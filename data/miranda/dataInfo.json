@@ -1,0 +1,8 @@
+{
+	"name" : "Miranda",
+    "skipOdd" : true,
+    "numberOfThread" : 128,
+    "numberOfMetric" : 2,
+    "inclusiveID" : 0,
+    "exclusiveID" : 1
+}
