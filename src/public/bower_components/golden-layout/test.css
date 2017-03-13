@@ -1,0 +1,16 @@
+h2{
+  font: 14px Arial, sans-serif;
+  color:#fff;
+  padding: 10px;
+}
+
+.lm_content{
+  text-align: center;
+}
+
+body {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    transition: all 0.5s ease;
+}
