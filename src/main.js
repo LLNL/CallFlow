@@ -1,13 +1,58 @@
-////////////// file paths for the data///////////////
-var filePath = "../data/miranda/";
-var configFilePath = filePath + "config2.json";
-var metricFilePath = filePath + "nodeData.json";
-var experimentFilePath = filePath + "experiment.xml";
-/////////////////////////////////////////////
+// ////////////// file paths for the data///////////////
+// var filePath = "../data/miranda/";
+// var configFilePath = filePath + "config2.json";
+// var metricFilePath = filePath + "nodeData.json";
+// var experimentFilePath = filePath + "experiment.xml";
+// /////////////////////////////////////////////
+var fs = require('fs');
+var argv = require('yargs').argv;
+var filePath;
+var xmlFile;
+var nodeMetricFile;
+var configFile;
+var dataSetFile;
+var dataSetInfo;
+if(!argv.d){
+	console.log("I do not know where to look for the data set");
+	return;
+}
+else{
+	dataSetFile = argv.d;
+}
+if(!fs.existsSync(dataSetFile)){
+	console.log('Sorry no such dataset exist at', dataSetFile);
+	return;
+}
+else{
+	dataSetInfo = require(dataSetFile);
+}
+if(dataSetInfo["path"] == null){
+	console.log('I need the path information');
+	return;
+}
+else{
+	filePath = dataSetInfo["path"];
+}
+if( dataSetInfo["experiment"] == null || !fs.existsSync(filePath + dataSetInfo["experiment"])){
+	console.log('No xml file found at', filePath + dataSetInfo["experiment"])
+	return;
+}
+else{
+	xmlFile = filePath + dataSetInfo["experiment"];
+}
+if( dataSetInfo["nodeMetric"] == null || !fs.existsSync(filePath + dataSetInfo["nodeMetric"]) ){
+	console.log('No metric file found at', filePath + dataSetInfo["nodeMetric"])
+	return;
+}
+else{
+	nodeMetricFile = filePath + dataSetInfo["nodeMetric"];
+}
+if( dataSetInfo["config"] != null){
+	configFile = filePath + dataSetInfo["config"];
+}
 
 
-var fs = require('fs'),
-    path = require('path'),
+var path = require('path'),
     express = require('express'),
     app = express(),
     LineByLineReader = require('line-by-line'),
@@ -32,7 +77,7 @@ Array.prototype.SumArray = function (arr) {
 }
 
 var nodeMetric = {};
-var nodeMetricReader = new LineByLineReader(metricFilePath);
+var nodeMetricReader = new LineByLineReader(nodeMetricFile);
 var callMetrixData;
 var entryExitData;
 
@@ -101,7 +146,7 @@ nodeMetricReader.on('end', function(){
 	console.log('done with reading metric data, begin reading xml file');
 	// var xmlFile = new fileLoader('../../data/miranda1/experiment.xml', myCallBack);
 	date1 = new Date();
-	var xml2 = new sankeySplitNode(experimentFilePath, sankeySplitNodeCallBack,configFilePath , [-99999], nodeMetric, []);		
+	var xml2 = new sankeySplitNode(xmlFile, sankeySplitNodeCallBack,configFile , [-99999], nodeMetric, []);		
 
 });
 
@@ -211,7 +256,7 @@ app.get('/splitNode', function(req, res){
 	res_global = res;
 
 	// var xml2 = new sankeySplitNode('../../data/miranda1/experiment.xml', splitNodeCallBack, procIDArray);
-	var xml2 = new sankeySplitNode(experimentFilePath, splitNodeCallBack2,configFilePath , procIDArray, nodeMetric, splitByParentList);	
+	var xml2 = new sankeySplitNode(xmlFile, splitNodeCallBack2,configFile, procIDArray, nodeMetric, splitByParentList);	
 })
 
 app.get('/getList', function(req, res){
@@ -359,9 +404,79 @@ app.get('/splitNodeByParents', function(req,res){
 
 	res_global = res;
 
-	var xml2 = new sankeySplitNode(experimentFilePath, splitNodeCallBack2,configFilePath , procIDArray, nodeMetric, splitByParentList);	
+	var xml2 = new sankeySplitNode(xmlFile, splitNodeCallBack2,configFile , procIDArray, nodeMetric, splitByParentList);	
 })
 
+app.get('/getHistogramScatterData', function(req, res){
+
+	var sankeyID = req.query["sankeyID"];	
+	var specialID = req.query["specialID"];
+
+	var node = staticGraph["nodes"][specialID];
+	var uniqueNodeIDList = node["uniqueNodeID"];
+	// console.log(node, uniqueNodeIDList);
+
+	var tempInc = [];
+	var tempExc = [];
+	uniqueNodeIDList.forEach(function(nodeID, idx){
+		var incRuntime = nodeMetric[parseInt(nodeID)]["inc"];
+		var excRuntime = nodeMetric[parseInt(nodeID)]["exc"];
+		if(idx == 0){
+			tempInc = incRuntime;
+			tempExc = excRuntime;
+		}
+		else{
+			tempInc = tempInc.SumArray( incRuntime );
+			tempExc = tempExc.SumArray( excRuntime );
+		}
+	});	
+
+	res.json({"inc": tempInc, "exc": tempExc});	
+})
+
+app.get('/calcEdgeValues', function(req, res){
+
+	//this could be a problem when there are lots of edges
+	var edgeSet1 = [];
+	var edgeSet2 = [];
+	var tempEdges = staticGraph["edges"].slice();
+
+	var processID = req.query["processIDList"];
+	var processIDList = [];
+	processID.forEach(function(pID){
+		processIDList.push( parseInt(pID) );
+	})
+	console.log(processIDList)
+
+	tempEdges.forEach(function(edge){
+		var idList = edge["nodeIDList"];
+		var edgeValueForBrush = 0;
+		var edgeValueForNonBrush = 0;
+		idList.forEach(function(id){
+			var runTime = nodeMetric[id]["inc"];
+			// processIDList.forEach(function(procid){
+			// 	edgeValue += runTime[procid];
+			// })
+			// console.log(runTime);
+			runTime.forEach(function(val, idx){
+				if( processIDList.indexOf(idx) > -1 ){
+					edgeValueForBrush += val;
+				}
+				else{
+					edgeValueForNonBrush += val;
+				}
+			})
+		})
+		var tempE1 = JSON.parse(JSON.stringify(edge));
+		tempE1["value"] = edgeValueForBrush;
+		edgeSet1.push(tempE1);
+		var tempE2 = JSON.parse(JSON.stringify(edge));
+		tempE2["value"] = edgeValueForNonBrush;
+		edgeSet2.push(tempE2);
+	});	
+
+	res.json( {"brush" : edgeSet1, "nonBrush" : edgeSet2} );
+})
 
 function splitNodeCallBack(data){
 
