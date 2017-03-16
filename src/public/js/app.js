@@ -257,8 +257,13 @@
 		//this is the data use for the histogram and scatter plot
 		var sankNodeDataHistScat = {};
 
-		var sankeySacle;
+		var sankeyScale;
 
+		var specialIDToSankIDMap = {};
+		var currentMaxID = 0;
+
+		var globalNodes;
+		var globalEdges;
 
 		function startVis(){
 			getNodeMetrics();
@@ -324,13 +329,19 @@
 	            		var tempObj = nodes[lab];
 	            		myNodes.push(tempObj);
 	            		idMap[ myNodes.sankeyID ] = 0;
+	            		specialIDToSankIDMap[lab] = tempObj["sankeyID"];
+        				currentMaxID = Math.max(currentMaxID, tempObj["sankeyID"]);
 	            	});
 
-	            	console.log(myNodes);
-	            	// myNodes.sort(function(a,b){
-	            	// 	return b["runTime"] - a["runTime"];
-	            	// });
-	            	console.log(myNodes);
+    				globalNodes = myNodes;
+					globalEdges = edges;
+					// console.log(myNodes);
+					myNodes.sort(function(a,b){
+						return a['sankeyID'] - b["sankeyID"];
+					})
+					edges.sort(function(a,b){
+						return a["sourceID"] - b["targetID"];
+					})
 
 	            	edgeList = data["edgeList"];
 	            	nodeList = data["nodeList"];
@@ -381,7 +392,8 @@
 
 		}
 
-		function showHistogram(node){
+		// function showHistogram(node){
+		function showHistogram(){
 
 			$("#hist_view").empty();
 			var width = $("#hist_view").parent().width();
@@ -416,24 +428,25 @@
 				);
 
 			var uniqueNodeIDList = node["uniqueNodeID"];
-			
-			var tempInc = [];
-			var tempExc = [];
-			uniqueNodeIDList.forEach(function(nodeID, idx){
-				var incRuntime = nodeMetrics[nodeID]["inc"];
-				var excRuntime = nodeMetrics[nodeID]["exc"];
-				if(idx == 0){
-					tempInc = incRuntime;
-					tempExc = excRuntime;
-				}
-				else{
-					tempInc = tempInc.SumArray( incRuntime );
-					tempExc = tempExc.SumArray( excRuntime );
-				}
-			});		
-			sankNodeDataHistScat = {"exc" : tempExc, "inc" : tempInc};
-			showHistogram(node);
-			showScatterPlot();
+			console.log(node);
+			getHistogramScatterData(node);
+			// var tempInc = [];
+			// var tempExc = [];
+			// uniqueNodeIDList.forEach(function(nodeID, idx){
+			// 	var incRuntime = nodeMetrics[nodeID]["inc"];
+			// 	var excRuntime = nodeMetrics[nodeID]["exc"];
+			// 	if(idx == 0){
+			// 		tempInc = incRuntime;
+			// 		tempExc = excRuntime;
+			// 	}
+			// 	else{
+			// 		tempInc = tempInc.SumArray( incRuntime );
+			// 		tempExc = tempExc.SumArray( excRuntime );
+			// 	}
+			// });		
+			// sankNodeDataHistScat = {"exc" : tempExc, "inc" : tempInc};
+			// showHistogram(node);
+			// showScatterPlot();
 
 			var tempList = {};
 			var nameToIDMap = res["nameToIDMap"];
@@ -545,6 +558,28 @@
 					console.log("There was problem with getting the data");
 				}	
 			});				
+		}
+
+		function getHistogramScatterData(node){
+			var sankeyID = node["sankeyID"];
+			var specialID = node["specialID"];
+			$.ajax({
+	            type:'GET',
+	            contentType: 'application/json',
+	            dataType: 'json',
+	            url: '/getHistogramScatterData',
+	            data: {"sankeyID" : sankeyID, "specialID" : specialID},
+	            success: function(histScatData){
+	            	sankNodeDataHistScat = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
+    				showHistogram();
+					showScatterPlot();
+
+	            },
+	            error: function(){
+	            	console.log("There was problem with getting the data for histogram and scatter plot");
+	            }	
+			});	
+
 		}
 
 		function splitNode(){
@@ -712,35 +747,45 @@
 	            	edges = data["edges"];
 	            	var myNodes = [];
 
-	            	var labelList = Object.keys(nodes);
-	            	labelList.forEach(function(lab){
-	            		var tempObj = nodes[lab];
-	            		myNodes.push(tempObj);
-	            	})
+	            	// var labelList = Object.keys(nodes);
+	            	// labelList.forEach(function(lab){
+	            	// 	var tempObj = nodes[lab];
+	            	// 	myNodes.push(tempObj);
+	            	// })
+
+		        	var labelList = Object.keys(nodes);
+		        	labelList.forEach(function(lab){
+		        		var tempObj = nodes[lab];
+		        		myNodes.push(tempObj);
+		        	});
 
 	            	edgeList = data["edgeList"];
 	            	nodeList = data["nodeList"];
 
-					// console.log(myNodes);
-					$('#procedure_view').empty();
-					sankeyVis = new Sankey({
-						ID: "#procedure_view",
-						width: $("#procedure_view").width(),
-						height: $("#procedure_view").height(),
-						// width: width,
-						// height: height,
-						margin: {top: 10, right: 10, bottom: 10, left: 10},
-						data: {"nodes": myNodes, "links": edges},
-						toolTipData : {"edgeList" : edgeList, "nodeList": nodeList},
-						// spinner: spinner,
-						clickCallBack: nodeClickCallBack
-					})	
+					// // console.log(myNodes);
+					// $('#procedure_view').empty();
+					// sankeyVis = new Sankey({
+					// 	ID: "#procedure_view",
+					// 	width: $("#procedure_view").width(),
+					// 	height: $("#procedure_view").height(),
+					// 	// width: width,
+					// 	// height: height,
+					// 	margin: {top: 10, right: 10, bottom: 10, left: 10},
+					// 	data: {"nodes": myNodes, "links": edges},
+					// 	toolTipData : {"edgeList" : edgeList, "nodeList": nodeList},
+					// 	// spinner: spinner,
+					// 	clickCallBack: nodeClickCallBack
+					// })	
 
-					sankColor = sankeyVis.colorScale;				
+					// sankColor = sankeyVis.colorScale;				
 
+					// d3.selectAll('.node text').style('opacity', 1);
+					// console.log('done with layout');
+
+					var remapResult = remapID(myNodes, edges, labelList);
+					var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList}
+					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData});
 					d3.selectAll('.node text').style('opacity', 1);
-					console.log('done with layout');
-
 					spinner.stop();
 
 
@@ -776,34 +821,44 @@
 	            	edges = data["edges"];
 	            	var myNodes = [];
 
-	            	var labelList = Object.keys(nodes);
-	            	labelList.forEach(function(lab){
-	            		var tempObj = nodes[lab];
-	            		myNodes.push(tempObj);
-	            	})
+	            	// var labelList = Object.keys(nodes);
+	            	// labelList.forEach(function(lab){
+	            	// 	var tempObj = nodes[lab];
+	            	// 	myNodes.push(tempObj);
+	            	// })
+		        	var labelList = Object.keys(nodes);
+		        	labelList.forEach(function(lab){
+		        		var tempObj = nodes[lab];
+		        		myNodes.push(tempObj);
+		        	});	            	
 
 	            	edgeList = data["edgeList"];
 	            	nodeList = data["nodeList"];
 
 					// console.log(myNodes);
-					$('#procedure_view').empty();
-					sankeyVis = new Sankey({
-						ID: "#procedure_view",
-						width: $("#procedure_view").width(),
-						height: $("#procedure_view").height(),
-						// width: width,
-						// height: height,
-						margin: {top: 10, right: 10, bottom: 10, left: 10},
-						data: {"nodes": myNodes, "links": edges},
-						toolTipData : {"edgeList" : edgeList, "nodeList": nodeList},
-						// spinner: spinner,
-						clickCallBack: nodeClickCallBack
-					})	
+					// $('#procedure_view').empty();
+					// sankeyVis = new Sankey({
+					// 	ID: "#procedure_view",
+					// 	width: $("#procedure_view").width(),
+					// 	height: $("#procedure_view").height(),
+					// 	// width: width,
+					// 	// height: height,
+					// 	margin: {top: 10, right: 10, bottom: 10, left: 10},
+					// 	data: {"nodes": myNodes, "links": edges},
+					// 	toolTipData : {"edgeList" : edgeList, "nodeList": nodeList},
+					// 	// spinner: spinner,
+					// 	clickCallBack: nodeClickCallBack
+					// })	
 
-					sankColor = sankeyVis.colorScale;				
+					// sankColor = sankeyVis.colorScale;				
 
+					// d3.selectAll('.node text').style('opacity', 1);
+					// console.log('done with layout');
+
+					var remapResult = remapID(myNodes, edges, labelList);
+					var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList}
+					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData});
 					d3.selectAll('.node text').style('opacity', 1);
-					console.log('done with layout');
 
 					spinner.stop();
 
@@ -872,44 +927,130 @@
 		}
 
 		function brushCallBack(processIDList){
-			edges.forEach(function(edge){
-				var idList = edge["nodeIDList"];
-				var edgeValue = 0;
-				idList.forEach(function(id){
-					var runTime = nodeMetrics[id]["inc"];
-					processIDList.forEach(function(procid){
-						edgeValue += runTime[procid];
-					})
-				})
-				edge["value"] = edgeValue;
+			// edges.forEach(function(edge){
+			// 	var idList = edge["nodeIDList"];
+			// 	var edgeValue = 0;
+			// 	idList.forEach(function(id){
+			// 		var runTime = nodeMetrics[id]["inc"];
+			// 		processIDList.forEach(function(procid){
+			// 			edgeValue += runTime[procid];
+			// 		})
+			// 	})
+			// 	edge["value"] = edgeValue;
+			// });
+
+			console.log(processIDList);
+
+			$.ajax({
+	            type:'GET',
+	            contentType: 'application/json',
+	            dataType: 'json',
+	            url: '/calcEdgeValues',
+	            data: {"processIDList" : processIDList},
+	            success: function(edgeSets){
+
+	            	edges = edgeSets["brush"];
+		        	var myNodes = [];
+
+		        	var labelList = Object.keys(nodes);
+		        	labelList.forEach(function(lab){
+		        		var tempObj = nodes[lab];
+		        		myNodes.push(tempObj);
+		        	})
+
+		        	console.log(edges);
+
+					// console.log(myNodes);
+					$('#procedure_view').empty();
+					sankeyVis = new Sankey({
+						ID: "#procedure_view",
+						width: $("#procedure_view").width(),
+						height: $("#procedure_view").height(),
+						// width: width,
+						// height: height,
+						margin: {top: 10, right: 10, bottom: 10, left: 10},
+						data: {"nodes": myNodes, "links": edges},
+						toolTipData : {"edgeList" : edgeList, "nodeList": nodeList},
+						// spinner: spinner,
+						clickCallBack: nodeClickCallBack
+					})	
+
+					sankColor = sankeyVis.colorScale;				
+
+					d3.selectAll('.node text').style('opacity', 1);
+	            },
+	            error: function(){
+	            	console.log("There was problem with getting the metric data");
+	            }	
+			});					
+
+		}
+
+		function remapID(newNodes, newEdges, newNodeListLabel){
+			//first find the difference between the old nodes and the new nodes
+			//basically, nodes that are in the old list but not in the new list
+			var oldNodeListLabel = Object.keys(specialIDToSankIDMap);
+			var removeNodesLabel = [];
+			oldNodeListLabel.forEach(function(oNodeLab){
+				if(newNodeListLabel.indexOf(oNodeLab) == -1){
+					//so we remove the node with this label
+					removeNodesLabel.push(oNodeLab);
+				}
 			});
 
+			//now mapping the newNodeID to the old one
+			//reused the remove ones or create new one as needed
+			var newSpecialIDToSankIDMap = {};
+			var tempMaxID = 0;
+			console.log(removeNodesLabel);
+			newNodes.forEach(function(nNode){
+				var curretnNodeLabel = nNode["specialID"];
+				if(specialIDToSankIDMap[curretnNodeLabel] != null){
+					// if(curretnNodeLabel == "LM8_0"){
+					// 	nNode["specialID"] = "LM8_10";
+					// 	nNode["name"] = "LEOS";
+					// }
 
-        	var myNodes = [];
+					nNode["sankeyID"] = specialIDToSankIDMap[curretnNodeLabel];
+				}
+				else{
+					//this is a new label
 
-        	var labelList = Object.keys(nodes);
-        	labelList.forEach(function(lab){
-        		var tempObj = nodes[lab];
-        		myNodes.push(tempObj);
-        	})
+					//first check if we can reuse an old one
+					if(removeNodesLabel.length > 0){
+						var reuseLabel = removeNodesLabel[0];
+						nNode["sankeyID"] = specialIDToSankIDMap[reuseLabel];
+						removeNodesLabel.shift();
+					}
+					else{
+						//don't have anymore to resuse
+						currentMaxID += 1;
+						nNode["sankeyID"] = currentMaxID;
+					}
+				}
 
+				newSpecialIDToSankIDMap[curretnNodeLabel] = nNode["sankeyID"];
+			})
 
-			// console.log(myNodes);
-			$('#procedure_view').empty();
-			sankeyVis = new Sankey({
-				ID: "#procedure_view",
-				width: $("#procedure_view").width(),
-				height: $("#procedure_view").height(),
-				// width: width,
-				// height: height,
-				margin: {top: 10, right: 10, bottom: 10, left: 10},
-				data: {"nodes": myNodes, "links": edges},
-				toolTipData : {"edgeList" : edgeList, "nodeList": nodeList},
-				// spinner: spinner,
-				clickCallBack: nodeClickCallBack
-			})	
+			newEdges.forEach(function(nEdge){
+				nEdge["source"] = newSpecialIDToSankIDMap[ nEdge["sourceLabel"] ];
+				nEdge["sourceID"] = newSpecialIDToSankIDMap[ nEdge["sourceLabel"] ];
+				nEdge["target"] = newSpecialIDToSankIDMap[ nEdge["targetLabel"] ];
+				nEdge["targetID"] = newSpecialIDToSankIDMap[ nEdge["targetLabel"] ];
+			})
 
-			sankColor = sankeyVis.colorScale;				
+			newNodes.sort(function(a,b){
+				return a['sankeyID'] - b["sankeyID"];
+			})
+			newEdges.sort(function(a,b){
+				return a["sourceID"] - b["targetID"];
+			})
 
-			d3.selectAll('.node text').style('opacity', 1);
+			specialIDToSankIDMap = newSpecialIDToSankIDMap;
+
+			// console.log(specialIDToSankIDMap, newSpecialIDToSankIDMap, newEdges, newNodes);
+
+			return {"nodes" : newNodes, "links" : newEdges};
+			// sankeyVis.updateData({"nodes" : newNodes, "links" : newEdges});
+
 		}

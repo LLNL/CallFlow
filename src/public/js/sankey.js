@@ -27,6 +27,15 @@ function Sankey(args){
 
 	var nodeList = [];
 
+	var transitionDuration = 2000;
+
+	var rootRunTime = 0;
+	data["links"].forEach(function(link){
+		if(link["sourceLabel"] == 'LM0'){
+			rootRunTime += link["value"];
+		}
+	})
+
 	// console.log(containerID);
 	// console.log(width)
 
@@ -69,48 +78,50 @@ function Sankey(args){
 	var ySpacing = 17;
 	var graph;
 
+	var zoom = d3.behavior.zoom()
+				.scaleExtent([0.1,10])
+				.on('zoom', zoomed);
+	
+
+	function zoomed(){
+		svgBase.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+
+		// var textScaleValue = 1 + (1/d3.event.scale );
+
+		// var nodeText = node.selectAll('text').attr("transform","scale(" + textScaleValue + ")");
+		// console.log(nodeText);
+		// console.log(d3.event.scale)
+
+	}
+
+	var svgO = d3.select(containerID).append("svg")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", height + margin.top + margin.bottom)
+	    .append("g")
+	    .attr("transform",
+	            // "translate(" + margin.left + "," + margin.top + ") rotate(90)")
+				"translate(" + margin.left + "," + margin.top + ")")
+
+	    .call(zoom);
+
+	//place an invisible rect over the svg to capture all mouse event
+	var containerRect = svgO.append('rect')
+							.attr('width', width)
+							.attr('height', height)
+							.style('fill', "none")
+							.style("pointer-events", "all"); //this line is needed to capture the mouse events related to the entire svg		
+
+	var svgBase = svgO.append('g');
+	
+	svg = svgBase.append('g')
+					// .attr('transform', "translate(" + 0 + "," + (-1) * width/2 + ")")
+
+	var defs = svg.append("defs");
+	var links = svg.append("g");
+	var nodes = svg.append("g");
+
+
 	function visualize(){
-
-		var zoom = d3.behavior.zoom()
-					.scaleExtent([0.1,10])
-					.on('zoom', zoomed);
-		
-
-		function zoomed(){
-			svgBase.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-
-			// var textScaleValue = 1 + (1/d3.event.scale );
-
-			// var nodeText = node.selectAll('text').attr("transform","scale(" + textScaleValue + ")");
-			// console.log(nodeText);
-			// console.log(d3.event.scale)
-
-		}
-
-		var svgO = d3.select(containerID).append("svg")
-		    .attr("width", width + margin.left + margin.right)
-		    .attr("height", height + margin.top + margin.bottom)
-		    .append("g")
-		    .attr("transform",
-		            // "translate(" + margin.left + "," + margin.top + ") rotate(90)")
-					"translate(" + margin.left + "," + margin.top + ")")
-
-		    .call(zoom);
-
-		//place an invisible rect over the svg to capture all mouse event
-		var containerRect = svgO.append('rect')
-								.attr('width', width)
-								.attr('height', height)
-								.style('fill', "none")
-								.style("pointer-events", "all"); //this line is needed to capture the mouse events related to the entire svg		
-
-		var svgBase = svgO.append('g');
-		
-		svg = svgBase.append('g')
-						// .attr('transform', "translate(" + 0 + "," + (-1) * width/2 + ")")
-
-		var defs = svg.append("defs");
-
 		// Set the sankey diagram properties
 		sankey = d3sankey()
 			.nodeWidth(17)
@@ -146,48 +157,120 @@ function Sankey(args){
 		    return d.color = color(d.name.replace(/ .*/, ""));
 		    // return d.color = color(d["lmID"]);
 		}
-
-		var grads = defs.selectAll("linearGradient")
-		        .data(graph.links, getGradID);
-
-		grads.enter().append("linearGradient")
-		        .attr("id", getGradID)
-		        .attr("gradientUnits", "userSpaceOnUse");
-
 		function positionGrads() {
 				    grads.attr("x1", function(d){return d.source.x;})
 				        .attr("y1", function(d){return d.source.y;})
 				        .attr("x2", function(d){return d.target.x;})
 				        .attr("y2", function(d){return d.target.y;});
-				}
-		positionGrads();
+		}		
 
-		grads.html("") //erase any existing <stop> elements on update
-		    .append("stop")
-		    .attr("offset", "0%")
-		    .attr("stop-color", function(d){
-		        return nodeColor( (+d.source.x <= +d.target.x)? 
-		                         d.source: d.target) ;
+		// var grads = defs.selectAll("linearGradient")
+		//         .data(graph.links, getGradID);
 
-		    	// return "red";
-		    });
+		// grads.enter().append("linearGradient")
+		//         .attr("id", getGradID)
+		//         .attr("gradientUnits", "userSpaceOnUse");
 
-		grads.append("stop")
-		    .attr("offset", "100%")
-		    .attr("stop-color", function(d){
-		        return nodeColor( (+d.source.x > +d.target.x)? 
-		                         d.source: d.target) 
+		// positionGrads();
 
-		    	// return "blue";
-		    });
+		// grads.html("") //erase any existing <stop> elements on update
+		//     .append("stop")
+		//     .attr("offset", "0%")
+		//     .attr("stop-color", function(d){
+		//         return nodeColor( (+d.source.x <= +d.target.x)? 
+		//                          d.source: d.target) ;
+
+		//     	// return "red";
+		//     });
+
+		// grads.append("stop")
+		//     .attr("offset", "100%")
+		//     .attr("stop-color", function(d){
+		//         return nodeColor( (+d.source.x > +d.target.x)? 
+		//                          d.source: d.target) 
+
+		//     	// return "blue";
+		//     });
 
 		// add in the links
-		var link = svg.append("g").selectAll(".link")
+		var link = links.selectAll(".link")
 		    .data(graph.links)
 		    .enter().append("path")
 		    .attr("class", "link")
 		    // .attr("d", path)
 		    .attr("d", function(d){
+		      	var Tx0 = d.source.x + d.source.dx,
+		          	Tx1 = d.target.x,
+		          	Txi = d3.interpolateNumber(Tx0, Tx1),
+		          	Tx2 = Txi(0.4),
+		          	Tx3 = Txi(1 - 0.4),
+		          	Ty0 = d.source.y + d.sy,
+		          	Ty1 = d.target.y + d.ty;
+
+		          	//note .ty is the y point that the edge meet the target(for top)
+		          	//		.sy is the y point of the source  (for top)
+		          	//		.dy is width of the edge
+
+		      	var Bx0 = d.source.x + d.source.dx,
+		          	Bx1 = d.target.x,
+		          	Bxi = d3.interpolateNumber(Bx0, Bx1),
+		          	Bx2 = Bxi(0.4),
+		          	Bx3 = Bxi(1 - 0.4),
+		          	By0 = d.source.y + d.dy + d.sy,
+		          	By1 = d.target.y + d.ty + d.dy;
+
+	          	var rightMoveDown = By1 - Ty1;
+
+				return "M" + Tx0 + "," + Ty0
+					+ "C" + Tx2 + "," + Ty0
+					+ " " + Tx3 + "," + Ty1
+					+ " " + Tx1 + "," + Ty1
+					+ " " + " v " + rightMoveDown
+					+ "C" + Bx3 + "," + By1
+					+ " " + Bx2 + "," + By0
+					+ " " + Bx0 + "," + By0
+		    })
+		    // .style("fill", "none")
+		    .style("fill", function(d){
+		    	// return "url(#" + getGradID(d) + ")";
+		    	return "grey";
+		    })
+		    .style('fill-opacity', 0)
+		    .style("stroke", function(d){
+		        return "url(#" + getGradID(d) + ")";
+		    })
+		    .style("stroke-opacity", "0.4")
+		    .on("mouseover", function() { 
+		    	// d3.select(this).style("stroke-opacity", "0.7") 
+		    	d3.select(this).style("fill-opacity", "0.7") 
+
+		    } )
+		    .on("mouseout", function() { 
+		    	// d3.select(this).style("stroke-opacity", "0.4") 
+		    	d3.select(this).style("fill-opacity", "0.4") 
+		    } )
+		    .on('click', function(d){
+		    	console.log(d);
+		    })
+		    // .style("stroke-width", function (d) {
+		    //     return Math.max(1, d.dy);
+		    // })
+		    .sort(function (a, b) {
+		        return b.dy - a.dy;
+		    });
+
+		//transition for links
+		// links.selectAll(".link")
+		// 	.data(graph.links)
+		// 	.transition()
+		// 	.duration(transitionDuration)
+		// 	.style('fill-opacity', 0.4);
+	    links.selectAll(".link")
+	    	.data(graph.links)
+	    	.transition()
+	    	.duration(transitionDuration)
+	    	.style('fill-opacity', 0.4)
+	    	.attr('d', function(d){
 		      	var Tx0 = d.source.x + d.source.dx,
 		          	Tx1 = d.target.x,
 		          	Txi = d3.interpolateNumber(Tx0, Tx1),
@@ -219,52 +302,18 @@ function Sankey(args){
 					+ " " + " v " + rightMoveDown
 					+ "C" + Bx3 + "," + By1
 					+ " " + Bx2 + "," + By0
-					+ " " + Bx0 + "," + By0
-		    })
-		    // .style("fill", "none")
-		    .style("fill", function(d){
-		    	return "url(#" + getGradID(d) + ")";
-		    })
-		    .style('fill-opacity', 0.4)
-		    .style("stroke", function(d){
-		        return "url(#" + getGradID(d) + ")";
-		    })
-		    .style("stroke-opacity", "0.4")
-		    .on("mouseover", function() { 
-		    	// d3.select(this).style("stroke-opacity", "0.7") 
-		    	d3.select(this).style("fill-opacity", "0.7") 
-
-		    } )
-		    .on("mouseout", function() { 
-		    	// d3.select(this).style("stroke-opacity", "0.4") 
-		    	d3.select(this).style("fill-opacity", "0.4") 
-		    } )
-		    .on('click', function(d){
-		    	console.log(d);
-		    })
-		    // .style("stroke-width", function (d) {
-		    //     return Math.max(1, d.dy);
-		    // })
-		    .sort(function (a, b) {
-		        return b.dy - a.dy;
-		    });
+					+ " " + Bx0 + "," + By0		    		
+	    	})		
 
 		// add in the nodes
-		var node = svg.append("g").selectAll(".node")
+		var node = nodes.selectAll(".node")
 		    .data(graph.nodes)
 		    .enter().append("g")
 		    .attr("class", "node")
+		    .attr('opacity' , 0)
 		    .attr("transform", function (d) {
 		        return "translate(" + d.x + "," + d.y + ")";
 		    });
-		    // .call(d3.behavior.drag()
-		    // .origin(function (d) {
-		    //     return d;
-		    // })
-		    // .on("dragstart", function () {
-		    //     this.parentNode.appendChild(this);
-		    // })
-		    // .on("drag", dragmove));
 
 		// add the rectangles for the nodes
 		node.append("rect")
@@ -281,8 +330,6 @@ function Sankey(args){
 
 		        return d.color = color(d.name.replace(/ .*/, ""));
 		        // return d.color = color(d["lmID"]);
-
-
 		    })
 		    // .style("fill-opacity", ".9")
 		    .style("fill-opacity", "1")
@@ -292,98 +339,6 @@ function Sankey(args){
 		    })
 		    .style("stroke-width", '1')
 		    .on("mouseover", function(d) { 
-		    	console.log( d );
-		    	// var sankeyNodeList = d["sankeyNodeList"];
-		    	// var uniqueNodeIDList = d["uniqueNodeID"];
-
-		    	// //get the final nodes that we are connected to
-		    	// var sourceLabel = [];
-		    	// var sourceID = [];
-		    	// edges.forEach(function(edge){
-		    		
-		    	// 	if(edge["targetID"] == d["sankeyID"]){
-		    	// 		console.log(edge);
-		    	// 		if(sourceLabel.indexOf(edge["sourceLabel"]) ==-1) {
-		    	// 			sourceLabel.push( edge["sourceLabel"] );
-		    	// 		}
-			    // 		if(sourceID.indexOf(edge["sourceID"]) == -1){
-	    		// 			sourceID.push(edge["sourceID"]);
-		    	// 		}
-		    	// 	}
-		    	// });
-		    	// console.log(sourceLabel, sourceID);
-
-		    	// var myParent = [];
-		    	// //get uniqueNodeID of parent
-		    	// var parUniqueNodeID = [];
-		    	// data.nodes.forEach(function(node){
-		    	// 	if(sourceID.indexOf(node["sankeyID"]) >-1 ){
-		    	// 		myParent.push(node);
-		    	// 		// console.log(node);
-		    	// 		node["uniqueNodeID"].forEach(function(nodeID){
-		    	// 			parUniqueNodeID.push(nodeID)
-		    	// 		})
-		    	// 	}
-		    	// })
-		    	
-		    	// console.log(sankeyNodeList, uniqueNodeIDList, parUniqueNodeID);
-		    	// var connectivity = {};
-		    	// var temp = 0;
-		    	// sankeyNodeList.forEach(function(sankID){
-		    	// 	console.log(toolTipData["nodeList"][sankID]);
-		    	// 	var connectionInfo = toolTipData["edgeList"][sankID];
-		    	// 	connectionInfo.forEach(function(connInfo){
-		    	// 		if(uniqueNodeIDList.indexOf(connInfo["nodeID"]) > -1 
-		    	// 			&& parUniqueNodeID.indexOf(connInfo["parentNodeID"]) > -1
-		    	// 			){
-			    // 			var parentProcName = connInfo["parentProcedureName"];
-			    // 			if(connectivity[parentProcName] == null){
-			    // 				connectivity[parentProcName] = {
-			    // 					"name" : parentProcName,
-			    // 					"loadModule" : connInfo["parentLoadModuleName"],
-			    // 					"procedureNameList" : {}
-			    // 				}
-			    // 			}
-			    // 			var procedureName = connInfo["procedureName"]
-			    // 			// if(connectivity[parentProcName]["procedureNameList"].indexOf(procedureName) == -1){
-			    // 			// 	connectivity[parentProcName]["procedureNameList"].push(procedureName);
-			    // 			// }
-			    // 			if(connectivity[parentProcName]["procedureNameList"][procedureName] == null){
-			    // 				connectivity[parentProcName]["procedureNameList"][procedureName] = 0;
-			    // 			}
-			    // 			connectivity[parentProcName]["procedureNameList"][procedureName] += connInfo["value"];
-			    // 			temp += connInfo["value"]
-		    	// 		}
-		    	// 	});
-		    	// });
-
-		    	// console.log(connectivity);
-		    	// console.log(temp, d["runTime"]);
-
-		    	// var fromProcToProc = [];
-		    	// Object.keys(connectivity).forEach(function(fromProc){
-		    	// 	Object.keys(connectivity[fromProc]["procedureNameList"]).forEach(function(toProc){
-		    	// 		var temp = {
-		    	// 			"fromProc" : fromProc,
-		    	// 			"fromLM" : connectivity[fromProc]["loadModule"],
-		    	// 			"toProc" : toProc,
-		    	// 			"toLM" : d["name"],
-		    	// 			"value" : connectivity[fromProc]["procedureNameList"][toProc]
-		    	// 		}
-		    	// 		// console.log(temp);
-		    	// 		fromProcToProc.push(temp);
-		    	// 	})
-		    	// })
-
-		    	// fromProcToProc.sort(function(a,b){
-		    	// 	return b["value"] - a["value"];
-		    	// });
-		    	// var temp = 0;
-		    	// fromProcToProc.forEach(function(ft){
-		    	// 	console.log(ft["value"] / 36644360084 * 100);
-		    	// 	temp += ft["value"] / 36644360084 * 100
-		    	// })
-		    	// console.log(temp);
 		    	var res = getFunctionListOfNode(d);
 		    	var fromProcToProc = res["fromProcToProc"];
 		    	var numberOfConn = Math.min(fromProcToProc.length, 10);
@@ -497,7 +452,13 @@ function Sankey(args){
 
 			//hide all links not connected to selected node
 			function fadeUnConnected(g){
-				link.filter(function(d){ return d.source !==g && d.target !== g; })
+				// link.filter(function(d){ return d.source !==g && d.target !== g; })
+				// 	.transition()
+				// 		.duration(500)
+				// 		.style("opacity", 0.05);
+
+				var thisLink = links.selectAll(".link");
+				thisLink.filter(function(d){ return d.source !==g && d.target !== g; })
 					.transition()
 						.duration(500)
 						.style("opacity", 0.05);
@@ -505,10 +466,56 @@ function Sankey(args){
 
 			//show all links
 			function unFade(){
-				link.transition()
+				// link.transition()
+				// 		.duration(500)
+				// 		.style("opacity", 1)
+
+				var thisLink = links.selectAll(".link");
+				thisLink.transition()
 						.duration(500)
 						.style("opacity", 1)
 			}
+
+		////////////////////////transition for nodes/////////////////////////
+	    nodes.selectAll('.node')
+	    	.data(graph.nodes)
+	    	.transition()
+	    	.duration(transitionDuration)
+	    	.attr('opacity' , 1)
+	    	.attr('transform', function(d){
+	    		return "translate(" + d.x + "," + d.y + ")";
+	    	})
+
+
+	    nodes.selectAll("text")
+	    	.data(graph.nodes)
+	    	.transition()
+	    	.duration(transitionDuration)
+	  //   	.attr('x', function(d){
+			// 	return sankey.nodeWidth() + 5;
+			// })
+			.text(function (d) {
+				console.log(d.name, d.specialID, d)
+	        	return d.name//; + "\n" + format(d.value);
+	    	});
+
+	    nodes.selectAll("rect")
+	    	.data(graph.nodes)
+	    	.transition()
+	    	.duration(transitionDuration)
+	    	.attr('height',function(d){
+	    		return d.dy;
+	    	})
+		    .style("fill", function (d) {
+
+		    	var temp = {"name" : d.name.replace(/ .*/, ""),
+							"color" : color(d.name.replace(/ .*/, ""))}
+		    	nodeList.push(temp);
+
+		        return d.color = color(d.name.replace(/ .*/, ""));
+		        // return d.color = color(d["lmID"]);
+		    })	    	
+	    ////////////////////////////////////
 
 		function showLegend(){
 			var colLegend = svgO.append('g');
@@ -677,6 +684,13 @@ function Sankey(args){
 			.attr('d', path);		
 	}
 
+	this.updateData = function(newData){
+		data["nodes"] = newData["nodes"];
+		data["links"] = newData["links"];
+		toolTipData = newData["toolTipData"];
+		visualize();
+	}	
+
 	function splitNode(node){
 
 		$.ajax({
@@ -744,13 +758,16 @@ function Sankey(args){
 		var sankeyNodeList = d["sankeyNodeList"];
 		var uniqueNodeIDList = d["uniqueNodeID"];
 
+		console.log(d);
+
 		//get the final nodes that we are connected to
 		var sourceLabel = [];
 		var sourceID = [];
-		console.log(edges);
+		// console.log(edges);
 		edges.forEach(function(edge){
 			
 			if(edge["targetID"] == d["sankeyID"]){
+				// console.log(edge);
 				// console.log(edge);
 				if(sourceLabel.indexOf(edge["sourceLabel"]) ==-1) {
 					sourceLabel.push( edge["sourceLabel"] );
@@ -834,11 +851,12 @@ function Sankey(args){
 		var temp = 0;
 		fromProcToProc.forEach(function(ft){
 			// console.log(ft["value"] / 36644360084 * 100);
-			temp += ft["value"] / 36644360084 * 100
+			temp += ft["value"] / rootRunTime * 100
 		})
 		// console.log(temp);
 
 		var res = {"fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap }
+		// console.log(fromProcToProc)
 		return res;
 	}
 

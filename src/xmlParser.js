@@ -1,7 +1,17 @@
 var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeMetrics, splitByParentList){
 	var fs = require('fs');
     var parser = require('libxmljs');
-    var config = require(configFileName);
+    var config;
+
+    if(fs.existsSync(configFileName)){
+        console.log('config file found at', configFileName);
+        config = require(configFileName);
+    }
+    else{
+        console.log('no config file found at', configFileName);
+        config = {};
+    }
+    
 
     var xmlFile = fileName;
 
