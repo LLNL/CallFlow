@@ -47,6 +47,10 @@ function Histogram(args){
 	var width = containerWidth - margin.right - margin.left;
 	var height = containerHeight - margin.top - margin.bottom;
 
+	var histogramOffset = Math.floor( height / 3 );
+
+	var histogramHeight = height - histogramOffset;
+
 	var brush;
 	var xFormat = d3.format(".1e")
 
@@ -57,7 +61,7 @@ function Histogram(args){
 
 	function visualize(){
 		xScale = d3.scale.ordinal().domain(xVals).rangeRoundBands([0, width], 0.05);
-		yScale = d3.scale.linear().domain([0, d3.max(freq)]).range([height, 0]);	
+		yScale = d3.scale.linear().domain([0, d3.max(freq)]).range([histogramHeight, 0]);	
 
 		 svg = d3.select(containerID)
 				.append('svg')
@@ -65,6 +69,33 @@ function Histogram(args){
 				.attr("height", height + margin.top + margin.bottom)
 			  	.append("g")
 			  	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		//Tool Tip
+		var toolTip = d3.select(containerID)
+										.append('div')
+										.attr('class', 'toolTip')
+										.style('position', 'absolute')
+										.style('padding', '5px 10px 0px 10px')
+										.style('opacity', 0)
+										.style('background', 'white')
+										.style('height', 'auto')
+										.style('width', 'auto')
+										.style('border-radius', '10px')
+										.style('border-width', '1px')
+										.style('border-style', 'solid')
+										.style('position', 'absolute');
+		var toolTipText = toolTip
+							.append('p')
+							.style('font-family', 'sans-serif')
+							.style('font-size', '13px');
+
+	    // brush
+	    brush = d3.svg.brush()
+	    			.x(xScale)
+	    			.on('brush', brushing)
+	    			// .extent([0,width])
+	    			.on('brushend', brushend)
+	    var brushG = svg.append('g').attr('class', 'brush').call(brush);
 
 		svg.selectAll('.selectBars').data(freq).enter()
 				             .append('rect').attr('class', 'selectBars')
@@ -80,7 +111,7 @@ function Histogram(args){
 				             	return xScale.rangeBand();
 				             })
 				             .attr('height', function(d){
-				             	return height - yScale(d);
+				             	return histogramHeight - yScale(d);
 				             })
 				             .attr('fill', 'steelblue')
 				             .attr('opacity', 1)
@@ -93,19 +124,56 @@ function Histogram(args){
 				             	return "black"		             	
 				             })
 				             .on('click', function(d,i){
-				             	if(hisCallBack){
-				             		hisCallBack(i);
-				             	}
+
+				             })
+				             .on('mouseover', function(d,i){
+	             				d3.select(this)
+				             		.attr('fill', 'red')
+				             	d3.selectAll('.lineRank_' + i)
+				             		.style('fill', 'orange')
+				             		.style('fill-opacity', 1);
+				             	var groupProcStr = groupProcess( binContainsProcID[i] )["string"];
+						    	var mousePos = d3.mouse(d3.select(containerID).node()); 
+						    	toolTip.style('opacity', 1)
+										.style('left', function(){
+											var xPos = mousePos[0]  + 10;
+											if(xPos >= width - 25){
+												return (xPos - 100) + 'px;'
+											}
+											else{
+												return (mousePos[0]  + 10) + 'px';
+											}
+											
+										})
+										.style('top', function(){
+											return mousePos[1] + "px";
+										})
+										.style('height', 'auto')
+										.style('width', 'auto');
+						    	toolTipText.html("Processes: " + groupProcStr);					             	
+				             })
+				             .on('mouseout', function(d,i){
+				             	d3.select(this)
+				             		.attr('fill', 'steelblue');
+				             	d3.selectAll('.lineRank_' + i)
+				             		.style('fill', 'grey')
+				             		.style('fill-opacity', 0.4);
+
+								toolTip.style('opacity', 0)
+										.style('left', function(){
+											return '0px';
+										})
+										.style('top', function(){
+											return "0px";
+										})
+										.style('height', 'auto')
+										.style('width', 'auto');
+
+				             	toolTipText.html("");	
+
 				             });	
 
-	    // brush
-	    brush = d3.svg.brush()
-	    			.x(xScale)
-	    			.on('brush', brushing)
-	    			// .extent([0,width])
-	    			.on('brushend', brushend)
-	    var brushG = svg.append('g').attr('class', 'brush').call(brush);
-	   	brushG.selectAll('rect').attr('height', height).attr('opacity', 0.2);
+	   	brushG.selectAll('rect').attr('height', histogramHeight).attr('opacity', 0.2);
 	   	var brushStart = 0;
 	   	var brushEnd = numbOfBins;
 	   	var bExtent;
@@ -124,9 +192,21 @@ function Histogram(args){
 
 	        brushStart = localBrushStart;
 	        brushEnd = localBrushEnd;
+
+	        //highlight rank lines that is brush
+	        svg.selectAll('.binRank').attr('opacity', 0);
+	        for(var i = brushStart; i < brushEnd; i++){
+
+	        	 svg.selectAll('.bin_' + i).attr('opacity', 1);
+
+	        }	
+
+	        if(brushStart == brushEnd){
+	        	svg.selectAll('.binRank').attr('opacity', 1);
+	        }        
 	   	}
 	   	function brushend(){
-	   		console.log(brushStart, brushEnd)
+	   		console.log(brushStart, brushend)
 	   		var processIDList = [];
 
 	   		for(var i = brushStart; i < brushEnd; i++){
@@ -167,7 +247,7 @@ function Histogram(args){
 
 		var xAxisLine = svg.append("g")
 					  .attr("class", "x axis")
-					  .attr("transform", "translate(0," + height + ")")
+					  .attr("transform", "translate(0," + histogramHeight + ")")
 					  .call(xAxis);
 
 		var yAxisLine = svg.append("g")
@@ -209,6 +289,151 @@ function Histogram(args){
 	                       .style('font-family', 'sans-serif')
 	                       .style('font-weight', 'lighter');	
 
+
+	    var rankLineScale = d3.scale.linear().domain([0, data.length]).range([0, width]);
+	    // var rankLinesG = svg.append('g');
+	    freq.forEach(function(fregVal, idx){
+	    	if(binContainsProcID[idx] != null){
+	    		var rankLinesG = svg.append('g')
+	    							.attr('class', "binRank bin_" + idx)
+	    							.attr('data-name', idx);
+		    	var processIDs = binContainsProcID[idx];
+
+		    	processIDs.sort(function(a,b){
+		    		return a - b;
+		    	});
+
+		  //   	var constData = processIDs.slice();
+		  //   	var a=0;
+		  //   	var groupArray = [];
+		  //   	cons(constData[0], 1);
+		  //   	console.log(constData);
+		  //   	console.log(groupArray);
+
+		  //   	//group process ids into consecutive group
+				// function cons(s,t){
+				//   if(s+1==constData[t]){
+				// 	    s=constData[t];
+				// 	    t=t+1;
+				// 	    cons(s,t);
+				// 	}
+				// 	else{
+				//     	print(a,t-1);
+				// 	}
+				// }
+
+				// function print(k,t){
+				//     display(k,t);
+				//     t++;
+				//     a=t;
+				//     start=constData[t];
+				// 	if(t<constData.length){
+				// 		cons(start,t+1);
+				// 	}
+				// }
+				// function display(k,t){
+				// 	var temp = [];
+				//     if(k!=t){
+				//     	// console.log(constData[k]+'-'+constData[t]);
+				//     	temp.push(constData[k]);
+				//     	temp.push(constData[t]);
+				//     }
+				// 	else{
+				//     	// console.log(constData[k]);
+				//     	temp.push(constData[k]);
+				// 	}
+				// 	groupArray.push(temp);
+				// 	// console.log(temp)
+				// }
+
+				var groupArray = groupProcess(processIDs)["array"];
+
+		    	var binWidth = xScale.rangeBand();
+		    	var widthPerRank = binWidth / processIDs.length;
+		    	var binLocation = xScale(idx);
+		    	// console.log(widthPerRank);
+		    	var cumulativeBinSpace = 0;
+		    	groupArray.forEach(function(group){
+		    		var line;
+		    		if(group.length == 1){
+		    			var start = group[0];
+		    			var end = start+1;
+		    			var topX1 = cumulativeBinSpace + binLocation;
+		    			var topX2 = cumulativeBinSpace + binLocation + ( 1 ) * widthPerRank;
+
+		    			var botX3 = rankLineScale(start);
+		    			var botX4 = rankLineScale(start);
+
+		    			var topY = height - histogramOffset;
+		    			var botY = height;
+		    			cumulativeBinSpace = cumulativeBinSpace + ( 1 ) * widthPerRank;
+
+		    			line = "M" + topX1 + " " + topY
+		    						+ "L " + topX2 + " " + topY
+		    						+ "L " + botX4 + " " + botY
+		    						+ "L " + botX3 + " " + botY;		
+		    		}
+		    		else{
+		    		// 	console.log(group);
+		    			var start = group[0];
+		    			var end = group[1];
+
+		    			var topX1 = cumulativeBinSpace + binLocation;
+		    			var topX2 = cumulativeBinSpace + ( end - start + 1 ) * widthPerRank + binLocation;
+		    			console.log(cumulativeBinSpace, ( end - start + 1 ) * widthPerRank, start, end)
+		    			var botX3 = rankLineScale(start);
+		    			var botX4 = rankLineScale(end);
+
+		    			var topY = height - histogramOffset;
+		    			var botY = height;
+
+		    			cumulativeBinSpace = cumulativeBinSpace + ( end - start + 1 ) * widthPerRank;
+
+		    			line = "M" + topX1 + " " + topY
+		    						+ "L " + topX2 + " " + topY
+		    						+ "L " + botX4 + " " + botY
+		    						+ "L " + botX3 + " " + botY;
+		    		}
+
+					rankLinesG.append('path')
+		    					.attr('d', line)
+		    					.attr('class', "lineRank_" + idx)
+		    					.style("fill", function(d){
+				    				return "grey";
+				    			})
+				    			.style('fill-opacity', 0.4);    
+		    	})
+	    	}
+	    })
+
+	    var rankLineAxis = d3.svg.axis()
+		    .scale(rankLineScale)
+		    .orient("bottom")
+		    // .outerTickSize(0)
+		    .ticks(10)
+		    .tickFormat(function(d, i){
+	     		return d;		    	
+		    });
+
+		var rankLineAxisLine = svg.append("g")
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + (height - 0) + ")")
+			.call(rankLineAxis);
+
+	    rankLineAxisLine.selectAll('path')
+	                        .style("fill", "none")
+	                        .style("stroke", "black")
+	                        .style("stroke-width", "1px");
+	    rankLineAxisLine.selectAll('line')
+	                        .style("fill", "none")
+	                        .style("stroke", "#000")
+	                        .style("stroke-width", "1px")
+	                        .style("opacity", 0.5);
+	    rankLineAxisLine.selectAll("text")
+	                       .style('font-size', '9px')
+	                       .style('font-family', 'sans-serif')
+	                       .style('font-weight', 'lighter');	
+
 	}
 
 	this.setContainerWidth = function(newWidth){
@@ -225,10 +450,69 @@ function Histogram(args){
 
 	this.reDraw = function(){
 		$(containerID).empty();
+		histogramOffset = Math.floor( height / 3 );
 
+		histogramHeight = height - histogramOffset;
 		visualize();
 	}
 
 	visualize();
+
+	//give an array of ids, group the ids into cosecutive group
+	//return a string version and an array version
+	//stolen from this: https://gist.github.com/XciA/10572206
+	function groupProcess(processIDs){
+    	var constData = processIDs.slice();
+    	var a=0;
+    	var groupArrayStr = "[ ";
+    	var groupArray = [];
+    	var first = true;
+    	cons(constData[0], 1);
+		function cons(s,t){
+		  if(s+1==constData[t]){
+			    s=constData[t];
+			    t=t+1;
+			    cons(s,t);
+			}
+			else{
+		    	print(a,t-1);
+			}
+		}
+
+		function print(k,t){
+		    display(k,t);
+		    t++;
+		    a=t;
+		    start=constData[t];
+			if(t<constData.length){
+				cons(start,t+1);
+			}
+		}
+		function display(k,t){
+			var string = "";
+			var temp = [];
+		    if(k!=t){
+		    	// console.log(constData[k]+'-'+constData[t]);
+		    	string = '[' + constData[k]+'-'+constData[t] +']'
+		    	temp.push(constData[k]);
+		    	temp.push(constData[t]);
+		    }
+			else{
+		    	// console.log(constData[k]);
+		    	string = '[' + constData[k] + ']'
+		    	temp.push(constData[k]);
+			}
+			// groupArray.push(temp);
+			// console.log(temp)
+			if(!first){
+				groupArrayStr += ', '
+			}
+			groupArrayStr += string;
+			groupArray.push(temp);
+			first = false;
+		}
+		groupArrayStr += ' ]';
+		return {"string": groupArrayStr, "array" : groupArray};		
+	}
 
 }

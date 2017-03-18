@@ -109,6 +109,7 @@ var exit;
 var nodeArray;
 var sanKeyMetricDataLM;
 
+
 var sankeyData;
 var nodeRemove;
 
@@ -118,6 +119,8 @@ var splitByParentList = [];
 
 var entryExitDataNodeSplit;
 var nodePaths;
+
+var functionList;
 
 var options = {
   mode: 'text',
@@ -131,6 +134,7 @@ var date1;
 var date2;
 
 var staticGraph; //this is the static graph we can load upond page refresh;
+var staticFunctionList;
 
 nodeMetricReader.on('line', function(line){
 	var myOBJ = JSON.parse(line);
@@ -163,6 +167,7 @@ function sankeySplitNodeCallBack(data){
 	var keepEdges = data["keepEdges"];
 	var nodeList = data["nodeList"];
 	var keepEdges = data["keepEdges"];
+	staticFunctionList = data["functionList"];
 
 	var connectionInfo = data["connectionInfo"];
 
@@ -206,6 +211,8 @@ app.get('/', function(req, res){
 	splitByParentList = [];
 	procIDArray = [];
 
+	functionList = staticFunctionList;
+
 	res.sendFile(__dirname + '/index.html');
 });
 
@@ -231,7 +238,12 @@ app.get('/getSankey', function(req, res){
 
 	// var temp = {"nodes" : staticGraph["nodes"], "edges" : staticGraph["edges"]};
 	// fs.writeFileSync("nodeEdgeTest.json", JSON.stringify(temp));
-	res.json(staticGraph);
+	procIDArray = [];
+	splitByParentList = [];
+	sankeyData = staticGraph;
+	var hisData = computeHistogram();
+	var resData = {"graph" : staticGraph, "histogramData" :  hisData}
+	res.json(resData);
 })
 
 app.get('/splitNode', function(req, res){
@@ -276,59 +288,35 @@ app.get('/getList', function(req, res){
 
 //this get the functions of more than one lms
 app.get('/getLists', function(req, res){
-	var specialIDs = req.query["specialIDs"];
+	var specialID = req.query["specialID"];
+	if(functionList[specialID] != null){
+		var functionListResult = {};
+		var functionListObject = functionList[specialID];
+		functionListObjectKeys = Object.keys(functionListObject);
+		functionListObjectKeys.forEach(function(procedureID){
+			if(functionListResult[procedureID] == null){
+				functionListResult[procedureID] = {
+					'procID' : procedureID,
+					'name' : procedureTable[procedureID],
+					'value' : 0
+				}
+			}
 
-	var functionLists = {};
-
-	specialIDs.forEach(function(specialID){
-		functionLists[specialID] = [];
-		var functionlist = entryExitDataNodeSplit[specialID];
-		if(functionlist["enter"] != null){
-			functionlist["enter"].forEach(function(func){
-				var name = procedureTable[func];
-
-				console.log(functionlist["entryNodeID"])
-
-				var nodesList = functionlist["entryNodeID"][func];
-
-			    var sumsInc = [];
-    			var sumsExc = [];
-    			var nodeIDs = [];
-				nodesList.forEach(function(node, idx){
-					nodeIDs.push(node);
-				});
-
-				nodeIDs.forEach(function(id, idx){
-			    	var runTimes = nodeMetric[id];
-
-			    	if(idx == 0){
-			    		sumsInc = runTimes["inc"];
-			    		sumsExc = runTimes["exc"];
-			    	}
-			    	else{
-			    		sumsInc = sumsInc.SumArray(runTimes["inc"]);
-			    		sumsExc = sumsExc.SumArray(runTimes["exc"]);
-			    	}					
+			var nodeIDList = functionList[specialID][procedureID];
+			nodeIDList.forEach(function(nodeID){
+				var incTime = nodeMetric[nodeID]["inc"];
+				incTime.forEach(function(val, idx){
+					functionListResult[procedureID]["value"] += val;
 				})
-
-				var incSum = 0;
-				sumsInc.forEach(function(val){
-					incSum += val;
-				})
-				var excSum = 0;
-				sumsExc.forEach(function(val){
-					excSum += val;
-				})
-
-				var tempObj = {'name' : name, "procID" : func, "incTime" : incSum, "excTime": excSum};
-
-				functionLists[specialID].push(tempObj);
-
 			})
-		}
-	})
+		});
 
-	res.json( functionLists );
+		res.json(functionListResult)
+	}
+	else{
+		console.log("Cannot find function list for", specialID);
+		res.json({})
+	}
 })
 
 app.get('/getRuntimeOfNode', function(req, res){
@@ -412,7 +400,7 @@ app.get('/getHistogramScatterData', function(req, res){
 	var sankeyID = req.query["sankeyID"];	
 	var specialID = req.query["specialID"];
 
-	var node = staticGraph["nodes"][specialID];
+	var node = sankeyData["nodes"][specialID];
 	var uniqueNodeIDList = node["uniqueNodeID"];
 	// console.log(node, uniqueNodeIDList);
 
@@ -439,7 +427,7 @@ app.get('/calcEdgeValues', function(req, res){
 	//this could be a problem when there are lots of edges
 	var edgeSet1 = [];
 	var edgeSet2 = [];
-	var tempEdges = staticGraph["edges"].slice();
+	var tempEdges = sankeyData["edges"].slice();
 
 	var processID = req.query["processIDList"];
 	var processIDList = [];
@@ -451,27 +439,44 @@ app.get('/calcEdgeValues', function(req, res){
 	tempEdges.forEach(function(edge){
 		var idList = edge["nodeIDList"];
 		var edgeValueForBrush = 0;
+		
 		var edgeValueForNonBrush = 0;
+		
+
 		idList.forEach(function(id){
 			var runTime = nodeMetric[id]["inc"];
+			var numberOfIDInBrush = 0;
+			var numberOfIDnotBrush = 0;
+			var tempValBrush = 0;
+			var tempValNonBrush = 0;
 			// processIDList.forEach(function(procid){
 			// 	edgeValue += runTime[procid];
 			// })
 			// console.log(runTime);
 			runTime.forEach(function(val, idx){
 				if( processIDList.indexOf(idx) > -1 ){
-					edgeValueForBrush += val;
+					// edgeValueForBrush += val;
+					numberOfIDInBrush += 1;
+					tempValBrush += val;
 				}
 				else{
-					edgeValueForNonBrush += val;
+					// edgeValueForNonBrush += val;
+					numberOfIDnotBrush += 1;
+					tempValNonBrush += val;
 				}
 			})
+			edgeValueForBrush += tempValBrush / Math.max(numberOfIDInBrush, 1);
+			edgeValueForNonBrush += tempValNonBrush / Math.max(numberOfIDnotBrush, 1);
+
 		})
 		var tempE1 = JSON.parse(JSON.stringify(edge));
 		tempE1["value"] = edgeValueForBrush;
+
 		edgeSet1.push(tempE1);
+
 		var tempE2 = JSON.parse(JSON.stringify(edge));
 		tempE2["value"] = edgeValueForNonBrush;
+
 		edgeSet2.push(tempE2);
 	});	
 
@@ -507,6 +512,7 @@ function splitNodeCallBack2(data){
 	var keepEdges = data["keepEdges"];
 	var nodeList = data["nodeList"];
 	var keepEdges = data["keepEdges"];
+	functionList = data["functionList"];
 
 	var connectionInfo = data["connectionInfo"];
 
@@ -523,5 +529,82 @@ function splitNodeCallBack2(data){
 	// var temp = {"nodes" : sankeyData["nodes"], "edges" : sankeyData["edges"]};
 	// fs.writeFileSync("nodeEdgeTest2.json", JSON.stringify(temp));
 
-	res_global.json(sankeyData);	
+	var hisData = computeHistogram();
+	var resData = {"graph" : sankeyData, "histogramData" :  hisData}
+
+	// res_global.json(sankeyData);
+	res_global.json(resData);	
 }
+
+//this function compute a mini histogram for each speical ID
+function computeHistogram(){
+	var sankeyNodes = sankeyData["nodes"];
+
+	var histogramData = {};
+	var numbOfBins = 20;
+	var maxFreq = 0;
+	var globalXvals;
+
+	var specialIDs = Object.keys(sankeyNodes);
+	specialIDs.forEach(function(specialID){
+		var sankNode = sankeyNodes[specialID];
+		var uniqueNodeIDList = sankNode["uniqueNodeID"];
+		var tempInc = [];
+		//calculate runtime for this sank node
+		uniqueNodeIDList.forEach(function(nodeID, idx){
+			var incRuntime = nodeMetric[parseInt(nodeID)]["inc"];
+			if(idx == 0){
+				tempInc = incRuntime;
+			}
+			else{
+				tempInc = tempInc.SumArray( incRuntime );
+			}
+		});	
+
+		//This section will bin the data////
+
+		var dataSorted = tempInc.slice();
+		dataSorted.sort(function(a,b){
+			return a - b;
+		});
+		var dataMin = dataSorted[0];
+		var dataMax = dataSorted[ dataSorted.length - 1 ];
+
+		var dataWidth = ((dataMax - dataMin) / numbOfBins);
+		var freq = [];
+		var binContainsProcID = {};
+		var xVals = [];
+		for(var i = 0; i < numbOfBins; i++){
+			xVals.push(i);
+			freq.push(0);
+		};		
+
+		tempInc.forEach(function(val, idx){
+			var pos = Math.floor( (val - dataMin) / dataWidth );
+			if(pos >= numbOfBins){
+				pos = numbOfBins - 1;
+			}
+			freq[pos] += 1;
+			maxFreq = Math.max(maxFreq, freq[pos]);
+		});
+
+
+		histogramData[specialID] = {
+			"numbOfBins" : numbOfBins,
+			"freq" : freq,
+			"xVals" : xVals
+		}
+		globalXvals = xVals;
+
+	})
+
+	return {"histogramData" : histogramData, "maxFreq" : maxFreq, "globalXvals" : globalXvals};
+}
+
+
+
+
+
+
+
+

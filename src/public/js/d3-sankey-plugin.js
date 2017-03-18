@@ -6,7 +6,13 @@ function d3sankey() {
       size = [1, 1],
       nodes = [],
       links = [],
-      xSpacing = 1;
+      xSpacing = 1,
+      referenceValue = 0;
+
+
+  var widthScale;
+
+  var minDistanceBetweenNode = 0;
 
   sankey.nodeWidth = function(_) {
     if (!arguments.length) return nodeWidth;
@@ -64,6 +70,12 @@ function d3sankey() {
     return sankey;    
   }
 
+  sankey.setReferenceValue = function(_){
+    if(!arguments.length) return referenceValue;
+    referenceValue = +_;
+    return sankey;
+  }
+
   sankey.link = function() {
     // var curvature = .5;
     var curvature = .4;
@@ -114,6 +126,9 @@ function d3sankey() {
     nodes.forEach(function(node) {
       node.sourceLinks = [];
       node.targetLinks = [];
+      node["maxLinkVal"] = 0;
+      node["minLinkVal"] = 1000000000000000;
+
     });
 
     // console.log(nodes[254]);
@@ -128,7 +143,28 @@ function d3sankey() {
       source.sourceLinks.push(link);
       // console.log(source, target, link.target, nodes[link.target]);
       target.targetLinks.push(link);
+
+      target["maxLinkVal"] = Math.max(target["maxLinkVal"], link["value"]);
+      source["maxLinkVal"] = Math.max(source["maxLinkVal"], link["value"]);
+
+      target["minLinkVal"] = Math.min(target["minLinkVal"], link["value"]);
+      source["minLinkVal"] = Math.min(source["minLinkVal"], link["value"]);
+
     });
+
+    nodes.forEach(function(node){
+        var maxOfInandOut = Math.min(node.sourceLinks.length, node.targetLinks.length);
+
+        if(node.sourceLinks.length == 0){
+            //it has no outgoing links
+            maxOfInandOut = node.targetLinks.length;
+        }
+
+        // var maxOfInandOut = node.sourceLinks.length + node.targetLinks.length;
+
+        node["maxLinks"] = maxOfInandOut;
+    })
+
   }
 
   // Compute the value (size) of each node by summing the associated links.
@@ -185,6 +221,16 @@ function d3sankey() {
       ++x;
     }
 
+    
+    minDistanceBetweenNode = nodeWidth * 2;
+
+    var minX;
+    if(x < 5){
+       widthScale = d3.scale.pow().domain([x,x + 1]).range([0, size[0]]);
+    }
+
+    widthScale = d3.scale.pow().domain([4,x]).range([4*minDistanceBetweenNode, size[0]]).exponent(2);
+
     //
     moveSinksRight(x);
     scaleNodeBreadths((size[0] - nodeWidth) / (x - 1));
@@ -211,15 +257,30 @@ function d3sankey() {
 
   function scaleNodeBreadths(kx) {
     nodes.forEach(function(node) {
-      node.x *= kx;
-      // if(node.targetLinks.length <= 1){
-      //   node.x = node.x * (nodeWidth + 10) ;
-      // }
-      // else{
 
-      //    node.x = node.targetLinks.length * 100 + node.x * (nodeWidth + 10);
-      // }
+      node.x *= kx;
+
+      var nodeX = node.x;
+
+      if(nodeX < 4){
+        nodeX = nodeX * minDistanceBetweenNode;
+      }
+      else{
+        nodeX = widthScale(nodeX);
+      }
+
+      // node.x = nodeX;
+
+    //   if(node.targetLinks.length <= 1){
+    //     node.x = node.x * (nodeWidth + 10) ;
+    //   }
+    //   else{
+
+    //      node.x = node.targetLinks.length * 100 + node.x * (nodeWidth + 10);
+    //   }
+
     });
+
   }
 
   function computeNodeDepths(iterations) {
@@ -241,8 +302,22 @@ function d3sankey() {
 
     function initializeNodeDepth() {
       var ky = d3.min(nodesByBreadth, function(nodes) {
-        return (size[1] - (nodes.length - 1) * nodePadding) / d3.sum(nodes, value);
+        // console.log(nodes, d3.sum(nodes, value));
+
+        var divValue = 1;
+        if(referenceValue > 0){
+          divValue = referenceValue;
+        }
+        else{
+          divValue = d3.sum(nodes, value);
+        }
+
+        return (size[1] - (nodes.length - 1) * nodePadding) / divValue;
       });
+
+      console.log("ky is", ky);
+
+      //need to change the scaling here
 
       nodesByBreadth.forEach(function(nodes) {
         nodes.forEach(function(node, i) {
@@ -325,7 +400,14 @@ function d3sankey() {
     function ascendingDepth(a, b) {
       // return a.y - b.y;
       // return b.y - a.y;
-      return b["runTime"] - a["runTime"];
+      // return b["runTime"] - a["runTime"];
+
+      if(a["maxLinks"] <= b["maxLinks"]){
+        return a["maxLinks"] - b["maxLinks"];
+      }
+      else{
+        return a["minLinkVal"] - b["minLinkVal"];
+      }
     }
   }
 
@@ -333,6 +415,13 @@ function d3sankey() {
     nodes.forEach(function(node) {
       node.sourceLinks.sort(ascendingTargetDepth);
       node.targetLinks.sort(ascendingSourceDepth);
+
+      // node.sourceLinks.sort(descendingTargetDepth);
+      // node.targetLinks.sort(descendingSourceDepth);
+
+      // node.sourceLinks.sort(descendingEdgeValue);
+      // node.targetLinks.sort(ascendingEdgeValue);
+
     });
     nodes.forEach(function(node) {
       var sy = 0, ty = 0;
@@ -353,6 +442,23 @@ function d3sankey() {
     function ascendingTargetDepth(a, b) {
       return a.target.y - b.target.y;
     }
+
+    function descendingTargetDepth(a, b){
+      return b.target.y - a.target.y;
+    }
+
+    function descendingSourceDepth(a,b){
+      return b.source.y - a.source.y;
+    }
+
+    function ascendingEdgeValue(a, b){
+      return a["value"] - b["value"];
+    }
+
+    function descendingEdgeValue(a, b){
+      return b["value"] - a["value"];
+    }    
+
   }
 
   function center(node) {
