@@ -61,6 +61,8 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
 
     var procIDToLMIDMap = {};
 
+    var functionList = {};
+
     function parseLoadModule(xmlLoadModNode){
         xmlLoadModNode.childNodes().forEach(function(loadMod){
             var id = parseInt(loadMod.attr('i').value());
@@ -900,6 +902,17 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
         	console.log("you fucked up, the current level is: " + level + ", the current specialID is: " + specialID + ", the parent specialID is: " + parentNode["specialID"] );
         }
 
+        //////add node into its function list, only add if node type is PR or PF, ie function call
+        if(node.Type == "PR" || node.Type == "PF"){
+
+            if(functionList[node.specialID] == null){
+                functionList[node.specialID] = {};
+            }
+            if(functionList[node.specialID][node.procedureID] == null){
+                functionList[node.specialID][node.procedureID] = [];
+            }
+            functionList[node.specialID][node.procedureID].push(node.nodeID);
+        }
     }
 
     //this function add in new information for the entry exit data
@@ -939,7 +952,8 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
         "entryExitData" : entryExitData,
         "nodePaths" : nodePaths,
         "connectionInfo" : connectionInfo,
-        "procedureTabel" : procedureTable,
+        "procedureTable" : procedureTable,
+        "functionList" : functionList
 	};
 
 	callBack(returnData);    

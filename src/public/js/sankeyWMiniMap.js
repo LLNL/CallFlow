@@ -11,6 +11,7 @@ function Sankey(args){
 		margin = args.margin || {top: 10, right: 30, bottom: 10, left: 10},
 		data = args.data,
 		toolTipData = args.toolTipData,
+		histogramData = args.histogramData,
 		// spinner = args.spinner,
 		clickCallBack = args.clickCallBack;
 
@@ -100,12 +101,15 @@ function Sankey(args){
 	var svg;
 	var sankey;
 	var xSpacing = 1;
-	var ySpacing = 24;
-	var nodeWidth = 17;
+	var ySpacing = 50;
+	var nodeWidth = 50;
 	var graph;
 	var graph2;
 
 	var treeHeight = height;
+
+	var minimapXScale = d3.scale.ordinal().domain(histogramData["globalXvals"]).rangeRoundBands([0, nodeWidth], 0.05);
+	var minimapYScale = d3.scale.linear().domain([0, histogramData["maxFreq"]]).range([ySpacing - 5, 5]);
 
 	var zoom = d3.behavior.zoom()
 				.scaleExtent([0.1,10])
@@ -146,10 +150,13 @@ function Sankey(args){
 	var svgBase = svgO.append('g');
 	
 	svg = svgBase.append('g')
-					.attr('transform', "translate(" + 0 + "," + (0) +  ")")
+					.attr('transform', "translate(" + 0 + "," + (nodeWidth + 10) +  ")")
 
 	var defs = svg.append("defs");
 	var links = svg.append("g");
+
+	var histograms = svg.append('g');
+
 	var nodes = svg.append("g");
 	/////////////////////////////////////////////////////////////////////////////////////
 
@@ -207,6 +214,10 @@ function Sankey(args){
 	/////////////////////////////////////////////////////////////////////////////////////
 
 	function visualize(){
+
+		//remove all histograms
+		histograms.selectAll("*").remove();
+
 		// Set the sankey diagram properties
 		sankey = d3sankey()
 			.nodeWidth(nodeWidth)
@@ -558,6 +569,51 @@ function Sankey(args){
 		        // return d.color = color(d["lmID"]);
 		    })	    	
 	    ////////////////////////////////////
+
+
+	    //add in histogram
+	    graph.nodes.forEach(function(node){
+	    	console.log(node, node.specialID, histogramData);
+	    	var histoData = histogramData["histogramData"][node.specialID];
+
+	    	var myXvals = histoData["xVals"];
+	    	var myFreq = histoData["freq"];
+
+	    	var myHist = histograms.append('g')
+	    							.attr('transform', function(){
+							    		return "translate(" + node.x + "," + (node.y - ySpacing) + ")";
+							    	});
+			myHist.selectAll('.histobars')
+					.data(myFreq)
+					.enter()
+					.append('rect')
+					.attr('class', 'histobars')
+		             .attr('x', function(d, i){
+		             	return minimapXScale(myXvals[i]);
+		             })
+		             .attr('y', function(d){
+		             	// height - y(d);
+		             	return minimapYScale(d);
+		             })
+		             .attr('width', function(d){
+		             	// return width/hData.length - 1.0;
+		             	return minimapXScale.rangeBand();
+		             })
+		             .attr('height', function(d){
+		             	return (ySpacing - 5) - minimapYScale(d);
+		             })
+		             .attr('fill', 'steelblue')
+		             .attr('opacity', 1)
+		             .attr('stroke-width', function(d,i){
+		 
+		             	return "0.2px";
+		             	
+		             })
+		             .attr('stroke', function(d,i){
+		             	return "black"		             	
+		             });
+	    })
+
 
 		function showLegend(){
 			var colLegend = svgO.append('g');
@@ -1032,6 +1088,7 @@ function Sankey(args){
 		data["nodes"] = newData["nodes"];
 		data["links"] = newData["links"];
 		toolTipData = newData["toolTipData"];
+		histogramData = newData["histogramData"];
 
 		secondGraphNodes = [];
 

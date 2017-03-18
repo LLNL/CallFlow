@@ -40,6 +40,7 @@
 		var spinner;
 		var target;
 
+		//configuration for the layout of the page
 		var config = {
 			settings: {
 				showCloseIcon : false,
@@ -83,13 +84,13 @@
 									isClosable: false,
 									title: "Node Info"
 								},								
-								{
-									type: 'component',
-									componentName: 'testComponent',
-									componentState: {id : "hist_view" },
-									isClosable: false,
-									title: "Histogram View"
-								},
+								// {
+								// 	type: 'component',
+								// 	componentName: 'testComponent',
+								// 	componentState: {id : "hist_view" },
+								// 	isClosable: false,
+								// 	title: "Histogram View"
+								// },
 								{
 									type: 'component',
 									componentName: 'testComponent',
@@ -108,12 +109,18 @@
 							},
 							{
 
-								type: 'component',
-								componentName: 'testComponent',
-								// id: 'control',
-								componentState: {id : "lm_view" },
-								isClosable: false,
-								title: "LM View"								
+								// type: 'component',
+								// componentName: 'testComponent',
+								// // id: 'control',
+								// componentState: {id : "lm_view" },
+								// isClosable: false,
+								// title: "LM View"		
+
+									type: 'component',
+									componentName: 'testComponent',
+									componentState: {id : "hist_view" },
+									isClosable: false,
+									title: "Histogram View"														
 							}
 						]
 					},
@@ -158,9 +165,14 @@
 
 			if(sankeyVis){
 				// console.log(d3.select("#procedure_view svg"));
-				d3.select("#procedure_view svg")
-					.attr("width", $("#procedure_view").width() )
-					.attr("height", $("#procedure_view").height() )
+				// d3.select("#procedure_view svg")
+				// 	.attr("width", $("#procedure_view").width() )
+				// 	.attr("height", $("#procedure_view").height() )
+
+				sankeyVis.updateSize({'width' : $("#procedure_view").width(),
+									  'height' : $("#procedure_view").height() })
+
+
 
 			}	
 
@@ -265,6 +277,8 @@
 		var globalNodes;
 		var globalEdges;
 
+		var rootRunTime = 0;
+
 		function startVis(){
 			getNodeMetrics();
 			getSankey(0);
@@ -291,18 +305,18 @@
 		}
 
 		function getNodeMetrics(){
-			$.ajax({
-	            type:'GET',
-	            contentType: 'application/json',
-	            dataType: 'json',
-	            url: '/getNodeMetrics',
-	            success: function(metricData){
-	            	nodeMetrics = metricData;
-	            },
-	            error: function(){
-	            	console.log("There was problem with getting the metric data");
-	            }	
-			});				
+			// $.ajax({
+	  //           type:'GET',
+	  //           contentType: 'application/json',
+	  //           dataType: 'json',
+	  //           url: '/getNodeMetrics',
+	  //           success: function(metricData){
+	  //           	nodeMetrics = metricData;
+	  //           },
+	  //           error: function(){
+	  //           	console.log("There was problem with getting the metric data");
+	  //           }	
+			// });				
 		}
 
 		function getSankey(lmID){
@@ -316,7 +330,8 @@
 	                //somecoment
 	            	console.log(newData);
 	            	console.log('done with getting data');
-	            	var data = newData;
+	            	var data = newData["graph"];
+	            	var histogramData = newData["histogramData"];
 	            	var offSet = 0;
 	            	nodes = data["nodes"];
 	            	edges = data["edges"];
@@ -343,6 +358,13 @@
 						return a["sourceID"] - b["targetID"];
 					})
 
+					edges.forEach(function(edge){
+						console.log(edge["sourceLabel"], )
+						if(edge["sourceLabel"] == "LM0"){
+							rootRunTime += edge["value"];
+						}
+					})
+
 	            	edgeList = data["edgeList"];
 	            	nodeList = data["nodeList"];
 
@@ -357,6 +379,7 @@
 						margin: {top: 10, right: 10, bottom: 10, left: 10},
 						data: {"nodes": myNodes, "links": edges},
 						toolTipData : {"edgeList" : edgeList, "nodeList": nodeList},
+						histogramData : histogramData,
 						// spinner: spinner,
 						clickCallBack: nodeClickCallBack
 					})	
@@ -365,6 +388,8 @@
 
 					d3.selectAll('.node text').style('opacity', 1);
 					console.log('done with layout');
+
+					console.log(histogramData);
 	            },
 	            error: function(){
 	            	console.log("There was problem with getting the data");
@@ -421,8 +446,8 @@
 
 			nodeInfo.html(
 				"Name : " + node.name +
-				"<br> Inclusive Time: " + node['inTime'] + 
-				"<br> Exclusive Time: " + node["exTime"] + 
+				"<br> Incoming: " + node['in'] + 
+				"<br> Outgoing: " + node["out"] + 
 				// "<br> Imbalance Percent: " + (node["imPerc"] * 100).toFixed(2) + "%"
 				""
 				);
@@ -430,6 +455,7 @@
 			var uniqueNodeIDList = node["uniqueNodeID"];
 			console.log(node);
 			getHistogramScatterData(node);
+
 			// var tempInc = [];
 			// var tempExc = [];
 			// uniqueNodeIDList.forEach(function(nodeID, idx){
@@ -448,6 +474,8 @@
 			// showHistogram(node);
 			// showScatterPlot();
 
+
+
 			var tempList = {};
 			var nameToIDMap = res["nameToIDMap"];
 			fromProcToProc.forEach(function(fromTo){
@@ -459,13 +487,21 @@
 			});
 			// console.log(nameToIDMap)
 			// console.log(JSON.stringify(tempList));
-			var tempList2 = [];
-			Object.keys(tempList).forEach(function(func){
-				// console.log(tempList[func]);
-				tempList2.push(tempList[func]);
-			})
-			listData = tempList2;
-			displayList();
+			// var tempList2 = [];
+			// Object.keys(tempList).forEach(function(func){
+			// 	// console.log(tempList[func]);
+			// 	console.log(tempList[func]["value"],  rootRunTime / 100)
+			// 	if(tempList[func]["value"] > rootRunTime * (1/100)){
+			// 		tempList2.push(tempList[func]);
+			// 	}
+				
+			// })
+			// listData = tempList2;
+
+
+			// displayList();
+
+			getList(node);
 
 
 			var parentProcList = {};
@@ -495,13 +531,22 @@
 	            type:'GET',
 	            contentType: 'application/json',
 	            dataType: 'json',
-	            url: '/getList',
-	            data: {"nodeID" : node.myID, "specialID" : node.specialID , "nodeLevel" : node.oldLevel, "offset": (node.oldLevel - node.level), "name" : node.name},
-	            success: function(newData){
+	            url: '/getLists',
+	            data: {"specialID" : node["specialID"]},
+	            success: function(procedureListData){
 
 	            	console.log("done with getting list of functions");
-					
-	            	listData = newData;
+					console.log(procedureListData);
+					listData = [];
+
+					var procIDs = Object.keys(procedureListData);
+					procIDs.forEach(function(procedureID){
+						if(procedureListData[procedureID]['value'] >= rootRunTime * (1/100)){
+							listData.push(procedureListData[procedureID]);
+						}
+					})
+
+	            	// listData = newData;
 	            	displayList();
 	            },
 	            error: function(){
@@ -741,7 +786,7 @@
 	                //somecoment
 	            	console.log(newData);
 	            	console.log('done with getting data');
-	            	var data = newData;
+	            	var data = newData["graph"];
 	            	var offSet = 0;
 	            	nodes = data["nodes"];
 	            	edges = data["edges"];
@@ -784,7 +829,8 @@
 
 					var remapResult = remapID(myNodes, edges, labelList);
 					var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList}
-					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData});
+					var histogramData = newData["histogramData"];
+					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData});
 					d3.selectAll('.node text').style('opacity', 1);
 					spinner.stop();
 
@@ -815,7 +861,7 @@
 					
 	            	console.log(newData);
 	            	console.log('done with getting data');
-	            	var data = newData;
+	            	var data = newData["graph"];
 	            	var offSet = 0;
 	            	nodes = data["nodes"];
 	            	edges = data["edges"];
@@ -857,7 +903,8 @@
 
 					var remapResult = remapID(myNodes, edges, labelList);
 					var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList}
-					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData});
+					var histogramData = newData["histogramData"];
+					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData});
 					d3.selectAll('.node text').style('opacity', 1);
 
 					spinner.stop();
@@ -949,7 +996,7 @@
 	            data: {"processIDList" : processIDList},
 	            success: function(edgeSets){
 
-	            	edges = edgeSets["brush"];
+	            	// edges = edgeSets["brush"];
 		        	var myNodes = [];
 
 		        	var labelList = Object.keys(nodes);
@@ -961,21 +1008,23 @@
 		        	console.log(edges);
 
 					// console.log(myNodes);
-					$('#procedure_view').empty();
-					sankeyVis = new Sankey({
-						ID: "#procedure_view",
-						width: $("#procedure_view").width(),
-						height: $("#procedure_view").height(),
-						// width: width,
-						// height: height,
-						margin: {top: 10, right: 10, bottom: 10, left: 10},
-						data: {"nodes": myNodes, "links": edges},
-						toolTipData : {"edgeList" : edgeList, "nodeList": nodeList},
-						// spinner: spinner,
-						clickCallBack: nodeClickCallBack
-					})	
+					// $('#procedure_view').empty();
+					// sankeyVis = new Sankey({
+					// 	ID: "#procedure_view",
+					// 	width: $("#procedure_view").width(),
+					// 	height: $("#procedure_view").height(),
+					// 	// width: width,
+					// 	// height: height,
+					// 	margin: {top: 10, right: 10, bottom: 10, left: 10},
+					// 	data: {"nodes": myNodes, "links": edges},
+					// 	toolTipData : {"edgeList" : edgeList, "nodeList": nodeList},
+					// 	// spinner: spinner,
+					// 	clickCallBack: nodeClickCallBack
+					// })	
 
-					sankColor = sankeyVis.colorScale;				
+					// sankColor = sankeyVis.colorScale;		
+
+					sankeyVis.changeProcessSelect({"brush": edgeSets["brush"], "nonBrush" : edgeSets["nonBrush"]});		
 
 					d3.selectAll('.node text').style('opacity', 1);
 	            },
