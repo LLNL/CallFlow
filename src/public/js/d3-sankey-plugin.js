@@ -229,7 +229,7 @@ function d3sankey() {
        widthScale = d3.scale.pow().domain([x,x + 1]).range([0, size[0]]);
     }
 
-    widthScale = d3.scale.pow().domain([4,x]).range([4*minDistanceBetweenNode, size[0]]).exponent(2);
+    widthScale = d3.scale.pow().domain([4,x]).range([4*minDistanceBetweenNode, size[0]]).exponent(.1);
 
     //
     moveSinksRight(x);
@@ -258,7 +258,7 @@ function d3sankey() {
   function scaleNodeBreadths(kx) {
     nodes.forEach(function(node) {
 
-      node.x *= kx;
+      // node.x *= kx;
 
       var nodeX = node.x;
 
@@ -269,7 +269,7 @@ function d3sankey() {
         nodeX = widthScale(nodeX);
       }
 
-      // node.x = nodeX;
+      node.x = nodeX;
 
     //   if(node.targetLinks.length <= 1){
     //     node.x = node.x * (nodeWidth + 10) ;
@@ -321,11 +321,34 @@ function d3sankey() {
 
       nodesByBreadth.forEach(function(nodes) {
         nodes.forEach(function(node, i) {
-          node.y = i;
+
+          var maxY = 0;
+
+          edges.forEach(function(edge){
+            if(edge["targetID"] == node['sankeyID']){
+              if(edge["source"] != null && edge["source"]['y'] != null){
+                maxY = Math.max(maxY, edge["source"]['y']);
+              }
+            }
+          })
+
+          node.y = Math.max(maxY, i);
+          node.parY = maxY;
+           // node.y = i;
           node.dy = node.value * ky;
           // node.dy = node.value;
           // node.dy = node["inTime"] * ky;
         });
+
+        // nodes.sort(function(a,b){
+        //   return a["parY"] - b["parY"];
+        // })
+
+        // nodes.forEach(function(node,i){
+        //   node.y = i;
+        // })
+
+
       });
 
       links.forEach(function(link) {
@@ -402,12 +425,12 @@ function d3sankey() {
       // return b.y - a.y;
       // return b["runTime"] - a["runTime"];
 
-      if(a["maxLinks"] <= b["maxLinks"]){
+      // if(a["maxLinks"] <= b["maxLinks"]){
         return a["maxLinks"] - b["maxLinks"];
-      }
-      else{
-        return a["minLinkVal"] - b["minLinkVal"];
-      }
+      // }
+      // else{
+      //   return a["minLinkVal"] - b["minLinkVal"];
+      // }
     }
   }
 

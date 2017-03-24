@@ -1,4 +1,4 @@
-var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeMetrics, splitByParentList){
+var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeMetrics, splitByParentList, nodeKeep){
 	var fs = require('fs');
     var parser = require('libxmljs');
     var config;
@@ -489,36 +489,58 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
 
     function parseNodes(xmlNode, parentNode, Cid, level){
         var xmlNodeName = xmlNode.name();
+        console.log(xmlNodeName);
 
-        if(xmlNodeName == "SecCallPathProfileData"){
-            counter++;
-            parseSecCallPathProfileData(xmlNode, level);
+        if(xmlNodeName == "SecCallPathProfileData" || 
+            xmlNodeName == "PF" ||
+            xmlNodeName == "C" ||
+            xmlNodeName == "S" ||
+            xmlNodeName == "L" ||
+            xmlNodeName == "Pr"){
+            // console.log(xmlNodeName);
+            var nodeID;
+            if(xmlNodeName == "SecCallPathProfileData"){
+                nodeID = 1;
+            }
+            else{
+                nodeID = parseInt(xmlNode.attr('i').value());
+            }
+
+            // console.log(nodeID, nodeKeep.indexOf(nodeID) > -1)
+
+            if(nodeKeep.indexOf(nodeID) > -1 || xmlNodeName == "C"){
+                if(xmlNodeName == "SecCallPathProfileData"){
+                    counter++;
+                    parseSecCallPathProfileData(xmlNode, level);
+                }
+
+                else if(xmlNodeName == "PF"){
+                    counter++;
+                    parsePF(xmlNode, parentNode, Cid, level);
+                }
+
+                else if(xmlNodeName == "C"){
+                    // counter++;
+                    parseC(xmlNode, parentNode, level);
+                }
+
+                else if(xmlNodeName == "S"){
+                    counter++;
+                    parseLine(xmlNode, parentNode, level);
+                }
+
+                else if(xmlNodeName == "L"){
+                    counter++;
+                    parseLoop(xmlNode, parentNode, level);
+                }
+
+                else if(xmlNodeName == "Pr"){
+                    counter++;
+                    parsePR(xmlNode, parentNode, level);
+                }   
+            } 
+
         }
-
-        else if(xmlNodeName == "PF"){
-            counter++;
-            parsePF(xmlNode, parentNode, Cid, level);
-        }
-
-        else if(xmlNodeName == "C"){
-            // counter++;
-            parseC(xmlNode, parentNode, level);
-        }
-
-        else if(xmlNodeName == "S"){
-            counter++;
-            parseLine(xmlNode, parentNode, level);
-        }
-
-        else if(xmlNodeName == "L"){
-            counter++;
-            parseLoop(xmlNode, parentNode, level);
-        }
-
-        else if(xmlNodeName == "Pr"){
-            counter++;
-            // parsePR(xmlNode, parentNode, level);
-        }    
 
     }   
     
@@ -753,6 +775,7 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
 
         // if(specialID == "LM5687"){
     	// if(specialID == "CLM1"){
+
         if(splitByParentList.indexOf(specialID) > -1){
         	// if(node.parentSpecialID != specialID){
 	        //     specialID = node.parentSpecialID + "-" + specialID;
@@ -763,6 +786,9 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
 	            specialID = "LM" + internalNodeList[node.parentID].oldLoadModuleID + "-" + "LM" + node.oldLoadModuleID;
             	type = "LM" + "-" + "LM";
             	name = loadModuleTable[ internalNodeList[node.parentID].oldLoadModuleID ] + "-" + loadModuleTable[node.oldLoadModuleID];
+                // if(node.parentSpecialID == "CLM8" || node.parentSpecialID == "CLM5"){
+                //     console.log(specialID, internalNodeList[node.parentID].oldLoadModuleID, internalNodeList[node.parentID].Type);
+                // }
         	}
         	// else{
         	// 	nodePath = node["path"];
@@ -791,10 +817,10 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
         			// console.log(nodeID, node.nodeID);
 
         			var parLMID = internalNodeList[ parseInt(nodeID) ].oldLoadModuleID;
-        			if(parseInt(node.nodeID) == 189181){
-        				console.log(parLMID, nodeID, node.loadModuleID, parLMID != node.loadModuleID);
-        				// return;
-        			}        			
+        			// if(parseInt(node.nodeID) == 189181){
+        			// 	console.log(parLMID, nodeID, node.loadModuleID, parLMID != node.loadModuleID);
+        			// 	// return;
+        			// }        			
         			if(parLMID != node.oldLoadModuleID){
         				specialID = "LM" + parLMID + "-" + "LM" + node.oldLoadModuleID;
         				type = "LM" + "-" + "LM";
@@ -802,7 +828,8 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
         				return true;
         			}
         		})
-        	}        	
+        	} 
+
         }
         
 
