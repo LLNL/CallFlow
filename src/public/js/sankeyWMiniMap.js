@@ -227,7 +227,7 @@ function Sankey(args){
 		    // .size([width, height / 4]);
 		    // .size([2200 + 1000, 1500 / 4]);
 		    // .size([2200 + 1000, height])
-		    .size([width * 0.9, treeHeight])
+		    .size([width * 0.9, treeHeight - ySpacing])
 		    .xSpacing(xSpacing)
 		    .setReferenceValue(referenceValue);
 
@@ -410,7 +410,15 @@ function Sankey(args){
 		    .attr('opacity' , 0)
 		    .attr("transform", function (d) {
 		        return "translate(" + d.x + "," + d.y + ")";
-		    });
+		    })
+	     //    .call(d3.behavior.drag()
+		    // .origin(function (d) {
+		    //     return d;
+		    // })
+		    // .on("dragstart", function () {
+		    //     this.parentNode.appendChild(this);
+		    // })
+		    // .on("drag", dragmove));
 
 		// add the rectangles for the nodes
 		node.append("rect")
@@ -495,7 +503,7 @@ function Sankey(args){
 			    d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
 			    sankey.relayout();
 			    link.attr("d", path);
-			    positionGrads();
+			    // positionGrads();
 			};
 
 			function hightLightConnected(g){
@@ -632,6 +640,8 @@ function Sankey(args){
 			})
 		}
 		// showLegend(); 
+
+		// links.selectAll(".link").style("opacity", 0.0);
 	}
 
 	visualize();

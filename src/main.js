@@ -135,6 +135,7 @@ var date2;
 
 var staticGraph; //this is the static graph we can load upond page refresh;
 var staticFunctionList;
+var nodeIDKeep = []; //a array of node id got when read in the metric file
 
 nodeMetricReader.on('line', function(line){
 	var myOBJ = JSON.parse(line);
@@ -142,6 +143,9 @@ nodeMetricReader.on('line', function(line){
 		// console.log(myOBJ);
 	}
 	// console.log(myOBJ["id"]);
+
+	nodeIDKeep.push( parseInt(myOBJ.id) );
+
 	nodeMetric[myOBJ.id] = myOBJ;
 });
 
@@ -150,7 +154,7 @@ nodeMetricReader.on('end', function(){
 	console.log('done with reading metric data, begin reading xml file');
 	// var xmlFile = new fileLoader('../../data/miranda1/experiment.xml', myCallBack);
 	date1 = new Date();
-	var xml2 = new sankeySplitNode(xmlFile, sankeySplitNodeCallBack,configFile , [-99999], nodeMetric, []);		
+	var xml2 = new sankeySplitNode(xmlFile, sankeySplitNodeCallBack,configFile , [-99999], nodeMetric, [], nodeIDKeep);		
 
 });
 
@@ -268,7 +272,7 @@ app.get('/splitNode', function(req, res){
 	res_global = res;
 
 	// var xml2 = new sankeySplitNode('../../data/miranda1/experiment.xml', splitNodeCallBack, procIDArray);
-	var xml2 = new sankeySplitNode(xmlFile, splitNodeCallBack2,configFile, procIDArray, nodeMetric, splitByParentList);	
+	var xml2 = new sankeySplitNode(xmlFile, splitNodeCallBack2,configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep);	
 })
 
 app.get('/getList', function(req, res){
@@ -392,7 +396,7 @@ app.get('/splitNodeByParents', function(req,res){
 
 	res_global = res;
 
-	var xml2 = new sankeySplitNode(xmlFile, splitNodeCallBack2,configFile , procIDArray, nodeMetric, splitByParentList);	
+	var xml2 = new sankeySplitNode(xmlFile, splitNodeCallBack2,configFile , procIDArray, nodeMetric, splitByParentList, nodeIDKeep);	
 })
 
 app.get('/getHistogramScatterData', function(req, res){

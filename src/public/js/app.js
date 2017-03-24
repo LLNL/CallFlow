@@ -386,7 +386,7 @@
 
 					sankColor = sankeyVis.colorScale;				
 
-					d3.selectAll('.node text').style('opacity', 1);
+					// d3.selectAll('.node text').style('opacity', 1);
 					console.log('done with layout');
 
 					console.log(histogramData);
@@ -831,7 +831,7 @@
 					var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList}
 					var histogramData = newData["histogramData"];
 					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData});
-					d3.selectAll('.node text').style('opacity', 1);
+					// d3.selectAll('.node text').style('opacity', 1);
 					spinner.stop();
 
 
@@ -905,7 +905,7 @@
 					var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList}
 					var histogramData = newData["histogramData"];
 					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData});
-					d3.selectAll('.node text').style('opacity', 1);
+					// d3.selectAll('.node text').style('opacity', 1);
 
 					spinner.stop();
 

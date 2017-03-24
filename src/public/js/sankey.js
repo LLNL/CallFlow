@@ -206,7 +206,9 @@ function Sankey(args){
 					.attr("transform", "translate(" + 5 + "," + 5 + ")");
 	/////////////////////////////////////////////////////////////////////////////////////
 
-	function visualize(){
+	function visualize(removeIntermediate){
+
+
 		// Set the sankey diagram properties
 		sankey = d3sankey()
 			.nodeWidth(nodeWidth)
@@ -223,9 +225,17 @@ function Sankey(args){
 		var path = sankey.link();
 		// console.log('path', path);
 		// load the data
-		graph = {"nodes" : data["nodes"], "links" : data["links"]};
+		// graph = {"nodes" : data["nodes"], "links" : data["links"]};
 
-		// console.log(graph.nodes);
+		var graph_zero = {"nodes" : data["nodes"], "links" : data["links"]};
+		var graph; // = graph_zero;
+		if(removeIntermediate){
+			graph = rebuild(graph_zero.nodes, graph_zero.links);
+		}
+		else{
+			graph = graph_zero;
+		}
+		
 
 		sankey.nodes(graph.nodes)
 		    .links(graph.links)
@@ -278,11 +288,25 @@ function Sankey(args){
 		//     	// return "blue";
 		//     });
 
+		if(removeIntermediate){
+			svg.selectAll(".intermediate").remove();
+		}
+
 		// add in the links
 		var link = links.selectAll(".link")
 		    .data(graph.links)
-		    .enter().append("path")
-		    .attr("class", "link")
+
+		    link.enter().append("path")
+		    .attr("class", function(d){
+
+		    	if(d.source.name == "intermediate" || d.target.name == "intermediate"){
+		    		return "link intermediate";
+		    	}
+		    	else{
+		    		return "link";
+		    	}
+		    	
+		    })
 		    // .attr("d", path)
 		    .attr("d", function(d){
 		      	var Tx0 = d.source.x + d.source.dx,
@@ -325,7 +349,8 @@ function Sankey(args){
 		    .style("stroke", function(d){
 		        return "url(#" + getGradID(d) + ")";
 		    })
-		    .style("stroke-opacity", "0.4")
+		    // .style("stroke-opacity", "0.4")
+		    .style("stroke-opacity", "0.0")
 		    .on("mouseover", function() { 
 		    	// d3.select(this).style("stroke-opacity", "0.7") 
 		    	d3.select(this).style("fill-opacity", "0.7") 
@@ -341,10 +366,11 @@ function Sankey(args){
 		    // .style("stroke-width", function (d) {
 		    //     return Math.max(1, d.dy);
 		    // })
-		    .sort(function (a, b) {
-		        return b.dy - a.dy;
-		    });
+		    // .sort(function (a, b) {
+		    //     return b.dy - a.dy;
+		    // });
 
+		    link.exit().remove();
 		//transition for links
 		// links.selectAll(".link")
 		// 	.data(graph.links)
@@ -394,8 +420,16 @@ function Sankey(args){
 		// add in the nodes
 		var node = nodes.selectAll(".node")
 		    .data(graph.nodes)
-		    .enter().append("g")
-		    .attr("class", "node")
+			.enter().append("g")
+		    .attr("class", function(d){
+		    	if(d.name == "intermediate"){
+		    		return "node intermediate";
+		    	}
+		    	else{
+		    		return "node";
+		    	}
+		    	
+		    })
 		    .attr('opacity' , 0)
 		    .attr("transform", function (d) {
 		        return "translate(" + d.x + "," + d.y + ")";
@@ -410,35 +444,65 @@ function Sankey(args){
 		    .attr("width", sankey.nodeWidth())
 		    .style("fill", function (d) {
 
-		    	var temp = {"name" : d.name.replace(/ .*/, ""),
+		    	if(d.name == "intermediate"){
+		    		return 'grey'
+		    	}
+		    	else{
+			    	var temp = {"name" : d.name.replace(/ .*/, ""),
 							"color" : color(d.name.replace(/ .*/, ""))}
-		    	nodeList.push(temp);
+		    		nodeList.push(temp);
 
-		        return d.color = color(d.name.replace(/ .*/, ""));
+		        	return d.color = color(d.name.replace(/ .*/, ""));
+		    	}
 		        // return d.color = color(d["lmID"]);
 		    })
 		    // .style("fill-opacity", ".9")
-		    .style("fill-opacity", "1")
+		    .style("fill-opacity", function(d){
+		    	if(d.name == "intermediate"){
+		    		return '0'
+		    	}
+		    	else{
+		    		return '1';
+		    	}		    	
+		    })
 		    .style("shape-rendering", "crispEdges")
 		    .style("stroke", function (d) {
-		        return d3.rgb(d.color).darker(2);
+		    	if(d.name != "intermediate"){
+		    		return d3.rgb(d.color).darker(2);
+		    	}
+		    	else{
+		    		return 'grey';
+		    	}
+		        
 		    })
-		    .style("stroke-width", '1')
+		    .style("stroke-width", function(d){
+		        if(d.name == "intermediate"){
+		        	return 0;
+		        }
+		        else{
+		        	return 1;
+		        }		    	
+		    })
 		    .on("mouseover", function(d) { 
-		    	toolTipList.attr('width', "400px")
-							.attr('height', "150px")	    	
-		    	var res = getFunctionListOfNode(d);
-		    	toolTipTexts(d,res)
-		    	d3.select(this).style("stroke-width", "2");
-		    	fadeUnConnected(d);
+		    	if(d.name != "intermediate"){
+			    	toolTipList.attr('width', "400px")
+								.attr('height', "150px")	    	
+			    	var res = getFunctionListOfNode(d);
+			    	toolTipTexts(d,res)
+			    	d3.select(this).style("stroke-width", "2");
+			    	fadeUnConnected(d);
+		    	}
 		    } )
 		    .on("mouseout", function(d) { 
 
 		    	toolTipList.attr('width', '0px')
 		    				.attr('height', '0px')
 
-		    	d3.select(this).style("stroke-width", "1");
-		    	unFade();
+		    	if(d.name != "intermediate"){
+			    	d3.select(this).style("stroke-width", "1");
+			    	unFade();
+		    	}
+
 				toolTip.style('opacity', 0)
 						.style('left', function(){
 							return 0;
@@ -454,13 +518,47 @@ function Sankey(args){
 		    .on('click', function(d){
 
 		    	// splitNode(d);
-		    	var ret = getFunctionListOfNode(d);
-		    	var fromProcToProc = ret["fromProcToProc"];
-		    	var nameToIDMap = ret["nameToIDMap"];
-		    	var res = {"node" : d, "fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap};
-		    	// clickCallBack(d);
-		    	clickCallBack(res);
+		    	if(d.name != "intermediate"){
+			    	var ret = getFunctionListOfNode(d);
+			    	var fromProcToProc = ret["fromProcToProc"];
+			    	var nameToIDMap = ret["nameToIDMap"];
+			    	var res = {"node" : d, "fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap};
+			    	// clickCallBack(d);
+			    	clickCallBack(res);
+		    	}
 		    })
+
+		node.append("path")
+		    .attr('d', function(d){
+		    	if(d.name == "intermediate"){
+		    		return "m" + 0 + " " + 0
+		    				+ "h " + sankey.nodeWidth()
+		    				+ "v " + (1)*d.dy
+		    				+ "h " + (-1)*sankey.nodeWidth();
+		    	}
+		    })
+			.style("fill", function(d){
+		    	// return "url(#" + getGradID(d) + ")";
+		    	if(d.name == "intermediate"){
+		    		return 'grey'
+		    	}
+		    })
+		    .style('fill-opacity', function(d){
+		    	if(d.name == "intermediate"){
+		    		return 0.4
+		    	}
+		    	else{
+		    		return 0;
+		    	}
+		    })
+		    .style("stroke", function(d){
+		        // return "url(#" + getGradID(d) + ")";
+		    	if(d.name == "intermediate"){
+		    		return 'grey'
+		    	}
+		    })
+		    .style("stroke-opacity", "0.0") 
+
 		 // node.append("title")
 		 //    .text(function (d) {
 		 //        return d.name + "\n" + format(d.value);
@@ -473,8 +571,15 @@ function Sankey(args){
 			.attr('y', '10px')
 			.style('opacity', 0)
 	    	.text(function (d) {
-	        	return d.name//; + "\n" + format(d.value);
+	    		if(d.name != "intermediate"){
+	    			return d.name//; + "\n" + format(d.value);
+	    		}
+	    		else{
+	    			return "";
+	    		}
 	    	});
+
+	    // node.exit().remove();
 
 			// the function for moving the nodes
 			function dragmove(d) {
@@ -537,8 +642,12 @@ function Sankey(args){
 			// 	return sankey.nodeWidth() + 5;
 			// })
 			.text(function (d) {
-				console.log(d.name, d.specialID, d)
-	        	return d.name//; + "\n" + format(d.value);
+	    		if(d.name != "intermediate"){
+	    			return d.name//; + "\n" + format(d.value);
+	    		}
+	    		else{
+	    			return "";
+	    		}
 	    	});
 
 	    nodes.selectAll("rect")
@@ -561,7 +670,7 @@ function Sankey(args){
 
 		function showLegend(){
 			var colLegend = svgO.append('g');
-			console.log(nodeList);
+			// console.log(nodeList);
 			nodeList.forEach(function(nodeL, idx){
 				colLegend.append('rect')
 							.attr('height', '20')
@@ -578,7 +687,7 @@ function Sankey(args){
 		// showLegend(); 
 	}
 
-	visualize();
+	visualize(true);
 
 	function visualize2(){
 		// Set the sankey diagram properties
@@ -893,7 +1002,7 @@ function Sankey(args){
 
 		function showLegend(){
 			var colLegend = svgO.append('g');
-			console.log(nodeList);
+			// console.log(nodeList);
 			nodeList.forEach(function(nodeL, idx){
 				colLegend.append('rect')
 							.attr('height', '20')
@@ -1065,7 +1174,9 @@ function Sankey(args){
 
 		referenceValue = rootRunTime;
 
-		visualize();
+		visualize(true);
+
+		console.log(data["nodes"]);
 	}	
 
 	this.changeProcessSelect = function(newEdgeData){
@@ -1093,7 +1204,8 @@ function Sankey(args){
 			node["in"] = inComing;
 		});	
 
-		
+		// console.log(data["nodes"]);
+		strip_intermediate(data["nodes"], data["links"])
 
 		
 		var newEdges = newEdgeData["nonBrush"];
@@ -1118,14 +1230,16 @@ function Sankey(args){
 
 		});	
 
+		//strip_intermediate(secondGraphNodes, newEdges)
+
 		referenceValue = Math.max(maxEdge1, maxEdge2);
 
 		graph2 = {"nodes" : secondGraphNodes, "links" : newEdges};
 		d3.select(containerID).select('svg.sank2').attr("height", treeHeight + margin.top + margin.bottom);
 		containerRect2.attr('height', treeHeight);
 
-		visualize();
-		visualize2();		
+		visualize(true);
+		visualize2(true);		
 	}
 
 	this.updateSize = function(size){
@@ -1145,7 +1259,7 @@ function Sankey(args){
 			.attr("width", width + margin.left + margin.right)
 		containerRect.attr('height', treeHeight)
 					.attr('width', width);
-		visualize();
+		visualize(false);
 
 		if(graph2){
 			d3.select(containerID).select('svg.sank2')
@@ -1153,7 +1267,7 @@ function Sankey(args){
 				.attr("width", width + margin.left + margin.right);
 			containerRect2.attr('height', treeHeight)
 							.attr('width', width);
-			visualize2();				
+			visualize2(false);				
 		}
 
 	}
@@ -1225,7 +1339,7 @@ function Sankey(args){
 		var sankeyNodeList = d["sankeyNodeList"];
 		var uniqueNodeIDList = d["uniqueNodeID"];
 
-		console.log(d);
+		// console.log(d);
 
 		//get the final nodes that we are connected to
 		var sourceLabel = [];
@@ -1335,7 +1449,7 @@ function Sankey(args){
     	var mousePos = d3.mouse(d3.select(containerID).node()); 
     	toolTip.style('opacity', 1)
 				.style('left', function(){
-					console.log(mousePos[0]);
+					// console.log(mousePos[0]);
 					if(mousePos[0]  + 10 + 500 > width){
 						return (mousePos[0] - 500) + 'px';
 					}
@@ -1390,5 +1504,146 @@ function Sankey(args){
     	}
 
 	}
+
+	//////////////////Added in for edge crossing//////////////////////////////
+
+    // From sankey, but keep indices as indices
+    // Populate the sourceLinks and targetLinks for each node.
+    // Also, if the source and target are not objects, assume they are indices.
+    function computeNodeLinks(nodes, links) {
+        nodes.forEach(function(node) {
+        node.sourceLinks = [];
+        node.targetLinks = [];
+        });
+        links.forEach(function(link) {
+        var source = link.source,
+          target = link.target;
+        nodes[source].sourceLinks.push(link);
+        nodes[target].targetLinks.push(link);
+        });
+    }
+
+    // computeNodeBreadths from sankey re-written to use indexes
+    // Iteratively assign the breadth (x-position) for each node.
+    // Nodes are assigned the maximum breadth of incoming neighbors plus one;
+    // nodes with no incoming links are assigned breadth zero, while
+    // nodes with no outgoing links are assigned the maximum breadth.
+    function computeNodeBreadths(nodes,links) {
+        var remainingNodes = nodes.map(function(d) { return d.sankeyID })
+        var nextNodes
+        var x = 0
+
+        // console.log(nodes);
+
+        while (remainingNodes.length) {
+            nextNodes = [];
+            remainingNodes.forEach(function(node) {
+                nodes[node].x = x;
+                nodes[node].sourceLinks.forEach(function(link) {
+                    if (nextNodes.indexOf(link.target) < 0) {
+                        nextNodes.push(link.target);
+                    }
+                });
+            });
+            remainingNodes = nextNodes;
+            ++x;
+        }
+    }
+
+    // Add nodes and links as needed
+    function rebuild(nodes, links) {
+        var temp_nodes = nodes.slice()
+        var temp_links = links.slice()
+        computeNodeLinks(temp_nodes, temp_links)
+        computeNodeBreadths(temp_nodes, temp_links)
+        for (var i = 0; i < temp_links.length; i++) {
+        	// console.log(temp_links[i]);
+            var source = temp_links[i].source
+            var target = temp_links[i].target
+            var source_x = nodes[source].x
+            var target_x = nodes[target].x
+            var dx = target_x - source_x
+            // Put in intermediate steps
+            for (var j = dx; 1 < j; j--) {
+                var intermediate = nodes.length
+                // console.log(intermediate, temp_links.length, dx, target_x, source_x, nodes[i], source, target);
+                console.log(nodes[i], i, nodes.length, temp_links.length);
+                var tempNode = {
+                    sankeyID: intermediate,
+                    name: "intermediate",
+                    // runTime: nodes[i].runTime
+                }
+                // console.log(tempNode)
+                nodes.push(tempNode)
+                links.push({
+                    source: intermediate,
+                    target: (j == dx ? target : intermediate-1),
+                    value: links[i].value
+                })
+                if (j == dx) {
+                    links[i].original_target = target
+                    links[i].last_leg_source = intermediate
+                }
+                links[i].target = intermediate
+            }
+        }
+
+        // console.log({
+        //     nodes: nodes.slice(),
+        //     links: links.slice()
+        // })
+
+        return {
+            nodes: nodes,
+            links: links
+        }
+    }
+ 
+    function strip_intermediate(nodes, links) {
+        for (var i = links.length-1; i >= 0; i--) {
+            var link = links[i]
+            if (link.original_target) {
+                var intermediate = nodes[link.last_leg_source];
+
+                if(link["intermediateTargets"] == null){
+                	link["intermediateTargets"] = [];
+                }
+                var temp = {
+                	"x" : nodes[link.last_leg_source].x,
+                	"y" : nodes[link.last_leg_source].y,
+                	"nodeHeight" : nodes[link.last_leg_source].dy
+
+               	}
+               	link["intermediateTargets"].push(temp);
+            }
+        }
+
+        for (var i = links.length-1; i >= 0; i--) {
+            var link = links[i]
+            if (link.original_target) {
+                var intermediate = nodes[link.last_leg_source];
+                link.target = nodes[link.original_target]
+                link.ty = intermediate.sourceLinks[0].ty
+            }
+        }
+
+        // console.log(links);
+
+        for (var i = links.length-1; i >= 0; i--) {
+            var link = links[i]
+            if (link.source.name == "intermediate") {
+                links.splice(i, 1)
+            }
+        }
+        for (var i = nodes.length-1; i >= 0; i--) {
+            if (nodes[i].name == "intermediate") {
+                nodes.splice(i, 1)
+            }
+        }
+    }    
+
+
+
+	//////////////////////////////////////////////////////////////////////////	
 
 }

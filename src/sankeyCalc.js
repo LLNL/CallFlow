@@ -86,7 +86,7 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 			var lmAtLevelList = Object.keys(nodeArray[treeLev]);
 			lmAtLevelList.forEach(function(lmAtLevel){
 				var sankeyNode = nodeArray[treeLev][lmAtLevel];
-				if(sankeyNode["incTime"] >= FILTERPERCENT * rootRuntime ){
+				if(sankeyNode["incTime"] >= (FILTERPERCENT * rootRuntime) ){
 					nodesKeepAfterFilter[treeLev][lmAtLevel] = sankeyNode;
 				}
 	            else{
@@ -98,6 +98,9 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 	            }
 			}); //end of lmAtLevelList
 		}); //end of treeLevels
+
+
+		// console.log('the not interestlist', JSON.stringify(notInterestSpecID));
 
 		treeLevels.forEach(function(treeLev, idx){
 			if(idx > 0){
@@ -487,6 +490,8 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 			labelList[label].push(parseInt(id));
 		});
 
+		// console.log("the label list",JSON.stringify(labelList))
+
 		var seenLabelBefore = [];
 		var finalNodeList = {};
 
@@ -603,6 +608,7 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 				// }
 				var runTimeVal = 0;
 				var nodeIDUniqueList = [];
+				console.log(connLabel);
 				connectToIDList.forEach(function(tID){
 					sourceIDList.forEach(function(sID){
 						
@@ -636,43 +642,10 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 							}
 						});// end of connectionList
 
-						// if(sourceLabel == "LM5653" && connLabel == "LM5653_0"){
-						// 	console.log("found the edge, value is", runTimeVal);
-						// }
-		    //             if(sourceLabel == "CLM0" && connLabel == "CLM2"){
-		    //             	console.log(ttemp, sID, tID);
-		    //             }
-						// if(runTimeVal >= rootRuntime * FILTERPERCENT * 1){
-						// 	totalRuntime += runTimeVal;
-	     //                    var tempEdge = {
-	     //                        "value" : runTimeVal == 0 ? 1 : runTimeVal,
-	     //                        "oldSourceSpcID" : sourceSpcID,
-	     //                        "oldTargetSpcID" : nodeList[tID]["oldSpecialID"],
-	     //                        // "sourceSpcID" : nodeList[sID]["specialID"],
-	     //                        // "targetSpcID" : nodeList[tID]["specialID"]
-	     //                        "sourceSpcID" : sourceLabel,
-	     //                        "targetSpcID" : connLabel
-	     //                    }
-	     //                    // fs.appendFileSync("edgeInfo", JSON.stringify(tempEdge) + "\n");		
-	     //                    var tSourceSpcID = sourceLabel;
-	     //                    var tTargetSpcID = connLabel;
-	     //                    if(finalEdgeList[ tSourceSpcID ] == null){
-	     //                    	finalEdgeList[ tSourceSpcID ] = {};
-	     //                    }	
-	     //                    if(  finalEdgeList[ tSourceSpcID ][ tTargetSpcID ]== null){
-	     //                    	finalEdgeList[ tSourceSpcID ][ tTargetSpcID ] = 0;
-	     //                    }	
-
-	     //                    if(tSourceSpcID == "CLM1" && tTargetSpcID == "LM5653"){
-	     //                    	console.log(tempEdge["value"], tID, sID);
-	     //                    }
-	     //                    finalEdgeList[ tSourceSpcID ][ tTargetSpcID ] += tempEdge["value"];
-						// }
-
 					}) //end of sourceIDList
 				}) // end of connectToID
 
-				if(runTimeVal >= rootRuntime * FILTERPERCENT * 1){
+				if(runTimeVal > rootRuntime * FILTERPERCENT * 1){
 					totalRuntime += runTimeVal;
                     var tempEdge = {
                         "value" : runTimeVal == 0 ? 1 : runTimeVal,
