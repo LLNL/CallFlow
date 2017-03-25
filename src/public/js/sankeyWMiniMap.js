@@ -1185,6 +1185,8 @@ function Sankey(args){
 
 		visualize();
 		visualize2();		
+
+		// console.log(data["links"], data["nodes"])
 	}
 
 	this.updateSize = function(size){

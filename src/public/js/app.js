@@ -730,7 +730,12 @@
 	            	edgeList = data["edgeList"];
 	            	nodeList = data["nodeList"];
 
+	            	// console.log(edges);
+
 					var remapResult = remapID(myNodes, edges, labelList);
+
+					// console.log(remapResult);
+
 					var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList}
 					var histogramData = newData["histogramData"];
 					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData});
@@ -862,8 +867,13 @@
 		        	})
 
 	
+		        	// console.log(edgeSets["brush"]);
 
-					sankeyVis.changeProcessSelect({"brush": edgeSets["brush"], "nonBrush" : edgeSets["nonBrush"]});		
+		        	var remapedEdgesBrushed = reMapEdges(edgeSets["brush"]);
+		        	var remapedEdgesNonBrushed = reMapEdges(edgeSets["nonBrush"]);
+
+					// sankeyVis.changeProcessSelect({"brush": edgeSets["brush"], "nonBrush" : edgeSets["nonBrush"]});	
+					sankeyVis.changeProcessSelect({"brush": remapedEdgesBrushed, "nonBrush" : remapedEdgesNonBrushed});		
 
 					d3.selectAll('.node text').style('opacity', 1);
 	            },
@@ -941,4 +951,19 @@
 			return {"nodes" : newNodes, "links" : newEdges};
 			// sankeyVis.updateData({"nodes" : newNodes, "links" : newEdges});
 
+		}
+
+		function reMapEdges(edges){
+			edges.forEach(function(nEdge){
+				nEdge["source"] = specialIDToSankIDMap[ nEdge["sourceLabel"] ];
+				nEdge["sourceID"] = specialIDToSankIDMap[ nEdge["sourceLabel"] ];
+				nEdge["target"] = specialIDToSankIDMap[ nEdge["targetLabel"] ];
+				nEdge["targetID"] = specialIDToSankIDMap[ nEdge["targetLabel"] ];
+			})
+
+			edges.sort(function(a,b){
+				return a["sourceID"] - b["targetID"];
+			})	
+
+			return edges;		
 		}
