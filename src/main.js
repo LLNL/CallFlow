@@ -1,9 +1,4 @@
 // ////////////// file paths for the data///////////////
-// var filePath = "../data/miranda/";
-// var configFilePath = filePath + "config2.json";
-// var metricFilePath = filePath + "nodeData.json";
-// var experimentFilePath = filePath + "experiment.xml";
-// /////////////////////////////////////////////
 var fs = require('fs');
 var argv = require('yargs').argv;
 var filePath;
@@ -188,8 +183,8 @@ function sankeySplitNodeCallBack(data){
 	date2 = new Date();
 
 	var diff = date2 - date1;
-	console.log("the time it take to load and calc is, ", diff);
-	console.log('the time it take to calc the edges is', date2 - cTime1);
+	// console.log("the time it take to load and calc is, ", diff);
+	// console.log('the time it take to calc the edges is', date2 - cTime1);
 
 	var nodesDeepCopy = [];
 	var edgesDeepCopy = [];
@@ -211,7 +206,6 @@ function sankeySplitNodeCallBack(data){
 }
 
 app.get('/', function(req, res){
-	console.log("getting the cluster data");
 	splitByParentList = [];
 	procIDArray = [];
 
@@ -237,7 +231,7 @@ app.get('/getSankey', function(req, res){
 	// res_global = res;
 	// getSankey(lmID);
 
-	console.log("getting the sankey data");
+	// console.log("getting the sankey data");
 	// res.json(sankeyData);
 
 	// var temp = {"nodes" : staticGraph["nodes"], "edges" : staticGraph["edges"]};
@@ -266,9 +260,6 @@ app.get('/splitNode', function(req, res){
 		}		
 	})
 
-
-	console.log(procIDArray);
-
 	res_global = res;
 
 	// var xml2 = new sankeySplitNode('../../data/miranda1/experiment.xml', splitNodeCallBack, procIDArray);
@@ -284,7 +275,6 @@ app.get('/getList', function(req, res){
 	entryExitDataNodeSplit[specialID]["enter"].forEach(function(entryDat){
 		var name = procedureTable[entryDat];
 		var tempObj = {"name" : name, "procID" : entryDat};
-		console.log(name);
 		tempList.push(tempObj)
 	});
 	res.json( tempList );
@@ -318,7 +308,7 @@ app.get('/getLists', function(req, res){
 		res.json(functionListResult)
 	}
 	else{
-		console.log("Cannot find function list for", specialID);
+		// console.log("Cannot find function list for", specialID);
 		res.json({})
 	}
 })
@@ -336,8 +326,6 @@ app.get('/getRuntimeOfNode', function(req, res){
     // }
 
     var procIDofNode = req.query["specialID"];
-
-    console.log(procIDofNode);
 
     // var nodeOfInterest = sanKeyMetricData[lmIDofNode][levelOfNode][procIDofNode];
     var nodeOfInterest = sanKeyMetricDataLM[levelOfNode][procIDofNode];
@@ -372,24 +360,6 @@ app.get('/splitNodeByParents', function(req,res){
 	var nodeLabel = req.query["nodeLabel"];
 	var specIDofSplitNode = req.query["nodeSpecialID"];
 
-	// var parentList = Object.keys(parentProcList);
-	// if(splitParentList[nodeLabel] == null){
-	// 	splitParentList[nodeLabel] = {};
-	// }
-	// parentList.forEach(function(parName){
-	// 	if(splitParentList[nodeLabel][parName] == null){
-	// 		splitParentList[nodeLabel][parName] = [];
-	// 	}
-
-	// 	var procIDList = parentProcList[parName];
-	// 	procIDList.forEach(function(myID){
-	// 		myID = parseInt(myID);
-	// 		if(splitParentList[nodeLabel][parName].indexOf(myID) == -1){
-	// 			splitParentList[nodeLabel][parName].push(myID)
-	// 		}
-	// 	});
-	// });
-
 	if(splitByParentList.indexOf(specIDofSplitNode) == -1){
 		splitByParentList.push(specIDofSplitNode);
 	}
@@ -406,7 +376,7 @@ app.get('/getHistogramScatterData', function(req, res){
 
 	var node = sankeyData["nodes"][specialID];
 	var uniqueNodeIDList = node["uniqueNodeID"];
-	// console.log(node, uniqueNodeIDList);
+
 
 	var tempInc = [];
 	var tempExc = [];
@@ -438,7 +408,6 @@ app.get('/calcEdgeValues', function(req, res){
 	processID.forEach(function(pID){
 		processIDList.push( parseInt(pID) );
 	})
-	console.log(processIDList)
 
 	tempEdges.forEach(function(edge){
 		var idList = edge["nodeIDList"];
@@ -488,8 +457,6 @@ app.get('/calcEdgeValues', function(req, res){
 })
 
 function splitNodeCallBack(data){
-
-	console.log('done spliting node, begin calc edges');
 	nodeArray = data["nodeArray"];
 	sanKeyMetricDataLM = data["sanKeyMetricDataLM"];
 
@@ -504,7 +471,6 @@ function splitNodeCallBack(data){
 }
 
 function splitNodeCallBack2(data){
-	console.log('done spliting node, begin calc edges');
 	nodeArray = data["nodeArray"];
 	sanKeyMetricDataLM = data["sanKeyMetricDataLM"];
 	entryExitDataNodeSplit = data["entryExitData"];

@@ -61,8 +61,7 @@ function Sankey(args){
 		node["in"] = inComing;
 	});
 
-	// console.log(containerID);
-	// console.log(width)
+
 
 	var formatNumber = d3.format(",.0f"), // zero decimal places
 	format = function (d) {
@@ -71,8 +70,6 @@ function Sankey(args){
 	// color = d3.scale.category20();
 	// color = d3.scale.category10();
 	color = this.colorScale;
-
-	console.log(color)
 
 	var stat = {
 		"inTimeMin" : Number.MAX_SAFE_INTEGER,
@@ -361,7 +358,7 @@ function Sankey(args){
 		    	d3.select(this).style("fill-opacity", "0.4") 
 		    } )
 		    .on('click', function(d){
-		    	console.log(d);
+		    	// console.log(d);
 		    })
 		    // .style("stroke-width", function (d) {
 		    //     return Math.max(1, d.dy);
@@ -791,7 +788,7 @@ function Sankey(args){
 		    	d3.select(this).style("fill-opacity", "0.4") 
 		    } )
 		    .on('click', function(d){
-		    	console.log(d);
+		    	// console.log(d);
 		    })
 		    // .style("stroke-width", function (d) {
 		    //     return Math.max(1, d.dy);
@@ -983,7 +980,7 @@ function Sankey(args){
 			// 	return sankey.nodeWidth() + 5;
 			// })
 			.text(function (d) {
-				console.log(d.name, d.specialID, d)
+				// console.log(d.name, d.specialID, d)
 	        	return d.name//; + "\n" + format(d.value);
 	    	});
 
@@ -1176,7 +1173,6 @@ function Sankey(args){
 
 		visualize(true);
 
-		console.log(data["nodes"]);
 	}	
 
 	this.changeProcessSelect = function(newEdgeData){
@@ -1567,7 +1563,7 @@ function Sankey(args){
             for (var j = dx; 1 < j; j--) {
                 var intermediate = nodes.length
                 // console.log(intermediate, temp_links.length, dx, target_x, source_x, nodes[i], source, target);
-                console.log(nodes[i], i, nodes.length, temp_links.length);
+                // console.log(nodes[i], i, nodes.length, temp_links.length);
                 var tempNode = {
                     sankeyID: intermediate,
                     name: "intermediate",

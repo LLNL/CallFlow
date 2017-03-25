@@ -62,8 +62,6 @@ function Sankey(args){
 		node["in"] = inComing;
 	});
 
-	// console.log(containerID);
-	// console.log(width)
 
 	var formatNumber = d3.format(",.0f"), // zero decimal places
 	format = function (d) {
@@ -73,7 +71,6 @@ function Sankey(args){
 	// color = d3.scale.category10();
 	color = this.colorScale;
 
-	console.log(color)
 
 	var stat = {
 		"inTimeMin" : Number.MAX_SAFE_INTEGER,
@@ -119,11 +116,6 @@ function Sankey(args){
 	function zoomed(){
 		svgBase.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 
-		// var textScaleValue = 1 + (1/d3.event.scale );
-
-		// var nodeText = node.selectAll('text').attr("transform","scale(" + textScaleValue + ")");
-		// console.log(nodeText);
-		// console.log(d3.event.scale)
 		svgBase2.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");		
 
 	}
@@ -347,7 +339,7 @@ function Sankey(args){
 		    	d3.select(this).style("fill-opacity", "0.4") 
 		    } )
 		    .on('click', function(d){
-		    	console.log(d);
+		    	// console.log(d);
 		    })
 		    // .style("stroke-width", function (d) {
 		    //     return Math.max(1, d.dy);
@@ -556,7 +548,7 @@ function Sankey(args){
 			// 	return sankey.nodeWidth() + 5;
 			// })
 			.text(function (d) {
-				console.log(d.name, d.specialID, d)
+				// console.log(d.name, d.specialID, d)
 	        	return d.name//; + "\n" + format(d.value);
 	    	});
 
@@ -581,7 +573,7 @@ function Sankey(args){
 
 	    //add in histogram
 	    graph.nodes.forEach(function(node){
-	    	console.log(node, node.specialID, histogramData);
+	    	// console.log(node, node.specialID, histogramData);
 	    	var histoData = histogramData["histogramData"][node.specialID];
 
 	    	var myXvals = histoData["xVals"];
@@ -625,7 +617,7 @@ function Sankey(args){
 
 		function showLegend(){
 			var colLegend = svgO.append('g');
-			console.log(nodeList);
+			// console.log(nodeList);
 			nodeList.forEach(function(nodeL, idx){
 				colLegend.append('rect')
 							.attr('height', '20')
@@ -748,7 +740,7 @@ function Sankey(args){
 		    	d3.select(this).style("fill-opacity", "0.4") 
 		    } )
 		    .on('click', function(d){
-		    	console.log(d);
+		    	// console.log(d);
 		    })
 		    // .style("stroke-width", function (d) {
 		    //     return Math.max(1, d.dy);
@@ -940,7 +932,7 @@ function Sankey(args){
 			// 	return sankey.nodeWidth() + 5;
 			// })
 			.text(function (d) {
-				console.log(d.name, d.specialID, d)
+				// console.log(d.name, d.specialID, d)
 	        	return d.name//; + "\n" + format(d.value);
 	    	});
 
@@ -959,7 +951,7 @@ function Sankey(args){
 
 		function showLegend(){
 			var colLegend = svgO.append('g');
-			console.log(nodeList);
+			// console.log(nodeList);
 			nodeList.forEach(function(nodeL, idx){
 				colLegend.append('rect')
 							.attr('height', '20')
@@ -1292,7 +1284,6 @@ function Sankey(args){
 		var sankeyNodeList = d["sankeyNodeList"];
 		var uniqueNodeIDList = d["uniqueNodeID"];
 
-		console.log(d);
 
 		//get the final nodes that we are connected to
 		var sourceLabel = [];
@@ -1402,7 +1393,6 @@ function Sankey(args){
     	var mousePos = d3.mouse(d3.select(containerID).node()); 
     	toolTip.style('opacity', 1)
 				.style('left', function(){
-					console.log(mousePos[0]);
 					if(mousePos[0]  + 10 + 500 > width){
 						return (mousePos[0] - 500) + 'px';
 					}
