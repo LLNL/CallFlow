@@ -499,7 +499,7 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
 
                 else if(xmlNodeName == "Pr"){
                     counter++;
-                    // parsePR(xmlNode, parentNode, level);
+                    parsePR(xmlNode, parentNode, level);
                 }   
             } 
 
