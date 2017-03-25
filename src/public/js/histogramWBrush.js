@@ -29,7 +29,6 @@ function Histogram(args){
 		axis_x.push( dataMin + (i * dataWidth) );
 	};
 
-	console.log(axis_x);
 
 	data.forEach(function(val, idx){
 		var pos = Math.floor( (val - dataMin) / dataWidth );
@@ -180,7 +179,7 @@ function Histogram(args){
 	   	function brushing(){
 	   		bExtent = brush.extent();
 	   		var brushScale = d3.scale.linear().domain( xScale.range() ).range( xScale.domain() )
-	   		console.log(bExtent)
+	   		
 			var localBrushStart = (brush.empty()) ? brushStart : Math.floor(brushScale(bExtent[0]));
 				if(localBrushStart < 0){
 					localBrushStart = 0;
@@ -206,7 +205,7 @@ function Histogram(args){
 	        }        
 	   	}
 	   	function brushend(){
-	   		console.log(brushStart, brushend)
+
 	   		var processIDList = [];
 
 	   		for(var i = brushStart; i < brushEnd; i++){
@@ -303,48 +302,7 @@ function Histogram(args){
 		    		return a - b;
 		    	});
 
-		  //   	var constData = processIDs.slice();
-		  //   	var a=0;
-		  //   	var groupArray = [];
-		  //   	cons(constData[0], 1);
-		  //   	console.log(constData);
-		  //   	console.log(groupArray);
 
-		  //   	//group process ids into consecutive group
-				// function cons(s,t){
-				//   if(s+1==constData[t]){
-				// 	    s=constData[t];
-				// 	    t=t+1;
-				// 	    cons(s,t);
-				// 	}
-				// 	else{
-				//     	print(a,t-1);
-				// 	}
-				// }
-
-				// function print(k,t){
-				//     display(k,t);
-				//     t++;
-				//     a=t;
-				//     start=constData[t];
-				// 	if(t<constData.length){
-				// 		cons(start,t+1);
-				// 	}
-				// }
-				// function display(k,t){
-				// 	var temp = [];
-				//     if(k!=t){
-				//     	// console.log(constData[k]+'-'+constData[t]);
-				//     	temp.push(constData[k]);
-				//     	temp.push(constData[t]);
-				//     }
-				// 	else{
-				//     	// console.log(constData[k]);
-				//     	temp.push(constData[k]);
-				// 	}
-				// 	groupArray.push(temp);
-				// 	// console.log(temp)
-				// }
 
 				var groupArray = groupProcess(processIDs)["array"];
 
@@ -380,7 +338,7 @@ function Histogram(args){
 
 		    			var topX1 = cumulativeBinSpace + binLocation;
 		    			var topX2 = cumulativeBinSpace + ( end - start + 1 ) * widthPerRank + binLocation;
-		    			console.log(cumulativeBinSpace, ( end - start + 1 ) * widthPerRank, start, end)
+
 		    			var botX3 = rankLineScale(start);
 		    			var botX4 = rankLineScale(end);
 
@@ -439,8 +397,6 @@ function Histogram(args){
 	this.setContainerWidth = function(newWidth){
 		containerWidth = newWidth;
 		width = containerWidth - margin.left - margin.right;
-
-		console.log(containerWidth);
 	}
 
 	this.setContainerHeight = function(newHeight){

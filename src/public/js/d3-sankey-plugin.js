@@ -258,7 +258,7 @@ function d3sankey() {
   function scaleNodeBreadths(kx) {
     nodes.forEach(function(node) {
 
-      // node.x *= kx;
+      node.x *= kx;
 
       var nodeX = node.x;
 
@@ -269,7 +269,7 @@ function d3sankey() {
         nodeX = widthScale(nodeX);
       }
 
-      node.x = nodeX;
+      // node.x = nodeX;
 
     //   if(node.targetLinks.length <= 1){
     //     node.x = node.x * (nodeWidth + 10) ;
@@ -315,7 +315,7 @@ function d3sankey() {
         return (size[1] - (nodes.length - 1) * nodePadding) / divValue;
       });
 
-      console.log("ky is", ky);
+      // console.log("ky is", ky);
 
       //need to change the scaling here
 

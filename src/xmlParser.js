@@ -4,11 +4,11 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
     var config;
 
     if(fs.existsSync(configFileName)){
-        console.log('config file found at', configFileName);
+        // console.log('config file found at', configFileName);
         config = require(configFileName);
     }
     else{
-        console.log('no config file found at', configFileName);
+        // console.log('no config file found at', configFileName);
         config = {};
     }
     
@@ -21,9 +21,8 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
     console.log('begin parsing xml file');
     var xml = fs.readFileSync(xmlFile, 'utf8');
     obj = parser.parseXmlString(xml, {noblanks: true});
-    console.log('finish parsing xml file');
+    // console.log('finish parsing xml file');
     var date2 = new Date();
-    console.log("this is how long it take to parse the xml file", date2 - date1);
     var fileTable = {};
     var loadModuleTable = {};
     var procedureTable = {};
@@ -80,22 +79,28 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
             loadModuleTable[id] = newName;
             lmName.push(newName);
             var loadmodofsplitname = Object.keys(config);
+            // console.log("loadmodofsplitname", loadmodofsplitname);
+
+            //check the name of the file, and match the file to the load module that we want to split
             loadmodofsplitname.forEach(function(lmofsplit){
                 if(name.indexOf(lmofsplit) > -1){
                     if(lmIDToSplitConfig.indexOf(id) == -1){
                         lmIDToSplitConfig.push(id);
                     }
-                }
-                configLMSplitInfo[id] = {
-                    "files" : config[lmofsplit]["files"],
-                    "functions" : config[lmofsplit]["functions"]
-                }
 
+                    configLMSplitInfo[id] = {
+                        "files" : config[lmofsplit]["files"],
+                        "functions" : config[lmofsplit]["functions"]
+                    }
+
+                }
             })
 
             maxLMID = Math.max(maxLMID, id);
 
         })
+
+        // console.log("configLMSplitInfo", configLMSplitInfo);
     }
 
     //get the fileTable
@@ -108,16 +113,6 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
         lmIDToSplitConfig.forEach(function(lmToSplitID){
             splitLoadModuleFileID[lmToSplitID] = {};
         })
-
-        // var configKeys = Object.keys(config);
-        // configKeys.forEach(function(conF){
-        //     var prefs = config[conF];
-        //     // console.log(config)
-        //     // console.log(conF, prefs, config[conF])
-        //     prefs.forEach(function(pref){
-        //         prefixes.push(pref);
-        //     });       
-        // });
 
         xmlFileTableNode.childNodes().forEach(function(file){
             var id = parseInt(file.attr('i').value());
@@ -133,36 +128,6 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
             // console.log(name, newName);
 
             fileTable[id] = newName;
-
-            // prefixes.forEach(function(prefix){
-            //     if(name.indexOf(prefix) > 0){
-            //         //get everything after the split
-            //         var afterPrefix = name.substr(name.indexOf(prefix) + prefix.length);
-            //         // console.log(afterPrefix);
-
-            //         //now split the afterPrefix into parts seperate by the slash /
-            //         var splits = afterPrefix.split('/');
-            //         var loadModName = splits[0];
-            //         //first get the original lm id;
-            //         if(name.includes("miranda")){
-            //             if(splitLoadModuleFileID[8][loadModName] == null){
-            //                 splitLoadModuleFileID[8][loadModName] = { "prefixID" : prefixID , "fileList" : []};
-            //                 prefixID += 1;
-            //             }
-
-            //             if(lmName.indexOf(loadModName) == -1){
-            //             	maxLMID += 1;
-            //             	lmName.push(loadModName);
-            //             	loadModuleTable[maxLMID] = loadModName;
-            //             }
-
-            //             splitLoadModuleFileID[8][loadModName]['fileList'].push(id);
-            //             return;
-            //         }
-
-            //     }
-
-            // });   
 
         })
     }
@@ -192,10 +157,8 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
             }
         });
 
-        // console.log("the runtime metrics are: ", runtimeID);
     }
 
-    // console.log("the runtime metrics are: ", runtimeID);
 
     //this function parse the tables in the xml file
     function parseProfileTable(xmlNode){
@@ -489,7 +452,7 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
 
     function parseNodes(xmlNode, parentNode, Cid, level){
         var xmlNodeName = xmlNode.name();
-        console.log(xmlNodeName);
+        // console.log(xmlNodeName);
 
         if(xmlNodeName == "SecCallPathProfileData" || 
             xmlNodeName == "PF" ||
@@ -536,7 +499,7 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
 
                 else if(xmlNodeName == "Pr"){
                     counter++;
-                    parsePR(xmlNode, parentNode, level);
+                    // parsePR(xmlNode, parentNode, level);
                 }   
             } 
 
@@ -593,28 +556,14 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
                 newNode.fileID = currentFileID;
             }	
             if(parentNode.procedureID != null){
-                // if(newNode.nodeID == 45148){
-                //     console.log('hey!!, in the if')
-                // }
                 newNode.procedureID = parentNode.procedureID;
-                // if(newNode.nodeID == 45148){
-                //     console.log(newNode.procedureID, parentNode.procedureID)
-                // }
+
             }
             else{
-                // if(newNode.nodeID == 45148){
-                //     console.log('hey!!, in the else')
-                // }
                 newNode.procedureID = currentprocedureID;
             }
-
             newNode.name = fileTable[newNode.fileID] + ": " + newNode.lineNumber;
-            // if(newNode.nodeID == 45148){
-            //         console.log(newNode.procedureID)
-            //     }
-            // if(newNode.procedureID == 1318){
-            //     console.log(parentNode.Type, parentNode.nodeID, parentNode.loadModuleID, newNode.lineNumber, newNode.nodeID, parentNode.procedureID, parentNode.procedureID != null, newNode.fileID);
-            // }
+
     	}
 
     	if(type == "Loop"){
@@ -643,11 +592,6 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
 
             newNode.oldLoadModuleID = newNode.loadModuleID;
     	}
-
-    	// if(newNode.procedureID == 7104 && procedureTable[ newNode.procedureID ] == "free"){
-    	// 	fs.appendFileSync("problem", JSON.stringify(newNode) + "\n");
-    	// }
-
     	return newNode;
     }
 
@@ -658,8 +602,6 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
         var specialID;// = "LM" + newNode.loadModuleID;
         var type;
         var name;
-        // if(newNode.procedureID == parseInt(procID)){
-        // if(newNode.procedureID == parseInt(procID)){
         if(procIDArray.indexOf(node.procedureID) > -1){
             specialID = "PROC" + node.procedureID;
             type = "PROC";
@@ -689,22 +631,19 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
 
             //first set default for unknown file
             if(fileTable[node.fileID].includes("unknown file")){
-                // console.log("found the node");
                     specialID = "CLM" + node.loadModuleID + "-U";
                     type = "CLM";
                     name = loadModuleTable[node.loadModuleID] + "-unknown";             
             }
 
             //first check by file
-            
+            //This is where we try to figure out which load module the file should fall under
             var filePrefixes = configLMSplitInfo[node.loadModuleID]["files"];
-
             var fileName = fileIDTaleOrgName[node.fileID];
              filePrefixes.forEach(function(prefix){
                 if(fileName.indexOf(prefix) > 0){
                     //get everything after the split
                     var afterPrefix = fileName.substr(fileName.indexOf(prefix) + prefix.length);
-                    // console.log(afterPrefix);
 
                     //now split the afterPrefix into parts seperate by the slash /
                     var splits = afterPrefix.split('/');
@@ -723,6 +662,8 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
                 }
 
             }); 
+
+            /////////////////////////////////////
 
             //now search by functions
             var functionObjectList = Object.keys(configLMSplitInfo[node.loadModuleID]["functions"]);
@@ -746,7 +687,6 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
                     }
                 })
             })
-
         }
 
         else{
@@ -755,57 +695,13 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
             name = loadModuleTable[node.loadModuleID];
         }   
 
-        // var labelLst = Object.keys(splitParentList);
-        // labelLst.forEach(function(nodeLab){
-        // 	var parentList = Object.keys(splitParentList[nodeLab]);
-        // 	parentList.forEach(function(parLab){
-        // 		var nodeLabParLabIDList = splitParentList[nodeLab][parLab];
-        // 		if(nodeLabParLabIDList.indexOf( parseInt(node.procedureID) ) > -1){
-		      //       specialID = parLab + "-" + nodeLab;
-		      //       type = "PTC";
-		      //       name = parLab + "-" + nodeLab;    
-		      //       return;    			
-        // 		}
-        // 	})
-        // })
-
-        // if(node.parentSpecialID != specialID){
-
-        // }
-
-        // if(specialID == "LM5687"){
-    	// if(specialID == "CLM1"){
-
         if(splitByParentList.indexOf(specialID) > -1){
-        	// if(node.parentSpecialID != specialID){
-	        //     specialID = node.parentSpecialID + "-" + specialID;
-         //    	type = node.parentSpecialID + "-" + specialID;
-         //    	name = loadModuleTable[ internalNodeList[node.parentID].loadModuleID ] + "-" + loadModuleTable[node.loadModuleID];
-        	// }
+
         	if(internalNodeList[node.parentID].oldLoadModuleID != node.oldLoadModuleID){
 	            specialID = "LM" + internalNodeList[node.parentID].oldLoadModuleID + "-" + "LM" + node.oldLoadModuleID;
             	type = "LM" + "-" + "LM";
             	name = loadModuleTable[ internalNodeList[node.parentID].oldLoadModuleID ] + "-" + loadModuleTable[node.oldLoadModuleID];
-                // if(node.parentSpecialID == "CLM8" || node.parentSpecialID == "CLM5"){
-                //     console.log(specialID, internalNodeList[node.parentID].oldLoadModuleID, internalNodeList[node.parentID].Type);
-                // }
         	}
-        	// else{
-        	// 	nodePath = node["path"];
-        	// 	var nodePathID = nodePath.split('*');
-        	// 	nodePathID.sort(function(a,b){
-        	// 		return parseInt(b) - parseInt(a);
-        	// 	});
-        	// 	nodePathID.forEach(function(nodeID){
-        	// 		var parSpecID = internalNodeList[ parseInt(nodeID) ];
-        	// 		if(parSpecID != specialID){
-        	// 			specialID = parSpecID + "-" + specialID;
-        	// 			type = parSpecID + "-" + specialID;
-        	// 			name = loadModuleTable[ internalNodeList[parseInt(nodeID)].loadModuleID ] + "-" + loadModuleTable[node.loadModuleID];
-        	// 			return;
-        	// 		}
-        	// 	})
-        	// }
         	else{
         		nodePath = node["path"];
         		var nodePathID = nodePath.split('*');
@@ -816,11 +712,7 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
         		nodePathID.some(function(nodeID){
         			// console.log(nodeID, node.nodeID);
 
-        			var parLMID = internalNodeList[ parseInt(nodeID) ].oldLoadModuleID;
-        			// if(parseInt(node.nodeID) == 189181){
-        			// 	console.log(parLMID, nodeID, node.loadModuleID, parLMID != node.loadModuleID);
-        			// 	// return;
-        			// }        			
+        			var parLMID = internalNodeList[ parseInt(nodeID) ].oldLoadModuleID;    			
         			if(parLMID != node.oldLoadModuleID){
         				specialID = "LM" + parLMID + "-" + "LM" + node.oldLoadModuleID;
         				type = "LM" + "-" + "LM";
@@ -831,11 +723,6 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
         	} 
 
         }
-        
-
-        // if(node.nodeID == 45851){
-        //     console.log("node 45148 specialID is", specialID)
-        // }
 
         return {
         	"name" : name,
@@ -888,23 +775,8 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
 			nodeArray[level][specialID].parentSpecialID.push(parentNode["specialID"]);
         }
 
-        // if(connectionInfo[level-1][parentNode["specialID"]] != null){
-        // 	var connectionNode = {
-        // 		"parentSpecialID" : parentNode["parentSpecialID"],
-        // 		"nodeID" : parentNode["nodeID"],
-        // 		"specialID" : parentNode["specialID"],
-        // 		"childID" : node["nodeID"],
-        // 		"childSpecialID" : node["specialID"]
-        // 	};
-
-        // 	connectionInfo[level-1][parentNode["specialID"]].push(connectionNode);
-        // }
-        // else{
-        // 	console.log("you fucked up, the current level is: " + level + ", the current specialID is: " + specialID + ", the parent specialID is: " + parentNode["specialID"] );
-        // }
-
         var tempTime = 0;
-        // console.log(node["nodeID"],nodeMetric );
+
         nodeMetrics[node["nodeID"]]["inc"].forEach(function(val){
         	tempTime += val;
         })
@@ -972,6 +844,11 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
             }
         }
     }
+
+
+    // console.log("load module table", JSON.stringify(loadModuleTable));
+    // console.log("load module table", JSON.stringify(splitLoadModuleFileID));
+    
 
 	var returnData = {
         "nodeArray" : nodeArray,

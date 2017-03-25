@@ -143,7 +143,7 @@
 
 		var myLayout = new GoldenLayout( config , $("#main_container"));
 		myLayout.registerComponent( 'testComponent', function( container, state ){
-			console.log(state.id);
+			// console.log(state.id);
 			container.getElement().html( "<div id = " + state.id + " > </div>" );
 
 			// donewithlayout();
@@ -328,7 +328,7 @@
 	            data: {"lmID" : lmID},
 	            success: function(newData){
 	                //somecoment
-	            	console.log(newData);
+	            	// console.log(newData);
 	            	console.log('done with getting data');
 	            	var data = newData["graph"];
 	            	var histogramData = newData["histogramData"];
@@ -359,7 +359,7 @@
 					})
 
 					edges.forEach(function(edge){
-						console.log(edge["sourceLabel"], )
+						// console.log(edge["sourceLabel"] );
 						if(edge["sourceLabel"] == "LM0"){
 							rootRunTime += edge["value"];
 						}
@@ -386,10 +386,10 @@
 
 					sankColor = sankeyVis.colorScale;				
 
-					// d3.selectAll('.node text').style('opacity', 1);
-					console.log('done with layout');
+					d3.selectAll('.node text').style('opacity', 1);
+					// console.log('done with layout');
 
-					console.log(histogramData);
+					// console.log(histogramData);
 	            },
 	            error: function(){
 	            	console.log("There was problem with getting the data");
@@ -409,7 +409,7 @@
 				ID: "#scat_view",
 				width: width,
 				height: height,
-				margin: {top: 10, right: 10, bottom: 30, left: 40},
+				margin: {top: 10, right: 10, bottom: 30, left: 44},
 				data1: sankNodeDataHistScat["inc"].slice(),
 				data2: sankNodeDataHistScat["exc"].slice(),
 				sort: false						
@@ -439,7 +439,6 @@
 			$("#info_view").empty();
 
 			var node = res["node"];
-			console.log(node);
 			var fromProcToProc = res["fromProcToProc"];
 			var nodeInfo = d3.select("#info_view")
 				.append('p');
@@ -453,28 +452,7 @@
 				);
 
 			var uniqueNodeIDList = node["uniqueNodeID"];
-			console.log(node);
 			getHistogramScatterData(node);
-
-			// var tempInc = [];
-			// var tempExc = [];
-			// uniqueNodeIDList.forEach(function(nodeID, idx){
-			// 	var incRuntime = nodeMetrics[nodeID]["inc"];
-			// 	var excRuntime = nodeMetrics[nodeID]["exc"];
-			// 	if(idx == 0){
-			// 		tempInc = incRuntime;
-			// 		tempExc = excRuntime;
-			// 	}
-			// 	else{
-			// 		tempInc = tempInc.SumArray( incRuntime );
-			// 		tempExc = tempExc.SumArray( excRuntime );
-			// 	}
-			// });		
-			// sankNodeDataHistScat = {"exc" : tempExc, "inc" : tempInc};
-			// showHistogram(node);
-			// showScatterPlot();
-
-
 
 			var tempList = {};
 			var nameToIDMap = res["nameToIDMap"];
@@ -485,21 +463,6 @@
 				}
 				tempList[funcName]["value"] += fromTo["value"];
 			});
-			// console.log(nameToIDMap)
-			// console.log(JSON.stringify(tempList));
-			// var tempList2 = [];
-			// Object.keys(tempList).forEach(function(func){
-			// 	// console.log(tempList[func]);
-			// 	console.log(tempList[func]["value"],  rootRunTime / 100)
-			// 	if(tempList[func]["value"] > rootRunTime * (1/100)){
-			// 		tempList2.push(tempList[func]);
-			// 	}
-				
-			// })
-			// listData = tempList2;
-
-
-			// displayList();
 
 			getList(node);
 
@@ -535,8 +498,8 @@
 	            data: {"specialID" : node["specialID"]},
 	            success: function(procedureListData){
 
-	            	console.log("done with getting list of functions");
-					console.log(procedureListData);
+	            	// console.log("done with getting list of functions");
+
 					listData = [];
 
 					var procIDs = Object.keys(procedureListData);
@@ -632,7 +595,7 @@
 			  return parseInt(this.value);
 			}).get();
 
-			console.log(idList);
+
 			spinner.spin(target);
 			$.ajax({
 	            type:'GET',
@@ -641,8 +604,6 @@
 	            url: '/splitNode',
 	            data: {"idList" :  idList},
 	            success: function(newData){
-
-	            	console.log("done with node split");
 					
 	            	var data = newData;
 	            	var offSet = 0;
@@ -653,24 +614,6 @@
 
 
 	            	var levelOffSet = 0;
-
-					// var treeLevel = Object.keys(nodes);
-					// treeLevel.forEach(function(myLevel){
-					// 	var myLM = Object.keys(nodes[myLevel]);
-
-					// 	if(myLM.length == 0){
-					// 		levelOffSet += 1;
-					// 	}
-
-					// 	myLM.forEach(function(loadMod){
-
-					// 		var tempObj = nodes[myLevel][loadMod];
-					// 		tempObj.oldLevel = tempObj.level;
-					// 		tempObj.level = tempObj.level - levelOffSet;
-
-					// 		myNodes.push(tempObj);
-					// 	})
-					// });
 
 	            	var maxLevel = {};
 
@@ -720,11 +663,6 @@
 								if(maxLevel[lmN]){
 									maxLevel[lmN] = newLevel;
 								}
-
-								if(lmN == "LM7091"){
-									console.log('this node parent lv is');
-									console.log(lvl);
-								}
 							}
 
 						})
@@ -734,10 +672,7 @@
 					lmNodes.forEach(function(lmN){
 						// var parents = tempNodes[lmN]["parentLMProcID"];
 						myNodes.push(tempNodes[lmN]);
-					})			
-
-					console.log(myNodes);
-					console.log(edges);				
+					})						
 
 					// console.log(myNodes);
 					$('#procedure_view').empty();
@@ -771,7 +706,6 @@
 			  return parseInt(this.value);
 			}).get();
 
-			console.log(idList);
 			spinner.spin(target);
 			$.ajax({
 	            type:'GET',
@@ -781,22 +715,11 @@
 	            data: {"idList" :  idList},
 	            success: function(newData){
 
-	            	console.log("done with node split");
-					
-	                //somecoment
-	            	console.log(newData);
-	            	console.log('done with getting data');
 	            	var data = newData["graph"];
 	            	var offSet = 0;
 	            	nodes = data["nodes"];
 	            	edges = data["edges"];
 	            	var myNodes = [];
-
-	            	// var labelList = Object.keys(nodes);
-	            	// labelList.forEach(function(lab){
-	            	// 	var tempObj = nodes[lab];
-	            	// 	myNodes.push(tempObj);
-	            	// })
 
 		        	var labelList = Object.keys(nodes);
 		        	labelList.forEach(function(lab){
@@ -807,31 +730,11 @@
 	            	edgeList = data["edgeList"];
 	            	nodeList = data["nodeList"];
 
-					// // console.log(myNodes);
-					// $('#procedure_view').empty();
-					// sankeyVis = new Sankey({
-					// 	ID: "#procedure_view",
-					// 	width: $("#procedure_view").width(),
-					// 	height: $("#procedure_view").height(),
-					// 	// width: width,
-					// 	// height: height,
-					// 	margin: {top: 10, right: 10, bottom: 10, left: 10},
-					// 	data: {"nodes": myNodes, "links": edges},
-					// 	toolTipData : {"edgeList" : edgeList, "nodeList": nodeList},
-					// 	// spinner: spinner,
-					// 	clickCallBack: nodeClickCallBack
-					// })	
-
-					// sankColor = sankeyVis.colorScale;				
-
-					// d3.selectAll('.node text').style('opacity', 1);
-					// console.log('done with layout');
-
 					var remapResult = remapID(myNodes, edges, labelList);
 					var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList}
 					var histogramData = newData["histogramData"];
 					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData});
-					// d3.selectAll('.node text').style('opacity', 1);
+					d3.selectAll('.node text').style('opacity', 1);
 					spinner.stop();
 
 
@@ -857,21 +760,12 @@
 	            data: {"parentProcList" :  parentProcList, "nodeLabel" : nodeLabel, "nodeSpecialID" : nodeSpecialID},
 	            success: function(newData){
 
-	            	console.log("done with node split");
-					
-	            	console.log(newData);
-	            	console.log('done with getting data');
 	            	var data = newData["graph"];
 	            	var offSet = 0;
 	            	nodes = data["nodes"];
 	            	edges = data["edges"];
 	            	var myNodes = [];
 
-	            	// var labelList = Object.keys(nodes);
-	            	// labelList.forEach(function(lab){
-	            	// 	var tempObj = nodes[lab];
-	            	// 	myNodes.push(tempObj);
-	            	// })
 		        	var labelList = Object.keys(nodes);
 		        	labelList.forEach(function(lab){
 		        		var tempObj = nodes[lab];
@@ -881,31 +775,12 @@
 	            	edgeList = data["edgeList"];
 	            	nodeList = data["nodeList"];
 
-					// console.log(myNodes);
-					// $('#procedure_view').empty();
-					// sankeyVis = new Sankey({
-					// 	ID: "#procedure_view",
-					// 	width: $("#procedure_view").width(),
-					// 	height: $("#procedure_view").height(),
-					// 	// width: width,
-					// 	// height: height,
-					// 	margin: {top: 10, right: 10, bottom: 10, left: 10},
-					// 	data: {"nodes": myNodes, "links": edges},
-					// 	toolTipData : {"edgeList" : edgeList, "nodeList": nodeList},
-					// 	// spinner: spinner,
-					// 	clickCallBack: nodeClickCallBack
-					// })	
-
-					// sankColor = sankeyVis.colorScale;				
-
-					// d3.selectAll('.node text').style('opacity', 1);
-					// console.log('done with layout');
 
 					var remapResult = remapID(myNodes, edges, labelList);
 					var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList}
 					var histogramData = newData["histogramData"];
 					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData});
-					// d3.selectAll('.node text').style('opacity', 1);
+					d3.selectAll('.node text').style('opacity', 1);
 
 					spinner.stop();
 
@@ -921,9 +796,6 @@
 			var currentNodeSankeyID = node.myID;
 			var parentsSpecialID = [];
 
-			console.log(currentNodeSankeyID);
-
-			console.log(edges);
 
 			//get parent special id based on the edges
 			edges.forEach(function(edge){
@@ -942,9 +814,6 @@
 			parentsSpecialID.forEach(function(parentSpecID){
 
 			})
-
-
-			console.log(parentsSpecialID);
 
 			$.ajax({
 	            type:'GET',
@@ -974,19 +843,6 @@
 		}
 
 		function brushCallBack(processIDList){
-			// edges.forEach(function(edge){
-			// 	var idList = edge["nodeIDList"];
-			// 	var edgeValue = 0;
-			// 	idList.forEach(function(id){
-			// 		var runTime = nodeMetrics[id]["inc"];
-			// 		processIDList.forEach(function(procid){
-			// 			edgeValue += runTime[procid];
-			// 		})
-			// 	})
-			// 	edge["value"] = edgeValue;
-			// });
-
-			console.log(processIDList);
 
 			$.ajax({
 	            type:'GET',
@@ -1005,24 +861,7 @@
 		        		myNodes.push(tempObj);
 		        	})
 
-		        	console.log(edges);
-
-					// console.log(myNodes);
-					// $('#procedure_view').empty();
-					// sankeyVis = new Sankey({
-					// 	ID: "#procedure_view",
-					// 	width: $("#procedure_view").width(),
-					// 	height: $("#procedure_view").height(),
-					// 	// width: width,
-					// 	// height: height,
-					// 	margin: {top: 10, right: 10, bottom: 10, left: 10},
-					// 	data: {"nodes": myNodes, "links": edges},
-					// 	toolTipData : {"edgeList" : edgeList, "nodeList": nodeList},
-					// 	// spinner: spinner,
-					// 	clickCallBack: nodeClickCallBack
-					// })	
-
-					// sankColor = sankeyVis.colorScale;		
+	
 
 					sankeyVis.changeProcessSelect({"brush": edgeSets["brush"], "nonBrush" : edgeSets["nonBrush"]});		
 
@@ -1051,7 +890,7 @@
 			//reused the remove ones or create new one as needed
 			var newSpecialIDToSankIDMap = {};
 			var tempMaxID = 0;
-			console.log(removeNodesLabel);
+
 			newNodes.forEach(function(nNode){
 				var curretnNodeLabel = nNode["specialID"];
 				if(specialIDToSankIDMap[curretnNodeLabel] != null){
