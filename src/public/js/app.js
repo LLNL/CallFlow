@@ -77,6 +77,16 @@
 							{
 								type: 'stack',
 								content: [
+
+								{
+
+									type: 'component',
+									componentName: 'testComponent',
+									// id: 'control',
+									componentState: {id : "control" },
+									isClosable: false,
+									title: "Control"								
+								},								
 								{
 									type: 'component',
 									componentName: 'testComponent',
@@ -196,9 +206,85 @@
 
 		}
 
+		function initializeControlView(){
+
+			//create a dropdown to select color option
+			var dropDownData = {
+			    '0': 'Name',
+			    '1': 'Inclusive Runtime',
+			    '2': 'Exclusive Runtime',
+			    '3': 'Range/Avg'
+			}
+
+			var $label = $("<label>").text('Color By: ');
+
+			var s = $('<select name="colorDropDown"  id = "colorDropDown" onchange = "colorDropDownChange()" />');
+			for(var val in dropDownData) {
+			    $('<option />', {value: val, text: dropDownData[val]}).appendTo(s);
+			}
+
+			var temp = document.createElement('div');
+			temp.setAttribute("id", "dropDown");
+			$('#control').append(temp);
+			s.appendTo($label);
+			$('#dropDown').append($label);
+
+			var $metricLabel = $("<label>").text('Metric Color:');
+			$('#control').append($metricLabel);
+
+			temp = document.createElement('div');
+			temp.setAttribute("id", "metricColorScale");
+			// $("#metricColorScale").css({left: 200});
+			$('#control').append(temp);
+
+
+			var w = 200, h = 70;
+			var colorScaleHeight = 30
+			var nodeRunTimeColorScale = 'OrRd';
+
+			var spanColor = chroma.scale(nodeRunTimeColorScale).padding([0.2, 0]).domain([0,99]);
+
+			// console.log(spanColor(1));
+
+			var timeScaleDiv = document.getElementById('metricColorScale');
+			$("#metricColorScale").width(200);
+			$("#metricColorScale").height(h);
+			for(var i = 0 ; i < 100; i++){
+				// nodeRunData.push(i);
+				var newSpan = document.createElement('span');
+				newSpan.style.backgroundColor = spanColor(i);
+				newSpan.style.display = 'inline-block';
+				newSpan.style.height = colorScaleHeight + 'px';
+				newSpan.style.width = '1%';
+				timeScaleDiv.appendChild(newSpan);
+			}
+
+			var fastSpan = document.createElement('span');
+			fastSpan.style.position = "relative";
+			fastSpan.style.left = "0";
+			fastSpan.style.fontSize = "15px";
+			fastSpan.style.fontFamily = "sans-serif";
+			fastSpan.style.top = "5px";
+			fastSpan.innerHTML = "low";
+			timeScaleDiv.appendChild(fastSpan);
+
+			var slowSpan = document.createElement('span');
+			slowSpan.style.position = "relative";
+			slowSpan.style.left = "140";
+			slowSpan.style.fontSize = "15px";
+			slowSpan.style.fontFamily = "sans-serif";
+			slowSpan.style.top = "5px";
+			slowSpan.innerHTML = "high";
+			timeScaleDiv.appendChild(slowSpan);
+		}
+
 		function donewithlayout(){
 			updateDivSizes();
 			// getData();
+
+
+			initializeControlView();
+
 
 			var temp = document.createElement('div');
 			temp.setAttribute("id", "list_view");
@@ -280,6 +366,11 @@
 		var rootRunTime = 0;
 
 		function startVis(){
+
+			$("#control").css(
+				"padding","5px"
+			);
+
 			getNodeMetrics();
 			getSankey(0);
 		}
@@ -967,3 +1058,22 @@
 
 			return edges;		
 		}
+
+		function colorDropDownChange(){
+
+			var colorOption = parseInt(Number($("#colorDropDown").val()));
+			console.log(colorOption);
+
+			if(sankeyVis){
+				sankeyVis.changeNodeColor(colorOption);
+			}
+
+		}
+
+
+
+
+
+
+
+

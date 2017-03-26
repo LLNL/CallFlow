@@ -640,25 +640,42 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
             //This is where we try to figure out which load module the file should fall under
             var filePrefixes = configLMSplitInfo[node.loadModuleID]["files"];
             var fileName = fileIDTaleOrgName[node.fileID];
+            var prefixLen = 0;
              filePrefixes.forEach(function(prefix){
                 if(fileName.indexOf(prefix) > 0){
-                    //get everything after the split
-                    var afterPrefix = fileName.substr(fileName.indexOf(prefix) + prefix.length);
+                    if(prefix.length > prefixLen) {
+                        //get everything after the split
+                        var afterPrefix = fileName.substr(fileName.indexOf(prefix) + prefix.length);
 
-                    //now split the afterPrefix into parts seperate by the slash /
-                    var splits = afterPrefix.split('/');
-                    var loadModName = splits[0];
-                    //first get the original lm id;
-                        if(splitLoadModuleFileID[node.loadModuleID][loadModName] == null){
-                            maxLMID += 1;
-                            splitLoadModuleFileID[node.loadModuleID][loadModName] = { "prefixID" : prefixID , "fileList" : [], "newID" : maxLMID};
-                            prefixID += 1;
-                            loadModuleTable[maxLMID] = loadModName;
+                        //now split the afterPrefix into parts seperate by the slash /
+                        var splits = afterPrefix.split('/');
+                        var loadModName = splits[0];
+
+                        // if( prefix == "MILC/MILC7/generic_ks/" ){
+                        //     console.log(splits);
+                        // }
+
+                        if(splits.length == 1){ //we end up with a file name, so we will use the last porttion of the prefix
+                            var prefixSplit = prefix.split('/');
+                            loadModName = prefixSplit[ prefixSplit.length - 2 ]; //skip the last one since it is after the / so 
                         }
-                        specialID = "CLM" + splitLoadModuleFileID[node.loadModuleID][loadModName]["prefixID"];
-                        type = "CLM";
-                        name = loadModName;  
-                        node.oldLoadModuleID = splitLoadModuleFileID[node.loadModuleID][loadModName]["newID"];                
+                        else{
+                            loadModName = splits[0];
+                        }
+
+                        //first get the original lm id;
+                            if(splitLoadModuleFileID[node.loadModuleID][loadModName] == null){
+                                maxLMID += 1;
+                                splitLoadModuleFileID[node.loadModuleID][loadModName] = { "prefixID" : prefixID , "fileList" : [], "newID" : maxLMID};
+                                prefixID += 1;
+                                loadModuleTable[maxLMID] = loadModName;
+                            }
+                            specialID = "CLM" + splitLoadModuleFileID[node.loadModuleID][loadModName]["prefixID"];
+                            type = "CLM";
+                            name = loadModName;  
+                            prefixLen = prefix.length;
+                            node.oldLoadModuleID = splitLoadModuleFileID[node.loadModuleID][loadModName]["newID"];                
+                    }
                 }
 
             }); 
@@ -798,7 +815,7 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
         	connectionInfo[level][node["specialID"]].push(connectionNode);
         }
         else{
-        	console.log("you fucked up, the current level is: " + level + ", the current specialID is: " + specialID + ", the parent specialID is: " + parentNode["specialID"] );
+        	console.log("something is wrong, the current level is: " + level + ", the current specialID is: " + specialID + ", the parent specialID is: " + parentNode["specialID"] );
         }
 
         //////add node into its function list, only add if node type is PR or PF, ie function call
