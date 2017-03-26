@@ -409,6 +409,7 @@ app.get('/calcEdgeValues', function(req, res){
 		processIDList.push( parseInt(pID) );
 	})
 
+
 	tempEdges.forEach(function(edge){
 		var idList = edge["nodeIDList"];
 		var edgeValueForBrush = 0;
@@ -537,8 +538,24 @@ function computeHistogram(){
 		dataSorted.sort(function(a,b){
 			return a - b;
 		});
+
+		//compute the average of this sankey node
+		var average = 0;
+		var sumVal = 0;
+		dataSorted.forEach(function(val){
+			sumVal += val;
+		});
+
+		average = sumVal / dataSorted.length;
+
+
+
 		var dataMin = dataSorted[0];
 		var dataMax = dataSorted[ dataSorted.length - 1 ];
+
+		// console.log('the max-min/avg is',  (dataMax - dataMin) / average );
+
+		sankeyNodes[specialID]["nRange"] = (dataMax - dataMin) / average;
 
 		var dataWidth = ((dataMax - dataMin) / numbOfBins);
 		var freq = [];

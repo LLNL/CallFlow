@@ -1,5 +1,5 @@
 function Histogram(args){
-	console.log('inside histogram')
+	// console.log('inside histogram')
 	var containerID = args.ID || "body",
 		containerWidth = args.width || 900,
 		containerHeight = args.height || 900,
