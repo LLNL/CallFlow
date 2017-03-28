@@ -511,14 +511,31 @@ function Sankey(args){
 
 		node.append("text")
 			.attr('dy', '0.35em')
+			.attr("transform", "rotate(90)")
 			.attr('x', function(d){
-				return sankey.nodeWidth() + 5;
+				// return sankey.nodeWidth() + 5;
+				return 5;
 			})
-			.attr('y', '10px')
+			// .attr('y', '10px')
+			.attr('y', "-10")
 			.style('opacity', 0)
 	    	.text(function (d) {
 	    		if(d.name != "intermediate"){
-	    			return d.name//; + "\n" + format(d.value);
+	    			// return d.name//; + "\n" + format(d.value);
+
+	    			if(d.dy < 30 ){
+	    				return "";
+	    			}
+	    			else{
+	    				var textSize = calcTextSize(d.name)["width"];
+	    				
+	    				if(textSize < d.dy){
+	    					return d.name;
+	    				}
+	    				else{
+	    					return d.name.trunc(10);
+	    				}
+	    			}
 	    		}
 	    		else{
 	    			return "";
@@ -575,7 +592,19 @@ function Sankey(args){
 	    	.duration(transitionDuration)
 			.text(function (d) {
 	    		if(d.name != "intermediate"){
-	    			return d.name//; + "\n" + format(d.value);
+	    			if(d.dy < 30 ){
+	    				return "";
+	    			}
+	    			else{
+	    				var textSize = calcTextSize(d.name)["width"];
+	    				
+	    				if(textSize < d.dy){
+	    					return d.name;
+	    				}
+	    				else{
+	    					return d.name.trunc(10);
+	    				}
+	    			}
 	    		}
 	    		else{
 	    			return "";
@@ -933,14 +962,29 @@ function Sankey(args){
 
 		node2.append("text")
 			.attr('dy', '0.35em')
+			.attr("transform", "rotate(90)")
 			.attr('x', function(d){
-				return sankey2.nodeWidth() + 5;
+				// return sankey.nodeWidth() + 5;
+				return 5;
 			})
-			.attr('y', '10px')
+			// .attr('y', '10px')
+			.attr('y', "-10")
 			.style('opacity', 0)
 	    	.text(function (d) {
 	    		if(d.name != "intermediate"){
-	    			return d.name//; + "\n" + format(d.value);
+	    			if(d.dy < 30 ){
+	    				return "";
+	    			}
+	    			else{
+	    				var textSize = calcTextSize(d.name)["width"];
+	    				
+	    				if(textSize < d.dy){
+	    					return d.name;
+	    				}
+	    				else{
+	    					return d.name.trunc(10);
+	    				}
+	    			}
 	    		}
 	    		else{
 	    			return "";
@@ -997,7 +1041,19 @@ function Sankey(args){
 	    	.duration(transitionDuration)
 			.text(function (d) {
 	    		if(d.name != "intermediate"){
-	    			return d.name//; + "\n" + format(d.value);
+	    			if(d.dy < 30 ){
+	    				return "";
+	    			}
+	    			else{
+	    				var textSize = calcTextSize(d.name)["width"];
+	    				
+	    				if(textSize < d.dy){
+	    					return d.name;
+	    				}
+	    				else{
+	    					return d.name.trunc(10);
+	    				}
+	    			}
 	    		}
 	    		else{
 	    			return "";
@@ -1543,6 +1599,17 @@ function Sankey(args){
 	}
 
 
+    function calcTextSize(text) {
+	    if (!d3) return;
+	    var container = d3.select('body').append('svg');
+	    container.append('text').attr({ x: -99999, y: -99999 }).text(text);
+	    var size = container.node().getBBox();
+	    container.remove();
+	    return { width: size.width, height: size.height };
+	}
+
+	console.log(calcTextSize("AMPI"));
+
 
 	//////////////////Added in for edge crossing//////////////////////////////
 
@@ -1673,9 +1740,6 @@ function Sankey(args){
             }
         }
     }    
-
-
-
 	//////////////////////////////////////////////////////////////////////////	
 
 }
