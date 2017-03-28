@@ -69,6 +69,7 @@ function Histogram(args){
 		}
 		else{
 			yScale = d3.scale.log().domain([1, d3.max(freq)]).range([histogramHeight, 10]);
+			logScaleBool = true;
 		}	
 
 
@@ -258,8 +259,19 @@ function Histogram(args){
 		    .scale(yScale)
 		    .orient("left")
 		    .ticks(freq.length)
-		    .tickFormat(function(d){
-		    	return d
+		    .tickFormat(function(d, i){
+		    	console.log(d, logScaleBool);
+		    	if(logScaleBool){
+		    		if( d % 4 == 0 ){
+		    			return d;
+		    		}
+		    		else{
+		    			return "";
+		    		}
+		    	}
+		    	else{
+		    		return d;
+		    	}
 		    })
 		    .ticks(5, "%");				             
 
