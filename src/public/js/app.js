@@ -409,13 +409,16 @@
 
 		var showLabelBool = false;
 
+		var dataSetInfo;
+
 		function startVis(){
 
 			$("#control").css(
 				"padding","5px"
 			);
 
-			getNodeMetrics();
+			// getNodeMetrics();
+			getDataSetInfo();
 			getSankey(0);
 		}
 
@@ -437,6 +440,22 @@
 
 			minVal = min;
 			maxVal = max;
+		}
+
+		function getDataSetInfo(){
+			$.ajax({
+	            type:'GET',
+	            contentType: 'application/json',
+	            dataType: 'json',
+	            url: '/dataSetInfo',
+	            success: function(datInfo){
+	            	dataSetInfo = datInfo;
+
+	            },
+	            error: function(){
+	            	console.log("There was problem with getting the metric data");
+	            }	
+			});				
 		}
 
 		function getNodeMetrics(){
@@ -1160,6 +1179,19 @@
 
 		}
 
+		function showDatasetInfo(){
+			console.log("the nav bar was click");
+			var datasetName = dataSetInfo["dataName"] || "Unknown";
+			var numbOfNodes = dataSetInfo["numbNodes"] || "Unknown";
+			var string = "";
+			string += "Name: " + datasetName + " \n";
+			string += "Number of Processes: " + numbOfNodes + " \n";
+			string += "Path: " + dataSetInfo["path"] + " \n";
+			string += "Experiment: " + dataSetInfo["experiment"];
+
+			alert(string);
+		}
+
 		// $('#showLabelBox').attr('checked',false);
 		$("#showLabelBox").on("change",function(){
 			console.log("checkbox");
@@ -1208,10 +1240,16 @@
 
 				if(colorOption == 1 || colorOption == 2){
 
-					var slowTimeTxt = (minVal).toFixed(3) + "s";
-					var fastTimeTxt = (maxVal).toFixed(3) + "s";
-					$("#slowAttr").text(slowTimeTxt);
-					$("#fastAttr").text(fastTimeTxt);
+					if( !isNaN( parseInt($('#minVal').val()) ) ){
+						var slowTimeTxt = (minVal).toFixed(3) + "s";
+						$("#slowAttr").text(slowTimeTxt);
+					}
+					
+					if( !isNaN( parseInt($('#maxVal').val()) ) ){
+						var fastTimeTxt = (maxVal).toFixed(3) + "s";	
+						$("#fastAttr").text(fastTimeTxt);
+					}
+
 				}
 				else if(colorOption == 3){
 					$("#slowAttr").text(0);
@@ -1224,6 +1262,7 @@
 
 			})
 		});
+
 
 
 

@@ -1,4 +1,6 @@
 {
+	"dataName" : "Miranda",
+	"numbNodes" : "64",
 	"path" : "../../data/miranda/",
 	"experiment" : "experiment.xml",
 	"nodeMetric" : "nodeData.json",
