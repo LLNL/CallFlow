@@ -41,6 +41,12 @@ function Sankey(args){
 	var rootRunTime = 0;
 	var rootRunTime1 = 0;
 	var rootRunTime2 = 0;
+
+	var gMinInc;
+	var gMaxInc;
+	var gMinExc;
+	var gMaxExc;
+
 	data["links"].forEach(function(link){
 		if(link["sourceLabel"] == 'LM0'){
 			rootRunTime += link["value"];
@@ -49,6 +55,7 @@ function Sankey(args){
 
 	var referenceValue = rootRunTime;
 	rootRunTime1 = rootRunTime;
+
 
 	var secondGraphNodes = [];// = data["nodes"].slice();
 
@@ -467,7 +474,7 @@ function Sankey(args){
 			    	var ret = getFunctionListOfNode(d);
 			    	var fromProcToProc = ret["fromProcToProc"];
 			    	var nameToIDMap = ret["nameToIDMap"];
-			    	var res = {"node" : d, "fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap};
+			    	var res = {"node" : d, "fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap, "rootRunTime" : rootRunTime};
 			    	// clickCallBack(d);
 			    	clickCallBack(res);
 		    	}
@@ -1280,6 +1287,35 @@ function Sankey(args){
 
 	}
 
+	this.setGlobalRange = function(option, minVal, maxVal){
+		if(option == 1){
+
+			if(minVal){
+				gMinInc = minVal * 1000000;
+			}
+			if(maxVal){
+				gMaxInc = maxVal * 1000000;
+			}
+
+		}
+
+		else if(option == 2){
+			if(minVal){
+				gMinExc = minVal * 1000000;
+			}
+			if(maxVal){
+				gMaxExc = maxVal * 1000000;
+			}			
+		}
+
+		computeColorScale();
+		d3.selectAll('.node rect')
+					.style('fill', function(d){
+						return d.color = setNodeColor(d);
+					})		
+
+	}
+
 	function getFunctionListOfNode(d){
 		var sankeyNodeList = d["sankeyNodeList"];
 		var uniqueNodeIDList = d["uniqueNodeID"];
@@ -1374,13 +1410,13 @@ function Sankey(args){
 			return b["value"] - a["value"];
 		});
 		var temp = 0;
-		fromProcToProc.forEach(function(ft){
-			// console.log(ft["value"] / 36644360084 * 100);
-			temp += ft["value"] / rootRunTime * 100
-		})
+		// fromProcToProc.forEach(function(ft){
+		// 	// console.log(ft["value"] / 36644360084 * 100);
+		// 	temp += ft["value"];// / rootRunTime * 100
+		// })
 		// console.log(temp);
 
-		var res = {"fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap }
+		var res = {"fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap , "rootRunTime" : rootRunTime}
 		// console.log(fromProcToProc)
 		return res;
 	}
@@ -1407,8 +1443,8 @@ function Sankey(args){
 					return (mousePos[1] + 50) + "px";
 				})
     	toolTipText.html("Name: " + node.name +		
-    			"<br> Inclusive Time: " + (node['inclusive']/ runTimeR * 100 ).toFixed(3) + "%" + 
-				"<br> Exclusive Time: " + (node["exclusive"] / runTimeR * 100).toFixed(3) + "%" );
+    			"<br> Inclusive Time: " + (node['inclusive'] * 0.000001 ).toFixed(3) + "s - " +  (node['inclusive']/ runTimeR * 100 ).toFixed(3) + "%" + 
+				"<br> Exclusive Time: " + (node['exclusive'] * 0.000001 ).toFixed(3)  + "s - " + (node["exclusive"] / runTimeR * 100).toFixed(3) + "%" );
 
 
     	var textLength = 100;
@@ -1467,6 +1503,20 @@ function Sankey(args){
 	}
 
 	function computeColorScale(){
+
+		if(gMinInc){
+			minInc = gMinInc;
+		}
+		if(gMaxInc){
+			maxInc = gMaxInc;
+		}
+		if(gMinExc){
+			minExc = gMinExc;
+		}
+		if(gMaxExc){
+			maxExc = gMaxExc;
+		}
+
 		incColorScale = chroma.scale('OrRd').padding([0.2, 0])
 	    				.domain([ minInc, maxInc ]);
 

@@ -1,3 +1,8 @@
+		String.prototype.trunc = String.prototype.trunc ||
+	      function(n){
+	          return (this.length > n) ? this.substr(0, n-1) + '...' : this;
+	      };
+
 		Array.prototype.SumArray = function (arr) {
 		    var sum = [];
 		    if (arr != null && this.length == arr.length) {
@@ -297,6 +302,22 @@
 
 
 			timeScaleDiv.appendChild(slowSpan);
+
+			var $rangeLable = $("<label>").text('Set Range:');
+			$('#control').append($rangeLable);
+			temp = document.createElement('div');
+			temp.setAttribute("id", "setRange");
+			$('#control').append(temp);
+			 $('<p><label for="minVal"> Min Value:  <input type="text" id="minVal" size="12" name="minVal" value="" placeholder="Input Value" /></label></p>').appendTo(temp);
+			 $('<p><label for="maxVal"> Max Value: <input type="text" id="maxVal" size="12" name="maxVal" value="" placeholder="Input Value" /></label></p>').appendTo(temp);
+
+			 var tButton=$('<input/>').attr({
+			        type: "button",
+			        id: "setRangeBtr",
+			        value: 'Set Range'
+			    });
+			 tButton.appendTo(temp);
+
 		}
 
 		function donewithlayout(){
@@ -558,6 +579,8 @@
 		function nodeClickCallBack(res){
 			$("#info_view").empty();
 
+			// console.log(res);
+
 			var node = res["node"];
 			var fromProcToProc = res["fromProcToProc"];
 			var nodeInfo = d3.select("#info_view")
@@ -578,11 +601,14 @@
 			var nameToIDMap = res["nameToIDMap"];
 			fromProcToProc.forEach(function(fromTo){
 				var funcName = fromTo["toProc"];
+				console.log(fromTo);
 				if(tempList[funcName] == null){
 					tempList[funcName] = {"name" : funcName, "value" : 0, "procID" : nameToIDMap[funcName]};
 				}
 				tempList[funcName]["value"] += fromTo["value"];
 			});
+
+			console.log(tempList);
 
 			getList(node);
 
@@ -645,13 +671,16 @@
         		return b["value"] - a["value"];
         	})
         	listData.forEach(function(dat){
+        		console.log(dat);
 				// create the necessary elements
+				var funcName = dat["name"].trunc(20) + ": [" + (dat["value"] * 0.000001).toFixed(3)  + "s, " + (dat["value"] /rootRunTime * 100).toFixed(3) + "%]" ;
 				var label = document.createElement("label");
-				var description = document.createTextNode(dat["name"]);
+				var description = document.createTextNode(funcName);
 				var checkbox = document.createElement("input");
 
 				checkbox.type = "checkbox";
-				checkbox.name = dat["name"];
+				
+				checkbox.name = funcName;
 				checkbox.value = dat["procID"];
 				checkbox.setAttribute('class', "list_checkbox");
 
@@ -1117,8 +1146,11 @@
 				var runTimes = sankeyVis.changeNodeColor(colorOption);
 
 				if(colorOption == 1 || colorOption == 2){
-					$("#slowAttr").text(runTimes[0]);
-					$("#fastAttr").text(runTimes[1]);
+
+					var slowTimeTxt = (runTimes[0] * 0.000001).toFixed(3) + "s";
+					var fastTimeTxt = (runTimes[1] * 0.000001).toFixed(3) + "s";
+					$("#slowAttr").text(slowTimeTxt);
+					$("#fastAttr").text(fastTimeTxt);
 				}
 				else if(colorOption == 3){
 					$("#slowAttr").text(0);
@@ -1144,6 +1176,52 @@
 				else{
 					d3.selectAll('.node text').style('opacity', 0);
 				}				
+			})
+
+			$("#setRangeBtr").on('click', function(){
+				console.log('button is click');
+				var minVal;
+				var maxVal;
+
+				if( isNaN( parseInt($('#maxVal').val()) ) ){
+					maxVal = null
+				}
+				else{
+					maxVal = parseInt($('#maxVal').val());
+				}
+				if( isNaN( parseInt($('#minVal').val()) ) ){
+					minVal = null
+				}
+				else{
+					minVal = parseInt($('#minVal').val());
+				}
+
+				if(minVal != null && maxVal != null && ( minVal < 1 || minVal > maxVal )){
+					alert("Please make sure that minimun value is >= 1 and min val <= max value")
+				}
+
+				var colorOption = parseInt(Number($("#colorDropDown").val()));
+				
+				if(colorOption == 1 || colorOption == 2 && sankeyVis){
+					sankeyVis.setGlobalRange(colorOption, minVal, maxVal);
+				}
+
+				if(colorOption == 1 || colorOption == 2){
+
+					var slowTimeTxt = (minVal).toFixed(3) + "s";
+					var fastTimeTxt = (maxVal).toFixed(3) + "s";
+					$("#slowAttr").text(slowTimeTxt);
+					$("#fastAttr").text(fastTimeTxt);
+				}
+				else if(colorOption == 3){
+					$("#slowAttr").text(0);
+					$("#fastAttr").text(1);
+				}
+				else{
+					$("#slowAttr").text("N/A");
+					$("#fastAttr").text("N/A");
+				}
+
 			})
 		});
 

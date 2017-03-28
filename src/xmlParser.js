@@ -805,6 +805,8 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
         	tempTime += val;
         })
 
+        var avgTime = tempTime / Math.max(1, nodeMetrics[node["nodeID"]]["inc"].length);
+
         if(connectionInfo[level][node["specialID"]] != null){
         	var connectionNode = {
         		"parentNodeID" : parentNode["nodeID"],
@@ -814,7 +816,8 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
         		"nodeID" : node["nodeID"],
         		"specialID" : node["specialID"],
         		"procedureName" : procedureTable[ node["procedureID"] ],
-        		"value" : tempTime,
+        		// "value" : tempTime,
+                "value" : avgTime,
         		"procID" : node["procedureID"],
                 "type" : node.Type
         	};

@@ -559,6 +559,7 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 
 				var runTimeVal = 0;
 				var nodeIDUniqueList = [];
+				var runTimeAvg = 0;
 				// console.log(connLabel);
 				connectToIDList.forEach(function(tID){
 					sourceIDList.forEach(function(sID){
@@ -569,6 +570,9 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 						var connectionList = edgeList[tID];
 						// var runTimeVal = 0;
 						var ttemp = 0;
+
+
+
 						connectionList.forEach(function(connInfo){
 
 							if(//connInfo["parentSpecialID"] == sourceSpcID && 
@@ -578,11 +582,15 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 
 								var nodeID = connInfo["nodeID"];
 								nodeIDUniqueList.push(nodeID);
+								var sumOfRunTimeForThisNode = 0;
 								var runTimeInc = nodeMetric[nodeID]["inc"];
 								runTimeInc.forEach(function(val){
 									runTimeVal += val;
 									ttemp += val;
+									sumOfRunTimeForThisNode += val;
 								});
+
+								runTimeAvg += sumOfRunTimeForThisNode / Math.max(runTimeInc.length, 1);
 							}
 						});// end of connectionList
 
@@ -590,9 +598,11 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 				}) // end of connectToID
 
 				if(runTimeVal > rootRuntime * FILTERPERCENT * 1){
-					totalRuntime += runTimeVal;
+					// totalRuntime += runTimeVal;
+					totalRuntime += runTimeAvg;
                     var tempEdge = {
-                        "value" : runTimeVal == 0 ? 1 : runTimeVal,
+                        // "value" : runTimeVal == 0 ? 1 : runTimeVal,
+                        "value" : runTimeAvg == 0 ? 1 : runTimeAvg,
                         // "oldSourceSpcID" : sourceSpcID,
                         // "oldTargetSpcID" : nodeList[tID]["oldSpecialID"],
                         // "sourceSpcID" : nodeList[sID]["specialID"],
@@ -831,9 +841,13 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 		 	var formCyleBool = false;
 
 		 	var chldRunTime = 0;
+
+		 	var numberOfProcess = 1;
+
 		 	chldConnList.forEach(function(chldConn){
 		 		var chldNodeID = chldConn["childID"];
 		 		var chldNodeRunTimeInc = nodeMetric[chldNodeID]['inc'];
+		 		// numberOfProcess = Math.max(numberOfProcess, chldNodeRunTimeInc.length);
 		 		chldNodeRunTimeInc.forEach(function(val){
 		 			chldRunTime += val;
 		 		}); // end of chldNodeRunTimeInc;
@@ -875,7 +889,7 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 		 			newConnectionMap[specialIDofCurrentNode].push({"oldChildSpecialID" : childSpecID, "newChildSpecialID" : newLabelName});
 
 		 			var tempEdge = {
-                        "value" : chldRunTime == 0 ? 1 : chldRunTime,
+                        "value" : chldRunTime == 0 ? 1 : chldRunTime / numberOfProcess,
                         "sourceSpcID" : specialIDofCurrentNode,
                         "targetSpcID" : newLabelName		 				
 		 			};
@@ -885,7 +899,7 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 		 		}
 		 		else{
 		 			var tempEdge = {
-                        "value" : chldRunTime == 0 ? 1 : chldRunTime,
+                        "value" : chldRunTime == 0 ? 1 : chldRunTime / numberOfProcess,
                         "sourceSpcID" : specialIDofCurrentNode,
                         "targetSpcID" : childSpecID		 				
 		 			};		

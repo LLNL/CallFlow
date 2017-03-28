@@ -7,6 +7,8 @@ var nodeMetricFile;
 var configFile;
 var dataSetFile;
 var dataSetInfo;
+var portNumber;
+
 if(!argv.d){
 	console.log("I do not know where to look for the data set");
 	return;
@@ -45,6 +47,9 @@ else{
 if( dataSetInfo["config"] != null){
 	configFile = filePath + dataSetInfo["config"];
 }
+if( dataSetInfo["port"] != null ){
+	portNumber = parseInt(dataSetInfo["port"]);
+}
 
 
 var path = require('path'),
@@ -53,7 +58,7 @@ var path = require('path'),
     LineByLineReader = require('line-by-line'),
     TreeModel = require('tree-model'),
     server = require('http').Server(app);
-var port = process.env.PORT || 8500,
+var port = process.env.PORT || portNumber || 8500,
 host = process.env.HOST || "localhost"; 
 // host = process.env.HOST || "detoo.cs.ucdavis.edu";
 
@@ -294,16 +299,28 @@ app.get('/getLists', function(req, res){
 				functionListResult[procedureID] = {
 					'procID' : procedureID,
 					'name' : procedureTable[procedureID],
-					'value' : 0
+					'value' : 0,
+					'excVal' :0
 				}
 			}
 
 			var nodeIDList = functionList[specialID][procedureID];
 			nodeIDList.forEach(function(nodeID){
 				var incTime = nodeMetric[nodeID]["inc"];
+				var temp = 0;
 				incTime.forEach(function(val, idx){
-					functionListResult[procedureID]["value"] += val;
+					temp += val;
 				})
+
+				var excTime = nodeMetric[nodeID]["exc"];
+				var excTemp = 0;
+				excTime.forEach(function(val, idx){
+					excTemp += val;
+				})
+
+				functionListResult[procedureID]["value"] += temp / Math.max(incTime.length, 1);
+
+				functionListResult[procedureID]["excVal"] += excTemp / Math.max(excTime.length, 1);
 			})
 		});
 
