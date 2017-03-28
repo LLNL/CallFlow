@@ -44,7 +44,7 @@ function Histogram(args){
 
 
 	var width = containerWidth - margin.right - margin.left;
-	var height = containerHeight - margin.top - margin.bottom;
+	var height = containerHeight - margin.top - margin.bottom - 20;
 
 	var histogramOffset = Math.floor( height / 3 );
 
@@ -58,9 +58,19 @@ function Histogram(args){
 	var xScale;
 	var yScale;
 
+	var logScaleBool = false;
+
 	function visualize(){
 		xScale = d3.scale.ordinal().domain(xVals).rangeRoundBands([0, width], 0.05);
-		yScale = d3.scale.linear().domain([0, d3.max(freq)]).range([histogramHeight, 0]);	
+
+		if(d3.max(freq) < 50){
+			yScale = d3.scale.linear().domain([0, d3.max(freq)]).range([histogramHeight, 0]);
+			logScaleBool = false;
+		}
+		else{
+			yScale = d3.scale.log().domain([1, d3.max(freq)]).range([histogramHeight, 10]);
+		}	
+
 
 		 svg = d3.select(containerID)
 				.append('svg')
@@ -110,6 +120,11 @@ function Histogram(args){
 				             	return xScale.rangeBand();
 				             })
 				             .attr('height', function(d){
+				             	var histFreq = d;
+				             	if( d < 1 && logScaleBool){
+				             		histFreq = 1;
+				             		return 0;
+				             	}
 				             	return histogramHeight - yScale(d);
 				             })
 				             .attr('fill', 'steelblue')
@@ -228,8 +243,12 @@ function Histogram(args){
 		    .tickFormat(function(d, i){
 	     		// var temp = axis_x[i] + "s";
 	     		var temp = axis_x[i];
-	     		if(i % 2 == 0)
-	     			return xFormat(temp);	
+	     		if(i % 4 == 0){
+	     			var value = temp * 0.000001;
+	     			return xFormat(value) + "s";
+	     			// return value;
+	     		}
+	
 	     		else
 	     			return "";	    	
 		    	
@@ -252,12 +271,13 @@ function Histogram(args){
 		var yAxisLine = svg.append("g")
 					  .attr("class", "y axis")
 					  .call(yAxis)
-		// var yAxisLineText = yAxisLine.append("text")
-		// 						  .attr("transform", "rotate(-90)")
-		// 						  .attr("y", 6)
-		// 						  .attr("dy", ".71em")
-		// 						  .style("text-anchor", "end")
-		// 						  .text("Frequency");	
+		var yAxisLineText = yAxisLine.append("text")
+								  .attr("transform", "rotate(-90)")
+								  .attr("y", -30)
+								  .attr('x', -histogramHeight + 50)
+								  .attr("dy", ".71em")
+								  .style("text-anchor", "end")
+								  .text("Frequency");	
 
 	    xAxisLine.selectAll('path')
 	                        .style("fill", "none")
@@ -377,6 +397,14 @@ function Histogram(args){
 			.attr("class", "x axis")
 			.attr("transform", "translate(0," + (height - 0) + ")")
 			.call(rankLineAxis);
+
+		var rankLineAxisLineText = rankLineAxisLine.append("text")
+										  // .attr("transform", "rotate(-90)")
+										  .attr("y", 20)
+										  .attr('x', 25)
+										  .attr("dy", ".71em")
+										  .style("text-anchor", "end")
+										  .text("MPI Ranks");	
 
 	    rankLineAxisLine.selectAll('path')
 	                        .style("fill", "none")
