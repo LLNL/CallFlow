@@ -235,7 +235,8 @@ function Sankey(args){
 		sankey = d3sankey()
 			.nodeWidth(nodeWidth)
 		    .nodePadding(ySpacing)
-		    .size([width * 0.9, treeHeight - ySpacing])
+		    // .size([width * 0.9, treeHeight - ySpacing])
+		    .size([width * 1.05, treeHeight - ySpacing])
 		    .xSpacing(xSpacing)
 		    .setReferenceValue(referenceValue);
 
@@ -437,10 +438,12 @@ function Sankey(args){
 			    	toolTipTexts(d,res, rootRunTime1)
 			    	d3.select(this).style("stroke-width", "2");
 			    	// fadeUnConnected(d);
+
+			    	// svg.selectAll(".link").style('fill-opacity', 0.0)
+			    	// svg.selectAll('.node').style('opacity', '0.0')
 		    	}
 		    })
 		    .on("mouseout", function(d) { 
-
 		    	toolTipList.attr('width', '0px')
 		    				.attr('height', '0px')
 		    	if(d.name != "intermediate"){
@@ -458,7 +461,7 @@ function Sankey(args){
 
 		    	
 		    	toolTipG.selectAll('*').remove();		    	
-		    } )		    
+		    })		    
 		    .on('click', function(d){
 		    	if(d.name != "intermediate"){
 			    	var ret = getFunctionListOfNode(d);
@@ -1022,6 +1025,13 @@ function Sankey(args){
 					.style('fill', function(d){
 						return d.color = setNodeColor(d);
 					})
+		}
+
+		if(nodeColorOption == 1){
+			return [minInc, maxInc];
+		}
+		else if(nodeColorOption == 2){
+			return [minExc, maxExc];
 		}
 
 	}
