@@ -142,7 +142,7 @@
 								type: 'component',
 								componentName: 'testComponent',
 								componentState: { id: 'procedure_view' },
-								title: 'Procedure View'
+								title: 'Graph View'
 							}
 						]
 						
@@ -266,15 +266,20 @@
 			fastSpan.style.fontFamily = "sans-serif";
 			fastSpan.style.top = "5px";
 			fastSpan.innerHTML = "low";
+			fastSpan.setAttribute("id", "slowAttr");
 			timeScaleDiv.appendChild(fastSpan);
 
 			var slowSpan = document.createElement('span');
-			slowSpan.style.position = "relative";
-			slowSpan.style.left = "140";
+			slowSpan.style.position = "absolute";
+			// slowSpan.style.left = "140";
+			slowSpan.style.left = "190";
 			slowSpan.style.fontSize = "15px";
 			slowSpan.style.fontFamily = "sans-serif";
-			slowSpan.style.top = "5px";
+			slowSpan.style.top = $("#metricColorScale").position().top + colorScaleHeight + 10;// + 5;
 			slowSpan.innerHTML = "high";
+			slowSpan.setAttribute("id", "fastAttr");
+
+
 			timeScaleDiv.appendChild(slowSpan);
 		}
 
@@ -1065,7 +1070,16 @@
 			console.log(colorOption);
 
 			if(sankeyVis){
-				sankeyVis.changeNodeColor(colorOption);
+				var runTimes = sankeyVis.changeNodeColor(colorOption);
+
+				if(colorOption == 1 || colorOption == 2){
+					$("#slowAttr").text(runTimes[0]);
+					$("#fastAttr").text(runTimes[1]);
+				}
+				else if(colorOption == 3){
+					$("#slowAttr").text(0);
+					$("#fastAttr").text(1);
+				}
 			}
 
 		}

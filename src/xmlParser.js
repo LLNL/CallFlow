@@ -1,4 +1,4 @@
-var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeMetrics, splitByParentList, nodeKeep){
+var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArray, nodeMetrics, splitByParentList, nodeKeep){
 	var fs = require('fs');
     var parser = require('libxmljs');
     var config;
@@ -19,8 +19,15 @@ var fileLoader = function(fileName, callBack, configFileName, procIDArray, nodeM
     var obj;
     var date1 = new Date();
     console.log('begin parsing xml file');
-    var xml = fs.readFileSync(xmlFile, 'utf8');
-    obj = parser.parseXmlString(xml, {noblanks: true});
+    if(xmlTree){
+        obj = xmlTree;
+    }
+    else{
+        var xml = fs.readFileSync(xmlFile, 'utf8');
+        obj = parser.parseXmlString(xml, {noblanks: true});
+
+        xmlTree = obj;
+    }
     // console.log('finish parsing xml file');
     var date2 = new Date();
     var fileTable = {};

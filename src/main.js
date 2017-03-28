@@ -71,6 +71,8 @@ Array.prototype.SumArray = function (arr) {
     return sum;
 }
 
+var xmlTree;
+
 var nodeMetric = {};
 var nodeMetricReader = new LineByLineReader(nodeMetricFile);
 var callMetrixData;
@@ -149,7 +151,7 @@ nodeMetricReader.on('end', function(){
 	console.log('done with reading metric data, begin reading xml file');
 	// var xmlFile = new fileLoader('../../data/miranda1/experiment.xml', myCallBack);
 	date1 = new Date();
-	var xml2 = new sankeySplitNode(xmlFile, sankeySplitNodeCallBack,configFile , [-99999], nodeMetric, [], nodeIDKeep);		
+	var xml2 = new sankeySplitNode(xmlTree, xmlFile, sankeySplitNodeCallBack,configFile , [-99999], nodeMetric, [], nodeIDKeep);		
 
 });
 
@@ -263,7 +265,7 @@ app.get('/splitNode', function(req, res){
 	res_global = res;
 
 	// var xml2 = new sankeySplitNode('../../data/miranda1/experiment.xml', splitNodeCallBack, procIDArray);
-	var xml2 = new sankeySplitNode(xmlFile, splitNodeCallBack2,configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep);	
+	var xml2 = new sankeySplitNode(xmlTree, xmlFile, splitNodeCallBack2,configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep);	
 })
 
 app.get('/getList', function(req, res){
@@ -366,7 +368,7 @@ app.get('/splitNodeByParents', function(req,res){
 
 	res_global = res;
 
-	var xml2 = new sankeySplitNode(xmlFile, splitNodeCallBack2,configFile , procIDArray, nodeMetric, splitByParentList, nodeIDKeep);	
+	var xml2 = new sankeySplitNode(xmlTree, xmlFile, splitNodeCallBack2,configFile , procIDArray, nodeMetric, splitByParentList, nodeIDKeep);	
 })
 
 app.get('/getHistogramScatterData', function(req, res){
