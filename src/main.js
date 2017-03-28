@@ -221,6 +221,10 @@ app.get('/', function(req, res){
 	res.sendFile(__dirname + '/index.html');
 });
 
+app.get('/dataSetInfo', function(req, res){
+	res.json(dataSetInfo);
+})
+
 app.get('/data', function(req, res){
 	runPython(res);
 })
