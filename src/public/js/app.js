@@ -208,6 +208,23 @@
 
 		function initializeControlView(){
 
+			var label = document.createElement("label");
+			var description = document.createTextNode('Show Name: ');
+			var checkbox = document.createElement("input");
+			
+			checkbox.type = "checkbox";
+			// checkbox.name = dat["name"];
+			// checkbox.value = dat["procID"];
+			checkbox.setAttribute('id', "showLabelBox");
+
+			label.appendChild(description);
+			label.appendChild(checkbox);
+
+			document.getElementById('control').appendChild(label);
+
+			$('#showLabelBox').attr('checked',false);
+
+
 			//create a dropdown to select color option
 			var dropDownData = {
 			    '0': 'Name',
@@ -236,7 +253,6 @@
 			temp.setAttribute("id", "metricColorScale");
 			// $("#metricColorScale").css({left: 200});
 			$('#control').append(temp);
-
 
 			var w = 200, h = 70;
 			var colorScaleHeight = 30
@@ -370,6 +386,8 @@
 
 		var rootRunTime = 0;
 
+		var showLabelBool = false;
+
 		function startVis(){
 
 			$("#control").css(
@@ -482,7 +500,13 @@
 
 					sankColor = sankeyVis.colorScale;				
 
-					d3.selectAll('.node text').style('opacity', 1);
+					if(showLabelBool == true){
+						d3.selectAll('.node text').style('opacity', 1);
+					}
+					else{
+						d3.selectAll('.node text').style('opacity', 0);
+					}
+					
 					// console.log('done with layout');
 
 					// console.log(histogramData);
@@ -784,7 +808,12 @@
 						clickCallBack: nodeClickCallBack
 					})					
 
-					d3.selectAll('.node text').style('opacity', 1);
+					if(showLabelBool == true){
+						d3.selectAll('.node text').style('opacity', 1);
+					}
+					else{
+						d3.selectAll('.node text').style('opacity', 0);
+					}
 
 					spinner.stop();
 
@@ -835,7 +864,12 @@
 					var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList}
 					var histogramData = newData["histogramData"];
 					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData});
-					d3.selectAll('.node text').style('opacity', 1);
+					if(showLabelBool == true){
+						d3.selectAll('.node text').style('opacity', 1);
+					}
+					else{
+						d3.selectAll('.node text').style('opacity', 0);
+					}
 					spinner.stop();
 
 
@@ -881,7 +915,12 @@
 					var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList}
 					var histogramData = newData["histogramData"];
 					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData});
-					d3.selectAll('.node text').style('opacity', 1);
+					if(showLabelBool == true){
+						d3.selectAll('.node text').style('opacity', 1);
+					}
+					else{
+						d3.selectAll('.node text').style('opacity', 0);
+					}
 
 					spinner.stop();
 
@@ -971,7 +1010,12 @@
 					// sankeyVis.changeProcessSelect({"brush": edgeSets["brush"], "nonBrush" : edgeSets["nonBrush"]});	
 					sankeyVis.changeProcessSelect({"brush": remapedEdgesBrushed, "nonBrush" : remapedEdgesNonBrushed});		
 
-					d3.selectAll('.node text').style('opacity', 1);
+					if(showLabelBool == true){
+						d3.selectAll('.node text').style('opacity', 1);
+					}
+					else{
+						d3.selectAll('.node text').style('opacity', 0);
+					}
 	            },
 	            error: function(){
 	            	console.log("There was problem with getting the metric data");
@@ -1083,6 +1127,26 @@
 			}
 
 		}
+
+		// $('#showLabelBox').attr('checked',false);
+		$("#showLabelBox").on("change",function(){
+			console.log("checkbox");
+		})
+
+		$(document).ready(function () {
+			$("#showLabelBox").on("change",function(){
+				var checkBoxStatus = $("#showLabelBox").is(':checked');
+
+				showLabelBool = checkBoxStatus;
+				if(showLabelBool == true){
+					d3.selectAll('.node text').style('opacity', 1);
+				}
+				else{
+					d3.selectAll('.node text').style('opacity', 0);
+				}				
+			})
+		});
+
 
 
 
