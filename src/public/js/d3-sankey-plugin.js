@@ -332,6 +332,7 @@ function d3sankey() {
             }
           })
 
+          node.maxY = maxY;
           node.y = Math.max(maxY, i);
           node.parY = maxY;
            // node.y = i;
@@ -424,6 +425,10 @@ function d3sankey() {
       // return a.y - b.y;
       // return b.y - a.y;
       // return b["runTime"] - a["runTime"];
+
+      // if(a["parY"] > b["parY"]){
+      //   return a["parY"] > b["parY"];
+      // }
 
       // if(a["maxLinks"] <= b["maxLinks"]){
         return a["maxLinks"] - b["maxLinks"];
