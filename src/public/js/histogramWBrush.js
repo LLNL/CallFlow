@@ -260,7 +260,7 @@ function Histogram(args){
 		    .orient("left")
 		    .ticks(freq.length)
 		    .tickFormat(function(d, i){
-		    	console.log(d, logScaleBool);
+		    	// console.log(d, logScaleBool);
 		    	if(logScaleBool){
 		    		if( d % 4 == 0 ){
 		    			return d;

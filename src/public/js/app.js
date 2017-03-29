@@ -620,14 +620,14 @@
 			var nameToIDMap = res["nameToIDMap"];
 			fromProcToProc.forEach(function(fromTo){
 				var funcName = fromTo["toProc"];
-				console.log(fromTo);
+				// console.log(fromTo);
 				if(tempList[funcName] == null){
 					tempList[funcName] = {"name" : funcName, "value" : 0, "procID" : nameToIDMap[funcName]};
 				}
 				tempList[funcName]["value"] += fromTo["value"];
 			});
 
-			console.log(tempList);
+			// console.log(tempList);
 
 			getList(node);
 
@@ -690,7 +690,7 @@
         		return b["value"] - a["value"];
         	})
         	listData.forEach(function(dat){
-        		console.log(dat);
+        		// console.log(dat);
 				// create the necessary elements
 				var funcName = dat["name"].trunc(20) + ": [" + (dat["value"] * 0.000001).toFixed(3)  + "s, " + (dat["value"] /rootRunTime * 100).toFixed(3) + "%]" ;
 				var label = document.createElement("label");
