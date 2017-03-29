@@ -1314,32 +1314,37 @@ function Sankey(args){
 	}
 
 	this.updateSize = function(size){
-		containerWidth = size["width"];
-		containerHeight = size["height"];
-		width = containerWidth - margin.left - margin.right;
-		height = containerHeight - 2*margin.top - 2*margin.bottom;	
+		if(containerWidth != size["width"] || containerHeight != size["height"]){
 
-		if(graph2){
-			treeHeight = height / 2;
-		}
-		else{
-			treeHeight = height;
-		}
-		d3.select(containerID).select('svg.sank1')
-			.attr("height", treeHeight + margin.top + margin.bottom)
-			.attr("width", width + margin.left + margin.right)
-		containerRect.attr('height', treeHeight)
-					.attr('width', width);
-		visualize();
+			containerWidth = size["width"];
+			containerHeight = size["height"];
+			width = containerWidth - margin.left - margin.right;
+			height = containerHeight - 2*margin.top - 2*margin.bottom;	
 
-		if(graph2){
-			d3.select(containerID).select('svg.sank2')
+			if(graph2){
+				treeHeight = height / 2;
+			}
+			else{
+				treeHeight = height;
+			}
+			d3.select(containerID).select('svg.sank1')
 				.attr("height", treeHeight + margin.top + margin.bottom)
-				.attr("width", width + margin.left + margin.right);
-			containerRect2.attr('height', treeHeight)
-							.attr('width', width);
-			visualize2();				
+				.attr("width", width + margin.left + margin.right)
+			containerRect.attr('height', treeHeight)
+						.attr('width', width);
+			visualize();
+
+			if(graph2){
+				d3.select(containerID).select('svg.sank2')
+					.attr("height", treeHeight + margin.top + margin.bottom)
+					.attr("width", width + margin.left + margin.right);
+				containerRect2.attr('height', treeHeight)
+								.attr('width', width);
+				visualize2();				
+			}
+
 		}
+
 
 	}
 
