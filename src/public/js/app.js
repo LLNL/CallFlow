@@ -235,7 +235,8 @@
 			    '0': 'Name',
 			    '1': 'Inclusive Runtime',
 			    '2': 'Exclusive Runtime',
-			    '3': 'Range/Avg'
+			    '3': 'Range/Avg',
+			    '4': 'Difference'
 			}
 
 			var $label = $("<label>").text('Color By: ');
@@ -259,49 +260,51 @@
 			// $("#metricColorScale").css({left: 200});
 			$('#control').append(temp);
 
-			var w = 200, h = 70;
-			var colorScaleHeight = 30
-			var nodeRunTimeColorScale = 'OrRd';
+			// var w = 200, h = 70;
+			// var colorScaleHeight = 30
+			// var nodeRunTimeColorScale = 'OrRd';
 
-			var spanColor = chroma.scale(nodeRunTimeColorScale).padding([0.2, 0]).domain([0,99]);
+			// var spanColor = chroma.scale(nodeRunTimeColorScale).padding([0.2, 0]).domain([0,99]);
 
-			// console.log(spanColor(1));
+			// // console.log(spanColor(1));
 
-			var timeScaleDiv = document.getElementById('metricColorScale');
-			$("#metricColorScale").width(200);
-			$("#metricColorScale").height(h);
-			for(var i = 0 ; i < 100; i++){
-				// nodeRunData.push(i);
-				var newSpan = document.createElement('span');
-				newSpan.style.backgroundColor = spanColor(i);
-				newSpan.style.display = 'inline-block';
-				newSpan.style.height = colorScaleHeight + 'px';
-				newSpan.style.width = '1%';
-				timeScaleDiv.appendChild(newSpan);
-			}
+			// var timeScaleDiv = document.getElementById('metricColorScale');
+			// $("#metricColorScale").width(200);
+			// $("#metricColorScale").height(h);
+			// for(var i = 0 ; i < 100; i++){
+			// 	// nodeRunData.push(i);
+			// 	var newSpan = document.createElement('span');
+			// 	newSpan.style.backgroundColor = spanColor(i);
+			// 	newSpan.style.display = 'inline-block';
+			// 	newSpan.style.height = colorScaleHeight + 'px';
+			// 	newSpan.style.width = '1%';
+			// 	timeScaleDiv.appendChild(newSpan);
+			// }
 
-			var fastSpan = document.createElement('span');
-			fastSpan.style.position = "relative";
-			fastSpan.style.left = "0";
-			fastSpan.style.fontSize = "15px";
-			fastSpan.style.fontFamily = "sans-serif";
-			fastSpan.style.top = "5px";
-			fastSpan.innerHTML = "low";
-			fastSpan.setAttribute("id", "slowAttr");
-			timeScaleDiv.appendChild(fastSpan);
+			// var fastSpan = document.createElement('span');
+			// fastSpan.style.position = "relative";
+			// fastSpan.style.left = "0";
+			// fastSpan.style.fontSize = "15px";
+			// fastSpan.style.fontFamily = "sans-serif";
+			// fastSpan.style.top = "5px";
+			// fastSpan.innerHTML = "low";
+			// fastSpan.setAttribute("id", "slowAttr");
+			// timeScaleDiv.appendChild(fastSpan);
 
-			var slowSpan = document.createElement('span');
-			slowSpan.style.position = "absolute";
-			// slowSpan.style.left = "140";
-			slowSpan.style.left = "190";
-			slowSpan.style.fontSize = "15px";
-			slowSpan.style.fontFamily = "sans-serif";
-			slowSpan.style.top = $("#metricColorScale").position().top + colorScaleHeight + 10;// + 5;
-			slowSpan.innerHTML = "high";
-			slowSpan.setAttribute("id", "fastAttr");
+			// var slowSpan = document.createElement('span');
+			// slowSpan.style.position = "absolute";
+			// // slowSpan.style.left = "140";
+			// slowSpan.style.left = "190";
+			// slowSpan.style.fontSize = "15px";
+			// slowSpan.style.fontFamily = "sans-serif";
+			// slowSpan.style.top = $("#metricColorScale").position().top + colorScaleHeight + 10;// + 5;
+			// slowSpan.innerHTML = "high";
+			// slowSpan.setAttribute("id", "fastAttr");
 
 
-			timeScaleDiv.appendChild(slowSpan);
+			// timeScaleDiv.appendChild(slowSpan);
+
+			colorScaleLegend(0);
 
 			var $rangeLable = $("<label>").text('Set Range:');
 			$('#control').append($rangeLable);
@@ -390,6 +393,7 @@
 		var nodes;
 		var edgeList;
     	var nodeList;
+    	var connectionList;
 
 		var currentClickNode;
 		var nodeMetrics;
@@ -514,13 +518,16 @@
 
 					edges.forEach(function(edge){
 						// console.log(edge["sourceLabel"] );
-						if(edge["sourceLabel"] == "LM0"){
+						if(edge["sourceLabel"] == "LM0" || parseInt(edge["sourceLabel"]) == 0){
 							rootRunTime += edge["value"];
 						}
 					})
 
 	            	edgeList = data["edgeList"];
 	            	nodeList = data["nodeList"];
+	            	connectionList = data["connInfo"];
+
+	            	// console.log(myNodes);
 
 					// console.log(myNodes);
 					$('#procedure_view').empty();
@@ -532,13 +539,13 @@
 						// height: height,
 						margin: {top: 10, right: 10, bottom: 10, left: 10},
 						data: {"nodes": myNodes, "links": edges},
-						toolTipData : {"edgeList" : edgeList, "nodeList": nodeList},
+						toolTipData : {"edgeList" : edgeList, "nodeList": nodeList, "connInfo" : connectionList},
 						histogramData : histogramData,
 						// spinner: spinner,
 						clickCallBack: nodeClickCallBack
 					})	
 
-					sankColor = sankeyVis.colorScale;				
+					// sankColor = sankeyVis.colorScale;				
 
 					if(showLabelBool == true){
 						d3.selectAll('.node text').style('opacity', 1);
@@ -570,8 +577,8 @@
 				width: width,
 				height: height,
 				margin: {top: 10, right: 10, bottom: 30, left: 44},
-				data1: sankNodeDataHistScat["inc"].slice(),
-				data2: sankNodeDataHistScat["exc"].slice(),
+				yData: sankNodeDataHistScat["inc"].slice(),
+				xData: sankNodeDataHistScat["exc"].slice(),
 				sort: false						
 			})			
 
@@ -627,7 +634,7 @@
 				tempList[funcName]["value"] += fromTo["value"];
 			});
 
-			// console.log(tempList);
+			console.log(tempList);
 
 			getList(node);
 
@@ -689,6 +696,7 @@
         	listData.sort(function(a,b){
         		return b["value"] - a["value"];
         	})
+        	console.log(listData);
         	listData.forEach(function(dat){
         		// console.log(dat);
 				// create the necessary elements
@@ -879,13 +887,15 @@
 			  return parseInt(this.value);
 			}).get();
 
+			console.log(currentClickNode);
+
 			spinner.spin(target);
 			$.ajax({
 	            type:'GET',
 	            contentType: 'application/json',
 	            dataType: 'json',
 	            url: '/splitNode',
-	            data: {"idList" :  idList},
+	            data: {"idList" :  idList, "lmID" : currentClickNode["nodeSpecialID"]},
 	            success: function(newData){
 
 	            	var data = newData["graph"];
@@ -902,6 +912,11 @@
 
 	            	edgeList = data["edgeList"];
 	            	nodeList = data["nodeList"];
+	            	connectionList = data["connInfo"];
+
+	            	console.log(edges);
+
+	            	console.log(edgeList);
 
 	            	// console.log(edges);
 
@@ -909,7 +924,7 @@
 
 					// console.log(remapResult);
 
-					var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList}
+					var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList, "connInfo" : connectionList}
 					var histogramData = newData["histogramData"];
 					sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData});
 					if(showLabelBool == true){
@@ -1055,7 +1070,9 @@
 		        	var remapedEdgesBrushed = reMapEdges(edgeSets["brush"]);
 		        	var remapedEdgesNonBrushed = reMapEdges(edgeSets["nonBrush"]);
 
-					// sankeyVis.changeProcessSelect({"brush": edgeSets["brush"], "nonBrush" : edgeSets["nonBrush"]});	
+		        	// console.log(remapedEdgesBrushed);
+
+					sankeyVis.changeProcessSelect({"brush": edgeSets["brush"], "nonBrush" : edgeSets["nonBrush"]});	
 					sankeyVis.changeProcessSelect({"brush": remapedEdgesBrushed, "nonBrush" : remapedEdgesNonBrushed});		
 
 					if(showLabelBool == true){
@@ -1119,6 +1136,7 @@
 			})
 
 			newEdges.forEach(function(nEdge){
+				console.log(nEdge);
 				nEdge["source"] = newSpecialIDToSankIDMap[ nEdge["sourceLabel"] ];
 				nEdge["sourceID"] = newSpecialIDToSankIDMap[ nEdge["sourceLabel"] ];
 				nEdge["target"] = newSpecialIDToSankIDMap[ nEdge["targetLabel"] ];
@@ -1160,6 +1178,7 @@
 
 			var colorOption = parseInt(Number($("#colorDropDown").val()));
 			console.log(colorOption);
+			colorScaleLegend(colorOption);
 
 			if(sankeyVis){
 				var runTimes = sankeyVis.changeNodeColor(colorOption);
@@ -1177,6 +1196,71 @@
 				}
 			}
 
+		}
+
+		function colorScaleLegend(colorOption){
+			var w = 200, h = 70;
+			var colorScaleHeight = 30
+			var nodeRunTimeColorScale;
+			var spanColor;
+			var innerHTMLText = [];
+			if(colorOption != 4){
+				nodeRunTimeColorScale = 'OrRd';
+				spanColor = chroma.scale(nodeRunTimeColorScale).padding([0.2, 0]).domain([0,99]);
+				innerHTMLText = ["low", "high"];
+
+			}
+			else{
+				nodeRunTimeColorScale = 'RdYlBu';
+				spanColor = chroma.scale(nodeRunTimeColorScale).domain([0,99]);
+				innerHTMLText = ["-1", "1"];
+			}
+
+			// console.log(spanColor(1));
+
+			var timeScaleDiv = document.getElementById('metricColorScale');
+			$("#metricColorScale").width(200);
+			$("#metricColorScale").height(h);
+			$("#metricColorScale").empty();
+			if(colorOption > 0){
+				for(var i = 0 ; i < 100; i++){
+					// nodeRunData.push(i);
+					var newSpan = document.createElement('span');
+					newSpan.style.backgroundColor = spanColor(i);
+					newSpan.style.display = 'inline-block';
+					newSpan.style.height = colorScaleHeight + 'px';
+					newSpan.style.width = '1%';
+					timeScaleDiv.appendChild(newSpan);
+				}
+
+				var fastSpan = document.createElement('span');
+				// fastSpan.setAttribute("id", "fastSpan");
+				fastSpan.style.position = "relative";
+				fastSpan.style.left = "0";
+				fastSpan.style.fontSize = "15px";
+				fastSpan.style.fontFamily = "sans-serif";
+				fastSpan.style.top = "5px";
+				fastSpan.innerHTML = innerHTMLText[0];
+				fastSpan.setAttribute("id", "slowAttr");
+				timeScaleDiv.appendChild(fastSpan);
+
+				var slowSpan = document.createElement('span');
+				slowSpan.style.position = "absolute";
+				// slowSpan.style.left = "140";
+				slowSpan.style.left = "190";
+				slowSpan.style.fontSize = "15px";
+				slowSpan.style.fontFamily = "sans-serif";
+				// slowSpan.style.top = $("#metricColorScale").position().top + colorScaleHeight + 5;// + 5;
+				slowSpan.style.top = $("#slowAttr").position().top;
+				slowSpan.innerHTML = innerHTMLText[1];
+				slowSpan.setAttribute("id", "fastAttr");
+
+				console.log($("#metricColorScale").position().top, colorScaleHeight, $("#slowAttr").position().top);
+
+
+				timeScaleDiv.appendChild(slowSpan);	
+			}
+		
 		}
 
 		function showDatasetInfo(){

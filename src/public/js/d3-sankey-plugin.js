@@ -311,8 +311,10 @@ function d3sankey() {
         else{
           divValue = d3.sum(nodes, value);
         }
-
-        return (size[1] - (nodes.length - 1) * nodePadding) / divValue;
+        // console.log("ky",(size[1] - (nodes.length - 1) * nodePadding) / divValue, size[1], (nodes.length - 1) * nodePadding, nodes.length, nodePadding);
+        // console.log(nodes);
+        // return (size[1] - (nodes.length - 1) * nodePadding) / divValue;
+        return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
       });
 
       // console.log("ky is", ky);
@@ -337,13 +339,14 @@ function d3sankey() {
           node.parY = maxY;
            // node.y = i;
           node.dy = node.value * ky;
+          // console.log(node.value, ky,node.dy)
           // node.dy = node.value;
           // node.dy = node["inTime"] * ky;
         });
 
-        // nodes.sort(function(a,b){
-        //   return a["parY"] - b["parY"];
-        // })
+        nodes.sort(function(a,b){
+          return a["parY"] - b["parY"];
+        })
 
         // nodes.forEach(function(node,i){
         //   node.y = i;
@@ -426,9 +429,9 @@ function d3sankey() {
       // return b.y - a.y;
       // return b["runTime"] - a["runTime"];
 
-      // if(a["parY"] > b["parY"]){
-      //   return a["parY"] > b["parY"];
-      // }
+      if(a["parY"] > b["parY"]){
+        return a["parY"] > b["parY"];
+      }
 
       // if(a["maxLinks"] <= b["maxLinks"]){
         return a["maxLinks"] - b["maxLinks"];
@@ -447,8 +450,8 @@ function d3sankey() {
       // node.sourceLinks.sort(descendingTargetDepth);
       // node.targetLinks.sort(descendingSourceDepth);
 
-      // node.sourceLinks.sort(descendingEdgeValue);
-      // node.targetLinks.sort(ascendingEdgeValue);
+      // node.sourceLinks.sort(ascendingEdgeValue);
+      // node.targetLinks.sort(descendingEdgeValue);
 
     });
     nodes.forEach(function(node) {
