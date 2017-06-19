@@ -114,9 +114,9 @@ function Scatter(args){
 	        .datum(regressionY)
 	        .attr("class", "res_line")
 	        .attr("d", line)
-	        .style("stroke", "red")
+	        .style("stroke", "black")
 			.style("stroke-width", "1px")
-			.style("opacity", 1);	
+			.style("opacity", 0.5);	
 
 		var coefText = svg.append('g');
 		var decimalFormat = d3.format("0.2f");
