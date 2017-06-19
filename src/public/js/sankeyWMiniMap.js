@@ -29,6 +29,7 @@ function Sankey(args){
 	var incColorScale;
 	var excColorScale;
 	var nRangeColorScale;
+	var diffColorScale;
 
 	var nodeColorOption = 0;
 
@@ -47,8 +48,11 @@ function Sankey(args){
 	var gMinExc;
 	var gMaxExc;
 
+	var minHeightForText = 50;
+	var textTruncForNode = 8;
+
 	data["links"].forEach(function(link){
-		if(link["sourceLabel"] == 'LM0'){
+		if(link["sourceLabel"] == 'LM0' || parseInt(link["sourceLabel"]) == 0){
 			rootRunTime += link["value"];
 		}
 	})
@@ -266,7 +270,8 @@ function Sankey(args){
 			svg.selectAll(".intermediate").remove();
 		}
 
-		// add in the links
+		// add in the links	
+		links.selectAll('.link').remove();
 		var link = links.selectAll(".link")
 		    .data(graph.links)
 		    .enter().append("path")
@@ -336,9 +341,9 @@ function Sankey(args){
 
 	    links.selectAll(".link")
 	    	.data(graph.links)
-	    	.transition()
-	    	.duration(transitionDuration)
-	    	.style('fill-opacity', 0.4)
+	    	// .transition()
+	    	// .duration(transitionDuration)
+	    	.style('fill-opacity', 0.0)
 	    	.attr('d', function(d){
 		      	var Tx0 = d.source.x + d.source.dx,
 		          	Tx1 = d.target.x,
@@ -393,8 +398,9 @@ function Sankey(args){
 
 
 		// add the rectangles for the nodes
-		node.append("rect")
+		var rect = node.append("rect")
 		    .attr("height", function (d) {
+		    	// console.log(d.dy);
 		        return d.dy;
 		        // return d["inTime"];
 		    })
@@ -441,7 +447,7 @@ function Sankey(args){
 		    	if(d.name != "intermediate"){
 			    	toolTipList.attr('width', "400px")
 								.attr('height', "150px")	    	
-			    	var res = getFunctionListOfNode(d);
+			    	var res = getFunctionListOfNode2(d);
 			    	toolTipTexts(d,res, rootRunTime1)
 			    	d3.select(this).style("stroke-width", "2");
 			    	// fadeUnConnected(d);
@@ -470,7 +476,7 @@ function Sankey(args){
 		    	toolTipG.selectAll('*').remove();		    	
 		    })		    
 		    .on('click', function(d){
-		    	// console.log(d);
+		    	console.log(d);
 		    	if(d.name != "intermediate"){
 			    	var ret = getFunctionListOfNode(d);
 			    	var fromProcToProc = ret["fromProcToProc"];
@@ -497,7 +503,7 @@ function Sankey(args){
 		    })
 		    .style('fill-opacity', function(d){
 		    	if(d.name == "intermediate"){
-		    		return 0.4
+		    		return 0.0;
 		    	}
 		    	else{
 		    		return 0;
@@ -524,7 +530,7 @@ function Sankey(args){
 	    		if(d.name != "intermediate"){
 	    			// return d.name//; + "\n" + format(d.value);
 
-	    			if(d.dy < 30 ){
+	    			if(d.dy < minHeightForText ){
 	    				return "";
 	    			}
 	    			else{
@@ -534,14 +540,48 @@ function Sankey(args){
 	    					return d.name;
 	    				}
 	    				else{
-	    					return d.name.trunc(10);
+	    					return d.name.trunc(textTruncForNode);
 	    				}
 	    			}
 	    		}
 	    		else{
 	    			return "";
 	    		}
+	    	})
+	    	.on("mouseover", function(d){
+	    		if(d.name != "intermediate"){
+	    			toolTipList.attr('width', "400px")
+								.attr('height', "150px")	    	
+			    	var res = getFunctionListOfNode2(d);
+			    	toolTipTexts(d,res, rootRunTime1);
+
+			    	// var parentDOM = d3.select(this).node().parentNode;
+			    	// console.log(parentDOM)
+			    	// console.log(d3.select(this.parentNode).select('rect'))
+			    	d3.select(this.parentNode).select('rect').style("stroke-width", "2");
+	    		}
+	    	})
+	    	.on("mouseout", function(d){
+		    	toolTipList.attr('width', '0px')
+		    				.attr('height', '0px')
+		    	if(d.name != "intermediate"){
+			    	d3.select(this.parentNode).select('rect').style("stroke-width", "1");
+			    	unFade();
+		    	}
+				toolTip.style('opacity', 0)
+						.style('left', function(){
+							return 0;
+						})
+						.style('top', function(){
+							return 0;
+						})
+		    	toolTipText.html("");
+
+		    	
+		    	toolTipG.selectAll('*').remove();		    		
 	    	});
+
+
 
 			// the function for moving the nodes
 			function dragmove(d) {
@@ -593,7 +633,7 @@ function Sankey(args){
 	    	.duration(transitionDuration)
 			.text(function (d) {
 	    		if(d.name != "intermediate"){
-	    			if(d.dy < 30 ){
+	    			if(d.dy < minHeightForText ){
 	    				return "";
 	    			}
 	    			else{
@@ -603,7 +643,7 @@ function Sankey(args){
 	    					return d.name;
 	    				}
 	    				else{
-	    					return d.name.trunc(10);
+	    					return d.name.trunc(textTruncForNode);
 	    				}
 	    			}
 	    		}
@@ -633,53 +673,77 @@ function Sankey(args){
 		    })	    	
 	    ////////////////////////////////////
 
+	    // console.log(nodes.selectAll('path'));
+
+	    links.selectAll(".link")
+	    	.data(graph.links)
+	    	.transition()
+	    	.duration(transitionDuration)
+	    	.delay(transitionDuration/3)
+	    	.style('fill-opacity', 0.4)
+	    nodes.selectAll('path')
+	    	.data(graph.nodes)
+	    	.transition()
+	    	.duration(transitionDuration)
+	    	.delay(transitionDuration/3)
+	    	.style('fill-opacity' , function(d){
+	    		console.log(d.name)
+	    		if(d.name == "intermediate"){
+	    			return 0.4;
+	    		}
+	    	})
+
+	    var drawHist = true;
+
 
 	    //add in histogram
-	    graph.nodes.forEach(function(node){
-	    	// console.log(node, node.specialID, histogramData);
-	    	if(node.name != "intermediate"){
+	    if(drawHist){
+		    graph.nodes.forEach(function(node){
+		    	// console.log(node, node.specialID, histogramData);
+		    	if(node.name != "intermediate"){
 
-		    	var histoData = histogramData["histogramData"][node.specialID];
+			    	var histoData = histogramData["histogramData"][node.specialID];
 
-		    	var myXvals = histoData["xVals"];
-		    	var myFreq = histoData["freq"];
+			    	var myXvals = histoData["xVals"];
+			    	var myFreq = histoData["freq"];
 
-		    	var myHist = histograms.append('g')
-		    							.attr('transform', function(){
-								    		return "translate(" + node.x + "," + (node.y - ySpacing) + ")";
-								    	});
-				myHist.selectAll('.histobars')
-						.data(myFreq)
-						.enter()
-						.append('rect')
-						.attr('class', 'histobars')
-			             .attr('x', function(d, i){
-			             	return minimapXScale(myXvals[i]);
-			             })
-			             .attr('y', function(d){
-			             	// height - y(d);
-			             	return minimapYScale(d);
-			             })
-			             .attr('width', function(d){
-			             	// return width/hData.length - 1.0;
-			             	return minimapXScale.rangeBand();
-			             })
-			             .attr('height', function(d){
-			             	return (ySpacing - 5) - minimapYScale(d);
-			             })
-			             .attr('fill', 'steelblue')
-			             .attr('opacity', 1)
-			             .attr('stroke-width', function(d,i){
-			 
-			             	return "0.2px";
-			             	
-			             })
-			             .attr('stroke', function(d,i){
-			             	return "black"		             	
-			             });
+			    	var myHist = histograms.append('g')
+			    							.attr('transform', function(){
+									    		return "translate(" + node.x + "," + (node.y - ySpacing) + ")";
+									    	});
+					myHist.selectAll('.histobars')
+							.data(myFreq)
+							.enter()
+							.append('rect')
+							.attr('class', 'histobars')
+				             .attr('x', function(d, i){
+				             	return minimapXScale(myXvals[i]);
+				             })
+				             .attr('y', function(d){
+				             	// height - y(d);
+				             	return minimapYScale(d);
+				             })
+				             .attr('width', function(d){
+				             	// return width/hData.length - 1.0;
+				             	return minimapXScale.rangeBand();
+				             })
+				             .attr('height', function(d){
+				             	return (ySpacing - 5) - minimapYScale(d);
+				             })
+				             .attr('fill', 'steelblue')
+				             .attr('opacity', 1)
+				             .attr('stroke-width', function(d,i){
+				 
+				             	return "0.2px";
+				             	
+				             })
+				             .attr('stroke', function(d,i){
+				             	return "black"		             	
+				             });
 
-	    	}
-	    })
+		    	}
+		    })
+	    }
 
 
 		function showLegend(){
@@ -711,7 +775,7 @@ function Sankey(args){
 			.nodeWidth(nodeWidth)
 
 		    .nodePadding(ySpacing)
-		    .size([width * 0.9, treeHeight])
+		    .size([width * 1.05, treeHeight - ySpacing])
 		    .xSpacing(xSpacing)
 		    .setReferenceValue(referenceValue);
 
@@ -731,6 +795,7 @@ function Sankey(args){
 		}
 
 		// add in the links
+		links2.selectAll('.link').remove();
 		var link2 = links2.selectAll(".link")
 		    .data(graph2.links)
 		    .enter().append("path")
@@ -803,7 +868,7 @@ function Sankey(args){
 	    	.data(graph2.links)
 	    	.transition()
 	    	.duration(transitionDuration)
-	    	.style('fill-opacity', 0.4)
+	    	.style('fill-opacity', 0.0)
 	    	.attr('d', function(d){
 		      	var Tx0 = d.source.x + d.source.dx,
 		          	Tx1 = d.target.x,
@@ -947,7 +1012,7 @@ function Sankey(args){
 		    })
 		    .style('fill-opacity', function(d){
 		    	if(d.name == "intermediate"){
-		    		return 0.4
+		    		return 0.0;
 		    	}
 		    	else{
 		    		return 0;
@@ -1075,7 +1140,27 @@ function Sankey(args){
 		    	else{
 			    	return d.color = setNodeColor(d);
 		    	}
-		    })	    	
+		    })	   
+
+	    links2.selectAll(".link")
+	    	.data(graph2.links)
+	    	.transition()
+	    	.duration(transitionDuration)
+	    	.delay(transitionDuration/3)
+	    	.style('fill-opacity', 0.4)
+	    nodes2.selectAll('path')
+	    	.data(graph2.nodes)
+	    	.transition()
+	    	.duration(transitionDuration)
+	    	.delay(transitionDuration/3)
+	    	.style('fill-opacity' , function(d){
+	    		console.log(d.name)
+	    		if(d.name == "intermediate"){
+	    			return 0.4;
+	    		}
+	    	})
+
+
 	    ////////////////////////////////////
 	}
 
@@ -1257,14 +1342,13 @@ function Sankey(args){
 			calcStat(node["inclusive"], node["exclusive"]);
 			// console.log(node["inclusive"]);
 
-			if(node['specialID'] == 'LM0'){
+			if(node['specialID'] == 'LM0' || node['specialID'] == "0"){
 				rootRunTime1 = node["inclusive"];
 			}
-
 		});	
 
 		strip_intermediate(data["nodes"], data["links"])
-
+		// console.log(data["links"]);
 		
 		var newEdges = newEdgeData["nonBrush"];
 		var maxEdge2 = 0;
@@ -1289,15 +1373,30 @@ function Sankey(args){
 			node["inclusive"] = Math.max(inComing, outGoing);
 			node["exclusive"] = Math.max(inComing, outGoing) - outGoing;
 
+			// console.log(inComing, outGoing);
+
 			calcStat(node["inclusive"], node["exclusive"]);
 			// console.log(node["inclusive"]);
-			if(node['specialID'] == 'LM0'){
+			if(node['specialID'] == 'LM0' || node['specialID'] == "0"){
 				rootRunTime2 = node["inclusive"];
 			}
 
 		});	
 
+		data["nodes"].forEach(function(node){
+			node.diff = 0;
+			secondGraphNodes.some(function(sNode){
+				if(sNode["specialID"] == node["specialID"]){
+					var diff = (node["inclusive"] - sNode["inclusive"]) / node["inclusive"];
+					sNode.diff = diff;
+					node.diff = (sNode["inclusive"] - node["inclusive"]) / sNode["inclusive"]
+					return true;
+				}
+			})
+		})
+
 		referenceValue = Math.max(maxEdge1, maxEdge2);
+		// console.log(rootRunTime1, rootRunTime2, referenceValue, maxEdge1, maxEdge2);
 
 		graph2 = {"nodes" : secondGraphNodes, "links" : newEdges};
 
@@ -1379,6 +1478,7 @@ function Sankey(args){
 	}
 
 	function getFunctionListOfNode(d){
+		console.log('inside functionlist1');
 		var sankeyNodeList = d["sankeyNodeList"];
 		var uniqueNodeIDList = d["uniqueNodeID"];
 
@@ -1422,6 +1522,7 @@ function Sankey(args){
 		sankeyNodeList.forEach(function(sankID){
 			// console.log(toolTipData["nodeList"][sankID]);
 			var connectionInfo = toolTipData["edgeList"][sankID];
+			console.log(connectionInfo, toolTipData["edgeList"], sankID);
 			connectionInfo.forEach(function(connInfo){
 				if(uniqueNodeIDList.indexOf(connInfo["nodeID"]) > -1 
 					&& parUniqueNodeID.indexOf(connInfo["parentNodeID"]) > -1
@@ -1436,8 +1537,10 @@ function Sankey(args){
 	    					"procedureNameList" : {}
 	    				}
 	    			}
+
+
 	    			var procedureName = connInfo["procedureName"];
-	    			nameToIDMap[procedureName] = connInfo["procID"];
+	    			nameToIDMap[procedureName] = connInfo["procID"] || connInfo["procedureID"];
 	    			// if(connectivity[parentProcName]["procedureNameList"].indexOf(procedureName) == -1){
 	    			// 	connectivity[parentProcName]["procedureNameList"].push(procedureName);
 	    			// }
@@ -1483,6 +1586,109 @@ function Sankey(args){
 		return res;
 	}
 
+	function getFunctionListOfNode2(d){
+		console.log("inside functionlist2");
+		var sankeyNodeList = d["sankeyNodeList"];
+		var uniqueNodeIDList = d["uniqueNodeID"];
+
+
+		//get the final nodes that we are connected to
+		var sourceLabel = [];
+		var sourceID = [];
+		// console.log(edges);
+		edges.forEach(function(edge){
+			
+			if(edge["targetID"] == d["sankeyID"]){
+				if(sourceLabel.indexOf(edge["sourceLabel"]) ==-1) {
+					sourceLabel.push( edge["sourceLabel"] );
+				}
+	    		if(sourceID.indexOf(edge["sourceID"]) == -1){
+					sourceID.push(edge["sourceID"]);
+				}
+			}
+		});
+
+		var myParent = [];
+		//get uniqueNodeID of parent
+		var parUniqueNodeID = [];
+		data.nodes.forEach(function(node){
+			if(sourceID.indexOf(node["sankeyID"]) >-1 ){
+				myParent.push(node);
+				// console.log(node);
+				node["uniqueNodeID"].forEach(function(nodeID){
+					parUniqueNodeID.push(nodeID)
+				})
+			}
+		})
+		
+		// console.log(sankeyNodeList, uniqueNodeIDList, parUniqueNodeID);
+		var connectivity = {};
+		var temp = 0;
+		var nameToIDMap = {};
+		// sankeyNodeList.forEach(function(sankID){
+			// console.log(toolTipData["nodeList"][sankID]);
+			var connectionInfo = toolTipData["connInfo"][ d["specialID"] ];
+			console.log(connectionInfo, toolTipData);
+			connectionInfo.forEach(function(connInfo){
+				if(uniqueNodeIDList.indexOf(connInfo["nodeID"]) > -1 
+					&& parUniqueNodeID.indexOf(connInfo["parentNodeID"]) > -1
+					&& (connInfo["type"] == "PR" || connInfo["type"] == "PF")
+					){
+					// console.log(connInfo);
+	    			var parentProcName = connInfo["parentProcedureName"];
+	    			if(connectivity[parentProcName] == null){
+	    				connectivity[parentProcName] = {
+	    					"name" : parentProcName,
+	    					"loadModule" : connInfo["parentLoadModuleName"],
+	    					"procedureNameList" : {}
+	    				}
+	    			}
+
+
+	    			var procedureName = connInfo["procedureName"];
+	    			nameToIDMap[procedureName] = connInfo["procID"] || connInfo["procedureID"];
+	    			// if(connectivity[parentProcName]["procedureNameList"].indexOf(procedureName) == -1){
+	    			// 	connectivity[parentProcName]["procedureNameList"].push(procedureName);
+	    			// }
+	    			if(connectivity[parentProcName]["procedureNameList"][procedureName] == null){
+	    				connectivity[parentProcName]["procedureNameList"][procedureName] = 0;
+	    			}
+	    			connectivity[parentProcName]["procedureNameList"][procedureName] += connInfo["value"];
+	    			temp += connInfo["value"]
+				}
+			});
+		// });
+
+		// console.log(connectivity);
+		// console.log(temp, d["runTime"]);
+
+		var fromProcToProc = [];
+		Object.keys(connectivity).forEach(function(fromProc){
+			Object.keys(connectivity[fromProc]["procedureNameList"]).forEach(function(toProc){
+				var temp = {
+					"fromProc" : fromProc,
+					"fromLM" : connectivity[fromProc]["loadModule"],
+					"toProc" : toProc,
+					"toLM" : d["name"],
+					"value" : connectivity[fromProc]["procedureNameList"][toProc]
+				}
+				// console.log(temp);
+				fromProcToProc.push(temp);
+			})
+		})
+
+		fromProcToProc.sort(function(a,b){
+			return b["value"] - a["value"];
+		});
+		var temp = 0;
+
+		var res = {"fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap , "rootRunTime" : rootRunTime}
+		// console.log(fromProcToProc)
+		return res;
+	}
+
+
+
 	function toolTipTexts(node, data, runTimeR){
     	var fromProcToProc = data["fromProcToProc"];
     	var numberOfConn = Math.min(fromProcToProc.length, 10);
@@ -1511,6 +1717,8 @@ function Sankey(args){
 
     	var textLength = 100;
     	var rectWidth = "5px";
+
+    	console.log(fromProcToProc)
 
     	toolTipG.selectAll('*').remove();
     	for(var tIndex = 0; tIndex < numberOfConn; tIndex++){
@@ -1587,11 +1795,14 @@ function Sankey(args){
 
 	    nRangeColorScale = chroma.scale('OrRd').padding([0.2, 0])
 	    				.domain([ 0, 1 ]);
+
+	    diffColorScale = chroma.scale('RdYlBu').domain([-1, 1]);
 	}
 
 	function setNodeColor(node){
 			if(nodeColorOption == 0){
 				return color(node.name.replace(/ .*/, ""));
+				// return color(node["specialID"]);
 			}
 			else if(nodeColorOption == 1){
 		        return incColorScale(node.inclusive);
@@ -1601,6 +1812,9 @@ function Sankey(args){
 			}	
 			else if(nodeColorOption == 3){
 		        return nRangeColorScale(node.nRange);
+			}
+			else if(nodeColorOption == 4){
+				return diffColorScale(node.diff || 0);
 			}
 	}
 
@@ -1614,7 +1828,6 @@ function Sankey(args){
 	    return { width: size.width, height: size.height };
 	}
 
-	console.log(calcTextSize("AMPI"));
 
 
 	//////////////////Added in for edge crossing//////////////////////////////

@@ -1,4 +1,4 @@
-var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArray, nodeMetrics, splitByParentList, nodeKeep){
+var fileLoader = function(xmlTree, fileName, nodeMetrics, callBack, configFileName){
 	var fs = require('fs');
     var parser = require('libxmljs');
     var config;
@@ -12,7 +12,7 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
         config = {};
     }
     
-    console.log(config);
+    var someCounter = 0;
 
     var xmlFile = fileName;
 
@@ -69,6 +69,7 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
     var procIDToLMIDMap = {};
 
     var functionList = {};
+
 
     function parseLoadModule(xmlLoadModNode){
         xmlLoadModNode.childNodes().forEach(function(loadMod){
@@ -227,6 +228,7 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
     var callMetrixData = {};
     var entryExitData = {};
 
+    //this hold the path as well as the loadmodid of the node;
     var nodeInfo = {};
 
     var nodeArray = {};
@@ -255,6 +257,7 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
 
         root.procedureID = 0;
         root.loadModuleID = 0;
+        root.oldLoadModuleID = 0;
         root.path = root.nodeID;
         root.specialIDName = "Root";
 
@@ -270,36 +273,31 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
             sanKeyMetricDataLM[level] = {};
             connectionInfo[level] = {};
         }
-        nodeArray[level][tempID] = {
-            "name" : "Root",
-            "inTime" : 0,
-            "exTime" : 0,
-            "lmID" : 0,
-            "procID" : 0,
-            "myID" : sanKeyIDLM,
-            "level" : level,
-            "type" : "LM",
-            "specialID" : tempID, 
-            "uniqueID" : [],
+        nodeArray[level][0] = {
+                "name" : name,
+                "inTime" : 0,
+                "exTime" : 0,
+                "loadModID" : 0,
+                "type" : "Root",
+                "parentLMID" : [],
+                "level" : level,
+                "uniqueID" : [], 
         };
-        sanKeyMetricDataLM[level][tempID] = [];
-        // sanKeyMetricData[level]["root"].push(root.nodeID);
-        sanKeyMetricDataLM[level][tempID].push({"nodeID": root.nodeID, "parentNodeID" : null, "nodeLevel" : level, "parentSpecialID" : null});   
+ 
+ 		nodeInfo[root.nodeID] = {
+ 			"path" : nodePaths[root.nodeID],
+ 			"loadModID" : 0,
+ 			"oldLoadModID" : 0,
+            "procID" : 0
+ 		}
 
-        nodeArray[level][tempID]["uniqueID"].push(root.nodeID);
+        nodeArray[level][0]["uniqueID"].push(root.nodeID);
 
-        connectionInfo[level][tempID] = [];
+        connectionInfo[level][0] = [];
 
         sanKeyIDLM += 1;
 
         /////////////End/////////////////////////////////////        
-
-        entryExitData[tempID] = {
-            "name" : "root",
-            "nodeIDs" : [], //an array to store the id of tree nodes
-            "exit" : [], //array to store procedures that call proc from different lm
-            "enter" : [] //array to store procs that was call from different lm
-        }
 
         var nextLevel = level + 1;
         internalNodeList[root.nodeID] = root;
@@ -331,23 +329,21 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
 
         //////////////////End////////////////////////////////
 
-		addEntryExitData(tempID, newNode, parentNode);
+		// if(parentNode["specialID"] == "CLM2" && newNode["specialID"] == "LM8"){
+		// 	var physicsFunc = procedureTable[parentNode.procedureID];
+		// 	var mirandaFunc = procedureTable[newNode.procedureID];
 
-		if(parentNode["specialID"] == "CLM2" && newNode["specialID"] == "LM8"){
-			var physicsFunc = procedureTable[parentNode.procedureID];
-			var mirandaFunc = procedureTable[newNode.procedureID];
+		// 	var physicsFile = fileTable[parentNode["fileID"]];
+		// 	var mirandaFile = fileTable[newNode["fileID"]];
+		// 	var temp = {
+		// 		"physics funtion" : physicsFunc,
+		// 		"miranda function" : mirandaFunc,
+		// 		"physics file" : physicsFunc,
+		// 		"miranda file" : mirandaFile
+		// 	};
+		// 	// fs.appendFileSync("physicstomiranda", JSON.stringify(temp) + "\n");
 
-			var physicsFile = fileTable[parentNode["fileID"]];
-			var mirandaFile = fileTable[newNode["fileID"]];
-			var temp = {
-				"physics funtion" : physicsFunc,
-				"miranda function" : mirandaFunc,
-				"physics file" : physicsFunc,
-				"miranda file" : mirandaFile
-			};
-			// fs.appendFileSync("physicstomiranda", JSON.stringify(temp) + "\n");
-
-		}
+		// }
 
         xmlNode.childNodes().forEach(function(child){
             if(child.name() != "M"){
@@ -448,8 +444,6 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
         addInfo(level, tempID, newNode, parentNode);       
         //////////////////End////////////////////////////////
 
-		addEntryExitData(tempID, newNode, parentNode);
-
         var nextLevel = level + 1;;
         xmlNode.childNodes().forEach(function(child){
             if(child.name() != "M"){
@@ -462,57 +456,35 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
         var xmlNodeName = xmlNode.name();
         // console.log(xmlNodeName);
 
-        if(xmlNodeName == "SecCallPathProfileData" || 
-            xmlNodeName == "PF" ||
-            xmlNodeName == "C" ||
-            xmlNodeName == "S" ||
-            xmlNodeName == "L" ||
-            xmlNodeName == "Pr"){
-            // console.log(xmlNodeName);
-            var nodeID;
-            if(xmlNodeName == "SecCallPathProfileData"){
-                nodeID = 1;
-            }
-            else{
-                nodeID = parseInt(xmlNode.attr('i').value());
-            }
-
-            // console.log(nodeID, nodeKeep.indexOf(nodeID) > -1)
-
-            if(nodeKeep.indexOf(nodeID) > -1 || xmlNodeName == "C"){
-                if(xmlNodeName == "SecCallPathProfileData"){
-                    counter++;
-                    parseSecCallPathProfileData(xmlNode, level);
-                }
-
-                else if(xmlNodeName == "PF"){
-                    counter++;
-                    parsePF(xmlNode, parentNode, Cid, level);
-                }
-
-                else if(xmlNodeName == "C"){
-                    // counter++;
-                    parseC(xmlNode, parentNode, level);
-                }
-
-                else if(xmlNodeName == "S"){
-                    counter++;
-                    parseLine(xmlNode, parentNode, level);
-                }
-
-                else if(xmlNodeName == "L"){
-                    counter++;
-                    parseLoop(xmlNode, parentNode, level);
-                }
-
-                else if(xmlNodeName == "Pr"){
-                    counter++;
-                    parsePR(xmlNode, parentNode, level);
-                }   
-            } 
-
+        if(xmlNodeName == "SecCallPathProfileData"){
+            counter++;
+            parseSecCallPathProfileData(xmlNode, level);
         }
 
+        else if(xmlNodeName == "PF"){
+            counter++;
+            parsePF(xmlNode, parentNode, Cid, level);
+        }
+
+        else if(xmlNodeName == "C"){
+            // counter++;
+            parseC(xmlNode, parentNode, level);
+        }
+
+        else if(xmlNodeName == "S"){
+            counter++;
+            parseLine(xmlNode, parentNode, level);
+        }
+
+        else if(xmlNodeName == "L"){
+            counter++;
+            parseLoop(xmlNode, parentNode, level);
+        }
+
+        else if(xmlNodeName == "Pr"){
+            counter++;
+            parsePR(xmlNode, parentNode, level);
+        }   
     }   
     
 
@@ -604,32 +576,17 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
     }
 
 
+    var unKnowLoadModID;
 
     //this function determine the specialID, name and type of the node
     function getSpecialIDNameType(node){
         var specialID;// = "LM" + newNode.loadModuleID;
         var type;
         var name;
-        if(procIDArray.indexOf(node.procedureID) > -1){
-            specialID = "PROC" + node.procedureID;
-            type = "PROC";
-            name = procedureTable[node.procedureID];
 
-            if(procIDToLMIDMap[node.procedureID] == null){
-                maxLMID += 1;
-                procIDToLMIDMap[node.procedureID] = {
-                    "newID" : maxLMID
-                }
-
-                loadModuleTable[maxLMID] = procedureTable[node.procedureID];
-            }
-
-            node.oldLoadModuleID = procIDToLMIDMap[node.procedureID]["newID"];
-
-        }
 
         //this lm is the one we want to split based on the config file
-        else if(lmIDToSplitConfig.indexOf(node.loadModuleID) >-1){
+        if(lmIDToSplitConfig.indexOf(node.loadModuleID) >-1){
             //check for the file names
 
             //first get all the lm
@@ -637,11 +594,19 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
             type = "LM";
             name = loadModuleTable[node.loadModuleID]
 
+            // console.log(loadModuleTable[node.loadModuleID]);
+
             //first set default for unknown file
             if(fileTable[node.fileID].includes("unknown file")){
                     specialID = "CLM" + node.loadModuleID + "-U";
                     type = "CLM";
-                    name = loadModuleTable[node.loadModuleID] + "-unknown";             
+                    name = loadModuleTable[node.loadModuleID] + "-unknown";  
+                    if(unKnowLoadModID == null){
+                    	maxLMID += 1; 
+                    	loadModuleTable[maxLMID] = name;  
+                    	unKnowLoadModID = maxLMID;
+                    } 
+                    node.oldLoadModuleID = unKnowLoadModID;    
             }
 
             //first check by file
@@ -720,41 +685,9 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
             name = loadModuleTable[node.loadModuleID];
         }   
 
-        if(splitByParentList.indexOf(specialID) > -1){
-
-        	if(internalNodeList[node.parentID].oldLoadModuleID != node.oldLoadModuleID){
-	            specialID = "LM" + internalNodeList[node.parentID].oldLoadModuleID + "-" + "LM" + node.oldLoadModuleID;
-            	type = "LM" + "-" + "LM";
-            	name = loadModuleTable[ internalNodeList[node.parentID].oldLoadModuleID ] + "-" + loadModuleTable[node.oldLoadModuleID];
-        	}
-        	else{
-        		nodePath = node["path"];
-        		var nodePathID = nodePath.split('*');
-        		nodePathID.pop();
-        		nodePathID.sort(function(a,b){
-        			return parseInt(b) - parseInt(a);
-        		});
-        		nodePathID.some(function(nodeID){
-        			// console.log(nodeID, node.nodeID);
-
-        			var parLMID = internalNodeList[ parseInt(nodeID) ].oldLoadModuleID;    			
-        			if(parLMID != node.oldLoadModuleID){
-        				specialID = "LM" + parLMID + "-" + "LM" + node.oldLoadModuleID;
-        				type = "LM" + "-" + "LM";
-        				name = loadModuleTable[ internalNodeList[parseInt(nodeID)].oldLoadModuleID ] + "-" + loadModuleTable[node.oldLoadModuleID];
-        				return true;
-        			}
-        		})
-        	} 
-
-        }
-
-    // if(name.includes("miranda") && name != "miranda.x-unknown"){
-    //     console.log(name);
-    // }
-
-    // console.log(name);
-
+        // if(name.includes("miranda") && name != "miranda.x-unknown"){
+        // 	console.log(name);
+        // }
 
         return {
         	"name" : name,
@@ -774,125 +707,92 @@ var fileLoader = function(xmlTree, fileName, callBack, configFileName, procIDArr
 
     //this create new node if needed for the final tree
     function createNewTreeNode(level, specialID, name, type, node){
-        if(nodeArray[level][specialID] == null){
-            nodeArray[level][specialID] = {
+        if(nodeArray[level][node.oldLoadModuleID] == null){
+            nodeArray[level][node.oldLoadModuleID] = {
                 "name" : name,
                 "inTime" : 0,
                 "exTime" : 0,
-                "lmID" : node.loadModuleID,
-                "myID" : sanKeyIDLM,
-                "specialID" : specialID,
+                "loadModID" : node.oldLoadModuleID,
+                "oldLoadModID" : node.oldLoadModuleID,
                 "type" : type,
-                "parentSpecialID" : [],
+                "parentLMID" : [],
                 "level" : level,
                 "uniqueID" : [],         
             };
 
             sanKeyIDLM += 1;
 
-            sanKeyMetricDataLM[level][specialID] = [];
-            connectionInfo[level][specialID] = [];
+            sanKeyMetricDataLM[level][node.oldLoadModuleID] = [];
+            connectionInfo[level][node.oldLoadModuleID] = [];
         }
     }
 
     //this add new info into the nodearray, sankeymetric, and connectionInfo
     function addInfo(level, specialID, node, parentNode){
-        if(nodeArray[level][specialID]["uniqueID"].indexOf(node.nodeID) == -1){
-            nodeArray[level][specialID]["uniqueID"].push(node.nodeID);
+
+ 		nodeInfo[node.nodeID] = {
+ 			"path" : nodePaths[node.nodeID],
+ 			"loadModID" : node.oldLoadModuleID,
+ 			"oldLoadModID" : node.oldLoadModuleID,
+            "procID" : node.procedureID
+ 		}
+
+    	if(nodeArray[level][node.oldLoadModuleID]["uniqueID"].indexOf(node.nodeID) == -1){
+            nodeArray[level][node.oldLoadModuleID]["uniqueID"].push(node.nodeID);
         }
 
-        sanKeyMetricDataLM[level][specialID].push({"nodeID": node.nodeID, "parentLMID" : parentNode.loadModuleID, "parentNodeID" : parentNode.nodeID, "nodeLevel" : level, "parentProcID": parentNode.procedureID, "parentSpecialID" : parentNode.specialID});
-
-		if(nodeArray[level][specialID].parentSpecialID.indexOf(parentNode["specialID"]) == -1){
-			nodeArray[level][specialID].parentSpecialID.push(parentNode["specialID"]);
+		if(nodeArray[level][node.oldLoadModuleID].parentLMID.indexOf(parentNode["oldLoadModuleID"]) == -1){
+			nodeArray[level][node.oldLoadModuleID].parentLMID.push(parentNode["oldLoadModuleID"]);
         }
 
         var tempTime = 0;
 
         nodeMetrics[node["nodeID"]]["inc"].forEach(function(val){
-        	tempTime += val;
+            tempTime += val;
         })
 
-        var avgTime = tempTime / Math.max(1, nodeMetrics[node["nodeID"]]["inc"].length);
+        var avgTime = tempTime / Math.max(1, nodeMetrics[node["nodeID"]]["inc"].length);        
 
-        if(connectionInfo[level][node["specialID"]] != null){
+        if(connectionInfo[level][node["oldLoadModuleID"]] != null){
         	var connectionNode = {
         		"parentNodeID" : parentNode["nodeID"],
-        		"parentSpecialID" : parentNode["specialID"],
+        		"parentLoadModID" : parentNode["oldLoadModuleID"],
+                "parentLoadModuleName": loadModuleTable[parentNode["oldLoadModuleID"]],
         		"parentProcedureName" : procedureTable[ parentNode["procedureID"] ],
-        		"parentLoadModuleName" : parentNode["specialIDName"],
+        		"parentProcedureID" : parentNode["procedureID"],
         		"nodeID" : node["nodeID"],
-        		"specialID" : node["specialID"],
+        		"type" : node.Type,
+        		"loadModID" : node["oldLoadModuleID"],
         		"procedureName" : procedureTable[ node["procedureID"] ],
-        		// "value" : tempTime,
+        		"procedureID" : node["procedureID"],
                 "value" : avgTime,
-        		"procID" : node["procedureID"],
-                "type" : node.Type
+                "rawTime" : tempTime
         	};
 
-        	connectionInfo[level][node["specialID"]].push(connectionNode);
+        	connectionInfo[level][node["oldLoadModuleID"]].push(connectionNode);
         }
         else{
-        	console.log("something is wrong, the current level is: " + level + ", the current specialID is: " + specialID + ", the parent specialID is: " + parentNode["specialID"] );
+        	console.log("something is wrong, the current level is: " + level + ", the current loadModID is: " + node["oldLoadModuleID"] + ", the parent loadModID is: " + parentNode["oldLoadModuleID"] );
         }
 
-        //////add node into its function list, only add if node type is PR or PF, ie function call
-        if(node.Type == "PR" || node.Type == "PF"){
-
-            if(functionList[node.specialID] == null){
-                functionList[node.specialID] = {};
-            }
-            if(functionList[node.specialID][node.procedureID] == null){
-                functionList[node.specialID][node.procedureID] = [];
-            }
-            functionList[node.specialID][node.procedureID].push(node.nodeID);
+        if(node["oldLoadModuleID"] == "7169"){
+            someCounter += 1;
         }
     }
 
-    //this function add in new information for the entry exit data
-    function addEntryExitData(specialID, node, parentNode){
-        if(entryExitData[specialID] == null){
 
-            entryExitData[specialID] = {
-                "name" : specialID,
-                "exit" : [], //array to store procedures that call proc from different lm
-                "enter" : [], //array to store procs that was call from different lm
-                "entryNodeID" : {}
-            }
-
-        }
-
-        //parent and current lmid are not the same
-        //that mean we have a enter and exit
-        if(specialID != parentNode["specialID"]){
-            if(entryExitData[specialID]["enter"].indexOf(node.procedureID) == -1){
-                entryExitData[specialID]["enter"].push(node.procedureID);
-            }
-
-            if(entryExitData[specialID]["entryNodeID"][node.procedureID] == null){
-                entryExitData[specialID]["entryNodeID"][node.procedureID] = []
-            }
-            entryExitData[specialID]["entryNodeID"][node.procedureID].push(node.nodeID);
-
-            if(entryExitData[parentNode["specialID"]]["exit"].indexOf(parentNode.procedureID) == -1){
-                entryExitData[parentNode["specialID"]]["exit"].push(parentNode.procedureID);
-            }
-        }
-    }
 
 
     // console.log("load module table", JSON.stringify(loadModuleTable));
     // console.log("load module table", JSON.stringify(splitLoadModuleFileID));
     
+    console.log('the number of connection is', someCounter);
 
 	var returnData = {
         "nodeArray" : nodeArray,
-        "sanKeyMetricDataLM" : sanKeyMetricDataLM,
-        "entryExitData" : entryExitData,
-        "nodePaths" : nodePaths,
         "connectionInfo" : connectionInfo,
-        "procedureTable" : procedureTable,
-        "functionList" : functionList
+        "nodeInfo" : nodeInfo,
+        "procedureTable" : procedureTable
 	};
 
 	callBack(returnData);    

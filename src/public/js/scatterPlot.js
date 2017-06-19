@@ -3,8 +3,8 @@ function Scatter(args){
 		containerWidth = args.width || 900,
 		containerHeight = args.height || 900,
 		margin = args.margin || {top: 10, right: 30, bottom: 10, left: 10},
-		data1 = args.data1,
-		data2 = args.data2,
+		yData = args.yData,
+		xData = args.xData,
 		label = args.label,
 		sort =  args.sort,
 		clickCallBack = args.clickCallBack;	
@@ -15,27 +15,30 @@ function Scatter(args){
 	var height = containerHeight - margin.top - margin.bottom;
 
 	//find min and max
-	var minVal = Number.MAX_SAFE_INTEGER;
-	var maxVal = 0;
+	var yMin = Number.MAX_SAFE_INTEGER;
+	var yMax = 0;
 
-	var minVal2 = Number.MAX_SAFE_INTEGER;
-	var maxVal2 = 0;
+	var xMin = Number.MAX_SAFE_INTEGER;
+	var xMax = 0;
 	// if(sort == true){
 	// 	data.sort(function(a,b){
 	// 		return a - b;
 	// 	});
 	// }
 
-	data1.forEach(function(d){
-		minVal = Math.min(minVal, d);
-		maxVal = Math.max(maxVal, d);
+	yData.forEach(function(d){
+		yMin = Math.min(yMin, d);
+		yMax = Math.max(yMax, d);
 	});
 
-	data2.forEach(function(d){
-		minVal2 = Math.min(minVal2, d);
-		maxVal2 = Math.max(maxVal2, d);
+	xData.forEach(function(d){
+		xMin = Math.min(xMin, d);
+		xMax = Math.max(xMax, d);
 	});
 
+	var leastSquaresCoeff = leastSquares(xData.slice(), yData.slice());
+	var regressionY = leastSquaresCoeff["y_res"];
+	var corre_coef = leastSquaresCoeff["corre_coef"];
 	//set scale
 	var xScale;
 	var yScale;
@@ -45,9 +48,9 @@ function Scatter(args){
 
 	function visualize(){
 
-		xScale = d3.scale.linear().domain([minVal2, maxVal2]).range([0, width]);
-		yScale = d3.scale.linear().domain([minVal, maxVal]).range([height, 0]);
-		
+		xScale = d3.scale.linear().domain([xMin, xMax]).range([0, width]);
+		yScale = d3.scale.linear().domain([yMin, yMax]).range([height, 0]);
+
 		svg = d3.select(containerID).append('svg')
 				.attr('width', width + margin.left + margin.right)
 				.attr('height', height + margin.top + margin.bottom)
@@ -87,17 +90,40 @@ function Scatter(args){
 				.text("Inclusive Runtime");
 
 		svg.append('g').selectAll('.dot')
-			.data(data1)
+			.data(yData)
 			.enter().append('circle')
 			.attr('class', 'dot')
 			.attr('r', 3)
 			.attr('cx', function(d, i){
-				return xScale(data2[i]);
+				return xScale(xData[i]);
 			})
 			.attr('cy', function(d, i){
 				return yScale(d);
 			})
 			.style('fill', "#4682b4")
+
+		var line = d3.svg.line()
+			        .x(function(d,i) {
+			            return xScale(xData[i]);
+			        })
+			        .y(function(d) {
+			            return yScale(d);
+			        });
+
+		var trendline = svg.append('g').append("path")
+	        .datum(regressionY)
+	        .attr("class", "res_line")
+	        .attr("d", line)
+	        .style("stroke", "red")
+			.style("stroke-width", "1px")
+			.style("opacity", 1);	
+
+		var coefText = svg.append('g');
+		var decimalFormat = d3.format("0.2f");
+		coefText.append('text')
+				.text("corr-coef: " + decimalFormat(corre_coef))
+				.attr("x", function(d) {return width - 100;})
+				.attr("y", function(d) {return 10;});	
 
         xAxisLine.selectAll('path')
 				.style("fill", "none")
@@ -147,4 +173,82 @@ function Scatter(args){
 
 		visualize();
 	}
+
+	// returns slope, intercept and r-square of the line
+	function leastSquares(xSeries, ySeries) {
+		var n = xSeries.length;
+		var x_mean = 0;
+        var y_mean = 0;
+        var term1 = 0;
+        var term2 = 0;
+
+        for (var i = 0; i < n; i++) {
+            x_mean += xSeries[i];
+            y_mean += ySeries[i];
+        }
+
+        // calculate mean x and y
+        x_mean /= n;
+        y_mean /= n;
+
+        // calculate coefficients
+        var xr = 0;
+        var yr = 0;
+        for (i = 0; i < xSeries.length; i++) {
+            xr = xSeries[i] - x_mean;
+            yr = ySeries[i] - y_mean;
+            term1 += xr * yr;
+            term2 += xr * xr;
+
+        }
+
+        var b1 = term1 / term2;
+        var b0 = y_mean - (b1 * x_mean);
+        // perform regression 
+
+        yhat = [];
+        // fit line using coeffs
+        for (i = 0; i < xSeries.length; i++) {
+            yhat.push(b0 + (xSeries[i] * b1));
+        }
+
+        //compute correlation coef
+        var xy = [];
+	    var x2 = [];
+	    var y2 = [];
+	  
+	    for(var i=0; i<n; i++) {
+	        xy.push(xSeries[i] * ySeries[i]);
+	        x2.push(xSeries[i] * xSeries[i]);
+	        y2.push(ySeries[i] * ySeries[i]);
+	    }
+
+		var sum_x = 0;
+	    var sum_y = 0;
+	    var sum_xy = 0;
+	    var sum_x2 = 0;
+	    var sum_y2 = 0;
+	  
+	    for(var i=0; i< n; i++) {
+	        sum_x += xSeries[i];
+	        sum_y += ySeries[i];
+	        sum_xy += xy[i];
+	        sum_x2 += x2[i];
+	        sum_y2 += y2[i];
+	    }
+		var step1 = (n * sum_xy) - (sum_x * sum_y);
+	    var step2 = (n * sum_x2) - (sum_x * sum_x);
+	    var step3 = (n * sum_y2) - (sum_y * sum_y);
+	    var step4 = Math.sqrt(step2 * step3);
+	    var corre_coef = step1 / step4;
+
+	    console.log(corre_coef);
+
+        return {
+        	"y_res" : yhat,
+        	"corre_coef" : corre_coef
+        };
+
+	}
+
 }

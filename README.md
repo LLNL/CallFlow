@@ -6,6 +6,7 @@ To install, change directory to the src/ folder
 Run:
 ```
  $ npm install
+ $ bower install
 ```
 
 ### To Run
