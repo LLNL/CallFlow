@@ -6,7 +6,11 @@ To install, change directory to the src/ folder
 Run:
 ```
  $ npm install
+ $ bower install
 ```
+If you get a libtool related error during libxlmjs build in the first step on
+Mac OSX, you should try again after removing the macports version of libtool
+from your path.
 
 ### To Run
 In the src/ directory
