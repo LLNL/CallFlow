@@ -447,7 +447,7 @@ function Sankey(args){
 		    	if(d.name != "intermediate"){
 			    	toolTipList.attr('width', "400px")
 								.attr('height', "150px")	    	
-			    	var res = getFunctionListOfNode2(d);
+			    	var res = getFunctionListOfNode(d);
 			    	toolTipTexts(d,res, rootRunTime1)
 			    	d3.select(this).style("stroke-width", "2");
 			    	// fadeUnConnected(d);
@@ -552,7 +552,7 @@ function Sankey(args){
 	    		if(d.name != "intermediate"){
 	    			toolTipList.attr('width', "400px")
 								.attr('height', "150px")	    	
-			    	var res = getFunctionListOfNode2(d);
+			    	var res = getFunctionListOfNode(d);
 			    	toolTipTexts(d,res, rootRunTime1);
 
 			    	// var parentDOM = d3.select(this).node().parentNode;
@@ -1626,7 +1626,7 @@ function Sankey(args){
 		var temp = 0;
 		var nameToIDMap = {};
 		// sankeyNodeList.forEach(function(sankID){
-			// console.log(toolTipData["nodeList"][sankID]);
+			console.log(toolTipData);
 			var connectionInfo = toolTipData["connInfo"][ d["specialID"] ];
 			console.log(connectionInfo, toolTipData);
 			connectionInfo.forEach(function(connInfo){
