@@ -1,25 +1,31 @@
-//this modual compute the sankey nodes and links for the load modual
-var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connectionInfo){
-	var fs = require('fs');
-	var nodeRemove = [];
+var graphBuilder = function(nodeArray, connectionInfo, nodeInfo, nodeMetric){
 
-	var treeLevels = Object.keys(nodeArray);
-	var rootSpecialID = "LM0";
-	var rootRuntime;
+	var orgAdjMatrix = {};
+	var nodeIDtoLM = {}; //keep the mapping from node id of orgAdjMat to lm
 
-	var edges = {};
+	var rootLMID = 0;
 
-	var newLMIDMapping = {};//this map the old lmid to the new one
-	var newConnectionMap = {};
-	var parentChildrenList = {};
+	var map = {};
+	var nodeList = {};
 
-	var FILTERPERCENT = 1 / 100;
+	var lmAdjMatrix = {};
+
+	var maxLMID = 0;
+	var idList = [];
+
+	var sankeyNodeList = {};
 
 	var nameList = {};
 
+	//these two hold the relavent information reguarding the 
+	var finalSankeyNodes = {};
+	var finalSankeyEdges = {};
+
+	var FILTERPERCENT = 1 / 100;
 
 	function computeTime(){
 		// console.log('begin computing runtime for each sankey node');
+		var treeLevels = Object.keys(nodeArray);
 		treeLevels.forEach(function(treeLev){
 			var lmAtLevelList = Object.keys(nodeArray[treeLev]);
 
@@ -73,9 +79,11 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 		computeTime();
 		// console.log('begin filtering nodes');
 
-		rootRuntime = nodeArray[0][rootSpecialID]["incTime"];
+		rootRuntime = nodeArray[0][rootLMID]["incTime"];
+		// console.log(rootRuntime);
 		var nodesKeepAfterFilter = {};
 		var notInterestSpecID = {};
+		var treeLevels = Object.keys(nodeArray);
 		treeLevels.forEach(function(treeLev){
 			// filterNodeData[treeLev] = {};
 			nodesKeepAfterFilter[treeLev] = {};
@@ -90,7 +98,7 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 	                    notInterestSpecID[treeLev] = [];
 	                }
 
-	                notInterestSpecID[treeLev].push(lmAtLevel);
+	                notInterestSpecID[treeLev].push(parseInt(lmAtLevel));
 	            }
 			}); //end of lmAtLevelList
 		}); //end of treeLevels
@@ -103,25 +111,40 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 		        if(typeof notInsSpcTemp != "undefined"){
 
 		            notInsSpcTemp.forEach(function(ni){
-		                // notInt.push(parseInt(ni));
-		                notInt.push(ni);
+		                notInt.push(parseInt(ni));
+		                // notInt.push(ni);
 		            });
 		        }
 
+		        // if(idx == 35){
+		        // 	console.log(notInt, spcIDAtThisLevel);
+		        // }
+
 		        spcIDAtThisLevel.forEach(function(currentSpcID){
-		        	var tempParentSpcID = nodesKeepAfterFilter[treeLev][currentSpcID]["parentSpecialID"];
+		        	var tempParentLMID = nodesKeepAfterFilter[treeLev][currentSpcID]["parentLMID"];
+
+		        	var tParentLMID = [];
+		        	tempParentLMID.forEach(function(id){
+		        		tParentLMID.push(parseInt(id));
+		        	})
+
 		            notInt.forEach(function(nLMID){
 		            	var nLMIDINT; //= parseInt(nLMID.replace('LM', ''));
-		            	nLMIDINT = nLMID;
-		                var tempIDX = tempParentSpcID.indexOf(nLMIDINT);
+		            	nLMIDINT = parseInt(nLMID);
+		                var tempIDX = tParentLMID.indexOf(nLMIDINT);
+
+		                // if(idx == 35 && nLMIDINT == 7152 && parseInt(currentSpcID) == 7156){
+	                	// if(idx == 35 ){
+		                // 	console.log(tempIDX, tParentLMID, currentSpcID)
+		                // }
 
 		                if(tempIDX >= 0){
-		                    tempParentSpcID.splice(tempIDX, 1);
+		                    tempParentLMID.splice(tempIDX, 1);
 		                }
 		                
 		            });
 
-		             nodesKeepAfterFilter[treeLev][currentSpcID]["parentSpecialID"] = tempParentSpcID;
+		             nodesKeepAfterFilter[treeLev][currentSpcID]["parentLMID"] = tempParentLMID;
 
 		        })
 
@@ -129,6 +152,7 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 		}); // end of treeLevels
 
 		// console.log('finish with filtering nodes');
+		// console.log(notInterestSpecID);
 		return {"nodesKeepAfterFilter" : nodesKeepAfterFilter};
 	}
 
@@ -153,32 +177,40 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 				var currentTreeLev = treeLev;
 				lmAtLevelList.forEach(function(currentLMAtLevel){
 		
-					var mySpecialID = nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["specialID"];
+					var mySpecialID = nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["loadModID"];
 
 	                //taking care of the easy case first, which has more than one parents
-	                if(nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentSpecialID"].length > 1){
+	                if(nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentLMID"].length > 1){
 
 
 	                    var canMergeBool = false;
 	                    var parentSameAsMeLevel;
-	                    if(nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentSpecialID"].indexOf(currentLMAtLevel) > -1){
-	                    	//so one of my parentspecialid is the same as me
+	                    tparentsLMID = [];
+	                    nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentLMID"].forEach(function(val){
+	                    	tparentsLMID.push( parseInt(val) );
+	                    })
+
+	                    if(tparentsLMID.indexOf(parseInt(currentLMAtLevel)) > -1){
+	                    	//so one of my parentLMID is the same as me
 	                    	var otherParentLevel = [];
 	                    	
-	                    	var parentsList = nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentSpecialID"];
+	                    	var parentsList = nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentLMID"];
 	                    	parentsList.forEach(function(parSpcID){
 		                    	for(var tIndex = parseInt(currentTreeLev) - 1; tIndex >= 0; tIndex--){
 		                    		var spcIDAtThisLevel = Object.keys(newNodeArray[tIndex]);
-		                    		if(currentLMAtLevel == "CLM3"){
-		                    			// console.log(spcIDAtThisLevel, tIndex);
-		                    		}
-		                    		if(spcIDAtThisLevel.indexOf(parSpcID) > -1){
-		                    			if(parSpcID == currentLMAtLevel){
+
+		                    		var tspcIDAtThisLevel = [];
+		                    		spcIDAtThisLevel.forEach(function(val){
+		                    			tspcIDAtThisLevel.push(parseInt(val));
+		                    		})
+
+		                    		if(tspcIDAtThisLevel.indexOf(parseInt(parSpcID)) > -1){
+		                    			if(parseInt(parSpcID) == parseInt(currentLMAtLevel)){
 		                    				parentSameAsMeLevel = tIndex;
 		                    			}
 		                    			else{
-		                    				if(otherParentLevel.indexOf(parSpcID) == -1){
-		                    					otherParentLevel.push(tIndex);
+		                    				if(otherParentLevel.indexOf(parseInt(parSpcID)) == -1){
+		                    					otherParentLevel.push(parseInt(tIndex));
 		                    				}
 		                    			}
 		                    			break;
@@ -186,10 +218,10 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 		                    	}
 	                    	}); // end of parentsList
 
-	                    	if(otherParentLevel.indexOf(parentSameAsMeLevel) == -1 && typeof(parentSameAsMeLevel) != 'undefined'){
+	                    	if(otherParentLevel.indexOf(parseInt(parentSameAsMeLevel)) == -1 && typeof(parentSameAsMeLevel) != 'undefined'){
 	                    		var largestBool = true;
 	                    		otherParentLevel.forEach(function(lev){
-	                    			if(lev >= parentSameAsMeLevel){
+	                    			if(parseInt(lev) >= parseInt(parentSameAsMeLevel)){
 	                    				largestBool = false;
 	                    			}
 	                    		})
@@ -204,9 +236,9 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 	                    if(canMergeBool){
 	                    	var currentConnectionInfo = connectionInfo[currentTreeLev][currentLMAtLevel];
                             currentConnectionInfo.forEach(function(connInfo){
-                            	if(connInfo["specialID"] != connInfo["parentSpecialID"]){
+                            	// if(parseInt(connInfo["loadModID"]) != parseInt(connInfo["parentLMID"])){
 	                                newConnectionInfo[parentSameAsMeLevel][currentLMAtLevel].push(connInfo);
-                            	}
+                            	// }
 	                        });
 
                             var currentNode = nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel];
@@ -223,23 +255,35 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 	                }
 
 	                //if only have one parent, but parent lmid is not the same as current node lmid
-	                else if( nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentSpecialID"].length == 1 &&
-	                		 nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentSpecialID"][0] != currentLMAtLevel){
+	                else if( nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentLMID"].length == 1 &&
+	                		 parseInt(nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentLMID"][0]) != parseInt(currentLMAtLevel)){
 	                	newNodeArray[currentTreeLev][currentLMAtLevel] = nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel];
 	                    newConnectionInfo[currentTreeLev][currentLMAtLevel] = connectionInfo[currentTreeLev][currentLMAtLevel];
 	                }
 
 	                //if only have one parent and parent lmid is same as current node lmid
-	                else if(nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentSpecialID"].length == 1 &&
-	                		 nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentSpecialID"][0] == currentLMAtLevel){
+	                else if(nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentLMID"].length == 1 &&
+	                		 parseInt(nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel]["parentLMID"][0]) == parseInt(currentLMAtLevel)){
 	                	//look for the node with same lm from previous level
 	                	for(var i = currentTreeLev -1; i >= 0; i--){
 	                		var previousLevel = i;
 
 	                        var prevLevelLM = Object.keys(newNodeArray[previousLevel]);
 
+	                        var tPrevLevelLM = [];
+	                        prevLevelLM.forEach(function(val){
+	                        	tPrevLevelLM.push( parseInt(val) );
+	                        })
+
 	                        //check if this prev level has the LM we want
-	                        if(prevLevelLM.indexOf(currentLMAtLevel) > -1){
+	                        if(tPrevLevelLM.indexOf(parseInt(currentLMAtLevel)) > -1){
+
+		                    	var currentConnectionInfo = connectionInfo[currentTreeLev][currentLMAtLevel];
+	                            currentConnectionInfo.forEach(function(connInfo){
+	                            	// if(parseInt(connInfo["loadModID"]) != parseInt(connInfo["parentLMID"])){
+		                                newConnectionInfo[previousLevel][currentLMAtLevel].push(connInfo);
+	                            	// }
+		                        });
 
 	                            var currentNode = nodesKeepAfterFilter[currentTreeLev][currentLMAtLevel];
 	                            currentNode["uniqueID"].forEach(function(nodeID){
@@ -261,107 +305,8 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 		}); //end of treeLevels
 		// console.log("finish groupNodeToParent");
 		// console.log(newNodeArray);
+		// console.log(newNodeArray[28][7152]['parentLMID']);
 		return {"newNodeArray" : newNodeArray, "newConnectionInfo" : newConnectionInfo};
-	}
-
-	//this function combines nodes such that each lm only have one node
-	//unless said node create a cycle we can't ignore
-	function combineNodes(){
-		// console.log("begin combineNodes");
-		var groupNodeToParentReturn = groupNodeToParent();
-		var newNodeArrayFromGroup = groupNodeToParentReturn["newNodeArray"];
-		var newConnectionInfoFromGroup = groupNodeToParentReturn["newConnectionInfo"];
-
-		treeLevels = Object.keys(newNodeArrayFromGroup);
-		var newNodeArray = {};//the final node array
-		var newConnectionInfo = {};//the final connection info
-
-		// access uing the specialid of the current node
-		// each contain an array of specialid of the parent
-		// also contain the array of specialid of the children
-		// when access, if the children filed is null, that mean we haven't seen this id yet
-
-		
-		// var needToChangeSpecialID = [];
-
-		var seenBefore = []; //this keep track of all special id that we have seen before
-		var connectTo = {}; //for each lmid, create an array to indicate which lmid it is connect to
-
-		// newConnectionMap[parentLMID] = [
-		// 	 {childOldSpecID: oldpscid, childNewSpcID: newspcid}
-		// ]
-		var newConnectionMap = {};
-
-		treeLevels.forEach(function(treeLev, idx){
-			if(idx > 0){
-				newNodeArray[treeLev] = {};
-				newConnectionInfo[treeLev] = {};
-				var currentTreeLevel = treeLev;
-				var lmAtLevelList = Object.keys(newNodeArrayFromGroup[treeLev]);
-				lmAtLevelList.forEach(function(currentLM){
-
-					//first, is there any specialid that we need to change
-					var needToChangeSpecialID = Object.keys(newLMIDMapping);
-					//grap the connection list for this specialID
-					var currentConnList = newConnectionInfoFromGroup[treeLev][currentLM];
-
-					//first determine if this node need to change its lable, need to combine, or keep it as is
-					if(seenBefore.indexOf(currentLM) > -1){ //ok, so we seen this lm id before
-						//now we need to determine if we need to change its label or need to combine
-
-						if(newLMIDMapping[currentLM] == null){ //this is a node that we haven't determine to change its label yet, so we just combine it to the previous node
-							calculateEdge(currentLM , currentConnList, false, "")
-						}
-						else{
-
-							//this might be wrong, but assume that if we have a new mapping, we only have one name
-							var newLabel = newLMIDMapping[currentLM][ newLMIDMapping[currentLM].length ];
-
-							var newSankeyNode = newNodeArrayFromGroup[treeLev][currentLM];
-							newSankeyNode["specialID"] = newLabel;
-							if(parentChildrenList[newLabel] == null){
-								parentChildrenList[newLabel] = {};
-								parentChildrenList[newLabel]["parent"] = [];
-							}
-							
-							calculateEdge(currentLM , currentConnList, true, newLabel)
-
-
-						}
-
-					}
-					else{ //havent seen this lm id before
-						//so we need to create a new sankey node
-						var newSankeyNode = newNodeArrayFromGroup[treeLev][currentLM];
-						seenBefore.push(currentLM);
-						parentChildrenList[currentLM] = {};
-						parentChildrenList[currentLM]["parent"] = [];
-						calculateEdge(currentLM , currentConnList, false, "")
-					}
-				}); //end of lmAtLevelList
-			}
-			else{
-				newNodeArray[0] = newNodeArrayFromGroup[0];
-				newConnectionInfo[0] = newConnectionInfoFromGroup[0];
-				var connInfoList = [];
-				parentChildrenList["LM0"] = {};
-				var childrenSpecID = [];
-				newConnectionInfo[0]["LM0"].forEach(function(connInfo){
-					// note that we only want the connInfo where the chldspcid is different from the current node
-					if(connInfo["childSpecialID"] != "LM0"){
-						connInfoList.push(connInfo);
-						if(childrenSpecID.indexOf(connInfo["childSpecialID"]) == -1){
-							childrenSpecID.push(connInfo["childSpecialID"]);
-						}
-					}
-				});
-				parentChildrenList["LM0"]["children"] = childrenSpecID;
-				parentChildrenList["LM0"]["parent"] = [];
-				// calculateEdge("LM0", connInfoList);
-			}
-		}); //end of treeLevels
-
-		// console.log("finish combineNodes");
 	}
 
 	var labelList = {};
@@ -373,8 +318,8 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 	var adjacencyMatrixByLabel = {};
 	var mapping = {};
 
-	function combineNodes2(){
-		// console.log("begin combineNodes");
+	function combineNodes(){
+		console.log("begin combineNodes");
 		var groupNodeToParentReturn = groupNodeToParent();
 		var newNodeArrayFromGroup = groupNodeToParentReturn["newNodeArray"];
 		var newConnectionInfoFromGroup = groupNodeToParentReturn["newConnectionInfo"];
@@ -390,15 +335,15 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 			specialIDAtLevelList.forEach(function(currentSpecialID){
 				var sankeyNode = newNodeArrayFromGroup[treeLev][currentSpecialID];
 				sankeyNode["sankeyID"] = idCounter;
-				sankeyNode["oldSpecialID"] = sankeyNode["specialID"];
 				var connectionInfo = newConnectionInfoFromGroup[treeLev][currentSpecialID];
 				nodeList[idCounter] = sankeyNode;
 				edgeList[idCounter] = connectionInfo;
+				maxLMID = Math.max(parseInt(currentSpecialID), maxLMID);
 				idCounter += 1;
 			});
 		});
 
-		console.log("after assigning ids",idCounter);
+		// console.log("after assigning id", idCounter);
 
 		treeLevels.forEach(function(treeLev, idx){
 			var currentTreeLevel = treeLev;
@@ -412,19 +357,24 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 					var connectionInfoList = newConnectionInfoFromGroup[treeLev][currentSpecialID];
 					var parentSpecialIDList = [];
 					connectionInfoList.forEach(function(connInfo){
-						var parentSpcID = connInfo["parentSpecialID"];
-						if(parentSpecialIDList.indexOf(parentSpcID) == -1){
-							parentSpecialIDList.push(parentSpcID);
+						var parentLMID = connInfo["parentLoadModID"];
+						if(parentSpecialIDList.indexOf(parentLMID) == -1){
+							parentSpecialIDList.push(parseInt(parentLMID));
 						}
 					});
 
-					parentSpecialIDList.forEach(function(parentSpcID){
+					parentSpecialIDList.forEach(function(parentLMID){
 
 						for(var i = parseInt(currentTreeLevel) - 1; i >= 0; i--){
 							var previousLev = i;
 							var specialIDAtThisLevel = Object.keys(newNodeArrayFromGroup[previousLev]);
-							if(specialIDAtThisLevel.indexOf(parentSpcID) > -1){
-								var parSankeyID = newNodeArrayFromGroup[previousLev][parentSpcID]["sankeyID"];
+							var loadModAtLevel = [];
+							specialIDAtThisLevel.forEach(function(lm){
+								loadModAtLevel.push(parseInt(lm));
+							})
+
+							if(loadModAtLevel.indexOf(parentLMID) > -1){
+								var parSankeyID = newNodeArrayFromGroup[previousLev][parentLMID]["sankeyID"];
 
 								if(adjacencyMatrix[parSankeyID] != null){
 									adjacencyMatrix[parSankeyID].push(sankeyNodeID);
@@ -446,9 +396,6 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 				adjacencyMatrix[0] = [];
 			}
 		});
-		/////// end of assigning id and create adjacency matrix
-		// console.log("finish combineNodes");
-
 
 		idList = Object.keys(adjacencyMatrix);
 		idList.sort(function(a,b){
@@ -457,7 +404,7 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 
 		idList.forEach(function(id){
 			var node = nodeList[id];
-			var label = node["specialID"];
+			var label = parseInt(node["loadModID"]);
 			if(labelList[label] == null){
 				labelList[label] = [];
 			}
@@ -471,7 +418,7 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 		idList.forEach(function(id){
 			var connection = adjacencyMatrix[id];
 			var node = nodeList[id];	
-			var nodeLabel = node["specialID"];
+			var nodeLabel = parseInt(node["loadModID"]);
 			if(seenLabelBefore.indexOf(nodeLabel) == -1){
 				finalNodeList[id] = node;
 				adjacencyMatrixByLabel[nodeLabel] = [];
@@ -489,11 +436,11 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 
 				});
 
-				if(node["specialID"] == nodeLabel){
+				if(node["loadModID"] == nodeLabel){
 
 				}
 				else{
-					node["specialID"] = nodeLabel;
+					node["loadModID"] = nodeLabel;
 				}
 			}
 
@@ -516,31 +463,63 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 
 			})
 
-		});		
+		});	
 
 		// console.log(adjacencyMatrixByLabel);
+
+		Object.keys(labelList).forEach(function(lab){
+			var tid = labelList[lab][0];
+			var tnode = nodeList[tid];
+			// console.log(tnode["name"], lab);
+
+			finalSankeyNodes[lab] = {
+				"loadModID" : lab,
+				"name" : tnode["name"],
+				"uniqueIDList" : []
+			}
+
+			finalSankeyEdges[lab] = [];
+
+			labelList[lab].forEach(function(nID){
+				var node = nodeList[nID];
+				var uniqueIDList = node["uniqueID"];
+				uniqueIDList.forEach(function(uniqueID){
+					finalSankeyNodes[lab]["uniqueIDList"].push(uniqueID);
+					nodeInfo[uniqueID]["loadModID"] = lab;
+				})
+
+				var edges = edgeList[nID];
+				edges.forEach(function(edge){
+					finalSankeyEdges[lab].push(edge);
+				})
+			})
+		})
+
 	}
 
-
 	function calcEdge(){
-		combineNodes2();
+		combineNodes();
 		var sankIDCounter = 0;
 		var name;
 		var idMap = {};
 		var finalNodes = {};
 		var finalEdges = [];
 		var finalEdgeList = {};
-
 		var nodeIDConnectionList = {};
+		var finalConnectionInfo = {};
+
+		var removeConns = {};
+		var removeNodeID = [];
 
 		var finalLabels = Object.keys(adjacencyMatrixByLabel);
 		finalLabels.forEach(function(sourceLabel){
 			var uniqueIDList = []; //this store the unigue node id taken from the tree node;
-			var sankeyNodeList = []; //this list contains the sankey nodes that make up this final node
+			var sankeyNodeList = []; //this list contains the sankey nodes that make up this final node		
 			var totalRuntime = 0;
+			var rawRunTime = 0;
 			var sourceIDList = labelList[sourceLabel];
 			var connectToLabelList = adjacencyMatrixByLabel[sourceLabel];
-			var oldSpecialID;
+			var oldSpecialID;	
 
 			if(sourceIDList.length > 0){
 				var tempID = sourceIDList[0];
@@ -551,37 +530,32 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 				if(sankeyNodeList.indexOf(sID) == -1){
 					sankeyNodeList.push(sID);
 				}
+
+
 				sUniqueID.forEach(function(id){
 					if(uniqueIDList.indexOf(id) == -1){
 						uniqueIDList.push(id);
 					}
 				});
-			});
+			});		
 			connectToLabelList.forEach(function(connLabel){
 				var connectToIDList = labelList[connLabel];
-				//The problem probably lies in here
-				//we are essesnsitally calculate connection by permutate on both list
-
 				var runTimeVal = 0;
 				var nodeIDUniqueList = [];
 				var runTimeAvg = 0;
-				// console.log(connLabel);
-				connectToIDList.forEach(function(tID){
-					sourceIDList.forEach(function(sID){
-						
-						// var sourceSpcID = nodeList[sID]["specialID"];
-						var sourceSpcID = nodeList[sID]["oldSpecialID"];
-						oldSpecialID = nodeList[sID]["oldSpecialID"];
+
+				connectToIDList.forEach(function(tIDtemp){
+					var tID = parseInt(tIDtemp);
+					sourceIDList.forEach(function(sIDtemp){
+						var sID = parseInt(sIDtemp);
+
 						var connectionList = edgeList[tID];
-						// var runTimeVal = 0;
 						var ttemp = 0;
-
-
-
 						connectionList.forEach(function(connInfo){
 
-							if(//connInfo["parentSpecialID"] == sourceSpcID && 
-								nodeList[sID]["uniqueID"].indexOf(connInfo["parentNodeID"]) > -1
+
+
+							if( nodeList[sID]["uniqueID"].indexOf(connInfo["parentNodeID"]) > -1
 								&& (connInfo["type"] == "PF" || connInfo["type"] == "PR")
 								){
 
@@ -597,23 +571,24 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 
 								runTimeAvg += sumOfRunTimeForThisNode / Math.max(runTimeInc.length, 1);
 							}
-						});// end of connectionList
+						});// end of connectionList						
 
 					}) //end of sourceIDList
-				}) // end of connectToID
+				}) //end of connectToIDList
 
+				//filter out all small edges
 				if(runTimeVal > rootRuntime * FILTERPERCENT * 1){
+					if(sourceLabel == '7159'){
+						console.log(connLabel);
+					}
 					// totalRuntime += runTimeVal;
 					totalRuntime += runTimeAvg;
+					rawRunTime += runTimeVal;
                     var tempEdge = {
                         // "value" : runTimeVal == 0 ? 1 : runTimeVal,
                         "value" : runTimeAvg == 0 ? 1 : runTimeAvg,
-                        // "oldSourceSpcID" : sourceSpcID,
-                        // "oldTargetSpcID" : nodeList[tID]["oldSpecialID"],
-                        // "sourceSpcID" : nodeList[sID]["specialID"],
-                        // "targetSpcID" : nodeList[tID]["specialID"]
-                        "sourceSpcID" : sourceLabel,
-                        "targetSpcID" : connLabel
+                        "sourceLoadModID" : sourceLabel,
+                        "targetLoadModID" : connLabel
                     }
                     // fs.appendFileSync("edgeInfo", JSON.stringify(tempEdge) + "\n");		
                     var tSourceSpcID = sourceLabel;
@@ -630,26 +605,87 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
                     nodeIDUniqueList.forEach(function(nodeID){
                     	nodeIDConnectionList[ tSourceSpcID ][ tTargetSpcID ].push(nodeID);
                     })
+				}	
 
-				}				
-			}); //end of connectToLabelList
+				else{
+					if(removeConns[sourceLabel] == null){
+						removeConns[sourceLabel] = [];
+					}
+					removeConns[sourceLabel].push(connLabel);
+					// if(sourceLabel == "5649" && connLabel == "7091"){
+					// 	console.log(nodeIDUniqueList);
+					// }
+					nodeIDUniqueList.forEach(function(nID){
+						if(removeNodeID.indexOf(nID) == -1){
+							removeNodeID.push(nID);
+						}
+					})
+					
+				}
+
+			})	//end of connectToLabelList
 
 			finalNodes[sourceLabel] = {
 				"sankeyID" : sankIDCounter,
 				"name" : name ,
 				"specialID" : sourceLabel,
 				"runTime" : totalRuntime,
+				"rawRunTime" : rawRunTime,
 				"oldSpecialID" : oldSpecialID,
 				"uniqueNodeID" : uniqueIDList,
 				"sankeyNodeList" : sankeyNodeList
 			};
 
-			console.log("there are", sourceLabel, uniqueIDList.length)
+			console.log("the node", sourceLabel, uniqueIDList.length);
+
+			var connections = [];
+			sankeyNodeList.forEach(function(id){
+				var conns = edgeList[id];
+				conns.forEach(function(conn){
+					conn["parentLoadModID"] = nodeInfo[ conn["parentNodeID"] ]["loadModID"];
+					conn["loadModID"] = nodeInfo[ conn["nodeID"] ]["loadModID"];
+
+
+					// if(conn["value"] > rootRuntime * FILTERPERCENT * 1){
+						// connections.push(conn);
+					// }
+
+					if(conn["loadModID"] == "7091" && conn["parentLoadModID"] == "5649"){
+						// console.log();
+					}
+
+					if(removeNodeID.indexOf(conn["nodeID"]) == -1){
+						connections.push(conn);
+						if(conn["loadModID"] == "7091" && conn["parentLoadModID"] == "5579"){
+							// console.log('I was not remove');
+						}						
+					}
+					else{
+						if(conn["loadModID"] == "7091" && conn["parentLoadModID"] == "5579"){
+							// console.log('I was remove');
+						}
+					}
+				})
+			})
+
+			finalConnectionInfo[sourceLabel] = connections;
 
 			idMap[sourceLabel] = sankIDCounter;
-			sankIDCounter += 1;
+			sankIDCounter += 1;			
 
-		}); //end of finalLabels
+			var removedLables = removeConns[sourceLabel];
+			if(removedLables != null){
+				removedLables.forEach(function(lab){
+					var removeIndex = adjacencyMatrixByLabel[sourceLabel].indexOf(lab.toString());
+					if(removeIndex > -1){
+						adjacencyMatrixByLabel[sourceLabel].splice(removeIndex, 1);
+					}
+				});
+			}
+
+		})	//end of finalLabels	
+
+		// console.log(idMap);
 
 		var finalEdgeLabelList = Object.keys(finalEdgeList);
 		finalEdgeLabelList.forEach(function(fromLabel){
@@ -678,7 +714,13 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 			})
 		});
 
-		return {"nodes" : finalNodes, "edges" : finalEdges, "nodeList" : nodeList, "edgeList" : edgeList};
+
+
+		console.log(adjacencyMatrixByLabel);
+		console.log(rootRuntime);
+		// console.log(removeNodeID)
+		return {"nodes" : finalNodes, "edges" : finalEdges, "nodeList" : nodeList, "edgeList" : edgeList, "connInfo" : finalConnectionInfo, "adjMatrix" : adjacencyMatrixByLabel};		
+
 	}
 
 	function addEdge(fromID, fromLabel, toID, toLabel){
@@ -689,23 +731,29 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 			//check for other mapping
 			if(mapping[toLabel] == null){ //we never got this mapping before so create a new one
 				mapping[toLabel] = [];
-				var newLabel = toLabel + "_" + mapping[toLabel].length;
+				maxLMID += 1;
+				var newLabel = maxLMID;
 				mapping[toLabel].push(newLabel);
-				// adjacencyMatrixByLabel[fromLabel].push(newLabel);
-				if(adjacencyMatrixByLabel[fromLabel].indexOf(newLabel) == -1){
+				
+				var labelsOfadjacencyMatrixByLabel = [];
+				adjacencyMatrixByLabel[fromLabel].forEach(function(lb){
+					labelsOfadjacencyMatrixByLabel.push( parseInt(lb) );
+				})
+
+				if(labelsOfadjacencyMatrixByLabel.indexOf(newLabel) == -1){
 					adjacencyMatrixByLabel[fromLabel].push(newLabel);
 				}					
 				adjacencyMatrixByLabel[newLabel] = [];
 
-				var oldIndexInLabelList = labelList[toLabel].indexOf(parseInt(toID));
+				var oldIndexInLabelList = labelList[parseInt(toLabel)].indexOf(parseInt(toID));
 				if(oldIndexInLabelList > -1){
-					labelList[toLabel].splice(oldIndexInLabelList, 1);
+					labelList[parseInt(toLabel)].splice(oldIndexInLabelList, 1);
 				}
 
-				labelList[newLabel] = [];
-				labelList[newLabel].push(parseInt(toID));
-				if(nodeList[toID]["specialID"] == toLabel){
-					nodeList[toID]["specialID"] = newLabel;
+				labelList[parseInt(newLabel)] = [];
+				labelList[parseInt(newLabel)].push(parseInt(toID));
+				if(parseInt(nodeList[toID]["loadModID"]) == parseInt(toLabel)){
+					nodeList[toID]["loadModID"] = newLabel;
 				}
 			}
 			else{
@@ -713,17 +761,18 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 				var needToCreateNewMapBool = true;
 				var newLabel;
 
-				map.forEach(function(mapToTry){
+				map.some(function(mapToTry){
 					needToCreateNewMapBool = isReachable(mapToTry, fromLabel);
 					if(needToCreateNewMapBool == false){
 						newLabel = mapToTry;
-						return;
+						return true;
 					}
 				});
 
 				if(needToCreateNewMapBool){
 					// console.log("we need to create new label");
-					newLabel = toLabel + "_" + mapping[toLabel].length;
+					maxLMID += 1;
+					newLabel = maxLMID;
 					var oldIndexInLabelList = labelList[toLabel].indexOf(parseInt(toID));
 					if(oldIndexInLabelList > -1){
 						labelList[toLabel].splice(oldIndexInLabelList, 1);
@@ -744,9 +793,9 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 						labelList[toLabel].splice(oldIndexInLabelList, 1);
 					
 					}
-					labelList[newLabel].push(parseInt(toID));
-					if(nodeList[toID]["specialID"] == toLabel){
-						nodeList[toID]["specialID"] = newLabel;
+					labelList[parseInt(newLabel)].push(parseInt(toID));
+					if(parseInt(nodeList[toID]["loadModID"]) == parseInt(toLabel)){
+						nodeList[toID]["loadModID"] = newLabel;
 					}	
 
 					// adjacencyMatrixByLabel[fromLabel].push(newLabel);
@@ -772,7 +821,7 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 			}
 		}
 
-	}
+	}	
 
 	function isReachable(sourceLabel, toLabel){
 		var visited = {};
@@ -812,120 +861,11 @@ var LMCalc = function(nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connec
 		return false;
 	}
 
-	function calculateEdge(specialIDofCurrentNode , connectionList, needToReLable, newLabel){
-
-		if(needToReLable){
-			specialIDofCurrentNode = newLabel;
-		}
-
-		 // connInfo
-		 var connInfoByChild = {};
-		 connectionList.forEach(function(connInfo){
-		 	var childSpecID = connInfo["childSpecialID"];
-		 	if(needToReLable){
-		 		connInfo["specialID"] = newLabel;
-		 	}
-
-		 	var parSpcID = connInfo["parentSpecialID"];
-		 	if(parentChildrenList[connInfo["specialID"]]["parent"].indexOf(parSpcID) == -1){
-		 		parentChildrenList[connInfo["specialID"]]["parent"].push(parSpcID);
-		 	}
-
-		 	if(connInfoByChild[childSpecID] == null){
-		 		connInfoByChild[childSpecID] = [];
-		 	}
-
-		 	connInfoByChild[childSpecID].push(connInfo);
-
-		 }); //end of connectionList
-
-		 var chldSpecIDList = Object.keys(connInfoByChild);
-		 chldSpecIDList.forEach(function(childSpecID){
-
-		 	//get connection info for this child
-		 	var chldConnList = connInfoByChild[childSpecID];
-
-		 	var formCyleBool = false;
-
-		 	var chldRunTime = 0;
-
-		 	var numberOfProcess = 1;
-
-		 	chldConnList.forEach(function(chldConn){
-		 		var chldNodeID = chldConn["childID"];
-		 		var chldNodeRunTimeInc = nodeMetric[chldNodeID]['inc'];
-		 		// numberOfProcess = Math.max(numberOfProcess, chldNodeRunTimeInc.length);
-		 		chldNodeRunTimeInc.forEach(function(val){
-		 			chldRunTime += val;
-		 		}); // end of chldNodeRunTimeInc;
-
-		 		//this will allow us to know wheter or not this specific chldid will form a cycle
-		 		var nodeID = chldConn["nodeID"];
-		 		var chldPath = nodePaths[chldNodeID];
-		 		var nodePath = nodePaths[nodeID];
-		 		if(chldPath.includes(nodePath)){
-                        formCyleBool = true;
-                }
-
-		 	}); //end of chldConnList
-
-		 	//now we have the value, we need to check if we want to keep it
-		 	if(chldRunTime >= rootRuntime * FILTERPERCENT){
-
-		 		if(formCyleBool){ //connect to this child will create a cycle
-		 			if(newLMIDMapping[childSpecID] == null){
-		 				newLMIDMapping[childSpecID] = [];
-		 			}
-
-		 			var newLabelName;
-
-		 			if(newLMIDMapping[childSpecID] == null){
-		 				newLMIDMapping[childSpecID] = [];
-		 			}
-		 			if(newConnectionMap[specialIDofCurrentNode] == null && newLMIDMapping[childSpecID] != null && newLMIDMapping[childSpecID].length > 0){
-		 				newLabelName = newLMIDMapping[childSpecID][ newLMIDMapping[childSpecID].length ];
-		 			}
-		 			else{
-		 				newLabelName = childSpecID + "_" + newLMIDMapping[childSpecID].length;
-		 				newLMIDMapping[childSpecID].push(newLabelName);
-		 			}
-
-		 			if(newConnectionMap[specialIDofCurrentNode] == null){
-		 				newConnectionMap[specialIDofCurrentNode] = [];
-		 			}
-		 			newConnectionMap[specialIDofCurrentNode].push({"oldChildSpecialID" : childSpecID, "newChildSpecialID" : newLabelName});
-
-		 			var tempEdge = {
-                        "value" : chldRunTime == 0 ? 1 : chldRunTime / numberOfProcess,
-                        "sourceSpcID" : specialIDofCurrentNode,
-                        "targetSpcID" : newLabelName		 				
-		 			};
-
-		 			fs.appendFileSync("splitMiranda.json", JSON.stringify(tempEdge) + "\n");
-
-		 		}
-		 		else{
-		 			var tempEdge = {
-                        "value" : chldRunTime == 0 ? 1 : chldRunTime / numberOfProcess,
-                        "sourceSpcID" : specialIDofCurrentNode,
-                        "targetSpcID" : childSpecID		 				
-		 			};		
-
-		 			fs.appendFileSync("splitMiranda.json", JSON.stringify(tempEdge) + "\n");
-		 		}
-		 	}
-
-		 }); // end of chldSpecIDList
-	}
-
-	function detectCycle(specialID, specialIDToCheck){
-
-	}
-
 	this.compute = function(){
 		var res = calcEdge();
 		return {"newSankey" : res};
+		// combineNodes()
+		// groupNodeToParent();
 	}
 }
-
-module.exports = LMCalc;
+module.exports = graphBuilder;
