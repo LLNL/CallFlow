@@ -50,7 +50,7 @@ node Each line in the file contains the following information:
     "inc" : An array of inclusive runtimes
     "exc" : An array of exclusive runtimes
 }
-
+```
 
 4. Configuration file: A configuration file to tell the parser how to parse
 some problematic load modules (this is optional). The format of the file is
