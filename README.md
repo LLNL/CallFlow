@@ -1,6 +1,10 @@
 CallFlow 1.0
 ============
 
+CallFlow is a visualization tool to view and analyze Calling Context Tree (CCT)
+data provided by HPCToolkit. CallFlow uses Sankey diagrams to display the CCT
+hierarchy.
+
 ### Requirements
 
 You will need to install the latest version of Node.js (v7.7.2 or higher).
