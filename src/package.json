@@ -6,6 +6,8 @@
   "dependencies": {
     "bower": "^1.8.0",
     "check-types": "^7.0.1",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-config-standard": "^10.2.1",
     "express": "^4.14.0",
     "http": "^0.0.0",
     "libxmljs": "^0.18.4",
@@ -16,7 +18,15 @@
     "xml2js": "^0.4.17",
     "yargs": "^7.0.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^4.11.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "^6.0.2",
+    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-react": "^7.4.0",
+    "eslint-plugin-standard": "^3.0.1"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
