@@ -1,12 +1,13 @@
-module.exports = {
-    "extends": "airbnb",
-    "rules": {
-	"indent": [2, 2],
-	"no-tabs": 'off',
-	"max-len": 'off',
-	"no-console": 'off',
-	"no-use-before-define": "off",
-	"no-unused-vars": "off",
+var OFF = 0, WARN = 1, ERROR = 2;
 
+module.exports = {
+    "extends": "airbnb-base",
+    "rules":{
+	"radix": OFF,
+	"indent": [WARN, 4], 
+        "no-mixed-spaces-and-tabs": OFF,
+	"no-tabs": OFF,
+	"no-use-before-define": OFF,
+	"no-console": OFF
     }
 };

@@ -6,10 +6,13 @@
   "dependencies": {
     "bower": "^1.8.0",
     "check-types": "^7.0.1",
+    "dotenv": "^4.0.0",
     "eslint-config-airbnb": "^16.1.0",
     "eslint-config-standard": "^10.2.1",
     "express": "^4.14.0",
+    "getenv": "^0.7.0",
     "http": "^0.0.0",
+    "isdev": "^1.0.1",
     "libxmljs": "^0.18.4",
     "line-by-line": "^0.1.5",
     "path": "^0.12.7",
@@ -19,16 +22,33 @@
     "yargs": "^7.0.2"
   },
   "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react-hmre": "^1.1.1",
+    "babel-root-import": "^4.1.8",
+    "connect-history-api-fallback": "^1.5.0",
     "eslint": "^4.11.0",
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",
     "eslint-plugin-node": "^5.2.1",
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-react": "^7.4.0",
-    "eslint-plugin-standard": "^3.0.1"
+    "eslint-plugin-standard": "^3.0.1",
+    "webpack": "^3.8.1",
+    "webpack-dev-middleware": "^1.12.0",
+    "webpack-hot-middleware": "^2.20.0",
+    "webpack-merge": "^4.1.1",
+    "webpack-node-externals": "^1.6.0",
+    "winston": "^2.4.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint-server": "eslint server -ext .js",
+    "clean": "rm -rf ./public/build",
+    "build-watch": "npm run clean && webpack -d --watch",
+    "build-dev": "npm run clean && webpack -d",
+    "server": "node index.js -d ./hpctoolkit-parser/calc-pi.json"
   },
   "author": "Huu Tan Nguyen",
   "license": "MIT"
