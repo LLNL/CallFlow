@@ -186,6 +186,8 @@ function parseSecCallPathProfileData(xmlNode){
         if(child.name() != "M")
             parseNodes(child, root, "false");
     })
+
+
 }
 
 //parsing PF nodes
@@ -409,29 +411,30 @@ function parseNodes(xmlNode, parentNode, Cid){
 var offsets = []; //this store the offset in the .mdb file to get the appropriate runtime metric for each node
 
 fs.open(mdbFiile, 'r', function(err, fd){
-    if(err){
+  if(err){
         throw err;
     }
 
     var buffer = new Buffer(4);
     //this is the type of file
     var num = fs.readSync(fd, buffer, 0, 4, null);
-    // console.log(buffer[0]);
-    // console.log(buffer.toString('utf8'), num);
+  console.log("number ", num);
+  // console.log(buffer[0]);
+  // console.log(buffer.toString('utf8'), num);
     console.log(buffer.readUIntBE(0, 4));
 
     //this is the number of data files
     num = fs.readSync(fd, buffer, 0, 4, null);
     var numbOfFiles = buffer.readUIntBE(0, 4)
-    // console.log(numbOfFiles);
+  console.log(numbOfFiles);
 
     //getting the proc-id, thread-id, and offset
-    for(var i = 0; i < numbOfFiles; i++) {
+    for(var i = 0; i < num; i++) {
         buffer = new Buffer(4);
         num = fs.readSync(fd, buffer, 0, 4, null);
-        // console.log("proc-id", buffer.readUIntBE(0, 4));
+//         console.log("proc-id", buffer.readUIntBE(0, 4));
         num = fs.readSync(fd, buffer, 0, 4, null);
-        // console.log("thread-id", buffer.readUIntBE(0, 4));
+//      console.log("thread-id", buffer.readUIntBE(0, 4));
 
         buffer = new Buffer(8);
         num = fs.readSync(fd, buffer, 0, 8, null);
@@ -439,6 +442,7 @@ fs.open(mdbFiile, 'r', function(err, fd){
         offsets.push(offset);
         // console.log("offset", offset);
         // console.log("/n");
+//      console.log(i, numbOfFiles);
     }
 
 
@@ -456,56 +460,57 @@ fs.open(mdbFiile, 'r', function(err, fd){
     //reading the inclusive runtime
     // var myMetricID = dataInfo.inclusiveID;
 
-    console.log("begin reading the data file");
-        // var incMetricID = dataInfo.inclusiveID;
-        var incMetricID = 0;
-        // var excMetricID = dataInfo.exclusiveID;
-        var excMetricID = 1;
-        nodeID.forEach(function(id){
-            var myID = parseInt(id) - 1;
-            var filePosInc = (myID * numbOfMetrics * 8) + (incMetricID * 8) + 32;
-            var filePosExc = (myID * numbOfMetrics * 8) + (excMetricID * 8) + 32;
+  console.log("begin reading the data file");
+  // var incMetricID = dataInfo.inclusiveID;
+  var incMetricID = 0;
+  // var excMetricID = dataInfo.exclusiveID;
+  var excMetricID = 1;
+  nodeID.forEach(function(id){
+    console.log(id);
+    var myID = parseInt(id) - 1;
+    var filePosInc = (myID * numbOfMetrics * 8) + (incMetricID * 8) + 32;
+    var filePosExc = (myID * numbOfMetrics * 8) + (excMetricID * 8) + 32;
+    
+    var incArray = [];
+    var excArray = [];
+    offsets.forEach(function(offset, idx){
+      
+      var num = fs.readSync(fd, buffer, 0, 8, offset + filePosInc);
+      var value = parseFloat(buffer.readDoubleBE(0));
+      // console.log(value);
+      // nodeMetric[id]["inc"].push(value);
+      incArray.push(value);
 
-            var incArray = [];
-            var excArray = [];
-            offsets.forEach(function(offset, idx){
-                
-                var num = fs.readSync(fd, buffer, 0, 8, offset + filePosInc);
-                var value = parseFloat(buffer.readDoubleBE(0));
-                // console.log(value);
-                // nodeMetric[id]["inc"].push(value);
-                incArray.push(value);
+      var excNum = fs.readSync(fd, buffer, 0, 8, offset + filePosExc);
+      var excValue = parseFloat(buffer.readDoubleBE(0));
+      // nodeMetric[id]["exc"].push(excValue);
+      excArray.push(excValue);
 
-                var excNum = fs.readSync(fd, buffer, 0, 8, offset + filePosExc);
-                var excValue = parseFloat(buffer.readDoubleBE(0));
-                // nodeMetric[id]["exc"].push(excValue);
-                excArray.push(excValue);
+      // if(id == 1){
+      //     console.log(value);
+      // }
+      
+    })
 
-                // if(id == 1){
-                //     console.log(value);
-                // }
-                
-            })
+    // if(id == 1){
+    //     console.log(JSON.stringify(nodeMetric[id]));
+    // }        
 
-            // if(id == 1){
-            //     console.log(JSON.stringify(nodeMetric[id]));
-            // }        
+    // var tempObj = JSON.parse(JSON.stringify(nodeMetric[id]));
+    // tempObj["inc"] = incArray;
+    // tempObj["exc"] = excArray;
 
-            // var tempObj = JSON.parse(JSON.stringify(nodeMetric[id]));
-            // tempObj["inc"] = incArray;
-            // tempObj["exc"] = excArray;
+    var tempObj = {
+      "id": nodeMetric[id].nodeID,
+      "inc" : incArray,
+      "exc" : excArray
+    }
 
-            var tempObj = {
-                "id": nodeMetric[id].nodeID,
-                "inc" : incArray,
-                "exc" : excArray
-            }
+    // fs.appendFileSync(dataFilePath + "nodeData.json", JSON.stringify(nodeMetric[id]) + "\n");    
+    fs.appendFileSync(dataFilePath + fileName, JSON.stringify(tempObj) + "\n");    
 
-            // fs.appendFileSync(dataFilePath + "nodeData.json", JSON.stringify(nodeMetric[id]) + "\n");    
-            fs.appendFileSync(dataFilePath + fileName, JSON.stringify(tempObj) + "\n");    
-
-        })
+  })
 
 
-    console.log('finish reading the data file');
+  console.log('finish reading the data file');
 })

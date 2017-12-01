@@ -20,13 +20,24 @@ If you get a libtool related error during libxlmjs build in the first step on
 Mac OSX, you should try again after removing the macports version of libtool
 from your path.
 
+### Pre-process
+
+HPCToolkit data needs to be converted to CallFlow format using,
+
+```
+	cd hpctoolkit-parser
+	./hpct2cf <hpctoolkit-database-path> <experiment-name> <number-nodes>
+
+```
+
 ### To Run
 
 In the src/ directory, run:
 ```
  $ node main.js -d /path/to/datasetinfo.json
 ```
-Point browser to http://localhost:8500
+
+Point browser to http://localhost:8900
 
 ### Inputs
 
