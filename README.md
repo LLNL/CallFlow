@@ -24,7 +24,7 @@ from your path.
 
 In the src/ directory, run:
 ```
- $ node main.js -d /path/to/datasetinfo.json
+ $ node index.js -d /path/to/datasetinfo.json
 ```
 Point browser to http://localhost:8500
 
