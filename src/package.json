@@ -5,6 +5,7 @@
   "main": "main.js",
   "dependencies": {
     "babel": "^6.23.0",
+    "bluebird": "^3.5.1",
     "bower": "^1.8.0",
     "check-types": "^7.0.1",
     "eslint": "^4.12.1",

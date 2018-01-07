@@ -11,7 +11,7 @@
  * Please also read the LICENSE file for the MIT License notice.
  ***************************************************************************** */
 
-// this modual compute the sankey nodes and links for the load modual
+// this module computes the sankey nodes and links for the load module
 const LMCalc = function (nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connectionInfo) {
     const fs = require('fs');
     const nodeRemove = [];

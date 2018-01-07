@@ -18,9 +18,8 @@ const argv = require('yargs').argv;
 
 const app = express();
 
-const CalcLM3 = require('./server/sankeyCalc.js');
-const SankeySplitNode = require('./server/xmlParser.js');
-
+const sankeyCalc = require('./server/sankeyCalc.js');
+const xmlParser = require('./server/xmlParser.js');
 
 const server = require('http').Server(app);
 
@@ -31,7 +30,7 @@ let procIDArray = [];
 let splitByParentList = [];
 let entryExitDataNodeSplit;
 let nodePaths;
-let functionList;
+var functionList;
 let staticGraph; // this is the static graph we can load upond page refresh;
 let staticFunctionList;
 let filePath;
@@ -73,6 +72,9 @@ const nodeIDKeep = []; // a array of node id got when read in the metric file
 // let entry;
 // let exit;
 // let nodeRemove;
+
+/* debug = true;  prints all debug statements */
+var debug = true;
 
 function exception(msg1, msg2) {
     console.log(msg1 + msg2);
@@ -122,11 +124,8 @@ const port = process.env.PORT || portNumber || 8500;
 const host = process.env.HOST || 'localhost';
 // host = process.env.HOST || "detoo.cs.ucdavis.edu";
 
-
-app.use(express.static(`${__dirname}/public`));
-
 /* Add a SumArray method to all arrays by expanding the
- Array prototype(do this once in a general place) */
+  Array prototype(do this once in a general place) */
 Array.prototype.SumArray = function (arr) {
     const ret = [];
     if (arr != null && this.length === arr.length) {
@@ -138,6 +137,7 @@ Array.prototype.SumArray = function (arr) {
     return ret;
 };
 
+/* Reading metric file to create a map of nodeIDs */
 nodeMetricReader.on('line', (line) => {
     const myOBJ = JSON.parse(line);
     nodeIDKeep.push(parseInt(myOBJ.id), 10);
@@ -145,74 +145,27 @@ nodeMetricReader.on('line', (line) => {
 });
 
 nodeMetricReader.on('end', () => {
-    console.log('done with reading metric data, begin reading xml file');
-    // var xmlFile = new fileLoader('../../data/miranda1/experiment.xml', myCallBack);
-    date1 = new Date();
-    const xml2 = new SankeySplitNode(xmlTree, xmlFile, sankeySplitNodeCallBack, configFile, [-99999], nodeMetric, [], nodeIDKeep);
+    if(debug){
+	console.log('[Data Process] Done parsing metric file. ');
+    }
+    xmlParser.init(xmlTree, xmlFile, configFile, [-99999], nodeMetric, [], nodeIDKeep).then((data) => {
+	xmlParser.callback(data, nodeMetric).then((graph) => {
+	    functionList = data.functionList;
+	    procedureTable = data.procedureTable;
+	    staticGraph = graph;
+	    server.listen(port, host, () => {
+		console.log('Sever started, listening', host, port);
+	    });
+	});
+    });
 });
 
-function sankeySplitNodeCallBack(data) {
-    console.log('done spliting node, begin calc edges');
-    nodeArray = data.nodeArray;
-    sanKeyMetricDataLM = data.sanKeyMetricDataLM;
-    entryExitDataNodeSplit = data.entryExitData;
-    nodePaths = data.nodePaths;
-    procedureTable = data.procedureTable;
+app.use(express.static(`${__dirname}/public`));
 
-    // from the nodeSplitMiranda.js
-    //  const finalTree = data.finalTree;
-    //  const keepEdges = data.keepEdges;
-    //  const nodeList = data.nodeList;
-    //  let keepEdges = data.keepEdges;
-    staticFunctionList = data.functionList;
-
-    const connectionInfo = data.connectionInfo;
-
-    //  const cTime1 = new Date();
-    // var lmcalc = new calcLM3(nodeArray, nodeMetric, sanKeyMetricDataLM, nodePaths);
-    const lmcalc = new CalcLM3(nodeArray, nodeMetric, sanKeyMetricDataLM, nodePaths, connectionInfo);
-
-    // var lmcalc = new calcMiranda(finalTree, nodeList, nodePaths, nodeMetric, keepEdges);
-
-    const result = lmcalc.compute();
-    sankeyData = result.newSankey;
-    // nodeRemove = result["nodeRemove"];
-
-    date2 = new Date();
-
-    //  const diff = date2 - date1;
-    // console.log("the time it take to load and calc is, ", diff);
-    // console.log('the time it take to calc the edges is', date2 - cTime1);
-
-    let nodesDeepCopy = [];
-    const edgesDeepCopy = [];
-    let nodeListDeepCopy = {};
-    let edgeListDeepCopy = {};
-    sankeyData.edges.forEach((edge) => {
-        const tempObj = JSON.parse(JSON.stringify(edge));
-        edgesDeepCopy.push(tempObj);
-    });
-    nodesDeepCopy = JSON.parse(JSON.stringify(sankeyData.nodes));
-    nodeListDeepCopy = JSON.parse(JSON.stringify(sankeyData.nodeList));
-    edgeListDeepCopy = JSON.parse(JSON.stringify(sankeyData.edgeList));
-
-    staticGraph = {
-        nodes: nodesDeepCopy,
-        edges: edgesDeepCopy,
-        nodeList: nodeListDeepCopy,
-        edgeList: edgeListDeepCopy,
-    };
-
-    server.listen(port, host, () => {
-        console.log('Sever started, listening', host, port);
-    });
-}
-
+/***** Routes *******/
 app.get('/', (req, res) => {
     splitByParentList = [];
     procIDArray = [];
-    functionList = staticFunctionList;
-
     res.sendFile(`${__dirname}/index.html`);
 });
 
@@ -253,28 +206,6 @@ app.get('/getSankey', (req, res) => {
     res.json(resData);
 });
 
-app.get('/splitNode', (req, res) => {
-    // var level = parseInt( req.query["nodeLevel"] )
-    // var specialID = req.query["specialID"];
-    // var highestProc = calcHighestProcs(level, specialID);
-
-    // var myID = parseInt(highestProc["procID"])
-
-    const idList = req.query.idList;
-
-    idList.forEach((sID) => {
-        const myID = parseInt(sID, 10);
-        if (procIDArray.indexOf(myID) === -1 || procIDArray.length === 0) {
-            procIDArray.push(myID);
-        }
-    });
-
-    resGlobal = res;
-
-    // var xml2 = new sankeySplitNode('../../data/miranda1/experiment.xml', splitNodeCallBack, procIDArray);
-    const xml2 = new SankeySplitNode(xmlTree, xmlFile, splitNodeCallBack2, configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep);
-});
-
 app.get('/getList', (req, res) => {
     const level = parseInt(req.query.nodeLevel, 10);
     const specialID = req.query.specialID;
@@ -295,11 +226,12 @@ app.get('/getList', (req, res) => {
 app.get('/getLists', (req, res) => {
     const specialID = req.query.specialID;
     if (functionList[specialID] != null) {
-        const functionListResult = {};
+	const functionListResult = {};
         const functionListObject = functionList[specialID];
         const functionListObjectKeys = Object.keys(functionListObject);
+	
         functionListObjectKeys.forEach((procedureID) => {
-            if (functionListResult[procedureID] === null) {
+            if (!functionListResult[procedureID]) {
                 functionListResult[procedureID] = {
                     procID: procedureID,
                     name: procedureTable[procedureID],
@@ -307,7 +239,7 @@ app.get('/getLists', (req, res) => {
                     excVal: 0,
                 };
             }
-
+	    
             const nodeIDList = functionList[specialID][procedureID];
             nodeIDList.forEach((nodeID) => {
                 const incTime = nodeMetric[nodeID].inc;
@@ -321,9 +253,8 @@ app.get('/getLists', (req, res) => {
                 excTime.forEach((val, idx) => {
                     excTemp += val;
                 });
-
+		
                 functionListResult[procedureID].value += temp / Math.max(incTime.length, 1);
-
                 functionListResult[procedureID].excVal += excTemp / Math.max(excTime.length, 1);
             });
         });
@@ -374,6 +305,30 @@ app.get('/getRuntimeOfNode', (req, res) => {
     });
 });
 
+app.get('/splitNode', (req, res) => {
+    // var level = parseInt( req.query["nodeLevel"] )
+    // var specialID = req.query["specialID"];
+    // var highestProc = calcHighestProcs(level, specialID);
+
+    // var myID = parseInt(highestProc["procID"])
+    const idList = req.query.idList;
+
+    idList.forEach((sID) => {
+        const myID = parseInt(sID, 10);
+        if (procIDArray.indexOf(myID) === -1 || procIDArray.length === 0) {
+            procIDArray.push(myID);
+        }
+    });
+   
+    xmlParser.init(xmlTree, xmlFile, configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep).then((data) => {
+	functionList = data.functionList;
+	procedureTable = data.procedureTable;
+	xnlParser.splitNodeCallback(data, nodeMetric).then((resData) => {
+	    res.json(resData);
+	})
+    })
+});
+
 app.get('/splitNodeByParents', (req, res) => {
     // splitParentList
     const parentProcList = req.query.parentProcList;
@@ -386,7 +341,13 @@ app.get('/splitNodeByParents', (req, res) => {
 
     resGlobal = res;
 
-    const xml2 = new sankeySplitNode(xmlTree, xmlFile, splitNodeCallBack2, configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep);
+    xmlParser.init(xmlTree, xmlFile, configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep).then((data) => {
+	functionList = data.functionList;
+	procedureTable = data.procedureTable;
+	xmlParser.splitNodeCallback(data, nodeMetric).then( (data) => {
+	    resGlobal.json(data);
+	})
+    })
 });
 
 app.get('/getHistogramScatterData', (req, res) => {
@@ -476,36 +437,8 @@ function splitNodeCallBack(data) {
 }
 
 function splitNodeCallBack2(data) {
-    nodeArray = data.nodeArray;
-    sanKeyMetricDataLM = data.sanKeyMetricDataLM;
-    entryExitDataNodeSplit = data.entryExitData;
-    nodePaths = data.nodePaths;
-    procedureTable = data.procedureTable;
-
-    // from the nodeSplitMiranda.js
-    const finalTree = data.finalTree;
-    var keepEdges = data.keepEdges;
-    const nodeList = data.nodeList;
-    var keepEdges = data.keepEdges;
-    functionList = data.functionList;
-
-    const connectionInfo = data.connectionInfo;
-    const cTime1 = new Date();
-    // var lmcalc = new calcLM3(nodeArray, nodeMetric, sanKeyMetricDataLM, nodePaths)
-    const lmcalc = new calcLM3(nodeArray, nodeMetric, sanKeyMetricDataLM, nodePaths, connectionInfo);
-    // var lmcalc = new calcMiranda(finalTree, nodeList, nodePaths, nodeMetric, keepEdges);
-    const result = lmcalc.compute();
-    sankeyData = result.newSankey;
-    console.log('done with split node');
-    // var temp = {"nodes" : sankeyData["nodes"], "edges" : sankeyData["edges"]};
-    // fs.writeFileSync("nodeEdgeTest2.json", JSON.stringify(temp));
-    const hisData = computeHistogram();
-    const resData = {
-        graph: sankeyData,
-        histogramData: hisData,
-    };
     // resGlobal.json(sankeyData);
-    resGlobal.json(resData);
+
 }
 
 // this function compute a mini histogram for each speical ID

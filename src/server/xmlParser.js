@@ -10,28 +10,32 @@
  * https://github.com/LLNL/CallFlow
  * Please also read the LICENSE file for the MIT License notice.
  ***************************************************************************** */
+const fs = require('fs');
+const parser = require('libxmljs');
+const Q = require('bluebird');
 
-const fileLoader = function (xmlTree, fileName, callBack, configFileName, procIDArray, nodeMetrics, splitByParentList, nodeKeep) {
-    const fs = require('fs');
-    const parser = require('libxmljs');
-    let config;
+const sankeyCalc = require('./sankeyCalc.js');
 
-    if (fs.existsSync(configFileName)) {
+let debug = true;
+
+const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetrics, splitByParentList, nodeKeep) {
+    var deferred  = Q.defer();
+    let config = {};
+
+/*    if (fs.existsSync(configFileName)) {
         // console.log('config file found at', configFileName);
         config = require(configFileName);
     } else {
-        // console.log('no config file found at', configFileName);
+	console.log('no config file found at', configFileName);
         config = {};
     }
+*/
+    if(debug){
+	console.log('[Data Process] Start parsing xml file.');
+    }
 
-    console.log(config);
-
-    const xmlFile = fileName;
-
-    // console.log(xmlFile);
     let obj;
     const date1 = new Date();
-    console.log('begin parsing xml file');
     if (xmlTree) {
         obj = xmlTree;
     } else {
@@ -853,7 +857,109 @@ const fileLoader = function (xmlTree, fileName, callBack, configFileName, procID
         functionList,
     };
 
-    callBack(returnData);
+    deferred.resolve(returnData);
+    return deferred.promise;
 };
 
-module.exports = fileLoader;
+const callback = function(data, nodeMetric) {
+    let deferred = Q.defer();
+    if(debug){
+	console.log('[Data Process] XML parsed - Callback');
+	console.log('[Data Process] Begin sankey graph calculation');
+    }
+    nodeArray = data.nodeArray;
+    sanKeyMetricDataLM = data.sanKeyMetricDataLM;
+    entryExitDataNodeSplit = data.entryExitData;
+    nodePaths = data.nodePaths;
+    procedureTable = data.procedureTable;
+
+    // from the nodeSplitMiranda.js
+    //  const finalTree = data.finalTree;
+    //  const keepEdges = data.keepEdges;
+    //  const nodeList = data.nodeList;
+    //  let keepEdges = data.keepEdges;
+    staticFunctionList = data.functionList;
+
+    const connectionInfo = data.connectionInfo;
+
+    //  const cTime1 = new Date();
+    // var lmcalc = new calcLM3(nodeArray, nodeMetric, sanKeyMetricDataLM, nodePaths);
+    const lmcalc = new sankeyCalc(nodeArray, nodeMetric, sanKeyMetricDataLM, nodePaths, connectionInfo);
+
+    // var lmcalc = new calcMiranda(finalTree, nodeList, nodePaths, nodeMetric, keepEdges);
+
+    const result = lmcalc.compute();
+    sankeyData = result.newSankey;
+    // nodeRemove = result["nodeRemove"];
+
+    date2 = new Date();
+
+    //  const diff = date2 - date1;
+    // console.log("the time it take to load and calc is, ", diff);
+    // console.log('the time it take to calc the edges is', date2 - cTime1);
+
+    let nodesDeepCopy = [];
+    const edgesDeepCopy = [];
+    let nodeListDeepCopy = {};
+    let edgeListDeepCopy = {};
+    sankeyData.edges.forEach((edge) => {
+        const tempObj = JSON.parse(JSON.stringify(edge));
+        edgesDeepCopy.push(tempObj);
+    });
+    nodesDeepCopy = JSON.parse(JSON.stringify(sankeyData.nodes));
+    nodeListDeepCopy = JSON.parse(JSON.stringify(sankeyData.nodeList));
+    edgeListDeepCopy = JSON.parse(JSON.stringify(sankeyData.edgeList));
+
+    staticGraph = {
+        nodes: nodesDeepCopy,
+        edges: edgesDeepCopy,
+        nodeList: nodeListDeepCopy,
+        edgeList: edgeListDeepCopy,
+    };
+
+    deferred.resolve(staticGraph);
+    return deferred.promise;
+}
+
+const splitNodeCallback = function(data, nodeMetric){
+    let deferred = Q.defer();
+    nodeArray = data.nodeArray;
+    sanKeyMetricDataLM = data.sanKeyMetricDataLM;
+    entryExitDataNodeSplit = data.entryExitData;
+    nodePaths = data.nodePaths;
+    procedureTable = data.procedureTable;
+
+    // from the nodeSplitMiranda.js
+    const finalTree = data.finalTree;
+    var keepEdges = data.keepEdges;
+    const nodeList = data.nodeList;
+    var keepEdges = data.keepEdges;
+    functionList = data.functionList;
+
+    const connectionInfo = data.connectionInfo;
+    const cTime1 = new Date();
+    // var lmcalc = new calcLM3(nodeArray, nodeMetric, sanKeyMetricDataLM, nodePaths)
+    const lmcalc = new sankeyCalc(nodeArray, nodeMetric, sanKeyMetricDataLM, nodePaths, connectionInfo);
+    // var lmcalc = new calcMiranda(finalTree, nodeList, nodePaths, nodeMetric, keepEdges);
+    const result = lmcalc.compute();
+    sankeyData = result.newSankey;
+    // var temp = {"nodes" : sankeyData["nodes"], "edges" : sankeyData["edges"]};
+    // fs.writeFileSync("nodeEdgeTest2.json", JSON.stringify(temp));
+    const hisData = computeHistogram();
+    const resData = {
+        graph: sankeyData,
+        histogramData: hisData,
+    };
+
+    if(debug){
+	console.log('[Server] Done splitting nodes');
+    }
+    deferred.resolve(resData);
+    return deferred.promise;
+}
+
+module.exports = {
+    init,
+    callback,
+    splitNodeCallback
+}
