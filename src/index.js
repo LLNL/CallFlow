@@ -10,7 +10,12 @@
  * https://github.com/LLNL/CallFlow
  * Please also read the LICENSE file for the MIT License notice.
  ***************************************************************************** */
-// ////////////// file paths for the data///////////////
+/* Problems unresolved
+
+   1. nodeSplit doesn't work because of promises change.
+*/
+
+///////////////// file paths for the data///////////////
 const fs = require('fs');
 const express = require('express');
 const LineByLineReader = require('line-by-line');

@@ -10,12 +10,16 @@
  * https://github.com/LLNL/CallFlow
  * Please also read the LICENSE file for the MIT License notice.
  ***************************************************************************** */
+const fs = require('fs');
 
-// this module computes the sankey nodes and links for the load module
+function log(val){
+    console.log('[LMCalc] ', val);
+}
+
+/* this module computes the sankey nodes and links for the load module */
 const LMCalc = function (nodeArray, nodeMetric, sanKeyMetricData, nodePaths, connectionInfo) {
-    const fs = require('fs');
     const nodeRemove = [];
-
+    log(nodeMetric);
     let treeLevels = Object.keys(nodeArray);
     const rootSpecialID = 'LM0';
     let rootRuntime;
