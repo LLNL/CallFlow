@@ -1,0 +1,6 @@
+{
+    "path" : "../data/lulesh/",
+    "experiment" : "experiment.xml",
+    "nodeMetric" : "metrics.json",
+    "port" : 8900
+}
