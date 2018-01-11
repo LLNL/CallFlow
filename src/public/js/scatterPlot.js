@@ -10,6 +10,24 @@
  * https://github.com/LLNL/CallFlow
  * Please also read the LICENSE file for the MIT License notice.
  ******************************************************************************/
+function showScatterPlot(){
+    var width = $("#scat_view").parent().width();
+    var height = $("#scat_view").parent().height();
+    var runTimeLable;
+    var scatDat;
+
+    $('#scat_view').empty();
+    scatterPot = new Scatter({
+	ID: "#scat_view",
+	width: width,
+	height: height,
+	margin: {top: 10, right: 10, bottom: 30, left: 44},
+	yData: sankNodeDataHistScat["inc"].slice(),
+	xData: sankNodeDataHistScat["exc"].slice(),
+	sort: false						
+    })			
+
+}
 
 function Scatter(args){
 	var containerID = args.ID || "body",

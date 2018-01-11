@@ -1,0 +1,27 @@
+function functionListUI(){
+    var listViewDiv = document.createElement('div');
+    listViewDiv.setAttribute("id", "list_view"); 
+    document.getElementById('fList_view').appendChild(listViewDiv);
+
+    $("#list_view").width( $("#fList_view").width() );
+    $("#list_view").height( $("#fList_view").height() - 50 );
+    $("#list_view").css("overflow", "auto");
+
+    var button = $('<button/>',
+		   {
+		       text: 'Split Node',
+		       click: splitNode2,
+		       id: "splitNodeBtr"
+		   });
+    $("#fList_view").append(button);
+    document.getElementById("splitNodeBtr").disabled = true;
+
+    var button2 = $('<button/>',
+		    {
+			text: 'Split By Parents',
+			click: splitNodeByParents,
+			id: "splitNodeByParentBtr"
+		    });
+    $("#fList_view").append(button2);
+    document.getElementById("splitNodeByParentBtr").disabled = true;
+}
