@@ -41,53 +41,35 @@ var opts = {
 
 var spinner;
 var target;
-
 var rectWidth = 20;
 var rectHeight = 20;
-
 var visData;
-
 var minVal;
 var maxVal;
-
 var numbOfClusters = 16; //this is the number of clusters
-
 var lmView;
 var sankeyVis;
-
 var selectedLMID;
-
 var scatterPot;
 var histogram;
-
 var listData;
-
 var sankColor;
-
 var edges;
 var nodes;
 var edgeList;
 var nodeList;
 var connectionList;
-
 var currentClickNode;
 var nodeMetrics;
-
 //this is the data use for the histogram and scatter plot
 var sankNodeDataHistScat = {};
-
 var sankeyScale;
-
 var specialIDToSankIDMap = {};
 var currentMaxID = 0;
-
 var globalNodes;
 var globalEdges;
-
 var rootRunTime = 0;
-
 var showLabelBool = false;
-
 var dataSetInfo;
 
 function startVis(){
