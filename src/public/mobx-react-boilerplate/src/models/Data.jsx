@@ -1,22 +1,15 @@
-import { observable, action, computed } from 'mobx'
-import { Collection, Model } from 'mobx-rest'
-import { extendObservable } from 'mobx'
+import { observable, action, computed, autorun } from 'mobx'
 
-class DataModel extends Model {
-    constructor(data){
-	super(data)
-	console.log(data);
-    }
-    @computed get data(){
-	
-    }
+import agent from '../agent'
 
+class SankeyStore {
+    @observable graph = []
+    @observable histogram = []
+
+    @action getSankey () {
+	return agent.Sankey.getSankey()
+	    .then(data) => console.log(data);
+    }
 }
 
-class DataCollection extends Collection {
-    url() { return `/reactGetSankey` }
-    model() { return DataModel }
-}
-
-
-export default new DataCollection()
+export default new SankeyStore();

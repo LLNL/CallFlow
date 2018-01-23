@@ -41,6 +41,7 @@
     "mobx-rest": "^2.2.5",
     "mobx-rest-fetch-adapter": "^0.1.4",
     "react": "^15.1.0",
-    "react-dom": "^15.1.0"
+    "react-dom": "^15.1.0",
+    "superagent": "^3.8.2"
   }
 }
