@@ -174,15 +174,26 @@ app.get('/', (req, res) => {
     res.sendFile(`${__dirname}/index.html`);
 });
 
+app.get('/dummy', (req, res) => {
+    res.json([ {1:1}, {1:2} ] );
+});
+
 app.get('/dataSetInfo', (req, res) => {
     res.json(dataSetInfo);
 });
+
+app.get('/reactDataSetInfo', (req, res) => {
+    var ret = [];
+    ret.push(dataSetInfo);
+    res.json(ret);
+})
 
 app.get('/data', (req, res) => {
     // runPython(res);
 });
 
 app.get('/getNodeMetrics', (req, res) => {
+    console.log('nodeMetrics');
     res.json(nodeMetric);
 });
 
@@ -210,6 +221,20 @@ app.get('/getSankey', (req, res) => {
     };
     res.json(resData);
 });
+
+app.get('/reactGetSankey', (req, res) => {
+       procIDArray = [];
+    splitByParentList = [];
+    sankeyData = staticGraph;
+    const hisData = computeHistogram();
+    const resData = {
+        graph: staticGraph,
+        histogramData: hisData,
+    };
+    var ret = [];
+    ret.push(resData);
+    res.json(ret);
+})
 
 app.get('/getList', (req, res) => {
     const level = parseInt(req.query.nodeLevel, 10);

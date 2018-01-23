@@ -1,28 +1,21 @@
-import React from "react";
-import { render } from "react-dom";
-import DevTools from "mobx-react-devtools";
+import React from "react"
+import { render } from "react-dom"
+import DevTools from "mobx-react-devtools"
+import { apiClient } from 'mobx-rest'
+import adapter from 'mobx-rest-fetch-adapter'
 
-import Vis from "./components/Vis";
-import TodoListModel from "./models/TodoListModel";
-import TodoModel from "./models/TodoModel";
+import Vis from "./components/Vis"
 
-const store = new TodoListModel();
+const apiPath = "http://localhost:8900"
+apiClient(adapter, {apiPath})
 
 render(
   <div>
     <DevTools />
-    <Vis store={store} />
+    <Vis />
   </div>,
   document.getElementById("root")
 );
 
-store.addTodo("Get Coffee");
-store.addTodo("Write simpler code");
-store.todos[0].finished = true;
-
-setTimeout(() => {
-  store.addTodo("Get a cookie as well");
-}, 2000);
-
 // playing around in the console
-window.store = store;
+//window.store = store;

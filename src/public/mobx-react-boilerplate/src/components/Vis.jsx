@@ -1,31 +1,40 @@
-import React, { Component } from "react";
-import { observable, action } from "mobx";
-import { observer } from "mobx-react";
+import React, { Component } from "react"
+import { observable, action, computed } from "mobx"
+import { observer, Provider } from "mobx-react"
 
-import Todo from "./Todo";
-import GoldenLayout from "./GoldenLayout";
+import DataStore from '../models/Data'
+import GoldenLayout from "./GoldenLayout"
+import Data from '../models/Data'
 
 @observer
-class Vis extends React.Component {
-    @observable newTodoTitle = "";
-
-    render() {
-	return (
-	    <GoldenLayout />
-	);
+class Vis extends Component {
+    componentWillMount (){
+	Data.fetch()
+    }
+    
+    renderContent() {
+	if(Data.isRequest('fetching')) {
+	    console.log('fetching');
+	    //return <Loading label="Application" />
+	}
+	else{
+	    return ( <Provider DataStore = {DataStore}>
+		     <GoldenLayout />
+		     </Provider>
+		   );
+	}
     }
 
-    @action
-    handleInputChange = e => {
-	this.newTodoTitle = e.target.value;
-    };
-
-    @action
-    handleFormSubmit = e => {
-	this.props.store.addTodo(this.newTodoTitle);
-	this.newTodoTitle = "";
-	e.preventDefault();
-    };
+    render() {
+	const { data } = this.props
+	return (
+	<div className='App'>
+		<div className='App_body'>
+		    {this.renderContent()}
+                </div>
+	</div>
+	)
+    }
 }
 
 export default Vis
