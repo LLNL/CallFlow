@@ -1,38 +1,36 @@
 import React, { Component } from "react"
 import { observable, action, computed } from "mobx"
-import { observer, Provider } from "mobx-react"
+import { observer, inject, Provider } from "mobx-react"
 
-import DataStore from '../models/Data'
 import GoldenLayout from "./GoldenLayout"
-import Data from '../models/Data'
+import Sankey from './Sankey'
 
+import sankeyStore from '../store/sankeyStore'
+
+@inject('sankeyStore')
 @observer
 class Vis extends Component {
     componentWillMount (){
-	Data.fetch()
+	this.props.sankeyStore.getData()
     }
-    
-    renderContent() {
-	if(Data.isRequest('fetching')) {
-	    console.log('fetching');
-	    //return <Loading label="Application" />
+
+    renderVis() {
+	if(!this.props.sankeyStore.isLoading){
+	    return ( <Sankey store={sankeyStore} />)
 	}
-	else{
-	    return ( <Provider DataStore = {DataStore}>
-		     <GoldenLayout />
-		     </Provider>
-		   );
-	}
+	else
+	    console.log("fetching")
     }
 
     render() {
-	const { data } = this.props
 	return (
-	<div className='App'>
-		<div className='App_body'>
-		    {this.renderContent()}
-                </div>
-	</div>
+		<Provider store={sankeyStore}>
+		<div className='App'>
+		<div id="Vis">
+		{this.renderVis()}
+	    </div>
+		</div>
+		</Provider>
 	)
     }
 }

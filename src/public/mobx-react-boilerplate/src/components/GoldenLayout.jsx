@@ -1,13 +1,17 @@
 import React, { Component } from 'react'
-import { observer } from 'mobx-react'
+import ReactDom from 'react-dom'
+import { observer, Provider } from 'mobx-react'
 import GoldenLayout from 'golden-layout'
 import { TestComponent } from './TestComponent'
+import { Sankey } from './Sankey'
+
+import Vis from './Vis'
 
 @observer
 class GoldenLayoutWrapper extends Component {
     componentDidMount() {
 	let windowWidth = window.innerWidth;
-	let config = {
+	const config = {
 	    settings: {
 		showCloseIcon : false,
 		showPopoutIcon : false,
@@ -25,41 +29,36 @@ class GoldenLayoutWrapper extends Component {
 				type: 'stack',
 				content: [
 				    {
-					type: 'component',
-					componentName: 'testComponent',
-					componentState: {id : "control" },
-					isClosable: false,
-					title: "Control"								
+					title: "Control",								
+					type: 'react-component',
+					component: 'testComponent',
+					props: { id : "control" },
 				    },								
 				    {
-					type: 'component',
-					componentName: 'testComponent',
-					componentState: {id : "info_view" },
-					isClosable: false,
-					title: "Node Info"
+					title: "Node Info",
+					type: 'react-component',
+					component: 'testComponent',
+					props: { id : "info_view" }
 				    },								
 				    {
-					type: 'component',
-					componentName: 'testComponent',
-					componentState: {id : "scat_view" },
-					isClosable: false,
-					title: "Scatter Plot View"
+					title: "Scatter Plot View",
+					type: 'react-component',
+					component: 'testComponent',
+					props: { id : "scat_view" },
 				    },
 				    {
-					type: 'component',
-					componentName: 'testComponent',
-					componentState: {id : "fList_view" },
-					isClosable: false,
-					title: "Function List"
+					title: "Function List",
+					type: 'react-component',
+					component: 'testComponent',
+					props: { id : "fList_view" },
 				    },								
 				]
 			    },
 			    {
-				type: 'component',
-				componentName: 'testComponent',
-				componentState: {id : "hist_view" },
-				isClosable: false,
-				title: "Histogram View"	
+				title: "Histogram View",
+				type: 'react-component',
+				component: 'testComponent',
+				props: { id : "hist_view" },
 			    }
 			]
 		    },
@@ -68,10 +67,10 @@ class GoldenLayoutWrapper extends Component {
 			width: windowWidth * 70,
 			content: [
 			    {
-				type: 'component',
-				componentName: 'testComponent',
-				componentState: { id: 'procedure_view' },
-				title: 'Graph View'
+				title: 'Graph View',
+				type: 'react-component',
+				component: 'Vis',
+				props: { id: 'graph_view' },
 			    }
 			]
 			
@@ -79,13 +78,13 @@ class GoldenLayoutWrapper extends Component {
 		]
 	    }]			
 	}
-
-	function wrapComponent(Component, store) {
-            class Wrapped extends React.Component {
+	
+        function wrapComponent(component, store) {
+            class Wrapped extends Component {
                 render() {
                     return (
                         <Provider store={store}>
-                            <Component {...this.props}/>
+                            <component {...this.props}/>
                         </Provider>
                     );
                 }
@@ -93,11 +92,10 @@ class GoldenLayoutWrapper extends Component {
             return Wrapped;
         };
 	
-	let layout = new GoldenLayout(config, this.layout);
-	layout.registerComponent('testComponent',
-				 wrapComponent(TestComponent, this.context.store));
-	layout.init();
-
+	let layout = new GoldenLayout(config, this.layout)
+	layout.registerComponent('testComponent', TestComponent)
+	layout.registerComponent('Vis', Vis)
+	layout.init()
 	window.addEventListener('resize', () => {
 	    layout.updateSize();
 	})
@@ -105,7 +103,7 @@ class GoldenLayoutWrapper extends Component {
 
     render() {
 	return (
-		<div className='goldenLayout' ref = { input => this.loyout = input } />
+		<div className='goldenLayout' ref = {input => this.layout = input} />
 	);
     }
 }

@@ -1,12 +1,18 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { observer } from 'mobx-react'
+import { observer, Provider } from 'mobx-react'
+
+import goldenLayoutStore from '../store/goldenLayoutStore'
 
 @observer
-class TestComponent extends React.Component {
+class TestComponent extends Component {
     render() {
 	return (
-		<h1> { this.props.label } </h1>
+		<Provider store={goldenLayoutStore}>
+		<div id={this.props.id}> </div>
+		</Provider>
 	)
     }
 }
+
+export default TestComponent

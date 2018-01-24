@@ -1,4 +1,4 @@
-import superagentPromise from ' superagent-promise'
+import superagentPromise from 'superagent-promise'
 import _superagent from 'superagent'
 
 const agent = superagentPromise(_superagent, global.Promise)
@@ -12,7 +12,7 @@ const requests = {
 }
 
 const Sankey = {
-    getSankey: () => requests.get('/getSankey')1
+    getSankey: () => requests.get('/getSankey')
 }
 
 export default {
