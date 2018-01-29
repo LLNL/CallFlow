@@ -2,3 +2,4 @@
 **/.DS_Store
 src/node_modules
 src/public/bower_components
+src/public/react-redux/node_modules

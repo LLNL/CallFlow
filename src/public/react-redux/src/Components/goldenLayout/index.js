@@ -1,16 +1,20 @@
 import React, { Component } from 'react'
-import ReactDom from 'react-dom'
-import { observer, Provider } from 'mobx-react'
 import GoldenLayout from 'golden-layout'
-import { TestComponent } from './TestComponent'
-import { Sankey } from './Sankey'
+import {Provider} from 'react-redux'
 
-import Vis from './Vis'
+import TestComponent from '../TestComponent'
+//import iciSank from '../iciSank/index'
+import store from '../../store'
 
-@observer
+import './goldenLayout-base.css'
+import './goldenLayout-light-theme.css'
+import './goldenLayout.css'
+
 class GoldenLayoutWrapper extends Component {
-    componentDidMount() {
+    componentWillMount(props) {
 	let windowWidth = window.innerWidth;
+	let windowHeight = window.innerHeight;
+
 	const config = {
 	    settings: {
 		showCloseIcon : false,
@@ -69,7 +73,7 @@ class GoldenLayoutWrapper extends Component {
 			    {
 				title: 'Graph View',
 				type: 'react-component',
-				component: 'Vis',
+				component: 'testComponent',
 				props: { id: 'graph_view' },
 			    }
 			]
@@ -78,34 +82,41 @@ class GoldenLayoutWrapper extends Component {
 		]
 	    }]			
 	}
+
 	
-        function wrapComponent(component, store) {
-            class Wrapped extends Component {
+        function wrapComponent(Component, store, props) {
+            class Wrapper extends React.Component {
                 render() {
                     return (
                         <Provider store={store}>
-                            <component {...this.props}/>
+                            <Component {...props}/>
                         </Provider>
                     );
                 }
             }
-            return Wrapped;
+            return Wrapper;
         };
-	
-	let layout = new GoldenLayout(config, this.layout)
-	layout.registerComponent('testComponent', TestComponent)
-	layout.registerComponent('Vis', Vis)
-	layout.init()
-	window.addEventListener('resize', () => {
-	    layout.updateSize();
-	})
-    } 
 
+	setTimeout(() => {
+	    var layout = new GoldenLayout(config, this.layout);
+            layout.registerComponent('testComponent', wrapComponent(TestComponent, this.context.store));
+//	    layout.registerComponent('iciSank', wrapComponent(iciSank, store, this.props.data));
+	
+            layout.init();
+	    
+            window.addEventListener('resize', () => {
+		layout.updateSize();
+            });
+	}, 0);
+    }
+    
     render() {
-	return (
-		<div className='goldenLayout' ref = {input => this.layout = input} />
-	);
+            return (
+		    <div className='goldenLayout' ref={input => this.layout = input}/>
+            )
+	
     }
 }
 
-export default GoldenLayoutWrapper;
+
+export default GoldenLayoutWrapper
