@@ -3,7 +3,7 @@ import GoldenLayout from 'golden-layout'
 import {Provider} from 'react-redux'
 
 import TestComponent from '../TestComponent'
-//import iciSank from '../iciSank/index'
+import Sankey from '../Sankey/index'
 import store from '../../store'
 
 import './goldenLayout-base.css'
@@ -73,8 +73,8 @@ class GoldenLayoutWrapper extends Component {
 			    {
 				title: 'Graph View',
 				type: 'react-component',
-				component: 'testComponent',
-				props: { id: 'graph_view' },
+				component: 'Sankey',
+				props: { id: 'Sankey_view' },
 			    }
 			]
 			
@@ -100,7 +100,7 @@ class GoldenLayoutWrapper extends Component {
 	setTimeout(() => {
 	    var layout = new GoldenLayout(config, this.layout);
             layout.registerComponent('testComponent', wrapComponent(TestComponent, this.context.store));
-//	    layout.registerComponent('iciSank', wrapComponent(iciSank, store, this.props.data));
+	    layout.registerComponent('Sankey', wrapComponent(Sankey, store, this.props.data));
 	
             layout.init();
 	    
