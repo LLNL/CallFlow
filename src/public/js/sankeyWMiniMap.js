@@ -20,8 +20,10 @@ function Sankey(args){
 	toolTipData = args.toolTipData,
 	histogramData = args.histogramData,
 	// spinner = args.spinner,
-	clickCallBack = args.clickCallBack;
-
+	clickCallBack = args.clickCallBack,
+	maxNodeSize = args.maxNodeSize;
+    
+    
     this.colorScale = args.colorScale || d3.scale.category20();
     var width = containerWidth - margin.left - margin.right;
     var height = containerHeight - 2*margin.top - 2*margin.bottom;
@@ -139,8 +141,8 @@ function Sankey(args){
     var graph;
     var graph2;
 
-    var treeHeight = height;
-
+  var treeHeight = height < maxNodeSize ? height: maxNodeSize;
+//    var treeHeight = height;
     var minimapXScale = d3.scale.ordinal().domain(histogramData["globalXvals"]).rangeRoundBands([0, nodeWidth], 0.05);
     var minimapYScale = d3.scale.linear().domain([0, histogramData["maxFreq"]]).range([ySpacing - 5, 5]);
 
@@ -402,7 +404,7 @@ function Sankey(args){
 	// add the rectangles for the nodes
 	var rect = node.append("rect")
 	    .attr("height", function (d) {
-		// console.log(d.dy);
+		 console.log(d.dy);
 		return d.dy;
 		// return d["inTime"];
 	    })

@@ -71,6 +71,7 @@ var globalEdges;
 var rootRunTime = 0;
 var showLabelBool = false;
 var dataSetInfo;
+var maxNodeSize = 0.75*window.innerHeight;
 
 function startVis(){
     $("#control").css(
@@ -192,7 +193,8 @@ function getSankey(lmID){
 		toolTipData : {"edgeList" : edgeList, "nodeList": nodeList, "connInfo" : connectionList},
 		histogramData : histogramData,
 		// spinner: spinner,
-		clickCallBack: nodeClickCallBack
+		clickCallBack: nodeClickCallBack,
+		maxNodeSize: maxNodeSize
 	    })	
 
 	    // sankColor = sankeyVis.colorScale;				
@@ -365,7 +367,8 @@ function splitNode(){
 		margin: {top: 10, right: 10, bottom: 10, left: 10},
 		data: {"nodes": myNodes, "links": edges},
 		colorScale : sankColor,
-		clickCallBack: nodeClickCallBack
+		clickCallBack: nodeClickCallBack,
+		maxNodeSize : maxNodeSize
 	    })					
 
 	    if(showLabelBool == true){
@@ -414,7 +417,7 @@ function splitNode2(){
 	    var remapResult = remapID(myNodes, edges, labelList);
 	    var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList, "connInfo" : connectionList}
 	    var histogramData = newData["histogramData"];
-	    sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData});
+	    sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData, "maxNodeSize": maxNodeSize });
 	    if(showLabelBool == true){
 		d3.selectAll('.node text').style('opacity', 1);
 	    }
@@ -460,7 +463,7 @@ function splitNodeByParents(){
 	    var remapResult = remapID(myNodes, edges, labelList);
 	    var newToolTipData = {"edgeList" : edgeList, "nodeList": nodeList}
 	    var histogramData = newData["histogramData"];
-	    sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData});
+	    sankeyVis.updateData({"nodes" : remapResult["nodes"], "links" : remapResult["links"], "toolTipData" : newToolTipData, "histogramData" : histogramData, "maxNodeSize": maxNodeSize });
 	    if(showLabelBool == true){
 		d3.selectAll('.node text').style('opacity', 1);
 	    }
@@ -605,7 +608,6 @@ function remapID(newNodes, newEdges, newNodeListLabel){
 	}
 	newSpecialIDToSankIDMap[curretnNodeLabel] = nNode["sankeyID"];
     })
-
     newEdges.forEach(function(nEdge){
 	console.log(nEdge);
 	nEdge["source"] = newSpecialIDToSankIDMap[ nEdge["sourceLabel"] ];
@@ -613,18 +615,14 @@ function remapID(newNodes, newEdges, newNodeListLabel){
 	nEdge["target"] = newSpecialIDToSankIDMap[ nEdge["targetLabel"] ];
 	nEdge["targetID"] = newSpecialIDToSankIDMap[ nEdge["targetLabel"] ];
     })
-
     newNodes.sort(function(a,b){
 	return a['sankeyID'] - b["sankeyID"];
     })
     newEdges.sort(function(a,b){
 	return a["sourceID"] - b["targetID"];
     })
-
     specialIDToSankIDMap = newSpecialIDToSankIDMap;
-
     // console.log(specialIDToSankIDMap, newSpecialIDToSankIDMap, newEdges, newNodes);
-
     return {"nodes" : newNodes, "links" : newEdges};
     // sankeyVis.updateData({"nodes" : newNodes, "links" : newEdges});
 
@@ -637,11 +635,9 @@ function reMapEdges(edges){
 	nEdge["target"] = specialIDToSankIDMap[ nEdge["targetLabel"] ];
 	nEdge["targetID"] = specialIDToSankIDMap[ nEdge["targetLabel"] ];
     })
-
     edges.sort(function(a,b){
 	return a["sourceID"] - b["targetID"];
-    })	
-
+    })
     return edges;		
 }
 
@@ -693,8 +689,13 @@ $(document).ready(function () {
 	}				
     })
 
+    $('#setNodeSizeBtr').on('click', function(){
+	var val = parseInt($('#nodeSize').val());
+	maxNodeSize = val;
+			  
+    })
+    
     $("#setRangeBtr").on('click', function(){
-	console.log('button is click');
 	var minVal;
 	var maxVal;
 
@@ -714,25 +715,19 @@ $(document).ready(function () {
 	if(minVal != null && maxVal != null && ( minVal < 1 || minVal > maxVal )){
 	    alert("Please make sure that minimun value is >= 1 and min val <= max value")
 	}
-
 	var colorOption = parseInt(Number($("#colorDropDown").val()));
-	
 	if(colorOption == 1 || colorOption == 2 && sankeyVis){
 	    sankeyVis.setGlobalRange(colorOption, minVal, maxVal);
 	}
-
 	if(colorOption == 1 || colorOption == 2){
-
 	    if( !isNaN( parseInt($('#minVal').val()) ) ){
 		var slowTimeTxt = (minVal).toFixed(3) + "s";
 		$("#slowAttr").text(slowTimeTxt);
 	    }
-	    
 	    if( !isNaN( parseInt($('#maxVal').val()) ) ){
 		var fastTimeTxt = (maxVal).toFixed(3) + "s";	
 		$("#fastAttr").text(fastTimeTxt);
 	    }
-
 	}
 	else if(colorOption == 3){
 	    $("#slowAttr").text(0);
@@ -742,16 +737,5 @@ $(document).ready(function () {
 	    $("#slowAttr").text("N/A");
 	    $("#fastAttr").text("N/A");
 	}
-
     })
 });
-
-
-
-
-
-
-
-
-
-
