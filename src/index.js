@@ -19,7 +19,9 @@
 const fs = require('fs');
 const express = require('express');
 const LineByLineReader = require('line-by-line');
-const argv = require('yargs').argv;
+const argv = require('minimist')(process.argv.slice(2));
+const path = require('path');
+const rsvp = require('rsvp');
 
 const app = express();
 
@@ -49,6 +51,7 @@ let dataSetInfo;
 let xmlTree;
 let procedureTable;
 let resGlobal = null; // this is use to return the data to the browser
+let datasetFile;
 
 const nodeMetric = {};
 const nodeIDKeep = []; // a array of node id got when read in the metric file
@@ -85,46 +88,88 @@ function exception(msg1, msg2) {
     console.log(msg1 + msg2);
 }
 
-function preCheck() {
+function argParser() {
+    let JSONFile;
     if (!argv.d) {
         exception('I do not know where to look for the data set');
     } else {
-        dataSetFile = argv.d;
+        JSONFile = argv.d;
     }
+    parseJSONFile(JSONFile);
+}
 
-    if (!fs.existsSync(dataSetFile)) {
+function loadFile(filePath){
+    return new rsvp.Promise( (resolve, reject) => {	
+	if (datasetFile.experiment === null || !fs.existsSync(path.resolve(filePath +  datasetFile.experiment))) {
+            exception('No xml file found at', path.resolve(filePath + datasetFile.experiment));
+	} else {
+            xmlFile = path.resolve(filePath + datasetFile.experiment);
+	}
+	
+	if (datasetFile.nodeMetric === null || !fs.existsSync(filePath + datasetFile.nodeMetric)) {
+            exception('No metric file found at', filePath + datasetFile.nodeMetric);
+	} else {
+            nodeMetricFile = path.resolve(filePath + datasetFile.nodeMetric);
+            nodeMetricReader = new LineByLineReader(nodeMetricFile);
+	}
+	if (datasetFile.config != null) {
+            configFile = filePath + datasetFile.config;
+	}
+
+	nodeMetricReader.on('line', (line) => {
+	    const myOBJ = JSON.parse(line);
+	    nodeIDKeep.push(parseInt(myOBJ.id), 10);
+	    nodeMetric[myOBJ.id] = myOBJ;
+	});
+
+	nodeMetricReader.on('error', (err) => {
+	    console.log(err);
+	})
+
+	nodeMetricReader.on('end', () => {
+	    if(debug){
+		console.log('[Data Process] Done parsing metric file. ');
+	    }
+	    xmlParser.init(xmlTree, xmlFile, configFile, [-99999], nodeMetric, [], nodeIDKeep).then((data) => {
+		xmlParser.callback(data, nodeMetric).then((graph) => {
+		    functionList = data.functionList;
+		    procedureTable = data.procedureTable;
+		    staticGraph = graph;
+		    resolve(staticGraph);
+		});
+	    });
+	});
+
+    })
+}
+
+function parseJSONFile(JSONFile){
+    if (!fs.existsSync(JSONFile)) {
         exception('Sorry no such dataset exist at', datasetFile);
     } else {
-        dataSetInfo = require(dataSetFile);
+        datasetFile = require(JSONFile);
     }
 
-    if (dataSetInfo.path === null) {
+    if (datasetFile.path === null) {
         exception('I need the path information');
     } else {
-        filePath = dataSetInfo.path;
+        filePaths = datasetFile.path;
     }
 
-    if (dataSetInfo.experiment === null || !fs.existsSync(filePath + dataSetInfo.experiment)) {
-        exception('No xml file found at', filePath + dataSetInfo.experiment);
-    } else {
-        xmlFile = filePath + dataSetInfo.experiment;
-    }
-
-    if (dataSetInfo.nodeMetric === null || !fs.existsSync(filePath + dataSetInfo.nodeMetric)) {
-        exception('No metric file found at', filePath + dataSetInfo.nodeMetric);
-    } else {
-        nodeMetricFile = filePath + dataSetInfo.nodeMetric;
-        nodeMetricReader = new LineByLineReader(nodeMetricFile);
-    }
-    if (dataSetInfo.config != null) {
-        configFile = filePath + dataSetInfo.config;
-    }
-    if (dataSetInfo.port != null) {
-        portNumber = parseInt(dataSetInfo.port, 10);
+    let promises = filePaths.map(loadFile);
+    rsvp.all(promises).then( (graphs) => {
+	console.log(graphs);
+    }).catch( (err) => {
+	console.log(err);
+    })
+    
+    if (datasetFile.port != null) {
+        portNumber = parseInt(datasetFile.port, 10);
     }
 }
 
-preCheck();
+argParser();
+
 const port = process.env.PORT || portNumber || 8500;
 const host = process.env.HOST || 'localhost';
 // host = process.env.HOST || "detoo.cs.ucdavis.edu";
@@ -138,32 +183,15 @@ Array.prototype.SumArray = function (arr) {
             ret.push(this[i] + arr[i]);
         }
     }
-
     return ret;
 };
 
 /* Reading metric file to create a map of nodeIDs */
-nodeMetricReader.on('line', (line) => {
-    const myOBJ = JSON.parse(line);
-    nodeIDKeep.push(parseInt(myOBJ.id), 10);
-    nodeMetric[myOBJ.id] = myOBJ;
+
+server.listen(port, host, () => {
+    console.log('Sever started, listening', host, port);
 });
 
-nodeMetricReader.on('end', () => {
-    if(debug){
-	console.log('[Data Process] Done parsing metric file. ');
-    }
-    xmlParser.init(xmlTree, xmlFile, configFile, [-99999], nodeMetric, [], nodeIDKeep).then((data) => {
-	xmlParser.callback(data, nodeMetric).then((graph) => {
-	    functionList = data.functionList;
-	    procedureTable = data.procedureTable;
-	    staticGraph = graph;
-	    server.listen(port, host, () => {
-		console.log('Sever started, listening', host, port);
-	    });
-	});
-    });
-});
 
 app.use(express.static(`${__dirname}/public`));
 
@@ -193,7 +221,6 @@ app.get('/data', (req, res) => {
 });
 
 app.get('/getNodeMetrics', (req, res) => {
-    console.log('nodeMetrics');
     res.json(nodeMetric);
 });
 
@@ -370,7 +397,6 @@ app.get('/splitNodeByParents', (req, res) => {
     }
 
     resGlobal = res;
-
     xmlParser.init(xmlTree, xmlFile, configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep).then((data) => {
 	functionList = data.functionList;
 	procedureTable = data.procedureTable;
@@ -442,7 +468,6 @@ app.get('/calcEdgeValues', (req, res) => {
         const tempE1 = JSON.parse(JSON.stringify(edge));
         tempE1.value = edgeValueForBrush;
         edgeSet1.push(tempE1);
-
         const tempE2 = JSON.parse(JSON.stringify(edge));
         tempE2.value = edgeValueForNonBrush;
         edgeSet2.push(tempE2);
@@ -464,11 +489,6 @@ function splitNodeCallBack(data) {
 
     console.log('done with split node');
     resGlobal.json(sankeyData);
-}
-
-function splitNodeCallBack2(data) {
-    // resGlobal.json(sankeyData);
-
 }
 
 // this function compute a mini histogram for each speical ID
