@@ -549,7 +549,7 @@ const graphBuilder = function (nodeArray, connectionInfo, nodeInfo, nodeMetric) 
                 // filter out all small edges
                 if (runTimeVal > rootRuntime * FILTERPERCENT * 1) {
                     if (sourceLabel == '7159') {
-                        console.log(connLabel);
+//                        console.log(connLabel);
                     }
                     // totalRuntime += runTimeVal;
                     totalRuntime += runTimeAvg;
@@ -602,7 +602,7 @@ const graphBuilder = function (nodeArray, connectionInfo, nodeInfo, nodeMetric) 
                 sankeyNodeList,
             };
 
-            console.log('the node', sourceLabel, uniqueIDList.length);
+//            console.log('the node', sourceLabel, uniqueIDList.length);
 
             const connections = [];
             sankeyNodeList.forEach((id) => {
@@ -677,8 +677,8 @@ const graphBuilder = function (nodeArray, connectionInfo, nodeInfo, nodeMetric) 
         });
 
 
-        console.log(adjacencyMatrixByLabel);
-        console.log(rootRuntime);
+//        console.log(adjacencyMatrixByLabel);
+//        console.log(rootRuntime);
         // console.log(removeNodeID)
         return {
             nodes: finalNodes, edges: finalEdges, nodeList, edgeList, connInfo: finalConnectionInfo, adjMatrix: adjacencyMatrixByLabel,

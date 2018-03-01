@@ -38,7 +38,8 @@ let splitByParentList = [];
 let entryExitDataNodeSplit;
 let nodePaths;
 var functionList;
-let staticGraph; // this is the static graph we can load upond page refresh;
+let staticGraph;
+let staticGraphs = []; // this is the static graph we can load upond page refresh;
 let staticFunctionList;
 let filePath;
 let xmlFile;
@@ -100,16 +101,11 @@ function argParser() {
 
 function loadFile(filePath){
     return new rsvp.Promise( (resolve, reject) => {	
-	if (datasetFile.experiment === null || !fs.existsSync(path.resolve(filePath +  datasetFile.experiment))) {
-            exception('No xml file found at', path.resolve(filePath + datasetFile.experiment));
-	} else {
-            xmlFile = path.resolve(filePath + datasetFile.experiment);
-	}
-	
 	if (datasetFile.nodeMetric === null || !fs.existsSync(filePath + datasetFile.nodeMetric)) {
             exception('No metric file found at', filePath + datasetFile.nodeMetric);
 	} else {
             nodeMetricFile = path.resolve(filePath + datasetFile.nodeMetric);
+	    console.log(nodeMetricFile);
             nodeMetricReader = new LineByLineReader(nodeMetricFile);
 	}
 	if (datasetFile.config != null) {
@@ -130,6 +126,13 @@ function loadFile(filePath){
 	    if(debug){
 		console.log('[Data Process] Done parsing metric file. ');
 	    }
+	    if (datasetFile.experiment === null || !fs.existsSync(path.resolve(filePath +  datasetFile.experiment))) {
+		exception('No xml file found at', path.resolve(filePath + datasetFile.experiment));
+	    } else {
+		xmlFile = path.resolve(filePath + datasetFile.experiment);
+	    }
+
+	    console.log(xmlFile);
 	    xmlParser.init(xmlTree, xmlFile, configFile, [-99999], nodeMetric, [], nodeIDKeep).then((data) => {
 		xmlParser.callback(data, nodeMetric).then((graph) => {
 		    functionList = data.functionList;
@@ -155,10 +158,13 @@ function parseJSONFile(JSONFile){
     } else {
         filePaths = datasetFile.path;
     }
-
+    
     let promises = filePaths.map(loadFile);
-    rsvp.all(promises).then( (graphs) => {
-	console.log(graphs);
+    rsvp.all(promises).then( (graphs) => {	
+	staticGraphs.push(graphs);
+	server.listen(port, host, () => {
+	    console.log('Sever started, listening', host, port);
+	});
     }).catch( (err) => {
 	console.log(err);
     })
@@ -187,10 +193,6 @@ Array.prototype.SumArray = function (arr) {
 };
 
 /* Reading metric file to create a map of nodeIDs */
-
-server.listen(port, host, () => {
-    console.log('Sever started, listening', host, port);
-});
 
 
 app.use(express.static(`${__dirname}/public`));
@@ -243,6 +245,7 @@ app.get('/getSankey', (req, res) => {
     sankeyData = staticGraph;
     const hisData = computeHistogram();
     const resData = {
+	graphs: staticGraphs,
         graph: staticGraph,
         histogramData: hisData,
     };
@@ -250,7 +253,8 @@ app.get('/getSankey', (req, res) => {
 });
 
 app.get('/reactGetSankey', (req, res) => {
-       procIDArray = [];
+    let ret = [];
+    procIDArray = [];
     splitByParentList = [];
     sankeyData = staticGraph;
     const hisData = computeHistogram();
@@ -258,7 +262,6 @@ app.get('/reactGetSankey', (req, res) => {
         graph: staticGraph,
         histogramData: hisData,
     };
-    var ret = [];
     ret.push(resData);
     res.json(ret);
 })

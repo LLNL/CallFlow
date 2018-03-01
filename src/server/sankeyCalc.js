@@ -13,7 +13,7 @@
 const fs = require('fs');
 
 function log(val){
-    console.log('[LMCalc] ', val);
+//    console.log('[LMCalc] ', val);
 }
 
 /* this module computes the sankey nodes and links for the load module */

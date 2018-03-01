@@ -318,7 +318,7 @@ const nodeSplit = function (sankeyNodesC, sankeyEdgesC, nodeListC, edgeListC, ad
         // 	console.log(edge["sourceLabel"], edge["targetLabel"]);
         // })
 
-        console.log(removedConnections);
+//        console.log(removedConnections);
 
         return nodeToChecks;
     }
@@ -383,7 +383,7 @@ const nodeSplit = function (sankeyNodesC, sankeyEdgesC, nodeListC, edgeListC, ad
     this.nodeSplit = function () {
         // reconstructAdjMatrix();
         calcNewEdges();
-        console.log(adjMatrix);
+//        console.log(adjMatrix);
 
         // console.log("there are ", sankeyEdges.length);
 

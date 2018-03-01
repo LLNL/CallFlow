@@ -31,7 +31,7 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
     }
 */
     if(debug){
-	console.log('[Data Process] Start parsing xml file.');
+	console.log('[Data Process] Start parsing xml file.', xmlFile);
     }
 
     let obj;
