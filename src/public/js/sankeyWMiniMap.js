@@ -265,7 +265,7 @@ function Sankey(args){
 	else{
 	    graph = graph_zero;
 	}
-
+	console.log(graph.nodes);
 	sankey.nodes(graph.nodes)
 	    .links(graph.links)
 	    .layout(32);	

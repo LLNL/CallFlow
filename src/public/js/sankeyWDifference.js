@@ -1852,13 +1852,12 @@ function diffSankey(args){
     // nodes with no incoming links are assigned breadth zero, while
     // nodes with no outgoing links are assigned the maximum breadth.
     function computeNodeBreadths(nodes,links) {
-        var remainingNodes = nodes.map(function(d) { return d.sankeyID })
+	console.log(nodes);
+        var remainingNodes = nodes.map(function(d) { console.log(d.sankeyID); return d.sankeyID })
         var nextNodes
         var x = 0
 
-        // console.log(nodes);
-
-        while (remainingNodes.length) {
+/*        while (remainingNodes.length) {
             nextNodes = [];
             remainingNodes.forEach(function(node) {
                 nodes[node].x = x;
@@ -1870,7 +1869,7 @@ function diffSankey(args){
             });
             remainingNodes = nextNodes;
             ++x;
-        }
+        }*/
     }
 
     // Add nodes and links as needed
@@ -2008,3 +2007,4 @@ function nodeClickCallBack(res){
     document.getElementById("splitNodeByParentBtr").disabled = false;
     // splitNodeByParents(parentProcList, node.name);
 }
+ 

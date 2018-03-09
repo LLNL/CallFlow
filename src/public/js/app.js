@@ -133,6 +133,7 @@ function getNodeMetrics(){
 }
 
 function nodesObjToArr(nodes){
+    console.log(nodes);
     let nodesArr = [];
     var labelList = Object.keys(nodes);
     labelList.forEach(function(lab){
@@ -151,7 +152,8 @@ function nodesObjToArr(nodes){
 }
 
 function splitView(data){
-    let graphs = data["graphs"][0];
+    console.log(data);
+/*    let graphs = data["graphs"][0];
     let histogramData = data["histogramData"];
     let nodes0Arr = nodesObjToArr(graphs[0].nodes);
     let nodes1Arr = nodesObjToArr(graphs[1].nodes);
@@ -168,6 +170,7 @@ function splitView(data){
     })
 
     $('#procedure_view').empty();
+    console.log(nodes0Arr);
     let sankeyVis1 = new Sankey({
 	ID: '#procedure_view',
 	width: $('#procedure_view').width(),
@@ -188,7 +191,7 @@ function splitView(data){
 	histogramData : histogramData,
 	clickCallBack: nodeClickCallBack,
 	maxNodeSize: maxNodeSize
-    })
+    })*/
 }
 
 
@@ -200,7 +203,7 @@ function getSankey(lmID){
 	url: '/getSankey',
 	data: { 'lmID': lmID },
 	success: function(data){
-	    let dualViewEnable = true;
+	    let dualViewEnable = false;
 	    if(dualViewEnable){
 		dualView(data);
 	    }
