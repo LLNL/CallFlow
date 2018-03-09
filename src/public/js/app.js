@@ -132,6 +132,89 @@ function getNodeMetrics(){
     // });				
 }
 
+function nodesObjToArr(nodes){
+    let nodesArr = [];
+    var labelList = Object.keys(nodes);
+    labelList.forEach(function(lab){
+	var tempObj = nodes[lab];
+	nodesArr.push(tempObj);
+//	idMap[ myNodes.sankeyID ] = 0;
+//	specialIDToSankIDMap[lab] = tempObj["sankeyID"];
+//        currentMaxID = Math.max(currentMaxID, tempObj["sankeyID"]);
+    });
+
+    nodesArr.sort(function(a,b){
+	return a['sankeyID'] - b['sankeyID'];
+    })
+
+    return nodesArr;    
+}
+
+function splitView(data){
+    let graphs = data["graphs"][0];
+    let histogramData = data["histogramData"];
+    let nodes0Arr = nodesObjToArr(graphs[0].nodes);
+    let nodes1Arr = nodesObjToArr(graphs[1].nodes);
+
+    let graph0edge = graphs[0].edges;
+    let graph1edge = graphs[1].edges;
+
+    graph0edge.sort(function(a,b){
+	return a['sourceID'] - b['targetID'];
+    })
+
+    graph1edge.sort(function(a,b){
+	return a['sourceID'] - b['targetID'];
+    })
+
+    $('#procedure_view').empty();
+    let sankeyVis1 = new Sankey({
+	ID: '#procedure_view',
+	width: $('#procedure_view').width(),
+	height: $('#procedure_view').height()/2,
+	margin: { top: 10, right: 10, bottom: 10, left:10 },
+	data: { 'nodes': nodes0Arr, 'links': graph0edge },
+	histogramData : histogramData,
+	clickCallBack: nodeClickCallBack,
+	maxNodeSize: maxNodeSize
+    })
+
+    let sankeyVis2 = new Sankey({
+	ID: '#procedure_view',
+	width: $('#procedure_view').width(),
+	height: $('#procedure_view').height()/2,
+	margin: { top: $('#procedure_view').height/2, right: 10, bottom: 10, left:10 },
+	data: { 'nodes': nodes1Arr, 'links': graph1edge },
+	histogramData : histogramData,
+	clickCallBack: nodeClickCallBack,
+	maxNodeSize: maxNodeSize
+    })
+}
+
+
+function getSankey(lmID){
+    $.ajax({
+	type: 'GET',
+	contentType: 'application/json',
+	dataType: 'json',
+	url: '/getSankey',
+	data: { 'lmID': lmID },
+	success: function(data){
+	    let dualViewEnable = true;
+	    if(dualViewEnable){
+		dualView(data);
+	    }
+	    else{
+		splitView(data);
+	    }
+	},
+	error: function(err){
+	    console.log(err);
+	}
+    })
+}
+
+/*
 function getSankey(lmID){
     $.ajax({
 	type:'GET',
@@ -164,6 +247,7 @@ function getSankey(lmID){
     	    globalNodes = myNodes;
 	    globalEdges = edges;
 	    
+	    console.log(myNodes);
 	    myNodes.sort(function(a,b){
 		return a['sankeyID'] - b["sankeyID"];
 	    })
@@ -210,7 +294,7 @@ function getSankey(lmID){
 	    console.log("There was problem with getting the data");
 	}	
     });				
-}
+}*/
 // getData();
 
 function getList(node){

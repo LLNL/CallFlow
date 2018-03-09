@@ -88,15 +88,27 @@ var config = {
 		    }
 		]
 	    },
-	    {
+	    {	
 		type: 'column',
 		width: $(window).width() * 70,
 		content: [
 		    {
-			type: 'component',
-			componentName: 'testComponent',
-			componentState: { id: 'procedure_view' },
-			title: 'Graph View'
+			type: 'stack',
+			content: [
+			    {
+				type: 'component',
+				componentName: 'testComponent',
+				componentState: { id: 'procedure_view' },
+				title: 'Graph View'
+			    },
+			    {
+				type: 'component',
+				componentName: 'testComponent',
+				componentState: { id: 'split_view' },
+				title: 'Split View'
+			    },
+			    
+			]
 		    }
 		]
 		
@@ -132,9 +144,11 @@ function updateDivSizes(){
 	// 	.attr("width", $("#procedure_view").width() )
 	// 	.attr("height", $("#procedure_view").height() )
 
-	sankeyVis.updateSize({'width' : $("#procedure_view").width(),
-			      'height' : $("#procedure_view").height() })
+	sankeyVis1.updateSize({'width' : $("#procedure_view").width(),
+			      'height' : $("#procedure_view").height()/2 })
 
+	sankeyVis2.updateSize({'width' : $('#procedure_view').width(),
+			      'height': $('#procedure_view').height()/2 });
     }	
 
     if(scatterPot){
@@ -167,5 +181,4 @@ function donewithlayout(){
     spinner = new Spinner(opts).spin(parentOfSankeyView);
     spinner.stop();
     startVis();
-    
 }

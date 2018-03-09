@@ -11,14 +11,14 @@
  * Please also read the LICENSE file for the MIT License notice.
  ******************************************************************************/
 
-function Sankey(args){
+function diffSankey(args){
     var containerID = args.ID || "body",
 	containerWidth = args.width || 900,
 	containerHeight = args.height || 900,
 	margin = args.margin || {top: 10, right: 30, bottom: 10, left: 10},
 	data = args.data,
 	toolTipData = args.toolTipData,
-	histogramData = args.histogramData,
+//	histogramData = args.histogramData,
 	// spinner = args.spinner,
 	clickCallBack = args.clickCallBack,
 	maxNodeSize = args.maxNodeSize;
@@ -143,8 +143,8 @@ function Sankey(args){
 
   var treeHeight = height < maxNodeSize ? height: maxNodeSize;
 //    var treeHeight = height;
-    var minimapXScale = d3.scale.ordinal().domain(histogramData["globalXvals"]).rangeRoundBands([0, nodeWidth], 0.05);
-    var minimapYScale = d3.scale.linear().domain([0, histogramData["maxFreq"]]).range([ySpacing - 5, 5]);
+//    var minimapXScale = d3.scale.ordinal().domain(histogramData["globalXvals"]).rangeRoundBands([0, nodeWidth], 0.05);
+//    var minimapYScale = d3.scale.linear().domain([0, histogramData["maxFreq"]]).range([ySpacing - 5, 5]);
 
     var zoom = d3.behavior.zoom()
 	.scaleExtent([0.1,10])
