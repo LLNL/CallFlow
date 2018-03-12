@@ -15,6 +15,7 @@ function sortObjToArr(obj, sortAttr){
     })
     return ret;
 }
+
 /* 
    Sorted Nodes and edges added to Graph(In object changes)
    Nodes -> { } -> [ ]
@@ -36,30 +37,49 @@ function sortNodesEdges(graphs){
    
 */ 
 function aggregateNodes(graphs){
-    let aggrNodes = {};
-    var count = 0;
+    let aggrNodes = [];
+    var nodeCount = 0;
     for(let i = 0; i < graphs.length; i++){
 	let nodeInGraph = 0;
 	let nodes = graphs[i].sortedNodesArr;
 	for(let nodeID = 0; nodeID < nodes.length; nodeID++){
 	    let node = nodes[nodeID];
-	    if(aggrNodes[node.name] == undefined){
-		aggrNodes[node.name] = {};
-	    }
-	    aggrNodes[node.name].sankeyID = nodeCount;
-	    aggrNodes[node.name].graph = i;
-	    aggrNodes[node.name].graphSankeyID = node.sankeyID;
+	    node.graphSankeyID = node.sankeyID;
+	    node.sankeyID = nodeCount;
+	    node.graph = i;
+	    aggrNodes.push(node);
 	    nodeCount += 1;
-
-
-	    /* aggrNodes[node.name].sankeyID = node.sankeyID;
-	    aggrNodes[node.name].name = node.name;
-	    aggrNodes[node.name].runTime += node.runTime;
-	    aggrNodes[node.name].value = 1000;
-	    aggrNodes[node.name].dy +=100; */ 
 	}
     }
-    return sortObjToArr(aggrNodes, 'runTime');
+    aggrNodes.sort( (a,b) => {
+	return b['runTime'] - a['runTime'];
+    })
+    return aggrNodes;
+}
+
+function nodeToIDMap(nodes, graphs){
+    let ret = [];
+    for(var i = 0; i < graphs.length; i++){
+	ret[i] = [];
+	for(var nodeID = 0; nodeID < nodes.length; nodeID++){
+	    if(nodes[nodeID].graph == i){
+		ret[i][nodes[nodeID].name] = nodes[nodeID].sankeyID;
+	    }
+	}
+    }
+    return ret;
+}
+
+function aggregateEdges(nodeIDMap, graphs){
+    let ret = [];
+    console.log(graphs);
+    for(let i = 0; i < graphs.length; i++){
+	let edges = graphs[i].edges;
+	for(let edgeID = 0; edgeID < edges.length; edgeID++){
+	    
+	}
+    }
+    return ret;
 }
 
 function dualView(data){
@@ -69,15 +89,17 @@ function dualView(data){
     let aggrEdges = [];
 
     graphs = sortNodesEdges(graphs);
+    aggrNodes = aggregateNodes(graphs);
+    nodeIDMap = nodeToIDMap(aggrNodes, graphs);
+    aggregateEdges(nodeIDMap, graphs);
     
-    
-    for(var i = 0; i < graphs[0].sortedNodesArr.length; i++){
+/*    for(var i = 0; i < graphs[0].sortedNodesArr.length; i++){
 	aggrNodes.push(graphs[0].sortedNodesArr[i]);
     }
 
     for(var i = 0; i < graphs[1].sortedNodesArr.length; i++){
 	aggrNodes.push(graphs[1].sortedNodesArr[i]);
-    }
+    }*/
 
     for(var i = 0; i < graphs[0].edges.length; i++){
 	aggrEdges.push(graphs[0].edges[i]);
@@ -89,8 +111,7 @@ function dualView(data){
 
     console.log(aggrNodes, aggrEdges);
 
-    //    let aggrNodes = aggregateNodes(graphs);
-    let diffSankey1 = new diffSankey({
+   let diffSankey1 = new diffSankey({
 	ID: '#procedure_view',
 	width: $('#procedure_view').width(),
 	height: $('#procedure_view').height()/2,
