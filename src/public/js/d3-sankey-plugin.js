@@ -117,7 +117,7 @@ function d3sankey() {
 		x3 = xi(1 - curvature),
 		y0 = d.source.y + d.sy + d.dy / 2,
 		y1 = d.target.y + d.ty + d.dy / 2;
-            // console.log(d.dy, d);
+
 	    return "M" + x0 + "," + y0
 		+ "C" + x2 + "," + y0
 		+ " " + x3 + "," + y1
@@ -315,8 +315,6 @@ function d3sankey() {
 
 	function initializeNodeDepth() {
 	    var ky = d3.min(nodesByBreadth, function(nodes) {
-		// console.log(nodes, d3.sum(nodes, value));
-
 		var divValue = 1;
 		if(referenceValue > 0){
 		    divValue = referenceValue;
@@ -330,10 +328,7 @@ function d3sankey() {
 		return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
 	    });
 
-	    // console.log("ky is", ky);
-
 	    //need to change the scaling here
-
 	    nodesByBreadth.forEach(function(nodes) {
 		nodes.forEach(function(node, i) {
 		    var maxY = 0;
@@ -349,21 +344,13 @@ function d3sankey() {
 		    node.y = Math.max(maxY, i);
 		    node.parY = maxY;
 		    // node.y = i;
-		    node.dy = node.value * ky;
-		    // console.log(node.value, ky,node.dy)
-		    // node.dy = node.value;
+		    node.dy = node.value*ky;
 		    // node.dy = node["inTime"] * ky;
 		});
 
 		nodes.sort(function(a,b){
 		    return a["parY"] - b["parY"];
 		})
-
-		// nodes.forEach(function(node,i){
-		//   node.y = i;
-		// })
-
-
 	    });
 
 	    links.forEach(function(link) {
@@ -411,14 +398,13 @@ function d3sankey() {
 
 		// Push any overlapping nodes down.
 		nodes.sort(ascendingDepth);
-
 		for (i = 0; i < n; ++i) {
 		    node = nodes[i];
 		    dy = y0 - node.y;
 		    if (dy > 0) node.y += dy;
 		    y0 = node.y + node.dy + nodePadding;
 		}
-
+		
 		// If the bottommost node goes outside the bounds, push it back up.
 		dy = y0 - nodePadding - size[1];
 		if (dy > 0) {
