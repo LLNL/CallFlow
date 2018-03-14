@@ -49,6 +49,8 @@ function aggregateNodes(graphs){
 	    node.graph = i;
 	    aggrNodes.push(node);
 	    nodeCount += 1;
+	    node.specialID = node.specialID + '/G-' + i;
+	    node.name = node.name + '/G-'+i;
 	}
     }
     aggrNodes.sort( (a,b) => {
@@ -63,7 +65,7 @@ function nodeToIDMap(nodes, graphs){
 	ret[i] = [];
 	for(var nodeID = 0; nodeID < nodes.length; nodeID++){
 	    if(nodes[nodeID].graph == i){
-		ret[i][nodes[nodeID].name] = nodes[nodeID].sankeyID;
+		ret[i][nodes[nodeID].specialID] = nodes[nodeID].sankeyID;
 	    }
 	}
     }
@@ -72,11 +74,20 @@ function nodeToIDMap(nodes, graphs){
 
 function aggregateEdges(nodeIDMap, graphs){
     let ret = [];
-    console.log(graphs);
+    let color = ['#ff0', '#00f'];
     for(let i = 0; i < graphs.length; i++){
 	let edges = graphs[i].edges;
 	for(let edgeID = 0; edgeID < edges.length; edgeID++){
-	    
+	    edges[edgeID].sourceLabel = edges[edgeID].sourceLabel + '/G-' + i;
+	    edges[edgeID].targetLabel = edges[edgeID].targetLabel + '/G-' + i;
+	    edges[edgeID].sourceID = nodeIDMap[i][edges[edgeID].sourceLabel];
+	    edges[edgeID].targetID = nodeIDMap[i][edges[edgeID].targetLabel];
+	    edges[edgeID].source.sankeyID = nodeIDMap[i][edges[edgeID].sourceLabel];
+	    edges[edgeID].target.sankeyID = nodeIDMap[i][edges[edgeID].targetLabel];
+	    edges[edgeID].name = edges[edgeID].name + '/G-'+ i;
+	    edges[edgeID].color = color[i];
+	    edges[edgeID].graph = i;
+	    ret.push(edges[edgeID]);
 	}
     }
     return ret;
@@ -91,30 +102,14 @@ function dualView(data){
     graphs = sortNodesEdges(graphs);
     aggrNodes = aggregateNodes(graphs);
     nodeIDMap = nodeToIDMap(aggrNodes, graphs);
-    aggregateEdges(nodeIDMap, graphs);
+    aggrEdges = aggregateEdges(nodeIDMap, graphs);
     
-/*    for(var i = 0; i < graphs[0].sortedNodesArr.length; i++){
-	aggrNodes.push(graphs[0].sortedNodesArr[i]);
-    }
-
-    for(var i = 0; i < graphs[1].sortedNodesArr.length; i++){
-	aggrNodes.push(graphs[1].sortedNodesArr[i]);
-    }*/
-
-    for(var i = 0; i < graphs[0].edges.length; i++){
-	aggrEdges.push(graphs[0].edges[i]);
-    }
-
-    for(var i = 0; i < graphs[1].edges.length; i++){
-	aggrEdges.push(graphs[1].edges[i]);
-    }
-
     console.log(aggrNodes, aggrEdges);
 
    let diffSankey1 = new diffSankey({
 	ID: '#procedure_view',
 	width: $('#procedure_view').width(),
-	height: $('#procedure_view').height()/2,
+	height: $('#procedure_view').height(),
 	margin: { top: 0, right: 10, bottom: 10, left:10 },
 	data: { 'nodes': aggrNodes, 'links': aggrEdges },
 	clickCallBack: nodeClickCallBack,

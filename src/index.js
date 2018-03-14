@@ -132,7 +132,6 @@ function loadFile(filePath){
 		xmlFile = path.resolve(filePath + datasetFile.experiment);
 	    }
 
-	    console.log(xmlFile);
 	    xmlParser.init(xmlTree, xmlFile, configFile, [-99999], nodeMetric, [], nodeIDKeep).then((data) => {
 		xmlParser.callback(data, nodeMetric).then((graph) => {
 		    functionList = data.functionList;
@@ -142,7 +141,6 @@ function loadFile(filePath){
 		});
 	    });
 	});
-
     })
 }
 

@@ -12,7 +12,7 @@
  ******************************************************************************/
 
 function diffSankey(args){
-    let containerID = args.ID || "body",
+    var containerID = args.ID || "body",
 	containerWidth = args.width || 900,
 	containerHeight = args.height || 900,
 	margin = args.margin || {top: 10, right: 30, bottom: 10, left: 10},
@@ -57,44 +57,48 @@ function diffSankey(args){
 
     var minHeightForText = 50;
     var textTruncForNode = 8;
-    
+
     data["links"].forEach(function(link){
-	if(link["sourceLabel"] == 'LM0' || parseInt(link["sourceLabel"]) == 0){
+	if(link["sourceLabel"].split('/')[0] == 'LM0' || parseInt(link["sourceLabel"].split('/')[0]) == 0){
 	    rootRunTime += link["value"];
 	}
     })
 
     var referenceValue = rootRunTime;
-    rootRunTime1 = rootRunTime;
-
-
-    var secondGraphNodes = [];// = data["nodes"].slice();
-
-
     resetStat();
 
     data["nodes"].forEach(function(node){
-	var outGoing = 0;
-	var inComing = 0;
+	var outGoing = [];
+	var inComing = [];
 	var nodeLabel = node["specialID"];
-
-	var tempOBJ = JSON.parse( JSON.stringify(node) );
-	secondGraphNodes.push(tempOBJ);
-
 	data["links"].forEach(function(edge){
 	    if(edge["sourceLabel"] == nodeLabel){
-		outGoing += edge["value"];
+		if(outGoing[edge.graph] == undefined){
+		    outGoing[edge.graph] = 0;
+		}
+		outGoing[edge.graph] += edge["value"];
 	    }
 	    else if(edge["targetLabel"] == nodeLabel){
-		inComing += edge["value"];
+		if(inComing[edge.graph] == undefined){
+		    inComing[edge.graph] = 0;
+		}
+		inComing[edge.graph] += edge["value"];
 	    }
 	})
 
-	node["out"] = outGoing;
-	node["in"] = inComing;
+	if(outGoing[node.graph] == undefined){
+	    outGoing[node.graph] = 0;
+	}
 
-	node["inclusive"] = Math.max(inComing, outGoing);
-	node["exclusive"] = Math.max(inComing, outGoing) - outGoing;
+	if(inComing[node.graph] == undefined){
+	    inComing[node.graph] = 0;
+	}
+	
+	node["out"] = outGoing[node.graph];
+	node["in"] = inComing[node.graph];
+
+	node["inclusive"] = Math.max(inComing[node.graph], outGoing[node.graph]);
+	node["exclusive"] = Math.max(inComing[node.graph], outGoing[node.graph]) - outGoing[node.graph];
 
 	calcStat(node["inclusive"], node["exclusive"])
     });
@@ -105,8 +109,6 @@ function diffSankey(args){
 	format = function (d) {
 	    return formatNumber(d) + " " + units;
 	},
-	// color = d3.scale.category20();
-	// color = d3.scale.category10();
 	color = this.colorScale;
 
 
@@ -129,20 +131,18 @@ function diffSankey(args){
     });
 
     var inTimeColorScale = d3.scale.quantize().range(colorbrewer.Reds[8]).domain([stat["inTimeMin"], stat["inTimeMax"]]);
-    // var inTimeColorScale = d3.scale.linear().domain([ 0,1 ]).range([1, 10]);
     var exTimeColorScale = d3.scale.quantize().range(colorbrewer.Reds[8]).domain([stat["exTimeMin"], stat["exTimeMax"]]);
     var imPercColorScale = d3.scale.quantize().range(colorbrewer.Reds[8]).domain([stat["imPercMin"], stat["imPercMax"]]);
-    // console.log(inTimeColorScale(0));
+    
     var svg;
     var sankey;
     var xSpacing = 1;
     var ySpacing = 50;
     var nodeWidth = 50;
     var graph;
-    var graph2;
 
-  var treeHeight = height < maxNodeSize ? height: maxNodeSize;
-//    var treeHeight = height;
+//  var treeHeight = height < maxNodeSize ? height: maxNodeSize;
+    var treeHeight = height;
 //    var minimapXScale = d3.scale.ordinal().domain(histogramData["globalXvals"]).rangeRoundBands([0, nodeWidth], 0.05);
 //    var minimapYScale = d3.scale.linear().domain([0, histogramData["maxFreq"]]).range([ySpacing - 5, 5]);
 
@@ -150,7 +150,6 @@ function diffSankey(args){
 	.scaleExtent([0.1,10])
 	.on('zoom', zoomed);
     
-
     function zoomed(){
 	svgBase.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
     }
@@ -162,7 +161,6 @@ function diffSankey(args){
 	.attr("height", treeHeight + margin.top + margin.bottom)
 	.append("g")
 	.attr("transform",
-	      // "translate(" + margin.left + "," + margin.top + ") rotate(90)")
 	      "translate(" + margin.left + "," + margin.top + ")")
 
 	.call(zoom);
@@ -185,6 +183,7 @@ function diffSankey(args){
     var histograms = svg.append('g');
 
     var nodes = svg.append("g");
+
 
     ////////////////////////////Tool Tip/////////////////////////////////////////////////
     var toolTip = d3.select(containerID)
@@ -210,13 +209,17 @@ function diffSankey(args){
     var toolTipG = toolTipList.append('g')
 	.attr("transform", "translate(" + 5 + "," + 5 + ")");
     /////////////////////////////////////////////////////////////////////////////////////
-    visualize(true);
-    
+
     function visualize(removeIntermediate){
+
+	//remove all histograms
+	histograms.selectAll("*").remove();
+
 	// Set the sankey diagram properties
 	sankey = d3sankey()
 	    .nodeWidth(nodeWidth)
 	    .nodePadding(ySpacing)
+	// .size([width * 0.9, treeHeight - ySpacing])
 	    .size([width * 1.05, treeHeight - ySpacing])
 	    .xSpacing(xSpacing)
 	    .setReferenceValue(referenceValue);
@@ -231,13 +234,11 @@ function diffSankey(args){
 	else{
 	    graph = graph_zero;
 	}
-	
+
 	sankey.nodes(graph.nodes)
 	    .links(graph.links)
 	    .layout(32);	
 
-	console.log(graph.nodes, graph.links);
-	
 	if(removeIntermediate){
 	    svg.selectAll(".intermediate").remove();
 	}
@@ -255,7 +256,6 @@ function diffSankey(args){
 		    return "link";
 		}		    	
 	    })
-	// .attr("d", path)
 	    .attr("d", function(d){
 		var Tx0 = d.source.x + d.source.dx,
 		    Tx1 = d.target.x,
@@ -277,7 +277,7 @@ function diffSankey(args){
 		    By0 = d.source.y + d.dy + d.sy,
 		    By1 = d.target.y + d.ty + d.dy;
 
-		var rightMoveDown = By1 - Ty1;
+	        var rightMoveDown = By1 - Ty1;
 
 		return "M" + Tx0 + "," + Ty0
 		    + "C" + Tx2 + "," + Ty0
@@ -288,18 +288,30 @@ function diffSankey(args){
 		    + " " + Bx2 + "," + By0
 		    + " " + Bx0 + "," + By0
 	    })
-	    .style("fill", function(d){	
-		return "grey";
+	    .style("fill", function(d){
+		// return "url(#" + getGradID(d) + ")";
+		return d.color;
 	    })
 	    .style('fill-opacity', 0)
 	    .style("stroke", function(d){
+		// return "url(#" + getGradID(d) + ")";
 	    })
 	    .style("stroke-opacity", "0.4")
+	// .on("mouseover", function() { 
+	// 	// d3.select(this).style("stroke-opacity", "0.7") 
+	// 	d3.select(this).style("fill-opacity", "0.7") 
+
+	// } )
+	// .on("mouseout", function() { 
+	// 	// d3.select(this).style("stroke-opacity", "0.4") 
+	// 	d3.select(this).style("fill-opacity", "0.4") 
+	// } )
+	// .sort(function (a, b) {
+	//     return b.dy - a.dy;
+	// });
 
 	links.selectAll(".link")
 	    .data(graph.links)
-	// .transition()
-	// .duration(transitionDuration)
 	    .style('fill-opacity', 0.0)
 	    .attr('d', function(d){
 		var Tx0 = d.source.x + d.source.dx,
@@ -324,7 +336,7 @@ function diffSankey(args){
 		    By0 = d.source.y + d.dy + d.sy,
 		    By1 = d.target.y + d.ty + d.dy;
 
-		var rightMoveDown = By1 - Ty1;
+	        var rightMoveDown = By1 - Ty1;
 
 		return "M" + Tx0 + "," + Ty0
 		    + "C" + Tx2 + "," + Ty0
@@ -334,8 +346,8 @@ function diffSankey(args){
 		    + "C" + Bx3 + "," + By1
 		    + " " + Bx2 + "," + By0
 		    + " " + Bx0 + "," + By0		    		
-	    })		
-
+	    })
+	
 	// add in the nodes
 	var node = nodes.selectAll(".node")
 	    .data(graph.nodes)
@@ -350,6 +362,7 @@ function diffSankey(args){
 	    })
 	    .attr('opacity' , 0)
 	    .attr("transform", function (d) {
+		console.log(d.x, d.y);
 		return "translate(" + d.x + "," + d.y + ")";
 	    })
 
@@ -357,7 +370,6 @@ function diffSankey(args){
 	// add the rectangles for the nodes
 	var rect = node.append("rect")
 	    .attr("height", function (d) {
-		console.log(d);
 		return d.dy;
 		// return d["inTime"];
 	    })
@@ -438,7 +450,6 @@ function diffSankey(args){
 		    var fromProcToProc = ret["fromProcToProc"];
 		    var nameToIDMap = ret["nameToIDMap"];
 		    var res = {"node" : d, "fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap, "rootRunTime" : rootRunTime};
-		    // clickCallBack(d);
 		    clickCallBack(res);
 		}
 	    })
@@ -447,14 +458,17 @@ function diffSankey(args){
 	    .attr('d', function(d){
 		if(d.name == "intermediate"){
 		    return "m" + 0 + " " + 0
-			+ "h " + sankey.nodeWidth()
-			+ "v " + (1)*d.dy
-			+ "h " + (-1)*sankey.nodeWidth();
+		    	+ "h " + sankey.nodeWidth()
+		    	+ "v " + (1)*d.dy
+		    	+ "h " + (-1)*sankey.nodeWidth();
 		}
 	    })
 	    .style("fill", function(d){
 		if(d.name == "intermediate"){
 		    return 'grey'
+		}
+		else{
+		    return d.color
 		}
 	    })
 	    .style('fill-opacity', function(d){
@@ -479,19 +493,15 @@ function diffSankey(args){
 		// return sankey.nodeWidth() + 5;
 		return 5;
 	    })
-	// .attr('y', '10px')
 	    .attr('y', "-10")
 	    .style('opacity', 0)
 	    .text(function (d) {
-		if(d.name != "intermediate"){
-	    	    // return d.name//; + "\n" + format(d.value);
-
-	    	    if(d.dy < minHeightForText ){
+	    	if(d.name != "intermediate"){
+	    	    if(d.dy < minHeightForText ) {
 	    		return "";
 	    	    }
-	    	    else{
+	    	    else {
 	    		var textSize = calcTextSize(d.name)["width"];
-	    		
 	    		if(textSize < d.dy){
 	    		    return d.name;
 	    		}
@@ -499,13 +509,13 @@ function diffSankey(args){
 	    		    return d.name.trunc(textTruncForNode);
 	    		}
 	    	    }
-		}
-		else{
+	    	}
+	    	else{
 	    	    return "";
-		}
+	    	}
 	    })
 	    .on("mouseover", function(d){
-		if(d.name != "intermediate"){
+	    	if(d.name != "intermediate"){
 	    	    toolTipList.attr('width', "400px")
 			.attr('height', "150px")	    	
 		    var res = getFunctionListOfNode(d);
@@ -515,7 +525,7 @@ function diffSankey(args){
 		    // console.log(parentDOM)
 		    // console.log(d3.select(this.parentNode).select('rect'))
 		    d3.select(this.parentNode).select('rect').style("stroke-width", "2");
-		}
+	    	}
 	    })
 	    .on("mouseout", function(d){
 		toolTipList.attr('width', '0px')
@@ -542,7 +552,7 @@ function diffSankey(args){
 	// the function for moving the nodes
 	function dragmove(d) {
 	    d3.select(this).attr("transform",
-				 "translate(" + (
+			         "translate(" + (
 				     d.x = Math.max(0, Math.min(width - d.dx, d3.event.x))) + "," + (
 					 d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
 	    sankey.relayout();
@@ -579,7 +589,7 @@ function diffSankey(args){
 	    .duration(transitionDuration)
 	    .attr('opacity' , 1)
 	    .attr('transform', function(d){
-		return "translate(" + d.x + "," + d.y + ")";
+	    	return "translate(" + d.x + "," + d.y + ")";
 	    })
 
 
@@ -588,7 +598,7 @@ function diffSankey(args){
 	    .transition()
 	    .duration(transitionDuration)
 	    .text(function (d) {
-		if(d.name != "intermediate"){
+	    	if(d.name != "intermediate"){
 	    	    if(d.dy < minHeightForText ){
 	    		return "";
 	    	    }
@@ -602,10 +612,10 @@ function diffSankey(args){
 	    		    return d.name.trunc(textTruncForNode);
 	    		}
 	    	    }
-		}
-		else{
+	    	}
+	    	else{
 	    	    return "";
-		}
+	    	}
 	    });
 
 	nodes.selectAll("rect")
@@ -613,10 +623,9 @@ function diffSankey(args){
 	    .transition()
 	    .duration(transitionDuration)
 	    .attr('height',function(d){
-		return d.dy;
+	    	return d.dy;
 	    })
 	    .style("fill", function (d) {
-
 		var temp = {"name" : d.name.replace(/ .*/, ""),
 			    "color" : color(d.name.replace(/ .*/, ""))}
 		nodeList.push(temp);
@@ -641,9 +650,9 @@ function diffSankey(args){
 	    .duration(transitionDuration)
 	    .delay(transitionDuration/3)
 	    .style('fill-opacity' , function(d){
-		if(d.name == "intermediate"){
+	    	if(d.name == "intermediate"){
 	    	    return 0.4;
-		}
+	    	}
 	    })
 
 	var drawHist = false;
@@ -697,6 +706,7 @@ function diffSankey(args){
 
 	function showLegend(){
 	    var colLegend = svgO.append('g');
+	    // console.log(nodeList);
 	    nodeList.forEach(function(nodeL, idx){
 		colLegend.append('rect')
 		    .attr('height', '20')
@@ -710,16 +720,11 @@ function diffSankey(args){
 		    .text(nodeL["name"]);
 	    })
 	}
+	// showLegend(); 
     }
 
+    visualize(true);
     
-    function clearHistogram(){
-	//remove all histograms
-	histograms.selectAll("*").remove();
-    }
-    
-
-
     this.changeNodeColor = function(option){
 
 	if(option != nodeColorOption){
@@ -1395,7 +1400,6 @@ function diffSankey(args){
             node.sourceLinks = [];
             node.targetLinks = [];
         });
-	console.log(nodes);
         links.forEach(function(link) {
             var source = link.source,
 		target = link.target;
@@ -1410,12 +1414,11 @@ function diffSankey(args){
     // nodes with no incoming links are assigned breadth zero, while
     // nodes with no outgoing links are assigned the maximum breadth.
     function computeNodeBreadths(nodes,links) {
-        var remainingNodes = nodes.map(function(d, i) { return i })
+        var remainingNodes = nodes.map(function(d) { return d.sankeyID })
         var nextNodes
         var x = 0
-	console.log(nodes);
-	console.log(remainingNodes);
-        while (remainingNodes.length) {
+
+/*        while (remainingNodes.length) {
             nextNodes = [];
             remainingNodes.forEach(function(node) {
                 nodes[node].x = x;
@@ -1427,7 +1430,7 @@ function diffSankey(args){
             });
             remainingNodes = nextNodes;
             ++x;
-        }
+        }*/
     }
 
     // Add nodes and links as needed
@@ -1450,7 +1453,6 @@ function diffSankey(args){
                     name: "intermediate",
                     // runTime: nodes[i].runTime
                 }
-		
                 nodes.push(tempNode)
                 links.push({
                     source: intermediate,
@@ -1565,3 +1567,4 @@ function nodeClickCallBack(res){
     document.getElementById("splitNodeByParentBtr").disabled = false;
     // splitNodeByParents(parentProcList, node.name);
 }
+ 
