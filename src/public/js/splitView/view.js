@@ -107,11 +107,11 @@ function dualView(data){
     console.log(aggrNodes, aggrEdges);
 
    let diffSankey1 = new diffSankey({
-	ID: '#procedure_view',
-	width: $('#procedure_view').width(),
-	height: $('#procedure_view').height(),
-	margin: { top: 0, right: 10, bottom: 10, left:10 },
-	data: { 'nodes': aggrNodes, 'links': aggrEdges },
+       ID: '#procedure_view',
+       width: $('#procedure_view').width(),
+       height: $('#procedure_view').height(),
+       margin: { top: 0, right: 10, bottom: 10, left:10 },
+       data: { 'nodes': aggrNodes, 'links': aggrEdges , 'graphCount': graphs.length},
 	clickCallBack: nodeClickCallBack,
 	maxNodeSize: maxNodeSize
     })

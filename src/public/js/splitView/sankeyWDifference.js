@@ -227,7 +227,8 @@ function diffSankey(args){
 	    graph = graph_zero;
 	}
 
-	sankey.nodes(graph.nodes)
+	sankey.graphCount(data.graphCount)
+	    .nodes(graph.nodes)
 	    .links(graph.links)
 	    .layout(32);	
 
