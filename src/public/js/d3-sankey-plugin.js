@@ -133,6 +133,14 @@ function d3sankey() {
 	return link;
     };
 
+    function fetchCorrectNode(id, graph){
+	for(let i = 0; i < nodes.length; i++){
+	    if(nodes[i].graph == graph && nodes[i].graphSankeyID == id){
+		return nodes[i];
+	    }
+	}
+    }
+
     // Populate the sourceLinks and targetLinks for each node.
     // Also, if the source and target are not objects, assume they are indices.
     function computeNodeLinks() {
@@ -144,11 +152,18 @@ function d3sankey() {
 	});
 
 	links.forEach(function(link) {
-	    var source = link.source,
-		target = link.target;
+	    console.log(link);
+	    var sourceID = link.source,
+		targetID = link.target;
+
+	    let source, target;
 	    
-	    if (typeof source === "number") source = link.source = nodes[link.source];
-	    if (typeof target === "number") target = link.target = nodes[link.target];
+	    if (typeof sourceID === "number") {
+		source = fetchCorrectNode(sourceID, link.graph);
+	    }
+	    if (typeof targetID === "number") {
+		target = fetchCorrectNode(targetID, link.graph);
+	    }
 	    source.sourceLinks.push(link);
 	    target.targetLinks.push(link);
 
@@ -175,15 +190,27 @@ function d3sankey() {
 	console.log(nodes, links);
     }
 
+    function d3sum(arr, graph){
+	let ret = 0;
+	console.log(arr);
+	for(let i = 0; i < arr.length; i+=1){
+	    if(arr[i].graph == graph){
+		ret += arr[i].value;
+	    }
+	}
+	return ret;
+    }
+
+    
     // Compute the value (size) of each node by summing the associated links.
     function computeNodeValues() {
 	nodes.forEach(function(node) {
 	    
 	    node.value = Math.max(
-		d3.sum(node.sourceLinks, value),
-		d3.sum(node.targetLinks, value)
+		d3sum(node.sourceLinks, node.graph),
+		d3sum(node.targetLinks, node.graph)
 	    );
-
+	    console.log(node.value);
 	    // if(node.level ==  0){
 	    //   console.log(node.sourceLinks, node);
 	    //   node.value = d3.sum(node.sourceLinks, value);

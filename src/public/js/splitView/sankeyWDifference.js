@@ -28,7 +28,6 @@ function diffSankey(args){
     var width = containerWidth - margin.left - margin.right;
     var height = containerHeight - 2*margin.top - 2*margin.bottom;
     var units = "Widgets";
-    
     var maxInc = 0;
     var minInc = Number.MAX_SAFE_INTEGER;
     var maxExc = 0;
@@ -37,24 +36,17 @@ function diffSankey(args){
     var excColorScale;
     var nRangeColorScale;
     var diffColorScale;
-
     var nodeColorOption = 0;
-
     var colorArray = ["red", "green", "yellow", "blue", "black", "white"];
-
     var nodeList = [];
-
     var transitionDuration = 2000;
-
     var rootRunTime = 0;
     var rootRunTime1 = 0;
     var rootRunTime2 = 0;
-
     var gMinInc;
     var gMaxInc;
     var gMinExc;
     var gMaxExc;
-
     var minHeightForText = 50;
     var textTruncForNode = 8;
 
