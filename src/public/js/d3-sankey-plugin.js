@@ -19,6 +19,7 @@ function d3sankey() {
 	size = [1, 1],
 	nodes = [],
 	links = [],
+	nodeIDMap = {};
 	graphCount = 0,
 	xSpacing = 1,
 	referenceValue = 0;
@@ -51,6 +52,12 @@ function d3sankey() {
 	return sankey;
     };
 
+    sankey.nodeIDMap = function(_){
+	if(!arguments.length) return nodeIDMap;
+	nodeIDMap = _;
+	return sankey;
+    };
+
     sankey.graphCount = function(_){
 	if(!arguments.length) {
 	    return graphCount;
@@ -75,8 +82,8 @@ function d3sankey() {
 	computeNodeLinks();
 	computeNodeValues();
 	computeNodeBreadths();
-//	computeNodeDepths(iterations);
-//	computeLinkDepths();
+	computeNodeDepths(iterations);
+	computeLinkDepths();
 	return sankey;
     };
 
@@ -160,25 +167,27 @@ function d3sankey() {
 	});
 
 	links.forEach(function(link) {
-	    var sourceID = link.source,
-		targetID = link.target;
+	    var sourceID = link.sourceID,
+		targetID = link.targetID;
 
 	    let source, target;
-	    
 	    if (typeof sourceID === "number") {
-		source = fetchCorrectNode(sourceID, link.graph);
-		source.sourceLinks.push(link);
-		source["maxLinkVal"] = Math.max(source["maxLinkVal"], link["value"]);
-		source["minLinkVal"] = Math.min(source["minLinkVal"], link["value"]);
+		source = nodes[link.sourceID];
+		if(source != undefined){
+		    source.sourceLinks.push(link);
+		    source["maxLinkVal"] = Math.max(source["maxLinkVal"], link["value"]);
+		    source["minLinkVal"] = Math.min(source["minLinkVal"], link["value"]);
+		}
 	    }
 
 	    if (typeof targetID === "number") {
-		target = fetchCorrectNode(targetID, link.graph);
-		target.targetLinks.push(link);
-		target["maxLinkVal"] = Math.max(target["maxLinkVal"], link["value"]);
-		target["minLinkVal"] = Math.min(target["minLinkVal"], link["value"]);
+		target = nodes[link.targetID];
+		if(target != undefined){
+		    target.targetLinks.push(link);
+		    target["maxLinkVal"] = Math.max(target["maxLinkVal"], link["value"]);
+		    target["minLinkVal"] = Math.min(target["minLinkVal"], link["value"]);
+		}
 	    }
-
 	});
 
 	nodes.forEach(function(node){
@@ -202,7 +211,6 @@ function d3sankey() {
 	return ret;
     }
 
-    
     // Compute the value (size) of each node by summing the associated links.
     function computeNodeValues() {
 	nodes.forEach(function(node) {
@@ -232,69 +240,94 @@ function d3sankey() {
 	    // );
 	    // node.value = node["inTime"];
 	});
+	console.log(nodes, links);
     }
 
+
+    function partition(nodes){
+	let ret = [];
+	for(let i = 0; i < nodes.length; i++){
+	    if(ret[nodes[i].graph] == undefined){
+		ret[nodes[i].graph] = [];
+	    }
+	    ret[nodes[i].graph].push(nodes[i]);
+	}
+
+	ret.sort( (a,b) => {
+	    return b.runTime - a.runTime;
+	})
+	
+	return ret;
+    }
+
+    function d3max(arr){
+	let ret = 0;
+	for(let i = 0; i < arr.length; i++){
+	    ret = Math.max(arr[i], ret);
+	}
+	return ret;
+    }
+    
     // Iteratively assign the (x-position) for each node.
     // Nodes are assigned the maximum breadth of incoming neighbors plus one;
     // nodes with no incoming links are assigned breadth zero, while
     // nodes with no outgoing links are assigned the maximum breadth.
     function computeNodeBreadths() {
-	var remainingNodes = nodes,
-            nextNodes,
-            x = 0;
+	var graphNodes = partition(nodes),
+            nextNodes = [],
+            depthArr = [];
 	
 	for(var i = 0 ; i < graphCount; i++){
+	    let remainingNodes = [graphNodes[i][0]];
+	    let depth = 0;
 	    while (remainingNodes.length) {
+		console.log(nextNodes);
 		nextNodes = [];
-		console.log(remainingNodes);
 		remainingNodes.forEach(function(node) {
-		    if(node.graph == i){
-			node.x = x;
-			node.dx = nodeWidth;
-			node.sourceLinks.forEach(function(link) {
-			    if(link.graph == i){
-				console.log(link);
-				nextNodes.push(link.target);
-			    }
-			});
-		    }
+		    node.depth = depth;
+		    node.dx = nodeWidth;
+		    node.sourceLinks.forEach(function(link) {
+			console.log(nodes[nodeIDMap[link.targetLabel]])
+			nextNodes.push(nodes[nodeIDMap[link.targetLabel]]);
+		    });
 		});
 		remainingNodes = nextNodes;
-		++x;
+		++depth;
 	    }
+	    depthArr.push(depth);
 	}
 	
 	minDistanceBetweenNode = nodeWidth * 2;
 
+	let depthMax = d3max(depthArr);
+//	moveSourcesRight(depthMax);
 	var minX;
-	if(x < 5){
-	    widthScale = d3.scale.pow().domain([x,x + 1]).range([0, size[0]]);
+	if(depthMax < 5){
+	    widthScale = d3.scale.pow().domain([depthMax,depthMax + 1]).range([0, size[0]]);
 	}
 
-	widthScale = d3.scale.pow().domain([4,x]).range([4*minDistanceBetweenNode, size[0]]).exponent(.1);
-
-	scaleNodeBreadths((size[0] - nodeWidth) / (x - 1));
+	widthScale = d3.scale.pow().domain([4, depthMax]).range([(depthMax-1)*minDistanceBetweenNode, size[0]]).exponent(.1);
+	
+	scaleNodeBreadths((size[0] - nodeWidth) / (depthMax - 1));
 	console.log(nodes);
     }
 
     function moveSourcesRight() {
 	nodes.forEach(function(node) {
 	    if (!node.targetLinks.length) {
-		node.x = d3.min(node.sourceLinks, function(d) { return d.target.x; }) - 1;
+		node.depth = d3.min(node.sourceLinks, function(d) { console.log(d); return d.target; }) - 1;
 	    }
 	});
     }
 
     function scaleNodeBreadths(kx) {
 	nodes.forEach(function(node) {
-	    var nodeX = node.x;
-	    if(nodeX < 4){
-		nodeX = nodeX * minDistanceBetweenNode;
+	    if(node.depth < 4){
+		node.x = node.depth * minDistanceBetweenNode;
 	    }
 	    else{
-		nodeX = widthScale(nodeX);
+		node.x = widthScale(node.depth);
 	    }
-	    node.x = nodeX;
 	});
 
     }

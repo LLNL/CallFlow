@@ -49,6 +49,7 @@ function aggregateNodes(graphs){
 	    node.graph = i;
 	    aggrNodes.push(node);
 	    nodeCount += 1;
+	    node.nameTemp = node.specialID;
 	    node.specialID = node.specialID + '/G-' + i;
 	    node.name = node.name + '/G-'+i;
 	}
@@ -60,36 +61,38 @@ function aggregateNodes(graphs){
 }
 
 function nodeToIDMap(nodes, graphs){
-    let ret = [];
+    let ret = {};
     for(var i = 0; i < graphs.length; i++){
-	ret[i] = [];
 	for(var nodeID = 0; nodeID < nodes.length; nodeID++){
 	    if(nodes[nodeID].graph == i){
-		ret[i][nodes[nodeID].specialID] = nodes[nodeID].sankeyID;
+		ret[nodes[nodeID].specialID] = nodeID;
 	    }
 	}
     }
     return ret;
 }
 
-function aggregateEdges(nodeIDMap, graphs){
+function aggregateEdges(nodes, nodeIDMap, graphs){
     let ret = [];
-    let color = ['#ff0', '#00f'];
+    let color = ['#ff0', '#0af','ffa'];
     for(let i = 0; i < graphs.length; i++){
 	let edges = graphs[i].edges;
+	console.log(edges);
 	for(let edgeID = 0; edgeID < edges.length; edgeID++){
 	    edges[edgeID].sourceLabel = edges[edgeID].sourceLabel + '/G-' + i;
 	    edges[edgeID].targetLabel = edges[edgeID].targetLabel + '/G-' + i;
-	    edges[edgeID].sourceID = nodeIDMap[i][edges[edgeID].sourceLabel];
-	    edges[edgeID].targetID = nodeIDMap[i][edges[edgeID].targetLabel];
-	    edges[edgeID].source.sankeyID = nodeIDMap[i][edges[edgeID].sourceLabel];
-	    edges[edgeID].target.sankeyID = nodeIDMap[i][edges[edgeID].targetLabel];
-	    edges[edgeID].name = edges[edgeID].name + '/G-'+ i;
+	    edges[edgeID].sourceID = nodeIDMap[edges[edgeID].sourceLabel];
+	    edges[edgeID].targetID = nodeIDMap[edges[edgeID].targetLabel];
+	    edges[edgeID].source = nodes[nodeIDMap[edges[edgeID].sourceLabel]];
+	    edges[edgeID].target = nodes[nodeIDMap[edges[edgeID].targetLabel]];	    
+	    edges[edgeID].source.sankeyID = nodeIDMap[edges[edgeID].sourceLabel];
+	    edges[edgeID].target.sankeyID = nodeIDMap[edges[edgeID].targetLabel];
 	    edges[edgeID].color = color[i];
 	    edges[edgeID].graph = i;
 	    ret.push(edges[edgeID]);
 	}
     }
+    console.log(ret);
     return ret;
 }
 
@@ -102,7 +105,8 @@ function dualView(data){
     graphs = sortNodesEdges(graphs);
     aggrNodes = aggregateNodes(graphs);
     nodeIDMap = nodeToIDMap(aggrNodes, graphs);
-    aggrEdges = aggregateEdges(nodeIDMap, graphs);
+    console.log(nodeIDMap);
+    aggrEdges = aggregateEdges(aggrNodes, nodeIDMap, graphs);
     
     console.log(aggrNodes, aggrEdges);
 
@@ -111,8 +115,8 @@ function dualView(data){
        width: $('#procedure_view').width(),
        height: $('#procedure_view').height(),
        margin: { top: 0, right: 10, bottom: 10, left:10 },
-       data: { 'nodes': aggrNodes, 'links': aggrEdges , 'graphCount': graphs.length},
-	clickCallBack: nodeClickCallBack,
-	maxNodeSize: maxNodeSize
-    })
+       data: { 'nodes': aggrNodes, 'links': aggrEdges , 'graphCount': graphs.length, 'nodeIDMap': nodeIDMap },
+       clickCallBack: nodeClickCallBack,
+       maxNodeSize: maxNodeSize
+   });
 }

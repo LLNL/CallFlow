@@ -228,6 +228,7 @@ function diffSankey(args){
 	}
 
 	sankey.graphCount(data.graphCount)
+	    .nodeIDMap(data.nodeIDMap)
 	    .nodes(graph.nodes)
 	    .links(graph.links)
 	    .layout(32);	
@@ -236,7 +237,7 @@ function diffSankey(args){
 	    svg.selectAll(".intermediate").remove();
 	}
 
-	// add in the links	
+	// add in the links
 	links.selectAll('.link').remove();
 	var link = links.selectAll(".link")
 	    .data(graph.links)
@@ -1354,7 +1355,7 @@ function diffSankey(args){
 
     function setNodeColor(node){
 	if(nodeColorOption == 0){
-	    return color(node.name.replace(/ .*/, ""));
+	    return color(node.nameTemp.replace(/ .*/, ""));
 	    // return color(node["specialID"]);
 	}
 	else if(nodeColorOption == 1){
@@ -1394,8 +1395,8 @@ function diffSankey(args){
             node.targetLinks = [];
         });
         links.forEach(function(link) {
-            var source = link.source,
-		target = link.target;
+            var source = link.sourceID,
+		target = link.targetID;
             nodes[source].sourceLinks.push(link);
             nodes[target].targetLinks.push(link);
         });
@@ -1433,8 +1434,8 @@ function diffSankey(args){
         computeNodeLinks(temp_nodes, temp_links)
         computeNodeBreadths(temp_nodes, temp_links)
         for (var i = 0; i < temp_links.length; i++) {
-            var source = temp_links[i].source
-            var target = temp_links[i].target
+            var source = temp_links[i].sourceID;
+            var target = temp_links[i].targetID;
             var source_x = nodes[source].x
             var target_x = nodes[target].x
             var dx = target_x - source_x
