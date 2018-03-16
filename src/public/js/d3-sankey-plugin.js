@@ -12,17 +12,17 @@
  ******************************************************************************/
 
 // d3.sankey = function() {
-function d3sankey() {
+function d3sankeyMultiple() {
     var sankey = {},
 	nodeWidth = 24,
 	nodePadding = 8,
 	size = [1, 1],
 	nodes = [],
 	links = [],
-	nodeIDMap = {};
+	nodeIDMap = {},
 	graphCount = 0,
 	xSpacing = 1,
-	referenceValue = 0;
+	rootRunTime = [];
 
     var widthScale;
     
@@ -99,8 +99,8 @@ function d3sankey() {
     }
 
     sankey.setReferenceValue = function(_){
-	if(!arguments.length) return referenceValue;
-	referenceValue = +_;
+	if(!arguments.length) return rootRunTime;
+	rootRunTime = _;
 	return sankey;
     }
 
@@ -281,13 +281,11 @@ function d3sankey() {
 	    let remainingNodes = [graphNodes[i][0]];
 	    let depth = 0;
 	    while (remainingNodes.length) {
-		console.log(nextNodes);
 		nextNodes = [];
 		remainingNodes.forEach(function(node) {
 		    node.depth = depth;
 		    node.dx = nodeWidth;
 		    node.sourceLinks.forEach(function(link) {
-			console.log(nodes[nodeIDMap[link.targetLabel]])
 			nextNodes.push(nodes[nodeIDMap[link.targetLabel]]);
 		    });
 		});
@@ -309,7 +307,6 @@ function d3sankey() {
 	widthScale = d3.scale.pow().domain([4, depthMax]).range([(depthMax-1)*minDistanceBetweenNode, size[0]]).exponent(.1);
 	
 	scaleNodeBreadths((size[0] - nodeWidth) / (depthMax - 1));
-	console.log(nodes);
     }
 
     function moveSourcesRight() {
@@ -337,7 +334,19 @@ function d3sankey() {
             .key(function(d) { return d.x; })
             .sortKeys(d3.ascending)
             .entries(nodes)
-            .map(function(d) { return d.values; });
+            .map(function(d) {
+		let ret = [];
+		let idMap = {};
+		for(let i = 0; i < d.values.length; i++){
+		    if(idMap[d.values[i].nameTemp] == undefined){
+			ret.push(d.values[i])
+		    }
+		    idMap[d.values[i].nameTemp] = true;
+		}
+		console.log(idMap);
+		console.log(ret, d.values);
+		return d.values;
+	    });
 
 	//
 	initializeNodeDepth();
@@ -349,20 +358,40 @@ function d3sankey() {
 	    resolveCollisions();
 	}
 
-	function initializeNodeDepth() {
-	    var ky = d3.min(nodesByBreadth, function(nodes) {
-		var divValue = 1;
-		if(referenceValue > 0){
-		    divValue = referenceValue;
+	function normalize(obj){
+	    let ret = 0;
+	    for(let i in obj){
+		if(obj.hasOwnProperty(i)){
+		    console.log(obj[i]);
+		    ret = Math.max(ret, obj[i]);
 		}
+	    }
+
+	    console.log(ret);
+	    
+	    let norm = []
+	    for(let i in obj){
+		if(obj.hasOwnProperty(i)){
+		    norm.push(obj[i]);
+		}
+	    }
+
+	    return norm;
+	}
+	
+	function initializeNodeDepth() {
+	    let divValue = 1;
+	    var ky = d3.min(nodesByBreadth, function(nodes) {
+		let normalizedReferenceValue = normalize(rootRunTime);
+//		if(normalizedReferenceValue > 0){
+		    divValue = normalizedReferenceValue;
+/*		}
 		else{
 		    divValue = d3.sum(nodes, value);
-		}
-		// console.log("ky",(size[1] - (nodes.length - 1) * nodePadding) / divValue, size[1], (nodes.length - 1) * nodePadding, nodes.length, nodePadding);
-		// console.log(nodes);
-		// return (size[1] - (nodes.length - 1) * nodePadding) / divValue;
-		return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
+		}*/
+		return (Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue[2]);
 	    });
+	    console.log(size[1], nodes.length, nodePadding, divValue, ky);
 
 	    //need to change the scaling here
 	    nodesByBreadth.forEach(function(nodes) {
@@ -411,6 +440,7 @@ function d3sankey() {
 
 	function relaxRightToLeft(alpha) {
 	    nodesByBreadth.slice().reverse().forEach(function(nodes) {
+		console.log(nodes);
 		nodes.forEach(function(node) {
 		    if (node.sourceLinks.length) {
 			var y = d3.sum(node.sourceLinks, weightedTarget) / d3.sum(node.sourceLinks, value);

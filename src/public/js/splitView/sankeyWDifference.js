@@ -21,8 +21,7 @@ function diffSankey(args){
 //	histogramData = args.histogramData,
 	// spinner = args.spinner,
 	clickCallBack = args.clickCallBack,
-	maxNodeSize = args.maxNodeSize;
-    
+	maxNodeSize = args.maxNodeSize;    
     
     this.colorScale = args.colorScale || d3.scale.category20();
     var width = containerWidth - margin.left - margin.right;
@@ -40,7 +39,7 @@ function diffSankey(args){
     var colorArray = ["red", "green", "yellow", "blue", "black", "white"];
     var nodeList = [];
     var transitionDuration = 2000;
-    var rootRunTime = 0;
+    var rootRunTime = [];
     var rootRunTime1 = 0;
     var rootRunTime2 = 0;
     var gMinInc;
@@ -51,12 +50,19 @@ function diffSankey(args){
     var textTruncForNode = 8;
 
     data["links"].forEach(function(link){
-	if(link["sourceLabel"].split('/')[0] == 'LM0' || parseInt(link["sourceLabel"].split('/')[0]) == 0){
-	    rootRunTime += link["value"];
+	let label = link['sourceLabel'].split('/');
+	let graphID = label[1];
+	let linkID = label[0];
+	if(linkID == 'LM0' || parseInt(linkID) == 0){
+	    if(rootRunTime[graphID] == undefined){
+		rootRunTime[graphID] = 0;
+	    }
+	    rootRunTime[graphID] += link["value"];
 	}
     })
 
     var referenceValue = rootRunTime;
+
     resetStat();
 
     data["nodes"].forEach(function(node){
@@ -208,13 +214,13 @@ function diffSankey(args){
 	histograms.selectAll("*").remove();
 
 	// Set the sankey diagram properties
-	sankey = d3sankey()
+	sankey = d3sankeyMultiple()
 	    .nodeWidth(nodeWidth)
 	    .nodePadding(ySpacing)
 	// .size([width * 0.9, treeHeight - ySpacing])
 	    .size([width * 1.05, treeHeight - ySpacing])
 	    .xSpacing(xSpacing)
-	    .setReferenceValue(referenceValue);
+	    .setReferenceValue(rootRunTime);
 
 	var path = sankey.link();
 

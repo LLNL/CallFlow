@@ -33,9 +33,7 @@ function sortNodesEdges(graphs){
     return graphs;
 }
 
-/* 
-   
-*/ 
+ 
 function aggregateNodes(graphs){
     let aggrNodes = [];
     var nodeCount = 0;
@@ -74,10 +72,9 @@ function nodeToIDMap(nodes, graphs){
 
 function aggregateEdges(nodes, nodeIDMap, graphs){
     let ret = [];
-    let color = ['#ff0', '#0af','ffa'];
+    let color = ['#ff0', '#0af','#0f6f6a'];
     for(let i = 0; i < graphs.length; i++){
 	let edges = graphs[i].edges;
-	console.log(edges);
 	for(let edgeID = 0; edgeID < edges.length; edgeID++){
 	    edges[edgeID].sourceLabel = edges[edgeID].sourceLabel + '/G-' + i;
 	    edges[edgeID].targetLabel = edges[edgeID].targetLabel + '/G-' + i;
