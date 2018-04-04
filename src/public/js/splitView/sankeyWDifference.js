@@ -311,6 +311,7 @@ function diffSankey(args){
 	    .data(graph.links)
 	    .style('fill-opacity', 0.0)
 	    .attr('d', function(d){
+		console.log(d);
 		var Tx0 = d.source.x + d.source.dx,
 		    Tx1 = d.target.x,
 		    Txi = d3.interpolateNumber(Tx0, Tx1),

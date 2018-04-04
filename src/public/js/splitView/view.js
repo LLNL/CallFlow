@@ -141,12 +141,9 @@ function combineArrays(nodeMap){
 
 function nodeToIDMap(nodes, graphs){
     let ret = {};
-    for(var i = 0; i < graphs.length; i++){
-	for(var nodeID = 0; nodeID < nodes.length; nodeID++){
-	    if(nodes[nodeID].graph == i){
-		ret[nodes[nodeID].specialID] = nodeID;
-	    }
-	}
+    console.log(nodes);
+    for(let i = 0; i < nodes.length; i++){
+	ret[nodes[i].specialID] = nodes[i].sankeyID;
     }
     return ret;
 }
@@ -174,7 +171,19 @@ function nodeToIDMap(nodes, graphs){
     }*/
 
 function aggregateEdges(nodes, graphs){
-    console.log(nodes);
+    let ret = [];
+    nodeIDMap = nodeToIDMap(nodes, graphs);
+    console.log(nodeIDMap);
+    for(var i = 0; i < graphs.length; i++){
+	let edges = graphs[i].edges;
+	for(let edgeID = 0; edgeID < edges.length; edgeID++){
+	    edges[edgeID].sourceID = nodeIDMap[edges[edgeID].sourceLabel];
+	    edges[edgeID].targetID = nodeIDMap[edges[edgeID].targetLabel];
+	    edges[edgeID].color = '#0f6fga';
+	    ret.push(edges[edgeID]);
+	}
+    }
+    return ret;
 }
 
 function dualView(data){
@@ -189,7 +198,7 @@ function dualView(data){
     
 //    console.log(aggrNodes, aggrEdges);
 
-/*   let diffSankey1 = new diffSankey({
+   let diffSankey1 = new diffSankey({
        ID: '#procedure_view',
        width: $('#procedure_view').width(),
        height: $('#procedure_view').height(),
@@ -197,5 +206,5 @@ function dualView(data){
        data: { 'nodes': aggrNodes, 'links': aggrEdges , 'graphCount': graphs.length, 'nodeIDMap': nodeIDMap },
        clickCallBack: nodeClickCallBack,
        maxNodeSize: maxNodeSize
-   });*/
+   });
 }

@@ -243,7 +243,6 @@ function d3sankeyMultiple() {
 	console.log(nodes, links);
     }
 
-
     function partition(nodes){
 	let ret = [];
 	for(let i = 0; i < nodes.length; i++){
@@ -273,12 +272,12 @@ function d3sankeyMultiple() {
     // nodes with no incoming links are assigned breadth zero, while
     // nodes with no outgoing links are assigned the maximum breadth.
     function computeNodeBreadths() {
-	var graphNodes = partition(nodes),
+	var graphNodes = nodes,
             nextNodes = [],
             depthArr = [];
 	
 	for(var i = 0 ; i < graphCount; i++){
-	    let remainingNodes = [graphNodes[i][0]];
+	    let remainingNodes = nodes;
 	    let depth = 0;
 	    while (remainingNodes.length) {
 		nextNodes = [];
