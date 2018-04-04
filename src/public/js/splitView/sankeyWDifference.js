@@ -207,9 +207,7 @@ function diffSankey(args){
     var toolTipG = toolTipList.append('g')
 	.attr("transform", "translate(" + 5 + "," + 5 + ")");
     /////////////////////////////////////////////////////////////////////////////////////
-
     function visualize(removeIntermediate){
-
 	//remove all histograms
 	histograms.selectAll("*").remove();
 
@@ -217,7 +215,6 @@ function diffSankey(args){
 	sankey = d3sankeyMultiple()
 	    .nodeWidth(nodeWidth)
 	    .nodePadding(ySpacing)
-	// .size([width * 0.9, treeHeight - ySpacing])
 	    .size([width * 1.05, treeHeight - ySpacing])
 	    .xSpacing(xSpacing)
 	    .setReferenceValue(rootRunTime);
@@ -957,7 +954,6 @@ function diffSankey(args){
 	})
 
 	referenceValue = Math.max(maxEdge1, maxEdge2);
-	// console.log(rootRunTime1, rootRunTime2, referenceValue, maxEdge1, maxEdge2);
 
 	graph2 = {"nodes" : secondGraphNodes, "links" : newEdges};
 
@@ -968,15 +964,12 @@ function diffSankey(args){
 
 	computeColorScale();
 
-	// console.log(minInc, maxInc, minExc, maxExc);
-
 	visualize(true);
 	visualize2(true);	
     }
 
     this.updateSize = function(size){
 	if(containerWidth != size["width"] || containerHeight != size["height"]){
-
 	    containerWidth = size["width"];
 	    containerHeight = size["height"];
 	    width = containerWidth - margin.left - margin.right;
@@ -1003,10 +996,7 @@ function diffSankey(args){
 		    .attr('width', width);
 		visualize2();				
 	    }
-
 	}
-
-
     }
 
     this.setGlobalRange = function(option, minVal, maxVal){

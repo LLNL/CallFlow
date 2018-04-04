@@ -1,7 +1,7 @@
 {
     "dataName" : "Lulesh-1",
     "numbNodes" : "2",
-    "path" : ["../data/lulesh/ampi4-8-db/", "../data/lulesh/ampi4-1-db/", "../data/lulesh/ldb-4-8-db/"],
+    "path" : ["../data/lulesh/ampi4-8-db/", "../data/lulesh/ampi4-1-db/"],
     "experiment" : "experiment.xml", 
     "nodeMetric" : "nodeData.json",
     "config" : "config.json",

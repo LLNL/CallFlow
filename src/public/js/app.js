@@ -133,7 +133,6 @@ function getNodeMetrics(){
 }
 
 function nodesObjToArr(nodes){
-    console.log(nodes);
     let nodesArr = [];
     var labelList = Object.keys(nodes);
     labelList.forEach(function(lab){
@@ -152,7 +151,6 @@ function nodesObjToArr(nodes){
 }
 
 function splitView(data){
-    console.log(data);
     let graphs = data["graphs"][0];
     let histogramData = data["histogramData"];
     let nodes0Arr = nodesObjToArr(graphs[0].nodes);
@@ -192,7 +190,6 @@ function splitView(data){
 	maxNodeSize: maxNodeSize
     })
 }
-
 
 function getSankey(lmID){
     $.ajax({
