@@ -275,7 +275,7 @@ function diffSankey(args){
 		    By1 = d.target.y + d.ty + d.dy;
 
 	        var rightMoveDown = By1 - Ty1;
-
+		
 		return "M" + Tx0 + "," + Ty0
 		    + "C" + Tx2 + "," + Ty0
 		    + " " + Tx3 + "," + Ty1
@@ -287,6 +287,7 @@ function diffSankey(args){
 	    })
 	    .style("fill", function(d){
 		// return "url(#" + getGradID(d) + ")";
+		console.log(d.color);
 		return d.color;
 	    })
 	    .style('fill-opacity', 0)
@@ -311,7 +312,6 @@ function diffSankey(args){
 	    .data(graph.links)
 	    .style('fill-opacity', 0.0)
 	    .attr('d', function(d){
-		console.log(d);
 		var Tx0 = d.source.x + d.source.dx,
 		    Tx1 = d.target.x,
 		    Txi = d3.interpolateNumber(Tx0, Tx1),
@@ -360,7 +360,7 @@ function diffSankey(args){
 	    })
 	    .attr('opacity' , 0)
 	    .attr("transform", function (d) {
-		console.log(d.x, d.y);
+//		console.log(d.x, d.y);
 		return "translate(" + d.x + "," + d.y + ")";
 	    })
 
@@ -368,6 +368,7 @@ function diffSankey(args){
 	// add the rectangles for the nodes
 	var rect = node.append("rect")
 	    .attr("height", function (d) {
+		console.log(d.dy, d.name);
 		return d.dy;
 		// return d["inTime"];
 	    })
@@ -442,7 +443,7 @@ function diffSankey(args){
 		toolTipG.selectAll('*').remove();		    	
 	    })		    
 	    .on('click', function(d){
-		console.log(d);
+//		console.log(d);
 		if(d.name != "intermediate"){
 		    var ret = getFunctionListOfNode(d);
 		    var fromProcToProc = ret["fromProcToProc"];
@@ -1073,7 +1074,7 @@ function diffSankey(args){
 	sankeyNodeList.forEach(function(sankID){
 	    // console.log(toolTipData["nodeList"][sankID]);
 	    var connectionInfo = toolTipData["edgeList"][sankID];
-	    console.log(connectionInfo, toolTipData["edgeList"], sankID);
+//	    console.log(connectionInfo, toolTipData["edgeList"], sankID);
 	    connectionInfo.forEach(function(connInfo){
 		if(uniqueNodeIDList.indexOf(connInfo["nodeID"]) > -1 
 		   && parUniqueNodeID.indexOf(connInfo["parentNodeID"]) > -1
@@ -1179,7 +1180,7 @@ function diffSankey(args){
 	// sankeyNodeList.forEach(function(sankID){
 	//	console.log(toolTipData);
 	var connectionInfo = toolTipData["connInfo"][ d["specialID"] ];
-	console.log(connectionInfo, toolTipData);
+//	console.log(connectionInfo, toolTipData);
 	connectionInfo.forEach(function(connInfo){
 	    if(uniqueNodeIDList.indexOf(connInfo["nodeID"]) > -1 
 	       && parUniqueNodeID.indexOf(connInfo["parentNodeID"]) > -1
@@ -1269,7 +1270,6 @@ function diffSankey(args){
     	var textLength = 100;
     	var rectWidth = "5px";
 
-    	console.log(fromProcToProc)
 
     	toolTipG.selectAll('*').remove();
     	for(var tIndex = 0; tIndex < numberOfConn; tIndex++){
@@ -1352,7 +1352,7 @@ function diffSankey(args){
 
     function setNodeColor(node){
 	if(nodeColorOption == 0){
-	    return color(node.nameTemp.replace(/ .*/, ""));
+	    return color(node.name.replace(/ .*/, ""));
 	    // return color(node["specialID"]);
 	}
 	else if(nodeColorOption == 1){

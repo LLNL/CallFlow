@@ -214,10 +214,10 @@ function d3sankeyMultiple() {
     // Compute the value (size) of each node by summing the associated links.
     function computeNodeValues() {
 	nodes.forEach(function(node) {
-	    
+	    console.log(value);
 	    node.value = Math.max(
-		d3sum(node.sourceLinks, node.graph),
-		d3sum(node.targetLinks, node.graph)
+		d3.sum(node.sourceLinks, value),
+	        d3.sum(node.targetLinks, value)
 	    );
 	    // if(node.level ==  0){
 	    //   console.log(node.sourceLinks, node);
@@ -240,7 +240,6 @@ function d3sankeyMultiple() {
 	    // );
 	    // node.value = node["inTime"];
 	});
-	console.log(nodes, links);
     }
 
     function partition(nodes){
@@ -251,7 +250,7 @@ function d3sankeyMultiple() {
 	    }
 	    ret[nodes[i].graph].push(nodes[i]);
 	}
-
+	
 	ret.sort( (a,b) => {
 	    return b.runTime - a.runTime;
 	})
@@ -293,9 +292,7 @@ function d3sankeyMultiple() {
 	    }
 	    depthArr.push(depth);
 	}
-	
 	minDistanceBetweenNode = nodeWidth * 2;
-
 	let depthMax = d3max(depthArr);
 //	moveSourcesRight(depthMax);
 	var minX;
@@ -311,7 +308,7 @@ function d3sankeyMultiple() {
     function moveSourcesRight() {
 	nodes.forEach(function(node) {
 	    if (!node.targetLinks.length) {
-		node.depth = d3.min(node.sourceLinks, function(d) { console.log(d); return d.target; }) - 1;
+		node.depth = d3.min(node.sourceLinks, function(d) { return d.target; }) - 1;
 	    }
 	});
     }
@@ -325,7 +322,6 @@ function d3sankeyMultiple() {
 		node.x = widthScale(node.depth);
 	    }
 	});
-
     }
 
     function computeNodeDepths(iterations) {
@@ -337,17 +333,14 @@ function d3sankeyMultiple() {
 		let ret = [];
 		let idMap = {};
 		for(let i = 0; i < d.values.length; i++){
-		    if(idMap[d.values[i].nameTemp] == undefined){
+		    if(idMap[d.values[i].name] == undefined){
 			ret.push(d.values[i])
 		    }
-		    idMap[d.values[i].nameTemp] = true;
+		    idMap[d.values[i].name] = true;
 		}
-		console.log(idMap);
-		console.log(ret, d.values);
 		return d.values;
 	    });
 
-	//
 	initializeNodeDepth();
 	resolveCollisions();
 	for (var alpha = 1; iterations > 0; --iterations) {
@@ -361,12 +354,10 @@ function d3sankeyMultiple() {
 	    let ret = 0;
 	    for(let i in obj){
 		if(obj.hasOwnProperty(i)){
-		    console.log(obj[i]);
 		    ret = Math.max(ret, obj[i]);
 		}
 	    }
 
-	    console.log(ret);
 	    
 	    let norm = []
 	    for(let i in obj){
@@ -387,10 +378,9 @@ function d3sankeyMultiple() {
 /*		}
 		else{
 		    divValue = d3.sum(nodes, value);
-		}*/
-		return (Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue[2]);
+		    }*/
+		return (Math.abs((size[1] - (nodes.length - 1) * nodePadding))/divValue );
 	    });
-	    console.log(size[1], nodes.length, nodePadding, divValue, ky);
 
 	    //need to change the scaling here
 	    nodesByBreadth.forEach(function(nodes) {
@@ -403,12 +393,13 @@ function d3sankeyMultiple() {
 			    }
 			}
 		    })
-
 		    node.maxY = maxY;
 		    node.y = Math.max(maxY, i);
+
 		    node.parY = maxY;
 		    // node.y = i;
-		    node.dy = node.value*ky + node.graph*100;
+		    node.dy = node.value*ky;
+		    console.log(node.value);
 		    // node.dy = node["inTime"] * ky;
 		});
 
@@ -418,8 +409,9 @@ function d3sankeyMultiple() {
 	    });
 
 	    links.forEach(function(link) {
-		link.dy = link.value * ky;
+		link.dy = Math.ceil(link.value * ky);
 	    });
+	    
 	}
 
 	function relaxLeftToRight(alpha) {
@@ -439,7 +431,6 @@ function d3sankeyMultiple() {
 
 	function relaxRightToLeft(alpha) {
 	    nodesByBreadth.slice().reverse().forEach(function(nodes) {
-		console.log(nodes);
 		nodes.forEach(function(node) {
 		    if (node.sourceLinks.length) {
 			var y = d3.sum(node.sourceLinks, weightedTarget) / d3.sum(node.sourceLinks, value);
@@ -519,6 +510,7 @@ function d3sankeyMultiple() {
 	nodes.forEach(function(node) {
 	    var sy = 0, ty = 0;
 	    node.sourceLinks.forEach(function(link) {
+		console.log('a');
 		link.sy = sy;
 		sy += link.dy;
 	    });

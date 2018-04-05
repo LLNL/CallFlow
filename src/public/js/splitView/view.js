@@ -130,6 +130,7 @@ function combineArrays(nodeMap){
 			name : nodeMapArr[i][0].name,
 			specialID: nodeMapArr[i][0].specialID,
 			runTime: runTime,
+			nameTemp : nodeMapArr[i][0].name
 		    }
 		}
 	    }
@@ -141,7 +142,6 @@ function combineArrays(nodeMap){
 
 function nodeToIDMap(nodes, graphs){
     let ret = {};
-    console.log(nodes);
     for(let i = 0; i < nodes.length; i++){
 	ret[nodes[i].specialID] = nodes[i].sankeyID;
     }
@@ -172,14 +172,16 @@ function nodeToIDMap(nodes, graphs){
 
 function aggregateEdges(nodes, graphs){
     let ret = [];
+    let color = ['#ff315c', '#49d25c'];
     nodeIDMap = nodeToIDMap(nodes, graphs);
-    console.log(nodeIDMap);
     for(var i = 0; i < graphs.length; i++){
 	let edges = graphs[i].edges;
 	for(let edgeID = 0; edgeID < edges.length; edgeID++){
 	    edges[edgeID].sourceID = nodeIDMap[edges[edgeID].sourceLabel];
 	    edges[edgeID].targetID = nodeIDMap[edges[edgeID].targetLabel];
-	    edges[edgeID].color = '#0f6fga';
+	    edges[edgeID].source = nodes[nodeIDMap[edges[edgeID].sourceLabel]];
+	    edges[edgeID].target = nodes[nodeIDMap[edges[edgeID].targetLabel]];
+	    edges[edgeID].color = color[i];
 	    ret.push(edges[edgeID]);
 	}
     }
@@ -192,11 +194,11 @@ function dualView(data){
     let aggrNodes = [];
     let aggrEdges = [];
 
+    console.log(graphs);
     graphs = sortNodesEdges(graphs);
     aggrNodes = aggregateNodes(graphs);
     aggrEdges = aggregateEdges(aggrNodes, graphs);
-    
-//    console.log(aggrNodes, aggrEdges);
+
 
    let diffSankey1 = new diffSankey({
        ID: '#procedure_view',
