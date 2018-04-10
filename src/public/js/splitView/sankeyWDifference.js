@@ -35,7 +35,7 @@ function diffSankey(args){
     var excColorScale;
     var nRangeColorScale;
     var diffColorScale;
-    var nodeColorOption = 0;
+    var nodeColorOption = 1;
     var colorArray = ["red", "green", "yellow", "blue", "black", "white"];
     var nodeList = [];
     var transitionDuration = 2000;
@@ -400,7 +400,6 @@ function diffSankey(args){
 		    toolTipTexts(d,res, rootRunTime1)
 		    d3.select(this).style("stroke-width", "2");
 		    // fadeUnConnected(d);
-
 		    // svg.selectAll(".link").style('fill-opacity', 0.0)
 		    // svg.selectAll('.node').style('opacity', '0.0')
 		}
@@ -425,7 +424,6 @@ function diffSankey(args){
 		toolTipG.selectAll('*').remove();		    	
 	    })		    
 	    .on('click', function(d){
-//		console.log(d);
 		if(d.name != "intermediate"){
 		    var ret = getFunctionListOfNode(d);
 		    var fromProcToProc = ret["fromProcToProc"];
@@ -617,7 +615,6 @@ function diffSankey(args){
 		    return d.color = setNodeColor(d);
 		}
 	    })	    	
-	////////////////////////////////////
 
 	links.selectAll(".link")
 	    .data(graph.links)
@@ -639,7 +636,6 @@ function diffSankey(args){
 	var drawHist = false;
 	if(drawHist){
 	    graph.nodes.forEach(function(node){
-		// console.log(node, node.specialID, histogramData);
 		if(node.name != "intermediate"){
 
 		    var histoData = histogramData["histogramData"][node.specialID];
@@ -800,11 +796,8 @@ function diffSankey(args){
     }
 
     this.updateData = function(newData){
-
 	graph2 = null;
-
 	resetStat();
-
 	data["nodes"] = newData["nodes"];
 	data["links"] = newData["links"];
 	toolTipData = newData["toolTipData"];
@@ -815,10 +808,8 @@ function diffSankey(args){
 	data["nodes"].forEach(function(node){
 	    var outGoing = 0;
 	    var inComing = 0;
-
 	    var tempOBJ = JSON.parse( JSON.stringify(node) );
 	    secondGraphNodes.push(tempOBJ);
-
 	    var nodeLabel = node["specialID"];
 	    data["links"].forEach(function(edge){
 		if(edge["sourceLabel"] == nodeLabel){
@@ -828,27 +819,21 @@ function diffSankey(args){
 		    inComing += edge["value"];
 		}
 	    })
-
 	    node["out"] = outGoing;
 	    node["in"] = inComing;
 	    node["inclusive"] = Math.max(inComing, outGoing);
 	    node["exclusive"] = Math.max(inComing, outGoing) - outGoing;
-
 	    calcStat(node["inclusive"], node["exclusive"]);
-
-	});		
-
+	});
+	
 	treeHeight = height;
-
 	d3.select(containerID).select('svg.sank1').attr("height", treeHeight + margin.top + margin.bottom);
 	containerRect.attr('height', treeHeight);
 	d3.select(containerID).select('svg.sank2').attr("height", 0);
 	containerRect2.attr('height', 0);
-
+	
 	referenceValue = rootRunTime;
-
 	computeColorScale();
-
 	visualize(true);
     }	
 
@@ -1087,9 +1072,6 @@ function diffSankey(args){
 	    });
 	});
 
-	// console.log(connectivity);
-	// console.log(temp, d["runTime"]);
-
 	var fromProcToProc = [];
 	Object.keys(connectivity).forEach(function(fromProc){
 	    Object.keys(connectivity[fromProc]["procedureNameList"]).forEach(function(toProc){
@@ -1100,7 +1082,6 @@ function diffSankey(args){
 		    "toLM" : d["name"],
 		    "value" : connectivity[fromProc]["procedureNameList"][toProc]
 		}
-		// console.log(temp);
 		fromProcToProc.push(temp);
 	    })
 	})
@@ -1109,19 +1090,12 @@ function diffSankey(args){
 	    return b["value"] - a["value"];
 	});
 	var temp = 0;
-	// fromProcToProc.forEach(function(ft){
-	// 	// console.log(ft["value"] / 36644360084 * 100);
-	// 	temp += ft["value"];// / rootRunTime * 100
-	// })
-	// console.log(temp);
-
+	
 	var res = {"fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap , "rootRunTime" : rootRunTime}
-	// console.log(fromProcToProc)
 	return res;
     }
 
     function getFunctionListOfNode2(d){
-	console.log("inside functionlist2");
 	var sankeyNodeList = d["sankeyNodeList"];
 	var uniqueNodeIDList = d["uniqueNodeID"];
 
@@ -1129,7 +1103,7 @@ function diffSankey(args){
 	//get the final nodes that we are connected to
 	var sourceLabel = [];
 	var sourceID = [];
-	// console.log(edges);
+	
 	edges.forEach(function(edge){
 	    
 	    if(edge["targetID"] == d["sankeyID"]){
@@ -1321,10 +1295,10 @@ function diffSankey(args){
 	}
 
 	incColorScale = chroma.scale('OrRd').padding([0.2, 0])
-	    .domain([ minInc, maxInc ]);
+	    .domain([139731100, 455098600]);
 
 	excColorScale = chroma.scale('OrRd').padding([0.2, 0])
-	    .domain([ minExc, maxExc ]);
+	    .domain([139731100, 455098600]);
 
 	nRangeColorScale = chroma.scale('OrRd').padding([0.2, 0])
 	    .domain([ 0, 1 ]);
@@ -1338,7 +1312,7 @@ function diffSankey(args){
 	    // return color(node["specialID"]);
 	}
 	else if(nodeColorOption == 1){
-	    return incColorScale(node.inclusive);
+	    return incColorScale(node.value);
 	}
 	else if(nodeColorOption == 2){
 	    return excColorScale(node.exclusive);

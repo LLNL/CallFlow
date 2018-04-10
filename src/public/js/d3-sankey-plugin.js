@@ -281,12 +281,11 @@ function d3sankeyMultiple() {
             nextNodes = [],
             depthArr = [];
 
-	for(var i = 0 ; i < 1; i++){
+	for(var i = 0 ; i < graphs.length; i++){
 	    let depth = 0;
 	    while (graphNodes.length) {		
 		nextNodes = [];
 		graphNodes.forEach(function(node) {
-		    console.log(node.name);
 		    if(node.name == 'Root'){
 			node.depth = 0;
 		    }
@@ -294,10 +293,16 @@ function d3sankeyMultiple() {
 			node.depth = 1;
 		    }
 		    else if(node.name == 'lulesh2.0'){
+			node.depth = 3;
+		    }
+		    else if(node.name == 'libc-2.17.so'){
 			node.depth = 2;
 		    }
-		    else{
+		    else if(node.name == 'libmpi-12.0.5'){
 			node.depth = 3;
+		    }
+		    else{
+			node.depth = 4;
 		    }
 		    
 //		    node.depth = Math.ceil(Math.random()*5);
@@ -313,11 +318,8 @@ function d3sankeyMultiple() {
 	    }
 	    depthArr.push(depth);
 	}
-	console.log(depthArr);
-	depthArr = [5,4,3,2,1,0];
 	minDistanceBetweenNode = nodeWidth * 2;
 	let depthMax = d3max(depthArr);
-	console.log(depthMax);
 //	moveSourcesRight(depthMax);
 	var minX;
 	if(depthMax < 5){
@@ -340,7 +342,6 @@ function d3sankeyMultiple() {
     function scaleNodeBreadths(kx) {
 	nodes.forEach(function(node) {
 	    //	    if(node.depth > 0){
-	    console.log(node.depth);
 		node.x = node.depth * minDistanceBetweenNode;
 //	    }
 //	    else{
@@ -429,8 +430,7 @@ function d3sankeyMultiple() {
 	    });
 
 	    links.forEach(function(link) {
-		link.dy = Math.ceil(link.value * ky);
-		console.log(link.dy);
+		link.dy = Math.ceil(link.val*ky*link.maxVal);
 	    });
 	}
 
@@ -438,10 +438,9 @@ function d3sankeyMultiple() {
 	    nodesByBreadth.forEach(function(nodes, breadth) {
 		nodes.forEach(function(node) {
 		    if (node.targetLinks.length) {
-//			var y = d3.sum(node.targetLinks, weightedSource) / d3sum(node.targetLinks, "value");
-			var y = node.dy;
-			//			node.y += (y - center(node)) * alpha;
-			node.y = node.dy;
+			var y = d3sum(node.sourceLinks, "value") / d3sum(node.targetLinks, "value");
+			node.y += y * alpha;
+//			node.y = node.dy;
 		    }
 		});
 	    });
@@ -455,9 +454,10 @@ function d3sankeyMultiple() {
 	    nodesByBreadth.slice().reverse().forEach(function(nodes) {
 		nodes.forEach(function(node) {
 		    if (node.sourceLinks.length) {
-//			var y = d3sum(node.sourceLinks, "weightedTarget") / d3sum(node.sourceLinks, "value");
-			node.y = node.dy;
-//			node.y += (y - center(node)) * alpha;
+			var y = d3sum(node.targetLinks, "value") / d3sum(node.sourceLinks, "value");
+//			node.y = node.dy;
+			//			node.y += (y - center(node)) * alpha;
+			node.y = y * alpha;
 		    }
 		});
 	    });
@@ -535,6 +535,7 @@ function d3sankeyMultiple() {
 	    node.sourceLinks.forEach(function(link) {
 		link.sy = sy;
 		sy += link.dy;
+		
 	    });
 	    node.targetLinks.forEach(function(link) {
 		link.ty = ty;
