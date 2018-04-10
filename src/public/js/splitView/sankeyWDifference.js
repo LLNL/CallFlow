@@ -132,85 +132,71 @@ function diffSankey(args){
     var exTimeColorScale = d3.scale.quantize().range(colorbrewer.Reds[8]).domain([stat["exTimeMin"], stat["exTimeMax"]]);
     var imPercColorScale = d3.scale.quantize().range(colorbrewer.Reds[8]).domain([stat["imPercMin"], stat["imPercMax"]]);
     
-    var svg;
-    var sankey;
-    var xSpacing = 1;
-    var ySpacing = 50;
-    var nodeWidth = 50;
-    var graph;
 
-//  var treeHeight = height < maxNodeSize ? height: maxNodeSize;
-    var treeHeight = height;
-//    var minimapXScale = d3.scale.ordinal().domain(histogramData["globalXvals"]).rangeRoundBands([0, nodeWidth], 0.05);
-//    var minimapYScale = d3.scale.linear().domain([0, histogramData["maxFreq"]]).range([ySpacing - 5, 5]);
-
-    var zoom = d3.behavior.zoom()
-	.scaleExtent([0.1,10])
-	.on('zoom', zoomed);
-    
-    function zoomed(){
-	svgBase.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    // setup
+    {
+	function zoomed(){
+	    svgBase.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+	}
+	var svg;
+	var sankey;
+	var xSpacing = 1;
+	var ySpacing = 50;
+	var nodeWidth = 50;
+	var graph;
+	//  var treeHeight = height < maxNodeSize ? height: maxNodeSize;
+	var treeHeight = height;
+	//    var minimapXScale = d3.scale.ordinal().domain(histogramData["globalXvals"]).rangeRoundBands([0, nodeWidth], 0.05);
+	//    var minimapYScale = d3.scale.linear().domain([0, histogramData["maxFreq"]]).range([ySpacing - 5, 5]);
+	var zoom = d3.behavior.zoom()
+	    .scaleExtent([0.1,10])
+	    .on('zoom', zoomed);
+	var svgO = d3.select(containerID).append("svg")
+	    .attr('class', 'sank1')
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", treeHeight + margin.top + margin.bottom)
+	    .append("g")
+	    .attr("transform",
+		  "translate(" + margin.left + "," + margin.top + ")")
+	    .call(zoom);
+	//place an invisible rect over the svg to capture all mouse event
+	var containerRect = svgO.append('rect')
+	    .attr('width', width)
+	    .attr('height', treeHeight)
+	    .style('fill', "none")
+	    .style("pointer-events", "all"); //this line is needed to capture the mouse events related to the entire svg		
+	var svgBase = svgO.append('g');	
+	svg = svgBase.append('g')
+	    .attr('transform', "translate(" + 0 + "," + (nodeWidth + 10) +  ")")
+	var defs = svg.append("defs");
+	var links = svg.append("g");
+	var histograms = svg.append('g');
+	var nodes = svg.append("g");
+	var toolTip = d3.select(containerID)
+	    .append('div')
+	    .attr('class', 'toolTip')
+	    .style('position', 'absolute')
+	    .style('padding', '5px 10px 0px 10px')
+	    .style('opacity', 0)
+	    .style('background', 'white')
+	    .style('height', 'auto')
+	    .style('width', 'auto')
+	    .style('border-radius', '10px')
+	    .style('border-width', '1px')
+	    .style('border-style', 'solid')
+	    .style('position', 'absolute');
+	var toolTipText = toolTip
+	    .append('p')
+	    .style('font-family', 'sans-serif')
+	    .style('font-size', '13px');
+	var toolTipList = toolTip.append('svg');
+	toolTipList.attr('width', "400px")
+	    .attr('height', "150px")
+	var toolTipG = toolTipList.append('g')
+	    .attr("transform", "translate(" + 5 + "," + 5 + ")");
     }
 
-    //////////////////////////////Top tree//////////////////////////////////////
-    var svgO = d3.select(containerID).append("svg")
-	.attr('class', 'sank1')
-	.attr("width", width + margin.left + margin.right)
-	.attr("height", treeHeight + margin.top + margin.bottom)
-	.append("g")
-	.attr("transform",
-	      "translate(" + margin.left + "," + margin.top + ")")
-
-	.call(zoom);
-
-    //place an invisible rect over the svg to capture all mouse event
-    var containerRect = svgO.append('rect')
-	.attr('width', width)
-	.attr('height', treeHeight)
-	.style('fill', "none")
-	.style("pointer-events", "all"); //this line is needed to capture the mouse events related to the entire svg		
-
-    var svgBase = svgO.append('g');
-    
-    svg = svgBase.append('g')
-	.attr('transform', "translate(" + 0 + "," + (nodeWidth + 10) +  ")")
-
-    var defs = svg.append("defs");
-    var links = svg.append("g");
-
-    var histograms = svg.append('g');
-
-    var nodes = svg.append("g");
-
-
-    ////////////////////////////Tool Tip/////////////////////////////////////////////////
-    var toolTip = d3.select(containerID)
-	.append('div')
-	.attr('class', 'toolTip')
-	.style('position', 'absolute')
-	.style('padding', '5px 10px 0px 10px')
-	.style('opacity', 0)
-	.style('background', 'white')
-	.style('height', 'auto')
-	.style('width', 'auto')
-	.style('border-radius', '10px')
-	.style('border-width', '1px')
-	.style('border-style', 'solid')
-	.style('position', 'absolute');
-    var toolTipText = toolTip
-	.append('p')
-	.style('font-family', 'sans-serif')
-	.style('font-size', '13px');
-    var toolTipList = toolTip.append('svg');
-    toolTipList.attr('width', "400px")
-	.attr('height', "150px")
-    var toolTipG = toolTipList.append('g')
-	.attr("transform", "translate(" + 5 + "," + 5 + ")");
-    /////////////////////////////////////////////////////////////////////////////////////
-    function visualize(removeIntermediate){
-	//remove all histograms
-	histograms.selectAll("*").remove();
-
+    {
 	// Set the sankey diagram properties
 	sankey = d3sankeyMultiple()
 	    .nodeWidth(nodeWidth)
@@ -223,19 +209,18 @@ function diffSankey(args){
 
 	// load the data
 	var graph_zero = {"nodes" : data["nodes"], "links" : data["links"]};
-	if(removeIntermediate){
-	    graph = rebuild(graph_zero.nodes, graph_zero.links);
-	}
-	else{
-	    graph = graph_zero;
-	}
-
+	graph = rebuild(graph_zero.nodes, graph_zero.links);
+    
 	sankey.graphCount(data.graphCount)
 	    .nodeIDMap(data.nodeIDMap)
 	    .nodes(graph.nodes)
 	    .links(graph.links)
 	    .layout(32);	
+    }
 
+    function visualize(removeIntermediate){
+	//remove all histograms
+	histograms.selectAll("*").remove();
 	if(removeIntermediate){
 	    svg.selectAll(".intermediate").remove();
 	}
@@ -261,7 +246,7 @@ function diffSankey(args){
 		    Tx3 = Txi(1 - 0.4),
 		    Ty0 = d.source.y + d.sy,
 		    Ty1 = d.target.y + d.ty;
-
+		
 		//note .ty is the y point that the edge meet the target(for top)
 		//		.sy is the y point of the source  (for top)
 		//		.dy is width of the edge
@@ -287,7 +272,6 @@ function diffSankey(args){
 	    })
 	    .style("fill", function(d){
 		// return "url(#" + getGradID(d) + ")";
-		console.log(d.color);
 		return d.color;
 	    })
 	    .style('fill-opacity', 0)
@@ -360,7 +344,6 @@ function diffSankey(args){
 	    })
 	    .attr('opacity' , 0)
 	    .attr("transform", function (d) {
-//		console.log(d.x, d.y);
 		return "translate(" + d.x + "," + d.y + ")";
 	    })
 
@@ -370,7 +353,6 @@ function diffSankey(args){
 	    .attr("height", function (d) {
 		console.log(d.dy, d.name);
 		return d.dy;
-		// return d["inTime"];
 	    })
 	    .attr("width", sankey.nodeWidth())
 	    .style("fill", function (d) {

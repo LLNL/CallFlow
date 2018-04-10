@@ -611,7 +611,7 @@ const LMCalc = function (nodeArray, nodeMetric, sanKeyMetricData, nodePaths, con
                 sankeyNodeList,
             };
 
-            console.log('there are', sourceLabel, uniqueIDList.length);
+            console.log('[Logger] '+name+'{'+sourceLabel+'} with',  uniqueIDList.length, 'children-', totalRuntime);
 
             idMap[sourceLabel] = sankIDCounter;
             sankIDCounter += 1;

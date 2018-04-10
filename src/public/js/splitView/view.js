@@ -85,20 +85,19 @@ function sortNodesEdges(graphs){
 function aggregateNodes(graphs){
     let aggrNodes = [];
     let nodeMap = {};
-    var nodeCount = 0;
     for(let i = 0; i < graphs.length; i++){
 	let nodes = graphs[i].sortedNodesArr;
 	for(let j = 0; j < nodes.length; j++){
 	    //By special ID;
-	    if(nodeMap[nodes[j].specialID]== undefined){
+/*	    if(nodeMap[nodes[j].specialID]== undefined){
 		nodeMap[nodes[j].specialID] = [];
 	    }
-	    nodeMap[nodes[j].specialID].push(nodes[j]);
+	    nodeMap[nodes[j].specialID].push(nodes[j]);*/
 	    //By name;
-/*	    if(nodeMap[nodes[j].name] == undefined){
+	    if(nodeMap[nodes[j].name] == undefined){
 		nodeMap[nodes[j].name] = [];
 	    }
-	    nodeMap[nodes[j].name].push(nodes[j]);*/
+	    nodeMap[nodes[j].name].push(nodes[j]);
 	}
     }
     aggrNodes = combineArrays(nodeMap);
@@ -114,7 +113,7 @@ function combineArrays(nodeMap){
     let nodeMapArr = objToArr(nodeMap);
     for(let i = 0; i < nodeMapArr.length; i++){
 	let runTime = [];
-	let sankeyID = [];
+	let specialID = [];
 	if( nodeMapArr[i].length == 1){
 	    runTime.push(nodeMapArr[i][0].runTime);
 	    nodeMapArr[i][0].runTime = runTime;
@@ -123,12 +122,12 @@ function combineArrays(nodeMap){
 	else{
 	    for(var j = 0; j < nodeMapArr[i].length; j++){
 		runTime.push(nodeMapArr[i][j].runTime);
-		sankeyID.push(nodeMapArr[i][j].sankeyID);
+		specialID.push(nodeMapArr[i][j].specialID);
 		if(j == nodeMapArr[i].length - 1){
 		    ret[count] = {
 			sankeyID : count,
 			name : nodeMapArr[i][0].name,
-			specialID: nodeMapArr[i][0].specialID,
+			specialID: specialID,
 			runTime: runTime,
 			nameTemp : nodeMapArr[i][0].name
 		    }
@@ -140,50 +139,75 @@ function combineArrays(nodeMap){
     return ret;
 }
 
-function nodeToIDMap(nodes, graphs){
-    let ret = {};
+/*function nodeToIDMap(graphs){
+    let ret = [];
+    for(let graph = 0; graph < graphs.length; graph++){
+	ret[graph] = {};
+	let nodes = objToArr(graphs[graph].nodes);
+	for(let i = 0; i < nodes.length; i++){
+/*	    if(ret[graph][nodes[i].name] == undefined){
+		ret[graph][nodes[i].name] = [];
+	    }
+	    ret[graph][nodes[i].name].push(nodes[i].specialID);
+	    if(ret[graph][nodes[i].specialID] == undefined){
+		ret[graph][nodes[i].specialID] = [];
+	    }
+	    ret[graph][nodes[i].specialID]  = nodes[i].name;
+
+	}
+    }
+    return ret;
+}*/
+
+function nodeToIDMap(nodes){
+    let ret = [];
     for(let i = 0; i < nodes.length; i++){
-	ret[nodes[i].specialID] = nodes[i].sankeyID;
+	let node = nodes[i];
+	if(node.specialID != undefined){
+	    for(let j = 0; j < node.specialID.length; j++){
+		if(ret[node.specialID[j]] == undefined){
+		    ret[node.specialID[j]] = i;
+		}
+	    }
+	}
     }
     return ret;
 }
 
-/*function aggregateEdges(nodes, nodeIDMap, graphs){
-    let ret = [];
-    let color = ['#ff0', '#0af','#0f6f6a'];
-    for(let i = 0; i < graphs.length; i++){
-	let edges = graphs[i].edges;
-	for(let edgeID = 0; edgeID < edges.length; edgeID++){
-	    edges[edgeID].sourceLabel = edges[edgeID].sourceLabel + '/G-' + i;
-	    edges[edgeID].targetLabel = edges[edgeID].targetLabel + '/G-' + i;
-	    edges[edgeID].sourceID = nodeIDMap[edges[edgeID].sourceLabel];
-	    edges[edgeID].targetID = nodeIDMap[edges[edgeID].targetLabel];
-	    edges[edgeID].source = nodes[nodeIDMap[edges[edgeID].sourceLabel]];
-	    edges[edgeID].target = nodes[nodeIDMap[edges[edgeID].targetLabel]];	    
-	    edges[edgeID].source.sankeyID = nodeIDMap[edges[edgeID].sourceLabel];
-	    edges[edgeID].target.sankeyID = nodeIDMap[edges[edgeID].targetLabel];
-	    edges[edgeID].color = color[i];
-	    edges[edgeID].graph = i;
-	    ret.push(edges[edgeID]);
-	}
+function labelToIDMap(nodes){
+    let ret = {};
+    for(let i = 0; i < nodes.length; i++){
+	ret[nodes[i].specialID] = nodes[i].name;
     }
     return ret;
-    }*/
+}
 
-function aggregateEdges(nodes, graphs){
+function aggregateEdges(nodes, graphs, nodeIDMap, labelIDMap){
     let ret = [];
     let color = ['#ff315c', '#49d25c'];
-    nodeIDMap = nodeToIDMap(nodes, graphs);
+    let count = 0;
+    let edgeMap = {};
     for(var i = 0; i < graphs.length; i++){
 	let edges = graphs[i].edges;
 	for(let edgeID = 0; edgeID < edges.length; edgeID++){
-	    edges[edgeID].sourceID = nodeIDMap[edges[edgeID].sourceLabel];
-	    edges[edgeID].targetID = nodeIDMap[edges[edgeID].targetLabel];
-	    edges[edgeID].source = nodes[nodeIDMap[edges[edgeID].sourceLabel]];
-	    edges[edgeID].target = nodes[nodeIDMap[edges[edgeID].targetLabel]];
-	    edges[edgeID].color = color[i];
-	    ret.push(edges[edgeID]);
+	    let sourceID = nodeIDMap[edges[edgeID].sourceLabel];
+	    let targetID = nodeIDMap[edges[edgeID].targetLabel];
+	    if(edgeMap[sourceID+'-'+targetID] == undefined || edgeMap[sourceID+'-'+targetID] == false){
+		edges[edgeID].sankeyID = count;
+//		edges[edgeID].sourceID = nodeIDMap[edges[edgeID].sourceLabel];
+		//		edges[edgeID].targetID = nodeIDMap[edges[edgeID].targetLabel];
+		edges[edgeID].sourceID = nodes[nodeIDMap[edges[edgeID].sourceLabel]].sankeyID;
+		edges[edgeID].targetID = nodes[nodeIDMap[edges[edgeID].targetLabel]].sankeyID;
+		edges[edgeID].source = nodes[nodeIDMap[edges[edgeID].sourceLabel]];
+		edges[edgeID].target = nodes[nodeIDMap[edges[edgeID].targetLabel]];
+		edges[edgeID].color = color[i];
+		edgeMap[sourceID+'-'+targetID] = true;
+		edgeMap[targetID+'-'+sourceID] = true;
+		ret.push(edges[edgeID]);
+		
+	    }
 	}
+	count+=1;
     }
     return ret;
 }
@@ -193,20 +217,22 @@ function dualView(data){
     let graphs = data['graphs'][0];
     let aggrNodes = [];
     let aggrEdges = [];
-
-    console.log(graphs);
+    
     graphs = sortNodesEdges(graphs);
     aggrNodes = aggregateNodes(graphs);
-    aggrEdges = aggregateEdges(aggrNodes, graphs);
-
-
-   let diffSankey1 = new diffSankey({
-       ID: '#procedure_view',
-       width: $('#procedure_view').width(),
-       height: $('#procedure_view').height(),
-       margin: { top: 0, right: 10, bottom: 10, left:10 },
-       data: { 'nodes': aggrNodes, 'links': aggrEdges , 'graphCount': graphs.length, 'nodeIDMap': nodeIDMap },
-       clickCallBack: nodeClickCallBack,
-       maxNodeSize: maxNodeSize
-   });
+    let nodeIDMap = nodeToIDMap(aggrNodes);
+    console.log(nodeIDMap);
+    let labelIDMap = labelToIDMap(graphs);
+    aggrEdges = aggregateEdges(aggrNodes, graphs, nodeIDMap, labelIDMap);
+    
+    console.log(aggrNodes, graphs, aggrEdges);
+    let diffSankey1 = new diffSankey({
+	ID: '#procedure_view',
+	width: $('#procedure_view').width(),
+	height: $('#procedure_view').height(),
+	margin: { top: 0, right: 10, bottom: 10, left:10 },
+	data: { 'nodes': aggrNodes, 'links': aggrEdges , 'graphCount': graphs.length, 'nodeIDMap': nodeIDMap },
+	clickCallBack: nodeClickCallBack,
+	maxNodeSize: maxNodeSize
+    });
 }

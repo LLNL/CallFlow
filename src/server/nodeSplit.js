@@ -51,10 +51,9 @@ const nodeSplit = function (sankeyNodesC, sankeyEdgesC, nodeListC, edgeListC, ad
         maxID = Math.max(maxID, sankID);
     });
 
-    // console.log('there are,', sankeyEdges.length);
+    console.log('[Logger] Edges:,', sankeyEdges.length);
 
     const rootRunTime = sankeyNodes[0].rawRunTime;
-    console.log(rootRunTime);
     const FILTERPERCENT = 1 / 100;
 
     function splitByFunction() {
@@ -383,11 +382,6 @@ const nodeSplit = function (sankeyNodesC, sankeyEdgesC, nodeListC, edgeListC, ad
     this.nodeSplit = function () {
         // reconstructAdjMatrix();
         calcNewEdges();
-//        console.log(adjMatrix);
-
-        // console.log("there are ", sankeyEdges.length);
-
-        // return {"nodes" : sankeyNodes, "edges" : sankeyEdges};
         const graph = {
             nodes: sankeyNodes, edges: sankeyEdges, nodeList, edgeList, connInfo: connectionInfo, adjMatrix,
         };
