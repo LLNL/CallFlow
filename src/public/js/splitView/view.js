@@ -82,11 +82,22 @@ function sortNodesEdges(graphs){
     return aggrNodes;
 }
 */
+
+function filter(nodes){
+    let ret = [];
+    for(let i = 0; i < nodes.length; i++){
+	if(nodes[i].runTime != 0){
+	    ret.push(nodes[i]);
+	}
+    }
+    return ret;
+}
+
 function aggregateNodes(graphs){
     let aggrNodes = [];
     let nodeMap = {};
     for(let i = 0; i < graphs.length; i++){
-	let nodes = graphs[i].sortedNodesArr;
+	let nodes = filter(graphs[i].sortedNodesArr);
 	for(let j = 0; j < nodes.length; j++){
 	    //By special ID;
 /*	    if(nodeMap[nodes[j].specialID]== undefined){
@@ -97,9 +108,11 @@ function aggregateNodes(graphs){
 	    if(nodeMap[nodes[j].name] == undefined){
 		nodeMap[nodes[j].name] = [];
 	    }
+	    nodes[j].graph = i;
 	    nodeMap[nodes[j].name].push(nodes[j]);
 	}
     }
+    console.log(nodeMap);
     aggrNodes = combineArrays(nodeMap);
     aggrNodes.sort( (a,b) => {
 	return sum(b['runTime']) - sum(a['runTime']);
@@ -110,7 +123,7 @@ function aggregateNodes(graphs){
 function combineArrays(nodeMap){
     let ret = [];
     let count = 0;
-    let nodeMapArr = objToArr(nodeMap);
+    let nodeMapArr = objToArr(nodeMap);   
     for(let i = 0; i < nodeMapArr.length; i++){
 	let runTime = [];
 	let specialID = [];
@@ -121,21 +134,24 @@ function combineArrays(nodeMap){
 	}
 	else{
 	    for(var j = 0; j < nodeMapArr[i].length; j++){
-		runTime.push(nodeMapArr[i][j].runTime);
-		specialID.push(nodeMapArr[i][j].specialID);
-		if(j == nodeMapArr[i].length - 1){
-		    ret[count] = {
-			sankeyID : count,
-			name : nodeMapArr[i][0].name,
-			specialID: specialID,
-			runTime: runTime,
-			nameTemp : nodeMapArr[i][0].name
+		if(nodeMapArr[i][j].runTime != 0){
+		    runTime.push(nodeMapArr[i][j].runTime);
+		    specialID.push(nodeMapArr[i][j].specialID);
+		    if(j == nodeMapArr[i].length - 1){
+			ret[count] = {
+			    sankeyID : count,
+			    name : nodeMapArr[i][0].name,
+			    specialID: specialID,
+			    runTime: runTime,
+			    nameTemp : nodeMapArr[i][0].name
+			}
 		    }
 		}
 	    }
 	}
 	count++;
     }
+    console.log(ret);
     return ret;
 }
 
@@ -163,11 +179,9 @@ function nodeToIDMap(nodes){
     let ret = [];
     for(let i = 0; i < nodes.length; i++){
 	let node = nodes[i];
-	if(node.specialID != undefined){
-	    for(let j = 0; j < node.specialID.length; j++){
-		if(ret[node.specialID[j]] == undefined){
-		    ret[node.specialID[j]] = i;
-		}
+	for(let j = 0; j < node.specialID.length; j++){
+	    if(ret[node.specialID[j]] == undefined){
+		ret[node.specialID[j]] = i;
 	    }
 	}
     }
@@ -182,30 +196,35 @@ function labelToIDMap(nodes){
     return ret;
 }
 
+function aggregateEdgeass(nodes, graphs, nodeIDMap, labelIDMap){
+    for(let i = 0; i < 1; i++){
+	let edges = graphs[i].edges;
+	for(let id = 0; id < edges.length; id++){
+	    let sourceID = nodeIDMap[edges[id].sourceLabel];
+	    let targetID = nodeIDMap[edges[id].targetLabel];
+	    console.log(sourceID, targetID);
+	}
+    }
+}
+
 function aggregateEdges(nodes, graphs, nodeIDMap, labelIDMap){
     let ret = [];
     let color = ['#ff315c', '#49d25c'];
     let count = 0;
     let edgeMap = {};
-    for(var i = 0; i < graphs.length; i++){
+    for(var i = 0; i < 1; i++){
 	let edges = graphs[i].edges;
 	for(let edgeID = 0; edgeID < edges.length; edgeID++){
 	    let sourceID = nodeIDMap[edges[edgeID].sourceLabel];
 	    let targetID = nodeIDMap[edges[edgeID].targetLabel];
-	    if(edgeMap[sourceID+'-'+targetID] == undefined || edgeMap[sourceID+'-'+targetID] == false){
-		edges[edgeID].sankeyID = count;
-//		edges[edgeID].sourceID = nodeIDMap[edges[edgeID].sourceLabel];
-		//		edges[edgeID].targetID = nodeIDMap[edges[edgeID].targetLabel];
-		edges[edgeID].sourceID = nodes[nodeIDMap[edges[edgeID].sourceLabel]].sankeyID;
-		edges[edgeID].targetID = nodes[nodeIDMap[edges[edgeID].targetLabel]].sankeyID;
-		edges[edgeID].source = nodes[nodeIDMap[edges[edgeID].sourceLabel]];
-		edges[edgeID].target = nodes[nodeIDMap[edges[edgeID].targetLabel]];
-		edges[edgeID].color = color[i];
-		edgeMap[sourceID+'-'+targetID] = true;
-		edgeMap[targetID+'-'+sourceID] = true;
-		ret.push(edges[edgeID]);
-		
-	    }
+	    edges[edgeID].sankeyID = count;
+	    edges[edgeID].sourceID = nodeIDMap[edges[edgeID].sourceLabel];
+	    edges[edgeID].targetID = nodeIDMap[edges[edgeID].targetLabel];
+	    edges[edgeID].source = nodes[nodeIDMap[edges[edgeID].sourceLabel]];
+	    edges[edgeID].target = nodes[nodeIDMap[edges[edgeID].targetLabel]];
+	    edges[edgeID].color = color[i];
+	    if(edges[edgeID].source != undefined && edges[edgeID].target != undefined)
+		ret.push(edges[edgeID]);   
 	}
 	count+=1;
     }
@@ -217,6 +236,8 @@ function dualView(data){
     let graphs = data['graphs'][0];
     let aggrNodes = [];
     let aggrEdges = [];
+
+    console.log(graphs);
     
     graphs = sortNodesEdges(graphs);
     aggrNodes = aggregateNodes(graphs);

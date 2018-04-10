@@ -82,8 +82,8 @@ function d3sankeyMultiple() {
 	computeNodeLinks();
 	computeNodeValues();
 	computeNodeBreadths();
-//	computeNodeDepths(iterations);
-//	computeLinkDepths();
+	computeNodeDepths(iterations);
+	computeLinkDepths();
 	return sankey;
     };
 
@@ -262,6 +262,15 @@ function d3sankeyMultiple() {
 	}
 	return ret;
     }
+
+    function arrayContains(arr, id){
+	for(let i = 0; i < arr.length; i++){
+	    if(arr[i] == id){
+		return true;
+	    }
+	}
+	return false;
+    }
     
     // Iteratively assign the (x-position) for each node.
     // Nodes are assigned the maximum breadth of incoming neighbors plus one;
@@ -272,27 +281,43 @@ function d3sankeyMultiple() {
             nextNodes = [],
             depthArr = [];
 
-	for(var i = 0 ; i < graphCount; i++){
-	    let remainingNodes = nodes;
+	for(var i = 0 ; i < 1; i++){
 	    let depth = 0;
-	    while (remainingNodes.length) {		
-		console.log(remainingNodes.length);
+	    while (graphNodes.length) {		
 		nextNodes = [];
-		remainingNodes.forEach(function(node) {
-		    node.depth = depth;
+		graphNodes.forEach(function(node) {
+		    console.log(node.name);
+		    if(node.name == 'Root'){
+			node.depth = 0;
+		    }
+		    else if(node.name == 'libmonitor.so.0.0.0' || node.name == 'unknown'){
+			node.depth = 1;
+		    }
+		    else if(node.name == 'lulesh2.0'){
+			node.depth = 2;
+		    }
+		    else{
+			node.depth = 3;
+		    }
+		    
+//		    node.depth = Math.ceil(Math.random()*5);
 		    node.dx = nodeWidth;
 		    node.sourceLinks.forEach(function(link) {
-			console.log(nodes[nodeIDMap[link.targetLabel]]);
-	//		nextNodes.push(nodes[nodeIDMap[link.targetLabel]]);
+			if(node.specialID[0] != link.targetLabel){
+//			    nextNodes.push(nodes[nodeIDMap[link.targetLabel]]);
+			}
 		    });
 		});
-		remainingNodes = nextNodes;
+		graphNodes = nextNodes;
 		++depth;
 	    }
 	    depthArr.push(depth);
 	}
+	console.log(depthArr);
+	depthArr = [5,4,3,2,1,0];
 	minDistanceBetweenNode = nodeWidth * 2;
 	let depthMax = d3max(depthArr);
+	console.log(depthMax);
 //	moveSourcesRight(depthMax);
 	var minX;
 	if(depthMax < 5){
@@ -314,12 +339,13 @@ function d3sankeyMultiple() {
 
     function scaleNodeBreadths(kx) {
 	nodes.forEach(function(node) {
-	    if(node.depth < 4){
+	    //	    if(node.depth > 0){
+	    console.log(node.depth);
 		node.x = node.depth * minDistanceBetweenNode;
-	    }
-	    else{
-		node.x = widthScale(node.depth);
-	    }
+//	    }
+//	    else{
+//		node.x = widthScale(node.depth);
+//	    }
 	});
     }
 
@@ -397,7 +423,6 @@ function d3sankeyMultiple() {
 /*		nodes.sort(function(a,b){
 		    return a["parY"] - b["parY"];
 		    })*/
-
 		nodes.sort(function(a,b){
 		    return a.value - b.value;
 		})
@@ -405,6 +430,7 @@ function d3sankeyMultiple() {
 
 	    links.forEach(function(link) {
 		link.dy = Math.ceil(link.value * ky);
+		console.log(link.dy);
 	    });
 	}
 
