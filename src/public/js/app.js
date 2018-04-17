@@ -199,13 +199,14 @@ function getSankey(lmID){
 	url: '/getSankey',
 	data: { 'lmID': lmID },
 	success: function(data){
-	    let dualViewEnable = true;
+        console.log(data);
+/*	    let dualViewEnable = true;
 	    if(dualViewEnable){
 		dualView(data);
 	    }
 	    else{
 		splitView(data);
-	    }
+	    }*/
 	},
 	error: function(err){
 	    console.log(err);
