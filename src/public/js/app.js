@@ -145,12 +145,23 @@ function nodesObjToArr(nodes){
 
     nodesArr.sort(function(a,b){
 	return a['sankeyID'] - b['sankeyID'];
-    })
-
+    })    
     return nodesArr;    
 }
 
-function splitView(data){
+function singleView(data){
+    let diffSankey1 = new diffSankey({
+	ID: '#procedure_view',
+	width: $('#procedure_view').width(),
+	height: $('#procedure_view').height(),
+	margin: { top: 0, right: 10, bottom: 10, left:10 },
+	data: { 'nodes': data['nodes'], 'links': data['edges'] , 'graphCount': graphs.length, 'nodeIDMap': nodeIDMap },
+	clickCallBack: nodeClickCallBack,
+	maxNodeSize: maxNodeSize
+    });
+}
+
+function dualView(data){
     let graphs = data["graphs"][0];
     let histogramData = data["histogramData"];
     let nodes0Arr = nodesObjToArr(graphs[0].nodes);
@@ -199,14 +210,14 @@ function getSankey(lmID){
 	url: '/getSankey',
 	data: { 'lmID': lmID },
 	success: function(data){
-        console.log(data);
-/*	    let dualViewEnable = true;
-	    if(dualViewEnable){
-		dualView(data);
-	    }
-	    else{
-		splitView(data);
-	    }*/
+	    singleView(data);
+	    // let dualViewEnable = true;
+	    // if(dualViewEnable){
+	    // 	dualView(data);
+	    // }
+	    // else{
+	    // 	splitView(data);
+	    // }
 	},
 	error: function(err){
 	    console.log(err);

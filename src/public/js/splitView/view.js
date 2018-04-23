@@ -254,7 +254,7 @@ function aggregateEdges(nodes, graphs, nodeIDMap, labelIDMap){
     return ret;
 }
 
-function dualView(data){
+function splitView(data){
     let maxNodeSize = 300;
     let graph = data['graphs'][0];
     let aggrNodes = [];
