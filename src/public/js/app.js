@@ -150,15 +150,19 @@ function nodesObjToArr(nodes){
 }
 
 function singleView(data){
-    let diffSankey1 = new diffSankey({
-	ID: '#procedure_view',
-	width: $('#procedure_view').width(),
-	height: $('#procedure_view').height(),
-	margin: { top: 0, right: 10, bottom: 10, left:10 },
-	data: { 'nodes': data['nodes'], 'links': data['edges'] , 'graphCount': graphs.length, 'nodeIDMap': nodeIDMap },
-	clickCallBack: nodeClickCallBack,
-	maxNodeSize: maxNodeSize
-    });
+    let graphs = data['graphs'];
+    for(let i = 0; i < graphs.length; i++){
+        console.log(graphs[i]);
+        let sankey = new singleSankey({
+	        ID: '#procedure_view',
+	        width: $('#procedure_view').width(),
+	        height: $('#procedure_view').height(),
+	        margin: { top: 0, right: 10, bottom: 10, left:10 },
+	        data: graphs[i],
+	        clickCallBack: nodeClickCallBack,
+	        maxNodeSize: maxNodeSize
+        });
+    }
 }
 
 function dualView(data){
