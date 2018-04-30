@@ -6,11 +6,9 @@ import json
 import uuid
 import argparse
 from hpctoolkit_format import *
+from caliper_format import *
 
 format = ""
-runtime = {}
-label = {}
-sankeyIDMap = {}
 gfs = []
 graphs = {}
 app = Flask(__name__, static_url_path='/public')
@@ -39,7 +37,6 @@ def create_gf(paths, file_format):
       gf.from_hpctoolkit(paths[i])
     elif file_format == 'caliper':
       gf.from_caliper(paths[i])
-      print gf
     ret.append(gf)
   return ret
 
@@ -81,11 +78,8 @@ if __name__ == '__main__':
 
   # Parse using the hpctoolkit format
   if file_format == 'hpctoolkit':
-    a = hpctoolkit_format()
-    graphs = a.run(gfs)
+    graphs = hpctoolkit_format().run(gfs);
   elif file_format == 'caliper':
-    graphs = caliper_format(gfs)
+    graphs = caliper_callflow_format().run(gfs);
 
-  
-    
   app.run(debug = True, use_reloader=True)

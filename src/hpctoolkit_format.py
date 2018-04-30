@@ -1,6 +1,6 @@
 from hatchet import *
 
-class hpctoolkit_format:
+class hpctoolkit_format(object):
     
     def __init__(self):
         self.runtime = {}
