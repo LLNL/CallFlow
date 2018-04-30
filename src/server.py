@@ -4,7 +4,10 @@ import os
 import sys
 import json
 import uuid
+import argparse
+from hpctoolkit_format import *
 
+format = ""
 runtime = {}
 label = {}
 sankeyIDMap = {}
@@ -13,6 +16,12 @@ graphs = {}
 app = Flask(__name__, static_url_path='/public')
 app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), 'src')
 
+def parse_arguments():
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--file_format", help="Format: caliper(.json) | hpctoolkit")
+  parser.add_argument("--input_file", help="Input file")
+  args = parser.parse_args()
+  return args
 
 # Input: JSON File
 # Output: path to the data
@@ -22,133 +31,21 @@ def read_file(jsonfile):
 
 # Input: paths array from JSON file
 # Output: Array of graphFrames
-def create_gf(paths):
+def create_gf(paths, file_format):
   ret = []
   for i in range(0, len(paths)):
     gf = GraphFrame()
-    gf.from_hpctoolkit(paths[i])
+    if file_format == 'hpctoolkit':
+      gf.from_hpctoolkit(paths[i])
+    elif file_format == 'caliper':
+      gf.from_caliper(paths[i])
+      print gf
     ret.append(gf)
   return ret
 
-# Input : ./xxx/xxx/yyy
-# Output: yyy
-def sanitizeName(name):
-  if name == None:
-    return None
-  name_split = name.split('/')
-  return name_split[len(name_split) - 1]  
-
-def construct_nodes(gf, level):
-  ret = []
-  sankeyID = 1
-  module_df = gf.dataframe.groupby('module')
-
-  runtime['<program root>'] = 2998852.0
-  label['<program root>'] = 'LM0'
-  sankeyIDMap['<program root>'] = 0
-  ret.append({ 'exc': 0.0, 'inc': 2998852.0, 'name': "<program root>", 'sankeyID': 1, 'lmID': 'LM0', 'level': 0 })
-  nodeCount = 1;
-
-  for key, item in module_df:
-    node = {}
-    node['inc'] = module_df[['CPUTIME (usec) (I)']].get_group(key).sum()[0]
-    node['exc'] = module_df[['CPUTIME (usec) (E)']].get_group(key).sum()[0]
-    node['name'] = sanitizeName(key)
-    node['level'] = level[sanitizeName(key)]
-    node['lmID'] = 'LM' + str(nodeCount)
-    runtime[sanitizeName(key)] = module_df[['CPUTIME (usec) (E)']].get_group(key).sum()[0]    
-    label[sanitizeName(key)] = 'LM' + str(nodeCount)
-    sankeyIDMap[sanitizeName(key)] = sankeyID
-    node['sankeyID'] = sankeyID
-    sankeyID = sankeyID + 1
-    nodeCount += 1
-    ret.append(node)
-  # label[''] = 'LM' + str(nodeCount)
-  # sankeyIDMap[''] = nodeCount
-  # ret.append({'exc': 0.0, 'inc': 0.0, 'name': '', 'sankeyID': sankeyID, 'lmID': label[''], 'level': 6 })
-  return ret
-
-def assign_levels(gf):
+def caliper_format(gfs):
   ret = {}
-  ret['<program root>'] = 0
-  visited, queue = set(), gf.graph.roots
-  while queue:
-    node = queue.pop(0)
-    # Not the right way
-    current = sanitizeName(node.module)
-    parent = sanitizeName(node.parentModule)
-    if current in ret.keys():
-      ret[current] = ret[current]
-    else:
-      ret[current] = ret[parent] + 1
-        
-    if node not in visited:
-      visited.add(node)
-      queue.extend(node.children)
   return ret
-
-
-def construct_edges(gf, level):
-  # Not sure why there is a need to initialize gf again 
-  gf = GraphFrame()
-  gf.from_hpctoolkit('../data/calc-pi')
-  ret = []
-  edges = []
-  edgeMap = {}
-  count = 0 
-  v, q = set(), gf.graph.roots
-  while q:
-    node = q.pop(0)
-    
-    source = node.parentModule
-    target = node.module
-
-    source = sanitizeName(source)
-    target = sanitizeName(target)
-
-    if source != None and target != None and level[source] != level[target]:
-      edgeLabel = source + '-' + target 
-      edge = {}
-      edge['sourceInfo'] = {
-        'level' : level[source],
-        'label': label[source],
-        'name': source
-      }
-      edge['sourceID'] = sankeyIDMap[source]
-      edge['targetInfo'] = {
-        'level': level[target],
-        'label': label[target],
-        'name': target
-      }
-      edge['targetID'] = sankeyIDMap[target]
-      edge['value'] = runtime[source]
-      edgeMap[edgeLabel] = count
-      edges.append(edge)
-      count += 1
-          
-    if node.module not in ret:
-      ret.append(node.module)
-
-    if node not in v:
-      v.add(node)
-      q.extend(node.children)
-  return edges
-
-# Input : [<GraphFrame>, <GraphFrame>,...]
-# Output: { graphs: [{ nodes: [], edges: [] }, ...] } 
-def callflow_format(gfs):
-  ret = {}
-  graphs = []
-  graphID = 0
-  for gf in gfs:
-    print gf.graph.to_string(gf.graph.roots, gf.dataframe, threshold=0.0)
-    level = assign_levels(gf)
-    nodes = construct_nodes(gf, level)
-    edges = construct_edges(gf, level)
-    graphs.append({ "nodes": nodes, "edges": edges, "graphID": graphID })
-    graphID += 1
-  ret = { "graphs" : graphs }
-  return ret    
 
 # App routes 
 @app.route('/')
@@ -170,7 +67,25 @@ def dataSetInfo():
     })
 
 if __name__ == '__main__':
-  paths = read_file(sys.argv[1])
-  gfs = create_gf(paths)
-  graphs = callflow_format(gfs)
+  # Read arguments from command line
+  args = parse_arguments()
+  
+  # Set the format (caliper | hpctoolkit)
+  file_format = args.file_format
+  
+  # Parse the file (--file) according to the format. 
+  paths = read_file(args.input_file)
+
+  # Create the graph frame 
+  gfs = create_gf(paths, file_format)
+
+  # Parse using the hpctoolkit format
+  if file_format == 'hpctoolkit':
+    a = hpctoolkit_format()
+    graphs = a.run(gfs)
+  elif file_format == 'caliper':
+    graphs = caliper_format(gfs)
+
+  
+    
   app.run(debug = True, use_reloader=True)
