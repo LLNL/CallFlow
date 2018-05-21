@@ -117,7 +117,6 @@ function d3sankeySingle() {
                 x3 = xi(1 - curvature),
                 y0 = d.source.y + d.sy + d.dy / 2,
                 y1 = d.target.y + d.ty + d.dy / 2;
-            // console.log(d.dy, d);
             return "M" + x0 + "," + y0
                 + "C" + x2 + "," + y0
                 + " " + x3 + "," + y1
@@ -187,15 +186,13 @@ function d3sankeySingle() {
     // Compute the value (size) of each node by summing the associated links.
     function computeNodeValues() {
         nodes.forEach(function(node) {
-            
+
+            console.log(node);
             node.value = Math.max(
-                d3sum(node.sourceLinks,'value'),
-                d3sum(node.targetLinks,'value')
+                d3.sum(node.sourceLinks,value),
+                d3.sum(node.targetLinks,value)
             );
-
-            console.log(d3sum(node.sourceLinks,'value'), d3sum(node.targetLinks,'value'))
-            console.log(node.value, node.name);
-
+ 
             // if(node.level ==  0){
             //   console.log(node.sourceLinks, node);
             //   node.value = d3.sum(node.sourceLinks, value);
@@ -317,7 +314,6 @@ function d3sankeySingle() {
             .entries(nodes)
             .map(function(d) { return d.values; });
 
-        //
         initializeNodeDepth();
         resolveCollisions();
         for (var alpha = 1; iterations > 0; --iterations) {
@@ -334,7 +330,7 @@ function d3sankeySingle() {
                     divValue = referenceValue;
                 }
                 else{
-                    divValue = d3.sum(nodes, value);
+                    divValue = d3sum(nodes, "value");
                 }
                 return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
             });
@@ -351,6 +347,8 @@ function d3sankeySingle() {
                     });
                     node.y = Math.max(maxY, i);
                     node.parY = maxY;
+
+                    console.log(node.value);
                     node.dy = node.value * ky;
                     console.log(node.value, node.name, ky)
                 });

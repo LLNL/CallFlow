@@ -51,7 +51,8 @@ function singleSankey(args){
     let graphID = data['graphID'];
 
     data["edges"].forEach(function(edge){
-	    let label = edge['sourceInfo'].label;
+	    let label = edge['sourceInfo'].name;
+        let graphID = edge['sourceInfo'].label;
 	    if(label == '<program root>'){
 	        if(rootRunTime[graphID] == undefined){
 		        rootRunTime[graphID] = 0;
@@ -64,18 +65,24 @@ function singleSankey(args){
 
     resetStat();
 
+    var outGoing = [];
+	var inComing = [];
     data["nodes"].forEach(function(node){
-	    var outGoing = [];
-	    var inComing = [];
 	    var nodeLabel = node["lmID"];
+        
 	    data["edges"].forEach(function(edge){
+            let graphID = edge['sourceInfo'].label;
 	        if(edge["sourceInfo"].label == nodeLabel){
 		        if(outGoing[graphID] == undefined){
 		            outGoing[graphID] = 0;
 		        }
 		        outGoing[graphID] += edge["value"];
 	        }
-	        else if(edge["targetInfo"].label == nodeLabel){
+        });
+        
+        data["edges"].forEach(function(edge){
+            let graphID = edge['targetInfo'].label;
+	        if(edge["targetInfo"].label == nodeLabel){
 		        if(inComing[graphID] == undefined){
 		            inComing[graphID] = 0;
 		        }
@@ -83,19 +90,19 @@ function singleSankey(args){
 	        }
 	    })
 
-	    if(outGoing[graphID] == undefined){
-	        outGoing[graphID] = 0;
+	    if(outGoing[nodeLabel] == undefined){
+	        outGoing[nodeLabel] = 0;
 	    }
 
-	    if(inComing[graphID] == undefined){
-	        inComing[graphID] = 0;
+	    if(inComing[nodeLabel] == undefined){
+	        inComing[nodeLabel] = 0;
 	    }
 	    
-	    node["out"] = outGoing[graphID];
-	    node["in"] = inComing[graphID];
+	    node["out"] = outGoing[nodeLabel];
+	    node["in"] = inComing[nodeLabel];
 
-	    node["inclusive"] = Math.max(inComing[graphID], outGoing[graphID]);
-	    node["exclusive"] = Math.max(inComing[graphID], outGoing[graphID]) - outGoing[graphID];
+	    node["inclusive"] = Math.max(inComing[nodeLabel], outGoing[nodeLabel]);
+	    node["exclusive"] = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel];
 
 	    calcStat(node["inclusive"], node["exclusive"])
     });
@@ -195,25 +202,25 @@ function singleSankey(args){
 	        .attr("transform", "translate(" + 5 + "," + 5 + ")");
     }
 
-    {
-	    // Set the sankey diagram properties
-	    sankey = d3sankeySingle()
-	        .nodeWidth(nodeWidth)
-	        .nodePadding(ySpacing)
-	        .size([width * 1.05, treeHeight - ySpacing])
-	        .xSpacing(xSpacing)
-	        .setReferenceValue(rootRunTime);
+    // {
+	//     // Set the sankey diagram properties
+	//     sankey = d3sankeySingle()
+	//         .nodeWidth(nodeWidth)
+	//         .nodePadding(ySpacing)
+    //         .size([width * 1.05, treeHeight - ySpacing])
+	//         .xSpacing(xSpacing)
+	//         .setReferenceValue(rootRunTime);
         
-	    var path = sankey.link();
+	//     var path = sankey.link();
         
-	    // load the data
-	    var graph_zero = data
-	    graph = rebuild(graph_zero.nodes, graph_zero.edges);
+	//     // load the data
+	//     var graph_zero = data
+	//     graph = rebuild(graph_zero.nodes, graph_zero.edges);
         
-	    sankey.nodes(graph.nodes)
-	        .links(graph.links)
-	        .layout(32);	
-    }
+	//     sankey.nodes(graph.nodes)
+	//         .links(graph.links)
+	//         .layout(32);	
+    // }
 
     function visualize(removeIntermediate){
 	    //remove all histograms
@@ -349,7 +356,7 @@ function singleSankey(args){
 	    // add the rectangles for the nodes
 	    var rect = node.append("rect")
 	        .attr("height", function (d) {
-		        console.log(d.dy, d.name, d.dx);
+  		        console.log(d.dy, d.name, d.dx);
 		        return d.dy;
 	        })
 	        .attr("width", sankey.nodeWidth())
