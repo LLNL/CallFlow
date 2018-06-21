@@ -14,17 +14,16 @@
 import Layout from './goldenLayout'
 import View from './view'
 import ControlUI from './components/controlUI'
+import Vis from './components/vis'
+import SpinnerWrapper from './components/spinnerWrapper'
 
 let layout = new Layout()
 
 function start(){
     let controlUI =  new ControlUI();
-    functionListUI();
-    var parentOfSankeyView =  document.getElementById("procedure_view").parentElement;        
-    target = parentOfSankeyView;
-    spinner = new Spinner(opts).spin(parentOfSankeyView);
-    spinner.stop();
-    startVis();
+    //    let functionListUI = new FunctionListUI();
+    let vis = new Vis()
+    vis.init()
 }
 
 export {
@@ -32,31 +31,6 @@ export {
 }
 
 var debug = true;
-var opts = {
-    lines: 13 // The number of lines to draw
-    , length: 28 // The length of each line
-    , width: 14 // The line thickness
-    , radius: 42 // The radius of the inner circle
-    , scale: 1 // Scales overall size of the spinner
-    , corners: 1 // Corner roundness (0..1)
-    , color: '#000' // #rgb or #rrggbb or array of colors
-    , opacity: 0.25 // Opacity of the lines
-    , rotate: 0 // The rotation offset
-    , direction: 1 // 1: clockwise, -1: counterclockwise
-    , speed: 1 // Rounds per second
-    , trail: 60 // Afterglow percentage
-    , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
-    , zIndex: 2e9 // The z-index (defaults to 2000000000)
-    , className: 'spinner' // The CSS class to assign to the spinner
-    , top: '50%' // Top position relative to parent
-    , left: '50%' // Left position relative to parent
-    , shadow: false // Whether to render a shadow
-    , hwaccel: false // Whether to use hardware acceleration
-    , position: 'absolute' // Element positioning
-}
-
-var spinner;
-var target;
 var rectWidth = 20;
 var rectHeight = 20;
 var visData;
@@ -90,9 +64,6 @@ var dataSetInfo;
 var maxNodeSize = 0.75*window.innerHeight;
 
 function startVis(){
-    $("#control").css(
-	    "padding","5px"
-    );
     getNodeMetrics();
     getDataSetInfo();
     getSankey(0);
@@ -115,38 +86,6 @@ function getDataStat(){
     maxVal = max;
 }
 
-function getDataSetInfo(){
-    $.ajax({
-	    type:'GET',
-	    contentType: 'application/json',
-	    dataType: 'json',
-	    url: '/dataSetInfo',
-	    success: function(data){
-	        if(debug){
-		        console.log("[Getter] Dataset information: ", data);
-	        }
-	        dataSetInfo = data;
-	    },
-	    error: function(){
-	        console.log("There was problem with getting the metric data");
-	    }	
-    });				
-}
-
-function getNodeMetrics(){
-    // $.ajax({
-    //           type:'GET',
-    //           contentType: 'application/json',
-    //           dataType: 'json',
-    //           url: '/getNodeMetrics',
-    //           success: function(metricData){
-    //           	nodeMetrics = metricData;
-    //           },
-    //           error: function(){
-    //           	console.log("There was problem with getting the metric data");
-    //           }	
-    // });				
-}
 
 function nodesObjToArr(nodes){
     let nodesArr = [];
@@ -222,28 +161,6 @@ function dualView(data){
     })
 }
 
-function getSankey(lmID){
-    $.ajax({
-	    type: 'GET',
-	    contentType: 'application/json',
-	    dataType: 'json',
-	    url: '/getSankey',
-	    data: { 'lmID': lmID },
-	    success: function(data){
-//	        singleView(data);
-	        let dualViewEnable = true;
-	        if(dualViewEnable){
-	        	dualView(data);
-	        }
-	        else{
-	        	splitView(data);
-	        }
-	    },
-	    error: function(err){
-	        console.log(err);
-	    }
-    })
-}
 
 /*
   function getSankey(lmID){
@@ -328,76 +245,6 @@ function getSankey(lmID){
   }*/
 // getData();
 
-function getList(node){
-    $.ajax({
-	    type:'GET',
-	    contentType: 'application/json',
-	    dataType: 'json',
-	    url: '/getLists',
-	    data: {"specialID" : node["specialID"]},
-	    success: function(procedureListData){
-	        if(debug){
-		        console.log('[Getter] List: ', procedureListData);
-	        }
-	        listData = [];
-	        var procIDs = Object.keys(procedureListData);
-	        procIDs.forEach(function(procedureID){
-		        if(procedureListData[procedureID]['value'] >= rootRunTime * (1/100)){
-		            listData.push(procedureListData[procedureID]);
-		        }
-	        })
-	        displayList(listData);
-	    },
-	    error: function(){
-	        console.log("There was problem with getting the data");
-	    }	
-    });				
-}
-
-function getScatter(node){
-    $.ajax({
-	    type:'GET',
-	    contentType: 'application/json',
-	    dataType: 'json',
-	    url: '/getRuntimeOfNode',
-	    data: {"nodeID" : node.myID, "specialID" : node.specialID , "nodeLevel" : node.oldLevel, "lmID" : selectedLMID, "offset": (node.oldLevel - node.level), "name" : node.name},
-	    success: function(runTimes){
-	        if(debug){
-		        console.log('[Getter] Scatter plot data: ', runTimes);
-	        }
-	        scatterData = runTimes;
-	        showScatterPlot();
-	        histogramUI();
-	    },
-	    error: function(){
-	        console.log("There was problem with getting the data");
-	    }	
-    });				
-}
-
-function getHistogramScatterData(node){
-    var sankeyID = node["sankeyID"];
-    var specialID = node["specialID"];
-    $.ajax({
-	    type:'GET',
-	    contentType: 'application/json',
-	    dataType: 'json',
-	    url: '/getHistogramScatterData',
-	    data: {"sankeyID" : sankeyID, "specialID" : specialID},
-	    success: function(histScatData){
-	        if(debug){
-		        console.log('[Getter] Histogram Scatter Data: ', histScatData);
-	        }
-	        sankNodeDataHistScat = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
-	        showScatterPlot();
-	        histogramUI();
-	    },
-	    error: function(){
-	        console.log("There was problem with getting the data for histogram and scatter plot");
-	    }	
-    });	
-
-}
 
 
 function splitNode(){

@@ -157,3 +157,7 @@ label {
     stroke-width: 0px;
     shape-rendering: crispEdges;
 }
+
+#control{
+   padding: 5px;     
+}

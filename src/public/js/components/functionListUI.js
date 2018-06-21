@@ -32,8 +32,6 @@ function displayList(listData){
         return b["value"] - a["value"];
     })
     listData.forEach(function(dat){
-        // console.log(dat);
-	// create the necessary elements
 	var funcName = dat["name"].trunc(20) + ": [" + (dat["value"] * 0.000001).toFixed(3)  + "s, " + (dat["value"] /rootRunTime * 100).toFixed(3) + "%]" ;
 	var label = document.createElement("label");
 	var description = document.createTextNode(funcName);
