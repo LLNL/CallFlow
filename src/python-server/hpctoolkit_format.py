@@ -85,7 +85,7 @@ class hpctoolkit_format(object):
     def construct_edges(self, gf, level):
         # Not sure why there is a need to initialize gf again 
         gf = GraphFrame()
-        gf.from_hpctoolkit('../data/calc-pi')
+        gf.from_hpctoolkit('/Users/kesavan1/Suraj/llnl/CallFlow/data/calc-pi/')
         ret = []
         edges = []
         edgeMap = {}

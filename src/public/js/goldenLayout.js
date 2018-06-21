@@ -1,184 +1,191 @@
+import View from './view'
+import { start } from './app'
+
 //configuration for the layout of the page
-var config = {
+let config = {
     settings: {
-	showCloseIcon : false,
-	showPopoutIcon : false,
-	reorderEnabled : false
+	    showCloseIcon : false,
+	    showPopoutIcon : false,
+	    reorderEnabled : false
     },
 
     content: [{
-	type: 'row',
-	content: [
-	    {
-		type: 'column',
-		width: $(window).width() * 25,
-		content: [
-		    // {
+	    type: 'row',
+	    content: [
+	        {
+		        type: 'column',
+		        width: $(window).width() * 25,
+		        content: [
+		            // {
 
-		    // 	type: 'component',
-		    // 	componentName: 'testComponent',
-		    // 	// id: 'control',
-		    // 	componentState: {id : "control" },
-		    // 	isClosable: false,
-		    // 	title: "Control"								
-		    // },
-		    // {
+		            // 	type: 'component',
+		            // 	componentName: 'testComponent',
+		            // 	// id: 'control',
+		            // 	componentState: {id : "control" },
+		            // 	isClosable: false,
+		            // 	title: "Control"								
+		            // },
+		            // {
 
-		    // 	type: 'component',
-		    // 	componentName: 'testComponent',
-		    // 	// id: 'control',
-		    // 	componentState: {id : "stat_view" },
-		    // 	isClosable: false,
-		    // 	title: "Statistic View"								
-		    // },
-		    {
-			type: 'stack',
-			content: [
-			    {
-				type: 'component',
-				componentName: 'testComponent',
-				// id: 'control',
-				componentState: {id : "control" },
-				isClosable: false,
-				title: "Control"								
-			    },								
-			    {
-				type: 'component',
-				componentName: 'testComponent',
-				componentState: {id : "info_view" },
-				isClosable: false,
-				title: "Node Info"
-			    },								
-			    // {
-			    // 	type: 'component',
-			    // 	componentName: 'testComponent',
-			    // 	componentState: {id : "hist_view" },
-			    // 	isClosable: false,
-			    // 	title: "Histogram View"
-			    // },
-			    {
-				type: 'component',
-				componentName: 'testComponent',
-				componentState: {id : "scat_view" },
-				isClosable: false,
-				title: "Scatter Plot View"
-			    },
-			    {
-				type: 'component',
-				componentName: 'testComponent',
-				componentState: {id : "fList_view" },
-				isClosable: false,
-				title: "Function List"
-			    },								
-			]
-		    },
-		    {
-			// type: 'component',
-			// componentName: 'testComponent',
-			// // id: 'control',
-			// componentState: {id : "lm_view" },
-			// isClosable: false,
-			// title: "LM View"		
+		            // 	type: 'component',
+		            // 	componentName: 'testComponent',
+		            // 	// id: 'control',
+		            // 	componentState: {id : "stat_view" },
+		            // 	isClosable: false,
+		            // 	title: "Statistic View"								
+		            // },
+		            {
+			            type: 'stack',
+			            content: [
+			                {
+				                type: 'component',
+				                componentName: 'testComponent',
+				                // id: 'control',
+				                componentState: {id : "control" },
+				                isClosable: false,
+				                title: "Control"								
+			                },								
+			                {
+				                type: 'component',
+				                componentName: 'testComponent',
+				                componentState: {id : "info_view" },
+				                isClosable: false,
+				                title: "Node Info"
+			                },								
+			                // {
+			                // 	type: 'component',
+			                // 	componentName: 'testComponent',
+			                // 	componentState: {id : "hist_view" },
+			                // 	isClosable: false,
+			                // 	title: "Histogram View"
+			                // },
+			                {
+				                type: 'component',
+				                componentName: 'testComponent',
+				                componentState: {id : "scat_view" },
+				                isClosable: false,
+				                title: "Scatter Plot View"
+			                },
+			                {
+				                type: 'component',
+				                componentName: 'testComponent',
+				                componentState: {id : "fList_view" },
+				                isClosable: false,
+				                title: "Function List"
+			                },								
+			            ]
+		            },
+		            {
+			            // type: 'component',
+			            // componentName: 'testComponent',
+			            // // id: 'control',
+			            // componentState: {id : "lm_view" },
+			            // isClosable: false,
+			            // title: "LM View"		
 
-			type: 'component',
-			componentName: 'testComponent',
-			componentState: {id : "hist_view" },
-			isClosable: false,
-			title: "Histogram View"	
-		    }
-		]
-	    },
-	    {	
-		type: 'column',
-		width: $(window).width() * 70,
-		content: [
-		    {
-			type: 'stack',
-			content: [
-			    {
-				type: 'component',
-				componentName: 'testComponent',
-				componentState: { id: 'procedure_view' },
-				title: 'Graph View'
-			    },
-			    {
-				type: 'component',
-				componentName: 'testComponent',
-				componentState: { id: 'split_view' },
-				title: 'Split View'
-			    },
-			    
-			]
-		    }
-		]
-		
-	    }
-	]
+			            type: 'component',
+			            componentName: 'testComponent',
+			            componentState: {id : "hist_view" },
+			            isClosable: false,
+			            title: "Histogram View"	
+		            }
+		        ]
+	        },
+	        {	
+		        type: 'column',
+		        width: $(window).width() * 70,
+		        content: [
+		            {
+			            type: 'stack',
+			            content: [
+			                {
+				                type: 'component',
+				                componentName: 'testComponent',
+				                componentState: { id: 'procedure_view' },
+				                title: 'Graph View'
+			                },
+			                {
+				                type: 'component',
+				                componentName: 'testComponent',
+				                componentState: { id: 'split_view' },
+				                title: 'Split View'
+			                },
+			                
+			            ]
+		            }
+		        ]
+		        
+	        }
+	    ]
     }]			
 }
 
-var goldenLayout = new GoldenLayout( config , $("#main_container"));
-goldenLayout.registerComponent( 'testComponent', function( container, state ){
-    container.getElement().html( "<div id = " + state.id + " > </div>" );
+function setMainContainerBox(){
+    // Set the container width and height
+    $("#main_container").width( $(window).width() - 10);
+    $("#main_container").height( $(window).height() - $("#nav_bar").height() - 30);
+}
 
-    // donewithlayout();
-    ids.push(state.id);
-});
+export default class Layout {
+    constructor(){
+        setMainContainerBox()
+        this.layout = new GoldenLayout( config , $("#main_container"));
+        this.ids = []
+        
+        self = this
+        this.layout.registerComponent( 'testComponent', function( container, state ){
+            container.getElement().html( "<div id = " + state.id + " > </div>" );
+            self.ids.push(state.id);
+        });
+        
+        this.layout.on("initialised", function (){
+            self.update();
+            start()
+        });
 
-goldenLayout.on("initialised", donewithlayout);
+        this.layout.on('stateChanged', function(component){
+            self.update();
+        })
 
-goldenLayout.on('stateChanged', function(component){
-    updateDivSizes();
-})
-goldenLayout.init();
-
-function updateDivSizes(){
-    ids.forEach(function(myid){
-	$("#" + myid).width( $("#" + myid).parent().width() );
-	$("#" + myid).height( $("#" + myid).parent().height() );
-    })		
-
-    if(sankeyVis){
-	// console.log(d3.select("#procedure_view svg"));
-	// d3.select("#procedure_view svg")
-	// 	.attr("width", $("#procedure_view").width() )
-	// 	.attr("height", $("#procedure_view").height() )
-
-	sankeyVis1.updateSize({'width' : $("#procedure_view").width(),
-			      'height' : $("#procedure_view").height()/2 })
-
-	sankeyVis2.updateSize({'width' : $('#procedure_view').width(),
-			      'height': $('#procedure_view').height()/2 });
-    }	
-
-    if(scatterPot){
-	scatterPot.setContainerWidth( $("#scat_view").width() );
-	scatterPot.setContainerHeight( $("#scat_view").height() );
-	scatterPot.reDraw();
-    }
-    if(histogram){
-	histogram.setContainerWidth( $("#hist_view").width() );
-	histogram.setContainerHeight( $("#hist_view").height() );
-	histogram.reDraw();
-
-    }
-
-    $("#list_view").width( $("#fList_view").width() );
-    $("#list_view").height( $("#fList_view").height() - 50 );
-    if(listData){
-	displayList();
+        this.layout.init();
     }
 }
 
-function donewithlayout(){
-    updateDivSizes();
-    // getData();
-    controlUI ();
-    functionListUI();
-    var parentOfSankeyView =  document.getElementById("procedure_view").parentElement;
+Layout.prototype.update = function(ids){
+    this.ids.forEach(function(id){
+	    $("#" + id).width( $("#" + id).parent().width() );
+	    $("#" + id).height( $("#" + id).parent().height() );
+    })		
 
-    target = parentOfSankeyView;
-    spinner = new Spinner(opts).spin(parentOfSankeyView);
-    spinner.stop();
-    startVis();
+    // Commenting for now...
+    // if(sankeyVis){
+	//     // console.log(d3.select("#procedure_view svg"));
+	//     // d3.select("#procedure_view svg")
+	//     // 	.attr("width", $("#procedure_view").width() )
+	//     // 	.attr("height", $("#procedure_view").height() )
+
+	//     sankeyVis1.updateSize({'width' : $("#procedure_view").width(),
+	// 		                   'height' : $("#procedure_view").height()/2 })
+
+	//     sankeyVis2.updateSize({'width' : $('#procedure_view').width(),
+	// 		                   'height': $('#procedure_view').height()/2 });
+    // }	
+
+    // if(scatterPot){
+	//     scatterPot.setContainerWidth( $("#scat_view").width() );
+	//     scatterPot.setContainerHeight( $("#scat_view").height() );
+	//     scatterPot.reDraw();
+    // }
+    // if(histogram){
+	//     histogram.setContainerWidth( $("#hist_view").width() );
+	//     histogram.setContainerHeight( $("#hist_view").height() );
+	//     histogram.reDraw();
+
+    // }
+
+    // $("#list_view").width( $("#fList_view").width() );
+    // $("#list_view").height( $("#fList_view").height() - 50 );
+    // if(listData){
+	//     displayList();
+    // }
 }

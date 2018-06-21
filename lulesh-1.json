@@ -1,7 +1,7 @@
 {
     "dataName" : "Lulesh-1",
     "numbNodes" : "2",
-    "path" : ["/home/vidi/Suraj/llnl/CallFlow/data/lulesh-1/db-ampi4-100-1"],
+    "path" : ["/Users/kesavan1/Suraj/llnl/CallFlow/data/lulesh-1/db-ampi4-100-1"],
     "experiment" : "experiment.xml", 
     "nodeMetric" : "nodeData.json",
     "config" : "config.json",

@@ -13,7 +13,7 @@ gfs = []
 graphs = {}
 app = Flask(__name__, static_url_path='/public')
 app.debug = True
-app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), 'src')
+app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), '')
 
 def parse_arguments():
   parser = argparse.ArgumentParser()

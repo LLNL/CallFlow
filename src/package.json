@@ -7,7 +7,6 @@
     "babel": "^6.23.0",
     "bluebird": "^3.5.1",
     "bower": "^1.8.0",
-    "browserify": "^16.2.2",
     "budo": "^11.2.2",
     "check-types": "^7.0.1",
     "eslint": "^4.12.1",
@@ -27,6 +26,11 @@
     "xmljs": "^0.3.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.0.0-beta.51",
+    "@babel/preset-env": "^7.0.0-beta.51",
+    "babel-core": "^6.26.3",
+    "babelify": "^9.0.0",
+    "browserify": "^16.2.2",
     "eslint-plugin-import": "^2.8.0"
   },
   "scripts": {
