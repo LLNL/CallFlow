@@ -13,11 +13,12 @@
 
 import Layout from './goldenLayout'
 import View from './view'
+import ControlUI from './components/controlUI'
 
 let layout = new Layout()
 
 function start(){
-    controlUI();
+    let controlUI =  new ControlUI();
     functionListUI();
     var parentOfSankeyView =  document.getElementById("procedure_view").parentElement;        
     target = parentOfSankeyView;
