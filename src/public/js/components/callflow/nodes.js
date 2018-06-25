@@ -1,3 +1,14 @@
+import Color from './color.js'
+
+function calcTextSize(text) {
+	if (!d3) return;
+	var container = d3.select('body').append('svg');
+	container.append('text').attr({ x: -99999, y: -99999 }).text(text);
+	var size = container.node().getBBox();
+	container.remove();
+	return { width: size.width, height: size.height };
+}
+
 export default function drawNodes(graph, view){
     let node = view.nodes.selectAll(".node")
 	    .data(graph.nodes)
@@ -10,9 +21,8 @@ export default function drawNodes(graph, view){
 		        return "node";
 		    }		    	
 	    })
-	    .attr('opacity' , 0)
+	    .attr('opacity' , 1)
 	    .attr("transform", function (d) {
-            console.log(d.x, d.y, d.name)
 		    return "translate(" + d.x + "," + d.y + ")";
 	    })
 
@@ -20,20 +30,19 @@ export default function drawNodes(graph, view){
 	// add the rectangles for the nodes
 	let rect = node.append("rect")
 	    .attr("height", function (d) {
-  		    console.log(d.dy, d.name, d.dx);
+//  		    console.log(d.dy, d.name, d.dx);
 		    return d.dy;
 	    })
 	    .attr("width", view.nodeWidth)
 	    .style("fill", function (d) {
-		    var temp = {"name" : d.name.replace(/ .*/, ""),
-			            "color" : color(d.name.replace(/ .*/, ""))}
-		    nodeList.push(temp);
+//		    var temp = {"name" : d.name.replace(/ .*/, ""),
+//			            "color" : view.color(d.name.replace(/ .*/, ""))}
+//		    nodeList.push(temp);
 		    if(d.name == "intermediate"){
 		        return 'grey'
 		    }
 		    else{
-//                console.log(setNodeColor(d))
-                return d.color = setNodeColor(d);
+                return view.color.getColor(d);
 		    }
 
 	    })
@@ -48,7 +57,7 @@ export default function drawNodes(graph, view){
 	    .style("shape-rendering", "crispEdges")
 	    .style("stroke", function (d) {
 		    if(d.name != "intermediate"){
-		        return d3.rgb(d.color).darker(2);
+		        return d3.rgb(view.color.getColor(d)).darker(2);
 		    }
 		    else{
 		        return 'grey';
@@ -117,7 +126,7 @@ export default function drawNodes(graph, view){
 		        return 'grey'
 		    }
 		    else{
-		        return d.color
+		        return view.color.getColor(d)
 		    }
 	    })
 	    .style('fill-opacity', function(d){
@@ -146,7 +155,7 @@ export default function drawNodes(graph, view){
 	    .style('opacity', 0)
 	    .text(function (d) {
 	    	if(d.name != "intermediate"){
-	    	    if(d.dy < minHeightForText ) {
+	    	    if(d.dy < view.minHeightForText ) {
 	    		    return "";
 	    	    }
 	    	    else {

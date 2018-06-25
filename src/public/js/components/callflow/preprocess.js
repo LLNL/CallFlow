@@ -1,9 +1,9 @@
 export default function preprocess(graph){    
     let rootRunTime = calculateRootRunTime(graph.edges)
-    graph.nodes = calculateFlow(graph.nodes, graph.edges)
+    graph = calculateFlow(graph)
 
     // Not sure why this is needed! 
-    graph.nodes = moreProcessing(graph.nodes)
+    graph = moreProcessing(graph)
     return graph
 }
 
@@ -24,7 +24,9 @@ function calculateRootRunTime(edges) {
     return ret;
 }
 
-function calculateFlow(nodes, edges){
+function calculateFlow(graph){
+    let nodes = graph.nodes
+    let edges = graph.edges
     let outGoing = [];
 	let inComing = [];
     nodes.forEach((node) => {
@@ -64,13 +66,13 @@ function calculateFlow(nodes, edges){
 	    node["inclusive"] = Math.max(inComing[nodeLabel], outGoing[nodeLabel]);
 	    node["exclusive"] = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel];
 
-	    calcStat(node["inclusive"], node["exclusive"])
+	    calcStat(graph, node["inclusive"], node["exclusive"])
     })
     
-    return nodes
+    return graph
 }
 
-function moreProcessing(nodes){
+function moreProcessing(graph){
     let stat = {
 	    "inTimeMin" : Number.MAX_SAFE_INTEGER,
 	    "inTimeMax" : 0,
@@ -81,35 +83,33 @@ function moreProcessing(nodes){
     };
 
     // For now I am changing inTime to inc, exTime to exc. Not sure if this is needed. 
-    nodes.forEach((data) => {
-	    stat["inTimeMin"] = Math.min(stat["inTimeMin"], data["inc"]);
-	    stat["inTimeMax"] = Math.max(stat["inTimeMax"], data["inc"]);
-	    stat["exTimeMin"] = Math.min(stat["exTimeMin"], data["exc"]);
-	    stat["exTimeMax"] = Math.max(stat["exTimeMax"], data["exc"]);
-//	    stat["imPercMin"] = Math.min(stat["imPercMin"], data["imPerc"]);
-//	    stat["imPercMax"] = Math.max(stat["imPercMax"], data["imPerc"]);
+    graph.nodes.forEach((data) => {
+	    graph.stat.inTimeMin = Math.min(graph.stat.inTimeMin, data.inc);
+	    graph.stat.inTimeMax = Math.max(graph.stat.inTimeMax, data.inc);
+	    graph.stat.exTimeMin = Math.min(graph.stat.exTimeMin, data.exc);
+	    graph.stat.exTimeMax = Math.max(graph.stat.exTimeMax, data.exc);
+        //	    graph.stat.imPercMin = Math.min(graph.stat.imPercMin, data.imPerc);
+        //	    graph.stat.imPercMax = Math.max(graph.stat.imPercMax, data.imPerc);
     });
 
-    return nodes
+    return graph
 }
 
-function calcStat(inTime, exTime){
-    let stat = resetStat()
-    stat.maxInc = Math.max(stat.maxInc, inTime);
-	stat.minInc = Math.min(stat.minInc, inTime);
-	stat.maxExc = Math.max(stat.maxExc, exTime);
-	stat.minExc = Math.min(stat.minExc, exTime);
-
-    return stat
+function calcStat(graph, inTime, exTime){
+    graph.stat = resetStat()
+	graph.stat.minInc = Math.min(graph.stat.minInc, inTime)
+    graph.stat.maxInc = Math.max(graph.stat.maxInc, inTime)
+	graph.stat.minExc = Math.min(graph.stat.minExc, exTime)
+    graph.stat.maxExc = Math.max(graph.stat.maxExc, exTime)
 }
 
 
 function resetStat(){
     let stat = {}
-    stat.maxInc = 0;
-	stat.minInc = Number.MAX_SAFE_INTEGER;
-	stat.maxExc = 0;
-	stat.minExc = Number.MAX_SAFE_INTEGER;
+    stat.maxInc = 0
+	stat.minInc = Number.MAX_SAFE_INTEGER
+	stat.maxExc = 0
+	stat.minExc = Number.MAX_SAFE_INTEGER
     return stat
 }
 
