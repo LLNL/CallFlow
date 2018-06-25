@@ -17,6 +17,7 @@ export default class CallFlow{
         this.view.margin = prop.margin || { top: 10, right: 30, bottom: 10, left: 10 }
         this.view.width = (prop.width || 900) - prop.margin.left - prop.margin.right
         this.view.height = prop.height || 900 - prop.margin.top - prop.margin.bottom        
+        this.view.transitionDuration = 1000
         this.view.color = null
         
         // Data properties 
@@ -37,7 +38,6 @@ export default class CallFlow{
 CallFlow.prototype.render = function(){
     this.view.color = new Color()
     this.view.color.setColorScale(this.graph.stat.minInc, this.graph.stat.maxInc, this.graph.stat.minExc, this.graph.stat.maxExc)
-    console.log(this.view)
     drawEdges(this.graph, this.view)
     drawNodes(this.graph, this.view)
 }
