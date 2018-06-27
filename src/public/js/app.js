@@ -675,6 +675,7 @@ function nodeClickCallBack(res){
 }
 
 function getList(node){
+    console.log(node['specialID'])
     $.ajax({
 	type:'GET',
 	contentType: 'application/json',

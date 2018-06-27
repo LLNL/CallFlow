@@ -15,6 +15,7 @@
     "isdev": "^1.0.1",
     "libxmljs": "^0.18.4",
     "line-by-line": "^0.1.5",
+    "npm": "^6.1.0",
     "path": "^0.12.7",
     "tree-model": "^1.0.6",
     "xml-parser": "^1.2.1",

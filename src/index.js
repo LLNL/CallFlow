@@ -41,17 +41,12 @@ app.use(express.static(`${__dirname}/public`));
 const fs = require('fs');
 const argv = require('yargs').argv;
 const LineByLineReader = require('line-by-line');
-const CalcLM3 = require('./server/sankeyCalc.js');
+const calcLM3 = require('./server/sankeyCalc.js');
 const SankeySplitNode = require('./server/xmlParser.js');
 
 let nodeArray;
 let sanKeyMetricDataLM;
 let sankeyData;
-let procIDArray = [];
-let splitByParentList = [];
-let entryExitDataNodeSplit;
-let nodePaths;
-let functionList;
 let date1;
 let date2;
 let staticGraph; // this is the static graph we can load upond page refresh;
@@ -69,7 +64,12 @@ let procedureTable;
 let resGlobal = null; // this is use to return the data to the browser
 
 const nodeMetric = {};
-const nodeIDKeep = []; // a array of node id got when read in the metric file
+const nodeIDKeep = []; // an array of node ids from the metric file
+let procIDArray = [];
+let splitByParentList = [];
+let entryExitDataNodeSplit;
+let nodePaths;
+let functionList;
 
 /* Unused variables */
 // const splitParentList = {};
@@ -185,7 +185,7 @@ function sankeySplitNodeCallBack(data) {
 
     //  const cTime1 = new Date();
     // var lmcalc = new calcLM3(nodeArray, nodeMetric, sanKeyMetricDataLM, nodePaths);
-    const lmcalc = new CalcLM3(nodeArray, nodeMetric, sanKeyMetricDataLM, nodePaths, connectionInfo);
+    const lmcalc = new calcLM3(nodeArray, nodeMetric, sanKeyMetricDataLM, nodePaths, connectionInfo);
 
     // var lmcalc = new calcMiranda(finalTree, nodeList, nodePaths, nodeMetric, keepEdges);
 
@@ -278,6 +278,7 @@ app.get('/splitNode', (req, res) => {
 
     const idList = req.query.idList;
 
+    console.log(idList)
     idList.forEach((sID) => {
         const myID = parseInt(sID, 10);
         if (procIDArray.indexOf(myID) === -1 || procIDArray.length === 0) {
@@ -288,6 +289,10 @@ app.get('/splitNode', (req, res) => {
     resGlobal = res;
 
     // var xml2 = new sankeySplitNode('../../data/miranda1/experiment.xml', splitNodeCallBack, procIDArray);
+    console.log(" -----------Split by parent list ", splitByParentList)
+    console.log(" -----------Proc id array", procIDArray)
+    console.log(" -----------nodeIDKeep", nodeIDKeep)
+//    console.log(" -----------node Metrics", nodeMetric)
     const xml2 = new SankeySplitNode(xmlTree, xmlFile, splitNodeCallBack2, configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep);
 });
 
@@ -315,14 +320,14 @@ app.get('/getLists', (req, res) => {
         const functionListObject = functionList[specialID];
         const functionListObjectKeys = Object.keys(functionListObject);
         functionListObjectKeys.forEach((procedureID) => {
-            if (functionListResult[procedureID] === null) {
+//            if (functionListResult[procedureID] === null) {
                 functionListResult[procedureID] = {
                     procID: procedureID,
                     name: procedureTable[procedureID],
                     value: 0,
                     excVal: 0,
                 };
-            }
+//            }
 
             const nodeIDList = functionList[specialID][procedureID];
             nodeIDList.forEach((nodeID) => {
@@ -343,7 +348,6 @@ app.get('/getLists', (req, res) => {
                 functionListResult[procedureID].excVal += excTemp / Math.max(excTime.length, 1);
             });
         });
-
         res.json(functionListResult);
     } else {
     // console.log("Cannot find function list for", specialID);
@@ -402,7 +406,7 @@ app.get('/splitNodeByParents', (req, res) => {
 
     resGlobal = res;
 
-    const xml2 = new sankeySplitNode(xmlTree, xmlFile, splitNodeCallBack2, configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep);
+    const xml2 = new SankeySplitNode(xmlTree, xmlFile, splitNodeCallBack2, configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep);
 });
 
 app.get('/getHistogramScatterData', (req, res) => {
