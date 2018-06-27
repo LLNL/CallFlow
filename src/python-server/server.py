@@ -40,6 +40,7 @@ def create_gf(paths, file_format):
     elif file_format == 'caliper':
       gf.from_caliper(paths[i])
     ret.append(gf)
+  print gf.graph.to_string(gf.graph.roots, gf.dataframe, threshold=0.0)
   return ret
 
 def caliper_format(gfs):

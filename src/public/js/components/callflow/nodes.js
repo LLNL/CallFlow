@@ -36,8 +36,8 @@ export default function drawNodes(graph, view){
 	    })
     
     drawRectangle(node, graph, view)
-//    drawPath(node, graph, view)
-//    drawText(node, graph, view)
+    drawPath(node, graph, view)
+    drawText(node, graph, view)
 }
 
 // add the rectangles for the nodes
@@ -206,7 +206,7 @@ function drawText(node, graph, view){
 		    return 5;
 	    })
 	    .attr('y', "-10")
-	    .style('opacity', 0)
+	    .style('opacity', 1)
 	    .text(function (d) {
 	    	if(d.name != "intermediate"){
 	    	    if(d.dy < view.minHeightForText ) {
@@ -242,7 +242,7 @@ function drawText(node, graph, view){
 		        d3.select(this.parentNode).select('rect').style("stroke-width", "1");
 		        unFade();
 		    }
-		    view.toolTip.style('opacity', 0)
+		    view.toolTip.style('opacity', 1)
 		        .style('left', function(){
 			        return 0;
 		        })
@@ -258,6 +258,7 @@ function drawText(node, graph, view){
 	    .data(graph.nodes)
 	    .transition()
 	    .duration(view.transitionDuration)
+        .style('opacity', 1)
 	    .text(function (d) {
 	    	if(d.name != "intermediate"){
 	    	    if(d.dy < view.minHeightForText ){

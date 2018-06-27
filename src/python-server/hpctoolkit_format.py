@@ -15,6 +15,7 @@ class hpctoolkit_format(object):
         for gf in gfs:
             print gf.graph.to_string(gf.graph.roots, gf.dataframe, threshold=0.0)
             level = self.assign_levels(gf)
+            print level
             nodes = self.construct_nodes(gf, level)
             edges = self.construct_edges(gf, level)
             self.graphs.append({ "nodes": nodes, "edges": edges, "graphID": graphID })
@@ -47,6 +48,7 @@ class hpctoolkit_format(object):
             node['inc'] = module_df[['CPUTIME (usec) (I)']].get_group(key).sum()[0]
             node['exc'] = module_df[['CPUTIME (usec) (E)']].get_group(key).sum()[0]
             node['name'] = self.sanitizeName(key)
+            print node['inc'], node['name'], node['exc']    
             node['level'] = level[self.sanitizeName(key)]
             node['lmID'] = 'LM' + str(nodeCount)
             node['sankeyID'] = sankeyID
@@ -56,6 +58,7 @@ class hpctoolkit_format(object):
             sankeyID = sankeyID + 1
             nodeCount += 1
             ret.append(node)
+            break
             # label[''] = 'LM' + str(nodeCount)
             # sankeyIDMap[''] = nodeCount
             # ret.append({'exc': 0.0, 'inc': 0.0, 'name': '', 'sankeyID': sankeyID, 'lmID': label[''], 'level': 6 })
@@ -65,15 +68,14 @@ class hpctoolkit_format(object):
     def assign_levels(self, gf):
         ret = {}
         ret['<program root>'] = 0
+        print gf.graph.roots[0].children
         visited, queue = set(), gf.graph.roots
         while queue:
             node = queue.pop(0)
             # Not the right way
             current = self.sanitizeName(node.module)
             parent = self.sanitizeName(node.parentModule)
-            if current in ret.keys():
-                ret[current] = ret[current]
-            else:
+            if current not in ret.keys():
                 ret[current] = ret[parent] + 1
                 
             if node not in visited:

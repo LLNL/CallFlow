@@ -38,6 +38,6 @@ export default class CallFlow{
 CallFlow.prototype.render = function(){
     this.view.color = new Color()
     this.view.color.setColorScale(this.graph.stat.minInc, this.graph.stat.maxInc, this.graph.stat.minExc, this.graph.stat.maxExc)
-    drawEdges(this.graph, this.view)
     drawNodes(this.graph, this.view)
+    drawEdges(this.graph, this.view)
 }
