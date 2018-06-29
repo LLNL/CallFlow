@@ -13,9 +13,8 @@ class hpctoolkit_format(object):
         ret = {}
         graphID = 0
         for gf in gfs:
-            print gf.graph.to_string(gf.graph.roots, gf.dataframe, threshold=0.0)
+#            print gf.graph.to_string(gf.graph.roots, gf.dataframe, threshold=0.0)
             level = self.assign_levels(gf)
-            print level
             nodes = self.construct_nodes(gf, level)
             edges = self.construct_edges(gf, level)
             self.graphs.append({ "nodes": nodes, "edges": edges, "graphID": graphID })
@@ -48,7 +47,6 @@ class hpctoolkit_format(object):
             node['inc'] = module_df[['CPUTIME (usec) (I)']].get_group(key).sum()[0]
             node['exc'] = module_df[['CPUTIME (usec) (E)']].get_group(key).sum()[0]
             node['name'] = self.sanitizeName(key)
-            print node['inc'], node['name'], node['exc']    
             node['level'] = level[self.sanitizeName(key)]
             node['lmID'] = 'LM' + str(nodeCount)
             node['sankeyID'] = sankeyID
@@ -58,7 +56,6 @@ class hpctoolkit_format(object):
             sankeyID = sankeyID + 1
             nodeCount += 1
             ret.append(node)
-            break
             # label[''] = 'LM' + str(nodeCount)
             # sankeyIDMap[''] = nodeCount
             # ret.append({'exc': 0.0, 'inc': 0.0, 'name': '', 'sankeyID': sankeyID, 'lmID': label[''], 'level': 6 })
@@ -68,7 +65,6 @@ class hpctoolkit_format(object):
     def assign_levels(self, gf):
         ret = {}
         ret['<program root>'] = 0
-        print gf.graph.roots[0].children
         visited, queue = set(), gf.graph.roots
         while queue:
             node = queue.pop(0)
@@ -82,7 +78,6 @@ class hpctoolkit_format(object):
                 visited.add(node)
                 queue.extend(node.children)
         return ret
-
 
     def construct_edges(self, gf, level):
         # Not sure why there is a need to initialize gf again 
@@ -101,7 +96,7 @@ class hpctoolkit_format(object):
             
             source = self.sanitizeName(source)
             target = self.sanitizeName(target)
-            
+
             if source != None and target != None and level[source] != level[target]:
                 edgeLabel = source + '-' + target 
                 edge = {}

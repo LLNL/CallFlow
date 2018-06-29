@@ -161,3 +161,6 @@ label {
 #control{
    padding: 5px;     
 }
+.controlComponent{
+    border-bottom : 2px 
+}

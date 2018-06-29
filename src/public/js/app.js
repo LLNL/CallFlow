@@ -1,4 +1,4 @@
-/*******************************************************************************
+ /*******************************************************************************
  * Copyright (c) 2017, Lawrence Livermore National Security, LLC.
  * Produced at the Lawrence Livermore National Laboratory.
  *
@@ -633,12 +633,15 @@ function showDatasetInfo(){
     alert(string);
 }
 
-// $('#showLabelBox').attr('checked',false);
+$('#showLabelBox').attr('checked',true);
 $("#showLabelBox").on("change",function(){
     console.log("checkbox");
 })
 
 $(document).ready(function () {
+    $('#inputFileBtr').on("click", function(){
+        
+    })
     $("#showLabelBox").on("change",function(){
 	    var checkBoxStatus = $("#showLabelBox").is(':checked');
 
