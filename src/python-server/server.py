@@ -26,7 +26,9 @@ def parse_arguments():
 # Output: path to the data
 def read_file(jsonfile):
   f = open(jsonfile, 'r')
-  path = json.loads(f.read())['path']
+  json_data = json.loads(f.read())
+  path = json_data['path']
+  config = json_data['config']
   return path
 
 # Input: paths array from JSON file
@@ -40,7 +42,6 @@ def create_gf(paths, file_format):
     elif file_format == 'caliper':
       gf.from_caliper(paths[i])
     ret.append(gf)
-  print gf.graph.to_string(gf.graph.roots, gf.dataframe, threshold=0.0)
   return ret
 
 def caliper_format(gfs):

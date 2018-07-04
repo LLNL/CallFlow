@@ -1,11 +1,20 @@
 {
     "dataName" : "Lulesh-1",
-    "numbNodes" : "2",
-    "path" : ["/Users/kesavan1/Suraj/llnl/CallFlow/data/lulesh-1/db-ampi4-100-1"],
-    "experiment" : "experiment.xml", 
-    "nodeMetric" : "nodeData.json",
-    "config" : "config.json",
-    "port" : 8900
+    "path" : ["/Users/kesavan1/Suraj/llnl/CallFlow/data/lulesh-1/db-ampi4-100-8"],
+    "config": {
+	    "lulesh2.0" :{
+            "id" : "2",
+		    "name" : "lulesh",
+		    "files" : [ "mpi-linux-x86_64-ifort-mpicxx/tmp/", "mpi-linux-x86_64-ifort-mpicxx/", "mpi-linux-x86_64-ifort-mpicxx/tmp/libs/ck-libs/", "mpi-linux-x86_64-ifort-mpicxx/tmp/libs/conv-libs/"],
+            "functions" : [] 
+	    },
+        "libmpi.so.12.0.5" :{
+            "name" : "MPI",
+            "files" : ["../src/mpi/"],
+            "functions" : []
+        }
+    }
 }
+
 
 

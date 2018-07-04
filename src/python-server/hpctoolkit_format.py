@@ -13,13 +13,14 @@ class hpctoolkit_format(object):
         ret = {}
         graphID = 0
         for gf in gfs:
-#            print gf.graph.to_string(gf.graph.roots, gf.dataframe, threshold=0.0)
-            level = self.assign_levels(gf)
-            nodes = self.construct_nodes(gf, level)
-            edges = self.construct_edges(gf, level)
-            self.graphs.append({ "nodes": nodes, "edges": edges, "graphID": graphID })
-            graphID += 1
-        ret = { "graphs" : self.graphs }
+            print gf.graph.roots, gf.dataframe
+            print gf.graph.to_string(gf.graph.roots, gf.dataframe, threshold=0.0)
+            #            level = self.assign_levels(gf)
+#            nodes = self.construct_nodes(gf, level)
+#            edges = self.construct_edges(gf, level)
+#            self.graphs.append({ "nodes": nodes, "edges": edges, "graphID": graphID })
+#            graphID += 1
+#        ret = { "graphs" : self.graphs }
         return ret
 
     # Input : ./xxx/xxx/yyy
