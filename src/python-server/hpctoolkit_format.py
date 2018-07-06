@@ -13,14 +13,11 @@ class hpctoolkit_format(object):
         ret = {}
         graphID = 0
         for gf in gfs:
-            print gf.graph.roots, gf.dataframe
-            print gf.graph.to_string(gf.graph.roots, gf.dataframe, threshold=0.0)
             #            level = self.assign_levels(gf)
-#            nodes = self.construct_nodes(gf, level)
-#            edges = self.construct_edges(gf, level)
-#            self.graphs.append({ "nodes": nodes, "edges": edges, "graphID": graphID })
-#            graphID += 1
-#        ret = { "graphs" : self.graphs }
+            nodes = self.construct_nodes(gf)
+            #            edges = self.construct_edges(gf, level)
+            self.graphs.append({ "nodes": nodes })
+        ret = { "graphs" : self.graphs }
         return ret
 
     # Input : ./xxx/xxx/yyy
@@ -31,8 +28,47 @@ class hpctoolkit_format(object):
         name_split = name.split('/')
         return name_split[len(name_split) - 1]  
 
+    def metrics(self, df):
+        metrics = {}
+        metric_list = ['CPUTIME (usec) (E)', 'CPUTIME (usec) (I)', 'file', 'line', 'type']
+        for metric in metric_list:
+            metrics[metric] = df[metric][0]
+        return metrics
+
+    def construct_nodes(self, gf):
+        name_df = gf.dataframe.groupby(['module','name'])
+        nodes_map = {}
+
+        # Structure creation
+        for key, item in name_df:
+            node_key = key[0]
+            nodes_map[node_key] = {}
+            nodes_map[node_key]["fns"] = []
+
+        print nodes_map
+            
+        for key, item in name_df:
+            node_key = key[0]
+            metrics_pes = []
+            for rank_keys, rank_items in item.groupby(['rank']):
+                metrics_pes.append(self.metrics(rank_items))
+
+            nodes_map[node_key]["fns"].append({ 
+                "fn_name": key[1], 
+                "metrics": metrics_pes
+            })
+            print len(nodes_map[node_key]["fns"])
+
+        nodes = []
+        for key, item in nodes_map.iteritems():
+            nodes.append({
+                'module': key,
+                'props': item
+            })
+            
+        return nodes
     
-    def construct_nodes(self, gf, level):
+    def construjct_nodes(self, gf, level):
         ret = []
         sankeyID = 1
         module_df = gf.dataframe.groupby('module')
