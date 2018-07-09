@@ -35,13 +35,13 @@ def read_file(jsonfile):
 # Output: Array of graphFrames
 def create_gf(paths, file_format):
   ret = []
-  for i in range(0, len(paths)):
-    gf = GraphFrame()
-    if file_format == 'hpctoolkit':
-      gf.from_hpctoolkit(paths[i])
-    elif file_format == 'caliper':
-      gf.from_caliper(paths[i])
-    ret.append(gf)
+  gf = GraphFrame()
+  if file_format == 'hpctoolkit':
+    gf.from_hpctoolkit(paths[0])
+  elif file_format == 'caliper':
+    gf.from_caliper(paths[0])
+  ret.append(gf)
+  #  for i in range(0, 1):
   return ret
 
 def caliper_format(gfs):
@@ -60,6 +60,7 @@ def send_js(filename):
 
 @app.route('/getSankey')
 def getSankey():
+  print graphs
   return jsonify(graphs)
   
 @app.route('/dataSetInfo')
@@ -89,4 +90,4 @@ if __name__ == '__main__':
   elif file_format == 'caliper':
     graphs = caliper_callflow_format().run(gfs);
 
-  app.run(debug = True, use_reloader=True)
+  app.run(debug = True, use_reloader=False)

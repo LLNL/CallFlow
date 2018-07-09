@@ -1,4 +1,6 @@
 from hatchet import *
+import math
+import sys
 
 class hpctoolkit_format(object):
     def __init__(self):
@@ -28,16 +30,55 @@ class hpctoolkit_format(object):
         name_split = name.split('/')
         return name_split[len(name_split) - 1]  
 
+    # get metrics for a dataframe grouped object
     def metrics(self, df):
         metrics = {}
-        metric_list = ['CPUTIME (usec) (E)', 'CPUTIME (usec) (I)', 'file', 'line', 'type']
+        metric_list = ['CPUTIME (usec) (E)', 'CPUTIME (usec) (I)', 'file', 'line', 'type', 'name']
         for metric in metric_list:
-            metrics[metric] = df[metric][0]
+            metrics[metric] = []
+        for metric in metric_list:
+            for procs in range(0, len(df[['name']])):
+                metrics[metric].append(df[metric][procs])
         return metrics
 
+    # Lookup by the node hash
+    def lookup(self, gf, node_hash):
+        df = gf.dataframe
+        return df.loc[df['node'] == node_hash]
+
+    # depth first search of the graph. 
+    def dfs(self, gf):
+        root = gf.graph.roots[0]
+        node_gen = gf.graph.roots[0].traverse()
+        while root != None:
+            root = next(node_gen)
+            print root, node_lookup(gf, root)
+
+    # Get the inclusive runtime of the root
+    # Sum of the inclusive times of all the ranks or the max??
+    def getRunTime(self, gf):
+        root_metrics = self.lookup(gf, gf.graph.roots[0])
+        return root_metrics[['CPUTIME (usec) (I)']].sum()[0]
+
+    # TODO: Filter the dataframe to reduce the amount of nodes we parse through
+    def filterNodes(self, gf):
+        max_inclusive_time =  self.getRunTime(gf)
+
+        filter_df = gf.dataframe.groupby(['module','name'])                
+        print len(filter_df.groups)
+        filter_df.filter(lambda x:  x[['CPUTIME (usec) (E)']].sum()[0]/num_pes > 0.1*max_inclusive_time)
+        print len(name_df.groups)
+
+        return filter_df
+
+    # Construct the nodes for the graph.
     def construct_nodes(self, gf):
         name_df = gf.dataframe.groupby(['module','name'])
         nodes_map = {}
+        num_pes = 100
+
+        nodes = []
+        max_inclusive_time =  self.getRunTime(gf)        
 
         # Structure creation
         for key, item in name_df:
@@ -45,30 +86,32 @@ class hpctoolkit_format(object):
             nodes_map[node_key] = {}
             nodes_map[node_key]["fns"] = []
 
-        print nodes_map
-            
         for key, item in name_df:
-            node_key = key[0]
-            metrics_pes = []
-            for rank_keys, rank_items in item.groupby(['rank']):
-                metrics_pes.append(self.metrics(rank_items))
+            if item[['CPUTIME (usec) (I)']].sum()[0]/num_pes > 0.01*max_inclusive_time:
+                print "Shape:", item.shape
+                print key
+                node_key = key[0]
+                metrics_pes = []
+                for rank_keys, rank_items in item.groupby(['rank']):
+                    metrics_pes.append(self.metrics(rank_items))
+                    
+                nodes_map[node_key]["fns"].append({ 
+                    "fn_name": key[1], 
+                    "metrics": metrics_pes
+                })
+                print len(nodes_map[node_key]["fns"])
 
-            nodes_map[node_key]["fns"].append({ 
-                "fn_name": key[1], 
-                "metrics": metrics_pes
-            })
-            print len(nodes_map[node_key]["fns"])
-
-        nodes = []
-        for key, item in nodes_map.iteritems():
-            nodes.append({
-                'module': key,
-                'props': item
-            })
-            
+                
+                for key, item in nodes_map.iteritems():
+                    nodes.append({
+                        'module': key,
+                        'props': item
+                    })
+            else:
+                print 'Omitting node for less time', key, item[['CPUTIME (usec) (E)']].sum()[0]
         return nodes
     
-    def construjct_nodes(self, gf, level):
+    def construdct_nodes(self, gf, level):
         ret = []
         sankeyID = 1
         module_df = gf.dataframe.groupby('module')
