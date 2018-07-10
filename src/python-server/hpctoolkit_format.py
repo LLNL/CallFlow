@@ -58,7 +58,7 @@ class hpctoolkit_format(object):
     # Sum of the inclusive times of all the ranks or the max??
     def getRunTime(self, gf):
         root_metrics = self.lookup(gf, gf.graph.roots[0])
-        return root_metrics[['CPUTIME (usec) (I)']].sum()[0]
+        return root_metrics[['CPUTIME (usec) (I)']].max()[0]
 
     # TODO: Filter the dataframe to reduce the amount of nodes we parse through
     def filterNodes(self, gf):
@@ -66,7 +66,7 @@ class hpctoolkit_format(object):
 
         filter_df = gf.dataframe.groupby(['module','name'])                
         print len(filter_df.groups)
-        filter_df.filter(lambda x:  x[['CPUTIME (usec) (E)']].sum()[0]/num_pes > 0.1*max_inclusive_time)
+        filter_df.filter(lambda x:  x[['CPUTIME (usec) (E)']].max()[0]/num_pes > 0.1*max_inclusive_time)
         print len(name_df.groups)
 
         return filter_df
