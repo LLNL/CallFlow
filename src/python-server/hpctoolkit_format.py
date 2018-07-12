@@ -1,6 +1,7 @@
 from hatchet import *
 import math
 import sys
+import time
 
 debug = True
 
@@ -47,7 +48,6 @@ class hpctoolkit_format(object):
     # Lookup by the node hash
     def lookup(self, df, node_hash):
         return df.loc[df['node'] == node_hash] 
-
     
     # depth first search for  the graph.
     # TODO: add level to the node attribs
@@ -67,7 +67,6 @@ class hpctoolkit_format(object):
             pass
         finally:
             del root
-        print nodes
         return nodes
 
     # Get the inclusive runtime of the root
@@ -81,56 +80,71 @@ class hpctoolkit_format(object):
         filter_df = gf.dataframe[(gf.dataframe['CPUTIME (usec) (I)'] > 0.01*max_inclusive_time)]
         if debug:
             print '[Filter] Removed {0} nodes by threshold {1}'.format(gf.dataframe.shape[0] - filter_df.shape[0], max_inclusive_time)
+            print '[Filter] Nodes left: '.format(filter_df.shape[0])
         return filter_df
 
     # create new data frame from the nodes
     def createdf(self, nodes):
-        df = 
+        df = None
         return df
 
     # Construct the nodes for the graph.
     def construct_nodes(self, gf):
         nodes_map = {}
-        num_pes = 3
-        nodes = []
+        ret = []
 
+        t = time.time()
         # Filter the dataframe. Should I filter the graph or just check if it is in the frame. 
         filter_df = self.filterNodesByIncTime(gf)
+        if debug: 
+            print time.time() - t
 
-        nodes = self.dfs(gf, filter_df)
+        t = time.time()
+        # List of nodes of interest
+        nodes = pd.Series(self.dfs(gf, filter_df))
+        if debug:
+            print time.time() - t
+        
 
-        # group the frame by the module and name
-        # grouped_df = filter_df.groupby(['module','name'])
+        # Convert the nodes into a dataframe.
+        node_metrics = []
+        for node in nodes:
+             node_metrics.append(self.lookup(filter_df , node))
+        node_metrics_df = pd.concat(node_metrics)
 
-        # # Structure creation
-        # for key, item in grouped_df:
-        #     if debug:
-        #         print 'Module name: {0}, function: {1}'.format(key[0], key[1])
-        #     node_key = key[0]
-        #     nodes_map[node_key] = {}
-        #     nodes_map[node_key]["fns"] = []
+        # group the frame by the module and name        
+        grouped_df = node_metrics_df.groupby(['module', 'name'])
+            
+        # Structure creation
+        for key, item in grouped_df:
+            if debug:
+                print 'Module name: {0}, function: {1}'.format(key[0], key[1])
+            node_key = key[0]
+            nodes_map[node_key] = {}
+            nodes_map[node_key]["fns"] = []
 
 
-        # for key, item in grouped_df:
-        #     print "Shape:", item.shape
-        #     node_key = key[0]
-        #     metrics_pes = []
-        #     for rank_keys, rank_items in item.groupby(['rank']):
-        #         metrics_pes.append(self.metrics(rank_items))
+        for key, item in grouped_df:
+            print "Shape:", item.shape
+            node_key = key[0]
+            metrics_pes = []
+            for rank_keys, rank_items in item.groupby(['rank']):
+                metrics_pes.append(self.metrics(rank_items))
                     
-        #     nodes_map[node_key]["fns"].append({ 
-        #         "fn_name": key[1], 
-        #         "metrics": metrics_pes
-        #     })
-        #     print len(nodes_map[node_key]["fns"])
+            nodes_map[node_key]["fns"].append({ 
+                "fn_name": key[1], 
+                "metrics": metrics_pes
+            })
+        print nodes_map
             
             
-        #     for key, item in nodes_map.iteritems():
-        #         nodes.append({
-        #             'module': key,
-        #             'props': item
-        #         })
-        return nodes
+        for key, item in nodes_map.iteritems():
+            print item
+            ret.append({
+                'module': key,
+                'props': item
+            })
+        return ret
     
     def construdct_nodes(self, gf, level):
         ret = []
