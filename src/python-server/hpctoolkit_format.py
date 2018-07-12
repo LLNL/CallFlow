@@ -2,6 +2,7 @@ from hatchet import *
 import math
 import sys
 import time
+import CCT
 
 debug = True
 
@@ -62,7 +63,7 @@ class hpctoolkit_format(object):
                 # Check if the node is in the filtered_df and it has a module name 
                 # TODO : Check if root.module == "None"
                 if not metrics.empty:
-                    nodes.append(root)
+                    nodes.append({ "source": root.parent, "target": root })
         except StopIteration:
             pass
         finally:
@@ -88,6 +89,13 @@ class hpctoolkit_format(object):
         df = None
         return df
 
+    def getNodes(self, graph):
+        ret = []
+        print graph
+
+    def getEdges(self, graph):
+        ret = []
+
     # Construct the nodes for the graph.
     def construct_nodes(self, gf):
         nodes_map = {}
@@ -101,81 +109,54 @@ class hpctoolkit_format(object):
 
         t = time.time()
         # List of nodes of interest
-        nodes = pd.Series(self.dfs(gf, filter_df))
+        graph = self.dfs(gf, filter_df)
         if debug:
             print time.time() - t
-        
 
+
+        nodesInGraph = getNodes(graph)
+        edgesInGraph = getEdges(graph)
+        
         # Convert the nodes into a dataframe.
         node_metrics = []
         for node in nodes:
-             node_metrics.append(self.lookup(filter_df , node))
+            node_metrics.append(self.lookup(filter_df , node['target']))
         node_metrics_df = pd.concat(node_metrics)
 
-        # group the frame by the module and name        
-        grouped_df = node_metrics_df.groupby(['module', 'name'])
+        # # group the frame by the module and name        
+        # grouped_df = node_metrics_df.groupby(['module', 'name'])
             
-        # Structure creation
-        for key, item in grouped_df:
-            if debug:
-                print 'Module name: {0}, function: {1}'.format(key[0], key[1])
-            node_key = key[0]
-            nodes_map[node_key] = {}
-            nodes_map[node_key]["fns"] = []
+        # # Structure creation
+        # for key, item in grouped_df:
+        #     if debug:
+        #         print 'Module name: {0}, function: {1}'.format(key[0], key[1])
+        #     node_key = key[0]
+        #     nodes_map[node_key] = {}
+        #     nodes_map[node_key]["fns"] = []
 
 
-        for key, item in grouped_df:
-            print "Shape:", item.shape
-            node_key = key[0]
-            metrics_pes = []
-            for rank_keys, rank_items in item.groupby(['rank']):
-                metrics_pes.append(self.metrics(rank_items))
+        # for key, item in grouped_df:
+        #     print "Shape:", item.shape
+        #     node_key = key[0]
+        #     metrics_pes = []
+        #     for rank_keys, rank_items in item.groupby(['rank']):
+        #         metrics_pes.append(self.metrics(rank_items))
                     
-            nodes_map[node_key]["fns"].append({ 
-                "fn_name": key[1], 
-                "metrics": metrics_pes
-            })
-        print nodes_map
+        #     nodes_map[node_key]["fns"].append({ 
+        #         "fn_name": key[1], 
+        #         "metrics": metrics_pes
+        #     })
+        # print nodes_map
             
             
-        for key, item in nodes_map.iteritems():
-            print item
-            ret.append({
-                'module': key,
-                'props': item
-            })
+        # for key, item in nodes_map.iteritems():
+        #     print item
+        #     ret.append({
+        #         'module': key,
+        #         'props': item
+        #     })
         return ret
     
-    def construdct_nodes(self, gf, level):
-        ret = []
-        sankeyID = 1
-        module_df = gf.dataframe.groupby('module')
-        
-        self.runtime['<program root>'] = 2998852.0
-        self.label['<program root>'] = 'LM0'
-        self.sankeyIDMap['<program root>'] = 0
-        ret.append({ 'exc': 0.0, 'inc': 2998852.0, 'name': "<program root>", 'sankeyID': 1, 'lmID': 'LM0', 'level': 0 })
-        nodeCount = 1;
-
-        for key, item in module_df:
-            node = {}
-            node['inc'] = module_df[['CPUTIME (usec) (I)']].get_group(key).sum()[0]
-            node['exc'] = module_df[['CPUTIME (usec) (E)']].get_group(key).sum()[0]
-            node['name'] = self.sanitizeName(key)
-            node['level'] = level[self.sanitizeName(key)]
-            node['lmID'] = 'LM' + str(nodeCount)
-            node['sankeyID'] = sankeyID
-            self.runtime[self.sanitizeName(key)] = module_df[['CPUTIME (usec) (E)']].get_group(key).sum()[0]    
-            self.label[self.sanitizeName(key)] = 'LM' + str(nodeCount)
-            self.sankeyIDMap[self.sanitizeName(key)] = sankeyID
-            sankeyID = sankeyID + 1
-            nodeCount += 1
-            ret.append(node)
-            # label[''] = 'LM' + str(nodeCount)
-            # sankeyIDMap[''] = nodeCount
-            # ret.append({'exc': 0.0, 'inc': 0.0, 'name': '', 'sankeyID': sankeyID, 'lmID': label[''], 'level': 6 })
-
-        return ret
 
     def assign_levels(self, gf):
         ret = {}
