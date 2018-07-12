@@ -2,6 +2,8 @@ from hatchet import *
 import math
 import sys
 
+debug = True
+
 class hpctoolkit_format(object):
     def __init__(self):
         self.runtime = {}
@@ -36,79 +38,98 @@ class hpctoolkit_format(object):
         metric_list = ['CPUTIME (usec) (E)', 'CPUTIME (usec) (I)', 'file', 'line', 'type', 'name']
         for metric in metric_list:
             metrics[metric] = []
+            print df[['name']]
         for metric in metric_list:
             for procs in range(0, len(df[['name']])):
                 metrics[metric].append(df[metric][procs])
         return metrics
 
     # Lookup by the node hash
-    def lookup(self, gf, node_hash):
-        df = gf.dataframe
-        return df.loc[df['node'] == node_hash]
+    def lookup(self, df, node_hash):
+        return df.loc[df['node'] == node_hash] 
 
-    # depth first search of the graph. 
-    def dfs(self, gf):
+    
+    # depth first search for  the graph.
+    # TODO: add level to the node attribs
+    def dfs(self, gf, df):
+        nodes = []
         root = gf.graph.roots[0]
         node_gen = gf.graph.roots[0].traverse()
-        while root != None:
-            root = next(node_gen)
-            print root, node_lookup(gf, root)
+        try:
+            while root != None:
+                root = next(node_gen)
+                metrics = self.lookup(df, root)
+                # Check if the node is in the filtered_df and it has a module name 
+                # TODO : Check if root.module == "None"
+                if not metrics.empty:
+                    nodes.append(root)
+        except StopIteration:
+            pass
+        finally:
+            del root
+        print nodes
+        return nodes
 
     # Get the inclusive runtime of the root
-    # Sum of the inclusive times of all the ranks or the max??
     def getRunTime(self, gf):
-        root_metrics = self.lookup(gf, gf.graph.roots[0])
+        root_metrics = self.lookup(gf.dataframe, gf.graph.roots[0])
         return root_metrics[['CPUTIME (usec) (I)']].max()[0]
 
-    # TODO: Filter the dataframe to reduce the amount of nodes we parse through
-    def filterNodes(self, gf):
+    # TODO: Move to a new file if we need to filter by more attributes
+    def filterNodesByIncTime(self, gf):
         max_inclusive_time =  self.getRunTime(gf)
-
-        filter_df = gf.dataframe.groupby(['module','name'])                
-        print len(filter_df.groups)
-        filter_df.filter(lambda x:  x[['CPUTIME (usec) (E)']].max()[0]/num_pes > 0.1*max_inclusive_time)
-        print len(name_df.groups)
-
+        filter_df = gf.dataframe[(gf.dataframe['CPUTIME (usec) (I)'] > 0.01*max_inclusive_time)]
+        if debug:
+            print '[Filter] Removed {0} nodes by threshold {1}'.format(gf.dataframe.shape[0] - filter_df.shape[0], max_inclusive_time)
         return filter_df
+
+    # create new data frame from the nodes
+    def createdf(self, nodes):
+        df = 
+        return df
 
     # Construct the nodes for the graph.
     def construct_nodes(self, gf):
-        name_df = gf.dataframe.groupby(['module','name'])
         nodes_map = {}
-        num_pes = 100
-
+        num_pes = 3
         nodes = []
-        max_inclusive_time =  self.getRunTime(gf)        
 
-        # Structure creation
-        for key, item in name_df:
-            node_key = key[0]
-            nodes_map[node_key] = {}
-            nodes_map[node_key]["fns"] = []
+        # Filter the dataframe. Should I filter the graph or just check if it is in the frame. 
+        filter_df = self.filterNodesByIncTime(gf)
 
-        for key, item in name_df:
-            if item[['CPUTIME (usec) (I)']].sum()[0]/num_pes > 0.01*max_inclusive_time:
-                print "Shape:", item.shape
-                print key
-                node_key = key[0]
-                metrics_pes = []
-                for rank_keys, rank_items in item.groupby(['rank']):
-                    metrics_pes.append(self.metrics(rank_items))
+        nodes = self.dfs(gf, filter_df)
+
+        # group the frame by the module and name
+        # grouped_df = filter_df.groupby(['module','name'])
+
+        # # Structure creation
+        # for key, item in grouped_df:
+        #     if debug:
+        #         print 'Module name: {0}, function: {1}'.format(key[0], key[1])
+        #     node_key = key[0]
+        #     nodes_map[node_key] = {}
+        #     nodes_map[node_key]["fns"] = []
+
+
+        # for key, item in grouped_df:
+        #     print "Shape:", item.shape
+        #     node_key = key[0]
+        #     metrics_pes = []
+        #     for rank_keys, rank_items in item.groupby(['rank']):
+        #         metrics_pes.append(self.metrics(rank_items))
                     
-                nodes_map[node_key]["fns"].append({ 
-                    "fn_name": key[1], 
-                    "metrics": metrics_pes
-                })
-                print len(nodes_map[node_key]["fns"])
-
-                
-                for key, item in nodes_map.iteritems():
-                    nodes.append({
-                        'module': key,
-                        'props': item
-                    })
-            else:
-                print 'Omitting node for less time', key, item[['CPUTIME (usec) (E)']].sum()[0]
+        #     nodes_map[node_key]["fns"].append({ 
+        #         "fn_name": key[1], 
+        #         "metrics": metrics_pes
+        #     })
+        #     print len(nodes_map[node_key]["fns"])
+            
+            
+        #     for key, item in nodes_map.iteritems():
+        #         nodes.append({
+        #             'module': key,
+        #             'props': item
+        #         })
         return nodes
     
     def construdct_nodes(self, gf, level):
