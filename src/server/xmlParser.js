@@ -21,7 +21,6 @@ const fileLoader = function (xmlTree, xmlFile, callBack, configFileName, procIDA
     } else {
         config = {};
     }
-
     
     let obj;
     console.log('begin parsing xml file');

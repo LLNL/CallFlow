@@ -350,7 +350,6 @@ app.get('/getLists', (req, res) => {
         });
         res.json(functionListResult);
     } else {
-    // console.log("Cannot find function list for", specialID);
         res.json({});
     }
 });
@@ -395,7 +394,6 @@ app.get('/getRuntimeOfNode', (req, res) => {
 });
 
 app.get('/splitNodeByParents', (req, res) => {
-    // splitParentList
     const parentProcList = req.query.parentProcList;
     const nodeLabel = req.query.nodeLabel;
     const specIDofSplitNode = req.query.nodeSpecialID;
@@ -405,7 +403,6 @@ app.get('/splitNodeByParents', (req, res) => {
     }
 
     resGlobal = res;
-
     const xml2 = new SankeySplitNode(xmlTree, xmlFile, splitNodeCallBack2, configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep);
 });
 

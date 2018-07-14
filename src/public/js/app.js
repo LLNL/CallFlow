@@ -673,9 +673,8 @@ function nodeClickCallBack(res){
     document.getElementById("splitNodeByParentBtr").disabled = false;
     // splitNodeByParents(parentProcList, node.name);
 }
-
+x
 function getList(node){
-    console.log(node['specialID'])
     $.ajax({
 	type:'GET',
 	contentType: 'application/json',
