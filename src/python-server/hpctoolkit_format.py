@@ -3,26 +3,39 @@ import math
 import sys
 import time
 import CCT
+from filter import *
 
 debug = True
 
-class hpctoolkit_format(object):
-    def __init__(self):
-        self.runtime = {}
-        self.label = {}
-        self.sankeyIDMap = {}
+class hpctoolkit_preprocess(object):
+    def __init__(self, gfs, filter=False, filterBy="IncTime"):
         self.graphs = []
 
+        # Filter the dataframe. Should I filter the graph or just check if it is in the frame.
+        if filter:
+            if filterBy == "IncTime":
+                self.df = filter.byIncTime(gfs)
+            elif filterBy == "ExcTime":
+                self.df = filter.byExcTime(gfs)
+        else:
+            self.df = gf.dataframe
+
+        self.run(gfs)
+        
     # Input : [<GraphFrame>, <GraphFrame>,...]
     # Output: { graphs: [{ nodes: [], edges: [] }, ...] } 
     def run(self, gfs):
         ret = {}
         graphID = 0
         for gf in gfs:
-            #            level = self.assign_levels(gf)
             nodes = self.construct_nodes(gf)
-            #            edges = self.construct_edges(gf, level)
-            self.graphs.append({ "nodes": nodes })
+            self.graphs.append({
+                "load_modules": gf.tables.load_modules,
+                "src_files": gf.tables.src_files,
+                "procedure_names": gf.tables.procedure_names,
+                "metric_names": gf.tables.metric_names,
+                "nodes": nodes
+            })
         ret = { "graphs" : self.graphs }
         return ret
 
@@ -70,20 +83,6 @@ class hpctoolkit_format(object):
             del root
         return nodes
 
-    # Get the inclusive runtime of the root
-    def getRunTime(self, gf):
-        root_metrics = self.lookup(gf.dataframe, gf.graph.roots[0])
-        return root_metrics[['CPUTIME (usec) (I)']].max()[0]
-
-    # TODO: Move to a new file if we need to filter by more attributes
-    def filterNodesByIncTime(self, gf):
-        max_inclusive_time =  self.getRunTime(gf)
-        filter_df = gf.dataframe[(gf.dataframe['CPUTIME (usec) (I)'] > 0.01*max_inclusive_time)]
-        if debug:
-            print '[Filter] Removed {0} nodes by threshold {1}'.format(gf.dataframe.shape[0] - filter_df.shape[0], max_inclusive_time)
-            print '[Filter] Nodes left: '.format(filter_df.shape[0])
-        return filter_df
-
     # create new data frame from the nodes
     def createdf(self, nodes):
         df = None
@@ -100,12 +99,6 @@ class hpctoolkit_format(object):
     def construct_nodes(self, gf):
         nodes_map = {}
         ret = []
-
-        t = time.time()
-        # Filter the dataframe. Should I filter the graph or just check if it is in the frame. 
-        filter_df = self.filterNodesByIncTime(gf)
-        if debug: 
-            print time.time() - t
 
         t = time.time()
         # List of nodes of interest

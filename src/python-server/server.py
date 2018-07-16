@@ -18,10 +18,15 @@ class CallFlow():
         self.debug = False
         self.config = None 
          
-        self.create_parser()
-        self.create_server()
-        self.launch()
-         
+        self.create_parser()  # Parse the input arguments
+        self.setup_variables() # Setup variables which are common to filter and server (like gf, config, etc)
+
+        if not self.args.filter:
+            self.create_server()
+            self.launch()
+        else:
+            self.filter_gfs()
+        
     def create_server(self):
         self.app = Flask(__name__, static_url_path='/public')
         self.app.debug = True
@@ -39,7 +44,6 @@ class CallFlow():
         
         @self.app.route('/getSankey')
         def getSankey():
-            print graphs
             return jsonify(graphs)
         
         @self.app.route('/dataSetInfo')
@@ -51,25 +55,30 @@ class CallFlow():
     def create_parser(self):
         parser = argparse.ArgumentParser()
         parser.add_argument("--verbose", help="Display debug points")
-        parser.add_argument("--file_format", help="Format: caliper(.json) | hpctoolkit")
         parser.add_argument("--input_file", help="Input file")
+        parser.add_argument("--filter", action="store_true", help="Filter the dataframe")
+        parser.add_argument("--filterBy", default="IncTime", help="IncTime | ExcTime, [Default = IncTime] ")
+        parser.add_argument("--filtertheta", default="0.01", help="Threshold [Default = 0.01]")
         self.args = parser.parse_args()
 
         self.debug = self.args.verbose
-
-    def launch(self):
+        
+    def setup_variables(self):
+        file_ext = os.path.splitext(self.args.input_file)[1]
+        print file_ext
         # Set the format (caliper | hpctoolkit)
-        file_format = self.args.file_format
+#        file_format = if self.args.file_format
   
         # Parse the file (--file) according to the format. 
         self.config = configFileReader(self.args.input_file)
   
         # Create the graph frame 
-        gfs = self.create_gf(paths, file_format)
+        gfs = self.create_gf(self.config.paths, file_format)
 
+    def process(self):
         # Parse using the hpctoolkit format
         if file_format == 'hpctoolkit':
-            self.cfg = hpctoolkit_format().run(gfs);
+            self.cfg = hpctoolkit_format(gfs);
         elif file_format == 'caliper':
             self.cfg = caliper_callflow_format().run(gfs);
             

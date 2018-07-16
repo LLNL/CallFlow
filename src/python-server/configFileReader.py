@@ -4,19 +4,17 @@ class configFileReader():
     def __init__(self, jsonFile):
         f = open(jsonFile, 'r')
         self.data = self.json_data(f.read())
-        self.path = self.data['paths']
+        self.paths = self.data['path']
         self.props = self.data['props']
         self.fnMap = self.getFuncMap()
         self.fileMap = self.getFileMap()
-        return self
 
     # File map from the config file
     def getFileMap(self):
         fileMap = {}
         for obj in self.props:
-            print obj
-            name = self.props[obj].name
-            fileMap[name] = self.props[obj].files
+            name = self.props[obj]['name']
+            fileMap[name] = self.props[obj]['files']
         return fileMap
 
     # Function map from the config file
@@ -24,8 +22,8 @@ class configFileReader():
         funcMap = {}
         print self.props
         for obj in self.props:            
-            name = self.props[obj].name
-            funcMap[name] = self.props[obj].functions
+            name = self.props[obj]['name']
+            funcMap[name] = self.props[obj]['functions']
         return funcMap
 
     def json_data(self, json_text):

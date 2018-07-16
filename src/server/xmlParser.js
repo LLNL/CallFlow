@@ -41,89 +41,62 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
     } else {
         const xml = fs.readFileSync(xmlFile, 'utf8');
         obj = parser.parseXmlString(xml, { noblanks: true });
-
         xmlTree = obj;
     }
-    // console.log('finish parsing xml file');
+    
     const date2 = new Date();
     const fileTable = {};
     const loadModuleTable = {};
     const procedureTable = {};
-
     // var nodeMetric = {};
     const flatProfile = {};
     const flatIDCounter = 0;
-
     const procTableByLM = {};
-
-    // access using nodeID, contain lmID, parent nodeID, parent lmID, and level
-    const edgesInfo = {};
-
+    const edgesInfo = {};     // access using nodeID, contain lmID, parent nodeID, parent lmID, and level
     var entryExitData = {};
-
     const finalTree = {}; // access using lm id, one entry per lm
     const nodeList = {}; // access uing lm id, one array per lm, array contains node ids of lm
-
     const lmIDToSplitConfig = []; // contains the lm id that we want to split based on the config file
-
     const splitLoadModuleFileID = {}; // contain the list of file id for each load module that we want to split, top access by the lm id of spliting load module, next by the name of the new splited module
     // for example: miranda lm is 8, splitting into drivers, io, ect
     // so we have splitLoadModuleFileID[8]["Driver"] = {fileList: [], index: SomeNumb}
 
     const configNameToID = {}; // from the config file, map the name of the loadmodule to the
-
     const configLMSplitInfo = {}; // access by load module id
-
     let prefixID = 0;
     const fileIDTaleOrgName = {};
-
     let maxLMID = 0;
-
     const lmName = [];
-
     const procIDToLMIDMap = {};
-
     const functionList = {};
 
     function parseLoadModule(xmlLoadModNode) {
         xmlLoadModNode.childNodes().forEach((loadMod) => {
             const id = parseInt(loadMod.attr('i').value());
             const name = loadMod.attr('n').value();
-            // loadModuleTable[id] = name;
-
             const regName = /([^/]+$)/g.exec(name);
-
             let newName;
             if (regName != null) { newName = regName[1]; } else { newName = name; }
-
             loadModuleTable[id] = newName;
             lmName.push(newName);
             const loadmodofsplitname = Object.keys(config);
-            // console.log("loadmodofsplitname", loadmodofsplitname);
-
             // check the name of the file, and match the file to the load module that we want to split
             loadmodofsplitname.forEach((lmofsplit) => {
                 if (name.indexOf(lmofsplit) > -1) {
                     if (lmIDToSplitConfig.indexOf(id) == -1) {
                         lmIDToSplitConfig.push(id);
                     }
-
                     configLMSplitInfo[id] = {
                         files: config[lmofsplit].files,
                         functions: config[lmofsplit].functions,
                     };
                 }
             });
-
             maxLMID = Math.max(maxLMID, id);
         });
-
-        // console.log("configLMSplitInfo", configLMSplitInfo);
     }
 
     // get the fileTable
-
-
     function parseFileTable(xmlFileTableNode) {
         const prefixes = [];
         // var prefixID = 0;
@@ -136,11 +109,8 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
             const name = file.attr('n').value();
             fileIDTaleOrgName[id] = name;
             const regName = /([^/]+$)/g.exec(name);
-
             let newName;
             if (regName != null) { newName = regName[1]; } else { newName = name; }
-            // console.log(name, newName);
-
             fileTable[id] = newName;
         });
     }
@@ -155,7 +125,6 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
     }
 
     const runtimeID = {};
-
     function parseMetrics(xmlMetricNode) {
         xmlMetricNode.childNodes().forEach((metric) => {
             const id = parseInt(metric.attr('i').value());
@@ -194,8 +163,7 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
     parseProfileTable(xmlExperimentTables);
 
     const cct = obj.root().child(1).child(1);
-    // console.log(cct.name());
-
+    
     function Node() {
         return {
             nodeID: null,
@@ -212,7 +180,6 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
     }
 
     const cctData = [];
-
     let root;
     let currentFileName = '';
     let currentFileID;
@@ -220,32 +187,24 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
     let currentprocedureID;
     let counter = 0;
     let currentCallSiteID;
-
     const callSiteMetric = {};
-
-
     const callMetrixData = {};
     var entryExitData = {};
-
     const nodeInfo = {};
-
     const nodeArray = {};
     let sanKeyIDLM = 0;
     const sanKeyMetricDataLM = {};
 
-    // sepperate by level and lmID
+    // separate by level and lmID
     // tell us the children of this lmid
     const connectionInfo = {};
-
     const nodePaths = {};
-
     const internalNodeList = {};
 
     parseNodes(cct, null, 'false', 0);
 
     function parseSecCallPathProfileData(xmlNode, level) {
         root = new Node();
-
         const name = 'Experiment Aggregate Metrics';
         root.name = name;
         root.nodeID = 1;
@@ -257,11 +216,8 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
         root.loadModuleID = 0;
         root.path = root.nodeID;
         root.specialIDName = 'Root';
-
         nodePaths[root.nodeID] = root.path;
-
         const tempID = `LM${0}`;
-
         root.specialID = tempID;
 
         // /////////Sankey call path of LM////////////////////
@@ -287,14 +243,11 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
         sanKeyMetricDataLM[level][tempID].push({
             nodeID: root.nodeID, parentNodeID: null, nodeLevel: level, parentSpecialID: null,
         });
-
         nodeArray[level][tempID].uniqueID.push(root.nodeID);
-
         connectionInfo[level][tempID] = [];
-
         sanKeyIDLM += 1;
 
-        // ///////////End/////////////////////////////////////
+        /////////////End/////////////////////////////////////
 
         entryExitData[tempID] = {
             name: 'root',
@@ -308,14 +261,17 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
         xmlNode.childNodes().forEach((child) => {
             if (child.name() != 'M') { parseNodes(child, root, 'false', nextLevel); }
         });
+
+//	console.log("Entry exit data", entryExitData)
+//	console.log("Internal node list", internalNodeList)
+//	console.log("connection information", connectionInfo)
     }
 
     function parsePF(xmlNode, parentNode, Cid, level) {
         const newNode = createNewNodeFromXML(xmlNode, 'PF', level, parentNode);
-
         const nextLevel = level + 1;
-
         const getSpecialIDNameTypeRes = getSpecialIDNameType(newNode);
+	console.log(getSpecialIDNameTypeRes)
         const tempID = getSpecialIDNameTypeRes.specialID;// = "LM" + newNode.loadModuleID;
         const type = getSpecialIDNameTypeRes.type;
         const name = getSpecialIDNameTypeRes.name;
@@ -325,29 +281,26 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
 
         // //////lm callpath stuff//////////////////////
         createNewTreeLevel(level);
-
         createNewTreeNode(level, tempID, name, type, newNode);
-
         addInfo(level, tempID, newNode, parentNode);
-
         // ////////////////End////////////////////////////////
 
         addEntryExitData(tempID, newNode, parentNode);
 
-        if (parentNode.specialID == 'CLM2' && newNode.specialID == 'LM8') {
-            const physicsFunc = procedureTable[parentNode.procedureID];
-            const mirandaFunc = procedureTable[newNode.procedureID];
+        // if (parentNode.specialID == 'CLM2' && newNode.specialID == 'LM8') {
+        //     const physicsFunc = procedureTable[parentNode.procedureID];
+        //     const mirandaFunc = procedureTable[newNode.procedureID];
 
-            const physicsFile = fileTable[parentNode.fileID];
-            const mirandaFile = fileTable[newNode.fileID];
-            const temp = {
-                'physics funtion': physicsFunc,
-                'miranda function': mirandaFunc,
-                'physics file': physicsFunc,
-                'miranda file': mirandaFile,
-            };
-            // fs.appendFileSync("physicstomiranda", JSON.stringify(temp) + "\n");
-        }
+        //     const physicsFile = fileTable[parentNode.fileID];
+        //     const mirandaFile = fileTable[newNode.fileID];
+        //     const temp = {
+        //         'physics funtion': physicsFunc,
+        //         'miranda function': mirandaFunc,
+        //         'physics file': physicsFunc,
+        //         'miranda file': mirandaFile,
+        //     };
+        //     // fs.appendFileSync("physicstomiranda", JSON.stringify(temp) + "\n");
+        // }
 
         xmlNode.childNodes().forEach((child) => {
             if (child.name() != 'M') {
@@ -404,18 +357,13 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
         newNode.specialID = tempID;
         newNode.specialIDName = name;
         internalNodeList[newNode.nodeID] = newNode;
-
         // newNode.loadModuleID = currentLoadModID;
-
-
+	
         // //////lm callpath stuff//////////////////////
         createNewTreeLevel(level);
-
         createNewTreeNode(level, tempID, name, type, newNode);
-
         addInfo(level, tempID, newNode, parentNode);
         // ////////////////End////////////////////////////////
-
 
         const nextLevel = level + 1;
         xmlNode.childNodes().forEach((child) => {
@@ -427,7 +375,6 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
 
     function parsePR(xmlNode, parentNode, level) {
         const newNode = createNewNodeFromXML(xmlNode, 'PR', level, parentNode);
-
         const getSpecialIDNameTypeRes = getSpecialIDNameType(newNode);
         const tempID = getSpecialIDNameTypeRes.specialID;// = "LM" + newNode.loadModuleID;
         const type = getSpecialIDNameTypeRes.type;
@@ -439,9 +386,7 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
 
         // //////lm callpath stuff//////////////////////
         createNewTreeLevel(level);
-
         createNewTreeNode(level, tempID, name, type, newNode);
-
         addInfo(level, tempID, newNode, parentNode);
         // ////////////////End////////////////////////////////
 
@@ -457,26 +402,22 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
 
     function parseNodes(xmlNode, parentNode, Cid, level) {
         const xmlNodeName = xmlNode.name();
-        // console.log(xmlNodeName);
-
         if (xmlNodeName == 'SecCallPathProfileData' ||
             xmlNodeName == 'PF' ||
             xmlNodeName == 'C' ||
             xmlNodeName == 'S' ||
             xmlNodeName == 'L' ||
             xmlNodeName == 'Pr') {
-            // console.log(xmlNodeName);
             let nodeID;
             if (xmlNodeName == 'SecCallPathProfileData') {
                 nodeID = 1;
             } else {
                 nodeID = parseInt(xmlNode.attr('i').value());
             }
-
-            // console.log(nodeID, nodeKeep.indexOf(nodeID) > -1)
-
             if (nodeKeep.indexOf(nodeID) > -1 || xmlNodeName == 'C') {
-                if (xmlNodeName == 'SecCallPathProfileData') {
+		if( debug && xmlNode.attr('i') != null)
+		    console.log("id: ", xmlNode.attr('i').value(), "tag:", xmlNodeName)
+		if (xmlNodeName == 'SecCallPathProfileData') {
                     counter++;
                     parseSecCallPathProfileData(xmlNode, level);
                 } else if (xmlNodeName == 'PF') {
@@ -512,34 +453,25 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
     	nodePaths[newNode.nodeID] = newNode.path;
 
     	if (type == 'PF' || type == 'PR') {
-	        newNode.loadModuleID = parseInt(xmlNode.attr('lm').value());
-	        newNode.fileID = parseInt(xmlNode.attr('f').value());
-	        newNode.procedureID = parseInt(xmlNode.attr('n').value());
-	        newNode.name = procedureTable[newNode.procedureID];
-
-	        currentFileID = newNode.fileID;
-	        currentLoadModID = newNode.loadModuleID;
-	        currentprocedureID = newNode.procedureID;
-
-
+	    newNode.loadModuleID = parseInt(xmlNode.attr('lm').value());
+	    newNode.fileID = parseInt(xmlNode.attr('f').value());
+	    newNode.procedureID = parseInt(xmlNode.attr('n').value());
+	    newNode.name = procedureTable[newNode.procedureID];
+	    currentFileID = newNode.fileID;
+	    currentLoadModID = newNode.loadModuleID;
+	    currentprocedureID = newNode.procedureID
             newNode.oldLoadModuleID = newNode.loadModuleID;
-
-
-	        currentFileName = fileTable[newNode.fileID];
-
-            // if(newNode.procedureID == 7104){
-            //     fs.appendFileSync("problemNode", JSON.stringify(newNode) + "\n");
-            // }
+	    currentFileName = fileTable[newNode.fileID];
     	}
     	if (type == 'PR') {
-    		newNode.aType = parseInt(xmlNode.attr('a').value());
+    	    newNode.aType = parseInt(xmlNode.attr('a').value());
     	}
-
+	
     	if (type == 'Line') {
-    		newNode.lineNumber = parseInt(xmlNode.attr('l').value());
-        	// newNode.name = currentFileName + ": " + newNode.lineNumber;
-        	// newNode.fileID = currentFileID;
-        	// newNode.procedureID = currentprocedureID;
+    	    newNode.lineNumber = parseInt(xmlNode.attr('l').value());
+            // newNode.name = currentFileName + ": " + newNode.lineNumber;
+            // newNode.fileID = currentFileID;
+            // newNode.procedureID = currentprocedureID;
             if (parentNode.fileID != null) {
                 newNode.fileID = parentNode.fileID;
             } else {
@@ -554,26 +486,26 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
     	}
 
     	if (type == 'Loop') {
-        	newNode.lineNumber = parseInt(xmlNode.attr('l').value());
+            newNode.lineNumber = parseInt(xmlNode.attr('l').value());
             newNode.fileID = parseInt(xmlNode.attr('f').value());
-        	newNode.name = `Loop at ${fileTable[newNode.fileID]}: ${newNode.lineNumber}`;
+            newNode.name = `Loop at ${fileTable[newNode.fileID]}: ${newNode.lineNumber}`;
             if (parentNode.procedureID != null) {
                 newNode.procedureID = parentNode.procedureID;
             } else {
                 newNode.procedureID = currentprocedureID;
             }
 
-        	currentFileID = newNode.fileID;
-        	// newNode.procedureID = currentprocedureID;
-        	currentFileName = fileTable[newNode.fileID];
+            currentFileID = newNode.fileID;
+            // newNode.procedureID = currentprocedureID;
+            currentFileName = fileTable[newNode.fileID];
     	}
 
     	if (type == 'Loop' || type == 'Line') {
-	        if (parentNode.loadModuleID != null) {
-	            newNode.loadModuleID = parentNode.loadModuleID;
-	        } else {
-	            newNode.loadModuleID = currentLoadModID;
-	        }
+	    if (parentNode.loadModuleID != null) {
+	        newNode.loadModuleID = parentNode.loadModuleID;
+	    } else {
+	        newNode.loadModuleID = currentLoadModID;
+	    }
 
             newNode.oldLoadModuleID = newNode.loadModuleID;
     	}
@@ -596,17 +528,14 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
                 procIDToLMIDMap[node.procedureID] = {
                     newID: maxLMID,
                 };
-
                 loadModuleTable[maxLMID] = procedureTable[node.procedureID];
             }
-
             node.oldLoadModuleID = procIDToLMIDMap[node.procedureID].newID;
         }
 
         // this lm is the one we want to split based on the config file
         else if (lmIDToSplitConfig.indexOf(node.loadModuleID) > -1) {
             // check for the file names
-
             // first get all the lm
             specialID = `LM${node.loadModuleID}`;
             type = 'LM';
@@ -619,7 +548,7 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
                 name = `${loadModuleTable[node.loadModuleID]}-unknown`;
             }
 
-            // first check by file
+            // Assign specialID by file name
             // This is where we try to figure out which load module the file should fall under
             const filePrefixes = configLMSplitInfo[node.loadModuleID].files;
             const fileName = fileIDTaleOrgName[node.fileID];
@@ -661,11 +590,9 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
                 }
             });
 
-            // ///////////////////////////////////
-
-            // now search by functions
+	    // Assign specialID by functions
             const functionObjectList = Object.keys(configLMSplitInfo[node.loadModuleID].functions);
-            functionObjectList.forEach((functionToCheck) => {
+	    functionObjectList.forEach((functionToCheck) => {
                 const functionNames = configLMSplitInfo[node.loadModuleID].functions[functionToCheck];
                 functionNames.forEach((fName) => {
                     if (procedureTable[node.procedureID].includes(fName)) {
@@ -683,47 +610,41 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
                     }
                 });
             });
-        } else {
+        }
+	else {
+	    console.log('here', node.loadModuleID)
             specialID = `LM${node.loadModuleID}`;
             type = 'LM';
             name = loadModuleTable[node.loadModuleID];
         }
 
         if (splitByParentList.indexOf(specialID) > -1) {
-        	if (internalNodeList[node.parentID].oldLoadModuleID != node.oldLoadModuleID) {
-	            specialID = `LM${internalNodeList[node.parentID].oldLoadModuleID}-` + `LM${node.oldLoadModuleID}`;
+            if (internalNodeList[node.parentID].oldLoadModuleID != node.oldLoadModuleID) {
+	        specialID = `LM${internalNodeList[node.parentID].oldLoadModuleID}-` + `LM${node.oldLoadModuleID}`;
             	type = 'LM' + '-' + 'LM';
             	name = `${loadModuleTable[internalNodeList[node.parentID].oldLoadModuleID]}-${loadModuleTable[node.oldLoadModuleID]}`;
-        	} else {
-        		nodePath = node.path;
-        		const nodePathID = nodePath.split('*');
-        		nodePathID.pop();
-        		nodePathID.sort((a, b) => parseInt(b) - parseInt(a));
-        		nodePathID.some((nodeID) => {
-        			// console.log(nodeID, node.nodeID);
-
-        			const parLMID = internalNodeList[parseInt(nodeID)].oldLoadModuleID;
-        			if (parLMID != node.oldLoadModuleID) {
-        				specialID = `LM${parLMID}-` + `LM${node.oldLoadModuleID}`;
-        				type = 'LM' + '-' + 'LM';
-        				name = `${loadModuleTable[internalNodeList[parseInt(nodeID)].oldLoadModuleID]}-${loadModuleTable[node.oldLoadModuleID]}`;
-        				return true;
-        			}
-        		});
-        	}
+            }
+	    else {
+        	nodePath = node.path;
+        	const nodePathID = nodePath.split('*');
+        	nodePathID.pop();
+        	nodePathID.sort((a, b) => parseInt(b) - parseInt(a));
+        	nodePathID.some((nodeID) => {
+        	    const parLMID = internalNodeList[parseInt(nodeID)].oldLoadModuleID;
+        	    if (parLMID != node.oldLoadModuleID) {
+        		specialID = `LM${parLMID}-` + `LM${node.oldLoadModuleID}`;
+        		type = 'LM' + '-' + 'LM';
+        		name = `${loadModuleTable[internalNodeList[parseInt(nodeID)].oldLoadModuleID]}-${loadModuleTable[node.oldLoadModuleID]}`;
+        		return true;
+        	    }
+        	});
+            }
         }
 
-        // if(name.includes("miranda") && name != "miranda.x-unknown"){
-        //     console.log(name);
-        // }
-
-        // console.log(name);
-
-
         return {
-        	name,
-        	specialID,
-        	type,
+            name,
+            specialID,
+            type,
         };
     }
 

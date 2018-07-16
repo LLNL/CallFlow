@@ -105,7 +105,6 @@ function loadFile(filePath){
             exception('No metric file found at', filePath + datasetFile.nodeMetric);
 	} else {
             nodeMetricFile = path.resolve(filePath + datasetFile.nodeMetric);
-	    console.log(nodeMetricFile);
             nodeMetricReader = new LineByLineReader(nodeMetricFile);
 	}
 	if (datasetFile.config != null) {
