@@ -8,16 +8,18 @@ import argparse
 from hpctoolkit_format import *
 from caliper_format import *
 from configFileReader import * 
+from Callflow_filter import *
 
 class CallFlow():
     def __init__(self):
-        self.app = None
-        self.args = None
-        self.cfg = None
-        self.gf = None
-        self.debug = False
-        self.config = None 
-         
+        self.app = None # App state
+        self.args = None # Arguments passed through the CLI
+        self.config = None # Config file json 
+        self.gfs_format = [] # Graph formats in array for the paths
+        self.gfs = [] # Graphframes returned by hatchet
+        self.cfgs = [] # CallFlow graphs
+        self.debug = False # Debug gives time, other information
+
         self.create_parser()  # Parse the input arguments
         self.setup_variables() # Setup variables which are common to filter and server (like gf, config, etc)
 
@@ -60,42 +62,82 @@ class CallFlow():
         parser.add_argument("--filterBy", default="IncTime", help="IncTime | ExcTime, [Default = IncTime] ")
         parser.add_argument("--filtertheta", default="0.01", help="Threshold [Default = 0.01]")
         self.args = parser.parse_args()
-
         self.debug = self.args.verbose
-        
-    def setup_variables(self):
-        file_ext = os.path.splitext(self.args.input_file)[1]
-        print file_ext
-        # Set the format (caliper | hpctoolkit)
-#        file_format = if self.args.file_format
-  
+
+    # Find the file format automatically. 
+    def find_file_format(self, path):
+        file_ext = None
+        files = os.listdir(path)
+        for file in files:
+            if file.endswith('.xml'):
+                file_ext = 'hpctoolkit'
+            elif file.endswith('.json'):
+                file_ext = 'caliper'
+        return file_ext
+
+    def setup_variables(self): 
         # Parse the file (--file) according to the format. 
         self.config = configFileReader(self.args.input_file)
-  
-        # Create the graph frame 
-        gfs = self.create_gf(self.config.paths, file_format)
 
-    def process(self):
-        # Parse using the hpctoolkit format
-        if file_format == 'hpctoolkit':
-            self.cfg = hpctoolkit_format(gfs);
-        elif file_format == 'caliper':
-            self.cfg = caliper_callflow_format().run(gfs);
+        for path in self.config.paths:
+            self.gfs_format.append(self.find_file_format(path))
+
+    def filter_gfs(self):
+        # Create the graph frames from the paths and corresponding format using hatchet
+        gfs = self.create_gfs()
+        fgfs = []
+        
+        # Filter graphframes based on threshold
+        for gf in gfs:
+            if self.args.filterBy == "IncTime":
+                fgfs.append(byIncTime(gf))
+                #fgfs.append(byIncTime(gf, self.args.filtertheta))
+            elif self.args.filterBy == "ExcTime":
+                fgfs.append(byExcTime(gf))
+                #fgfs.append(Callflow_filter.byExcTime(gf, self.args.filtertheta))
+            else:
+                fgfs.append(gf)
+
+        self.write_gfs(fgfs)
+        
+    # Write graphframes to csv files
+    def write_gfs(self, fgfs):
+        for idx, fgf in enumerate(fgfs):
+            fgf.to_csv('calc-pi_filtered_{0}.csv'.format(idx))
             
-        self.app.run(debug = self.debug, use_reloader=False)
-  
+    def launch_webapp(self):
+        # Load the graph frames from the files. 
+        self.gfs = self.load_gfs()
 
-    # Input: paths array from JSON file
-    # Output: Array of graphFrames
-    def create_gf(self, paths, file_format):
+        # Create the callflow graph frames from graphframes given by hatchet
+        self.cfgs = self.create_cfgs()
+
+        # Launch the flask app
+        self.app.run(debug = self.debug, use_reloader=False)
+        
+    # Loops over the config.paths and gets the graphframe from hatchet
+    def create_gfs(self):
         ret = []
-        gf = GraphFrame()
-        if file_format == 'hpctoolkit':
-            gf.from_hpctoolkit(paths[0])
-        elif file_format == 'caliper':
-            gf.from_caliper(paths[0])
-        ret.append(gf)
+        print self.config.paths
+        for idx, path in enumerate(self.config.paths):
+            gf = GraphFrame()
+            if self.gfs_format[idx] == 'hpctoolkit':
+                gf.from_hpctoolkit(path)
+            elif self.gfs_format[idx] == 'caliper':
+                gf.from_caliper(path)
+            ret.append(gf)
         return ret
+
+    # Loops through the graphframes and creates callflow graph format
+    def create_cfgs(self):
+        ret = []
+        for gf in self.gfs:
+            if file_format == 'hpctoolkit':
+                ret.append(hpctoolkit_format(gf))
+            elif file_format == 'caliper':
+                ret.append(caliper_callflow_format().run(gf))
+        return ret
+  
 
 
 if __name__ == '__main__':

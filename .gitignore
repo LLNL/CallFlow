@@ -5,3 +5,6 @@ src/public/bower_components
 src/public/react-redux/node_modules
 data/*
 hpctoolkit/*
+*pyc
+.ipynb_checkpoints/*
+*.pynb
