@@ -1,18 +1,25 @@
 from flask import Flask, jsonify, render_template, send_from_directory, current_app
-from hatchet import *
 import os
 import sys
 import json
 import uuid
 import argparse
+import logging
+
+
+from hatchet import *
 from hpctoolkit_format import *
 from caliper_format import *
 from configFileReader import * 
 from Callflow_filter import *
+import utils
+from logger import ColorStreamHandler # colorful logger
+
 
 class CallFlow():
     def __init__(self):
         self.app = None # App state
+        self.log = None
         self.args = None # Arguments passed through the CLI
         self.config = None # Config file json 
         self.gfs_format = [] # Graph formats in array for the paths
@@ -20,15 +27,78 @@ class CallFlow():
         self.cfgs = [] # CallFlow graphs
         self.debug = False # Debug gives time, other information
 
+        self.create_logger() # Setup color logging. Attaches to self.app        
         self.create_parser()  # Parse the input arguments
-        self.setup_variables() # Setup variables which are common to filter and server (like gf, config, etc)
-
+        self.verify_parser()  # Raises expections if something is not provided. 
+        self.create_variables() # Setup variables which are common to filter and server (like gf, config, etc)
+        
         if not self.args.filter:
             self.create_server()
             self.launch()
         else:
+            self.log.debug("Filtering the graphframe by {0} with threshold {1}".format(self.args.filterBy, self.args.filtertheta))
             self.filter_gfs()
+
+    def create_logger(self):
+         self.log = logging.getLogger('MyLogger')
+         print dir(self.log)
+         self.log.setLevel(logging.DEBUG)
+         self.log.addHandler(ColorStreamHandler)
         
+    def create_parser(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--verbose", help="Display debug points")
+        parser.add_argument("--config_file", help="Config file to read")
+        parser.add_argument("--input_format", default="hpctoolkit", help="caliper | hpctoolkit")
+        parser.add_argument("--filter", action="store_true", help="Filter the dataframe")
+        parser.add_argument("--filterBy", default="IncTime", help="IncTime | ExcTime, [Default = IncTime] ")
+        parser.add_argument("--filtertheta", default="0.01", help="Threshold [Default = 0.01]")
+        self.args = parser.parse_args()
+        self.debug = self.args.verbose
+
+    def verify_parser(self):
+        # Check if the config file is provided and exists! 
+        if not self.args.config_file:
+            self.app.log.critical("Please provide a config file. To see options, use --help")
+            raise Exception()
+        else:
+            if not os.path.isfile(self.args.config_file):
+                self.app.log.critical("Please check the config file path. There exists no such file in the path provided")
+                raise Exception()
+
+    def create_variables(self): 
+        # Parse the file (--file) according to the format. 
+        self.config = configFileReader(self.args.config_file)
+
+        if 'format' not in self.config.data:
+            logging.warn('File formats not provided. Automatically looking for the files with experiment')
+            self.gfs_format = utils.automatic_gfs_format_lookup(self.config.paths)
+        else:
+            self.gfs_format = self.config.format
+          
+    def filter_gfs(self):
+        # Create the graph frames from the paths and corresponding format using hatchet
+        gfs = self.create_gfs()
+        fgfs = []
+        
+        # Filter graphframes based on threshold
+        for gf in gfs:
+            if self.args.filterBy == "IncTime":
+                fgfs.append(byIncTime(gf))
+                #fgfs.append(byIncTime(gf, self.args.filtertheta))
+            elif self.args.filterBy == "ExcTime":
+                fgfs.append(byExcTime(gf))
+                #fgfs.append(Callflow_filter.byExcTime(gf, self.args.filtertheta))
+            else:
+                fgfs.append(gf)
+
+        self.write_gfs(fgfs)
+        
+    # Write graphframes to csv files
+    def write_gfs(self, fgfs):
+        for idx, fgf in enumerate(fgfs):
+            fgf.to_csv('calc-pi_filtered_{0}.csv'.format(idx))
+            
     def create_server(self):
         self.app = Flask(__name__, static_url_path='/public')
         self.app.debug = True
@@ -53,58 +123,8 @@ class CallFlow():
             return jsonify({
                 "g": 1
             })
-                
-    def create_parser(self):
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--verbose", help="Display debug points")
-        parser.add_argument("--input_file", help="Input file")
-        parser.add_argument("--filter", action="store_true", help="Filter the dataframe")
-        parser.add_argument("--filterBy", default="IncTime", help="IncTime | ExcTime, [Default = IncTime] ")
-        parser.add_argument("--filtertheta", default="0.01", help="Threshold [Default = 0.01]")
-        self.args = parser.parse_args()
-        self.debug = self.args.verbose
 
-    # Find the file format automatically. 
-    def find_file_format(self, path):
-        file_ext = None
-        files = os.listdir(path)
-        for file in files:
-            if file.endswith('.xml'):
-                file_ext = 'hpctoolkit'
-            elif file.endswith('.json'):
-                file_ext = 'caliper'
-        return file_ext
 
-    def setup_variables(self): 
-        # Parse the file (--file) according to the format. 
-        self.config = configFileReader(self.args.input_file)
-
-        for path in self.config.paths:
-            self.gfs_format.append(self.find_file_format(path))
-
-    def filter_gfs(self):
-        # Create the graph frames from the paths and corresponding format using hatchet
-        gfs = self.create_gfs()
-        fgfs = []
-        
-        # Filter graphframes based on threshold
-        for gf in gfs:
-            if self.args.filterBy == "IncTime":
-                fgfs.append(byIncTime(gf))
-                #fgfs.append(byIncTime(gf, self.args.filtertheta))
-            elif self.args.filterBy == "ExcTime":
-                fgfs.append(byExcTime(gf))
-                #fgfs.append(Callflow_filter.byExcTime(gf, self.args.filtertheta))
-            else:
-                fgfs.append(gf)
-
-        self.write_gfs(fgfs)
-        
-    # Write graphframes to csv files
-    def write_gfs(self, fgfs):
-        for idx, fgf in enumerate(fgfs):
-            fgf.to_csv('calc-pi_filtered_{0}.csv'.format(idx))
-            
     def launch_webapp(self):
         # Load the graph frames from the files. 
         self.gfs = self.load_gfs()
@@ -138,7 +158,5 @@ class CallFlow():
                 ret.append(caliper_callflow_format().run(gf))
         return ret
   
-
-
 if __name__ == '__main__':
     CallFlow()

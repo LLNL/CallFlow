@@ -45,3 +45,8 @@ class configFileReader():
         }
         # if it's anything else, return it in its original form
         return data
+
+
+class configFileWriter():
+    def __init__():
+        return 0

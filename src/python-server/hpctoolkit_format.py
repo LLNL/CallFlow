@@ -3,23 +3,12 @@ import math
 import sys
 import time
 import CCT
-from filter import *
 
 debug = True
 
 class hpctoolkit_preprocess(object):
     def __init__(self, gfs, filter=False, filterBy="IncTime"):
         self.graphs = []
-
-        # Filter the dataframe. Should I filter the graph or just check if it is in the frame.
-        if filter:
-            if filterBy == "IncTime":
-                self.df = filter.byIncTime(gfs)
-            elif filterBy == "ExcTime":
-                self.df = filter.byExcTime(gfs)
-        else:
-            self.df = gf.dataframe
-
         self.run(gfs)
         
     # Input : [<GraphFrame>, <GraphFrame>,...]
