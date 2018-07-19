@@ -30,7 +30,7 @@ class CallFlow():
         
         if not self.args.filter:
             self.create_server()
-            self.launch()
+            self.launch_webapp()
         else:
             self.filter_gfs()
         
@@ -78,10 +78,11 @@ class CallFlow():
         for idx, gf in enumerate(gfs):
             log.info("Filtering the {0} graphframe by {1} with threshold {2}".format(idx, self.args.filterBy, self.args.filtertheta))
             if self.args.filterBy == "IncTime":
-                fgfs.append(byIncTime(gf))
+                fgfs.append(gf.filter(lambda x: 'MPI' in x['path']))
+                #                fgfs.append(gf.filter(lambda x: x['CPUTIME (usec) (I)'] > 0.01*getRunTime(gf)))
                 #fgfs.append(byIncTime(gf, self.args.filtertheta))
             elif self.args.filterBy == "ExcTime":
-                fgfs.append(byExcTime(gf))
+                fgfs.append(gf.filter(byExcTime))
                 #fgfs.append(Callflow_filter.byExcTime(gf, self.args.filtertheta))
             else:
                 fgfs.append(gf)
@@ -132,6 +133,9 @@ class CallFlow():
 
         # Launch the flask app
         self.app.run(debug = self.debug, use_reloader=False)
+
+    def load_gfs(self):
+        return 0
         
     # Loops over the config.paths and gets the graphframe from hatchet
     def create_gfs(self):
