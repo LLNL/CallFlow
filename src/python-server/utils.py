@@ -1,7 +1,7 @@
 import os
 import fnmatch
-import logging
-import logger
+from logger import log
+
 
 # Input : ./xxx/xxx/yyy
 # Output: yyy
@@ -25,6 +25,6 @@ def automatic_gfs_format_lookup(paths):
                 ret.append('hpctoolkit')
             elif file.endswith('.json'):
                 ret.append('caliper')
-                
+    log.info("Found formats = {0}".format(ret))
     return ret
             

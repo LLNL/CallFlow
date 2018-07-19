@@ -4,8 +4,6 @@ import sys
 import json
 import uuid
 import argparse
-import logging
-
 
 from hatchet import *
 from hpctoolkit_format import *
@@ -13,13 +11,12 @@ from caliper_format import *
 from configFileReader import * 
 from Callflow_filter import *
 import utils
-from logger import ColorStreamHandler # colorful logger
+from logger import log
 
 
 class CallFlow():
     def __init__(self):
         self.app = None # App state
-        self.log = None
         self.args = None # Arguments passed through the CLI
         self.config = None # Config file json 
         self.gfs_format = [] # Graph formats in array for the paths
@@ -27,7 +24,6 @@ class CallFlow():
         self.cfgs = [] # CallFlow graphs
         self.debug = False # Debug gives time, other information
 
-        self.create_logger() # Setup color logging. Attaches to self.app        
         self.create_parser()  # Parse the input arguments
         self.verify_parser()  # Raises expections if something is not provided. 
         self.create_variables() # Setup variables which are common to filter and server (like gf, config, etc)
@@ -36,14 +32,7 @@ class CallFlow():
             self.create_server()
             self.launch()
         else:
-            self.log.debug("Filtering the graphframe by {0} with threshold {1}".format(self.args.filterBy, self.args.filtertheta))
             self.filter_gfs()
-
-    def create_logger(self):
-         self.log = logging.getLogger('MyLogger')
-         print dir(self.log)
-         self.log.setLevel(logging.DEBUG)
-         self.log.addHandler(ColorStreamHandler)
         
     def create_parser(self):
         parser = argparse.ArgumentParser()
@@ -59,11 +48,11 @@ class CallFlow():
     def verify_parser(self):
         # Check if the config file is provided and exists! 
         if not self.args.config_file:
-            self.app.log.critical("Please provide a config file. To see options, use --help")
+            log.error("Please provide a config file. To see options, use --help")
             raise Exception()
         else:
             if not os.path.isfile(self.args.config_file):
-                self.app.log.critical("Please check the config file path. There exists no such file in the path provided")
+                log.error("Please check the config file path. There exists no such file in the path provided")
                 raise Exception()
 
     def create_variables(self): 
@@ -71,18 +60,23 @@ class CallFlow():
         self.config = configFileReader(self.args.config_file)
 
         if 'format' not in self.config.data:
-            logging.warn('File formats not provided. Automatically looking for the files with experiment')
+            log.warn('File formats not provided. Automatically looking for the files with experiment')
             self.gfs_format = utils.automatic_gfs_format_lookup(self.config.paths)
         else:
             self.gfs_format = self.config.format
-          
+
+
+    # ===============================================================================
+            # Filtering Graphframes
+    # ===============================================================================
     def filter_gfs(self):
         # Create the graph frames from the paths and corresponding format using hatchet
         gfs = self.create_gfs()
         fgfs = []
         
         # Filter graphframes based on threshold
-        for gf in gfs:
+        for idx, gf in enumerate(gfs):
+            log.info("Filtering the {0} graphframe by {1} with threshold {2}".format(idx, self.args.filterBy, self.args.filtertheta))
             if self.args.filterBy == "IncTime":
                 fgfs.append(byIncTime(gf))
                 #fgfs.append(byIncTime(gf, self.args.filtertheta))
@@ -97,8 +91,13 @@ class CallFlow():
     # Write graphframes to csv files
     def write_gfs(self, fgfs):
         for idx, fgf in enumerate(fgfs):
-            fgf.to_csv('calc-pi_filtered_{0}.csv'.format(idx))
-            
+            filename = 'calc-pi_filtered_{0}.csv'.format(idx)
+            log.info("Writing the filtered graphframe to {0}".format(filename))
+            fgf.to_json(filename)
+       
+    # ==============================================================================
+                # Callflow server 
+    # ==============================================================================
     def create_server(self):
         self.app = Flask(__name__, static_url_path='/public')
         self.app.debug = True
@@ -124,7 +123,6 @@ class CallFlow():
                 "g": 1
             })
 
-
     def launch_webapp(self):
         # Load the graph frames from the files. 
         self.gfs = self.load_gfs()
@@ -138,7 +136,6 @@ class CallFlow():
     # Loops over the config.paths and gets the graphframe from hatchet
     def create_gfs(self):
         ret = []
-        print self.config.paths
         for idx, path in enumerate(self.config.paths):
             gf = GraphFrame()
             if self.gfs_format[idx] == 'hpctoolkit':

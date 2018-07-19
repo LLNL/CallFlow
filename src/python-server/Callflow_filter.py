@@ -1,4 +1,5 @@
 import time
+from logger import log
 
 # Lookup by the node hash
 def lookup(df, node_hash):
@@ -11,15 +12,15 @@ def getRunTime(gf):
     return root_metrics[['CPUTIME (usec) (I)']].max()[0]
 
 # TODO: Move to a new file if we need to filter by more attributes
-def byIncTime(gf,):
+def byIncTime(gf):
     t = time.time()
     threshold = 0.01
     max_inclusive_time = getRunTime(gf)
-    print max_inclusive_time*threshold
+    log.info("[Filter] {0}% of the {1} is {2}".format(threshold, max_inclusive_time, max_inclusive_time*threshold))
     filter_df = gf.dataframe[(gf.dataframe['CPUTIME (usec) (I)'] > threshold*max_inclusive_time)]
-    print '[Filter] Removed {0} nodes by threshold {1}'.format(gf.dataframe.shape[0] - filter_df.shape[0], max_inclusive_time)
-    print '[Filter] Nodes left: '.format(filter_df.shape[0])
-    print "Time consumed", time.time() - t
+    log.info('[Filter] Removed {0} nodes by threshold {1}'.format(gf.dataframe.shape[0] - filter_df.shape[0], max_inclusive_time))
+    log.info('[Filter] Saving the graphfram with {0} left '.format(filter_df.shape[0]))
+    log.warn("[Filter] Time consumed: {0}".format(time.time() - t))
     return filter_df
 
 

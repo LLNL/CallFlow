@@ -1,31 +1,56 @@
 import logging
+import colorlog
 
-class ColorStreamHandler(logging.StreamHandler):
-    DEFAULT = '\x1b[0m'
-    RED     = '\x1b[31m'
-    GREEN   = '\x1b[32m'
-    YELLOW  = '\x1b[33m'
-    CYAN    = '\x1b[36m'
+class Log:
 
-    CRITICAL = RED
-    ERROR    = RED
-    WARNING  = YELLOW
-    INFO     = GREEN
-    DEBUG    = CYAN
+    aliases = {
+        logging.ERROR:    ("error", "err", "e"),
+        logging.WARNING:  ("warning", "warn", "w"),
+        logging.INFO:     ("info", "inf", "nfo", "i"),
+        }
+    
+    def __init__(self, lvl=logging.DEBUG, format=None):
+        self.lvl = lvl
+        if not format:
+            format  ="\033[1m CallFlow:  %(log_color)s%(message)s%(reset)s"
+        self.format = format
+        logging.root.setLevel(self.lvl)
+        self.formatter = colorlog.ColoredFormatter(self.format)
+        self.stream = logging.StreamHandler()
+        self.stream.setLevel(self.lvl)
+        self.stream.setFormatter(self.formatter)
+        self.logger = logging.getLogger('pythonConfig')
+        self.logger.setLevel(self.lvl)
+        self.logger.addHandler(self.stream)
+        
+    def error(self, msg, *args, **kwargs):
+        for line in str(msg).splitlines():
+            self.logger.error(line, *args, **kwargs)        
+    err = e = error
 
-    @classmethod
-    def _get_color(cls, level):
-        if level >= logging.CRITICAL:  return cls.CRITICAL
-        elif level >= logging.ERROR:   return cls.ERROR
-        elif level >= logging.WARNING: return cls.WARNING
-        elif level >= logging.INFO:    return cls.INFO
-        elif level >= logging.DEBUG:   return cls.DEBUG
-        else:                          return cls.DEFAULT
+    def warn(self, msg, *args, **kwargs):
+        for line in str(msg).splitlines():
+            self.logger.warn(line, *args, **kwargs)
 
-    def __init__(self, stream=None):
-        logging.StreamHandler.__init__(self, stream)
+    warning = w = warn
+    
+    def info(self, msg, *args, **kwargs):
+        for line in str(msg).splitlines():
+            self.logger.info(line, *args, **kwargs)
 
-    def format(self, record):
-        text = logging.StreamHandler.format(self, record)
-        color = self._get_color(record.levelno)
-        return color + text + self.DEFAULT
+    inf = i = info
+    
+    def _parse_level(self, lvl):
+        for log_level in self.aliases:
+            if lvl == log_level or lvl in self.aliases[log_level]:
+                return log_level
+        raise TypeError('not a logging level: %s'%lvl)
+    
+    def level(self, lvl=None):
+        if not lvl:
+            return self.lvl
+        self.lvl = self._parse_level(lvl)
+        self.stream.setLevel(self.lvl)
+        self.logging.root.setLevel(self.lvl)
+                
+log = Log()
