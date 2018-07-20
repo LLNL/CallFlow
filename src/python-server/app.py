@@ -9,7 +9,6 @@ from hatchet import *
 from hpctoolkit_format import *
 from caliper_format import *
 from configFileReader import * 
-from Callflow_filter import *
 import utils
 from logger import log
 
@@ -68,22 +67,25 @@ class CallFlow():
 
     # ===============================================================================
             # Filtering Graphframes
-    # ===============================================================================
+    # ===============================================================================    
     def filter_gfs(self):
         # Create the graph frames from the paths and corresponding format using hatchet
         gfs = self.create_gfs()
         fgfs = []
         
         # Filter graphframes based on threshold
-        for idx, gf in enumerate(gfs):
+        for idx, gf in enumerate(gfs):            
             log.info("Filtering the {0} graphframe by {1} with threshold {2}".format(idx, self.args.filterBy, self.args.filtertheta))
             if self.args.filterBy == "IncTime":
-                fgfs.append(gf.filter(lambda x: 'MPI' in x['path']))
-                #                fgfs.append(gf.filter(lambda x: x['CPUTIME (usec) (I)'] > 0.01*getRunTime(gf)))
-                #fgfs.append(byIncTime(gf, self.args.filtertheta))
+                max_inclusive_time = utils.getMaxIncTime(gf)
+                filter_gf = gf.filter(lambda x: True if(x['CPUTIME (usec) (I)'] > 0.01*max_inclusive_time) else False)
+                log.info('[Filter] Removed {0} nodes. (Inclusive time = {1} ) '.format(gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], max_inclusive_time))
+                fgfs.append(filter_gf)
             elif self.args.filterBy == "ExcTime":
-                fgfs.append(gf.filter(byExcTime))
-                #fgfs.append(Callflow_filter.byExcTime(gf, self.args.filtertheta))
+                max_exclusive_time = utils.getMaxExcTime(gf)
+                filter_gf = gf.filter(lambda x: True if (x['CPUTIME (usec) (E)'] > 0.01*max_exclusive_time) else False)
+                log.info('[Filter] Removed {0} nodes. (Exclusive time = {1})'.format(gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], max_exclusive_time))
+                fgfs.append(filter_gf)
             else:
                 fgfs.append(gf)
 
@@ -93,8 +95,7 @@ class CallFlow():
     def write_gfs(self, fgfs):
         for idx, fgf in enumerate(fgfs):
             filename = 'calc-pi_filtered_{0}.csv'.format(idx)
-            log.info("Writing the filtered graphframe to {0}".format(filename))
-            fgf.to_json(filename)
+            CaliperWriter(fgf, filename)
        
     # ==============================================================================
                 # Callflow server 

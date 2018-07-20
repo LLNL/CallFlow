@@ -1,9 +1,12 @@
 import json
+from logger import log
+
 
 class configFileReader():
     def __init__(self, jsonFile):
         f = open(jsonFile, 'r')
         self.data = self.json_data(f.read())
+        log.info('Config file: {0}'.format(self.data))
         self.paths = self.data['path']
         self.props = self.data['props']
         self.fnMap = self.getFuncMap()
