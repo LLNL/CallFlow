@@ -9,9 +9,10 @@ class configFileReader():
         log.info('Config file: {0}'.format(self.data))
         self.paths = self.data['path']
         self.props = self.data['props']
+        self.format = self.data['format'] if 'format' in self.data.keys() else None
         self.fnMap = self.getFuncMap()
         self.fileMap = self.getFileMap()
-
+        
     # File map from the config file
     def getFileMap(self):
         fileMap = {}

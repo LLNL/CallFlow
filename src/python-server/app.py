@@ -11,7 +11,7 @@ from caliper_format import *
 from configFileReader import * 
 import utils
 from logger import log
-
+from CCT import *
 
 class CallFlow():
     def __init__(self):
@@ -32,7 +32,9 @@ class CallFlow():
             self.launch_webapp()
         else:
             self.filter_gfs()
-        
+#            self.create_server()
+#            self.launch_webapp()
+            
     def create_parser(self):
         parser = argparse.ArgumentParser()
         parser.add_argument("--verbose", help="Display debug points")
@@ -64,7 +66,6 @@ class CallFlow():
         else:
             self.gfs_format = self.config.format
 
-
     # ===============================================================================
             # Filtering Graphframes
     # ===============================================================================    
@@ -75,27 +76,31 @@ class CallFlow():
         
         # Filter graphframes based on threshold
         for idx, gf in enumerate(gfs):            
+            cct = CCT()
+            cct.dfs(gf, gf.dataframe)
             log.info("Filtering the {0} graphframe by {1} with threshold {2}".format(idx, self.args.filterBy, self.args.filtertheta))
             if self.args.filterBy == "IncTime":
                 max_inclusive_time = utils.getMaxIncTime(gf)
                 filter_gf = gf.filter(lambda x: True if(x['CPUTIME (usec) (I)'] > 0.01*max_inclusive_time) else False)
                 log.info('[Filter] Removed {0} nodes. (Inclusive time = {1} ) '.format(gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], max_inclusive_time))
-                fgfs.append(filter_gf)
             elif self.args.filterBy == "ExcTime":
                 max_exclusive_time = utils.getMaxExcTime(gf)
                 filter_gf = gf.filter(lambda x: True if (x['CPUTIME (usec) (E)'] > 0.01*max_exclusive_time) else False)
                 log.info('[Filter] Removed {0} nodes. (Exclusive time = {1})'.format(gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], max_exclusive_time))
-                fgfs.append(filter_gf)
             else:
-                fgfs.append(gf)
+               filter_gf = gf
+
+            filter_gf = filter_gf.graft()
+            fgfs.append(filter_gf)
 
         self.write_gfs(fgfs)
         
     # Write graphframes to csv files
     def write_gfs(self, fgfs):
         for idx, fgf in enumerate(fgfs):
-            filename = 'calc-pi_filtered_{0}.csv'.format(idx)
-            CaliperWriter(fgf, filename)
+            filepath = self.config.paths[idx] +'calc-pi_filtered_{0}.json'.format(idx)
+            CaliperWriter(fgf, filepath)
+            
        
     # ==============================================================================
                 # Callflow server 
@@ -127,7 +132,9 @@ class CallFlow():
 
     def launch_webapp(self):
         # Load the graph frames from the files. 
-        self.gfs = self.load_gfs()
+        self.gfs = self.create_gfs()
+
+        print self.gfs
 
         # Create the callflow graph frames from graphframes given by hatchet
         self.cfgs = self.create_cfgs()
@@ -145,7 +152,7 @@ class CallFlow():
             gf = GraphFrame()
             if self.gfs_format[idx] == 'hpctoolkit':
                 gf.from_hpctoolkit(path)
-            elif self.gfs_format[idx] == 'caliper':
+            elif self.gfs_format[idx] == 'caliper':                
                 gf.from_caliper(path)
             ret.append(gf)
         return ret
@@ -153,10 +160,10 @@ class CallFlow():
     # Loops through the graphframes and creates callflow graph format
     def create_cfgs(self):
         ret = []
-        for gf in self.gfs:
-            if file_format == 'hpctoolkit':
+        for idx, gf in enumerate(self.gfs):
+            if self.gfs_format[idx] == 'hpctoolkit':
                 ret.append(hpctoolkit_format(gf))
-            elif file_format == 'caliper':
+            elif self.gfs_format[idx] == 'caliper':
                 ret.append(caliper_callflow_format().run(gf))
         return ret
   
