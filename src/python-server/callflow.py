@@ -2,15 +2,42 @@ from hatchet import *
 import math
 import sys
 import time
-import CCT
+from collections import defaultdict
+import networkx as nx
+from collections import deque
+import utils
+import matplotlib.pyplot as plt
 
+class Node:
+    def __init__(self, node_type):
+        self.node_type = node_type
+        self.split = NO_SPLIT
+        self.index_in_root = -1
+        self.comp_num = -1
+        self.is_separated = False
 
-debug = True
+class callflow:
+    def __init__(self, gf):
+        self.gf = gf
+        self.graph = defaultdict(list)        
+        self.g = self.create_graph()
+        
+        self.sg = self.create_super_graph(self.g, mapping)
+        #        self.run(gfs)
 
-class hpctoolkit_preprocess(object):
-    def __init__(self, gfs, filter=False, filterBy="IncTime"):
-        self.graphs = []
-        self.run(gfs)
+    # TODO: Add props to the nodes. 
+    def create_graph(self):
+        nodes = self.dfs(self.gf)
+        g = nx.from_pandas_dataframe(nodes, source='source', target='target')
+        print g.nodes(data=True)
+        nx.set_node_attributes(g, 'module', lambda x: 0)
+        print g.nodes(data=True)
+        return g
+
+    def create_super_graph(self, g, mapping):
+        g = nx.graph()
+        return g
+
         
     # Input : [<GraphFrame>, <GraphFrame>,...]
     # Output: { graphs: [{ nodes: [], edges: [] }, ...] } 
@@ -48,30 +75,29 @@ class hpctoolkit_preprocess(object):
             for procs in range(0, len(df[['name']])):
                 metrics[metric].append(df[metric][procs])
         return metrics
-
-    # Lookup by the node hash
-    def lookup(self, df, node_hash):
-        return df.loc[df['node'] == node_hash] 
-    
+   
     # depth first search for  the graph.
     # TODO: add level to the node attribs
-    def dfs(self, gf, df):
-        nodes = []
+    # Check if the node is in the filtered_df and it has a module name 
+    # TODO : Check if root.module == "None"
+    def dfs(self, gf):
+        graph = pd.DataFrame(dict(source=[], target=[], metrics=[]))
         root = gf.graph.roots[0]
         node_gen = gf.graph.roots[0].traverse()
+        df = gf.dataframe
         try:
             while root != None:
-                root = next(node_gen)
-                metrics = self.lookup(df, root)
-                # Check if the node is in the filtered_df and it has a module name 
-                # TODO : Check if root.module == "None"
-                if not metrics.empty:
-                    nodes.append({ "source": root.parent, "target": root })
+                root = next(node_gen)                
+                target_metrics = utils.lookup(df, root)
+                source_metrics = utils.lookup(df, root.parent)
+                if not target_metrics.empty and not source_metrics.empty:
+                    temp = pd.DataFrame(dict(source =[root.parent], target =[root], source_metrics=[source_metrics], target_metrics= [target_metrics]))                    
+                    graph = pd.concat([graph, temp])
         except StopIteration:
             pass
         finally:
             del root
-        return nodes
+        return graph
 
     # create new data frame from the nodes
     def createdf(self, nodes):

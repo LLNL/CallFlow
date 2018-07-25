@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from flask import Flask, jsonify, render_template, send_from_directory, current_app
 import os
 import sys
@@ -6,8 +8,7 @@ import uuid
 import argparse
 
 from hatchet import *
-from hpctoolkit_format import *
-from caliper_format import *
+from callflow import *
 from configFileReader import * 
 import utils
 from logger import log
@@ -32,8 +33,8 @@ class CallFlow():
             self.launch_webapp()
         else:
             self.filter_gfs()
-#            self.create_server()
-#            self.launch_webapp()
+            self.create_server()
+            self.launch_webapp()
             
     def create_parser(self):
         parser = argparse.ArgumentParser()
@@ -66,6 +67,7 @@ class CallFlow():
         else:
             self.gfs_format = self.config.format
 
+
     # ===============================================================================
             # Filtering Graphframes
     # ===============================================================================    
@@ -93,15 +95,15 @@ class CallFlow():
             filter_gf = filter_gf.graft()
             fgfs.append(filter_gf)
 
-        self.write_gfs(fgfs)
+        self.gfs = fgfs
+#        self.write_gfs(fgfs)
         
     # Write graphframes to csv files
     def write_gfs(self, fgfs):
         for idx, fgf in enumerate(fgfs):
             filepath = self.config.paths[idx] +'calc-pi_filtered_{0}.json'.format(idx)
             CaliperWriter(fgf, filepath)
-            
-       
+                  
     # ==============================================================================
                 # Callflow server 
     # ==============================================================================
@@ -113,7 +115,7 @@ class CallFlow():
         # App routes 
         @self.app.route('/')
         def root():
-            print "App directory", app.__dir__
+            print("App directory", app.__dir__)
             return send_from_directory(app.__dir__, 'index.html')
         
         @self.app.route('/<path:filename>')
@@ -131,16 +133,14 @@ class CallFlow():
             })
 
     def launch_webapp(self):
-        # Load the graph frames from the files. 
-        self.gfs = self.create_gfs()
-
-        print self.gfs
+        # Load the graph frames from an intermediate format.
+#        self.gfs = self.create_gfs()
 
         # Create the callflow graph frames from graphframes given by hatchet
         self.cfgs = self.create_cfgs()
 
         # Launch the flask app
-        self.app.run(debug = self.debug, use_reloader=False)
+        self.app.run(debug = self.debug, use_reloader=True)
 
     def load_gfs(self):
         return 0
@@ -161,10 +161,7 @@ class CallFlow():
     def create_cfgs(self):
         ret = []
         for idx, gf in enumerate(self.gfs):
-            if self.gfs_format[idx] == 'hpctoolkit':
-                ret.append(hpctoolkit_format(gf))
-            elif self.gfs_format[idx] == 'caliper':
-                ret.append(caliper_callflow_format().run(gf))
+            ret.append(callflow(gf))
         return ret
   
 if __name__ == '__main__':

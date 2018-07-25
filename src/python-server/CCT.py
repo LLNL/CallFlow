@@ -1,7 +1,7 @@
 from functools import total_ordering
 from utils import lookup
 
-#z@total_ordering
+#@total_ordering
 class CCT:
 
     # depth first search for  the graph.

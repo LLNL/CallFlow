@@ -44,4 +44,4 @@ def automatic_gfs_format_lookup(paths):
                 ret.append('caliper')
     log.info("Found formats = {0}".format(ret))
     return ret
-            
+
