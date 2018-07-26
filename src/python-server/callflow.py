@@ -21,23 +21,34 @@ class callflow:
         self.gf = gf
         self.graph = defaultdict(list)        
         self.g = self.create_graph()
-        
+        mapping = {}
         self.sg = self.create_super_graph(self.g, mapping)
         #        self.run(gfs)
 
     # TODO: Add props to the nodes. 
     def create_graph(self):
-        nodes = self.dfs(self.gf)
-        g = nx.from_pandas_dataframe(nodes, source='source', target='target')
-        print g.nodes(data=True)
-        nx.set_node_attributes(g, 'module', lambda x: 0)
-        print g.nodes(data=True)
+        graph = self.dfs(self.gf)
+        print len(graph)
+        g = nx.from_pandas_dataframe(graph, source='source', target='target') 
+        module_mapping = self.create_module_map(g.nodes(), 'module')
+        name_mapping = self.create_module_map(g.nodes(), 'name')
+        file_mapping = self.create_module_map(g.nodes(), 'file')
+        type_mapping = self.create_module_map(g.nodes(), 'type')
+        nx.set_node_attributes(g, 'module', module_mapping)
+        nx.set_node_attributes(g, 'name', name_mapping)
+        nx.set_node_attributes(g, 'file', file_mapping)
+        nx.set_node_attributes(g, 'type', type_mapping)
         return g
 
     def create_super_graph(self, g, mapping):
-        g = nx.graph()
+        g = {}
         return g
 
+    def create_module_map(self, nodes, attribute):
+        ret = {}
+        for node in nodes:
+            ret[node] = utils.lookupByAttribute(self.gf.dataframe, node, attribute)
+        return ret
         
     # Input : [<GraphFrame>, <GraphFrame>,...]
     # Output: { graphs: [{ nodes: [], edges: [] }, ...] } 
@@ -55,14 +66,6 @@ class callflow:
             })
         ret = { "graphs" : self.graphs }
         return ret
-
-    # Input : ./xxx/xxx/yyy
-    # Output: yyy
-    def sanitizeName(self, name):
-        if name == None:
-            return None
-        name_split = name.split('/')
-        return name_split[len(name_split) - 1]  
 
     # get metrics for a dataframe grouped object
     def metrics(self, df):
@@ -90,8 +93,10 @@ class callflow:
                 root = next(node_gen)                
                 target_metrics = utils.lookup(df, root)
                 source_metrics = utils.lookup(df, root.parent)
+                print source_metrics, target_metrics
                 if not target_metrics.empty and not source_metrics.empty:
                     temp = pd.DataFrame(dict(source =[root.parent], target =[root], source_metrics=[source_metrics], target_metrics= [target_metrics]))                    
+                    print 'a'
                     graph = pd.concat([graph, temp])
         except StopIteration:
             pass
