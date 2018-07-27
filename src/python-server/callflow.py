@@ -25,8 +25,11 @@ class callflow:
         self.sg = self.create_super_graph(self.g, mapping)
         #        self.run(gfs)
 
-    # TODO: Add props to the nodes. 
+    # TODO : make a NX graph by the callpath. Much easier on Computation. No need to dfs. 
     def create_graph(self):
+        print self.gf.dataframe.loc[self.gf.dataframe['node'] == self.gf.graph.roots[0]]['node'][0].callpath
+        self.gf.dataframe['path'] =  self.gf.dataframe['node'].apply(lambda node: node.callpath)
+        print self.gf.dataframe['path']
         graph = self.dfs(self.gf)
         print len(graph)
         g = nx.from_pandas_dataframe(graph, source='source', target='target') 
@@ -38,6 +41,7 @@ class callflow:
         nx.set_node_attributes(g, 'name', name_mapping)
         nx.set_node_attributes(g, 'file', file_mapping)
         nx.set_node_attributes(g, 'type', type_mapping)
+        print g
         return g
 
     def create_super_graph(self, g, mapping):
@@ -93,10 +97,8 @@ class callflow:
                 root = next(node_gen)                
                 target_metrics = utils.lookup(df, root)
                 source_metrics = utils.lookup(df, root.parent)
-                print source_metrics, target_metrics
                 if not target_metrics.empty and not source_metrics.empty:
                     temp = pd.DataFrame(dict(source =[root.parent], target =[root], source_metrics=[source_metrics], target_metrics= [target_metrics]))                    
-                    print 'a'
                     graph = pd.concat([graph, temp])
         except StopIteration:
             pass

@@ -32,7 +32,8 @@ class CallFlow():
             self.create_server()
             self.launch_webapp()
         else:
-            self.filter_gfs()
+            self.gfs = self.create_gfs()
+            self.fgfs = self.filter_gfs()
             self.create_server()
             self.launch_webapp()
             
@@ -67,36 +68,57 @@ class CallFlow():
         else:
             self.gfs_format = self.config.format
 
+    # Loops over the config.paths and gets the graphframe from hatchet
+    def create_gfs(self):
+        log.info("Creating graphframes....")
+        t = time.time()
+        ret = []
+        for idx, path in enumerate(self.config.paths):
+            gf = GraphFrame()
+            if self.gfs_format[idx] == 'hpctoolkit':
+                gf.from_hpctoolkit(path)
+            elif self.gfs_format[idx] == 'caliper':                
+                gf.from_caliper(path)
+            ret.append(gf)
+        log.info("[Create] Nodes count: {0} (time={1})".format(gf.dataframe.shape[0], time.time() - t))
+        return ret
 
+
+            
     # ===============================================================================
             # Filtering Graphframes
     # ===============================================================================    
-    def filter_gfs(self):
+    def filter_gfs(self, write=False):
         # Create the graph frames from the paths and corresponding format using hatchet
-        gfs = self.create_gfs()
         fgfs = []
-        
         # Filter graphframes based on threshold
-        for idx, gf in enumerate(gfs):            
-            cct = CCT()
-            cct.dfs(gf, gf.dataframe)
-            log.info("Filtering the {0} graphframe by {1} with threshold {2}".format(idx, self.args.filterBy, self.args.filtertheta))
+        for idx, gf in enumerate(self.gfs):            
+            log.info("Filtering....")
+            t = time.time()
             if self.args.filterBy == "IncTime":
                 max_inclusive_time = utils.getMaxIncTime(gf)
+                log.info('[Filter] By Inclusive time = {0} '.format(max_inclusive_time))
                 filter_gf = gf.filter(lambda x: True if(x['CPUTIME (usec) (I)'] > 0.01*max_inclusive_time) else False)
-                log.info('[Filter] Removed {0} nodes. (Inclusive time = {1} ) '.format(gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], max_inclusive_time))
             elif self.args.filterBy == "ExcTime":
                 max_exclusive_time = utils.getMaxExcTime(gf)
+                log.info('[Filter] By Exclusive time = {0})'.format(max_exclusive_time))
                 filter_gf = gf.filter(lambda x: True if (x['CPUTIME (usec) (E)'] > 0.01*max_exclusive_time) else False)
-                log.info('[Filter] Removed {0} nodes. (Exclusive time = {1})'.format(gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], max_exclusive_time))
             else:
-               filter_gf = gf
-
+                log.warn("Not filtering.... Can take forever. Thou were warned")
+                filter_gf = gf
+            log.info('[Filter] Removed {0} nodes. (time={1})'.format(gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], time.time() - t))
+               
+            log.info("Graftin......")
+            t = time.time()
             filter_gf = filter_gf.graft()
+            log.info("[Graft] {1} nodes left (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
             fgfs.append(filter_gf)
 
-        self.gfs = fgfs
-#        self.write_gfs(fgfs)
+        if write:
+            self.write_gfs(fgfs)
+            
+        return fgfs
+   
         
     # Write graphframes to csv files
     def write_gfs(self, fgfs):
@@ -145,20 +167,8 @@ class CallFlow():
     def load_gfs(self):
         return 0
         
-    # Loops over the config.paths and gets the graphframe from hatchet
-    def create_gfs(self):
-        ret = []
-        for idx, path in enumerate(self.config.paths):
-            gf = GraphFrame()
-            if self.gfs_format[idx] == 'hpctoolkit':
-                gf.from_hpctoolkit(path)
-            elif self.gfs_format[idx] == 'caliper':                
-                gf.from_caliper(path)
-            ret.append(gf)
-        return ret
-
     # Loops through the graphframes and creates callflow graph format
-    def create_cfgs(self):
+    def create_cfgs(self):        
         ret = []
         for idx, gf in enumerate(self.gfs):
             ret.append(callflow(gf))

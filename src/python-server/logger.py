@@ -9,10 +9,10 @@ class Log:
         logging.INFO:     ("info", "inf", "nfo", "i"),
         }
     
-    def __init__(self, lvl=logging.DEBUG, format=None):
+    def __init__(self, lvl=logging.DEBUG):
         self.lvl = lvl
-        if not format:
-            format  ="\033[1m CallFlow:  %(log_color)s%(message)s%(reset)s"
+#        format  ="\033[1m CallFlow: [" + action + "] %(log_color)s%(message)s%(reset)s"
+        format  ="\033[1m CallFlow:  %(log_color)s%(message)s%(reset)s"
         self.format = format
         logging.root.setLevel(self.lvl)
         self.formatter = colorlog.ColoredFormatter(self.format)
@@ -25,7 +25,7 @@ class Log:
         
     def error(self, msg, *args, **kwargs):
         for line in str(msg).splitlines():
-            self.logger.error(line, *args, **kwargs)        
+            self.logger.error(line *args, **kwargs)        
     err = e = error
 
     def warn(self, msg, *args, **kwargs):
