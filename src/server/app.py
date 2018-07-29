@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 from flask import Flask, jsonify, render_template, send_from_directory, current_app
 import os
 import sys
@@ -13,6 +12,8 @@ from configFileReader import *
 import utils
 from logger import log
 from CCT import *
+
+app = Flask(__name__, static_url_path='/public')
 
 class CallFlow():
     def __init__(self):
@@ -130,25 +131,25 @@ class CallFlow():
                 # Callflow server 
     # ==============================================================================
     def create_server(self):
-        self.app = Flask(__name__, static_url_path='/public')
-        self.app.debug = True
-        self.app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), '')
+        app.debug = True
+        app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), '')
         
         # App routes 
-        @self.app.route('/')
+        @app.route('/')
         def root():
             print("App directory", app.__dir__)
             return send_from_directory(app.__dir__, 'index.html')
         
-        @self.app.route('/<path:filename>')
+        @app.route('/<path:filename>')
         def send_js(filename):
             return send_from_directory(os.path.join(app.__dir__, 'public'), filename)
         
-        @self.app.route('/getSankey')
+        @app.route('/getSankey')
         def getSankey():
-            return jsonify(graphs)
+            print self.cfgs
+            return json.dumps(self.cfgs)
         
-        @self.app.route('/dataSetInfo')
+        @app.route('/dataSetInfo')
         def dataSetInfo():
             return jsonify({
                 "g": 1
@@ -161,8 +162,9 @@ class CallFlow():
         # Create the callflow graph frames from graphframes given by hatchet
         self.cfgs = self.create_cfgs()
 
+        print self.cfgs
         # Launch the flask app
-        self.app.run(debug = self.debug, use_reloader=True)
+        app.run(debug = self.debug, use_reloader=True)
 
     def load_gfs(self):
         return 0
@@ -170,8 +172,10 @@ class CallFlow():
     # Loops through the graphframes and creates callflow graph format
     def create_cfgs(self):        
         ret = []
-        for idx, gf in enumerate(self.gfs):
-            ret.append(callflow(gf))
+        for idx, gf in enumerate(self.fgfs):
+            callflow = Callflow(gf)
+            ret.append(callflow.getCFG())
+        print ret    
         return ret
   
 if __name__ == '__main__':

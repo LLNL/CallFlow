@@ -7,6 +7,7 @@ import networkx as nx
 from collections import deque
 import utils
 import matplotlib.pyplot as plt
+#from floweaver import *
 
 class Node:
     def __init__(self, node_type):
@@ -16,33 +17,39 @@ class Node:
         self.comp_num = -1
         self.is_separated = False
 
-class callflow:
+class Callflow():
     def __init__(self, gf):
         self.gf = gf
-        self.graph = defaultdict(list)        
+        self.df = gf.dataframe
+        self.graph = gf.graph
         self.g = self.create_graph()
         mapping = {}
         self.sg = self.create_super_graph(self.g, mapping)
-        #        self.run(gfs)
+        self.cfg = self.convert_graph(self.g)
 
     # TODO : make a NX graph by the callpath. Much easier on Computation. No need to dfs. 
     def create_graph(self):
-        print self.gf.dataframe.loc[self.gf.dataframe['node'] == self.gf.graph.roots[0]]['node'][0].callpath
-        self.gf.dataframe['path'] =  self.gf.dataframe['node'].apply(lambda node: node.callpath)
-        print self.gf.dataframe['path']
-        graph = self.dfs(self.gf)
-        print len(graph)
-        g = nx.from_pandas_dataframe(graph, source='source', target='target') 
+        g = nx.DiGraph()
+        
+        self.df['path'] =  self.df['node'].apply(lambda node: node.callpath)
+        self.df = self.df.reset_index(drop=True)
+        self.df.groupby(['node'], as_index=True, squeeze=True)
+        
+        for path in self.df['path']:
+            g.add_path(path)
+        
         module_mapping = self.create_module_map(g.nodes(), 'module')
         name_mapping = self.create_module_map(g.nodes(), 'name')
         file_mapping = self.create_module_map(g.nodes(), 'file')
         type_mapping = self.create_module_map(g.nodes(), 'type')
+        time_mapping = self.create_module_map(g.nodes(), 'CPUTIME (usec) (I)')
         nx.set_node_attributes(g, 'module', module_mapping)
-        nx.set_node_attributes(g, 'name', name_mapping)
-        nx.set_node_attributes(g, 'file', file_mapping)
-        nx.set_node_attributes(g, 'type', type_mapping)
-        print g
+        nx.set_node_attributes(g, 'time', time_mapping)
+        # nx.set_node_attributes(g, 'name', name_mapping)
+        # nx.set_node_attributes(g, 'file', file_mapping)
+        # nx.set_node_attributes(g, 'type', type_mapping)
         return g
+    
 
     def create_super_graph(self, g, mapping):
         g = {}
@@ -51,9 +58,22 @@ class callflow:
     def create_module_map(self, nodes, attribute):
         ret = {}
         for node in nodes:
-            ret[node] = utils.lookupByAttribute(self.gf.dataframe, node, attribute)
+            if attribute == 'CPUTIME (usec) (I)':
+                ret[node] =  self.df[self.df['name'] == node][attribute].max()
+            else:
+                ret[node] =  self.df[self.df['name'] == node][attribute]
+#            ret[node] = utils.lookupByAttribute(self.gf.dataframe, node, attribute)
         return ret
+
+    def convert_graph(self, graph):
+        return {
+            "nodes": self.g.nodes(),
+            "edges": self.g.edges()
+        }
         
+    def getCFG(self):
+        return self.cfg
+    
     # Input : [<GraphFrame>, <GraphFrame>,...]
     # Output: { graphs: [{ nodes: [], edges: [] }, ...] } 
     def run(self, gfs):
@@ -105,18 +125,6 @@ class callflow:
         finally:
             del root
         return graph
-
-    # create new data frame from the nodes
-    def createdf(self, nodes):
-        df = None
-        return df
-
-    def getNodes(self, graph):
-        ret = []
-        print graph
-
-    def getEdges(self, graph):
-        ret = []
 
     # Construct the nodes for the graph.
     def construct_nodes(self, gf):

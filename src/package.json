@@ -32,6 +32,7 @@
     "babelify": "^9.0.0",
     "browserify": "^16.2.2",
     "eslint-plugin-import": "^2.8.0",
+    "forever": "^0.15.3",
     "madge": "^3.1.1"
   },
   "scripts": {
