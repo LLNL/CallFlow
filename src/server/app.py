@@ -146,7 +146,6 @@ class CallFlow():
         
         @app.route('/getSankey')
         def getSankey():
-            print self.cfgs
             return json.dumps(self.cfgs)
         
         @app.route('/dataSetInfo')
@@ -162,7 +161,6 @@ class CallFlow():
         # Create the callflow graph frames from graphframes given by hatchet
         self.cfgs = self.create_cfgs()
 
-        print self.cfgs
         # Launch the flask app
         app.run(debug = self.debug, use_reloader=True)
 
@@ -175,7 +173,6 @@ class CallFlow():
         for idx, gf in enumerate(self.fgfs):
             callflow = Callflow(gf)
             ret.append(callflow.getCFG())
-        print ret    
         return ret
   
 if __name__ == '__main__':

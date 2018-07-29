@@ -22,11 +22,11 @@ class Callflow():
         self.gf = gf
         self.df = gf.dataframe
         self.graph = gf.graph
+        self.rootRunTimeInc = self.getRootRunTimeInc()
         self.g = self.create_graph()
         mapping = {}
         self.sg = self.create_super_graph(self.g, mapping)
         self.cfg = self.convert_graph(self.g)
-
     # TODO : make a NX graph by the callpath. Much easier on Computation. No need to dfs. 
     def create_graph(self):
         g = nx.DiGraph()
@@ -38,6 +38,7 @@ class Callflow():
         for path in self.df['path']:
             g.add_path(path)
         
+
         module_mapping = self.create_module_map(g.nodes(), 'module')
         name_mapping = self.create_module_map(g.nodes(), 'name')
         file_mapping = self.create_module_map(g.nodes(), 'file')
@@ -45,9 +46,9 @@ class Callflow():
         time_mapping = self.create_module_map(g.nodes(), 'CPUTIME (usec) (I)')
         nx.set_node_attributes(g, 'module', module_mapping)
         nx.set_node_attributes(g, 'time', time_mapping)
-        # nx.set_node_attributes(g, 'name', name_mapping)
-        # nx.set_node_attributes(g, 'file', file_mapping)
-        # nx.set_node_attributes(g, 'type', type_mapping)
+        nx.set_node_attributes(g, 'name', name_mapping)
+        nx.set_node_attributes(g, 'file', file_mapping)
+        nx.set_node_attributes(g, 'type', type_mapping)
         return g
     
 
@@ -59,21 +60,29 @@ class Callflow():
         ret = {}
         for node in nodes:
             if attribute == 'CPUTIME (usec) (I)':
-                ret[node] =  self.df[self.df['name'] == node][attribute].max()
+                ret[node] =  self.df[self.df['name'] == node][attribute].max().tolist()
             else:
-                ret[node] =  self.df[self.df['name'] == node][attribute]
+                ret[node] =  self.df[self.df['name'] == node][attribute].tolist()
 #            ret[node] = utils.lookupByAttribute(self.gf.dataframe, node, attribute)
         return ret
 
     def convert_graph(self, graph):
         return {
-            "nodes": self.g.nodes(),
+            "stats": {
+                "rootRunTimeInc": self.rootRunTimeInc
+            },
+            "nodes": self.g.nodes(data=True),
             "edges": self.g.edges()
         }
         
     def getCFG(self):
         return self.cfg
-    
+
+    def getRootRunTimeInc(self):
+        root = self.graph.roots[0]
+        root_metrics = utils.lookup(self.df, root)
+        return root_metrics['CPUTIME (usec) (I)'].max()
+
     # Input : [<GraphFrame>, <GraphFrame>,...]
     # Output: { graphs: [{ nodes: [], edges: [] }, ...] } 
     def run(self, gfs):
@@ -97,7 +106,6 @@ class Callflow():
         metric_list = ['CPUTIME (usec) (E)', 'CPUTIME (usec) (I)', 'file', 'line', 'type', 'name']
         for metric in metric_list:
             metrics[metric] = []
-            print df[['name']]
         for metric in metric_list:
             for procs in range(0, len(df[['name']])):
                 metrics[metric].append(df[metric][procs])
