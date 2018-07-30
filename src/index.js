@@ -153,7 +153,8 @@ function parseJSONFile(JSONFile){
     if (datasetFile.path === null) {
         exception('I need the path information');
     } else {
-        filePaths = datasetFile.path;
+        filePaths = datasetFile.path
+	console.log(filePaths)
     }
     
     let promises = filePaths.map(loadFile);

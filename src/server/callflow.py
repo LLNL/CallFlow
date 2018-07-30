@@ -8,7 +8,8 @@ from networkx.readwrite import json_graph
 from collections import deque
 import utils
 import matplotlib.pyplot as plt
-#from floweaver import *
+import ete3
+from logger import log
 
 class Node:
     def __init__(self, node_type):
@@ -23,17 +24,21 @@ class Callflow():
         self.gf = gf
         self.df = gf.dataframe
         self.graph = gf.graph
-        self.rootRunTimeInc = self.getRootRunTimeInc()
+        self.pre_process()
         self.g = self.create_graph()
-        mapping = {}
-        self.sg = self.create_super_graph(self.g, mapping)
-        self.cfg = self.convert_graph(self.g)
+        self.g = self.check_cycles(self.g)
+        self.tree = self.create_subtrees(self.g)
+        self.sg = self.create_super_graph(self.g, {})
+        self.cfg = self.convert_graph(self.tree)
 
-    def create_graph(self):
+    def pre_process(self):
         self.df['path'] =  self.df['node'].apply(lambda node: node.callpath)
         self.df = self.df.reset_index(drop=True)
         self.df.groupby(['node'], as_index=True, squeeze=True)
-        
+        self.root = list(set(utils.lookup(self.df, self.graph.roots[0]).name))[0]
+        self.rootRunTimeInc = self.getRootRunTimeInc() 
+
+    def create_graph(self):        
         g = nx.DiGraph(rootRunTimeInc = self.rootRunTimeInc)        
         for path in self.df['path']:
             g.add_path(path)
@@ -52,12 +57,34 @@ class Callflow():
         nx.set_node_attributes(g, 'children', children_mapping)
 
         capacity_mapping = self.calculate_flows(g)
-        nx.set_edge_attributes(g, 'capacity', capacity_mapping)
-
-        print 'a'+ str(nx.flow_hierarchy(g))
-#        print self.leaves_below(g, '<program root>')
+        nx.set_edge_attributes(g, 'weight', capacity_mapping)
 
         return g
+
+    def check_cycles(self, g):
+        log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(g)))
+        self.is_tree = nx.is_tree(g)
+        log.warn("Is it a tree? : {0}".format(nx.is_tree(g)))
+
+        if not self.is_tree:
+            log.info("Removing the cycles from graph.....")
+            cycles = nx.find_cycle(g)
+            for cycle in cycles:
+                log.warn("Removing cycles: {0} -> {1}".format(cycle[0], cycle[1]))
+                g.remove_edge(*cycle)
+#            nx.set_graph_attributes(g, 'cycles', cycle)
+        return g
+    
+    def create_subtrees(self, g):
+        subtrees = {node: ete3.Tree(name = node) for node in g.nodes()}
+        [map(lambda edge:subtrees[edge[0]].add_child(subtrees[edge[1]]), g.edges())]
+        tree = subtrees[self.root]
+        print type(subtrees)
+        for subtree in subtrees:
+            for y in subtrees[subtree]:
+                print str(subtree) + ':' + str(y)
+        log.info(tree)
+        return tree
 
     def hierarchy_level(self, G, root, level = None, parent = None):
         if level == None:
@@ -66,8 +93,6 @@ class Callflow():
         else:
             level[root] = level[parent] + 1
         neighbors = G.neighbors(root)
-        print parent, root, neighbors
-        print level
         if len(neighbors)!=0:
             for neighbor in neighbors:
                 level[root] = self.hierarchy_level(G, neighbor, level=level, parent = root)
@@ -79,7 +104,7 @@ class Callflow():
 
     def immediate_children(self, graph):
         ret = {}
-        parentChildMap = nx.dfs_successors(graph, '<program root>')
+        parentChildMap = nx.dfs_successors(graph, self.root)
         nodes = graph.nodes()
         for node in nodes:
             if node in parentChildMap.keys():
@@ -103,7 +128,7 @@ class Callflow():
         return ret
             
     
-    def create_super_graph(self, graph, mapping):
+    def create_super_graph(self, graph, query):
         g = {}
         return g
 
@@ -113,21 +138,12 @@ class Callflow():
             if attribute == 'CPUTIME (usec) (I)':
                 ret[node] =  self.df[self.df['name'] == node][attribute].max().tolist()
             else:
-                ret[node] =  list(set(self.df[self.df['name'] == node][attribute].tolist()))
-
-            
+                ret[node] =  list(set(self.df[self.df['name'] == node][attribute].tolist()))            
 #            ret[node] = utils.lookupByAttribute(self.gf.dataframe, node, attribute)
         return ret
     
     def convert_graph(self, graph):
         return json_graph.node_link_data(self.g)
-        return {
-            "stats": {
-                "rootRunTimeInc": self.rootRunTimeInc
-            },
-            "nodes": self.g.nodes(data=True),
-            "edges": self.g.edges(data=True)
-        }
         
     def getCFG(self):
         return self.cfg
