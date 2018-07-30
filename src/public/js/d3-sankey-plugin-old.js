@@ -143,11 +143,11 @@ function d3sankeySingle() {
         });
 
         links.forEach(function(link) {
-            var source = link.sourceID,
-                target = link.targetID;
+            var source = link.source,
+                target = link.target;
 
-            if (typeof source === "number") source = link.source = nodes[link.sourceID];
-            if (typeof target === "number") target = link.target = nodes[link.targetID];
+            if (typeof source === "number") source = link.source = nodes[link.source];
+            if (typeof target === "number") target = link.target = nodes[link.target];
             
             source.sourceLinks.push(link);
             target.targetLinks.push(link);
@@ -176,21 +176,19 @@ function d3sankeySingle() {
     }
 
     function d3sum(values, valueOf){
-	    let sum = 0, value;
-	    for(let  i = 0 ; i < values.length; i++){
-	        sum += values[i][valueOf];
-	    }
+	let sum = 0, value;
+	for(let  i = 0 ; i < values.length; i++){
+	    sum += values[i][valueOf];
+	}
 	    return sum;
     }
     
     // Compute the value (size) of each node by summing the associated links.
     function computeNodeValues() {
         nodes.forEach(function(node) {
-
-            console.log(node);
             node.value = Math.max(
-                d3.sum(node.sourceLinks,value),
-                d3.sum(node.targetLinks,value)
+                d3sum(node.sourceLinks,"capacity"),
+                d3sum(node.targetLinks,"capacity")
             );
  
             // if(node.level ==  0){
@@ -221,29 +219,28 @@ function d3sankeySingle() {
     // nodes with no incoming links are assigned breadth zero, while
     // nodes with no outgoing links are assigned the maximum breadth.
     function computeNodeBreadths() {
-/*        var remainingNodes = nodes,
-            nextNodes,
-            x = 0;
-        console.log(remainingNodes);
-        while (remainingNodes.length && x < 100) {
-            console.log(remainingNodes);
-            nextNodes = [];
-            remainingNodes.forEach(function(node) {
-                node.x = x;
-                console.log(x);
-                node.dx = nodeWidth;
-                node.sourceLinks.forEach(function(link) {
-                    nextNodes.push(link.target);
-                });
-            });
-            remainingNodes = nextNodes;
-            ++x;
-            }*/
+        // var remainingNodes = nodes,
+        //     nextNodes,
+        //     x = 0;
+        // while (remainingNodes.length && x < 100) {
+        //     console.log(remainingNodes);
+        //     nextNodes = [];
+        //     remainingNodes.forEach(function(node) {
+        //         node.x = x;
+        //         console.log(x);
+        //         node.dx = nodeWidth;
+        //         node.sourceLinks.forEach(function(link) {
+        //             nextNodes.push(link.target);
+        //         });
+        //     });
+        //     remainingNodes = nextNodes;
+        //     ++x;
+        // }
 
-        nodes.forEach(function(node) {
-            node.x = node.level; 
-            node.dx = nodeWidth;
-        })
+        // nodes.forEach(function(node) {
+        //     node.x = node.level; 
+        //     node.dx = nodeWidth;
+        // })
 
         x = 6;
         

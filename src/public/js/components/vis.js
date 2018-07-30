@@ -36,6 +36,7 @@ Vis.prototype.init = function() {
             console.log('[Vis] Sankey information :', data)
         }
         self.graphs = data
+
 	console.log(self.graphs)
         let prop = {
             ID: '#procedure_view',

@@ -1,23 +1,23 @@
 export default function sankeyComputation(graph, view){
-    console.log(graph, view)
     let sankey = d3sankeySingle()
-	    .nodeWidth(view.nodeWidth)
-	    .nodePadding(view.ySpacing)
+	.nodeWidth(view.nodeWidth)
+	.nodePadding(view.ySpacing)
         .size([view.width * 1.05, view.height - view.ySpacing])
-	    .xSpacing(view.xSpacing)
-	    .setReferenceValue(view.rootRunTime);
+	.xSpacing(view.xSpacing)
+	.setReferenceValue(view.rootRunTime);
     
-	let path = sankey.link();
+    let path = sankey.link();
     
-	let graph_temp = buildGraph(graph.nodes, graph.edges);
-	sankey.nodes(graph_temp.nodes)
-	    .links(graph_temp.edges)
-	    .layout(32);
+    let graph_temp = buildGraph(graph.nodes, graph.links);
+    sankey.nodes(graph_temp.nodes)
+	.links(graph_temp.edges)
+	.layout(32);
 
     return sankey
 }
 
 function buildGraph(nodes, edges) {
+    console.log(nodes, edges)
     let temp_nodes = nodes.slice()
     let temp_edges = edges.slice()
 
@@ -25,8 +25,8 @@ function buildGraph(nodes, edges) {
     computeNodeBreadths(temp_nodes, temp_edges)
 
     for (var i = 0; i < temp_edges.length; i++) {
-        let source = temp_edges[i].sourceID;
-        let target = temp_edges[i].targetID;
+        let source = temp_edges[i].source;
+        let target = temp_edges[i].target;
         let source_x = nodes[source].x
         let target_x = nodes[target].x
         let dx = target_x - source_x
@@ -65,8 +65,8 @@ function computeNodeEdges(nodes, links) {
         node.targetLinks = [];
     });
     links.forEach(function(link) {
-        var source = link.sourceID,
-		    target = link.targetID;
+        var source = link.source,
+		    target = link.target;
         nodes[source].sourceLinks.push(link);
         nodes[target].targetLinks.push(link);
     });

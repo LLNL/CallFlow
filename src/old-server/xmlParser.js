@@ -271,7 +271,6 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
         const newNode = createNewNodeFromXML(xmlNode, 'PF', level, parentNode);
         const nextLevel = level + 1;
         const getSpecialIDNameTypeRes = getSpecialIDNameType(newNode);
-	console.log(getSpecialIDNameTypeRes)
         const tempID = getSpecialIDNameTypeRes.specialID;// = "LM" + newNode.loadModuleID;
         const type = getSpecialIDNameTypeRes.type;
         const name = getSpecialIDNameTypeRes.name;
@@ -415,8 +414,6 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
                 nodeID = parseInt(xmlNode.attr('i').value());
             }
             if (nodeKeep.indexOf(nodeID) > -1 || xmlNodeName == 'C') {
-		if( debug && xmlNode.attr('i') != null)
-		    console.log("id: ", xmlNode.attr('i').value(), "tag:", xmlNodeName)
 		if (xmlNodeName == 'SecCallPathProfileData') {
                     counter++;
                     parseSecCallPathProfileData(xmlNode, level);
@@ -612,7 +609,6 @@ const init  = function (xmlTree, xmlFile, configFileName, procIDArray, nodeMetri
             });
         }
 	else {
-	    console.log('here', node.loadModuleID)
             specialID = `LM${node.loadModuleID}`;
             type = 'LM';
             name = loadModuleTable[node.loadModuleID];

@@ -15,6 +15,9 @@ def sanitizeName(name):
 def lookup(df, node_hash):
     return df.loc[df['node'] == node_hash] 
 
+def lookupByName(df, name):
+    return df.loc[df['name'] == name]
+
 def lookupByAttribute(df, node_hash, attribute):
     ret = []
     node_df = df.loc[df['node'] == node_hash]

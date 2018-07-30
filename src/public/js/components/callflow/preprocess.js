@@ -8,29 +8,29 @@ export default function preprocess(graph){
 
 function calculateFlow(graph){
     let nodes = graph.nodes
-    let edges = graph.edges
+    let links = graph.links
     let outGoing = [];
     let inComing = [];
     nodes.forEach((node) => {
-	let nodeLabel = node["lmID"];
+	let nodeLabel = node.name[0];
         
-	edges.forEach((edge) => {
-            let graphID = edge['sourceInfo'].label;
-	    if(edge["sourceInfo"].label == nodeLabel){
-		if(outGoing[graphID] == undefined){
-		    outGoing[graphID] = 0;
+	links.forEach((link) => {
+            let linkLabel = nodes[link.source].name[0];
+	    if(linkLabel == nodeLabel){
+		if(outGoing[linkLabel] == undefined){
+		    outGoing[linkLabel] = 0;
 		}
-		outGoing[graphID] += edge["value"];
+		outGoing[linkLabel] += link.capacity
 	    }
         });
         
-        edges.forEach((edge) => {
-            let graphID = edge['targetInfo'].label;
-	    if(edge["targetInfo"].label == nodeLabel){
-		if(inComing[graphID] == undefined){
-		    inComing[graphID] = 0;
+        links.forEach((link) => {
+            let linkLabel = nodes[link.target].name[0]
+	    if(linkLabel == nodeLabel){
+		if(inComing[linkLabel] == undefined){
+		    inComing[linkLabel] = 0;
 		}
-		inComing[graphID] += edge["value"];
+		inComing[linkLabel] += link.capacity;
 	    }
 	})
 
@@ -50,7 +50,7 @@ function calculateFlow(graph){
 
 	calcStat(graph, node["inclusive"], node["exclusive"])
     })
-    
+
     return graph
 }
 

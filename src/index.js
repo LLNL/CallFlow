@@ -25,8 +25,8 @@ const rsvp = require('rsvp');
 
 const app = express();
 
-const sankeyCalc = require('./server/sankeyCalc.js');
-const xmlParser = require('./server/xmlParser.js');
+const sankeyCalc = require('./old-server/sankeyCalc.js');
+const xmlParser = require('./old-server/xmlParser.js');
 
 const server = require('http').Server(app);
 

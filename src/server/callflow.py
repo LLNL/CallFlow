@@ -4,6 +4,7 @@ import sys
 import time
 from collections import defaultdict
 import networkx as nx
+from networkx.readwrite import json_graph
 from collections import deque
 import utils
 import matplotlib.pyplot as plt
@@ -27,32 +28,82 @@ class Callflow():
         mapping = {}
         self.sg = self.create_super_graph(self.g, mapping)
         self.cfg = self.convert_graph(self.g)
-    # TODO : make a NX graph by the callpath. Much easier on Computation. No need to dfs. 
+
     def create_graph(self):
-        g = nx.DiGraph()
-        
         self.df['path'] =  self.df['node'].apply(lambda node: node.callpath)
         self.df = self.df.reset_index(drop=True)
         self.df.groupby(['node'], as_index=True, squeeze=True)
         
+        g = nx.DiGraph(rootRunTimeInc = self.rootRunTimeInc)        
         for path in self.df['path']:
             g.add_path(path)
-        
-
+            
         module_mapping = self.create_module_map(g.nodes(), 'module')
         name_mapping = self.create_module_map(g.nodes(), 'name')
         file_mapping = self.create_module_map(g.nodes(), 'file')
         type_mapping = self.create_module_map(g.nodes(), 'type')
         time_mapping = self.create_module_map(g.nodes(), 'CPUTIME (usec) (I)')
+        children_mapping = self.immediate_children(g)
         nx.set_node_attributes(g, 'module', module_mapping)
         nx.set_node_attributes(g, 'time', time_mapping)
         nx.set_node_attributes(g, 'name', name_mapping)
         nx.set_node_attributes(g, 'file', file_mapping)
         nx.set_node_attributes(g, 'type', type_mapping)
-        return g
-    
+        nx.set_node_attributes(g, 'children', children_mapping)
 
-    def create_super_graph(self, g, mapping):
+        capacity_mapping = self.calculate_flows(g)
+        nx.set_edge_attributes(g, 'capacity', capacity_mapping)
+
+        print 'a'+ str(nx.flow_hierarchy(g))
+#        print self.leaves_below(g, '<program root>')
+
+        return g
+
+    def hierarchy_level(self, G, root, level = None, parent = None):
+        if level == None:
+            level = {}
+            level[root] = 0
+        else:
+            level[root] = level[parent] + 1
+        neighbors = G.neighbors(root)
+        print parent, root, neighbors
+        print level
+        if len(neighbors)!=0:
+            for neighbor in neighbors:
+                level[root] = self.hierarchy_level(G, neighbor, level=level, parent = root)
+        return level
+
+    def leaves_below(self, graph, node):
+        return set(sum(([vv for vv in v if graph.out_degree(vv) == 0]
+                    for k, v in nx.dfs_successors(graph, node).items()), []))
+
+    def immediate_children(self, graph):
+        ret = {}
+        parentChildMap = nx.dfs_successors(graph, '<program root>')
+        nodes = graph.nodes()
+        for node in nodes:
+            if node in parentChildMap.keys():
+                ret[node] =  parentChildMap[node]
+        return ret
+
+    def calculate_flows(self, graph):
+        ret = {}
+        edges = graph.edges()
+        for edge in edges:
+            source = utils.lookupByName(self.df, edge[0])
+            target = utils.lookupByName(self.df, edge[1])
+
+            source_inc = source['CPUTIME (usec) (I)'].max()
+            target_inc = target['CPUTIME (usec) (I)'].max()
+            
+            if source_inc == target_inc:
+                ret[edge] = source_inc
+            else:
+                ret[edge] = source_inc - target_inc
+        return ret
+            
+    
+    def create_super_graph(self, graph, mapping):
         g = {}
         return g
 
@@ -62,17 +113,20 @@ class Callflow():
             if attribute == 'CPUTIME (usec) (I)':
                 ret[node] =  self.df[self.df['name'] == node][attribute].max().tolist()
             else:
-                ret[node] =  self.df[self.df['name'] == node][attribute].tolist()
+                ret[node] =  list(set(self.df[self.df['name'] == node][attribute].tolist()))
+
+            
 #            ret[node] = utils.lookupByAttribute(self.gf.dataframe, node, attribute)
         return ret
-
+    
     def convert_graph(self, graph):
+        return json_graph.node_link_data(self.g)
         return {
             "stats": {
                 "rootRunTimeInc": self.rootRunTimeInc
             },
             "nodes": self.g.nodes(data=True),
-            "edges": self.g.edges()
+            "edges": self.g.edges(data=True)
         }
         
     def getCFG(self):
@@ -134,121 +188,3 @@ class Callflow():
             del root
         return graph
 
-    # Construct the nodes for the graph.
-    def construct_nodes(self, gf):
-        nodes_map = {}
-        ret = []
-
-        t = time.time()
-        # List of nodes of interest
-        graph = self.dfs(gf, filter_df)
-        if debug:
-            print time.time() - t
-
-
-        nodesInGraph = getNodes(graph)
-        edgesInGraph = getEdges(graph)
-        
-        # Convert the nodes into a dataframe.
-        node_metrics = []
-        for node in nodes:
-            node_metrics.append(self.lookup(filter_df , node['target']))
-        node_metrics_df = pd.concat(node_metrics)
-
-        # # group the frame by the module and name        
-        # grouped_df = node_metrics_df.groupby(['module', 'name'])
-            
-        # # Structure creation
-        # for key, item in grouped_df:
-        #     if debug:
-        #         print 'Module name: {0}, function: {1}'.format(key[0], key[1])
-        #     node_key = key[0]
-        #     nodes_map[node_key] = {}
-        #     nodes_map[node_key]["fns"] = []
-
-
-        # for key, item in grouped_df:
-        #     print "Shape:", item.shape
-        #     node_key = key[0]
-        #     metrics_pes = []
-        #     for rank_keys, rank_items in item.groupby(['rank']):
-        #         metrics_pes.append(self.metrics(rank_items))
-                    
-        #     nodes_map[node_key]["fns"].append({ 
-        #         "fn_name": key[1], 
-        #         "metrics": metrics_pes
-        #     })
-        # print nodes_map
-            
-            
-        # for key, item in nodes_map.iteritems():
-        #     print item
-        #     ret.append({
-        #         'module': key,
-        #         'props': item
-        #     })
-        return ret
-    
-
-    def assign_levels(self, gf):
-        ret = {}
-        ret['<program root>'] = 0
-        visited, queue = set(), gf.graph.roots
-        while queue:
-            node = queue.pop(0)
-            # Not the right way
-            current = self.sanitizeName(node.module)
-            parent = self.sanitizeName(node.parentModule)
-            if current not in ret.keys():
-                ret[current] = ret[parent] + 1
-                
-            if node not in visited:
-                visited.add(node)
-                queue.extend(node.children)
-        return ret
-
-    def construct_edges(self, gf, level):
-        # Not sure why there is a need to initialize gf again 
-        gf = GraphFrame()
-        gf.from_hpctoolkit('/Users/kesavan1/Suraj/llnl/CallFlow/data/calc-pi/')
-        ret = []
-        edges = []
-        edgeMap = {}
-        count = 0 
-        v, q = set(), gf.graph.roots
-        while q:
-            node = q.pop(0)
-            
-            source = node.parentModule
-            target = node.module
-            
-            source = self.sanitizeName(source)
-            target = self.sanitizeName(target)
-
-            if source != None and target != None and level[source] != level[target]:
-                edgeLabel = source + '-' + target 
-                edge = {}
-                edge['sourceInfo'] = {
-                    'level' : level[source],
-                    'label': self.label[source],
-                    'name': source
-                }
-                edge['sourceID'] = self.sankeyIDMap[source]
-                edge['targetInfo'] = {
-                    'level': level[target],
-                    'label': self.label[target],
-                    'name': target
-                }
-                edge['targetID'] = self.sankeyIDMap[target]
-                edge['value'] = self.runtime[source]
-                edgeMap[edgeLabel] = count
-                edges.append(edge)
-                count += 1
-          
-            if node.module not in ret:
-                ret.append(node.module)
-
-            if node not in v:
-                v.add(node)
-                q.extend(node.children)
-        return edges
