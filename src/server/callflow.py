@@ -26,7 +26,6 @@ class Callflow():
         self.graph = gf.graph
         self.pre_process()
         self.g = self.create_graph()
-        self.g = self.check_cycles(self.g)
         self.tree = self.create_subtrees(self.g)
         self.sg = self.create_super_graph(self.g, {})
         self.cfg = self.convert_graph(self.tree)
@@ -42,6 +41,8 @@ class Callflow():
         g = nx.DiGraph(rootRunTimeInc = self.rootRunTimeInc)        
         for path in self.df['path']:
             g.add_path(path)
+
+        g = self.check_cycles(g)
             
         module_mapping = self.create_module_map(g.nodes(), 'module')
         name_mapping = self.create_module_map(g.nodes(), 'name')
@@ -49,13 +50,18 @@ class Callflow():
         type_mapping = self.create_module_map(g.nodes(), 'type')
         time_mapping = self.create_module_map(g.nodes(), 'CPUTIME (usec) (I)')
         children_mapping = self.immediate_children(g)
+        level_mapping = self.hierarchy_level(g, self.root)
+#        render_mapping = self.is_renderable_node(g, query)
+
         nx.set_node_attributes(g, 'module', module_mapping)
-        nx.set_node_attributes(g, 'time', time_mapping)
+        nx.set_node_attributes(g, 'weight', time_mapping)
         nx.set_node_attributes(g, 'name', name_mapping)
         nx.set_node_attributes(g, 'file', file_mapping)
         nx.set_node_attributes(g, 'type', type_mapping)
         nx.set_node_attributes(g, 'children', children_mapping)
-
+        nx.set_node_attributes(g, 'level', level_mapping)
+#        nx.set_node_attributes(g, 'is_render', render_mapping)
+        
         capacity_mapping = self.calculate_flows(g)
         nx.set_edge_attributes(g, 'weight', capacity_mapping)
 
@@ -82,7 +88,7 @@ class Callflow():
         print type(subtrees)
         for subtree in subtrees:
             for y in subtrees[subtree]:
-                print str(subtree) + ':' + str(y)
+                print str(subtree) + ':' + str(y)                
         log.info(tree)
         return tree
 
@@ -95,7 +101,7 @@ class Callflow():
         neighbors = G.neighbors(root)
         if len(neighbors)!=0:
             for neighbor in neighbors:
-                level[root] = self.hierarchy_level(G, neighbor, level=level, parent = root)
+                self.hierarchy_level(G, neighbor, level=level, parent = root)
         return level
 
     def leaves_below(self, graph, node):

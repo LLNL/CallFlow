@@ -10,7 +10,6 @@ function calcTextSize(text) {
 }
 
 export default function drawNodes(graph, view){
-    console.log(graph.nodes)
     let node = view.nodes.selectAll(".node")
 	.data(graph.nodes)
 	.enter().append("g")
@@ -45,6 +44,7 @@ export default function drawNodes(graph, view){
 function drawRectangle(node, graph, view){
     let rect = node.append("rect")
 	.attr("height", function (d) {
+	    console.log(d.name[0], d.dy)
 	    return d.dy;
 	})
 	.attr("width", view.nodeWidth)
@@ -193,12 +193,11 @@ function drawPath(node, graph, view){
 	    	return 0.4;
 	    }
 	})
-
-    
 }
 
 
 function drawText(node, graph, view){
+    let textTruncForNode = 8;
     node.append("text")
 	.attr('dy', '0.35em')
 	.attr("transform", "rotate(90)")
@@ -216,10 +215,10 @@ function drawText(node, graph, view){
 	    	else {
 	    	    var textSize = calcTextSize(d.name)["width"];
 	    	    if(textSize < d.dy){
-	    		return d.name;
+	    		return d.name[0];
 	    	    }
 	    	    else{
-	    		return d.name.trunc(textTruncForNode);
+	    		return d.name[0].trunc(textTruncForNode);
 	    	    }
 	    	}
 	    }
@@ -228,7 +227,7 @@ function drawText(node, graph, view){
 	    }
 	})
 	.on("mouseover", function(d){
-	    if(d.name != "intermediate"){
+	    if(d.name[0] != "intermediate"){
 	    	toolTipList.attr('width', "400px")
 		    .attr('height', "150px")	    	
 		var res = getFunctionListOfNode(d);
@@ -239,7 +238,7 @@ function drawText(node, graph, view){
 	.on("mouseout", function(d){
 	    view.toolTipList.attr('width', '0px')
 		.attr('height', '0px')
-	    if(d.name != "intermediate"){
+	    if(d.name[0] != "intermediate"){
 		d3.select(this.parentNode).select('rect').style("stroke-width", "1");
 		unFade();
 	    }
@@ -269,10 +268,10 @@ function drawText(node, graph, view){
 	    	    var textSize = calcTextSize(d.name)["width"];
 	    	    
 	    	    if(textSize < d.dy){
-	    		return d.name;
+	    		return d.name[0];
 	    	    }
 	    	    else{
-	    		return d.name.trunc(textTruncForNode);
+	    		return d.name[0].trunc(textTruncForNode);
 	    	    }
 	    	}
 	    }

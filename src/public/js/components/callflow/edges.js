@@ -1,7 +1,7 @@
 export default function drawEdges(graph, view){
     view.edges.selectAll('.edge').remove();
 	var edge = view.edges.selectAll(".edge")
-	    .data(graph.edges)
+	    .data(graph.links)
 	    .enter().append("path")
 	    .attr("class", function(d){
 		    if(d.source.name == "intermediate" || d.target.name == "intermediate"){
@@ -66,7 +66,7 @@ export default function drawEdges(graph, view){
 	// });
 
 	view.edges.selectAll(".edge")
-	    .data(graph.edges)
+	    .data(graph.links)
 	    .style('fill-opacity', 0)
 	    .attr('d', function(d){
 		    var Tx0 = d.source.x + d.source.dx,
@@ -104,7 +104,7 @@ export default function drawEdges(graph, view){
 	    })
     
     view.edges.selectAll(".edge")
-	    .data(graph.edges)
+	    .data(graph.links)
 	    .transition()
 	    .duration(view.transitionDuration)
 	    .delay(view.transitionDuration/3)

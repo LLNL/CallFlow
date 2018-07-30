@@ -175,21 +175,29 @@ function d3sankeySingle() {
 
     }
 
-    function d3sum(values, valueOf){
+    function d3sum(values, attr){
 	let sum = 0, value;
 	for(let  i = 0 ; i < values.length; i++){
-	    sum += values[i][valueOf];
+	    sum += values[i].weight;
 	}
-	    return sum;
+	return sum;
     }
     
     // Compute the value (size) of each node by summing the associated links.
     function computeNodeValues() {
         nodes.forEach(function(node) {
             node.value = Math.max(
-                d3sum(node.sourceLinks,"capacity"),
-                d3sum(node.targetLinks,"capacity")
+                d3sum(node.sourceLinks,"weight"),
+                d3sum(node.targetLinks,"weight")
             );
+
+	    // // TODO: lol this is totally wrong. Need to work on this. 
+	    // if(node.value > node.weight && node.sourceLinks.length!=0){
+	    // 	node.value = Number.POSITIVE_INFINITY		
+	    // 	for(link of node.sourceLinks){
+	    // 	    node.value = Math.min(link.weight, node.value)
+	    // 	}
+	    // }
  
             // if(node.level ==  0){
             //   console.log(node.sourceLinks, node);
@@ -237,10 +245,10 @@ function d3sankeySingle() {
         //     ++x;
         // }
 
-        // nodes.forEach(function(node) {
-        //     node.x = node.level; 
-        //     node.dx = nodeWidth;
-        // })
+        nodes.forEach(function(node) {
+            node.x = node.level; 
+            node.dx = nodeWidth;
+        })
 
         x = 6;
         
@@ -344,8 +352,7 @@ function d3sankeySingle() {
                     });
                     node.y = Math.max(maxY, i);
                     node.parY = maxY;
-
-                    console.log(node.value);
+		    console.log(node.value)
                     node.dy = node.value * ky;
                     console.log(node.value, node.name, ky)
                 });
@@ -356,7 +363,7 @@ function d3sankeySingle() {
             });
 
             links.forEach(function(link) {
-                link.dy = link.value * ky;
+                link.dy = link.weight* ky;
             });
         }
 
@@ -372,7 +379,7 @@ function d3sankeySingle() {
             });
 
             function weightedSource(link) {
-                return center(link.source) * link.value;
+                return center(link.source) * link.weight
             }
         }
 
@@ -387,7 +394,7 @@ function d3sankeySingle() {
             });
 
             function weightedTarget(link) {
-                return center(link.target) * link.value;
+                return center(link.target) * link.weight;
             }
         }
 
@@ -492,7 +499,7 @@ function d3sankeySingle() {
     }
 
     function value(link) {
-        return link.value;
+        return link.weight;
     }
 
     return sankey;
