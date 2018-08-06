@@ -30,13 +30,14 @@ class CallFlow():
         self.create_variables() # Setup variables which are common to filter and server (like gf, config, etc)
         
         if not self.args.filter:
+            self.gfs = self.create_gfs()
             self.create_server()
-            self.launch_webapp()
+            self.launch_webapp(self.gfs)
         else:
             self.gfs = self.create_gfs()
             self.fgfs = self.filter_gfs()
             self.create_server()
-            self.launch_webapp()
+            self.launch_webapp(self.fgfs)
             
     def create_parser(self):
         parser = argparse.ArgumentParser()
@@ -85,7 +86,6 @@ class CallFlow():
         return ret
 
 
-            
     # ===============================================================================
             # Filtering Graphframes
     # ===============================================================================    
@@ -99,16 +99,15 @@ class CallFlow():
             if self.args.filterBy == "IncTime":
                 max_inclusive_time = utils.getMaxIncTime(gf)
                 log.info('[Filter] By Inclusive time = {0} '.format(max_inclusive_time))
-                filter_gf = gf.filter(lambda x: True if(x['CPUTIME (usec) (I)'] > 0.01*max_inclusive_time) else False)
+                filter_gf = gf.filter(lambda x: True if(x['CPUTIME (usec) (E)'] > 0.01*max_inclusive_time) else False)
             elif self.args.filterBy == "ExcTime":
                 max_exclusive_time = utils.getMaxExcTime(gf)
                 log.info('[Filter] By Exclusive time = {0})'.format(max_exclusive_time))
-                filter_gf = gf.filter(lambda x: True if (x['CPUTIME (usec) (E)'] > 0.01*max_exclusive_time) else False)
+                filter_gf = gf.filter(lambda x: True if (x['CPUTIME (usec) (I)'] > 0.01*max_exclusive_time) else False)
             else:
                 log.warn("Not filtering.... Can take forever. Thou were warned")
                 filter_gf = gf
             log.info('[Filter] Removed {0} nodes. (time={1})'.format(gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], time.time() - t))
-               
             log.info("Graftin......")
             t = time.time()
             filter_gf = filter_gf.graft()
@@ -154,12 +153,13 @@ class CallFlow():
                 "g": 1
             })
 
-    def launch_webapp(self):
+    def launch_webapp(self, gfs):
         # Load the graph frames from an intermediate format.
 #        self.gfs = self.create_gfs()
 
         # Create the callflow graph frames from graphframes given by hatchet
-        self.cfgs = self.create_cfgs()
+
+        self.cfgs = self.create_cfgs(gfs)
 
         # Launch the flask app
         app.run(debug = self.debug, use_reloader=True)
@@ -168,9 +168,9 @@ class CallFlow():
         return 0
         
     # Loops through the graphframes and creates callflow graph format
-    def create_cfgs(self):        
+    def create_cfgs(self, gfs):        
         ret = []
-        for idx, gf in enumerate(self.fgfs):
+        for idx, gf in enumerate(gfs):
             callflow = Callflow(gf)
             ret.append(callflow.getCFG())
         return ret

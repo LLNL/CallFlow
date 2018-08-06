@@ -44,8 +44,7 @@ export default function drawNodes(graph, view){
 function drawRectangle(node, graph, view){
     let rect = node.append("rect")
 	.attr("height", function (d) {
-	    console.log(d.name[0], d.dy)
-	    return d.dy;
+	    return d.height;
 	})
 	.attr("width", view.nodeWidth)
         .attr("opacity", 0)
@@ -88,10 +87,10 @@ function drawRectangle(node, graph, view){
 	})
 	.on("mouseover", function(d) { 
 	    if(d.name != "intermediate"){
-		toolTipList.attr('width', "400px")
+		view.toolTipList.attr('width', "400px")
 		    .attr('height', "150px")	    	
-		var res = getFunctionListOfNode(d);
-		toolTipTexts(d,res, rootRunTime1)
+//		var res = getFunctionListOfNode(d);
+//		toolTipTexts(d,res, rootRunTime1)
 		d3.select(this).style("stroke-width", "2");
 		// fadeUnConnected(d);
 		// svg.selectAll(".link").style('fill-opacity', 0.0)
@@ -99,32 +98,33 @@ function drawRectangle(node, graph, view){
 	    }
 	})
 	.on("mouseout", function(d) { 
-	    toolTipList.attr('width', '0px')
+	    view.toolTipList.attr('width', '0px')
 		.attr('height', '0px')
 	    if(d.name != "intermediate"){
 		d3.select(this).style("stroke-width", "1");
-		unFade();
+//		unFade();
 	    }
-	    toolTip.style('opacity', 0)
+	    view.toolTip.style('opacity', 0)
 		.style('left', function(){
 		    return 0;
 		})
 		.style('top', function(){
 		    return 0;
 		})
-	    toolTipText.html("");
+	    view.toolTipText.html("");
 
 	    
-	    toolTipG.selectAll('*').remove();		    	
+	    view.toolTipG.selectAll('*').remove();		    	
 	})		    
 	.on('click', function(d){
-	    if(d.name != "intermediate"){
-		var ret = getFunctionListOfNode(d);
-		var fromProcToProc = ret["fromProcToProc"];
-		var nameToIDMap = ret["nameToIDMap"];
-		var res = {"node" : d, "fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap, "rootRunTime" : rootRunTime};
-		clickCallBack(res);
-	    }
+	    console.log(d)
+	    // if(d.name != "intermediate"){
+	    // 	var ret = getFunctionListOfNode(d);
+	    // 	var fromProcToProc = ret["fromProcToProc"];
+	    // 	var nameToIDMap = ret["nameToIDMap"];
+	    // 	var res = {"node" : d, "fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap, "rootRunTime" : rootRunTime};
+	    // 	clickCallBack(res);
+	    // }
 	})
 
     // Transition
@@ -134,7 +134,7 @@ function drawRectangle(node, graph, view){
 	.duration(view.transitionDuration)
         .attr("opacity", 1)
 	.attr('height',function(d){
-	    return d.dy;
+	    return d.height;
 	})
 	.style("fill", function (d) {
 	    //		    var temp = {"name" : d.name.replace(/ .*/, ""),
@@ -156,7 +156,7 @@ function drawPath(node, graph, view){
 	    if(d.name == "intermediate"){
 		return "m" + 0 + " " + 0
 		    + "h " + sankey.nodeWidth()
-		    + "v " + (1)*d.dy
+		    + "v " + (1)*d.height
 		    + "h " + (-1)*sankey.nodeWidth();
 	    }
 	})
@@ -209,12 +209,12 @@ function drawText(node, graph, view){
 	.style('opacity', 1)
 	.text(function (d) {
 	    if(d.name != "intermediate"){
-	    	if(d.dy < view.minHeightForText ) {
+	    	if(d.height < view.minHeightForText ) {
 	    	    return "";
 	    	}
 	    	else {
 	    	    var textSize = calcTextSize(d.name)["width"];
-	    	    if(textSize < d.dy){
+	    	    if(textSize < d.height){
 	    		return d.name[0];
 	    	    }
 	    	    else{
@@ -228,10 +228,10 @@ function drawText(node, graph, view){
 	})
 	.on("mouseover", function(d){
 	    if(d.name[0] != "intermediate"){
-	    	toolTipList.attr('width', "400px")
+	    	view.toolTipList.attr('width', "400px")
 		    .attr('height', "150px")	    	
-		var res = getFunctionListOfNode(d);
-		toolTipTexts(d,res, rootRunTime1);
+//		var res = getFunctionListOfNode(d);
+//		toolTipTexts(d,res, rootRunTime1);
 		d3.select(this.parentNode).select('rect').style("stroke-width", "2");
 	    }
 	})
@@ -240,7 +240,7 @@ function drawText(node, graph, view){
 		.attr('height', '0px')
 	    if(d.name[0] != "intermediate"){
 		d3.select(this.parentNode).select('rect').style("stroke-width", "1");
-		unFade();
+//		unFade();
 	    }
 	    view.toolTip.style('opacity', 1)
 		.style('left', function(){
@@ -261,13 +261,13 @@ function drawText(node, graph, view){
         .style('opacity', 1)
 	.text(function (d) {
 	    if(d.name != "intermediate"){
-	    	if(d.dy < view.minHeightForText ){
+	    	if(d.height < view.minHeightForText ){
 	    	    return "";
 	    	}
 	    	else{
 	    	    var textSize = calcTextSize(d.name)["width"];
 	    	    
-	    	    if(textSize < d.dy){
+	    	    if(textSize < d.height){
 	    		return d.name[0];
 	    	    }
 	    	    else{

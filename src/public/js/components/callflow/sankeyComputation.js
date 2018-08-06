@@ -1,10 +1,11 @@
 export default function sankeyComputation(graph, view){
+    console.log(view)
     let sankey = d3sankeySingle()
 	.nodeWidth(view.nodeWidth)
 	.nodePadding(view.ySpacing)
         .size([view.width * 1.05, view.height - view.ySpacing])
 	.xSpacing(view.xSpacing)
-	.setReferenceValue(view.rootRunTime);
+	.setReferenceValue(graph.graph.rootRunTimeInc);
     
     let path = sankey.link();
     

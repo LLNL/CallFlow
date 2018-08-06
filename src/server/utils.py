@@ -33,8 +33,8 @@ def lookupByAttribute(df, node_hash, attribute):
 # Get the max Inclusive time from the root of the CCT.
 def getMaxIncTime(gf):
     ret = 0.0
-    for root in gf.graph.roots:        
-        ret = max(ret, lookup(gf.dataframe, root)['CPUTIME (usec) (I)'].max())
+    for root in gf.graph.roots:
+        ret = max(ret, lookup(gf.dataframe, root)['CPUTIME (usec) (E)'].max())
     return ret
 
 # TODO: Get the maximum exclusive time from the graphframe. 

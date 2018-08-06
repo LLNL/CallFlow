@@ -20,7 +20,7 @@ function calculateFlow(graph){
 		if(outGoing[linkLabel] == undefined){
 		    outGoing[linkLabel] = 0;
 		}
-		outGoing[linkLabel] += link.capacity
+		outGoing[linkLabel] += link.weight
 	    }
         });
         
@@ -30,7 +30,7 @@ function calculateFlow(graph){
 		if(inComing[linkLabel] == undefined){
 		    inComing[linkLabel] = 0;
 		}
-		inComing[linkLabel] += link.capacity;
+		inComing[linkLabel] += link.weight;
 	    }
 	})
 

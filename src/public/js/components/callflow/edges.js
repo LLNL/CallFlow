@@ -29,8 +29,8 @@ export default function drawEdges(graph, view){
 		        Bxi = d3.interpolateNumber(Bx0, Bx1),
 		        Bx2 = Bxi(0.4),
 		        Bx3 = Bxi(1 - 0.4),
-		        By0 = d.source.y + d.dy + d.sy,
-		        By1 = d.target.y + d.ty + d.dy;
+		        By0 = d.source.y + d.height + d.sy,
+		        By1 = d.target.y + d.ty + d.height;
 
 	        var rightMoveDown = By1 - Ty1;
 		    
@@ -88,8 +88,8 @@ export default function drawEdges(graph, view){
 		        Bxi = d3.interpolateNumber(Bx0, Bx1),
 		        Bx2 = Bxi(0.4),
 		        Bx3 = Bxi(1 - 0.4),
-		        By0 = d.source.y + d.dy + d.sy,
-		        By1 = d.target.y + d.ty + d.dy;
+		        By0 = d.source.y + d.height + d.sy,
+		        By1 = d.target.y + d.ty + d.height;
 
 	        var rightMoveDown = By1 - Ty1;
 
@@ -111,3 +111,12 @@ export default function drawEdges(graph, view){
 	    .style('fill-opacity', 0.3)
 }
 
+
+
+
+function unFade(){
+    var thisLink = view.edges.selectAll(".edge");
+    thisLink.transition()
+	.duration(500)
+	.style("opacity", 1)
+}

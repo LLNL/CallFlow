@@ -34,6 +34,7 @@ class Callflow():
         self.df['path'] =  self.df['node'].apply(lambda node: node.callpath)
         self.df = self.df.reset_index(drop=True)
         self.df.groupby(['node'], as_index=True, squeeze=True)
+        print utils.lookup(self.df, self.graph.roots[0])
         self.root = list(set(utils.lookup(self.df, self.graph.roots[0]).name))[0]
         self.rootRunTimeInc = self.getRootRunTimeInc() 
 
@@ -48,7 +49,7 @@ class Callflow():
         name_mapping = self.create_module_map(g.nodes(), 'name')
         file_mapping = self.create_module_map(g.nodes(), 'file')
         type_mapping = self.create_module_map(g.nodes(), 'type')
-        time_mapping = self.create_module_map(g.nodes(), 'CPUTIME (usec) (I)')
+        time_mapping = self.create_module_map(g.nodes(), 'CPUTIME (usec) (E)')
         children_mapping = self.immediate_children(g)
         level_mapping = self.hierarchy_level(g, self.root)
 #        render_mapping = self.is_renderable_node(g, query)
@@ -70,25 +71,20 @@ class Callflow():
     def check_cycles(self, g):
         log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(g)))
         self.is_tree = nx.is_tree(g)
-        log.warn("Is it a tree? : {0}".format(nx.is_tree(g)))
+        log.warn("Is it a tree? : {0}".format(self.is_tree))
 
         if not self.is_tree:
             log.info("Removing the cycles from graph.....")
-            cycles = nx.find_cycle(g)
+            cycles = nx.find_cycle(g, self.root)
             for cycle in cycles:
                 log.warn("Removing cycles: {0} -> {1}".format(cycle[0], cycle[1]))
                 g.remove_edge(*cycle)
-#            nx.set_graph_attributes(g, 'cycles', cycle)
         return g
     
     def create_subtrees(self, g):
         subtrees = {node: ete3.Tree(name = node) for node in g.nodes()}
         [map(lambda edge:subtrees[edge[0]].add_child(subtrees[edge[1]]), g.edges())]
-        tree = subtrees[self.root]
-        print type(subtrees)
-        for subtree in subtrees:
-            for y in subtrees[subtree]:
-                print str(subtree) + ':' + str(y)                
+        tree = subtrees[self.root]        
         log.info(tree)
         return tree
 
@@ -124,8 +120,8 @@ class Callflow():
             source = utils.lookupByName(self.df, edge[0])
             target = utils.lookupByName(self.df, edge[1])
 
-            source_inc = source['CPUTIME (usec) (I)'].max()
-            target_inc = target['CPUTIME (usec) (I)'].max()
+            source_inc = source['CPUTIME (usec) (E)'].max()
+            target_inc = target['CPUTIME (usec) (E)'].max()
             
             if source_inc == target_inc:
                 ret[edge] = source_inc
@@ -157,7 +153,7 @@ class Callflow():
     def getRootRunTimeInc(self):
         root = self.graph.roots[0]
         root_metrics = utils.lookup(self.df, root)
-        return root_metrics['CPUTIME (usec) (I)'].max()
+        return root_metrics['CPUTIME (usec) (E)'].max()
 
     # Input : [<GraphFrame>, <GraphFrame>,...]
     # Output: { graphs: [{ nodes: [], edges: [] }, ...] } 
