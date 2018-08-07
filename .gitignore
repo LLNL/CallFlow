@@ -8,3 +8,9 @@ hpctoolkit/*
 *pyc
 .ipynb_checkpoints/*
 *.pynb
+v1/src/node_modules
+v1/src/public/bower_components
+v1/src/public/react-redux/node_modules
+v1/data/*
+
+    
