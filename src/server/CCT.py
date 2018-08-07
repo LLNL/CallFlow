@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from functools import total_ordering
 from utils import lookup
 
@@ -24,5 +26,4 @@ class CCT:
             pass
         finally:
             del root
-        print nodes
         return nodes

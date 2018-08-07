@@ -1,12 +1,16 @@
 import json
 from logger import log
-
+import os
 
 class configFileReader():
-    def __init__(self, jsonFile):
-        f = open(jsonFile, 'r')
+    def __init__(self, filepath):
+        dirname = os.path.dirname(__file__)
+        filename = os.path.join(dirname, filepath)
+        print(filename)
+        f = open(filename, 'r')
         self.data = self.json_data(f.read())
         log.info('Config file: {0}'.format(self.data))
+        print(self.data)
         self.paths = self.data['path']
         self.props = self.data['props']
         self.format = self.data['format'] if 'format' in self.data.keys() else None
@@ -24,7 +28,6 @@ class configFileReader():
     # Function map from the config file
     def getFuncMap(self):
         funcMap = {}
-        print self.props
         for obj in self.props:            
             name = self.props[obj]['name']
             funcMap[name] = self.props[obj]['functions']
@@ -35,7 +38,7 @@ class configFileReader():
     
     def _byteify(self, data, ignore_dicts = False):
         # if this is a unicode string, return its string representation
-        if isinstance(data, unicode):
+        if isinstance(data, bytes):
             return data.encode('utf-8')
         # if this is a list of values, return list of byteified values
         if isinstance(data, list):
@@ -44,9 +47,8 @@ class configFileReader():
         # but only if we haven't already byteified it
         if isinstance(data, dict) and not ignore_dicts:
             return {
-                self._byteify(key, ignore_dicts=True): self._byteify(value, ignore_dicts=True)
-                for key, value in data.iteritems()
-        }
+                self._byteify(key, ignore_dicts=True): self._byteify(value, ignore_dicts=True) for key, value in data.items()
+            }
         # if it's anything else, return it in its original form
         return data
 

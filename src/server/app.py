@@ -17,6 +17,7 @@ app = Flask(__name__, static_url_path='/public')
 
 class CallFlow():
     def __init__(self):
+        self.callflow_path = os.path.abspath(os.path.join(__file__, '../../..'))
         self.app = None # App state
         self.args = None # Arguments passed through the CLI
         self.config = None # Config file json 
@@ -76,6 +77,7 @@ class CallFlow():
         t = time.time()
         ret = []
         for idx, path in enumerate(self.config.paths):
+            path = os.path.abspath(os.path.join(self.callflow_path, path))
             gf = GraphFrame()
             if self.gfs_format[idx] == 'hpctoolkit':
                 gf.from_hpctoolkit(path)
@@ -132,7 +134,7 @@ class CallFlow():
     def create_server(self):
         app.debug = True
         app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), '')
-        
+        print(app.__dir__)
         # App routes 
         @app.route('/')
         def root():

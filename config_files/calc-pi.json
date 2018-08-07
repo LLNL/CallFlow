@@ -1,0 +1,8 @@
+{
+    "dataName" : "calc-pi",
+    "numbNodes" : "2",
+    "path" : ["/home/vidi/Suraj/llnl/CallFlow/data/calc-pi/"],
+    "experiment" : "experiment.xml",
+    "nodeMetric" : "nodeData.json",
+    "port" : 8900
+}

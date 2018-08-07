@@ -1,6 +1,6 @@
 {
     "dataName" : "Lulesh-1",
-    "path" : ["/Users/jarus//ucd/Research/Visualisation/projects/CallFlow/data/lulesh-1/db-ampi4-100-8"],
+    "path" : ["./data/lulesh-1/db-ampi4-100-8"],
     "format" : ["hpctoolkit"],
     "props": {
 	    "lulesh2.0" :{
