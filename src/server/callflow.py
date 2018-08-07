@@ -37,14 +37,15 @@ class Callflow():
         print utils.lookup(self.df, self.graph.roots[0])
         self.root = list(set(utils.lookup(self.df, self.graph.roots[0]).name))[0]
         self.rootRunTimeInc = self.getRootRunTimeInc() 
-
+        print self.df
+        
     def create_graph(self):        
         g = nx.DiGraph(rootRunTimeInc = self.rootRunTimeInc)        
         for path in self.df['path']:
             g.add_path(path)
 
         g = self.check_cycles(g)
-            
+        
         module_mapping = self.create_module_map(g.nodes(), 'module')
         name_mapping = self.create_module_map(g.nodes(), 'name')
         file_mapping = self.create_module_map(g.nodes(), 'file')
