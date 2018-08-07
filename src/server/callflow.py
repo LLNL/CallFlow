@@ -48,22 +48,23 @@ class Callflow():
         name_mapping = self.create_module_map(g.nodes(), 'name')
         file_mapping = self.create_module_map(g.nodes(), 'file')
         type_mapping = self.create_module_map(g.nodes(), 'type')
-        time_mapping = self.create_module_map(g.nodes(), 'CPUTIME (usec) (E)')
+        time_mapping = self.create_module_map(g.nodes(), 'CPUTIME (usec) (I)')
         children_mapping = self.immediate_children(g)
         level_mapping = self.hierarchy_level(g, self.root)
 #        render_mapping = self.is_renderable_node(g, query)
 
-        nx.set_node_attributes(g, 'module', module_mapping)
-        nx.set_node_attributes(g, 'weight', time_mapping)
-        nx.set_node_attributes(g, 'name', name_mapping)
-        nx.set_node_attributes(g, 'file', file_mapping)
-        nx.set_node_attributes(g, 'type', type_mapping)
-        nx.set_node_attributes(g, 'children', children_mapping)
-        nx.set_node_attributes(g, 'level', level_mapping)
+
+        nx.set_node_attributes(g, name='module', values=module_mapping)
+        nx.set_node_attributes(g, name='weight', values=time_mapping)
+        nx.set_node_attributes(g, name='name', values=name_mapping)
+        nx.set_node_attributes(g, name='file', values=file_mapping)
+        nx.set_node_attributes(g, name='type', values=type_mapping)
+        nx.set_node_attributes(g, name='children', values=children_mapping)
+        nx.set_node_attributes(g, name='level', values=level_mapping)
 #        nx.set_node_attributes(g, 'is_render', render_mapping)
         
         capacity_mapping = self.calculate_flows(g)
-        nx.set_edge_attributes(g, 'weight', capacity_mapping)
+        nx.set_edge_attributes(g, name='weight', values=capacity_mapping)
 
         return g
 
@@ -94,7 +95,7 @@ class Callflow():
         else:
             level[root] = level[parent] + 1
         neighbors = G.neighbors(root)
-        if len(neighbors)!=0:
+        if neighbors != None:
             for neighbor in neighbors:
                 self.hierarchy_level(G, neighbor, level=level, parent = root)
         return level
@@ -119,8 +120,8 @@ class Callflow():
             source = utils.lookupByName(self.df, edge[0])
             target = utils.lookupByName(self.df, edge[1])
 
-            source_inc = source['CPUTIME (usec) (E)'].max()
-            target_inc = target['CPUTIME (usec) (E)'].max()
+            source_inc = source['CPUTIME (usec) (I)'].max()
+            target_inc = target['CPUTIME (usec) (I)'].max()
             
             if source_inc == target_inc:
                 ret[edge] = source_inc
@@ -140,7 +141,6 @@ class Callflow():
                 ret[node] =  self.df[self.df['name'] == node][attribute].max().tolist()
             else:
                 ret[node] =  list(set(self.df[self.df['name'] == node][attribute].tolist()))            
-#            ret[node] = utils.lookupByAttribute(self.gf.dataframe, node, attribute)
         return ret
     
     def convert_graph(self, graph):
@@ -152,7 +152,7 @@ class Callflow():
     def getRootRunTimeInc(self):
         root = self.graph.roots[0]
         root_metrics = utils.lookup(self.df, root)
-        return root_metrics['CPUTIME (usec) (E)'].max()
+        return root_metrics['CPUTIME (usec) (I)'].max()
 
     # Input : [<GraphFrame>, <GraphFrame>,...]
     # Output: { graphs: [{ nodes: [], edges: [] }, ...] } 

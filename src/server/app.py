@@ -101,11 +101,11 @@ class CallFlow():
             if self.args.filterBy == "IncTime":
                 max_inclusive_time = utils.getMaxIncTime(gf)
                 log.info('[Filter] By Inclusive time = {0} '.format(max_inclusive_time))
-                filter_gf = gf.filter(lambda x: True if(x['CPUTIME (usec) (E)'] > 0.01*max_inclusive_time) else False)
+                filter_gf = gf.filter(lambda x: True if(x['CPUTIME (usec) (I)'] > 0.01*max_inclusive_time) else False)
             elif self.args.filterBy == "ExcTime":
                 max_exclusive_time = utils.getMaxExcTime(gf)
                 log.info('[Filter] By Exclusive time = {0})'.format(max_exclusive_time))
-                filter_gf = gf.filter(lambda x: True if (x['CPUTIME (usec) (I)'] > 0.01*max_exclusive_time) else False)
+                filter_gf = gf.filter(lambda x: True if (x['CPUTIME (usec) (E)'] > 0.01*max_exclusive_time) else False)
             else:
                 log.warn("Not filtering.... Can take forever. Thou were warned")
                 filter_gf = gf

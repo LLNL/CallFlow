@@ -157,7 +157,7 @@ function dualView(data){
     document.getElementById("splitNodeByParentBtr").disabled = false;
     // splitNodeByParents(parentProcList, node.name);
 }
-x
+
 function getList(node){
     $.ajax({
 	type:'GET',

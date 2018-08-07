@@ -16,9 +16,11 @@
         "babel-core": "^6.26.3",
         "babelify": "^9.0.0",
         "browserify": "^16.2.2",
+        "browserify-livereload": "^1.0.10",
         "eslint-plugin-import": "^2.8.0",
         "forever": "^0.15.3",
-        "madge": "^3.1.1"
+        "madge": "^3.1.1",
+        "watchify": "^3.11.0"
     },
     "scripts": {
         "compile": "touch public/js/build/bundle.js && node public/js/build.js",

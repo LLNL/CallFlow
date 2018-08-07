@@ -34,7 +34,7 @@ def lookupByAttribute(df, node_hash, attribute):
 def getMaxIncTime(gf):
     ret = 0.0
     for root in gf.graph.roots:
-        ret = max(ret, lookup(gf.dataframe, root)['CPUTIME (usec) (E)'].max())
+        ret = max(ret, lookup(gf.dataframe, root)['CPUTIME (usec) (I)'].max())
     return ret
 
 # TODO: Get the maximum exclusive time from the graphframe. 
