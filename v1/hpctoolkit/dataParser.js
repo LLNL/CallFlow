@@ -15,45 +15,67 @@ var fs = require('fs');
 var parser = require('libxmljs');
 
 
-var dataFilePath = process.argv[2];
+var dataFilePath = process.argv[2];//'../vis2017Data/miranda/2nodes/';
+
 var xmlFile = dataFilePath + 'experiment.xml';
 var mdbFiile = dataFilePath + 'experiment-1.mdb';
+// var infoFile = dataFilePath + 'dataInfo.json';
 var fileName = "nodeData.json";
+// var dataInfo = require(infoFile);
+
+
 var obj;
+
+
+console.log('begin parsing file');
+var xml = fs.readFileSync(xmlFile, 'utf8');
+obj = parser.parseXmlString(xml, {noblanks: true});
+console.log('finish parsing the file');
+
 var fileTable = {}; //store the files names, access with file id
 var loadModuleTable = {}; //store the load modules names, access with load module's id
 var procedureTable = {}; //store the procedures names, access with procedure's id
+
 var nodeMetric = {}; //use to store the runtime of each tree node, access with node's id
 
 
-var xml = fs.readFileSync(xmlFile, 'utf8');
-obj = parser.parseXmlString(xml, {noblanks: true});
 
 function parseLoadModule(xmlLoadModNode){
     xmlLoadModNode.childNodes().forEach(function(loadMod){
         var id = parseInt(loadMod.attr('i').value());
         var name = loadMod.attr('n').value();
+        // loadModuleTable[id] = name;
+
         var regName = /([^/]+$)/g.exec(name);
+
         var newName;
         if(regName != null)
             newName = regName[1];
         else
             newName = name;
+
+
         loadModuleTable[id] = newName;
     })
 }
+
+
 
 function parseFileTable(xmlFileTableNode){
     xmlFileTableNode.childNodes().forEach(function(file){
         var id = parseInt(file.attr('i').value());
         var name = file.attr('n').value();
         // fileTable[id] = name;
+
         var regName = /([^/]+$)/g.exec(name);
+
         var newName;
         if(regName != null)
             newName = regName[1];
         else
             newName = name;
+        // console.log(name, newName);
+
         fileTable[id] = newName;
     })
 }
@@ -68,11 +90,13 @@ function parseProcedureTable(xmlProcedureTableNode){
 }
 
 var runtimeID = {};
+
 //parsing the metrics table
 function parseMetrics(xmlMetricNode){
     xmlMetricNode.childNodes().forEach(function(metric){
         var id = parseInt(metric.attr('i').value());
         var name = metric.attr('n').value();
+
         if(name.indexOf("WALLCLOCK") !== - 1 || name.indexOf("REALTIME") !== - 1){
             var temp = {
                 "n" : name,
@@ -81,7 +105,9 @@ function parseMetrics(xmlMetricNode){
             runtimeID[id] = temp;
         }
     })
+
     console.log("the runtime metrics are: ", runtimeID);
+
 }
 
 //this function parse the tables in the xml file
@@ -143,6 +169,7 @@ parseNodes(cct, null, "false");
 //parsing the root node
 function parseSecCallPathProfileData(xmlNode){
     root = new Node();
+
     var name = "Experiment Aggregate Metrics";
     root.name = name;
     root.nodeID = 1;
@@ -152,6 +179,9 @@ function parseSecCallPathProfileData(xmlNode){
     root.exc = [];
 
     nodeMetric[root.nodeID] = root;
+
+    // fs.appendFileSync("xmlParserResult.json", JSON.stringify(root) + "\n");
+
     xmlNode.childNodes().forEach(function(child){
         if(child.name() != "M")
             parseNodes(child, root, "false");
@@ -161,6 +191,7 @@ function parseSecCallPathProfileData(xmlNode){
 //parsing PF nodes
 function parsePF(xmlNode, parentNode, Cid){
     var newNode = new Node();
+
     newNode.nodeID = parseInt(xmlNode.attr('i').value());
     newNode.loadModuleID = parseInt(xmlNode.attr('lm').value());
     newNode.fileID = parseInt(xmlNode.attr('f').value());
@@ -178,6 +209,9 @@ function parsePF(xmlNode, parentNode, Cid){
 
     //add this node id to get the metric later
     nodeMetric[newNode.nodeID] = newNode;
+    
+
+    // fs.appendFileSync("xmlParserResult.json", JSON.stringify(newNode) + "\n");
 
     //recursively parsing the children nodes
     xmlNode.childNodes().forEach(function(child){
@@ -196,6 +230,8 @@ function parsePF(xmlNode, parentNode, Cid){
 //it is not needed
 function parseC(xmlNode, parentNode){
     currentCallSiteID = parseInt(xmlNode.attr('i').value());
+
+
     xmlNode.childNodes().forEach(function(child){
         if(child.name() != "M"){
             parseNodes(child, parentNode, "true");
@@ -208,6 +244,7 @@ function parseLoop(xmlNode, parentNode){
     var newNode = new Node();
 
     newNode.nodeID = parseInt(xmlNode.attr('i').value());
+
     newNode.fileID = parseInt(xmlNode.attr('f').value());
     newNode.lineNumber = parseInt(xmlNode.attr('l').value());
     newNode.name = "Loop at " + fileTable[newNode.fileID] + ": " + newNode.lineNumber;
@@ -235,25 +272,32 @@ function parseLoop(xmlNode, parentNode){
         newNode.procedureID = currentprocedureID;
     }
     
+
    nodeMetric[newNode.nodeID] = newNode;
+
+    // fs.appendFileSync("xmlParserResult.json", JSON.stringify(newNode) + "\n");
+
     xmlNode.childNodes().forEach(function(child){
         if(child.name() != "M"){
             parseNodes(child, newNode, "false");
         }
     })
+
+    // parentNode.children.push(newNode);
 }
 
 //parse line nodes
 function parseLine(xmlNode, parentNode){
     var newNode = new Node();
+
     newNode.nodeID = parseInt(xmlNode.attr('i').value());
+
     newNode.lineNumber = parseInt(xmlNode.attr('l').value());
     newNode.name = currentFileName + ": " + newNode.lineNumber;
     newNode.Type = "Line";
     newNode.parentID = parentNode.nodeID;
     newNode.inc = [];
     newNode.exc = [];
-    
     //since the loop node doesn't contain the load module info
     //use the parent's load module for this node
     if(parentNode.loadModuleID != null){
@@ -278,7 +322,11 @@ function parseLine(xmlNode, parentNode){
     else{
         newNode.fileID = fileID;
     }       
+
     nodeMetric[newNode.nodeID] = newNode;
+
+    // fs.appendFileSync("xmlParserResult.json", JSON.stringify(newNode) + "\n");
+
     xmlNode.childNodes().forEach(function(child){
         if(child.name() != "M"){
             parseNodes(child, parentNode, "false");
@@ -289,7 +337,7 @@ function parseLine(xmlNode, parentNode){
 //parse PR nodes
 function parsePR(xmlNode, parentNode) {
     var newNode = new Node();
-    
+
     newNode.nodeID = parseInt(xmlNode.attr('i').value());
     newNode.loadModuleID = parseInt(xmlNode.attr('lm').value());
     newNode.fileID = parseInt(xmlNode.attr('f').value());
@@ -298,6 +346,7 @@ function parsePR(xmlNode, parentNode) {
     newNode.Type = "PR";
     newNode.parentID = parentNode.nodeID;
     newNode.aType = parseInt(xmlNode.attr('a').value());
+    // newNode.level = level;
     newNode.inc = [];
     newNode.exc = [];
 
@@ -306,11 +355,16 @@ function parsePR(xmlNode, parentNode) {
     currentprocedureID = newNode.procedureID;
 
     nodeMetric[newNode.nodeID] = newNode;
+
+    // fs.appendFileSync("xmlParserResult.json", JSON.stringify(newNode) + "\n");
+
     xmlNode.childNodes().forEach(function(child){
         if(child.name() != "M"){
             parseNodes(child, newNode, "false");
         }
     })
+
+
 }
 
 //recursively call this function to parse the xml nodes
@@ -328,6 +382,7 @@ function parseNodes(xmlNode, parentNode, Cid){
     }
 
     else if(xmlNodeName == "C"){
+        // counter++;
         parseC(xmlNode, parentNode);
     }
 
@@ -350,9 +405,10 @@ function parseNodes(xmlNode, parentNode, Cid){
 
 //after finish with read the xml nodes
 //parse the runtime data
+
 var offsets = []; //this store the offset in the .mdb file to get the appropriate runtime metric for each node
 
-fs.open(mdbFile, 'r', function(err, fd){
+fs.open(mdbFiile, 'r', function(err, fd){
     if(err){
         throw err;
     }
@@ -360,26 +416,38 @@ fs.open(mdbFile, 'r', function(err, fd){
     var buffer = new Buffer(4);
     //this is the type of file
     var num = fs.readSync(fd, buffer, 0, 4, null);
+    // console.log(buffer[0]);
+    // console.log(buffer.toString('utf8'), num);
+    console.log(buffer.readUIntBE(0, 4));
 
     //this is the number of data files
     num = fs.readSync(fd, buffer, 0, 4, null);
     var numbOfFiles = buffer.readUIntBE(0, 4)
+    // console.log(numbOfFiles);
 
     //getting the proc-id, thread-id, and offset
     for(var i = 0; i < numbOfFiles; i++) {
         buffer = new Buffer(4);
         num = fs.readSync(fd, buffer, 0, 4, null);
+        // console.log("proc-id", buffer.readUIntBE(0, 4));
         num = fs.readSync(fd, buffer, 0, 4, null);
+        // console.log("thread-id", buffer.readUIntBE(0, 4));
 
         buffer = new Buffer(8);
         num = fs.readSync(fd, buffer, 0, 8, null);
         var offset = buffer.readUIntBE(0, 8);
         offsets.push(offset);
+        // console.log("offset", offset);
+        // console.log("/n");
     }
 
 
     /////////////////////reading the contents of the data files/////////////
+
+
     buffer = new Buffer(8);
+
+
     var nodeID = Object.keys(nodeMetric); //get the node id
 
     // var numbOfMetrics = dataInfo.numberOfMetric; //this is the number of metrics, this can derive from the xml file but I haven't get to that yet so hardcode for now
@@ -404,19 +472,40 @@ fs.open(mdbFile, 'r', function(err, fd){
                 
                 var num = fs.readSync(fd, buffer, 0, 8, offset + filePosInc);
                 var value = parseFloat(buffer.readDoubleBE(0));
+                // console.log(value);
+                // nodeMetric[id]["inc"].push(value);
                 incArray.push(value);
 
                 var excNum = fs.readSync(fd, buffer, 0, 8, offset + filePosExc);
                 var excValue = parseFloat(buffer.readDoubleBE(0));
-                excArray.push(excValue);                
+                // nodeMetric[id]["exc"].push(excValue);
+                excArray.push(excValue);
+
+                // if(id == 1){
+                //     console.log(value);
+                // }
+                
             })
+
+            // if(id == 1){
+            //     console.log(JSON.stringify(nodeMetric[id]));
+            // }        
+
+            // var tempObj = JSON.parse(JSON.stringify(nodeMetric[id]));
+            // tempObj["inc"] = incArray;
+            // tempObj["exc"] = excArray;
 
             var tempObj = {
                 "id": nodeMetric[id].nodeID,
                 "inc" : incArray,
                 "exc" : excArray
             }
+
+            // fs.appendFileSync(dataFilePath + "nodeData.json", JSON.stringify(nodeMetric[id]) + "\n");    
             fs.appendFileSync(dataFilePath + fileName, JSON.stringify(tempObj) + "\n");    
+
         })
+
+
     console.log('finish reading the data file');
 })
