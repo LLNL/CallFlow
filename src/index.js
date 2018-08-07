@@ -74,7 +74,7 @@ const nodeIDKeep = []; // a array of node id got when read in the metric file
   scriptPath: './',
   pythonOptions: ['-u'],
   args: [numberOfClusters],
-}; */
+  }; */
 // let LMInternalCallPath;
 // let sanKeyMetricData;
 // let nodeInfo;
@@ -100,46 +100,46 @@ function argParser() {
 }
 
 function loadFile(filePath){
-    return new rsvp.Promise( (resolve, reject) => {	
-	if (datasetFile.nodeMetric === null || !fs.existsSync(filePath + datasetFile.nodeMetric)) {
+    return new rsvp.Promise( (resolve, reject) => {
+        if (datasetFile.nodeMetric === null || !fs.existsSync(filePath + datasetFile.nodeMetric)) {
             exception('No metric file found at', filePath + datasetFile.nodeMetric);
-	} else {
+        } else {
             nodeMetricFile = path.resolve(filePath + datasetFile.nodeMetric);
             nodeMetricReader = new LineByLineReader(nodeMetricFile);
-	}
-	if (datasetFile.config != null) {
+        }
+        if (datasetFile.config != null) {
             configFile = filePath + datasetFile.config;
-	}
+        }
 
-	nodeMetricReader.on('line', (line) => {
-	    const myOBJ = JSON.parse(line);
-	    nodeIDKeep.push(parseInt(myOBJ.id), 10);
-	    nodeMetric[myOBJ.id] = myOBJ;
-	});
+        nodeMetricReader.on('line', (line) => {
+            const myOBJ = JSON.parse(line);
+            nodeIDKeep.push(parseInt(myOBJ.id), 10);
+            nodeMetric[myOBJ.id] = myOBJ;
+        });
 
-	nodeMetricReader.on('error', (err) => {
-	    console.log(err);
-	})
+        nodeMetricReader.on('error', (err) => {
+            console.log(err);
+        })
 
-	nodeMetricReader.on('end', () => {
-	    if(debug){
-		console.log('[Data Process] Done parsing metric file. ');
-	    }
-	    if (datasetFile.experiment === null || !fs.existsSync(path.resolve(filePath +  datasetFile.experiment))) {
-		exception('No xml file found at', path.resolve(filePath + datasetFile.experiment));
-	    } else {
-		xmlFile = path.resolve(filePath + datasetFile.experiment);
-	    }
+        nodeMetricReader.on('end', () => {
+            if(debug){
+                console.log('[Data Process] Done parsing metric file. ');
+            }
+            if (datasetFile.experiment === null || !fs.existsSync(path.resolve(filePath +  datasetFile.experiment))) {
+                exception('No xml file found at', path.resolve(filePath + datasetFile.experiment));
+            } else {
+                xmlFile = path.resolve(filePath + datasetFile.experiment);
+            }
 
-	    xmlParser.init(xmlTree, xmlFile, configFile, [-99999], nodeMetric, [], nodeIDKeep).then((data) => {
-		xmlParser.callback(data, nodeMetric).then((graph) => {
-		    functionList = data.functionList;
-		    procedureTable = data.procedureTable;
-		    staticGraph = graph;
-		    resolve(staticGraph);
-		});
-	    });
-	});
+            xmlParser.init(xmlTree, xmlFile, configFile, [-99999], nodeMetric, [], nodeIDKeep).then((data) => {
+                xmlParser.callback(data, nodeMetric).then((graph) => {
+                    functionList = data.functionList;
+                    procedureTable = data.procedureTable;
+                    staticGraph = graph;
+                    resolve(staticGraph);
+                });
+            });
+        });
     })
 }
 
@@ -154,22 +154,22 @@ function parseJSONFile(JSONFile){
         exception('I need the path information');
     } else {
         filePaths = datasetFile.path
-	console.log(filePaths)
+        console.log(filePaths)
     }
-    
+
     let promises = filePaths.map(loadFile);
-    rsvp.all(promises).then( (graphs) => {	
-	staticGraphs.push(graphs);
-	server.listen(port, host, () => {
-	    console.log('Sever started, listening', host, port);
-	});
+    rsvp.all(promises).then( (graphs) => {
+        staticGraphs.push(graphs);
+        server.listen(port, host, () => {
+            console.log('Sever started, listening', host, port);
+        });
     }).catch( (err) => {
-	console.log(err);
+        console.log(err);
     })
-    
-    if (datasetFile.port != null) {
-        portNumber = parseInt(datasetFile.port, 10);
-    }
+
+        if (datasetFile.port != null) {
+            portNumber = parseInt(datasetFile.port, 10);
+        }
 }
 
 argParser();
@@ -179,7 +179,7 @@ const host = process.env.HOST || 'localhost';
 // host = process.env.HOST || "detoo.cs.ucdavis.edu";
 
 /* Add a SumArray method to all arrays by expanding the
-  Array prototype(do this once in a general place) */
+   Array prototype(do this once in a general place) */
 Array.prototype.SumArray = function (arr) {
     const ret = [];
     if (arr != null && this.length === arr.length) {
@@ -243,7 +243,7 @@ app.get('/getSankey', (req, res) => {
     sankeyData = staticGraph;
     const hisData = computeHistogram();
     const resData = {
-	graphs: staticGraphs,
+        graphs: staticGraphs,
         graph: staticGraph,
         histogramData: hisData,
     };
@@ -284,10 +284,10 @@ app.get('/getList', (req, res) => {
 app.get('/getLists', (req, res) => {
     const specialID = req.query.specialID;
     if (functionList[specialID] != null) {
-	const functionListResult = {};
+        const functionListResult = {};
         const functionListObject = functionList[specialID];
         const functionListObjectKeys = Object.keys(functionListObject);
-	
+
         functionListObjectKeys.forEach((procedureID) => {
             if (!functionListResult[procedureID]) {
                 functionListResult[procedureID] = {
@@ -297,7 +297,7 @@ app.get('/getLists', (req, res) => {
                     excVal: 0,
                 };
             }
-	    
+
             const nodeIDList = functionList[specialID][procedureID];
             nodeIDList.forEach((nodeID) => {
                 const incTime = nodeMetric[nodeID].inc;
@@ -311,7 +311,7 @@ app.get('/getLists', (req, res) => {
                 excTime.forEach((val, idx) => {
                     excTemp += val;
                 });
-		
+
                 functionListResult[procedureID].value += temp / Math.max(incTime.length, 1);
                 functionListResult[procedureID].excVal += excTemp / Math.max(excTime.length, 1);
             });
@@ -319,7 +319,7 @@ app.get('/getLists', (req, res) => {
 
         res.json(functionListResult);
     } else {
-    // console.log("Cannot find function list for", specialID);
+        // console.log("Cannot find function list for", specialID);
         res.json({});
     }
 });
@@ -329,7 +329,7 @@ app.get('/getRuntimeOfNode', (req, res) => {
     const levelOfNode = parseInt(req.query.nodeLevel, 10);
 
     // if(req.query["name"] === "root"){
-    // 	lmIDofNode = "root";
+    // lmIDofNode = "root";
     // }
     // else{
     const lmIDofNode = parseInt(req.query.lmID, 10);
@@ -346,7 +346,7 @@ app.get('/getRuntimeOfNode', (req, res) => {
     });
 
     nodeIDs.forEach((id, idx) => {
-    // grab runtime for this id
+        // grab runtime for this id
         const runTimes = nodeMetric[id];
         if (idx === 0) {
             sumsInc = runTimes.inc;
@@ -377,13 +377,13 @@ app.get('/splitNode', (req, res) => {
             procIDArray.push(myID);
         }
     });
-   
+
     xmlParser.init(xmlTree, xmlFile, configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep).then((data) => {
-	functionList = data.functionList;
-	procedureTable = data.procedureTable;
-	xnlParser.splitNodeCallback(data, nodeMetric).then((resData) => {
-	    res.json(resData);
-	})
+        functionList = data.functionList;
+        procedureTable = data.procedureTable;
+        xnlParser.splitNodeCallback(data, nodeMetric).then((resData) => {
+            res.json(resData);
+        })
     })
 });
 
@@ -399,11 +399,11 @@ app.get('/splitNodeByParents', (req, res) => {
 
     resGlobal = res;
     xmlParser.init(xmlTree, xmlFile, configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep).then((data) => {
-	functionList = data.functionList;
-	procedureTable = data.procedureTable;
-	xmlParser.splitNodeCallback(data, nodeMetric).then( (data) => {
-	    resGlobal.json(data);
-	})
+        functionList = data.functionList;
+        procedureTable = data.procedureTable;
+        xmlParser.splitNodeCallback(data, nodeMetric).then( (data) => {
+            resGlobal.json(data);
+        })
     })
 });
 

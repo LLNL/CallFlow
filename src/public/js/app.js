@@ -136,6 +136,63 @@ function dualView(data){
     graph1edge.sort(function(a,b){
 	    return a['sourceID'] - b['targetID'];
     })
+    var parentProcList = {};
+    
+    fromProcToProc.forEach(function(fromTo){
+	var parentLabel = fromTo["fromLM"];
+
+	if(parentProcList[parentLabel] == null){
+	    parentProcList[parentLabel] = [];
+	}
+	var funcName = fromTo["toProc"];
+	// console.log(funcName);
+	var procID = nameToIDMap[funcName];
+	if(parentProcList[parentLabel].indexOf(procID) == -1){
+	    parentProcList[parentLabel].push(procID);
+	}
+    });
+    // console.log("proc ids by parent are,", parentProcList, node.name);
+    // console.log(node.specialID);
+    currentClickNode = {"nodeLabel" : node.name, "nodeSpecialID" : node.specialID};
+    document.getElementById("splitNodeByParentBtr").disabled = false;
+    // splitNodeByParents(parentProcList, node.name);
+}
+x
+function getList(node){
+    $.ajax({
+	type:'GET',
+	contentType: 'application/json',
+	dataType: 'json',
+	url: '/getLists',
+	data: {"specialID" : node["specialID"]},
+	success: function(procedureListData){
+
+	    // console.log("done with getting list of functions");
+
+	    listData = [];
+
+	    var procIDs = Object.keys(procedureListData);
+	    procIDs.forEach(function(procedureID){
+		if(procedureListData[procedureID]['value'] >= rootRunTime * (1/100)){
+		    listData.push(procedureListData[procedureID]);
+		}
+	    })
+
+	    // listData = newData;
+	    displayList();
+	},
+	error: function(){
+	    console.log("There was problem with getting the data");
+	}	
+    });				
+}
+
+function displayList(){
+    $('#list_view').empty();
+    // console.log(listData);
+    listData.sort(function(a,b){
+        return b["value"] - a["value"];
+    })
 
     $('#procedure_view').empty();
     let sankeyVis1 = new Sankey({

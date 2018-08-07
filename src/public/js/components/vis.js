@@ -1,6 +1,6 @@
 import spinnerWrapper from './spinnerWrapper'
 import { getDataSetInfo, getNodeMetrics, getSankey } from '../routes'
-import CallFlow from './callFlow'
+import CallFlow from './CallFlow.js'
 
 export default class Vis {
     constructor() {
