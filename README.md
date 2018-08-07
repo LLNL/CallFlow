@@ -1,7 +1,7 @@
 CallFlow v2.0 (Dev)
 ============
 
-The hpctoolkit-parser has been replace with [Hatchet](www.github.com/LLNL/hatchet) to support a standard API and work with many formats (like hpctoolkit, caliper, etc.). Hatchet analyzes performance data that is organized in a tree hierarchy (such as calling context trees, call graphs, nested regions' timers etc.).
+The hpctoolkit-parser has been replaced by [Hatchet](www.github.com/LLNL/hatchet) to support a standard API and work with many formats (like hpctoolkit, caliper, etc.). Hatchet analyzes performance data that is organized in a tree hierarchy (such as calling context trees, call graphs, nested regions' timers etc.).
 
 ### Input
 
@@ -41,10 +41,16 @@ Callflow uses the hatchet API to obtain the graphframe (which technically contai
 ```
 
 ### Running 
-To run the server, 
+To transpile the code to ES5,
 
 ```
-	cd src/server
+    npm run-script compile
+```
+        
+To run the server, 
+
+```    
+    cd src/server
 	python app.py --config-file "Config file" --filter
 ```
 
@@ -58,11 +64,6 @@ The filtered dataset can also be stored to avoid the filter step on each run. (T
 
 Client side of Callflow is written in semi ES5->ES6 fashion. Hence it requires a transpiler like browserify or webpack to work with. We currently use browserify to write into a bundle.js file found in /build. (TODO: Make it more automatic)
 
-To run the client,
-
-``` 
-	forever build.js
-```
 ### Reference
 
 Any published work that utilizes this software should include the following

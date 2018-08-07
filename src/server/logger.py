@@ -25,7 +25,7 @@ class Log:
         
     def error(self, msg, *args, **kwargs):
         for line in str(msg).splitlines():
-            self.logger.error(line *args, **kwargs)        
+            self.logger.error(line, *args, **kwargs)        
     err = e = error
 
     def warn(self, msg, *args, **kwargs):

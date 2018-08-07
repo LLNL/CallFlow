@@ -8,7 +8,6 @@
         "eslint": "^4.12.1",
         "eslint-config-airbnb": "^16.1.0",
         "http": "^0.0.0",
-        "path": "^0.12.7",
         "tree-model": "^1.0.6"
     },
     "devDependencies": {
@@ -22,7 +21,8 @@
         "madge": "^3.1.1"
     },
     "scripts": {
-        "build": "touch public/js/build/bundle.js && node public/js/build.js"
+        "compile": "touch public/js/build/bundle.js && node public/js/build.js",
+        "server": "python3 server/app.py"
     },
     "author": "Suraj Kesavan, Huu Tan Nguyen",
     "license": "MIT"
