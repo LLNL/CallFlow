@@ -7,8 +7,14 @@
         "bower": "^1.8.0",
         "eslint": "^4.12.1",
         "eslint-config-airbnb": "^16.1.0",
+        "gulp": "^3.9.1",
+        "gulp-sourcemaps": "^2.6.4",
         "http": "^0.0.0",
-        "tree-model": "^1.0.6"
+        "lodash": "^4.17.10",
+        "lodash.assign": "^4.2.0",
+        "tree-model": "^1.0.6",
+        "vinyl-buffer": "^1.0.1",
+        "vinyl-source-stream": "^2.0.0"
     },
     "devDependencies": {
         "@babel/core": "^7.0.0-beta.51",
@@ -23,7 +29,7 @@
         "watchify": "^3.11.0"
     },
     "scripts": {
-        "compile": "touch public/js/build/bundle.js && node public/js/build.js",
+        "compile": "node public/js/build.js",
         "server": "python3 server/app.py"
     },
     "author": "Suraj Kesavan, Huu Tan Nguyen",

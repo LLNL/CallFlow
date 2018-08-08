@@ -9,6 +9,7 @@ from collections import deque
 import utils
 import matplotlib.pyplot as plt
 import ete3
+import pprint
 from logger import log
 
 class Node:
@@ -65,7 +66,7 @@ class Callflow():
         
         capacity_mapping = self.calculate_flows(g)
         nx.set_edge_attributes(g, name='weight', values=capacity_mapping)
-
+        
         return g
 
     def check_cycles(self, g):
@@ -144,7 +145,9 @@ class Callflow():
         return ret
     
     def convert_graph(self, graph):
-        return json_graph.node_link_data(self.g)
+        res = json_graph.node_link_data(self.g)
+        pprint.pprint(res)
+        return res
         
     def getCFG(self):
         return self.cfg

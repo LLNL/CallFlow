@@ -18,7 +18,6 @@ export default function sankeyComputation(graph, view){
 }
 
 function buildGraph(nodes, edges) {
-    console.log(nodes, edges)
     let temp_nodes = nodes.slice()
     let temp_edges = edges.slice()
 
@@ -26,8 +25,8 @@ function buildGraph(nodes, edges) {
     computeNodeBreadths(temp_nodes, temp_edges)
 
     for (var i = 0; i < temp_edges.length; i++) {
-        let source = temp_edges[i].source;
-        let target = temp_edges[i].target;
+        let source = temp_edges[i].sourceID;
+        let target = temp_edges[i].targetID;
         let source_x = nodes[source].x
         let target_x = nodes[target].x
         let dx = target_x - source_x
@@ -66,8 +65,8 @@ function computeNodeEdges(nodes, links) {
         node.targetLinks = [];
     });
     links.forEach(function(link) {
-        var source = link.source,
-		    target = link.target;
+        var source = link.sourceID,
+		    target = link.targetID;
         nodes[source].sourceLinks.push(link);
         nodes[target].targetLinks.push(link);
     });
