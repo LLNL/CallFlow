@@ -1,6 +1,7 @@
 import spinnerWrapper from './spinnerWrapper'
 import { getDataSetInfo, getNodeMetrics, getSankey } from '../routes'
 import CallFlow from './CallFlow.js'
+import Color from "./callflow/color.js"
 
 export default class Vis {
     constructor() {
@@ -9,6 +10,7 @@ export default class Vis {
         this.nodeMetrics = null
         this.debug = true
         this.graphs = null
+	this.color = null
     }
 }
 
@@ -37,7 +39,6 @@ Vis.prototype.init = function() {
         }
         self.graphs = data
 
-	console.log(self.graphs)
         let prop = {
             ID: '#procedure_view',
             width : $('#procedure_view').width(),
@@ -45,6 +46,8 @@ Vis.prototype.init = function() {
             margin : { top: 0, right: 10, bottom: 10, left: 10 },
         }
         let callFlow = new CallFlow(self.graphs[0], prop)
+
+	
 	// let dualViewEnable = true;
 	// if(dualViewEnable){
 	//     dualView(data);

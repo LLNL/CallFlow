@@ -209,7 +209,7 @@ function d3sankeySingle() {
         nodes.forEach(function(node) {
             node.value = Math.max(
                 d3sum(node.sourceLinks,"weight"),
-                d3sum(node.targetLinks,"weight")
+		node.weight
             );
 
 	    // // TODO: lol this is totally wrong. Need to work on this. 

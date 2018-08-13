@@ -5,7 +5,7 @@ The hpctoolkit-parser has been replaced by [Hatchet](www.github.com/LLNL/hatchet
 
 ### Input
 
-Callflow currently, supports two formats, namely hpctoolkit and [caliper](www.github.com/LLNL/caliper).
+Callflow currently, supports two formats, hpctoolkit and [caliper](www.github.com/LLNL/caliper).
 
 ```
 	hpctoolkit format
@@ -31,7 +31,7 @@ Callflow currently, supports two formats, namely hpctoolkit and [caliper](www.gi
 
 ### Hatchet format: 
 
-Callflow uses the hatchet API to obtain the graphframe (which technically contains a graph and dataframe). 
+Callflow uses the hatchet API to obtain the graphframe (which contains a graph and dataframe). 
 
 ``` 
 	Graphframe : {
@@ -62,7 +62,7 @@ Filtering the dataset reduces the number of nodes both hatchet and callflow has 
 
 The filtered dataset can also be stored to avoid the filter step on each run. (TODO: Find an intermediate format for interfacing hatchet and callflow)
 
-Client side of Callflow is written in semi ES5->ES6 fashion. Hence it requires a transpiler like browserify or webpack to work with. We currently use browserify to write into a bundle.js file found in /build. (TODO: Make it more automatic)
+Client side of Callflow is in semi ES6 fashion. Hence it requires a transpiler like browserify or webpack to work with. We currently use browserify to write into a bundle.js file found in /build.
 
 ### Reference
 

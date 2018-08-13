@@ -1,3 +1,4 @@
+#!/usr/bin/env pythonx
 from hatchet import *
 import math
 import sys
@@ -35,6 +36,7 @@ class Callflow():
         self.df['path'] =  self.df['node'].apply(lambda node: node.callpath)
         self.df = self.df.reset_index(drop=True)
         self.df.groupby(['node'], as_index=True, squeeze=True)
+        print(utils.lookup(self.df, self.graph.roots[0]))
         self.root = list(set(utils.lookup(self.df, self.graph.roots[0]).name))[0]
         self.rootRunTimeInc = self.getRootRunTimeInc() 
         
@@ -121,13 +123,16 @@ class Callflow():
             source = utils.lookupByName(self.df, edge[0])
             target = utils.lookupByName(self.df, edge[1])
 
+            
             source_inc = source['CPUTIME (usec) (I)'].max()
             target_inc = target['CPUTIME (usec) (I)'].max()
+
+            print(source_inc, target_inc)
             
             if source_inc == target_inc:
                 ret[edge] = source_inc
             else:
-                ret[edge] = source_inc - target_inc
+                ret[edge] = target_inc
         return ret
             
     

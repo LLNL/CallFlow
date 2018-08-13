@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import json
 from logger import log
 import os
@@ -6,11 +7,9 @@ class configFileReader():
     def __init__(self, filepath):
         dirname = os.path.dirname(__file__)
         filename = os.path.join(dirname, filepath)
-        print(filename)
-        f = open(filename, 'r')
-        self.data = self.json_data(f.read())
+        f = open(filename, 'r').read()
+        self.data = self.json_data(f)
         log.info('Config file: {0}'.format(self.data))
-        print(self.data)
         self.paths = self.data['path']
         self.props = self.data['props']
         self.format = self.data['format'] if 'format' in self.data.keys() else None

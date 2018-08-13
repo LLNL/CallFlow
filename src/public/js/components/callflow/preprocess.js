@@ -1,16 +1,17 @@
 export default function preprocess(graph){    
     graph = addLinkNodeIDs(graph)
+    console.log(graph)
     graph = calculateFlow(graph)
 
     // Not sure why this is needed! 
-    graph = moreProcessing(graph)
+//    graph = moreProcessing(graph)    
     return graph
 }
 
 
 /* Link: {
    sourceID : int, targetID: int , target: str, source: str 
-}*/
+   }*/
 function addLinkNodeIDs(graph){
     let nodeMap = {}
     for(let [idx, node] of graph.nodes.entries()){
@@ -30,77 +31,79 @@ function calculateFlow(graph){
     let outGoing = [];
     let inComing = [];
     nodes.forEach((node) => {
-	    let nodeLabel = node.name[0];
+	let nodeLabel = node.name[0];
         
-	    links.forEach((link) => {
+	links.forEach((link) => {
             let linkLabel = nodes[link.sourceID].name[0];
-	        if(linkLabel == nodeLabel){
-		        if(outGoing[linkLabel] == undefined){
-		            outGoing[linkLabel] = 0;
-		        }
-		        outGoing[linkLabel] += link.weight
-	        }
+	    if(linkLabel == nodeLabel){
+		if(outGoing[linkLabel] == undefined){
+		    outGoing[linkLabel] = 0;
+		}
+		outGoing[linkLabel] += link.weight
+	    }
         });
         
         links.forEach((link) => {
             let linkLabel = nodes[link.targetID].name[0]
-	        if(linkLabel == nodeLabel){
-		        if(inComing[linkLabel] == undefined){
-		            inComing[linkLabel] = 0;
-		        }
-		        inComing[linkLabel] += link.weight;
-	        }
-	    })
-
-	    if(outGoing[nodeLabel] == undefined){
-	        outGoing[nodeLabel] = 0;
+	    if(linkLabel == nodeLabel){
+		if(inComing[linkLabel] == undefined){
+		    inComing[linkLabel] = 0;
+		}
+		inComing[linkLabel] += link.weight;
 	    }
+	})
 
-	    if(inComing[nodeLabel] == undefined){
-	        inComing[nodeLabel] = 0;
-	    }
-	    
-	    node["out"] = outGoing[nodeLabel];
-	    node["in"] = inComing[nodeLabel];
+	if(outGoing[nodeLabel] == undefined){
+	    outGoing[nodeLabel] = 0;
+	}
 
-	    node["inclusive"] = Math.max(inComing[nodeLabel], outGoing[nodeLabel]);
-	    node["exclusive"] = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel];
+	if(inComing[nodeLabel] == undefined){
+	    inComing[nodeLabel] = 0;
+	}
+	
+	node["out"] = outGoing[nodeLabel];
+	node["in"] = inComing[nodeLabel];
 
-	    calcStat(graph, node["inclusive"], node["exclusive"])
+	node["inclusive"] = Math.max(inComing[nodeLabel], outGoing[nodeLabel]);
+	node["exclusive"] = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel];
+
+	calcStat(graph, node["inclusive"], node["exclusive"])
     })
 
     return graph
 }
 
-function moreProcessing(graph){
-    let stat = {
-	    "inTimeMin" : Number.MAX_SAFE_INTEGER,
-	    "inTimeMax" : 0,
-	    "exTimeMin" : Number.MAX_SAFE_INTEGER,
-	    "exTimeMax" : 0,
-	    "imPercMin" : Number.MAX_SAFE_INTEGER,
-	    "imPercMax" : 0
-    };
+// function moreProcessing(graph){
+//     let stat = {
+// 	"inTimeMin" : Number.MAX_SAFE_INTEGER,
+// 	"inTimeMax" : 0,
+// 	"exTimeMin" : Number.MAX_SAFE_INTEGER,
+// 	"exTimeMax" : 0,
+// 	"imPercMin" : Number.MAX_SAFE_INTEGER,
+// 	"imPercMax" : 0
+//     };
 
-    // For now I am changing inTime to inc, exTime to exc. Not sure if this is needed. 
-    graph.nodes.forEach((data) => {
-	    graph.stat.inTimeMin = Math.min(graph.stat.inTimeMin, data.inc);
-	    graph.stat.inTimeMax = Math.max(graph.stat.inTimeMax, data.inc);
-	    graph.stat.exTimeMin = Math.min(graph.stat.exTimeMin, data.exc);
-	    graph.stat.exTimeMax = Math.max(graph.stat.exTimeMax, data.exc);
-        //	    graph.stat.imPercMin = Math.min(graph.stat.imPercMin, data.imPerc);
-        //	    graph.stat.imPercMax = Math.max(graph.stat.imPercMax, data.imPerc);
-    });
+//     // For now I am changing inTime to inc, exTime to exc. Not sure if this is needed. 
+//     graph.nodes.forEach((data) => {
+// 	graph.stat.inTimeMin = Math.min(graph.stat.inTimeMin, data.in);
+// 	graph.stat.inTimeMax = Math.max(graph.stat.inTimeMax, data.in);
+// 	graph.stat.exTimeMin = Math.min(graph.stat.exTimeMin, data.out);
+// 	graph.stat.exTimeMax = Math.max(graph.stat.exTimeMax, data.out);
+//         //	    graph.stat.imPercMin = Math.min(graph.stat.imPercMin, data.imPerc);
+//         //	    graph.stat.imPercMax = Math.max(graph.stat.imPercMax, data.imPerc);
+//     });
 
-    return graph
-}
+//     return graph
+// }
 
 function calcStat(graph, inTime, exTime){
     graph.stat = resetStat()
-    graph.stat.minInc = Math.min(graph.stat.minInc, inTime)
-    graph.stat.maxInc = Math.max(graph.stat.maxInc, inTime)
-    graph.stat.minExc = Math.min(graph.stat.minExc, exTime)
-    graph.stat.maxExc = Math.max(graph.stat.maxExc, exTime)
+    graph.nodes.forEach((data) => {
+	graph.stat.minInc = Math.min(graph.stat.minInc, data.in)
+	graph.stat.maxInc = Math.max(graph.stat.maxInc, data.in)
+	graph.stat.minExc = Math.min(graph.stat.minExc, data.out)
+	graph.stat.maxExc = Math.max(graph.stat.maxExc, data.out)
+    })    
 }
 
 

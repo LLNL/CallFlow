@@ -1,6 +1,6 @@
 {
-    "dataset" : "calc-pi",
-    "path" : ["/home/vidi/Suraj/llnl/CallFlow/data/calc-pi/"],
-    "props":{
-    }
+	"dataset": "calc-pi",
+	"path": ["/Users/jarus/ucd/Research/Visualisation/projects/CallFlow/data/calc-pi/"],
+	"format": ["hpctoolkit"],
+	"props": {}
 }

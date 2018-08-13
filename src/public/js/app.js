@@ -24,6 +24,7 @@ function start(){
     //    let functionListUI = new FunctionListUI();
     let vis = new Vis()
     vis.init()
+    console.log('a')
 }
 
 export {
