@@ -46,15 +46,6 @@ Vis.prototype.init = function() {
             margin : { top: 0, right: 10, bottom: 10, left: 10 },
         }
         let callFlow = new CallFlow(self.graphs[0], prop)
-
-	
-	// let dualViewEnable = true;
-	// if(dualViewEnable){
-	//     dualView(data);
-	// }
-	// else{
-	//     splitView(data);
-	// }
     });
 
     spinner.stop();    

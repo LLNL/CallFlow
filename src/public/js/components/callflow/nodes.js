@@ -32,6 +32,7 @@ export default function drawNodes(graph, view){
 	.duration(view.transitionDuration)
 	.attr('opacity' , 1)
 	.attr('transform', function(d){
+	    console.log("d.x, d.y", d.x, d.y);
 	    return "translate(" + d.x + "," + d.y + ")";
 	})
     
