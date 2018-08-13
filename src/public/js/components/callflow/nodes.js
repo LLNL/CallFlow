@@ -49,16 +49,7 @@ function drawRectangle(node, graph, view){
 	.attr("width", view.nodeWidth)
         .attr("opacity", 0)
 	.style("fill", function (d) {
-            //		    var temp = {"name" : d.name.replace(/ .*/, ""),
-            //			            "color" : view.color(d.name.replace(/ .*/, ""))}
-            //		    nodeList.push(temp);
-	    if(d.name == "intermediate"){
-		return 'grey'
-	    }
-	    else{
-                return view.color.getColor(d);
-	    }
-
+            return view.color.getColor(d);
 	})
 	.style("fill-opacity", function(d){
 	    if(d.name == "intermediate"){
@@ -137,9 +128,6 @@ function drawRectangle(node, graph, view){
 	    return d.height;
 	})
 	.style("fill", function (d) {
-	    //		    var temp = {"name" : d.name.replace(/ .*/, ""),
-	    //			            "color" : color(d.name.replace(/ .*/, ""))}
-	    //		    nodeList.push(temp);
 	    if(d.name == "intermediate"){
 		return 'grey'
 	    }
@@ -254,11 +242,15 @@ function drawText(node, graph, view){
 	});
 
     // Transition
+    console.log(view.color)
     view.nodes.selectAll("text")
 	.data(graph.nodes)
 	.transition()
 	.duration(view.transitionDuration)
         .style('opacity', 1)
+    	.style("fill", function(d){
+	    return view.color.setContrast(view.color.getColor(d))
+	})
 	.text(function (d) {
 	    if(d.name != "intermediate"){
 	    	if(d.height < view.minHeightForText ){

@@ -10,7 +10,6 @@ export default class Color {
     }
 
     setColorScale (minInc, maxInc, minExc, maxExc){
-	console.log(minInc, maxInc, minExc, maxExc);
         if(!minInc){
             minInc = 0
         }
@@ -57,4 +56,23 @@ export default class Color {
 	    return this.diffColorScale(node.diff || 0);
 	}
     }
+
+    setContrast(hex){
+	let rgb = this.hexToRgb(hex)
+	var o = Math.round(((parseInt(rgb['r']) * 299) +
+			    (parseInt(rgb['g']) * 587) +
+                      (parseInt(rgb['b']) * 114)) / 1000);
+	
+	return (o > 125) ? '#000' : '#fff';
+    }
+
+    hexToRgb(hex) {
+	var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+	return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+	} : null;
+    }
+
 }
