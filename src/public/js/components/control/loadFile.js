@@ -1,4 +1,4 @@
-export default function loadFile(){
+export default function loadFile(parent){
     let inputFile = document.createElement('div')
     inputFile.setAttribute("class", "controlComponent")
     
@@ -18,5 +18,9 @@ export default function loadFile(){
     button.appendTo(inputFileContent);    
     inputFile.append(inputFileLabel);
     inputFile.append(inputFileContent);
-    $('#control').append(inputFile)
+    $(parent).append(inputFile)
+
+    $('input[id="inputFileBtr"]').on('change', function(){
+	return $('input[id="inputFileBtr"]').val();
+    })
 }

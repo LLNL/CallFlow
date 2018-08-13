@@ -12,7 +12,6 @@
  ******************************************************************************/
 
 import Layout from './goldenLayout'
-import View from './view'
 import ControlUI from './components/controlUI'
 import Vis from './components/vis'
 import SpinnerWrapper from './components/spinnerWrapper'
@@ -24,7 +23,7 @@ function start(){
     //    let functionListUI = new FunctionListUI();
     let vis = new Vis()
     vis.init()
-    console.log('a')
+
 }
 
 export {

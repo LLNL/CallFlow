@@ -2,6 +2,7 @@ import spinnerWrapper from './spinnerWrapper'
 import { getDataSetInfo, getNodeMetrics, getSankey } from '../routes'
 import CallFlow from './CallFlow.js'
 import Color from "./callflow/color.js"
+import ConfigJSON from './ConfigJSON.js'
 
 export default class Vis {
     constructor() {
@@ -46,6 +47,7 @@ Vis.prototype.init = function() {
             margin : { top: 0, right: 10, bottom: 10, left: 10 },
         }
         let callFlow = new CallFlow(self.graphs[0], prop)
+	let configJSON = new ConfigJSON();
     });
 
     spinner.stop();    

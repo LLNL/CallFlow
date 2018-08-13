@@ -24,7 +24,6 @@ export default function DOMSetup(view){
         .style('fill', 'none')
         .style('pointer-events', 'all')
     
-
     view.defs = view.svg.append('defs')
     view.edges = view.svg.append('g')
     view.histograms = view.svg.append('g')

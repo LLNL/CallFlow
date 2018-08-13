@@ -1,3 +1,18 @@
+function getConfigFile(filename, cb){
+    $.ajax({
+	type:'GET',
+	contentType: 'applications/json',
+	dataType: 'json',
+	url: '/loadConfigFile',
+	data: { "filename": filename },
+	success: cb,
+	error: () => {
+	    console.log('There was a problem with reading the config file');	    
+	}
+    })
+}
+
+
 function getDataSetInfo(cb){
     $.ajax({
 	    type:'GET',
@@ -112,5 +127,6 @@ function getHistogramScatterData(node){
 export {
     getDataSetInfo,
     getNodeMetrics,
-    getSankey
+    getSankey,
+    getConfigFile
 }

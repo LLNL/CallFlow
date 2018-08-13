@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env pythonx
 from flask import Flask, jsonify, render_template, send_from_directory, current_app
 import os
 import sys
@@ -134,7 +134,6 @@ class CallFlow():
     def create_server(self):
         app.debug = True
         app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), '')
-        print(app.__dir__)
         # App routes 
         @app.route('/')
         def root():
@@ -153,6 +152,12 @@ class CallFlow():
         def dataSetInfo():
             return jsonify({
                 "g": 1
+            })
+
+        @app.route('/loadConfigFile')
+        def configFile(json):
+            return jsonify({
+                
             })
 
     def launch_webapp(self, gfs):
