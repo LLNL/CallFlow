@@ -44,7 +44,6 @@ Vis.prototype.init = function() {
             ID: '#procedure_view',
             width : $('#procedure_view').width(),
             height : $('#procedure_view').height(),
-            margin : { top: 0, right: 10, bottom: 10, left: 10 },
         }
         let callFlow = new CallFlow(self.graphs[0], prop)
 	let configJSON = new ConfigJSON();

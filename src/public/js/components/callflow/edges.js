@@ -29,8 +29,8 @@ export default function drawEdges(graph, view){
 		Bxi = d3.interpolateNumber(Bx0, Bx1),
 		Bx2 = Bxi(0.4),
 		Bx3 = Bxi(1 - 0.4),
-		By0 = d.source.y + d.height + d.sy,
-		By1 = d.target.y + d.ty + d.height;
+		By0 = d.source.y + d.height+ d.sy,
+		By1 = d.target.y + d.ty + d.height/2;
 
 	    var rightMoveDown = By1 - Ty1;
 	    

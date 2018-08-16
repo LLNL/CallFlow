@@ -14,9 +14,9 @@ export default class CallFlow{
         this.view.nodeWidth = 50
         this.view.containerID = prop.ID
         this.view.minHeightForText = 10
-        this.view.margin = prop.margin || { top: 10, right: 30, bottom: 10, left: 10 }
-        this.view.width = (prop.width || 900) - prop.margin.left - prop.margin.right
-        this.view.height = prop.height || 900 - prop.margin.top - prop.margin.bottom        
+        this.view.margin = prop.margin || { top: 20, right: 30, bottom: 10, left: 10 }
+        this.view.width = (prop.width || 900) - this.view.margin.left - this.view.margin.right
+        this.view.height = prop.height || 900 - this.view.margin.top - this.view.margin.bottom        
         this.view.transitionDuration = 1000
         this.view.color = null
         

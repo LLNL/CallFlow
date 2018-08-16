@@ -23,6 +23,7 @@ export default function drawNodes(graph, view){
 	})
 	.attr('opacity' , 0)
 	.attr("transform", function (d) {
+	    console.log(d.x, d.y);
 	    return "translate(" + d.x + "," + d.y + ")";
 	})
 
@@ -185,7 +186,7 @@ function drawPath(node, graph, view){
 
 
 function drawText(node, graph, view){
-    let textTruncForNode = 8;
+    let textTruncForNode = 4;
     node.append("text")
 	.attr('dy', '0.35em')
 	.attr("transform", "rotate(90)")

@@ -35,8 +35,9 @@ class Callflow():
     def pre_process(self):
         self.df['path'] =  self.df['node'].apply(lambda node: node.callpath)
         self.df = self.df.reset_index(drop=True)
-        self.df.groupby(['node'], as_index=True, squeeze=True)
-        print(utils.lookup(self.df, self.graph.roots[0]))
+        self.gdf = self.df.groupby(['node', 'module'], as_index=True, squeeze=True)
+        for key, item in self.gdf:
+            print self.gdf.get_group(key).module, "\n\n"
         self.root = list(set(utils.lookup(self.df, self.graph.roots[0]).name))[0]
         self.rootRunTimeInc = self.getRootRunTimeInc() 
         
