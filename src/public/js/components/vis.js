@@ -20,12 +20,12 @@ Vis.prototype.init = function() {
 
     let self = this
     // fetch the data
-    getDataSetInfo(function(data){
-	if(self.debug){
-	    console.log("[Vis] Dataset information: ", data);
-	}
-	self.dataSetInfo = data;
-    });
+    // getDataSetInfo(function(data){
+    // 	if(self.debug){
+    // 	    console.log("[Vis] Dataset information: ", data);
+    // 	}
+    // 	self.dataSetInfo = data;
+    // });
 
     /*    getNodeMetrics(function(data){
           if(self.debug){
@@ -34,7 +34,7 @@ Vis.prototype.init = function() {
           self.nodeMetrics = data;
 	  });*/
 
-    getSankey(0, function(data){
+    getSankey(function(data){
         if(self.debug){
             console.log('[Vis] Sankey information :', data)
         }

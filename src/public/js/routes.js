@@ -39,13 +39,12 @@ function getNodeMetrics(cb){
     });				
 }
 
-function getSankey(lmID, cb){
+function getSankey(cb){
     $.ajax({
 	    type: 'GET',
 	    contentType: 'application/json',
 	    dataType: 'json',
 	    url: '/getSankey',
-	    data: { 'lmID': lmID },
 	    success: cb,
 	    error: function(err){
 	        console.log(err);

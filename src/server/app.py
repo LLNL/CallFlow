@@ -146,18 +146,16 @@ class CallFlow():
         
         @app.route('/getSankey')
         def getSankey():
+            print self.cfgs
             return json.dumps(self.cfgs)
         
-        @app.route('/dataSetInfo')
-        def dataSetInfo():
-            return jsonify({
-                "g": 1
-            })
+        @app.route('/groupBy')
+        def groupBy():
+            return jsonify()
 
         @app.route('/loadConfigFile')
         def configFile(json):
-            return jsonify({
-                
+            return jsonify({                
             })
 
     def launch_webapp(self, gfs):
@@ -165,7 +163,6 @@ class CallFlow():
 #        self.gfs = self.create_gfs()
 
         # Create the callflow graph frames from graphframes given by hatchet
-
         self.cfgs = self.create_cfgs(gfs)
 
         # Launch the flask app
