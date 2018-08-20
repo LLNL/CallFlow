@@ -28,7 +28,7 @@ class Callflow():
         self.df = gf.dataframe
         self.graph = gf.graph
         self.pre_process()
-        self.g = self.create_nx_graph('group_path')
+        self.g = self.create_nx_graph('path')
         self.tree = self.create_subtrees(self.g)
         self.sg = self.create_super_graph(self.g, {})
         self.cfg = self.convert_graph(self.tree)
@@ -39,8 +39,21 @@ class Callflow():
         self.df.groupby(['node'], as_index=True, squeeze=True)
         self.root = list(set(utils.lookup(self.df, self.graph.roots[0]).name))[0]
         self.rootRunTimeInc = self.get_root_runtime_Inc()
+        imbalance_perc_map = self.imbalance()
+        self.df['imbalance_perc'] = self.df['CPUTIME (usec) (I)'].apply(lambda node: node)
         self.superFrame = self.groupby(self.gf, 'module')
 
+    def imbalance(self):
+        imbalance_perc_map = {}
+        node_max_map = {}
+        node_avg_map = {}
+
+        for idx, row in self.df.iterrows():
+            node_max_map[row.node] = max(utils.lookup(self.df, row.node)['CPUTIME (usec) (I)'])
+            node_avg_map[row.node] = utils.avg(utils.lookup(self.df, row.node)['CPUTIME (usec) (I)'])
+            
+        print node_max_map, node_avg_map
+            
     def groupby(self, gf, attr):
         groupsTracked = {}
         root = self.graph.roots[0]

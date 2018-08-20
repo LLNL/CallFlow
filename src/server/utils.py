@@ -9,7 +9,11 @@ def sanitizeName(name):
     if name == None:
         return None
     name_split = name.split('/')
-    return name_split[len(name_split) - 1]  
+    return name_split[len(name_split) - 1]
+
+def avg(l):
+    """uses floating-point division."""
+    return sum(l) / float(len(l))
 
 # Lookup by the node hash
 def lookup(df, node_hash):
