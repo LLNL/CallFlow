@@ -27,21 +27,18 @@ from actions import groupBy
 class CallFlow():
     def __init__(self, gf):
         self.gf = gf
-        self.df = gf.dataframe
         self.graph = gf.graph
-        
-#        self.superFrame = self.groupby(self.gf, 'module')
+        self.df = gf.dataframe       
 
         self.df = PreProcess(self.df).df
-        self.g = self.create_nx_graph('path')
-        self.tree = self.create_subtrees(self.g)
-#        self.sg = self.create_super_graph(self.g, {})
-        self.cfg = self.convert_graph(self.tree)
+
+        nx = NetworkX(gf, 'path')
+        self.cfg = self.convert_graph(nx.g)
 
     def update(self, action):
         return self.cfg
                 
-    def bfs(self, gf):        
+    def bfs(self, gf):
         visited, queue = set(), gf.graph.roots[0]
         while queue:
             node = queue.pop(0)
@@ -50,14 +47,9 @@ class CallFlow():
 #                queue.extend()
     
     def convert_graph(self, graph):
-        res = json_graph.node_link_data(self.g)
+        res = json_graph.node_link_data(graph)
 #        pprint.pprint(res)
         return res
         
     def getCFG(self):
         return self.cfg
-
-    def get_root_runtime_Inc(self):
-        root = self.graph.roots[0]
-        root_metrics = utils.lookup(self.df, root)
-        return root_metrics['CPUTIME (usec) (I)'].max()
