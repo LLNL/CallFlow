@@ -41,14 +41,14 @@ function getNodeMetrics(cb){
 
 function getSankey(cb){
     $.ajax({
-	    type: 'GET',
-	    contentType: 'application/json',
-	    dataType: 'json',
-	    url: '/getSankey',
-	    success: cb,
-	    error: function(err){
-	        console.log(err);
-	    }
+	type: "GET",
+	contentType: "application/json",
+	dataType: "json",
+	url: '/getSankey',
+	success: cb,
+	error: function(err){
+	    console.log(err);
+	}
     })
 }
 

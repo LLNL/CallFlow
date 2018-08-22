@@ -1,7 +1,18 @@
+##############################################################################
+# Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Callflowt.
+# Created by Suraj Kesavan <kesavan1@llnl.gov>.
+# LLNL-CODE-741008. All rights reserved.
+#
+# For details, see: https://github.com/LLNL/Callflow
+# Please also read the LICENSE file for the MIT License notice.
+##############################################################################
+
 import os
 import fnmatch
 from logger import log
-
 
 # Input : ./xxx/xxx/yyy
 # Output: yyy
@@ -21,6 +32,9 @@ def lookup(df, node_hash):
 
 def lookupByName(df, name):
     return df.loc[df['name'] == name]
+
+def lookupByNodeName(df, name):
+    return df.loc[df['node_name'] == name]
 
 def lookupByAttribute(df, node_hash, attribute):
     ret = []

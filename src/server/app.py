@@ -1,4 +1,17 @@
+##############################################################################
+# Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Callflow.
+# Created by Suraj Kesavan <kesavan1@llnl.gov>.
+# LLNL-CODE-741008. All rights reserved.
+#
+# For details, see: https://github.com/LLNL/Callflow
+# Please also read the LICENSE file for the MIT License notice.
+##############################################################################
+
 #!/usr/bin/env pythonx
+
 from flask import Flask, jsonify, render_template, send_from_directory, current_app
 import os
 import sys
@@ -15,7 +28,7 @@ from CCT import *
 
 app = Flask(__name__, static_url_path='/public')
 
-class CallFlow():
+class App():
     def __init__(self):
         self.callflow_path = os.path.abspath(os.path.join(__file__, '../../..'))
         self.app = None # App state
@@ -146,7 +159,7 @@ class CallFlow():
         
         @app.route('/getSankey')
         def getSankey():
-            print self.cfgs
+            print type(self.cfgs)
             return json.dumps(self.cfgs)
         
         @app.route('/groupBy')
@@ -175,9 +188,9 @@ class CallFlow():
     def create_cfgs(self, gfs):        
         ret = []
         for idx, gf in enumerate(gfs):
-            callflow = Callflow(gf)
+            callflow = CallFlow(gf)
             ret.append(callflow.getCFG())
         return ret
   
 if __name__ == '__main__':
-    CallFlow()
+    App()

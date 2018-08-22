@@ -1,10 +1,6 @@
 export default function preprocess(graph){    
     graph = addLinkNodeIDs(graph)
-    console.log(graph)
     graph = calculateFlow(graph)
-
-    // Not sure why this is needed! 
-//    graph = moreProcessing(graph)    
     return graph
 }
 
@@ -13,6 +9,7 @@ export default function preprocess(graph){
    sourceID : int, targetID: int , target: str, source: str 
    }*/
 function addLinkNodeIDs(graph){
+    console.log(graph)
     let nodeMap = {}
     for(let [idx, node] of graph.nodes.entries()){
         nodeMap[node.name[0]] = idx
