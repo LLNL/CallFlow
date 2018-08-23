@@ -59,6 +59,10 @@ class NetworkX():
         capacity_mapping = self.calculate_flows(self.g)        
         nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)                
 
+        print("Nodes", self.g.nodes())
+        print("Edges", self.g.edges())
+
+        
     def get_root_runtime_Inc(self):
         root = self.graph.roots[0]
         root_metrics = utils.lookup(self.df, root)
@@ -72,13 +76,16 @@ class NetworkX():
                 log.warn("Removing cycles: {0} -> {1}".format(cycle[0], cycle[1]))
                 self.g.remove_edge(*cycle)
 
-    def create_module_map(self, nodes, attribute):
+    def create_module_map(self, nodes, attr):
         ret = {}
         for node in nodes:
-            if attribute == 'CPUTIME (usec) (I)':
-                ret[node] =  self.df[self.df['name'] == node][attribute].max().tolist()
+            if attr == 'CPUTIME (usec) (I)':
+                if len(self.df[self.df['node_name'] == node][attr]) != 0:
+                    ret[node] =  self.df[self.df['node_name'] == node][attr].max().tolist()
+                else:
+                    ret[node] = 0
             else:
-                ret[node] =  list(set(self.df[self.df['name'] == node][attribute].tolist()))            
+                ret[node] =  list(set(self.df[self.df['node_name'] == node][attr].tolist()))            
         return ret
 
     def draw_tree(self, g):

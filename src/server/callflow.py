@@ -29,13 +29,15 @@ class CallFlow():
         self.gf = gf
         self.graph = gf.graph
         self.df = gf.dataframe       
-        self.df = PreProcess(self.df).df
+        self.df = PreProcess(self.df).df        
         nx = NetworkX(gf, 'path')
+
+        groupBy(self.gf, 'module')
+
+        nx = NetworkX(gf, 'group_path')
         self.cfg = self.convert_graph(nx.g)
 
-    def update(self, action):
-        
-        
+    def update(self, action):        
         return self.cfg
                 
     def bfs(self, gf):

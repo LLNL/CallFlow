@@ -80,7 +80,7 @@ class App():
 
         if 'format' not in self.config.data:
             log.warn('File formats not provided. Automatically looking for the files with experiment')
-            self.gfs_format = utils.automatic_gfs_format_lookup(self.config.paths)
+            self.gfs_format = self.automatic_gfs_format_lookup(self.config.paths)
         else:
             self.gfs_format = self.config.format
 
@@ -100,7 +100,25 @@ class App():
         log.info("[Create] Nodes count: {0} (time={1})".format(gf.dataframe.shape[0], time.time() - t))
         return ret
 
+    # Find the file format automatically.  Automatic look up for the format
+    # args: paths (from config file)
+    # return : Array(gf_format)
+    # Todo: Write better regex to eliminate looping through mdb files
+    def automatic_gfs_format_lookup(self, paths):
+        ret = []
+        pattern = 'experiment*'
+        for path in paths:
+            filtered_path =  fnmatch.filter(os.listdir(path), pattern)
+            for file in filtered_path:
+                if file.endswith('.xml'):
+                    ret.append('hpctoolkit')
+                elif file.endswith('.json'):
+                    ret.append('caliper')
+                    log.info("Found formats = {0}".format(ret))
+        return ret
 
+
+    
     # ===============================================================================
             # Filtering Graphframes
     # ===============================================================================    
