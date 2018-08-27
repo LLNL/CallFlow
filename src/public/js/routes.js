@@ -43,7 +43,6 @@ function getSankey(cb){
     $.ajax({
 	type: "GET",
 	contentType: "application/json",
-	dataType: "json",
 	url: '/getSankey',
 	success: cb,
 	error: function(err){

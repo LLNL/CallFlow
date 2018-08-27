@@ -9,7 +9,6 @@ export default function preprocess(graph){
    sourceID : int, targetID: int , target: str, source: str 
    }*/
 function addLinkNodeIDs(graph){
-    console.log(graph)
     let nodeMap = {}
     for(let [idx, node] of graph.nodes.entries()){
         nodeMap[node.name[0]] = idx
@@ -19,6 +18,7 @@ function addLinkNodeIDs(graph){
         link.sourceID = nodeMap[link.source]
         link.targetID = nodeMap[link.target]
     }
+    
     return graph
 }
 

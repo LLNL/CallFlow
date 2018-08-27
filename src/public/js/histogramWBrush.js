@@ -241,7 +241,6 @@ Histogram.prototype.bars = function(args){
 	.on('click', function(d,i){
 	})
 	.on('mouseover', function(d,i){
-	    console.log(d);
 	    d3.select(this)
 		.attr('fill', 'red')
 	    d3.selectAll('.lineRank_' + i)

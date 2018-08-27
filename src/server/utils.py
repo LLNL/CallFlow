@@ -18,7 +18,7 @@ from logger import log
 # Output: yyy
 def sanitizeName(name):
     if name == None:
-        return None
+        return "Unkno"
     name_split = name.split('/')
     return name_split[len(name_split) - 1]
 

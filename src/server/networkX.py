@@ -25,29 +25,35 @@ class NetworkX():
         self.root = list(set(utils.lookup(self.df, self.graph.roots[0]).name))[0]
         self.rootRunTimeInc = self.get_root_runtime_Inc()
         
-        self.g = nx.DiGraph(rootRunTimeInc = self.rootRunTimeInc)        
-
+        self.g = nx.DiGraph(rootRunTimeInc = self.rootRunTimeInc)       
+        
         for idx, row in self.df.iterrows():
             if row.show_node:
-                print 'Adding for node: {0}'.format(row.node)
                 self.g.add_path(row[path_name])
-            else:
-                print 'Not showing the node: {0}'.format(row.node)
+#                print 'Adding for node: {0}'.format(row.node)
+#            else:
+                
+                #                print 'Not showing the node: {0}'.format(row.node)
 
-        log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
+        print("Nodes", self.g.nodes(data=True))
+        print("Edges", self.g.edges())
+                
+#        log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
         self.is_tree = nx.is_tree(self.g)
         log.warn("Is it a tree? : {0}".format(self.is_tree))
                 
         self.check_and_remove_cycles()
-                
+#        self.check_and_retain_cycles()
+        
         module_mapping = self.create_module_map(self.g.nodes(), 'module')
-        name_mapping = self.create_module_map(self.g.nodes(), 'name')
+        name_mapping = self.create_module_map(self.g.nodes(), 'node_name')
         file_mapping = self.create_module_map(self.g.nodes(), 'file')
         type_mapping = self.create_module_map(self.g.nodes(), 'type')
         time_mapping = self.create_module_map(self.g.nodes(), 'CPUTIME (usec) (I)')
         #        children_mapping = self.immediate_children(g)
         level_mapping = self.hierarchy_level(self.g, self.root)
         
+
         nx.set_node_attributes(self.g, name='module', values=module_mapping)
         nx.set_node_attributes(self.g, name='weight', values=time_mapping)
         nx.set_node_attributes(self.g, name='name', values=name_mapping)
@@ -59,7 +65,7 @@ class NetworkX():
         capacity_mapping = self.calculate_flows(self.g)        
         nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)                
 
-        print("Nodes", self.g.nodes())
+        print("Nodes", self.g.nodes(data=True))
         print("Edges", self.g.edges())
 
         
@@ -76,6 +82,40 @@ class NetworkX():
                 log.warn("Removing cycles: {0} -> {1}".format(cycle[0], cycle[1]))
                 self.g.remove_edge(*cycle)
 
+    def check_and_retain_cycles(self):
+        temp = {}
+        if not self.is_tree:
+            log.info("Renaming the cycles upto a certain level")
+            cycles = nx.find_cycle(self.g, self.root)
+            print cycles
+            for cycle in cycles:
+                if cycle[0] not in temp:
+                    temp[cycle[0]] = 0
+                if cycle[1] not in temp:
+                    temp[cycle[1]] = 0
+
+                temp[cycle[0]] += 1
+                temp[cycle[1]] += 1
+
+                    
+                if cycle[0] == cycle[1]:
+                    temp_src_trgt = (cycle[0], cycle[1]+'_')
+                    self.g.add_edge(*temp_src_trgt)
+                    self.g.remove_edge(*cycle)
+                    break
+                
+                if temp[cycle[0]] > 1:
+                    temp_src_trgt = (cycle[0], cycle[1]+'_')
+                    print "adding {0} : {1}".format(temp_src_trgt[0], temp_src_trgt[1])
+                    self.g.add_edge(*temp_src_trgt)
+                    self.g.remove_edge(*cycle)
+                elif temp[cycle[1]] > 1:
+                    temp_src_trgt = (cycle[0], cycle[1] + '_')
+                    print "adding {0} : {1}".format(temp_src_trgt[0], temp_src_trgt[1])
+                    self.g.add_edge(*temp_src_trgt)
+                    self.g.remove_edge(*cycle)
+                    
+                
     def create_module_map(self, nodes, attr):
         ret = {}
         for node in nodes:
@@ -102,6 +142,8 @@ class NetworkX():
         else:
             level[root] = level[parent] + 1
         neighbors = G.neighbors(root)
+        if  neighbors == None:
+            print "None"+ neighbors
         if neighbors != None:
             for neighbor in neighbors:
                 self.hierarchy_level(G, neighbor, level=level, parent = root)
@@ -129,12 +171,9 @@ class NetworkX():
             
             source_inc = source['CPUTIME (usec) (I)'].max()
             target_inc = target['CPUTIME (usec) (I)'].max()
-
-            print(source_inc, target_inc)
             
             if source_inc == target_inc:
                 ret[edge] = source_inc
             else:
                 ret[edge] = target_inc
-        print ret        
         return ret

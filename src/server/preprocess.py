@@ -40,8 +40,8 @@ class PreProcess():
         # node_name is different from name in dataframe. So creating a copy of it.
         self.df['node_name'] = self.df['name'].apply(lambda name: name)
 
+        self.df['module'] = self.df['module'].apply(lambda module_name: utils.sanitizeName(module_name))
         
-
     def create_max_incTime_map(self):
         ret = {}
         for idx, row in self.df.iterrows():

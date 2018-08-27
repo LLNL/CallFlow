@@ -200,8 +200,8 @@ function d3sankeySingle() {
         nodes.forEach(function(node) {
             node.value = Math.max(
                 d3sum(node.sourceLinks,"weight"),
-		d3sum(node.targetLinks, "weight"));
-//		node.weight);
+//		d3sum(node.targetLinks, "weight"));
+		node.weight);
 
 	    // // TODO: lol this is totally wrong. Need to work on this. 
 	    // if(node.value > node.weight && node.sourceLinks.length!=0){
@@ -258,7 +258,10 @@ function d3sankeySingle() {
         // }
 
         nodes.forEach(function(node) {
-            node.x = node.level; 
+	    if(node.name[0] == 'Unkno'){
+		node.level = 1
+	    }
+            node.x = node.level + 1; 
             node.dx = nodeWidth;
         })
 
@@ -346,7 +349,7 @@ function d3sankeySingle() {
                             }
                         }
                     });
-		    node.y = Math.max(0, maxY);
+		    node.y = Math.min(0, maxY);
                     node.parY = maxY;
 		    node.height = (node.value * scale);		    
                 });

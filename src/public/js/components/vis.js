@@ -35,6 +35,7 @@ Vis.prototype.init = function() {
 	  });*/
 
     getSankey(function(data){
+	data = JSON.parse(data)
         if(self.debug){
             console.log('[Vis] Sankey information :', data)
         }
