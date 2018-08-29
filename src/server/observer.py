@@ -1,4 +1,4 @@
-class Boss(object):
+class Subject(object):
     """ 
     Maintains a list of observers and notifies them
     when a state changes
@@ -26,4 +26,23 @@ class Boss(object):
         """        
         for observer in self.observers:
             observer.update()
+        
+# Base class for an observer
+class Observer(object):
+    def update(self):
+        raise NotImplementedError("Observer not implemented")
+
+
+class filterObserver(Observer):
+    def __init__(self, subject):
+        self.subject = subject
+        
+    def update(self):
+
+
+class rootObserver(Observer):
+    def __init__(self, subject):
+        self.subject = subject
+
+    def update(self):
         

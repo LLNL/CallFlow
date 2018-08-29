@@ -22,11 +22,12 @@ class PreProcess():
         
     def map(self):
         return self.map
-        
+
     class Builder(object):
-        def __init__(self, gf):
-            self.df = gf.dataframe
-            self.graph = gf.graph
+        def __init__(self, state):
+            self.state = state
+            self.df = state.df
+            self.graph = state.graph
             self.map = {}
             
         def build(self):
@@ -44,12 +45,10 @@ class PreProcess():
             ret = {}
 
             for idx, row in self.df.iterrows():
-                print row.node.df_index
-                ret[row.node] = max(utils.lookup(self.df, row.node)['CPUTIME (usec) (I)'])
+                ret[str(row.node.df_index)] = max(self.state.lookup(row.node.df_index)['CPUTIME (usec) (I)'])
 
             self.map['max_incTime'] = ret
-            self.df['max_incTime'] = self.df['node'].apply(lambda node: self.map['max_incTime'][node])
-
+            self.df['max_incTime'] = self.df['node'].apply(lambda node: self.map['max_incTime'][str(node.df_index)])
             return self
 
         # Avg of inclusive Runtimes among all processes
@@ -58,10 +57,10 @@ class PreProcess():
             ret = {}
 
             for idx, row in self.df.iterrows():
-                ret[row.node] = utils.avg(utils.lookup(self.df, row.node)['CPUTIME (usec) (I)'])
+                ret[str(row.node.df_index)] = utils.avg(self.state.lookup(row.node.df_index)['CPUTIME (usec) (I)'])
 
             self.map['avg_incTime'] = ret    
-            self.df['avg_incTime'] = self.df['node'].apply(lambda node: self.map['avg_incTime'][node])
+            self.df['avg_incTime'] = self.df['node'].apply(lambda node: self.map['avg_incTime'][str(node.df_index)])
 
             return self
         
@@ -70,11 +69,10 @@ class PreProcess():
             ret = {}
             
             for idx, row in self.df.iterrows():
-                ret[row.node] = (self.map['max_incTime'][row.node] - self.map['avg_incTime'][row.node])/ self.map['max_incTime'][row.node]
+                ret[str(row.node.df_index)] = (self.map['max_incTime'][str(row.node.df_index)] - self.map['avg_incTime'][str(row.node.df_index)])/ self.map['max_incTime'][str(row.node.df_index)]
 
             self.map['imbalance_perc'] = ret
-            self.df['imbalance_perc'] = self.df['node'].apply(lambda node: self.map['imbalance_perc'][node])
-
+            self.df['imbalance_perc'] = self.df['node'].apply(lambda node: self.map['imbalance_perc'][str(node.df_index)])
             return self
             
         def add_callers_and_callees(self):
@@ -90,18 +88,17 @@ class PreProcess():
             try:
                 while root.callpath != None:
                     root = next(node_gen)
-                
                     if root.parent not in callees:
                         callees[root.parent] = []
                     
-                    callees[root.parent].append(root)
+                    callees[root.parent].append(root.df_index)
             except StopIteration:
                 pass
             finally:
                 del root
 
-            self.map['callees'] = callees
-            self.df['callees'] = self.df['node'].apply(lambda node: self.map['callees'][node] if node in self.map['callees'] else [])            
+#            self.map['callees'] = callees
+            self.df['callees'] = self.df['node'].apply(lambda node: callees[node] if node in callees else [])            
 
             return self
         
@@ -113,7 +110,7 @@ class PreProcess():
 
         def update_show_node(self, show_node_map):
             self.map.show_node = show_node_map
-            self.df['show_node'] = self.df['node'].apply(lambda node: show_node_map[node])
+            self.df['show_node'] = self.df['node'].apply(lambda node: show_node_map[str(node.df_index)])
 
         # node_name is different from name in dataframe. So creating a copy of it.
         def add_vis_node_name(self):
@@ -127,3 +124,4 @@ class PreProcess():
         def update_module_name(self):
             self.df['module'] = self.df['module'].apply(lambda name: utils.sanitizeName(name))
             return self
+        

@@ -21,25 +21,33 @@ from networkx.readwrite import json_graph
 
 from preprocess import PreProcess
 from networkX import NetworkX
+from actions import groupBy, splitCallee, splitCaller
+from state import State
 
-from actions import groupBy, splitByChildren
-
+# need to make this observable on gf. When the gf changes the whole thing reflects
 class CallFlow:
     def __init__(self, gf):
-        self.gf = gf
-        self.preprocess = PreProcess.Builder(self.gf).add_path().add_max_incTime().add_avg_incTime().add_imbalance_perc().add_callers_and_callees().add_show_node().add_vis_node_name().update_module_name().build()
+        self.state = State(gf)        
+        self.preprocess = PreProcess.Builder(self.state).add_path().add_max_incTime().add_avg_incTime().add_imbalance_perc().add_callers_and_callees().add_show_node().add_vis_node_name().update_module_name().build()
 
-        self.graph = self.preprocess.graph
-        self.df = self.preprocess.df
-        self.map = self.preprocess.map
+        self.state.graph = self.preprocess.graph
+        self.state.df = self.preprocess.df
+        self.state.map = self.preprocess.map
+
+        # Need to make it an observable. When the root changes the application
+        # updates to the call graph from that node as the root. 
+        self.state.root = None
         
-        nx = NetworkX(self.graph, self.df, 'path')                
-        self.cfg = json_graph.node_link_data(nx.g)
+        nx = NetworkX(self.state, 'path')                
+        self.update('groupBy')
 
-    def update(self, action, attr):        
+#        self.cfg = json_graph.node_link_data(nx.g)
+        
+
+    def update(self, action):        
         if action == "groupBy":
-            groupBy(self.gf, 'module')
-            nx = NetworkX(self.graph, self.df, 'group_path')
+            groupBy(self.state, 'module')
+            nx = NetworkX(self.state, 'group_path')
         elif action == "split-callee":
             splitCallee(self.gf, split_node)
         elif action == "split-caller":

@@ -33,10 +33,12 @@ Vis.prototype.init = function() {
           }
           self.nodeMetrics = data;
 	  });*/
-
+    getDataMaps(function(data){
+	console.log(data)
+    });
+    
     getSankey(function(data){
 	data = JSON.parse(data)
-//	map = getDataMaps();
         if(self.debug){
             console.log('[Vis] Sankey information :', data)
         }

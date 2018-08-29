@@ -24,7 +24,6 @@ from callflow import *
 from configFileReader import * 
 import utils
 from logger import log
-from CCT import *
 
 app = Flask(__name__, static_url_path='/public')
 
@@ -183,8 +182,8 @@ class App():
 
         @app.route('/getMaps')
         def getMaps():
-            print self.callflow.map
-            return json.dumps(self.callflow.map)
+            print self.callflow.state.map
+            return json.dumps(self.callflow.state.map)
 
         @app.route('/groupBy')
         def groupBy():

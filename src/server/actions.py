@@ -15,9 +15,9 @@
 import utils
 
 
-def groupBy(gf, attr):
-    graph = gf.graph
-    df = gf.dataframe
+def groupBy(state, attr):
+    graph = state.graph
+    df = state.df
     
     groupsTracked = {}
     
@@ -69,7 +69,6 @@ def groupBy(gf, attr):
     utils.update_df(df, 'show_node', show_node_map)
     utils.update_df(df, 'vis_node_name', node_name_map)
 
-    return gf
 
 def create_group_paths(df, path):
     group_path = ['<program root>']

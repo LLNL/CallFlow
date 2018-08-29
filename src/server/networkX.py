@@ -14,15 +14,15 @@
 
 import ete3
 import networkx as nx
-import utils
 from logger import log
 
 class NetworkX():
-    def __init__(self, graph, df, path_name):
-        self.graph =graph
-        self.df = df
-        
-        self.root = list(set(utils.lookup(self.df, self.graph.roots[0]).name))[0]
+    def __init__(self, state, path_name):
+        self.state = state
+        self.graph = self.state.graph
+        self.df = self.state.df
+
+        self.root = self.state.lookup(self.graph.roots[0].df_index).name[0]
         self.rootRunTimeInc = self.get_root_runtime_Inc()
         
         self.g = nx.DiGraph(rootRunTimeInc = self.rootRunTimeInc)       
@@ -30,48 +30,44 @@ class NetworkX():
         for idx, row in self.df.iterrows():
             if row.show_node:
                 self.g.add_path(row[path_name])
-#                print 'Adding for node: {0}'.format(row.node)
-#            else:
                 
-                #                print 'Not showing the node: {0}'.format(row.node)
-
-        print("Nodes", self.g.nodes(data=True))
-        print("Edges", self.g.edges())
-                
-#        log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
+        log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
         self.is_tree = nx.is_tree(self.g)
         log.warn("Is it a tree? : {0}".format(self.is_tree))
                 
         self.check_and_remove_cycles()
 #        self.check_and_retain_cycles()
         
-        module_mapping = self.create_module_map(self.g.nodes(), 'module')
-        name_mapping = self.create_module_map(self.g.nodes(), 'vis_node_name')
-        file_mapping = self.create_module_map(self.g.nodes(), 'file')
-        type_mapping = self.create_module_map(self.g.nodes(), 'type')
-        time_mapping = self.create_module_map(self.g.nodes(), 'CPUTIME (usec) (I)')
-        #        children_mapping = self.immediate_children(g)
+#        module_mapping = self.create_module_map(self.g.nodes(), 'module')
+#        file_mapping = self.create_module_map(self.g.nodes(), 'file')
+#        type_mapping = self.create_module_map(self.g.nodes(), 'type')
+#        children_mapping = self.immediate_children(g)
 #        children_mapping = self.create_module_map(self.g.nodes(), 'children')
+
+#        nx.set_node_attributes(self.g, name='module', values=module_mapping)
+#        nx.set_node_attributes(self.g, name='file', values=file_mapping)
+#        nx.set_node_attributes(self.g, name='type', values=type_mapping)
+#        nx.set_node_attributes(self.g, name='children', values=children_mapping)
+
+
+        time_mapping = self.create_module_map(self.g.nodes(), 'CPUTIME (usec) (I)')
+        name_mapping = self.create_module_map(self.g.nodes(), 'vis_node_name')
         level_mapping = self.hierarchy_level(self.g, self.root)       
 
-        nx.set_node_attributes(self.g, name='module', values=module_mapping)
         nx.set_node_attributes(self.g, name='weight', values=time_mapping)
         nx.set_node_attributes(self.g, name='name', values=name_mapping)
-        nx.set_node_attributes(self.g, name='file', values=file_mapping)
-        nx.set_node_attributes(self.g, name='type', values=type_mapping)
-#        nx.set_node_attributes(self.g, name='children', values=children_mapping)
         nx.set_node_attributes(self.g, name='level', values=level_mapping)
         
         capacity_mapping = self.calculate_flows(self.g)        
         nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)                
 
         print("Nodes", self.g.nodes(data=True))
-        print("Edges", self.g.edges())
+        print("Edges", self.g.edges(data=True))
 
         
     def get_root_runtime_Inc(self):
         root = self.graph.roots[0]
-        root_metrics = utils.lookup(self.df, root)
+        root_metrics = self.state.lookup(root.df_index)
         return root_metrics['CPUTIME (usec) (I)'].max()
 
     def check_and_remove_cycles(self):    
@@ -166,8 +162,8 @@ class NetworkX():
         ret = {}
         edges = graph.edges()
         for edge in edges:
-            source = utils.lookupByNodeName(self.df, edge[0])
-            target = utils.lookupByNodeName(self.df, edge[1])
+            source = self.state.lookup_with_vis_nodeName(edge[0])
+            target = self.state.lookup_with_vis_nodeName(edge[1])
             
             source_inc = source['CPUTIME (usec) (I)'].max()
             target_inc = target['CPUTIME (usec) (I)'].max()
