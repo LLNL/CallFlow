@@ -213,7 +213,7 @@ class App():
         ret = []
         for idx, gf in enumerate(gfs):
             self.callflow = CallFlow(gf)
-            ret.append(self.callflow.getCFG())
+            ret.append(self.callflow.cfg)
         return ret
   
 if __name__ == '__main__':

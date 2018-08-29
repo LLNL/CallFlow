@@ -14,6 +14,7 @@
 
 import utils
 
+
 def groupBy(gf, attr):
     graph = gf.graph
     df = gf.dataframe
@@ -93,11 +94,24 @@ def find_a_good_node_name(df, node, attr, modules_tracked):
         return ''
 
 
-def splitByChildren(df, node):
+def splitCaller(df, node):
     show_node_map = {}
     children_of_node = df[df['node'] == node].children
     for nod in children_of_node:
         show_node_map[node] = True
 
     utils.update_df(df, 'show_node', show_node_map)
+
+def splitCallee(df, node):
+    ret = {}
+    return retx
+
+def bfs(self, gf):
+    visited, queue = set(), gf.graph.roots[0]
+    while queue:
+        node = queue.pop(0)
+        if node not in visited:
+            visited.add(vertex)
+#                queue.extend()
+
         
