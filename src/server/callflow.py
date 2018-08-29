@@ -22,19 +22,35 @@ from networkx.readwrite import json_graph
 from preprocess import PreProcess
 from networkX import NetworkX
 
-from actions import groupBy
+from actions import groupBy, splitByChildren
 
-class CallFlow():
+class CallFlow:
     def __init__(self, gf):
         self.gf = gf
-        self.graph = gf.graph
-        self.df = gf.dataframe       
-        self.df = PreProcess(self.df).df        
+
+        """
+        preprocess is the processed graphframe which contains the
+        modified graphframe
+        """
+        self.preprocess = PreProcess.Builder(self.gf).add_path().add_max_incTime().add_avg_incTime().add_imbalance_perc().add_callers_and_callees().add_show_node().add_vis_node_name().update_module_name().build()
+
+
+        self.graph = self.preprocess.graph
+        self.df = self.preprocess.df
+        
         nx = NetworkX(gf, 'path')
 
         groupBy(self.gf, 'module')
 
-        nx = NetworkX(gf, 'group_path')
+        nx = NetworkX(gf, 'group_path')        
+        node_gen = self.graph.roots[0].traverse()
+        
+        split_node = next(node_gen)
+        split_node = next(node_gen)
+        
+#        splitByChildren(self.df, split_node)
+#        nx = NetworkX(gf, 'group_path')
+        
         self.cfg = self.convert_graph(nx.g)
 
     def update(self, action):        

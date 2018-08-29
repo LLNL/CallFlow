@@ -37,7 +37,7 @@ def groupBy(gf, attr):
     group_path_map[rootdf.node[0]] = tuple(['<program root>'])
     node_name_map[rootdf.node[0]] = '<program root>'
     show_node_map[rootdf.node[0]] = True
-    print root
+    
     try:
         while root.callpath != None:
             root = next(node_gen)
@@ -49,9 +49,6 @@ def groupBy(gf, attr):
             # Note: need to work on it more....
             if target.empty or source.empty:
                 continue
-
-            print target.module[0]
-
 
             group_path_map[target.node[0]] = create_group_paths(df, source.path[0])
                 
@@ -69,7 +66,7 @@ def groupBy(gf, attr):
 
     utils.update_df(df, 'group_path', group_path_map)
     utils.update_df(df, 'show_node', show_node_map)
-    utils.update_df(df, 'node_name', node_name_map)
+    utils.update_df(df, 'vis_node_name', node_name_map)
 
     return gf
 
@@ -94,3 +91,13 @@ def find_a_good_node_name(df, node, attr, modules_tracked):
             return node_name
     else:
         return ''
+
+
+def splitByChildren(df, node):
+    show_node_map = {}
+    children_of_node = df[df['node'] == node].children
+    for nod in children_of_node:
+        show_node_map[node] = True
+
+    utils.update_df(df, 'show_node', show_node_map)
+        

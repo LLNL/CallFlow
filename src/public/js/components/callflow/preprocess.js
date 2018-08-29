@@ -17,8 +17,7 @@ function addLinkNodeIDs(graph){
     for(let link of graph.links){
         link.sourceID = nodeMap[link.source]
         link.targetID = nodeMap[link.target]
-    }
-    
+    }    
     return graph
 }
 

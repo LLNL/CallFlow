@@ -46,20 +46,20 @@ class NetworkX():
 #        self.check_and_retain_cycles()
         
         module_mapping = self.create_module_map(self.g.nodes(), 'module')
-        name_mapping = self.create_module_map(self.g.nodes(), 'node_name')
+        name_mapping = self.create_module_map(self.g.nodes(), 'vis_node_name')
         file_mapping = self.create_module_map(self.g.nodes(), 'file')
         type_mapping = self.create_module_map(self.g.nodes(), 'type')
         time_mapping = self.create_module_map(self.g.nodes(), 'CPUTIME (usec) (I)')
         #        children_mapping = self.immediate_children(g)
-        level_mapping = self.hierarchy_level(self.g, self.root)
-        
+#        children_mapping = self.create_module_map(self.g.nodes(), 'children')
+        level_mapping = self.hierarchy_level(self.g, self.root)       
 
         nx.set_node_attributes(self.g, name='module', values=module_mapping)
         nx.set_node_attributes(self.g, name='weight', values=time_mapping)
         nx.set_node_attributes(self.g, name='name', values=name_mapping)
         nx.set_node_attributes(self.g, name='file', values=file_mapping)
         nx.set_node_attributes(self.g, name='type', values=type_mapping)
-        #        nx.set_node_attributes(self.g, name='children', values=children_mapping)
+#        nx.set_node_attributes(self.g, name='children', values=children_mapping)
         nx.set_node_attributes(self.g, name='level', values=level_mapping)
         
         capacity_mapping = self.calculate_flows(self.g)        
@@ -120,12 +120,12 @@ class NetworkX():
         ret = {}
         for node in nodes:
             if attr == 'CPUTIME (usec) (I)':
-                if len(self.df[self.df['node_name'] == node][attr]) != 0:
-                    ret[node] =  self.df[self.df['node_name'] == node][attr].max().tolist()
+                if len(self.df[self.df['vis_node_name'] == node][attr]) != 0:
+                    ret[node] =  self.df[self.df['vis_node_name'] == node][attr].max().tolist()
                 else:
                     ret[node] = 0
             else:
-                ret[node] =  list(set(self.df[self.df['node_name'] == node][attr].tolist()))            
+                ret[node] =  list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
         return ret
 
     def draw_tree(self, g):

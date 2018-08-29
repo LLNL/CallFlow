@@ -184,7 +184,7 @@ class App():
         def groupBy():
             return jsonify()
 
-        @app.route('/loadConfigFile')
+        @app.route('/split')
         def configFile(json):
             return jsonify({                
             })

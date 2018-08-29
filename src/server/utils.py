@@ -34,7 +34,7 @@ def lookupByName(df, name):
     return df.loc[df['name'] == name]
 
 def lookupByNodeName(df, name):
-    return df.loc[df['node_name'] == name]
+    return df.loc[df['vis_node_name'] == name]
 
 def lookupByAttr(df, node_hash, attr):
     ret = []
