@@ -38,7 +38,8 @@ class App():
         self.gfs = [] # Graphframes returned by hatchet
         self.cfgs = [] # CallFlow graphs
         self.debug = False # Debug gives time, other information
-
+        self.callflow = {}
+        
         self.create_parser()  # Parse the input arguments
         self.verify_parser()  # Raises expections if something is not provided. 
         self.create_variables() # Setup variables which are common to filter and server (like gf, config, etc)
@@ -179,7 +180,12 @@ class App():
         def getSankey():
             print type(self.cfgs)
             return json.dumps(self.cfgs)
-        
+
+        @app.route('/getMaps')
+        def getMaps():
+            print self.callflow.map
+            return json.dumps(self.callflow.map)
+
         @app.route('/groupBy')
         def groupBy():
             return jsonify()
@@ -206,8 +212,8 @@ class App():
     def create_cfgs(self, gfs):        
         ret = []
         for idx, gf in enumerate(gfs):
-            callflow = CallFlow(gf)
-            ret.append(callflow.getCFG())
+            self.callflow = CallFlow(gf)
+            ret.append(self.callflow.getCFG())
         return ret
   
 if __name__ == '__main__':

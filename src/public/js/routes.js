@@ -12,6 +12,22 @@ function getConfigFile(filename, cb){
     })
 }
 
+function getDataMaps(){
+    $.ajax({
+	type:'GET',
+	contentType: 'applications/json',
+	dataType: 'json',
+	url: '/getMaps',
+	success: (map) =>{
+	    console.log("Map", map);
+	    return map
+	},
+	error: () => {
+	    console.log('There was a problem with reading the config file');	    
+	}
+    })
+}
+
 
 function getDataSetInfo(cb){
     $.ajax({
@@ -123,7 +139,7 @@ function getHistogramScatterData(node){
 }
 
 export {
-    getDataSetInfo,
+    getDataMaps,
     getNodeMetrics,
     getSankey,
     getConfigFile

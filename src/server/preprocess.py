@@ -44,6 +44,7 @@ class PreProcess():
             ret = {}
 
             for idx, row in self.df.iterrows():
+                print row.node.df_index
                 ret[row.node] = max(utils.lookup(self.df, row.node)['CPUTIME (usec) (I)'])
 
             self.map['max_incTime'] = ret

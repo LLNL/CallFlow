@@ -18,9 +18,9 @@ import utils
 from logger import log
 
 class NetworkX():
-    def __init__(self, gf, path_name):
-        self.graph = gf.graph
-        self.df = gf.dataframe
+    def __init__(self, graph, df, path_name):
+        self.graph =graph
+        self.df = df
         
         self.root = list(set(utils.lookup(self.df, self.graph.roots[0]).name))[0]
         self.rootRunTimeInc = self.get_root_runtime_Inc()

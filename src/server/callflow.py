@@ -34,15 +34,15 @@ class CallFlow:
         """
         self.preprocess = PreProcess.Builder(self.gf).add_path().add_max_incTime().add_avg_incTime().add_imbalance_perc().add_callers_and_callees().add_show_node().add_vis_node_name().update_module_name().build()
 
-
         self.graph = self.preprocess.graph
         self.df = self.preprocess.df
+        self.map = self.preprocess.map
         
-        nx = NetworkX(gf, 'path')
+        nx = NetworkX(self.graph, self.df, 'path')
 
         groupBy(self.gf, 'module')
 
-        nx = NetworkX(gf, 'group_path')        
+        nx = NetworkX(self.graph, self.df, 'group_path')        
         node_gen = self.graph.roots[0].traverse()
         
         split_node = next(node_gen)
@@ -66,7 +66,6 @@ class CallFlow:
     
     def convert_graph(self, graph):
         res = json_graph.node_link_data(graph)
-#        pprint.pprint(res)
         return res
         
     def getCFG(self):

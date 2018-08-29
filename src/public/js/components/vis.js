@@ -1,5 +1,5 @@
 import spinnerWrapper from './spinnerWrapper'
-import { getDataSetInfo, getNodeMetrics, getSankey } from '../routes'
+import { getDataMaps, getNodeMetrics, getSankey } from '../routes'
 import CallFlow from './CallFlow.js'
 import Color from "./callflow/color.js"
 import ConfigJSON from './ConfigJSON.js'
@@ -36,6 +36,7 @@ Vis.prototype.init = function() {
 
     getSankey(function(data){
 	data = JSON.parse(data)
+	map = getDataMaps();
         if(self.debug){
             console.log('[Vis] Sankey information :', data)
         }
