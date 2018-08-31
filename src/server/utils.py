@@ -14,6 +14,9 @@ import os
 import fnmatch
 from logger import log
 
+def lookup(df, node):
+    return df.loc[df['node'] == node]
+
 # Input : ./xxx/xxx/yyy
 # Output: yyy
 def sanitizeName(name):
@@ -37,9 +40,4 @@ def getMaxIncTime(gf):
 def getMaxExcTime(gf):
     ret  = gf.dataframe['CPUTIME (usec) (E)'].max()
     return ret
-
-def update_df(df, column_name, data):
-    df[column_name] = df['node'].apply(lambda node: data[node] if node in data.keys() else '')
-    return df
-
 
