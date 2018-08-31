@@ -5,6 +5,7 @@ export default function DOMSetup(view){
 	        d3.event.sourceEvent.stopPropagation();
 	})
 	.on('drag', function (d, i) {
+	    console.log(d3.event.dx, d3.event.dy)
 	    d.x += d3.event.dx;
 	    d.y += d3.event.dy;
 	    d3.select(this).attr("transform", "translate(" + d.x + "," + d.y + ")");
@@ -14,10 +15,10 @@ export default function DOMSetup(view){
     let zoom = d3.behavior.zoom()
         .scaleExtent([0.1, 10])
         .on('zoom', () => {
-	    let tx = Math.min(0, Math.min(d3.event.translate[0], view.width - view.width*d3.event.scale))
-	    let ty = Math.min(0, Math.min(d3.event.translate[1], view.height - view.height*d3.event.scale))
-//	    view.svg.attr("transform", "translate(" + [tx, ty]  + ")scale(" + d3.event.scale + ")");
-	    view.svg.attr("transform", "translate(" + d3.event.traslate  + ")scale(" + d3.event.scale + ")");
+	    let tx = Math.min(0, Math.min(d3.event.translate[0], view.width + view.width*d3.event.scale))
+	    let ty = Math.min(0, Math.min(d3.event.translate[1], view.height + view.height*d3.event.scale))
+	    view.svg.attr("transform", "translate(" + [tx, ty]  + ")scale(" + d3.event.scale + ")");
+//	    view.svg.attr("transform", "translate(" + d3.event.traslate  + ")scale(" + d3.event.scale + ")");
 	})    
     
     view.svg = d3.select(view.containerID).append('svg')

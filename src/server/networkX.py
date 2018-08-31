@@ -35,8 +35,8 @@ class NetworkX():
         self.is_tree = nx.is_tree(self.g)
         log.warn("Is it a tree? : {0}".format(self.is_tree))
                 
-        self.check_and_remove_cycles()
-#        self.check_and_retain_cycles()
+#        self.check_and_remove_cycles()
+        self.check_and_retain_cycles()
         
 #        module_mapping = self.create_module_map(self.g.nodes(), 'module')
 #        file_mapping = self.create_module_map(self.g.nodes(), 'file')
@@ -52,11 +52,11 @@ class NetworkX():
 
         time_mapping = self.create_module_map(self.g.nodes(), 'CPUTIME (usec) (I)')
         name_mapping = self.create_module_map(self.g.nodes(), 'vis_node_name')
-        level_mapping = self.hierarchy_level(self.g, self.root)       
+#       level_mapping = self.hierarchy_level(self.g, self.root)       
 
         nx.set_node_attributes(self.g, name='weight', values=time_mapping)
         nx.set_node_attributes(self.g, name='name', values=name_mapping)
-        nx.set_node_attributes(self.g, name='level', values=level_mapping)
+#        nx.set_node_attributes(self.g, name='level', values=level_mapping)
         
         capacity_mapping = self.calculate_flows(self.g)        
         nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)                
@@ -83,7 +83,6 @@ class NetworkX():
         if not self.is_tree:
             log.info("Renaming the cycles upto a certain level")
             cycles = nx.find_cycle(self.g, self.root)
-            print cycles
             for cycle in cycles:
                 if cycle[0] not in temp:
                     temp[cycle[0]] = 0
@@ -101,13 +100,15 @@ class NetworkX():
                     break
                 
                 if temp[cycle[0]] > 1:
-                    temp_src_trgt = (cycle[0], cycle[1]+'_')
+                    temp_src_trgt = (cycle[0], cycle[1]+'_')                    
                     print "adding {0} : {1}".format(temp_src_trgt[0], temp_src_trgt[1])
+                    self.g.add_node(cycle[1]+'_')
                     self.g.add_edge(*temp_src_trgt)
                     self.g.remove_edge(*cycle)
                 elif temp[cycle[1]] > 1:
-                    temp_src_trgt = (cycle[0], cycle[1] + '_')
+                    temp_src_trgt = (cycle[0] + '_', cycle[1])
                     print "adding {0} : {1}".format(temp_src_trgt[0], temp_src_trgt[1])
+                    self.g.add_node(cycle[0]+'_')
                     self.g.add_edge(*temp_src_trgt)
                     self.g.remove_edge(*cycle)
                     
@@ -115,6 +116,16 @@ class NetworkX():
     def create_module_map(self, nodes, attr):
         ret = {}
         for node in nodes:
+            
+            # For back edges, name = 'backedge', weight = -1
+            if node.endswith('_'):
+                if attr == 'vis_node_name':
+                    ret[node] = [node]
+                    continue
+                if attr == 'CPUTIME (usec) (I)':
+                    ret[node] = self.df[self.df['vis_node_name'] == node[:-1]][attr].max().tolist()
+                    continue                
+            
             if attr == 'CPUTIME (usec) (I)':
                 if len(self.df[self.df['vis_node_name'] == node][attr]) != 0:
                     ret[node] =  self.df[self.df['vis_node_name'] == node][attr].max().tolist()
@@ -161,10 +172,19 @@ class NetworkX():
     def calculate_flows(self, graph):
         ret = {}
         edges = graph.edges()
-        for edge in edges:
-            source = self.state.lookup_with_vis_nodeName(edge[0])
-            target = self.state.lookup_with_vis_nodeName(edge[1])
-            
+        for edge in edges:            
+            if edge[0].endswith('_'):
+                source = self.state.lookup_with_vis_nodeName(edge[0][:-1])
+                target = self.state.lookup_with_vis_nodeName(edge[1])           
+
+            elif edge[1].endswith('_'):
+                source = self.state.lookup_with_vis_nodeName(edge[0])
+                target = self.state.lookup_with_vis_nodeName(edge[1][:-1])           
+
+            else:
+                source = self.state.lookup_with_vis_nodeName(edge[0])
+                target = self.state.lookup_with_vis_nodeName(edge[1])           
+                
             source_inc = source['CPUTIME (usec) (I)'].max()
             target_inc = target['CPUTIME (usec) (I)'].max()
             

@@ -13,7 +13,6 @@
 #!/usr/bin/env python3
 
 import pandas as pd
-from state import State
 
 class groupBy:
     def __init__(self, state, attr):

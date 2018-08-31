@@ -1,9 +1,36 @@
 export default function preprocess(graph){    
+    graph = combineBackNodes(graph)
+    console.log(graph)
     graph = addLinkNodeIDs(graph)
     graph = calculateFlow(graph)
     return graph
 }
 
+function findNodeById(graph, node_id){
+    let ret 
+    for(let node of graph.nodes){
+	if(node_id == node.id){
+	    ret = node
+	}
+    }
+    return ret
+}
+
+function combineBackNodes(graph){
+    let ret = []
+    for(let node of graph.nodes){
+	let node_id = node.id
+	if (node_id.slice(-1) == '_'){
+	    let correct_node_id = node.id.slice(0, node.id.length - 1)
+	    let correct_node = findNodeById(graph, correct_node_id)
+	    correct_node.weight += node.weight
+	    for (let edge in node.sourceLinks){
+		correct_node.targetLinks.push(edge)
+	    }
+	}
+    }
+    return graph
+}
 
 /* Link: {
    sourceID : int, targetID: int , target: str, source: str 
