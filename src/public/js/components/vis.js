@@ -1,8 +1,9 @@
-import spinnerWrapper from './spinnerWrapper'
 import { getDataMaps, getNodeMetrics, getSankey } from '../routes'
-import CallFlow from './CallFlow.js'
-import Color from "./callflow/color.js"
-import ConfigJSON from './ConfigJSON.js'
+import spinnerWrapper from './spinner'
+import CallFlow from './callflow_wrapper'
+import ConfigJSON from './ConfigJSON'
+
+import Color from "./callflow/color"
 
 export default class Vis {
     constructor() {
@@ -17,43 +18,33 @@ export default class Vis {
 
 Vis.prototype.init = function() {
     let spinner = spinnerWrapper(this.target);
+//    let histogram = new Histogram()
 
     let self = this
-    // fetch the data
-    // getDataSetInfo(function(data){
-    // 	if(self.debug){
-    // 	    console.log("[Vis] Dataset information: ", data);
-    // 	}
-    // 	self.dataSetInfo = data;
-    // });
-
-    /*    getNodeMetrics(function(data){
-          if(self.debug){
-          console.log('[Vis] Node metrics : ', data);
-          }
-          self.nodeMetrics = data;
-	  });*/
-    getDataMaps(function(data){
-	console.log(data)
-    });
-    
-    getSankey(function(data){
-	data = JSON.parse(data)
-        if(self.debug){
-            console.log('[Vis] Sankey information :', data)
-        }
-        self.graphs = data
-
-        let prop = {
-            ID: '#procedure_view',
-            width : $('#procedure_view').width(),
-            height : $('#procedure_view').height(),
-        }
-        let callFlow = new CallFlow(self.graphs[0], prop)
-	let configJSON = new ConfigJSON();
-    });
+    getDataMaps(this.getDataMaps_callback);
+    getSankey(this.getSankey_callback);
 
     spinner.stop();    
+}
+
+Vis.prototype.getDataMaps_callback = function(data){
+    console.log(data);    
+}
+
+Vis.prototype.getSankey_callback = function(data){
+    data = JSON.parse(data)
+    if(self.debug){
+        console.log('[Vis] Sankey information :', data)
+    }
+    self.graphs = data
+    
+    let prop = {
+        ID: '#procedure_view',
+        width : Math.max(1000, $('#procedure_view').height()),
+        height : $('#procedure_view').height(),
+    }
+    let callFlow = new CallFlow(self.graphs[0], prop)
+    let configJSON = new ConfigJSON();
 }
 
 Vis.prototype.update = function(){

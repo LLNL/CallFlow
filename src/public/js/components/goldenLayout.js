@@ -1,4 +1,4 @@
-import { start } from './app'
+import { start } from './../app'
 
 //configuration for the layout of the page
 let config = {
@@ -127,14 +127,14 @@ let config = {
     }]			
 }
 
+// Set the container width and height
 function setMainContainerBox(){
-    // Set the container width and height
     $("#main_container").width( $(window).width() - 10);
     $("#main_container").height( $(window).height() - $("#nav_bar").height() - 30);
 }
 
 export default class Layout {
-    constructor(){
+    constructor(cb){
         setMainContainerBox()
         this.layout = new GoldenLayout( config , $("#main_container"));
         this.ids = []

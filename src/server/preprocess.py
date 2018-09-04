@@ -14,6 +14,10 @@
 
 import utils
 
+
+# Preprocess the dataframe
+# Builder object
+# Preprocess.add_X().add_Y().....
 class PreProcess():
     def __init__(self, builder):
         self.graph = builder.graph

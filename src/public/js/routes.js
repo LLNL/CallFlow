@@ -33,7 +33,6 @@ function getDataSetInfo(cb){
     $.ajax({
 	    type:'GET',
 	    contentType: 'application/json',
-	    dataType: 'json',
 	    url: '/dataSetInfo',
 	    success: cb,
 	    error: function(){

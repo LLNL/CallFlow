@@ -172,24 +172,45 @@ class NetworkX():
     def calculate_flows(self, graph):
         ret = {}
         edges = graph.edges()
-        for edge in edges:            
-            if edge[0].endswith('_'):
-                source = self.state.lookup_with_vis_nodeName(edge[0][:-1])
-                target = self.state.lookup_with_vis_nodeName(edge[1])           
-
+        additional_flow = {}
+        
+        # Calculates the costs in cycles and aggregates to one node.
+        for edge in edges:
+            source = edge[0]
+            target = edge[1]
+            
+            if source.endswith('_'):
+                cycle_node = source
+                cycle_node_df = self.state.lookup_with_vis_nodeName(cycle_node[:-1])
+                additional_flow[cycle_node] = cycle_node_df['CPUTIME (usec) (I)'].max()
+            elif target.endswith('_'):
+                cycle_node = target
+                cycle_node_df = self.state.lookup_with_vis_nodeName(cycle_node[:-1])
+                additional_flow[cycle_node] = cycle_node_df['CPUTIME (usec) (I)'].max()
+                
+        for edge in edges:
+            added_flow = 0
+            if edge[0].endswith('_'):              
+                ret[edge] = additional_flow[edge[0]]
+                continue
+                # source_name = edge[0]
+                # target_name = edge[1]
+                # added_flow = additional_flow[source_name]
             elif edge[1].endswith('_'):
-                source = self.state.lookup_with_vis_nodeName(edge[0])
-                target = self.state.lookup_with_vis_nodeName(edge[1][:-1])           
-
-            else:
-                source = self.state.lookup_with_vis_nodeName(edge[0])
-                target = self.state.lookup_with_vis_nodeName(edge[1])           
+                ret[edge] = additional_flow[edge[1]]
+                continue
+                # source_name = edge[0]
+                # target_name = edge[1]
+                # added_flow = additional_flow[target_name]
+            source = self.state.lookup_with_vis_nodeName(edge[0])
+            target = self.state.lookup_with_vis_nodeName(edge[1])           
                 
             source_inc = source['CPUTIME (usec) (I)'].max()
             target_inc = target['CPUTIME (usec) (I)'].max()
-            
+
             if source_inc == target_inc:
                 ret[edge] = source_inc
             else:
                 ret[edge] = target_inc
+                                
         return ret

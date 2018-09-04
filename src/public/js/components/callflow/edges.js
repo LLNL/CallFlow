@@ -30,7 +30,7 @@ export default function drawEdges(graph, view){
 		Bx2 = Bxi(0.4),
 		Bx3 = Bxi(1 - 0.4),
 		By0 = d.source.y + d.height+ d.sy,
-		By1 = d.target.y + d.ty + d.height/2;
+		By1 = d.target.y + d.ty + d.height;
 
 	    var rightMoveDown = By1 - Ty1;
 	    

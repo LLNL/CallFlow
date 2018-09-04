@@ -425,7 +425,7 @@ function d3sankeySingle() {
     }
 
     function center(node) {
-	return node.y + node.height;
+//	return node.y + node.height;
 	return 0;
     }
 

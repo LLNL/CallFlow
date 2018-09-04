@@ -1,4 +1,5 @@
 export default function preprocess(graph){    
+    console.log(graph)
     graph = combineBackNodes(graph)
     console.log(graph)
     graph = addLinkNodeIDs(graph)

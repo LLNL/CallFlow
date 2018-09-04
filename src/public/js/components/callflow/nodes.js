@@ -23,7 +23,7 @@ export default function drawNodes(graph, view){
 	})
 	.attr('opacity' , 0)
 	.attr("transform", function (d) {
-	    console.log(d.x, d.y);
+	    console.log(d.id, d.height, d.x, d.y);
 	    return "translate(" + d.x + "," + d.y + ")";
 	})
 
