@@ -30,14 +30,14 @@ export default class CallFlow{
         //        this.resetStat()
         this.graph = preprocess(this.graph)
         this.view = DOMSetup(this.view)
-        this.sankey = sankeyComputation(this.graph, this.view)
+        this.view.sankey = sankeyComputation(this.graph, this.view)
         this.render()
     }
 }
 
 CallFlow.prototype.render = function(){
     this.view.color = new Color()
-    this.view.color.setColorScale(this.graph.stat.minInc, this.graph.stat.maxInc, this.graph.stat.minExc, this.graph.stat.maxExc)
+    this.view.color.setColorScale(this.graph.stat.minInc, this.graph.stat.maxInc, this.graph.stat.minExc, this.graph.stat.maxExc)    
     drawNodes(this.graph, this.view)
     drawEdges(this.graph, this.view)
 }

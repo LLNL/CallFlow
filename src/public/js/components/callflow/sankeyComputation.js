@@ -1,5 +1,4 @@
 export default function sankeyComputation(graph, view){
-    console.log(view)
     let sankey = d3sankeySingle()
 	.nodeWidth(view.nodeWidth)
 	.nodePadding(view.ySpacing)
@@ -8,12 +7,13 @@ export default function sankeyComputation(graph, view){
 	.setReferenceValue(graph.graph.rootRunTimeInc);
     
     let path = sankey.link();
-    
-    let graph_temp = buildGraph(graph.nodes, graph.links);
-    sankey.nodes(graph_temp.nodes)
-	.links(graph_temp.edges)
+
+    sankey.nodes(graph.nodes)
+	.links(graph.links)
 	.layout(32);
 
+    let graph_temp = buildGraph(graph.nodes, graph.links);
+    
     return sankey
 }
 
@@ -27,8 +27,8 @@ function buildGraph(nodes, edges) {
     for (var i = 0; i < temp_edges.length; i++) {
         let source = temp_edges[i].sourceID;
         let target = temp_edges[i].targetID;
-        let source_x = nodes[source].x
-        let target_x = nodes[target].x
+        let source_x = nodes[source].level
+        let target_x = nodes[target].level
         let dx = target_x - source_x
 
         // Put in intermediate steps
@@ -37,13 +37,13 @@ function buildGraph(nodes, edges) {
             let tempNode = {
                 sankeyID: intermediate,
                 name: "intermediate",
-                // runTime: nodes[i].runTime
+//                runTime: nodes[i].runTime
             }
             nodes.push(tempNode)
             edges.push({
                 source: intermediate,
                 target: (j == dx ? target : intermediate-1),
-                value: links[i].value
+                value: edges[i].value
             })
             if (j == dx) {
                 edges[i].original_target = target
@@ -78,21 +78,27 @@ function computeNodeEdges(nodes, links) {
 // nodes with no incoming links are assigned breadth zero, while
 // nodes with no outgoing links are assigned the maximum breadth.
 function computeNodeBreadths(nodes,links) {
-    var remainingNodes = nodes.map(function(d) { return d.sankeyID })
+    var remainingNodes = nodes.map(function(d) { return d})
+    console.log(remainingNodes)
     var nextNodes
     var x = 0
-    // while (remainingNodes.length) {
-    //     nextNodes = [];
-    //     remainingNodes.forEach(function(node) {
-    //         nodes[node].x = x;
-    //         nodes[node].sourceLinks.forEach(function(link) {
-    //             if (nextNodes.indexOf(link.target) < 0) {
-    //                 nextNodes.push(link.target);
-    //             }
-    //         });
-    //     });
-    //     remainingNodes = nextNodes;
-    //     ++x;
-    // }
+    console.log(nodes)
+    while (remainingNodes.length) {
+        nextNodes = [];
+        remainingNodes.forEach(function(node) {
+            node.level = x;
+            node.sourceLinks.forEach(function(link) {
+                if (nextNodes.indexOf(link.target) < 0) {
+                    nextNodes.push(link.target);
+                }
+            });
+        });
+        remainingNodes = nextNodes;
+        ++x;
+    }
 }
+
+
+
+
 

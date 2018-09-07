@@ -1,7 +1,6 @@
 export default function preprocess(graph){    
     console.log(graph)
     graph = combineBackNodes(graph)
-    console.log(graph)
     graph = addLinkNodeIDs(graph)
     graph = calculateFlow(graph)
     return graph
@@ -19,16 +18,16 @@ function findNodeById(graph, node_id){
 
 function combineBackNodes(graph){
     let ret = []
+    console.log(graph.nodes)
     for(let node of graph.nodes){
 	let node_id = node.id
-	if (node_id.slice(-1) == '_'){
-	    let correct_node_id = node.id.slice(0, node.id.length - 1)
-	    let correct_node = findNodeById(graph, correct_node_id)
-	    correct_node.weight += node.weight
-	    for (let edge in node.sourceLinks){
-		correct_node.targetLinks.push(edge)
-	    }
-	}
+	console.log(node_id)
+//	if(node_id.endswith('_')){
+//	    graph.nodes.splice(graph.nodes.indexOf(node), 1)
+//	}
+    }
+
+    for(let link of graph.links){
     }
     return graph
 }
@@ -141,4 +140,87 @@ function resetStat(){
 }
 
 
+
+// From sankey, but keep indices as indices
+// Populate the sourceLinks and targetLinks for each node.
+// Also, if the source and target are not objects, assume they are indices.
+function computeNodeLinks(nodes, links) {
+    nodes.forEach(function(node) {
+        node.sourceLinks = [];
+        node.targetLinks = [];
+    });
+    links.forEach(function(link) {
+        var source = link.sourceID,
+            target = link.targetID;
+        nodes[source].sourceLinks.push(link);
+        nodes[target].targetLinks.push(link);
+    });
+}
+
+// computeNodeBreadths from sankey re-written to use indexes
+// Iteratively assign the breadth (x-position) for each node.
+// Nodes are assigned the maximum breadth of incoming neighbors plus one;
+// nodes with no incoming links are assigned breadth zero, while
+// nodes with no outgoing links are assigned the maximum breadth.
+function computeNodeBreadths(nodes,links) {
+    var remainingNodes = nodes.map(function(d) { return d.sankeyID })
+    var nextNodes
+    var x = 0
+
+    while (remainingNodes.length) {
+        nextNodes = [];
+        remainingNodes.forEach(function(node) {
+            nodes[node].level = x;
+            nodes[node].sourceLinks.forEach(function(link) {
+                if (nextNodes.indexOf(link.target) < 0) {
+                    nextNodes.push(link.target);
+                }
+            });
+        });
+        remainingNodes = nextNodes;
+        ++x;
+    }
+}
+
+// Add nodes and links as needed
+function rebuild(nodes, links) {
+    var temp_nodes = nodes
+    var temp_links = links
+    computeNodeLinks(temp_nodes, temp_links)
+    computeNodeBreadths(temp_nodes, temp_links)
+    for (var i = 0; i < temp_links.length; i++) {
+        // console.log(temp_links[i]);
+        var source = temp_links[i].sourceID
+        var target = temp_links[i].targetID
+        var source_x = nodes[source].x
+        var target_x = nodes[target].x
+        var dx = target_x - source_x
+        // Put in intermediate steps
+        for (var j = dx; 1 < j; j--) {
+            var intermediate = nodes.length
+            var tempNode = {
+                sankeyID: intermediate,
+                name: "intermediate",
+                // runTime: nodes[i].runTime
+            }
+            // console.log(tempNode)
+            nodes.push(tempNode)
+            links.push({
+                source: intermediate,
+                target: (j == dx ? target : intermediate-1),
+                value: links[i].value
+            })
+            if (j == dx) {
+                links[i].original_target = target
+                links[i].last_leg_source = intermediate
+            }
+            links[i].target = intermediate
+        }
+    }
+
+    return {
+        nodes: nodes,
+        links: links
+    }
+}
 

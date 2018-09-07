@@ -52,18 +52,22 @@ class NetworkX():
 
         time_mapping = self.create_module_map(self.g.nodes(), 'CPUTIME (usec) (I)')
         name_mapping = self.create_module_map(self.g.nodes(), 'vis_node_name')
+        type_mapping = self.create_module_map(self.g.nodes(), 'type')
+        df_index_mapping = self.create_module_map(self.g.nodes(), 'df_index')
 #       level_mapping = self.hierarchy_level(self.g, self.root)       
 
         nx.set_node_attributes(self.g, name='weight', values=time_mapping)
         nx.set_node_attributes(self.g, name='name', values=name_mapping)
-#        nx.set_node_attributes(self.g, name='level', values=level_mapping)
+        nx.set_node_attributes(self.g, name='type', values=type_mapping)
+        nx.set_node_attributes(self.g, name='df_index', values=df_index_mapping)
         
-        capacity_mapping = self.calculate_flows(self.g)        
-        nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)                
-
+        capacity_mapping = self.calculate_flows(self.g)
+        type_mapping = self.edge_type(self.g)
+        nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)
+        nx.set_edge_attributes(self.g, name='type', values=type_mapping)        
+        
         print("Nodes", self.g.nodes(data=True))
         print("Edges", self.g.edges(data=True))
-
         
     def get_root_runtime_Inc(self):
         root = self.graph.roots[0]
@@ -115,8 +119,7 @@ class NetworkX():
                 
     def create_module_map(self, nodes, attr):
         ret = {}
-        for node in nodes:
-            
+        for node in nodes:            
             # For back edges, name = 'backedge', weight = -1
             if node.endswith('_'):
                 if attr == 'vis_node_name':
@@ -124,13 +127,18 @@ class NetworkX():
                     continue
                 if attr == 'CPUTIME (usec) (I)':
                     ret[node] = self.df[self.df['vis_node_name'] == node[:-1]][attr].max().tolist()
-                    continue                
+                    continue
+                if attr == 'node_type':
+                    ret[node] = 'back_edge'
+                    continue
             
             if attr == 'CPUTIME (usec) (I)':
                 if len(self.df[self.df['vis_node_name'] == node][attr]) != 0:
                     ret[node] =  self.df[self.df['vis_node_name'] == node][attr].max().tolist()
                 else:
                     ret[node] = 0
+            elif attr == 'node_type':
+                ret[node] = 'normal_edge'
             else:
                 ret[node] =  list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
         return ret
@@ -168,6 +176,20 @@ class NetworkX():
             if node in parentChildMap.keys():
                 ret[node] =  parentChildMap[node]
         return ret
+
+    def edge_type(self, graph):
+        ret = {}
+        edges = graph.edges()
+        for edge in edges:
+            source = edge[0]
+            target = edge[1]
+
+            if source.endswith('_') or target.endswith('_'):
+                ret[edge] = 'back_edge'
+            else:
+                ret[edge] = 'forward_edge'
+        return ret
+            
 
     def calculate_flows(self, graph):
         ret = {}

@@ -11,7 +11,6 @@
  * Please also read the LICENSE file for the MIT License notice.
  ******************************************************************************/
 
-// d3.sankey = function() {
 function d3sankeySingle() {
     var sankey = {},
         nodeWidth = 24,
@@ -88,19 +87,22 @@ function d3sankeySingle() {
     }
 
     sankey.link = function() {
-        // var curvature = .5;
         var curvature = .4;
 
         // this function draw links at bottom
         function link(d) {
-            var x0 = d.source.x + d.source.dx,
+            var x0 = d.source.x + d.source.height,
                 x1 = d.target.x,
                 xi = d3.interpolateNumber(x0, x1),
                 x2 = xi(curvature),
                 x3 = xi(1 - curvature),
-                y0 = d.source.y + d.sy + d.height,
-                y1 = d.target.y + d.ty + d.height;
-        }
+                y0 = d.source.y + d.sy + d.height/2,
+                y1 = d.target.y + d.ty + d.height/2;
+	    return "M" + x0 + "," + y0
+		+ "C" + x2 + "," + y0
+		+ " " + x3 + "," + y1
+		+ " " + x1 + "," + y1;
+	}
 
         link.curvature = function(_) {
             if (!arguments.length) return curvature;
@@ -258,7 +260,7 @@ function d3sankeySingle() {
          }
 
         function initializeNodeDepth() {
-            var scale = d3.max(nodesByBreadth, function(nodes) {               
+            var scale = d3.min(nodesByBreadth, function(nodes) {               
                 var divValue = 1;
                 if(referenceValue > 0){
                     divValue = referenceValue;
@@ -281,8 +283,8 @@ function d3sankeySingle() {
 		    let nodeHeight = 0;
                     links.forEach(function(edge){
                         if(edge["target"] == node){
-                            if(edge["source"] != null && edge["source"]['height'] != null){
-                                nodeHeight = Math.max(nodeHeight, edge["source"]['height']);
+                            if(edge["source"] != null && edge["source"]['y'] != null){
+                                nodeHeight = Math.max(nodeHeight, edge["source"]['y']);
                             }
                         }
                     });
@@ -307,7 +309,6 @@ function d3sankeySingle() {
                 nodes.forEach(function(node) {
                     if (node.targetLinks.length) {
 			var y = d3.sum(node.targetLinks, weightedSource) / d3.sum(node.targetLinks, value);
-//                        var y = d3sum(node.targetLinks, "weight");
                         node.y += (y - center(node))*alpha;
                     }
                 });
@@ -324,7 +325,6 @@ function d3sankeySingle() {
                     if (node.sourceLinks.length) {
 			var y = d3.sum(node.sourceLinks, weightedTarget) / d3.sum(node.sourceLinks, value);
 			
-			//  var y = d3sum(node.sourceLinks, 'weight');
                         node.y += (y + center(node))*alpha;
                     }
                 });
@@ -425,7 +425,6 @@ function d3sankeySingle() {
     }
 
     function center(node) {
-//	return node.y + node.height;
 	return 0;
     }
 

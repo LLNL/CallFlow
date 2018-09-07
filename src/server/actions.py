@@ -21,7 +21,7 @@ class groupBy:
         self.attr = attr
         self.groups_tracked = {}
         
-        self.first_detect_dfs(state)
+        self.run(state)
 
     
     def create_new_path(self, path, state):
@@ -44,7 +44,7 @@ class groupBy:
         else:
             return ''
 
-    def first_detect_dfs(self, state):
+    def run(self, state):
         group_path_map = {}
         show_node_map = {}
         node_name_map = {}       

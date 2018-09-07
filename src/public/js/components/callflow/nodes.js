@@ -1,3 +1,4 @@
+import { getHistogramData } from '../../routes'
 import Color from './color.js'
 
 function calcTextSize(text) {
@@ -23,8 +24,12 @@ export default function drawNodes(graph, view){
 	})
 	.attr('opacity' , 0)
 	.attr("transform", function (d) {
-	    console.log(d.id, d.height, d.x, d.y);
-	    return "translate(" + d.x + "," + d.y + ")";
+	    if(d.name != "intermediate"){
+		return "translate(" + d.x + "," + d.y + ")";
+	    }
+	    else{
+		return "translate(0,0)";
+	    }
 	})
 
     view.nodes.selectAll('.node')
@@ -109,7 +114,7 @@ function drawRectangle(node, graph, view){
 	    view.toolTipG.selectAll('*').remove();		    	
 	})		    
 	.on('click', function(d){
-	    console.log(d)
+	    getHistogramData(d)
 	    // if(d.name != "intermediate"){
 	    // 	var ret = getFunctionListOfNode(d);
 	    // 	var fromProcToProc = ret["fromProcToProc"];
@@ -144,9 +149,9 @@ function drawPath(node, graph, view){
 	.attr('d', function(d){
 	    if(d.name == "intermediate"){
 		return "m" + 0 + " " + 0
-		    + "h " + sankey.nodeWidth()
-		    + "v " + (1)*d.height
-		    + "h " + (-1)*sankey.nodeWidth();
+		    + "h " + view.sankey.nodeWidth()
+		    + "v " + (1)*0
+		    + "h " + (-1)*view.sankey.nodeWidth();
 	    }
 	})
 	.style("fill", function(d){
@@ -243,7 +248,6 @@ function drawText(node, graph, view){
 	});
 
     // Transition
-    console.log(view.color)
     view.nodes.selectAll("text")
 	.data(graph.nodes)
 	.transition()

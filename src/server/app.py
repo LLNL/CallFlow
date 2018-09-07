@@ -12,7 +12,7 @@
 
 #!/usr/bin/env pythonx
 
-from flask import Flask, jsonify, render_template, send_from_directory, current_app
+from flask import Flask, jsonify, render_template, send_from_directory, current_app, request
 import os
 import sys
 import json
@@ -182,7 +182,6 @@ class App():
 
         @app.route('/getMaps')
         def getMaps():
-            print self.callflow.state.map
             return json.dumps(self.callflow.state.map)
 
         @app.route('/groupBy')
@@ -193,6 +192,16 @@ class App():
         def configFile(json):
             return jsonify({                
             })
+
+        @app.route('/getHistogramData')
+        def getHistogramData():
+            df_index = str(request.args.get('df_index'))
+            dataMap = self.callflow.state.map
+            print dataMap['incTime'], df_index
+            print jsonify({
+                "inc": dataMap['incTime'][df_index],
+                "exc": dataMap['excTime'][df_index]
+                })
 
     def launch_webapp(self, gfs):
         # Load the graph frames from an intermediate format.

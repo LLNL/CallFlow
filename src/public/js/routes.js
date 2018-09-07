@@ -113,33 +113,32 @@ function getScatter(node){
     });				
 }
 
-function getHistogramScatterData(node){
-    var sankeyID = node["sankeyID"];
-    var specialID = node["specialID"];
+function getHistogramData(node){
     $.ajax({
-	    type:'GET',
-	    contentType: 'application/json',
-	    dataType: 'json',
-	    url: '/getHistogramScatterData',
-	    data: {"sankeyID" : sankeyID, "specialID" : specialID},
-	    success: function(histScatData){
-	        if(debug){
-		        console.log('[Getter] Histogram Scatter Data: ', histScatData);
-	        }
-	        sankNodeDataHistScat = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
-	        showScatterPlot();
-	        histogramUI();
-	    },
-	    error: function(){
-	        console.log("There was problem with getting the data for histogram and scatter plot");
-	    }	
+	type:'GET',
+	contentType: 'application/json',
+	dataType: 'json',
+	url: '/getHistogramData',
+	data: {"df_index": node.df_index[0]},
+	success: function(histScatData){
+	    console.log(histScatData)
+	    if(debug){
+		console.log('[Getter] Histogram Scatter Data: ', histScatData);
+	    }
+	    sankNodeDataHistScat = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
+	    showScatterPlot();
+	    histogramUI();
+	},
+	error: function(){
+	    console.log("There was problem with getting the data for histogram and scatter plot");
+	}	
     });	
-
 }
 
 export {
     getDataMaps,
     getNodeMetrics,
     getSankey,
-    getConfigFile
+    getConfigFile,    
+    getHistogramData
 }

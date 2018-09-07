@@ -43,6 +43,22 @@ class PreProcess():
 
             return self
 
+        def add_incTime(self):
+            ret = {}
+            for idx, row in self.df.iterrows():
+                ret[str(row.node.df_index)] = self.state.lookup(row.node.df_index)['CPUTIME (usec) (I)'].tolist()
+
+            self.map['incTime'] = ret
+            return self
+
+        def add_excTime(self):
+            ret = {}
+            for idx, row in self.df.iterrows():
+                ret[str(row.node.df_index)] = self.state.lookup(row.node.df_index)['CPUTIME (usec) (E)'].tolist()
+
+            self.map['excTime'] = ret
+            return self
+
         # Max of the inclusive Runtimes among all processes
         # node -> max([ inclusive times of process])
         def add_max_incTime(self):
@@ -129,3 +145,7 @@ class PreProcess():
             self.df['module'] = self.df['module'].apply(lambda name: utils.sanitizeName(name))
             return self
         
+
+        def add_df_index(self):
+            self.df['df_index'] = self.df['node'].apply(lambda node: node.df_index)
+            return self

@@ -12,7 +12,7 @@ export default function drawEdges(graph, view){
 	    }		    	
 	})
 	.attr("d", function(d){
-	    var Tx0 = d.source.x + d.source.dx,
+	    var Tx0 = d.source.x + d.source.height,
 		Tx1 = d.target.x,
 		Txi = d3.interpolateNumber(Tx0, Tx1),
 		Tx2 = Txi(0.4),
@@ -24,7 +24,7 @@ export default function drawEdges(graph, view){
 	    //		.sy is the y point of the source  (for top)
 	    //		.dy is width of the edge
 
-	    var Bx0 = d.source.x + d.source.dx,
+	    var Bx0 = d.source.x + d.source.height,
 		Bx1 = d.target.x,
 		Bxi = d3.interpolateNumber(Bx0, Bx1),
 		Bx2 = Bxi(0.4),
