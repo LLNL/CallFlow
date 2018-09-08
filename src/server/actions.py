@@ -19,13 +19,12 @@ class groupBy:
         self.graph = state.graph
         self.df = state.df
         self.attr = attr
-        self.groups_tracked = {}
-        
+        self.entry_funcs = {}
         self.run(state)
 
     
-    def create_new_path(self, path, state):
-        group_path = ['<program root>']
+    def create_group_path(self, path, state):
+        group_path = []
         temp = None
         for i, elem in enumerate(path):
             module = state.lookup_with_vis_nodeName(elem).module[0]
@@ -37,54 +36,84 @@ class groupBy:
     def find_a_good_node_name(self, node, attr, state):
         node_name = state.lookup_by_column(node.df_index, attr)[0]
         if len(node_name) != 0:
-            if node_name in self.groups_tracked:
+            if node_name in self.entry_funcs:
                 return 'Module already assigned'
             else:
                 return node_name
         else:
             return ''
 
-    def run(self, state):
-        group_path_map = {}
-        show_node_map = {}
-        node_name_map = {}       
 
+    def create_component_path(self, path, group_path, state):
+        component_path = []
+        node_module = state.lookup_with_vis_nodeName(path[-1]).module[0]
+        for i, elem in enumerate(path[::-1]):            
+            module = state.lookup_with_vis_nodeName(elem).module[0]
+            if elem not in self.entry_funcs[module]:
+                module_final = module
+                component_path.append(elem)
+
+        print component_path[::-1], node_module
+            
+    def run(self, state):
+        group_path = {}
+        component_path = {}
+        show_node = {}
+        node_name = {}       
+        entry_function = {}
+        
         root = self.graph.roots[0]
         node_gen = self.graph.roots[0].traverse()       
     
         rootdf = state.lookup(root.df_index)
-        group_path_map[rootdf.node[0]] = tuple(['<program root>'])
-        node_name_map[rootdf.node[0]] = '<program root>'
-        show_node_map[rootdf.node[0]] = True
-    
+        group_path[rootdf.node[0]] = tuple(['libmonitor.so.0.0.0'])
+        node_name[rootdf.node[0]] = '<program root>'
+        show_node[rootdf.node[0]] = True
+        self.entry_funcs['libmonitor.so.0.0.0'] = ['<program root>']
+        count = 0
         try:
             while root.callpath != None:
                 root = next(node_gen)
-                target = state.lookup_with_node(root)
-                source = state.lookup_with_node(root.parent)
+                t = state.lookup_with_node(root)
+                s = state.lookup_with_node(root.parent)
 
                 # check if there are entries for the source and target
                 # Note: need to work on it more....
-                if target.empty or source.empty:
+                if t.empty or s.empty:
                     continue
 
-                group_path_map[target.node[0]] = self.create_new_path(source.path[0], state)
+                snode = s.node[0]
+                tnode = t.node[0]
+
+                spath = s.path[0]
+                tpath = t.path[0]
                 
-                if target.module.isin(self.groups_tracked)[0]:
-                    show_node_map[target.node[0]] = False
-                    node_name_map[target.node[0]] = ''
+                count += 1
+                if count > 30:
+                    break
+                
+                if t.module.isin(self.entry_funcs)[0]:
+                    show_node[tnode] = False
+                    node_name[tnode] = ''
+                    if show_node[snode]:
+                        self.entry_funcs[t[self.attr][0]].append(state.lookup_with_node(tnode)['name'][0])
                 else:
-                    show_node_map[target.node[0]] = True
-                    node_name_map[target.node[0]] = self.find_a_good_node_name(target.node[0], self.attr, state)
-                    self.groups_tracked[target[self.attr][0]] = True
+                    show_node[tnode] = True
+                    node_name[tnode] = self.find_a_good_node_name(tnode, self.attr, state)
+                    self.entry_funcs[t[self.attr][0]] = [state.lookup_with_node(tnode)['name'][0]]
+
+                group_path[tnode] = self.create_group_path(tpath, state)
+                component_path[tnode] = self.create_component_path(tpath, group_path[tnode], state)
+
         except StopIteration:
             pass
         finally:
             del root
 
-        state.update_df('group_path', group_path_map)
-        state.update_df('show_node', show_node_map)
-        state.update_df('vis_node_name', node_name_map)
+        state.update_df('group_path', group_path)
+        state.update_df('component_path', component_path)
+        state.update_df('show_node', show_node)
+        state.update_df('vis_node_name', node_name)
         
 def splitCaller(df, node):
     show_node_map = {}

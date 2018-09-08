@@ -35,8 +35,10 @@ class NetworkX():
         self.is_tree = nx.is_tree(self.g)
         log.warn("Is it a tree? : {0}".format(self.is_tree))
                 
-#        self.check_and_remove_cycles()
-        self.check_and_retain_cycles()
+        if not self.is_tree:
+            # I believe this is kind of wrong to remove the cycles.
+            #self.check_and_remove_cycles()
+            self.check_and_retain_cycles(3)
         
 #        module_mapping = self.create_module_map(self.g.nodes(), 'module')
 #        file_mapping = self.create_module_map(self.g.nodes(), 'file')
@@ -66,8 +68,8 @@ class NetworkX():
         nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)
         nx.set_edge_attributes(self.g, name='type', values=type_mapping)        
         
-        print("Nodes", self.g.nodes(data=True))
-        print("Edges", self.g.edges(data=True))
+#        print("Nodes", self.g.nodes(data=True))
+#        print("Edges", self.g.edges(data=True))
         
     def get_root_runtime_Inc(self):
         root = self.graph.roots[0]
@@ -79,10 +81,11 @@ class NetworkX():
             log.info("Removing the cycles from graph.....")
             cycles = nx.find_cycle(self.g, self.root)
             for cycle in cycles:
-                log.warn("Removing cycles: {0} -> {1}".format(cycle[0], cycle[1]))
-                self.g.remove_edge(*cycle)
+                log.warn("Removing cycles: {0} -> {1}".format(cycle[0], cycle[1]))                
+#                self.g.remove_edge(*cycle)
+ 
 
-    def check_and_retain_cycles(self):
+    def check_and_retain_cycles(self, allow_level):
         temp = {}
         if not self.is_tree:
             log.info("Renaming the cycles upto a certain level")
@@ -103,13 +106,13 @@ class NetworkX():
                     self.g.remove_edge(*cycle)
                     break
                 
-                if temp[cycle[0]] > 1:
+                if temp[cycle[0]] > allow_level:
                     temp_src_trgt = (cycle[0], cycle[1]+'_')                    
                     print "adding {0} : {1}".format(temp_src_trgt[0], temp_src_trgt[1])
                     self.g.add_node(cycle[1]+'_')
                     self.g.add_edge(*temp_src_trgt)
                     self.g.remove_edge(*cycle)
-                elif temp[cycle[1]] > 1:
+                elif temp[cycle[1]] > allow_level:
                     temp_src_trgt = (cycle[0] + '_', cycle[1])
                     print "adding {0} : {1}".format(temp_src_trgt[0], temp_src_trgt[1])
                     self.g.add_node(cycle[0]+'_')

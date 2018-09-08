@@ -14,7 +14,6 @@
 
 import utils
 
-
 # Preprocess the dataframe
 # Builder object
 # Preprocess.add_X().add_Y().....
@@ -147,5 +146,7 @@ class PreProcess():
         
 
         def add_df_index(self):
-            self.df['df_index'] = self.df['node'].apply(lambda node: node.df_index)
+            self.df['df_index'] = self.df['node'].apply(lambda node: node.df_index)           
             return self
+
+        

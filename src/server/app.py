@@ -197,10 +197,17 @@ class App():
         def getHistogramData():
             df_index = str(request.args.get('df_index'))
             dataMap = self.callflow.state.map
-            print dataMap['incTime'], df_index
-            print jsonify({
-                "inc": dataMap['incTime'][df_index],
-                "exc": dataMap['excTime'][df_index]
+
+            for key, value in dataMap['incTime'].items():
+                print key
+                if key == df_index:
+                    print 'True'
+                    
+            
+
+            return jsonify({
+#                "inc": dataMap['incTime'][df_index],
+#                "exc": dataMap['excTime'][df_index]
                 })
 
     def launch_webapp(self, gfs):
