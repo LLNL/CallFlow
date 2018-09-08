@@ -35,10 +35,10 @@ class NetworkX():
         self.is_tree = nx.is_tree(self.g)
         log.warn("Is it a tree? : {0}".format(self.is_tree))
                 
-        if not self.is_tree:
+#        if not self.is_tree:
             # I believe this is kind of wrong to remove the cycles.
-            #self.check_and_remove_cycles()
-            self.check_and_retain_cycles(3)
+#            self.check_and_remove_cycles()
+#            self.check_and_retain_cycles(3)
         
 #        module_mapping = self.create_module_map(self.g.nodes(), 'module')
 #        file_mapping = self.create_module_map(self.g.nodes(), 'file')

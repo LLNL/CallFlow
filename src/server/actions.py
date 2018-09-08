@@ -46,31 +46,34 @@ class groupBy:
 
     def create_component_path(self, path, group_path, state):
         component_path = []
-        node_module = state.lookup_with_vis_nodeName(path[-1]).module[0]
-        for i, elem in enumerate(path[::-1]):            
-            module = state.lookup_with_vis_nodeName(elem).module[0]
-            if elem not in self.entry_funcs[module]:
-                module_final = module
-                component_path.append(elem)
+        path = list(path)
+        component_module = state.lookup_with_vis_nodeName(path[-1]).module[0]
+        component_path.append(component_module)
 
-        print component_path[::-1], node_module
+        filter_path = [node for node in path if component_module == state.lookup_with_vis_nodeName(node).module[0]]
+       
+        for i, elem in enumerate(filter_path):            
+             component_path.append(elem)                    
+
+        return tuple(component_path)
             
     def run(self, state):
         group_path = {}
         component_path = {}
-        show_node = {}
+        is_entry_func = {}
         node_name = {}       
         entry_function = {}
         
         root = self.graph.roots[0]
         node_gen = self.graph.roots[0].traverse()       
     
-        rootdf = state.lookup(root.df_index)
-        group_path[rootdf.node[0]] = tuple(['libmonitor.so.0.0.0'])
-        node_name[rootdf.node[0]] = '<program root>'
-        show_node[rootdf.node[0]] = True
-        self.entry_funcs['libmonitor.so.0.0.0'] = ['<program root>']
+        rootdf = state.lookup_with_node(root)
+        group_path[rootdf.node[0]] = self.create_group_path(rootdf.path[0], state)        
+        node_name[rootdf.node[0]] = self.find_a_good_node_name(root, self.attr, state)
+        is_entry_func[rootdf.node[0]] = True
+        self.entry_funcs[rootdf.module[0]] = [root]
         count = 0
+        
         try:
             while root.callpath != None:
                 root = next(node_gen)
@@ -89,22 +92,29 @@ class groupBy:
                 tpath = t.path[0]
                 
                 count += 1
-                if count > 30:
+                print count
+                if count > 80:
                     break
                 
                 if t.module.isin(self.entry_funcs)[0]:
-                    show_node[tnode] = False
+                    is_entry_func[tnode] = False
                     node_name[tnode] = ''
-                    if show_node[snode]:
+                    if snode in is_entry_func:
                         self.entry_funcs[t[self.attr][0]].append(state.lookup_with_node(tnode)['name'][0])
                 else:
-                    show_node[tnode] = True
+                    is_entry_func[tnode] = True
                     node_name[tnode] = self.find_a_good_node_name(tnode, self.attr, state)
                     self.entry_funcs[t[self.attr][0]] = [state.lookup_with_node(tnode)['name'][0]]
 
                 group_path[tnode] = self.create_group_path(tpath, state)
                 component_path[tnode] = self.create_component_path(tpath, group_path[tnode], state)
 
+                # print "is entry function:", is_entry_func[tnode]
+                # print "entry functions: ", self.entry_funcs[t.module[0]]
+                # print "node path: ", tpath                
+                # print "group path: ", group_path[tnode]
+                # print "component path: ", component_path[tnode]
+                
         except StopIteration:
             pass
         finally:
@@ -112,7 +122,7 @@ class groupBy:
 
         state.update_df('group_path', group_path)
         state.update_df('component_path', component_path)
-        state.update_df('show_node', show_node)
+        state.update_df('show_node', is_entry_func)
         state.update_df('vis_node_name', node_name)
         
 def splitCaller(df, node):

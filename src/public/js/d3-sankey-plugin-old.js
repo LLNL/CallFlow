@@ -172,7 +172,7 @@ function d3sankeySingle() {
     function findroot(){
 	let ret = []
 	nodes.forEach(function(node){
-	    if(node['id'] == '<program root>'){
+	    if(node['id'] == 'libmonitor.so.0.0.0'){
 		ret.push(node)
 	    }	    
 	})
@@ -196,7 +196,8 @@ function d3sankeySingle() {
 		    node.level = levelMap[node.id.slice(0, node.id.length - 1)]
 		    levelMap[node.id] = levelMap[node.id.slice(0, node.id.length - 1)]
 		}
-		else{
+		else{		   
+		    console.log(level)
 		    node.level = level;
 		    levelMap[node.id] = level;
 		}
@@ -208,7 +209,7 @@ function d3sankeySingle() {
             remainingNodes = nextNodes;
             ++level;
         }
-	console.log(levelMap)
+	console.log("Levels assigned", levelMap)
 	
         minDistanceBetweenNode = nodeWidth
 	widthScale = d3.scale.pow().domain([0,level+1]).range([minDistanceBetweenNode, size[0]])	
