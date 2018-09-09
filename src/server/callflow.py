@@ -20,7 +20,7 @@ from logger import log
 from networkx.readwrite import json_graph
 
 from preprocess import PreProcess
-from networkX import NetworkX
+from callgraph import CallGraph
 from actions import groupBy, splitCallee, splitCaller
 from state import State
 
@@ -37,15 +37,17 @@ class CallFlow:
         # Need to make it an observable. When the root changes the application
         # updates to the call graph from that node as the root. 
         self.state.root = None
+
         
-        nx = NetworkX(self.state, 'path')                
+        
+#        nx = NetworkX(self.state, 'path')                
         self.update('groupBy')
         
 
     def update(self, action):        
         if action == "groupBy":
             groupBy(self.state, 'module')
-            nx = NetworkX(self.state, 'group_path')
+            nx = CallGraph(self.state, 'group_path')
         elif action == "split-callee":
             splitCallee(self.gf, split_node)
         elif action == "split-caller":

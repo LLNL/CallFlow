@@ -16,8 +16,9 @@ import ete3
 import networkx as nx
 from logger import log
 
-class NetworkX():
+class CallGraph(nx.Graph):
     def __init__(self, state, path_name):
+        super(CallGraph, self).__init__()
         self.state = state
         self.graph = self.state.graph
         self.df = self.state.df
@@ -34,12 +35,25 @@ class NetworkX():
         log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
         self.is_tree = nx.is_tree(self.g)
         log.warn("Is it a tree? : {0}".format(self.is_tree))
-                
-#        if not self.is_tree:
-            # I believe this is kind of wrong to remove the cycles.
+
+        print("Nodes", self.g.nodes(data=True))
+        print("Edges", self.g.edges(data=True))
+
+        self.root = 'libmonitor.so.0.0.0'
+        self.find_cycles()
+
+        # I believe this is kind of wrong to remove the cycles.
 #            self.check_and_remove_cycles()
-#            self.check_and_retain_cycles(3)
-        
+
+
+        self.add_node_attributes()
+        self.add_edge_attributes()
+
+        print("Nodes", self.g.nodes(data=False))
+        print("Edges", self.g.edges(data=False))
+
+
+    def add_node_attributes(self):        
 #        module_mapping = self.create_module_map(self.g.nodes(), 'module')
 #        file_mapping = self.create_module_map(self.g.nodes(), 'file')
 #        type_mapping = self.create_module_map(self.g.nodes(), 'type')
@@ -51,25 +65,23 @@ class NetworkX():
 #        nx.set_node_attributes(self.g, name='type', values=type_mapping)
 #        nx.set_node_attributes(self.g, name='children', values=children_mapping)
 
-
         time_mapping = self.create_module_map(self.g.nodes(), 'CPUTIME (usec) (I)')
         name_mapping = self.create_module_map(self.g.nodes(), 'vis_node_name')
         type_mapping = self.create_module_map(self.g.nodes(), 'type')
         df_index_mapping = self.create_module_map(self.g.nodes(), 'df_index')
-#       level_mapping = self.hierarchy_level(self.g, self.root)       
+        level_mapping = self.hierarchy_level1()       
 
+        
         nx.set_node_attributes(self.g, name='weight', values=time_mapping)
         nx.set_node_attributes(self.g, name='name', values=name_mapping)
         nx.set_node_attributes(self.g, name='type', values=type_mapping)
         nx.set_node_attributes(self.g, name='df_index', values=df_index_mapping)
         
+    def add_edge_attributes(self):
         capacity_mapping = self.calculate_flows(self.g)
         type_mapping = self.edge_type(self.g)
         nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)
-        nx.set_edge_attributes(self.g, name='type', values=type_mapping)        
-        
-#        print("Nodes", self.g.nodes(data=True))
-#        print("Edges", self.g.edges(data=True))
+        nx.set_edge_attributes(self.g, name='type', values=type_mapping)                
         
     def get_root_runtime_Inc(self):
         root = self.graph.roots[0]
@@ -77,19 +89,134 @@ class NetworkX():
         return root_metrics['CPUTIME (usec) (I)'].max()
 
     def check_and_remove_cycles(self):    
-        if not self.is_tree:
-            log.info("Removing the cycles from graph.....")
-            cycles = nx.find_cycle(self.g, self.root)
-            for cycle in cycles:
-                log.warn("Removing cycles: {0} -> {1}".format(cycle[0], cycle[1]))                
-#                self.g.remove_edge(*cycle)
- 
+        log.info("Removing the cycles from graph.....")
+        cycles = nx.find_cycle(self.g, self.root, orientation='ignore')
+        for cycle in cycles:
+             log.warn("Removing cycles: {0} -> {1}".format(cycle[0], cycle[1]))
+             
+    def tailhead(self, edge):
+        return edge[0], edge[1]
 
+    def edges_from(self, node):
+        for e in self.g.edges(node):
+            yield e + ('forward',)            
+
+    def edge_id(self, edge):
+        return edge[:-1] 
+    
+    def hierarchy_level1(self):
+        level = {}
+        level[self.root] = 0
+        nodes = self.g.nbunch_iter(self.root)
+
+        v_nodes = set()
+        v_edges = set()
+        edges = {}
+        
+        for start_node in nodes:
+            seen = [start_node]
+            active_nodes = {start_node}
+
+            level = 0
+            while seen:
+                curr_node = seen[-1]
+                if curr_node not in v_nodes:
+                    edges[curr_node] = self.edges_from(curr_node)
+                    v_nodes.add(curr_node)
+
+                try:
+                    edge = next(edges[curr_node])
+                    if edge[-1] == 'forward':
+                        print 'level up', edge[0], edge[1]
+#                        level[edge[1]] = level[edge[0]] + 1                        
+                except StopIteration:
+                    seen.pop()
+                    level = 0
+                else:
+                    edgeid = self.edge_id(edge)
+                    if edgeid not in v_edges:
+                        v_edges.add(edgeid)
+                        if edge[-1] == 'reverse':
+                            seen.append(edge[0])
+                        else:
+                            seen.append(edge[1])                
+        return level
+
+    def find_cycles(self):
+        explored = set()
+        cycle = []
+        final_node = None
+        flow = {}
+        levelMap = {}
+        nodes = self.g.nbunch_iter(self.root)
+        
+        for start_node in nodes:            
+            if start_node in explored:
+                continue
+
+            edges = []
+            seen = {start_node}
+            active_nodes = [start_node]
+            previous_head = None
+
+            levelMap['libmonitor.so.0.0.0'] = 0
+            
+            for edge in nx.edge_dfs(self.g, start_node, 'original'):                
+                print "Edge :     ", edge
+                head_level = None
+                tail_level = None
+                head, tail = self.tailhead(edge)
+
+                if head in active_nodes and head != start_node and tail in active_nodes:
+                    print 'cycle', head, tail
+                    self.g.remove_edge(*edge)
+                    self.g.add_node(tail+'_')
+                    self.g.add_edge(head, tail+'_')
+                    levelMap[tail+'_'] = levelMap[head] + 1
+                    continue
+                else:
+                    if head != start_node:
+                        active_nodes.append(head)
+                    levelMap[tail] = levelMap[head]+ 1
+
+                
+                # Check if there is an existing level mapping for the head node and assign. 
+                if head in levelMap.keys():
+                    head_level = levelMap[head]
+
+                # Check if there is an existing level mapping for the tail node and assign. 
+                if tail in levelMap.keys():
+                    tail_level = levelMap[tail]
+
+                # if tail_level and head_level exist, we are done here.
+#                if head_level != None and tail_level != None:
+#                    continue                
+
+                # Since dfs, set level = 0 when head is the start_node. 
+                if head == start_node:
+                    level = 0
+                    active_nodes = [start_node]
+
+                flow[edge] = (head_level, tail_level)
+                print active_nodes
+            print levelMap
+            print flow
+
+                
+        # for i, edge in enumerate(cycle):
+        #     tail, head = self.tailhead(edge)
+        #     if tail == final_node:
+        #         break
+
+        # return cycle[i:]
+                
     def check_and_retain_cycles(self, allow_level):
         temp = {}
         if not self.is_tree:
+            cycles = self.find_cycle()
+            print nx.convert_node_labels_to_integers(self.g)
             log.info("Renaming the cycles upto a certain level")
-            cycles = nx.find_cycle(self.g, self.root)
+            print cycles
             for cycle in cycles:
                 if cycle[0] not in temp:
                     temp[cycle[0]] = 0
@@ -111,13 +238,13 @@ class NetworkX():
                     print "adding {0} : {1}".format(temp_src_trgt[0], temp_src_trgt[1])
                     self.g.add_node(cycle[1]+'_')
                     self.g.add_edge(*temp_src_trgt)
-                    self.g.remove_edge(*cycle)
+                    self.g.remove_edge(cycle[0], cycle[1])
                 elif temp[cycle[1]] > allow_level:
                     temp_src_trgt = (cycle[0] + '_', cycle[1])
                     print "adding {0} : {1}".format(temp_src_trgt[0], temp_src_trgt[1])
                     self.g.add_node(cycle[0]+'_')
                     self.g.add_edge(*temp_src_trgt)
-                    self.g.remove_edge(*cycle)
+                    self.g.remove_edge(cycle[0], cycle[1])
                     
                 
     def create_module_map(self, nodes, attr):
@@ -152,20 +279,6 @@ class NetworkX():
         tree = subtrees[self.root]        
         log.info(tree)
         return tree
-
-    def hierarchy_level(self, G, root, level = None, parent = None):
-        if level == None:
-            level = {}
-            level[root] = 0
-        else:
-            level[root] = level[parent] + 1
-        neighbors = G.neighbors(root)
-        if  neighbors == None:
-            print "None"+ neighbors
-        if neighbors != None:
-            for neighbor in neighbors:
-                self.hierarchy_level(G, neighbor, level=level, parent = root)
-        return level
 
     def leaves_below(self, graph, node):
         return set(sum(([vv for vv in v if graph.out_degree(vv) == 0]
