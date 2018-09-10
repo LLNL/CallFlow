@@ -1,6 +1,6 @@
 export default function preprocess(graph){    
     console.log(graph)
-    graph = combineBackNodes(graph)
+//    graph = combineBackNodes(graph)
     graph = addLinkNodeIDs(graph)
     graph = calculateFlow(graph)
     return graph
@@ -16,22 +16,6 @@ function findNodeById(graph, node_id){
     return ret
 }
 
-function combineBackNodes(graph){
-    let ret = []
-    console.log(graph.nodes)
-    for(let node of graph.nodes){
-	let node_id = node.id
-	console.log(node_id)
-//	if(node_id.endswith('_')){
-//	    graph.nodes.splice(graph.nodes.indexOf(node), 1)
-//	}
-    }
-
-    for(let link of graph.links){
-    }
-    return graph
-}
-
 /* Link: {
    sourceID : int, targetID: int , target: str, source: str 
    }*/
@@ -40,10 +24,15 @@ function addLinkNodeIDs(graph){
     for(let [idx, node] of graph.nodes.entries()){
         nodeMap[node.name[0]] = idx
     }
+
+    console.log(nodeMap)
     let links = graph.links
+    console.log(links)
     for(let link of graph.links){
+	console.log(link.source, link.target)
         link.sourceID = nodeMap[link.source]
         link.targetID = nodeMap[link.target]
+	console.log(link.sourceID, link.targetID);
     }    
     return graph
 }

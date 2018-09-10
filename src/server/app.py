@@ -199,8 +199,8 @@ class App():
             dataMap = self.callflow.state.map
 
             for key in dataMap['incTime'].keys():
-                print key, df_index, type(key), type(df_index)
                 if key == df_index:
+                    print "Matched index ", key
                     return jsonify({
                         "inc": dataMap['incTime'][key],
                         "exc": dataMap['excTime'][key]

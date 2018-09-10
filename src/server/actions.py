@@ -92,8 +92,7 @@ class groupBy:
                 tpath = t.path[0]
                 
                 count += 1
-#                print count
-                if count > 80:
+                if count > 70:
                     break
                 
                 if t.module.isin(self.entry_funcs)[0]:

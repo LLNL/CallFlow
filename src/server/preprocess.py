@@ -113,7 +113,6 @@ class PreProcess():
             try:
                 while root.callpath != None:
                     root = next(node_gen)
-                    print 
                     if root.parent not in callees:
                         callees[root.parent] = []
                     

@@ -150,6 +150,13 @@ function d3sankeySingle() {
             node["maxLinks"] = maxOfInandOut;
         })
 
+	// swap the source links and target links
+	links.forEach(function(link){
+	    let temp =  link.sourceLinks;
+	    link.sourceLinks = link.targetLinks
+	    link.targetLinks = temp
+	    
+	})
     }
 
     function d3sum(values, attr){
@@ -383,12 +390,16 @@ function d3sankeySingle() {
         nodes.forEach(function(node) {
             var sy = 0, ty = 0;
             node.sourceLinks.forEach(function(link) {
-                link.sy = sy;
-                sy += link.height;
+		if(link.type != 'back_edge'){
+                    link.sy = sy;
+                    sy += link.height;
+		}
             });
             node.targetLinks.forEach(function(link) {
-                link.ty = ty;
-                ty += link.height;
+		if(link.type != 'back_edge'){
+                    link.ty = ty;
+                    ty += link.height
+		};
             });
         });
 
