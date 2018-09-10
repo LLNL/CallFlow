@@ -22,7 +22,7 @@ function buildGraph(nodes, edges) {
     let temp_edges = edges.slice()
 
     computeNodeEdges(temp_nodes, temp_edges)
-    computeNodeBreadths(temp_nodes, temp_edges)
+    //computeNodeBreadths(temp_nodes, temp_edges)
 
     for (var i = 0; i < temp_edges.length; i++) {
         let source = temp_edges[i].sourceID;
@@ -84,9 +84,9 @@ function computeNodeBreadths(nodes,links) {
     var x = 0
     console.log(nodes)
     while (remainingNodes.length) {
+	console.log('a')
         nextNodes = [];
         remainingNodes.forEach(function(node) {
-            node.level = x;
             node.sourceLinks.forEach(function(link) {
                 if (nextNodes.indexOf(link.target) < 0) {
                     nextNodes.push(link.target);

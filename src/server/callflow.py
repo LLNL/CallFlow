@@ -28,7 +28,10 @@ from state import State
 class CallFlow:
     def __init__(self, gf):
         self.state = State(gf)        
-        self.preprocess = PreProcess.Builder(self.state).add_path().add_incTime().add_excTime().add_max_incTime().add_avg_incTime().add_imbalance_perc().add_callers_and_callees().add_show_node().add_vis_node_name().update_module_name().add_df_index().build()
+        self.preprocess = PreProcess.Builder(self.state).add_df_index().add_path().add_incTime().add_excTime().add_callers_and_callees().add_show_node().add_vis_node_name().update_module_name().build()
+
+
+        #.add_max_incTime().add_avg_incTime().add_imbalance_perc()
 
         self.state.graph = self.preprocess.graph
         self.state.df = self.preprocess.df

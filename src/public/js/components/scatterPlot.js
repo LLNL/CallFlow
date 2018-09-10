@@ -10,23 +10,25 @@
  * https://github.com/LLNL/CallFlow
  * Please also read the LICENSE file for the MIT License notice.
  ******************************************************************************/
-function showScatterPlot(){
+function scatterPlotUI(data){
     var width = $("#scat_view").parent().width();
     var height = $("#scat_view").parent().height();
     var runTimeLable;
     var scatDat;
 
     $('#scat_view').empty();
-    scatterPot = new Scatter({
+    let scatterPot = new Scatter({
 	ID: "#scat_view",
 	width: width,
 	height: height,
 	margin: {top: 10, right: 10, bottom: 30, left: 44},
-	yData: sankNodeDataHistScat["inc"].slice(),
-	xData: sankNodeDataHistScat["exc"].slice(),
+	yData: data["inc"].slice(),
+	xData: data["exc"].slice(),
 	sort: false						
     })			
 }
+
+export default scatterPlotUI
 
 function Scatter(args){
     var containerID = args.ID || "body",
@@ -232,7 +234,7 @@ function Scatter(args){
         var b0 = y_mean - (b1 * x_mean);
         // perform regression 
 
-        yhat = [];
+        let yhat = [];
         // fit line using coeffs
         for (i = 0; i < xSeries.length; i++) {
             yhat.push(b0 + (xSeries[i] * b1));

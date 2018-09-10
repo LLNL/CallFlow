@@ -40,17 +40,12 @@ class CallGraph(nx.Graph):
         print("Edges", self.g.edges(data=True))
 
         self.root = 'libmonitor.so.0.0.0'
-        self.find_cycles()
-
-        # I believe this is kind of wrong to remove the cycles.
-#            self.check_and_remove_cycles()
-
 
         self.add_node_attributes()
         self.add_edge_attributes()
 
-        print("Nodes", self.g.nodes(data=False))
-        print("Edges", self.g.edges(data=False))
+        print("Nodes", self.g.nodes(data=True))
+        print("Edges", self.g.edges(data=True))
 
 
     def add_node_attributes(self):        
@@ -66,22 +61,27 @@ class CallGraph(nx.Graph):
 #        nx.set_node_attributes(self.g, name='children', values=children_mapping)
 
         time_mapping = self.create_module_map(self.g.nodes(), 'CPUTIME (usec) (I)')
-        name_mapping = self.create_module_map(self.g.nodes(), 'vis_node_name')
-        type_mapping = self.create_module_map(self.g.nodes(), 'type')
-        df_index_mapping = self.create_module_map(self.g.nodes(), 'df_index')
-        level_mapping = self.hierarchy_level1()       
-
-        
         nx.set_node_attributes(self.g, name='weight', values=time_mapping)
+
+        name_mapping = self.create_module_map(self.g.nodes(), 'vis_node_name')
         nx.set_node_attributes(self.g, name='name', values=name_mapping)
+
+        type_mapping = self.create_module_map(self.g.nodes(), 'type')
         nx.set_node_attributes(self.g, name='type', values=type_mapping)
+        
+        df_index_mapping = self.create_module_map(self.g.nodes(), 'df_index')
         nx.set_node_attributes(self.g, name='df_index', values=df_index_mapping)
+        
+        self.level_mapping = self.level_map()               
+        nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
         
     def add_edge_attributes(self):
         capacity_mapping = self.calculate_flows(self.g)
         type_mapping = self.edge_type(self.g)
+        flow_mapping = self.flow_map()
         nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)
-        nx.set_edge_attributes(self.g, name='type', values=type_mapping)                
+        nx.set_edge_attributes(self.g, name='type', values=type_mapping)
+        nx.set_edge_attributes(self.g, name='flow', values=flow_mapping)
         
     def get_root_runtime_Inc(self):
         root = self.graph.roots[0]
@@ -142,74 +142,65 @@ class CallGraph(nx.Graph):
                             seen.append(edge[1])                
         return level
 
-    def find_cycles(self):
-        explored = set()
-        cycle = []
-        final_node = None
-        flow = {}
+    def level_map(self):
         levelMap = {}
+        track_level = 0
         nodes = self.g.nbunch_iter(self.root)
         
         for start_node in nodes:            
-            if start_node in explored:
-                continue
-
-            edges = []
-            seen = {start_node}
             active_nodes = [start_node]
-            previous_head = None
-
-            levelMap['libmonitor.so.0.0.0'] = 0
+            levelMap[self.root] = 0
             
             for edge in nx.edge_dfs(self.g, start_node, 'original'):                
-                print "Edge :     ", edge
+                print "Edge:", edge
                 head_level = None
                 tail_level = None
                 head, tail = self.tailhead(edge)
 
                 if head in active_nodes and head != start_node and tail in active_nodes:
-                    print 'cycle', head, tail
-                    self.g.remove_edge(*edge)
+                    print 'Cycle found', head, tail
+                    edge_data = self.g.get_edge_data(*edge)
+#                    node_data = self.g.get_node_data(tail)
                     self.g.add_node(tail+'_')
-                    self.g.add_edge(head, tail+'_')
-                    levelMap[tail+'_'] = levelMap[head] + 1
+                    self.g.add_edge(head, tail+'_', data=edge_data)
+                    self.g.node[tail+'_']['name'] = [tail + '_']
+                    self.g.node[tail+'_']['weight'] = self.g.node[tail]['weight']
+                    self.g.remove_edge(*edge)
+                    levelMap[tail+'_'] = track_level + 1
                     continue
                 else:
                     if head != start_node:
                         active_nodes.append(head)
-                    levelMap[tail] = levelMap[head]+ 1
-
-                
-                # Check if there is an existing level mapping for the head node and assign. 
-                if head in levelMap.keys():
-                    head_level = levelMap[head]
-
-                # Check if there is an existing level mapping for the tail node and assign. 
-                if tail in levelMap.keys():
-                    tail_level = levelMap[tail]
-
-                # if tail_level and head_level exist, we are done here.
-#                if head_level != None and tail_level != None:
-#                    continue                
+                    levelMap[tail] = levelMap[head] +  1
+                    track_level += 1
 
                 # Since dfs, set level = 0 when head is the start_node. 
                 if head == start_node:
-                    level = 0
                     active_nodes = [start_node]
+                    track_level = 0
+                    
+            return levelMap
 
-                flow[edge] = (head_level, tail_level)
-                print active_nodes
-            print levelMap
-            print flow
-
+    def flow_map(self):
+        flowMap = {}
+        nodes = self.g.nbunch_iter(self.root)
+        for start_node in nodes:            
+            for edge in nx.edge_dfs(self.g, start_node, 'original'):                                
+                head_level = None
+                tail_level = None
+                head, tail = self.tailhead(edge)
                 
-        # for i, edge in enumerate(cycle):
-        #     tail, head = self.tailhead(edge)
-        #     if tail == final_node:
-        #         break
+                # Check if there is an existing level mapping for the head node and assign. 
+                if head in self.level_mapping.keys():
+                    head_level =  self.level_mapping[head]
 
-        # return cycle[i:]
-                
+                # Check if there is an existing level mapping for the tail node and assign. 
+                if tail in self.level_mapping.keys():
+                    tail_level = self.level_mapping[tail]
+
+                flowMap[edge] = (head_level, tail_level)
+        return flowMap
+                                
     def check_and_retain_cycles(self, allow_level):
         temp = {}
         if not self.is_tree:

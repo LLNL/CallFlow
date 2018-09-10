@@ -12,6 +12,7 @@
 
 #!/usr/bin/env python3
 
+import random
 import utils
 
 # Preprocess the dataframe
@@ -42,20 +43,25 @@ class PreProcess():
 
             return self
 
-        def add_incTime(self):
+        def _map(self, attr, ):
             ret = {}
             for idx, row in self.df.iterrows():
-                ret[str(row.node.df_index)] = self.state.lookup(row.node.df_index)['CPUTIME (usec) (I)'].tolist()
+                node_df = self.state.lookup_with_node(row.node)
+                p_index = node_df['df_index'].tolist()
+                print p_index
+                p_incTime  = node_df[attr].tolist()
+                for idx in range(len(p_index)):
+                    if p_index[idx] not in ret:
+                        ret[p_index[idx]] = []
+                    ret[p_index[idx]].append(p_incTime[idx])
+            return ret
 
-            self.map['incTime'] = ret
+        def add_incTime(self):
+            self.map['incTime'] = self._map('CPUTIME (usec) (I)')
             return self
 
         def add_excTime(self):
-            ret = {}
-            for idx, row in self.df.iterrows():
-                ret[str(row.node.df_index)] = self.state.lookup(row.node.df_index)['CPUTIME (usec) (E)'].tolist()
-
-            self.map['excTime'] = ret
+            self.map['excTime'] = self._map('CPUTIME (usec) (E)')
             return self
 
         # Max of the inclusive Runtimes among all processes
@@ -107,6 +113,7 @@ class PreProcess():
             try:
                 while root.callpath != None:
                     root = next(node_gen)
+                    print 
                     if root.parent not in callees:
                         callees[root.parent] = []
                     
@@ -144,9 +151,7 @@ class PreProcess():
             self.df['module'] = self.df['module'].apply(lambda name: utils.sanitizeName(name))
             return self
         
-
         def add_df_index(self):
-            self.df['df_index'] = self.df['node'].apply(lambda node: node.df_index)           
+            self.df['df_index'] = self.df['node'].apply(lambda node: random.randint(1,100))
+#            self.df['df_index'] = self.df['node'].apply(lambda node: node.df_index)
             return self
-
-        

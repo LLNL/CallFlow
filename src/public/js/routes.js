@@ -1,3 +1,7 @@
+import histogramUI from './components/histogram'
+import scatterPlotUI from './components/scatterPlot'
+
+
 function getConfigFile(filename, cb){
     $.ajax({
 	type:'GET',
@@ -121,13 +125,10 @@ function getHistogramData(node){
 	url: '/getHistogramData',
 	data: {"df_index": node.df_index[0]},
 	success: function(histScatData){
-	    console.log(histScatData)
-	    if(debug){
-		console.log('[Getter] Histogram Scatter Data: ', histScatData);
-	    }
-	    sankNodeDataHistScat = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
-	    showScatterPlot();
-	    histogramUI();
+	    console.log('[Getter] Histogram Scatter Data: ', histScatData);
+	    let data = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
+	    scatterPlotUI(data);
+	    histogramUI(data);
 	},
 	error: function(){
 	    console.log("There was problem with getting the data for histogram and scatter plot");

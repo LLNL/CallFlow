@@ -93,6 +93,7 @@ export default function drawEdges(graph, view){
 
 	    var rightMoveDown = By1 - Ty1;
 
+	    
 	    return "M" + Tx0 + "," + Ty0
 		+ "C" + Tx2 + "," + Ty0
 		+ " " + Tx3 + "," + Ty1

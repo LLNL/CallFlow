@@ -195,20 +195,16 @@ class App():
 
         @app.route('/getHistogramData')
         def getHistogramData():
-            df_index = str(request.args.get('df_index'))
+            df_index = int(request.args.get('df_index'))
             dataMap = self.callflow.state.map
 
-            for key, value in dataMap['incTime'].items():
-                print key
+            for key in dataMap['incTime'].keys():
+                print key, df_index, type(key), type(df_index)
                 if key == df_index:
-                    print 'True'
-                    
-            
-
-            return jsonify({
-#                "inc": dataMap['incTime'][df_index],
-#                "exc": dataMap['excTime'][df_index]
-                })
+                    return jsonify({
+                        "inc": dataMap['incTime'][key],
+                        "exc": dataMap['excTime'][key]
+                        })
 
     def launch_webapp(self, gfs):
         # Load the graph frames from an intermediate format.

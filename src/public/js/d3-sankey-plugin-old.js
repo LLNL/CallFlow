@@ -186,30 +186,22 @@ function d3sankeySingle() {
     function computeNodeBreadths() {
 	let remainingNodes = findroot()
         let nextNodes = [];
-        let level = 0;
-	let levelMap = {}
-        while (remainingNodes.length) {
-            nextNodes = [];
-	    remainingNodes.forEach(function(node) {
-		node.dx = nodeWidth;
-		if(node['id'][node['id'].length - 1] == '_'){		    
-		    node.level = levelMap[node.id.slice(0, node.id.length - 1)]
-		    levelMap[node.id] = levelMap[node.id.slice(0, node.id.length - 1)]
-		}
-		else{		   
-		    console.log(level)
-		    node.level = level;
-		    levelMap[node.id] = level;
-		}
-		console.log(node.id, node.level)
-                node.sourceLinks.forEach(function(link) {
-                    nextNodes.push(link.target);
-                });
-            });
-            remainingNodes = nextNodes;
-            ++level;
-        }
-	console.log("Levels assigned", levelMap)
+        // while (remainingNodes.length) {
+        //     nextNodes = [];
+	//     remainingNodes.forEach(function(node) {
+	// 	node.dx = nodeWidth;
+        //         node.sourceLinks.forEach(function(link) {
+        //             nextNodes.push(link.target);
+        //         });
+        //     });
+        //     remainingNodes = nextNodes;
+        // }
+
+	nodes.forEach(function(node){
+	    node.dx = nodeWidth
+	})
+
+	level = 5
 	
         minDistanceBetweenNode = nodeWidth
 	widthScale = d3.scale.pow().domain([0,level+1]).range([minDistanceBetweenNode, size[0]])	
