@@ -22,6 +22,8 @@ class CallGraph(nx.Graph):
         self.state = state
         self.graph = self.state.graph
         self.df = self.state.df
+        self.root = state.lookup_with_node(self.graph.roots[0])['vis_node_name'][0]
+        
 
         self.root = self.state.lookup(self.graph.roots[0].df_index).name[0]
         self.rootRunTimeInc = self.get_root_runtime_Inc()
@@ -33,21 +35,18 @@ class CallGraph(nx.Graph):
             if row.show_node:
                 self.g.add_path(row[path_name])
                 
-        log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
         self.is_tree = nx.is_tree(self.g)
-        log.warn("Is it a tree? : {0}".format(self.is_tree))
         
-        self.root = state.lookup_with_node(self.graph.roots[0])['vis_node_name'][0]
-
-        print("Nodes", self.g.nodes(data=True))
-        print("Edges", self.g.edges(data=True))
-
         self.add_node_attributes()
         self.add_edge_attributes()
 
         print("Nodes", self.g.nodes(data=True))
         print("Edges", self.g.edges(data=True))
 
+        log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
+        log.warn("Edges in the tree: {0}".format(len(self.g.edges)))
+        log.warn("Is it a tree? : {0}".format(self.is_tree))       
+        log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
 
     def add_node_attributes(self):        
 #        module_mapping = self.create_module_map(self.g.nodes(), 'module')
@@ -73,7 +72,7 @@ class CallGraph(nx.Graph):
         df_index_mapping = self.create_module_map(self.g.nodes(), 'df_index')
         nx.set_node_attributes(self.g, name='df_index', values=df_index_mapping)
         
-        self.level_mapping = self.level_map()               
+        self.level_mapping = self.assign_levels()               
         nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
 
 #        self.find_bridge_nodes()
@@ -90,12 +89,6 @@ class CallGraph(nx.Graph):
         root = self.graph.roots[0]
         root_metrics = self.state.lookup(root.df_index)
         return root_metrics['CPUTIME (usec) (I)'].max()
-
-    def check_and_remove_cycles(self):    
-        log.info("Removing the cycles from graph.....")
-        cycles = nx.find_cycle(self.g, self.root, orientation='ignore')
-        for cycle in cycles:
-             log.warn("Removing cycles: {0} -> {1}".format(cycle[0], cycle[1]))
              
     def tailhead(self, edge):
         return edge[0], edge[1]
@@ -148,7 +141,7 @@ class CallGraph(nx.Graph):
                             seen.append(edge[1])                
         return level
 
-    def level_map(self):
+    def assign_levels(self):
         levelMap = {}
         track_level = 0
         nodes = self.g.nbunch_iter(self.root)
@@ -158,7 +151,7 @@ class CallGraph(nx.Graph):
             levelMap[self.root] = 0
             
             for edge in nx.edge_dfs(self.g, start_node, 'original'):                
-                print "Edge:", edge
+                log.warn("[Graph] Edge: {0}".format(edge))
                 head_level = None
                 tail_level = None
                 head, tail = self.tailhead(edge)
@@ -186,7 +179,7 @@ class CallGraph(nx.Graph):
                 if head == start_node:
                     active_nodes = [start_node]
                     track_level = 0                    
-            return levelMap
+        return levelMap
 
     def find_bridge_nodes(self):
         chains = nx.chain_decomposition(self.g.to_undirected(), root=self.root)

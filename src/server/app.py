@@ -42,17 +42,16 @@ class App():
         self.create_parser()  # Parse the input arguments
         self.verify_parser()  # Raises expections if something is not provided. 
         self.create_variables() # Setup variables which are common to filter and server (like gf, config, etc)
-        
-        if not self.args.filter:
-            self.gfs = self.create_gfs()
-            self.create_server()
-            self.launch_webapp(self.gfs)
-        else:
-            self.gfs = self.create_gfs()
-            self.fgfs = self.filter_gfs()
-            self.create_server()
-            self.launch_webapp(self.fgfs)
+
+        self.gfs = self.create_gfs()
+
+        if self.args.filter:        
+            self.gfs = self.filter_gfs()
             
+        self.display_stats()
+        self.create_server()
+        self.launch_webapp()
+        
     def create_parser(self):
         parser = argparse.ArgumentParser()
         parser.add_argument("--verbose", help="Display debug points")
@@ -131,7 +130,6 @@ class App():
             t = time.time()
             if self.args.filterBy == "IncTime":
                 max_inclusive_time = utils.getMaxIncTime(gf)
-                log.info('[Filter] By Inclusive time = {0} '.format(max_inclusive_time))
                 filter_gf = gf.filter(lambda x: True if(x['CPUTIME (usec) (I)'] > 0.01*max_inclusive_time) else False)
             elif self.args.filterBy == "ExcTime":
                 max_exclusive_time = utils.getMaxExcTime(gf)
@@ -151,7 +149,19 @@ class App():
             self.write_gfs(fgfs)
             
         return fgfs
-   
+
+
+    # Display stats 
+    def display_stats(self):
+        for idx, gf in enumerate(self.gfs):
+            log.warn('==========================')
+            log.info('Stats: Dataset () '.format(idx))
+            log.warn('==========================')
+            max_inclusive_time = utils.getMaxIncTime(gf)
+            max_exclusive_time = utils.getMaxExcTime(gf)
+            log.info('Inclusive time = {0} '.format(max_inclusive_time))
+            log.info('Exclusive time = {0} '.format(max_exclusive_time))
+            log.info('Number of nodes = {0}'.format(184))
         
     # Write graphframes to csv files
     def write_gfs(self, fgfs):
@@ -206,12 +216,13 @@ class App():
                         "exc": dataMap['excTime'][key]
                         })
 
-    def launch_webapp(self, gfs):
+    def launch_webapp(self):
         # Load the graph frames from an intermediate format.
 #        self.gfs = self.create_gfs()
+        
 
         # Create the callflow graph frames from graphframes given by hatchet
-        self.cfgs = self.create_cfgs(gfs)
+        self.cfgs = self.create_cfgs(self.gfs)
 
         # Launch the flask app
         app.run(debug = self.debug, use_reloader=True)
