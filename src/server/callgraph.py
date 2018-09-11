@@ -25,6 +25,7 @@ class CallGraph(nx.Graph):
 
         self.root = self.state.lookup(self.graph.roots[0].df_index).name[0]
         self.rootRunTimeInc = self.get_root_runtime_Inc()
+        self.edge_direction = {}
         
         self.g = nx.DiGraph(rootRunTimeInc = self.rootRunTimeInc)       
         
@@ -35,11 +36,11 @@ class CallGraph(nx.Graph):
         log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
         self.is_tree = nx.is_tree(self.g)
         log.warn("Is it a tree? : {0}".format(self.is_tree))
+        
+        self.root = state.lookup_with_node(self.graph.roots[0])['vis_node_name'][0]
 
         print("Nodes", self.g.nodes(data=True))
         print("Edges", self.g.edges(data=True))
-
-        self.root = 'libmonitor.so.0.0.0'
 
         self.add_node_attributes()
         self.add_edge_attributes()
@@ -74,6 +75,8 @@ class CallGraph(nx.Graph):
         
         self.level_mapping = self.level_map()               
         nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
+
+#        self.find_bridge_nodes()
         
     def add_edge_attributes(self):
         capacity_mapping = self.calculate_flows(self.g)
@@ -96,6 +99,9 @@ class CallGraph(nx.Graph):
              
     def tailhead(self, edge):
         return edge[0], edge[1]
+
+    def tailheadDir(self, edge):
+        return edge[0], edge[1], self.edge_direction[edge]
 
     def edges_from(self, node):
         for e in self.g.edges(node):
@@ -156,11 +162,14 @@ class CallGraph(nx.Graph):
                 head_level = None
                 tail_level = None
                 head, tail = self.tailhead(edge)
-
+                
+                if head != start_node:
+                    active_nodes.append(head)
+                
                 if head in active_nodes and head != start_node and tail in active_nodes:
                     print 'Cycle found', head, tail
+                    self.edge_direction[(head, tail+'_')] = 'back_edge'
                     edge_data = self.g.get_edge_data(*edge)
-#                    node_data = self.g.get_node_data(tail)
                     self.g.add_node(tail+'_')
                     self.g.add_edge(head, tail+'_', data=edge_data)
                     self.g.node[tail+'_']['name'] = [tail + '_']
@@ -169,18 +178,24 @@ class CallGraph(nx.Graph):
                     levelMap[tail+'_'] = track_level + 1
                     continue
                 else:
-                    if head != start_node:
-                        active_nodes.append(head)
+                    self.edge_direction[(head, tail)] = 'forward_edge'
                     levelMap[tail] = levelMap[head] +  1
                     track_level += 1
 
                 # Since dfs, set level = 0 when head is the start_node. 
                 if head == start_node:
                     active_nodes = [start_node]
-                    track_level = 0
-                    
+                    track_level = 0                    
             return levelMap
 
+    def find_bridge_nodes(self):
+        chains = nx.chain_decomposition(self.g.to_undirected(), root=self.root)
+        print next(chains)
+        chain_edges = set(chain.from_iterable(chains))
+        for u, v in G.edges():
+            if (u, v) not in chain_edges and (v, u) not in chain_edges:
+                print  u, v
+        
     def flow_map(self):
         flowMap = {}
         nodes = self.g.nbunch_iter(self.root)
@@ -188,7 +203,7 @@ class CallGraph(nx.Graph):
             for edge in nx.edge_dfs(self.g, start_node, 'original'):                                
                 head_level = None
                 tail_level = None
-                head, tail = self.tailhead(edge)
+                head, tail, direction = self.tailheadDir(edge)
                 
                 # Check if there is an existing level mapping for the head node and assign. 
                 if head in self.level_mapping.keys():
@@ -198,7 +213,14 @@ class CallGraph(nx.Graph):
                 if tail in self.level_mapping.keys():
                     tail_level = self.level_mapping[tail]
 
-                flowMap[edge] = (head_level, tail_level)
+                flowMap[edge] = {
+                    "source": head,
+                    "target": tail,
+                    "source_level" : head_level,
+                    "target_level": tail_level,
+#                    "direction": direction
+                }
+                print flowMap[edge]
         return flowMap
                                 
     def check_and_retain_cycles(self, allow_level):

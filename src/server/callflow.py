@@ -41,9 +41,7 @@ class CallFlow:
         # updates to the call graph from that node as the root. 
         self.state.root = None
 
-        
-        
-#        nx = NetworkX(self.state, 'path')                
+        #        nx = NetworkX(self.state, 'path')                
         self.update('groupBy')
         
 

@@ -1,19 +1,54 @@
 export default function preprocess(graph){    
-    console.log(graph)
-//    graph = combineBackNodes(graph)
+    graph = c_a(graph)
     graph = addLinkNodeIDs(graph)
     graph = calculateFlow(graph)
     return graph
 }
 
-function findNodeById(graph, node_id){
-    let ret 
+function c_a(graph){
+    let nodes = graph.nodes
+
+    
     for(let node of graph.nodes){
-	if(node_id == node.id){
-	    ret = node
+	if(node.name[0] == 'libmpi.so.12.0.5'){
+//	    node.level = 1
+	}
+	if(node.name[0] == 'unkno'){
+	    node.level = 4
+	}
+	if(node.name[0] == 'libpsm_infinipath.so.1.14'){
+	    node.level = 4
+	}
+	if(node.name[0] == 'libc-2.12.so'){
+	    node.level = 5
+	}
+	
+    }
+    var nodesByBreadth = d3.nest()
+	.key(function(d) { return d.level; })
+        .sortKeys(d3.ascending)
+        .entries(graph.nodes)
+        .map(function(d) { return d.values; });
+
+    var nodesByBreadt = d3.nest()
+	.key(function(d) { return d.level; })
+        .sortKeys(d3.ascending)
+        .entries(graph.nodes)
+        .map(function(d, i) {
+	    let map = []	    
+	    for(let nodesInLevel of d.values){
+		map.push(nodesInLevel.name[0])
+	    }
+	    return map	    
+	});
+
+    for(let link of graph.links){
+	if(link.type != 'back_edge'){
+	    console.log(link.source, link.target, link.weight)
 	}
     }
-    return ret
+    
+    return graph
 }
 
 /* Link: {
@@ -25,14 +60,15 @@ function addLinkNodeIDs(graph){
         nodeMap[node.name[0]] = idx
     }
 
-    console.log(nodeMap)
     let links = graph.links
     console.log(links)
     for(let link of graph.links){
-	console.log(link.source, link.target)
+	if(link.source[0][-1] == '_' || link.target[0][-1] == '_'){
+	    continue
+	}
+	
         link.sourceID = nodeMap[link.source]
         link.targetID = nodeMap[link.target]
-	console.log(link.sourceID, link.targetID);
     }    
     return graph
 }
@@ -46,17 +82,18 @@ function calculateFlow(graph){
 	let nodeLabel = node.name[0];
         
 	links.forEach((link) => {
-            let linkLabel = nodes[link.sourceID].name[0];
+	    let linkLabel = nodes[link.sourceID].name[0];
 	    if(linkLabel == nodeLabel){
 		if(outGoing[linkLabel] == undefined){
 		    outGoing[linkLabel] = 0;
 		}
 		outGoing[linkLabel] += link.weight
 	    }
-        });
-        
+	    
+	});
+	
         links.forEach((link) => {
-            let linkLabel = nodes[link.targetID].name[0]
+	    let linkLabel = nodes[link.targetID].name[0]
 	    if(linkLabel == nodeLabel){
 		if(inComing[linkLabel] == undefined){
 		    inComing[linkLabel] = 0;

@@ -15,7 +15,7 @@ export default function drawNodes(graph, view){
 	.data(graph.nodes)
 	.enter().append("g")
 	.attr("class", function(d){
-	    if(d.name == "intermediate"){
+	    if(d.name == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
 		return "node intermediate";
 	    }
 	    else{
@@ -58,7 +58,8 @@ function drawRectangle(node, graph, view){
             return view.color.getColor(d);
 	})
 	.style("fill-opacity", function(d){
-	    if(d.name == "intermediate"){
+	    if(d.name == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
+//	    if(d.name == "intermediate"){
 		return '0'
 	    }
 	    else{
@@ -67,7 +68,8 @@ function drawRectangle(node, graph, view){
 	})
 	.style("shape-rendering", "crispEdges")
 	.style("stroke", function (d) {
-	    if(d.name != "intermediate"){
+	    if(d.name == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
+//	    if(d.name != "intermediate"){
 		return d3.rgb(view.color.getColor(d)).darker(2);
 	    }
 	    else{
@@ -75,7 +77,8 @@ function drawRectangle(node, graph, view){
 	    }
 	})
 	.style("stroke-width", function(d){
-	    if(d.name == "intermediate"){
+	    if(d.name == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
+//	    if(d.name == "intermediate"){
 		return 0;
 	    }
 	    else{
@@ -97,7 +100,7 @@ function drawRectangle(node, graph, view){
 	.on("mouseout", function(d) { 
 	    view.toolTipList.attr('width', '0px')
 		.attr('height', '0px')
-	    if(d.name != "intermediate"){
+	    if(d.name == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
 		d3.select(this).style("stroke-width", "1");
 //		unFade();
 	    }
@@ -202,7 +205,7 @@ function drawText(node, graph, view){
 	.attr('y', "-10")
 	.style('opacity', 1)
 	.text(function (d) {
-	    if(d.name != "intermediate"){
+	    if(d.name[0] != "intermediate" && d.name[0][d.name[0].length - 1] != '_'){
 	    	if(d.height < view.minHeightForText ) {
 	    	    return "";
 	    	}
@@ -257,7 +260,7 @@ function drawText(node, graph, view){
 	    return view.color.setContrast(view.color.getColor(d))
 	})
 	.text(function (d) {
-	    if(d.name != "intermediate"){
+	    if(d.name[0] != "intermediate" &&  d.name[0][d.name[0].length - 1] != '_'){
 	    	if(d.height < view.minHeightForText ){
 	    	    return "";
 	    	}

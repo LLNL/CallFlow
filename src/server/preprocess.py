@@ -40,7 +40,6 @@ class PreProcess():
         # Add the path information from the node object
         def add_path(self):
             self.df['path'] = self.df['node'].apply(lambda node: node.callpath)
-
             return self
 
         def _map(self, attr, ):
@@ -48,7 +47,6 @@ class PreProcess():
             for idx, row in self.df.iterrows():
                 node_df = self.state.lookup_with_node(row.node)
                 p_index = node_df['df_index'].tolist()
-                print p_index
                 p_incTime  = node_df[attr].tolist()
                 for idx in range(len(p_index)):
                     if p_index[idx] not in ret:

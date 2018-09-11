@@ -128,9 +128,11 @@ function d3sankeySingle() {
 
             if (typeof source === "number") source = link.source = nodes[link.sourceID];
             if (typeof target === "number") target = link.target = nodes[link.targetID];
-            
-            source.sourceLinks.push(link);
-            target.targetLinks.push(link);
+
+	    if(link.type != 'back_edge'){
+		source.sourceLinks.push(link);
+		target.targetLinks.push(link);
+	    }
 
             target["maxLinkVal"] = Math.max(target["maxLinkVal"], link["weight"]);
             source["maxLinkVal"] = Math.max(source["maxLinkVal"], link["weight"]);
@@ -179,7 +181,7 @@ function d3sankeySingle() {
     function findroot(){
 	let ret = []
 	nodes.forEach(function(node){
-	    if(node['id'] == 'libmonitor.so.0.0.0'){
+	    if(node['id'] == 'cpi'){
 		ret.push(node)
 	    }	    
 	})
@@ -208,7 +210,7 @@ function d3sankeySingle() {
 	    node.dx = nodeWidth
 	})
 
-	level = 5
+	level = 7
 	
         minDistanceBetweenNode = nodeWidth
 	widthScale = d3.scale.pow().domain([0,level+1]).range([minDistanceBetweenNode, size[0]])	
@@ -291,7 +293,7 @@ function d3sankeySingle() {
 		    node.y = Math.min(levelY, i)
 		    levelY = nodeHeight
                     node.parY = nodeHeight;
-		    node.height = node.weight*scale;
+		    node.height = node.value*scale*0.5;
                 });
 
                 nodes.sort(function(a,b){
@@ -300,7 +302,7 @@ function d3sankeySingle() {
             });
 
             links.forEach(function(link) {
-                link.height = link.weight*scale;
+                link.height = link.weight*scale*0.5;
             });
         }
 
