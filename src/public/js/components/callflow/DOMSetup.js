@@ -5,7 +5,6 @@ export default function DOMSetup(view){
 	        d3.event.sourceEvent.stopPropagation();
 	})
 	.on('drag', function (d, i) {
-	    console.log(d3.event.dx, d3.event.dy)
 	    d.x += d3.event.dx;
 	    d.y += d3.event.dy;
 	    d3.select(this).attr("transform", "translate(" + d.x + "," + d.y + ")");
@@ -26,7 +25,7 @@ export default function DOMSetup(view){
         .attr('width', view.width + view.margin.left + view.margin.right)
         .attr('height', view.height + view.margin.top + view.margin.bottom)
         .append('g')
-        .attr('transform', 'translate(' + view.margin.left + ',' + view.margin.top + ')')
+        .attr('transform', 'translate(' + view.margin.left + ',' + view.margin.top+ ')')
         .call(zoom)
 	.call(dragGroup)
 

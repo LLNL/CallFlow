@@ -26,7 +26,8 @@ function histogramUI(data){
 	numbOfBins : 20,
 //	brushCallBack: brushCallBack,
 //	clickCallBack: nodeClickCallBack						
-    })	
+    })
+    return histogram
 }
 
 function brushCallBack(processIDList){
@@ -47,13 +48,8 @@ function brushCallBack(processIDList){
                 myNodes.push(tempObj);
             })
 
-
-            // console.log(edgeSets["brush"]);
-
             var remapedEdgesBrushed = reMapEdges(edgeSets["brush"]);
             var remapedEdgesNonBrushed = reMapEdges(edgeSets["nonBrush"]);
-
-            // console.log(remapedEdgesBrushed);
 
             sankeyVis.changeProcessSelect({"brush": edgeSets["brush"], "nonBrush" : edgeSets["nonBrush"]});
             sankeyVis.changeProcessSelect({"brush": remapedEdgesBrushed, "nonBrush" : remapedEdgesNonBrushed});
@@ -82,7 +78,6 @@ function Histogram(args){
 	margin = args.margin || {top: 10, right: 30, bottom: 10, left: 10},
 	data = args.data,
 	numbOfBins = args.numbOfBins || 20,
-	// spinner = args.spinner,
 	brushCallBack = args.brushCallBack,
 	clickCallBack = args.clickCallBack;
 
@@ -133,8 +128,8 @@ function Histogram(args){
 	histogramHeight = boxHeight - histogramOffset;
 	this.visualize(args);
     }
-    console.log(this);
     this.visualize(args);
+    return this
 }
 
 Histogram.prototype.dataProcess = function(args, data){
@@ -160,8 +155,6 @@ Histogram.prototype.dataProcess = function(args, data){
 
     data.forEach(function(val, idx){
 	var pos = Math.floor( (val - dataMin) / dataWidth );
-	console.log(val, dataMin, dataWidth)
-	console.log(pos)
 	if(pos >= args.numbOfBins){
 	    pos = args.numbOfBins - 1;
 	}

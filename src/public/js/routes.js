@@ -117,23 +117,34 @@ function getScatter(node){
     });				
 }
 
-function getHistogramData(node){
-    $.ajax({
-	type:'GET',
-	contentType: 'application/json',
-	dataType: 'json',
-	url: '/getHistogramData',
-	data: {"df_index": node.df_index[0]},
-	success: function(histScatData){
-	    console.log('[Getter] Histogram Scatter Data: ', histScatData);
-	    let data = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
-	    scatterPlotUI(data);
-	    histogramUI(data);
-	},
-	error: function(){
-	    console.log("There was problem with getting the data for histogram and scatter plot");
-	}	
-    });	
+function getHistogramData(node, cb){    
+    if(node.df_index != undefined){
+	console.log('fetch')
+	$.ajax({
+	    type:'GET',
+	    contentType: 'application/json',
+	    dataType: 'json',
+	    url: '/getHistogramData',
+	    data: {"df_index": node.df_index[0]},
+	    success: function(histScatData){
+		if(cb){
+		    let data = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
+		    data = histogramUI(data);
+		    console.log(data)
+		    cb(data);
+		    return
+		}
+		console.log('[Getter] Histogram Scatter Data: ', histScatData);
+		let data = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
+		scatterPlotUI(data);
+		histogramUI(data);
+		return histScatData
+	    },
+	    error: function(){
+		console.log("There was problem with getting the data for histogram and scatter plot");
+	    }	
+	});	
+    }
 }
 
 export {
