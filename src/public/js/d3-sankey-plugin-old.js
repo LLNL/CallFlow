@@ -124,10 +124,15 @@ function d3sankeySingle() {
 
         links.forEach(function(link) {
             var source = link.sourceID,
-                target = link.targetID;
+		target = link.targetID;
 
-            if (typeof source === "number") source = link.source = nodes[link.sourceID];
-            if (typeof target === "number") target = link.target = nodes[link.targetID];
+	    console.log(source, target)
+	    
+	    console.log(link.sourceID, link.targetID, nodes[link.sourceID], nodes[link.targetID])
+
+	    
+            source = link.source = nodes[link.sourceID];
+            target = link.target = nodes[link.targetID];
 
 	    if(link.type != 'back_edge'){
 		source.sourceLinks.push(link);

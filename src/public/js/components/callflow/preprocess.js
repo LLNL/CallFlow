@@ -1,4 +1,4 @@
-export default function preprocess(graph){    
+export default function preprocess(graph){
     graph = c_a(graph)
     graph = addLinkNodeIDs(graph)
     graph = calculateFlow(graph)
@@ -6,24 +6,17 @@ export default function preprocess(graph){
 }
 
 function c_a(graph){
-    let nodes = graph.nodes
+    let nodes = graph.nodes    
 
-    
-    for(let node of graph.nodes){
-	if(node.name[0] == 'libmpi.so.12.0.5'){
-//	    node.level = 1
+    for(let node of nodes){
+	if(node.name == 'libpsm_infinipath.so.1.14'){
+	    node.level = 4;
 	}
-	if(node.name[0] == 'unkno'){
-	    node.level = 4
+	else if(node.name == 'libc-2.12.so'){
+	    node.level = 5;
 	}
-	if(node.name[0] == 'libpsm_infinipath.so.1.14'){
-	    node.level = 4
-	}
-	if(node.name[0] == 'libc-2.12.so'){
-	    node.level = 5
-	}
-	
     }
+    
     var nodesByBreadth = d3.nest()
 	.key(function(d) { return d.level; })
         .sortKeys(d3.ascending)
@@ -43,8 +36,9 @@ function c_a(graph){
 	});
 
     for(let link of graph.links){
+	console.log(link.type, link.source, link.target, link.weight)
 	if(link.type != 'back_edge'){
-	    console.log(link.source, link.target, link.weight)
+//	    console.log(link.source, link.target, link.weight)
 	}
     }
     
@@ -61,7 +55,6 @@ function addLinkNodeIDs(graph){
     }
 
     let links = graph.links
-    console.log(links)
     for(let link of graph.links){
 	if(link.source[0][-1] == '_' || link.target[0][-1] == '_'){
 	    continue

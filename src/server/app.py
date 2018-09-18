@@ -220,7 +220,6 @@ class App():
         # Load the graph frames from an intermediate format.
 #        self.gfs = self.create_gfs()
         
-
         # Create the callflow graph frames from graphframes given by hatchet
         self.cfgs = self.create_cfgs(self.gfs)
 

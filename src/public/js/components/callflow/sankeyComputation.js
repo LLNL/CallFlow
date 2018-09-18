@@ -12,17 +12,19 @@ export default function sankeyComputation(graph, view){
 	.links(graph.links)
 	.layout(32);
 
-    let graph_temp = buildGraph(graph.nodes, graph.links);
+    correctGraph(graph.nodes, graph.links);
+
+    console.log(graph.links[5], graph.nodes)
     
     return sankey
 }
 
-function buildGraph(nodes, edges) {
+function correctGraph(nodes, edges) {
     let temp_nodes = nodes.slice()
     let temp_edges = edges.slice()
 
     computeNodeEdges(temp_nodes, temp_edges)
-    //computeNodeBreadths(temp_nodes, temp_edges)
+    computeNodeBreadths(temp_nodes, temp_edges)
 
     for (var i = 0; i < temp_edges.length; i++) {
         let source = temp_edges[i].sourceID;
@@ -30,14 +32,15 @@ function buildGraph(nodes, edges) {
         let source_x = nodes[source].level
         let target_x = nodes[target].level
         let dx = target_x - source_x
-
+	
         // Put in intermediate steps
         for (let j = dx; 1 < j; j--) {
             let intermediate = nodes.length
             let tempNode = {
                 sankeyID: intermediate,
                 name: "intermediate",
-//                runTime: nodes[i].runTime
+                weight: nodes[i].weight,
+		height: nodes[i].value
             }
             nodes.push(tempNode)
             edges.push({
@@ -49,7 +52,7 @@ function buildGraph(nodes, edges) {
                 edges[i].original_target = target
                 edges[i].last_leg_source = intermediate
             }
-            edges[i].target = intermediate
+//            edges[i].target = tempNode
         }
     }
 
@@ -65,8 +68,8 @@ function computeNodeEdges(nodes, links) {
         node.targetLinks = [];
     });
     links.forEach(function(link) {
-        var source = link.sourceID,
-		    target = link.targetID;
+        let source = link.sourceID,
+	    target = link.targetID;
         nodes[source].sourceLinks.push(link);
         nodes[target].targetLinks.push(link);
     });
@@ -79,12 +82,9 @@ function computeNodeEdges(nodes, links) {
 // nodes with no outgoing links are assigned the maximum breadth.
 function computeNodeBreadths(nodes,links) {
     var remainingNodes = nodes.map(function(d) { return d})
-    console.log(remainingNodes)
     var nextNodes
     var x = 0
-    console.log(nodes)
     while (remainingNodes.length) {
-	console.log('a')
         nextNodes = [];
         remainingNodes.forEach(function(node) {
             node.sourceLinks.forEach(function(link) {

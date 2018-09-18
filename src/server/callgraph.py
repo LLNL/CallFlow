@@ -24,19 +24,11 @@ class CallGraph(nx.Graph):
         self.df = self.state.df
         self.root = state.lookup_with_node(self.graph.roots[0])['vis_node_name'][0]
         
-
-        self.root = self.state.lookup(self.graph.roots[0].df_index).name[0]
-        self.rootRunTimeInc = self.get_root_runtime_Inc()
-        self.edge_direction = {}
-        
+        self.rootRunTimeInc = self.root_runtime_inc()
+        self.edge_direction = {}        
         self.g = nx.DiGraph(rootRunTimeInc = self.rootRunTimeInc)       
         
-        for idx, row in self.df.iterrows():
-            if row.show_node:
-                self.g.add_path(row[path_name])
-                
-        self.is_tree = nx.is_tree(self.g)
-        
+        self.add_paths(path_name)
         self.add_node_attributes()
         self.add_edge_attributes()
 
@@ -45,8 +37,18 @@ class CallGraph(nx.Graph):
 
         log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
         log.warn("Edges in the tree: {0}".format(len(self.g.edges)))
-        log.warn("Is it a tree? : {0}".format(self.is_tree))       
+        log.warn("Is it a tree? : {0}".format(nx.is_tree(self.g)))    
         log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
+
+    def root_runtime_inc(self):
+        root = self.graph.roots[0]
+        root_metrics = self.state.lookup(root.df_index)
+        return root_metrics['CPUTIME (usec) (I)'].max()
+    
+    def add_paths(self, path_name):
+        for idx, row in self.df.iterrows():
+            if row.show_node:
+                self.g.add_path(row[path_name])                
 
     def add_node_attributes(self):        
 #        module_mapping = self.create_module_map(self.g.nodes(), 'module')
@@ -60,16 +62,16 @@ class CallGraph(nx.Graph):
 #        nx.set_node_attributes(self.g, name='type', values=type_mapping)
 #        nx.set_node_attributes(self.g, name='children', values=children_mapping)
 
-        time_mapping = self.create_module_map(self.g.nodes(), 'CPUTIME (usec) (I)')
+        time_mapping = self.generic_map(self.g.nodes(), 'CPUTIME (usec) (I)')
         nx.set_node_attributes(self.g, name='weight', values=time_mapping)
 
-        name_mapping = self.create_module_map(self.g.nodes(), 'vis_node_name')
+        name_mapping = self.generic_map(self.g.nodes(), 'vis_node_name')
         nx.set_node_attributes(self.g, name='name', values=name_mapping)
 
-        type_mapping = self.create_module_map(self.g.nodes(), 'type')
+        type_mapping = self.generic_map(self.g.nodes(), 'type')
         nx.set_node_attributes(self.g, name='type', values=type_mapping)
         
-        df_index_mapping = self.create_module_map(self.g.nodes(), 'df_index')
+        df_index_mapping = self.generic_map(self.g.nodes(), 'df_index')
         nx.set_node_attributes(self.g, name='df_index', values=df_index_mapping)
         
         self.level_mapping = self.assign_levels()               
@@ -77,19 +79,33 @@ class CallGraph(nx.Graph):
 
 #        self.find_bridge_nodes()
         
-    def add_edge_attributes(self):
-        capacity_mapping = self.calculate_flows(self.g)
-        type_mapping = self.edge_type(self.g)
-        flow_mapping = self.flow_map()
-        nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)
-        nx.set_edge_attributes(self.g, name='type', values=type_mapping)
-        nx.set_edge_attributes(self.g, name='flow', values=flow_mapping)
+    def generic_map(self, nodes, attr):
+        ret = {}
+        for node in nodes:            
+            # For back edges, name = 'backedge', weight = -1
+            if node.endswith('_'):
+                if attr == 'vis_node_name':
+                    ret[node] = [node]
+                    continue
+                if attr == 'CPUTIME (usec) (I)':
+                    ret[node] = self.df[self.df['vis_node_name'] == node[:-1]][attr].max().tolist()
+                    continue
+                if attr == 'node_type':
+                    ret[node] = 'back_edge'
+                    continue
+            
+            if attr == 'CPUTIME (usec) (I)':
+                if len(self.df[self.df['vis_node_name'] == node][attr]) != 0:
+                    ret[node] =  self.df[self.df['vis_node_name'] == node][attr].max().tolist()
+                else:
+                    ret[node] = 0
+            elif attr == 'node_type':
+                ret[node] = 'normal_edge'
+            else:
+                ret[node] =  list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
+        return ret
+
         
-    def get_root_runtime_Inc(self):
-        root = self.graph.roots[0]
-        root_metrics = self.state.lookup(root.df_index)
-        return root_metrics['CPUTIME (usec) (I)'].max()
-             
     def tailhead(self, edge):
         return edge[0], edge[1]
 
@@ -101,45 +117,7 @@ class CallGraph(nx.Graph):
             yield e + ('forward',)            
 
     def edge_id(self, edge):
-        return edge[:-1] 
-    
-    def hierarchy_level1(self):
-        level = {}
-        level[self.root] = 0
-        nodes = self.g.nbunch_iter(self.root)
-
-        v_nodes = set()
-        v_edges = set()
-        edges = {}
-        
-        for start_node in nodes:
-            seen = [start_node]
-            active_nodes = {start_node}
-
-            level = 0
-            while seen:
-                curr_node = seen[-1]
-                if curr_node not in v_nodes:
-                    edges[curr_node] = self.edges_from(curr_node)
-                    v_nodes.add(curr_node)
-
-                try:
-                    edge = next(edges[curr_node])
-                    if edge[-1] == 'forward':
-                        print 'level up', edge[0], edge[1]
-#                        level[edge[1]] = level[edge[0]] + 1                        
-                except StopIteration:
-                    seen.pop()
-                    level = 0
-                else:
-                    edgeid = self.edge_id(edge)
-                    if edgeid not in v_edges:
-                        v_edges.add(edgeid)
-                        if edge[-1] == 'reverse':
-                            seen.append(edge[0])
-                        else:
-                            seen.append(edge[1])                
-        return level
+        return edge[:-1]     
 
     def assign_levels(self):
         levelMap = {}
@@ -158,9 +136,10 @@ class CallGraph(nx.Graph):
                 
                 if head != start_node:
                     active_nodes.append(head)
-                
+
+                # if cycle is found 
                 if head in active_nodes and head != start_node and tail in active_nodes:
-                    print 'Cycle found', head, tail
+                    log.warn('Cycle found : {0} <====> {1}'.format(head, tail))
                     self.edge_direction[(head, tail+'_')] = 'back_edge'
                     edge_data = self.g.get_edge_data(*edge)
                     self.g.add_node(tail+'_')
@@ -169,25 +148,21 @@ class CallGraph(nx.Graph):
                     self.g.node[tail+'_']['weight'] = self.g.node[tail]['weight']
                     self.g.remove_edge(*edge)
                     levelMap[tail+'_'] = track_level + 1
+                    print levelMap[tail+'_']
                     continue
                 else:
                     self.edge_direction[(head, tail)] = 'forward_edge'
-                    levelMap[tail] = levelMap[head] +  1
+                    levelMap[tail] = levelMap[head] +  1                    
                     track_level += 1
+                    log.warn("level for {0}: {1}".format(tail, levelMap[tail]))
 
                 # Since dfs, set level = 0 when head is the start_node. 
                 if head == start_node:
                     active_nodes = [start_node]
-                    track_level = 0                    
+                    track_level = 0
+
         return levelMap
 
-    def find_bridge_nodes(self):
-        chains = nx.chain_decomposition(self.g.to_undirected(), root=self.root)
-        print next(chains)
-        chain_edges = set(chain.from_iterable(chains))
-        for u, v in G.edges():
-            if (u, v) not in chain_edges and (v, u) not in chain_edges:
-                print  u, v
         
     def flow_map(self):
         flowMap = {}
@@ -216,68 +191,14 @@ class CallGraph(nx.Graph):
                 print flowMap[edge]
         return flowMap
                                 
-    def check_and_retain_cycles(self, allow_level):
-        temp = {}
-        if not self.is_tree:
-            cycles = self.find_cycle()
-            print nx.convert_node_labels_to_integers(self.g)
-            log.info("Renaming the cycles upto a certain level")
-            print cycles
-            for cycle in cycles:
-                if cycle[0] not in temp:
-                    temp[cycle[0]] = 0
-                if cycle[1] not in temp:
-                    temp[cycle[1]] = 0
+    def add_edge_attributes(self):
+        capacity_mapping = self.calculate_flows(self.g)
+        type_mapping = self.edge_type(self.g)
+        flow_mapping = self.flow_map()
+        nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)
+        nx.set_edge_attributes(self.g, name='type', values=type_mapping)
+        nx.set_edge_attributes(self.g, name='flow', values=flow_mapping)
 
-                temp[cycle[0]] += 1
-                temp[cycle[1]] += 1
-
-                    
-                if cycle[0] == cycle[1]:
-                    temp_src_trgt = (cycle[0], cycle[1]+'_')
-                    self.g.add_edge(*temp_src_trgt)
-                    self.g.remove_edge(*cycle)
-                    break
-                
-                if temp[cycle[0]] > allow_level:
-                    temp_src_trgt = (cycle[0], cycle[1]+'_')                    
-                    print "adding {0} : {1}".format(temp_src_trgt[0], temp_src_trgt[1])
-                    self.g.add_node(cycle[1]+'_')
-                    self.g.add_edge(*temp_src_trgt)
-                    self.g.remove_edge(cycle[0], cycle[1])
-                elif temp[cycle[1]] > allow_level:
-                    temp_src_trgt = (cycle[0] + '_', cycle[1])
-                    print "adding {0} : {1}".format(temp_src_trgt[0], temp_src_trgt[1])
-                    self.g.add_node(cycle[0]+'_')
-                    self.g.add_edge(*temp_src_trgt)
-                    self.g.remove_edge(cycle[0], cycle[1])
-                    
-                
-    def create_module_map(self, nodes, attr):
-        ret = {}
-        for node in nodes:            
-            # For back edges, name = 'backedge', weight = -1
-            if node.endswith('_'):
-                if attr == 'vis_node_name':
-                    ret[node] = [node]
-                    continue
-                if attr == 'CPUTIME (usec) (I)':
-                    ret[node] = self.df[self.df['vis_node_name'] == node[:-1]][attr].max().tolist()
-                    continue
-                if attr == 'node_type':
-                    ret[node] = 'back_edge'
-                    continue
-            
-            if attr == 'CPUTIME (usec) (I)':
-                if len(self.df[self.df['vis_node_name'] == node][attr]) != 0:
-                    ret[node] =  self.df[self.df['vis_node_name'] == node][attr].max().tolist()
-                else:
-                    ret[node] = 0
-            elif attr == 'node_type':
-                ret[node] = 'normal_edge'
-            else:
-                ret[node] =  list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
-        return ret
 
     def draw_tree(self, g):
         subtrees = {node: ete3.Tree(name = node) for node in g.nodes()}
