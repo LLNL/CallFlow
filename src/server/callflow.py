@@ -36,25 +36,26 @@ class CallFlow:
         self.state.df = self.preprocess.df
         self.state.map = self.preprocess.map
 
+
         # Need to make it an observable. When the root changes the application
         # updates to the call graph from that node as the root. 
         self.state.root = None
 
-        #self.update('default')
-        self.update('groupBy')
-        
+#        self.default_g = self.update('default', [])
+        self.update('groupBy', [])
 
-    def update(self, action):        
+    def update(self, action, attr):        
         if action == 'default':
             nx = CallGraph(self.state, 'path')                
         elif action == "groupBy":
             groupBy(self.state, 'module')
             nx = CallGraph(self.state, 'group_path')
         elif action == "split-callee":
-            splitCallee(self.gf, split_node)
+            splitCallee(self.state, attr)
         elif action == "split-caller":
             splitCaller(self.gf, split_node)
 
         self.cfg = json_graph.node_link_data(nx.g)
-                                
+
+        return nx.get_graph()
         

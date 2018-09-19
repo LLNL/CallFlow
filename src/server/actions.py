@@ -123,25 +123,25 @@ class groupBy:
         state.update_df('component_path', component_path)
         state.update_df('show_node', is_entry_func)
         state.update_df('vis_node_name', node_name)
+
+
+class splitCallee:
+    def __init__(self, state, df_index):
+        self.graph = state.graph
+        self.df = state.df
+        self.df_index = df_index
+        self.entry_funcs = {}
+        self.run(state)
         
+    def run(self, state):    
+        print state.lookup_with_df_index(self.df_index)
+        ret = {}
+        return ret
+
 def splitCaller(df, node):
     show_node_map = {}
     children_of_node = df[df['node'] == node].children
     for nod in children_of_node:
         show_node_map[node] = True
 
-    utils.update_df(df, 'show_node', show_node_map)
-
-def splitCallee(df, node):
-    ret = {}
-    return retx
-
-def bfs(self, gf):
-    visited, queue = set(), gf.graph.roots[0]
-    while queue:
-        node = queue.pop(0)
-        if node not in visited:
-            visited.add(vertex)
-#                queue.extend()
-
-        
+        utils.update_df(df, 'show_node', show_node_map)

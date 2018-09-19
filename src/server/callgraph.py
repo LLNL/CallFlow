@@ -27,18 +27,21 @@ class CallGraph(nx.Graph):
         self.rootRunTimeInc = self.root_runtime_inc()
         self.edge_direction = {}        
         self.g = nx.DiGraph(rootRunTimeInc = self.rootRunTimeInc)       
-        
+
         self.add_paths(path_name)
         self.add_node_attributes()
         self.add_edge_attributes()
 
-        print("Nodes", self.g.nodes(data=True))
-        print("Edges", self.g.edges(data=True))
+#        print("Nodes", self.g.nodes(data=True))
+#        print("Edges", self.g.edges(data=True))
 
         log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
         log.warn("Edges in the tree: {0}".format(len(self.g.edges)))
         log.warn("Is it a tree? : {0}".format(nx.is_tree(self.g)))    
         log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
+
+    def get_graph(self):
+        return self.g
 
     def root_runtime_inc(self):
         root = self.graph.roots[0]
@@ -54,13 +57,11 @@ class CallGraph(nx.Graph):
 #        module_mapping = self.create_module_map(self.g.nodes(), 'module')
 #        file_mapping = self.create_module_map(self.g.nodes(), 'file')
 #        type_mapping = self.create_module_map(self.g.nodes(), 'type')
-#        children_mapping = self.immediate_children(g)
 #        children_mapping = self.create_module_map(self.g.nodes(), 'children')
 
 #        nx.set_node_attributes(self.g, name='module', values=module_mapping)
 #        nx.set_node_attributes(self.g, name='file', values=file_mapping)
 #        nx.set_node_attributes(self.g, name='type', values=type_mapping)
-#        nx.set_node_attributes(self.g, name='children', values=children_mapping)
 
         time_mapping = self.generic_map(self.g.nodes(), 'CPUTIME (usec) (I)')
         nx.set_node_attributes(self.g, name='weight', values=time_mapping)
@@ -77,7 +78,10 @@ class CallGraph(nx.Graph):
         self.level_mapping = self.assign_levels()               
         nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
 
-#        self.find_bridge_nodes()
+        children_mapping = self.immediate_children()
+        nx.set_node_attributes(self.g, name='children', values=children_mapping)
+
+        #        self.find_bridge_nodes()
         
     def generic_map(self, nodes, attr):
         ret = {}
@@ -117,7 +121,7 @@ class CallGraph(nx.Graph):
             yield e + ('forward',)            
 
     def edge_id(self, edge):
-        return edge[:-1]     
+        return edge[:-1]
 
     def assign_levels(self):
         levelMap = {}
@@ -211,10 +215,10 @@ class CallGraph(nx.Graph):
         return set(sum(([vv for vv in v if graph.out_degree(vv) == 0]
                     for k, v in nx.dfs_successors(graph, node).items()), []))
 
-    def immediate_children(self, graph):
+    def immediate_children(self):
         ret = {}
-        parentChildMap = nx.dfs_successors(graph, self.graph.roots[0])
-        nodes = graph.nodes()
+        parentChildMap = nx.dfs_successors(self.g, self.root)
+        nodes = self.g.nodes()
         for node in nodes:
             if node in parentChildMap.keys():
                 ret[node] =  parentChildMap[node]

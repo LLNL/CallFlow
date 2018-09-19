@@ -147,10 +147,29 @@ function getHistogramData(node, cb){
     }
 }
 
+function getFunctionLists(node, cb){
+    if (node.df_index != undefined){
+	$.ajax({
+	    type:'GET',
+	    contentType: 'application/json',
+	    dataType: 'json',
+	    url: '/getFunctionLists',
+	    data: {"df_index": node.df_index[0]},
+	    success: function(histScatData){
+	    },
+	    error: function(){
+		console.log("There was problem with getting the data for histogram and scatter plot");
+	    }
+	})
+    }
+}
+
 export {
     getDataMaps,
     getNodeMetrics,
     getSankey,
     getConfigFile,    
-    getHistogramData
+    getHistogramData,
+    getFunctionLists
+    
 }

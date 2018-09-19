@@ -144,12 +144,9 @@ class App():
             filter_gf = filter_gf.graft()
             log.info("[Graft] {1} nodes left (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
             fgfs.append(filter_gf)
-
         if write:
-            self.write_gfs(fgfs)
-            
+            self.write_gfs(fgfs)            
         return fgfs
-
 
     # Display stats 
     def display_stats(self):
@@ -216,6 +213,11 @@ class App():
                         "exc": dataMap['excTime'][key]
                         })
 
+        @app.route('/getFunctionLists')
+        def getFunctionLists():
+            df_index = int(request.args.get('df_index'))
+            self.callflow.update('split-callee', df_index)
+            
     def launch_webapp(self):
         # Load the graph frames from an intermediate format.
 #        self.gfs = self.create_gfs()

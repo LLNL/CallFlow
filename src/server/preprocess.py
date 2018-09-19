@@ -114,14 +114,15 @@ class PreProcess():
                     if root.parent not in callees:
                         callees[root.parent] = []
                     
-                    callees[root.parent].append(root.df_index)
+                    callees[root.parent].append(root)
             except StopIteration:
                 pass
             finally:
                 del root
 
 #            self.map['callees'] = callees
-            self.df['callees'] = self.df['node'].apply(lambda node: callees[node] if node in callees else [])            
+            self.df['callees'] = self.df['node'].apply(lambda node: callees[node] if node in callees else [])
+            self.df['callers'] = self.df['node'].apply(lambda node: callers[node] if node in callers else [])
 
             return self
         
