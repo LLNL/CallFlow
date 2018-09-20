@@ -1,4 +1,4 @@
-export default function nodeSize(){
+export default function nodeSize(view){
     let rangeLabel = $("<label>").text('Set Node size');
     $('#control').append(rangeLabel);
 

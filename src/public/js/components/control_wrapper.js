@@ -6,13 +6,12 @@ import colorLegend from './control/colorLegend'
 import groupBy from './control/groupBy'
 
 export default class ControlUI {
-    constructor() {
-        let colorLegendOption = 0
-        colorLegend(colorLegendOption)
-        showName()
-	groupBy()
-        colorBy()
-        range()
-        nodeSize()
+    constructor(graph, view) {
+//        colorLegend(view.colorOption)
+        showName(view)
+	groupBy(view)
+        colorBy(graph, view)
+        range(view)
+        nodeSize(view)
     }
 }

@@ -1,11 +1,12 @@
 export default class Color {
-    constructor(scale) {
+    constructor(view, scale) {
+	console.log(view)
+	this.view = view
         this.colorScale = scale || d3.scale.category20()
         this.incColorScale = null
         this.excColorScale = null
         this.nRangeColorScale = null
-        this.diffColorScale = null
-        this.colorOption = 1
+        this.diffColorScale = null   
         this.colors = ["red", "green", "yellow", "blue", "black", "white"]
     }
 
@@ -34,14 +35,11 @@ export default class Color {
 
 	this.diffColorScale = chroma.scale('RdYlBu').domain([-1, 1]);
     }
-
-    getColor(node, colorOption){
-        if(colorOption == undefined){
-            colorOption = 1
-        }
+    
+    getColor(node){
+	let colorOption = this.view.colorOption
 	if(colorOption == 0){
-	    return this.colorScale(node.name.replace(/ .*/, ""));
-	    // return color(node["specialID"]);
+	    return this.colorScale(node.name[0].replace(/ .*/, ""));
 	}
 	else if(colorOption == 1){
 	    return this.incColorScale(node.weight);

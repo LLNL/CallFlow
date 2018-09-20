@@ -5,6 +5,7 @@ import drawEdges from './callflow/edges.js'
 import drawNodes from './callflow/nodes.js'
 import drawHistogram from './callflow/histogram.js'
 import Color from './callflow/color.js'
+import ControlUI from './control_wrapper.js'
 
 export default class CallFlow{
     constructor(graph, prop) {
@@ -31,14 +32,20 @@ export default class CallFlow{
         this.graph = preprocess(this.graph)
         this.view = DOMSetup(this.view)
         this.view.sankey = sankeyComputation(this.graph, this.view)
+	this.view.colorOption = 1
+	this.view.color = new Color(this.view)
+	this.view.color.setColorScale(this.graph.stat.minInc, this.graph.stat.maxInc, this.graph.stat.minExc, this.graph.stat.maxExc)
         this.render()
+	let controlUI =  new ControlUI(this.graph, this.view)
     }
 }
 
 CallFlow.prototype.render = function(){
-    this.view.color = new Color()
-    this.view.color.setColorScale(this.graph.stat.minInc, this.graph.stat.maxInc, this.graph.stat.minExc, this.graph.stat.maxExc)
     drawNodes(this.graph, this.view)
     drawEdges(this.graph, this.view)
     drawHistogram(this.graph, this.view)
+}
+
+CallFlow.prototype.clear = function(){
+    $('#procedure_view').empty()
 }

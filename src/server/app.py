@@ -205,6 +205,7 @@ class App():
             dataMap = self.callflow.state.map
 
             for key in dataMap['incTime'].keys():
+                print 'Key', key
                 if key == df_index:
                     return jsonify({
                         "inc": dataMap['incTime'][key],
@@ -220,6 +221,9 @@ class App():
         # Load the graph frames from an intermediate format.
 #        self.gfs = self.create_gfs()
 
+        # Create the callflow graph frames from graphframes given by hatchet
+        self.cfgs = self.create_cfgs(self.gfs, 'module')
+        
         # Launch the flask app
         app.run(debug = self.debug, use_reloader=True)
 

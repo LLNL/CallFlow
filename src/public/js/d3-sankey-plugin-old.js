@@ -126,9 +126,9 @@ function d3sankeySingle() {
             var source = link.sourceID,
 		target = link.targetID;
 
-	    console.log(source, target)
+//	    console.log(source, target)
 	    
-	    console.log(link.sourceID, link.targetID, nodes[link.sourceID], nodes[link.targetID])
+//	    console.log(link.sourceID, link.targetID, nodes[link.sourceID], nodes[link.targetID])
 
 	    
             source = link.source = nodes[link.sourceID];

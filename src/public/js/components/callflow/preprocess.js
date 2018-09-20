@@ -1,8 +1,30 @@
 export default function preprocess(graph){
+    graph = cleanGraph(graph)
     graph = c_a(graph)
     graph = addLinkNodeIDs(graph)
     graph = calculateFlow(graph)
     return graph
+}
+
+function cleanGraph(graph){
+    let new_nodes = []
+    let new_links = []
+    for(let node of graph.nodes){
+	if(node.name == 'intermediate'){
+	    new_nodes.push(node)
+	}
+    }
+
+    for(let link of graph.links){
+	if(link.name == 'intermediate'){
+	    new_links.push(link)
+	}
+    }
+
+    return {
+	nodes : new_nodes,
+	links : new_links
+    }
 }
 
 function c_a(graph){
@@ -34,13 +56,7 @@ function c_a(graph){
 	    }
 	    return map	    
 	});
-
-    for(let link of graph.links){
-	console.log(link.type, link.source, link.target, link.weight)
-	if(link.type != 'back_edge'){
-//	    console.log(link.source, link.target, link.weight)
-	}
-    }
+    
     
     return graph
 }
@@ -147,7 +163,6 @@ function calcStat(graph, inTime, exTime){
 	graph.stat.maxExc = Math.max(graph.stat.maxExc, data.out)
     })    
 }
-
 
 function resetStat(){
     let stat = {}
