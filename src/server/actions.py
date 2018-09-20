@@ -22,15 +22,14 @@ class groupBy:
         self.entry_funcs = {}
         self.run(state)
 
-    
     def create_group_path(self, path, state):
         group_path = []
         temp = None
         for i, elem in enumerate(path):
-            module = state.lookup_with_vis_nodeName(elem).module[0]
-            if temp == None or module != temp:
-                group_path.append(module)
-                temp = module
+            grouping = state.lookup_with_vis_nodeName(elem)[self.attr][0]
+            if temp == None or grouping != temp:
+                group_path.append(grouping)
+                temp = grouping
         return tuple(group_path)
 
     def find_a_good_node_name(self, node, attr, state):

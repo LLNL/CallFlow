@@ -21,8 +21,8 @@ Vis.prototype.init = function() {
 //    let histogram = new Histogram()
 
     let self = this
+    getSankey('module');
     getDataMaps(this.getDataMaps_callback);
-    getSankey(this.getSankey_callback);
 
     spinner.stop();    
 }
@@ -31,21 +31,6 @@ Vis.prototype.getDataMaps_callback = function(data){
     console.log(data);    
 }
 
-Vis.prototype.getSankey_callback = function(data){
-    data = JSON.parse(data)
-    if(self.debug){
-        console.log('[Vis] Sankey information :', data)
-    }
-    self.graphs = data
-    
-    let prop = {
-        ID: '#procedure_view',
-        width : Math.max(1000, $('#procedure_view').height()),
-        height : $('#procedure_view').height(),
-    }
-    let callFlow = new CallFlow(self.graphs[0], prop)
-    let configJSON = new ConfigJSON();
-}
 
 Vis.prototype.update = function(){
     let spinner = spinnerWrapper(this.target)

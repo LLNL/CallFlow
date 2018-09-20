@@ -184,16 +184,15 @@ class App():
         
         @app.route('/getSankey')
         def getSankey():
-            print type(self.cfgs)
+            group_by_attr = str(request.args.get('group_by'))
+            
+            # Create the callflow graph frames from graphframes given by hatchet
+            self.cfgs = self.create_cfgs(self.gfs, group_by_attr)
             return json.dumps(self.cfgs)
 
         @app.route('/getMaps')
         def getMaps():
             return json.dumps(self.callflow.state.map)
-
-        @app.route('/groupBy')
-        def groupBy():
-            return jsonify()
 
         @app.route('/split')
         def configFile(json):
@@ -207,7 +206,6 @@ class App():
 
             for key in dataMap['incTime'].keys():
                 if key == df_index:
-                    print "Matched index ", key
                     return jsonify({
                         "inc": dataMap['incTime'][key],
                         "exc": dataMap['excTime'][key]
@@ -221,9 +219,6 @@ class App():
     def launch_webapp(self):
         # Load the graph frames from an intermediate format.
 #        self.gfs = self.create_gfs()
-        
-        # Create the callflow graph frames from graphframes given by hatchet
-        self.cfgs = self.create_cfgs(self.gfs)
 
         # Launch the flask app
         app.run(debug = self.debug, use_reloader=True)
@@ -232,10 +227,11 @@ class App():
         return 0
         
     # Loops through the graphframes and creates callflow graph format
-    def create_cfgs(self, gfs):        
+    def create_cfgs(self, gfs, group_by_attr):        
         ret = []
         for idx, gf in enumerate(gfs):
             self.callflow = CallFlow(gf)
+            self.callflow.update('groupBy', group_by_attr)
             ret.append(self.callflow.cfg)
         return ret
   

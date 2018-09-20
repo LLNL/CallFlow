@@ -42,13 +42,12 @@ class CallFlow:
         self.state.root = None
 
 #        self.default_g = self.update('default', [])
-        self.update('groupBy', [])
 
     def update(self, action, attr):        
         if action == 'default':
             nx = CallGraph(self.state, 'path')                
         elif action == "groupBy":
-            groupBy(self.state, 'module')
+            groupBy(self.state, attr)
             nx = CallGraph(self.state, 'group_path')
         elif action == "split-callee":
             splitCallee(self.state, attr)

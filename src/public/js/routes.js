@@ -1,6 +1,38 @@
 import histogramUI from './components/histogram'
 import scatterPlotUI from './components/scatterPlot'
+import CallFlow from './components/callflow_wrapper'
+import ConfigJSON from './components/ConfigJSON'
 
+
+function getSankey(attr){
+    console.log('Grouping by', attr)
+    $.ajax({
+	type: "GET",
+	contentType: "application/json",
+	url: '/getSankey',
+	data: { 'group_by': attr }, 
+	success: function(data){
+	    $('#procedure_view').empty()
+	    data = JSON.parse(data)
+	    if(self.debug){
+		console.log('[Vis] Sankey information :', data)
+	    }
+	    self.graphs = data
+	    
+	    let prop = {
+		ID: '#procedure_view',
+		width : Math.max(1000, $('#procedure_view').height()),
+		height : $('#procedure_view').height(),
+	    }
+	    let callFlow = new CallFlow(self.graphs[0], prop)
+	    let configJSON = new ConfigJSON();
+
+	},
+	error: function(err){
+	    console.log(err);
+	}
+    })
+}
 
 function getConfigFile(filename, cb){
     $.ajax({
@@ -56,18 +88,6 @@ function getNodeMetrics(cb){
             console.log("There was problem with getting the metric data");
         }	
     });				
-}
-
-function getSankey(cb){
-    $.ajax({
-	type: "GET",
-	contentType: "application/json",
-	url: '/getSankey',
-	success: cb,
-	error: function(err){
-	    console.log(err);
-	}
-    })
 }
 
 function getList(node){
@@ -162,7 +182,7 @@ function getFunctionLists(node, cb){
 	    }
 	})
     }
-}
+} 
 
 export {
     getDataMaps,
