@@ -13,7 +13,8 @@
             "files" : ["../src/mpi/"],
             "functions" : []
         }
-    }
+    },
+    "nop": "100"
 }
 
 

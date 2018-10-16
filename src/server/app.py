@@ -92,7 +92,7 @@ class App():
             path = os.path.abspath(os.path.join(self.callflow_path, path))
             gf = GraphFrame()
             if self.gfs_format[idx] == 'hpctoolkit':
-                gf.from_hpctoolkit(path)
+                gf.from_hpctoolkit(path, int(self.config.nop))
             elif self.gfs_format[idx] == 'caliper':                
                 gf.from_caliper(path)
             ret.append(gf)
@@ -142,6 +142,7 @@ class App():
             log.info("Graftin......")
             t = time.time()
             filter_gf = filter_gf.graft()
+            print(filter_gf.dataframe.shape)
             log.info("[Graft] {1} nodes left (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
             fgfs.append(filter_gf)
         if write:
@@ -205,7 +206,7 @@ class App():
             dataMap = self.callflow.state.map
 
             for key in dataMap['incTime'].keys():
-                print 'Key', key
+                print('Key', key)
                 if key == df_index:
                     return jsonify({
                         "inc": dataMap['incTime'][key],

@@ -107,7 +107,7 @@ class groupBy:
                 group_path[tnode] = self.create_group_path(tpath, state)
                 component_path[tnode] = self.create_component_path(tpath, group_path[tnode], state)
 
-                # print "is entry function:", is_entry_func[tnode]
+                # print("is entry function:", is_entry_func[tnode])
                 # print "entry functions: ", self.entry_funcs[t.module[0]]
                 # print "node path: ", tpath                
                 # print "group path: ", group_path[tnode]
@@ -133,7 +133,7 @@ class splitCallee:
         self.run(state)
         
     def run(self, state):    
-        print state.lookup_with_df_index(self.df_index)
+        print(state.lookup_with_df_index(self.df_index))
         ret = {}
         return ret
 
@@ -142,5 +142,4 @@ def splitCaller(df, node):
     children_of_node = df[df['node'] == node].children
     for nod in children_of_node:
         show_node_map[node] = True
-
         utils.update_df(df, 'show_node', show_node_map)

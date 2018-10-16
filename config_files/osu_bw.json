@@ -3,7 +3,8 @@
     "path" : ["./data/hpctoolkit-osu_bw"],
     "format" : ["hpctoolkit"],
     "props": {
-    }
+    },
+    "nop": 3
 }
 
 

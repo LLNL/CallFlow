@@ -28,6 +28,7 @@ class configFileReader():
         self.format = self.data['format'] if 'format' in self.data.keys() else None
         self.fnMap = self.getFuncMap()
         self.fileMap = self.getFileMap()
+        self.nop = self.data['nop']
         
     # File map from the config file
     def getFileMap(self):

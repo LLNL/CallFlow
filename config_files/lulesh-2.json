@@ -3,5 +3,6 @@
     "path" : ["./data/hpctoolkit-lulesh-2"],
     "format" : ["hpctoolkit"],
     "props": {
-    }
+    },
+    "nop": 3
 }
