@@ -205,7 +205,6 @@ class App():
             dataMap = self.callflow.state.map
 
             for key in dataMap['incTime'].keys():
-                print 'Key', key
                 if key == df_index:
                     return jsonify({
                         "inc": dataMap['incTime'][key],
@@ -227,9 +226,6 @@ class App():
         # Launch the flask app
         app.run(debug = self.debug, use_reloader=True)
 
-    def load_gfs(self):
-        return 0
-        
     # Loops through the graphframes and creates callflow graph format
     def create_cfgs(self, gfs, group_by_attr):        
         ret = []

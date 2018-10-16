@@ -1,4 +1,6 @@
-import { start } from './../app'
+import { start, App } from './../app'
+
+var app_global
 
 //configuration for the layout of the page
 let config = {
@@ -137,6 +139,7 @@ export default class Layout {
     constructor(cb){
         setMainContainerBox()
         this.layout = new GoldenLayout( config , $("#main_container"));
+	
         this.ids = []
         
         self = this
@@ -147,7 +150,7 @@ export default class Layout {
         
         this.layout.on("initialised", function (){
             self.update();
-            start()
+	    self.app = new App()
         });
 
         this.layout.on('stateChanged', function(component){

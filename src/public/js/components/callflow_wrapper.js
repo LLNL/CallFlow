@@ -17,7 +17,8 @@ export default class CallFlow{
         this.view.minHeightForText = 10
         this.view.margin = prop.margin || { top: 100, right: 30, bottom: 10, left: 10 }
         this.view.width = (prop.width || 900) - this.view.margin.left - this.view.margin.right
-        this.view.height = prop.height || 900 - this.view.margin.top - this.view.margin.bottom        
+        this.view.height = (prop.height || 900) - this.view.margin.top - this.view.margin.bottom
+	this.view.treeHeight = 
         this.view.transitionDuration = 1000
         this.view.color = null
         
@@ -48,4 +49,10 @@ CallFlow.prototype.render = function(){
 
 CallFlow.prototype.clear = function(){
     $('#procedure_view').empty()
+}
+
+CallFlow.prototype.update = function(){
+    this.refresh = true
+    this.graph = preprocess(this.graph, this.refresh)
+    this.render()
 }

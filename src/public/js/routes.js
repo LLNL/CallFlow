@@ -2,18 +2,27 @@ import histogramUI from './components/histogram'
 import scatterPlotUI from './components/scatterPlot'
 import CallFlow from './components/callflow_wrapper'
 import ConfigJSON from './components/ConfigJSON'
-
+import { App, layout } from './app'
 
 function getSankey(attr, cb){
-    $.ajax({
-	type: "GET",
-	contentType: "application/json",
-	url: '/getSankey',
-	data: { 'group_by': attr }, 
-	success: cb,
-	error: function(err){
-	    console.log(err);
-	}
+    return new Promise( (resolve, reject) => {
+	$.ajax({
+	    type: "GET",
+	    contentType: "application/json",
+	    url: '/getSankey',
+	    data: { 'group_by': attr }, 
+	    success: (data) => {
+		data = JSON.parse(data)
+		if(self.debug){
+		    console.log('[Vis] Sankey information :', data)
+		}
+		resolve(data[0])
+	    },
+	    error: function(err){
+		console.log(err);
+		reject();
+	    }
+	})
     })
 }
 
@@ -32,18 +41,20 @@ function getConfigFile(filename, cb){
 }
 
 function getDataMaps(){
-    $.ajax({
-	type:'GET',
-	contentType: 'applications/json',
-	dataType: 'json',
-	url: '/getMaps',
-	success: (map) =>{
-	    console.log("Map", map);
-	    return map
-	},
-	error: () => {
-	    console.log('There was a problem with reading the config file');	    
-	}
+    return new Promise( (resolve, reject) => {
+	$.ajax({
+	    type:'GET',
+	    contentType: 'applications/json',
+	    dataType: 'json',
+	    url: '/getMaps',
+	    success: (map) =>{
+		resolve(map)
+	    },
+	    error: () => {
+		console.log('There was a problem with reading the config file');
+		reject()
+	    }
+	})
     })
 }
 
@@ -122,7 +133,6 @@ function getScatter(node){
 
 function getHistogramData(node, cb){    
     if(node.df_index != undefined){
-	console.log('fetch')
 	$.ajax({
 	    type:'GET',
 	    contentType: 'application/json',
