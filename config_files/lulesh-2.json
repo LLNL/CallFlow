@@ -1,0 +1,7 @@
+{
+    "dataName" : "Lulesh-1",
+    "path" : ["./data/hpctoolkit-lulesh-2"],
+    "format" : ["hpctoolkit"],
+    "props": {
+    }
+}

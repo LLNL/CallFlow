@@ -1,0 +1,10 @@
+{
+    "dataName" : "Lulesh-1",
+    "path" : ["./data/hpctoolkit-osu_bw"],
+    "format" : ["hpctoolkit"],
+    "props": {
+    }
+}
+
+
+
