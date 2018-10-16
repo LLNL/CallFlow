@@ -12,12 +12,12 @@ export default function DOMSetup(view){
     
     //Zoom behavior
     let zoom = d3.behavior.zoom()
-        .scaleExtent([0.1, 10])
+        .scaleExtent([0.1, 1])
         .on('zoom', () => {
-	    let tx = Math.min(0, Math.min(d3.event.translate[0], view.width + view.width*d3.event.scale))
-	    let ty = Math.min(0, Math.min(d3.event.translate[1], view.height + view.height*d3.event.scale))
-	    view.svg.attr("transform", "translate(" + [tx, ty]  + ")scale(" + d3.event.scale + ")");
-//	    view.svg.attr("transform", "translate(" + d3.event.traslate  + ")scale(" + d3.event.scale + ")");
+//	    let tx = Math.min(0, Math.min(d3.event.translate[0], view.width + view.width*d3.event.scale))
+//	    let ty = Math.min(0, Math.min(d3.event.translate[1], view.height + view.height*d3.event.scale))
+//	    view.svgBase.attr("transform", "translate(" + [tx, ty]  + ")scale(" + d3.event.scale + ")");
+	    view.svgBase.attr("transform", "translate(" + d3.event.traslate  + ")scale(" + d3.event.scale + ")");
 	})    
     
     view.svg = d3.select(view.containerID).append('svg')
@@ -27,8 +27,9 @@ export default function DOMSetup(view){
         .append('g')
         .attr('transform', 'translate(' + view.margin.left + ',' + view.margin.top+ ')')
         .call(zoom)
-	.call(dragGroup)
+//	.call(dragGroup)
 
+    
     // Invisible svg to capture mouse events
     let isvg = view.svg.append('rect')
         .attr('id', 'invisibleSVG')
@@ -36,11 +37,13 @@ export default function DOMSetup(view){
         .attr('height', view.height)
         .style('fill', 'none')
         .style('pointer-events', 'all')
-    
-    view.defs = view.svg.append('defs')
-    view.edges = view.svg.append('g')
-    view.histograms = view.svg.append('g')
-    view.nodes = view.svg.append('g')
+
+    view.svgBase = view.svg.append('g')
+    view.svgVis  = view.svgBase.append('g')
+    view.defs = view.svgVis.append('defs')
+    view.edges = view.svgVis.append('g')
+    view.histograms = view.svgVis.append('g')
+    view.nodes = view.svgVis.append('g')
     
     // ToolTip
     view.toolTip = d3.select(view.containerID)

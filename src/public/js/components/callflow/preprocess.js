@@ -1,5 +1,8 @@
-export default function preprocess(graph){
-    graph = cleanGraph(graph)
+export default function preprocess(graph, refresh){
+    if(refresh == true){
+	graph = cleanGraph(graph)
+    }
+    console.log(graph)
     graph = c_a(graph)
     graph = addLinkNodeIDs(graph)
     graph = calculateFlow(graph)
@@ -10,13 +13,14 @@ function cleanGraph(graph){
     let new_nodes = []
     let new_links = []
     for(let node of graph.nodes){
-	if(node.name == 'intermediate'){
+	console.log(node)
+	if(node.type != undefined){
 	    new_nodes.push(node)
 	}
     }
 
     for(let link of graph.links){
-	if(link.name == 'intermediate'){
+	if(link.name != 'intermediate' || link.name != 'intermediate'){
 	    new_links.push(link)
 	}
     }
@@ -83,6 +87,7 @@ function addLinkNodeIDs(graph){
 }
 
 function calculateFlow(graph){
+    console.log(graph)
     let nodes = graph.nodes
     let links = graph.links
     let outGoing = [];

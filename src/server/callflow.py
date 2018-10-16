@@ -40,8 +40,6 @@ class CallFlow:
         # Need to make it an observable. When the root changes the application
         # updates to the call graph from that node as the root. 
         self.state.root = None
-    
-        self.default_g = self.update('default', 'module')
 
     def update(self, action, attr):        
         if action == 'default':

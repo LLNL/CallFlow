@@ -137,9 +137,11 @@ class splitCallee:
         ret = {}
         return ret
 
-def splitCaller(df, node):
-    show_node_map = {}
-    children_of_node = df[df['node'] == node].children
-    for nod in children_of_node:
-        show_node_map[node] = True
+class splitCaller:
+    def __init__(self, state, df_index):
+        show_node_map = {}
+        children_of_node = df[df['node'] == node].children
+        for nod in children_of_node:
+            show_node_map[node] = True
+
         utils.update_df(df, 'show_node', show_node_map)

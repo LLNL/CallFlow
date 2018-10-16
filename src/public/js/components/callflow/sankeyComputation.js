@@ -4,7 +4,7 @@ export default function sankeyComputation(graph, view){
 	.nodePadding(view.ySpacing)
         .size([view.width * 1.05, view.height - view.ySpacing])
 	.xSpacing(view.xSpacing)
-	.setReferenceValue(graph.graph.rootRunTimeInc);
+	.setReferenceValue(graph.rootRunTimeInc);
     
     let path = sankey.link();
 
