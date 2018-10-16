@@ -1,4 +1,4 @@
-import { render } from './../../app.js'
+import { layout } from './../../app.js'
 import CallFlow from '../callflow_wrapper.js'
 
 //create a dropdown to select color option
@@ -22,6 +22,7 @@ export default function colorBy(graph, view){
 	let attr_id = $("#colorDropDown :selected").val();
 	$('#procedure_view').empty()
 	view.colorOption = attr_id;
+	clear()
 	render(graph)
     })
     
