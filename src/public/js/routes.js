@@ -6,55 +6,55 @@ import { App, layout } from './app'
 
 function getSankey(attr, cb){
     return new Promise( (resolve, reject) => {
-	$.ajax({
-	    type: "GET",
-	    contentType: "application/json",
-	    url: '/getSankey',
-	    data: { 'group_by': attr }, 
-	    success: (data) => {
-		data = JSON.parse(data)
-		if(self.debug){
-		    console.log('[Vis] Sankey information :', data)
-		}
-		resolve(data[0])
-	    },
-	    error: function(err){
-		console.log(err);
-		reject();
-	    }
-	})
+	    $.ajax({
+	        type: "GET",
+	        contentType: "application/json",
+	        url: '/getSankey',
+	        data: { 'group_by': attr }, 
+	        success: (data) => {
+		        data = JSON.parse(data)
+		        if(self.debug){
+		            console.log('[Vis] Sankey information :', data)
+		        }
+		        resolve(data[0])
+	        },
+	        error: function(err){
+		        console.log(err);
+		        reject();
+	        }
+	    })
     })
 }
 
 function getConfigFile(filename, cb){
     $.ajax({
-	type:'GET',
-	contentType: 'applications/json',
-	dataType: 'json',
-	url: '/loadConfigFile',
-	data: { "filename": filename },
-	success: cb,
-	error: () => {
-	    console.log('There was a problem with reading the config file');	    
-	}
+	    type:'GET',
+	    contentType: 'applications/json',
+	    dataType: 'json',
+	    url: '/loadConfigFile',
+	    data: { "filename": filename },
+	    success: cb,
+	    error: () => {
+	        console.log('There was a problem with reading the config file');	    
+	    }
     })
 }
 
 function getDataMaps(){
     return new Promise( (resolve, reject) => {
-	$.ajax({
-	    type:'GET',
-	    contentType: 'applications/json',
-	    dataType: 'json',
-	    url: '/getMaps',
-	    success: (map) =>{
-		resolve(map)
-	    },
-	    error: () => {
-		console.log('There was a problem with reading the config file');
-		reject()
-	    }
-	})
+	    $.ajax({
+	        type:'GET',
+	        contentType: 'applications/json',
+	        dataType: 'json',
+	        url: '/getMaps',
+	        success: (map) =>{
+		        resolve(map)
+	        },
+	        error: () => {
+		        console.log('There was a problem with reading the config file');
+		        reject()
+	        }
+	    })
     })
 }
 
@@ -133,46 +133,50 @@ function getScatter(node){
 
 function getHistogramData(node, cb){    
     if(node.df_index != undefined){
-	$.ajax({
-	    type:'GET',
-	    contentType: 'application/json',
-	    dataType: 'json',
-	    url: '/getHistogramData',
-	    data: {"df_index": node.df_index[0]},
-	    success: function(histScatData){
-		if(cb){
-		    let data = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
-		    data = histogramUI(data);
-		    cb(data);
-		    return
-		}
-		console.log('[Getter] Histogram Scatter Data: ', histScatData);
-		let data = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
-		scatterPlotUI(data);
-		histogramUI(data);
-		return histScatData
-	    },
-	    error: function(){
-		console.log("There was problem with getting the data for histogram and scatter plot");
-	    }	
-	});	
+	    $.ajax({
+	        type:'GET',
+	        contentType: 'application/json',
+	        dataType: 'json',
+	        url: '/getHistogramData',
+	        data: {"df_index": node.df_index[0]},
+	        success: function(histScatData){
+		        if(cb){
+		            let data = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
+		            data = histogramUI(data);
+		            cb(data);
+		            return
+		        }
+		        console.log('[Getter] Histogram Scatter Data: ', histScatData);
+		        let data = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
+		        scatterPlotUI(data);
+		        histogramUI(data);
+		        return histScatData
+	        },
+	        error: function(){
+		        console.log("There was problem with getting the data for histogram and scatter plot");
+	        }	
+	    });	
     }
 }
 
+
+
+
 function getFunctionLists(node, cb){
     if (node.df_index != undefined){
-	$.ajax({
-	    type:'GET',
-	    contentType: 'application/json',
-	    dataType: 'json',
-	    url: '/getFunctionLists',
-	    data: {"df_index": node.df_index[0]},
-	    success: function(histScatData){
-	    },
-	    error: function(){
-		console.log("There was problem with getting the data for histogram and scatter plot");
-	    }
-	})
+	    $.ajax({
+	        type:'GET',
+	        contentType: 'application/json',
+	        dataType: 'json',
+	        url: '/getFunctionLists',
+	        data: {"df_index": node.df_index[0]},
+	        success: function(histScatData){
+                
+	        },
+	        error: function(){
+		        console.log("There was problem with getting the data for histogram and scatter plot");
+	        }
+	    })
     }
 } 
 
@@ -182,6 +186,5 @@ export {
     getSankey,
     getConfigFile,    
     getHistogramData,
-    getFunctionLists
-    
+    getFunctionLists,
 }
