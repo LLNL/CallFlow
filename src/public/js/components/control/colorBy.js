@@ -1,4 +1,4 @@
-import { layout } from './../../app.js'
+import { layout } from '../../app.js'
 import CallFlow from '../callflow_wrapper.js'
 
 //create a dropdown to select color option
@@ -13,17 +13,15 @@ export default function colorBy(graph, view){
 
     let label = $("<label>").text('Color By: ');
 
-    let select = $('<select name="colorDropDown"  id = "colorDropDown"/>');
-    for(let val in dropDownData) {
+    let select = $('<select name="colorDropDown" id="colorDropDown"/>');
+    for(let val in dropDownData){
 	    $('<option />', {value: val, text: dropDownData[val]}).appendTo(select);
     }
 
     select.change(function(){
-	let attr_id = $("#colorDropDown :selected").val();
-	$('#procedure_view').empty()
-	view.colorOption = attr_id;
-	clear()
-	render(graph)
+	    let attr_id = $("#colorDropDown :selected").val();
+	    view.colorOption = attr_id;
+        layout.app.update('onColorChange', attr_id)
     })
     
     let dropDownDiv = document.createElement('div');

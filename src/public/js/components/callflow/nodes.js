@@ -10,7 +10,7 @@ function calcTextSize(text) {
     return { width: size.width, height: size.height };
 }
 
-export default function drawNodes(graph, view){
+function drawNodes(graph, view){
     let node = view.nodes.selectAll(".node")
 	    .data(graph.nodes)
 	    .enter().append("g")
@@ -40,14 +40,20 @@ export default function drawNodes(graph, view){
 	    .attr('transform', function(d){
 	        return "translate(" + d.x + "," + d.y + ")";
 	    })
-    
+
     drawRectangle(node, graph, view)
     drawPath(node, graph, view)
     drawText(node, graph, view)
 }
 
+
+function clearNodes(view){
+    view.nodes.selectAll(".node").remove()
+}
+
 // add the rectangles for the nodes
 function drawRectangle(node, graph, view){
+    console.log(node)
     let rect = node.append("rect")
 	    .attr("height", function (d) {
 	        return d.height;
@@ -58,7 +64,7 @@ function drawRectangle(node, graph, view){
             return view.color.getColor(d);
 	    })
 	    .style("fill-opacity", function(d){
-	        if(d.name[0] == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
+	        if(d.name == "intermediate" || d.name[d.name.length - 1] == '_'){
                 if(d.name[0] == "intermediate"){
 		            return 0;
 	            }
@@ -127,7 +133,7 @@ function drawRectangle(node, graph, view){
 	        // }
 	    })
         .on('contextmenu', function(d){
-            return view.contextMenu(d);            
+            return view.svgBase.contextMenu(d);            
         })
 
     // Transition
@@ -271,6 +277,7 @@ function drawText(node, graph, view){
 	    })
 	    .text(function (d) {
             let name_splits = d.name[0].split('/').reverse()
+            console.log(name_splits)
             if(name_splits.length == 1){
                 d.name = d.name[0]
             }
@@ -278,7 +285,7 @@ function drawText(node, graph, view){
                 d.name = name_splits[0]
             }
 
-            if(d.name != "i" &&  d.name[d.name[0].length - 1] != '_'){
+            if(d.name != "i" &&  d.name[d.name.length - 1] != '_'){
 	    	    if(d.height < view.minHeightForText ){
 	    	        return "";
 	    	    }
@@ -465,4 +472,10 @@ function getFunctionListOfNode(graph, d){
     var res = {"fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap , "rootRunTime" : rootRunTime}
     // console.log(fromProcToProc)
     return res;
+}
+
+
+export {
+    drawNodes,
+    clearNodes
 }

@@ -46,7 +46,7 @@ export default function DOMSetup(view){
     view.edges = view.svgVis.append('g')
     view.histograms = view.svgVis.append('g')
     view.nodes = view.svgVis.append('g')
-    view.contextMenu = contextMenu()
+    view.svgBase.contextMenu = contextMenu()
     
     // ToolTip
     view.toolTip = d3.select(view.containerID)

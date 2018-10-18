@@ -1,4 +1,4 @@
- /*******************************************************************************
+/*******************************************************************************
  * Copyright (c) 2017, Lawrence Livermore National Security, LLC.
  * Produced at the Lawrence Livermore National Laboratory.
  *
@@ -25,55 +25,60 @@ let layout = new Layout()
 
 export default class App{
     constructor(){
-	this.target = document.getElementById("procedure_view").parentElement;
-	this.refresh = false
-	this.spinner = spinnerWrapper(this.target);
-	this.fetch('module')
+	    this.target = document.getElementById("procedure_view").parentElement
+	    this.refresh = false
+	    this.spinner = spinnerWrapper(this.target)
+	    this.fetch('module')
+        this.callflow = null
     }
-    
 
     setState(data){
-	this.state = data
+	    this.state = data
     }
 
     setDataMap(data){
-	this.dataMap = data
+	    this.dataMap = data
     }
 
     fetch(attr){
-	let self = this
-	getSankey(attr).then((data) => {
-	    self.state = data
-	    getDataMaps().then((map) => {
-		self.map = map
-		this.render()
+	    let self = this
+	    getSankey(attr).then((data) => {
+	        self.state = data
+	        getDataMaps().then((map) => {
+		        self.map = map
+		        this.render()
+	        })
 	    })
-	})
     }
 
     render(){
-	let prop = {
-	    ID: '#procedure_view',
-	    width : Math.max(1000, $('#procedure_view').height()),
-	    height : $('#procedure_view').height(),
-	}
-	this.callFlow = new CallFlow(this.state, prop)
-	let configJSON = new ConfigJSON();
-	this.spinner.stop();    
+	    let prop = {
+	        ID: '#procedure_view',
+	        width : Math.max(1000, $('#procedure_view').height()),
+	        height : $('#procedure_view').height(),
+	    }
+	    this.callflow = new CallFlow(this.state, prop)
+        console.log(this.callflow)
+	    let configJSON = new ConfigJSON();
+	    this.spinner.stop();    
     }
 
     update(action, attr){
-	this.clear()
-	if(action == 'groupBy'){
-	    this.fetch(attr)
-	}
+	    if(action == 'onGroupChange'){
+            this.clear()
+	        this.fetch(attr)
+	    }
+        if(action == 'onColorChange'){            
+            this.callflow.setColor(attr)
+            this.callflow.render()
+        }
     }
 
     clear(){
-	$('#procedure_view').empty()
-	$('#control').empty()
-	$('#config_file_editor').empty()
-	$('#hist_view').empty()
+	    $('#procedure_view').empty()
+	    $('#control').empty()
+	    $('#config_file_editor').empty()
+	    $('#hist_view').empty()
     }
 }
 

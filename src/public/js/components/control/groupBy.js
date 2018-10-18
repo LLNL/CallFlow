@@ -4,8 +4,8 @@ import { layout } from '../../app.js'
 
 export default function groupBy(view){
     let dropDownData = {
-	'0': 'module',
-	'1': 'file'
+	    '0': 'module',
+	    '1': 'file'
     }
 
     let label = $("<label>").text('Group By: ');
@@ -16,8 +16,8 @@ export default function groupBy(view){
     }
 
     select.change(function(){
-	let attr_id = $("#groupByDropDown :selected").val();
-	layout.app.update('groupBy', dropDownData[attr_id])
+	    let attr_id = $("#groupByDropDown :selected").val();
+	    layout.app.update('onGroupChange', dropDownData[attr_id])
     })
 
     let dropDownDiv = document.createElement('div');
@@ -31,7 +31,7 @@ function groupBy_cb(data){
     clear()
     data = JSON.parse(data)
     if(self.debug){
-	console.log('[Vis] Sankey information :', data)
+	    console.log('[Vis] Sankey information :', data)
     }
     layout.app.update()
 }

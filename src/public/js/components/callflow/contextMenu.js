@@ -1,51 +1,23 @@
 export default function contextMenu(openCallback) {
     let menu = [
         {
-	        title: 'Automatic sort',
+	        title: 'Show names',
 	        action: function(elm, d, i) {
-	            spinner = new Spinner(opts).spin(View.parentOfView);
-	            var request = {
-		            "boxes": State.box,
-		            "boxID": d.id,
-		            'automaticSortValue': State.automaticSortValue
-	            };
-	            socket.emit("getClickStateFromBox", request);
-	            socket.on('clickStateFromBox', function(data){
-		            State = JSON.parse(data);
-		            nodeSize = assignNodeSize(statistics.Attribute, statistics.sequenceCount[attribute]);
-		            boxOffsets = findBoxOffsets();
-		            [nodes, edges] = preprocess(State.box, null);
-		            render(nodes, edges);
-	            });
-	        }
+            }
         },
         {
 	        title: 'Forward re-arrangement',
 	        action : function(elm, d, i){
-	            let box = d.id;
-	            order = 1;
-	            iciSankClearNodes(box);
-	            iciSankDrawNodes(box, preprocess.nodeMap[box], order);
 	        }
         },
         {
 	        title: 'Reverse re-arrangement',
 	        action: function(elm, d, i){
-	            let box = d.id;
-	            iciSankClearNodes(box);
-                iciSank_clearEdgesBox();
-	            order = -1;
-	            iciSank_drawEdgesBox(preprocess.reverseEdges);
-	            iciSankDrawNodes(box, preprocess.reverseNodeMap[box], order);
 	        }
         },
         {
 	        title: 'Pivotal alignment',
 	        action: function(elm, d, i){
-                Api.pivotQuery(App.pivot)
-                    .then(function(){
-                        reload_click()
-                    })
             }
         },
         {
@@ -181,7 +153,6 @@ export default function contextMenu(openCallback) {
 
 	    // the openCallback allows an action to fire before the menu is displayed
 	    // an example usage would be closing a tooltip
-        console.log(data)
 	    if (openCallback) openCallback(data, index);
 
 	    // display context menu
