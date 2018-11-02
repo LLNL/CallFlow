@@ -1,4 +1,4 @@
-import { getHistogramData } from '../../routes'
+import { getFunctionLists, getHistogramData } from '../../routes'
 import Color from './color.js'
 
 function calcTextSize(text) {
@@ -53,7 +53,6 @@ function clearNodes(view){
 
 // add the rectangles for the nodes
 function drawRectangle(node, graph, view){
-    console.log(node)
     let rect = node.append("rect")
 	    .attr("height", function (d) {
 	        return d.height;
@@ -122,8 +121,8 @@ function drawRectangle(node, graph, view){
 	        view.toolTipG.selectAll('*').remove();		    	
 	    })		    
 	    .on('click', function(d){
+            getFunctionLists(d)
 	        getHistogramData(d)
-//	        getFunctionLists(d)
 	        // if(d.name != "intermediate"){
 	        // 	var ret = getFunctionListOfNode(d);
 	        // 	var fromProcToProc = ret["fromProcToProc"];
@@ -277,7 +276,6 @@ function drawText(node, graph, view){
 	    })
 	    .text(function (d) {
             let name_splits = d.name[0].split('/').reverse()
-            console.log(name_splits)
             if(name_splits.length == 1){
                 d.name = d.name[0]
             }
@@ -403,7 +401,6 @@ function getFunctionListOfNode(graph, d){
         }
     })
 
-    // console.log(sankeyNodeList, uniqueNodeIDList, parUniqueNodeID);
     var connectivity = {};
     var temp = 0;
     var nameToIDMap = {};

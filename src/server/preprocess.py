@@ -124,6 +124,8 @@ class PreProcess():
             self.df['callees'] = self.df['node'].apply(lambda node: callees[node] if node in callees else [])
             self.df['callers'] = self.df['node'].apply(lambda node: callers[node] if node in callers else [])
 
+            print(self.df['df_index'], self.df['callees'])
+            
             return self
         
         def add_show_node(self):
@@ -151,5 +153,5 @@ class PreProcess():
         
         def add_df_index(self):
             self.df['df_index'] = self.df['node'].apply(lambda node: random.randint(1,100))
-#            self.df['df_index'] = self.df['node'].apply(lambda node: node.df_index)
+            #            self.df['df_index'] = self.df['node'].apply(lambda node: node.df_index)
             return self

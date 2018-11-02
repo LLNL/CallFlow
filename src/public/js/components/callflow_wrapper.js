@@ -3,6 +3,7 @@ import DOMSetup from './callflow/DOMSetup.js'
 import sankeyComputation from './callflow/sankeyComputation.js'
 import drawEdges from './callflow/edges.js'
 import { drawNodes, clearNodes } from './callflow/nodes.js'
+import { drawHierarchy } from './callflow/hierarchy.js'
 import drawHistogram from './callflow/histogram.js'
 import Color from './callflow/color.js'
 import ControlUI from './control_wrapper.js'
@@ -32,7 +33,7 @@ export default class CallFlow{
         this.graph = preprocess(this.graph)
         this.view = DOMSetup(this.view)
         this.view.sankey = sankeyComputation(this.graph, this.view)
-        this.setColor(0)
+        this.setColor(1)
         this.render()
 	    let controlUI =  new ControlUI(this.graph, this.view)
         return this
@@ -49,6 +50,7 @@ CallFlow.prototype.render = function(){
     drawNodes(this.graph, this.view)
     drawEdges(this.graph, this.view)
     drawHistogram(this.graph, this.view)
+    drawHierarchy(this.graph, this.view)
 }
 
 CallFlow.prototype.clear = function(){
