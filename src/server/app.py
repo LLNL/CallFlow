@@ -206,7 +206,6 @@ class App():
             dataMap = self.callflow.state.map
 
             for key in dataMap['incTime'].keys():
-                print('Key', key)
                 if key == df_index:
                     return jsonify({
                         "inc": dataMap['incTime'][key],
@@ -216,6 +215,7 @@ class App():
         @app.route('/getFunctionLists')
         def getFunctionLists():
             df_index = int(request.args.get('df_index'))
+            print(df_index)
             self.callflow.update('split-callee', df_index)
 
         def getEntireTree():

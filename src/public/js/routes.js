@@ -159,18 +159,17 @@ function getHistogramData(node, cb){
     }
 }
 
-
-
-
 function getFunctionLists(node, cb){
+    console.log(node)
     if (node.df_index != undefined){
+        console.log(node.df_index[0])
 	    $.ajax({
 	        type:'GET',
 	        contentType: 'application/json',
 	        dataType: 'json',
 	        url: '/getFunctionLists',
 	        data: {"df_index": node.df_index[0]},
-	        success: function(histScatData){
+	        success: function(data){
                 
 	        },
 	        error: function(){

@@ -53,7 +53,6 @@ function clearNodes(view){
 
 // add the rectangles for the nodes
 function drawRectangle(node, graph, view){
-    console.log(node)
     let rect = node.append("rect")
 	.attr("height", function (d) {
 	    return d.height;
