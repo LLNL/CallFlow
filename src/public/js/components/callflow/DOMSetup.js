@@ -46,7 +46,7 @@ export default function DOMSetup(view){
     view.nodes = view.svgVis.append('g')
     view.svgBase.contextMenu = contextMenu()
 
-    new EasyPZ(document.getElementsByClassName('sankey1')[0], function() {})
+//    new EasyPZ(document.getElementsByClassName('sankey1')[0], function() {})
     
     // ToolTip
     view.toolTip = d3.select(view.containerID)

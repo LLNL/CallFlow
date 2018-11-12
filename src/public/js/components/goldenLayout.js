@@ -42,17 +42,17 @@ let config = {
 				                type: 'component',
 				                componentName: 'testComponent',
 				                // id: 'control',
-				                componentState: {id : "config_file_editor" },
-				                isClosable: false,
-				                title: "Config file"								
-			                },								
-			                {
-				                type: 'component',
-				                componentName: 'testComponent',
-				                // id: 'control',
 				                componentState: {id : "control" },
 				                isClosable: false,
 				                title: "Control"								
+			                },								
+                            			                {
+				                type: 'component',
+				                componentName: 'testComponent',
+				                // id: 'control',
+				                componentState: {id : "config_file_editor" },
+				                isClosable: false,
+				                title: "Config file"								
 			                },								
 			                {
 				                type: 'component',

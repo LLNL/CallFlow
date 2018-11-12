@@ -60,25 +60,24 @@ export default class App{
 	        height : $('#procedure_view').height(),
 	    }
 	    this.callflow = new CallFlow(this.state, prop)
-        console.log(this.callflow)
 	    let configJSON = new ConfigJSON();
 	    this.spinner.stop();    
     }
 
     update(action, attr){
-	if(action == 'onGroupChange'){
+	    if(action == 'onGroupChange'){
             this.clear()
-	    this.fetch(attr)
-	}
+	        this.fetch(attr)
+	    }
         if(action == 'onColorChange'){            
             this.callflow.setColor(attr)
             this.callflow.render()
         }
-	if(action == 'onNodeScaleChange'){
-	    preprocess(this.callflow.graph, this.callflow.view)
-	    sankeyComputation(this.callflow.graph, this.callflow.view)
-	    this.callflow.render()
-	}
+	    if(action == 'onNodeScaleChange'){
+	        preprocess(this.callflow.graph, true)
+	        sankeyComputation(this.callflow.graph, this.callflow.view)
+	        this.callflow.render()
+	    }
     }
 
     clear(){

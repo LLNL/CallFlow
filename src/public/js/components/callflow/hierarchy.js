@@ -33,10 +33,9 @@ function drawHierarchy(view, graph){
     var partition = d3.layout.partition()
         .size([height, width]);
 
-
-    var csv = d3.csvParseRows(text);
-    var json = buildHierarchy(csv);
-    createVisualization(json);
+//    var csv = d3.csvParseRows();
+//    var json = buildHierarchy(csv);
+//    createVisualization(json);
     
 }
 
