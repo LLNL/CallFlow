@@ -217,6 +217,9 @@ class App():
         def getFunctionLists():
             df_index = int(request.args.get('df_index'))
             self.callflow.update('split-callee', df_index)
+
+        def getEntireTree():
+            self.callflow.update('entire-tree')
             
     def launch_webapp(self):
         # Load the graph frames from an intermediate format.

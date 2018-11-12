@@ -2,7 +2,6 @@ export default function preprocess(graph, refresh){
     if(refresh == true){
 	graph = cleanGraph(graph)
     }
-    console.log(graph)
     graph = c_a(graph)
     graph = addLinkNodeIDs(graph)
     graph = calculateFlow(graph)
@@ -13,7 +12,6 @@ function cleanGraph(graph){
     let new_nodes = []
     let new_links = []
     for(let node of graph.nodes){
-	console.log(node)
 	if(node.type != undefined){
 	    new_nodes.push(node)
 	}
@@ -76,7 +74,8 @@ function addLinkNodeIDs(graph){
 
     let links = graph.links
     for(let link of graph.links){
-	if(link.source[0][-1] == '_' || link.target[0][-1] == '_'){
+	console.log(link.source)
+	if(link.source.name[-1] == '_' || link.target.name[-1] == '_'){
 	    continue
 	}
 	
@@ -87,7 +86,6 @@ function addLinkNodeIDs(graph){
 }
 
 function calculateFlow(graph){
-    console.log(graph)
     let nodes = graph.nodes
     let links = graph.links
     let outGoing = [];

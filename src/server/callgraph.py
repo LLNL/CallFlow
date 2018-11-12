@@ -27,12 +27,13 @@ class CallGraph(nx.Graph):
         self.rootRunTimeInc = self.root_runtime_inc()
         self.edge_direction = {}        
         self.g = nx.DiGraph(rootRunTimeInc = self.rootRunTimeInc)       
-
-
-        print(self.root)
+        
         self.add_paths(path_name)
         self.add_node_attributes()
         self.add_edge_attributes()
+
+        self.adj_matrix = nx.adjacency_matrix(self.g)
+        print(self.adj_matrix.todense())
 
         print("Nodes", self.g.nodes(data=True))
         print("Edges", self.g.edges(data=True))
@@ -154,7 +155,6 @@ class CallGraph(nx.Graph):
                     self.g.node[tail+'_']['weight'] = self.g.node[tail]['weight']
                     self.g.remove_edge(*edge)
                     levelMap[tail+'_'] = track_level + 1
-                    print(levelMap[tail+'_'])
                     continue
                 else:
                     self.edge_direction[(head, tail)] = 'forward_edge'
@@ -194,7 +194,6 @@ class CallGraph(nx.Graph):
                     "target_level": tail_level,
 #                    "direction": direction
                 }
-                print(flowMap[edge])
         return flowMap
                                 
     def add_edge_attributes(self):

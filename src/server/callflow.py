@@ -21,7 +21,9 @@ from networkx.readwrite import json_graph
 
 from preprocess import PreProcess
 from callgraph import CallGraph
-from actions import groupBy, splitCallee, splitCaller
+from actions.groupBy import groupBy
+from actions.split_callee import splitCallee
+from actions.split_caller import splitCaller
 from state import State
 
 # need to make this observable on gf. When the gf changes the whole thing reflects
@@ -48,9 +50,13 @@ class CallFlow:
             groupBy(self.state, attr)
             nx = CallGraph(self.state, 'group_path')
         elif action == "split-callee":
-            nx = splitCallee(self.state, attr)
+            splitCallee(self.state, attr)
+            nx = CallGraph(self.state, 'path')
         elif action == "split-caller":
-            nx = splitCaller(self.gf, split_node)
+            splitCaller(self.gf, split_node)
+            nx = CallGraph(self.state, 'path')
+        elif action == "entire-tree":
+            nx = CallGraph(self.state)
 
         self.cfg = json_graph.node_link_data(nx.g)
 

@@ -28,9 +28,7 @@ export default function DOMSetup(view){
         .attr('height', view.height + view.margin.top + view.margin.bottom)
         .append('g')
         .attr('transform', 'translate(' + view.margin.left + ',' + view.margin.top+ ')')
-        .call(zoom)
-    //	.call(dragGroup)
-
+        .call(zoom)    
     
     // Invisible svg to capture mouse events
     let isvg = view.svg.append('rect')
@@ -47,6 +45,8 @@ export default function DOMSetup(view){
     view.histograms = view.svgVis.append('g')
     view.nodes = view.svgVis.append('g')
     view.svgBase.contextMenu = contextMenu()
+
+    new EasyPZ(document.getElementsByClassName('sankey1')[0], function() {})
     
     // ToolTip
     view.toolTip = d3.select(view.containerID)

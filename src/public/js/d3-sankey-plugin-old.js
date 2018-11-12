@@ -19,7 +19,8 @@ function d3sankeySingle() {
         nodes = [],
         links = [],
         xSpacing = 1,
-        referenceValue = 0;
+        referenceValue = 0,
+	minNodeScale = 0;
     
     var widthScale;
     var minDistanceBetweenNode = 0;
@@ -86,6 +87,12 @@ function d3sankeySingle() {
         return sankey;
     }
 
+    sankey.setMinNodeScale =  function(_){
+        if(!arguments.length) return minNodeScale;
+	minNodeScale = +_;
+        return sankey;
+    }
+    
     sankey.link = function() {
         var curvature = .4;
 
@@ -297,7 +304,7 @@ function d3sankeySingle() {
 		    node.y = Math.min(levelY, i)
 		    levelY = nodeHeight
                     node.parY = nodeHeight;
-		    node.height = node.value*scale*0.5;
+		    node.height = node.value*minNodeScale*scale;
                 });
 
                 nodes.sort(function(a,b){
@@ -306,7 +313,7 @@ function d3sankeySingle() {
             });
 
             links.forEach(function(link) {
-                link.height = link.weight*scale*0.5;
+                link.height = link.weight*scale*minNodeScale;
             });
         }
 

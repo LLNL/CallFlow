@@ -18,6 +18,8 @@ import { getDataMaps, getNodeMetrics, getSankey } from './routes'
 import scatterPlotUI from './components/scatterPlot'
 import CallFlow from './components/callflow_wrapper'
 import ConfigJSON from './components/ConfigJSON'
+import preprocess from './components/callflow/preprocess.js'
+import sankeyComputation from './components/callflow/sankeyComputation.js'
 
 let spinner;
 let layout = new Layout()
@@ -64,14 +66,19 @@ export default class App{
     }
 
     update(action, attr){
-	    if(action == 'onGroupChange'){
+	if(action == 'onGroupChange'){
             this.clear()
-	        this.fetch(attr)
-	    }
+	    this.fetch(attr)
+	}
         if(action == 'onColorChange'){            
             this.callflow.setColor(attr)
             this.callflow.render()
         }
+	if(action == 'onNodeScaleChange'){
+	    preprocess(this.callflow.graph, this.callflow.view)
+	    sankeyComputation(this.callflow.graph, this.callflow.view)
+	    this.callflow.render()
+	}
     }
 
     clear(){

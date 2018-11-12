@@ -113,15 +113,27 @@ let config = {
 				                componentState: { id: 'procedure_view' },
 				                title: 'Call graph view'
 			                },
-			                // {
-				            //     type: 'component',
-				            //     componentName: 'testComponent',
-				            //     componentState: { id: 'split_view' },
-				            //     title: 'Split View'
-			                // },
+			                {
+				            type: 'component',
+				            componentName: 'testComponent',
+				            componentState: { id: 'full_graph_view' },
+				            title: 'Full graph view'
+			                },
 			                
 			            ]
-		            }
+		            },
+			    // {
+			    // 	type: 'stack',
+			    // 	content: [
+			    // 	    {
+			    // 		type: 'component',
+			    // 		componentName: 'testComponent',
+			    // 		componentState: { id: 'diff_view' },
+			    // 		title: 'Diff view'
+			    // 	    }
+			    // 	]
+			    // }
+			    
 		        ]
 		        
 	        }

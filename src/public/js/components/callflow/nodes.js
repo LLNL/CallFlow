@@ -12,34 +12,34 @@ function calcTextSize(text) {
 
 function drawNodes(graph, view){
     let node = view.nodes.selectAll(".node")
-	    .data(graph.nodes)
-	    .enter().append("g")
-	    .attr("class", function(d){
-	        if(d.name == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
-		        return "node intermediate";
-	        }
-	        else{
-		        return "node";
-	        }		    	
-	    })
-	    .attr('opacity' , 0)
-	    .attr("transform", function (d) {
-	        if(d.name != "intermediate"){
-		        return "translate(" + d.x + "," + d.y + ")";
-	        }
-	        else{
-		        return "translate(0,0)";
-	        }
-	    })
+	.data(graph.nodes)
+	.enter().append("g")
+	.attr("class", function(d){
+	    if(d.name == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
+		return "node intermediate";
+	    }
+	    else{
+		return "node";
+	    }		    	
+	})
+	.attr('opacity' , 0)
+	.attr("transform", function (d) {
+	    if(d.name != "intermediate"){
+		return "translate(" + d.x + "," + d.y + ")";
+	    }
+	    else{
+		return "translate(0,0)";
+	    }
+	})
 
     view.nodes.selectAll('.node')
-	    .data(graph.nodes)
-	    .transition()
-	    .duration(view.transitionDuration)
-	    .attr('opacity' , 1)
-	    .attr('transform', function(d){
-	        return "translate(" + d.x + "," + d.y + ")";
-	    })
+	.data(graph.nodes)
+	.transition()
+	.duration(view.transitionDuration)
+	.attr('opacity' , 1)
+	.attr('transform', function(d){
+	    return "translate(" + d.x + "," + d.y + ")";
+	})
 
     drawRectangle(node, graph, view)
     drawPath(node, graph, view)
@@ -55,104 +55,104 @@ function clearNodes(view){
 function drawRectangle(node, graph, view){
     console.log(node)
     let rect = node.append("rect")
-	    .attr("height", function (d) {
-	        return d.height;
-	    })
-	    .attr("width", view.nodeWidth)
+	.attr("height", function (d) {
+	    return d.height;
+	})
+	.attr("width", view.nodeWidth)
         .attr("opacity", 0)
-	    .style("fill", function (d) {
+	.style("fill", function (d) {
             return view.color.getColor(d);
-	    })
-	    .style("fill-opacity", function(d){
-	        if(d.name == "intermediate" || d.name[d.name.length - 1] == '_'){
+	})
+	.style("fill-opacity", function(d){
+	    if(d.name == "intermediate" || d.name[d.name.length - 1] == '_'){
                 if(d.name[0] == "intermediate"){
-		            return 0;
-	            }
-	            else{
-		            return 1;
-	            }
-	        }
-	    })
-	    .style("shape-rendering", "crispEdges")
-	    .style("stroke", function (d) {
-            if(d.name != "intermediate"){
-		        return d3.rgb(view.color.getColor(d)).darker(2);
+		    return 0;
 	        }
 	        else{
-		        return '#e1e1e1';
+		    return 1;
 	        }
-	    })
-	    .style("stroke-width", function(d){
-	        if(d.name[0] == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
+	    }
+	})
+	.style("shape-rendering", "crispEdges")
+	.style("stroke", function (d) {
+            if(d.name != "intermediate"){
+		return d3.rgb(view.color.getColor(d)).darker(2);
+	    }
+	    else{
+		return '#e1e1e1';
+	    }
+	})
+	.style("stroke-width", function(d){
+	    if(d.name[0] == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
                 if(d.name[0] == "intermediate"){
-		            return 0;
-	            }
-	            else{
-		            return 1;
-	            }
-	    	}
-	    })
-	    .on("mouseover", function(d) { 
-	        if(d.name != "intermediate"){
-		        view.toolTipList.attr('width', "400px")
-		            .attr('height', "150px")	    	
-                var res = getFunctionListOfNode(graph, d);
+		    return 0;
+	        }
+	        else{
+		    return 1;
+	        }
+	    }
+	})
+	.on("mouseover", function(d) { 
+	    if(d.name != "intermediate"){
+		view.toolTipList.attr('width', "400px")
+		    .attr('height', "150px")	    	
+//                var res = getFunctionListOfNode(graph, d);
                 //		toolTipTexts(d,res, rootRunTime1)
-		        d3.select(this).style("stroke-width", "2");
-		        // fadeUnConnected(d);
-		        // svg.selectAll(".link").style('fill-opacity', 0.0)
-		        // svg.selectAll('.node').style('opacity', '0.0')
-	        }
-	    })
-	    .on("mouseout", function(d) { 
-	        view.toolTipList.attr('width', '0px')
-		        .attr('height', '0px')
-	        if(d.name[0] == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
-		        d3.select(this).style("stroke-width", "1");
-                unFade();
-	        }
-	        view.toolTip.style('opacity', 0)
-		        .style('left', function(){
-		            return 0;
-		        })
-		        .style('top', function(){
-		            return 0;
-		        })
-	        view.toolTipText.html("");
-	        view.toolTipG.selectAll('*').remove();		    	
-	    })		    
-	    .on('click', function(d){
-	        getHistogramData(d)
-//	        getFunctionLists(d)
-	        // if(d.name != "intermediate"){
-	        // 	var ret = getFunctionListOfNode(d);
-	        // 	var fromProcToProc = ret["fromProcToProc"];
-	        // 	var nameToIDMap = ret["nameToIDMap"];
-	        // 	var res = {"node" : d, "fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap, "rootRunTime" : rootRunTime};
-	        // 	clickCallBack(res);
-	        // }
-	    })
+		d3.select(this).style("stroke-width", "2");
+		// fadeUnConnected(d);
+		// svg.selectAll(".link").style('fill-opacity', 0.0)
+		// svg.selectAll('.node').style('opacity', '0.0')
+	    }
+	})
+	.on("mouseout", function(d) { 
+	    view.toolTipList.attr('width', '0px')
+		.attr('height', '0px')
+	    if(d.name[0] == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
+		d3.select(this).style("stroke-width", "1");
+		//                unFade();
+	    }
+	    view.toolTip.style('opacity', 0)
+		.style('left', function(){
+		    return 0;
+		})
+		.style('top', function(){
+		    return 0;
+		})
+	    view.toolTipText.html("");
+	    view.toolTipG.selectAll('*').remove();		    	
+	})		    
+	.on('click', function(d){
+	    getHistogramData(d)
+	    //	        getFunctionLists(d)
+	    // if(d.name != "intermediate"){
+	    // 	var ret = getFunctionListOfNode(d);
+	    // 	var fromProcToProc = ret["fromProcToProc"];
+	    // 	var nameToIDMap = ret["nameToIDMap"];
+	    // 	var res = {"node" : d, "fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap, "rootRunTime" : rootRunTime};
+	    // 	clickCallBack(res);
+	    // }
+	})
         .on('contextmenu', function(d){
             return view.svgBase.contextMenu(d);            
         })
 
     // Transition
     view.nodes.selectAll("rect")
-	    .data(graph.nodes)
-	    .transition()
-	    .duration(view.transitionDuration)
+	.data(graph.nodes)
+	.transition()
+	.duration(view.transitionDuration)
         .attr("opacity", 1)
-	    .attr('height',function(d){
-	        return d.height;
-	    })
-	    .style("fill", function (d) {
-	        if(d.name == "intermediate"){
-		        return '#e1e1e1'
-	        }
-	        else{
-		        return d.color = view.color.getColor(d);
-	        }
-	    })
+	.attr('height',function(d){
+	    return d.height;
+	})
+	.style("fill", function (d) {
+	    if(d.name == "intermediate"){
+		return '#e1e1e1'
+	    }
+	    else{
+		return d.color = view.color.getColor(d);
+	    }
+	})
         .style("stroke", function(d){
             if(d.name == "intermediate"){
                 return 0
@@ -165,117 +165,117 @@ function drawRectangle(node, graph, view){
 
 function drawPath(node, graph, view){
     node.append("path")
-	    .attr('d', function(d){
-	        if(d.name == "intermediate"){
-		        return "m" + 0 + " " + 0
-		            + "h " + view.sankey.nodeWidth()
-		            + "v " + (1)*0
-		            + "h " + (-1)*view.sankey.nodeWidth();
-	        }
-	    })
-	    .style("fill", function(d){
-	        if(d.name == "intermediate"){
-		        return 'grey'
-	        }
-	        else{
-		        return view.color.getColor(d)
-	        }
-	    })
-	    .style('fill-opacity', function(d){
-	        if(d.name == "intermediate"){
-		        return 0.0;
-	        }
-	        else{
-		        return 0;
-	        }
-	    })
-	    .style("stroke", function(d){
-	        if(d.name == "intermediate"){
-		        return 'grey'
-	        }
-	    })
-	    .style("stroke-opacity", "0.0") 
+	.attr('d', function(d){
+	    if(d.name == "intermediate"){
+		return "m" + 0 + " " + 0
+		    + "h " + view.sankey.nodeWidth()
+		    + "v " + (1)*0
+		    + "h " + (-1)*view.sankey.nodeWidth();
+	    }
+	})
+	.style("fill", function(d){
+	    if(d.name == "intermediate"){
+		return 'grey'
+	    }
+	    else{
+		return view.color.getColor(d)
+	    }
+	})
+	.style('fill-opacity', function(d){
+	    if(d.name == "intermediate"){
+		return 0.0;
+	    }
+	    else{
+		return 0;
+	    }
+	})
+	.style("stroke", function(d){
+	    if(d.name == "intermediate"){
+		return 'grey'
+	    }
+	})
+	.style("stroke-opacity", "0.0") 
 
     view.nodes.selectAll('path')
-	    .data(graph.nodes)
-	    .transition()
-	    .duration(view.transitionDuration)
-	    .delay(view.transitionDuration/3)
-	    .style('fill-opacity' , function(d){
-	        if(d.name[0] == "intermediate"){
-	    	    return 0;
-	        }
-	    })
+	.data(graph.nodes)
+	.transition()
+	.duration(view.transitionDuration)
+	.delay(view.transitionDuration/3)
+	.style('fill-opacity' , function(d){
+	    if(d.name[0] == "intermediate"){
+	    	return 0;
+	    }
+	})
 }
 
 
 function drawText(node, graph, view){
     let textTruncForNode = 4;
     node.append("text")
-	    .attr('dy', '0.35em')
-	    .attr("transform", "rotate(90)")
-	    .attr('x', function(d){
-	        // return sankey.nodeWidth() + 5;
-	        return 5;
-	    })
-	    .attr('y', "-10")
-	    .style('opacity', 1)
-	    .text(function (d) {
-	        if(d.name != "intermediate" && d.name[0][d.name[0].length - 1] != '_'){
-	    	    if(d.height < view.minHeightForText ) {
-	    	        return "";
-	    	    }
-	    	    else {
-	    	        var textSize = calcTextSize(d.name)["width"];
-	    	        if(textSize < d.height){
-	    		        return d.name[0];
-	    	        }
-	    	        else{
-	    		        return d.name[0].trunc(textTruncForNode);
-	    	        }
-	    	    }
-	        }
-	        else{
+	.attr('dy', '0.35em')
+	.attr("transform", "rotate(90)")
+	.attr('x', function(d){
+	    // return sankey.nodeWidth() + 5;
+	    return 5;
+	})
+	.attr('y', "-10")
+	.style('opacity', 1)
+	.text(function (d) {
+	    if(d.name != "intermediate" && d.name[0][d.name[0].length - 1] != '_'){
+	    	if(d.height < view.minHeightForText ) {
 	    	    return "";
-	        }
-	    })
-	    .on("mouseover", function(d){
-	        if(d.name[0] != "intermediate"){
-	    	    view.toolTipList.attr('width', "400px")
-		            .attr('height', "150px")	    	
+	    	}
+	    	else {
+	    	    var textSize = calcTextSize(d.name)["width"];
+	    	    if(textSize < d.height){
+	    		return d.name[0];
+	    	    }
+	    	    else{
+	    		return d.name[0].trunc(textTruncForNode);
+	    	    }
+	    	}
+	    }
+	    else{
+	    	return "";
+	    }
+	})
+	.on("mouseover", function(d){
+	    if(d.name[0] != "intermediate"){
+	    	view.toolTipList.attr('width', "400px")
+		    .attr('height', "150px")	    	
                 //		var res = getFunctionListOfNode(d);
                 //		toolTipTexts(d,res, rootRunTime1);
-		        d3.select(this.parentNode).select('rect').style("stroke-width", "2");
-	        }
-	    })
-	    .on("mouseout", function(d){
-	        view.toolTipList.attr('width', '0px')
-		        .attr('height', '0px')
-	        if(d.name[0] != "intermediate"){
-		        d3.select(this.parentNode).select('rect').style("stroke-width", "1");
-                unFade();
-	        }
-	        view.toolTip.style('opacity', 1)
-		        .style('left', function(){
-		            return 0;
-		        })
-		        .style('top', function(){
-		            return 0;
-		        })
-	        view.toolTipText.html("");		    
-	        view.toolTipG.selectAll('*').remove();		    		
-	    });
+		d3.select(this.parentNode).select('rect').style("stroke-width", "2");
+	    }
+	})
+	.on("mouseout", function(d){
+	    view.toolTipList.attr('width', '0px')
+		.attr('height', '0px')
+	    if(d.name[0] != "intermediate"){
+		d3.select(this.parentNode).select('rect').style("stroke-width", "1");
+		//                unFade();
+	    }
+	    view.toolTip.style('opacity', 1)
+		.style('left', function(){
+		    return 0;
+		})
+		.style('top', function(){
+		    return 0;
+		})
+	    view.toolTipText.html("");		    
+	    view.toolTipG.selectAll('*').remove();		    		
+	});
 
     // Transition
     view.nodes.selectAll("text")
-	    .data(graph.nodes)
-	    .transition()
-	    .duration(view.transitionDuration)
+	.data(graph.nodes)
+	.transition()
+	.duration(view.transitionDuration)
         .style('opacity', 1)
     	.style("fill", function(d){
-	        return view.color.setContrast(view.color.getColor(d))
-	    })
-	    .text(function (d) {
+	    return view.color.setContrast(view.color.getColor(d))
+	})
+	.text(function (d) {
             let name_splits = d.name[0].split('/').reverse()
             console.log(name_splits)
             if(name_splits.length == 1){
@@ -286,23 +286,23 @@ function drawText(node, graph, view){
             }
 
             if(d.name != "i" &&  d.name[d.name.length - 1] != '_'){
-	    	    if(d.height < view.minHeightForText ){
-	    	        return "";
+	    	if(d.height < view.minHeightForText ){
+	    	    return "";
+	    	}
+	    	else{
+	    	    var textSize = calcTextSize(d.name)["width"];	    	        
+	    	    if(textSize < d.height){
+	    		return d.name;
 	    	    }
 	    	    else{
-	    	        var textSize = calcTextSize(d.name)["width"];	    	        
-	    	        if(textSize < d.height){
-	    		        return d.name;
-	    	        }
-	    	        else{
-	    		        return d.name.trunc(textTruncForNode);
-	    	        }
+	    		return d.name.trunc(textTruncForNode);
 	    	    }
-	        }
-	        else{
-	    	    return "";
-	        }
-	    });   
+	    	}
+	    }
+	    else{
+	    	return "";
+	    }
+	});   
 }
 
 
@@ -379,7 +379,6 @@ function getFunctionListOfNode(graph, d){
     var sourceLabel = [];
     var sourceID = [];
     graph.edges.forEach(function(edge){
-
         if(edge["targetID"] == d["sankeyID"]){
             if(sourceLabel.indexOf(edge["sourceLabel"]) ==-1) {
                 sourceLabel.push( edge["sourceLabel"] );
