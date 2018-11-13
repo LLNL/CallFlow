@@ -53,7 +53,7 @@ class CallFlow:
             splitCallee(self.state, attr)
             nx = CallGraph(self.state, 'path')
         elif action == "split-caller":
-            splitCaller(self.gf, split_node)
+            splitCaller(self.state, attr)
             nx = CallGraph(self.state, 'path')
 
         self.cfg = json_graph.node_link_data(nx.g)

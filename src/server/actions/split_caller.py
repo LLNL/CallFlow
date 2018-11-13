@@ -13,9 +13,43 @@
 #!/usr/bin/env python3
 
 import pandas as pd
+from collections import defaultdict
 
 class splitCaller:
-    def __init__(self, state, df_index):
+    def __init__(self, state, node):
+        self.graph = state.graph
+        self.df = state.df
+        self.d_graph = defaultdict(list)
+        self.node = node
+        self.entry_functions(state)
+
+
+    def entry_functions(self, state):
+        root = self.graph.roots[0]
+        node_gen = self.graph.roots[0].traverse()
+        
+        try:
+            while root.callpath != None:
+                root = next(node_gen)
+                t = state.lookup_with_node(root)
+                s = state.lookup_with_node(root.parent)
+
+                if len(s['vis_node_name']) != 0:
+                    if s['module'][0] == self.node:
+                        print(len(s['group_path'][0]))
+                        if len(s['group_path'][0]) == 4:
+                            print(s['name'][0])
+                            print(s['path'][0], s['group_path'][0], s['component_path'][0])
+                    
+        except StopIteration:
+            pass
+        finally:
+            del root
+            
+    def getChildren(self):
+        
+        return []
+        
         show_node_map = {}
         children_of_node = df[df['node'] == node].children
         for nod in children_of_node:

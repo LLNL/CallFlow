@@ -284,5 +284,4 @@ class CallGraph(nx.Graph):
             else:
                 ret[edge] = target_inc
 
-        print(ret)
         return ret

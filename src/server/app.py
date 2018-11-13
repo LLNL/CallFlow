@@ -142,7 +142,6 @@ class App():
             log.info("Graftin......")
             t = time.time()
             filter_gf = filter_gf.graft()
-            print(filter_gf.dataframe.shape)
             log.info("[Graft] {1} nodes left (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
             fgfs.append(filter_gf)
         if write:
@@ -204,11 +203,14 @@ class App():
         def getMaps():
             return json.dumps(self.callflow.state.map)
 
-        @app.route('/split')
-        def configFile(json):
-            return jsonify({                
-            })
-
+        @app.route('/splitCaller')
+        def splitCaller():
+            ret = []
+            node = str(request.args.get('node'))
+            self.callflow.update('split-caller', node)
+            return ''
+        #self.callflow.cfg
+                
         @app.route('/getHistogramData')
         def getHistogramData():
             df_index = int(request.args.get('df_index'))
@@ -224,7 +226,7 @@ class App():
         @app.route('/getFunctionLists')
         def getFunctionLists():
             df_index = int(request.args.get('df_index'))
-            print(df_index)
+#            print(df_index)
             self.callflow.update('split-callee', df_index)
 
             

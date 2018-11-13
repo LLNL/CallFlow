@@ -23,7 +23,8 @@ class splitCallee:
         self.run(state)
         
     def run(self, state):    
-        print(state.lookup_with_df_index(self.df_index))
+
+#        print(state.lookup_with_df_index(self.df_index))
         ret = {}
         return ret
 

@@ -37,9 +37,21 @@ export default class CallFlow{
         this.setColor(1)
         this.render()
 	    let controlUI =  new ControlUI(this.graph, this.view)
+//        this.renderCCTBtn()
         return this
     }
 }
+
+CallFlow.prototype.renderCCTBtn = function(){
+    var render_button= $('<input type="button" id="renderCCTBtn" value="Render CCT"/>');        
+    $('#control').append(render_button)
+    $('#renderCCTBtn').click(function(){
+        getCCT().then((data) => {
+            
+        })
+    })
+}
+
 
 CallFlow.prototype.setColor = function(colorOption){
 	this.view.colorOption = colorOption

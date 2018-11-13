@@ -40,8 +40,8 @@ function correctGraph(nodes, edges) {
                 let tempNode = {
                     sankeyID: intermediate,
                     name: "intermediate",
-                    weight: nodes[i].weight,
-		            height: nodes[i].value
+//                    weight: nodes[i].weight,
+//		            height: nodes[i].value
                 }
                 nodes.push(tempNode)
                 edges.push({

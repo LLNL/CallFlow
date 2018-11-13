@@ -14,7 +14,7 @@
 import Layout from './components/goldenLayout'
 import ControlUI from './components/control_wrapper'
 import spinnerWrapper from './components/spinner'
-import { getDataMaps, getNodeMetrics, getSankey, getCCT } from './routes'
+import { getDataMaps, getNodeMetrics, getSankey, getCCT, splitCaller } from './routes'
 import scatterPlotUI from './components/scatterPlot'
 import CallFlow from './components/callflow_wrapper'
 import CCT from './components/cct_wrapper'
@@ -31,7 +31,8 @@ export default class App{
 	    this.target = document.getElementById("procedure_view").parentElement
 	    this.refresh = false
 	    this.spinner = spinnerWrapper(this.target)
-	    this.fetch('module')
+        this.addRenderCCTBtn()
+	    this.fetch('module')        
         this.callflow = null
     }
 
@@ -45,19 +46,29 @@ export default class App{
 
     fetch(attr){
 	    let self = this
-        console.log(attr)
 	    getSankey(attr).then((data) => {
 	        self.state = data
 	        getDataMaps().then((map) => {
 		        self.map = map
 		        this.render()
 	        })
-	    })
+	    }).then(() => {
+            splitCaller('lulesh2.0').then((data) => {
+                self.state = data
+//                this.render()
+            })
+        })
+    }
 
-        // Fetch CCT default view
-        getCCT().then((data) => {
-            self.state_cct = data
-            this.renderCCT()
+    addRenderCCTBtn(){
+        let self = this
+        let render_button= $('<input type="button" id="renderCCTBtn" value="Render CCT"/>');        
+        $('#control').append(render_button)
+        $('#renderCCTBtn').click(function(){
+            getCCT().then((data) => {
+                self.state_cct = data
+                self.renderCCT()                
+            })
         })
     }
 
@@ -75,8 +86,8 @@ export default class App{
     renderCCT(){
         let prop = {
             ID: '#CCT_view',
-            width : $('#CCT_view').height(),
-            height: $('#CCT_view').height()
+            width : $('#procedure_view').width(),
+            height: $('#procedure_view').height()
         }
 
         this.CCT = new CCT(this.state_cct, prop)

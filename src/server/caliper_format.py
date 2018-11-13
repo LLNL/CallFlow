@@ -9,7 +9,6 @@ class caliper_callflow_format(object):
         ret = {}
         for gf in gfs:
             level = self.assign_levels(gf)
-        print level
             # graphID = 0
         # for gf in gfs:
         #     print gf.graph.to_string(gf.graph.roots, gf.dataframe, threshold=0.0)

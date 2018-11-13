@@ -124,7 +124,7 @@ class PreProcess():
             self.df['callees'] = self.df['node'].apply(lambda node: callees[node] if node in callees else [])
             self.df['callers'] = self.df['node'].apply(lambda node: callers[node] if node in callers else [])
 
-            print(self.df['df_index'], self.df['callees'])
+#            print(self.df['df_index'], self.df['callees'])
             
             return self
         
