@@ -75,7 +75,7 @@ export default class App{
     renderCCT(){
         let prop = {
             ID: '#CCT_view',
-            width : Math.max(1000, $('#CCT_view').height()),
+            width : $('#CCT_view').height(),
             height: $('#CCT_view').height()
         }
 

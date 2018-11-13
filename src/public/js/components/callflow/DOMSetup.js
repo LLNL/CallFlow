@@ -19,7 +19,7 @@ export default function DOMSetup(view){
             //	    let tx = Math.min(0, Math.min(d3.event.translate[0], view.width + view.width*d3.event.scale))
             //	    let ty = Math.min(0, Math.min(d3.event.translate[1], view.height + view.height*d3.event.scale))
             //	    view.svgBase.attr("transform", "translate(" + [tx, ty]  + ")scale(" + d3.event.scale + ")");
-	        view.svgBase.attr("transform", "translate(" + d3.event.traslate  + ")scale(" + d3.event.scale + ")");
+	        view.svgBase.attr("transform", "translate(" + d3.event.translate  + ")scale(" + d3.event.scale + ")");
 	    })    
     
     view.svg = d3.select(view.containerID).append('svg')

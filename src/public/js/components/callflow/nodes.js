@@ -55,7 +55,6 @@ function clearNodes(view){
 function drawRectangle(node, graph, view){
     let rect = node.append("rect")
 	.attr("height", function (d) {
-        console.log(d.height)
 	    return d.height;
 	})
 	.attr("width", view.nodeWidth)

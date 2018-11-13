@@ -305,7 +305,6 @@ function d3sankeySingle() {
 		            node.y = Math.min(levelY, i)
 		            levelY = nodeHeight
                     node.parY = nodeHeight;
-                    console.log(node.value)
 		            node.height = node.value*minNodeScale*scale;
                 });
 
