@@ -46,6 +46,7 @@ function cleanGraph(graph){
 }
 
 function c_a(graph){
+    console.log(graph)
     let nodes = graph.nodes    
 
     for(let node of nodes){

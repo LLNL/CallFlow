@@ -274,13 +274,15 @@ class CallGraph(nx.Graph):
                 # added_flow = additional_flow[target_name]
             source = self.state.lookup_with_vis_nodeName(edge[0])
             target = self.state.lookup_with_vis_nodeName(edge[1])           
-                
+            
             source_inc = source['CPUTIME (usec) (I)'].max()
             target_inc = target['CPUTIME (usec) (I)'].max()
+
 
             if source_inc == target_inc:
                 ret[edge] = source_inc
             else:
                 ret[edge] = target_inc
-                                
+
+        print(ret)
         return ret

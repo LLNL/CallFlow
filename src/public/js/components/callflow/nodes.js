@@ -55,6 +55,7 @@ function clearNodes(view){
 function drawRectangle(node, graph, view){
     let rect = node.append("rect")
 	.attr("height", function (d) {
+        console.log(d.height)
 	    return d.height;
 	})
 	.attr("width", view.nodeWidth)
@@ -276,7 +277,6 @@ function drawText(node, graph, view){
 	})
 	.text(function (d) {
             let name_splits = d.name[0].split('/').reverse()
-            console.log(name_splits)
             if(name_splits.length == 1){
                 d.name = d.name[0]
             }

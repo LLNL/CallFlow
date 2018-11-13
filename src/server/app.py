@@ -191,6 +191,15 @@ class App():
             self.cfgs = self.create_cfgs(self.gfs, group_by_attr)
             return json.dumps(self.cfgs)
 
+        @app.route('/getCCT')
+        def getCCT():
+            ret = []
+            for idx, gf in enumerate(self.gfs):
+                self.cct = CallFlow(gf)
+                self.cct.update('default', '')
+                ret.append(self.cct.cfg)
+            return json.dumps(ret)
+            
         @app.route('/getMaps')
         def getMaps():
             return json.dumps(self.callflow.state.map)
@@ -218,8 +227,6 @@ class App():
             print(df_index)
             self.callflow.update('split-callee', df_index)
 
-        def getEntireTree():
-            self.callflow.update('entire-tree')
             
     def launch_webapp(self):
         # Load the graph frames from an intermediate format.

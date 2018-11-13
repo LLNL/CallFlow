@@ -14,9 +14,10 @@
 import Layout from './components/goldenLayout'
 import ControlUI from './components/control_wrapper'
 import spinnerWrapper from './components/spinner'
-import { getDataMaps, getNodeMetrics, getSankey } from './routes'
+import { getDataMaps, getNodeMetrics, getSankey, getCCT } from './routes'
 import scatterPlotUI from './components/scatterPlot'
 import CallFlow from './components/callflow_wrapper'
+import CCT from './components/cct_wrapper'
 import ConfigJSON from './components/ConfigJSON'
 import preprocess from './components/callflow/preprocess.js'
 import sankeyComputation from './components/callflow/sankeyComputation.js'
@@ -44,6 +45,7 @@ export default class App{
 
     fetch(attr){
 	    let self = this
+        console.log(attr)
 	    getSankey(attr).then((data) => {
 	        self.state = data
 	        getDataMaps().then((map) => {
@@ -51,6 +53,12 @@ export default class App{
 		        this.render()
 	        })
 	    })
+
+        // Fetch CCT default view
+        getCCT().then((data) => {
+            self.state_cct = data
+            this.renderCCT()
+        })
     }
 
     render(){
@@ -62,6 +70,16 @@ export default class App{
 	    this.callflow = new CallFlow(this.state, prop)
 	    let configJSON = new ConfigJSON();
 	    this.spinner.stop();    
+    }
+
+    renderCCT(){
+        let prop = {
+            ID: '#CCT_view',
+            width : Math.max(1000, $('#CCT_view').height()),
+            height: $('#CCT_view').height()
+        }
+
+        this.CCT = new CCT(this.state_cct, prop)
     }
 
     update(action, attr){

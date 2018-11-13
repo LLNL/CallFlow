@@ -55,8 +55,6 @@ class CallFlow:
         elif action == "split-caller":
             splitCaller(self.gf, split_node)
             nx = CallGraph(self.state, 'path')
-        elif action == "entire-tree":
-            nx = CallGraph(self.state)
 
         self.cfg = json_graph.node_link_data(nx.g)
 

@@ -26,6 +26,28 @@ function getSankey(attr, cb){
     })
 }
 
+function getCCT(attr, cb){
+    return new Promise( (resolve, reject) => {
+	    $.ajax({
+	        type: "GET",
+	        contentType: "application/json",
+	        url: '/getCCT',
+	        success: (data) => {
+		        data = JSON.parse(data)
+		        if(self.debug){
+		            console.log('[Vis] Sankey information :', data)
+		        }
+		        resolve(data[0])
+	        },
+	        error: function(err){
+		        console.log(err);
+		        reject();
+	        }
+	    })
+    })
+}
+
+
 function getConfigFile(filename, cb){
     $.ajax({
 	    type:'GET',
@@ -186,4 +208,5 @@ export {
     getConfigFile,    
     getHistogramData,
     getFunctionLists,
+    getCCT,
 }

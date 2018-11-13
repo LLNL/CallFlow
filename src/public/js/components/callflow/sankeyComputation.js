@@ -1,5 +1,4 @@
 export default function sankeyComputation(graph, view){
-    console.log(view.minNodeScale)
     let sankey = d3sankeySingle()
 	    .nodeWidth(view.nodeWidth)
 	    .nodePadding(view.ySpacing)
@@ -16,8 +15,6 @@ export default function sankeyComputation(graph, view){
 
     correctGraph(graph.nodes, graph.links);
 
-    console.log(graph.links, graph.nodes)
-    
     return sankey
 }
 

@@ -116,8 +116,8 @@ let config = {
 			                {
 				            type: 'component',
 				            componentName: 'testComponent',
-				            componentState: { id: 'full_graph_view' },
-				            title: 'Full graph view'
+				            componentState: { id: 'CCT_view' },
+				            title: 'CCT view'
 			                },
 			                
 			            ]
