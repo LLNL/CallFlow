@@ -1,5 +1,6 @@
 import histogramUI from './components/histogram'
 import scatterPlotUI from './components/scatterPlot'
+import { displayFunctions } from './components/functionList'
 import CallFlow from './components/callflow_wrapper'
 import ConfigJSON from './components/ConfigJSON'
 import { App, layout } from './app'
@@ -216,7 +217,9 @@ function getFunctionLists(node, cb){
                 "mod_index": node.mod_index[0]
             },
 	        success: function(data){
-                console.log(data)
+                console.log('Function lists', data)
+                displayFunctions(data)
+                return data;
 	        },
 	        error: function(){
 		        console.log("There was problem with getting the data for histogram and scatter plot");

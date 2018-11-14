@@ -4,12 +4,14 @@ import colorBy from './control/colorBy'
 import showName from './control/showName'
 import colorLegend from './control/colorLegend'
 import groupBy from './control/groupBy'
+import { functionListUI } from './functionList'
 
 export default class ControlUI {
     constructor(graph, view) {
-//        colorLegend(view.colorOption)
+        //        colorLegend(view.colorOption)
+        functionListUI()
         showName(view)
-	groupBy(view)
+	    groupBy(view)
         colorBy(graph, view)
         range(view)
         nodeSize(view)

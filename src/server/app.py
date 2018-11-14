@@ -230,7 +230,6 @@ class App():
             df = self.callflow.state.df
             entry_funcs = df[df.df_index == df_index]['callees'].values.tolist()[0]
             other_funcs = list(set(df[df.mod_index == mod_index]['name']))
-            print(other_funcs)
             return json.dumps({
                 "entry_funcs": entry_funcs,
                 "other_funcs": other_funcs
