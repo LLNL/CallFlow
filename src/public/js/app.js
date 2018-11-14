@@ -56,13 +56,16 @@ export default class App{
             splitCaller('lulesh2.0').then((data) => {
                 self.state = data
 //                this.render()
+            }).then(() => {
+
             })
+            
         })
     }
 
     addRenderCCTBtn(){
         let self = this
-        let render_button= $('<input type="button" id="renderCCTBtn" value="Render CCT"/>');        
+        let render_button= $('<input type="button" id="renderCCTBtn" value="Render CCT"/> <br/>');        
         $('#control').append(render_button)
         $('#renderCCTBtn').click(function(){
             getCCT().then((data) => {

@@ -226,8 +226,15 @@ class App():
         @app.route('/getFunctionLists')
         def getFunctionLists():
             df_index = int(request.args.get('df_index'))
-#            print(df_index)
-            self.callflow.update('split-callee', df_index)
+            mod_index = int(request.args.get('mod_index'))
+            df = self.callflow.state.df
+            entry_funcs = df[df.df_index == df_index]['callees'].values.tolist()[0]
+            other_funcs = list(set(df[df.mod_index == mod_index]['name']))
+            print(other_funcs)
+            return json.dumps({
+                "entry_funcs": entry_funcs,
+                "other_funcs": other_funcs
+            })
 
             
     def launch_webapp(self):

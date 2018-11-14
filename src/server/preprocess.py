@@ -33,6 +33,11 @@ class PreProcess():
             self.df = state.df
             self.graph = state.graph
             self.map = {}
+
+        def clean_lib_monitor(self):
+#            print(self.df[self.df.module == 'libmonitor.so.0.0.0'])
+#            print(self.df[self.df.module != 'libmonitor.so.0.0.0'])
+            return self
             
         def build(self):
             return PreProcess(self)
@@ -105,24 +110,29 @@ class PreProcess():
             
             root = graph.roots[0]
             node_gen = graph.roots[0].traverse()
-            callers[root] = []
-            callees[root] = []
+
+            root_df = self.state.lookup(root.df_index)['name'][0]
+            callers[root_df] = []
+            callees[root_df] = []
         
             try:
                 while root.callpath != None:
                     root = next(node_gen)
-                    if root.parent not in callees:
-                        callees[root.parent] = []
+                    if root.parent:
+                        root_df = self.state.lookup(root.df_index)['name'][0]
+                        parent_df = self.state.lookup(root.parent.df_index)['name'][0]
+                        if parent_df not in callees:
+                            callees[parent_df] = []
                     
-                    callees[root.parent].append(root)
+                        callees[parent_df].append(root_df)
             except StopIteration:
                 pass
             finally:
                 del root
 
 #            self.map['callees'] = callees
-            self.df['callees'] = self.df['node'].apply(lambda node: callees[node] if node in callees else [])
-            self.df['callers'] = self.df['node'].apply(lambda node: callers[node] if node in callers else [])
+            self.df['callees'] = self.df['name'].apply(lambda node: callees[node] if node in callees else [])
+            self.df['callers'] = self.df['name'].apply(lambda node: callers[node] if node in callers else [])
 
 #            print(self.df['df_index'], self.df['callees'])
             
@@ -152,6 +162,7 @@ class PreProcess():
             return self
         
         def add_df_index(self):
-            self.df['df_index'] = self.df['node'].apply(lambda node: random.randint(1,100))
-            #            self.df['df_index'] = self.df['node'].apply(lambda node: node.df_index)
+            self.df['df_index'] = self.df.groupby('node').ngroup() 
+            self.df['mod_index'] = self.df.groupby('module').ngroup()
             return self
+

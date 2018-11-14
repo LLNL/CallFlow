@@ -77,7 +77,10 @@ class CallGraph(nx.Graph):
         
         df_index_mapping = self.generic_map(self.g.nodes(), 'df_index')
         nx.set_node_attributes(self.g, name='df_index', values=df_index_mapping)
-        
+
+        mod_index_mapping = self.generic_map(self.g.nodes(), 'mod_index')
+        nx.set_node_attributes(self.g, name='mod_index', values=mod_index_mapping)
+
         self.level_mapping = self.assign_levels()               
         nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
 

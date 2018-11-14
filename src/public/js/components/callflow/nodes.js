@@ -1,4 +1,4 @@
-import { getHistogramData } from '../../routes'
+import { getHistogramData, getFunctionLists } from '../../routes'
 import Color from './color.js'
 
 function calcTextSize(text) {
@@ -122,7 +122,7 @@ function drawRectangle(node, graph, view){
 	})		    
 	.on('click', function(d){
 	    getHistogramData(d)
-	    //	        getFunctionLists(d)
+	    getFunctionLists(d)
 	    // if(d.name != "intermediate"){
 	    // 	var ret = getFunctionListOfNode(d);
 	    // 	var fromProcToProc = ret["fromProcToProc"];

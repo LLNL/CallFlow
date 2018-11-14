@@ -204,7 +204,6 @@ function getHistogramData(node, cb){
 }
 
 function getFunctionLists(node, cb){
-    console.log(node)
     if (node.df_index != undefined){
         console.log(node.df_index[0])
 	    $.ajax({
@@ -212,9 +211,12 @@ function getFunctionLists(node, cb){
 	        contentType: 'application/json',
 	        dataType: 'json',
 	        url: '/getFunctionLists',
-	        data: {"df_index": node.df_index[0]},
+	        data: {
+                "df_index": node.df_index[0],
+                "mod_index": node.mod_index[0]
+            },
 	        success: function(data){
-                
+                console.log(data)
 	        },
 	        error: function(){
 		        console.log("There was problem with getting the data for histogram and scatter plot");
