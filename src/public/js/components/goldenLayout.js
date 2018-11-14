@@ -38,6 +38,13 @@ let config = {
 		            {
 			            type: 'stack',
 			            content: [
+                            {
+				                type: 'component',
+				                componentName: 'testComponent',
+				                componentState: {id : "fList_view" },
+				                isClosable: false,
+				                title: "Function List"
+			                },								
 			                {
 				                type: 'component',
 				                componentName: 'testComponent',
@@ -75,13 +82,6 @@ let config = {
 				                isClosable: false,
 				                title: "Scatter Plot View"
 			                },
-			                {
-				                type: 'component',
-				                componentName: 'testComponent',
-				                componentState: {id : "fList_view" },
-				                isClosable: false,
-				                title: "Function List"
-			                },								
 			            ]
 		            },
 		            {

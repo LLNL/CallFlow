@@ -1,3 +1,5 @@
+import { splitCaller } from '../routes'
+
 function functionListUI(){
     var listViewDiv = document.createElement('div');
     listViewDiv.setAttribute("id", "list_view"); 
@@ -9,21 +11,21 @@ function functionListUI(){
 
     var button = $('<button/>',
 		           {
-		               text: 'Split Node',
-		               click: splitCaller,
+		               text: 'Split Caller',
 		               id: "splitNodeBtr"
 		           });
+
+    
     $("#fList_view").append(button);
-    document.getElementById("splitNodeBtr").disabled = true;
+//    document.getElementById("splitNodeBtr").disabled = true;
 
     var button2 = $('<button/>',
 		            {
-			            text: 'Split By Parents',
-			            click: splitCallee,
+			            text: 'Split Callee',
 			            id: "splitNodeByParentBtr"
 		            });
     $("#fList_view").append(button2);
-    document.getElementById("splitNodeByParentBtr").disabled = true;
+//    document.getElementById("splitNodeByParentBtr").disabled = true;
 }
 
 function displayFunctions(listData){
@@ -38,9 +40,8 @@ function displayFunctions(listData){
 
     document.getElementById('list_view').appendChild(document.createTextNode("Entry functions: "))
     document.getElementById('list_view').appendChild(document.createElement("br"));  
-    entry_funcs.forEach(function(dat){
-        var funcName = dat.trunc(20);// + ": [" + (dat["value"] * 0.000001).toFixed(3)  + "s, " + (dat["value"] /rootRunTime * 100).toFixed(3) + "%]" ;
-//	    var funcName = dat["name"].trunc(20) + ": [" + (dat["value"] * 0.000001).toFixed(3)  + "s, " + (dat["value"] /rootRunTime * 100).toFixed(3) + "%]" ;
+    entry_funcs.forEach(function(dat){    
+        var funcName = dat["name"].trunc(20) + ": [" + (dat["value_inc"] * 0.000001).toFixed(3)  + "s, " ;
 	    var label = document.createElement("label");
 	    var description = document.createTextNode(funcName);
 	    var checkbox = document.createElement("input");
@@ -59,11 +60,13 @@ function displayFunctions(listData){
 
     document.getElementById('list_view').appendChild(document.createElement('br'));
 
+
+
+    
     document.getElementById('list_view').appendChild(document.createTextNode("Other functions: "))
     document.getElementById('list_view').appendChild(document.createElement("br"));  
     other_funcs.forEach(function(dat){
-        var funcName = dat.trunc(20);// + ": [" + (dat["value"] * 0.000001).toFixed(3)  + "s, " + (dat["value"] /rootRunTime * 100).toFixed(3) + "%]" ;
-//	    var funcName = dat["name"].trunc(20) + ": [" + (dat["value"] * 0.000001).toFixed(3)  + "s, " + (dat["value"] /rootRunTime * 100).toFixed(3) + "%]" ;
+	    var funcName = dat["name"].trunc(20) + ": [" + (dat["value_inc"] * 0.000001).toFixed(3)  + "s,";
 	    var label = document.createElement("label");
 	    var description = document.createTextNode(funcName);
 	    var checkbox = document.createElement("input");        
@@ -79,19 +82,20 @@ function displayFunctions(listData){
 	    document.getElementById('list_view').appendChild(label);
 	    document.getElementById('list_view').appendChild(document.createElement("br"));  
     });
-
     
-
     document.getElementById("splitNodeBtr").disabled = false;
 
-}
+    $('#splitNodeBtr').click( () => {
+        var idList = $('input:checkbox:checked.list_checkbox').map(function () {
+            console.log(this.value['name'], this.value['df_index'])
+            return this.value
+        }).get();
+        splitCaller(idList).then((data) => {
+            self.state = data
+            //                this.render()
+        })
 
-function splitCaller(){
-
-}
-
-function splitCallee(){
-
+    })
 }
 
 

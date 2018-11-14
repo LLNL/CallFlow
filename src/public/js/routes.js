@@ -49,13 +49,13 @@ function getCCT(attr, cb){
 }
 
 
-function splitCaller(attr, cb){
+function splitCaller(idList, cb){
     return new Promise( (resolve, reject) => {
 	    $.ajax({
 	        type: "GET",
 	        contentType: "application/json",
 	        url: '/splitCaller',
-            data: { 'node': attr },
+            data: { 'idList': JSON.stringify(idList) },
 	        success: (data) => {
 //		        data = JSON.parse(data)
 		        if(self.debug){

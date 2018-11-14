@@ -16,13 +16,25 @@ import pandas as pd
 from collections import defaultdict
 
 class splitCaller:
-    def __init__(self, state, node):
+    def __init__(self, state, idList):
         self.graph = state.graph
         self.df = state.df
         self.d_graph = defaultdict(list)
-        self.node = node
-        self.entry_functions(state)
+        self.nodes = self.find_df(idList)
+        print(self.nodes, len(self.nodes))
 
+    def find_df(self, nodes):
+        ret = []
+        nodes = nodes.replace('"', '')
+        nodes = nodes.replace('[', '')
+        nodes = nodes.replace(']', '')
+        nodes = nodes.split(',')
+
+        for node in nodes:
+            print(node)
+            df = self.df[self.df.name == node]
+            ret.append(df)
+            return ret
 
     def entry_functions(self, state):
         root = self.graph.roots[0]
@@ -47,9 +59,7 @@ class splitCaller:
             del root
             
     def getChildren(self):
-        
         return []
-        
         show_node_map = {}
         children_of_node = df[df['node'] == node].children
         for nod in children_of_node:

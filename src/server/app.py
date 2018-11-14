@@ -206,10 +206,10 @@ class App():
         @app.route('/splitCaller')
         def splitCaller():
             ret = []
-            node = str(request.args.get('node'))
-            self.callflow.update('split-caller', node)
-            return ''
-        #self.callflow.cfg
+            idList = request.args.get('idList')
+#            print(idList, type(idList), type(request.args.get('idList')))
+            self.callflow.update('split-caller', idList)
+            return json.dumps(ret)
                 
         @app.route('/getHistogramData')
         def getHistogramData():
@@ -230,9 +230,34 @@ class App():
             df = self.callflow.state.df
             entry_funcs = df[df.df_index == df_index]['callees'].values.tolist()[0]
             other_funcs = list(set(df[df.mod_index == mod_index]['name']))
+
+            entry_funcs_json = []
+            for func in entry_funcs:
+                x_df = df[df.name == func]
+                entry_funcs_json.append({
+                    "name": func,
+                    "value_inc": x_df['CPUTIME (usec) (I)'].values.tolist()[0],
+                    "value_exc": x_df['CPUTIME (usec) (E)'].values.tolist()[0],
+                    "df_index": x_df['df_index'].values.tolist()[0]
+                })
+
+
+            other_funcs_json = []
+            for func in other_funcs:
+                x_df = df[df.name == func]
+                print(x_df)
+                other_funcs_json.append({
+                    "name": func,
+                    "value_inc": x_df['CPUTIME (usec) (I)'].values.tolist()[0],
+                    "value_exc": x_df['CPUTIME (usec) (E)'].values.tolist()[0],                    
+                    "df_index": x_df['df_index'].values.tolist()[0]
+                })
+
+            
+
             return json.dumps({
-                "entry_funcs": entry_funcs,
-                "other_funcs": other_funcs
+                "entry_funcs": entry_funcs_json,
+                "other_funcs": other_funcs_json
             })
 
             

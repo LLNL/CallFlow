@@ -53,12 +53,12 @@ export default class App{
 		        this.render()
 	        })
 	    }).then(() => {
-            splitCaller('lulesh2.0').then((data) => {
-                self.state = data
-//                this.render()
-            }).then(() => {
+//             splitCaller('lulesh2.0').then((data) => {
+//                 self.state = data
+// //                this.render()
+//             }).then(() => {
 
-            })
+//             })
             
         })
     }
