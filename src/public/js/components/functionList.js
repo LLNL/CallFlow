@@ -17,7 +17,7 @@ function functionListUI(){
 
     
     $("#fList_view").append(button);
-//    document.getElementById("splitNodeBtr").disabled = true;
+    document.getElementById("splitNodeBtr").disabled = true;
 
     var button2 = $('<button/>',
 		            {
@@ -25,7 +25,7 @@ function functionListUI(){
 			            id: "splitNodeByParentBtr"
 		            });
     $("#fList_view").append(button2);
-//    document.getElementById("splitNodeByParentBtr").disabled = true;
+    document.getElementById("splitNodeByParentBtr").disabled = true;
 }
 
 function displayFunctions(listData){
@@ -34,14 +34,14 @@ function displayFunctions(listData){
     let entry_funcs = listData['entry_funcs']
     let other_funcs = listData['other_funcs']
     
-    // listData.sort(function(a,b){
-    //     return b["value"] - a["value"];
-    // })
+    entry_funcs.sort(function(a,b){
+        return b["value_exc"] - a["value_exc"];
+    })
 
     document.getElementById('list_view').appendChild(document.createTextNode("Entry functions: "))
     document.getElementById('list_view').appendChild(document.createElement("br"));  
     entry_funcs.forEach(function(dat){    
-        var funcName = dat["name"].trunc(20) + ": [" + (dat["value_inc"] * 0.000001).toFixed(3)  + "s, " ;
+        var funcName = dat["name"].trunc(20) + ": [ Exc:" + (dat["value_exc"] * 0.000001).toFixed(3)  + "s, " + "Inc:" + (dat["value_inc"] * 0.000001).toFixed(3) + "s]";
 	    var label = document.createElement("label");
 	    var description = document.createTextNode(funcName);
 	    var checkbox = document.createElement("input");
@@ -61,12 +61,14 @@ function displayFunctions(listData){
     document.getElementById('list_view').appendChild(document.createElement('br'));
 
 
+    other_funcs.sort(function(a,b){
+        return b["value_exc"] - a["value_exc"];
+    })
 
-    
     document.getElementById('list_view').appendChild(document.createTextNode("Other functions: "))
     document.getElementById('list_view').appendChild(document.createElement("br"));  
     other_funcs.forEach(function(dat){
-	    var funcName = dat["name"].trunc(20) + ": [" + (dat["value_inc"] * 0.000001).toFixed(3)  + "s,";
+        var funcName = dat["name"].trunc(20) + ": [ Exc:" + (dat["value_exc"] * 0.000001).toFixed(3)  + "s, " + "Inc:" + (dat["value_inc"] * 0.000001).toFixed(3) + "]";
 	    var label = document.createElement("label");
 	    var description = document.createTextNode(funcName);
 	    var checkbox = document.createElement("input");        
@@ -87,6 +89,7 @@ function displayFunctions(listData){
 
     $('#splitNodeBtr').click( () => {
         var idList = $('input:checkbox:checked.list_checkbox').map(function () {
+            console.log(this)
             console.log(this.value['name'], this.value['df_index'])
             return this.value
         }).get();
