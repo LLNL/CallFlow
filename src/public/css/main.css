@@ -21,7 +21,6 @@ body{
 	font-family: 'Open Sans', sans-serif;
 	margin-bottom: 0px;
 	height: 99%;
-    color:#fff;
 }
 
 #content{
@@ -98,3 +97,27 @@ body{
 #other{
 	height: 32% !important;
 }
+
+
+.box {
+    font: 10px sans-serif;
+}
+
+.box line,
+.box rect,
+.box circle {
+    fill: steelblue;
+    stroke: #000;
+    stroke-width: 1px;
+}
+
+.box .center {
+    stroke-dasharray: 3,3;
+}
+
+.box .outlier {
+    fill: none;
+    stroke: #000;
+}
+
+        

@@ -236,8 +236,8 @@ class App():
                 x_df = df[df.name == func]
                 entry_funcs_json.append({
                     "name": func,
-                    "value_inc": x_df['CPUTIME (usec) (I)'].values.tolist()[0],
-                    "value_exc": x_df['CPUTIME (usec) (E)'].values.tolist()[0],
+                    "value_inc": x_df['CPUTIME (usec) (I)'].values.tolist(),
+                    "value_exc": x_df['CPUTIME (usec) (E)'].values.tolist(),
                     "df_index": x_df['df_index'].values.tolist()[0]
                 })
 
@@ -245,11 +245,10 @@ class App():
             other_funcs_json = []
             for func in other_funcs:
                 x_df = df[df.name == func]
-                print(x_df)
                 other_funcs_json.append({
                     "name": func,
-                    "value_inc": x_df['CPUTIME (usec) (I)'].values.tolist()[0],
-                    "value_exc": x_df['CPUTIME (usec) (E)'].values.tolist()[0],                    
+                    "value_inc": x_df['CPUTIME (usec) (I)'].values.tolist(),
+                    "value_exc": x_df['CPUTIME (usec) (E)'].values.tolist(),                    
                     "df_index": x_df['df_index'].values.tolist()[0]
                 })
 
