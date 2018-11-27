@@ -43,11 +43,6 @@ export default class CCT{
     }
 }
 
-CCT.prototype.renderBtn = function(){
-    var render_button= $('<input type="button" value="new button"/>');        
-    $('#cct_view').append(render_button)
-    console.log('added')
-}
 
 CCT.prototype.setColor = function(colorOption){
 	this.view.colorOption = colorOption

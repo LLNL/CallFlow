@@ -2,7 +2,7 @@ import { splitCaller } from '../routes'
 import { d3_box } from './boxPlot'
 
 function functionListUI(){
-    var listViewDiv = document.createElement('div');
+    var listViewDiv = document.createElement('table');
     listViewDiv.setAttribute("id", "list_view"); 
     document.getElementById('fList_view').appendChild(listViewDiv);
 
@@ -20,8 +20,7 @@ function functionListUI(){
     $("#fList_view").append(button);
     document.getElementById("splitNodeBtr").disabled = true;
 
-    var button2 = $('<button/>',
-		            {
+    var button2 = $('<button/>',{
 			            text: 'Split Callee',
 			            id: "splitNodeByParentBtr"
 		            });
@@ -39,15 +38,16 @@ function displayFunctions(listData){
         return b["value_exc"] - a["value_exc"];
     })
 
-    document.getElementById('list_view').appendChild(document.createTextNode("Entry functions: "))
-    document.getElementById('list_view').appendChild(document.createElement("br"));  
+    let divHead = document.createElement('label');
+    divHead.appendChild(document.createTextNode("Entry functions: "))
+    document.getElementById('list_view').appendChild(divHead)
     entry_funcs.forEach(function(dat){    
-        var funcName = dat["name"].trunc(20)
-        //        var funcName = dat["name"].trunc(20) + ": [ Exc:" + (dat["value_exc"] * 0.000001).toFixed(3)  + "s, " + "Inc:" + (dat["value_inc"] * 0.000001).toFixed(3) + "s]";
-        var div = document.createElement('div')
-	    var label = document.createElement("label");
-	    var description = document.createTextNode(funcName);
-	    var checkbox = document.createElement("input");
+        var funcName = dat["name"].trunc(20) + ": [ Exc:" + (avg(dat["value_exc"]) * 0.000001).toFixed(3)  + "s, " + "Inc:" + (avg(dat["value_inc"]) * 0.000001).toFixed(3) + "s]";
+
+        let div = document.createElement('div')
+	    let label = document.createElement("div");
+	    let description = document.createTextNode(funcName);
+	    let checkbox = document.createElement("input");
         
 	    checkbox.type = "checkbox";
 	    checkbox.name = funcName;
@@ -58,30 +58,32 @@ function displayFunctions(listData){
 	    label.appendChild(description);
 
         div.appendChild(label)
-        boxPlotUI(dat, 'inc')
-
-        document.getElementById('list_view').appendChild(div);
-	    document.getElementById('list_view').appendChild(document.createElement("br"));
+        $('#list_view').append(div);
+        $('list_view').append(document.createElement("br"));
+        boxPlotUI(div, dat, 'inc')
 
     });
-
+    document.getElementById('list_view').appendChild(document.createElement('br'));
     document.getElementById('list_view').appendChild(document.createElement('br'));
 
+
+    // ############################################################################################################
     // For other_funcs
     other_funcs.sort(function(a,b){
         return b["value_exc"] - a["value_exc"];
     })
 
-    document.getElementById('list_view').appendChild(document.createTextNode("Other functions: "))
-    document.getElementById('list_view').appendChild(document.createElement("br"));  
-    other_funcs.forEach(function(dat){
-        var funcName = dat["name"].trunc(20)
-        //      var funcName = dat["name"].trunc(20) + ": [ Exc:" + (dat["value_exc"] * 0.000001).toFixed(3)  + "s, " + "Inc:" + (dat["value_inc"] * 0.000001).toFixed(3) + "]";
+    let otherHead = document.createElement('label');
+    otherHead.appendChild(document.createTextNode("Inside functions: "))
+    document.getElementById('list_view').appendChild(otherHead)
 
-        var div = document.createElement('div')
-	    var label = document.createElement("label");
-	    var description = document.createTextNode(funcName);
-	    var checkbox = document.createElement("input");        
+    let other_funcs_count = 0
+    other_funcs.forEach(function(dat){
+        var funcName = dat["name"].trunc(20) + ": [ Exc:" + (avg(dat["value_exc"]) * 0.000001).toFixed(3)  + "s, " + "Inc:" + (avg(dat["value_inc"]) * 0.000001).toFixed(3) + "s]";
+        let div = document.createElement('div')
+	    let label = document.createElement("div");
+	    let description = document.createTextNode(funcName);
+	    let checkbox = document.createElement("input");        
 
 	    checkbox.type = "checkbox";	    
 	    checkbox.name = funcName;
@@ -90,22 +92,20 @@ function displayFunctions(listData){
 
 	    label.appendChild(checkbox);
 	    label.appendChild(description);
-
+        
         div.appendChild(label)
-        boxPlotUI(dat, 'inc')
-
 	    document.getElementById('list_view').appendChild(div);
-	    document.getElementById('list_view').appendChild(document.createElement("br"));  
+        document.getElementById('list_view').appendChild(document.createElement("br"));
+        
+        boxPlotUI(div, dat, 'inc')
 
+        other_funcs_count += 1
     });
-    
+
+    document.getElementById('list_view').append('<text>' + other_funcs_count + '</text>');
     document.getElementById("splitNodeBtr").disabled = false;
-
-
-    
     $('#splitNodeBtr').click( () => {
         var idList = $('input:checkbox:checked.list_checkbox').map(function () {
-            console.log(this)
             console.log(this.value['name'], this.value['df_index'])
             return this.value
         }).get();
@@ -115,6 +115,14 @@ function displayFunctions(listData){
         })
 
     })
+}
+
+function avg(arr){
+    let sum = 0;
+    for(let i = 0; i < arr.length; i++){
+        sum += arr[i]        
+    }
+    return sum/arr.length
 }
 
 function median(arr){
@@ -179,7 +187,7 @@ function iqr(k) {
     };
 }
 
-function boxPlotUI(data, type){
+function boxPlotUI(div, data, type){
     let inc_arr = data['value_inc']
     let exc_arr = data['value_exc']    
 
@@ -194,35 +202,39 @@ function boxPlotUI(data, type){
         q = quartiles(exc_arr)
     }
 
-    var margin = {top: -20, right: 200, bottom: 0, left: 0};
-    var width = 200;
-    var height = 50;
-    let labels = false;
+    console.log("Value", val)
+    console.log("quartiles", q)
+    
+    var margin = {top: 0, right: 10, bottom: 0, left: 0};
+    var width = $('#list_view').width();
+    var height = 20;
+    let labels = true;
     
     var chart = d3_box()
+        .height(height)
         .whiskers(iqr(1.5))
-        .height(100)
         .domain([q[4], q[5]])
         .showLabels(labels);
 
-    var offset = $('#list_view').width() - margin.right;
+    let offset =  margin.right;
     
-    var svg = d3.select("#list_view").append("svg")
+    let svg = d3.select('#list_view').append("svg")
         .attr("width", width)
         .attr("height", height)
         .attr("class", "box")
         .attr("transform", "translate(" + offset + "," + margin.top + ")")
-        .append("g")
 
-    var x = d3.scale.ordinal()
+    let x = d3.scale.ordinal()
         .domain(val)
-        .rangeRoundBands([0 , width], 0.7, 0.3); 
-
+        .rangeRoundBands([0, width]);
+    
     svg.selectAll(".box")
         .data([val])
         .enter().append("g")
+        .attr("width", width)
+        .attr("height", height)
         .attr("transform", function(d) { return "translate(" + 0  + "," + x(d[0]) + ")"; } )
-        .call(chart.width(x.rangeBand())); 
+        .call(chart.width(width)); 
 
     return svg
 }

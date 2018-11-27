@@ -1,6 +1,6 @@
 // Inspired by http://informationandvisualization.de/blog/box-plot
 function d3_box() {
-    var width = 1,
+    let width = 1,
         height = 1,
         duration = 0,
         domain = null,
@@ -15,12 +15,7 @@ function d3_box() {
     // For each small multiple…
     function box(g) {
         g.each(function(data, i) {
-            //d = d.map(value).sort(d3.ascending);
-            //var boxIndex = data[0];
-            //var boxIndex = 1;
-            //            var d = data[1].sort(d3.ascending);
             var d = data.sort(d3.ascending)
-
             var g = d3.select(this),
                 n = d.length,
                 min = d[0],
@@ -42,7 +37,7 @@ function d3_box() {
             // Compute the new x-scale.
             var x1 = d3.scale.linear()
                 .domain(domain && domain.call(this, d, i) || [min, max])
-                .range([height, 0]);
+                .range([width, 0]);
 
             // Retrieve the old x-scale, if this is an update.
             var x0 = this.__chart__ || d3.scale.linear()
@@ -62,12 +57,12 @@ function d3_box() {
             var center = g.selectAll("line.center")
                 .data(whiskerData ? [whiskerData] : []);
 
-            //vertical line
+            //horizontal line
             center.enter().insert("line", "rect")
                 .attr("class", "center")
-                .attr("y1", width / 2)
-                .attr("x1", function(d) { return x0(d[0]); })
-                .attr("y2", width / 2)
+                .attr("y1", height/2)
+                .attr("y2", height/2)
+                .attr("x1", function(d) { console.log(x0[d[0]]); console.log(x0(d[1])); return x0(d[0]); })
                 .attr("x2", function(d) { return x0(d[1]); })
                 .style("opacity", 1e-6)
                 .transition()
@@ -93,16 +88,18 @@ function d3_box() {
             var box = g.selectAll("rect.box")
                 .data([quartileData]);
 
+            console.log('quartile data', quartileData)
+            
             box.enter().append("rect")
                 .attr("class", "box")
                 .attr("y", 0)
                 .attr("x", function(d) { return x0(d[2]); })
-                .attr("height", width)
-                .attr("width", function(d) { return x0(d[0]) - x0(d[2]); })
+                .attr("height", height - 5)
+                .attr("width", function(d) { return Math.abs(x0(d[0]) - x0(d[2])); })
                 .transition()
                 .duration(duration)
                 .attr("x", function(d) { return x1(d[2]); })
-                .attr("width", function(d) { return x1(d[0]) - x1(d[2]); });
+                .attr("width", function(d) { return Math.abs(x1(d[0]) - x1(d[2])); });
 
             box.transition()
                 .duration(duration)
@@ -117,7 +114,7 @@ function d3_box() {
                 .attr("class", "median")
                 .attr("y1", 0)
                 .attr("x1", x0)
-                .attr("y2", width)
+                .attr("y2", height)
                 .attr("x2", x0)
                 .transition()
                 .duration(duration)
@@ -137,7 +134,7 @@ function d3_box() {
                 .attr("class", "whisker")
                 .attr("y1", 0)
                 .attr("x1", x0)
-                .attr("y2", 0 + width)
+                .attr("y2", height)
                 .attr("x2", x0)
                 .style("opacity", 1e-6)
                 .transition()
@@ -166,7 +163,7 @@ function d3_box() {
             outlier.enter().insert("circle", "text")
                 .attr("class", "outlier")
                 .attr("r", 5)
-                .attr("cy", width / 2)
+                .attr("cy", height/ 2)
                 .attr("cx", function(i) { return x0(d[i]); })
                 .style("opacity", 1e-6)
                 .transition()
@@ -186,8 +183,7 @@ function d3_box() {
                 .remove();
 
             // Compute the tick format.
-            console.log(x1)
-            var format = tickFormat || x1.tickFormat(8);
+            var format = tickFormat || x1.tickFormat(4);
             
             // Update box ticks.
             var boxTick = g.selectAll("text.box")
@@ -199,7 +195,7 @@ function d3_box() {
                     .attr("class", "box")
                     .attr("dx", ".3em")
                     .attr("dy", function(d, i) { return i & 1 ? 6 : -6 })
-                    .attr("y", function(d, i) { return i & 1 ?  + width : 0 })
+                    .attr("y", function(d, i) { return i & 1 ? + height - 5: 0 })
                     .attr("x", x0)
                     .attr("text-anchor", function(d, i) { return i & 1 ? "start" : "end"; })
                     .text(format)
@@ -223,7 +219,7 @@ function d3_box() {
                     .attr("class", "whisker")
                     .attr("dx", ".3em")
                     .attr("dy", 10)
-                    .attr("y", width)
+                    .attr("y", height)
                     .attr("x", x0)
                     .text(format)
                     .style("opacity", 1e-6)
@@ -245,7 +241,7 @@ function d3_box() {
                 .style("opacity", 1e-6)
                 .remove();
         });
-        d3.timer.flush();
+//        d3.timer.flush();
     }
 
     box.width = function(x) {
@@ -310,6 +306,7 @@ function boxWhiskers(d) {
 }
 
 function boxQuartiles(d) {
+
     return [
         d3.quantile(d, .25),
         d3.quantile(d, .5),

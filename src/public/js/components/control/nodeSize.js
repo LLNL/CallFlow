@@ -18,9 +18,9 @@ export default function nodeSize(view){
     tButton.appendTo(rangeDiv);
 
     tButton.click(function(){
-	let val = $('#nodeSize').val()	
-	view.minNodeScale = val
-	layout.app.update('onNodeScaleChange')
+	    let val = $('#nodeSize').val()	
+	    view.minNodeScale = val
+	    layout.app.update('onNodeScaleChange')
     })
 
 }
