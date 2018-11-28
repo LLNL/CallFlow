@@ -20,9 +20,9 @@ export default class CCT{
         this.view.margin = { top: 100, right: 30, bottom: 10, left: 10 }
         this.view.width = (prop.width) - this.view.margin.left - this.view.margin.right
         this.view.height = (prop.height) - this.view.margin.top - this.view.margin.bottom
-	    this.view.treeHeight = this.view.transitionDuration = 1000
+	this.view.treeHeight = this.view.transitionDuration = 1000
         this.view.color = null
-	    this.view.minNodeScale = 1.0        
+	this.view.minNodeScale = 1.0        
         
         // Data properties 
         this.graph = graph
@@ -38,15 +38,14 @@ export default class CCT{
         this.setColor(1)
         this.render()
         return this
-
-
     }
 }
 
 CCT.prototype.renderBtn = function(){
-    var render_button= $('<input type="button" value="new button"/>');        
+    var render_button= $('<input type="button" value="render"/>');        
     $('#cct_view').append(render_button)
-    console.log('added')
+    var render_dot_button= $('<input type="button" value="render Dot"/>');        
+    $('#cct_view').append(render_bot_button)
 }
 
 CCT.prototype.setColor = function(colorOption){

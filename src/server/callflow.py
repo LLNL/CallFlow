@@ -18,7 +18,8 @@ import utils
 import pprint
 from logger import log
 from networkx.readwrite import json_graph
-
+from networkx.drawing.nx_agraph import write_dot
+    
 from preprocess import PreProcess
 from callgraph import CallGraph
 from actions.groupBy import groupBy
@@ -55,6 +56,13 @@ class CallFlow:
         elif action == "split-caller":
             splitCaller(self.state, attr)
             nx = CallGraph(self.state, 'path')
+        elif action == "dot-format":
+            nx = CallGraph(self.state, 'path')
+            nx.write_dot(nx.g, '/Users/jarus/ucd/Research/Visualisation/projects/CallFlow/src/server')
+        # elif action == "default-dot":
+        #     nx = CallGraph(self.state, 'path')
+        #     self.cfg = write_dot(nx, "graph.dot")
+        #     return nx.get_graph()
 
         self.cfg = json_graph.node_link_data(nx.g)
 

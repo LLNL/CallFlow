@@ -184,8 +184,8 @@ class App():
         
         @app.route('/getSankey')
         def getSankey():
-            group_by_attr = str(request.args.get('group_by'))
-            
+            group_by_attr = str(request.args.get('in_data'))
+            print(group_by_attr)
             # Create the callflow graph frames from graphframes given by hatchet
             self.cfgs = self.create_cfgs(self.gfs, group_by_attr)
             return json.dumps(self.cfgs)
@@ -198,7 +198,16 @@ class App():
                 self.cct.update('default', '')
                 ret.append(self.cct.cfg)
             return json.dumps(ret)
-            
+
+        @app.route('/getDotCCT')
+        def getDotCCT():
+            ret = []
+            for idx, gf in enumerate(self.gfs):
+                self.cct = CallFlow(gf)
+                self.cct.update('default-dot', '')
+                ret.append(self.cct.cfg)
+            return json.dumps(ret)
+                    
         @app.route('/getMaps')
         def getMaps():
             return json.dumps(self.callflow.state.map)
@@ -206,14 +215,15 @@ class App():
         @app.route('/splitCaller')
         def splitCaller():
             ret = []
-            idList = request.args.get('idList')
+            idList = request.args.get('in_data')
 #            print(idList, type(idList), type(request.args.get('idList')))
             self.callflow.update('split-caller', idList)
             return json.dumps(ret)
                 
         @app.route('/getHistogramData')
         def getHistogramData():
-            df_index = int(request.args.get('df_index'))
+            df_index = int(request.args.get('in_data')['df_index'])
+            print(df_index)
             dataMap = self.callflow.state.map
 
             for key in dataMap['incTime'].keys():
@@ -225,8 +235,8 @@ class App():
 
         @app.route('/getFunctionLists')
         def getFunctionLists():
-            df_index = int(request.args.get('df_index'))
-            mod_index = int(request.args.get('mod_index'))
+            df_index = int(request.args.get('in_data')['df_index'])
+            mod_index = int(request.args.get('in_data')['mod_index'])
             df = self.callflow.state.df
             entry_funcs = df[df.df_index == df_index]['callees'].values.tolist()[0]
             other_funcs = list(set(df[df.mod_index == mod_index]['name']))
@@ -241,7 +251,6 @@ class App():
                     "df_index": x_df['df_index'].values.tolist()[0]
                 })
 
-
             other_funcs_json = []
             for func in other_funcs:
                 x_df = df[df.name == func]
@@ -251,8 +260,6 @@ class App():
                     "value_exc": x_df['CPUTIME (usec) (E)'].values.tolist(),                    
                     "df_index": x_df['df_index'].values.tolist()[0]
                 })
-
-            
 
             return json.dumps({
                 "entry_funcs": entry_funcs_json,

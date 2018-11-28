@@ -25,42 +25,45 @@ import sankeyComputation from './components/callflow/sankeyComputation.js'
 let spinner;
 let layout = new Layout()
 
-
 export default class App{
     constructor(){
-	    this.target = document.getElementById("procedure_view").parentElement
-	    this.refresh = false
-	    this.spinner = spinnerWrapper(this.target)
+	this.target = document.getElementById("procedure_view").parentElement
+	this.refresh = false
+	this.spinner = spinnerWrapper(this.target)
         this.addRenderCCTBtn()
-	    this.fetch('module')        
+	this.fetch('module')        
         this.callflow = null
     }
 
     setState(data){
-	    this.state = data
+	this.state = data
     }
 
     setDataMap(data){
-	    this.dataMap = data
+	this.dataMap = data
     }
 
     fetch(attr){
-	    let self = this
-	    getSankey(attr).then((data) => {
-	        self.state = data
-	        getDataMaps().then((map) => {
-		        self.map = map
-		        this.render()
-	        })
-	    }).then(() => {
-//             splitCaller('lulesh2.0').then((data) => {
-//                 self.state = data
-// //                this.render()
-//             }).then(() => {
+	let self = this
+	getSankey(attr).then((data) => {
+	    console.log(data)
+	    self.state = data
+	    this.render()
+	}).then(() => {
+	    //             splitCaller('lulesh2.0').then((data) => {
+	    //                 self.state = data
+	    // //                this.render()
+	    //             }).then(() => {
 
-//             })
+	    //             })
             
         })
+
+	// getDataMaps().then((map) => {
+	//     self.map = map
+	//     this.render()
+	// })
+
     }
 
     addRenderCCTBtn(){
@@ -76,14 +79,14 @@ export default class App{
     }
 
     render(){
-	    let prop = {
-	        ID: '#procedure_view',
-	        width : Math.max(1000, $('#procedure_view').height()),
-	        height : $('#procedure_view').height(),
-	    }
-	    this.callflow = new CallFlow(this.state, prop)
-	    let configJSON = new ConfigJSON();
-	    this.spinner.stop();    
+	let prop = {
+	    ID: '#procedure_view',
+	    width : Math.max(1000, $('#procedure_view').height()),
+	    height : $('#procedure_view').height(),
+	}
+	this.callflow = new CallFlow(this.state, prop)
+	let configJSON = new ConfigJSON();
+	this.spinner.stop();    
     }
 
     renderCCT(){
@@ -92,59 +95,32 @@ export default class App{
             width : $('#procedure_view').width(),
             height: $('#procedure_view').height()
         }
-
         this.CCT = new CCT(this.state_cct, prop)
     }
 
     update(action, attr){
-	    if(action == 'onGroupChange'){
+	if(action == 'onGroupChange'){
             this.clear()
-	        this.fetch(attr)
-	    }
+	    this.fetch(attr)
+	}
         if(action == 'onColorChange'){            
             this.callflow.setColor(attr)
             this.callflow.render()
         }
-	    if(action == 'onNodeScaleChange'){
-	        preprocess(this.callflow.graph, true)
-	        sankeyComputation(this.callflow.graph, this.callflow.view)
-	        this.callflow.render()
-	    }
+	if(action == 'onNodeScaleChange'){
+	    preprocess(this.callflow.graph, true)
+	    sankeyComputation(this.callflow.graph, this.callflow.view)
+	    this.callflow.render()
+	}
     }
 
     clear(){
-	    $('#procedure_view').empty()
-	    $('#control').empty()
-	    $('#config_file_editor').empty()
-	    $('#hist_view').empty()
+	$('#procedure_view').empty()
+	$('#control').empty()
+	$('#config_file_editor').empty()
+	$('#hist_view').empty()
     }
 }
-
-// function start(){
-//     let target = document.getElementById("procedure_view").parentElement;        
-//     spinner = spinnerWrapper(target);
-//     getSankey('module', getSankey_cb);
-//     getDataMaps();
-// }
-
-// function getSankey_cb(data){
-//     data = JSON.parse(data)
-//     if(self.debug){
-// 	console.log('[Vis] Sankey information :', data)
-//     }
-//     render(data[0])
-// }
-
-// function render(data){
-//     let prop = {
-// 	ID: '#procedure_view',
-// 	width : Math.max(1000, $('#procedure_view').height()),
-// 	height : $('#procedure_view').height(),
-//     }
-//     let callFlow = new CallFlow(data, prop)
-//     let configJSON = new ConfigJSON();
-//     spinner.stop();    
-// }
 
 export {
     App,
