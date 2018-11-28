@@ -122,17 +122,17 @@ let config = {
 			                
 			            ]
 		            },
-			    // {
-			    // 	type: 'stack',
-			    // 	content: [
-			    // 	    {
-			    // 		type: 'component',
-			    // 		componentName: 'testComponent',
-			    // 		componentState: { id: 'diff_view' },
-			    // 		title: 'Diff view'
-			    // 	    }
-			    // 	]
-			    // }
+			        {
+			    	    type: 'stack',
+			    	    content: [
+			    	        {
+			    		        type: 'component',
+			    		        componentName: 'testComponent',
+			    		        componentState: { id: 'diff_view' },
+			    		        title: 'Diff view'
+			    	        }
+			    	    ]
+			        }
 			    
 		        ]
 		        

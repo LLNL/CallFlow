@@ -37,7 +37,7 @@ function d3_box() {
             // Compute the new x-scale.
             var x1 = d3.scale.linear()
                 .domain(domain && domain.call(this, d, i) || [min, max])
-                .range([width, 0]);
+                .range([width - 50, 0]);
 
             // Retrieve the old x-scale, if this is an update.
             var x0 = this.__chart__ || d3.scale.linear()
@@ -62,7 +62,7 @@ function d3_box() {
                 .attr("class", "center")
                 .attr("y1", height/2)
                 .attr("y2", height/2)
-                .attr("x1", function(d) { console.log(x0[d[0]]); console.log(x0(d[1])); return x0(d[0]); })
+                .attr("x1", function(d) {  return x0(d[0]); })
                 .attr("x2", function(d) { return x0(d[1]); })
                 .style("opacity", 1e-6)
                 .transition()
@@ -162,24 +162,27 @@ function d3_box() {
 
             outlier.enter().insert("circle", "text")
                 .attr("class", "outlier")
-                .attr("r", 5)
+                .attr("r", 3)
                 .attr("cy", height/ 2)
-                .attr("cx", function(i) { return x0(d[i]); })
+                .attr("cx", function(i) { return x0(d[i]) + 3; })
                 .style("opacity", 1e-6)
                 .transition()
                 .duration(duration)
                 .attr("cx", function(i) { return x1(d[i]); })
-                .style("opacity", 1);
-
+                .style("opacity", 1)
+                .style("fill", "#000")
+            
             outlier.transition()
                 .duration(duration)
                 .attr("cx", function(i) { return x1(d[i]); })
-                .style("opacity", 1);
+                .style("opacity", 1)
+                .style("fill", "#000");
 
             outlier.exit().transition()
                 .duration(duration)
                 .attr("cx", function(i) { return x1(d[i]); })
                 .style("opacity", 1e-6)
+                .style("fill", "#000")
                 .remove();
 
             // Compute the tick format.
@@ -214,11 +217,11 @@ function d3_box() {
             // to join box ticks pre-transition with whisker ticks post-.
             var whiskerTick = g.selectAll("text.whisker")
                 .data(whiskerData || []);
-            if(showLabels == false) {
+            if(showLabels == true) {
                 whiskerTick.enter().append("text")
                     .attr("class", "whisker")
                     .attr("dx", ".3em")
-                    .attr("dy", 10)
+                    .attr("dy", 3)
                     .attr("y", height)
                     .attr("x", x0)
                     .text(format)

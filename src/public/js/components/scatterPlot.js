@@ -41,7 +41,6 @@ function Scatter(args){
 	    sort =  args.sort,
 	    clickCallBack = args.clickCallBack;	
 
-    // console.log("in scatter", label, sort);
     var width = containerWidth - margin.left - margin.right;
     var height = containerHeight - margin.top - margin.bottom;
 
@@ -51,11 +50,6 @@ function Scatter(args){
 
     var xMin = Number.MAX_SAFE_INTEGER;
     var xMax = 0;
-    // if(sort == true){
-    // 	data.sort(function(a,b){
-    // 		return a - b;
-    // 	});
-    // }
 
     yData.forEach(function(d){
 	    yMin = Math.min(yMin, d);
@@ -70,10 +64,10 @@ function Scatter(args){
     var leastSquaresCoeff = leastSquares(xData.slice(), yData.slice());
     var regressionY = leastSquaresCoeff["y_res"];
     var corre_coef = leastSquaresCoeff["corre_coef"];
-    //set scale
+
+    
     var xScale;
-//    var yScale;
-    var yScale = d3.scale.log().domain([minVal + 0.000001, maxVal + 0.000001]).range([height, 0]);
+    var yScale = d3.scale.log().domain([yMin + 0.000001, yMax + 0.000001]).range([height, 0]);
 
     var svg;
 
@@ -90,7 +84,6 @@ function Scatter(args){
 	        .scale(xScale)
 	        .orient('bottom')
 	        .ticks(5)
-	    // .tickFormat(d3.formatPrefix(".1", 1e6));
 	        .tickFormat(d3.format(".1e"));	
 	    var yAxis = d3.svg.axis()
 	        .scale(yScale)

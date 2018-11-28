@@ -53,7 +53,6 @@ class groupBy:
        
         for i, elem in enumerate(filter_path):            
              component_path.append(elem)                    
-
         return tuple(component_path)
             
     def run(self, state):
@@ -118,3 +117,6 @@ class groupBy:
         state.update_df('component_path', component_path)
         state.update_df('show_node', is_entry_func)
         state.update_df('vis_node_name', node_name)
+
+        print(state.df['component_path'])
+        

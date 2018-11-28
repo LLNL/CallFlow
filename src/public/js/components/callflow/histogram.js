@@ -29,15 +29,15 @@ export default function drawHistogram(graph, view){
 }
 
 function drawHist(graph, view){
-    let xScale = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
-    let yScale = 45
-    let minimapXScale = d3.scale.ordinal().domain(xScale).rangeRoundBands([0, view.nodeWidth], 0.05);
-    let minimapYScale = d3.scale.linear().domain([0, yScale]).range([view.ySpacing - 5, 5]);
-
     graph.nodes.forEach(function(node){
 	    if(node.name != 'intermediate'){
 	        getHistogramData(node, function(histoData){
 	    	    if (histoData != undefined){
+                    let xScale = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+                    let yScale = 45
+                    let minimapXScale = d3.scale.ordinal().domain(xScale).rangeRoundBands([0, view.nodeWidth], 0.05);
+                    let minimapYScale = d3.scale.linear().domain([0, yScale]).range([view.ySpacing - 5, 5]);
+
 	    	        var myXvals = histoData["xVals"];
 	    	        var myFreq = histoData["freq"];
 	    	        var myHist = view.histograms.append('g')
@@ -72,6 +72,7 @@ function drawHist(graph, view){
                         .style("font-size", "1px");                    
 	    	    }		
 	        })
-	    }
+
+        }
     })
 }

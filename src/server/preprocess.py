@@ -107,6 +107,7 @@ class PreProcess():
             graph = self.graph
             callees = {}
             callers = {}
+            module = {}
             
             root = graph.roots[0]
             node_gen = graph.roots[0].traverse()
@@ -114,7 +115,8 @@ class PreProcess():
             root_df = self.state.lookup(root.df_index)['name'][0]
             callers[root_df] = []
             callees[root_df] = []
-        
+            module[root_df] = []
+            
             try:
                 while root.callpath != None:
                     root = next(node_gen)
@@ -125,16 +127,20 @@ class PreProcess():
                             callees[parent_df] = []
                     
                         callees[parent_df].append(root_df)
+
+                        if root_df not in callers:
+                            callers[root_df] = []
+                        callers[root_df].append(parent_df)
+                        
             except StopIteration:
                 pass
             finally:
                 del root
 
-#            self.map['callees'] = callees
             self.df['callees'] = self.df['name'].apply(lambda node: callees[node] if node in callees else [])
             self.df['callers'] = self.df['name'].apply(lambda node: callers[node] if node in callers else [])
-
-#            print(self.df['df_index'], self.df['callees'])
+            
+#            print(self.df['df_index'], self.df['callees'], self.df['callers'])
             
             return self
         
