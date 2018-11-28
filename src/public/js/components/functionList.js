@@ -83,7 +83,7 @@ function displayFunctions(listData){
 
 function boxPlotContainerUI(dat, type){
     let component_level = dat['component_path'].length - 1;
-    var funcName = dat["name"].trunc(10) + ": [ Exc:" + (avg(dat["value_exc"]) * 0.000001).toFixed(3)  + "s, " + "Inc:" + (avg(dat["value_inc"]) * 0.000001).toFixed(3) + "s c_level: " + component_level + "]";
+    var funcName = dat["name"].trunc(10) + ": [ Exc:" + (avg(dat["value_exc"]) * 0.000001).toFixed(3)  + "s, " + "Inc:" + (avg(dat["value_inc"]) * 0.000001).toFixed(3) + "s, c_level: " + component_level + "]";
 
     let div = document.createElement('div')
 	let label = document.createElement("div");
@@ -100,7 +100,7 @@ function boxPlotContainerUI(dat, type){
 
     div.appendChild(label)
     $('#list_view').append(div);
-    $('list_view').append(document.createElement("br"));
+    $('#list_view').append(document.createElement("br"));
     boxPlotUI(div, dat, type)
 }
 

@@ -184,8 +184,7 @@ class App():
         
         @app.route('/getSankey')
         def getSankey():
-            group_by_attr = str(request.args.get('in_data'))
-            print(group_by_attr)
+            group_by_attr = json.loads(request.args.get('in_data'))
             # Create the callflow graph frames from graphframes given by hatchet
             self.cfgs = self.create_cfgs(self.gfs, group_by_attr)
             return json.dumps(self.cfgs)
@@ -215,28 +214,28 @@ class App():
         @app.route('/splitCaller')
         def splitCaller():
             ret = []
-            idList = request.args.get('in_data')
-#            print(idList, type(idList), type(request.args.get('idList')))
+            idList = json.loads(request.args.get('in_data'))
             self.callflow.update('split-caller', idList)
             return json.dumps(ret)
                 
         @app.route('/getHistogramData')
         def getHistogramData():
-            df_index = int(request.args.get('in_data')['df_index'])
-            print(df_index)
+            data_json = json.loads(request.args.get('in_data'))
+            df_index = data_json['df_index']
             dataMap = self.callflow.state.map
 
             for key in dataMap['incTime'].keys():
                 if key == df_index:
-                    return jsonify({
+                    return json.dumps({
                         "inc": dataMap['incTime'][key],
                         "exc": dataMap['excTime'][key]
                         })
 
         @app.route('/getFunctionLists')
         def getFunctionLists():
-            df_index = int(request.args.get('in_data')['df_index'])
-            mod_index = int(request.args.get('in_data')['mod_index'])
+            data_json = json.loads(request.args.get('in_data'))
+            df_index = data_json['df_index']
+            mod_index = data_json['mod_index']            
             df = self.callflow.state.df
             entry_funcs = df[df.df_index == df_index]['callees'].values.tolist()[0]
             other_funcs = list(set(df[df.mod_index == mod_index]['name']))
@@ -265,6 +264,7 @@ class App():
                     "df_index": x_df['df_index'].values.tolist()[0]
                 })
 
+                
             return json.dumps({
                 "entry_funcs": entry_funcs_json,
                 "other_funcs": other_funcs_json

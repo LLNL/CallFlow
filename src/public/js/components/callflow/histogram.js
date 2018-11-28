@@ -5,27 +5,6 @@ export default function drawHistogram(graph, view){
     let globalXVals = 0
     let count = 0
     drawHist(graph, view)
-    // graph.nodes.forEach(function(node){
-    // 	console.log(node.name)
-    // 	if(node.name != "intermediate"){
-    // 	    console.log(node)
-    // 	    getHistogramData(node, function(histoData){
-    // 		console.log(histoData)
-    // 		if (histoData != undefined){
-    // 		    globalXVals = Math.max(globalXVals, histoData['xVals'].length)
-    // 		    console.log(histoData['xVals'])
-    // 		    console.log(globalXVals)
-    // 		    for(let i = 0; i < histoData['freq'].length; i++){
-    // 			maxFreq = Math.max(maxFreq, histoData['freq'][i])
-    // 		    }
-    // 		    count += 1;
-    // 		    if(count == graph.nodes.length - 1 ){
-    // 			console.log('end')
-    // 		    }
-    // 		}
-    // 	    });
-    // 	}
-    // });
 }
 
 function drawHist(graph, view){

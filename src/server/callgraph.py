@@ -35,8 +35,8 @@ class CallGraph(nx.Graph):
         self.adj_matrix = nx.adjacency_matrix(self.g)
         print(self.adj_matrix.todense())
 
-        print("Nodes", self.g.nodes(data=True))
-        print("Edges", self.g.edges(data=True))
+#        print("Nodes", self.g.nodes(data=True))
+#        print("Edges", self.g.edges(data=True))
 
         log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
         log.warn("Edges in the tree: {0}".format(len(self.g.edges)))

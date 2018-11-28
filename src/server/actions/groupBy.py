@@ -118,5 +118,5 @@ class groupBy:
         state.update_df('show_node', is_entry_func)
         state.update_df('vis_node_name', node_name)
 
-        print(state.df['component_path'])
+#        print(state.df['component_path'])
         

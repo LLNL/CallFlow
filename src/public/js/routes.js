@@ -7,24 +7,25 @@ import { App, layout } from './app'
 
 function request(title, data, cb){
     return new Promise( (resolve, reject) => {
-	$.ajax({
-	    type: "GET",
-	    contentType: "application/json",
-	    url: '/' + title,
-	    data: { 'in_data': data }, 
-	    success: (data) => {
-		data = JSON.parse(data)
-		if(self.debug){
-		    console.log('[', title,'] Data:', data)
-		}
-		resolve(data[0])
-	    },
-	    error: function(err){
-		if(err)
-		    console.log(err);		
-		reject();
-	    }
-	})
+	    $.ajax({
+	        type: "GET",
+	        contentType: "application/json",
+	        url: '/' + title,
+	        data: { 'in_data': JSON.stringify(data) }, 
+	        success: (data) => {
+		        data = JSON.parse(data)
+                console.log(data)
+		        if(self.debug){
+		            console.log('[', title,'] Data:', data)
+		        }
+		        resolve(data[0])
+	        },
+	        error: function(err){
+		        if(err)
+		            console.log(err);		
+		        reject();
+	        }
+	    })
     })
 }
 
@@ -45,7 +46,7 @@ function getSankey(attr, cb){
 
 function splitCaller(idList, cb){
     idList = JSON.stringify(idList)
-    return request('getCCT', idList, (data) =>{
+    return request('getCCT', idList, (data) => {
     })
 }
 
@@ -65,36 +66,63 @@ function getNodeMetrics(cb){
     return request('/getNodeMetrics', [], cb)
 }
 
+function getNextLevelNodes(cb){
+    return request('/getNextLevelNodes', [], cb)
+}
+
 function getHistogramData(node, cb){    
     if(node.df_index != undefined){
-	return request('/getHistogramData', {
-	    "df_index": node.df_index[0]
-	}, (data) => {
-	    if(cb){
-		let res = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
-		data = histogramUI(res);
-		cb(res);
-		return
-	    }
-	    console.log('[Getter] Histogram Scatter Data: ', histScatData);
-	    let res= {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
-	    scatterPlotUI(res);
-	    histogramUI(res);
-	    return histScatData
-	});
-    }
-}
+        $.ajax({
+            type:'GET',
+            contentType: 'application/json',
+            dataType: 'json',
+            url: '/getHistogramData',
+            data: {
+                "in_data": JSON.stringify({
+                    "df_index": node.df_index[0]
+                })
+            },
+            success: function(histScatData){
+                if(cb){
+                    let data = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
+                    data = histogramUI(data);
+                    cb(data);
+                    return
+                }
+                console.log('[Getter] Histogram Scatter Data: ', histScatData);
+                let data = {"exc" : histScatData["exc"], "inc" : histScatData["inc"]};
+                scatterPlotUI(data);
+                histogramUI(data);
+                return histScatData
+            },
+            error: function(){
+                console.log("There was problem with getting the data for histogram and scatter plot");
+            }
+        });
+    }}
 
 function getFunctionLists(node, cb){
     if (node.df_index != undefined){
-	request('getFunctionLists',  {
-	    "df_index": node.df_index[0],
-	    "mod_index": node.mod_index[0]
-	}, (data) => {
-	    console.log('Function lists', data)
-            displayFunctions(data)
-            return data;
-	});
+        $.ajax({
+            type:'GET',
+            contentType: 'application/json',
+            dataType: 'json',
+            url: '/getFunctionLists',
+            data: {
+                "in_data": JSON.stringify({
+                    "df_index": node.df_index[0],
+                    "mod_index": node.mod_index[0]
+                })
+            },
+            success: function(data){
+                console.log('Function lists', data)
+                displayFunctions(data)
+                return data;
+            },
+            error: function(){
+                console.log("There was problem with getting the data for histogram and scatter plot");
+            }
+        })
     }
 } 
 
