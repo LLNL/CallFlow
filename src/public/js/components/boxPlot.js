@@ -87,8 +87,6 @@ function d3_box() {
             // Update innerquartile box.
             var box = g.selectAll("rect.box")
                 .data([quartileData]);
-
-            console.log('quartile data', quartileData)
             
             box.enter().append("rect")
                 .attr("class", "box")

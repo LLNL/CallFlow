@@ -66,10 +66,46 @@ function getNodeMetrics(cb){
     return request('/getNodeMetrics', [], cb)
 }
 
-function getNextLevelNodes(cb){
-    return request('/getNextLevelNodes', [], cb)
+function getNextLevelNodes(node, level, cb){
+    return new Promise( (resolve, reject) => {
+        if(node.df_index != undefined){
+            $.ajax({
+                type: 'GET',
+                contentType: 'application/json',
+                dataType: 'json',
+                url: '/getNextLevelNodes',
+                data: {
+                    "in_data": JSON.stringify({
+                        "df_index": node.df_index[0],
+                        "level": level
+                    })
+                },
+                success: function(data){
+                    data = JSON.parse(JSON.stringify(data))
+                    let nodes = {}
+                    for(let dat of data){
+                        let parse_dat = JSON.parse(dat)
+                        if(nodes[parse_dat['name']] == undefined){
+                            nodes[parse_dat['name']] = []
+                        }
+                        nodes[parse_dat['name']].push({
+                            "exc": parse_dat['exc'],
+                            "inc": parse_dat['inc'],                        
+                        })
+                    }
+                    resolve(nodes)
+                },
+                error: function(err){
+                    if(err){
+                        console.log(err)
+                        console.log("There was problem with getting the data for next level nodes");
+                    }
+                    reject(err)
+                }
+            })
+        }
+    })
 }
-
 function getHistogramData(node, cb){    
     if(node.df_index != undefined){
         $.ajax({
@@ -134,5 +170,6 @@ export {
     getHistogramData,
     getFunctionLists,
     getCCT,
+    getNextLevelNodes,
     splitCaller,
 }

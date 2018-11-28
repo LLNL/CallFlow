@@ -32,8 +32,8 @@ class CallGraph(nx.Graph):
         self.add_node_attributes()
         self.add_edge_attributes()
 
-        self.adj_matrix = nx.adjacency_matrix(self.g)
-        print(self.adj_matrix.todense())
+        # self.adj_matrix = nx.adjacency_matrix(self.g)
+        # print(self.adj_matrix.todense())
 
 #        print("Nodes", self.g.nodes(data=True))
 #        print("Edges", self.g.edges(data=True))

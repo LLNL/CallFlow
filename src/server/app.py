@@ -270,13 +270,32 @@ class App():
                 "other_funcs": other_funcs_json
             })
 
+        @app.route('/getNextLevelNodes')
+        def getNextLevelNodes():
+            data_json = json.loads(request.args.get('in_data'))        
+            df_index = data_json['df_index']
+            level = data_json['level']
+            df = self.callflow.state.df
+            mod_index = df[df.df_index == df_index]['mod_index'].values.tolist()[0]
+            df = df[df.mod_index == mod_index]
+            level_df = df[df.component_level == level]
+
+            ret = []
+            for idx, row in level_df.iterrows():                
+                ret.append(json.dumps({
+                    "name": row['name'],
+                    'file': row['file'],
+                    "inc" : row['CPUTIME (usec) (I)'],                    
+                    "exc" : row['CPUTIME (usec) (E)'],                    
+                }))
+            return str(json.dumps(ret))
             
     def launch_webapp(self):
         # Load the graph frames from an intermediate format.
 #        self.gfs = self.create_gfs()
 
         # Create the callflow graph frames from graphframes given by hatchet
-        self.cfgs = self.create_cfgs(self.gfs, 'module')
+#        self.cfgs = self.create_cfgs(self.gfs, 'module')
         
         # Launch the flask app
         app.run(debug = self.debug, use_reloader=True)

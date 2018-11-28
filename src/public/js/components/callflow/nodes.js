@@ -1,4 +1,4 @@
-import { getHistogramData, getFunctionLists } from '../../routes'
+import { getHistogramData, getFunctionLists, getNextLevelNodes } from '../../routes'
 import Color from './color.js'
 
 function calcTextSize(text) {
@@ -23,6 +23,9 @@ function drawNodes(graph, view){
 	        }		    	
 	    })
 	    .attr('opacity' , 0)
+        .attr('id', function(d){
+            return d.name[0].split('.')[0]
+        })
 	    .attr("transform", function (d) {
 	        if(d.name != "intermediate"){
 		        return "translate(" + d.x + "," + d.y + ")";
@@ -122,19 +125,19 @@ function drawRectangle(node, graph, view){
 	    })		    
 	    .on('click', function(d){
 	        getHistogramData(d)
-	        getFunctionLists(d)
-            
-	        // if(d.name != "intermediate"){
-	        // 	var ret = getFunctionListOfNode(d);
-	        // 	var fromProcToProc = ret["fromProcToProc"];
-	        // 	var nameToIDMap = ret["nameToIDMap"];
-	        // 	var res = {"node" : d, "fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap, "rootRunTime" : rootRunTime};
-	        // 	clickCallBack(res);
-	        // }
-	    })
-        .on('contextmenu', function(d){
-            return view.svgBase.contextMenu(d);            
+
         })
+        .on('dblclick', function(d){
+            let level = 3
+            getNextLevelNodes(d, level).then( (data) => {
+                let arr_data = Object.values(data)
+                getFunctionLists(d)
+                drawLevelNodes(graph, view, d, arr_data, level)                
+            });
+        })
+        // .on('contextmenu', function(d){
+        //     return view.svgBase.contextMenu(d);            
+        // })
 
     // Transition
     view.nodes.selectAll("rect")
@@ -160,7 +163,89 @@ function drawRectangle(node, graph, view){
             else
                 return 1
         })
+}
 
+function drawLevelNodes(graph, view, d, nodes, level){
+    let nodeOffset = 3
+    let parentNodeName = d.name.split('.')[0]
+
+    function avg(arr){
+        let ret = {}
+        let sum_exc = 0
+        let sum_inc = 0
+        for(let i = 0; i < arr.length; i++){
+            sum_exc += arr[i]['exc']
+            sum_inc += arr[i]['inc']
+        }
+        return {
+            'weight': sum_exc/arr.length,
+        }
+    }
+
+    let tot_avg = 0;
+    for(let i = 0; i < nodes.length; i++){
+        tot_avg += avg(nodes[i])['weight']
+    }
+
+    let parentColor = new Color(view)
+	parentColor.setColorScale(0, d.weight, 0, 0)
+
+
+    console.log(parentColor)
+    
+    let floating_height = 0
+    for(let i = 0; i < nodes.length; i++){
+        let node = {}
+
+        let w = avg(nodes[i])
+        let h = (d.height*w['weight'])/tot_avg
+
+        let rect = view.nodes.select('#'+ parentNodeName).append("rect")
+	        .attr("height", function (d) {
+	            return h;
+	        })
+	        .attr("width", view.nodeWidth - level*2)
+            .attr("opacity", 1)
+            .attr("x", function(d){
+                return 50
+            })
+            .attr("y", function(d){
+                return floating_height
+            })
+	        .style("fill", function (d) {
+                return parentColor.getColor(w);
+	        })
+	        .style("fill-opacity", function(d){
+	            if(d.name == "intermediate" || d.name[d.name.length - 1] == '_'){
+                    if(d.name[0] == "intermediate"){
+		                return 0;
+	                }
+	                else{
+		                return 1;
+	                }
+	            }
+	        })
+	        .style("shape-rendering", "crispEdges")
+	        .style("stroke", function (d) {
+                if(d.name != "intermediate"){
+		            return d3.rgb(view.color.getColor(w)).darker(2);
+	            }
+	            else{
+		            return '#e1e1e1';
+	            }
+	        })
+	        .style("stroke-width", function(d){
+	            if(d.name[0] == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
+                    if(d.name[0] == "intermediate"){
+		                return 0;
+	                }
+	                else{
+		                return 1;
+	                }
+	            }
+	        })
+        floating_height += h
+    }
 }
 
 function drawPath(node, graph, view){
