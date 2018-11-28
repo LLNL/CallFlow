@@ -120,4 +120,8 @@ body{
     stroke: #000;
 }
 
-        
+
+
+#list_view{
+    scroll: overflow-y;
+    }

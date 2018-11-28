@@ -35,7 +35,7 @@ function drawHierarchy(view, graph){
 
 //    var csv = d3.csvParseRows();
 //    var json = buildHierarchy(csv);
-//    createVisualization(json);
+    //    createVisualization(json);
     
 }
 

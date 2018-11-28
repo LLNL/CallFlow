@@ -248,6 +248,8 @@ class App():
                     "name": func,
                     "value_inc": x_df['CPUTIME (usec) (I)'].values.tolist(),
                     "value_exc": x_df['CPUTIME (usec) (E)'].values.tolist(),
+                    "component_path": x_df['component_path'].values.tolist()[0],
+                    "group_path": x_df['group_path'].values.tolist()[0],
                     "df_index": x_df['df_index'].values.tolist()[0]
                 })
 
@@ -258,6 +260,8 @@ class App():
                     "name": func,
                     "value_inc": x_df['CPUTIME (usec) (I)'].values.tolist(),
                     "value_exc": x_df['CPUTIME (usec) (E)'].values.tolist(),                    
+                    "component_path": x_df['component_path'].values.tolist()[0],
+                    "group_path": x_df['group_path'].values.tolist()[0],
                     "df_index": x_df['df_index'].values.tolist()[0]
                 })
 
