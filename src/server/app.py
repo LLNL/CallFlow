@@ -215,6 +215,7 @@ class App():
         def splitCaller():
             ret = []
             idList = json.loads(request.args.get('in_data'))
+            print(idList)
             self.callflow.update('split-caller', idList)
             return json.dumps(ret)
                 
@@ -222,7 +223,20 @@ class App():
         def getHistogramData():
             data_json = json.loads(request.args.get('in_data'))
             df_index = data_json['df_index']
+            mod_index = data_json['mod_index']
             dataMap = self.callflow.state.map
+
+            #Commented out but come bck in future
+            
+            # df = self.callflow.state.df
+
+            # scat_df = df[df.mod_index == mod_index]
+
+            # inc_scat = []
+            # exc_scat = []
+            # for idx, row in scat_df.iterrows():
+            #     print(scat_df['CPUTIME (usec) (I)'])
+            #     inc_scat.append(scat_df['CPUTIME (usec) (I)'])
 
             for key in dataMap['incTime'].keys():
                 if key == df_index:

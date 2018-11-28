@@ -122,6 +122,7 @@ body{
 
 
 
-#list_view{
-    scroll: overflow-y;
+#flist_view{
+    overflow-y: scroll
+         max-height: 100vh;
     }

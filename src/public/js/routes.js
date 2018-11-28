@@ -46,7 +46,7 @@ function getSankey(attr, cb){
 
 function splitCaller(idList, cb){
     idList = JSON.stringify(idList)
-    return request('getCCT', idList, (data) => {
+    return request('splitCaller', idList, (data) => {
     })
 }
 
@@ -90,7 +90,8 @@ function getNextLevelNodes(node, level, cb){
                         }
                         nodes[parse_dat['name']].push({
                             "exc": parse_dat['exc'],
-                            "inc": parse_dat['inc'],                        
+                            "inc": parse_dat['inc'],
+                            "name": parse_dat['name']
                         })
                     }
                     resolve(nodes)
@@ -115,7 +116,8 @@ function getHistogramData(node, cb){
             url: '/getHistogramData',
             data: {
                 "in_data": JSON.stringify({
-                    "df_index": node.df_index[0]
+                    "df_index": node.df_index[0],
+                    "mod_index": node.mod_index[0]
                 })
             },
             success: function(histScatData){

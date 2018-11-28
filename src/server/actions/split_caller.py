@@ -20,22 +20,45 @@ class splitCaller:
         self.graph = state.graph
         self.df = state.df
         self.d_graph = defaultdict(list)
-        self.nodes = self.find_df(idList)
-        print(self.nodes, len(self.nodes))
+        self.module = []
+        self.nodes = []
+        self.find_df(idList)
 
-    def find_df(self, nodes):
-        ret = []
-        nodes = nodes.replace('"', '')
-        nodes = nodes.replace('[', '')
-        nodes = nodes.replace(']', '')
-        nodes = nodes.split(',')
 
-        for node in nodes:
+    def find_df(self, df_indices):
+        df_indices = df_indices.replace('"', '')
+        df_indices = df_indices.replace('[', '')
+        df_indices = df_indices.replace(']', '')
+        df_indices = df_indices.split(',')
+        
+        for idx, df_index in enumerate(df_indices):
+            node = self.df[self.df['df_index'] == int(df_index)]
+            self.module.append(node['module'].tolist()[0])
+            new_node_name = self.module[idx] + ':' + node['name'].tolist()[0]
+            node['vis_node_name'] = self.module[idx] + ':' + node['name'].tolist()[0]
+            self.df.update(node)
+            self.nodes.append(node)
+            self.add_vis_node_name(self.module[idx], new_node_name)            
+
+    def change_group_path(self):
+        for node in self.nodes:
             print(node)
-            df = self.df[self.df.name == node]
-            ret.append(df)
-            return ret
 
+    def add_vis_node_name(self, module, node_name):
+        nodes_in_vis = self.df[self.df['vis_node_name'] != '']
+        group_paths_df = nodes_in_vis['group_path']
+
+        for idx, row in group_paths_df.items():
+            if module in row:
+                row = list(row)
+                for idx, el in enumerate(row):
+                    if el == module:
+                        row.insert(idx+1, node_name)
+
+        self.df['group_path'].update(group_paths_df)
+        print(self.df['group_path'])
+
+    
     def entry_functions(self, state):
         root = self.graph.roots[0]
         node_gen = self.graph.roots[0].traverse()

@@ -41,22 +41,13 @@ let config = {
                             {
 				                type: 'component',
 				                componentName: 'testComponent',
-				                componentState: {id : "fList_view" },
+				                componentState: {id : "scat_view" },
 				                isClosable: false,
-				                title: "Function List"
-			                },								
-			                {
+				                title: "Scatter Plot View"
+			                },
+                            {
 				                type: 'component',
 				                componentName: 'testComponent',
-				                // id: 'control',
-				                componentState: {id : "control" },
-				                isClosable: false,
-				                title: "Control"								
-			                },								
-                            			                {
-				                type: 'component',
-				                componentName: 'testComponent',
-				                // id: 'control',
 				                componentState: {id : "config_file_editor" },
 				                isClosable: false,
 				                title: "Config file"								
@@ -68,30 +59,9 @@ let config = {
 				                isClosable: false,
 				                title: "Node Info"
 			                },								
-			                // {
-			                // 	type: 'component',
-			                // 	componentName: 'testComponent',
-			                // 	componentState: {id : "hist_view" },
-			                // 	isClosable: false,
-			                // 	title: "Histogram View"
-			                // },
-			                {
-				                type: 'component',
-				                componentName: 'testComponent',
-				                componentState: {id : "scat_view" },
-				                isClosable: false,
-				                title: "Scatter Plot View"
-			                },
 			            ]
 		            },
 		            {
-			            // type: 'component',
-			            // componentName: 'testComponent',
-			            // // id: 'control',
-			            // componentState: {id : "lm_view" },
-			            // isClosable: false,
-			            // title: "LM View"		
-
 			            type: 'component',
 			            componentName: 'testComponent',
 			            componentState: {id : "hist_view" },
@@ -102,7 +72,7 @@ let config = {
 	        },
 	        {	
 		        type: 'column',
-		        width: $(window).width() * 70,
+		        width: $(window).width() * 50,
 		        content: [
 		            {
 			            type: 'stack',
@@ -136,7 +106,34 @@ let config = {
 			    
 		        ]
 		        
-	        }
+	        },
+            {
+                type: 'column',
+                width: $(window).width()*20,
+                content : [
+                    {
+                        type: 'stack',
+                        content: [
+                            {
+				                type: 'component',
+				                componentName: 'testComponent',
+				                componentState: {id : "fList_view" },
+				                isClosable: false,
+				                title: "Function List"
+			                },								
+
+                            {
+				                type: 'component',
+				                componentName: 'testComponent',
+				                componentState: {id : "control" },
+				                isClosable: false,
+				                title: "Control"
+							}
+                        ]
+                    },	                   
+                ]
+            }
+            
 	    ]
     }]			
 }

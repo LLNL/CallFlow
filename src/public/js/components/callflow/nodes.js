@@ -128,7 +128,7 @@ function drawRectangle(node, graph, view){
 
         })
         .on('dblclick', function(d){
-            let level = 3
+            let level = 1
             getNextLevelNodes(d, level).then( (data) => {
                 let arr_data = Object.values(data)
                 getFunctionLists(d)
@@ -187,11 +187,11 @@ function drawLevelNodes(graph, view, d, nodes, level){
         tot_avg += avg(nodes[i])['weight']
     }
 
+    console.log(nodes)
+    
     let parentColor = new Color(view)
 	parentColor.setColorScale(0, d.weight, 0, 0)
 
-
-    console.log(parentColor)
     
     let floating_height = 0
     for(let i = 0; i < nodes.length; i++){
@@ -207,7 +207,7 @@ function drawLevelNodes(graph, view, d, nodes, level){
 	        .attr("width", view.nodeWidth - level*2)
             .attr("opacity", 1)
             .attr("x", function(d){
-                return 50
+                return 3
             })
             .attr("y", function(d){
                 return floating_height

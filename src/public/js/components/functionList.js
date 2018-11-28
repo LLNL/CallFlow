@@ -8,26 +8,29 @@ function functionListUI(){
 
     $("#list_view").width( $("#fList_view").width() );
     $("#list_view").height( $("#fList_view").height() - 50 );
-    $("#list_view").css("overflow", "auto");
+    $("#list_view").css("overflow-y", "scroll");
+    $('#list_view').css('max-height', '100')
+//    document.getElementById("splitNodeByParentBtr").disabled = true;
+}
+
+function displayFunctions(listData){
+    $('#list_view').empty();
+
     var button = $('<button/>', {
 		text: 'Split Caller',
 		id: "splitNodeBtr"
 	});
 
     
-    $("#fList_view").append(button);
+    $("#list_view").append(button);
     document.getElementById("splitNodeBtr").disabled = true;
     var button2 = $('<button/>',{
 		text: 'Split Callee',
 		id: "splitNodeByParentBtr"
 	});
-    $("#fList_view").append(button2);
-    document.getElementById("splitNodeByParentBtr").disabled = true;
-}
+    $("#list_view").append(button2);
 
-function displayFunctions(listData){
-    $('#list_view').empty();
-
+    
     let entry_funcs = listData['entry_funcs']
     let other_funcs = listData['other_funcs']
     
@@ -69,10 +72,10 @@ function displayFunctions(listData){
 
     document.getElementById("splitNodeBtr").disabled = false;
     $('#splitNodeBtr').click( () => {
-        var idList = $('input:checkbox:checked.list_checkbox').map(function () {
-            console.log(this.value['name'], this.value['df_index'])
-            return this.value
+        let idList = $('input:checkbox:checked.list_checkbox').map(function () {
+            return this.df_index
         }).get();
+        console.log(idList)
         splitCaller(idList).then((data) => {
             self.state = data
             //                this.render()
@@ -92,7 +95,8 @@ function boxPlotContainerUI(dat, type){
     
 	checkbox.type = "checkbox";
 	checkbox.name = funcName;
-	checkbox.value = dat;
+    checkbox.df_index = dat['df_index']
+    checkbox.node_name = dat['name']                           
 	checkbox.setAttribute('class', "list_checkbox");
 
 	label.appendChild(checkbox);

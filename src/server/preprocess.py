@@ -51,7 +51,7 @@ class PreProcess():
             ret = {}
             for idx, row in self.df.iterrows():
                 node_df = self.state.lookup_with_node(row.node)
-                p_index = node_df['df_index'].tolist()
+                p_index = node_df['mod_index'].tolist()
                 p_incTime  = node_df[attr].tolist()
                 for idx in range(len(p_index)):
                     if p_index[idx] not in ret:
