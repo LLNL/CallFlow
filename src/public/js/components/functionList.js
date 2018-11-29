@@ -75,7 +75,6 @@ function displayFunctions(listData){
         let idList = $('input:checkbox:checked.list_checkbox').map(function () {
             return this.df_index
         }).get();
-        console.log(idList)
         splitCaller(idList).then((data) => {
             self.state = data
             //                this.render()
@@ -104,7 +103,6 @@ function boxPlotContainerUI(dat, type){
 
     div.appendChild(label)
     $('#list_view').append(div);
-    $('#list_view').append(document.createElement("br"));
     boxPlotUI(div, dat, type)
 }
 
@@ -192,12 +190,14 @@ function boxPlotUI(div, data, type){
     }
     
     var margin = {top: 0, right: 10, bottom: 0, left: 5};
-    var width = $('#list_view').width();
-    var height = 25;
-    let labels = false;
-    
+    var width = $('#list_view').width() - 30;
+    var height = 50;
+    let labels = true;
+
+
+    let textOffset = 25
     var chart = d3_box()
-        .height(height)
+        .height(height - textOffset)
         .whiskers(iqr(1.5))
         .domain([q[4], q[5]])
         .showLabels(labels);

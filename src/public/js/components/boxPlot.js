@@ -15,6 +15,7 @@ function d3_box() {
     // For each small multiple…
     function box(g) {
         g.each(function(data, i) {
+            console.log(i, data)
             var d = data.sort(d3.ascending)
             var g = d3.select(this),
                 n = d.length,
@@ -37,7 +38,7 @@ function d3_box() {
             // Compute the new x-scale.
             var x1 = d3.scale.linear()
                 .domain(domain && domain.call(this, d, i) || [min, max])
-                .range([width - 50, 0]);
+                .range([width, 0]);
 
             // Retrieve the old x-scale, if this is an update.
             var x0 = this.__chart__ || d3.scale.linear()
@@ -62,26 +63,26 @@ function d3_box() {
                 .attr("class", "center")
                 .attr("y1", height/2)
                 .attr("y2", height/2)
-                .attr("x1", function(d) {  return x0(d[0]); })
-                .attr("x2", function(d) { return x0(d[1]); })
+                .attr("x1", function(d) {  return x0(d[1]); })
+                .attr("x2", function(d) { return x0(d[0]); })
                 .style("opacity", 1e-6)
                 .transition()
                 .duration(duration)
                 .style("opacity", 1)
-                .attr("x1", function(d) { return x1(d[0]); })
-                .attr("x2", function(d) { return x1(d[1]); });
+                .attr("x1", function(d) { return x1(d[1]); })
+                .attr("x2", function(d) { return x1(d[0]); });
 
             center.transition()
                 .duration(duration)
                 .style("opacity", 1)
-                .attr("x1", function(d) { return x1(d[0]); })
-                .attr("x2", function(d) { return x1(d[1]); });
-
+                .attr("x1", function(d) { console.log(x1(d[0]), d[0]); return x1(d[1]); })
+                .attr("x2", function(d) { console.log(x1(d[1]), d[1]); return x1(d[0]); });
+            
             center.exit().transition()
                 .duration(duration)
                 .style("opacity", 1e-6)
-                .attr("x1", function(d) { return x1(d[0]); })
-                .attr("x2", function(d) { return x1(d[1]); })
+                .attr("x1", function(d) {  return x1(d[1]); })
+                .attr("x2", function(d) {  return x1(d[0]); })
                 .remove();
 
             // Update innerquartile box.
@@ -91,7 +92,7 @@ function d3_box() {
             box.enter().append("rect")
                 .attr("class", "box")
                 .attr("y", 0)
-                .attr("x", function(d) { return x0(d[2]); })
+                .attr("x", function(d) { console.log(d); return x0(d[2]); })
                 .attr("height", height - 5)
                 .attr("width", function(d) { return Math.abs(x0(d[0]) - x0(d[2])); })
                 .transition()
@@ -112,12 +113,13 @@ function d3_box() {
                 .attr("class", "median")
                 .attr("y1", 0)
                 .attr("x1", x0)
-                .attr("y2", height)
+                .attr("y2", height - 5)
                 .attr("x2", x0)
                 .transition()
                 .duration(duration)
                 .attr("x1", x1)
-                .attr("x2", x1);
+                .attr("x2", x1)
+                .attr('stroke-width', 2)
 
             medianLine.transition()
                 .duration(duration)
@@ -139,7 +141,9 @@ function d3_box() {
                 .duration(duration)
                 .attr("x1", x1)
                 .attr("x2", x1)
+                .attr('stroke-width', 2)
                 .style("opacity", 1);
+            
 
             whisker.transition()
                 .duration(duration)
@@ -162,7 +166,7 @@ function d3_box() {
                 .attr("class", "outlier")
                 .attr("r", 3)
                 .attr("cy", height/ 2)
-                .attr("cx", function(i) { return x0(d[i]) + 3; })
+                .attr("cx", function(i) { return x0(d[i]); })
                 .style("opacity", 1e-6)
                 .transition()
                 .duration(duration)
@@ -184,57 +188,65 @@ function d3_box() {
                 .remove();
 
             // Compute the tick format.
-            var format = tickFormat || x1.tickFormat(4);
+            var format = tickFormat || x1.tickFormat(2);
             
             // Update box ticks.
             var boxTick = g.selectAll("text.box")
-                .data(quartileData);
-
-            
-            if(showLabels == true) {
-                boxTick.enter().append("text")
-                    .attr("class", "box")
-                    .attr("dx", ".3em")
-                    .attr("dy", function(d, i) { return i & 1 ? 6 : -6 })
-                    .attr("y", function(d, i) { return i & 1 ? + height - 5: 0 })
-                    .attr("x", x0)
-                    .attr("text-anchor", function(d, i) { return i & 1 ? "start" : "end"; })
-                    .text(format)
-                    .transition()
-                    .duration(duration)
-                    .attr("x", x1);
-            }
+                .data(quartileData)
+           
+            boxTick.enter().append("text")
+                .attr("class", "box")
+                .attr("dx", ".3em")
+                .attr("dy", function(d, i) { return 10 })
+                .attr("y", function(d, i) { return i % 2 ? height : 0 })            
+                .attr("x", x0)
+                .attr("text-anchor", function(d, i) { return 'middle'})
+                .text(function(d){
+                    return (d*0.000001).toFixed(3) + 's'
+                })
+                .transition()
+                .duration(duration)
+                .attr("x", x1)
+                .attr("fill", function(d, i) { return i % 2 ? '#00B300': '#8F0000'});
 
             boxTick.transition()
                 .duration(duration)
-                .text(format)
-                .attr("x", x1);
+                .text(function(d){
+                    return (d*0.000001).toFixed(3) + 's'
+                })
+                .attr("x", x1)
+                .attr("fill", function(d, i) { return i % 2 ? '#00B300': '#8F0000'});
 
             // Update whisker ticks. These are handled separately from the box
             // ticks because they may or may not exist, and we want don't want
             // to join box ticks pre-transition with whisker ticks post-.
             var whiskerTick = g.selectAll("text.whisker")
-                .data(whiskerData || []);
-            if(showLabels == true) {
-                whiskerTick.enter().append("text")
-                    .attr("class", "whisker")
-                    .attr("dx", ".3em")
-                    .attr("dy", 3)
-                    .attr("y", height)
-                    .attr("x", x0)
-                    .text(format)
-                    .style("opacity", 1e-6)
-                    .style("color", "#f00")
-                    .transition()
-                    .duration(duration)
-                    .attr("x", x1)
-                    .style("opacity", 1);
-            }
-            whiskerTick.transition()
+                .data(whiskerData)
+
+            whiskerTick.enter().append("text")
+                .attr("class", "whisker")
+                .attr("dx", ".3em")
+                .attr("dy", 5)
+                .attr("y", height)
+                .attr("x", x0)
+                .attr("text-anchor", function(d, i) { return i % 2 ? 'start': 'end'})
+                .text(function(d){
+                    return (d*0.000001).toFixed(3) + 's'
+                })
+                .style("opacity", 1e-6)
+                .style("color", "#f00")
+                .transition()
                 .duration(duration)
-                .text(format)
                 .attr("x", x1)
                 .style("opacity", 1);
+            
+               whiskerTick.transition()
+                .duration(duration)
+                .text(function(d){
+                    return (d*0.000001).toFixed(3) + 's'
+                })
+               .attr("x", x1)
+               .style("opacity", 1);
 
             whiskerTick.exit().transition()
                 .duration(duration)
