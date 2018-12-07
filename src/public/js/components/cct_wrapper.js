@@ -1,8 +1,10 @@
 import preprocess from './callflow/preprocess.js'
 import DOMSetup from './callflow/DOMSetup.js'
+import CCTComputation from './CCT/computation.js'
 import sankeyComputation from './callflow/sankeyComputation.js'
-import drawEdges from './CCT/edges.js'
 import { drawNodes, clearNodes } from './CCT/nodes.js'
+import { drawNodes_force, clearNodes_force, drawEdges_force } from './CCT/nodes_force.js'
+import drawEdges_force from './CCT/edges_force.js'
 import { drawHierarchy } from './callflow/hierarchy.js'
 import drawHistogram from './callflow/histogram.js'
 import Color from './callflow/color.js'
@@ -34,7 +36,13 @@ export default class CCT{
         //        this.resetStat()
         this.graph = preprocess(this.graph)
         this.view = DOMSetup(this.view)
-        this.view.sankey = sankeyComputation(this.graph, this.view)
+        this.view.layout = 'sankey'
+        if(this.view.layout == 'sankey'){
+            this.view.cct = sankeyComputation(this.graph, this.view)
+        }
+        else if(this.view.layout == 'force'){
+            this.view.cct = CCTComputation(this.graph, this.view)
+        }
         this.setColor(1)
         this.render()
         return this
@@ -53,6 +61,11 @@ CCT.prototype.render = function(){
     drawEdges(this.graph, this.view)
     drawHistogram(this.graph, this.view)
     drawHierarchy(this.graph, this.view)
+}
+
+CCT.prototype.render_force = function(){
+    drawNodes_force(this.graph, this.view)
+    drawEdges_force(this.graph, this.view)
 }
 
 CCT.prototype.clear = function(){
