@@ -1,7 +1,7 @@
 {
     "dataName" : "Lulesh-1",
-    "path" : ["./data/lulesh-1/db-ampi4-100-8"],
-    "format" : ["hpctoolkit"],
+    "path" : ["./data/lulesh-1/db-ampi4-100-8", "./data/lulesh-1/db-ampi4-100-1"],
+    "format" : ["hpctoolkit", "hpctoolkit"],
     "props": {
 	    "lulesh2.0" :{
 		    "name" : "lulesh",

@@ -5,7 +5,6 @@ from utils import lookup
 
 #@total_ordering
 class CCT:
-
     # depth first search for  the graph.
     # TODO: add level to the node attribs
     def dfs(self, gf, df):

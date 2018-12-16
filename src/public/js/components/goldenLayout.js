@@ -5,108 +5,108 @@ var app_global
 //configuration for the layout of the page
 let config = {
     settings: {
-	    showCloseIcon : false,
-	    showPopoutIcon : false,
-	    reorderEnabled : false
+	showCloseIcon : false,
+	showPopoutIcon : false,
+	reorderEnabled : false
     },
 
     content: [{
-	    type: 'row',
-	    content: [
-	        {
-		        type: 'column',
-		        width: $(window).width() * 25,
+	type: 'row',
+	content: [
+	    {
+		type: 'column',
+		width: $(window).width() * 25,
+		content: [
+		    // {
+
+		    // 	type: 'component',
+		    // 	componentName: 'testComponent',
+		    // 	// id: 'control',
+		    // 	componentState: {id : "control" },
+		    // 	isClosable: false,
+		    // 	title: "Control"								
+		    // },
+		    // {
+
+		    // 	type: 'component',
+		    // 	componentName: 'testComponent',
+		    // 	// id: 'control',
+		    // 	componentState: {id : "stat_view" },
+		    // 	isClosable: false,
+		    // 	title: "Statistic View"								
+		    // },
+		    {
+			type: 'stack',
+			content: [
+                            {
+				type: 'component',
+				componentName: 'testComponent',
+				componentState: {id : "scat_view" },
+				isClosable: false,
+				title: "Scatter Plot View"
+			    },
+                            {
+				type: 'component',
+				componentName: 'testComponent',
+				componentState: {id : "config_file_editor" },
+				isClosable: false,
+				title: "Config file"								
+			    },								
+			    {
+				type: 'component',
+				componentName: 'testComponent',
+				componentState: {id : "info_view" },
+				isClosable: false,
+				title: "Node Info"
+			    },								
+			]
+		    },
+		    {
+			type: 'component',
+			componentName: 'testComponent',
+			componentState: {id : "hist_view" },
+			isClosable: false,
+			title: "Histogram View"	
+		    }
+		]
+	    },
+	    {	
+		type: 'column',
+		width: $(window).width() * 50,
+		content: [
+		    {
+			type: 'stack',
+			content: [
+			    {
+				type: 'component',
+				componentName: 'testComponent',
+				componentState: { id: 'procedure_view' },
+				title: 'Call graph view'
+			    },
+			    {
+				type: 'component',
+				componentName: 'testComponent',
+				componentState: { id: 'CCT_view' },
+				title: 'CCT view'
+			    },
+			    
+			]
+		    },
+		    {
+		        type: 'stack',
 		        content: [
-		            // {
-
-		            // 	type: 'component',
-		            // 	componentName: 'testComponent',
-		            // 	// id: 'control',
-		            // 	componentState: {id : "control" },
-		            // 	isClosable: false,
-		            // 	title: "Control"								
-		            // },
-		            // {
-
-		            // 	type: 'component',
-		            // 	componentName: 'testComponent',
-		            // 	// id: 'control',
-		            // 	componentState: {id : "stat_view" },
-		            // 	isClosable: false,
-		            // 	title: "Statistic View"								
-		            // },
 		            {
-			            type: 'stack',
-			            content: [
-                            {
-				                type: 'component',
-				                componentName: 'testComponent',
-				                componentState: {id : "scat_view" },
-				                isClosable: false,
-				                title: "Scatter Plot View"
-			                },
-                            {
-				                type: 'component',
-				                componentName: 'testComponent',
-				                componentState: {id : "config_file_editor" },
-				                isClosable: false,
-				                title: "Config file"								
-			                },								
-			                {
-				                type: 'component',
-				                componentName: 'testComponent',
-				                componentState: {id : "info_view" },
-				                isClosable: false,
-				                title: "Node Info"
-			                },								
-			            ]
-		            },
-		            {
-			            type: 'component',
-			            componentName: 'testComponent',
-			            componentState: {id : "hist_view" },
-			            isClosable: false,
-			            title: "Histogram View"	
+		    	        type: 'component',
+		    	        componentName: 'testComponent',
+		    	        componentState: { id: 'diff_view' },
+		    	        title: 'Diff view'
 		            }
 		        ]
-	        },
-	        {	
-		        type: 'column',
-		        width: $(window).width() * 50,
-		        content: [
-		            {
-			            type: 'stack',
-			            content: [
-			                {
-				                type: 'component',
-				                componentName: 'testComponent',
-				                componentState: { id: 'procedure_view' },
-				                title: 'Call graph view'
-			                },
-			                {
-				            type: 'component',
-				            componentName: 'testComponent',
-				            componentState: { id: 'CCT_view' },
-				            title: 'CCT view'
-			                },
-			                
-			            ]
-		            },
-			        {
-			    	    type: 'stack',
-			    	    content: [
-			    	        {
-			    		        type: 'component',
-			    		        componentName: 'testComponent',
-			    		        componentState: { id: 'diff_view' },
-			    		        title: 'Diff view'
-			    	        }
-			    	    ]
-			        }
-			    
-		        ]
-		        
-	        },
+		    }
+		    
+		]
+		
+	    },
             {
                 type: 'column',
                 width: $(window).width()*20,
@@ -115,26 +115,26 @@ let config = {
                         type: 'stack',
                         content: [
                             {
-				                type: 'component',
-				                componentName: 'testComponent',
-				                componentState: {id : "fList_view" },
-				                isClosable: false,
-				                title: "Function List"
-			                },								
+				type: 'component',
+				componentName: 'testComponent',
+				componentState: {id : "fList_view" },
+				isClosable: false,
+				title: "Function List"
+			    },								
 
                             {
-				                type: 'component',
-				                componentName: 'testComponent',
-				                componentState: {id : "control" },
-				                isClosable: false,
-				                title: "Control"
-							}
+				type: 'component',
+				componentName: 'testComponent',
+				componentState: {id : "control" },
+				isClosable: false,
+				title: "Control"
+			    }
                         ]
                     },	                   
                 ]
             }
             
-	    ]
+	]
     }]			
 }
 
@@ -148,7 +148,7 @@ export default class Layout {
     constructor(cb){
         setMainContainerBox()
         this.layout = new GoldenLayout( config , $("#main_container"));
-	    
+	
         this.ids = []
         
         self = this
@@ -159,7 +159,7 @@ export default class Layout {
         
         this.layout.on("initialised", function (){
             self.update();
-	        self.app = new App()
+	    self.app = new App()
         });
 
         this.layout.on('stateChanged', function(component){
@@ -172,8 +172,8 @@ export default class Layout {
 
 Layout.prototype.update = function(ids){
     this.ids.forEach(function(id){
-	    $("#" + id).width( $("#" + id).parent().width() );
-	    $("#" + id).height( $("#" + id).parent().height() );
+	$("#" + id).width( $("#" + id).parent().width() );
+	$("#" + id).height( $("#" + id).parent().height() );
     })		
 
     // Commenting for now...

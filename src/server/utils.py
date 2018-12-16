@@ -41,3 +41,16 @@ def getMaxExcTime(gf):
     ret  = gf.dataframe['CPUTIME (usec) (E)'].max()
     return ret
 
+def getAvgIncTime(gf):
+    ret = 0.0
+    for root in gf.graph.roots:
+        ret += lookup(gf.dataframe, root)['CPUTIME (usec) (I)'].mean()
+    return ret/len(gf.graph.roots)
+
+def getAvgExcTime(gf):
+    ret = gf.dataframe['CPUTIME (usec) (E)'].mean()
+    return ret
+
+def getNumOfNodes(gf):
+    return gf.dataframe['module'].count()
+     

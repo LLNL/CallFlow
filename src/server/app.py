@@ -10,7 +10,7 @@
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
 
-#!/usr/bin/env pythonx
+#!/usr/bin/env python
 
 from flask import Flask, jsonify, render_template, send_from_directory, current_app, request
 import os
@@ -96,7 +96,8 @@ class App():
             elif self.gfs_format[idx] == 'caliper':                
                 gf.from_caliper(path)
             ret.append(gf)
-        log.info("[Create] Nodes count: {0} (time={1})".format(gf.dataframe.shape[0], time.time() - t))
+            log.info(str(idx) + ":" + path)
+            log.info("[Create] Nodes count: {0} (time={1})".format(gf.dataframe.shape[0], time.time() - t))
         return ret
 
     # Find the file format automatically.  Automatic look up for the format
@@ -152,13 +153,18 @@ class App():
     def display_stats(self):
         for idx, gf in enumerate(self.gfs):
             log.warn('==========================')
-            log.info('Stats: Dataset () '.format(idx))
+            log.info('Stats: Dataset ({0}) '.format(idx))
             log.warn('==========================')
             max_inclusive_time = utils.getMaxIncTime(gf)
             max_exclusive_time = utils.getMaxExcTime(gf)
-            log.info('Inclusive time = {0} '.format(max_inclusive_time))
-            log.info('Exclusive time = {0} '.format(max_exclusive_time))
-            log.info('Number of nodes = {0}'.format(184))
+            avg_inclusive_time = utils.getAvgIncTime(gf)
+            avg_exclusive_time = utils.getAvgExcTime(gf)
+            num_of_nodes = utils.getNumOfNodes(gf)
+            log.info('Max Inclusive time = {0} '.format(max_inclusive_time))
+            log.info('Max Exclusive time = {0} '.format(max_exclusive_time))
+            log.info('Avg Inclusive time = {0} '.format(avg_inclusive_time))
+            log.info('Avg Exclusive time = {0} '.format(avg_exclusive_time))
+            log.info('Number of super nodes = {0}'.format(num_of_nodes))
         
     # Write graphframes to csv files
     def write_gfs(self, fgfs):
@@ -215,7 +221,7 @@ class App():
         def splitCaller():
             ret = []
             idList = json.loads(request.args.get('in_data'))
-            print(idList)
+#            print(idList)
             self.callflow.update('split-caller', idList)
             return json.dumps(ret)
                 
@@ -226,7 +232,7 @@ class App():
             mod_index = data_json['mod_index']
             dataMap = self.callflow.state.map
 
-            #Commented out but come bck in future
+            #Commented out but come back in future
             
             # df = self.callflow.state.df
 
