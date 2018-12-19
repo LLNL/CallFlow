@@ -46,12 +46,16 @@ class App():
         self.gfs = self.create_gfs()
 
         if self.args.filter:        
-            self.gfs = self.filter_gfs()
-            
-        self.display_stats()
-        self.create_server()
-        self.launch_webapp()
-        
+            self.gfs = self.filter_gfs(True)
+            self.cfgs = self.create_cfgs(fgfs, 'default', '')
+            self.display_stats()
+            self.write_gfs(self.gfs, self.cfgs)           
+
+        if not self.args.filter:
+            self.read_data()
+            self.create_server()
+            self.launch_webapp()
+
     def create_parser(self):
         parser = argparse.ArgumentParser()
         parser.add_argument("--verbose", help="Display debug points")
@@ -97,7 +101,7 @@ class App():
                 gf.from_caliper(path)
             ret.append(gf)
             log.info(str(idx) + ":" + path)
-            log.info("[Create] Nodes count: {0} (time={1})".format(gf.dataframe.shape[0], time.time() - t))
+            log.info("[Create] Rows in dataframe: {0} (time={1})".format(gf.dataframe.shape[0], time.time() - t))
         return ret
 
     # Find the file format automatically.  Automatic look up for the format
@@ -117,8 +121,6 @@ class App():
                     log.info("Found formats = {0}".format(ret))
         return ret
 
-
-    
     # ===============================================================================
             # Filtering Graphframes
     # ===============================================================================    
@@ -127,7 +129,7 @@ class App():
         fgfs = []
         # Filter graphframes based on threshold
         for idx, gf in enumerate(self.gfs):            
-            log.info("Filtering....")
+            log.info("Filtering the dataframe!")
             t = time.time()
             if self.args.filterBy == "IncTime":
                 max_inclusive_time = utils.getMaxIncTime(gf)
@@ -139,14 +141,13 @@ class App():
             else:
                 log.warn("Not filtering.... Can take forever. Thou were warned")
                 filter_gf = gf
-            log.info('[Filter] Removed {0} nodes. (time={1})'.format(gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], time.time() - t))
-            log.info("Graftin......")
+            log.info('[Filter] Removed {0} rows. (time={1})'.format(gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], time.time() - t))
+            log.info("Grafting the graph!")
             t = time.time()
             filter_gf = filter_gf.graft()
-            log.info("[Graft] {1} nodes left (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
+            log.info("[Graft] {1} rows left (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
             fgfs.append(filter_gf)
-        if write:
-            self.write_gfs(fgfs)            
+#            print(filter_gf.graph.to_string(None, filter_gf.dataframe))
         return fgfs
 
     # Display stats 
@@ -164,14 +165,32 @@ class App():
             log.info('Max Exclusive time = {0} '.format(max_exclusive_time))
             log.info('Avg Inclusive time = {0} '.format(avg_inclusive_time))
             log.info('Avg Exclusive time = {0} '.format(avg_exclusive_time))
-            log.info('Number of super nodes = {0}'.format(num_of_nodes))
+            log.info('Number of nodes in CCT = {0}'.format(num_of_nodes))
         
     # Write graphframes to csv files
     def write_gfs(self, fgfs):
         for idx, fgf in enumerate(fgfs):
-            filepath = self.config.paths[idx] +'calc-pi_filtered_{0}.json'.format(idx)
-            CaliperWriter(fgf, filepath)
-                  
+            datapath = str(self.config.paths[idx]).split('/')[-1] +'_filtered_d_{0}.json'.format(idx)
+            log.info("Writing the filtered dataframe to {0}".format(datapath))
+            fgf.dataframe.to_pickle(datapath)
+            graphpath = str(self.config.paths[idx]).split('/')[-1] +'_filtered_g_{0}.json'.format(idx)
+            log.info("Writing the filtered graph to {0}".format(graphpath))
+            with open(graphpath, 'w') as gfile:
+                json.dump(self.cfgs[idx], gfile)
+
+    def read_data(self):
+        self.gfs = []
+        self.cfgs = []
+        for idx, path in enumerate(self.config.paths):
+            datapath = str(self.config.paths[idx]).split('/')[-1] +'_filtered_d_{0}.json'.format(idx)
+            self.gfs.append(pd.read_pickle(datapath))
+            graphpath = str(self.config.paths[idx]).split('/')[-1] +'_filtered_g_{0}.json'.format(idx)
+            with open(graphpath) as g:
+                js_graph = json.load(g)
+            self.cfgs.append(json_graph.node_link_graph(js_graph))
+        log.warn("Read from the data files")
+            
+                    
     # ==============================================================================
                 # Callflow server 
     # ==============================================================================
@@ -192,7 +211,7 @@ class App():
         def getSankey():
             group_by_attr = json.loads(request.args.get('in_data'))
             # Create the callflow graph frames from graphframes given by hatchet
-            self.cfgs = self.create_cfgs(self.gfs, group_by_attr)
+            self.cfgs = self.create_cfgs(self.gfs, group_by_attr, '')
             return json.dumps(self.cfgs)
 
         @app.route('/getCCT')
@@ -221,7 +240,7 @@ class App():
         def splitCaller():
             ret = []
             idList = json.loads(request.args.get('in_data'))
-#            print(idList)
+            print(idList)
             self.callflow.update('split-caller', idList)
             return json.dumps(ret)
                 
@@ -321,11 +340,11 @@ class App():
         app.run(debug = self.debug, use_reloader=True)
 
     # Loops through the graphframes and creates callflow graph format
-    def create_cfgs(self, gfs, group_by_attr):        
+    def create_cfgs(self, gfs, action, group_by_attr):        
         ret = []
         for idx, gf in enumerate(gfs):
             self.callflow = CallFlow(gf)
-            self.callflow.update('groupBy', group_by_attr)
+            self.callflow.update(action, group_by_attr)
             ret.append(self.callflow.cfg)
         return ret
   

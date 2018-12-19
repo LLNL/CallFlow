@@ -22,7 +22,7 @@ class configFileReader():
         filename = os.path.join(dirname, filepath)
         f = open(filename, 'r').read()
         self.data = self.json_data(f)
-        log.info('Config file: {0}'.format(self.data))
+        log.info('Config file: {0}'.format(json.dumps(self.data, indent=4, sort_keys=True)))
         self.paths = self.data['path']
         self.props = self.data['props']
         self.format = self.data['format'] if 'format' in self.data.keys() else None

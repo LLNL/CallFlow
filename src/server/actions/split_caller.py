@@ -40,9 +40,9 @@ class splitCaller:
             self.nodes.append(node)
             self.add_vis_node_name(self.module[idx], new_node_name)            
 
-#    def change_group_path(self):
-#        for node in self.nodes:
-#            print(node)
+    def change_group_path(self):
+        for node in self.nodes:
+            print(node)
 
     def add_vis_node_name(self, module, node_name):
         nodes_in_vis = self.df[self.df['vis_node_name'] != '']
@@ -56,7 +56,7 @@ class splitCaller:
                         row.insert(idx+1, node_name)
 
         self.df['group_path'].update(group_paths_df)
-#        print(self.df['group_path'])
+        print(self.df['group_path'])
 
     
     def entry_functions(self, state):
@@ -69,12 +69,12 @@ class splitCaller:
                 t = state.lookup_with_node(root)
                 s = state.lookup_with_node(root.parent)
 
-#                if len(s['vis_node_name']) != 0:
-#                    if s['module'][0] == self.node:
-#                        print(len(s['group_path'][0]))
-#                        if len(s['group_path'][0]) == 4:
-#                            print(s['name'][0])
-#                            print(s['path'][0], s['group_path'][0], s['component_path'][0])
+                if len(s['vis_node_name']) != 0:
+                    if s['module'][0] == self.node:
+                        print(len(s['group_path'][0]))
+                        if len(s['group_path'][0]) == 4:
+                            print(s['name'][0])
+                            print(s['path'][0], s['group_path'][0], s['component_path'][0])
                     
         except StopIteration:
             pass
