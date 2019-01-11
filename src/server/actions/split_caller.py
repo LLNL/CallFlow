@@ -22,10 +22,10 @@ class splitCaller:
         self.d_graph = defaultdict(list)
         self.module = []
         self.nodes = []
-        self.find_df(idList)
+        self.map_to_df_row(idList)
 
 
-    def find_df(self, df_indices):
+    def map_to_df_row(self, df_indices):
         df_indices = df_indices.replace('"', '')
         df_indices = df_indices.replace('[', '')
         df_indices = df_indices.replace(']', '')
@@ -33,12 +33,16 @@ class splitCaller:
         
         for idx, df_index in enumerate(df_indices):
             node = self.df[self.df['df_index'] == int(df_index)]
-            self.module.append(node['module'].tolist()[0])
+            self.module.append(node['module'].tolist()[0])            
             new_node_name = self.module[idx] + ':' + node['name'].tolist()[0]
             node['vis_node_name'] = self.module[idx] + ':' + node['name'].tolist()[0]
+            print(node['vis_node_name'])
             self.df.update(node)
             self.nodes.append(node)
-            self.add_vis_node_name(self.module[idx], new_node_name)            
+            self.add_vis_node_name(self.module[idx], new_node_name)
+
+        print("modules: {0}".format(self.module))
+        print("nodes: {0}".format(self.nodes))
 
     def change_group_path(self):
         for node in self.nodes:

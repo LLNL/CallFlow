@@ -1,6 +1,7 @@
 class State(object):
     def __init__(self, gf):
         self.df = gf.dataframe
+        self.graph = gf.graph
         self.root = None
         self.node_hash = self.add_node_hash()
 

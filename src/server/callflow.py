@@ -59,6 +59,11 @@ class CallFlow:
         elif action == "dot-format":
             nx = CallGraph(self.state, 'path')
             nx.write_dot(nx.g, '/Users/jarus/ucd/Research/Visualisation/projects/CallFlow/src/server')
+        elif action == "graphml-format":
+            nx = CallGraph(self.state, 'path')
+            name = attr + '{0}.graphml'.format(idx)
+            nx.write_graphml(nx, name)
+
         # elif action == "default-dot":
         #     nx = CallGraph(self.state, 'path')
         #     self.cfg = write_dot(nx, "graph.dot")

@@ -5,6 +5,7 @@ import showName from './control/showName'
 import colorLegend from './control/colorLegend'
 import groupBy from './control/groupBy'
 import { functionListUI } from './functionList'
+import graphEmbedding from './control/graphEmbedding'
 
 export default class ControlUI {
     constructor(graph, view) {
@@ -15,5 +16,6 @@ export default class ControlUI {
         colorBy(graph, view)
         range(view)
         nodeSize(view)
+	graphEmbedding(view)
     }
 }

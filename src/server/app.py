@@ -24,6 +24,7 @@ from callflow import *
 from configFileReader import * 
 import utils
 from logger import log
+import networkx as nx
 
 app = Flask(__name__, static_url_path='/public')
 
@@ -44,17 +45,18 @@ class App():
         self.create_variables() # Setup variables which are common to filter and server (like gf, config, etc)
 
         self.gfs = self.create_gfs()
-
+        
         if self.args.filter:        
             self.gfs = self.filter_gfs(True)
-            self.cfgs = self.create_cfgs(fgfs, 'default', '')
+#            self.cfgs = self.create_cfgs(self.gfs, 'default', '')
             self.display_stats()
-            self.write_gfs(self.gfs, self.cfgs)           
+#            self.write_gfs(self.gfs, self.cfgs)           
 
-        if not self.args.filter:
-            self.read_data()
-            self.create_server()
-            self.launch_webapp()
+#        if not self.args.filter:
+#            self.read_data()
+        self.create_server()
+        self.launch_webapp()
+        self.write_gfs_graphml()
 
     def create_parser(self):
         parser = argparse.ArgumentParser()
@@ -211,7 +213,7 @@ class App():
         def getSankey():
             group_by_attr = json.loads(request.args.get('in_data'))
             # Create the callflow graph frames from graphframes given by hatchet
-            self.cfgs = self.create_cfgs(self.gfs, group_by_attr, '')
+            self.cfgs = self.create_cfgs(self.gfs, 'groupBy', group_by_attr)
             return json.dumps(self.cfgs)
 
         @app.route('/getCCT')
@@ -243,7 +245,11 @@ class App():
             print(idList)
             self.callflow.update('split-caller', idList)
             return json.dumps(ret)
-                
+
+        @app.route('/getGraphEmbedding')
+        def getGraphEmbedding():
+            self.cct.update('graphml-format', str(self.config.paths[idx]).split('/')[-1])
+        
         @app.route('/getHistogramData')
         def getHistogramData():
             data_json = json.loads(request.args.get('in_data'))

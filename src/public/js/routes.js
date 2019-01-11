@@ -6,6 +6,7 @@ import ConfigJSON from './components/ConfigJSON'
 import { App, layout } from './app'
 
 function request(title, data, cb){
+    console.log("Request - ", title)
     return new Promise( (resolve, reject) => {
 	    $.ajax({
 	        type: "GET",
@@ -51,19 +52,23 @@ function splitCaller(idList, cb){
 }
 
 function getConfigFile(filename, cb){
-    return request('/loadConfigFile', filename, cb)
+    return request('loadConfigFile', filename, cb)
 }
 
 function getDataMaps(attr, cb){
-    return request('/getMaps', attr, cb)
+    return request('getMaps', attr, cb)
 }
 
 function getDataSetInfo(cb){
-    return request('/dataSetInfo', [], cb)
+    return request('dataSetInfo', [], cb)
 }
 
 function getNodeMetrics(cb){
-    return request('/getNodeMetrics', [], cb)
+    return request('getNodeMetrics', [], cb)
+}
+
+function getGraphEmbedding(cb){
+    return request('getGraphEmbedding', [], cb)
 }
 
 function getNextLevelNodes(node, level, cb){
@@ -174,4 +179,5 @@ export {
     getCCT,
     getNextLevelNodes,
     splitCaller,
+    getGraphEmbedding,
 }
