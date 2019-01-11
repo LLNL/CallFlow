@@ -35,10 +35,12 @@ class App():
         self.args = None # Arguments passed through the CLI
         self.config = None # Config file json 
         self.gfs_format = [] # Graph formats in array for the paths
+        self.ccts = []
         self.gfs = [] # Graphframes returned by hatchet
         self.cfgs = [] # CallFlow graphs
         self.debug = False # Debug gives time, other information
         self.callflow = {}
+
         
         self.create_parser()  # Parse the input arguments
         self.verify_parser()  # Raises expections if something is not provided. 
@@ -191,8 +193,33 @@ class App():
                 js_graph = json.load(g)
             self.cfgs.append(json_graph.node_link_graph(js_graph))
         log.warn("Read from the data files")
-            
-                    
+
+    def launch_webapp(self):
+        # Load the graph frames from an intermediate format.
+        #        self.gfs = self.create_gfs()
+
+        # Create the callflow graph frames from graphframes given by hatchet
+        #        self.cfgs = self.create_cfgs(self.gfs, 'module')
+        
+        # Launch the flask app
+        app.run(debug = self.debug, use_reloader=True)
+
+    # Loops through the graphframes and creates callflow graph format
+    def create_cfgs(self, gfs, action, group_by_attr):        
+        ret = []
+        for idx, gf in enumerate(gfs):
+            self.callflow = CallFlow(gf)
+            self.callflow.update(action, group_by_attr)
+            ret.append(self.callflow.cfg)
+        return ret
+
+    # Loops through gfs and creates their respective CCTs.
+    # Method exists because the CCTs are not create by default. 
+    def create_ccts(self):
+        for idx, gf in enumerate(self.gfs):
+            temp = CallFlow(gf)
+            self.ccts.append(temp)
+
     # ==============================================================================
                 # Callflow server 
     # ==============================================================================
@@ -219,18 +246,18 @@ class App():
         @app.route('/getCCT')
         def getCCT():
             ret = []
+            self.create_ccts()
             for idx, gf in enumerate(self.gfs):
-                self.cct = CallFlow(gf)
-                self.cct.update('default', '')
+                self.cct[idx].update('default', '')
                 ret.append(self.cct.cfg)
             return json.dumps(ret)
 
         @app.route('/getDotCCT')
         def getDotCCT():
             ret = []
+            self.create_ccts()
             for idx, gf in enumerate(self.gfs):
-                self.cct = CallFlow(gf)
-                self.cct.update('default-dot', '')
+                self.cct[idx].update('default-dot', '')
                 ret.append(self.cct.cfg)
             return json.dumps(ret)
                     
@@ -248,8 +275,12 @@ class App():
 
         @app.route('/getGraphEmbedding')
         def getGraphEmbedding():
-            self.cct.update('graphml-format', str(self.config.paths[idx]).split('/')[-1])
-        
+            if len(self.ccts) == 0 :
+                self.create_ccts()
+            for idx, cct in enumerate(self.ccts):
+                cct.update('graphml-format', str(self.config.paths[idx]).split('/')[-1])
+
+            
         @app.route('/getHistogramData')
         def getHistogramData():
             data_json = json.loads(request.args.get('in_data'))
@@ -334,25 +365,8 @@ class App():
                     "exc" : row['CPUTIME (usec) (E)'],                    
                 }))
             return str(json.dumps(ret))
-            
-    def launch_webapp(self):
-        # Load the graph frames from an intermediate format.
-#        self.gfs = self.create_gfs()
+                          
 
-        # Create the callflow graph frames from graphframes given by hatchet
-#        self.cfgs = self.create_cfgs(self.gfs, 'module')
-        
-        # Launch the flask app
-        app.run(debug = self.debug, use_reloader=True)
 
-    # Loops through the graphframes and creates callflow graph format
-    def create_cfgs(self, gfs, action, group_by_attr):        
-        ret = []
-        for idx, gf in enumerate(gfs):
-            self.callflow = CallFlow(gf)
-            self.callflow.update(action, group_by_attr)
-            ret.append(self.callflow.cfg)
-        return ret
-  
 if __name__ == '__main__':
     App()

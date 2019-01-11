@@ -26,6 +26,7 @@ from actions.groupBy import groupBy
 from actions.split_callee import splitCallee
 from actions.split_caller import splitCaller
 from state import State
+import networkx as netx
 
 # need to make this observable on gf. When the gf changes the whole thing reflects
 class CallFlow:
@@ -46,24 +47,28 @@ class CallFlow:
 
     def update(self, action, attr):        
         if action == 'default':
-            nx = CallGraph(self.state, 'path')                
+            nx = CallGraph(self.state, 'path', True)                
         elif action == "groupBy":
             groupBy(self.state, attr)
-            nx = CallGraph(self.state, 'group_path')
+            nx = CallGraph(self.state, 'group_path', True)
         elif action == "split-callee":
             splitCallee(self.state, attr)
-            nx = CallGraph(self.state, 'path')
+            nx = CallGraph(self.state, 'path', True)
         elif action == "split-caller":
             splitCaller(self.state, attr)
-            nx = CallGraph(self.state, 'path')
+            nx = CallGraph(self.state, 'path', True)
         elif action == "dot-format":
-            nx = CallGraph(self.state, 'path')
-            nx.write_dot(nx.g, '/Users/jarus/ucd/Research/Visualisation/projects/CallFlow/src/server')
+            nx = CallGraph(self.state, 'path', False)
+            netx.write_dot(nx.get_graph(), '/Users/jarus/ucd/Research/Visualisation/projects/CallFlow/src/server')
         elif action == "graphml-format":
-            nx = CallGraph(self.state, 'path')
-            name = attr + '{0}.graphml'.format(idx)
-            nx.write_graphml(nx, name)
-
+            nx = CallGraph(self.state, 'path', False)
+            name = attr + '.graphml'
+            netx.write_graphml(nx.get_graph(), '/home/vidi/Suraj/llnl/CallFlow/src/server/' + name)
+        elif action == 'json-format':
+            nx = CallGrap(self.state, 'path', false)
+            name = attr + '.json'
+            utils.graphmltojson('/home/vidi/Suraj/llnl/CallFlow/src/server/' + name, '/home/vidi/Suraj/llnl/CallFlow/src/server/' + name + '.json')
+            
         # elif action == "default-dot":
         #     nx = CallGraph(self.state, 'path')
         #     self.cfg = write_dot(nx, "graph.dot")

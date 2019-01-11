@@ -17,7 +17,7 @@ import networkx as nx
 from logger import log
 
 class CallGraph(nx.Graph):
-    def __init__(self, state, path_name):
+    def __init__(self, state, path_name, add_info):
         super(CallGraph, self).__init__()
         self.state = state
         self.graph = self.state.graph
@@ -26,11 +26,15 @@ class CallGraph(nx.Graph):
         
         self.rootRunTimeInc = self.root_runtime_inc()
         self.edge_direction = {}        
-        self.g = nx.DiGraph(rootRunTimeInc = self.rootRunTimeInc)       
+        self.g = nx.DiGraph(rootRunTimeInc = int(self.rootRunTimeInc))
         
         self.add_paths(path_name)
-        self.add_node_attributes()
-        self.add_edge_attributes()
+        if add_info == True:
+            self.add_node_attributes()
+            self.add_edge_attributes()
+        else:
+            print('not adding attributes')
+            pass
 
         # self.adj_matrix = nx.adjacency_matrix(self.g)
         # print(self.adj_matrix.todense())
@@ -87,7 +91,7 @@ class CallGraph(nx.Graph):
 #        children_mapping = self.immediate_children()
 #        nx.set_node_attributes(self.g, name='children', values=children_mapping)
 
-        #        self.find_bridge_nodes()
+#        self.find_bridge_nodes()
         
     def generic_map(self, nodes, attr):
         ret = {}
@@ -120,7 +124,7 @@ class CallGraph(nx.Graph):
         return edge[0], edge[1]
 
     def tailheadDir(self, edge):
-        return edge[0], edge[1], self.edge_direction[edge]
+        return str(edge[0]), str(edge[1]), self.edge_direction[edge]
 
     def edges_from(self, node):
         for e in self.g.edges(node):
@@ -171,7 +175,6 @@ class CallGraph(nx.Graph):
                     track_level = 0
 
         return levelMap
-
         
     def flow_map(self):
         flowMap = {}
@@ -193,8 +196,8 @@ class CallGraph(nx.Graph):
                 flowMap[edge] = {
                     "source": head,
                     "target": tail,
-                    "source_level" : head_level,
-                    "target_level": tail_level,
+                    "source_level" : int(head_level),
+                    "target_level": int(tail_level),
 #                    "direction": direction
                 }
         return flowMap
@@ -206,7 +209,6 @@ class CallGraph(nx.Graph):
         nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)
         nx.set_edge_attributes(self.g, name='type', values=type_mapping)
         nx.set_edge_attributes(self.g, name='flow', values=flow_mapping)
-
 
     def draw_tree(self, g):
         subtrees = {node: ete3.Tree(name = node) for node in g.nodes()}
