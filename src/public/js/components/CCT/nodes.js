@@ -167,9 +167,9 @@ function drawPath(node, graph, view){
 	    .attr('d', function(d){
 	        if(d.name == "intermediate"){
 		        return "m" + 0 + " " + 0
-		            + "h " + view.sankey.nodeWidth()
+		            + "h " + view.nodeWidth
 		            + "v " + (1)*0
-		            + "h " + (-1)*view.sankey.nodeWidth();
+		            + "h " + (-1)*view.nodeWidth;
 	        }
 	    })
 	    .style("fill", function(d){

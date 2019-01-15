@@ -85,6 +85,12 @@ class CallGraph(nx.Graph):
         mod_index_mapping = self.generic_map(self.g.nodes(), 'mod_index')
         nx.set_node_attributes(self.g, name='mod_index', values=mod_index_mapping)
 
+        imbalance_perc_mapping = self.generic_map(self.g.nodes(), 'imbalance_perc')
+        nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)
+
+        show_node_mapping = self.generic_map(self.g.nodes(), 'show_node')
+        nx.set_node_attributes(self.g, name='show_node', values=imbalance_perc_mapping)
+
         self.level_mapping = self.assign_levels()               
         nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
 
@@ -119,7 +125,6 @@ class CallGraph(nx.Graph):
                 ret[node] =  list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
         return ret
 
-        
     def tailhead(self, edge):
         return edge[0], edge[1]
 

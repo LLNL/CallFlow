@@ -248,8 +248,8 @@ class App():
             ret = []
             self.create_ccts()
             for idx, gf in enumerate(self.gfs):
-                self.cct[idx].update('default', '')
-                ret.append(self.cct.cfg)
+                self.ccts[idx].update('default', '')
+                ret.append(self.ccts[idx].cfg)
             return json.dumps(ret)
 
         @app.route('/getDotCCT')
@@ -257,8 +257,8 @@ class App():
             ret = []
             self.create_ccts()
             for idx, gf in enumerate(self.gfs):
-                self.cct[idx].update('default-dot', '')
-                ret.append(self.cct.cfg)
+                self.ccts[idx].update('default-dot', '')
+                ret.append(self.ccts[idx].cfg)
             return json.dumps(ret)
                     
         @app.route('/getMaps')

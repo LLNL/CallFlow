@@ -3,6 +3,7 @@ import DOMSetup from './callflow/DOMSetup.js'
 import CCTComputation from './CCT/computation.js'
 import sankeyComputation from './callflow/sankeyComputation.js'
 import { drawNodes, clearNodes } from './CCT/nodes.js'
+import drawEdges from './CCT/edges.js'
 import { drawNodes_force, clearNodes_force, drawEdges_force } from './CCT/nodes_force.js'
 import { drawHierarchy } from './callflow/hierarchy.js'
 import drawHistogram from './callflow/histogram.js'
@@ -11,19 +12,18 @@ import ControlUI from './control_wrapper.js'
 
 export default class CCT{
     constructor(graph, prop) {
-        console.log(prop)
         // View properties
         this.view = {}
         this.view.ySpacing = 50
         this.view.nodeWidth = 50
         this.view.containerID = prop.ID
         this.view.minHeightForText = 10
-        this.view.margin = { top: 100, right: 30, bottom: 10, left: 10 }
+        this.view.margin = { top: 10, right: 30, bottom: 10, left: 10 }
         this.view.width = (prop.width) - this.view.margin.left - this.view.margin.right
         this.view.height = (prop.height) - this.view.margin.top - this.view.margin.bottom
-	this.view.treeHeight = this.view.transitionDuration = 1000
+	    this.view.treeHeight = this.view.transitionDuration = 1000
         this.view.color = null
-	this.view.minNodeScale = 1.0        
+	    this.view.minNodeScale = 1.0        
         
         // Data properties 
         this.graph = graph
@@ -42,8 +42,9 @@ export default class CCT{
         else if(this.view.layout == 'force'){
             this.view.cct = CCTComputation(this.graph, this.view)
         }
-        this.setColor(1)
-        this.render()
+        this.setColor(5)
+        //        this.render()
+        this.render_force()
         return this
     }
 }
