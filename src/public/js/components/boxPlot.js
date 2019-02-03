@@ -15,7 +15,6 @@ function d3_box() {
     // For each small multiple…
     function box(g) {
         g.each(function(data, i) {
-            console.log(i, data)
             var d = data.sort(d3.ascending)
             var g = d3.select(this),
                 n = d.length,
@@ -54,6 +53,8 @@ function d3_box() {
             // and other elements are variable, so we need to exit them! Variable
             // elements also fade in and out.
 
+            var flist_width = $('#fList_view').width();
+            
             // Update center line: the vertical line spanning the whiskers.
             var center = g.selectAll("line.center")
                 .data(whiskerData ? [whiskerData] : []);
@@ -75,8 +76,8 @@ function d3_box() {
             center.transition()
                 .duration(duration)
                 .style("opacity", 1)
-                .attr("x1", function(d) { console.log(x1(d[0]), d[0]); return x1(d[1]); })
-                .attr("x2", function(d) { console.log(x1(d[1]), d[1]); return x1(d[0]); });
+                .attr("x1", function(d) { return x1(d[1]); })
+                .attr("x2", function(d) { return x1(d[0]); });
             
             center.exit().transition()
                 .duration(duration)
@@ -92,7 +93,7 @@ function d3_box() {
             box.enter().append("rect")
                 .attr("class", "box")
                 .attr("y", 0)
-                .attr("x", function(d) { console.log(d); return x0(d[2]); })
+                .attr("x", function(d) { return x0(d[2]); })
                 .attr("height", height - 5)
                 .attr("width", function(d) { return Math.abs(x0(d[0]) - x0(d[2])); })
                 .transition()
@@ -117,8 +118,8 @@ function d3_box() {
                 .attr("x2", x0)
                 .transition()
                 .duration(duration)
-                .attr("x1", x1)
-                .attr("x2", x1)
+                .attr("x1", flist_width - x1)
+                .attr("x2", flist_width - x1)
                 .attr('stroke-width', 2)
 
             medianLine.transition()
@@ -170,19 +171,19 @@ function d3_box() {
                 .style("opacity", 1e-6)
                 .transition()
                 .duration(duration)
-                .attr("cx", function(i) { return x1(d[i]); })
+                .attr("cx", function(i) { return flist_width - x1(d[i]); })
                 .style("opacity", 1)
                 .style("fill", "#000")
             
             outlier.transition()
                 .duration(duration)
-                .attr("cx", function(i) { return x1(d[i]); })
+                .attr("cx", function(i) { return flist_width - x1(d[i]); })
                 .style("opacity", 1)
                 .style("fill", "#000");
 
             outlier.exit().transition()
                 .duration(duration)
-                .attr("cx", function(i) { return x1(d[i]); })
+                .attr("cx", function(i) { return flist_width - x1(d[i]); })
                 .style("opacity", 1e-6)
                 .style("fill", "#000")
                 .remove();
@@ -202,7 +203,7 @@ function d3_box() {
                 .attr("x", x0)
                 .attr("text-anchor", function(d, i) { return 'middle'})
                 .text(function(d){
-                    return (d*0.000001).toFixed(3) + 's'
+                    return ((d*0.001)/60.0).toFixed(3) + 's'
                 })
                 .transition()
                 .duration(duration)
@@ -212,7 +213,7 @@ function d3_box() {
             boxTick.transition()
                 .duration(duration)
                 .text(function(d){
-                    return (d*0.000001).toFixed(3) + 's'
+                    return ((d*0.001)/60).toFixed(3) + 's'
                 })
                 .attr("x", x1)
                 .attr("fill", function(d, i) { return i % 2 ? '#00B300': '#8F0000'});
@@ -231,7 +232,7 @@ function d3_box() {
                 .attr("x", x0)
                 .attr("text-anchor", function(d, i) { return i % 2 ? 'start': 'end'})
                 .text(function(d){
-                    return (d*0.000001).toFixed(3) + 's'
+                    return ((d*0.001)/60.0).toFixed(3) + 's'
                 })
                 .style("opacity", 1e-6)
                 .style("color", "#f00")
@@ -243,7 +244,7 @@ function d3_box() {
                whiskerTick.transition()
                 .duration(duration)
                 .text(function(d){
-                    return (d*0.000001).toFixed(3) + 's'
+                    return ((d*0.000001)/60.).toFixed(3) + 's'
                 })
                .attr("x", x1)
                .style("opacity", 1);

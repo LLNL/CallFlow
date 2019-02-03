@@ -73,7 +73,14 @@ function getGraphEmbedding(cb){
 
 function getNextLevelNodes(node, level, cb){
     return new Promise( (resolve, reject) => {
-        if(node.df_index != undefined){
+        let df_index;
+        if(node.df_index instanceof Array){
+            df_index = node.df_index[0]
+        }
+        else{
+            df_index = node.df_index
+        }
+        if(df_index != undefined){
             $.ajax({
                 type: 'GET',
                 contentType: 'application/json',
@@ -81,7 +88,7 @@ function getNextLevelNodes(node, level, cb){
                 url: '/getNextLevelNodes',
                 data: {
                     "in_data": JSON.stringify({
-                        "df_index": node.df_index[0],
+                        "df_index": df_index,                        
                         "level": level
                     })
                 },
@@ -92,11 +99,13 @@ function getNextLevelNodes(node, level, cb){
                         let parse_dat = JSON.parse(dat)
                         if(nodes[parse_dat['name']] == undefined){
                             nodes[parse_dat['name']] = []
-                        }
+                        }                        
                         nodes[parse_dat['name']].push({
                             "exc": parse_dat['exc'],
                             "inc": parse_dat['inc'],
-                            "name": parse_dat['name']
+                            "name": parse_dat['name'],
+                            "df_index": parse_dat['df_index'],                          
+                            "mod_index": parse_dat['mod_index']
                         })
                     }
                     resolve(nodes)
@@ -145,7 +154,16 @@ function getHistogramData(node, cb){
     }}
 
 function getFunctionLists(node, cb){
-    if (node.df_index != undefined){
+    let df_index, mod_index;
+    if(node.df_index instanceof Array){
+        df_index = node.df_index[0]
+        mod_index = node.mod_index[0]
+    }
+    else{
+        df_index = node.df_index
+        mod_index = node.mod_index
+    }
+    if(df_index != undefined){
         $.ajax({
             type:'GET',
             contentType: 'application/json',
@@ -153,8 +171,8 @@ function getFunctionLists(node, cb){
             url: '/getFunctionLists',
             data: {
                 "in_data": JSON.stringify({
-                    "df_index": node.df_index[0],
-                    "mod_index": node.mod_index[0]
+                    "df_index": df_index,
+                    "mod_index": mod_index
                 })
             },
             success: function(data){

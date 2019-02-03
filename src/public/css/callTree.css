@@ -37,3 +37,7 @@
     stroke: black;
     stroke-width: 2px;    
 }
+
+.big_text{
+    font-size: 32px;
+}

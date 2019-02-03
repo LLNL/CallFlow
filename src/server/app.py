@@ -58,7 +58,7 @@ class App():
 #            self.read_data()
         self.create_server()
         self.launch_webapp()
-        self.write_gfs_graphml()
+#        self.write_gfs_graphml()
 
     def create_parser(self):
         parser = argparse.ArgumentParser()
@@ -211,6 +211,7 @@ class App():
             self.callflow = CallFlow(gf)
             self.callflow.update(action, group_by_attr)
             ret.append(self.callflow.cfg)
+            print(ret)
         return ret
 
     # Loops through gfs and creates their respective CCTs.
@@ -240,7 +241,9 @@ class App():
         def getSankey():
             group_by_attr = json.loads(request.args.get('in_data'))
             # Create the callflow graph frames from graphframes given by hatchet
+            print("calculating cfgs")
             self.cfgs = self.create_cfgs(self.gfs, 'groupBy', group_by_attr)
+            print(self.cfgs)
             return json.dumps(self.cfgs)
 
         @app.route('/getCCT')
@@ -279,7 +282,6 @@ class App():
                 self.create_ccts()
             for idx, cct in enumerate(self.ccts):
                 cct.update('graphml-format', str(self.config.paths[idx]).split('/')[-1])
-
             
         @app.route('/getHistogramData')
         def getHistogramData():
@@ -313,7 +315,7 @@ class App():
             df_index = data_json['df_index']
             mod_index = data_json['mod_index']            
             df = self.callflow.state.df
-            entry_funcs = df[df.df_index == df_index]['callees'].values.tolist()[0]
+            entry_funcs = df[df.df_index == df_index]['callers'].values.tolist()[0]
             other_funcs = list(set(df[df.mod_index == mod_index]['name']))
 
             entry_funcs_json = []
@@ -348,7 +350,8 @@ class App():
 
         @app.route('/getNextLevelNodes')
         def getNextLevelNodes():
-            data_json = json.loads(request.args.get('in_data'))        
+            data_json = json.loads(request.args.get('in_data'))
+            print(data_json)
             df_index = data_json['df_index']
             level = data_json['level']
             df = self.callflow.state.df
@@ -362,11 +365,11 @@ class App():
                     "name": row['name'],
                     'file': row['file'],
                     "inc" : row['CPUTIME (usec) (I)'],                    
-                    "exc" : row['CPUTIME (usec) (E)'],                    
+                    "exc" : row['CPUTIME (usec) (E)'],
+                    "df_index": row['df_index'],
+                    "mod_index": row['mod_index']
                 }))
             return str(json.dumps(ret))
                           
-
-
 if __name__ == '__main__':
     App()

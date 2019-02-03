@@ -40,27 +40,35 @@ class PreProcess():
             return self
             
         def build(self):
+            print("done building")
             return PreProcess(self)
 
         # Add the path information from the node object
         def add_path(self):
             self.df['path'] = self.df['node'].apply(lambda node: node.callpath)
+            print("aa")
             return self
 
         def _map(self, attr, ):
             ret = {}
+            print(self.df.shape)
             for idx, row in self.df.iterrows():
                 node_df = self.state.lookup_with_node(row.node)
                 p_index = node_df['df_index'].tolist()
                 p_incTime  = node_df[attr].tolist()
+                print(p_index)
                 for idx in range(len(p_index)):
                     if p_index[idx] not in ret:
                         ret[p_index[idx]] = []
                     ret[p_index[idx]].append(p_incTime[idx])
+            print(ret)
             return ret
 
         def add_incTime(self):
+            print('addddd')
+            print(self._map('CPUTIME (usec) (I)'))
             self.map['incTime'] = self._map('CPUTIME (usec) (I)')
+            print("addd")
             return self
 
         def add_excTime(self):
@@ -77,6 +85,7 @@ class PreProcess():
 
             self.map['max_incTime'] = ret
             self.df['max_incTime'] = self.df['node'].apply(lambda node: self.map['max_incTime'][str(node.df_index)])
+            print("here")
             return self
 
         # Avg of inclusive Runtimes among all processes
@@ -140,14 +149,14 @@ class PreProcess():
             self.df['callees'] = self.df['name'].apply(lambda node: callees[node] if node in callees else [])
             self.df['callers'] = self.df['name'].apply(lambda node: callers[node] if node in callers else [])
             
-#            print(self.df['df_index'], self.df['callees'], self.df['callers'])
+            print(self.df['df_index'], self.df['callees'], self.df['callers'])
             
             return self
         
         def add_show_node(self):
             self.map['show_node'] = {}
             self.df['show_node'] = self.df['node'].apply(lambda node: True)
-
+            print("c")
             return self
 
         def update_show_node(self, show_node_map):
@@ -157,7 +166,7 @@ class PreProcess():
         # node_name is different from name in dataframe. So creating a copy of it.
         def add_vis_node_name(self):
             self.df['vis_node_name'] = self.df['name'].apply(lambda name: name)
-
+            print("a")
             return self
 
         def update_node_name(self, node_name_map):
@@ -165,10 +174,14 @@ class PreProcess():
 
         def update_module_name(self):
             self.df['module'] = self.df['module'].apply(lambda name: utils.sanitizeName(name))
+            print("b")
             return self
         
         def add_df_index(self):
-            self.df['df_index'] = self.df.groupby('node').ngroup() 
+            print("Trying to add index")
+            self.df['df_index'] = self.df.groupby('node').ngroup()
+            print("There")
             self.df['mod_index'] = self.df.groupby('module').ngroup()
+            print("here")
             return self
 

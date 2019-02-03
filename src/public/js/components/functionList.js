@@ -30,16 +30,19 @@ function displayFunctions(listData){
 	});
     $("#list_view").append(button2);
 
+    let br = document.createElement('br')
+    document.getElementById('list_view').appendChild(document.createElement('br'));
+    document.getElementById('list_view').appendChild(document.createElement('br'));
     
     let entry_funcs = listData['entry_funcs']
     let other_funcs = listData['other_funcs']
     
     entry_funcs.sort(function(a,b){
-        return b["value_exc"] - a["value_exc"];
+        return b["value_inc"] - a["value_inc"];
     })
 
     let divHead = document.createElement('label');
-    divHead.appendChild(document.createTextNode("Entry functions: "))
+    divHead.appendChild(document.createTextNode("Callees: "))
     document.getElementById('list_view').appendChild(divHead)
 
     let text = document.createTextNode(' ' + entry_funcs.length + ' in count')
@@ -55,11 +58,13 @@ function displayFunctions(listData){
     // ############################################################################################################
     // For other_funcs
     other_funcs.sort(function(a,b){
-        return b["value_exc"] - a["value_exc"];
+        return avg(b["value_inc"]) - avg(a["value_inc"]);
     })
 
+    console.log(other_funcs)
+    
     let otherHead = document.createElement('label');
-    otherHead.appendChild(document.createTextNode("Inside functions: "))
+    otherHead.appendChild(document.createTextNode("Callers: "))
     document.getElementById('list_view').appendChild(otherHead)
 
     let othertext = document.createTextNode(' '+ other_funcs.length + ' in count')
@@ -84,13 +89,18 @@ function displayFunctions(listData){
 }
 
 function boxPlotContainerUI(dat, type){
-    let component_level = dat['component_path'].length - 1;
-    var funcName = dat["name"].trunc(10) + ": [ Exc:" + (avg(dat["value_exc"]) * 0.000001).toFixed(3)  + "s, " + "Inc:" + (avg(dat["value_inc"]) * 0.000001).toFixed(3) + "s, c_level: " + component_level + "]";
+    let funcName = dat["name"]
+    let funcProps = ": [ Exc:" + ((avg(dat["value_exc"]) * 0.001)/60).toFixed(3)  + "s, " + "Inc:" + ((avg(dat["value_inc"]) * 0.001)/60.0).toFixed(3) + "s]"
+    let callStackDepth = dat['component_path'].length - 1
+    let funcComponent = "Call stack depth:" + callStackDepth;
 
     let div = document.createElement('div')
 	let label = document.createElement("div");
-	let description = document.createTextNode(funcName);
+    let funcPropsDiv = document.createTextNode(funcProps);
+	let funcNameDiv = document.createTextNode(funcName);
+    let funcComponentDiv = document.createTextNode(funcComponent);
 	let checkbox = document.createElement("input");
+    let br = document.createElement('br')
     
 	checkbox.type = "checkbox";
 	checkbox.name = funcName;
@@ -99,8 +109,11 @@ function boxPlotContainerUI(dat, type){
 	checkbox.setAttribute('class', "list_checkbox");
 
 	label.appendChild(checkbox);
-	label.appendChild(description);
-
+    label.appendChild(funcNameDiv);
+    label.appendChild(document.createElement('br'))
+    label.appendChild(funcPropsDiv);
+    label.appendChild(funcComponentDiv);
+    
     div.appendChild(label)
     $('#list_view').append(div);
     boxPlotUI(div, dat, type)
@@ -208,6 +221,7 @@ function boxPlotUI(div, data, type){
         .attr("width", width)
         .attr("height", height)
         .attr("class", "box")
+        .attr("x", $('#fList_view').width())
         .attr("transform", "translate(" + offset + "," + margin.top + ")")
 
     let x = d3.scale.ordinal()

@@ -1,6 +1,9 @@
 import { getHistogramData, getFunctionLists, getNextLevelNodes } from '../../routes'
 import Color from './color.js'
 
+let node_heights = {};
+let current_level = {}
+
 function calcTextSize(text) {
     if (!d3) return;
     var container = d3.select('body').append('svg');
@@ -24,7 +27,7 @@ function drawNodes(graph, view){
 	    })
 	    .attr('opacity' , 0)
         .attr('id', function(d){
-            return d.name[0].split('.')[0]
+            return "n" + d.df_index
         })
 	    .attr("transform", function (d) {
 	        if(d.name != "intermediate"){
@@ -58,6 +61,8 @@ function clearNodes(view){
 function drawRectangle(node, graph, view){
     let rect = node.append("rect")
 	    .attr("height", function (d) {
+            current_level[d.mod_index] = 0;
+            node_heights[d.df_index] = d.height;
 	        return d.height;
 	    })
 	    .attr("width", view.nodeWidth)
@@ -129,6 +134,7 @@ function drawRectangle(node, graph, view){
         })
         .on('dblclick', function(d){
             let level = 1
+            current_level[d.mod_index] += 1
             getNextLevelNodes(d, level).then( (data) => {
                 let arr_data = Object.values(data)
                 getFunctionLists(d)
@@ -167,7 +173,7 @@ function drawRectangle(node, graph, view){
 
 function drawLevelNodes(graph, view, d, nodes, level){
     let nodeOffset = 3
-    let parentNodeName = d.name.split('.')[0]
+    let parentNodeName = "n" + d.df_index
 
     function avg(arr){
         let ret = {}
@@ -178,7 +184,7 @@ function drawLevelNodes(graph, view, d, nodes, level){
             sum_inc += arr[i]['inc']
         }
         return {
-            'weight': sum_exc/arr.length,
+            'weight': sum_inc/arr.length,
         }
     }
 
@@ -186,31 +192,40 @@ function drawLevelNodes(graph, view, d, nodes, level){
     for(let i = 0; i < nodes.length; i++){
         tot_avg += avg(nodes[i])['weight']
     }
-
-    console.log(nodes)
     
     let parentColor = new Color(view)
 	parentColor.setColorScale(0, d.weight, 0, 0)
 
     
-    let floating_height = 0
+    let floating_height = 0;
+
+    nodes.sort(function(a, b){
+        return avg(b)['weight'] - avg(a)['weight']
+    })
+
+
     for(let i = 0; i < nodes.length; i++){
-        let node = {}
+        let w = avg(nodes[i]) let h = 0; if(d.height != undefined){ h
+        = (d.height*w['weight'])/tot_avg } else{ h =
+        (node_heights[nodes[i][0].df_index]*w['weight'])/tot_avg }
+        
+        let node = view.nodes.select('#'+ parentNodeName)
+            .data(nodes[i]) .append('g');
 
-        let w = avg(nodes[i])
-        let h = (d.height*w['weight'])/tot_avg
-
-        let rect = view.nodes.select('#'+ parentNodeName).append("rect")
+        let rect = node.append('rect')
 	        .attr("height", function (d) {
 	            return h;
 	        })
-	        .attr("width", view.nodeWidth - level*2)
+	        .attr("width", view.nodeWidth/2)
             .attr("opacity", 1)
             .attr("x", function(d){
-                return 3
+                return view.nodeWidth + (level - 1)*(view.nodeWidth/2);
+            })
+            .attr("id", function(d){
+                return "n" + d.df_index;
             })
             .attr("y", function(d){
-                return floating_height
+                return floating_height;
             })
 	        .style("fill", function (d) {
                 return parentColor.getColor(w);
@@ -244,7 +259,69 @@ function drawLevelNodes(graph, view, d, nodes, level){
 	                }
 	            }
 	        })
-        floating_height += h
+            .on('dblclick', function(d){
+                let level = 1;
+                current_level[d.mod_index] += 1;
+                getNextLevelNodes(d, level).then( (data) => {
+                    let arr_data = Object.values(data)
+                    getFunctionLists(d)
+                    drawLevelNodes(graph, view, d, arr_data, current_level[d.mod_index])                
+                });                
+            })
+        floating_height += h;
+
+        let textTruncForNode = 4; let text = node.append("text")
+        .attr('dy', '0.35em') .attr("transform", "rotate(90)")
+        .attr('x', function(d){ return 5 + view.nodeWidth +
+        (level-1)*(view.nodeWidth/2);
+	        })
+	        .attr('y', "-10")
+	        .style('opacity', 1)
+	        .text(function (d) {
+	            if(d.name != "intermediate" && d.name[d.name.length - 1] != '_'){
+	    	        if(d.height < view.minHeightForText ) {
+	    	            return "";
+	    	        }
+	    	        else {
+	    	            var textSize = calcTextSize(d.name)["width"];
+	    	            if(textSize < d.height){
+	    		            return d.name;
+	    	        }
+	    	            else{
+	    		            return d.name.trunc(textTruncForNode);
+	    	            }
+	    	        }
+	            }
+	            else{
+	    	        return "";
+	            }
+	        })
+	        .on("mouseover", function(d){
+	            if(d.name[0] != "intermediate"){
+	    	        view.toolTipList.attr('width', "400px")
+		                .attr('height', "150px")	    	
+                    //		var res = getFunctionListOfNode(d);
+                    //		toolTipTexts(d,res, rootRunTime1);
+		            d3.select(this.parentNode).select('rect').style("stroke-width", "2");
+	            }
+	        })
+	        .on("mouseout", function(d){
+	            view.toolTipList.attr('width', '0px')
+		            .attr('height', '0px')
+	            if(d.name[0] != "intermediate"){
+		            d3.select(this.parentNode).select('rect').style("stroke-width", "1");
+		            //                unFade();
+	            }
+	            view.toolTip.style('opacity', 1)
+		            .style('left', function(){
+		                return 0;
+		            })
+		            .style('top', function(){
+		                return 0;
+		            })
+	            view.toolTipText.html("");		    
+	            view.toolTipG.selectAll('*').remove();		    		
+	        })
     }
 }
 
@@ -349,7 +426,8 @@ function drawText(node, graph, view){
 		        })
 	        view.toolTipText.html("");		    
 	        view.toolTipG.selectAll('*').remove();		    		
-	    });
+	    })
+            
 
     // Transition
     view.nodes.selectAll("text")

@@ -129,10 +129,18 @@ let config = {
                             {
 				                type: 'component',
 				                componentName: 'testComponent',
+				                componentState: {id : "component_graph_view" },
+				                isClosable: false,
+				                title: "Component Graph view"
+			                },
+                            {
+				                type: 'component',
+				                componentName: 'testComponent',
 				                componentState: {id : "CCT_view" },
 				                isClosable: false,
 				                title: "CCT view"
 			                }
+
                         ]
                     },	                   
                 ]
