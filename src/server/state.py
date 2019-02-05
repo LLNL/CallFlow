@@ -3,9 +3,9 @@ class State(object):
         self.df = gf.dataframe
         self.graph = gf.graph
         self.root = None
-        self.node_hash = self.add_node_hash()
+        self.node_hash_map = self.node_hash_mapper()
 
-    def add_node_hash(self):
+    def node_hash_mapper(self):
         ret = {}
         for idx, row in self.df.iterrows():
             df_node_index = str(row.node.df_index)
@@ -41,7 +41,7 @@ class State(object):
 
     def lookup_with_df_index(self, df_index):
         return self.df.loc[self.df['df_index'] == df_index]
-
+    
     def grouped_df(self, attr):
         self.gdf[attr] = self.df.groupby(attr, as_index=True, squeeze=True)  
         self.gdfKeys= self.gdf[attr].groups.keys()

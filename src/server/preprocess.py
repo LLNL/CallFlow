@@ -174,14 +174,10 @@ class PreProcess():
 
         def update_module_name(self):
             self.df['module'] = self.df['module'].apply(lambda name: utils.sanitizeName(name))
-            print("b")
             return self
         
         def add_df_index(self):
-            print("Trying to add index")
-            self.df['df_index'] = self.df.groupby('node').ngroup()
-            print("There")
+            self.df['n_index'] = self.df.groupby('nid').ngroup()
             self.df['mod_index'] = self.df.groupby('module').ngroup()
-            print("here")
             return self
 
