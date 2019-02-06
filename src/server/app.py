@@ -241,9 +241,7 @@ class App():
         def getSankey():
             group_by_attr = json.loads(request.args.get('in_data'))
             # Create the callflow graph frames from graphframes given by hatchet
-            print("calculating cfgs")
             self.cfgs = self.create_cfgs(self.gfs, 'groupBy', group_by_attr)
-            print(self.cfgs)
             return json.dumps(self.cfgs)
 
         @app.route('/getCCT')

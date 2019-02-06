@@ -45,7 +45,6 @@ class groupBy:
         else:
             return ''
 
-
     def create_component_path(self, path, group_path, state):
         component_path = []
         path = list(path)
@@ -112,11 +111,12 @@ class groupBy:
                 component_path[tnode] = self.create_component_path(tpath, group_path[tnode], state)
                 component_level[tnode] = self.create_component_level(component_path[tnode])
 
-                print("is entry function:", is_entry_func[tnode])
-                print("entry functions: ", self.entry_funcs[tmodule])
-                print("node path: ", tpath)                
-                print("group path: ", group_path[tnode])
-                print("component path: ", component_path[tnode])
+                print(tnode, len(self.entry_funcs[tmodule]))
+#                print("is entry function:", is_entry_func[tnode])
+#                print("entry functions: ", self.entry_funcs[tmodule])
+#                print("node path: ", tpath)                
+#                print("group path: ", group_path[tnode])
+#                print("component path: ", component_path[tnode])
                 
         except StopIteration:
             pass

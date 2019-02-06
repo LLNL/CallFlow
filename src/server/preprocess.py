@@ -82,7 +82,6 @@ class PreProcess():
             return ret
 
         def add_incTime(self):
-            print(self._map('CPUTIME (usec) (I)'))
             self.map['incTime'] = self._map('CPUTIME (usec) (I)')
             return self
 
@@ -138,7 +137,6 @@ class PreProcess():
             root_df = root.callpath[-1]
             callers[root_df] = []
             callees[root_df] = []
-            module[root_df] = []
             
             try:
                 while root.callpath != None:
@@ -161,9 +159,7 @@ class PreProcess():
                 del root
 
             self.df['callees'] = self.df['name'].apply(lambda node: callees[node] if node in callees else [])
-            self.df['callers'] = self.df['name'].apply(lambda node: callers[node] if node in callers else [])
-            
-#            print(self.df['df_index'], self.df['callees'], self.df['callers'])
+            self.df['callers'] = self.df['name'].apply(lambda node: callers[node] if node in callers else [])        
             
             return self
         
@@ -195,4 +191,3 @@ class PreProcess():
         def add_mod_index(self):
             self.df['mod_index'] = self.df.groupby('module').ngroup()
             return self
-

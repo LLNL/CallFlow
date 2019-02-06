@@ -91,11 +91,11 @@ class CallGraph(nx.Graph):
         show_node_mapping = self.generic_map(self.g.nodes(), 'show_node')
         nx.set_node_attributes(self.g, name='show_node', values=imbalance_perc_mapping)
 
-        self.level_mapping = self.assign_levels()               
-        nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
+        # self.level_mapping = self.assign_levels()               
+        # nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
 
-#        children_mapping = self.immediate_children()
-#        nx.set_node_attributes(self.g, name='children', values=children_mapping)
+        children_mapping = self.immediate_children()
+        nx.set_node_attributes(self.g, name='children', values=children_mapping)
 
 #        self.find_bridge_nodes()
         

@@ -39,14 +39,12 @@ class CallFlow:
         self.state.df = self.preprocess.df
         self.state.map = self.preprocess.map
 
-        print("Done preprocessing.")
 
         # Need to make it an observable. When the root changes the application
         # updates to the call graph from that node as the root. 
         self.state.root = None
 
     def update(self, action, attr):        
-        print("update action")
         if action == 'default':
             nx = CallGraph(self.state, 'path', True)                
         elif action == "groupBy":
