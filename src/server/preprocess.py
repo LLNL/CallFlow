@@ -33,6 +33,28 @@ class PreProcess():
             self.df = state.df
             self.graph = state.graph
             self.map = {}
+            self.df_index_name_map = self.bfs()
+
+        def bfs(self):
+            ret = {}
+            node_count = 0
+            root = self.graph.roots[0]
+            node_gen = self.graph.roots[0].traverse()
+            try:
+                while root.callpath != None:
+                    node_count += 1
+                    root = next(node_gen)
+                    ret[root.callpath[-1]] = root.df_index
+            except StopIteration:
+                pass
+            finally:
+                print("Total nodes in the graph", node_count)
+                del root
+            return ret
+
+        def add_df_index(self):
+            self.df['df_index'] = self.df['name'].apply(lambda node: self.df_index_name_map[node] if node in self.df_index_name_map else '')
+            return self
 
         def clean_lib_monitor(self):
 #            print(self.df[self.df.module == 'libmonitor.so.0.0.0'])
@@ -40,35 +62,28 @@ class PreProcess():
             return self
             
         def build(self):
-            print("done building")
             return PreProcess(self)
 
         # Add the path information from the node object
         def add_path(self):
             self.df['path'] = self.df['node'].apply(lambda node: node.callpath)
-            print("aa")
             return self
 
         def _map(self, attr, ):
             ret = {}
-            print(self.df.shape)
             for idx, row in self.df.iterrows():
                 node_df = self.state.lookup_with_node(row.node)
                 p_index = node_df['df_index'].tolist()
                 p_incTime  = node_df[attr].tolist()
-                print(p_index)
                 for idx in range(len(p_index)):
                     if p_index[idx] not in ret:
                         ret[p_index[idx]] = []
                     ret[p_index[idx]].append(p_incTime[idx])
-            print(ret)
             return ret
 
         def add_incTime(self):
-            print('addddd')
             print(self._map('CPUTIME (usec) (I)'))
             self.map['incTime'] = self._map('CPUTIME (usec) (I)')
-            print("addd")
             return self
 
         def add_excTime(self):
@@ -85,7 +100,6 @@ class PreProcess():
 
             self.map['max_incTime'] = ret
             self.df['max_incTime'] = self.df['node'].apply(lambda node: self.map['max_incTime'][str(node.df_index)])
-            print("here")
             return self
 
         # Avg of inclusive Runtimes among all processes
@@ -121,7 +135,7 @@ class PreProcess():
             root = graph.roots[0]
             node_gen = graph.roots[0].traverse()
 
-            root_df = self.state.lookup(root.df_index)['name'][0]
+            root_df = root.callpath[-1]
             callers[root_df] = []
             callees[root_df] = []
             module[root_df] = []
@@ -130,8 +144,8 @@ class PreProcess():
                 while root.callpath != None:
                     root = next(node_gen)
                     if root.parent:
-                        root_df = self.state.lookup(root.df_index)['name'][0]
-                        parent_df = self.state.lookup(root.parent.df_index)['name'][0]
+                        root_df = root.callpath[-1]
+                        parent_df = root.parent.callpath[-1]
                         if parent_df not in callees:
                             callees[parent_df] = []
                     
@@ -149,14 +163,13 @@ class PreProcess():
             self.df['callees'] = self.df['name'].apply(lambda node: callees[node] if node in callees else [])
             self.df['callers'] = self.df['name'].apply(lambda node: callers[node] if node in callers else [])
             
-            print(self.df['df_index'], self.df['callees'], self.df['callers'])
+#            print(self.df['df_index'], self.df['callees'], self.df['callers'])
             
             return self
         
         def add_show_node(self):
             self.map['show_node'] = {}
             self.df['show_node'] = self.df['node'].apply(lambda node: True)
-            print("c")
             return self
 
         def update_show_node(self, show_node_map):
@@ -166,7 +179,6 @@ class PreProcess():
         # node_name is different from name in dataframe. So creating a copy of it.
         def add_vis_node_name(self):
             self.df['vis_node_name'] = self.df['name'].apply(lambda name: name)
-            print("a")
             return self
 
         def update_node_name(self, node_name_map):
@@ -176,8 +188,11 @@ class PreProcess():
             self.df['module'] = self.df['module'].apply(lambda name: utils.sanitizeName(name))
             return self
         
-        def add_df_index(self):
+        def add_n_index(self):
             self.df['n_index'] = self.df.groupby('nid').ngroup()
+            return self
+
+        def add_mod_index(self):
             self.df['mod_index'] = self.df.groupby('module').ngroup()
             return self
 

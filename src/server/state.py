@@ -14,7 +14,7 @@ class State(object):
     
     def lookup_by_column(self, _hash, col_name):
         ret = []
-        node_df = self.df.loc[self.df['node'] == self.node_hash[str(_hash)]]
+        node_df = self.df.loc[self.df['node'] == self.node_hash_map[str(_hash)]]
         node_df_T = node_df.T.squeeze()
         node_df_T_attr = node_df_T.loc[col_name]
         if node_df_T_attr is not None:
@@ -25,7 +25,7 @@ class State(object):
         return ret
         
     def lookup(self, _hash):
-        return self.df.loc[self.df['node'] == self.node_hash[str(_hash)]]
+        return self.df.loc[self.df['node'] == self.node_hash_map[str(_hash)]]
 
     def lookup_with_node(self, node):
         return self.df.loc[self.df['node'] == node]

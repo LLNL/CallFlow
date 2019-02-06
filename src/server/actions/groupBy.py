@@ -29,7 +29,7 @@ class groupBy:
         group_path = []
         temp = None
         for i, elem in enumerate(path):
-            grouping = state.lookup_with_vis_nodeName(elem)[self.attr][0]
+            grouping = state.lookup_with_vis_nodeName(elem)[self.attr].tolist()[0]
             if temp == None or grouping != temp:
                 group_path.append(grouping)
                 temp = grouping
@@ -49,10 +49,10 @@ class groupBy:
     def create_component_path(self, path, group_path, state):
         component_path = []
         path = list(path)
-        component_module = state.lookup_with_vis_nodeName(path[-1]).module[0]
+        component_module = state.lookup_with_vis_nodeName(path[-1]).module.tolist()[0]
         component_path.append(component_module)
 
-        filter_path = [node for node in path if component_module == state.lookup_with_vis_nodeName(node).module[0]]
+        filter_path = [node for node in path if component_module == state.lookup_with_vis_nodeName(node).module.tolist()[0]]
        
         for i, elem in enumerate(filter_path):            
              component_path.append(elem)                    
@@ -89,32 +89,34 @@ class groupBy:
                 # Note: need to work on it more....
                 if t.empty or s.empty:
                     continue
+                              
+                snode = s.node.tolist()[0]
+                tnode = t.node.tolist()[0]
 
-                snode = s.node[0]
-                tnode = t.node[0]
+                spath = s.path.tolist()[0]
+                tpath = t.path.tolist()[0]
 
-                spath = s.path[0]
-                tpath = t.path[0]
+                tmodule = t.module.tolist()[0]
                                 
-                if t.module.isin(self.entry_funcs)[0]:
+                if tmodule in self.entry_funcs:
                     is_entry_func[tnode] = False
                     node_name[tnode] = ''
                     if snode in is_entry_func:
-                        self.entry_funcs[t[self.attr][0]].append(state.lookup_with_node(tnode)['name'][0])
+                        self.entry_funcs[t[self.attr].tolist()[0]].append(state.lookup_with_node(tnode)['name'].tolist()[0])
                 else:
                     is_entry_func[tnode] = True
                     node_name[tnode] = self.find_a_good_node_name(tnode, self.attr, state)
-                    self.entry_funcs[t[self.attr][0]] = [state.lookup_with_node(tnode)['name'][0]]
+                    self.entry_funcs[t[self.attr].tolist()[0]] = [state.lookup_with_node(tnode)['name'].tolist()[0]]
 
                 group_path[tnode] = self.create_group_path(tpath, state)
                 component_path[tnode] = self.create_component_path(tpath, group_path[tnode], state)
                 component_level[tnode] = self.create_component_level(component_path[tnode])
 
-                # print("is entry function:", is_entry_func[tnode])
-                # print "entry functions: ", self.entry_funcs[t.module[0]]
-                # print "node path: ", tpath                
-                # print "group path: ", group_path[tnode]
-                # print "component path: ", component_path[tnode]
+                print("is entry function:", is_entry_func[tnode])
+                print("entry functions: ", self.entry_funcs[tmodule])
+                print("node path: ", tpath)                
+                print("group path: ", group_path[tnode])
+                print("component path: ", component_path[tnode])
                 
         except StopIteration:
             pass
@@ -126,5 +128,3 @@ class groupBy:
         state.update_df('show_node', is_entry_func)
         state.update_df('vis_node_name', node_name)
         state.update_df('component_level', component_level)
-#        print(state.df['component_path'])
-        
