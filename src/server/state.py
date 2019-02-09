@@ -2,6 +2,7 @@ class State(object):
     def __init__(self, gf):
         self.df = gf.dataframe
         self.graph = gf.graph
+        self.g = None
         self.root = None
         self.node_hash_map = self.node_hash_mapper()
 

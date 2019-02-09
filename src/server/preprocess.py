@@ -73,12 +73,12 @@ class PreProcess():
             ret = {}
             for idx, row in self.df.iterrows():
                 node_df = self.state.lookup_with_node(row.node)
-                p_index = node_df['df_index'].tolist()
+                n_index = node_df['n_index'].tolist()
                 p_incTime  = node_df[attr].tolist()
-                for idx in range(len(p_index)):
-                    if p_index[idx] not in ret:
-                        ret[p_index[idx]] = []
-                    ret[p_index[idx]].append(p_incTime[idx])
+                for idx in range(len(n_index)):
+                    if n_index[idx] not in ret:
+                        ret[n_index[idx]] = []
+                    ret[n_index[idx]].append(p_incTime[idx])
             return ret
 
         def add_incTime(self):

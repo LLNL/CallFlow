@@ -78,7 +78,7 @@ function displayFunctions(listData){
     document.getElementById("splitNodeBtr").disabled = false;
     $('#splitNodeBtr').click( () => {
         let idList = $('input:checkbox:checked.list_checkbox').map(function () {
-            return this.df_index
+            return this.n_index
         }).get();
         splitCaller(idList).then((data) => {
             self.state = data
@@ -104,7 +104,7 @@ function boxPlotContainerUI(dat, type){
     
 	checkbox.type = "checkbox";
 	checkbox.name = funcName;
-    checkbox.df_index = dat['df_index']
+    checkbox.n_index = dat['n_index']
     checkbox.node_name = dat['name']                           
 	checkbox.setAttribute('class', "list_checkbox");
 

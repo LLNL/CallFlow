@@ -14,10 +14,24 @@
 
 import pandas as pd
 
-class entireGraph:
-    def __init__(self, state):
+class componentGraph:
+    def __init__(self, state, module):
         self.graph = state.graph
+        self.df = state.df
+        self.module = module
         self.run()
 
-    def run():
-        
+    def run(self):
+        """
+        Return the component graph for a module.
+        """
+        paths = []
+        func_in_module = state.df.loc[state.df['module'] == module]['name'].unique().tolist()
+        print("Number of functions inside the {0} module: {1}".format(module, len(func_in_module)))
+        for idx, func in enumerate(func_in_module):
+            paths.append({
+                "module": module,
+                "path": [state.df.loc[state.df['name'] == func]['component_path'].unique().tolist()[0]],
+                "inc_time" : state.df.loc[state.df['name'] == func]['CPUTIME (usec) (I)'].mean()
+            })
+        return pd.DataFrame(paths)

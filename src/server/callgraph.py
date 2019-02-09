@@ -82,6 +82,9 @@ class CallGraph(nx.Graph):
         df_index_mapping = self.generic_map(self.g.nodes(), 'df_index')
         nx.set_node_attributes(self.g, name='df_index', values=df_index_mapping)
 
+        n_index_mapping = self.generic_map(self.g.nodes(), 'n_index')
+        nx.set_node_attributes(self.g, name='n_index', values=n_index_mapping)
+
         mod_index_mapping = self.generic_map(self.g.nodes(), 'mod_index')
         nx.set_node_attributes(self.g, name='mod_index', values=mod_index_mapping)
 
@@ -91,8 +94,8 @@ class CallGraph(nx.Graph):
         show_node_mapping = self.generic_map(self.g.nodes(), 'show_node')
         nx.set_node_attributes(self.g, name='show_node', values=imbalance_perc_mapping)
 
-        # self.level_mapping = self.assign_levels()               
-        # nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
+        self.level_mapping = self.assign_levels()               
+        nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
 
         children_mapping = self.immediate_children()
         nx.set_node_attributes(self.g, name='children', values=children_mapping)
@@ -129,7 +132,7 @@ class CallGraph(nx.Graph):
         return edge[0], edge[1]
 
     def tailheadDir(self, edge):
-        return str(edge[0]), str(edge[1]), self.edge_direction[edge]
+        print(str(edge[0]), str(edge[1]), self.edge_direction[edge])
 
     def edges_from(self, node):
         for e in self.g.edges(node):
@@ -165,7 +168,7 @@ class CallGraph(nx.Graph):
                     self.g.add_edge(head, tail+'_', data=edge_data)
                     self.g.node[tail+'_']['name'] = [tail + '_']
                     self.g.node[tail+'_']['weight'] = self.g.node[tail]['weight']
-                    self.g.remove_edge(*edge)
+                    self.g.remove_edge(edge[0], edge[1])
                     levelMap[tail+'_'] = track_level + 1
                     continue
                 else:
@@ -173,7 +176,6 @@ class CallGraph(nx.Graph):
                     levelMap[tail] = levelMap[head] +  1                    
                     track_level += 1
                     log.warn("level for {0}: {1}".format(tail, levelMap[tail]))
-
                 # Since dfs, set level = 0 when head is the start_node. 
                 if head == start_node:
                     active_nodes = [start_node]
@@ -188,7 +190,7 @@ class CallGraph(nx.Graph):
             for edge in nx.edge_dfs(self.g, start_node, 'original'):                                
                 head_level = None
                 tail_level = None
-                head, tail, direction = self.tailheadDir(edge)
+                head, tail = self.tailhead(edge)
                 
                 # Check if there is an existing level mapping for the head node and assign. 
                 if head in self.level_mapping.keys():
@@ -198,19 +200,14 @@ class CallGraph(nx.Graph):
                 if tail in self.level_mapping.keys():
                     tail_level = self.level_mapping[tail]
 
-                flowMap[edge] = {
-                    "source": head,
-                    "target": tail,
-                    "source_level" : int(head_level),
-                    "target_level": int(tail_level),
-#                    "direction": direction
-                }
+                flowMap[(edge[0], edge[1])] = (int(head_level), int(tail_level))
         return flowMap
                                 
     def add_edge_attributes(self):
         capacity_mapping = self.calculate_flows(self.g)
         type_mapping = self.edge_type(self.g)
         flow_mapping = self.flow_map()
+        print(flow_mapping)
         nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)
         nx.set_edge_attributes(self.g, name='type', values=type_mapping)
         nx.set_edge_attributes(self.g, name='flow', values=flow_mapping)

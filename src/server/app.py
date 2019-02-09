@@ -284,8 +284,9 @@ class App():
         @app.route('/getHistogramData')
         def getHistogramData():
             data_json = json.loads(request.args.get('in_data'))
-            df_index = data_json['df_index']
+            n_index = data_json['n_index']
             mod_index = data_json['mod_index']
+            print(data_json)
             dataMap = self.callflow.state.map
 
             #Commented out but come back in future
@@ -301,7 +302,8 @@ class App():
             #     inc_scat.append(scat_df['CPUTIME (usec) (I)'])
 
             for key in dataMap['incTime'].keys():
-                if key == df_index:
+                print(key)
+                if key == n_index:
                     return json.dumps({
                         "inc": dataMap['incTime'][key],
                         "exc": dataMap['excTime'][key]
@@ -310,10 +312,10 @@ class App():
         @app.route('/getFunctionLists')
         def getFunctionLists():
             data_json = json.loads(request.args.get('in_data'))
-            df_index = data_json['df_index']
+            n_index = data_json['n_index']
             mod_index = data_json['mod_index']            
             df = self.callflow.state.df
-            entry_funcs = df[df.df_index == df_index]['callers'].values.tolist()[0]
+            entry_funcs = df[df.n_index == n_index]['callers'].values.tolist()[0]
             other_funcs = list(set(df[df.mod_index == mod_index]['name']))
 
             entry_funcs_json = []
@@ -325,7 +327,7 @@ class App():
                     "value_exc": x_df['CPUTIME (usec) (E)'].values.tolist(),
                     "component_path": x_df['component_path'].values.tolist()[0],
                     "group_path": x_df['group_path'].values.tolist()[0],
-                    "df_index": x_df['df_index'].values.tolist()[0]
+                    "n_index": x_df['n_index'].values.tolist()[0]
                 })
 
             other_funcs_json = []
@@ -337,7 +339,7 @@ class App():
                     "value_exc": x_df['CPUTIME (usec) (E)'].values.tolist(),                    
                     "component_path": x_df['component_path'].values.tolist()[0],
                     "group_path": x_df['group_path'].values.tolist()[0],
-                    "df_index": x_df['df_index'].values.tolist()[0]
+                    "n_index": x_df['n_index'].values.tolist()[0]
                 })
 
                 
@@ -349,11 +351,11 @@ class App():
         @app.route('/getNextLevelNodes')
         def getNextLevelNodes():
             data_json = json.loads(request.args.get('in_data'))
-            print(data_json)
-            df_index = data_json['df_index']
+            n_index = data_json['n_index']
+            print(n_index)
             level = data_json['level']
             df = self.callflow.state.df
-            mod_index = df[df.df_index == df_index]['mod_index'].values.tolist()[0]
+            mod_index = df[df['n_index'] == n_index]['mod_index'].values.tolist()[0]
             df = df[df.mod_index == mod_index]
             level_df = df[df.component_level == level]
 
@@ -364,7 +366,7 @@ class App():
                     'file': row['file'],
                     "inc" : row['CPUTIME (usec) (I)'],                    
                     "exc" : row['CPUTIME (usec) (E)'],
-                    "df_index": row['df_index'],
+                    "n_index": row['n_index'],
                     "mod_index": row['mod_index']
                 }))
             return str(json.dumps(ret))
