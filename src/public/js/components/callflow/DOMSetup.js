@@ -1,53 +1,57 @@
-import contextMenu  from './contextMenu.js'
+/* eslint-disable no-undef */
+/* eslint-disable no-param-reassign */
+import contextMenu from './contextMenu.js';
 
-export default function DOMSetup(view){
-    var dragGroup = d3.behavior.drag()
-	    .on('dragstart', function () {
+export default function DOMSetup(view) {
+    const dragGroup = d3.behavior.drag()
+	    .on('dragstart', () => {
 	        console.log('Start Dragging Group');
 	        d3.event.sourceEvent.stopPropagation();
 	    })
-	    .on('drag', function (d, i) {
+	    // eslint-disable-next-line func-names
+	    .on('drag', function (d) {
 	        d.x += d3.event.dx;
 	        d.y += d3.event.dy;
-	        d3.select(this).attr("transform", "translate(" + d.x + "," + d.y + ")");
-	    });    
-    
-    //Zoom behavior
-    let zoom = d3.behavior.zoom()
+	        d3.select(this).attr('transform', `translate(${d.x},${d.y})`);
+	    });
+
+    // Zoom behavior
+    const zoom = d3.behavior.zoom()
         .scaleExtent([0.1, 1])
         .on('zoom', () => {
             //	    let tx = Math.min(0, Math.min(d3.event.translate[0], view.width + view.width*d3.event.scale))
             //	    let ty = Math.min(0, Math.min(d3.event.translate[1], view.height + view.height*d3.event.scale))
             //	    view.svgBase.attr("transform", "translate(" + [tx, ty]  + ")scale(" + d3.event.scale + ")");
-	        view.svgBase.attr("transform", "translate(" + d3.event.translate  + ")scale(" + d3.event.scale + ")");
-	    })    
-    
+	        view.svgBase.attr('transform', `translate(${d3.event.translate})scale(${d3.event.scale})`);
+	    });
+
     view.svg = d3.select(view.containerID).append('svg')
-        .attr('class','sankey1')
+        .attr('class', 'sankey1')
         .attr('width', view.width + view.margin.left + view.margin.right)
         .attr('height', view.height + view.margin.top + view.margin.bottom)
         .append('g')
-        .attr('transform', 'translate(' + view.margin.left + ',' + view.margin.top+ ')')
-        .call(zoom)    
-    
+        .attr('transform', `translate(${view.margin.left},${view.margin.top})`)
+        .call(zoom);
+
     // Invisible svg to capture mouse events
-    let isvg = view.svg.append('rect')
+    // eslint-disable-next-line no-unused-vars
+    const isvg = view.svg.append('rect')
         .attr('id', 'invisibleSVG')
         .attr('width', view.width)
         .attr('height', view.height)
         .style('fill', 'none')
-        .style('pointer-events', 'all')
+        .style('pointer-events', 'all');
 
-    view.svgBase = view.svg.append('g')
-    view.svgVis  = view.svgBase.append('g')
-    view.defs = view.svgVis.append('defs')
-    view.edges = view.svgVis.append('g')
-    view.histograms = view.svgVis.append('g')
-    view.nodes = view.svgVis.append('g')
-    view.svgBase.contextMenu = contextMenu()
+    view.svgBase = view.svg.append('g');
+    view.svgVis = view.svgBase.append('g');
+    view.defs = view.svgVis.append('defs');
+    view.edges = view.svgVis.append('g');
+    view.histograms = view.svgVis.append('g');
+    view.nodes = view.svgVis.append('g');
+    view.svgBase.contextMenu = contextMenu();
 
-//    new EasyPZ(document.getElementsByClassName('sankey1')[0], function() {})
-    
+    //    new EasyPZ(document.getElementsByClassName('sankey1')[0], function() {})
+
     // ToolTip
     view.toolTip = d3.select(view.containerID)
 	    .append('div')
@@ -67,10 +71,10 @@ export default function DOMSetup(view){
 	    .style('font-family', 'sans-serif')
 	    .style('font-size', '13px');
     view.toolTipList = view.toolTip.append('svg');
-    view.toolTipList.attr('width', "400px")
-	    .attr('height', "150px")
+    view.toolTipList.attr('width', '400px')
+	    .attr('height', '150px');
     view.toolTipG = view.toolTipList.append('g')
-	    .attr("transform", "translate(" + 5 + "," + 5 + ")");    
+	    .attr('transform', `translate(${5},${5})`);
 
-    return view
+    return view;
 }

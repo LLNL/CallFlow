@@ -1,174 +1,190 @@
-export default function preprocess(graph, refresh){
-    if(refresh == true){
-	    graph = cleanGraph(graph)
-        graph = c_a(graph)
-        graph = addLinkNodeIDs_(graph)
-    }
-    else{
-        graph = c_a(graph)
-        graph = addLinkNodeIDs(graph)
+/* eslint-disable no-continue */
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+/* eslint-disable camelcase */
+/* eslint-disable prefer-destructuring */
+/* eslint-disable no-param-reassign */
+export default function preprocess(graph, refresh) {
+    if (refresh == true) {
+	    graph = cleanGraph(graph);
+        graph = c_a(graph);
+        graph = addLinkNodeIDs_(graph);
+    } else {
+        graph = c_a(graph);
+        graph = addLinkNodeIDs(graph);
     }
 
-    graph = calculateFlow(graph)
-    return graph
+    graph = calculateFlow(graph);
+    return graph;
 }
 
-function cleanGraph(graph){
-    let new_nodes = []
-    let new_links = []
-    for(let node of graph.nodes){
-	    if(node.type != undefined){
-	        new_nodes.push(node)
+function cleanGraph(graph) {
+    const new_nodes = [];
+    let new_links = [];
+    // eslint-disable-next-line no-restricted-syntax
+    for (const node of graph.nodes) {
+	    if (node.type != undefined) {
+	        new_nodes.push(node);
 	    }
     }
 
-    for(let link of graph.links){
-	    if(link.name != 'intermediate' || link.name != 'intermediate' || link.name != undefined ){
-	        new_links.push(link)
+    // eslint-disable-next-line no-restricted-syntax
+    for (const link of graph.links) {
+	    if (link.name != 'intermediate' || link.name != 'intermediate' || link.name != undefined) {
+	        new_links.push(link);
 	    }
     }
 
 
     // Remove the unnecessary edges
-    let tempLinks = []
+    const tempLinks = [];
     new_links.forEach((link) => {
-        if(typeof(link.source) === 'object'){
-            tempLinks.push(link)
+        if (typeof (link.source) === 'object') {
+            tempLinks.push(link);
         }
-    })
-    new_links = tempLinks
+    });
+    new_links = tempLinks;
 
-    
+
     return {
-	    nodes : new_nodes,
-	    links : new_links
-    }
+	    nodes: new_nodes,
+	    links: new_links,
+    };
 }
 
-function c_a(graph){
-    console.log(graph)
-    let nodes = graph.nodes    
+// eslint-disable-next-line camelcase
+function c_a(graph) {
+    console.log(graph);
+    const nodes = graph.nodes;
 
-    for(let node of nodes){
-	    if(node.name == 'libpsm_infinipath.so.1.14'){
+    // eslint-disable-next-line no-restricted-syntax
+    for (const node of nodes) {
+	    if (node.name == 'libpsm_infinipath.so.1.14') {
 	        node.level = 4;
-	    }
-	    else if(node.name == 'libc-2.12.so'){
+	    } else if (node.name == 'libc-2.12.so') {
 	        node.level = 5;
 	    }
     }
-    
-    var nodesByBreadth = d3.nest()
-	    .key(function(d) { return d.level; })
-        .sortKeys(d3.ascending)
-        .entries(graph.nodes)
-        .map(function(d) { return d.values; });
 
-    var nodesByBreadt = d3.nest()
-	    .key(function(d) { return d.level; })
+    const nodesByBreadth = d3.nest()
+	    .key(d => d.level)
         .sortKeys(d3.ascending)
         .entries(graph.nodes)
-        .map(function(d, i) {
-	        let map = []	    
-	        for(let nodesInLevel of d.values){
-		        map.push(nodesInLevel.name[0])
+        .map(d => d.values);
+
+    const nodesByBreadt = d3.nest()
+	    .key(d => d.level)
+        .sortKeys(d3.ascending)
+        .entries(graph.nodes)
+        .map((d, i) => {
+	        const map = [];
+	        // eslint-disable-next-line no-restricted-syntax
+	        for (const nodesInLevel of d.values) {
+		        map.push(nodesInLevel.name[0]);
 	        }
-	        return map	    
+	        return map;
 	    });
-    
-    
-    return graph
+
+
+    return graph;
 }
 
 /* Link: {
-   sourceID : int, targetID: int , target: str, source: str 
-   }*/
-function addLinkNodeIDs(graph){
-    let nodeMap = {}
-    for(let [idx, node] of graph.nodes.entries()){
-        nodeMap[node.name[0]] = idx
+   sourceID : int, targetID: int , target: str, source: str
+   } */
+function addLinkNodeIDs(graph) {
+    const nodeMap = {};
+    // eslint-disable-next-line no-restricted-syntax
+    for (const [idx, node] of graph.nodes.entries()) {
+        nodeMap[node.name[0]] = idx;
     }
 
-    let links = graph.links
-    for(let link of graph.links){
-	    if(link.source[-1] == '_' || link.target[-1] == '_'){
-	        continue
+    const links = graph.links;
+    // eslint-disable-next-line no-restricted-syntax
+    for (const link of graph.links) {
+	    if (link.source[-1] == '_' || link.target[-1] == '_') {
+	        continue;
 	    }
-	    
-        link.sourceID = nodeMap[link.source]
-        link.targetID = nodeMap[link.target]
-    }    
-    return graph
+
+        link.sourceID = nodeMap[link.source];
+        link.targetID = nodeMap[link.target];
+    }
+    return graph;
 }
 
 /* Link: {
-   sourceID : int, targetID: int , target: str, source: str 
-   }*/
-function addLinkNodeIDs_(graph){
-    let nodeMap = {}
-    for(let [idx, node] of graph.nodes.entries()){
-        nodeMap[node.name] = idx
+   sourceID : int, targetID: int , target: str, source: str
+   } */
+// eslint-disable-next-line no-underscore-dangle
+function addLinkNodeIDs_(graph) {
+    const nodeMap = {};
+    // eslint-disable-next-line no-restricted-syntax
+    for (const [idx, node] of graph.nodes.entries()) {
+        nodeMap[node.name] = idx;
     }
 
 
-    let links = graph.links
-    for(let link of graph.links){
-	    if(link.source.name[link.source.name.length - 1] == '_' || link.target.name[link.target.name.length - 1] == '_'){
-	        continue
+    const links = graph.links;
+    // eslint-disable-next-line no-restricted-syntax
+    for (const link of graph.links) {
+	    if (link.source.name[link.source.name.length - 1] == '_' || link.target.name[link.target.name.length - 1] == '_') {
+	        // eslint-disable-next-line no-continue
+	        continue;
 	    }
-        link.sourceID = nodeMap[link.source.name]
-        link.targetID = nodeMap[link.target.name]
-    }    
-    return graph
+        link.sourceID = nodeMap[link.source.name];
+        link.targetID = nodeMap[link.target.name];
+    }
+    return graph;
 }
 
-function calculateFlow(graph){
-    let nodes = graph.nodes
-    let links = graph.links
-    let outGoing = [];
-    let inComing = [];
+function calculateFlow(graph) {
+    // eslint-disable-next-line prefer-destructuring
+    const nodes = graph.nodes;
+    // eslint-disable-next-line prefer-destructuring
+    const links = graph.links;
+    const outGoing = [];
+    const inComing = [];
     nodes.forEach((node) => {
-	    let nodeLabel = node.name[0];
-        
+	    const nodeLabel = node.name[0];
+
         links.forEach((link) => {
-	        let linkLabel = nodes[link.sourceID].name;
-	        if(linkLabel == nodeLabel){
-		        if(outGoing[linkLabel] == undefined){
+	        const linkLabel = nodes[link.sourceID].name;
+	        if (linkLabel == nodeLabel) {
+		        if (outGoing[linkLabel] == undefined) {
 		            outGoing[linkLabel] = 0;
 		        }
-		        outGoing[linkLabel] += link.weight
+		        outGoing[linkLabel] += link.weight;
 	        }
-	        
 	    });
-	    
+
         links.forEach((link) => {
-	        let linkLabel = nodes[link.targetID].name
-	        if(linkLabel == nodeLabel){
-		        if(inComing[linkLabel] == undefined){
+	        const linkLabel = nodes[link.targetID].name;
+	        if (linkLabel == nodeLabel) {
+		        if (inComing[linkLabel] == undefined) {
 		            inComing[linkLabel] = 0;
 		        }
 		        inComing[linkLabel] += link.weight;
 	        }
-	    })
+	    });
 
-	    if(outGoing[nodeLabel] == undefined){
+	    if (outGoing[nodeLabel] == undefined) {
 	        outGoing[nodeLabel] = 0;
 	    }
 
-	    if(inComing[nodeLabel] == undefined){
+	    if (inComing[nodeLabel] == undefined) {
 	        inComing[nodeLabel] = 0;
 	    }
-	    
-	    node["out"] = outGoing[nodeLabel];
-	    node["in"] = inComing[nodeLabel];
 
-	    node["inclusive"] = Math.max(inComing[nodeLabel], outGoing[nodeLabel]);
-	    node["exclusive"] = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel];
+	    node.out = outGoing[nodeLabel];
+	    node.in = inComing[nodeLabel];
 
-	    calcStat(graph, node["inclusive"], node["exclusive"])
-    })
+	    node.inclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]);
+	    node.exclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel];
 
-    return graph
+	    calcStat(graph, node.inclusive, node.exclusive);
+    });
+
+    return graph;
 }
 
 // function moreProcessing(graph){
@@ -181,7 +197,7 @@ function calculateFlow(graph){
 // 	"imPercMax" : 0
 //     };
 
-//     // For now I am changing inTime to inc, exTime to exc. Not sure if this is needed. 
+//     // For now I am changing inTime to inc, exTime to exc. Not sure if this is needed.
 //     graph.nodes.forEach((data) => {
 // 	graph.stat.inTimeMin = Math.min(graph.stat.inTimeMin, data.in);
 // 	graph.stat.inTimeMax = Math.max(graph.stat.inTimeMax, data.in);
@@ -194,21 +210,23 @@ function calculateFlow(graph){
 //     return graph
 // }
 
-function calcStat(graph, inTime, exTime){
-    graph.stat = resetStat()
+function calcStat(graph, inTime, exTime) {
+    // eslint-disable-next-line no-param-reassign
+    graph.stat = resetStat();
     graph.nodes.forEach((data) => {
-	    graph.stat.minInc = Math.min(graph.stat.minInc, data.in)
-	    graph.stat.maxInc = Math.max(graph.stat.maxInc, data.in)
-	    graph.stat.minExc = Math.min(graph.stat.minExc, data.out)
-	    graph.stat.maxExc = Math.max(graph.stat.maxExc, data.out)
-    })    
+	    // eslint-disable-next-line no-param-reassign
+	    graph.stat.minInc = Math.min(graph.stat.minInc, data.in);
+	    graph.stat.maxInc = Math.max(graph.stat.maxInc, data.in);
+	    graph.stat.minExc = Math.min(graph.stat.minExc, data.out);
+	    graph.stat.maxExc = Math.max(graph.stat.maxExc, data.out);
+    });
 }
 
-function resetStat(){
-    let stat = {}
-    stat.maxInc = 0
-    stat.minInc = Number.MAX_SAFE_INTEGER
-    stat.maxExc = 0
-    stat.minExc = Number.MAX_SAFE_INTEGER
-    return stat
+function resetStat() {
+    const stat = {};
+    stat.maxInc = 0;
+    stat.minInc = Number.MAX_SAFE_INTEGER;
+    stat.maxExc = 0;
+    stat.minExc = Number.MAX_SAFE_INTEGER;
+    return stat;
 }

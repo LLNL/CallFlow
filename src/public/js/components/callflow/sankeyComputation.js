@@ -1,13 +1,17 @@
-export default function sankeyComputation(graph, view){
-    let sankey = d3sankeySingle()
+/* eslint-disable no-loop-func */
+/* eslint-disable one-var */
+/* eslint-disable no-param-reassign */
+/* eslint-disable camelcase */
+export default function sankeyComputation(graph, view) {
+    const sankey = d3sankeySingle()
 	    .nodeWidth(view.nodeWidth)
 	    .nodePadding(view.ySpacing)
         .size([view.width * 1.05, view.height - view.ySpacing])
 	    .xSpacing(view.xSpacing)
 	    .setReferenceValue(graph.rootRunTimeInc)
 	    .setMinNodeScale(view.minNodeScale);
-    
-    let path = sankey.link();
+
+    const path = sankey.link();
 
     sankey.nodes(graph.nodes)
 	    .links(graph.links)
@@ -15,43 +19,43 @@ export default function sankeyComputation(graph, view){
 
     correctGraph(graph.nodes, graph.links);
 
-    return sankey
+    return sankey;
 }
 
 function correctGraph(nodes, edges) {
-    let temp_nodes = nodes.slice()
-    let temp_edges = edges.slice()
+    const temp_nodes = nodes.slice();
+    const temp_edges = edges.slice();
 
-    computeNodeEdges(temp_nodes, temp_edges)
-    computeNodeBreadths(temp_nodes, temp_edges)
+    computeNodeEdges(temp_nodes, temp_edges);
+    computeNodeBreadths(temp_nodes, temp_edges);
 
-    for (var i = 0; i < temp_edges.length; i++) {
-        let source = temp_edges[i].sourceID;
-        let target = temp_edges[i].targetID;
+    for (let i = 0; i < temp_edges.length; i++) {
+        const source = temp_edges[i].sourceID;
+        const target = temp_edges[i].targetID;
 
-        if(source != undefined && target != undefined){
-            let source_x = nodes[source].level
-            let target_x = nodes[target].level
-            let dx = target_x - source_x
-	        
+        if (source != undefined && target != undefined) {
+            const source_x = nodes[source].level;
+            const target_x = nodes[target].level;
+            const dx = target_x - source_x;
+
             // Put in intermediate steps
-            for (let j = dx; 1 < j; j--) {
-                let intermediate = nodes.length
-                let tempNode = {
+            for (let j = dx; j > 1; j--) {
+                const intermediate = nodes.length;
+                const tempNode = {
                     sankeyID: intermediate,
-                    name: "intermediate",
-//                    weight: nodes[i].weight,
-//		            height: nodes[i].value
-                }
-                nodes.push(tempNode)
+                    name: 'intermediate',
+                    //                    weight: nodes[i].weight,
+                    //		            height: nodes[i].value
+                };
+                nodes.push(tempNode);
                 edges.push({
                     source: intermediate,
-                    target: (j == dx ? target : intermediate-1),
-                    value: edges[i].value
-                })
+                    target: (j == dx ? target : intermediate - 1),
+                    value: edges[i].value,
+                });
                 if (j == dx) {
-                    edges[i].original_target = target
-                    edges[i].last_leg_source = intermediate
+                    edges[i].original_target = target;
+                    edges[i].last_leg_source = intermediate;
                 }
                 //            edges[i].target = tempNode
             }
@@ -59,21 +63,21 @@ function correctGraph(nodes, edges) {
     }
 
     return {
-        nodes: nodes,
-        edges: edges
-    }
+        nodes,
+        edges,
+    };
 }
 
 function computeNodeEdges(nodes, links) {
-    nodes.forEach(function(node) {
+    nodes.forEach((node) => {
         node.sourceLinks = [];
         node.targetLinks = [];
     });
-    links.forEach(function(link) {
+    links.forEach((link) => {
         let source = link.sourceID,
 	        target = link.targetID;
 
-        if(source != undefined && target != undefined){
+        if (source != undefined && target != undefined) {
             nodes[source].sourceLinks.push(link);
             nodes[target].targetLinks.push(link);
         }
@@ -85,14 +89,14 @@ function computeNodeEdges(nodes, links) {
 // Nodes are assigned the maximum breadth of incoming neighbors plus one;
 // nodes with no incoming links are assigned breadth zero, while
 // nodes with no outgoing links are assigned the maximum breadth.
-function computeNodeBreadths(nodes,links) {
-    var remainingNodes = nodes.map(function(d) { return d})
-    var nextNodes
-    var x = 0
+function computeNodeBreadths(nodes, links) {
+    let remainingNodes = nodes.map((d) => d);
+    let nextNodes;
+    let x = 0;
     while (remainingNodes.length) {
         nextNodes = [];
-        remainingNodes.forEach(function(node) {
-            node.sourceLinks.forEach(function(link) {
+        remainingNodes.forEach((node) => {
+            node.sourceLinks.forEach((link) => {
                 if (nextNodes.indexOf(link.target) < 0) {
                     nextNodes.push(link.target);
                 }
@@ -102,8 +106,4 @@ function computeNodeBreadths(nodes,links) {
         ++x;
     }
 }
-
-
-
-
 
