@@ -1,4 +1,5 @@
-import { getHistogramData, getFunctionLists, getNextLevelNodes } from '../../routes'
+import { getHistogramData, getFunctionLists, getHierarchy } from '../../routes'
+import { drawIcicleHierarchy } from './hierarchy'
 import Color from './color.js'
 
 let node_heights = {};
@@ -133,12 +134,12 @@ function drawRectangle(node, graph, view){
 
       })
       .on('dblclick', function(d){
-        let level = 1
-        current_level[d.mod_index] += 1
-        getNextLevelNodes(d, level).then( (data) => {
+        getHierarchy(d).then((data) => {
           let arr_data = Object.values(data)
-          getFunctionLists(d)
-          drawLevelNodes(graph, view, d, arr_data, level)                
+          drawIcicleHierarchy(view, arr_data)                
+          // getFunctionLists(d).then((data) => {
+            
+          // })
         });
       })
   // .on('contextmenu', function(d){
@@ -169,164 +170,6 @@ function drawRectangle(node, graph, view){
       else
         return 1
     })
-}
-
-function drawLevelNodes(graph, view, d, nodes, level){
-  let nodeOffset = 3
-  let parentNodeName = "n" + d.n_index
-
-  function avg(arr){
-    let ret = {}
-    let sum_exc = 0
-    let sum_inc = 0
-    for(let i = 0; i < arr.length; i++){
-      sum_exc += arr[i]['exc']
-      sum_inc += arr[i]['inc']
-    }
-    return {
-      'weight': sum_inc/arr.length,
-    }
-  }
-
-  let tot_avg = 0;
-  for(let i = 0; i < nodes.length; i++){
-    tot_avg += avg(nodes[i])['weight']
-  }
-  
-  let parentColor = new Color(view)
-	parentColor.setColorScale(0, d.weight, 0, 0)
-
-  
-  let floating_height = 0;
-
-  nodes.sort(function(a, b){
-    return avg(b)['weight'] - avg(a)['weight']
-  })
-
-
-  for(let i = 0; i < nodes.length; i++){
-    let w = avg(nodes[i])
-    let h = 0;
-    if(d.height != undefined){
-      h = (d.height*w['weight'])/tot_avg
-    } else{
-      h = (node_heights[nodes[i][0].n_index]*w['weight'])/tot_avg
-    }
-    
-    let node = view.nodes.select('#'+ parentNodeName)
-        .data(nodes[i]) .append('g');
-
-    let rect = node.append('rect')
-	      .attr("height", function (d) {
-	        return h;
-	      })
-	      .attr("width", view.nodeWidth/2)
-        .attr("opacity", 1)
-        .attr("x", function(d){
-          return view.nodeWidth + (level - 1)*(view.nodeWidth/2);
-        })
-        .attr("id", function(d){
-          return "n" + d.n_index;
-        })
-        .attr("y", function(d){
-          return floating_height;
-        })
-	      .style("fill", function (d) {
-          return parentColor.getColor(w);
-	      })
-	      .style("fill-opacity", function(d){
-	        if(d.name == "intermediate" || d.name[d.name.length - 1] == '_'){
-            if(d.name[0] == "intermediate"){
-		          return 0;
-	          }
-	          else{
-		          return 1;
-	          }
-	        }
-	      })
-	      .style("shape-rendering", "crispEdges")
-	      .style("stroke", function (d) {
-          if(d.name != "intermediate"){
-		        return d3.rgb(view.color.getColor(w)).darker(2);
-	        }
-	        else{
-		        return '#e1e1e1';
-	        }
-	      })
-	      .style("stroke-width", function(d){
-	        if(d.name[0] == "intermediate" || d.name[0][d.name[0].length - 1] == '_'){
-            if(d.name[0] == "intermediate"){
-		          return 0;
-	          }
-	          else{
-		          return 1;
-	          }
-	        }
-	      })
-        .on('dblclick', function(d){
-          let level = 1;
-          current_level[d.mod_index] += 1;
-          getNextLevelNodes(d, level).then( (data) => {
-            let arr_data = Object.values(data)
-            getFunctionLists(d)
-            drawLevelNodes(graph, view, d, arr_data, current_level[d.mod_index])                
-          });                
-        })
-    floating_height += h;
-
-    let textTruncForNode = 4; let text = node.append("text")
-        .attr('dy', '0.35em') .attr("transform", "rotate(90)")
-        .attr('x', function(d){ return 5 + view.nodeWidth +
-                                (level-1)*(view.nodeWidth/2);
-	                            })
-	      .attr('y', "-10")
-	      .style('opacity', 1)
-	      .text(function (d) {
-	        if(d.name != "intermediate" && d.name[d.name.length - 1] != '_'){
-	    	    if(d.height < view.minHeightForText ) {
-	    	      return "";
-	    	    }
-	    	    else {
-	    	      var textSize = calcTextSize(d.name)["width"];
-	    	      if(textSize < d.height){
-	    		      return d.name;
-	    	      }
-	    	      else{
-	    		      return d.name.trunc(textTruncForNode);
-	    	      }
-	    	    }
-	        }
-	        else{
-	    	    return "";
-	        }
-	      })
-	      .on("mouseover", function(d){
-	        if(d.name[0] != "intermediate"){
-	    	    view.toolTipList.attr('width', "400px")
-		          .attr('height', "150px")	    	
-            //		var res = getFunctionListOfNode(d);
-            //		toolTipTexts(d,res, rootRunTime1);
-		        d3.select(this.parentNode).select('rect').style("stroke-width", "2");
-	        }
-	      })
-	      .on("mouseout", function(d){
-	        view.toolTipList.attr('width', '0px')
-		        .attr('height', '0px')
-	        if(d.name[0] != "intermediate"){
-		        d3.select(this.parentNode).select('rect').style("stroke-width", "1");
-		        //                unFade();
-	        }
-	        view.toolTip.style('opacity', 1)
-		        .style('left', function(){
-		          return 0;
-		        })
-		        .style('top', function(){
-		          return 0;
-		        })
-	        view.toolTipText.html("");		    
-	        view.toolTipG.selectAll('*').remove();		    		
-	      })
-  }
 }
 
 function drawPath(node, graph, view){

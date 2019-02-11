@@ -286,7 +286,6 @@ class App():
             data_json = json.loads(request.args.get('in_data'))
             n_index = data_json['n_index']
             mod_index = data_json['mod_index']
-            print(data_json)
             dataMap = self.callflow.state.map
 
             #Commented out but come back in future
@@ -302,7 +301,6 @@ class App():
             #     inc_scat.append(scat_df['CPUTIME (usec) (I)'])
 
             for key in dataMap['incTime'].keys():
-                print(key)
                 if key == n_index:
                     return json.dumps({
                         "inc": dataMap['incTime'][key],
@@ -348,28 +346,32 @@ class App():
                 "other_funcs": other_funcs_json
             })
 
-        @app.route('/getNextLevelNodes')
-        def getNextLevelNodes():
+        @app.route('/getHierarchy')
+        def getHierarchy():
             data_json = json.loads(request.args.get('in_data'))
             n_index = data_json['n_index']
-            print(n_index)
-            level = data_json['level']
             df = self.callflow.state.df
             mod_index = df[df['n_index'] == n_index]['mod_index'].values.tolist()[0]
             df = df[df.mod_index == mod_index]
-            level_df = df[df.component_level == level]
 
-            ret = []
-            for idx, row in level_df.iterrows():                
-                ret.append(json.dumps({
-                    "name": row['name'],
-                    'file': row['file'],
-                    "inc" : row['CPUTIME (usec) (I)'],                    
-                    "exc" : row['CPUTIME (usec) (E)'],
-                    "n_index": row['n_index'],
-                    "mod_index": row['mod_index']
-                }))
-            return str(json.dumps(ret))
-                          
+            paths = []
+            func_in_module = df.loc[df['mod_index'] == mod_index]['name'].unique().tolist()
+            module = df.loc[df['n_index'] == n_index]['module'].unique().tolist()[0]
+            print("Number of functions inside the {0} module: {1}".format(module, len(func_in_module)))
+            for idx, func in enumerate(func_in_module):
+                paths.append({
+                    "module": module,
+                    "path": df.loc[df['name'] == func]['component_path'].unique().tolist()[0],
+                    "inc_time" : df.loc[df['name'] == func]['CPUTIME (usec) (I)'].mean(),
+                    "component_level": df.loc[df['name'] == func]['component_level'].unique().tolist()[0],
+                })
+            paths_df = pd.DataFrame(paths)
+
+            max_level = paths_df['component_level'].max()
+            print("Max levels inside the node: {0}".format(max_level))
+            
+            return paths_df.to_json(orient="columns")
+            
+                                  
 if __name__ == '__main__':
     App()

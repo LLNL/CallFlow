@@ -63,7 +63,7 @@ CallFlow.prototype.render = function(){
     drawNodes(this.graph, this.view)
     drawEdges(this.graph, this.view)
     drawHistogram(this.graph, this.view)
-    drawHierarchy(this.graph, this.view)
+//    drawHierarchy(this.graph, this.view)
 }
 
 CallFlow.prototype.clear = function(){

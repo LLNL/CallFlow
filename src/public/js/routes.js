@@ -71,7 +71,7 @@ function getGraphEmbedding(cb){
   return request('getGraphEmbedding', [], cb)
 }
 
-function getNextLevelNodes(node, level, cb){
+function getHierarchy(node, level, cb){
   return new Promise( (resolve, reject) => {
     let n_index;
     if(node.n_index instanceof Array){
@@ -85,31 +85,17 @@ function getNextLevelNodes(node, level, cb){
         type: 'GET',
         contentType: 'application/json',
         dataType: 'json',
-        url: '/getNextLevelNodes',
+        url: '/getHierarchy',
         data: {
           "in_data": JSON.stringify({
             "n_index": n_index,                        
-            "level": level
           })
         },
         success: function(data){
           data = JSON.parse(JSON.stringify(data))
-          let nodes = {}
-          for(let dat of data){
-            let parse_dat = JSON.parse(dat)
-            console.log(parse_dat)
-            if(nodes[parse_dat['name']] == undefined){
-              nodes[parse_dat['name']] = []
-            }                        
-            nodes[parse_dat['name']].push({
-              "exc": parse_dat['exc'],
-              "inc": parse_dat['inc'],
-              "name": parse_dat['name'],
-              "n_index": parse_dat['n_index'],                          
-              "mod_index": parse_dat['mod_index']
-            })
-          }
-          resolve(nodes)
+          console.log("Hierarchy data", data)          
+
+          resolve(data)
         },
         error: function(err){
           if(err){
@@ -199,7 +185,7 @@ export {
   getHistogramData,
   getFunctionLists,
   getCCT,
-  getNextLevelNodes,
+  getHierarchy,
   splitCaller,
   getGraphEmbedding,
 }
