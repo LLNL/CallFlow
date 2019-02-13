@@ -1,10 +1,10 @@
+/* eslint-disable camelcase */
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-undef */
 /* eslint-disable consistent-return */
 export default class Color {
     constructor(view, scale) {
-	    console.log(view);
-	    this.view = view;
+  	    this.view = view;
         // eslint-disable-next-line no-undef
         this.colorScale = scale || d3.scale.category20();
         this.incColorScale = null;
@@ -30,8 +30,8 @@ export default class Color {
         }
 
         // eslint-disable-next-line no-undef
-        this.incColorScale = chroma.scale('OrRd').padding([0.2, 0])
-	        .domain([minInc, maxInc]);
+        this.incColorScale = chroma.scale('OrRd').padding([0.1, 0])
+	        .domain([minInc, maxInc*1.1]);
 
 	    this.excColorScale = chroma.scale('OrRd').padding([0.2, 0])
 	        .domain([minExc, maxExc]);
@@ -51,8 +51,7 @@ export default class Color {
 	        return this.incColorScale(node.weight);
 	    } else if (colorOption == 2) {
 	        return this.excColorScale(node.exclusive);
-	    }
-	    else if (colorOption == 3) {
+	    } else if (colorOption == 3) {
 	        return this.nRangeColorScale(node.nRange);
 	    } else if (colorOption == 4) {
 	        return this.diffColorScale(node.diff || 0);
@@ -73,7 +72,7 @@ export default class Color {
 			                (parseInt(rgb.g) * 587) +
                             (parseInt(rgb.b) * 114)) / 1000);
 
-	    return (o > 125) ? '#000' : '#fff';
+	    return (o > 128) ? '#000' : '#fff';
     }
 
     // eslint-disable-next-line class-methods-use-this

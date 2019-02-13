@@ -1,26 +1,25 @@
-export default function loadFile(parent){
-    let inputFile = document.createElement('div')
-    inputFile.setAttribute("class", "controlComponent")
-    
-    let inputFileLabel = document.createElement("label")
-    inputFileLabel.textContent = "Load file"
+/* eslint-disable no-undef */
+export default function loadFile(parent) {
+    const inputFile = document.createElement('div');
+    inputFile.setAttribute('class', 'controlComponent');
 
-    let inputFileContent = document.createElement('div');
-    inputFileContent.setAttribute("id", "loadFile");
-    
-    let button=$('<input/>').attr({
-	    type: "file",
-	    id: "inputFileBtr",
-	    value: "set",
+    const inputFileLabel = document.createElement('label');
+    inputFileLabel.textContent = 'Load file';
+
+    const inputFileContent = document.createElement('div');
+    inputFileContent.setAttribute('id', 'loadFile');
+
+    const button = $('<input/>').attr({
+	    type: 'file',
+	    id: 'inputFileBtr',
+	    value: 'set',
     });
 
     // mount to the DOM
-    button.appendTo(inputFileContent);    
+    button.appendTo(inputFileContent);
     inputFile.append(inputFileLabel);
     inputFile.append(inputFileContent);
-    $(parent).append(inputFile)
+    $(parent).append(inputFile);
 
-    $('input[id="inputFileBtr"]').on('change', function(){
-	return $('input[id="inputFileBtr"]').val();
-    })
+    $('input[id="inputFileBtr"]').on('change', () => $('input[id="inputFileBtr"]').val());
 }

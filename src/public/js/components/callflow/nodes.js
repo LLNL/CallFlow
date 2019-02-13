@@ -1,6 +1,5 @@
 import { getHistogramData, getFunctionLists, getHierarchy } from '../../routes';
 import { clearIcicles, drawIcicleHierarchy } from './hierarchy';
-import Color from './color.js';
 
 const node_heights = {};
 const current_level = {};
@@ -68,7 +67,6 @@ function drawRectangle(node, graph, view) {
                 if (d.name[0] == 'intermediate') {
 		        return 0;
 	        }
-
 		        return 1;
 	      }
 	    })
@@ -93,8 +91,8 @@ function drawRectangle(node, graph, view) {
 	      if (d.name != 'intermediate') {
 		      view.toolTipList.attr('width', '400px')
 		        .attr('height', '150px');
-                //                var res = getFunctionListOfNode(graph, d);
-                //		toolTipTexts(d,res, rootRunTime1)
+                // var res = getFunctionListOfNode(graph, d);
+                // toolTipTexts(d,res, rootRunTime1)
 		      d3.select(this).style('stroke-width', '2');
 		      // fadeUnConnected(d);
 		      // svg.selectAll(".link").style('fill-opacity', 0.0)
@@ -119,14 +117,12 @@ function drawRectangle(node, graph, view) {
         })
         .on('dblclick', (d) => {
             getHierarchy(d).then((data) => {
-                console.log(view.hierarchy);
-                if (view.hierarchy != undefined) {
-                    clearIcicles(view);
-                }
-                drawIcicleHierarchy(view, data);
-                getFunctionLists(d).then((data) => {
+              let attr = 'inclusive';
+              let direction = 'LR';
+              drawIcicleHierarchy(view, data, direction, attr);
+              getFunctionLists(d).then((data) => {
 
-                });
+              });
             });
         });
     // .on('contextmenu', function(d){
@@ -193,8 +189,8 @@ function drawPath(node, graph, view) {
 	  .delay(view.transitionDuration / 3)
 	  .style('fill-opacity', (d) => {
 	    if (d.name[0] == 'intermediate') {
-	    	return 0;
-	    }
+        return 0;
+      }
 	  });
 }
 
@@ -214,7 +210,6 @@ function drawText(node, graph, view) {
 	    	if(d.height < view.minHeightForText ) {
 	    	  return '';
 	    	}
-	    	
 	    	  var textSize = calcTextSize(d.name)['width'];
 	    	  if(textSize < d.height){
 	    		  return d.name[0];
@@ -224,16 +219,12 @@ function drawText(node, graph, view) {
 	    	  }
 	    	
 	    }
-	    
 	    	return '';
-	    
 	  })
 	  .on('mouseover', function (d) {
 	    if (d.name[0] != 'intermediate') {
 	    	view.toolTipList.attr('width', '400px')
 		      .attr('height', '150px');
-                //		var res = getFunctionListOfNode(d);
-                //		toolTipTexts(d,res, rootRunTime1);
 		    d3.select(this.parentNode).select('rect').style('stroke-width', '2');
 	    }
 	  })
@@ -272,15 +263,11 @@ function drawText(node, graph, view) {
 	    	if(d.height < view.minHeightForText ){
 	    	  return '';
 	    	}
-	    	
-	    	  var textSize = calcTextSize(d.name)['width'];	    	        
-	    	  if(textSize < d.height){
-	    		  return d.name;
-	    	  }
-	    	  
-	    		  return d.name.trunc(textTruncForNode);
-	    	  
-	    	
+	    	var textSize = calcTextSize(d.name)['width'];	    	        
+	    	if(textSize < d.height){
+	    		return d.name;
+	    	}
+	    	return d.name.trunc(textTruncForNode);
 	    }
 	    else{
 	    	return '';

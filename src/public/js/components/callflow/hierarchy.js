@@ -1,3 +1,6 @@
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-prototype-builtins */
 /* eslint-disable no-mixed-operators */
 /* eslint-disable vars-on-top */
 /* eslint-disable no-var */
@@ -26,7 +29,9 @@ function buildHierarchy(csv) {
     const root = { name: 'root', children: [] };
     for (let i = 0; i < csv.length; i++) {
         const sequence = csv[i][0];
-        const size = csv[i][1];
+        const inc_time = csv[i][1];
+        const exc_time = csv[i][2];
+        const load_imb = csv[i][3];
         const parts = sequence;
         let currentNode = root;
         for (let j = 0; j < parts.length; j++) {
@@ -51,7 +56,13 @@ function buildHierarchy(csv) {
                 currentNode = childNode;
             } else {
                 // Reached the end of the sequence; create a leaf node.
-                childNode = { name: nodeName, weight: size, children: [] };
+                childNode = {
+                    name: nodeName,
+                    weight: inc_time,
+                    exc_time,
+                    load_imb,
+                    children: []
+                };
                 children.push(childNode);
             }
         }
@@ -60,11 +71,15 @@ function buildHierarchy(csv) {
 }
 
 function clearIcicles(view) {
-    console.log(view.hierarchy)
-    view.hierarchy.selectAll('g').remove();
+    console.log('here');
+    $('#iciclehierarchySVG').remove();
 }
 
-function drawIcicles(view, json) {
+function drawIcicles(view, json, direction, attr) {
+    console.log(attr);
+    if (view.hierarchy != undefined) {
+        clearIcicles(view);
+    }
     // Total size of all segments; we set this later, after loading the data
     let totalSize = 0;
 
@@ -75,6 +90,7 @@ function drawIcicles(view, json) {
     view.hierarchy = d3.select('#component_graph_view').append('svg')
         .attr('width', width)
         .attr('height', height)
+        .attr('id', 'iciclehierarchySVG')
         .append('g')
         .attr('id', 'container');
 
@@ -83,7 +99,7 @@ function drawIcicles(view, json) {
         .value(d => d.weight);
 
     // Basic setup of page elements.
-    initializeBreadcrumbTrail();
+    // initializeBreadcrumbTrail();
     //  drawLegend();
     d3.select('#togglelegend').on('click', toggleLegend);
 
@@ -98,21 +114,58 @@ function drawIcicles(view, json) {
     const nodes = partition.nodes(json)
         .filter(d => (d.dx > 0.5));
 
-    const node = view.hierarchy.data([json]).selectAll('.node')
+    const node = view.hierarchy.data([json]).selectAll('.icicleNode')
         .data(nodes)
         .enter()
         .append('rect')
-        .attr('class', 'node')
-        .attr('x', d => d.x)
-        .attr('y', d => d.y)
-        .attr('width', d => d.dx)
-        .attr('height', d => d.dy)
-        .attr('display', d => (d.depth ? null : 'none'))
-        .style('fill', d => view.color.getColor(d))
+        .attr('class', 'icicleNode')
+        .attr('x', (d) => {
+            if (direction == 'LR') { return d.y; }
+            return d.x;
+        })
+        .attr('y', (d) => {
+            if (direction == 'LR') { return d.x; }
+            return d.y;
+        })
+        .attr('width', (d) => {
+            if (direction == 'LR') { return d.dy; } return d.dx;
+        })
+        .attr('height', (d) => {
+            if (direction == 'LR') { return d.dx; } return d.dy;
+        })
+        .style('fill', (d) => {
+            let color = view.color.getColor(d);
+            if (color._rgb == [204, 204, 204, 1]) { color = [161.43, 0, 0, 1]; }
+            return color;
+        })
         .style('stroke', () => '#0e0e0e')
         .style('stroke-width', () => '1px')
         .style('opacity', 1)
         .on('mouseover', mouseover);
+
+    const text = view.hierarchy.data([json]).selectAll('.icicleText')
+        .data(nodes)
+        .enter()
+        .append('text')
+        .attr('class', 'icicleText')
+        .attr('x', (d) => {
+            if (direction == 'LR') { return d.y; }
+            return d.x;
+        })
+        .attr('y', (d) => {
+            if (direction == 'LR') { return d.x; }
+            return d.y + 15;
+        })
+        .attr('width', (d) => {
+            if (direction == 'LR') { return d.dy / 2; } return d.dx / 2;
+        })
+        .text((d) => {
+            const textTruncForNode = 18;
+            if(d.width < 50)
+                return '';
+            return d.name.trunc(textTruncForNode);
+        });
+
 
     // Add the mouseleave handler to the bounding rect.
     d3.select('#container').on('mouseleave', mouseleave);
@@ -130,14 +183,14 @@ function drawIcicles(view, json) {
         }
 
         const sequenceArray = getAncestors(d);
-        updateBreadcrumbs(sequenceArray, percentageString);
+        // updateBreadcrumbs(sequenceArray, percentageString);
 
         // Fade all the segments.
-        d3.selectAll('.node')
+        d3.selectAll('.icicleNode')
             .style('opacity', 0.3);
 
         // Then highlight only those that are an ancestor of the current segment.
-        view.hierarchy.selectAll('.node')
+        view.hierarchy.selectAll('.icicleNode')
         // eslint-disable-next-line no-shadow
             .filter(node => (sequenceArray.indexOf(node) >= 0))
             .style('opacity', 1);
@@ -150,10 +203,10 @@ function drawIcicles(view, json) {
             .style('visibility', 'hidden');
 
         // Deactivate all segments during transition.
-        d3.selectAll('.node').on('mouseover', null);
+        d3.selectAll('.icicleNode').on('mouseover', null);
 
         // Transition each segment to full opacity and then reactivate it.
-        d3.selectAll('.node')
+        d3.selectAll('.icicleNode')
             .transition()
             .duration(1000)
             .style('opacity', 1)
@@ -161,31 +214,6 @@ function drawIcicles(view, json) {
                 d3.select(this).on('mouseover', mouseover);
             });
     }
-
-    view.hierarchy.append('text')
-        .attr('dy', '0.35em')
-        .attr('x', () => 5)
-        .attr('y', d => d.depth * d.dx)
-        .style('opacity', 1)
-        .text(d => d.name.trunc(5))
-        .on('mouseover', function () {
-            view.toolTipList.attr('width', '400px')
-                .attr('height', '150px');
-            d3.select(this.parentNode).select('rect').style('stroke-width', '2');
-        })
-        .on('mouseout', function () {
-            view.toolTipList.attr('width', '0px')
-                .attr('height', '0px');
-            d3.select(this.parentNode).select('rect').style('stroke-width', '1');
-        });
-
-    // Transition
-    view.hierarchy.selectAll('text')
-        .transition()
-        .duration(view.transitionDuration)
-        .style('opacity', 1)
-        .style('fill', d => view.color.setContrast(view.color.getColor(d)))
-        .text(d => console.log(d));
 }
 
 
