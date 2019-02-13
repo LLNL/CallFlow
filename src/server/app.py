@@ -286,26 +286,19 @@ class App():
             data_json = json.loads(request.args.get('in_data'))
             n_index = data_json['n_index']
             mod_index = data_json['mod_index']
-            dataMap = self.callflow.state.map
+            dataMap = self.callflow.state.map            
+            df = self.callflow.state.df
 
-            #Commented out but come back in future
-            
-            # df = self.callflow.state.df
-
-            # scat_df = df[df.mod_index == mod_index]
-
-            # inc_scat = []
-            # exc_scat = []
-            # for idx, row in scat_df.iterrows():
-            #     print(scat_df['CPUTIME (usec) (I)'])
-            #     inc_scat.append(scat_df['CPUTIME (usec) (I)'])
-
-            for key in dataMap['incTime'].keys():
-                if key == n_index:
-                    return json.dumps({
-                        "inc": dataMap['incTime'][key],
-                        "exc": dataMap['excTime'][key]
-                        })
+            func_in_module = df[df.mod_index == mod_index]['name'].unique().tolist()
+            sct = []
+            for idx, func in enumerate(func_in_module):
+                sct.append({
+                    "name": func,
+                    "inc" : df.loc[df['name'] == func]['CPUTIME (usec) (I)'].mean(),
+                    "exc" : df.loc[df['name'] == func]['CPUTIME (usec) (E)'].mean(),
+                })
+            sct_df = pd.DataFrame(sct)
+            return sct_df.to_json(orient="columns")
 
         @app.route('/getFunctionLists')
         def getFunctionLists():
