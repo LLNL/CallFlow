@@ -8,6 +8,7 @@ import drawEdges from './callflow/edges';
 import { drawNodes, clearNodes } from './callflow/nodes';
 import drawHistogram from './callflow/histogram';
 import Color from './callflow/color';
+import ControlUI from './control_wrapper'
 
 export default class CallFlow {
     constructor(graph, prop) {
@@ -39,6 +40,7 @@ export default class CallFlow {
         this.view.sankey = sankeyComputation(this.graph, this.view);
         this.setColor(1);
         this.render();
+        let controlUI = new ControlUI(this.graph, this.view)
         //        this.renderCCTBtn()
         return this;
     }

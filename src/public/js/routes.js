@@ -10,25 +10,24 @@ import { displayFunctions } from './components/functionList';
 function request(title, data) {
     console.log('Request - ', title);
     return new Promise((resolve, reject) => {
-	  $.ajax({
-	    type: 'GET',
-	    contentType: 'application/json',
-	    url: `/${title}`,
-	    data: { in_data: JSON.stringify(data) },
-	    success: (data) => {
-		    data = JSON.parse(data);
+        $.ajax({
+            type: 'GET',
+            contentType: 'application/json',
+            url: `/${title}`,
+            data: { in_data: JSON.stringify(data) },
+            success: (data) => {
+                data = JSON.parse(data);
                 console.log(data);
-		    if (self.debug) {
-		      console.log('[', title, '] Data:', data);
-		    }
-		    resolve(data[0]);
-	    },
-	    error(err) {
-		    if (err)
-		      {console.log(err);}
-		    reject();
-	    },
-	  });
+                if (self.debug) {
+                    console.log('[', title, '] Data:', data);
+                }
+                resolve(data[0]);
+            },
+            error(err) {
+                if (err) { console.log(err); }
+                reject();
+            },
+        });
     });
 }
 
@@ -123,7 +122,7 @@ function getHistogramData(node, cb) {
                     return;
                 }
                 console.log('[Getter] Histogram Scatter Data: ', histScatData);
-                const data = { exc: histScatData.exc, inc: histScatData.inc };
+                const data = histScatData;
                 scatterPlotUI(data);
                 histogramUI(data);
                 return histScatData;
@@ -136,8 +135,8 @@ function getHistogramData(node, cb) {
 }
 
 function getFunctionLists(node) {
-    let n_index,
-        mod_index;
+    let n_index;
+    let mod_index;
     if (node.n_index instanceof Array) {
         n_index = node.n_index[0];
         mod_index = node.mod_index[0];

@@ -61,7 +61,7 @@ function buildHierarchy(csv) {
                     weight: inc_time,
                     exc_time,
                     load_imb,
-                    children: []
+                    children: [],
                 };
                 children.push(childNode);
             }
@@ -71,7 +71,6 @@ function buildHierarchy(csv) {
 }
 
 function clearIcicles(view) {
-    console.log('here');
     $('#iciclehierarchySVG').remove();
 }
 
@@ -160,9 +159,8 @@ function drawIcicles(view, json, direction, attr) {
             if (direction == 'LR') { return d.dy / 2; } return d.dx / 2;
         })
         .text((d) => {
-            const textTruncForNode = 18;
-            if(d.width < 50)
-                return '';
+            const textTruncForNode = 10;
+            if (d.dy < 50 ||  d.dx < 50) { return ''; }
             return d.name.trunc(textTruncForNode);
         });
 

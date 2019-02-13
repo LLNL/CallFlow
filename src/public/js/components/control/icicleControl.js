@@ -5,6 +5,8 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-undef */
+import { layout } from '../../app';
+
 function icicleLayoutDirection(view) {
     const label = document.createElement('label');
     const description = document.createTextNode('Horizontal icicle plot: ');

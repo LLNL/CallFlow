@@ -1,3 +1,6 @@
+/* eslint-disable func-names */
+/* eslint-disable no-shadow */
+/* eslint-disable no-undef */
 /* eslint-disable no-var */
 /* eslint-disable vars-on-top */
 /* eslint-disable block-scoped-var */
@@ -22,11 +25,9 @@ function scatterPlotUI(data) {
     const width = $('#scat_view').parent().width();
     const height = $('#scat_view').parent().height();
     let runTimeLable;
-	let scatDat;
-	
-	console.log(data.inc[0], typeof(data.inc), Object.values(data.inc));
+    let scatDat;
 
-    $('#scat_view').empty();
+	$('#scat_view').empty();
     const scatterPot = new Scatter({
 	    ID: '#scat_view',
 	    width,
@@ -35,7 +36,8 @@ function scatterPlotUI(data) {
             top: 10, right: 10, bottom: 30, left: 44,
         },
 	    yData: Object.values(data.inc),
-	    xData: Object.values(data.exc),
+        xData: Object.values(data.exc),
+        dataset_index: Object.values(data.dataset_index),
 	    sort: false,
     });
 }
@@ -50,7 +52,8 @@ function Scatter(args) {
             top: 10, right: 30, bottom: 10, left: 10,
         },
 	    yData = args.yData,
-	    xData = args.xData,
+        xData = args.xData,
+        dataset_index = args.dataset_index,
 	    label = args.label,
 	    sort = args.sort,
 	    clickCallBack = args.clickCallBack;
@@ -87,7 +90,6 @@ function Scatter(args) {
         return max;
     }
 
-    console.log(yData, xData);
     yMin = arrayMin(yData);
     yMax = arrayMax(yData);
 
@@ -145,14 +147,17 @@ function Scatter(args) {
 	        .text('Inclusive Runtime');
 
 	    svg.append('g').selectAll('.dot')
-	        .data(yData)
+	        .data(dataset_index)
 	        .enter()
             .append('circle')
 	        .attr('class', 'dot')
 	        .attr('r', 3)
 	        .attr('cx', (d, i) => xScale(xData[i]))
-	        .attr('cy', (d, i) => yScale(d))
-	        .style('fill', '#4682b4');
+	        .attr('cy', (d, i) => yScale(yData[i]))
+	        .style('fill', (d, i) => {
+                if (d == 0) return '#4682b4';
+                return '#46b447';
+            });
 
 	    const line = d3.svg.line()
 	        .x((d, i) => xScale(xData[i]))
@@ -207,8 +212,6 @@ function Scatter(args) {
     this.setContainerWidth = function (newWidth) {
 	    containerWidth = newWidth;
 	    width = containerWidth - margin.left - margin.right;
-
-	    console.log(containerWidth);
     };
 
     this.setContainerHeight = function (newHeight) {
@@ -238,7 +241,6 @@ function Scatter(args) {
         x_mean /= n;
         y_mean /= n;
 
-		console.log(x_mean, y_mean)
         // calculate coefficients
         let xr = 0;
         let yr = 0;

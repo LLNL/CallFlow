@@ -209,9 +209,9 @@ class App():
         ret = []
         for idx, gf in enumerate(gfs):
             self.callflow = CallFlow(gf)
+            self.callflow.dataset = self.config.paths[idx]
             self.callflow.update(action, group_by_attr)
-            ret.append(self.callflow.cfg)
-            print(ret)
+            ret.append(self.callflow)
         return ret
 
     # Loops through gfs and creates their respective CCTs.
@@ -242,7 +242,10 @@ class App():
             group_by_attr = json.loads(request.args.get('in_data'))
             # Create the callflow graph frames from graphframes given by hatchet
             self.cfgs = self.create_cfgs(self.gfs, 'groupBy', group_by_attr)
-            return json.dumps(self.cfgs)
+            ret_cfg = []
+            for idx, cfg in enumerate(self.cfgs):
+                ret_cfg.append(cfg.cfg)
+            return json.dumps(ret_cfg)
 
         @app.route('/getCCT')
         def getCCT():
@@ -286,17 +289,19 @@ class App():
             data_json = json.loads(request.args.get('in_data'))
             n_index = data_json['n_index']
             mod_index = data_json['mod_index']
-            dataMap = self.callflow.state.map            
-            df = self.callflow.state.df
-
-            func_in_module = df[df.mod_index == mod_index]['name'].unique().tolist()
+            
             sct = []
-            for idx, func in enumerate(func_in_module):
-                sct.append({
-                    "name": func,
-                    "inc" : df.loc[df['name'] == func]['CPUTIME (usec) (I)'].mean(),
-                    "exc" : df.loc[df['name'] == func]['CPUTIME (usec) (E)'].mean(),
-                })
+            for idx, cfg in enumerate(self.cfgs):
+                df = cfg.state.df
+                func_in_module = df[df.mod_index == mod_index]['name'].unique().tolist()
+                for idx2, func in enumerate(func_in_module):
+                    sct.append({
+                        "dataset": cfg.dataset,
+                        "name": func,
+                        "inc" : df.loc[df['name'] == func]['CPUTIME (usec) (I)'].mean(),
+                        "exc" : df.loc[df['name'] == func]['CPUTIME (usec) (E)'].mean(),
+                        "dataset_index": idx
+                    })
             sct_df = pd.DataFrame(sct)
             return sct_df.to_json(orient="columns")
 
