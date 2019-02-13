@@ -1,3 +1,7 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable camelcase */
+/* eslint-disable import/no-named-as-default-member */
+/* eslint-disable import/no-named-as-default */
 /* eslint-disable no-multi-assign */
 /* eslint-disable func-names */
 /* eslint-disable no-undef */
@@ -8,7 +12,7 @@ import drawEdges from './callflow/edges';
 import { drawNodes, clearNodes } from './callflow/nodes';
 import drawHistogram from './callflow/histogram';
 import Color from './callflow/color';
-import ControlUI from './control_wrapper'
+import ControlUI from './control_wrapper';
 
 export default class CallFlow {
     constructor(graph, prop) {
@@ -38,9 +42,11 @@ export default class CallFlow {
         this.graph = preprocess(this.graph);
         this.view = DOMSetup(this.view);
         this.view.sankey = sankeyComputation(this.graph, this.view);
+        this.view.icicleDirection = 'TB';
+        this.view.icicleColorByAttr = 1;
         this.setColor(1);
         this.render();
-        let controlUI = new ControlUI(this.graph, this.view)
+        const controlUI = new ControlUI(this.graph, this.view);
         //        this.renderCCTBtn()
         return this;
     }
@@ -60,6 +66,7 @@ CallFlow.prototype.renderCCTBtn = function () {
 CallFlow.prototype.setColor = function (colorOption) {
     this.view.colorOption = colorOption;
     this.view.color = new Color(this.view);
+    console.log(this.graph.stat.minExc, this.graph.stat.maxExc);
     this.view.color.setColorScale(this.graph.stat.minInc, this.graph.stat.maxInc, this.graph.stat.minExc, this.graph.stat.maxExc);
 };
 

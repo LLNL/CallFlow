@@ -15,13 +15,19 @@ function icicleLayoutDirection(view) {
     checkbox.type = 'checkbox';
     // checkbox.name = dat["name"];
     // checkbox.value = dat["procID"];
-    checkbox.setAttribute('id', 'showLabelBox');
+    checkbox.setAttribute('id', 'horizontal_icicle');
 
     label.appendChild(description);
     label.appendChild(checkbox);
 
     document.getElementById('component_graph_view').appendChild(label);
-    $('#showLabelBox').attr('checked', false);
+    $('#horizontal_icicle').attr('checked', false);
+
+    $('#horizontal_icicle').change(() => {
+        console.log($('#horizontal_icicle').val());
+        let attr = 'LR';
+        layout.app.update('onIcicleDirectionChange', attr);
+    });
 }
 
 function icicleColorBy(view) {
@@ -33,32 +39,25 @@ function icicleColorBy(view) {
 
     const label = $('<label>').text('Color By: ');
 
-    const select = $('<select name="colorDropDown" id="icicleColorDropDown"/>');
+    const select = $('<select name="colorDropDown" id="icicle_color_dropdown"/>');
     for (const val in dropDownData) {
 	    $('<option />', { value: val, text: dropDownData[val] }).appendTo(select);
     }
 
     select.change(() => {
-	    let attr_id = $('#icicleColorDropDown :selected').val();
+	    let attr_id = $('#icicle_color_dropdown :selected').val();
 	    view.colorOption = attr_id;
         layout.app.update('onIcicleColorChange', attr_id);
     });
 
     const dropDownDiv = document.createElement('div');
-    dropDownDiv.setAttribute('id', 'icicleDropDown');
+    dropDownDiv.setAttribute('id', 'icicle_dropdown');
     $('#component_graph_view').append(dropDownDiv);
     select.appendTo(label);
-    $('#icicleDropDown').append(label);
-    $('#icicleDropDown').append(select);
+    $('#icicle_dropdown').append(label);
+    $('#icicle_dropdown').append(select);
 
-    // Metric Color Scale
-    const metricLabel = $('<label>').text('Color:');
     $('#component_graph_view').append(dropDownDiv);
-
-    const metricColorScaleDiv = document.createElement('div');
-    metricColorScaleDiv.setAttribute('id', 'metricColorScale');
-    // $("#metricColorScale").css({left: 200});
-    $('#component_graph_view').append(metricColorScaleDiv);
 }
 
 

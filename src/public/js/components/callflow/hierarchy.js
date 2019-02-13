@@ -1,3 +1,5 @@
+/* eslint-disable import/prefer-default-export */
+/* eslint-disable prefer-const */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-prototype-builtins */
@@ -12,6 +14,8 @@
 function drawIcicleHierarchy(view, hierarchy) {
     const path = hierarchy.path;
     const inc_time = hierarchy.inc_time;
+    const exclusive = hierarchy.exclusive;
+    const imbalance_perc = hierarchy.imbalance_perc;
 
     const path_hierarchy_format = [];
     for (const i in path) {
@@ -19,6 +23,8 @@ function drawIcicleHierarchy(view, hierarchy) {
             path_hierarchy_format[i] = [];
             path_hierarchy_format[i].push(path[i]);
             path_hierarchy_format[i].push(inc_time[i]);
+            path_hierarchy_format[i].push(exclusive[i]);
+            path_hierarchy_format[i].push(imbalance_perc[i]);
         }
     }
     const json = buildHierarchy(path_hierarchy_format);
@@ -30,8 +36,8 @@ function buildHierarchy(csv) {
     for (let i = 0; i < csv.length; i++) {
         const sequence = csv[i][0];
         const inc_time = csv[i][1];
-        const exc_time = csv[i][2];
-        const load_imb = csv[i][3];
+        const exclusive = csv[i][2];
+        const imbalance_perc = csv[i][3];
         const parts = sequence;
         let currentNode = root;
         for (let j = 0; j < parts.length; j++) {
@@ -59,8 +65,8 @@ function buildHierarchy(csv) {
                 childNode = {
                     name: nodeName,
                     weight: inc_time,
-                    exc_time,
-                    load_imb,
+                    exclusive,
+                    imbalance_perc,
                     children: [],
                 };
                 children.push(childNode);
@@ -74,8 +80,9 @@ function clearIcicles(view) {
     $('#iciclehierarchySVG').remove();
 }
 
-function drawIcicles(view, json, direction, attr) {
-    console.log(attr);
+function drawIcicles(view, json) {
+    let direction = view.icicleDirection;
+    let attr = view.icicleColorByAttr;
     if (view.hierarchy != undefined) {
         clearIcicles(view);
     }
@@ -106,7 +113,7 @@ function drawIcicles(view, json, direction, attr) {
     // when the mouse leaves the parent g.
     view.hierarchy.append('svg:rect')
         .attr('width', width)
-        .attr('height', height)
+        .attr('height', height - 50)
         .style('opacity', 0);
 
     // For efficiency, filter nodes to keep only those large enough to see.
@@ -127,14 +134,16 @@ function drawIcicles(view, json, direction, attr) {
             return d.y;
         })
         .attr('width', (d) => {
-            if (direction == 'LR') { return d.dy; } return d.dx;
+            if (direction == 'LR') { return d.dy; }
+            return d.dx;
         })
         .attr('height', (d) => {
-            if (direction == 'LR') { return d.dx; } return d.dy;
+            if (direction == 'LR') { return d.dx; }
+            return d.dy;
         })
         .style('fill', (d) => {
-            let color = view.color.getColor(d);
-            if (color._rgb == [204, 204, 204, 1]) { color = [161.43, 0, 0, 1]; }
+            const color = view.color.getColor(d);
+            if (color._rgb[0] == 204) { return '#9B0011'; }
             return color;
         })
         .style('stroke', () => '#0e0e0e')
@@ -146,7 +155,11 @@ function drawIcicles(view, json, direction, attr) {
         .data(nodes)
         .enter()
         .append('text')
-        .attr('class', 'icicleText')
+        .attr('class', 'icicleText')	
+        .attr('transform', (d) => {
+            if (direction == 'LR') { return 'rotate(90)'; }
+            return 'rotate(0)';
+        })
         .attr('x', (d) => {
             if (direction == 'LR') { return d.y; }
             return d.x;
@@ -160,7 +173,7 @@ function drawIcicles(view, json, direction, attr) {
         })
         .text((d) => {
             const textTruncForNode = 10;
-            if (d.dy < 50 ||  d.dx < 50) { return ''; }
+            if (d.dy < 10 || d.dx < 50) { return ''; }
             return d.name.trunc(textTruncForNode);
         });
 
@@ -303,7 +316,4 @@ function toggleLegend() {
     }
 }
 
-export {
-    drawIcicleHierarchy,
-    clearIcicles,
-};
+export { drawIcicleHierarchy };

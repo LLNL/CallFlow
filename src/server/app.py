@@ -361,8 +361,8 @@ class App():
                     "module": module,
                     "path": df.loc[df['name'] == func]['component_path'].unique().tolist()[0],
                     "inc_time" : df.loc[df['name'] == func]['CPUTIME (usec) (I)'].mean(),
-                    "exc_time" : df.loc[df['name'] == func]['CPUTIME (usec) (E)'].mean(),
-                    "load_imb" : df.loc[df['name'] == func]['imbalance_perc'].mean(),
+                    "exclusive" : df.loc[df['name'] == func]['CPUTIME (usec) (E)'].mean(),
+                    "imbalance_perc" : df.loc[df['name'] == func]['imbalance_perc'].mean(),
                     "component_level": df.loc[df['name'] == func]['component_level'].unique().tolist()[0],
                 })
             paths_df = pd.DataFrame(paths)

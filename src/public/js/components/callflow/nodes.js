@@ -1,5 +1,5 @@
 import { getHistogramData, getFunctionLists, getHierarchy } from '../../routes';
-import { clearIcicles, drawIcicleHierarchy } from './hierarchy';
+import { drawIcicleHierarchy } from './hierarchy';
 
 const node_heights = {};
 const current_level = {};
@@ -115,16 +115,15 @@ function drawRectangle(node, graph, view) {
 	    .on('click', (d) => {
 	      getHistogramData(d);
         })
-        .on('dblclick', (d) => {
-            getHierarchy(d).then((data) => {
-              let attr = 'inclusive';
-              let direction = 'LR';
-              drawIcicleHierarchy(view, data, direction, attr);
-              getFunctionLists(d).then((data) => {
+      .on('dblclick', (d) => {
+        view.selectedModule = d;
+        getHierarchy(d).then((data) => {
+          drawIcicleHierarchy(view, data);
+          getFunctionLists(d).then((data) => {
 
-              });
-            });
+          });
         });
+      });
     // .on('contextmenu', function(d){
     //     return view.svgBase.contextMenu(d);
     // })
@@ -193,7 +192,6 @@ function drawPath(node, graph, view) {
       }
 	  });
 }
-
 
 function drawText(node, graph, view) {
     const textTruncForNode = 4;

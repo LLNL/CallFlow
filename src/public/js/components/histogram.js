@@ -31,7 +31,8 @@ function histogramUI(data) {
         margin: {
             top: 10, right: 10, bottom: 30, left: 40,
         },
-        data: Object.values(data.inc),
+		data: Object.values(data.inc),
+		dataset_index: Object.values(data.dataset_index),
         numbOfBins: 20,
         //	brushCallBack: brushCallBack,
         //	clickCallBack: nodeClickCallBack
@@ -85,7 +86,8 @@ function Histogram(args) {
             top: 10, right: 30, bottom: 10, left: 10,
         },
         data = args.data,
-        numbOfBins = args.numbOfBins || 20,
+		numbOfBins = args.numbOfBins || 20,
+		dataset_index = args.dataset_index,
         brushCallBack = args.brushCallBack,
         clickCallBack = args.clickCallBack;
 
