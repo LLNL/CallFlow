@@ -5,17 +5,18 @@
 /* eslint-disable prefer-destructuring */
 /* eslint-disable no-param-reassign */
 export default function preprocess(graph, refresh) {
-    if (refresh == true) {
-	    graph = cleanGraph(graph);
-        graph = c_a(graph);
-        graph = addLinkNodeIDs_(graph);
-    } else {
-        graph = c_a(graph);
-        graph = addLinkNodeIDs(graph);
-    }
+    console.log(graph)
+    // if (refresh == true) {
+	//     graph = cleanGraph(graph);
+    //     graph = c_a(graph);
+    //     graph = addLinkNodeIDs_(graph);
+    // } else {
+    //     graph = c_a(graph);
+    //     graph = addLinkNodeIDs(graph);
+    // }
 
-    graph = calculateFlow(graph);
-    return graph;
+    // graph = calculateFlow(graph);
+    // return graph;
 }
 
 function cleanGraph(graph) {
@@ -148,6 +149,7 @@ function calculateFlow(graph) {
 	    const nodeLabel = node.name[0];
 
         links.forEach((link) => {
+            console.log(link)
 	        const linkLabel = nodes[link.sourceID].name;
 	        if (linkLabel == nodeLabel) {
 		        if (outGoing[linkLabel] == undefined) {
