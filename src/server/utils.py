@@ -16,7 +16,7 @@ from logger import log
 
 # For converting graphml to json
 import networkx as nx
-from community import community_louvain
+#from community import community_louvain
 from networkx.readwrite import json_graph
 import json
 
