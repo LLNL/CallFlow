@@ -6,6 +6,7 @@
 /* eslint-disable no-param-reassign */
 export default function preprocess(graph, refresh) {
     console.log(graph)
+    
     if (refresh == true) {
     	graph = cleanGraph(graph);
         graph = c_a(graph);
@@ -149,7 +150,6 @@ function calculateFlow(graph) {
 	    const nodeLabel = node.name[0];
 
         links.forEach((link) => {
-	    console.log(link)
 	        const linkLabel = nodes[link.sourceID].name;
 	        if (linkLabel == nodeLabel) {
 		        if (outGoing[linkLabel] == undefined) {
