@@ -4,9 +4,7 @@
 /* eslint-disable camelcase */
 /* eslint-disable prefer-destructuring */
 /* eslint-disable no-param-reassign */
-export default function preprocess(graph, refresh) {
-    console.log(graph)
-    
+export default function preprocess(graph, refresh) {    
     if (refresh == true) {
     	graph = cleanGraph(graph);
         graph = c_a(graph);

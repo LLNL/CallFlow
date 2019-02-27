@@ -16,6 +16,8 @@ function drawIcicleHierarchy(view, hierarchy) {
     const inc_time = hierarchy.inc_time;
     const exclusive = hierarchy.exclusive;
     const imbalance_perc = hierarchy.imbalance_perc;
+    const exit = hierarchy.exit;
+    const component_path = hierarchy.component_path;
 
     const path_hierarchy_format = [];
     for (const i in path) {
@@ -25,9 +27,12 @@ function drawIcicleHierarchy(view, hierarchy) {
             path_hierarchy_format[i].push(inc_time[i]);
             path_hierarchy_format[i].push(exclusive[i]);
             path_hierarchy_format[i].push(imbalance_perc[i]);
+            path_hierarchy_format[i].push(exit[i]);
+            path_hierarchy_format[i].push(component_path[i]);
         }
     }
     const json = buildHierarchy(path_hierarchy_format);
+    console.log(json);
     drawIcicles(view, json);
 }
 
@@ -38,6 +43,8 @@ function buildHierarchy(csv) {
         const inc_time = csv[i][1];
         const exclusive = csv[i][2];
         const imbalance_perc = csv[i][3];
+        const exit = csv[i][4];
+        const component_path = csv[i][5];
         const parts = sequence;
         let currentNode = root;
         for (let j = 0; j < parts.length; j++) {
@@ -67,6 +74,8 @@ function buildHierarchy(csv) {
                     weight: inc_time,
                     exclusive,
                     imbalance_perc,
+                    exit,
+                    component_path,
                     children: [],
                 };
                 children.push(childNode);
@@ -112,9 +121,37 @@ function drawIcicles(view, json) {
     // Bounding rect underneath the chart, to make it easier to detect
     // when the mouse leaves the parent g.
     view.hierarchy.append('svg:rect')
-        .attr('width', width)
-        .attr('height', height - 50)
+        .attr('width', () => {
+            if (direction == 'LR') return height;
+            return width;
+        })
+        .attr('height', () => {
+            if (direction == 'LR') return width - 50;
+            return height - 50;
+        })
         .style('opacity', 0);
+
+    var sliderStep = d3.sliderBottom()
+        .min(0)
+        .max(10)
+        .width(300)
+        .tickFormat(d3.format('.2%'))
+        .ticks(5)
+        .step(0.005)
+        .default(0.015)
+        .on('onchange', (val) => {
+            d3.select('p#value-step').text(d3.format('.2%')(val));
+        });
+
+    var gStep = d3
+        .select('#iciclehierarchySVG')
+        .append('svg')
+        .attr('width', 100)
+        .attr('height', height)
+        .append('g')
+        .attr('transform', 'translate(30,30)');
+
+    gStep.call(sliderStep);
 
     // For efficiency, filter nodes to keep only those large enough to see.
     const nodes = partition.nodes(json)
@@ -147,22 +184,25 @@ function drawIcicles(view, json) {
             return color;
         })
         .style('stroke', () => '#0e0e0e')
-        .style('stroke-width', () => '1px')
-        .style('opacity', 1)
+        .style('stroke-width', d => '1px')
+        .style('opacity', (d) => {
+            if (d.exit) { return 0.5; }
+            return 1;
+        })
         .on('mouseover', mouseover);
 
     const text = view.hierarchy.data([json]).selectAll('.icicleText')
         .data(nodes)
         .enter()
         .append('text')
-        .attr('class', 'icicleText')	
+        .attr('class', 'icicleText')
         .attr('transform', (d) => {
             if (direction == 'LR') { return 'rotate(90)'; }
             return 'rotate(0)';
         })
         .attr('x', (d) => {
-            if (direction == 'LR') { return d.y; }
-            return d.x;
+            if (direction == 'LR') { return d.y * len(d.component_path); }
+            return d.x + 15;
         })
         .attr('y', (d) => {
             if (direction == 'LR') { return d.x; }
@@ -226,7 +266,6 @@ function drawIcicles(view, json) {
             });
     }
 }
-
 
 // Given a node in a partition layout, return an array of all of its ancestor
 // nodes, highest first, but excluding the root.

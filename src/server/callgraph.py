@@ -85,6 +85,9 @@ class CallGraph(nx.Graph):
         n_index_mapping = self.generic_map(self.g.nodes(), 'n_index')
         nx.set_node_attributes(self.g, name='n_index', values=n_index_mapping)
 
+        module_mapping = self.generic_map(self.g.nodes(), 'module')
+        nx.set_node_attributes(self.g, name='module', values=module_mapping)
+
         mod_index_mapping = self.generic_map(self.g.nodes(), 'mod_index')
         nx.set_node_attributes(self.g, name='mod_index', values=mod_index_mapping)
 

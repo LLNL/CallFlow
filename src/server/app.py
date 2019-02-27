@@ -56,6 +56,7 @@ class App():
 
 #        if not self.args.filter:
 #            self.read_data()
+        self.ccts = self.create_ccts(self.gfs, 'default', '')
         self.create_server()
         self.launch_webapp()
 #        self.write_gfs_graphml()
@@ -216,10 +217,13 @@ class App():
 
     # Loops through gfs and creates their respective CCTs.
     # Method exists because the CCTs are not create by default. 
-    def create_ccts(self):
-        for idx, gf in enumerate(self.gfs):
-            temp = CallFlow(gf)
-            self.ccts.append(temp)
+    def create_ccts(self, gfs, action, group_by_attr):
+        ret = []
+        for idx, gf in enumerate(gfs):
+            self.cctflow = CallFlow(gf)
+            self.cctflow.update(action, group_by_attr)
+            ret.append(self.cctflow)
+        return ret
 
     # ==============================================================================
                 # Callflow server 
@@ -242,18 +246,18 @@ class App():
             group_by_attr = json.loads(request.args.get('in_data'))
             # Create the callflow graph frames from graphframes given by hatchet
             self.cfgs = self.create_cfgs(self.gfs, 'groupBy', group_by_attr)
-            ret_cfg = []
+            ret = []
             for idx, cfg in enumerate(self.cfgs):
-                ret_cfg.append(cfg.cfg)
-            return json.dumps(ret_cfg)
+                ret.append(cfg.json_graph)
+            return json.dumps(ret)
 
         @app.route('/getCCT')
         def getCCT():
             ret = []
-            self.create_ccts()
-            for idx, gf in enumerate(self.gfs):
-                self.ccts[idx].update('default', '')
-                ret.append(self.ccts[idx].cfg)
+            self.ccts = self.create_ccts(self.gfs, 'default', '')
+            ret = []
+            for idx, cct in enumerate(self.ccts):
+                ret.append(cct.json_graph)
             return json.dumps(ret)
 
         @app.route('/getDotCCT')
@@ -349,15 +353,61 @@ class App():
             data_json = json.loads(request.args.get('in_data'))
             n_index = data_json['n_index']
             df = self.callflow.state.df
+            cct_df = self.cctflow.state.df
+
+            def module_hierarchy_graph(module):
+                g = self.ccts[0].state.g
+                print(g.nodes(data=True))
+                hierarchy = nx.Graph()
+                source_target_data = []
+                nodes = [x for x,y in g.nodes(data=True) if 'module' in y and y['module'] == [module]]
+                node = nodes[0]
+                for idx, node in enumerate(nodes):
+                    neighbors = sorted(g[node].items(), key=lambda edge: edge[1]['weight'])
+                    for idx, n in enumerate(neighbors):
+                        print("source: {0}, target: {1}".format(node, n[0]))
+                        source_node = node
+                        target_node = n[0]
+                        weight = n[1]['weight']
+                        level = idx
+                        if(cct_df[cct_df['name'] == n[0]]['module'].unique()[0] != module):
+                            type_node = 'exit'
+                            level = -1
+                            print('{0} is an exit node'.format(n[0]))
+                        else:
+                            type_node = 'normal'
+                        source_target_data.append({
+                            "source": source_node,
+                            "target": target_node,
+                            "weight": weight,
+                            "level": level,
+                            "type": type_node
+                        })
+                isExit = {}
+                for idx, data in enumerate(source_target_data):
+                    if data['level'] == -1:
+                        isExit[data['source']] = True
+                    else:
+                        isExit[data['source']] = False
+                return isExit
+
             mod_index = df[df['n_index'] == n_index]['mod_index'].values.tolist()[0]
             df = df[df.mod_index == mod_index]
+            module = df.loc[df['n_index'] == n_index]['module'].unique().tolist()[0]            
 
+            is_exit = module_hierarchy_graph(module)
             paths = []
             func_in_module = df.loc[df['mod_index'] == mod_index]['name'].unique().tolist()
-            module = df.loc[df['n_index'] == n_index]['module'].unique().tolist()[0]
             print("Number of functions inside the {0} module: {1}".format(module, len(func_in_module)))
             for idx, func in enumerate(func_in_module):
+                if func not in is_exit:
+                    print(func)
+                    is_exit[func] = False
+                else:
+                    is_exit[func] = True
                 paths.append({
+                    "func": func,
+                    "exit": is_exit[func],
                     "module": module,
                     "path": df.loc[df['name'] == func]['component_path'].unique().tolist()[0],
                     "inc_time" : df.loc[df['name'] == func]['CPUTIME (usec) (I)'].mean(),

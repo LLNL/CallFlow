@@ -67,13 +67,14 @@ class CallFlow:
             nx = CallGrap(self.state, 'path', false)
             name = attr + '.json'
             utils.graphmltojson('/home/vidi/Suraj/llnl/CallFlow/src/server/' + name, '/home/vidi/Suraj/llnl/CallFlow/src/server/' + name + '.json')
-            
+        
+        self.state.g = nx.g
         # elif action == "default-dot":
         #     nx = CallGraph(self.state, 'path')
         #     self.cfg = write_dot(nx, "graph.dot")
         #     return nx.get_graph()
 
-        self.cfg = json_graph.node_link_data(nx.g)
-        print(self.cfg)
+        self.json_graph = json_graph.node_link_data(nx.g)
+        print(self.json_graph)
         return nx.get_graph()
         

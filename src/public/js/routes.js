@@ -85,7 +85,6 @@ function getHierarchy(node) {
                 success(data) {
                     data = JSON.parse(JSON.stringify(data));
                     console.log('Hierarchy data', data);
-
                     resolve(data);
                 },
                 error(err) {

@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import networkx as nx
 import pandas
 from hatchet import *
@@ -25,13 +19,9 @@ from state import State
 from callgraph import CallGraph
 from preprocess import PreProcess
 
-
 pd.options.display.max_rows = 10
 pd.options.display.float_format = '{:,.2f}'.format
 plt.rcParams['figure.figsize'] = (16, 12)
-
-
-
 
 # Linux path
 if platform.system() == "Linux":
@@ -42,10 +32,6 @@ else:
 
 dataset_path = ["data/lulesh-1/db-ampi4-100-1", "data/lulesh-1/db-ampi4-100-8"]
 dataset = ['db-ampi4-100-1', 'db-ampi4-100-8']    
-
-
-# In[7]:
-
 
 # Create Graphframes.
 def create_gfs(file_format, paths):    
@@ -175,7 +161,7 @@ def main(dataset_path):
 	dataset = []
 	for idx, path in enumerate(dataset_path):
 		dataset.append(path.split('/')[0])
-		
+
 	gfs = create_gfs('hpctoolkit', dataset_path)
 	# filtered graph frames.
 	fgfs = filter_gfs(gfs, 'IncTime')  
