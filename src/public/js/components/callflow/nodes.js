@@ -57,7 +57,7 @@ function drawRectangle(node, graph, view) {
 	    .attr('height', (d) => {
             current_level[d.mod_index] = 0;
             node_heights[d.n_index] = d.height;
-	      return d.height;
+	      return d.height*1.5;
 	    })
 	    .attr('width', view.nodeWidth)
         .attr('opacity', 0)
@@ -73,9 +73,8 @@ function drawRectangle(node, graph, view) {
 	    .style('shape-rendering', 'crispEdges')
 	    .style('stroke', (d) => {
             if (d.name != 'intermediate') {
-		      return d3.rgb(view.color.getColor(d)).darker(2);
+		return d3.rgb(view.color.getColor(d)).darker(2);
 	      }
-
 		      return '#e1e1e1';
 	    })
 	    .style('stroke-width', (d) => {
@@ -83,7 +82,6 @@ function drawRectangle(node, graph, view) {
                 if (d.name[0] == 'intermediate') {
 		        return 0;
 	        }
-
 		        return 1;
 	      }
 	    })

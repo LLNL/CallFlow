@@ -42,10 +42,10 @@ class CallGraph(nx.Graph):
 #        print("Nodes", self.g.nodes(data=True))
 #        print("Edges", self.g.edges(data=True))
 
-        log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
-        log.warn("Edges in the tree: {0}".format(len(self.g.edges)))
-        log.warn("Is it a tree? : {0}".format(nx.is_tree(self.g)))    
-        log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
+#        log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
+#        log.warn("Edges in the tree: {0}".format(len(self.g.edges)))
+#        log.warn("Is it a tree? : {0}".format(nx.is_tree(self.g)))    
+#        log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
 
     def get_graph(self):
         return self.g

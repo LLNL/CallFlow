@@ -74,6 +74,6 @@ class CallFlow:
         #     return nx.get_graph()
 
         self.cfg = json_graph.node_link_data(nx.g)
-
+        print(self.cfg)
         return nx.get_graph()
         

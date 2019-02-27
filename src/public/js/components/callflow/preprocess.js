@@ -5,15 +5,15 @@
 /* eslint-disable prefer-destructuring */
 /* eslint-disable no-param-reassign */
 export default function preprocess(graph, refresh) {
+    console.log(graph)
     if (refresh == true) {
-	    graph = cleanGraph(graph);
+    	graph = cleanGraph(graph);
         graph = c_a(graph);
         graph = addLinkNodeIDs_(graph);
     } else {
         graph = c_a(graph);
         graph = addLinkNodeIDs(graph);
     }
-
     graph = calculateFlow(graph);
     return graph;
 }
@@ -106,8 +106,8 @@ function addLinkNodeIDs(graph) {
 	        continue;
 	    }
 
-        link.sourceID = nodeMap[link.source];
-        link.targetID = nodeMap[link.target];
+        link['sourceID'] = nodeMap[link.source];
+        link['targetID'] = nodeMap[link.target];
     }
     return graph;
 }
@@ -127,12 +127,13 @@ function addLinkNodeIDs_(graph) {
     const links = graph.links;
     // eslint-disable-next-line no-restricted-syntax
     for (const link of graph.links) {
-	    if (link.source.name[link.source.name.length - 1] == '_' || link.target.name[link.target.name.length - 1] == '_') {
+	console.log(link.source, link.target)
+	if (link.source.name[link.source.name.length - 1] == '_' || link.target.name[link.target.name.length - 1] == '_') {
 	        // eslint-disable-next-line no-continue
 	        continue;
 	    }
-        link.sourceID = nodeMap[link.source.name];
-        link.targetID = nodeMap[link.target.name];
+        link['sourceID'] = nodeMap[link.source.name];
+        link['targetID'] = nodeMap[link.target.name];
     }
     return graph;
 }
@@ -148,6 +149,7 @@ function calculateFlow(graph) {
 	    const nodeLabel = node.name[0];
 
         links.forEach((link) => {
+	    console.log(link)
 	        const linkLabel = nodes[link.sourceID].name;
 	        if (linkLabel == nodeLabel) {
 		        if (outGoing[linkLabel] == undefined) {
