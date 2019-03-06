@@ -1,3 +1,4 @@
+/* eslint-disable one-var */
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable prefer-const */
 /* eslint-disable no-underscore-dangle */
@@ -28,12 +29,13 @@ function drawIcicleHierarchy(view, hierarchy) {
             path_hierarchy_format[i].push(exclusive[i]);
             path_hierarchy_format[i].push(imbalance_perc[i]);
             path_hierarchy_format[i].push(exit[i]);
-            path_hierarchy_format[i].push(component_path[i]);
+            // path_hierarchy_format[i].push(component_path[i]);
         }
     }
     const json = buildHierarchy(path_hierarchy_format);
     console.log(json);
     drawIcicles(view, json);
+    drawSlider(view);
 }
 
 function buildHierarchy(csv) {
@@ -44,7 +46,7 @@ function buildHierarchy(csv) {
         const exclusive = csv[i][2];
         const imbalance_perc = csv[i][3];
         const exit = csv[i][4];
-        const component_path = csv[i][5];
+        // const component_path = csv[i][5];
         const parts = sequence;
         let currentNode = root;
         for (let j = 0; j < parts.length; j++) {
@@ -75,7 +77,7 @@ function buildHierarchy(csv) {
                     exclusive,
                     imbalance_perc,
                     exit,
-                    component_path,
+                    // component_path,
                     children: [],
                 };
                 children.push(childNode);
@@ -83,6 +85,94 @@ function buildHierarchy(csv) {
         }
     }
     return root;
+}
+
+function drawSlider(view) {
+    let svg = d3.select('#component_graph_view').append('svg'),
+        margin = {
+            top: 0, right: 0, bottom: 0, left: 0,
+        },
+        width = svg.attr('width') - margin.left - margin.right,
+        midX = 10,
+        height = svg.attr('height') - margin.top - margin.bottom;
+
+    let y = d3.scale.linear()
+        .domain([10, 0])
+        .range([0, height])
+        .clamp(true);
+
+    let brush = d3.svg.brush()
+        .y(y)
+        .extent([0, 0])
+        .on('brush', brushed);
+
+    let g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    let slider = g.append('g')
+        .attr('transform', `translate(${midX}, 0)`);
+
+    slider.append('g')
+        .attr('class', 'y axis')
+        .call(d3.svg.axis()
+            .scale(y)
+            .orient('right')
+            .tickFormat(d => `${d}`)
+            .tickSize(0)
+            .tickPadding(13))
+        .select('.domain')
+        .select(function () { return this.parentNode.appendChild(this.cloneNode(true)); })
+        .attr('class', 'halo');
+
+    var prevVal = 0;
+    var handle = slider.append('path')
+        .attr('class', 'handle')
+        .attr('d', 'M-7 -4 L-7 4 L-5 6 L5 6 L11 0 L5 -6 L-5 -6 Z')
+        .attr('transform', `translate(0, ${y(prevVal)})`);
+
+    var ruler = slider.append('g')
+        .attr('transform', 'translate(-4, 0)')
+        .attr('class', 'ruler')
+        .call(brush);
+
+    ruler.selectAll('.extent,.resize')
+        .remove();
+
+    ruler.select('.background')
+        .style('cursor', 'ns-resize')
+        .attr('width', 40);
+
+    // initial animation
+    ruler.call(brush.event)
+        .transition()
+        .duration(750)
+        .ease('out-in')
+        .call(brush.extent([120, 120]))
+        .call(brush.event);
+
+    function brushed() {
+        var value = brush.extent()[1],
+            t = d3;
+
+        if (d3.event.sourceEvent) { // not a programmatic event
+            value = y.invert(d3.mouse(this)[1]);
+            brush.extent([value, value]);
+            if (d3.event.sourceEvent.type === 'mousemove') {
+                // interrupt transition
+                handle.interrupt();
+            } else if (value != prevVal) {
+                // animate when is't a click, not a drag
+                t = d3.transition()
+                    .duration(Math.abs(y(value) - y(prevVal)))
+                    .ease('out-in');
+            }
+        }
+
+        t.select('.handle')
+            .attr('transform', `translate(0, ${y(value)})`);
+
+        prevVal = value;
+    }
 }
 
 function clearIcicles(view) {
@@ -131,27 +221,6 @@ function drawIcicles(view, json) {
         })
         .style('opacity', 0);
 
-    var sliderStep = d3.sliderBottom()
-        .min(0)
-        .max(10)
-        .width(300)
-        .tickFormat(d3.format('.2%'))
-        .ticks(5)
-        .step(0.005)
-        .default(0.015)
-        .on('onchange', (val) => {
-            d3.select('p#value-step').text(d3.format('.2%')(val));
-        });
-
-    var gStep = d3
-        .select('#iciclehierarchySVG')
-        .append('svg')
-        .attr('width', 100)
-        .attr('height', height)
-        .append('g')
-        .attr('transform', 'translate(30,30)');
-
-    gStep.call(sliderStep);
 
     // For efficiency, filter nodes to keep only those large enough to see.
     const nodes = partition.nodes(json)
@@ -180,7 +249,7 @@ function drawIcicles(view, json) {
         })
         .style('fill', (d) => {
             const color = view.color.getColor(d);
-            if (color._rgb[0] == 204) { return '#9B0011'; }
+            if (color._rgb[0] == 204) { return '#7A000E'; }
             return color;
         })
         .style('stroke', () => '#0e0e0e')
