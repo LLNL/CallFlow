@@ -386,9 +386,9 @@ class App():
                 isExit = {}
                 for idx, data in enumerate(source_target_data):
                     if data['level'] == -1:
-                        isExit[data['source']] = True
+                        isExit[data['target']] = True
                     else:
-                        isExit[data['source']] = False
+                        isExit[data['target']] = False
                 return isExit
 
             mod_index = df[df['n_index'] == n_index]['mod_index'].values.tolist()[0]
