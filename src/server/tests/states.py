@@ -2,26 +2,15 @@ import networkx as nx
 import pandas
 from hatchet import *
 import os
-import matplotlib.pyplot as plt
-import seaborn.apionly as sns
-import igraph
 import platform
 
-# libraries for gromov distance computation.
-import numpy as np
-import scipy as sp
-import ot
-from sklearn.decomposition import PCA
-from sklearn import manifold
-
-from actions.groupBy import groupBy
+from groupBy import groupBy
 from state import State
-from callgraph import CallGraph
 from preprocess import PreProcess
 
-pd.options.display.max_rows = 10
-pd.options.display.float_format = '{:,.2f}'.format
-plt.rcParams['figure.figsize'] = (16, 12)
+# pd.options.display.max_rows = 10
+# pd.options.display.float_format = '{:,.2f}'.format
+# plt.rcParams['figure.figsize'] = (16, 12)
 
 # Linux path
 if platform.system() == "Linux":

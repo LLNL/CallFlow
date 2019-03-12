@@ -1,13 +1,17 @@
-import { start, App } from './../app'
+/* eslint-disable func-names */
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+/* eslint-disable camelcase */
+import { start, App } from './../app';
 
-var app_global
+let app_global;
 
-//configuration for the layout of the page
-let config = {
+// configuration for the layout of the page
+const config = {
     settings: {
-	    showCloseIcon : false,
-	    showPopoutIcon : false,
-	    reorderEnabled : false
+	    showCloseIcon: false,
+	    showPopoutIcon: false,
+	    reorderEnabled: false,
     },
 
     content: [{
@@ -24,7 +28,7 @@ let config = {
 		            // 	// id: 'control',
 		            // 	componentState: {id : "control" },
 		            // 	isClosable: false,
-		            // 	title: "Control"								
+		            // 	title: "Control"
 		            // },
 		            // {
 
@@ -33,7 +37,7 @@ let config = {
 		            // 	// id: 'control',
 		            // 	componentState: {id : "stat_view" },
 		            // 	isClosable: false,
-		            // 	title: "Statistic View"								
+		            // 	title: "Statistic View"
 		            // },
 		            {
 			            type: 'stack',
@@ -41,87 +45,88 @@ let config = {
                             {
 				                type: 'component',
 				                componentName: 'testComponent',
-				                componentState: {id : "scat_view" },
+				                componentState: { id: 'scat_view' },
 				                isClosable: false,
-				                title: "Scatter Plot View"
+				                title: 'Scatter Plot View',
 			                },
                             {
 				                type: 'component',
 				                componentName: 'testComponent',
-				                componentState: {id : "config_file_editor" },
+				                componentState: { id: 'config_file_editor' },
 				                isClosable: false,
-				                title: "Config file"								
-			                },								
+				                title: 'Config file',
+			                },
 			                {
 				                type: 'component',
 				                componentName: 'testComponent',
-				                componentState: {id : "info_view" },
+				                componentState: { id: 'info_view' },
 				                isClosable: false,
-				                title: "Node Info"
-			                },								
-			            ]
+				                title: 'Node Info',
+			                },
+			            ],
 		            },
 		            {
 			            type: 'component',
 			            componentName: 'testComponent',
-			            componentState: {id : "hist_view" },
+			            componentState: { id: 'hist_view' },
 			            isClosable: false,
-			            title: "Histogram View"	
-		            }
-		        ]
+			            title: 'Histogram View',
+		            },
+		        ],
 	        },
-	        {	
+	        {
 		        type: 'column',
 		        width: $(window).width() * 50,
 		        content: [
 		            {
-			            type: 'stack',
-			            content: [
-			                {
-				                type: 'component',
-				                componentName: 'testComponent',
-				                componentState: { id: 'procedure_view' },
-				                title: 'Call graph view'
-			                },			                
-			            ]
+                        type: 'stack',
+                        content: [
+                            {
+            	                type: 'component',
+            	                componentName: 'testComponent',
+            	                componentState: { id: 'procedure_view' },
+            	                title: 'Call graph view',
+                            },
+                        ],
 		            },
-		            {
-		                type: 'stack',
-		                content: [
-		                    {
-		    	                type: 'component',
-		    	                componentName: 'testComponent',
-		    	                componentState: { id: 'diff_view' },
-		    	                title: 'Diff view'
-		                    }
-		                ]
-		            }
-		            
-		        ]
+		            // {
+		            //     type: 'stack',
+		            //     content: [
+		            //         {
+		    	    //             type: 'component',
+		    	    //             componentName: 'testComponent',
+		    	    //             componentState: { id: 'diff_view' },
+		    	    //             title: 'Diff view'
+		            //         }
+		            //     ]
+		            // }
+
+		        ],
 		    },
+            
             {
                 type: 'column',
-                width: $(window).width()*20,
-                content : [
+                width: $(window).width() * 20,
+                content: [
                     {
                         type: 'stack',
                         content: [
                             {
 				                type: 'component',
 				                componentName: 'testComponent',
-				                componentState: {id : "fList_view" },
+				                componentState: { id: 'fList_view' },
 				                isClosable: false,
-				                title: "Function List"
-			                },								
+				                title: 'Function List',
+			                },
 
                             {
 				                type: 'component',
 				                componentName: 'testComponent',
-				                componentState: {id : "control" },
+				                componentState: { id: 'control' },
 				                isClosable: false,
-				                title: "Control"
-			                }
-                        ]
+				                title: 'Control',
+			                },
+                        ],
                     },
                     {
                         type: 'stack',
@@ -129,64 +134,64 @@ let config = {
                             {
 				                type: 'component',
 				                componentName: 'testComponent',
-				                componentState: {id : "component_graph_view" },
+				                componentState: { id: 'component_graph_view' },
 				                isClosable: false,
-				                title: "Component Graph view"
+				                title: 'Component Graph view',
 			                },
                             {
 				                type: 'component',
 				                componentName: 'testComponent',
-				                componentState: {id : "CCT_view" },
+				                componentState: { id: 'CCT_view' },
 				                isClosable: false,
-				                title: "CCT view"
-			                }
+				                title: 'CCT view',
+			                },
 
-                        ]
-                    },	                   
-                ]
-            }
-            
-	    ]
-    }]			
-}
+                        ],
+                    },
+                ],
+            },
+
+	    ],
+    }],
+};
 
 // Set the container width and height
-function setMainContainerBox(){
-    $("#main_container").width( $(window).width() - 10);
-    $("#main_container").height( $(window).height() - $("#nav_bar").height() - 30);
+function setMainContainerBox() {
+    $('#main_container').width($(window).width() - 10);
+    $('#main_container').height($(window).height() - $('#nav_bar').height() - 30);
 }
 
 export default class Layout {
-    constructor(cb){
-        setMainContainerBox()
-        this.layout = new GoldenLayout( config , $("#main_container"));
-	    
-        this.ids = []
-        
-        self = this
-        this.layout.registerComponent( 'testComponent', function( container, state ){
-            container.getElement().html( "<div id = " + state.id + " > </div>" );
+    constructor(cb) {
+        setMainContainerBox();
+        this.layout = new GoldenLayout(config, $('#main_container'));
+
+        this.ids = [];
+
+        const self = this;
+        this.layout.registerComponent('testComponent', (container, state) => {
+            container.getElement().html(`<div id = ${state.id} > </div>`);
             self.ids.push(state.id);
         });
-        
-        this.layout.on("initialised", function (){
+
+        this.layout.on('initialised', () => {
             self.update();
-	        self.app = new App()
+	        self.app = new App();
         });
 
-        this.layout.on('stateChanged', function(component){
+        this.layout.on('stateChanged', (component) => {
             self.update();
-        })
+        });
 
         this.layout.init();
     }
 }
 
-Layout.prototype.update = function(ids){
-    this.ids.forEach(function(id){
-	    $("#" + id).width( $("#" + id).parent().width() );
-	    $("#" + id).height( $("#" + id).parent().height() );
-    })		
+Layout.prototype.update = function (ids) {
+    this.ids.forEach((id) => {
+	    $(`#${id}`).width($(`#${id}`).parent().width());
+	    $(`#${id}`).height($(`#${id}`).parent().height());
+    });
 
     // Commenting for now...
     // if(sankeyVis){
@@ -200,7 +205,7 @@ Layout.prototype.update = function(ids){
 
     //     sankeyVis2.updateSize({'width' : $('#procedure_view').width(),
     // 		                   'height': $('#procedure_view').height()/2 });
-    // }	
+    // }
 
     // if(scatterPot){
     //     scatterPot.setContainerWidth( $("#scat_view").width() );
@@ -219,4 +224,4 @@ Layout.prototype.update = function(ids){
     // if(listData){
     //     displayList();
     // }
-}
+};

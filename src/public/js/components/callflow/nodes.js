@@ -46,7 +46,6 @@ function drawNodes(graph, view) {
     drawText(node, graph, view);
 }
 
-
 function clearNodes(view) {
     view.nodes.selectAll('.node').remove();
 }
@@ -110,16 +109,13 @@ function drawRectangle(node, graph, view) {
 	      view.toolTipText.html('');
 	      view.toolTipG.selectAll('*').remove();
 	    })
-	    .on('click', (d) => {
-	      getHistogramData(d);
-        })
-      .on('dblclick', (d) => {
+      .on('click', (d) => {
         view.selectedModule = d;
         getHierarchy(d).then((data) => {
           drawIcicleHierarchy(view, data);
-          getFunctionLists(d).then((data) => {
+          // getFunctionLists(view.selectedModule).then((data) => {
 
-          });
+          // });
         });
       });
     // .on('contextmenu', function(d){
@@ -331,108 +327,6 @@ function toolTipTexts(node, data, runTimeR) {
             .text(timeInfo);
     }
 }
-
-function getFunctionListOfNode(graph, d) {
-    const sankeyNodeList = d.sankeyNodeList;
-    const uniqueNodeIDList = d.uniqueNodeID;
-
-
-    // get the final nodes that we are connected to
-    const sourceLabel = [];
-    const sourceID = [];
-    graph.edges.forEach((edge) => {
-        if (edge.targetID == d.sankeyID) {
-            if (sourceLabel.indexOf(edge.sourceLabel) == -1) {
-                sourceLabel.push(edge.sourceLabel);
-            }
-            if (sourceID.indexOf(edge.sourceID) == -1) {
-                sourceID.push(edge.sourceID);
-            }
-        }
-    });
-
-    const myParent = [];
-    // get uniqueNodeID of parent
-    const parUniqueNodeID = [];
-    graph.nodes.forEach((node) => {
-        if (sourceID.indexOf(node.sankeyID) > -1) {
-            myParent.push(node);
-            // console.log(node);
-            node.uniqueNodeID.forEach((nodeID) => {
-                parUniqueNodeID.push(nodeID);
-            });
-        }
-    });
-
-    // console.log(sankeyNodeList, uniqueNodeIDList, parUniqueNodeID);
-    const connectivity = {};
-    var temp = 0;
-    const nameToIDMap = {};
-    sankeyNodeList.forEach((sankID) => {
-    // console.log(toolTipData["nodeList"][sankID]);
-        const connectionInfo = toolTipData.edgeList[sankID];
-        console.log(connectionInfo, toolTipData.edgeList, sankID);
-        connectionInfo.forEach((connInfo) => {
-            if (uniqueNodeIDList.indexOf(connInfo.nodeID) > -1
-         && parUniqueNodeID.indexOf(connInfo.parentNodeID) > -1
-         && (connInfo.type == 'PR' || connInfo.type == 'PF')
-            ) {
-                // console.log(connInfo);
-                let parentProcName = connInfo.parentProcedureName;
-                if (connectivity[parentProcName] == null) {
-                    connectivity[parentProcName] = {
-                        name: parentProcName,
-                        loadModule: connInfo.parentLoadModuleName,
-                        procedureNameList: {},
-                    };
-                }
-
-
-                let procedureName = connInfo.procedureName;
-                nameToIDMap[procedureName] = connInfo.procID || connInfo.procedureID;
-                // if(connectivity[parentProcName]["procedureNameList"].indexOf(procedureName) == -1){
-                // connectivity[parentProcName]["procedureNameList"].push(procedureName);
-                // }
-                if (connectivity[parentProcName].procedureNameList[procedureName] == null) {
-                    connectivity[parentProcName].procedureNameList[procedureName] = 0;
-                }
-                connectivity[parentProcName].procedureNameList[procedureName] += connInfo.value;
-                temp += connInfo.value;
-            }
-        });
-    });
-
-    // console.log(connectivity);
-    // console.log(temp, d["runTime"]);
-
-    const fromProcToProc = [];
-    Object.keys(connectivity).forEach((fromProc) => {
-        Object.keys(connectivity[fromProc].procedureNameList).forEach((toProc) => {
-            let temp = {
-                fromProc: fromProc,
-                fromLM: connectivity[fromProc].loadModule,
-                toProc: toProc,
-                toLM: d.name,
-                value: connectivity[fromProc].procedureNameList[toProc],
-            };
-            // console.log(temp);
-            fromProcToProc.push(temp);
-        });
-    });
-
-    fromProcToProc.sort((a, b) => b.value - a.value);
-    var temp = 0;
-    // fromProcToProc.forEach(function(ft){
-    // // console.log(ft["value"] / 36644360084 * 100);
-    // temp += ft["value"];// / rootRunTime * 100
-    // })
-    // console.log(temp);
-
-    const res = { fromProcToProc, nameToIDMap, rootRunTime };
-    // console.log(fromProcToProc)
-    return res;
-}
-
 
 export {
     drawNodes,

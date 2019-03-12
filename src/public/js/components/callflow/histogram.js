@@ -18,7 +18,8 @@ function drawHist(graph, view) {
 	    	        const myXvals = histoData.xVals;
 	    	        const myFreq = histoData.freq;
 	    	        const myHist = view.histograms.append('g')
-	    		        .attr('transform', () => `translate(${node.x},${node.y - view.ySpacing})`);
+						.attr('transform', () => `translate(${node.x},${node.y - view.ySpacing})`);
+					console.log(myHist)
 	    	        myHist.selectAll('.histobars')
 	    		        .data(myFreq)
 	    		        .enter()

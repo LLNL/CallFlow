@@ -66,7 +66,6 @@ CallFlow.prototype.renderCCTBtn = function () {
 CallFlow.prototype.setColor = function (colorOption) {
     this.view.colorOption = colorOption;
     this.view.color = new Color(this.view);
-    console.log(this.graph.stat.minExc, this.graph.stat.maxExc);
     this.view.color.setColorScale(this.graph.stat.minInc, this.graph.stat.maxInc, this.graph.stat.minExc, this.graph.stat.maxExc);
 };
 
@@ -74,7 +73,7 @@ CallFlow.prototype.render = function () {
     drawNodes(this.graph, this.view);
     drawEdges(this.graph, this.view);
     drawHistogram(this.graph, this.view);
-//    drawHierarchy(this.graph, this.view)
+    // drawIcicleHierarchy(this.graph, this.view)
 };
 
 CallFlow.prototype.clear = function () {

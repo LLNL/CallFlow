@@ -150,7 +150,6 @@ function d3_box() {
                 .attr('stroke-width', 2)
                 .style('opacity', 1);
 
-
             whisker.transition()
                 .duration(duration)
                 .attr('x1', x1)

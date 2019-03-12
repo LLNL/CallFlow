@@ -1,6 +1,6 @@
+// eslint-disable-next-line no-unused-vars
 export default function drawEdges(graph, view) {
     view.edges.selectAll('.edge').remove();
-    // eslint-disable-next-line no-unused-vars
     const edge = view.edges.selectAll('.edge')
         .data(graph.links)
         .enter().append('path')

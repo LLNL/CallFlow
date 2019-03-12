@@ -33,7 +33,6 @@ function drawIcicleHierarchy(view, hierarchy) {
         }
     }
     const json = buildHierarchy(path_hierarchy_format);
-    console.log(json);
     drawIcicles(view, json);
     drawSlider(view);
 }
@@ -95,6 +94,8 @@ function drawSlider(view) {
         width = svg.attr('width') - margin.left - margin.right,
         midX = 10,
         height = svg.attr('height') - margin.top - margin.bottom;
+    
+    console.log(width, height)
 
     let y = d3.scale.linear()
         .domain([10, 0])
