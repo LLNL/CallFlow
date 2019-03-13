@@ -4,7 +4,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable prefer-destructuring */
 /* eslint-disable no-param-reassign */
-export default function preprocess(graph, refresh) {    
+// eslint-disable-next-line no-restricted-syntax
+
+export default function preprocess(graph, refresh) {
+    console.log(graph)    
     if (refresh == true) {
     	graph = cleanGraph(graph);
         graph = c_a(graph);
@@ -17,23 +20,20 @@ export default function preprocess(graph, refresh) {
     return graph;
 }
 
+// Removes undefined nodes and edges from the graph
 function cleanGraph(graph) {
     const new_nodes = [];
     let new_links = [];
-    // eslint-disable-next-line no-restricted-syntax
     for (const node of graph.nodes) {
 	    if (node.type != undefined) {
 	        new_nodes.push(node);
 	    }
     }
-
-    // eslint-disable-next-line no-restricted-syntax
     for (const link of graph.links) {
 	    if (link.name != 'intermediate' || link.name != 'intermediate' || link.name != undefined) {
 	        new_links.push(link);
 	    }
     }
-
 
     // Remove the unnecessary edges
     const tempLinks = [];
@@ -44,7 +44,6 @@ function cleanGraph(graph) {
     });
     new_links = tempLinks;
 
-
     return {
 	    nodes: new_nodes,
 	    links: new_links,
@@ -53,10 +52,8 @@ function cleanGraph(graph) {
 
 // eslint-disable-next-line camelcase
 function c_a(graph) {
-    console.log(graph);
     const nodes = graph.nodes;
 
-    // eslint-disable-next-line no-restricted-syntax
     for (const node of nodes) {
 	    if (node.name == 'libpsm_infinipath.so.1.14') {
 	        node.level = 4;
@@ -77,7 +74,6 @@ function c_a(graph) {
         .entries(graph.nodes)
         .map((d, i) => {
 	        const map = [];
-	        // eslint-disable-next-line no-restricted-syntax
 	        for (const nodesInLevel of d.values) {
 		        map.push(nodesInLevel.name[0]);
 	        }
@@ -93,13 +89,11 @@ function c_a(graph) {
    } */
 function addLinkNodeIDs(graph) {
     const nodeMap = {};
-    // eslint-disable-next-line no-restricted-syntax
     for (const [idx, node] of graph.nodes.entries()) {
         nodeMap[node.name[0]] = idx;
     }
 
     const links = graph.links;
-    // eslint-disable-next-line no-restricted-syntax
     for (const link of graph.links) {
 	    if (link.source[-1] == '_' || link.target[-1] == '_') {
 	        continue;
@@ -117,16 +111,12 @@ function addLinkNodeIDs(graph) {
 // eslint-disable-next-line no-underscore-dangle
 function addLinkNodeIDs_(graph) {
     const nodeMap = {};
-    // eslint-disable-next-line no-restricted-syntax
     for (const [idx, node] of graph.nodes.entries()) {
         nodeMap[node.name] = idx;
     }
 
-
     const links = graph.links;
-    // eslint-disable-next-line no-restricted-syntax
     for (const link of graph.links) {
-	console.log(link.source, link.target)
 	if (link.source.name[link.source.name.length - 1] == '_' || link.target.name[link.target.name.length - 1] == '_') {
 	        // eslint-disable-next-line no-continue
 	        continue;

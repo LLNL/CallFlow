@@ -18,6 +18,8 @@ import sys
 import json
 import uuid
 import argparse
+from flask_cors import CORS
+
 
 from hatchet import *
 from callflow import *
@@ -27,6 +29,7 @@ from logger import log
 import networkx as nx
 
 app = Flask(__name__, static_url_path='/public')
+CORS(app)
 
 class App():
     def __init__(self):
@@ -56,7 +59,7 @@ class App():
 
 #        if not self.args.filter:
 #            self.read_data()
-        self.ccts = self.create_ccts(self.gfs, 'default', '')
+        # self.ccts = self.create_ccts(self.gfs, 'default', '')
         self.create_server()
         self.launch_webapp()
 #        self.write_gfs_graphml()
@@ -244,7 +247,7 @@ class App():
         
         @app.route('/getSankey')
         def getSankey():
-            group_by_attr = json.loads(request.args.get('in_data'))
+            group_by_attr = 'module'
             # Create the callflow graph frames from graphframes given by hatchet
             self.cfgs = self.create_cfgs(self.gfs, 'groupBy', group_by_attr)
             ret = []
