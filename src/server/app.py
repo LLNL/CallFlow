@@ -104,8 +104,8 @@ class App():
             path = os.path.abspath(os.path.join(self.callflow_path, path))
             gf = GraphFrame()
             if self.gfs_format[idx] == 'hpctoolkit':
-                # gf.from_hpctoolkit(path, int(self.config.nop))
-                gf.from_hpctoolkit(path)
+                gf.from_hpctoolkit(path, int(self.config.nop))
+                #gf.from_hpctoolkit(path)
             elif self.gfs_format[idx] == 'caliper':                
                 gf.from_caliper(path)
             ret.append(gf)
@@ -255,6 +255,18 @@ class App():
                 ret.append(cfg.json_graph)
             return json.dumps(ret)
 
+        @app.route('/getMeans')
+        def getMeans():
+            aggr_times = {}
+            for idx, cfg in enumerate(self.cfgs):
+                df = cfg.df
+                pivot = pd.pivot_table(state.df, values=['CPUTIME (usec) (I)'], index=['module'], columns=['rank'])
+                for idx, row in enumerate(pivot.iterrows()):
+                    if(row[0] not in aggr_times):
+                        aggr_times[row[0]] = []
+                    aggr_times[row[0]].append(row[1].mean())
+            return json.dumps(aggr_times)
+        
         @app.route('/getCCT')
         def getCCT():
             ret = []

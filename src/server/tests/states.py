@@ -44,11 +44,11 @@ def lookup_with_name(df, name):
 def getMaxIncTime(gf):                                                                                                                   
 	ret = 0.0                                                                                                                            
 	for root in gf.graph.roots:                                                                                                          
-		ret = max(ret, lookup(gf.dataframe, root)['time (inc)'].max())                                                           
+		ret = max(ret, lookup(gf.dataframe, root)['CPUTIME (usec) (I)'].max())                                                           
 	return ret                                                                                                                           
 																																		 
 def getMaxExcTime(gf):                                                                                                                   
-	ret  = gf.dataframe['time'].max()                                                                                      
+	ret  = gf.dataframe['CPUTIME (usec) (E)'].max()                                                                                      
 	return ret                                                                                                                           
 			   
 def special_lookup(gf, df_index):   
@@ -63,11 +63,11 @@ def filter_gfs(gfs, filterBy):
 		print("Filtering the dataframe!")                                                                                         
 		if filterBy == "IncTime":                                                                                          
 			max_inclusive_time = getMaxIncTime(gf)                                                                             
-			filter_gf = gf.filter(lambda x: True if(x['time (inc)'] > 0.01*max_inclusive_time) else False)                   
+			filter_gf = gf.filter(lambda x: True if(x['CPUTIME (usec) (I)'] > 0.01*max_inclusive_time) else False)                   
 		elif self.args.filterBy == "ExcTime":                                                                                        
 			max_exclusive_time = getMaxExcTime(gf)                                                                             
 			print('[Filter] By Exclusive time = {0})'.format(max_exclusive_time))                                                 
-			filter_gf = gf.filter(lambda x: True if (x['time'] > 0.01*max_exclusive_time) else False)                  
+			filter_gf = gf.filter(lambda x: True if (x['CPUTIME (usec) (E)'] > 0.01*max_exclusive_time) else False)                  
 		else:                                                                                                                        
 			print("Not filtering.... Can take forever. Thou were warned")                                                         
 			filter_gf = gf                                                                                                           

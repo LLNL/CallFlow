@@ -1,13 +1,13 @@
-/* eslint-disable prefer-destructuring */
-/* eslint-disable camelcase */
-/* eslint-disable no-param-reassign */
-/* eslint-disable no-undef */
-/* eslint-disable consistent-return */
+import * as  d3 from 'd3'
+import { scaleOrdinal } from 'd3-scale';
+import chroma from 'chroma-js'
+
+
 export default class Color {
-    constructor(view, scale) {
-  	    this.view = view;
+    constructor(colorOption) {
         // eslint-disable-next-line no-undef
-        this.colorScale = scale || d3.scale.category20();
+        this.colorOption = colorOption
+        this.colorScale =  d3.scaleOrdinal(d3.schemeCategory10);        ;
         this.incColorScale = null;
         this.excColorScale = null;
         this.nRangeColorScale = null;
@@ -48,26 +48,17 @@ export default class Color {
     }
 
     getColor(node) {
-	    const colorOption = this.view.colorOption;
-	    if (colorOption == 0) {
+	    if (this.colorOption == 0) {
 	        return this.colorScale(node.name[0].replace(/ .*/, ''));
-	    } else if (colorOption == 1) {
+	    } else if (this.colorOption == 1) {
 	        return this.incColorScale(node.weight);
-	    } else if (colorOption == 2) {
+	    } else if (this.colorOption == 2) {
 	        return this.excColorScale(node.exclusive);
-	    } else if (colorOption == 3) {
+	    } else if (this.colorOption == 3) {
 	        return this.nRangeColorScale(node.nRange);
-	    } else if (colorOption == 4) {
+	    } else if (this.colorOption == 4) {
 	        return this.diffColorScale(node.diff || 0);
-	    } else if (colorOption == 5) {
-           /*  let imbalance_perc = 0;
-            if (node.imbalance_perc != undefined) {
-                imbalance_perc = node.imbalance_perc[0];
-            } else {
-                imbalance_perc = node.imbalance_perc;
-            }
-            console.log(node) 
-            console.log(imbalance_perc, node.imbalance_perc); */
+	    } else if (this.colorOption == 5) {
             return this.loadImbColorScale(node.imbalance_perc);
         }
     }

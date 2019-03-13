@@ -75,7 +75,7 @@
     <v-flex>
       <v-container fluid fill-height class="pa-0">
         <v-layout justify-center align-center>
-          <v-flex xs7 fill-height class="pa-2">
+          <v-flex xs7 fill-height class="pa-0">
             <v-toolbar dense>
               <!-- <v-flex xs9 class="ma-2">
                       <v-select label="Metric" :items="metrics" multiple v-model="selectedMetrics"
@@ -94,9 +94,16 @@
             </v-toolbar>
             <Callgraph ref="Callgraph" v-bind:data="callgraphData" />
           </v-flex>
-          <v-flex xs5 fill-height class="pa-2">
+          <v-flex xs5 fill-height class="pa-0">
             <v-toolbar dense>
-  
+                <v-btn v-on:click="split()">Split
+                </v-btn>
+                <v-range-slider label="Level" v-model="level" :max="10" :min="0" :step="1">
+                    <template #prepend>
+                      <v-text-field v-model="level[0]" class="pt-0 mt-0" hide-details single-line type="number" style="width: 30px">
+                      </v-text-field>
+                    </template>
+                  </v-range-slider>
             </v-toolbar>
             <Icicle ref="Icicle" />
           </v-flex>

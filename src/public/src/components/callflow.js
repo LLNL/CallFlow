@@ -29,6 +29,7 @@ export default {
     filterPerc: [0, 100],
     callgraphData: null, 
     cctData: null,
+    level: [0, 4]
    }),
 
   watch: {
@@ -41,6 +42,7 @@ export default {
   methods: {
     init() {
       console.log("Data for", this.selectedFormat, ": ", this.callgraphData)
+      console.log(this.$refs)
       this.$refs.Callgraph.init(this.callgraphData)
     },
 
