@@ -44,11 +44,11 @@ def lookup_with_name(df, name):
 def getMaxIncTime(gf):                                                                                                                   
 	ret = 0.0                                                                                                                            
 	for root in gf.graph.roots:                                                                                                          
-		ret = max(ret, lookup(gf.dataframe, root)['CPUTIME (usec) (I)'].max())                                                           
+		ret = max(ret, lookup(gf.dataframe, root)['time (inc)'].max())                                                           
 	return ret                                                                                                                           
 																																		 
 def getMaxExcTime(gf):                                                                                                                   
-	ret  = gf.dataframe['CPUTIME (usec) (E)'].max()                                                                                      
+	ret  = gf.dataframe['time'].max()                                                                                      
 	return ret                                                                                                                           
 			   
 def special_lookup(gf, df_index):   
@@ -63,11 +63,11 @@ def filter_gfs(gfs, filterBy):
 		print("Filtering the dataframe!")                                                                                         
 		if filterBy == "IncTime":                                                                                          
 			max_inclusive_time = getMaxIncTime(gf)                                                                             
-			filter_gf = gf.filter(lambda x: True if(x['CPUTIME (usec) (I)'] > 0.01*max_inclusive_time) else False)                   
+			filter_gf = gf.filter(lambda x: True if(x['time (inc)'] > 0.01*max_inclusive_time) else False)                   
 		elif self.args.filterBy == "ExcTime":                                                                                        
 			max_exclusive_time = getMaxExcTime(gf)                                                                             
 			print('[Filter] By Exclusive time = {0})'.format(max_exclusive_time))                                                 
-			filter_gf = gf.filter(lambda x: True if (x['CPUTIME (usec) (E)'] > 0.01*max_exclusive_time) else False)                  
+			filter_gf = gf.filter(lambda x: True if (x['time'] > 0.01*max_exclusive_time) else False)                  
 		else:                                                                                                                        
 			print("Not filtering.... Can take forever. Thou were warned")                                                         
 			filter_gf = gf                                                                                                           
@@ -140,12 +140,6 @@ def preprocess(state):
 	preprocess = PreProcess.Builder(state).add_df_index().add_n_index().add_mod_index().add_path().add_callers_and_callees().add_show_node().add_vis_node_name().update_module_name().clean_lib_monitor().add_max_incTime().add_incTime().add_excTime().add_avg_incTime().add_imbalance_perc().build() 
 
 
-#NetworkX stuff.
-def create_nx_graph(state):
-	g = nx.DiGraph()
-	return g
-
-
 def main(dataset_path):
 	dataset = []
 	for idx, path in enumerate(dataset_path):
@@ -161,6 +155,5 @@ def main(dataset_path):
 		state = State(fgf)
 		preprocess(state)
 		groupBy(state, 'module')
-		create_nx_graph(state)
 		states.append(state)
 	return states

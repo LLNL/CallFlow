@@ -32,6 +32,6 @@ class componentGraph:
             paths.append({
                 "module": module,
                 "path": [state.df.loc[state.df['name'] == func]['component_path'].unique().tolist()[0]],
-                "inc_time" : state.df.loc[state.df['name'] == func]['CPUTIME (usec) (I)'].mean()
+                "inc_time" : state.df.loc[state.df['name'] == func]['time (inc)'].mean()
             })
         return pd.DataFrame(paths)

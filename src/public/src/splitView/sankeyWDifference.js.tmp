@@ -12,13 +12,13 @@
  ******************************************************************************/
 
 function Sankey(args){
-    var containerID = args.ID || "body",
+    let containerID = args.ID || "body",
 	containerWidth = args.width || 900,
 	containerHeight = args.height || 900,
 	margin = args.margin || {top: 10, right: 30, bottom: 10, left: 10},
 	data = args.data,
 	toolTipData = args.toolTipData,
-	histogramData = args.histogramData,
+//	histogramData = args.histogramData,
 	// spinner = args.spinner,
 	clickCallBack = args.clickCallBack,
 	maxNodeSize = args.maxNodeSize;
@@ -38,7 +38,7 @@ function Sankey(args){
     var nRangeColorScale;
     var diffColorScale;
 
-    var nodeColorOption = 0;
+    var nodeColorOption = 1;
 
     var colorArray = ["red", "green", "yellow", "blue", "black", "white"];
 
@@ -57,11 +57,11 @@ function Sankey(args){
 
     var minHeightForText = 50;
     var textTruncForNode = 8;
-
+    
     data["links"].forEach(function(link){
-	if(link["sourceLabel"] == 'LM0' || parseInt(link["sourceLabel"]) == 0){
-	    rootRunTime += link["value"];
-	}
+	    if(link["sourceLabel"] == 'LM0' || parseInt(link["sourceLabel"]) == 0){
+	        rootRunTime += link["value"];
+	    }
     })
 
     var referenceValue = rootRunTime;
@@ -143,8 +143,8 @@ function Sankey(args){
 
   var treeHeight = height < maxNodeSize ? height: maxNodeSize;
 //    var treeHeight = height;
-    var minimapXScale = d3.scale.ordinal().domain(histogramData["globalXvals"]).rangeRoundBands([0, nodeWidth], 0.05);
-    var minimapYScale = d3.scale.linear().domain([0, histogramData["maxFreq"]]).range([ySpacing - 5, 5]);
+//    var minimapXScale = d3.scale.ordinal().domain(histogramData["globalXvals"]).rangeRoundBands([0, nodeWidth], 0.05);
+//    var minimapYScale = d3.scale.linear().domain([0, histogramData["maxFreq"]]).range([ySpacing - 5, 5]);
 
     var zoom = d3.behavior.zoom()
 	.scaleExtent([0.1,10])
@@ -153,7 +153,6 @@ function Sankey(args){
 
     function zoomed(){
 	svgBase.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-	svgBase2.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");		
     }
 
     //////////////////////////////Top tree//////////////////////////////////////
@@ -186,35 +185,6 @@ function Sankey(args){
     var histograms = svg.append('g');
 
     var nodes = svg.append("g");
-    /////////////////////////////////////////////////////////////////////////////////////
-
-    //////////////////////////////Bottom Tree////////////////////////////////////////////
-    var svgO2 = d3.select(containerID).append("svg")
-	.attr('class', 'sank2')
-	.attr("width", width + margin.left + margin.right)
-	.attr("height", 0)
-	.append("g")
-	.attr("transform",
-	      // "translate(" + margin.left + "," + margin.top + ") rotate(90)")
-	      "translate(" + margin.left + "," + margin.top + ")")
-
-	.call(zoom);
-    var containerRect2 = svgO2.append('rect')
-	.attr('width', width)
-	.attr('height', 0)
-	.style('fill', "none")
-	.style("pointer-events", "all"); //this line is needed to capture the mouse events related to the entire svg	
-
-    var svgBase2 = svgO2.append('g');
-    var svg2 = svgBase2.append('g')
-
-    var defs2 = svg2.append("defs");
-    var links2 = svg2.append("g");
-    var nodes2 = svg2.append("g");	
-
-    var sankey2;
-    /////////////////////////////////////////////////////////////////////////////////////
-
 
     ////////////////////////////Tool Tip/////////////////////////////////////////////////
     var toolTip = d3.select(containerID)
@@ -240,17 +210,13 @@ function Sankey(args){
     var toolTipG = toolTipList.append('g')
 	.attr("transform", "translate(" + 5 + "," + 5 + ")");
     /////////////////////////////////////////////////////////////////////////////////////
-
+    visualize(true);
+    
     function visualize(removeIntermediate){
-
-	//remove all histograms
-	histograms.selectAll("*").remove();
-
 	// Set the sankey diagram properties
-	sankey = d3sankey()
+	sankey = d3sankeyMultiple()
 	    .nodeWidth(nodeWidth)
 	    .nodePadding(ySpacing)
-	// .size([width * 0.9, treeHeight - ySpacing])
 	    .size([width * 1.05, treeHeight - ySpacing])
 	    .xSpacing(xSpacing)
 	    .setReferenceValue(referenceValue);
@@ -265,11 +231,13 @@ function Sankey(args){
 	else{
 	    graph = graph_zero;
 	}
-	console.log(graph.nodes);
+	
 	sankey.nodes(graph.nodes)
 	    .links(graph.links)
 	    .layout(32);	
 
+	console.log(graph.nodes, graph.links);
+	
 	if(removeIntermediate){
 	    svg.selectAll(".intermediate").remove();
 	}
@@ -309,7 +277,7 @@ function Sankey(args){
 		    By0 = d.source.y + d.dy + d.sy,
 		    By1 = d.target.y + d.ty + d.dy;
 
-	        var rightMoveDown = By1 - Ty1;
+		var rightMoveDown = By1 - Ty1;
 
 		return "M" + Tx0 + "," + Ty0
 		    + "C" + Tx2 + "," + Ty0
@@ -320,28 +288,13 @@ function Sankey(args){
 		    + " " + Bx2 + "," + By0
 		    + " " + Bx0 + "," + By0
 	    })
-	// .style("fill", "none")
-	    .style("fill", function(d){
-		// return "url(#" + getGradID(d) + ")";
+	    .style("fill", function(d){	
 		return "grey";
 	    })
 	    .style('fill-opacity', 0)
 	    .style("stroke", function(d){
-		// return "url(#" + getGradID(d) + ")";
 	    })
 	    .style("stroke-opacity", "0.4")
-	// .on("mouseover", function() { 
-	// 	// d3.select(this).style("stroke-opacity", "0.7") 
-	// 	d3.select(this).style("fill-opacity", "0.7") 
-
-	// } )
-	// .on("mouseout", function() { 
-	// 	// d3.select(this).style("stroke-opacity", "0.4") 
-	// 	d3.select(this).style("fill-opacity", "0.4") 
-	// } )
-	// .sort(function (a, b) {
-	//     return b.dy - a.dy;
-	// });
 
 	links.selectAll(".link")
 	    .data(graph.links)
@@ -371,7 +324,7 @@ function Sankey(args){
 		    By0 = d.source.y + d.dy + d.sy,
 		    By1 = d.target.y + d.ty + d.dy;
 
-	        var rightMoveDown = By1 - Ty1;
+		var rightMoveDown = By1 - Ty1;
 
 		return "M" + Tx0 + "," + Ty0
 		    + "C" + Tx2 + "," + Ty0
@@ -397,7 +350,6 @@ function Sankey(args){
 	    })
 	    .attr('opacity' , 0)
 	    .attr("transform", function (d) {
-		console.log(d.x, d.y);
 		return "translate(" + d.x + "," + d.y + ")";
 	    })
 
@@ -405,13 +357,11 @@ function Sankey(args){
 	// add the rectangles for the nodes
 	var rect = node.append("rect")
 	    .attr("height", function (d) {
-		 console.log(d.dy);
 		return d.dy;
 		// return d["inTime"];
 	    })
 	    .attr("width", sankey.nodeWidth())
 	    .style("fill", function (d) {
-
 		var temp = {"name" : d.name.replace(/ .*/, ""),
 			    "color" : color(d.name.replace(/ .*/, ""))}
 		nodeList.push(temp);
@@ -481,7 +431,6 @@ function Sankey(args){
 		toolTipG.selectAll('*').remove();		    	
 	    })		    
 	    .on('click', function(d){
-		console.log(d);
 		if(d.name != "intermediate"){
 		    var ret = getFunctionListOfNode(d);
 		    var fromProcToProc = ret["fromProcToProc"];
@@ -496,9 +445,9 @@ function Sankey(args){
 	    .attr('d', function(d){
 		if(d.name == "intermediate"){
 		    return "m" + 0 + " " + 0
-		    	+ "h " + sankey.nodeWidth()
-		    	+ "v " + (1)*d.dy
-		    	+ "h " + (-1)*sankey.nodeWidth();
+			+ "h " + sankey.nodeWidth()
+			+ "v " + (1)*d.dy
+			+ "h " + (-1)*sankey.nodeWidth();
 		}
 	    })
 	    .style("fill", function(d){
@@ -532,7 +481,7 @@ function Sankey(args){
 	    .attr('y', "-10")
 	    .style('opacity', 0)
 	    .text(function (d) {
-	    	if(d.name != "intermediate"){
+		if(d.name != "intermediate"){
 	    	    // return d.name//; + "\n" + format(d.value);
 
 	    	    if(d.dy < minHeightForText ){
@@ -548,13 +497,13 @@ function Sankey(args){
 	    		    return d.name.trunc(textTruncForNode);
 	    		}
 	    	    }
-	    	}
-	    	else{
+		}
+		else{
 	    	    return "";
-	    	}
+		}
 	    })
 	    .on("mouseover", function(d){
-	    	if(d.name != "intermediate"){
+		if(d.name != "intermediate"){
 	    	    toolTipList.attr('width', "400px")
 			.attr('height', "150px")	    	
 		    var res = getFunctionListOfNode(d);
@@ -564,7 +513,7 @@ function Sankey(args){
 		    // console.log(parentDOM)
 		    // console.log(d3.select(this.parentNode).select('rect'))
 		    d3.select(this.parentNode).select('rect').style("stroke-width", "2");
-	    	}
+		}
 	    })
 	    .on("mouseout", function(d){
 		toolTipList.attr('width', '0px')
@@ -591,7 +540,7 @@ function Sankey(args){
 	// the function for moving the nodes
 	function dragmove(d) {
 	    d3.select(this).attr("transform",
-			         "translate(" + (
+				 "translate(" + (
 				     d.x = Math.max(0, Math.min(width - d.dx, d3.event.x))) + "," + (
 					 d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
 	    sankey.relayout();
@@ -628,7 +577,7 @@ function Sankey(args){
 	    .duration(transitionDuration)
 	    .attr('opacity' , 1)
 	    .attr('transform', function(d){
-	    	return "translate(" + d.x + "," + d.y + ")";
+		return "translate(" + d.x + "," + d.y + ")";
 	    })
 
 
@@ -637,7 +586,7 @@ function Sankey(args){
 	    .transition()
 	    .duration(transitionDuration)
 	    .text(function (d) {
-	    	if(d.name != "intermediate"){
+		if(d.name != "intermediate"){
 	    	    if(d.dy < minHeightForText ){
 	    		return "";
 	    	    }
@@ -651,10 +600,10 @@ function Sankey(args){
 	    		    return d.name.trunc(textTruncForNode);
 	    		}
 	    	    }
-	    	}
-	    	else{
+		}
+		else{
 	    	    return "";
-	    	}
+		}
 	    });
 
 	nodes.selectAll("rect")
@@ -662,7 +611,7 @@ function Sankey(args){
 	    .transition()
 	    .duration(transitionDuration)
 	    .attr('height',function(d){
-	    	return d.dy;
+		return d.dy;
 	    })
 	    .style("fill", function (d) {
 
@@ -690,9 +639,9 @@ function Sankey(args){
 	    .duration(transitionDuration)
 	    .delay(transitionDuration/3)
 	    .style('fill-opacity' , function(d){
-	    	if(d.name == "intermediate"){
+		if(d.name == "intermediate"){
 	    	    return 0.4;
-	    	}
+		}
 	    })
 
 	var drawHist = false;
@@ -739,7 +688,6 @@ function Sankey(args){
 			.attr('stroke', function(d,i){
 			    return "black"		             	
 			});
-
 		}
 	    })
 	}
@@ -747,7 +695,6 @@ function Sankey(args){
 
 	function showLegend(){
 	    var colLegend = svgO.append('g');
-	    // console.log(nodeList);
 	    nodeList.forEach(function(nodeL, idx){
 		colLegend.append('rect')
 		    .attr('height', '20')
@@ -761,407 +708,15 @@ function Sankey(args){
 		    .text(nodeL["name"]);
 	    })
 	}
-	// showLegend(); 
-
-	// links.selectAll(".link").style("opacity", 0.0);
     }
 
-    visualize(true);
-
-    function visualize2(removeIntermediate){
-	// Set the sankey diagram properties
-	sankey2 = d3sankey()
-	    .nodeWidth(nodeWidth)
-
-	    .nodePadding(ySpacing)
-	    .size([width * 1.05, treeHeight - ySpacing])
-	    .xSpacing(xSpacing)
-	    .setReferenceValue(referenceValue);
-
-	var path = sankey2.link();
-
-	var graph_zero = {"nodes" : graph2["nodes"], "links" : graph2["links"]};
-	if(removeIntermediate){
-	    graph2 = rebuild(graph_zero.nodes, graph_zero.links);
-	}		
-
-	sankey2.nodes(graph2.nodes)
-	    .links(graph2.links)
-	    .layout(32);	
-
-	if(removeIntermediate){
-	    svg2.selectAll(".intermediate").remove();
-	}
-
-	// add in the links
-	links2.selectAll('.link').remove();
-	var link2 = links2.selectAll(".link")
-	    .data(graph2.links)
-	    .enter().append("path")
-	    .attr("class", function(d){
-		if(d.source.name == "intermediate" || d.target.name == "intermediate"){
-		    return "link intermediate";
-		}
-		else{
-		    return "link";
-		}  	
-	    })
-	    .attr("d", function(d){
-		var Tx0 = d.source.x + d.source.dx,
-		    Tx1 = d.target.x,
-		    Txi = d3.interpolateNumber(Tx0, Tx1),
-		    Tx2 = Txi(0.4),
-		    Tx3 = Txi(1 - 0.4),
-		    Ty0 = d.source.y + d.sy,
-		    Ty1 = d.target.y + d.ty;
-
-		//note .ty is the y point that the edge meet the target(for top)
-		//		.sy is the y point of the source  (for top)
-		//		.dy is width of the edge
-
-		var Bx0 = d.source.x + d.source.dx,
-		    Bx1 = d.target.x,
-		    Bxi = d3.interpolateNumber(Bx0, Bx1),
-		    Bx2 = Bxi(0.4),
-		    Bx3 = Bxi(1 - 0.4),
-		    By0 = d.source.y + d.dy + d.sy,
-		    By1 = d.target.y + d.ty + d.dy;
-
-	        var rightMoveDown = By1 - Ty1;
-
-		return "M" + Tx0 + "," + Ty0
-		    + "C" + Tx2 + "," + Ty0
-		    + " " + Tx3 + "," + Ty1
-		    + " " + Tx1 + "," + Ty1
-		    + " " + " v " + rightMoveDown
-		    + "C" + Bx3 + "," + By1
-		    + " " + Bx2 + "," + By0
-		    + " " + Bx0 + "," + By0
-	    })
-	// .style("fill", "none")
-	    .style("fill", function(d){
-		// return "url(#" + getGradID(d) + ")";
-		return "grey";
-	    })
-	    .style('fill-opacity', 0)
-	    .style("stroke", function(d){
-		// return "url(#" + getGradID(d) + ")";
-	    })
-	    .style("stroke-opacity", "0.4")
-	// .on("mouseover", function() { 
-	// 	// d3.select(this).style("stroke-opacity", "0.7") 
-	// 	d3.select(this).style("fill-opacity", "0.7") 
-
-	// } )
-	// .on("mouseout", function() { 
-	// 	// d3.select(this).style("stroke-opacity", "0.4") 
-	// 	d3.select(this).style("fill-opacity", "0.4") 
-	// } )
-	// .on('click', function(d){
-	// 	// console.log(d);
-	// })
-	// .sort(function (a, b) {
-	//     return b.dy - a.dy;
-	// });
-	links2.selectAll(".link")
-	    .data(graph2.links)
-	    .transition()
-	    .duration(transitionDuration)
-	    .style('fill-opacity', 0.0)
-	    .attr('d', function(d){
-		var Tx0 = d.source.x + d.source.dx,
-		    Tx1 = d.target.x,
-		    Txi = d3.interpolateNumber(Tx0, Tx1),
-		    Tx2 = Txi(0.4),
-		    Tx3 = Txi(1 - 0.4),
-		    Ty0 = d.source.y + d.sy,
-		    Ty1 = d.target.y + d.ty;
-
-		//note .ty is the y point that the edge meet the target(for top)
-		//		.sy is the y point of the source  (for top)
-		//		.dy is width of the edge
-
-		// var rightMoveDown = d.target.y + d.dy / 2;
-
-		var Bx0 = d.source.x + d.source.dx,
-		    Bx1 = d.target.x,
-		    Bxi = d3.interpolateNumber(Bx0, Bx1),
-		    Bx2 = Bxi(0.4),
-		    Bx3 = Bxi(1 - 0.4),
-		    By0 = d.source.y + d.dy + d.sy,
-		    By1 = d.target.y + d.ty + d.dy;
-
-	        var rightMoveDown = By1 - Ty1;
-
-		return "M" + Tx0 + "," + Ty0
-		    + "C" + Tx2 + "," + Ty0
-		    + " " + Tx3 + "," + Ty1
-		    + " " + Tx1 + "," + Ty1
-		    + " " + " v " + rightMoveDown
-		    + "C" + Bx3 + "," + By1
-		    + " " + Bx2 + "," + By0
-		    + " " + Bx0 + "," + By0		    		
-	    })		
-
-	// add in the nodes
-	var node2 = nodes2.selectAll(".node")
-	    .data(graph2.nodes)
-	    .enter().append("g")
-	    .attr("class", function(d){
-		if(d.name == "intermediate"){
-		    return "node intermediate";
-		}
-		else{
-		    return "node";
-		}  	
-	    })
-	    .attr('opacity' , 0)
-	    .attr("transform", function (d) {
-		return "translate(" + d.x + "," + d.y + ")";
-	    });
-
-	// add the rectangles for the nodes
-	node2.append("rect")
-	    .attr("height", function (d) {
-		return d.dy;
-	    })
-	    .attr("width", sankey.nodeWidth())
-	    .style("fill", function (d) {
-		if(d.name == "intermediate"){
-		    return 'grey'
-		}
-		else{
-		    return d.color = setNodeColor(d);
-		}		    	
-	    })
-	    .style("fill-opacity", function(d){
-		if(d.name == "intermediate"){
-		    return '0'
-		}
-		else{
-		    return '1';
-		}		    	
-	    })
-	    .style("shape-rendering", "crispEdges")
-	    .style("stroke", function (d) {
-		if(d.name != "intermediate"){
-		    return d3.rgb(d.color).darker(2);
-		}
-		else{
-		    return 'grey';
-		}       
-	    })
-	    .style("stroke-width", function(d){
-		if(d.name == "intermediate"){
-		    return 0;
-		}
-		else{
-		    return 1;
-		}		    	
-	    })
-	    .on("mouseover", function(d) { 
-		if(d.name != "intermediate"){
-		    toolTipList.attr('width', "400px")
-			.attr('height', "150px")	    	
-		    var res = getFunctionListOfNode(d);
-		    toolTipTexts(d,res, rootRunTime2)
-		    d3.select(this).style("stroke-width", "2");
-		}
-	    } )
-	    .on("mouseout", function(d) { 
-		if(d.name != "intermediate"){
-		    d3.select(this).style("stroke-width", "1");
-		}
-		toolTip.style('opacity', 0)
-		    .style('left', function(){
-			return 0;
-		    })
-		    .style('top', function(){
-			return 0;
-		    })
-		toolTipText.html("");
-
-		
-		toolTipG.selectAll('*').remove();		    	
-	    } )		    
-	    .on('click', function(d){
-		if(d.name != "intermediate"){
-		    var ret = getFunctionListOfNode(d);
-		    var fromProcToProc = ret["fromProcToProc"];
-		    var nameToIDMap = ret["nameToIDMap"];
-		    var res = {"node" : d, "fromProcToProc" : fromProcToProc, "nameToIDMap" : nameToIDMap};
-		    // clickCallBack(d);
-		    clickCallBack(res);
-		}
-	    })
-
-	node2.append("path")
-	    .attr('d', function(d){
-		if(d.name == "intermediate"){
-		    return "m" + 0 + " " + 0
-		    	+ "h " + sankey.nodeWidth()
-		    	+ "v " + (1)*d.dy
-		    	+ "h " + (-1)*sankey.nodeWidth();
-		}
-	    })
-	    .style("fill", function(d){
-		if(d.name == "intermediate"){
-		    return 'grey'
-		}
-	    })
-	    .style('fill-opacity', function(d){
-		if(d.name == "intermediate"){
-		    return 0.0;
-		}
-		else{
-		    return 0;
-		}
-	    })
-	    .style("stroke", function(d){
-		// return "url(#" + getGradID(d) + ")";
-		if(d.name == "intermediate"){
-		    return 'grey'
-		}
-	    })
-	    .style("stroke-opacity", "0.0") 
-
-	node2.append("text")
-	    .attr('dy', '0.35em')
-	    .attr("transform", "rotate(90)")
-	    .attr('x', function(d){
-		// return sankey.nodeWidth() + 5;
-		return 5;
-	    })
-	// .attr('y', '10px')
-	    .attr('y', "-10")
-	    .style('opacity', 0)
-	    .text(function (d) {
-	    	if(d.name != "intermediate"){
-	    	    if(d.dy < 30 ){
-	    		return "";
-	    	    }
-	    	    else{
-	    		var textSize = calcTextSize(d.name)["width"];
-	    		
-	    		if(textSize < d.dy){
-	    		    return d.name;
-	    		}
-	    		else{
-	    		    return d.name.trunc(10);
-	    		}
-	    	    }
-	    	}
-	    	else{
-	    	    return "";
-	    	}
-	    });
-
-	// the function for moving the nodes
-	function dragmove(d) {
-	    d3.select(this).attr("transform",
-			         "translate(" + (
-				     d.x = Math.max(0, Math.min(width - d.dx, d3.event.x))) + "," + (
-					 d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
-	    sankey2.relayout();
-	    link2.attr("d", path);
-	};
-
-	function hightLightConnected(g){
-	    link.filter(function(d){return d.source === g;})
-	    //.style()
-	}
-
-	//hide all links not connected to selected node
-	function fadeUnConnected(g){
-	    var thisLink = links2.selectAll(".link");
-	    thisLink.filter(function(d){ return d.source !==g && d.target !== g; })
-		.transition()
-		.duration(500)
-		.style("opacity", 0.05);
-	}
-
-	//show all links
-	function unFade(){
-
-	    var thisLink = links2.selectAll(".link");
-	    thisLink.transition()
-		.duration(500)
-		.style("opacity", 1)
-	}
-
-	////////////////////////transition for nodes/////////////////////////
-	nodes2.selectAll('.node')
-	    .data(graph2.nodes)
-	    .transition()
-	    .duration(transitionDuration)
-	    .attr('opacity' , 1)
-	    .attr('transform', function(d){
-	    	return "translate(" + d.x + "," + d.y + ")";
-	    })
-
-
-	nodes2.selectAll("text")
-	    .data(graph2.nodes)
-	    .transition()
-	    .duration(transitionDuration)
-	    .text(function (d) {
-	    	if(d.name != "intermediate"){
-	    	    if(d.dy < 30 ){
-	    		return "";
-	    	    }
-	    	    else{
-	    		var textSize = calcTextSize(d.name)["width"];
-	    		
-	    		if(textSize < d.dy){
-	    		    return d.name;
-	    		}
-	    		else{
-	    		    return d.name.trunc(10);
-	    		}
-	    	    }
-	    	}
-	    	else{
-	    	    return "";
-	    	}
-	    });
-
-	nodes2.selectAll("rect")
-	    .data(graph2.nodes)
-	    .transition()
-	    .duration(transitionDuration)
-	    .attr('height',function(d){
-	    	return d.dy;
-	    })
-	    .style("fill", function (d) {
-		if(d.name == "intermediate"){
-		    return 'grey'
-		}
-		else{
-		    return d.color = setNodeColor(d);
-		}
-	    })	   
-
-	links2.selectAll(".link")
-	    .data(graph2.links)
-	    .transition()
-	    .duration(transitionDuration)
-	    .delay(transitionDuration/3)
-	    .style('fill-opacity', 0.4)
-	nodes2.selectAll('path')
-	    .data(graph2.nodes)
-	    .transition()
-	    .duration(transitionDuration)
-	    .delay(transitionDuration/3)
-	    .style('fill-opacity' , function(d){
-	    	console.log(d.name)
-	    	if(d.name == "intermediate"){
-	    	    return 0.4;
-	    	}
-	    })
-
-
-	////////////////////////////////////
+    
+    function clearHistogram(){
+	//remove all histograms
+	histograms.selectAll("*").remove();
     }
+    
+
 
     this.changeNodeColor = function(option){
 
@@ -1193,10 +748,6 @@ function Sankey(args){
 	    .layout(32)
 
 	sankey.relayout();
-
-	// console.log(d3.selectAll('.node'));
-	// // d3.selectAll('.node').data(graph.nodes).enter();
-	// console.log(d3.selectAll('.node'));
 
 	//there is no need to update the data since the data is pass by ref
 	d3.selectAll('.node')
@@ -1798,6 +1349,7 @@ function Sankey(args){
     }
 
     function setNodeColor(node){
+	console.log(nodeColorOption);
 	if(nodeColorOption == 0){
 	    return color(node.name.replace(/ .*/, ""));
 	    // return color(node["specialID"]);
@@ -1838,6 +1390,7 @@ function Sankey(args){
             node.sourceLinks = [];
             node.targetLinks = [];
         });
+	console.log(nodes);
         links.forEach(function(link) {
             var source = link.source,
 		target = link.target;
@@ -1852,12 +1405,11 @@ function Sankey(args){
     // nodes with no incoming links are assigned breadth zero, while
     // nodes with no outgoing links are assigned the maximum breadth.
     function computeNodeBreadths(nodes,links) {
-        var remainingNodes = nodes.map(function(d) { return d.sankeyID })
+        var remainingNodes = nodes.map(function(d, i) { return i })
         var nextNodes
         var x = 0
-
-        // console.log(nodes);
-
+	console.log(nodes);
+	console.log(remainingNodes);
         while (remainingNodes.length) {
             nextNodes = [];
             remainingNodes.forEach(function(node) {
@@ -1893,7 +1445,7 @@ function Sankey(args){
                     name: "intermediate",
                     // runTime: nodes[i].runTime
                 }
-                // console.log(tempNode)
+		
                 nodes.push(tempNode)
                 links.push({
                     source: intermediate,

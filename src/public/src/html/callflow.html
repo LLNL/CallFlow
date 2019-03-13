@@ -1,0 +1,79 @@
+<v-app id="inspire">
+  <v-toolbar color="teal" dark fixed app clipped-right>
+    <v-toolbar-side-icon @click.stop="left = !left">
+    </v-toolbar-side-icon>
+    <v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
+    <!-- <v-flex xs2 class="ma-2">
+      <v-select label="TimeMode" :items="timeDomains" v-model="selectedTimeDomain" :menu-props="{ maxHeight: '400' }"
+        box v-on:change="updateTimeDomain()">
+      </v-select>
+    </v-flex>
+    <v-flex xs2 class="ma-2">
+      <v-select label="Granularity" :items="granularity" v-model="selectedGranularity" :menu-props="{ maxHeight: '400' }" box
+        v-on:change="updateGran()">
+      </v-select>
+    </v-flex>
+    <v-spacer></v-spacer>
+    <v-spacer></v-spacer>
+    <v-flex xs2>
+      <v-select label="Analysis Mode" :items="modes" v-model="selectedMode" box :menu-props="{ maxHeight: '400' }"
+      v-on:change="updateMode()"></v-select>
+    </v-flex>
+     -->
+  </v-toolbar>
+
+  <v-navigation-drawer v-model="left" temporary fixed>
+      <v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
+      <v-card flex fill-height id="control-panel">
+        <!-- <v-layout row wrap>
+            <v-switch :label="`Aggr`" v-model="isAggregated" v-on:change="visualize()"></v-switch>
+            <v-btn icon>
+                <v-icon v-on:click="reset()">refresh</v-icon>
+            </v-btn>
+            <v-flex xs12 class="ma-1">
+                <v-select label="1st Plot Metric" :items="metrics" v-model="plotMetric1"
+                    :menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updatePlotMetric1()">
+                </v-select>
+            </v-flex>
+            <v-flex xs12 class="ma-1">
+              <v-select label="2nd Plot Metric" :items="metrics" v-model="plotMetric2"
+                  :menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updatePlotMetric2()">
+              </v-select>
+            </v-flex>
+            <v-flex xs12 class="ma-1">
+                <v-select label="Change Point Detection" :items="cpd" v-model="selectedcpd" v-on:change="visualize()">
+                </v-select>
+            </v-flex>
+            <v-flex xs12 class="ma-1">
+                <v-select label="Dimensionality reduction" :items="dimred" v-model="selectedDimred" v-on:change="visualize()">
+                </v-select>
+            </v-flex>
+            <v-flex xs12 class="ma-1">
+                <v-select label="Similarity measure" :items="similarity" v-model="selectedSimilarity"
+                    v-on:change="visualize()">
+                </v-select>
+            </v-flex>
+            <v-flex xs12 class="ma-1">
+                <v-select label="Cluster by Metric" :items="clusterMetrics" v-model="selectedClusterMetric" v-on:change="updateClusterMetric()">
+                </v-select>
+            </v-flex>
+    
+            <v-spacer></v-spacer>
+        </v-layout> -->
+    </v-card>
+  </v-navigation-drawer>
+
+  <v-content class="pt-auto" fill-height id="dashboard">
+    <v-flex>
+        <VisBoard ref="StreamBoard"
+          v-bind:stream-data="streamData"
+        />
+    </v-flex>
+   
+  </v-content>
+  <v-footer color="grey" class="white--text" app> 
+  <span> VIDi Labs, University of California, Davis </span>  
+          <v-spacer></v-spacer>
+          <span>&copy; 2018</span>
+  </v-footer>
+</v-app>

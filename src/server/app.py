@@ -101,7 +101,8 @@ class App():
             path = os.path.abspath(os.path.join(self.callflow_path, path))
             gf = GraphFrame()
             if self.gfs_format[idx] == 'hpctoolkit':
-                gf.from_hpctoolkit(path, int(self.config.nop))
+                # gf.from_hpctoolkit(path, int(self.config.nop))
+                gf.from_hpctoolkit(path)
             elif self.gfs_format[idx] == 'caliper':                
                 gf.from_caliper(path)
             ret.append(gf)
