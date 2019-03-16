@@ -20,7 +20,6 @@ import uuid
 import argparse
 from flask_cors import CORS
 
-
 from hatchet import *
 from callflow import *
 from configFileReader import * 
@@ -36,7 +35,6 @@ class App():
         self.callflow_path = os.path.abspath(os.path.join(__file__, '../../..'))
         self.app = None # App state
         self.args = None # Arguments passed through the CLI
-        self.config = None # Config file json 
         self.gfs_format = [] # Graph formats in array for the paths
         self.ccts = []
         self.gfs = [] # Graphframes returned by hatchet
@@ -47,9 +45,8 @@ class App():
         
         self.create_parser()  # Parse the input arguments
         self.verify_parser()  # Raises expections if something is not provided. 
-        self.create_variables() # Setup variables which are common to filter and server (like gf, config, etc)
-
-        self.gfs = self.create_gfs()
+        
+        self.callflow = CallFlow(self.args)
         
         if self.args.filter:        
             self.gfs = self.filter_gfs(True)
@@ -61,7 +58,7 @@ class App():
 #            self.read_data()
         # self.ccts = self.create_ccts(self.gfs, 'default', '')
         self.create_server()
-        self.launch_webapp()
+        app.run(debug = self.debug, use_reloader=True)
 #        self.write_gfs_graphml()
 
     def create_parser(self):
@@ -85,8 +82,8 @@ class App():
                 log.error("Please check the config file path. There exists no such file in the path provided")
                 raise Exception()
 
-    def create_variables(self): 
         # Parse the file (--file) according to the format. 
+    def parse_config_file(self): 
         self.config = configFileReader(self.args.config_file)
 
         if 'format' not in self.config.data:
@@ -94,24 +91,6 @@ class App():
             self.gfs_format = self.automatic_gfs_format_lookup(self.config.paths)
         else:
             self.gfs_format = self.config.format
-
-    # Loops over the config.paths and gets the graphframe from hatchet
-    def create_gfs(self):
-        log.info("Creating graphframes....")
-        t = time.time()
-        ret = []
-        for idx, path in enumerate(self.config.paths):
-            path = os.path.abspath(os.path.join(self.callflow_path, path))
-            gf = GraphFrame()
-            if self.gfs_format[idx] == 'hpctoolkit':
-                gf.from_hpctoolkit(path, int(self.config.nop))
-                #gf.from_hpctoolkit(path)
-            elif self.gfs_format[idx] == 'caliper':                
-                gf.from_caliper(path)
-            ret.append(gf)
-            log.info(str(idx) + ":" + path)
-            log.info("[Create] Rows in dataframe: {0} (time={1})".format(gf.dataframe.shape[0], time.time() - t))
-        return ret
 
     # Find the file format automatically.  Automatic look up for the format
     # args: paths (from config file)
@@ -129,35 +108,6 @@ class App():
                     ret.append('caliper')
                     log.info("Found formats = {0}".format(ret))
         return ret
-
-    # ===============================================================================
-            # Filtering Graphframes
-    # ===============================================================================    
-    def filter_gfs(self, write=False):
-        # Create the graph frames from the paths and corresponding format using hatchet
-        fgfs = []
-        # Filter graphframes based on threshold
-        for idx, gf in enumerate(self.gfs):            
-            log.info("Filtering the dataframe!")
-            t = time.time()
-            if self.args.filterBy == "IncTime":
-                max_inclusive_time = utils.getMaxIncTime(gf)
-                filter_gf = gf.filter(lambda x: True if(x['CPUTIME (usec) (I)'] > 0.01*max_inclusive_time) else False)
-            elif self.args.filterBy == "ExcTime":
-                max_exclusive_time = utils.getMaxExcTime(gf)
-                log.info('[Filter] By Exclusive time = {0})'.format(max_exclusive_time))
-                filter_gf = gf.filter(lambda x: True if (x['CPUTIME (usec) (E)'] > 0.01*max_exclusive_time) else False)
-            else:
-                log.warn("Not filtering.... Can take forever. Thou were warned")
-                filter_gf = gf
-            log.info('[Filter] Removed {0} rows. (time={1})'.format(gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], time.time() - t))
-            log.info("Grafting the graph!")
-            t = time.time()
-            filter_gf = filter_gf.graft()
-            log.info("[Graft] {1} rows left (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
-            fgfs.append(filter_gf)
-#            print(filter_gf.graph.to_string(None, filter_gf.dataframe))
-        return fgfs
 
     # Display stats 
     def display_stats(self):
@@ -199,16 +149,6 @@ class App():
             self.cfgs.append(json_graph.node_link_graph(js_graph))
         log.warn("Read from the data files")
 
-    def launch_webapp(self):
-        # Load the graph frames from an intermediate format.
-        #        self.gfs = self.create_gfs()
-
-        # Create the callflow graph frames from graphframes given by hatchet
-        #        self.cfgs = self.create_cfgs(self.gfs, 'module')
-        
-        # Launch the flask app
-        app.run(debug = self.debug, use_reloader=True)
-
     # Loops through the graphframes and creates callflow graph format
     def create_cfgs(self, gfs, action, group_by_attr):        
         ret = []
@@ -229,9 +169,6 @@ class App():
             ret.append(self.cctflow)
         return ret
 
-    # ==============================================================================
-                # Callflow server 
-    # ==============================================================================
     def create_server(self):
         app.debug = True
         app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), '')

@@ -23,14 +23,18 @@ from networkx.drawing.nx_agraph import write_dot
 from preprocess import PreProcess
 from callgraph import CallGraph
 from actions.groupBy import groupBy
+from actions.filter import FilterGraphFrame
 from actions.split_callee import splitCallee
 from actions.split_caller import splitCaller
 from state import State
-import networkx as netx
+import networkx as nx
 
 # need to make this observable on gf. When the gf changes the whole thing reflects
 class CallFlow:
-    def __init__(self, gf):
+    def __init__(self, args):
+        self.args = args
+        self.parse_config_file()
+
         self.state = State(gf)        
         self.preprocess = PreProcess.Builder(self.state).add_df_index().add_n_index().add_mod_index().add_path().add_callers_and_callees().add_show_node().add_vis_node_name().update_module_name().clean_lib_monitor().add_max_incTime().add_incTime().add_excTime().add_avg_incTime().add_imbalance_perc().build()
         self.state.graph = self.preprocess.graph
@@ -40,6 +44,26 @@ class CallFlow:
         # Need to make it an observable. When the root changes the application
         # updates to the call graph from that node as the root. 
         self.state.root = None
+
+
+    # Loops over the config.paths and gets the graphframe from hatchet
+    def create_gfs(self):
+        log.info("Creating graphframes.")
+        t = time.time()
+        ret = []
+        for idx, path in enumerate(self.config.paths):
+            path = os.path.abspath(os.path.join(self.callflow_path, path))
+            gf = GraphFrame()
+            if self.gfs_format[idx] == 'hpctoolkit':
+                gf.from_hpctoolkit(path, int(self.config.nop))
+            elif self.gfs_format[idx] == 'caliper':                
+                gf.from_caliper(path)
+            ret.append(gf)
+            log.info(str(idx) + ":" + path)
+            log.info("[Create] Rows in dataframe: {0} (time={1})".format(gf.dataframe.shape[0], time.time() - t))
+        return ret
+
+    
 
     def update(self, action, attr):        
         if action == 'default':
@@ -61,7 +85,7 @@ class CallFlow:
             name = attr + '.graphml'
             netx.write_graphml(nx.get_graph(), '/home/vidi/Suraj/llnl/CallFlow/src/server/' + name)
         elif action == 'json-format':
-            nx = CallGrap(self.state, 'path', false)
+            nx = CallGraph(self.state, 'path', false)
             name = attr + '.json'
             utils.graphmltojson('/home/vidi/Suraj/llnl/CallFlow/src/server/' + name, '/home/vidi/Suraj/llnl/CallFlow/src/server/' + name + '.json')
         
@@ -72,6 +96,5 @@ class CallFlow:
         #     return nx.get_graph()
 
         self.json_graph = json_graph.node_link_data(nx.g)
-        print(self.json_graph)
         return nx.get_graph()
         
