@@ -21,29 +21,41 @@ class configFileReader():
         dirname = os.path.dirname(__file__)
         filename = os.path.join(dirname, filepath)
         f = open(filename, 'r').read()
-        self.data = self.json_data(f)
-        log.info('Config file: {0}'.format(json.dumps(self.data, indent=4, sort_keys=True)))
-        self.paths = self.data['path']
-        self.props = self.data['props']
-        self.format = self.data['format'] if 'format' in self.data.keys() else None
-        self.fnMap = self.getFuncMap()
-        self.fileMap = self.getFileMap()
-        self.nop = self.data['nop']
-        
+        self.datasets = self.json_data(f)['datasets']  
+        self.names = []
+        self.paths = {}
+        self.props = {}
+        self.nop  = {}
+        self.format = {}
+        self.fnMap = {}
+        self.fileMap = {}      
+        self.run()
+
+    def run(self):
+        for idx, data in enumerate(self.datasets):
+            name = data['name']
+            self.names.append(name)
+            log.info('Config file: {0}'.format(json.dumps(data, indent=4, sort_keys=True)))
+            self.paths[name] = data['path']
+            self.format[name] = data['format'] 
+            self.fnMap[name] = self.getFuncMap(data['props'])
+            self.fileMap[name] = self.getFileMap(data['props'])
+            self.nop[name] = data['nop']
+
     # File map from the config file
-    def getFileMap(self):
+    def getFileMap(self, props):
         fileMap = {}
-        for obj in self.props:
-            name = self.props[obj]['name']
-            fileMap[name] = self.props[obj]['files']
+        for obj in props:
+            name = props[obj]['name']
+            fileMap[name] = props[obj]['files']
         return fileMap
 
     # Function map from the config file
-    def getFuncMap(self):
+    def getFuncMap(self, props):
         funcMap = {}
-        for obj in self.props:            
-            name = self.props[obj]['name']
-            funcMap[name] = self.props[obj]['functions']
+        for obj in props: 
+            name = props[obj]['name']
+            funcMap[name] = props[obj]['functions']
         return funcMap
 
     def json_data(self, json_text):

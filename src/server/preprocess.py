@@ -82,11 +82,11 @@ class PreProcess():
             return ret
 
         def add_incTime(self):
-            self.map['incTime'] = self._map('CPUTIME (usec) (I)')
+            self.map['incTime'] = self._map('time (inc)')
             return self
 
         def add_excTime(self):
-            self.map['excTime'] = self._map('CPUTIME (usec) (E)')
+            self.map['excTime'] = self._map('time')
             return self
 
         # Max of the inclusive Runtimes among all processes
@@ -95,7 +95,7 @@ class PreProcess():
             ret = {}
 
             for idx, row in self.df.iterrows():
-                ret[str(row.node.df_index)] = max(self.state.lookup(row.node.df_index)['CPUTIME (usec) (I)'])
+                ret[str(row.node.df_index)] = max(self.state.lookup(row.node.df_index)['time (inc)'])
 
             self.map['max_incTime'] = ret
             self.df['max_incTime'] = self.df['node'].apply(lambda node: self.map['max_incTime'][str(node.df_index)])
@@ -107,7 +107,7 @@ class PreProcess():
             ret = {}
 
             for idx, row in self.df.iterrows():
-                ret[str(row.node.df_index)] = utils.avg(self.state.lookup(row.node.df_index)['CPUTIME (usec) (I)'])
+                ret[str(row.node.df_index)] = utils.avg(self.state.lookup(row.node.df_index)['time (inc)'])
 
             self.map['avg_incTime'] = ret    
             self.df['avg_incTime'] = self.df['node'].apply(lambda node: self.map['avg_incTime'][str(node.df_index)])

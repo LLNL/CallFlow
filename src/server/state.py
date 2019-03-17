@@ -1,10 +1,31 @@
+from logger import log
+import os
+from hatchet import *
+
 class State(object):
-    def __init__(self, gf):
-        self.df = gf.dataframe
-        self.graph = gf.graph
+    # TODO: Assign self.g, self.root... 
+    def __init__(self, config, name):
+        self.config = config
+        self.name = name
+        self.callflow_path = os.path.abspath(os.path.join(__file__, '../../..'))
+        self.path = os.path.abspath(os.path.join(self.callflow_path, self.config.paths[self.name]))
         self.g = None
         self.root = None
+
+        self.gf = self.create_gfs()
+        self.df = self.gf.dataframe
+        self.graph = self.gf.graph
         self.node_hash_map = self.node_hash_mapper()
+        
+    # Loops over the config.paths and gets the graphframe from hatchet
+    def create_gfs(self):
+        log.info("[State] Creating graphframes: {0}".format(self.name))
+        gf = GraphFrame()
+        if self.config.format[self.name] == 'hpctoolkit':
+            gf.from_hpctoolkit(self.path, int(self.config.nop[self.name]))
+        elif self.config.format[self.name] == 'caliper':                
+            gf.from_caliper(path)        
+        return gf
 
     def node_hash_mapper(self):
         ret = {}

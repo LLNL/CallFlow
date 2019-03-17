@@ -39,22 +39,22 @@ def avg(l):
 def getMaxIncTime(gf):
     ret = 0.0
     for root in gf.graph.roots:
-        ret = max(ret, lookup(gf.dataframe, root)['CPUTIME (usec) (I)'].max())
+        ret = max(ret, lookup(gf.dataframe, root)['time (inc)'].max())
     return ret
 
 # TODO: Get the maximum exclusive time from the graphframe. 
 def getMaxExcTime(gf):
-    ret  = gf.dataframe['CPUTIME (usec) (E)'].max()
+    ret  = gf.dataframe['time'].max()
     return ret
 
 def getAvgIncTime(gf):
     ret = 0.0
     for root in gf.graph.roots:
-        ret += lookup(gf.dataframe, root)['CPUTIME (usec) (I)'].mean()
+        ret += lookup(gf.dataframe, root)['time (inc)'].mean()
     return ret/len(gf.graph.roots)
 
 def getAvgExcTime(gf):
-    ret = gf.dataframe['CPUTIME (usec) (E)'].mean()
+    ret = gf.dataframe['time'].mean()
     return ret
 
 def getNumOfNodes(gf):

@@ -38,7 +38,7 @@ export default class CallFlow {
         this.rootRunTime = [];
 
         // Function calls
-        //        this.resetStat()
+        // this.resetStat()
         this.graph = preprocess(this.graph);
         this.view = DOMSetup(this.view);
         this.view.sankey = sankeyComputation(this.graph, this.view);
@@ -61,7 +61,6 @@ CallFlow.prototype.renderCCTBtn = function () {
         });
     });
 };
-
 
 CallFlow.prototype.setColor = function (colorOption) {
     this.view.colorOption = colorOption;

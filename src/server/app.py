@@ -20,7 +20,6 @@ import uuid
 import argparse
 from flask_cors import CORS
 
-from hatchet import *
 from callflow import *
 from configFileReader import * 
 import utils
@@ -35,30 +34,32 @@ class App():
         self.callflow_path = os.path.abspath(os.path.join(__file__, '../../..'))
         self.app = None # App state
         self.args = None # Arguments passed through the CLI
-        self.gfs_format = [] # Graph formats in array for the paths
         self.ccts = []
-        self.gfs = [] # Graphframes returned by hatchet
         self.cfgs = [] # CallFlow graphs
+        self.props = {
+            'filterBy': 'IncTime',
+            
+        }
         self.debug = False # Debug gives time, other information
-        self.callflow = {}
-
         
+
         self.create_parser()  # Parse the input arguments
         self.verify_parser()  # Raises expections if something is not provided. 
         
-        self.callflow = CallFlow(self.args)
+        self.config = configFileReader(self.args.config_file)
+        self.callflow = CallFlow(self.config, self.props)
+        self.create_server()
+        app.run(debug = self.debug, use_reloader=True)
         
-        if self.args.filter:        
-            self.gfs = self.filter_gfs(True)
-#            self.cfgs = self.create_cfgs(self.gfs, 'default', '')
-            self.display_stats()
-#            self.write_gfs(self.gfs, self.cfgs)           
+#         if self.args.filter:        
+#             self.gfs = self.filter_gfs(True)
+# #            self.cfgs = self.create_cfgs(self.gfs, 'default', '')
+#             self.display_stats()
+# #            self.write_gfs(self.gfs, self.cfgs)           
 
 #        if not self.args.filter:
 #            self.read_data()
         # self.ccts = self.create_ccts(self.gfs, 'default', '')
-        self.create_server()
-        app.run(debug = self.debug, use_reloader=True)
 #        self.write_gfs_graphml()
 
     def create_parser(self):
@@ -82,49 +83,32 @@ class App():
                 log.error("Please check the config file path. There exists no such file in the path provided")
                 raise Exception()
 
-        # Parse the file (--file) according to the format. 
-    def parse_config_file(self): 
-        self.config = configFileReader(self.args.config_file)
+    #     # Parse the file (--file) according to the format. 
+    # def parse_config_file(self): 
 
-        if 'format' not in self.config.data:
-            log.warn('File formats not provided. Automatically looking for the files with experiment')
-            self.gfs_format = self.automatic_gfs_format_lookup(self.config.paths)
-        else:
-            self.gfs_format = self.config.format
+    #     if 'format' not in self.config.data:
+    #         log.warn('File formats not provided. Automatically looking for the files with experiment')
+    #         self.gfs_format = self.automatic_gfs_format_lookup(self.config.paths)
+    #     else:
+    #         self.gfs_format = self.config.format
 
-    # Find the file format automatically.  Automatic look up for the format
-    # args: paths (from config file)
-    # return : Array(gf_format)
-    # Todo: Write better regex to eliminate looping through mdb files
-    def automatic_gfs_format_lookup(self, paths):
-        ret = []
-        pattern = 'experiment*'
-        for path in paths:
-            filtered_path =  fnmatch.filter(os.listdir(path), pattern)
-            for file in filtered_path:
-                if file.endswith('.xml'):
-                    ret.append('hpctoolkit')
-                elif file.endswith('.json'):
-                    ret.append('caliper')
-                    log.info("Found formats = {0}".format(ret))
-        return ret
+    # # Find the file format automatically.  Automatic look up for the format
+    # # args: paths (from config file)
+    # # return : Array(gf_format)
+    # # Todo: Write better regex to eliminate looping through mdb files
+    # def automatic_gfs_format_lookup(self, paths):
+    #     ret = []
+    #     pattern = 'experiment*'
+    #     for path in paths:
+    #         filtered_path =  fnmatch.filter(os.listdir(path), pattern)
+    #         for file in filtered_path:
+    #             if file.endswith('.xml'):
+    #                 ret.append('hpctoolkit')
+    #             elif file.endswith('.json'):
+    #                 ret.append('caliper')
+    #                 log.info("Found formats = {0}".format(ret))
+    #     return ret
 
-    # Display stats 
-    def display_stats(self):
-        for idx, gf in enumerate(self.gfs):
-            log.warn('==========================')
-            log.info('Stats: Dataset ({0}) '.format(idx))
-            log.warn('==========================')
-            max_inclusive_time = utils.getMaxIncTime(gf)
-            max_exclusive_time = utils.getMaxExcTime(gf)
-            avg_inclusive_time = utils.getAvgIncTime(gf)
-            avg_exclusive_time = utils.getAvgExcTime(gf)
-            num_of_nodes = utils.getNumOfNodes(gf)
-            log.info('Max Inclusive time = {0} '.format(max_inclusive_time))
-            log.info('Max Exclusive time = {0} '.format(max_exclusive_time))
-            log.info('Avg Inclusive time = {0} '.format(avg_inclusive_time))
-            log.info('Avg Exclusive time = {0} '.format(avg_exclusive_time))
-            log.info('Number of nodes in CCT = {0}'.format(num_of_nodes))
         
     # Write graphframes to csv files
     def write_gfs(self, fgfs):
@@ -230,7 +214,6 @@ class App():
         def splitCaller():
             ret = []
             idList = json.loads(request.args.get('in_data'))
-            print(idList)
             self.callflow.update('split-caller', idList)
             return json.dumps(ret)
 
