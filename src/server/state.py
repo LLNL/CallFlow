@@ -32,6 +32,7 @@ class State(object):
         for idx, row in self.df.iterrows():
             df_node_index = str(row.node.df_index)
             ret[df_node_index] = row.node
+        self.node_hash_map = ret
         return ret
     
     def lookup_by_column(self, _hash, col_name):
@@ -60,6 +61,7 @@ class State(object):
 
     def update_df(self, col_name, mapping):
         self.df[col_name] = self.df['node'].apply(lambda node: mapping[node] if node in mapping.keys() else '')
+        self.df = self.df
 
     def lookup_with_df_index(self, df_index):
         return self.df.loc[self.df['df_index'] == df_index]

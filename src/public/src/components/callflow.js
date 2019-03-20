@@ -42,7 +42,6 @@ export default {
   methods: {
     init() {
       console.log("Data for", this.selectedFormat, ": ", this.callgraphData)
-      console.log(this.$refs)
       this.$refs.Callgraph.init(this.callgraphData)
     },
 
@@ -50,7 +49,7 @@ export default {
       this.$refs.Callgraph.clear()
     },
 
-    send(path, callback) {
+    request(path, callback) {
       axios.get(this.server + '/' + path, this.config)
       .then(res => {
         let data = res.data
@@ -60,14 +59,18 @@ export default {
 
     fetchData() {
       if(this.selectedFormat == 'Callgraph'){
-        this.send('getSankey', (data) => {
+        this.request('callgraph', (data) => {
           this.callgraphData = data[0]
           this.init()
+          this.request('splitLevel', (data) => {
+            this.callgraphData = data[0]
+            this.update()
+          })
         })
         
       }
       else if (this.selectedFormat == 'CCT'){
-        this.send('/getCCT', (data) => {
+        this.send('getCCT', (data) => {
           this.cctData = data[0]
           this.init()
         })

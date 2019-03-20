@@ -1,8 +1,11 @@
 {
-    "dataName" : "Lulesh-1",
-    "path" : ["./data/hpctoolkit-lulesh-2"],
-    "format" : ["hpctoolkit"],
-    "props": {
-    },
-    "nop": 3
+    "datasets": [
+        {
+            "name": "Lulesh-1",
+            "path": "./data/hpctoolkit-lulesh-2",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": 3
+        }
+    ]
 }

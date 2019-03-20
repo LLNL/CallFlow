@@ -25,6 +25,7 @@ from configFileReader import *
 import utils
 from logger import log
 import networkx as nx
+from networkx.readwrite import json_graph
 
 app = Flask(__name__, static_url_path='/public')
 CORS(app)
@@ -38,11 +39,9 @@ class App():
         self.cfgs = [] # CallFlow graphs
         self.props = {
             'filterBy': 'IncTime',
-            
         }
         self.debug = False # Debug gives time, other information
         
-
         self.create_parser()  # Parse the input arguments
         self.verify_parser()  # Raises expections if something is not provided. 
         
@@ -133,26 +132,6 @@ class App():
             self.cfgs.append(json_graph.node_link_graph(js_graph))
         log.warn("Read from the data files")
 
-    # Loops through the graphframes and creates callflow graph format
-    def create_cfgs(self, gfs, action, group_by_attr):        
-        ret = []
-        for idx, gf in enumerate(gfs):
-            self.callflow = CallFlow(gf)
-            self.callflow.dataset = self.config.paths[idx]
-            self.callflow.update(action, group_by_attr)
-            ret.append(self.callflow)
-        return ret
-
-    # Loops through gfs and creates their respective CCTs.
-    # Method exists because the CCTs are not create by default. 
-    def create_ccts(self, gfs, action, group_by_attr):
-        ret = []
-        for idx, gf in enumerate(gfs):
-            self.cctflow = CallFlow(gf)
-            self.cctflow.update(action, group_by_attr)
-            ret.append(self.cctflow)
-        return ret
-
     def create_server(self):
         app.debug = True
         app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), '')
@@ -166,15 +145,29 @@ class App():
         def send_js(filename):
             return send_from_directory(os.path.join(app.__dir__, 'public'), filename)
         
-        @app.route('/getSankey')
-        def getSankey():
+        @app.route('/callgraph')
+        def callgraph():
             group_by_attr = 'module'
             # Create the callflow graph frames from graphframes given by hatchet
-            self.cfgs = self.create_cfgs(self.gfs, 'groupBy', group_by_attr)
+            self.callflow.update('group', 'module')
             ret = []
-            for idx, cfg in enumerate(self.cfgs):
-                ret.append(cfg.json_graph)
+            for idx, state in self.callflow.states.items():
+                json_result = json_graph.node_link_data(state.g)
+                ret.append(json_result)
             return json.dumps(ret)
+
+        @app.route('/splitLevel')
+        def splitLevel():
+            level = 3
+            self.callflow.update('split-level', {
+                "module": 'lulesh2.0',
+                "level": 3
+            })
+            ret = []
+            for idx, state in self.callflow.states.items():
+                json_result = json_graph.node_link_data(state.g)
+                ret.append(json_result)
+            return json.dumps(ret)    
 
         @app.route('/getMeans')
         def getMeans():

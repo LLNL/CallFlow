@@ -17,7 +17,6 @@ import time
 import utils
 import pprint
 from logger import log
-from networkx.readwrite import json_graph
 from networkx.drawing.nx_agraph import write_dot
     
 from preprocess import PreProcess
@@ -25,10 +24,12 @@ from callgraph import CallGraph
 from actions.groupBy import groupBy
 from actions.split_callee import splitCallee
 from actions.split_caller import splitCaller
+from actions.split_level import splitLevel
 from state import State
 from logger import log
 import time
 import networkx as nx
+import pandas as pd
 
 class CallFlow:
     def __init__(self, config, props):
@@ -50,6 +51,13 @@ class CallFlow:
         for idx, name in enumerate(self.config.names):        
             states[name] = State(self.config, name)
             states[name].fgf = self.filter(states[name]) 
+
+            # update df and graph after filtering.
+            states[name].df = states[name].fgf.dataframe
+            states[name].graph = states[name].fgf.graph
+            states[name].hashMap = states[name].node_hash_mapper()
+
+            print(len(states[name].hashMap.keys()))
 
              # Pre-process the dataframe and Graph. 
             preprocess = PreProcess.Builder(states[name]) \
@@ -90,44 +98,48 @@ class CallFlow:
         log.info("Grafting the graph!")
         t = time.time()
         fgf = filter_gf.graft()
-        log.info("[Graft] {1} rows left (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
+        log.info("[Graft] {1} rows in dataframe (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
         return fgf
 
-    def update(self, action, attr):        
-        if action == 'default':
-            nx = CallGraph(self.state, 'path', True)      
-        elif action == 'filter':
-            Filter(self.state)          
-        elif action == "groupBy":
-            groupBy(self.state, attr)
-            nx = CallGraph(self.state, 'group_path', True)
-        elif action == "split-callee":
-            splitCallee(self.state, attr)
-            nx = CallGraph(self.state, 'path', True)
-        elif action == "split-caller":
-            splitCaller(self.state, attr)
-            nx = CallGraph(self.state, 'path', True)
-        elif action == "dot-format":
-            nx = CallGraph(self.state, 'path', False)
-            netx.write_dot(nx.get_graph(), '/Users/jarus/ucd/Research/Visualisation/projects/CallFlow/src/server')
-        elif action == "graphml-format":
-            nx = CallGraph(self.state, 'path', False)
-            name = attr + '.graphml'
-            netx.write_graphml(nx.get_graph(), '/home/vidi/Suraj/llnl/CallFlow/src/server/' + name)
-        elif action == 'json-format':
-            nx = CallGraph(self.state, 'path', false)
-            name = attr + '.json'
-            utils.graphmltojson('/home/vidi/Suraj/llnl/CallFlow/src/server/' + name, '/home/vidi/Suraj/llnl/CallFlow/src/server/' + name + '.json')
-        
-        self.state.g = nx.g
-        # elif action == "default-dot":
-        #     nx = CallGraph(self.state, 'path')
-        #     self.cfg = write_dot(nx, "graph.dot")
-        #     return nx.get_graph()
+    def update(self, action, attr):    
+        for name, state in self.states.items():    
+            print("[{0}] {1}".format(action, name))
+            if action == 'default':
+                nx = CallGraph(state, 'path', True)      
+            elif action == 'filter':
+                Filter(state)    
+                nx = CallGraph(state, 'group_path', True)      
+            elif action == "group":
+                groupBy(state, attr)
+                nx = CallGraph(state, 'group_path', True)
+            elif action == 'split-level':
+                splitLevel(state, attr)
+                nx = CallGraph(state, 'group_path', True)
+            elif action == "split-callee":
+                splitCallee(state, attr)
+                nx = CallGraph(state, 'path', True)
+            elif action == "split-caller":
+                splitCaller(state, attr)
+                nx = CallGraph(state, 'path', True)
+            elif action == "dot-format":
+                nx = CallGraph(state, 'path', False)
+                nx.write_dot(nx.get_graph(), '/Users/jarus/ucd/Research/Visualisation/projects/CallFlow/src/server')
+            elif action == "graphml-format":
+                nx = CallGraph(state, 'path', False)
+                name = attr + '.graphml'
+                nx.write_graphml(nx.get_graph(), '/home/vidi/Suraj/llnl/CallFlow/src/server/' + name)
+            elif action == 'json-format':
+                nx = CallGraph(state, 'path', false)
+                name = attr + '.json'
+                utils.graphmltojson('/home/vidi/Suraj/llnl/CallFlow/src/server/' + name, '/home/vidi/Suraj/llnl/CallFlow/src/server/' + name + '.json')
+            self.write_df()
+            state.g = nx.g    
 
-        self.json_graph = json_graph.node_link_data(nx.g)
-        return nx.get_graph()
-    
+    def write_df(self):
+        for name, state in self.states.items():
+            print('Writing {0}'.format(name))
+            state.df.to_csv('./test_{0}.csv'.format(name))
+            
     def displayStats(self, name):
         log.warn('==========================')
         log.info("Number of datasets : {0}".format(len(self.config[name].paths.keys())))

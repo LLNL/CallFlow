@@ -29,7 +29,7 @@ class groupBy:
         group_path = []
         temp = None
         for i, elem in enumerate(path):
-            grouping = state.lookup_with_vis_nodeName(elem)[self.attr].tolist()[0]
+            grouping = state.lookup_with_nodeName(elem)[self.attr].tolist()[0]
             if temp == None or grouping != temp:
                 group_path.append(grouping)
                 temp = grouping
@@ -48,10 +48,10 @@ class groupBy:
     def create_component_path(self, path, group_path, state):
         component_path = []
         path = list(path)
-        component_module = state.lookup_with_vis_nodeName(path[-1]).module.tolist()[0]
+        component_module = state.lookup_with_nodeName(path[-1]).module.tolist()[0]
         component_path.append(component_module)
 
-        filter_path = [node for node in path if component_module == state.lookup_with_vis_nodeName(node).module.tolist()[0]]
+        filter_path = [node for node in path if component_module == state.lookup_with_nodeName(node).module.tolist()[0]]
        
         for i, elem in enumerate(filter_path):            
              component_path.append(elem)                    

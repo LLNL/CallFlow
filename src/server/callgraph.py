@@ -53,7 +53,7 @@ class CallGraph(nx.Graph):
     def root_runtime_inc(self):
         root = self.graph.roots[0]
         root_metrics = self.state.lookup(root.df_index)
-        return root_metrics['CPUTIME (usec) (I)'].max()
+        return root_metrics['time (inc)'].max()
     
     def add_paths(self, path_name):
         for idx, row in self.df.iterrows():
@@ -70,7 +70,7 @@ class CallGraph(nx.Graph):
 #        nx.set_node_attributes(self.g, name='file', values=file_mapping)
 #        nx.set_node_attributes(self.g, name='type', values=type_mapping)
 
-        time_mapping = self.generic_map(self.g.nodes(), 'CPUTIME (usec) (I)')
+        time_mapping = self.generic_map(self.g.nodes(), 'time (inc)')
         nx.set_node_attributes(self.g, name='weight', values=time_mapping)
 
         name_mapping = self.generic_map(self.g.nodes(), 'vis_node_name')
@@ -113,14 +113,14 @@ class CallGraph(nx.Graph):
                 if attr == 'vis_node_name':
                     ret[node] = [node]
                     continue
-                if attr == 'CPUTIME (usec) (I)':
+                if attr == 'time (inc)':
                     ret[node] = self.df[self.df['vis_node_name'] == node[:-1]][attr].max().tolist()
                     continue
                 if attr == 'node_type':
                     ret[node] = 'back_edge'
                     continue
             
-            if attr == 'CPUTIME (usec) (I)':
+            if attr == 'time (inc)':
                 if len(self.df[self.df['vis_node_name'] == node][attr]) != 0:
                     ret[node] =  self.df[self.df['vis_node_name'] == node][attr].max().tolist()
                 else:
@@ -262,11 +262,11 @@ class CallGraph(nx.Graph):
             if source.endswith('_'):
                 cycle_node = source
                 cycle_node_df = self.state.lookup_with_vis_nodeName(cycle_node[:-1])
-                additional_flow[cycle_node] = cycle_node_df['CPUTIME (usec) (I)'].max()
+                additional_flow[cycle_node] = cycle_node_df['time (inc)'].max()
             elif target.endswith('_'):
                 cycle_node = target
                 cycle_node_df = self.state.lookup_with_vis_nodeName(cycle_node[:-1])
-                additional_flow[cycle_node] = cycle_node_df['CPUTIME (usec) (I)'].max()
+                additional_flow[cycle_node] = cycle_node_df['time (inc)'].max()
                 
         for edge in edges:
             added_flow = 0
@@ -285,8 +285,8 @@ class CallGraph(nx.Graph):
             source = self.state.lookup_with_vis_nodeName(edge[0])
             target = self.state.lookup_with_vis_nodeName(edge[1])           
             
-            source_inc = source['CPUTIME (usec) (I)'].max()
-            target_inc = target['CPUTIME (usec) (I)'].max()
+            source_inc = source['time (inc)'].max()
+            target_inc = target['time (inc)'].max()
 
 
             if source_inc == target_inc:
