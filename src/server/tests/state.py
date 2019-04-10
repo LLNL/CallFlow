@@ -9,7 +9,7 @@ class State(object):
     def node_hash_mapper(self):
         ret = {}
         for idx, row in self.df.iterrows():
-            df_node_index = str(row.node.df_index)
+            df_node_index = str(row.nid)
             ret[df_node_index] = row.node
         return ret
     

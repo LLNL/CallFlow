@@ -39,16 +39,13 @@ class CallGraph(nx.Graph):
         # self.adj_matrix = nx.adjacency_matrix(self.g)
         # print(self.adj_matrix.todense())
 
-#        print("Nodes", self.g.nodes(data=True))
+        print("Nodes", self.g.nodes())
 #        print("Edges", self.g.edges(data=True))
 
 #        log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
 #        log.warn("Edges in the tree: {0}".format(len(self.g.edges)))
 #        log.warn("Is it a tree? : {0}".format(nx.is_tree(self.g)))    
 #        log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
-
-    def get_graph(self):
-        return self.g
 
     def root_runtime_inc(self):
         root = self.graph.roots[0]

@@ -19,7 +19,6 @@ export default {
         transitionDuration: 1000,
         minHeightForText: 10,
         view: {},
-
     }),
 
     watch: {
@@ -34,7 +33,6 @@ export default {
             this.graph = data
             this.view = view
             this.nodes = d3.select('#nodes')
-            console.log(this.view)
             const node = this.nodes.selectAll('.node')
                 .data(this.graph.nodes)
                 .enter().append('g')

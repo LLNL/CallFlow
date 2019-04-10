@@ -38,6 +38,7 @@ class CallFlow:
         # Config contains properties set by the input config file. 
         self.config = config
         
+
         # Create states for each dataset.
         # Note: gf would never change from create_gf.
         # Note: fgf would be changed when filter props are changed by client. 
@@ -45,10 +46,23 @@ class CallFlow:
         # Note: graph is always updated.
         # Note: map -> not sure if it can be used.
         self.states = self.default_pipeline()
+    
+    def dfs(self, roots, limit):
+        self.level = 0
 
+        def dfs_recurse(root):
+            for node in root.children:
+                if(self.level < limit):
+                    print(node)
+                    self.level += 1
+                    dfs_recurse(node)
+
+        for root in roots:
+            dfs_recurse(root)
+            
     def default_pipeline(self):
         states = {}
-        for idx, name in enumerate(self.config.names):        
+        for idx, name in enumerate(self.config.names):   
             states[name] = State(self.config, name)
             states[name].fgf = self.filter(states[name]) 
 
@@ -57,14 +71,11 @@ class CallFlow:
             states[name].graph = states[name].fgf.graph
             states[name].hashMap = states[name].node_hash_mapper()
 
-            print(len(states[name].hashMap.keys()))
-
              # Pre-process the dataframe and Graph. 
             preprocess = PreProcess.Builder(states[name]) \
                 .add_df_index() \
                 .add_n_index() \
                 .add_mod_index() \
-                .add_path() \
                 .add_callers_and_callees() \
                 .add_show_node() \
                 .add_vis_node_name() \
@@ -79,6 +90,15 @@ class CallFlow:
 
             states[name].df = preprocess.df
             states[name].graph = preprocess.graph
+            literal = states[name].graph.to_literal(graph=states[name].graph, dataframe=states[name].df)
+
+            #gf = GraphFrame()
+            #gf.from_literal(literal)
+            # roots = states[name].graph.roots
+            # self.level = 0
+            # for root in roots:
+            #     dfs(root)
+
             states[name].map = preprocess.map
         return states
 
@@ -97,8 +117,8 @@ class CallFlow:
         log.info('[Filter] Removed {0} rows. (time={1})'.format(state.gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], time.time() - t))
         log.info("Grafting the graph!")
         t = time.time()
-        fgf = filter_gf.graft()
-        log.info("[Graft] {1} rows in dataframe (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
+        fgf = filter_gf.squash()
+        log.info("[Squash] {1} rows in dataframe (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
         return fgf
 
     def update(self, action, attr):    

@@ -95,10 +95,10 @@ class PreProcess():
             ret = {}
 
             for idx, row in self.df.iterrows():
-                ret[str(row.node.df_index)] = max(self.state.lookup(row.node.df_index)['time (inc)'])
+                ret[str(row.nid)] = max(self.state.lookup(row.nid)['time (inc)'])
 
             self.map['max_incTime'] = ret
-            self.df['max_incTime'] = self.df['node'].apply(lambda node: self.map['max_incTime'][str(node.df_index)])
+            self.df['max_incTime'] = self.df['node'].apply(lambda node: self.map['max_incTime'][str(node.nid)])
             return self
 
         # Avg of inclusive Runtimes among all processes
@@ -107,22 +107,21 @@ class PreProcess():
             ret = {}
 
             for idx, row in self.df.iterrows():
-                ret[str(row.node.df_index)] = utils.avg(self.state.lookup(row.node.df_index)['time (inc)'])
+                ret[str(row.nid)] = utils.avg(self.state.lookup(row.nid)['time (inc)'])
 
             self.map['avg_incTime'] = ret    
-            self.df['avg_incTime'] = self.df['node'].apply(lambda node: self.map['avg_incTime'][str(node.df_index)])
+            self.df['avg_incTime'] = self.df['node'].apply(lambda node: self.map['avg_incTime'][str(node.nid)])
 
             return self
         
         # Imbalance percentage Series in the dataframe    
         def add_imbalance_perc(self):
             ret = {}
-            
             for idx, row in self.df.iterrows():
-                ret[str(row.node.df_index)] = (self.map['max_incTime'][str(row.node.df_index)] - self.map['avg_incTime'][str(row.node.df_index)])/ self.map['max_incTime'][str(row.node.df_index)]
+                ret[str(row.nid)] = (self.map['max_incTime'][str(row.nid)] - self.map['avg_incTime'][str(row.nid)])/ self.map['max_incTime'][str(row.nid)]
 
             self.map['imbalance_perc'] = ret
-            self.df['imbalance_perc'] = self.df['node'].apply(lambda node: self.map['imbalance_perc'][str(node.df_index)])
+            self.df['imbalance_perc'] = self.df['node'].apply(lambda node: self.map['imbalance_perc'][str(node.nid)])
             return self
             
         def add_callers_and_callees(self):
@@ -141,17 +140,18 @@ class PreProcess():
             try:
                 while root.callpath != None:
                     root = next(node_gen)
-                    if root.parent:
-                        root_df = root.callpath[-1]
-                        parent_df = root.parent.callpath[-1]
-                        if parent_df not in callees:
-                            callees[parent_df] = []
+                    if root.parents:
+                        for idx, parent in enumerate(root.parents):
+                            root_df = root.callpath[-1]
+                            parent_df = parent.callpath[-1]
+                            if parent_df not in callees:
+                                callees[parent_df] = []
                     
-                        callees[parent_df].append(root_df)
+                            callees[parent_df].append(root_df)
 
-                        if root_df not in callers:
-                            callers[root_df] = []
-                        callers[root_df].append(parent_df)
+                            if root_df not in callers:
+                                callers[root_df] = []
+                            callers[root_df].append(parent_df)
                         
             except StopIteration:
                 pass

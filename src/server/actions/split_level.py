@@ -20,4 +20,31 @@ class splitLevel:
             df = self.df[self.df['name'] == name]
             pd.options.mode.chained_assignment = None
             df['vis_node_name'] = self.module + ':' + str(name)
-        
+
+        root = self.graph.roots[0]
+        node_gen = self.graph.roots[0].traverse()
+
+
+
+        try:
+            while root.callpath != None:
+                root = next(node_gen)    
+                t = state.lookup_with_node(root)
+                s = state.lookup_with_node(root.parent)
+
+                if t.empty or s.empty:
+                    continue
+
+                snode = s.node.tolist()[0]
+                tnode = t.node.tolist()[0]
+
+                spath = s.path.tolist()[0]
+                tpath = t.path.tolist()[0]
+
+                print(snode, tnode)
+                #print(spath, tpath)
+
+        except StopIteration:
+            pass
+        finally:
+            del root

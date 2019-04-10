@@ -22,7 +22,8 @@ class State(object):
         log.info("[State] Creating graphframes: {0}".format(self.name))
         gf = GraphFrame()
         if self.config.format[self.name] == 'hpctoolkit':
-            gf.from_hpctoolkit(self.path, int(self.config.nop[self.name]))
+            # gf.from_hpctoolkit(self.path, int(self.config.nop[self.name]))
+            gf.from_hpctoolkit(self.path)
         elif self.config.format[self.name] == 'caliper':                
             gf.from_caliper(path)        
         return gf
@@ -30,7 +31,7 @@ class State(object):
     def node_hash_mapper(self):
         ret = {}
         for idx, row in self.df.iterrows():
-            df_node_index = str(row.node.df_index)
+            df_node_index = str(row.nid)
             ret[df_node_index] = row.node
         self.node_hash_map = ret
         return ret
