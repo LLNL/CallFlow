@@ -4,30 +4,14 @@ from hatchet import *
 
 class State(object):
     # TODO: Assign self.g, self.root... 
-    def __init__(self, config, name):
-        self.config = config
-        self.name = name
-        self.callflow_path = os.path.abspath(os.path.join(__file__, '../../..'))
-        self.path = os.path.abspath(os.path.join(self.callflow_path, self.config.paths[self.name]))
+    def __init__(self):
         self.g = None
-        self.root = None
-
-        self.gf = self.create_gfs()
-        self.df = self.gf.dataframe
-        self.graph = self.gf.graph
-        self.node_hash_map = self.node_hash_mapper()
+        self.roots = None
+        self.gf = None
+        self.df = None
+        self.graph = None
+        self.map = None
         
-    # Loops over the config.paths and gets the graphframe from hatchet
-    def create_gfs(self):
-        log.info("[State] Creating graphframes: {0}".format(self.name))
-        gf = GraphFrame()
-        if self.config.format[self.name] == 'hpctoolkit':
-            # gf.from_hpctoolkit(self.path, int(self.config.nop[self.name]))
-            gf.from_hpctoolkit(self.path)
-        elif self.config.format[self.name] == 'caliper':                
-            gf.from_caliper(path)        
-        return gf
-
     def node_hash_mapper(self):
         ret = {}
         for idx, row in self.df.iterrows():
@@ -38,7 +22,7 @@ class State(object):
     
     def lookup_by_column(self, _hash, col_name):
         ret = []
-        node_df = self.df.loc[self.df['node'] == self.node_hash_map[str(_hash)]]
+        node_df = self.df.loc[self.df['node'] == self.map[str(_hash)]]
         node_df_T = node_df.T.squeeze()
         node_df_T_attr = node_df_T.loc[col_name]
         if node_df_T_attr is not None:
@@ -52,6 +36,8 @@ class State(object):
         return self.df.loc[self.df['node'] == self.node_hash_map[str(_hash)]]
 
     def lookup_with_node(self, node):
+        # print(type(self.df['node'][0]))
+        # print(self.df.loc[self.df['node'] == node]) 
         return self.df.loc[self.df['node'] == node]
 
     def lookup_with_nodeName(self, name):

@@ -149,12 +149,9 @@ class App():
         def callgraph():
             group_by_attr = 'module'
             # Create the callflow graph frames from graphframes given by hatchet
-            self.callflow.update('group', 'module')
-            ret = []
-            for idx, state in self.callflow.states.items():
-                json_result = json_graph.node_link_data(state.g)
-                ret.append(json_result)
-            return json.dumps(ret)
+            g = self.callflow.update('group', 'module')
+            result = json_graph.node_link_data(g)
+            return json.dumps(result)
 
         @app.route('/splitLevel')
         def splitLevel():

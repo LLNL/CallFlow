@@ -21,9 +21,7 @@ class groupBy:
         self.df = state.df
         self.attr = attr
         self.entry_funcs = {}
-        t = time.time()
         self.run(state)
-        print(time.time() - t)
 
     def create_group_path(self, path, state):
         group_path = []
@@ -36,14 +34,11 @@ class groupBy:
         return tuple(group_path)
 
     def find_a_good_node_name(self, node, attr, state):
-        node_name = state.lookup_by_column(node.df_index, attr)[0]
-        if len(node_name) != 0:
-            if node_name in self.entry_funcs:
-                return 'Module already assigned'
-            else:
-                return node_name
-        else:
-            return ''
+        node_name = state.lookup_with_node(node)[attr].tolist()[0]
+        print(node_name)
+        if(node_name == ''):
+            return 'Unknown'
+        return node_name
 
     def create_component_path(self, path, group_path, state):
         component_path = []
@@ -70,9 +65,10 @@ class groupBy:
         
         root = self.graph.roots[0]
         node_gen = self.graph.roots[0].traverse()       
-    
+
         rootdf = state.lookup_with_node(root)
-        group_path[rootdf.node[0]] = self.create_group_path(rootdf.path[0], state)        
+
+        group_path[rootdf.node[0]] = self.create_group_path(root.callpath, state)        
         node_name[rootdf.node[0]] = self.find_a_good_node_name(root, self.attr, state)
         is_entry_func[rootdf.node[0]] = True
         self.entry_funcs[rootdf.module[0]] = [root]
@@ -82,7 +78,9 @@ class groupBy:
             while root.callpath != None:
                 root = next(node_gen)
                 t = state.lookup_with_node(root)
-                s = state.lookup_with_node(root.parent)
+                if(len(root.parents) == 0):
+                    continue
+                s = state.lookup_with_node(root.parents[0])
 
                 # check if there are entries for the source and target
                 # Note: need to work on it more....
@@ -92,8 +90,8 @@ class groupBy:
                 snode = s.node.tolist()[0]
                 tnode = t.node.tolist()[0]
 
-                spath = s.path.tolist()[0]
-                tpath = t.path.tolist()[0]
+                spath = root.callpath
+                tpath = root.parents[0].callpath
 
                 tmodule = t.module.tolist()[0]
                                 
@@ -104,7 +102,7 @@ class groupBy:
                         self.entry_funcs[t[self.attr].tolist()[0]].append(state.lookup_with_node(tnode)['name'].tolist()[0])
                 else:
                     is_entry_func[tnode] = True
-                    node_name[tnode] = self.find_a_good_node_name(tnode, self.attr, state)
+                    node_name[tnode] = self.find_a_good_node_name(root.parents[0], self.attr, state)
                     self.entry_funcs[t[self.attr].tolist()[0]] = [state.lookup_with_node(tnode)['name'].tolist()[0]]
 
                 group_path[tnode] = self.create_group_path(tpath, state)

@@ -15,6 +15,7 @@
 import ete3
 import networkx as nx
 from logger import log
+import math
 
 class CallGraph(nx.Graph):
     def __init__(self, state, path_name, add_info):
@@ -39,7 +40,7 @@ class CallGraph(nx.Graph):
         # self.adj_matrix = nx.adjacency_matrix(self.g)
         # print(self.adj_matrix.todense())
 
-        print("Nodes", self.g.nodes())
+        # print("Nodes", self.g.nodes())
 #        print("Edges", self.g.edges(data=True))
 
 #        log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
@@ -49,7 +50,7 @@ class CallGraph(nx.Graph):
 
     def root_runtime_inc(self):
         root = self.graph.roots[0]
-        root_metrics = self.state.lookup(root.df_index)
+        root_metrics = self.state.lookup_with_node(root)
         return root_metrics['time (inc)'].max()
     
     def add_paths(self, path_name):
@@ -207,7 +208,7 @@ class CallGraph(nx.Graph):
         capacity_mapping = self.calculate_flows(self.g)
         type_mapping = self.edge_type(self.g)
         flow_mapping = self.flow_map()
-        print(flow_mapping)
+        print(capacity_mapping)
         nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)
         nx.set_edge_attributes(self.g, name='type', values=type_mapping)
         nx.set_edge_attributes(self.g, name='flow', values=flow_mapping)
@@ -280,11 +281,16 @@ class CallGraph(nx.Graph):
                 # target_name = edge[1]
                 # added_flow = additional_flow[target_name]
             source = self.state.lookup_with_vis_nodeName(edge[0])
-            target = self.state.lookup_with_vis_nodeName(edge[1])           
+            target = self.state.lookup_with_vis_nodeName(edge[1])   
+            print(self.state.df['vis_node_name'].unique())
+            print(edge[0], edge[1])        
             
             source_inc = source['time (inc)'].max()
             target_inc = target['time (inc)'].max()
 
+            print(source_inc, target_inc)
+            if(math.isnan(target_inc)):
+                target_inc = 2148211.0
 
             if source_inc == target_inc:
                 ret[edge] = source_inc

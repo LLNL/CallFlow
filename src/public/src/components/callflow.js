@@ -23,6 +23,8 @@ export default {
     },
     left: false,
     formats: ['Callgraph', 'CCT'],
+    datasets: ['impi', 'mvapich2', 'openmpi'],
+    selectedDataset: 'impi',
     selectedFormat: 'Callgraph',
     filterBy: ['Inclusive', 'Exclusive'],
     selectedFilterBy: 'Inclusive',
@@ -60,7 +62,8 @@ export default {
     fetchData() {
       if(this.selectedFormat == 'Callgraph'){
         this.request('callgraph', (data) => {
-          this.callgraphData = data[0]
+          console.log(data)
+          this.callgraphData = data
           this.init()
           this.request('splitLevel', (data) => {
             this.callgraphData = data[0]
