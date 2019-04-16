@@ -25,12 +25,13 @@ export default {
 
     methods: {
         init(graph, view) {
+            console.log(graph)
             this.edges = d3.select('#edges')
-           // this.edges.selectAll('.edge').remove();
             const edge = this.edges.selectAll('.edge')
                 .data(graph.links)
                 .enter().append('path')
                 .attr('class', (d) => {
+                    console.log(d)
                     if (d.source.name == 'intermediate' || d.target.name == 'intermediate') {
                         return 'edge intermediate';
                     }
@@ -147,7 +148,7 @@ export default {
         },
 
         clear() {
-            //   this.$refs.Sankey.clear()
+            this.edges.selectAll('.edge').remove()
         },
 
         update() {

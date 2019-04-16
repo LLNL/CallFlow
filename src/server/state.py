@@ -10,6 +10,8 @@ class State(object):
         self.gf = None
         self.df = None
         self.graph = None
+        self.entire_graph = None
+        self.entire_g = None
         self.map = None
         
     def node_hash_mapper(self):

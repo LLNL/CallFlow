@@ -38,8 +38,8 @@ export default class Color {
 	    this.excColorScale = chroma.scale('OrRd').padding([0.2, 0])
 	        .domain([minExc, maxExc]);
 
-	    this.nRangeColorScale = chroma.scale('OrRd').padding([0.2, 0])
-	        .domain([0, 1]);
+	    this.nRangeColorScale = chroma.scale(['black','red','yellow','white'])
+            .correctLightness();
 
         this.diffColorScale = chroma.scale('RdYlBu').domain([-1, 1]);
 
@@ -48,14 +48,14 @@ export default class Color {
     }
 
     getColor(node) {
-	    if (this.colorOption == 0) {
+	    if (this.colorOption == 'Name') {
 	        return this.colorScale(node.name[0].replace(/ .*/, ''));
-	    } else if (this.colorOption == 1) {
+	    } else if (this.colorOption == 'Inclusive') {
 	        return this.incColorScale(node.weight);
-	    } else if (this.colorOption == 2) {
+	    } else if (this.colorOption == 'Exclusive') {
 	        return this.excColorScale(node.exclusive);
-	    } else if (this.colorOption == 3) {
-	        return this.nRangeColorScale(node.nRange);
+	    } else if (this.colorOption == 'Uncertainity') {
+	        return this.nRangeColorScale(node.inclusive);
 	    } else if (this.colorOption == 4) {
 	        return this.diffColorScale(node.diff || 0);
 	    } else if (this.colorOption == 5) {

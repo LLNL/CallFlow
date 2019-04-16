@@ -18,13 +18,14 @@ from logger import log
 import math
 
 class CallGraph(nx.Graph):
-    def __init__(self, state, path_name, add_info):
+    def __init__(self, state, path_name, add_info, group_by):
         super(CallGraph, self).__init__()
         self.state = state
         self.graph = self.state.graph
         self.df = self.state.df
         self.root = state.lookup_with_node(self.graph.roots[0])['vis_node_name'][0]
-        
+        self.group_by = group_by
+
         self.rootRunTimeInc = self.root_runtime_inc()
         self.edge_direction = {}        
         self.g = nx.DiGraph(rootRunTimeInc = int(self.rootRunTimeInc))
@@ -119,14 +120,16 @@ class CallGraph(nx.Graph):
                     continue
             
             if attr == 'time (inc)':
-                if len(self.df[self.df['vis_node_name'] == node][attr]) != 0:
-                    ret[node] =  self.df[self.df['vis_node_name'] == node][attr].max().tolist()
-                else:
-                    ret[node] = 0
+                group_df = self.df.groupby([self.group_by]).agg(['mean'])
+                ret[node] = group_df.loc[node, 'max_incTime'][0]
             elif attr == 'node_type':
                 ret[node] = 'normal_edge'
             else:
-                ret[node] =  list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
+                df = self.df.loc[self.df['vis_node_name'] == node][attr]
+                if df.empty:
+                    ret[node] = ['Unkno']
+                else:
+                    ret[node] = list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
         return ret
 
     def tailhead(self, edge):
@@ -208,7 +211,6 @@ class CallGraph(nx.Graph):
         capacity_mapping = self.calculate_flows(self.g)
         type_mapping = self.edge_type(self.g)
         flow_mapping = self.flow_map()
-        print(capacity_mapping)
         nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)
         nx.set_edge_attributes(self.g, name='type', values=type_mapping)
         nx.set_edge_attributes(self.g, name='flow', values=flow_mapping)
@@ -280,18 +282,13 @@ class CallGraph(nx.Graph):
                 # source_name = edge[0]
                 # target_name = edge[1]
                 # added_flow = additional_flow[target_name]
-            source = self.state.lookup_with_vis_nodeName(edge[0])
-            target = self.state.lookup_with_vis_nodeName(edge[1])   
-            print(self.state.df['vis_node_name'].unique())
-            print(edge[0], edge[1])        
+            # source = self.state.lookup_with_vis_nodeName(edge[0])
+            # target = self.state.lookup_with_vis_nodeName(edge[1])
+            group_df = self.df.groupby([self.group_by]).agg(['mean'])
+            source_inc = group_df.loc[edge[0], 'max_incTime'][0]   
+            target_inc = group_df.loc[edge[1], 'max_incTime'][0]   
             
-            source_inc = source['time (inc)'].max()
-            target_inc = target['time (inc)'].max()
-
-            print(source_inc, target_inc)
-            if(math.isnan(target_inc)):
-                target_inc = 2148211.0
-
+         
             if source_inc == target_inc:
                 ret[edge] = source_inc
             else:

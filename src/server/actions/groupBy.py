@@ -16,37 +16,38 @@ import pandas as pd
 import time 
 
 class groupBy:
-    def __init__(self, state, attr):
+    def __init__(self, state, group_by):
+        self.state = state
         self.graph = state.graph
         self.df = state.df
-        self.attr = attr
+        self.group_by = group_by
         self.entry_funcs = {}
-        self.run(state)
+        self.run()
 
-    def create_group_path(self, path, state):
+    def create_group_path(self, path):
         group_path = []
         temp = None
         for i, elem in enumerate(path):
-            grouping = state.lookup_with_nodeName(elem)[self.attr].tolist()[0]
+            grouping = self.state.lookup_with_nodeName(elem)[self.group_by].tolist()[0]
             if temp == None or grouping != temp:
                 group_path.append(grouping)
                 temp = grouping
         return tuple(group_path)
 
-    def find_a_good_node_name(self, node, attr, state):
-        node_name = state.lookup_with_node(node)[attr].tolist()[0]
-        print(node_name)
+    def find_a_good_node_name(self, node):
+        node_name = self.state.lookup_with_node(node)[self.group_by].tolist()[0]
         if(node_name == ''):
-            return 'Unknown'
+            node_name = 'Unkno'
+        print('Node name', node_name)
         return node_name
 
-    def create_component_path(self, path, group_path, state):
+    def create_component_path(self, path, group_path):
         component_path = []
         path = list(path)
-        component_module = state.lookup_with_nodeName(path[-1]).module.tolist()[0]
+        component_module = self.state.lookup_with_nodeName(path[-1])[self.group_by].tolist()[0]
         component_path.append(component_module)
 
-        filter_path = [node for node in path if component_module == state.lookup_with_nodeName(node).module.tolist()[0]]
+        filter_path = [node for node in path if component_module == self.state.lookup_with_nodeName(node)[self.group_by].tolist()[0]]
        
         for i, elem in enumerate(filter_path):            
              component_path.append(elem)                    
@@ -55,74 +56,129 @@ class groupBy:
     def create_component_level(self, component_path):
         return len(component_path) - 1
             
-    def run(self, state):
+    def run(self):
         group_path = {}
         component_path = {}
         component_level = {}
         is_entry_func = {}
         node_name = {}       
-        entry_function = {}
+    
+        roots = self.graph.roots
+        for root in roots:
+            node_gen = root.traverse()       
+            rootdf = self.state.lookup_with_node(root)
+
+            group_path[rootdf.node[0]] = self.create_group_path(root.callpath)        
+            node_name[rootdf.node[0]] = self.find_a_good_node_name(root)
+            is_entry_func[rootdf.node[0]] = True
+            self.entry_funcs[rootdf[self.group_by][0]] = [root]
+            count = 0
+            root = next(node_gen)
+
         
-        root = self.graph.roots[0]
-        node_gen = self.graph.roots[0].traverse()       
+            try:
+                while root.callpath != None:
+                    root = next(node_gen)
+                    t = self.state.lookup_with_node(root)
+                    # if(len(root.parents) == 0):
+                    #     continue
+                    s = self.state.lookup_with_node(root.parents[0])
 
-        rootdf = state.lookup_with_node(root)
-
-        group_path[rootdf.node[0]] = self.create_group_path(root.callpath, state)        
-        node_name[rootdf.node[0]] = self.find_a_good_node_name(root, self.attr, state)
-        is_entry_func[rootdf.node[0]] = True
-        self.entry_funcs[rootdf.module[0]] = [root]
-        count = 0
-        
-        try:
-            while root.callpath != None:
-                root = next(node_gen)
-                t = state.lookup_with_node(root)
-                if(len(root.parents) == 0):
-                    continue
-                s = state.lookup_with_node(root.parents[0])
-
-                # check if there are entries for the source and target
-                # Note: need to work on it more....
-                if t.empty or s.empty:
-                    continue
+                    # check if there are entries for the source and target
+                    # Note: need to work on it more....
+                    if t.empty or s.empty:
+                        continue
                               
-                snode = s.node.tolist()[0]
-                tnode = t.node.tolist()[0]
+                    snode = s.node.tolist()[0]
+                    tnode = t.node.tolist()[0]
 
-                spath = root.callpath
-                tpath = root.parents[0].callpath
+                    spath = root.callpath
+                    tpath = root.parents[0].callpath
 
-                tmodule = t.module.tolist()[0]
+                    tmodule = t[self.group_by].tolist()[0]
                                 
-                if tmodule in self.entry_funcs:
-                    is_entry_func[tnode] = False
-                    node_name[tnode] = ''
-                    if snode in is_entry_func:
-                        self.entry_funcs[t[self.attr].tolist()[0]].append(state.lookup_with_node(tnode)['name'].tolist()[0])
-                else:
+                    # if tmodule in self.entry_funcs:
+                    #     is_entry_func[tnode] = False
+                    #     node_name[tnode] = self.find_a_good_node_name(root.parents[0])
+                    #     if snode in is_entry_func:
+                    #         self.entry_funcs[t[self.group_by].tolist()[0]].append(self.state.lookup_with_node(tnode)['name'].tolist()[0])
+                    # else:
                     is_entry_func[tnode] = True
-                    node_name[tnode] = self.find_a_good_node_name(root.parents[0], self.attr, state)
-                    self.entry_funcs[t[self.attr].tolist()[0]] = [state.lookup_with_node(tnode)['name'].tolist()[0]]
+                    node_name[tnode] = self.find_a_good_node_name(root.parents[0])
+                    self.entry_funcs[t[self.group_by].tolist()[0]] = [self.state.lookup_with_node(tnode)[self.group_by].tolist()[0]]
 
-                group_path[tnode] = self.create_group_path(tpath, state)
-                component_path[tnode] = self.create_component_path(tpath, group_path[tnode], state)
-                component_level[tnode] = self.create_component_level(component_path[tnode])
+                    group_path[tnode] = self.create_group_path(tpath)
+                    component_path[tnode] = self.create_component_path(tpath, group_path[tnode])
+                    component_level[tnode] = self.create_component_level(component_path[tnode])
 
-#                print(tnode, len(self.entry_funcs[tmodule]))
-#                print("is entry function:", is_entry_func[tnode])
-#                print("entry functions: ", self.entry_funcs[tmodule])
-#                print("node path: ", tpath)                
-#                print("group path: ", group_path[tnode])
-#                print("component path: ", component_path[tnode])
+                    # print(snode, tnode, len(self.entry_funcs[tmodule]))
+                    # print("is entry function:", is_entry_func[tnode])
+                    # print("entry functions: ", self.entry_funcs[tmodule])
+                    # print("node path: ", tpath)                
+                    # print("group path: ", group_path[tnode])
+                    # print("component path: ", component_path[tnode])
                 
-        except StopIteration:
-            pass
-        finally:
-            del root
+            except StopIteration:
+                pass
+            finally:
+                del root
 
-        state.update_df('group_path', group_path)
-        state.update_df('component_path', component_path)
-        state.update_df('show_node', is_entry_func)
-        state.update_df('vis_node_name', node_name)
-        state.update_df('component_level', component_level)
+            # try:
+            #     while root.callpath != None:
+            #         root = next(node_gen)
+            #         t = self.state.lookup_with_node(root)
+            #         # if(len(root.parents) == 0):
+            #         #     continue
+            #         s = self.state.lookup_with_node(root.parents[0])
+
+            #         # check if there are entries for the source and target
+            #         # Note: need to work on it more....
+            #         if t.empty or s.empty:
+            #             continue
+                              
+            #         snode = s.node.tolist()[0]
+            #         tnode = t.node.tolist()[0]
+
+            #         spath = root.callpath
+            #         tpath = root.parents[0].callpath
+
+            #         sgroup = s[self.group_by].tolist()[0]
+            #         tgroup = t[self.group_by].tolist()[0]
+            #         # print(snode, tnode)
+
+            #         node_name[tnode] = self.find_a_good_node_name(root)
+            #         is_entry_func[tnode] = True
+
+            #         # if tmodule in self.entry_funcs:
+            #         #     is_entry_func[tnode] = False
+            #         #     node_name[tnode] = self.find_a_good_node_name(root.parents[0])
+            #         #     if snode in is_entry_func:
+            #         #         self.entry_funcs[t[self.group_by].tolist()[0]].append(self.state.lookup_with_node(tnode)['name'].tolist()[0])
+            #         # else:
+            #         #     is_entry_func[tnode] = True
+            #         #     node_name[tnode] = self.find_a_good_node_name(root.parents[0])
+            #         #     self.entry_funcs[t[self.group_by].tolist()[0]] = [self.state.lookup_with_node(tnode)['name'].tolist()[0]]
+
+            #         group_path[tnode] = self.create_group_path(tpath)
+            #         component_path[tnode] = self.create_component_path(tpath, group_path[tnode])
+            #         component_level[tnode] = self.create_component_level(component_path[tnode])
+
+            #         # print(group_path[tnode])
+
+            #         # print(snode, tnode, len(self.entry_funcs[tmodule]))
+            #         # print("is entry function:", is_entry_func[tnode])
+            #         # print("entry functions: ", self.entry_funcs[tgroup])
+            #         # print("node path: ", tpath)                
+            #         # print("group path: ", group_path[tnode])
+            #         # print("component path: ", component_path[tnode])
+                
+            # except StopIteration:
+            #     pass
+            # finally:
+            #     del root
+
+        self.state.update_df('group_path', group_path)
+        self.state.update_df('component_path', component_path)
+        self.state.update_df('show_node', is_entry_func)
+        self.state.update_df('vis_node_name', node_name)
+        self.state.update_df('component_level', component_level)

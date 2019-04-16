@@ -24,6 +24,8 @@ from actions.groupBy import groupBy
 from actions.split_callee import splitCallee
 from actions.split_caller import splitCaller
 from actions.split_level import splitLevel
+from actions.struct_diff import structDiff
+from actions.module_hierarchy import moduleHierarchy
 from state import State
 from logger import log
 import time
@@ -86,6 +88,8 @@ class CallFlow:
 
     def process(self, state):
         # Filter the graphframe based on inc_time or exc_time. 
+        state.entire_df = state.df
+        state.entire_graph = state.graph
         state.fgf = self.filter(state) 
         # update df and graph after filtering.
         state.df = state.fgf.dataframe
@@ -112,19 +116,35 @@ class CallFlow:
         state.df = preprocess.df
         state.graph = preprocess.graph
         state.map = preprocess.map
+        self.dfs(state.graph, 50)
+
 
         return state
 
     def write_gf(self, states, name):
         state = states[name]
         dirname = '/'.join(os.path.dirname(__file__).split('/')[:-2])
+        print('writing to file')
+        # dump the entire_graph as literal
+        # entire_graph_literal = state.entire_graph.to_literal(graph=state.entire_graph, dataframe=state.entire_df)
+        # print(entire_graph_literal)
+        # entire_graph_filepath = dirname + self.config.paths[name][1:] + '/entire_graph.json'
+        # with open(entire_graph_filepath, 'w') as entire_graphFile:
+        #     json.dump(entire_graph_literal, entire_graphFile)
+
+        # dump the filtered graph as literal.
         literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
         graph_filepath = dirname + self.config.paths[name][1:] + '/graph.json'
         with open(graph_filepath, 'w') as graphFile:
             json.dump(literal, graphFile)
 
-        df_filepath = dirname + self.config.paths[name][1:] + '/df.csv'
-        state.df.to_csv(df_filepath)
+        # # dump the entire dataframe to csv. 
+        # entire_df_filepath = dirname + self.config.paths[name][1:] + '/entire_df.csv'
+        # state.entire_df.to_csv(entire_df_filepath)
+
+        # # dump the filtered dataframe to csv.
+        # df_filepath = dirname + self.config.paths[name][1:] + '/df.csv'
+        # state.df.to_csv(df_filepath)
 
     def replace_str_with_Node(self, df, graph):
         mapper = {}
@@ -135,25 +155,47 @@ class CallFlow:
         for root in graph.roots:
             mapper[root.callpath[-1]] = Node(root.nid, root.callpath, None)
             dfs_recurse(root)
-        df['node'] = df['node'].apply(lambda node: mapper[node])
+        df['node'] = df['node'].apply(lambda node: mapper[node] if node in mapper else '')
         return df
 
     def read_gf(self, name):
         state = State()
         dirname = '/'.join(os.path.dirname(__file__).split('/')[:-2])
-        graph_filepath = dirname + self.config.paths[name][1:] + '/graph.json'
         df_filepath = dirname + self.config.paths[name][1:] + '/df.csv'
+        entire_df_filepath = dirname + self.config.paths[name][1:] + '/entire_df.csv'
+        graph_filepath = dirname + self.config.paths[name][1:] + '/graph.json'
+        entire_graph_filepath = dirname + self.config.paths[name][1:] + '/entire_graph.json'      
         with open(graph_filepath, 'r') as graphFile:
             data = json.load(graphFile)
 
         state.gf = GraphFrame()
         state.gf.from_literal(data)
+
+        with open(entire_graph_filepath, 'r') as entire_graphFile:
+            entire_data = json.load(entire_graphFile)
+            
+        state.entire_gf = GraphFrame()
+        state.entire_gf.from_literal(entire_data)
+
         state.df = pd.read_csv(df_filepath)
+        state.entire_df = pd.read_csv(entire_df_filepath)
+
         state.graph = state.gf.graph
+        state.entire_graph = state.entire_gf.graph
+
         state.map = state.node_hash_mapper()
+
+        # Print the module group by information. 
+        # print(state.df.groupby(['module']).agg(['mean','count']))
 
         # replace df['node'] from str to the Node object.
         state.df = self.replace_str_with_Node(state.df, state.graph)
+        state.entire_df = self.replace_str_with_Node(state.entire_df, state.entire_graph)
+
+        # add path to the dataframes. 
+        # state.df['path'] = state.df['node'].apply(lambda node: node.callpath)
+        # state.entire_df['path'] = state.entire_df['node'].apply(lambda node: node.callpath if node else [])
+
         
         return state
 
@@ -195,19 +237,23 @@ class CallFlow:
         log.info("[Squash] {1} rows in dataframe (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
         return fgf
 
-    def update(self, action, attr):    
-        name = 'kripke-impi'
-        print(self.states.keys())
-        state = self.states[name]
-        print("[{0}] {1}".format(action, name))
+    def update(self, action, attr, dataset, dataset2):
+        state = self.states[dataset]
+        if(dataset2 != None):
+            state2 = self.states[dataset2]
+        print("[{0}] {1}".format(action, dataset))
         if action == 'default':
-            nx = CallGraph(state, 'path', True)      
+            groupBy(state, attr)
+            nx = CallGraph(state, 'group_path', True, 'name')      
         elif action == 'filter':
             Filter(state)    
-            nx = CallGraph(state, 'group_path', True)      
+            nx = CallGraph(state, 'group_path', True, 'module')      
         elif action == "group":
             groupBy(state, attr)
-            nx = CallGraph(state, 'group_path', True)
+            nx = CallGraph(state, 'group_path', True, 'module')
+        elif action == 'diff':
+            structDiff(state, state2)
+            nx = CallGraph(state, 'group_path', True, 'module')
         elif action == 'split-level':
             splitLevel(state, attr)
             nx = CallGraph(state, 'group_path', True)
@@ -217,17 +263,11 @@ class CallFlow:
         elif action == "split-caller":
             splitCaller(state, attr)
             nx = CallGraph(state, 'path', True)
-        elif action == "dot-format":
-            nx = CallGraph(state, 'path', False)
-            nx.write_dot(nx.get_graph(), '/Users/jarus/ucd/Research/Visualisation/projects/CallFlow/src/server')
-        elif action == "graphml-format":
-            nx = CallGraph(state, 'path', False)
-            name = attr + '.graphml'
-            nx.write_graphml(nx.get_graph(), '/home/vidi/Suraj/llnl/CallFlow/src/server/' + name)
-        elif action == 'json-format':
-            nx = CallGraph(state, 'path', false)
-            name = attr + '.json'
-            utils.graphmltojson('/home/vidi/Suraj/llnl/CallFlow/src/server/' + name, '/home/vidi/Suraj/llnl/CallFlow/src/server/' + name + '.json')
+        elif action == 'module-hierarchy':
+            nx = CallGraph(state, 'path', False, 'name')
+            state.entire_g = nx.g
+            moduleHierarchy(state, attr)
+
         state.g = nx.g   
 
         return state.g 

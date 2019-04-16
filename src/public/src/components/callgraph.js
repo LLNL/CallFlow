@@ -39,7 +39,7 @@ export default {
     height: null,
     treeHeight: null,
     color: null,
-    colorOption: 1
+    colorOption: null,
   }),
 
   watch: {
@@ -52,8 +52,8 @@ export default {
 
   methods: {
     init(data) {
-      this.width = 900 - this.margin.left - this.margin.right
-      this.height = 900 - this.margin.top - this.margin.bottom
+      this.width =  document.getElementById('vis').clientWidth - this.margin.left - this.margin.right
+      this.height =  window.innerHeight*0.89 - this.margin.top - this.margin.bottom
       d3.select('#' + this.id)
         .attr('class', 'sankey')
         .attr('width', this.width + this.margin.left + this.margin.right)
@@ -70,13 +70,21 @@ export default {
 
       // need to clean this up still
       this.data = preprocess(data, false)
-      this.sankey = this.initSankey(this.data)
+      this.d3sankey = this.initSankey(this.data)
       this.postProcess(this.data.nodes, this.data.links)
       
       // Set color scales
       this.view.color = new Color(this.colorOption)
+      console.log(this.view.color)
       this.view.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
 
+      this.render()
+    },
+
+    updateColor(option){
+      this.colorOption = option
+      this.view.color = new Color(this.colorOption)
+      this.view.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
       this.render()
     },
 
@@ -184,11 +192,20 @@ export default {
     },
 
     clear() {
-      //   this.$refs.Sankey.clear()
+      this.$refs.Nodes.clear()
+      this.$refs.Edges.clear()
     },
 
-    update() {
-      //   this.$refs.Sankey.tick()
+    update(data) {
+      this.data = preprocess(data, false)
+      this.d3sankey = this.initSankey(this.data)
+      this.postProcess(this.data.nodes, this.data.links)
+      
+      // Set color scales
+      this.view.color = new Color(this.colorOption)
+      this.view.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
+
+      this.render()
     },
   }
 }

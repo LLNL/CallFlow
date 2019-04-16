@@ -145,6 +145,7 @@ export default function Sankey() {
                 target = link.target = nodes[link.targetID];
 
 	            if(link.type != 'back_edge'){
+                    console.log(link)
 		            source.sourceLinks.push(link);
 		            target.targetLinks.push(link);
 	            }
@@ -220,7 +221,6 @@ export default function Sankey() {
         //     });
         //     remainingNodes = nextNodes;
         // }
-        console.log(nodeWidth)
 	    nodes.forEach(function(node){
 	        node.dx = nodeWidth
 	    })
@@ -308,7 +308,8 @@ export default function Sankey() {
 		            node.y = Math.min(levelY, i)
 		            levelY = nodeHeight
                     node.parY = nodeHeight;
-		            node.height = node.value*minNodeScale*scale;
+                    // console.log(node.weight, node.name, scale)
+		            node.height = node.weight*minNodeScale*scale;
                 });
 
                 nodes.sort(function(a,b){

@@ -13,6 +13,7 @@
 #!/usr/bin/env python
 
 from flask import Flask, jsonify, render_template, send_from_directory, current_app, request
+from flask_socketio import SocketIO, emit, send
 import os
 import sys
 import json
@@ -28,6 +29,7 @@ import networkx as nx
 from networkx.readwrite import json_graph
 
 app = Flask(__name__, static_url_path='/public')
+sockets = SocketIO(app)
 CORS(app)
 
 class App():
@@ -47,8 +49,8 @@ class App():
         
         self.config = configFileReader(self.args.config_file)
         self.callflow = CallFlow(self.config, self.props)
-        self.create_server()
-        app.run(debug = self.debug, use_reloader=True)
+        self.create_socket_server()
+        sockets.run(app, debug = self.debug, use_reloader=True)
         
 #         if self.args.filter:        
 #             self.gfs = self.filter_gfs(True)
@@ -131,6 +133,48 @@ class App():
                 js_graph = json.load(g)
             self.cfgs.append(json_graph.node_link_graph(js_graph))
         log.warn("Read from the data files")
+
+    def create_socket_server(self):
+        @sockets.on('dataset', namespace='/')
+        def single(data):
+            dataset = data['dataset']
+            graph_format = data['format']
+            print('[Dataset Update] ', dataset)
+            if(graph_format == 'CCT'):
+                group_by_attr = 'name'
+                g = self.callflow.update('default', group_by_attr, dataset, None)
+            elif(graph_format == 'Callgraph'):
+                group_by_attr = 'module'
+                g = self.callflow.update('group', group_by_attr, dataset, None)
+            result = json_graph.node_link_data(g)
+            emit('dataset', result, json=True)
+
+        @sockets.on('diff', namespace='/')
+        def diff(data):
+            dataset1 = data['dataset1']
+            dataset2 = data['dataset2']
+            graph_format = data['format']
+            print('[Diff] Comapring {0} and {1}'.format(dataset1, dataset2))
+            if(graph_format == 'CCT'):
+                group_by_attr = 'default'
+                g = self.callflow.update('diff', group_by_attr, dataset1, dataset2)
+            elif(graph_format == 'Callgraph'):
+                group_by_attr = 'module'
+                g = self.callflow.update('diff', group_by_attr, dataset1, dataset2)
+            result = json_graph.node_link_data(g)
+            emit('dataset', result, json=True)
+
+        @sockets.on('module_hierarchy', namespace='/')
+        def module_hierarchy(data):
+            nid = data['nid']
+            dataset = data['dataset']
+            result = self.callflow.update('module-hierarchy', nid, dataset, None)
+            emit('module_hierarchy', result, json=True)
+
+        @sockets.on('uncertainity', namespace='/')
+        def uncertainity(data):
+            result = {}
+            emit('uncertainity', result, json=True)
 
     def create_server(self):
         app.debug = True
@@ -274,79 +318,7 @@ class App():
                 "other_funcs": other_funcs_json
             })
 
-        @app.route('/getHierarchy')
-        def getHierarchy():
-            data_json = json.loads(request.args.get('in_data'))
-            n_index = data_json['n_index']
-            df = self.callflow.state.df
-            cct_df = self.cctflow.state.df
-
-            def module_hierarchy_graph(module):
-                g = self.ccts[0].state.g
-                print(g.nodes(data=True))
-                hierarchy = nx.Graph()
-                source_target_data = []
-                nodes = [x for x,y in g.nodes(data=True) if 'module' in y and y['module'] == [module]]
-                node = nodes[0]
-                for idx, node in enumerate(nodes):
-                    neighbors = sorted(g[node].items(), key=lambda edge: edge[1]['weight'])
-                    for idx, n in enumerate(neighbors):
-                        print("source: {0}, target: {1}".format(node, n[0]))
-                        source_node = node
-                        target_node = n[0]
-                        weight = n[1]['weight']
-                        level = idx
-                        if(cct_df[cct_df['name'] == n[0]]['module'].unique()[0] != module):
-                            type_node = 'exit'
-                            level = -1
-                            print('{0} is an exit node'.format(n[0]))
-                        else:
-                            type_node = 'normal'
-                        source_target_data.append({
-                            "source": source_node,
-                            "target": target_node,
-                            "weight": weight,
-                            "level": level,
-                            "type": type_node
-                        })
-                isExit = {}
-                for idx, data in enumerate(source_target_data):
-                    if data['level'] == -1:
-                        isExit[data['target']] = True
-                    else:
-                        isExit[data['target']] = False
-                return isExit
-
-            mod_index = df[df['n_index'] == n_index]['mod_index'].values.tolist()[0]
-            df = df[df.mod_index == mod_index]
-            module = df.loc[df['n_index'] == n_index]['module'].unique().tolist()[0]            
-
-            is_exit = module_hierarchy_graph(module)
-            paths = []
-            func_in_module = df.loc[df['mod_index'] == mod_index]['name'].unique().tolist()
-            print("Number of functions inside the {0} module: {1}".format(module, len(func_in_module)))
-            for idx, func in enumerate(func_in_module):
-                if func not in is_exit:
-                    print(func)
-                    is_exit[func] = False
-                else:
-                    is_exit[func] = True
-                paths.append({
-                    "func": func,
-                    "exit": is_exit[func],
-                    "module": module,
-                    "path": df.loc[df['name'] == func]['component_path'].unique().tolist()[0],
-                    "inc_time" : df.loc[df['name'] == func]['CPUTIME (usec) (I)'].mean(),
-                    "exclusive" : df.loc[df['name'] == func]['CPUTIME (usec) (E)'].mean(),
-                    "imbalance_perc" : df.loc[df['name'] == func]['imbalance_perc'].mean(),
-                    "component_level": df.loc[df['name'] == func]['component_level'].unique().tolist()[0],
-                })
-            paths_df = pd.DataFrame(paths)
-
-            max_level = paths_df['component_level'].max()
-            print("Max levels inside the node: {0}".format(max_level))
-            
-            return paths_df.to_json(orient="columns")
+      
             
                                   
 if __name__ == '__main__':

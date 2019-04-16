@@ -12,6 +12,9 @@ export default {
 
 <style>
 #app {
-  margin-top: 10px;
+}
+
+#vis {
+  border: 2px solid #e1e1e1;
 }
 </style>

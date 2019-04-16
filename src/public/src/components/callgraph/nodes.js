@@ -1,5 +1,6 @@
 import tpl from '../../html/callgraph/nodes.html'
 import * as  d3 from 'd3'
+import { timeHours } from 'd3-time';
 
 export default {
     template: tpl,
@@ -37,9 +38,9 @@ export default {
                 .data(this.graph.nodes)
                 .enter().append('g')
                 .attr('class', (d) => {
-                    if (d.name == 'intermediate' || d.name[0][d.name[0].length - 1] == '_') {
-                        return 'node intermediate';
-                    }
+                    // if (d.name == 'intermediate' || d.name[0][d.name[0].length - 1] == '_') {
+                    //     return 'node intermediate';
+                    // }
                     return 'node';
                 })
                 .attr('opacity', 0)
@@ -90,12 +91,12 @@ export default {
                     return '#e1e1e1';
                 })
                 .style('stroke-width', (d) => {
-                    if (d.name[0] == 'intermediate' || d.name[0][d.name[0].length - 1] == '_') {
-                        if (d.name[0] == 'intermediate') {
-                            return 0;
-                        }
+                    // if (d.name[0] == 'intermediate' || d.name[0][d.name[0].length - 1] == '_') {
+                    //     if (d.name[0] == 'intermediate') {
+                    //         return 0;
+                    //     }
                         return 1;
-                    }
+                    // }
                 })
                 .on('mouseover', function (d) {
                     if (d.name != 'intermediate') {
@@ -123,13 +124,11 @@ export default {
                     // this.view.toolTipG.selectAll('*').remove();
                 })
                 .on('click', (d) => {
-                    this.view.selectedModule = d;
-                    getHierarchy(d).then((data) => {
-                        drawIcicleHierarchy(this.view, data);
-                        // getFunctionLists(view.selectedModule).then((data) => {
-
-                        // });
-                    });
+                    let nid = d.n_index[0]
+                    this.$socket.emit('module_hierarchy', {
+                        nid, 
+                        dataset: 'kripke-impi',
+                    })
                 });
             // .on('contextmenu', function(d){
             //     return view.svgBase.contextMenu(d);
@@ -140,7 +139,10 @@ export default {
                 .data(this.graph.nodes)
                 .transition()
                 .duration(this.transitionDuration)
-                .attr('opacity', 1)
+                .attr('opacity', d => {
+                    this.quantileLines(rect, d)
+                    return 1;
+                })
                 .attr('height', d => d.height)
                 .style('fill', (d) => {
                     if (d.name == 'intermediate') {
@@ -155,6 +157,26 @@ export default {
                     }
                     return 1;
                 });
+
+            
+            
+        },
+
+        quantileLines(rect, data) {
+            for (let i = 0; i < data.nrange.length; i += 1) {
+                let nrange = data.nrange[i]
+                this.nodes.append('line')
+                    .attr('id', 'line-' + i)
+                    .style("stroke", "black")  
+                    .style("stroke-width", 2)
+                    .attr("x1", data.x)   
+                    .attr("y1", data.y*(nrange/data.weight)) 
+                    .attr("x2", data.x + this.nodeWidth)     
+                    .attr("y2", data.y*(nrange/data.weight))
+
+             
+                    
+            }
         },
 
         path(node) {
@@ -222,20 +244,20 @@ export default {
                 .attr('y', '-10')
                 .style('opacity', 1)
                 .text((d) => {
-                    if (d.name != 'intermediate' && d.name[0][d.name[0].length - 1] != '_') {
-                        if (d.height < this.minHeightForText) {
-                            return '';
-                        }
-                        // var textSize = this.textSize(d.name)['width'];
-                        // if (textSize < d.height) {
-                        //     return d.name[0];
-                        // }
-                        // else {
-                             return this.trunc(d.name[0], textTruncForNode)
+                    // if (d.name != 'intermediate' && d.name[0][d.name[0].length - 1] != '_') {
+                    //     if (d.height < this.minHeightForText) {
+                    //         return '';
+                    //     }
+                    //     // var textSize = this.textSize(d.name)['width'];
+                    //     // if (textSize < d.height) {
+                    //     //     return d.name[0];
+                    //     // }
+                    //     // else {
+                    return this.trunc(d.name, textTruncForNode)
                         // }
 
-                    }
-                    return '';
+                    // }
+                    // return '';
                 })
                 .on('mouseover', function (d) {
                     if (d.name[0] != 'intermediate') {
@@ -267,9 +289,16 @@ export default {
                 .style('opacity', 1)
                 .style('fill', d => this.view.color.setContrast(this.view.color.getColor(d)))
                 .text((d) => {
-                    let name_splits = d.name[0].split('/').reverse()
+                    if(d.name.length == 1){
+                        name = d.name[0]
+                    }
+                    else{
+                        name = d.name
+                    }
+
+                    let name_splits = name.split('/').reverse()
                     if (name_splits.length == 1) {
-                        d.name = d.name[0]
+                        d.name = name
                     }
                     else {
                         d.name = name_splits[0]
@@ -292,7 +321,7 @@ export default {
         },
 
         clear() {
-            //   this.$refs.Sankey.clear()
+            d3.selectAll('.node').remove()
         },
 
         update() {

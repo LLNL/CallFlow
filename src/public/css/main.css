@@ -23,7 +23,7 @@ body{
 	height: 99%;
 }
 
-#content{
+/* #content{
 	height: 98% !important;
 	padding-top: 15px;
 }
@@ -119,10 +119,14 @@ body{
     fill: none;
     stroke: #000;
 }
-
-
+ */
 
 #flist_view{
     overflow-y: scroll
-         max-height: 100vh;
-    }
+    max-height: 100vh;
+}
+
+#vis {
+	border: 2px;
+	border-color: #000;
+}
