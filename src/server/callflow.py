@@ -134,9 +134,16 @@ class CallFlow:
 
         # dump the filtered graph as literal.
         literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
+        temp_gf = GraphFrame()
+        temp_gf.from_literal(literal)
+
+        self.dfs(temp_gf.graph, 100)
+        
         graph_filepath = dirname + self.config.paths[name][1:] + '/graph.json'
         with open(graph_filepath, 'w') as graphFile:
             json.dump(literal, graphFile)
+
+        print("written to file succesfully")
 
         # # dump the entire dataframe to csv. 
         # entire_df_filepath = dirname + self.config.paths[name][1:] + '/entire_df.csv'
@@ -222,11 +229,11 @@ class CallFlow:
         t = time.time()
         if self.props['filterBy'] == "IncTime":
             max_inclusive_time = utils.getMaxIncTime(state.gf)
-            filter_gf = state.gf.filter(lambda x: True if(x['time (inc)'] > 0.01*max_inclusive_time) else False)
+            filter_gf = state.gf.filter(lambda x: True if(x['time (inc)'] > 0.001*max_inclusive_time) else False)
         elif self.args['filterBy'] == "ExcTime":
             max_exclusive_time = utils.getMaxExcTime(state.gf)
             log.info('[Filter] By Exclusive time = {0})'.format(max_exclusive_time))
-            filter_gf = state.gf.filter(lambda x: True if (x['time'] > 0.01*max_exclusive_time) else False)
+            filter_gf = state.gf.filter(lambda x: True if (x['time'] > 0.001*max_exclusive_time) else False)
         else:
             log.warn("Not filtering.... Can take forever. Thou were warned")
             filter_gf = state.gf
