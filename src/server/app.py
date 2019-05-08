@@ -135,17 +135,38 @@ class App():
         log.warn("Read from the data files")
 
     def create_socket_server(self):
-        @sockets.on('dataset', namespace='/')
-        def single(data):
+        @sockets.on('filter', namespace='/')
+        def filter(data):
             dataset = data['dataset']
             graph_format = data['format']
-            print('[Dataset Update] ', dataset)
+            filterBy = data['filterBy']
+            filterPerc = data['filterPerc']
+            g = self.callflow.update({
+                "name": "filter",
+                "filterBy": filterBy,
+                "filterPerc": filterPerc,
+                "dataset1": dataset
+            })
+
+        @sockets.on('group', namespace='/')
+        def group(data):
+            dataset = data['dataset']
+            graph_format = data['format']
+            print('[Group] Dataset: {0}, format: {1}'.format(dataset, graph_format))
             if(graph_format == 'CCT'):
                 group_by_attr = 'name'
-                g = self.callflow.update('default', group_by_attr, dataset, None)
+                g = self.callflow.update({
+                    "name": "group",
+                    "groupBy": group_by_attr,
+                    "dataset1": dataset
+                })
             elif(graph_format == 'Callgraph'):
                 group_by_attr = 'module'
-                g = self.callflow.update('group', group_by_attr, dataset, None)
+                g = self.callflow.update({
+                    "name": 'group', 
+                    "groupBy": group_by_attr, 
+                    "dataset1": dataset
+                })
             result = json_graph.node_link_data(g)
             emit('dataset', result, json=True)
 
@@ -157,18 +178,32 @@ class App():
             print('[Diff] Comapring {0} and {1}'.format(dataset1, dataset2))
             if(graph_format == 'CCT'):
                 group_by_attr = 'default'
-                g = self.callflow.update('diff', group_by_attr, dataset1, dataset2)
+                g = self.callflow.update({
+                    "name": 'diff',
+                    "groupBy": group_by_attr,
+                    "dataset1": dataset1,
+                    "dataset2": dataset2
+                })
             elif(graph_format == 'Callgraph'):
                 group_by_attr = 'module'
-                g = self.callflow.update('diff', group_by_attr, dataset1, dataset2)
-            result = json_graph.node_link_data(g)
-            emit('dataset', result, json=True)
+                g = self.callflow.update({
+                    "name": 'diff',
+                    "groupBy": group_by_attr,
+                    "dataset1": dataset1,
+                    "dataset2": dataset2
+                })
+            result = json.dumps(g)
+            emit('diff', result, json=True)
 
         @sockets.on('module_hierarchy', namespace='/')
         def module_hierarchy(data):
             nid = data['nid']
             dataset = data['dataset']
-            result = self.callflow.update('module-hierarchy', nid, dataset, None)
+            result = self.callflow.update({
+                "name": 'module-hierarchy', 
+                "groupBy": nid, 
+                "dataset1": dataset1,
+            })
             emit('module_hierarchy', result, json=True)
 
         @sockets.on('uncertainity', namespace='/')

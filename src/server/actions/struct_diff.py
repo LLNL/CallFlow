@@ -14,6 +14,9 @@
 
 import pandas as pd
 import time 
+from .union_find import UnionFind
+from functools import reduce
+import math
 
 class structDiff:
     def __init__(self, state1, state2):
@@ -21,166 +24,121 @@ class structDiff:
         self.state2 = state2
         self.graph1 = state1.graph
         self.graph2 = state2.graph
-        self.df = state.df
-        self.group_by = group_by
-        self.entry_funcs = {}
+        self.df1 = state1.df
+        self.df2 = state2.df
+        self.gfs = {}
+        self.gfs['impi'] = self.state1
+        self.gfs['mvapich2'] = self.state2
+        self.union_find = UnionFind()
         self.run()
 
-    def create_group_path(self, path):
-        group_path = []
-        temp = None
-        for i, elem in enumerate(path):
-            grouping = self.state.lookup_with_nodeName(elem)[self.group_by].tolist()[0]
-            if temp == None or grouping != temp:
-                group_path.append(grouping)
-                temp = grouping
-        return tuple(group_path)
+    def findAvgDiff(self, node, attr):
+        attr_values = []
+        gfs = self.gfs
+        for gf_name in gfs.keys():
+            df = gfs[gf_name].df
+            attr_value = df.loc[df['name'] == node.callpath[-1]][attr].mean()
+            attr_values.append(attr_value)
 
-    def find_a_good_node_name(self, node):
-        node_name = self.state.lookup_with_node(node)[self.group_by].tolist()[0]
-        if(node_name == ''):
-            node_name = 'Unkno'
-        print('Node name', node_name)
-        return node_name
+        sum_attr_values = 0
+        avg_attr_values = reduce(lambda sum_attr_values, x: (sum_attr_values + x), attr_values)
+        
+        diff_by_avg = []
+        for idx, avg in enumerate(attr_values):
+            diff_by_avg.append(avg - avg_attr_values)    
+    
+        final = []
+        for idx, val in enumerate(diff_by_avg):
+            if(math.isnan(val)):
+                final.append(0.0)
+            else:
+                final.append(val)
 
-    def create_component_path(self, path, group_path):
-        component_path = []
-        path = list(path)
-        component_module = self.state.lookup_with_nodeName(path[-1])[self.group_by].tolist()[0]
-        component_path.append(component_module)
+        # print("avg", final)
+        return final
 
-        filter_path = [node for node in path if component_module == self.state.lookup_with_nodeName(node)[self.group_by].tolist()[0]]
-       
-        for i, elem in enumerate(filter_path):            
-             component_path.append(elem)                    
-        return tuple(component_path)
+    def findMinDiff(self, node, attr):    
+        attr_values = []
+        gfs = self.gfs
+        for gf_name in gfs.keys():
+            df = gfs[gf_name].df
+            attr_value = df.loc[df['name'] == node.callpath[-1]][attr].mean()
+            attr_values.append(attr_value)
 
-    def create_component_level(self, component_path):
-        return len(component_path) - 1
+        min_ = float('inf')
+        for idx, attr_value in enumerate(attr_values):
+            min_ = min(min_, attr_value)
+
+        if(min_ == float('inf')):
+            min_ = 0.0
+
+        diff_by_min = []
+        for idx, attr_value in enumerate(attr_values):
+            if(math.isnan(attr_value)):
+                diff_by_min.append(0.0)
+            else:
+                diff_by_min.append(attr_value - min_)
+        # print("min:", diff_by_min)
+        return diff_by_min 
+    
+    def dfs(self, df, graph, graph_name):        
+        def dfs_recurse(self, root):
+            for node in root.children:
+                source = root
+                target = node
+                source_name = source.callpath[-1]
+                target_name = target.callpath[-1]
+                # print("Node : {0} - {1}".format(source_name, target_name))
+                self.union_find.add({
+                    "name": source_name + '-' + target_name,
+                    "source": source,
+                    "target": target,
+                    "graphID": [graph_name],
+                    # "source_time": df.loc[df['name'] == source_name]['time'].mean(),
+                    # "target_time": df.loc[df['name'] == target_name]['time'].mean(),
+               })
+                dfs_recurse(self, node)
+        for root in graph.roots:
+            # print("Root: {0}".format(root.callpath[-1]))
+            dfs_recurse(self, root)
             
     def run(self):
-        group_path = {}
-        component_path = {}
-        component_level = {}
-        is_entry_func = {}
-        node_name = {}       
-    
-        roots = self.graph.roots
-        for root in roots:
-            node_gen = root.traverse()       
-            rootdf = self.state.lookup_with_node(root)
+        self.dfs(self.df1, self.graph1, "impi")
+        self.dfs(self.df2, self.graph2, "mvapich2")
+        edges = self.union_find.get_elts()
 
-            group_path[rootdf.node[0]] = self.create_group_path(root.callpath)        
-            node_name[rootdf.node[0]] = self.find_a_good_node_name(root)
-            is_entry_func[rootdf.node[0]] = True
-            self.entry_funcs[rootdf[self.group_by][0]] = [root]
-            count = 0
-            root = next(node_gen)
-
+        nodes = []
+        nodeMap = []
+        for edge in edges:
+            source_node = edge["source"]
+            target_node = edge["target"]
+            source_name = edge["source"].callpath[-1]
+            target_name = edge["target"].callpath[-1]
+            source = {}
+            target = {}
+            if(source_name not in nodeMap):
+                source["name"] = source_name
+                source["diff_time_avg"] = self.findAvgDiff(source_node, 'time')
+                source["diff_time_avg (inc)"] = self.findAvgDiff(source_node, 'time (inc)')
+                source["diff_time_min"] = self.findMinDiff(source_node, 'time')
+                source["diff_time_min (inc)"] = self.findMinDiff(source_node, 'time (inc)')
+                source["imbalance_perc"] = self.findAvgDiff(source_node, "imbalance_perc")
+                nodes.append(source)
+                nodeMap.append(source_name)
         
-            try:
-                while root.callpath != None:
-                    root = next(node_gen)
-                    t = self.state.lookup_with_node(root)
-                    # if(len(root.parents) == 0):
-                    #     continue
-                    s = self.state.lookup_with_node(root.parents[0])
-
-                    # check if there are entries for the source and target
-                    # Note: need to work on it more....
-                    if t.empty or s.empty:
-                        continue
-                              
-                    snode = s.node.tolist()[0]
-                    tnode = t.node.tolist()[0]
-
-                    spath = root.callpath
-                    tpath = root.parents[0].callpath
-
-                    tmodule = t[self.group_by].tolist()[0]
-                                
-                    # if tmodule in self.entry_funcs:
-                    #     is_entry_func[tnode] = False
-                    #     node_name[tnode] = self.find_a_good_node_name(root.parents[0])
-                    #     if snode in is_entry_func:
-                    #         self.entry_funcs[t[self.group_by].tolist()[0]].append(self.state.lookup_with_node(tnode)['name'].tolist()[0])
-                    # else:
-                    is_entry_func[tnode] = True
-                    node_name[tnode] = self.find_a_good_node_name(root.parents[0])
-                    self.entry_funcs[t[self.group_by].tolist()[0]] = [self.state.lookup_with_node(tnode)[self.group_by].tolist()[0]]
-
-                    group_path[tnode] = self.create_group_path(tpath)
-                    component_path[tnode] = self.create_component_path(tpath, group_path[tnode])
-                    component_level[tnode] = self.create_component_level(component_path[tnode])
-
-                    # print(snode, tnode, len(self.entry_funcs[tmodule]))
-                    # print("is entry function:", is_entry_func[tnode])
-                    # print("entry functions: ", self.entry_funcs[tmodule])
-                    # print("node path: ", tpath)                
-                    # print("group path: ", group_path[tnode])
-                    # print("component path: ", component_path[tnode])
-                
-            except StopIteration:
-                pass
-            finally:
-                del root
-
-            # try:
-            #     while root.callpath != None:
-            #         root = next(node_gen)
-            #         t = self.state.lookup_with_node(root)
-            #         # if(len(root.parents) == 0):
-            #         #     continue
-            #         s = self.state.lookup_with_node(root.parents[0])
-
-            #         # check if there are entries for the source and target
-            #         # Note: need to work on it more....
-            #         if t.empty or s.empty:
-            #             continue
-                              
-            #         snode = s.node.tolist()[0]
-            #         tnode = t.node.tolist()[0]
-
-            #         spath = root.callpath
-            #         tpath = root.parents[0].callpath
-
-            #         sgroup = s[self.group_by].tolist()[0]
-            #         tgroup = t[self.group_by].tolist()[0]
-            #         # print(snode, tnode)
-
-            #         node_name[tnode] = self.find_a_good_node_name(root)
-            #         is_entry_func[tnode] = True
-
-            #         # if tmodule in self.entry_funcs:
-            #         #     is_entry_func[tnode] = False
-            #         #     node_name[tnode] = self.find_a_good_node_name(root.parents[0])
-            #         #     if snode in is_entry_func:
-            #         #         self.entry_funcs[t[self.group_by].tolist()[0]].append(self.state.lookup_with_node(tnode)['name'].tolist()[0])
-            #         # else:
-            #         #     is_entry_func[tnode] = True
-            #         #     node_name[tnode] = self.find_a_good_node_name(root.parents[0])
-            #         #     self.entry_funcs[t[self.group_by].tolist()[0]] = [self.state.lookup_with_node(tnode)['name'].tolist()[0]]
-
-            #         group_path[tnode] = self.create_group_path(tpath)
-            #         component_path[tnode] = self.create_component_path(tpath, group_path[tnode])
-            #         component_level[tnode] = self.create_component_level(component_path[tnode])
-
-            #         # print(group_path[tnode])
-
-            #         # print(snode, tnode, len(self.entry_funcs[tmodule]))
-            #         # print("is entry function:", is_entry_func[tnode])
-            #         # print("entry functions: ", self.entry_funcs[tgroup])
-            #         # print("node path: ", tpath)                
-            #         # print("group path: ", group_path[tnode])
-            #         # print("component path: ", component_path[tnode])
-                
-            # except StopIteration:
-            #     pass
-            # finally:
-            #     del root
-
-        self.state.update_df('group_path', group_path)
-        self.state.update_df('component_path', component_path)
-        self.state.update_df('show_node', is_entry_func)
-        self.state.update_df('vis_node_name', node_name)
-        self.state.update_df('component_level', component_level)
+            if(target_name not in nodeMap):
+                target["name"] = target_name
+                target["diff_time_avg"] = self.findAvgDiff(target_node, 'time')
+                target["diff_time_avg (inc)"] = self.findAvgDiff(target_node, 'time (inc)')
+                target["diff_time_min"] = self.findMinDiff(target_node, 'time')
+                target["diff_time_min (inc)"] = self.findMinDiff(target_node, 'time (inc)')
+                target["imbalance_perc"] = self.findAvgDiff(target_node, "imbalance_perc")
+                nodes.append(target)
+                nodeMap.append(target_name)
+            edge["source"] = edge["source"].callpath[-1]
+            edge["target"] = edge["target"].callpath[-1]
+    
+        self.g = {
+            "nodes": nodes,
+            "edges": edges
+       }

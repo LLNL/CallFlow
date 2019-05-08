@@ -57,6 +57,7 @@ class CallGraph(nx.Graph):
     def add_paths(self, path_name):
         for idx, row in self.df.iterrows():
             if row.show_node:
+                print(row[path_name])
                 self.g.add_path(row[path_name])                
 
     def add_node_attributes(self):        

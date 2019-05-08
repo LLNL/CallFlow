@@ -1,139 +1,102 @@
 <v-app id="inspire">
-  <v-toolbar color="teal" dark fixed app clipped-right>
-    <v-toolbar-side-icon @click.stop="left = !left">
-    </v-toolbar-side-icon>
-    <v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
-    <v-flex xs2 class="ma-2">
-      <v-select label="Dataset 1" :items="datasets" v-model="selectedDataset" :menu-props="{ maxHeight: '400' }" box
-        v-on:change="updateDataset()">
-      </v-select>
-    </v-flex>
-    <v-flex xs2 class="ma-2" v-if="selectedMode == 'Diff'">
-      <v-select label="Dataset 2" :items="datasets" v-model="selectedDataset2" :menu-props="{ maxHeight: '400' }" box
-        v-on:change="updateDataset()">
-      </v-select>
-    </v-flex>
-    <v-flex xs2 class="ma-2">
-      <v-select label="Graph to visualize" :items="formats" v-model="selectedFormat" :menu-props="{ maxHeight: '400' }"
-        box v-on:change="updateFormat()">
-      </v-select>
-    </v-flex>
-    <v-spacer></v-spacer>
-    <v-spacer></v-spacer>
-    <v-flex xs2>
-      <v-select label="Analysis Mode" :items="modes" v-model="selectedMode" box :menu-props="{ maxHeight: '400' }"
-        v-on:change="updateMode()"></v-select>
-    </v-flex>
+	<v-toolbar color="teal" dark fixed app clipped-right>
+		<v-toolbar-side-icon @click.stop="left = !left">
+		</v-toolbar-side-icon>
+		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
+		<v-flex xs2 class="ma-2">
+			<v-select label="Dataset 1" :items="datasets" v-model="selectedDataset" :menu-props="{ maxHeight: '400' }"
+				box v-on:change="updateDataset()">
+			</v-select>
+		</v-flex>
+		<v-flex xs2 class="ma-2" v-if="selectedMode == 'Diff'">
+			<v-select label="Dataset 2" :items="datasets" v-model="selectedDataset2" :menu-props="{ maxHeight: '400' }"
+				box v-on:change="updateDataset()">
+			</v-select>
+		</v-flex>
+		<v-flex xs2 class="ma-2">
+			<v-select label="Graph to visualize" :items="formats" v-model="selectedFormat"
+				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
+			</v-select>
+		</v-flex>
+		<v-spacer></v-spacer>
+		<v-spacer></v-spacer>
+		<v-flex xs2>
+			<v-select label="Analysis Mode" :items="modes" v-model="selectedMode" box :menu-props="{ maxHeight: '400' }"
+				v-on:change="updateMode()"></v-select>
+		</v-flex>
 
-  </v-toolbar>
+	</v-toolbar>
 
-  <v-navigation-drawer v-model="left" temporary fixed>
-    <v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
-    <v-card flex fill-height id="control-panel">
-      <v-layout row wrap>
-        <v-switch :label="`Aggr`" v-model="isAggregated" v-on:change="visualize()"></v-switch>
-        <v-btn icon>
-          <v-icon v-on:click="reset()">refresh</v-icon>
-        </v-btn>
-        <v-flex xs12 class="ma-1">
-          <v-select label="Color By" :items="colorBy" v-model="selectedColorBy" :menu-props="{ maxHeight: '200' }"
-            persistent-hint v-on:change="updateColorBy()">
-          </v-select>
-        </v-flex>
-        <v-flex xs12 class="ma-1">
-          <v-select label="Group By" :items="groupBy" v-model="selectedGroupBy" :menu-props="{ maxHeight: '200' }"
-            persistent-hint v-on:change="updateGroupBy()">
-          </v-select>
-        </v-flex>
-        <v-flex xs12 class="ma-1">
-          <v-select label="Filter By" :items="filterBy" v-model="selectedFilterBy" :menu-props="{ maxHeight: '200' }"
-            persistent-hint v-on:change="updateFilterBy()">
-          </v-select>
-        </v-flex>
-        <v-flex xs12 class="ma-1">
-          <v-range-slider label="Filter Percentage" v-model="filterPerc" :max="100" :min="0" :step="1">
-            <template #prepend>
-              <v-text-field v-model="filterPerc[0]" class="pt-0 mt-0" hide-details single-line type="number"
-                style="width: 30px">
-              </v-text-field>
-            </template>
-          </v-range-slider>
-        </v-flex>
+	<v-navigation-drawer v-model="left" temporary fixed>
+		<v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
+		<v-card flex fill-height id="control-panel">
+			<v-layout row wrap>
+				<v-btn icon>
+					<v-icon v-on:click="reset()">refresh</v-icon>
+				</v-btn>
+				<v-flex xs12 class="ma-1">
+					<v-select label="Color By" :items="colorBy" v-model="selectedColorBy"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColorBy()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-select label="Group By" :items="groupBy" v-model="selectedGroupBy"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateGroupBy()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-select label="Filter By" :items="filterBy" v-model="selectedFilterBy"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateFilterBy()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-range-slider label="Filter Percentage" v-model="filterPercRange" :max="100" :min="0" :step="1">
+						<template #prepend>
+							<v-text-field v-model="filterPercRange[[0, filterPerc]]" class="pt-0 mt-0" hide-details single-line
+								type="number" style="width: 30px">
+							</v-text-field>
+						</template>
+					</v-range-slider>
+				</v-flex>
 
-        <!-- <v-flex xs12 class="ma-1">
-              <v-select label="2nd Plot Metric" :items="metrics" v-model="plotMetric2"
-                  :menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updatePlotMetric2()">
-              </v-select>
-            </v-flex>
-            <v-flex xs12 class="ma-1">
-                <v-select label="Change Point Detection" :items="cpd" v-model="selectedcpd" v-on:change="visualize()">
-                </v-select>
-            </v-flex>
-            <v-flex xs12 class="ma-1">
-                <v-select label="Dimensionality reduction" :items="dimred" v-model="selectedDimred" v-on:change="visualize()">
-                </v-select>
-            </v-flex>
-            <v-flex xs12 class="ma-1">
-                <v-select label="Similarity measure" :items="similarity" v-model="selectedSimilarity"
-                    v-on:change="visualize()">
-                </v-select>
-            </v-flex>
-            <v-flex xs12 class="ma-1">
-                <v-select label="Cluster by Metric" :items="clusterMetrics" v-model="selectedClusterMetric" v-on:change="updateClusterMetric()">
-                </v-select>
-            </v-flex> -->
+				<v-spacer></v-spacer>
+			</v-layout>
+		</v-card>
+	</v-navigation-drawer>
 
-        <v-spacer></v-spacer>
-      </v-layout>
-    </v-card>
-  </v-navigation-drawer>
+	<v-content class="pt-auto" fill-height id="dashboard">
+		<v-flex>
+			<v-container fluid fill-height class="pa-0">
+				<v-layout justify-center align-center>
+					<v-flex xs3 fill-height class="pa-0">
+						<v-toolbar dense>
+							<v-btn v-on:click="split()">Split
+							</v-btn>
+							<v-range-slider label="Level" v-model="level" :max="10" :min="0" :step="1">
+								<template #prepend>
+									<v-text-field v-model="level[0]" class="pt-0 mt-0" hide-details single-line
+										type="number" style="width: 30px">
+									</v-text-field>
+								</template>
+							</v-range-slider>
+						</v-toolbar>
+						<Icicle ref="Icicle" />
+					</v-flex>
+					<v-flex xs9 fill-height class="pa-0" id="vis" v-if="selectedMode == 'Single'">
+						<Callgraph ref="Callgraph" v-if="selectedFormat == 'Callgraph'" />
+						<CCT ref="CCT" v-if="selectedFormat == 'CCT'" />
+					</v-flex>
+					<v-flex xs9 fill-height class="pa-0" id="vis" v-if="selectedMode == 'Diff'" >
+						<Diffgraph ref="Diffgraph" />
+					</v-flex>
+				</v-layout>
+			</v-container>
+		</v-flex>
 
-  <v-content class="pt-auto" fill-height id="dashboard">
-    <v-flex>
-      <v-container fluid fill-height class="pa-0">
-        <v-layout justify-center align-center>
-          <v-flex xs3 fill-height class="pa-0">
-            <v-toolbar dense>
-              <v-btn v-on:click="split()">Split
-              </v-btn>
-              <v-range-slider label="Level" v-model="level" :max="10" :min="0" :step="1">
-                <template #prepend>
-                  <v-text-field v-model="level[0]" class="pt-0 mt-0" hide-details single-line type="number"
-                    style="width: 30px">
-                  </v-text-field>
-                </template>
-              </v-range-slider>
-            </v-toolbar>
-            <Icicle ref="Icicle" />
-          </v-flex>
-          <v-flex xs9 fill-height class="pa-0" id="vis">
-            <!-- <v-toolbar dense> -->
-            <!-- <v-flex xs9 class="ma-2">
-                      <v-select label="Metric" :items="metrics" multiple v-model="selectedMetrics"
-                        :menu-props="{ maxHeight: '400' }" persistent-hint v-on:change="visualize()">
-                      </v-select>
-                    </v-flex>
-                    <v-flex xs2 class="ma-2">
-                      <v-select label="Measure" :items="measures" v-model="selectedMeasure" v-on:change="visualize()">
-                      </v-select>
-                    </v-flex>
-                    <v-spacer></v-spacer>
-                    <v-switch :label="`Aggr`" v-model="isAggregated" v-on:change="visualize()"></v-switch>
-                    <v-btn icon>
-                      <v-icon v-on:click="reset()">refresh</v-icon>
-                    </v-btn> -->
-            <!-- </v-toolbar> -->
-            <Callgraph ref="Callgraph" v-if="selectedFormat == 'Callgraph'" />
-            <CCT ref="CCT" v-if="selectedFormat == 'CCT'" />
-          </v-flex>
-        </v-layout>
-      </v-container>
-    </v-flex>
-
-  </v-content>
-  <v-footer color="teal" class="white--text" app>
-    <span> VIDi Labs, University of California, Davis </span>
-    <v-spacer></v-spacer>
-    <span>&copy; 2018</span>
-  </v-footer>
+	</v-content>
+	<v-footer color="teal" class="white--text" app>
+		<span> Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis </span>
+		<v-spacer></v-spacer>
+		<span>&copy; 2019</span>
+	</v-footer>
 </v-app>

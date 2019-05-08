@@ -28,10 +28,11 @@ class groupBy:
         group_path = []
         temp = None
         for i, elem in enumerate(path):
-            grouping = self.state.lookup_with_nodeName(elem)[self.group_by].tolist()[0]
-            if temp == None or grouping != temp:
-                group_path.append(grouping)
-                temp = grouping
+            grouping = self.state.lookup_with_nodeName(elem)[self.group_by].unique()
+            # if temp == None or grouping != temp:
+            if len(grouping) != 0 and (temp == None or grouping != temp):
+                group_path.append(grouping[0])
+                temp = grouping[0]
         return tuple(group_path)
 
     def find_a_good_node_name(self, node):
@@ -46,8 +47,7 @@ class groupBy:
         path = list(path)
         component_module = self.state.lookup_with_nodeName(path[-1])[self.group_by].tolist()[0]
         component_path.append(component_module)
-
-        filter_path = [node for node in path if component_module == self.state.lookup_with_nodeName(node)[self.group_by].tolist()[0]]
+        filter_path = [node for node in path if component_module == self.state.lookup_with_nodeName(node)[self.group_by].tolist()]
        
         for i, elem in enumerate(filter_path):            
              component_path.append(elem)                    
@@ -75,7 +75,6 @@ class groupBy:
             count = 0
             root = next(node_gen)
 
-        
             try:
                 while root.callpath != None:
                     root = next(node_gen)

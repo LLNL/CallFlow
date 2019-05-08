@@ -1,5 +1,6 @@
 import tpl from '../html/callflow.html'
 import Callgraph from './callgraph'
+import Diffgraph from './diffgraph'
 import CCT from './cct'
 import Icicle from './icicle'
 import Vue from 'vue'
@@ -11,7 +12,8 @@ export default {
 	components: {
 		Callgraph,
 		CCT,
-		Icicle
+		Icicle,
+		Diffgraph,
 	},
 	data: () => ({
 		socket: null,
@@ -33,11 +35,12 @@ export default {
 		selectedGroupBy: 'Function',
 		filterBy: ['Inclusive', 'Exclusive'],
 		selectedFilterBy: 'Inclusive',
-		filterPerc: [0, 100],
+		filterPercRange: [0, 100],
+		filterPerc: 10, 
 		colorBy: ['Name', 'Exclusive', 'Inclusive', 'Uncertainity'],
 		selectedColorBy: 'Exclusive',
 		modes: ['Single', 'Diff'],
-		selectedMode: 'Single',
+		selectedMode: 'Diff',
 		CallgraphData: null,
 		CCTData: null,
 		level: [0, 4],
@@ -90,7 +93,8 @@ export default {
 			})
 
 			this.sockets.subscribe('diff', (data) => {
-
+				data = JSON.parse(data)
+				this.$refs.Diffgraph.init(data)
 			})
 
 			this.sockets.subscribe('module_hierarchy', (data) => {
@@ -100,7 +104,7 @@ export default {
 
 		init() {
 			if(this.selectedMode == 'Single'){
-				this.$socket.emit('dataset', {
+				this.$socket.emit('group', {
 					dataset: this.selectedDataset,
 					format: this.selectedFormat,
 				})
@@ -121,7 +125,7 @@ export default {
 		updateFormat() {
 			Vue.nextTick(() => {
 				this.clear()
-				this.$socket.emit('dataset', {
+				this.$socket.emit('group', {
 					dataset: this.selectedDataset,
 					format: this.selectedFormat
 				})
@@ -131,7 +135,7 @@ export default {
 		updateDataset() {
 			Vue.nextTick(() => {
 				this.clear()
-				this.$socket.emit('dataset', {
+				this.$socket.emit('group', {
 					dataset: this.selectedDataset,
 					format: this.selectedFormat
 				})
@@ -141,7 +145,7 @@ export default {
 		updateMode() {
 			Vue.nextTick(() => {
 				this.clear()
-				this.$socket.emit('diff', {
+				this.$socket.emit('group', {
 					dataset1: this.selectedDataset,
 					dataset2: this.selectedDataset2,
 					format: this.selectedFormat
@@ -154,6 +158,12 @@ export default {
 				this.clear()
 				this.$refs.Callgraph.updateColor(this.selectedColorBy)
 				
+			})
+		},
+
+		updateFilterBy(){
+			Vue.nextTick(() => {
+				this.clear()
 			})
 		}
 	}

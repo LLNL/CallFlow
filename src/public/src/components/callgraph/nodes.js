@@ -70,7 +70,7 @@ export default {
                 .attr('height', (d) => {
                     this.currentNodeLevel[d.mod_index] = 0;
                     this.nodeHeights[d.n_index] = d.height;
-                    return d.height * 1.5;
+                    return Math.log(d.height);
                 })
                 .attr('width', this.nodeWidth)
                 .attr('opacity', 0)

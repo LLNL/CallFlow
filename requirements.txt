@@ -1,0 +1,6 @@
+pandas
+numpy
+flask
+flask-cors
+networkx
+ABC

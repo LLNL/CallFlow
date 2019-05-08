@@ -81,9 +81,7 @@ class CallFlow:
                 self.write_gf(states, name)
             else:
                 states[name] = self.read_gf(name)
-
-            # self.dfs(states[name].graph, 20)
-            # print(states[name].df.head())
+                
         return states
 
     def process(self, state):
@@ -116,8 +114,7 @@ class CallFlow:
         state.df = preprocess.df
         state.graph = preprocess.graph
         state.map = preprocess.map
-        self.dfs(state.graph, 50)
-
+        # self.dfs(state.graph, 50)
 
         return state
 
@@ -171,7 +168,8 @@ class CallFlow:
         df_filepath = dirname + self.config.paths[name][1:] + '/df.csv'
         entire_df_filepath = dirname + self.config.paths[name][1:] + '/entire_df.csv'
         graph_filepath = dirname + self.config.paths[name][1:] + '/graph.json'
-        entire_graph_filepath = dirname + self.config.paths[name][1:] + '/entire_graph.json'      
+        entire_graph_filepath = dirname + self.config.paths[name][1:] + '/entire_graph.json'   
+
         with open(graph_filepath, 'r') as graphFile:
             data = json.load(graphFile)
 
@@ -203,7 +201,6 @@ class CallFlow:
         # state.df['path'] = state.df['node'].apply(lambda node: node.callpath)
         # state.entire_df['path'] = state.entire_df['node'].apply(lambda node: node.callpath if node else [])
 
-        
         return state
 
      # Loops over the config.paths and gets the graphframe from hatchet
@@ -225,15 +222,15 @@ class CallFlow:
         
         return state
 
-    def filter(self, state):
+    def filter(self, state, filterBy, filterPerc):
         t = time.time()
-        if self.props['filterBy'] == "IncTime":
+        if filterBy == "IncTime":
             max_inclusive_time = utils.getMaxIncTime(state.gf)
-            filter_gf = state.gf.filter(lambda x: True if(x['time (inc)'] > 0.001*max_inclusive_time) else False)
-        elif self.args['filterBy'] == "ExcTime":
+            filter_gf = state.gf.filter(lambda x: True if(x['time (inc)'] > filterPerc*max_inclusive_time) else False)
+        elif filterBy == "ExcTime":
             max_exclusive_time = utils.getMaxExcTime(state.gf)
             log.info('[Filter] By Exclusive time = {0})'.format(max_exclusive_time))
-            filter_gf = state.gf.filter(lambda x: True if (x['time'] > 0.001*max_exclusive_time) else False)
+            filter_gf = state.gf.filter(lambda x: True if (x['time'] > filterPerc*max_exclusive_time) else False)
         else:
             log.warn("Not filtering.... Can take forever. Thou were warned")
             filter_gf = state.gf
@@ -244,40 +241,43 @@ class CallFlow:
         log.info("[Squash] {1} rows in dataframe (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
         return fgf
 
-    def update(self, action, attr, dataset, dataset2):
-        state = self.states[dataset]
-        if(dataset2 != None):
-            state2 = self.states[dataset2]
-        print("[{0}] {1}".format(action, dataset))
-        if action == 'default':
-            groupBy(state, attr)
-            nx = CallGraph(state, 'group_path', True, 'name')      
-        elif action == 'filter':
-            Filter(state)    
-            nx = CallGraph(state, 'group_path', True, 'module')      
-        elif action == "group":
-            groupBy(state, attr)
-            nx = CallGraph(state, 'group_path', True, 'module')
-        elif action == 'diff':
-            structDiff(state, state2)
-            nx = CallGraph(state, 'group_path', True, 'module')
-        elif action == 'split-level':
-            splitLevel(state, attr)
-            nx = CallGraph(state, 'group_path', True)
-        elif action == "split-callee":
-            splitCallee(state, attr)
-            nx = CallGraph(state, 'path', True)
-        elif action == "split-caller":
-            splitCaller(state, attr)
-            nx = CallGraph(state, 'path', True)
-        elif action == 'module-hierarchy':
+    def update(self, action):
+        state1 = self.states[action["dataset1"]]
+        if("dataset2" in action):
+            state2 = self.states[action["dataset2"]]
+        action_name = action["name"]
+        print("[{0}] {1}".format(action_name, action))
+        
+        if action_name == 'default':
+            groupBy(state1, action["groupBy"])
+            nx = CallGraph(state1, 'group_path', True, 'name')
+        elif action_name == 'filter':
+            Filter(state1, action["filterBy"], action["filterPerc"])
+            nx = CallGraph(state1, 'group_path', True, 'module')
+        elif action_name == "group":
+            groupBy(state1, action["groupBy"])
+            nx = CallGraph(state1, 'group_path', True, 'module')
+        elif action_name == 'diff':
+            union_state = structDiff(state1, state2)
+            nx = union_state
+            # nx = CallGraph(union_state, 'group_path', True, 'module')
+        elif action_name == 'split-level':
+            splitLevel(state1, action["groupBy"])
+            nx = CallGraph(state1, 'group_path', True)
+        elif action_name == "split-callee":
+            splitCallee(state1, action["groupBy"])
+            nx = CallGraph(state1, 'path', True)
+        elif action_name == "split-caller":
+            splitCaller(state1, action["groupBy"])
+            nx = CallGraph(state1, 'path', True)
+        elif action_name == 'module-hierarchy':
             nx = CallGraph(state, 'path', False, 'name')
             state.entire_g = nx.g
             moduleHierarchy(state, attr)
 
-        state.g = nx.g   
+        state1.g = nx.g
 
-        return state.g 
+        return state1.g 
 
     def write_df(self):
         for name, state in self.states.items():

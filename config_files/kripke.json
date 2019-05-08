@@ -1,0 +1,20 @@
+{
+    "datasets": [
+        {
+            "name": "kripke-impi",
+            "path": "./data/kripke/impi",
+            "format": "hpctoolkit",
+            "props": {
+            },
+            "nop": "128"
+        },
+        {
+            "name": "kripke-mvapich2",
+            "path": "./data/kripke/mvapich2",
+            "format": "hpctoolkit",
+            "props": {
+            },
+            "nop": "128"
+		}
+    ]
+}
