@@ -145,11 +145,7 @@ export default {
 		updateMode() {
 			Vue.nextTick(() => {
 				this.clear()
-				this.$socket.emit('group', {
-					dataset1: this.selectedDataset,
-					dataset2: this.selectedDataset2,
-					format: this.selectedFormat
-				})
+				this.init()
 			})
 		},
 

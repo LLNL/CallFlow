@@ -4,19 +4,15 @@ import * as  d3 from 'd3'
 import dagreD3 from 'dagre-d3/dist/dagre-d3';
 
 import Color from '../old_components/callflow/color'
-import { geoRotation } from 'd3-geo';
 
 export default {
     name: 'Diffgraph',
     template: tpl,
     components: {
-
     },
-
     props: [
 
     ],
-
     data: () => ({
         graph: null,
         id: 'diffgraph_overview',
@@ -92,13 +88,10 @@ export default {
                 g.setEdge(data.edges[i]['source'], data.edges[i]['target'], { label: graphIDs });
             }
             
-            console.log(nodeMarker)
-
             // Set some general styles
             g.nodes().forEach(function (v) {
                 var node = g.node(v);
-                console.log(nodeMarker[node.label].split(',').length)
-                if(nodeMarker[node.label].split(',').length == 2){
+                if(nodeMarker[node.label].split(',').length >= 2){
                     node.style = "stroke: 3px"
                     node.style = "fill: #f77"
                 }
@@ -117,7 +110,6 @@ export default {
             let svg = d3.select("#" + this.id)
             svg.append('g')
             let inner = svg.select('g');
-            console.log(inner)
 
             // Set up zoom support
             var zoom = d3.zoom().on("zoom", function () {
