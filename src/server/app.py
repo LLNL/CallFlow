@@ -12,6 +12,7 @@
 
 #!/usr/bin/env python
 
+# Library imports
 from flask import Flask, jsonify, render_template, send_from_directory, current_app, request
 from flask_socketio import SocketIO, emit, send
 import os
@@ -20,13 +21,13 @@ import json
 import uuid
 import argparse
 from flask_cors import CORS
+from networkx.readwrite import json_graph
 
+# Callflow imports
 from callflow import *
 from configFileReader import * 
 import utils
 from logger import log
-import networkx as nx
-from networkx.readwrite import json_graph
 
 app = Flask(__name__, static_url_path='/public')
 sockets = SocketIO(app)
@@ -35,108 +36,88 @@ CORS(app)
 class App():
     def __init__(self):
         self.callflow_path = os.path.abspath(os.path.join(__file__, '../../..'))
-        self.app = None # App state
-        self.args = None # Arguments passed through the CLI
-        self.ccts = []
-        self.cfgs = [] # CallFlow graphs
-        self.props = {
-            'filterBy': 'IncTime',
-        }
-        self.debug = False # Debug gives time, other information
-        
-        self.create_parser()  # Parse the input arguments
-        self.verify_parser()  # Raises expections if something is not provided. 
-        
-        self.config = configFileReader(self.args.config_file)
-        self.callflow = CallFlow(self.config, self.props)
-        self.create_socket_server()
-        sockets.run(app, debug = self.debug, use_reloader=True)
-        
-#         if self.args.filter:        
-#             self.gfs = self.filter_gfs(True)
-# #            self.cfgs = self.create_cfgs(self.gfs, 'default', '')
-#             self.display_stats()
-# #            self.write_gfs(self.gfs, self.cfgs)           
 
-#        if not self.args.filter:
-#            self.read_data()
-        # self.ccts = self.create_ccts(self.gfs, 'default', '')
-#        self.write_gfs_graphml()
+        self.create_parser() 
+        self.verify_parser()  
 
+        self.debug = True
+
+        self.config = configFileReader(self.args.config)
+        self.config.server_dir = os.getcwd()
+        self.config.callflow_dir = self.config.server_dir + '/.callflow'
+        self.config.preprocess = self.args.preprocess
+        
+        self.create_dot_callflow_folder()
+        self.callflow = CallFlow(self.config)
+
+        # Start server if preprocess is not called. 
+        if not self.config.preprocess:
+            self.create_socket_server()
+            sockets.run(app, debug = self.debug, use_reloader=True)
+            
+    # Custom print function. 
+    def print(self, action, data = {}):
+        action = 'Action: {0}'.format(action)
+        if bool(data):
+            data_string = 'Data: ' + json.dumps(data, indent=4, sort_keys=True)
+        else:
+            data_string = ''
+        log.info('[app.py] {0} {1}'.format(action, data_string))
+
+    # Parse the input arguments 
     def create_parser(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument("--verbose", help="Display debug points")
-        parser.add_argument("--config_file", help="Config file to read")
+        parser.add_argument("--verbose", action="store_true", help="Display debug points")
+        parser.add_argument("--config", help="Config file to read")
         parser.add_argument("--input_format", default="hpctoolkit", help="caliper | hpctoolkit")
         parser.add_argument("--filter", action="store_true", help="Filter the dataframe")
         parser.add_argument("--filterBy", default="IncTime", help="IncTime | ExcTime, [Default = IncTime] ")
         parser.add_argument("--filtertheta", default="0.01", help="Threshold [Default = 0.01]")
+        parser.add_argument("--preprocess", action="store_true", help="Preprocess the file")
         self.args = parser.parse_args()
         self.debug = self.args.verbose
 
+    # Raises expections if something is not provided
     def verify_parser(self):
         # Check if the config file is provided and exists! 
-        if not self.args.config_file:
+        if not self.args.config:
             log.error("Please provide a config file. To see options, use --help")
             raise Exception()
         else:
-            if not os.path.isfile(self.args.config_file):
+            if not os.path.isfile(self.args.config):
                 log.error("Please check the config file path. There exists no such file in the path provided")
                 raise Exception()
 
-    #     # Parse the file (--file) according to the format. 
-    # def parse_config_file(self): 
-
-    #     if 'format' not in self.config.data:
-    #         log.warn('File formats not provided. Automatically looking for the files with experiment')
-    #         self.gfs_format = self.automatic_gfs_format_lookup(self.config.paths)
-    #     else:
-    #         self.gfs_format = self.config.format
-
-    # # Find the file format automatically.  Automatic look up for the format
-    # # args: paths (from config file)
-    # # return : Array(gf_format)
-    # # Todo: Write better regex to eliminate looping through mdb files
-    # def automatic_gfs_format_lookup(self, paths):
-    #     ret = []
-    #     pattern = 'experiment*'
-    #     for path in paths:
-    #         filtered_path =  fnmatch.filter(os.listdir(path), pattern)
-    #         for file in filtered_path:
-    #             if file.endswith('.xml'):
-    #                 ret.append('hpctoolkit')
-    #             elif file.endswith('.json'):
-    #                 ret.append('caliper')
-    #                 log.info("Found formats = {0}".format(ret))
-    #     return ret
-
+    def create_dot_callflow_folder(self):
+        if self.debug:
+            self.print('Create .callflow directiory.')
+        if not os.path.exists(self.config.callflow_dir):    
+            os.makedirs(self.config.callflow_dir)
         
-    # Write graphframes to csv files
-    def write_gfs(self, fgfs):
-        for idx, fgf in enumerate(fgfs):
-            datapath = str(self.config.paths[idx]).split('/')[-1] +'_filtered_d_{0}.json'.format(idx)
-            log.info("Writing the filtered dataframe to {0}".format(datapath))
-            fgf.dataframe.to_pickle(datapath)
-            graphpath = str(self.config.paths[idx]).split('/')[-1] +'_filtered_g_{0}.json'.format(idx)
-            log.info("Writing the filtered graph to {0}".format(graphpath))
-            with open(graphpath, 'w') as gfile:
-                json.dump(self.cfgs[idx], gfile)
+        for dataset in self.config.datasets:
+            dataset_dir = self.config.server_dir + '/.callflow/' + dataset['name']
+            if not os.path.exists(dataset_dir):
+                if self.debug:
+                    print('Creating .callflow directory for dataset : {0}'.format(dataset['name']))
+                os.makedirs(dataset_dir)
 
-    def read_data(self):
-        self.gfs = []
-        self.cfgs = []
-        for idx, path in enumerate(self.config.paths):
-            datapath = str(self.config.paths[idx]).split('/')[-1] +'_filtered_d_{0}.json'.format(idx)
-            self.gfs.append(pd.read_pickle(datapath))
-            graphpath = str(self.config.paths[idx]).split('/')[-1] +'_filtered_g_{0}.json'.format(idx)
-            with open(graphpath) as g:
-                js_graph = json.load(g)
-            self.cfgs.append(json_graph.node_link_graph(js_graph))
-        log.warn("Read from the data files")
+            files = ["entire_df.csv", "filter_df.csv", "entire_graph.json", "filter_graph.json"]
+            for f in files:
+                if not os.path.exists(dataset_dir + '/' + f):
+                    os.mknod(dataset_dir + '/' + f)
 
     def create_socket_server(self):
+        @sockets.on('init', namespace='/')
+        def init():
+            config_json = json.dumps(self.config, default=lambda o: o.__dict__)
+            print(config_json)
+            emit('init', config_json, json=True)
+
+
         @sockets.on('filter', namespace='/')
         def filter(data):
+            if self.debug == True:
+                self.print('[Request] Filter the dataset.', data)
             dataset = data['dataset']
             graph_format = data['format']
             filterBy = data['filterBy']
@@ -150,6 +131,8 @@ class App():
 
         @sockets.on('group', namespace='/')
         def group(data):
+            if self.debug == True:
+                self.print('[Request] Group the dataset.', data)
             dataset = data['dataset']
             graph_format = data['format']
             print('[Group] Dataset: {0}, format: {1}'.format(dataset, graph_format))
@@ -172,6 +155,8 @@ class App():
 
         @sockets.on('diff', namespace='/')
         def diff(data):
+            if self.debug == True:
+                print('[Request] Diff the dataset.', data)
             dataset1 = data['dataset1']
             dataset2 = data['dataset2']
             graph_format = data['format']
@@ -197,17 +182,21 @@ class App():
 
         @sockets.on('module_hierarchy', namespace='/')
         def module_hierarchy(data):
+            if self.debug == True:
+                print('[Request] Module hierarchy of the dataset.', data)
             nid = data['nid']
-            dataset = data['dataset']
+            dataset = data['dataset1']
             result = self.callflow.update({
                 "name": 'module-hierarchy', 
-                "groupBy": nid, 
-                "dataset1": dataset1,
+                "node-id": nid, 
+                "dataset1": dataset,
             })
             emit('module_hierarchy', result, json=True)
 
         @sockets.on('uncertainity', namespace='/')
         def uncertainity(data):
+            if self.debug == True:
+                self.print('[Request] Uncertainity of the dataset.')
             result = {}
             emit('uncertainity', result, json=True)
 

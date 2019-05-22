@@ -26,7 +26,7 @@ class Log:
     def __init__(self, lvl=logging.DEBUG):
         self.lvl = lvl
 #        format  ="\033[1m CallFlow: [" + action + "] %(log_color)s%(message)s%(reset)s"
-        format  ="\033[1m CallFlow:  %(log_color)s%(message)s%(reset)s"
+        format  ="\033[1m #  %(log_color)s%(message)s%(reset)s"
         self.format = format
         logging.root.setLevel(self.lvl)
         self.formatter = colorlog.ColoredFormatter(self.format)

@@ -91,23 +91,18 @@ export default {
                     return '#e1e1e1';
                 })
                 .style('stroke-width', (d) => {
-                    // if (d.name[0] == 'intermediate' || d.name[0][d.name[0].length - 1] == '_') {
-                    //     if (d.name[0] == 'intermediate') {
-                    //         return 0;
-                    //     }
-                        return 1;
-                    // }
+                    return 1;
                 })
                 .on('mouseover', function (d) {
                     if (d.name != 'intermediate') {
-                        // this.view.toolTipList.attr('width', '400px')
-                        //     .attr('height', '150px');
-                        // var res = getFunctionListOfNode(graph, d);
-                        // toolTipTexts(d,res, rootRunTime1)
-                        // d3.select(this).style('stroke-width', '2');
-                        // fadeUnConnected(d);
-                        // svg.selectAll(".link").style('fill-opacity', 0.0)
-                        // svg.selectAll('.node').style('opacity', '0.0')
+                        this.view.toolTipList.attr('width', '400px')
+                            .attr('height', '150px');
+                        var res = getFunctionListOfNode(graph, d);
+                        toolTipTexts(d,res, rootRunTime1)
+                        d3.select(this).style('stroke-width', '2');
+                        fadeUnConnected(d);
+                        svg.selectAll(".link").style('fill-opacity', 0.0)
+                        svg.selectAll('.node').style('opacity', '0.0')
                     }
                 })
                 .on('mouseout', function (d) {
@@ -126,8 +121,8 @@ export default {
                 .on('click', (d) => {
                     let nid = d.n_index[0]
                     this.$socket.emit('module_hierarchy', {
-                        nid, 
-                        dataset: 'kripke-impi',
+                        nid,
+                        dataset1: 'kripke-impi',
                     })
                 });
             // .on('contextmenu', function(d){
@@ -158,8 +153,8 @@ export default {
                     return 1;
                 });
 
-            
-            
+
+
         },
 
         quantileLines(rect, data) {
@@ -167,15 +162,15 @@ export default {
                 let nrange = data.nrange[i]
                 this.nodes.append('line')
                     .attr('id', 'line-' + i)
-                    .style("stroke", "black")  
+                    .style("stroke", "black")
                     .style("stroke-width", 2)
-                    .attr("x1", data.x)   
-                    .attr("y1", data.y*(nrange/data.weight)) 
-                    .attr("x2", data.x + this.nodeWidth)     
-                    .attr("y2", data.y*(nrange/data.weight))
+                    .attr("x1", data.x)
+                    .attr("y1", data.y * (nrange / data.weight))
+                    .attr("x2", data.x + this.nodeWidth)
+                    .attr("y2", data.y * (nrange / data.weight))
 
-             
-                    
+
+
             }
         },
 
@@ -231,8 +226,8 @@ export default {
             return { width: size.width, height: size.height };
         },
 
-        trunc(str, n){
-            return (str.length > n) ? str.substr(0, n-1) + '...' : str;
+        trunc(str, n) {
+            return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
         text(node) {
@@ -254,7 +249,7 @@ export default {
                     //     // }
                     //     // else {
                     return this.trunc(d.name, textTruncForNode)
-                        // }
+                    // }
 
                     // }
                     // return '';
@@ -289,10 +284,10 @@ export default {
                 .style('opacity', 1)
                 .style('fill', d => this.view.color.setContrast(this.view.color.getColor(d)))
                 .text((d) => {
-                    if(d.name.length == 1){
+                    if (d.name.length == 1) {
                         name = d.name[0]
                     }
-                    else{
+                    else {
                         name = d.name
                     }
 

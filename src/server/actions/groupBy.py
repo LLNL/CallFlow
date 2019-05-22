@@ -39,7 +39,7 @@ class groupBy:
         node_name = self.state.lookup_with_node(node)[self.group_by].tolist()[0]
         if(node_name == ''):
             node_name = 'Unkno'
-        print('Node name', node_name)
+        # print('Node name', node_name)
         return node_name
 
     def create_component_path(self, path, group_path):

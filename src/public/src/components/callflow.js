@@ -5,7 +5,6 @@ import CCT from './cct'
 import Icicle from './icicle'
 import Vue from 'vue'
 
-
 export default {
 	name: 'entry',
 	template: tpl,
@@ -40,7 +39,7 @@ export default {
 		colorBy: ['Name', 'Exclusive', 'Inclusive', 'Uncertainity'],
 		selectedColorBy: 'Exclusive',
 		modes: ['Single', 'Diff'],
-		selectedMode: 'Diff',
+		selectedMode: 'Single',
 		CallgraphData: null,
 		CCTData: null,
 		level: [0, 4],
@@ -68,6 +67,11 @@ export default {
 		},
 
 		registerSockets() {
+			this.sockets.subscribe('init', (data) => {
+				data = JSON.parse(data)
+				console.log("Config", data)
+			})
+
 			this.sockets.subscribe('dataset', (data) => {
 				console.log("Data for", this.selectedFormat, ": ", data)
 				this.$refs.Callgraph.colorOption = this.selectedColorBy
@@ -98,28 +102,28 @@ export default {
 			})
 
 			this.sockets.subscribe('module_hierarchy', (data) => {
-
+				data = JSON.parse(data)
+				// $this.$refs.Histogram.init(data)
 			})
 		},
 
 		init() {
-			if(this.selectedMode == 'Single'){
-				this.$socket.emit('group', {
-					dataset: this.selectedDataset,
-					format: this.selectedFormat,
-				})
+			this.$socket.emit('init')
+
+			// if(this.selectedMode == 'Single'){
+			// 	this.$socket.emit('group', {
+			// 		dataset: this.selectedDataset,
+			// 		format: this.selectedFormat,
+			// 	})
 				
-			}
-			else if(this.selectedMode == 'Diff'){
-				this.$socket.emit('diff', {
-					dataset1: this.selectedDataset,
-					dataset2: this.selectedDataset2,
-					format: this.selectedFormat
-				})
-			}
-
-
-			
+			// }
+			// else if(this.selectedMode == 'Diff'){
+			// 	this.$socket.emit('diff', {
+			// 		dataset1: this.selectedDataset,
+			// 		dataset2: this.selectedDataset2,
+			// 		format: this.selectedFormat
+			// 	})
+			// }			
 		},
 
 		updateFormat() {
