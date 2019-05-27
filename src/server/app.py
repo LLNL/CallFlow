@@ -110,7 +110,6 @@ class App():
         @sockets.on('init', namespace='/')
         def init():
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
-            print(config_json)
             emit('init', config_json, json=True)
 
 
@@ -151,7 +150,7 @@ class App():
                     "dataset1": dataset
                 })
             result = json_graph.node_link_data(g)
-            emit('dataset', result, json=True)
+            emit('group', result, json=True)
 
         @sockets.on('diff', namespace='/')
         def diff(data):
@@ -180,7 +179,7 @@ class App():
             result = json.dumps(g)
             emit('diff', result, json=True)
 
-        @sockets.on('module_hierarchy', namespace='/')
+        @sockets.on('hierarchy', namespace='/')
         def module_hierarchy(data):
             if self.debug == True:
                 print('[Request] Module hierarchy of the dataset.', data)
@@ -191,7 +190,7 @@ class App():
                 "node-id": nid, 
                 "dataset1": dataset,
             })
-            emit('module_hierarchy', result, json=True)
+            emit('hierarchy', result, json=True)
 
         @sockets.on('uncertainity', namespace='/')
         def uncertainity(data):
@@ -199,6 +198,33 @@ class App():
                 self.print('[Request] Uncertainity of the dataset.')
             result = {}
             emit('uncertainity', result, json=True)
+
+        @sockets.on('histogram', namespace="/")
+        def histogram(data):
+            if self.debug == True:
+                self.print('[Request] Histogram of a Node')
+            print(data)
+            nid = data['nid']
+            dataset = data['dataset1']
+            result = {}
+            n_index = data_json['n_index']
+            mod_index = data_json['mod_index']
+            
+            sct = []
+            for idx, cfg in enumerate(self.cfgs):
+                df = cfg.state.df
+                func_in_module = df[df.mod_index == mod_index]['name'].unique().tolist()
+                for idx2, func in enumerate(func_in_module):
+                    sct.append({
+                        "dataset": cfg.dataset,
+                        "name": func,
+                        "inc" : df.loc[df['name'] == func]['CPUTIME (usec) (I)'].mean(),
+                        "exc" : df.loc[df['name'] == func]['CPUTIME (usec) (E)'].mean(),
+                        "dataset_index": idx
+                    })
+            sct_df = pd.DataFrame(sct)
+            return sct_df.to_json(orient="columns")
+            emit('histogram', result, json=True)
 
     def create_server(self):
         app.debug = True

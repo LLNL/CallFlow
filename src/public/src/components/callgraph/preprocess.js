@@ -6,7 +6,7 @@
 /* eslint-disable no-param-reassign */
 export default function preprocess(graph, refresh) {
     graph = cleanGraph(graph);
-    graph = addUncertainityInfo(graph)
+    // graph = addUncertainityInfo(graph)
     graph = addLinkNodeIDs_(graph);
     graph = calculateFlow(graph);
     return graph;
@@ -87,9 +87,7 @@ function addUncertainityInfo(graph) {
                 node.nrange.push(vals[i]) 
             }
         }
-        console.log(node)
     }
-    console.log(graph.nodes)
     return graph
 }
 
@@ -125,11 +123,8 @@ function addLinkNodeIDs_(graph) {
     const nodeMap = {};
     // eslint-disable-next-line no-restricted-syntax
     for (const [idx, node] of graph.nodes.entries()) {
-        console.log(node.name)
         nodeMap[node.name] = idx;
     }
-
-    console.log(nodeMap)
 
     const links = graph.links;
     // eslint-disable-next-line no-restricted-syntax

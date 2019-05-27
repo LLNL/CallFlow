@@ -25,16 +25,14 @@ export default {
 
     methods: {
         init(graph, view) {
-            console.log(graph)
             this.edges = d3.select('#edges')
             const edge = this.edges.selectAll('.edge')
                 .data(graph.links)
                 .enter().append('path')
                 .attr('class', (d) => {
-                    console.log(d)
-                    if (d.source.name == 'intermediate' || d.target.name == 'intermediate') {
-                        return 'edge intermediate';
-                    }
+                    // if (d.source.name == 'intermediate' || d.target.name == 'intermediate') {
+                    //     return 'edge intermediate';
+                    // }
 
                     return 'edge';
                 })

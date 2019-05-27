@@ -28,18 +28,17 @@ class groupBy:
         group_path = []
         temp = None
         for i, elem in enumerate(path):
-            grouping = self.state.lookup_with_nodeName(elem)[self.group_by].unique()
-            # if temp == None or grouping != temp:
-            if len(grouping) != 0 and (temp == None or grouping != temp):
-                group_path.append(grouping[0])
-                temp = grouping[0]
+            grouping = self.state.lookup_with_nodeName(elem)[self.group_by].unique()[0]
+            if temp == None or grouping != temp:
+            # if len(grouping) != 0 and (temp == None or grouping != temp):
+                group_path.append(grouping)
+                temp = grouping
         return tuple(group_path)
 
     def find_a_good_node_name(self, node):
         node_name = self.state.lookup_with_node(node)[self.group_by].tolist()[0]
         if(node_name == ''):
-            node_name = 'Unkno'
-        # print('Node name', node_name)
+            node_name = 'Unknown'
         return node_name
 
     def create_component_path(self, path, group_path):

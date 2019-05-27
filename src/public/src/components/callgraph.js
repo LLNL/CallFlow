@@ -2,6 +2,8 @@ import tpl from '../html/callgraph.html'
 import preprocess from './callgraph/preprocess'
 import Sankey from './callgraph/sankey'
 import Nodes from './callgraph/nodes'
+import IntermediateNodes from './callgraph/intermediateNodes'
+import MiniHistograms from './callgraph/miniHistograms'
 import Edges from './callgraph/edges'
 
 import * as  d3 from 'd3'
@@ -13,11 +15,12 @@ export default {
 	template: tpl,
 	components: {
 		Nodes,
+		IntermediateNodes,
 		Edges,
+		MiniHistograms,
 	},
 
 	props: [
-		// 'data'
 	],
 
 	data: () => ({
@@ -32,7 +35,9 @@ export default {
 		margin: {
 			top: 30, right: 30, bottom: 10, left: 10
 		},
-		view: {
+		pass_props: {
+			nodeWidth: 50,
+			ySpacing: 50,
 			color: null,
 		},
 		width: null,
@@ -54,7 +59,7 @@ export default {
 		init(data) {
 			this.width = document.getElementById('vis').clientWidth - this.margin.left - this.margin.right
 			this.height = window.innerHeight * 0.89 - this.margin.top - this.margin.bottom
-			d3.select('#' + this.id)
+			this.viewport = d3.select('#' + this.id)
 				.attr('class', 'sankey')
 				.attr('width', this.width + this.margin.left + this.margin.right)
 				.attr('height', this.height + this.margin.top + this.margin.bottom)
@@ -74,16 +79,41 @@ export default {
 			this.postProcess(this.data.nodes, this.data.links)
 
 			// Set color scales
-			this.view.color = new Color(this.colorOption)
-			this.view.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
+			this.pass_props.color = new Color(this.colorOption)
+			this.pass_props.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
+
+			this.render()
+		},
+
+		render() {
+			this.$refs.Nodes.init(this.data, this.pass_props)
+			// this.$refs.IntermediateNodes.init(this.data)
+			this.$refs.Edges.init(this.data)
+			this.$refs.MiniHistograms.init(this.data, this.pass_props)
+		},
+
+		clear() {
+			this.$refs.Nodes.clear()
+			this.$refs.Edges.clear()
+			this.init()
+		},
+
+		update(data) {
+			this.data = preprocess(data, false)
+			this.d3sankey = this.initSankey(this.data)
+			this.postProcess(this.data.nodes, this.data.links)
+
+			// Set color scales
+			this.pass_props.color = new Color(this.colorOption)
+			this.pass_props.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
 
 			this.render()
 		},
 
 		updateColor(option) {
 			this.colorOption = option
-			this.view.color = new Color(this.colorOption)
-			this.view.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
+			this.pass_props.color = new Color(this.colorOption)
+			this.pass_props.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
 			this.render()
 		},
 
@@ -182,29 +212,6 @@ export default {
 				remainingNodes = nextNodes;
 				++x;
 			}
-		},
-
-		render() {
-			this.$refs.Nodes.init(this.data, this.view)
-			this.$refs.Edges.init(this.data, this.view)
-
-		},
-
-		clear() {
-			this.$refs.Nodes.clear()
-			this.$refs.Edges.clear()
-		},
-
-		update(data) {
-			this.data = preprocess(data, false)
-			this.d3sankey = this.initSankey(this.data)
-			this.postProcess(this.data.nodes, this.data.links)
-
-			// Set color scales
-			this.view.color = new Color(this.colorOption)
-			this.view.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
-
-			this.render()
 		},
 	}
 }

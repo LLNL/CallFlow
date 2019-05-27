@@ -1,12 +1,10 @@
 import tpl from '../../html/callgraph/nodes.html'
 import * as  d3 from 'd3'
-import { timeHours } from 'd3-time';
 
 export default {
     template: tpl,
     name: 'Nodes',
     components: {
-
     },
 
     props: [
@@ -30,27 +28,20 @@ export default {
     },
 
     methods: {
-        init(data, view) {
-            this.graph = data
+        init(graph, view) {
+            this.graph = graph
             this.view = view
             this.nodes = d3.select('#nodes')
             const node = this.nodes.selectAll('.node')
                 .data(this.graph.nodes)
                 .enter().append('g')
                 .attr('class', (d) => {
-                    // if (d.name == 'intermediate' || d.name[0][d.name[0].length - 1] == '_') {
-                    //     return 'node intermediate';
-                    // }
                     return 'node';
                 })
                 .attr('opacity', 0)
                 .attr('id', d => `n${d.n_index}`)
                 .attr('transform', (d) => {
-                    if (d.name != 'intermediate') {
-                        return `translate(${d.x},${d.y})`;
-                    }
-
-                    return 'translate(0,0)';
+                    return `translate(${d.x},${d.y})`;
                 });
 
             this.nodes.selectAll('.node')
@@ -70,7 +61,7 @@ export default {
                 .attr('height', (d) => {
                     this.currentNodeLevel[d.mod_index] = 0;
                     this.nodeHeights[d.n_index] = d.height;
-                    return Math.log(d.height);
+                    return d.height;
                 })
                 .attr('width', this.nodeWidth)
                 .attr('opacity', 0)
@@ -85,25 +76,20 @@ export default {
                 })
                 .style('shape-rendering', 'crispEdges')
                 .style('stroke', (d) => {
-                    if (d.name != 'intermediate') {
-                        return d3.rgb(this.view.color.getColor(d)).darker(2);
-                    }
-                    return '#e1e1e1';
+                    return d3.rgb(this.view.color.getColor(d)).darker(2);
                 })
                 .style('stroke-width', (d) => {
                     return 1;
                 })
                 .on('mouseover', function (d) {
-                    if (d.name != 'intermediate') {
-                        this.view.toolTipList.attr('width', '400px')
-                            .attr('height', '150px');
-                        var res = getFunctionListOfNode(graph, d);
-                        toolTipTexts(d,res, rootRunTime1)
-                        d3.select(this).style('stroke-width', '2');
-                        fadeUnConnected(d);
-                        svg.selectAll(".link").style('fill-opacity', 0.0)
-                        svg.selectAll('.node').style('opacity', '0.0')
-                    }
+                    this.view.toolTipList.attr('width', '400px')
+                        .attr('height', '150px');
+                    var res = getFunctionListOfNode(graph, d);
+                    toolTipTexts(d, res, rootRunTime1)
+                    d3.select(this).style('stroke-width', '2');
+                    fadeUnConnected(d);
+                    svg.selectAll(".link").style('fill-opacity', 0.0)
+                    svg.selectAll('.node').style('opacity', '0.0')
                 })
                 .on('mouseout', function (d) {
                     // this.view.toolTipList.attr('width', '0px')
@@ -135,26 +121,16 @@ export default {
                 .transition()
                 .duration(this.transitionDuration)
                 .attr('opacity', d => {
-                    this.quantileLines(rect, d)
+                    // this.quantileLines(rect, d)
                     return 1;
                 })
                 .attr('height', d => d.height)
                 .style('fill', (d) => {
-                    if (d.name == 'intermediate') {
-                        return '#e1e1e1';
-                    }
-
                     return d.color = this.view.color.getColor(d);
                 })
                 .style('stroke', (d) => {
-                    if (d.name == 'intermediate') {
-                        return 0;
-                    }
                     return 1;
                 });
-
-
-
         },
 
         quantileLines(rect, data) {
@@ -168,40 +144,22 @@ export default {
                     .attr("y1", data.y * (nrange / data.weight))
                     .attr("x2", data.x + this.nodeWidth)
                     .attr("y2", data.y * (nrange / data.weight))
-
-
-
             }
         },
 
         path(node) {
             node.append('path')
                 .attr('d', (d) => {
-                    if (d.name == 'intermediate') {
-                        return `m${0} ${0
-                            }h ${view.sankey.nodeWidth()
-                            }v ${(1) * 0
-                            }h ${(-1) * view.sankey.nodeWidth()}`;
-                    }
+                    return `m${0} ${0
+                        }h ${this.nodeWidth
+                        }v ${(1) * 0
+                        }h ${(-1) * this.nodeWidth}`;
                 })
                 .style('fill', (d) => {
-                    if (d.name == 'intermediate') {
-                        return 'grey';
-                    }
-
                     return this.view.color.getColor(d);
                 })
                 .style('fill-opacity', (d) => {
-                    if (d.name == 'intermediate') {
-                        return 0.0;
-                    }
-
                     return 0;
-                })
-                .style('stroke', (d) => {
-                    if (d.name == 'intermediate') {
-                        return 'grey';
-                    }
                 })
                 .style('stroke-opacity', '0.0');
 
@@ -211,9 +169,7 @@ export default {
                 .duration(this.transitionDuration)
                 .delay(this.transitionDuration / 3)
                 .style('fill-opacity', (d) => {
-                    if (d.name[0] == 'intermediate') {
-                        return 0;
-                    }
+                    return 1.0;
                 });
         },
 
@@ -255,24 +211,24 @@ export default {
                     // return '';
                 })
                 .on('mouseover', function (d) {
-                    if (d.name[0] != 'intermediate') {
-                        view.toolTipList.attr('width', '400px')
-                            .attr('height', '150px');
-                        d3.select(this.parentNode).select('rect').style('stroke-width', '2');
-                    }
+                    // if (d.name[0] != 'intermediate') {
+                    //     view.toolTipList.attr('width', '400px')
+                    //         .attr('height', '150px');
+                    //     d3.select(this.parentNode).select('rect').style('stroke-width', '2');
+                    // }
                 })
                 .on('mouseout', function (d) {
-                    view.toolTipList.attr('width', '0px')
-                        .attr('height', '0px');
-                    if (d.name[0] != 'intermediate') {
-                        d3.select(this.parentNode).select('rect').style('stroke-width', '1');
-                        //                unFade();
-                    }
-                    view.toolTip.style('opacity', 1)
-                        .style('left', () => 0)
-                        .style('top', () => 0);
-                    view.toolTipText.html('');
-                    view.toolTipG.selectAll('*').remove();
+                    // view.toolTipList.attr('width', '0px')
+                    //     .attr('height', '0px');
+                    // if (d.name[0] != 'intermediate') {
+                    //     d3.select(this.parentNode).select('rect').style('stroke-width', '1');
+                    //     //                unFade();
+                    // }
+                    // view.toolTip.style('opacity', 1)
+                    //     .style('left', () => 0)
+                    //     .style('top', () => 0);
+                    // view.toolTipText.html('');
+                    // view.toolTipG.selectAll('*').remove();
                 });
 
 
@@ -290,7 +246,6 @@ export default {
                     else {
                         name = d.name
                     }
-
                     let name_splits = name.split('/').reverse()
                     if (name_splits.length == 1) {
                         d.name = name

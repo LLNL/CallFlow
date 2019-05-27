@@ -120,14 +120,14 @@ class CallGraph(nx.Graph):
                     continue
             
             if attr == 'time (inc)':
-                group_df = self.df.groupby([self.group_by]).agg(['mean'])
-                ret[node] = group_df.loc[node, 'max_incTime'][0]
+                group_df = self.df.groupby([self.group_by]).max()
+                ret[node] = group_df.loc[node, 'avg_incTime']
             elif attr == 'node_type':
                 ret[node] = 'normal_edge'
             else:
                 df = self.df.loc[self.df['vis_node_name'] == node][attr]
                 if df.empty:
-                    ret[node] = ['Unkno']
+                    ret[node] = ['Unknown']
                 else:
                     ret[node] = list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
         return ret
@@ -284,10 +284,11 @@ class CallGraph(nx.Graph):
                 # added_flow = additional_flow[target_name]
             # source = self.state.lookup_with_vis_nodeName(edge[0])
             # target = self.state.lookup_with_vis_nodeName(edge[1])
-            group_df = self.df.groupby([self.group_by]).agg(['mean'])
-            source_inc = group_df.loc[edge[0], 'max_incTime'][0]   
-            target_inc = group_df.loc[edge[1], 'max_incTime'][0]   
+            group_df = self.df.groupby([self.group_by]).max()
+            source_inc = group_df.loc[edge[0], 'max_incTime']   
+            target_inc = group_df.loc[edge[1], 'max_incTime']
             
+            print(source_inc, target_inc)
          
             if source_inc == target_inc:
                 ret[edge] = source_inc

@@ -17,113 +17,134 @@ export default {
 	data: () => ({
 		socket: null,
 		appName: 'Callflow',
-		dialog: true,
 		socketError: false,
-		isAggregated: true,
 		server: 'localhost:5000',
 		config: {
 			headers: { 'Access-Control-Allow-Origin': '*' }
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		datasets: ['kripke-impi', 'kripke-mvapich2', 'kripke-openmpi'],
-		selectedDataset: 'kripke-impi',
-		selectedDataset2: 'kripke-mvapich2',
+		datasets: [],
+		selectedDataset: '',
+		selectedDataset2: '',
 		selectedFormat: 'Callgraph',
 		groupBy: ['Name', 'Function', 'Files'],
 		selectedGroupBy: 'Function',
 		filterBy: ['Inclusive', 'Exclusive'],
 		selectedFilterBy: 'Inclusive',
 		filterPercRange: [0, 100],
-		filterPerc: 10, 
+		filterPerc: 10,
 		colorBy: ['Name', 'Exclusive', 'Inclusive', 'Uncertainity'],
 		selectedColorBy: 'Exclusive',
-		modes: ['Single', 'Diff'],
+		modes: [],
 		selectedMode: 'Single',
 		CallgraphData: null,
 		CCTData: null,
 		level: [0, 4],
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
+		enableDiff: false,
 	}),
 
 	watch: {
 	},
 
 	mounted() {
-		this.registerSockets()
-		this.init()
+		this.$socket.emit('init')
 	},
 
 	sockets: {
-		connect: () => {
+		connect() {
 			console.log('socket connected')
 		},
+
+		init(data) {
+			data = JSON.parse(data)
+			console.log("Config file: ", data)
+			this.numOfDatasets = data['datasets'].length
+			// Enable diff mode only if the number of datasets >= 2
+			this.datasets = data['names']
+			this.selectedDataset = data['names'][0]
+
+			if (this.numOfDatasets >= 2) {
+				this.enableDiff = true
+				this.modes = ['Single', 'Diff']
+				this.selectedDataset2 = data['names'][1]
+			}
+			else {
+				this.enableDiff = false
+				this.modes = ['Single']
+				this.selectedDataset2 = ''
+			}
+			this.init()
+		},
+
+		group(data) {
+			console.log("Data for", this.selectedFormat, ": ", data)
+			if (this.selectedFormat == 'Callgraph') {
+				if (this.isCallgraphInitialized == true) {
+					this.$refs.Callgraph.update(data)
+				}
+				else {
+					this.isCallgraphInitialized = true
+					this.$refs.Callgraph.colorOption = this.selectedColorBy
+					this.$refs.Callgraph.init(data)
+				}
+			}
+			else if (this.selectedFormat == 'CCT') {
+				this.CCTData = data
+				if (this.isCCTInitialized == true) {
+					this.$refs.CCT.update(data)
+				}
+				else {
+					this.isCCTInitialized = true
+					this.$refs.CCT.colorOption = this.selectedColorBy
+					this.$refs.CCT.init(data)
+				}
+			}
+		},
+
+		diff(data) {
+			data = JSON.parse(data)
+			this.$refs.Diffgraph.init(data)
+		},
+
+		hierarchy(data) {
+			data = JSON.parse(data)
+		},
+
+		histogram(data) {
+			data = JSON.parse(data)
+			this.$refs.Histograms.init(data)
+		}
+
 	},
 
 	methods: {
 		clear() {
-			this.$refs.Callgraph.clear()
-		},
-
-		registerSockets() {
-			this.sockets.subscribe('init', (data) => {
-				data = JSON.parse(data)
-				console.log("Config", data)
-			})
-
-			this.sockets.subscribe('dataset', (data) => {
-				console.log("Data for", this.selectedFormat, ": ", data)
-				this.$refs.Callgraph.colorOption = this.selectedColorBy
-				if (this.selectedFormat == 'Callgraph') {
-					if (this.isCallgraphInitialized == true) {
-						this.$refs.Callgraph.update(data)
-					}
-					else {
-						this.isCallgraphInitialized = true
-						this.$refs.Callgraph.init(data)
-					}
-				}
-				else if (this.selectedFormat == 'CCT') {
-					this.CCTData = data
-					if (this.isCCTInitialized == true) {
-						this.$refs.CCT.update(data)
-					}
-					else {
-						this.isCCTInitialized = true
-						this.$refs.CCT.init(data)
-					}
-				}
-			})
-
-			this.sockets.subscribe('diff', (data) => {
-				data = JSON.parse(data)
-				this.$refs.Diffgraph.init(data)
-			})
-
-			this.sockets.subscribe('module_hierarchy', (data) => {
-				data = JSON.parse(data)
-				// $this.$refs.Histogram.init(data)
-			})
+			if (this.selectedFormat == 'Callgraph') {
+				this.$refs.CCT.clear()
+			}
+			else if (this.selectedFormat == 'CCT') {
+				this.$refs.Callgraph.clear()
+			}
 		},
 
 		init() {
-			this.$socket.emit('init')
+			if (this.selectedMode == 'Single') {
+				this.$socket.emit('group', {
+					dataset: this.selectedDataset,
+					format: this.selectedFormat,
+				})
 
-			// if(this.selectedMode == 'Single'){
-			// 	this.$socket.emit('group', {
-			// 		dataset: this.selectedDataset,
-			// 		format: this.selectedFormat,
-			// 	})
-				
-			// }
-			// else if(this.selectedMode == 'Diff'){
-			// 	this.$socket.emit('diff', {
-			// 		dataset1: this.selectedDataset,
-			// 		dataset2: this.selectedDataset2,
-			// 		format: this.selectedFormat
-			// 	})
-			// }			
+			}
+			else if (this.selectedMode == 'Diff') {
+				this.$socket.emit('diff', {
+					dataset1: this.selectedDataset,
+					dataset2: this.selectedDataset2,
+					format: this.selectedFormat
+				})
+			}
 		},
 
 		updateFormat() {
@@ -153,15 +174,15 @@ export default {
 			})
 		},
 
-		updateColorBy(){
+		updateColorBy() {
 			Vue.nextTick(() => {
 				this.clear()
 				this.$refs.Callgraph.updateColor(this.selectedColorBy)
-				
+
 			})
 		},
 
-		updateFilterBy(){
+		updateFilterBy() {
 			Vue.nextTick(() => {
 				this.clear()
 			})

@@ -5,6 +5,8 @@ import Edges from './cct/edges'
 import Sankey from './callgraph/sankey'
 
 import * as  d3 from 'd3'
+import dagreD3 from 'dagre-d3/dist/dagre-d3';
+
 import Color from '../old_components/callflow/color';
 // import { behavior } from 'd3-behavior'
 
@@ -29,7 +31,7 @@ export default {
             ySpacing: 50,
             nodeScale: 1.0,
         },
-        margin: { 
+        margin: {
             top: 30, right: 30, bottom: 10, left: 10
         },
         view: {
@@ -53,27 +55,82 @@ export default {
     methods: {
         init(data) {
             this.width = document.getElementById('vis').clientWidth - this.margin.left - this.margin.right
-            this.height = window.innerHeight * 0.89 - this.margin.top - this.margin.bottom
+            this.height = window.innerHeight //- this.margin.top - this.margin.bottom
             d3.select('#' + this.id)
                 .attr('class', 'sankey')
                 .attr('width', this.width + this.margin.left + this.margin.right)
                 .attr('height', this.height + this.margin.top + this.margin.bottom)
 
-            this.data = preprocess(data, false)
-            this.d3sankey = this.initSankey(this.data)
-            this.postProcess(this.data.nodes, this.data.links)
+            // this.data = preprocess(data, false)
+            // this.d3sankey = this.initSankey(this.data)
+            // this.postProcess(this.data.nodes, this.data.links)
 
             // Set color scales
-            this.view.color = new Color(this.colorOption)
-            this.view.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
+            // this.view.color = new Color(this.colorOption)
+            // this.view.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
 
-            this.render()
+            this.render(data)
         },
 
-        render() {
-            
-            this.$refs.Nodes.init(this.data, this.view)
-            this.$refs.Edges.init(this.data, this.view)
+        // render() {
+
+        //     this.$refs.Nodes.init(this.data, this.view)
+        //     this.$refs.Edges.init(this.data, this.view)
+        // },
+
+        render(data) {
+            // Create a new directed graph
+            let g = new dagreD3.graphlib.Graph().setGraph({});
+
+            let nodes = JSON.parse(JSON.stringify(data.nodes))
+            let links = JSON.parse(JSON.stringify(data.links))
+            console.log(nodes)
+            nodes.forEach((node, i) => {
+                g.setNode(node['name'][0], { label: node['name'][0] + '/' + node['module'][0] });
+            });
+
+            // Set up the edges
+            for (let i = 0; i < links.length - 2; i += 1) {
+                g.setEdge(links[i]['source'], links[i]['target'], { label: '' });
+            }
+            console.log(g.nodes())
+
+            // Set some general styles
+            g.nodes().forEach(function (v) {
+                let node = g.node(v);
+                if (node != undefined) {
+                    node.style = "stroke: 3px"
+                    node.style = "fill: #f77"
+                    node.rx = node.ry = 5;
+                }
+            });
+
+            g.edges().forEach((e) => {
+                var edge = g.edge(e)
+                // g.edge(e).style = "stroke: 1.5px "
+            })
+
+            let svg = d3.select("#" + this.id)
+            svg.append('g')
+            let inner = svg.select('g');
+
+            // Set up zoom support
+            var zoom = d3.zoom().on("zoom", function () {
+                inner.attr("transform", d3.event.transform);
+            });
+            svg.call(zoom);
+
+            // Create the renderer
+            var render = new dagreD3.render();
+
+            // Run the renderer. This is what draws the final graph.
+            render(inner, g);
+
+            // Center the graph
+            var initialScale = 1;
+            svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
+
+            svg.attr('height', g.graph().height * initialScale + 40);
         },
 
         clear() {

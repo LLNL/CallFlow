@@ -232,15 +232,17 @@ class CallFlow:
             state2 = self.states[action["dataset2"]]
         action_name = action["name"]
 
+        self.print('Grouping by: ', action['groupBy'])
+
         if action_name == 'default':
             groupBy(state1, action["groupBy"])
-            nx = CallGraph(state1, 'group_path', True, 'name')
+            nx = CallGraph(state1, 'group_path', True, action["groupBy"])
         elif action_name == 'filter':
             Filter(state1, action["filterBy"], action["filterPerc"])
-            nx = CallGraph(state1, 'group_path', True, 'module')
+            nx = CallGraph(state1, 'group_path', True, action["groupBy"])
         elif action_name == "group":
             groupBy(state1, action["groupBy"])
-            nx = CallGraph(state1, 'group_path', True, 'module')
+            nx = CallGraph(state1, 'group_path', True, action["groupBy"])
         elif action_name == 'diff':
             union_state = structDiff(state1, state2)
             nx = union_state
