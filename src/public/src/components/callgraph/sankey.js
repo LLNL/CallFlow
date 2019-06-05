@@ -379,7 +379,7 @@ export default function Sankey() {
                 if (dy > 0) {
 		            y0 = node.y -= dy;
                     // Push any overlapping nodes back up.
-                    for (i = nodes.length - 2; i > 0; --i) {
+                    for (let i = nodes.length - 2; i > 0; --i) {
                         node = nodes[i];
                         dy = node.y + node.height + nodePadding - y0;
                         if (dy > 0) node.y -= dy;

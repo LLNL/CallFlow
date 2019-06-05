@@ -72,7 +72,7 @@ class App():
         parser.add_argument("--input_format", default="hpctoolkit", help="caliper | hpctoolkit")
         parser.add_argument("--filter", action="store_true", help="Filter the dataframe")
         parser.add_argument("--filterBy", default="IncTime", help="IncTime | ExcTime, [Default = IncTime] ")
-        parser.add_argument("--filtertheta", default="0.01", help="Threshold [Default = 0.01]")
+        parser.add_argument("--filtertheta", default="10", help="Threshold [Default = 10]")
         parser.add_argument("--preprocess", action="store_true", help="Preprocess the file")
         self.args = parser.parse_args()
         self.debug = self.args.verbose
@@ -118,37 +118,45 @@ class App():
             if self.debug == True:
                 self.print('[Request] Filter the dataset.', data)
             dataset = data['dataset']
-            graph_format = data['format']
+            graphFormat = data['format']
             filterBy = data['filterBy']
             filterPerc = data['filterPerc']
-            g = self.callflow.update({
+            obj = {
                 "name": "filter",
                 "filterBy": filterBy,
                 "filterPerc": filterPerc,
-                "dataset1": dataset
-            })
+                "dataset1": dataset,
+            }
+            if(graphFormat == 'CCT'):
+                groupByAttr = 'name'
+                obj['groupBy'] = groupByAttr    
+                g = self.callflow.update(obj)
+            elif(graphFormat == 'Callgraph'):
+                groupByAttr = 'module'
+                obj['groupBy'] = groupByAttr
+                g = self.callflow.update(obj)
+            result = json_graph.node_link_data(g)
+            emit('filter', result, json=True)
 
         @sockets.on('group', namespace='/')
         def group(data):
             if self.debug == True:
                 self.print('[Request] Group the dataset.', data)
             dataset = data['dataset']
-            graph_format = data['format']
-            print('[Group] Dataset: {0}, format: {1}'.format(dataset, graph_format))
-            if(graph_format == 'CCT'):
-                group_by_attr = 'name'
-                g = self.callflow.update({
-                    "name": "group",
-                    "groupBy": group_by_attr,
-                    "dataset1": dataset
-                })
-            elif(graph_format == 'Callgraph'):
-                group_by_attr = 'module'
-                g = self.callflow.update({
-                    "name": 'group', 
-                    "groupBy": group_by_attr, 
-                    "dataset1": dataset
-                })
+            graphFormat = data['format']
+            print('[Group] Dataset: {0}, format: {1}'.format(dataset, graphFormat))
+            obj = {
+                "name": "group",
+                "dataset1": dataset
+            }
+            if(graphFormat == 'CCT'):
+                groupByAttr = 'name'
+                obj['groupBy'] = groupByAttr
+                g = self.callflow.update(obj)
+            elif(graphFormat == 'Callgraph'):
+                groupByAttr = 'module'
+                obj['groupBy'] = groupByAttr
+                g = self.callflow.update(obj)
             result = json_graph.node_link_data(g)
             emit('group', result, json=True)
 

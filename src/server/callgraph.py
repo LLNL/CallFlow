@@ -70,6 +70,7 @@ class CallGraph(nx.Graph):
 #        nx.set_node_attributes(self.g, name='type', values=type_mapping)
 
         time_mapping = self.generic_map(self.g.nodes(), 'time (inc)')
+        print(time_mapping)
         nx.set_node_attributes(self.g, name='weight', values=time_mapping)
 
         name_mapping = self.generic_map(self.g.nodes(), 'vis_node_name')
@@ -113,6 +114,8 @@ class CallGraph(nx.Graph):
                     ret[node] = [node]
                     continue
                 if attr == 'time (inc)':
+                    print('aaaaaaa')
+                    print(self.df[self.df['vis_node_name'] == node[:-1]][attr])
                     ret[node] = self.df[self.df['vis_node_name'] == node[:-1]][attr].max().tolist()
                     continue
                 if attr == 'node_type':

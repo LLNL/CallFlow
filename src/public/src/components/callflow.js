@@ -5,6 +5,10 @@ import CCT from './cct'
 import Icicle from './icicle'
 import Vue from 'vue'
 
+import VueSlider from 'vue-slider-component'
+import 'vue-slider-component/theme/antd.css'
+
+
 export default {
 	name: 'entry',
 	template: tpl,
@@ -13,6 +17,7 @@ export default {
 		CCT,
 		Icicle,
 		Diffgraph,
+		VueSlider,
 	},
 	data: () => ({
 		socket: null,
@@ -31,9 +36,10 @@ export default {
 		groupBy: ['Name', 'Function', 'Files'],
 		selectedGroupBy: 'Function',
 		filterBy: ['Inclusive', 'Exclusive'],
+		filterRange: [0, 100],
 		selectedFilterBy: 'Inclusive',
 		filterPercRange: [0, 100],
-		filterPerc: 10,
+		selectedFilterPerc: 10,
 		colorBy: ['Name', 'Exclusive', 'Inclusive', 'Uncertainity'],
 		selectedColorBy: 'Exclusive',
 		modes: [],
@@ -44,6 +50,7 @@ export default {
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
 		enableDiff: false,
+		firstRender: false
 	}),
 
 	watch: {
@@ -79,8 +86,69 @@ export default {
 			this.init()
 		},
 
+		filter(data) {
+			console.log("Data for", this.selectedFormat, ": ", data)
+			this.update(data)
+		},
+
 		group(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
+			this.update(data)
+		},
+
+		diff(data) {
+			data = JSON.parse(data)
+			this.$refs.Diffgraph.init(data)
+		},
+
+		hierarchy(data) {
+			data = JSON.parse(data)
+		},
+	},
+
+	methods: {
+		clear() {
+			if (this.selectedFormat == 'Callgraph') {
+				this.$refs.CCT.clear()
+			}
+			else if (this.selectedFormat == 'CCT') {
+				this.$refs.Callgraph.clear()
+			}
+		},
+
+		clearLocal(){
+			if (this.selectedFormat == 'Callgraph') {
+				this.$refs.Callgraph.clear()
+			}
+			else if (this.selectedFormat == 'CCT') {
+				this.$refs.CCT.clear()
+			}
+		},
+
+		init() {
+			if (this.selectedMode == 'Single') {
+				this.$socket.emit('group', {
+					dataset: this.selectedDataset,
+					format: this.selectedFormat,
+				})
+
+			}
+			else if (this.selectedMode == 'Diff') {
+				this.$socket.emit('diff', {
+					dataset1: this.selectedDataset,
+					dataset2: this.selectedDataset2,
+					format: this.selectedFormat
+				})
+			}
+		},
+
+		update(data){
+			if(this.firstRender == false){
+				this.firstRender = true
+			}
+			else{
+				this.clearLocal()
+			}
 			if (this.selectedFormat == 'Callgraph') {
 				if (this.isCallgraphInitialized == true) {
 					this.$refs.Callgraph.update(data)
@@ -104,47 +172,13 @@ export default {
 			}
 		},
 
-		diff(data) {
-			data = JSON.parse(data)
-			this.$refs.Diffgraph.init(data)
-		},
-
-		hierarchy(data) {
-			data = JSON.parse(data)
-		},
-
-		histogram(data) {
-			data = JSON.parse(data)
-			this.$refs.Histograms.init(data)
-		}
-
-	},
-
-	methods: {
-		clear() {
-			if (this.selectedFormat == 'Callgraph') {
-				this.$refs.CCT.clear()
-			}
-			else if (this.selectedFormat == 'CCT') {
-				this.$refs.Callgraph.clear()
-			}
-		},
-
-		init() {
-			if (this.selectedMode == 'Single') {
-				this.$socket.emit('group', {
-					dataset: this.selectedDataset,
-					format: this.selectedFormat,
-				})
-
-			}
-			else if (this.selectedMode == 'Diff') {
-				this.$socket.emit('diff', {
-					dataset1: this.selectedDataset,
-					dataset2: this.selectedDataset2,
-					format: this.selectedFormat
-				})
-			}
+		refresh() {
+			this.$socket.emit('filter', {
+				dataset: this.selectedDataset,
+				format: this.selectedFormat,
+				filterBy: this.selectedFilterBy,
+				filterPerc: this.selectedFilterPerc
+			})
 		},
 
 		updateFormat() {
@@ -185,6 +219,15 @@ export default {
 		updateFilterBy() {
 			Vue.nextTick(() => {
 				this.clear()
+			})
+		},
+
+		updateFilterPerc() {
+			this.$socket.emit('filter', {
+				dataset: this.selectedDataset,
+				format: this.selectedFormat,
+				filterBy: this.selectedFilterBy,
+				filterPerc: this.selectedFilterPerc
 			})
 		}
 	}

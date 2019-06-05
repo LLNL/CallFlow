@@ -50,13 +50,14 @@
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
-					<v-range-slider label="Filter Percentage" v-model="filterPercRange" :max="100" :min="0" :step="1">
+					<v-text-field label="Filter Percentage" v-model="selectedFilterPerc" class="mt-0"  type="number"></v-text-field>
+					<vue-slider id="frequency-slider" :width="200" :process="true" v-model="selectedFilterPerc" :order="false" @change="updateFilterPerc" style="">
 						<template #prepend>
-							<v-text-field v-model="filterPercRange[[0, filterPerc]]" class="pt-0 mt-0" hide-details single-line
-								type="number" style="width: 30px">
+							<v-text-field v-model="filterPercRange[[0, selectedFilterPerc]]" class="pt-0 mt-0" hide-details
+								single-line type="number" style="width: 30px">
 							</v-text-field>
 						</template>
-					</v-range-slider>
+					</vue-slider>
 				</v-flex>
 
 				<v-spacer></v-spacer>
@@ -86,7 +87,7 @@
 						<Callgraph ref="Callgraph" v-if="selectedFormat == 'Callgraph'" />
 						<CCT ref="CCT" v-if="selectedFormat == 'CCT'" />
 					</v-flex>
-					<v-flex xs9 fill-height class="pa-0" id="vis" v-if="selectedMode == 'Diff'" >
+					<v-flex xs9 fill-height class="pa-0" id="vis" v-if="selectedMode == 'Diff'">
 						<Diffgraph ref="Diffgraph" />
 					</v-flex>
 				</v-layout>

@@ -39,6 +39,7 @@ class CallFlow:
         # Config contains properties set by the input config file. 
         self.config = config
         
+        self.reUpdate = False
         self.reProcess = config.preprocess
 
         # Create states for each dataset.
@@ -47,7 +48,7 @@ class CallFlow:
         # Note: df is always updated.
         # Note: graph is always updated.
         # Note: map -> not sure if it can be used.
-        self.states = self.default_pipeline()
+        self.states = self.default_pipeline(self.config.names)
     
     def print(self, action, data = {}):
         action = '[callfow.py] Action: {0}'.format(action)
@@ -71,30 +72,34 @@ class CallFlow:
             print(root)
             dfs_recurse(root)
             
-    def default_pipeline(self):
+    def default_pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
         if self.reProcess:
             self.print("Processing with filter.")
         else:
             self.print("Reading from the processed files.")
         
         states = {}
-        for idx, name in enumerate(self.config.names):   
-            states[name] = State()
+        for idx, dataset in enumerate(datasets):   
+            states[dataset] = State()
             # This step takes a bit of time so do it only if required. 
             # It would be required especially when filtering and stuff. 
             if(self.reProcess):
-                states[name] = self.create_gf(states[name], name)
-                self.write_gf(states, name, 'entire')
-                states[name] = self.process(states[name])
-                self.write_gf(states, name, 'filter')
+                states[dataset] = self.create_gf(states[dataset], dataset)
+                self.write_gf(states, dataset, 'entire')
+                states[dataset] = self.process(states[dataset], filterBy, filterPerc)
+                self.write_gf(states, dataset, 'filter')
+            elif(self.reUpdate):
+                states[dataset] = self.create_gf(states[dataset], dataset)
+                states[dataset] = self.process(states[dataset], filterBy, filterPerc)
             else:
-                states[name] = self.read_gf(name)
+                states[dataset] = self.read_gf(dataset)
                 
         return states
 
-    def process(self, state):
-        # Filter the graphframe based on inc_time or exc_time. 
-        state.fgf = self.filter(state, 'Inclusive', 0.1) 
+    def process(self, state, filterBy, filterPerc):
+        # Filter the graphframe based on inc_time or exc_time.
+        filterPercInDecimals = int(filterPerc)/100 
+        state.fgf = self.filter(state, filterBy, filterPercInDecimals) 
 
         # update df and graph after filtering.
         state.df = state.fgf.dataframe
@@ -209,6 +214,7 @@ class CallFlow:
 
     def filter(self, state, filterBy, filterPerc):
         t = time.time()
+        self.print(filterPerc)
         if filterBy == "Inclusive":
             max_inclusive_time = utils.getMaxIncTime(state.gf)
             filter_gf = state.gf.filter(lambda x: True if(x['time (inc)'] > filterPerc*max_inclusive_time) else False)
@@ -227,9 +233,11 @@ class CallFlow:
         return fgf
 
     def update(self, action):
-        state1 = self.states[action["dataset1"]]
+        dataset1 = action['dataset1']
+        state1 = self.states[dataset1]
         if("dataset2" in action):
-            state2 = self.states[action["dataset2"]]
+            dataset2 = action['dataset2']
+            state2 = self.states[dataset2]
         action_name = action["name"]
 
         self.print('Grouping by: ', action['groupBy'])
@@ -238,8 +246,14 @@ class CallFlow:
             groupBy(state1, action["groupBy"])
             nx = CallGraph(state1, 'group_path', True, action["groupBy"])
         elif action_name == 'filter':
-            Filter(state1, action["filterBy"], action["filterPerc"])
-            nx = CallGraph(state1, 'group_path', True, action["groupBy"])
+            datasets = [dataset1]
+            if ("dataset2" in action):
+                datasets = [dataset1, dataset2]
+            self.reUpdate = True
+            self.states = self.default_pipeline(datasets, action["filterBy"], action["filterPerc"]) 
+            groupBy(self.states[dataset1], action["groupBy"])
+            nx = CallGraph(self.states[dataset1], 'group_path', True, action["groupBy"])
+            self.reUpdate = False
         elif action_name == "group":
             groupBy(state1, action["groupBy"])
             nx = CallGraph(state1, 'group_path', True, action["groupBy"])
