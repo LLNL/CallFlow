@@ -9,7 +9,6 @@
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
-
 #!/usr/bin/env python3
 
 import random

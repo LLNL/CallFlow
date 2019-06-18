@@ -57,7 +57,6 @@ class CallGraph(nx.Graph):
     def add_paths(self, path_name):
         for idx, row in self.df.iterrows():
             if row.show_node:
-                print(row[path_name])
                 self.g.add_path(row[path_name])                
 
     def add_node_attributes(self):        
@@ -71,6 +70,7 @@ class CallGraph(nx.Graph):
 #        nx.set_node_attributes(self.g, name='type', values=type_mapping)
 
         time_mapping = self.generic_map(self.g.nodes(), 'time (inc)')
+        print(time_mapping)
         nx.set_node_attributes(self.g, name='weight', values=time_mapping)
 
         name_mapping = self.generic_map(self.g.nodes(), 'vis_node_name')
@@ -114,6 +114,8 @@ class CallGraph(nx.Graph):
                     ret[node] = [node]
                     continue
                 if attr == 'time (inc)':
+                    print('aaaaaaa')
+                    print(self.df[self.df['vis_node_name'] == node[:-1]][attr])
                     ret[node] = self.df[self.df['vis_node_name'] == node[:-1]][attr].max().tolist()
                     continue
                 if attr == 'node_type':
@@ -121,14 +123,14 @@ class CallGraph(nx.Graph):
                     continue
             
             if attr == 'time (inc)':
-                group_df = self.df.groupby([self.group_by]).agg(['mean'])
-                ret[node] = group_df.loc[node, 'max_incTime'][0]
+                group_df = self.df.groupby([self.group_by]).max()
+                ret[node] = group_df.loc[node, 'avg_incTime']
             elif attr == 'node_type':
                 ret[node] = 'normal_edge'
             else:
                 df = self.df.loc[self.df['vis_node_name'] == node][attr]
                 if df.empty:
-                    ret[node] = ['Unkno']
+                    ret[node] = ['Unknown']
                 else:
                     ret[node] = list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
         return ret
@@ -137,7 +139,7 @@ class CallGraph(nx.Graph):
         return edge[0], edge[1]
 
     def tailheadDir(self, edge):
-        print(str(edge[0]), str(edge[1]), self.edge_direction[edge])
+        return str(edge[0]), str(edge[1]), self.edge_direction[edge]
 
     def edges_from(self, node):
         for e in self.g.edges(node):
@@ -285,10 +287,11 @@ class CallGraph(nx.Graph):
                 # added_flow = additional_flow[target_name]
             # source = self.state.lookup_with_vis_nodeName(edge[0])
             # target = self.state.lookup_with_vis_nodeName(edge[1])
-            group_df = self.df.groupby([self.group_by]).agg(['mean'])
-            source_inc = group_df.loc[edge[0], 'max_incTime'][0]   
-            target_inc = group_df.loc[edge[1], 'max_incTime'][0]   
+            group_df = self.df.groupby([self.group_by]).max()
+            source_inc = group_df.loc[edge[0], 'max_incTime']   
+            target_inc = group_df.loc[edge[1], 'max_incTime']
             
+            print(source_inc, target_inc)
          
             if source_inc == target_inc:
                 ret[edge] = source_inc

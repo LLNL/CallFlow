@@ -137,24 +137,28 @@ export default function Sankey() {
                 var source = link.sourceID,
 		            target = link.targetID;
 
-                // bconsole.log(source, target)	    
+                // console.log(source, target)	    
                 // console.log(link.sourceID, link.targetID, nodes[link.sourceID], nodes[link.targetID])
 
 	            
                 source = link.source = nodes[link.sourceID];
                 target = link.target = nodes[link.targetID];
 
-	            if(link.type != 'back_edge'){
-                    console.log(link)
-		            source.sourceLinks.push(link);
-		            target.targetLinks.push(link);
-	            }
-
-                target["maxLinkVal"] = Math.max(target["maxLinkVal"], link["weight"]);
-                source["maxLinkVal"] = Math.max(source["maxLinkVal"], link["weight"]);
-
-                target["minLinkVal"] = Math.min(target["minLinkVal"], link["weight"]);
-                source["minLinkVal"] = Math.min(source["minLinkVal"], link["weight"]);
+                // console.log(source, target)
+                // Come back here and correct this bug. 
+                if(source != undefined && target != undefined){
+                    if(link.type != 'back_edge'){
+                        source.sourceLinks.push(link);
+                            target.targetLinks.push(link);
+                    }
+    
+                    target["maxLinkVal"] = Math.max(target["maxLinkVal"], link["weight"]);
+                    source["maxLinkVal"] = Math.max(source["maxLinkVal"], link["weight"]);
+    
+                    target["minLinkVal"] = Math.min(target["minLinkVal"], link["weight"]);
+                    source["minLinkVal"] = Math.min(source["minLinkVal"], link["weight"]);
+                }
+	            
             }
         });
 
@@ -375,7 +379,7 @@ export default function Sankey() {
                 if (dy > 0) {
 		            y0 = node.y -= dy;
                     // Push any overlapping nodes back up.
-                    for (i = nodes.length - 2; i > 0; --i) {
+                    for (let i = nodes.length - 2; i > 0; --i) {
                         node = nodes[i];
                         dy = node.y + node.height + nodePadding - y0;
                         if (dy > 0) node.y -= dy;

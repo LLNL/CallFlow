@@ -6,8 +6,8 @@
 
 <script>
 export default {
-  name: 'App'
-}
+  name: "App"
+};
 </script>
 
 <style>
@@ -26,5 +26,14 @@ export default {
   stroke: #333;
   fill: #333;
   stroke-width: 1.5px;
+}
+
+.v-text-field {
+  padding-top: 0px;
+}
+
+#frequency-slider {
+  display: inline-block;
+  margin: 5px;
 }
 </style>

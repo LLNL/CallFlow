@@ -1,11 +1,11 @@
 {
-    "dataName" : "Lulesh-1",
-    "path" : ["./data/hpctoolkit-osu_bw"],
-    "format" : ["hpctoolkit"],
-    "props": {
-    },
-    "nop": 3
+    "datasets": [
+        {
+            "name": "hpctoolkit-osu_bw",
+            "path": "./data/hpctoolkit-osu_bw",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": 3
+        }
+    ]
 }
-
-
-

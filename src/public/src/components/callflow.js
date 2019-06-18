@@ -5,6 +5,9 @@ import CCT from './cct'
 import Icicle from './icicle'
 import Vue from 'vue'
 
+import VueSlider from 'vue-slider-component'
+import 'vue-slider-component/theme/antd.css'
+
 
 export default {
 	name: 'entry',
@@ -14,112 +17,168 @@ export default {
 		CCT,
 		Icicle,
 		Diffgraph,
+		VueSlider,
 	},
 	data: () => ({
 		socket: null,
 		appName: 'Callflow',
-		dialog: true,
 		socketError: false,
-		isAggregated: true,
 		server: 'localhost:5000',
 		config: {
 			headers: { 'Access-Control-Allow-Origin': '*' }
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		datasets: ['kripke-impi', 'kripke-mvapich2', 'kripke-openmpi'],
-		selectedDataset: 'kripke-impi',
-		selectedDataset2: 'kripke-mvapich2',
+		datasets: [],
+		selectedDataset: '',
+		selectedDataset2: '',
 		selectedFormat: 'Callgraph',
 		groupBy: ['Name', 'Function', 'Files'],
 		selectedGroupBy: 'Function',
 		filterBy: ['Inclusive', 'Exclusive'],
+		filterRange: [0, 100],
 		selectedFilterBy: 'Inclusive',
 		filterPercRange: [0, 100],
-		filterPerc: 10, 
+		selectedFilterPerc: 10,
 		colorBy: ['Name', 'Exclusive', 'Inclusive', 'Uncertainity'],
 		selectedColorBy: 'Exclusive',
-		modes: ['Single', 'Diff'],
-		selectedMode: 'Diff',
+		modes: [],
+		selectedMode: 'Single',
 		CallgraphData: null,
 		CCTData: null,
 		level: [0, 4],
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
+		enableDiff: false,
+		firstRender: false
 	}),
 
 	watch: {
 	},
 
 	mounted() {
-		this.registerSockets()
-		this.init()
+		this.$socket.emit('init')
 	},
 
 	sockets: {
-		connect: () => {
+		connect() {
 			console.log('socket connected')
+		},
+
+		init(data) {
+			data = JSON.parse(data)
+			console.log("Config file: ", data)
+			this.numOfDatasets = data['datasets'].length
+			// Enable diff mode only if the number of datasets >= 2
+			this.datasets = data['names']
+			this.selectedDataset = data['names'][0]
+
+			if (this.numOfDatasets >= 2) {
+				this.enableDiff = true
+				this.modes = ['Single', 'Diff']
+				this.selectedDataset2 = data['names'][1]
+			}
+			else {
+				this.enableDiff = false
+				this.modes = ['Single']
+				this.selectedDataset2 = ''
+			}
+			this.init()
+		},
+
+		filter(data) {
+			console.log("Data for", this.selectedFormat, ": ", data)
+			this.update(data)
+		},
+
+		group(data) {
+			console.log("Data for", this.selectedFormat, ": ", data)
+			this.update(data)
+		},
+
+		diff(data) {
+			data = JSON.parse(data)
+			this.$refs.Diffgraph.init(data)
+		},
+
+		hierarchy(data) {
+			data = JSON.parse(data)
 		},
 	},
 
 	methods: {
 		clear() {
-			this.$refs.Callgraph.clear()
+			if (this.selectedFormat == 'Callgraph') {
+				this.$refs.CCT.clear()
+			}
+			else if (this.selectedFormat == 'CCT') {
+				this.$refs.Callgraph.clear()
+			}
 		},
 
-		registerSockets() {
-			this.sockets.subscribe('dataset', (data) => {
-				console.log("Data for", this.selectedFormat, ": ", data)
-				this.$refs.Callgraph.colorOption = this.selectedColorBy
-				if (this.selectedFormat == 'Callgraph') {
-					if (this.isCallgraphInitialized == true) {
-						this.$refs.Callgraph.update(data)
-					}
-					else {
-						this.isCallgraphInitialized = true
-						this.$refs.Callgraph.init(data)
-					}
-				}
-				else if (this.selectedFormat == 'CCT') {
-					this.CCTData = data
-					if (this.isCCTInitialized == true) {
-						this.$refs.CCT.update(data)
-					}
-					else {
-						this.isCCTInitialized = true
-						this.$refs.CCT.init(data)
-					}
-				}
-			})
-
-			this.sockets.subscribe('diff', (data) => {
-				data = JSON.parse(data)
-				this.$refs.Diffgraph.init(data)
-			})
-
-			this.sockets.subscribe('module_hierarchy', (data) => {
-
-			})
+		clearLocal(){
+			if (this.selectedFormat == 'Callgraph') {
+				this.$refs.Callgraph.clear()
+			}
+			else if (this.selectedFormat == 'CCT') {
+				this.$refs.CCT.clear()
+			}
 		},
 
 		init() {
-			if(this.selectedMode == 'Single'){
+			if (this.selectedMode == 'Single') {
 				this.$socket.emit('group', {
 					dataset: this.selectedDataset,
 					format: this.selectedFormat,
 				})
-				
+
 			}
-			else if(this.selectedMode == 'Diff'){
+			else if (this.selectedMode == 'Diff') {
 				this.$socket.emit('diff', {
 					dataset1: this.selectedDataset,
 					dataset2: this.selectedDataset2,
 					format: this.selectedFormat
 				})
 			}
+		},
 
+		update(data){
+			if(this.firstRender == false){
+				this.firstRender = true
+			}
+			else{
+				this.clearLocal()
+			}
+			if (this.selectedFormat == 'Callgraph') {
+				if (this.isCallgraphInitialized == true) {
+					this.$refs.Callgraph.update(data)
+				}
+				else {
+					this.isCallgraphInitialized = true
+					this.$refs.Callgraph.colorOption = this.selectedColorBy
+					this.$refs.Callgraph.init(data)
+				}
+			}
+			else if (this.selectedFormat == 'CCT') {
+				this.CCTData = data
+				if (this.isCCTInitialized == true) {
+					this.$refs.CCT.update(data)
+				}
+				else {
+					this.isCCTInitialized = true
+					this.$refs.CCT.colorOption = this.selectedColorBy
+					this.$refs.CCT.init(data)
+				}
+			}
+		},
 
-			
+		refresh() {
+			this.$socket.emit('filter', {
+				dataset: this.selectedDataset,
+				format: this.selectedFormat,
+				filterBy: this.selectedFilterBy,
+				filterPerc: this.selectedFilterPerc
+			})
 		},
 
 		updateFormat() {
@@ -145,25 +204,30 @@ export default {
 		updateMode() {
 			Vue.nextTick(() => {
 				this.clear()
-				this.$socket.emit('group', {
-					dataset1: this.selectedDataset,
-					dataset2: this.selectedDataset2,
-					format: this.selectedFormat
-				})
+				this.init()
 			})
 		},
 
-		updateColorBy(){
+		updateColorBy() {
 			Vue.nextTick(() => {
 				this.clear()
 				this.$refs.Callgraph.updateColor(this.selectedColorBy)
-				
+
 			})
 		},
 
-		updateFilterBy(){
+		updateFilterBy() {
 			Vue.nextTick(() => {
 				this.clear()
+			})
+		},
+
+		updateFilterPerc() {
+			this.$socket.emit('filter', {
+				dataset: this.selectedDataset,
+				format: this.selectedFormat,
+				filterBy: this.selectedFilterBy,
+				filterPerc: this.selectedFilterPerc
 			})
 		}
 	}
