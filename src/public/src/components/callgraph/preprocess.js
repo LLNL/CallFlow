@@ -5,7 +5,6 @@
 /* eslint-disable prefer-destructuring */
 /* eslint-disable no-param-reassign */
 export default function preprocess(graph, refresh) {
-    console.log(graph)
     graph = cleanGraph(graph);
     // graph = addUncertainityInfo(graph)
     graph = addLinkNodeIDs_(graph);

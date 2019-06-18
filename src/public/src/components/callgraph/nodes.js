@@ -6,11 +6,7 @@ export default {
     name: 'Nodes',
     components: {
     },
-
-    props: [
-
-    ],
-
+    props: [],
     data: () => ({
         currentNodeLevel: {},
         nodeHeights: {},
@@ -19,12 +15,13 @@ export default {
         minHeightForText: 10,
         view: {},
     }),
-
-    watch: {
-
+    mounted() {
     },
 
-    mounted() {
+    sockets : {
+        histogram(data){
+            
+        }
     },
 
     methods: {
@@ -109,6 +106,9 @@ export default {
                     this.$socket.emit('module_hierarchy', {
                         nid,
                         dataset1: 'kripke-impi',
+                    })
+                    this.$socket.emit('histogram', {
+
                     })
                 });
             // .on('contextmenu', function(d){

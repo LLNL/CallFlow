@@ -210,28 +210,13 @@ class App():
         @sockets.on('histogram', namespace="/")
         def histogram(data):
             if self.debug == True:
-                self.print('[Request] Histogram of a Node')
-            print(data)
-            nid = data['nid']
+                self.print('[Request] Histogram of a Module', data['module'])
             dataset = data['dataset1']
-            result = {}
-            n_index = data_json['n_index']
-            mod_index = data_json['mod_index']
-            
-            sct = []
-            for idx, cfg in enumerate(self.cfgs):
-                df = cfg.state.df
-                func_in_module = df[df.mod_index == mod_index]['name'].unique().tolist()
-                for idx2, func in enumerate(func_in_module):
-                    sct.append({
-                        "dataset": cfg.dataset,
-                        "name": func,
-                        "inc" : df.loc[df['name'] == func]['CPUTIME (usec) (I)'].mean(),
-                        "exc" : df.loc[df['name'] == func]['CPUTIME (usec) (E)'].mean(),
-                        "dataset_index": idx
-                    })
-            sct_df = pd.DataFrame(sct)
-            return sct_df.to_json(orient="columns")
+            result = self.callflow.update({
+                "name": "histogram",
+                "dataset1": dataset,
+                "module": data['module'],
+            })            
             emit('histogram', result, json=True)
 
     def create_server(self):
@@ -243,18 +228,6 @@ class App():
             print("App directory", app.__dir__)
             return send_from_directory(app.__dir__, 'index.html')
         
-        @app.route('/<path:filename>')
-        def send_js(filename):
-            return send_from_directory(os.path.join(app.__dir__, 'public'), filename)
-        
-        @app.route('/callgraph')
-        def callgraph():
-            group_by_attr = 'module'
-            # Create the callflow graph frames from graphframes given by hatchet
-            g = self.callflow.update('group', 'module')
-            result = json_graph.node_link_data(g)
-            return json.dumps(result)
-
         @app.route('/splitLevel')
         def splitLevel():
             level = 3
@@ -297,11 +270,7 @@ class App():
                 self.ccts[idx].update('default-dot', '')
                 ret.append(self.ccts[idx].cfg)
             return json.dumps(ret)
-                    
-        @app.route('/getMaps')
-        def getMaps():
-            return json.dumps(self.callflow.state.map)
-
+    
         @app.route('/splitCaller')
         def splitCaller():
             ret = []

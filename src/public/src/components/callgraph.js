@@ -18,6 +18,7 @@ export default {
 		IntermediateNodes,
 		Edges,
 		MiniHistograms,
+		Histogram,
 	},
 
 	props: [
@@ -89,7 +90,8 @@ export default {
 			this.$refs.Nodes.init(this.data, this.pass_props)
 			// this.$refs.IntermediateNodes.init(this.data)
 			this.$refs.Edges.init(this.data)
-			// this.$refs.MiniHistograms.init(this.data, this.pass_props)
+			console.log(this.pass_props)
+			this.$refs.MiniHistograms.init(this.data, this.pass_props)
 		},
 
 		clear() {

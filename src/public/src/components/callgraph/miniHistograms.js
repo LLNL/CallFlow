@@ -1,18 +1,14 @@
 import tpl from '../../html/callgraph/miniHistograms.html'
 import * as  d3 from 'd3'
-import { scale } from 'd3-scale'
 
 export default {
     template: tpl,
     name: 'Histograms',
     components: {
-
     },
-
-    props: [
-    ],
-
+    props: [],
     data: () => ({
+        view: {},
         xScale: [],
         yScale: [],
         vals: [],
@@ -21,14 +17,6 @@ export default {
         minimapXScale: null,
         minimapYScale: null,
     }),
-
-    watch: {
-
-    },
-
-    mounted() {
-
-    },
 
     sockets: {
         histogram(data) {
@@ -39,21 +27,28 @@ export default {
 
     methods: {
         init(graph, view) {
+            this.view = view
+            console.log(this.view)
             this.xScale = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
             this.yScale = 100;
             this.minimapXScale = d3.scaleBand().domain(this.xScale).rangeRound([0, view.nodeWidth], 0.05);
             this.minimapYScale = d3.scaleLinear().domain([0, this.yScale]).range([view.ySpacing - 5, 5]);
             for(let i = 0; i < graph.nodes.length; i += 1) {
                 let node = graph.nodes[i]
-                console.log(this)
-                this.$socket.emit('histogram', node)
+                this.$socket.emit('histogram', {
+                    'dataset1': 'hpctoolkit-osu_bw',
+                    'format': 'Callgraph',
+                    'n_index': node['n_index'],
+                    'module': node['name']
+                })               
             }
         },
 
-        drawHistogram() {
-            this.vals = histoData.xVals;
-            this.freq = histoData.freq;
-            this.histogram = view.histograms.append('g')
+        drawHistogram(data) {
+
+            this.vals = data.xVals;
+            this.freq = data.freq;
+            this.histogram = this.view.histograms.append('g')
                 .attr('transform', () => `translate(${node.x},${node.y - view.ySpacing})`);
             this.histogram.selectAll('.histobars')
                 .data(myFreq)

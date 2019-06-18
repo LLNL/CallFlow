@@ -232,6 +232,23 @@ class CallFlow:
         log.info("[Squash] {1} rows in dataframe (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
         return fgf
 
+    def histogram(self, dataset, module):
+        result = {}       
+        sct = []
+        df = self.states[dataset].df
+        func_in_module = df[df['module'] == module]['name'].unique().tolist()
+        print(func_in_module, module)
+        for idx, func in enumerate(func_in_module):
+            sct.append({
+                "name": func,
+                "inc": df.loc[df['name'] == func]['time (inc)'].mean(),
+                "exc": df.loc[df['name'] == func]['time'].mean(),
+            })
+        sct_df = pd.DataFrame(sct)
+
+        print(sct_df)
+        return sct_df.to_json(orient="columns")
+
     def update(self, action):
         dataset1 = action['dataset1']
         state1 = self.states[dataset1]
@@ -240,7 +257,8 @@ class CallFlow:
             state2 = self.states[dataset2]
         action_name = action["name"]
 
-        self.print('Grouping by: ', action['groupBy'])
+        if 'groupBy' in action:
+            self.print('Grouping by: ', action['groupBy'])
 
         if action_name == 'default':
             groupBy(state1, action["groupBy"])
@@ -274,6 +292,9 @@ class CallFlow:
             nx = CallGraph(state1, 'path', False, 'name')
             state.entire_g = nx.g
             moduleHierarchy(state1, attr)
+        elif action_name == 'histogram':
+            module = action['module']
+            return self.histogram(dataset1, module)
 
         state1.g = nx.g
 

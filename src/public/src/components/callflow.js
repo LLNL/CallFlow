@@ -3,11 +3,11 @@ import Callgraph from './callgraph'
 import Diffgraph from './diffgraph'
 import CCT from './cct'
 import Icicle from './icicle'
+import Histogram from './histogram'
 import Vue from 'vue'
 
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/antd.css'
-
 
 export default {
 	name: 'entry',
@@ -18,6 +18,7 @@ export default {
 		Icicle,
 		Diffgraph,
 		VueSlider,
+		Histogram
 	},
 	data: () => ({
 		socket: null,
@@ -157,6 +158,7 @@ export default {
 					this.isCallgraphInitialized = true
 					this.$refs.Callgraph.colorOption = this.selectedColorBy
 					this.$refs.Callgraph.init(data)
+					this.$refs.Histogram.init(data)
 				}
 			}
 			else if (this.selectedFormat == 'CCT') {
