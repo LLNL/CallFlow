@@ -13,6 +13,7 @@ class State(object):
         self.entire_graph = None
         self.entire_g = None
         self.map = None
+        self.node_hash_map = {}
         
     def node_hash_mapper(self):
         ret = {}

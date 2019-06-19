@@ -25,6 +25,7 @@ from actions.split_caller import splitCaller
 from actions.split_level import splitLevel
 from actions.struct_diff import structDiff
 from actions.module_hierarchy import moduleHierarchy
+from actions.filter import Filter
 from state import State
 from logger import log
 
@@ -49,34 +50,12 @@ class CallFlow:
         # Note: graph is always updated.
         # Note: map -> not sure if it can be used.
         self.states = self.default_pipeline(self.config.names)
-    
-    def print(self, action, data = {}):
-        action = '[callfow.py] Action: {0}'.format(action)
-        if bool(data):
-            data_string = 'Data: ' + json.dumps(data, indent=4, sort_keys=True)
-        else:
-            data_string = ''
-        log.info(' {0} {1}'.format(action, data_string))
-
-    def dfs(self, graph, limit):
-        self.level = 0
-        
-        def dfs_recurse(root):
-            for node in root.children:
-                if(self.level < limit):
-                    print('Node', node)
-                    self.level += 1
-                    dfs_recurse(node)
-        
-        for root in graph.roots:
-            print(root)
-            dfs_recurse(root)
             
     def default_pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
         if self.reProcess:
-            self.print("Processing with filter.")
+            utils.debug("Processing with filter.")
         else:
-            self.print("Reading from the processed files.")
+            utils.debug("Reading from the processed files.")
         
         states = {}
         for idx, dataset in enumerate(datasets):   
@@ -85,8 +64,9 @@ class CallFlow:
             # It would be required especially when filtering and stuff. 
             if(self.reProcess):
                 states[dataset] = self.create_gf(states[dataset], dataset)
+                # states[dataset] = self.process(states[dataset])
                 self.write_gf(states, dataset, 'entire')
-                states[dataset] = self.process(states[dataset], filterBy, filterPerc)
+                states[dataset] = self.filter(states[dataset], filterBy, filterPerc) 
                 self.write_gf(states, dataset, 'filter')
             elif(self.reUpdate):
                 states[dataset] = self.create_gf(states[dataset], dataset)
@@ -96,16 +76,13 @@ class CallFlow:
                 
         return states
 
-    def process(self, state, filterBy, filterPerc):
-        # Filter the graphframe based on inc_time or exc_time.
-        filterPercInDecimals = int(filterPerc)/100 
-        state.fgf = self.filter(state, filterBy, filterPercInDecimals) 
+    def filter(self, state, filterBy, filterPerc):
+        filter_obj = Filter(state, filterBy, filterPerc)
+        state.df = filter_obj.fgf.dataframe
+        state.graph = filter_obj.fgf.graph
+        return state
 
-        # update df and graph after filtering.
-        state.df = state.fgf.dataframe
-        state.graph = state.fgf.graph
-        state.hashMap = state.node_hash_mapper()
-        
+    def process(self, state):        
         # Pre-process the dataframe and Graph. 
         preprocess = PreProcess.Builder(state) \
             .add_df_index() \
@@ -133,7 +110,7 @@ class CallFlow:
     def write_gf(self, states, state_name, format_of_df):
         state = states[state_name]
         dirname = self.config.callflow_dir
-        self.print('writing the graph file', format_of_df)
+        utils.debug('writing file for format: ', format_of_df)
         # dump the entire_graph as literal
         graph_literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
         graph_filepath = dirname + '/' + state_name + '/' + format_of_df + '_graph.json'
@@ -196,7 +173,7 @@ class CallFlow:
      # Loops over the config.paths and gets the graphframe from hatchet
     def create_gf(self, state, name):
         state = State()
-        self.print("Creating graphframes: ", name)
+        utils.debug("Creating graphframes: ", name)
         callflow_path = os.path.abspath(os.path.join(__file__, '../../..'))
         data_path = os.path.abspath(os.path.join(callflow_path, self.config.paths[name]))
 
@@ -211,26 +188,6 @@ class CallFlow:
         state.graph = gf.graph
         
         return state
-
-    def filter(self, state, filterBy, filterPerc):
-        t = time.time()
-        self.print(filterPerc)
-        if filterBy == "Inclusive":
-            max_inclusive_time = utils.getMaxIncTime(state.gf)
-            filter_gf = state.gf.filter(lambda x: True if(x['time (inc)'] > filterPerc*max_inclusive_time) else False)
-        elif filterBy == "Exclusive":
-            max_exclusive_time = utils.getMaxExcTime(state.gf)
-            log.info('[Filter] By Exclusive time = {0})'.format(max_exclusive_time))
-            filter_gf = state.gf.filter(lambda x: True if (x['time'] > filterPerc*max_exclusive_time) else False)
-        else:
-            log.warn("Not filtering.... Can take forever. Thou were warned")
-            filter_gf = state.gf
-        log.info('[Filter] Removed {0} rows. (time={1})'.format(state.gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], time.time() - t))
-        log.info("Grafting the graph!")
-        t = time.time()
-        fgf = filter_gf.squash()
-        log.info("[Squash] {1} rows in dataframe (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
-        return fgf
 
     def update(self, action):
         dataset1 = action['dataset1']

@@ -11,9 +11,6 @@ export default {
 </script>
 
 <style>
-#app {
-}
-
 #vis {
   border: 2px solid #e1e1e1;
 }
