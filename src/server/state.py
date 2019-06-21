@@ -14,14 +14,6 @@ class State(object):
         self.entire_g = None
         self.map = None
         self.node_hash_map = {}
-        
-    def node_hash_mapper(self):
-        ret = {}
-        for idx, row in self.df.iterrows():
-            df_node_index = str(row.nid)
-            ret[df_node_index] = row.node
-        self.node_hash_map = ret
-        return ret
     
     def lookup_by_column(self, _hash, col_name):
         ret = []

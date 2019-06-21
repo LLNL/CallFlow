@@ -19,6 +19,7 @@ from networkx.drawing.nx_agraph import write_dot
     
 from preprocess import PreProcess
 from callgraph import CallGraph
+from actions.create import Create
 from actions.groupBy import groupBy
 from actions.split_callee import splitCallee
 from actions.split_caller import splitCaller
@@ -35,6 +36,7 @@ import pandas as pd
 import json
 import os
 
+
 class CallFlow:
     def __init__(self, config):
         # Config contains properties set by the input config file. 
@@ -49,37 +51,42 @@ class CallFlow:
         # Note: df is always updated.
         # Note: graph is always updated.
         # Note: map -> not sure if it can be used.
-        self.states = self.default_pipeline(self.config.names)
+        self.states = self.pipeline(self.config.names)
             
-    def default_pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
+    def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
         if self.reProcess:
             utils.debug("Processing with filter.")
         else:
             utils.debug("Reading from the processed files.")
         
         states = {}
-        for idx, dataset in enumerate(datasets):   
-            states[dataset] = State()
+        for idx, dataset_name in enumerate(datasets):   
+            states[dataset_name] = State()
             # This step takes a bit of time so do it only if required. 
             # It would be required especially when filtering and stuff. 
             if(self.reProcess):
-                states[dataset] = self.create_gf(states[dataset], dataset)
-                # states[dataset] = self.process(states[dataset])
-                self.write_gf(states, dataset, 'entire')
-                states[dataset] = self.filter(states[dataset], filterBy, filterPerc) 
-                self.write_gf(states, dataset, 'filter')
+                states[dataset_name] = self.create(dataset_name)
+                states[dataset_name] = self.process(states[dataset_name])
+                self.write_gf(states[dataset_name], dataset_name, 'entire')
+                states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc) 
+                self.write_gf(states[dataset_name], dataset_name, 'filter')
             elif(self.reUpdate):
-                states[dataset] = self.create_gf(states[dataset], dataset)
-                states[dataset] = self.process(states[dataset], filterBy, filterPerc)
+                states[dataset_name] = self.create(dataset_name)
+                states[dataset_name] = self.process(states[dataset_name], filterBy, filterPerc)
             else:
-                states[dataset] = self.read_gf(dataset)
+                states[dataset_name] = self.read_gf(dataset_name)
                 
         return states
 
-    def filter(self, state, filterBy, filterPerc):
-        filter_obj = Filter(state, filterBy, filterPerc)
-        state.df = filter_obj.fgf.dataframe
-        state.graph = filter_obj.fgf.graph
+    def create(self, name):
+        state = State()
+        create = Create(self.config, name)
+
+        state.gf = create.gf
+        state.df = create.df
+        state.node_hash_map = create.node_hash_map    
+        state.graph = create.graph
+        
         return state
 
     def process(self, state):        
@@ -101,14 +108,25 @@ class CallFlow:
             .add_path() \
             .build()
 
+        state.gf = preprocess.gf
         state.df = preprocess.df
         state.graph = preprocess.graph
-        state.map = preprocess.map
+        state.node_hash_map = preprocess.node_hash_map
+        # state.map = preprocess.map
 
         return state
 
-    def write_gf(self, states, state_name, format_of_df):
-        state = states[state_name]
+    def filter(self, state, filterBy, filterPerc):
+        filter_obj = Filter(state, filterBy, filterPerc)
+
+        state.gf = filter_obj.gf
+        state.df = filter_obj.df
+        state.graph = filter_obj.graph
+        state.node_hash_map = filter_obj.node_hash_map
+
+        return state
+
+    def write_gf(self, state, state_name, format_of_df):
         dirname = self.config.callflow_dir
         utils.debug('writing file for format: ', format_of_df)
         # dump the entire_graph as literal
@@ -123,6 +141,7 @@ class CallFlow:
 
     def replace_str_with_Node(self, df, graph):
         mapper = {}
+
         def dfs_recurse(root):
             for node in root.children: 
                 mapper[node.callpath[-1]] = Node(node.nid, node.callpath, None)
@@ -159,7 +178,7 @@ class CallFlow:
         state.graph = state.gf.graph
         state.entire_graph = state.entire_gf.graph
 
-        state.map = state.node_hash_mapper()
+        state.map = utils.node_hash_mapper(state.entire_df)
 
         # Print the module group by information. 
         # print(state.df.groupby(['module']).agg(['mean','count']))
@@ -169,26 +188,7 @@ class CallFlow:
         state.entire_df = self.replace_str_with_Node(state.entire_df, state.entire_graph)
 
         return state
-
-     # Loops over the config.paths and gets the graphframe from hatchet
-    def create_gf(self, state, name):
-        state = State()
-        utils.debug("Creating graphframes: ", name)
-        callflow_path = os.path.abspath(os.path.join(__file__, '../../..'))
-        data_path = os.path.abspath(os.path.join(callflow_path, self.config.paths[name]))
-
-        gf = GraphFrame()
-        if self.config.format[name] == 'hpctoolkit':
-            gf.from_hpctoolkit(data_path)
-        elif self.config.format[name] == 'caliper':                
-            gf.from_caliper(data_path)  
-
-        state.gf = gf
-        state.df = gf.dataframe
-        state.graph = gf.graph
-        
-        return state
-
+     
     def update(self, action):
         dataset1 = action['dataset1']
         state1 = self.states[dataset1]
@@ -197,7 +197,7 @@ class CallFlow:
             state2 = self.states[dataset2]
         action_name = action["name"]
 
-        self.print('Grouping by: ', action['groupBy'])
+        utils.debug('Grouping by: ', action['groupBy'])
 
         if action_name == 'default':
             groupBy(state1, action["groupBy"])

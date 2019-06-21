@@ -82,7 +82,7 @@ def graphmltojson(graphfile, outfile):
     fo.write(json_data);
     fo.close()
 
-def debug(self, action='', data={}):
+def debug(action='', data={}):
     action = '[callfow.py] Action: {0}'.format(action)
     if bool(data):
         data_string = 'Data: ' + json.dumps(data, indent=4, sort_keys=True)
@@ -90,7 +90,7 @@ def debug(self, action='', data={}):
         data_string = ''
     log.info(' {0} {1}'.format(action, data_string))
 
-def dfs(self, graph, limit):
+def dfs(graph, limit):
     self.level = 0
     def dfs_recurse(root):
         for node in root.children:
@@ -102,3 +102,10 @@ def dfs(self, graph, limit):
     for root in graph.roots:
         print("Root = ", root)
         dfs_recurse(root)
+
+def node_hash_mapper(df):
+    ret = {}
+    for idx, row in df.iterrows():
+        df_node_index = str(row.nid)
+        ret[df_node_index] = row.node
+    return ret  

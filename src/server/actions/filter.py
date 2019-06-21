@@ -18,26 +18,32 @@ import utils
 from logger import log
 
 class Filter:
+    '''
+    Filter the graphframe.
+    Input: State object, parameter to filterBy (could be inclusive/exclusive, 
+            filterPerc: user provided filter percentage (1-100))
+    '''
     def __init__(self, state, filterBy, filterPerc):
+        utils.debug('filter', filterBy)
+        utils.debug('filter', filterPerc)
         self.state = state
         self.graph = state.graph
         self.df = state.df
         self.gf = state.gf
-
-        utils.debug('filter', filterBy)
-        utils.debug('filter', filterPerc)
+        
         self.filterBy = filterBy
         self.filterPercInDecimals = int(filterPerc)/100 
         
-        self.fgf = self.filter() 
+        self.fgf = self.run() 
         self.fgf = self.graft()
 
         # update df and graph after filtering.
-        self.state.df = self.fgf.dataframe
-        self.state.graph = self.fgf.graph
-        # self.state.hashMap = state.node_hash_mapper()        
+        self.df = self.fgf.dataframe
+        self.graph = self.fgf.graph
+        # self.state.node_hash_map = utils.node_hash_mapper(self.state.df)      
+        self.node_hash_map = state.node_hash_map
 
-    def filter(self):
+    def run(self):
         log.info('Filtering the graph.')
         t = time.time()
         if self.filterBy == "Inclusive":
