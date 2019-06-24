@@ -46,6 +46,9 @@ class App():
         self.config.server_dir = os.getcwd()
         self.config.callflow_dir = self.config.server_dir + '/.callflow'
         self.config.preprocess = self.args.preprocess
+
+        if self.config.preprocess:
+            self.create_dot_callflow_folder()
         
         # self.create_dot_callflow_folder()
         self.callflow = CallFlow(self.config)
