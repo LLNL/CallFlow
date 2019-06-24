@@ -21,7 +21,8 @@ class PreProcess():
     def __init__(self, builder):
         self.graph = builder.graph
         self.df = builder.df
-        self.map = builder.map
+        self.gf = builder.gf
+        self.node_hash_map = builder.node_hash_map
         
     def map(self):
         return self.map
@@ -29,8 +30,10 @@ class PreProcess():
     class Builder(object):
         def __init__(self, state):
             self.state = state
+            self.gf = state.gf
             self.df = state.df
             self.graph = state.graph
+            self.node_hash_map = state.node_hash_map
             self.map = {}
             self.df_index_name_map = self.bfs()
 
@@ -117,7 +120,10 @@ class PreProcess():
         def add_imbalance_perc(self):
             ret = {}
             for idx, row in self.df.iterrows():
-                ret[str(row.nid)] = (self.map['max_incTime'][str(row.nid)] - self.map['avg_incTime'][str(row.nid)])/ self.map['max_incTime'][str(row.nid)]
+                max_incTime = self.map['max_incTime'][str(row.nid)]
+                if(max_incTime == 0.0):
+                    max_incTime = 1.0
+                ret[str(row.nid)] = (self.map['max_incTime'][str(row.nid)] - self.map['avg_incTime'][str(row.nid)])/max_incTime
 
             self.map['imbalance_perc'] = ret
             self.df['imbalance_perc'] = self.df['node'].apply(lambda node: self.map['imbalance_perc'][str(node.nid)])

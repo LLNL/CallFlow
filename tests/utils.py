@@ -39,7 +39,7 @@ def avg(l):
 def getMaxIncTime(gf):
     ret = 0.0
     for root in gf.graph.roots:
-        ret = max(ret, lookup(gf.dataframe, root)['CPUTIME (usec) (I)'].max())
+        ret = max(ret, lookup(gf.dataframe, root)['time (inc)'].max())
     return ret
 
 # TODO: Get the maximum exclusive time from the graphframe. 
@@ -50,11 +50,11 @@ def getMaxExcTime(gf):
 def getAvgIncTime(gf):
     ret = 0.0
     for root in gf.graph.roots:
-        ret += lookup(gf.dataframe, root)['CPUTIME (usec) (I)'].mean()
+        ret += lookup(gf.dataframe, root)['time (inc)'].mean()
     return ret/len(gf.graph.roots)
 
 def getAvgExcTime(gf):
-    ret = gf.dataframe['CPUTIME (usec) (E)'].mean()
+    ret = gf.dataframe['time'].mean()
     return ret
 
 def getNumOfNodes(gf):
@@ -81,3 +81,31 @@ def graphmltojson(graphfile, outfile):
     fo = open(outfile, "w")
     fo.write(json_data);
     fo.close()
+
+def debug(action='', data={}):
+    action = '[callfow.py] {0}'.format(action)
+    if bool(data):
+        data_string = 'Data: ' + json.dumps(data, indent=4, sort_keys=True)
+    else:
+        data_string = ''
+    log.info(' {0} {1}'.format(action, data_string))
+
+def dfs(graph, limit):
+    self.level = 0
+    def dfs_recurse(root):
+        for node in root.children:
+            if(self.level < limit):
+                print('Node =', node)
+                self.level += 1
+                dfs_recurse(node)
+        
+    for root in graph.roots:
+        print("Root = ", root)
+        dfs_recurse(root)
+
+def node_hash_mapper(df):
+    ret = {}
+    for idx, row in df.iterrows():
+        df_node_index = str(row.nid)
+        ret[df_node_index] = row.node
+    return ret  

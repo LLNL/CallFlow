@@ -29,7 +29,7 @@ def create_gfs(file_format, paths):
 	for idx, path in enumerate(paths):
 		path = os.path.abspath(os.path.join(callflow_path, path)) 
 		gf = GraphFrame()   
-		gf.from_hpctoolkit(path, 3)                                                                            
+		gf.from_hpctoolkit(path)                                                                            
 		ret.append(gf) 
 		print(str(idx) + ":" + path)                                                                                              
 	return ret 
@@ -139,21 +139,60 @@ def add_callers_and_callee(graph, df):
 def preprocess(state):
 	preprocess = PreProcess.Builder(state).add_df_index().add_n_index().add_mod_index().add_path().add_callers_and_callees().add_show_node().add_vis_node_name().update_module_name().clean_lib_monitor().add_max_incTime().add_incTime().add_excTime().add_avg_incTime().add_imbalance_perc().build() 
 
+def read_gf(name):
+    state = State()
+    dirname = self.config.callflow_dir
+    df_filepath = dirname + '/' + name +  '/filter_df.csv'
+    entire_df_filepath = dirname + '/' + name + '/entire_df.csv'
+    graph_filepath = dirname + '/' + name + '/filter_graph.json'
+    entire_graph_filepath = dirname + '/' + name + '/entire_graph.json'   
+
+    with open(graph_filepath, 'r') as graphFile:
+        data = json.load(graphFile)
+
+    state.gf = GraphFrame()
+    state.gf.from_literal(data)
+
+    with open(entire_graph_filepath, 'r') as entire_graphFile:
+        entire_data = json.load(entire_graphFile)
+            
+    state.entire_gf = GraphFrame()
+    state.entire_gf.from_literal(entire_data)
+
+    state.df = pd.read_csv(df_filepath)
+    state.entire_df = pd.read_csv(entire_df_filepath)
+
+    state.graph = state.gf.graph
+    state.entire_graph = state.entire_gf.graph
+
+    state.map = state.node_hash_mapper()
+
+    # Print the module group by information. 
+    # print(state.df.groupby(['module']).agg(['mean','count']))
+
+    # replace df['node'] from str to the Node object.
+    state.df = self.replace_str_with_Node(state.df, state.graph)
+    state.entire_df = self.replace_str_with_Node(state.entire_df, state.entire_graph)
+
+    return state
 
 def main(dataset_path):
 	dataset = []
 	for idx, path in enumerate(dataset_path):
 		dataset.append(path.split('/')[0])
-
-	gfs = create_gfs('hpctoolkit', dataset_path)
-	# filtered graph frames.
-	fgfs = filter_gfs(gfs, 'IncTime')  
-	
-	states = []
-	for idx, fgf in enumerate(fgfs):
-		print("Shape of the dataframe from graph ({0}): {1}".format(dataset[idx], fgf.dataframe.shape))
-		state = State(fgf)
-		preprocess(state)
-		groupBy(state, 'module')
+		
 		states.append(state)
-	return states
+	# gfs = create_gfs('hpctoolkit', dataset_path)
+	# # filtered graph frames.
+	# fgfs = filter_gfs(gfs, 'IncTime')  
+	
+	# states = []
+	# for idx, fgf in enumerate(fgfs):
+	# 	print("Shape of the dataframe from graph ({0}): {1}".format(dataset[idx], fgf.dataframe.shape))
+	# 	state = State(fgf)
+	# 	preprocess(state)
+	# 	groupBy(state, 'module')
+	# 	states.append(state)
+	# return states
+
+main()

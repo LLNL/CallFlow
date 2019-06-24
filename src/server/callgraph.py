@@ -16,6 +16,7 @@ import ete3
 import networkx as nx
 from logger import log
 import math
+from ast import literal_eval as make_tuple
 
 class CallGraph(nx.Graph):
     def __init__(self, state, path_name, add_info, group_by):
@@ -32,10 +33,11 @@ class CallGraph(nx.Graph):
         
         self.add_paths(path_name)
         if add_info == True:
+            print('Creating a Graph without node or edge attributes.')
             self.add_node_attributes()
             self.add_edge_attributes()
         else:
-            print('not adding attributes')
+            print('Creating a Graph without node or edge attributes.')
             pass
 
         # self.adj_matrix = nx.adjacency_matrix(self.g)
@@ -57,20 +59,15 @@ class CallGraph(nx.Graph):
     def add_paths(self, path_name):
         for idx, row in self.df.iterrows():
             if row.show_node:
-                self.g.add_path(row[path_name])                
+                path = row[path_name]
+                # TODO: Sometimes the path becomes a string. Find why it happens. 
+                # If it becomes a string 
+                if isinstance(path, str):
+                    path = make_tuple(row[path_name])
+                self.g.add_path(path)                
 
     def add_node_attributes(self):        
-#        module_mapping = self.create_module_map(self.g.nodes(), 'module')
-#        file_mapping = self.create_module_map(self.g.nodes(), 'file')
-#        type_mapping = self.create_module_map(self.g.nodes(), 'type')
-#        children_mapping = self.create_module_map(self.g.nodes(), 'children')
-
-#        nx.set_node_attributes(self.g, name='module', values=module_mapping)
-#        nx.set_node_attributes(self.g, name='file', values=file_mapping)
-#        nx.set_node_attributes(self.g, name='type', values=type_mapping)
-
         time_mapping = self.generic_map(self.g.nodes(), 'time (inc)')
-        print(time_mapping)
         nx.set_node_attributes(self.g, name='weight', values=time_mapping)
 
         name_mapping = self.generic_map(self.g.nodes(), 'vis_node_name')
@@ -114,8 +111,6 @@ class CallGraph(nx.Graph):
                     ret[node] = [node]
                     continue
                 if attr == 'time (inc)':
-                    print('aaaaaaa')
-                    print(self.df[self.df['vis_node_name'] == node[:-1]][attr])
                     ret[node] = self.df[self.df['vis_node_name'] == node[:-1]][attr].max().tolist()
                     continue
                 if attr == 'node_type':

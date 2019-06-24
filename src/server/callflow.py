@@ -16,15 +16,17 @@ import time
 import utils
 from logger import log
 from networkx.drawing.nx_agraph import write_dot
-    
+
 from preprocess import PreProcess
 from callgraph import CallGraph
+from actions.create import Create
 from actions.groupBy import groupBy
 from actions.split_callee import splitCallee
 from actions.split_caller import splitCaller
 from actions.split_level import splitLevel
 from actions.struct_diff import structDiff
 from actions.module_hierarchy import moduleHierarchy
+from actions.filter import Filter
 from state import State
 from logger import log
 
@@ -34,11 +36,11 @@ import pandas as pd
 import json
 import os
 
+
 class CallFlow:
     def __init__(self, config):
         # Config contains properties set by the input config file. 
         self.config = config
-        
         self.reUpdate = False
         self.reProcess = config.preprocess
 
@@ -48,64 +50,46 @@ class CallFlow:
         # Note: df is always updated.
         # Note: graph is always updated.
         # Note: map -> not sure if it can be used.
-        self.states = self.default_pipeline(self.config.names)
-    
-    def print(self, action, data = {}):
-        action = '[callfow.py] Action: {0}'.format(action)
-        if bool(data):
-            data_string = 'Data: ' + json.dumps(data, indent=4, sort_keys=True)
-        else:
-            data_string = ''
-        log.info(' {0} {1}'.format(action, data_string))
-
-    def dfs(self, graph, limit):
-        self.level = 0
-        
-        def dfs_recurse(root):
-            for node in root.children:
-                if(self.level < limit):
-                    print('Node', node)
-                    self.level += 1
-                    dfs_recurse(node)
-        
-        for root in graph.roots:
-            print(root)
-            dfs_recurse(root)
+        self.states = self.pipeline(self.config.names)
             
-    def default_pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
+    def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
         if self.reProcess:
-            self.print("Processing with filter.")
+            utils.debug("Processing with filter.")
         else:
-            self.print("Reading from the processed files.")
+            utils.debug("Reading from the processed files.")
         
         states = {}
-        for idx, dataset in enumerate(datasets):   
-            states[dataset] = State()
+        for idx, dataset_name in enumerate(datasets):   
+            states[dataset_name] = State()
             # This step takes a bit of time so do it only if required. 
             # It would be required especially when filtering and stuff. 
             if(self.reProcess):
-                states[dataset] = self.create_gf(states[dataset], dataset)
-                self.write_gf(states, dataset, 'entire')
-                states[dataset] = self.process(states[dataset], filterBy, filterPerc)
-                self.write_gf(states, dataset, 'filter')
+                states[dataset_name] = self.create(dataset_name)
+                states[dataset_name] = self.process(states[dataset_name])
+                self.write_gf(states[dataset_name], dataset_name, 'entire')
+                states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc) 
+                self.write_gf(states[dataset_name], dataset_name, 'filter')
             elif(self.reUpdate):
-                states[dataset] = self.create_gf(states[dataset], dataset)
-                states[dataset] = self.process(states[dataset], filterBy, filterPerc)
+                states[dataset_name] = self.create(dataset_name)
+                states[dataset_name] = self.process(states[dataset_name])
+                states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc)
             else:
-                states[dataset] = self.read_gf(dataset)
+                states[dataset_name] = self.read_gf(dataset_name)
                 
         return states
 
-    def process(self, state, filterBy, filterPerc):
-        # Filter the graphframe based on inc_time or exc_time.
-        filterPercInDecimals = int(filterPerc)/100 
-        state.fgf = self.filter(state, filterBy, filterPercInDecimals) 
+    def create(self, name):
+        state = State()
+        create = Create(self.config, name)
 
-        # update df and graph after filtering.
-        state.df = state.fgf.dataframe
-        state.graph = state.fgf.graph
-        state.hashMap = state.node_hash_mapper()
+        state.gf = create.gf
+        state.df = create.df
+        state.node_hash_map = create.node_hash_map    
+        state.graph = create.graph       
         
+        return state
+
+    def process(self, state):        
         # Pre-process the dataframe and Graph. 
         preprocess = PreProcess.Builder(state) \
             .add_df_index() \
@@ -124,16 +108,27 @@ class CallFlow:
             .add_path() \
             .build()
 
+        state.gf = preprocess.gf
         state.df = preprocess.df
         state.graph = preprocess.graph
-        state.map = preprocess.map
+        state.node_hash_map = preprocess.node_hash_map
+        # state.map = preprocess.map
 
         return state
 
-    def write_gf(self, states, state_name, format_of_df):
-        state = states[state_name]
+    def filter(self, state, filterBy, filterPerc):
+        filter_obj = Filter(state, filterBy, filterPerc)
+
+        state.gf = filter_obj.gf
+        state.df = filter_obj.df
+        state.graph = filter_obj.graph
+        state.node_hash_map = filter_obj.node_hash_map
+
+        return state
+
+    def write_gf(self, state, state_name, format_of_df):
         dirname = self.config.callflow_dir
-        self.print('writing the graph file', format_of_df)
+        utils.debug('writing file for format: ', format_of_df)
         # dump the entire_graph as literal
         graph_literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
         graph_filepath = dirname + '/' + state_name + '/' + format_of_df + '_graph.json'
@@ -146,6 +141,7 @@ class CallFlow:
 
     def replace_str_with_Node(self, df, graph):
         mapper = {}
+
         def dfs_recurse(root):
             for node in root.children: 
                 mapper[node.callpath[-1]] = Node(node.nid, node.callpath, None)
@@ -182,7 +178,7 @@ class CallFlow:
         state.graph = state.gf.graph
         state.entire_graph = state.entire_gf.graph
 
-        state.map = state.node_hash_mapper()
+        state.map = utils.node_hash_mapper(state.entire_df)
 
         # Print the module group by information. 
         # print(state.df.groupby(['module']).agg(['mean','count']))
@@ -193,108 +189,65 @@ class CallFlow:
 
         return state
 
-     # Loops over the config.paths and gets the graphframe from hatchet
-    def create_gf(self, state, name):
-        state = State()
-        self.print("Creating graphframes: ", name)
-        callflow_path = os.path.abspath(os.path.join(__file__, '../../..'))
-        data_path = os.path.abspath(os.path.join(callflow_path, self.config.paths[name]))
-
-        gf = GraphFrame()
-        if self.config.format[name] == 'hpctoolkit':
-            gf.from_hpctoolkit(data_path)
-        elif self.config.format[name] == 'caliper':                
-            gf.from_caliper(data_path)  
-
-        state.gf = gf
-        state.df = gf.dataframe
-        state.graph = gf.graph
-        
-        return state
-
-    def filter(self, state, filterBy, filterPerc):
-        t = time.time()
-        self.print(filterPerc)
-        if filterBy == "Inclusive":
-            max_inclusive_time = utils.getMaxIncTime(state.gf)
-            filter_gf = state.gf.filter(lambda x: True if(x['time (inc)'] > filterPerc*max_inclusive_time) else False)
-        elif filterBy == "Exclusive":
-            max_exclusive_time = utils.getMaxExcTime(state.gf)
-            log.info('[Filter] By Exclusive time = {0})'.format(max_exclusive_time))
-            filter_gf = state.gf.filter(lambda x: True if (x['time'] > filterPerc*max_exclusive_time) else False)
-        else:
-            log.warn("Not filtering.... Can take forever. Thou were warned")
-            filter_gf = state.gf
-        log.info('[Filter] Removed {0} rows. (time={1})'.format(state.gf.dataframe.shape[0] - filter_gf.dataframe.shape[0], time.time() - t))
-        log.info("Grafting the graph!")
-        t = time.time()
-        fgf = filter_gf.squash()
-        log.info("[Squash] {1} rows in dataframe (time={0})".format(time.time() - t, filter_gf.dataframe.shape[0]))
-        return fgf
-
-    def histogram(self, dataset, module):
-        result = {}       
-        sct = []
-        df = self.states[dataset].df
-        func_in_module = df[df['module'] == module]['name'].unique().tolist()
-        print(func_in_module, module)
-        for idx, func in enumerate(func_in_module):
-            sct.append({
-                "name": func,
-                "inc": df.loc[df['name'] == func]['time (inc)'].mean(),
-                "exc": df.loc[df['name'] == func]['time'].mean(),
-            })
-        sct_df = pd.DataFrame(sct)
-
-        print(sct_df)
-        return sct_df.to_json(orient="columns")
-
     def update(self, action):
+        utils.debug('Update', action)
+
         dataset1 = action['dataset1']
         state1 = self.states[dataset1]
+
+        # Some checks. 
         if("dataset2" in action):
             dataset2 = action['dataset2']
             state2 = self.states[dataset2]
         action_name = action["name"]
 
         if 'groupBy' in action:
-            self.print('Grouping by: ', action['groupBy'])
+            utils.debug('Grouping by: ', action['groupBy'])
+        else:
+            action['groupBy'] = 'name'
 
+        # Compare against the different operations
         if action_name == 'default':
             groupBy(state1, action["groupBy"])
             nx = CallGraph(state1, 'group_path', True, action["groupBy"])
+        
         elif action_name == 'filter':
             datasets = [dataset1]
             if ("dataset2" in action):
                 datasets = [dataset1, dataset2]
             self.reUpdate = True
-            self.states = self.default_pipeline(datasets, action["filterBy"], action["filterPerc"]) 
+            self.states = self.pipeline(datasets, action["filterBy"], action["filterPerc"]) 
             groupBy(self.states[dataset1], action["groupBy"])
             nx = CallGraph(self.states[dataset1], 'group_path', True, action["groupBy"])
             self.reUpdate = False
+        
         elif action_name == "group":
-            groupBy(state1, action["groupBy"])
+            group = groupBy(state1, action["groupBy"])
+            self.states[dataset1].df = group.df
+            self.states[dataset1].graph = group.graph 
             nx = CallGraph(state1, 'group_path', True, action["groupBy"])
+        
         elif action_name == 'diff':
             union_state = structDiff(state1, state2)
             nx = union_state
             # nx = CallGraph(union_state, 'group_path', True, 'module')
+        
         elif action_name == 'split-level':
             splitLevel(state1, action["groupBy"])
             nx = CallGraph(state1, 'group_path', True)
+        
         elif action_name == "split-callee":
             splitCallee(state1, action["groupBy"])
             nx = CallGraph(state1, 'path', True)
+        
         elif action_name == "split-caller":
             splitCaller(state1, action["groupBy"])
             nx = CallGraph(state1, 'path', True)
-        elif action_name == 'module-hierarchy':
+        
+        elif action_name == 'hierarchy':
             nx = CallGraph(state1, 'path', False, 'name')
-            state.entire_g = nx.g
-            moduleHierarchy(state1, attr)
-        elif action_name == 'histogram':
-            module = action['module']
-            return self.histogram(dataset1, module)
+            state1.entire_g = nx.g
+            moduleHierarchy(state1, action["nid"])
 
         state1.g = nx.g
 
