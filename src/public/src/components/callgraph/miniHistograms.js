@@ -36,7 +36,7 @@ export default {
             for(let i = 0; i < graph.nodes.length; i += 1) {
                 let node = graph.nodes[i]
                 this.$socket.emit('histogram', {
-                    'dataset1': 'hpctoolkit-osu_bw',
+                    'dataset1': 'osu_bw',
                     'format': 'Callgraph',
                     'n_index': node['n_index'],
                     'module': node['name']

@@ -2,7 +2,7 @@
     "datasets": [
         {
             "name": "osu_bw",
-            "path": "./data/hpctoolkit-osu_bw",
+            "path": "./data/osu_bw",
             "format": "hpctoolkit",
             "props": {},
             "nop": 3

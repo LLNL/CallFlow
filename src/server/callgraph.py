@@ -32,6 +32,7 @@ class CallGraph(nx.Graph):
         self.g = nx.DiGraph(rootRunTimeInc = int(self.rootRunTimeInc))
         
         self.add_paths(path_name)
+        print(self.g.nodes())
         if add_info == True:
             print('Creating a Graph without node or edge attributes.')
             self.add_node_attributes()
@@ -55,6 +56,18 @@ class CallGraph(nx.Graph):
         root = self.graph.roots[0]
         root_metrics = self.state.lookup_with_node(root)
         return root_metrics['time (inc)'].max()
+
+    def no_cycle_path(self, path):
+        ret = []
+        mapper = {}
+        for idx, elem in enumerate(path):
+            if elem not in mapper:
+                mapper[elem] = 1
+                ret.append(elem)
+            else:
+                ret.append(elem + "_" + str(mapper[elem]))
+                mapper[elem] += 1
+        return tuple(ret)
     
     def add_paths(self, path_name):
         for idx, row in self.df.iterrows():
@@ -64,7 +77,8 @@ class CallGraph(nx.Graph):
                 # If it becomes a string 
                 if isinstance(path, str):
                     path = make_tuple(row[path_name])
-                self.g.add_path(path)                
+                corrected_path = self.no_cycle_path(path)
+                self.g.add_path(corrected_path)                
 
     def add_node_attributes(self):        
         time_mapping = self.generic_map(self.g.nodes(), 'time (inc)')

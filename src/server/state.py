@@ -35,7 +35,7 @@ class State(object):
         # print(self.df.loc[self.df['node'] == node]) 
         return self.df.loc[self.df['node'] == node]
 
-    def lookup_with_nodeName(self, name):
+    def lookup_with_name(self, name):
         return self.df.loc[self.df['name'] == name]
 
     def lookup_with_vis_nodeName(self, name):

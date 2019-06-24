@@ -35,6 +35,7 @@ export default {
         histogramHeight: 0,
         histogramWidth: 0,
         histogramSVG: null,
+        id: 'hist_view',
     }),
 
     mounted() {
@@ -46,7 +47,7 @@ export default {
 
     methods: {
         init(data) {
-            this.width = document.getElementById('#hist_view').parent().width()/2
+            this.width = document.getElementById('#hist_view').width()/2
             this.height = $('#hist_view').parent().width()/2
             this.data = Object.values(data.inc)
 
@@ -72,13 +73,13 @@ export default {
                 .append('g')
                 .attr('transform', `translate(${margin.left},${margin.top})`);
 
-            this.histogramXScale = d3.scale.ordinal().domain(this.xVals).rangeRoundBands([0, histogramWidth], 0.05);
+            this.histogramXScale = d3.scaleOrdinal().domain(this.xVals).rangeRoundBands([0, histogramWidth], 0.05);
 
             if (d3.max(this.freq) < 50) {
-                this.histogramYScale = d3.scale.linear().domain([0, d3.max(this.freq)]).range([histogramHeight, 0]);
+                this.histogramYScale = d3.scaleLinear().domain([0, d3.max(this.freq)]).range([histogramHeight, 0]);
                 this.logScaleBool = false;
             } else {
-                this.histogramYScale = d3.scale.log().domain([1, d3.max(this.freq)]).range([histogramHeight, 10]);
+                this.histogramYScale = d3.scaleLog().domain([1, d3.max(this.freq)]).range([histogramHeight, 10]);
                 this.logScaleBool = true;
             }
 
@@ -358,7 +359,7 @@ export default {
         },
 
         rankLineScale() {
-            const rankLineScale = d3.scale.linear().domain([0, this.data.length]).range([0, this.histogramWidth]);
+            const rankLineScale = d3.scaleLinear().domain([0, this.data.length]).range([0, this.histogramWidth]);
             this.freq.forEach((fregVal, idx) => {
                 const processIDs = this.binContainsProcID[idx];
                 if (processIDs) {
@@ -477,7 +478,7 @@ export default {
             let brushEnd = this.numbOfBins;
             let bExtent;
             bExtent = brush.extent();
-            const brushScale = d3.scale.linear().domain(histogramXScale.range()).range(histogramXScale.domain());
+            const brushScale = d3.scaleLinear().domain(histogramXScale.range()).range(histogramXScale.domain());
             let localBrushStart = (brush.empty()) ? brushStart : Math.floor(brushScale(bExtent[0]));
             if (localBrushStart < 0) {
                 localBrushStart = 0;

@@ -126,14 +126,16 @@ class CallFlow:
 
         return state
 
-    def write_gf(self, state, state_name, format_of_df):
+    def write_gf(self, state, state_name, format_of_df, write_graph=True):
         dirname = self.config.callflow_dir
         utils.debug('writing file for format: ', format_of_df)
-        # dump the entire_graph as literal
-        graph_literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
-        graph_filepath = dirname + '/' + state_name + '/' + format_of_df + '_graph.json'
-        with open(graph_filepath, 'w') as graphFile:
-            json.dump(graph_literal, graphFile)
+
+        if write_graph:
+            # dump the entire_graph as literal
+            graph_literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
+            graph_filepath = dirname + '/' + state_name + '/' + format_of_df + '_graph.json'
+            with open(graph_filepath, 'w') as graphFile:
+                json.dump(graph_literal, graphFile)
 
         # dump the filtered dataframe to csv.
         df_filepath = dirname + '/' + state_name + '/' + format_of_df + '_df.csv'
@@ -225,6 +227,8 @@ class CallFlow:
             group = groupBy(state1, action["groupBy"])
             self.states[dataset1].df = group.df
             self.states[dataset1].graph = group.graph 
+            write_graph = False
+            self.write_gf(state1, dataset1, "group", write_graph)
             nx = CallGraph(state1, 'group_path', True, action["groupBy"])
         
         elif action_name == 'diff':

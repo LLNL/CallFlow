@@ -4,6 +4,7 @@ import Sankey from './callgraph/sankey'
 import Nodes from './callgraph/nodes'
 import IntermediateNodes from './callgraph/intermediateNodes'
 import MiniHistograms from './callgraph/miniHistograms'
+import Histogram from './histogram'
 import Edges from './callgraph/edges'
 
 import * as  d3 from 'd3'
