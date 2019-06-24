@@ -72,7 +72,8 @@ class CallFlow:
                 self.write_gf(states[dataset_name], dataset_name, 'filter')
             elif(self.reUpdate):
                 states[dataset_name] = self.create(dataset_name)
-                states[dataset_name] = self.process(states[dataset_name], filterBy, filterPerc)
+                states[dataset_name] = self.process(states[dataset_name])
+                states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc)
             else:
                 states[dataset_name] = self.read_gf(dataset_name)
                 
@@ -190,47 +191,64 @@ class CallFlow:
         return state
      
     def update(self, action):
+        utils.debug('Update', action)
+
         dataset1 = action['dataset1']
         state1 = self.states[dataset1]
+
+        # Some checks. 
         if("dataset2" in action):
             dataset2 = action['dataset2']
             state2 = self.states[dataset2]
         action_name = action["name"]
 
-        utils.debug('Grouping by: ', action['groupBy'])
+        if 'groupBy' in action:
+            utils.debug('Grouping by: ', action['groupBy'])
+        else:
+            action['groupBy'] = 'name'
 
+        # Compare against the different operations
         if action_name == 'default':
             groupBy(state1, action["groupBy"])
             nx = CallGraph(state1, 'group_path', True, action["groupBy"])
+        
         elif action_name == 'filter':
             datasets = [dataset1]
             if ("dataset2" in action):
                 datasets = [dataset1, dataset2]
             self.reUpdate = True
-            self.states = self.default_pipeline(datasets, action["filterBy"], action["filterPerc"]) 
+            self.states = self.pipeline(datasets, action["filterBy"], action["filterPerc"]) 
             groupBy(self.states[dataset1], action["groupBy"])
             nx = CallGraph(self.states[dataset1], 'group_path', True, action["groupBy"])
             self.reUpdate = False
+        
         elif action_name == "group":
-            groupBy(state1, action["groupBy"])
+            group = groupBy(state1, action["groupBy"])
+            self.states[dataset1].df = group.df
+            self.states[dataset1].graph = group.graph 
             nx = CallGraph(state1, 'group_path', True, action["groupBy"])
+        
         elif action_name == 'diff':
             union_state = structDiff(state1, state2)
             nx = union_state
             # nx = CallGraph(union_state, 'group_path', True, 'module')
+        
         elif action_name == 'split-level':
             splitLevel(state1, action["groupBy"])
             nx = CallGraph(state1, 'group_path', True)
+        
         elif action_name == "split-callee":
             splitCallee(state1, action["groupBy"])
             nx = CallGraph(state1, 'path', True)
+        
         elif action_name == "split-caller":
             splitCaller(state1, action["groupBy"])
             nx = CallGraph(state1, 'path', True)
-        elif action_name == 'module-hierarchy':
+        
+        elif action_name == 'hierarchy':
             nx = CallGraph(state1, 'path', False, 'name')
-            state.entire_g = nx.g
-            moduleHierarchy(state1, attr)
+            state1.entire_g = nx.g
+            moduleHierarchy(state1, action["nid"])
 
         state1.g = nx.g
 

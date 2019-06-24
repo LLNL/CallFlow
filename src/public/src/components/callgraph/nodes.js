@@ -82,14 +82,14 @@ export default {
                     return 1;
                 })
                 .on('mouseover', function (d) {
-                    this.view.toolTipList.attr('width', '400px')
-                        .attr('height', '150px');
-                    var res = getFunctionListOfNode(graph, d);
-                    toolTipTexts(d, res, rootRunTime1)
-                    d3.select(this).style('stroke-width', '2');
-                    fadeUnConnected(d);
-                    svg.selectAll(".link").style('fill-opacity', 0.0)
-                    svg.selectAll('.node').style('opacity', '0.0')
+                    // this.view.toolTipList.attr('width', '400px')
+                    //     .attr('height', '150px');
+                    // var res = getFunctionListOfNode(graph, d);
+                    // toolTipTexts(d, res, rootRunTime1)
+                    // d3.select(this).style('stroke-width', '2');
+                    // fadeUnConnected(d);
+                    // svg.selectAll(".link").style('fill-opacity', 0.0)
+                    // svg.selectAll('.node').style('opacity', '0.0')
                 })
                 .on('mouseout', function (d) {
                     // this.view.toolTipList.attr('width', '0px')
@@ -105,15 +105,13 @@ export default {
                     // this.view.toolTipG.selectAll('*').remove();
                 })
                 .on('click', (d) => {
+                    console.log(d)
                     let nid = d.n_index[0]
-                    this.$socket.emit('module_hierarchy', {
+                    this.$socket.emit('hierarchy', {
                         nid,
-                        dataset1: 'kripke-impi',
+                        dataset1: 'osu_bw',
                     })
                 });
-            // .on('contextmenu', function(d){
-            //     return view.svgBase.contextMenu(d);
-            // })
 
             // Transition
             this.nodes.selectAll('rect')

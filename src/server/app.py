@@ -194,8 +194,8 @@ class App():
             nid = data['nid']
             dataset = data['dataset1']
             result = self.callflow.update({
-                "name": 'module-hierarchy', 
-                "node-id": nid, 
+                "name": 'hierarchy', 
+                "nid": nid, 
                 "dataset1": dataset,
             })
             emit('hierarchy', result, json=True)
