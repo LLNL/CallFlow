@@ -2,7 +2,7 @@
 # Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
-# This file is part of Callflowt.
+# This file is part of Callflow.
 # Created by Suraj Kesavan <kesavan1@llnl.gov>.
 # LLNL-CODE-741008. All rights reserved.
 #
@@ -42,7 +42,7 @@ class CallGraph(nx.Graph):
             pass
 
         # self.adj_matrix = nx.adjacency_matrix(self.g)
-        # print(self.adj_matrix.todense())
+        # self.dense_adj_matrix = self.adj_matrix.todense()
 
         # print("Nodes", self.g.nodes())
 #        print("Edges", self.g.edges(data=True))
@@ -113,8 +113,6 @@ class CallGraph(nx.Graph):
 
         children_mapping = self.immediate_children()
         nx.set_node_attributes(self.g, name='children', values=children_mapping)
-
-#        self.find_bridge_nodes()
         
     def generic_map(self, nodes, attr):
         ret = {}

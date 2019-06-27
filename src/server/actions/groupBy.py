@@ -23,6 +23,7 @@ class groupBy:
 #         self.eliminate_funcs = ['libmonitor.so.0.0.0']
         self.eliminate_funcs = []
         self.entry_funcs = {}
+        self.module_func_map = {}
         self.drop_eliminate_funcs()
         self.run()
         self.df = self.state.df
@@ -35,19 +36,37 @@ class groupBy:
 
     # Create a group path for the df.column = group_path.
     def create_group_path(self, path):
-#         print('path: {0}'.format(path))
         group_path = []
         temp = None
+        function = path[-1]        
+        module_idx = 0
+        
         for i, elem in enumerate(path):
             grouping = self.state.lookup_with_name(elem)[self.group_by].unique()
-            if len(grouping) != 0:
-                if grouping[0] not in self.eliminate_funcs:
-                    if temp == None or grouping[0] != temp:
-                        group_path.append(grouping[0])
-                        temp = grouping[0]
+            if len(grouping) == 0:
+                break
+            
+            module = grouping[0]
+            
+            # Add the function to the module map.
+            if module not in self.module_func_map:
+                self.module_func_map[module] = []
+            self.module_func_map[module].append(function)
+            
+            # Append the module into the group path. 
+            if module not in self.eliminate_funcs:
+                if temp == None or module != temp:
+                    # Append "_" + module_idx if the module exists in the group_path. 
+                    if module in group_path:
+                        module_idx += 1
+                        module = module + '_' + str(module_idx)
+
+                    group_path.append(module)
+                    temp = module
+        
         group_path = tuple(group_path)
-#         print('group_path: {0}'.format(group_path))
         return group_path
+
 
     # Find a name for nodes with no name. 
     def find_a_good_node_name(self, node):
@@ -76,7 +95,8 @@ class groupBy:
         component_level = {}
         entry_func = {}
         show_node = {}
-        node_name = {}       
+        node_name = {}    
+        module = {}   
     
         roots = self.state.graph.roots
         if len(roots) > 1:
@@ -96,6 +116,7 @@ class groupBy:
                 node_name[rootdf.node[0]] = self.find_a_good_node_name(root)
                 entry_func[rootdf.node[0]] = True
                 show_node[rootdf.node[0]] = True
+                module[rootdf.node[0]] = group_path[rootdf.node[0]][-1]
                 count = 0
             root = next(node_gen)
 
@@ -125,7 +146,8 @@ class groupBy:
                             group_path[tnode] = self.create_group_path(tpath)
                             component_path[tnode] = self.create_component_path(tpath, group_path[tnode])
                             component_level[tnode] = len(component_path[tnode]) - 1
-                            
+                            module[tnode] = group_path[tnode][-1]
+
                             if component_level[tnode] == 2:
                                 entry_func[tnode] = True
                             else:
@@ -153,3 +175,4 @@ class groupBy:
         self.state.update_df('show_node', entry_func)
         self.state.update_df('vis_node_name', node_name)
         self.state.update_df('component_level', component_level)
+        self.state.update_df('module', module)
