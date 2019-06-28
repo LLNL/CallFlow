@@ -9,7 +9,6 @@
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
-#!/usr/bin/env python3
 
 from hatchet import *
 import time
@@ -68,6 +67,7 @@ class CallFlow:
                 states[dataset_name] = self.process(states[dataset_name])
                 self.write_gf(states[dataset_name], dataset_name, 'entire')
                 states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc) 
+                print(states[dataset_name].df)
                 self.write_gf(states[dataset_name], dataset_name, 'filter')
             elif(self.reUpdate):
                 states[dataset_name] = self.create(dataset_name)
@@ -128,12 +128,13 @@ class CallFlow:
 
     def write_gf(self, state, state_name, format_of_df, write_graph=True):
         dirname = self.config.callflow_dir
-        utils.debug('writing file for format: ', format_of_df)
+        utils.debug('writing file for format. \n', format_of_df)
 
         if write_graph:
             # dump the entire_graph as literal
             graph_literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
             graph_filepath = dirname + '/' + state_name + '/' + format_of_df + '_graph.json'
+            utils.debug('File path: {0}'.format(graph_filepath))
             with open(graph_filepath, 'w') as graphFile:
                 json.dump(graph_literal, graphFile)
 
@@ -252,6 +253,9 @@ class CallFlow:
             nx = CallGraph(state1, 'path', False, 'name')
             state1.entire_g = nx.g
             moduleHierarchy(state1, action["nid"])
+
+        elif action_name == 'histogram':
+            return {}
 
         state1.g = nx.g
 

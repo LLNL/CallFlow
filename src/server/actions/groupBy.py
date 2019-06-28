@@ -10,7 +10,6 @@
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
 
-#!/usr/bin/env python3
 
 import pandas as pd
 import utils
@@ -40,6 +39,7 @@ class groupBy:
         temp = None
         function = path[-1]        
         module_idx = 0
+        change_name = False
         
         for i, elem in enumerate(path):
             grouping = self.state.lookup_with_name(elem)[self.group_by].unique()
@@ -60,34 +60,22 @@ class groupBy:
                     if module in group_path:
                         module_idx += 1
                         module = module + '_' + str(module_idx)
+                        change_name = True
 
                     group_path.append(module)
                     temp = module
         
         group_path = tuple(group_path)
-        return group_path
-
-
-    # Find a name for nodes with no name. 
-    def find_a_good_node_name(self, node):
-        node_name = self.state.lookup_with_name(node.callpath[-1])[self.group_by].tolist()[0]
-        if(node_name == ''):
-            node_name = 'Unknown name(N/A)'
-        return node_name
+        return (group_path, change_name)
 
     def create_component_path(self, path, group_path):
         component_path = []
         path = list(path)
         component_module = self.state.lookup_with_name(path[-1])[self.group_by].tolist()[0]
-        component_path.append(component_module)
-        filter_path = [node for node in path if component_module == \
+        component_path = [node for node in path if component_module == \
                        self.state.lookup_with_name(node)[self.group_by].tolist()[0]]
-        for i, elem in enumerate(filter_path):            
-             component_path.append(elem)                    
+        component_path.insert(0, component_module)
         return tuple(component_path)
-
-    def create_component_level(self, component_path):
-        return len(component_path) - 1
             
     def run(self):
         group_path = {}
@@ -97,10 +85,11 @@ class groupBy:
         show_node = {}
         node_name = {}    
         module = {}   
+        change_name = {}
     
         roots = self.state.graph.roots
         if len(roots) > 1:
-            print('It is a multi-rooted tree with {0} roots'.format(len(roots)))
+                ('It is a multi-rooted tree with {0} roots'.format(len(roots)))
         
         for root in roots:
             node_gen = root.traverse()       
@@ -111,9 +100,11 @@ class groupBy:
             # Check if the dataframe exists for the root node. 
             # It might be a function that is eliminated. 
             else: 
-                utils.debug('Function: {0}'.format(root))
-                group_path[rootdf.node[0]] = self.create_group_path(root.callpath)        
-                node_name[rootdf.node[0]] = self.find_a_good_node_name(root)
+                temp_group_path_results = self.create_group_path(root.callpath)
+                group_path[rootdf.node[0]] = temp_group_path_results[0]
+                change_name[rootdf.node[0]] = temp_group_path_results[1]
+
+                node_name[rootdf.node[0]] =  self.state.lookup_with_node(root)['module'][0]
                 entry_func[rootdf.node[0]] = True
                 show_node[rootdf.node[0]] = True
                 module[rootdf.node[0]] = group_path[rootdf.node[0]][-1]
@@ -141,21 +132,26 @@ class groupBy:
                             tpath = parent.callpath
 
                             tmodule = t[self.group_by].tolist()[0]
-                                                        
-                            node_name[tnode] = self.find_a_good_node_name(parent)
-                            group_path[tnode] = self.create_group_path(tpath)
-                            component_path[tnode] = self.create_component_path(tpath, group_path[tnode])
+
+                            temp_group_path_results = self.create_group_path(tpath)               
+                            group_path[tnode] = temp_group_path_results[0]
+                            change_name[tnode] = temp_group_path_results[1]
+                            component_path[tnode] = self.create_component_path(spath, group_path[tnode])
                             component_level[tnode] = len(component_path[tnode]) - 1
-                            module[tnode] = group_path[tnode][-1]
+                            module[tnode] = component_path[tnode][0]
 
                             if component_level[tnode] == 2:
                                 entry_func[tnode] = True
                             else:
                                 entry_func[tnode] = False
-                                
-                            if component_level[tnode] == 1:
+                            
+                            
+                            print(tnode, module[tnode], change_name[tnode])
+                            if component_level[tnode] == 1 or change_name[tnode]:
+                                node_name[tnode] = component_path[tnode][0]
                                 show_node[tnode] = True
                             else:
+                                node_name[tnode] = "N/A"
                                 show_node[tnode] = False
                             
                     # print("is entry function:", entry_func[tnode])
@@ -169,6 +165,7 @@ class groupBy:
                 pass
             finally:
                 del root
+
 
         self.state.update_df('group_path', group_path)
         self.state.update_df('component_path', component_path)

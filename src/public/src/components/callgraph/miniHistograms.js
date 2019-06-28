@@ -35,12 +35,12 @@ export default {
             this.minimapYScale = d3.scaleLinear().domain([0, this.yScale]).range([view.ySpacing - 5, 5]);
             for(let i = 0; i < graph.nodes.length; i += 1) {
                 let node = graph.nodes[i]
-                this.$socket.emit('histogram', {
-                    'dataset1': 'osu_bw',
-                    'format': 'Callgraph',
-                    'n_index': node['n_index'],
-                    'module': node['name']
-                })               
+                // this.$socket.emit('histogram', {
+                //     'dataset1': 'osu_bw',
+                //     'format': 'Callgraph',
+                //     'n_index': node['n_index'],
+                //     'module': node['name']
+                // })               
             }
         },
 

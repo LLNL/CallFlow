@@ -1,8 +1,8 @@
 {
     "datasets": [
         {
-            "name": "kripke-openmpi",
-            "path": "./data/kripke/openmpi",
+            "name": "kripke-mvapich2",
+            "path": "./data/kripke/mvapich2",
             "format": "hpctoolkit",
             "props": {
             },

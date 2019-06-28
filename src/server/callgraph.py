@@ -10,13 +10,13 @@
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
 
-#!/usr/bin/env python3
 
 import ete3
 import networkx as nx
 from logger import log
 import math
 from ast import literal_eval as make_tuple
+
 
 class CallGraph(nx.Graph):
     def __init__(self, state, path_name, add_info, group_by):
@@ -26,15 +26,18 @@ class CallGraph(nx.Graph):
         self.df = self.state.df
         self.root = state.lookup_with_node(self.graph.roots[0])['vis_node_name'][0]
         self.group_by = group_by
+        
+        print(self.df[['vis_node_name', 'name', 'module']])
 
         self.rootRunTimeInc = self.root_runtime_inc()
         self.edge_direction = {}        
         self.g = nx.DiGraph(rootRunTimeInc = int(self.rootRunTimeInc))
         
         self.add_paths(path_name)
+
         print(self.g.nodes())
         if add_info == True:
-            print('Creating a Graph without node or edge attributes.')
+            print('Creating a Graph with node or edge attributes.')
             self.add_node_attributes()
             self.add_edge_attributes()
         else:
@@ -129,6 +132,7 @@ class CallGraph(nx.Graph):
                     ret[node] = 'back_edge'
                     continue
             
+
             if attr == 'time (inc)':
                 group_df = self.df.groupby([self.group_by]).max()
                 ret[node] = group_df.loc[node, 'avg_incTime']
@@ -137,7 +141,7 @@ class CallGraph(nx.Graph):
             else:
                 df = self.df.loc[self.df['vis_node_name'] == node][attr]
                 if df.empty:
-                    ret[node] = ['Unknown']
+                    ret[node] = ['Unkno']
                 else:
                     ret[node] = list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
         return ret
@@ -297,9 +301,7 @@ class CallGraph(nx.Graph):
             group_df = self.df.groupby([self.group_by]).max()
             source_inc = group_df.loc[edge[0], 'max_incTime']   
             target_inc = group_df.loc[edge[1], 'max_incTime']
-            
-            print(source_inc, target_inc)
-         
+                     
             if source_inc == target_inc:
                 ret[edge] = source_inc
             else:

@@ -10,8 +10,6 @@
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
 
-#!/usr/bin/env python3
-
 import pandas as pd
 import time 
 
@@ -94,13 +92,7 @@ class groupBy:
                     tpath = root.parents[0].callpath
 
                     tmodule = t[self.group_by].tolist()[0]
-                                
-                    # if tmodule in self.entry_funcs:
-                    #     is_entry_func[tnode] = False
-                    #     node_name[tnode] = self.find_a_good_node_name(root.parents[0])
-                    #     if snode in is_entry_func:
-                    #         self.entry_funcs[t[self.group_by].tolist()[0]].append(self.state.lookup_with_node(tnode)['name'].tolist()[0])
-                    # else:
+                            
                     is_entry_func[tnode] = True
                     node_name[tnode] = self.find_a_good_node_name(root.parents[0])
                     self.entry_funcs[t[self.group_by].tolist()[0]] = [self.state.lookup_with_node(tnode)[self.group_by].tolist()[0]]

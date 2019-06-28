@@ -10,8 +10,6 @@
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
 
-#!/usr/bin/env python
-
 # Library imports
 from flask import Flask, jsonify, render_template, send_from_directory, current_app, request
 from flask_socketio import SocketIO, emit, send
@@ -44,7 +42,7 @@ class App():
 
         self.config = configFileReader(self.args.config)
         self.config.server_dir = os.getcwd()
-        self.config.callflow_dir = self.config.server_dir + '/.callflow'
+        self.config.callflow_dir = self.callflow_path + '/.callflow'
         self.config.preprocess = self.args.preprocess
 
         if self.config.preprocess:
@@ -98,11 +96,12 @@ class App():
             os.makedirs(self.config.callflow_dir)
         
         for dataset in self.config.datasets:
-            dataset_dir = self.config.server_dir + '/.callflow/' + dataset['name']
+            dataset_dir = self.config.callflow_dir + '/' + dataset['name']
             if not os.path.exists(dataset_dir):
                 if self.debug:
                     print('Creating .callflow directory for dataset : {0}'.format(dataset['name']))
                 os.makedirs(dataset_dir)
+
 
             files = ["entire_df.csv", "filter_df.csv", "entire_graph.json", "filter_graph.json"]
             for f in files:

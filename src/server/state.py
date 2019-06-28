@@ -31,9 +31,7 @@ class State(object):
         return self.df.loc[self.df['node'] == self.node_hash_map[str(_hash)]]
 
     def lookup_with_node(self, node):
-        # print(type(self.df['node'][0]))
-        # print(self.df.loc[self.df['node'] == node]) 
-        return self.df.loc[self.df['node'] == node]
+        return self.df.loc[self.df['name'] == node.callpath[-1]]
 
     def lookup_with_name(self, name):
         return self.df.loc[self.df['name'] == name]
