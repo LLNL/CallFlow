@@ -84,11 +84,11 @@ class PreProcess():
             return ret
 
         def add_incTime(self):
-            self.map['incTime'] = self._map('time (inc)')
+            self.map['time (inc)'] = self._map('time (inc)')
             return self
 
         def add_excTime(self):
-            self.map['excTime'] = self._map('time')
+            self.map['time'] = self._map('time')
             return self
 
         # Max of the inclusive Runtimes among all processes

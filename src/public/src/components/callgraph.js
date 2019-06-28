@@ -9,7 +9,6 @@ import Edges from './callgraph/edges'
 
 import * as  d3 from 'd3'
 import Color from '../old_components/callflow/color';
-// import { behavior } from 'd3-behavior'
 
 export default {
 	name: 'Callgraph',
@@ -75,16 +74,7 @@ export default {
 			//     view.svgBase.attr('transform', `translate(${d3.event.translate})scale(${d3.event.scale})`);
 			// });
 
-			// need to clean this up still
-			this.data = preprocess(data, false)
-			this.d3sankey = this.initSankey(this.data)
-			this.postProcess(this.data.nodes, this.data.links)
-
-			// Set color scales
-			this.pass_props.color = new Color(this.colorOption)
-			this.pass_props.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
-
-			this.render()
+			this.update(data)
 		},
 
 		render() {
@@ -102,9 +92,11 @@ export default {
 
 		update(data) {
 			this.data = preprocess(data, false)
+			console.log("Preprocessing done.")
 			this.d3sankey = this.initSankey(this.data)
-			this.postProcess(this.data.nodes, this.data.links)
-
+			console.log("Layout Calculation.")
+			this.postProcess(this.data.nodes, this.data.links)	
+			console.log("Post-processing done.") 
 			// Set color scales
 			this.pass_props.color = new Color(this.colorOption)
 			this.pass_props.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
@@ -142,7 +134,10 @@ export default {
 			const temp_edges = edges.slice();
 
 			this.computeNodeEdges(temp_nodes, temp_edges);
-			this.computeNodeBreadths(temp_nodes, temp_edges);
+			console.log("Compute node edges (Post process)")
+			this.computeNodeBreadths(temp_nodes, temp_edges)
+			console.log("Compute node breadths (Post process)")
+
 
 			for (let i = 0; i < temp_edges.length; i++) {
 				const source = temp_edges[i].sourceID;
@@ -202,7 +197,12 @@ export default {
 			let remainingNodes = nodes.map((d) => d);
 			let nextNodes;
 			let x = 0;
+			let count = 10
 			while (remainingNodes.length) {
+				if(count > 10){
+					break;
+				}
+				console.log(remainingNodes.length)
 				nextNodes = [];
 				remainingNodes.forEach((node) => {
 					node.sourceLinks.forEach((link) => {

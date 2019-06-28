@@ -9,6 +9,7 @@ export default function preprocess(graph, refresh) {
     // graph = addUncertainityInfo(graph)
     graph = addLinkNodeIDs_(graph);
     graph = calculateFlow(graph);
+    console.log(graph)
     return graph;
 }
 

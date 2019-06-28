@@ -50,7 +50,18 @@ class CallFlow:
         # Note: graph is always updated.
         # Note: map -> not sure if it can be used.
         self.states = self.pipeline(self.config.names)
-            
+
+        self.config.max_incTime = 0
+        self.config.min_incTime = 0
+        self.config.max_excTime = 0
+        self.config.min_excTime = 0
+        for idx, state in enumerate(self.states):
+            print(self.states[state].gf.dataframe)
+            self.config.max_incTime = utils.getMaxIncTime(self.states[state].gf)
+            self.config.max_excTime = utils.getMaxExcTime(self.states[state].gf)
+            self.config.min_incTime = utils.getMinIncTime(self.states[state].gf)
+            self.config.min_excTime = utils.getMinExcTime(self.states[state].gf)
+
     def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
         if self.reProcess:
             utils.debug("Processing with filter.")
@@ -92,7 +103,6 @@ class CallFlow:
     def process(self, state):        
         # Pre-process the dataframe and Graph. 
         preprocess = PreProcess.Builder(state) \
-            .add_df_index() \
             .add_n_index() \
             .add_mod_index() \
             .add_callers_and_callees() \

@@ -66,10 +66,15 @@ export default function Sankey() {
 
     sankey.layout = function(iterations) {
         computeNodeLinks();
+        console.log("Computed Node links.")
         computeNodeValues();
+        console.log("Computed node values.")
         computeNodeBreadths();
+        console.log("Computed node breadths.")
         computeNodeDepths(iterations);
+        console.log("Computed node depths")
         computeLinkDepths();
+        console.log("Computed linke depths.")
         return sankey;
     };
 

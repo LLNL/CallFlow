@@ -27,7 +27,7 @@ def lookup(df, node):
 # Output: yyy
 def sanitizeName(name):
     if name == None:
-        return "Unkno"
+        return "Unknown(NA)"
     name_split = name.split('/')
     return name_split[len(name_split) - 1]
 
@@ -39,12 +39,14 @@ def avg(l):
 def getMaxIncTime(gf):
     ret = 0.0
     for root in gf.graph.roots:
-        ret = max(ret, lookup(gf.dataframe, root)['time (inc)'].max())
+        node_df = lookup(gf.dataframe, root)
+        print(node_df)
+        ret = max(ret, float(node_df['time (inc)'].max()))
     return ret
 
 # TODO: Get the maximum exclusive time from the graphframe. 
 def getMaxExcTime(gf):
-    ret  = gf.dataframe['time'].max()
+    ret  = float(gf.dataframe['time'].max())
     return ret
 
 def getAvgIncTime(gf):
@@ -56,6 +58,12 @@ def getAvgIncTime(gf):
 def getAvgExcTime(gf):
     ret = gf.dataframe['time'].mean()
     return ret
+
+def getMinIncTime(gf):
+    return 0
+
+def getMinExcTime(gf):
+    return 0
 
 def getNumOfNodes(gf):
     return gf.dataframe['module'].count()

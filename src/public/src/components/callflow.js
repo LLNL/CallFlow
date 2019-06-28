@@ -39,6 +39,7 @@ export default {
 		filterBy: ['Inclusive', 'Exclusive'],
 		filterRange: [0, 100],
 		selectedFilterBy: 'Inclusive',
+		selectedIncTime: 0,
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 10,
 		colorBy: ['Name', 'Exclusive', 'Inclusive', 'Uncertainity'],
@@ -83,6 +84,11 @@ export default {
 				this.enableDiff = false
 				this.modes = ['Single']
 				this.selectedDataset2 = ''
+				this.maxExcTime = data['max_excTime']
+				this.minExcTime = data['min_excTime']
+				this.maxIncTime = data['max_incTime']
+				this.minIncTime = data['min_incTime']
+				this.selectedIncTime = (this.selectedFilterPerc*this.maxIncTime)/100
 			}
 			this.init()
 		},
@@ -143,11 +149,12 @@ export default {
 			}
 		},
 
-		update(data){
+		update(data){	
 			if(this.firstRender == false){
 				this.firstRender = true
 			}
 			else{
+				console.log("Clearing the Sankey view")
 				this.clearLocal()
 			}
 			if (this.selectedFormat == 'Callgraph') {
@@ -158,7 +165,7 @@ export default {
 					this.isCallgraphInitialized = true
 					this.$refs.Callgraph.colorOption = this.selectedColorBy
 					this.$refs.Callgraph.init(data)
-					this.$refs.Histogram.init(data)
+					// this.$refs.Histogram.init(data)
 				}
 			}
 			else if (this.selectedFormat == 'CCT') {
@@ -174,7 +181,7 @@ export default {
 			}
 		},
 
-		refresh() {
+		reset() {
 			this.$socket.emit('filter', {
 				dataset: this.selectedDataset,
 				format: this.selectedFormat,
@@ -231,6 +238,17 @@ export default {
 				filterBy: this.selectedFilterBy,
 				filterPerc: this.selectedFilterPerc
 			})
-		}
+		},
+
+		updateFilterIncTime(){
+			this.selectedFilterPerc = (this.selectedIncTime/this.maxIncTime)*100
+			console.log(this.selectedFilterPerc)
+			this.$socket.emit('filter', {
+				dataset: this.selectedDataset,
+				format: this.selectedFormat,
+				filterBy: this.selectedFilterBy,
+				filterPerc: this.selectedFilterPerc
+			})
+		},
 	}
 }
