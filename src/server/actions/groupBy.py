@@ -71,9 +71,13 @@ class groupBy:
     def create_component_path(self, path, group_path):
         component_path = []
         path = list(path)
-        component_module = self.state.lookup_with_name(path[-1])[self.group_by].tolist()[0]
+        # component_module = self.state.lookup_with_name(path[-1])[self.group_by].tolist()[0]
+        component_module = group_path[-1]
         component_path = [node for node in path if component_module == \
                        self.state.lookup_with_name(node)[self.group_by].tolist()[0]]
+        
+        if len(component_path) == 0:
+            component_path.append(path[-1])
         component_path.insert(0, component_module)
         return tuple(component_path)
             
@@ -104,21 +108,34 @@ class groupBy:
                 group_path[rootdf.node[0]] = temp_group_path_results[0]
                 change_name[rootdf.node[0]] = temp_group_path_results[1]
 
+                component_path[rootdf.node[0]] = self.create_component_path(root.callpath, group_path[rootdf.node[0]])
+                component_level[rootdf.node[0]] = len(component_path[rootdf.node[0]])
                 node_name[rootdf.node[0]] =  self.state.lookup_with_node(root)['module'][0]
                 entry_func[rootdf.node[0]] = True
                 show_node[rootdf.node[0]] = True
                 module[rootdf.node[0]] = group_path[rootdf.node[0]][-1]
-                count = 0
+                
+                print("entry function:", entry_func[rootdf.node[0]])
+                print('Change name:', change_name[rootdf.node[0]])
+                print("node path: ", root.callpath)                
+                print("group path: ", group_path[rootdf.node[0]])
+                print("component path: ", component_path[rootdf.node[0]])
+                print("component level: ", component_level[rootdf.node[0]])
+                print("Show node: ", show_node[rootdf.node[0]])
+                print("name: ", node_name[rootdf.node[0]])
+                print('Module: ', module[rootdf.node[0]])
+                print("=================================")
+
             root = next(node_gen)
 
             try:
                 while root.callpath != None:
                     root = next(node_gen)
-                    t = self.state.lookup_with_name(root.callpath[-1])
+                    s = self.state.lookup_with_name(root.callpath[-1])
                     parents = root.parents 
                     
                     for idx, parent in enumerate(parents):
-                        s = self.state.lookup_with_name(parent.callpath[-1])
+                        t = self.state.lookup_with_name(parent.callpath[-1])
                     
                         if s.empty:
                             print("Not considering the Source function {0} [{1}]".format(parent, s['module']))
@@ -133,33 +150,34 @@ class groupBy:
 
                             tmodule = t[self.group_by].tolist()[0]
 
-                            temp_group_path_results = self.create_group_path(tpath)               
-                            group_path[tnode] = temp_group_path_results[0]
-                            change_name[tnode] = temp_group_path_results[1]
-                            component_path[tnode] = self.create_component_path(spath, group_path[tnode])
-                            component_level[tnode] = len(component_path[tnode]) - 1
-                            module[tnode] = component_path[tnode][0]
+                            temp_group_path_results = self.create_group_path(spath)               
+                            group_path[snode] = temp_group_path_results[0]
+                            change_name[snode] = temp_group_path_results[1]
+                            
+                            component_path[snode] = self.create_component_path(spath, group_path[snode])
+                            component_level[snode] = len(component_path[snode])
+                            module[snode] = component_path[snode][0]
 
-                            if component_level[tnode] == 2:
-                                entry_func[tnode] = True
+                            if component_level[snode] == 2:
+                                entry_func[snode] = True
+                                node_name[snode] = component_path[snode][0]
+                                show_node[snode] = True
                             else:
-                                entry_func[tnode] = False
+                                entry_func[snode] = False
+                                node_name[snode] = "N/A"
+                                show_node[snode] = False
                             
-                            
-                            print(tnode, module[tnode], change_name[tnode])
-                            if component_level[tnode] == 1 or change_name[tnode]:
-                                node_name[tnode] = component_path[tnode][0]
-                                show_node[tnode] = True
-                            else:
-                                node_name[tnode] = "N/A"
-                                show_node[tnode] = False
-                            
-                    # print("is entry function:", entry_func[tnode])
-                    # print("node path: ", tpath)                
-                    # print("group path: ", group_path[tnode])
-                    # print("component path: ", component_path[tnode])
-                    # print("component level: ", component_level[tnode])
-                    # print("Show node: ", show_node[tnode])
+                    # print('Node', snode)        
+                    # print("entry function:", entry_func[snode])
+                    # print('Change name:', change_name[snode])
+                    # print("node path: ", spath)                
+                    # print("group path: ", group_path[snode])
+                    # print("component path: ", component_path[snode])
+                    # print("component level: ", component_level[snode])
+                    # print("Show node: ", show_node[snode])
+                    # print("name: ", node_name[snode])
+                    # print('Module: ', module[snode])
+                    # print("=================================")
                 
             except StopIteration:
                 pass
@@ -172,4 +190,5 @@ class groupBy:
         self.state.update_df('show_node', entry_func)
         self.state.update_df('vis_node_name', node_name)
         self.state.update_df('component_level', component_level)
-        self.state.update_df('module', module)
+        self.state.update_df('_module', module)
+        self.state.update_df('change_name', change_name)

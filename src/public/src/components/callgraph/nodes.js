@@ -13,6 +13,7 @@ export default {
         nodeWidth: 50,
         transitionDuration: 1000,
         minHeightForText: 10,
+        textTruncForNode: 25,
         view: {},
     }),
     mounted() {
@@ -185,7 +186,6 @@ export default {
         },
 
         text(node) {
-            const textTruncForNode = 10;
             node.append('text')
                 .attr('dy', '0.35em')
                 .attr('transform', 'rotate(90)')
@@ -202,7 +202,7 @@ export default {
                     //     //     return d.name[0];
                     //     // }
                     //     // else {
-                    return this.trunc(d.name, textTruncForNode)
+                    return this.trunc(d.name, this.textTruncForNode)
                     // }
 
                     // }
@@ -260,7 +260,7 @@ export default {
                         // if (textSize < d.height) {
                         //     return d.name;
                         // }
-                        return this.trunc(d.name, textTruncForNode);
+                        return this.trunc(d.name, this.textTruncForNode);
                     }
                     else {
                         return '';

@@ -27,7 +27,7 @@ class CallGraph(nx.Graph):
         self.root = state.lookup_with_node(self.graph.roots[0])['vis_node_name'][0]
         self.group_by = group_by
         
-        print(self.df[['vis_node_name', 'name', 'module']])
+        print(self.df[['vis_node_name', 'name', '_module', 'show_node']])
 
         self.rootRunTimeInc = self.root_runtime_inc()
         self.edge_direction = {}        
@@ -40,6 +40,7 @@ class CallGraph(nx.Graph):
             print('Creating a Graph with node or edge attributes.')
             self.add_node_attributes()
             self.add_edge_attributes()
+            print(self.g.nodes(data=True))
         else:
             print('Creating a Graph without node or edge attributes.')
             pass
@@ -81,6 +82,7 @@ class CallGraph(nx.Graph):
                 if isinstance(path, str):
                     path = make_tuple(row[path_name])
                 corrected_path = self.no_cycle_path(path)
+                print(corrected_path)
                 self.g.add_path(corrected_path)                
 
     def add_node_attributes(self):        
@@ -92,9 +94,6 @@ class CallGraph(nx.Graph):
 
         type_mapping = self.generic_map(self.g.nodes(), 'type')
         nx.set_node_attributes(self.g, name='type', values=type_mapping)
-        
-        df_index_mapping = self.generic_map(self.g.nodes(), 'df_index')
-        nx.set_node_attributes(self.g, name='df_index', values=df_index_mapping)
 
         n_index_mapping = self.generic_map(self.g.nodes(), 'n_index')
         nx.set_node_attributes(self.g, name='n_index', values=n_index_mapping)
@@ -103,7 +102,7 @@ class CallGraph(nx.Graph):
         nx.set_node_attributes(self.g, name='module', values=module_mapping)
 
         mod_index_mapping = self.generic_map(self.g.nodes(), 'mod_index')
-        nx.set_node_attributes(self.g, name='mod_index', values=mod_index_mapping)
+        nx.set_node_attributes(self.g, name='mod_inde   x', values=mod_index_mapping)
 
         imbalance_perc_mapping = self.generic_map(self.g.nodes(), 'imbalance_perc')
         nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)
@@ -131,17 +130,18 @@ class CallGraph(nx.Graph):
                 if attr == 'node_type':
                     ret[node] = 'back_edge'
                     continue
-            
 
             if attr == 'time (inc)':
-                group_df = self.df.groupby([self.group_by]).max()
-                ret[node] = group_df.loc[node, 'avg_incTime']
+                group_df = self.df.groupby(['_' +self.group_by]).max()
+                ret[node] = group_df.loc[node, 'max_incTime']
             elif attr == 'node_type':
                 ret[node] = 'normal_edge'
+            elif attr == 'name':
+                print(node)
             else:
                 df = self.df.loc[self.df['vis_node_name'] == node][attr]
                 if df.empty:
-                    ret[node] = ['Unkno']
+                    ret[node] = self.df[self.df['_module'] == node][attr]
                 else:
                     ret[node] = list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
         return ret
@@ -180,14 +180,19 @@ class CallGraph(nx.Graph):
                 # if cycle is found 
                 if head in active_nodes and head != start_node and tail in active_nodes:
                     log.warn('Cycle found : {0} <====> {1}'.format(head, tail))
-                    self.edge_direction[(head, tail+'_')] = 'back_edge'
-                    edge_data = self.g.get_edge_data(*edge)
-                    self.g.add_node(tail+'_')
-                    self.g.add_edge(head, tail+'_', data=edge_data)
-                    self.g.node[tail+'_']['name'] = [tail + '_']
-                    self.g.node[tail+'_']['weight'] = self.g.node[tail]['weight']
-                    self.g.remove_edge(edge[0], edge[1])
-                    levelMap[tail+'_'] = track_level + 1
+                    # self.edge_direction[(head, tail+'_')] = 'back_edge'
+                    # edge_data = self.g.get_edge_data(*edge)
+                    # self.g.add_node(tail+'_')
+                    # self.g.add_edge(head, tail+'_', data=edge_data)
+                    # self.g.node[tail+'_']['name'] = [tail + '_']
+                    # self.g.node[tail+'_']['weight'] = self.g.node[tail]['weight']
+                    # self.g.remove_edge(edge[0], edge[1])
+                    # levelMap[tail+'_'] = track_level + 1
+
+                    #TODO: Handle cycle case.
+                    # self.edge_direction[(head, tail)] = 'forward_edge'
+                    # levelMap[tail] = levelMap[head] +  1                    
+                    # track_level += 1
                     continue
                 else:
                     self.edge_direction[(head, tail)] = 'forward_edge'
@@ -246,7 +251,7 @@ class CallGraph(nx.Graph):
         nodes = self.g.nodes()
         for node in nodes:
             if node in parentChildMap.keys():
-                ret[node] =  parentChildMap[node]
+                ret[node] = parentChildMap[node]
         return ret
 
     def edge_type(self, graph):
@@ -298,7 +303,7 @@ class CallGraph(nx.Graph):
                 # added_flow = additional_flow[target_name]
             # source = self.state.lookup_with_vis_nodeName(edge[0])
             # target = self.state.lookup_with_vis_nodeName(edge[1])
-            group_df = self.df.groupby([self.group_by]).max()
+            group_df = self.df.groupby(['_' +  self.group_by]).max()
             source_inc = group_df.loc[edge[0], 'max_incTime']   
             target_inc = group_df.loc[edge[1], 'max_incTime']
                      
