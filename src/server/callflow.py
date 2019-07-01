@@ -209,16 +209,18 @@ class CallFlow:
         for idx, func in enumerate(func_in_module):
             ret.append({
                 "name": func,
-                "time (inc)" : entire_df.loc[entire_df['name'] == func]['time (inc)'].tolist(),
-                "time" : entire_df.loc[entire_df['name'] == func]['time'].tolist(),
-                "rank": entire_df.loc[entire_df['name'] == func]['rank'].tolist()
+                "time (inc)": entire_df.loc[entire_df['name'] == func]['time (inc)'].tolist(),
+                "time": entire_df.loc[entire_df['name'] == func]['time'].tolist(),
+                "rank": entire_df.loc[entire_df['name'] == func]['rank'].tolist(),
             })
         ret_df = pd.DataFrame(ret)
         return ret_df.to_json(orient="columns")
 
     def miniHistograms(self, state):
         ret = {}
+        ret_df = {}
         df = state.df
+        entire_df = state.entire_df
         modules_in_df = df['_module'].unique()
 
         for module in modules_in_df:
@@ -228,10 +230,14 @@ class CallFlow:
                     ret[module] = []
                 ret[module].append({
                     "name": func,
-                    "inc": df.loc[df['name'] == func]['time (inc)'].mean(),
-                    "exc": df.loc[df['name'] == func]['time'].mean(),
+                    "time (inc)": entire_df.loc[entire_df['name'] == func]['time (inc)'].tolist(),
+                    "time": entire_df.loc[entire_df['name'] == func]['time'].tolist(),
+                    "rank": entire_df.loc[entire_df['name'] == func]['rank'].tolist(),
                 })
-        return ret
+            ret_df[module] = pd.DataFrame(ret[module])
+            ret[module] = ret_df[module].to_json(orient="columns")
+        print(ret)
+        return json.dumps(ret)
 
     def update(self, action):
         utils.debug('Update', action)

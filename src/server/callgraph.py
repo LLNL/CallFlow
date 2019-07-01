@@ -262,7 +262,7 @@ class CallGraph(nx.Graph):
                 ret[edge] = 'forward_edge'
         return ret
             
-
+    # TODO: Wrong formulation of the edge weights. 
     def calculate_flows(self, graph):
         ret = {}
         edges = graph.edges()
@@ -287,19 +287,11 @@ class CallGraph(nx.Graph):
             if edge[0].endswith('_'):              
                 ret[edge] = additional_flow[edge[0]]
                 continue
-                # source_name = edge[0]
-                # target_name = edge[1]
-                # added_flow = additional_flow[source_name]
             elif edge[1].endswith('_'):
                 ret[edge] = additional_flow[edge[1]]
                 continue
-                # source_name = edge[0]
-                # target_name = edge[1]
-                # added_flow = additional_flow[target_name]
-            # source = self.state.lookup_with_vis_nodeName(edge[0])
-            # target = self.state.lookup_with_vis_nodeName(edge[1])
-            group_df = self.df.groupby(['_' +  self.group_by]).max()
-            source_inc = group_df.loc[edge[0], 'max_incTime']   
+            group_df = self.df.groupby(['_' +  self.group_by]).mean()
+            source_inc = group_df.loc[edge[0], 'avg_incTime']   
             target_inc = group_df.loc[edge[1], 'max_incTime']
                      
             if source_inc == target_inc:

@@ -26,6 +26,7 @@ export default {
     methods: {
         init(graph, view) {
             this.edges = d3.select('#edges')
+            this.view = view
             const edge = this.edges.selectAll('.edge')
                 .data(graph.links)
                 .enter().append('path')
@@ -43,7 +44,7 @@ export default {
                         Tx2 = Txi(0.4),
                         Tx3 = Txi(1 - 0.4),
                         Ty0 = d.source.y + d.sy,
-                        Ty1 = d.target.y + d.ty;
+                        Ty1 = d.target.y + d.ty 
 
                     // note .ty is the y point that the edge meet the target(for top)
                     //		.sy is the y point of the source  (for top)
@@ -55,7 +56,7 @@ export default {
                         Bx2 = Bxi(0.4),
                         Bx3 = Bxi(1 - 0.4),
                         By0 = d.source.y + d.height + d.sy,
-                        By1 = d.target.y + d.ty + d.height;
+                        By1 = d.target.y + d.ty + d.height
 
                     const rightMoveDown = By1 - Ty1;
 
@@ -107,8 +108,8 @@ export default {
                         Txi = d3.interpolateNumber(Tx0, Tx1),
                         Tx2 = Txi(0.4),
                         Tx3 = Txi(1 - 0.4),
-                        Ty0 = d.source.y + d.sy,
-                        Ty1 = d.target.y + d.ty;
+                        Ty0 = d.source.y + d.sy + this.view.ySpacing,
+                        Ty1 = d.target.y + d.ty + this.view.ySpacing;
 
                     // note .ty is the y point that the edge meet the target(for top)
                     //		.sy is the y point of the source  (for top)
@@ -121,8 +122,8 @@ export default {
                         Bxi = d3.interpolateNumber(Bx0, Bx1),
                         Bx2 = Bxi(0.4),
                         Bx3 = Bxi(1 - 0.4),
-                        By0 = d.source.y + d.height + d.sy,
-                        By1 = d.target.y + d.ty + d.height;
+                        By0 = d.source.y + d.height + d.sy + this.view.ySpacing,
+                        By1 = d.target.y + d.ty + d.height + this.view.ySpacing;
 
                     const rightMoveDown = By1 - Ty1;
 

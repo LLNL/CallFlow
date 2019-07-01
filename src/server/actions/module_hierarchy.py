@@ -4,12 +4,34 @@ import networkx as nx
 import utils
 
 class moduleHierarchy:
-    def __init__(self, state, nid):
-        self.state = state 
+    def __init__(self, state, selected_node):
         self.graph = state.graph
         self.df = state.df
-        self.nid = nid
+        if not self.gdf:
+            utils.debug("Error: Group_df not created.")
+        self.gdf = state.gdf
+        self.selected_node = selected_node
+        self.hierarchy_g = nx.Graph()
         self.run()
+
+    def add_paths(self, df, path_name):
+        for idx, row in df.iterrows():
+            if row.show_node:
+                path = row[path_name]
+                if isinstance(path, str):
+                    path = make_tuple(row[path_name])
+                self.hierarchy_g.add_path(path)      
+
+    def create_hierarchy_df(self, module):
+        df = self.state.df
+        meta_nodes = df.loc[df['_module'] == module]
+        if not df['component_path']:
+            utils.debug('Error: Component path not defined in the df')
+        self.add_paths(meta_nodes, 'component_path')
+
+        # TODO: Add other meta information if needed. 
+        
+        return self.hierarchy.g.to_json()
 
     def create_hierarchy_graph(self, module):
         g = self.state.entire_g
@@ -57,18 +79,16 @@ class moduleHierarchy:
                 isExit[data['target']] = False
         return isExit
 
+    # instead of nid, get by module. nid seems very vulnerable rn. 
     def run(self):
         node = self.df.loc[self.df['nid'] == self.nid]
-        mod_index = node['mod_index'].values.tolist()
-        print(mod_index)
+        modules = node['module'].values.tolist()
+
         if len(mod_index) != 1:
             utils.debug("Something wrong!, A node cannot belong to two modules.")
             print(mod_index)
         else:
-            mod_index = mod_index[0]
-            # df = self.df.loc[self.df['mod_index'] == mod_index]
-            module = node['module'].unique()[0]
-            print(node['module'])
+            module = modules[0]
             is_exit = self.create_hierarchy_graph(module)
  
         paths = []

@@ -10,8 +10,21 @@ class splitLevel:
         self.level = attr['level']
         self.run(state)
         
-    def run(self, state):    
-        ret = {}
+    # Look into the df and get the functions inside.
+    def get_functions_inside(self, module):
+        return ret
+
+    # Bfs on the module. 
+    # Or get the component paths from the df and create a tree.
+    # ret should be an array of nodes with levels. 
+    def get_functions_hierarchy(self, module):
+        return ret    
+
+
+    # get_functions_inside
+    def run(self):    
+        functions = get_functions_inside()
+
         nodes = self.df.loc[self.df['module'] == self.module]
         callees = nodes['callees']
         component_nodes = nodes.loc[nodes['component_level'] == float(self.level)]

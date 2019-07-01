@@ -44,13 +44,12 @@ export default {
                 .data(this.graph.nodes)
                 .enter().append('g')
                 .attr('class', (d) => {
-                    console.log(d.mod_index)
                     return 'node';
                 })
                 .attr('opacity', 0)
                 .attr('id', d => `node_${d.mod_index}`)
                 .attr('transform', (d) => {
-                    return `translate(${d.x},${d.y})`;
+                    return `translate(${d.x},${d.y })`;
                 });
 
             this.nodes.selectAll('.node')
@@ -58,7 +57,7 @@ export default {
                 .transition()
                 .duration(this.transitionDuration)
                 .attr('opacity', 1)
-                .attr('transform', d => `translate(${d.x},${d.y})`);
+                .attr('transform', d => `translate(${d.x},${d.y + this.view.ySpacing})`);
 
             this.rectangle(node);
             this.path(node);
@@ -119,6 +118,7 @@ export default {
                     //     nid: d.n_index[0],
                     //     dataset1: 'osu_bw',
                     // })
+                    console.log(d)
                     this.$socket.emit('histogram', {
                         mod_index: d.mod_index[0],
                         module: d.module[0],

@@ -42,7 +42,7 @@ export default {
 		selectedIncTime: 0,
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 10,
-		colorBy: ['Name', 'Exclusive', 'Inclusive', 'Uncertainity'],
+		colorBy: ['Name', 'Exclusive', 'Inclusive', 'Imbalance'],
 		selectedColorBy: 'Exclusive',
 		modes: [],
 		selectedMode: 'Single',

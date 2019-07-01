@@ -72,7 +72,7 @@
 			<v-container fluid fill-height class="pa-0">
 				<v-layout justify-center align-center>
 					<v-flex xs3 fill-height class="pa-0">
-						<Histogram ref="Histogram" />
+						<Histogram ref="Histogram" v-bind:selected-color-by="selectedColorBy"/>
 						<v-toolbar dense>
 							<v-btn v-on:click="split()">Split
 							</v-btn>

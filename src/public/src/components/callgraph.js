@@ -38,7 +38,7 @@ export default {
 		},
 		pass_props: {
 			nodeWidth: 50,
-			ySpacing: 50,
+			ySpacing: 60,
 			color: null,
 		},
 		width: null,
@@ -80,7 +80,7 @@ export default {
 		render() {
 			this.$refs.Nodes.init(this.data, this.pass_props)
 			// this.$refs.IntermediateNodes.init(this.data)
-			this.$refs.Edges.init(this.data)
+			this.$refs.Edges.init(this.data, this.pass_props)
 			this.$refs.Histogram.init()
 			this.$refs.MiniHistograms.init(this.data, this.pass_props)
 		},
@@ -200,11 +200,11 @@ export default {
 			let nextNodes;
 			let x = 0;
 			let count = 10
+			console.log("Bug here. Correct me.")
 			while (remainingNodes.length) {
 				if(count > 10){
 					break;
 				}
-				console.log(remainingNodes.length)
 				nextNodes = [];
 				remainingNodes.forEach((node) => {
 					node.sourceLinks.forEach((link) => {

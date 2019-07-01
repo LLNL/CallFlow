@@ -13,14 +13,16 @@
 
 import tpl from '../html/histogram.html'
 import * as  d3 from 'd3'
-import "d3-selection-multi"
+// import "d3-selection-multi"
 
 export default {
     template: tpl,
     name: 'Histogram',
     components: {
     },
-    props: [],
+    props: [
+        // 'selectedColorBy'
+    ],
     data: () => ({
         data: [],
         width: 0,
@@ -29,7 +31,7 @@ export default {
             top: 10, right: 10, bottom: 30, left: 40,
         },
         dataset_index: [],
-        numbOfBins: 20,
+        numbOfBins: 5,
         boxWidth: 0,
         boxHeight: 0,
         histogramOffset: 0,
@@ -39,7 +41,9 @@ export default {
         id: 'hist_view',
         firstRender: true,
         xVals: [],
-        freq: []
+        freq: [],
+        selectedColorBy: 'Inclusive', 
+        MPIcount: 0,
     }),
 
     mounted() {
@@ -69,13 +73,16 @@ export default {
         setupSVG() {
             this.histogramSVG = d3.select('#' + this.id)
                 .append('svg')
-                .attrs({
-                    "id": "hist_view_svg",
-                    "width": this.boxWidth + this.margin.right + this.margin.left,
-                    "height": this.boxHeight + this.margin.top + this.margin.bottom,
-                })
+                // .attrs({
+                //     "id": "hist_view_svg",
+                //     "width": this.boxWidth + this.margin.right + this.margin.left,
+                //     "height": this.boxHeight + this.margin.top + this.margin.bottom,
+                // })
+                .attr("id", "hist_view_svg")
+                .attr("width", this.boxWidth + this.margin.right + this.margin.left)
+                .attr("height", this.boxHeight + this.margin.top + this.margin.bottom)
                 .append('g')
-                .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
+                .attr('transform', `translate(${this.margin.left},${this.margin.top})`)
         },
 
         start(data) {
@@ -85,9 +92,8 @@ export default {
             }
 
             this.firstRender = false
-            this.data = Object.values(data.inc)
 
-            const temp = this.dataProcess(this.data);
+            const temp = this.dataProcess(data);
             this.xVals = temp[0];
             this.freq = temp[1];
             this.axis_x = temp[2];
@@ -123,22 +129,50 @@ export default {
             this.height = this.containerHeight - this.margin.top - this.margin.bottom
         },
 
+        array_unique(arr) {
+            return arr.filter(function (value, index, self) { 
+              return self.indexOf(value) === index;
+            })
+        },
+
+
         dataProcess(data) {
             const xVals = [];
             const freq = [];
             const axis_x = [];
+            const dataSorted = []
 
-            let attr = 'time'
-            console.log(data)
-            data = data[attr]
-            console.log(data)
+            let attr_data = {}
+            console.log("Histogram data by: ", this.selectedColorBy)
+            if(this.selectedColorBy == 'Inclusive'){
+                attr_data = data['time (inc)']
+            }
+            else if (this.selectedColorBy == 'Exclusive'){
+                attr_data = data['time']
+            }
+            else if(this.selectedColorBy == 'Name'){
+                attr_data = data['rank']
+            }
+            else if(this.selectedColorBy == 'Imbalance'){
+                attr_data = data['imbalance']
+            }
 
-            const dataSorted = data.slice()
+            let funcCount = Object.keys(attr_data).length
+            let ranks = data['rank'][0]
+            this.MPIcount = this.array_unique(ranks).length
+            for(let i = 0; i < attr_data[0].length; i += 1){
+                for(const [key, value] in Object.entries(attr_data)){
+                    if (dataSorted[i] == undefined){
+                        dataSorted[i] = 0
+                    }
+                    dataSorted[i] += attr_data[key][i]
+                }
+            }          
+
             dataSorted.sort((a, b) => a - b)
-            print(dataSorted)
             const dataMin = dataSorted[0];
-            const dataMax = dataSorted[dataSorted.length - 1];
-
+            const dataMax = dataSorted[dataSorted.length - 1];  
+                        
             const dataWidth = ((dataMax - dataMin) / this.numbOfBins);
             const binContainsProcID = {};
             for (let i = 0; i < this.numbOfBins; i++) {
@@ -147,7 +181,7 @@ export default {
                 axis_x.push(dataMin + (i * dataWidth));
             }
 
-            data.forEach((val, idx) => {
+            dataSorted.forEach((val, idx) => {
                 let pos = Math.floor((val - dataMin) / dataWidth);
                 if (pos >= this.numbOfBins) {
                     pos = this.numbOfBins - 1;
@@ -156,9 +190,11 @@ export default {
                 if (binContainsProcID[pos] == null) {
                     binContainsProcID[pos] = [];
                 }
-                binContainsProcID[pos].push(idx);
+                binContainsProcID[pos].push(data['rank'][0][idx]);
             });
+            this.data  = dataSorted
 
+            console.log(xVals, freq, axis_x, binContainsProcID)
             return [xVals, freq, axis_x, binContainsProcID];
         },
 
@@ -273,7 +309,6 @@ export default {
                     d3.selectAll(`.lineRank_${i}`)
                         .style('fill', 'orange')
                         .style('fill-opacity', 1);
-                    console.log(this.binContainsProcID)
                     const groupProcStr = this.groupProcess(this.binContainsProcID[i]).string;
                     const mousePos = d3.mouse(d3.select(this.id).node());
                     toolTip.style('opacity', 1)
@@ -311,7 +346,7 @@ export default {
         axis() {
             const xFormat = d3.format('.1e');
             const xAxis = d3.axisBottom(this.histogramXScale)
-                .ticks(this.xVals.length)
+                .ticks(this.MPIcount)
                 .tickFormat((d, i) => {
                     let temp = this.axis_x[i];
                     if (i % 4 == 0) {
@@ -385,7 +420,8 @@ export default {
         },
 
         rankLineScale() {
-            const ranklinescale = d3.scaleLinear().domain([0, this.data.length]).range([0, this.histogramWidth]);
+            console.log(this.MPIcount)
+            const ranklinescale = d3.scaleLinear().domain([0, this.MPIcount]).range([0, this.histogramWidth]);
             this.freq.forEach((fregVal, idx) => {
                 const processIDs = this.binContainsProcID[idx];
                 if (processIDs) {
