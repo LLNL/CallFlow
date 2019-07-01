@@ -1,28 +1,30 @@
 import tpl from '../html/icicle.html'
 
 export default {
-  name: 'Icicle',
-  template: tpl,
-  components: {
+	name: 'Icicle',
+	template: tpl,
+	components: {
 
-  },
-  props: [
-],
-  data: () => ({
-   }),
+	},
+	props: [
+	
+	],
+	data: () => ({
+		id: 'icicle_view'
+	}),
 
-  watch: {
-    
-  },
+	watch: {
 
-  methods: {
-    init() {
-    },
+	},
 
-    clear() {
-    },
+	methods: {
+		init() {
+		},
 
-    update() {
-    },
-  }
+		clear() {
+		},
+
+		update() {
+		},
+	}
 }

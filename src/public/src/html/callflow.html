@@ -50,11 +50,13 @@
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
-					<v-text-field label="Filter Threshold" v-model="selectedIncTime" class="mt-0"  type="number" @change="updateFilterIncTime"></v-text-field>
-					<vue-slider id="frequency-slider" :width="200" :process="true" v-model="selectedFilterPerc" :order="false" @change="updateFilterPerc" style="">
+					<v-text-field label="Filter Threshold" v-model="selectedIncTime" class="mt-0" type="number"
+						@change="updateFilterIncTime"></v-text-field>
+					<vue-slider id="frequency-slider" :width="200" :process="true" v-model="selectedFilterPerc"
+						:order="false" @change="updateFilterPerc" style="">
 						<template #prepend>
-							<v-text-field v-model="filterPercRange[[0, selectedFilterPerc]]" class="pt-0 mt-0" hide-details
-								single-line type="number" style="width: 30px">
+							<v-text-field v-model="filterPercRange[[0, selectedFilterPerc]]" class="pt-0 mt-0"
+								hide-details single-line type="number" style="width: 30px">
 							</v-text-field>
 						</template>
 					</vue-slider>
@@ -69,8 +71,8 @@
 		<v-flex>
 			<v-container fluid fill-height class="pa-0">
 				<v-layout justify-center align-center>
-					<Histogram ref="Histogram" />
 					<v-flex xs3 fill-height class="pa-0">
+						<Histogram ref="Histogram" />
 						<v-toolbar dense>
 							<v-btn v-on:click="split()">Split
 							</v-btn>

@@ -317,8 +317,14 @@ export default function Sankey() {
 		            node.y = Math.min(levelY, i)
 		            levelY = nodeHeight
                     node.parY = nodeHeight;
-                    // console.log(node.weight, node.name, scale)
-		            node.height = node.weight*minNodeScale*scale;
+
+
+                    let height = node.in
+                    // TODO: Add a key "isStart" to the node.
+                    if(height == 0){
+                        height = node.out
+                    }
+		            node.height = height*minNodeScale*scale;
                 });
 
                 nodes.sort(function(a,b){
@@ -327,7 +333,11 @@ export default function Sankey() {
             });
 
             links.forEach(function(link) {
-                link.height = link.weight*scale*minNodeScale;
+                let weight = link.weight
+                if(link.source.weight < weight){
+                    weight = link.source.minLinkVal
+                }                
+                link.height = weight*scale*minNodeScale;
             });
         }
 

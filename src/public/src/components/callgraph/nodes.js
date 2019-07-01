@@ -1,5 +1,6 @@
 import tpl from '../../html/callgraph/nodes.html'
 import * as  d3 from 'd3'
+import { dsvFormat } from 'd3-dsv';
 
 export default {
     template: tpl,
@@ -15,13 +16,22 @@ export default {
         minHeightForText: 10,
         textTruncForNode: 25,
         view: {},
+        debug: true,
     }),
     mounted() {
     },
 
-    sockets : {
-        histogram(data){
-            
+    sockets: {
+        histogram(data) {
+            data = JSON.parse(data)
+            if (this.debug == true){
+                console.log(data)
+            }
+            this.$parent.$refs.Histogram.start(data)
+        },
+
+        hierarchy(data) {
+
         }
     },
 
@@ -34,10 +44,11 @@ export default {
                 .data(this.graph.nodes)
                 .enter().append('g')
                 .attr('class', (d) => {
+                    console.log(d.mod_index)
                     return 'node';
                 })
                 .attr('opacity', 0)
-                .attr('id', d => `n${d.n_index}`)
+                .attr('id', d => `node_${d.mod_index}`)
                 .attr('transform', (d) => {
                     return `translate(${d.x},${d.y})`;
                 });
@@ -102,15 +113,16 @@ export default {
                     // this.view.toolTipText.html('');
                     // this.view.toolTipG.selectAll('*').remove();
                 })
+                // TODO: Get the dataset from app.py. or make a store for vue-x
                 .on('click', (d) => {
-                    console.log(d)
-                    let nid = d.n_index[0]
-                    this.$socket.emit('hierarchy', {
-                        nid,
-                        dataset1: 'osu_bw',
-                    })
+                    // this.$socket.emit('hierarchy', {
+                    //     nid: d.n_index[0],
+                    //     dataset1: 'osu_bw',
+                    // })
                     this.$socket.emit('histogram', {
-
+                        mod_index: d.mod_index[0],
+                        module: d.module[0],
+                        dataset1: 'osu_bw'
                     })
                 });
 

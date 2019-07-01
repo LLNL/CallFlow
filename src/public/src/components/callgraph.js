@@ -81,13 +81,15 @@ export default {
 			this.$refs.Nodes.init(this.data, this.pass_props)
 			// this.$refs.IntermediateNodes.init(this.data)
 			this.$refs.Edges.init(this.data)
-			console.log(this.pass_props)
+			this.$refs.Histogram.init()
 			this.$refs.MiniHistograms.init(this.data, this.pass_props)
 		},
 
 		clear() {
 			this.$refs.Nodes.clear()
 			this.$refs.Edges.clear()
+			this.$refs.Histogram.clear()
+			this.$refs.MiniHistograms.clear()
 		},
 
 		update(data) {

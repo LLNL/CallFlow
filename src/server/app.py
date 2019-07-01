@@ -114,7 +114,6 @@ class App():
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
             emit('init', config_json, json=True)
 
-
         @sockets.on('filter', namespace='/')
         def filter(data):
             if self.debug == True:
@@ -217,9 +216,20 @@ class App():
             result = self.callflow.update({
                 "name": "histogram",
                 "dataset1": dataset,
-                "module": data['module'],
+                "mod_index": data['mod_index'],
             })            
             emit('histogram', result, json=True)
+
+        @sockets.on('miniHistogram', namespace="/")
+        def histogram(data):
+            if self.debug == True:
+                self.print("[Request] Mini-histogram")
+            dataset = data['dataset1']
+            result = self.callflow.update({
+                "name": "mini-histogram",
+                "dataset1": dataset,
+            })            
+            emit('miniHistogram', result, json=True)
 
     def create_server(self):
         app.debug = True

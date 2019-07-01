@@ -3,7 +3,7 @@ import * as  d3 from 'd3'
 
 export default {
     template: tpl,
-    name: 'Histograms',
+    name: 'MiniHistograms',
     components: {
     },
     props: [],
@@ -19,46 +19,58 @@ export default {
     }),
 
     sockets: {
-        histogram(data) {
-			data = JSON.parse(data)
-            this.drawHistogram(data)
+        miniHistogram(data) {
+            console.log(data)
+            for (const [key, value] of Object.entries(data)) {
+                let node = this.getNode(key)
+                console.log(value)
+                // this.drawHistogram(value, node)
+            }
+            
         }
     },
 
     methods: {
         init(graph, view) {
+            this.graph = graph
             this.view = view
-            console.log(this.view)
             this.xScale = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
             this.yScale = 100;
             this.minimapXScale = d3.scaleBand().domain(this.xScale).rangeRound([0, view.nodeWidth], 0.05);
             this.minimapYScale = d3.scaleLinear().domain([0, this.yScale]).range([view.ySpacing - 5, 5]);
-            for(let i = 0; i < graph.nodes.length; i += 1) {
-                let node = graph.nodes[i]
-                // this.$socket.emit('histogram', {
-                //     'dataset1': 'osu_bw',
-                //     'format': 'Callgraph',
-                //     'n_index': node['n_index'],
-                //     'module': node['name']
-                // })               
+            this.$socket.emit('miniHistogram', {
+                'dataset1': 'osu_bw',
+            })
+
+        },
+        
+        getNode(node_name){
+            let ret = {}
+            for(let i = 0; i < this.graph.nodes.length; i += 1){
+                let node = this.graph.nodes[i]
+                if(node.name == node_name){
+                    return node
+                }
             }
         },
 
-        drawHistogram(data) {
-
+        drawHistogram(data, node) {
             this.vals = data.xVals;
             this.freq = data.freq;
-            this.histogram = this.view.histograms.append('g')
-                .attr('transform', () => `translate(${node.x},${node.y - view.ySpacing})`);
-            this.histogram.selectAll('.histobars')
-                .data(myFreq)
+            let minihistogram = d3.select('#node_'+ node.mod_index)
+                .append('g')
+                .attr('id', 'a')
+                .attr('transform', () => `translate(${node.x},${node.y - this.view.ySpacing})`)
+            
+            minihistogram.selectAll('#a')
+                .data(this.freq)
                 .enter()
                 .append('rect')
                 .attr('class', 'histobars')
-                .attr('x', (d, i) => minimapXScale(myXvals[i]))
+                .attr('x', (d, i) => minimapXScale(this.vals[i]))
                 .attr('y', d => minimapYScale(d))
                 .attr('width', () => minimapXScale.rangeBand())
-                .attr('height', d => (view.ySpacing - 5) - minimapYScale(d))
+                .attr('height', d => (this.view.ySpacing - 5) - minimapYScale(d))
                 .attr('fill', 'steelblue')
                 .attr('opacity', 1)
                 .attr('stroke-width', () => '0.2px')

@@ -13,6 +13,7 @@
 
 import tpl from '../html/histogram.html'
 import * as  d3 from 'd3'
+import "d3-selection-multi"
 
 export default {
     template: tpl,
@@ -36,29 +37,23 @@ export default {
         histogramWidth: 0,
         histogramSVG: null,
         id: 'hist_view',
+        firstRender: true,
+        xVals: [],
+        freq: []
     }),
 
     mounted() {
-        this.id = 'hist_view';
     },
 
     sockets: {
     },
 
     methods: {
-        init(data) {
-            this.width = document.getElementById('#hist_view').width()/2
-            this.height = $('#hist_view').parent().width()/2
-            this.data = Object.values(data.inc)
+        init() {
+            this.padding = { left: 15, top: 10, right: 0, bottom: 40 }
 
-            const temp = this.dataProcess(args, this.data);
-            this.xVals = temp[0];
-            this.freq = temp[1];
-            this.axis_x = temp[2];
-            this.binContainsProcID = temp[3];
-            this.logScaleBool = false;
-
-            this.dataset_index = Object.values(this.data.dataset_index)
+            this.width = document.getElementById('hist_view').clientWidth
+            this.height = window.innerHeight / 2 - 50
 
             this.boxWidth = this.width - this.margin.right - this.margin.left;
             this.boxHeight = this.height - this.margin.top - this.margin.bottom - 20;
@@ -66,24 +61,56 @@ export default {
             this.histogramHeight = this.boxHeight - this.histogramOffset;
             this.histogramWidth = this.boxWidth;
 
-            this.histogramSVG = d3.select(this.id)
-                .append('svg')
-                .attr('width', boxWidth + margin.right + margin.left)
-                .attr('height', boxHeight + margin.top + margin.bottom)
-                .append('g')
-                .attr('transform', `translate(${margin.left},${margin.top})`);
+            this.histogramSVGid = 'hist_view_svg'
+            this.brush();
+            this.setupSVG()
+        },
 
-            this.histogramXScale = d3.scaleOrdinal().domain(this.xVals).rangeRoundBands([0, histogramWidth], 0.05);
+        setupSVG() {
+            this.histogramSVG = d3.select('#' + this.id)
+                .append('svg')
+                .attrs({
+                    "id": "hist_view_svg",
+                    "width": this.boxWidth + this.margin.right + this.margin.left,
+                    "height": this.boxHeight + this.margin.top + this.margin.bottom,
+                })
+                .append('g')
+                .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
+        },
+
+        start(data) {
+            if (!this.firstRender) {
+                this.clear()
+                this.setupSVG()
+            }
+
+            this.firstRender = false
+            this.data = Object.values(data.inc)
+
+            const temp = this.dataProcess(this.data);
+            this.xVals = temp[0];
+            this.freq = temp[1];
+            this.axis_x = temp[2];
+            this.binContainsProcID = temp[3];
+
+            this.logScaleBool = false;
+            this.histogramXScale = d3.scaleBand()
+                .domain(this.xVals)
+                .rangeRound([0, this.histogramWidth], 0.05)
 
             if (d3.max(this.freq) < 50) {
-                this.histogramYScale = d3.scaleLinear().domain([0, d3.max(this.freq)]).range([histogramHeight, 0]);
+                this.histogramYScale = d3.scaleLinear()
+                    .domain([0, d3.max(this.freq)])
+                    .range([this.histogramHeight, 0])
                 this.logScaleBool = false;
             } else {
-                this.histogramYScale = d3.scaleLog().domain([1, d3.max(this.freq)]).range([histogramHeight, 10]);
+                this.histogramYScale = d3.scaleLog()
+                    .domain([1, d3.max(this.freq)])
+                    .range([this.histogramHeight, 10]);
                 this.logScaleBool = true;
             }
 
-            this.visualize(args);
+            this.visualize();
         },
 
         setContainerWidth(newWidth) {
@@ -101,9 +128,14 @@ export default {
             const freq = [];
             const axis_x = [];
 
-            const dataSorted = data.slice();
-            dataSorted.sort((a, b) => a - b);
+            let attr = 'time'
+            console.log(data)
+            data = data[attr]
+            console.log(data)
 
+            const dataSorted = data.slice()
+            dataSorted.sort((a, b) => a - b)
+            print(dataSorted)
             const dataMin = dataSorted[0];
             const dataMax = dataSorted[dataSorted.length - 1];
 
@@ -184,18 +216,17 @@ export default {
         },
 
         clear() {
-            $('#hist_view').empty()
+            d3.select('#' + this.histogramSVGid).remove()
         },
 
         visualize() {
             this.bars();
-            this.brush(args);
-            this.axis(args);
-            this.rankLineScale(args);
+            this.axis();
+            this.rankLineScale();
         },
 
         bars() {
-            const toolTip = d3.select(this.id)
+            const toolTip = d3.select('#' + this.svg_id)
                 .append('div')
                 .attr('class', 'toolTip')
                 .style('position', 'absolute')
@@ -213,16 +244,15 @@ export default {
                 .style('font-family', 'sans-serif')
                 .style('font-size', '13px');
 
-            histogramSVG.selectAll('.selectBars').data(this.freq).enter()
+            this.histogramSVG.selectAll('.selectBars').data(this.freq).enter()
                 .append('rect')
                 .attr('class', 'selectBars')
                 .attr('x', (d, i) => this.histogramXScale(this.xVals[i]))
-                .attr('y', d =>
-                    // height - y(d);
-                    this.histogramYScale(d))
+                .attr('y', d => {
+                    return this.histogramYScale(d)
+                })
                 .attr('width', d =>
-                    // return width/hData.length - 1.0;
-                    this.histogramXScale.rangeBand())
+                    this.histogramXScale.bandwidth())
                 .attr('height', (d) => {
                     let histFreq = d;
                     if (d < 1 && this.logScaleBool) {
@@ -243,6 +273,7 @@ export default {
                     d3.selectAll(`.lineRank_${i}`)
                         .style('fill', 'orange')
                         .style('fill-opacity', 1);
+                    console.log(this.binContainsProcID)
                     const groupProcStr = this.groupProcess(this.binContainsProcID[i]).string;
                     const mousePos = d3.mouse(d3.select(this.id).node());
                     toolTip.style('opacity', 1)
@@ -273,16 +304,13 @@ export default {
                         .style('width', 'auto');
 
                     toolTipText.html('');
-                });
+                })
         },
 
         /* Axis for the histogram */
         axis() {
             const xFormat = d3.format('.1e');
-            const xAxis = d3.svg.axis()
-                .scale(this.histogramXScale)
-                .orient('bottom')
-                // .outerTickSize(0)
+            const xAxis = d3.axisBottom(this.histogramXScale)
                 .ticks(this.xVals.length)
                 .tickFormat((d, i) => {
                     let temp = this.axis_x[i];
@@ -293,12 +321,10 @@ export default {
                     return '';
                 });
 
-            const yAxis = d3.svg.axis()
-                .scale(histogramYScale)
-                .orient('left')
-                .ticks(self.freq.length)
+            const yAxis = d3.axisLeft(this.histogramYScale)
+                .ticks(this.freq.length)
                 .tickFormat((d, i) => {
-                    if (self.logScaleBool) {
+                    if (this.logScaleBool) {
                         if (d % 4 == 0) {
                             return d;
                         }
@@ -310,7 +336,7 @@ export default {
 
             const xAxisLine = this.histogramSVG.append('g')
                 .attr('class', 'x axis')
-                .attr('transform', `translate(0,${histogramHeight})`)
+                .attr('transform', `translate(0,${this.histogramHeight})`)
                 .call(xAxis);
 
             const yAxisLine = this.histogramSVG.append('g')
@@ -359,7 +385,7 @@ export default {
         },
 
         rankLineScale() {
-            const rankLineScale = d3.scaleLinear().domain([0, this.data.length]).range([0, this.histogramWidth]);
+            const ranklinescale = d3.scaleLinear().domain([0, this.data.length]).range([0, this.histogramWidth]);
             this.freq.forEach((fregVal, idx) => {
                 const processIDs = this.binContainsProcID[idx];
                 if (processIDs) {
@@ -370,7 +396,7 @@ export default {
                     processIDs.sort((a, b) => a - b);
 
                     const groupArray = this.groupProcess(processIDs).array;
-                    const binWidth = this.histogramXScale.rangeBand();
+                    const binWidth = this.histogramXScale.bandwidth();
                     const widthPerRank = binWidth / processIDs.length;
                     const binLocation = this.histogramXScale(idx);
                     let cumulativeBinSpace = 0;
@@ -383,8 +409,8 @@ export default {
                             var topX1 = cumulativeBinSpace + binLocation;
                             var topX2 = cumulativeBinSpace + binLocation + (1) * widthPerRank;
 
-                            var botX3 = this.rankLineScale(start);
-                            var botX4 = this.rankLineScale(start);
+                            var botX3 = ranklinescale(start);
+                            var botX4 = ranklinescale(start);
 
                             var topY = this.boxHeight - this.histogramOffset;
                             var botY = this.boxHeight;
@@ -401,8 +427,8 @@ export default {
                             var topX1 = cumulativeBinSpace + binLocation;
                             var topX2 = cumulativeBinSpace + (end - start + 1) * widthPerRank + binLocation;
 
-                            var botX3 = this.rankLineScale(start);
-                            var botX4 = this.rankLineScale(end);
+                            var botX3 = ranklinescale(start);
+                            var botX4 = ranklinescale(end);
 
                             var topY = this.boxHeight - this.histogramOffset;
                             var botY = this.boxHeight;
@@ -426,16 +452,13 @@ export default {
                 }
             });
 
-            const rankLineAxis = d3.svg.axis()
-                .scale(rankLineScale)
-                .orient('bottom')
-                // .outerTickSize(0)
+            const rankLineAxis = d3.axisBottom(ranklinescale)
                 .ticks(10)
                 .tickFormat((d, i) => d);
 
-            const rankLineAxisLine = histogramSVG.append('g')
+            const rankLineAxisLine = this.histogramSVG.append('g')
                 .attr('class', 'x axis')
-                .attr('transform', `translate(0,${boxHeight - 0})`)
+                .attr('transform', `translate(0,${this.boxHeight - 0})`)
                 .call(rankLineAxis);
 
             const rankLineAxisLineText = rankLineAxisLine.append('text')
@@ -464,13 +487,12 @@ export default {
 
         /* Brush for selecting the Sankey nodes and generating a new plot to compare */
         brush() {
-            this.brush = d3.svg.brush()
-                .x(this.histogramXScale)
+            this.brush = d3.brushX()
+                .extent([[this.padding.left, this.padding.top], [this.width - this.padding.right, this.height - this.padding.bottom]])
                 .on('brush', this.brushing)
-                // .extent([0,width])
-                .on('brushend', this.brushend);
-            const brushG = this.histogramSVG.append('g').attr('class', 'brush').call(brush);
-            brushG.selectAll('rect').attr('height', histogramHeight).attr('opacity', 0.2);
+                .on('end', this.brushend);
+            // const brushG = this.histogramSVG.append('g').attr('class', 'brush').call(this.brush);
+            // brushG.selectAll('rect').attr('height', this.histogramHeight).attr('opacity', 0.2);
         },
 
         brushing() {
@@ -484,19 +506,19 @@ export default {
                 localBrushStart = 0;
             }
             const localBrushEnd = (brush.empty()) ? brushEnd : Math.floor(brushScale(bExtent[1]));
-            histogramSVG.select('g.brush').call((brush.empty()) ? brush.clear() : brush.extent([brushScale.invert(localBrushStart), brushScale.invert(localBrushEnd)]));
+            this.histogramSVG.select('g.brush').call((brush.empty()) ? brush.clear() : brush.extent([brushScale.invert(localBrushStart), brushScale.invert(localBrushEnd)]));
 
             brushStart = localBrushStart;
             brushEnd = localBrushEnd;
 
             // highlight rank lines that is brush
-            histogramSVG.selectAll('.binRank').attr('opacity', 0);
+            this.histogramSVG.selectAll('.binRank').attr('opacity', 0);
             for (let i = brushStart; i < brushEnd; i++) {
-                histogramSVG.selectAll(`.bin_${i}`).attr('opacity', 1);
+                this.histogramSVG.selectAll(`.bin_${i}`).attr('opacity', 1);
             }
 
             if (brushStart == brushEnd) {
-                histogramSVG.selectAll('.binRank').attr('opacity', 1);
+                this.histogramSVG.selectAll('.binRank').attr('opacity', 1);
             }
         },
 
@@ -549,7 +571,3 @@ export default {
         }
     }
 }
-
-
-
-

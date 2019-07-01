@@ -23,6 +23,7 @@ class groupBy:
         self.eliminate_funcs = []
         self.entry_funcs = {}
         self.module_func_map = {}
+        self.module_id_map = {}
         self.drop_eliminate_funcs()
         self.run()
         self.df = self.state.df
@@ -90,6 +91,10 @@ class groupBy:
         node_name = {}    
         module = {}   
         change_name = {}
+        module_idx = {}
+
+        module_id_map = {}
+        module_count = 0
     
         roots = self.state.graph.roots
         if len(roots) > 1:
@@ -114,7 +119,8 @@ class groupBy:
                 entry_func[rootdf.node[0]] = True
                 show_node[rootdf.node[0]] = True
                 module[rootdf.node[0]] = group_path[rootdf.node[0]][-1]
-                
+                module_idx[rootdf.node[0]] = module_count
+
                 print("entry function:", entry_func[rootdf.node[0]])
                 print('Change name:', change_name[rootdf.node[0]])
                 print("node path: ", root.callpath)                
@@ -157,6 +163,13 @@ class groupBy:
                             component_path[snode] = self.create_component_path(spath, group_path[snode])
                             component_level[snode] = len(component_path[snode])
                             module[snode] = component_path[snode][0]
+                            
+                            if module[snode] not in module_id_map:
+                                module_count += 1 
+                                module_id_map[module[snode]] = module_count
+                                module_idx[snode] = module_id_map[module[snode]]
+                            else:
+                                module_idx[snode] = module_id_map[module[snode]]
 
                             if component_level[snode] == 2:
                                 entry_func[snode] = True
@@ -164,7 +177,7 @@ class groupBy:
                                 show_node[snode] = True
                             else:
                                 entry_func[snode] = False
-                                node_name[snode] = "N/A"
+                                node_name[snode] = "Unknown(NA)"
                                 show_node[snode] = False
                             
                     # print('Node', snode)        
@@ -184,7 +197,6 @@ class groupBy:
             finally:
                 del root
 
-
         self.state.update_df('group_path', group_path)
         self.state.update_df('component_path', component_path)
         self.state.update_df('show_node', entry_func)
@@ -192,3 +204,6 @@ class groupBy:
         self.state.update_df('component_level', component_level)
         self.state.update_df('_module', module)
         self.state.update_df('change_name', change_name)
+        self.state.update_df('mod_index', module_idx)
+
+        print(self.state.df['mod_index'])

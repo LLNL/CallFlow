@@ -56,7 +56,6 @@ class CallFlow:
         self.config.max_excTime = 0
         self.config.min_excTime = 0
         for idx, state in enumerate(self.states):
-            print(self.states[state].gf.dataframe)
             self.config.max_incTime = utils.getMaxIncTime(self.states[state].gf)
             self.config.max_excTime = utils.getMaxExcTime(self.states[state].gf)
             self.config.min_incTime = utils.getMinIncTime(self.states[state].gf)
@@ -78,7 +77,6 @@ class CallFlow:
                 states[dataset_name] = self.process(states[dataset_name])
                 self.write_gf(states[dataset_name], dataset_name, 'entire')
                 states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc) 
-                print(states[dataset_name].df)
                 self.write_gf(states[dataset_name], dataset_name, 'filter')
             elif(self.reUpdate):
                 states[dataset_name] = self.create(dataset_name)
@@ -202,6 +200,39 @@ class CallFlow:
 
         return state
 
+    def histogram(self, state, mod_index):            
+        ret = []
+        df = state.df
+        entire_df = state.entire_df
+        func_in_module = df[df.mod_index == mod_index]['name'].unique().tolist()
+        
+        for idx, func in enumerate(func_in_module):
+            ret.append({
+                "name": func,
+                "time (inc)" : entire_df.loc[entire_df['name'] == func]['time (inc)'].tolist(),
+                "time" : entire_df.loc[entire_df['name'] == func]['time'].tolist(),
+                "rank": entire_df.loc[entire_df['name'] == func]['rank'].tolist()
+            })
+        ret_df = pd.DataFrame(ret)
+        return ret_df.to_json(orient="columns")
+
+    def miniHistograms(self, state):
+        ret = {}
+        df = state.df
+        modules_in_df = df['_module'].unique()
+
+        for module in modules_in_df:
+            func_in_module = df[df._module == module]['name'].unique().tolist()
+            for idx, func in enumerate(func_in_module):
+                if module not in ret:
+                    ret[module] = []
+                ret[module].append({
+                    "name": func,
+                    "inc": df.loc[df['name'] == func]['time (inc)'].mean(),
+                    "exc": df.loc[df['name'] == func]['time'].mean(),
+                })
+        return ret
+
     def update(self, action):
         utils.debug('Update', action)
 
@@ -265,7 +296,12 @@ class CallFlow:
             moduleHierarchy(state1, action["nid"])
 
         elif action_name == 'histogram':
-            return {}
+            ret = self.histogram(state1, action["mod_index"])
+            return ret
+
+        elif action_name == "mini-histogram":
+            ret = self.miniHistograms(state1)
+            return ret
 
         state1.g = nx.g
 

@@ -27,20 +27,16 @@ class CallGraph(nx.Graph):
         self.root = state.lookup_with_node(self.graph.roots[0])['vis_node_name'][0]
         self.group_by = group_by
         
-        print(self.df[['vis_node_name', 'name', '_module', 'show_node']])
-
         self.rootRunTimeInc = self.root_runtime_inc()
         self.edge_direction = {}        
         self.g = nx.DiGraph(rootRunTimeInc = int(self.rootRunTimeInc))
         
         self.add_paths(path_name)
 
-        print(self.g.nodes())
         if add_info == True:
             print('Creating a Graph with node or edge attributes.')
             self.add_node_attributes()
             self.add_edge_attributes()
-            print(self.g.nodes(data=True))
         else:
             print('Creating a Graph without node or edge attributes.')
             pass
@@ -82,7 +78,6 @@ class CallGraph(nx.Graph):
                 if isinstance(path, str):
                     path = make_tuple(row[path_name])
                 corrected_path = self.no_cycle_path(path)
-                print(corrected_path)
                 self.g.add_path(corrected_path)                
 
     def add_node_attributes(self):        
@@ -102,7 +97,7 @@ class CallGraph(nx.Graph):
         nx.set_node_attributes(self.g, name='module', values=module_mapping)
 
         mod_index_mapping = self.generic_map(self.g.nodes(), 'mod_index')
-        nx.set_node_attributes(self.g, name='mod_inde   x', values=mod_index_mapping)
+        nx.set_node_attributes(self.g, name='mod_index', values=mod_index_mapping)
 
         imbalance_perc_mapping = self.generic_map(self.g.nodes(), 'imbalance_perc')
         nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)
@@ -136,8 +131,8 @@ class CallGraph(nx.Graph):
                 ret[node] = group_df.loc[node, 'max_incTime']
             elif attr == 'node_type':
                 ret[node] = 'normal_edge'
-            elif attr == 'name':
-                print(node)
+            # elif attr == 'name':
+            #     print(node)
             else:
                 df = self.df.loc[self.df['vis_node_name'] == node][attr]
                 if df.empty:
