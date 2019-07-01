@@ -223,13 +223,24 @@ class App():
         @sockets.on('miniHistogram', namespace="/")
         def histogram(data):
             if self.debug == True:
-                self.print("[Request] Mini-histogram")
+                self.print("[Request] Mini-histogram", data)
             dataset = data['dataset1']
             result = self.callflow.update({
                 "name": "mini-histogram",
                 "dataset1": dataset,
             })            
             emit('miniHistogram', result, json=True)
+
+        @sockets.on('hierarchy', namespace="/")
+        def hierarchy(data):
+            if self.debug == True:
+                self.print("[Request] Hierarchy of module", data)
+            result = self.callflow.update({
+                "name": "hierarchy",
+                "dataset1": data['dataset1'],
+                "module": data['module']
+            })
+            emit('hierarchy', result, json=True)
 
     def create_server(self):
         app.debug = True

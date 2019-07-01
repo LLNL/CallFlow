@@ -73,17 +73,6 @@
 				<v-layout justify-center align-center>
 					<v-flex xs3 fill-height class="pa-0">
 						<Histogram ref="Histogram" v-bind:selected-color-by="selectedColorBy"/>
-						<v-toolbar dense>
-							<v-btn v-on:click="split()">Split
-							</v-btn>
-							<v-range-slider label="Level" v-model="level" :max="10" :min="0" :step="1">
-								<template #prepend>
-									<v-text-field v-model="level[0]" class="pt-0 mt-0" hide-details single-line
-										type="number" style="width: 30px">
-									</v-text-field>
-								</template>
-							</v-range-slider>
-						</v-toolbar>
 						<Icicle ref="Icicle" />
 					</v-flex>
 					<v-flex xs9 fill-height class="pa-0" id="vis" v-if="selectedMode == 'Single'">

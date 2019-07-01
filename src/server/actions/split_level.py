@@ -37,8 +37,6 @@ class splitLevel:
         root = self.graph.roots[0]
         node_gen = self.graph.roots[0].traverse()
 
-
-
         try:
             while root.callpath != None:
                 root = next(node_gen)    
@@ -54,7 +52,6 @@ class splitLevel:
                 spath = s.path.tolist()[0]
                 tpath = t.path.tolist()[0]
 
-                print(snode, tnode)
                 #print(spath, tpath)
 
         except StopIteration:

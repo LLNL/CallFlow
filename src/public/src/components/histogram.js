@@ -50,6 +50,13 @@ export default {
     },
 
     sockets: {
+        histogram(data) {
+            data = JSON.parse(data)
+            if (this.debug == true){
+                console.log(data)
+            }
+            this.start(data)
+        },
     },
 
     methods: {
@@ -73,14 +80,11 @@ export default {
         setupSVG() {
             this.histogramSVG = d3.select('#' + this.id)
                 .append('svg')
-                // .attrs({
-                //     "id": "hist_view_svg",
-                //     "width": this.boxWidth + this.margin.right + this.margin.left,
-                //     "height": this.boxHeight + this.margin.top + this.margin.bottom,
-                // })
-                .attr("id", "hist_view_svg")
-                .attr("width", this.boxWidth + this.margin.right + this.margin.left)
-                .attr("height", this.boxHeight + this.margin.top + this.margin.bottom)
+                .attrs({
+                    "id": "hist_view_svg",
+                    "width": this.boxWidth + this.margin.right + this.margin.left,
+                    "height": this.boxHeight + this.margin.top + this.margin.bottom,
+                })
                 .append('g')
                 .attr('transform', `translate(${this.margin.left},${this.margin.top})`)
         },
@@ -127,7 +131,7 @@ export default {
         setContainerHeight(newHeight) {
             this.containerHeight = newHeight
             this.height = this.containerHeight - this.margin.top - this.margin.bottom
-        },
+        },  
 
         array_unique(arr) {
             return arr.filter(function (value, index, self) { 
@@ -172,8 +176,10 @@ export default {
             dataSorted.sort((a, b) => a - b)
             const dataMin = dataSorted[0];
             const dataMax = dataSorted[dataSorted.length - 1];  
-                        
+
+            
             const dataWidth = ((dataMax - dataMin) / this.numbOfBins);
+            // console.log(dataWidth)
             const binContainsProcID = {};
             for (let i = 0; i < this.numbOfBins; i++) {
                 xVals.push(i);
@@ -194,7 +200,7 @@ export default {
             });
             this.data  = dataSorted
 
-            console.log(xVals, freq, axis_x, binContainsProcID)
+            // console.log(xVals, freq, axis_x, binContainsProcID)
             return [xVals, freq, axis_x, binContainsProcID];
         },
 

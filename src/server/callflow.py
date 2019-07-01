@@ -15,6 +15,7 @@ import time
 import utils
 from logger import log
 from networkx.drawing.nx_agraph import write_dot
+from networkx.readwrite import json_graph
 
 from preprocess import PreProcess
 from callgraph import CallGraph
@@ -236,8 +237,14 @@ class CallFlow:
                 })
             ret_df[module] = pd.DataFrame(ret[module])
             ret[module] = ret_df[module].to_json(orient="columns")
-        print(ret)
         return json.dumps(ret)
+
+    def hierarchy(self, state, module):
+        ret = {}
+        df = state.df
+        hierarchy_nx = nx.m
+
+        func_in_module = df[df.mod_index == mod_index]['name'].unique().tolist()
 
     def update(self, action):
         utils.debug('Update', action)
@@ -273,12 +280,12 @@ class CallFlow:
         
         elif action_name == "group":
             group = groupBy(state1, action["groupBy"])
-            self.states[dataset1].df = group.df
+            self.states[dataset1].gdf = group.df
             self.states[dataset1].graph = group.graph 
             write_graph = False
             self.write_gf(state1, dataset1, "group", write_graph)
             nx = CallGraph(state1, 'group_path', True, action["groupBy"])
-        
+
         elif action_name == 'diff':
             union_state = structDiff(state1, state2)
             nx = union_state
@@ -297,9 +304,11 @@ class CallFlow:
             nx = CallGraph(state1, 'path', True)
         
         elif action_name == 'hierarchy':
-            nx = CallGraph(state1, 'path', False, 'name')
-            state1.entire_g = nx.g
-            moduleHierarchy(state1, action["nid"])
+            # nx = CallGraph(state1, 'path', False, 'name')
+            # state1.entire_g = nx.g
+            mH = moduleHierarchy(self.states[dataset1], action["module"])
+            hierarchy = mH.hierarchy
+            return json_graph.node_link_data(hierarchy)
 
         elif action_name == 'histogram':
             ret = self.histogram(state1, action["mod_index"])

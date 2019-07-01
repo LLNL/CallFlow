@@ -48,7 +48,6 @@ export default {
 		selectedMode: 'Single',
 		CallgraphData: null,
 		CCTData: null,
-		level: [0, 4],
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
 		enableDiff: false,
@@ -107,10 +106,6 @@ export default {
 			data = JSON.parse(data)
 			this.$refs.Diffgraph.init(data)
 		},
-
-		hierarchy(data) {
-			data = JSON.parse(data)
-		},
 	},
 
 	methods: {
@@ -165,7 +160,8 @@ export default {
 					this.isCallgraphInitialized = true
 					this.$refs.Callgraph.colorOption = this.selectedColorBy
 					this.$refs.Callgraph.init(data)
-					// this.$refs.Histogram.init(data)
+					this.$refs.Histogram.init(data)
+					this.$refs.Icicle.init(data)
 				}
 			}
 			else if (this.selectedFormat == 'CCT') {

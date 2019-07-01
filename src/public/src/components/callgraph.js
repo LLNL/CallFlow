@@ -4,7 +4,6 @@ import Sankey from './callgraph/sankey'
 import Nodes from './callgraph/nodes'
 import IntermediateNodes from './callgraph/intermediateNodes'
 import MiniHistograms from './callgraph/miniHistograms'
-import Histogram from './histogram'
 import Edges from './callgraph/edges'
 
 import * as  d3 from 'd3'
@@ -18,7 +17,6 @@ export default {
 		IntermediateNodes,
 		Edges,
 		MiniHistograms,
-		Histogram,
 	},
 
 	props: [
@@ -81,7 +79,6 @@ export default {
 			this.$refs.Nodes.init(this.data, this.pass_props)
 			// this.$refs.IntermediateNodes.init(this.data)
 			this.$refs.Edges.init(this.data, this.pass_props)
-			this.$refs.Histogram.init()
 			this.$refs.MiniHistograms.init(this.data, this.pass_props)
 		},
 

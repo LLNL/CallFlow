@@ -22,17 +22,6 @@ export default {
     },
 
     sockets: {
-        histogram(data) {
-            data = JSON.parse(data)
-            if (this.debug == true){
-                console.log(data)
-            }
-            this.$parent.$refs.Histogram.start(data)
-        },
-
-        hierarchy(data) {
-
-        }
     },
 
     methods: {
@@ -114,11 +103,12 @@ export default {
                 })
                 // TODO: Get the dataset from app.py. or make a store for vue-x
                 .on('click', (d) => {
-                    // this.$socket.emit('hierarchy', {
-                    //     nid: d.n_index[0],
-                    //     dataset1: 'osu_bw',
-                    // })
                     console.log(d)
+                    this.$socket.emit('hierarchy', {
+                        mod_index: d.mod_index[0],
+                        module: d.module[0],
+                        dataset1: 'osu_bw',
+                    })
                     this.$socket.emit('histogram', {
                         mod_index: d.mod_index[0],
                         module: d.module[0],

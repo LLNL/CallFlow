@@ -1,3 +1,15 @@
-<v-card fill-height class="pa-0" :id="id">
-
+<v-card fill-height class="pa-0" >
+    <v-layout row wrap :id="id">
+        <v-toolbar dense>
+            <v-btn v-on:click="split()">Split
+            </v-btn>
+            <v-range-slider label="Level" v-model="level" :max="10" :min="0" :step="1">
+                <template #prepend>
+                    <v-text-field v-model="level[0]" class="pt-0 mt-0" hide-details single-line type="number"
+                        style="width: 30px">
+                    </v-text-field>
+                </template>
+            </v-range-slider>
+        </v-toolbar>
+    </v-layout>
 </v-card>

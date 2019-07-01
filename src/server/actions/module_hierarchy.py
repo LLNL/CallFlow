@@ -2,16 +2,16 @@ import pandas as pd
 import time 
 import networkx as nx
 import utils
+from networkx.readwrite import json_graph
 
 class moduleHierarchy:
-    def __init__(self, state, selected_node):
+    def __init__(self, state, module):
+        self.entire_graph = state.entire_graph
+        # self.gdf = state.gdf
         self.graph = state.graph
         self.df = state.df
-        if not self.gdf:
-            utils.debug("Error: Group_df not created.")
-        self.gdf = state.gdf
-        self.selected_node = selected_node
-        self.hierarchy_g = nx.Graph()
+        self.module = module
+        self.hierarchy = nx.Graph()
         self.run()
 
     def add_paths(self, df, path_name):
@@ -20,25 +20,61 @@ class moduleHierarchy:
                 path = row[path_name]
                 if isinstance(path, str):
                     path = make_tuple(row[path_name])
-                self.hierarchy_g.add_path(path)      
+                self.hierarchy.add_path(path)      
+
+    def generic_map(self, nodes, attr):
+        ret = {}
+        for node in nodes:          
+            # if the node is a module.
+            if node == self.module:
+                if attr == 'time (inc)':
+                    group_df = self.df.groupby(['module']).mean()
+                    ret[node] = group_df.loc[node, 'time (inc)']
+                else:
+                    df = self.df.loc[self.df['module'] == node][attr]
+                    if df.empty:
+                        ret[node] = self.df[self.df['_module'] == node][attr]
+                    else:
+                        ret[node] = list(set(self.df[self.df['name'] == node][attr].tolist())) 
+            else:
+                if attr == 'time (inc)':
+                    group_df = self.df.groupby(['name']).mean()
+                    ret[node] = group_df.loc[node, 'time (inc)']
+                else:
+                    df = self.df.loc[self.df['name'] == node][attr]
+                    if df.empty:
+                        ret[node] = self.df[self.df['name'] == node][attr]
+                    else:
+                        ret[node] = list(set(self.df[self.df['name'] == node][attr].tolist()))            
+        return ret
+
+    def add_node_attributes(self):
+        time_mapping = self.generic_map(self.hierarchy.nodes(), 'time (inc)')
+        nx.set_node_attributes(self.hierarchy, name='time (inc)', values=time_mapping)
+
+        time_inc_mapping = self.generic_map(self.hierarchy.nodes(), 'time')
+        nx.set_node_attributes(self.hierarchy, name='time', values=time_mapping)
+
+        imbalance_perc_mapping = self.generic_map(self.hierarchy.nodes(), 'imbalance_perc')
+        nx.set_node_attributes(self.hierarchy, name='imbalance_perc', values=imbalance_perc_mapping)
 
     def create_hierarchy_df(self, module):
-        df = self.state.df
+        df = self.df
         meta_nodes = df.loc[df['_module'] == module]
-        if not df['component_path']:
+        if 'component_path' not in df.columns:
             utils.debug('Error: Component path not defined in the df')
         self.add_paths(meta_nodes, 'component_path')
 
-        # TODO: Add other meta information if needed. 
-        
-        return self.hierarchy.g.to_json()
+        self.add_node_attributes()
+
+        return json_graph.node_link_data(self.hierarchy)
 
     def create_hierarchy_graph(self, module):
-        g = self.state.entire_g
-        hierarchy = nx.Graph()
+        g = self.entire_graph
+        print(g.nodes())
         source_target_data = []
         
-        nodes = [x for x,y in g.nodes(data=True) if 'module' in y and y['module'] == module]
+        nodes = [x for x, y in g.nodes(data=True) if 'module' in y and y['module'] == module]
 
         for idx, node in enumerate(nodes):
             neighbors = sorted(g[node].items(), key=lambda edge: edge[1]['weight'])
@@ -69,8 +105,7 @@ class moduleHierarchy:
                         "level": level,
                         "type": type_node
                     })
-
-            
+ 
         isExit = {}
         for idx, data in enumerate(source_target_data):
             if data['level'] == -1:
@@ -81,20 +116,14 @@ class moduleHierarchy:
 
     # instead of nid, get by module. nid seems very vulnerable rn. 
     def run(self):
-        node = self.df.loc[self.df['nid'] == self.nid]
+        node = self.df.loc[self.df['module'] == self.module]
         modules = node['module'].values.tolist()
 
-        if len(mod_index) != 1:
-            utils.debug("Something wrong!, A node cannot belong to two modules.")
-            print(mod_index)
-        else:
-            module = modules[0]
-            is_exit = self.create_hierarchy_graph(module)
- 
-        paths = []
-        func_in_module = self.df.loc[self.df['mod_index'] == mod_index]['name'].unique().tolist()
-        print("Number of functions inside the {0} module: {1}".format(module, len(func_in_module)))
-        print(func_in_module)
+        module = modules[0]
+        hierarchy_graph = self.create_hierarchy_df(module)
+
+        print(hierarchy_graph)
+
         # for idx, func in enumerate(func_in_module):
         #     func_df = self.df.loc[self.df['name'] == func]
         #     if func not in is_exit:
