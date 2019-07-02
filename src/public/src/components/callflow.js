@@ -8,6 +8,7 @@ import Vue from 'vue'
 
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/antd.css'
+import Color from './color';
 
 export default {
 	name: 'entry',
@@ -51,7 +52,8 @@ export default {
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
 		enableDiff: false,
-		firstRender: false
+		firstRender: false,
+		colorOption: 1,
 	}),
 
 	watch: {
@@ -152,16 +154,20 @@ export default {
 				console.log("Clearing the Sankey view")
 				this.clearLocal()
 			}
+			this.color = new Color(this.colorOption)
+			this.color.setColorScale(this.minIncTime, this.maxIncTime, this.minExcTime, this.maxExcTime)
+
 			if (this.selectedFormat == 'Callgraph') {
 				if (this.isCallgraphInitialized == true) {
 					this.$refs.Callgraph.update(data)
 				}
 				else {
 					this.isCallgraphInitialized = true
-					this.$refs.Callgraph.colorOption = this.selectedColorBy
+					this.$refs.Callgraph.color = this.color
+					this.$refs.Icicle.color = this.color
 					this.$refs.Callgraph.init(data)
-					this.$refs.Histogram.init(data)
-					this.$refs.Icicle.init(data)
+					this.$refs.Histogram.init()
+					this.$refs.Icicle.init()
 				}
 			}
 			else if (this.selectedFormat == 'CCT') {
@@ -184,6 +190,13 @@ export default {
 				filterBy: this.selectedFilterBy,
 				filterPerc: this.selectedFilterPerc
 			})
+		},
+
+		updateColor(option) {
+			this.colorOption = option
+			this.pass_props.color = new Color(this.colorOption)
+			this.pass_props.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
+			this.render()
 		},
 
 		updateFormat() {
@@ -238,7 +251,6 @@ export default {
 
 		updateFilterIncTime(){
 			this.selectedFilterPerc = (this.selectedIncTime/this.maxIncTime)*100
-			console.log(this.selectedFilterPerc)
 			this.$socket.emit('filter', {
 				dataset: this.selectedDataset,
 				format: this.selectedFormat,
