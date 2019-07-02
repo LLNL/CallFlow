@@ -13,7 +13,7 @@ export default {
         nodeHeights: {},
         nodeWidth: 50,
         transitionDuration: 1000,
-        minHeightForText: 10,
+        minHeightForText: 15,
         textTruncForNode: 25,
         view: {},
         debug: true,
@@ -103,7 +103,7 @@ export default {
                 })
                 // TODO: Get the dataset from app.py. or make a store for vue-x
                 .on('click', (d) => {
-                    console.log(d)
+                    console.log("Clicked on node: ", d)
                     this.$socket.emit('hierarchy', {
                         mod_index: d.mod_index[0],
                         module: d.module[0],

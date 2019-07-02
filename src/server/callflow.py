@@ -247,13 +247,6 @@ class CallFlow:
             ret[module] = ret_df[module].to_json(orient="columns")
         return json.dumps(ret)
 
-    def hierarchy(self, state, module):
-        ret = {}
-        df = state.df
-        hierarchy_nx = nx.m
-
-        func_in_module = df[df.mod_index == mod_index]['name'].unique().tolist()
-
     def update(self, action):
         utils.debug('Update', action)
 
@@ -316,12 +309,11 @@ class CallFlow:
             nx = CallGraph(state1, 'path', True)
         
         elif action_name == 'hierarchy':
-            # nx = CallGraph(state1, 'path', False, 'name')
-            # state1.entire_g = nx.g
             mH = moduleHierarchy(self.states[dataset1], action["module"])
-            hierarchy = mH.hierarchy
-            return json_graph.node_link_data(hierarchy)
-
+            # hierarchy = mH.hierarchy
+            # return json_graph.node_link_data(hierarchy)
+            return mH.result 
+            
         elif action_name == 'histogram':
             ret = self.histogram(state1, action["mod_index"])
             return ret

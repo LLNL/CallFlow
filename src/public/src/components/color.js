@@ -49,7 +49,12 @@ export default class Color {
 	    if (colorOption == 0) {
 	        return this.colorScale(node.name[0].replace(/ .*/, ''));
 	    } else if (colorOption == 1) {
-	        return this.incColorScale(node.weight);
+            if (node.weight == undefined){
+                return this.incColorScale(node.value)
+            }
+            else{
+                return this.incColorScale(node.weight)
+            }
 	    } else if (colorOption == 2) {
 	        return this.excColorScale(node.exclusive);
 	    } else if (colorOption == 3) {

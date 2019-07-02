@@ -32,7 +32,8 @@ export default {
 
 	sockets: {
 		hierarchy(data) {
-			this.update(data)
+			data = JSON.parse(data)
+			this.update_from_df(data)
 		}
 	},
 
@@ -41,11 +42,9 @@ export default {
 			this.width = document.getElementById(this.id).clientWidth
 			this.height = window.innerHeight / 2 - 50
 
-			this.boxWidth = this.width - this.margin.right - this.margin.left;
-			this.boxHeight = this.height - this.margin.top - this.margin.bottom - 20;
-			this.icicleOffset = Math.floor(this.boxHeight / 3);
-			this.icicleHeight = this.boxHeight - this.histogramOffset;
-			this.icicleWidth = this.boxWidth;
+			this.icicleWidth = this.width - this.margin.right - this.margin.left
+			this.icicleHeight = this.height - this.margin.top - this.margin.bottom - 20
+			this.icicleOffset = Math.floor(this.boxHeight / 3)
 
 			this.icicleSVGid = 'component_graph_view'
 			this.setupSVG()
@@ -56,11 +55,12 @@ export default {
 				.append('svg')
 				.attrs({
 					'id': this.icicleSVGid + '_container',
-					'width': this.boxWidth + this.margin.right + this.margin.left,
-					'height': this.boxHeight + this.margin.top + this.margin.bottom,
+					'width': this.icicleWidth + this.margin.right + this.margin.left,
+					'height': this.icicleHeight + this.margin.top + this.margin.bottom,
 				})
 		},
 
+		// TODO: remove the [] from id field.
 		update(data) {
 			let path_hierarchy_format = []
 			let nodes = data.nodes
@@ -70,16 +70,18 @@ export default {
 				path_hierarchy_format[i].push(nodes[i]['time (inc)']);
 				path_hierarchy_format[i].push(nodes[i]['time']);
 				path_hierarchy_format[i].push(nodes[i]['imbalance_perc']);
+				path_hierarchy_format[i].push([nodes[i]['id']])
 			}
 			const json = this.buildHierarchy(path_hierarchy_format);
 			this.drawIcicles(json);
 		},
 
-		update_from_df(data) {
-			const path = hierarchy['component_path']
+		update_from_df(hierarchy) {
+			const path = hierarchy['path']
 			const inc_time = hierarchy['time (inc)']
 			const exclusive = hierarchy['time']
 			const imbalance_perc = hierarchy['imbalance_perc']
+			const name = hierarchy['name']
 			// const exit = hierarchy.exit;
 			// const component_path = hierarchy.component_path;
 			const path_hierarchy_format = [];
@@ -90,6 +92,7 @@ export default {
 					path_hierarchy_format[i].push(inc_time[i]);
 					path_hierarchy_format[i].push(exclusive[i]);
 					path_hierarchy_format[i].push(imbalance_perc[i]);
+					path_hierarchy_format[i].push(name[i])
 					// path_hierarchy_format[i].push(exit[i]);
 					// path_hierarchy_format[i].push(component_path[i]);
 				}
@@ -103,8 +106,9 @@ export default {
 		},
 
 		buildHierarchy(csv) {
+			console.log(csv)
 			const root = {
-				name: 'root',
+				name: ['root'],
 				children: []
 			};
 			for (let i = 0; i < csv.length; i++) {
@@ -112,6 +116,7 @@ export default {
 				const inc_time = csv[i][1];
 				const exclusive = csv[i][2];
 				const imbalance_perc = csv[i][3];
+				const name = csv[i][4]
 				// const exit = csv[i][4];
 				// const component_path = csv[i][5];
 				const parts = sequence;
@@ -166,17 +171,32 @@ export default {
 		textSize(text) {
 			if (!d3) return;
 			const container = d3.select('body').append('svg');
-			container.append('text').attr({ x: -99999, y: -99999 }).text(text);
+			container.append('text').attr({
+				x: -99999,
+				y: -99999
+			}).text(text);
 			const size = container.node().getBBox();
 			container.remove();
-			return { width: size.width, height: size.height };
+			return {
+				width: size.width,
+				height: size.height
+			};
 		},
 
 		descendents(root) {
-			var nodes = [];
-			root.children.forEach(function (node) {
-				nodes.push(node);
-			});
+			let nodes = [];
+			let queue = []
+			queue.push(root)
+			while(queue.length != 0){
+				root = queue.pop()
+				if (root.children == undefined){
+					break
+				}
+				root.children.forEach(function (node) {
+					nodes.push(node);
+					queue.push(node)
+				});
+			}			
 			return nodes;
 		},
 
@@ -185,8 +205,7 @@ export default {
 			let attr = this.icicleColorByAttr;
 			if (this.hierarchy != undefined) {
 				this.clearIcicles();
-			}
-			else {
+			} else {
 				this.hierarchy = this.hierarchyContainer.append('g')
 					.attrs({
 						'id': this.icicleSVGid
@@ -194,7 +213,6 @@ export default {
 			}
 			// Total size of all segments; we set this later, after loading the data
 			let totalSize = 0;
-
 			let root = d3.hierarchy(json)
 				.sum((d) => {
 					return d['value']
@@ -225,11 +243,11 @@ export default {
 
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partitionRoot)
-				.filter(d => (d.x1 - d.x0 > 0.5));
+					.filter(d => (d.x1 - d.x0 > 0.5));
 
 			this.addNodes()
 			this.addText()
-			
+
 			// Add the mouseleave handler to the bounding rect.
 			d3.select('#container').on('mouseleave', this.mouseleave);
 
@@ -238,6 +256,7 @@ export default {
 		},
 
 		addNodes() {
+			console.log(this.nodes)
 			this.hierarchy
 				.selectAll('.icicleNode')
 				.data(this.nodes)
@@ -254,6 +273,7 @@ export default {
 					if (this.selectedDirection == 'LR') {
 						return d.x0;
 					}
+					console.log(this.icicleWidth, this.icicleHeight, d.y0)
 					return d.y0;
 				})
 				.attr('width', (d) => {
@@ -316,12 +336,16 @@ export default {
 					}
 					return d.dx1 - d.dx0 / 2;
 				})
+				.style('fill', (d) => {
+					let color = this.color.setContrast(this.color.getColor(d))
+					return color
+				})
 				.text((d) => {
 					if (d.y1 - d.y0 < 10 || d.x1 - d.x0 < 50) {
 						return '';
 					}
 
-					let name = d.data.name[d.data.name.length - 1]
+					let name = d.data.name
 					return this.trunc(name, this.textTruncForNode);
 				});
 		},
