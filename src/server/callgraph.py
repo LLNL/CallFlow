@@ -126,8 +126,16 @@ class CallGraph(nx.Graph):
                     ret[node] = 'back_edge'
                     continue
 
+            if self.group_by == 'module':
+                groupby = '_module'
+            elif self.group_by == 'name':
+                groupby = 'name'
+
             if attr == 'time (inc)':
-                group_df = self.df.groupby(['_' +self.group_by]).max()
+                if self.group_by == 'module':
+                    group_df = self.df.groupby([groupby]).max()
+                elif self.group_by == 'name':
+                    group_df = self.df.groupby([groupby]).mean()
                 ret[node] = group_df.loc[node, 'max_incTime']
             elif attr == 'node_type':
                 ret[node] = 'normal_edge'
@@ -136,7 +144,7 @@ class CallGraph(nx.Graph):
             else:
                 df = self.df.loc[self.df['vis_node_name'] == node][attr]
                 if df.empty:
-                    ret[node] = self.df[self.df['_module'] == node][attr]
+                    ret[node] = self.df[self.df[groupby] == node][attr]
                 else:
                     ret[node] = list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
         return ret
@@ -243,6 +251,7 @@ class CallGraph(nx.Graph):
     def immediate_children(self):
         ret = {}
         parentChildMap = nx.dfs_successors(self.g, self.root)
+        print('aaaaaaaaaaaaaaaaaaaaaaaaa', parentChildMap)
         nodes = self.g.nodes()
         for node in nodes:
             if node in parentChildMap.keys():

@@ -97,6 +97,8 @@ class CallFlow:
         state.node_hash_map = create.node_hash_map    
         state.graph = create.graph       
         
+        print("After Creating.")
+        print(state.df.groupby(['module']).mean())
         return state
 
     def process(self, state):        
@@ -123,6 +125,9 @@ class CallFlow:
         state.node_hash_map = preprocess.node_hash_map
         # state.map = preprocess.map
 
+        print("After preprocessing.")
+        print(state.df.groupby(['module']).mean())
+
         return state
 
     def filter(self, state, filterBy, filterPerc):
@@ -133,6 +138,9 @@ class CallFlow:
         state.graph = filter_obj.graph
         state.node_hash_map = filter_obj.node_hash_map
 
+        print("After filtering.")
+        print(state.df.groupby(['module']).mean())
+
         return state
 
     def write_gf(self, state, state_name, format_of_df, write_graph=True):
@@ -142,7 +150,7 @@ class CallFlow:
         if write_graph:
             # dump the entire_graph as literal
             graph_literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
-            graph_filepath = dirname + '/' + state_name + '/' + format_of_df + '_graph.json'
+            graph_filepath = dirname + '/' +     state_name + '/' + format_of_df + '_graph.json'
             utils.debug('File path: {0}'.format(graph_filepath))
             with open(graph_filepath, 'w') as graphFile:
                 json.dump(graph_literal, graphFile)
@@ -284,7 +292,11 @@ class CallFlow:
             self.states[dataset1].graph = group.graph 
             write_graph = False
             self.write_gf(state1, dataset1, "group", write_graph)
-            nx = CallGraph(state1, 'group_path', True, action["groupBy"])
+            if(action['groupBy'] == 'module'):
+                path_type = 'group_path'
+            elif(action['groupBy'] == 'name'):
+                path_type = 'path'
+            nx = CallGraph(state1, path_type, True, action["groupBy"])
 
         elif action_name == 'diff':
             union_state = structDiff(state1, state2)

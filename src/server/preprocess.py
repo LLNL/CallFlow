@@ -186,7 +186,7 @@ class PreProcess():
             self.df['node_name'] = self.df['name'].apply(lambda name: node_name_map[name])
 
         def update_module_name(self):
-            self.df['module'] = self.df['module'].apply(lambda name: utils.sanitizeName(name))
+            self.df['module'] = self.df['module'].apply(lambda name: name)
             return self
         
         def add_n_index(self):
