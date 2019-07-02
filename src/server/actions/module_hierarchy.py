@@ -2,7 +2,6 @@ import pandas as pd
 import time 
 import networkx as nx
 import utils
-from networkx.readwrite import json_graph
 
 class moduleHierarchy:
     def __init__(self, state, module):
@@ -58,20 +57,19 @@ class moduleHierarchy:
         imbalance_perc_mapping = self.generic_map(self.hierarchy.nodes(), 'imbalance_perc')
         nx.set_node_attributes(self.hierarchy, name='imbalance_perc', values=imbalance_perc_mapping)
 
+        component_path_mapping = self.generic_map(self.hierarchy.nodes(), 'component_path')
+        nx.set_node_attributes(self.hierarchy, name='component_path', values=component_path_mapping)
+
     def create_hierarchy_df(self, module):
         df = self.df
         meta_nodes = df.loc[df['_module'] == module]
         if 'component_path' not in df.columns:
             utils.debug('Error: Component path not defined in the df')
         self.add_paths(meta_nodes, 'component_path')
-
         self.add_node_attributes()
-
-        return json_graph.node_link_data(self.hierarchy)
 
     def create_hierarchy_graph(self, module):
         g = self.entire_graph
-        print(g.nodes())
         source_target_data = []
         
         nodes = [x for x, y in g.nodes(data=True) if 'module' in y and y['module'] == module]
@@ -122,7 +120,7 @@ class moduleHierarchy:
         module = modules[0]
         hierarchy_graph = self.create_hierarchy_df(module)
 
-        print(hierarchy_graph)
+        return hierarchy_graph
 
         # for idx, func in enumerate(func_in_module):
         #     func_df = self.df.loc[self.df['name'] == func]

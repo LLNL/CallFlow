@@ -11,7 +11,7 @@ export default {
 
 	],
 	data: () => ({
-		id: 'icicle_view',
+		id: 'component_graph_view',
 		margin: {
 			top: 10,
 			right: 10,
@@ -34,7 +34,7 @@ export default {
 
 	methods: {
 		init() {
-			this.width = document.getElementById('icicle_view').clientWidth
+			this.width = document.getElementById(this.id).clientWidth
 			this.height = window.innerHeight / 2 - 50
 
 			this.boxWidth = this.width - this.margin.right - this.margin.left;
@@ -43,7 +43,7 @@ export default {
 			this.icicleHeight = this.boxHeight - this.histogramOffset;
 			this.icicleWidth = this.boxWidth;
 
-			this.icicleSVGid = 'icicle_view_svg'
+			this.icicleSVGid = 'component_graph_view_svg'
 			this.setupSVG()
 		},
 
@@ -61,14 +61,30 @@ export default {
 				})
 		},
 
-		start(hierarchy) {
-			const path = hierarchy.path;
-			const inc_time = hierarchy.inc_time;
-			const exclusive = hierarchy.exclusive;
-			const imbalance_perc = hierarchy.imbalance_perc;
-			const exit = hierarchy.exit;
-			const component_path = hierarchy.component_path;
+		start(data) {
+			let path_hierarchy_format = []
+			let nodes = data.nodes
+			for (let i = 0; i < nodes.length; i += 1) {
+				path_hierarchy_format[i] = [];
+				path_hierarchy_format[i].push(nodes[i]['component_path']);
+				path_hierarchy_format[i].push(nodes[i]['time (inc)']);
+				path_hierarchy_format[i].push(nodes[i]['time']);
+				path_hierarchy_format[i].push(nodes[i]['imbalance_perc']);
+			}
+			console.log(path_hierarchy_format)
+			const json = this.buildHierarchy(path_hierarchy_format);
+			console.log(json)
+			this.drawIcicles(json);
+		},
 
+		start_from_df(data) {
+			const path = hierarchy['component_path']
+			const inc_time = hierarchy['time (inc)']
+			const exclusive = hierarchy['time']
+			const imbalance_perc = hierarchy['imbalance_perc']
+			// const exit = hierarchy.exit;
+			// const component_path = hierarchy.component_path;
+			console.log(path)
 			const path_hierarchy_format = [];
 			for (const i in path) {
 				if (path.hasOwnProperty(i)) {
@@ -77,11 +93,13 @@ export default {
 					path_hierarchy_format[i].push(inc_time[i]);
 					path_hierarchy_format[i].push(exclusive[i]);
 					path_hierarchy_format[i].push(imbalance_perc[i]);
-					path_hierarchy_format[i].push(exit[i]);
+					// path_hierarchy_format[i].push(exit[i]);
 					// path_hierarchy_format[i].push(component_path[i]);
 				}
 			}
+			console.log(path_hierarchy_format)
 			const json = this.buildHierarchy(path_hierarchy_format);
+			console.log(json)
 			this.drawIcicles(json);
 		},
 
@@ -95,7 +113,7 @@ export default {
 				const inc_time = csv[i][1];
 				const exclusive = csv[i][2];
 				const imbalance_perc = csv[i][3];
-				const exit = csv[i][4];
+				// const exit = csv[i][4];
 				// const component_path = csv[i][5];
 				const parts = sequence;
 				let currentNode = root;
@@ -129,7 +147,7 @@ export default {
 							weight: inc_time,
 							exclusive,
 							imbalance_perc,
-							exit,
+							// exit,
 							// component_path,
 							children: [],
 						};
@@ -151,40 +169,43 @@ export default {
 			}
 			// Total size of all segments; we set this later, after loading the data
 			let totalSize = 0;
-
-			const width = $('#component_graph_view').width();
-			const height = $('#component_graph_view').height();
-
 			// eslint-disable-next-line no-param-reassign
 			view.hierarchy = d3.select('#component_graph_view').append('svg')
-				.attr('width', width)
-				.attr('height', height)
+				.attr('width', this.width)
+				.attr('height', this.height)
 				.attr('id', 'iciclehierarchySVG')
 				.append('g')
 				.attr('id', 'container');
 
+			let root = d3.hierarchy(json, getChild)
+				.sum((d) => {
+					return 1
+				})
+				.sort(null)
+
 			const partition = d3.partition()
-				.size([width, height])
-				.value(d => d.weight);
+				.size([this.width, this.height])
+			// .value(d => d.weight);
 
 			// Basic setup of page elements.
 			// initializeBreadcrumbTrail();
 			//  drawLegend();
-			d3.select('#togglelegend').on('click', toggleLegend);
+			d3.select('#togglelegend').on('click', this.toggleLegend);
 
 			// Bounding rect underneath the chart, to make it easier to detect
 			// when the mouse leaves the parent g.
 			view.hierarchy.append('svg:rect')
 				.attr('width', () => {
-					if (direction == 'LR') return height;
-					return width;
+					if (direction == 'LR') return this.boxHeight;
+					return this.width;
 				})
 				.attr('height', () => {
-					if (direction == 'LR') return width - 50;
-					return height - 50;
+					if (direction == 'LR') return this.width - 50;
+					return this.height - 50;
 				})
-				.style('opacity', 0);
+				.style('opacity', 0)
 
+			partition(root)
 
 			// For efficiency, filter nodes to keep only those large enough to see.
 			const nodes = partition.nodes(json)
