@@ -1,14 +1,11 @@
-/* eslint-disable prefer-destructuring */
-/* eslint-disable camelcase */
-/* eslint-disable no-param-reassign */
-/* eslint-disable no-undef */
-/* eslint-disable consistent-return */
+import * as d3 from 'd3'
+import * as chroma from 'chroma-js';
+
 export default class Color {
-    constructor(view, scale) {
-  	    this.view = view;
-        // eslint-disable-next-line no-undef
-        this.colorScale = scale || d3.scale.category20();
-        this.incColorScale = null;
+    constructor(option, scale) {
+        this.option = option
+        this.colorScale = scale || d3.scaleOrdinal(d3.schemeCategory10)
+        this.incColorScale = null
         this.excColorScale = null;
         this.nRangeColorScale = null;
         this.diffColorScale = null;
@@ -48,7 +45,7 @@ export default class Color {
     }
 
     getColor(node) {
-	    const colorOption = this.view.colorOption;
+	    const colorOption = this.option;
 	    if (colorOption == 0) {
 	        return this.colorScale(node.name[0].replace(/ .*/, ''));
 	    } else if (colorOption == 1) {

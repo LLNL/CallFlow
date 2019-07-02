@@ -97,8 +97,9 @@ export default {
 			this.postProcess(this.data.nodes, this.data.links)	
 			console.log("Post-processing done.") 
 			// Set color scales
-			this.pass_props.color = new Color(this.colorOption)
-			this.pass_props.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
+			this.pass_props.color = this.color
+			console.log(this.color)
+			// this.pass_props.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
 
 			this.render()
 		},

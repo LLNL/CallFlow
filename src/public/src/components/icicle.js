@@ -13,12 +13,17 @@ export default {
 	data: () => ({
 		id: 'component_graph_view',
 		margin: {
-			top: 10,
-			right: 10,
-			bottom: 30,
-			left: 40,
+			top: 5,
+			right: 5,
+			bottom: 5,
+			left: 5,
 		},
 		level: [0, 4],
+		colorByAttr: 'Inclusive',
+		direction: ['LR', 'TD'],
+		selectedDirection: 'TD',
+		textTruncForNode: 10,
+		color: null,
 	}),
 
 	watch: {
@@ -27,8 +32,7 @@ export default {
 
 	sockets: {
 		hierarchy(data) {
-			console.log(data)
-			this.start(data)
+			this.update(data)
 		}
 	},
 
@@ -43,25 +47,21 @@ export default {
 			this.icicleHeight = this.boxHeight - this.histogramOffset;
 			this.icicleWidth = this.boxWidth;
 
-			this.icicleSVGid = 'component_graph_view_svg'
+			this.icicleSVGid = 'component_graph_view'
 			this.setupSVG()
 		},
 
 		setupSVG() {
-			this.icicleSVG = d3.select('#' + this.id)
+			this.hierarchyContainer = d3.select('#' + this.id)
 				.append('svg')
 				.attrs({
-					"id": this.icicleSVGid,
-					"width": this.boxWidth + this.margin.right + this.margin.left,
-					"height": this.boxHeight + this.margin.top + this.margin.bottom,
-				})
-				.append('g')
-				.attrs({
-					'transform': `translate(${this.margin.left},${this.margin.top})`
+					'id': this.icicleSVGid + '_container',
+					'width': this.boxWidth + this.margin.right + this.margin.left,
+					'height': this.boxHeight + this.margin.top + this.margin.bottom,
 				})
 		},
 
-		start(data) {
+		update(data) {
 			let path_hierarchy_format = []
 			let nodes = data.nodes
 			for (let i = 0; i < nodes.length; i += 1) {
@@ -71,20 +71,17 @@ export default {
 				path_hierarchy_format[i].push(nodes[i]['time']);
 				path_hierarchy_format[i].push(nodes[i]['imbalance_perc']);
 			}
-			console.log(path_hierarchy_format)
 			const json = this.buildHierarchy(path_hierarchy_format);
-			console.log(json)
 			this.drawIcicles(json);
 		},
 
-		start_from_df(data) {
+		update_from_df(data) {
 			const path = hierarchy['component_path']
 			const inc_time = hierarchy['time (inc)']
 			const exclusive = hierarchy['time']
 			const imbalance_perc = hierarchy['imbalance_perc']
 			// const exit = hierarchy.exit;
 			// const component_path = hierarchy.component_path;
-			console.log(path)
 			const path_hierarchy_format = [];
 			for (const i in path) {
 				if (path.hasOwnProperty(i)) {
@@ -97,10 +94,12 @@ export default {
 					// path_hierarchy_format[i].push(component_path[i]);
 				}
 			}
-			console.log(path_hierarchy_format)
 			const json = this.buildHierarchy(path_hierarchy_format);
-			console.log(json)
 			this.drawIcicles(json);
+		},
+
+		trunc(str, n) {
+			return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
 		},
 
 		buildHierarchy(csv) {
@@ -144,7 +143,7 @@ export default {
 						// Reached the end of the sequence; create a leaf node.
 						childNode = {
 							name: nodeName,
-							weight: inc_time,
+							value: inc_time,
 							exclusive,
 							imbalance_perc,
 							// exit,
@@ -157,91 +156,120 @@ export default {
 			}
 			return root;
 		},
-		clearIcicles(view) {
-			$('#iciclehierarchySVG').remove();
+
+		clearIcicles() {
+			d3.selectAll('.icicleNode').remove();
+			d3.selectAll('.icicleText').remove();
+
 		},
 
-		drawIcicles(view, json) {
-			let direction = view.icicleDirection;
-			let attr = view.icicleColorByAttr;
-			if (view.hierarchy != undefined) {
-				clearIcicles(view);
+		textSize(text) {
+			if (!d3) return;
+			const container = d3.select('body').append('svg');
+			container.append('text').attr({ x: -99999, y: -99999 }).text(text);
+			const size = container.node().getBBox();
+			container.remove();
+			return { width: size.width, height: size.height };
+		},
+
+		descendents(root) {
+			var nodes = [];
+			root.children.forEach(function (node) {
+				nodes.push(node);
+			});
+			return nodes;
+		},
+
+		drawIcicles(json) {
+			let direction = this.icicleDirection;
+			let attr = this.icicleColorByAttr;
+			if (this.hierarchy != undefined) {
+				this.clearIcicles();
+			}
+			else {
+				this.hierarchy = this.hierarchyContainer.append('g')
+					.attrs({
+						'id': this.icicleSVGid
+					})
 			}
 			// Total size of all segments; we set this later, after loading the data
 			let totalSize = 0;
-			// eslint-disable-next-line no-param-reassign
-			view.hierarchy = d3.select('#component_graph_view').append('svg')
-				.attr('width', this.width)
-				.attr('height', this.height)
-				.attr('id', 'iciclehierarchySVG')
-				.append('g')
-				.attr('id', 'container');
 
-			let root = d3.hierarchy(json, getChild)
+			let root = d3.hierarchy(json)
 				.sum((d) => {
-					return 1
+					return d['value']
 				})
-				.sort(null)
 
 			const partition = d3.partition()
 				.size([this.width, this.height])
-			// .value(d => d.weight);
 
 			// Basic setup of page elements.
 			// initializeBreadcrumbTrail();
 			//  drawLegend();
 			d3.select('#togglelegend').on('click', this.toggleLegend);
 
-			// Bounding rect underneath the chart, to make it easier to detect
-			// when the mouse leaves the parent g.
-			view.hierarchy.append('svg:rect')
-				.attr('width', () => {
-					if (direction == 'LR') return this.boxHeight;
-					return this.width;
-				})
-				.attr('height', () => {
-					if (direction == 'LR') return this.width - 50;
-					return this.height - 50;
-				})
-				.style('opacity', 0)
+			// // Bounding rect underneath the chart, to make it easier to detect
+			// // when the mouse leaves the parent g.
+			// this.hierarchy.append('svg:rect')
+			// 	.attr('width', () => {
+			// 		if (this.selectedDirection == 'LR') return this.boxHeight;
+			// 		return this.width;
+			// 	})
+			// 	.attr('height', () => {
+			// 		if (this.selectedDirection == 'LR') return this.width - 50;
+			// 		return this.height - 50;
+			// 	})
+			// 	.style('opacity', 0)
 
-			partition(root)
+			let partitionRoot = partition(root)
 
 			// For efficiency, filter nodes to keep only those large enough to see.
-			const nodes = partition.nodes(json)
-				.filter(d => (d.dx > 0.5));
+			this.nodes = this.descendents(partitionRoot)
+				.filter(d => (d.x1 - d.x0 > 0.5));
 
-			const node = view.hierarchy.data([json]).selectAll('.icicleNode')
-				.data(nodes)
+			this.addNodes()
+			this.addText()
+			
+			// Add the mouseleave handler to the bounding rect.
+			d3.select('#container').on('mouseleave', this.mouseleave);
+
+			// Get total size of the tree = value of root node from partition.
+			totalSize = root.value;
+		},
+
+		addNodes() {
+			this.hierarchy
+				.selectAll('.icicleNode')
+				.data(this.nodes)
 				.enter()
 				.append('rect')
 				.attr('class', 'icicleNode')
 				.attr('x', (d) => {
-					if (direction == 'LR') {
-						return d.y;
+					if (this.selectedDirection == 'LR') {
+						return d.y0;
 					}
-					return d.x;
+					return d.x0;
 				})
 				.attr('y', (d) => {
-					if (direction == 'LR') {
-						return d.x;
+					if (this.selectedDirection == 'LR') {
+						return d.x0;
 					}
-					return d.y;
+					return d.y0;
 				})
 				.attr('width', (d) => {
-					if (direction == 'LR') {
-						return d.dy;
+					if (this.selectedDirection == 'LR') {
+						return d.y1 - d.y0;
 					}
-					return d.dx;
+					return d.x1 - d.x0;
 				})
 				.attr('height', (d) => {
-					if (direction == 'LR') {
-						return d.dx;
+					if (this.selectedDirection == 'LR') {
+						return d.x1 - d.x0;
 					}
-					return d.dy;
+					return d.y1 - d.y0;
 				})
 				.style('fill', (d) => {
-					const color = view.color.getColor(d);
+					const color = this.color.getColor(d);
 					if (color._rgb[0] == 204) {
 						return '#7A000E';
 					}
@@ -255,93 +283,88 @@ export default {
 					}
 					return 1;
 				})
-				.on('mouseover', mouseover);
+				.on('mouseover', this.mouseover);
+		},
 
-			const text = view.hierarchy.data([json]).selectAll('.icicleText')
-				.data(nodes)
+		addText() {
+			this.hierarchy.selectAll('.icicleText')
+				.data(this.nodes)
 				.enter()
 				.append('text')
 				.attr('class', 'icicleText')
 				.attr('transform', (d) => {
-					if (direction == 'LR') {
+					if (this.selectedDirection == 'LR') {
 						return 'rotate(90)';
 					}
 					return 'rotate(0)';
 				})
 				.attr('x', (d) => {
-					if (direction == 'LR') {
-						return d.y * len(d.component_path);
+					if (this.selectedDirection == 'LR') {
+						return d.y0 * len(d.component_path);
 					}
-					return d.x + 15;
+					return d.x0 + 15;
 				})
 				.attr('y', (d) => {
-					if (direction == 'LR') {
-						return d.x;
+					if (this.selectedDirection == 'LR') {
+						return d.x0;
 					}
-					return d.y + 15;
+					return d.y0 + 15;
 				})
 				.attr('width', (d) => {
-					if (direction == 'LR') {
-						return d.dy / 2;
+					if (this.selectedDirection == 'LR') {
+						return d.y1 - d.y0 / 2;
 					}
-					return d.dx / 2;
+					return d.dx1 - d.dx0 / 2;
 				})
 				.text((d) => {
-					const textTruncForNode = 10;
-					if (d.dy < 10 || d.dx < 50) {
+					if (d.y1 - d.y0 < 10 || d.x1 - d.x0 < 50) {
 						return '';
 					}
-					return d.name.trunc(textTruncForNode);
+
+					let name = d.data.name[d.data.name.length - 1]
+					return this.trunc(name, this.textTruncForNode);
 				});
+		},
 
+		// Restore everything to full opacity when moving off the visualization.
+		mouseleave() {
+			// Hide the breadcrumb trail
+			d3.select('#trail')
+				.style('visibility', 'hidden');
 
-			// Add the mouseleave handler to the bounding rect.
-			d3.select('#container').on('mouseleave', mouseleave);
+			// Deactivate all segments during transition.
+			d3.selectAll('.icicleNode').on('mouseover', null);
 
-			// Get total size of the tree = value of root node from partition.
-			// eslint-disable-next-line no-underscore-dangle
-			totalSize = node.node().__data__.value;
+			// Transition each segment to full opacity and then reactivate it.
+			d3.selectAll('.icicleNode')
+				.transition()
+				.duration(1000)
+				.style('opacity', 1)
+				.each('end', function () {
+					d3.select(this).on('mouseover', mouseover);
+				});
+		},
 
-			// Fade all but the current sequence, and show it in the breadcrumb trail.
-			function mouseover(d) {
-				const percentage = (100 * d.value / totalSize).toPrecision(3);
-				let percentageString = `${percentage}%`;
-				if (percentage < 0.1) {
-					percentageString = '< 0.1%';
-				}
-
-				const sequenceArray = getAncestors(d);
-				// updateBreadcrumbs(sequenceArray, percentageString);
-
-				// Fade all the segments.
-				d3.selectAll('.icicleNode')
-					.style('opacity', 0.3);
-
-				// Then highlight only those that are an ancestor of the current segment.
-				view.hierarchy.selectAll('.icicleNode')
-					// eslint-disable-next-line no-shadow
-					.filter(node => (sequenceArray.indexOf(node) >= 0))
-					.style('opacity', 1);
+		// Fade all but the current sequence, and show it in the breadcrumb trail.
+		mouseover(d) {
+			const percentage = (100 * d.value / totalSize).toPrecision(3);
+			let percentageString = `${percentage}%`;
+			if (percentage < 0.1) {
+				percentageString = '< 0.1%';
 			}
 
-			// Restore everything to full opacity when moving off the visualization.
-			function mouseleave() {
-				// Hide the breadcrumb trail
-				d3.select('#trail')
-					.style('visibility', 'hidden');
+			const sequenceArray = getAncestors(d);
+			// updateBreadcrumbs(sequenceArray, percentageString);
 
-				// Deactivate all segments during transition.
-				d3.selectAll('.icicleNode').on('mouseover', null);
+			// Fade all the segments.
+			d3.selectAll('.icicleNode')
+				.style('opacity', 0.3);
 
-				// Transition each segment to full opacity and then reactivate it.
-				d3.selectAll('.icicleNode')
-					.transition()
-					.duration(1000)
-					.style('opacity', 1)
-					.each('end', function () {
-						d3.select(this).on('mouseover', mouseover);
-					});
-			}
+			// Then highlight only those that are an ancestor of the current segment.
+			view.hierarchy.selectAll('.icicleNode')
+				// eslint-disable-next-line no-shadow
+				.filter(node => (sequenceArray.indexOf(node) >= 0))
+				.style('opacity', 1);
 		},
 
 		// Given a node in a partition layout, return an array of all of its ancestor
