@@ -22,7 +22,7 @@ export default {
 		colorByAttr: 'Inclusive',
 		direction: ['LR', 'TD'],
 		selectedDirection: 'TD',
-		textTruncForNode: 10,
+		textTruncForNode: 15,
 		color: null,
 	}),
 
@@ -106,7 +106,6 @@ export default {
 		},
 
 		buildHierarchy(csv) {
-			console.log(csv)
 			const root = {
 				name: ['root'],
 				children: []
@@ -169,38 +168,41 @@ export default {
 		},
 
 		textSize(text) {
-			if (!d3) return;
-			const container = d3.select('body').append('svg');
-			container.append('text').attr({
-				x: -99999,
-				y: -99999
-			}).text(text);
-			const size = container.node().getBBox();
-			container.remove();
-			return {
-				width: size.width,
-				height: size.height
-			};
+			const container = d3.select('#' + this.icicleSVGid).append('svg');
+            container.append('text')
+                .attrs({
+                    x: -99999,
+                    y: -99999
+                })
+                .text((d) => text);
+            const size = container.node().getBBox();
+            container.remove();
+            return {
+                width: size.width,
+                height: size.height
+            };
 		},
 
 		descendents(root) {
 			let nodes = [];
 			let queue = []
 			queue.push(root)
-			while(queue.length != 0){
+			nodes.push(root)
+			while (queue.length != 0) {
 				root = queue.pop()
-				if (root.children == undefined){
+				if (root.children == undefined) {
 					break
 				}
 				root.children.forEach(function (node) {
 					nodes.push(node);
 					queue.push(node)
 				});
-			}			
+			}
 			return nodes;
 		},
 
 		drawIcicles(json) {
+			json = json.children[0]
 			let direction = this.icicleDirection;
 			let attr = this.icicleColorByAttr;
 			if (this.hierarchy != undefined) {
@@ -226,24 +228,24 @@ export default {
 			//  drawLegend();
 			d3.select('#togglelegend').on('click', this.toggleLegend);
 
-			// // Bounding rect underneath the chart, to make it easier to detect
-			// // when the mouse leaves the parent g.
-			// this.hierarchy.append('svg:rect')
-			// 	.attr('width', () => {
-			// 		if (this.selectedDirection == 'LR') return this.boxHeight;
-			// 		return this.width;
-			// 	})
-			// 	.attr('height', () => {
-			// 		if (this.selectedDirection == 'LR') return this.width - 50;
-			// 		return this.height - 50;
-			// 	})
-			// 	.style('opacity', 0)
+			// Bounding rect underneath the chart, to make it easier to detect
+			// when the mouse leaves the parent g.
+			this.hierarchy.append('svg:rect')
+				.attr('width', () => {
+					if (this.selectedDirection == 'LR') return this.boxHeight;
+					return this.width;
+				})
+				.attr('height', () => {
+					if (this.selectedDirection == 'LR') return this.width - 50;
+					return this.height - 50;
+				})
+				.style('opacity', 0)
 
 			let partitionRoot = partition(root)
 
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partitionRoot)
-					.filter(d => (d.x1 - d.x0 > 0.5));
+				.filter(d => (d.x1 - d.x0 > 0.5));
 
 			this.addNodes()
 			this.addText()
@@ -273,7 +275,6 @@ export default {
 					if (this.selectedDirection == 'LR') {
 						return d.x0;
 					}
-					console.log(this.icicleWidth, this.icicleHeight, d.y0)
 					return d.y0;
 				})
 				.attr('width', (d) => {
@@ -346,7 +347,12 @@ export default {
 					}
 
 					let name = d.data.name
-					return this.trunc(name, this.textTruncForNode);
+					var textSize = this.textSize(name)['width'];
+                    if (textSize < d.height) {
+                        return name;
+                    } else {
+                        return this.trunc(name, this.textTruncForNode)
+                    }
 				});
 		},
 

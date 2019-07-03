@@ -1,12 +1,13 @@
 import tpl from '../../html/callgraph/nodes.html'
-import * as  d3 from 'd3'
-import { dsvFormat } from 'd3-dsv';
+import * as d3 from 'd3'
+import {
+    dsvFormat
+} from 'd3-dsv';
 
 export default {
     template: tpl,
     name: 'Nodes',
-    components: {
-    },
+    components: {},
     props: [],
     data: () => ({
         currentNodeLevel: {},
@@ -18,11 +19,9 @@ export default {
         view: {},
         debug: true,
     }),
-    mounted() {
-    },
+    mounted() {},
 
-    sockets: {
-    },
+    sockets: {},
 
     methods: {
         init(graph, view) {
@@ -175,12 +174,19 @@ export default {
         },
 
         textSize(text) {
-            if (!d3) return;
-            const container = d3.select('body').append('svg');
-            container.append('text').attr({ x: -99999, y: -99999 }).text(text);
+            const container = d3.select('#callgraph_overview').append('svg');
+            container.append('text')
+                .attrs({
+                    x: -99999,
+                    y: -99999
+                })
+                .text((d) => text);
             const size = container.node().getBBox();
             container.remove();
-            return { width: size.width, height: size.height };
+            return {
+                width: size.width,
+                height: size.height
+            };
         },
 
         trunc(str, n) {
@@ -195,20 +201,15 @@ export default {
                 .attr('y', '-10')
                 .style('opacity', 1)
                 .text((d) => {
-                    // if (d.name != 'intermediate' && d.name[0][d.name[0].length - 1] != '_') {
-                    //     if (d.height < this.minHeightForText) {
-                    //         return '';
-                    //     }
-                    //     // var textSize = this.textSize(d.name)['width'];
-                    //     // if (textSize < d.height) {
-                    //     //     return d.name[0];
-                    //     // }
-                    //     // else {
-                    return this.trunc(d.name, this.textTruncForNode)
-                    // }
-
-                    // }
-                    // return '';
+                    if (d.height < this.minHeightForText) {
+                        return '';
+                    }
+                    var textSize = this.textSize(d.name)['width'];
+                    if (textSize < d.height) {
+                        return d.name[0];
+                    } else {
+                        return this.trunc(d.name, this.textTruncForNode)
+                    }
                 })
                 .on('mouseover', function (d) {
                     // if (d.name[0] != 'intermediate') {
@@ -242,15 +243,13 @@ export default {
                 .text((d) => {
                     if (d.name.length == 1) {
                         name = d.name[0]
-                    }
-                    else {
+                    } else {
                         name = d.name
                     }
                     let name_splits = name.split('/').reverse()
                     if (name_splits.length == 1) {
                         d.name = name
-                    }
-                    else {
+                    } else {
                         d.name = name_splits[0]
                     }
 
@@ -258,13 +257,12 @@ export default {
                         if (d.height < this.minHeightForText) {
                             return '';
                         }
-                        // var textSize = this.textSize(d.name)['width'];
-                        // if (textSize < d.height) {
-                        //     return d.name;
-                        // }
+                        var textSize = this.textSize(d.name)['width'];
+                        if (textSize < d.height) {
+                            return d.name;
+                        }
                         return this.trunc(d.name, this.textTruncForNode);
-                    }
-                    else {
+                    } else {
                         return '';
                     }
                 });
