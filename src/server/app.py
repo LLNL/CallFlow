@@ -102,7 +102,6 @@ class App():
                     print('Creating .callflow directory for dataset : {0}'.format(dataset['name']))
                 os.makedirs(dataset_dir)
 
-
             files = ["entire_df.csv", "filter_df.csv", "entire_graph.json", "filter_graph.json"]
             for f in files:
                 if not os.path.exists(dataset_dir + '/' + f):
@@ -250,126 +249,6 @@ class App():
         def root():
             print("App directory", app.__dir__)
             return send_from_directory(app.__dir__, 'index.html')
-        
-        @app.route('/splitLevel')
-        def splitLevel():
-            level = 3
-            self.callflow.update('split-level', {
-                "module": 'lulesh2.0',
-                "level": 3
-            })
-            ret = []
-            for idx, state in self.callflow.states.items():
-                json_result = json_graph.node_link_data(state.g)
-                ret.append(json_result)
-            return json.dumps(ret)    
-
-        @app.route('/getMeans')
-        def getMeans():
-            aggr_times = {}
-            for idx, cfg in enumerate(self.cfgs):
-                df = cfg.df
-                pivot = pd.pivot_table(state.df, values=['CPUTIME (usec) (I)'], index=['module'], columns=['rank'])
-                for idx, row in enumerate(pivot.iterrows()):
-                    if(row[0] not in aggr_times):
-                        aggr_times[row[0]] = []
-                    aggr_times[row[0]].append(row[1].mean())
-            return json.dumps(aggr_times)
-        
-        @app.route('/getCCT')
-        def getCCT():
-            ret = []
-            self.ccts = self.create_ccts(self.gfs, 'default', '')
-            ret = []
-            for idx, cct in enumerate(self.ccts):
-                ret.append(cct.json_graph)
-            return json.dumps(ret)
-
-        @app.route('/getDotCCT')
-        def getDotCCT():
-            ret = []
-            self.create_ccts()
-            for idx, gf in enumerate(self.gfs):
-                self.ccts[idx].update('default-dot', '')
-                ret.append(self.ccts[idx].cfg)
-            return json.dumps(ret)
-    
-        @app.route('/splitCaller')
-        def splitCaller():
-            ret = []
-            idList = json.loads(request.args.get('in_data'))
-            self.callflow.update('split-caller', idList)
-            return json.dumps(ret)
-
-        @app.route('/getGraphEmbedding')
-        def getGraphEmbedding():
-            if len(self.ccts) == 0 :
-                self.create_ccts()
-            for idx, cct in enumerate(self.ccts):
-                cct.update('graphml-format', str(self.config.paths[idx]).split('/')[-1])
-            
-        @app.route('/getHistogramData')
-        def getHistogramData():
-            data_json = json.loads(request.args.get('in_data'))
-            n_index = data_json['n_index']
-            mod_index = data_json['mod_index']
-            
-            sct = []
-            for idx, cfg in enumerate(self.cfgs):
-                df = cfg.state.df
-                func_in_module = df[df.mod_index == mod_index]['name'].unique().tolist()
-                for idx2, func in enumerate(func_in_module):
-                    sct.append({
-                        "dataset": cfg.dataset,
-                        "name": func,
-                        "inc" : df.loc[df['name'] == func]['CPUTIME (usec) (I)'].mean(),
-                        "exc" : df.loc[df['name'] == func]['CPUTIME (usec) (E)'].mean(),
-                        "dataset_index": idx
-                    })
-            sct_df = pd.DataFrame(sct)
-            return sct_df.to_json(orient="columns")
-
-        @app.route('/getFunctionLists')
-        def getFunctionLists():
-            data_json = json.loads(request.args.get('in_data'))
-            n_index = data_json['n_index']
-            mod_index = data_json['mod_index']            
-            df = self.callflow.state.df
-            entry_funcs = df[df.n_index == n_index]['callers'].values.tolist()[0]
-            other_funcs = list(set(df[df.mod_index == mod_index]['name']))
-
-            entry_funcs_json = []
-            for func in entry_funcs:
-                x_df = df[df.name == func]
-                entry_funcs_json.append({
-                    "name": func,
-                    "value_inc": x_df['CPUTIME (usec) (I)'].values.tolist(),
-                    "value_exc": x_df['CPUTIME (usec) (E)'].values.tolist(),
-                    "component_path": x_df['component_path'].values.tolist()[0],
-                    "group_path": x_df['group_path'].values.tolist()[0],
-                    "n_index": x_df['n_index'].values.tolist()[0]
-                })
-
-            other_funcs_json = []
-            for func in other_funcs:
-                x_df = df[df.name == func]
-                other_funcs_json.append({
-                    "name": func,
-                    "value_inc": x_df['CPUTIME (usec) (I)'].values.tolist(),
-                    "value_exc": x_df['CPUTIME (usec) (E)'].values.tolist(),                    
-                    "component_path": x_df['component_path'].values.tolist()[0],
-                    "group_path": x_df['group_path'].values.tolist()[0],
-                    "n_index": x_df['n_index'].values.tolist()[0]
-                })
-
-                
-            return json.dumps({
-                "entry_funcs": entry_funcs_json,
-                "other_funcs": other_funcs_json
-            })
-
-      
-            
                                   
 if __name__ == '__main__':
     App()

@@ -24,6 +24,10 @@ export default {
 		selectedDirection: 'TD',
 		textTruncForNode: 15,
 		color: null,
+		totalSize: 0,
+		b : {
+			w: 150, h: 30, s: 3, t: 10
+		},
 	}),
 
 	watch: {
@@ -214,7 +218,6 @@ export default {
 					})
 			}
 			// Total size of all segments; we set this later, after loading the data
-			let totalSize = 0;
 			let root = d3.hierarchy(json)
 				.sum((d) => {
 					return d['value']
@@ -223,8 +226,8 @@ export default {
 			const partition = d3.partition()
 				.size([this.width, this.height])
 
-			// Basic setup of page elements.
-			// initializeBreadcrumbTrail();
+			// Setup the view components
+			this.initializeBreadcrumbTrail();
 			//  drawLegend();
 			d3.select('#togglelegend').on('click', this.toggleLegend);
 
@@ -254,7 +257,8 @@ export default {
 			d3.select('#container').on('mouseleave', this.mouseleave);
 
 			// Get total size of the tree = value of root node from partition.
-			totalSize = root.value;
+			this.totalSize = root.value;
+			
 		},
 
 		addNodes() {
@@ -304,6 +308,7 @@ export default {
 					}
 					return 1;
 				})
+				.on('click', this.click)
 				.on('mouseover', this.mouseover);
 		},
 
@@ -356,6 +361,10 @@ export default {
 				});
 		},
 
+		click(){
+			d3
+		},
+
 		// Restore everything to full opacity when moving off the visualization.
 		mouseleave() {
 			// Hide the breadcrumb trail
@@ -377,22 +386,22 @@ export default {
 
 		// Fade all but the current sequence, and show it in the breadcrumb trail.
 		mouseover(d) {
-			const percentage = (100 * d.value / totalSize).toPrecision(3);
+			const percentage = (100 * d.value / this.totalSize).toPrecision(3);
 			let percentageString = `${percentage}%`;
 			if (percentage < 0.1) {
 				percentageString = '< 0.1%';
 			}
 
-			const sequenceArray = getAncestors(d);
-			// updateBreadcrumbs(sequenceArray, percentageString);
+			const sequenceArray = this.getAncestors(d);
+			console.log(sequenceArray)
+			this.updateBreadcrumbs(sequenceArray, percentageString);
 
 			// Fade all the segments.
 			d3.selectAll('.icicleNode')
 				.style('opacity', 0.3);
 
 			// Then highlight only those that are an ancestor of the current segment.
-			view.hierarchy.selectAll('.icicleNode')
-				// eslint-disable-next-line no-shadow
+			this.hierarchy.selectAll('.icicleNode')
 				.filter(node => (sequenceArray.indexOf(node) >= 0))
 				.style('opacity', 1);
 		},
@@ -400,20 +409,21 @@ export default {
 		// Given a node in a partition layout, return an array of all of its ancestor
 		// nodes, highest first, but excluding the root.
 		getAncestors(node) {
-			const path = [];
-			let current = node;
+			const path = []
+			let current = node
 			while (current.parent) {
-				path.unshift(current);
-				current = current.parent;
+				path.unshift(current)
+				current = current.parent
 			}
+			path.unshift(current)
 			return path;
 		},
 
 		initializeBreadcrumbTrail() {
 			// Add the svg area.
-			const width = $('#component_graph_view').width();
+			const width = document.getElementById(this.icicleSVGid).clientWidth;
 			const trail = d3.select('#sequence').append('svg:svg')
-				.attr('width', width)
+				.attr('width', this.icicleWidth)
 				.attr('height', 50)
 				.attr('id', 'trail');
 			// Add the label at the end, for the percentage.
@@ -426,12 +436,12 @@ export default {
 		breadcrumbPoints(i) {
 			const points = [];
 			points.push('0,0');
-			points.push(`${b.w},0`);
-			points.push(`${b.w + b.t},${b.h / 2}`);
-			points.push(`${b.w},${b.h}`);
-			points.push(`0,${b.h}`);
+			points.push(`${this.b.w},0`);
+			points.push(`${this.b.w + this.b.t},${this.b.h / 2}`);
+			points.push(`${this.b.w},${this.b.h}`);
+			points.push(`0,${this.b.h}`);
 			if (i > 0) { // Leftmost breadcrumb; don't include 6th vertex.
-				points.push(`${b.t},${b.h / 2}`);
+				points.push(`${this.b.t},${this.b.h / 2}`);
 			}
 			return points.join(' ');
 		},
@@ -447,26 +457,26 @@ export default {
 			const entering = g.enter().append('svg:g');
 
 			entering.append('svg:polygon')
-				.attr('points', breadcrumbPoints)
+				.attr('points', this.breadcrumbPoints)
 				.style('fill', () => '#f1f1f1');
 
 			entering.append('svg:text')
-				.attr('x', (b.w + b.t) / 2)
-				.attr('y', b.h / 2)
+				.attr('x', (this.b.w + this.b.t) / 2)
+				.attr('y', this.b.h / 2)
 				.attr('dy', '0.35em')
 				.attr('text-anchor', 'middle')
 				.text(d => d.name);
 
 			// Set position for entering and updating nodes.
-			g.attr('transform', (d, i) => `translate(${i * (b.w + b.s)}, 0)`);
+			g.attr('transform', (d, i) => `translate(${i * (this.b.w + this.b.s)}, 0)`);
 
 			// Remove exiting nodes.
 			g.exit().remove();
 
 			// Now move and update the percentage at the end.
 			d3.select('#trail').select('#endlabel')
-				.attr('x', (nodeArray.length + 0.5) * (b.w + b.s))
-				.attr('y', b.h / 2)
+				.attr('x', (nodeArray.length + 0.5) * (this.b.w + this.b.s))
+				.attr('y', this.b.h / 2)
 				.attr('dy', '0.35em')
 				.attr('text-anchor', 'middle')
 				.text(percentageString);

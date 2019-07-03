@@ -14,6 +14,7 @@ from hatchet import *
 import time
 import utils
 from logger import log
+
 from networkx.drawing.nx_agraph import write_dot
 from networkx.readwrite import json_graph
 
@@ -280,6 +281,7 @@ class CallFlow:
             self.reUpdate = False
         
         elif action_name == "group":
+            print(action['groupBy'])
             group = groupBy(state1, action["groupBy"])
             self.states[dataset1].gdf = group.df
             self.states[dataset1].graph = group.graph 
@@ -290,6 +292,11 @@ class CallFlow:
             elif(action['groupBy'] == 'name'):
                 path_type = 'path'
             nx = CallGraph(state1, path_type, True, action["groupBy"])
+
+        elif action_name == 'cct':
+            state = self.read_gf(dataset1)
+            nx = CallGraph(state, 'path', True, action['groupBy'])
+            # write_dot(graph.g, self.config.callflow_dir)
 
         elif action_name == 'diff':
             union_state = structDiff(state1, state2)
@@ -313,7 +320,7 @@ class CallFlow:
             # hierarchy = mH.hierarchy
             # return json_graph.node_link_data(hierarchy)
             return mH.result 
-            
+
         elif action_name == 'histogram':
             ret = self.histogram(state1, action["mod_index"])
             return ret

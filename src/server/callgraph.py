@@ -22,6 +22,7 @@ class CallGraph(nx.Graph):
     def __init__(self, state, path_name, add_info, group_by):
         super(CallGraph, self).__init__()
         self.state = state
+        self.path_name = path_name
         self.graph = self.state.graph
         self.df = self.state.df
         self.root = state.lookup_with_node(self.graph.roots[0])['vis_node_name'][0]
@@ -31,6 +32,8 @@ class CallGraph(nx.Graph):
         self.edge_direction = {}        
         self.g = nx.DiGraph(rootRunTimeInc = int(self.rootRunTimeInc))
         
+        print(self.df.columns)
+
         self.add_paths(path_name)
 
         if add_info == True:
@@ -130,6 +133,8 @@ class CallGraph(nx.Graph):
                 groupby = '_module'
             elif self.group_by == 'name':
                 groupby = 'name'
+            elif self.path_name == 'path':
+                groupby = '_name'
 
             if attr == 'time (inc)':
                 if self.group_by == 'module':

@@ -24,7 +24,7 @@ class groupBy:
         self.entry_funcs = {}
         self.module_func_map = {}
         self.module_id_map = {}
-        print(self.df.groupby(['module']).mean())
+
         self.drop_eliminate_funcs()
         self.run()
         self.df = self.state.df
@@ -203,8 +203,8 @@ class groupBy:
         self.state.update_df('show_node', entry_func)
         self.state.update_df('vis_node_name', node_name)
         self.state.update_df('component_level', component_level)
-        self.state.update_df('_module', module)
+        self.state.update_df('_'+self.group_by, module)
         self.state.update_df('change_name', change_name)
         self.state.update_df('mod_index', module_idx)
 
-        print(self.state.df)
+        print(self.state.df['_'+self.group_by])
