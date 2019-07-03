@@ -2,5 +2,5 @@ pandas
 numpy
 flask
 flask-cors
+flask_socketio
 networkx
-ABC

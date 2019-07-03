@@ -23,7 +23,7 @@ from networkx.readwrite import json_graph
 
 # Callflow imports
 from callflow import *
-from configFileReader import * 
+from configFileReader import *
 import utils
 from logger import log
 
@@ -35,8 +35,8 @@ class App():
     def __init__(self):
         self.callflow_path = os.path.abspath(os.path.join(__file__, '../../..'))
 
-        self.create_parser() 
-        self.verify_parser()  
+        self.create_parser()
+        self.verify_parser()
 
         self.debug = True
 
@@ -47,16 +47,16 @@ class App():
 
         if self.config.preprocess:
             self.create_dot_callflow_folder()
-        
+
         # self.create_dot_callflow_folder()
         self.callflow = CallFlow(self.config)
 
-        # Start server if preprocess is not called. 
+        # Start server if preprocess is not called.
         if not self.config.preprocess:
             self.create_socket_server()
             sockets.run(app, debug = self.debug, use_reloader=True)
-            
-    # Custom print function. 
+
+    # Custom print function.
     def print(self, action, data = {}):
         action = 'Action: {0}'.format(action)
         if bool(data):
@@ -65,7 +65,7 @@ class App():
             data_string = ''
         log.info('[app.py] {0} {1}'.format(action, data_string))
 
-    # Parse the input arguments 
+    # Parse the input arguments
     def create_parser(self):
         parser = argparse.ArgumentParser()
         parser.add_argument("--verbose", action="store_true", help="Display debug points")
@@ -80,7 +80,7 @@ class App():
 
     # Raises expections if something is not provided
     def verify_parser(self):
-        # Check if the config file is provided and exists! 
+        # Check if the config file is provided and exists!
         if not self.args.config:
             log.error("Please provide a config file. To see options, use --help")
             raise Exception()
@@ -92,9 +92,9 @@ class App():
     def create_dot_callflow_folder(self):
         if self.debug:
             self.print('Create .callflow directiory.')
-        if not os.path.exists(self.config.callflow_dir):    
+        if not os.path.exists(self.config.callflow_dir):
             os.makedirs(self.config.callflow_dir)
-        
+
         for dataset in self.config.datasets:
             dataset_dir = self.config.callflow_dir + '/' + dataset['name']
             if not os.path.exists(dataset_dir):
@@ -105,7 +105,8 @@ class App():
             files = ["entire_df.csv", "filter_df.csv", "entire_graph.json", "filter_graph.json"]
             for f in files:
                 if not os.path.exists(dataset_dir + '/' + f):
-                    os.mknod(dataset_dir + '/' + f)
+                    open(os.path.join(dataset_dir, f), 'w').close()
+                    #os.mknod(dataset_dir + '/' + f)
 
     def create_socket_server(self):
         @sockets.on('init', namespace='/')
@@ -129,7 +130,7 @@ class App():
             }
             if(graphFormat == 'CCT'):
                 groupByAttr = 'name'
-                obj['groupBy'] = groupByAttr    
+                obj['groupBy'] = groupByAttr
                 g = self.callflow.update(obj)
             elif(graphFormat == 'Callgraph'):
                 groupByAttr = 'module'
@@ -194,8 +195,8 @@ class App():
             nid = data['nid']
             dataset = data['dataset1']
             result = self.callflow.update({
-                "name": 'hierarchy', 
-                "nid": nid, 
+                "name": 'hierarchy',
+                "nid": nid,
                 "dataset1": dataset,
             })
             emit('hierarchy', result, json=True)
@@ -216,7 +217,7 @@ class App():
                 "name": "histogram",
                 "dataset1": dataset,
                 "mod_index": data['mod_index'],
-            })            
+            })
             emit('histogram', result, json=True)
 
         @sockets.on('miniHistogram', namespace="/")
@@ -227,7 +228,7 @@ class App():
             result = self.callflow.update({
                 "name": "mini-histogram",
                 "dataset1": dataset,
-            })            
+            })
             emit('miniHistogram', result, json=True)
 
         @sockets.on('hierarchy', namespace="/")
@@ -244,11 +245,11 @@ class App():
     def create_server(self):
         app.debug = True
         app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), '')
-        # App routes 
+        # App routes
         @app.route('/')
         def root():
             print("App directory", app.__dir__)
             return send_from_directory(app.__dir__, 'index.html')
-                                  
+
 if __name__ == '__main__':
     App()
