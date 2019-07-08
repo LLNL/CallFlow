@@ -61,6 +61,7 @@ class groupBy:
                     # Append "_" + module_idx if the module exists in the group_path. 
                     if module in group_path:
                         module_idx += 1
+                        print(module)
                         module = module + '_' + str(module_idx)
                         change_name = True
 

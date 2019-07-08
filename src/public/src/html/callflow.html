@@ -73,14 +73,20 @@
 				<v-layout justify-center align-center>
 					<v-flex xs3 fill-height class="pa-0">
 						<Histogram ref="Histogram" v-bind:selected-color-by="selectedColorBy"/>
-						<Icicle ref="Icicle" />
+						<Icicle 
+							ref="Icicle" />
 					</v-flex>
 					<v-flex xs9 fill-height class="pa-0" id="vis" v-if="selectedMode == 'Single'">
-						<Callgraph ref="Callgraph" v-if="selectedFormat == 'Callgraph'" />
-						<CCT ref="CCT" v-if="selectedFormat == 'CCT'" />
-					</v-flex>
+						<Callgraph 
+							ref="Callgraph" 
+							v-if="selectedFormat == 'Callgraph'" />
+						<CCT 
+							ref="CCT" 
+							v-if="selectedFormat == 'CCT'"/>
+						</v-flex>
 					<v-flex xs9 fill-height class="pa-0" id="vis" v-if="selectedMode == 'Diff'">
-						<Diffgraph ref="Diffgraph" />
+						<Diffgraph 
+							ref="Diffgraph" />
 					</v-flex>
 				</v-layout>
 			</v-container>

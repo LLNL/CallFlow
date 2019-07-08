@@ -48,13 +48,19 @@ export default {
 
     },
 
+    sockets: {
+        cct(data) {
+            this.render(data)
+        },
+    },
+
     mounted() {
         this.id = this.id
     },
 
     methods: {
         init(data) {
-            this.width = document.getElementById('vis').clientWidth - this.margin.left - this.margin.right
+            this.width = window.innerWidth
             this.height = window.innerHeight //- this.margin.top - this.margin.bottom
             d3.select('#' + this.id)
                 .attr('class', 'sankey')
@@ -84,16 +90,14 @@ export default {
 
             let nodes = JSON.parse(JSON.stringify(data.nodes))
             let links = JSON.parse(JSON.stringify(data.links))
-            console.log(nodes)
             nodes.forEach((node, i) => {
-                g.setNode(node['name'][0], { label: node['name'][0] + '/' + node['module'][0] });
+                g.setNode(node['id'], { label: node['id'] })// + '/' + node['module'][0] });
             });
 
             // Set up the edges
             for (let i = 0; i < links.length - 2; i += 1) {
                 g.setEdge(links[i]['source'], links[i]['target'], { label: '' });
             }
-            console.log(g.nodes())
 
             // Set some general styles
             g.nodes().forEach(function (v) {
@@ -109,6 +113,8 @@ export default {
                 var edge = g.edge(e)
                 // g.edge(e).style = "stroke: 1.5px "
             })
+
+            console.log(g.nodes(), g.edges())
 
             let svg = d3.select("#" + this.id)
             svg.append('g')

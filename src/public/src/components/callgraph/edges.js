@@ -102,14 +102,13 @@ export default {
                         d.ty = 0
                         return
                     }
-                    console.log(d.sy)
                     let Tx0 = d.source.x + d.source.dx,
                         Tx1 = d.target.x,
                         Txi = d3.interpolateNumber(Tx0, Tx1),
                         Tx2 = Txi(0.4),
                         Tx3 = Txi(1 - 0.4),
-                        Ty0 = d.source.y + d.sy + this.view.ySpacing,
-                        Ty1 = d.target.y + d.ty + this.view.ySpacing;
+                        Ty0 = d.source.y + d.sy + this.$parent.ySpacing,
+                        Ty1 = d.target.y + d.ty + this.$parent.ySpacing;
 
                     // note .ty is the y point that the edge meet the target(for top)
                     //		.sy is the y point of the source  (for top)
@@ -122,12 +121,10 @@ export default {
                         Bxi = d3.interpolateNumber(Bx0, Bx1),
                         Bx2 = Bxi(0.4),
                         Bx3 = Bxi(1 - 0.4),
-                        By0 = d.source.y + d.height + d.sy + this.view.ySpacing,
-                        By1 = d.target.y + d.ty + d.height + this.view.ySpacing;
+                        By0 = d.source.y + d.height + d.sy + this.$parent.ySpacing,
+                        By1 = d.target.y + d.ty + d.height + this.$parent.ySpacing;
 
-                    const rightMoveDown = By1 - Ty1;
-
-
+                    const rightMoveDown = By1 - Ty1
                     return `M${Tx0},${Ty0
                         }C${Tx2},${Ty0
                         } ${Tx3},${Ty1

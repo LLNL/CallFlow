@@ -169,7 +169,7 @@ export default {
                     if (dataSorted[i] == undefined){
                         dataSorted[i] = 0
                     }
-                    dataSorted[i] += attr_data[key][i]
+                    dataSorted[i] += attr_data[0][i]
                 }
             }          
 

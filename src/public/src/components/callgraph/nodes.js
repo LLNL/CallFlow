@@ -1,13 +1,13 @@
 import tpl from '../../html/callgraph/nodes.html'
 import * as d3 from 'd3'
-import {
-    dsvFormat
-} from 'd3-dsv';
+import ToolTip from './tooltip'
 
 export default {
     template: tpl,
     name: 'Nodes',
-    components: {},
+    components: {
+        ToolTip
+    },
     props: [],
     data: () => ({
         currentNodeLevel: {},
@@ -16,43 +16,44 @@ export default {
         transitionDuration: 1000,
         minHeightForText: 15,
         textTruncForNode: 25,
-        view: {},
-        debug: true,
     }),
-    mounted() {},
+    mounted() {
 
-    sockets: {},
+    },
+    sockets: {
 
+    },
     methods: {
-        init(graph, view) {
+        init(graph) {
             this.graph = graph
-            this.view = view
             this.nodes = d3.select('#nodes')
             const node = this.nodes.selectAll('.node')
                 .data(this.graph.nodes)
                 .enter().append('g')
                 .attr('class', (d) => {
-                    return 'node';
+                    return 'node'
                 })
                 .attr('opacity', 0)
                 .attr('id', d => `node_${d.mod_index}`)
                 .attr('transform', (d) => {
-                    return `translate(${d.x},${d.y })`;
-                });
+                    return `translate(${d.x},${d.y })`
+                })
 
             this.nodes.selectAll('.node')
                 .data(this.graph.nodes)
                 .transition()
                 .duration(this.transitionDuration)
                 .attr('opacity', 1)
-                .attr('transform', d => `translate(${d.x},${d.y + this.view.ySpacing})`);
+                .attr('transform', d => `translate(${d.x},${d.y + this.$parent.ySpacing})`)
 
-            this.rectangle(node);
-            this.path(node);
-            this.text(node);
+            this.rectangle(node)
+            this.path(node)
+            this.text(node)
+            this.$refs.ToolTip.init(this.$parent.id)
         },
 
         rectangle(node) {
+            let self = this
             const rect = node.append('rect')
                 .attr('height', (d) => {
                     this.currentNodeLevel[d.mod_index] = 0;
@@ -61,57 +62,37 @@ export default {
                 })
                 .attr('width', this.nodeWidth)
                 .attr('opacity', 0)
-                .style('fill', d => this.view.color.getColor(d))
+                .style('fill', d => this.$store.color.getColor(d))
                 .style('fill-opacity', (d) => {
-                    if (d.name == 'intermediate' || d.name[d.name.length - 1] == '_') {
-                        if (d.name[0] == 'intermediate') {
-                            return 0;
-                        }
-                        return 1;
+                    if (d.name == 'intermediate') {
+                        return 0
                     }
+                    return 1
                 })
                 .style('shape-rendering', 'crispEdges')
                 .style('stroke', (d) => {
-                    return d3.rgb(this.view.color.getColor(d)).darker(2);
+                    return d3.rgb(this.$store.color.getColor(d)).darker(2);
                 })
                 .style('stroke-width', (d) => {
-                    return 1;
+                    return 1
                 })
                 .on('mouseover', function (d) {
-                    // this.view.toolTipList.attr('width', '400px')
-                    //     .attr('height', '150px');
-                    // var res = getFunctionListOfNode(graph, d);
-                    // toolTipTexts(d, res, rootRunTime1)
-                    // d3.select(this).style('stroke-width', '2');
-                    // fadeUnConnected(d);
-                    // svg.selectAll(".link").style('fill-opacity', 0.0)
-                    // svg.selectAll('.node').style('opacity', '0.0')
+                    self.$refs.ToolTip.render(self.graph, d)  
                 })
                 .on('mouseout', function (d) {
-                    // this.view.toolTipList.attr('width', '0px')
-                    //     .attr('height', '0px');
-                    // if (d.name[0] == 'intermediate' || d.name[0][d.name[0].length - 1] == '_') {
-                    //     d3.select(this).style('stroke-width', '1');
-                    //     //                unFade();
-                    // }
-                    // this.view.toolTip.style('opacity', 0)
-                    //     .style('left', () => 0)
-                    //     .style('top', () => 0);
-                    // this.view.toolTipText.html('');
-                    // this.view.toolTipG.selectAll('*').remove();
+                    
                 })
                 // TODO: Get the dataset from app.py. or make a store for vue-x
                 .on('click', (d) => {
-                    console.log("Clicked on node: ", d)
                     this.$socket.emit('hierarchy', {
                         mod_index: d.mod_index[0],
                         module: d.module[0],
-                        dataset1: 'osu_bw',
+                        dataset1: this.$store.selectedDataset,
                     })
                     this.$socket.emit('histogram', {
                         mod_index: d.mod_index[0],
                         module: d.module[0],
-                        dataset1: 'osu_bw'
+                        dataset1: this.$store.selectedDataset,
                     })
                 });
 
@@ -126,7 +107,7 @@ export default {
                 })
                 .attr('height', d => d.height)
                 .style('fill', (d) => {
-                    return d.color = this.view.color.getColor(d);
+                    return d.color = this.$store.color.getColor(d);
                 })
                 .style('stroke', (d) => {
                     return 1;
@@ -156,7 +137,7 @@ export default {
                         }h ${(-1) * this.nodeWidth}`;
                 })
                 .style('fill', (d) => {
-                    return this.view.color.getColor(d);
+                    return this.$store.color.getColor(d);
                 })
                 .style('fill-opacity', (d) => {
                     return 0;
@@ -232,14 +213,15 @@ export default {
                     // view.toolTipG.selectAll('*').remove();
                 });
 
-
             // Transition
             this.nodes.selectAll('text')
                 .data(this.graph.nodes)
                 .transition()
                 .duration(this.transitionDuration)
                 .style('opacity', 1)
-                .style('fill', d => this.view.color.setContrast(this.view.color.getColor(d)))
+                .style('fill', d => {
+                    return this.$store.color.setContrast(this.$store.color.getColor(d))
+                })
                 .text((d) => {
                     if (d.name.length == 1) {
                         name = d.name[0]
@@ -270,6 +252,7 @@ export default {
 
         clear() {
             d3.selectAll('.node').remove()
+            this.$refs.ToolTip.clear()
         },
 
         update() {

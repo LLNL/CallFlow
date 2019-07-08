@@ -30,7 +30,7 @@ export default {
 
 
     methods: {
-        init(view, hierarchy) {
+        start(view, hierarchy) {
             const path = hierarchy.path;
             const inc_time = hierarchy.inc_time;
             const exclusive = hierarchy.exclusive;

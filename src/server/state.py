@@ -42,9 +42,6 @@ class State(object):
     def update_df(self, col_name, mapping):
         self.df[col_name] = self.df['node'].apply(lambda node: mapping[node] if node in mapping.keys() else '')
         self.df = self.df
-
-    def lookup_with_df_index(self, df_index):
-        return self.df.loc[self.df['df_index'] == df_index]
     
     def grouped_df(self, attr):
         self.gdf[attr] = self.df.groupby(attr, as_index=True, squeeze=True)  

@@ -7,7 +7,6 @@ import MiniHistograms from './callgraph/miniHistograms'
 import Edges from './callgraph/edges'
 
 import * as  d3 from 'd3'
-import Color from '../old_components/callflow/color';
 
 export default {
 	name: 'Callgraph',
@@ -18,32 +17,20 @@ export default {
 		Edges,
 		MiniHistograms,
 	},
-
-	props: [
-	],
-
+	props: [],
 	data: () => ({
 		graph: null,
 		id: 'callgraph_overview',
-		sankey: {
-			nodeWidth: 50,
-			xSpacing: 0,
-			ySpacing: 50,
-			nodeScale: 1.0,
-		},
+		nodeWidth: 50,
+		xSpacing: 0,	
+		ySpacing: 50,
+		nodeScale: 1.0,
 		margin: {
 			top: 30, right: 30, bottom: 10, left: 10
-		},
-		pass_props: {
-			nodeWidth: 50,
-			ySpacing: 60,
-			color: null,
 		},
 		width: null,
 		height: null,
 		treeHeight: null,
-		color: null,
-		colorOption: null,
 	}),
 
 	watch: {
@@ -76,16 +63,15 @@ export default {
 		},
 
 		render() {
-			this.$refs.Nodes.init(this.data, this.pass_props)
+			this.$refs.Nodes.init(this.data, this.view)
 			// this.$refs.IntermediateNodes.init(this.data)
-			this.$refs.Edges.init(this.data, this.pass_props)
-			this.$refs.MiniHistograms.init(this.data, this.pass_props)
+			this.$refs.Edges.init(this.data, this.view)
+			this.$refs.MiniHistograms.init(this.data, this.view)
 		},
 
 		clear() {
 			this.$refs.Nodes.clear()
 			this.$refs.Edges.clear()
-			this.$refs.Histogram.clear()
 			this.$refs.MiniHistograms.clear()
 		},
 
@@ -96,30 +82,19 @@ export default {
 			console.log("Layout Calculation.")
 			this.postProcess(this.data.nodes, this.data.links)	
 			console.log("Post-processing done.") 
-			// Set color scales
-			this.pass_props.color = this.color
-			console.log(this.color)
-			// this.pass_props.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
 
-			this.render()
-		},
-
-		updateColor(option) {
-			this.colorOption = option
-			this.pass_props.color = new Color(this.colorOption)
-			this.pass_props.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
 			this.render()
 		},
 
 		//Sankey computation
 		initSankey() {
 			let sankey = Sankey()
-				.nodeWidth(this.sankey.nodeWidth)
-				.nodePadding(this.sankey.ySpacing)
-				.size([this.width * 1.05, this.height - this.sankey.ySpacing])
-				.xSpacing(this.sankey.xSpacing)
+				.nodeWidth(this.nodeWidth)
+				.nodePadding(this.ySpacing)
+				.size([this.width * 1.05, this.height - this.ySpacing])
+				.xSpacing(this.xSpacing)
 				//    .setReferenceValue(this.data.rootRunTimeInc)
-				.setMinNodeScale(this.sankey.nodeScale);
+				.setMinNodeScale(this.nodeScale);
 
 			let path = sankey.link()
 

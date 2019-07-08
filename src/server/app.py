@@ -145,9 +145,11 @@ class App():
                 self.print('[Request] Group the dataset.', data)
             dataset = data['dataset']
             graphFormat = data['format']
+            groupBy = data['groupBy'].lower()
             print('[Group] Dataset: {0}, format: {1}'.format(dataset, graphFormat))
             obj = {
                 "name": "group",
+                "groupBy": groupBy,
                 "dataset1": dataset
             }
             if(graphFormat == 'CCT'):
@@ -155,8 +157,6 @@ class App():
                 obj['groupBy'] = groupByAttr
                 g = self.callflow.update(obj)
             elif(graphFormat == 'Callgraph'):
-                groupByAttr = 'module'
-                obj['groupBy'] = groupByAttr
                 g = self.callflow.update(obj)
             result = json_graph.node_link_data(g)
             emit('group', result, json=True)
@@ -241,6 +241,30 @@ class App():
                 "module": data['module']
             })
             emit('hierarchy', result, json=True)
+
+        @sockets.on('tooltip', namespace="/")
+        def tooltip(data):
+            if self.debug == True:
+                self.print("[Request] Tooltip of node", data)
+            result = self.callflow.update({
+                "name": "tooltip",
+                "dataset1": data['dataset1'],
+                "module": data["module"]
+            })
+        
+        @sockets.on('cct', namespace="/")
+        def cct(data):
+            if self.debug == True:
+                self.print("[Request] CCT of the run", data)
+
+            g = self.callflow.update({
+                "name": "cct",
+                "dataset1": data['dataset'],
+            })
+            result = json_graph.node_link_data(g)
+            print(result)
+            emit('cct', result, json=True)
+
 
     def create_server(self):
         app.debug = True

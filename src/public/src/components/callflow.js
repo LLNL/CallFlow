@@ -35,8 +35,8 @@ export default {
 		selectedDataset: '',
 		selectedDataset2: '',
 		selectedFormat: 'Callgraph',
-		groupBy: ['Name', 'Function', 'Files'],
-		selectedGroupBy: 'Function',
+		groupBy: ['Name', 'Module', 'File'],
+		selectedGroupBy: 'Module',
 		filterBy: ['Inclusive', 'Exclusive'],
 		filterRange: [0, 100],
 		selectedFilterBy: 'Inclusive',
@@ -53,7 +53,6 @@ export default {
 		isCCTInitialized: false,
 		enableDiff: false,
 		firstRender: false,
-		colorOption: 1,
 	}),
 
 	watch: {
@@ -73,7 +72,9 @@ export default {
 			console.log("Config file: ", data)
 			this.numOfDatasets = data['datasets'].length
 			// Enable diff mode only if the number of datasets >= 2
+			this.$store.datasets = data['names']
 			this.datasets = data['names']
+			this.$store.selectedDataset = data['names'][0]
 			this.selectedDataset = data['names'][0]
 
 			if (this.numOfDatasets >= 2) {
@@ -130,20 +131,27 @@ export default {
 		},
 
 		init() {
+			// Initialize colors
+			this.colors()
 			if (this.selectedMode == 'Single') {
 				this.$socket.emit('group', {
-					dataset: this.selectedDataset,
+					dataset: this.$store.selectedDataset,
 					format: this.selectedFormat,
+					groupBy: this.selectedGroupBy
 				})
 
 			}
 			else if (this.selectedMode == 'Diff') {
 				this.$socket.emit('diff', {
-					dataset1: this.selectedDataset,
-					dataset2: this.selectedDataset2,
+					datasets: this.$store.datasets,
 					format: this.selectedFormat
 				})
 			}
+		},
+
+		colors(){
+			this.$store.color = new Color(this.selectedColorBy)
+			this.$store.color.setColorScale(this.minIncTime, this.maxIncTime, this.minExcTime, this.maxExcTime)
 		},
 
 		update(data){	
@@ -154,8 +162,6 @@ export default {
 				console.log("Clearing the Sankey view")
 				this.clearLocal()
 			}
-			this.color = new Color(this.colorOption)
-			this.color.setColorScale(this.minIncTime, this.maxIncTime, this.minExcTime, this.maxExcTime)
 
 			if (this.selectedFormat == 'Callgraph') {
 				if (this.isCallgraphInitialized == true) {
@@ -163,8 +169,6 @@ export default {
 				}
 				else {
 					this.isCallgraphInitialized = true
-					this.$refs.Callgraph.color = this.color
-					this.$refs.Icicle.color = this.color
 					this.$refs.Callgraph.init(data)
 					this.$refs.Histogram.init()
 					this.$refs.Icicle.init()
@@ -177,7 +181,6 @@ export default {
 				}
 				else {
 					this.isCCTInitialized = true
-					this.$refs.CCT.colorOption = this.selectedColorBy
 					this.$refs.CCT.init(data)
 				}
 			}
@@ -185,36 +188,47 @@ export default {
 
 		reset() {
 			this.$socket.emit('filter', {
-				dataset: this.selectedDataset,
+				dataset: this.$store.selectedDataset,
 				format: this.selectedFormat,
 				filterBy: this.selectedFilterBy,
 				filterPerc: this.selectedFilterPerc
 			})
 		},
 
-		updateColor(option) {
-			this.colorOption = option
-			this.pass_props.color = new Color(this.colorOption)
-			this.pass_props.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
-			this.render()
+		updateColor() {
+			this.$store.color = new Color(this.selectedColorBy)
+			this.$store.color.setColorScale(this.minIncTime, this.maxIncTime, this.minExcTime, this.maxExcTime)
+			this.$refs.Callgraph.render()
 		},
 
 		updateFormat() {
 			Vue.nextTick(() => {
 				// this.clear()
-				this.$socket.emit('group', {
-					dataset: this.selectedDataset,
-					format: this.selectedFormat
-				})
+				console.log(this.selectedFormat)
+				if(this.selectedFormat == 'CCT'){
+					this.$socket.emit('cct', {
+						dataset: this.$store.selectedDataset,
+						
+					})
+				}
+				else{
+					this.$socket.emit('group', {
+						dataset: this.$store.selectedDataset,
+						format: this.selectedFormat,
+						groupBy: this.selectedGroupBy
+					})
+				}
+				
 			})
 		},
 
 		updateDataset() {
 			Vue.nextTick(() => {
-				this.clear()
+				this.clearLocal()
 				this.$socket.emit('group', {
-					dataset: this.selectedDataset,
-					format: this.selectedFormat
+					dataset: this.$store.selectedDataset,
+					format: this.selectedFormat,
+					groupBy: this.selectedGroupBy
 				})
 			})
 		},
@@ -228,21 +242,32 @@ export default {
 
 		updateColorBy() {
 			Vue.nextTick(() => {
-				this.clear()
-				this.$refs.Callgraph.updateColor(this.selectedColorBy)
+				this.clearLocal()
+				this.updateColor(this.selectedColorBy)
 
 			})
 		},
 
 		updateFilterBy() {
 			Vue.nextTick(() => {
-				this.clear()
+				
+			})
+		},
+
+		updateGroupBy() {
+			Vue.nextTick(() => {
+				this.clearLocal()
+				this.$socket.emit('group', {
+					dataset: this.$store.selectedDataset,
+					format: this.selectedFormat,
+					groupBy: this.selectedGroupBy,
+				})
 			})
 		},
 
 		updateFilterPerc() {
 			this.$socket.emit('filter', {
-				dataset: this.selectedDataset,
+				dataset: this.$store.selectedDataset,
 				format: this.selectedFormat,
 				filterBy: this.selectedFilterBy,
 				filterPerc: this.selectedFilterPerc
@@ -252,7 +277,7 @@ export default {
 		updateFilterIncTime(){
 			this.selectedFilterPerc = (this.selectedIncTime/this.maxIncTime)*100
 			this.$socket.emit('filter', {
-				dataset: this.selectedDataset,
+				dataset: this.$store.selectedDataset,
 				format: this.selectedFormat,
 				filterBy: this.selectedFilterBy,
 				filterPerc: this.selectedFilterPerc

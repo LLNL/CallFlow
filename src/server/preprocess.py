@@ -35,7 +35,7 @@ class PreProcess():
             self.graph = state.graph
             self.node_hash_map = state.node_hash_map
             self.map = {}
-            self.df_index_name_map = self.bfs()
+            # self.df_index_name_map = self.bfs()
 
         def bfs(self):
             ret = {}
@@ -53,15 +53,6 @@ class PreProcess():
                 print("Total nodes in the graph", node_count)
                 del root
             return ret
-
-        def add_df_index(self):
-            self.df['df_index'] = self.df['name'].apply(lambda node: self.df_index_name_map[node] if node in self.df_index_name_map else '')
-            return self
-
-        def clean_lib_monitor(self):
-#            print(self.df[self.df.module == 'libmonitor.so.0.0.0'])
-#            print(self.df[self.df.module != 'libmonitor.so.0.0.0'])
-            return self
             
         def build(self):
             return PreProcess(self)
@@ -186,7 +177,7 @@ class PreProcess():
             self.df['node_name'] = self.df['name'].apply(lambda name: node_name_map[name])
 
         def update_module_name(self):
-            self.df['module'] = self.df['module'].apply(lambda name: name)
+            self.df['module'] = self.df['module'].apply(lambda name: utils.sanitizeName(name))
             return self
         
         def add_n_index(self):

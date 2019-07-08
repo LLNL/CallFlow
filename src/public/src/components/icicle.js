@@ -1,15 +1,14 @@
 import tpl from '../html/icicle.html'
 import * as d3 from 'd3'
+import dropdown from 'vue-dropdowns'
 
 export default {
 	name: 'Icicle',
 	template: tpl,
 	components: {
-
+		'dropdown': dropdown
 	},
-	props: [
-
-	],
+	props: [],
 	data: () => ({
 		id: 'component_graph_view',
 		margin: {
@@ -18,7 +17,7 @@ export default {
 			bottom: 5,
 			left: 5,
 		},
-		level: [0, 4],
+		level: [0, 0],
 		colorByAttr: 'Inclusive',
 		direction: ['LR', 'TD'],
 		selectedDirection: 'TD',
@@ -28,15 +27,41 @@ export default {
 		b : {
 			w: 150, h: 30, s: 3, t: 10
 		},
+		arrayOfObjects: [],
+        object: {
+            name: 'Object Name',
+        },
+		selectedSplitOption: {
+			name: "Split level",
+		},
+		splitOptions: [
+			{ 
+				"name": 'Split caller',
+			}, 
+			{ 
+				"name": 'Split callee',
+			}, 
+			{
+				"name":'Split level', 
+			}],
+		placeholder: 'Split options',
+		maxLevel: 0,
+		path_hierarchy: [],
 	}),
 
 	watch: {
-
+		level: {
+			handler: function(val, oldVal) {
+				this.update_level(); 
+			},
+			deep: true
+		}
 	},
 
 	sockets: {
 		hierarchy(data) {
 			data = JSON.parse(data)
+			this.update_maxlevels(data)
 			this.update_from_df(data)
 		}
 	},
@@ -64,45 +89,92 @@ export default {
 				})
 		},
 
-		// TODO: remove the [] from id field.
-		update(data) {
-			let path_hierarchy_format = []
-			let nodes = data.nodes
-			for (let i = 0; i < nodes.length; i += 1) {
-				path_hierarchy_format[i] = [];
-				path_hierarchy_format[i].push(nodes[i]['component_path']);
-				path_hierarchy_format[i].push(nodes[i]['time (inc)']);
-				path_hierarchy_format[i].push(nodes[i]['time']);
-				path_hierarchy_format[i].push(nodes[i]['imbalance_perc']);
-				path_hierarchy_format[i].push([nodes[i]['id']])
+		split() {
+
+		},
+
+		// // TODO: remove the [] from id field.
+		// update(data) {
+		// 	let path_hierarchy_format = []
+		// 	let nodes = data.nodes
+		// 	for (let i = 0; i < nodes.length; i += 1) {
+		// 		path_hierarchy_format[i] = [];
+		// 		path_hierarchy_format[i].push(nodes[i]['component_path']);
+		// 		path_hierarchy_format[i].push(nodes[i]['time (inc)']);
+		// 		path_hierarchy_format[i].push(nodes[i]['time']);
+		// 		path_hierarchy_format[i].push(nodes[i]['imbalance_perc']);
+		// 		path_hierarchy_format[i].push([nodes[i]['id']])
+		// 	}
+		// 	const json = this.buildHierarchy(path_hierarchy_format);
+		// 	this.drawIcicles(json);
+		// },
+
+		update_maxlevels(data){
+			let levels = data['level']
+			for (const [key, value] of Object.entries(levels)) {
+				if(this.maxLevel < value){
+					this.maxLevel = value
+					this.level = [0, value]
+				}	
+            }
+		},
+
+		// TODO: Need to make level view for the icicle plot. 
+		update_level(){
+			this.clearIcicles()
+			let ret = []
+			console.log("Number of children: ", this.path_hierarchy)
+			this.minLevel = this.level[0]
+			this.maxLevel = this.level[1]
+
+			console.log(this.minLevel, this.maxLevel)
+			if (this.minLevel > this.maxLevel){
+				console.log("Cannot generate icicle plot, min_level > max_level")
+				return 
 			}
-			const json = this.buildHierarchy(path_hierarchy_format);
-			this.drawIcicles(json);
+
+			for(let i = 0; i < this.path_hierarchy.length; i += 1){
+				let level = this.path_hierarchy[i][0].length
+				console.log(level)
+				if(level == 1){
+					ret.push(this.path_hierarchy[i])
+				}
+				else if(level >= this.minLevel || level < this.maxLevel){
+					ret.push(this.path_hierarchy[i])					
+				}
+				else{
+					console.log('aaaa')
+				}
+			}
+			this.path_hierarchy = ret
+			console.log("Number of children: ", this.path_hierarchy)
+
+			const json = this.buildHierarchy(this.path_hierarchy)
+			this.drawIcicles(json)
 		},
 
 		update_from_df(hierarchy) {
 			const path = hierarchy['path']
-			const inc_time = hierarchy['time (inc)']
+			 const inc_time = hierarchy['time (inc)']
 			const exclusive = hierarchy['time']
 			const imbalance_perc = hierarchy['imbalance_perc']
 			const name = hierarchy['name']
 			// const exit = hierarchy.exit;
 			// const component_path = hierarchy.component_path;
-			const path_hierarchy_format = [];
 			for (const i in path) {
 				if (path.hasOwnProperty(i)) {
-					path_hierarchy_format[i] = [];
-					path_hierarchy_format[i].push(path[i]);
-					path_hierarchy_format[i].push(inc_time[i]);
-					path_hierarchy_format[i].push(exclusive[i]);
-					path_hierarchy_format[i].push(imbalance_perc[i]);
-					path_hierarchy_format[i].push(name[i])
+					this.path_hierarchy[i] = []
+					this.path_hierarchy[i].push(path[i])
+					this.path_hierarchy[i].push(inc_time[i])
+					this.path_hierarchy[i].push(exclusive[i])
+					this.path_hierarchy[i].push(imbalance_perc[i])
+					this.path_hierarchy[i].push(name[i])
 					// path_hierarchy_format[i].push(exit[i]);
 					// path_hierarchy_format[i].push(component_path[i]);
 				}
 			}
-			const json = this.buildHierarchy(path_hierarchy_format);
-			this.drawIcicles(json);
+			const json = this.buildHierarchy(this.path_hierarchy)
+			this.drawIcicles(json)
 		},
 
 		trunc(str, n) {
@@ -152,7 +224,7 @@ export default {
 						childNode = {
 							name: nodeName,
 							value: inc_time,
-							exclusive,
+							exclusive: exclusive,
 							imbalance_perc,
 							// exit,
 							// component_path,
@@ -168,7 +240,6 @@ export default {
 		clearIcicles() {
 			d3.selectAll('.icicleNode').remove();
 			d3.selectAll('.icicleText').remove();
-
 		},
 
 		textSize(text) {
@@ -195,7 +266,7 @@ export default {
 			while (queue.length != 0) {
 				root = queue.pop()
 				if (root.children == undefined) {
-					break
+					continue
 				}
 				root.children.forEach(function (node) {
 					nodes.push(node);
@@ -262,7 +333,6 @@ export default {
 		},
 
 		addNodes() {
-			console.log(this.nodes)
 			this.hierarchy
 				.selectAll('.icicleNode')
 				.data(this.nodes)
@@ -294,7 +364,7 @@ export default {
 					return d.y1 - d.y0;
 				})
 				.style('fill', (d) => {
-					const color = this.color.getColor(d);
+					let color = this.$store.color.getColor(d.data);
 					if (color._rgb[0] == 204) {
 						return '#7A000E';
 					}
@@ -343,7 +413,7 @@ export default {
 					return d.dx1 - d.dx0 / 2;
 				})
 				.style('fill', (d) => {
-					let color = this.color.setContrast(this.color.getColor(d))
+					let color = this.$store.color.setContrast(this.$store.color.getColor(d))
 					return color
 				})
 				.text((d) => {
@@ -362,7 +432,23 @@ export default {
 		},
 
 		click(){
-			d3
+			// const percentage = (100 * d.value / this.totalSize).toPrecision(3);
+			// let percentageString = `${percentage}%`;
+			// if (percentage < 0.1) {
+			// 	percentageString = '< 0.1%';
+			// }
+
+			// const sequenceArray = this.getAncestors(d);
+			// this.updateBreadcrumbs(sequenceArray, percentageString);
+
+			// Fade all the segments.
+			d3.selectAll('.icicleNode')
+				.style('opacity', 0.3);
+
+			// Then highlight only those that are an ancestor of the current segment.
+			this.hierarchy.selectAll('.icicleNode')
+				.filter(node => (sequenceArray.indexOf(node) >= 0))
+				.style('opacity', 1);
 		},
 
 		// Restore everything to full opacity when moving off the visualization.
@@ -393,7 +479,6 @@ export default {
 			}
 
 			const sequenceArray = this.getAncestors(d);
-			console.log(sequenceArray)
 			this.updateBreadcrumbs(sequenceArray, percentageString);
 
 			// Fade all the segments.

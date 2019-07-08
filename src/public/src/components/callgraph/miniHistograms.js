@@ -19,7 +19,7 @@ export default {
         selectedColorBy: "Inclusive",
         numbOfBins: 5,
         padding: {
-            top: 0, left: 0, right: 0, bottom: 0
+            top: 0, left: 0, right: 0, bottom: 10
         },
         nodeScale: 0.99,
     }),
@@ -85,7 +85,7 @@ export default {
                     if (dataSorted[i] == undefined) {
                         dataSorted[i] = 0
                     }
-                    dataSorted[i] += attr_data[key][i]
+                    dataSorted[i] += attr_data[0][i]
                 }
             }
 
@@ -110,6 +110,10 @@ export default {
             return [xVals, freq];
         },
 
+        clear() {
+            d3.selectAll('#histobars').remove()
+        },
+
         drawHistogram(data, node) {
             const temp = this.dataProcess(data)
             let xVals = temp[0]
@@ -117,24 +121,23 @@ export default {
 
             this.minimapXScale = d3.scaleBand()
                 .domain(xVals)
-                .rangeRound([0, this.view.nodeWidth], 0.05)
+                .rangeRound([0, this.$parent.nodeWidth])
 
             this.minimapYScale = d3.scaleLinear()
                 .domain([0, d3.max(freq)])
-                .range([this.view.nodeWidth, 10]);
+                .range([this.$parent.ySpacing, 0]);
 
             for(let i = 0; i < freq.length; i += 1){
-                // d3.select('#node_' + node.mod_index[0])
                 d3.select('#histograms')
                 .append('rect')
                 .attrs({
                     'id': 'histobars',
                     'width': () => this.minimapXScale.bandwidth(),
                     'height': (d) => {
-                        return (this.view.nodeWidth) - this.minimapYScale(freq[i])
+                        return (this.$parent.nodeWidth) - this.minimapYScale(freq[i])
                     },
                     'x': (d) => node.x + this.minimapXScale(xVals[i]),
-                    'y': (d) => node.y + 5 + this.minimapYScale(freq[i]),
+                    'y': (d) => node.y + this.minimapYScale(freq[i]),
                     'opacity': 1,
                     'stroke-width': '0.2px',
                     'stroke': 'black',

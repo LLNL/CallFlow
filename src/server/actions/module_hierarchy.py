@@ -47,7 +47,6 @@ class moduleHierarchy:
         return ret
 
     def add_node_attributes(self):
-        print(self.df.loc[self.df['module'] == "libmpi.so.12.0.5"][['name', 'component_path', 'time (inc)']])
         time_mapping = self.generic_map(self.hierarchy.nodes(), 'time (inc)')
         nx.set_node_attributes(self.hierarchy, name='time (inc)', values=time_mapping)
 
@@ -63,6 +62,7 @@ class moduleHierarchy:
     def create_hierarchy_df(self, module):
         df = self.df
         meta_nodes = df.loc[df['_module'] == module]
+        print(meta_nodes)
         if 'component_path' not in df.columns:
             utils.debug('Error: Component path not defined in the df')
         self.add_paths(meta_nodes, 'component_path')

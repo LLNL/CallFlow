@@ -14,21 +14,6 @@ export default class Color {
     }
 
     setColorScale(minInc, maxInc, minExc, maxExc) {
-        if (!minInc) {
-            // eslint-disable-next-line no-param-reassign
-            minInc = 0;
-        }
-        if (!maxInc) {
-            maxInc = Number.MAX_SAFE_INTEGER;
-        }
-        if (!minExc) {
-            minInc = 0;
-        }
-        if (!maxExc) {
-            maxExc = Number.MAX_SAFE_INTEGER;
-        }
-
-        // eslint-disable-next-line no-undef
         this.incColorScale = chroma.scale('OrRd').padding([0.2, 0])
 	        .domain([minInc, maxInc]);
 
@@ -41,35 +26,31 @@ export default class Color {
         this.diffColorScale = chroma.scale('RdYlBu').domain([-1, 1]);
 
         this.loadImbColorScale = chroma.scale('OrRd').padding([0.2, 0])
-            .domain([0, 0.5]);
+            .domain([0, 0.5]);        
     }
 
     getColor(node) {
-	    const colorOption = this.option;
-	    if (colorOption == 0) {
+	    if (this.option == "Name") {
 	        return this.colorScale(node.name[0].replace(/ .*/, ''));
-	    } else if (colorOption == 1) {
+        } 
+        else if (this.option == "Inclusive") {
             if (node.weight == undefined){
                 return this.incColorScale(node.value)
             }
             else{
                 return this.incColorScale(node.weight)
             }
-	    } else if (colorOption == 2) {
-	        return this.excColorScale(node.exclusive);
-	    } else if (colorOption == 3) {
+        } 
+        else if (this.option == "Exclusive") {
+            return this.excColorScale(node.exclusive);
+        }
+        else if (this.option == 3) {
 	        return this.nRangeColorScale(node.nRange);
-	    } else if (colorOption == 4) {
+        } 
+        else if (this.option == 4) {
 	        return this.diffColorScale(node.diff || 0);
-	    } else if (colorOption == 5) {
-           /*  let imbalance_perc = 0;
-            if (node.imbalance_perc != undefined) {
-                imbalance_perc = node.imbalance_perc[0];
-            } else {
-                imbalance_perc = node.imbalance_perc;
-            }
-            console.log(node) 
-            console.log(imbalance_perc, node.imbalance_perc); */
+        } 
+        else if (this.option == "Imbalance") {
             return this.loadImbColorScale(node.imbalance_perc);
         }
     }
@@ -83,7 +64,6 @@ export default class Color {
 	    return (o > 128) ? '#000' : '#fff';
     }
 
-    // eslint-disable-next-line class-methods-use-this
     hexToRgb(hex) {
 	    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 	    return result ? {

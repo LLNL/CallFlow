@@ -26,6 +26,7 @@ from actions.split_callee import splitCallee
 from actions.split_caller import splitCaller
 from actions.split_level import splitLevel
 from actions.struct_diff import structDiff
+from actions.cct import CCT
 from actions.module_hierarchy import moduleHierarchy
 from actions.filter import Filter
 from state import State
@@ -111,7 +112,6 @@ class CallFlow:
             .add_show_node() \
             .add_vis_node_name() \
             .update_module_name() \
-            .clean_lib_monitor() \
             .add_max_incTime() \
             .add_incTime() \
             .add_excTime() \
@@ -124,10 +124,6 @@ class CallFlow:
         state.df = preprocess.df
         state.graph = preprocess.graph
         state.node_hash_map = preprocess.node_hash_map
-        # state.map = preprocess.map
-
-        print("After preprocessing.")
-        print(state.df.groupby(['module']).mean())
 
         return state
 
@@ -138,9 +134,6 @@ class CallFlow:
         state.df = filter_obj.df
         state.graph = filter_obj.graph
         state.node_hash_map = filter_obj.node_hash_map
-
-        print("After filtering.")
-        print(state.df.groupby(['module']).mean())
 
         return state
 
@@ -236,17 +229,36 @@ class CallFlow:
         for module in modules_in_df:
             func_in_module = df[df._module == module]['name'].unique().tolist()
             for idx, func in enumerate(func_in_module):
+                func_df = entire_df.loc[entire_df['name'] == func]
                 if module not in ret:
                     ret[module] = []
                 ret[module].append({
                     "name": func,
-                    "time (inc)": entire_df.loc[entire_df['name'] == func]['time (inc)'].tolist(),
-                    "time": entire_df.loc[entire_df['name'] == func]['time'].tolist(),
-                    "rank": entire_df.loc[entire_df['name'] == func]['rank'].tolist(),
+                    "time (inc)": func_df['time (inc)'].tolist(),
+                    "mean_time (inc)": func_df['time (inc)'].mean(),
+                    "time": func_df['time'].tolist(),
+                    "mean_time": func_df['time'].mean(),
+                    "rank": func_df['rank'].tolist(),
                 })
             ret_df[module] = pd.DataFrame(ret[module])
             ret[module] = ret_df[module].to_json(orient="columns")
         return json.dumps(ret)
+
+    def tooltip(self, state, mod_index):
+        ret = []
+        df = state.df
+        entire_df = state.entire_df
+        func_in_module = df[df.mod_index == mod_index]['name'].unique().tolist()
+        
+        for idx, func in enumerate(func_in_module):
+            ret.append({
+                "name": func,
+                "time (inc)": entire_df.loc[entire_df['name'] == func]['time (inc)'].tolist(),
+                "time": entire_df.loc[entire_df['name'] == func]['time'].tolist(),
+                "rank": entire_df.loc[entire_df['name'] == func]['rank'].tolist(),
+            })
+        ret_df = pd.DataFrame(ret)
+        return ret_df.to_json(orient="columns")
 
     def update(self, action):
         utils.debug('Update', action)
@@ -281,7 +293,6 @@ class CallFlow:
             self.reUpdate = False
         
         elif action_name == "group":
-            print(action['groupBy'])
             group = groupBy(state1, action["groupBy"])
             self.states[dataset1].gdf = group.df
             self.states[dataset1].graph = group.graph 
@@ -292,11 +303,6 @@ class CallFlow:
             elif(action['groupBy'] == 'name'):
                 path_type = 'path'
             nx = CallGraph(state1, path_type, True, action["groupBy"])
-
-        elif action_name == 'cct':
-            state = self.read_gf(dataset1)
-            nx = CallGraph(state, 'path', True, action['groupBy'])
-            # write_dot(graph.g, self.config.callflow_dir)
 
         elif action_name == 'diff':
             union_state = structDiff(state1, state2)
@@ -329,6 +335,10 @@ class CallFlow:
             ret = self.miniHistograms(state1)
             return ret
 
+        elif action_name == "cct":
+            nx = CCT(state1)
+            return nx.g
+           
         state1.g = nx.g
 
         return state1.g 
