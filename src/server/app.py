@@ -114,30 +114,22 @@ class App():
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
             emit('init', config_json, json=True)
 
-        @sockets.on('filter', namespace='/')
+        @sockets.on('reset', namespace='/')
         def filter(data):
             if self.debug == True:
                 self.print('[Request] Filter the dataset.', data)
             dataset = data['dataset']
-            graphFormat = data['format']
             filterBy = data['filterBy']
             filterPerc = data['filterPerc']
             obj = {
-                "name": "filter",
+                "name": "reset",
                 "filterBy": filterBy,
                 "filterPerc": filterPerc,
                 "dataset1": dataset,
             }
-            if(graphFormat == 'CCT'):
-                groupByAttr = 'name'
-                obj['groupBy'] = groupByAttr
-                g = self.callflow.update(obj)
-            elif(graphFormat == 'Callgraph'):
-                groupByAttr = 'module'
-                obj['groupBy'] = groupByAttr
-                g = self.callflow.update(obj)
+            g = self.callflow.update(obj)
             result = json_graph.node_link_data(g)
-            emit('filter', result, json=True)
+            emit('reset', result, json=True)
 
         @sockets.on('group', namespace='/')
         def group(data):
@@ -262,7 +254,6 @@ class App():
                 "dataset1": data['dataset'],
             })
             result = json_graph.node_link_data(g)
-            print(result)
             emit('cct', result, json=True)
 
 

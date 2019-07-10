@@ -14,24 +14,25 @@ export default class Color {
     }
 
     setColorScale(minInc, maxInc, minExc, maxExc) {
-        this.incColorScale = chroma.scale('OrRd').padding([0.2, 0])
+        // console.log(minInc, maxInc, minExc, maxExc)
+        this.incColorScale = chroma.scale('OrRd')
 	        .domain([minInc, maxInc]);
 
-	    this.excColorScale = chroma.scale('OrRd').padding([0.2, 0])
+	    this.excColorScale = chroma.scale('OrRd')
 	        .domain([minExc, maxExc]);
 
-	    this.nRangeColorScale = chroma.scale('OrRd').padding([0.2, 0])
+	    this.nRangeColorScale = chroma.scale('RdYlBu').padding([0.2, 0])
 	        .domain([0, 1]);
 
         this.diffColorScale = chroma.scale('RdYlBu').domain([-1, 1]);
 
-        this.loadImbColorScale = chroma.scale('OrRd').padding([0.2, 0])
-            .domain([0, 0.5]);        
+        this.loadImbColorScale = chroma.scale('OrRd')
+            .domain([0, 1]);        
     }
 
     getColor(node) {
-	    if (this.option == "Name") {
-	        return this.colorScale(node.name[0].replace(/ .*/, ''));
+	    if (this.option == "Module") {
+	        return this.colorScale(node.module);
         } 
         else if (this.option == "Inclusive") {
             if (node.weight == undefined){

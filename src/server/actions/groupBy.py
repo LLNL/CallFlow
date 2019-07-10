@@ -61,7 +61,6 @@ class groupBy:
                     # Append "_" + module_idx if the module exists in the group_path. 
                     if module in group_path:
                         module_idx += 1
-                        print(module)
                         module = module + '_' + str(module_idx)
                         change_name = True
 
@@ -207,5 +206,3 @@ class groupBy:
         self.state.update_df('_'+self.group_by, module)
         self.state.update_df('change_name', change_name)
         self.state.update_df('mod_index', module_idx)
-
-        print(self.state.df['_'+self.group_by])

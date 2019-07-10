@@ -94,7 +94,7 @@ export default {
                         module: d.module[0],
                         dataset1: this.$store.selectedDataset,
                     })
-                });
+                })
 
             // Transition
             this.nodes.selectAll('rect')

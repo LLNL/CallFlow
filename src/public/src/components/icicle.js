@@ -27,22 +27,18 @@ export default {
 		b : {
 			w: 150, h: 30, s: 3, t: 10
 		},
-		arrayOfObjects: [],
-        object: {
-            name: 'Object Name',
-        },
 		selectedSplitOption: {
-			name: "Split level",
+			name: "split-caller",
 		},
 		splitOptions: [
 			{ 
-				"name": 'Split caller',
+				"name": 'split-caller',
 			}, 
 			{ 
-				"name": 'Split callee',
+				"name": 'split-callee',
 			}, 
 			{
-				"name":'Split level', 
+				"name":'split-level', 
 			}],
 		placeholder: 'Split options',
 		maxLevel: 0,
@@ -93,22 +89,6 @@ export default {
 
 		},
 
-		// // TODO: remove the [] from id field.
-		// update(data) {
-		// 	let path_hierarchy_format = []
-		// 	let nodes = data.nodes
-		// 	for (let i = 0; i < nodes.length; i += 1) {
-		// 		path_hierarchy_format[i] = [];
-		// 		path_hierarchy_format[i].push(nodes[i]['component_path']);
-		// 		path_hierarchy_format[i].push(nodes[i]['time (inc)']);
-		// 		path_hierarchy_format[i].push(nodes[i]['time']);
-		// 		path_hierarchy_format[i].push(nodes[i]['imbalance_perc']);
-		// 		path_hierarchy_format[i].push([nodes[i]['id']])
-		// 	}
-		// 	const json = this.buildHierarchy(path_hierarchy_format);
-		// 	this.drawIcicles(json);
-		// },
-
 		update_maxlevels(data){
 			let levels = data['level']
 			for (const [key, value] of Object.entries(levels)) {
@@ -123,11 +103,11 @@ export default {
 		update_level(){
 			this.clearIcicles()
 			let ret = []
-			console.log("Number of children: ", this.path_hierarchy)
+			// console.log("Number of children: ", this.path_hierarchy)
 			this.minLevel = this.level[0]
 			this.maxLevel = this.level[1]
 
-			console.log(this.minLevel, this.maxLevel)
+			// console.log(this.minLevel, this.maxLevel)
 			if (this.minLevel > this.maxLevel){
 				console.log("Cannot generate icicle plot, min_level > max_level")
 				return 
@@ -135,7 +115,7 @@ export default {
 
 			for(let i = 0; i < this.path_hierarchy.length; i += 1){
 				let level = this.path_hierarchy[i][0].length
-				console.log(level)
+				// console.log(level)
 				if(level == 1){
 					ret.push(this.path_hierarchy[i])
 				}
@@ -143,11 +123,11 @@ export default {
 					ret.push(this.path_hierarchy[i])					
 				}
 				else{
-					console.log('aaaa')
+					// console.log('aaaa')
 				}
 			}
 			this.path_hierarchy = ret
-			console.log("Number of children: ", this.path_hierarchy)
+			// console.log("Number of children: ", this.path_hierarchy)
 
 			const json = this.buildHierarchy(this.path_hierarchy)
 			this.drawIcicles(json)
@@ -223,6 +203,7 @@ export default {
 						// Reached the end of the sequence; create a leaf node.
 						childNode = {
 							name: nodeName,
+							module: nodeName,
 							value: inc_time,
 							exclusive: exclusive,
 							imbalance_perc,
@@ -421,7 +402,7 @@ export default {
 						return '';
 					}
 
-					let name = d.data.name
+					let name = d.data.module
 					var textSize = this.textSize(name)['width'];
                     if (textSize < d.height) {
                         return name;
@@ -431,24 +412,25 @@ export default {
 				});
 		},
 
-		click(){
-			// const percentage = (100 * d.value / this.totalSize).toPrecision(3);
-			// let percentageString = `${percentage}%`;
-			// if (percentage < 0.1) {
-			// 	percentageString = '< 0.1%';
-			// }
-
-			// const sequenceArray = this.getAncestors(d);
-			// this.updateBreadcrumbs(sequenceArray, percentageString);
+		click(d){
+			let splitByOption = this.selectedSplitOption.name
 
 			// Fade all the segments.
 			d3.selectAll('.icicleNode')
-				.style('opacity', 0.3);
+				.style('opacity', 0.3)
 
+			let sequenceArray = this.getAncestors(d);
 			// Then highlight only those that are an ancestor of the current segment.
 			this.hierarchy.selectAll('.icicleNode')
-				.filter(node => (sequenceArray.indexOf(node) >= 0))
+				.filter(node => {
+					console.log(sequenceArray)
+					return (sequenceArray.indexOf(node) >= 0)
+				})
 				.style('opacity', 1);
+				
+			this.$socket.emit(splitByOption, {
+
+			})
 		},
 
 		// Restore everything to full opacity when moving off the visualization.

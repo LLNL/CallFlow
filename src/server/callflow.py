@@ -282,15 +282,14 @@ class CallFlow:
             groupBy(state1, action["groupBy"])
             nx = CallGraph(state1, 'group_path', True, action["groupBy"])
         
-        elif action_name == 'filter':
+        elif action_name == 'reset':
             datasets = [dataset1]
             if ("dataset2" in action):
                 datasets = [dataset1, dataset2]
             self.reUpdate = True
-            self.states = self.pipeline(datasets, action["filterBy"], action["filterPerc"]) 
-            groupBy(self.states[dataset1], action["groupBy"])
-            nx = CallGraph(self.states[dataset1], 'group_path', True, action["groupBy"])
+            self.states = self.pipeline(datasets, action["filterBy"], action["filterPerc"])
             self.reUpdate = False
+            return {}
         
         elif action_name == "group":
             group = groupBy(state1, action["groupBy"])

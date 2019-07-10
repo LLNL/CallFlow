@@ -1,14 +1,9 @@
 import tpl from '../html/cct.html'
-import preprocess from './callgraph/preprocess'
 import Nodes from './cct/nodes'
 import Edges from './cct/edges'
-import Sankey from './callgraph/sankey'
 
 import * as  d3 from 'd3'
 import dagreD3 from 'dagre-d3/dist/dagre-d3';
-
-import Color from '../old_components/callflow/color';
-// import { behavior } from 'd3-behavior'
 
 export default {
     name: 'CCT',
@@ -19,7 +14,7 @@ export default {
     },
 
     props: [
-        // 'data'
+        "selectedColorBy"
     ],
 
     data: () => ({
@@ -41,7 +36,6 @@ export default {
         height: null,
         treeHeight: null,
         color: null,
-        colorOption: 1
     }),
 
     watch: {
@@ -50,7 +44,7 @@ export default {
 
     sockets: {
         cct(data) {
-            this.render(data)
+            this.init(data)
         },
     },
 
@@ -60,38 +54,30 @@ export default {
 
     methods: {
         init(data) {
-            this.width = window.innerWidth
-            this.height = window.innerHeight //- this.margin.top - this.margin.bottom
+            this.data = data
+            this.width = document.getElementById('cct_vis').clientWidth - this.margin.left - this.margin.right
+            this.height = window.innerHeight * 0.99  - this.margin.bottom
             d3.select('#' + this.id)
                 .attr('class', 'sankey')
                 .attr('width', this.width + this.margin.left + this.margin.right)
                 .attr('height', this.height + this.margin.top + this.margin.bottom)
-
-            // this.data = preprocess(data, false)
-            // this.d3sankey = this.initSankey(this.data)
-            // this.postProcess(this.data.nodes, this.data.links)
-
-            // Set color scales
-            // this.view.color = new Color(this.colorOption)
-            // this.view.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
-
             this.render(data)
         },
 
-        // render() {
-
-        //     this.$refs.Nodes.init(this.data, this.view)
-        //     this.$refs.Edges.init(this.data, this.view)
-        // },
-
-        render(data) {
+        render() {
             // Create a new directed graph
             let g = new dagreD3.graphlib.Graph().setGraph({});
 
-            let nodes = JSON.parse(JSON.stringify(data.nodes))
-            let links = JSON.parse(JSON.stringify(data.links))
+            let nodes = JSON.parse(JSON.stringify(this.data.nodes))
+            let links = JSON.parse(JSON.stringify(this.data.links))
             nodes.forEach((node, i) => {
-                g.setNode(node['id'], { label: node['id'] })// + '/' + node['module'][0] });
+                g.setNode(node['id'], { 
+                    label: node['module'] + ':' + node['id'],
+                    exclusive: node['time'],
+                    value: node['time (inc)'],
+                    module: node['module'],
+                    imbalance_perc: node['imbalance_perc'],
+                })
             });
 
             // Set up the edges
@@ -99,12 +85,14 @@ export default {
                 g.setEdge(links[i]['source'], links[i]['target'], { label: '' });
             }
 
+            let self = this 
             // Set some general styles
             g.nodes().forEach(function (v) {
                 let node = g.node(v);
                 if (node != undefined) {
-                    node.style = "stroke: 3px"
-                    node.style = "fill: #f77"
+                    let color = self.$store.color.getColor(node)
+                    // node.style = "stroke:" + self.$store.color.setContrast(color) 
+                    node.style = "fill:" + color
                     node.rx = node.ry = 5;
                 }
             });
@@ -113,8 +101,6 @@ export default {
                 var edge = g.edge(e)
                 // g.edge(e).style = "stroke: 1.5px "
             })
-
-            console.log(g.nodes(), g.edges())
 
             let svg = d3.select("#" + this.id)
             svg.append('g')
@@ -144,112 +130,7 @@ export default {
         },
 
         update(data) {
-            this.data = preprocess(data, false)
-            this.d3sankey = this.initSankey(this.data)
-            this.postProcess(this.data.nodes, this.data.links)
-
-            // Set color scales
-            this.view.color = new Color(this.colorOption)
-            this.view.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
-
-            this.render()
-        },
-
-        //Sankey computation
-        initSankey() {
-            let sankey = Sankey()
-                .nodeWidth(this.sankey.nodeWidth)
-                .nodePadding(this.sankey.ySpacing)
-                .size([this.width * 1.05, this.height - this.sankey.ySpacing])
-                .xSpacing(this.sankey.xSpacing)
-                //    .setReferenceValue(this.data.rootRunTimeInc)
-                .setMinNodeScale(this.sankey.nodeScale);
-
-            let path = sankey.link()
-
-            sankey.nodes(this.data.nodes)
-                .links(this.data.links)
-                .layout(32)
-            return sankey
-        },
-
-        postProcess(nodes, edges) {
-            const temp_nodes = nodes.slice();
-            const temp_edges = edges.slice();
-
-            this.computeNodeEdges(temp_nodes, temp_edges);
-            this.computeNodeBreadths(temp_nodes, temp_edges);
-
-            for (let i = 0; i < temp_edges.length; i++) {
-                const source = temp_edges[i].sourceID;
-                const target = temp_edges[i].targetID;
-
-                if (source != undefined && target != undefined) {
-                    const source_x = nodes[source].level;
-                    const target_x = nodes[target].level;
-                    const dx = target_x - source_x;
-
-                    // Put in intermediate steps
-                    for (let j = dx; j > 1; j--) {
-                        const intermediate = nodes.length;
-                        const tempNode = {
-                            sankeyID: intermediate,
-                            name: 'intermediate',
-                            //                    weight: nodes[i].weight,
-                            //		            height: nodes[i].value
-                        };
-                        nodes.push(tempNode);
-                        edges.push({
-                            source: intermediate,
-                            target: (j == dx ? target : intermediate - 1),
-                            value: edges[i].value,
-                        });
-                        if (j == dx) {
-                            edges[i].original_target = target;
-                            edges[i].last_leg_source = intermediate;
-                        }
-                    }
-                }
-            }
-        },
-
-        computeNodeEdges(nodes, edges) {
-            nodes.forEach((node) => {
-                node.sourceLinks = [];
-                node.targetLinks = [];
-            });
-            edges.forEach((edge) => {
-                let source = edge.sourceID,
-                    target = edge.targetID;
-
-                if (source != undefined && target != undefined) {
-                    nodes[source].sourceLinks.push(edge);
-                    nodes[target].targetLinks.push(edge);
-                }
-            });
-
-            return {
-                nodes,
-                edges,
-            };
-        },
-
-        computeNodeBreadths(nodes, edges) {
-            let remainingNodes = nodes.map((d) => d);
-            let nextNodes;
-            let x = 0;
-            while (remainingNodes.length) {
-                nextNodes = [];
-                remainingNodes.forEach((node) => {
-                    node.sourceLinks.forEach((link) => {
-                        if (nextNodes.indexOf(link.target) < 0) {
-                            nextNodes.push(link.target);
-                        }
-                    });
-                });
-                remainingNodes = nextNodes;
-                ++x;
-            }
+         
         },
     }
 }

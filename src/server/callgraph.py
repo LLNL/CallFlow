@@ -10,8 +10,6 @@
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
 
-
-#import ete3
 import networkx as nx
 from logger import log
 import math
@@ -31,9 +29,7 @@ class CallGraph(nx.Graph):
         self.rootRunTimeInc = self.root_runtime_inc()
         self.edge_direction = {}        
         self.g = nx.DiGraph(rootRunTimeInc = int(self.rootRunTimeInc))
-        
-        print(self.df.columns)
-
+    
         self.add_paths(path_name)
 
         if add_info == True:
@@ -256,7 +252,6 @@ class CallGraph(nx.Graph):
     def immediate_children(self):
         ret = {}
         parentChildMap = nx.dfs_successors(self.g, self.root)
-        print('aaaaaaaaaaaaaaaaaaaaaaaaa', parentChildMap)
         nodes = self.g.nodes()
         for node in nodes:
             if node in parentChildMap.keys():

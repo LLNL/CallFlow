@@ -3,7 +3,7 @@ import tpl from '../html/diffgraph.html'
 import * as  d3 from 'd3'
 import dagreD3 from 'dagre-d3/dist/dagre-d3';
 
-import Color from '../old_components/callflow/color'
+// import Color from './color'
 
 export default {
     name: 'Diffgraph',

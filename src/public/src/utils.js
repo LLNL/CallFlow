@@ -16,8 +16,9 @@ Array.prototype.SumArray = function (arr) {
     return sum;
 }
 
-/** Deep copy the given object considering circular structure.*This
-function caches all nested objects and its copies.*If it detects circular structure, use cached copy to avoid infinite loop.*
+/** Deep copy the given object considering circular structure.
+ **This function caches all nested objects and its copies.*If it detects 
+ circular structure, use cached copy to avoid infinite loop.*
     *
     @param {
         *

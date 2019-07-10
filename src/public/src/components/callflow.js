@@ -27,14 +27,16 @@ export default {
 		socketError: false,
 		server: 'localhost:5000',
 		config: {
-			headers: { 'Access-Control-Allow-Origin': '*' }
+			headers: {
+				'Access-Control-Allow-Origin': '*'
+			}
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
+		selectedFormat: 'Callgraph',
 		datasets: [],
 		selectedDataset: '',
 		selectedDataset2: '',
-		selectedFormat: 'Callgraph',
 		groupBy: ['Name', 'Module', 'File'],
 		selectedGroupBy: 'Module',
 		filterBy: ['Inclusive', 'Exclusive'],
@@ -43,8 +45,8 @@ export default {
 		selectedIncTime: 0,
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 10,
-		colorBy: ['Name', 'Exclusive', 'Inclusive', 'Imbalance'],
-		selectedColorBy: 'Exclusive',
+		colorBy: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
+		selectedColorBy: 'Inclusive',
 		modes: [],
 		selectedMode: 'Single',
 		CallgraphData: null,
@@ -55,8 +57,7 @@ export default {
 		firstRender: false,
 	}),
 
-	watch: {
-	},
+	watch: {},
 
 	mounted() {
 		this.$socket.emit('init')
@@ -81,8 +82,7 @@ export default {
 				this.enableDiff = true
 				this.modes = ['Single', 'Diff']
 				this.selectedDataset2 = data['names'][1]
-			}
-			else {
+			} else {
 				this.enableDiff = false
 				this.modes = ['Single']
 				this.selectedDataset2 = ''
@@ -90,19 +90,21 @@ export default {
 				this.minExcTime = data['min_excTime']
 				this.maxIncTime = data['max_incTime']
 				this.minIncTime = data['min_incTime']
-				this.selectedIncTime = (this.selectedFilterPerc*this.maxIncTime)/100
+				this.selectedIncTime = (this.selectedFilterPerc * this.maxIncTime) / 100
 			}
 			this.init()
 		},
 
-		filter(data) {
+		reset(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
-			this.update(data)
+			this.init()
 		},
 
 		group(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
-			this.update(data)
+			this.$refs.Callgraph.init(data)
+			this.$refs.Histogram.init()
+			this.$refs.Icicle.init()
 		},
 
 		diff(data) {
@@ -115,17 +117,15 @@ export default {
 		clear() {
 			if (this.selectedFormat == 'Callgraph') {
 				this.$refs.CCT.clear()
-			}
-			else if (this.selectedFormat == 'CCT') {
+			} else if (this.selectedFormat == 'CCT') {
 				this.$refs.Callgraph.clear()
 			}
 		},
 
-		clearLocal(){
+		clearLocal() {
 			if (this.selectedFormat == 'Callgraph') {
 				this.$refs.Callgraph.clear()
-			}
-			else if (this.selectedFormat == 'CCT') {
+			} else if (this.selectedFormat == 'CCT') {
 				this.$refs.CCT.clear()
 			}
 		},
@@ -134,14 +134,19 @@ export default {
 			// Initialize colors
 			this.colors()
 			if (this.selectedMode == 'Single') {
-				this.$socket.emit('group', {
-					dataset: this.$store.selectedDataset,
-					format: this.selectedFormat,
-					groupBy: this.selectedGroupBy
-				})
+				if (this.selectedFormat == 'CCT') {
+					this.$socket.emit('cct', {
+						dataset: this.$store.selectedDataset,
+					})
+				} else if (this.selectedFormat == 'Callgraph') {
+					this.$socket.emit('group', {
+						dataset: this.$store.selectedDataset,
+						format: this.selectedFormat,
+						groupBy: this.selectedGroupBy
+					})
+				}
 
-			}
-			else if (this.selectedMode == 'Diff') {
+			} else if (this.selectedMode == 'Diff') {
 				this.$socket.emit('diff', {
 					datasets: this.$store.datasets,
 					format: this.selectedFormat
@@ -149,47 +154,14 @@ export default {
 			}
 		},
 
-		colors(){
+		colors() {
 			this.$store.color = new Color(this.selectedColorBy)
 			this.$store.color.setColorScale(this.minIncTime, this.maxIncTime, this.minExcTime, this.maxExcTime)
 		},
 
-		update(data){	
-			if(this.firstRender == false){
-				this.firstRender = true
-			}
-			else{
-				console.log("Clearing the Sankey view")
-				this.clearLocal()
-			}
-
-			if (this.selectedFormat == 'Callgraph') {
-				if (this.isCallgraphInitialized == true) {
-					this.$refs.Callgraph.update(data)
-				}
-				else {
-					this.isCallgraphInitialized = true
-					this.$refs.Callgraph.init(data)
-					this.$refs.Histogram.init()
-					this.$refs.Icicle.init()
-				}
-			}
-			else if (this.selectedFormat == 'CCT') {
-				this.CCTData = data
-				if (this.isCCTInitialized == true) {
-					this.$refs.CCT.update(data)
-				}
-				else {
-					this.isCCTInitialized = true
-					this.$refs.CCT.init(data)
-				}
-			}
-		},
-
 		reset() {
-			this.$socket.emit('filter', {
+			this.$socket.emit('reset', {
 				dataset: this.$store.selectedDataset,
-				format: this.selectedFormat,
 				filterBy: this.selectedFilterBy,
 				filterPerc: this.selectedFilterPerc
 			})
@@ -198,27 +170,28 @@ export default {
 		updateColor() {
 			this.$store.color = new Color(this.selectedColorBy)
 			this.$store.color.setColorScale(this.minIncTime, this.maxIncTime, this.minExcTime, this.maxExcTime)
-			this.$refs.Callgraph.render()
+			if (this.selectedFormat == 'Callgraph') {
+				this.$refs.Callgraph.render()
+			} else if (this.selectedFormat == 'CCT') {
+				this.$refs.CCT.render()
+			}
 		},
 
 		updateFormat() {
 			Vue.nextTick(() => {
 				// this.clear()
-				console.log(this.selectedFormat)
-				if(this.selectedFormat == 'CCT'){
+				if (this.selectedFormat == 'CCT') {
 					this.$socket.emit('cct', {
 						dataset: this.$store.selectedDataset,
-						
 					})
-				}
-				else{
+				} else {
 					this.$socket.emit('group', {
 						dataset: this.$store.selectedDataset,
 						format: this.selectedFormat,
 						groupBy: this.selectedGroupBy
 					})
 				}
-				
+
 			})
 		},
 
@@ -250,7 +223,7 @@ export default {
 
 		updateFilterBy() {
 			Vue.nextTick(() => {
-				
+
 			})
 		},
 
@@ -266,16 +239,16 @@ export default {
 		},
 
 		updateFilterPerc() {
-			this.$socket.emit('filter', {
-				dataset: this.$store.selectedDataset,
-				format: this.selectedFormat,
-				filterBy: this.selectedFilterBy,
-				filterPerc: this.selectedFilterPerc
-			})
+			// this.$socket.emit('filter', {
+			// 	dataset: this.$store.selectedDataset,
+			// 	format: this.selectedFormat,
+			// 	filterBy: this.selectedFilterBy,
+			// 	filterPerc: this.selectedFilterPerc
+			// })
 		},
 
-		updateFilterIncTime(){
-			this.selectedFilterPerc = (this.selectedIncTime/this.maxIncTime)*100
+		updateFilterIncTime() {
+			this.selectedFilterPerc = (this.selectedIncTime / this.maxIncTime) * 100
 			this.$socket.emit('filter', {
 				dataset: this.$store.selectedDataset,
 				format: this.selectedFormat,

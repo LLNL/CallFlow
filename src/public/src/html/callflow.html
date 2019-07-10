@@ -71,20 +71,25 @@
 		<v-flex>
 			<v-container fluid fill-height class="pa-0">
 				<v-layout justify-center align-center>
-					<v-flex xs3 fill-height class="pa-0">
-						<Histogram ref="Histogram" v-bind:selected-color-by="selectedColorBy"/>
+					<v-flex xs3 fill-height class="pa-0" v-if="selectedFormat == 'Callgraph'">
+						<Histogram ref="Histogram" 
+							v-bind:selected-color-by="selectedColorBy"
+							v-if="selectedFormat=='Callgraph'"/>
 						<Icicle 
-							ref="Icicle" />
+							ref="Icicle" 
+							v-if="selectedFormat=='Callgraph'"/>
 					</v-flex>
-					<v-flex xs9 fill-height class="pa-0" id="vis" v-if="selectedMode == 'Single'">
+					<v-flex xs9 fill-height class="pa-0" id="vis" v-if="selectedMode == 'Single' && selectedFormat =='Callgraph' ">
 						<Callgraph 
 							ref="Callgraph" 
 							v-if="selectedFormat == 'Callgraph'" />
+					</v-flex>
+					<v-flex xs12 fill-height class="pa-0" id="cct_vis" v-if="selectedMode == 'Single' && selectedFormat == 'CCT'">
 						<CCT 
 							ref="CCT" 
 							v-if="selectedFormat == 'CCT'"/>
-						</v-flex>
-					<v-flex xs9 fill-height class="pa-0" id="vis" v-if="selectedMode == 'Diff'">
+					</v-flex>
+					<v-flex xs9 fill-height class="pa-0" id="diff_vis" v-if="selectedMode == 'Diff'">
 						<Diffgraph 
 							ref="Diffgraph" />
 					</v-flex>
