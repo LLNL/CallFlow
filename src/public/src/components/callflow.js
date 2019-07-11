@@ -9,6 +9,7 @@ import Vue from 'vue'
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/antd.css'
 import Color from './color';
+import { timingSafeEqual } from 'crypto';
 
 export default {
 	name: 'entry',
@@ -86,11 +87,11 @@ export default {
 				this.enableDiff = false
 				this.modes = ['Single']
 				this.selectedDataset2 = ''
-				this.maxExcTime = data['max_excTime']
-				this.minExcTime = data['min_excTime']
-				this.maxIncTime = data['max_incTime']
-				this.minIncTime = data['min_incTime']
-				this.selectedIncTime = (this.selectedFilterPerc * this.maxIncTime) / 100
+				this.$store.maxExcTime = data['max_excTime']
+				this.$store.minExcTime = data['min_excTime']
+				this.$store.maxIncTime = data['max_incTime']
+				this.$store.minIncTime = data['min_incTime']
+				this.selectedIncTime = (this.selectedFilterPerc * this.$store.maxIncTime*0.000001) / 100
 			}
 			this.init()
 		},
@@ -156,7 +157,16 @@ export default {
 
 		colors() {
 			this.$store.color = new Color(this.selectedColorBy)
-			this.$store.color.setColorScale(this.minIncTime, this.maxIncTime, this.minExcTime, this.maxExcTime)
+			if(this.selectedColorBy == 'Inclusive'){
+				this.colorMin = this.$store.minIncTime
+				this.colorMax = this.$store.maxIncTime
+			}
+			else if(this.selectedColorBy == 'Exclusive'){
+				this.colorMin = this.$store.minExcTime
+				this.colorMax = this.$store.maxExcTime
+			}
+
+			this.$store.color.setColorScale(this.colorMin, this.colorMax)
 		},
 
 		reset() {
@@ -168,8 +178,7 @@ export default {
 		},
 
 		updateColor() {
-			this.$store.color = new Color(this.selectedColorBy)
-			this.$store.color.setColorScale(this.minIncTime, this.maxIncTime, this.minExcTime, this.maxExcTime)
+			this.colors()
 			if (this.selectedFormat == 'Callgraph') {
 				this.$refs.Callgraph.render()
 			} else if (this.selectedFormat == 'CCT') {

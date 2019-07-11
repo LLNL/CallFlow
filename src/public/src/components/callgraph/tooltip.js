@@ -1,6 +1,5 @@
     import tpl from '../../html/callgraph/tooltip.html'
     import * as d3 from 'd3'
-    import EventHandler from '../../EventHandler'
 
     export default {
         template: tpl,
@@ -12,7 +11,11 @@
         ],
 
         data: () => ({
-            id: ''
+            id: '',
+            textCount: 0,
+            textxOffset: 20,
+            textyOffset: 20,
+            textPadding: 13,
         }),
         sockets: {
             tooltip(data) {
@@ -23,8 +26,7 @@
 
         },
 
-        mounted() {
-        },
+        mounted() {},
         methods: {
             init(id) {
                 this.id = id
@@ -33,17 +35,20 @@
                     .attr('class', 'toolTipSVG')
 
                 this.toolTipG = this.toolTipDiv.append('g')
+                this.halfWidth = document.getElementById('callgraph_overview').clientWidth / 2
             },
 
             render(graph, node) {
                 this.clear()
                 var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
+                this.mousePos = d3.mouse(d3.select('#' + this.id).node())
+                this.mousePosX = this.mousePos[0]
+                this.mousePosY = this.mousePos[1]
                 this.toolTipG.attr('height', svgScale(10) + "px")
-                var mousePos = d3.mouse(d3.select('#' + this.id).node());
                 this.toolTipRect = this.toolTipG
                     .append('rect')
                     .attrs({
-                        "class": "toolTip",
+                        "class": "toolTipContent",
                         'fill': 'white',
                         "stroke": "black",
                         "rx": "10px",
@@ -53,17 +58,16 @@
                     })
                     .attrs({
                         'x': () => {
-                            let halfWidth = document.getElementById('callgraph_overview').clientWidth/2
-                            if (mousePos[0] + 10 + halfWidth > document.getElementById('callgraph_overview').clientWidth) {
-                                return (mousePos[0] - 200) + 'px';
-                            } else if (mousePos[0] < 100) {
-                                return (mousePos[0]) + 'px'
+                            if (this.mousePosX + this.halfWidth > document.getElementById('callgraph_overview').clientWidth) {
+                                return (this.mousePosX - 200) + 'px';
+                            } else if (this.mousePosX < 100) {
+                                return (this.mousePosX) + 'px'
                             } else {
-                                return (mousePos[0] - 200) + 'px';
+                                return (this.mousePosX - 200) + 'px';
                             }
                         },
                         'y': () => {
-                            return (mousePos[1] + 50) + "px";
+                            return (this.mousePosY + 50) + "px";
                         }
                     })
                 this.graph = graph
@@ -73,13 +77,25 @@
             },
 
             addText(text) {
+                this.textCount += 1
                 this.toolTipText = this.toolTipG
                     .append('text')
                     .style('font-family', 'sans-serif')
-                    .style('font-size', '13px')
+                    .style('font-size', '')
                     .attrs({
-                        'y': () => {},
-                        'x': () => {}
+                        'class': 'toolTipContent',
+                        'x': () => {
+                            if (this.mousePosX + this.halfWidth > document.getElementById('callgraph_overview').clientWidth) {
+                                return (this.mousePosX - 200) + this.textxOffset + 'px';
+                            } else if (this.mousePosX < 100) {
+                                return (this.mousePosX) + this.textxOffset + 'px'
+                            } else {
+                                return (this.mousePosX - 200) + this.textxOffset + 'px';
+                            }
+                        },
+                        'y': () => {
+                            return (this.mousePosY + 50) + this.textyOffset + this.textPadding * this.textCount + "px";
+                        }
                     })
                     .text(text)
             },
@@ -87,14 +103,13 @@
             times() {
                 let self = this
                 this.addText('Name: ' + this.node.name)
-                // .text("Name: " + self.node.name +
-                //     "<br> Inclusive Time: " + (self.node['inclusive'] * 0.000001).toFixed(3) + "s - " + (self.node['inclusive']).toFixed(3) + "%" +
-                //     "<br> Exclusive Time: " + (self.node['exclusive'] * 0.000001).toFixed(3) + "s - " + (self.node["exclusive"]).toFixed(3) + "%");
+                this.addText('Inclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive/this.$store.maxIncTime)*100).toFixed(3)) + "%")
+                this.addText('Exclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive/this.$store.maxIncTime)*100).toFixed(3)) + "%")
             },
 
             paths() {
-                var textLength = 100;
-                var rectWidth = "5px";
+                var textLength = 100
+                var rectWidth = "5px"
 
                 this.toolTipG.selectAll('*').remove();
                 for (var tIndex = 0; tIndex < numberOfConn; tIndex++) {
@@ -133,7 +148,8 @@
             },
 
             clear() {
-                d3.selectAll('.toolTip').remove()
+                this.textCount = 0
+                d3.selectAll('.toolTipContent').remove()
             },
 
         }
