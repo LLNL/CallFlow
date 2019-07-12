@@ -9,7 +9,7 @@ import Vue from 'vue'
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/antd.css'
 import Color from './color';
-import { timingSafeEqual } from 'crypto';
+import colorbrewer from '../thirdParty/colorbrewer'
 
 export default {
 	name: 'entry',
@@ -48,8 +48,13 @@ export default {
 		selectedFilterPerc: 10,
 		colorBy: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
 		selectedColorBy: 'Inclusive',
+		colorMap: [],
+		selectedColorMap: "OrRd",
+		colorPoints: [3, 4, 5, 6, 7, 8, 9],
+		selectedColorPoint: 3, 
 		modes: [],
 		selectedMode: 'Single',
+		selectedBinCount: 5,
 		CallgraphData: null,
 		CCTData: null,
 		isCallgraphInitialized: false,
@@ -91,7 +96,9 @@ export default {
 				this.$store.minExcTime = data['min_excTime']
 				this.$store.maxIncTime = data['max_incTime']
 				this.$store.minIncTime = data['min_incTime']
-				this.selectedIncTime = (this.selectedFilterPerc * this.$store.maxIncTime*0.000001) / 100
+				this.$store.numbOfRanks = data['numbOfRanks']
+				this.$store.selectedBinCount = this.selectedBinCount
+				this.selectedIncTime = (this.selectedFilterPerc * this.$store.maxIncTime * 0.000001) / 100
 			}
 			this.init()
 		},
@@ -157,16 +164,17 @@ export default {
 
 		colors() {
 			this.$store.color = new Color(this.selectedColorBy)
-			if(this.selectedColorBy == 'Inclusive'){
+			this.colorMap = this.$store.color.getAllColors()
+			
+			if (this.selectedColorBy == 'Inclusive') {
 				this.colorMin = this.$store.minIncTime
 				this.colorMax = this.$store.maxIncTime
-			}
-			else if(this.selectedColorBy == 'Exclusive'){
+			} else if (this.selectedColorBy == 'Exclusive') {
 				this.colorMin = this.$store.minExcTime
 				this.colorMax = this.$store.maxExcTime
 			}
 
-			this.$store.color.setColorScale(this.colorMin, this.colorMax)
+			this.$store.color.setColorScale(this.colorMin, this.colorMax, this.selectedColorMap, this.selectedColorPoint)
 		},
 
 		reset() {
@@ -265,5 +273,24 @@ export default {
 				filterPerc: this.selectedFilterPerc
 			})
 		},
+
+		updateBinCount() {
+			// Update the binCount in the store
+			this.$store.selectedBinCount = this.selectedBinCount
+			// Clear the existing histogram if there is one.
+			if (this.$store.selectedNode != null) {
+				this.$refs.Histogram.clear()
+				let d = this.$store.selectedNode
+				this.$socket.emit('histogram', {
+					mod_index: d.mod_index[0],
+					module: d.module[0],
+					dataset1: this.$store.selectedDataset,
+				})
+			}
+			// Call updateMiniHistogram inside callgraph.js
+			this.$refs.Callgraph.updateMiniHistogram()
+			// TODO: Call updateHistogram for diffCallgraph when needed. 
+
+		}
 	}
 }

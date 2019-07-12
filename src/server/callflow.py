@@ -58,11 +58,13 @@ class CallFlow:
         self.config.min_incTime = 0
         self.config.max_excTime = 0
         self.config.min_excTime = 0
+        self.config.numbOfRanks = 0
         for idx, state in enumerate(self.states):
             self.config.max_incTime = utils.getMaxIncTime(self.states[state].gf)
             self.config.max_excTime = utils.getMaxExcTime(self.states[state].gf)
             self.config.min_incTime = utils.getMinIncTime(self.states[state].gf)
             self.config.min_excTime = utils.getMinExcTime(self.states[state].gf)
+            self.config.numbOfRanks = utils.getNumbOfRanks(self.states[state].gf)
 
     def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
         if self.reProcess:

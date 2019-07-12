@@ -429,7 +429,7 @@ export default {
 				.style('opacity', 1);
 				
 			this.$socket.emit(splitByOption, {
-
+				// "module":
 			})
 		},
 

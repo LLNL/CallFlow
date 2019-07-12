@@ -1,27 +1,29 @@
 /** *****************************************************************************
- * Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ * Copyright (c) 2017-19, Lawrence Livermore National Security, LLC.
  * Produced at the Lawrence Livermore National Laboratory.
  *
- * Written by Huu Tan Nguyen <htpnguyen@ucdavis.edu>.
+ * Written by Suraj Kesavan <spkesavan@ucdavis.edu>.
  *
  * LLNL-CODE-740862. All rights reserved.
  *
  * This file is part of CallFlow. For details, see:
  * https://github.com/LLNL/CallFlow
-11 * Please also read the LICENSE file for the MIT License notice.
+ * Please also read the LICENSE file for the MIT License notice.
  ***************************************************************************** */
+
 
 import tpl from '../html/histogram.html'
 import * as  d3 from 'd3'
-// import "d3-selection-multi"
+import "d3-selection-multi"
+import ToolTip from './Histogram/tooltip'
 
 export default {
     template: tpl,
     name: 'Histogram',
     components: {
+        ToolTip
     },
     props: [
-        // 'selectedColorBy'
     ],
     data: () => ({
         data: [],
@@ -31,7 +33,6 @@ export default {
             top: 10, right: 10, bottom: 30, left: 40,
         },
         dataset_index: [],
-        numbOfBins: 5,
         boxWidth: 0,
         boxHeight: 0,
         histogramOffset: 0,
@@ -75,6 +76,7 @@ export default {
             this.histogramSVGid = 'hist_view_svg'
             this.brush();
             this.setupSVG()
+            this.$refs.ToolTip.init('hist_view_svg')
         },
 
         setupSVG() {
@@ -102,6 +104,7 @@ export default {
             this.freq = temp[1];
             this.axis_x = temp[2];
             this.binContainsProcID = temp[3];
+            console.log(this.binContainsProcID)
 
             this.logScaleBool = false;
             this.histogramXScale = d3.scaleBand()
@@ -178,10 +181,9 @@ export default {
             const dataMax = dataSorted[dataSorted.length - 1];  
 
             
-            const dataWidth = ((dataMax - dataMin) / this.numbOfBins);
-            // console.log(dataWidth)
+            const dataWidth = ((dataMax - dataMin) / this.$store.selectedBinCount);
             const binContainsProcID = {};
-            for (let i = 0; i < this.numbOfBins; i++) {
+            for (let i = 0; i < this.$store.selectedBinCount; i++) {
                 xVals.push(i);
                 freq.push(0);
                 axis_x.push(dataMin + (i * dataWidth));
@@ -189,8 +191,8 @@ export default {
 
             dataSorted.forEach((val, idx) => {
                 let pos = Math.floor((val - dataMin) / dataWidth);
-                if (pos >= this.numbOfBins) {
-                    pos = this.numbOfBins - 1;
+                if (pos >= this.$store.selectedBinCount) {
+                    pos = this.$store.selectedBinCount - 1;
                 }
                 freq[pos] += 1;
                 if (binContainsProcID[pos] == null) {
@@ -268,6 +270,7 @@ export default {
         },
 
         bars() {
+            let self = this
             const toolTip = d3.select('#' + this.svg_id)
                 .append('div')
                 .attr('class', 'toolTip')
@@ -314,22 +317,9 @@ export default {
                         .attr('fill', 'red');
                     d3.selectAll(`.lineRank_${i}`)
                         .style('fill', 'orange')
-                        .style('fill-opacity', 1);
-                    const groupProcStr = this.groupProcess(this.binContainsProcID[i]).string;
-                    const mousePos = d3.mouse(d3.select(this.id).node());
-                    toolTip.style('opacity', 1)
-                        .style('left', () => {
-                            let xPos = mousePos[0] + 10;
-                            if (xPos >= this.width - 25) {
-                                return `${xPos - 100}px;`;
-                            }
-
-                            return `${mousePos[0] + 10}px`;
-                        })
-                        .style('top', () => `${mousePos[1]}px`)
-                        .style('height', 'auto')
-                        .style('width', 'auto');
-                    toolTipText.html(`Processes: ${groupProcStr}`);
+                        .style('fill-opacity', 1)
+                    let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;    
+                    self.$refs.ToolTip.render(groupProcStr, d)  
                 })
                 .on('mouseout', function (d, i) {
                     d3.select(this)
@@ -350,7 +340,7 @@ export default {
 
         /* Axis for the histogram */
         axis() {
-            const xFormat = d3.format('.1e');
+            const xFormat = d3.format('1e');
             const xAxis = d3.axisBottom(this.histogramXScale)
                 .ticks(this.MPIcount)
                 .tickFormat((d, i) => {
@@ -373,7 +363,7 @@ export default {
                     }
                     return d;
                 })
-                .ticks(5, '%');
+                .ticks(this.$store.numbOfRanks, '%');
 
             const xAxisLine = this.histogramSVG.append('g')
                 .attr('class', 'x axis')
@@ -426,7 +416,6 @@ export default {
         },
 
         rankLineScale() {
-            console.log(this.MPIcount)
             const ranklinescale = d3.scaleLinear().domain([0, this.MPIcount]).range([0, this.histogramWidth]);
             this.freq.forEach((fregVal, idx) => {
                 const processIDs = this.binContainsProcID[idx];

@@ -1,3 +1,16 @@
+/** *****************************************************************************
+ * Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ * Produced at the Lawrence Livermore National Laboratory.
+ *
+ * Written by Huu Tan Nguyen <htpnguyen@ucdavis.edu>.
+ *
+ * LLNL-CODE-740862. All rights reserved.
+ *
+ * This file is part of CallFlow. For details, see:
+ * https://github.com/LLNL/CallFlow
+ * Please also read the LICENSE file for the MIT License notice.
+ ***************************************************************************** */
+
 import tpl from '../../html/callgraph/miniHistograms.html'
 import * as d3 from 'd3'
 import 'd3-selection-multi'
@@ -17,22 +30,21 @@ export default {
         minimapXScale: null,
         minimapYScale: null,
         selectedColorBy: "Inclusive",
-        numbOfBins: 5,
         padding: {
             top: 0, left: 0, right: 0, bottom: 10
         },
         nodeScale: 0.99,
+        data: null,
     }),
 
     sockets: {
         miniHistogram(data) {
-            data = JSON.parse(data)
-            for (const [key, value] of Object.entries(data)) {
+            this.data = JSON.parse(data)
+            for (const [key, value] of Object.entries(this.data)) {
                 let node = this.getNode(key)
-                data = JSON.parse(value)
-                this.drawHistogram(data, node)
+                let d = JSON.parse(value)
+                this.drawHistogram(d, node)
             }
-
         }
     },
 
@@ -41,9 +53,8 @@ export default {
             this.graph = graph
             this.view = view
             this.$socket.emit('miniHistogram', {
-                'dataset1': 'osu_bw',
+                'dataset1': this.$store.selectedDataset,
             })
-
         },
 
         getNode(node_name) {
@@ -93,16 +104,16 @@ export default {
             const dataMin = dataSorted[0];
             const dataMax = dataSorted[dataSorted.length - 1];
 
-            const dataWidth = ((dataMax - dataMin) / this.numbOfBins);
-            for (let i = 0; i < this.numbOfBins; i++) {
+            const dataWidth = ((dataMax - dataMin) / this.$store.selectedBinCount);
+            for (let i = 0; i < this.$store.selectedBinCount; i++) {
                 xVals.push(i);
                 freq.push(0);
             }
 
             dataSorted.forEach((val, idx) => {
                 let pos = Math.floor((val - dataMin) / dataWidth);
-                if (pos >= this.numbOfBins) {
-                    pos = this.numbOfBins - 1;
+                if (pos >= this.$store.selectedBinCount) {
+                    pos = this.$store.selectedBinCount - 1;
                 }
                 freq[pos] += 1;
             });

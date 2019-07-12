@@ -61,6 +61,23 @@
 						</template>
 					</vue-slider>
 				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-text-field label="Number of bins in Histogram" class="mt-0" type="number"
+						v-model="selectedBinCount" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateBinCount()">
+					</v-text-field>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-select label="Color Map" :items="colorMap" v-model="selectedColorMap"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColor()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+						<v-text-field label="Color points (3-9)" class="mt-0" type="number"
+						v-model="selectedColorPoint" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateColor()">
+					</v-text-field>
+				</v-flex>
 
 				<v-spacer></v-spacer>
 			</v-layout>
@@ -72,26 +89,20 @@
 			<v-container fluid fill-height class="pa-0">
 				<v-layout justify-center align-center>
 					<v-flex xs3 fill-height class="pa-0" v-if="selectedFormat == 'Callgraph'">
-						<Histogram ref="Histogram" 
-							v-bind:selected-color-by="selectedColorBy"
-							v-if="selectedFormat=='Callgraph'"/>
-						<Icicle 
-							ref="Icicle" 
-							v-if="selectedFormat=='Callgraph'"/>
+						<Histogram ref="Histogram" v-bind:selected-color-by="selectedColorBy"
+							v-if="selectedFormat=='Callgraph'" />
+						<Icicle ref="Icicle" v-if="selectedFormat=='Callgraph'" />
 					</v-flex>
-					<v-flex xs9 fill-height class="pa-0" id="vis" v-if="selectedMode == 'Single' && selectedFormat =='Callgraph' ">
-						<Callgraph 
-							ref="Callgraph" 
-							v-if="selectedFormat == 'Callgraph'" />
+					<v-flex xs9 fill-height class="pa-0" id="vis"
+						v-if="selectedMode == 'Single' && selectedFormat =='Callgraph' ">
+						<Callgraph ref="Callgraph" v-if="selectedFormat == 'Callgraph'" />
 					</v-flex>
-					<v-flex xs12 fill-height class="pa-0" id="cct_vis" v-if="selectedMode == 'Single' && selectedFormat == 'CCT'">
-						<CCT 
-							ref="CCT" 
-							v-if="selectedFormat == 'CCT'"/>
+					<v-flex xs12 fill-height class="pa-0" id="cct_vis"
+						v-if="selectedMode == 'Single' && selectedFormat == 'CCT'">
+						<CCT ref="CCT" v-bind:selected-color-by="selected-color-by" v-if="selectedFormat == 'CCT'" />
 					</v-flex>
 					<v-flex xs9 fill-height class="pa-0" id="diff_vis" v-if="selectedMode == 'Diff'">
-						<Diffgraph 
-							ref="Diffgraph" />
+						<Diffgraph ref="Diffgraph" />
 					</v-flex>
 				</v-layout>
 			</v-container>

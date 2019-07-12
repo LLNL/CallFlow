@@ -1,8 +1,8 @@
 /*******************************************************************************
- * Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ * Copyright (c) 2017-19, Lawrence Livermore National Security, LLC.
  * Produced at the Lawrence Livermore National Laboratory.
  *
- * Written by Huu Tan Nguyen <htpnguyen@ucdavis.edu>.
+ * Written by Suraj Kesavan <spkesavan@ucdavis.edu>.
  *
  * LLNL-CODE-740862. All rights reserved.
  *
@@ -21,9 +21,10 @@ export default function Sankey() {
         size = [1, 1],
         nodes = [],
         links = [],
-        xSpacing = 1,
+        levelSpacing = 10,
         referenceValue = 0,
-	    minNodeScale = 0;
+        minNodeScale = 0,
+        maxLevel = 1;
     
     var widthScale;
     var minDistanceBetweenNode = 0;
@@ -34,9 +35,9 @@ export default function Sankey() {
         return sankey;  
     };
 
-    sankey.xSpacing = function(_) {
-        if(!arguments.length) return xSpacing;
-        xSpacing = +_;
+    sankey.levelSpacing = function(_) {
+        if(!arguments.length) return levelSpacing;
+        levelSpacing = +_;
         return sankey;
     }
 
@@ -62,6 +63,12 @@ export default function Sankey() {
         if (!arguments.length) return size;
         size = _;
         return sankey;
+    };
+
+    sankey.maxLevel = function(_){
+        if (!arguments.length) return maxLevel
+        maxLevel = _
+        return sankey
     };
 
     sankey.layout = function(iterations) {
@@ -141,15 +148,10 @@ export default function Sankey() {
             if(link.sourceID != undefined || link.targetID != undefined){                               
                 var source = link.sourceID,
 		            target = link.targetID;
-
-                // console.log(source, target)	    
-                // console.log(link.sourceID, link.targetID, nodes[link.sourceID], nodes[link.targetID])
-
 	            
                 source = link.source = nodes[link.sourceID];
                 target = link.target = nodes[link.targetID];
 
-                // console.log(source, target)
                 // Come back here and correct this bug. 
                 if(source != undefined && target != undefined){
                     if(link.type != 'back_edge'){
@@ -232,13 +234,12 @@ export default function Sankey() {
         // }
 	    nodes.forEach(function(node){
 	        node.dx = nodeWidth
-	    })
-
-	    let level = 7
-	    
+        })
+        console.log(maxLevel)
+        
         minDistanceBetweenNode = nodeWidth
-	    widthScale = scalePow().domain([0,level+1]).range([minDistanceBetweenNode, size[0]])	
-        scaleNodeBreadths((size[0] - nodeWidth/2) / (level - 1));
+        widthScale = scalePow().domain([0,maxLevel+1]).range([minDistanceBetweenNode, size[0]])	
+        scaleNodeBreadths((size[0] - nodeWidth/2) / (maxLevel - 1));
     }
 
     function moveSourcesRight() {

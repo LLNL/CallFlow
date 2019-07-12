@@ -31,8 +31,6 @@
             init(id) {
                 this.id = id
                 this.toolTipDiv = d3.select('#' + this.id)
-                    .append('svg')
-                    .attr('class', 'toolTipSVG')
 
                 this.toolTipG = this.toolTipDiv.append('g')
                 this.halfWidth = document.getElementById('callgraph_overview').clientWidth / 2

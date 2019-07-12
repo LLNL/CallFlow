@@ -67,6 +67,9 @@ def getMinExcTime(gf):
 def getNumOfNodes(gf):
     return gf.dataframe['module'].count()
 
+def getNumbOfRanks(gf):
+    return len(gf.dataframe['rank'][0])
+
 def graphmltojson(graphfile, outfile):
     """
     Converts GraphML file to json while adding communities/modularity groups

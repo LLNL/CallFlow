@@ -80,10 +80,10 @@ export default {
                     self.$refs.ToolTip.render(self.graph, d)  
                 })
                 .on('mouseout', function (d) {
-                    
+                    self.$refs.ToolTip.clear()
                 })
-                // TODO: Get the dataset from app.py. or make a store for vue-x
                 .on('click', (d) => {
+                    this.$store.selectedNode = d
                     this.$socket.emit('hierarchy', {
                         mod_index: d.mod_index[0],
                         module: d.module[0],
@@ -255,8 +255,5 @@ export default {
             this.$refs.ToolTip.clear()
         },
 
-        update() {
-            //   this.$refs.Sankey.tick()
-        },
     }
 }

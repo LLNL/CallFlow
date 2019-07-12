@@ -1,3 +1,17 @@
+/** *****************************************************************************
+ * Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ * Produced at the Lawrence Livermore National Laboratory.
+ *
+ * Written by Suraj Kesavan <spkesavan@ucdavis.edu>.
+ *
+ * LLNL-CODE-740862. All rights reserved.
+ *
+ * This file is part of CallFlow. For details, see:
+ * https://github.com/LLNL/CallFlow
+ * Please also read the LICENSE file for the MIT License notice.
+ ***************************************************************************** */
+
+
 import tpl from '../html/callgraph.html'
 import preprocess from './callgraph/preprocess'
 import Sankey from './callgraph/sankey'
@@ -5,6 +19,7 @@ import Nodes from './callgraph/nodes'
 import IntermediateNodes from './callgraph/intermediateNodes'
 import MiniHistograms from './callgraph/miniHistograms'
 import Edges from './callgraph/edges'
+import ColorMap from './callgraph/colormap'
 
 import * as  d3 from 'd3'
 
@@ -16,13 +31,14 @@ export default {
 		IntermediateNodes,
 		Edges,
 		MiniHistograms,
+		ColorMap,
 	},
 	props: [],
 	data: () => ({
 		graph: null,
 		id: 'callgraph_overview',
 		nodeWidth: 50,
-		xSpacing: 0,	
+		levelSpacing: 40,	
 		ySpacing: 50,
 		nodeScale: 1.0,
 		margin: {
@@ -67,23 +83,33 @@ export default {
 			// this.$refs.IntermediateNodes.init(this.data)
 			this.$refs.Edges.init(this.data, this.view)
 			this.$refs.MiniHistograms.init(this.data, this.view)
+			this.$refs.ColorMap.init()
 		},
 
 		clear() {
 			this.$refs.Nodes.clear()
 			this.$refs.Edges.clear()
 			this.$refs.MiniHistograms.clear()
+			this.$refs.ColorMap.clear(0)
 		},
 
 		update(data) {
 			this.data = preprocess(data, false)
+			this.maxLevel = data.maxLevel
+
 			console.log("Preprocessing done.")
 			this.d3sankey = this.initSankey(this.data)
 			console.log("Layout Calculation.")
 			this.postProcess(this.data.nodes, this.data.links)	
 			console.log("Post-processing done.") 
 
+
 			this.render()
+		},
+
+		updateMiniHistogram() {
+			this.$refs.MiniHistograms.clear()
+			this.$refs.MiniHistograms.init(this.data, this.view)
 		},
 
 		//Sankey computation
@@ -92,7 +118,8 @@ export default {
 				.nodeWidth(this.nodeWidth)
 				.nodePadding(this.ySpacing)
 				.size([this.width * 1.05, this.height - this.ySpacing])
-				.xSpacing(this.xSpacing)
+				.levelSpacing(this.levelSpacing)
+				.maxLevel(this.maxLevel)
 				//    .setReferenceValue(this.data.rootRunTimeInc)
 				.setMinNodeScale(this.nodeScale);
 

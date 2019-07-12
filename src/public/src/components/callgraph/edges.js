@@ -143,12 +143,19 @@ export default {
                 .style('fill-opacity', 0.3);
         },
 
-        clear() {
-            this.edges.selectAll('.edge').remove()
+        //hide all links not connected to selected node
+        fadeUnConnected(g) {
+            let thisLink = this.graph.links.selectAll(".link");
+            thisLink.filter(function (d) {
+                    return d.source !== g && d.target !== g;
+                })
+                .transition()
+                .duration(500)
+                .style("opacity", 0.05);
         },
 
-        update() {
-            //   this.$refs.Sankey.tick()
+        clear() {
+            this.edges.selectAll('.edge').remove()
         },
     }
 }
