@@ -52,6 +52,12 @@ export default {
 		selectedColorMap: "OrRd",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
 		selectedColorPoint: 3, 
+		selectedColorMin: null,
+		selectedColorMax: null,
+		selectedColorMinText: '',
+		selectedColorMaxText: '',
+		groupModes: ['include callbacks', 'exclude callbacks'],
+		selectedGroupMode: 'include callbacks',
 		modes: [],
 		selectedMode: 'Single',
 		selectedBinCount: 5,
@@ -98,7 +104,7 @@ export default {
 				this.$store.minIncTime = data['min_incTime']
 				this.$store.numbOfRanks = data['numbOfRanks']
 				this.$store.selectedBinCount = this.selectedBinCount
-				this.selectedIncTime = (this.selectedFilterPerc * this.$store.maxIncTime * 0.000001) / 100
+				this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime * 0.000001)/100).toFixed(3)
 			}
 			this.init()
 		},
@@ -166,15 +172,17 @@ export default {
 			this.$store.color = new Color(this.selectedColorBy)
 			this.colorMap = this.$store.color.getAllColors()
 			
-			if (this.selectedColorBy == 'Inclusive') {
-				this.colorMin = this.$store.minIncTime
-				this.colorMax = this.$store.maxIncTime
-			} else if (this.selectedColorBy == 'Exclusive') {
-				this.colorMin = this.$store.minExcTime
-				this.colorMax = this.$store.maxExcTime
-			}
-
-			this.$store.color.setColorScale(this.colorMin, this.colorMax, this.selectedColorMap, this.selectedColorPoint)
+				if (this.selectedColorBy == 'Inclusive') {
+					this.selectedColorMin = this.$store.minIncTime
+					this.selectedColorMax = this.$store.maxIncTime
+				} else if (this.selectedColorBy == 'Exclusive') {
+					this.selectedColorMin = this.$store.minExcTime
+					this.selectedColorMax = this.$store.maxExcTime
+				}
+	
+			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
+			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
+			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 		},
 
 		reset() {
@@ -187,6 +195,15 @@ export default {
 
 		updateColor() {
 			this.colors()
+			if (this.selectedFormat == 'Callgraph') {
+				this.$refs.Callgraph.render()
+			} else if (this.selectedFormat == 'CCT') {
+				this.$refs.CCT.render()
+			}
+		},
+
+		updateColorMinMax(){
+			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
 			if (this.selectedFormat == 'Callgraph') {
 				this.$refs.Callgraph.render()
 			} else if (this.selectedFormat == 'CCT') {

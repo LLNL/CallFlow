@@ -360,10 +360,9 @@ export default class Color {
         let ret = []
         let fraction = 1 / colorPoint
         for (let i = 0; i < colorPoint; i += 1) {
-            console.log(i*fraction)
-            ret.push(i * fraction * this.colorMax)
+            ret.push(i * fraction )
         }
-        ret.push(this.colorMax)
+        ret.push(1)
         return ret
     }
 
@@ -372,28 +371,27 @@ export default class Color {
         this.colorMax = max
         this.colorMap = this.colorbrewer[colorType][colorPoint]
         this.colorPadding = this.setColorPadding(colorPoint)
-        console.log(this.colorPadding)
         if (this.option == 'Module') {
-            this.colorScale = scale || d3.scaleOrdinal(d3.schemeCategory10)
+            this.colorScale = d3.scaleOrdinal(d3.schemeCategory10)
         } else if (this.option == 'Inclusive') {
             this.incColorScale = chroma.scale(this.colorMap)
-                .domain([min, max]).classes(colorPoint)
-                // .domain([min, max]);
+                // .padding(this.colorPadding)
+                .domain([min, max])
         } else if (this.option == 'Exclusive') {
             this.excColorScale = chroma.scale(this.colorMap)
-                .domain(this.colorPadding).classes(this.colorPoint)
-                // .domain([min, max]);
+                // .padding(this.colorPadding)
+                .domain([min, max]);
         } else if (this.option == 'nRange') {
             this.nRangeColorScale = chroma.scale(this.colorMap)
-                .padding(this.colorPadding)
+                // .padding(this.colorPadding)
                 .domain([0, 1])
         } else if (this.option == 'Diff') {
             this.diffColorScale = chroma.scale(this.colorMap)
-                .padding(this.colorPadding)
+                // .padding(this.colorPadding)
                 .domain([-1, 1]);
         } else if (this.option == 'Imbalance') {
             this.loadImbColorScale = chroma.scale(this.colorMap)
-                .padding(this.colorPadding)
+                // .padding(this.colorPadding)
                 .domain([0, 1]);
         }
     }

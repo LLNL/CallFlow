@@ -1,6 +1,7 @@
 import tpl from '../../html/callgraph/edges.html'
 import * as d3 from 'd3'
 import 'd3-selection-multi'
+import { timingSafeEqual } from 'crypto';
 
 export default {
     template: tpl,
@@ -41,84 +42,77 @@ export default {
             this.colorMap = this.color.colorMap
             this.colorPoints = this.color.colorPoints
 
-            let id = this.$parent.id
-            this.containerWidth = document.getElementById(id).clientWidth
-            this.containerHeight = document.getElementById(id).clientHeight
+            this.parentID = this.$parent.id
+            this.containerWidth = document.getElementById(this.parentID).clientWidth
+            this.containerHeight = document.getElementById(this.parentID).clientHeight
 
-            this.scaleG = d3.select('#' + id)
+            this.scaleG = d3.select('#' + this.parentID)
                 .append('g')
                 .attrs({
                     'id': 'colormap',
                 })
 
             this.render()
+            this.drawText()
         },
 
         render() {
             if (this.color.option == "Module") {
 
             } else {
-                let self = this
-                let splits = 100
+                let splits = 5
                 let color = this.color.getScale(this.color.option)
 
-                for (let i = 1; i < splits; i += 1) {
+                for (let i = 0; i < splits; i += 1) {
+                    let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
+                    console.log(splitColor, this.colorMax)
                     this.scaleG.append('rect')
                         .attrs({
                             'width': this.width / splits,
                             'height': this.height,
                             'x': i * (this.width / splits),
-                            'class':'colormap-rect',
+                            'class': 'colormap-rect',
                             'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - this.padding.bottom})`,
-                            'fill': color(this.colorMax/(splits-i))
+                            'fill': color(splitColor)
                         })
+                    if(i == splits - 1){
+                        console.log(color(this.colorMin + i*this.colorMax/(splits - i)))
+                    }
                 }
 
             }
+        },
 
+        drawText() {
+            // draw the element
+            this.scaleG.append("text")
+                .style("fill", "black")
+                .style("font-size", "14px")
+                .attrs({
+                    "dy": ".35em",
+                    "text-anchor": "middle",
+                    'class':'colormap-text',
+                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
+                })
+                .text(this.colorMin*0.000001 + 's');
 
-            // if (colorOption > 0) {
-            //     for (var i = 0; i < 100; i++) {
-            //         // nodeRunData.push(i);
-            //         var newSpan = document.createElement('span');
-            //         newSpan.style.backgroundColor = spanColor(i);
-            //         newSpan.style.display = 'inline-block';
-            //         newSpan.style.height = colorScaleHeight + 'px';
-            //         newSpan.style.width = '1%';
-            //         timeScaleDiv.appendChild(newSpan);
-            //     }
+            this.scaleG.append("text")
+                .style("fill", "black")
+                .style("font-size", "14px")
+                .attrs({
+                    "dy": ".35em",
+                    "text-anchor": "middle", 
+                    "class": "colormap-text",
+                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - 2*this.padding.bottom})`,
+                })
+                .text(this.colorMax*0.000001 + "s");
 
-            //     var fastSpan = document.createElement('span');
-            //     // fastSpan.setAttribute("id", "fastSpan");
-            //     fastSpan.style.position = "relative";
-            //     fastSpan.style.left = "0";
-            //     fastSpan.style.fontSize = "15px";
-            //     fastSpan.style.fontFamily = "sans-serif";
-            //     fastSpan.style.top = "5px";
-            //     fastSpan.innerHTML = innerHTMLText[0];
-            //     fastSpan.setAttribute("id", "slowAttr");
-            //     timeScaleDiv.appendChild(fastSpan);
-
-            //     var slowSpan = document.createElement('span');
-            //     slowSpan.style.position = "absolute";
-            //     // slowSpan.style.left = "140";
-            //     slowSpan.style.left = "190";
-            //     slowSpan.style.fontSize = "15px";
-            //     slowSpan.style.fontFamily = "sans-serif";
-            //     // slowSpan.style.top = $("#metricColorScale").position().top + colorScaleHeight + 5;// + 5;
-            //     slowSpan.style.top = $("#slowAttr").position().top;
-            //     slowSpan.innerHTML = innerHTMLText[1];
-            //     slowSpan.setAttribute("id", "fastAttr");
-
-            //     console.log($("#metricColorScale").position().top, colorScaleHeight, $("#slowAttr").position().top);
-
-
-            //     timeScaleDiv.appendChild(slowSpan);
-            // }
+            
         },
 
         clear() {
-            this.scaleG.selectAll('.colormap-rect').remove()
+            d3.selectAll('.colormap-text').remove()
+            d3.selectAll('.colormap-rect').remove()
         },
     }
 }

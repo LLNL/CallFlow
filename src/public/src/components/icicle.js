@@ -346,9 +346,7 @@ export default {
 				})
 				.style('fill', (d) => {
 					let color = this.$store.color.getColor(d.data);
-					if (color._rgb[0] == 204) {
-						return '#7A000E';
-					}
+					console.log(d.data)
 					return color;
 				})
 				.style('stroke', () => '#0e0e0e')

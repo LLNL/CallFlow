@@ -62,11 +62,12 @@ export default {
                 })
                 .attr('width', this.nodeWidth)
                 .attr('opacity', 0)
-                .style('fill', d => this.$store.color.getColor(d))
+                .style('fill', d => {
+                    let color = this.$store.color.getColor(d)
+                    console.log(color)
+                    return color
+                })
                 .style('fill-opacity', (d) => {
-                    if (d.name == 'intermediate') {
-                        return 0
-                    }
                     return 1
                 })
                 .style('shape-rendering', 'crispEdges')
