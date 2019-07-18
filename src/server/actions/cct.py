@@ -37,10 +37,14 @@ class CCT:
     def generic_map(self, nodes, attr):
         ret = {}
         for node in nodes:          
+            data = self.entire_df.loc[self.entire_df['name'] == node][attr]
             if attr == 'time' or attr == 'time (inc)' or attr == 'imbalance_perc':
-                ret[node] = self.entire_df.loc[self.entire_df['name'] == node][attr].mean()
+                ret[node] = data.mean()
             else:
-                ret[node] = list(set(self.entire_df[self.entire_df['name'] == node][attr].tolist()))[0]            
+                if(len(data) > 0):
+                    ret[node] = list(set(data.tolist()))[0]
+                else:
+                    ret[node] = 's'  
         return ret
 
     def add_paths(self, path_name):
@@ -56,4 +60,4 @@ class CCT:
     def run(self):    
         self.g = nx.DiGraph()
         self.add_paths('path')
-        self.add_node_attributes() 
+        self.add_node_attributes()

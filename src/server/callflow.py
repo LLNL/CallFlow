@@ -24,6 +24,7 @@ from actions.create import Create
 from actions.groupBy import groupBy
 from actions.split_callee import splitCallee
 from actions.split_caller import splitCaller
+from actions.split_rank import splitRank
 from actions.split_level import splitLevel
 from actions.struct_diff import structDiff
 from actions.cct import CCT
@@ -205,11 +206,11 @@ class CallFlow:
 
         return state
 
-    def histogram(self, state, mod_index):            
+    def histogram(self, state, module):            
         ret = []
         df = state.df
         entire_df = state.entire_df
-        func_in_module = df[df.mod_index == mod_index]['name'].unique().tolist()
+        func_in_module = df[df.module == module]['name'].unique().tolist()
         
         for idx, func in enumerate(func_in_module):
             ret.append({
@@ -304,32 +305,33 @@ class CallFlow:
             elif(action['groupBy'] == 'name'):
                 path_type = 'path'
             nx = CallGraph(state1, path_type, True, action["groupBy"])
+            return nx.g
 
         elif action_name == 'diff':
             union_state = structDiff(state1, state2)
-            nx = union_state
             # nx = CallGraph(union_state, 'group_path', True, 'module')
         
         elif action_name == 'split-level':
             splitLevel(state1, action["groupBy"])
             nx = CallGraph(state1, 'group_path', True)
+            return nx.g
         
         elif action_name == "split-callee":
             splitCallee(state1, action["groupBy"])
             nx = CallGraph(state1, 'path', True)
+            return nx.g
         
         elif action_name == "split-caller":
             splitCaller(state1, action["groupBy"])
             nx = CallGraph(state1, 'path', True)
+            return nx.g
         
         elif action_name == 'hierarchy':
             mH = moduleHierarchy(self.states[dataset1], action["module"])
-            # hierarchy = mH.hierarchy
-            # return json_graph.node_link_data(hierarchy)
             return mH.result 
 
         elif action_name == 'histogram':
-            ret = self.histogram(state1, action["mod_index"])
+            ret = self.histogram(state1, action["module"])
             return ret
 
         elif action_name == "mini-histogram":
@@ -339,7 +341,10 @@ class CallFlow:
         elif action_name == "cct":
             nx = CCT(state1)
             return nx.g
-           
+
+        elif action_name == 'split-rank':
+            ret = splitRank(state1, action['ids'])
+            return ret
         state1.g = nx.g
 
         return state1.g 

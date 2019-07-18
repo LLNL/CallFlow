@@ -1,28 +1,25 @@
 import tpl from '../../html/callgraph/edges.html'
 import * as d3 from 'd3'
 import 'd3-selection-multi'
-import { timingSafeEqual } from 'crypto';
 
 export default {
     template: tpl,
     name: 'ColorMap',
     components: {
-
     },
 
     props: [
-
     ],
 
     data: () => ({
         transitionDuration: 1000,
         width: 200,
-        height: 70,
+        height: 20,
         colorScaleHeight: 30,
         colorMin: 0,
         colorMax: 0,
         padding: {
-            bottom: 20,
+            bottom: 10,
             right: 250,
         }
     }),
@@ -43,8 +40,8 @@ export default {
             this.colorPoints = this.color.colorPoints
 
             this.parentID = this.$parent.id
-            this.containerWidth = document.getElementById(this.parentID).clientWidth
-            this.containerHeight = document.getElementById(this.parentID).clientHeight
+            this.containerWidth = this.$parent.width
+            this.containerHeight = this.$parent.height
 
             this.scaleG = d3.select('#' + this.parentID)
                 .append('g')
@@ -65,7 +62,6 @@ export default {
 
                 for (let i = 0; i < splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
-                    console.log(splitColor, this.colorMax)
                     this.scaleG.append('rect')
                         .attrs({
                             'width': this.width / splits,
@@ -75,9 +71,6 @@ export default {
                             'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - this.padding.bottom})`,
                             'fill': color(splitColor)
                         })
-                    if(i == splits - 1){
-                        console.log(color(this.colorMin + i*this.colorMax/(splits - i)))
-                    }
                 }
 
             }

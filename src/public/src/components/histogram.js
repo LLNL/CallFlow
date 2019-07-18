@@ -11,9 +11,8 @@
  * Please also read the LICENSE file for the MIT License notice.
  ***************************************************************************** */
 
-
 import tpl from '../html/histogram.html'
-import * as  d3 from 'd3'
+import * as d3 from 'd3'
 import "d3-selection-multi"
 import ToolTip from './Histogram/tooltip'
 
@@ -23,14 +22,16 @@ export default {
     components: {
         ToolTip
     },
-    props: [
-    ],
+    props: [],
     data: () => ({
         data: [],
         width: 0,
         height: 0,
         margin: {
-            top: 10, right: 10, bottom: 30, left: 40,
+            top: 10,
+            right: 10,
+            bottom: 10,
+            left: 10,
         },
         dataset_index: [],
         boxWidth: 0,
@@ -39,74 +40,56 @@ export default {
         histogramHeight: 0,
         histogramWidth: 0,
         histogramSVG: null,
-        id: 'hist_view',
+        id: 'histogram_view',
         firstRender: true,
         xVals: [],
         freq: [],
-        selectedColorBy: 'Inclusive', 
+        selectedColorBy: 'Inclusive',
         MPIcount: 0,
     }),
 
-    mounted() {
-    },
+    mounted() {},
 
     sockets: {
         histogram(data) {
             data = JSON.parse(data)
-            if (this.debug == true){
-                console.log(data)
-            }
-            this.start(data)
+            console.log("Histogram Data: ", data)
+            this.render(data)
         },
     },
 
     methods: {
         init() {
-            this.padding = { left: 15, top: 10, right: 0, bottom: 40 }
+            this.toolbarHeight = document.getElementById('toolbar').clientHeight
+			this.footerHeight = document.getElementById('footer').clientHeight
+            this.width = document.getElementById(this.id).clientWidth
+            this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight)*0.5
 
-            this.width = document.getElementById('hist_view').clientWidth
-            this.height = window.innerHeight / 2 - 50
-
-            this.boxWidth = this.width - this.margin.right - this.margin.left;
-            this.boxHeight = this.height - this.margin.top - this.margin.bottom - 20;
-            this.histogramOffset = Math.floor(this.boxHeight / 3);
-            this.histogramHeight = this.boxHeight - this.histogramOffset;
-            this.histogramWidth = this.boxWidth;
-
-            this.histogramSVGid = 'hist_view_svg'
-            this.brush();
-            this.setupSVG()
-            this.$refs.ToolTip.init('hist_view_svg')
+            this.histogramWidth = this.width - this.margin.right - this.margin.left;
+            this.histogramHeight = this.height - this.margin.top - this.margin.bottom;
         },
 
-        setupSVG() {
-            this.histogramSVG = d3.select('#' + this.id)
-                .append('svg')
-                .attrs({
-                    "id": "hist_view_svg",
-                    "width": this.boxWidth + this.margin.right + this.margin.left,
-                    "height": this.boxHeight + this.margin.top + this.margin.bottom,
-                })
-                .append('g')
-                .attr('transform', `translate(${this.margin.left},${this.margin.top})`)
-        },
-
-        start(data) {
+        render(data) {
             if (!this.firstRender) {
                 this.clear()
-                this.setupSVG()
             }
 
             this.firstRender = false
-
             const temp = this.dataProcess(data);
             this.xVals = temp[0];
             this.freq = temp[1];
             this.axis_x = temp[2];
             this.binContainsProcID = temp[3];
-            console.log(this.binContainsProcID)
-
             this.logScaleBool = false;
+
+            this.histogramSVG = d3.select('#' + this.id)
+                .attrs({
+                    "width": this.histogramWidth - this.margin.right - this.margin.left,
+                    "height": this.histogramHeight + this.margin.top + this.margin.bottom,
+                    "transform": `translate(${this.margin.left}, ${this.margin.top})`
+                })
+            this.$refs.ToolTip.init(this.id)
+
             this.histogramXScale = d3.scaleBand()
                 .domain(this.xVals)
                 .rangeRound([0, this.histogramWidth], 0.05)
@@ -122,8 +105,19 @@ export default {
                     .range([this.histogramHeight, 10]);
                 this.logScaleBool = true;
             }
-
             this.visualize();
+        },
+
+        clear() {
+            d3.select('#' + this.id).remove()
+            this.$refs.ToolTip.clear()
+        },
+
+        visualize() {
+            this.bars();
+            this.axis();
+            this.rankLineScale();
+            // this.brushes ()
         },
 
         setContainerWidth(newWidth) {
@@ -134,14 +128,13 @@ export default {
         setContainerHeight(newHeight) {
             this.containerHeight = newHeight
             this.height = this.containerHeight - this.margin.top - this.margin.bottom
-        },  
-
-        array_unique(arr) {
-            return arr.filter(function (value, index, self) { 
-              return self.indexOf(value) === index;
-            })
         },
 
+        array_unique(arr) {
+            return arr.filter(function (value, index, self) {
+                return self.indexOf(value) === index;
+            })
+        },
 
         dataProcess(data) {
             const xVals = [];
@@ -150,37 +143,33 @@ export default {
             const dataSorted = []
 
             let attr_data = {}
-            console.log("Histogram data by: ", this.selectedColorBy)
-            if(this.selectedColorBy == 'Inclusive'){
+            if (this.selectedColorBy == 'Inclusive') {
                 attr_data = data['time (inc)']
-            }
-            else if (this.selectedColorBy == 'Exclusive'){
+            } else if (this.selectedColorBy == 'Exclusive') {
                 attr_data = data['time']
-            }
-            else if(this.selectedColorBy == 'Name'){
+            } else if (this.selectedColorBy == 'Name') {
                 attr_data = data['rank']
-            }
-            else if(this.selectedColorBy == 'Imbalance'){
+            } else if (this.selectedColorBy == 'Imbalance') {
                 attr_data = data['imbalance']
             }
 
             let funcCount = Object.keys(attr_data).length
             let ranks = data['rank'][0]
             this.MPIcount = this.array_unique(ranks).length
-            for(let i = 0; i < attr_data[0].length; i += 1){
-                for(const [key, value] in Object.entries(attr_data)){
-                    if (dataSorted[i] == undefined){
+            for (let i = 0; i < attr_data[0].length; i += 1) {
+                for (const [key, value] in Object.entries(attr_data)) {
+                    if (dataSorted[i] == undefined) {
                         dataSorted[i] = 0
                     }
                     dataSorted[i] += attr_data[0][i]
                 }
-            }          
-
+            }
+``
             dataSorted.sort((a, b) => a - b)
             const dataMin = dataSorted[0];
-            const dataMax = dataSorted[dataSorted.length - 1];  
+            const dataMax = dataSorted[dataSorted.length - 1];
 
-            
+
             const dataWidth = ((dataMax - dataMin) / this.$store.selectedBinCount);
             const binContainsProcID = {};
             for (let i = 0; i < this.$store.selectedBinCount; i++) {
@@ -200,7 +189,7 @@ export default {
                 }
                 binContainsProcID[pos].push(data['rank'][0][idx]);
             });
-            this.data  = dataSorted
+            this.data = dataSorted
 
             // console.log(xVals, freq, axis_x, binContainsProcID)
             return [xVals, freq, axis_x, binContainsProcID];
@@ -236,6 +225,7 @@ export default {
                     cons(start, t + 1);
                 }
             }
+
             function display(k, t) {
                 let string = '';
                 const temp = [];
@@ -256,39 +246,14 @@ export default {
                 first = false;
             }
             groupArrayStr += ' ]';
-            return { string: groupArrayStr, array: groupArray };
-        },
-
-        clear() {
-            d3.select('#' + this.histogramSVGid).remove()
-        },
-
-        visualize() {
-            this.bars();
-            this.axis();
-            this.rankLineScale();
+            return {
+                string: groupArrayStr,
+                array: groupArray
+            };
         },
 
         bars() {
             let self = this
-            const toolTip = d3.select('#' + this.svg_id)
-                .append('div')
-                .attr('class', 'toolTip')
-                .style('position', 'absolute')
-                .style('padding', '5px 10px 0px 10px')
-                .style('opacity', 0)
-                .style('background', 'white')
-                .style('height', 'auto')
-                .style('width', 'auto')
-                .style('border-radius', '10px')
-                .style('border-width', '1px')
-                .style('border-style', 'solid')
-                .style('position', 'absolute');
-            const toolTipText = toolTip
-                .append('p')
-                .style('font-family', 'sans-serif')
-                .style('font-size', '13px');
-
             this.histogramSVG.selectAll('.selectBars').data(this.freq).enter()
                 .append('rect')
                 .attr('class', 'selectBars')
@@ -310,16 +275,15 @@ export default {
                 .attr('opacity', 1)
                 .attr('stroke-width', (d, i) => '0.2px')
                 .attr('stroke', (d, i) => 'black')
-                .on('click', (d, i) => {
-                })
+                .on('click', (d, i) => {})
                 .on('mouseover', function (d, i) {
                     d3.select(this)
                         .attr('fill', 'red');
                     d3.selectAll(`.lineRank_${i}`)
                         .style('fill', 'orange')
                         .style('fill-opacity', 1)
-                    let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;    
-                    self.$refs.ToolTip.render(groupProcStr, d)  
+                    let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
+                    self.$refs.ToolTip.render(groupProcStr, d)
                 })
                 .on('mouseout', function (d, i) {
                     d3.select(this)
@@ -327,14 +291,7 @@ export default {
                     d3.selectAll(`.lineRank_${i}`)
                         .style('fill', 'grey')
                         .style('fill-opacity', 0.4);
-
-                    toolTip.style('opacity', 0)
-                        .style('left', () => '0px')
-                        .style('top', () => '0px')
-                        .style('height', 'auto')
-                        .style('width', 'auto');
-
-                    toolTipText.html('');
+                    self.$refs.ToolTip.clear()
                 })
         },
 
@@ -447,10 +404,10 @@ export default {
                             var botY = this.boxHeight;
                             cumulativeBinSpace += (1) * widthPerRank;
 
-                            line = 'M' + topX1 + ' ' + topY
-                                + 'L ' + topX2 + ' ' + topY
-                                + 'L ' + botX4 + ' ' + botY
-                                + 'L ' + botX3 + ' ' + botY;
+                            line = 'M' + topX1 + ' ' + topY +
+                                'L ' + topX2 + ' ' + topY +
+                                'L ' + botX4 + ' ' + botY +
+                                'L ' + botX3 + ' ' + botY;
                         } else {
                             var start = group[0];
                             var end = group[1];
@@ -466,10 +423,10 @@ export default {
 
                             cumulativeBinSpace += (end - start + 1) * widthPerRank;
 
-                            line = 'M' + topX1 + ' ' + topY
-                                + 'L ' + topX2 + ' ' + topY
-                                + 'L ' + botX4 + ' ' + botY
-                                + 'L ' + botX3 + ' ' + botY;
+                            line = 'M' + topX1 + ' ' + topY +
+                                'L ' + topX2 + ' ' + topY +
+                                'L ' + botX4 + ' ' + botY +
+                                'L ' + botX3 + ' ' + botY;
                         }
 
                         rankLinesG.append('path')
@@ -515,47 +472,57 @@ export default {
                 .style('font-weight', 'lighter');
         },
 
+        drawBrush() {
+            this.brushdata = []
+            this.brushSVG = this.histogramSVG
+                .append('svg')
 
-        /* Brush for selecting the Sankey nodes and generating a new plot to compare */
-        brush() {
             this.brush = d3.brushX()
-                .extent([[this.padding.left, this.padding.top], [this.width - this.padding.right, this.height - this.padding.bottom]])
+                .extent([
+                    [this.margin.left, this.margin.top],
+                    [this.width - this.margin.right, this.height - this.margin.bottom]
+                ])
                 .on('brush', this.brushing)
-                .on('end', this.brushend);
-            // const brushG = this.histogramSVG.append('g').attr('class', 'brush').call(this.brush);
-            // brushG.selectAll('rect').attr('height', this.histogramHeight).attr('opacity', 0.2);
+                .on('end', this.brushend)
+            let id = 0
+            this.brushdata.push({
+                id: id,
+                brush: this.brush
+            })
+
+            this.brushSVG
+                .selectAll('.brush')
+                .data(this.brushdata)
+                .enter()
+                .insert("g", ".brush")
+                .attr("class", "brush")
+                .call(this.brush)
         },
 
         brushing() {
-            let brushStart = 0;
-            let brushEnd = this.numbOfBins;
-            let bExtent;
-            bExtent = brush.extent();
-            const brushScale = d3.scaleLinear().domain(histogramXScale.range()).range(histogramXScale.domain());
-            let localBrushStart = (brush.empty()) ? brushStart : Math.floor(brushScale(bExtent[0]));
-            if (localBrushStart < 0) {
-                localBrushStart = 0;
-            }
-            const localBrushEnd = (brush.empty()) ? brushEnd : Math.floor(brushScale(bExtent[1]));
-            this.histogramSVG.select('g.brush').call((brush.empty()) ? brush.clear() : brush.extent([brushScale.invert(localBrushStart), brushScale.invert(localBrushEnd)]));
+            const brushScale = d3.scaleLinear().domain(this.histogramXScale.domain()).range(this.histogramXScale.range());
+            let brushStart = d3.event.selection.map(brushScale.invert)[0]
+            let brushEnd = d3.event.selection.map(brushScale.invert)[1]
+            let brushPoints = this.histogramXScale.domain().length
 
-            brushStart = localBrushStart;
-            brushEnd = localBrushEnd;
+            this.localBrushStart = Math.floor(brushStart * brushPoints)
+            this.localBrushEnd = Math.ceil(brushEnd * brushPoints)
 
             // highlight rank lines that is brush
             this.histogramSVG.selectAll('.binRank').attr('opacity', 0);
-            for (let i = brushStart; i < brushEnd; i++) {
+            for (let i = this.localBrushStart; i < this.localBrushEnd; i++) {
                 this.histogramSVG.selectAll(`.bin_${i}`).attr('opacity', 1);
             }
 
-            if (brushStart == brushEnd) {
+            if (this.localBrushStart == this.localBrushEnd) {
                 this.histogramSVG.selectAll('.binRank').attr('opacity', 1);
             }
         },
 
         brushend() {
+            let self = this
             const processIDList = [];
-            for (let i = brushStart; i < brushEnd; i++) {
+            for (let i = this.localBrushStart; i < this.localBrushEnd; i++) {
                 if (self.binContainsProcID[i] != null) {
                     const curList = self.binContainsProcID[i];
                     curList.forEach((processID) => {
@@ -563,42 +530,10 @@ export default {
                     });
                 }
             }
-            this.brushCallBack(processIDList);
+            self.$socket.emit('split-rank', {
+                'dataset': self.$store.selectedDataset,
+                'ids': processIDList
+            })
         },
-
-        brushCallBack(processIDList) {
-            $.ajax({
-                type: 'GET',
-                contentType: 'application/json',
-                dataType: 'json',
-                url: '/calcEdgeValues',
-                data: { processIDList },
-                success(edgeSets) {
-                    // edges = edgeSets["brush"];
-                    const myNodes = [];
-
-                    const labelList = Object.keys(nodes);
-                    labelList.forEach((lab) => {
-                        let tempObj = nodes[lab];
-                        myNodes.push(tempObj);
-                    });
-
-                    const remapedEdgesBrushed = reMapEdges(edgeSets.brush);
-                    const remapedEdgesNonBrushed = reMapEdges(edgeSets.nonBrush);
-
-                    sankeyVis.changeProcessSelect({ brush: edgeSets.brush, nonBrush: edgeSets.nonBrush });
-                    sankeyVis.changeProcessSelect({ brush: remapedEdgesBrushed, nonBrush: remapedEdgesNonBrushed });
-
-                    if (showLabelBool == true) {
-                        d3.selectAll('.node text').style('opacity', 1);
-                    } else {
-                        d3.selectAll('.node text').style('opacity', 0);
-                    }
-                },
-                error() {
-                    console.log('There was problem with getting the metric data');
-                },
-            });
-        }
     }
 }

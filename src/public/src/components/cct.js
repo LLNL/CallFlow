@@ -13,10 +13,6 @@ export default {
         Edges,
     },
 
-    props: [
-        "selectedColorBy"
-    ],
-
     data: () => ({
         graph: null,
         id: 'cct_overview',
@@ -44,6 +40,7 @@ export default {
 
     sockets: {
         cct(data) {
+            console.log("CCT data: ", data)
             this.init(data)
         },
     },
@@ -55,7 +52,7 @@ export default {
     methods: {
         init(data) {
             this.data = data
-            this.width = document.getElementById('cct_vis').clientWidth - this.margin.left - this.margin.right
+            this.width = window.innerWidth - this.margin.left - this.margin.right
             this.height = window.innerHeight * 0.99  - this.margin.bottom
             d3.select('#' + this.id)
                 .attr('class', 'sankey')

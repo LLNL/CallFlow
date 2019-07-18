@@ -11,7 +11,7 @@
  * Please also read the LICENSE file for the MIT License notice.
  ***************************************************************************** */
 
-import tpl from '../../html/callgraph/miniHistograms.html'
+import tpl from '../../html/diffgraph/miniHistograms.html'
 import * as d3 from 'd3'
 import 'd3-selection-multi'
 
@@ -41,7 +41,6 @@ export default {
         miniHistogram(data) {
             this.data = JSON.parse(data)
             for (const [key, value] of Object.entries(this.data)) {
-                console.log(key)
                 let node = this.getNode(key)
                 let d = JSON.parse(value)
                 this.drawHistogram(d, node)
@@ -60,7 +59,6 @@ export default {
 
         getNode(node_name) {
             let ret = {}
-            console.log(this.graph)
             for (let i = 0; i < this.graph.nodes.length; i += 1) {
                 let node = this.graph.nodes[i]
                 if (node.name == node_name) {

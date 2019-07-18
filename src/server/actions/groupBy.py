@@ -40,7 +40,7 @@ class groupBy:
         group_path = []
         temp = None
         function = path[-1]        
-        module_idx = 0
+        self.callbacks = {}
         change_name = False
         
         for i, elem in enumerate(path):
@@ -60,12 +60,17 @@ class groupBy:
                 if temp == None or module != temp:
                     # Append "_" + module_idx if the module exists in the group_path. 
                     if module in group_path:
-                        module_idx += 1
-                        module = module + '_' + str(module_idx)
+                        from_module = group_path[len(group_path) - 1]
+                        to_module = module
+                        if(from_module not in self.callbacks):
+                            self.callbacks[from_module] = []
+                        if(to_module not in self.callbacks[from_module]):
+                            self.callbacks[from_module].append(to_module)
+                        
                         change_name = True
-
-                    group_path.append(module)
-                    temp = module
+                    else:
+                        group_path.append(module)
+                        temp = module
         
         group_path = tuple(group_path)
         return (group_path, change_name)
@@ -116,7 +121,7 @@ class groupBy:
 
                 component_path[rootdf.node[0]] = self.create_component_path(root.callpath, group_path[rootdf.node[0]])
                 component_level[rootdf.node[0]] = len(component_path[rootdf.node[0]])
-                node_name[rootdf.node[0]] =  self.state.lookup_with_node(root)['module'][0]
+                node_name[rootdf.node[0]] = self.state.lookup_with_node(root)['module'][0]
                 entry_func[rootdf.node[0]] = True
                 show_node[rootdf.node[0]] = True
                 module[rootdf.node[0]] = group_path[rootdf.node[0]][-1]
@@ -206,3 +211,5 @@ class groupBy:
         self.state.update_df('_'+self.group_by, module)
         self.state.update_df('change_name', change_name)
         self.state.update_df('mod_index', module_idx)
+
+        self.state.callbacks = self.callbacks

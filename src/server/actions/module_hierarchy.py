@@ -59,12 +59,19 @@ class moduleHierarchy:
         component_path_mapping = self.generic_map(self.hierarchy.nodes(), 'component_path')
         nx.set_node_attributes(self.hierarchy, name='component_path', values=component_path_mapping)
 
-    def create_hierarchy_df(self, module):
+    # instead of nid, get by module. nid seems very vulnerable rn. 
+    def run(self):
         df = self.df
+        print(self.module)
+        node = df.loc[df['module'] == self.module]
+        modules = node['module'].values.tolist()
+
+        module = modules[0]
+        print(modules)
         meta_nodes = df.loc[df['_module'] == module]
-        print(meta_nodes)
         if 'component_path' not in df.columns:
             utils.debug('Error: Component path not defined in the df')
+        
         self.add_paths(meta_nodes, 'component_path')
         self.add_node_attributes()
 
@@ -81,11 +88,6 @@ class moduleHierarchy:
                     "level": 1
                 })
             else:
-                # component_path_df = df.loc[df['name'] == func]['component_path']
-                # component_level_df = df.loc[df['name'] == func]['component_level']
-                # component_level_group_df = df.groupby(['_module', 'component_level'])
-                # for key, item in component_level_group_df:
-                #     print(component_level_group_df.get_group(key), "\n\n")
                 paths.append({
                     "name": func,
                     "path": list(df.loc[df['name'] == func]['component_path'].tolist()[0]),
@@ -96,20 +98,7 @@ class moduleHierarchy:
                 })
         paths_df = pd.DataFrame(paths)
 
-        # max_level = paths_df['component_level'].max()
-        # print("Max levels inside the node: {0}".format(max_level))
-            
         print(paths_df)
         return paths_df.to_json(orient="columns")
-
-    # instead of nid, get by module. nid seems very vulnerable rn. 
-    def run(self):
-        node = self.df.loc[self.df['module'] == self.module]
-        modules = node['module'].values.tolist()
-
-        module = modules[0]
-        hierarchy_graph = self.create_hierarchy_df(module)
-
-        return hierarchy_graph
 
         

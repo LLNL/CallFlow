@@ -30,6 +30,7 @@ export default function Sankey() {
     var minDistanceBetweenNode = 0;
 
     sankey.nodeWidth = function(_) {
+        console.log(_)
         if (!arguments.length) return nodeWidth;
         nodeWidth = +_;
         return sankey;  
@@ -232,6 +233,7 @@ export default function Sankey() {
         //     });
         //     remainingNodes = nextNodes;
         // }
+        console.log(nodeWidth)
 	    nodes.forEach(function(node){
 	        node.dx = nodeWidth
         })

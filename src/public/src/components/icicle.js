@@ -271,10 +271,7 @@ export default {
 			}
 			// Total size of all segments; we set this later, after loading the data
 			let root = d3.hierarchy(json)
-				.sum((d) => {
-					return d['value']
-				})
-
+				
 			const partition = d3.partition()
 				.size([this.width, this.height])
 
@@ -346,7 +343,7 @@ export default {
 				})
 				.style('fill', (d) => {
 					let color = this.$store.color.getColor(d.data);
-					console.log(d.data)
+					console.log(d)
 					return color;
 				})
 				.style('stroke', () => '#0e0e0e')
@@ -421,7 +418,6 @@ export default {
 			// Then highlight only those that are an ancestor of the current segment.
 			this.hierarchy.selectAll('.icicleNode')
 				.filter(node => {
-					console.log(sequenceArray)
 					return (sequenceArray.indexOf(node) >= 0)
 				})
 				.style('opacity', 1);

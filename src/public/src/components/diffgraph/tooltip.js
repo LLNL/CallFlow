@@ -1,4 +1,4 @@
-import tpl from '../../html/callgraph/tooltip.html'
+import tpl from '../../html/diffgraph/tooltip.html'
 import * as d3 from 'd3'
 
 export default {

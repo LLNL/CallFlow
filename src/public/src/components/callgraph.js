@@ -19,6 +19,7 @@ import Nodes from './callgraph/nodes'
 import IntermediateNodes from './callgraph/intermediateNodes'
 import MiniHistograms from './callgraph/miniHistograms'
 import Edges from './callgraph/edges'
+// import CallbackEdges from './callgraph/callbackEdges'
 import ColorMap from './callgraph/colormap'
 
 import * as  d3 from 'd3'
@@ -32,11 +33,13 @@ export default {
 		Edges,
 		MiniHistograms,
 		ColorMap,
+		// CallbackEdges,
 	},
 	props: [],
 	data: () => ({
 		graph: null,
-		id: 'callgraph_overview',
+		id: 'callgraph-overview',
+		dashboardID: 'callgraph-dashboard',
 		nodeWidth: 50,
 		levelSpacing: 40,	
 		ySpacing: 50,
@@ -50,21 +53,24 @@ export default {
 	}),
 
 	watch: {
-
 	},
 
 	mounted() {
-		this.id = this.id
 	},
 
 	methods: {
 		init(data) {
-			this.width = document.getElementById('vis').clientWidth - this.margin.left - this.margin.right
-			this.height = window.innerHeight * 0.89 - this.margin.top - this.margin.bottom
-			this.viewport = d3.select('#' + this.id)
-				.attr('class', 'sankey')
-				.attr('width', this.width + this.margin.left + this.margin.right)
-				.attr('height', this.height + this.margin.top + this.margin.bottom)
+			this.toolbarHeight = document.getElementById('toolbar').clientHeight
+			this.footerHeight = document.getElementById('footer').clientHeight
+			this.width = window.innerWidth*0.7 - this.margin.left - this.margin.right
+			this.height = window.innerHeight - this.margin.top - this.margin.bottom - this.toolbarHeight - this.footerHeight
+			this.sankeySVG = d3.select('#' + this.id)
+				.attrs({
+					'width': this.width + this.margin.left + this.margin.right,
+					"height": this.height + this.margin.top + this.margin.bottom,
+					// "transform": `translate(${this.width}, ${0.07*this.height})`,
+					"top": this.toolbarHeight
+				})
 
 			// this.zoom = behavior.zoom()
 			//   .scaleExtent([0.1, 1])
@@ -75,36 +81,34 @@ export default {
 			//     view.svgBase.attr('transform', `translate(${d3.event.translate})scale(${d3.event.scale})`);
 			// });
 
-			this.update(data)
-		},
-
-		render() {
-			this.$refs.Nodes.init(this.data, this.view)
-			// this.$refs.IntermediateNodes.init(this.data)
-			this.$refs.Edges.init(this.data, this.view)
-			this.$refs.MiniHistograms.init(this.data, this.view)
-			this.$refs.ColorMap.init()
+			this.render(data)
 		},
 
 		clear() {
 			this.$refs.Nodes.clear()
 			this.$refs.Edges.clear()
+			// this.$refs.CallbackEdges.clear()
 			this.$refs.MiniHistograms.clear()
 			this.$refs.ColorMap.clear(0)
 		},
 
-		update(data) {
+		render(data) {
 			this.data = preprocess(data, false)
-			this.maxLevel = data.maxLevel
+			this.maxLevel = this.data.maxLevel
 
 			console.log("Preprocessing done.")
 			this.d3sankey = this.initSankey(this.data)
 			console.log("Layout Calculation.")
-			this.postProcess(this.data.nodes, this.data.links)	
-			console.log("Post-processing done.") 
+			// this.postProcess(this.data.nodes, this.data.links)	
+			// console.log("Post-processing done.") 
 
+			this.$refs.Nodes.init(this.data, this.view)
+			// this.$refs.IntermediateNodes.init(this.data)
+			this.$refs.Edges.init(this.data, this.view)
+			// this.$refs.CallbackEdges.init(this.data, this.view)
+			this.$refs.MiniHistograms.init(this.data, this.view)
+			this.$refs.ColorMap.init()
 
-			this.render()
 		},
 
 		updateMiniHistogram() {
@@ -215,6 +219,7 @@ export default {
 				});
 				remainingNodes = nextNodes;
 				++x;
+				count += 1
 			}
 		},
 	}

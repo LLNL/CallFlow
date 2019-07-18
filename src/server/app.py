@@ -39,7 +39,6 @@ class App():
         self.verify_parser()
 
         self.debug = True
-
         self.config = configFileReader(self.args.config)
         self.config.server_dir = os.getcwd()
         self.config.callflow_dir = self.callflow_path + '/.callflow'
@@ -116,7 +115,7 @@ class App():
 
         @sockets.on('reset', namespace='/')
         def filter(data):
-            if self.debug == True:
+            if self.debug:
                 self.print('[Request] Filter the dataset.', data)
             dataset = data['dataset']
             filterBy = data['filterBy']
@@ -126,14 +125,14 @@ class App():
                 "filterBy": filterBy,
                 "filterPerc": filterPerc,
                 "dataset1": dataset,
-            }
+            }   
             g = self.callflow.update(obj)
             result = json_graph.node_link_data(g)
             emit('reset', result, json=True)
 
         @sockets.on('group', namespace='/')
         def group(data):
-            if self.debug == True:
+            if self.debug:
                 self.print('[Request] Group the dataset.', data)
             dataset = data['dataset']
             graphFormat = data['format']
@@ -144,45 +143,30 @@ class App():
                 "groupBy": groupBy,
                 "dataset1": dataset
             }
-            if(graphFormat == 'CCT'):
-                groupByAttr = 'name'
-                obj['groupBy'] = groupByAttr
-                g = self.callflow.update(obj)
-            elif(graphFormat == 'Callgraph'):
-                g = self.callflow.update(obj)
+            g = self.callflow.update(obj)
             result = json_graph.node_link_data(g)
             emit('group', result, json=True)
 
         @sockets.on('diff', namespace='/')
         def diff(data):
-            if self.debug == True:
+            if self.debug:
                 print('[Request] Diff the dataset.', data)
             dataset1 = data['dataset1']
             dataset2 = data['dataset2']
-            graph_format = data['format']
             print('[Diff] Comapring {0} and {1}'.format(dataset1, dataset2))
-            if(graph_format == 'CCT'):
-                group_by_attr = 'default'
-                g = self.callflow.update({
-                    "name": 'diff',
-                    "groupBy": group_by_attr,
-                    "dataset1": dataset1,
-                    "dataset2": dataset2
-                })
-            elif(graph_format == 'Callgraph'):
-                group_by_attr = 'module'
-                g = self.callflow.update({
-                    "name": 'diff',
-                    "groupBy": group_by_attr,
-                    "dataset1": dataset1,
-                    "dataset2": dataset2
-                })
-            result = json.dumps(g)
+            groupBy = data['groupBy'].lower()
+            g = self.callflow.update({
+                "name": 'group',
+                "groupBy": groupBy,
+                "dataset1": dataset1,
+                "dataset2": dataset2
+            })
+            result = json_graph.node_link_data(g)
             emit('diff', result, json=True)
 
         @sockets.on('hierarchy', namespace='/')
         def module_hierarchy(data):
-            if self.debug == True:
+            if self.debug:
                 print('[Request] Module hierarchy of the dataset.', data)
             nid = data['nid']
             dataset = data['dataset1']
@@ -195,26 +179,38 @@ class App():
 
         @sockets.on('uncertainity', namespace='/')
         def uncertainity(data):
-            if self.debug == True:
+            if self.debug:
                 self.print('[Request] Uncertainity of the dataset.')
             result = {}
             emit('uncertainity', result, json=True)
 
         @sockets.on('histogram', namespace="/")
         def histogram(data):
-            if self.debug == True:
+            if self.debug:
                 self.print('[Request] Histogram of a Module', data['module'])
             dataset = data['dataset1']
             result = self.callflow.update({
                 "name": "histogram",
                 "dataset1": dataset,
-                "mod_index": data['mod_index'],
+                "module": data['module'],
             })
             emit('histogram', result, json=True)
 
+        @sockets.on('scatterplot', namespace="/")
+        def scatterplot(data):
+            if self.debug:
+                self.print('[Request] ScatterPlot of a Module', data['module'])
+            dataset = data['dataset1']
+            result = self.callflow.update({
+                "name": "histogram",
+                "dataset1": dataset,
+                "module": data['module'],
+            })
+            emit('scatterplot', result, json=True)
+
         @sockets.on('miniHistogram', namespace="/")
         def histogram(data):
-            if self.debug == True:
+            if self.debug:
                 self.print("[Request] Mini-histogram", data)
             dataset = data['dataset1']
             result = self.callflow.update({
@@ -225,7 +221,7 @@ class App():
 
         @sockets.on('hierarchy', namespace="/")
         def hierarchy(data):
-            if self.debug == True:
+            if self.debug:
                 self.print("[Request] Hierarchy of module", data)
             result = self.callflow.update({
                 "name": "hierarchy",
@@ -236,7 +232,7 @@ class App():
 
         @sockets.on('tooltip', namespace="/")
         def tooltip(data):
-            if self.debug == True:
+            if self.debug:
                 self.print("[Request] Tooltip of node", data)
             result = self.callflow.update({
                 "name": "tooltip",
@@ -246,7 +242,7 @@ class App():
         
         @sockets.on('cct', namespace="/")
         def cct(data):
-            if self.debug == True:
+            if self.debug:
                 self.print("[Request] CCT of the run", data)
 
             g = self.callflow.update({
@@ -254,8 +250,20 @@ class App():
                 "dataset1": data['dataset'],
             })
             result = json_graph.node_link_data(g)
+            print(result)
             emit('cct', result, json=True)
 
+        @sockets.on('split-rank', namespace='/')
+        def split_rank(data):
+            if self.debug:
+                self.print("[Request] Split callgraph by rank", data)
+            
+            result = self.callflow.update({
+                "name": "split-rank",
+                "dataset1": data['dataset'],
+                "ids": data['ids']
+            })
+            emit('split-rank', result, json=True)
 
     def create_server(self):
         app.debug = True

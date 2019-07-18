@@ -1,5 +1,5 @@
 <v-app id="inspire">
-	<v-toolbar color="teal" dark fixed app clipped-right>
+	<v-toolbar id="toolbar" color="teal" dark fixed app clipped-right>
 		<v-toolbar-side-icon @click.stop="left = !left">
 		</v-toolbar-side-icon>
 		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
@@ -50,13 +50,15 @@
 					</v-text-field>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
-					<v-text-field label="Color minimum (in seconds)" class="mt-0" type="number" v-model="selectedColorMinText"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColorMinMax()">
+					<v-text-field label="Color minimum (in seconds)" class="mt-0" type="number"
+						v-model="selectedColorMinText" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateColorMinMax()">
 					</v-text-field>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
-					<v-text-field label="Color maximum (in seconds)" class="mt-0" type="number" v-model="selectedColorMaxText"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColorMinMax()">
+					<v-text-field label="Color maximum (in seconds)" class="mt-0" type="number"
+						v-model="selectedColorMaxText" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateColorMinMax()">
 					</v-text-field>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
@@ -75,8 +77,8 @@
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
-					<v-text-field label="Filter Threshold (in seconds)" v-model="selectedIncTime" class="mt-0" type="number"
-						@change="updateFilterIncTime"></v-text-field>
+					<v-text-field label="Filter Threshold (in seconds)" v-model="selectedIncTime" class="mt-0"
+						type="number" @change="updateFilterIncTime"></v-text-field>
 					<vue-slider id="frequency-slider" :width="200" :process="true" v-model="selectedFilterPerc"
 						:order="false" @change="updateFilterPerc" style="">
 						<template #prepend>
@@ -92,41 +94,55 @@
 						v-on:change="updateBinCount()">
 					</v-text-field>
 				</v-flex>
-
-
-				<v-spacer></v-spacer>
 			</v-layout>
 		</v-card>
 	</v-navigation-drawer>
 
-	<v-content class="pt-auto" fill-height id="dashboard">
-		<v-flex>
-			<v-container fluid fill-height class="pa-0">
-				<v-layout justify-center align-center>
-					<v-flex xs3 fill-height class="pa-0" v-if="selectedFormat == 'Callgraph'">
-						<Histogram ref="Histogram" v-bind:selected-color-by="selectedColorBy"
-							v-if="selectedFormat=='Callgraph'" />
-						<Icicle ref="Icicle" v-if="selectedFormat=='Callgraph'" />
-					</v-flex>
-					<v-flex xs9 fill-height class="pa-0" id="vis"
-						v-if="selectedMode == 'Single' && selectedFormat =='Callgraph' ">
-						<Callgraph ref="Callgraph" v-if="selectedFormat == 'Callgraph'" />
-					</v-flex>
-					<v-flex xs12 fill-height class="pa-0" id="cct_vis"
-						v-if="selectedMode == 'Single' && selectedFormat == 'CCT'">
-						<CCT ref="CCT" v-if="selectedFormat == 'CCT'" />
-					</v-flex>
-					<v-flex xs9 fill-height class="pa-0" id="diff_vis" v-if="selectedMode == 'Diff'">
-						<Diffgraph ref="Diffgraph" />
-					</v-flex>
-				</v-layout>
-			</v-container>
-		</v-flex>
+	<v-content class="pt-auto">
+		<v-layout v-show="selectedFormat == 'Callgraph'">
+			<splitpanes id="callgraph-dashboard" class="default-theme">
+				<splitpanes horizontal :splitpanes-size="30">
+					<span>
+						<Scatterplot ref="Scatterplot" />
+					</span>
+					<span>
+						<Histogram ref="Histogram" />
+					</span>
 
+				</splitpanes>
+				<span :splitpanes-size="70">
+					<Callgraph ref="Callgraph" />
+					<!-- <Callgraph2 ref="Callgraph2" /> -->
+				</span>
+			</splitpanes>
+		</v-layout>
+		<v-layout v-show="selectedFormat == 'CCT'">
+			<splitpanes id="cct-dashboard">
+				<span>
+					<CCT ref="CCT" />
+				</span>
+			</splitpanes>
+		</v-layout>
+		<v-layout v-show="selectedFormat == 'Diff'">
+			<splitpanes>
+				<splitpanes horizontal :splitpanes-size="30">
+					<span>
+						<Histogram ref="Histogram" />
+					</span>
+					<span>
+						<Icicle ref="Icicle" />
+					</span>
+				</splitpanes>
+				<span>
+					<Diffgraph ref="Diffgraph" />
+				</span>
+			</splitpanes>
+		</v-layout>
 	</v-content>
-	<v-footer color="teal" class="white--text" app>
+	<v-footer id="footer" color="teal" class="white--text" app>
 		<span> Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis </span>
 		<v-spacer></v-spacer>
-		<span>&copy; 2019</span>
+		<span>&copy; 2017 - 2019</span>
 	</v-footer>
+
 </v-app>

@@ -25,12 +25,14 @@ class CallGraph(nx.Graph):
         self.df = self.state.df
         self.root = state.lookup_with_node(self.graph.roots[0])['vis_node_name'][0]
         self.group_by = group_by
+        self.callbacks = self.state.callbacks
         
         self.rootRunTimeInc = self.root_runtime_inc()
         self.edge_direction = {}        
         self.g = nx.DiGraph(rootRunTimeInc = int(self.rootRunTimeInc))
     
         self.add_paths(path_name)
+        self.add_callback_paths()
 
         if add_info == True:
             print('Creating a Graph with node or edge attributes.')
@@ -77,7 +79,13 @@ class CallGraph(nx.Graph):
                 if isinstance(path, str):
                     path = make_tuple(row[path_name])
                 corrected_path = self.no_cycle_path(path)
-                self.g.add_path(corrected_path)                
+                self.g.add_path(corrected_path)
+        print(self.g.nodes())
+
+    def add_callback_paths(self):
+        for from_module, to_modules in self.callbacks.items():
+            for idx, to_module in enumerate(to_modules):
+                self.g.add_edge(from_module, to_module, type="callback")
 
     def add_node_attributes(self):        
         time_mapping = self.generic_map(self.g.nodes(), 'time (inc)')
@@ -112,19 +120,7 @@ class CallGraph(nx.Graph):
         
     def generic_map(self, nodes, attr):
         ret = {}
-        for node in nodes:            
-            # For back edges, name = 'backedge', weight = -1
-            if node.endswith('_'):
-                if attr == 'vis_node_name':
-                    ret[node] = [node]
-                    continue
-                if attr == 'time (inc)':
-                    ret[node] = self.df[self.df['vis_node_name'] == node[:-1]][attr].max().tolist()
-                    continue
-                if attr == 'node_type':
-                    ret[node] = 'back_edge'
-                    continue
-
+        for node in nodes:
             if self.group_by == 'module':
                 groupby = '_module'
             elif self.group_by == 'name':
@@ -235,7 +231,7 @@ class CallGraph(nx.Graph):
         type_mapping = self.edge_type(self.g)
         flow_mapping = self.flow_map()
         nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)
-        nx.set_edge_attributes(self.g, name='type', values=type_mapping)
+        # nx.set_edge_attributes(self.g, name='type', values=type_mapping)
         nx.set_edge_attributes(self.g, name='flow', values=flow_mapping)
 
     def draw_tree(self, g):

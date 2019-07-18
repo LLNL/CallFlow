@@ -1,4 +1,4 @@
-import tpl from '../../html/callgraph/edges.html'
+import tpl from '../../html/diffgraph/edges.html'
 import * as  d3 from 'd3'
 
 export default {

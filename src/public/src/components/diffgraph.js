@@ -1,21 +1,27 @@
 import tpl from '../html/diffgraph.html'
-
+import preprocess from './diffgraph/preprocess'
+import Sankey from './diffgraph/sankey'
+import Nodes from './diffgraph/nodes'
+// import IntermediateNodes from './callgraph/intermediateNodes'
+import MiniHistograms from './diffgraph/miniHistograms'
+import Edges from './diffgraph/edges'
 import * as  d3 from 'd3'
-import dagreD3 from 'dagre-d3/dist/dagre-d3';
-
-// import Color from './color'
 
 export default {
     name: 'Diffgraph',
     template: tpl,
     components: {
+        Nodes,
+		// IntermediateNodes,
+		Edges,
+		MiniHistograms,
     },
     props: [
-
+       
     ],
     data: () => ({
         graph: null,
-        id: 'diffgraph_overview',
+        id: 'diffgraph-overview',
         margin: {
             top: 30, right: 30, bottom: 10, left: 10
         },
@@ -39,104 +45,157 @@ export default {
 
     methods: {
         init(data) {
-            this.width = document.getElementById('vis').clientWidth - this.margin.left - this.margin.right
-            this.height = window.innerHeight * 0.89 - this.margin.top - this.margin.bottom
-            d3.select('#' + this.id)
-                .attr('class', 'diffgraph')
-                .attr('width', this.width + this.margin.left + this.margin.right)
-                .attr('height', this.height + this.margin.top + this.margin.bottom)
-
-            // Set color scales
-            // this.view.color = new Color(this.colorOption)
-            // this.view.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
-
+            this.toolbarHeight = document.getElementById('toolbar').clientHeight
+			this.footerHeight = document.getElementById('footer').clientHeight
+			this.width = window.innerWidth*0.7 - this.margin.left - this.margin.right
+			this.height = window.innerHeight - this.margin.top - this.margin.bottom - this.toolbarHeight - this.footerHeight
+			this.diffSVG = d3.select('#' + this.id)
+				.attrs({
+					'width': this.width + this.margin.left + this.margin.right,
+					"height": this.height + this.margin.top + this.margin.bottom,
+					"top": this.toolbarHeight
+                })
+                
             this.render(data)
         },
 
-        updateColor(option) {
-            // this.colorOption = option
-            // this.view.color = new Color(this.colorOption)
-            // this.view.color.setColorScale(this.data.stat.minInc, this.data.stat.maxInc, this.data.stat.minExc, this.data.stat.maxExc)
-            // this.render()
-        },
+     
+        lear() {
+			this.$refs.Nodes.clear()
+			this.$refs.Edges.clear()
+			// this.$refs.CallbackEdges.clear()
+			this.$refs.MiniHistograms.clear()
+		},
 
-        removeDuplicates(arr){
-            let mapper = []
-            for (let i = 0 ; i < arr.length; i += 1){
-                if(! mapper.includes(arr[i])){
-                    mapper.push(arr[i])
-                }
-            }
-            return mapper.toString()
-        },
+		render(data) {
+			this.data = preprocess(data, false)
+			this.maxLevel = data.maxLevel
 
-        render(data) {
-            // Create a new directed graph
-            var g = new dagreD3.graphlib.Graph().setGraph({});
+			console.log("Preprocessing done.")
+			this.d3sankey = this.initSankey()
+            console.log("Layout Calculation.")
+            console.log(this.data)
+			// this.postProcess(this.data.nodes, this.data.links)	
+			// console.log("Post-processing done.") 
 
-            // States and transitions from RFC 793
-            var states = data.nodes
-            // Automatically label each of the nodes
-            states.forEach(function (state) { g.setNode(state['name'], { label: state['name'] }); });
+			// this.$refs.Nodes.init(this.data, this.view)
+			// // this.$refs.IntermediateNodes.init(this.data)
+			// this.$refs.Edges.init(this.data, this.view)
+			// // this.$refs.CallbackEdges.init(this.data, this.view)
+			// this.$refs.MiniHistograms.init(this.data, this.view)
 
-            let nodeMarker = {}
-            // Set up the edges
-            for(let i = 0; i < data.edges.length; i += 1){
-                let graphIDs = this.removeDuplicates(data.edges[i]['graphID'])
-                nodeMarker[data.edges[i]['source']] = graphIDs
-                nodeMarker[data.edges[i]["target"]] = graphIDs
-                g.setEdge(data.edges[i]['source'], data.edges[i]['target'], { label: graphIDs });
-            }
-            
-            // Set some general styles
-            g.nodes().forEach(function (v) {
-                var node = g.node(v);
-                if(nodeMarker[node.label].split(',').length >= 2){
-                    node.style = "stroke: 3px"
-                    node.style = "fill: #f77"
-                }
-                else{
-                    node.style = "fill: #fff"
-                }
-            
-                node.rx = node.ry = 5;
-            });
+		},
 
-            g.edges().forEach( (e) => {
-                var edge = g.edge(e)
-                // g.edge(e).style = "stroke: 1.5px "
-            })
+		updateMiniHistogram() {
+			this.$refs.MiniHistograms.clear()
+			this.$refs.MiniHistograms.init(this.data, this.view)
+		},
 
-            let svg = d3.select("#" + this.id)
-            svg.append('g')
-            let inner = svg.select('g');
+		//Sankey computation
+		initSankey() {
+			let sankey = Sankey()
+				.nodeWidth(this.nodeWidth)
+				.nodePadding(this.ySpacing)
+				.size([this.width * 1.05, this.height - this.ySpacing])
+				.levelSpacing(this.levelSpacing)
+				.maxLevel(this.maxLevel)
+				//    .setReferenceValue(this.data.rootRunTimeInc)
+				.setMinNodeScale(this.nodeScale);
 
-            // Set up zoom support
-            var zoom = d3.zoom().on("zoom", function () {
-                inner.attr("transform", d3.event.transform);
-            });
-            svg.call(zoom);
+			let path = sankey.link()
 
-            // Create the renderer
-            var render = new dagreD3.render();
+			sankey.nodes(this.data.nodes)
+				.links(this.data.links)
+				.layout(32)
+			return sankey
+		},
 
-            // Run the renderer. This is what draws the final graph.
-            render(inner, g);
+		postProcess(nodes, edges) {
+			const temp_nodes = nodes.slice();
+			const temp_edges = edges.slice();
 
-            // Center the graph
-            var initialScale = 1;
-            svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
+			this.computeNodeEdges(temp_nodes, temp_edges);
+			console.log("Compute node edges (Post process)")
+			this.computeNodeBreadths(temp_nodes, temp_edges)
+			console.log("Compute node breadths (Post process)")
 
-            svg.attr('height', g.graph().height * initialScale + 40);
-        },
 
-        clear() {
-            this.$refs.Nodes.clear()
-            this.$refs.Edges.clear()
-        },
+			for (let i = 0; i < temp_edges.length; i++) {
+				const source = temp_edges[i].sourceID;
+				const target = temp_edges[i].targetID;
 
-        update(data) {
-            this.render()
-        },
+				if (source != undefined && target != undefined) {
+					const source_x = nodes[source].level;
+					const target_x = nodes[target].level;
+					const dx = target_x - source_x;
+
+					// Put in intermediate steps
+					for (let j = dx; j > 1; j--) {
+						const intermediate = nodes.length;
+						const tempNode = {
+							sankeyID: intermediate,
+							name: 'intermediate',
+							//                    weight: nodes[i].weight,
+							//		            height: nodes[i].value
+						};
+						nodes.push(tempNode);
+						edges.push({
+							source: intermediate,
+							target: (j == dx ? target : intermediate - 1),
+							value: edges[i].value,
+						});
+						if (j == dx) {
+							edges[i].original_target = target;
+							edges[i].last_leg_source = intermediate;
+						}
+					}
+				}
+			}
+		},
+
+		computeNodeEdges(nodes, edges) {
+			nodes.forEach((node) => {
+				node.sourceLinks = [];
+				node.targetLinks = [];
+			});
+			edges.forEach((edge) => {
+				let source = edge.sourceID,
+					target = edge.targetID;
+
+				if (source != undefined && target != undefined) {
+					nodes[source].sourceLinks.push(edge);
+					nodes[target].targetLinks.push(edge);
+				}
+			});
+
+			return {
+				nodes,
+				edges,
+			};
+		},
+
+		computeNodeBreadths(nodes, edges) {
+			let remainingNodes = nodes.map((d) => d);
+			let nextNodes;
+			let x = 0;
+			let count = 10
+			console.log("Bug here. Correct me.")
+			while (remainingNodes.length) {
+				if(count > 10){
+					break;
+				}
+				nextNodes = [];
+				remainingNodes.forEach((node) => {
+					node.sourceLinks.forEach((link) => {
+						if (nextNodes.indexOf(link.target) < 0) {
+							nextNodes.push(link.target);
+						}
+					});
+				});
+				remainingNodes = nextNodes;
+				++x;
+				count += 1
+			}
+		},
     }
 }

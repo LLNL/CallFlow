@@ -1,4 +1,4 @@
-import tpl from '../../html/callgraph/nodes.html'
+import tpl from '../../html/diffgraph/nodes.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
 
@@ -36,6 +36,7 @@ export default {
                 .attr('opacity', 0)
                 .attr('id', d => `node_${d.mod_index}`)
                 .attr('transform', (d) => {
+                    console.log(d)
                     return `translate(${d.x},${d.y })`
                 })
 
@@ -84,7 +85,7 @@ export default {
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
-                    this.$socket.emit('scatterplot  ', {
+                    this.$socket.emit('scatterplot', {
                         module: d.id,
                         dataset1: this.$store.selectedDataset,
                     })
