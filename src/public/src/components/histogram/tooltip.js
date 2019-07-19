@@ -31,14 +31,15 @@ export default {
     mounted() {},
     methods: {
         init(id) {
-            this.id = id
-            this.toolTipDiv = d3.select('#' + this.id)
+            this.parentID = id
+            this.toolTipDiv = d3.select('#' + this.parentID)
                 .append('svg')
                 .attr('class', 'toolTipSVG')
 
             this.toolTipG = this.toolTipDiv.append('g')
-            this.height = document.getElementById(this.id).clientHeight/10
-            this.halfWidth = document.getElementById(this.id).clientWidth / 2
+            this.height = document.getElementById('callgraph-overview').clientHeight/10
+            this.halfWidth = document.getElementById(this.parentID).clientWidth / 2
+            console.log(this.height, this.halfWidth)
         },
 
         render(data, node) {

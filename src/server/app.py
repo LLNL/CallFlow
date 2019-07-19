@@ -250,7 +250,6 @@ class App():
                 "dataset1": data['dataset'],
             })
             result = json_graph.node_link_data(g)
-            print(result)
             emit('cct', result, json=True)
 
         @sockets.on('split-rank', namespace='/')

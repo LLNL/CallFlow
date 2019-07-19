@@ -25,14 +25,15 @@ class CallGraph(nx.Graph):
         self.df = self.state.df
         self.root = state.lookup_with_node(self.graph.roots[0])['vis_node_name'][0]
         self.group_by = group_by
-        self.callbacks = self.state.callbacks
+        # self.callbacks = self.state.callbacks
+        self.callbacks = []
         
         self.rootRunTimeInc = self.root_runtime_inc()
         self.edge_direction = {}        
         self.g = nx.DiGraph(rootRunTimeInc = int(self.rootRunTimeInc))
     
         self.add_paths(path_name)
-        self.add_callback_paths()
+        # self.add_callback_paths()
 
         if add_info == True:
             print('Creating a Graph with node or edge attributes.')
@@ -120,6 +121,7 @@ class CallGraph(nx.Graph):
         
     def generic_map(self, nodes, attr):
         ret = {}
+        print(nodes)
         for node in nodes:
             if self.group_by == 'module':
                 groupby = '_module'
@@ -134,10 +136,6 @@ class CallGraph(nx.Graph):
                 elif self.group_by == 'name':
                     group_df = self.df.groupby([groupby]).mean()
                 ret[node] = group_df.loc[node, 'max_incTime']
-            elif attr == 'node_type':
-                ret[node] = 'normal_edge'
-            # elif attr == 'name':
-            #     print(node)
             else:
                 df = self.df.loc[self.df['vis_node_name'] == node][attr]
                 if df.empty:

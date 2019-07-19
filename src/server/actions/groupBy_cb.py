@@ -9,9 +9,10 @@
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
+
+
 import pandas as pd
 import utils
-
 
 class groupBy:
     def __init__(self, state, group_by):
@@ -39,6 +40,7 @@ class groupBy:
         group_path = []
         temp = None
         function = path[-1]        
+        self.callbacks = {}
         change_name = False
         
         for i, elem in enumerate(path):
@@ -55,21 +57,22 @@ class groupBy:
             
             # Append the module into the group path. 
             if module not in self.eliminate_funcs:
-                if temp is None or module != temp:
-                   
-                    # Append function name to the node if the module exists in the group_path. 
-                    if module in group_path :
+                if temp == None or module != temp:
+                    # Append "_" + module_idx if the module exists in the group_path. 
+                    if module in group_path:
                         from_module = group_path[len(group_path) - 1]
                         to_module = module
-                        group_path.append(module + ':' + path[i])
-                        temp = module + ':' + path[i]
+                        if(from_module not in self.callbacks):
+                            self.callbacks[from_module] = []
+                        if(to_module not in self.callbacks[from_module]):
+                            self.callbacks[from_module].append(to_module)
+                        
                         change_name = True
                     else:
                         group_path.append(module)
                         temp = module
         
         group_path = tuple(group_path)
-        print(group_path)
         return (group_path, change_name)
 
     def create_component_path(self, path, group_path):
@@ -207,4 +210,6 @@ class groupBy:
         self.state.update_df('component_level', component_level)
         self.state.update_df('_'+self.group_by, module)
         self.state.update_df('change_name', change_name)
-        self.state.update_df('mod_index', module_idx)   
+        self.state.update_df('mod_index', module_idx)
+
+        self.state.callbacks = self.callbacks

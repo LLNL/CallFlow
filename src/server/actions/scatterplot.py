@@ -14,24 +14,28 @@
 
 import pandas as pd
 
-class componentGraph:
+
+class Scatterplot:
     def __init__(self, state, module):
         self.graph = state.graph
         self.df = state.df
         self.module = module
-        self.run()
-
-    def run(self):
-        """
-        Return the component graph for a module.
-        """
-        paths = []
-        func_in_module = state.df.loc[state.df['module'] == module]['name'].unique().tolist()
-        print("Number of functions inside the {0} module: {1}".format(module, len(func_in_module)))
+        self.entry_funcs = {}
+        self.run(state)
+        
+    def run(self):    
+        ret = []
+        entire_df = self.state.entire_df
+        func_in_module = self.df[self.df.module == self.module]['name'].unique().tolist()
+        
         for idx, func in enumerate(func_in_module):
-            paths.append({
-                "module": module,
-                "path": [state.df.loc[state.df['name'] == func]['component_path'].unique().tolist()[0]],
-                "inc_time" : state.df.loc[state.df['name'] == func]['CPUTIME (usec) (I)'].mean()
+            ret.append({
+                "name": func,
+                "time (inc)": entire_df.loc[entire_df['name'] == func]['time (inc)'].tolist(),
+                "time": entire_df.loc[entire_df['name'] == func]['time'].tolist(),
+                "rank": entire_df.loc[entire_df['name'] == func]['rank'].tolist(),
             })
-        return pd.DataFrame(paths)
+        ret_df = pd.DataFrame(ret)
+        return ret_df.to_json(orient="columns")
+
+

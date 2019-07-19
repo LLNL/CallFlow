@@ -15,7 +15,7 @@ import 'splitpanes/dist/splitpanes.css'
 
 
 export default {
-	name: 'entry',
+	name: 'CallFlow',
 	template: tpl,
 	components: {
 		Callgraph,

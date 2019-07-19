@@ -38,12 +38,12 @@ export default {
     }),
 
     sockets: {
-        miniHistogram(data) {
+        miniHistogramDiff(data) {
             this.data = JSON.parse(data)
             for (const [key, value] of Object.entries(this.data)) {
                 let node = this.getNode(key)
                 let d = JSON.parse(value)
-                this.drawHistogram(d, node)
+                this.render(d, node)
             }
         }
     },
@@ -125,7 +125,7 @@ export default {
             d3.selectAll('#histobars').remove()
         },
 
-        drawHistogram(data, node) {
+        render(data, node) {
             const temp = this.dataProcess(data)
             let xVals = temp[0]
             let freq = temp[1]
