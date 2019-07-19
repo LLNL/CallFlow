@@ -37,7 +37,8 @@ class groupBy:
     # Create a group path for the df.column = group_path.
     def create_group_path(self, path):
         group_path = []
-        temp = None
+        prev_module = None
+        temp2 = None
         function = path[-1]        
         change_name = False
         
@@ -55,14 +56,14 @@ class groupBy:
             
             # Append the module into the group path. 
             if module not in self.eliminate_funcs:
-                if temp is None or module != temp:
-                   
+                if prev_module is None or module != prev_module:
                     # Append function name to the node if the module exists in the group_path. 
                     if module in group_path :
                         from_module = group_path[len(group_path) - 1]
                         to_module = module
+                        if (temp2 == None or temp)
                         group_path.append(module + ':' + path[i])
-                        temp = module + ':' + path[i]
+                        temp2 = module + ':' + path[i]
                         change_name = True
                     else:
                         group_path.append(module)
