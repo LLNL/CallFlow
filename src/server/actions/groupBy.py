@@ -37,6 +37,7 @@ class groupBy:
     # Create a group path for the df.column = group_path.
     def create_group_path(self, path):
         group_path = []
+        self.prev_module_map = {}
         prev_module = None
         function = path[-1]        
         change_name = False
