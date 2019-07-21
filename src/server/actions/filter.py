@@ -47,10 +47,10 @@ class Filter:
         log.info('Filtering the graph.')
         t = time.time()
         if self.filterBy == "Inclusive":
-            max_inclusive_time = utils.getMaxIncTime(self.gf)
+            max_inclusive_time = utils.getMaxIncTime_from_gf(self.gf)
             filter_gf = self.gf.filter(lambda x: True if(x['time (inc)'] > self.filterPercInDecimals*max_inclusive_time) else False)
         elif filterBy == "Exclusive":
-            max_exclusive_time = utils.getMaxExcTime(self.gf)
+            max_exclusive_time = utils.getMaxExcTime_from_gf(self.gf)
             log.info('[Filter] By Exclusive time = {0})'.format(max_exclusive_time))
             filter_gf = self.gf.filter(lambda x: True if (x['time'] > self.filterPercInDecimals*max_exclusive_time) else False)
         else:

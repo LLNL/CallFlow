@@ -37,8 +37,8 @@ class groupBy:
     # Create a group path for the df.column = group_path.
     def create_group_path(self, path):
         group_path = []
+        self.prev_module_map = {}
         prev_module = None
-        temp2 = None
         function = path[-1]        
         change_name = False
         
@@ -61,9 +61,8 @@ class groupBy:
                     if module in group_path :
                         from_module = group_path[len(group_path) - 1]
                         to_module = module
-                        if (temp2 == None or temp)
                         group_path.append(module + ':' + path[i])
-                        temp2 = module + ':' + path[i]
+                        prev_module = module
                         change_name = True
                     else:
                         group_path.append(module)

@@ -44,6 +44,7 @@ class CallFlow:
     def __init__(self, config):
         # Config contains properties set by the input config file. 
         self.config = config
+        
         self.reUpdate = False
         self.reProcess = config.preprocess
 
@@ -54,18 +55,6 @@ class CallFlow:
         # Note: graph is always updated.
         # Note: map -> not sure if it can be used.
         self.states = self.pipeline(self.config.names)
-
-        self.config.max_incTime = 0
-        self.config.min_incTime = 0
-        self.config.max_excTime = 0
-        self.config.min_excTime = 0
-        self.config.numbOfRanks = 0
-        for idx, state in enumerate(self.states):
-            self.config.max_incTime = utils.getMaxIncTime(self.states[state].gf)
-            self.config.max_excTime = utils.getMaxExcTime(self.states[state].gf)
-            self.config.min_incTime = utils.getMinIncTime(self.states[state].gf)
-            self.config.min_excTime = utils.getMinExcTime(self.states[state].gf)
-            self.config.numbOfRanks = utils.getNumbOfRanks(self.states[state].gf)
 
     def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
         if self.reProcess:
@@ -92,6 +81,14 @@ class CallFlow:
                 states[dataset_name] = self.read_gf(dataset_name)
                 
         return states
+
+    def setConfig(self):
+        for idx, state in enumerate(self.states):
+            self.config.max_incTime = utils.getMaxIncTime(self.states[state])
+            self.config.max_excTime = utils.getMaxExcTime(self.states[state])
+            self.config.min_incTime = utils.getMinIncTime(self.states[state])
+            self.config.min_excTime = utils.getMinExcTime(self.states[state])
+            self.config.numbOfRanks = utils.getNumbOfRanks(self.states[state])
 
     def create(self, name):
         state = State()
@@ -266,6 +263,12 @@ class CallFlow:
     def update(self, action):
         utils.debug('Update', action)
 
+        action_name = action["name"]
+
+        if action_name == 'init':
+            self.setConfig()
+            return self.config
+
         dataset1 = action['dataset1']
         state1 = self.states[dataset1]
 
@@ -273,7 +276,6 @@ class CallFlow:
         if("dataset2" in action):
             dataset2 = action['dataset2']
             state2 = self.states[dataset2]
-        action_name = action["name"]
 
         if 'groupBy' in action:
             utils.debug('Grouping by: ', action['groupBy'])
@@ -345,6 +347,7 @@ class CallFlow:
         elif action_name == 'split-rank':
             ret = splitRank(state1, action['ids'])
             return ret
+
         state1.g = nx.g
 
         return state1.g 
