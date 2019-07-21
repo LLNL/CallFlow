@@ -38,9 +38,13 @@ class groupBy:
     def create_group_path(self, path):
         group_path = []
         prev_module = None
-        temp2 = None
         function = path[-1]        
         change_name = False
+
+        # Create a map having initial funcs being mapped.
+        module_df = self.df.groupby(['module'])
+        for module, df in module_df:
+            self.module_func_map[module] = []
         
         for i, elem in enumerate(path):
             grouping = self.state.lookup_with_name(elem)[self.group_by].unique()
@@ -48,28 +52,30 @@ class groupBy:
                 break
             
             module = grouping[0]
-            
-            # Add the function to the module map.
-            if module not in self.module_func_map:
-                self.module_func_map[module] = []
-            self.module_func_map[module].append(function)
-            
+                        
             # Append the module into the group path. 
             if module not in self.eliminate_funcs:
-                if prev_module is None or module != prev_module:
-                    # Append function name to the node if the module exists in the group_path. 
-                    if module in group_path :
+                if prev_module is None:
+                    prev_module = module
+                    group_path.append(module)
+                elif module != prev_module:
+                    print("Group path is ", group_path)
+                    if module in group_path:
                         from_module = group_path[len(group_path) - 1]
                         to_module = module
-                        if (temp2 == None or temp)
                         group_path.append(module + ':' + path[i])
-                        temp2 = module + ':' + path[i]
+                        prev_module = module
+                        self.module_func_map[module].append(module + ':' + path[i])
                         change_name = True
                     else:
                         group_path.append(module)
-                        temp = module
+                        prev_module = module
+                else:
+                    prev_module = module
+                    continue
         
         group_path = tuple(group_path)
+        print(self.module_func_map)
         print(group_path)
         return (group_path, change_name)
 

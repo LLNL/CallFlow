@@ -100,7 +100,7 @@ export default {
 			this.d3sankey = this.initSankey(this.data)
 			console.log("Layout Calculation.")
 			// this.postProcess(this.data.nodes, this.data.links)	
-			// console.log("Post-processing done.") 
+			console.log("Post-processing done.") 
 
 			this.$refs.Nodes.init(this.data, this.view)
 			// this.$refs.IntermediateNodes.init(this.data)
