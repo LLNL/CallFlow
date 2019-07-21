@@ -110,8 +110,19 @@ class App():
     def create_socket_server(self):
         @sockets.on('init', namespace='/')
         def init():
+            self.callflow.update({
+                'name': "init",
+            })
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
             emit('init', config_json, json=True)
+
+        # @sockets.on('config')
+        # def config(data):
+        #     result = self.callflow.update({
+        #         "name": "config",
+        #         "datasets": data['datasets'],
+        #     })
+        #     emit('config', result, json=True)
 
         @sockets.on('reset', namespace='/')
         def filter(data):

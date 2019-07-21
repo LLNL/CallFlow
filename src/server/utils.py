@@ -36,39 +36,81 @@ def avg(l):
     return sum(l) / float(len(l))
 
 # Get the max Inclusive time from the root of the CCT.
-def getMaxIncTime(gf):
+def getMaxIncTime(state):
+    ret = 0.0
+    graph = state.graph
+    df = state.entire_df
+    for root in graph.roots:
+        node_df = lookup(df, root)
+        ret = max(ret, float(max(node_df['time (inc)'].tolist())))
+    return ret
+
+# TODO: Get the maximum exclusive time from the graphframe. 
+def getMaxExcTime(state):
+    df = state.entire_df
+    ret = float(df['time'].max())
+    return ret
+
+def getAvgIncTime(state):
+    ret = 0.0
+    graph = state.graph
+    df = state.entire_df
+    for root in gf.graph.roots:
+        ret += lookup(df, root)['time (inc)'].mean()
+    return ret/len(gf.graph.roots)
+
+def getAvgExcTime(state):
+    df = state.entire_df
+    ret = df['time'].mean()
+    return ret
+
+def getMinIncTime(state):
+    return 0
+
+def getMinExcTime(state):
+    return 0
+
+def getNumOfNodes(state):
+    df = state.df
+    return df['module'].count()
+
+def getNumbOfRanks(state):
+    df = state.entire_df
+    return len(df['rank'].unique())
+
+def getMaxIncTime_from_gf(gf):
     ret = 0.0
     for root in gf.graph.roots:
         node_df = lookup(gf.dataframe, root)
         ret = max(ret, float(max(node_df['time (inc)'].tolist())))
     return ret
 
-# TODO: Get the maximum exclusive time from the graphframe. 
-def getMaxExcTime(gf):
-    ret  = float(gf.dataframe['time'].max())
+def getMaxExcTime_from_gf(gf):
+    ret = float(gf.dataframe['time'].max())
     return ret
 
-def getAvgIncTime(gf):
+def getAvgIncTime_from_gf(gf):
     ret = 0.0
     for root in gf.graph.roots:
         ret += lookup(gf.dataframe, root)['time (inc)'].mean()
     return ret/len(gf.graph.roots)
 
-def getAvgExcTime(gf):
+def getAvgExcTime_from_gf(gf):
     ret = gf.dataframe['time'].mean()
     return ret
 
-def getMinIncTime(gf):
+def getMinIncTime_from_gf(gf):
     return 0
 
-def getMinExcTime(gf):
+def getMinExcTime_from_gf(gf):
     return 0
 
-def getNumOfNodes(gf):
+def getNumOfNodes_from_gf(gf):
     return gf.dataframe['module'].count()
 
-def getNumbOfRanks(gf):
-    return len(gf.dataframe['rank'][0])
+def getNumbOfRanks_from_gf(gf):
+    return len(gf.dataframe['rank'].unique())
+
 
 def graphmltojson(graphfile, outfile):
     """

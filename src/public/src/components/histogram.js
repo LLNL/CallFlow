@@ -14,7 +14,7 @@
 import tpl from '../html/histogram.html'
 import * as d3 from 'd3'
 import "d3-selection-multi"
-import ToolTip from './Histogram/tooltip'
+import ToolTip from './histogram/tooltip'
 
 export default {
     template: tpl,
