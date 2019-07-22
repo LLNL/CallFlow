@@ -285,7 +285,6 @@ class App():
                 'dataset1': data['dataset1'],
                 'module': data['module']
             })
-            print(json.dumps(result))
             emit('function', result, json=True)
 
     def create_server(self):

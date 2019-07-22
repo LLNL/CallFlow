@@ -22,6 +22,7 @@ class groupBy:
         self.eliminate_funcs = []
         self.entry_funcs = {}
         self.module_func_map = {}
+        self.other_funcs = {}
         self.module_id_map = {}
 
         self.drop_eliminate_funcs()
@@ -45,7 +46,12 @@ class groupBy:
         # Create a map having initial funcs being mapped.
         module_df = self.df.groupby(['module'])
         for module, df in module_df:
-            self.module_func_map[module] = []
+            if module not in self.module_func_map:
+                self.module_func_map[module] = []
+            if module not in self.entry_funcs:
+                self.entry_funcs[module] = []
+            if module not in self.other_funcs:
+                self.other_funcs[module] = []
         
         for i, elem in enumerate(path):
             grouping = self.state.lookup_with_name(elem)[self.group_by].unique()
@@ -71,9 +77,13 @@ class groupBy:
                     else:
                         group_path.append(module)
                         prev_module = module
+                        if path[i] not in self.entry_funcs[module]:
+                            self.entry_funcs[module].append(path[i])
                 else:
                     prev_module = module
                     continue
+                    if path[i] not in self.other_funcs[module] and path[i] not in self.entry_funcs[module]:
+                        self.other_funcs[module].append(path[i])
         
         group_path = tuple(group_path)
         return (group_path, change_name)
@@ -214,3 +224,6 @@ class groupBy:
         self.state.update_df('_'+self.group_by, module)
         self.state.update_df('change_name', change_name)
         self.state.update_df('mod_index', module_idx)   
+
+        self.state.entry_funcs = self.entry_funcs
+        self.state.other_funcs = self.other_funcs

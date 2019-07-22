@@ -269,11 +269,19 @@ class CallFlow:
         ret = []
         df = state.df
         entire_df = state.entire_df
+        entry_funcs = state.entry_funcs[module]
+        other_funcs = state.other_funcs[module]
+        callers = []
+        callees = []
         
-        callees = df[df.module == module]['callees'].unique().tolist()
-        callers = df[df.module == module]['callers'].unique().tolist()
+        for idx, entry_func in enumerate(entry_funcs):
+            print("Entry func: ", entry_func)
+            callees.append(df[df.name == entry_func]['callees'].unique().tolist())
+            callers.append(df[df.name == entry_func]['callers'].unique().tolist())
 
         return {
+            "entry_function": entry_funcs,
+            "other_funcs": other_funcs,
             "callees": callees,
             "callers": callers
         }

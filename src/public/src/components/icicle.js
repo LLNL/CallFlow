@@ -223,6 +223,10 @@ export default {
 			return root;
 		},
 
+		clear(){
+			this.clearIcicles()
+		},
+
 		clearIcicles() {
 			d3.selectAll('.icicleNode').remove()
 			d3.selectAll('.icicleText').remove()

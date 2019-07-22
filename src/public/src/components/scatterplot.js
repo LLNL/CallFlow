@@ -39,6 +39,9 @@ export default {
 		yMin: 0,
 		yMax: 0,
 		firstRender: true,
+		scatterHeight: 0,
+		scatterWidth: 0,
+
 	}),
 
 	sockets: {
@@ -192,7 +195,7 @@ export default {
                     return '';
 				});
 
-			let xAxisHeightCorrected = self.xAxisHeight + this.margin.left
+			let xAxisHeightCorrected = self.yAxisHeight //this.margin.left
 			var xAxisLine = this.svg.append('g')
 				.attr('class', 'axis')
 				.attr('id', 'xAxis')
@@ -202,7 +205,7 @@ export default {
 			this.svg.append('text')
 				.attr('class', 'axisLabel')
 				.attr('x', self.scatterWidth)
-				.attr('y', self.yAxisHeight)
+				.attr('y', self.yAxisHeight - this.margin.top)
 				.style('font-size', '10px')
 				.style('text-anchor', 'end')
 				.text("Exclusive Runtime")

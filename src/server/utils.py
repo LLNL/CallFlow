@@ -39,10 +39,10 @@ def avg(l):
 def getMaxIncTime(state):
     ret = 0.0
     graph = state.graph
-    df = state.entire_df
+    df = state.df
     for root in graph.roots:
-        node_df = lookup(df, root)
-        print(node_df['time (inc)'])
+        node_df = df.loc[df['name'] == '<program root>']
+        print(node_df)
         ret = max(ret, float(max(node_df['time (inc)'].tolist())))
     print(ret)
     return ret

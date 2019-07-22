@@ -16,6 +16,11 @@ export default {
         width: null,
         height: null,
         id: '',
+        textxOffset: 10,
+        textyOffset: 10,
+        textPadding: 0,
+        textCount:0,
+        textSize: 15
     }),
 
     watch: {
@@ -51,6 +56,7 @@ export default {
                     "height": this.boxHeight + this.padding.top + this.padding.bottom,
                     "transform": `translate(${this.padding.left}, ${this.padding.top})`
                 })
+            this.textPadding  = 1.5* this.textSize
         },
 
         addText(text) {
@@ -58,29 +64,24 @@ export default {
             this.toolTipText = d3.select('#'+this.id)
                 .append('text')
                 .style('font-family', 'sans-serif')
-                .style('font-size', '')
+                .style('font-size', this.textSize)
                 .attrs({
-                    'class': 'toolTipContent',
-                    'x': () => {
-                        if (this.mousePosX + this.halfWidth > this.callgraphOverviewWidth) {
-                            return (this.mousePosX - 200) + this.textxOffset + 'px';
-                        } else if (this.mousePosX < 100) {
-                            return (this.mousePosX) + this.textxOffset + 'px'
-                        } else {
-                            return (this.mousePosX - 200) + this.textxOffset + 'px';
-                        }
+                    'class': 'functionContent',
+                    'x': (d, i) => {
+                        return this.textxOffset + "px"
                     },
                     'y': () => {
-                        return (this.mousePosY + 50) + this.textyOffset + this.textPadding * this.textCount + "px";
+                        return this.textyOffset + this.textPadding * this.textCount + "px";
                     }
                 })
                 .text(text)
         },
 
         render(data) {
+            this.addText('Entry functions: ')
             this.addText('Callees: ')
-            this.addText('Callees: ')
-
+            this.addText('Callers: ')
+            this.addText('Other Functions: ')
         },
 
         clear() {

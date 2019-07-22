@@ -8,11 +8,12 @@
             "nop": 3
         },
         {
-            "name": "calc-pi",
+            "name": "cpi",
             "path": "./data/hpctoolkit-cpi-database",
             "format": "hpctoolkit",
-            "props": {},
-            "nop": 3
+            "props": {
+            },
+            "nop": "128"
         }
     ]
 }

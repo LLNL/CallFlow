@@ -76,7 +76,7 @@ export default {
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
 		modes: [],
-		selectedMode: 'Single',
+		selectedMode: 'Diff',
 		selectedBinCount: 5,
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,

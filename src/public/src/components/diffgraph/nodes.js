@@ -25,7 +25,7 @@ export default {
     methods: {
         init(graph, view) {
             this.graph = graph
-            this.nodes = d3.select('#' + this._uid)
+            this.nodes = d3.select('#' + this.id)
             const node = this.nodes.selectAll('.diff-node')
                 .data(this.graph.nodes)
                 .enter().append('g')
