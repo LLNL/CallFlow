@@ -270,10 +270,23 @@ class App():
             
             result = self.callflow.update({
                 "name": "split-rank",
-                "dataset1": data['dataset'],
+                "dataset1": data['dataset1'],
                 "ids": data['ids']
             })
             emit('split-rank', result, json=True)
+
+        @sockets.on('function', namespace='/')
+        def function(data):
+            if self.debug: 
+                self.print('[Request] Function request for module', data)
+
+            result = self.callflow.update({
+                'name': 'function',
+                'dataset1': data['dataset1'],
+                'module': data['module']
+            })
+            print(json.dumps(result))
+            emit('function', result, json=True)
 
     def create_server(self):
         app.debug = True

@@ -3,7 +3,7 @@ import * as  d3 from 'd3'
 
 export default {
     template: tpl,
-    name: 'Edges',
+    name: 'DiffEdges',
     components: {
 
     },
@@ -13,7 +13,8 @@ export default {
     ],
 
     data: () => ({
-        transitionDuration: 1000
+        transitionDuration: 1000,
+        id: ''
     }),
 
     watch: {
@@ -21,22 +22,23 @@ export default {
     },
 
     mounted() {
+        this.id = 'diff-edges-' + this._uid 
     },
 
     methods: {
         init(graph, view) {
-            this.edges = d3.select('#edges')
+            this.edges = d3.select('#' + this.id)
             this.view = view
 
             let links = graph.links.filter( (link) => {
                 return link.type != "callback"
             })
 
-            this.edges.selectAll('.edge')
+            this.edges.selectAll('.diff-edge')
                 .data(links)
                 .enter().append('path')
                 .attr('class', (d) => {
-                    return 'edge';
+                    return 'diff-edge';
                 })
                 .attr('d', (d) => {
                     let Tx0 = d.source.x + d.source.height,
@@ -91,7 +93,7 @@ export default {
             //     return b.dy - a.dy;
             // });
 
-            this.edges.selectAll('.edge')
+            this.edges.selectAll('.diff-edge')
                 .data(links)
                 .style('fill-opacity', 0)
                 .attr('d', (d) => {
@@ -136,7 +138,7 @@ export default {
                         } ${Bx0},${By0}`;
                 });
 
-            this.edges.selectAll('.edge')
+            this.edges.selectAll('.diff-edge')
                 .data(graph.links)
                 .transition()
                 .duration(this.transitionDuration)
@@ -156,7 +158,7 @@ export default {
         },
 
         clear() {
-            this.edges.selectAll('.edge').remove()
+            this.edges.selectAll('.diff-edge').remove()
         },
     }
 }

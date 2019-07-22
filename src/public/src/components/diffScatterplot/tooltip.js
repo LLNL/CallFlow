@@ -1,4 +1,4 @@
-import tpl from '../../html/histogram/tooltip.html'
+import tpl from '../../html/scatterplot/tooltip.html'
 import * as d3 from 'd3'
 
 export default {
@@ -31,14 +31,14 @@ export default {
     mounted() {},
     methods: {
         init(id) {
-            this.parentID = id
-            this.toolTipDiv = d3.select('#' + this.parentID)
+            this.id = id
+            this.toolTipDiv = d3.select('#' + this.id)
                 .append('svg')
                 .attr('class', 'toolTipSVG')
 
             this.toolTipG = this.toolTipDiv.append('g')
-            this.height = document.getElementById('callgraph-dashboard').clientHeight
-            this.halfWidth = document.getElementById('histogram_view').clientWidth / 2
+            this.height = document.getElementById(this.id).clientHeight/10
+            this.halfWidth = document.getElementById(this.id).clientWidth / 2
         },
 
         render(data, node) {

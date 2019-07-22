@@ -83,12 +83,17 @@ class CallFlow:
         return states
 
     def setConfig(self):
+        self.config.max_incTime = {}
+        self.config.max_excTime = {}
+        self.config.min_incTime = {}
+        self.config.min_excTime = {}
+        self.config.numbOfRanks = {}
         for idx, state in enumerate(self.states):
-            self.config.max_incTime = utils.getMaxIncTime(self.states[state])
-            self.config.max_excTime = utils.getMaxExcTime(self.states[state])
-            self.config.min_incTime = utils.getMinIncTime(self.states[state])
-            self.config.min_excTime = utils.getMinExcTime(self.states[state])
-            self.config.numbOfRanks = utils.getNumbOfRanks(self.states[state])
+            self.config.max_incTime[state] = utils.getMaxIncTime(self.states[state])
+            self.config.max_excTime[state] = utils.getMaxExcTime(self.states[state])
+            self.config.min_incTime[state] = utils.getMinIncTime(self.states[state])
+            self.config.min_excTime[state] = utils.getMinExcTime(self.states[state])
+            self.config.numbOfRanks[state] = utils.getNumbOfRanks(self.states[state])
 
     def create(self, name):
         state = State()
@@ -173,8 +178,6 @@ class CallFlow:
         entire_df_filepath = dirname + '/' + name + '/entire_df.csv'
         graph_filepath = dirname + '/' + name + '/filter_graph.json'
         entire_graph_filepath = dirname + '/' + name + '/entire_graph.json'   
-
-        print(df_filepath)
 
         with open(graph_filepath, 'r') as graphFile:
             data = json.load(graphFile)
@@ -262,6 +265,19 @@ class CallFlow:
         ret_df = pd.DataFrame(ret)
         return ret_df.to_json(orient="columns")
 
+    def function(self, state, module):
+        ret = []
+        df = state.df
+        entire_df = state.entire_df
+        
+        callees = df[df.module == module]['callees'].unique().tolist()
+        callers = df[df.module == module]['callers'].unique().tolist()
+
+        return {
+            "callees": callees,
+            "callers": callers
+        }
+
     def update(self, action):
         utils.debug('Update', action)
 
@@ -278,6 +294,8 @@ class CallFlow:
         if("dataset2" in action):
             dataset2 = action['dataset2']
             state2 = self.states[dataset2]
+
+        print("The selected Dataset is ", dataset1)
 
         if 'groupBy' in action:
             utils.debug('Grouping by: ', action['groupBy'])
@@ -348,6 +366,10 @@ class CallFlow:
 
         elif action_name == 'split-rank':
             ret = splitRank(state1, action['ids'])
+            return ret
+
+        elif action_name == 'function':
+            ret = self. function(state1, action['module'])
             return ret
 
         state1.g = nx.g

@@ -13,7 +13,8 @@ export default {
     ],
 
     data: () => ({
-        transitionDuration: 1000
+        transitionDuration: 1000,
+        id: '',
     }),
 
     watch: {
@@ -21,11 +22,12 @@ export default {
     },
 
     mounted() {
+        this.id = 'edges-' + this._uid
     },
 
     methods: {
         init(graph, view) {
-            this.edges = d3.select('#edges')
+            this.edges = d3.select('#' + this.id)
             this.view = view
 
             let links = graph.links.filter( (link) => {
@@ -156,7 +158,7 @@ export default {
         },
 
         clear() {
-            this.edges.selectAll('.edge').remove()
+            d3.selectAll('.edge').remove()
         },
     }
 }

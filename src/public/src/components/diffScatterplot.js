@@ -10,12 +10,12 @@
  * https://github.com/LLNL/CallFlow
  * Please also read the LICENSE file for the MIT License notice.
  ******************************************************************************/
-import tpl from '../html/scatterplot.html'
+import tpl from '../html/diffScatterplot.html'
 import * as d3 from 'd3'
-import ToolTip from './scatterplot/tooltip'
+import ToolTip from './diffScatterplot/tooltip'
 
 export default {
-	name: 'Scatterplot',
+	name: 'diffScatterplot',
 	template: tpl,
 	components: {
 		ToolTip
@@ -23,7 +23,7 @@ export default {
 
 	data: () => ({
 		graph: null,
-		id: 'scatterplot-view',
+		id: 'diffscatterplot-view',
 		width: null,
 		height: null,
 		margin: {
@@ -42,7 +42,7 @@ export default {
 	}),
 
 	sockets: {
-		scatterplot(data) {
+		diffscatterplot(data) {
 			data = JSON.parse(data)
 			console.log("Scatter data: ", data)
 			if (this.firstRender) {

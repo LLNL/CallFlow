@@ -35,7 +35,14 @@ export default {
         },
         nodeScale: 0.99,
         data: null,
+        id: '',
+        nodes: null,
+        edges: null,
     }),
+
+    mounted() {
+        this.id = 'minihistogram-overview-' + this._uid
+    },
 
     sockets: {
         miniHistogram(data) {
@@ -43,14 +50,17 @@ export default {
             for (const [key, value] of Object.entries(this.data)) {
                 let node = this.getNode(key)
                 let d = JSON.parse(value)
-                this.render(d, node)
+                if(node != null){
+                    this.render(d, node)
+                }
             }
         }
     },
 
     methods: {
         init(graph, view) {
-            this.graph = graph
+            this.nodes = graph.nodes
+            this.links = graph.links
             this.view = view
             this.$socket.emit('miniHistogram', {
                 'dataset1': this.$store.selectedDataset,
@@ -59,8 +69,14 @@ export default {
 
         getNode(node_name) {
             let ret = {}
-            for (let i = 0; i < this.graph.nodes.length; i += 1) {
-                let node = this.graph.nodes[i]
+            // TODO: Since there are two multihistogram socket calls, 
+            // There is an extra minihistogram function that gets executed,
+            // Avoid this.
+            if(this.nodes == undefined){
+                return null
+            }
+            for (let i = 0; i < this.nodes.length; i += 1) {
+                let node = this.nodes[i]
                 if (node.name == node_name) {
                     return node
                 }
@@ -139,7 +155,7 @@ export default {
                 .range([this.$parent.ySpacing, 0]);
 
             for(let i = 0; i < freq.length; i += 1){
-                d3.select('#histograms')
+                d3.select('#'+this.id)
                 .append('rect')
                 .attrs({
                     'id': 'histobars',

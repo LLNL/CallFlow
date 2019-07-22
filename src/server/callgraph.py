@@ -81,7 +81,6 @@ class CallGraph(nx.Graph):
                     path = make_tuple(row[path_name])
                 corrected_path = self.no_cycle_path(path)
                 self.g.add_path(corrected_path)
-        print(self.g.nodes())
 
     def add_callback_paths(self):
         for from_module, to_modules in self.callbacks.items():
@@ -121,7 +120,6 @@ class CallGraph(nx.Graph):
         
     def generic_map(self, nodes, attr):
         ret = {}
-        print(nodes)
         for node in nodes:
             if self.group_by == 'module':
                 groupby = '_module'
@@ -136,6 +134,8 @@ class CallGraph(nx.Graph):
                 elif self.group_by == 'name':
                     group_df = self.df.groupby([groupby]).mean()
                 ret[node] = group_df.loc[node, 'max_incTime']
+                print(ret[node])
+
             else:
                 df = self.df.loc[self.df['vis_node_name'] == node][attr]
                 if df.empty:

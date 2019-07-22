@@ -13,20 +13,21 @@ export default {
     ],
 
     data: () => ({
-        transitionDuration: 1000
+        transitionDuration: 1000,
+        id: ''
     }),
 
     watch: {
-
     },
 
     mounted() {
+        this.id = 'edges-' + this._uid
     },
 
     methods: {
         init(graph, view) {
             console.log(graph.links)
-            this.edges = d3.select('#edges')
+            this.edges = d3.select('#' + this.id)
             const edge = this.edges.selectAll('.edge')
                 .data(graph.links)
                 .enter().append('path')
@@ -142,7 +143,7 @@ export default {
         },
 
         clear() {
-            this.edges.selectAll('.edge').remove()
+            d3.selectAll('.edge').remove()
         },
 
         update() {

@@ -18,6 +18,12 @@
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
 			</v-select>
 		</v-flex>
+		<v-flex xs2 class="ma-2">
+			<v-select label="Data" :items="datas" v-model="selectedData"
+				:menu-props="{ maxHeight: '400' }" box v-on:change="updateData()">
+			</v-select>
+		</v-flex>
+		
 		<v-spacer></v-spacer>
 		<v-spacer></v-spacer>
 		<v-flex xs2>
@@ -104,8 +110,8 @@
 	</v-navigation-drawer>
 
 	<v-content class="pt-auto">
-		<v-layout v-show="selectedFormat == 'Callgraph'">
-			<splitpanes id="callgraph-dashboard" class="default-theme">
+		<v-layout v-show="selectedFormat == 'Callgraph' && selectedMode == 'Single'">
+			<splitpanes id="callgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe'">
 				<splitpanes horizontal :splitpanes-size="30">
 					<span>
 						<Scatterplot ref="Scatterplot" />
@@ -113,13 +119,28 @@
 					<span>
 						<Histogram ref="Histogram" />
 					</span>
-
+					
 				</splitpanes>
 				<span :splitpanes-size="70">
-					<Callgraph ref="Callgraph" />
+					<Callgraph ref="CallgraphA" />
 					<!-- <Callgraph2 ref="Callgraph2" /> -->
 				</span>
 			</splitpanes>
+			<splitpanes class="default-theme" id="callgraph2-dashboard" v-show="selectedData == 'Graph'">
+				<splitpanes horizontal :splitpanes-size="30" >
+						<span>
+						<Function ref="Function" />
+					</span>
+					<span>
+						<Icicle ref="Icicle" />
+					</span>
+				</splitpanes>
+				<span :splitpanes-size="70">
+					<Callgraph ref="CallgraphB" />
+					<!-- <Callgraph2 ref="Callgraph2" /> -->
+				</span>
+			</splitpanes>
+			
 		</v-layout>
 		<v-layout v-show="selectedFormat == 'CCT'">
 			<splitpanes id="cct-dashboard">
@@ -128,19 +149,28 @@
 				</span>
 			</splitpanes>
 		</v-layout>
-		<v-layout v-show="selectedFormat == 'Diff'">
-			<splitpanes>
-				<splitpanes horizontal :splitpanes-size="30">
+		<v-layout v-show="selectedMode == 'Diff'">
+			<splitpanes id="diffgraph-dashboard" class="default-theme">
+				<splitpanes horizontal :splitpanes-size="30" v-show="selectedData == 'Dataframe'">
 					<span>
-						<Histogram ref="Histogram" />
+						<DiffScatterplot ref="DiffScatterplot" />
 					</span>
 					<span>
-						<!-- <Icicle ref="Icicle" /> -->
+						<diffHistogram ref="DiffHistogram" />
+					</span>
+					<span :splitpanes-size="70">
+						<Diffgraph ref="Diffgraph" />
 					</span>
 				</splitpanes>
-				<span>
-					<Diffgraph ref="Diffgraph" />
-				</span>
+				<!-- <splitpanes horizontal :splitpanes-size="30" v-show="selectedData == 'Graph'">
+					<span>
+						<diffFunctions ref="DiffFunctions" />
+					</span>
+					<span>
+						<diffIcicle ref="Icicle" />
+					</span>
+				</splitpanes> -->
+				
 			</splitpanes>
 		</v-layout>
 	</v-content>

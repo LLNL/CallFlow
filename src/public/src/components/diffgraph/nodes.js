@@ -4,7 +4,7 @@ import ToolTip from './tooltip'
 
 export default {
     template: tpl,
-    name: 'Nodes',
+    name: 'DiffNodes',
     components: {
         ToolTip
     },
@@ -16,31 +16,29 @@ export default {
         transitionDuration: 1000,
         minHeightForText: 15,
         textTruncForNode: 25,
+        id: ''
     }),
     mounted() {
-
+        this.id = 'diff-nodes-' + this._uid
     },
-    sockets: {
-
-    },
+ 
     methods: {
-        init(graph) {
+        init(graph, view) {
             this.graph = graph
-            this.nodes = d3.select('#nodes')
-            const node = this.nodes.selectAll('.node')
+            this.nodes = d3.select('#' + this._uid)
+            const node = this.nodes.selectAll('.diff-node')
                 .data(this.graph.nodes)
                 .enter().append('g')
                 .attr('class', (d) => {
-                    return 'node'
+                    return 'diff-node'
                 })
                 .attr('opacity', 0)
-                .attr('id', d => `node_${d.mod_index}`)
+                .attr('id', d => `diff-node_${d.mod_index}`)
                 .attr('transform', (d) => {
-                    console.log(d)
                     return `translate(${d.x},${d.y })`
                 })
 
-            this.nodes.selectAll('.node')
+            this.nodes.selectAll('.diff-node')
                 .data(this.graph.nodes)
                 .transition()
                 .duration(this.transitionDuration)
@@ -85,12 +83,19 @@ export default {
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
-                    this.$socket.emit('scatterplot', {
-                        module: d.id,
+                    let selectedModule = ''
+                    if(d.id.indexOf(':') >  -1 ){
+                        selectedModule = d.id.split(':')[0]
+                    }
+                    else{
+                        selectedModule = d.id
+                    }
+                    this.$socket.emit('diffscatterplot', {
+                        module: selectedModule,
                         dataset1: this.$store.selectedDataset,
                     })
-                    this.$socket.emit('histogram', {
-                        module: d.id,
+                    this.$socket.emit('icicle', {
+                        module: selectedModule,
                         dataset1: this.$store.selectedDataset,
                     })
                 })
@@ -100,13 +105,15 @@ export default {
                 .data(this.graph.nodes)
                 .transition()
                 .duration(this.transitionDuration)
+                .duration(this.transitionDuration)
                 .attr('opacity', d => {
                     // this.quantileLines(rect, d)
                     return 1;
                 })
                 .attr('height', d => d.height)
                 .style('fill', (d) => {
-                    return d.color = this.$store.color.getColor(d);
+                    return "#fff"
+                    // return d.color = this.$store.color.getColor(d);
                 })
                 .style('stroke', (d) => {
                     return 1;
@@ -219,7 +226,8 @@ export default {
                 .duration(this.transitionDuration)
                 .style('opacity', 1)
                 .style('fill', d => {
-                    return this.$store.color.setContrast(this.$store.color.getColor(d))
+                    return '#000'
+                    // return this.$store.color.setContrast(this.$store.color.getColor(d))
                 })
                 .text((d) => {
                     if (d.name.length == 1) {
@@ -250,7 +258,7 @@ export default {
         },
 
         clear() {
-            d3.selectAll('.node').remove()
+            d3.selectAll('.diff-node').remove()
             this.$refs.ToolTip.clear()
         },
 

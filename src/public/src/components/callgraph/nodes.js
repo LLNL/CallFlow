@@ -16,9 +16,10 @@ export default {
         transitionDuration: 1000,
         minHeightForText: 15,
         textTruncForNode: 25,
+        id: '',
     }),
     mounted() {
-
+        this.id = 'node-' + this._uid
     },
     sockets: {
 
@@ -26,7 +27,7 @@ export default {
     methods: {
         init(graph) {
             this.graph = graph
-            this.nodes = d3.select('#nodes')
+            this.nodes = d3.select('#' + this.id)
             const node = this.nodes.selectAll('.node')
                 .data(this.graph.nodes)
                 .enter().append('g')
@@ -91,14 +92,28 @@ export default {
                     else{
                         selectedModule = d.id
                     }
-                    this.$socket.emit('scatterplot', {
-                        module: selectedModule,
-                        dataset1: this.$store.selectedDataset,
-                    })
-                    this.$socket.emit('histogram', {
-                        module: selectedModule,
-                        dataset1: this.$store.selectedDataset,
-                    })
+
+                   if (this.$store.selectedData == 'Dataframe'){
+                        this.$socket.emit('scatterplot', {
+                            module: selectedModule,
+                            dataset1: this.$store.selectedDataset,
+                        })
+                        this.$socket.emit('histogram', {
+                            module: selectedModule,
+                            dataset1: this.$store.selectedDataset,
+                        })
+                    }
+                    else if (this.$store.selectedData == 'Graph'){
+                        this.$socket.emit('function', {
+                            module: selectedModule,
+                            dataset1: this.$store.selectedDataset,
+                        })
+                        this.$socket.emit('hierarchy', {
+                            module: selectedModule,
+                            dataset1: this.$store.selectedDataset,
+                        })
+                    }
+                    
                 })
 
             // Transition

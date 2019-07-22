@@ -19,6 +19,7 @@ export default {
         transitionDuration: 1000,
         minHeightForText: 10,
         view: {},
+        id: '',
     }),
 
     watch: {
@@ -26,13 +27,14 @@ export default {
     },
 
     mounted() {
+        this.id = 'nodes-' + this._uid
     },
 
     methods: {
         init(data, view) {
             this.graph = data
             this.view = view
-            this.nodes = d3.select('#nodes')
+            this.nodes = d3.select('#' + this.id)
             const node = this.nodes.selectAll('.node')
                 .data(this.graph.nodes)
                 .enter().append('g')

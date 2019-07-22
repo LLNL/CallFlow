@@ -67,7 +67,6 @@ class moduleHierarchy:
         modules = node['module'].values.tolist()
 
         module = modules[0]
-        print(modules)
         meta_nodes = df.loc[df['_module'] == module]
         if 'component_path' not in df.columns:
             utils.debug('Error: Component path not defined in the df')

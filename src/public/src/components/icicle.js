@@ -45,6 +45,7 @@ export default {
 		placeholder: 'Split options',
 		maxLevel: 0,
 		path_hierarchy: [],
+		id: ''
 	}),
 
 	watch: {
@@ -66,24 +67,28 @@ export default {
 		}
 	},
 
+	mounted() {
+		this.id = 'icicle-overview-' + this._uid
+	},
+
 	methods: {
 		init() {
-			this.toolbarHeight = document.getElementById('toolbar').clientHeight
-			this.footerHeight = document.getElementById('footer').clientHeight
-			this.icicleToolbarHeight = document.getElementById('icicle-toolbar').clientHeight
-			this.width = document.getElementById(this.id).clientWidth
-			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight - this.icicleToolbarHeight)*0.5
-            this.icicleWidth = this.width - this.margin.right - this.margin.left
-			this.icicleHeight = this.height - this.margin.top - this.margin.bottom
-			// this.setupSVG()
-			
+					
 		},
 
 		setupSVG() {
-			this.hierarchySVG = d3.select('#' + this.id)
+			this.toolbarHeight = document.getElementById('toolbar').clientHeight
+			this.footerHeight = document.getElementById('footer').clientHeight
+			this.icicleToolbarHeight = document.getElementById('icicle-toolbar').clientHeight
+			this.width = document.getElementById('icicle-overview').clientWidth
+			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight - this.icicleToolbarHeight)*0.5
+            this.icicleWidth = this.width - this.margin.right - this.margin.left
+			this.icicleHeight = this.height - this.margin.top - this.margin.bottom	
+			
+			this.hierarchySVG = d3.select('#icicle-overview')
 				.append('svg')
 				.attrs({
-					'id': this.id + '_container',
+					'id': this.id,
 					'width': this.icicleWidth + this.margin.right + this.margin.left,
 					'height': this.icicleHeight + this.margin.top + this.margin.bottom,
 				})
@@ -258,7 +263,6 @@ export default {
 		},
 
 		drawIcicles(json) {
-			console.log('gettinghere ')
 			json = json.children[0]
 			if (this.hierarchy != undefined) {
 				this.clearIcicles();
@@ -343,7 +347,6 @@ export default {
 				})
 				.style('fill', (d) => {
 					let color = this.$store.color.getColor(d.data);
-					console.log(d)
 					return color;
 				})
 				.style('stroke', () => '#0e0e0e')

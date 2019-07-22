@@ -31,7 +31,7 @@ export default {
             this.id = id
             this.toolTipDiv = d3.select('#' + this.id)
             this.toolTipG = this.toolTipDiv.append('g')
-            this.callgraphOverviewWidth = document.getElementById('callgraph-overview').clientWidth
+            this.callgraphOverviewWidth = window.innerWidth
             this.halfWidth = this.callgraphOverviewWidth / 2
         },
 
@@ -100,8 +100,8 @@ export default {
         times() {
             let self = this
             this.addText('Name: ' + this.node.name)
-            this.addText('Inclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime) * 100).toFixed(3)) + "%")
-            this.addText('Exclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime) * 100).toFixed(3)) + "%")
+            this.addText('Inclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime[this.$store.selectedDataset]) * 100).toFixed(3)) + "%")
+            this.addText('Exclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime[this.$store.selectedDataset]) * 100).toFixed(3)) + "%")
         },
 
         paths() {

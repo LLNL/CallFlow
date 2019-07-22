@@ -11,45 +11,13 @@
  * Please also read the LICENSE file for the MIT License notice.
  ***************************************************************************** */
 
-export default function preprocess(graph, refresh) {
-    // graph = cleanGraph(graph);
+export default function preprocess(graph) {
     // graph = addUncertainityInfo(graph)
     graph = addMaxLevel(graph)
-    graph = addLinkID(graph);
-    graph = calculateFlow(graph);
+    graph = addLinkID(graph)
+    graph = calculateFlow(graph)
     console.log("Graph after preprocessing: ", graph)
-    return graph;
-}
-
-function cleanGraph(graph) {
-    const new_nodes = [];
-    let new_links = [];
-    for (const node of graph.nodes) {
-        if (node != undefined && node.name[0][node.name[0].length - 1] != '_') {
-            new_nodes.push(node);
-        }
-    }
-
-    for (const link of graph.links) {
-        if (link.name != 'intermediate' || link.name != 'intermediate' || link.name != undefined) {
-            new_links.push(link);
-        }
-    }
-
-    // Remove the unnecessary edges
-    const tempLinks = [];
-    new_links.forEach((link) => {
-        if ((link.source) != undefined && link.target != undefined) {
-            tempLinks.push(link);
-        }
-    });
-    new_links = tempLinks;
-
-    return {
-        nodes: new_nodes,
-        links: new_links,
-    };
-
+    return graph
 }
 
 function addUncertainityInfo(graph) {
@@ -97,7 +65,6 @@ function addUncertainityInfo(graph) {
     return graph
 }
 
-
 function addMaxLevel(graph) {
     let ret = 0
     let nodes = graph.nodes
@@ -109,24 +76,6 @@ function addMaxLevel(graph) {
     }
     graph['maxLevel'] = ret 
     return graph
-}
-
-/* Link: {
-   sourceID : int, targetID: int , target: str, source: str
-   } */
-function addLinkID_(graph) {
-    const nodeMap = {};
-    for (const [idx, node] of graph.nodes.entries()) {
-        nodeMap[node.name[0]] = idx;
-    }
-
-
-    const links = graph.links;
-    for (const link of graph.links) {
-        link['sourceID'] = nodeMap[link.source];
-        link['targetID'] = nodeMap[link.target];
-    }
-    return graph;
 }
 
 /* Link: {
@@ -144,9 +93,6 @@ function addLinkID(graph) {
             continue;
         }
 
-        if (link.source[link.source.length - 1] == '_' || link.target[link.target.length - 1] == '_') {
-            continue;
-        }
         link['sourceID'] = nodeMap[link.source];
         link['targetID'] = nodeMap[link.target];
     }
@@ -171,7 +117,6 @@ function calculateFlow(graph) {
                     outGoing[linkLabel] += link.weight;
                 }
             }
-
         });
 
         links.forEach((link) => {
@@ -184,7 +129,6 @@ function calculateFlow(graph) {
                     inComing[linkLabel] += link.weight;
                 }
             }
-
         });
 
         if (outGoing[nodeLabel] == undefined) {

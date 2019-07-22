@@ -21,7 +21,8 @@ export default {
         padding: {
             bottom: 10,
             right: 250,
-        }
+        },
+        id: ''
     }),
 
     watch: {
@@ -77,6 +78,7 @@ export default {
         },
 
         drawText() {
+            console.log(this.colorMin, this.colorMax)
             // draw the element
             this.scaleG.append("text")
                 .style("fill", "black")

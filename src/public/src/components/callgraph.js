@@ -38,8 +38,7 @@ export default {
 	},
 	props: [],
 	data: () => ({
-		graph: null,
-		id: 'callgraph-overview',
+		id: '',
 		dashboardID: 'callgraph-dashboard',
 		nodeWidth: 50,
 		levelSpacing: 40,	
@@ -59,6 +58,7 @@ export default {
 	},
 
 	mounted() {
+		this.id = 'callgraph-overview-' + this._uid
 	},
 
 	methods: {
@@ -71,7 +71,6 @@ export default {
 				.attrs({
 					'width': this.width + this.margin.left + this.margin.right,
 					"height": this.height + this.margin.top + this.margin.bottom,
-					// "transform": `translate(${this.width}, ${0.07*this.height})`,
 					"top": this.toolbarHeight
 				})
 
@@ -97,9 +96,7 @@ export default {
 		},
 
 		render() {
-
 			this.graph = preprocess(this.data, false)
-			console.log(this.graph)
 			this.maxLevel = this.graph.maxLevel
 
 			console.log("Preprocessing done.")

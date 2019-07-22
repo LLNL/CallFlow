@@ -88,6 +88,8 @@ class PreProcess():
             ret = {}
 
             for idx, row in self.df.iterrows():
+                if(row.nid == 2):
+                    print(self.state.lookup(row.nid)['time (inc)'])
                 ret[str(row.nid)] = max(self.state.lookup(row.nid)['time (inc)'])
 
             self.map['max_incTime'] = ret

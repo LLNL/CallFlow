@@ -42,7 +42,9 @@ def getMaxIncTime(state):
     df = state.entire_df
     for root in graph.roots:
         node_df = lookup(df, root)
+        print(node_df['time (inc)'])
         ret = max(ret, float(max(node_df['time (inc)'].tolist())))
+    print(ret)
     return ret
 
 # TODO: Get the maximum exclusive time from the graphframe. 

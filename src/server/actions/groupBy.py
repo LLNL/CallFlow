@@ -60,7 +60,7 @@ class groupBy:
                     prev_module = module
                     group_path.append(module)
                 elif module != prev_module:
-                    print("Group path is ", group_path)
+                    # print("Group path is ", group_path)
                     if module in group_path:
                         from_module = group_path[len(group_path) - 1]
                         to_module = module
@@ -76,8 +76,6 @@ class groupBy:
                     continue
         
         group_path = tuple(group_path)
-        print(self.module_func_map)
-        print(group_path)
         return (group_path, change_name)
 
     def create_component_path(self, path, group_path):

@@ -5,6 +5,11 @@ import CCT from './cct'
 import Icicle from './icicle'
 import Scatterplot from './scatterplot'
 import Histogram from './histogram'
+import DiffHistogram from './diffhistogram'
+import Function from './function'
+// import DiffFunction from './difffunction'
+// import DiffIcicle from './difficicle'
+import DiffScatterplot from './diffScatterplot'
 import Vue from 'vue'
 
 import VueSlider from 'vue-slider-component'
@@ -21,7 +26,12 @@ export default {
 		Callgraph,
 		CCT,
 		Scatterplot,
+		Function,
 		Diffgraph,
+		DiffHistogram,
+		DiffScatterplot,
+		// DiffFunction,
+		// DiffIcicle,
 		VueSlider,
 		Histogram,
 		Splitpanes,
@@ -70,6 +80,8 @@ export default {
 		selectedBinCount: 5,
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
+		datas: ['Dataframe', 'Graph'],
+		selectedData: 'Graph',
 		enableDiff: false,
 		firstRender: false,
 	}),
@@ -114,6 +126,7 @@ export default {
 			this.$store.selectedBinCount = this.selectedBinCount
 			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime * 0.000001) / 100).toFixed(3)
 			this.$store.selectedScatterMode = this.selectedScatterMode
+			this.$store.selectedData = this.selectedData
 
 			this.init()
 		},
@@ -125,16 +138,23 @@ export default {
 
 		group(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
-			this.$refs.Callgraph.init(data)
+			if(this.selectedData == 'Dataframe'){
+				this.$refs.CallgraphA.init(data)
+			}
+			else if(this.selectedData == 'Graph'){
+				this.$refs.CallgraphB.init(data)
+			}
 			this.$refs.Scatterplot.init()
 			this.$refs.Histogram.init()
+			this.$refs.Function.init()
+			this.$refs.Icicle.init()
 		},
 
 		diff(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
 			this.$refs.Diffgraph.init(data)
-			// this.$refs.Histogram.init()
-			// this.$refs.Icicle.init()
+			this.$refs.DiffScatterplot.init()
+			this.$refs.Icicle.init()
 		},
 	},
 
@@ -143,23 +163,37 @@ export default {
 			if (this.selectedFormat == 'Callgraph') {
 				this.$refs.CCT.clear()
 			} else if (this.selectedFormat == 'CCT') {
-				this.$refs.Callgraph.clear()
+				if(this.selectedData == 'Dataframe'){
+					this.$refs.CallgraphA.clear()
+				}
+				else if (this.selectedData == 'Graph'){
+					this.$refs.CallgraphB.clear()	
+				}
 				this.$refs.Histogram.clear()
 				this.$refs.Scatterplot.clear()
-			}
+				this.$refs.Function.clear()
+				this.$refs.Icicle.clear()
+			} 
 		},
 
 		clearLocal() {
 			if (this.selectedFormat == 'Callgraph') {
-				this.$refs.Callgraph.clear()
+				if(this.selectedData == 'Dataframe'){
+					this.$refs.CallgraphA.clear()
+				}
+				else if (this.selectedData == 'Graph'){
+					this.$refs.CallgraphB.clear()	
+				}
 				this.$refs.Histogram.clear()
 				this.$refs.Scatterplot.clear()
+				this.$refs.Function.clear()
+				this.$refs.Icicle.clear()
 			} else if (this.selectedFormat == 'CCT') {
 				this.$refs.CCT.clear()
-			} else if (this.selectedFormat == 'Diffgraph') {
+			} else if (this.selectedMode == 'Diffgraph') {
 				this.$refs.Diffgraph.clear()
 				this.$refs.Icicle.clear()
-				this.$refs.Histogram.clear()
+				this.$refs.DiffHistogram.clear()
 			}
 		},
 
@@ -204,11 +238,11 @@ export default {
 			this.colorMap = this.$store.color.getAllColors()
 
 			if (this.selectedColorBy == 'Inclusive') {
-				this.selectedColorMin = this.$store.minIncTime
-				this.selectedColorMax = this.$store.maxIncTime
+				this.selectedColorMin = this.$store.minIncTime[this.selectedDataset]
+				this.selectedColorMax = this.$store.maxIncTime[this.selectedDataset]
 			} else if (this.selectedColorBy == 'Exclusive') {
-				this.selectedColorMin = this.$store.minExcTime
-				this.selectedColorMax = this.$store.maxExcTime
+				this.selectedColorMin = this.$store.minExcTime[this.selectedDataset]
+				this.selectedColorMax = this.$store.maxExcTime[this.selectedDataset]
 			}
 
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
@@ -251,31 +285,15 @@ export default {
 
 		updateFormat() {
 			Vue.nextTick(() => {
-				// this.clear()
-				if (this.selectedFormat == 'CCT') {
-					this.$socket.emit('cct', {
-						dataset: this.$store.selectedDataset,
-					})
-				} else {
-					this.$socket.emit('group', {
-						dataset: this.$store.selectedDataset,
-						format: this.selectedFormat,
-						groupBy: this.selectedGroupBy
-					})
-				}
-
+				this.clear()
+				this.init()
 			})
 		},
 
 		updateDataset() {
-			Vue.nextTick(() => {
-				this.clearLocal()
-				this.$socket.emit('group', {
-					dataset: this.$store.selectedDataset,
-					format: this.selectedFormat,
-					groupBy: this.selectedGroupBy
-				})
-			})
+			this.clearLocal()
+			this.$store.selectedDataset = this.selectedDataset
+			this.init()
 		},
 
 		updateMode() {
@@ -358,8 +376,13 @@ export default {
 			}
 			else{
 				console.log('The selected module is :', this.$store.selectedNode)
-			}
-			
+			}	
+		},
+
+		updateData(){
+			this.$store.selectedData = this.selectedData
+			this.clearLocal()
+			this.init()
 		}
 	}
 }
