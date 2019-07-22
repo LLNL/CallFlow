@@ -94,10 +94,10 @@ export default {
                         module: selectedModule,
                         dataset1: this.$store.selectedDataset,
                     })
-                    this.$socket.emit('icicle', {
-                        module: selectedModule,
-                        dataset1: this.$store.selectedDataset,
-                    })
+                    // this.$socket.emit('icicle', {
+                    //     module: selectedModule,
+                    //     dataset1: this.$store.selectedDataset,
+                    // })
                 })
 
             // Transition

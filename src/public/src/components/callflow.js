@@ -7,8 +7,8 @@ import Scatterplot from './scatterplot'
 import Histogram from './histogram'
 import DiffHistogram from './diffhistogram'
 import Function from './function'
-// import DiffFunction from './difffunction'
-// import DiffIcicle from './difficicle'
+import DiffFunction from './difffunction'
+import DiffIcicle from './difficicle'
 import DiffScatterplot from './diffScatterplot'
 import Vue from 'vue'
 
@@ -30,8 +30,8 @@ export default {
 		Diffgraph,
 		DiffHistogram,
 		DiffScatterplot,
-		// DiffFunction,
-		// DiffIcicle,
+		DiffFunction,
+		DiffIcicle,
 		VueSlider,
 		Histogram,
 		Splitpanes,
@@ -81,7 +81,7 @@ export default {
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
 		datas: ['Dataframe', 'Graph'],
-		selectedData: 'Graph',
+		selectedData: 'Dataframe',
 		enableDiff: false,
 		firstRender: false,
 	}),
@@ -101,6 +101,7 @@ export default {
 			data = JSON.parse(data)
 			console.log("Config file: ", data)
 			this.numOfDatasets = data['datasets'].length
+
 			// Enable diff mode only if the number of datasets >= 2
 			this.$store.datasets = data['names']
 			this.datasets = data['names']
@@ -152,9 +153,16 @@ export default {
 
 		diff(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
-			this.$refs.Diffgraph.init(data)
+			if(this.selectedData == 'Dataframe'){
+				this.$refs.DiffgraphA.init(data)
+			}
+			else if(this.selectedData == 'Graph'){
+				this.$refs.DiffgraphB.init(data)
+			}
 			this.$refs.DiffScatterplot.init()
-			this.$refs.Icicle.init()
+			this.$refs.DiffHistogram.init()
+			this.$refs.DiffFunction.init()
+			this.$refs.DiffIcicle.init()
 		},
 	},
 
@@ -381,7 +389,7 @@ export default {
 
 		updateData(){
 			this.$store.selectedData = this.selectedData
-			this.clearLocal()
+			this.clear()
 			this.init()
 		}
 	}

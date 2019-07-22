@@ -23,7 +23,7 @@ export default {
 
 	data: () => ({
 		graph: null,
-		id: 'diffscatterplot-view',
+		id: '',
 		width: null,
 		height: null,
 		margin: {
@@ -53,6 +53,7 @@ export default {
 	},
 
 	mounted() {
+		this.id = 'diff-scatterplot-view-' + this._uid
 	},
 
 	methods: {

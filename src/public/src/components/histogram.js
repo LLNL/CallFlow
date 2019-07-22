@@ -115,8 +115,7 @@ export default {
 
         clear() {
             d3.selectAll('.selectBars').remove()
-            d3.select('.x-axis').remove()
-            d3.select('.y-axis').remove()
+            d3.selectAll('.histogram-axis').remove()
             d3.selectAll('.binRank').remove()
             d3.selectAll('.lineRank').remove()
             this.$refs.ToolTip.clear()
@@ -336,12 +335,14 @@ export default {
                 .ticks(this.$store.numbOfRanks, '%');
 
             const xAxisLine = this.histogramSVG.append('g')
-                .attr('class', 'x-axis')
+                .attr('class', 'histogram-axis')
+                .attr('id', 'x-axis')
                 .attr('transform', `translate(0,${this.histogramHeight})`)
                 .call(xAxis);
 
             const yAxisLine = this.histogramSVG.append('g')
-                .attr('class', 'y-axis')
+                .attr('class', 'histogram-axis')
+                .attr('id', 'y-axis')
                 .call(yAxis);
 
             const yAxisLineText = yAxisLine.append('text')
