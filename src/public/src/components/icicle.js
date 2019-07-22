@@ -23,6 +23,8 @@ export default {
 		selectedDirection: 'TD',
 		textTruncForNode: 15,
 		color: null,
+		width: null, 
+		height: null,
 		totalSize: 0,
 		b : {
 			w: 150, h: 30, s: 3, t: 10
@@ -57,36 +59,34 @@ export default {
 	sockets: {
 		hierarchy(data) {
 			data = JSON.parse(data)
-			this.update_maxlevels(data)
 			this.update_from_df(data)
+		},
+		level_change(data){
+			this.update_maxlevels(data)
 		}
 	},
 
 	methods: {
 		init() {
+			this.toolbarHeight = document.getElementById('toolbar').clientHeight
+			this.footerHeight = document.getElementById('footer').clientHeight
+			this.icicleToolbarHeight = document.getElementById('icicle-toolbar').clientHeight
 			this.width = document.getElementById(this.id).clientWidth
-			this.height = window.innerHeight / 2 - 50
-
-			this.icicleWidth = this.width - this.margin.right - this.margin.left
-			this.icicleHeight = this.height - this.margin.top - this.margin.bottom - 20
-			this.icicleOffset = Math.floor(this.boxHeight / 3)
-
-			this.icicleSVGid = 'component_graph_view'
-			this.setupSVG()
+			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight - this.icicleToolbarHeight)*0.5
+            this.icicleWidth = this.width - this.margin.right - this.margin.left
+			this.icicleHeight = this.height - this.margin.top - this.margin.bottom
+			// this.setupSVG()
+			
 		},
 
 		setupSVG() {
-			this.hierarchyContainer = d3.select('#' + this.id)
+			this.hierarchySVG = d3.select('#' + this.id)
 				.append('svg')
 				.attrs({
-					'id': this.icicleSVGid + '_container',
+					'id': this.id + '_container',
 					'width': this.icicleWidth + this.margin.right + this.margin.left,
 					'height': this.icicleHeight + this.margin.top + this.margin.bottom,
 				})
-		},
-
-		split() {
-
 		},
 
 		update_maxlevels(data){
@@ -135,7 +135,7 @@ export default {
 
 		update_from_df(hierarchy) {
 			const path = hierarchy['path']
-			 const inc_time = hierarchy['time (inc)']
+			const inc_time = hierarchy['time (inc)']
 			const exclusive = hierarchy['time']
 			const imbalance_perc = hierarchy['imbalance_perc']
 			const name = hierarchy['name']
@@ -219,12 +219,12 @@ export default {
 		},
 
 		clearIcicles() {
-			d3.selectAll('.icicleNode').remove();
-			d3.selectAll('.icicleText').remove();
+			d3.selectAll('.icicleNode').remove()
+			d3.selectAll('.icicleText').remove()
 		},
 
 		textSize(text) {
-			const container = d3.select('#' + this.icicleSVGid).append('svg');
+			const container = d3.select('#' + this.id).append('svg');
             container.append('text')
                 .attrs({
                     x: -99999,
@@ -258,13 +258,13 @@ export default {
 		},
 
 		drawIcicles(json) {
+			console.log('gettinghere ')
 			json = json.children[0]
-			let direction = this.icicleDirection;
-			let attr = this.icicleColorByAttr;
 			if (this.hierarchy != undefined) {
 				this.clearIcicles();
 			} else {
-				this.hierarchy = this.hierarchyContainer.append('g')
+				this.setupSVG()
+				this.hierarchy = this.hierarchySVG.append('g')
 					.attrs({
 						'id': this.icicleSVGid
 					})
@@ -276,7 +276,7 @@ export default {
 				.size([this.width, this.height])
 
 			// Setup the view components
-			this.initializeBreadcrumbTrail();
+			// this.initializeBreadcrumbTrail();
 			//  drawLegend();
 			d3.select('#togglelegend').on('click', this.toggleLegend);
 
@@ -284,7 +284,7 @@ export default {
 			// when the mouse leaves the parent g.
 			this.hierarchy.append('svg:rect')
 				.attr('width', () => {
-					if (this.selectedDirection == 'LR') return this.boxHeight;
+					if (this.selectedDirection == 'LR') return this.icicleHeight;
 					return this.width;
 				})
 				.attr('height', () => {

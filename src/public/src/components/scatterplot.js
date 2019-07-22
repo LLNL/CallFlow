@@ -13,6 +13,7 @@
 import tpl from '../html/scatterplot.html'
 import * as d3 from 'd3'
 import ToolTip from './scatterplot/tooltip'
+import { thresholdSturges } from 'd3-array';
 
 export default {
 	name: 'Scatterplot',
@@ -23,150 +24,224 @@ export default {
 
 	data: () => ({
 		graph: null,
-		id: 'scatterplot',
+		id: 'scatterplot-view',
 		width: null,
 		height: null,
 		margin: {
 			top: 10,
-			right: 30,
+			right: 10,
 			bottom: 10,
 			left: 10
 		},
 		xData: null,
 		yData: null,
 		xMin: 0,
-		xMax: Number.MAX_SAFE_INTEGER,
+		xMax: 0,
 		yMin: 0,
-		yMax: Number.MAX_SAFE_INTEGER,
-
-		
-
+		yMax: 0,
+		firstRender: true,
 	}),
-
-	watch: {
-
-	},
 
 	sockets: {
 		scatterplot(data) {
 			data = JSON.parse(data)
 			console.log("Scatter data: ", data)
+			if (this.firstRender) {
+				this.init()
+			}
 			this.render(data)
 		},
 	},
 
 	mounted() {
-		this.id = this.id
 	},
 
 	methods: {
-		init() {			
+		init() {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
-            this.width = document.getElementById(this.id).clientWidth
-			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight)*0.5
-			
+			this.width = window.innerWidth * 0.3
+			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.5
+
 			this.scatterWidth = this.width - this.margin.right - this.margin.left;
-            this.scatterHeight = this.height - this.margin.top - this.margin.bottom;
+			this.scatterHeight = this.height - this.margin.top - this.margin.bottom;
+
+			this.svg = d3.select('#' + this.id)
+				.attr('width', this.width - this.margin.left - this.margin.right)
+				.attr('height', this.height - this.margin.top - this.margin.bottom)
+				.attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")");
 		},
 
-		process(data){
+		scatterAll() {
+			let xArray = []
+			let yArray = []
+			let yMin = 0
+			let xMin = 0
+			let xMax = 0
+			let yMax = 0
+
+			for (const [idx, d] of Object.entries(this.yData)) {
+				for (let rank = 0; rank < d.length; rank += 1) {
+					yMin = Math.min(yMin, d[rank])
+					yMax = Math.max(yMax, d[rank])
+					yArray.push(d[rank])
+				}
+			}
+
+			for (const [idx, d] of Object.entries(this.xData)) {
+				for (let rank = 0; rank < d.length; rank += 1) {
+					xMin = Math.min(xMin, d[rank]);
+					xMax = Math.max(xMax, d[rank]);
+					xArray.push(d[rank])
+				}
+			}
+
+			return [xMin, yMin, xMax, yMax, xArray, yArray]
+		},
+
+		scatterMean() {
+			let xArray = []
+			let yArray = []
+			let yMin = 0
+			let xMin = 0
+			let xMax = 0
+			let yMax = 0
+			for (const [idx, d] of Object.entries(this.yData)) {
+				let ySum = 0
+				for (let rank = 0; rank < d.length; rank += 1) {
+					yMin = Math.min(yMin, d[rank])
+					yMax = Math.max(yMax, d[rank])
+					ySum += d[rank]
+				}
+				yArray.push(ySum / d.length)
+			}
+
+			for (const [idx, d] of Object.entries(this.xData)) {
+				let xSum = 0
+				for (let rank = 0; rank < d.length; rank += 1) {
+					xMin = Math.min(xMin, d[rank]);
+					xMax = Math.max(xMax, d[rank]);
+					xSum += d[rank]
+				}
+				yArray.push(xSum / d.length)
+			}
+			return [xMin, yMin, xMax, yMax, xArray, yArray]
+		},
+
+		process(data) {
 			this.yData = data["time (inc)"]
 			this.xData = data["time"]
-			
-			this.yData.forEach(function (d) {
-				this.yMin = Math.min(this.yMin, d);
-				this.yMax = Math.max(this.yMax, d);
-			});
+			this.nameData = data['name']
 
-			this.xData.forEach(function (d) {
-				this.xMin = Math.min(this.xMin, d);
-				this.xMax = Math.max(this.xMax, d);
-			});
+			let temp
+			if (this.$store.selectedScatterMode == 'mean') {
+				console.log('mean')
+				temp = this.scatterMean()
+			}
+			else if (this.$store.selectedScatterMode == 'all') {
+				console.log('all')
+				temp = this.scatterAll()
+			}
+			this.xMin = temp[0]
+			this.yMin = temp[1]
+			this.xMax = temp[2]
+			this.yMax = temp[3]
+			this.xArray = temp[4]
+			this.yArray = temp[5]
 
-			this.leastSquaresCoeff = this.leastSquares(this.xData.slice(), this.yData.slice());
-			this.regressionY = leastSquaresCoeff["y_res"];
-			this.corre_coef = leastSquaresCoeff["corre_coef"];
+			console.log(this.xArray, this.yArray)
 
-			this.xScale = d3.scaleLinear().domain([this.xMin, this.xMax]).range([0, this.width])
-			this.yScale = d3.scaleLinear().domain([this.yMin, this.yMax]).range([this.height, 0])
+			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice())
+			this.regressionY = this.leastSquaresCoeff["y_res"];
+			this.corre_coef = this.leastSquaresCoeff["corre_coef"];
+
+			this.xAxisHeight = this.scatterWidth - 4 * this.margin.left
+			this.yAxisHeight = this.scatterHeight - 4 * this.margin.top
+			this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.xAxisHeight])
+			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.yAxisHeight, 0])
 		},
 
 		render(data) {
+			if (!this.firstRender) {
+				this.clear()
+			}
+			this.firstRender = false
 			this.process(data)
-			this.svg = d3.select(containerID).append('svg')
-				.attr('width', width + margin.left + margin.right)
-				.attr('height', height + margin.top + margin.bottom)
-				.append('g')
-				.attr('transform', "translate(" + margin.left + "," + margin.top + ")");
+			let self = this
 
-			var xAxis = d3.svg.axis()
-				.scale(xScale)
-				.orient('bottom')
+			var xAxis = d3.axisBottom(self.xScale)
 				.ticks(5)
-				// .tickFormat(d3.formatPrefix(".1", 1e6));
-				.tickFormat(d3.format(".1e"));
-			var yAxis = d3.svg.axis()
-				.scale(yScale)
-				.orient('left')
+				.tickFormat(d3.format("0.2s"));
+			var yAxis = d3.axisLeft(self.yScale)
 				.ticks(5)
-				.tickFormat(d3.format(".1e"));
+				.tickFormat(d3.format("0.2s"));
 
-			var xAxisLine = svg.append('g')
-				.attr('class', 'xAxis')
-				.attr("transform", "translate(0," + height + ")")
+			let xAxisHeightCorrected = self.xAxisHeight + this.margin.left
+			var xAxisLine = this.svg.append('g')
+				.attr('class', 'axis')
+				.attr('id', 'xAxis')
+				.attr("transform", "translate(" + 3 * self.margin.left + "," + xAxisHeightCorrected + ")")
 				.call(xAxis)
-			xAxisLine.append('text')
-				.attr('x', width)
-				.attr('y', -6)
+
+			this.svg.append('text')
+				.attr('class', 'axisLabel')
+				.attr('x', self.scatterWidth)
+				.attr('y', self.yAxisHeight)
+				.style('font-size', '10px')
 				.style('text-anchor', 'end')
 				.text("Exclusive Runtime")
 
-			var yAxisLine = svg.append('g')
-				.attr('class', 'yAxis')
+			var yAxisLine = this.svg.append('g')
+				.attr('id', 'yAxis')
+				.attr('class', 'axis')
+				.attr('transform', "translate(" + 3 * self.margin.top + ", 0)")
 				.call(yAxis)
-			yAxisLine.append("text")
+
+			this.svg.append("text")
+				.attr('class', 'axisLabel')
 				.attr('transform', 'rotate(-90)')
-				.attr('y', 6)
-				.attr('dy', ".71em")
+				.attr('x', 0)
+				.attr('y', 4 * this.margin.left)
 				.style("text-anchor", "end")
+				.style("font-size", "10px")
 				.text("Inclusive Runtime");
 
-			svg.append('g').selectAll('.dot')
-				.data(yData)
+			this.svg.selectAll('.dot')
+				.data(this.yArray)
 				.enter().append('circle')
 				.attr('class', 'dot')
 				.attr('r', 3)
 				.attr('cx', function (d, i) {
-					return xScale(xData[i]);
+					return self.xScale(d) + 3 * self.margin.left;
 				})
 				.attr('cy', function (d, i) {
-					return yScale(d);
+					return self.yScale(d);
 				})
 				.style('fill', "#4682b4")
 
-			var line = d3.svg.line()
+			var line = d3.line()
 				.x(function (d, i) {
-					return xScale(xData[i]);
+					return self.xScale(self.xArray[i]) + 3 * self.margin.left;
 				})
-				.y(function (d) {
-					return yScale(d);
+				.y(function (d, i) {
+					return self.yScale(self.yArray[i]);
 				});
 
-			var trendline = svg.append('g').append("path")
-				.datum(regressionY)
+			var trendline = this.svg.append('g').append("path")
+				.datum(this.regressionY)
 				.attr("class", "res_line")
 				.attr("d", line)
 				.style("stroke", "black")
 				.style("stroke-width", "1px")
 				.style("opacity", 0.5);
 
-			var coefText = svg.append('g');
+			var coefText = this.svg.append('g');
 			var decimalFormat = d3.format("0.2f");
 			coefText.append('text')
-				.text("corr-coef: " + decimalFormat(corre_coef))
+				.attr('class', 'text')
+				.text("corr-coef: " + decimalFormat(this.corre_coef))
 				.attr("x", function (d) {
-					return width - 100;
+					return self.scatterWidth - 100;
 				})
 				.attr("y", function (d) {
 					return 10;
@@ -200,8 +275,10 @@ export default {
 				.style('font-family', 'sans-serif')
 				.style('font-weight', 'lighter');
 		},
+
 		// returns slope, intercept and r-square of the line
 		leastSquares(xSeries, ySeries) {
+			console.log(xSeries, ySeries)
 			var n = xSeries.length;
 			var x_mean = 0;
 			var y_mean = 0;
@@ -232,7 +309,7 @@ export default {
 			var b0 = y_mean - (b1 * x_mean);
 			// perform regression 
 
-			yhat = [];
+			let yhat = [];
 			// fit line using coeffs
 			for (i = 0; i < xSeries.length; i++) {
 				yhat.push(b0 + (xSeries[i] * b1));
@@ -266,6 +343,7 @@ export default {
 			var step2 = (n * sum_x2) - (sum_x * sum_x);
 			var step3 = (n * sum_y2) - (sum_y * sum_y);
 			var step4 = Math.sqrt(step2 * step3);
+
 			var corre_coef = step1 / step4;
 
 			return {
@@ -282,29 +360,15 @@ export default {
 
 
 		clear() {
-
+			d3.selectAll('.dot').remove()
+			d3.selectAll('.axis').remove()
+			d3.selectAll('.res_line').remove()
+			d3.selectAll('.axisLabel').remove()
+			d3.selectAll('.text').remove()
 		},
 
 		update(data) {
 
 		},
 	}
-}
-
-
-function Scatter(args) {
-
-
-
-	this.
-
-
-
-	this.reDraw = function () {
-		$(containerID).empty();
-
-		visualize();
-	}
-
-
 }

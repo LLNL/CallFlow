@@ -84,12 +84,19 @@ export default {
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
-                    this.$socket.emit('scatterplot  ', {
-                        module: d.id,
+                    let selectedModule = ''
+                    if(d.id.indexOf(':') >  -1 ){
+                        selectedModule = d.id.split(':')[0]
+                    }
+                    else{
+                        selectedModule = d.id
+                    }
+                    this.$socket.emit('scatterplot', {
+                        module: selectedModule,
                         dataset1: this.$store.selectedDataset,
                     })
                     this.$socket.emit('histogram', {
-                        module: d.id,
+                        module: selectedModule,
                         dataset1: this.$store.selectedDataset,
                     })
                 })

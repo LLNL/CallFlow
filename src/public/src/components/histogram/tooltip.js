@@ -37,9 +37,8 @@ export default {
                 .attr('class', 'toolTipSVG')
 
             this.toolTipG = this.toolTipDiv.append('g')
-            this.height = document.getElementById('callgraph-overview').clientHeight/10
-            this.halfWidth = document.getElementById(this.parentID).clientWidth / 2
-            console.log(this.height, this.halfWidth)
+            this.height = document.getElementById('callgraph-overview').clientHeight
+            this.halfWidth = document.getElementById('histogram_view').clientWidth / 2
         },
 
         render(data, node) {

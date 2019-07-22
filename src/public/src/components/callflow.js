@@ -63,11 +63,11 @@ export default {
 		selectedColorMaxText: '',
 		groupModes: ['include callbacks', 'exclude callbacks'],
 		selectedGroupMode: 'include callbacks',
+		scatterMode: ['mean', 'all'],
+		selectedScatterMode: 'all',
 		modes: [],
 		selectedMode: 'Single',
 		selectedBinCount: 5,
-		CallgraphData: null,
-		CCTData: null,
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
 		enableDiff: false,
@@ -113,6 +113,7 @@ export default {
 			this.$store.numbOfRanks = data['numbOfRanks']
 			this.$store.selectedBinCount = this.selectedBinCount
 			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime * 0.000001) / 100).toFixed(3)
+			this.$store.selectedScatterMode = this.selectedScatterMode
 
 			this.init()
 		},
@@ -125,16 +126,15 @@ export default {
 		group(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
 			this.$refs.Callgraph.init(data)
-			this.$refs.Histogram.init()
 			this.$refs.Scatterplot.init()
-
+			this.$refs.Histogram.init()
 		},
 
 		diff(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
 			this.$refs.Diffgraph.init(data)
-			this.$refs.Histogram.init()
-			this.$refs.Icicle.init()
+			// this.$refs.Histogram.init()
+			// this.$refs.Icicle.init()
 		},
 	},
 
@@ -153,9 +153,13 @@ export default {
 			if (this.selectedFormat == 'Callgraph') {
 				this.$refs.Callgraph.clear()
 				this.$refs.Histogram.clear()
-				this.$refs.Icicle.clear()
+				this.$refs.Scatterplot.clear()
 			} else if (this.selectedFormat == 'CCT') {
 				this.$refs.CCT.clear()
+			} else if (this.selectedFormat == 'Diffgraph') {
+				this.$refs.Diffgraph.clear()
+				this.$refs.Icicle.clear()
+				this.$refs.Histogram.clear()
 			}
 		},
 
@@ -222,11 +226,18 @@ export default {
 
 		updateColor() {
 			this.colors()
-			if (this.selectedFormat == 'Callgraph') {
-				this.$refs.Callgraph.render()
-			} else if (this.selectedFormat == 'CCT') {
-				this.$refs.CCT.render()
+			if (this.selectedFormat == 'CCT') {
+				this.$socket.emit('cct', {
+					dataset: this.$store.selectedDataset,
+				})
+			} else if (this.selectedFormat == 'Callgraph') {
+				this.$socket.emit('group', {
+					dataset: this.$store.selectedDataset,
+					format: this.selectedFormat,
+					groupBy: this.selectedGroupBy
+				})
 			}
+
 		},
 
 		updateColorMinMax() {
@@ -335,6 +346,20 @@ export default {
 			this.$refs.Callgraph.updateMiniHistogram()
 			// TODO: Call updateHistogram for diffCallgraph when needed. 
 
+		},
+
+		updateScatterMode(){
+			if(this.$store.selectedNode != undefined){
+				this.$store.selectedScatterMode = this.selectedScatterMode
+				this.$socket.emit('scatterplot', {
+					module: this.$store.selectedNode,
+					dataset1: this.$store.selectedDataset,
+				})
+			}
+			else{
+				console.log('The selected module is :', this.$store.selectedNode)
+			}
+			
 		}
 	}
 }

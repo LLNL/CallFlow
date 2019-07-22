@@ -80,7 +80,7 @@
 					<v-text-field label="Filter Threshold (in seconds)" v-model="selectedIncTime" class="mt-0"
 						type="number" @change="updateFilterIncTime"></v-text-field>
 					<vue-slider id="frequency-slider" :width="200" :process="true" v-model="selectedFilterPerc"
-						:order="false" @change="updateFilterPerc" style="">
+						:order="false" @change="updateFilterPerc">
 						<template #prepend>
 							<v-text-field v-model="filterPercRange[[0, selectedFilterPerc]]" class="pt-0 mt-0"
 								hide-details single-line type="number" style="width: 30px">
@@ -93,6 +93,11 @@
 						v-model="selectedBinCount" :menu-props="{ maxHeight: '200' }" persistent-hint
 						v-on:change="updateBinCount()">
 					</v-text-field>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-select label="Scatter mode" :items="scatterMode" v-model="selectedScatterMode"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateScatterMode()">
+					</v-select>
 				</v-flex>
 			</v-layout>
 		</v-card>
@@ -130,7 +135,7 @@
 						<Histogram ref="Histogram" />
 					</span>
 					<span>
-						<Icicle ref="Icicle" />
+						<!-- <Icicle ref="Icicle" /> -->
 					</span>
 				</splitpanes>
 				<span>

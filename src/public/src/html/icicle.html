@@ -1,5 +1,5 @@
     <v-layout row wrap :id="id">
-        <v-toolbar dense>
+        <v-toolbar dense id="icicle-toolbar">
             <dropdown v-bind:options="splitOptions" :selected="selectedSplitOption" v-on:updateOption="split()" :placeholder="placeholder">
             </dropdown>
             <v-range-slider label="Level" v-model="level" v-bind:max="maxLevel" :min="0" :step="1">

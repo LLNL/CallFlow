@@ -174,6 +174,8 @@ class CallFlow:
         graph_filepath = dirname + '/' + name + '/filter_graph.json'
         entire_graph_filepath = dirname + '/' + name + '/entire_graph.json'   
 
+        print(df_filepath)
+
         with open(graph_filepath, 'r') as graphFile:
             data = json.load(graphFile)
 

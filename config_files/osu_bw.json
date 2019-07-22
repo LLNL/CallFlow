@@ -6,6 +6,13 @@
             "format": "hpctoolkit",
             "props": {},
             "nop": 3
+        },
+        {
+            "name": "calc-pi",
+            "path": "./data/hpctoolkit-cpi-database",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": 3
         }
     ]
 }

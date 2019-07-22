@@ -23,6 +23,7 @@ import Edges from './callgraph/edges'
 import ColorMap from './callgraph/colormap'
 
 import * as  d3 from 'd3'
+import { min } from 'd3-array';
 
 export default {
 	name: 'Callgraph',
@@ -50,6 +51,8 @@ export default {
 		width: null,
 		height: null,
 		treeHeight: null,
+		data: null,
+		graph: null,
 	}),
 
 	watch: {
@@ -81,7 +84,8 @@ export default {
 			//     view.svgBase.attr('transform', `translate(${d3.event.translate})scale(${d3.event.scale})`);
 			// });
 
-			this.render(data)
+			this.data = data
+			this.render()
 		},
 
 		clear() {
@@ -92,28 +96,30 @@ export default {
 			this.$refs.ColorMap.clear(0)
 		},
 
-		render(data) {
-			this.data = preprocess(data, false)
-			this.maxLevel = this.data.maxLevel
+		render() {
+
+			this.graph = preprocess(this.data, false)
+			console.log(this.graph)
+			this.maxLevel = this.graph.maxLevel
 
 			console.log("Preprocessing done.")
-			this.d3sankey = this.initSankey(this.data)
+			this.d3sankey = this.initSankey(this.graph)
 			console.log("Layout Calculation.")
 			// this.postProcess(this.data.nodes, this.data.links)	
 			console.log("Post-processing done.") 
 
-			this.$refs.Nodes.init(this.data, this.view)
+			this.$refs.Nodes.init(this.graph, this.view)
 			// this.$refs.IntermediateNodes.init(this.data)
-			this.$refs.Edges.init(this.data, this.view)
+			this.$refs.Edges.init(this.graph, this.view)
 			// this.$refs.CallbackEdges.init(this.data, this.view)
-			this.$refs.MiniHistograms.init(this.data, this.view)
+			this.$refs.MiniHistograms.init(this.graph, this.view)
 			this.$refs.ColorMap.init()
 
 		},
 
 		updateMiniHistogram() {
 			this.$refs.MiniHistograms.clear()
-			this.$refs.MiniHistograms.init(this.data, this.view)
+			this.$refs.MiniHistograms.init(this.graph, this.view)
 		},
 
 		//Sankey computation
@@ -123,14 +129,14 @@ export default {
 				.nodePadding(this.ySpacing)
 				.size([this.width * 1.05, this.height - this.ySpacing])
 				.levelSpacing(this.levelSpacing)
-				.maxLevel(this.maxLevel)
+				.maxLevel(this.graph.maxLevel)
 				//    .setReferenceValue(this.data.rootRunTimeInc)
 				.setMinNodeScale(this.nodeScale);
 
 			let path = sankey.link()
 
-			sankey.nodes(this.data.nodes)
-				.links(this.data.links)
+			sankey.nodes(this.graph.nodes)
+				.links(this.graph.links)
 				.layout(32)
 			return sankey
 		},

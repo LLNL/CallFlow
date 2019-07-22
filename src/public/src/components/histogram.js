@@ -25,20 +25,18 @@ export default {
     props: [],
     data: () => ({
         data: [],
-        width: 0,
-        height: 0,
-        margin: {
+        width: null,
+        height: null,
+        histogramHeight: null,
+        histogramWidth: null,
+        histogramSVG: null,
+        padding: {
             top: 10,
             right: 10,
             bottom: 10,
             left: 10,
         },
         dataset_index: [],
-        boxWidth: 0,
-        boxHeight: 0,
-        histogramOffset: 0,
-        histogramHeight: 0,
-        histogramWidth: 0,
         histogramSVG: null,
         id: 'histogram_view',
         firstRender: true,
@@ -54,6 +52,9 @@ export default {
         histogram(data) {
             data = JSON.parse(data)
             console.log("Histogram Data: ", data)
+            if(this.firstRender) {
+                this.init()
+            }
             this.render(data)
         },
     },
@@ -62,11 +63,21 @@ export default {
         init() {
             this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
-            this.width = document.getElementById(this.id).clientWidth
-            this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight)*0.5
+			this.footerHeight = document.getElementById('footer').clientHeight
+            this.width = window.innerWidth*0.3
+            this.height = (window.innerHeight - this.toolbarHeight - 2* this.footerHeight)*0.5
 
-            this.histogramWidth = this.width - this.margin.right - this.margin.left;
-            this.histogramHeight = this.height - this.margin.top - this.margin.bottom;
+            this.boxWidth = this.width - this.padding.right - this.padding.left;
+            this.boxHeight = this.height - this.padding.top - this.padding.bottom - 20;
+            this.histogramOffset = Math.floor(this.boxHeight / 3);
+            this.histogramHeight = this.boxHeight - this.histogramOffset;
+            this.histogramWidth = this.boxWidth;
+            this.histogramSVG = d3.select('#' + this.id)
+                .attrs({    
+                    "width": this.boxWidth + this.padding.right + this.padding.left,
+                    "height": this.boxHeight + this.padding.top + this.padding.bottom,
+                    "transform": `translate(${this.padding.left}, ${this.padding.top})`
+                })
         },
 
         render(data) {
@@ -82,17 +93,11 @@ export default {
             this.binContainsProcID = temp[3];
             this.logScaleBool = false;
 
-            this.histogramSVG = d3.select('#' + this.id)
-                .attrs({
-                    "width": this.histogramWidth - this.margin.right - this.margin.left,
-                    "height": this.histogramHeight + this.margin.top + this.margin.bottom,
-                    "transform": `translate(${this.margin.left}, ${this.margin.top})`
-                })
             this.$refs.ToolTip.init(this.id)
 
             this.histogramXScale = d3.scaleBand()
                 .domain(this.xVals)
-                .rangeRound([0, this.histogramWidth], 0.05)
+                .rangeRound([0, this.histogramWidth])
 
             if (d3.max(this.freq) < 50) {
                 this.histogramYScale = d3.scaleLinear()
@@ -109,7 +114,11 @@ export default {
         },
 
         clear() {
-            d3.select('#' + this.id).remove()
+            d3.selectAll('.selectBars').remove()
+            d3.select('.x-axis').remove()
+            d3.select('.y-axis').remove()
+            d3.selectAll('.binRank').remove()
+            d3.selectAll('.lineRank').remove()
             this.$refs.ToolTip.clear()
         },
 
@@ -117,7 +126,7 @@ export default {
             this.bars();
             this.axis();
             this.rankLineScale();
-            // this.brushes ()
+            this.brushes ()
         },
 
         setContainerWidth(newWidth) {
@@ -128,7 +137,7 @@ export default {
         setContainerHeight(newHeight) {
             this.containerHeight = newHeight
             this.height = this.containerHeight - this.margin.top - this.margin.bottom
-        },
+        },      
 
         array_unique(arr) {
             return arr.filter(function (value, index, self) {
@@ -164,7 +173,7 @@ export default {
                     dataSorted[i] += attr_data[0][i]
                 }
             }
-``
+
             dataSorted.sort((a, b) => a - b)
             const dataMin = dataSorted[0];
             const dataMax = dataSorted[dataSorted.length - 1];
@@ -254,15 +263,20 @@ export default {
 
         bars() {
             let self = this
-            this.histogramSVG.selectAll('.selectBars').data(this.freq).enter()
+            this.histogramSVG.selectAll('.selectBars')
+                .data(this.freq)
+                .enter()
                 .append('rect')
                 .attr('class', 'selectBars')
-                .attr('x', (d, i) => this.histogramXScale(this.xVals[i]))
-                .attr('y', d => {
+                .attr('x', (d, i) => {
+                    return this.histogramXScale(this.xVals[i])
+                })
+                .attr('y', (d, i) => {
                     return this.histogramYScale(d)
                 })
-                .attr('width', d =>
-                    this.histogramXScale.bandwidth())
+                .attr('width', (d) => {
+                    return this.histogramXScale.bandwidth()
+                })  
                 .attr('height', (d) => {
                     let histFreq = d;
                     if (d < 1 && this.logScaleBool) {
@@ -275,7 +289,6 @@ export default {
                 .attr('opacity', 1)
                 .attr('stroke-width', (d, i) => '0.2px')
                 .attr('stroke', (d, i) => 'black')
-                .on('click', (d, i) => {})
                 .on('mouseover', function (d, i) {
                     d3.select(this)
                         .attr('fill', 'red');
@@ -303,8 +316,8 @@ export default {
                 .tickFormat((d, i) => {
                     let temp = this.axis_x[i];
                     if (i % 4 == 0) {
-                        let value = temp * 0.000001;
-                        return `${xFormat(value)}s`;
+                        let value = temp * 0.000001
+                        return `${xFormat(value)}s`
                     }
                     return '';
                 });
@@ -323,12 +336,12 @@ export default {
                 .ticks(this.$store.numbOfRanks, '%');
 
             const xAxisLine = this.histogramSVG.append('g')
-                .attr('class', 'x axis')
+                .attr('class', 'x-axis')
                 .attr('transform', `translate(0,${this.histogramHeight})`)
                 .call(xAxis);
 
             const yAxisLine = this.histogramSVG.append('g')
-                .attr('class', 'y axis')
+                .attr('class', 'y-axis')
                 .call(yAxis);
 
             const yAxisLineText = yAxisLine.append('text')
@@ -430,8 +443,8 @@ export default {
                         }
 
                         rankLinesG.append('path')
-                            .attr('d', line)
-                            .attr('class', 'lineRank_' + idx)
+                            .attr('d', line)    
+                            .attr('class', 'lineRank lineRank_' + idx)
                             .style('fill', (d) => {
                                 return "grey";
                             })
@@ -472,15 +485,15 @@ export default {
                 .style('font-weight', 'lighter');
         },
 
-        drawBrush() {
+        brushes() {
             this.brushdata = []
             this.brushSVG = this.histogramSVG
                 .append('svg')
 
             this.brush = d3.brushX()
                 .extent([
-                    [this.margin.left, this.margin.top],
-                    [this.width - this.margin.right, this.height - this.margin.bottom]
+                    [this.padding.left, this.padding.top],
+                    [this.width - this.padding.right, this.height - this.padding.bottom]
                 ])
                 .on('brush', this.brushing)
                 .on('end', this.brushend)
