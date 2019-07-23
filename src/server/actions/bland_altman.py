@@ -9,10 +9,8 @@
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
-
-#!/usr/bin/env python3
-
 import pandas as pd
+
 
 class BlandAltman:
     def __init__(self, state1, state2, col, catcol):
@@ -42,7 +40,7 @@ class BlandAltman:
             'md': md,
             'sd': sd,
             'mean': mean,
-            'diff', diff,
+            'diff': diff,
         }
         
         ret_df = pd.DataFrame(ret)

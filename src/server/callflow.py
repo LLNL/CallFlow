@@ -20,8 +20,12 @@ from networkx.readwrite import json_graph
 
 from preprocess import PreProcess
 from callgraph import CallGraph
+
 from actions.create import Create
 from actions.groupBy import groupBy
+from actions.mini_histogram import MiniHistogram
+from actions.histogram import Histogram
+from actions.scatterplot import Scatterplot
 from actions.split_callee import splitCallee
 from actions.split_caller import splitCaller
 from actions.split_rank import splitRank
@@ -30,6 +34,9 @@ from actions.struct_diff import structDiff
 from actions.cct import CCT
 from actions.module_hierarchy import moduleHierarchy
 from actions.filter import Filter
+from actions.bland_altman import BlandAltman
+from actions.function_list import FunctionList
+
 from state import State
 from logger import log
 
@@ -208,107 +215,23 @@ class CallFlow:
 
         return state
 
-    def histogram(self, state, module):            
-        ret = []
-        df = state.df
-        entire_df = state.entire_df
-        func_in_module = df[df.module == module]['name'].unique().tolist()
-        
-        for idx, func in enumerate(func_in_module):
-            ret.append({
-                "name": func,
-                "time (inc)": entire_df.loc[entire_df['name'] == func]['time (inc)'].tolist(),
-                "time": entire_df.loc[entire_df['name'] == func]['time'].tolist(),
-                "rank": entire_df.loc[entire_df['name'] == func]['rank'].tolist(),
-            })
-        ret_df = pd.DataFrame(ret)
-        return ret_df.to_json(orient="columns")
-
-    def miniHistograms(self, state):
-        ret = {}
-        ret_df = {}
-        df = state.df
-        entire_df = state.entire_df
-        modules_in_df = df['_module'].unique()
-
-        for module in modules_in_df:
-            func_in_module = df[df._module == module]['name'].unique().tolist()
-            for idx, func in enumerate(func_in_module):
-                func_df = entire_df.loc[entire_df['name'] == func]
-                if module not in ret:
-                    ret[module] = []
-                ret[module].append({
-                    "name": func,
-                    "time (inc)": func_df['time (inc)'].tolist(),
-                    "mean_time (inc)": func_df['time (inc)'].mean(),
-                    "time": func_df['time'].tolist(),
-                    "mean_time": func_df['time'].mean(),
-                    "rank": func_df['rank'].tolist(),
-                })
-            ret_df[module] = pd.DataFrame(ret[module])
-            ret[module] = ret_df[module].to_json(orient="columns")
-        return json.dumps(ret)
-
-    def tooltip(self, state, mod_index):
-        ret = []
-        df = state.df
-        entire_df = state.entire_df
-        func_in_module = df[df.mod_index == mod_index]['name'].unique().tolist()
-        
-        for idx, func in enumerate(func_in_module):
-            ret.append({
-                "name": func,
-                "time (inc)": entire_df.loc[entire_df['name'] == func]['time (inc)'].tolist(),
-                "time": entire_df.loc[entire_df['name'] == func]['time'].tolist(),
-                "rank": entire_df.loc[entire_df['name'] == func]['rank'].tolist(),
-            })
-        ret_df = pd.DataFrame(ret)
-        return ret_df.to_json(orient="columns")
-
-    def function(self, state, module):
-        ret = []
-        df = state.df
-        entire_df = state.entire_df
-        entry_funcs = state.entry_funcs[module]
-        other_funcs = state.other_funcs[module]
-        callers = []
-        callees = []
-        
-        for idx, entry_func in enumerate(entry_funcs):
-            print("Entry func: ", entry_func)
-            callees.append(df[df.name == entry_func]['callees'].unique().tolist())
-            callers.append(df[df.name == entry_func]['callers'].unique().tolist())
-
-        return {
-            "entry_function": entry_funcs,
-            "other_funcs": other_funcs,
-            "callees": callees,
-            "callers": callers
-        }
-
     def update(self, action):
         utils.debug('Update', action)
-
         action_name = action["name"]
 
         if action_name == 'init':
             self.setConfig()
             return self.config
 
-        dataset1 = action['dataset1']
-        state1 = self.states[dataset1]
-
-        # Some checks. 
-        if("dataset2" in action):
-            dataset2 = action['dataset2']
-            state2 = self.states[dataset2]
-
-        print("The selected Dataset is ", dataset1)
-
         if 'groupBy' in action:
             utils.debug('Grouping by: ', action['groupBy'])
         else:
             action['groupBy'] = 'name'
+
+        dataset1 = action['dataset1']
+        state1 = self.states[dataset1]
+
+        print("The selected Dataset is ", dataset1)
 
         # Compare against the different operations
         if action_name == 'default':
@@ -317,8 +240,6 @@ class CallFlow:
         
         elif action_name == 'reset':
             datasets = [dataset1]
-            if ("dataset2" in action):
-                datasets = [dataset1, dataset2]
             self.reUpdate = True
             self.states = self.pipeline(datasets, action["filterBy"], action["filterPerc"])
             self.reUpdate = False
@@ -361,12 +282,12 @@ class CallFlow:
             return mH.result 
 
         elif action_name == 'histogram':
-            ret = self.histogram(state1, action["module"])
-            return ret
+            histogram = Histogram(state1, action["module"])
+            return histogram.result
 
         elif action_name == "mini-histogram":
-            ret = self.miniHistograms(state1)
-            return ret
+            minihistogram = MiniHistogram(state1)
+            return minihistogram.result
 
         elif action_name == "cct":
             nx = CCT(state1)
@@ -377,12 +298,24 @@ class CallFlow:
             return ret
 
         elif action_name == 'function':
-            ret = self. function(state1, action['module'])
-            return ret
+            functionlist = FunctionList(state1, action['module'])
+            return functionlist.result
 
-        state1.g = nx.g
+    def update_diff(self, action):
+        utils.debug('Update Diff', action)
+        action_name = action["name"]
+        datasets = action['datasets']
 
-        return state1.g 
+        if action_name == 'init':
+            self.setConfig()
+            return self.config
+
+        elif action_name == 'bland-altman':
+            state1 = action['state1']
+            state2 = action['state2']
+            col = action['col']
+            catcol = action['catcol']
+            ret = BlandAltman(state1, state2, col, catcol)            
 
     def displayStats(self, name):
         log.warn('==========================')

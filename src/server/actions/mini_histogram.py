@@ -8,11 +8,9 @@
 #
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
-##############################################################################
-
-#!/usr/bin/env python3
-
+##############################################################################  
 import pandas as pd
+import json
 
 
 class MiniHistogram:
@@ -20,7 +18,7 @@ class MiniHistogram:
         self.state = state
         self.graph = state.graph
         self.df = state.df
-        self.results = self.run()
+        self.result = self.run()
         
     def run(self):    
         ret = {}
@@ -45,5 +43,4 @@ class MiniHistogram:
             ret_df[module] = pd.DataFrame(ret[module])
             ret[module] = ret_df[module].to_json(orient="columns")
         return json.dumps(ret)
-        return ret
 

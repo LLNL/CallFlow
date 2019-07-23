@@ -23,7 +23,7 @@ export default {
             nodeScale: 1.0,
         },
         margin: {
-            top: 30, right: 30, bottom: 10, left: 10
+            top: 10, right: 30, bottom: 10, left: 10
         },
         view: {
             color: null,
@@ -53,9 +53,9 @@ export default {
         init(data) {
             this.data = data
             this.width = window.innerWidth - this.margin.left - this.margin.right
-            this.height = window.innerHeight * 0.99  - this.margin.bottom
+            this.height = window.innerHeight - this.margin.bottom - this.margin.top
             d3.select('#' + this.id)
-                .attr('class', 'sankey')
+                .attr('class', 'cct')
                 .attr('width', this.width + this.margin.left + this.margin.right)
                 .attr('height', this.height + this.margin.top + this.margin.bottom)
             this.render(data)
