@@ -62,7 +62,6 @@ class moduleHierarchy:
     # instead of nid, get by module. nid seems very vulnerable rn. 
     def run(self):
         df = self.df
-        print(self.module)
         node = df.loc[df['module'] == self.module]
         modules = node['module'].values.tolist()
 
@@ -81,8 +80,8 @@ class moduleHierarchy:
                 paths.append({
                     "name": func,
                     "path": [module],
-                    "time (inc)": df.loc[df['_module'] == module]['time (inc)'].mean(),
-                    "time": df.loc[df['_module'] == module]['time'].mean(),
+                    "time (inc)": df.loc[df['_module'] == module]['time (inc)'].max(),
+                    "time": df.loc[df['_module'] == module]['time'].max(),
                     "imbalance_perc": df.loc[df['_module'] == module]['imbalance_perc'].max(),
                     "level": 1
                 })

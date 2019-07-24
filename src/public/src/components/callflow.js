@@ -49,7 +49,7 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'CCT',
+		selectedFormat: 'Callgraph',
 		datasets: [],
 		selectedDataset: '',
 		selectedDataset2: '',
@@ -78,10 +78,11 @@ export default {
 		modes: [],
 		selectedMode: 'Single',
 		selectedBinCount: 5,
+		selectedFunctionsInCCT: 30,
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
 		datas: ['Dataframe', 'Graph'],
-		selectedData: 'Dataframe',
+		selectedData: 'Graph',
 		enableDiff: false,
 		firstRender: false,
 	}),
@@ -125,10 +126,11 @@ export default {
 			this.$store.minIncTime = data['min_incTime']
 			this.$store.numbOfRanks = data['numbOfRanks']
 			this.$store.selectedBinCount = this.selectedBinCount
+			console.log(this.$store.minIncTime)
 			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime * 0.000001) / 100).toFixed(3)
 			this.$store.selectedScatterMode = this.selectedScatterMode
 			this.$store.selectedData = this.selectedData
-
+			console.log(this.selectedFormat)
 			this.init()
 		},
 
@@ -139,10 +141,9 @@ export default {
 
 		group(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
-			if(this.selectedData == 'Dataframe'){
+			if (this.selectedData == 'Dataframe') {
 				this.$refs.CallgraphA.init(data)
-			}
-			else if(this.selectedData == 'Graph'){
+			} else if (this.selectedData == 'Graph') {
 				this.$refs.CallgraphB.init(data)
 			}
 			this.$refs.Scatterplot.init()
@@ -153,10 +154,9 @@ export default {
 
 		diff(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
-			if(this.selectedData == 'Dataframe'){
+			if (this.selectedData == 'Dataframe') {
 				this.$refs.DiffgraphA.init(data)
-			}
-			else if(this.selectedData == 'Graph'){
+			} else if (this.selectedData == 'Graph') {
 				this.$refs.DiffgraphB.init(data)
 			}
 			this.$refs.DiffScatterplot.init()
@@ -171,26 +171,24 @@ export default {
 			if (this.selectedFormat == 'Callgraph') {
 				this.$refs.CCT.clear()
 			} else if (this.selectedFormat == 'CCT') {
-				if(this.selectedData == 'Dataframe'){
+				if (this.selectedData == 'Dataframe') {
 					this.$refs.CallgraphA.clear()
-				}
-				else if (this.selectedData == 'Graph'){
-					this.$refs.CallgraphB.clear()	
+				} else if (this.selectedData == 'Graph') {
+					this.$refs.CallgraphB.clear()
 				}
 				this.$refs.Histogram.clear()
 				this.$refs.Scatterplot.clear()
 				this.$refs.Function.clear()
 				this.$refs.Icicle.clear()
-			} 
+			}
 		},
 
 		clearLocal() {
 			if (this.selectedFormat == 'Callgraph') {
-				if(this.selectedData == 'Dataframe'){
+				if (this.selectedData == 'Dataframe') {
 					this.$refs.CallgraphA.clear()
-				}
-				else if (this.selectedData == 'Graph'){
-					this.$refs.CallgraphB.clear()	
+				} else if (this.selectedData == 'Graph') {
+					this.$refs.CallgraphB.clear()
 				}
 				this.$refs.Histogram.clear()
 				this.$refs.Scatterplot.clear()
@@ -208,10 +206,12 @@ export default {
 		init() {
 			// Initialize colors
 			this.colors()
+			console.log(this.selectedFormat)
 			if (this.selectedMode == 'Single') {
 				if (this.selectedFormat == 'CCT') {
 					this.$socket.emit('cct', {
 						dataset: this.$store.selectedDataset,
+						functionInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
 					this.$socket.emit('group', {
@@ -221,8 +221,7 @@ export default {
 					})
 				}
 
-			} 
-			else if (this.selectedMode == 'Diff') {
+			} else if (this.selectedMode == 'Diff') {
 				if (this.selectedFormat == 'CCT') {
 					this.$socket.emit('cct', {
 						dataset: this.$store.selectedDataset,
@@ -230,8 +229,7 @@ export default {
 					this.$socket.emit('cct2', {
 						dataset: this.$store.selectedDataset2,
 					})
-				}
-				else if(this.selectedFormat == 'Callgraph'){
+				} else if (this.selectedFormat == 'Callgraph') {
 					this.$socket.emit('diff', {
 						dataset1: this.$store.selectedDataset,
 						dataset2: this.$store.selectedDataset2,
@@ -292,10 +290,8 @@ export default {
 		},
 
 		updateFormat() {
-			Vue.nextTick(() => {
-				this.clear()
-				this.init()
-			})
+			this.clearLocal()
+			this.init()
 		},
 
 		updateDataset() {
@@ -305,18 +301,13 @@ export default {
 		},
 
 		updateMode() {
-			Vue.nextTick(() => {
 				this.clear()
 				this.init()
-			})
 		},
 
 		updateColorBy() {
-			Vue.nextTick(() => {
-				this.clearLocal()
-				this.updateColor(this.selectedColorBy)
-
-			})
+			this.clearLocal()
+			this.updateColor(this.selectedColorBy)
 		},
 
 		updateFilterBy() {
@@ -374,20 +365,26 @@ export default {
 
 		},
 
-		updateScatterMode(){
-			if(this.$store.selectedNode != undefined){
+		updateScatterMode() {
+			if (this.$store.selectedNode != undefined) {
 				this.$store.selectedScatterMode = this.selectedScatterMode
 				this.$socket.emit('scatterplot', {
 					module: this.$store.selectedNode,
 					dataset1: this.$store.selectedDataset,
 				})
-			}
-			else{
+			} else {
 				console.log('The selected module is :', this.$store.selectedNode)
-			}	
+			}
 		},
 
-		updateData(){
+		updateFunctionsInCCT() {
+			this.$socket.emit('cct', {
+				dataset: this.$store.selectedDataset,
+				functionInCCT: this.selectedFunctionsInCCT,
+			})
+		},
+
+		updateData() {
 			this.$store.selectedData = this.selectedData
 			this.clear()
 			this.init()

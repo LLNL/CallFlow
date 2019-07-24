@@ -16,9 +16,14 @@ from ast import literal_eval as make_tuple
 
 
 class CCT:
-    def __init__(self, state):
-        self.entire_graph = state.entire_graph
-        self.entire_df = state.entire_df
+    def __init__(self, state, functionsInCCT):
+        number_of_nodes = len(state.entire_df['name'].unique())
+        if(number_of_nodes < int(functionsInCCT)):
+            self.entire_graph = state.entire_graph
+            self.entire_df = state.entire_df
+        else:
+            self.entire_df = state.df
+            self.entire_graph = state.graph
         self.run()
 
     def add_node_attributes(self):

@@ -10,7 +10,6 @@ export default {
 	},
 	props: [],
 	data: () => ({
-		id: 'component_graph_view',
 		margin: {
 			top: 5,
 			right: 5,
@@ -59,7 +58,7 @@ export default {
 
 	sockets: {
 		hierarchy(data) {
-			data = JSON.parse(data)
+			data = JSON.parse(data)	
 			this.update_from_df(data)
 		},
 		level_change(data){
@@ -80,15 +79,14 @@ export default {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
 			this.icicleToolbarHeight = document.getElementById('icicle-toolbar').clientHeight
-			this.width = document.getElementById('icicle-overview').clientWidth
+			this.width = window.innerWidth*0.3
 			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight - this.icicleToolbarHeight)*0.5
             this.icicleWidth = this.width - this.margin.right - this.margin.left
 			this.icicleHeight = this.height - this.margin.top - this.margin.bottom	
 			
-			this.hierarchySVG = d3.select('#icicle-overview')
+			this.hierarchySVG = d3.select('#' + this.id)
 				.append('svg')
 				.attrs({
-					'id': this.id,
 					'width': this.icicleWidth + this.margin.right + this.margin.left,
 					'height': this.icicleHeight + this.margin.top + this.margin.bottom,
 				})
@@ -120,7 +118,6 @@ export default {
 
 			for(let i = 0; i < this.path_hierarchy.length; i += 1){
 				let level = this.path_hierarchy[i][0].length
-				// console.log(level)
 				if(level == 1){
 					ret.push(this.path_hierarchy[i])
 				}
@@ -128,7 +125,6 @@ export default {
 					ret.push(this.path_hierarchy[i])					
 				}
 				else{
-					// console.log('aaaa')
 				}
 			}
 			this.path_hierarchy = ret
@@ -212,6 +208,8 @@ export default {
 							value: inc_time,
 							exclusive: exclusive,
 							imbalance_perc,
+							length: parts.length,
+							count: j,
 							// exit,
 							// component_path,
 							children: [],
@@ -224,7 +222,7 @@ export default {
 		},
 
 		clear(){
-			this.clearIcicles()
+			// this.clearIcicles()
 		},
 
 		clearIcicles() {
@@ -305,7 +303,18 @@ export default {
 
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partitionRoot)
-				.filter(d => (d.x1 - d.x0 > 0.5));
+				// .filter(d => {
+				// 	console.log(d)
+				// 	console.log(d.data.name, d.value)
+				// 	if(this.selectedDirection == 'TD'){
+				// 		console.log(d.y1, d.y0)
+				// 		return (d.y1 - d.y0 > 0.5)
+				// 	}
+				// 	else{
+				// 		console.log(d.x1, d.x0)
+				// 		return (d.x1 - d.x0 > 0.5)
+				// 	}
+				// });
 
 			this.addNodes()
 			this.addText()
@@ -327,7 +336,11 @@ export default {
 				.attr('class', 'icicleNode')
 				.attr('x', (d) => {
 					if (this.selectedDirection == 'LR') {
-						return d.y0;
+						if(Number.isNaN(d.y0)){
+							return d.data.count * this.width/d.data.length
+						}
+						return d.data.count * this.width/d.data.length
+						// return d.y0;
 					}
 					return d.x0;
 				})
@@ -339,7 +352,11 @@ export default {
 				})
 				.attr('width', (d) => {
 					if (this.selectedDirection == 'LR') {
-						return d.y1 - d.y0;
+						if(Number.isNaN(d.y1 - d.y0)){
+							return this.width/d.data.length
+						}
+						return this.width/d.data.length
+						// return d.y1 - d.y0;
 					}
 					return d.x1 - d.x0;
 				})
@@ -350,6 +367,9 @@ export default {
 					return d.y1 - d.y0;
 				})
 				.style('fill', (d) => {
+					if(d.data.value == 0){
+						return '#e1e1e1'
+					}
 					let color = this.$store.color.getColor(d.data);
 					return color;
 				})
@@ -379,7 +399,11 @@ export default {
 				})
 				.attr('x', (d) => {
 					if (this.selectedDirection == 'LR') {
-						return d.y0 * len(d.component_path);
+						if(Number.isNaN(d.y0)){
+							return d.data.count * this.width/d.data.length
+						}
+						return d.data.count * this.width/d.data.length
+						// return d.y0 * len(d.component_path);
 					}
 					return d.x0 + 15;
 				})
@@ -391,7 +415,12 @@ export default {
 				})
 				.attr('width', (d) => {
 					if (this.selectedDirection == 'LR') {
-						return d.y1 - d.y0 / 2;
+						if (Number.isNaN(d.y1 - d.y0)){
+							return this.width/d.data.length
+						}
+						// return d.y1 - d.y0 / 2;
+						return this.width/d.data.length
+
 					}
 					return d.dx1 - d.dx0 / 2;
 				})
@@ -455,6 +484,7 @@ export default {
 
 		// Fade all but the current sequence, and show it in the breadcrumb trail.
 		mouseover(d) {
+			console.log(d.data.name)
 			const percentage = (100 * d.value / this.totalSize).toPrecision(3);
 			let percentageString = `${percentage}%`;
 			if (percentage < 0.1) {

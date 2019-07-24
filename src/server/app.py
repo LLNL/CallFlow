@@ -116,14 +116,6 @@ class App():
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
             emit('init', config_json, json=True)
 
-        # @sockets.on('config')
-        # def config(data):
-        #     result = self.callflow.update({
-        #         "name": "config",
-        #         "datasets": data['datasets'],
-        #     })
-        #     emit('config', result, json=True)
-
         @sockets.on('reset', namespace='/')
         def filter(data):
             if self.debug:
@@ -259,6 +251,7 @@ class App():
             g = self.callflow.update({
                 "name": "cct",
                 "dataset1": data['dataset'],
+                "functionInCCT": data['functionInCCT'],
             })
             result = json_graph.node_link_data(g)
             emit('cct', result, json=True)
@@ -286,6 +279,11 @@ class App():
                 'module': data['module']
             })
             emit('function', result, json=True)
+
+        @sockets.on('diffscatterplot', namespace='/')
+        def diffscatterplot(data):
+            if self.debug:
+                self.print('[Request] Diff-Scatterplot request for module')
 
     def create_server(self):
         app.debug = True

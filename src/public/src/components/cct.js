@@ -15,7 +15,7 @@ export default {
 
     data: () => ({
         graph: null,
-        id: 'cct_overview',
+        id: 'cct-overview',
         sankey: {
             nodeWidth: 50,
             xSpacing: 0,
@@ -32,6 +32,7 @@ export default {
         height: null,
         treeHeight: null,
         color: null,
+        firstRender: true,
     }),
 
     watch: {
@@ -41,6 +42,9 @@ export default {
     sockets: {
         cct(data) {
             console.log("CCT data: ", data)
+            if(!this.firstRender){
+                this.clear()
+            }
             this.init(data)
         },
     },
@@ -51,9 +55,13 @@ export default {
 
     methods: {
         init(data) {
+            if(this.firstRender){
+                this.firstRender = false   
+            }
             this.data = data
             this.width = window.innerWidth - this.margin.left - this.margin.right
             this.height = window.innerHeight - this.margin.bottom - this.margin.top
+
             d3.select('#' + this.id)
                 .attr('class', 'cct')
                 .attr('width', this.width + this.margin.left + this.margin.right)
@@ -78,7 +86,7 @@ export default {
             });
 
             // Set up the edges
-            for (let i = 0; i < links.length - 2; i += 1) {
+            for (let i = 0; i < links.length; i += 1) {
                 g.setEdge(links[i]['source'], links[i]['target'], { label: '' });
             }
 
@@ -90,7 +98,7 @@ export default {
                     let color = self.$store.color.getColor(node)
                     // node.style = "stroke:" + self.$store.color.setContrast(color) 
                     node.style = "fill:" + color
-                    node.rx = node.ry = 5;
+                    node.rx = node.ry = 4;
                 }
             });
 
@@ -123,7 +131,7 @@ export default {
         },
 
         clear() {
-
+            d3.select('#' + this.id).remove()
         },
 
         update(data) {

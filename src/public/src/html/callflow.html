@@ -103,6 +103,12 @@
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateScatterMode()">
 					</v-select>
 				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat == 'CCT'">
+					<v-text-field label="Min. number of functions in CCT" class="mt-0" type="number"
+						v-model="selectedFunctionsInCCT" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateFunctionsInCCT()">
+					</v-text-field>
+					</v-flex>
 			</v-layout>
 		</v-card>
 	</v-navigation-drawer>

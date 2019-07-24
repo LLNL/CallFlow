@@ -290,7 +290,7 @@ class CallFlow:
             return minihistogram.result
 
         elif action_name == "cct":
-            nx = CCT(state1)
+            nx = CCT(state1, action['functionInCCT'])
             return nx.g
 
         elif action_name == 'split-rank':

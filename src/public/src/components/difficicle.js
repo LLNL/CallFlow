@@ -10,7 +10,6 @@ export default {
 	},
 	props: [],
 	data: () => ({
-		id: 'component_graph_view',
 		margin: {
 			top: 5,
 			right: 5,
@@ -58,17 +57,17 @@ export default {
 	},
 
 	sockets: {
-		hierarchy(data) {
+		diff_hierarchy(data) {
 			data = JSON.parse(data)
 			this.update_from_df(data)
 		},
-		level_change(data){
+		diff_level_change(data){
 			this.update_maxlevels(data)
 		}
 	},
 
 	mounted() {
-		this.id = 'icicle-overview-' + this._uid
+		this.id = 'diff-icicle-overview-' + this._uid
 	},
 
 	methods: {
