@@ -107,20 +107,22 @@ class CallGraph(nx.Graph):
         mod_index_mapping = self.generic_map(self.g.nodes(), 'mod_index')
         nx.set_node_attributes(self.g, name='mod_index', values=mod_index_mapping)
 
-        imbalance_perc_mapping = self.generic_map(self.g.nodes(), 'imbalance_perc')
-        nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)
+        # imbalance_perc_mapping = self.generic_map(self.g.nodes(), 'imbalance_perc')
+        # nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)
 
-        show_node_mapping = self.generic_map(self.g.nodes(), 'show_node')
-        nx.set_node_attributes(self.g, name='show_node', values=imbalance_perc_mapping)
+        # show_node_mapping = self.generic_map(self.g.nodes(), 'show_node')
+        # nx.set_node_attributes(self.g, name='show_node', values=imbalance_perc_mapping)
 
-        self.level_mapping = self.assign_levels()               
-        nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
+        # self.level_mapping = self.assign_levels()               
+        # nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
 
         children_mapping = self.immediate_children()
         nx.set_node_attributes(self.g, name='children', values=children_mapping)
 
         entry_function_mapping = self.generic_map(self.g.nodes(), 'entry_functions')
         nx.set_node_attributes(self.g, name='entry_functions', values=entry_function_mapping)
+
+        print('Done')
 
     def generic_map(self, nodes, attr):
         ret = {}
@@ -137,7 +139,7 @@ class CallGraph(nx.Graph):
                     group_df = self.df.groupby([groupby]).max()
                 elif self.group_by == 'name':
                     group_df = self.df.groupby([groupby]).mean()
-                ret[node] = group_df.loc[node, 'max_incTime']
+                ret[node] = group_df.loc[node, 'time (inc)']
             
             elif attr == 'entry_functions':
                 module_df = self.df.loc[(self.df['module'] == node)]
@@ -158,9 +160,15 @@ class CallGraph(nx.Graph):
                         'time': entry_func_df['time'].mean().tolist(),
                         'time (inc)': entry_func_df['time (inc)'].mean().tolist()
                     })
-                
-                print(ret[node])
 
+            elif attr == 'imbalance_perc':
+                module_df = self.df.loc[self.df['module'] == node]
+                max_incTime = module_df['time (inc)'].max()
+                min_incTime = module_df['time (inc)'].min()
+                avg_incTime = module_df['time (inc)'].mean()
+
+                ret[node] = (max_incTime - avg_incTime)/max_incTime
+                
             else:
                 df = self.df.loc[self.df['vis_node_name'] == node][attr]
                 if df.empty:
@@ -219,7 +227,7 @@ class CallGraph(nx.Graph):
                     continue
                 else:
                     self.edge_direction[(head, tail)] = 'forward_edge'
-                    levelMap[tail] = levelMap[head] +  1                    
+                    levelMap[tail] = levelMap[head] + 1                    
                     track_level += 1
                     log.warn("level for {0}: {1}".format(tail, levelMap[tail]))
                 # Since dfs, set level = 0 when head is the start_node. 
@@ -240,7 +248,7 @@ class CallGraph(nx.Graph):
                 
                 # Check if there is an existing level mapping for the head node and assign. 
                 if head in self.level_mapping.keys():
-                    head_level =  self.level_mapping[head]
+                    head_level = self.level_mapping[head]
 
                 # Check if there is an existing level mapping for the tail node and assign. 
                 if tail in self.level_mapping.keys():
@@ -251,11 +259,11 @@ class CallGraph(nx.Graph):
                                 
     def add_edge_attributes(self):
         capacity_mapping = self.calculate_flows(self.g)
-        type_mapping = self.edge_type(self.g)
-        flow_mapping = self.flow_map()
+        # type_mapping = self.edge_type(self.g)
+        # flow_mapping = self.flow_map()
         nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)
         # nx.set_edge_attributes(self.g, name='type', values=type_mapping)
-        nx.set_edge_attributes(self.g, name='flow', values=flow_mapping)
+        # nx.set_edge_attributes(self.g, name='flow', values=flow_mapping)
 
     def draw_tree(self, g):
         subtrees = {node: ete3.Tree(name = node) for node in g.nodes()}
@@ -319,12 +327,11 @@ class CallGraph(nx.Graph):
                 ret[edge] = additional_flow[edge[1]]
                 continue
             group_df = self.df.groupby(['_' +  self.group_by]).mean()
-            source_inc = group_df.loc[edge[0], 'avg_incTime']   
-            target_inc = group_df.loc[edge[1], 'max_incTime']
+            source_inc = group_df.loc[edge[0], 'time (inc)'].mean()   
+            target_inc = group_df.loc[edge[1], 'time (inc)'].max()
                      
             if source_inc == target_inc:
                 ret[edge] = source_inc
             else:
                 ret[edge] = target_inc
-
         return ret

@@ -1,0 +1,20 @@
+{
+    "datasets": [
+        {
+            "name": "calc-pi",
+            "path": "./data/calc-pi",
+            "format": "hpctoolkit",
+            "props": {
+            },
+            "nop": ""
+        },
+        {
+            "name": "calc-pi-half",
+            "path": "./data/calc-pi-half",
+            "format": "hpctoolkit",
+            "props": {
+            },
+            "nop": "128"
+        }
+    ]
+}

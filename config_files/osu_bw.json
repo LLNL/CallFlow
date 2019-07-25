@@ -6,14 +6,6 @@
             "format": "hpctoolkit",
             "props": {},
             "nop": 3
-        },
-        {
-            "name": "cpi",
-            "path": "./data/hpctoolkit-cpi-database",
-            "format": "hpctoolkit",
-            "props": {
-            },
-            "nop": "128"
         }
     ]
 }
