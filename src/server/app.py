@@ -63,7 +63,7 @@ class App():
             data_string = 'Data: ' + json.dumps(data, indent=4, sort_keys=True)
         else:
             data_string = ''
-        log.info('[app.py] {0} {1}'.format(action, data_string))
+        log.warn('[app.py] {0} {1}'.format(action, data_string))
 
     # Parse the input arguments
     def create_parser(self):
@@ -149,6 +149,7 @@ class App():
             }
             g = self.callflow.update(obj)
             result = json_graph.node_link_data(g)
+            print(result)
             emit('group', result, json=True)
 
         @sockets.on('diff', namespace='/')

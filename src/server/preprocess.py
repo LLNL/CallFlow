@@ -13,6 +13,15 @@
 
 import random
 import utils
+from logger import log
+from functools import wraps
+
+def tmp_wrap(func):
+    @wraps(func)
+    def tmp(*args, **kwargs):
+        log.info("Preprocessing : {0}".format(func.__name__))
+        return func(*args, **kwargs)
+    return tmp
 
 # Preprocess the dataframe
 # Builder object
@@ -36,7 +45,7 @@ class PreProcess():
             self.node_hash_map = state.node_hash_map
             self.map = {}
             # self.df_index_name_map = self.bfs()
-
+        
         def bfs(self):
             ret = {}
             node_count = 0
@@ -58,6 +67,7 @@ class PreProcess():
             return PreProcess(self)
 
         # Add the path information from the node object
+        @tmp_wrap
         def add_path(self):
             self.df['path'] = self.df['node'].apply(lambda node: node.callpath)
             return self
@@ -74,16 +84,19 @@ class PreProcess():
                     ret[n_index[idx]].append(p_incTime[idx])
             return ret
 
+        @tmp_wrap
         def add_incTime(self):
             self.map['time (inc)'] = self._map('time (inc)')
             return self
 
+        @tmp_wrap
         def add_excTime(self):
             self.map['time'] = self._map('time')
             return self
 
         # Max of the inclusive Runtimes among all processes
         # node -> max([ inclusive times of process])
+        @tmp_wrap
         def add_max_incTime(self):
             ret = {}
 
@@ -96,9 +109,11 @@ class PreProcess():
 
         # Avg of inclusive Runtimes among all processes
         # node -> avg([ inclusive times of process])
+        @tmp_wrap
         def add_avg_incTime(self):
             ret = {}
 
+            print(self.df.info())
             for idx, row in self.df.iterrows():
                 ret[str(row.nid)] = utils.avg(self.state.lookup(row.nid)['time (inc)'])
 
@@ -108,6 +123,7 @@ class PreProcess():
             return self
         
         # Imbalance percentage Series in the dataframe    
+        @tmp_wrap
         def add_imbalance_perc(self):
             ret = {}
             for idx, row in self.df.iterrows():
@@ -120,6 +136,7 @@ class PreProcess():
             self.df['imbalance_perc'] = self.df['node'].apply(lambda node: self.map['imbalance_perc'][str(node.nid)])
             return self
             
+        @tmp_wrap
         def add_callers_and_callees(self):
             graph = self.graph
             callees = {}
@@ -159,31 +176,38 @@ class PreProcess():
             
             return self
         
+        @tmp_wrap
         def add_show_node(self):
             self.map['show_node'] = {}
             self.df['show_node'] = self.df['node'].apply(lambda node: True)
             return self
 
+        @tmp_wrap
         def update_show_node(self, show_node_map):
             self.map.show_node = show_node_map
             self.df['show_node'] = self.df['node'].apply(lambda node: show_node_map[str(node.df_index)])
 
         # node_name is different from name in dataframe. So creating a copy of it.
+        @tmp_wrap
         def add_vis_node_name(self):
             self.df['vis_node_name'] = self.df['name'].apply(lambda name: name)
             return self
 
+        @tmp_wrap
         def update_node_name(self, node_name_map):
             self.df['node_name'] = self.df['name'].apply(lambda name: node_name_map[name])
-
+    
+        @tmp_wrap
         def update_module_name(self):
             self.df['module'] = self.df['module'].apply(lambda name: utils.sanitizeName(name))
             return self
         
+        @tmp_wrap
         def add_n_index(self):
             self.df['n_index'] = self.df.groupby('nid').ngroup()
             return self
 
+        @tmp_wrap
         def add_mod_index(self):
             self.df['mod_index'] = self.df.groupby('module').ngroup()
             return self

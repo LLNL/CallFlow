@@ -208,7 +208,7 @@ export default function Sankey() {
     function findroot(){
 	    let ret = []
 	    nodes.forEach(function(node){
-	        if(node['id'] == 'cpi'){
+	        if(node['id'] == "libmonitor.so.0.0.0"){
 		        ret.push(node)
 	        }	    
 	    })
@@ -220,24 +220,28 @@ export default function Sankey() {
     // nodes with no incoming links are assigned breadth zero, while
     // nodes with no outgoing links are assigned the maximum breadth.
     function computeNodeBreadths() {
-	    let remainingNodes = findroot()
+        let remainingNodes = findroot()
+        console.log(remainingNodes)
         let nextNodes = [];
-        // while (remainingNodes.length) {
-        //     nextNodes = [];
-	    //     remainingNodes.forEach(function(node) {
-	    // 	node.dx = nodeWidth;
-        //         node.sourceLinks.forEach(function(link) {
-        //             nextNodes.push(link.target);
-        //         });
-        //     });
-        //     remainingNodes = nextNodes;
-        // }
+        let level = 0
+        while (remainingNodes.length) {
+            nextNodes = [];
+	        remainingNodes.forEach(function(node) {
+                node.level = level
+	    	    node.dx = nodeWidth;
+                node.sourceLinks.forEach(function(link) {
+                    nextNodes.push(link.target);
+                });
+            });
+            remainingNodes = nextNodes;
+            ++level
+        }
 	    nodes.forEach(function(node){
 	        node.dx = nodeWidth
         })
         
         minDistanceBetweenNode = nodeWidth
-        widthScale = scalePow().domain([0,maxLevel+1]).range([minDistanceBetweenNode, size[0]])	
+        widthScale = scalePow().domain([0,level+1]).range([minDistanceBetweenNode, size[0]])	
         scaleNodeBreadths((size[0] - nodeWidth/2) / (maxLevel - 1));
     }
 
@@ -262,8 +266,9 @@ export default function Sankey() {
 
     function scaleNodeBreadths(kx) {
         nodes.forEach(function(node) {
-	        var level = node.level;
-	        let x = widthScale(level);
+	        let level = node.level
+            let x = widthScale(level)
+            console.log(node.name, x, node.level)
 	        node.x = x
         });
     }

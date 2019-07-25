@@ -16,7 +16,6 @@ from logger import log
 
 # For converting graphml to json
 import networkx as nx
-#from community import community_louvain
 from networkx.readwrite import json_graph
 import json
 
@@ -39,12 +38,10 @@ def avg(l):
 def getMaxIncTime(state):
     ret = 0.0
     graph = state.graph
-    df = state.df
+    df = state.entire_df
     for root in graph.roots:
-        node_df = df.loc[df['name'] == '<program root>']
-        print(node_df)
+        node_df = lookup(df, root)
         ret = max(ret, float(max(node_df['time (inc)'].tolist())))
-    print(ret)
     return ret
 
 # TODO: Get the maximum exclusive time from the graphframe. 
@@ -142,7 +139,7 @@ def debug(action='', data={}):
         data_string = 'Data: ' + json.dumps(data, indent=4, sort_keys=True)
     else:
         data_string = ''
-    log.info(' {0} {1}'.format(action, data_string))
+    log.error(' {0} {1}'.format(action, data_string))
 
 def dfs(graph, limit):
     self.level = 0

@@ -14,6 +14,7 @@ from hatchet import *
 import time
 import utils
 from logger import log
+from timer import Timer
 
 from networkx.drawing.nx_agraph import write_dot
 from networkx.readwrite import json_graph
@@ -51,7 +52,6 @@ class CallFlow:
     def __init__(self, config):
         # Config contains properties set by the input config file. 
         self.config = config
-        
         self.reUpdate = False
         self.reProcess = config.preprocess
 
@@ -61,6 +61,7 @@ class CallFlow:
         # Note: df is always updated.
         # Note: graph is always updated.
         # Note: map -> not sure if it can be used.
+        self.timer = Timer()
         self.states = self.pipeline(self.config.names)
 
     def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
@@ -124,11 +125,6 @@ class CallFlow:
             .add_show_node() \
             .add_vis_node_name() \
             .update_module_name() \
-            .add_max_incTime() \
-            .add_incTime() \
-            .add_excTime() \
-            .add_avg_incTime() \
-            .add_imbalance_perc() \
             .add_path() \
             .build()
 
@@ -151,7 +147,7 @@ class CallFlow:
 
     def write_gf(self, state, state_name, format_of_df, write_graph=True):
         dirname = self.config.callflow_dir
-        utils.debug('writing file for format. \n', format_of_df)
+        utils.debug('writing file for {0} format'.format(format_of_df))
 
         if write_graph:
             # dump the entire_graph as literal
@@ -187,8 +183,9 @@ class CallFlow:
         graph_filepath = dirname + '/' + name + '/filter_graph.json'
         entire_graph_filepath = dirname + '/' + name + '/entire_graph.json'   
 
-        with open(graph_filepath, 'r') as graphFile:
-            data = json.load(graphFile)
+        with self.timer.phase('data frame'):
+            with open(graph_filepath, 'r') as graphFile:
+                data = json.load(graphFile)
 
         state.gf = GraphFrame()
         state.gf.from_literal(data)
