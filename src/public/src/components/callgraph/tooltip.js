@@ -70,7 +70,7 @@ export default {
             this.graph = graph
             this.node = node
             this.times()
-            // this.paths()
+            this.paths()
         },
 
         addText(text) {
@@ -105,6 +105,11 @@ export default {
         },
 
         paths() {
+            let entry_functions = JSON.parse(this.node.entry_functions)
+            console.log(entry_functions)
+
+            // for idx, entry_function in enumerate(entry_functions):
+                // this.addText('Name: ' + entry_function.name)
             var textLength = 100
             var rectWidth = "5px"
 

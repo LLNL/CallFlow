@@ -23,7 +23,6 @@ export default {
 
 	data: () => ({
 		graph: null,
-		id: 'scatterplot-view',
 		width: null,
 		height: null,
 		margin: {
@@ -41,6 +40,7 @@ export default {
 		firstRender: true,
 		scatterHeight: 0,
 		scatterWidth: 0,
+		id: ''
 
 	}),
 
@@ -56,6 +56,7 @@ export default {
 	},
 
 	mounted() {
+		this.id = 'scatterplot-view-' + this._uid
 	},
 
 	methods: {
@@ -151,7 +152,8 @@ export default {
 			this.xArray = temp[4]
 			this.yArray = temp[5]
 
-			console.log(this.xArray, this.yArray)
+			console.log('X-axis:', this.xArray)
+			console.log('Y-axis:', this.yArray)
 
 			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice())
 			this.regressionY = this.leastSquaresCoeff["y_res"];

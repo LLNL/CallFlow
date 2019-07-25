@@ -131,7 +131,7 @@ export default {
         },
 
         clear() {
-            d3.select('#' + this.id).remove()
+            // d3.select('#' + this.id).remove()
         },
 
         update(data) {

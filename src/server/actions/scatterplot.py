@@ -14,7 +14,6 @@
 
 import pandas as pd
 
-
 class Scatterplot:
     def __init__(self, state, module):
         self.graph = state.graph

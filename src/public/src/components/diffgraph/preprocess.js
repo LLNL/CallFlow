@@ -12,44 +12,12 @@
  ***************************************************************************** */
 
 export default function preprocess(graph, refresh) {
-    // graph = cleanGraph(graph);
     // graph = addUncertainityInfo(graph)
     graph = addMaxLevel(graph)
     graph = addLinkID(graph);
     graph = calculateFlow(graph);
     console.log("Graph after preprocessing: ", graph)
     return graph;
-}
-
-function cleanGraph(graph) {
-    const new_nodes = [];
-    let new_links = [];
-    for (const node of graph.nodes) {
-        if (node != undefined && node.name[0][node.name[0].length - 1] != '_') {
-            new_nodes.push(node);
-        }
-    }
-
-    for (const link of graph.links) {
-        if (link.name != 'intermediate' || link.name != 'intermediate' || link.name != undefined) {
-            new_links.push(link);
-        }
-    }
-
-    // Remove the unnecessary edges
-    const tempLinks = [];
-    new_links.forEach((link) => {
-        if ((link.source) != undefined && link.target != undefined) {
-            tempLinks.push(link);
-        }
-    });
-    new_links = tempLinks;
-
-    return {
-        nodes: new_nodes,
-        links: new_links,
-    };
-
 }
 
 function addUncertainityInfo(graph) {

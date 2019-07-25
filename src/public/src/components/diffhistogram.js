@@ -49,9 +49,9 @@ export default {
     mounted() {},
 
     sockets: {
-        histogram(data) {
+        diffhistogram(data) {
             data = JSON.parse(data)
-            console.log("Histogram Data: ", data)
+            console.log("Diff Histogram Data: ", data)
             if(this.firstRender) {
                 this.init()
             }

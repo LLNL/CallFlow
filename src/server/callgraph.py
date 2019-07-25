@@ -13,6 +13,7 @@
 import networkx as nx
 from logger import log
 import math
+import json
 from ast import literal_eval as make_tuple
 
 
@@ -117,7 +118,10 @@ class CallGraph(nx.Graph):
 
         children_mapping = self.immediate_children()
         nx.set_node_attributes(self.g, name='children', values=children_mapping)
-        
+
+        entry_function_mapping = self.generic_map(self.g.nodes(), 'entry_functions')
+        nx.set_node_attributes(self.g, name='entry_functions', values=entry_function_mapping)
+
     def generic_map(self, nodes, attr):
         ret = {}
         for node in nodes:
@@ -134,6 +138,27 @@ class CallGraph(nx.Graph):
                 elif self.group_by == 'name':
                     group_df = self.df.groupby([groupby]).mean()
                 ret[node] = group_df.loc[node, 'max_incTime']
+            
+            elif attr == 'entry_functions':
+                module_df = self.df.loc[(self.df['module'] == node)]
+                entry_func_df = module_df.loc[(module_df['component_level'] == 2)]
+                if(entry_func_df.empty):
+                    ret[node] = json.dumps({
+                        'name': '',
+                        'time': [],
+                        'time (inc)': []
+                    })
+                else:
+                    name = entry_func_df['name'].unique().tolist()
+                    time = entry_func_df['time'].mean().tolist()
+                    time_inc = entry_func_df['time (inc)'].mean().tolist()
+                
+                    ret[node] = json.dumps({
+                        'name': entry_func_df['name'].unique().tolist(),
+                        'time': entry_func_df['time'].mean().tolist(),
+                        'time (inc)': entry_func_df['time (inc)'].mean().tolist()
+                    })
+                
                 print(ret[node])
 
             else:

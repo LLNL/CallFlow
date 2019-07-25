@@ -82,7 +82,7 @@ export default {
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
 		datas: ['Dataframe', 'Graph'],
-		selectedData: 'Graph',
+		selectedData: 'Dataframe',
 		enableDiff: false,
 		firstRender: false,
 	}),
@@ -126,11 +126,9 @@ export default {
 			this.$store.minIncTime = data['min_incTime']
 			this.$store.numbOfRanks = data['numbOfRanks']
 			this.$store.selectedBinCount = this.selectedBinCount
-			console.log(this.$store.minIncTime)
 			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime * 0.000001) / 100).toFixed(3)
 			this.$store.selectedScatterMode = this.selectedScatterMode
 			this.$store.selectedData = this.selectedData
-			console.log(this.selectedFormat)
 			this.init()
 		},
 
@@ -206,7 +204,7 @@ export default {
 		init() {
 			// Initialize colors
 			this.colors()
-			console.log(this.selectedFormat)
+			
 			if (this.selectedMode == 'Single') {
 				if (this.selectedFormat == 'CCT') {
 					this.$socket.emit('cct', {

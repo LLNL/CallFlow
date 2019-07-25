@@ -20,11 +20,12 @@ class splitRank:
         self.entire_df = state.entire_df
         self.ids = ids
         self.other_ids = self.find_other_ids()
-        print(self.other_ids)
 
     def find_other_ids(self):
         unique_ids = list(self.entire_df['rank'].unique())
-        print(unique_ids, self.ids)
-
         ret = [ids for ids in unique_ids if np.int64(ids) not in self.ids]
-        return ret                                                                            
+        return ret
+
+    def run(self):
+        return {}
+

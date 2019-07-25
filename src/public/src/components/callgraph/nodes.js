@@ -84,6 +84,7 @@ export default {
                     self.$refs.ToolTip.clear()
                 })
                 .on('click', (d) => {
+                    console.log("Selected node: ", d)
                     this.$store.selectedNode = d
                     let selectedModule = ''
                     if(d.id.indexOf(':') >  -1 ){

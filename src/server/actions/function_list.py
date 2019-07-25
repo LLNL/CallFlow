@@ -23,34 +23,19 @@ class FunctionList:
         self.result = self.run()
         
     def run(self):    
-        
         callers = []
         callees = []
-        
+        ret = []
         for idx, entry_func in enumerate(entry_funcs):
             print("Entry func: ", entry_func)
             callees.append(df[df.name == entry_func]['callees'].unique().tolist())
             callers.append(df[df.name == entry_func]['callers'].unique().tolist())
 
-        return {
-            "entry_function": entry_funcs,
-            "other_funcs": other_funcs,
-            "callees": callees,
-            "callers": callers
-        }
-        ret = []
-        func_in_module = self.df[df.mod_index == mod_index]['name'].unique().tolist()
-        
-        for idx, func in enumerate(func_in_module):
-            name_entire_df = self.entire_df.loc[self.entire_df['name'] == func]
-            name_df = self.df.loc[self.df['name'] == func]
             ret.append({
-                "name": func,
-                "time (inc)": name_entire_df['time (inc)'].tolist(),
-                "time": name_entire_df['time'].tolist(),
-                "rank": name_entire_df['rank'].tolist(),
-                "callers": name_df['callers'].tolist(),
-                "callees": name_df['callees'].tolist()
+                "entry_function": entry_func,
+                "other_funcs": other_funcs,
+                "callees": callees,
+                "callers": callers
             })
         ret_df = pd.DataFrame(ret)
         return ret_df.to_json(orient="columns")

@@ -111,8 +111,8 @@ class CallFlow:
         state.node_hash_map = create.node_hash_map    
         state.graph = create.graph       
         
-        print("After Creating.")
-        print(state.df.groupby(['module']).mean())
+        # print("After Creating.")
+        # print(state.df.groupby(['module']).mean())
         return state
 
     def process(self, state):        
@@ -158,8 +158,9 @@ class CallFlow:
             graph_literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
             graph_filepath = dirname + '/' +     state_name + '/' + format_of_df + '_graph.json'
             utils.debug('File path: {0}'.format(graph_filepath))
-            with open(graph_filepath, 'w') as graphFile:
-                json.dump(graph_literal, graphFile)
+            if(format_of_df == 'entire'):
+                with open(graph_filepath, 'w') as graphFile:
+                    json.dump(graph_literal, graphFile)
 
         # dump the filtered dataframe to csv.
         df_filepath = dirname + '/' + state_name + '/' + format_of_df + '_df.csv'

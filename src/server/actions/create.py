@@ -34,7 +34,7 @@ class Create:
 
     def run(self):
         callflow_path = os.path.abspath(os.path.join(__file__, '../../../..'))
-        print(callflow_path)
+        print("CallFlow path is", callflow_path)
         data_path = os.path.abspath(os.path.join(callflow_path, self.config.paths[self.name]))
 
         gf = GraphFrame()

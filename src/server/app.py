@@ -31,6 +31,7 @@ app = Flask(__name__, static_url_path='/public')
 sockets = SocketIO(app)
 CORS(app)
 
+
 class App():
     def __init__(self):
         self.callflow_path = os.path.abspath(os.path.join(__file__, '../../..'))
