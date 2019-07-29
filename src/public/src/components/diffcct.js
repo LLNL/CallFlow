@@ -1,23 +1,19 @@
-import tpl from '../html/cct.html'
-import Nodes from './cct/nodes'
-import Edges from './cct/edges'
-import ColorMap from './cct/colormap'
+import tpl from '../html/diffcct.html'
+import DiffColorMap from './diffcct/colormap'
 
 import * as d3 from 'd3'
 import dagreD3 from 'dagre-d3/dist/dagre-d3';
 
 export default {
-    name: 'CCT',
+    name: 'DiffCCT',
     template: tpl,
     components: {
-        Nodes,
-        Edges,
-        ColorMap
+        DiffColorMap
     },
 
     data: () => ({
         graph: null,
-        id: 'cct-overview',
+        id: 'diff-cct-overview',
         sankey: {
             nodeWidth: 50,
             xSpacing: 0,
@@ -44,48 +40,44 @@ export default {
 
     },
 
-
-
     sockets: {
-        cct(data) {
-            console.log("CCT data: ", data)
-            if (!this.firstRender) {
-                this.clear()
-            }
-            this.init(data)
-        },
     },
 
     mounted() {
-        this.id = this.id
     },
 
     methods: {
-        init(data) {
+        init(data, id) {
+            console.log(data)
             if (this.firstRender) {
                 this.firstRender = false
             }
+            this.id = 'diff-cct-' + id
             this.data = data
             this.toolbarHeight = document.getElementById('toolbar').clientHeight
             this.footerHeight = document.getElementById('footer').clientHeight
-            this.width = window.innerWidth - this.margin.left - this.margin.right
+            this.width = window.innerWidth/2 - this.margin.left - this.margin.right
             this.height = window.innerHeight - this.margin.bottom - this.margin.top - this.toolbarHeight - this.footerHeight
 
-            this.svg = d3.select('#' + this.id)
+            d3.select('#' + this.id)
+                .append('svg')
                 .attrs({
-                    'class': 'cct',
+                    'id': this.id + '-svg',
+                    'class': 'diff-cct',
                     'width': this.width,
                     'height': this.height,
                 })
-            this.render(this.$store.selectedDataset)
-            this.$refs.ColorMap.init()
+
+            this.render()
+
+            // this.$refs.DiffColorMap.init()
         },
 
-        render(dataset) {
+        render() {
             // Create a new directed graph
             let g = new dagreD3.graphlib.Graph().setGraph({});
 
-            let graph = this.data[dataset]
+            let graph = this.data
             let nodes = graph.nodes
             let links = graph.links
 
@@ -123,8 +115,9 @@ export default {
                 // g.edge(e).style = "stroke: 1.5px "
             })
 
-            let svg = d3.select("#" + this.id)
-            let inner = svg.select('g');
+            let svg = d3.select('#' + this.id + '-svg')
+            console.log('#' + this.id + '-svg')
+            let inner = svg.append('g');
 
             // Set up zoom support
             var zoom = d3.zoom().on("zoom", function () {
@@ -133,10 +126,10 @@ export default {
             svg.call(zoom);
 
             // Create the renderer
-            var render = new dagreD3.render();
+            var render = new dagreD3.render()
 
             // Run the renderer. This is what draws the final graph.
-            render(inner, g);
+            render(inner, g)
 
             // Center the graph
             var initialScale = 1;

@@ -63,7 +63,7 @@ class App():
             data_string = 'Data: ' + json.dumps(data, indent=4, sort_keys=True)
         else:
             data_string = ''
-        log.warn('[app.py] {0} {1}'.format(action, data_string))
+        log.info('[app.py] {0} {1}'.format(action, data_string))
 
     # Parse the input arguments
     def create_parser(self):
@@ -149,7 +149,6 @@ class App():
             }
             g = self.callflow.update(obj)
             result = json_graph.node_link_data(g)
-            print(result)
             emit('group', result, json=True)
 
         @sockets.on('diff', namespace='/')
@@ -282,10 +281,32 @@ class App():
             })
             emit('function', result, json=True)
 
-        @sockets.on('diffscatterplot', namespace='/')
+        @sockets.on('diff_scatterplot', namespace='/')
         def diffscatterplot(data):
             if self.debug:
-                self.print('[Request] Diff-Scatterplot request for module')
+                self.print('[Request] Diff-Scatterplot request for module.')
+
+        @sockets.on('diff_cct', namespace='/')
+        def diffcct(data):
+            if self.debug:
+                self.print('[Request] Diff-CCT for the two datasets.', data)
+            g1 = self.callflow.update({
+                "name": "cct",
+                "dataset1": data['dataset1'],
+                "functionInCCT": data['functionInCCT'],
+            })
+            g2 = self.callflow.update({
+                "name": "cct",
+                "dataset1": data['dataset2'],
+                "functionInCCT": data['functionInCCT'],
+            })
+            g1_result = json_graph.node_link_data(g1)
+            g2_result = json_graph.node_link_data(g2)
+            print(g1_result, g2_result)
+            emit('diff_cct', {
+                data['dataset1']: g1_result,
+                data['dataset2']: g2_result
+            }, json=True)
 
     def create_server(self):
         app.debug = True

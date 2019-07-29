@@ -131,172 +131,6 @@ export default {
 			return [xMin, yMin, xMax, yMax, xArray, yArray]
 		},
 
-		process(data) {
-			this.yData = data["time (inc)"]
-			this.xData = data["time"]
-			this.nameData = data['name']
-
-			let temp
-			if (this.$store.selectedScatterMode == 'mean') {
-				console.log('mean')
-				temp = this.scatterMean()
-			}
-			else if (this.$store.selectedScatterMode == 'all') {
-				console.log('all')
-				temp = this.scatterAll()
-			}
-			this.xMin = temp[0]
-			this.yMin = temp[1]
-			this.xMax = temp[2]
-			this.yMax = temp[3]
-			this.xArray = temp[4]
-			this.yArray = temp[5]
-
-			console.log('X-axis:', this.xArray)
-			console.log('Y-axis:', this.yArray)
-
-			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice())
-			this.regressionY = this.leastSquaresCoeff["y_res"];
-			this.corre_coef = this.leastSquaresCoeff["corre_coef"];
-
-			this.xAxisHeight = this.scatterWidth - 4 * this.margin.left
-			this.yAxisHeight = this.scatterHeight - 4 * this.margin.left
-			this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.xAxisHeight])
-			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.yAxisHeight, 0])
-		},
-
-		render(data) {
-			if (!this.firstRender) {
-				this.clear()
-			}
-			this.firstRender = false
-			this.process(data)
-			let self = this
-
-			const xFormat = d3.format('0.1s');
-			var xAxis = d3.axisBottom(self.xScale)
-				.ticks(5)
-				.tickFormat( (d, i) => {
-					let temp = d;
-                    if (i % 2 == 0 ) {
-                        let value = temp * 0.000001
-                        return `${xFormat(value)}s`
-                    }
-                    return '';
-				});
-
-			const yFormat = d3.format('0.2s')
-			var yAxis = d3.axisLeft(self.yScale)
-				.ticks(5)
-				.tickFormat((d, i) => {
-					let temp = d;
-                    if (i % 2 == 0) {
-                        let value = temp * 0.000001
-                        return `${xFormat(value)}s`
-                    }
-                    return '';
-				});
-
-			let xAxisHeightCorrected = self.yAxisHeight //this.margin.left
-			var xAxisLine = this.svg.append('g')
-				.attr('class', 'axis')
-				.attr('id', 'xAxis')
-				.attr("transform", "translate(" + 3 * self.margin.left + "," + xAxisHeightCorrected + ")")
-				.call(xAxis)
-
-			this.svg.append('text')
-				.attr('class', 'axisLabel')
-				.attr('x', self.scatterWidth)
-				.attr('y', self.yAxisHeight - this.margin.top)
-				.style('font-size', '10px')
-				.style('text-anchor', 'end')
-				.text("Exclusive Runtime")
-
-			var yAxisLine = this.svg.append('g')
-				.attr('id', 'yAxis')
-				.attr('class', 'axis')
-				.attr('transform', "translate(" + 3 * self.margin.left + ", 0)")
-				.call(yAxis)
-
-			this.svg.append("text")
-				.attr('class', 'axisLabel')
-				.attr('transform', 'rotate(-90)')
-				.attr('x', 0)
-				.attr('y', 4 * this.margin.left)
-				.style("text-anchor", "end")
-				.style("font-size", "10px")
-				.text("Inclusive Runtime");
-
-			this.svg.selectAll('.dot')
-				.data(this.yArray)
-				.enter().append('circle')
-				.attr('class', 'dot')
-				.attr('r', 3)
-				.attr('cx', function (d, i) {
-					return self.xScale(d) + 3 * self.margin.left;
-				})
-				.attr('cy', function (d, i) {
-					return self.yScale(d);
-				})
-				.style('fill', "#4682b4")
-
-			var line = d3.line()
-				.x(function (d, i) {
-					return self.xScale(self.xArray[i]) + 3 * self.margin.left;
-				})
-				.y(function (d, i) {
-					return self.yScale(self.yArray[i]);
-				});
-
-			var trendline = this.svg.append('g').append("path")
-				.datum(this.regressionY)
-				.attr("class", "res_line")
-				.attr("d", line)
-				.style("stroke", "black")
-				.style("stroke-width", "1px")
-				.style("opacity", 0.5);
-
-			var coefText = this.svg.append('g');
-			var decimalFormat = d3.format("0.2f");
-			coefText.append('text')
-				.attr('class', 'text')
-				.text("corr-coef: " + decimalFormat(this.corre_coef))
-				.attr("x", function (d) {
-					return self.scatterWidth - 100;
-				})
-				.attr("y", function (d) {
-					return 10;
-				});
-
-			xAxisLine.selectAll('path')
-				.style("fill", "none")
-				.style("stroke", "black")
-				.style("stroke-width", "1px");
-			xAxisLine.selectAll('line')
-				.style("fill", "none")
-				.style("stroke", "#000")
-				.style("stroke-width", "1px")
-				.style("opacity", 0.5);
-			xAxisLine.selectAll("text")
-				.style('font-size', '10px')
-				.style('font-family', 'sans-serif')
-				.style('font-weight', 'lighter');
-
-			yAxisLine.selectAll('path')
-				.style("fill", "none")
-				.style("stroke", "black")
-				.style("stroke-width", "1px");
-			yAxisLine.selectAll('line')
-				.style("fill", "none")
-				.style("stroke", "#000")
-				.style("stroke-width", "1px")
-				.style("opacity", 0.5);
-			yAxisLine.selectAll("text")
-				.style('font-size', '10px')
-				.style('font-family', 'sans-serif')
-				.style('font-weight', 'lighter');
-		},
-
 		// returns slope, intercept and r-square of the line
 		leastSquares(xSeries, ySeries) {
 			var n = xSeries.length;
@@ -373,11 +207,194 @@ export default {
 
 		},
 
+		process(data) {
+			this.yData = data["time (inc)"]
+			this.xData = data["time"]
+			this.nameData = data['name']
+
+			let temp
+			if (this.$store.selectedScatterMode == 'mean') {
+				console.log('mean')
+				temp = this.scatterMean()
+			}
+			else if (this.$store.selectedScatterMode == 'all') {
+				console.log('all')
+				temp = this.scatterAll()
+			}
+			this.xMin = temp[0]
+			this.yMin = temp[1]
+			this.xMax = temp[2]
+			this.yMax = temp[3]
+			this.xArray = temp[4]
+			this.yArray = temp[5]
+
+			console.log('X-axis:', this.xArray)
+			console.log('Y-axis:', this.yArray)
+
+			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice())
+			this.regressionY = this.leastSquaresCoeff["y_res"];
+			this.corre_coef = this.leastSquaresCoeff["corre_coef"];
+
+			this.xAxisHeight = this.scatterWidth - 4 * this.margin.left
+			this.yAxisHeight = this.scatterHeight - 4 * this.margin.left
+			this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.xAxisHeight])
+			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.yAxisHeight, 0])
+		},
+
+		xAxis(){
+			let self = this
+			const xFormat = d3.format('0.1s');
+			var xAxis = d3.axisBottom(self.xScale)
+				.ticks(5)
+				.tickFormat( (d, i) => {
+					let temp = d;
+                    if (i % 2 == 0 ) {
+                        let value = temp * 0.000001
+                        return `${xFormat(value)}s`
+                    }
+                    return '';
+				});
+
+			let xAxisHeightCorrected = self.yAxisHeight //this.margin.left
+			var xAxisLine = this.svg.append('g')
+				.attr('class', 'axis')
+				.attr('id', 'xAxis')
+				.attr("transform", "translate(" + 3 * self.margin.left + "," + xAxisHeightCorrected + ")")
+				.call(xAxis)
+
+			xAxisLine.selectAll('path')
+				.style("fill", "none")
+				.style("stroke", "black")
+				.style("stroke-width", "1px");
+			xAxisLine.selectAll('line')
+				.style("fill", "none")
+				.style("stroke", "#000")
+				.style("stroke-width", "1px")
+				.style("opacity", 0.5);
+			xAxisLine.selectAll("text")
+				.style('font-size', '10px')
+				.style('font-family', 'sans-serif')
+				.style('font-weight', 'lighter');
+		},
+
+		yAxis(){
+			let self = this
+			const yFormat = d3.format('0.2s')
+			let yAxis = d3.axisLeft(self.yScale)
+				.ticks(5)
+				.tickFormat((d, i) => {
+					let temp = d;
+                    if (i % 2 == 0) {
+                        let value = temp * 0.000001
+                        return `${yFormat(value)}s`
+                    }
+                    return '';
+				});
+
+			this.svg.append('text')
+				.attr('class', 'axisLabel')
+				.attr('x', self.scatterWidth)
+				.attr('y', self.yAxisHeight - this.margin.top)
+				.style('font-size', '10px')
+				.style('text-anchor', 'end')
+				.text("Exclusive Runtime")
+
+			var yAxisLine = this.svg.append('g')
+				.attr('id', 'yAxis')
+				.attr('class', 'axis')
+				.attr('transform', "translate(" + 3 * self.margin.left + ", 0)")
+				.call(yAxis)
+
+			this.svg.append("text")
+				.attr('class', 'axisLabel')
+				.attr('transform', 'rotate(-90)')
+				.attr('x', 0)
+				.attr('y', 4 * this.margin.left)
+				.style("text-anchor", "end")
+				.style("font-size", "10px")
+				.text("Inclusive Runtime")
+
+			yAxisLine.selectAll('path')
+				.style("fill", "none")
+				.style("stroke", "black")
+				.style("stroke-width", "1px");
+			yAxisLine.selectAll('line')
+				.style("fill", "none")
+				.style("stroke", "#000")
+				.style("stroke-width", "1px")
+				.style("opacity", 0.5);
+			yAxisLine.selectAll("text")
+				.style('font-size', '10px')
+				.style('font-family', 'sans-serif')
+				.style('font-weight', 'lighter');
+		},
+	
+		trendline() {
+			let self = this
+			var line = d3.line()
+				.x(function (d, i) {
+					return self.xScale(self.xArray[i]) + 3 * self.margin.left;
+				})
+				.y(function (d, i) {
+					return self.yScale(self.yArray[i]);
+				});
+
+			var trendline = this.svg.append('g').append("path")
+				.datum(this.regressionY)
+				.attr("class", "res_line")
+				.attr("d", line)
+				.style("stroke", "black")
+				.style("stroke-width", "1px")
+				.style("opacity", 0.5);
+		},
+
+		dots(){
+			let self = this
+			this.svg.selectAll('.dot')
+				.data(this.yArray)
+				.enter().append('circle')
+				.attr('class', 'dot')
+				.attr('r', 5)
+				.attr('cx', function (d, i) {
+					return self.xScale(d) + 3 * self.margin.left;
+				})
+				.attr('cy', function (d, i) {
+					return self.yScale(d);
+				})
+				.style('fill', "#4682b4")
+		},
+
+		correlationText(){
+			let self = this
+			let decimalFormat = d3.format("0.2f");
+			this.svg.append('g').append('text')
+				.attr('class', 'text')
+				.text("corr-coef: " + decimalFormat(this.corre_coef))
+				.attr("x", function (d) {
+					return self.scatterWidth - 100;
+				})
+				.attr("y", function (d) {
+					return 10;
+				});
+		},
+
+		render(data) {
+			if (!this.firstRender) {
+				this.clear()
+			}
+			this.firstRender = false
+			this.process(data)
+			this.xAxis()
+			this.yAxis()
+			this.trendline()
+			this.dots()
+			this.correlationText()
+		},
+
 		setContainerWidth(newWidth) {
 			containerWidth = newWidth;
 			width = containerWidth - margin.left - margin.right;
 		},
-
 
 		clear() {
 			d3.selectAll('.dot').remove()

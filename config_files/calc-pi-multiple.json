@@ -6,7 +6,7 @@
             "format": "hpctoolkit",
             "props": {
             },
-            "nop": ""
+            "nop": "3"
         },
         {
             "name": "calc-pi-half",
@@ -14,7 +14,7 @@
             "format": "hpctoolkit",
             "props": {
             },
-            "nop": "128"
+            "nop": "3"
         }
     ]
 }

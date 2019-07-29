@@ -1,6 +1,6 @@
 import tpl from '../html/diffgraph.html'
 import preprocess from './diffgraph/preprocess'
-import Sankey from './diffgraph/sankey'
+import Sankey from './callgraph/sankey'
 import DiffNodes from './diffgraph/nodes'
 // import IntermediateNodes from './callgraph/intermediateNodes'
 import MiniHistograms from './diffgraph/miniHistograms'
@@ -81,7 +81,6 @@ export default {
 			// this.postProcess(this.data.nodes, this.data.links)	
 			console.log("Post-processing done.") 
 
-			console.log(this.$refs)
 			this.$refs.DiffNodes.init(this.graph, this.view)
 			// // this.$refs.IntermediateNodes.init(this.data)
 			this.$refs.DiffEdges.init(this.graph, this.view)

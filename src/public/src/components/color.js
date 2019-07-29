@@ -416,19 +416,35 @@ export default class Color {
         if (this.option == "Module") {
             return this.colorScale(node.module);
         } else if (this.option == "Inclusive") {
-            if (node.weight == undefined) {
+            if (node['time (inc)'] == undefined) {
                 return this.incColorScale(node.value)
             } else {
-                return this.incColorScale(node.weight)
+                return this.incColorScale(node["time (inc)"])
             }
         } else if (this.option == "Exclusive") {
-            return this.excColorScale(node.exclusive)
+            return this.excColorScale(node["time"])
         } else if (this.option == "nRange") {
             return this.nRangeColorScale(node.nRange)
         } else if (this.option == "Diff") {
             return this.diffColorScale(node.diff);
         } else if (this.option == "Imbalance") {
             return this.loadImbColorScale(node.imbalance_perc);
+        }
+    }
+
+    getColorByValue(value){
+        if (this.option == "Module") {
+            return this.colorScale(value);
+        } else if (this.option == "Inclusive") {
+                return this.incColorScale(value)
+        } else if (this.option == "Exclusive") {
+            return this.excColorScale(value)
+        } else if (this.option == "nRange") {
+            return this.nRangeColorScale(value)
+        } else if (this.option == "Diff") {
+            return this.diffColorScale(value)
+        } else if (this.option == "Imbalance") {
+            return this.loadImbColorScale(value)
         }
     }
 

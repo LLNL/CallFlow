@@ -1,41 +1,48 @@
-import tpl from '../html/callflow.html'
-import Callgraph from './callgraph'
-import Diffgraph from './diffgraph'
-import CCT from './cct'
-import Icicle from './icicle'
-import Scatterplot from './scatterplot'
-import Histogram from './histogram'
-import DiffHistogram from './diffhistogram'
-import Function from './function'
-import DiffFunction from './difffunction'
-import DiffIcicle from './difficicle'
-import DiffScatterplot from './diffScatterplot'
 import Vue from 'vue'
-
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/antd.css'
 import Color from './color';
 import Splitpanes from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 
+// Template import
+import tpl from '../html/callflow.html'
+
+// Single mode imports
+import Callgraph from './callgraph'
+import CCT from './cct'
+import Icicle from './icicle'
+import Scatterplot from './scatterplot'
+import Histogram from './histogram'
+import Function from './function'
+
+// Diff mode imports
+import Diffgraph from './diffgraph'
+import DiffFunction from './difffunction'
+import DiffHistogram from './diffhistogram'
+import DiffIcicle from './difficicle'
+import DiffScatterplot from './diffScatterplot'
+import DiffCCT from './diffcct'
 
 export default {
 	name: 'CallFlow',
 	template: tpl,
 	components: {
+		Splitpanes,
+		VueSlider,
 		Callgraph,
 		CCT,
 		Scatterplot,
 		Function,
+		Histogram,
+		Icicle,
 		Diffgraph,
+		DiffCCT,
+		// DiffCCT2,
 		DiffHistogram,
 		DiffScatterplot,
 		DiffFunction,
 		DiffIcicle,
-		VueSlider,
-		Histogram,
-		Splitpanes,
-		Icicle,
 	},
 	data: () => ({
 		socket: null,
@@ -49,7 +56,7 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'Callgraph',
+		selectedFormat: 'CCT',
 		datasets: [],
 		selectedDataset: '',
 		selectedDataset2: '',
@@ -76,7 +83,7 @@ export default {
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
 		modes: [],
-		selectedMode: 'Single',
+		selectedMode: 'Diff',
 		selectedBinCount: 5,
 		selectedFunctionsInCCT: 30,
 		isCallgraphInitialized: false,
@@ -126,7 +133,7 @@ export default {
 			this.$store.minIncTime = data['min_incTime']
 			this.$store.numbOfRanks = data['numbOfRanks']
 			this.$store.selectedBinCount = this.selectedBinCount
-			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime * 0.000001) / 100).toFixed(3)
+			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedDataset] * 0.000001) / 100).toFixed(3)
 			this.$store.selectedScatterMode = this.selectedScatterMode
 			this.$store.selectedData = this.selectedData
 			this.init()
@@ -162,6 +169,13 @@ export default {
 			this.$refs.DiffFunction.init()
 			this.$refs.DiffIcicle.init()
 		},
+
+		diff_cct(data) {
+			console.log("Diff CCT data: ", data)
+			console.log(this.$refs)
+			this.$refs.DiffCCT1.init(data[this.$store.selectedDataset], '1')
+			this.$refs.DiffCCT2.init(data[this.$store.selectedDataset2], '2')
+		}
 	},
 
 	methods: {
@@ -204,7 +218,7 @@ export default {
 		init() {
 			// Initialize colors
 			this.colors()
-			
+
 			if (this.selectedMode == 'Single') {
 				if (this.selectedFormat == 'CCT') {
 					this.$socket.emit('cct', {
@@ -221,11 +235,10 @@ export default {
 
 			} else if (this.selectedMode == 'Diff') {
 				if (this.selectedFormat == 'CCT') {
-					this.$socket.emit('cct', {
-						dataset: this.$store.selectedDataset,
-					})
-					this.$socket.emit('cct2', {
-						dataset: this.$store.selectedDataset2,
+					this.$socket.emit('diff_cct', {
+						dataset1: this.$store.selectedDataset,
+						dataset2: this.$store.selectedDataset2,
+						functionInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
 					this.$socket.emit('diff', {
@@ -250,6 +263,7 @@ export default {
 			}
 
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
+			this.$store.colorPoint = this.selectedColorPoint
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 		},
@@ -267,6 +281,7 @@ export default {
 			if (this.selectedFormat == 'CCT') {
 				this.$socket.emit('cct', {
 					dataset: this.$store.selectedDataset,
+					functionInCCT: this.selectedFunctionsInCCT,
 				})
 			} else if (this.selectedFormat == 'Callgraph') {
 				this.$socket.emit('group', {
@@ -294,13 +309,14 @@ export default {
 
 		updateDataset() {
 			this.clearLocal()
+			this.colors()
 			this.$store.selectedDataset = this.selectedDataset
 			this.init()
 		},
 
 		updateMode() {
-				this.clear()
-				this.init()
+			this.clear()
+			this.init()
 		},
 
 		updateColorBy() {
@@ -312,6 +328,12 @@ export default {
 			Vue.nextTick(() => {
 
 			})
+		},
+
+		updateColorPoint(){
+			this.clearLocal()
+			this.colors()
+			this.init()
 		},
 
 		updateGroupBy() {

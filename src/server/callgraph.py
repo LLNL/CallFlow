@@ -89,8 +89,11 @@ class CallGraph(nx.Graph):
                 self.g.add_edge(from_module, to_module, type="callback")
 
     def add_node_attributes(self):        
-        time_mapping = self.generic_map(self.g.nodes(), 'time (inc)')
-        nx.set_node_attributes(self.g, name='weight', values=time_mapping)
+        time_inc_mapping = self.generic_map(self.g.nodes(), 'time (inc)')
+        nx.set_node_attributes(self.g, name='time (inc)', values=time_inc_mapping)
+
+        time_mapping = self.generic_map(self.g.nodes(), 'time')
+        nx.set_node_attributes(self.g, name="time", values=time_mapping)
 
         name_mapping = self.generic_map(self.g.nodes(), 'vis_node_name')
         nx.set_node_attributes(self.g, name='name', values=name_mapping)
@@ -136,13 +139,13 @@ class CallGraph(nx.Graph):
 
             if attr == 'time (inc)':
                 if self.group_by == 'module':
-                    group_df = self.df.groupby([groupby]).max()
+                    group_df = self.df.groupby([groupby]).mean()
                 elif self.group_by == 'name':
                     group_df = self.df.groupby([groupby]).mean()
                 ret[node] = group_df.loc[node, 'time (inc)']
             
             elif attr == 'entry_functions':
-                module_df = self.df.loc[(self.df['module'] == node)]
+                module_df = self.df.loc[self.df['module'] == node]
                 entry_func_df = module_df.loc[(module_df['component_level'] == 2)]
                 if(entry_func_df.empty):
                     ret[node] = json.dumps({
@@ -168,6 +171,14 @@ class CallGraph(nx.Graph):
                 avg_incTime = module_df['time (inc)'].mean()
 
                 ret[node] = (max_incTime - avg_incTime)/max_incTime
+
+            elif attr == 'time':
+                module_df = self.df.loc[self.df['module'] == node]
+                if self.group_by == 'module':
+                    group_df = self.df.groupby([groupby]).max()
+                elif self.group_by == 'name':
+                    group_df = self.df.groupby([groupby]).mean()
+                ret[node] = group_df.loc[node, 'time']
                 
             else:
                 df = self.df.loc[self.df['vis_node_name'] == node][attr]
@@ -326,9 +337,9 @@ class CallGraph(nx.Graph):
             elif edge[1].endswith('_'):
                 ret[edge] = additional_flow[edge[1]]
                 continue
-            group_df = self.df.groupby(['_' +  self.group_by]).mean()
-            source_inc = group_df.loc[edge[0], 'time (inc)'].mean()   
-            target_inc = group_df.loc[edge[1], 'time (inc)'].max()
+            group_df = self.df.groupby(['_' +  self.group_by]).max()
+            source_inc = group_df.loc[edge[0], 'time (inc)']  
+            target_inc = group_df.loc[edge[1], 'time (inc)']
                      
             if source_inc == target_inc:
                 ret[edge] = source_inc

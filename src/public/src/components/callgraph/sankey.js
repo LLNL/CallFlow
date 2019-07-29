@@ -156,7 +156,7 @@ export default function Sankey() {
                 if(source != undefined && target != undefined){
                     if(link.type != 'back_edge'){
                         source.sourceLinks.push(link);
-                            target.targetLinks.push(link);
+                        target.targetLinks.push(link);
                     }
     
                     target["maxLinkVal"] = Math.max(target["maxLinkVal"], link["weight"]);
@@ -297,8 +297,9 @@ export default function Sankey() {
                     divValue = referenceValue;
                 }
                 else{
-		            divValue = d3.sum(nodes, value);
+		            divValue = d3.sum(nodes, d => d['time (inc)']);
                 }
+                console.log(divValue)
                 return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
             });
 
@@ -324,11 +325,11 @@ export default function Sankey() {
                     node.parY = nodeHeight;
 
 
-                    let height = node.in
-                    // TODO: Add a key "isStart" to the node.
-                    if(height == 0){
-                        height = node.out
-                    }
+                    let height = Math.max(node.in, node.out)
+                    // // TODO: Add a key "isStart" to the node.
+                    // if(height == 0){
+                    //     height = node.out
+                    // }
 
                     // if (node.weight > node.in){
                     //     height = node.weight
@@ -346,7 +347,8 @@ export default function Sankey() {
                 let weight = link.weight
                 if(link.source.weight < weight){
                     weight = link.source.minLinkVal
-                }                
+                }
+                console.log(weight, scale)
                 link.height = weight*scale*minNodeScale;
             });
         }

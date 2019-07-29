@@ -207,6 +207,7 @@ export default {
                         return '';
                     }
                     var textSize = this.textSize(d.name)['width'];
+                    console.log(textSize)
                     if (textSize < d.height) {
                         return d.name[0];
                     } else {

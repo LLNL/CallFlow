@@ -50,7 +50,7 @@ export default {
                     "stroke": "black",
                     "rx": "10px",
                     "fill-opacity": 1,
-                    "width": "300",
+                    "width": "375",
                     "height": "150",
                 })
                 .attrs({
@@ -69,6 +69,15 @@ export default {
                 })
             this.graph = graph
             this.node = node
+
+            if (this.mousePosX + this.halfWidth > this.callgraphOverviewWidth) {
+                this.xOffset = this.mousePosX - 200 + this.textxOffset
+            } else if (this.mousePosX < 100) {
+                this.xOffset = this.mousePosX + this.textxOffset
+            } else {
+                this.xOffset = this.mousePosX - 200 + this.textxOffset
+            }
+
             this.times()
             this.paths()
         },
@@ -82,13 +91,7 @@ export default {
                 .attrs({
                     'class': 'toolTipContent',
                     'x': () => {
-                        if (this.mousePosX + this.halfWidth > this.callgraphOverviewWidth) {
-                            return (this.mousePosX - 200) + this.textxOffset + 'px';
-                        } else if (this.mousePosX < 100) {
-                            return (this.mousePosX) + this.textxOffset + 'px'
-                        } else {
-                            return (this.mousePosX - 200) + this.textxOffset + 'px';
-                        }
+                        return this.xOffset + 'px'
                     },
                     'y': () => {
                         return (this.mousePosY + 50) + this.textyOffset + this.textPadding * this.textCount + "px";
@@ -98,53 +101,79 @@ export default {
         },
 
         times() {
-            let self = this
-            this.addText('Name: ' + this.node.name)
+            this.addText('Name: ' + this.node.name.trunc(40))
             this.addText('Inclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime[this.$store.selectedDataset]) * 100).toFixed(3)) + "%")
             this.addText('Exclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime[this.$store.selectedDataset]) * 100).toFixed(3)) + "%")
         },
 
         paths() {
             let entry_functions = JSON.parse(this.node.entry_functions)
-            console.log(entry_functions)
 
-            // for idx, entry_function in enumerate(entry_functions):
-                // this.addText('Name: ' + entry_function.name)
-            var textLength = 100
-            var rectWidth = "5px"
+            this.rectWidth = "10px"
 
-            this.toolTipG.selectAll('*').remove();
-            for (var tIndex = 0; tIndex < numberOfConn; tIndex++) {
-                var yOffset = tIndex * 10;
-                this.toolTipG.append('rect')
-                    .attr('width', rectWidth)
-                    .attr('height', '5px')
-                    .attr('y', yOffset + 'px')
-                    .style('fill', color(fromProcToProc[tIndex]["fromLM"]))
-                var fpName = fromProcToProc[tIndex]["fromProc"];
-                toolTipG.append('text')
-                    .attr('x', "10")
-                    .attr('y', (yOffset + 5) + "px")
-                    .text(fpName.trunc(20))
-                toolTipG.append('text')
-                    .attr('x', "150")
-                    .attr('y', (yOffset + 5) + "px")
+            this.addText('')
+            this.addText('Entry Functions: ' )
+
+            for (var tIndex = 0; tIndex < entry_functions.name.length; tIndex++) {
+                this.textCount += 1
+                let fromColor = this.$store.color.getColor(this.node)
+                let toColor = this.$store.color.getColorByValue(entry_functions['time (inc)'])
+                let fromFunc = this.node.name
+                let toFunc = entry_functions['name'][tIndex]
+                let xOffset = this.xOffset
+                let yOffset = this.mousePosY + 50 + this.textyOffset + this.textPadding * this.textCount
+
+                this.toolTipG
+                    .append('rect')
+                    .attrs({
+                        'width': this.rectWidth,
+                        'height': this.rectWidth,
+                        'x': xOffset + 'px',
+                        'y': yOffset - 10 + 'px',
+                        'class': 'toolTipContent'
+                    })
+                    .style('fill', fromColor)
+                this.toolTipG
+                    .append('text')
+                    .attrs({
+                        'x': xOffset + 15 + 'px',
+                        'y': yOffset + "px",
+                        'class': 'toolTipContent',
+                    })
+                    .text(fromFunc.trunc(15))
+                this.toolTipG
+                    .append('text')
+                    .attrs({
+                        'x': xOffset + 120 + 'px',
+                        'y': yOffset + "px",
+                        'class': 'toolTipContent',
+                    })
                     .text("->")
-                toolTipG.append('rect')
-                    .attr('width', rectWidth)
-                    .attr('height', '5px')
-                    .attr('x', '170px')
-                    .attr('y', yOffset + 'px')
-                    .style('fill', color(fromProcToProc[tIndex]["toLM"]))
-                toolTipG.append('text')
-                    .attr('x', "180px")
-                    .attr('y', (yOffset + 5) + "px")
-                    .text(fromProcToProc[tIndex]["toProc"].trunc(20))
-                // var timeInfo = fromProcToProc[0]["value"] + " (" + (fromProcToProc[0]["value"] / 36644360084 * 100 ) + "%)"
-                var timeInfo = (fromProcToProc[tIndex]["value"] / rootRunTime * 100).toFixed(3) + '%'
-                toolTipG.append('text')
-                    .attr('x', "320")
-                    .attr('y', (yOffset + 5) + "px")
+                this.toolTipG
+                    .append('rect')
+                    .attrs({
+                        'width': this.rectWidth,
+                        'height': this.rectWidth,
+                        'x': xOffset + 140 + 'px',
+                        'y': yOffset - 10 + 'px',
+                        'class': 'toolTipContent',
+                    })
+                    .style('fill', toColor)
+                this.toolTipG
+                    .append('text')
+                    .attrs({
+                        'x': xOffset + 155 + 'px',
+                        'y': yOffset + "px",
+                        'class': 'toolTipContent',
+                    })
+                    .text(toFunc.trunc(15))
+                let timeInfo = (entry_functions['time (inc)'] / this.$store.maxIncTime[this.$store.selectedDataset] * 100).toFixed(3) + '%'
+                this.toolTipG.append('text')
+                    .attrs({
+                        'x': xOffset + 270 + 'px',
+                        'y': (yOffset) + "px",
+                        'class': 'toolTipContent',
+                    })
                     .text(timeInfo)
             }
         },

@@ -22,6 +22,9 @@ import json
 def lookup(df, node):
     return df.loc[df['node'] == node]
 
+def lookup_with_name(df, name):
+    return df.loc[df['name'] == name]
+
 # Input : ./xxx/xxx/yyy
 # Output: yyy
 def sanitizeName(name):
@@ -39,8 +42,10 @@ def getMaxIncTime(state):
     ret = 0.0
     graph = state.graph
     df = state.entire_df
+    print(df['name'])
     for root in graph.roots:
-        node_df = lookup(df, root)
+        node_df = lookup_with_name(df, root.callpath[-1])
+        print(root)
         ret = max(ret, float(max(node_df['time (inc)'].tolist())))
     return ret
 

@@ -1,15 +1,13 @@
-import tpl from '../../html/callgraph/colormap.html'
+import tpl from '../../html/cct/colormap.html'
 import * as d3 from 'd3'
 import 'd3-selection-multi'
 
 export default {
     template: tpl,
     name: 'ColorMap',
-    components: {
-    },
+    components: {},
 
-    props: [
-    ],
+    props: [],
 
     data: () => ({
         transitionDuration: 1000,
@@ -19,7 +17,7 @@ export default {
         colorMin: 0,
         colorMax: 0,
         padding: {
-            bottom: 10,
+            bottom: 30,
             right: 250,
         },
         id: ''
@@ -29,7 +27,9 @@ export default {
 
     },
 
-    mounted() {},
+    mounted() {
+        this.id = 'colormap-' + this._uid
+    },
 
     methods: {
         init() {
@@ -58,7 +58,8 @@ export default {
             if (this.color.option == "Module") {
 
             } else {
-                let splits = 5
+                let splits = this.$store.colorPoint
+                console.log(splits)
                 let color = this.color.getScale(this.color.option)
 
                 for (let i = 0; i < splits; i += 1) {
@@ -86,23 +87,22 @@ export default {
                 .attrs({
                     "dy": ".35em",
                     "text-anchor": "middle",
-                    'class':'colormap-text',
+                    'class': 'colormap-text',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
                 })
-                .text(this.colorMin*0.000001 + 's');
+                .text(this.colorMin * 0.000001 + 's');
 
             this.scaleG.append("text")
                 .style("fill", "black")
                 .style("font-size", "14px")
                 .attrs({
                     "dy": ".35em",
-                    "text-anchor": "middle", 
+                    "text-anchor": "middle",
                     "class": "colormap-text",
                     'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - 2*this.padding.bottom})`,
                 })
-                .text(this.colorMax*0.000001 + "s");
+                .text(this.colorMax * 0.000001 + "s");
 
-            
         },
 
         clear() {

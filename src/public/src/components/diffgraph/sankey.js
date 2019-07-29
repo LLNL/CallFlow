@@ -200,8 +200,8 @@ export default function Sankey() {
     function computeNodeValues() {
         nodes.forEach(function(node) {
             node.value = Math.max(
-                d3.sum(node.sourceLinks, value),
-                d3.sum(node.targetLinks, value));
+                d3.sum(node.sourceLinks, d => d['time (inc)']),
+                d3.sum(node.targetLinks, d => d['time (inc)']))
         });
     }
 
@@ -293,7 +293,7 @@ export default function Sankey() {
                     divValue = referenceValue;
                 }
                 else{
-		            divValue = d3.sum(nodes, value);
+		            divValue = d3.sum(nodes, d => d['time (inc)']);
                 }
                 return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
             });
