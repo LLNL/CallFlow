@@ -285,6 +285,21 @@ class App():
         def diffscatterplot(data):
             if self.debug:
                 self.print('[Request] Diff-Scatterplot request for module.')
+            result = {}
+            for dataset in data['datasets']:
+                result[dataset] = self.callflow.update({
+                    "name": "histogram",
+                    "dataset1": dataset,
+                    "module": data['module'],
+                })
+            emit('diff_scatterplot', json.dumps(result), json=True)
+
+        @sockets.on('diff_histogram', namespace='/')
+        def diffhistogram(data):
+            if self.debug:
+                self.print('[Request] Diff-Histogram request for module.')
+            
+            emit('diff_histogram', result, json=True)
 
         @sockets.on('diff_cct', namespace='/')
         def diffcct(data):
@@ -302,7 +317,6 @@ class App():
             })
             g1_result = json_graph.node_link_data(g1)
             g2_result = json_graph.node_link_data(g2)
-            print(g1_result, g2_result)
             emit('diff_cct', {
                 data['dataset1']: g1_result,
                 data['dataset2']: g2_result

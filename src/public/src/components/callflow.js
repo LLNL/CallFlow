@@ -56,7 +56,7 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'CCT',
+		selectedFormat: 'Callgraph',
 		datasets: [],
 		selectedDataset: '',
 		selectedDataset2: '',
@@ -161,13 +161,15 @@ export default {
 			console.log("Data for", this.selectedFormat, ": ", data)
 			if (this.selectedData == 'Dataframe') {
 				this.$refs.DiffgraphA.init(data)
+				this.$refs.DiffScatterplot.init()
+				this.$refs.DiffHistogram.init()
 			} else if (this.selectedData == 'Graph') {
 				this.$refs.DiffgraphB.init(data)
+				this.$refs.DiffFunction.init()
+				this.$refs.DiffIcicle.init()
 			}
-			this.$refs.DiffScatterplot.init()
-			this.$refs.DiffHistogram.init()
-			this.$refs.DiffFunction.init()
-			this.$refs.DiffIcicle.init()
+		
+			
 		},
 
 		diff_cct(data) {

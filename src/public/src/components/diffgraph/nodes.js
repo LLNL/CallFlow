@@ -90,9 +90,9 @@ export default {
                     else{
                         selectedModule = d.id
                     }
-                    this.$socket.emit('diffscatterplot', {
+                    this.$socket.emit('diff_scatterplot', {
                         module: selectedModule,
-                        dataset1: this.$store.selectedDataset,
+                        datasets: this.$store.datasets,
                     })
                     // this.$socket.emit('icicle', {
                     //     module: selectedModule,

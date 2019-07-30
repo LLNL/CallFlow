@@ -39,16 +39,26 @@ export default {
 		yMin: 0,
 		yMax: 0,
 		firstRender: true,
+		xData: [],
+		yData: [],
+		nameData: [],
 	}),
 
 	sockets: {
-		diffscatterplot(data) {
+		diff_scatterplot(data) {
 			data = JSON.parse(data)
+			let dataset_keys = Object.keys(data)
 			console.log("Scatter data: ", data)
 			if (this.firstRender) {
 				this.init()
 			}
-			this.render(data)
+			for (const dataset of dataset_keys) {
+				let dataset_data = JSON.parse(data[dataset])
+				console.log(dataset_data)
+				this.preprocess(dataset_data, dataset)
+			}
+
+			this.render()
 		},
 	},
 
@@ -69,7 +79,7 @@ export default {
 			this.svg = d3.select('#' + this.id)
 				.attr('width', this.width - this.margin.left - this.margin.right)
 				.attr('height', this.height - this.margin.top - this.margin.bottom)
-				.attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")");
+				.attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
 		},
 
 		scatterAll() {
@@ -79,33 +89,26 @@ export default {
 			let xMin = 0
 			let xMax = 0
 			let yMax = 0
-
-			for (const [idx, d] of Object.entries(this.yData)) {
-				for (let rank = 0; rank < d.length; rank += 1) {
-					yMin = Math.min(yMin, d[rank])
-					yMax = Math.max(yMax, d[rank])
-					yArray.push(d[rank])
-				}
+			for (const idx in this.yData) {
+				let d = this.yData[idx]
+				console.log(d)
+				yMin = Math.min(yMin, d['d'])
+				yMax = Math.max(yMax, d['d'])
+				yArray.push(d)
 			}
 
-			for (const [idx, d] of Object.entries(this.xData)) {
-				for (let rank = 0; rank < d.length; rank += 1) {
-					xMin = Math.min(xMin, d[rank]);
-					xMax = Math.max(xMax, d[rank]);
-					xArray.push(d[rank])
-				}
-			}
+			for (const idx in this.xData) {
+				let d = this.xData[idx]
+				xMin = Math.min(xMin, d['d']);
+				xMax = Math.max(xMax, d['d']);
+				xArray.push(d)
 
+			}
+			console.log(xMin, yMin, xMax, yMax, xArray, yArray)
 			return [xMin, yMin, xMax, yMax, xArray, yArray]
 		},
 
 		scatterMean() {
-			let xArray = []
-			let yArray = []
-			let yMin = 0
-			let xMin = 0
-			let xMax = 0
-			let yMax = 0
 			for (const [idx, d] of Object.entries(this.yData)) {
 				let ySum = 0
 				for (let rank = 0; rank < d.length; rank += 1) {
@@ -128,17 +131,42 @@ export default {
 			return [xMin, yMin, xMax, yMax, xArray, yArray]
 		},
 
-		process(data) {
-			this.yData = data["time (inc)"]
-			this.xData = data["time"]
-			this.nameData = data['name']
+		preprocess(data, dataset_name) {
+			for (let i in data["time (inc)"]) {
+				for (let j in data["time (inc)"][i]) {
+					this.yData.push({
+						'd': data['time (inc)'][i][j],
+						'dataset': dataset_name
+					})
+				}
+			}
 
+
+			for (let i in data["time"]) {
+				for (let j in data["time"][i]) {
+					this.xData.push({
+						'd': data['time'][i][j],
+						'dataset': dataset_name
+					})
+				}
+			}
+
+			for (let i in data["name"]) {
+				for (let j in data["name"][i]) {
+					this.nameData.push({
+						'd': data['name'][i][j],
+						'name': dataset_name
+					})
+				}
+			}
+		},
+
+		process() {
 			let temp
 			if (this.$store.selectedScatterMode == 'mean') {
 				console.log('mean')
 				temp = this.scatterMean()
-			}
-			else if (this.$store.selectedScatterMode == 'all') {
+			} else if (this.$store.selectedScatterMode == 'all') {
 				console.log('all')
 				temp = this.scatterAll()
 			}
@@ -148,8 +176,6 @@ export default {
 			this.yMax = temp[3]
 			this.xArray = temp[4]
 			this.yArray = temp[5]
-
-			console.log(this.xArray, this.yArray)
 
 			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice())
 			this.regressionY = this.leastSquaresCoeff["y_res"];
@@ -166,19 +192,19 @@ export default {
 				this.clear()
 			}
 			this.firstRender = false
-			this.process(data)
 			let self = this
+			this.process()
 
 			const xFormat = d3.format('0.1s');
 			var xAxis = d3.axisBottom(self.xScale)
 				.ticks(5)
-				.tickFormat( (d, i) => {
+				.tickFormat((d, i) => {
 					let temp = d;
-                    if (i % 2 == 0 ) {
-                        let value = temp * 0.000001
-                        return `${xFormat(value)}s`
-                    }
-                    return '';
+					if (i % 2 == 0) {
+						let value = temp * 0.000001
+						return `${xFormat(value)}s`
+					}
+					return '';
 				});
 
 			const yFormat = d3.format('0.2s')
@@ -186,11 +212,11 @@ export default {
 				.ticks(5)
 				.tickFormat((d, i) => {
 					let temp = d;
-                    if (i % 2 == 0) {
-                        let value = temp * 0.000001
-                        return `${xFormat(value)}s`
-                    }
-                    return '';
+					if (i % 2 == 0) {
+						let value = temp * 0.000001
+						return `${xFormat(value)}s`
+					}
+					return '';
 				});
 
 			let xAxisHeightCorrected = self.xAxisHeight + this.margin.left
@@ -229,10 +255,10 @@ export default {
 				.attr('class', 'dot')
 				.attr('r', 3)
 				.attr('cx', function (d, i) {
-					return self.xScale(d) + 3 * self.margin.left;
+					return self.xScale(d.d) + 3 * self.margin.left;
 				})
 				.attr('cy', function (d, i) {
-					return self.yScale(d);
+					return self.yScale(d.d);
 				})
 				.style('fill', "#4682b4")
 

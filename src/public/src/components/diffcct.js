@@ -22,9 +22,9 @@ export default {
         },
         margin: {
             top: 0,
-            right: 0,
+            right: 10,
             bottom: 0,
-            left: 0
+            left: 10
         },
         view: {
             color: null,
@@ -48,7 +48,6 @@ export default {
 
     methods: {
         init(data, id) {
-            console.log(data)
             if (this.firstRender) {
                 this.firstRender = false
             }
@@ -116,7 +115,6 @@ export default {
             })
 
             let svg = d3.select('#' + this.id + '-svg')
-            console.log('#' + this.id + '-svg')
             let inner = svg.append('g');
 
             // Set up zoom support
