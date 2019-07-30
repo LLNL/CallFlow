@@ -28,7 +28,7 @@ export default {
     },
 
     sockets: {
-        function(data) {
+        diff_function(data) {
             console.log("Function data: ", data)
             this.render(data)
         },

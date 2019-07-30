@@ -11,7 +11,7 @@ export default {
         graph: null,
         id: 'function-overview',
         padding: {
-            top: 30, right: 30, bottom: 10, left: 10
+            top: 10, right: 10, bottom: 10, left: 10
         },
         width: null,
         height: null,
@@ -29,6 +29,7 @@ export default {
 
     sockets: {
         function(data) {
+            data = JSON.parse(data)
             console.log("Function data: ", data)
             this.render(data)
         },
@@ -42,18 +43,18 @@ export default {
         init() {
             this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
-			this.footerHeight = document.getElementById('footer').clientHeight
+
             this.width = window.innerWidth*0.3
-            this.height = (window.innerHeight - this.toolbarHeight - 2* this.footerHeight)*0.5
+            this.height = window.innerHeight*0.5 - this.toolbarHeight - this.footerHeight
 
             this.boxWidth = this.width - this.padding.right - this.padding.left;
-            this.boxHeight = this.height - this.padding.top - this.padding.bottom - 20;
+            this.boxHeight = this.height - this.padding.top - this.padding.bottom;
             this.functionHeight = this.boxHeight - this.histogramOffset;
             this.functionWidth = this.boxWidth;
             this.funcitonSVG = d3.select('#' + this.id)
                 .attrs({    
-                    "width": this.boxWidth + this.padding.right + this.padding.left,
-                    "height": this.boxHeight + this.padding.top + this.padding.bottom,
+                    "width": this.boxWidth,// + this.padding.right + this.padding.left,
+                    "height": this.boxHeight,
                     "transform": `translate(${this.padding.left}, ${this.padding.top})`
                 })
             this.textPadding  = 1.5* this.textSize
@@ -78,14 +79,20 @@ export default {
         },
 
         render(data) {
+            this.clear()
             this.addText('Entry functions: ')
-            this.addText('Callees: ')
+            for(const [key, value] of Object.entries(data)){
+                console.log(value[0])
+                this.addText(value[0])
+            }
+            // this.addText('Callees: ')
             this.addText('Callers: ')
             this.addText('Other Functions: ')
         },
 
         clear() {
-
+            this.textCount = 0
+            d3.selectAll('.functionContent').remove()
         },
 
         update(data) {

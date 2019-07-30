@@ -85,7 +85,7 @@ export default {
             // Create a new directed graph
             let g = new dagreD3.graphlib.Graph().setGraph({});
 
-            let graph = this.data[dataset]
+            let graph = this.data
             let nodes = graph.nodes
             let links = graph.links
 
@@ -101,9 +101,17 @@ export default {
 
             // Set up the edges
             for (let i = 0; i < links.length; i += 1) {
+                let edge_label = ''
+                if(links[i]['count'] != 1){
+                    edge_label = '' + links[i]['count']
+                }
+                else{
+                    edge_label = ''
+                }
                 g.setEdge(links[i]['source'], links[i]['target'], {
-                    label: ''
+                    label: edge_label
                 });
+                
             }
 
             let self = this
