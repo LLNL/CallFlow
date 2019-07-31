@@ -37,6 +37,7 @@ from actions.module_hierarchy import moduleHierarchy
 from actions.filter import Filter
 from actions.bland_altman import BlandAltman
 from actions.function_list import FunctionList
+from actions.union_graph import UnionGraph
 
 from state import State
 from logger import log
@@ -305,17 +306,45 @@ class CallFlow:
         utils.debug('Update Diff', action)
         action_name = action["name"]
         datasets = action['datasets']
+        self.nx = {}
 
         if action_name == 'init':
             self.setConfig()
             return self.config
+
+        elif action_name == "group":
+            for idx, (dataset, state) in enumerate(self.states.items()):
+                if (idx == 0):
+                    dataset1 = dataset
+                if (idx == 1):
+                    dataset2 = dataset
+                group = groupBy(state, action["groupBy"])
+                self.states[dataset].gdf = group.df
+                self.states[dataset].graph = group.graph 
+                write_graph = False
+                self.write_gf(state, dataset, "group", write_graph)
+                if(action['groupBy'] == 'module'):
+                    path_type = 'group_path'
+                elif(action['groupBy'] == 'name'):
+                    path_type = 'path'
+                temp = CallGraph(state, path_type, True, action["groupBy"])
+                self.nx[dataset] = temp.g
+            
+            union_nx = UnionGraph(self.nx[dataset1], self.nx[dataset2]).R
+            print(union_nx)
+            return union_nx
 
         elif action_name == 'bland-altman':
             state1 = action['state1']
             state2 = action['state2']
             col = action['col']
             catcol = action['catcol']
-            ret = BlandAltman(state1, state2, col, catcol)            
+            ret = BlandAltman(state1, state2, col, catcol)
+            return ret
+
+        elif action_name == 'Gromov-wasserstein':
+            ret = {}       
+            return ret  
 
     def displayStats(self, name):
         log.warn('==========================')

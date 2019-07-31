@@ -43,7 +43,7 @@ class FunctionList:
         
     def run(self):    
         callers = {}
-        callees = []
+        callees = {}
         entry_func = []
         ret = []
 
@@ -59,10 +59,15 @@ class FunctionList:
             print("Entry func: ", entry_func)
 
             callers[entry_func] = list(self.entire_g.predecessors(entry_func))
+            
+            for idx, caller in enumerate(callers[entry_func]):
+                callees[caller] = list(self.entire_g.predecessors(caller))
+
         ret.append({
             "entry_functions": entry_funcs,
             "other_functions": other_funcs,
-            "callers": callers
+            "callers": callers,
+            "callees": callees,
         })
         ret_df = pd.DataFrame(ret)
         return ret_df.to_json(orient="columns")

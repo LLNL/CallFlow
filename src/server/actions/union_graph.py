@@ -1,83 +1,70 @@
-def union(G, H, rename=(None, None), name=None):
-    """ Return the union of graphs G and H.
+import networkx as nx
 
-    Graphs G and H must be disjoint, otherwise an exception is raised.
 
-    Parameters
-    ----------
-    G,H : graph
-       A NetworkX graph
+class UnionGraph():
+    def __init__(self, G, H, rename=(None, None), name=None):
+        # R1 = nx.convert_node_labels_to_integers(G)
+        # R2 = nx.convert_node_labels_to_integers(H, first_label=len(R1))
+       self.union(G, H, rename, name)
 
-    rename : bool , default=(None, None)
-       Node names of G and H can be changed by specifying the tuple
-       rename=('G-','H-') (for example).  Node "u" in G is then renamed
-       "G-u" and "v" in H is renamed "H-v".
+    # Return the union of graphs G and H.    
+    def union(self, G, H, rename, name):
+        if not G.is_multigraph() == H.is_multigraph():
+            raise nx.NetworkXError('G and H must both be graphs or multigraphs.')
+        # Union is the same type as G
+        self.R = G.__class__()
+        # add graph attributes, H attributes take precedent over G attributes
+        self.R.graph.update(G.graph)
+        self.R.graph.update(H.graph)
 
-    name : string
-       Specify the name for the union graph
+        # rename graph to obtain disjoint node labels
+        def add_prefix(graph, prefix):
+            if prefix is None:
+                return graph
 
-    Returns
-    -------
-    U : A union graph with the same type as G.
+            def label(x):
+                if is_string_like(x):
+                    name = prefix + x
+                else:
+                    name = prefix + repr(x)
+                return name
+            return nx.relabel_nodes(graph, label)
+        
+        G = add_prefix(G, rename[0])
+        H = add_prefix(H, rename[1])
 
-    Notes
-    -----
-    To force a disjoint union with node relabeling, use
-    disjoint_union(G,H) or convert_node_labels_to integers().
+        # if(set(G) != set(H)):
+        #     break        
+        # # TODO: Integrate the check_graph.
 
-    Graph, edge, and node attributes are propagated from G and H
-    to the union graph.  If a graph attribute is present in both
-    G and H the value from H is used.
+        if G.is_multigraph():
+            G_edges = G.edges(keys=True, data=True)
+        else:
+            G_edges = G.edges(data=True)
+        if H.is_multigraph():
+            H_edges = H.edges(keys=True, data=True)
+        else:
+            H_edges = H.edges(data=True)
 
-    See Also
-    --------
-    disjoint_union
-    """
-    if not G.is_multigraph() == H.is_multigraph():
-        raise nx.NetworkXError('G and H must both be graphs or multigraphs.')
-    # Union is the same type as G
-    R = G.__class__()
-    # add graph attributes, H attributes take precedent over G attributes
-    R.graph.update(G.graph)
-    R.graph.update(H.graph)
+        # add nodes
+        self.R.add_nodes_from(G)
+        self.R.add_edges_from(G_edges)
+        # add edges
+        self.R.add_nodes_from(H)
+        self.R.add_edges_from(H_edges)
+        # add node attributes
+        
+        for n in G:
+            # R.nodes[n].update(G.nodes[n])
+            self.append(n, G.nodes(), 'calc-pi')
+        for n in H:
+            self.append(n, H.nodes(), 'calc-pi-half')
 
-    # rename graph to obtain disjoint node labels
-    def add_prefix(graph, prefix):
-        if prefix is None:
-            return graph
+        # print(self.R.nodes(data=True))
 
-        def label(x):
-            if is_string_like(x):
-                name = prefix + x
-            else:
-                name = prefix + repr(x)
-            return name
-        return nx.relabel_nodes(graph, label)
-    G = add_prefix(G, rename[0])
-    H = add_prefix(H, rename[1])
-    if set(G) & set(H):
-        raise nx.NetworkXError('The node sets of G and H are not disjoint.',
-                               'Use appropriate rename=(Gprefix,Hprefix)'
-                               'or use disjoint_union(G,H).')
-    if G.is_multigraph():
-        G_edges = G.edges(keys=True, data=True)
-    else:
-        G_edges = G.edges(data=True)
-    if H.is_multigraph():
-        H_edges = H.edges(keys=True, data=True)
-    else:
-        H_edges = H.edges(data=True)
-
-    # add nodes
-    R.add_nodes_from(G)
-    R.add_edges_from(G_edges)
-    # add edges
-    R.add_nodes_from(H)
-    R.add_edges_from(H_edges)
-    # add node attributes
-    for n in G:
-        R.nodes[n].update(G.nodes[n])
-    for n in H:
-        R.nodes[n].update(H.nodes[n])
-
-    return R
+    def append(self, node, graph, dataset):
+        for idx, (key, val) in enumerate(graph.items()):
+            if(key == node):
+                if(dataset not in self.R.nodes[node]):
+                    self.R.nodes[node][dataset] = {}
+                self.R.nodes[node][dataset] = val

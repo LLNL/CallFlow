@@ -33,7 +33,7 @@ export default {
                     return 'diff-node'
                 })
                 .attr('opacity', 0)
-                .attr('id', d => `diff-node_${d.mod_index}`)
+                .attr('id', (d, i) => `diff-node_${d.xid}`)
                 .attr('transform', (d) => {
                     return `translate(${d.x},${d.y })`
                 })
@@ -48,6 +48,7 @@ export default {
             this.rectangle(node)
             this.path(node)
             this.text(node)
+            this.quantileLines(node)
             this.$refs.ToolTip.init(this.$parent.id)
         },
 
@@ -94,7 +95,7 @@ export default {
                         module: selectedModule,
                         datasets: this.$store.datasets,
                     })
-                    // this.$socket.emit('icicle', {
+                    // this.$socket.emit('diff_hierarchy', {
                     //     module: selectedModule,
                     //     dataset1: this.$store.selectedDataset,
                     // })
@@ -120,18 +121,43 @@ export default {
                 });
         },
 
-        quantileLines(rect, data) {
-            for (let i = 0; i < data.nrange.length; i += 1) {
-                let nrange = data.nrange[i]
-                this.nodes.append('line')
-                    .attr('id', 'line-' + i)
-                    .style("stroke", "black")
-                    .style("stroke-width", 2)
-                    .attr("x1", data.x)
-                    .attr("y1", data.y * (nrange / data.weight))
-                    .attr("x2", data.x + this.nodeWidth)
-                    .attr("y2", data.y * (nrange / data.weight))
+        quantileLines(node) {
+            console.log(node)
+            let colors = {
+                'calc-pi': '#f00',
+                'calc-pi-half': '#0f0'
             }
+            let count = 0
+            for(let i = 0; i < this.graph.nodes.length; i++){
+                let node_data = this.graph.nodes[i]
+                console.log(node_data)
+                let props = JSON.parse(JSON.stringify(node_data['props']))
+               
+                for (const [dataset, val] of Object.entries(props)) {
+                    let x1 = node_data.x - this.nodeWidth
+                    let x2 = node_data.x
+                    let y1 = (node_data.height - val*node_data.height)*0.5
+                    d3.select('#diff-node_' + node_data.xid).append('line')
+                        .attr('id', 'line-1-' + dataset + '-' + node_data.xid)
+                        .style("stroke", colors[dataset])
+                        .style("stroke-width", 3)
+                        .attr("x1", 0)
+                        .attr("y1", y1)
+                        .attr("x2", this.nodeWidth)
+                        .attr("y2", y1)
+
+                    d3.select('#diff-node_' + node_data.xid).append('line')
+                        .attr('id', 'line-2-' + dataset + '-' + node_data.xid)
+                        .style("stroke", colors[dataset])
+                        .style("stroke-width", 3)
+                        .attr("x1", 0)
+                        .attr("y1", node_data.height - y1)
+                        .attr("x2", this.nodeWidth)
+                        .attr("y2", node_data.height - y1)
+                }
+                count += 1
+            }
+            
         },
 
         path(node) {

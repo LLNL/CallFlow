@@ -83,7 +83,7 @@ export default {
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
 		modes: [],
-		selectedMode: 'Single',
+		selectedMode: 'Diff',
 		selectedBinCount: 5,
 		selectedFunctionsInCCT: 30,
 		isCallgraphInitialized: false,
@@ -157,7 +157,7 @@ export default {
 			this.$refs.Icicle.init()
 		},
 
-		diff(data) {
+		diff_group(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
 			if (this.selectedData == 'Dataframe') {
 				this.$refs.DiffgraphA.init(data)
@@ -241,9 +241,8 @@ export default {
 						functionInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
-					this.$socket.emit('diff', {
-						dataset1: this.$store.selectedDataset,
-						dataset2: this.$store.selectedDataset2,
+					this.$socket.emit('diff_group', {
+						datasets: this.$store.datasets,
 						groupBy: this.selectedGroupBy
 					})
 				}

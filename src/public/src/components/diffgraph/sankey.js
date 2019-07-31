@@ -156,7 +156,7 @@ export default function Sankey() {
                 if(source != undefined && target != undefined){
                     if(link.type != 'back_edge'){
                         source.sourceLinks.push(link);
-                            target.targetLinks.push(link);
+                        target.targetLinks.push(link);
                     }
     
                     target["maxLinkVal"] = Math.max(target["maxLinkVal"], link["weight"]);
@@ -201,14 +201,14 @@ export default function Sankey() {
         nodes.forEach(function(node) {
             node.value = Math.max(
                 d3.sum(node.sourceLinks, value),
-                d3.sum(node.targetLinks, value));
+		        d3.sum(node.targetLinks, value));
         });
     }
 
     function findroot(){
 	    let ret = []
 	    nodes.forEach(function(node){
-	        if(node['id'] == 'cpi'){
+	        if(node['id'] == "libmonitor.so.0.0.0"){
 		        ret.push(node)
 	        }	    
 	    })
@@ -220,25 +220,28 @@ export default function Sankey() {
     // nodes with no incoming links are assigned breadth zero, while
     // nodes with no outgoing links are assigned the maximum breadth.
     function computeNodeBreadths() {
-	    let remainingNodes = findroot()
+        let remainingNodes = findroot()
+        console.log(remainingNodes)
         let nextNodes = [];
-        // while (remainingNodes.length) {
-        //     nextNodes = [];
-	    //     remainingNodes.forEach(function(node) {
-	    // 	node.dx = nodeWidth;
-        //         node.sourceLinks.forEach(function(link) {
-        //             nextNodes.push(link.target);
-        //         });
-        //     });
-        //     remainingNodes = nextNodes;
-        // }
-
+        let level = 0
+        while (remainingNodes.length) {
+            nextNodes = [];
+	        remainingNodes.forEach(function(node) {
+                node.level = level
+	    	    node.dx = nodeWidth;
+                node.sourceLinks.forEach(function(link) {
+                    nextNodes.push(link.target);
+                });
+            });
+            remainingNodes = nextNodes;
+            ++level
+        }
 	    nodes.forEach(function(node){
 	        node.dx = nodeWidth
         })
         
         minDistanceBetweenNode = nodeWidth
-        widthScale = scalePow().domain([0, maxLevel+1]).range([minDistanceBetweenNode, size[0]])	
+        widthScale = scalePow().domain([0,level+1]).range([minDistanceBetweenNode, size[0]])	
         scaleNodeBreadths((size[0] - nodeWidth/2) / (maxLevel - 1));
     }
 
@@ -263,9 +266,10 @@ export default function Sankey() {
 
     function scaleNodeBreadths(kx) {
         nodes.forEach(function(node) {
-	        var level = node.level;
+	        let level = node.level
             let x = widthScale(level)
-            node.x = x
+            console.log(node.name, x, node.level, node.height)
+	        node.x = x
         });
     }
 
@@ -293,8 +297,9 @@ export default function Sankey() {
                     divValue = referenceValue;
                 }
                 else{
-		            divValue = d3.sum(nodes, value);
+		            divValue = d3.sum(nodes, d => d['time (inc)']);
                 }
+                console.log(divValue)
                 return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
             });
 
@@ -320,13 +325,17 @@ export default function Sankey() {
                     node.parY = nodeHeight;
 
 
-                    let height = node.in
-                    // TODO: Add a key "isStart" to the node.
-                    if(height == 0){
-                        height = node.out
-                    }
+                    let height = Math.max(node.in, node.out)
+                    // // TODO: Add a key "isStart" to the node.
+                    // if(height == 0){
+                    //     height = node.out
+                    // }
 
-                    node.height = height*minNodeScale*scale;
+                    // if (node.weight > node.in){
+                    //     height = node.weight
+                    // }
+
+		            node.height = height*minNodeScale*scale;
                 });
 
                 nodes.sort(function(a,b){
@@ -338,7 +347,8 @@ export default function Sankey() {
                 let weight = link.weight
                 if(link.source.weight < weight){
                     weight = link.source.minLinkVal
-                }                
+                }
+                console.log(weight, scale)
                 link.height = weight*scale*minNodeScale;
             });
         }

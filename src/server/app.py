@@ -150,23 +150,6 @@ class App():
             result = json_graph.node_link_data(g)
             emit('group', result, json=True)
 
-        @sockets.on('diff', namespace='/')
-        def diff(data):
-            if self.debug:
-                print('[Request] Diff the dataset.', data)
-            dataset1 = data['dataset1']
-            dataset2 = data['dataset2']
-            print('[Diff] Comapring {0} and {1}'.format(dataset1, dataset2))
-            groupBy = data['groupBy'].lower()
-            g = self.callflow.update({
-                "name": 'group',
-                "groupBy": groupBy,
-                "dataset1": dataset1,
-                "dataset2": dataset2
-            })
-            result = json_graph.node_link_data(g)
-            emit('diff', result, json=True)
-
         @sockets.on('hierarchy', namespace='/')
         def module_hierarchy(data):
             if self.debug:
@@ -320,6 +303,23 @@ class App():
                 data['dataset1']: g1_result,
                 data['dataset2']: g2_result
             }, json=True)
+
+        @sockets.on('diff_group', namespace='/')
+        def diff(data):
+            result = {}
+            if self.debug:
+                print('[Request] Diff the dataset.', data)
+            datasets = data['datasets']
+            print('[Diff] Datasets: {0}'.format(datasets))
+            groupBy = data['groupBy'].lower()
+            nx = self.callflow.update_diff({
+                "name": 'group',
+                "groupBy": groupBy,
+                "datasets": datasets
+            })
+            # for idx, (dataset, nx) in enumerate(nx.items()):
+            result = json_graph.node_link_data(nx)
+            emit('diff_group', result, json=True)
 
     def create_server(self):
         app.debug = True

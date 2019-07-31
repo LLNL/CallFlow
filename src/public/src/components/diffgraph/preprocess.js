@@ -13,11 +13,39 @@
 
 export default function preprocess(graph, refresh) {
     // graph = addUncertainityInfo(graph)
-    graph = addMaxLevel(graph)
-    graph = addLinkID(graph);
-    graph = calculateFlow(graph);
+    graph = findMaxGraph(graph)
+    graph = addLinkID(graph)
+    graph = calculateFlow(graph)
+    graph = addLines(graph)
     console.log("Graph after preprocessing: ", graph)
     return graph;
+}
+
+function findMaxGraph(graph){
+    let datasets = ['calc-pi', 'calc-pi-half']
+    
+    for(const node of graph.nodes){
+        let obj = {
+            'name': '',
+            'time': 0,
+            'time (inc)': 0,
+        }
+        for(const dataset of datasets){
+            if(node[dataset]['time'] > obj['time']){
+                obj['time'] = node[dataset]['time']
+            }
+            if(node[dataset]['time (inc)'] > obj['time (inc)']){
+                obj['time (inc)'] = node[dataset]['time (inc)']
+            }
+            obj['name'] = node[dataset]['name'][0]
+            obj['xid'] = node[dataset]['n_index'][0]
+        }
+        for(const [key, value] of Object.entries(obj)){
+            node[key] = value
+        }
+    }
+    console.log(graph)
+    return graph
 }
 
 function addUncertainityInfo(graph) {
@@ -65,38 +93,6 @@ function addUncertainityInfo(graph) {
     return graph
 }
 
-
-function addMaxLevel(graph) {
-    let ret = 0
-    let nodes = graph.nodes
-    for (let i = 0; i < nodes.length; i += 1) {
-        let node = nodes[i]
-            if (ret < node.level) {
-            ret = node.level
-        }
-    }
-    graph['maxLevel'] = ret 
-    return graph
-}
-
-/* Link: {
-   sourceID : int, targetID: int , target: str, source: str
-   } */
-function addLinkID_(graph) {
-    const nodeMap = {};
-    for (const [idx, node] of graph.nodes.entries()) {
-        nodeMap[node.name[0]] = idx;
-    }
-
-
-    const links = graph.links;
-    for (const link of graph.links) {
-        link['sourceID'] = nodeMap[link.source];
-        link['targetID'] = nodeMap[link.target];
-    }
-    return graph;
-}
-
 /* Link: {
    sourceID : int, targetID: int , target: str, source: str
    } */
@@ -127,7 +123,7 @@ function calculateFlow(graph) {
     const outGoing = [];
     const inComing = [];
     nodes.forEach((node) => {
-        const nodeLabel = node.name[0];
+        const nodeLabel = node.name;
 
         links.forEach((link) => {
             if (nodes[link.sourceID] != undefined) {
@@ -136,7 +132,7 @@ function calculateFlow(graph) {
                     if (outGoing[linkLabel] == undefined) {
                         outGoing[linkLabel] = 0;
                     }
-                    outGoing[linkLabel] += link.weight;
+                    outGoing[linkLabel] += nodes[link.sourceID]['time (inc)'];
                 }
             }
 
@@ -149,7 +145,7 @@ function calculateFlow(graph) {
                     if (inComing[linkLabel] == undefined) {
                         inComing[linkLabel] = 0;
                     }
-                    inComing[linkLabel] += link.weight;
+                    inComing[linkLabel] += nodes[link.targetID]['time (inc)'];
                 }
             }
 
@@ -171,4 +167,22 @@ function calculateFlow(graph) {
     });
 
     return graph;
+}
+
+function addLines(graph){
+    let datasets = ['calc-pi', 'calc-pi-half']
+    
+    let count = 0
+    for(const node of graph.nodes){
+        let obj = {}
+        for(const dataset of datasets){
+            obj[dataset] = node[dataset]['time (inc)']/node['time (inc)']
+            obj['xid'] = node[dataset]['n_index'][0]
+
+        }
+        node['props'] = obj
+        count += 1
+    }
+    console.log(graph)
+    return graph
 }

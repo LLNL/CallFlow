@@ -1,6 +1,6 @@
 import tpl from '../html/diffgraph.html'
 import preprocess from './diffgraph/preprocess'
-import Sankey from './callgraph/sankey'
+import Sankey from './diffgraph/sankey'
 import DiffNodes from './diffgraph/nodes'
 // import IntermediateNodes from './callgraph/intermediateNodes'
 import MiniHistograms from './diffgraph/miniHistograms'

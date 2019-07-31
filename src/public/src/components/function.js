@@ -63,7 +63,9 @@ export default {
         addText(text, isBold=false) {
             this.textCount += 1
             this.toolTipText = d3.select('#'+this.id)
+                .data([text])
                 .append('text')
+                // .attr('type', 'checkbox')
                 .style('font-family', 'sans-serif')
                 .style('font-weight', (d,i) => {
                     if(isBold){
@@ -81,17 +83,32 @@ export default {
                         return this.textyOffset + this.textPadding * this.textCount + "px";
                     }
                 })  
-                .text(text)
+                .text((d) => {
+                    return d
+                })
+                .style('pointer-events', 'auto')
+                .on('click', (d) => {
+                    console.log(d)
+                })
         },
 
         render(data) {
             this.clear()
+            this.addText('Module: ', true)
+            this.addText(this.$store.selectedNode['id'])
             this.addText('Entry functions: ', true)
             let entry_functions = data['entry_functions'][0]
-            for(let i = 0; i < entry_functions.length; i += 1){
-                this.addText(entry_functions[i])
+            let callees = data['callees']
+            for(const [key, value] of Object.entries(callees[0])){
+                this.addText(key)
             }
-            // this.addText('Callees: ')
+            this.addText('Callees: ', true)
+            // let callees = data['callees']
+            for(const [key, value] of Object.entries(callees[0])){
+                let text = value + '  ->  ' + key
+                this.addText(text)
+            }
+
             this.addText('Callers: ', true)
             let callers = data['callers']
             for(const [key, value] of Object.entries(callers[0])){
