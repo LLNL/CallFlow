@@ -60,11 +60,17 @@ export default {
             this.textPadding  = 1.5* this.textSize
         },
 
-        addText(text) {
+        addText(text, isBold=false) {
             this.textCount += 1
             this.toolTipText = d3.select('#'+this.id)
                 .append('text')
                 .style('font-family', 'sans-serif')
+                .style('font-weight', (d,i) => {
+                    if(isBold){
+                        return '700'
+                    }
+                    return '400'
+                })
                 .style('font-size', this.textSize)
                 .attrs({
                     'class': 'functionContent',
@@ -74,20 +80,29 @@ export default {
                     'y': () => {
                         return this.textyOffset + this.textPadding * this.textCount + "px";
                     }
-                })
+                })  
                 .text(text)
         },
 
         render(data) {
             this.clear()
-            this.addText('Entry functions: ')
-            for(const [key, value] of Object.entries(data)){
-                console.log(value[0])
-                this.addText(value[0])
+            this.addText('Entry functions: ', true)
+            let entry_functions = data['entry_functions'][0]
+            for(let i = 0; i < entry_functions.length; i += 1){
+                this.addText(entry_functions[i])
             }
             // this.addText('Callees: ')
-            this.addText('Callers: ')
-            this.addText('Other Functions: ')
+            this.addText('Callers: ', true)
+            let callers = data['callers']
+            for(const [key, value] of Object.entries(callers[0])){
+                let text = value + '  ->  ' + key
+                this.addText(text)
+            }
+            this.addText('Other Functions: ', true)
+            let other_functions = data['other_functions'][0]
+            for(let i = 0; i < other_functions.length; i += 1){
+                this.addText(other_functions[i])
+            }
         },
 
         clear() {

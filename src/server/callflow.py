@@ -255,6 +255,7 @@ class CallFlow:
             elif(action['groupBy'] == 'name'):
                 path_type = 'path'
             nx = CallGraph(state1, path_type, True, action["groupBy"])
+            state1.g = nx.g
             return nx.g
 
         elif action_name == 'diff':

@@ -11,45 +11,59 @@
 ##############################################################################  
 import pandas as pd
 import json
-
+import networkx as nx
+from ast import literal_eval as make_tuple
 
 class FunctionList:
     def __init__(self, state, module):
         self.graph = state.graph
         self.df = state.df
         self.entire_df = state.entire_df
-        self.entry_funcs = state.entry_funcs[module]
-        self.other_funcs = state.other_funcs[module]
+        self.module_df = self.df.loc[self.df['module'] == module]
+        # self.entry_funcs = state.entry_funcs[module]
+        # self.other_funcs = state.other_funcs[module]
         self.result = self.run()
 
     # Convert "['<unknown procedure>']" to Array([<unknown procedure>])
     def sanitize(self, string):
-        print(string)
         # strip_1 = string.strip(['"'])
         strip_2 = string.strip(']')
         strip_3 = strip_2.strip('[')
         return strip_3.split(',')
+
+    def add_paths(self, path_name):
+        for idx, row in self.entire_df.iterrows():
+            if row.show_node:
+                path = row[path_name]
+                # TODO: Sometimes the path becomes a string. Find why it happens. 
+                # If path becomes a string.
+                if isinstance(path, str):
+                    path = make_tuple(row[path_name])
+                self.entire_g.add_path(path)
         
     def run(self):    
-        callers = []
+        callers = {}
         callees = []
+        entry_func = []
         ret = []
-        for idx, entry_func in enumerate(self.entry_funcs):
+
+        # Create a networkX graph.
+        self.entire_g = nx.DiGraph()
+        self.add_paths('path')
+
+        entry_func_df = self.module_df.loc[self.module_df['component_level'] == 2] 
+        entry_funcs = entry_func_df['name'].unique()
+        other_func_df = self.module_df.loc[self.module_df['component_level'] > 2]
+        other_funcs = other_func_df['name'].unique()
+        for idx, entry_func in enumerate(entry_funcs):
             print("Entry func: ", entry_func)
-            callees_array = self.df[self.df.name == entry_func]['callees'].unique() 
-            callers_array = self.df[self.df.name == entry_func]['callers'].unique()
 
-            for idx, callee in enumerate(callees_array):
-                callees.append(self.sanitize(callee))
-            for idx, caller in enumerate(callers_array):
-                callers.append(self.sanitize(caller))
-
-            ret.append({
-                "entry_function": entry_func,
-                "other_funcs": self.other_funcs,
-                "callees": callees,
-                "callers": callers
-            })
+            callers[entry_func] = list(self.entire_g.predecessors(entry_func))
+        ret.append({
+            "entry_functions": entry_funcs,
+            "other_functions": other_funcs,
+            "callers": callers
+        })
         ret_df = pd.DataFrame(ret)
         return ret_df.to_json(orient="columns")
 

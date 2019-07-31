@@ -14,10 +14,10 @@ class moduleHierarchy:
         self.result = self.run()
 
     def add_paths(self, df, path_name):
-        print(self.df.loc[self.df['name'] == 'pthread_create']['path'].tolist())
+        # print(self.df.loc[self.df['name'] == 'pthread_create']['path'].tolist())
         for idx, row in df.iterrows():
             path = row[path_name]
-            print(path)
+            # print(path)
             if isinstance(path, str):
                 path = make_tuple(row[path_name])
             self.hierarchy.add_path(path)      
@@ -78,7 +78,6 @@ class moduleHierarchy:
         source_target_data = []
         paths = []
         for idx, func in enumerate(self.hierarchy.nodes()):
-            print(func)
             if func == module:
                 paths.append({
                     "name": func,
