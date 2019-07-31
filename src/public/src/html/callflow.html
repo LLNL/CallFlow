@@ -165,7 +165,7 @@
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-show="selectedMode == 'Diff'">
+		<v-layout v-show="selectedMode == 'Diff' && selectedFormat == 'Callgraph'">
 			<splitpanes id="diffgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe'">
 				<splitpanes horizontal :splitpanes-size="30">
 					<span>
@@ -197,6 +197,21 @@
 				</splitpanes>
 			</splitpanes>
 		</v-layout>
+
+		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Diff'">
+				<splitpanes id="cct-dashboard">
+					<splitpanes horizontal :splitpanes-size="50">
+						<span>
+							<DiffCCT ref="DiffCCT1" id="diff-cct-1"/>
+						</span>
+					</splitpanes>
+					<splitpanes horizontal :splitpanes-size="50">
+						<span>
+							<DiffCCT ref="DiffCCT2" id="diff-cct-2"/>
+						</span>
+					</splitpanes>	
+				</splitpanes>
+			</v-layout>
 	</v-content>
 	
 	<v-footer id="footer" color="teal" class="white--text" app>
