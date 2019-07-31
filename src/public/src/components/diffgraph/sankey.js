@@ -200,8 +200,8 @@ export default function Sankey() {
     function computeNodeValues() {
         nodes.forEach(function(node) {
             node.value = Math.max(
-                d3.sum(node.sourceLinks, d => d['time (inc)']),
-                d3.sum(node.targetLinks, d => d['time (inc)']))
+                d3.sum(node.sourceLinks, value),
+                d3.sum(node.targetLinks, value));
         });
     }
 
@@ -232,6 +232,7 @@ export default function Sankey() {
         //     });
         //     remainingNodes = nextNodes;
         // }
+
 	    nodes.forEach(function(node){
 	        node.dx = nodeWidth
         })
@@ -265,7 +266,6 @@ export default function Sankey() {
 	        var level = node.level;
             let x = widthScale(level)
             node.x = x
-            console.log(node.level, node.x, node.dx)
         });
     }
 
@@ -293,7 +293,7 @@ export default function Sankey() {
                     divValue = referenceValue;
                 }
                 else{
-		            divValue = d3.sum(nodes, d => d['time (inc)']);
+		            divValue = d3.sum(nodes, value);
                 }
                 return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
             });
@@ -326,11 +326,7 @@ export default function Sankey() {
                         height = node.out
                     }
 
-                    // if (node.weight > node.in){
-                    //     height = node.weight
-                    // }
-
-		            node.height = height*minNodeScale*scale;
+                    node.height = height*minNodeScale*scale;
                 });
 
                 nodes.sort(function(a,b){

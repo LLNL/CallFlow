@@ -82,7 +82,7 @@ export default {
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
 		modes: [],
-		selectedMode: 'Single',
+		selectedMode: 'Diff',
 		selectedBinCount: 5,
 		selectedFunctionsInCCT: 30,
 		isCallgraphInitialized: false,
@@ -144,7 +144,7 @@ export default {
 		},
 
 		group(data) {
-			console.log("Data for", this.selectedFormat, ": ", data)
+			console.log("Data for", this.selectedFormat, "[" , this.selectedDataset, "]", ": ", data)
 			if (this.selectedData == 'Dataframe') {
 				this.$refs.CallgraphA.init(data)
 			} else if (this.selectedData == 'Graph') {
@@ -157,7 +157,7 @@ export default {
 		},
 
 		diff(data) {
-			console.log("Data for", this.selectedFormat, ": ", data)
+			console.log("Diff for", this.selectedFormat, "[", this.$store.datasets, "]", data)
 			if (this.selectedData == 'Dataframe') {
 				this.$refs.DiffgraphA.init(data)
 				this.$refs.DiffScatterplot.init()
@@ -166,9 +166,7 @@ export default {
 				this.$refs.DiffgraphB.init(data)
 				this.$refs.DiffFunction.init()
 				this.$refs.DiffIcicle.init()
-			}
-		
-			
+			}	
 		},
 
 		diff_cct(data) {
