@@ -239,17 +239,17 @@ class App():
             result = json_graph.node_link_data(g)
             emit('cct', result, json=True)
 
-        @sockets.on('split-rank', namespace='/')
+        @sockets.on('splitcaller', namespace='/')
         def split_rank(data):
             if self.debug:
                 self.print("[Request] Split callgraph by rank", data)
             
-            result = self.callflow.update({
-                "name": "split-rank",
-                "dataset1": data['dataset1'],
-                "ids": data['ids']
-            })
-            emit('split-rank', result, json=True)
+            # result = self.callflow.update({
+            #     "name": "split-caller",
+            #     "dataset1": data['dataset1'],
+            #     "split": data['split']
+            # })
+            emit('splitcaller', {}, json=True)
 
         @sockets.on('function', namespace='/')
         def function(data):

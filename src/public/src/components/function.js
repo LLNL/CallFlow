@@ -1,5 +1,6 @@
 import tpl from '../html/function.html'
 import * as  d3 from 'd3'
+import { timingSafeEqual } from 'crypto';
 
 export default {
     name: 'Function',
@@ -33,6 +34,10 @@ export default {
             console.log("Function data: ", data)
             this.render(data)
         },
+
+        splitcaller(data){
+            console.log("Split caller graph", data)      
+        }
     },
 
     mounted() {
@@ -88,20 +93,28 @@ export default {
                 })
                 .style('pointer-events', 'auto')
                 .on('click', (d) => {
-                    console.log(d)
+                    console.log("Selected split-caller", d)
+                    this.$socket.emit('splitcaller',{
+                        "name": "split-caller",
+                        "dataset1": this.$store.selectedDataset,
+                        "split": d
+                    })
                 })
         },
 
         render(data) {
             this.clear()
+
             this.addText('Module: ', true)
             this.addText(this.$store.selectedNode['id'])
+
             this.addText('Entry functions: ', true)
             let entry_functions = data['entry_functions'][0]
             let callees = data['callees']
             for(const [key, value] of Object.entries(callees[0])){
                 this.addText(key)
             }
+
             this.addText('Callees: ', true)
             // let callees = data['callees']
             for(const [key, value] of Object.entries(callees[0])){
