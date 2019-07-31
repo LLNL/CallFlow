@@ -64,7 +64,7 @@ class CallFlow:
         self.timer = Timer()
         self.states = self.pipeline(self.config.names)
 
-    def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
+    def pipeline(self, datasets, filterBy="Inclusive", filterPerc="0"):
         if self.reProcess:
             utils.debug("Processing with filter.")
         else:
@@ -152,7 +152,7 @@ class CallFlow:
         if write_graph:
             # dump the entire_graph as literal
             graph_literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
-            graph_filepath = dirname + '/' +     state_name + '/' + format_of_df + '_graph.json'
+            graph_filepath = dirname + '/' + state_name + '/' + format_of_df + '_graph.json'
             utils.debug('File path: {0}'.format(graph_filepath))
             if(format_of_df == 'entire'):
                 with open(graph_filepath, 'w') as graphFile:
@@ -178,7 +178,7 @@ class CallFlow:
     def read_gf(self, name):
         state = State()
         dirname = self.config.callflow_dir
-        df_filepath = dirname + '/' + name +  '/filter_df.csv'
+        df_filepath = dirname + '/' + name + '/filter_df.csv'
         entire_df_filepath = dirname + '/' + name + '/entire_df.csv'
         graph_filepath = dirname + '/' + name + '/filter_graph.json'
         entire_graph_filepath = dirname + '/' + name + '/entire_graph.json'   
@@ -238,11 +238,12 @@ class CallFlow:
         
         elif action_name == 'reset':
             datasets = [dataset1]
-            self.reUpdate = True
+            self.reProcess = True
             self.states = self.pipeline(datasets, action["filterBy"], action["filterPerc"])
-            self.reUpdate = False
+            self.reProcess  = False
+            self.states = self.pipeline(datasets)
             return {}
-        
+
         elif action_name == "group":
             group = groupBy(state1, action["groupBy"])
             self.states[dataset1].gdf = group.df

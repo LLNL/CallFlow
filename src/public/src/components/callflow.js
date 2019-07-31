@@ -38,7 +38,6 @@ export default {
 		Icicle,
 		Diffgraph,
 		DiffCCT,
-		// DiffCCT2,
 		DiffHistogram,
 		DiffScatterplot,
 		DiffFunction,
@@ -56,18 +55,18 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'CCT',
+		selectedFormat: 'Callgraph',
 		datasets: [],
 		selectedDataset: '',
 		selectedDataset2: '',
-		groupBy: ['Name', 'Module', 'File'],
+		groupBy: ['Module', 'File'],
 		selectedGroupBy: 'Module',
 		filterBy: ['Inclusive', 'Exclusive'],
 		filterRange: [0, 100],
 		selectedFilterBy: 'Inclusive',
 		selectedIncTime: 0,
 		filterPercRange: [0, 100],
-		selectedFilterPerc: 10,
+		selectedFilterPerc: 0,
 		colorBy: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
 		selectedColorBy: 'Inclusive',
 		colorMap: [],
@@ -264,6 +263,8 @@ export default {
 				this.selectedColorMax = this.$store.maxExcTime[this.selectedDataset]
 			}
 
+			this.$store.colorMin = this.selectedColorMin
+			this.$store.colorMax = this.selectedColorMax
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
 			this.$store.colorPoint = this.selectedColorPoint
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
@@ -271,6 +272,7 @@ export default {
 		},
 
 		reset() {
+			this.clear()
 			this.$socket.emit('reset', {
 				dataset: this.$store.selectedDataset,
 				filterBy: this.selectedFilterBy,
@@ -296,9 +298,12 @@ export default {
 		},
 
 		updateColorMinMax() {
-			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
+			this.$store.colorMin = this.selectedColorMinText*1000000
+			this.$store.colorMax = this.selectedColorMaxText*1000000
+			this.$store.color.setColorScale(this.$store.ColorMin, this.$store.ColorMax, this.selectedColorMap, this.selectedColorPoint)
 			if (this.selectedFormat == 'Callgraph') {
 				this.$refs.Callgraph.render()
+				this.$refs.Callgraph.updateColorMap()
 			} else if (this.selectedFormat == 'CCT') {
 				this.$refs.CCT.render()
 			}
@@ -350,22 +355,15 @@ export default {
 		},
 
 		updateFilterPerc() {
-			// this.$socket.emit('filter', {
-			// 	dataset: this.$store.selectedDataset,
-			// 	format: this.selectedFormat,
-			// 	filterBy: this.selectedFilterBy,
-			// 	filterPerc: this.selectedFilterPerc
-			// })
+			this.selectedIncTime = this.selectedFilterPerc*0.01*this.$store.maxIncTime[this.$store.selectedDataset] * 0.000001
+			setTimeout(() => {
+				this.reset()
+			}, 2000)
 		},
 
 		updateFilterIncTime() {
-			this.selectedFilterPerc = (this.selectedIncTime / this.maxIncTime) * 100
-			this.$socket.emit('filter', {
-				dataset: this.$store.selectedDataset,
-				format: this.selectedFormat,
-				filterBy: this.selectedFilterBy,
-				filterPerc: this.selectedFilterPerc
-			})
+			this.selectedFilterPerc = (this.selectedIncTime / this.$store.maxIncTime[this.selectedDataset]) * 100
+			this.reset()
 		},
 
 		updateBinCount() {

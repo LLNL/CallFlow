@@ -29,9 +29,9 @@ export default {
   padding-top: 0px;
 }
 
-#frequency-slider {
+.vue-slider {
   display: inline-block;
-  margin: 5px;
+  left: 30px;
 }
 
 .node circle {

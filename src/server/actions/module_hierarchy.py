@@ -14,8 +14,10 @@ class moduleHierarchy:
         self.result = self.run()
 
     def add_paths(self, df, path_name):
+        print(self.df.loc[self.df['name'] == 'pthread_create']['path'].tolist())
         for idx, row in df.iterrows():
             path = row[path_name]
+            print(path)
             if isinstance(path, str):
                 path = make_tuple(row[path_name])
             self.hierarchy.add_path(path)      
@@ -53,8 +55,8 @@ class moduleHierarchy:
         time_inc_mapping = self.generic_map(self.hierarchy.nodes(), 'time')
         nx.set_node_attributes(self.hierarchy, name='time', values=time_mapping)
 
-        imbalance_perc_mapping = self.generic_map(self.hierarchy.nodes(), 'imbalance_perc')
-        nx.set_node_attributes(self.hierarchy, name='imbalance_perc', values=imbalance_perc_mapping)
+        # imbalance_perc_mapping = self.generic_map(self.hierarchy.nodes(), 'imbalance_perc')
+        # nx.set_node_attributes(self.hierarchy, name='imbalance_perc', values=imbalance_perc_mapping)
 
         component_path_mapping = self.generic_map(self.hierarchy.nodes(), 'component_path')
         nx.set_node_attributes(self.hierarchy, name='component_path', values=component_path_mapping)
@@ -76,27 +78,31 @@ class moduleHierarchy:
         source_target_data = []
         paths = []
         for idx, func in enumerate(self.hierarchy.nodes()):
+            print(func)
             if func == module:
                 paths.append({
                     "name": func,
                     "path": [module],
                     "time (inc)": df.loc[df['_module'] == module]['time (inc)'].max(),
                     "time": df.loc[df['_module'] == module]['time'].max(),
-                    "imbalance_perc": df.loc[df['_module'] == module]['imbalance_perc'].max(),
+                    # "imbalance_perc": df.loc[df['_module'] == module]['imbalance_perc'].max(),
                     "level": 1
                 })
             else:
-                paths.append({
-                    "name": func,
-                    "path": list(df.loc[df['name'] == func]['component_path'].tolist()[0]),
-                    "time (inc)": df.loc[df['name'] == func]['time (inc)'].mean(),
-                    "time": df.loc[df['name'] == func]['time'].mean(),
-                    "imbalance_perc": df.loc[df['name'] == func]['imbalance_perc'].max(),
-                    "level": df.loc[df['name'] == func]['component_level'].max(),
-                })
+                # There can be many functions with the same name but get called again and again. 
+                component_paths_df = df.loc[df['name'] == func]['component_path']
+                component_paths_array = component_paths_df.tolist()
+                for idx, component_path in enumerate(component_paths_array):
+                    paths.append({
+                        "name": func,
+                        "path": list(component_path),
+                        "time (inc)": df.loc[df['name'] == func]['time (inc)'].mean(),
+                        "time": df.loc[df['name'] == func]['time'].mean(),
+                        # "imbalance_perc": df.loc[df['name'] == func]['imbalance_perc'].max(),
+                        "level": df.loc[df['name'] == func]['component_level'].max(),
+                    })
         paths_df = pd.DataFrame(paths)
 
-        print(paths_df)
         return paths_df.to_json(orient="columns")
 
         

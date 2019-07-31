@@ -77,11 +77,12 @@ export default {
                     'width': this.width,
                     'height': this.height,
                 })
-            this.render(this.$store.selectedDataset)
             this.$refs.ColorMap.init()
+            this.render()
         },
 
-        render(dataset) {
+        render() {
+            this.$refs.ColorMap.init()
             // Create a new directed graph
             let g = new dagreD3.graphlib.Graph().setGraph({});
 
@@ -155,6 +156,7 @@ export default {
 
         clear() {
             // d3.select('#' + this.id).remove()
+            d3.selectAll('.output').remove()
         },
 
         update(data) {

@@ -20,7 +20,7 @@ export default {
             bottom: 30,
             right: 250,
         },
-        id: ''
+        id: 'colormap'
     }),
 
     watch: {
@@ -28,7 +28,6 @@ export default {
     },
 
     mounted() {
-        this.id = 'colormap-' + this._uid
     },
 
     methods: {
@@ -45,21 +44,15 @@ export default {
             this.containerHeight = this.$parent.height
 
             this.scaleG = d3.select('#' + this.parentID)
-                .append('g')
-                .attrs({
-                    'id': 'colormap',
-                })
-
             this.render()
-            this.drawText()
         },
 
         render() {
+            this.color = this.$store.color
             if (this.color.option == "Module") {
 
             } else {
                 let splits = this.$store.colorPoint
-                console.log(splits)
                 let color = this.color.getScale(this.color.option)
 
                 for (let i = 0; i < splits; i += 1) {
@@ -76,10 +69,11 @@ export default {
                 }
 
             }
+
+            this.drawText()
         },
 
         drawText() {
-            console.log(this.colorMin, this.colorMax)
             // draw the element
             this.scaleG.append("text")
                 .style("fill", "black")
@@ -108,6 +102,7 @@ export default {
         clear() {
             d3.selectAll('.colormap-text').remove()
             d3.selectAll('.colormap-rect').remove()
+            d3.selectAll('#colormap').remove()
         },
     }
 }

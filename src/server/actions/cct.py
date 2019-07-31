@@ -14,6 +14,7 @@ import pandas as pd
 import networkx as nx
 from ast import literal_eval as make_tuple
 
+
 class CCT:
     def __init__(self, state, functionsInCCT):
         number_of_nodes = len(state.entire_df['name'].unique())
@@ -35,8 +36,8 @@ class CCT:
         module_mapping = self.node_map(self.g.nodes(), 'module')
         nx.set_node_attributes(self.g, name='module', values=module_mapping)
 
-        imbalance_perc_mapping = self.node_map(self.g.nodes(), 'imbalance_perc')
-        nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)
+        # imbalance_perc_mapping = self.node_map(self.g.nodes(), 'imbalance_perc')
+        # nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)
 
     def add_edge_attributes(self):
         num_of_calls_mapping = self.edge_map(self.g.edges(), 'component_path')

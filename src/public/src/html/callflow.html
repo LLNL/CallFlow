@@ -3,7 +3,6 @@
 		<v-toolbar-side-icon @click.stop="left = !left">
 		</v-toolbar-side-icon>
 		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
-		<v-spacer></v-spacer>
 		<v-flex xs2 class="ma-2">
 			<v-select label="Dataset 1" :items="datasets" v-model="selectedDataset" :menu-props="{ maxHeight: '400' }"
 				box v-on:change="updateDataset()">
@@ -19,11 +18,12 @@
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
 			</v-select>
 		</v-flex>
-		<v-flex xs2 class="ma-2" v-show="selectedFormat == 'Callgraph'">
+		<v-flex xs2 class="ma-2">
 			<v-select label="Data" :items="datas" v-model="selectedData" :menu-props="{ maxHeight: '400' }" box
 				v-on:change="updateData()">
 			</v-select>
 		</v-flex>
+		<v-spacer></v-spacer>
 		<v-flex xs2>
 			<v-select label="Analysis Mode" :items="modes" v-model="selectedMode" box :menu-props="{ maxHeight: '400' }"
 				v-on:change="updateMode()"></v-select>
@@ -65,14 +65,15 @@
 						v-on:change="updateColorMinMax()">
 					</v-text-field>
 				</v-flex>
-				<v-flex xs12 class="ma-1">
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
 					<v-select label="Group By" :items="groupBy" v-model="selectedGroupBy"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateGroupBy()">
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
 					<v-select label="Group Mode" :items="groupModes" v-model="selectedGroupMode"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateGroupByMode()">
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateGroupByMode()" 
+						v-show="selectedFormat == 'Callgraph'">
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
@@ -92,13 +93,13 @@
 						</template>
 					</vue-slider>
 				</v-flex>
-				<v-flex xs12 class="ma-1">
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
 					<v-text-field label="Number of bins in Histogram" class="mt-0" type="number"
 						v-model="selectedBinCount" :menu-props="{ maxHeight: '200' }" persistent-hint
 						v-on:change="updateBinCount()">
 					</v-text-field>
 				</v-flex>
-				<v-flex xs12 class="ma-1">
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
 					<v-select label="Scatter mode" :items="scatterMode" v-model="selectedScatterMode"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateScatterMode()">
 					</v-select>
@@ -156,7 +157,7 @@
 
 		</v-layout>
 
-		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Single'">
+		<v-layout v-show="selectedFormat == 'CCT'">
 			<splitpanes id="cct-dashboard">
 				<span>
 					<CCT ref="CCT" />
@@ -164,7 +165,7 @@
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-show="selectedMode == 'Diff' && selectedFormat == 'Callgraph'">
+		<v-layout v-show="selectedMode == 'Diff'">
 			<splitpanes id="diffgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe'">
 				<splitpanes horizontal :splitpanes-size="30">
 					<span>
@@ -196,23 +197,6 @@
 				</splitpanes>
 			</splitpanes>
 		</v-layout>
-
-		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Diff'">
-			<splitpanes id="cct-dashboard">
-				<splitpanes horizontal :splitpanes-size="50">
-					<span>
-						<DiffCCT ref="DiffCCT1" id="diff-cct-1"/>
-					</span>
-				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="50">
-					<span>
-						<DiffCCT ref="DiffCCT2" id="diff-cct-2"/>
-					</span>
-				</splitpanes>	
-			</splitpanes>
-		</v-layout>
-
-
 	</v-content>
 	
 	<v-footer id="footer" color="teal" class="white--text" app>

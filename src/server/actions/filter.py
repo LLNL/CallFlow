@@ -48,11 +48,11 @@ class Filter:
         t = time.time()
         if self.filterBy == "Inclusive":
             max_inclusive_time = utils.getMaxIncTime_from_gf(self.gf)
-            filter_gf = self.gf.filter(lambda x: True if(x['time (inc)'] > self.filterPercInDecimals*max_inclusive_time) else False)
+            filter_gf = self.gf.filter(lambda x: True if(x['time (inc)'] >= self.filterPercInDecimals*max_inclusive_time) else False)
         elif filterBy == "Exclusive":
             max_exclusive_time = utils.getMaxExcTime_from_gf(self.gf)
             log.info('[Filter] By Exclusive time = {0})'.format(max_exclusive_time))
-            filter_gf = self.gf.filter(lambda x: True if (x['time'] > self.filterPercInDecimals*max_exclusive_time) else False)
+            filter_gf = self.gf.filter(lambda x: True if (x['time'] >= self.filterPercInDecimals*max_exclusive_time) else False)
         else:
             log.warn("Not filtering.... Can take forever. Thou were warned")
             filter_gf = self.gf

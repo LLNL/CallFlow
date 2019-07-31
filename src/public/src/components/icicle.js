@@ -59,6 +59,7 @@ export default {
 	sockets: {
 		hierarchy(data) {
 			data = JSON.parse(data)	
+			console.log("Module hierarchy: ", data)
 			this.update_from_df(data)
 		},
 		level_change(data){
@@ -148,7 +149,7 @@ export default {
 					this.path_hierarchy[i].push(path[i])
 					this.path_hierarchy[i].push(inc_time[i])
 					this.path_hierarchy[i].push(exclusive[i])
-					this.path_hierarchy[i].push(imbalance_perc[i])
+					// this.path_hierarchy[i].push(imbalance_perc[i])
 					this.path_hierarchy[i].push(name[i])
 					// path_hierarchy_format[i].push(exit[i]);
 					// path_hierarchy_format[i].push(component_path[i]);
@@ -171,7 +172,7 @@ export default {
 				const sequence = csv[i][0];
 				const inc_time = csv[i][1];
 				const exclusive = csv[i][2];
-				const imbalance_perc = csv[i][3];
+				// const imbalance_perc = csv[i][3];
 				const name = csv[i][4]
 				// const exit = csv[i][4];
 				// const component_path = csv[i][5];
@@ -207,7 +208,7 @@ export default {
 							module: nodeName,
 							value: inc_time,
 							exclusive: exclusive,
-							imbalance_perc,
+							// imbalance_perc,
 							length: parts.length,
 							count: j,
 							// exit,

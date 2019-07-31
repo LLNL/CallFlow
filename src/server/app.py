@@ -130,8 +130,7 @@ class App():
                 "filterPerc": filterPerc,
                 "dataset1": dataset,
             }   
-            g = self.callflow.update(obj)
-            result = json_graph.node_link_data(g)
+            result = self.callflow.update(obj)
             emit('reset', result, json=True)
 
         @sockets.on('group', namespace='/')

@@ -100,6 +100,14 @@ class groupBy:
             component_path.append(path[-1])
         component_path.insert(0, component_module)
         return tuple(component_path)
+
+    def find_all_paths(self, df):
+        ret = []
+        unique_paths = df['path'].unique()
+        for idx, path in enumerate(unique_paths):
+            # print(df.loc[df['path'] == path]['name'])
+            ret.append(df.loc[df['path'] == path])
+        return (ret)
             
     def run(self):
         group_path = {}
@@ -161,55 +169,58 @@ class groupBy:
                     
                     for idx, parent in enumerate(parents):
                         t = self.state.lookup_with_name(parent.callpath[-1])
-                    
-                        if s.empty:
-                            print("Not considering the Source function {0} [{1}]".format(parent, s['module']))
-                        elif t.empty:
-                            print("Not considering the Target function {0} [{1}]".format(root, t['path']))
-                        elif not s.empty and not t.empty:
-                            snode = s.node.tolist()[0]
-                            tnode = t.node.tolist()[0]
+                        t_all = self.find_all_paths(t)
 
-                            spath = root.callpath
-                            tpath = parent.callpath
+                        for idx, t in enumerate(t_all):
+                            # print(t.node)
+                            if s.empty:
+                                print("Not considering the Source function {0} [{1}]".format(parent, s['module']))
+                            elif t.empty:
+                                print("Not considering the Target function {0} [{1}]".format(root, t['path']))
+                            elif not s.empty and not t.empty:
+                                snode = s.node.tolist()[0]
+                                tnode = t.node.tolist()[0]
 
-                            tmodule = t[self.group_by].tolist()[0]
+                                spath = root.callpath
+                                tpath = parent.callpath
 
-                            temp_group_path_results = self.create_group_path(spath)               
-                            group_path[snode] = temp_group_path_results[0]
-                            change_name[snode] = temp_group_path_results[1]
+                                tmodule = t[self.group_by].tolist()[0]
+
+                                temp_group_path_results = self.create_group_path(spath)               
+                                group_path[snode] = temp_group_path_results[0]
+                                change_name[snode] = temp_group_path_results[1]
                             
-                            component_path[snode] = self.create_component_path(spath, group_path[snode])
-                            component_level[snode] = len(component_path[snode])
-                            module[snode] = component_path[snode][0]
+                                component_path[snode] = self.create_component_path(spath, group_path[snode])
+                                component_level[snode] = len(component_path[snode])
+                                module[snode] = component_path[snode][0]
                             
-                            if module[snode] not in module_id_map:
-                                module_count += 1 
-                                module_id_map[module[snode]] = module_count
-                                module_idx[snode] = module_id_map[module[snode]]
-                            else:
-                                module_idx[snode] = module_id_map[module[snode]]
+                                if module[snode] not in module_id_map:
+                                    module_count += 1 
+                                    module_id_map[module[snode]] = module_count
+                                    module_idx[snode] = module_id_map[module[snode]]
+                                else:
+                                    module_idx[snode] = module_id_map[module[snode]]
 
-                            if component_level[snode] == 2:
-                                entry_func[snode] = True
-                                node_name[snode] = component_path[snode][0]
-                                show_node[snode] = True
-                            else:
-                                entry_func[snode] = False
-                                node_name[snode] = "Unknown(NA)"
-                                show_node[snode] = False
+                                if component_level[snode] == 2:
+                                    entry_func[snode] = True
+                                    node_name[snode] = component_path[snode][0]
+                                    show_node[snode] = True
+                                else:
+                                    entry_func[snode] = False
+                                    node_name[snode] = "Unknown(NA)"
+                                    show_node[snode] = False
                             
-                    # print('Node', snode)        
-                    # print("entry function:", entry_func[snode])
-                    # print('Change name:', change_name[snode])
-                    # print("node path: ", spath)                
-                    # print("group path: ", group_path[snode])
-                    # print("component path: ", component_path[snode])
-                    # print("component level: ", component_level[snode])
-                    # print("Show node: ", show_node[snode])
-                    # print("name: ", node_name[snode])
-                    # print('Module: ', module[snode])
-                    # print("=================================")
+                        # print('Node', snode)        
+                        # print("entry function:", entry_func[snode])
+                        # print('Change name:', change_name[snode])
+                        # print("node path: ", spath)                
+                        # print("group path: ", group_path[snode])
+                        # print("component path: ", component_path[snode])
+                        # print("component level: ", component_level[snode])
+                        # print("Show node: ", show_node[snode])
+                        # print("name: ", node_name[snode])
+                        # print('Module: ', module[snode])
+                        # print("=================================")
                 
             except StopIteration:
                 pass

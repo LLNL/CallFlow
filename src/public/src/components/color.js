@@ -422,7 +422,12 @@ export default class Color {
                 return this.incColorScale(node["time (inc)"])
             }
         } else if (this.option == "Exclusive") {
-            return this.excColorScale(node["time"])
+            console.log(node.exclusive)
+            if (node['time'] == undefined) {
+                return this.excColorScale(node["time"])
+            } else {
+                return this.excColorScale(node.exclusive)
+            }
         } else if (this.option == "nRange") {
             return this.nRangeColorScale(node.nRange)
         } else if (this.option == "Diff") {

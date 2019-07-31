@@ -85,6 +85,7 @@ export default {
 				// .call(this.zoom)
 
 			this.data = data
+			this.clear()
 			this.render()
 		},
 
@@ -103,7 +104,6 @@ export default {
 			this.d3sankey = this.initSankey(this.graph)
 			console.log("Layout Calculation.")
 			this.postProcess(this.data.nodes, this.data.links)
-			console.log(this.data)
 			console.log("Post-processing done.")
 
 			this.$refs.Nodes.init(this.graph, this.view)
@@ -118,6 +118,11 @@ export default {
 		updateMiniHistogram() {
 			this.$refs.MiniHistograms.clear()
 			this.$refs.MiniHistograms.init(this.graph, this.view)
+		},
+
+		updateColorMap(){
+			this.$refs.ColorMap.clear()
+			// this.$refs.ColorMap.init()
 		},
 
 		//Sankey computation

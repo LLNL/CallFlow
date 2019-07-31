@@ -9,6 +9,7 @@ class State(object):
         self.roots = None
         self.gf = None
         self.df = None
+        self.entire_df = None
         self.graph = None
         self.entire_graph = None
         self.entire_g = None
