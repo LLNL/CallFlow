@@ -221,7 +221,6 @@ export default function Sankey() {
     // nodes with no outgoing links are assigned the maximum breadth.
     function computeNodeBreadths() {
         let remainingNodes = findroot()
-        console.log(remainingNodes)
         let nextNodes = [];
         let level = 0
         while (remainingNodes.length) {
@@ -268,7 +267,7 @@ export default function Sankey() {
         nodes.forEach(function(node) {
 	        let level = node.level
             let x = widthScale(level)
-            console.log(node.name, x, node.level)
+            // console.log(node.name, x, node.level)
 	        node.x = x
         });
     }
@@ -299,7 +298,6 @@ export default function Sankey() {
                 else{
 		            divValue = d3.sum(nodes, d => d['time (inc)']);
                 }
-                console.log(divValue)
                 return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
             });
 
@@ -348,7 +346,6 @@ export default function Sankey() {
                 if(link.source.weight < weight){
                     weight = link.source.minLinkVal
                 }
-                console.log(weight, scale)
                 link.height = weight*scale*minNodeScale;
             });
         }

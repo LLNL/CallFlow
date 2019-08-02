@@ -109,7 +109,12 @@
 						v-model="selectedFunctionsInCCT" :menu-props="{ maxHeight: '200' }" persistent-hint
 						v-on:change="updateFunctionsInCCT()">
 					</v-text-field>
-					</v-flex>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat == 'Callgraph' && selectedMode == 'Diff'">
+					<v-select label="Align node to" :items="diffNodeAlignment" v-model="selectedDiffNodeAlignment"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateDiffNodeAlignment()">
+					</v-select>
+				</v-flex>
 			</v-layout>
 		</v-card>
 	</v-navigation-drawer>
@@ -204,10 +209,7 @@
 						<span>
 							<DiffCCT ref="DiffCCT1" id="diff-cct-1"/>
 						</span>
-					</splitpanes>
-					<splitpanes horizontal :splitpanes-size="50">
-						<span>
-							<DiffCCT ref="DiffCCT2" id="diff-cct-2"/>
+			a
 						</span>
 					</splitpanes>	
 				</splitpanes>

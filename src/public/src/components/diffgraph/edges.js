@@ -26,9 +26,9 @@ export default {
     },
 
     methods: {
-        init(graph, view) {
+        init(graph) {
+            console.log(graph)
             this.edges = d3.select('#' + this.id)
-            this.view = view
 
             let links = graph.links.filter( (link) => {
                 return link.type != "callback"
@@ -79,19 +79,17 @@ export default {
                 .style('stroke', (d) => {
                     // return "url(#" + getGradID(d) + ")";
                 })
-                .style('stroke-opacity', '0.4');
-            // .on("mouseover", function() {
-            // 	// d3.select(this).style("stroke-opacity", "0.7")
-            // 	d3.select(this).style("fill-opacity", "0.7")
-
-            // } )
-            // .on("mouseout", function() {
-            // 	// d3.select(this).style("stroke-opacity", "0.4")
-            // 	d3.select(this).style("fill-opacity", "0.4")
-            // } )
-            // .sort(function (a, b) {
-            //     return b.dy - a.dy;
-            // });
+                .style('stroke-opacity', '0.4') 
+                .on("mouseover", function() {
+                	d3.select(this).style("stroke-opacity", "0.7")
+                    d3.select(this).style("fill-opacity", "0.7")
+                })
+                .on("mouseout", function() {
+                	d3.select(this).style("fill-opacity", "0.4")
+                })
+               .sort(function (a, b) {
+                    return b.dy - a.dy;
+                });
 
             this.edges.selectAll('.diff-edge')
                 .data(links)
@@ -128,6 +126,8 @@ export default {
                         By1 = d.target.y + d.ty + d.height + this.$parent.ySpacing;
 
                     const rightMoveDown = By1 - Ty1
+                    console.log(d)
+                    // console.log(Tx0, Ty0, Tx1, Tx2, Tx3, Ty0, Ty1, Bx0, Bx2, Bx3, By1, By0)
                     return `M${Tx0},${Ty0
                         }C${Tx2},${Ty0
                         } ${Tx3},${Ty1

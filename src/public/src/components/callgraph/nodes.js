@@ -143,20 +143,6 @@ export default {
                 });
         },
 
-        quantileLines(rect, data) {
-            for (let i = 0; i < data.nrange.length; i += 1) {
-                let nrange = data.nrange[i]
-                this.nodes.append('line')
-                    .attr('id', 'line-' + i)
-                    .style("stroke", "black")
-                    .style("stroke-width", 2)
-                    .attr("x1", data.x)
-                    .attr("y1", data.y * (nrange / data.weight))
-                    .attr("x2", data.x + this.nodeWidth)
-                    .attr("y2", data.y * (nrange / data.weight))
-            }
-        },
-
         path(node) {
             node.append('path')
                 .attr('d', (d) => {

@@ -1,6 +1,7 @@
 import tpl from '../../html/diffgraph/nodes.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
+import EventHandler from '../../EventHandler'
 
 export default {
     template: tpl,
@@ -16,25 +17,33 @@ export default {
         transitionDuration: 1000,
         minHeightForText: 15,
         textTruncForNode: 25,
-        id: ''
+        id: '',
+        graph: null,
     }),
     mounted() {
         this.id = 'diff-nodes-' + this._uid
+
+        let self = this
+        EventHandler.$on('update_diff_node_alignment', function () {
+            self.clearQuantileLines()
+            self.quantileLines()
+        })
     },
- 
+
     methods: {
-        init(graph, view) {
+        init(graph) {
             this.graph = graph
             this.nodes = d3.select('#' + this.id)
 
             // https://observablehq.com/@geekplux/dragable-d3-sankey-diagram
             this.drag = d3.drag()
-                .subject((d) =>  { return d; })
-                .on("start", function() { 
+                .subject((d) => {
+                    return d;
+                })
+                .on("start", function () {
                     this.parentNode.appendChild(this)
                 })
                 .on("drag", (d) => {
-                    console.log(d)
                     d3.select(`node_${d.mod_index[0]}`).attr("transform",
                         "translate(" + (
                             d.x = Math.max(0, Math.min(this.$parent.width - d.dx, d3.event.x))
@@ -45,7 +54,7 @@ export default {
                     // link.attr("d", path);
                 })
 
-            const node = this.nodes.selectAll('.diff-node')
+            this.nodesSVG = this.nodes.selectAll('.diff-node')
                 .data(this.graph.nodes)
                 .enter().append('g')
                 .attr('class', (d) => {
@@ -56,8 +65,7 @@ export default {
                 .attr('transform', (d) => {
                     return `translate(${d.x},${d.y })`
                 })
-                // .call(this.drag);
-           
+            // .call(this.drag);
 
             this.nodes.selectAll('.diff-node')
                 .data(this.graph.nodes)
@@ -66,16 +74,16 @@ export default {
                 .attr('opacity', 1)
                 .attr('transform', d => `translate(${d.x},${d.y + this.$parent.ySpacing})`)
 
-            this.rectangle(node)
-            this.path(node)
-            this.text(node)
-            this.quantileLines(node)
+            this.rectangle()
+            this.path()
+            this.text()
+            this.quantileLines()
             this.$refs.ToolTip.init(this.$parent.id)
         },
 
-        rectangle(node) {
+        rectangle() {
             let self = this
-            const rect = node.append('rect')
+            this.nodesSVG.append('rect')
                 .attr('height', (d) => {
                     this.currentNodeLevel[d.mod_index] = 0;
                     this.nodeHeights[d.n_index] = d.height;
@@ -98,7 +106,7 @@ export default {
                     return 1
                 })
                 .on('mouseover', function (d) {
-                    self.$refs.ToolTip.render(self.graph, d)  
+                    self.$refs.ToolTip.render(self.graph, d)
                 })
                 .on('mouseout', function (d) {
                     self.$refs.ToolTip.clear()
@@ -106,10 +114,9 @@ export default {
                 .on('click', (d) => {
                     this.$store.selectedNode = d
                     let selectedModule = ''
-                    if(d.id.indexOf(':') >  -1 ){
+                    if (d.id.indexOf(':') > -1) {
                         selectedModule = d.id.split(':')[0]
-                    }
-                    else{
+                    } else {
                         selectedModule = d.id
                     }
                     this.$socket.emit('diff_scatterplot', {
@@ -142,25 +149,36 @@ export default {
                 });
         },
 
-        quantileLines(node) {
-            console.log(node)
-            let colors = {
-                'calc-pi': '#f00',
-                'calc-pi-half': '#0f0'
-            }
+        clearQuantileLines() {
+            d3.selectAll('.quantileLines').remove()
+        },
+
+        quantileLines() {
+            let mode = this.$store.selectedDiffNodeAlignment
             let count = 0
-            for(let i = 0; i < this.graph.nodes.length; i++){
-                let node_data = this.graph.nodes[i]
-                console.log(node_data)
+
+            for (let i = 0; i < this.$store.graph.nodes.length; i++) {
+                let node_data = this.$store.graph.nodes[i]
                 let props = JSON.parse(JSON.stringify(node_data['props']))
-               
+
                 for (const [dataset, val] of Object.entries(props)) {
                     let x1 = node_data.x - this.nodeWidth
                     let x2 = node_data.x
-                    let y1 = (node_data.height - val*node_data.height)*0.5
+                    let y1 = 0
+                    let y2 = 0
+                    if (mode == 'Middle') {
+                        y1 = (node_data.height - val * node_data.height) * 0.5
+                        y2 = node_data.height - y1
+                    } else if (mode == 'Top') {
+                        let gap = 5
+                        y1 = 0 //+ count * gap
+                        count += 1
+                        y2 = node_data.height * val
+                    }
                     d3.select('#diff-node_' + node_data.xid).append('line')
+                        .attr('class', 'quantileLines')
                         .attr('id', 'line-1-' + dataset + '-' + node_data.xid)
-                        .style("stroke", colors[dataset])
+                        .style("stroke", this.$store.color.datasetColor[dataset])
                         .style("stroke-width", 3)
                         .attr("x1", 0)
                         .attr("y1", y1)
@@ -168,21 +186,20 @@ export default {
                         .attr("y2", y1)
 
                     d3.select('#diff-node_' + node_data.xid).append('line')
+                        .attr('class', 'quantileLines')
                         .attr('id', 'line-2-' + dataset + '-' + node_data.xid)
-                        .style("stroke", colors[dataset])
+                        .style("stroke", this.$store.color.datasetColor[dataset])
                         .style("stroke-width", 3)
                         .attr("x1", 0)
-                        .attr("y1", node_data.height - y1)
+                        .attr("y1", y2)
                         .attr("x2", this.nodeWidth)
-                        .attr("y2", node_data.height - y1)
+                        .attr("y2", y2)
                 }
-                count += 1
             }
-            
         },
 
-        path(node) {
-            node.append('path')
+        path() {
+            this.nodesSVG.append('path')
                 .attr('d', (d) => {
                     return `m${0} ${0
                         }h ${this.nodeWidth
@@ -227,8 +244,8 @@ export default {
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
-        text(node) {
-            node.append('text')
+        text() {
+            this.nodesSVG.append('text')
                 .attr('dy', '0.35em')
                 .attr('transform', 'rotate(90)')
                 .attr('x', '5')

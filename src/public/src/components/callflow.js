@@ -4,6 +4,7 @@ import 'vue-slider-component/theme/antd.css'
 import Color from './color';
 import Splitpanes from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
+import EventHandler from '../EventHandler'
 
 // Template import
 import tpl from '../html/callflow.html'
@@ -86,6 +87,8 @@ export default {
 		selectedMode: 'Diff',
 		selectedBinCount: 5,
 		selectedFunctionsInCCT: 30,
+		selectedDiffNodeAlignment: 'Middle',
+		diffNodeAlignment: ['Middle', 'Top'],
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
 		datas: ['Dataframe', 'Graph'],
@@ -136,6 +139,7 @@ export default {
 			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedDataset] * 0.000001) / 100).toFixed(3)
 			this.$store.selectedScatterMode = this.selectedScatterMode
 			this.$store.selectedData = this.selectedData
+			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment
 			this.init()
 		},
 
@@ -158,7 +162,7 @@ export default {
 		},
 
 		diff_group(data) {
-			console.log("Data for", this.selectedFormat, ": ", data)
+			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
 			if (this.selectedData == 'Dataframe') {
 				this.$refs.DiffgraphA.init(data)
 				this.$refs.DiffScatterplot.init()
@@ -262,6 +266,12 @@ export default {
 
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
 			this.$store.colorPoint = this.selectedColorPoint
+			console.log(this.$store.datasets)
+			this.$store.color.datasetColor = {}
+			for(let i = 0; i < this.$store.datasets.length; i += 1){
+				this.$store.color.datasetColor[this.$store.datasets[i]] = this.$store.color.getCatColor(i)
+			}
+			console.log(this.$store.color.datasetColor)
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 		},
@@ -406,6 +416,13 @@ export default {
 			this.$store.selectedData = this.selectedData
 			this.clear()
 			this.init()
-		}
+		},
+
+		updateDiffNodeAlignment(){
+			console.log('Alignment mode: ', this.selectedDiffNodeAlignment)
+			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment
+			EventHandler.$emit('update_diff_node_alignment')
+		},
+
 	}
 }

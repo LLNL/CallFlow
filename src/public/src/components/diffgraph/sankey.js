@@ -15,16 +15,18 @@ import { scalePow } from 'd3-scale';
 
 
 export default function Sankey() {
-    var sankey = {},
-        nodeWidth = 24,
-        nodePadding = 8,
-        size = [1, 1],
-        nodes = [],
-        links = [],
-        levelSpacing = 10,
-        referenceValue = 0,
-        minNodeScale = 0,
-        maxLevel = 1;
+    let sankey = {}
+    let nodeWidth = 24
+    let nodePadding = 8
+    let size = [1, 1]
+    let nodes = []
+    let links = []
+    let levelSpacing = 10
+    let referenceValue = 0
+    let minNodeScale = 0
+    let maxLevel = 1
+    let datasets = []
+
     
     var widthScale;
     var minDistanceBetweenNode = 0;
@@ -70,6 +72,12 @@ export default function Sankey() {
         maxLevel = _
         return sankey
     };
+
+    sankey.datasets = function(_){
+        if(!arguments.length) return datasets
+        datasets = _
+        return sankey
+    }
 
     sankey.layout = function(iterations) {
         computeNodeLinks();
@@ -221,7 +229,6 @@ export default function Sankey() {
     // nodes with no outgoing links are assigned the maximum breadth.
     function computeNodeBreadths() {
         let remainingNodes = findroot()
-        console.log(remainingNodes)
         let nextNodes = [];
         let level = 0
         while (remainingNodes.length) {
@@ -268,7 +275,7 @@ export default function Sankey() {
         nodes.forEach(function(node) {
 	        let level = node.level
             let x = widthScale(level)
-            console.log(node.name, x, node.level, node.height)
+            // console.log(node.name, x, node.level, node.height)
 	        node.x = x
         });
     }
@@ -299,7 +306,6 @@ export default function Sankey() {
                 else{
 		            divValue = d3.sum(nodes, d => d['time (inc)']);
                 }
-                console.log(divValue)
                 return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
             });
 
@@ -344,11 +350,24 @@ export default function Sankey() {
             });
 
             links.forEach(function(link) {
-                let weight = link.weight
+                let weight = 0
+                let source_max_weight = 0
+                let target_max_weight = 0
+                if(datasets.length == 0){
+                    weight = link.weight
+                }
+
+                for(let i = 0; i < datasets.length; i += 1){
+                    console.log(link['source'][datasets[i]] )
+                    let source_link = link['source'][datasets[i]]
+                    let target_link = link['target'][datasets[i]]
+                    source_max_weight = Math.max(source_max_weight, source_link['time (inc)'])
+                    target_max_weight = Math.max(target_max_weight, target_link['time (inc)'])
+                }
+                weight = Math.min(source_max_weight, target_max_weight)
                 if(link.source.weight < weight){
                     weight = link.source.minLinkVal
                 }
-                console.log(weight, scale)
                 link.height = weight*scale*minNodeScale;
             });
         }

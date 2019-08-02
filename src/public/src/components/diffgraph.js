@@ -2,6 +2,7 @@ import tpl from '../html/diffgraph.html'
 import preprocess from './diffgraph/preprocess'
 import Sankey from './diffgraph/sankey'
 import DiffNodes from './diffgraph/nodes'
+import DiffColorMap from './diffgraph/colormap'
 // import IntermediateNodes from './callgraph/intermediateNodes'
 import MiniHistograms from './diffgraph/miniHistograms'
 import DiffEdges from './diffgraph/edges'
@@ -15,6 +16,7 @@ export default {
 		// IntermediateNodes,
 		DiffEdges,
 		// MiniHistograms,
+		DiffColorMap
     },
     props: [
        
@@ -57,17 +59,17 @@ export default {
 					"top": this.toolbarHeight
 				})
 
-            this.data = data
+			this.data = data
             this.render(data)
         },
 
      
-        lear() {
+        clear() {
 			this.$refs.DiffNodes.clear()
 			this.$refs.DiffEdges.clear()
 			// this.$refs.CallbackEdges.clear()
 			// this.$refs.MiniHistograms.clear()
-			// this.$refs.ColorMap.clear(0)
+			this.$refs.DiffColorMap.clear(0)
 		},
 
 		render(data) {
@@ -80,10 +82,13 @@ export default {
             // console.log(this.data)
 			// this.postProcess(this.data.nodes, this.data.links)	
 			console.log("Post-processing done.") 
+			this.$store.graph = this.graph
+			
 
 			this.$refs.DiffNodes.init(this.graph, this.view)
 			// // this.$refs.IntermediateNodes.init(this.data)
 			this.$refs.DiffEdges.init(this.graph, this.view)
+			this.$refs.DiffColorMap.init()
 			// // this.$refs.CallbackEdges.init(this.data, this.view)
 			// this.$refs.MiniHistograms.init(this.graph, this.view)
 
@@ -103,7 +108,8 @@ export default {
 				.levelSpacing(this.levelSpacing)
 				.maxLevel(this.graph.maxLevel)
 				//    .setReferenceValue(this.data.rootRunTimeInc)
-				.setMinNodeScale(this.nodeScale);
+				.datasets(this.$store.datasets)
+				.setMinNodeScale(this.nodeScale)
 
 			let path = sankey.link()
 
