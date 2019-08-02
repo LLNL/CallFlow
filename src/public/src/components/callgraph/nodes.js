@@ -28,6 +28,16 @@ export default {
         init(graph) {
             this.graph = graph
             this.nodes = d3.select('#' + this.id)
+
+            this.drag = d3.drag()
+                .subject((d) =>  {
+                    return d;
+                })
+                .on("start", function() { 
+                    this.parentNode.appendChild(this)
+                })
+                .on("drag", this.dragmove)
+
             const node = this.nodes.selectAll('.node')
                 .data(this.graph.nodes)
                 .enter().append('g')
@@ -39,6 +49,7 @@ export default {
                 .attr('transform', (d) => {
                     return `translate(${d.x},${d.y })`
                 })
+                // .call(this.drag)
 
             this.nodes.selectAll('.node')
                 .data(this.graph.nodes)
@@ -78,7 +89,7 @@ export default {
                     return 1
                 })
                 .on('mouseover', function (d) {
-                    self.$refs.ToolTip.render(self.graph, d)  
+                    self.$refs.ToolTip.render(self.graph, d)
                 })
                 .on('mouseout', function (d) {
                     self.$refs.ToolTip.clear()
@@ -87,14 +98,13 @@ export default {
                     console.log("Selected node: ", d)
                     this.$store.selectedNode = d
                     let selectedModule = ''
-                    if(d.id.indexOf(':') >  -1 ){
+                    if (d.id.indexOf(':') > -1) {
                         selectedModule = d.id.split(':')[0]
-                    }
-                    else{
+                    } else {
                         selectedModule = d.id
                     }
 
-                   if (this.$store.selectedData == 'Dataframe'){
+                    if (this.$store.selectedData == 'Dataframe') {
                         this.$socket.emit('scatterplot', {
                             module: selectedModule,
                             dataset1: this.$store.selectedDataset,
@@ -103,8 +113,7 @@ export default {
                             module: selectedModule,
                             dataset1: this.$store.selectedDataset,
                         })
-                    }
-                    else if (this.$store.selectedData == 'Graph'){
+                    } else if (this.$store.selectedData == 'Graph') {
                         this.$socket.emit('function', {
                             module: selectedModule,
                             dataset1: this.$store.selectedDataset,
@@ -114,7 +123,7 @@ export default {
                             dataset1: this.$store.selectedDataset,
                         })
                     }
-                    
+
                 })
 
             // Transition
@@ -123,7 +132,6 @@ export default {
                 .transition()
                 .duration(this.transitionDuration)
                 .attr('opacity', d => {
-                    // this.quantileLines(rect, d)
                     return 1;
                 })
                 .attr('height', d => d.height)
@@ -276,6 +284,18 @@ export default {
             d3.selectAll('.node').remove()
             this.$refs.ToolTip.clear()
         },
+
+        dragmove(d) {
+            console.log(d)
+            d3.select(`node_${d.mod_index[0]}`).attr("transform",
+                "translate(" + (
+                    d.x = Math.max(0, Math.min(this.$parent.width - d.dx, d3.event.x))
+                ) + "," + (
+                    d.y = Math.max(0, Math.min(this.$parent.height - d.dy, d3.event.y))
+                ) + ")");
+            // sankey.relayout();
+            // link.attr("d", path);
+        }
 
     }
 }

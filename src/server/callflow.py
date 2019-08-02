@@ -21,6 +21,7 @@ from networkx.readwrite import json_graph
 
 from preprocess import PreProcess
 from callgraph import CallGraph
+from diffgraph import DiffGraph
 
 from actions.create import Create
 from actions.groupBy import groupBy
@@ -203,7 +204,7 @@ class CallFlow:
         state.graph = state.gf.graph
         state.entire_graph = state.entire_gf.graph
 
-        state.map = utils.node_hash_mapper(state.entire_df)
+        # state.map = utils.node_hash_mapper(state.entire_df)
 
         # Print the module group by information. 
         # print(state.df.groupby(['module']).agg(['mean','count']))
@@ -211,6 +212,25 @@ class CallFlow:
         # replace df['node'] from str to the Node object.
         state.df = self.replace_str_with_Node(state.df, state.graph)
         state.entire_df = self.replace_str_with_Node(state.entire_df, state.entire_graph)
+
+        return state
+
+    def read_group_gf(self, name):
+        state = State()
+        dirname = self.config.callflow_dir
+        group_df_file_path = dirname + '/' + name + '/group_df.csv'
+        group_graph_file_path = dirname + '/' + name + '/filter_graph.json'
+
+        with self.timer.phase('Read group dataframe'):
+            with open(group_graph_file_path, 'r') as groupGraphFile:
+                data = json.load(groupGraphFile)
+
+        state.group_gf = GraphFrame()
+        state.group_gf.from_literal(data)
+
+        state.group_graph = state.group_gf.graph
+        state.group_df = pd.read_csv(group_df_file_path)
+        state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
 
         return state
 
@@ -313,22 +333,17 @@ class CallFlow:
             return self.config
 
         elif action_name == "group":
-            for idx, (dataset, state) in enumerate(self.states.items()):
-                if (idx == 0):
-                    dataset1 = dataset
-                if (idx == 1):
-                    dataset2 = dataset
-                group = groupBy(state, action["groupBy"])
-                self.states[dataset].gdf = group.df
-                self.states[dataset].graph = group.graph 
-                write_graph = False
-                self.write_gf(state, dataset, "group", write_graph)
-                if(action['groupBy'] == 'module'):
-                    path_type = 'group_path'
-                elif(action['groupBy'] == 'name'):
-                    path_type = 'path'
-                temp = CallGraph(state, path_type, True, action["groupBy"])
-                self.nx[dataset] = temp.g
+            dataset1 = datasets[0]
+            dataset2 = datasets[1]
+            if(action['groupBy'] == 'module'):
+                path_type = 'group_path'
+            elif(action['groupBy'] == 'name'):
+                path_type = 'path'
+
+            for idx, dataset in enumerate(datasets):
+                group_state = self.read_group_gf(dataset)
+                nx = DiffGraph(group_state, path_type, True, action["groupBy"])
+                self.nx[dataset] = nx.g
             
             union_nx = UnionGraph(self.nx[dataset1], self.nx[dataset2]).R
             print(union_nx)

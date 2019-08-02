@@ -26,6 +26,25 @@ export default {
         init(graph, view) {
             this.graph = graph
             this.nodes = d3.select('#' + this.id)
+
+            // https://observablehq.com/@geekplux/dragable-d3-sankey-diagram
+            this.drag = d3.drag()
+                .subject((d) =>  { return d; })
+                .on("start", function() { 
+                    this.parentNode.appendChild(this)
+                })
+                .on("drag", (d) => {
+                    console.log(d)
+                    d3.select(`node_${d.mod_index[0]}`).attr("transform",
+                        "translate(" + (
+                            d.x = Math.max(0, Math.min(this.$parent.width - d.dx, d3.event.x))
+                        ) + "," + (
+                            d.y = Math.max(0, Math.min(this.$parent.height - d.dy, d3.event.y))
+                        ) + ")");
+                    // sankey.relayout();
+                    // link.attr("d", path);
+                })
+
             const node = this.nodes.selectAll('.diff-node')
                 .data(this.graph.nodes)
                 .enter().append('g')
@@ -37,6 +56,8 @@ export default {
                 .attr('transform', (d) => {
                     return `translate(${d.x},${d.y })`
                 })
+                // .call(this.drag);
+           
 
             this.nodes.selectAll('.diff-node')
                 .data(this.graph.nodes)

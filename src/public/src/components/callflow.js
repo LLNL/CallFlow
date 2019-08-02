@@ -83,7 +83,7 @@ export default {
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
 		modes: [],
-		selectedMode: 'Single',
+		selectedMode: 'Diff',
 		selectedBinCount: 5,
 		selectedFunctionsInCCT: 30,
 		isCallgraphInitialized: false,
@@ -172,7 +172,6 @@ export default {
 
 		diff_cct(data) {
 			console.log("Diff CCT data: ", data)
-			console.log(this.$refs)
 			this.$refs.DiffCCT1.init(data[this.$store.selectedDataset], '1')
 			this.$refs.DiffCCT2.init(data[this.$store.selectedDataset2], '2')
 		}
