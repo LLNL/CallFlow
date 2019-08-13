@@ -31,18 +31,21 @@ class PreProcess():
         self.graph = builder.graph
         self.df = builder.df
         self.gf = builder.gf
-        self.node_hash_map = builder.node_hash_map
-        
+
     def map(self):
         return self.map
 
     class Builder(object):
-        def __init__(self, state):
+        def __init__(self, state, gf_type='filter'):
             self.state = state
-            self.gf = state.gf
-            self.df = state.df
-            self.graph = state.graph
-            self.node_hash_map = state.node_hash_map
+            if(gf_type == 'filter'):
+                self.gf = state.gf
+                self.df = state.df
+                self.graph = state.graph
+            elif(gf_type  == 'entire'):
+                self.gf = state.entire_gf
+                self.df = state.entire_df
+                self.graph = state.entire_graph
             self.map = {}
             # self.df_index_name_map = self.bfs()
         
@@ -112,8 +115,6 @@ class PreProcess():
         @tmp_wrap
         def add_avg_incTime(self):
             ret = {}
-
-            print(self.df.info())
             for idx, row in self.df.iterrows():
                 ret[str(row.nid)] = utils.avg(self.state.lookup(row.nid)['time (inc)'])
 

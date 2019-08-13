@@ -84,9 +84,9 @@ export default {
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
 		modes: [],
-		selectedMode: 'Diff',
+		selectedMode: 'Single',
 		selectedBinCount: 5,
-		selectedFunctionsInCCT: 30,
+		selectedFunctionsInCCT: 50,
 		selectedDiffNodeAlignment: 'Middle',
 		diffNodeAlignment: ['Middle', 'Top'],
 		isCallgraphInitialized: false,
@@ -124,11 +124,13 @@ export default {
 				this.modes = ['Single', 'Diff']
 				this.selectedDataset2 = data['names'][1]
 				this.$store.selectedDataset2 = data['names'][1]
+				// this.selectedMode = 'Diff'
 
 			} else {
 				this.enableDiff = false
 				this.modes = ['Single']
 				this.selectedDataset2 = ''
+				this.selectedMode = 'Single'
 			}
 			this.$store.maxExcTime = data['max_excTime']
 			this.$store.minExcTime = data['min_excTime']
@@ -248,6 +250,14 @@ export default {
 						datasets: this.$store.datasets,
 						groupBy: this.selectedGroupBy
 					})
+					this.$socket.emit('diff_scatterplot', {
+                        datasets: this.$store.datasets,
+                        dataset1: this.$store.selectedDataset,
+                        dataset2: this.$store.selectedDataset2,
+                        col: 'time (inc)',
+                        catcol: 'name',
+                        plot: 'bland-altman'
+                    })
 				}
 			}
 		},

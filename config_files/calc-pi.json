@@ -2,7 +2,7 @@
     "datasets": [
         {
             "name": "calc-pi",
-            "path": "./data/calc-pi",
+            "path": "./data/hpctoolkit-cpi-database",
             "format": "hpctoolkit",
             "props": {
             },

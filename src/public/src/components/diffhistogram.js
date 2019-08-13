@@ -16,6 +16,8 @@ import * as d3 from 'd3'
 import "d3-selection-multi"
 import ToolTip from './histogram/tooltip'
 
+// http://plnkr.co/edit/wfOx8615PnZh2CST301F?p=preview
+
 export default {
     template: tpl,
     name: 'Histogram',

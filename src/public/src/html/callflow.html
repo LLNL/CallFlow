@@ -28,7 +28,6 @@
 			<v-select label="Analysis Mode" :items="modes" v-model="selectedMode" box :menu-props="{ maxHeight: '400' }"
 				v-on:change="updateMode()"></v-select>
 		</v-flex>
-
 	</v-toolbar>
 
 	<v-navigation-drawer v-model="left" temporary fixed>
@@ -70,12 +69,12 @@
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateGroupBy()">
 					</v-select>
 				</v-flex>
-				<v-flex xs12 class="ma-1">
+				<!-- <v-flex xs12 class="ma-1">
 					<v-select label="Group Mode" :items="groupModes" v-model="selectedGroupMode"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateGroupByMode()" 
 						v-show="selectedFormat == 'Callgraph'">
 					</v-select>
-				</v-flex>
+				</v-flex> -->
 				<v-flex xs12 class="ma-1">
 					<v-select label="Filter By" :items="filterBy" v-model="selectedFilterBy"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateFilterBy()">

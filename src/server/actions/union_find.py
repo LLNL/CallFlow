@@ -82,7 +82,7 @@ class UnionFind(object):
         self.n_comps = 0  # the number of disjoint sets or components
         self._next = 0  # next available id
         self._elts = []  # the elements
-        self._indx = {}  #  dict mapping elt -> index in _elts
+        self._indx = {}  #   dict mapping elt -> index in _elts
         self._par = []  # parent: for the internal tree structure
         self._siz = []  # size of the component - correct only for roots
 
@@ -114,7 +114,6 @@ class UnionFind(object):
             obj = self._elts[obj_pos]
             if(x['graphID'] not in obj['graphID']):
                 obj['graphID'].append(x['graphID'][0])
-            print("Obj", obj)
             
         return x["name"] in self._indx
 

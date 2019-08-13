@@ -79,6 +79,7 @@ export default {
                     return color
                 })
                 .style('fill-opacity', (d) => {
+                    console.log(d.name, d.out, d.in, d.value)
                     return 1
                 })
                 .style('shape-rendering', 'crispEdges')
@@ -272,7 +273,6 @@ export default {
         },
 
         dragmove(d) {
-            console.log(d)
             d3.select(`node_${d.mod_index[0]}`).attr("transform",
                 "translate(" + (
                     d.x = Math.max(0, Math.min(this.$parent.width - d.dx, d3.event.x))

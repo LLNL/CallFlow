@@ -20,7 +20,7 @@ from networkx.readwrite import json_graph
 import json
 
 def lookup(df, node):
-    return df.loc[df['node'] == node]
+    return df.loc[df['name'] == node.callpath[-1]]
 
 def lookup_with_name(df, name):
     return df.loc[df['name'] == name]
@@ -42,10 +42,8 @@ def getMaxIncTime(state):
     ret = 0.0
     graph = state.graph
     df = state.entire_df
-    print(df['name'])
     for root in graph.roots:
         node_df = lookup_with_name(df, root.callpath[-1])
-        print(root)
         ret = max(ret, float(max(node_df['time (inc)'].tolist())))
     return ret
 
@@ -82,39 +80,40 @@ def getNumbOfRanks(state):
     df = state.entire_df
     return len(df['rank'].unique())
 
-def getMaxIncTime_from_gf(gf):
+def getMaxIncTime_from_gf(graph, dataframe):
     ret = 0.0
-    for root in gf.graph.roots:
-        node_df = lookup(gf.dataframe, root)
+    for root in graph.roots:
+        print(root)
+        node_df = lookup(dataframe, root)
+        print(node_df)
         ret = max(ret, float(max(node_df['time (inc)'].tolist())))
     return ret
 
-def getMaxExcTime_from_gf(gf):
-    ret = float(gf.dataframe['time'].max())
+def getMaxExcTime_from_gf(graph, dataframe):
+    ret = float(dataframe['time'].max())
     return ret
 
-def getAvgIncTime_from_gf(gf):
+def getAvgIncTime_from_gf(graph, dataframe):
     ret = 0.0
-    for root in gf.graph.roots:
-        ret += lookup(gf.dataframe, root)['time (inc)'].mean()
-    return ret/len(gf.graph.roots)
+    for root in graph.roots:
+        ret += lookup(dataframe, root)['time (inc)'].mean()
+    return ret/len(graph.roots)
 
-def getAvgExcTime_from_gf(gf):
-    ret = gf.dataframe['time'].mean()
+def getAvgExcTime_from_gf(graph, dataframe):
+    ret = dataframe['time'].mean()
     return ret
 
-def getMinIncTime_from_gf(gf):
+def getMinIncTime_from_gf(graph, dataframe):
     return 0
 
-def getMinExcTime_from_gf(gf):
+def getMinExcTime_from_gf(graph, dataframe):
     return 0
 
-def getNumOfNodes_from_gf(gf):
-    return gf.dataframe['module'].count()
+def getNumOfNodes_from_gf(graph, dataframe):
+    return dataframe['module'].count()
 
-def getNumbOfRanks_from_gf(gf):
-    return len(gf.dataframe['rank'].unique())
-
+def getNumbOfRanks_from_gf(graph, dataframe):
+    return len(dataframe['rank'].unique())
 
 def graphmltojson(graphfile, outfile):
     """
@@ -135,24 +134,24 @@ def graphmltojson(graphfile, outfile):
 
     # Write to file
     fo = open(outfile, "w")
-    fo.write(json_data);
+    fo.write(json_data)
     fo.close()
 
 def debug(action='', data={}):
     action = '[callfow.py] Action: {0}'.format(action)
     if bool(data):
-        data_string = 'Data: ' + json.dumps(data, indent=4, sort_keys=True)
+        data_string = '' + json.dumps(data, indent=4, sort_keys=True)
     else:
         data_string = ''
     log.error(' {0} {1}'.format(action, data_string))
 
 def dfs(graph, limit):
-    self.level = 0
     def dfs_recurse(root):
+        level = 0
         for node in root.children:
-            if(self.level < limit):
+            if(level < limit):
                 print('Node =', node)
-                self.level += 1
+                level += 1
                 dfs_recurse(node)
         
     for root in graph.roots:

@@ -44,6 +44,8 @@ class App():
         self.config.server_dir = os.getcwd()
         self.config.callflow_dir = self.callflow_path + '/.callflow'
         self.config.preprocess = self.args.preprocess
+        self.config.entire = self.args.entire
+        self.config.filter = self.args.filter
 
         if self.config.preprocess:
             self.create_dot_callflow_folder()
@@ -71,7 +73,8 @@ class App():
         parser.add_argument("--verbose", action="store_true", help="Display debug points")
         parser.add_argument("--config", help="Config file to read")
         parser.add_argument("--input_format", default="hpctoolkit", help="caliper | hpctoolkit")
-        parser.add_argument("--filter", action="store_true", help="Filter the dataframe")
+        parser.add_argument("--filter", action="store_true", help="Save the filtered dataframe.")
+        parser.add_argument("--entire", action="store_true", help="Save the entire dataframe.")
         parser.add_argument("--filterBy", default="IncTime", help="IncTime | ExcTime, [Default = IncTime] ")
         parser.add_argument("--filtertheta", default="10", help="Threshold [Default = 10]")
         parser.add_argument("--preprocess", action="store_true", help="Preprocess the file")
@@ -267,14 +270,16 @@ class App():
         def diffscatterplot(data):
             if self.debug:
                 self.print('[Request] Diff-Scatterplot request for module.')
-            result = {}
-            for dataset in data['datasets']:
-                result[dataset] = self.callflow.update({
-                    "name": "histogram",
-                    "dataset1": dataset,
-                    "module": data['module'],
-                })
-            emit('diff_scatterplot', json.dumps(result), json=True)
+            result = self.callflow.update_diff({
+                "name": "scatterplot",
+                "datasets": data['datasets'],
+                "dataset1": data["dataset1"],
+                "dataset2": data["dataset2"],
+                'col': data['col'],
+                'catcol': data['catcol'],
+                'plot': data['plot']
+            })
+            emit('diff_scatterplot', result, json=True)
 
         @sockets.on('diff_histogram', namespace='/')
         def diffhistogram(data):

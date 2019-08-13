@@ -152,12 +152,13 @@ export default function Sankey() {
                 source = link.source = nodes[link.sourceID];
                 target = link.target = nodes[link.targetID];
 
+
                 // Come back here and correct this bug. 
                 if(source != undefined && target != undefined){
-                    if(link.type != 'back_edge'){
+                    // if(link.type != 'back_edge'){
                         source.sourceLinks.push(link);
                         target.targetLinks.push(link);
-                    }
+                    // }
     
                     target["maxLinkVal"] = Math.max(target["maxLinkVal"], link["weight"]);
                     source["maxLinkVal"] = Math.max(source["maxLinkVal"], link["weight"]);
@@ -325,13 +326,13 @@ export default function Sankey() {
 
                     let height = Math.max(node.in, node.out)
                     // // TODO: Add a key "isStart" to the node.
-                    // if(height == 0){
-                    //     height = node.out
-                    // }
+                    if(height == 0){
+                        height = node.out
+                    }
 
-                    // if (node.weight > node.in){
-                    //     height = node.weight
-                    // }
+                    if (node.weight > node.in){
+                        height = node.weight
+                    }
 
 		            node.height = height*minNodeScale*scale;
                 });

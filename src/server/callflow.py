@@ -56,6 +56,8 @@ class CallFlow:
         self.config = config
         self.reUpdate = False
         self.reProcess = config.preprocess
+        self.processEntire = config.entire
+        self.processFilter = config.filter
 
         # Create states for each dataset.
         # Note: gf would never change from create_gf.
@@ -66,7 +68,7 @@ class CallFlow:
         self.timer = Timer()
         self.states = self.pipeline(self.config.names)
 
-    def pipeline(self, datasets, filterBy="Inclusive", filterPerc="0"):
+    def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
         if self.reProcess:
             utils.debug("Processing with filter.")
         else:
@@ -77,15 +79,19 @@ class CallFlow:
             states[dataset_name] = State()
             # This step takes a bit of time so do it only if required. 
             # It would be required especially when filtering and stuff. 
-            if(self.reProcess):
+            if(self.reProcess and self.processEntire):
                 states[dataset_name] = self.create(dataset_name)
-                states[dataset_name] = self.process(states[dataset_name])
+                states[dataset_name] = self.process(states[dataset_name], 'entire')
                 self.write_gf(states[dataset_name], dataset_name, 'entire')
+                states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc) 
+                self.write_gf(states[dataset_name], dataset_name, 'filter')
+            elif(self.reProcess and self.processFilter):
+                states[dataset_name] = self.read_entire_gf(dataset_name)
                 states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc) 
                 self.write_gf(states[dataset_name], dataset_name, 'filter')
             elif(self.reUpdate):
                 states[dataset_name] = self.create(dataset_name)
-                states[dataset_name] = self.process(states[dataset_name])
+                states[dataset_name] = self.process(states[dataset_name], 'filter')
                 states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc)
             else:
                 states[dataset_name] = self.read_gf(dataset_name)
@@ -109,18 +115,17 @@ class CallFlow:
         state = State()
         create = Create(self.config, name)
 
-        state.gf = create.gf
-        state.df = create.df
-        state.node_hash_map = create.node_hash_map    
-        state.graph = create.graph       
+        state.entire_gf = create.gf
+        state.entire_df = create.df
+        state.entire_graph = create.graph       
         
         # print("After Creating.")
         # print(state.df.groupby(['module']).mean())
         return state
 
-    def process(self, state):        
+    def process(self, state, gf_type):        
         # Pre-process the dataframe and Graph. 
-        preprocess = PreProcess.Builder(state) \
+        preprocess = PreProcess.Builder(state, gf_type) \
             .add_n_index() \
             .add_mod_index() \
             .add_callers_and_callees() \
@@ -133,7 +138,6 @@ class CallFlow:
         state.gf = preprocess.gf
         state.df = preprocess.df
         state.graph = preprocess.graph
-        state.node_hash_map = preprocess.node_hash_map
 
         return state
 
@@ -143,7 +147,6 @@ class CallFlow:
         state.gf = filter_obj.gf
         state.df = filter_obj.df
         state.graph = filter_obj.graph
-        state.node_hash_map = filter_obj.node_hash_map
 
         return state
 
@@ -156,9 +159,8 @@ class CallFlow:
             graph_literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
             graph_filepath = dirname + '/' + state_name + '/' + format_of_df + '_graph.json'
             utils.debug('File path: {0}'.format(graph_filepath))
-            if(format_of_df == 'entire'):
-                with open(graph_filepath, 'w') as graphFile:
-                    json.dump(graph_literal, graphFile)
+            with open(graph_filepath, 'w') as graphFile:
+                json.dump(graph_literal, graphFile)
 
         # dump the filtered dataframe to csv.
         df_filepath = dirname + '/' + state_name + '/' + format_of_df + '_df.csv'
@@ -176,6 +178,27 @@ class CallFlow:
             dfs_recurse(root)
         df['node'] = df['node'].apply(lambda node: mapper[node] if node in mapper else '')
         return df
+
+    def read_entire_gf(self, name):
+        log.info('[Process] Reading the entire dataframe and graph')
+        state = State()
+        dirname = self.config.callflow_dir
+        entire_df_filepath = dirname + '/' + name + '/entire_df.csv'
+        entire_graph_filepath = dirname + '/' + name + '/entire_graph.json'   
+
+        with open(entire_graph_filepath, 'r') as entire_graphFile:
+            entire_data = json.load(entire_graphFile)
+            
+        state.entire_gf = GraphFrame()
+        state.entire_gf.from_literal(entire_data)
+
+        state.entire_df = pd.read_csv(entire_df_filepath)
+        state.entire_graph = state.entire_gf.graph
+
+        # replace df['node'] from str to the Node object.
+        state.entire_df = self.replace_str_with_Node(state.entire_df, state.entire_graph)
+
+        return state
 
     def read_gf(self, name):
         state = State()
@@ -346,15 +369,17 @@ class CallFlow:
                 self.nx[dataset] = nx.g
             
             union_nx = UnionGraph(self.nx[dataset1], self.nx[dataset2]).R
-            print(union_nx)
             return union_nx
 
-        elif action_name == 'bland-altman':
-            state1 = action['state1']
-            state2 = action['state2']
-            col = action['col']
-            catcol = action['catcol']
-            ret = BlandAltman(state1, state2, col, catcol)
+        elif action_name == 'scatterplot':
+            if(action['plot'] == 'bland-altman'):
+                state1 = self.states[action['dataset1']]
+                state2 = self.states[action['dataset2']]
+                col = action['col']
+                catcol = action['catcol']
+                dataset1 = action['dataset1']
+                dataset2 = action['dataset2']
+                ret = BlandAltman(state1, state2, col, catcol, dataset1, dataset2).results
             return ret
 
         elif action_name == 'Gromov-wasserstein':

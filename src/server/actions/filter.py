@@ -24,15 +24,21 @@ class Filter:
             filterPerc: user provided filter percentage (1-100))
     '''
     def __init__(self, state, filterBy, filterPerc):
-        utils.debug('filter', filterBy)
-        utils.debug('filter', filterPerc)
+        utils.debug('filter By:', filterBy)
+        utils.debug('filter Perc:', filterPerc)
         self.state = state
-        self.graph = state.graph
-        self.df = state.df
-        self.gf = state.gf
+        self.graph = state.entire_graph
+        self.df = state.entire_df
+        self.gf = state.entire_gf
+
+        self.df.set_index(['node', 'rank'], drop=False, inplace=True)
+
+        # self.df = pd.MultiIndex.from_frame(self.df, names=['node', 'rank'])
+        self.gf.dataframe = self.df
         
         self.filterBy = filterBy
-        self.filterPercInDecimals = int(filterPerc)/100 
+        self.filterPercInDecimals = int(filterPerc)/100
+        # self.filterPercInDecimals = 0.0001 
         
         self.fgf = self.run() 
         self.fgf = self.graft()
@@ -40,17 +46,15 @@ class Filter:
         # update df and graph after filtering.
         self.df = self.fgf.dataframe
         self.graph = self.fgf.graph
-        # self.state.node_hash_map = utils.node_hash_mapper(self.state.df)      
-        self.node_hash_map = state.node_hash_map
 
     def run(self):
         log.info('Filtering the graph.')
         t = time.time()
         if self.filterBy == "Inclusive":
-            max_inclusive_time = utils.getMaxIncTime_from_gf(self.gf)
-            filter_gf = self.gf.filter(lambda x: True if(x['time (inc)'] >= self.filterPercInDecimals*max_inclusive_time) else False)
+            max_inclusive_time = utils.getMaxIncTime_from_gf(self.graph, self.df)
+            filter_gf = self.gf.filter(lambda x: True if(x['time (inc)'] > self.filterPercInDecimals*max_inclusive_time) else False)
         elif filterBy == "Exclusive":
-            max_exclusive_time = utils.getMaxExcTime_from_gf(self.gf)
+            max_exclusive_time = utils.getMaxExcTime_from_gf(self.graph, self.df)
             log.info('[Filter] By Exclusive time = {0})'.format(max_exclusive_time))
             filter_gf = self.gf.filter(lambda x: True if (x['time'] >= self.filterPercInDecimals*max_exclusive_time) else False)
         else:
@@ -64,6 +68,7 @@ class Filter:
     def graft(self):
         log.info("Squashing the graph.")
         t = time.time()
-        fgf = self.fgf.squash()
+        fgf = self.fgf.squash()[0]
+        old_new_id_mapping = self.fgf.squash()[1]
         log.info("[Squash] {1} rows in dataframe (time={0})".format(time.time() - t, fgf.dataframe.shape[0]))
         return fgf

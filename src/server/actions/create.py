@@ -9,9 +9,6 @@
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
-
-#!/usr/bin/env python3
-
 import pandas as pd
 import time 
 import utils
@@ -34,7 +31,6 @@ class Create:
 
     def run(self):
         callflow_path = os.path.abspath(os.path.join(__file__, '../../../..'))
-        print("CallFlow path is", callflow_path)
         data_path = os.path.abspath(os.path.join(callflow_path, self.config.paths[self.name]))
 
         gf = GraphFrame()

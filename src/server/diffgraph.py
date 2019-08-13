@@ -25,9 +25,7 @@ class DiffGraph(nx.Graph):
         self.path_name = path_name
         self.graph = self.state.group_graph
         self.df = self.state.group_df
-        print(self.graph.roots)
         self.root = utils.lookup_with_name(self.df, self.graph.roots[0].callpath[-1])['vis_node_name'][0]
-        print(self.root)
         self.group_by = group_by
         # self.callbacks = self.state.callbacks
         self.callbacks = []

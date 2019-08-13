@@ -210,17 +210,17 @@ class groupBy:
                                     node_name[snode] = "Unknown(NA)"
                                     show_node[snode] = False
                             
-                        # print('Node', snode)        
-                        # print("entry function:", entry_func[snode])
-                        # print('Change name:', change_name[snode])
-                        # print("node path: ", spath)                
-                        # print("group path: ", group_path[snode])
-                        # print("component path: ", component_path[snode])
-                        # print("component level: ", component_level[snode])
-                        # print("Show node: ", show_node[snode])
-                        # print("name: ", node_name[snode])
-                        # print('Module: ', module[snode])
-                        # print("=================================")
+                        print('Node', snode)        
+                        print("entry function:", entry_func[snode])
+                        print('Change name:', change_name[snode])
+                        print("node path: ", spath)                
+                        print("group path: ", group_path[snode])
+                        print("component path: ", component_path[snode])
+                        print("component level: ", component_level[snode])
+                        print("Show node: ", show_node[snode])
+                        print("name: ", node_name[snode])
+                        print('Module: ', module[snode])
+                        print("=================================")
                 
             except StopIteration:
                 pass

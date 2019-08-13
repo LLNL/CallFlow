@@ -119,10 +119,7 @@ export default {
                     } else {
                         selectedModule = d.id
                     }
-                    this.$socket.emit('diff_scatterplot', {
-                        module: selectedModule,
-                        datasets: this.$store.datasets,
-                    })
+
                     // this.$socket.emit('diff_hierarchy', {
                     //     module: selectedModule,
                     //     dataset1: this.$store.selectedDataset,
@@ -176,24 +173,35 @@ export default {
                         y2 = node_data.height * val
                     }
                     d3.select('#diff-node_' + node_data.xid).append('line')
-                        .attr('class', 'quantileLines')
-                        .attr('id', 'line-1-' + dataset + '-' + node_data.xid)
+                        .attrs({
+                            'class': 'quantileLines',
+                            'id': 'line-1-' + dataset + '-' + node_data.xid,
+                            "x1": 0,
+                            "y1": y1,
+                            "x2": this.nodeWidth,
+                            "y2": y1
+                        })
                         .style("stroke", this.$store.color.datasetColor[dataset])
                         .style("stroke-width", 3)
-                        .attr("x1", 0)
-                        .attr("y1", y1)
-                        .attr("x2", this.nodeWidth)
-                        .attr("y2", y1)
 
                     d3.select('#diff-node_' + node_data.xid).append('line')
-                        .attr('class', 'quantileLines')
-                        .attr('id', 'line-2-' + dataset + '-' + node_data.xid)
+                        .attrs({
+                            'class': 'quantileLines',
+                            'id': 'line-2-' + dataset + '-' + node_data.xid,
+                            "x1": 0,
+                            "y1": y2,
+                            "x2": this.nodeWidth,
+                            "y2": y2
+                        })
                         .style("stroke", this.$store.color.datasetColor[dataset])
                         .style("stroke-width", 3)
-                        .attr("x1", 0)
-                        .attr("y1", y2)
-                        .attr("x2", this.nodeWidth)
-                        .attr("y2", y2)
+                        .on('click', (d) => {
+                            console.log(d)
+                            d3.select(this).style("stroke", "black")
+                            let dataset = d.id.split('-')
+
+                            console.log(dataset)
+                        })
                 }
             }
         },

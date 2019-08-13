@@ -32,6 +32,21 @@ class CallGraph(nx.Graph):
         self.rootRunTimeInc = self.root_runtime_inc()
         self.edge_direction = {}        
         self.g = nx.DiGraph(rootRunTimeInc = int(self.rootRunTimeInc))
+
+        debug = True
+        if(debug):
+            log.info(self.df.info())
+            log.warn('Modules: {0}'.format(self.df['module'].unique()))
+            log.warn('Top 10 Inclusive time: ')
+            top = 10
+            top_inclusive_df = self.df.nlargest(top, 'time (inc)')
+            for idx, row in top_inclusive_df.iterrows():
+                log.info('{0} [{1}]'.format(row['name'], row["time (inc)"]))
+
+            log.warn('Top 10 Enclusive time: ')
+            top_exclusive_df = self.df.nlargest(top, 'time')
+            for idx, row in top_exclusive_df.iterrows():
+                log.info('{0} [{1}]'.format(row['name'], row["time"]))
     
         self.add_paths(path_name)
         # self.add_callback_paths()
@@ -48,7 +63,7 @@ class CallGraph(nx.Graph):
         # self.dense_adj_matrix = self.adj_matrix.todense()
 
         # print("Nodes", self.g.nodes())
-#        print("Edges", self.g.edges(data=True))
+        print("Edges", self.g.edges())
 
 #        log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
 #        log.warn("Edges in the tree: {0}".format(len(self.g.edges)))
@@ -64,12 +79,14 @@ class CallGraph(nx.Graph):
         ret = []
         mapper = {}
         for idx, elem in enumerate(path):
+            print(elem)
             if elem not in mapper:
                 mapper[elem] = 1
                 ret.append(elem)
             else:
                 ret.append(elem + "_" + str(mapper[elem]))
                 mapper[elem] += 1
+        print(tuple(ret))
         return tuple(ret)
     
     def add_paths(self, path_name):
@@ -81,6 +98,9 @@ class CallGraph(nx.Graph):
                 if isinstance(path, str):
                     path = make_tuple(row[path_name])
                 corrected_path = self.no_cycle_path(path)
+                print(row['name'], row['time (inc)'], row['time'])
+                print(row['path'])
+                print(corrected_path)
                 self.g.add_path(corrected_path)
 
     def add_callback_paths(self):
@@ -125,8 +145,6 @@ class CallGraph(nx.Graph):
         entry_function_mapping = self.generic_map(self.g.nodes(), 'entry_functions')
         nx.set_node_attributes(self.g, name='entry_functions', values=entry_function_mapping)
 
-        print('Done')
-
     def generic_map(self, nodes, attr):
         ret = {}
         for node in nodes:
@@ -142,6 +160,8 @@ class CallGraph(nx.Graph):
                     group_df = self.df.groupby([groupby]).mean()
                 elif self.group_by == 'name':
                     group_df = self.df.groupby([groupby]).mean()
+
+                print(self.df.groupby([groupby]))
                 ret[node] = group_df.loc[node, 'time (inc)']
             
             elif attr == 'entry_functions':

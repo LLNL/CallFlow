@@ -106,7 +106,7 @@ function calculateFlow(graph) {
     const inComing = [];
     nodes.forEach((node) => {
         const nodeLabel = node.name[0];
-
+        console.log("For node: ", nodeLabel)
         links.forEach((link) => {
             if (nodes[link.sourceID] != undefined) {
                 const linkLabel = nodes[link.sourceID].name;
@@ -114,7 +114,12 @@ function calculateFlow(graph) {
                     if (outGoing[linkLabel] == undefined) {
                         outGoing[linkLabel] = 0;
                     }
-                    outGoing[linkLabel] += link.weight;
+                    if(outGoing[linkLabel] != 0){
+                        outGoing[linkLabel] = Math.max(link.weight, outGoing[linkLabel])
+                    }
+                    else{
+                        outGoing[linkLabel] += link.weight;
+                    }
                 }
             }
         });
@@ -126,8 +131,15 @@ function calculateFlow(graph) {
                     if (inComing[linkLabel] == undefined) {
                         inComing[linkLabel] = 0;
                     }
-                    inComing[linkLabel] += link.weight;
+                    
+                    if(inComing[linkLabel] != 0) {
+                        inComing[linkLabel] = Math.max(link.weight, inComing[linkLabel])
+                    }
+                    else{
+                        inComing[linkLabel] += link.weight;
+                    }
                 }
+                console.log(link, inComing)
             }
         });
 
@@ -143,7 +155,9 @@ function calculateFlow(graph) {
         node.in = inComing[nodeLabel];
 
         node.inclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]);
-        node.exclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel];
+        node.exclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel]
+
+        console.log(inComing, outGoing)
     });
 
     return graph;
