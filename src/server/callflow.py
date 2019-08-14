@@ -356,8 +356,6 @@ class CallFlow:
             return self.config
 
         elif action_name == "group":
-            dataset1 = datasets[0]
-            dataset2 = datasets[1]
             if(action['groupBy'] == 'module'):
                 path_type = 'group_path'
             elif(action['groupBy'] == 'name'):
@@ -365,11 +363,13 @@ class CallFlow:
 
             for idx, dataset in enumerate(datasets):
                 group_state = self.read_group_gf(dataset)
-                nx = DiffGraph(group_state, path_type, True, action["groupBy"])
-                self.nx[dataset] = nx.g
+                graph = DiffGraph(group_state, path_type, True, action["groupBy"])
+                self.nx[dataset] = graph.g
             
-            union_nx = UnionGraph(self.nx[dataset1], self.nx[dataset2]).R
-            return union_nx
+            u_graph = UnionGraph()
+            for idx, dataset in enumerate(datasets):
+                u_graph.unionize(self.nx[dataset], dataset)
+            return u_graph.R
 
         elif action_name == 'scatterplot':
             if(action['plot'] == 'bland-altman'):

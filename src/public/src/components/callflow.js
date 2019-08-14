@@ -84,7 +84,7 @@ export default {
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
 		modes: [],
-		selectedMode: 'Single',
+		selectedMode: 'Distribution',
 		selectedBinCount: 5,
 		selectedFunctionsInCCT: 50,
 		selectedDiffNodeAlignment: 'Middle',
@@ -121,7 +121,7 @@ export default {
 
 			if (this.numOfDatasets >= 2) {
 				this.enableDiff = true
-				this.modes = ['Single', 'Diff']
+				this.modes = ['Single', 'Distribution']
 				this.selectedDataset2 = data['names'][1]
 				this.$store.selectedDataset2 = data['names'][1]
 				// this.selectedMode = 'Diff'
@@ -213,7 +213,7 @@ export default {
 				this.$refs.Icicle.clear()
 			} else if (this.selectedFormat == 'CCT') {
 				this.$refs.CCT.clear()
-			} else if (this.selectedMode == 'Diffgraph') {
+			} else if (this.selectedFormat == 'Diffgraph') {
 				this.$refs.Diffgraph.clear()
 				this.$refs.Icicle.clear()
 				this.$refs.DiffHistogram.clear()
@@ -238,7 +238,8 @@ export default {
 					})
 				}
 
-			} else if (this.selectedMode == 'Diff') {
+			} else if (this.selectedMode == 'Distribution') {
+				console.log('a')
 				if (this.selectedFormat == 'CCT') {
 					this.$socket.emit('diff_cct', {
 						dataset1: this.$store.selectedDataset,
@@ -250,14 +251,14 @@ export default {
 						datasets: this.$store.datasets,
 						groupBy: this.selectedGroupBy
 					})
-					this.$socket.emit('diff_scatterplot', {
-                        datasets: this.$store.datasets,
-                        dataset1: this.$store.selectedDataset,
-                        dataset2: this.$store.selectedDataset2,
-                        col: 'time (inc)',
-                        catcol: 'name',
-                        plot: 'bland-altman'
-                    })
+					// this.$socket.emit('diff_scatterplot', {
+                    //     datasets: this.$store.datasets,
+                    //     dataset1: this.$store.selectedDataset,
+                    //     dataset2: this.$store.selectedDataset2,
+                    //     col: 'time (inc)',
+                    //     catcol: 'name',
+                    //     plot: 'bland-altman'
+                    // })
 				}
 			}
 		},
@@ -276,12 +277,12 @@ export default {
 
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
 			this.$store.colorPoint = this.selectedColorPoint
-			console.log(this.$store.datasets)
+			console.log("Datasets :", this.$store.datasets)
 			this.$store.color.datasetColor = {}
 			for(let i = 0; i < this.$store.datasets.length; i += 1){
 				this.$store.color.datasetColor[this.$store.datasets[i]] = this.$store.color.getCatColor(i)
 			}
-			console.log(this.$store.color.datasetColor)
+			console.log("Color map: ", this.$store.color.datasetColor)
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 		},

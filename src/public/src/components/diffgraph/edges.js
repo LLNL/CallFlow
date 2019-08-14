@@ -58,7 +58,7 @@ export default {
                         Bxi = d3.interpolateNumber(Bx0, Bx1),
                         Bx2 = Bxi(0.4),
                         Bx3 = Bxi(1 - 0.4),
-                        By0 = d.source.y + d.height + d.sy,
+                        By0 = d.source.y + d.height + d.sy + 100,
                         By1 = d.target.y + d.ty + d.height
 
                     const rightMoveDown = By1 - Ty1;
@@ -122,8 +122,8 @@ export default {
                         Bxi = d3.interpolateNumber(Bx0, Bx1),
                         Bx2 = Bxi(0.4),
                         Bx3 = Bxi(1 - 0.4),
-                        By0 = d.source.y + d.height + d.sy + this.$parent.ySpacing,
-                        By1 = d.target.y + d.ty + d.height + this.$parent.ySpacing;
+                        By0 = d.source.y + d.height + d.sy + this.$parent.ySpacing + 100,
+                        By1 = d.target.y + d.ty + d.height + this.$parent.ySpacing + 100;
 
                     const rightMoveDown = By1 - Ty1
                     console.log(d)

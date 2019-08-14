@@ -109,7 +109,7 @@
 						v-on:change="updateFunctionsInCCT()">
 					</v-text-field>
 				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat == 'Callgraph' && selectedMode == 'Diff'">
+				<v-flex xs12 class="ma-1" v-show="selectedFormat == 'Callgraph' && selectedMode == 'Distribution'">
 					<v-select label="Align node to" :items="diffNodeAlignment" v-model="selectedDiffNodeAlignment"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateDiffNodeAlignment()">
 					</v-select>
@@ -169,7 +169,7 @@
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-show="selectedMode == 'Diff' && selectedFormat == 'Callgraph'">
+		<v-layout v-show="selectedMode == 'Distribution' && selectedFormat == 'Callgraph'">
 			<splitpanes id="diffgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe'">
 				<splitpanes horizontal :splitpanes-size="30">
 					<span>
@@ -202,7 +202,7 @@
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Diff'">
+		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Distribution'">
 				<splitpanes id="cct-dashboard">
 					<splitpanes horizontal :splitpanes-size="50">
 						<span>

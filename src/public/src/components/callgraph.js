@@ -99,7 +99,6 @@ export default {
 
 		render() {
 			this.graph = preprocess(this.data, false)
-		
 			console.log("Preprocessing done.")
 			this.d3sankey = this.initSankey(this.graph)
 			console.log("Layout Calculation.")
