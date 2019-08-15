@@ -102,9 +102,9 @@ export default {
 		preprocess(graph, refresh) {
 			// graph = addUncertainityInfo(graph)
 			graph = this.findMaxGraph(graph)
+			graph = this.addLines(graph)
 			graph = this.addLinkID(graph)
 			graph = this.calculateFlow(graph)
-			graph = this.addLines(graph)
 			console.log("Graph after preprocessing: ", graph)
 			return graph;
 		},
@@ -272,6 +272,16 @@ export default {
 				count += 1
 			}
 			return graph
+		},
+
+		addEdges(graph){
+			let datasets = this.$store.datasets
+			for(const edge of graph.edges){
+				let obj = {}
+				for(const dataset of datasets){
+					obj[dataset]
+				}		
+			}
 		},
 
 		//Sankey computation
