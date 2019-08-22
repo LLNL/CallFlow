@@ -349,13 +349,10 @@ class CallFlow:
         utils.debug('Update Diff', action)
         action_name = action["name"]
         datasets = action['datasets']
-        self.nx = {}
 
         if action_name == 'init':
             self.setConfig()
-            return self.config
 
-        elif action_name == "group":
             if(action['groupBy'] == 'module'):
                 path_type = 'group_path'
             elif(action['groupBy'] == 'name'):
@@ -363,12 +360,17 @@ class CallFlow:
 
             for idx, dataset in enumerate(datasets):
                 group_state = self.read_group_gf(dataset)
-                graph = DiffGraph(group_state, path_type, True, action["groupBy"])
-                self.nx[dataset] = graph.g
-            
+                graph = DiffGraph(group_state, path_type, True, action['groupBy'])
+                self.states[dataset].g = graph.g
+
+            print(self.states[datasets[0]].g.nodes())
+
+            return self.config
+
+        elif action_name == "group":
             u_graph = UnionGraph()
             for idx, dataset in enumerate(datasets):
-                u_graph.unionize(self.nx[dataset], dataset)
+                u_graph.unionize(self.states[dataset].g, dataset)
             return u_graph.R
 
         elif action_name == 'scatterplot':

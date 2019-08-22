@@ -116,14 +116,14 @@ export default {
 			// Enable diff mode only if the number of datasets >= 2
 			this.$store.datasets = data['names']
 			this.datasets = data['names']
-			this.$store.selectedDataset = data['names'][0]
-			this.selectedDataset = data['names'][0]
+			this.$store.selectedDataset = data['names'][1]
+			this.selectedDataset = data['names'][1]
 
 			if (this.numOfDatasets >= 2) {
 				this.enableDiff = true
 				this.modes = ['Single', 'Distribution']
-				this.selectedDataset2 = data['names'][1]
-				this.$store.selectedDataset2 = data['names'][1]
+				this.selectedDataset2 = data['names'][0]
+				this.$store.selectedDataset2 = data['names'][0]
 				// this.selectedMode = 'Diff'
 
 			} else {
@@ -239,7 +239,6 @@ export default {
 				}
 
 			} else if (this.selectedMode == 'Distribution') {
-				console.log('a')
 				if (this.selectedFormat == 'CCT') {
 					this.$socket.emit('diff_cct', {
 						dataset1: this.$store.selectedDataset,
@@ -247,6 +246,11 @@ export default {
 						functionInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
+					this.$socket.emit('diff_init', {
+						datasets: this.$store.datasets,
+						groupBy: this.selectedGroupBy
+					})
+					
 					this.$socket.emit('diff_group', {
 						datasets: this.$store.datasets,
 						groupBy: this.selectedGroupBy

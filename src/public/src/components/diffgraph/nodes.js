@@ -166,13 +166,21 @@ export default {
                     if (mode == 'Middle') {
                         y1 = (node_data.height - val * node_data.height) * 0.5
                         y2 = node_data.height - y1
+                        this.drawUpLine(y1, y2, node_data, dataset)
+                        this.drawBottomLine(y1, y2, node_data, dataset)
                     } else if (mode == 'Top') {
                         let gap = 5
-                        y1 = 0 //+ count * gap
+                        y1 = 0
                         count += 1
                         y2 = node_data.height * val
-                    }
-                    d3.select('#diff-node_' + node_data.xid).append('line')
+                        this.drawBottomLine(y1, y2, node_data, dataset)
+                    }                   
+                }
+            }
+        },
+
+        drawUpLine(y1, y2, node_data, dataset){
+            d3.select('#diff-node_' + node_data.xid).append('line')
                         .attrs({
                             'class': 'quantileLines',
                             'id': 'line-1-' + dataset + '-' + node_data.xid,
@@ -184,7 +192,10 @@ export default {
                         .style("stroke", this.$store.color.datasetColor[dataset])
                         .style("stroke-width", 3)
 
-                    d3.select('#diff-node_' + node_data.xid).append('line')
+        },
+
+        drawBottomLine(y1, y2, node_data, dataset){
+            d3.select('#diff-node_' + node_data.xid).append('line')
                         .attrs({
                             'class': 'quantileLines',
                             'id': 'line-2-' + dataset + '-' + node_data.xid,
@@ -197,13 +208,9 @@ export default {
                         .style("stroke-width", 3)
                         .on('click', (d) => {
                             console.log(d)
-                            d3.select(this).style("stroke", "black")
                             let dataset = d.id.split('-')
-
                             console.log(dataset)
                         })
-                }
-            }
         },
 
         path() {

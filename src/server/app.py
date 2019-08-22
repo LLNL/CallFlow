@@ -309,13 +309,24 @@ class App():
                 data['dataset2']: g2_result
             }, json=True)
 
+        @sockets.on('diff_init', namespace='/')
+        def diffinit(data):
+            if self.debug:
+                self.print('[Request] Init the diff mode')
+            groupBy = data['groupBy'].lower()
+            datasets = data['datasets']
+            self.callflow.update_diff({
+                'name': 'init',
+                'groupBy': groupBy,
+                'datasets': datasets
+            })
+
         @sockets.on('diff_group', namespace='/')
         def diff(data):
             result = {}
             if self.debug:
-                print('[Request] Diff the dataset.', data)
+                self.print('[Request] Diff the dataset.', data)
             datasets = data['datasets']
-            print('[Diff] Datasets: {0}'.format(datasets))
             groupBy = data['groupBy'].lower()
             nx = self.callflow.update_diff({
                 "name": 'group',
