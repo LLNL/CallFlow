@@ -110,7 +110,7 @@ export default {
 
 		init(data) {
 			data = JSON.parse(data)
-			console.log("Config file: ", data)
+			console.log("Config file contains: ", data)
 			this.numOfDatasets = data['datasets'].length
 
 			// Enable diff mode only if the number of datasets >= 2
@@ -232,7 +232,6 @@ export default {
 						functionInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
-					console.log(this.$store.selectedDataset)
 					this.$socket.emit('group', {
 						dataset: this.$store.selectedDataset,
 						format: this.selectedFormat,
@@ -274,7 +273,6 @@ export default {
 			this.colorMap = this.$store.color.getAllColors()
 
 			if (this.selectedColorBy == 'Inclusive') {
-				console.log(this.selectedDataset)
 				this.selectedColorMin = this.$store.minIncTime[this.selectedDataset]
 				this.selectedColorMax = this.$store.maxIncTime[this.selectedDataset]
 			} else if (this.selectedColorBy == 'Exclusive') {
@@ -284,12 +282,12 @@ export default {
 
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
 			this.$store.colorPoint = this.selectedColorPoint
-			console.log("Datasets :", this.$store.datasets)
+			console.log("Datasets are :", this.$store.datasets)
 			this.$store.color.datasetColor = {}
 			for(let i = 0; i < this.$store.datasets.length; i += 1){
 				this.$store.color.datasetColor[this.$store.datasets[i]] = this.$store.color.getCatColor(i)
 			}
-			console.log("Color map: ", this.$store.color.datasetColor)
+			console.log("Assigned Color map: ", this.$store.color.datasetColor)
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 		},

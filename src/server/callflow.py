@@ -68,7 +68,7 @@ class CallFlow:
         self.timer = Timer()
         self.states = self.pipeline(self.config.names)
 
-    def pipeline(self, datasets, filterBy="Inclusive", filterPerc="0.1"):
+    def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
         if self.reProcess:
             utils.debug("Processing with filter.")
         else:
@@ -154,7 +154,6 @@ class CallFlow:
 
         if write_graph:
             # dump the entire_graph as literal
-            print(state.df)
             graph_literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
             graph_filepath = dirname + '/' + state_name + '/' + format_of_df + '_graph.json'
             utils.debug('File path: {0}'.format(graph_filepath))
@@ -354,12 +353,9 @@ class CallFlow:
                 path_type = 'path'
 
             for idx, dataset in enumerate(datasets):
-                group_state = self.read_gf(dataset)
+                group_state = self.read_group_gf(dataset)
                 graph = DiffGraph(group_state, path_type, True, action['groupBy'])
                 self.states[dataset].g = graph.g
-
-            print(self.states[datasets[0]].g.nodes())
-
             return self.config
 
         elif action_name == "group":

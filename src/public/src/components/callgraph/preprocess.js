@@ -12,7 +12,6 @@
  ***************************************************************************** */
 
 export default function preprocess(graph) {
-    // graph = addUncertainityInfo(graph)
     graph = addMaxLevel(graph)
     graph = addLinkID(graph)
     graph = calculateFlow(graph)
@@ -40,8 +39,11 @@ function addLinkID(graph) {
     const nodeMap = {}
     let idx = 0, node;
     for ([idx, node] of graph.nodes.entries()) {
-        console.log(node.name)
         nodeMap[node.name] = idx;
+        let debug = true
+        if(debug){
+            console.log("Assigning", node.name[0], " with map index: ", idx)
+        }
     }
 
     idx += 1
@@ -64,9 +66,7 @@ function addLinkID(graph) {
 
         link['sourceID'] = nodeMap[link.source]
         link['targetID'] = nodeMap[link.target]
-        console.log(link.source, link.target)
     }
-    console.log(nodeMap)
     return graph;
 }
 
@@ -75,9 +75,10 @@ function calculateFlow(graph) {
     const links = graph.links;
     const outGoing = [];
     const inComing = [];
+
+    let debug = true
     nodes.forEach((node) => {
         const nodeLabel = node.name[0];
-        console.log("For node: ", nodeLabel)
         links.forEach((link) => {
             if (nodes[link.sourceID] != undefined) {
                 const linkLabel = nodes[link.sourceID].name;
@@ -91,6 +92,7 @@ function calculateFlow(graph) {
                     else{
                         outGoing[linkLabel] += link.weight;
                     }
+                    
                 }
             }
         });
@@ -110,6 +112,8 @@ function calculateFlow(graph) {
                         inComing[linkLabel] += link.weight;
                     }
                 }
+                if(debug){
+                }
             }
         });
 
@@ -120,7 +124,7 @@ function calculateFlow(graph) {
         if (inComing[nodeLabel] == undefined) {
             inComing[nodeLabel] = 0;
         }
-
+  
         node.out = outGoing[nodeLabel];
         node.in = inComing[nodeLabel];
 
@@ -128,6 +132,17 @@ function calculateFlow(graph) {
         node.exclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel]
 
     });
+
+
+    if(debug){
+        links.forEach((link) => {
+            let sourceLabel = link.source
+            let targetLabel = link.target
+            console.log("[Preprocess] Outgoing flow: {", sourceLabel, "}:", outGoing[sourceLabel])
+            console.log("[Preprocess] Incoming flow {", targetLabel,"}: ", inComing[targetLabel])
+        })
+
+    }
 
     return graph;
 }

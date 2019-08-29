@@ -83,9 +83,7 @@ def getNumbOfRanks(state):
 def getMaxIncTime_from_gf(graph, dataframe):
     ret = 0.0
     for root in graph.roots:
-        print(root)
         node_df = lookup(dataframe, root)
-        print(node_df)
         ret = max(ret, float(max(node_df['time (inc)'].tolist())))
     return ret
 

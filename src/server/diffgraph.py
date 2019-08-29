@@ -24,6 +24,7 @@ class DiffGraph(nx.Graph):
         self.state = state
         self.path_name = path_name
         self.graph = self.state.graph
+        print(state.graph)
         print(self.graph.roots)
         self.df = self.state.df
         self.root = utils.lookup_with_name(self.df, self.graph.roots[0].callpath[-1])['vis_node_name'][0]
@@ -77,6 +78,7 @@ class DiffGraph(nx.Graph):
     def add_paths(self, path_name):
         for idx, row in self.df.iterrows():
             if row.show_node:
+                print(row)
                 path = row[path_name]
                 # TODO: Sometimes the path becomes a string. Find why it happens. 
                 # If it becomes a string 

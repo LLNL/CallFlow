@@ -151,6 +151,7 @@ class App():
             }
             g = self.callflow.update(obj)
             result = json_graph.node_link_data(g)
+            print('ddddddddddddddddddddddddddddddddddddddddd')
             print(result)
             emit('group', result, json=True)
 

@@ -118,14 +118,14 @@ class CallGraph(nx.Graph):
         name_mapping = self.generic_map(self.g.nodes(), 'vis_node_name')
         nx.set_node_attributes(self.g, name='name', values=name_mapping)
 
-        type_mapping = self.generic_map(self.g.nodes(), 'type')
-        nx.set_node_attributes(self.g, name='type', values=type_mapping)
+        # type_mapping = self.generic_map(self.g.nodes(), 'type')
+        # nx.set_node_attributes(self.g, name='type', values=type_mapping)
 
         n_index_mapping = self.generic_map(self.g.nodes(), 'n_index')
         nx.set_node_attributes(self.g, name='n_index', values=n_index_mapping)
 
-        module_mapping = self.generic_map(self.g.nodes(), 'module')
-        nx.set_node_attributes(self.g, name='module', values=module_mapping)
+        # module_mapping = self.generic_map(self.g.nodes(), 'module')
+        # nx.set_node_attributes(self.g, name='module', values=module_mapping)
 
         mod_index_mapping = self.generic_map(self.g.nodes(), 'mod_index')
         nx.set_node_attributes(self.g, name='mod_index', values=mod_index_mapping)
@@ -149,7 +149,7 @@ class CallGraph(nx.Graph):
         ret = {}
         for node in nodes:
             if self.group_by == 'module':
-                groupby = '_module'
+                groupby = 'module'
             elif self.group_by == 'name':
                 groupby = 'name'
             elif self.path_name == 'path':
@@ -158,15 +158,15 @@ class CallGraph(nx.Graph):
             if '//' in node:
                 corrected_module = node.split('//')[0]
                 corrected_node = node.split('//')[1]
-                # groupby = 'name'
-                print("Getting dets of [module={0}], function={1}".format(corrected_module, corrected_node))
+                log.info("Getting dets of [module={0}], function={1}".format(corrected_module, corrected_node))
+                groupby = 'name'
             else:
                 corrected_node = node
-
-            corrected_node = node
-            
+                groupby = 'module'
+ 
             if attr == 'time (inc)':
                 group_df = self.df.groupby([groupby]).mean()
+                # log.info("Group df by {0} = \n {1}".format(groupby, group_df))
                 ret[node] = group_df.loc[corrected_node, 'time (inc)']
             
             elif attr == 'entry_functions':
@@ -209,11 +209,14 @@ class CallGraph(nx.Graph):
                 ret[node] = [node] 
                 
             else:
-                df = self.df.loc[self.df['vis_node_name'] == corrected_node][attr]
-                if df.empty:
-                    ret[node] = self.df[self.df[groupby] == corrected_node][attr]
-                else:
-                    ret[node] = list(set(self.df[self.df['vis_node_name'] == corrected_node][attr].tolist()))
+                group_df = self.df.groupby([groupby]).mean()
+                ret[node] = group_df.loc[corrected_node, attr]
+
+                # df = self.df.loc[self.df['vis_node_name'] == corrected_node][attr]
+                # if df.empty:
+                #     ret[node] = self.df[self.df[groupby] == corrected_node][attr]
+                # else:
+                #     ret[node] = list(set(self.df[self.df['vis_node_name'] == corrected_node][attr].tolist()))
         return ret
 
     def tailhead(self, edge):
@@ -365,21 +368,29 @@ class CallGraph(nx.Graph):
             elif edge[1].endswith('_'):
                 ret[edge] = additional_flow[edge[1]]
                 continue
-            group_df = self.df.groupby(['_' +  self.group_by]).max()
-            
+
+            # For source edge
             if '//' in edge[0]:
-                corrected_edge0 = edge[0].split('//')[0]
+                corrected_source = edge[0].split('//')[1]
+                group_by = 'name'
             else:
-                corrected_edge0 = edge[0]
-
+                corrected_source = edge[0]
+                group_by = 'module'
+            group_df = self.df.groupby([group_by]).max()
+            source_inc = group_df.loc[corrected_source, 'time (inc)']  
+            
+            # For target edge
             if '//' in edge[1]:
-                corrected_edge1 = edge[1].split('//')[0]
+                corrected_target = edge[1].split('//')[1]
+                group_by = 'name'
             else:
-                corrected_edge1 = edge[1]
-
-            source_inc = group_df.loc[corrected_edge0, 'time (inc)']  
-            target_inc = group_df.loc[corrected_edge1, 'time (inc)']
+                corrected_target = edge[1]
+                group_by = 'module'
+            group_df = self.df.groupby([group_by]).max()
+            target_inc = group_df.loc[corrected_target, 'time (inc)']
                      
+            log.info("Source node : {0}, time : {1}".format(corrected_source, source_inc))
+            log.info("Target node : {0}, time : {1}".format(corrected_target, target_inc))
             if source_inc == target_inc:
                 ret[edge] = source_inc
             else:
