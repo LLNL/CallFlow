@@ -9,6 +9,7 @@ class UnionGraph():
         
     # Return the union of graphs G and H.    
     def unionize(self, H, name = None, rename=(None, None)):
+        print(H)
         if not self.R.is_multigraph() == H.is_multigraph():
             raise nx.NetworkXError('G and H must both be graphs or multigraphs.')
         

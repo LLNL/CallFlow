@@ -37,8 +37,8 @@ class Filter:
         self.gf.dataframe = self.df
         
         self.filterBy = filterBy
-        self.filterPercInDecimals = int(filterPerc)/100
-        # self.filterPercInDecimals = 0.0001 
+        # self.filterPercInDecimals = int(filterPerc)/100
+        self.filterPercInDecimals = 0.001 
         
         self.fgf = self.run() 
         self.fgf = self.graft()
@@ -68,7 +68,6 @@ class Filter:
     def graft(self):
         log.info("Squashing the graph.")
         t = time.time()
-        fgf = self.fgf.squash()[0]
-        old_new_id_mapping = self.fgf.squash()[1]
+        fgf = self.fgf.squash()
         log.info("[Squash] {1} rows in dataframe (time={0})".format(time.time() - t, fgf.dataframe.shape[0]))
         return fgf

@@ -15,6 +15,7 @@ from logger import log
 import math
 import json
 from ast import literal_eval as make_tuple
+import ete3
 
 
 class CallGraph(nx.Graph):
@@ -39,14 +40,15 @@ class CallGraph(nx.Graph):
             log.warn('Modules: {0}'.format(self.df['module'].unique()))
             log.warn('Top 10 Inclusive time: ')
             top = 10
-            top_inclusive_df = self.df.nlargest(top, 'time (inc)')
-            for idx, row in top_inclusive_df.iterrows():
-                log.info('{0} [{1}]'.format(row['name'], row["time (inc)"]))
+            rank_df = self.df.groupby(['name', 'rank']).mean()
+            top_inclusive_df = rank_df.nlargest(top, 'time (inc)', keep="first")
+            for name, row in top_inclusive_df.iterrows():
+                log.info('{0} [{1}]'.format(name, row["time (inc)"]))
 
             log.warn('Top 10 Enclusive time: ')
-            top_exclusive_df = self.df.nlargest(top, 'time')
-            for idx, row in top_exclusive_df.iterrows():
-                log.info('{0} [{1}]'.format(row['name'], row["time"]))
+            top_exclusive_df = rank_df.nlargest(top, 'time', keep="first")
+            for name, row in top_exclusive_df.iterrows():
+                log.info('{0} [{1}]'.format(name, row["time"]))
     
         self.add_paths(path_name)
         # self.add_callback_paths()
@@ -62,9 +64,12 @@ class CallGraph(nx.Graph):
         # self.adj_matrix = nx.adjacency_matrix(self.g)
         # self.dense_adj_matrix = self.adj_matrix.todense()
 
+        for node in self.g.nodes(data=True):
+            print("Node", node)
         # print("Nodes", self.g.nodes())
-        print("Edges", self.g.edges())
-
+        print("Edges", self.g.edges(data=True ))
+        # print(self.graph.to_string(self.graph.roots, self.df, threshold=0.0))
+        # self.draw_tree(self.g)
 #        log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
 #        log.warn("Edges in the tree: {0}".format(len(self.g.edges)))
 #        log.warn("Is it a tree? : {0}".format(nx.is_tree(self.g)))    
@@ -79,14 +84,12 @@ class CallGraph(nx.Graph):
         ret = []
         mapper = {}
         for idx, elem in enumerate(path):
-            print(elem)
             if elem not in mapper:
                 mapper[elem] = 1
                 ret.append(elem)
             else:
                 ret.append(elem + "_" + str(mapper[elem]))
                 mapper[elem] += 1
-        print(tuple(ret))
         return tuple(ret)
     
     def add_paths(self, path_name):
@@ -98,9 +101,6 @@ class CallGraph(nx.Graph):
                 if isinstance(path, str):
                     path = make_tuple(row[path_name])
                 corrected_path = self.no_cycle_path(path)
-                print(row['name'], row['time (inc)'], row['time'])
-                print(row['path'])
-                print(corrected_path)
                 self.g.add_path(corrected_path)
 
     def add_callback_paths(self):
@@ -155,17 +155,22 @@ class CallGraph(nx.Graph):
             elif self.path_name == 'path':
                 groupby = '_name'
 
-            if attr == 'time (inc)':
-                if self.group_by == 'module':
-                    group_df = self.df.groupby([groupby]).mean()
-                elif self.group_by == 'name':
-                    group_df = self.df.groupby([groupby]).mean()
+            if '//' in node:
+                corrected_module = node.split('//')[0]
+                corrected_node = node.split('//')[1]
+                # groupby = 'name'
+                print("Getting dets of [module={0}], function={1}".format(corrected_module, corrected_node))
+            else:
+                corrected_node = node
 
-                print(self.df.groupby([groupby]))
-                ret[node] = group_df.loc[node, 'time (inc)']
+            corrected_node = node
+            
+            if attr == 'time (inc)':
+                group_df = self.df.groupby([groupby]).mean()
+                ret[node] = group_df.loc[corrected_node, 'time (inc)']
             
             elif attr == 'entry_functions':
-                module_df = self.df.loc[self.df['module'] == node]
+                module_df = self.df.loc[self.df['module'] == corrected_node]
                 entry_func_df = module_df.loc[(module_df['component_level'] == 2)]
                 if(entry_func_df.empty):
                     ret[node] = json.dumps({
@@ -185,7 +190,7 @@ class CallGraph(nx.Graph):
                     })
 
             elif attr == 'imbalance_perc':
-                module_df = self.df.loc[self.df['module'] == node]
+                module_df = self.df.loc[self.df['module'] == corrected_node]
                 max_incTime = module_df['time (inc)'].max()
                 min_incTime = module_df['time (inc)'].min()
                 avg_incTime = module_df['time (inc)'].mean()
@@ -193,19 +198,22 @@ class CallGraph(nx.Graph):
                 ret[node] = (max_incTime - avg_incTime)/max_incTime
 
             elif attr == 'time':
-                module_df = self.df.loc[self.df['module'] == node]
+                module_df = self.df.loc[self.df['module'] == corrected_node]
                 if self.group_by == 'module':
                     group_df = self.df.groupby([groupby]).max()
                 elif self.group_by == 'name':
                     group_df = self.df.groupby([groupby]).mean()
-                ret[node] = group_df.loc[node, 'time']
+                ret[node] = group_df.loc[corrected_node, 'time']
+        
+            elif attr == 'vis_node_name':
+                ret[node] = [node] 
                 
             else:
-                df = self.df.loc[self.df['vis_node_name'] == node][attr]
+                df = self.df.loc[self.df['vis_node_name'] == corrected_node][attr]
                 if df.empty:
-                    ret[node] = self.df[self.df[groupby] == node][attr]
+                    ret[node] = self.df[self.df[groupby] == corrected_node][attr]
                 else:
-                    ret[node] = list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
+                    ret[node] = list(set(self.df[self.df['vis_node_name'] == corrected_node][attr].tolist()))
         return ret
 
     def tailhead(self, edge):
@@ -297,7 +305,7 @@ class CallGraph(nx.Graph):
         # nx.set_edge_attributes(self.g, name='flow', values=flow_mapping)
 
     def draw_tree(self, g):
-        subtrees = {node: ete3.Tree(name = node) for node in g.nodes()}
+        subtrees = {node: ete3.Tree(name=node) for node in g.nodes()}
         [map(lambda edge:subtrees[edge[0]].add_child(subtrees[edge[1]]), g.edges())]
         tree = subtrees[self.root]        
         log.info(tree)
@@ -358,8 +366,19 @@ class CallGraph(nx.Graph):
                 ret[edge] = additional_flow[edge[1]]
                 continue
             group_df = self.df.groupby(['_' +  self.group_by]).max()
-            source_inc = group_df.loc[edge[0], 'time (inc)']  
-            target_inc = group_df.loc[edge[1], 'time (inc)']
+            
+            if '//' in edge[0]:
+                corrected_edge0 = edge[0].split('//')[0]
+            else:
+                corrected_edge0 = edge[0]
+
+            if '//' in edge[1]:
+                corrected_edge1 = edge[1].split('//')[0]
+            else:
+                corrected_edge1 = edge[1]
+
+            source_inc = group_df.loc[corrected_edge0, 'time (inc)']  
+            target_inc = group_df.loc[corrected_edge1, 'time (inc)']
                      
             if source_inc == target_inc:
                 ret[edge] = source_inc

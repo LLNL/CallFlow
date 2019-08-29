@@ -152,7 +152,6 @@ export default function Sankey() {
                 source = link.source = nodes[link.sourceID];
                 target = link.target = nodes[link.targetID];
 
-
                 // Come back here and correct this bug. 
                 if(source != undefined && target != undefined){
                     // if(link.type != 'back_edge'){
@@ -344,7 +343,8 @@ export default function Sankey() {
 
             links.forEach(function(link) {
                 let weight = link.weight
-                if(link.source.weight < weight){
+                console.log(link, link.source)
+                if(link.source.value < weight){
                     weight = link.source.minLinkVal
                 }
                 link.height = weight*scale*minNodeScale;

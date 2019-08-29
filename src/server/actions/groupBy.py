@@ -18,7 +18,6 @@ class groupBy:
         self.state = state
         self.df = self.state.df
         self.group_by = group_by
-#         self.eliminate_funcs = ['libmonitor.so.0.0.0']
         self.eliminate_funcs = []
         self.entry_funcs = {}
         self.module_func_map = {}
@@ -70,9 +69,9 @@ class groupBy:
                     if module in group_path:
                         from_module = group_path[len(group_path) - 1]
                         to_module = module
-                        group_path.append(module + ':' + path[i])
+                        group_path.append(module + '//' + path[i])
                         prev_module = module
-                        self.module_func_map[module].append(module + ':' + path[i])
+                        self.module_func_map[module].append(module + '//' + path[i])
                         change_name = True
                     else:
                         group_path.append(module)
@@ -86,6 +85,7 @@ class groupBy:
                         self.other_funcs[module].append(path[i])
         
         group_path = tuple(group_path)
+        print(group_path)
         return (group_path, change_name)
 
     def create_component_path(self, path, group_path):
@@ -105,7 +105,6 @@ class groupBy:
         ret = []
         unique_paths = df['path'].unique()
         for idx, path in enumerate(unique_paths):
-            # print(df.loc[df['path'] == path]['name'])
             ret.append(df.loc[df['path'] == path])
         return (ret)
             
@@ -137,6 +136,7 @@ class groupBy:
             # It might be a function that is eliminated. 
             else: 
                 temp_group_path_results = self.create_group_path(root.callpath)
+                print(temp_group_path_results)
                 group_path[rootdf.node[0]] = temp_group_path_results[0]
                 change_name[rootdf.node[0]] = temp_group_path_results[1]
 
@@ -210,17 +210,17 @@ class groupBy:
                                     node_name[snode] = "Unknown(NA)"
                                     show_node[snode] = False
                             
-                        print('Node', snode)        
-                        print("entry function:", entry_func[snode])
-                        print('Change name:', change_name[snode])
-                        print("node path: ", spath)                
-                        print("group path: ", group_path[snode])
-                        print("component path: ", component_path[snode])
-                        print("component level: ", component_level[snode])
-                        print("Show node: ", show_node[snode])
-                        print("name: ", node_name[snode])
-                        print('Module: ', module[snode])
-                        print("=================================")
+                        # print('Node', snode)        
+                        # print("entry function:", entry_func[snode])
+                        # print('Change name:', change_name[snode])
+                        # print("node path: ", spath)                
+                        # print("group path: ", group_path[snode])
+                        # print("component path: ", component_path[snode])
+                        # print("component level: ", component_level[snode])
+                        # print("Show node: ", show_node[snode])
+                        # print("name: ", node_name[snode])
+                        # print('Module: ', module[snode])
+                        # print("=================================")
                 
             except StopIteration:
                 pass

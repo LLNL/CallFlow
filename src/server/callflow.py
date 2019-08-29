@@ -68,7 +68,7 @@ class CallFlow:
         self.timer = Timer()
         self.states = self.pipeline(self.config.names)
 
-    def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
+    def pipeline(self, datasets, filterBy="Inclusive", filterPerc="0.1"):
         if self.reProcess:
             utils.debug("Processing with filter.")
         else:
@@ -77,8 +77,6 @@ class CallFlow:
         states = {}
         for idx, dataset_name in enumerate(datasets):   
             states[dataset_name] = State()
-            # This step takes a bit of time so do it only if required. 
-            # It would be required especially when filtering and stuff. 
             if(self.reProcess and self.processEntire):
                 states[dataset_name] = self.create(dataset_name)
                 states[dataset_name] = self.process(states[dataset_name], 'entire')
@@ -117,7 +115,7 @@ class CallFlow:
 
         state.entire_gf = create.gf
         state.entire_df = create.df
-        state.entire_graph = create.graph       
+        state.entire_graph = create.graph
         
         # print("After Creating.")
         # print(state.df.groupby(['module']).mean())
@@ -156,6 +154,7 @@ class CallFlow:
 
         if write_graph:
             # dump the entire_graph as literal
+            print(state.df)
             graph_literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
             graph_filepath = dirname + '/' + state_name + '/' + format_of_df + '_graph.json'
             utils.debug('File path: {0}'.format(graph_filepath))
@@ -301,10 +300,6 @@ class CallFlow:
             nx = CallGraph(state1, path_type, True, action["groupBy"])
             state1.g = nx.g
             return nx.g
-
-        elif action_name == 'diff':
-            union_state = structDiff(state1, state2)
-            # nx = CallGraph(union_state, 'group_path', True, 'module')
         
         elif action_name == 'split-level':
             splitLevel(state1, action["groupBy"])
@@ -359,7 +354,7 @@ class CallFlow:
                 path_type = 'path'
 
             for idx, dataset in enumerate(datasets):
-                group_state = self.read_group_gf(dataset)
+                group_state = self.read_gf(dataset)
                 graph = DiffGraph(group_state, path_type, True, action['groupBy'])
                 self.states[dataset].g = graph.g
 

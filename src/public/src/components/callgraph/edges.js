@@ -1,5 +1,5 @@
 import tpl from '../../html/callgraph/edges.html'
-import * as  d3 from 'd3'
+import * as d3 from 'd3'
 
 export default {
     template: tpl,
@@ -30,7 +30,7 @@ export default {
             this.edges = d3.select('#' + this.id)
             this.view = view
 
-            let links = graph.links.filter( (link) => {
+            let links = graph.links.filter((link) => {
                 return link.type != "callback"
             })
 
@@ -47,7 +47,7 @@ export default {
                         Tx2 = Txi(0.4),
                         Tx3 = Txi(1 - 0.4),
                         Ty0 = d.source.y + d.sy,
-                        Ty1 = d.target.y + d.ty 
+                        Ty1 = d.target.y + d.ty
 
                     // note .ty is the y point that the edge meet the target(for top)
                     //		.sy is the y point of the source  (for top)
@@ -62,7 +62,7 @@ export default {
                         By1 = d.target.y + d.ty + d.height
 
                     const rightMoveDown = By1 - Ty1;
-
+                    console.log(d)
                     return `M${Tx0},${Ty0}
 		                    C${Tx2},${Ty0} 
 		                    ${Tx3}, ${Ty1} 
@@ -72,9 +72,9 @@ export default {
 		                    ${Bx2},${By0} 
 		                    ${Bx0},${By0}`;
                 })
-                .style('fill', d =>
-                    // return "url(#" + getGradID(d) + ")";
-                    d.color)
+                .style('fill', d => {
+                    return '#202020'
+                })
                 .style('fill-opacity', 0)
                 .style('stroke', (d) => {
                     // return "url(#" + getGradID(d) + ")";
@@ -97,11 +97,11 @@ export default {
                 .data(links)
                 .style('fill-opacity', 0)
                 .attr('d', (d) => {
-                    if(d.sy == undefined){
+                    if (d.sy == undefined) {
                         d.sy = 0
                         return
                     }
-                    if(d.ty == undefined){
+                    if (d.ty == undefined) {
                         d.ty = 0
                         return
                     }

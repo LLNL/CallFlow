@@ -116,8 +116,8 @@ export default {
 			// Enable diff mode only if the number of datasets >= 2
 			this.$store.datasets = data['names']
 			this.datasets = data['names']
-			this.$store.selectedDataset = data['names'][1]
-			this.selectedDataset = data['names'][1]
+			this.$store.selectedDataset = data['names'][0]
+			this.selectedDataset = data['names'][0]
 
 			if (this.numOfDatasets >= 2) {
 				this.enableDiff = true
@@ -151,6 +151,7 @@ export default {
 		},
 
 		group(data) {
+			console.log(data)
 			console.log("Data for", this.selectedFormat, ": ", data)
 			if (this.selectedData == 'Dataframe') {
 				this.$refs.CallgraphA.init(data)
@@ -231,6 +232,7 @@ export default {
 						functionInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
+					console.log(this.$store.selectedDataset)
 					this.$socket.emit('group', {
 						dataset: this.$store.selectedDataset,
 						format: this.selectedFormat,
@@ -272,6 +274,7 @@ export default {
 			this.colorMap = this.$store.color.getAllColors()
 
 			if (this.selectedColorBy == 'Inclusive') {
+				console.log(this.selectedDataset)
 				this.selectedColorMin = this.$store.minIncTime[this.selectedDataset]
 				this.selectedColorMax = this.$store.maxIncTime[this.selectedDataset]
 			} else if (this.selectedColorBy == 'Exclusive') {

@@ -365,7 +365,8 @@ export default function Sankey() {
                     target_max_weight = Math.max(target_max_weight, target_link['time (inc)'])
                 }
                 weight = Math.min(source_max_weight, target_max_weight)
-                if(link.source.weight < weight){
+                console.log(link.source, link)
+                if(link.source.value < weight){
                     weight = link.source.minLinkVal
                 }
                 link.height = weight*scale*minNodeScale;

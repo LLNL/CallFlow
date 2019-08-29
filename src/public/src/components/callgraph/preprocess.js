@@ -20,51 +20,6 @@ export default function preprocess(graph) {
     return graph
 }
 
-function addUncertainityInfo(graph) {
-    let dataset1 = {
-        'libmonitor.so.0.0.0': [0.0, 0.0, 0.0, 194787687.0],
-        'kripke': [0.0, 0.0, 472050.25, 194787687.0],
-        'ld-2.17.so': [0.0, 0.0, 0.0, 5990.0],
-        'libc-2.17.so': [0.0, 0.0, 0.0, 2413077.0],
-        'libfabric.so.1.9.14': [0.0, 0.0, 0.0, 525976.0],
-        'libm-2.17.so': [0.0, 0.0, 0.0, 5988.0],
-        'libpsm2.so.2.1': [0.0, 0.0, 0.0, 245065.0],
-        'libstdc++.so.6.0.20': [0.0, 0.0, 0.0, 604003.0],
-        'libmpi.so.12.0.0': [0.0, 0.0, 5983.0, 2912673.0],
-        '<unknown load module>': [5979.0, 11959.5, 11988.25, 41951.0]
-    }
-    let dataset2 = {
-        'libmonitor.so.0.0.0': [0.0, 0.0, 5978.25, 194787687.0],
-        'kripke': [0.0, 0.0, 5965.25, 194787687.0],
-        'ld-2.17.so': [0.0, 5990.0, 23922.5, 107417.0],
-        'libc-2.17.so': [0.0, 0.0, 0.0, 80080390.0],
-        'libm-2.17.so': [0.0, 0.0, 0.0, 5980.0],
-        'libpsm2.so.2.1': [0.0, 0.0, 0.0, 5773527.0],
-        'libpthread-2.17.so': [0.0, 0.0, 5935.25, 17972.0],
-        'libstdc++.so.6.0.20': [0.0, 0.0, 0.0, 80080390.0],
-        'libintlc.so.5': [0.0, 0.0, 0.0, 5993.0],
-        'libmpi.so.12.0.5': [0.0, 0.0, 0.0, 747178.0],
-        '<unknown load module>': [5979.0, 11959.5, 11988.25, 41951.0]
-    }
-
-    for (const node of graph.nodes) {
-        node.nrange = []
-        if (node.name in dataset1) {
-            let vals = dataset1[node.name]
-            for (let i = 0; i < vals.length; i += 1) {
-                node.nrange.push(vals[i])
-            }
-        }
-        if (node.name in dataset2) {
-            let vals = dataset2[node.name]
-            for (let i = 0; i < vals.length; i += 1) {
-                node.nrange.push(vals[i])
-            }
-        }
-    }
-    return graph
-}
-
 function addMaxLevel(graph) {
     let ret = 0
     let nodes = graph.nodes
@@ -82,10 +37,14 @@ function addMaxLevel(graph) {
    sourceID : int, targetID: int , target: str, source: str
    } */
 function addLinkID(graph) {
-    const nodeMap = {};
-    for (const [idx, node] of graph.nodes.entries()) {
+    const nodeMap = {}
+    let idx = 0, node;
+    for ([idx, node] of graph.nodes.entries()) {
+        console.log(node.name)
         nodeMap[node.name] = idx;
     }
+
+    idx += 1
 
     const links = graph.links;
     for (const link of graph.links) {
@@ -93,9 +52,21 @@ function addLinkID(graph) {
             continue;
         }
 
-        link['sourceID'] = nodeMap[link.source];
-        link['targetID'] = nodeMap[link.target];
+        if(nodeMap[link.source] == undefined){
+            nodeMap[link.source] = idx
+            idx += 1
+        }
+        
+        if(nodeMap[link.target] == undefined){
+            nodeMap[link.target] = idx
+            idx += 1
+        }
+
+        link['sourceID'] = nodeMap[link.source]
+        link['targetID'] = nodeMap[link.target]
+        console.log(link.source, link.target)
     }
+    console.log(nodeMap)
     return graph;
 }
 
@@ -139,7 +110,6 @@ function calculateFlow(graph) {
                         inComing[linkLabel] += link.weight;
                     }
                 }
-                console.log(link, inComing)
             }
         });
 
@@ -157,7 +127,6 @@ function calculateFlow(graph) {
         node.inclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]);
         node.exclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel]
 
-        console.log(inComing, outGoing)
     });
 
     return graph;
