@@ -143,22 +143,30 @@ def debug(action='', data={}):
         data_string = ''
     log.error(' {0} {1}'.format(action, data_string))
 
-def dfs(graph, limit):
-    def dfs_recurse(root):
-        level = 0
-        for node in root.children:
-            if(level < limit):
-                print('Node =', node)
-                level += 1
-                dfs_recurse(node)
-        
-    for root in graph.roots:
-        print("Root = ", root)
-        dfs_recurse(root)
-
 def node_hash_mapper(df):
     ret = {}
     for idx, row in df.iterrows():
         df_node_index = str(row.nid)
         ret[df_node_index] = row.node
     return ret  
+
+def dfs(graph, dataframe, limit):
+    def dfs_recurse(root, level):
+        for node in root.children:
+            result = ''
+            if(level < limit):
+                for i in range(0, level):
+                    result += '- '
+                node_df = dataframe.loc[(dataframe['nid'] == node.nid) & (dataframe['name'] == node.callpath[-1])]
+                inclusive_runtime = " time (inc) = " + str(node_df['time (inc)'].mean())
+                exclusive_runtime = " time = " + str(node_df['time'].mean())
+                # module = "Module = " + str(node_df['module'].unique()[0])
+                module = ''
+                result += 'Node = ' + node.callpath[-1] + '[' + module + ':' + str(node.nid) + ']' + inclusive_runtime + exclusive_runtime 
+                print(result)
+                level += 1
+                dfs_recurse(node, level)
+    level = 0
+    for root in graph.roots:
+        print("Root = {0} [{1}]".format(root, root.nid))
+        dfs_recurse(root, level)

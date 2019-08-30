@@ -28,8 +28,11 @@ class State(object):
                 ret = node_df_T_attr.tolist()
         return ret
         
-    def lookup(self, _hash):
-        return self.df.loc[self.df['node'] == self.node_hash_map[str(_hash)]]
+    def lookup(self, node):
+        print(node.nid, node.callpath[-1])
+        # print(self.df['name'].unique())
+        # print(self.df.loc[self.df['name'] == node.callpath[-1]])
+        return self.df.loc[(self.df['name'] == node.callpath[-1]) & (self.df['nid'] == node.nid)]
 
     def lookup_with_node(self, node):
         return self.df.loc[self.df['name'] == node.callpath[-1]]
@@ -41,7 +44,7 @@ class State(object):
         return self.df.loc[self.df['vis_node_name'] == name]
 
     def update_df(self, col_name, mapping):
-        self.df[col_name] = self.df['node'].apply(lambda node: mapping[node] if node in mapping.keys() else '')
+        self.df[col_name] = self.df['nid'].apply(lambda node: mapping[node] if node in mapping.keys() else '')
         self.df = self.df
     
     def grouped_df(self, attr):

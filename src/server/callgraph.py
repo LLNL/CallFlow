@@ -36,11 +36,10 @@ class CallGraph(nx.Graph):
 
         debug = True
         if(debug):
-            log.info(self.df.info())
             log.warn('Modules: {0}'.format(self.df['module'].unique()))
             log.warn('Top 10 Inclusive time: ')
             top = 10
-            rank_df = self.df.groupby(['name', 'rank']).mean()
+            rank_df = self.df.groupby(['name', 'nid']).mean()
             top_inclusive_df = rank_df.nlargest(top, 'time (inc)', keep="first")
             for name, row in top_inclusive_df.iterrows():
                 log.info('{0} [{1}]'.format(name, row["time (inc)"]))
@@ -65,9 +64,10 @@ class CallGraph(nx.Graph):
         # self.dense_adj_matrix = self.adj_matrix.todense()
 
         for node in self.g.nodes(data=True):
-            print("Node", node)
+            log.info("Node: {0}".format(node))
         # print("Nodes", self.g.nodes())
-        print("Edges", self.g.edges(data=True ))
+        for edge in self.g.edges():
+            log.info("Edge: {0}".format(edge))
         # print(self.graph.to_string(self.graph.roots, self.df, threshold=0.0))
         # self.draw_tree(self.g)
 #        log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
@@ -88,7 +88,7 @@ class CallGraph(nx.Graph):
                 mapper[elem] = 1
                 ret.append(elem)
             else:
-                ret.append(elem + "_" + str(mapper[elem]))
+                ret.append(elem + "//" + str(mapper[elem]))
                 mapper[elem] += 1
         return tuple(ret)
     
@@ -100,8 +100,10 @@ class CallGraph(nx.Graph):
                 # If it becomes a string 
                 if isinstance(path, str):
                     path = make_tuple(row[path_name])
+                # if 'kripke//Kernel_3d_DGZ::LPlusTimes' not in path:
                 corrected_path = self.no_cycle_path(path)
-                self.g.add_path(corrected_path)
+                print("corrected path",  corrected_path)
+                self.g.add_path(corrected_path, nid=row.nid)
 
     def add_callback_paths(self):
         for from_module, to_modules in self.callbacks.items():
@@ -139,8 +141,8 @@ class CallGraph(nx.Graph):
         # self.level_mapping = self.assign_levels()               
         # nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
 
-        children_mapping = self.immediate_children()
-        nx.set_node_attributes(self.g, name='children', values=children_mapping)
+        # children_mapping = self.immediate_children()
+        # nx.set_node_attributes(self.g, name='children', values=children_mapping)
 
         entry_function_mapping = self.generic_map(self.g.nodes(), 'entry_functions')
         nx.set_node_attributes(self.g, name='entry_functions', values=entry_function_mapping)
@@ -154,6 +156,10 @@ class CallGraph(nx.Graph):
                 groupby = 'name'
             elif self.path_name == 'path':
                 groupby = '_name'
+
+            # if '|' in node:
+            #     corrected_nid = node.split('|')[0]
+            #     node = node.split('|')[1] 
 
             if '//' in node:
                 corrected_module = node.split('//')[0]
@@ -343,7 +349,7 @@ class CallGraph(nx.Graph):
     # TODO: Wrong formulation of the edge weights. 
     def calculate_flows(self, graph):
         ret = {}
-        edges = graph.edges()
+        edges = graph.edges(data=True)
         additional_flow = {}
         
         # Calculates the costs in cycles and aggregates to one node.
@@ -370,29 +376,48 @@ class CallGraph(nx.Graph):
                 continue
 
             # For source edge
-            if '//' in edge[0]:
-                corrected_source = edge[0].split('//')[1]
-                group_by = 'name'
+            if '|' in edge[0]:
+                source = edge[0].split('|')[1]
             else:
-                corrected_source = edge[0]
+                source = edge[0]
+
+            corrected_module = source.split('//')[0]
+            if '//' in source:
+                corrected_source = source.split('//')[1]
+                group_by = 'name'
+                source_df = self.df.loc[(self.df[group_by] == corrected_source) & (self.df['nid'] == edge[2]['nid'])]
+            else:
+                corrected_source = source
                 group_by = 'module'
-            group_df = self.df.groupby([group_by]).max()
-            source_inc = group_df.loc[corrected_source, 'time (inc)']  
+                print(corrected_module, corrected_source, edge[2]['nid'])
+                source_df = self.df.loc[(self.df[group_by] == corrected_module) & (self.df['nid'] == edge[2]['nid'])]
+
+            source_inc = source_df['time (inc)'].mean()
+            print(source_df)
             
             # For target edge
-            if '//' in edge[1]:
-                corrected_target = edge[1].split('//')[1]
+            if '|' in edge[1]:
+                target = edge[1].split('|')[1]
+            else: 
+                target = edge[1]
+
+            corrected_module = target.split('//')[0]
+            if '//' in target:
+                corrected_target = target.split('//')[1]
                 group_by = 'name'
+                target_df = self.df.loc[(self.df[group_by] == corrected_target) & (self.df['nid'] == edge[2]['nid'])]
             else:
-                corrected_target = edge[1]
+                corrected_target = target
                 group_by = 'module'
-            group_df = self.df.groupby([group_by]).max()
-            target_inc = group_df.loc[corrected_target, 'time (inc)']
+                target_df = self.df.loc[(self.df[group_by] == corrected_module) & (self.df['nid'] == edge[2]['nid'])]
+            target_inc = target_df['time (inc)'].mean()
                      
             log.info("Source node : {0}, time : {1}".format(corrected_source, source_inc))
             log.info("Target node : {0}, time : {1}".format(corrected_target, target_inc))
+
+            print(edge)
             if source_inc == target_inc:
-                ret[edge] = source_inc
+                ret[(edge[0], edge[1])] = source_inc
             else:
-                ret[edge] = target_inc
+                ret[(edge[0], edge[1])] = target_inc
         return ret

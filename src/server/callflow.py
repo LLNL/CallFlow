@@ -234,6 +234,10 @@ class CallFlow:
         state.df = self.replace_str_with_Node(state.df, state.graph)
         state.entire_df = self.replace_str_with_Node(state.entire_df, state.entire_graph)
 
+        print("==============================================")
+        # utils.dfs(state.graph, state.df, 1000)
+        # utils.dfs(state.entire_graph, state.entire_df, 1000)
+
         return state
 
     def read_group_gf(self, name):
@@ -287,6 +291,7 @@ class CallFlow:
             return {}
 
         elif action_name == "group":
+            utils.dfs(state1.graph, state1.df, 1000)
             group = groupBy(state1, action["groupBy"])
             self.states[dataset1].gdf = group.df
             self.states[dataset1].graph = group.graph 
