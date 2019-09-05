@@ -63,16 +63,18 @@ class groupBy:
             if module not in self.eliminate_funcs:
                 if prev_module is None:
                     prev_module = module
+                    # group_path.append(module + '=' + path[i])
                     group_path.append(module)
                 elif module != prev_module:
                     if module in group_path:
                         from_module = group_path[len(group_path) - 1]
                         to_module = module
-                        group_path.append(module + '//' + path[i])
+                        group_path.append(module + '/' + path[i])
                         prev_module = module
-                        self.module_func_map[module].append(module + '//' + path[i])
+                        self.module_func_map[module].append(module + '/' + path[i])
                         change_name = True
                     else:
+                        # group_path.append(module + '=' + path[i])
                         group_path.append(module)
                         prev_module = module
                         if path[i] not in self.entry_funcs[module]:
@@ -83,8 +85,8 @@ class groupBy:
                     if path[i] not in self.other_funcs[module] and path[i] not in self.entry_funcs[module]:
                         self.other_funcs[module].append(path[i])
         
+        # group_path = (tuple(group_path), nid)
         group_path = tuple(group_path)
-        # print(group_path)
         return (group_path, change_name)
 
     def create_component_path(self, path, group_path):
@@ -117,6 +119,7 @@ class groupBy:
         module = {}   
         change_name = {}
         module_idx = {}
+        source_nid = {}
 
         module_id_map = {}
         module_count = 0
@@ -145,17 +148,18 @@ class groupBy:
                 show_node[rootdf.node[0].nid] = True
                 module[rootdf.node[0].nid] = group_path[rootdf.node[0].nid][-1]
                 module_idx[rootdf.node[0].nid] = module_count
+                source_nid[rootdf.node[0].nid] = None
 
-                # print("entry function:", entry_func[rootdf.node[0]])
-                # print('Change name:', change_name[rootdf.node[0]])
-                # print("node path: ", root.callpath)                
-                # print("group path: ", group_path[rootdf.node[0]])
-                # print("component path: ", component_path[rootdf.node[0]])
-                # print("component level: ", component_level[rootdf.node[0]])
-                # print("Show node: ", show_node[rootdf.node[0]])
-                # print("name: ", node_name[rootdf.node[0]])
-                # print('Module: ', module[rootdf.node[0]])
-                # print("=================================")
+                print("entry function:", entry_func[rootdf.node[0].nid])
+                print('Change name:', change_name[rootdf.node[0].nid])
+                print("node path: ", root.callpath)                
+                print("group path: ", group_path[rootdf.node[0].nid])
+                print("component path: ", component_path[rootdf.node[0].nid])
+                print("component level: ", component_level[rootdf.node[0].nid])
+                print("Show node: ", show_node[rootdf.node[0].nid])
+                print("name: ", node_name[rootdf.node[0].nid])
+                print('Module: ', module[rootdf.node[0].nid])
+                print("=================================")
 
             root = next(node_gen)
 
@@ -193,6 +197,7 @@ class groupBy:
                                 component_path[snid] = self.create_component_path(spath, group_path[snid])
                                 component_level[snid] = len(component_path[snid])
                                 module[snid] = component_path[snid][0]
+                                source_nid[tnid] = snid
                             
                                 if module[snid] not in module_id_map:
                                     module_count += 1 
@@ -203,24 +208,24 @@ class groupBy:
 
                                 if component_level[snid] == 2:
                                     entry_func[snid] = True
-                                    node_name[snid] = component_path[snid][0]
+                                    node_name[snid] = component_path[snid][1]
                                     show_node[snid] = True
                                 else:
                                     entry_func[snid] = False
                                     node_name[snid] = "Unknown(NA)"
                                     show_node[snid] = False
                             
-                        # print('Node', snode)        
-                        # print("entry function:", entry_func[snid])
-                        # print('Change name:', change_name[snid])
-                        # print("node path: ", spath)                
-                        # print("group path: ", group_path[snid])
-                        # print("component path: ", component_path[snid])
-                        # print("component level: ", component_level[snid])
-                        # print("Show node: ", show_node[snid])
-                        # print("name: ", node_name[snid])
-                        # print('Module: ', module[snid])
-                        # print("=================================")
+                        print('Node: ', snode)        
+                        print("entry function:", entry_func[snid])
+                        print('Change name:', change_name[snid])
+                        print("node path: ", spath)                
+                        print("group path: ", group_path[snid])
+                        print("component path: ", component_path[snid])
+                        print("component level: ", component_level[snid])
+                        print("Show node: ", show_node[snid])
+                        print("name: ", node_name[snid])
+                        print('Module: ', module[snid])
+                        print("=================================")
                 
             except StopIteration:
                 pass
@@ -238,3 +243,5 @@ class groupBy:
 
         self.state.entry_funcs = self.entry_funcs
         self.state.other_funcs = self.other_funcs
+        self.state.source_nid = source_nid
+

@@ -211,13 +211,13 @@ class CallFlow:
                 data = json.load(graphFile)
 
         state.gf = GraphFrame()
-        state.gf.from_literal(data)
+        state.gf.from_literal_persist(data)
 
         with open(entire_graph_filepath, 'r') as entire_graphFile:
             entire_data = json.load(entire_graphFile)
             
         state.entire_gf = GraphFrame()
-        state.entire_gf.from_literal(entire_data)
+        state.entire_gf.from_literal_persist(entire_data)
 
         state.df = pd.read_csv(df_filepath)
         state.entire_df = pd.read_csv(entire_df_filepath)
@@ -268,14 +268,14 @@ class CallFlow:
             return self.config
 
         if 'groupBy' in action:
-            utils.debug('Grouping by: ', action['groupBy'])
+            log.debug('Grouping by: {0}'.format(action['groupBy']))
         else:
             action['groupBy'] = 'name'
 
         dataset1 = action['dataset1']
         state1 = self.states[dataset1]
 
-        print("The selected Dataset is ", dataset1)
+        log.info("The selected Dataset is {0}".format(dataset1))
 
         # Compare against the different operations
         if action_name == 'default':
@@ -291,6 +291,7 @@ class CallFlow:
             return {}
 
         elif action_name == "group":
+            log.debug("Grouping the Graphframe by: {0}".format(action['groupBy']))
             utils.dfs(state1.graph, state1.df, 1000)
             group = groupBy(state1, action["groupBy"])
             self.states[dataset1].gdf = group.df

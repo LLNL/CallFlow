@@ -141,7 +141,7 @@ def debug(action='', data={}):
         data_string = '' + json.dumps(data, indent=4, sort_keys=True)
     else:
         data_string = ''
-    log.error(' {0} {1}'.format(action, data_string))
+    log.debug(' {0} {1}'.format(action, data_string))
 
 def node_hash_mapper(df):
     ret = {}
@@ -151,6 +151,8 @@ def node_hash_mapper(df):
     return ret  
 
 def dfs(graph, dataframe, limit):
+    log.info('DFS on the call graph')
+    log.info('--------------------- ')
     def dfs_recurse(root, level):
         for node in root.children:
             result = ''
@@ -163,10 +165,10 @@ def dfs(graph, dataframe, limit):
                 # module = "Module = " + str(node_df['module'].unique()[0])
                 module = ''
                 result += 'Node = ' + node.callpath[-1] + '[' + module + ':' + str(node.nid) + ']' + inclusive_runtime + exclusive_runtime 
-                print(result)
+                log.info(result)
                 level += 1
                 dfs_recurse(node, level)
     level = 0
     for root in graph.roots:
-        print("Root = {0} [{1}]".format(root, root.nid))
+        log.info("Root = {0} [{1}]".format(root, root.nid))
         dfs_recurse(root, level)

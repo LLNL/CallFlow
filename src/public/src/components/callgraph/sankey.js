@@ -208,7 +208,8 @@ export default function Sankey() {
     function findroot(){
 	    let ret = []
 	    nodes.forEach(function(node){
-	        if(node['id'] == "libmonitor.so.0.0.0"){
+            if(node['id'] == 'libmonitor.so.0.0.0'){
+	        // if(node['id'] == "libmonitor.so.0.0.0=<program root>"){
 		        ret.push(node)
 	        }	    
 	    })
@@ -221,12 +222,14 @@ export default function Sankey() {
     // nodes with no outgoing links are assigned the maximum breadth.
     function computeNodeBreadths() {
         let remainingNodes = findroot()
+        console.log(remainingNodes)
         let nextNodes = [];
         let level = 0
         while (remainingNodes.length) {
             nextNodes = [];
 	        remainingNodes.forEach(function(node) {
                 node.level = level
+                console.log(level)
 	    	    node.dx = nodeWidth;
                 node.sourceLinks.forEach(function(link) {
                     nextNodes.push(link.target);
@@ -265,8 +268,9 @@ export default function Sankey() {
 
     function scaleNodeBreadths(kx) {
         nodes.forEach(function(node) {
-	        let level = node.level
-            let x = widthScale(level)
+
+            console.log(node.level)
+            let x = widthScale(node.level)
             // console.log(node.name, x, node.level)
 	        node.x = x
         });

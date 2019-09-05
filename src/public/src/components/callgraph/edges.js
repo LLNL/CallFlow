@@ -41,6 +41,7 @@ export default {
                     return 'edge';
                 })
                 .attr('d', (d) => {
+                    console.log(d.source.x, d.source.height, d.target.x, d.source.y, d.sy, d.target.y, d.ty)
                     let Tx0 = d.source.x + d.source.height,
                         Tx1 = d.target.x,
                         Txi = d3.interpolateNumber(Tx0, Tx1),

@@ -53,27 +53,23 @@ class CallGraph(nx.Graph):
         # self.add_callback_paths()
 
         if add_info == True:
-            print('Creating a Graph with node or edge attributes.')
+            log.info('Creating a Graph with node or edge attributes.')
             self.add_node_attributes()
             self.add_edge_attributes()
         else:
-            print('Creating a Graph without node or edge attributes.')
+            log.info('Creating a Graph without node or edge attributes.')
             pass
-
-        # self.adj_matrix = nx.adjacency_matrix(self.g)
-        # self.dense_adj_matrix = self.adj_matrix.todense()
 
         for node in self.g.nodes(data=True):
             log.info("Node: {0}".format(node))
-        # print("Nodes", self.g.nodes())
         for edge in self.g.edges():
             log.info("Edge: {0}".format(edge))
-        # print(self.graph.to_string(self.graph.roots, self.df, threshold=0.0))
-        # self.draw_tree(self.g)
-#        log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
-#        log.warn("Edges in the tree: {0}".format(len(self.g.edges)))
-#        log.warn("Is it a tree? : {0}".format(nx.is_tree(self.g)))    
-#        log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
+        
+        if debug:
+            log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
+            log.warn("Edges in the tree: {0}".format(len(self.g.edges)))
+            log.warn("Is it a tree? : {0}".format(nx.is_tree(self.g)))    
+            log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
 
     def root_runtime_inc(self):
         root = self.graph.roots[0]
@@ -99,11 +95,15 @@ class CallGraph(nx.Graph):
                 # TODO: Sometimes the path becomes a string. Find why it happens. 
                 # If it becomes a string 
                 if isinstance(path, str):
-                    path = make_tuple(row[path_name])
-                # if 'kripke//Kernel_3d_DGZ::LPlusTimes' not in path:
+                    path = make_tuple(path)
+ 
                 corrected_path = self.no_cycle_path(path)
-                print("corrected path",  corrected_path)
-                self.g.add_path(corrected_path, nid=row.nid)
+                if(len(corrected_path) >= 2):   
+                    source = corrected_path[-2]
+                    target = corrected_path[-1]
+
+                    if not self.g.has_edge(source, target):
+                        self.g.add_edge(source, target)
 
     def add_callback_paths(self):
         for from_module, to_modules in self.callbacks.items():
@@ -123,14 +123,14 @@ class CallGraph(nx.Graph):
         # type_mapping = self.generic_map(self.g.nodes(), 'type')
         # nx.set_node_attributes(self.g, name='type', values=type_mapping)
 
-        n_index_mapping = self.generic_map(self.g.nodes(), 'n_index')
-        nx.set_node_attributes(self.g, name='n_index', values=n_index_mapping)
+        # n_index_mapping = self.generic_map(self.g.nodes(), 'n_index')
+        # nx.set_node_attributes(self.g, name='n_index', values=n_index_mapping)
 
         # module_mapping = self.generic_map(self.g.nodes(), 'module')
         # nx.set_node_attributes(self.g, name='module', values=module_mapping)
 
-        mod_index_mapping = self.generic_map(self.g.nodes(), 'mod_index')
-        nx.set_node_attributes(self.g, name='mod_index', values=mod_index_mapping)
+        # mod_index_mapping = self.generic_map(self.g.nodes(), 'mod_index')
+        # nx.set_node_attributes(self.g, name='mod_index', values=mod_index_mapping)
 
         # imbalance_perc_mapping = self.generic_map(self.g.nodes(), 'imbalance_perc')
         # nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)
@@ -157,21 +157,27 @@ class CallGraph(nx.Graph):
             elif self.path_name == 'path':
                 groupby = '_name'
 
-            # if '|' in node:
-            #     corrected_nid = node.split('|')[0]
-            #     node = node.split('|')[1] 
-
-            if '//' in node:
-                corrected_module = node.split('//')[0]
-                corrected_node = node.split('//')[1]
+            if "=" in node:
+                log.info('Super node: {0}'.format(node))
+                corrected_module = node.split('=')[0]
+                corrected_function = node.split('=')[1]
+                corrected_node = corrected_module
+                groupby = 'module'
+            elif '/' in node:
+                log.info('Meta node: {0}'.format(node))
+                corrected_module = node.split('/')[0]
+                corrected_function = node.split('/')[1]
+                corrected_node = corrected_function
                 log.info("Getting dets of [module={0}], function={1}".format(corrected_module, corrected_node))
                 groupby = 'name'
             else:
+                log.info('Node: {0}'.format(node))
                 corrected_node = node
                 groupby = 'module'
  
             if attr == 'time (inc)':
-                group_df = self.df.groupby([groupby]).mean()
+                group_df = self.df.groupby([groupby]).max()
+                print(corrected_node)
                 # log.info("Group df by {0} = \n {1}".format(groupby, group_df))
                 ret[node] = group_df.loc[corrected_node, 'time (inc)']
             
@@ -217,12 +223,6 @@ class CallGraph(nx.Graph):
             else:
                 group_df = self.df.groupby([groupby]).mean()
                 ret[node] = group_df.loc[corrected_node, attr]
-
-                # df = self.df.loc[self.df['vis_node_name'] == corrected_node][attr]
-                # if df.empty:
-                #     ret[node] = self.df[self.df[groupby] == corrected_node][attr]
-                # else:
-                #     ret[node] = list(set(self.df[self.df['vis_node_name'] == corrected_node][attr].tolist()))
         return ret
 
     def tailhead(self, edge):
@@ -231,79 +231,72 @@ class CallGraph(nx.Graph):
     def tailheadDir(self, edge):
         return str(edge[0]), str(edge[1]), self.edge_direction[edge]
 
-    def edges_from(self, node):
-        for e in self.g.edges(node):
-            yield e + ('forward',)            
-
-    def edge_id(self, edge):
-        return edge[:-1]
-
-    def assign_levels(self):
-        levelMap = {}
-        track_level = 0
-        nodes = self.g.nbunch_iter(self.root)
+    # def assign_levels(self):
+    #     levelMap = {}
+    #     track_level = 0
+    #     nodes = self.g.nbunch_iter(self.root)
         
-        for start_node in nodes:            
-            active_nodes = [start_node]
-            levelMap[self.root] = 0
+    #     for start_node in nodes:            
+    #         active_nodes = [start_node]
+    #         levelMap[self.root] = 0
             
-            for edge in nx.edge_dfs(self.g, start_node, 'original'):                
-                log.warn("[Graph] Edge: {0}".format(edge))
-                head_level = None
-                tail_level = None
-                head, tail = self.tailhead(edge)
+    #         for edge in nx.edge_dfs(self.g, start_node, 'original'):                
+    #             log.warn("[Graph] Edge: {0}".format(edge))
+    #             head_level = None
+    #             tail_level = None
+    #             head, tail = self.tailhead(edge)
                 
-                if head != start_node:
-                    active_nodes.append(head)
+    #             if head != start_node:
+    #                 active_nodes.append(head)
 
-                # if cycle is found 
-                if head in active_nodes and head != start_node and tail in active_nodes:
-                    log.warn('Cycle found : {0} <====> {1}'.format(head, tail))
-                    # self.edge_direction[(head, tail+'_')] = 'back_edge'
-                    # edge_data = self.g.get_edge_data(*edge)
-                    # self.g.add_node(tail+'_')
-                    # self.g.add_edge(head, tail+'_', data=edge_data)
-                    # self.g.node[tail+'_']['name'] = [tail + '_']
-                    # self.g.node[tail+'_']['weight'] = self.g.node[tail]['weight']
-                    # self.g.remove_edge(edge[0], edge[1])
-                    # levelMap[tail+'_'] = track_level + 1
+    #             # if cycle is found 
+    #             if head in active_nodes and head != start_node and tail in active_nodes:
+    #                 log.warn('Cycle found : {0} <====> {1}'.format(head, tail))
+    #                 # self.edge_direction[(head, tail+'_')] = 'back_edge'
+    #                 # edge_data = self.g.get_edge_data(*edge)
+    #                 # self.g.add_node(tail+'_')
+    #                 # self.g.add_edge(head, tail+'_', data=edge_data)
+    #                 # self.g.node[tail+'_']['name'] = [tail + '_']
+    #                 # self.g.node[tail+'_']['weight'] = self.g.node[tail]['weight']
+    #                 # self.g.remove_edge(edge[0], edge[1])
+    #                 # levelMap[tail+'_'] = track_level + 1
 
-                    #TODO: Handle cycle case.
-                    # self.edge_direction[(head, tail)] = 'forward_edge'
-                    # levelMap[tail] = levelMap[head] +  1                    
-                    # track_level += 1
-                    continue
-                else:
-                    self.edge_direction[(head, tail)] = 'forward_edge'
-                    levelMap[tail] = levelMap[head] + 1                    
-                    track_level += 1
-                    log.warn("level for {0}: {1}".format(tail, levelMap[tail]))
-                # Since dfs, set level = 0 when head is the start_node. 
-                if head == start_node:
-                    active_nodes = [start_node]
-                    track_level = 0
+    #                 #TODO: Handle cycle case.
+    #                 # self.edge_direction[(head, tail)] = 'forward_edge'
+    #                 # levelMap[tail] = levelMap[head] +  1                    
+    #                 # track_level += 1
+    #                 continue
+    #             else:
+    #                 self.edge_direction[(head, tail)] = 'forward_edge'
+    #                 levelMap[tail] = levelMap[head] + 1                    
+    #                 track_level += 1
+    #                 log.warn("level for {0}: {1}".format(tail, levelMap[tail]))
+    #             # Since dfs, set level = 0 when head is the start_node. 
+    #             if head == start_node:
+    #                 active_nodes = [start_node]
+    #                 track_level = 0
 
-        return levelMap
+    #     return levelMap
         
-    def flow_map(self):
-        flowMap = {}
-        nodes = self.g.nbunch_iter(self.root)
-        for start_node in nodes:            
-            for edge in nx.edge_dfs(self.g, start_node, 'original'):                                
-                head_level = None
-                tail_level = None
-                head, tail = self.tailhead(edge)
+    # def flow_map(self):
+    #     flowMap = {}
+    #     nodes = self.g.nbunch_iter(self.root)
+    #     for start_node in nodes:            
+    #         for edge in nx.edge_dfs(self.g, start_node, 'original'):                                
+    #             head_level = None
+    #             tail_level = None
+    #             head, tail = self.tailhead(edge)
                 
-                # Check if there is an existing level mapping for the head node and assign. 
-                if head in self.level_mapping.keys():
-                    head_level = self.level_mapping[head]
+    #             # Check if there is an existing level mapping for the head node and assign. 
+    #             if head in self.level_mapping.keys():
+    #                 head_level = self.level_mapping[head]
 
-                # Check if there is an existing level mapping for the tail node and assign. 
-                if tail in self.level_mapping.keys():
-                    tail_level = self.level_mapping[tail]
+    #             # Check if there is an existing level mapping for the tail node and assign. 
+    #             if tail in self.level_mapping.keys():
+    #                 tail_level = self.level_mapping[tail]
 
-                flowMap[(edge[0], edge[1])] = (int(head_level), int(tail_level))
-        return flowMap
+    #             flowMap[(edge[0], edge[1])] = (int(head_level), int(tail_level))
+    #     return flowMap
                                 
     def add_edge_attributes(self):
         capacity_mapping = self.calculate_flows(self.g)
@@ -313,43 +306,44 @@ class CallGraph(nx.Graph):
         # nx.set_edge_attributes(self.g, name='type', values=type_mapping)
         # nx.set_edge_attributes(self.g, name='flow', values=flow_mapping)
 
-    def draw_tree(self, g):
-        subtrees = {node: ete3.Tree(name=node) for node in g.nodes()}
-        [map(lambda edge:subtrees[edge[0]].add_child(subtrees[edge[1]]), g.edges())]
-        tree = subtrees[self.root]        
-        log.info(tree)
-        return tree
+    # def draw_tree(self, g):
+    #     subtrees = {node: ete3.Tree(name=node) for node in g.nodes()}
+    #     [map(lambda edge:subtrees[edge[0]].add_child(subtrees[edge[1]]), g.edges())]
+    #     tree = subtrees[self.root]        
+    #     log.info(tree)
+    #     return tree
 
-    def leaves_below(self, graph, node):
-        return set(sum(([vv for vv in v if graph.out_degree(vv) == 0]
-                    for k, v in nx.dfs_successors(graph, node).items()), []))
+    # def leaves_below(self, graph, node):
+    #     return set(sum(([vv for vv in v if graph.out_degree(vv) == 0]
+    #                 for k, v in nx.dfs_successors(graph, node).items()), []))
 
-    def immediate_children(self):
-        ret = {}
-        parentChildMap = nx.dfs_successors(self.g, self.root)
-        nodes = self.g.nodes()
-        for node in nodes:
-            if node in parentChildMap.keys():
-                ret[node] = parentChildMap[node]
-        return ret
+    # def immediate_children(self):
+    #     ret = {}
+    #     parentChildMap = nx.dfs_successors(self.g, self.root)
+    #     nodes = self.g.nodes()
+    #     for node in nodes:
+    #         if node in parentChildMap.keys():
+    #             ret[node] = parentChildMap[node]
+    #     return ret
 
-    def edge_type(self, graph):
-        ret = {}
-        edges = graph.edges()
-        for edge in edges:
-            source = edge[0]
-            target = edge[1]
+    # def edge_type(self, graph):
+    #     ret = {}
+    #     edges = graph.edges()
+    #     for edge in edges:
+    #         source = edge[0]
+    #         target = edge[1]
 
-            if source.endswith('_') or target.endswith('_'):
-                ret[edge] = 'back_edge'
-            else:
-                ret[edge] = 'forward_edge'
-        return ret
-            
-    # TODO: Wrong formulation of the edge weights. 
+    #         if source.endswith('_') or target.endswith('_'):
+    #             ret[edge] = 'back_edge'
+    #         else:
+    #             ret[edge] = 'forward_edge'
+    #     return ret
+
+    # Calculate the sankey flows from source node to target node.        
     def calculate_flows(self, graph):
         ret = {}
         edges = graph.edges(data=True)
+        print(edges)
         additional_flow = {}
         
         # Calculates the costs in cycles and aggregates to one node.
@@ -375,49 +369,42 @@ class CallGraph(nx.Graph):
                 ret[edge] = additional_flow[edge[1]]
                 continue
 
-            # For source edge
-            if '|' in edge[0]:
-                source = edge[0].split('|')[1]
+            # source edge
+            if '/' in edge[0]:
+                source_module = edge[0].split('/')[0]
+                source_function = edge[0].split('/')[1]
+                source_df = self.df.loc[(self.df['name'] == source_function)]
             else:
-                source = edge[0]
-
-            corrected_module = source.split('//')[0]
-            if '//' in source:
-                corrected_source = source.split('//')[1]
-                group_by = 'name'
-                source_df = self.df.loc[(self.df[group_by] == corrected_source) & (self.df['nid'] == edge[2]['nid'])]
-            else:
-                corrected_source = source
-                group_by = 'module'
-                print(corrected_module, corrected_source, edge[2]['nid'])
-                source_df = self.df.loc[(self.df[group_by] == corrected_module) & (self.df['nid'] == edge[2]['nid'])]
+                # source_module = edge[0].split('=')[0]
+                # source_function = edge[0].split('=')[1]
+                source_module = edge[0]
+                source_df = self.df.loc[(self.df['module'] == source_module)]
 
             source_inc = source_df['time (inc)'].mean()
-            print(source_df)
+            # print(source_df)
             
             # For target edge
-            if '|' in edge[1]:
-                target = edge[1].split('|')[1]
+            if '/' in edge[1]:
+                target_module = edge[1].split('/')[0]
+                target_function = edge[1].split('/')[1]
+                target_df = self.df.loc[(self.df['name'] == target_function)]
             else: 
-                target = edge[1]
+                # target_module = edge[1].split('=')[0]
+                # target_function = edge[1].split('=')[1]
+                target_module = edge[1]
+                target_df = self.df.loc[(self.df['module'] == target_module)]
 
-            corrected_module = target.split('//')[0]
-            if '//' in target:
-                corrected_target = target.split('//')[1]
-                group_by = 'name'
-                target_df = self.df.loc[(self.df[group_by] == corrected_target) & (self.df['nid'] == edge[2]['nid'])]
-            else:
-                corrected_target = target
-                group_by = 'module'
-                target_df = self.df.loc[(self.df[group_by] == corrected_module) & (self.df['nid'] == edge[2]['nid'])]
             target_inc = target_df['time (inc)'].mean()
-                     
-            log.info("Source node : {0}, time : {1}".format(corrected_source, source_inc))
-            log.info("Target node : {0}, time : {1}".format(corrected_target, target_inc))
+            # print(target_df)
+                                 
+            log.info("Source node : {0}, time : {1}".format(source, source_inc))
+            log.info("Target node : {0}, time : {1}".format(target, target_inc))
 
-            print(edge)
             if source_inc == target_inc:
                 ret[(edge[0], edge[1])] = source_inc
             else:
                 ret[(edge[0], edge[1])] = target_inc
+
+            if math.isnan(ret[(edge[0], edge[1])]):
+                ret[(edge[0], edge[1])] = 0
         return ret

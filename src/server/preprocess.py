@@ -72,7 +72,7 @@ class PreProcess():
         # Add the path information from the node object
         @tmp_wrap
         def add_path(self):
-            self.df['path'] = self.df['node'].apply(lambda node: node.callpath)
+            self.df['path'] = self.df['node'].apply(lambda node: (node.callpath, node.nid))
             return self
 
         def _map(self, attr, ):

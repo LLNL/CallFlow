@@ -85,11 +85,11 @@ class App():
     def verify_parser(self):
         # Check if the config file is provided and exists!
         if not self.args.config:
-            log.error("Please provide a config file. To see options, use --help")
+            log.info("Please provide a config file. To see options, use --help")
             raise Exception()
         else:
             if not os.path.isfile(self.args.config):
-                log.error("Please check the config file path. There exists no such file in the path provided")
+                log.info("Please check the config file path. There exists no such file in the path provided")
                 raise Exception()
 
     def create_dot_callflow_folder(self):
@@ -151,7 +151,7 @@ class App():
             }
             g = self.callflow.update(obj)
             result = json_graph.node_link_data(g)
-            print(result)
+            print("Group graph: \n", result)
             emit('group', result, json=True)
 
     

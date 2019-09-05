@@ -37,10 +37,10 @@ class Log:
         self.logger.setLevel(self.lvl)
         self.logger.addHandler(self.stream)
         
-    def error(self, msg, *args, **kwargs):
+    def debug(self, msg, *args, **kwargs):
         for line in str(msg).splitlines():
             self.logger.error(line, *args, **kwargs)        
-    err = e = error
+    dbg = d = debug
 
     def warn(self, msg, *args, **kwargs):
         for line in str(msg).splitlines():
