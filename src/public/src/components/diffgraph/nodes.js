@@ -63,7 +63,7 @@ export default {
                 .attr('opacity', 0)
                 .attr('id', (d, i) => `diff-node_${d.xid}`)
                 .attr('transform', (d) => {
-                    return `translate(${d.x},${d.y })`
+                    return `translate(${d.x},${d.y})`
                 })
             // .call(this.drag);
 
@@ -74,6 +74,7 @@ export default {
                 .attr('opacity', 1)
                 .attr('transform', d => `translate(${d.x},${d.y + this.$parent.ySpacing})`)
 
+            this.lineGradients()
             this.rectangle()
             this.path()
             this.text()
@@ -143,9 +144,45 @@ export default {
                 })
                 .style('stroke', (d) => {
                     return 1;
-                });
+                })
+                .style("fill", (d) => {
+                    return "url(#linear-gradient-" + d.name[0] + ")"
+                })
         },
 
+        //Gradients
+        clearLineGradients() {
+
+        },
+
+        lineGradients() {
+            for (let i = 0; i < this.$store.graph.nodes.length; i++) {
+                let node_data = this.$store.graph.nodes[i]
+                let props = JSON.parse(JSON.stringify(node_data['props']))
+
+                var defs = this.nodesSVG.append("defs");
+                this.linearGradient = defs.append("linearGradient")
+                    .attr("id", "linear-gradient-" + node_data.name[0]);
+                //Horizontal gradient
+                this.linearGradient
+                    .attr("x1", "0%")
+                    .attr("y1", "0%")
+                    .attr("x2", "0%")
+                    .attr("y2", "100%");
+
+                //Set the color for the start (0%)
+                for (const [dataset, val] of Object.entries(props)) {
+                    console.log(val)
+                    this.linearGradient.append("stop")
+                        .attr("offset", val*100 + "%")
+                        .attr("stop-color", d3.interpolateLab("gray")(val))
+                        // .attr("stop-color", this.$store.color.datasetColor[dataset]);
+                }
+            }            
+
+        },
+
+        // Lines
         clearQuantileLines() {
             d3.selectAll('.quantileLines').remove()
         },
@@ -156,8 +193,9 @@ export default {
 
             for (let i = 0; i < this.$store.graph.nodes.length; i++) {
                 let node_data = this.$store.graph.nodes[i]
+                console.log(node_data)
                 let props = JSON.parse(JSON.stringify(node_data['props']))
-
+                console.log(props)
                 for (const [dataset, val] of Object.entries(props)) {
                     let x1 = node_data.x - this.nodeWidth
                     let x2 = node_data.x
@@ -174,43 +212,68 @@ export default {
                         count += 1
                         y2 = node_data.height * val
                         this.drawBottomLine(y1, y2, node_data, dataset)
-                    }                   
+                    }
                 }
             }
         },
 
-        drawUpLine(y1, y2, node_data, dataset){
+        drawUpLine(y1, y2, node_data, dataset) {
             d3.select('#diff-node_' + node_data.xid).append('line')
-                        .attrs({
-                            'class': 'quantileLines',
-                            'id': 'line-1-' + dataset + '-' + node_data.xid,
-                            "x1": 0,
-                            "y1": y1,
-                            "x2": this.nodeWidth,
-                            "y2": y1
-                        })
-                        .style("stroke", this.$store.color.datasetColor[dataset])
-                        .style("stroke-width", 3)
+                .attrs({
+                    'class': 'quantileLines',
+                    'id': 'line-1-' + dataset + '-' + node_data.xid,
+                    "x1": 0,
+                    "y1": y1,
+                    "x2": this.nodeWidth,
+                    "y2": y1
+                })
+                .style('opacity', (d) => {
+                    if (this.$store.selectedDataset == dataset) {
+                        return 1
+                    }
+                    else {
+                        return 0.4
+                    }
+                })
+                .style("stroke", this.$store.color.datasetColor[dataset])
+                .style("stroke-width", (d) => {
+                    if (this.$store.selectedDataset == dataset) {
+                        return 3
+                    }
+                    else {
+                        return 2
+                    }
+                })
 
         },
 
-        drawBottomLine(y1, y2, node_data, dataset){
+        drawBottomLine(y1, y2, node_data, dataset) {
             d3.select('#diff-node_' + node_data.xid).append('line')
-                        .attrs({
-                            'class': 'quantileLines',
-                            'id': 'line-2-' + dataset + '-' + node_data.xid,
-                            "x1": 0,
-                            "y1": y2,
-                            "x2": this.nodeWidth,
-                            "y2": y2
-                        })
-                        .style("stroke", this.$store.color.datasetColor[dataset])
-                        .style("stroke-width", 3)
-                        .on('click', (d) => {
-                            console.log(d)
-                            let dataset = d.id.split('-')
-                            console.log(dataset)
-                        })
+                .attrs({
+                    'class': 'quantileLines',
+                    'id': 'line-2-' + dataset + '-' + node_data.xid,
+                    "x1": 0,
+                    "y1": y2,
+                    "x2": this.nodeWidth,
+                    "y2": y2
+                })
+                .style('opacity', (d) => {
+                    if (this.$store.selectedDataset == dataset) {
+                        return 1
+                    }
+                    else {
+                        return 0.4
+                    }
+                })
+                .style("stroke", this.$store.color.datasetColor[dataset])
+                .style("stroke-width", (d) => {
+                    if (this.$store.selectedDataset == dataset) {
+                        return 3
+                    }
+                    else {
+                        return 2
+                    }
+                })
         },
 
         path() {

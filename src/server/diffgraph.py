@@ -23,10 +23,8 @@ class DiffGraph(nx.Graph):
         super(DiffGraph, self).__init__()
         self.state = state
         self.path_name = path_name
-        self.graph = self.state.graph
-        print(state.graph)
-        print(self.graph.roots)
-        self.df = self.state.df
+        self.graph = self.state.group_graph
+        self.df = self.state.group_df
         self.root = utils.lookup_with_name(self.df, self.graph.roots[0].callpath[-1])['vis_node_name'][0]
         self.group_by = group_by
         # self.callbacks = self.state.callbacks
@@ -78,7 +76,6 @@ class DiffGraph(nx.Graph):
     def add_paths(self, path_name):
         for idx, row in self.df.iterrows():
             if row.show_node:
-                print(row)
                 path = row[path_name]
                 # TODO: Sometimes the path becomes a string. Find why it happens. 
                 # If it becomes a string 
@@ -144,7 +141,6 @@ class DiffGraph(nx.Graph):
                     group_df = self.df.groupby([groupby]).mean()
                 elif self.group_by == 'name':
                     group_df = self.df.groupby([groupby]).mean()
-                print(self.df)
                 ret[node] = group_df.loc[node, 'time (inc)']
             
             elif attr == 'entry_functions':

@@ -12,7 +12,7 @@ export default {
     data: () => ({
         transitionDuration: 1000,
         width: 200,
-        height: 20,
+        height: 500,
         colorScaleHeight: 30,
         colorMin: 0,
         colorMax: 0,
@@ -39,6 +39,7 @@ export default {
             this.parentID = this.$parent.id
             this.containerWidth = this.$parent.width
             this.containerHeight = this.$parent.height
+            this.height = 10*10
 
             this.scaleG = d3.select('#' + this.parentID)
                 .append('g')
@@ -46,6 +47,9 @@ export default {
                     'id': 'colormap',
                     'width': this.width
                 })
+                // .attr('transform', (d) => {
+                //     return `translate(-${window.innerWidth*0.1},${this.$store.datasets.length*20})`
+                // })
 
             this.render()
             // this.drawText()
@@ -54,16 +58,21 @@ export default {
         render() {
             let count = 0
             let gap = 15
+
             for (let [dataset, color] of Object.entries(this.$store.color.datasetColor)) {
                 this.scaleG.append('rect')
+                    .data([dataset])
                     .attrs({
                         'width': 30,
                         'height': 5,
                         'x': this.width/2,
-                        'y': count*gap - 10 ,
+                        'y': count*gap - 10*this.$store.datasets.length ,
                         'class': 'colormap-rect',
                         'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - this.padding.bottom})`,
                         'fill': color
+                    })
+                    .on('click', (d) => {
+                        console.log(d)
                     })
 
                 this.scaleG.append("text")
@@ -71,7 +80,7 @@ export default {
                     .style("font-size", "14px")
                     .attrs({
                         "dy": ".5em",
-                        'y': count*gap,
+                        'y': count*gap - 10*this.$store.datasets.length + 1*this.$store.datasets.length,
                         "text-anchor": "middle",
                         'class': 'colormap-text',
                         'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,

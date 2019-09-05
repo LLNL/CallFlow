@@ -116,14 +116,14 @@ export default {
 			// Enable diff mode only if the number of datasets >= 2
 			this.$store.datasets = data['names']
 			this.datasets = data['names']
-			this.$store.selectedDataset = data['names'][0]
-			this.selectedDataset = data['names'][0]
+			this.$store.selectedDataset = data['names'][4]
+			this.selectedDataset = data['names'][4]
 
 			if (this.numOfDatasets >= 2) {
 				this.enableDiff = true
 				this.modes = ['Single', 'Distribution']
-				this.selectedDataset2 = data['names'][0]
-				this.$store.selectedDataset2 = data['names'][0]
+				this.selectedDataset2 = data['names'][4]
+				this.$store.selectedDataset2 = data['names'][4]
 				// this.selectedMode = 'Diff'
 
 			} else {

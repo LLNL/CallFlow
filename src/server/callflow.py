@@ -234,7 +234,6 @@ class CallFlow:
         state.df = self.replace_str_with_Node(state.df, state.graph)
         state.entire_df = self.replace_str_with_Node(state.entire_df, state.entire_graph)
 
-        print("==============================================")
         # utils.dfs(state.graph, state.df, 1000)
         # utils.dfs(state.entire_graph, state.entire_df, 1000)
 
@@ -251,12 +250,11 @@ class CallFlow:
                 data = json.load(groupGraphFile)
 
         state.group_gf = GraphFrame()
-        state.group_gf.from_literal(data)
+        state.group_gf.from_literal_persist(data)
 
         state.group_graph = state.group_gf.graph
         state.group_df = pd.read_csv(group_df_file_path)
         state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
-
         return state
 
     def update(self, action):

@@ -113,25 +113,27 @@ export default {
 			let datasets = this.$store.datasets 
 			console.log(datasets)
 			for(const node of graph.nodes){
-				console.log(node)
 				let obj = {
 					'name': '',
 					'time': 0,
 					'time (inc)': 0,
 				}
 				for(const dataset of datasets){
-					if(node[dataset]['time'] > obj['time']){
-						obj['time'] = node[dataset]['time']
+					if(node.hasOwnProperty(dataset)){
+						if(node[dataset]['time'] > obj['time']){
+							obj['time'] = node[dataset]['time']
+						}
+						if(node[dataset]['time (inc)'] > obj['time (inc)']){
+							obj['time (inc)'] = node[dataset]['time (inc)']
+						}
+						obj['name'] = node[dataset]['name'][0]
+						obj['xid'] = node[dataset]['n_index'][0]	
 					}
-					if(node[dataset]['time (inc)'] > obj['time (inc)']){
-						obj['time (inc)'] = node[dataset]['time (inc)']
-					}
-					obj['name'] = node[dataset]['name'][0]
-					obj['xid'] = node[dataset]['n_index'][0]
 				}
 				for(const [key, value] of Object.entries(obj)){
 					node[key] = value
 				}
+				console.log(node)
 			}
 			console.log(graph)
 			return graph
@@ -264,8 +266,11 @@ export default {
 			for(const node of graph.nodes){
 				let obj = {}
 				for(const dataset of datasets){
-					obj[dataset] = node[dataset]['time (inc)']/node['time (inc)']
-					obj['xid'] = node[dataset]['n_index'][0]
+					if(node.hasOwnProperty(dataset)){
+						console.log(node[dataset]['time (inc)'], node['time (inc)'])
+						obj[dataset] = node[dataset]['time (inc)']/node['time (inc)']
+						obj['xid'] = node[dataset]['n_index'][0]
+					}
 		
 				}
 				node['props'] = obj

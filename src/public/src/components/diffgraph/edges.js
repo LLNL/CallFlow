@@ -27,7 +27,6 @@ export default {
             })
 
             this.$store.selectedAlignmentShow = 'Single'
-            this.$store.selectedDataset = 'calc-pi-random-1'
 
             if(this.$store.selectedAlignmentShow == 'All'){
                 for(let i = 0; i < this.$store.datasets.length; i += 1){
@@ -120,6 +119,8 @@ export default {
 
                     const rightMoveDown = By1 - Ty1;
 
+                    console.log(d.source.name, d.target.name, Tx0, Ty0, Tx2, Ty0, Tx3, Ty1)
+
                     return `M${Tx0},${Ty0}
                         C${Tx2},${Ty0} 
                         ${Tx3}, ${Ty1} 
@@ -184,7 +185,7 @@ export default {
                         Txi = d3.interpolateNumber(Tx0, Tx1),
                         Tx2 = Txi(0.4),
                         Tx3 = Txi(1 - 0.4),
-                        Ty0 = d.source.y + d.sy + this.$parent.ySpacing + d.ssy,
+                        Ty0 = d.source.y + d.sy + this.$parent.ySpacing,// + d.ssy,
                         Ty1 = d.target.y + d.ty + this.$parent.ySpacing
 
                     // note .ty is the y point that the edge meet the target(for top)
@@ -210,7 +211,8 @@ export default {
                     d._ty = d.target.value * (target_unit) * d.target.props[dataset]
 
                     if(ratio > 1){
-                        d.__sy = d.weight * (source_unit) * d.source.props[dataset]/2
+                        // d.__sy = d.weight * (source_unit) * d.source.props[dataset]/2
+                        d.__sy = 0
                         d.__ty = 0
                     }
                     else{

@@ -358,15 +358,18 @@ export default function Sankey() {
                 }
 
                 for(let i = 0; i < datasets.length; i += 1){
-                    console.log(link['source'][datasets[i]] )
-                    let source_link = link['source'][datasets[i]]
-                    let target_link = link['target'][datasets[i]]
+                    let source_link = 0, target_link = 0                    
+                    if(link['source'][datasets[i]] != undefined){
+                        source_link = link['source'][datasets[i]]
+                    }
+                    if(link['target'][datasets[i]] != undefined){
+                        target_link = link['target'][datasets[i]]
+                    }
                     source_max_weight = Math.max(source_max_weight, source_link['time (inc)'])
                     target_max_weight = Math.max(target_max_weight, target_link['time (inc)'])
                 }
                 weight = Math.min(source_max_weight, target_max_weight)
-                console.log(link.source, link)
-                if(link.source.value < weight){
+                if(link.source.value < weight){ 
                     weight = link.source.minLinkVal
                 }
                 link.height = weight*scale*minNodeScale;
