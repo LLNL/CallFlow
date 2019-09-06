@@ -116,8 +116,8 @@ export default {
 			// Enable diff mode only if the number of datasets >= 2
 			this.$store.datasets = data['names']
 			this.datasets = data['names']
-			this.$store.selectedDataset = data['names'][4]
-			this.selectedDataset = data['names'][4]
+			this.$store.selectedDataset = data['names'][1]
+			this.selectedDataset = data['names'][1]
 
 			if (this.numOfDatasets >= 2) {
 				this.enableDiff = true
@@ -181,6 +181,11 @@ export default {
 			console.log("Diff CCT data: ", data)
 			this.$refs.DiffCCT1.init(data[this.$store.selectedDataset], '1')
 			this.$refs.DiffCCT2.init(data[this.$store.selectedDataset2], '2')
+		},
+
+		diff_gradients(data){
+			console.log("Gradient data", data)
+
 		}
 	},
 
@@ -256,6 +261,11 @@ export default {
 						datasets: this.$store.datasets,
 						groupBy: this.selectedGroupBy
 					})
+
+					this.$socket.emit('diff_gradients', {
+						datasets: this.$store.datasets,
+						plot: 'kde'
+					})
 					// this.$socket.emit('diff_scatterplot', {
                     //     datasets: this.$store.datasets,
                     //     dataset1: this.$store.selectedDataset,
@@ -288,6 +298,7 @@ export default {
 				this.$store.color.datasetColor[this.$store.datasets[i]] = this.$store.color.getCatColor(i)
 			}
 			console.log("Assigned Color map: ", this.$store.color.datasetColor)
+			console.log(this.selectedColorMin)
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 		},

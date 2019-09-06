@@ -17,7 +17,15 @@
             "nop": "3"
         },
         {
-            "name": "calc-pi-random-0",
+            "name": "calc-pi-random-1",
+            "path": "./data/hpctoolkit-cpi-database",
+            "format": "hpctoolkit",
+            "props": {
+            },
+            "nop": "3"
+        },
+        {
+            "name": "calc-pi-random-2",
             "path": "./data/hpctoolkit-cpi-database",
             "format": "hpctoolkit",
             "props": {

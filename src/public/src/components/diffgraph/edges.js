@@ -114,12 +114,12 @@ export default {
                         Bxi = d3.interpolateNumber(Bx0, Bx1),
                         Bx2 = Bxi(0.4),
                         Bx3 = Bxi(1 - 0.4),
-                        By0 = d.source.y + d.height + d.sy + 100,
+                        By0 = d.source.y + d.height + d.sy, //+ 100,
                         By1 = d.target.y + d.ty + d.height
 
                     const rightMoveDown = By1 - Ty1;
-
-                    console.log(d.source.name, d.target.name, Tx0, Ty0, Tx2, Ty0, Tx3, Ty1)
+                    // console.log(d.source)
+                    // console.log(d.source.name, d.target.name, Tx0, Ty0, Tx2, Ty0, Tx3, Ty1)
 
                     return `M${Tx0},${Ty0}
                         C${Tx2},${Ty0} 

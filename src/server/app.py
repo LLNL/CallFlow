@@ -342,8 +342,22 @@ class App():
             })
             # for idx, (dataset, nx) in enumerate(nx.items()):
             result = json_graph.node_link_data(nx)
+            print(result)
             emit('diff_group', result, json=True)
 
+        @sockets.on('diff_gradients', namespace='/')
+        def gradients(data):
+            result = {}
+            if self.debug:
+                self.print('[Request] Gradients for all datasets', data)
+            result = self.callflow.update_diff({
+                "name": "gradients",
+                "datasets": data['datasets'],
+                'plot': data['plot']
+            })
+            emit('diff_gradients', result, json=True)
+
+            
     def create_server(self):
         app.debug = True
         app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), '')

@@ -74,7 +74,6 @@ export default {
                 .attr('opacity', 1)
                 .attr('transform', d => `translate(${d.x},${d.y + this.$parent.ySpacing})`)
 
-            this.lineGradients()
             this.rectangle()
             this.path()
             this.text()
@@ -92,13 +91,13 @@ export default {
                 })
                 .attr('width', this.nodeWidth)
                 .attr('opacity', 0)
-                .style('fill', d => {
-                    let color = this.$store.color.getColor(d)
-                    return color
-                })
-                .style('fill-opacity', (d) => {
-                    return 1
-                })
+                // .style('fill', d => {
+                //     let color = this.$store.color.getColor(d)
+                //     return color
+                // })
+                // .style('fill-opacity', (d) => {
+                //     return 1
+                // })
                 .style('shape-rendering', 'crispEdges')
                 .style('stroke', (d) => {
                     return d3.rgb(this.$store.color.getColor(d)).darker(2);
@@ -138,15 +137,13 @@ export default {
                     return 1;
                 })
                 .attr('height', d => d.height)
-                .style('fill', (d) => {
-                    return "#fff"
-                    // return d.color = this.$store.color.getColor(d);
-                })
                 .style('stroke', (d) => {
                     return 1;
                 })
-                .style("fill", (d) => {
-                    return "url(#linear-gradient-" + d.name[0] + ")"
+                .style("fill", (d, i) => {
+                    console.log(d)
+                    this.setupGradients(this.$store.graph.nodes[i])
+                    return "url(#linear-gradient-" + d.xid + "-up)" 
                 })
         },
 
@@ -154,32 +151,44 @@ export default {
         clearLineGradients() {
 
         },
+        //https://math.stackexchange.com/questions/2061963/find-the-control-points-of-a-bezier-curve-approximating-a-archimedean-spiral-cur
 
-        lineGradients() {
-            for (let i = 0; i < this.$store.graph.nodes.length; i++) {
-                let node_data = this.$store.graph.nodes[i]
-                let props = JSON.parse(JSON.stringify(node_data['props']))
+        setupGradients(node_data) {
+            let props = JSON.parse(JSON.stringify(node_data['props']))
 
-                var defs = this.nodesSVG.append("defs");
-                this.linearGradient = defs.append("linearGradient")
-                    .attr("id", "linear-gradient-" + node_data.name[0]);
-                //Horizontal gradient
-                this.linearGradient
-                    .attr("x1", "0%")
-                    .attr("y1", "0%")
-                    .attr("x2", "0%")
-                    .attr("y2", "100%");
+            var defs = d3.select('#diffgraph-overview-')
+                .append("defs");
+            this.linearGradient = defs.append("linearGradient")
+                .attr("id", "linear-gradient-" + node_data.xid +'-up');
 
-                //Set the color for the start (0%)
-                for (const [dataset, val] of Object.entries(props)) {
-                    console.log(val)
+            this.linearGradient2 = defs.append("linearGradient")
+                .attr("id", "linear-gradient-" + node_data.xid + '-down');
+
+            this.linearGradient
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "0%")
+                .attr("y2", "100%");
+
+            this.linearGradient
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "0%")
+                .attr("y2", "100%");
+
+            //Set the color for the start (0%)
+            for (const [dataset, val] of Object.entries(props)) {
+                if (dataset != 'xid') {
                     this.linearGradient.append("stop")
-                        .attr("offset", val*100 + "%")
-                        .attr("stop-color", d3.interpolateLab("gray")(val))
-                        // .attr("stop-color", this.$store.color.datasetColor[dataset]);
-                }
-            }            
+                        .attr("offset", Math.abs(val/2 * 100 - 50) + "%")
+                        .attr("stop-color", "#e1e1e1");
 
+                    this.linearGradient2.append("stop")
+                        .attr("offset", Math.abs(val / 2 * 100) + "%")
+                        .attr("stop-color", this.$store.color.datasetColor[dataset]);
+                }
+
+            }
         },
 
         // Lines
@@ -193,9 +202,7 @@ export default {
 
             for (let i = 0; i < this.$store.graph.nodes.length; i++) {
                 let node_data = this.$store.graph.nodes[i]
-                console.log(node_data)
                 let props = JSON.parse(JSON.stringify(node_data['props']))
-                console.log(props)
                 for (const [dataset, val] of Object.entries(props)) {
                     let x1 = node_data.x - this.nodeWidth
                     let x2 = node_data.x
@@ -230,17 +237,15 @@ export default {
                 .style('opacity', (d) => {
                     if (this.$store.selectedDataset == dataset) {
                         return 1
-                    }
-                    else {
-                        return 0.4
+                    } else {
+                        return 0.8
                     }
                 })
                 .style("stroke", this.$store.color.datasetColor[dataset])
                 .style("stroke-width", (d) => {
                     if (this.$store.selectedDataset == dataset) {
                         return 3
-                    }
-                    else {
+                    } else {
                         return 2
                     }
                 })
@@ -260,17 +265,15 @@ export default {
                 .style('opacity', (d) => {
                     if (this.$store.selectedDataset == dataset) {
                         return 1
-                    }
-                    else {
-                        return 0.4
+                    } else {
+                        return 0.8
                     }
                 })
                 .style("stroke", this.$store.color.datasetColor[dataset])
                 .style("stroke-width", (d) => {
                     if (this.$store.selectedDataset == dataset) {
                         return 3
-                    }
-                    else {
+                    } else {
                         return 2
                     }
                 })

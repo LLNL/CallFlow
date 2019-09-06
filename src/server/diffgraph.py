@@ -99,17 +99,17 @@ class DiffGraph(nx.Graph):
         name_mapping = self.generic_map(self.g.nodes(), 'vis_node_name')
         nx.set_node_attributes(self.g, name='name', values=name_mapping)
 
-        type_mapping = self.generic_map(self.g.nodes(), 'type')
-        nx.set_node_attributes(self.g, name='type', values=type_mapping)
+        # type_mapping = self.generic_map(self.g.nodes(), 'type')
+        # nx.set_node_attributes(self.g, name='type', values=type_mapping)
 
-        n_index_mapping = self.generic_map(self.g.nodes(), 'n_index')
-        nx.set_node_attributes(self.g, name='n_index', values=n_index_mapping)
+        nid_mapping = self.generic_map(self.g.nodes(), 'nid')
+        nx.set_node_attributes(self.g, name='nid', values=nid_mapping )
 
-        module_mapping = self.generic_map(self.g.nodes(), 'module')
-        nx.set_node_attributes(self.g, name='module', values=module_mapping)
+        # module_mapping = self.generic_map(self.g.nodes(), 'module')
+        # nx.set_node_attributes(self.g, name='module', values=module_mapping)
 
-        mod_index_mapping = self.generic_map(self.g.nodes(), 'mod_index')
-        nx.set_node_attributes(self.g, name='mod_index', values=mod_index_mapping)
+        # mod_index_mapping = self.generic_map(self.g.nodes(), 'mod_index')
+        # nx.set_node_attributes(self.g, name='mod_index', values=mod_index_mapping)
 
         # imbalance_perc_mapping = self.generic_map(self.g.nodes(), 'imbalance_perc')
         # nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)
@@ -120,8 +120,8 @@ class DiffGraph(nx.Graph):
         # self.level_mapping = self.assign_levels()               
         # nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
 
-        children_mapping = self.immediate_children()
-        nx.set_node_attributes(self.g, name='children', values=children_mapping)
+        # children_mapping = self.immediate_children()
+        # nx.set_node_attributes(self.g, name='children', values=children_mapping)
 
         entry_function_mapping = self.generic_map(self.g.nodes(), 'entry_functions')
         nx.set_node_attributes(self.g, name='entry_functions', values=entry_function_mapping)
@@ -178,13 +178,20 @@ class DiffGraph(nx.Graph):
                 elif self.group_by == 'name':
                     group_df = self.df.groupby([groupby]).mean()
                 ret[node] = group_df.loc[node, 'time']
-                
-            else:
+
+            elif attr == 'vis_node_name':
+                ret[node] = [node] 
+            
+            elif attr == 'nid':
                 df = self.df.loc[self.df['vis_node_name'] == node][attr]
                 if df.empty:
-                    ret[node] = self.df[self.df[groupby] == node][attr]
+                    ret[node] = int(self.df[self.df[groupby] == node][attr].unique()[0])
                 else:
                     ret[node] = list(set(self.df[self.df['vis_node_name'] == node][attr].tolist()))            
+
+            else:
+                group_df = self.df.groupby([groupby]).mean()
+                ret[node] = group_df.loc[node, attr]
         return ret
 
     def tailhead(self, edge):

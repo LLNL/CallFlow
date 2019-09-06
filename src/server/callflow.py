@@ -39,6 +39,7 @@ from actions.filter import Filter
 from actions.bland_altman import BlandAltman
 from actions.function_list import FunctionList
 from actions.union_graph import UnionGraph
+from actions.kde_gradients import KDE_gradients
 
 from state import State
 from logger import log
@@ -378,6 +379,11 @@ class CallFlow:
                 dataset2 = action['dataset2']
                 ret = BlandAltman(state1, state2, col, catcol, dataset1, dataset2).results
             return ret
+
+        elif action_name == 'gradients':
+            if(action['plot'] == 'kde'):
+                ret = KDE_gradients(self.states).results
+            return ret 
 
         elif action_name == 'Gromov-wasserstein':
             ret = {}       

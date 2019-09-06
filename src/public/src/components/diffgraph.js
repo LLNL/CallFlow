@@ -42,7 +42,7 @@ export default {
     },
 
     mounted() {
-		this.id = 'diffgraph-overview-' + this._uid
+		this.id = 'diffgraph-overview-' 
     },
 
     methods: {
@@ -127,7 +127,7 @@ export default {
 							obj['time (inc)'] = node[dataset]['time (inc)']
 						}
 						obj['name'] = node[dataset]['name'][0]
-						obj['xid'] = node[dataset]['n_index'][0]	
+						obj['xid'] = node[dataset]['nid']	
 					}
 				}
 				for(const [key, value] of Object.entries(obj)){
@@ -267,9 +267,8 @@ export default {
 				let obj = {}
 				for(const dataset of datasets){
 					if(node.hasOwnProperty(dataset)){
-						console.log(node[dataset]['time (inc)'], node['time (inc)'])
 						obj[dataset] = node[dataset]['time (inc)']/node['time (inc)']
-						obj['xid'] = node[dataset]['n_index'][0]
+						obj['xid'] = node[dataset]['nid']
 					}
 		
 				}

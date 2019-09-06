@@ -177,7 +177,6 @@ class CallGraph(nx.Graph):
  
             if attr == 'time (inc)':
                 group_df = self.df.groupby([groupby]).max()
-                print(corrected_node)
                 # log.info("Group df by {0} = \n {1}".format(groupby, group_df))
                 ret[node] = group_df.loc[corrected_node, 'time (inc)']
             
