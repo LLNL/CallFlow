@@ -356,7 +356,6 @@ class App():
                 'plot': data['plot']
             })
             emit('diff_gradients', result, json=True)
-
             
     def create_server(self):
         app.debug = True

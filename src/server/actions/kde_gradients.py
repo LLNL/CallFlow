@@ -6,8 +6,7 @@ import math
 class KDE_gradients:
     def __init__(self, states):
         self.states = states
-        self.modules = states['calc-pi'].df['module'].unique()
-        print(self.modules)
+        self.nodes = states['calc-pi'].g.nodes()
         self.results = self.run()
 
     def iqr(self, arr):
@@ -30,24 +29,21 @@ class KDE_gradients:
         else:
             return int(np.ceil((arr.max() - arr.min()) / h))
 
-    def kde(self, data, fft=True, kernel='gau', bw='scott', gridsize=100, cut=3, clip=(-np.inf, np.inf)):
+    def kde(self, data,  gridsize=5, fft=True, kernel='gau', bw='scott', cut=3, clip=(-np.inf, np.inf)):
         kde = smnp.KDEUnivariate(data)
         kde.fit(kernel, bw, fft, gridsize=gridsize, cut=cut, clip=clip)
-        cumulative = False
-        if cumulative:
-            grid, y = kde.support, kde.cdf
-        else:
-            grid, y = kde.support, kde.density
+        grid, y = kde.support, kde.density
         return (grid, y)
 
-    def remove_nan(self, arr):
-        ret = []
-        for idx, elem in enumerate(arr):
-            if (math.isnan(elem)):
-                print('yes')
-                ret.append(0.0)
-            else:
-                ret.append(elem)
+    def replace_nan_with_zero(self, arr):
+        print("Before removing NaNs", arr)
+        if math.isnan(arr):
+            return 0.0
+        else:
+            return arr
+
+    def clean_dict(self, in_dict):
+        ret = {k: in_dict[k] for k in in_dict if not math.isnan(in_dict[k])}
         return ret
 
     def run(self):
@@ -56,35 +52,40 @@ class KDE_gradients:
         kde_grid = {}
 
         # Calculate for each module
-        for module in self.modules:
+        for node in self.nodes:
             dist = {}
             mean_dist = {}
-
+            module = node.split('+')[0]
+            function = node.split('+')[1]
             # Get the runtimes for all the runs. 
             for idx, state in enumerate(self.states):
-                time_inc_df = self.states[state].df.loc[self.states[state].df['module'] == module]['time (inc)'].tolist()
-                time_inc_df = self.remove_nan(time_inc_df)
+                time_inc_df = self.states[state].df.loc[(self.states[state].df['module'] == module) & (self.states[state].df['name'] == function)]['time (inc)'].mean()
+                # nid = time_inc_df['nid'].unique()[0]
+                time_inc_df = self.replace_nan_with_zero(time_inc_df)
                 dist[state] = time_inc_df
                 mean_dist[state] = np.mean(time_inc_df)
-            print(module, mean_dist)
   
             # calculate mean runtime. 
-            np_mean_dist = np.array(tuple(mean_dist.values()))
-            print(np_mean_dist)
+            np_mean_dist = np.array(tuple(self.clean_dict(mean_dist).values()))
             
             # Calculate appropriate number of bins automatically. 
-            num_of_bins[module] = self.freedman_diaconis_bins(np_mean_dist)
+            num_of_bins[node] = self.freedman_diaconis_bins(np_mean_dist)
  
             # Calculate the KDE grid (x, y)
-            kde_grid[module] = self.kde(np_mean_dist)
+            kde_grid[node] = self.kde(np_mean_dist)
+            y_min = np.min(kde_grid[node][1])
+            y_max = np.max(kde_grid[node][1])
             
-            results[module] = {
+            results[node] = {
                 "dist": dist,
                 "mean_dist": mean_dist, 
                 "bins": num_of_bins,
-                "kde_x": kde_grid[module][0],
-                "kde_y": kde_grid[module][1]
+                "kde_x": kde_grid[node][0].tolist(),
+                "kde_y": kde_grid[node][1].tolist(),
+                "kde_y_min": y_min,
+                "kde_y_max": y_max,
             }
+        print(results)
         return results
 
 

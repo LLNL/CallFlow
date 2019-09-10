@@ -111,7 +111,6 @@ export default {
 		
 		findMaxGraph(graph){
 			let datasets = this.$store.datasets 
-			console.log(datasets)
 			for(const node of graph.nodes){
 				let obj = {
 					'name': '',
@@ -133,9 +132,7 @@ export default {
 				for(const [key, value] of Object.entries(obj)){
 					node[key] = value
 				}
-				console.log(node)
 			}
-			console.log(graph)
 			return graph
 		},
 		

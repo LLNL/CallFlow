@@ -87,7 +87,7 @@ export default {
 		selectedMode: 'Distribution',
 		selectedBinCount: 5,
 		selectedFunctionsInCCT: 50,
-		selectedDiffNodeAlignment: 'Middle',
+		selectedDiffNodeAlignment: 'Top',
 		diffNodeAlignment: ['Middle', 'Top'],
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
@@ -298,7 +298,6 @@ export default {
 				this.$store.color.datasetColor[this.$store.datasets[i]] = this.$store.color.getCatColor(i)
 			}
 			console.log("Assigned Color map: ", this.$store.color.datasetColor)
-			console.log(this.selectedColorMin)
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 		},

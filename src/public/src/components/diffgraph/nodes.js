@@ -19,7 +19,16 @@ export default {
         textTruncForNode: 25,
         id: '',
         graph: null,
+        nidNameMap: {},
     }),
+    sockets: {
+        diff_gradients(data) {
+            console.log("Gradient data:", data)
+            this.setupGradients2(data)
+
+
+        }
+    },
     mounted() {
         this.id = 'diff-nodes-' + this._uid
 
@@ -34,6 +43,11 @@ export default {
         init(graph) {
             this.graph = graph
             this.nodes = d3.select('#' + this.id)
+
+            for (let node of this.graph.nodes) {
+                console.log(node)
+                this.nidNameMap[node.name] = node.xid
+            }
 
             // https://observablehq.com/@geekplux/dragable-d3-sankey-diagram
             this.drag = d3.drag()
@@ -141,9 +155,8 @@ export default {
                     return 1;
                 })
                 .style("fill", (d, i) => {
-                    console.log(d)
-                    this.setupGradients(this.$store.graph.nodes[i])
-                    return "url(#linear-gradient-" + d.xid + "-up)" 
+                    // this.setupGradients2(this.$store.graph.nodes[i])
+                    return "url(#linear-gradient-" + d.xid + "-up)"
                 })
         },
 
@@ -159,7 +172,7 @@ export default {
             var defs = d3.select('#diffgraph-overview-')
                 .append("defs");
             this.linearGradient = defs.append("linearGradient")
-                .attr("id", "linear-gradient-" + node_data.xid +'-up');
+                .attr("id", "linear-gradient-" + node_data.xid + '-up');
 
             this.linearGradient2 = defs.append("linearGradient")
                 .attr("id", "linear-gradient-" + node_data.xid + '-down');
@@ -180,7 +193,7 @@ export default {
             for (const [dataset, val] of Object.entries(props)) {
                 if (dataset != 'xid') {
                     this.linearGradient.append("stop")
-                        .attr("offset", Math.abs(val/2 * 100 - 50) + "%")
+                        .attr("offset", Math.abs(val / 2 * 100 - 50) + "%")
                         .attr("stop-color", "#e1e1e1");
 
                     this.linearGradient2.append("stop")
@@ -188,6 +201,39 @@ export default {
                         .attr("stop-color", this.$store.color.datasetColor[dataset]);
                 }
 
+            }
+        },
+
+        setupGradients2(data) {
+            for (let d in data) {
+                var defs = d3.select('#diffgraph-overview-')
+                    .append("defs");
+                this.linearGradient = defs.append("linearGradient")
+                    .attr("id", "linear-gradient-" + this.nidNameMap[d] + '-up');
+
+                // this.linearGradient2 = defs.append("linearGradient")
+                // .attr("id", "linear-gradient-" + this. + '-down');
+
+                this.linearGradient
+                    .attr("x1", "0%")
+                    .attr("y1", "0%")
+                    .attr("x2", "0%")
+                    .attr("y2", "100%");
+
+                //Set the color for the start (0%)
+                for (const [idx, val] of Object.entries(data[d])) {
+                    let min_val = data[d]['kde_y_min']
+                    let max_val = data[d]['kde_y_max']
+                    if (idx == 'kde_y') {
+                        for (let i = 0; i < val.length; i += 1) {
+                            console.log(val[i], val[i]/(max_val - min_val), max_val, min_val)
+                            this.linearGradient.append("stop")
+                                .attr("offset", 100 * (i / val.length) + "%")
+                                .attr("stop-color", d3.interpolateReds(1 - (val[i]/(max_val - min_val)*100)));
+
+                        }
+                    }
+                }
             }
         },
 
