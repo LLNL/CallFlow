@@ -2,6 +2,9 @@ import tpl from '../../html/diffgraph/nodes.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
 import EventHandler from '../../EventHandler'
+import {
+    start
+} from 'repl';
 
 export default {
     template: tpl,
@@ -183,12 +186,6 @@ export default {
                 .attr("x2", "0%")
                 .attr("y2", "100%");
 
-            this.linearGradient
-                .attr("x1", "0%")
-                .attr("y1", "0%")
-                .attr("x2", "0%")
-                .attr("y2", "100%");
-
             //Set the color for the start (0%)
             for (const [dataset, val] of Object.entries(props)) {
                 if (dataset != 'xid') {
@@ -200,7 +197,6 @@ export default {
                         .attr("offset", Math.abs(val / 2 * 100) + "%")
                         .attr("stop-color", this.$store.color.datasetColor[dataset]);
                 }
-
             }
         },
 
@@ -211,28 +207,51 @@ export default {
                 this.linearGradient = defs.append("linearGradient")
                     .attr("id", "linear-gradient-" + this.nidNameMap[d] + '-up');
 
-                // this.linearGradient2 = defs.append("linearGradient")
-                // .attr("id", "linear-gradient-" + this. + '-down');
-
                 this.linearGradient
                     .attr("x1", "0%")
                     .attr("y1", "0%")
                     .attr("x2", "0%")
                     .attr("y2", "100%");
 
+                let root_d = 'libmonitor.so.0.0.0+<program root>'
                 //Set the color for the start (0%)
-                for (const [idx, val] of Object.entries(data[d])) {
-                    let min_val = data[d]['kde_y_min']
-                    let max_val = data[d]['kde_y_max']
-                    if (idx == 'kde_y') {
-                        for (let i = 0; i < val.length; i += 1) {
-                            console.log(val[i], val[i]/(max_val - min_val), max_val, min_val)
-                            this.linearGradient.append("stop")
-                                .attr("offset", 100 * (i / val.length) + "%")
-                                .attr("stop-color", d3.interpolateReds(1 - (val[i]/(max_val - min_val)*100)));
+                let min_val = data[root_d]['kde_y_min']
+                let max_val = data[root_d]['kde_y_max']
+                let data_min = data[root_d]['data_min']
+                let data_max = data[root_d]['data_max']
 
-                        }
+                let start_idx = 0
+                let curr_idx = 0
+                let grid = data[d]['kde_x']
+                let val = data[d]['kde_y']
+
+                for (let i = 0; i < grid.length; i += 1) {
+                    if (grid[i] > data_min) {
+                        start_idx = curr_idx
+                        break
                     }
+                    curr_idx += 1
+                }
+
+                let end_idx = 0
+                for (let i = 0; i < grid.length; i += 1) {
+                    if (grid[i] > data_max) {
+                        end_idx = curr_idx
+                        break
+                    }
+                    curr_idx += 1
+                }
+
+                if(end_idx == 0){
+                    end_idx = grid.length - 1
+
+                }
+                console.log(start_idx, end_idx)
+
+                for (let i = start_idx; i < end_idx; i += 1) {
+                    this.linearGradient.append("stop")
+                        .attr("offset", 100 * (i / val.length) + "%")
+                        .attr("stop-color", d3.interpolateReds((val[i] / (max_val - min_val))))
                 }
             }
         },
