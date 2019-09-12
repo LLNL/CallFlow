@@ -325,7 +325,7 @@ class CallFlow:
             return mH.result 
 
         elif action_name == 'histogram':
-            histogram = Histogram(state1, action["module"])
+            histogram = Histogram(state1, action["nid"])
             return histogram.result
 
         elif action_name == "mini-histogram":
@@ -342,7 +342,7 @@ class CallFlow:
             return ret
 
         elif action_name == 'function':
-            functionlist = FunctionList(state1, action['module'])
+            functionlist = FunctionList(state1, action['module'], action['nid'])
             return functionlist.result
 
     def update_diff(self, action):

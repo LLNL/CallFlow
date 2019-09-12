@@ -178,9 +178,13 @@ export default {
 				// const component_path = csv[i][5];
 				const parts = sequence;
 				let currentNode = root;
+				console.log(parts)
 				for (let j = 0; j < parts.length; j++) {
 					const children = currentNode.children;
-					const nodeName = parts[j];
+					let nodeName = parts[j];
+					// if(nodeName.includes('=')){
+						// nodeName = nodeName.split('=')[0]
+					// }
 					var childNode;
 					if (j + 1 < parts.length) {
 						// Not yet at the end of the sequence; move down the tree.
@@ -205,7 +209,6 @@ export default {
 						// Reached the end of the sequence; create a leaf node.
 						childNode = {
 							name: nodeName,
-							module: nodeName,
 							value: inc_time,
 							exclusive: exclusive,
 							// imbalance_perc,
@@ -277,7 +280,9 @@ export default {
 					})
 			}
 			// Total size of all segments; we set this later, after loading the data
+			console.log(json)
 			let root = d3.hierarchy(json)
+			console.log(root)
 				
 			const partition = d3.partition()
 				.size([this.width, this.height])
@@ -341,7 +346,6 @@ export default {
 							return d.data.count * this.width/d.data.length
 						}
 						return d.data.count * this.width/d.data.length
-						// return d.y0;
 					}
 					return d.x0;
 				})
@@ -353,13 +357,17 @@ export default {
 				})
 				.attr('width', (d) => {
 					if (this.selectedDirection == 'LR') {
+						console.log(d)
 						if(Number.isNaN(d.y1 - d.y0)){
 							return this.width/d.data.length
 						}
-						return this.width/d.data.length
-						// return d.y1 - d.y0;
+						else{
+							return d.y1 - d.y0;
+						}
+						// return this.width/d.data.length
 					}
-					return d.x1 - d.x0;
+					// return d.x1 - d.x0;
+					return this.width
 				})
 				.attr('height', (d) => {
 					if (this.selectedDirection == 'LR') {
@@ -423,7 +431,9 @@ export default {
 						return this.width/d.data.length
 
 					}
-					return d.dx1 - d.dx0 / 2;
+					console.log(d)
+					// return d.x1 - d.x0 / 2;
+					return this.width
 				})
 				.style('fill', (d) => {
 					let color = this.$store.color.setContrast(this.$store.color.getColor(d))
@@ -434,7 +444,7 @@ export default {
 						return '';
 					}
 
-					let name = d.data.module
+					let name = d.data.name
 					var textSize = this.textSize(name)['width'];
                     if (textSize < d.height) {
                         return name;

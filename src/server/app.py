@@ -183,12 +183,13 @@ class App():
         @sockets.on('histogram', namespace="/")
         def histogram(data):
             if self.debug:
-                self.print('[Request] Histogram of a Module', data['module'])
+                self.print('[Request] Histogram of a Module', data['nid'])
             dataset = data['dataset1']
             result = self.callflow.update({
                 "name": "histogram",
                 "dataset1": dataset,
                 "module": data['module'],
+                "nid": data['nid'],
             })
             emit('histogram', result, json=True)
 
@@ -201,6 +202,7 @@ class App():
                 "name": "histogram",
                 "dataset1": dataset,
                 "module": data['module'],
+                "nid": data['nid'],
             })
             emit('scatterplot', result, json=True)
 
@@ -269,7 +271,8 @@ class App():
             result = self.callflow.update({
                 'name': 'function',
                 'dataset1': data['dataset1'],
-                'module': data['module']
+                'module': data['module'],
+                'nid': data['nid']
             })
             emit('function', result, json=True)
 

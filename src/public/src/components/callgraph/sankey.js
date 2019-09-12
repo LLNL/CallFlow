@@ -228,8 +228,8 @@ export default function Sankey() {
         while (remainingNodes.length) {
             nextNodes = [];
 	        remainingNodes.forEach(function(node) {
+                console.log(node)
                 node.level = level
-                console.log(level)
 	    	    node.dx = nodeWidth;
                 node.sourceLinks.forEach(function(link) {
                     nextNodes.push(link.target);
@@ -257,9 +257,9 @@ export default function Sankey() {
 
     function moveSinksRight(x) {
         nodes.forEach(function(node) {
+            //		node.x = x - 1;
 	        // basically fix the last leaf in the graph as maximum possible level
             if (!node.sourceLinks.length) {
-                //		node.x = x - 1;
             }
             //	    node.x = d3.min(node.sourceLinks, function(d) { return d.target.x; });
             //            node.x = node.x + 1;

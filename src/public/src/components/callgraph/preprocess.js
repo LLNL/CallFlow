@@ -12,23 +12,9 @@
  ***************************************************************************** */
 
 export default function preprocess(graph) {
-    graph = addMaxLevel(graph)
     graph = addLinkID(graph)
     graph = calculateFlow(graph)
     console.log("Graph after preprocessing: ", graph)
-    return graph
-}
-
-function addMaxLevel(graph) {
-    let ret = 0
-    let nodes = graph.nodes
-    for (let i = 0; i < nodes.length; i += 1) {
-        let node = nodes[i]
-            if (ret < node.level) {
-            ret = node.level
-        }
-    }
-    graph['maxLevel'] = ret 
     return graph
 }
 
@@ -39,10 +25,10 @@ function addLinkID(graph) {
     const nodeMap = {}
     let idx = 0, node;
     for ([idx, node] of graph.nodes.entries()) {
-        nodeMap[node.name] = idx;
+        nodeMap[node.id] = idx;
         let debug = true
         if(debug){
-            console.log("Assigning", node.name[0], " with map index: ", idx)
+            console.log("Assigning", node.id, " with map index: ", idx)
         }
     }
 
@@ -78,10 +64,10 @@ function calculateFlow(graph) {
 
     let debug = true
     nodes.forEach((node) => {
-        const nodeLabel = node.name[0];
+        const nodeLabel = node.id;
         links.forEach((link) => {
             if (nodes[link.sourceID] != undefined) {
-                const linkLabel = nodes[link.sourceID].name;
+                const linkLabel = nodes[link.sourceID].id;
                 if (linkLabel == nodeLabel) {
                     if (outGoing[linkLabel] == undefined) {
                         outGoing[linkLabel] = 0;
@@ -99,7 +85,7 @@ function calculateFlow(graph) {
 
         links.forEach((link) => {
             if (nodes[link.targetID] != undefined) {
-                const linkLabel = nodes[link.targetID].name;
+                const linkLabel = nodes[link.targetID].id;
                 if (linkLabel == nodeLabel) {
                     if (inComing[linkLabel] == undefined) {
                         inComing[linkLabel] = 0;
@@ -111,8 +97,6 @@ function calculateFlow(graph) {
                     else{
                         inComing[linkLabel] += link.weight;
                     }
-                }
-                if(debug){
                 }
             }
         });

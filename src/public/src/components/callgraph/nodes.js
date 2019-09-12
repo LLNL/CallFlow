@@ -30,10 +30,10 @@ export default {
             this.nodes = d3.select('#' + this.id)
 
             this.drag = d3.drag()
-                .subject((d) =>  {
+                .subject((d) => {
                     return d;
                 })
-                .on("start", function() { 
+                .on("start", function () {
                     this.parentNode.appendChild(this)
                 })
                 .on("drag", this.dragmove)
@@ -47,9 +47,9 @@ export default {
                 .attr('opacity', 0)
                 .attr('id', d => `node_${d.mod_index}`)
                 .attr('transform', (d) => {
-                    return `translate(${d.x},${d.y })`
+                    return `translate(${d.x},${d.y})`
                 })
-                // .call(this.drag)
+            // .call(this.drag)
 
             this.nodes.selectAll('.node')
                 .data(this.graph.nodes)
@@ -98,28 +98,31 @@ export default {
                 .on('click', (d) => {
                     console.log("Selected node: ", d)
                     this.$store.selectedNode = d
+                    let selectedNid = 0
                     let selectedModule = ''
-                    // if (d.id.indexOf(':') > -1) {
-                    //     selectedModule = d.id.split(':')[0]
-                    // } else {
-                    //     selectedModule = d.id
-                    // }
+                    if (d.id.indexOf(':') > -1) {
+                        selectedModule = d.id.split(':')[0]
+                    } else {
+                        selectedModule = d.id
+                    }
 
-                    selectedModule = d.nid
-                    console.log(selectedModule)
+                    selectedNid = d.nid[0]
 
                     if (this.$store.selectedData == 'Dataframe') {
                         this.$socket.emit('scatterplot', {
                             module: selectedModule,
+                            nid: selectedNid,
                             dataset1: this.$store.selectedDataset,
                         })
                         this.$socket.emit('histogram', {
+                            nid: selectedNid,
                             module: selectedModule,
                             dataset1: this.$store.selectedDataset,
                         })
                     } else if (this.$store.selectedData == 'Graph') {
                         this.$socket.emit('function', {
                             module: selectedModule,
+                            nid: selectedNid,
                             dataset1: this.$store.selectedDataset,
                         })
                         this.$socket.emit('hierarchy', {
@@ -201,15 +204,14 @@ export default {
                 .attr('y', '-10')
                 .style('opacity', 1)
                 .text((d) => {
-                    console.log(d)
                     if (d.height < this.minHeightForText) {
                         return '';
                     }
                     var textSize = this.textSize(d.id)['width'];
                     if (textSize < d.height) {
-                        return d.id[0];
+                        return d.id[0].split('=')[0];
                     } else {
-                        return this.trunc(d.id, this.textTruncForNode)
+                        return this.trunc(d.id.split('=')[0], this.textTruncForNode)
                     }
                 })
                 .on('mouseover', function (d) {
@@ -243,11 +245,6 @@ export default {
                     return this.$store.color.setContrast(this.$store.color.getColor(d))
                 })
                 .text((d) => {
-                    if (d.name.length == 1) {
-                        name = d.id[0]
-                    } else {
-                        name = d.id
-                    }
                     // let name_splits = name.split('/').reverse()
                     // if (name_splits.length == 1) {
                     //     d.name = name
@@ -255,18 +252,14 @@ export default {
                     //     d.name = name_splits[0]
                     // }
 
-                    if (d.name != 'i' && d.name[d.name.length - 1] != '_') {
-                        if (d.height < this.minHeightForText) {
-                            return '';
-                        }
-                        var textSize = this.textSize(d.name)['width'];
-                        if (textSize < d.height) {
-                            return d.name;
-                        }
-                        return this.trunc(d.name, this.textTruncForNode);
-                    } else {
+                    if (d.height < this.minHeightForText) {
                         return '';
                     }
+                    var textSize = this.textSize(d.id.split('=')[0])['width'];
+                    if (textSize < d.height) {
+                        return d.id.split('=')[0];
+                    }
+                    return this.trunc(d.id.split('=')[0], this.textTruncForNode);
                 });
         },
 

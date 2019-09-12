@@ -64,7 +64,7 @@ class groupBy:
                 if prev_module is None:
                     prev_module = module
                     group_path.append(module + '=' + path[i])
-                    group_path.append(module)
+                    # group_path.append(module)
                 elif module != prev_module:
                     if module in group_path:
                         from_module = group_path[len(group_path) - 1]
@@ -75,7 +75,7 @@ class groupBy:
                         change_name = True
                     else:
                         group_path.append(module + '=' + path[i])
-                        group_path.append(module)
+                        # group_path.append(module)
                         prev_module = module
                         if path[i] not in self.entry_funcs[module]:
                             self.entry_funcs[module].append(path[i])
@@ -92,13 +92,30 @@ class groupBy:
     def create_component_path(self, path, group_path):
         component_path = []
         path = list(path)
-        # component_module = self.state.lookup_with_name(path[-1])[self.group_by].tolist()[0]
         component_module = group_path[-1]
-        component_path = [node for node in path if component_module == \
-                       self.state.lookup_with_name(node)[self.group_by].tolist()[0]]
+
+        if '=' in component_module:
+            module = component_module.split('=')[0]
+        elif '/' in component_module:
+            module = component_module.split('/')[0]
+
+        for idx, node in enumerate(path):
+            if '=' in node:
+                node_module = node.split('=')[0]
+                node_func = node.split('=')[1]
+            elif '/' in node:
+                node_module = node.split('/')[0]
+                node_func = node.split('/')[1]
+            else:
+                node_func = node
+
+            # print(self.df.loc[self.df['name'] == node_func]['module'])
+            if module == self.df.loc[self.df['name'] == node_func]['module'].tolist()[0]:
+                component_path.append(node_func)
         
-        if len(component_path) == 0:
-            component_path.append(path[-1])
+        # if len(component_path) == 0:
+        #     component_path.append(path[-1])
+        
         component_path.insert(0, component_module)
         return tuple(component_path)
 

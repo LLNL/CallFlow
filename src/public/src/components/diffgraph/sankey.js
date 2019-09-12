@@ -216,7 +216,7 @@ export default function Sankey() {
     function findroot(){
 	    let ret = []
 	    nodes.forEach(function(node){
-	        if(node['id'] == "libmonitor.so.0.0.0+<program root>"){
+	        if(node['id'] == "libmonitor.so.0.0.0=<program root>"){
 		        ret.push(node)
 	        }	    
 	    })
@@ -235,8 +235,9 @@ export default function Sankey() {
             nextNodes = [];
 	        remainingNodes.forEach(function(node) {
                 node.level = level
-	    	    node.dx = nodeWidth;
-                node.sourceLinks.forEach(function(link) {
+                node.dx = nodeWidth;
+                node.targetLinks.forEach(function(link) {
+                    console.log(link.target)
                     nextNodes.push(link.target);
                 });
             });

@@ -15,11 +15,21 @@ import networkx as nx
 from ast import literal_eval as make_tuple
 
 class FunctionList:
-    def __init__(self, state, module):
+    def __init__(self, state, modFunc, nid):
         self.graph = state.graph
         self.df = state.df
         self.entire_df = state.entire_df
-        self.module_df = self.df.loc[self.df['module'] == module]
+
+        # Processing for the modFunc format to get the module name
+        if '=' in modFunc:
+            self.function = modFunc.split('=')[1]
+            self.module = modFunc.split('=')[0]
+        elif '/' in modFunc:
+            self.function = modFunc.split('/')[1]
+            self.module = modFunc.split('/')[0]        
+            
+        self.module_df = self.df.loc[self.df['module'] == self.module]
+
         # self.entry_funcs = state.entry_funcs[module]
         # self.other_funcs = state.other_funcs[module]
         self.result = self.run()
@@ -31,15 +41,33 @@ class FunctionList:
         strip_3 = strip_2.strip('[')
         return strip_3.split(',')
 
+    # def add_paths(self, path_name):
+    #     for idx, row in self.entire_df.iterrows():
+    #         path = row[path_name][0]
+    #         # TODO: Sometimes the path becomes a string. Find why it happens. 
+    #         # If path becomes a string.
+    #         if isinstance(path, str):
+    #             path = make_tuple(row[path_name])
+    #         print(path)
+    #         self.entire_g.add_path(path)
+
     def add_paths(self, path_name):
-        for idx, row in self.entire_df.iterrows():
-            if row.show_node:
+        for idx, row in self.df.iterrows():
+            # if row.show_node:
                 path = row[path_name]
+                print(path)
                 # TODO: Sometimes the path becomes a string. Find why it happens. 
-                # If path becomes a string.
+                # If it becomes a string 
                 if isinstance(path, str):
-                    path = make_tuple(row[path_name])
-                self.entire_g.add_path(path)
+                    path = make_tuple(path)
+ 
+                corrected_path = path[0]
+                if(len(corrected_path) >= 2):   
+                    source = corrected_path[-2]
+                    target = corrected_path[-1]
+
+                    if not self.entire_g.has_edge(source, target):
+                        self.entire_g.add_edge(source, target)
         
     def run(self):    
         callers = {}
@@ -50,6 +78,7 @@ class FunctionList:
         # Create a networkX graph.
         self.entire_g = nx.DiGraph()
         self.add_paths('path')
+        print(self.entire_g.nodes())
 
         entry_func_df = self.module_df.loc[self.module_df['component_level'] == 2] 
         entry_funcs = entry_func_df['name'].unique()
@@ -58,6 +87,7 @@ class FunctionList:
         for idx, entry_func in enumerate(entry_funcs):
             print("Entry func: ", entry_func)
 
+            print("predecessors", self.entire_g.predecessors(entry_func))
             callers[entry_func] = list(self.entire_g.predecessors(entry_func))
             
             for idx, caller in enumerate(callers[entry_func]):
