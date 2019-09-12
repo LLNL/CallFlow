@@ -15,6 +15,14 @@
             "props": {
             },
             "nop": "128"
+        },
+        {
+            "name": "kripke-openmpi",
+            "path": "./data/kripke/impi",
+            "format": "hpctoolkit",
+            "props": {
+            },
+            "nop": "128"
         }
     ]
 }

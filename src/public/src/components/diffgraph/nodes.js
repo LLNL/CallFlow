@@ -28,8 +28,7 @@ export default {
         diff_gradients(data) {
             console.log("Gradient data:", data)
             this.setupGradients2(data)
-
-
+            this.debugGradients(data, 'libmonitor.so.0.0.0+<program root>', 'hist')
         }
     },
     mounted() {
@@ -48,7 +47,6 @@ export default {
             this.nodes = d3.select('#' + this.id)
 
             for (let node of this.graph.nodes) {
-                console.log(node)
                 this.nidNameMap[node.name] = node.xid
             }
 
@@ -201,6 +199,7 @@ export default {
         },
 
         setupGradients2(data) {
+            let method = 'hist'
             for (let d in data) {
                 var defs = d3.select('#diffgraph-overview-')
                     .append("defs");
@@ -215,15 +214,15 @@ export default {
 
                 let root_d = 'libmonitor.so.0.0.0+<program root>'
                 //Set the color for the start (0%)
-                let min_val = data[root_d]['kde_y_min']
-                let max_val = data[root_d]['kde_y_max']
+                let min_val = data[root_d][method]['y_min']
+                let max_val = data[root_d][method]['y_max']
                 let data_min = data[root_d]['data_min']
                 let data_max = data[root_d]['data_max']
 
                 let start_idx = 0
                 let curr_idx = 0
-                let grid = data[d]['kde_x']
-                let val = data[d]['kde_y']
+                let grid = data[d][method]['x']
+                let val = data[d][method]['y']
 
                 for (let i = 0; i < grid.length; i += 1) {
                     if (grid[i] > data_min) {
@@ -242,7 +241,7 @@ export default {
                     curr_idx += 1
                 }
 
-                if(end_idx == 0){
+                if (end_idx == 0) {
                     end_idx = grid.length - 1
 
                 }
@@ -254,6 +253,89 @@ export default {
                         .attr("stop-color", d3.interpolateReds((val[i] / (max_val - min_val))))
                 }
             }
+        },
+
+        debugGradients(data, node, mode) {
+            this.toolbarHeight = document.getElementById('toolbar').clientHeight
+            this.footerHeight = document.getElementById('footer').clientHeight
+            this.width = window.innerWidth * 0.3
+            this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.5
+
+            this.margin = {
+                    top: 10,
+                    right: 10,
+                    bottom: 10,
+                    left: 15
+                },
+            this.scatterWidth = this.width - this.margin.right - this.margin.left;
+            this.scatterHeight = this.height - this.margin.top - this.margin.bottom;
+
+            console.log(this.width, this.height, this.margin)
+            this.debugsvg = d3.select('#debug')
+                .attr('width', this.width - this.margin.left - this.margin.right)
+                .attr('height', this.height - this.margin.top - this.margin.bottom)
+                .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
+            const xFormat = d3.format('0.1s');
+            
+            this.xMin = data[node][mode]['x_min']
+            this.xMax = data[node][mode]['x_max']
+            this.yMin = data[node][mode]['y_min']
+            this.yMax = data[node][mode]['y_max']
+            this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.scatterWidth])
+			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.scatterHeight, 0])
+            var xAxis = d3.axisBottom(this.xScale)
+                .ticks(5)
+                .tickFormat((d, i) => {
+                    let temp = d;
+                    if (i % 2 == 0) {
+                        let value = temp * 0.000001
+                        return `${xFormat(value)}s`
+                    }
+                    return '';
+                });
+
+            const yFormat = d3.format('0.2s')
+            var yAxis = d3.axisLeft(this.yScale)
+                .ticks(5)
+                .tickFormat((d, i) => {
+                    let temp = d;
+                    if (i % 2 == 0) {
+                        let value = temp * 0.000001
+                        return `${xFormat(value)}s`
+                    }
+                    return '';
+                });
+
+            let xAxisHeightCorrected = 10 + this.margin.left
+            var xAxisLine = this.debugsvg.append('g')
+                .attr('class', 'axis')
+                .attr('id', 'xAxis')
+                .attr("transform", "translate(" + 3 * this.margin.left + "," + xAxisHeightCorrected + ")")
+                .call(xAxis)
+
+            this.debugsvg.append('text')
+                .attr('class', 'axisLabel')
+                .attr('x', self.scatterWidth)
+                .attr('y', self.yAxisHeight - this.margin.left * 1.5)
+                .style('font-size', '10px')
+                .style('text-anchor', 'end')
+                .text("Diff")
+
+            var yAxisLine = this.debugsvg.append('g')
+                .attr('id', 'yAxis')
+                .attr('class', 'axis')
+                .attr('transform', "translate(" + 3 * this.margin.left + ", 0)")
+                .call(yAxis)
+
+            this.debugsvg.append("text")
+                .attr('class', 'axisLabel')
+                .attr('transform', 'rotate(-90)')
+                .attr('x', 0)
+                .attr('y', 4 * this.margin.left)
+                .style("text-anchor", "end")
+                .style("font-size", "10px")
+                .text("Mean");
+
         },
 
         // Lines

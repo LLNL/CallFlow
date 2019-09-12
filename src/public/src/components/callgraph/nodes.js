@@ -99,11 +99,14 @@ export default {
                     console.log("Selected node: ", d)
                     this.$store.selectedNode = d
                     let selectedModule = ''
-                    if (d.id.indexOf(':') > -1) {
-                        selectedModule = d.id.split(':')[0]
-                    } else {
-                        selectedModule = d.id
-                    }
+                    // if (d.id.indexOf(':') > -1) {
+                    //     selectedModule = d.id.split(':')[0]
+                    // } else {
+                    //     selectedModule = d.id
+                    // }
+
+                    selectedModule = d.nid
+                    console.log(selectedModule)
 
                     if (this.$store.selectedData == 'Dataframe') {
                         this.$socket.emit('scatterplot', {
@@ -198,14 +201,15 @@ export default {
                 .attr('y', '-10')
                 .style('opacity', 1)
                 .text((d) => {
+                    console.log(d)
                     if (d.height < this.minHeightForText) {
                         return '';
                     }
-                    var textSize = this.textSize(d.name)['width'];
+                    var textSize = this.textSize(d.id)['width'];
                     if (textSize < d.height) {
-                        return d.name[0];
+                        return d.id[0];
                     } else {
-                        return this.trunc(d.name, this.textTruncForNode)
+                        return this.trunc(d.id, this.textTruncForNode)
                     }
                 })
                 .on('mouseover', function (d) {
@@ -240,16 +244,16 @@ export default {
                 })
                 .text((d) => {
                     if (d.name.length == 1) {
-                        name = d.name[0]
+                        name = d.id[0]
                     } else {
-                        name = d.name
+                        name = d.id
                     }
-                    let name_splits = name.split('/').reverse()
-                    if (name_splits.length == 1) {
-                        d.name = name
-                    } else {
-                        d.name = name_splits[0]
-                    }
+                    // let name_splits = name.split('/').reverse()
+                    // if (name_splits.length == 1) {
+                    //     d.name = name
+                    // } else {
+                    //     d.name = name_splits[0]
+                    // }
 
                     if (d.name != 'i' && d.name[d.name.length - 1] != '_') {
                         if (d.height < this.minHeightForText) {

@@ -194,7 +194,6 @@ export default {
 				});
 
 			let xAxisHeightCorrected = this.xAxisHeight + this.margin.left
-			console.log(3*this.margin.left, xAxisHeightCorrected)
 			var xAxisLine = this.svg.append('g')
 				.attr('class', 'axis')
 				.attr('id', 'xAxis')
@@ -204,7 +203,7 @@ export default {
 			this.svg.append('text')
 				.attr('class', 'axisLabel')
 				.attr('x', self.scatterWidth)
-				.attr('y', self.yAxisHeight + this.margin.left)
+				.attr('y', self.yAxisHeight - this.margin.left*1.5)
 				.style('font-size', '10px')
 				.style('text-anchor', 'end')
 				.text("Diff")
@@ -237,21 +236,21 @@ export default {
 				})
 				.style('fill', "#4682b4")
 
-			// var line = d3.line()
-			// 	.x(function (d, i) {
-			// 		return self.xScale(self.xArray[i]) + 3 * self.margin.left;
-			// 	})
-			// 	.y(function (d, i) {
-			// 		return self.yScale(self.yArray[i]);
-			// 	});
+			var line = d3.line()
+				.x(function (d, i) {
+					return self.xScale(self.xArray[i]) + 3 * self.margin.left;
+				})
+				.y(function (d, i) {
+					return self.yScale(self.yArray[i]);
+				});
 
-			// var trendline = this.svg.append('g').append("path")
-			// 	.datum(this.regressionY)
-			// 	.attr("class", "res_line")
-			// 	.attr("d", line)
-			// 	.style("stroke", "black")
-			// 	.style("stroke-width", "1px")
-			// 	.style("opacity", 0.5);
+			var mdline = this.svg.append('g').append("path")
+				.datum(this.md)
+				.attr("class", "res_line")
+				.attr("d", line)
+				.style("stroke", "black")
+				.style("stroke-width", "1px")
+				.style("opacity", 0.5);
 
 			// var coefText = this.svg.append('g');
 			// var decimalFormat = d3.format("0.2f");

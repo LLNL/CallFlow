@@ -120,6 +120,9 @@ class CallGraph(nx.Graph):
         name_mapping = self.generic_map(self.g.nodes(), 'vis_node_name')
         nx.set_node_attributes(self.g, name='name', values=name_mapping)
 
+        nid_mapping = self.generic_map(self.g.nodes(), 'nid')
+        nx.set_node_attributes(self.g, name='nid', values=nid_mapping)
+
         # type_mapping = self.generic_map(self.g.nodes(), 'type')
         # nx.set_node_attributes(self.g, name='type', values=type_mapping)
 
@@ -173,6 +176,7 @@ class CallGraph(nx.Graph):
             else:
                 log.info('Node: {0}'.format(node))
                 corrected_node = node
+                corrected_function = node
                 groupby = 'module'
  
             if attr == 'time (inc)':
@@ -218,9 +222,12 @@ class CallGraph(nx.Graph):
         
             elif attr == 'vis_node_name':
                 ret[node] = [node] 
+            
+            elif attr == 'nid':
+                ret[node] = self.df.loc[self.df['name'] == corrected_function]['nid'].tolist()
                 
             else:
-                group_df = self.df.groupby([groupby]).mean()
+                group_df = self.df.groupby(['name']).mean()
                 ret[node] = group_df.loc[corrected_node, attr]
         return ret
 

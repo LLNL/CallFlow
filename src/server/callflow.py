@@ -334,6 +334,7 @@ class CallFlow:
 
         elif action_name == "cct":
             nx = CCT(state1, action['functionInCCT'])
+            print(nx.g.nodes())
             return nx.g
 
         elif action_name == 'split-rank':

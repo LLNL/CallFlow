@@ -116,21 +116,24 @@ export default {
 			// Enable diff mode only if the number of datasets >= 2
 			this.$store.datasets = data['names']
 			this.datasets = data['names']
-			this.$store.selectedDataset = data['names'][1]
-			this.selectedDataset = data['names'][1]
+			
 
 			if (this.numOfDatasets >= 2) {
 				this.enableDiff = true
 				this.modes = ['Single', 'Distribution']
-				this.selectedDataset2 = data['names'][4]
-				this.$store.selectedDataset2 = data['names'][4]
-				// this.selectedMode = 'Diff'
+				this.selectedDataset2 = data['names'][1]
+				this.$store.selectedDataset2 = data['names'][1]
+				this.$store.selectedDataset = data['names'][2]
+				this.selectedDataset = data['names'][2]
+				this.selectedMode = 'Diff'
 
 			} else {
 				this.enableDiff = false
 				this.modes = ['Single']
 				this.selectedDataset2 = ''
 				this.selectedMode = 'Single'
+				this.$store.selectedDataset = data['names'][0]
+				this.selectedDataset = data['names'][0]
 			}
 			this.$store.maxExcTime = data['max_excTime']
 			this.$store.minExcTime = data['min_excTime']
@@ -266,14 +269,14 @@ export default {
 						datasets: this.$store.datasets,
 						plot: 'kde'
 					})
-					// this.$socket.emit('diff_scatterplot', {
-                    //     datasets: this.$store.datasets,
-                    //     dataset1: this.$store.selectedDataset,
-                    //     dataset2: this.$store.selectedDataset2,
-                    //     col: 'time (inc)',
-                    //     catcol: 'name',
-                    //     plot: 'bland-altman'
-                    // })
+					this.$socket.emit('diff_scatterplot', {
+                        datasets: this.$store.datasets,
+                        dataset1: this.$store.selectedDataset,
+                        dataset2: this.$store.selectedDataset2,
+                        col: 'time (inc)',
+                        catcol: 'name',
+                        plot: 'bland-altman'
+                    })
 				}
 			}
 		},
@@ -281,7 +284,7 @@ export default {
 		colors() {
 			this.$store.color = new Color(this.selectedColorBy)
 			this.colorMap = this.$store.color.getAllColors()
-
+			console.log(this.selectedColorBy)
 			if (this.selectedColorBy == 'Inclusive') {
 				this.selectedColorMin = this.$store.minIncTime[this.selectedDataset]
 				this.selectedColorMax = this.$store.maxIncTime[this.selectedDataset]
@@ -289,7 +292,7 @@ export default {
 				this.selectedColorMin = this.$store.minExcTime[this.selectedDataset]
 				this.selectedColorMax = this.$store.maxExcTime[this.selectedDataset]
 			}
-
+			console.log(this.selectedColorMin)
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
 			this.$store.colorPoint = this.selectedColorPoint
 			console.log("Datasets are :", this.$store.datasets)

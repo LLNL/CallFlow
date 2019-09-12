@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import stats
 import statsmodels.nonparametric.api as smnp
+import matplotlib.pyplot as plt
 import math
 
 class KDE_gradients:
@@ -12,9 +13,20 @@ class KDE_gradients:
     def iqr(self, arr):
         """Calculate the IQR for an array of numbers."""
         a = np.asarray(arr)
-        q1 = stats.scoreatpercentile(a, 25)
-        q3 = stats.scoreatpercentile(a, 75)
-        return q3 - q1
+        self.q1 = stats.scoreatpercentile(a, 25)
+        self.q2 = stats.scoreatpercentile(a, 50)
+        self.q3 = stats.scoreatpercentile(a, 75)
+
+    def dist(self, df):
+        ret = {}
+        if df.empty:
+            for i in range(0, self.num_of_ranks):
+                ret[i] = 0.0
+        else:
+            for idx, row in df.iterrows():
+                rank = int(row['rank'])
+                ret[rank] = float(row["time (inc)"])
+        return ret
 
     def freedman_diaconis_bins(self, arr):
         """Calculate number of hist bins using Freedman-Diaconis rule."""
@@ -22,51 +34,54 @@ class KDE_gradients:
         a = np.asarray(arr)
         if len(arr) < 2:
             return 1
-        h = 2 * self.iqr(arr) / (len(arr) ** (1 / 3))
+        # Calculate the iqr ranges.
+        self.iqr(arr)
+        # Calculate the h
+        h = 2 * (self.q3 - self.q1) / (len(arr) ** (1 / 3))
         # fall back to sqrt(a) bins if iqr is 0
         if h == 0:
             return int(np.sqrt(arr.size))
         else:
             return int(np.ceil((arr.max() - arr.min()) / h))
 
+    def convert_dict_to_list(self, dictionary):
+        ret = []
+        print(dictionary)
+        for state in dictionary:
+            for rank in dictionary[state]:
+                ret.append(dictionary[state][rank])
+        return ret
+
+
     def kde(self, data, gridsize=10, fft=True, kernel='gau', bw='scott', cut=3, clip=(-np.inf, np.inf)):
-        # if(gridsize < 10):
-        gridsize = 500
+        gridsize = 512
         
-        print("Data is ", data)
+        # print("Data is ", data)
         
         # assign binwidth using scott's factor
         if bw == 'scott':
             bw = stats.gaussian_kde(data).scotts_factor() * data.std(ddof=1)
-        print("biwidth is: ", bw)    
+        # print("biwidth is: ", bw)    
         
         kde = smnp.KDEUnivariate(data)
-        kde_gau = stats.gaussian_kde(data, bw_method=bw)
         
         # create the grid to fit the estimation.
-        # clip = (0, data.max())
-        # print(clip)
         support_min = max(data.min() - bw * cut, clip[0])
         support_max = min(data.max() + bw * cut, clip[1])
-        # support_min = max(0, clip[0])
-        # support_max = min(data.max(), clip[1])
-        grid = np.linspace(support_min, support_max, gridsize)
-        # clip = (support_min, support_max)
-        print("Grid is: ", grid.shape)
+        x = np.linspace(support_min, support_max, gridsize)
         
         kde.fit("gau", bw, fft, gridsize=gridsize, cut=cut, clip=clip)
         y = kde.density
-        print("Y is: ", y.shape)
-        x = grid
+        # print("Y is: ", y.shape)  
                 
-        return grid, y
- 
-    def replace_nan_with_zero(self, arr):
-        print("Before removing NaNs", arr)
-        if math.isnan(arr):
-            return 0.0
-        else:
-            return arr
+        return x, y
+
+    def histogram(self, data, nbins=10):
+        a = plt.hist(data, normed=True)
+        x = list(a[0])
+        y = list(a[1])
+        y = y[0: len(y) - 1]
+        return x, y
 
     def clean_dict(self, in_dict):
         ret = {k: in_dict[k] for k in in_dict if not math.isnan(in_dict[k])}
@@ -76,49 +91,93 @@ class KDE_gradients:
         results = {}
         num_of_bins = {}
         kde_grid = {}
+        hist_grid = {}
         data_max = {}
 
         # Calculate for each module
         for node in self.nodes:
             dist = {}
             mean_dist = {}
+            max_dist = {}
+            mean_time_inc_map = {}
             module = node.split('+')[0]
             function = node.split('+')[1]
-            data_max[node] = 0
+            mean_time_inc_map[node] = 0
 
             # Get the runtimes for all the runs. 
             for idx, state in enumerate(self.states):
-                time_inc_df = self.states[state].df.loc[(self.states[state].df['module'] == module) & (self.states[state].df['name'] == function)]['time (inc)'].mean()
-                time_inc_df = self.replace_nan_with_zero(time_inc_df)
-                dist[state] = time_inc_df
+                node_df = self.states[state].df.loc[(self.states[state].df['module'] == module) & (self.states[state].df['name'] == function)]
+                time_inc_df = node_df['time (inc)']
+                self.num_of_ranks = len(self.states[state].df['rank'].unique())
+                time_inc_list = time_inc_df.tolist()
 
-                mean_dist[state] = np.mean(time_inc_df)
-                    # data_max[node] = np.max(int(data_max[node]), time_inc_df )
+                if len(time_inc_list) == 0:
+                    time_inc_list = [0]*self.num_of_ranks
+
+                mean_time_inc = np.mean(time_inc_list)
+                max_time_inc = np.max(time_inc_list)
+                
+                print('=================================')
+                print("Module: {0}".format(module))
+                print("Function: {0}".format(function))
+                print("Time (inc): {0}".format(time_inc_df.tolist()))
+                print("mean Time (inc): {0}".format(mean_time_inc))
+                print("max Time (inc): {0}".format(max_time_inc)) 
+                print('=================================')
+
+                mean_dist[state] = mean_time_inc 
+                max_dist[state] = max_time_inc
+                dist[state] = self.dist(node_df)
 
             # calculate mean runtime. 
             np_mean_dist = np.array(tuple(self.clean_dict(mean_dist).values()))
             
+            np_max_dist = np.array(tuple(self.clean_dict(max_dist).values()))
+
+            # convert the dictionary of values to list of values. 
+            dist_list = self.convert_dict_to_list(dist)        
+
             # Calculate appropriate number of bins automatically. 
-            num_of_bins[node] = min(self.freedman_diaconis_bins(np_mean_dist), 50)
+            num_of_bins[node] = min(self.freedman_diaconis_bins(np.array(dist_list)), 50)
  
             # Calculate the KDE grid (x, y)
-            kde_grid[node] = self.kde(np_mean_dist, num_of_bins[node])
-            y_min = np.min(kde_grid[node][1])
-            y_max = np.max(kde_grid[node][1])
-            print("KDE _ y: ", kde_grid[node][1].tolist()   )
-            
+            kde_grid[node] = self.kde(np.array(dist_list), num_of_bins[node])
+            kde_x_min = np.min(kde_grid[node][0])
+            kde_x_max = np.max(kde_grid[node][0])
+            kde_y_min = np.min(kde_grid[node][1])
+            kde_y_max = np.max(kde_grid[node][1])
+
+            hist_grid[node] = self.histogram(np.array(dist_list))
+            hist_x_min = np.min(hist_grid[node][0])
+            hist_x_max = np.max(hist_grid[node][0])
+            hist_y_min = np.min(hist_grid[node][1])
+            hist_y_max = np.max(hist_grid[node][1])
             
             results[node] = {
                 "dist": dist,
                 "mean_dist": mean_dist, 
-                "bins": num_of_bins,
-                "kde_x": kde_grid[node][0].tolist(),
-                "kde_y": kde_grid[node][1].tolist(),
-                "kde_y_min": y_min,
-                "kde_y_max": y_max,
+                # "max_dist": max_dist,
+                "bins": num_of_bins[node],
+                "kde": {
+                    "x": kde_grid[node][0].tolist(),
+                    "y": kde_grid[node][1].tolist(),
+                    "x_min": kde_x_min,
+                    "x_max": kde_x_max,
+                    "y_min": kde_y_min,
+                    "y_max": kde_y_max,
+                },
+                "hist": {
+                    "x": hist_grid[node][0],
+                    "y": hist_grid[node][1],
+                    "x_min": hist_x_min,
+                    "x_max": hist_x_max,
+                    "y_min": hist_y_min,
+                    "y_max": hist_y_max,
+                },
                 "data_min": 0,
-                "data_max": 999560
+                "data_max": np_max_dist.tolist()
             }
+        # print(results)
         return results
 
 

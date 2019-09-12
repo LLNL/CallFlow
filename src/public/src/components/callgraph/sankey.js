@@ -208,8 +208,8 @@ export default function Sankey() {
     function findroot(){
 	    let ret = []
 	    nodes.forEach(function(node){
-            if(node['id'] == 'libmonitor.so.0.0.0'){
-	        // if(node['id'] == "libmonitor.so.0.0.0=<program root>"){
+            // if(node['id'] == 'libmonitor.so.0.0.0'){
+	        if(node['id'] == "libmonitor.so.0.0.0=<program root>"){
 		        ret.push(node)
 	        }	    
 	    })
@@ -328,7 +328,8 @@ export default function Sankey() {
 
 
                     console.log(node.value, node.in, node.name)
-                    let height = Math.max(node['time (inc)'], node.in)
+                    let height = Math.min(node['time (inc)'], node.in)
+                    console.log
                     // // TODO: Add a key "isStart" to the node.
                     if(height == 0){
                         height = node.out

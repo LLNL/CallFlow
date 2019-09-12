@@ -45,8 +45,10 @@ class CCT:
 
     def node_map(self, nodes, attr):
         ret = {}
-        for node in nodes:          
+        for node in nodes:  
+            print("Node is ", node)        
             data = self.entire_df.loc[self.entire_df['name'] == node][attr]
+            print(data)
             if attr == 'time' or attr == 'time (inc)' or attr == 'imbalance_perc':
                 ret[node] = data.mean()
             else:
@@ -102,7 +104,8 @@ class CCT:
                 # If path becomes a string.
                 if isinstance(path, str):
                     path = make_tuple(row[path_name])
-                self.g.add_path(path)  
+                    print(path)
+                self.g.add_path(path[0])  
 
     def find_cycle(self, G, source=None, orientation=None):
         if not G.is_directed() or orientation in (None, 'original'):
@@ -181,7 +184,7 @@ class CCT:
 
         else:
             assert(len(cycle) == 0)
-            raise nx.exception.NetworkXNoCycle('No cycle found.')
+            # raise nx.exception.NetworkXNoCycle('No cycle found.')
 
         # We now have a list of edges which ends on a cycle.
         # So we need to remove from the beginning edges that are not relevant.
@@ -198,3 +201,4 @@ class CCT:
         self.add_node_attributes()
         self.add_edge_attributes()
         self.g.cycles = self.find_cycle(self.g)
+        print(self.g.nodes())

@@ -63,7 +63,7 @@ class groupBy:
             if module not in self.eliminate_funcs:
                 if prev_module is None:
                     prev_module = module
-                    # group_path.append(module + '=' + path[i])
+                    group_path.append(module + '=' + path[i])
                     group_path.append(module)
                 elif module != prev_module:
                     if module in group_path:
@@ -74,7 +74,7 @@ class groupBy:
                         self.module_func_map[module].append(module + '/' + path[i])
                         change_name = True
                     else:
-                        # group_path.append(module + '=' + path[i])
+                        group_path.append(module + '=' + path[i])
                         group_path.append(module)
                         prev_module = module
                         if path[i] not in self.entry_funcs[module]:

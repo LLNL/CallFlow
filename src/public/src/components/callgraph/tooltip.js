@@ -101,7 +101,7 @@ export default {
         },
 
         times() {
-            this.addText('Name: ' + this.node.name.trunc(40))
+            this.addText('Name: ' + this.node.id.trunc(40))
             this.addText('Inclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime[this.$store.selectedDataset]) * 100).toFixed(3)) + "%")
             this.addText('Exclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime[this.$store.selectedDataset]) * 100).toFixed(3)) + "%")
         },
@@ -112,13 +112,13 @@ export default {
             this.rectWidth = "10px"
 
             this.addText('')
-            this.addText('Entry Functions: ' )
+            this.addText('Entry Functions: ')
 
             for (var tIndex = 0; tIndex < entry_functions.name.length; tIndex++) {
                 this.textCount += 1
                 let fromColor = this.$store.color.getColor(this.node)
                 let toColor = this.$store.color.getColorByValue(entry_functions['time (inc)'])
-                let fromFunc = this.node.name
+                let fromFunc = this.node.id
                 let toFunc = entry_functions['name'][tIndex]
                 let xOffset = this.xOffset
                 let yOffset = this.mousePosY + 50 + this.textyOffset + this.textPadding * this.textCount
@@ -133,6 +133,7 @@ export default {
                         'class': 'toolTipContent'
                     })
                     .style('fill', fromColor)
+
                 this.toolTipG
                     .append('text')
                     .attrs({
@@ -141,6 +142,7 @@ export default {
                         'class': 'toolTipContent',
                     })
                     .text(fromFunc.trunc(15))
+
                 this.toolTipG
                     .append('text')
                     .attrs({
@@ -149,6 +151,7 @@ export default {
                         'class': 'toolTipContent',
                     })
                     .text("->")
+
                 this.toolTipG
                     .append('rect')
                     .attrs({

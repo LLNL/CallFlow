@@ -59,6 +59,29 @@ export default {
             let count = 0
             let gap = 15
 
+            // Draw the colormap for heat map
+            if (this.color.option == "Module") {
+
+            } else {
+                let splits = 5
+                let color = this.color.getScale(this.color.option)
+
+                for (let i = 0; i < splits; i += 1) {
+                    let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
+                    this.scaleG.append('rect')
+                        .attrs({
+                            'width': this.width / splits,
+                            'height': this.height,
+                            'x': i * (this.width / splits),
+                            'class': 'colormap-rect',
+                            'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - this.padding.bottom})`,
+                            'fill': color(splitColor)
+                        })
+                }
+
+            }
+
+            // Draw labels for dataset coloring.
             for (let [dataset, color] of Object.entries(this.$store.color.datasetColor)) {
                 this.scaleG.append('rect')
                     .data([dataset])
@@ -80,7 +103,7 @@ export default {
                     .style("font-size", "14px")
                     .attrs({
                         "dy": ".5em",
-                        'y': count*gap - 10*this.$store.datasets.length + 1*this.$store.datasets.length,
+                        'y': count*gap - 10*this.$store.datasets.length + 0.5*this.$store.datasets.length,
                         "text-anchor": "middle",
                         'class': 'colormap-text',
                         'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,

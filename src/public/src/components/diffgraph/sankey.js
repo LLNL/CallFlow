@@ -360,6 +360,7 @@ export default function Sankey() {
                 for(let i = 0; i < datasets.length; i += 1){
                     let source_link = link['source'][datasets[i]]
                     let target_link = link['target'][datasets[i]]
+                    console.log(source_link, target_link)
                     source_max_weight = Math.max(source_max_weight, source_link['time (inc)'])
                     target_max_weight = Math.max(target_max_weight, target_link['time (inc)'])
                 }
