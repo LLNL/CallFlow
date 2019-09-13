@@ -44,21 +44,16 @@ class KDE_gradients:
         else:
             return int(np.ceil((arr.max() - arr.min()) / h))
 
-    def convert_dict_to_list(self, dictionary):
+    def convert_dictmean_to_list(self, dictionary):
         ret = []
-        print(dictionary)
         for state in dictionary:
-            for rank in dictionary[state]:
-                ret.append(dictionary[state][rank])
+            d = list(dictionary[state].values())
+            ret.append(max(d))
+            # ret.append(np.mean(np.array(d)))
         return ret
 
 
-    def kde(self, data, gridsize=10, fft=True, kernel='gau', bw='scott', cut=3, clip=(-np.inf, np.inf)):
-        gridsize = 512
-        
-        # print("Data is ", data)
-        
-        # assign binwidth using scott's factor
+    def kde(self, data, gridsize=512, fft=True, kernel='gau', bw='scott', cut=3, clip=(-np.inf, np.inf)):
         if bw == 'scott':
             bw = stats.gaussian_kde(data).scotts_factor() * data.std(ddof=1)
         # print("biwidth is: ", bw)    
@@ -76,12 +71,9 @@ class KDE_gradients:
                 
         return x, y
 
-    def histogram(self, data, nbins=10):
-        a = plt.hist(data, normed=True)
-        x = list(a[0])
-        y = list(a[1])
-        y = y[0: len(y) - 1]
-        return x, y
+    def histogram(self, data, nbins=60):
+        h, b = np.histogram(data, range=[0, data.max()], bins=nbins)
+        return 0.5*(b[1:]+b[:-1]), h
 
     def clean_dict(self, in_dict):
         ret = {k: in_dict[k] for k in in_dict if not math.isnan(in_dict[k])}
@@ -100,8 +92,8 @@ class KDE_gradients:
             mean_dist = {}
             max_dist = {}
             mean_time_inc_map = {}
-            module = node.split('+')[0]
-            function = node.split('+')[1]
+            module = node.split('=')[0]
+            function = node.split('=')[1]
             mean_time_inc_map[node] = 0
 
             # Get the runtimes for all the runs. 
@@ -115,7 +107,7 @@ class KDE_gradients:
                     time_inc_list = [0]*self.num_of_ranks
 
                 mean_time_inc = np.mean(time_inc_list)
-                max_time_inc = np.max(time_inc_list)
+                max_time_inc = max(time_inc_list)
                 
                 print('=================================')
                 print("Module: {0}".format(module))
@@ -125,9 +117,10 @@ class KDE_gradients:
                 print("max Time (inc): {0}".format(max_time_inc)) 
                 print('=================================')
 
-                mean_dist[state] = mean_time_inc 
+                mean_dist[state] = mean_time_inc
                 max_dist[state] = max_time_inc
                 dist[state] = self.dist(node_df)
+                print(type(mean_dist[state]), type(max_dist[state]))
 
             # calculate mean runtime. 
             np_mean_dist = np.array(tuple(self.clean_dict(mean_dist).values()))
@@ -135,9 +128,10 @@ class KDE_gradients:
             np_max_dist = np.array(tuple(self.clean_dict(max_dist).values()))
 
             # convert the dictionary of values to list of values. 
-            dist_list = self.convert_dict_to_list(dist)        
+            dist_list = self.convert_dictmean_to_list(dist)        
 
             # Calculate appropriate number of bins automatically. 
+            num_of_bins[node] = 10 
             num_of_bins[node] = min(self.freedman_diaconis_bins(np.array(dist_list)), 50)
  
             # Calculate the KDE grid (x, y)
@@ -148,27 +142,30 @@ class KDE_gradients:
             kde_y_max = np.max(kde_grid[node][1])
 
             hist_grid[node] = self.histogram(np.array(dist_list))
-            hist_x_min = np.min(hist_grid[node][0])
-            hist_x_max = np.max(hist_grid[node][0])
-            hist_y_min = np.min(hist_grid[node][1])
-            hist_y_max = np.max(hist_grid[node][1])
+            hist_x_min = hist_grid[node][0][0] #np.min(hist_grid[node][0])
+            hist_x_max = hist_grid[node][0][-1] #np.max(hist_grid[node][0])
+            hist_y_min = np.min(hist_grid[node][1]).astype(np.float64)
+            hist_y_max = np.max(hist_grid[node][1]).astype(np.float64)
             
+            print("hist ranges = {} {} {} {}\n"
+                .format(hist_x_min, hist_x_max, hist_y_min, hist_y_max)) 
+
             results[node] = {
                 "dist": dist,
-                "mean_dist": mean_dist, 
-                # "max_dist": max_dist,
+                "mean": mean_dist, 
+                "max": max_dist,
                 "bins": num_of_bins[node],
-                "kde": {
-                    "x": kde_grid[node][0].tolist(),
-                    "y": kde_grid[node][1].tolist(),
-                    "x_min": kde_x_min,
-                    "x_max": kde_x_max,
-                    "y_min": kde_y_min,
-                    "y_max": kde_y_max,
-                },
+                # "kde": {
+                #     "x": kde_grid[node][0].tolist(),
+                #     "y": kde_grid[node][1].tolist(),
+                #     "x_min": kde_x_min,
+                #     "x_max": kde_x_max,
+                #     "y_min": kde_y_min,
+                #     "y_max": kde_y_max,
+                # },
                 "hist": {
-                    "x": hist_grid[node][0],
-                    "y": hist_grid[node][1],
+                    "x": hist_grid[node][0].tolist(),
+                    "y": hist_grid[node][1].tolist(),
                     "x_min": hist_x_min,
                     "x_max": hist_x_max,
                     "y_min": hist_y_min,
@@ -177,7 +174,7 @@ class KDE_gradients:
                 "data_min": 0,
                 "data_max": np_max_dist.tolist()
             }
-        # print(results)
+        print(results)
         return results
 
 

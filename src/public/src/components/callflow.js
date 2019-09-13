@@ -121,12 +121,12 @@ export default {
 			if (this.numOfDatasets >= 2) {
 				this.enableDiff = true
 				this.modes = ['Single', 'Distribution']
+				this.selectedMode = 'Distribution'
 				this.selectedDataset2 = data['names'][1]
 				this.$store.selectedDataset2 = data['names'][1]
 				this.$store.selectedDataset = data['names'][2]
 				this.selectedDataset = data['names'][2]
-				this.selectedMode = 'Diff'
-
+ 
 			} else {
 				this.enableDiff = false
 				this.modes = ['Single']
@@ -185,11 +185,6 @@ export default {
 			this.$refs.DiffCCT1.init(data[this.$store.selectedDataset], '1')
 			this.$refs.DiffCCT2.init(data[this.$store.selectedDataset2], '2')
 		},
-
-		diff_gradients(data){
-			console.log("Gradient data", data)
-
-		}
 	},
 
 	methods: {
@@ -266,17 +261,17 @@ export default {
 					})
 
 					this.$socket.emit('diff_gradients', {
-						datasets: this.$store.datasets,
+						datasets:	 this.$store.datasets,
 						plot: 'kde'
 					})
-					this.$socket.emit('diff_scatterplot', {
-                        datasets: this.$store.datasets,
-                        dataset1: this.$store.selectedDataset,
-                        dataset2: this.$store.selectedDataset2,
-                        col: 'time (inc)',
-                        catcol: 'name',
-                        plot: 'bland-altman'
-                    })
+					// this.$socket.emit('diff_scatterplot', {
+                    //     datasets: this.$store.datasets,
+                    //     dataset1: this.$store.selectedDataset,
+                    //     dataset2: this.$store.selectedDataset2,
+                    //     col: 'time (inc)',
+                    //     catcol: 'name',
+                    //     plot: 'bland-altman'
+                    // })
 				}
 			}
 		},

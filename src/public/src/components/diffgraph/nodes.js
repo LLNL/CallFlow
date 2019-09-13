@@ -2,9 +2,7 @@ import tpl from '../../html/diffgraph/nodes.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
 import EventHandler from '../../EventHandler'
-import {
-    start
-} from 'repl';
+
 
 export default {
     template: tpl,
@@ -27,8 +25,9 @@ export default {
     sockets: {
         diff_gradients(data) {
             console.log("Gradient data:", data)
+            this.data = data
             this.setupGradients2(data)
-            this.debugGradients(data, 'libmonitor.so.0.0.0+<program root>', 'hist')
+            this.quantileLines(data, 'max')
         }
     },
     mounted() {
@@ -37,7 +36,6 @@ export default {
         let self = this
         EventHandler.$on('update_diff_node_alignment', function () {
             self.clearQuantileLines()
-            self.quantileLines()
         })
     },
 
@@ -92,7 +90,7 @@ export default {
             this.rectangle()
             this.path()
             this.text()
-            this.quantileLines()
+
             this.$refs.ToolTip.init(this.$parent.id)
         },
 
@@ -128,12 +126,9 @@ export default {
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
-                    let selectedModule = ''
-                    if (d.id.indexOf(':') > -1) {
-                        selectedModule = d.id.split(':')[0]
-                    } else {
-                        selectedModule = d.id
-                    }
+                    let selectedModule = d.id
+                    this.debugGradients(this.data, selectedModule, 'hist')
+                    this.debugGradients(this.data, selectedModule, 'kde')
 
                     // this.$socket.emit('diff_hierarchy', {
                     //     module: selectedModule,
@@ -156,7 +151,6 @@ export default {
                     return 1;
                 })
                 .style("fill", (d, i) => {
-                    // this.setupGradients2(this.$store.graph.nodes[i])
                     return "url(#linear-gradient-" + d.xid + "-up)"
                 })
         },
@@ -165,7 +159,6 @@ export default {
         clearLineGradients() {
 
         },
-        //https://math.stackexchange.com/questions/2061963/find-the-control-points-of-a-bezier-curve-approximating-a-archimedean-spiral-cur
 
         setupGradients(node_data) {
             let props = JSON.parse(JSON.stringify(node_data['props']))
@@ -212,47 +205,26 @@ export default {
                     .attr("x2", "0%")
                     .attr("y2", "100%");
 
-                let root_d = 'libmonitor.so.0.0.0+<program root>'
-                //Set the color for the start (0%)
-                let min_val = data[root_d][method]['y_min']
-                let max_val = data[root_d][method]['y_max']
-                let data_min = data[root_d]['data_min']
-                let data_max = data[root_d]['data_max']
+                let root_d = 'libmonitor.so.0.0.0=<program root>'
+                let min_val = data[d][method]['y_min']
+                let max_val = data[d][method]['y_max']
 
-                let start_idx = 0
-                let curr_idx = 0
                 let grid = data[d][method]['x']
                 let val = data[d][method]['y']
 
                 for (let i = 0; i < grid.length; i += 1) {
-                    if (grid[i] > data_min) {
-                        start_idx = curr_idx
-                        break
-                    }
-                    curr_idx += 1
-                }
-
-                let end_idx = 0
-                for (let i = 0; i < grid.length; i += 1) {
-                    if (grid[i] > data_max) {
-                        end_idx = curr_idx
-                        break
-                    }
-                    curr_idx += 1
-                }
-
-                if (end_idx == 0) {
-                    end_idx = grid.length - 1
-
-                }
-                console.log(start_idx, end_idx)
-
-                for (let i = start_idx; i < end_idx; i += 1) {
+                    // console.log(d, ':', i, " -- ", 100 * (i / grid.length), (val[i] / (max_val - min_val)))
+                    let x = (i + i + 1) / (2 * grid.length)
                     this.linearGradient.append("stop")
-                        .attr("offset", 100 * (i / val.length) + "%")
+                        .attr("offset", 100 * x + "%")
                         .attr("stop-color", d3.interpolateReds((val[i] / (max_val - min_val))))
                 }
             }
+        },
+
+        cleardebugGradients() {
+            d3.select('#debug').remove()
+            d3.selectAll('.line').remove()
         },
 
         debugGradients(data, node, mode) {
@@ -266,23 +238,21 @@ export default {
                     right: 10,
                     bottom: 10,
                     left: 15
-                },
+                }
             this.scatterWidth = this.width - this.margin.right - this.margin.left;
             this.scatterHeight = this.height - this.margin.top - this.margin.bottom;
 
-            console.log(this.width, this.height, this.margin)
             this.debugsvg = d3.select('#debug')
                 .attr('width', this.width - this.margin.left - this.margin.right)
                 .attr('height', this.height - this.margin.top - this.margin.bottom)
                 .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
             const xFormat = d3.format('0.1s');
-            
             this.xMin = data[node][mode]['x_min']
             this.xMax = data[node][mode]['x_max']
             this.yMin = data[node][mode]['y_min']
             this.yMax = data[node][mode]['y_max']
-            this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.scatterWidth])
-			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.scatterHeight, 0])
+            this.xScale = d3.scaleLinear().domain([this.xMin, this.xMax]).range([0, this.scatterWidth])
+            this.yScale = d3.scaleLinear().domain([this.yMin, this.yMax]).range([this.scatterHeight - this.margin.top - this.margin.bottom, 0])
             var xAxis = d3.axisBottom(this.xScale)
                 .ticks(5)
                 .tickFormat((d, i) => {
@@ -306,7 +276,7 @@ export default {
                     return '';
                 });
 
-            let xAxisHeightCorrected = 10 + this.margin.left
+            let xAxisHeightCorrected = this.scatterHeight - this.margin.top - this.margin.bottom
             var xAxisLine = this.debugsvg.append('g')
                 .attr('class', 'axis')
                 .attr('id', 'xAxis')
@@ -315,8 +285,8 @@ export default {
 
             this.debugsvg.append('text')
                 .attr('class', 'axisLabel')
-                .attr('x', self.scatterWidth)
-                .attr('y', self.yAxisHeight - this.margin.left * 1.5)
+                .attr('x', this.scatterWidth)
+                .attr('y', this.yAxisHeight - this.margin.left * 1.5)
                 .style('font-size', '10px')
                 .style('text-anchor', 'end')
                 .text("Diff")
@@ -331,11 +301,42 @@ export default {
                 .attr('class', 'axisLabel')
                 .attr('transform', 'rotate(-90)')
                 .attr('x', 0)
-                .attr('y', 4 * this.margin.left)
+                .attr('y', 2 * this.margin.left)
                 .style("text-anchor", "end")
                 .style("font-size", "10px")
                 .text("Mean");
 
+            let self = this
+            var plotLine = d3.line()
+                .curve(d3.curveMonotoneX)
+                .x(function (d) {
+                    return self.xScale(d.x);
+                })
+                .y(function (d) {
+                    return self.yScale(d.y);
+                });
+
+            let kde_data = data[node][mode]
+            let data_arr = []
+            for (let i = 0; i < kde_data['x'].length; i++) {
+                data_arr.push({
+                    'x': kde_data['x'][i],
+                    'y': kde_data['y'][i]
+                })
+            }
+            var line = this.debugsvg.append("path")
+                // .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
+                .data([data_arr])
+                .attr('class', 'line')
+                .attr("d", plotLine)
+                .attr("stroke", (d) => {
+                    if (mode == 'hist')
+                        return "blue"
+                    else
+                        return 'red'
+                })
+                .attr("stroke-width", "2")
+                .attr("fill", "none");
         },
 
         // Lines
@@ -343,29 +344,48 @@ export default {
             d3.selectAll('.quantileLines').remove()
         },
 
-        quantileLines() {
-            let mode = this.$store.selectedDiffNodeAlignment
-            let count = 0
+        // quantileLines() {
+        //     let mode = this.$store.selectedDiffNodeAlignment
+        //     let count = 0
 
-            for (let i = 0; i < this.$store.graph.nodes.length; i++) {
-                let node_data = this.$store.graph.nodes[i]
-                let props = JSON.parse(JSON.stringify(node_data['props']))
-                for (const [dataset, val] of Object.entries(props)) {
-                    let x1 = node_data.x - this.nodeWidth
-                    let x2 = node_data.x
-                    let y1 = 0
-                    let y2 = 0
-                    if (mode == 'Middle') {
-                        y1 = (node_data.height - val * node_data.height) * 0.5
-                        y2 = node_data.height - y1
-                        this.drawUpLine(y1, y2, node_data, dataset)
-                        this.drawBottomLine(y1, y2, node_data, dataset)
-                    } else if (mode == 'Top') {
-                        let gap = 5
-                        y1 = 0
-                        count += 1
-                        y2 = node_data.height * val
-                        this.drawBottomLine(y1, y2, node_data, dataset)
+        //     for (let i = 0; i < this.$store.graph.nodes.length; i++) {
+        //         let node_data = this.$store.graph.nodes[i]
+        //         let props = JSON.parse(JSON.stringify(node_data['props']))
+        //         for (const [dataset, val] of Object.entries(props)) {
+        //             let x1 = node_data.x - this.nodeWidth
+        //             let x2 = node_data.x
+        //             let y1 = 0
+        //             let y2 = 0
+        //             if (mode == 'Middle') {
+        //                 y1 = (node_data.height - val * node_data.height) * 0.5
+        //                 y2 = node_data.height - y1
+        //                 this.drawUpLine(y1, y2, node_data, dataset)
+        //                 this.drawBottomLine(y1, y2, node_data, dataset)
+        //             } else if (mode == 'Top') {
+        //                 let gap = 5
+        //                 y1 = 0
+        //                 count += 1
+        //                 y2 = node_data.height * val
+        //                 this.drawBottomLine(y1, y2, node_data, dataset)
+        //             }
+        //         }
+        //     }
+        // },
+
+        // Distance measure is either mean or max
+        quantileLines(data, dist_measure) {
+            let nodes = this.$store.graph.nodes
+            for (let i = 0; i < nodes.length; i += 1) {
+                let node_name = nodes[i].name
+                console.log(data, node_name, dist_measure)
+                let dist_measure_data = data[node_name][dist_measure]
+                let max_inc_time = Math.max.apply(null, data[node_name]['data_max'])
+                for (let val in dist_measure_data) {
+                    if (dist_measure_data.hasOwnProperty(val)) {
+                        let y1 = 0
+                        let y2 = (dist_measure_data[val]*nodes[i].height)/max_inc_time
+                        console.log(y1, y2)
+                        this.drawBottomLine(y1, y2, nodes[i], val)
                     }
                 }
             }
@@ -421,7 +441,7 @@ export default {
                     if (this.$store.selectedDataset == dataset) {
                         return 3
                     } else {
-                        return 2
+                        return 3
                     }
                 })
         },

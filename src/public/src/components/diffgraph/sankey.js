@@ -236,8 +236,7 @@ export default function Sankey() {
 	        remainingNodes.forEach(function(node) {
                 node.level = level
                 node.dx = nodeWidth;
-                node.targetLinks.forEach(function(link) {
-                    console.log(link.target)
+                node.sourceLinks.forEach(function(link) {
                     nextNodes.push(link.target);
                 });
             });
@@ -361,11 +360,27 @@ export default function Sankey() {
                 for(let i = 0; i < datasets.length; i += 1){
                     let source_link = link['source'][datasets[i]]
                     let target_link = link['target'][datasets[i]]
-                    console.log(source_link, target_link)
-                    source_max_weight = Math.max(source_max_weight, source_link['time (inc)'])
-                    target_max_weight = Math.max(target_max_weight, target_link['time (inc)'])
+
+                    let target_link_weight = 0
+                    if(target_link == undefined){
+                        target_link_weight = 0
+                    }
+                    else{
+                        target_link_weight = target_link['time (inc)']
+                    }
+                    target_max_weight = Math.max(target_max_weight, target_link_weight)
+
+                    let source_link_weight = 0
+                    if(source_link == undefined){
+                        source_link_weight = 0
+                    }
+                    else{
+                        source_link_weight = source_link['time (inc)']
+                    }
+                    source_max_weight = Math.max(source_max_weight, source_link_weight)
                 }
                 weight = Math.min(source_max_weight, target_max_weight)
+                console.log(weight)
                 if(link.source.value < weight){
                     weight = link.source.minLinkVal
                 }
