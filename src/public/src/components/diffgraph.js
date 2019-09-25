@@ -42,7 +42,7 @@ export default {
     },
 
     mounted() {
-		this.id = 'diffgraph-overview-' 
+		this.id = 'diffgraph-overview-'
     },
 
     methods: {
@@ -100,7 +100,6 @@ export default {
 
 		// Preprocessing the graph. 
 		preprocess(graph, refresh) {
-			// graph = addUncertainityInfo(graph)
 			graph = this.findMaxGraph(graph)
 			graph = this.addLines(graph)
 			graph = this.addLinkID(graph)
@@ -110,7 +109,7 @@ export default {
 		},
 		
 		findMaxGraph(graph){
-			let datasets = this.$store.datasets 
+			let datasets = this.$store.actual_dataset_names 
 			for(const node of graph.nodes){
 				let obj = {
 					'name': '',
@@ -126,7 +125,7 @@ export default {
 							obj['time (inc)'] = node[dataset]['time (inc)']
 						}
 						obj['name'] = node[dataset]['name'][0]
-						obj['xid'] = node[dataset]['nid']	
+						obj['xid'] = node[dataset]['nid'][0]	
 					}
 				}
 				for(const [key, value] of Object.entries(obj)){
@@ -175,7 +174,12 @@ export default {
 							if (outGoing[linkLabel] == undefined) {
 								outGoing[linkLabel] = 0;
 							}
-							outGoing[linkLabel] += nodes[link.sourceID]['time (inc)'];
+							if(outGoing[linkLabel] != 0){
+								outGoing[linkLabel] = Math.max(link.weight, outGoing[linkLabel])
+							}
+							else{
+								outGoing[linkLabel] += link.weight;
+							}
 						}
 					}
 		
@@ -188,7 +192,13 @@ export default {
 							if (inComing[linkLabel] == undefined) {
 								inComing[linkLabel] = 0;
 							}
-							inComing[linkLabel] += nodes[link.targetID]['time (inc)'];
+							
+							if(inComing[linkLabel] != 0) {
+								inComing[linkLabel] = Math.max(link.weight, inComing[linkLabel])
+							}
+							else{
+								inComing[linkLabel] += link.weight;
+							}
 						}
 					}
 		
@@ -213,7 +223,7 @@ export default {
 		},
 		
 		addLines(graph){
-			let datasets = this.$store.datasets			
+			let datasets = this.$store.actual_dataset_names			
 			let count = 0
 			for(const node of graph.nodes){
 				let obj = {}
@@ -222,8 +232,8 @@ export default {
 						obj[dataset] = node[dataset]['time (inc)']/node['time (inc)']
 						obj['xid'] = node[dataset]['nid']
 					}
-		
 				}
+				obj['union'] = node['union']['time (inc)']/node['time (inc)']
 				node['props'] = obj
 				count += 1
 			}
@@ -231,7 +241,7 @@ export default {
 		},
 
 		addEdges(graph){
-			let datasets = this.$store.datasets
+			let datasets = this.$store.actual_dataset_names
 			for(const edge of graph.edges){
 				let obj = {}
 				for(const dataset of datasets){
@@ -249,8 +259,9 @@ export default {
 				.levelSpacing(this.levelSpacing)
 				.maxLevel(this.graph.maxLevel)
 				//    .setReferenceValue(this.data.rootRunTimeInc)
-				.datasets(this.$store.datasets)
+				.datasets(this.$store.actual_dataset_names)
 				.setMinNodeScale(this.nodeScale)
+				.store(this.$store)
 
 			let path = sankey.link()
 

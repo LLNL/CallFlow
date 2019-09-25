@@ -37,7 +37,7 @@ class Filter:
         self.gf.dataframe = self.df
         
         self.filterBy = filterBy
-        self.filterPercInDecimals = int(filterPerc)/100
+        self.filterPercInDecimals = int(1)/100
         # self.filterPercInDecimals = 0.001 
         
         self.fgf = self.run() 

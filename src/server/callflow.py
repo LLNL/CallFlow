@@ -21,7 +21,7 @@ from networkx.readwrite import json_graph
 
 from preprocess import PreProcess
 from callgraph import CallGraph
-from diffgraph import DiffGraph
+from distgraph import DistGraph
 
 from actions.create import Create
 from actions.groupBy import groupBy
@@ -40,6 +40,7 @@ from actions.bland_altman import BlandAltman
 from actions.function_list import FunctionList
 from actions.union_graph import UnionGraph
 from actions.kde_gradients import KDE_gradients
+from actions.similarity import Similarity
 
 from state import State
 from logger import log
@@ -77,13 +78,18 @@ class CallFlow:
         
         states = {}
         for idx, dataset_name in enumerate(datasets):   
-            states[dataset_name] = State()
+            states[dataset_name] = State(dataset_name)
             if(self.reProcess and self.processEntire):
                 states[dataset_name] = self.create(dataset_name)
                 states[dataset_name] = self.process(states[dataset_name], 'entire')
                 self.write_gf(states[dataset_name], dataset_name, 'entire')
                 states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc) 
                 self.write_gf(states[dataset_name], dataset_name, 'filter')
+                group = groupBy(states[dataset_name], "module")
+                states[dataset_name].gdf = group.df
+                states[dataset_name].graph = group.graph 
+                write_graph = False
+                self.write_gf(states[dataset_name], dataset_name, "group", write_graph)
             elif(self.reProcess and self.processFilter):
                 states[dataset_name] = self.read_entire_gf(dataset_name)
                 states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc) 
@@ -104,14 +110,15 @@ class CallFlow:
         self.config.min_excTime = {}
         self.config.numbOfRanks = {}
         for idx, state in enumerate(self.states):
-            self.config.max_incTime[state] = utils.getMaxIncTime(self.states[state])
-            self.config.max_excTime[state] = utils.getMaxExcTime(self.states[state])
-            self.config.min_incTime[state] = utils.getMinIncTime(self.states[state])
-            self.config.min_excTime[state] = utils.getMinExcTime(self.states[state])
-            self.config.numbOfRanks[state] = utils.getNumbOfRanks(self.states[state])
+            if(state != 'union_graph'):
+                self.config.max_incTime[state] = utils.getMaxIncTime(self.states[state])
+                self.config.max_excTime[state] = utils.getMaxExcTime(self.states[state])
+                self.config.min_incTime[state] = utils.getMinIncTime(self.states[state])
+                self.config.min_excTime[state] = utils.getMinExcTime(self.states[state])
+                self.config.numbOfRanks[state] = utils.getNumbOfRanks(self.states[state])
 
     def create(self, name):
-        state = State()
+        state = State(name)
         create = Create(self.config, name)
 
         state.entire_gf = create.gf
@@ -180,7 +187,7 @@ class CallFlow:
 
     def read_entire_gf(self, name):
         log.info('[Process] Reading the entire dataframe and graph')
-        state = State()
+        state = State(name)
         dirname = self.config.callflow_dir
         entire_df_filepath = dirname + '/' + name + '/entire_df.csv'
         entire_graph_filepath = dirname + '/' + name + '/entire_graph.json'   
@@ -200,7 +207,7 @@ class CallFlow:
         return state
 
     def read_gf(self, name):
-        state = State()
+        state = State(name)
         dirname = self.config.callflow_dir
         df_filepath = dirname + '/' + name + '/filter_df.csv'
         entire_df_filepath = dirname + '/' + name + '/entire_df.csv'
@@ -241,7 +248,7 @@ class CallFlow:
         return state
 
     def read_group_gf(self, name):
-        state = State()
+        state = State(name)
         dirname = self.config.callflow_dir
         group_df_file_path = dirname + '/' + name + '/group_df.csv'
         group_graph_file_path = dirname + '/' + name + '/filter_graph.json'
@@ -291,7 +298,7 @@ class CallFlow:
 
         elif action_name == "group":
             log.debug("Grouping the Graphframe by: {0}".format(action['groupBy']))
-            utils.dfs(state1.graph, state1.df, 1000)
+            # utils.dfs(state1.graph, state1.df, 1000)
             group = groupBy(state1, action["groupBy"])
             self.states[dataset1].gdf = group.df
             self.states[dataset1].graph = group.graph 
@@ -334,7 +341,6 @@ class CallFlow:
 
         elif action_name == "cct":
             nx = CCT(state1, action['functionInCCT'])
-            print(nx.g.nodes())
             return nx.g
 
         elif action_name == 'split-rank':
@@ -346,7 +352,6 @@ class CallFlow:
             return functionlist.result
 
     def update_diff(self, action):
-        utils.debug('Update Diff', action)
         action_name = action["name"]
         datasets = action['datasets']
 
@@ -357,10 +362,10 @@ class CallFlow:
                 path_type = 'group_path'
             elif(action['groupBy'] == 'name'):
                 path_type = 'path'
-
+    
             for idx, dataset in enumerate(datasets):
                 group_state = self.read_group_gf(dataset)
-                graph = DiffGraph(group_state, path_type, True, action['groupBy'])
+                graph = DistGraph(group_state, path_type, True, action['groupBy'])
                 self.states[dataset].g = graph.g
             return self.config
 
@@ -368,6 +373,13 @@ class CallFlow:
             u_graph = UnionGraph()
             for idx, dataset in enumerate(datasets):
                 u_graph.unionize(self.states[dataset].g, dataset)
+            u_graph.add_union_node_attributes()
+            u_graph.add_edge_attributes()
+            self.states['union_graph'] = u_graph.R
+            print("Union graph nodes: ", self.states['union_graph'].nodes())
+            print("Dataset nodes: ", self.states[datasets[1]].g.nodes())
+            print("Union edges:", self.states['union_graph'].edges())
+            print("Dataset edges: ", self.states[datasets[1]].g.edges())
             return u_graph.R
 
         elif action_name == 'scatterplot':
@@ -389,6 +401,17 @@ class CallFlow:
         elif action_name == 'Gromov-wasserstein':
             ret = {}       
             return ret  
+
+        elif action_name == 'similarity':
+            ret = {}
+            similarities = {}
+            for idx, dataset in enumerate(datasets):
+                similarities[dataset] = []
+                for idx_2, dataset2 in enumerate(datasets):
+                    union_similarity = Similarity(self.states[dataset2].g, self.states[dataset].g)
+                    similarities[dataset].append(union_similarity.result)
+                    print("Similarity between union and {1}: {0}".format(union_similarity.result, dataset))
+            return similarities
 
     def displayStats(self, name):
         log.warn('==========================')

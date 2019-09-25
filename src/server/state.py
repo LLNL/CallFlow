@@ -4,7 +4,8 @@ from hatchet import *
 
 class State(object):
     # TODO: Assign self.g, self.root... 
-    def __init__(self):
+    def __init__(self, dataset_name):
+        self.name = dataset_name
         self.g = None
         self.roots = None
         self.gf = None
@@ -29,7 +30,6 @@ class State(object):
         return ret
         
     def lookup(self, node):
-        print(node.nid, node.callpath[-1])
         # print(self.df['name'].unique())
         # print(self.df.loc[self.df['name'] == node.callpath[-1]])
         return self.df.loc[(self.df['name'] == node.callpath[-1]) & (self.df['nid'] == node.nid)]

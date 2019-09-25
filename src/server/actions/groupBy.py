@@ -109,9 +109,10 @@ class groupBy:
             else:
                 node_func = node
 
-            # print(self.df.loc[self.df['name'] == node_func]['module'])
-            if module == self.df.loc[self.df['name'] == node_func]['module'].tolist()[0]:
-                component_path.append(node_func)
+            node_func_df = self.df.loc[self.df['name'] == node_func]
+            if not node_func_df.empty:
+                if module == node_func_df['module'].tolist()[0]:
+                    component_path.append(node_func)
         
         # if len(component_path) == 0:
         #     component_path.append(path[-1])
@@ -167,16 +168,16 @@ class groupBy:
                 module_idx[rootdf.node[0].nid] = module_count
                 source_nid[rootdf.node[0].nid] = None
 
-                print("entry function:", entry_func[rootdf.node[0].nid])
-                print('Change name:', change_name[rootdf.node[0].nid])
-                print("node path: ", root.callpath)                
-                print("group path: ", group_path[rootdf.node[0].nid])
-                print("component path: ", component_path[rootdf.node[0].nid])
-                print("component level: ", component_level[rootdf.node[0].nid])
-                print("Show node: ", show_node[rootdf.node[0].nid])
-                print("name: ", node_name[rootdf.node[0].nid])
-                print('Module: ', module[rootdf.node[0].nid])
-                print("=================================")
+                # print("entry function:", entry_func[rootdf.node[0].nid])
+                # print('Change name:', change_name[rootdf.node[0].nid])
+                # print("node path: ", root.callpath)                
+                # print("group path: ", group_path[rootdf.node[0].nid])
+                # print("component path: ", component_path[rootdf.node[0].nid])
+                # print("component level: ", component_level[rootdf.node[0].nid])
+                # print("Show node: ", show_node[rootdf.node[0].nid])
+                # print("name: ", node_name[rootdf.node[0].nid])
+                # print('Module: ', module[rootdf.node[0].nid])
+                # print("=================================")
 
             root = next(node_gen)
 
@@ -232,17 +233,17 @@ class groupBy:
                                     node_name[snid] = "Unknown(NA)"
                                     show_node[snid] = False
                             
-                        print('Node: ', snode)        
-                        print("entry function:", entry_func[snid])
-                        print('Change name:', change_name[snid])
-                        print("node path: ", spath)                
-                        print("group path: ", group_path[snid])
-                        print("component path: ", component_path[snid])
-                        print("component level: ", component_level[snid])
-                        print("Show node: ", show_node[snid])
-                        print("name: ", node_name[snid])
-                        print('Module: ', module[snid])
-                        print("=================================")
+                        # print('Node: ', snode)        
+                        # print("entry function:", entry_func[snid])
+                        # print('Change name:', change_name[snid])
+                        # print("node path: ", spath)                
+                        # print("group path: ", group_path[snid])
+                        # print("component path: ", component_path[snid])
+                        # print("component level: ", component_level[snid])
+                        # print("Show node: ", show_node[snid])
+                        # print("name: ", node_name[snid])
+                        # print('Module: ', module[snid])
+                        # print("=================================")
                 
             except StopIteration:
                 pass

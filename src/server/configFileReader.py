@@ -21,13 +21,13 @@ class configFileReader():
         filename = os.path.join(dirname, filepath)
         f = open(filename, 'r').read()
         self.datasets = self.json_data(f)['datasets']  
-        self.names = []
         self.paths = {}
         self.props = {}
         self.nop  = {}
         self.format = {}
         self.fnMap = {}
-        self.fileMap = {}      
+        self.fileMap = {}  
+        self.names = []    
         self.run()
 
     def run(self):

@@ -53,6 +53,19 @@ class App():
         # self.create_dot_callflow_folder()
         self.callflow = CallFlow(self.config)
 
+        self.config.distribution = True
+        if(self.config.distribution):
+            if self.debug:
+                self.print('[Request] Init the diff mode')
+            groupBy = 'module'
+            datasets = self.config.names
+            print(datasets)
+            self.callflow.update_diff({
+                'name': 'init',
+                'groupBy': groupBy,
+                'datasets': datasets
+            })
+
         # Start server if preprocess is not called.
         if not self.config.preprocess:
             self.create_socket_server()
@@ -153,12 +166,6 @@ class App():
             result = json_graph.node_link_data(g)
             print("Group graph: \n", result)
             emit('group', result, json=True)
-
-    
-        # @sockets.on('group', namespace='/')
-        # def group(data):
-        #     result = '{"directed":"True","multigraph":"False","graph":{"rootRunTimeInc":194595257},"nodes":[{"time (inc)":1.94516928E8,"time":0,"name":["libmonitor.so.0.0.0"],"type":["PF"],"n_index":[3],"module":["libmonitor.so.0.0.0"],"mod_index":[0],"children":["kripke"],"entry_functions":{"name":["<program root>"],"time":0,"time (inc)":1.94516928E8},"id":"libmonitor.so.0.0.0"},{"time (inc)":1.94148576E8,"time":5992,"name":["kripke"],"type":["PF"],"n_index":[4],"module":["kripke"],"mod_index":[1],"children":["Unknown(NA)"],"entry_functions":{"name":["main","Kernel_3d_DGZ::LTimes","Kernel_3d_DGZ::scattering","Kernel_3d_DGZ::LPlusTimes","SweepSubdomains","SweepComm::readySubdomains","ParallelComm::testRecieves","Kernel_3d_DGZ::sweep","Grid_Data::particleEdit"],"time":2.2576244E7,"time (inc)":4.9567268E7},"id":"kripke"},{"time (inc)":4.3454728E7,"time":6.1528596E7,"name":["Unknown(NA)"],"type":["PF","S","L"],"n_index":[389,520,529,531,533,535,536,537,538,800,674,1717,566,1718,1719,1720,1721,1722,1723,581,583,585,586,1484,1486,1487,1489,1491,1492,478,481,490,492,494,496,497],"module":["libmpi.so.12.0.5","Unknown(NA)","kripke"],"mod_index":[1,2,9],"children":["kripke:Kernel_3d_DGZ::LTimes","libc-2.17.so","kripke:Kernel_3d_DGZ::scattering","kripke:Kernel_3d_DGZ::LPlusTimes","kripke:SweepSubdomains","kripke:Grid_Data::particleEdit"],"entry_functions":{"name":"","time":[],"time (inc)":[]},"id":"Unknown(NA)"},{"time (inc)":1.94148576E8,"time":5992,"name":["kripke:Kernel_3d_DGZ::LTimes"],"type":["PF"],"n_index":[4],"module":["kripke"],"mod_index":[1],"entry_functions":{"name":["main","Kernel_3d_DGZ::LTimes","Kernel_3d_DGZ::scattering","Kernel_3d_DGZ::LPlusTimes","SweepSubdomains","SweepComm::readySubdomains","ParallelComm::testRecieves","Kernel_3d_DGZ::sweep","Grid_Data::particleEdit"],"time":2.2576244E7,"time (inc)":4.9567268E7},"id":"kripke:Kernel_3d_DGZ::LTimes"},{"time (inc)":2276253.5,"time":0,"name":["libc-2.17.so"],"type":["PF"],"n_index":[521,482],"module":["libc-2.17.so"],"mod_index":[6],"entry_functions":{"name":["__memset_sse2"],"time":0,"time (inc)":2276253.5},"id":"libc-2.17.so"},{"time (inc)":1.94148576E8,"time":5992,"name":["kripke:Kernel_3d_DGZ::scattering"],"type":["PF"],"n_index":[4],"module":["kripke"],"mod_index":[1],"entry_functions":{"name":["main","Kernel_3d_DGZ::LTimes","Kernel_3d_DGZ::scattering","Kernel_3d_DGZ::LPlusTimes","SweepSubdomains","SweepComm::readySubdomains","ParallelComm::testRecieves","Kernel_3d_DGZ::sweep","Grid_Data::particleEdit"],"time":2.2576244E7,"time (inc)":4.9567268E7},"id":"kripke:Kernel_3d_DGZ::scattering"},{"time (inc)":1.94148576E8,"time":5992,"name":["kripke:Kernel_3d_DGZ::LPlusTimes"],"type":["PF"],"n_index":[4],"module":["kripke"],"mod_index":[1],"entry_functions":{"name":["main","Kernel_3d_DGZ::LTimes","Kernel_3d_DGZ::scattering","Kernel_3d_DGZ::LPlusTimes","SweepSubdomains","SweepComm::readySubdomains","ParallelComm::testRecieves","Kernel_3d_DGZ::sweep","Grid_Data::particleEdit"],"time":2.2576244E7,"time (inc)":4.9567268E7},"id":"kripke:Kernel_3d_DGZ::LPlusTimes"},{"time (inc)":1.94148576E8,"time":5992,"name":["kripke:SweepSubdomains"],"type":["PF"],"n_index":[4],"module":["kripke"],"mod_index":[1],"children":["Unknown(NA):Loop@<unknown file> [kripke]:0"],"entry_functions":{"name":["main","Kernel_3d_DGZ::LTimes","Kernel_3d_DGZ::scattering","Kernel_3d_DGZ::LPlusTimes","SweepSubdomains","SweepComm::readySubdomains","ParallelComm::testRecieves","Kernel_3d_DGZ::sweep","Grid_Data::particleEdit"],"time":2.2576244E7,"time (inc)":4.9567268E7},"id":"kripke:SweepSubdomains"},{"time (inc)":4.3454728E7,"time":6.1528596E7,"name":["Unknown(NA):Loop@<unknown file> [kripke]:0"],"type":["PF","S","L"],"n_index":[389,520,529,531,533,535,536,537,538,800,674,1717,566,1718,1719,1720,1721,1722,1723,581,583,585,586,1484,1486,1487,1489,1491,1492,478,481,490,492,494,496,497],"module":["libmpi.so.12.0.5","Unknown(NA)","kripke"],"mod_index":[1,2,9],"children":["kripke:SweepComm::readySubdomains","kripke:Kernel_3d_DGZ::sweep"],"entry_functions":{"name":"","time":[],"time (inc)":[]},"id":"Unknown(NA):Loop@<unknown file> [kripke]:0"},{"time (inc)":1.94148576E8,"time":5992,"name":["kripke:SweepComm::readySubdomains"],"type":["PF"],"n_index":[4],"module":["kripke"],"mod_index":[1],"children":["Unknown(NA):Loop@<unknown file> [kripke]:0_1"],"entry_functions":{"name":["main","Kernel_3d_DGZ::LTimes","Kernel_3d_DGZ::scattering","Kernel_3d_DGZ::LPlusTimes","SweepSubdomains","SweepComm::readySubdomains","ParallelComm::testRecieves","Kernel_3d_DGZ::sweep","Grid_Data::particleEdit"],"time":2.2576244E7,"time (inc)":4.9567268E7},"id":"kripke:SweepComm::readySubdomains"},{"time (inc)":4.3454728E7,"time":6.1528596E7,"name":["Unknown(NA):Loop@<unknown file> [kripke]:0_1"],"type":["PF","S","L"],"n_index":[389,520,529,531,533,535,536,537,538,800,674,1717,566,1718,1719,1720,1721,1722,1723,581,583,585,586,1484,1486,1487,1489,1491,1492,478,481,490,492,494,496,497],"module":["libmpi.so.12.0.5","Unknown(NA)","kripke"],"mod_index":[1,2,9],"children":["libmpi.so.12.0.5"],"entry_functions":{"name":"","time":[],"time (inc)":[]},"id":"Unknown(NA):Loop@<unknown file> [kripke]:0_1"},{"time (inc)":2578232,"time":0,"name":["libmpi.so.12.0.5"],"type":["PF"],"n_index":[803,1716],"module":["libmpi.so.12.0.5"],"mod_index":[9],"entry_functions":{"name":["PMPI_Testany","PMPI_Reduce"],"time":0,"time (inc)":2608848.5},"id":"libmpi.so.12.0.5"},{"time (inc)":1.94148576E8,"time":5992,"name":["kripke:Kernel_3d_DGZ::sweep"],"type":["PF"],"n_index":[4],"module":["kripke"],"mod_index":[1],"entry_functions":{"name":["main","Kernel_3d_DGZ::LTimes","Kernel_3d_DGZ::scattering","Kernel_3d_DGZ::LPlusTimes","SweepSubdomains","SweepComm::readySubdomains","ParallelComm::testRecieves","Kernel_3d_DGZ::sweep","Grid_Data::particleEdit"],"time":2.2576244E7,"time (inc)":4.9567268E7},"id":"kripke:Kernel_3d_DGZ::sweep"},{"time (inc)":1.94148576E8,"time":5992,"name":["kripke:Grid_Data::particleEdit"],"type":["PF"],"n_index":[4],"module":["kripke"],"mod_index":[1],"entry_functions":{"name":["main","Kernel_3d_DGZ::LTimes","Kernel_3d_DGZ::scattering","Kernel_3d_DGZ::LPlusTimes","SweepSubdomains","SweepComm::readySubdomains","ParallelComm::testRecieves","Kernel_3d_DGZ::sweep","Grid_Data::particleEdit"],"time":2.2576244E7,"time (inc)":4.9567268E7},"id":"kripke:Grid_Data::particleEdit"}],"links":[{"weight":1.94595264E8,"source":"libmonitor.so.0.0.0","target":"kripke"},{"weight":1.93836256E8,"source":"kripke","target":"Unknown(NA)"},{"weight":3432889,"source":"kripke","target":"libmpi.so.12.0.5"},{"weight":1.94595264E8,"source":"Unknown(NA)","target":"kripke:Kernel_3d_DGZ::LTimes"},{"weight":2443120,"source":"Unknown(NA)","target":"libc-2.17.so"},{"weight":1.94595264E8,"source":"Unknown(NA)","target":"kripke:Kernel_3d_DGZ::scattering"},{"weight":1.94595264E8,"source":"Unknown(NA)","target":"kripke:Kernel_3d_DGZ::LPlusTimes"},{"weight":1.94595264E8,"source":"Unknown(NA)","target":"kripke:SweepSubdomains"},{"weight":1.94595264E8,"source":"Unknown(NA)","target":"kripke:Grid_Data::particleEdit"},{"weight":1.93836256E8,"source":"kripke:SweepSubdomains","target":"Unknown(NA):Loop@<unknown file> [kripke]:0"},{"weight":1.94595264E8,"source":"Unknown(NA):Loop@<unknown file> [kripke]:0","target":"kripke:SweepComm::readySubdomains"},{"weight":1.94595264E8,"source":"Unknown(NA):Loop@<unknown file> [kripke]:0","target":"kripke:Kernel_3d_DGZ::sweep"},{"weight":1.93836256E8,"source":"kripke:SweepComm::readySubdomains","target":"Unknown(NA):Loop@<unknown file> [kripke]:0_1"},{"weight":3432889,"source":"Unknown(NA):Loop@<unknown file> [kripke]:0_1","target":"libmpi.so.12.0.5"}]}'
-        #     emit('group', result, json=True)
 
         @sockets.on('hierarchy', namespace='/')
         def module_hierarchy(data):
@@ -338,14 +345,16 @@ class App():
                 self.print('[Request] Diff the dataset.', data)
             datasets = data['datasets']
             groupBy = data['groupBy'].lower()
-            nx = self.callflow.update_diff({
+            nx_graph = self.callflow.update_diff({
                 "name": 'group',
                 "groupBy": groupBy,
                 "datasets": datasets
-            })
-            # for idx, (dataset, nx) in enumerate(nx.items()):
-            result = json_graph.node_link_data(nx)
-            print(result)
+            })            
+            result = json_graph.node_link_data(nx_graph)
+            # result["adjList"] = nx.adjacency_matrix(nx_graph)
+            adjList = nx.adjacency_matrix(nx_graph).todense()
+            print(adjList)
+
             emit('diff_group', result, json=True)
 
         @sockets.on('diff_gradients', namespace='/')
@@ -359,6 +368,19 @@ class App():
                 'plot': data['plot']
             })
             emit('diff_gradients', result, json=True)
+
+        @sockets.on("diff_similarity", namespace='/')
+        def similarity(data):
+            result = {}
+            if self.debug:
+                self.print('[Request] Similarity of the datasets', data)
+            result = self.callflow.update_diff({
+                "name": "similarity",
+                "datasets": data['datasets'],
+                "algo": data['algo']
+            })
+            emit('diff_similarity', result, json=True)
+
             
     def create_server(self):
         app.debug = True

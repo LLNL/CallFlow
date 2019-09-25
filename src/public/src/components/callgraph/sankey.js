@@ -329,8 +329,7 @@ export default function Sankey() {
 
                     console.log(node.value, node.in, node.name)
                     let height = Math.min(node['time (inc)'], node.in)
-                    console.log
-                    // // TODO: Add a key "isStart" to the node.
+                    // TODO: Add a key "isStart" to the node.
                     if(height == 0){
                         height = node.out
                     }

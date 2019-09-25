@@ -27,8 +27,8 @@ export default {
             console.log("Gradient data:", data)
             this.data = data
             this.setupGradients2(data)
-            this.quantileLines(data, 'max')
-        }
+            // this.quantileLines(data, 'max')
+        },
     },
     mounted() {
         this.id = 'diff-nodes-' + this._uid
@@ -43,10 +43,7 @@ export default {
         init(graph) {
             this.graph = graph
             this.nodes = d3.select('#' + this.id)
-
-            for (let node of this.graph.nodes) {
-                this.nidNameMap[node.name] = node.xid
-            }
+            this.setNodeIds()
 
             // https://observablehq.com/@geekplux/dragable-d3-sankey-diagram
             this.drag = d3.drag()
@@ -74,7 +71,7 @@ export default {
                     return 'diff-node'
                 })
                 .attr('opacity', 0)
-                .attr('id', (d, i) => `diff-node_${d.xid}`)
+                .attr('id', (d, i) => `diff-node_${d.client_idx}`)
                 .attr('transform', (d) => {
                     return `translate(${d.x},${d.y})`
                 })
@@ -92,6 +89,15 @@ export default {
             this.text()
 
             this.$refs.ToolTip.init(this.$parent.id)
+        },
+
+        setNodeIds() {
+            let idx = 0
+            for (let node of this.graph.nodes) {
+                this.nidNameMap[node.name] = idx
+                node.client_idx = idx
+                idx += 1
+            }
         },
 
         rectangle() {
@@ -127,7 +133,9 @@ export default {
                 .on('click', (d) => {
                     this.$store.selectedNode = d
                     let selectedModule = d.id
-                    this.debugGradients(this.data, selectedModule, 'hist')
+
+                    this.cleardebugGradients()
+                    // this.debugGradients(this.data, selectedModule, 'hist')
                     this.debugGradients(this.data, selectedModule, 'kde')
 
                     // this.$socket.emit('diff_hierarchy', {
@@ -141,9 +149,7 @@ export default {
                 .data(this.graph.nodes)
                 .transition()
                 .duration(this.transitionDuration)
-                .duration(this.transitionDuration)
                 .attr('opacity', d => {
-                    // this.quantileLines(rect, d)
                     return 1;
                 })
                 .attr('height', d => d.height)
@@ -151,7 +157,7 @@ export default {
                     return 1;
                 })
                 .style("fill", (d, i) => {
-                    return "url(#linear-gradient-" + d.xid + "-up)"
+                    return "url(#linear-gradient" + d.client_idx + "-up)"
                 })
         },
 
@@ -160,71 +166,46 @@ export default {
 
         },
 
-        setupGradients(node_data) {
-            let props = JSON.parse(JSON.stringify(node_data['props']))
-
-            var defs = d3.select('#diffgraph-overview-')
-                .append("defs");
-            this.linearGradient = defs.append("linearGradient")
-                .attr("id", "linear-gradient-" + node_data.xid + '-up');
-
-            this.linearGradient2 = defs.append("linearGradient")
-                .attr("id", "linear-gradient-" + node_data.xid + '-down');
-
-            this.linearGradient
-                .attr("x1", "0%")
-                .attr("y1", "0%")
-                .attr("x2", "0%")
-                .attr("y2", "100%");
-
-            //Set the color for the start (0%)
-            for (const [dataset, val] of Object.entries(props)) {
-                if (dataset != 'xid') {
-                    this.linearGradient.append("stop")
-                        .attr("offset", Math.abs(val / 2 * 100 - 50) + "%")
-                        .attr("stop-color", "#e1e1e1");
-
-                    this.linearGradient2.append("stop")
-                        .attr("offset", Math.abs(val / 2 * 100) + "%")
-                        .attr("stop-color", this.$store.color.datasetColor[dataset]);
-                }
-            }
-        },
-
         setupGradients2(data) {
             let method = 'hist'
             for (let d in data) {
-                var defs = d3.select('#diffgraph-overview-')
-                    .append("defs");
-                this.linearGradient = defs.append("linearGradient")
-                    .attr("id", "linear-gradient-" + this.nidNameMap[d] + '-up');
+                if (this.nidNameMap[d] != undefined) {
+                    var defs = d3.select('#diffgraph-overview-')
+                        .append("defs");
 
-                this.linearGradient
-                    .attr("x1", "0%")
-                    .attr("y1", "0%")
-                    .attr("x2", "0%")
-                    .attr("y2", "100%");
+                    console.log(d, this.nidNameMap[d])
+                    this.linearGradient = defs.append("linearGradient")
+                        .attr("id", "linear-gradient" + this.nidNameMap[d] + '-up');
 
-                let root_d = 'libmonitor.so.0.0.0=<program root>'
-                let min_val = data[d][method]['y_min']
-                let max_val = data[d][method]['y_max']
+                    this.linearGradient
+                        .attr("x1", "0%")
+                        .attr("y1", "0%")
+                        .attr("x2", "0%")
+                        .attr("y2", "100%");
 
-                let grid = data[d][method]['x']
-                let val = data[d][method]['y']
+                    let root_d = 'libmonitor.so.0.0.0=<program root>'
+                    let min_val = data[d][method]['y_min']
+                    let max_val = data[d][method]['y_max']
 
-                for (let i = 0; i < grid.length; i += 1) {
-                    // console.log(d, ':', i, " -- ", 100 * (i / grid.length), (val[i] / (max_val - min_val)))
-                    let x = (i + i + 1) / (2 * grid.length)
-                    this.linearGradient.append("stop")
-                        .attr("offset", 100 * x + "%")
-                        .attr("stop-color", d3.interpolateReds((val[i] / (max_val - min_val))))
+                    let grid = data[d][method]['x']
+                    let val = data[d][method]['y']
+
+                    for (let i = 0; i < grid.length; i += 1) {
+                        // console.log(d, ':', i, " -- ", 100 * (i / grid.length), (val[i] / (max_val - min_val)))
+                        let x = (i + i + 1) / (2 * grid.length)
+                        this.linearGradient.append("stop")
+                            .attr("offset", 100 * x + "%")
+                            .attr("stop-color", d3.interpolateReds((val[i] / (max_val - min_val))))
+                    }
                 }
+
             }
         },
 
         cleardebugGradients() {
-            d3.select('#debug').remove()
-            d3.selectAll('.line').remove()
+            d3.selectAll('.debugLine').remove()
+            d3.selectAll('.axisLabel').remove()
+            d3.selectAll('.axis').remove()
         },
 
         debugGradients(data, node, mode) {
@@ -234,11 +215,11 @@ export default {
             this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.5
 
             this.margin = {
-                    top: 10,
-                    right: 10,
-                    bottom: 10,
-                    left: 15
-                }
+                top: 15,
+                right: 10,
+                bottom: 10,
+                left: 15
+            }
             this.scatterWidth = this.width - this.margin.right - this.margin.left;
             this.scatterHeight = this.height - this.margin.top - this.margin.bottom;
 
@@ -246,35 +227,39 @@ export default {
                 .attr('width', this.width - this.margin.left - this.margin.right)
                 .attr('height', this.height - this.margin.top - this.margin.bottom)
                 .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
-            const xFormat = d3.format('0.1s');
+            
             this.xMin = data[node][mode]['x_min']
             this.xMax = data[node][mode]['x_max']
             this.yMin = data[node][mode]['y_min']
             this.yMax = data[node][mode]['y_max']
             this.xScale = d3.scaleLinear().domain([this.xMin, this.xMax]).range([0, this.scatterWidth])
             this.yScale = d3.scaleLinear().domain([this.yMin, this.yMax]).range([this.scatterHeight - this.margin.top - this.margin.bottom, 0])
+            console.log(this.xScale(this.xMin), this.xScale(this.xMax))
+            
             var xAxis = d3.axisBottom(this.xScale)
-                .ticks(5)
-                .tickFormat((d, i) => {
-                    let temp = d;
-                    if (i % 2 == 0) {
-                        let value = temp * 0.000001
-                        return `${xFormat(value)}s`
-                    }
-                    return '';
-                });
+                // .ticks(5)
+                // .tickFormat((d, i) => {
+                //     console.log(d)
+                //     if (i % 2 == 0 || i == 0 ) {
+                //         return d
+                //     }
+                //     else{
+                //         return ''
+                //     }
+                // });
 
-            const yFormat = d3.format('0.2s')
             var yAxis = d3.axisLeft(this.yScale)
-                .ticks(5)
-                .tickFormat((d, i) => {
-                    let temp = d;
-                    if (i % 2 == 0) {
-                        let value = temp * 0.000001
-                        return `${xFormat(value)}s`
-                    }
-                    return '';
-                });
+                // .ticks(5)
+                // .tickFormat((d, i) => {
+                //     console.log(i)
+                //     if (i % 2 == 0 || i == 0) {
+                //         return d
+                //         // return `${this.yMin + i*d/(this.yMax - this.yMin)}`
+                //     }
+                //     else{
+                //         return ''
+                //     }
+                // });
 
             let xAxisHeightCorrected = this.scatterHeight - this.margin.top - this.margin.bottom
             var xAxisLine = this.debugsvg.append('g')
@@ -294,17 +279,17 @@ export default {
             var yAxisLine = this.debugsvg.append('g')
                 .attr('id', 'yAxis')
                 .attr('class', 'axis')
-                .attr('transform', "translate(" + 3 * this.margin.left + ", 0)")
+                .attr('transform', "translate(" + 2 * this.margin.left + ", 0)")
                 .call(yAxis)
 
             this.debugsvg.append("text")
                 .attr('class', 'axisLabel')
                 .attr('transform', 'rotate(-90)')
                 .attr('x', 0)
-                .attr('y', 2 * this.margin.left)
+                .attr('y', 1 * this.margin.left)
                 .style("text-anchor", "end")
                 .style("font-size", "10px")
-                .text("Mean");
+                .text("Histogram count");
 
             let self = this
             var plotLine = d3.line()
@@ -327,7 +312,7 @@ export default {
             var line = this.debugsvg.append("path")
                 // .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
                 .data([data_arr])
-                .attr('class', 'line')
+                .attr('class', 'debugLine')
                 .attr("d", plotLine)
                 .attr("stroke", (d) => {
                     if (mode == 'hist')
@@ -374,21 +359,21 @@ export default {
 
         // Distance measure is either mean or max
         quantileLines(data, dist_measure) {
-            let nodes = this.$store.graph.nodes
-            for (let i = 0; i < nodes.length; i += 1) {
-                let node_name = nodes[i].name
-                console.log(data, node_name, dist_measure)
-                let dist_measure_data = data[node_name][dist_measure]
-                let max_inc_time = Math.max.apply(null, data[node_name]['data_max'])
-                for (let val in dist_measure_data) {
-                    if (dist_measure_data.hasOwnProperty(val)) {
-                        let y1 = 0
-                        let y2 = (dist_measure_data[val]*nodes[i].height)/max_inc_time
-                        console.log(y1, y2)
-                        this.drawBottomLine(y1, y2, nodes[i], val)
-                    }
-                }
-            }
+            // let nodes = this.$store.graph.nodes
+            // for (let i = 0; i < nodes.length; i += 1) {
+            //     let node_name = nodes[i].name
+            //     console.log(data, node_name, dist_measure)
+            //     let dist_measure_data = data[node_name][dist_measure]
+            //     let max_inc_time = Math.max.apply(null, data[node_name]['data_max'])
+            //     for (let val in dist_measure_data) {
+            //         if (dist_measure_data.hasOwnProperty(val)) {
+            //             let y1 = 0
+            //             let y2 = (dist_measure_data[val]*nodes[i].height)/max_inc_time
+            //             console.log(y1, y2)
+            //             this.drawBottomLine(y1, y2, nodes[i], val)
+            //         }
+            //     }
+            // }
         },
 
         drawUpLine(y1, y2, node_data, dataset) {
@@ -542,30 +527,14 @@ export default {
                     // return this.$store.color.setContrast(this.$store.color.getColor(d))
                 })
                 .text((d) => {
-                    if (d.name.length == 1) {
-                        name = d.name[0]
-                    } else {
-                        name = d.name
-                    }
-                    let name_splits = name.split('/').reverse()
-                    if (name_splits.length == 1) {
-                        d.name = name
-                    } else {
-                        d.name = name_splits[0]
-                    }
-
-                    if (d.name != 'i' && d.name[d.name.length - 1] != '_') {
-                        if (d.height < this.minHeightForText) {
-                            return '';
-                        }
-                        var textSize = this.textSize(d.name)['width'];
-                        if (textSize < d.height) {
-                            return d.name;
-                        }
-                        return this.trunc(d.name, this.textTruncForNode);
-                    } else {
+                    if (d.height < this.minHeightForText) {
                         return '';
                     }
+                    var textSize = this.textSize(d.id.split('=')[0])['width'];
+                    if (textSize < d.height) {
+                        return d.id.split('=')[0];
+                    }
+                    return this.trunc(d.id.split('=')[0], this.textTruncForNode);
                 });
         },
 

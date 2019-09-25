@@ -26,6 +26,7 @@ export default function Sankey() {
     let minNodeScale = 0
     let maxLevel = 1
     let datasets = []
+    let store = {}
 
     
     var widthScale;
@@ -76,6 +77,12 @@ export default function Sankey() {
     sankey.datasets = function(_){
         if(!arguments.length) return datasets
         datasets = _
+        return sankey
+    }
+
+    sankey.store = function(_){
+        if(!arguments.length) return store
+        store = _
         return sankey
     }
 
@@ -237,6 +244,7 @@ export default function Sankey() {
                 node.level = level
                 node.dx = nodeWidth;
                 node.sourceLinks.forEach(function(link) {
+
                     nextNodes.push(link.target);
                 });
             });
@@ -275,7 +283,7 @@ export default function Sankey() {
         nodes.forEach(function(node) {
 	        let level = node.level
             let x = widthScale(level)
-            console.log(node.name, x, node.level, node.height)
+            console.log(node.name, x, node.level)
 	        node.x = x
         });
     }
@@ -331,17 +339,17 @@ export default function Sankey() {
                     node.parY = nodeHeight;
 
 
-                    let height = Math.max(node.in, node.out)
+                    let height = Math.max(node['time (inc)'], node.in)
                     // // TODO: Add a key "isStart" to the node.
-                    // if(height == 0){
-                    //     height = node.out
-                    // }
+                    if(height == 0){
+                        height = node.out
+                    }
 
-                    // if (node.weight > node.in){
-                    //     height = node.weight
-                    // }
+                    if (node.weight > node.in){
+                        height = node.weight
+                    }
 
-		            node.height = height*minNodeScale*scale;
+                    node.height = height*minNodeScale*scale;
                 });
 
                 nodes.sort(function(a,b){
@@ -350,27 +358,19 @@ export default function Sankey() {
             });
 
             links.forEach(function(link) {
-                let weight = 0
                 let source_max_weight = 0
                 let target_max_weight = 0
                 if(datasets.length == 0){
                     weight = link.weight
                 }
 
+                link.height = {}
+
                 for(let i = 0; i < datasets.length; i += 1){
                     let source_link = link['source'][datasets[i]]
                     let target_link = link['target'][datasets[i]]
-
-                    let target_link_weight = 0
-                    if(target_link == undefined){
-                        target_link_weight = 0
-                    }
-                    else{
-                        target_link_weight = target_link['time (inc)']
-                    }
-                    target_max_weight = Math.max(target_max_weight, target_link_weight)
-
                     let source_link_weight = 0
+                    let target_link_weight = 0
                     if(source_link == undefined){
                         source_link_weight = 0
                     }
@@ -378,13 +378,23 @@ export default function Sankey() {
                         source_link_weight = source_link['time (inc)']
                     }
                     source_max_weight = Math.max(source_max_weight, source_link_weight)
+                    
+                    if(target_link == undefined){
+                        target_link_weight = 0
+                    }
+                    else{
+                        target_link_weight = target_link['time (inc)']
+                    }
+                    target_max_weight = Math.max(target_max_weight, target_link_weight)
+                    link.height[datasets[i]] = target_link_weight*scale*minNodeScale
                 }
-                weight = Math.min(source_max_weight, target_max_weight)
-                console.log(weight)
-                if(link.source.value < weight){
-                    weight = link.source.minLinkVal
-                }
-                link.height = weight*scale*minNodeScale;
+                link.height['union'] = target_max_weight*scale*minNodeScale
+                // weight = source_max_weight - target_max_weight
+                // if(link.source.value < weight){
+                //     weight = link.source.minLinkVal
+                // }
+
+                link.max_height = target_max_weight*scale*minNodeScale
             });
         }
 
@@ -476,13 +486,13 @@ export default function Sankey() {
             node.sourceLinks.forEach(function(link) {
 		        if(link.type != 'back_edge'){
                     link.sy = sy;
-                    sy += link.height;
-		        }
+                    sy += link.height[store.selectedDataset];
+                }
             });
             node.targetLinks.forEach(function(link) {
 		        if(link.type != 'back_edge'){
                     link.ty = ty;
-                    ty += link.height
+                    ty += link.height[store.selectedDataset]
 		        };
             });
         });

@@ -173,7 +173,8 @@
 			<splitpanes id="diffgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe'">
 				<splitpanes horizontal :splitpanes-size="30">
 					<span>
-						<DiffScatterplot ref="DiffScatterplot" />
+						<!-- <DiffScatterplot ref="DiffScatterplot" /> -->
+						<SimilarityMatrix ref="SimilarityMatrix"/>
 					</span>
 					<span>
 						<svg id="debug"></svg>

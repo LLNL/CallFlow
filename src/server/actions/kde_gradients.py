@@ -7,7 +7,7 @@ import math
 class KDE_gradients:
     def __init__(self, states):
         self.states = states
-        self.nodes = states['calc-pi'].g.nodes()
+        self.nodes = states['union_graph'].nodes()
         self.results = self.run()
 
     def iqr(self, arr):
@@ -53,16 +53,17 @@ class KDE_gradients:
         return ret
 
 
-    def kde(self, data, gridsize=512, fft=True, kernel='gau', bw='scott', cut=3, clip=(-np.inf, np.inf)):
+    def kde(self, data, gridsize=10, fft=True, kernel='gau', bw='scott', cut=3, clip=(-np.inf, np.inf)):
         if bw == 'scott':
             bw = stats.gaussian_kde(data).scotts_factor() * data.std(ddof=1)
-        # print("biwidth is: ", bw)    
+        print("biwidth is: ", bw)    
         
         kde = smnp.KDEUnivariate(data)
         
         # create the grid to fit the estimation.
-        support_min = max(data.min() - bw * cut, clip[0])
+        support_min = min(max(data.min() - bw * cut, clip[0]), 0)
         support_max = min(data.max() + bw * cut, clip[1])
+        print(support_max, support_min)
         x = np.linspace(support_min, support_max, gridsize)
         
         kde.fit("gau", bw, fft, gridsize=gridsize, cut=cut, clip=clip)
@@ -71,7 +72,7 @@ class KDE_gradients:
                 
         return x, y
 
-    def histogram(self, data, nbins=60):
+    def histogram(self, data, nbins=20):
         h, b = np.histogram(data, range=[0, data.max()], bins=nbins)
         return 0.5*(b[1:]+b[:-1]), h
 
@@ -98,29 +99,29 @@ class KDE_gradients:
 
             # Get the runtimes for all the runs. 
             for idx, state in enumerate(self.states):
-                node_df = self.states[state].df.loc[(self.states[state].df['module'] == module) & (self.states[state].df['name'] == function)]
-                time_inc_df = node_df['time (inc)']
-                self.num_of_ranks = len(self.states[state].df['rank'].unique())
-                time_inc_list = time_inc_df.tolist()
+                if(state != "union_graph"):
+                    node_df = self.states[state].df.loc[(self.states[state].df['module'] == module) & (self.states[state].df['name'] == function)]
+                    time_inc_df = node_df['time (inc)']
+                    self.num_of_ranks = len(self.states[state].df['rank'].unique())
+                    time_inc_list = time_inc_df.tolist()
 
-                if len(time_inc_list) == 0:
-                    time_inc_list = [0]*self.num_of_ranks
+                    if len(time_inc_list) == 0:
+                        time_inc_list = [0]*self.num_of_ranks
 
-                mean_time_inc = np.mean(time_inc_list)
-                max_time_inc = max(time_inc_list)
+                    mean_time_inc = np.mean(time_inc_list)
+                    max_time_inc = max(time_inc_list)
                 
-                print('=================================')
-                print("Module: {0}".format(module))
-                print("Function: {0}".format(function))
-                print("Time (inc): {0}".format(time_inc_df.tolist()))
-                print("mean Time (inc): {0}".format(mean_time_inc))
-                print("max Time (inc): {0}".format(max_time_inc)) 
-                print('=================================')
+                    # print('=================================')
+                    # print("Module: {0}".format(module))
+                    # print("Function: {0}".format(function))
+                    # print("Time (inc): {0}".format(time_inc_df.tolist()))
+                    # print("mean Time (inc): {0}".format(mean_time_inc))
+                    # print("max Time (inc): {0}".format(max_time_inc)) 
+                    # print('=================================')
 
-                mean_dist[state] = mean_time_inc
-                max_dist[state] = max_time_inc
-                dist[state] = self.dist(node_df)
-                print(type(mean_dist[state]), type(max_dist[state]))
+                    mean_dist[state] = mean_time_inc
+                    max_dist[state] = max_time_inc
+                    dist[state] = self.dist(node_df)
 
             # calculate mean runtime. 
             np_mean_dist = np.array(tuple(self.clean_dict(mean_dist).values()))
@@ -135,7 +136,7 @@ class KDE_gradients:
             num_of_bins[node] = min(self.freedman_diaconis_bins(np.array(dist_list)), 50)
  
             # Calculate the KDE grid (x, y)
-            kde_grid[node] = self.kde(np.array(dist_list), num_of_bins[node])
+            kde_grid[node] = self.kde(np.array(dist_list), 10)
             kde_x_min = np.min(kde_grid[node][0])
             kde_x_max = np.max(kde_grid[node][0])
             kde_y_min = np.min(kde_grid[node][1])
@@ -147,22 +148,22 @@ class KDE_gradients:
             hist_y_min = np.min(hist_grid[node][1]).astype(np.float64)
             hist_y_max = np.max(hist_grid[node][1]).astype(np.float64)
             
-            print("hist ranges = {} {} {} {}\n"
-                .format(hist_x_min, hist_x_max, hist_y_min, hist_y_max)) 
+            # print("hist ranges = {} {} {} {}\n"
+            #     .format(hist_x_min, hist_x_max, hist_y_min, hist_y_max)) 
 
             results[node] = {
                 "dist": dist,
                 "mean": mean_dist, 
                 "max": max_dist,
                 "bins": num_of_bins[node],
-                # "kde": {
-                #     "x": kde_grid[node][0].tolist(),
-                #     "y": kde_grid[node][1].tolist(),
-                #     "x_min": kde_x_min,
-                #     "x_max": kde_x_max,
-                #     "y_min": kde_y_min,
-                #     "y_max": kde_y_max,
-                # },
+                "kde": {
+                    "x": kde_grid[node][0].tolist(),
+                    "y": kde_grid[node][1].tolist(),
+                    "x_min": kde_x_min,
+                    "x_max": kde_x_max,
+                    "y_min": kde_y_min,
+                    "y_max": kde_y_max,
+                },
                 "hist": {
                     "x": hist_grid[node][0].tolist(),
                     "y": hist_grid[node][1].tolist(),
@@ -174,7 +175,7 @@ class KDE_gradients:
                 "data_min": 0,
                 "data_max": np_max_dist.tolist()
             }
-        print(results)
+        # print(results)
         return results
 
 

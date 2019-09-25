@@ -24,6 +24,8 @@ import DiffHistogram from './diffhistogram'
 import DiffIcicle from './difficicle'
 import DiffScatterplot from './diffScatterplot'
 import DiffCCT from './diffcct'
+import SimilarityMatrix from './diffgraph/similarityMatrix'
+import DFS from './dfs'
 
 export default {
 	name: 'CallFlow',
@@ -41,9 +43,10 @@ export default {
 		DiffCCT,
 		// DiffCCT2,
 		DiffHistogram,
-		DiffScatterplot,
+		// DiffScatterplot,
 		DiffFunction,
 		DiffIcicle,
+		SimilarityMatrix
 	},
 	data: () => ({
 		socket: null,
@@ -108,25 +111,30 @@ export default {
 			console.log('socket connected')
 		},
 
+		// Assign variables for the store and Callflow ui component.
+		// Assign colors and min, max inclusive and exclusive times.
 		init(data) {
 			data = JSON.parse(data)
 			console.log("Config file contains: ", data)
 			this.numOfDatasets = data['datasets'].length
 
 			// Enable diff mode only if the number of datasets >= 2
-			this.$store.datasets = data['names']
-			this.datasets = data['names']
-			
+			let datasetMapping = this.assignUniqueDatasetNames(data['names'])
+			this.$store.datasets = datasetMapping['arr'] 
+			this.$store.datasetMap = datasetMapping['map']
+			this.$store.datasetRevMap = datasetMapping['revmap']
+			this.$store.actual_dataset_names = data['names']
+			this.datasets = this.$store.actual_dataset_names
 
 			if (this.numOfDatasets >= 2) {
 				this.enableDiff = true
 				this.modes = ['Single', 'Distribution']
-				this.selectedMode = 'Distribution'
+				// this.selectedMode = 'Distribution'
 				this.selectedDataset2 = data['names'][1]
 				this.$store.selectedDataset2 = data['names'][1]
 				this.$store.selectedDataset = data['names'][2]
 				this.selectedDataset = data['names'][2]
- 
+
 			} else {
 				this.enableDiff = false
 				this.modes = ['Single']
@@ -148,11 +156,13 @@ export default {
 			this.init()
 		},
 
+		// Reset to the init() function. 
 		reset(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
 			this.init()
 		},
 
+		// Fetch aggregated graph for single mode.
 		group(data) {
 			console.log(data)
 			console.log("Data for", this.selectedFormat, ": ", data)
@@ -167,11 +177,14 @@ export default {
 			this.$refs.Icicle.init()
 		},
 
+		// Fetch aggregated graph (Super graph) for distribution mode.
 		diff_group(data) {
-			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
+			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)			
+			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
 			if (this.selectedData == 'Dataframe') {
 				this.$refs.DiffgraphA.init(data)
-				this.$refs.DiffScatterplot.init()
+				// this.$refs.DiffScatterplot.init()
+				this.$refs.SimilarityMatrix.init()
 				this.$refs.DiffHistogram.init()
 			} else if (this.selectedData == 'Graph') {
 				this.$refs.DiffgraphB.init(data)
@@ -180,6 +193,7 @@ export default {
 			}
 		},
 
+		// Fetch CCT for distribution mode.
 		diff_cct(data) {
 			console.log("Diff CCT data: ", data)
 			this.$refs.DiffCCT1.init(data[this.$store.selectedDataset], '1')
@@ -188,6 +202,25 @@ export default {
 	},
 
 	methods: {
+		// Assigns idx to datasets. 
+		// osu_bcast.XX.XX.XX-XX => osu_bcast_1 and so on. 
+		assignUniqueDatasetNames(names){
+			let ret = []
+			let retMap = {}
+			let retRevMap = {}
+			for(let i = 0; i < names.length; i+=1){
+				let name = names[i].split('.')[0]
+				ret.push(name + '_' + i)
+				retMap[names[i]] = name + '_'  + i
+				retRevMap[name + '_' + i] = names[i]
+ 			}
+			return {
+				"arr": ret,
+				"map": retMap,
+				"revmap": retRevMap
+			}
+		},
+		
 		clear() {
 			if (this.selectedFormat == 'Callgraph') {
 				this.$refs.CCT.clear()
@@ -228,6 +261,7 @@ export default {
 			// Initialize colors
 			this.colors()
 
+			// Call the appropriate socket to query the server.
 			if (this.selectedMode == 'Single') {
 				if (this.selectedFormat == 'CCT') {
 					this.$socket.emit('cct', {
@@ -250,28 +284,33 @@ export default {
 						functionInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
-					this.$socket.emit('diff_init', {
-						datasets: this.$store.datasets,
-						groupBy: this.selectedGroupBy
-					})
-					
+					// this.$socket.emit('diff_init', {
+					// 	datasets: this.$store.actual_dataset_names,
+					// 	groupBy: this.selectedGroupBy
+					// })
+
 					this.$socket.emit('diff_group', {
-						datasets: this.$store.datasets,
+						datasets: this.$store.actual_dataset_names,
 						groupBy: this.selectedGroupBy
 					})
 
 					this.$socket.emit('diff_gradients', {
-						datasets:	 this.$store.datasets,
+						datasets: this.$store.actual_dataset_names,
 						plot: 'kde'
 					})
+
+					this.$socket.emit('diff_similarity', {
+						datasets: this.$store.actual_dataset_names,
+						algo: 'deltacon'
+					})
 					// this.$socket.emit('diff_scatterplot', {
-                    //     datasets: this.$store.datasets,
-                    //     dataset1: this.$store.selectedDataset,
-                    //     dataset2: this.$store.selectedDataset2,
-                    //     col: 'time (inc)',
-                    //     catcol: 'name',
-                    //     plot: 'bland-altman'
-                    // })
+					//     datasets: this.$store.client_datasets,
+					//     dataset1: this.$store.selectedDataset,
+					//     dataset2: this.$store.selectedDataset2,
+					//     col: 'time (inc)',
+					//     catcol: 'name',
+					//     plot: 'bland-altman'
+					// })
 				}
 			}
 		},
@@ -279,7 +318,6 @@ export default {
 		colors() {
 			this.$store.color = new Color(this.selectedColorBy)
 			this.colorMap = this.$store.color.getAllColors()
-			console.log(this.selectedColorBy)
 			if (this.selectedColorBy == 'Inclusive') {
 				this.selectedColorMin = this.$store.minIncTime[this.selectedDataset]
 				this.selectedColorMax = this.$store.maxIncTime[this.selectedDataset]
@@ -287,12 +325,12 @@ export default {
 				this.selectedColorMin = this.$store.minExcTime[this.selectedDataset]
 				this.selectedColorMax = this.$store.maxExcTime[this.selectedDataset]
 			}
-			console.log(this.selectedColorMin)
+		
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
 			this.$store.colorPoint = this.selectedColorPoint
-			console.log("Datasets are :", this.$store.datasets)
+			console.log("Datasets are :", this.datasets)
 			this.$store.color.datasetColor = {}
-			for(let i = 0; i < this.$store.datasets.length; i += 1){
+			for (let i = 0; i < this.$store.datasets.length; i += 1) {
 				this.$store.color.datasetColor[this.$store.datasets[i]] = this.$store.color.getCatColor(i)
 			}
 			console.log("Assigned Color map: ", this.$store.color.datasetColor)
@@ -362,7 +400,7 @@ export default {
 			})
 		},
 
-		updateColorPoint(){
+		updateColorPoint() {
 			this.clearLocal()
 			this.colors()
 			this.init()
@@ -414,7 +452,6 @@ export default {
 			// Call updateMiniHistogram inside callgraph.js
 			this.$refs.Callgraph.updateMiniHistogram()
 			// TODO: Call updateHistogram for diffCallgraph when needed. 
-
 		},
 
 		updateScatterMode() {
@@ -442,7 +479,7 @@ export default {
 			this.init()
 		},
 
-		updateDiffNodeAlignment(){
+		updateDiffNodeAlignment() {
 			console.log('Alignment mode: ', this.selectedDiffNodeAlignment)
 			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment
 			EventHandler.$emit('update_diff_node_alignment')

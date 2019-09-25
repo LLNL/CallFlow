@@ -54,7 +54,7 @@ class CallGraph(nx.Graph):
         # self.add_callback_paths()
 
         if add_info == True:
-            log.info('Creating a Graph with node or edge attributes.')
+            log.info('Creating a Graph with node or edge attributes.', self.path_name)
             self.add_node_attributes()
             self.add_edge_attributes()
         else:
