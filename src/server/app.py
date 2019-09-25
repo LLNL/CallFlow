@@ -31,7 +31,6 @@ app = Flask(__name__, static_url_path='/public')
 sockets = SocketIO(app)
 CORS(app)
 
-
 class App():
     def __init__(self):
         self.callflow_path = os.path.abspath(os.path.join(__file__, '../../..'))
@@ -59,7 +58,13 @@ class App():
                 self.print('[Request] Init the diff mode')
             groupBy = 'module'
             datasets = self.config.names
-          
+
+            self.callflow.update_dist({
+                'name': 'init',
+                'groupBy': groupBy,
+                'datasets': datasets
+            })
+
         # Start server if preprocess is not called.
         if not self.config.preprocess:
             self.create_socket_server()
@@ -121,6 +126,7 @@ class App():
     def create_socket_server(self):
         @sockets.on('init', namespace='/')
         def init():
+            print('herererere')
             self.callflow.update({
                 'name': "init",
             })
@@ -158,7 +164,6 @@ class App():
             }
             g = self.callflow.update(obj)
             result = json_graph.node_link_data(g)
-            print("Group graph: \n", result)
             emit('group', result, json=True)
 
         @sockets.on('hierarchy', namespace='/')
@@ -264,6 +269,18 @@ class App():
             # })
             emit('splitcaller', {}, json=True)
 
+        @sockets.on('dist_init', namespace='/')
+        def distinit(data):
+            if self.debug:
+                self.print('[Request] Init the dist mode')
+            groupBy = data['groupBy'].lower()
+            datasets = data['datasets']
+            self.callflow.update_dist({
+                'name': 'init',
+                'groupBy': groupBy,
+                'datasets': datasets
+            })
+
         @sockets.on('function', namespace='/')
         def function(data):
             if self.debug: 
@@ -276,6 +293,91 @@ class App():
                 'nid': data['nid']
             })
             emit('function', result, json=True)
+
+        @sockets.on('dist_scatterplot', namespace='/')
+        def distscatterplot(data):
+            if self.debug:
+                self.print('[Request] Dist-Scatterplot request for module.')
+            result = self.callflow.update_dist({
+                "name": "scatterplot",
+                "datasets": data['datasets'],
+                "dataset1": data["dataset1"],
+                "dataset2": data["dataset2"],
+                'col': data['col'],
+                'catcol': data['catcol'],
+                'plot': data['plot']
+            })
+            emit('dist_scatterplot', result, json=True)
+
+        @sockets.on('dist_histogram', namespace='/')
+        def disthistogram(data):
+            if self.debug:
+                self.print('[Request] Dist-Histogram request for module.')
+            emit('dist_histogram', result, json=True)
+
+        @sockets.on('dist_cct', namespace='/')
+        def distcct(data):
+            if self.debug:
+                self.print('[Request] Dist-CCT for the two datasets.', data)
+            g1 = self.callflow.update_dist({
+                "name": "cct",
+                "dataset1": data['dataset1'],
+                "functionInCCT": data['functionInCCT'],
+            })
+            g2 = self.callflow.update({
+                "name": "cct",
+                "dataset1": data['dataset2'],
+                "functionInCCT": data['functionInCCT'],
+            })
+            g1_result = json_graph.node_link_data(g1)
+            g2_result = json_graph.node_link_data(g2)
+            emit('dist_cct', {
+                data['dataset1']: g1_result,
+                data['dataset2']: g2_result
+            }, json=True)
+
+        @sockets.on('dist_group', namespace='/')
+        def dist(data):
+            result = {}
+            if self.debug:
+                self.print('[Request] Dist the dataset.', data)
+            datasets = data['datasets']
+            groupBy = data['groupBy'].lower()
+            nx_graph = self.callflow.update_dist({
+                "name": 'group',
+                "groupBy": groupBy,
+                "datasets": datasets
+            })            
+            result = json_graph.node_link_data(nx_graph)
+            adjList = nx.adjacency_matrix(nx_graph).todense()
+            # result['adj_matrix'] = json.dumps({'test': adjList}, cls=NDArrayEncoder, indent=4)
+
+            emit('dist_group', result, json=True)
+
+
+        @sockets.on('dist_gradients', namespace='/')
+        def gradients(data):
+            result = {}
+            if self.debug:
+                self.print('[Request] Gradients for all datasets', data)
+            result = self.callflow.update_dist({
+                "name": "gradients",
+                "datasets": data['datasets'],
+                'plot': data['plot']
+            })
+            emit('dist_gradients', result, json=True)
+
+        @sockets.on("dist_similarity", namespace='/')
+        def similarity(data):
+            result = {}
+            if self.debug:
+                self.print('[Request] Similarity of the datasets', data)
+            result = self.callflow.update_dist({
+                "name": "similarity",
+                "datasets": data['datasets'],
+                "algo": data['algo']
+            })
+            emit('dist_similarity', result, json=True)
 
             
     def create_server(self):

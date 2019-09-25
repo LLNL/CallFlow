@@ -387,7 +387,7 @@ export default class Color {
             this.nRangeColorScale = chroma.scale(this.colorMap)
                 // .padding(this.colorPadding)
                 .domain([0, 1])
-        } else if (this.option == 'Diff') {
+        } else if (this.option == 'Dist') {
             this.diffColorScale = chroma.scale(this.colorMap)
                 // .padding(this.colorPadding)
                 .domain([-1, 1]);

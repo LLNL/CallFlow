@@ -21,6 +21,7 @@ from networkx.readwrite import json_graph
 
 from preprocess import PreProcess
 from callgraph import CallGraph
+from distgraph import DistGraph
 
 from actions.create import Create
 from actions.groupBy import groupBy
@@ -35,6 +36,9 @@ from actions.cct import CCT
 from actions.module_hierarchy import moduleHierarchy
 from actions.filter import Filter
 from actions.function_list import FunctionList
+from actions.union_graph import UnionGraph
+from actions.kde_gradients import KDE_gradients
+from actions.similarity import Similarity
 
 from state import State
 from logger import log
@@ -344,6 +348,68 @@ class CallFlow:
         elif action_name == 'function':
             functionlist = FunctionList(state1, action['module'], action['nid'])
             return functionlist.result
+
+    def update_dist(self, action):
+        action_name = action["name"]
+        datasets = action['datasets']
+
+        if action_name == 'init':
+            self.setConfig()
+
+            if(action['groupBy'] == 'module'):
+                path_type = 'group_path'
+            elif(action['groupBy'] == 'name'):
+                path_type = 'path'
+    
+            for idx, dataset in enumerate(datasets):
+                group_state = self.read_group_gf(dataset)
+                graph = DistGraph(group_state, path_type, True, action['groupBy'])
+                self.states[dataset].g = graph.g
+            return self.config
+
+        elif action_name == "group":
+            u_graph = UnionGraph()
+            for idx, dataset in enumerate(datasets):
+                u_graph.unionize(self.states[dataset].g, dataset)
+            u_graph.add_union_node_attributes()
+            u_graph.add_edge_attributes()
+            self.states['union_graph'] = u_graph.R
+            # print("Union graph nodes: ", self.states['union_graph'].nodes())
+            # print("Dataset nodes: ", self.states[datasets[1]].g.nodes())
+            # print("Union edges:", self.states['union_graph'].edges())
+            # print("Dataset edges: ", self.states[datasets[1]].g.edges())
+            return u_graph.R
+
+        elif action_name == 'scatterplot':
+            if(action['plot'] == 'bland-altman'):
+                state1 = self.states[action['dataset1']]
+                state2 = self.states[action['dataset2']]
+                col = action['col']
+                catcol = action['catcol']
+                dataset1 = action['dataset1']
+                dataset2 = action['dataset2']
+                ret = BlandAltman(state1, state2, col, catcol, dataset1, dataset2).results
+            return ret
+
+        elif action_name == 'gradients':
+            if(action['plot'] == 'kde'):
+                ret = KDE_gradients(self.states).results
+            return ret 
+
+        elif action_name == 'Gromov-wasserstein':
+            ret = {}       
+            return ret  
+
+        elif action_name == 'similarity':
+            ret = {}
+            similarities = {}
+            for idx, dataset in enumerate(datasets):
+                similarities[dataset] = []
+                for idx_2, dataset2 in enumerate(datasets):
+                    union_similarity = Similarity(self.states[dataset2].g, self.states[dataset].g)
+                    similarities[dataset].append(union_similarity.result)
+                    print("Similarity between union and {1}: {0}".format(union_similarity.result, dataset))
+            return similarities
 
     def displayStats(self, name):
         log.warn('==========================')

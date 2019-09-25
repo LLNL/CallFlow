@@ -48,7 +48,6 @@ class CCT:
         for node in nodes:  
             print("Node is ", node)        
             data = self.entire_df.loc[self.entire_df['name'] == node][attr]
-            print(data)
             if attr == 'time' or attr == 'time (inc)' or attr == 'imbalance_perc':
                 ret[node] = data.mean()
             else:
@@ -201,4 +200,3 @@ class CCT:
         self.add_node_attributes()
         self.add_edge_attributes()
         self.g.cycles = self.find_cycle(self.g)
-        print(self.g.nodes())

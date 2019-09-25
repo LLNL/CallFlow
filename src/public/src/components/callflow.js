@@ -17,6 +17,11 @@ import Scatterplot from './scatterplot'
 import Histogram from './histogram'
 import Function from './function'
 
+import Distgraph from './distgraph'
+import SimilarityMatrix from './similarity-matrix'
+
+import io from 'socket.io-client';
+
 
 export default {
 	name: 'CallFlow',
@@ -30,11 +35,11 @@ export default {
 		Function,
 		Histogram,
 		Icicle,
+		Distgraph,
+		SimilarityMatrix
 	},
 	data: () => ({
-		socket: null,
 		appName: 'Callflow',
-		socketError: false,
 		server: 'localhost:5000',
 		config: {
 			headers: {
@@ -70,7 +75,7 @@ export default {
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
 		modes: [],
-		selectedMode: 'Distribution',
+		selectedMode: '',
 		selectedBinCount: 5,
 		selectedFunctionsInCCT: 50,
 		selectedDiffNodeAlignment: 'Top',
@@ -79,13 +84,18 @@ export default {
 		isCCTInitialized: false,
 		datas: ['Dataframe', 'Graph'],
 		selectedData: 'Dataframe',
-		enableDiff: false,
 		firstRender: false,
+		enableDist: false,
 	}),
 
 	watch: {},
 
 	mounted() {
+		var socket = io.connect('localhost:8080', {reconnect: true});
+		console.log('check 1', socket.connected);
+		socket.on('connect', function() {
+		  console.log('check 2', socket.connected);
+		});
 		this.$socket.emit('init')
 	},
 
@@ -100,26 +110,26 @@ export default {
 			data = JSON.parse(data)
 			console.log("Config file contains: ", data)
 			this.numOfDatasets = data['datasets'].length
-
+			
 			// Enable diff mode only if the number of datasets >= 2
 			let datasetMapping = this.assignUniqueDatasetNames(data['names'])
-			this.$store.datasets = datasetMapping['arr'] 
+			this.$store.datasets = datasetMapping['arr']
 			this.$store.datasetMap = datasetMapping['map']
 			this.$store.datasetRevMap = datasetMapping['revmap']
 			this.$store.actual_dataset_names = data['names']
 			this.datasets = this.$store.actual_dataset_names
 
 			if (this.numOfDatasets >= 2) {
-				this.enableDiff = true
+				this.enableDist = true
 				this.modes = ['Single', 'Distribution']
-				// this.selectedMode = 'Distribution'
+				this.selectedMode = 'Distribution'
 				this.selectedDataset2 = data['names'][1]
 				this.$store.selectedDataset2 = data['names'][1]
 				this.$store.selectedDataset = data['names'][2]
 				this.selectedDataset = data['names'][2]
 
 			} else {
-				this.enableDiff = false
+				this.enableDist = false
 				this.modes = ['Single']
 				this.selectedDataset2 = ''
 				this.selectedMode = 'Single'
@@ -147,7 +157,6 @@ export default {
 
 		// Fetch aggregated graph for single mode.
 		group(data) {
-			console.log(data)
 			console.log("Data for", this.selectedFormat, ": ", data)
 			if (this.selectedData == 'Dataframe') {
 				this.$refs.CallgraphA.init(data)
@@ -161,49 +170,53 @@ export default {
 		},
 
 		// Fetch aggregated graph (Super graph) for distribution mode.
-		diff_group(data) {
-			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)			
+		dist_group(data) {
+			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
 			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
 			if (this.selectedData == 'Dataframe') {
-				this.$refs.DiffgraphA.init(data)
+				this.$refs.DistgraphA.init(data)
 				// this.$refs.DiffScatterplot.init()
-				this.$refs.SimilarityMatrix.init()
-				this.$refs.DiffHistogram.init()
+				// this.$refs.SimilarityMatrix.init()
+				// this.$refs.DistHistogram.init()
 			} else if (this.selectedData == 'Graph') {
-				this.$refs.DiffgraphB.init(data)
-				this.$refs.DiffFunction.init()
-				this.$refs.DiffIcicle.init()
+				this.$refs.DistgraphB.init(data)
+				// this.$refs.DistFunction.init()
+				// this.$refs.DistIcicle.init()
 			}
 		},
 
 		// Fetch CCT for distribution mode.
-		diff_cct(data) {
+		dist_cct(data) {
 			console.log("Diff CCT data: ", data)
-			this.$refs.DiffCCT1.init(data[this.$store.selectedDataset], '1')
-			this.$refs.DiffCCT2.init(data[this.$store.selectedDataset2], '2')
+			this.$refs.DistCCT1.init(data[this.$store.selectedDataset], '1')
+			this.$refs.DistCCT2.init(data[this.$store.selectedDataset2], '2')
 		},
+		
+		disconnect(){
+			console.log('Disconnected.')
+		}
 	},
 
 	methods: {
 		// Assigns idx to datasets. 
 		// osu_bcast.XX.XX.XX-XX => osu_bcast_1 and so on. 
-		assignUniqueDatasetNames(names){
+		assignUniqueDatasetNames(names) {
 			let ret = []
 			let retMap = {}
 			let retRevMap = {}
-			for(let i = 0; i < names.length; i+=1){
+			for (let i = 0; i < names.length; i += 1) {
 				let name = names[i].split('.')[0]
 				ret.push(name + '_' + i)
-				retMap[names[i]] = name + '_'  + i
+				retMap[names[i]] = name + '_' + i
 				retRevMap[name + '_' + i] = names[i]
- 			}
+			}
 			return {
 				"arr": ret,
 				"map": retMap,
 				"revmap": retRevMap
 			}
 		},
-		
+
 		clear() {
 			if (this.selectedFormat == 'Callgraph') {
 				this.$refs.CCT.clear()
@@ -233,16 +246,17 @@ export default {
 				this.$refs.Icicle.clear()
 			} else if (this.selectedFormat == 'CCT') {
 				this.$refs.CCT.clear()
-			} else if (this.selectedFormat == 'Diffgraph') {
-				this.$refs.Diffgraph.clear()
+			} else if (this.selectedFormat == 'Distgraph') {
+				this.$refs.Distgraph.clear()
 				this.$refs.Icicle.clear()
-				this.$refs.DiffHistogram.clear()
+				this.$refs.DistHistogram.clear()
 			}
 		},
 
 		init() {
 			// Initialize colors
 			this.colors()
+			console.log('Selected mode: ', this.selectedMode)
 
 			// Call the appropriate socket to query the server.
 			if (this.selectedMode == 'Single') {
@@ -261,32 +275,27 @@ export default {
 
 			} else if (this.selectedMode == 'Distribution') {
 				if (this.selectedFormat == 'CCT') {
-					this.$socket.emit('diff_cct', {
+					this.$socket.emit('dist_cct', {
 						dataset1: this.$store.selectedDataset,
 						dataset2: this.$store.selectedDataset2,
 						functionInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
-					// this.$socket.emit('diff_init', {
-					// 	datasets: this.$store.actual_dataset_names,
-					// 	groupBy: this.selectedGroupBy
-					// })
-
-					this.$socket.emit('diff_group', {
+					this.$socket.emit('dist_group', {
 						datasets: this.$store.actual_dataset_names,
 						groupBy: this.selectedGroupBy
 					})
 
-					this.$socket.emit('diff_gradients', {
+					this.$socket.emit('dist_gradients', {
 						datasets: this.$store.actual_dataset_names,
 						plot: 'kde'
 					})
 
-					this.$socket.emit('diff_similarity', {
-						datasets: this.$store.actual_dataset_names,
-						algo: 'deltacon'
-					})
-					// this.$socket.emit('diff_scatterplot', {
+					// this.$socket.emit('dist_similarity', {
+					// 	datasets: this.$store.actual_dataset_names,
+					// 	algo: 'deltacon'
+					// })
+					// this.$socket.emit('dist_scatterplot', {
 					//     datasets: this.$store.client_datasets,
 					//     dataset1: this.$store.selectedDataset,
 					//     dataset2: this.$store.selectedDataset2,
@@ -308,7 +317,7 @@ export default {
 				this.selectedColorMin = this.$store.minExcTime[this.selectedDataset]
 				this.selectedColorMax = this.$store.maxExcTime[this.selectedDataset]
 			}
-		
+
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
 			this.$store.colorPoint = this.selectedColorPoint
 			console.log("Datasets are :", this.datasets)
@@ -316,6 +325,7 @@ export default {
 			for (let i = 0; i < this.$store.datasets.length; i += 1) {
 				this.$store.color.datasetColor[this.$store.datasets[i]] = this.$store.color.getCatColor(i)
 			}
+			console.log("Assigned Color map: ", this.$store.color.datasetColor)
 			console.log("Assigned Color map: ", this.$store.color.datasetColor)
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
