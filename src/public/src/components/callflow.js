@@ -17,15 +17,6 @@ import Scatterplot from './scatterplot'
 import Histogram from './histogram'
 import Function from './function'
 
-// Diff mode imports
-import Diffgraph from './diffgraph'
-import DiffFunction from './difffunction'
-import DiffHistogram from './diffhistogram'
-import DiffIcicle from './difficicle'
-import DiffScatterplot from './diffScatterplot'
-import DiffCCT from './diffcct'
-import SimilarityMatrix from './diffgraph/similarityMatrix'
-import DFS from './dfs'
 
 export default {
 	name: 'CallFlow',
@@ -39,14 +30,6 @@ export default {
 		Function,
 		Histogram,
 		Icicle,
-		Diffgraph,
-		DiffCCT,
-		// DiffCCT2,
-		DiffHistogram,
-		// DiffScatterplot,
-		DiffFunction,
-		DiffIcicle,
-		SimilarityMatrix
 	},
 	data: () => ({
 		socket: null,

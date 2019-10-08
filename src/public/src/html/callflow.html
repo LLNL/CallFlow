@@ -168,53 +168,6 @@
 				</span>
 			</splitpanes>
 		</v-layout>
-
-		<v-layout v-show="selectedMode == 'Distribution' && selectedFormat == 'Callgraph'">
-			<splitpanes id="diffgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe'">
-				<splitpanes horizontal :splitpanes-size="30">
-					<span>
-						<!-- <DiffScatterplot ref="DiffScatterplot" /> -->
-						<SimilarityMatrix ref="SimilarityMatrix"/>
-					</span>
-					<span>
-						<svg id="debug"></svg>
-					</span>
-				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="70">
-					<span>
-						<Diffgraph ref="DiffgraphA" />
-					</span>
-				</splitpanes>
-			</splitpanes>
-			<splitpanes id="diffgraph-dashboard-2" class="default-theme" v-show="selectedData == 'Graph'">
-				<splitpanes horizontal :splitpanes-size="30">
-					<span>
-						<diffFunction ref="DiffFunction" />
-					</span>
-					<span>
-						<DiffHistogram ref="DiffHistogram" />
-						<diffIcicle ref="DiffIcicle" />
-					</span>
-				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="70">
-					<span>
-						<Diffgraph ref="DiffgraphB" />
-					</span>
-				</splitpanes>
-			</splitpanes>
-		</v-layout>
-
-		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Distribution'">
-				<splitpanes id="cct-dashboard">
-					<splitpanes horizontal :splitpanes-size="50">
-						<span>
-							<DiffCCT ref="DiffCCT1" id="diff-cct-1"/>
-						</span>
-			a
-						</span>
-					</splitpanes>	
-				</splitpanes>
-			</v-layout>
 	</v-content>
 	
 	<v-footer id="footer" color="teal" class="white--text" app>

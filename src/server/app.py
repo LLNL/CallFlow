@@ -59,13 +59,7 @@ class App():
                 self.print('[Request] Init the diff mode')
             groupBy = 'module'
             datasets = self.config.names
-            print(datasets)
-            self.callflow.update_diff({
-                'name': 'init',
-                'groupBy': groupBy,
-                'datasets': datasets
-            })
-
+          
         # Start server if preprocess is not called.
         if not self.config.preprocess:
             self.create_socket_server()
@@ -282,104 +276,6 @@ class App():
                 'nid': data['nid']
             })
             emit('function', result, json=True)
-
-        @sockets.on('diff_scatterplot', namespace='/')
-        def diffscatterplot(data):
-            if self.debug:
-                self.print('[Request] Diff-Scatterplot request for module.')
-            result = self.callflow.update_diff({
-                "name": "scatterplot",
-                "datasets": data['datasets'],
-                "dataset1": data["dataset1"],
-                "dataset2": data["dataset2"],
-                'col': data['col'],
-                'catcol': data['catcol'],
-                'plot': data['plot']
-            })
-            emit('diff_scatterplot', result, json=True)
-
-        @sockets.on('diff_histogram', namespace='/')
-        def diffhistogram(data):
-            if self.debug:
-                self.print('[Request] Diff-Histogram request for module.')
-            
-            emit('diff_histogram', result, json=True)
-
-        @sockets.on('diff_cct', namespace='/')
-        def diffcct(data):
-            if self.debug:
-                self.print('[Request] Diff-CCT for the two datasets.', data)
-            g1 = self.callflow.update({
-                "name": "cct",
-                "dataset1": data['dataset1'],
-                "functionInCCT": data['functionInCCT'],
-            })
-            g2 = self.callflow.update({
-                "name": "cct",
-                "dataset1": data['dataset2'],
-                "functionInCCT": data['functionInCCT'],
-            })
-            g1_result = json_graph.node_link_data(g1)
-            g2_result = json_graph.node_link_data(g2)
-            emit('diff_cct', {
-                data['dataset1']: g1_result,
-                data['dataset2']: g2_result
-            }, json=True)
-
-        @sockets.on('diff_init', namespace='/')
-        def diffinit(data):
-            if self.debug:
-                self.print('[Request] Init the diff mode')
-            groupBy = data['groupBy'].lower()
-            datasets = data['datasets']
-            self.callflow.update_diff({
-                'name': 'init',
-                'groupBy': groupBy,
-                'datasets': datasets
-            })
-
-        @sockets.on('diff_group', namespace='/')
-        def diff(data):
-            result = {}
-            if self.debug:
-                self.print('[Request] Diff the dataset.', data)
-            datasets = data['datasets']
-            groupBy = data['groupBy'].lower()
-            nx_graph = self.callflow.update_diff({
-                "name": 'group',
-                "groupBy": groupBy,
-                "datasets": datasets
-            })            
-            result = json_graph.node_link_data(nx_graph)
-            # result["adjList"] = nx.adjacency_matrix(nx_graph)
-            adjList = nx.adjacency_matrix(nx_graph).todense()
-            print(adjList)
-
-            emit('diff_group', result, json=True)
-
-        @sockets.on('diff_gradients', namespace='/')
-        def gradients(data):
-            result = {}
-            if self.debug:
-                self.print('[Request] Gradients for all datasets', data)
-            result = self.callflow.update_diff({
-                "name": "gradients",
-                "datasets": data['datasets'],
-                'plot': data['plot']
-            })
-            emit('diff_gradients', result, json=True)
-
-        @sockets.on("diff_similarity", namespace='/')
-        def similarity(data):
-            result = {}
-            if self.debug:
-                self.print('[Request] Similarity of the datasets', data)
-            result = self.callflow.update_diff({
-                "name": "similarity",
-                "datasets": data['datasets'],
-                "algo": data['algo']
-            })
-            emit('diff_similarity', result, json=True)
 
             
     def create_server(self):

@@ -58,7 +58,7 @@ export default {
             if (this.color.option == "Module") {
 
             } else {
-                let splits = 5
+                let splits = 256
                 let color = this.color.getScale(this.color.option)
 
                 for (let i = 0; i < splits; i += 1) {
