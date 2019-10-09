@@ -1,5 +1,5 @@
-CallFlow v2.0 (Dev)
-============
+CallFlow v2.0b
+==============
 
 The hpctoolkit-parser has been replaced by [Hatchet](www.github.com/LLNL/hatchet) to support a standard API and work with many formats (like hpctoolkit, caliper, etc.). Hatchet analyzes performance data that is organized in a tree hierarchy (such as calling context trees, call graphs, nested regions' timers etc.).
 
@@ -25,9 +25,7 @@ Callflow currently, supports two formats, hpctoolkit and [caliper](www.github.co
 		  
 	caliper format:
 		  .../dataset/experiment.json
-	
 ```
-
 
 # Contents of JSON file
 To load multiiple datasets into Callflow, you need to provide a json file as input.  For examples, refer $CALLFLOW_PATH/config_files
@@ -70,7 +68,6 @@ To load multiiple datasets into Callflow, you need to provide a json file as inp
 	npm install
 	bower install
 	python setup.py install (TODO)
-
 ```
 
 # Hatchet: 
@@ -115,7 +112,7 @@ The filtered dataset can also be stored to avoid the filter step on each run. (T
 
 Client side of Callflow uses Vue.js and is in ES6. 
 
-#Reference
+# Reference
 
 Any published work that utilizes this software should include the following
 reference:
@@ -129,10 +126,14 @@ Performance Analysis, VPA '16, November 2016. LLNL-CONF-704659.
 
 # Copyright
 
-Copyright (c) 2019, Lawrence Livermore National Security, LLC.
+Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
 Produced at the Lawrence Livermore National Laboratory.
 
-Written by Huu Tan Nguyen <htpnguyen@ucdavis.edu>, Suraj Kesavan <spkesavan@ucdavis.edu>.
+Written by:
+```
+    Huu Tan Nguyen <htpnguyen@ucdavis.edu>
+    Suraj Kesavan <spkesavan@ucdavis.edu>.
+```
 
 LLNL-CODE-740862. All rights reserved.
 
