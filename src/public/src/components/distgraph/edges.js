@@ -66,6 +66,7 @@ export default {
             }
 
             this.showEdges()
+            this.drawEdgeLabels()
         },
 
         showEdges() {
@@ -278,27 +279,37 @@ export default {
 
                     let By0 = 0, By1 = 0;
 
+
+                    let props = d.source.props
+                    let least_prop = 1.0
+                    // for(let dataset in props){
+                    //     if(props.hasOwnProperty(dataset)){
+                    //         least_prop = Math.min(least_prop, props[dataset])
+                    //     }
+                    // }
+
                     if(d.height[dataset] > d.source.height){
-                        d.source_adjust = d.source.height
+                        d.source_adjust = d.source.height*least_prop
                     }
                     else{
-                        d.source_adjust = d.height[dataset]
+                        d.source_adjust = d.height[dataset]*least_prop
                     }
 
                     if(d.ty > 0){
-                        d.target_adjust = (d.target.height - d.ty)
+                        d.target_adjust = (d.target.height - d.ty)*least_prop
                     }
                     else{
                         d.target_adjust = 0
                     }
 
+
                     // console.log(d.height, dataset, d.height[dataset])
                     By0 = d.source.y + this.$parent.ySpacing + d.sy + d.source_adjust// d.target.value*(d.source.height/d.source.value)
-                    By1 = d.target.y + this.$parent.ySpacing + d.target_adjust + d.height[dataset] //+ d.target.value*(d.target.height/d.target.value)
+                    By1 = d.target.y + this.$parent.ySpacing + d.target_adjust + d.height[dataset]*least_prop //+ d.target.value*(d.target.height/d.target.value)
 
-                    console.log(d)
                     const rightMoveDown = By1 - Ty1
                     // console.log(d.source.y, d.target.y, d.sy, d.source_adjust, d.target_adjust)
+                    console.log()
                     return `M${Tx0},${Ty0
                         }C${Tx2},${Ty0
                         } ${Tx3},${Ty1
@@ -385,6 +396,64 @@ export default {
             for (let i = 0; i < this.$store.datasets.length; i += 1) {
                 this.edges.selectAll('.dist-edge-' + dataset).remove()
             }
+        },
+
+        drawEdgeLabels() {
+            this.labelContainer = this.edges.selectAll('label')
+                .data(this.links)
+                .enter()
+                .append('g')
+
+            this.labelContainer
+                .append('circle')
+                .attrs({
+                    'class': 'label',
+                    'id': (d, i) =>  { return 'label-' + d.client_idx },
+                    'r': 10,
+                    'stroke': 'black',
+                    'fill': 'white',
+                    'cx': (d, i) => {
+                        // return (d.source.x + d.target.x)/2
+                        return d.target.x - 20
+                    },
+                    'cy': (d, i) => {
+                        // let y_offset = d.target.y
+                        // if(d.source.y > d.target.y){
+                        //     y_offset = d.source.y
+                        // }
+                        // let y_height = d.ty
+                        // if(d.sy > d.ty){
+                        //     y_height = d.sy
+                        // }
+                        // return y_offset + this.$parent.ySpacing
+                        return d.target.y + this.$parent.ySpacing + d.target.height/2
+                    }
+                })
+
+            this.labelContainer.append("text")
+                .attrs({
+                    "x": (d, i) => {
+                        // return (d.source.x + d.target.x)/2
+                        return d.target.x - 20
+                    },
+                    "dx": (d) => -5,
+                    "dy": (d) => +5,
+                    "y": (d, i) => {
+                        // let y_offset = d.target.y
+                        // if(d.source.y > d.target.y){
+                        //     y_offset = d.source.y
+                        // }
+                        // let y_height = d.ty
+                        // if(d.sy > d.ty){
+                        //     y_height = d.sy
+                        // }
+                        // return y_offset + this.$parent.ySpacing
+
+                        return d.target.y + this.$parent.ySpacing + d.target.height/2
+                    },
+                    "class": 'labelText'
+                })
+                .text((d, i) => d.number_of_runs)
         },
     }
 }
