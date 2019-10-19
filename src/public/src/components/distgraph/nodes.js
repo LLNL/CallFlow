@@ -40,9 +40,19 @@ export default {
     },
 
     methods: {
+        group() {
+            this.total_weight = d3.nest()
+                .key(function (d) { return d.level; })
+                .key(function (d) { return d.sourceLinks.length; })
+                .rollup(function (d) {
+                    return d3.sum(d, function (g) { return g['time (inc)']; });
+                }).entries(this.graph.nodes)
+            },
+
         init(graph) {
             this.graph = graph
             this.nodes = d3.select('#' + this.id)
+            this.group()
             this.setNodeIds()
 
             // https://observablehq.com/@geekplux/dragable-d3-sankey-diagram
@@ -132,16 +142,20 @@ export default {
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
+                    console.log(d)
                     let selectedModule = d.id
 
                     // this.cleardebugGradients()
                     // this.debugGradients(this.data, selectedModule, 'hist')
                     // this.debugGradients(this.data, selectedModule, 'kde')
+                    // this.clearQuantileLines()
+                    this.clearLineGradients()
+                    this.quantileLines()
 
-                    this.$socket.emit('hierarchy', {
-                        module: selectedModule,
-                        dataset1: this.$store.selectedDataset,
-                    })
+                    // this.$socket.emit('hierarchy', {
+                    //     module: selectedModule,
+                    //     dataset1: this.$store.selectedDataset,
+                    // })
                 })
 
             // Transition
@@ -163,7 +177,7 @@ export default {
 
         //Gradients
         clearLineGradients() {
-
+            d3.selectAll('.linear-gradient').remove()
         },
 
         setupGradients2(data) {
@@ -173,9 +187,9 @@ export default {
                     var defs = d3.select('#distgraph-overview-')
                         .append("defs");
 
-                    console.log(d, this.nidNameMap[d])
                     this.linearGradient = defs.append("linearGradient")
-                        .attr("id", "linear-gradient" + this.nidNameMap[d] + '-up');
+                        .attr("id", "linear-gradient" + this.nidNameMap[d] + '-up')
+                        .attr("class", 'linear-gradient')
 
                     this.linearGradient
                         .attr("x1", "0%")
@@ -198,7 +212,6 @@ export default {
                             .attr("stop-color", d3.interpolateReds((val[i] / (max_val - min_val))))
                     }
                 }
-
             }
         },
 
@@ -227,39 +240,38 @@ export default {
                 .attr('width', this.width - this.margin.left - this.margin.right)
                 .attr('height', this.height - this.margin.top - this.margin.bottom)
                 .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
-            
+
             this.xMin = data[node][mode]['x_min']
             this.xMax = data[node][mode]['x_max']
             this.yMin = data[node][mode]['y_min']
             this.yMax = data[node][mode]['y_max']
             this.xScale = d3.scaleLinear().domain([this.xMin, this.xMax]).range([0, this.scatterWidth])
             this.yScale = d3.scaleLinear().domain([this.yMin, this.yMax]).range([this.scatterHeight - this.margin.top - this.margin.bottom, 0])
-            console.log(this.xScale(this.xMin), this.xScale(this.xMax))
-            
+
             var xAxis = d3.axisBottom(this.xScale)
-                // .ticks(5)
-                // .tickFormat((d, i) => {
-                //     console.log(d)
-                //     if (i % 2 == 0 || i == 0 ) {
-                //         return d
-                //     }
-                //     else{
-                //         return ''
-                //     }
-                // });
+            // .ticks(5)
+            // .tickFormat((d, i) => {
+            //     console.log(d)
+            //     if (i % 2 == 0 || i == 0 ) {
+            //         return d
+            //     }
+            //     else{
+            //         return ''
+            //     }
+            // });
 
             var yAxis = d3.axisLeft(this.yScale)
-                // .ticks(5)
-                // .tickFormat((d, i) => {
-                //     console.log(i)
-                //     if (i % 2 == 0 || i == 0) {
-                //         return d
-                //         // return `${this.yMin + i*d/(this.yMax - this.yMin)}`
-                //     }
-                //     else{
-                //         return ''
-                //     }
-                // });
+            // .ticks(5)
+            // .tickFormat((d, i) => {
+            //     console.log(i)
+            //     if (i % 2 == 0 || i == 0) {
+            //         return d
+            //         // return `${this.yMin + i*d/(this.yMax - this.yMin)}`
+            //     }
+            //     else{
+            //         return ''
+            //     }
+            // });
 
             let xAxisHeightCorrected = this.scatterHeight - this.margin.top - this.margin.bottom
             var xAxisLine = this.debugsvg.append('g')
@@ -329,99 +341,94 @@ export default {
             d3.selectAll('.quantileLines').remove()
         },
 
-        // quantileLines() {
-        //     let mode = this.$store.selectedDiffNodeAlignment
-        //     let count = 0
-
-        //     for (let i = 0; i < this.$store.graph.nodes.length; i++) {
-        //         let node_data = this.$store.graph.nodes[i]
-        //         let props = JSON.parse(JSON.stringify(node_data['props']))
-        //         for (const [dataset, val] of Object.entries(props)) {
-        //             let x1 = node_data.x - this.nodeWidth
-        //             let x2 = node_data.x
-        //             let y1 = 0
-        //             let y2 = 0
-        //             if (mode == 'Middle') {
-        //                 y1 = (node_data.height - val * node_data.height) * 0.5
-        //                 y2 = node_data.height - y1
-        //                 this.drawUpLine(y1, y2, node_data, dataset)
-        //                 this.drawBottomLine(y1, y2, node_data, dataset)
-        //             } else if (mode == 'Top') {
-        //                 let gap = 5
-        //                 y1 = 0
-        //                 count += 1
-        //                 y2 = node_data.height * val
-        //                 this.drawBottomLine(y1, y2, node_data, dataset)
-        //             }
-        //         }
-        //     }
-        // },
-
-        // Distance measure is either mean or max
-        quantileLines(data, dist_measure) {
-            // let nodes = this.$store.graph.nodes
-            // for (let i = 0; i < nodes.length; i += 1) {
-            //     let node_name = nodes[i].name
-            //     console.log(data, node_name, dist_measure)
-            //     let dist_measure_data = data[node_name][dist_measure]
-            //     let max_inc_time = Math.max.apply(null, data[node_name]['data_max'])
-            //     for (let val in dist_measure_data) {
-            //         if (dist_measure_data.hasOwnProperty(val)) {
-            //             let y1 = 0
-            //             let y2 = (dist_measure_data[val]*nodes[i].height)/max_inc_time
-            //             console.log(y1, y2)
-            //             this.drawBottomLine(y1, y2, nodes[i], val)
-            //         }
-            //     }
-            // }
+        quantileLines() {
+            console.log("Drawing quantiles")
+            let mode = this.$store.selectedDiffNodeAlignment
+            let count = 0
+            console.log(this.$store.graph.nodes)
+            for (let i = 0; i < this.$store.graph.nodes.length; i++) {
+                let node_data = this.$store.graph.nodes[i]
+                let props = JSON.parse(JSON.stringify(node_data['props']))
+                console.log(props)
+                for (const [dataset, val] of Object.entries(props)) {
+                    let x1 = node_data.x - this.nodeWidth
+                    let x2 = node_data.x
+                    let y1 = 0
+                    let y2 = 0
+                    if (mode == 'Middle') {
+                        y1 = (node_data.height - val * node_data.height) * 0.5
+                        y2 = node_data.height - y1
+                        this.drawUpLine(y1, y2, node_data, dataset)
+                        this.drawBottomLine(y1, y2, node_data, dataset)
+                    } else if (mode == 'Top') {
+                        let gap = 5
+                        y1 = 0
+                        count += 1
+                        y2 = node_data.height * val
+                        console.log(y1, y2)
+                        this.drawBottomLine(y1, y2, node_data, dataset)
+                    }
+                }
+            }
         },
 
+        // Distance measure is either mean or max
+        // quantileLines(data, dist_measure) {
+        // let nodes = this.$store.graph.nodes
+        // for (let i = 0; i < nodes.length; i += 1) {
+        //     let node_name = nodes[i].name
+        //     console.log(data, node_name, dist_measure)
+        //     let dist_measure_data = data[node_name][dist_measure]
+        //     let max_inc_time = Math.max.apply(null, data[node_name]['data_max'])
+        //     for (let val in dist_measure_data) {
+        //         if (dist_measure_data.hasOwnProperty(val)) {
+        //             let y1 = 0
+        //             let y2 = (dist_measure_data[val]*nodes[i].height)/max_inc_time
+        //             console.log(y1, y2)
+        //             this.drawBottomLine(y1, y2, nodes[i], val)
+        //         }
+        //     }
+        // }
+        // },
+
         drawUpLine(y1, y2, node_data, dataset) {
-            d3.select('#dist-node_' + node_data.xid).append('line')
+            d3.select('#dist-node_' + node_data['client_idx']).append('line')
                 .attrs({
                     'class': 'quantileLines',
-                    'id': 'line-1-' + dataset + '-' + node_data.xid,
+                    'id': 'line-1-' + dataset + '-' + node_data['client_idx'],
                     "x1": 0,
                     "y1": y1,
                     "x2": this.nodeWidth,
                     "y2": y1
                 })
                 .style('opacity', (d) => {
-                    if (this.$store.selectedDataset == dataset) {
-                        return 1
-                    } else {
-                        return 0.8
-                    }
+                    return 1
                 })
                 .style("stroke", this.$store.color.datasetColor[dataset])
                 .style("stroke-width", (d) => {
-                    if (this.$store.selectedDataset == dataset) {
-                        return 3
-                    } else {
-                        return 2
-                    }
+                    return 3
                 })
 
         },
 
         drawBottomLine(y1, y2, node_data, dataset) {
-            d3.select('#dist-node_' + node_data.xid).append('line')
-                .attrs({
-                    'class': 'quantileLines',
-                    'id': 'line-2-' + dataset + '-' + node_data.xid,
-                    "x1": 0,
-                    "y1": y2,
-                    "x2": this.nodeWidth,
-                    "y2": y2
-                })
-                .style('opacity', (d) => {
-                    if (this.$store.selectedDataset == dataset) {
-                        return 1
-                    } else {
-                        return 0.8
-                    }
-                })
-                .style("stroke", this.$store.color.datasetColor[dataset])
+            d3.select('#dist-node_' + node_data['client_idx']).append('line')
+                .attr("class", 'quantileLines')
+                .attr("id", 'line-2-' + dataset + '-' + node_data['client_idx'])
+                .attr("x1", 0)
+                .attr("y1", y2)
+                .attr("x2", this.nodeWidth)
+                .attr("y2", y2)
+                .attr("width", 10)
+
+                // .style('opacity', (d) => {
+                //     if (this.$store.selectedDataset == dataset) {
+                //         return 1
+                //     } else {
+                //         return 0.8
+                //     }
+                // })
+                .style("stroke", '#67a9cf')
                 .style("stroke-width", (d) => {
                     if (this.$store.selectedDataset == dataset) {
                         return 3
@@ -494,7 +501,7 @@ export default {
                     if (textSize < d.height) {
                         return d.name[0];
                     } else {
-                        return this.trunc(d.name, Math.floor(d.height/14))
+                        return this.trunc(d.name, Math.floor(d.height / 14))
                     }
                 })
                 .on('mouseover', function (d) {
@@ -536,7 +543,7 @@ export default {
                     if (textSize < d.height) {
                         return d.id.split('=')[0];
                     }
-                    return this.trunc(d.id.split('=')[0], Math.floor(d.height/14));
+                    return this.trunc(d.id.split('=')[0], Math.floor(d.height / 14));
                 });
         },
 

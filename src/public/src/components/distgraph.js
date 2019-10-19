@@ -81,11 +81,12 @@ export default {
 			// this.postProcess(this.data.nodes, this.data.links)	
 			console.log("Post-processing done.") 
 			this.$store.graph = this.graph
-			
+			this.$store.graph.graph.total_out = this.d3sankey.total_out
+			this.$store.graph.graph.total_in = this.d3sankey.total_in
 
-			this.$refs.DistNodes.init(this.graph, this.view)
+			this.$refs.DistNodes.init(this.$store.graph, this.view)
 			// // this.$refs.IntermediateNodes.init(this.data)
-			this.$refs.DistEdges.init(this.graph, this.view)
+			this.$refs.DistEdges.init(this.$store.graph, this.view)
 			// this.$refs.DistColorMap.init()
 			// // this.$refs.CallbackEdges.init(this.data, this.view)
 			// this.$refs.MiniHistograms.init(this.graph, this.view)
@@ -161,8 +162,8 @@ export default {
 		calculateFlow(graph) {
 			const nodes = graph.nodes;
 			const links = graph.links;
-			const outGoing = [];
-			const inComing = [];
+			const outGoing = {};
+			const inComing = {};
 			nodes.forEach((node) => {
 				const nodeLabel = node.name;
 		
@@ -268,6 +269,7 @@ export default {
 			sankey.nodes(this.graph.nodes)
 				.links(this.graph.links)
 				.layout(32)
+
 			return sankey
 		},
 
@@ -338,13 +340,8 @@ export default {
 		computeNodeBreadths(nodes, edges) {
 			let remainingNodes = nodes.map((d) => d);
 			let nextNodes;
-			let x = 0;
-			let count = 10
 			console.log("Bug here. Correct me.")
 			while (remainingNodes.length) {
-				if(count > 10){
-					break;
-				}
 				nextNodes = [];
 				remainingNodes.forEach((node) => {
 					node.sourceLinks.forEach((link) => {
@@ -354,8 +351,6 @@ export default {
 					});
 				});
 				remainingNodes = nextNodes;
-				++x;
-				count += 1
 			}
 		},
     }
