@@ -289,13 +289,11 @@ export default {
 
 
                     let By0 = 0, By1 = 0;
-                    
                     d.source_adjust = d.height['union']                    
                     d.target_adjust = d.height['union']
 
-                    console.log(d.source_adjust, d.target)
-                    By0 = d.source.y + this.$parent.ySpacing + d.sy + d.height['union']
-                    By1 = d.target.y + this.$parent.ySpacing + (d.target.value/d.max_height) * d.target.scale
+                    By0 = d.source.y + this.$parent.ySpacing + d.sy + d.height['union'] * d.proportion
+                    By1 = d.target.y + this.$parent.ySpacing + d.ty + d.height['union'] * d.proportion //(d.target.union['time (inc)']/d.max_height) * d.target.scale
 
                     const rightMoveDown = By1 - Ty1
                     return `M${Tx0},${Ty0

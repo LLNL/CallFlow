@@ -101,8 +101,6 @@ export default function Sankey() {
         console.log("Computed node depths")
         computeLinkDepths()
         console.log("Computed link depths.")
-        console.log(total_out, total_in)
-        console.log(sankey)
         sankey.total_in = total_in
         sankey.total_out = total_out
         return sankey;
@@ -205,7 +203,6 @@ export default function Sankey() {
             let temp = link.sourceLinks;
             link.sourceLinks = link.targetLinks
             link.targetLinks = temp
-
         })
     }
 
@@ -434,10 +431,11 @@ export default function Sankey() {
                     target_max_weight = Math.max(target_max_weight, target_link_weight)
                     link.height[datasets[i]] = target_link_weight * scale * minNodeScale
                 }
-                let proportion =  (link.weight / total_out[link.source.level]) 
-                console.log(proportion)
-                link.height['union'] = target_max_weight * scale * minNodeScale * proportion
-                link.max_height = target_max_weight * scale * minNodeScale * proportion
+                link.proportion =  (link.weight / total_out[link.target.level]) 
+                console.log(link.weight, total_out, link.source.level)
+                console.log(link.source.name, link.target.name, link.proportion)
+                link.height['union'] = target_max_weight * scale * minNodeScale//* proportion
+                link.max_height = target_max_weight * scale * minNodeScale //* proportion
             });
         }
 
@@ -530,7 +528,6 @@ export default function Sankey() {
             node.sourceLinks.forEach(function (link) {
                 if (link.type != 'back_edge') {
                     link.sy = sy;
-                    console.log(link)
                     sy += link.height['union'];
                 }
             });
@@ -539,6 +536,7 @@ export default function Sankey() {
                     link.ty = ty;
                     ty += link.height['union']
                 };
+                console.log(link.source.name, link.target.name, link.ty, ty)
             });
         });
 
@@ -573,10 +571,6 @@ export default function Sankey() {
 
     function value(link) {
         return link.weight;
-    }
-
-    function computeLinkProportions() {
-
     }
 
     return sankey;

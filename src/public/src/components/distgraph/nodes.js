@@ -47,7 +47,11 @@ export default {
                 .rollup(function (d) {
                     return d3.sum(d, function (g) { return g['time (inc)']; });
                 }).entries(this.graph.nodes)
-            },
+        },
+
+        filter(){
+            d3.select()
+        },
 
         init(graph) {
             this.graph = graph
@@ -365,7 +369,6 @@ export default {
                         y1 = 0
                         count += 1
                         y2 = node_data.height * val
-                        console.log(y1, y2)
                         this.drawBottomLine(y1, y2, node_data, dataset)
                     }
                 }
