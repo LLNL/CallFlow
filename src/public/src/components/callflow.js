@@ -48,7 +48,7 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'CCT',
+		selectedFormat: 'Callgraph',
 		datasets: [],
 		selectedDataset: '',
 		selectedDataset2: '',
@@ -61,7 +61,7 @@ export default {
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 10,
 		colorBy: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
-		selectedColorBy: 'Inclusive',
+		selectedColorBy: 'Exclusive',
 		colorMap: [],
 		selectedColorMap: "OrRd",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
@@ -177,7 +177,7 @@ export default {
 				this.$refs.DistgraphA.init(data)
 				// this.$refs.DiffScatterplot.init()
 				this.$refs.SimilarityMatrix.init()
-				this.$refs.DistHistogram.init()
+				// this.$refs.DistHistogram.init()
 			} else if (this.selectedData == 'Graph') {
 				this.$refs.DistgraphB.init(data)
 				// this.$refs.DistFunction.init()
@@ -315,14 +315,25 @@ export default {
 		colors() {
 			this.$store.color = new Color(this.selectedColorBy)
 			this.colorMap = this.$store.color.getAllColors()
-			if (this.selectedColorBy == 'Inclusive') {
-				this.selectedColorMin = this.$store.minIncTime[this.selectedDataset]
-				this.selectedColorMax = this.$store.maxIncTime[this.selectedDataset]
-			} else if (this.selectedColorBy == 'Exclusive') {
-				this.selectedColorMin = this.$store.minExcTime[this.selectedDataset]
-				this.selectedColorMax = this.$store.maxExcTime[this.selectedDataset]
+			if(this.selectedMode == 'Distribution'){
+				if(this.selectedColorBy == 'Inclusive'){
+					this.selectedColorMin = this.$store.minIncTime['union']
+					this.selectedColorMax = this.$store.maxIncTime['union']
+				}
+				else if(this.selectedColorBy == 'Exclusive'){
+					this.selectedColorMin = this.$store.minExcTime['union']
+					this.selectedColorMax = this.$store.maxExcTime['union']
+				}
 			}
-
+			else if(this.selectedMode == 'Single'){
+				if (this.selectedColorBy == 'Inclusive') {
+					this.selectedColorMin = this.$store.minIncTime[this.selectedDataset]
+					this.selectedColorMax = this.$store.maxIncTime[this.selectedDataset]
+				} else if (this.selectedColorBy == 'Exclusive') {
+					this.selectedColorMin = this.$store.minExcTime[this.selectedDataset]
+					this.selectedColorMax = this.$store.maxExcTime[this.selectedDataset]
+				}	
+			}
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
 			this.$store.colorPoint = this.selectedColorPoint
 			console.log("Datasets are :", this.datasets)
@@ -330,7 +341,6 @@ export default {
 			for (let i = 0; i < this.$store.datasets.length; i += 1) {
 				this.$store.color.datasetColor[this.$store.datasets[i]] = this.$store.color.getCatColor(i)
 			}
-			console.log("Assigned Color map: ", this.$store.color.datasetColor)
 			console.log("Assigned Color map: ", this.$store.color.datasetColor)
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001

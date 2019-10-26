@@ -76,7 +76,6 @@ class UnionGraph():
                     self.R.nodes[node][dataset_name] = {}
                 self.R.nodes[node][dataset_name] = val
 
-
     def add_union_node_attributes(self):
         for node in self.R.nodes(data=True):
             node_name = node[0]
@@ -98,6 +97,6 @@ class UnionGraph():
             self.R.nodes[node_name]['union']['time (inc)'] = max_inc_time
             self.R.nodes[node_name]['union']['time'] = max_exc_time
             self.R.nodes[node_name]['union']['entry_functions'] = entry_functions
-            print(self.R.nodes[node_name]['union'])
+            # print(self.R.nodes[node_name]['union'])
             # self.R.nodes[node]['union'] = {}
     

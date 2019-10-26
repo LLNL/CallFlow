@@ -38,13 +38,18 @@ def avg(l):
     return sum(l) / float(len(l))
 
 # Get the max Inclusive time from the root of the CCT.
+# def getMaxIncTime(state):
+#     ret = 0.0
+#     graph = state.graph
+#     df = state.entire_df
+#     for root in graph.roots:
+#         node_df = lookup_with_name(df, root.callpath[-1])
+#         ret = max(ret, float(max(node_df['time (inc)'].tolist())))
+#     return ret
+
 def getMaxIncTime(state):
-    ret = 0.0
-    graph = state.graph
     df = state.entire_df
-    for root in graph.roots:
-        node_df = lookup_with_name(df, root.callpath[-1])
-        ret = max(ret, float(max(node_df['time (inc)'].tolist())))
+    ret = float(df['time (inc)'].max())
     return ret
 
 # TODO: Get the maximum exclusive time from the graphframe. 

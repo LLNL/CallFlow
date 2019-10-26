@@ -46,7 +46,7 @@ class CCT:
     def node_map(self, nodes, attr):
         ret = {}
         for node in nodes:  
-            print("Node is ", node)        
+            # print("Node is ", node)        
             data = self.entire_df.loc[self.entire_df['name'] == node][attr]
             if attr == 'time' or attr == 'time (inc)' or attr == 'imbalance_perc':
                 ret[node] = data.mean()
@@ -103,7 +103,6 @@ class CCT:
                 # If path becomes a string.
                 if isinstance(path, str):
                     path = make_tuple(row[path_name])
-                    print(path)
                 self.g.add_path(path[0])  
 
     def find_cycle(self, G, source=None, orientation=None):

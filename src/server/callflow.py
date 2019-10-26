@@ -98,7 +98,7 @@ class CallFlow:
                 states[dataset_name] = self.process(states[dataset_name], 'filter')
                 states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc)
             else:
-                states[dataset_name] = self.read_gf(dataset_name)
+                states[dataset_name] = self.read_gf(dataset_name, 'dist')
                 
         return states
 
@@ -108,6 +108,10 @@ class CallFlow:
         self.config.min_incTime = {}
         self.config.min_excTime = {}
         self.config.numbOfRanks = {}
+        max_inclusvie_time = 0
+        max_exclusive_time = 0
+        min_inclusive_time = 0
+        min_exclusive_time = 0
         for idx, state in enumerate(self.states):
             if(state != 'union_graph'):
                 self.config.max_incTime[state] = utils.getMaxIncTime(self.states[state])
@@ -115,6 +119,14 @@ class CallFlow:
                 self.config.min_incTime[state] = utils.getMinIncTime(self.states[state])
                 self.config.min_excTime[state] = utils.getMinExcTime(self.states[state])
                 self.config.numbOfRanks[state] = utils.getNumbOfRanks(self.states[state])
+                max_exclusive_time = max(self.config.max_excTime[state], max_exclusive_time)
+                max_inclusvie_time = max(self.config.max_incTime[state], max_exclusive_time)
+                min_exclusive_time = min(self.config.min_excTime[state], min_exclusive_time)
+                min_inclusive_time = min(self.config.min_incTime[state], min_inclusive_time)
+        self.config.max_incTime['union'] = max_inclusvie_time
+        self.config.max_excTime['union'] = max_exclusive_time
+        self.config.min_incTime['union'] = min_inclusive_time
+        self.config.min_excTime['union'] = min_exclusive_time
 
     def create(self, name):
         state = State(name)
@@ -171,6 +183,23 @@ class CallFlow:
         df_filepath = dirname + '/' + state_name + '/' + format_of_df + '_df.csv'
         state.df.to_csv(df_filepath)
 
+    def write_group_gf(self, state, state_name, format_of_df, write_graph=True):
+        dirname = self.config.callflow_dir
+        utils.debug('writing file for {0} format'.format(format_of_df))
+
+        if write_graph:
+            # dump the entire_graph as literal
+            graph_literal = json_graph.node_link_data(state.graph)
+            graph_filepath = dirname + '/' + state_name + '/' + format_of_df + '_graph.json'
+            utils.debug('File path: {0}'.format(graph_filepath))
+            with open(graph_filepath, 'w') as graphFile:
+                json.dump(graph_literal, graphFile)
+
+        # dump the filtered dataframe to csv.
+        df_filepath = dirname + '/' + state_name + '/' + format_of_df + '_df.csv'
+        state.df.to_csv(df_filepath)
+
+
     def replace_str_with_Node(self, df, graph):
         mapper = {}
 
@@ -205,13 +234,17 @@ class CallFlow:
 
         return state
 
-    def read_gf(self, name):
+    def read_gf(self, name, graph_type):
         state = State(name)
-        dirname = self.config.callflow_dir
+        dirname = os.path.abspath(os.path.join(__file__, '../../..')) + '/.callflow'
         df_filepath = dirname + '/' + name + '/filter_df.csv'
         entire_df_filepath = dirname + '/' + name + '/entire_df.csv'
         graph_filepath = dirname + '/' + name + '/filter_graph.json'
         entire_graph_filepath = dirname + '/' + name + '/entire_graph.json'   
+        if(graph_type != None):
+            group_df_file_path = dirname + '/' + name + '/' + graph_type + '_df.csv'
+            group_graph_file_path = dirname + '/' + name + '/' + graph_type + '_graph.json'
+
 
         with self.timer.phase('data frame'):
             with open(graph_filepath, 'r') as graphFile:
@@ -232,7 +265,6 @@ class CallFlow:
         state.graph = state.gf.graph
         state.entire_graph = state.entire_gf.graph
 
-        # state.map = utils.node_hash_mapper(state.entire_df)
 
         # Print the module group by information. 
         # print(state.df.groupby(['module']).agg(['mean','count']))
@@ -241,18 +273,24 @@ class CallFlow:
         state.df = self.replace_str_with_Node(state.df, state.graph)
         state.entire_df = self.replace_str_with_Node(state.entire_df, state.entire_graph)
 
-        # utils.dfs(state.graph, state.df, 1000)
-        # utils.dfs(state.entire_graph, state.entire_df, 1000)
+        if(graph_type != None):
+            with self.timer.phase('Read {0} dataframe'.format(graph_type)):
+                with open(group_graph_file_path, 'r') as groupGraphFile:
+                    data = json.load(groupGraphFile)
+
+            state.group_graph = json_graph.node_link_graph(data)
+            state.group_df = pd.read_csv(group_df_file_path)
+            # state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
 
         return state
 
-    def read_group_gf(self, name):
+    def read_group_gf(self, name, graph_type):
         state = State(name)
         dirname = self.config.callflow_dir
-        group_df_file_path = dirname + '/' + name + '/group_df.csv'
-        group_graph_file_path = dirname + '/' + name + '/group_graph.json'
+        group_df_file_path = dirname + '/' + name + '/' + graph_type + '_df.csv'
+        group_graph_file_path = dirname + '/' + name + '/' + graph_type + '_graph.json'
 
-        with self.timer.phase('Read group dataframe'):
+        with self.timer.phase('Read {0} dataframe'.format(graph_type)):
             with open(group_graph_file_path, 'r') as groupGraphFile:
                 data = json.load(groupGraphFile)
 
@@ -262,6 +300,7 @@ class CallFlow:
         state.group_graph = state.group_gf.graph
         state.group_df = pd.read_csv(group_df_file_path)
         state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
+
         return state
 
     def update(self, action):
@@ -354,7 +393,7 @@ class CallFlow:
         action_name = action["name"]
         datasets = action['datasets']
 
-        if action_name == 'init':
+        if action_name == 'init_dist':
             self.setConfig()
 
             if(action['groupBy'] == 'module'):
@@ -363,17 +402,28 @@ class CallFlow:
                 path_type = 'path'
     
             for idx, dataset in enumerate(datasets):
-                group_state = self.read_group_gf(dataset)
+                group_state = self.read_group_gf(dataset, 'group')
                 graph = DistGraph(group_state, path_type, True, action['groupBy'])
-                self.states[dataset].g = graph.g
+                self.states[dataset].graph = graph.g
                 self.states[dataset].df = graph.df
+                self.write_group_gf(self.states[dataset], dataset, "dist", True)
+            return self.config
+
+        elif action_name == 'init':
+            # for idx, dataset in enumerate(datasets):
+                # self.states[dataset] = self.read_gf(dataset)
+                # dataset_name = dataset['name']
+                # print(dataset)
+                # self.states[dataset] = self.read_gf(dataset, 'dist')
+
+            self.setConfig()
             return self.config
 
         elif action_name == "group":
             u_graph = UnionGraph()
             u_df = pd.DataFrame()
             for idx, dataset in enumerate(datasets):
-                u_graph.unionize(self.states[dataset].g, dataset)
+                u_graph.unionize(self.states[dataset].group_graph, dataset)
                 u_df = pd.concat([u_df, self.states[dataset].df]).drop_duplicates()
             u_graph.add_union_node_attributes()
             u_graph.add_edge_attributes()
@@ -428,11 +478,11 @@ class CallFlow:
         elif action_name == "cct":
             self.update_dist({
                 'name':'group',
-                "groupBy": 'module',
+                "groupBy": 'name',
                 'datasets': action['datasets']
             })
-            print(self.states.keys())
             nx = CCT(self.states['union_graph'], action['functionsInCCT'])
+            print(nx.g.nodes())
             return nx.g 
 
     def displayStats(self, name):

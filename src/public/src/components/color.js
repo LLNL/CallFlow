@@ -362,7 +362,7 @@ export default class Color {
         let ret = []
         let fraction = 1 / colorPoint
         for (let i = 0; i < colorPoint; i += 1) {
-            ret.push(i * fraction )
+            ret.push(i * fraction)
         }
         ret.push(1)
         return ret
@@ -402,7 +402,7 @@ export default class Color {
         if (option == "Module") {
             return this.colorScale;
         } else if (option == "Inclusive") {
-                return this.incColorScale
+            return this.incColorScale
         } else if (option == "Exclusive") {
             return this.excColorScale
         } else if (option == "nRange") {
@@ -424,12 +424,7 @@ export default class Color {
                 return this.incColorScale(node["time (inc)"])
             }
         } else if (this.option == "Exclusive") {
-            console.log(node.exclusive)
-            if (node['time'] == undefined) {
-                return this.excColorScale(node["time"])
-            } else {
-                return this.excColorScale(node.exclusive)
-            }
+            return this.excColorScale(node.exclusive)
         } else if (this.option == "nRange") {
             return this.nRangeColorScale(node.nRange)
         } else if (this.option == "Diff") {
@@ -439,11 +434,11 @@ export default class Color {
         }
     }
 
-    getColorByValue(value){
+    getColorByValue(value) {
         if (this.option == "Module") {
             return this.colorScale(value);
         } else if (this.option == "Inclusive") {
-                return this.incColorScale(value)
+            return this.incColorScale(value)
         } else if (this.option == "Exclusive") {
             return this.excColorScale(value)
         } else if (this.option == "nRange") {
@@ -477,7 +472,7 @@ export default class Color {
         } : null;
     }
 
-    getCatColor(id){
+    getCatColor(id) {
         return this.catColors[id]
     }
 }

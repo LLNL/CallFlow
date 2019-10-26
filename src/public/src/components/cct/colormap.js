@@ -49,10 +49,11 @@ export default {
 
         render() {
             this.color = this.$store.color
+            console.log(this.colorMax)
             if (this.color.option == "Module") {
 
             } else {
-                let splits = this.$store.colorPoint
+                let splits = 1024
                 let color = this.color.getScale(this.color.option)
 
                 for (let i = 0; i < splits; i += 1) {

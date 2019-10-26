@@ -53,9 +53,20 @@ class App():
         self.callflow = CallFlow(self.config)
 
         self.config.distribution = True
-        if(self.config.distribution):
+        if(self.config.distribution and self.config.preprocess):
             if self.debug:
                 self.print('[Request] Init the diff mode')
+            groupBy = 'module'
+            datasets = self.config.names
+
+            self.callflow.update_dist({
+                'name': 'init_dist',
+                'groupBy': groupBy,
+                'datasets': datasets
+            })
+        elif(self.config.distribution and not self.config.preprocess):
+            if self.debug:
+                self.print('[Request] Load the graphframe for client')
             groupBy = 'module'
             datasets = self.config.names
 
@@ -126,9 +137,15 @@ class App():
     def create_socket_server(self):
         @sockets.on('init', namespace='/')
         def init():
-            self.callflow.update({
-                'name': "init",
-            })
+            if(self.config.distribution):
+                self.callflow.update_dist({
+                    'name': 'init',
+                    'datasets': self.config.datasets
+                })
+            else:
+                self.callflow.update({
+                    'name': "init",
+                })
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
             emit('init', config_json, json=True)
 
@@ -315,7 +332,7 @@ class App():
             emit('dist_histogram', result, json=True)
 
         @sockets.on('comp_cct', namespace='/')
-        def distcct(data):
+        def compcct(data):
             if self.debug:
                 self.print('[Request] Comp-CCT for the two datasets.', data)
             g1 = self.callflow.update_dist({
@@ -336,9 +353,9 @@ class App():
             }, json=True)
 
         @sockets.on('dist_cct', namespace='/')
-        def compcct(data):
+        def distcct(data):
             if self.debug:
-                self.print('[Request] Comp-CCT for the two datasets.', data)
+                self.print('[Request] Dist-CCT for the two datasets.', data)
 
             union_cct = self.callflow.update_dist({
                 "name": "cct",
@@ -346,10 +363,7 @@ class App():
                 'functionsInCCT': data['functionsInCCT'],
             })
             result = json_graph.node_link_data(union_cct)
-
-            emit('dist_cct', { 
-                'union': result,
-            }, json=True)
+            emit('dist_cct', result, json=True)
 
         @sockets.on('dist_group', namespace='/')
         def dist(data):
