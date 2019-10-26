@@ -34,6 +34,7 @@ from actions.split_rank import splitRank
 from actions.split_level import splitLevel
 from actions.cct import CCT
 from actions.module_hierarchy import moduleHierarchy
+from actions.module_hierarchy_dist import moduleHierarchyDist
 from actions.filter import Filter
 from actions.function_list import FunctionList
 from actions.union_graph import UnionGraph
@@ -85,9 +86,9 @@ class CallFlow:
                 self.write_gf(states[dataset_name], dataset_name, 'filter')
                 group = groupBy(states[dataset_name], "module")
                 states[dataset_name].gdf = group.df
-                states[dataset_name].graph = group.graph 
+                states[dataset_name].graph = group.graph
                 write_graph = False
-                self.write_gf(states[dataset_name], dataset_name, "group", write_graph)
+                self.write_gf(states[dataset_name], dataset_name, "group")
             elif(self.reProcess and self.processFilter):
                 states[dataset_name] = self.read_entire_gf(dataset_name)
                 states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc) 
@@ -181,7 +182,7 @@ class CallFlow:
             mapper[root.callpath[-1]] = Node(root.nid, root.callpath, None)
             dfs_recurse(root)
         df['node'] = df['node'].apply(lambda node: mapper[node] if node in mapper else '')
-        return df
+        return df 
 
     def read_entire_gf(self, name):
         log.info('[Process] Reading the entire dataframe and graph')
@@ -249,7 +250,7 @@ class CallFlow:
         state = State(name)
         dirname = self.config.callflow_dir
         group_df_file_path = dirname + '/' + name + '/group_df.csv'
-        group_graph_file_path = dirname + '/' + name + '/filter_graph.json'
+        group_graph_file_path = dirname + '/' + name + '/group_graph.json'
 
         with self.timer.phase('Read group dataframe'):
             with open(group_graph_file_path, 'r') as groupGraphFile:
@@ -303,7 +304,7 @@ class CallFlow:
             write_graph = False
             self.write_gf(state1, dataset1, "group", write_graph)
             if(action['groupBy'] == 'module'):
-                path_type = 'group_path'
+                path_type = 'group_path' 
             elif(action['groupBy'] == 'name'):
                 path_type = 'path'
             nx = CallGraph(state1, path_type, True, action["groupBy"])
@@ -365,15 +366,20 @@ class CallFlow:
                 group_state = self.read_group_gf(dataset)
                 graph = DistGraph(group_state, path_type, True, action['groupBy'])
                 self.states[dataset].g = graph.g
+                self.states[dataset].df = graph.df
             return self.config
 
         elif action_name == "group":
             u_graph = UnionGraph()
+            u_df = pd.DataFrame()
             for idx, dataset in enumerate(datasets):
                 u_graph.unionize(self.states[dataset].g, dataset)
+                u_df = pd.concat([u_df, self.states[dataset].df]).drop_duplicates()
             u_graph.add_union_node_attributes()
             u_graph.add_edge_attributes()
-            self.states['union_graph'] = u_graph.R
+            self.states['union_graph'] = State('union_graph')
+            self.states['union_graph'].graph = u_graph.R
+            self.states['union_graph'].df = u_df
             # print("Union graph nodes: ", self.states['union_graph'].nodes())
             # print("Dataset nodes: ", self.states[datasets[1]].g.nodes())
             # print("Union edges:", self.states['union_graph'].edges())
@@ -406,10 +412,28 @@ class CallFlow:
             for idx, dataset in enumerate(datasets):
                 similarities[dataset] = []
                 for idx_2, dataset2 in enumerate(datasets):
-                    union_similarity = Similarity(self.states[dataset2].g, self.states[dataset].g)
-                    similarities[dataset].append(union_similarity.result)
-                    print("Similarity between union and {1}: {0}".format(union_similarity.result, dataset))
+                    # if(dataset != dataset2):
+                        union_similarity = Similarity(self.states[dataset2].g, self.states[dataset].g)
+                        similarities[dataset].append(union_similarity.result)
+                        # print("Similarity between union and {1}: {0}".format(union_similarity.result, dataset))
+                    # else:
+                        # similarities[dataset].append(0)
             return similarities
+        
+        elif action_name == 'hierarchy':
+            ret = {}
+            mH = moduleHierarchyDist(self.states['union_graph'], action["module"])
+            return mH.result
+
+        elif action_name == "cct":
+            self.update_dist({
+                'name':'group',
+                "groupBy": 'module',
+                'datasets': action['datasets']
+            })
+            print(self.states.keys())
+            nx = CCT(self.states['union_graph'], action['functionsInCCT'])
+            return nx.g 
 
     def displayStats(self, name):
         log.warn('==========================')

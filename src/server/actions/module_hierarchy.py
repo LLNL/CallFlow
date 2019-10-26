@@ -3,10 +3,12 @@ import time
 import networkx as nx
 import utils
 from logger import log
+from ast import literal_eval as make_tuple
+
+
 
 class moduleHierarchy:
     def __init__(self, state, modFunc):
-        self.entire_graph = state.entire_graph
         self.graph = state.graph
         self.df = state.df
         
@@ -22,6 +24,7 @@ class moduleHierarchy:
         # Create the Super node's hierarchy. 
         self.hierarchy = nx.Graph()
 
+
         self.result = self.run()
 
     def add_paths(self, df, path_name):
@@ -31,35 +34,8 @@ class moduleHierarchy:
                 path = make_tuple(row[path_name])
             self.hierarchy.add_path(path)      
 
-    # def generic_map(self, nodes, attr):
-    #     ret = {}
-    #     for node in nodes:          
-    #         # if the node is a module.
-    #         if node == self.module:
-    #             if attr == 'time (inc)':
-    #                 group_df = self.df.groupby(['module']).mean()
-    #                 ret[node] = group_df.loc[node, 'time (inc)']
-    #             else:
-    #                 df = self.df.loc[self.df['module'] == node][attr]
-    #                 if df.empty:
-    #                     ret[node] = self.df[self.df['_module'] == node][attr]
-    #                 else:
-    #                     ret[node] = list(set(self.df[self.df['name'] == node][attr].tolist())) 
-    #         else:
-    #             if attr == 'time (inc)':
-    #                 group_df = self.df.groupby(['name']).mean()
-    #                 ret[node] = group_df.loc[node, 'time (inc)']
-    #             else:
-    #                 df = self.df.loc[self.df['name'] == node][attr]
-    #                 if df.empty:
-    #                     ret[node] = self.df[self.df['name'] == node][attr]
-    #                 else:
-    #                     ret[node] = list(set(self.df[self.df['name'] == node][attr].tolist()))            
-    #     return ret
-
     def generic_map(self, nodes, attr):
         ret = {}
-        print(nodes)
         for idx, node in enumerate(nodes):
             # idx = 0 in component path is the module.
             if idx == 0:
@@ -158,8 +134,7 @@ class moduleHierarchy:
         
         if 'component_path' not in self.df.columns:
             utils.debug('Error: Component path not defined in the df')
-        
-        print(node_df['component_path'])
+
         self.add_paths(node_df, 'component_path')
         self.add_node_attributes()
 

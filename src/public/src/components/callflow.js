@@ -18,7 +18,7 @@ import Histogram from './histogram'
 import Function from './function'
 
 import Distgraph from './distgraph'
-import SimilarityMatrix from './similarity-matrix'
+import SimilarityMatrix from './similarityMatrix'
 
 import io from 'socket.io-client';
 
@@ -48,7 +48,7 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'Callgraph',
+		selectedFormat: 'CCT',
 		datasets: [],
 		selectedDataset: '',
 		selectedDataset2: '',
@@ -176,8 +176,8 @@ export default {
 			if (this.selectedData == 'Dataframe') {
 				this.$refs.DistgraphA.init(data)
 				// this.$refs.DiffScatterplot.init()
-				// this.$refs.SimilarityMatrix.init()
-				// this.$refs.DistHistogram.init()
+				this.$refs.SimilarityMatrix.init()
+				this.$refs.DistHistogram.init()
 			} else if (this.selectedData == 'Graph') {
 				this.$refs.DistgraphB.init(data)
 				// this.$refs.DistFunction.init()
@@ -186,10 +186,15 @@ export default {
 		},
 
 		// Fetch CCT for distribution mode.
-		dist_cct(data) {
+		comp_cct(data) {
 			console.log("Diff CCT data: ", data)
 			this.$refs.DistCCT1.init(data[this.$store.selectedDataset], '1')
 			this.$refs.DistCCT2.init(data[this.$store.selectedDataset2], '2')
+		},
+
+		dist_cct(data){
+			console.log("Dist cct data: ", data)
+			this.$refs.CCT.init(data['union'], '2')
 		},
 		
 		disconnect(){
@@ -263,7 +268,7 @@ export default {
 				if (this.selectedFormat == 'CCT') {
 					this.$socket.emit('cct', {
 						dataset: this.$store.selectedDataset,
-						functionInCCT: this.selectedFunctionsInCCT,
+						functionsInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
 					this.$socket.emit('group', {
@@ -276,9 +281,8 @@ export default {
 			} else if (this.selectedMode == 'Distribution') {
 				if (this.selectedFormat == 'CCT') {
 					this.$socket.emit('dist_cct', {
-						dataset1: this.$store.selectedDataset,
-						dataset2: this.$store.selectedDataset2,
-						functionInCCT: this.selectedFunctionsInCCT,
+						datasets: this.$store.actual_dataset_names,
+						functionsInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
 					this.$socket.emit('dist_group', {
@@ -286,15 +290,16 @@ export default {
 						groupBy: this.selectedGroupBy
 					})
 
+					this.$socket.emit('dist_similarity', {
+						datasets: this.$store.actual_dataset_names,
+						algo: 'deltacon'
+					})
+
 					this.$socket.emit('dist_gradients', {
 						datasets: this.$store.actual_dataset_names,
 						plot: 'kde'
 					})
-
-					// this.$socket.emit('dist_similarity', {
-					// 	datasets: this.$store.actual_dataset_names,
-					// 	algo: 'deltacon'
-					// })
+	
 					// this.$socket.emit('dist_scatterplot', {
 					//     datasets: this.$store.client_datasets,
 					//     dataset1: this.$store.selectedDataset,

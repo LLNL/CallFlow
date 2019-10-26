@@ -17,7 +17,7 @@ from ast import literal_eval as make_tuple
 
 class CCT:
     def __init__(self, state, functionsInCCT):
-        number_of_nodes = len(state.entire_df['name'].unique())
+        number_of_nodes = len(state.df['name'].unique())
         if(number_of_nodes < int(functionsInCCT)):
             self.entire_graph = state.graph
             self.entire_df = state.df
@@ -187,7 +187,7 @@ class CCT:
 
         # We now have a list of edges which ends on a cycle.
         # So we need to remove from the beginning edges that are not relevant.
-
+        i = 0
         for i, edge in enumerate(cycle):
             tail, head = tailhead(edge)
             if tail == final_node:

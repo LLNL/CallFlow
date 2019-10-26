@@ -126,7 +126,6 @@ class App():
     def create_socket_server(self):
         @sockets.on('init', namespace='/')
         def init():
-            print('herererere')
             self.callflow.update({
                 'name': "init",
             })
@@ -315,10 +314,10 @@ class App():
                 self.print('[Request] Dist-Histogram request for module.')
             emit('dist_histogram', result, json=True)
 
-        @sockets.on('dist_cct', namespace='/')
+        @sockets.on('comp_cct', namespace='/')
         def distcct(data):
             if self.debug:
-                self.print('[Request] Dist-CCT for the two datasets.', data)
+                self.print('[Request] Comp-CCT for the two datasets.', data)
             g1 = self.callflow.update_dist({
                 "name": "cct",
                 "dataset1": data['dataset1'],
@@ -331,9 +330,25 @@ class App():
             })
             g1_result = json_graph.node_link_data(g1)
             g2_result = json_graph.node_link_data(g2)
-            emit('dist_cct', {
+            emit('comp_cct', {
                 data['dataset1']: g1_result,
                 data['dataset2']: g2_result
+            }, json=True)
+
+        @sockets.on('dist_cct', namespace='/')
+        def compcct(data):
+            if self.debug:
+                self.print('[Request] Comp-CCT for the two datasets.', data)
+
+            union_cct = self.callflow.update_dist({
+                "name": "cct",
+                "datasets": data['datasets'],
+                'functionsInCCT': data['functionsInCCT'],
+            })
+            result = json_graph.node_link_data(union_cct)
+
+            emit('dist_cct', { 
+                'union': result,
             }, json=True)
 
         @sockets.on('dist_group', namespace='/')
@@ -378,6 +393,17 @@ class App():
                 "algo": data['algo']
             })
             emit('dist_similarity', result, json=True)
+
+        @sockets.on('dist_hierarchy', namespace="/")
+        def dist_hierarchy(data):
+            if self.debug:
+                self.print("[Request] Topology of the module", data)
+            result = self.callflow.update_dist({
+                "name": "hierarchy",
+                "datasets": data['datasets'],
+                "module": data['module']
+            })
+            emit('dist_hierarchy', result, json=True)
 
             
     def create_server(self):

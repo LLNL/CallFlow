@@ -80,6 +80,7 @@ export default {
             console.log("Layout Calculation.")
 			// this.postProcess(this.data.nodes, this.data.links)	
 			console.log("Post-processing done.") 
+			// this.graph = this.filterNodes(this.graph)
 			this.$store.graph = this.graph
 			this.$store.graph.graph.total_out = this.d3sankey.total_out
 			this.$store.graph.graph.total_in = this.d3sankey.total_in
@@ -105,6 +106,7 @@ export default {
 			graph = this.addLinkID(graph)
 			graph = this.calculateFlow(graph)
 			console.log("Graph after preprocessing: ", graph)
+
 			return graph;
 		},
 		
@@ -238,6 +240,27 @@ export default {
 				node['props'] = obj
 				count += 1
 			}
+			return graph
+		},
+
+		filterNodes(graph){
+			let nodes = []
+			for(const node of graph.nodes){
+				console.log(node, typeof(node), Object.keys(node), node['height'])
+				if(node.height > 20){
+					nodes.push(node)
+				}
+			}
+			graph.nodes = nodes
+
+			let links = []
+			// for(const link of graph.links){
+			// 	if(link.source in nodes && link.target in nodes){
+			// 		links.push(link)
+			// 	}
+			// }
+			// graph.links = links
+			console.log("After filtering: ", graph)
 			return graph
 		},
 

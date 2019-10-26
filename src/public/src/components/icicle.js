@@ -62,6 +62,12 @@ export default {
 			console.log("Module hierarchy: ", data)
 			this.update_from_df(data)
 		},
+
+		dist_hierarchy(data){
+			data = JSON.parse(data)
+			console.log("Module hierarchy: ", data)
+			this.update_from_df(data)
+		},
 		level_change(data){
 			this.update_maxlevels(data)
 		}

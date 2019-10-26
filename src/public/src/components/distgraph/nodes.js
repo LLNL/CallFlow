@@ -146,7 +146,6 @@ export default {
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
-                    console.log(d)
                     let selectedModule = d.id
 
                     // this.cleardebugGradients()
@@ -156,10 +155,10 @@ export default {
                     this.clearLineGradients()
                     this.quantileLines()
 
-                    // this.$socket.emit('hierarchy', {
-                    //     module: selectedModule,
-                    //     dataset1: this.$store.selectedDataset,
-                    // })
+                    this.$socket.emit('dist_hierarchy', {
+                        module: selectedModule,
+						datasets: this.$store.actual_dataset_names,
+                    })
                 })
 
             // Transition

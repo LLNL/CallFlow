@@ -7,7 +7,7 @@ import math
 class KDE_gradients:
     def __init__(self, states):
         self.states = states
-        self.nodes = states['union_graph'].nodes()
+        self.nodes = states['union_graph'].graph.nodes()
         self.results = self.run()
 
     def iqr(self, arr):

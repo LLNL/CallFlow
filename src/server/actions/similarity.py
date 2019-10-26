@@ -27,22 +27,32 @@ class Similarity:
 
     def InverseMatrix(self, A):
         I = identity(A.shape[0])
+        # print("Identity :", I)
         D = diags(sum(A).toarray(), [0])
+        # print("Diag : ", D)
         c1 = trace(D.toarray()) + 2
+        # print("c1 : ", c1)
         c2 = trace(square(D).toarray()) - 1
+        # print("c2 : ", c2)
         h_h = sqrt((-c1 + sqrt(c1 * c1 + 4 * c2)) / (8 * c2))
+        # print("h_h : ", h_h)
         a = 4 * h_h * h_h / (1 - 4 * h_h * h_h)
+        # print("a : ", a)        
         c = 2 * h_h / (1 - 4 * h_h * h_h)
+        # print("c: ", c)
         M = c * A - a * D
+        # print("M :",  M)
         S = I
         mat = M
         power = 1
         while amax(M.toarray()) > 1e-09:
+            # print(power)
             if power < 7:
                 S = S + mat
                 mat = mat * M
                 power += 1
-
+            else:
+                break
         return S
 
     def run(self, A1, A2):
@@ -52,7 +62,8 @@ class Similarity:
         for i in range(A1.shape[0]):
             for j in range(A1.shape[0]):
                 d += (sqrt(S1[(i, j)]) - sqrt(S2[(i, j)])) ** 2
-
+        print("d: ", d)
         d = sqrt(d)
         sim = 1 / (1 + d)
+        # print(1 - sim)
         return 1 - sim
