@@ -1,0 +1,75 @@
+{
+    "run": "osu",
+    "datasets": [
+        {
+            "name": "osu_bcast.1.14.2019-09-03_11-23-27",
+            "path": "./data/osu/osu_bcast.1.14.2019-09-03_11-23-27",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": "3"
+        },
+        {
+            "name": "osu_bcast.1.14.2019-09-03_14-11-29",
+            "path": "./data/osu/osu_bcast.1.14.2019-09-03_14-11-29",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": "3"
+        },
+        {
+            "name": "osu_bcast.1.16.2019-09-03_19-04-47",
+            "path": "./data/osu/osu_bcast.1.16.2019-09-03_19-04-47",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": "3"
+        },
+        {
+            "name": "osu_bcast.1.10.2019-09-03_21-42-03",
+            "path": "./data/osu/osu_bcast.1.10.2019-09-03_21-42-03",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": "3"
+        },
+        {
+            "name": "osu_bcast.1.10.2019-09-03_11-12-50",
+            "path": "./data/osu/osu_bcast.1.10.2019-09-03_11-12-50",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": "3"
+        },
+        {
+            "name": "osu_bcast.1.16.2019-09-03_17-03-10",
+            "path": "./data/osu/osu_bcast.1.16.2019-09-03_17-03-10",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": "3"
+        },
+        {
+            "name": "osu_bcast.1.16.2019-09-03_14-16-10",
+            "path": "./data/osu/osu_bcast.1.16.2019-09-03_14-16-10",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": "3"
+        },
+        {
+            "name": "osu_bcast.1.10.2019-09-04_06-10-08",
+            "path": "./data/osu/osu_bcast.1.10.2019-09-04_06-10-08",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": "3"
+        },
+        {
+            "name": "osu_bcast.1.10.2019-09-04_04-14-14",
+            "path": "./data/osu/osu_bcast.1.10.2019-09-04_04-14-14",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": "3"
+        },
+        {
+            "name": "osu_bcast.1.10.2019-09-04_02-21-56",
+            "path": "./data/osu/osu_bcast.1.10.2019-09-04_02-21-56",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": "3"
+        }
+    ]
+}

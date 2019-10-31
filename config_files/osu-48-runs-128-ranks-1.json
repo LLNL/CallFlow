@@ -1,0 +1,11 @@
+{
+    "datasets": [
+        {
+            "name": "osu_iallgather.128.8.2019-10-20_02-14-54",
+            "path": "/mnt/2TB/p/lustre1/rahim/data/hpcdbs/osu/catalyst/mvapich2/2.3/osu_iallgather.128.8.2019-10-20_02-14-54",
+            "format": "hpctoolkit",
+            "props": {},
+            "nop": "3"
+        }
+    ]
+}
