@@ -419,6 +419,18 @@ class App():
             })
             emit('dist_hierarchy', result, json=True)
 
+        @sockets.on('dist_projection', namespace='/')
+        def dist_projection(data):
+            if self.debug:
+                self.print("[Request] Projection for the runs", data)
+
+            result = self.callflow.update_dist({
+                "name": "projection",
+                "datasets": data['datasets'],
+                "algo": data['algo']
+            })
+            print(result)
+            emit('dist_projection', result, json=True)
             
     def create_server(self):
         app.debug = True

@@ -431,8 +431,9 @@ export default function Sankey() {
                     target_max_weight = Math.max(target_max_weight, target_link_weight)
                     link.height[datasets[i]] = target_link_weight * scale * minNodeScale
                 }
+                if(link)
                 link.proportion =  (link.weight / total_out[link.target.level]) 
-                console.log(link.weight, total_out, link.source.level)
+                console.log(link.weight, link.source.level)
                 console.log(link.source.name, link.target.name, link.proportion)
                 link.height['union'] = target_max_weight * scale * minNodeScale//* proportion
                 link.max_height = target_max_weight * scale * minNodeScale //* proportion
@@ -536,7 +537,7 @@ export default function Sankey() {
                     link.ty = ty;
                     ty += link.height['union']
                 };
-                console.log(link.source.name, link.target.name, link.ty, ty)
+                // console.log(link.source.name, link.target.name, link.ty, ty)
             });
         });
 

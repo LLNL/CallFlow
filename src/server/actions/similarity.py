@@ -31,9 +31,9 @@ class Similarity:
         D = diags(sum(A).toarray(), [0])
         # print("Diag : ", D)
         c1 = trace(D.toarray()) + 2
-        # print("c1 : ", c1)
+        print("c1 : ", c1)
         c2 = trace(square(D).toarray()) - 1
-        # print("c2 : ", c2)
+        print("c2 : ", c2)
         h_h = sqrt((-c1 + sqrt(c1 * c1 + 4 * c2)) / (8 * c2))
         # print("h_h : ", h_h)
         a = 4 * h_h * h_h / (1 - 4 * h_h * h_h)
@@ -61,9 +61,9 @@ class Similarity:
         d = 0
         for i in range(A1.shape[0]):
             for j in range(A1.shape[0]):
-                d += (sqrt(S1[(i, j)]) - sqrt(S2[(i, j)])) ** 2
-        print("d: ", d)
+                d += (sqrt(S1.tocsr()[(i, j)]) - sqrt(S2.tocsr()[(i, j)])) ** 2
+        # print("d: ", d)
         d = sqrt(d)
         sim = 1 / (1 + d)
-        # print(1 - sim)
+        # print("Similarity: ", 1 - sim)
         return 1 - sim

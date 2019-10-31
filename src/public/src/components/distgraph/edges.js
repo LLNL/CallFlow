@@ -66,39 +66,15 @@ export default {
                 }
             }
 
-            this.showEdges()
             this.drawEdgeLabels()
         },
 
-        showEdges() {
-            let dataset = this.$store.datasets
-            this.edges.selectAll('.dist-edge-' + dataset[0])
-                .data(this.links)
-                .transition()
-                .duration(this.transitionDuration)
-                .delay(this.transitionDuration / 3)
-            // .style('fill-opacity', 0.3);
-
-            this.edges.selectAll('.dist-edge-' + dataset[1])
-                .data(this.links)
-                .transition()
-                .duration(this.transitionDuration)
-                .delay(this.transitionDuration / 3)
-            // .style('fill-opacity', 0.5);
-
-            this.edges.selectAll('.dist-edge-' + dataset[2])
-                .data(this.links)
-                .transition()
-                .duration(this.transitionDuration)
-                .delay(this.transitionDuration / 3)
-            // .style('fill-opacity', 0.7);
-        },
-
         initEdges(dataset) {
-            this.edges.selectAll('.dist-edge-' + dataset)
+            this.edges.selectAll('#dist-edge-' + dataset)
                 .data(this.links)
                 .enter().append('path')
-                .attr('class', (d) => {
+                .attr('class', 'dist-edge')
+                .attr('id', (d) => {
                     return 'dist-edge-' + dataset;
                 })
                 // .attr('d', (d) => {
@@ -266,7 +242,7 @@ export default {
             else {
                 client_dataset_name = this.$store.datasetMap[dataset]
             }
-            this.edges.selectAll('.dist-edge-' + client_dataset_name)
+            this.edges.selectAll('#dist-edge-' + client_dataset_name)
                 .data(this.links)
                 .attr('d', (d) => {
                     let Tx0 = d.source.x + d.source.dx,
@@ -379,9 +355,12 @@ export default {
         },
 
         clear() {
-            for (let i = 0; i < this.$store.datasets.length; i += 1) {
-                this.edges.selectAll('.dist-edge-' + dataset).remove()
-            }
+            // for (let i = 0; i < this.$store.datasets.length; i += 1) {
+                // this.edges.selectAll('.dist-edge-' + dataset).remove()
+            // }
+            this.edges.selectAll('.dist-edge').remove()
+            this.edges.selectAll('.edgelabel').remove()
+            this.edges.selectAll('.edgelabelText').remove()
         },
 
         drawEdgeLabels() {
@@ -394,7 +373,7 @@ export default {
             this.labelContainer
                 .append('circle')
                 .attrs({
-                    'class': 'label',
+                    'class': 'edgelabel',
                     'id': (d, i) => { return 'label-' + d.client_idx },
                     'r': 10,
                     'stroke': 'black',
@@ -438,7 +417,7 @@ export default {
 
                         return d.target.y + this.$parent.ySpacing + d.target.height / 2
                     },
-                    "class": 'labelText'
+                    "class": 'edgelabelText'
                 })
                 .text((d, i) => d.number_of_runs)
         },

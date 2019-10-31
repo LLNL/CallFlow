@@ -19,6 +19,7 @@ import Function from './function'
 
 import Distgraph from './distgraph'
 import SimilarityMatrix from './similarityMatrix'
+import Projection from './projection'
 
 import io from 'socket.io-client';
 
@@ -36,7 +37,8 @@ export default {
 		Histogram,
 		Icicle,
 		Distgraph,
-		SimilarityMatrix
+		SimilarityMatrix,
+		Projection
 	},
 	data: () => ({
 		appName: 'Callflow',
@@ -86,15 +88,17 @@ export default {
 		selectedData: 'Dataframe',
 		firstRender: false,
 		enableDist: false,
+		summaryChip: 'Summary Graph View',
+		initLoad: true,
 	}),
 
 	watch: {},
 
 	mounted() {
 		var socket = io.connect('localhost:8080', {reconnect: true});
-		console.log('check 1', socket.connected);
+		console.log('Socket connection check-1 : ', socket.connected);
 		socket.on('connect', function() {
-		  console.log('check 2', socket.connected);
+		  console.log('Socket connection check 2: ', socket.connected);
 		});
 		this.$socket.emit('init')
 	},
@@ -145,7 +149,10 @@ export default {
 			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedDataset] * 0.000001) / 100).toFixed(3)
 			this.$store.selectedScatterMode = this.selectedScatterMode
 			this.$store.selectedData = this.selectedData
+			this.$store.selectedFormat = this.selectedFormat
+			this.$store.selectedGroupBy = this.selectedGroupBy
 			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment
+			this.$store.colorset = ['#59A14E', '#AF7AA1', '#F18F2C']
 			this.init()
 		},
 
@@ -173,15 +180,21 @@ export default {
 		dist_group(data) {
 			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
 			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
-			if (this.selectedData == 'Dataframe') {
+			if (this.selectedData == 'Dataframe' && this.initLoad) {
 				this.$refs.DistgraphA.init(data)
 				// this.$refs.DiffScatterplot.init()
+				this.$refs.Projection.init()
 				this.$refs.SimilarityMatrix.init()
 				// this.$refs.DistHistogram.init()
-			} else if (this.selectedData == 'Graph') {
+				this.initLoad = false
+			} else if (this.selectedData == 'Graph' && this.initLoad) {
 				this.$refs.DistgraphB.init(data)
 				// this.$refs.DistFunction.init()
 				// this.$refs.DistIcicle.init()
+				this.initLoad = false
+			}
+			else{
+				this.$refs.DistgraphA.init(data)
 			}
 		},
 
@@ -285,6 +298,7 @@ export default {
 						functionsInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
+
 					this.$socket.emit('dist_group', {
 						datasets: this.$store.actual_dataset_names,
 						groupBy: this.selectedGroupBy
@@ -299,6 +313,13 @@ export default {
 						datasets: this.$store.actual_dataset_names,
 						plot: 'kde'
 					})
+
+
+					this.$socket.emit('dist_projection', {
+						datasets: this.$store.actual_dataset_names,
+						algo: 'tsne'
+					})
+	
 	
 					// this.$socket.emit('dist_scatterplot', {
 					//     datasets: this.$store.client_datasets,

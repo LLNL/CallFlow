@@ -40,6 +40,7 @@ from actions.function_list import FunctionList
 from actions.union_graph import UnionGraph
 from actions.kde_gradients import KDE_gradients
 from actions.similarity import Similarity
+from actions.run_projection import RunProjection
 
 from state import State
 from logger import log
@@ -237,6 +238,7 @@ class CallFlow:
     def read_gf(self, name, graph_type):
         state = State(name)
         dirname = os.path.abspath(os.path.join(__file__, '../../..')) + '/.callflow'
+        dataset_dirname = os.path.abspath(os.path.join(__file__, '../../..')) + '/data'
         df_filepath = dirname + '/' + name + '/filter_df.csv'
         entire_df_filepath = dirname + '/' + name + '/entire_df.csv'
         graph_filepath = dirname + '/' + name + '/filter_graph.json'
@@ -244,6 +246,7 @@ class CallFlow:
         if(graph_type != None):
             group_df_file_path = dirname + '/' + name + '/' + graph_type + '_df.csv'
             group_graph_file_path = dirname + '/' + name + '/' + graph_type + '_graph.json'
+        parameters_filepath = dataset_dirname + '/' + self.config.runName + '/'  + name + '/env_params.txt'
 
 
         with self.timer.phase('data frame'):
@@ -282,6 +285,13 @@ class CallFlow:
             state.group_df = pd.read_csv(group_df_file_path)
             # state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
 
+        state.projection_data =  {}
+        for line in open(parameters_filepath, 'r'):
+            s = 0
+            for num in line.strip().split(','):
+                split_num = num.split('=')
+                state.projection_data[split_num[0]] = split_num[1]
+
         return state
 
     def read_group_gf(self, name, graph_type):
@@ -300,6 +310,13 @@ class CallFlow:
         state.group_graph = state.group_gf.graph
         state.group_df = pd.read_csv(group_df_file_path)
         state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
+
+        state.projection_data =  {}
+        for line in open(parameters_filepath, 'r'):
+            s = 0
+            for num in line.strip().split(','):
+                split_num = num.split('=')
+                state.projection_data[split_num[0]] = split_num[1]
 
         return state
 
@@ -410,12 +427,6 @@ class CallFlow:
             return self.config
 
         elif action_name == 'init':
-            # for idx, dataset in enumerate(datasets):
-                # self.states[dataset] = self.read_gf(dataset)
-                # dataset_name = dataset['name']
-                # print(dataset)
-                # self.states[dataset] = self.read_gf(dataset, 'dist')
-
             self.setConfig()
             return self.config
 
@@ -457,18 +468,15 @@ class CallFlow:
             return ret  
 
         elif action_name == 'similarity':
-            ret = {}
-            similarities = {}
+            self.similarities = {}
             for idx, dataset in enumerate(datasets):
-                similarities[dataset] = []
+                self.similarities[dataset] = []
                 for idx_2, dataset2 in enumerate(datasets):
-                    # if(dataset != dataset2):
-                        union_similarity = Similarity(self.states[dataset2].g, self.states[dataset].g)
-                        similarities[dataset].append(union_similarity.result)
-                        # print("Similarity between union and {1}: {0}".format(union_similarity.result, dataset))
-                    # else:
-                        # similarities[dataset].append(0)
-            return similarities
+                    print(idx, idx_2)
+                    union_similarity = Similarity(self.states[dataset2].group_graph, self.states[dataset].group_graph)
+                    self.similarities[dataset].append(union_similarity.result)
+            print(self.similarities)
+            return self.similarities
         
         elif action_name == 'hierarchy':
             ret = {}
@@ -482,8 +490,11 @@ class CallFlow:
                 'datasets': action['datasets']
             })
             nx = CCT(self.states['union_graph'], action['functionsInCCT'])
-            print(nx.g.nodes())
             return nx.g 
+
+        elif action_name == 'projection':
+            result = RunProjection(self.states, self.similarities).result
+            return result.to_json(orient="columns")
 
     def displayStats(self, name):
         log.warn('==========================')

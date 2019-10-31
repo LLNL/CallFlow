@@ -183,4 +183,9 @@ body{
 	border: 2px;
 	border-color: #000;
 }
+
+.v-chip__content{
+	color: white;
+	font-size: 125%;
+}
 </style>

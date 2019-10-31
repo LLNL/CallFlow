@@ -21,6 +21,7 @@ class configFileReader():
         filename = os.path.join(dirname, filepath)
         f = open(filename, 'r').read()
         self.datasets = self.json_data(f)['datasets']  
+        self.runName = self.json_data(f)['run']
         self.paths = {}
         self.props = {}
         self.nop  = {}
@@ -31,6 +32,7 @@ class configFileReader():
         self.run()
 
     def run(self):
+
         for idx, data in enumerate(self.datasets):
             name = data['name']
             self.names.append(name)

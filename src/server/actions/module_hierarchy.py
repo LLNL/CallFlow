@@ -5,8 +5,6 @@ import utils
 from logger import log
 from ast import literal_eval as make_tuple
 
-
-
 class moduleHierarchy:
     def __init__(self, state, modFunc):
         self.graph = state.graph

@@ -171,19 +171,34 @@
 
 		<v-layout v-show="selectedMode == 'Distribution' && selectedFormat == 'Callgraph'">
 			<splitpanes id="diffgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe'">
-				<splitpanes horizontal :splitpanes-size="30">
+				<splitpanes horizontal :splitpanes-size="20">
 					<span>
-						<SimilarityMatrix ref="SimilarityMatrix"/>
+						<SimilarityMatrix ref="SimilarityMatrix" />
 					</span>
 					<span>
-						<svg id="debug"></svg>
+						<Projection ref="Projection" />
+					</span>
+					<span>
+						<Histogram ref="Histogram" />
 					</span>
 				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="70">
+				<splitpanes horizontal :splitpanes-size="60">
 					<span>
+						<v-layout class="chip-container">
+							<v-chip class="chip" chips close color="teal" label outlined clearable> {{ summaryChip }} </v-chip>
+						</v-layout>
 						<Distgraph ref="DistgraphA" />
 					</span>
 				</splitpanes>
+				<splitpanes horizontal :splitpanes-size="20">
+					<span>
+						<RunInformation ref="RunInformation"/>						
+					</span>
+					<span>
+						<Auxiliary ref="Auxiliary"/>
+					</span>
+				</splitpanes>
+
 			</splitpanes>
 			<splitpanes id="diffgraph-dashboard-2" class="default-theme" v-show="selectedData == 'Graph'">
 				<splitpanes horizontal :splitpanes-size="30">
@@ -204,18 +219,18 @@
 		</v-layout>
 
 		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Distribution'">
-				<splitpanes id="cct-dashboard">
-					<splitpanes horizontal :splitpanes-size="50">
-						<span>
-							<!-- <DiffCCT ref="DiffCCT1" id="diff-cct-1"/> -->
-						</span>
-			a
-						</span>
-					</splitpanes>	
+			<splitpanes id="cct-dashboard">
+				<splitpanes horizontal :splitpanes-size="50">
+					<span>
+						<!-- <DiffCCT ref="DiffCCT1" id="diff-cct-1"/> -->
+					</span>
+					a
+					</span>
 				</splitpanes>
-			</v-layout>
+			</splitpanes>
+		</v-layout>
 	</v-content>
-	
+
 	<v-footer id="footer" color="teal" class="white--text" app>
 		<span> Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis </span>
 		<v-spacer></v-spacer>

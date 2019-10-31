@@ -16,6 +16,7 @@ class State(object):
         self.entire_g = None
         self.map = None
         self.node_hash_map = {}
+        self.projection_data = {}
     
     def lookup_by_column(self, _hash, col_name):
         ret = []

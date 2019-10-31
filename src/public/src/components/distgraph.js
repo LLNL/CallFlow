@@ -6,50 +6,58 @@ import DistColorMap from './distgraph/colormap'
 import MiniHistograms from './distgraph/miniHistograms'
 import DistEdges from './distgraph/edges'
 import * as  d3 from 'd3'
+import EventHandler from './EventHandler.js'
+
 
 export default {
-    name: 'Distgraph',
-    template: tpl,
-    components: {
-        DistNodes,
+	name: 'Distgraph',
+	template: tpl,
+	components: {
+		DistNodes,
 		// IntermediateNodes,
 		DistEdges,
 		// MiniHistograms,
 		DistColorMap
-    },
-    props: [
-       
-    ],
-    data: () => ({
-        graph: null,
+	},
+	props: [
+
+	],
+	data: () => ({
+		graph: null,
 		id: 'distgraph-overview',
 		dashboardID: 'distgraph-dashboard',
 		nodeWidth: 50,
 		nodeScale: 1.0,
 		ySpacing: 50,
 		levelSpacing: 40,
-        margin: {
-            top: 30, right: 30, bottom: 10, left: 10
-        },
-        width: null,
-        height: null,
-        treeHeight: null,
-		data:null
-    }),
+		margin: {
+			top: 30, right: 30, bottom: 10, left: 10
+		},
+		width: null,
+		height: null,
+		treeHeight: null,
+		data: null,
+		message: "Summary Graph View",
+	}),
 
-    watch: {
+	watch: {
 
-    },
+	},
 
-    mounted() {
+	mounted() {
 		this.id = 'distgraph-overview-'
-    },
+		let self = this
+		EventHandler.$on('clear_summary_view', function () {
+			console.log("Clearing Summary view")
+			self.clear()
+		})
+	},
 
-    methods: {
-        init(data) {
+	methods: {
+		init(data) {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
-			this.width = window.innerWidth*0.7 - this.margin.left - this.margin.right
+			this.width = window.innerWidth * 0.7 - this.margin.left - this.margin.right
 			this.height = window.innerHeight - this.margin.top - this.margin.bottom - this.toolbarHeight - this.footerHeight
 			this.sankeySVG = d3.select('#' + this.id)
 				.attrs({
@@ -59,11 +67,11 @@ export default {
 				})
 
 			this.data = data
-            this.render(data)
-        },
+			this.render(data)
+		},
 
-     
-        clear() {
+
+		clear() {
 			this.$refs.DistNodes.clear()
 			this.$refs.DistEdges.clear()
 			// this.$refs.CallbackEdges.clear()
@@ -77,14 +85,13 @@ export default {
 
 			console.log("Preprocessing done.")
 			this.d3sankey = this.initSankey(this.graph)
-            console.log("Layout Calculation.")
+			console.log("Layout Calculation.")
 			// this.postProcess(this.data.nodes, this.data.links)	
-			console.log("Post-processing done.") 
+			console.log("Post-processing done.")
 			// this.graph = this.filterNodes(this.graph)
 			this.$store.graph = this.graph
 			this.$store.graph.graph.total_out = this.d3sankey.total_out
 			this.$store.graph.graph.total_in = this.d3sankey.total_in
-
 			this.$refs.DistNodes.init(this.$store.graph, this.view)
 			// // this.$refs.IntermediateNodes.init(this.data)
 			this.$refs.DistEdges.init(this.$store.graph, this.view)
@@ -109,34 +116,34 @@ export default {
 
 			return graph;
 		},
-		
-		findMaxGraph(graph){
-			let datasets = this.$store.actual_dataset_names 
-			for(const node of graph.nodes){
+
+		findMaxGraph(graph) {
+			let datasets = this.$store.actual_dataset_names
+			for (const node of graph.nodes) {
 				let obj = {
 					'name': '',
 					'time': 0,
 					'time (inc)': 0,
 				}
-				for(const dataset of datasets){
-					if(node.hasOwnProperty(dataset)){
-						if(node[dataset]['time'] > obj['time']){
+				for (const dataset of datasets) {
+					if (node.hasOwnProperty(dataset)) {
+						if (node[dataset]['time'] > obj['time']) {
 							obj['time'] = node[dataset]['time']
 						}
-						if(node[dataset]['time (inc)'] > obj['time (inc)']){
+						if (node[dataset]['time (inc)'] > obj['time (inc)']) {
 							obj['time (inc)'] = node[dataset]['time (inc)']
 						}
 						obj['name'] = node[dataset]['name'][0]
-						obj['xid'] = node[dataset]['nid'][0]	
+						obj['xid'] = node[dataset]['nid'][0]
 					}
 				}
-				for(const [key, value] of Object.entries(obj)){
+				for (const [key, value] of Object.entries(obj)) {
 					node[key] = value
 				}
 			}
 			return graph
 		},
-		
+
 		/* Link: {
 		   sourceID : int, targetID: int , target: str, source: str
 		   } */
@@ -145,13 +152,13 @@ export default {
 			for (const [idx, node] of graph.nodes.entries()) {
 				nodeMap[node.name] = idx;
 			}
-		
+
 			const links = graph.links;
 			for (const link of graph.links) {
 				if (link.source == undefined || link.target == undefined) {
 					continue;
 				}
-		
+
 				if (link.source[link.source.length - 1] == '_' || link.target[link.target.length - 1] == '_') {
 					continue;
 				}
@@ -160,7 +167,7 @@ export default {
 			}
 			return graph;
 		},
-		
+
 		calculateFlow(graph) {
 			const nodes = graph.nodes;
 			const links = graph.links;
@@ -168,7 +175,7 @@ export default {
 			const inComing = {};
 			nodes.forEach((node) => {
 				const nodeLabel = node.name;
-		
+
 				links.forEach((link) => {
 					if (nodes[link.sourceID] != undefined) {
 						const linkLabel = nodes[link.sourceID].name;
@@ -177,17 +184,17 @@ export default {
 								outGoing[linkLabel] = 0;
 								outGoing[linkLabel] = 0;
 							}
-							if(outGoing[linkLabel] != 0){
+							if (outGoing[linkLabel] != 0) {
 								outGoing[linkLabel] = Math.max(link.weight, outGoing[linkLabel])
 							}
-							else{
+							else {
 								outGoing[linkLabel] += link.weight;
 							}
 						}
 					}
-		
+
 				});
-		
+
 				links.forEach((link) => {
 					if (nodes[link.targetID] != undefined) {
 						const linkLabel = nodes[link.targetID].name;
@@ -195,59 +202,59 @@ export default {
 							if (inComing[linkLabel] == undefined) {
 								inComing[linkLabel] = 0;
 							}
-							
-							if(inComing[linkLabel] != 0) {
+
+							if (inComing[linkLabel] != 0) {
 								inComing[linkLabel] = Math.max(link.weight, inComing[linkLabel])
 							}
-							else{
+							else {
 								inComing[linkLabel] += link.weight;
 							}
 						}
 					}
-		
+
 				});
-		
+
 				if (outGoing[nodeLabel] == undefined) {
 					outGoing[nodeLabel] = 0;
 				}
-		
+
 				if (inComing[nodeLabel] == undefined) {
 					inComing[nodeLabel] = 0;
 				}
-		
+
 				node.out = outGoing[nodeLabel];
 				node.in = inComing[nodeLabel];
-		
+
 				node.inclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]);
 				node.exclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel];
 			});
-		
+
 			return graph;
 		},
-		
-		addLines(graph){
-			let datasets = this.$store.actual_dataset_names			
+
+		addLines(graph) {
+			let datasets = this.$store.actual_dataset_names
 			let count = 0
-			for(const node of graph.nodes){
+			for (const node of graph.nodes) {
 				let obj = {}
-				for(const dataset of datasets){
-					if(node.hasOwnProperty(dataset)){
-						obj[dataset] = node[dataset]['time (inc)']/node['time (inc)']
+				for (const dataset of datasets) {
+					if (node.hasOwnProperty(dataset)) {
+						obj[dataset] = node[dataset]['time (inc)'] / node['time (inc)']
 						obj['xid'] = node[dataset]['nid']
 					}
 				}
-				obj['union'] = node['union']['time (inc)']/node['time (inc)']
+				obj['union'] = node['union']['time (inc)'] / node['time (inc)']
 				node['props'] = obj
 				count += 1
 			}
 			return graph
 		},
 
-		filterNodes(graph){
+		filterNodes(graph) {
 			let nodes = []
-			for(const node of graph.nodes){
-				console.log(node, typeof(node), Object.keys(node), node['height'])
-				if(node.height > 20){
+			for (const node of graph.nodes) {
+				console.log(node, typeof (node), Object.keys(node), node['height'])
+				if (node.height > 20) {
 					nodes.push(node)
 				}
 			}
@@ -264,13 +271,13 @@ export default {
 			return graph
 		},
 
-		addEdges(graph){
+		addEdges(graph) {
 			let datasets = this.$store.actual_dataset_names
-			for(const edge of graph.edges){
+			for (const edge of graph.edges) {
 				let obj = {}
-				for(const dataset of datasets){
+				for (const dataset of datasets) {
 					obj[dataset]
-				}		
+				}
 			}
 		},
 
@@ -376,5 +383,5 @@ export default {
 				remainingNodes = nextNodes;
 			}
 		},
-    }
+	}
 }
