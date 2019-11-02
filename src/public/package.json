@@ -34,6 +34,7 @@
         "splitpanes": "^1.14.2",
         "vue": "^2.6.4",
         "vue-dropdowns": "^1.0.6",
+        "vue-material": "^1.0.0-beta-11",
         "vue-router": "^3.0.6",
         "vue-slider-component": "^3.0.32",
         "vue-socket.io": "^3.0.7",

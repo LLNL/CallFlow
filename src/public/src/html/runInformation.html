@@ -1,0 +1,21 @@
+<v-card :id="id">
+    <v-layout class="chip-container">
+        <v-chip class="chip" chips close color="teal" label outlined clearable> {{ message }} </v-chip>
+    </v-layout>
+    <template>
+        <md-table v-model="people" md-card @md-selected="onSelect">
+            <md-table-row slot="md-table-row" slot-scope="{ item }"  md-selectable="single">
+                <md-table-cell v-for="(key, idx) in item" md-label="{ idx }" :md-sort-by="getLabel(idx)"> {{ key }} </md-table-cell>
+
+                <!-- <md-table-cell md-label="Name" md-sort-by="{item}">{{ item.MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE }}</md-table-cell>
+                <md-table-cell md-label="Email" md-sort-by="email">{{ item.email }}</md-table-cell>
+                <md-table-cell md-label="Gender" md-sort-by="gender">{{ item.gender }}</md-table-cell>
+                <md-table-cell md-label="Job Title" md-sort-by="title">{{ item.title }}</md-table-cell> -->
+            </md-table-row>
+        </md-table>
+
+    </template>
+
+    <!-- <p>Selected:</p>
+        {{ selected }} -->
+</v-card>

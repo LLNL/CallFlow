@@ -432,6 +432,18 @@ class App():
             print(result)
             emit('dist_projection', result, json=True)
             
+        @sockets.on('run_information', namespace='/')
+        def run_information(data):
+            if self.debug:
+                self.print("[Request] Run information: ", data)
+
+            result = self.callflow.update_dist({
+                "name": "run-information",
+                "datasets": data['datasets'],
+            })
+            print(result)
+            emit('run_information', json.dumps(result), json=True)
+
     def create_server(self):
         app.debug = True
         app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), '')

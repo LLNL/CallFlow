@@ -31,9 +31,9 @@ class Similarity:
         D = diags(sum(A).toarray(), [0])
         # print("Diag : ", D)
         c1 = trace(D.toarray()) + 2
-        print("c1 : ", c1)
+        # print("c1 : ", c1)
         c2 = trace(square(D).toarray()) - 1
-        print("c2 : ", c2)
+        # print("c2 : ", c2)
         h_h = sqrt((-c1 + sqrt(c1 * c1 + 4 * c2)) / (8 * c2))
         # print("h_h : ", h_h)
         a = 4 * h_h * h_h / (1 - 4 * h_h * h_h)

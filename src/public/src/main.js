@@ -5,6 +5,9 @@ import BootstrapVue from 'bootstrap-vue'
 import App from './App'
 import VueSocketIO from 'vue-socket.io';
 import store from './store'
+import VueMaterial from 'vue-material'
+import 'vue-material/dist/vue-material.min.css'
+import 'vue-material/dist/theme/default.css'
 
 let socket = new VueSocketIO({
   debug: true,
@@ -22,6 +25,7 @@ Vue.use(BootstrapVue)
 Vue.use(socket)
 Vue.use(Router)
 Vue.use(Vuetify)
+Vue.use(VueMaterial)
 
 import 'vuetify/dist/vuetify.min.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'

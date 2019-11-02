@@ -21,6 +21,8 @@ import Distgraph from './distgraph'
 import SimilarityMatrix from './similarityMatrix'
 import Projection from './projection'
 
+import RunInformation from './runInformation'
+
 import io from 'socket.io-client';
 
 
@@ -38,7 +40,8 @@ export default {
 		Icicle,
 		Distgraph,
 		SimilarityMatrix,
-		Projection
+		Projection,
+		RunInformation
 	},
 	data: () => ({
 		appName: 'Callflow',
@@ -185,6 +188,7 @@ export default {
 				// this.$refs.DiffScatterplot.init()
 				this.$refs.Projection.init()
 				this.$refs.SimilarityMatrix.init()
+				// this.$refs.RunInformation.init()
 				// this.$refs.DistHistogram.init()
 				this.initLoad = false
 			} else if (this.selectedData == 'Graph' && this.initLoad) {
@@ -209,6 +213,7 @@ export default {
 			console.log("Dist cct data: ", data)
 			this.$refs.CCT.init(data['union'], '2')
 		},
+
 		
 		disconnect(){
 			console.log('Disconnected.')
@@ -299,6 +304,10 @@ export default {
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
 
+					this.$socket.emit('run_information', {
+						datasets: this.$store.actual_dataset_names,
+					})
+
 					this.$socket.emit('dist_group', {
 						datasets: this.$store.actual_dataset_names,
 						groupBy: this.selectedGroupBy
@@ -314,12 +323,13 @@ export default {
 						plot: 'kde'
 					})
 
-
+				
 					this.$socket.emit('dist_projection', {
 						datasets: this.$store.actual_dataset_names,
 						algo: 'tsne'
 					})
-	
+
+					
 	
 					// this.$socket.emit('dist_scatterplot', {
 					//     datasets: this.$store.client_datasets,

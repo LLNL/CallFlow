@@ -495,6 +495,13 @@ class CallFlow:
         elif action_name == 'projection':
             result = RunProjection(self.states, self.similarities).result
             return result.to_json(orient="columns")
+            
+        elif action_name == 'run-information':
+            ret = []
+            for idx, state in enumerate(self.states):
+                self.states[state].projection_data['dataset'] = state
+                ret.append(self.states[state].projection_data)
+            return ret
 
     def displayStats(self, name):
         log.warn('==========================')
