@@ -1,17 +1,110 @@
-<v-card :id="id">
+<v-card class="scroll" :id="id">
     <v-layout class="chip-container">
         <v-chip class="chip" chips close color="teal" label outlined clearable> {{ message }} </v-chip>
     </v-layout>
     <template>
         <md-table v-model="people" md-card @md-selected="onSelect">
-            <md-table-row slot="md-table-row" slot-scope="{ item }"  md-selectable="single">
-                <md-table-cell v-for="(key, idx) in item" md-label="{ idx }" :md-sort-by="getLabel(idx)"> {{ key }} </md-table-cell>
+            <md-table-row slot="md-table-row" slot-scope="{ item }" md-selectable="single">
+                <!-- <md-table-cell :md-label="dataset" :md-sort-by="dataset"> {{ dataset(labels) }} </md-table-cell> -->
+                <!-- <md-table-cell v-for="(key, idx) in item" :md-label="changeText(idx)" :md-sort-by="getLabel(idx)"> {{ key }} </md-table-cell> -->
 
-                <!-- <md-table-cell md-label="Name" md-sort-by="{item}">{{ item.MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE }}</md-table-cell>
-                <md-table-cell md-label="Email" md-sort-by="email">{{ item.email }}</md-table-cell>
-                <md-table-cell md-label="Gender" md-sort-by="gender">{{ item.gender }}</md-table-cell>
+                <md-table-cell md-label="dataset" md-sort-by="dataset">{{ item.dataset }}</md-table-cell>
+                <md-table-cell md-label="SMP_BARRIER" md-sort-by="MPIR_CVAR_ENABLE_SMP_BARRIER">
+                    {{ item.MPIR_CVAR_ENABLE_SMP_BARRIER }}</md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE"
+                    md-label="MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE">{{ item.MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE"
+                    md-label="MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE">
+                    {{ item.MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE"
+                    md-label="MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE">
+                    {{ item.MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_REDUCE_SHORT_MSG_SIZE" 
+                    md-label="MPIR_CVAR_REDUCE_SHORT_MSG_SIZE">
+                    {{ item.MPIR_CVAR_REDUCE_SHORT_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ENABLE_SMP_REDUCE" 
+                    md-label="MPIR_CVAR_ENABLE_SMP_REDUCE">
+                    {{ item.MPIR_CVAR_ENABLE_SMP_REDUCE }}</md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE"
+                    md-label="MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE">
+                    {{ item.MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_GATHERV_INTER_SSEND_MIN_PROCS"
+                    md-label="MPIR_CVAR_GATHERV_INTER_SSEND_MIN_PROCS">
+                    {{ item.MPIR_CVAR_GATHERV_INTER_SSEND_MIN_PROCS }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_BCAST_MIN_PROCS" 
+                    md-label="MPIR_CVAR_BCAST_MIN_PROCS">
+                    {{ item.MPIR_CVAR_BCAST_MIN_PROCS }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_BCAST_SHORT_MSG_SIZE"
+                    md-label="MPIR_CVAR_BCAST_SHORT_MSG_SIZE">
+                    {{ item.MPIR_CVAR_BCAST_SHORT_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_BCAST_LONG_MSG_SIZE" 
+                    md-label="MPIR_CVAR_BCAST_LONG_MSG_SIZE">
+                    {{ item.MPIR_CVAR_BCAST_LONG_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ENABLE_SMP_BCAST" 
+                    md-label="MPIR_CVAR_ENABLE_SMP_BCAST">
+                    {{ item.MPIR_CVAR_ENABLE_SMP_BCAST }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE"
+                    md-label="MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE">
+                    {{ item.MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE"
+                    md-label="MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE">
+                    {{ item.MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE"
+                    md-label="MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE">
+                    {{ item.MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE"
+                    md-label="MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE">
+                    {{ item.MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLTOALL_THROTTLE" 
+                    md-label="MPIR_CVAR_ALLTOALL_THROTTLE">
+                    {{ item.MPIR_CVAR_ALLTOALL_THROTTLE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE"
+                    md-label="MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE">
+                    {{ item.MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE"
+                    md-label="MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE">
+                    {{ item.MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE}}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ENABLE_SMP_COLLECTIVES"
+                    md-label="MPIR_CVAR_ENABLE_SMP_COLLECTIVES">
+                    {{ item.MPIR_CVAR_ENABLE_SMP_COLLECTIVES }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ENABLE_SMP_ALLREDUCE" 
+                    md-label="MPIR_CVAR_ENABLE_SMP_ALLREDUCE">
+                    {{ item.MPIR_CVAR_ENABLE_SMP_ALLREDUCE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE"
+                    md-label="MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE">
+                    {{ item.MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_GATHER_VSMALL_MSG_SIZE"
+                    md-label="MPIR_CVAR_GATHER_VSMALL_MSG_SIZE">
+                    {{ item.MPIR_CVAR_GATHER_VSMALL_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE"
+                    md-label="MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE">
+                    {{ item.MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE }}
+                </md-table-cell>
+
+                <!-- <md-table-cell md-label="Gender" md-sort-by="gender">{{ item.gender }}</md-table-cell>
                 <md-table-cell md-label="Job Title" md-sort-by="title">{{ item.title }}</md-table-cell> -->
-            </md-table-row>
+            </md-table-row> 
         </md-table>
 
     </template>

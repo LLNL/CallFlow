@@ -68,7 +68,8 @@ class CallFlow:
         # Note: graph is always updated.
         # Note: map -> not sure if it can be used.
         self.timer = Timer()
-        self.states = self.pipeline(self.config.names)
+        dataset_names = self.config.dataset_names
+        self.states = self.pipeline(dataset_names)
 
     def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
         if self.reProcess:
@@ -297,8 +298,10 @@ class CallFlow:
     def read_group_gf(self, name, graph_type):
         state = State(name)
         dirname = self.config.callflow_dir
+        dataset_dirname = os.path.abspath(os.path.join(__file__, '../../..')) + '/data'
         group_df_file_path = dirname + '/' + name + '/' + graph_type + '_df.csv'
-        group_graph_file_path = dirname + '/' + name + '/' + graph_type + '_graph.json'
+        group_graph_file_path = dirname + '/' + name + '/' + 'group' + '_graph.json'
+        parameters_filepath = dataset_dirname + '/' + self.config.runName + '/'  + name + '/env_params.txt'
 
         with self.timer.phase('Read {0} dataframe'.format(graph_type)):
             with open(group_graph_file_path, 'r') as groupGraphFile:
@@ -408,7 +411,8 @@ class CallFlow:
 
     def update_dist(self, action):
         action_name = action["name"]
-        datasets = action['datasets']
+        print("Action: ", action_name)
+        datasets = self.config.dataset_names
 
         if action_name == 'init_dist':
             self.setConfig()
@@ -417,16 +421,20 @@ class CallFlow:
                 path_type = 'group_path'
             elif(action['groupBy'] == 'name'):
                 path_type = 'path'
-    
+            print('Called')
             for idx, dataset in enumerate(datasets):
                 group_state = self.read_group_gf(dataset, 'group')
                 graph = DistGraph(group_state, path_type, True, action['groupBy'])
                 self.states[dataset].graph = graph.g
-                self.states[dataset].df = graph.df
+                self.states[dataset].df = group_state.group_df
                 self.write_group_gf(self.states[dataset], dataset, "dist", True)
             return self.config
 
         elif action_name == 'init':
+            for idx, dataset in enumerate(datasets):
+                dist_state = self.read_group_gf(dataset, 'dist')
+                self.states[dataset].graph = dist_state.group_graph
+                self.states[dataset].df = dist_state.group_df
             self.setConfig()
             return self.config
 
@@ -434,8 +442,10 @@ class CallFlow:
             u_graph = UnionGraph()
             u_df = pd.DataFrame()
             for idx, dataset in enumerate(datasets):
+                print('Columns', self.states[dataset].df.columns)
                 u_graph.unionize(self.states[dataset].group_graph, dataset)
-                u_df = pd.concat([u_df, self.states[dataset].df]).drop_duplicates()
+                u_df = pd.concat([u_df, self.states[dataset].df])#.drop_duplicates()
+            print(u_df.columns)
             u_graph.add_union_node_attributes()
             u_graph.add_edge_attributes()
             self.states['union_graph'] = State('union_graph')
@@ -472,20 +482,19 @@ class CallFlow:
             for idx, dataset in enumerate(datasets):
                 self.similarities[dataset] = []
                 for idx_2, dataset2 in enumerate(datasets):
-                    print(idx, idx_2)
                     union_similarity = Similarity(self.states[dataset2].group_graph, self.states[dataset].group_graph)
                     self.similarities[dataset].append(union_similarity.result)
             print(self.similarities)
             return self.similarities
         
         elif action_name == 'hierarchy':
-            ret = {}
+            print(self.states)
             mH = moduleHierarchyDist(self.states['union_graph'], action["module"])
             return mH.result
 
         elif action_name == "cct":
             self.update_dist({
-                'name':'group',
+                'name': 'group',
                 "groupBy": 'name',
                 'datasets': action['datasets']
             })

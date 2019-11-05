@@ -19,12 +19,18 @@ from sklearn.datasets import load_digits
 from sklearn.preprocessing import scale
 from .similarity import Similarity
 from sklearn import preprocessing
-from actions.kmeans import ProgKMeans
+from sklearn.cluster import KMeans
+from actions.algorithm.k_medoids import KMedoids
+from actions.algorithm.prog_kmeans import ProgKMeans
 
 class RunProjection:
     def __init__(self, states, similarities):
         self.similarities = similarities
         self.states = states
+        self.projection = 'MDS'
+        # self.clustering = 'k_medoids'
+        self.clustering = 'k_means'
+        self.n_cluster = 3
         self.result = self.run()
 
     def add_df_params(self, state):
@@ -45,19 +51,43 @@ class RunProjection:
         for idx, state in enumerate(self.states):
             if(state != 'union_graph'):
                 row_list.append(self.states[state].projection_data)
+
         df = pd.DataFrame(row_list)
+
+        # TODO: Remove all string columns from the dataframe.
+        if 'dataset' in df.columns:
+            print('Removing {0} column from the dataframe'.format('dataset'))
+            df = df.drop(columns = ['dataset'])
         x = df.values #returns a numpy array
+       
+        # Scale the values to value between 0 to 1
         min_max_scaler = preprocessing.MinMaxScaler()
         x_scaled = min_max_scaler.fit_transform(x)
         df = pd.DataFrame(x_scaled)
         X = np.vstack([df.values.tolist()])
-        RS = 20150101
-        proj = TSNE(random_state=RS).fit_transform(X)
+        
+        random_number = 20150101
+        if self.projection == 'MDS':
+            proj = MDS(random_state=random_number).fit_transform(X)
+    
+        elif self.projection == 'TSNE':
+            proj = TSNE(random_state=random_number).fit_transform(X)
+    
         datasets = [key for key in self.states.keys() if key != 'union_graph']
         ret = pd.DataFrame(proj, columns=list('xy'))
         ret['dataset'] = datasets
-        self.clustering = ProgKMeans(n_clusters=3)
-        self.clustering.progressive_fit(X, latency_limit_in_msec=100)
-        ret['label'] = self.clustering.predict(X).tolist()
+
+        if self.clustering == 'prog_k_means':
+            self.clusters = ProgKMeans(n_clusters=self.n_cluster)
+            self.clusters.progressive_fit(X, latency_limit_in_msec=100)
+            ret['label'] = self.clusters.predict(X).tolist()
+
+        elif self.clustering == 'k_medoids':
+            self.clusters = KMedoids(n_cluster=self.n_cluster)
+            ret['label'] = self.clusters.fit(X)
+        elif self.clustering == 'k_means':
+            self.clusters = KMeans(n_clusters=self.n_cluster, random_state=random_number)
+            ret['label'] = self.clusters.fit(X).labels_
+        
         print(ret)
         return ret

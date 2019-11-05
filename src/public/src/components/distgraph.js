@@ -3,10 +3,12 @@ import Sankey from './distgraph/sankey'
 import DistNodes from './distgraph/nodes'
 import DistColorMap from './distgraph/colormap'
 // import IntermediateNodes from './callgraph/intermediateNodes'
-import MiniHistograms from './distgraph/miniHistograms'
+import MiniHistograms from './callgraph/miniHistograms'
 import DistEdges from './distgraph/edges'
+import Dataset from './distgraph/dataset.js'
 import * as  d3 from 'd3'
 import EventHandler from './EventHandler.js'
+
 
 
 export default {
@@ -17,7 +19,8 @@ export default {
 		// IntermediateNodes,
 		DistEdges,
 		// MiniHistograms,
-		DistColorMap
+		DistColorMap,
+		Dataset
 	},
 	props: [
 
@@ -72,6 +75,7 @@ export default {
 
 
 		clear() {
+			// this.$refs.Dataset.clear()
 			this.$refs.DistNodes.clear()
 			this.$refs.DistEdges.clear()
 			// this.$refs.CallbackEdges.clear()
@@ -93,11 +97,11 @@ export default {
 			this.$store.graph.graph.total_out = this.d3sankey.total_out
 			this.$store.graph.graph.total_in = this.d3sankey.total_in
 			this.$refs.DistNodes.init(this.$store.graph, this.view)
-			// // this.$refs.IntermediateNodes.init(this.data)
+			// this.$refs.IntermediateNodes.init(this.data)
 			this.$refs.DistEdges.init(this.$store.graph, this.view)
 			// this.$refs.DistColorMap.init()
-			// // this.$refs.CallbackEdges.init(this.data, this.view)
-			// this.$refs.MiniHistograms.init(this.graph, this.view)
+			// this.$refs.CallbackEdges.init(this.data, this.view)
+			// this.$refs.MiniHistograms.init(this.$store.graph, this.view)
 
 		},
 
@@ -113,7 +117,6 @@ export default {
 			graph = this.addLinkID(graph)
 			graph = this.calculateFlow(graph)
 			console.log("Graph after preprocessing: ", graph)
-
 			return graph;
 		},
 
@@ -253,7 +256,6 @@ export default {
 		filterNodes(graph) {
 			let nodes = []
 			for (const node of graph.nodes) {
-				console.log(node, typeof (node), Object.keys(node), node['height'])
 				if (node.height > 20) {
 					nodes.push(node)
 				}

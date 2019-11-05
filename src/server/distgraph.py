@@ -11,6 +11,7 @@ class DistGraph(nx.Graph):
         self.path_name = path_name
         self.graph = self.state.group_graph
         self.df = self.state.group_df
+        print('Dist graph dataframe columns: ', self.df.columns)
         self.root = utils.lookup_with_name(self.df, self.graph.roots[0].callpath[(-1)])['vis_node_name'][0]
         self.group_by = group_by
         self.callbacks = []

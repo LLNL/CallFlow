@@ -368,7 +368,6 @@ export default function Sankey() {
                     });
                     node.parY = nodeHeight;
 
-
                     node.level = level[node.id]
 
                     // Sum the heights of nodes on top of the current node. 
@@ -431,8 +430,9 @@ export default function Sankey() {
                     target_max_weight = Math.max(target_max_weight, target_link_weight)
                     link.height[datasets[i]] = target_link_weight * scale * minNodeScale
                 }
-                if(link)
-                link.proportion =  (link.weight / total_out[link.target.level]) 
+                console.log(link.weight, total_out[link.target.level])
+                link.source_proportion = link.weight / link.source.value 
+                link.target_proportion = link.weight / link.target.value
                 console.log(link.weight, link.source.level)
                 console.log(link.source.name, link.target.name, link.proportion)
                 link.height['union'] = target_max_weight * scale * minNodeScale//* proportion

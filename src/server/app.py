@@ -68,7 +68,8 @@ class App():
             if self.debug:
                 self.print('[Request] Load the graphframe for client')
             groupBy = 'module'
-            datasets = self.config.names
+            print(self.config.dataset_names)
+            datasets = self.config.dataset_names
 
             self.callflow.update_dist({
                 'name': 'init',
@@ -383,6 +384,25 @@ class App():
 
             emit('dist_group', result, json=True)
 
+        @sockets.on('dist_group_highlight', namespace='/')
+        def dist(data):
+            result = {}
+            if self.debug:
+                self.print('[Request] Dist the dataset.', data)
+            datasets = data['datasets']
+            groupBy = data['groupBy'].lower()
+            nx_graph = self.callflow.update_dist({
+                "name": 'group',
+                "groupBy": groupBy,
+                "datasets": datasets
+            })            
+            result = json_graph.node_link_data(nx_graph)
+            adjList = nx.adjacency_matrix(nx_graph).todense()
+            # result['adj_matrix'] = json.dumps({'test': adjList}, cls=NDArrayEncoder, indent=4)
+
+            emit('dist_group_highlight', result, json=True)
+
+
 
         @sockets.on('dist_gradients', namespace='/')
         def gradients(data):
@@ -417,6 +437,7 @@ class App():
                 "datasets": data['datasets'],
                 "module": data['module']
             })
+            print(result)
             emit('dist_hierarchy', result, json=True)
 
         @sockets.on('dist_projection', namespace='/')
@@ -429,7 +450,6 @@ class App():
                 "datasets": data['datasets'],
                 "algo": data['algo']
             })
-            print(result)
             emit('dist_projection', result, json=True)
             
         @sockets.on('run_information', namespace='/')
@@ -441,7 +461,6 @@ class App():
                 "name": "run-information",
                 "datasets": data['datasets'],
             })
-            print(result)
             emit('run_information', json.dumps(result), json=True)
 
     def create_server(self):

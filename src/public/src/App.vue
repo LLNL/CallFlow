@@ -11,6 +11,14 @@ export default {
 </script>
 
 <style>
+#toolbar{
+	padding: 0px 0px 0px;
+}
+
+#toolbar > .v-toolbar__content{
+	height: 54px !important;
+}
+
 #vis {
   border: 2px solid #e1e1e1;
 }
@@ -52,7 +60,7 @@ export default {
 }
 
 .selected{
-    stroke: red;
+    stroke: #009688;
     stroke-width: 5px;
 }
 
@@ -187,5 +195,21 @@ body{
 .v-chip__content{
 	color: white;
 	font-size: 125%;
+}
+
+.scroll {
+    overflow-y: auto;
+}
+
+/* Lasso CSS*/
+.drawn {
+  fill: rgba(255, 255, 255, 0.5);
+  stroke: #009688;
+  stroke-width: 1.5px;
+}
+
+.origin {
+  fill: #009688;
+  opacity: 0.5;
 }
 </style>

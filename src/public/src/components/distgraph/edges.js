@@ -65,11 +65,10 @@ export default {
                     this.drawTopEdges('union')
                 }
             }
-
-            this.drawEdgeLabels()
         },
 
         initEdges(dataset) {
+            let self = this
             this.edges.selectAll('#dist-edge-' + dataset)
                 .data(this.links)
                 .enter().append('path')
@@ -121,12 +120,10 @@ export default {
                 .style('fill-opacity', (d) => {
                     return d.number_of_runs / this.$store.datasets.length
                 })
-                .on("mouseover", function () {
+                .on("mouseover", function (d) {
                     d3.select(this).style("stroke-opacity", "1.0")
-                    // d3.select(this).style("fill-opacity", "1.0")
-                })
-                .on("mouseout", function () {
-                    // d3.select(this).style("fill-opacity", "0.7")
+                    self.clearEdgeLabels()
+                    self.drawEdgeLabels(d)
                 })
                 .sort(function (a, b) {
                     return b.dy - a.dy;
@@ -265,11 +262,11 @@ export default {
 
 
                     let By0 = 0, By1 = 0;
-                    d.source_adjust = d.height['union']                    
+                    d.source_adjust = d.height['union']
                     d.target_adjust = d.height['union']
 
-                    By0 = d.source.y + this.$parent.ySpacing + d.sy + d.height['union'] * d.proportion
-                    By1 = d.target.y + this.$parent.ySpacing + d.ty + d.height['union'] * d.proportion //(d.target.union['time (inc)']/d.max_height) * d.target.scale
+                    By0 = d.source.y + this.$parent.ySpacing + d.sy + d.height['union'] * d.source_proportion
+                    By1 = d.target.y + this.$parent.ySpacing + d.ty + d.height['union'] * d.target_proportion //(d.target.union['time (inc)']/d.max_height) * d.target.scale
 
                     const rightMoveDown = By1 - Ty1
                     return `M${Tx0},${Ty0
@@ -284,6 +281,7 @@ export default {
             // .style('fill', (d) => {
             //     return this.$store.color.datasetColor[client_dataset_name]
             // })
+
         },
 
         // drawMiddleEdges2() {
@@ -356,19 +354,57 @@ export default {
 
         clear() {
             // for (let i = 0; i < this.$store.datasets.length; i += 1) {
-                // this.edges.selectAll('.dist-edge-' + dataset).remove()
+            // this.edges.selectAll('.dist-edge-' + dataset).remove()
             // }
             this.edges.selectAll('.dist-edge').remove()
             this.edges.selectAll('.edgelabel').remove()
             this.edges.selectAll('.edgelabelText').remove()
         },
+        
+        clearEdgeLabels(){
+            d3.selectAll('edgelabelhover').remove()
+            d3.selectAll('edgelabelTexthover').remove()
+        },
 
-        drawEdgeLabels() {
+        drawEdgeLabels(d) {
+            this.labelContainer = this.edges.selectAll('label')
+                .data([d])
+                .enter()
+                .append('g')
+
+            this.labelContainer
+                .append('circle')
+                .attrs({
+                    'class': 'edgelabelhover',
+                    'id': 'label-' + d.client_idx,
+                    'r': 15,
+                    'stroke': 'black',
+                    'fill': 'white',
+                    'cx': d.target.x - 20,
+                    'cy': d.target.y + this.$parent.ySpacing + d.target.height / 2,
+                })
+
+            this.labelContainer.append("text")
+                .attrs({
+                    "x": d.target.x - 20,
+                    "dx": -5,
+                    "dy": +5,
+                    "y": d.target.y + this.$parent.ySpacing + d.target.height / 2,
+                    "class": 'edgelabelTexthover'
+                })
+                .text((d, i) => d.number_of_runs)
+        },
+
+        clearAllEdgeLabels(){
+            d3.selectAll('edgelabel').remove()
+            d3.selectAll('edgelabelText').remove()
+        },
+
+        drawAllEdgeLabels() {
             this.labelContainer = this.edges.selectAll('label')
                 .data(this.links)
                 .enter()
                 .append('g')
-
 
             this.labelContainer
                 .append('circle')

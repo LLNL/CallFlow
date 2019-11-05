@@ -22,6 +22,7 @@ import SimilarityMatrix from './similarityMatrix'
 import Projection from './projection'
 
 import RunInformation from './runInformation'
+import AuxiliaryFunction from './auxiliaryFunction'
 
 import io from 'socket.io-client';
 
@@ -41,7 +42,8 @@ export default {
 		Distgraph,
 		SimilarityMatrix,
 		Projection,
-		RunInformation
+		RunInformation,
+		AuxiliaryFunction
 	},
 	data: () => ({
 		appName: 'Callflow',
@@ -53,7 +55,7 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'Callgraph',
+		selectedFormat: 'CCT',
 		datasets: [],
 		selectedDataset: '',
 		selectedDataset2: '',
@@ -188,6 +190,7 @@ export default {
 				// this.$refs.DiffScatterplot.init()
 				this.$refs.Projection.init()
 				this.$refs.SimilarityMatrix.init()
+				this.$refs.AuxiliaryFunction.init()
 				// this.$refs.RunInformation.init()
 				// this.$refs.DistHistogram.init()
 				this.initLoad = false

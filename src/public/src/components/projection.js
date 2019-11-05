@@ -34,7 +34,7 @@ export default {
         let self = this
         EventHandler.$on('highlight_datasets', (datasets) => {
             console.log("[Interaction] Highlighting the datasets :", datasets)
-            self.highlightNodes(datasets)
+            self.highlight(datasets)
         })
     },
     methods: {
@@ -45,7 +45,7 @@ export default {
             // let chipContainerHeight = document.getElementById('chip-container').clientHeight
 
             this.width = visContainer.clientWidth
-            this.height = (dashboardHeight - toolbarHeight) / 3
+            this.height = (dashboardHeight - toolbarHeight) / 3 - 40
             this.padding = { left: 50, top: 0, right: 50, bottom: 30 }
             this.x = d3.scaleLinear().range([0, this.width]);
             this.y = d3.scaleLinear().range([this.height, 0]);
@@ -64,7 +64,7 @@ export default {
             this.t = this.svg
                 .transition()
                 .duration(750);
-            
+
             this.axis()
         },
 
@@ -140,9 +140,41 @@ export default {
             return ret
         },
 
+        preprocess_2(data) {
+            let ret = {}
+            this.numberOfPoints = Object.entries(data['x']).length
+
+            for (let id = 0; id < this.numberOfPoints; id += 1) {
+                let dataset = data['dataset'][id]
+                ret[dataset] = []
+                ret[dataset].push(data['x'][id])
+                ret[dataset].push(data['y'][id])
+                ret[dataset].push(data['dataset'][id])
+                ret[dataset].push(id)
+                ret[dataset].push(data['label'][id])
+
+                let x = data['x'][id]
+                let y = data['y'][id]
+
+                if (x < this.xMin) {
+                    this.xMin = x
+                }
+                if (x > this.xMax) {
+                    this.xMax = x
+                }
+                if (y < this.yMin) {
+                    this.yMin = y
+                }
+                if (y > this.yMax) {
+                    this.yMax = y
+                }
+            }
+            return ret
+        },
+
         visualize(ts) {
-            this.ts = ts
-            this.data = this.preprocess(ts)
+            this.$store.projection = this.preprocess(ts)
+            this.$store.projection_results = this.preprocess_2(ts)
             this.x.domain([2.0 * this.xMin, 2.0 * this.xMax])
             this.y.domain([2.0 * this.yMin, 2.0 * this.yMax])
 
@@ -156,7 +188,7 @@ export default {
             d3.selectAll('.lasso' + this.id).remove()
             let self = this
             this.circles = this.svg.selectAll('circle')
-                .data(this.data)
+                .data(this.$store.projection)
                 .enter()
                 .append('circle')
                 .attrs({
@@ -173,14 +205,22 @@ export default {
                     cx: (d, i) => { return self.x(d[0]) },
                     cy: (d) => { return self.y(d[1]) },
                 })
-                // .call(this.d3zoom)
                 .on('click', (d) => {
+                    let dataset_name = d[2]
+                    this.$socket.emit('dist_group_highlight', {
+                        datasets: [dataset_name],
+                        groupBy: this.$store.selectedGroupBy
+                    })
+                    this.select(dataset_name)
+                })
+                .on('dblclick', (d) => {
                     let dataset_name = d[2]
                     EventHandler.$emit('clear_summary_view')
                     this.$socket.emit('dist_group', {
                         datasets: [dataset_name],
-						groupBy: this.$store.selectedGroupBy
-					})
+                        groupBy: this.$store.selectedGroupBy
+                    })
+                    this.select(dataset_name)
                 })
             this.lasso = lasso()
                 .className('lasso' + this.id)
@@ -206,8 +246,7 @@ export default {
 
             this.lasso.items()
                 .attr("r", (d) => {
-                    if (Object.entries(this.ts).length < 16) return 6.0
-                    else return 4.5
+                    return 4.5
                 }) // reset size
                 .classed("not_possible", true)
                 .classed("selected", false);
@@ -231,17 +270,7 @@ export default {
                     opacity: 0.3,
                 })
 
-            d3.selectAll('.liveMatrix')
-                .attrs({
-                    opacity: 0.5
-                })
-
-            d3.selectAll('.live-rect')
-                .style('fill-opacity', d => {
-                    return (d.weightAggr) / (this.$store.liveMax)
-                })
-
-            this.selectedIds = []
+            this.selectedDatasets = []
             // Reset the color of all dots
             this.lasso.items()
                 .classed("not_possible", false)
@@ -251,10 +280,9 @@ export default {
             this.lasso.selectedItems()
                 .classed("selected", true)
                 .attr("r", (d) => {
-                    if (Object.entries(this.ts).length < 16) return 6.0
-                    else return 6.0
+                    return 6.0
                 })
-                .attr("id", (d) => { this.selectedIds.push(d[3]) })
+                .attr("id", (d) => { this.selectedDatasets.push(d[2]) })
                 .attr("opacity", 1)
 
             // Reset the style of the not selected dots
@@ -262,37 +290,11 @@ export default {
                 .attr("r", 4.5)
                 .attr("opacity", 0.5);
 
-            this.$parent.selectedIds = this.selectedIds
-            this.$store.selectedIds = this.selectedIds
-            for (let i = 0; i < this.selectedIds.length - 1; i += 1) {
-                d3.selectAll('#dot' + this.selectedIds[i])
-                    .classed('selected', true)
-                    .attrs({
-                        opacity: 1,
-                        r: 6.0
-                    })
-
-                d3.selectAll('#clusterrect-' + this.selectedIds[i])
-                    .attrs({
-                        opacity: 1
-                    })
-                let peid = Math.floor(this.selectedIds[i] / 16)
-                // d3.selectAll('#live-rect-pe-' + peid)
-                //     .style('fill-opacity', d => {
-                //         return Math.pow(d.weight/this.$store.liveMax, 0.33)
-                //     })
-                //     // .style('fill', 'red')
-
-                d3.selectAll('.live-rect-kp-' + this.selectedIds[i])
-                    .attr('fill', (d, i) => {
-                        if (d.peid == peid) {
-                            return d3.interpolateGreys(Math.pow(d.weight / this.$store.liveMax, 0.33))
-                        }
-                        else
-                            return d3.interpolateGreys(0)
-                    })
-            }
-
+            EventHandler.$emit('clear_summary_view')
+            this.$socket.emit('dist_group', {
+                datasets: this.selectedDatasets,
+                groupBy: this.$store.selectedGroupBy
+            })
         },
 
         zoom() {
@@ -338,26 +340,6 @@ export default {
                 .attr("cy", function (d) { return self.y(d['PC1'][0]) })
         },
 
-        //==================================
-        // Not used
-        //==================================
-        findIdsInRegion(xMin, xMax, yMin, yMax) {
-            let ret = []
-            console.log(xMin, xMax, yMin, yMax)
-            xMin = this.x(xMin)
-            xMax = this.x(xMax)
-            yMin = this.y(yMin)
-            yMax = this.y(yMax)
-            for (let [idx, res] of Object.entries(this.ts)) {
-                let xVal = res['PC0'][0]
-                let yVal = res['PC1'][0]
-                if (xVal >= xMin && xVal <= xMax && yVal >= yMin && yVal <= yMax) {
-                    ret.push(idx)
-                }
-            }
-            return ret
-        },
-
         brushended() {
             let idleDelay = 350
             let s = d3.event.selection
@@ -396,7 +378,7 @@ export default {
             this.idleTimeout = null;
         },
 
-        highlightDatasets(){
+        highlight(dataset) {
             this.circles = this.svg.selectAll('circle')
                 .data(this.data)
                 .enter()
@@ -404,20 +386,18 @@ export default {
                 .attrs({
                     class: (d) => { return 'dot' + ' circle' + this.id },
                     id: (d) => { return 'dot' + d[3] },
-                    // stroke: (d) => { return this.$store.colorset[d[2]] },
+                    stroke: (d) => { return this.$store.color.highlight },
                     r: (d) => {
                         if (Object.entries(ts).length < 16) return 6.0
                         else return 4.5
                     },
-                    'stroke-width': 1.0,
+                    'stroke-width': 3.0,
                     // fill: (d) => { return this.$store.colorset[d[2]] },
-                    fill: (d) => { return '#252525' },
+                    fill: (d) => { return '#009688' },
                     id: (d) => { return 'dot' + d[3] },
                     cx: (d, i) => { return self.x(d[0]) },
                     cy: (d) => { return self.y(d[1]) },
                 })
-
-            // d3.se
         }
     },
 }

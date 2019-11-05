@@ -143,7 +143,7 @@ export default {
                 .adj(this.similarityMatrix)
 
             let matrixData = adjacencyMatrix()
-            console.log(matrixData)
+            let self = this
             
             if (!Number.isNaN(matrixData[0].x)) {
                 this.max_weight = 0
@@ -192,6 +192,9 @@ export default {
                     .style('fill-opacity', d => {
                         return 1
                     })
+                    .on('click', (d) => {
+                        self.highlight(d)
+                    })
 
                 d3.select('.KpMatrix')
                     .call(adjacencyMatrix.xAxis);
@@ -200,6 +203,10 @@ export default {
                     .call(adjacencyMatrix.yAxis);
             }
 
+        },
+
+        highlight(dataset){
+            console.log(dataset)
         },
 
         clear() {

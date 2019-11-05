@@ -7,7 +7,7 @@ export default {
         selected: {},
         id: '',
         people: [],
-        message: "Run Information",
+        message: "Run Information View",
     }),
 
     sockets: {
@@ -37,6 +37,15 @@ export default {
             this.labels = Object.keys(data[0])
             console.log(this.labels)
             this.people = data
+        },
+
+        dataset(idx){
+            return this.labels[idx]
+        },
+
+        changeText(idx){
+            console.log(idx)
+            return this.labels[idx]
         }
     }
 }

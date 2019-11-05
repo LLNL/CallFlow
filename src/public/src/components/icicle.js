@@ -87,7 +87,7 @@ export default {
 			this.footerHeight = document.getElementById('footer').clientHeight
 			this.icicleToolbarHeight = document.getElementById('icicle-toolbar').clientHeight
 			this.width = window.innerWidth*0.3
-			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight - this.icicleToolbarHeight)*0.5
+			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight - this.icicleToolbarHeight)*0.3
             this.icicleWidth = this.width - this.margin.right - this.margin.left
 			this.icicleHeight = this.height - this.margin.top - this.margin.bottom	
 			

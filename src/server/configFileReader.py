@@ -9,8 +9,6 @@
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
-#!/usr/bin/env python3
-
 import json
 from logger import log
 import os
@@ -29,13 +27,14 @@ class configFileReader():
         self.fnMap = {}
         self.fileMap = {}  
         self.names = []    
+        self.dataset_names = []
         self.run()
 
     def run(self):
-
         for idx, data in enumerate(self.datasets):
             name = data['name']
             self.names.append(name)
+            self.dataset_names.append(name)
             # log.info('Config file: {0}'.format(json.dumps(data, indent=4, sort_keys=True)))
             self.paths[name] = data['path']
             self.format[name] = data['format'] 
