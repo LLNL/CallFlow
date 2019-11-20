@@ -41,7 +41,7 @@ class App():
         self.debug = True
         self.config = configFileReader(self.args.config)
         self.config.server_dir = os.getcwd()
-        self.config.callflow_dir = self.callflow_path + '/.callflow'
+        self.config.callflow_dir = self.callflow_path + '/data/processed/' + self.config.runName 
         self.config.preprocess = self.args.preprocess
         self.config.entire = self.args.entire
         self.config.filter = self.args.filter

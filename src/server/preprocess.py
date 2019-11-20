@@ -1,3 +1,4 @@
+
 ##############################################################################
 # Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -9,7 +10,6 @@
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
-#!/usr/bin/env python3
 
 import random
 import utils
@@ -72,7 +72,7 @@ class PreProcess():
         # Add the path information from the node object
         @tmp_wrap
         def add_path(self):
-            self.df['path'] = self.df['node'].apply(lambda node: (node.callpath, node.nid))
+            # self.df['path'] = self.df['node'].apply(lambda node: (node.callpath, node.nid))
             return self
 
         def _map(self, attr, ):
@@ -142,45 +142,50 @@ class PreProcess():
             graph = self.graph
             callees = {}
             callers = {}
+            path = {}
             module = {}
             
-            root = graph.roots[0]
-            node_gen = graph.roots[0].traverse()
+            for root in graph.roots:
+                node_gen = root.traverse()
 
-            root_df = root.callpath[-1]
-            callers[root_df] = []
-            callees[root_df] = []
+                root_df = root.path()
+                callers[root_df] = []
+                callees[root_df] = []
             
-            try:
-                while root.callpath != None:
-                    root = next(node_gen)
-                    if root.parents:
-                        for idx, parent in enumerate(root.parents):
-                            root_df = root.callpath[-1]
-                            parent_df = parent.callpath[-1]
-                            if parent_df not in callees:
-                                callees[parent_df] = []
-                    
-                            callees[parent_df].append(root_df)
+                try:
+                    while root_df:
+                        root = next(node_gen)
+                        root_name = utils.getNodeName(root)
+                        path[root_name] = utils.getNodeCallpath(root)
+                        if root.parents:
+                            for idx, parent in enumerate(root.parents):
+                                parent_name = utils.getNodeName(parent)
 
-                            if root_df not in callers:
-                                callers[root_df] = []
-                            callers[root_df].append(parent_df)
+                                if parent_name not in callees:
+                                    callees[parent_name] = []
+
+                                callees[parent_name].append(root_name)
+
+                                if root_name not in callers:
+                                    callers[root_name] = []
+                                callers[root_df].append(parent_name)
                         
-            except StopIteration:
-                pass
-            finally:
-                del root
+                except StopIteration:
+                    pass
+                finally:
+                    del root
+
 
             self.df['callees'] = self.df['name'].apply(lambda node: callees[node] if node in callees else [])
-            self.df['callers'] = self.df['name'].apply(lambda node: callers[node] if node in callers else [])        
-            
+            self.df['callers'] = self.df['name'].apply(lambda node: callers[node] if node in callers else [])    
+            self.df['path'] = self.df['name'].apply(lambda node: path[node] if node in path else [])
+           
             return self
         
         @tmp_wrap
         def add_show_node(self):
             self.map['show_node'] = {}
-            self.df['show_node'] = self.df['node'].apply(lambda node: True)
+            self.df['show_node'] = self.df['name'].apply(lambda node: True)
             return self
 
         @tmp_wrap

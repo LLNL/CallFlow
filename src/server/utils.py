@@ -20,7 +20,7 @@ from networkx.readwrite import json_graph
 import json
 
 def lookup(df, node):
-    return df.loc[df['name'] == node.callpath[-1]]
+    return df.loc[df['name'] == getNodeName(node)]
 
 def lookup_with_name(df, name):
     return df.loc[df['name'] == name]
@@ -156,8 +156,6 @@ def node_hash_mapper(df):
     return ret  
 
 def dfs(graph, dataframe, limit):
-    log.info('DFS on the call graph')
-    log.info('--------------------- ')
     def dfs_recurse(root, level):
         for node in root.children:
             result = ''
@@ -175,5 +173,27 @@ def dfs(graph, dataframe, limit):
                 dfs_recurse(node, level)
     level = 0
     for root in graph.roots:
-        log.info("Root = {0} [{1}]".format(root, root.nid))
+        print("Root = {0} [{1}]".format("Root", root._hatchet_nid))
         dfs_recurse(root, level)
+
+def getNodeCallpath(node):
+    ret = []
+    list_of_frames = list(node.path())
+    for frame in list_of_frames:
+        name = frame.get('name')
+        print("Name = ", name)
+        if(name != None):
+            ret.append(frame.get('name'))
+        else:
+            ret.append(frame.get('file'))
+    return ret
+
+def getNodeParents(node):
+    return node.parents
+
+def getNodeName(node):
+    name = node.frame.get('name')
+    if(name != None):
+        return node.frame.get('name')   
+    else:
+        return node.frame.get('file')

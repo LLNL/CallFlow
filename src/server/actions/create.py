@@ -14,8 +14,7 @@ import time
 import utils
 from logger import log
 import os
-from hatchet import *
-
+import hatchet as ht
 
 class Create:
     '''
@@ -27,19 +26,25 @@ class Create:
         utils.debug("Creating graphframes: ", name)
         self.config = config
         self.name = name
+        self.gf = None
         self.run()
 
     def run(self):
-        callflow_path = os.path.abspath(os.path.join(__file__, '../../../..'))
+        callflow_path = "/home/vidi/Work/llnl/CallFlow"
         data_path = os.path.abspath(os.path.join(callflow_path, self.config.paths[self.name]))
 
-        gf = GraphFrame()
         if self.config.format[self.name] == 'hpctoolkit':
-            gf.from_hpctoolkit(data_path)
+            self.gf = ht.GraphFrame.from_hpctoolkit(data_path)
         elif self.config.format[self.name] == 'caliper':                
-            gf.from_caliper(data_path)  
-
-        self.gf = gf
-        self.df = gf.dataframe
-        self.node_hash_map = utils.node_hash_mapper(self.df)    
-        self.graph = gf.graph
+            self.gf = ht.GraphFrame.from_caliper(data_path)  
+        elif self.config.format[self.name] == 'caliper_json':
+            self.gf = ht.GraphFrame.from_caliper_json(data_path)
+        elif self.config.format[self.name] == 'gprof':
+            self.gf = ht.GraphFrame.from_grof_dot(data_path)
+        elif self.config.format[self.name] == 'literal':
+            self.gf = ht.GraphFrame.from_literal(data_path)
+        elif self.config.format[self.name] == 'lists':
+            self.gf = ht.GraphFrame.from_lists(data_path)
+            
+        self.df = self.gf.dataframe
+        self.graph = self.gf.graph

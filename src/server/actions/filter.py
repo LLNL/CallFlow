@@ -31,7 +31,7 @@ class Filter:
         self.df = state.entire_df
         self.gf = state.entire_gf
 
-        self.df.set_index(['node', 'rank'], drop=False, inplace=True)
+        # self.df.set_index(['node', 'rank'], drop=False, inplace=True)
 
         # self.df = pd.MultiIndex.from_frame(self.df, names=['node', 'rank'])
         self.gf.dataframe = self.df

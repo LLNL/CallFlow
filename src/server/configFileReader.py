@@ -19,7 +19,7 @@ class configFileReader():
         filename = os.path.join(dirname, filepath)
         f = open(filename, 'r').read()
         self.datasets = self.json_data(f)['datasets']  
-        self.runName = self.json_data(f)['run']
+        self.runName = self.json_data(f)['runName']
         self.paths = {}
         self.props = {}
         self.nop  = {}

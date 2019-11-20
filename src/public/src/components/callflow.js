@@ -55,7 +55,7 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'CCT',
+		selectedFormat: 'Callgraph',
 		datasets: [],
 		selectedDataset: '',
 		selectedDataset2: '',
@@ -93,7 +93,9 @@ export default {
 		selectedData: 'Dataframe',
 		firstRender: false,
 		enableDist: false,
-		summaryChip: 'Summary Graph View',
+		summaryChip: 'Ensemble Graph View',
+		ranks: [],
+		selectedRank: 10,
 		initLoad: true,
 	}),
 
@@ -130,8 +132,8 @@ export default {
 
 			if (this.numOfDatasets >= 2) {
 				this.enableDist = true
-				this.modes = ['Single', 'Distribution']
-				this.selectedMode = 'Distribution'
+				this.modes = ['Single', 'Ensemble']
+				this.selectedMode = 'Ensemble'
 				this.selectedDataset2 = data['names'][1]
 				this.$store.selectedDataset2 = data['names'][1]
 				this.$store.selectedDataset = data['names'][2]
@@ -299,14 +301,13 @@ export default {
 					})
 				}
 
-			} else if (this.selectedMode == 'Distribution') {
+			} else if (this.selectedMode == 'Ensemble') {
 				if (this.selectedFormat == 'CCT') {
 					this.$socket.emit('dist_cct', {
 						datasets: this.$store.actual_dataset_names,
 						functionsInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
-
 					this.$socket.emit('run_information', {
 						datasets: this.$store.actual_dataset_names,
 					})
@@ -326,13 +327,10 @@ export default {
 						plot: 'kde'
 					})
 
-				
 					this.$socket.emit('dist_projection', {
 						datasets: this.$store.actual_dataset_names,
 						algo: 'tsne'
 					})
-
-					
 	
 					// this.$socket.emit('dist_scatterplot', {
 					//     datasets: this.$store.client_datasets,
@@ -349,7 +347,7 @@ export default {
 		colors() {
 			this.$store.color = new Color(this.selectedColorBy)
 			this.colorMap = this.$store.color.getAllColors()
-			if(this.selectedMode == 'Distribution'){
+			if(this.selectedMode == 'Ensemble'){
 				if(this.selectedColorBy == 'Inclusive'){
 					this.selectedColorMin = this.$store.minIncTime['union']
 					this.selectedColorMax = this.$store.maxIncTime['union']
@@ -368,6 +366,7 @@ export default {
 					this.selectedColorMax = this.$store.maxExcTime[this.selectedDataset]
 				}	
 			}
+			console.log
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
 			this.$store.colorPoint = this.selectedColorPoint
 			console.log("Datasets are :", this.datasets)

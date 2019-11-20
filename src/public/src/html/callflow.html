@@ -18,11 +18,11 @@
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
 			</v-select>
 		</v-flex>
-		<v-flex xs2 class="ma-2">
+		<!-- <v-flex xs2 class="ma-2">
 			<v-select label="Data" :items="datas" v-model="selectedData" :menu-props="{ maxHeight: '400' }" box
 				v-on:change="updateData()">
 			</v-select>
-		</v-flex>
+		</v-flex> -->
 		<v-spacer></v-spacer>
 		<v-flex xs2>
 			<v-select label="Analysis Mode" :items="modes" v-model="selectedMode" box :menu-props="{ maxHeight: '400' }"
@@ -109,7 +109,7 @@
 						v-on:change="updateFunctionsInCCT()">
 					</v-text-field>
 				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat == 'Callgraph' && selectedMode == 'Distribution'">
+				<v-flex xs12 class="ma-1" v-show="selectedFormat == 'Callgraph' && selectedMode == 'Ensemble'">
 					<v-select label="Align node to" :items="diffNodeAlignment" v-model="selectedDiffNodeAlignment"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateDiffNodeAlignment()">
 					</v-select>
@@ -169,7 +169,7 @@
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-show="selectedMode == 'Distribution' && selectedFormat == 'Callgraph'">
+		<v-layout v-show="selectedMode == 'Ensemble' && selectedFormat == 'Callgraph'">
 			<splitpanes id="diffgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe'">
 				<splitpanes horizontal :splitpanes-size="20">
 					<span>
@@ -218,7 +218,7 @@
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Distribution'">
+		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Ensemble'">
 			<splitpanes id="cct-dashboard">
 				<splitpanes horizontal :splitpanes-size="50">
 					<span>

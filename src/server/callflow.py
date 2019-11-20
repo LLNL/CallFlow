@@ -10,7 +10,7 @@
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
 
-from hatchet import *
+import hatchet
 import time
 import utils
 from logger import log
@@ -99,6 +99,11 @@ class CallFlow:
                 states[dataset_name] = self.create(dataset_name)
                 states[dataset_name] = self.process(states[dataset_name], 'filter')
                 states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc)
+            elif(self.reProcess and self.processUnion):
+                states[dataset_name] = self.create(dataset_name)
+                states[dataset_name] = self.union(states[dataset_name])
+                states[dataset_name] = self.process(states[dataset_name], 'filter')
+                self.write_gf(states[dataset_name], dataset_name, 'entire')
             else:
                 states[dataset_name] = self.read_gf(dataset_name, 'dist')
                 
@@ -169,6 +174,18 @@ class CallFlow:
 
         return state
 
+    def union(self, state):
+        u_graph = UnionGraph()
+        u_df = pd.DataFrame()
+        for idx, dataset in enumerate(datasets):
+            u_graph.unionize(self.states[dataset].group_graph, dataset)
+            u_df = pd.concat([u_df, self.states[dataset].df])#.drop_duplicates()
+        u_graph.add_union_node_attributes()
+        u_graph.add_edge_attributes()
+        self.states['union_graph'] = State('union_graph')
+        self.states['union_graph'].graph = u_graph.R
+        self.states['union_graph'].df = u_df
+
     def write_gf(self, state, state_name, format_of_df, write_graph=True):
         dirname = self.config.callflow_dir
         utils.debug('writing file for {0} format'.format(format_of_df))
@@ -238,17 +255,15 @@ class CallFlow:
 
     def read_gf(self, name, graph_type):
         state = State(name)
-        dirname = os.path.abspath(os.path.join(__file__, '../../..')) + '/.callflow'
         dataset_dirname = os.path.abspath(os.path.join(__file__, '../../..')) + '/data'
-        df_filepath = dirname + '/' + name + '/filter_df.csv'
-        entire_df_filepath = dirname + '/' + name + '/entire_df.csv'
-        graph_filepath = dirname + '/' + name + '/filter_graph.json'
-        entire_graph_filepath = dirname + '/' + name + '/entire_graph.json'   
+        df_filepath = self.config.callflow_dir + '/' + name + '/filter_df.csv'
+        entire_df_filepath = self.config.callflow_dir + '/' + name + '/entire_df.csv'
+        graph_filepath = self.config.callflow_dir + '/' + name + '/filter_graph.json'
+        entire_graph_filepath = self.config.callflow_dir + '/' + name + '/entire_graph.json'   
         if(graph_type != None):
-            group_df_file_path = dirname + '/' + name + '/' + graph_type + '_df.csv'
-            group_graph_file_path = dirname + '/' + name + '/' + graph_type + '_graph.json'
+            group_df_file_path = self.config.callflow_dir + '/' + name + '/' + graph_type + '_df.csv'
+            group_graph_file_path = self.config.callflow_dir + '/' + name + '/' + graph_type + '_graph.json'
         parameters_filepath = dataset_dirname + '/' + self.config.runName + '/'  + name + '/env_params.txt'
-
 
         with self.timer.phase('data frame'):
             with open(graph_filepath, 'r') as graphFile:
@@ -286,7 +301,7 @@ class CallFlow:
             state.group_df = pd.read_csv(group_df_file_path)
             # state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
 
-        state.projection_data =  {}
+        state.projection_data = {}
         for line in open(parameters_filepath, 'r'):
             s = 0
             for num in line.strip().split(','):
@@ -442,10 +457,8 @@ class CallFlow:
             u_graph = UnionGraph()
             u_df = pd.DataFrame()
             for idx, dataset in enumerate(datasets):
-                print('Columns', self.states[dataset].df.columns)
                 u_graph.unionize(self.states[dataset].group_graph, dataset)
                 u_df = pd.concat([u_df, self.states[dataset].df])#.drop_duplicates()
-            print(u_df.columns)
             u_graph.add_union_node_attributes()
             u_graph.add_edge_attributes()
             self.states['union_graph'] = State('union_graph')
