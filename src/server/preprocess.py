@@ -217,3 +217,8 @@ class PreProcess():
         def add_mod_index(self):
             self.df['mod_index'] = self.df.groupby('module').ngroup()
             return self
+
+        @tmp_wrap
+        def add_dataset_name(self):
+            self.df['dataset'] = self.state.name
+            return self

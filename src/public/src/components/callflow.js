@@ -184,6 +184,7 @@ export default {
 		},
 
 		// Fetch aggregated graph (Super graph) for distribution mode.
+		// Fetch aggregated graph (Super graph) for distribution mode.
 		dist_group(data) {
 			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
 			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
@@ -366,7 +367,7 @@ export default {
 					this.selectedColorMax = this.$store.maxExcTime[this.selectedDataset]
 				}	
 			}
-			console.log
+
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
 			this.$store.colorPoint = this.selectedColorPoint
 			console.log("Datasets are :", this.datasets)

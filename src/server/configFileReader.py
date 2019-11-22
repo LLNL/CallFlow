@@ -18,8 +18,10 @@ class configFileReader():
         dirname = os.path.dirname(__file__)
         filename = os.path.join(dirname, filepath)
         f = open(filename, 'r').read()
-        self.datasets = self.json_data(f)['datasets']  
-        self.runName = self.json_data(f)['runName']
+        self.json = self.json_data(f)
+        self.datasets = self.json['datasets']  
+        self.runName = self.json['runName']
+        self.filter_perc = self.json['filter_perc']
         self.paths = {}
         self.props = {}
         self.nop  = {}

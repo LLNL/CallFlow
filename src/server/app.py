@@ -45,6 +45,7 @@ class App():
         self.config.preprocess = self.args.preprocess
         self.config.entire = self.args.entire
         self.config.filter = self.args.filter
+        self.config.union = self.args.union
 
         if self.config.preprocess:
             self.create_dot_callflow_folder()
@@ -55,15 +56,8 @@ class App():
         self.config.distribution = True
         if(self.config.distribution and self.config.preprocess):
             if self.debug:
-                self.print('[Request] Init the diff mode')
-            groupBy = 'module'
-            datasets = self.config.names
+                self.print('Pre-processing done.')
 
-            self.callflow.update_dist({
-                'name': 'init_dist',
-                'groupBy': groupBy,
-                'datasets': datasets
-            })
         elif(self.config.distribution and not self.config.preprocess):
             if self.debug:
                 self.print('[Request] Load the graphframe for client')
@@ -99,6 +93,7 @@ class App():
         parser.add_argument("--input_format", default="hpctoolkit", help="caliper | hpctoolkit")
         parser.add_argument("--filter", action="store_true", help="Save the filtered dataframe.")
         parser.add_argument("--entire", action="store_true", help="Save the entire dataframe.")
+        parser.add_argument("--union", action="store_true", help="Union all the dataframes.")
         parser.add_argument("--filterBy", default="IncTime", help="IncTime | ExcTime, [Default = IncTime] ")
         parser.add_argument("--filtertheta", default="10", help="Threshold [Default = 10]")
         parser.add_argument("--preprocess", action="store_true", help="Preprocess the file")

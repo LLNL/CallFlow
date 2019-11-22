@@ -181,7 +181,6 @@ def getNodeCallpath(node):
     list_of_frames = list(node.path())
     for frame in list_of_frames:
         name = frame.get('name')
-        print("Name = ", name)
         if(name != None):
             ret.append(frame.get('name'))
         else:

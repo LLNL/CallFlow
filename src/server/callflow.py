@@ -10,8 +10,8 @@
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
 
-import hatchet
-import time
+import hatchet as ht
+import time 
 import utils
 from logger import log
 from timer import Timer
@@ -41,6 +41,7 @@ from actions.union_graph import UnionGraph
 from actions.kde_gradients import KDE_gradients
 from actions.similarity import Similarity
 from actions.run_projection import RunProjection
+from actions.filter_union import FilterUnion
 
 from state import State
 from logger import log
@@ -60,6 +61,7 @@ class CallFlow:
         self.reProcess = config.preprocess
         self.processEntire = config.entire
         self.processFilter = config.filter
+        self.processUnion = config.union
 
         # Create states for each dataset.
         # Note: gf would never change from create_gf.
@@ -101,12 +103,17 @@ class CallFlow:
                 states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc)
             elif(self.reProcess and self.processUnion):
                 states[dataset_name] = self.create(dataset_name)
-                states[dataset_name] = self.union(states[dataset_name])
-                states[dataset_name] = self.process(states[dataset_name], 'filter')
+                states[dataset_name] = self.process(states[dataset_name], 'entire')
+                states[dataset_name] = self.convertToNetworkX(states[dataset_name], 'path')
                 self.write_gf(states[dataset_name], dataset_name, 'entire')
             else:
                 states[dataset_name] = self.read_gf(dataset_name, 'dist')
-                
+        
+        states['union'] = self.union(states)
+        states['union'] = self.filterUnion(states['union'], self.config.filter_perc)
+
+        self.write_union_gf(states['union'], 'union', 'union', False)
+       
         return states
 
     def setConfig(self):
@@ -125,7 +132,7 @@ class CallFlow:
                 self.config.max_excTime[state] = utils.getMaxExcTime(self.states[state])
                 self.config.min_incTime[state] = utils.getMinIncTime(self.states[state])
                 self.config.min_excTime[state] = utils.getMinExcTime(self.states[state])
-                self.config.numbOfRanks[state] = utils.getNumbOfRanks(self.states[state])
+                self.config.numbOfRanks[state] = self.config.nop
                 max_exclusive_time = max(self.config.max_excTime[state], max_exclusive_time)
                 max_inclusvie_time = max(self.config.max_incTime[state], max_exclusive_time)
                 min_exclusive_time = min(self.config.min_excTime[state], min_exclusive_time)
@@ -155,8 +162,8 @@ class CallFlow:
             .add_callers_and_callees() \
             .add_show_node() \
             .add_vis_node_name() \
+            .add_dataset_name() \
             .update_module_name() \
-            .add_path() \
             .build()
 
         state.gf = preprocess.gf
@@ -165,6 +172,13 @@ class CallFlow:
 
         return state
 
+    def convertToNetworkX(self, state, path):
+        convert = DistGraph(state, path)
+
+        state.g = convert.g
+        return state
+
+    # Filter by hatchet graphframe. 
     def filter(self, state, filterBy, filterPerc):
         filter_obj = Filter(state, filterBy, filterPerc)
 
@@ -174,17 +188,29 @@ class CallFlow:
 
         return state
 
-    def union(self, state):
+    # Union of all the networkX graphs provided.
+    def union(self, states):
         u_graph = UnionGraph()
         u_df = pd.DataFrame()
-        for idx, dataset in enumerate(datasets):
-            u_graph.unionize(self.states[dataset].group_graph, dataset)
-            u_df = pd.concat([u_df, self.states[dataset].df])#.drop_duplicates()
-        u_graph.add_union_node_attributes()
-        u_graph.add_edge_attributes()
-        self.states['union_graph'] = State('union_graph')
-        self.states['union_graph'].graph = u_graph.R
-        self.states['union_graph'].df = u_df
+        for idx, dataset in enumerate(states):
+            u_graph.unionize(states[dataset].g, dataset)
+            u_df = pd.concat([u_df, states[dataset].df])
+        # u_graph.add_union_node_attributes()
+        # u_graph.add_edge_attributes()
+
+        state = State('union')
+        state.df = u_df
+    
+        state.g = u_graph.R
+        print(state.g.nodes())
+
+        return state
+
+    def filterUnion(self, state, perc):
+        filter_obj = FilterUnion(state)
+        state.df = filter_obj.filter_time_inc_overall(perc)
+
+        return state
 
     def write_gf(self, state, state_name, format_of_df, write_graph=True):
         dirname = self.config.callflow_dir
@@ -218,6 +244,20 @@ class CallFlow:
         df_filepath = dirname + '/' + state_name + '/' + format_of_df + '_df.csv'
         state.df.to_csv(df_filepath)
 
+    def write_union_gf(self, state, state_name, format_of_df, write_graph=True):
+        dirname = self.config.callflow_dir
+        utils.debug('writing file for {0} format'.format(format_of_df))
+
+        # dump the filtered dataframe to csv.
+        df_filepath = dirname + '/' + format_of_df + '_df.csv'
+        graph_filepath = dirname + '/' + format_of_df + '_graph.json'
+        
+        state.df.to_csv(df_filepath)
+
+        g_data = json_graph.node_link_data(state.g)
+        print(g_data)
+        with open(graph_filepath, 'w') as graphFile:
+            json.dump(g_data, graphFile)
 
     def replace_str_with_Node(self, df, graph):
         mapper = {}
@@ -242,14 +282,33 @@ class CallFlow:
         with open(entire_graph_filepath, 'r') as entire_graphFile:
             entire_data = json.load(entire_graphFile)
             
-        state.entire_gf = GraphFrame()
-        state.entire_gf.from_literal(entire_data)
+        state.entire_gf = ht.from_literal(entire_data)
 
         state.entire_df = pd.read_csv(entire_df_filepath)
         state.entire_graph = state.entire_gf.graph
 
         # replace df['node'] from str to the Node object.
-        state.entire_df = self.replace_str_with_Node(state.entire_df, state.entire_graph)
+        # state.entire_df = self.replace_str_with_Node(state.entire_df, state.entire_graph)
+
+        return state
+
+    def read_union_gf(self, name):
+        log.info('[Process] Reading the entire dataframe and graph')
+        state = State(name)
+        dirname = self.config.callflow_dir
+        entire_df_filepath = dirname + '/' + name + '/entire_df.csv'
+        entire_graph_filepath = dirname + '/' + name + '/entire_graph.json'   
+        union_df_filepath = dirname + '/union_df.csv'
+
+        with open(entire_graph_filepath, 'r') as entire_graphFile:
+            entire_data = json.load(entire_graphFile)
+            
+        state.entire_gf = ht.from_literal(entire_data)
+
+        state.entire_df = pd.read_csv(entire_df_filepath)
+        state.entire_graph = state.entire_gf.graph
+
+        state.union_df = pd.read_csv(union_df_filepath)
 
         return state
 
@@ -269,14 +328,12 @@ class CallFlow:
             with open(graph_filepath, 'r') as graphFile:
                 data = json.load(graphFile)
 
-        state.gf = GraphFrame()
-        state.gf.from_literal_persist(data)
+        state.gf = ht.GraphFrame.from_literal(data)
 
         with open(entire_graph_filepath, 'r') as entire_graphFile:
             entire_data = json.load(entire_graphFile)
             
-        state.entire_gf = GraphFrame()
-        state.entire_gf.from_literal_persist(entire_data)
+        state.entire_gf = ht.GraphFrame.from_literal(entire_data)
 
         state.df = pd.read_csv(df_filepath)
         state.entire_df = pd.read_csv(entire_df_filepath)
@@ -284,13 +341,12 @@ class CallFlow:
         state.graph = state.gf.graph
         state.entire_graph = state.entire_gf.graph
 
-
         # Print the module group by information. 
         # print(state.df.groupby(['module']).agg(['mean','count']))
 
         # replace df['node'] from str to the Node object.
-        state.df = self.replace_str_with_Node(state.df, state.graph)
-        state.entire_df = self.replace_str_with_Node(state.entire_df, state.entire_graph)
+        # state.df = self.replace_str_with_Node(state.df, state.graph)
+        # state.entire_df = self.replace_str_with_Node(state.entire_df, state.entire_graph)
 
         if(graph_type != None):
             with self.timer.phase('Read {0} dataframe'.format(graph_type)):
@@ -322,12 +378,11 @@ class CallFlow:
             with open(group_graph_file_path, 'r') as groupGraphFile:
                 data = json.load(groupGraphFile)
 
-        state.group_gf = GraphFrame()
-        state.group_gf.from_literal_persist(data)
+        state.group_gf = ht.GraphFrame.from_literal(data)
 
         state.group_graph = state.group_gf.graph
         state.group_df = pd.read_csv(group_df_file_path)
-        state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
+        # state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
 
         state.projection_data =  {}
         for line in open(parameters_filepath, 'r'):
@@ -430,13 +485,13 @@ class CallFlow:
         datasets = self.config.dataset_names
 
         if action_name == 'init_dist':
-            self.setConfig()
+            # self.setConfig()
 
             if(action['groupBy'] == 'module'):
                 path_type = 'group_path'
             elif(action['groupBy'] == 'name'):
                 path_type = 'path'
-            print('Called')
+
             for idx, dataset in enumerate(datasets):
                 group_state = self.read_group_gf(dataset, 'group')
                 graph = DistGraph(group_state, path_type, True, action['groupBy'])
@@ -447,7 +502,7 @@ class CallFlow:
 
         elif action_name == 'init':
             for idx, dataset in enumerate(datasets):
-                dist_state = self.read_group_gf(dataset, 'dist')
+                dist_state = self.read_union_gf(dataset, 'union')
                 self.states[dataset].graph = dist_state.group_graph
                 self.states[dataset].df = dist_state.group_df
             self.setConfig()
