@@ -128,13 +128,13 @@ class PreProcess():
         def add_imbalance_perc(self):
             ret = {}
             for idx, row in self.df.iterrows():
-                max_incTime = self.map['max_incTime'][str(row.nid)]
+                max_incTime = self.df.loc[self.df['name'] == row['name']]['time (inc)'].max()
+                avg_incTime = self.df.loc[self.df['name'] == row['name']]['time (inc)'].mean()
                 if(max_incTime == 0.0):
                     max_incTime = 1.0
-                ret[str(row.nid)] = (self.map['max_incTime'][str(row.nid)] - self.map['avg_incTime'][str(row.nid)])/max_incTime
+                ret[row.name] = (row['time (inc)'] - avg_incTime)/max_incTime
 
-            self.map['imbalance_perc'] = ret
-            self.df['imbalance_perc'] = self.df['node'].apply(lambda node: self.map['imbalance_perc'][str(node.nid)])
+            self.df['imbalance_perc'] = self.df['node'].apply(lambda node: ret[node])
             return self
             
         @tmp_wrap

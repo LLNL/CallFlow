@@ -38,7 +38,7 @@ class RunProjection:
         ret['max_inclusive_time'] = state.df['time (inc)'].max()
         ret['max_exclusive_time'] = state.df['time'].max()
         ret['rank_count'] = len(state.df['rank'].unique())
-        ret['similarity'] = Similarity(state.group_graph, self.states['union_graph'].graph).result
+        ret['similarity'] = Similarity(state.g, self.states['union_graph'].g).result
         return ret    
     
     def run(self):
@@ -89,5 +89,4 @@ class RunProjection:
             self.clusters = KMeans(n_clusters=self.n_cluster, random_state=random_number)
             ret['label'] = self.clusters.fit(X).labels_
         
-        print(ret)
         return ret

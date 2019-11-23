@@ -24,7 +24,6 @@ class Histogram:
     def run(self):    
         ret = []
         func_in_module = self.df[self.df.nid == self.nid]['name'].unique().tolist()
-        print(func_in_module)
         
         for idx, func in enumerate(func_in_module):
             ret.append({
@@ -34,7 +33,6 @@ class Histogram:
                 "rank": self.entire_df.loc[self.entire_df['name'] == func]['rank'].tolist(),
             })
         ret_df = pd.DataFrame(ret)
-        print(ret_df)
         return ret_df.to_json(orient="columns")
 
 
