@@ -7,7 +7,7 @@ import math
 class KDE_gradients:
     def __init__(self, states):
         self.states = states
-        self.nodes = states['ensemble_graph'].g.nodes()
+        self.nodes = states['ensemble'].g.nodes()
         self.results = self.run()
 
     def iqr(self, arr):
@@ -88,19 +88,23 @@ class KDE_gradients:
         data_max = {}
 
         # Calculate for each module
-        for node in self.nodes:
+        for node in self.nodes(data=True):
             dist = {}
             mean_dist = {}
             max_dist = {}
             mean_time_inc_map = {}
-            print(node)
-            module = node.split('=')[0]
-            function = node.split('=')[1]
-            mean_time_inc_map[node] = 0
+            
+            name = node[0] 
+            data = node[1]
+
+            module = data['module']
+            function = data['name']
+            vis_node_name = data['vis_name']
+            mean_time_inc_map[data['vis_name']] = 0
 
             # Get the runtimes for all the runs. 
             for idx, state in enumerate(self.states):
-                if(state != "union_graph"):
+                if(state != "ensemble"):
                     node_df = self.states[state].df.loc[(self.states[state].df['module'] == module) & (self.states[state].df['name'] == function)]
                     time_inc_df = node_df['time (inc)']
                     self.num_of_ranks = len(self.states[state].df['rank'].unique())
@@ -133,50 +137,50 @@ class KDE_gradients:
             dist_list = self.convert_dictmean_to_list(dist)        
 
             # Calculate appropriate number of bins automatically. 
-            num_of_bins[node] = 10 
-            num_of_bins[node] = min(self.freedman_diaconis_bins(np.array(dist_list)), 50)
+            num_of_bins[vis_node_name] = 10 
+            num_of_bins[vis_node_name] = min(self.freedman_diaconis_bins(np.array(dist_list)), 50)
  
             # Calculate the KDE grid (x, y)
-            kde_grid[node] = self.kde(np.array(dist_list), 10)
-            kde_x_min = np.min(kde_grid[node][0])
-            kde_x_max = np.max(kde_grid[node][0])
-            kde_y_min = np.min(kde_grid[node][1])
-            kde_y_max = np.max(kde_grid[node][1])
+            # kde_grid[vis_node_name] = self.kde(np.array(dist_list), 10)
+            # kde_x_min = np.min(kde_grid[vis_node_name][0])
+            # kde_x_max = np.max(kde_grid[vis_node_name][0])
+            # kde_y_min = np.min(kde_grid[vis_node_name][1])
+            # kde_y_max = np.max(kde_grid[vis_node_name][1])
 
-            hist_grid[node] = self.histogram(np.array(dist_list))
-            hist_x_min = hist_grid[node][0][0] #np.min(hist_grid[node][0])
-            hist_x_max = hist_grid[node][0][-1] #np.max(hist_grid[node][0])
-            hist_y_min = np.min(hist_grid[node][1]).astype(np.float64)
-            hist_y_max = np.max(hist_grid[node][1]).astype(np.float64)
+            hist_grid[vis_node_name] = self.histogram(np.array(dist_list))
+            hist_x_min = hist_grid[vis_node_name][0][0] #np.min(hist_grid[node][0])
+            hist_x_max = hist_grid[vis_node_name][0][-1] #np.max(hist_grid[node][0])
+            hist_y_min = np.min(hist_grid[vis_node_name][1]).astype(np.float64)
+            hist_y_max = np.max(hist_grid[vis_node_name][1]).astype(np.float64)
             
             # print("hist ranges = {} {} {} {}\n"
             #     .format(hist_x_min, hist_x_max, hist_y_min, hist_y_max)) 
 
-            results[node] = {
+            results[vis_node_name] = {
                 "dist": dist,
                 "mean": mean_dist, 
                 "max": max_dist,
-                "bins": num_of_bins[node],
-                "kde": {
-                    "x": kde_grid[node][0].tolist(),
-                    "y": kde_grid[node][1].tolist(),
-                    "x_min": kde_x_min,
-                    "x_max": kde_x_max,
-                    "y_min": kde_y_min,
-                    "y_max": kde_y_max,
-                },
+                "bins": num_of_bins[vis_node_name],
+                # "kde": {
+                #     "x": kde_grid[vis_node_name][0].tolist(),
+                #     "y": kde_grid[vis_node_name][1].tolist(),
+                #     "x_min": kde_x_min,
+                #     "x_max": kde_x_max,
+                #     "y_min": kde_y_min,
+                #     "y_max": kde_y_max,
+                # },
                 "hist": {
-                    "x": hist_grid[node][0].tolist(),
-                    "y": hist_grid[node][1].tolist(),
+                    "x": hist_grid[vis_node_name][0].tolist(),
+                    "y": hist_grid[vis_node_name][1].tolist(),
                     "x_min": hist_x_min,
                     "x_max": hist_x_max,
                     "y_min": hist_y_min,
                     "y_max": hist_y_max,
                 },
                 "data_min": 0,
-                "data_max": np_max_dist.tolist()
+                # "data_max": np_max_dist.tolist()
             }
-        # print(results)
+        print(results)
         return results
 
 

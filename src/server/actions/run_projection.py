@@ -38,18 +38,18 @@ class RunProjection:
         ret['max_inclusive_time'] = state.df['time (inc)'].max()
         ret['max_exclusive_time'] = state.df['time'].max()
         ret['rank_count'] = len(state.df['rank'].unique())
-        ret['similarity'] = Similarity(state.g, self.states['ensemble_graph'].g).result
+        ret['similarity'] = Similarity(state.g, self.states['ensemble'].g).result
         return ret    
     
     def run(self):
         for idx, state in enumerate(self.states):
-            if(state != 'ensemble_graph'):
+            if(state != 'ensemble'):
                 df_params = self.add_df_params(self.states[state])
                 # self.states[state].projection_data.update(df_params)
 
         row_list = []
         for idx, state in enumerate(self.states):
-            if(state != 'ensemble_graph'):
+            if(state != 'ensemble'):
                 row_list.append(self.states[state].projection_data)
 
         df = pd.DataFrame(row_list)
@@ -73,7 +73,7 @@ class RunProjection:
         elif self.projection == 'TSNE':
             proj = TSNE(random_state=random_number).fit_transform(X)
     
-        datasets = [key for key in self.states.keys() if key != 'union_graph']
+        datasets = [key for key in self.states.keys() if key != 'ensemble']
         ret = pd.DataFrame(proj, columns=list('xy'))
         ret['dataset'] = datasets
 

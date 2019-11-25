@@ -107,9 +107,9 @@ export default {
 		socket.on('connect', function() {
 		  console.log('Socket connection check 2: ', socket.connected);
 		});
-		socket.on('connect_error', function(err) {
-			console.log('Socket error: ', err);
-		});
+		// socket.on('connect_error', function(err) {
+		// 	console.log('Socket error: ', err);
+		// });
 		
 		this.$socket.emit('init')
 	},
@@ -322,20 +322,20 @@ export default {
 						groupBy: this.selectedGroupBy
 					})
 
-					// this.$socket.emit('dist_similarity', {
-					// 	datasets: this.$store.actual_dataset_names,
-					// 	algo: 'deltacon'
-					// })
+					this.$socket.emit('dist_similarity', {
+						datasets: this.$store.actual_dataset_names,
+						algo: 'deltacon'
+					})
 
-					// this.$socket.emit('dist_gradients', {
-					// 	datasets: this.$store.actual_dataset_names,
-					// 	plot: 'kde'
-					// })
+					this.$socket.emit('dist_gradients', {
+						datasets: this.$store.actual_dataset_names,
+						plot: 'kde'
+					})
 
-					// this.$socket.emit('dist_projection', {
-					// 	datasets: this.$store.actual_dataset_names,
-					// 	algo: 'tsne'
-					// })
+					this.$socket.emit('dist_projection', {
+						datasets: this.$store.actual_dataset_names,
+						algo: 'tsne'
+					})
 	
 					// this.$socket.emit('dist_scatterplot', {
 					//     datasets: this.$store.client_datasets,

@@ -85,7 +85,6 @@ export default {
 
 		render(data) {
 			this.graph = this.preprocess(this.data, false)
-			this.maxLevel = this.graph.maxLevel
 
 			console.log("Preprocessing done.")
 			this.d3sankey = this.initSankey(this.graph)
@@ -112,12 +111,58 @@ export default {
 
 		// Preprocessing the graph. 
 		preprocess(graph, refresh) {
-			graph = this.findMaxGraph(graph)
+			graph = this.filterShowNodes(graph)
+			// graph = this.findMaxGraph(graph)
 			// graph = this.addLines(graph)
 			graph = this.addLinkID(graph)
 			graph = this.calculateFlow(graph)
 			console.log("Graph after preprocessing: ", graph)
 			return graph;
+		},
+
+		filterShowNodes(graph) {
+			let node_names = []
+			let nodes = []
+			for (const node of graph.nodes) {
+				if (node.show_node == true) {
+					nodes.push(node)
+					node_names.push(node.name)
+				}
+				console.log(node.name, node.module, node.show_node, node['time (inc)'], node.time)
+			}
+			graph.modules = nodes
+
+			let edges = []
+			for (const edge of graph.links) {
+				console.log(edge.source, edge.target, edge.weight, edge.exc_weight)
+			}
+			graph.edges = edges
+			return graph
+		},
+
+		constructModules(graph) {
+			for (const mod of graph.modules) {
+				let module_group_paths = mod['group_path']
+				if(module_group_paths.length > 1){
+
+				}
+				else if(module_group_paths == 1){
+
+				}
+				for(let i = 0; i < module_group_paths.length - 1; i += 1){
+					// if(this.isModuleEdge())
+				}
+			}
+		},
+
+		containsNode(node, list) {
+			var i;
+			for (i = 0; i < list.length; i++) {
+				if (list[i] === node) {
+					return true;
+				}
+			}
+			return false;
 		},
 
 		findMaxGraph(graph) {
@@ -136,8 +181,7 @@ export default {
 						if (node[dataset]['time (inc)'] > obj['time (inc)']) {
 							obj['time (inc)'] = node[dataset]['time (inc)']
 						}
-						obj['name'] = node[dataset]['name'][0]
-						obj['xid'] = node[dataset]['nid'][0]
+						obj['name'] = node[dataset]['name']
 					}
 				}
 				for (const [key, value] of Object.entries(obj)) {
