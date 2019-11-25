@@ -57,7 +57,7 @@ export default {
 	},
 
 	mounted() {
-		this.id = 'diff-scatterplot-view-' + this._uid
+		this.id = 'diff-scatterplot-view'
 	},
 
 	methods: {

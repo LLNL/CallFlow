@@ -9,7 +9,6 @@ class groupBy:
     def __init__(self, state, group_by):
         self.state = state
         self.g = state.g
-        print(self.g.nodes())
         self.df = self.state.df
         self.group_by = group_by
         self.eliminate_funcs = []
@@ -30,7 +29,6 @@ class groupBy:
 
     # Create a group path for the df.column = group_path.
     def create_group_path(self, path):
-        path = make_list(path)
         group_path = []
         self.prev_module_map = {}
         prev_module = None
@@ -117,7 +115,10 @@ class groupBy:
         for idx, path in enumerate(unique_paths):
             ret.append(df.loc[df['path'] == path])
         return (ret)
-            
+    
+    def update_df(self, col_name, mapping):
+        self.df[col_name] = self.df['name'].apply(lambda node: mapping[node] if node in mapping.keys() else '')
+    
     def run(self):
         group_path = {}
         component_path = {}
@@ -136,17 +137,21 @@ class groupBy:
         for edge in self.g.edges():
             snode = edge[0]
             tnode = edge[1]
-            
-            spath = self.df.loc[self.df['name'] == edge[0]]['path'].unique()[0]
-            tpath = self.df.loc[self.df['name'] == edge[1]]['path'].unique()[0]
+
+            s_df = self.df.loc[self.df['name'] == edge[0]]
+            t_df = self.df.loc[self.df['name'] == edge[1]]
+
+            spath = s_df['path'].tolist()[0]
+            tpath = t_df['path'].tolist()[0]
             
             temp_group_path_results = self.create_group_path(spath)               
             group_path[snode] = temp_group_path_results[0]
             change_name[snode] = temp_group_path_results[1]
-                            
+
             component_path[snode] = self.create_component_path(spath, group_path[snode])
             component_level[snode] = len(component_path[snode])
-            module[snode] = component_path[snode][0]
+            module[snode] = s_df['module'].tolist()[0]
+            print(snode)
                             
             if module[snode] not in module_id_map:
                 module_count += 1 
@@ -155,35 +160,69 @@ class groupBy:
             else:
                 module_idx[snode] = module_id_map[module[snode]]
 
-            if component_level[snode] == 1:
+            if component_level[snode] == 2:
                 entry_func[snode] = True
-                node_name[snode] = component_path[snode]
                 show_node[snode] = True
             else:
                 entry_func[snode] = False
-                node_name[snode] = "Unknown(NA)"
                 show_node[snode] = False
-                            
-            print('Node: ', snode)        
-            print("entry function:", entry_func[snode])
-            print('Change name:', change_name[snode])
-            print("node path: ", spath)                
-            print("group path: ", group_path[snode])
-            print("component path: ", component_path[snode])
-            print("component level: ", component_level[snode])
-            print("Show node: ", show_node[snode])
-            print("name: ", node_name[snode])
-            print('Module: ', module[snode])
-            print("=================================")
-        
-        self.state.update_df('group_path', group_path)
-        self.state.update_df('component_path', component_path)
-        self.state.update_df('show_node', entry_func)
-        self.state.update_df('vis_node_name', node_name)
-        self.state.update_df('component_level', component_level)
-        self.state.update_df('_'+self.group_by, module)
-        self.state.update_df('change_name', change_name)
-        self.state.update_df('mod_index', module_idx)   
 
-        self.state.entry_funcs = self.entry_funcs
-        self.state.other_funcs = self.other_funcs
+            node_name[snode] = module[snode]  + '=' + snode
+                            
+            # print('Node: ', snode)        
+            # print("entry function:", entry_func[snode])
+            # print('Change name:', change_name[snode])
+            # print("node path: ", spath)                
+            # print("group path: ", group_path[snode])
+            # print("component path: ", component_path[snode])
+            # print("component level: ", component_level[snode])
+            # print("Show node: ", show_node[snode])
+            # print("name: ", node_name[snode])
+            # print('Module: ', module[snode])
+            # print("=================================")
+        
+        self.update_df('group_path', group_path)
+        self.update_df('component_path', component_path)
+        self.update_df('show_node', entry_func)
+        self.update_df('vis_name', node_name)
+        self.update_df('component_level', component_level)
+        self.update_df('change_name', change_name)
+        self.update_df('mod_index', module_idx)   
+        self.update_df('module', module)
+        self.update_df('entry_function', entry_func)
+
+        show_nodes = self.df.loc[self.df['show_node'] == True]['vis_name'].unique()
+        print("Number of nodes shown in group graph: {0}".format(show_nodes))
+
+        for node in self.g.nodes(data=True):
+            nodeName = node[0]
+            nodeData = node[1]
+            if nodeName in show_node:
+                if show_node[nodeName] == True:
+                    nodeData['show_node'] = True
+                else:
+                    nodeData['show_node'] = False
+            else:
+                nodeData['show_node'] = False
+      
+            if nodeName in module:
+                nodeData['module'] = module[nodeName]
+            else:
+                nodeData['module'] = 'missing'
+
+            if nodeName in group_path:
+                nodeData['group_path'] = group_path[nodeName]
+            else:
+                nodeData['group_path'] = []
+
+            if nodeName in component_path:
+                nodeData['component_path'] = component_path[nodeName]
+            else:
+                nodeData['component_path'] = []
+
+
+
+            print(node)
+
+
+        print(self.g.nodes(data=True))

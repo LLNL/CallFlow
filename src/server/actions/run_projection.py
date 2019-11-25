@@ -38,18 +38,18 @@ class RunProjection:
         ret['max_inclusive_time'] = state.df['time (inc)'].max()
         ret['max_exclusive_time'] = state.df['time'].max()
         ret['rank_count'] = len(state.df['rank'].unique())
-        ret['similarity'] = Similarity(state.g, self.states['union_graph'].g).result
+        ret['similarity'] = Similarity(state.g, self.states['ensemble_graph'].g).result
         return ret    
     
     def run(self):
         for idx, state in enumerate(self.states):
-            if(state != 'union_graph'):
+            if(state != 'ensemble_graph'):
                 df_params = self.add_df_params(self.states[state])
                 # self.states[state].projection_data.update(df_params)
 
         row_list = []
         for idx, state in enumerate(self.states):
-            if(state != 'union_graph'):
+            if(state != 'ensemble_graph'):
                 row_list.append(self.states[state].projection_data)
 
         df = pd.DataFrame(row_list)

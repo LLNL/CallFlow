@@ -1,4 +1,6 @@
 import tpl from '../html/runInformation.html'
+import EventHandler from './EventHandler'
+
 
 export default {
     name: 'RunInformation',
@@ -6,10 +8,15 @@ export default {
     data: () => ({
         selected: {},
         id: '',
-        people: [],
         message: "Run Information View",
+        runs: [],
     }),
-
+    mounted() {
+        EventHandler.$on('highlight_datasets', (datasets) => {
+            console.log("[Interaction] Highlighting the datasets :", datasets)
+            self.highlight(datasets)
+        })
+    },
     sockets: {
         run_information(data) {
             data = JSON.parse(data)
@@ -18,6 +25,11 @@ export default {
     },
 
     methods: {
+        init(data) {
+            this.labels = Object.keys(data[0])
+            this.runs = data
+        },
+
         getClass: ({ id }) => ({
             'md-primary': id === 2,
             'md-accent': id === 3
@@ -28,15 +40,7 @@ export default {
         },
 
         getLabel(id){
-            console.log(id)
             return this.labels[id]
-        },
-
-        init(data) {
-            console.log(data)
-            this.labels = Object.keys(data[0])
-            console.log(this.labels)
-            this.people = data
         },
 
         dataset(idx){
@@ -44,8 +48,11 @@ export default {
         },
 
         changeText(idx){
-            console.log(idx)
             return this.labels[idx]
-        }
+        },
+
+        highlight(){
+            
+        },
     }
 }

@@ -4,6 +4,7 @@ import DiffNodes from './diffgraph/nodes'
 import DiffColorMap from './diffgraph/colormap'
 // import IntermediateNodes from './callgraph/intermediateNodes'
 import MiniHistograms from './diffgraph/miniHistograms'
+import SimilarityMatrix from './diffgraph/similarityMatrix'
 import DiffEdges from './diffgraph/edges'
 import * as  d3 from 'd3'
 
@@ -15,10 +16,10 @@ export default {
 		// IntermediateNodes,
 		DiffEdges,
 		// MiniHistograms,
-		DiffColorMap
+		DiffColorMap,
+		SimilarityMatrix
     },
     props: [
-       
     ],
     data: () => ({
         graph: null,
@@ -90,7 +91,7 @@ export default {
 			this.$refs.DiffColorMap.init()
 			// // this.$refs.CallbackEdges.init(this.data, this.view)
 			// this.$refs.MiniHistograms.init(this.graph, this.view)
-
+			this.$refs.SimilarityMatrix.init()
 		},
 
 		updateMiniHistogram() {

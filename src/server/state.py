@@ -45,8 +45,9 @@ class State(object):
         return self.df.loc[self.df['vis_node_name'] == name]
 
     def update_df(self, col_name, mapping):
-        self.df[col_name] = self.df['nid'].apply(lambda node: mapping[node] if node in mapping.keys() else '')
-        self.df = self.df
+        
+        print(mapping)
+        self.df[col_name] = self.df['name'].apply(lambda node: mapping[node] if node in mapping.keys() else '')
     
     def grouped_df(self, attr):
         self.gdf[attr] = self.df.groupby(attr, as_index=True, squeeze=True)  

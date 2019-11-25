@@ -94,7 +94,8 @@ export default {
                     count += 1
                 }
             }
-            this.visualize()
+            // Uncomment this.
+            // this.visualize()
         },
 
 

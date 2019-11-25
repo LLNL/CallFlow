@@ -17,7 +17,7 @@ import time
 import utils
 from logger import log
 
-class Filter:
+class FilterHatchet:
     '''
     Filter the graphframe.
     Input: State object, parameter to filterBy (could be inclusive/exclusive, 

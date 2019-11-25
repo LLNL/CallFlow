@@ -113,7 +113,7 @@ export default {
 		// Preprocessing the graph. 
 		preprocess(graph, refresh) {
 			graph = this.findMaxGraph(graph)
-			graph = this.addLines(graph)
+			// graph = this.addLines(graph)
 			graph = this.addLinkID(graph)
 			graph = this.calculateFlow(graph)
 			console.log("Graph after preprocessing: ", graph)

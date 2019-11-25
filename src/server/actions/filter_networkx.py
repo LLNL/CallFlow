@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 
-class FilterUnion():
+class FilterNetworkX():
     def __init__(self, state):
         self.df = state.df
         self.dataset_df = self.df.groupby(['dataset'])
@@ -46,13 +46,12 @@ class FilterUnion():
             if edge[0] in call_sites and edge[1] in call_sites:
                 ret.add_edge(edge[0], edge[1])
 
-        self.add_node_attributes(df, ret)
+        # self.add_node_attributes(df, ret)
         return ret
 
     def generic_map(self, df, g):
         df = df.reset_index(['rank'])
         columns = list(df.columns)
-        print(columns)
         for column in columns:
             values = {}
             non_unique_columns = ['time', 'time (inc)', 'dataset', 'rank']

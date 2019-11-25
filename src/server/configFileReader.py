@@ -22,13 +22,15 @@ class configFileReader():
         self.datasets = self.json['datasets']  
         self.runName = self.json['runName']
         self.filter_perc = self.json['filter_perc']
+        self.callflow_path = self.json['callflow_path']
+        self.processed_path = os.path.join(self.callflow_path, self.json['save_path'])
         self.paths = {}
         self.props = {}
         self.nop  = {}
         self.format = {}
         self.fnMap = {}
-        self.fileMap = {}  
-        self.names = []    
+        self.fileMap = {} 
+        self.names = []
         self.dataset_names = []
         self.run()
 
@@ -81,4 +83,4 @@ class configFileReader():
 
     def __repr__(self):
         items = ("%s = %r" % (k, v) for k, v in self.__dict__.items())
-        return "<%s: {%s}>" % (self.__class__.__name__, ', '.join(items))
+        return "<%s: {%s}> \n" % (self.__class__.__name__, ', '.join(items))

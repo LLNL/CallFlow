@@ -7,7 +7,7 @@ import math
 class KDE_gradients:
     def __init__(self, states):
         self.states = states
-        self.nodes = states['union_graph'].g.nodes()
+        self.nodes = states['ensemble_graph'].g.nodes()
         self.results = self.run()
 
     def iqr(self, arr):
@@ -93,6 +93,7 @@ class KDE_gradients:
             mean_dist = {}
             max_dist = {}
             mean_time_inc_map = {}
+            print(node)
             module = node.split('=')[0]
             function = node.split('=')[1]
             mean_time_inc_map[node] = 0

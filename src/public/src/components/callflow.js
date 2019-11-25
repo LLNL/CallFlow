@@ -107,6 +107,10 @@ export default {
 		socket.on('connect', function() {
 		  console.log('Socket connection check 2: ', socket.connected);
 		});
+		socket.on('connect_error', function(err) {
+			console.log('Socket error: ', err);
+		});
+		
 		this.$socket.emit('init')
 	},
 
@@ -184,8 +188,8 @@ export default {
 		},
 
 		// Fetch aggregated graph (Super graph) for distribution mode.
-		// Fetch aggregated graph (Super graph) for distribution mode.
 		dist_group(data) {
+			data = JSON.parse(data)
 			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
 			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
 			if (this.selectedData == 'Dataframe' && this.initLoad) {
@@ -318,20 +322,20 @@ export default {
 						groupBy: this.selectedGroupBy
 					})
 
-					this.$socket.emit('dist_similarity', {
-						datasets: this.$store.actual_dataset_names,
-						algo: 'deltacon'
-					})
+					// this.$socket.emit('dist_similarity', {
+					// 	datasets: this.$store.actual_dataset_names,
+					// 	algo: 'deltacon'
+					// })
 
-					this.$socket.emit('dist_gradients', {
-						datasets: this.$store.actual_dataset_names,
-						plot: 'kde'
-					})
+					// this.$socket.emit('dist_gradients', {
+					// 	datasets: this.$store.actual_dataset_names,
+					// 	plot: 'kde'
+					// })
 
-					this.$socket.emit('dist_projection', {
-						datasets: this.$store.actual_dataset_names,
-						algo: 'tsne'
-					})
+					// this.$socket.emit('dist_projection', {
+					// 	datasets: this.$store.actual_dataset_names,
+					// 	algo: 'tsne'
+					// })
 	
 					// this.$socket.emit('dist_scatterplot', {
 					//     datasets: this.$store.client_datasets,
@@ -350,12 +354,12 @@ export default {
 			this.colorMap = this.$store.color.getAllColors()
 			if(this.selectedMode == 'Ensemble'){
 				if(this.selectedColorBy == 'Inclusive'){
-					this.selectedColorMin = this.$store.minIncTime['union']
-					this.selectedColorMax = this.$store.maxIncTime['union']
+					this.selectedColorMin = this.$store.minIncTime['ensemble']
+					this.selectedColorMax = this.$store.maxIncTime['ensemble']
 				}
 				else if(this.selectedColorBy == 'Exclusive'){
-					this.selectedColorMin = this.$store.minExcTime['union']
-					this.selectedColorMax = this.$store.maxExcTime['union']
+					this.selectedColorMin = this.$store.minExcTime['ensemble']
+					this.selectedColorMax = this.$store.maxExcTime['ensemble']
 				}
 			}
 			else if(this.selectedMode == 'Single'){

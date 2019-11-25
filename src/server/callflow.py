@@ -11,20 +11,17 @@
 ##############################################################################
 
 import hatchet as ht
-import time 
+import time
 import utils
 from logger import log
 from timer import Timer
 
-from networkx.drawing.nx_agraph import write_dot
 from networkx.readwrite import json_graph
 
-from preprocess import PreProcess
 from callgraph import CallGraph
 from distgraph import DistGraph
 
-from actions.create import Create
-from actions.groupBy import groupBy
+
 from actions.mini_histogram import MiniHistogram
 from actions.histogram import Histogram
 from actions.scatterplot import Scatterplot
@@ -35,16 +32,15 @@ from actions.split_level import splitLevel
 from actions.cct import CCT
 from actions.module_hierarchy import moduleHierarchy
 from actions.module_hierarchy_dist import moduleHierarchyDist
-from actions.filter import Filter
 from actions.function_list import FunctionList
-from actions.union_graph import UnionGraph  
+from actions.union_graph import UnionGraph
 from actions.kde_gradients import KDE_gradients
 from actions.similarity import Similarity
 from actions.run_projection import RunProjection
-from actions.filter_union import FilterUnion
 
 from state import State
 from logger import log
+from pipeline import Pipeline
 
 import time
 import networkx as nx
@@ -55,7 +51,7 @@ import os
 
 class CallFlow:
     def __init__(self, config):
-        # Config contains properties set by the input config file. 
+        # Config contains properties set by the input config file.
         self.config = config
         self.reUpdate = False
         self.reProcess = config.preprocess
@@ -65,7 +61,7 @@ class CallFlow:
 
         # Create states for each dataset.
         # Note: gf would never change from create_gf.
-        # Note: fgf would be changed when filter props are changed by client. 
+        # Note: fgf would be changed when filter props are changed by client.
         # Note: df is always updated.
         # Note: graph is always updated.
         # Note: map -> not sure if it can be used.
@@ -78,44 +74,63 @@ class CallFlow:
             utils.debug("Processing with filter.")
         else:
             utils.debug("Reading from the processed files.")
-        
+
+        self.pipeline = Pipeline(self.config)
+
         states = {}
-        for idx, dataset_name in enumerate(datasets):   
+        for idx, dataset_name in enumerate(datasets):
             states[dataset_name] = State(dataset_name)
-            if(self.reProcess and self.processEntire):
-                states[dataset_name] = self.create(dataset_name)
-                states[dataset_name] = self.process(states[dataset_name], 'entire')
-                self.write_gf(states[dataset_name], dataset_name, 'entire')
-                states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc) 
-                self.write_gf(states[dataset_name], dataset_name, 'filter')
-                group = groupBy(states[dataset_name], "module")
-                states[dataset_name].gdf = group.df
-                states[dataset_name].graph = group.graph
+            if self.reProcess and self.processEntire:
+                states[dataset_name] = self.pipeline.create(dataset_name)
+                states[dataset_name] = self.pipeline.process(
+                    states[dataset_name], "entire"
+                )
+                self.pipeline.write_gf(states[dataset_name], dataset_name, "entire")
+                states[dataset_name] = self.pipeline.filter(
+                    states[dataset_name], filterBy, filterPerc
+                )
+                self.pipeline.write_gf(states[dataset_name], dataset_name, "filter")
+                states[dataset_name] = self.pipeline.group(
+                    states[dataset_name], "module"
+                )
+
                 write_graph = False
                 self.write_gf(states[dataset_name], dataset_name, "group")
-            elif(self.reProcess and self.processFilter):
-                states[dataset_name] = self.read_entire_gf(dataset_name)
-                states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc) 
-                self.write_gf(states[dataset_name], dataset_name, 'filter')
-            elif(self.reUpdate):
-                states[dataset_name] = self.create(dataset_name)
-                states[dataset_name] = self.process(states[dataset_name], 'filter')
-                states[dataset_name] = self.filter(states[dataset_name], filterBy, filterPerc)
-            elif(self.reProcess and self.processUnion):
-                states[dataset_name] = self.create(dataset_name)
-                states[dataset_name] = self.process(states[dataset_name], 'entire')
-                states[dataset_name] = self.convertToNetworkX(states[dataset_name], 'path')
-                self.write_gf(states[dataset_name], dataset_name, 'entire')
-                states[dataset_name] = self.filterUnion(states[dataset_name], self.config.filter_perc)
-                self.write_dataset_gf(states[dataset_name], dataset_name, 'filter')
+            elif self.reUpdate:
+                states[dataset_name] = self.pipeline.create(dataset_name)
+                states[dataset_name] = self.pipeline.process(
+                    states[dataset_name], "filter"
+                )
+                states[dataset_name] = self.pipeline.filter(
+                    states[dataset_name], filterBy, filterPerc
+                )
+            elif self.reProcess and self.processUnion:
+                states[dataset_name] = self.pipeline.create(dataset_name)
+                states[dataset_name] = self.pipeline.process(
+                    states[dataset_name], "entire"
+                )
+                states[dataset_name] = self.pipeline.convertToNetworkX(
+                    states[dataset_name], "path"
+                )
+                self.pipeline.write_gf(states[dataset_name], dataset_name, "entire")
+                states[dataset_name] = self.pipeline.filterNetworkX(
+                    states, dataset_name, self.config.filter_perc
+                )
+                self.pipeline.write_dataset_gf(
+                    states[dataset_name], dataset_name, "filter"
+                )
+                self.pipeline.write_hatchet_graph(states, dataset_name)
             # else:
-                # states[dataset_name] = self.read_gf(dataset_name, '')
-        
-        if(self.reProcess and self.processUnion):
-            states['union'] = self.union(states)
-            states['union'] = self.filterUnion(states['union'], self.config.filter_perc)
-            self.write_union_gf(states['union'], 'union', 'union', False)
-       
+            # states[dataset_name] = self.read_gf(dataset_name, '')
+
+        if self.reProcess and self.processUnion:
+            states["ensemble"] = self.pipeline.union(states)
+            states["ensemble"] = self.pipeline.filterNetworkX(
+                states, "ensemble", self.config.filter_perc
+            )
+            states["ensemble"] = self.pipeline.group(states, "ensemble", "module")
+            self.pipeline.write_ensemble_gf(states, "ensemble")
+
         return states
 
     def setConfig(self):
@@ -129,317 +144,97 @@ class CallFlow:
         min_inclusive_time = 0
         min_exclusive_time = 0
         for idx, state in enumerate(self.states):
-            if(state != 'union_graph'):
+            if state != "ensemble":
                 self.config.max_incTime[state] = utils.getMaxIncTime(self.states[state])
                 self.config.max_excTime[state] = utils.getMaxExcTime(self.states[state])
                 self.config.min_incTime[state] = utils.getMinIncTime(self.states[state])
                 self.config.min_excTime[state] = utils.getMinExcTime(self.states[state])
                 self.config.numbOfRanks[state] = self.config.nop
-                max_exclusive_time = max(self.config.max_excTime[state], max_exclusive_time)
-                max_inclusvie_time = max(self.config.max_incTime[state], max_exclusive_time)
-                min_exclusive_time = min(self.config.min_excTime[state], min_exclusive_time)
-                min_inclusive_time = min(self.config.min_incTime[state], min_inclusive_time)
-        self.config.max_incTime['union'] = max_inclusvie_time
-        self.config.max_excTime['union'] = max_exclusive_time
-        self.config.min_incTime['union'] = min_inclusive_time
-        self.config.min_excTime['union'] = min_exclusive_time
-
-    def create(self, name):
-        state = State(name)
-        create = Create(self.config, name)
-
-        state.entire_gf = create.gf
-        state.entire_df = create.df
-        state.entire_graph = create.graph
-        
-        # print("After Creating.")
-        # print(state.df.groupby(['module']).mean())
-        return state
-
-    def process(self, state, gf_type):        
-        # Pre-process the dataframe and Graph. 
-        preprocess = PreProcess.Builder(state, gf_type) \
-            .add_n_index() \
-            .add_mod_index() \
-            .add_callers_and_callees() \
-            .add_show_node() \
-            .add_vis_node_name() \
-            .add_dataset_name() \
-            .update_module_name() \
-            .build()
-
-        state.gf = preprocess.gf
-        state.df = preprocess.df
-        state.graph = preprocess.graph
-
-        return state
-
-    def convertToNetworkX(self, state, path):
-        convert = DistGraph(state, path)
-
-        state.g = convert.g
-        return state
-
-    # Filter by hatchet graphframe. 
-    def filter(self, state, filterBy, filterPerc):
-        filter_obj = Filter(state, filterBy, filterPerc)
-
-        state.gf = filter_obj.gf
-        state.df = filter_obj.df
-        state.graph = filter_obj.graph
-
-        return state
-
-    # Union of all the networkX graphs provided.
-    def union(self, states):
-        u_graph = UnionGraph()
-        u_df = pd.DataFrame()
-        for idx, dataset in enumerate(states):
-            u_graph.unionize(states[dataset].g, dataset)
-            u_df = pd.concat([u_df, states[dataset].df])
-        # u_graph.add_union_node_attributes()
-        # u_graph.add_edge_attributes()
-
-        state = State('union')
-        state.df = u_df
-    
-        state.g = u_graph.R
-
-        return state
-
-    def filterUnion(self, state, perc):
-        filter_obj = FilterUnion(state)
-        state.df = filter_obj.filter_time_inc_overall(perc)
-        state.g = filter_obj.filter_graph_nodes(state.df, state.g)
-
-        return state
-
-    def write_gf(self, state, state_name, format_of_df, write_graph=True):
-        dirname = self.config.callflow_dir
-        utils.debug('writing file for {0} format'.format(format_of_df))
-
-        if write_graph:
-            # dump the entire_graph as literal
-            graph_literal = state.graph.to_literal(graph=state.graph, dataframe=state.df)
-            graph_filepath = dirname + '/' + state_name + '/' + format_of_df + '_graph.json'
-            utils.debug('File path: {0}'.format(graph_filepath))
-            with open(graph_filepath, 'w') as graphFile:
-                json.dump(graph_literal, graphFile)
-
-        # dump the filtered dataframe to csv.
-        df_filepath = dirname + '/' + state_name + '/' + format_of_df + '_df.csv'
-        state.df.to_csv(df_filepath)
-
-    def write_dataset_gf(self, state, state_name, format_of_df, write_graph=True):
-        dirname = self.config.callflow_dir
-        utils.debug('writing file for {0} format'.format(format_of_df))
-
-        # dump the filtered dataframe to csv.
-        df_filepath = dirname + '/' + state_name + '/' + format_of_df + '_df.csv'
-        graph_filepath = dirname + '/' + state_name + '/' + format_of_df + '_graph.json'
-        
-        state.df.to_csv(df_filepath)
-
-        g_data = json_graph.node_link_data(state.g)
-        with open(graph_filepath, 'w') as graphFile:
-            json.dump(g_data, graphFile)
-
-    def write_union_gf(self, state, state_name, format_of_df, write_graph=True):
-        dirname = self.config.callflow_dir
-        utils.debug('writing file for {0} format'.format(format_of_df))
-
-        # dump the filtered dataframe to csv.
-        df_filepath = dirname + '/' + format_of_df + '_df.csv'
-        graph_filepath = dirname + '/' + format_of_df + '_graph.json'
-        
-        state.df.to_csv(df_filepath)
-
-        g_data = json_graph.node_link_data(state.g)
-        with open(graph_filepath, 'w') as graphFile:
-            json.dump(g_data, graphFile)
-
-    def replace_str_with_Node(self, df, graph):
-        mapper = {}
-
-        def dfs_recurse(root):
-            for node in root.children: 
-                mapper[node.callpath[-1]] = Node(node.nid, node.callpath, None)
-                dfs_recurse(node)
-        for root in graph.roots:
-            mapper[root.callpath[-1]] = Node(root.nid, root.callpath, None)
-            dfs_recurse(root)
-        df['node'] = df['node'].apply(lambda node: mapper[node] if node in mapper else '')
-        return df 
-
-    def read_entire_gf(self, dataset):
-        log.info('[Process] Reading the entire dataframe and graph')
-        state = State(dataset)
-        dirname = self.config.callflow_dir
-        entire_df_filepath = dirname + '/' + dataset + '/entire_df.csv'
-        entire_graph_filepath = dirname + '/' + dataset + '/entire_graph.json'   
-
-        with open(entire_graph_filepath, 'r') as entire_graphFile:
-            entire_data = json.load(entire_graphFile)
-            
-        state.entire_gf = ht.GraphFrame.from_literal(entire_data)
-
-        state.entire_df = pd.read_csv(entire_df_filepath)
-        state.entire_graph = state.entire_gf.graph
-
-        return state
-
-    def read_union_gf(self):
-        name = 'union'
-        log.info('[Process] Reading the union dataframe and graph')
-        state = State(name)
-        dirname = self.config.callflow_dir
-        union_df_filepath = dirname + '/' + name + '_df.csv'
-        union_graph_filepath = dirname + '/' + name + '_graph.json'   
-        
-        with open(union_graph_filepath, 'r') as union_graphFile:
-            union_graph = json.load(union_graphFile)
-        state.g = json_graph.node_link_graph(union_graph)
-
-        state.df = pd.read_csv(union_df_filepath)
-
-        return state
-
-    def read_dataset_gf(self, name):
-        state = State(name)
-        dataset_dirname = os.path.abspath(os.path.join(__file__, '../../..')) + '/data'
-        df_filepath = self.config.callflow_dir + '/' + name + '/filter_df.csv'
-        entire_df_filepath = self.config.callflow_dir + '/' + name + '/entire_df.csv'
-        graph_filepath = self.config.callflow_dir + '/' + name + '/filter_graph.json'
-        entire_graph_filepath = self.config.callflow_dir + '/' + name + '/entire_graph.json'   
-        # if(graph_type != None):
-        #     group_df_file_path = self.config.callflow_dir + '/' + name + '/' + graph_type + '_df.csv'
-        #     group_graph_file_path = self.config.callflow_dir + '/' + name + '/' + graph_type + '_graph.json'
-        parameters_filepath = dataset_dirname + '/' + self.config.runName + '/'  + name + '/env_params.txt'
-
-        state.df = pd.read_csv(df_filepath)
-        state.entire_df = pd.read_csv(entire_df_filepath)
-
-        # with open(entire_graph_filepath, 'r') as entire_graphFile:
-        #     entire_graph = json.load(entire_graphFile)
-        # print(entire_graph)
-        # state.entire_g = json_graph.node_link_graph(entire_graph)
-
-        with open(graph_filepath, 'r') as filter_graphFile:
-            graph = json.load(filter_graphFile)
-        state.g = json_graph.node_link_graph(graph)
-
-        # if(graph_type != None):
-        #     with self.timer.phase('Read {0} dataframe'.format(graph_type)):
-        #         with open(group_graph_file_path, 'r') as groupGraphFile:
-        #             data = json.load(groupGraphFile)
-
-        #     state.group_graph = json_graph.node_link_graph(data)
-        #     state.group_df = pd.read_csv(group_df_file_path)
-            # state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
-
-        state.projection_data = {}
-        for line in open(parameters_filepath, 'r'):
-            s = 0
-            for num in line.strip().split(','):
-                split_num = num.split('=')
-                state.projection_data[split_num[0]] = split_num[1]
-
-        return state
-
-    def read_group_gf(self, name, graph_type):
-        state = State(name)
-        dirname = self.config.callflow_dir
-        dataset_dirname = os.path.abspath(os.path.join(__file__, '../../..')) + '/data'
-        group_df_file_path = dirname + '/' + name + '/' + graph_type + '_df.csv'
-        group_graph_file_path = dirname + '/' + name + '/' + 'group' + '_graph.json'
-        parameters_filepath = dataset_dirname + '/' + self.config.runName + '/'  + name + '/env_params.txt'
-
-        with self.timer.phase('Read {0} dataframe'.format(graph_type)):
-            with open(group_graph_file_path, 'r') as groupGraphFile:
-                data = json.load(groupGraphFile)
-
-        state.group_gf = ht.GraphFrame.from_literal(data)
-
-        state.group_graph = state.group_gf.graph
-        state.group_df = pd.read_csv(group_df_file_path)
-        # state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
-
-        state.projection_data =  {}
-        for line in open(parameters_filepath, 'r'):
-            s = 0
-            for num in line.strip().split(','):
-                split_num = num.split('=')
-                state.projection_data[split_num[0]] = split_num[1]
-
-        return state
+                max_exclusive_time = max(
+                    self.config.max_excTime[state], max_exclusive_time
+                )
+                max_inclusvie_time = max(
+                    self.config.max_incTime[state], max_exclusive_time
+                )
+                min_exclusive_time = min(
+                    self.config.min_excTime[state], min_exclusive_time
+                )
+                min_inclusive_time = min(
+                    self.config.min_incTime[state], min_inclusive_time
+                )
+        self.config.max_incTime["ensemble"] = max_inclusvie_time
+        self.config.max_excTime["ensemble"] = max_exclusive_time
+        self.config.min_incTime["ensemble"] = min_inclusive_time
+        self.config.min_excTime["ensemble"] = min_exclusive_time
 
     def update(self, action):
-        utils.debug('Update', action)
+        utils.debug("Update", action)
         action_name = action["name"]
 
-        if action_name == 'init':
+        if action_name == "init":
             self.setConfig()
             return self.config
 
-        if 'groupBy' in action:
-            log.debug('Grouping by: {0}'.format(action['groupBy']))
+        if "groupBy" in action:
+            log.debug("Grouping by: {0}".format(action["groupBy"]))
         else:
-            action['groupBy'] = 'name'
+            action["groupBy"] = "name"
 
-        dataset1 = action['dataset1']
+        dataset1 = action["dataset1"]
         state1 = self.states[dataset1]
 
         log.info("The selected Dataset is {0}".format(dataset1))
 
         # Compare against the different operations
-        if action_name == 'default':
+        if action_name == "default":
             groupBy(state1, action["groupBy"])
-            nx = CallGraph(state1, 'group_path', True, action["groupBy"])
-        
-        elif action_name == 'reset':
+            nx = CallGraph(state1, "group_path", True, action["groupBy"])
+
+        elif action_name == "reset":
             datasets = [dataset1]
             self.reProcess = True
-            self.states = self.pipeline(datasets, action["filterBy"], action["filterPerc"])
-            self.reProcess  = False
+            self.states = self.pipeline(
+                datasets, action["filterBy"], action["filterPerc"]
+            )
+            self.reProcess = False
             self.states = self.pipeline(datasets)
             return {}
 
         elif action_name == "group":
-            log.debug("Grouping the Graphframe by: {0}".format(action['groupBy']))
-            # utils.dfs(state1.graph, state1.df, 1000)
+            log.debug("Grouping the Graphframe by: {0}".format(action["groupBy"]))
             group = groupBy(state1, action["groupBy"])
             self.states[dataset1].gdf = group.df
-            self.states[dataset1].graph = group.graph 
+            self.states[dataset1].graph = group.graph
             write_graph = False
             self.write_gf(state1, dataset1, "group", write_graph)
-            if(action['groupBy'] == 'module'):
-                path_type = 'group_path' 
-            elif(action['groupBy'] == 'name'):
-                path_type = 'path'
+            if action["groupBy"] == "module":
+                path_type = "group_path"
+            elif action["groupBy"] == "name":
+                path_type = "path"
             nx = CallGraph(state1, path_type, True, action["groupBy"])
             state1.g = nx.g
             return nx.g
-        
-        elif action_name == 'split-level':
+
+        elif action_name == "split-level":
             splitLevel(state1, action["groupBy"])
-            nx = CallGraph(state1, 'group_path', True)
+            nx = CallGraph(state1, "group_path", True)
             return nx.g
-        
+
         elif action_name == "split-callee":
             splitCallee(state1, action["groupBy"])
-            nx = CallGraph(state1, 'path', True)
+            nx = CallGraph(state1, "path", True)
             return nx.g
-        
+
         elif action_name == "split-caller":
             splitCaller(state1, action["groupBy"])
-            nx = CallGraph(state1, 'path', True)
+            nx = CallGraph(state1, "path", True)
             return nx.g
-        
-        elif action_name == 'hierarchy':
-            mH = moduleHierarchy(self.states[dataset1], action["module"])
-            return mH.result 
 
-        elif action_name == 'histogram':
+        elif action_name == "hierarchy":
+            mH = moduleHierarchy(self.states[dataset1], action["module"])
+            return mH.result
+
+        elif action_name == "histogram":
             histogram = Histogram(state1, action["nid"])
             return histogram.result
 
@@ -448,15 +243,15 @@ class CallFlow:
             return minihistogram.result
 
         elif action_name == "cct":
-            nx = CCT(state1, action['functionInCCT'])
+            nx = CCT(state1, action["functionInCCT"])
             return nx.g
 
-        elif action_name == 'split-rank':
-            ret = splitRank(state1, action['ids'])
+        elif action_name == "split-rank":
+            ret = splitRank(state1, action["ids"])
             return ret
 
-        elif action_name == 'function':
-            functionlist = FunctionList(state1, action['module'], action['nid'])
+        elif action_name == "function":
+            functionlist = FunctionList(state1, action["module"], action["nid"])
             return functionlist.result
 
     def update_dist(self, action):
@@ -464,105 +259,91 @@ class CallFlow:
         print("Action: ", action_name)
         datasets = self.config.dataset_names
 
-        if action_name == 'init_dist':
-            # self.setConfig()
-
-            if(action['groupBy'] == 'module'):
-                path_type = 'group_path'
-            elif(action['groupBy'] == 'name'):
-                path_type = 'path'
-
+        if action_name == "init":
+            self.states["ensemble"] = self.pipeline.read_ensemble_gf()
             for idx, dataset in enumerate(datasets):
-                group_state = self.read_group_gf(dataset, 'group')
-                graph = DistGraph(group_state, path_type, True, action['groupBy'])
-                self.states[dataset].graph = graph.g
-                self.states[dataset].df = group_state.group_df
-                self.write_group_gf(self.states[dataset], dataset, "dist", True)
-            return self.config
+                self.states[dataset] = self.pipeline.read_dataset_gf(dataset)
 
-        elif action_name == 'init':
-            self.states['union_graph'] = self.read_union_gf()
-            for idx, dataset in enumerate(datasets):
-                self.states[dataset] = self.read_dataset_gf(dataset)
-                
-            # Read all datasets but the filtered versions. 
-            
+            # Read all datasets but the filtered versions.
             self.setConfig()
             return self.config
 
         elif action_name == "group":
-            grouped_graph = groupBy(self.states['union_graph'], 'module')
-            self.states['union_graph'].g = grouped_graph.g
-            self.states['union_graph'].df =  grouped_graph.df
-            return grouped_graph.g
+            final_graph = DistGraph(
+                self.states["ensemble"], "", construct_graph=False, add_data=True
+            ).g
+            print(final_graph)
+            return final_graph
 
-        elif action_name == 'scatterplot':
-            if(action['plot'] == 'bland-altman'):
-                state1 = self.states[action['dataset1']]
-                state2 = self.states[action['dataset2']]
-                col = action['col']
-                catcol = action['catcol']
-                dataset1 = action['dataset1']
-                dataset2 = action['dataset2']
-                ret = BlandAltman(state1, state2, col, catcol, dataset1, dataset2).results
+        elif action_name == "scatterplot":
+            if action["plot"] == "bland-altman":
+                state1 = self.states[action["dataset1"]]
+                state2 = self.states[action["dataset2"]]
+                col = action["col"]
+                catcol = action["catcol"]
+                dataset1 = action["dataset1"]
+                dataset2 = action["dataset2"]
+                ret = BlandAltman(
+                    state1, state2, col, catcol, dataset1, dataset2
+                ).results
             return ret
 
-        elif action_name == 'gradients':
-            if(action['plot'] == 'kde'):
+        elif action_name == "gradients":
+            if action["plot"] == "kde":
                 ret = KDE_gradients(self.states).results
-            return ret 
+            return ret
 
-        elif action_name == 'Gromov-wasserstein':
-            ret = {}       
-            return ret  
+        elif action_name == "Gromov-wasserstein":
+            ret = {}
+            return ret
 
-        elif action_name == 'similarity':
+        elif action_name == "similarity":
             self.similarities = {}
             for idx, dataset in enumerate(datasets):
                 self.similarities[dataset] = []
                 for idx_2, dataset2 in enumerate(datasets):
-                    union_similarity = Similarity(self.states[dataset2].g, self.states[dataset].g)
+                    union_similarity = Similarity(
+                        self.states[dataset2].g, self.states[dataset].g
+                    )
                     self.similarities[dataset].append(union_similarity.result)
             return self.similarities
-        
-        elif action_name == 'hierarchy':
-            mH = moduleHierarchyDist(self.states['union_graph'], action["module"])
+
+        elif action_name == "hierarchy":
+            mH = moduleHierarchyDist(self.states["union_graph"], action["module"])
             return mH.result
 
         elif action_name == "cct":
-            self.update_dist({
-                'name': 'group',
-                "groupBy": 'name',
-                'datasets': action['datasets']
-            })
-            nx = CCT(self.states['union_graph'], action['functionsInCCT'])
-            return nx.g 
+            self.update_dist(
+                {"name": "group", "groupBy": "name", "datasets": action["datasets"]}
+            )
+            nx = CCT(self.states["union_graph"], action["functionsInCCT"])
+            return nx.g
 
-        elif action_name == 'projection':
+        elif action_name == "projection":
             result = RunProjection(self.states, self.similarities).result
             return result.to_json(orient="columns")
-            
-        elif action_name == 'run-information':
+
+        elif action_name == "run-information":
             ret = []
             for idx, state in enumerate(self.states):
-                self.states[state].projection_data['dataset'] = state
+                self.states[state].projection_data["dataset"] = state
                 ret.append(self.states[state].projection_data)
             return ret
 
     def displayStats(self, name):
-        log.warn('==========================')
+        log.warn("==========================")
         log.info("Number of datasets : {0}".format(len(self.config[name].paths.keys())))
-        log.info('Stats: Dataset ({0}) '.format(name))
-        log.warn('==========================')
+        log.info("Stats: Dataset ({0}) ".format(name))
+        log.warn("==========================")
         max_inclusive_time = utils.getMaxIncTime(gf)
         max_exclusive_time = utils.getMaxExcTime(gf)
         avg_inclusive_time = utils.getAvgIncTime(gf)
         avg_exclusive_time = utils.getAvgExcTime(gf)
         num_of_nodes = utils.getNumOfNodes(gf)
         log.info("[] Rows in dataframe: {0}".format(self.states[name].df.shape[0]))
-        log.info('Max Inclusive time = {0} '.format(max_inclusive_time))
-        log.info('Max Exclusive time = {0} '.format(max_exclusive_time))
-        log.info('Avg Inclusive time = {0} '.format(avg_inclusive_time))
-        log.info('Avg Exclusive time = {0} '.format(avg_exclusive_time))
-        log.info('Number of nodes in CCT = {0}'.format(num_of_nodes))
-        
+        log.info("Max Inclusive time = {0} ".format(max_inclusive_time))
+        log.info("Max Exclusive time = {0} ".format(max_exclusive_time))
+        log.info("Avg Inclusive time = {0} ".format(avg_inclusive_time))
+        log.info("Avg Exclusive time = {0} ".format(avg_exclusive_time))
+        log.info("Number of nodes in CCT = {0}".format(num_of_nodes))
+
