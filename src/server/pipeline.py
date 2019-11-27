@@ -219,7 +219,7 @@ class Pipeline:
         )
 
         state.df = pd.read_csv(df_filepath)
-        state.entire_df = pd.read_csv(entire_df_filepath)
+        # state.entire_df = pd.read_csv(entire_df_filepath)
 
         # with open(entire_graph_filepath, 'r') as entire_graphFile:
         #     entire_graph = json.load(entire_graphFile)

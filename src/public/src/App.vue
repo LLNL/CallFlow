@@ -66,7 +66,7 @@ export default {
 
 .unselected{
     stroke: black;
-    stroke-width: 2px;    
+    stroke-width: 2px;
 }
 
 .big_text{
@@ -211,5 +211,9 @@ body{
 .origin {
   fill: #009688;
   opacity: 0.5;
+}
+
+#run-information{
+  max-height: 400px
 }
 </style>

@@ -21,7 +21,6 @@ from .similarity import Similarity
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
 from actions.algorithm.k_medoids import KMedoids
-from actions.algorithm.prog_kmeans import ProgKMeans
 
 class RunProjection:
     def __init__(self, states, similarities):
@@ -39,8 +38,8 @@ class RunProjection:
         ret['max_exclusive_time'] = state.df['time'].max()
         ret['rank_count'] = len(state.df['rank'].unique())
         ret['similarity'] = Similarity(state.g, self.states['ensemble'].g).result
-        return ret    
-    
+        return ret
+
     def run(self):
         for idx, state in enumerate(self.states):
             if(state != 'ensemble'):
@@ -59,20 +58,20 @@ class RunProjection:
             print('Removing {0} column from the dataframe'.format('dataset'))
             df = df.drop(columns = ['dataset'])
         x = df.values #returns a numpy array
-       
+
         # Scale the values to value between 0 to 1
         min_max_scaler = preprocessing.MinMaxScaler()
         x_scaled = min_max_scaler.fit_transform(x)
         df = pd.DataFrame(x_scaled)
         X = np.vstack([df.values.tolist()])
-        
+
         random_number = 20150101
         if self.projection == 'MDS':
             proj = MDS(random_state=random_number).fit_transform(X)
-    
+
         elif self.projection == 'TSNE':
             proj = TSNE(random_state=random_number).fit_transform(X)
-    
+
         datasets = [key for key in self.states.keys() if key != 'ensemble']
         ret = pd.DataFrame(proj, columns=list('xy'))
         ret['dataset'] = datasets
@@ -88,5 +87,5 @@ class RunProjection:
         elif self.clustering == 'k_means':
             self.clusters = KMeans(n_clusters=self.n_cluster, random_state=random_number)
             ret['label'] = self.clusters.fit(X).labels_
-        
+
         return ret

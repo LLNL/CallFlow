@@ -2,7 +2,6 @@ import * as d3 from 'd3'
 import { lasso } from '../thirdParty/lasso';
 import template from '../html/projection.html'
 import EventHandler from './EventHandler.js'
-import { EventEmitter } from 'events';
 
 export default {
     name: 'Projection',
@@ -32,9 +31,9 @@ export default {
     mounted() {
         this.id = 'dim-overview' + this._uid
         let self = this
-        EventHandler.$on('highlight_datasets', (datasets) => {
-            console.log("[Interaction] Highlighting the datasets :", datasets)
-            self.highlight(datasets)
+        EventHandler.$on('highlight_dataset', (dataset) => {
+            console.log("[Projection] Highlighting the dataset :", dataset)
+            self.highlight(dataset)
         })
     },
     methods: {
@@ -70,11 +69,15 @@ export default {
 
         axis() {
             this.xAxis = d3.axisBottom(this.x)
-                .tickFormat(d3.format('0.1s'))
+                .tickFormat((d, i) => {
+                    return ''
+                    // return d
+                })
 
             this.yAxis = d3.axisLeft(this.y)
                 .tickFormat((d, i) => {
-                    return d
+                    return ''
+                    // return d
                 })
 
             this.yDom = [0, 0]
@@ -83,9 +86,10 @@ export default {
                 .attrs({
                     transform: `translate(${this.padding.left}, ${this.height - this.padding.bottom})`,
                     class: 'x-axis',
-                    'stroke-width': '1px',
-                    'color': '#000',
-                    'stroke': '#999',
+                    // 'stroke-width': '1px',
+                    'color': '#fff',
+                    // 'color': '#000',
+                    // 'stroke': '#999',
                 })
                 .call(this.xAxis);
 
@@ -93,9 +97,10 @@ export default {
                 .attrs({
                     transform: `translate(${this.padding.left}, ${this.padding.top})`,
                     class: 'y-axis',
-                    'stroke-width': '1px',
-                    'color': '#000',
-                    'stroke': '#999',
+                    // 'stroke-width': '1px',
+                    color: '#fff'
+                    // 'color': '#000',
+                    // 'stroke': '#999',
                 })
                 .call(this.yAxis);
         },
@@ -195,8 +200,8 @@ export default {
                 .enter()
                 .append('circle')
                 .attrs({
-                    class: (d) => { return 'dot' + ' circle' + this.id },
-                    id: (d) => { return 'dot' + d[3] },
+                    class: (d) => { console.log(d); return 'dot' + ' circle' + this.id },
+                    id: (d) => { return 'dot-' + self.$store.datasetMap[d[2]] },
                     // stroke: (d) => { return this.$store.colorset[d[2]] },
                     r: (d) => {
                         if (Object.entries(ts).length < 16) return 6.0
@@ -204,7 +209,6 @@ export default {
                     },
                     'stroke-width': 1.0,
                     fill: (d) => { return this.$store.colorset[d[4]] },
-                    id: (d) => { return 'dot' + d[3] },
                     cx: (d, i) => { return self.x(d[0]) },
                     cy: (d) => { return self.y(d[1]) },
                 })
@@ -382,24 +386,13 @@ export default {
         },
 
         highlight(dataset) {
-            this.circles = this.svg.selectAll('circle')
-                .data(this.data)
-                .enter()
-                .append('circle')
+            let datasetID = this.$store.datasetMap[dataset]
+            let self = this
+            this.circles = this.svg.selectAll('#dot-' + datasetID)
                 .attrs({
-                    class: (d) => { return 'dot' + ' circle' + this.id },
-                    id: (d) => { return 'dot' + d[3] },
-                    stroke: (d) => { return this.$store.color.highlight },
-                    r: (d) => {
-                        if (Object.entries(ts).length < 16) return 6.0
-                        else return 4.5
-                    },
-                    'stroke-width': 6.0,
+                    stroke: (d) => { return self.$store.color.highlight },
+                    'stroke-width': 3.0,
                     // fill: (d) => { return this.$store.colorset[d[2]] },
-                    fill: (d) => { return '#009688' },
-                    id: (d) => { return 'dot' + d[3] },
-                    cx: (d, i) => { return self.x(d[0]) },
-                    cy: (d) => { return self.y(d[1]) },
                 })
         }
     },

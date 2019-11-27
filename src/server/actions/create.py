@@ -10,7 +10,7 @@
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
 import pandas as pd
-import time 
+import time
 import utils
 from logger import log
 import os
@@ -20,7 +20,7 @@ class Create:
     '''
     Creates a graph frame.
     Input : config variable, and dataset name
-    Output : State object containing components of graphframe as separate object variables. 
+    Output : State object containing components of graphframe as separate object variables.
     '''
     def __init__(self, config, name):
         utils.debug("Creating graphframes: ", name)
@@ -30,13 +30,13 @@ class Create:
         self.run()
 
     def run(self):
-        callflow_path = "/home/vidi/Work/llnl/CallFlow"
+        callflow_path = self.config.callflow_path
         data_path = os.path.abspath(os.path.join(callflow_path, self.config.paths[self.name]))
 
         if self.config.format[self.name] == 'hpctoolkit':
             self.gf = ht.GraphFrame.from_hpctoolkit(data_path)
-        elif self.config.format[self.name] == 'caliper':                
-            self.gf = ht.GraphFrame.from_caliper(data_path)  
+        elif self.config.format[self.name] == 'caliper':
+            self.gf = ht.GraphFrame.from_caliper(data_path)
         elif self.config.format[self.name] == 'caliper_json':
             self.gf = ht.GraphFrame.from_caliper_json(data_path)
         elif self.config.format[self.name] == 'gprof':
@@ -45,6 +45,6 @@ class Create:
             self.gf = ht.GraphFrame.from_literal(data_path)
         elif self.config.format[self.name] == 'lists':
             self.gf = ht.GraphFrame.from_lists(data_path)
-            
+
         self.df = self.gf.dataframe
         self.graph = self.gf.graph

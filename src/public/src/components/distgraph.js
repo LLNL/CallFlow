@@ -279,10 +279,10 @@ export default {
 				for (const dataset of datasets) {
 					if (node.hasOwnProperty(dataset)) {
 						obj[dataset] = node[dataset]['time (inc)'] / node['time (inc)']
-						obj['xid'] = node[dataset]['nid']
+						obj['id'] = node[dataset]['id']
 					}
 				}
-				obj['union'] = node['union']['time (inc)'] / node['time (inc)']
+				obj['ensemble'] = node['ensemble']['time (inc)'] / node['time (inc)']
 				node['props'] = obj
 				count += 1
 			}

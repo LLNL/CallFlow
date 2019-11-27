@@ -1,7 +1,6 @@
 import tpl from '../html/runInformation.html'
 import EventHandler from './EventHandler'
 
-
 export default {
     name: 'RunInformation',
     template: tpl,
@@ -12,7 +11,8 @@ export default {
         runs: [],
     }),
     mounted() {
-        EventHandler.$on('highlight_datasets', (datasets) => {
+        let self = this
+        EventHandler.$on('highlight_dataset', (datasets) => {
             console.log("[Interaction] Highlighting the datasets :", datasets)
             self.highlight(datasets)
         })
@@ -37,6 +37,10 @@ export default {
 
         onSelect(item) {
             this.selected = item
+            console.log(item['dataset'])
+            this.$store.highlight_dataset = item['dataset']
+            EventHandler.$emit('highlight_dataset', item['dataset'])
+
         },
 
         getLabel(id){
@@ -52,7 +56,7 @@ export default {
         },
 
         highlight(){
-            
+            console.log("[Run information] highlight. ")
         },
     }
 }
