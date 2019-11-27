@@ -324,7 +324,8 @@ export default {
 
 					this.$socket.emit('dist_similarity', {
 						datasets: this.$store.actual_dataset_names,
-						algo: 'deltacon'
+						algo: 'deltacon',
+						module: 'all'
 					})
 
 					this.$socket.emit('dist_gradients', {

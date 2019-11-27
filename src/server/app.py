@@ -463,6 +463,7 @@ class App:
                     "name": "similarity",
                     "datasets": data["datasets"],
                     "algo": data["algo"],
+                    "module": data["module"]
                 }
             )
             emit("dist_similarity", result, json=True)

@@ -66,8 +66,8 @@ class CallFlow:
         # Note: graph is always updated.
         # Note: map -> not sure if it can be used.
         self.timer = Timer()
-        dataset_names = self.config.dataset_names
-        self.states = self.pipeline(dataset_names)
+        self.dataset_names = self.config.dataset_names
+        self.states = self.pipeline(self.dataset_names)
 
     def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
         if self.reProcess:
@@ -130,7 +130,8 @@ class CallFlow:
             )
             states["ensemble"] = self.pipeline.group(states, "ensemble", "module")
             self.pipeline.write_ensemble_gf(states, "ensemble")
-            self.pipeline.defconSimilarity(states, "ensemble")
+
+            similarities = self.pipeline.deltaconSimilarity(datasets, states, "ensemble")
 
         return states
 
@@ -298,13 +299,20 @@ class CallFlow:
             return ret
 
         elif action_name == "similarity":
-            self.similarities = {}
-            for idx, dataset in enumerate(datasets):
-                self.similarities[dataset] = []
-                for idx_2, dataset2 in enumerate(datasets):
-                    union_similarity = Similarity(
-                        self.states[dataset2].g, self.states[dataset].g
-                    )
+            if (action['module'] == 'all'):
+                dirname = self.config.callflow_dir
+                name = self.config.runName
+                similarity_filepath = dirname  + '/' + 'similarity.json'
+                with open(similarity_filepath, 'r') as similarity_file:
+                    self.similarities = json.load(similarity_file)
+            else:
+                self.similarities = {}
+                for idx, dataset in enumerate(datasets):
+                    self.similarities[dataset] = []
+                    for idx_2, dataset2 in enumerate(datasets):
+                        union_similarity = Similarity(
+                            self.states[dataset2].g, self.states[dataset].g
+                        )
                     self.similarities[dataset].append(union_similarity.result)
             return self.similarities
 

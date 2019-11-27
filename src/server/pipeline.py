@@ -8,6 +8,7 @@ from actions.groupBy import groupBy
 from actions.filter_hatchet import FilterHatchet
 from actions.filter_networkx import FilterNetworkX
 from actions.union_graph import UnionGraph
+from actions.similarity import Similarity
 
 from logger import log
 from state import State
@@ -275,3 +276,19 @@ class Pipeline:
                 state.projection_data[split_num[0]] = split_num[1]
 
         return state
+
+    def deltaconSimilarity(self, datasets, states, type):
+        ret = {}
+        for idx, dataset in enumerate(datasets):
+            ret[dataset] = []
+            for idx_2, dataset2 in enumerate(datasets):
+                union_similarity = Similarity(
+                    states[dataset2].g, states[dataset].g
+                )
+                ret[dataset].append(union_similarity.result)
+
+        dirname = self.config.callflow_dir
+        name = self.config.runName
+        similarity_filepath = dirname  + '/' + 'similarity.json'
+        with open(similarity_filepath, 'w') as json_file:
+                json.dump(ret, json_file)
