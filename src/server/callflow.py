@@ -112,7 +112,7 @@ class CallFlow:
                 states[dataset_name] = self.pipeline.convertToNetworkX(
                     states[dataset_name], "path"
                 )
-                self.pipeline.write_gf(states[dataset_name], dataset_name, "entire")
+                # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire")
                 states[dataset_name] = self.pipeline.filterNetworkX(
                     states, dataset_name, self.config.filter_perc
                 )
