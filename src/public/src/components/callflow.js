@@ -110,7 +110,7 @@ export default {
 		// socket.on('connect_error', function(err) {
 		// 	console.log('Socket error: ', err);
 		// });
-		
+
 		this.$socket.emit('init')
 	},
 
@@ -125,7 +125,7 @@ export default {
 			data = JSON.parse(data)
 			console.log("Config file contains: ", data)
 			this.numOfDatasets = data['datasets'].length
-			
+
 			// Enable diff mode only if the number of datasets >= 2
 			let datasetMapping = this.assignUniqueDatasetNames(data['names'])
 			this.$store.datasets = datasetMapping['arr']
@@ -167,7 +167,7 @@ export default {
 			this.init()
 		},
 
-		// Reset to the init() function. 
+		// Reset to the init() function.
 		reset(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
 			this.init()
@@ -224,15 +224,15 @@ export default {
 			this.$refs.CCT.init(data['union'], '2')
 		},
 
-		
+
 		disconnect(){
 			console.log('Disconnected.')
 		}
 	},
 
 	methods: {
-		// Assigns idx to datasets. 
-		// osu_bcast.XX.XX.XX-XX => osu_bcast_1 and so on. 
+		// Assigns idx to datasets.
+		// osu_bcast.XX.XX.XX-XX => osu_bcast_1 and so on.
 		assignUniqueDatasetNames(names) {
 			let ret = []
 			let retMap = {}
@@ -336,7 +336,7 @@ export default {
 						datasets: this.$store.actual_dataset_names,
 						algo: 'tsne'
 					})
-	
+
 					// this.$socket.emit('dist_scatterplot', {
 					//     datasets: this.$store.client_datasets,
 					//     dataset1: this.$store.selectedDataset,
@@ -369,7 +369,7 @@ export default {
 				} else if (this.selectedColorBy == 'Exclusive') {
 					this.selectedColorMin = this.$store.minExcTime[this.selectedDataset]
 					this.selectedColorMax = this.$store.maxExcTime[this.selectedDataset]
-				}	
+				}
 			}
 
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
@@ -497,7 +497,7 @@ export default {
 			}
 			// Call updateMiniHistogram inside callgraph.js
 			this.$refs.Callgraph.updateMiniHistogram()
-			// TODO: Call updateHistogram for diffCallgraph when needed. 
+			// TODO: Call updateHistogram for diffCallgraph when needed.
 		},
 
 		updateScatterMode() {

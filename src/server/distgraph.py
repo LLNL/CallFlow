@@ -27,6 +27,8 @@ class DistGraph(nx.Graph):
             "callers",
             "callees",
             "vis_name",
+            "module",
+            "show_node",
         ]
 
         if construct_graph:
@@ -67,13 +69,26 @@ class DistGraph(nx.Graph):
     def add_paths(self, path):
         for idx, row in self.df.iterrows():
             if row.show_node:
-                print(row[path], type(row[path]))
                 if isinstance(row[path], list):
                     path_tuple = row[path]
                 elif isinstance(row[path], str):
                     path_tuple = make_tuple(row[path])
                 corrected_path = self.no_cycle_path(path_tuple)
                 self.g.add_path(corrected_path)
+
+    def add_node_attributes(self):
+        ensemble_mapping = self.ensemble_map(self.g.nodes())
+
+        for idx, key in enumerate(ensemble_mapping):
+            nx.set_node_attributes(self.g, name=key, values=ensemble_mapping[key])
+
+        dataset_mapping = {}
+        for dataset in self.df["dataset"].unique():
+            dataset_mapping[dataset] = self.dataset_map(self.g.nodes(), dataset)
+
+            nx.set_node_attributes(
+                self.g, name=dataset, values=dataset_mapping[dataset]
+            )
 
     def add_edge_attributes(self):
         # number_of_runs_mapping = self.number_of_runs()
@@ -118,20 +133,6 @@ class DistGraph(nx.Graph):
             self.R.nodes[node_name]["ensemble"]["time"] = max_exc_time
             self.R.nodes[node_name]["ensemble"]["entry_functions"] = entry_functions
 
-    def add_node_attributes(self):
-        ensemble_mapping = self.ensemble_map(self.g.nodes())
-
-        for idx, key in enumerate(ensemble_mapping):
-            nx.set_node_attributes(self.g, name=key, values=ensemble_mapping[key])
-
-        dataset_mapping = {}
-        for dataset in self.df["dataset"].unique():
-            dataset_mapping[dataset] = self.dataset_map(self.g.nodes(), dataset)
-
-            nx.set_node_attributes(
-                self.g, name=dataset, values=dataset_mapping[dataset]
-            )
-
     def tailhead(self, edge):
         return (edge[0], edge[1])
 
@@ -154,11 +155,27 @@ class DistGraph(nx.Graph):
         edges = graph.edges()
         additional_flow = {}
         for edge in edges:
-            source = edge[0]
-            target = edge[1]
+            if "=" in edge[0]:
+                source_name = edge[0].split("=")[1]
+                source_module = edge[0].split("=")[0]
+            else:
+                source_name = edge[1]
+                source_module = self.df.loc[self.df["name"] == source_name]["module"][0]
 
-            source_inc = self.df.loc[(self.df["name"] == source)]["time (inc)"].max()
-            target_inc = self.df.loc[(self.df["name"] == target)]["time (inc)"].max()
+            if "=" in edge[1]:
+                target_name = edge[1].split("=")[1]
+                target_module = edge[1].split("=")[0]
+            else:
+                target_name = edge[1]
+                target_module = self.df.loc[self.df["name"] == target_name]["module"][0]
+
+            source_inc = self.df.loc[(self.df["name"] == source_name)][
+                "time (inc)"
+            ].max()
+            target_inc = self.df.loc[(self.df["name"] == target_name)][
+                "time (inc)"
+            ].max()
+
             if source_inc == target_inc:
                 ret[edge] = source_inc
             else:
@@ -171,11 +188,23 @@ class DistGraph(nx.Graph):
         edges = graph.edges()
         additional_flow = {}
         for edge in edges:
-            source = edge[0]
-            target = edge[1]
+            if "=" in edge[0]:
+                source_name = edge[0].split("=")[1]
+                source_module = edge[0].split("=")[0]
+            else:
+                source_name = edge[1]
+                source_module = self.df.loc[self.df["name"] == source_name]["module"][0]
 
-            source_inc = self.df.loc[(self.df["name"] == source)]["time"].max()
-            target_inc = self.df.loc[(self.df["name"] == target)]["time"].max()
+            if "=" in edge[1]:
+                target_name = edge[1].split("=")[1]
+                target_module = edge[1].split("=")[0]
+            else:
+                target_name = edge[1]
+                target_module = self.df.loc[self.df["name"] == target_name]["module"][0]
+
+            source_inc = self.df.loc[(self.df["name"] == source_name)]["time"].max()
+            target_inc = self.df.loc[(self.df["name"] == target_name)]["time"].max()
+
             if source_inc == target_inc:
                 ret[edge] = source_inc
             else:
@@ -185,17 +214,31 @@ class DistGraph(nx.Graph):
 
     def ensemble_map(self, nodes):
         ret = {}
+
+        ensemble_columns = []
+        for column in self.columns:
+            ensemble_columns.append(column)
+
+        new_columns = ["max_inc_time", "max_exc_time", "dist_inc_time", "dist_exc_time"]
+        ensemble_columns.append("dist_inc_time")
+        ensemble_columns.append("dist_exc_time")
+
         # loop through the nodes
         for node in self.g.nodes():
+            if "=" in node:
+                node_name = node.split("=")[1]
+            else:
+                node_name = node
 
             # Get their dataframe
-            node_df = self.df.loc[self.df["name"] == node]
+            node_df = self.df.loc[self.df["name"] == node_name]
 
-            for column in self.columns:
+            for column in ensemble_columns:
                 if column not in ret:
                     ret[column] = {}
 
-                column_data = node_df[column]
+                if(column not in new_columns):
+                    column_data = node_df[column]
 
                 if (
                     column == "time (inc)"
@@ -214,7 +257,12 @@ class DistGraph(nx.Graph):
                     else:
                         ret[column][node] = []
 
-                elif column == "name" or column == "vis_name":
+                elif (
+                    column == "name"
+                    or column == "vis_name"
+                    or column == "module"
+                    or column == "show_node"
+                ):
 
                     if len(column_data.value_counts() > 0):
                         ret[column][node] = column_data.tolist()[0]
@@ -227,16 +275,33 @@ class DistGraph(nx.Graph):
                         ret[column][node] = list(make_tuple(column_data.tolist()[0]))
                     else:
                         ret[column][node] = []
+
+                elif column == 'dist_inc_time':
+                    if len(node_df['time (inc)'].value_counts() > 0):
+                        ret[column][node] = node_df['time (inc)'].tolist()
+                    else:
+                        ret[column][node] = []
+
+                elif column == 'dist_exc_time':
+                    if len(node_df['time'].value_counts() > 0):
+                        ret[column][node] = node_df['time'].tolist()
+                    else:
+                        ret[column][node] = []
         return ret
 
     def dataset_map(self, nodes, dataset):
         ret = {}
         for node in self.g.nodes():
+            if "=" in node:
+                node_name = node.split("=")[1]
+            else:
+                node_name = node
+
             if node not in ret:
                 ret[node] = {}
 
             node_df = self.df.loc[
-                (self.df["name"] == node) & (self.df["dataset"] == dataset)
+                (self.df["name"] == node_name) & (self.df["dataset"] == dataset)
             ]
 
             for column in self.columns:
@@ -258,7 +323,12 @@ class DistGraph(nx.Graph):
                     else:
                         ret[node][column] = []
 
-                elif column == "name" or column == "vis_name":
+                elif (
+                    column == "name"
+                    or column == "vis_name"
+                    or column == "module"
+                    or column == "show_node"
+                ):
                     if len(column_data.value_counts()) > 0:
                         ret[node][column] = column_data.tolist()[0]
 

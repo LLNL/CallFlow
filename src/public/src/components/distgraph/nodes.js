@@ -109,7 +109,7 @@ export default {
         setNodeIds() {
             let idx = 0
             for (let node of this.graph.nodes) {
-                this.nidNameMap[node.name] = idx
+                this.nidNameMap[node.id] = idx
                 node.client_idx = idx
                 idx += 1
             }
@@ -148,7 +148,8 @@ export default {
                     // this.debugGradients(this.data, selectedModule, 'hist')
                     // this.debugGradients(this.data, selectedModule, 'kde')
                     this.clearQuantileLines()
-                    // this.clearLineGradients()
+                    // TODO: Clear only the gradients for that node only.
+                    this.clearLineGradients()
                     this.quantileLine(d)
 
                     // this.$socket.emit('dist_hierarchy', {
@@ -229,7 +230,7 @@ export default {
                         let x = (i + i + 1) / (2 * grid.length)
                         this.linearGradient.append("stop")
                             .attr("offset", 100 * x + "%")
-                            .attr("stop-color", d3.interpolateReds((val[i] / (max_val - min_val))))
+                            .attr("stop-color", d3.interpolateOranges((val[i] / (max_val - min_val))))
                     }
                 }
             }
@@ -544,10 +545,10 @@ export default {
                     if (d.height < this.minHeightForText) {
                         return '';
                     }
-                    var textSize = this.textSize(d.name)['width'];
-                    console.log(d.name, textSize, d.height)
+                    var textSize = this.textSize(d.id)['width'];
+                    console.log(d.id, textSize, d.height)
                     if (textSize < d.height) {
-                        return d.name[0];
+                        return d.id[0];
                     } else {
                         return this.trunc(d.name, Math.floor(d.height / 14))
                     }

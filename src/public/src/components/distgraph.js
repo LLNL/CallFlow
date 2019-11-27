@@ -9,8 +9,6 @@ import Dataset from './distgraph/dataset.js'
 import * as  d3 from 'd3'
 import EventHandler from './EventHandler.js'
 
-
-
 export default {
 	name: 'Distgraph',
 	template: tpl,
@@ -89,7 +87,7 @@ export default {
 			console.log("Preprocessing done.")
 			this.d3sankey = this.initSankey(this.graph)
 			console.log("Layout Calculation.")
-			// this.postProcess(this.data.nodes, this.data.links)	
+			// this.postProcess(this.data.nodes, this.data.links)
 			console.log("Post-processing done.")
 			// this.graph = this.filterNodes(this.graph)
 			this.$store.graph = this.graph
@@ -109,7 +107,7 @@ export default {
 			this.$refs.MiniHistograms.init(this.graph, this.view)
 		},
 
-		// Preprocessing the graph. 
+		// Preprocessing the graph.
 		preprocess(graph, refresh) {
 			graph = this.filterShowNodes(graph)
 			// graph = this.findMaxGraph(graph)
@@ -124,19 +122,18 @@ export default {
 			let node_names = []
 			let nodes = []
 			for (const node of graph.nodes) {
-				if (node.show_node == true) {
 					nodes.push(node)
 					node_names.push(node.name)
-				}
 				console.log(node.name, node.module, node.show_node, node['time (inc)'], node.time)
 			}
-			graph.modules = nodes
+			graph.nodes = nodes
+			// graph.modules = nodes
 
-			let edges = []
-			for (const edge of graph.links) {
-				console.log(edge.source, edge.target, edge.weight, edge.exc_weight)
-			}
-			graph.edges = edges
+			// let edges = []
+			// for (const edge of graph.links) {
+			// 	console.log(edge.source, edge.target, edge.weight, edge.exc_weight)
+			// }
+			// graph.edges = edges
 			return graph
 		},
 
@@ -181,7 +178,7 @@ export default {
 						if (node[dataset]['time (inc)'] > obj['time (inc)']) {
 							obj['time (inc)'] = node[dataset]['time (inc)']
 						}
-						obj['name'] = node[dataset]['name']
+						obj['id'] = node[dataset]['id']
 					}
 				}
 				for (const [key, value] of Object.entries(obj)) {
@@ -197,21 +194,16 @@ export default {
 		addLinkID(graph) {
 			const nodeMap = {};
 			for (const [idx, node] of graph.nodes.entries()) {
-				nodeMap[node.name] = idx;
+				console.log(node.id, idx)
+				nodeMap[node.id] = idx;
 			}
 
-			const links = graph.links;
 			for (const link of graph.links) {
-				if (link.source == undefined || link.target == undefined) {
-					continue;
-				}
-
-				if (link.source[link.source.length - 1] == '_' || link.target[link.target.length - 1] == '_') {
-					continue;
-				}
 				link['sourceID'] = nodeMap[link.source];
 				link['targetID'] = nodeMap[link.target];
 			}
+
+			console.log(nodeMap)
 			return graph;
 		},
 
@@ -225,7 +217,7 @@ export default {
 
 				links.forEach((link) => {
 					if (nodes[link.sourceID] != undefined) {
-						const linkLabel = nodes[link.sourceID].name;
+						const linkLabel = nodes[link.sourceID].id;
 						if (linkLabel == nodeLabel) {
 							if (outGoing[linkLabel] == undefined) {
 								outGoing[linkLabel] = 0;
@@ -244,7 +236,7 @@ export default {
 
 				links.forEach((link) => {
 					if (nodes[link.targetID] != undefined) {
-						const linkLabel = nodes[link.targetID].name;
+						const linkLabel = nodes[link.targetID].id;
 						if (linkLabel == nodeLabel) {
 							if (inComing[linkLabel] == undefined) {
 								inComing[linkLabel] = 0;
@@ -297,35 +289,35 @@ export default {
 			return graph
 		},
 
-		filterNodes(graph) {
-			let nodes = []
-			for (const node of graph.nodes) {
-				if (node.height > 20) {
-					nodes.push(node)
-				}
-			}
-			graph.nodes = nodes
+		// filterNodes(graph) {
+		// 	let nodes = []
+		// 	for (const node of graph.nodes) {
+		// 		if (node.height > 20) {
+		// 			nodes.push(node)
+		// 		}
+		// 	}
+		// 	graph.nodes = nodes
 
-			let links = []
-			// for(const link of graph.links){
-			// 	if(link.source in nodes && link.target in nodes){
-			// 		links.push(link)
-			// 	}
-			// }
-			// graph.links = links
-			console.log("After filtering: ", graph)
-			return graph
-		},
+		// 	let links = []
+		// 	// for(const link of graph.links){
+		// 	// 	if(link.source in nodes && link.target in nodes){
+		// 	// 		links.push(link)
+		// 	// 	}
+		// 	// }
+		// 	// graph.links = links
+		// 	console.log("After filtering: ", graph)
+		// 	return graph
+		// },
 
-		addEdges(graph) {
-			let datasets = this.$store.actual_dataset_names
-			for (const edge of graph.edges) {
-				let obj = {}
-				for (const dataset of datasets) {
-					obj[dataset]
-				}
-			}
-		},
+		// addEdges(graph) {
+		// 	let datasets = this.$store.actual_dataset_names
+		// 	for (const edge of graph.edges) {
+		// 		let obj = {}
+		// 		for (const dataset of datasets) {
+		// 			obj[dataset]
+		// 		}
+		// 	}
+		// },
 
 		//Sankey computation
 		initSankey() {

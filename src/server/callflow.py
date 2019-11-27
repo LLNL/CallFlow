@@ -130,6 +130,7 @@ class CallFlow:
             )
             states["ensemble"] = self.pipeline.group(states, "ensemble", "module")
             self.pipeline.write_ensemble_gf(states, "ensemble")
+            self.pipeline.defconSimilarity(states, "ensemble")
 
         return states
 
@@ -269,11 +270,10 @@ class CallFlow:
             return self.config
 
         elif action_name == "group":
-            final_graph = DistGraph(
-                self.states["ensemble"], "", construct_graph=False, add_data=True
+            self.states['ensemble'].g = DistGraph(
+                self.states["ensemble"], "group_path", construct_graph=True, add_data=True
             ).g
-            print(final_graph)
-            return final_graph
+            return self.states['ensemble'].g
 
         elif action_name == "scatterplot":
             if action["plot"] == "bland-altman":

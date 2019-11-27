@@ -37,7 +37,7 @@ class Similarity:
         h_h = sqrt((-c1 + sqrt(c1 * c1 + 4 * c2)) / (8 * c2))
         # print("h_h : ", h_h)
         a = 4 * h_h * h_h / (1 - 4 * h_h * h_h)
-        # print("a : ", a)        
+        # print("a : ", a)
         c = 2 * h_h / (1 - 4 * h_h * h_h)
         # print("c: ", c)
         M = c * A - a * D

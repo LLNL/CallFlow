@@ -420,7 +420,7 @@ class App:
             )
             result = json_graph.node_link_data(nx_graph)
             result = json.dumps(result)
-           # print(utils.is_json(json.dumps(result))
+            # print(utils.is_json(json.dumps(result))
             emit("dist_group", result, json=True)
 
         @sockets.on("dist_group_highlight", namespace="/")

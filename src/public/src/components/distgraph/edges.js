@@ -27,7 +27,7 @@ export default {
                 return link.type != "callback"
             })
 
-            this.$store.selectedAlignmentShow = 'Union'
+            this.$store.selectedAlignmentShow = 'Ensemble'
 
             let datasets = this.$store.actual_dataset_names
             if (this.$store.selectedAlignmentShow == 'All') {
@@ -39,7 +39,7 @@ export default {
             }
             else {
                 let client_dataset_name = this.$store.datasetMap[this.$store.selectedDataset]
-                this.initEdges('union')
+                this.initEdges('ensemble')
             }
 
             if (this.$store.selectedDiffNodeAlignment == 'Middle') {
@@ -58,11 +58,11 @@ export default {
                 if (this.$store.selectedAlignmentShow == 'All') {
                     for (let i = 0; i < datasets.length; i += 1) {
                         let dataset = datasets[i]
-                        this.drawTopEdges('union')
+                        this.drawTopEdges('ensemble')
                     }
                 }
-                else if (this.$store.selectedAlignmentShow == 'Union') {
-                    this.drawTopEdges('union')
+                else if (this.$store.selectedAlignmentShow == 'Ensemble') {
+                    this.drawTopEdges('ensemble')
                 }
             }
         },
@@ -102,12 +102,12 @@ export default {
                 //     // console.log(d.source.name, d.target.name, Tx0, Ty0, Tx2, Ty0, Tx3, Ty1)
 
                 //     return `M${Tx0},${Ty0}
-                //         C${Tx2},${Ty0} 
-                //         ${Tx3}, ${Ty1} 
-                //         ${Tx1}, ${Ty1} 
+                //         C${Tx2},${Ty0}
+                //         ${Tx3}, ${Ty1}
+                //         ${Tx1}, ${Ty1}
                 //         ` + ` v ${rightMoveDown}
-                //         C${Bx3},${By1} 
-                //         ${Bx2},${By0} 
+                //         C${Bx3},${By1}
+                //         ${Bx2},${By0}
                 //         ${Bx0},${By0}`;
                 // })
                 .style('fill', (d) => {
@@ -233,41 +233,44 @@ export default {
 
         drawTopEdges(dataset) {
             let client_dataset_name = ''
-            if (dataset == 'union') {
+            if (dataset == 'ensmeble') {
                 client_dataset_name = dataset
             }
             else {
                 client_dataset_name = this.$store.datasetMap[dataset]
             }
-            this.edges.selectAll('#dist-edge-' + client_dataset_name)
+            console.log(this.links)
+            // console.log(client_dataset_name, dataset, this.$store.datasetMap[dataset])
+            this.edges.selectAll('#dist-edge-' + dataset)
                 .data(this.links)
                 .attr('d', (d) => {
-                    let Tx0 = d.source.x + d.source.dx,
-                        Tx1 = d.target.x,
+                    let Tx0 = d.source_dict.x + d.source_dict.dx,
+                        Tx1 = d.target_dict.x,
                         Txi = d3.interpolateNumber(Tx0, Tx1),
                         Tx2 = Txi(0.4),
                         Tx3 = Txi(1 - 0.4),
-                        Ty0 = d.source.y + this.$parent.ySpacing + d.sy,
-                        Ty1 = d.target.y + this.$parent.ySpacing
+                        Ty0 = d.source_dict.y + this.$parent.ySpacing + d.sy,
+                        Ty1 = d.target_dict.y + this.$parent.ySpacing
 
                     // note .ty is the y point that the edge meet the target(for top)
                     //		.sy is the y point of the source  (for top)
                     //		.dy is width of the edge
 
-                    let Bx0 = d.source.x + d.source.dx,
-                        Bx1 = d.target.x,
+                    let Bx0 = d.source_dict.x + d.source_dict.dx,
+                        Bx1 = d.target_dict.x,
                         Bxi = d3.interpolateNumber(Bx0, Bx1),
                         Bx2 = Bxi(0.4),
                         Bx3 = Bxi(1 - 0.4)
 
 
                     let By0 = 0, By1 = 0;
-                    d.source_adjust = d.height['union']
-                    d.target_adjust = d.height['union']
+                    d.source_adjust = d.height['ensemble']
+                    d.target_adjust = d.height['ensemble']
 
-                    By0 = d.source.y + this.$parent.ySpacing + d.sy + d.height['union'] * d.source_proportion
-                    By1 = d.target.y + this.$parent.ySpacing + d.ty + d.height['union'] * d.target_proportion //(d.target.union['time (inc)']/d.max_height) * d.target.scale
+                    By0 = d.source_dict.y + this.$parent.ySpacing + d.sy + d.height['ensemble'] * d.source_proportion
+                    By1 = d.target_dict.y + this.$parent.ySpacing + d.ty + d.height['ensemble'] * d.target_proportion //(d.target.union['time (inc)']/d.max_height) * d.target.scale
 
+                    console.log(By0, By1)
                     const rightMoveDown = By1 - Ty1
                     return `M${Tx0},${Ty0
                         }C${Tx2},${Ty0
@@ -310,7 +313,7 @@ export default {
         //     additional = 0
 
         //     d.sy = (s_top_offset + additional) * source_prop_ratio// + d.source.height/4
-        //     d.ty = (t_top_offset + additional) * target_prop_ratio //+ d.target.height/4 
+        //     d.ty = (t_top_offset + additional) * target_prop_ratio //+ d.target.height/4
 
         //     let Tx0 = d.source.x + d.source.dx,
         //         Tx1 = d.target.x,
@@ -360,7 +363,7 @@ export default {
             this.edges.selectAll('.edgelabel').remove()
             this.edges.selectAll('.edgelabelText').remove()
         },
-        
+
         clearEdgeLabels(){
             d3.selectAll('edgelabelhover').remove()
             d3.selectAll('edgelabelTexthover').remove()

@@ -70,12 +70,12 @@ export default {
 
         axis() {
             this.xAxis = d3.axisBottom(this.x)
-                .tickPadding(10)
                 .tickFormat(d3.format('0.1s'))
 
             this.yAxis = d3.axisLeft(this.y)
-                .tickPadding(10)
-                .tickFormat(d3.format('0.1s'))
+                .tickFormat((d, i) => {
+                    return d
+                })
 
             this.yDom = [0, 0]
 
@@ -83,7 +83,9 @@ export default {
                 .attrs({
                     transform: `translate(${this.padding.left}, ${this.height - this.padding.bottom})`,
                     class: 'x-axis',
-                    'stroke-width': '2px'
+                    'stroke-width': '1px',
+                    'color': '#000',
+                    'stroke': '#999',
                 })
                 .call(this.xAxis);
 
@@ -91,10 +93,11 @@ export default {
                 .attrs({
                     transform: `translate(${this.padding.left}, ${this.padding.top})`,
                     class: 'y-axis',
-                    'stroke-width': '2px'
+                    'stroke-width': '1px',
+                    'color': '#000',
+                    'stroke': '#999',
                 })
                 .call(this.yAxis);
-
         },
 
         label() {
@@ -391,7 +394,7 @@ export default {
                         if (Object.entries(ts).length < 16) return 6.0
                         else return 4.5
                     },
-                    'stroke-width': 3.0,
+                    'stroke-width': 6.0,
                     // fill: (d) => { return this.$store.colorset[d[2]] },
                     fill: (d) => { return '#009688' },
                     id: (d) => { return 'dot' + d[3] },

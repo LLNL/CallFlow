@@ -170,10 +170,10 @@ export default function Sankey() {
             var source = link.sourceID,
                 target = link.targetID;
 
-            source = link.source = nodes[link.sourceID];
-            target = link.target = nodes[link.targetID];
+            source = link.source_dict = nodes[link.sourceID];
+            target = link.target_dict = nodes[link.targetID];
 
-            // Come back here and correct this bug. 
+            // Come back here and correct this bug.
             if (source != undefined && target != undefined) {
                 source.sourceLinks.push(link);
                 target.targetLinks.push(link);
@@ -184,8 +184,6 @@ export default function Sankey() {
                 target["minLinkVal"] = Math.min(target["minLinkVal"], link["weight"]);
                 source["minLinkVal"] = Math.min(source["minLinkVal"], link["weight"]);
             }
-
-            // }
         });
 
         nodes.forEach(function (node) {
@@ -198,12 +196,12 @@ export default function Sankey() {
             node["maxLinks"] = maxOfInandOut;
         })
 
-        // swap the source links and target links
-        links.forEach(function (link) {
-            let temp = link.sourceLinks;
-            link.sourceLinks = link.targetLinks
-            link.targetLinks = temp
-        })
+        // // swap the source links and target links
+        // links.forEach(function (link) {
+        //     let temp = link.sourceLinks;
+        //     link.sourceLinks = link.targetLinks
+        //     link.targetLinks = temp
+        // })
     }
 
     function d3sum(values, attr) {
@@ -247,8 +245,7 @@ export default function Sankey() {
                 node.level = level
                 node.dx = nodeWidth;
                 node.sourceLinks.forEach(function (link) {
-
-                    nextNodes.push(link.target);
+                    nextNodes.push(link.target_dict);
                 });
             });
             remainingNodes = nextNodes;
@@ -320,8 +317,8 @@ export default function Sankey() {
             .sortKeys(d3.ascending)
             .entries(nodes)
             .map(function (d) { return d.values; })
-        
-        calculateTotalLevelFlow()
+
+        // calculateTotalLevelFlow()
         initializeNodeDepth();
         resolveCollisions();
         iterations = 32
@@ -370,7 +367,7 @@ export default function Sankey() {
 
                     node.level = level[node.id]
 
-                    // Sum the heights of nodes on top of the current node. 
+                    // Sum the heights of nodes on top of the current node.
                     node.y = 0
                     for (let j = 0; j < i - 1; j += 1) {
                         node.y += n[j].height
@@ -407,12 +404,14 @@ export default function Sankey() {
                 }
 
                 link.height = {}
+                let source_link_weight = 0
+                let target_link_weight = 0
 
                 for (let i = 0; i < datasets.length; i += 1) {
-                    let source_link = link['source'][datasets[i]]
-                    let target_link = link['target'][datasets[i]]
-                    let source_link_weight = 0
-                    let target_link_weight = 0
+                    let source_link = link['source_dict'][datasets[i]]
+                    let target_link = link['target_dict'][datasets[i]]
+                    console.log(source_link, target_link)
+
                     if (source_link == undefined) {
                         source_link_weight = 0
                     }
@@ -430,12 +429,21 @@ export default function Sankey() {
                     target_max_weight = Math.max(target_max_weight, target_link_weight)
                     link.height[datasets[i]] = target_link_weight * scale * minNodeScale
                 }
-                console.log(link.weight, total_out[link.target.level])
-                link.source_proportion = link.weight / link.source.value 
-                link.target_proportion = link.weight / link.target.value
-                console.log(link.weight, link.source.level)
-                console.log(link.source.name, link.target.name, link.proportion)
-                link.height['union'] = target_max_weight * scale * minNodeScale//* proportion
+                // console.log(link.weight, total_out[link.target.level])
+
+                // if(dataset != 'ensemble'){
+                //     link.source_proportion = link.weight / link.source_dict[dataset].weight
+                //     link.target_proportion = link.weight / link.target_dict[dataset].weight
+                // }
+                // else{
+                    link.source_proportion = 1.0
+                    link.target_proportion = 1.0
+                // }
+                console.log(target_max_weight, source_link_weight, target_link_weight)
+
+                console.log(link.source, link.target)
+
+                link.height['ensemble'] = target_max_weight * scale * minNodeScale//* proportion
                 link.max_height = target_max_weight * scale * minNodeScale //* proportion
             });
         }
@@ -529,15 +537,14 @@ export default function Sankey() {
             node.sourceLinks.forEach(function (link) {
                 if (link.type != 'back_edge') {
                     link.sy = sy;
-                    sy += link.height['union'];
+                    sy += link.height['ensemble'];
                 }
             });
             node.targetLinks.forEach(function (link) {
                 if (link.type != 'back_edge') {
                     link.ty = ty;
-                    ty += link.height['union']
+                    ty += link.height['ensemble']
                 };
-                // console.log(link.source.name, link.target.name, link.ty, ty)
             });
         });
 
