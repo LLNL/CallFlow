@@ -317,14 +317,14 @@ class CallFlow:
             return self.similarities
 
         elif action_name == "hierarchy":
-            mH = moduleHierarchyDist(self.states["union_graph"], action["module"])
+            mH = moduleHierarchyDist(self.states["ensemble"], action["module"])
             return mH.result
 
         elif action_name == "cct":
             self.update_dist(
                 {"name": "group", "groupBy": "name", "datasets": action["datasets"]}
             )
-            nx = CCT(self.states["union_graph"], action["functionsInCCT"])
+            nx = CCT(self.states["ensemble"], action["functionsInCCT"])
             return nx.g
 
         elif action_name == "projection":
@@ -337,6 +337,10 @@ class CallFlow:
                 self.states[state].projection_data["dataset"] = state
                 ret.append(self.states[state].projection_data)
             return ret
+
+        elif action_name == "mini-histogram":
+            minihistogram = MiniHistogram(self.states['ensemble'])
+            return minihistogram.result
 
     def displayStats(self, name):
         log.warn("==========================")

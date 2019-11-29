@@ -3,7 +3,7 @@ import Sankey from './distgraph/sankey'
 import DistNodes from './distgraph/nodes'
 import DistColorMap from './distgraph/colormap'
 // import IntermediateNodes from './callgraph/intermediateNodes'
-import MiniHistograms from './callgraph/miniHistograms'
+import MiniHistograms from './distgraph/miniHistograms'
 import DistEdges from './distgraph/edges'
 import Dataset from './distgraph/dataset.js'
 import * as  d3 from 'd3'
@@ -16,7 +16,7 @@ export default {
 		DistNodes,
 		// IntermediateNodes,
 		DistEdges,
-		// MiniHistograms,
+		MiniHistograms,
 		DistColorMap,
 		Dataset
 	},
@@ -77,7 +77,7 @@ export default {
 			this.$refs.DistNodes.clear()
 			this.$refs.DistEdges.clear()
 			// this.$refs.CallbackEdges.clear()
-			// this.$refs.MiniHistograms.clear()
+			this.$refs.MiniHistograms.clear()
 			// this.$refs.DistColorMap.clear(0)
 		},
 
@@ -98,7 +98,7 @@ export default {
 			this.$refs.DistEdges.init(this.$store.graph, this.view)
 			// this.$refs.DistColorMap.init()
 			// this.$refs.CallbackEdges.init(this.data, this.view)
-			// this.$refs.MiniHistograms.init(this.$store.graph, this.view)
+			this.$refs.MiniHistograms.init(this.$store.graph, this.view)
 
 		},
 
@@ -112,6 +112,7 @@ export default {
 			graph = this.filterShowNodes(graph)
 			// graph = this.findMaxGraph(graph)
 			// graph = this.addLines(graph)
+			graph = this.addNodeMap(graph)
 			graph = this.addLinkID(graph)
 			graph = this.calculateFlow(graph)
 			console.log("Graph after preprocessing: ", graph)
@@ -134,6 +135,18 @@ export default {
 			// 	console.log(edge.source, edge.target, edge.weight, edge.exc_weight)
 			// }
 			// graph.edges = edges
+			return graph
+		},
+
+		addNodeMap(graph){
+			let nodeMap = {}
+			let idx = 0
+			for(const node of graph.nodes){
+				nodeMap[node.id] = idx
+				idx += 1
+			}
+
+			graph.nodeMap = nodeMap
 			return graph
 		},
 
@@ -194,7 +207,6 @@ export default {
 		addLinkID(graph) {
 			const nodeMap = {};
 			for (const [idx, node] of graph.nodes.entries()) {
-				console.log(node.id, idx)
 				nodeMap[node.id] = idx;
 			}
 
@@ -203,7 +215,6 @@ export default {
 				link['targetID'] = nodeMap[link.target];
 			}
 
-			console.log(nodeMap)
 			return graph;
 		},
 

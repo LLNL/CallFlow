@@ -54,14 +54,14 @@ def avg(l):
 
 
 def getMaxIncTime(state):
-    df = state.entire_df
+    df = state.df
     ret = float(df["time (inc)"].max())
     return ret
 
 
 # TODO: Get the maximum exclusive time from the graphframe.
 def getMaxExcTime(state):
-    df = state.entire_df
+    df = state.df
     ret = float(df["time"].max())
     return ret
 
@@ -69,14 +69,14 @@ def getMaxExcTime(state):
 def getAvgIncTime(state):
     ret = 0.0
     graph = state.graph
-    df = state.entire_df
+    df = state.df
     for root in gf.graph.roots:
         ret += lookup(df, root)["time (inc)"].mean()
     return ret / len(gf.graph.roots)
 
 
 def getAvgExcTime(state):
-    df = state.entire_df
+    df = state.df
     ret = df["time"].mean()
     return ret
 

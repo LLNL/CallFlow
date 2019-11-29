@@ -267,6 +267,15 @@ class App:
             )
             emit("miniHistogram", result, json=True)
 
+        @sockets.on("distMiniHistogram", namespace="/")
+        def histogram(data):
+            if self.debug:
+                self.print("[Request] Mini-histogram", data)
+            result = self.callflow.update_dist(
+                {"name": "mini-histogram"}
+            )
+            emit("distMiniHistogram", result, json=True)
+
         @sockets.on("hierarchy", namespace="/")
         def hierarchy(data):
             if self.debug:

@@ -25,13 +25,13 @@ class Create:
     def __init__(self, config, name):
         utils.debug("Creating graphframes: ", name)
         self.config = config
+        self.callflow_path = config.callflow_path
         self.name = name
-        self.gf = None
         self.run()
 
     def run(self):
-        callflow_path = self.config.callflow_path
-        data_path = os.path.abspath(os.path.join(callflow_path, self.config.paths[self.name]))
+        data_path = os.path.abspath(os.path.join(self.callflow_path, self.config.paths[self.name]))
+        print(data_path)
 
         if self.config.format[self.name] == 'hpctoolkit':
             self.gf = ht.GraphFrame.from_hpctoolkit(data_path)
