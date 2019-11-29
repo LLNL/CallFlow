@@ -37,6 +37,7 @@ from actions.union_graph import UnionGraph
 from actions.kde_gradients import KDE_gradients
 from actions.similarity import Similarity
 from actions.run_projection import RunProjection
+from actions.dist_histogram import DistHistogram
 
 from state import State
 from logger import log
@@ -341,6 +342,11 @@ class CallFlow:
         elif action_name == "mini-histogram":
             minihistogram = MiniHistogram(self.states['ensemble'])
             return minihistogram.result
+
+        elif action_name == "histogram":
+            histogram = DistHistogram(self.states['ensemble'], action["module"])
+            return histogram.result
+
 
     def displayStats(self, name):
         log.warn("==========================")

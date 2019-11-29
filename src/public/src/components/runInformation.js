@@ -7,7 +7,7 @@ export default {
     data: () => ({
         selected: {},
         id: '',
-        message: "Run Information View",
+        message: "Run Parameters",
         runs: [],
     }),
     mounted() {

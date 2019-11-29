@@ -78,7 +78,6 @@ export default {
                     // link.attr("d", path);
                 })
 
-            console.log(this.graph.nodes)
             this.nodesSVG = this.nodes.selectAll('.dist-node')
                 .data(this.graph.nodes)
                 .enter().append('g')
@@ -147,10 +146,10 @@ export default {
                     // this.cleardebugGradients()
                     // this.debugGradients(this.data, selectedModule, 'hist')
                     // this.debugGradients(this.data, selectedModule, 'kde')
-                    this.clearQuantileLines()
+                    // this.clearQuantileLines()
                     // TODO: Clear only the gradients for that node only.
-                    this.clearLineGradients()
-                    this.quantileLine(d)
+                    // this.clearLineGradients()
+                    // this.quantileLine(d)
 
                     // this.$socket.emit('dist_hierarchy', {
                     //     module: selectedModule,
@@ -170,12 +169,19 @@ export default {
                     // this.debugGradients(this.data, selectedModule, 'hist')
                     // this.debugGradients(this.data, selectedModule, 'kde')
                     // this.clearQuantileLines()
-                    this.clearLineGradients()
-                    this.quantileLines()
+
+                    // Bring this back
+                    // this.clearLineGradients()
+                    // this.quantileLines()
 
                     this.$socket.emit('dist_hierarchy', {
                         module: selectedModule,
                         datasets: this.$store.actual_dataset_names,
+                    })
+
+                    this.$socket.emit('dist_histogram', {
+                        datasets: this.$store.actual_dataset_names,
+                        module: selectedModule
                     })
                 })
 

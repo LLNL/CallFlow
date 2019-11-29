@@ -23,6 +23,7 @@ import Projection from './projection'
 
 import RunInformation from './runInformation'
 import AuxiliaryFunction from './auxiliaryFunction'
+import DiffHistogram from './diffhistogram'
 
 import io from 'socket.io-client';
 
@@ -43,7 +44,8 @@ export default {
 		SimilarityMatrix,
 		Projection,
 		RunInformation,
-		AuxiliaryFunction
+		AuxiliaryFunction,
+		DiffHistogram
 	},
 	data: () => ({
 		appName: 'Callflow',
@@ -93,7 +95,7 @@ export default {
 		selectedData: 'Dataframe',
 		firstRender: false,
 		enableDist: false,
-		summaryChip: 'Ensemble Graph View',
+		summaryChip: 'Ensemble Graph',
 		ranks: [],
 		selectedRank: 10,
 		initLoad: true,
@@ -199,7 +201,7 @@ export default {
 				this.$refs.SimilarityMatrix.init()
 				this.$refs.AuxiliaryFunction.init()
 				// this.$refs.RunInformation.init()
-				// this.$refs.DistHistogram.init()
+				this.$refs.DiffHistogram.init()
 				this.initLoad = false
 			} else if (this.selectedData == 'Graph' && this.initLoad) {
 				this.$refs.DistgraphB.init(data)

@@ -20,7 +20,7 @@ import ToolTip from './histogram/tooltip'
 
 export default {
     template: tpl,
-    name: 'Histogram',
+    name: 'DiffHistogram',
     components: {
         ToolTip
     },
@@ -51,7 +51,7 @@ export default {
     mounted() {},
 
     sockets: {
-        diffhistogram(data) {
+        dist_histogram(data) {
             data = JSON.parse(data)
             console.log("Diff Histogram Data: ", data)
             if(this.firstRender) {
@@ -75,11 +75,12 @@ export default {
             this.histogramHeight = this.boxHeight - this.histogramOffset;
             this.histogramWidth = this.boxWidth;
             this.histogramSVG = d3.select('#' + this.id)
-                .attrs({    
+                .attrs({
                     "width": this.boxWidth + this.padding.right + this.padding.left,
                     "height": this.boxHeight + this.padding.top + this.padding.bottom,
                     "transform": `translate(${this.padding.left}, ${this.padding.top})`
                 })
+            console.log(this.histogramSVG, this.boxHeight)
         },
 
         render(data) {
@@ -95,7 +96,7 @@ export default {
             this.binContainsProcID = temp[3];
             this.logScaleBool = false;
 
-            this.$refs.ToolTip.init(this.id)
+            // this.$refs.ToolTip.init(this.id)
 
             this.histogramXScale = d3.scaleBand()
                 .domain(this.xVals)
@@ -139,7 +140,7 @@ export default {
         setContainerHeight(newHeight) {
             this.containerHeight = newHeight
             this.height = this.containerHeight - this.margin.top - this.margin.bottom
-        },      
+        },
 
         array_unique(arr) {
             return arr.filter(function (value, index, self) {
@@ -202,7 +203,7 @@ export default {
             });
             this.data = dataSorted
 
-            // console.log(xVals, freq, axis_x, binContainsProcID)
+            console.log(xVals, freq, axis_x, binContainsProcID)
             return [xVals, freq, axis_x, binContainsProcID];
         },
 
@@ -265,12 +266,13 @@ export default {
 
         bars() {
             let self = this
-            this.histogramSVG.selectAll('.selectBars')
+            this.histogramSVG//.selectAll('.selectBars')
                 .data(this.freq)
                 .enter()
                 .append('rect')
                 .attr('class', 'selectBars')
                 .attr('x', (d, i) => {
+                    console.log(d, this.xVals[i])
                     return this.histogramXScale(this.xVals[i])
                 })
                 .attr('y', (d, i) => {
@@ -278,13 +280,14 @@ export default {
                 })
                 .attr('width', (d) => {
                     return this.histogramXScale.bandwidth()
-                })  
+                })
                 .attr('height', (d) => {
                     let histFreq = d;
                     if (d < 1 && this.logScaleBool) {
                         histFreq = 1;
                         return 0;
                     }
+                    console.log(this.histogramHeight, this.histogramYScale(d))
                     return this.histogramHeight - this.histogramYScale(d);
                 })
                 .attr('fill', 'steelblue')
@@ -445,7 +448,7 @@ export default {
                         }
 
                         rankLinesG.append('path')
-                            .attr('d', line)    
+                            .attr('d', line)
                             .attr('class', 'lineRank lineRank_' + idx)
                             .style('fill', (d) => {
                                 return "grey";

@@ -71,7 +71,7 @@
 				</v-flex>
 				<!-- <v-flex xs12 class="ma-1">
 					<v-select label="Group Mode" :items="groupModes" v-model="selectedGroupMode"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateGroupByMode()" 
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateGroupByMode()"
 						v-show="selectedFormat == 'Callgraph'">
 					</v-select>
 				</v-flex> -->
@@ -176,10 +176,10 @@
 						<SimilarityMatrix ref="SimilarityMatrix" />
 					</span>
 					<span>
-						<Projection ref="Projection" />
+						<Icicle ref="Icicle" />
 					</span>
 					<span>
-						<Icicle ref="Icicle" />
+						<DiffHistogram ref="DiffHistogram" />
 					</span>
 				</splitpanes>
 				<splitpanes horizontal :splitpanes-size="60">
@@ -192,7 +192,10 @@
 				</splitpanes>
 				<splitpanes horizontal :splitpanes-size="20">
 					<span>
-						<RunInformation ref="RunInformation"/>						
+						<Projection ref="Projection" />
+					</span>
+					<span>
+						<RunInformation ref="RunInformation"/>
 					</span>
 					<span>
 						<AuxiliaryFunction ref="AuxiliaryFunction"/>

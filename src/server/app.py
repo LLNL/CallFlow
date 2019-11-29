@@ -374,6 +374,14 @@ class App:
         def disthistogram(data):
             if self.debug:
                 self.print("[Request] Dist-Histogram request for module.")
+            datasets = data['datasets']
+            result = self.callflow.update_dist(
+                {
+                    "name": "histogram",
+                    "datasets": datasets,
+                    "module": data["module"],
+                }
+            )
             emit("dist_histogram", result, json=True)
 
         @sockets.on("comp_cct", namespace="/")
