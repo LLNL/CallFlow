@@ -240,6 +240,9 @@ export default {
                 .on("end", this.lassoEnd);
 
             this.svg.call(this.lasso)
+
+            this.highlight(this.$store.selectedTargetDataset)
+
         },
 
         // ====================================
@@ -392,8 +395,9 @@ export default {
                 .attrs({
                     stroke: (d) => { return self.$store.color.highlight },
                     'stroke-width': 3.0,
-                    // fill: (d) => { return this.$store.colorset[d[2]] },
                 })
+
+            console.log(dataset)
         }
     },
 }

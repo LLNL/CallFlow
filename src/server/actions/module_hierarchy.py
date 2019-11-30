@@ -1,15 +1,16 @@
 import pandas as pd
-import time 
+import time
 import networkx as nx
 import utils
 from logger import log
 from ast import literal_eval as make_tuple
 
+
 class moduleHierarchy:
     def __init__(self, state, modFunc):
         self.graph = state.graph
         self.df = state.df
-        
+
         self.modFunc = modFunc
         # Processing for the modFunc format to get the module name
         if '=' in modFunc:
@@ -19,10 +20,8 @@ class moduleHierarchy:
             self.function = modFunc.split('/')[1]
             self.module = modFunc.split('/')[0]
 
-        # Create the Super node's hierarchy. 
+        # Create the Super node's hierarchy.
         self.hierarchy = nx.Graph()
-
-
         self.result = self.run()
 
     def add_paths(self, df, path_name):
@@ -30,7 +29,7 @@ class moduleHierarchy:
             path = row[path_name]
             if isinstance(path, str):
                 path = make_tuple(row[path_name])
-            self.hierarchy.add_path(path)      
+            self.hierarchy.add_path(path)
 
     def generic_map(self, nodes, attr):
         ret = {}
@@ -39,14 +38,13 @@ class moduleHierarchy:
             if idx == 0:
                 corrected_node = node.split('=')[0]
                 groupby = 'module'
-        
-            else:  
+            else:
                 if "=" in node:
                     log.info('Super node: {0}'.format(node))
                     corrected_module = node.split('=')[0]
                     corrected_function = node.split('=')[1]
                     corrected_node = corrected_function
-                    groupby = 'name'        
+                    groupby = 'name'
 
                 elif '/' in node:
                     log.info('Meta node: {0}'.format(node))
@@ -54,18 +52,18 @@ class moduleHierarchy:
                     corrected_function = node.split('/')[1]
                     corrected_node = corrected_function
                     log.info("Getting dets of [module={0}], function={1}".format(corrected_module, corrected_node))
-                    groupby = 'name'        
+                    groupby = 'name'
 
                 else:
                     log.info('Node: {0}'.format(node))
                     corrected_node = node
                     corrected_function = node
-                    groupby = 'name'        
+                    groupby = 'name'
 
             if attr == 'time (inc)':
                 group_df = self.df.groupby([groupby]).max()
                 ret[node] = group_df.loc[corrected_node, 'time (inc)']
-            
+
             elif attr == 'entry_functions':
                 module_df = self.df.loc[self.df['module'] == corrected_node]
                 entry_func_df = module_df.loc[(module_df['component_level'] == 2)]
@@ -79,7 +77,7 @@ class moduleHierarchy:
                     name = entry_func_df['name'].unique().tolist()
                     time = entry_func_df['time'].mean().tolist()
                     time_inc = entry_func_df['time (inc)'].mean().tolist()
-                
+
                     ret[node] = json.dumps({
                         'name': entry_func_df['name'].unique().tolist(),
                         'time': entry_func_df['time'].mean().tolist(),
@@ -101,13 +99,13 @@ class moduleHierarchy:
                 elif groupby == 'name':
                     group_df = self.df.groupby([groupby]).mean()
                 ret[node] = group_df.loc[corrected_node, 'time']
-        
+
             elif attr == 'vis_node_name':
-                ret[node] = [node] 
-            
+                ret[node] = [node]
+
             elif attr == 'nid':
                 ret[node] = self.df.loc[self.df['name'] == corrected_function]['nid'].tolist()
-                
+
             else:
                 group_df = self.df.groupby([groupby]).max()
                 ret[node] = group_df.loc[corrected_node, attr]
@@ -126,10 +124,10 @@ class moduleHierarchy:
         component_path_mapping = self.generic_map(self.hierarchy.nodes(), 'component_path')
         nx.set_node_attributes(self.hierarchy, name='component_path', values=component_path_mapping)
 
-    # instead of nid, get by module. nid seems very vulnerable rn. 
+    # instead of nid, get by module. nid seems very vulnerable rn.
     def run(self):
         node_df = self.df.loc[self.df['module'] == self.module]
-        
+
         if 'component_path' not in self.df.columns:
             utils.debug('Error: Component path not defined in the df')
 
@@ -162,7 +160,7 @@ class moduleHierarchy:
                     "level": 1
                 })
             else:
-                # There can be many functions with the same name but get called again and again. 
+                # There can be many functions with the same name but get called again and again.
                 component_paths_df = self.df.loc[self.df['name'] == node]['component_path'].unique()
                 component_paths_array = component_paths_df.tolist()
                 for idx, component_path in enumerate(component_paths_array):
@@ -178,4 +176,3 @@ class moduleHierarchy:
         paths_df = pd.DataFrame(paths)
         return paths_df.to_json(orient="columns")
 
-        

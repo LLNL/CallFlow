@@ -23,10 +23,9 @@ import Projection from './projection'
 
 import RunInformation from './runInformation'
 import AuxiliaryFunction from './auxiliaryFunction'
-import DiffHistogram from './diffhistogram'
+import DistHistogram from './disthistogram'
 
 import io from 'socket.io-client';
-
 
 export default {
 	name: 'CallFlow',
@@ -45,7 +44,7 @@ export default {
 		Projection,
 		RunInformation,
 		AuxiliaryFunction,
-		DiffHistogram
+		DistHistogram
 	},
 	data: () => ({
 		appName: 'Callflow',
@@ -59,7 +58,7 @@ export default {
 		formats: ['Callgraph', 'CCT'],
 		selectedFormat: 'Callgraph',
 		datasets: [],
-		selectedDataset: '',
+		selectedTargetDataset: '',
 		selectedDataset2: '',
 		groupBy: ['Name', 'Module', 'File'],
 		selectedGroupBy: 'Module',
@@ -97,7 +96,8 @@ export default {
 		enableDist: false,
 		summaryChip: 'Ensemble Graph',
 		ranks: [],
-		selectedRank: 10,
+		// selectedRank: 10,
+		selectedTargetDataset: '',
 		initLoad: true,
 	}),
 
@@ -142,8 +142,6 @@ export default {
 				this.selectedMode = 'Ensemble'
 				this.selectedDataset2 = data['names'][1]
 				this.$store.selectedDataset2 = data['names'][1]
-				this.$store.selectedDataset = data['names'][2]
-				this.selectedDataset = data['names'][2]
 
 			} else {
 				this.enableDist = false
@@ -166,6 +164,9 @@ export default {
 			this.$store.selectedGroupBy = this.selectedGroupBy
 			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment
 			this.$store.colorset = ['#59A14E', '#AF7AA1', '#F18F2C']
+
+			this.setTargetDataset()
+
 			this.init()
 		},
 
@@ -340,6 +341,12 @@ export default {
 						algo: 'tsne'
 					})
 
+					this.$socket.emit('dist_auxiliary', {
+						datasets: this.$store.actual_dataset_names,
+						sortBy: 'diff',
+						module: 'all'
+					})
+
 					// this.$socket.emit('dist_scatterplot', {
 					//     datasets: this.$store.client_datasets,
 					//     dataset1: this.$store.selectedDataset,
@@ -385,6 +392,7 @@ export default {
 			console.log("Assigned Color map: ", this.$store.color.datasetColor)
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
+			this.$store.color.highlight = '#4681B4'
 		},
 
 		reset() {
@@ -393,6 +401,22 @@ export default {
 				filterBy: this.selectedFilterBy,
 				filterPerc: this.selectedFilterPerc
 			})
+		},
+
+		setTargetDataset(){
+			let min_inclusive_dataset = '';
+			let min_inclusive_time = this.$store.maxIncTime['ensemble']
+			for(let dataset in this.$store.maxIncTime){
+				if (this.$store.maxIncTime.hasOwnProperty(dataset)) {
+					if(min_inclusive_time > this.$store.maxIncTime[dataset]){
+						min_inclusive_dataset = dataset
+					}
+					min_inclusive_time = Math.min(this.$store.maxIncTime[dataset], min_inclusive_time)
+				}
+			}
+			this.$store.selectedTargetDataset = min_inclusive_dataset
+			this.selectedTargetDataset = min_inclusive_dataset
+			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
 
 		updateColor() {
@@ -426,10 +450,10 @@ export default {
 			this.init()
 		},
 
-		updateDataset() {
+		updateTargetDataset() {
 			this.clearLocal()
 			this.colors()
-			this.$store.selectedDataset = this.selectedDataset
+			this.$store.selectedTargetDataset = this.selectedTargetDataset
 			this.init()
 		},
 

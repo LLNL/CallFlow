@@ -410,7 +410,6 @@ export default function Sankey() {
                 for (let i = 0; i < datasets.length; i += 1) {
                     let source_link = link['source_dict'][datasets[i]]
                     let target_link = link['target_dict'][datasets[i]]
-                    console.log(source_link, target_link)
 
                     if (source_link == undefined) {
                         source_link_weight = 0

@@ -3,11 +3,11 @@
 		<v-toolbar-side-icon @click.stop="left = !left">
 		</v-toolbar-side-icon>
 		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
-		<!-- <v-flex xs2 class="ma-2">
-			<v-select label="Dataset 1" :items="datasets" v-model="selectedDataset" :menu-props="{ maxHeight: '400' }"
-				box v-on:change="updateDataset()">
+		<v-flex xs3 class="ma-2">
+			<v-select label="Set Target run" :items="datasets" v-model="selectedTargetDataset" :menu-props="{ maxHeight: '400' }"
+				box v-on:change="updateTargetDataset()">
 			</v-select>
-		</v-flex> -->
+		</v-flex>
 		<!-- <v-flex xs2 class="ma-2" v-if="selectedMode == 'Distribution'">
 			<v-select label="Dataset 2" :items="datasets" v-model="selectedDataset2" :menu-props="{ maxHeight: '400' }"
 				box v-on:change="updateDataset()">
@@ -179,7 +179,7 @@
 						<Icicle ref="Icicle" />
 					</span>
 					<span>
-						<DiffHistogram ref="DiffHistogram" />
+						<DistHistogram ref="DistHistogram" />
 					</span>
 				</splitpanes>
 				<splitpanes horizontal :splitpanes-size="60">
@@ -203,14 +203,14 @@
 				</splitpanes>
 
 			</splitpanes>
-			<splitpanes id="diffgraph-dashboard-2" class="default-theme" v-show="selectedData == 'Graph'">
+			<!-- <splitpanes id="diffgraph-dashboard-2" class="default-theme" v-show="selectedData == 'Graph'">
 				<splitpanes horizontal :splitpanes-size="30">
 					<span>
-						<!-- <diffFunction ref="DiffFunction" /> -->
+						<diffFunction ref="DiffFunction" />
 					</span>
 					<span>
-						<!-- <DiffHistogram ref="DiffHistogram" /> -->
-						<!-- <diffIcicle ref="DiffIcicle" /> -->
+						<DiffHistogram ref="DiffHistogram" />
+						<diffIcicle ref="DiffIcicle" />
 					</span>
 				</splitpanes>
 				<splitpanes horizontal :splitpanes-size="70">
@@ -218,7 +218,7 @@
 						<Distgraph ref="DistgraphB" />
 					</span>
 				</splitpanes>
-			</splitpanes>
+			</splitpanes> -->
 		</v-layout>
 
 		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Ensemble'">

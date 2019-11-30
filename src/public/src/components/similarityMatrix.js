@@ -33,16 +33,16 @@ export default {
         min: 100,
         firstRender: true,
         margin: {
-			top: 10,
-			right: 10,
-			bottom: 10,
-			left: 15
-		},
+            top: 10,
+            right: 10,
+            bottom: 10,
+            left: 15
+        },
     }),
     sockets: {
-        dist_similarity(data){
+        dist_similarity(data) {
             console.log("Similarities: ", data)
-            this.processSimilarityMatrix(data)      
+            this.processSimilarityMatrix(data)
         }
     },
     watch: {
@@ -55,18 +55,18 @@ export default {
     methods: {
         init() {
             this.toolbarHeight = document.getElementById('toolbar').clientHeight
-			this.footerHeight = document.getElementById('footer').clientHeight
-			this.width = window.innerWidth * 0.3
-			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.5
+            this.footerHeight = document.getElementById('footer').clientHeight
+            this.width = window.innerWidth * 0.3
+            this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.5
 
-			this.containerWidth = this.width - this.margin.right - this.margin.left;
-			this.containerHeight = this.height - this.margin.top - this.margin.bottom;
+            this.containerWidth = this.width - this.margin.right - this.margin.left;
+            this.containerHeight = this.height - this.margin.top - this.margin.bottom;
 
-			this.svg = d3.select('#' + this.id)
-				.attr('width', this.width - this.margin.left - this.margin.right)
-				.attr('height', this.height - this.margin.top - this.margin.bottom)
-				.attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
-            
+            this.svg = d3.select('#' + this.id)
+                .attr('width', this.width - this.margin.left - this.margin.right)
+                .attr('height', this.height - this.margin.top - this.margin.bottom)
+                .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
+
             this.matrixLength = Math.min(this.containerHeight, this.containerWidth)
             this.matrixWidth = this.matrixLength * this.matrixScale
             this.matrixHeight = this.matrixLength * this.matrixScale
@@ -78,10 +78,21 @@ export default {
         processSimilarityMatrix(data) {
             this.similarityMatrix = []
             let mat = []
-            
+
+            this.datasetMap = {}
+            this.datasetRevMap = {}
+            let idx = 0
+            for (var dataset in data) {
+                if (data.hasOwnProperty(dataset)) {
+                    this.datasetMap[dataset] = idx
+                    this.datasetRevMap[idx] = dataset
+                    idx += 1
+                }
+            }
+
             let count = 0
-            for(var dataset in data){
-                if(data.hasOwnProperty(dataset)){
+            for (var dataset in data) {
+                if (data.hasOwnProperty(dataset)) {
                     let similarity = data[dataset]
                     for (let i = 0; i < similarity.length; i += 1) {
                         if (this.similarityMatrix[count] == undefined) {
@@ -91,6 +102,8 @@ export default {
                             x: count,
                             j: i,
                             z: similarity[i],
+                            id_x: this.datasetMap[dataset],
+                            id_y: i
                         }
                     }
                     count += 1
@@ -145,7 +158,7 @@ export default {
                 .adj(this.similarityMatrix)
 
             let matrixData = adjacencyMatrix()
-            
+
             if (!Number.isNaN(matrixData[0].x)) {
                 this.max_weight = 0
                 this.min_weight = 0
@@ -173,10 +186,11 @@ export default {
                     .enter()
                     .append('rect')
                     .attrs({
-                        class: (d, i) => 'rect',
+                        class: (d, i) => 'rect similarityRect-' + d.source,
+                        // id: (d, i) => 'similarityRect-' + d.source,
                         'width': (d) => this.nodeWidth,
                         'height': (d) => this.nodeHeight,
-                        'x': (d) => d.x ,
+                        'x': (d) => d.x,
                         'y': (d) => d.y,
                     })
                     .style('stroke', (d, i) => {
@@ -194,7 +208,6 @@ export default {
                         return 1
                     })
                     .on('click', d => {
-                        console.log(this.$store.actual_dataset_names[d.source], this.$store.actual_dataset_names[d.target])
                         let highlight_datasets = []
                         let source_dataset = this.$store.actual_dataset_names[d.source]
                         let target_dataset = this.$store.actual_dataset_names[d.target]
@@ -202,18 +215,38 @@ export default {
                         highlight_datasets.push(target_dataset)
                         EventHandler.$emit('highlight_datasets', highlight_datasets)
                     })
+                    .on('mouseover', d => {
+
+                    })
+                    .on('mouseout', (d) => {
+
+                    })
 
                 d3.select('.KpMatrix')
                     .call(adjacencyMatrix.xAxis);
 
                 d3.select('.KpMatrix')
                     .call(adjacencyMatrix.yAxis);
+
+                this.highlight_dataset(this.$store.selectedTargetDataset)
             }
+        },
+
+        highlight_dataset(dataset) {
+            let dataset_idx = this.datasetMap[dataset]
+            let self = this
+            d3.selectAll('.similarityRect-' + dataset_idx)
+                .style('stroke', (d, i) => {
+                    return self.$store.color.highlight
+                })
+                .style('stroke-width', (d, i) => {
+                    return 3
+                })
 
         },
 
         clear() {
-            d3.select('')
+
         },
     }
 }

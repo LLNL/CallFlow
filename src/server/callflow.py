@@ -38,6 +38,7 @@ from actions.kde_gradients import KDE_gradients
 from actions.similarity import Similarity
 from actions.run_projection import RunProjection
 from actions.dist_histogram import DistHistogram
+from actions.dist_auxiliary import Auxiliary
 
 from state import State
 from logger import log
@@ -347,6 +348,9 @@ class CallFlow:
             histogram = DistHistogram(self.states['ensemble'], action["module"])
             return histogram.result
 
+        elif action_name == "auxiliary":
+            auxiliary = Auxiliary(self.states['ensemble'], action['module'])
+            return auxiliary.result
 
     def displayStats(self, name):
         log.warn("==========================")

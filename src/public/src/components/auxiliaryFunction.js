@@ -1,6 +1,6 @@
 import tpl from '../html/auxiliaryfunction.html'
 import d3_box from '../thirdParty/boxPlot'
-
+import EventHandler from './EventHandler'
 
 export default {
     name: 'AuxiliaryFunction',
@@ -19,7 +19,7 @@ export default {
     },
 
     sockets: {
-        auxiliary_function(data) {
+        auxiliary(data) {
             data = JSON.parse(data)
             this.init(data)
         },
@@ -36,15 +36,11 @@ export default {
         },
 
         getLabel(id){
-            console.log(id)
             return this.labels[id]
         },
 
         init(data) {
-            // console.log(data)
-            // this.labels = Object.keys(data[0])
-            // console.log(this.labels)
-            // this.people = data
+            this.boxPlotUI(data, 'inc')
         },
 
         dataset(idx){
@@ -64,7 +60,7 @@ export default {
 
         },
 
-        boxPlotUI(div, data, type){
+        boxPlotUI(data, type){
             let inc_arr = data['time (inc)']
             let exc_arr = data['time']
 
@@ -72,11 +68,11 @@ export default {
             let val = [];
             if(type == 'inc'){
                 val = inc_arr
-                q = quartiles(inc_arr)
+                q = this.quartiles(inc_arr)
             }
             else{
                 val = exc_arr
-                q = quartiles(exc_arr)
+                q = this.quartiles(exc_arr)
             }
 
             var margin = {top: 0, right: 10, bottom: 0, left: 5};

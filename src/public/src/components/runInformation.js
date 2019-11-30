@@ -28,6 +28,7 @@ export default {
         init(data) {
             this.labels = Object.keys(data[0])
             this.runs = data
+            this.highlight(this.$store.selectedTargetDataset)
         },
 
         getClass: ({ id }) => ({
@@ -40,7 +41,6 @@ export default {
             console.log(item['dataset'])
             this.$store.highlight_dataset = item['dataset']
             EventHandler.$emit('highlight_dataset', item['dataset'])
-
         },
 
         getLabel(id){

@@ -519,9 +519,25 @@ class App:
                 self.print("[Request] Run information: ", data)
 
             result = self.callflow.update_dist(
-                {"name": "run-information", "datasets": data["datasets"],}
+                {"name": "run-information", "datasets": data["datasets"]}
             )
+            print(result)
             emit("run_information", json.dumps(result), json=True)
+
+        @sockets.on("dist_auxiliary", namespace="/")
+        def run_information(data):
+            if self.debug:
+                self.print("[Request] Auxiliary: ", data)
+            result = self.callflow.update_dist(
+                {
+                    "name": "auxiliary",
+                    "datasets": data["datasets"],
+                    "sortBy": data['sortBy'],
+                    "module": data['module']
+                }
+            )
+            print(result)
+            emit("auxiliary", result, json=True)
 
     def create_server(self):
         app.debug = True

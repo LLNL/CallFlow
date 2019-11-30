@@ -23,9 +23,7 @@ class DistHistogram:
 
     def run(self):
         ret = []
-        print(self.name)
         func_in_module = self.df[self.df.vis_name == self.name]['name'].unique().tolist()
-        print(func_in_module)
 
         for idx, func in enumerate(func_in_module):
             ret.append({

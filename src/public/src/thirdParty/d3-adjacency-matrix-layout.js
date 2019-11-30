@@ -32,27 +32,17 @@ export default function adjacencyMatrixLayout() {
         for (let i = 0; i < adj.length; i += 1) {
             for (let j = 0; j < adj[i].length; j += 1) {
                 var grid = {
-                    id: adj[i][j].peid + '-' + adj[i][j].kpid,
+                    id: adj[i][j].id_x + '-' + adj[i][j].id_y,
                     source: i,
                     target: j,
-                    xid: j,
-                    yid: adj[i][j].peid * 16 + adj[i][j].kpid,
+                    xid: adj[i][j].id_x,
+                    yid: adj[i][j].id_y,
                     x: xScale(i),
                     y: yScale(j),
                     yAggr: yScale(j),
                     weight: adj[i][j].z,
-                    weightAggr: adj[i][j].pe_z,
                     height: nodeHeight,
                     width: nodeWidth,
-                    changePoint: adj[i][j].changePoint,
-                    changeIdx: adj[i][j].changeIdx,
-                    cluster: adj[i][j].cluster,
-                    clusters: adj[i][j].clusters,
-                    kpid: adj[i][j].kpid,
-                    kpgid: adj[i][j].kpgid,
-                    peid: adj[i][j].peid,
-                    maxComm: adj[i][j].maxComm,
-                    minComm: adj[i][j].minComm
                 }
                 matrix.push(grid);
             }

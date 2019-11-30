@@ -27,7 +27,6 @@ export default {
             console.log("Gradient data:", data)
             this.data = data
             this.setupGradients2(data)
-            // this.quantileLines(data, 'max')
         },
     },
     mounted() {
@@ -85,7 +84,7 @@ export default {
                     return 'dist-node'
                 })
                 .attr('opacity', 0)
-                .attr('id', (d, i) => `dist-node_${d.client_idx}`)
+                .attr('id', (d, i) => `dist-node_${this.graph.nodeMap[d['vis_name']]}`)
                 .attr('transform', (d) => {
                     return `translate(${d.x},${d.y})`
                 })
@@ -101,6 +100,7 @@ export default {
             this.rectangle()
             this.path()
             this.text()
+            this.drawTargetLine()
 
             this.$refs.ToolTip.init(this.$parent.id)
         },
@@ -370,7 +370,6 @@ export default {
 
         quantileLines() {
             let mode = this.$store.selectedDiffNodeAlignment
-            let count = 0
             for (let i = 0; i < this.$store.graph.nodes.length; i++) {
                 let node_data = this.$store.graph.nodes[i]
                 let props = JSON.parse(JSON.stringify(node_data['props']))
@@ -395,12 +394,12 @@ export default {
             }
         },
 
-
         quantileLine(d) {
             let mode = this.$store.selectedDiffNodeAlignment
             for (let i = 0; i < this.$store.graph.nodes.length; i++) {
                 if (d == this.$store.graph.nodes[i]) {
                     let node_data = this.$store.graph.nodes[i]
+                    console.log(node_data)
                     let props = JSON.parse(JSON.stringify(node_data['props']))
                     for (const [dataset, val] of Object.entries(props)) {
                         if (dataset != 'xid' && dataset != 'union') {
@@ -420,35 +419,43 @@ export default {
                                 this.drawBottomLine(y1, y2, node_data, dataset)
                             }
                         }
-
                     }
-
                 }
             }
         },
 
+        drawTargetLine(d) {
+            let mode = this.$store.selectedDiffNodeAlignment
+            let dataset = this.$store.selectedTargetDataset
+            for (let i = 0; i < this.$store.graph.nodes.length; i++) {
+                let node_data = this.$store.graph.nodes[i]
 
-        // Distance measure is either mean or max
-        // quantileLines(data, dist_measure) {
-        // let nodes = this.$store.graph.nodes
-        // for (let i = 0; i < nodes.length; i += 1) {
-        //     let node_name = nodes[i].name
-        //     console.log(data, node_name, dist_measure)
-        //     let dist_measure_data = data[node_name][dist_measure]
-        //     let max_inc_time = Math.max.apply(null, data[node_name]['data_max'])
-        //     for (let val in dist_measure_data) {
-        //         if (dist_measure_data.hasOwnProperty(val)) {
-        //             let y1 = 0
-        //             let y2 = (dist_measure_data[val]*nodes[i].height)/max_inc_time
-        //             console.log(y1, y2)
-        //             this.drawBottomLine(y1, y2, nodes[i], val)
-        //         }
-        //     }
-        // }
-        // },
+                let min_inclusive_data = node_data[dataset]['time (inc)']
+                let x1 = node_data.x - this.nodeWidth
+                let x2 = node_data.x
+                let y1 = 0
+                let y2 = 0
+                // Middle alignment is wrong
+                if (mode == 'Middle') {
+                    y1 = (node_data.height - val * node_data.height) * 0.5
+                    y2 = node_data.height - y1
+                    this.drawUpLine(y1, y2, node_data, dataset)
+                    this.drawBottomLine(y1, y2, node_data, dataset)
+                }
+                else if (mode == 'Top') {
+                    let gap = 5
+                    y1 = 0
+                    y2 = (node_data.height * node_data[dataset]['time (inc)']) / node_data['time (inc)']
+                    console.log(y1, y2)
+                    this.drawBottomLine(y1, y2, node_data, dataset)
+                }
+            }
+
+        },
+
 
         drawUpLine(y1, y2, node_data, dataset) {
-            d3.select('#dist-node_' + node_data['client_idx']).append('line')
+            d3.select('#dist-node_' + this.graph.nodeMap[node_data['vis_name']]).append('line')
                 .attrs({
                     'class': 'quantileLines',
                     'id': 'line-1-' + dataset + '-' + node_data['client_idx'],
@@ -460,36 +467,51 @@ export default {
                 .style('opacity', (d) => {
                     return 1
                 })
-                .style("stroke", this.$store.color.datasetColor[dataset])
+                .style("stroke", this.$store.color.colorPallette['pink'])
                 .style("stroke-width", (d) => {
                     return 3
                 })
+        },
 
+        CYKToRGB(CMYK) {
+            let result = {}
+            let c = CMYK[0];
+            let m = CMYK[1];
+            let y = CMYK[2];
+            let k = 0;
+
+            result.r = 1 - Math.min(1, c * (1 - k) + k);
+            result.g = 1 - Math.min(1, m * (1 - k) + k);
+            result.b = 1 - Math.min(1, y * (1 - k) + k);
+
+            result.r = Math.round(result.r * 255);
+            result.g = Math.round(result.g * 255);
+            result.b = Math.round(result.b * 255);
+
+
+            function componentToHex(c) {
+                var hex = c.toString(16);
+                return hex.length == 1 ? "0" + hex : hex;
+              }
+
+            return "#" + componentToHex(result.r) + componentToHex(result.g) + componentToHex(result.b);
         },
 
         drawBottomLine(y1, y2, node_data, dataset) {
-            d3.select('#dist-node_' + node_data['client_idx']).append('line')
+            console.log(this.graph.nodeMap, node_data['vis_name'], this.graph.nodeMap[node_data['vis_name']])
+            d3.select('#dist-node_' + this.graph.nodeMap[node_data['vis_name']]).append('line')
                 .attr("class", 'quantileLines')
                 .attr("id", 'line-2-' + dataset + '-' + node_data['client_idx'])
                 .attr("x1", 0)
                 .attr("y1", y2)
                 .attr("x2", this.nodeWidth)
                 .attr("y2", y2)
-                .attr("stroke-width", 3)
-
-                // .style('opacity', (d) => {
-                //     if (this.$store.selectedDataset == dataset) {
-                //         return 1
-                //     } else {
-                //         return 0.8
-                //     }
-                // })
-                .style("stroke", (d) => {
-                    if (dataset != 'xid' && dataset != 'union') {
-                        let cluster = this.$store.projection_results[dataset][4]
-                        return this.$store.colorset[cluster];
+                .attr("stroke-width", 5)
+                .attr("stroke", (d) => {
+                    if (dataset != 'ensemble') {
+                        return '#4681B4'
+                        // return this.$store.color.colorPallette['pink'];
                     }
-
                 })
         },
 
@@ -552,7 +574,6 @@ export default {
                         return '';
                     }
                     var textSize = this.textSize(d.id)['width'];
-                    console.log(d.id, textSize, d.height)
                     if (textSize < d.height) {
                         return d.id[0];
                     } else {
