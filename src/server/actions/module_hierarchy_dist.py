@@ -35,6 +35,7 @@ class moduleHierarchyDist:
 
     def generic_map(self, nodes, attr):
         ret = {}
+
         log.info("Number of nodes in this hierarchy: {0}".format(len(nodes)))
         for idx, node in enumerate(nodes):
             # idx = 0 in component path is the module.
@@ -68,7 +69,7 @@ class moduleHierarchyDist:
             ret['time'] = {}
             ret['component_path'] = {}
 
-            # if attr == 'time (inc)':
+                # if attr == 'time (inc)':
             group_max_df = self.df.groupby([groupby]).max()
             group_mean_df = self.df.groupby([groupby]).mean()
             ret['time (inc)'][node] = group_max_df.loc[corrected_node, 'time (inc)']
@@ -80,6 +81,7 @@ class moduleHierarchyDist:
             ret['time'][node] = group_df.loc[corrected_node, 'time']
 
             ret[attr][node] = group_max_df.loc[corrected_node, attr]
+
         return ret
 
     def add_node_attributes(self):
@@ -94,39 +96,47 @@ class moduleHierarchyDist:
     # instead of nid, get by module. nid seems very vulnerable rn.
     def run(self):
         node_df = self.df.loc[self.df['module'] == self.module]
-        node_df = node_df.loc[node_df['component_level'] < 5]
+        node_paths = node_df.loc[node_df['component_level'] < 5]
+
         if 'component_path' not in self.df.columns:
             utils.debug('Error: Component path not defined in the df')
 
-        self.add_paths(node_df, 'component_path')
+        self.add_paths(node_paths, 'component_path')
+        print(self.hierarchy.nodes())
         self.add_node_attributes()
 
         paths = []
+        existing_nodes = {}
         for idx, node in enumerate(self.hierarchy.nodes()):
-            if '=' in node:
-                split = node.split('=')
-                module = split[0]
-                func = split[1]
-                path = make_tuple(self.df.loc[self.df['name'] == func]['component_path'].unique()[0])
-                paths.append({
-                    "name": func,
-                    "path": path,
-                    "time (inc)": self.df.loc[self.df['module'] == module]['time (inc)'].max(),
-                    "time": self.df.loc[self.df['module'] == module]['time'].max(),
-                    # "imbalance_perc": df.loc[df['_module'] == module]['imbalance_perc'].max(),
-                    "level": int(self.df.loc[self.df['name'] == func]['component_level'].unique()[0]) - 1
-                })
-            else:
-                func = node
-                path = make_tuple(self.df.loc[self.df['name'] == func]['component_path'].unique()[0])
-                paths.append({
-                    "name": func,
-                    "path": path,
-                    "time (inc)": self.df.loc[self.df['name'] == func]['time (inc)'].max(),
-                    "time": self.df.loc[self.df['name'] == func]['time'].max(),
-                    # "imbalance_perc": df.loc[df['_module'] == module]['imbalance_perc'].max(),
-                    "level": int(self.df.loc[self.df['name'] == func]['component_level'].unique()[0]) - 1
-                })
+            if node not in existing_nodes:
+
+                if '=' in node:
+                    split = node.split('=')
+                    module = split[0]
+                    func = split[1]
+                    path = make_tuple(self.df.loc[self.df['name'] == func]['component_path'].unique()[0])
+                    paths.append({
+                        "name": func,
+                        "path": path,
+                        "time (inc)": self.df.loc[self.df['module'] == module]['time (inc)'].max(),
+                        "time": self.df.loc[self.df['module'] == module]['time'].max(),
+                        # "imbalance_perc": df.loc[df['_module'] == module]['imbalance_perc'].max(),
+                        "level": int(self.df.loc[self.df['name'] == func]['component_level'].unique()[0]) - 1
+                    })
+                else:
+                    func = node
+                    path = make_tuple(self.df.loc[self.df['name'] == func]['component_path'].unique()[0])
+                    paths.append({
+                        "name": func,
+                        "path": path,
+                        "time (inc)": self.df.loc[self.df['name'] == func]['time (inc)'].max(),
+                        "time": self.df.loc[self.df['name'] == func]['time'].max(),
+                        # "imbalance_perc": df.loc[df['_module'] == module]['imbalance_perc'].max(),
+                        "level": int(self.df.loc[self.df['name'] == func]['component_level'].unique()[0]) - 1
+                    })
+
+                existing_nodes[node] = True
+
 
         paths_df = pd.DataFrame(paths)
         return paths_df.to_json(orient="columns")

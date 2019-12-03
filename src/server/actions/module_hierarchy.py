@@ -118,8 +118,8 @@ class moduleHierarchy:
         time_inc_mapping = self.generic_map(self.hierarchy.nodes(), 'time')
         nx.set_node_attributes(self.hierarchy, name='time', values=time_mapping)
 
-        # imbalance_perc_mapping = self.generic_map(self.hierarchy.nodes(), 'imbalance_perc')
-        # nx.set_node_attributes(self.hierarchy, name='imbalance_perc', values=imbalance_perc_mapping)
+        imbalance_perc_mapping = self.generic_map(self.hierarchy.nodes(), 'imbalance_perc')
+        nx.set_node_attributes(self.hierarchy, name='imbalance_perc', values=imbalance_perc_mapping)
 
         component_path_mapping = self.generic_map(self.hierarchy.nodes(), 'component_path')
         nx.set_node_attributes(self.hierarchy, name='component_path', values=component_path_mapping)
@@ -163,6 +163,7 @@ class moduleHierarchy:
                 # There can be many functions with the same name but get called again and again.
                 component_paths_df = self.df.loc[self.df['name'] == node]['component_path'].unique()
                 component_paths_array = component_paths_df.tolist()
+                print(component_paths_array)
                 for idx, component_path in enumerate(component_paths_array):
                     paths.append({
                         "name": node,

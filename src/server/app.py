@@ -276,18 +276,18 @@ class App:
             )
             emit("distMiniHistogram", result, json=True)
 
-        @sockets.on("hierarchy", namespace="/")
-        def hierarchy(data):
-            if self.debug:
-                self.print("[Request] Hierarchy of module", data)
-            result = self.callflow.update(
-                {
-                    "name": "hierarchy",
-                    "dataset1": data["dataset1"],
-                    "module": data["module"],
-                }
-            )
-            emit("hierarchy", result, json=True)
+        # @sockets.on("hierarchy", namespace="/")
+        # def hierarchy(data):
+        #     if self.debug:
+        #         self.print("[Request] Hierarchy of module", data)
+        #     result = self.callflow.update(
+        #         {
+        #             "name": "hierarchy",
+        #             "dataset1": data["dataset1"],
+        #             "module": data["module"],
+        #         }
+        #     )
+        #     emit("hierarchy", result, json=True)
 
         @sockets.on("tooltip", namespace="/")
         def tooltip(data):
@@ -370,7 +370,7 @@ class App:
             )
             emit("dist_scatterplot", result, json=True)
 
-        @sockets.on("dist_histogram", namespace="/")
+        @sockets.on("ensemble_histogram", namespace="/")
         def disthistogram(data):
             if self.debug:
                 self.print("[Request] Dist-Histogram request for module.")

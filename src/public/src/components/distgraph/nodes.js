@@ -179,7 +179,7 @@ export default {
                         datasets: this.$store.actual_dataset_names,
                     })
 
-                    this.$socket.emit('dist_histogram', {
+                    this.$socket.emit('ensemble_histogram', {
                         datasets: this.$store.actual_dataset_names,
                         module: selectedModule
                     })
