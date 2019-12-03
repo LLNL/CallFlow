@@ -1,3 +1,4 @@
+import * as d3 from 'd3'
 
 // Inspired by http://informationandvisualization.de/blog/box-plot
 function boxPlot() {
@@ -19,7 +20,7 @@ function boxPlot() {
             //d = d.map(value).sort(d3.ascending);
             //var boxIndex = data[0];
             //var boxIndex = 1;
-            var d = data[1].sort(d3.ascending);
+            var d = data.sort(d3.ascending);
 
             // console.log(boxIndex);
             //console.log(d);
@@ -43,12 +44,12 @@ function boxPlot() {
                 : d3.range(n);
 
             // Compute the new x-scale.
-            var x1 = d3.scale.linear()
-                .domain(domain && domain.call(this, d, i) || [min, max])
+            var x1 = d3.scaleLinear()
+                .domain([min, max])
                 .range([height, 0]);
 
             // Retrieve the old x-scale, if this is an update.
-            var x0 = this.__chart__ || d3.scale.linear()
+            var x0 = this.__chart__ || d3.scaleLinear()
                 .domain([0, Infinity])
                 // .domain([0, max])
                 .range(x1.range());
@@ -244,7 +245,6 @@ function boxPlot() {
                 .style("opacity", 1e-6)
                 .remove();
         });
-        d3.timer.flush();
     }
 
     box.width = function (x) {
@@ -273,7 +273,7 @@ function boxPlot() {
 
     box.domain = function (x) {
         if (!arguments.length) return domain;
-        domain = x == null ? x : d3.functor(x);
+        domain = x == null ? x : x;
         return box;
     };
 
@@ -300,7 +300,6 @@ function boxPlot() {
         quartiles = x;
         return box;
     };
-
     return box;
 };
 
@@ -315,3 +314,5 @@ function boxQuartiles(d) {
         d3.quantile(d, .75)
     ];
 }
+
+export default boxPlot

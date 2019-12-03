@@ -18,7 +18,7 @@ export default {
         xMax: 0,
         yMin: 0,
         yMax: 0,
-        message: 'Data Projection',
+        message: 'Parameter Projection',
         showMessage: false,
     }),
     sockets: {
