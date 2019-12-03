@@ -13,46 +13,69 @@ export default {
         people: [],
         message: "Auxiliary Call Sites",
         callsites: [],
-        dataReady: false
+        dataReady: false,
+        number_of_callsites: 0,
+        firstRender: true,
+
     }),
     mounted() {
         EventHandler.$on('highlight_datasets', (datasets) => {
             console.log("[Interaction] Highlighting the datasets :", datasets)
             self.highlight(datasets)
         })
+
+        EventHandler.$on('update_auxiliary_sortBy', (sortBy) => {
+            self.updateSortBy(sortBy)
+        })
     },
 
     sockets: {
         auxiliary(data) {
             data = JSON.parse(data)
-            this.dataReady = true
             console.log(data)
-            this.init(data)
+            this.dataReady = true
+            let d = data.data
+            let index = data.index
+            let columns = data.columns
+
+            let columnMap = {}
+            let idx = 0
+            for (let column of columns) {
+                columnMap[column] = idx
+                idx += 1
+            }
+            this.init(d, index, columns, columnMap)
         },
     },
 
     methods: {
-        init(data) {
+        init(data, index, columns, columnMap) {
+
+            if (!this.firstRender) {
+                this.clear()
+            }
+            else{
+                this.firstRender=false
+            }
             this.callsites = []
-            let index = Object.keys(data['name'])
+            this.number_of_callsites = index.length
 
             for (let i = 0; i < index.length; i += 1) {
                 let callsite = {}
-                let name = data['name'][index[i]]
 
-                callsite = {
-                    'time (inc)': data['time (inc)'][index[i]],
-                    'time': data['time'][index[i]],
-                    'rank': data['rank'][index[i]],
-                    'id': data['id'][index[i]],
-                    'name': name
+                for (let column of columns) {
+                    callsite[column] = data[i][columnMap[column]]
                 }
-                this.callsites.push(callsite)
-            }
 
-            for (let i = 0; i < this.callsites.length; i += 1) {
-                let callsite = this.callsites[i]
+                this.callsites.push(callsite)
                 this.boxPlotContainerUI(callsite, 'inc')
+            }
+        },
+
+        clear() {
+            var els = document.querySelectorAll('.auxiliary-node')
+            for (var i = 0; i < els.length; i++) {
+                els[i].parentNode.innerHTML = ''
             }
         },
 
@@ -72,23 +95,71 @@ export default {
 
         },
 
-        boxPlotContainerUI(dat, type) {
+        createLabel(text) {
             let div = document.createElement('div')
-            div.setAttribute('id', dat.id)
             let label = document.createElement("div");
-            let description = document.createTextNode(dat.name);
-            let checkbox = document.createElement("input");
+            let textNode = document.createTextNode(text);
+            label.appendChild(textNode);
+            div.appendChild(label)
+            return label
+        },
 
+        createCheckbox(dat) {
+            let div = document.createElement('div')
+            let container = document.createElement("div");
+            let checkbox = document.createElement("input");
             checkbox.type = "checkbox";
             checkbox.name = dat.name;
             checkbox.node_name = dat['name']
             checkbox.setAttribute('class', "list_checkbox");
+            let textNode = document.createTextNode('Reveal in Ensemble graph');
+            container.appendChild(textNode)
+            container.appendChild(checkbox);
+            div.appendChild(container)
+            return div
+        },
 
-            label.appendChild(checkbox);
-            label.appendChild(description);
+        drawLine() {
+            let div = document.createElement('div')
+            var newLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            newLine.setAttribute('id', 'line2');
+            newLine.setAttribute('x1', '0');
+            newLine.setAttribute('y1', '0');
+            newLine.setAttribute('x2', '200');
+            newLine.setAttribute('y2', '200');
+            newLine.setAttribute("stroke", "black")
+            div.appendChild(newLine);
+            return newLine
+        },
 
-            div.appendChild(label)
-            document.getElementById('auxiliary-function-overview').append(div);
+
+        trunc(str, n) {
+            return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
+        },
+
+
+        boxPlotContainerUI(dat, type) {
+            let container = document.createElement('div')
+            let div = document.createElement('div')
+            div.setAttribute('id', dat.id)
+            div.setAttribute('class', 'auxiliary-node')
+
+            let checkbox = this.createCheckbox(dat)
+            let call_site = this.createLabel("".concat("Call site: ", this.trunc(dat.name, 30)))
+
+            let time_inc = dat["mean_time (inc)"].toFixed(2)
+            let inclusive_runtime = this.createLabel("".concat("Inclusive Runtime (mean): ", time_inc));
+            let time = dat["mean_time"].toFixed(2)
+            let exclusive_runtime = this.createLabel("".concat("Exclusive Runtime (mean): ", time));
+
+
+            div.appendChild(checkbox);
+            div.appendChild(call_site);
+            div.appendChild(inclusive_runtime);
+            div.appendChild(exclusive_runtime);
+
+            container.appendChild(div)
+            document.getElementById('auxiliary-function-overview').append(container);
             this.boxPlotUI(dat, type)
         },
 
@@ -98,16 +169,21 @@ export default {
 
             let q = [];
             let val = [];
+            let max = 0, min = 0;
             if (type == 'inc') {
                 val = inc_arr
                 q = this.quartiles(inc_arr)
+                max = data['max_time (inc)']
+                min = data['min_time (inc)']
             }
             else {
                 val = exc_arr
                 q = this.quartiles(exc_arr)
+                max = data['max_time']
+                min = data['min_time']
             }
             var margin = { top: 0, right: 10, bottom: 0, left: 5 };
-            this.width = document.getElementById('auxiliary-function-overview').clientWidth
+            this.width = document.getElementById('auxiliary-function-overview').clientWidth - 50
             this.height = 50;
             let labels = true;
 
@@ -115,7 +191,7 @@ export default {
             var chart = boxPlot()
                 .width(this.width - textOffset)
                 .whiskers(this.iqr(1.5))
-                .domain([0, 1147289.0])
+                .domain([min, max])
                 .showLabels(labels);
 
             let offset = margin.right;
@@ -141,8 +217,6 @@ export default {
                 //     return "translate(" + x(d[0]) + "," + 0 + ")";
                 // })
                 .call(chart.height(this.height));
-
-
         },
 
         iqr(k) {

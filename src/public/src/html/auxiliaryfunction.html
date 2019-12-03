@@ -1,5 +1,8 @@
 <v-layout row wrap :id="id">
     <v-chip class="chip" chips close color="teal" label outlined clearable> {{ message }} </v-chip>
+    <span>     Contains {{number_of_callsites}} callsites.
+        </span>
+    </v-text>
 <!--
     <ul v-if="dataReady == true">
         <li v-for="callsite in callsites">

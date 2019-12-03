@@ -536,7 +536,6 @@ class App:
                     "module": data['module']
                 }
             )
-            print(result)
             emit("auxiliary", result, json=True)
 
     def create_server(self):

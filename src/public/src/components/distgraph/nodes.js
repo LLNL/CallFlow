@@ -183,6 +183,12 @@ export default {
                         datasets: this.$store.actual_dataset_names,
                         module: selectedModule
                     })
+
+                    this.$socket.emit('dist_auxiliary', {
+                        datasets: this.$store.actual_dataset_names,
+                        module: selectedModule,
+                        sortBy: this.$store.auxiliarySortBy,
+                    })
                 })
 
             // Transition

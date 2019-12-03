@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <router-view/>
+    <router-view />
   </div>
 </template>
 
@@ -11,12 +11,12 @@ export default {
 </script>
 
 <style>
-#toolbar{
-	padding: 0px 0px 0px;
+#toolbar {
+  padding: 0px 0px 0px;
 }
 
-#toolbar > .v-toolbar__content{
-	height: 54px !important;
+#toolbar > .v-toolbar__content {
+  height: 54px !important;
 }
 
 #vis {
@@ -48,7 +48,9 @@ export default {
   stroke-width: 0.5px;
 }
 
-.node text { font: 12px sans-serif; }
+.node text {
+  font: 12px sans-serif;
+}
 
 .link {
   fill: none;
@@ -59,30 +61,30 @@ export default {
   /*opacity: 0;*/
 }
 
-.selected{
-    stroke: #009688;
-    stroke-width: 5px;
+.selected {
+  stroke: #009688;
+  stroke-width: 5px;
 }
 
-.unselected{
-    stroke: black;
-    stroke-width: 2px;
+.unselected {
+  stroke: black;
+  stroke-width: 2px;
 }
 
-.big_text{
-    font-size: 32px;
+.big_text {
+  font-size: 32px;
 }
 
-*{
-	margin: 0;
-	padding: 0;
+* {
+  margin: 0;
+  padding: 0;
 }
 
-body{
-	top: -10px !important;
-	font-family: 'Open Sans', sans-serif;
-	margin-bottom: 0px;
-	height: 99%;
+body {
+  top: -10px !important;
+  font-family: "Open Sans", sans-serif;
+  margin-bottom: 0px;
+  height: 99%;
 }
 
 /* #content{
@@ -127,78 +129,77 @@ body{
 	height: 100% !important;
 
 	/*this lines modify the border*/
-	/*border: 1px solid !important;*/
+/*border: 1px solid !important;*/
 /* } */
-.column#side_vis{
-	padding-bottom: 0px !important;
-	margin-right: -10em !important;
-	padding-right: -10em !important;
+.column#side_vis {
+  padding-bottom: 0px !important;
+  margin-right: -10em !important;
+  padding-right: -10em !important;
 }
 /*#main_vis{
 	height : 100% !important;
 }*/
-.ui.vis{
-	height: 98% !important;
+.ui.vis {
+  height: 98% !important;
 }
 
-.tight{
-	margin-left: -1em;
-	/*padding-right: -1em;*/
+.tight {
+  margin-left: -1em;
+  /*padding-right: -1em;*/
 }
-.ui.segment.vis_container{
-	margin-right: -1em;
-}
-
-.small_container#control{
-	height: 33% !important;
-}
-#nodeInfo{
-	/*height: 33% !important;*/
-	height: 65% !important;
-}
-#other{
-	height: 32% !important;
+.ui.segment.vis_container {
+  margin-right: -1em;
 }
 
+.small_container#control {
+  height: 33% !important;
+}
+#nodeInfo {
+  /*height: 33% !important;*/
+  height: 65% !important;
+}
+#other {
+  height: 32% !important;
+}
 
 .box {
-    font: 10px sans-serif;
+  font: 10px sans-serif;
 }
 
 .box line,
 .box rect,
 .box circle {
-    fill: steelblue;
-    stroke: #000;
-    stroke-width: 1.5px;
+  fill: steelblue;
+  stroke: #000;
+  stroke-width: 1.5px;
 }
 
 .box .center {
-    stroke-dasharray: 3,3;
+  stroke-dasharray: 3, 3;
 }
 
 .box .outlier {
-    fill: none;
-    stroke: #000;
+  fill: none;
+  stroke: #000;
 }
 
-#flist_view{
-    overflow-y: scroll;
-    max-height: 100vh;
+#flist_view {
+  overflow-y: scroll;
+  max-height: 100vh;
 }
 
 #vis {
-	border: 2px;
-	border-color: #000;
+  border: 2px;
+  border-color: #000;
 }
 
-.v-chip__content{
-	color: white;
-	font-size: 125%;
+.v-chip__content {
+  color: white;
+  font-size: 125%;
 }
 
 .scroll {
-    overflow-y: auto;
+  overflow-y: auto;
 }
 
 /* Lasso CSS*/
@@ -213,7 +214,19 @@ body{
   opacity: 0.5;
 }
 
-#run-information{
-  max-height: 400px
+#run-information {
+  max-height: 400px;
 }
+
+#auxiliary-function-overview {
+  max-height: 550px;
+  overflow: auto;
+}
+
+.auxiliary-node{
+    padding: 10px;
+    margin: 3px;
+    border-color: #7b7474;
+    border-width: 3px;
+    border-style: solid;}
 </style>

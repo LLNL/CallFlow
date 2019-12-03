@@ -95,6 +95,7 @@ export default {
 		firstRender: false,
 		enableDist: false,
 		summaryChip: 'Ensemble Graph',
+		auxiliarySortBy: 'time (inc)',
 		ranks: [],
 		// selectedRank: 10,
 		selectedTargetDataset: '',
@@ -164,6 +165,7 @@ export default {
 			this.$store.selectedGroupBy = this.selectedGroupBy
 			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment
 			this.$store.colorset = ['#59A14E', '#AF7AA1', '#F18F2C']
+			this.$store.auxiliarySortBy = this.auxiliarySortBy
 
 			this.setTargetDataset()
 
@@ -343,7 +345,7 @@ export default {
 
 					this.$socket.emit('dist_auxiliary', {
 						datasets: this.$store.actual_dataset_names,
-						sortBy: 'diff',
+						sortBy: this.$store.auxiliarySortBy,
 						module: 'all'
 					})
 
@@ -557,6 +559,12 @@ export default {
 			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment
 			EventHandler.$emit('update_diff_node_alignment')
 		},
+
+		updateAuxiliarySortBy(){
+			this.$store.auxiliarySortBy = this.auxiliarySortBy
+			EventHandler.$emit('update_auxiliary_sortBy')
+
+		}
 
 	}
 }

@@ -38,7 +38,6 @@ export default {
 
         onSelect(item) {
             this.selected = item
-            console.log(item['dataset'])
             this.$store.highlight_dataset = item['dataset']
             EventHandler.$emit('highlight_dataset', item['dataset'])
         },

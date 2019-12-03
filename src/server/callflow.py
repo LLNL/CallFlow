@@ -349,7 +349,7 @@ class CallFlow:
             return histogram.result
 
         elif action_name == "auxiliary":
-            auxiliary = Auxiliary(self.states['ensemble'], action['module'])
+            auxiliary = Auxiliary(self.states['ensemble'], module=action['module'], sortBy=action['sortBy'])
             return auxiliary.result
 
     def displayStats(self, name):
