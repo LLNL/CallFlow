@@ -26,6 +26,7 @@ export default {
         auxiliary(data) {
             data = JSON.parse(data)
             this.dataReady = true
+            console.log(data)
             this.init(data)
         },
     },
@@ -114,7 +115,7 @@ export default {
             var chart = boxPlot()
                 .width(this.width - textOffset)
                 .whiskers(this.iqr(1.5))
-                .domain([q[4], q[5]])
+                .domain([0, 1147289.0])
                 .showLabels(labels);
 
             let offset = margin.right;
