@@ -28,6 +28,20 @@ export default {
             this.data = data
             this.setupGradients2(data)
         },
+
+        dist_group_highlight(data){
+			data = JSON.parse(data)
+			console.log("Group highlight for", this.selectedFormat, ": [", this.selectedMode, "]", data)
+			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
+			// if (this.selectedData == 'Dataframe' && this.initLoad) {
+			// 	this.$refs.DistgraphA.init(data)
+			// } else if (this.selectedData == 'Graph' && this.initLoad) {
+			// 	this.$refs.DistgraphB.init(data)
+			// }
+			// else{
+			// 	this.$refs.DistgraphA.init(data)
+			// }
+		},
     },
     mounted() {
         this.id = 'dist-nodes-' + this._uid

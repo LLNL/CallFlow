@@ -47,7 +47,7 @@ export default {
 		DistHistogram
 	},
 	data: () => ({
-		appName: 'Callflow',
+		appName: 'CallFlow',
 		server: 'localhost:5000',
 		config: {
 			headers: {
@@ -211,6 +211,20 @@ export default {
 				// this.$refs.DistFunction.init()
 				// this.$refs.DistIcicle.init()
 				this.initLoad = false
+			}
+			else{
+				this.$refs.DistgraphA.init(data)
+			}
+		},
+
+		dist_group_highlight(data){
+			data = JSON.parse(data)
+			console.log("Group highlight for", this.selectedFormat, ": [", this.selectedMode, "]", data)
+			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
+			if (this.selectedData == 'Dataframe' && this.initLoad) {
+				this.$refs.DistgraphA.init(data)
+			} else if (this.selectedData == 'Graph' && this.initLoad) {
+				this.$refs.DistgraphB.init(data)
 			}
 			else{
 				this.$refs.DistgraphA.init(data)

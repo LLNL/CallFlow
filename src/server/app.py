@@ -444,7 +444,7 @@ class App:
         def dist(data):
             result = {}
             if self.debug:
-                self.print("[Request] Dist the dataset.", data)
+                self.print("[Group highlight] Dist the dataset.", data)
             datasets = data["datasets"]
             groupBy = data["groupBy"].lower()
             nx_graph = self.callflow.update_dist(
@@ -453,6 +453,7 @@ class App:
             result = json_graph.node_link_data(nx_graph)
             adjList = nx.adjacency_matrix(nx_graph).todense()
             # result['adj_matrix'] = json.dumps({'test': adjList}, cls=NDArrayEncoder, indent=4)
+            result = json.dumps(result)
 
             emit("dist_group_highlight", result, json=True)
 

@@ -43,7 +43,7 @@ export default {
             let toolbarHeight = document.getElementById('toolbar').clientHeight
 
             this.width = visContainer.clientWidth
-            this.height = (dashboardHeight - toolbarHeight) / 4
+            this.height = (dashboardHeight - toolbarHeight) / 5
             this.padding = { left: 50, top: 0, right: 50, bottom: 30 }
             this.x = d3.scaleLinear().range([0, this.width]);
             this.y = d3.scaleLinear().range([this.height, 0]);
@@ -127,6 +127,8 @@ export default {
                 ret[id].push(data['dataset'][id])
                 ret[id].push(id)
                 ret[id].push(data['label'][id])
+                ret[id].push(data['max_inclusive_time'][id])
+                ret[id].push(data['max_exclusive_time'][id])
 
                 let x = data['x'][id]
                 let y = data['y'][id]
@@ -193,13 +195,21 @@ export default {
 
             d3.selectAll('.circle' + this.id).remove()
             d3.selectAll('.lasso' + this.id).remove()
+
+            // Define the div for the tooltip
+            var tooltip = d3.select("#" + this.id)
+                .append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+
+
             let self = this
             this.circles = this.svg.selectAll('circle')
                 .data(this.$store.projection)
                 .enter()
                 .append('circle')
                 .attrs({
-                    class: (d) => { console.log(d); return 'dot' + ' circle' + this.id },
+                    class: (d) => { return 'dot' + ' circle' + this.id },
                     id: (d) => { return 'dot-' + self.$store.datasetMap[d[2]] },
                     // stroke: (d) => { return this.$store.colorset[d[2]] },
                     r: (d) => {
@@ -211,23 +221,49 @@ export default {
                     cx: (d, i) => { return self.x(d[0]) },
                     cy: (d) => { return self.y(d[1]) },
                 })
+                .on('mouseover', (d) => {
+                    console.log(d)
+                    let dataset_name = d[2]
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html("Run: " + dataset_name + "<br/>" +
+                                "Inclusive time: " + d[5] + "<br/>" +
+                                "Exclusive time: " + d[6])
+                        .style("left", (d3.event.pageX) + "px")
+                        .style("top", (d3.event.pageY - 28) + "px");
+                })
+                .on('mouseout', (d) => {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                })
                 .on('click', (d) => {
                     let dataset_name = d[2]
                     this.$socket.emit('dist_group_highlight', {
                         datasets: [dataset_name],
                         groupBy: this.$store.selectedGroupBy
                     })
-                    this.select(dataset_name)
-                })
-                .on('dblclick', (d) => {
-                    let dataset_name = d[2]
-                    EventHandler.$emit('clear_summary_view')
-                    this.$socket.emit('dist_group', {
+
+                    this.$socket.emit('dist_auxiliary', {
                         datasets: [dataset_name],
-                        groupBy: this.$store.selectedGroupBy
+                        sortBy: this.$store.auxiliarySortBy,
+						module: 'all'
                     })
+                    this.$store.selectedTargetDataset = dataset_name;
                     this.select(dataset_name)
+                    EventHandler.$emit('highlight_datasets', this.$store.selectedTargetDataset)
                 })
+            // .on('dblclick', (d) => {
+            //     let dataset_name = d[2]
+            //     EventHandler.$emit('clear_summary_view')
+            //     this.$socket.emit('dist_group', {
+            //         datasets: [dataset_name],
+            //         groupBy: this.$store.selectedGroupBy
+            //     })
+            //     this.select(dataset_name)
+            // })
+
             this.lasso = lasso()
                 .className('lasso' + this.id)
                 .closePathSelect(true)
@@ -300,10 +336,17 @@ export default {
                 .attr("opacity", 0.5);
 
             EventHandler.$emit('clear_summary_view')
-            this.$socket.emit('dist_group', {
+            this.$socket.emit('dist_group_highlight', {
                 datasets: this.selectedDatasets,
                 groupBy: this.$store.selectedGroupBy
             })
+
+            this.$socket.emit('dist_auxiliary', {
+                datasets: this.selectedDatasets,
+                sortBy: this.$store.auxiliarySortBy,
+                module: 'all'
+            })
+            EventHandler.$emit('highlight_datasets', this.selectedDatasets)
         },
 
         zoom() {
@@ -396,7 +439,10 @@ export default {
                     'stroke-width': 3.0,
                 })
 
-            console.log(dataset)
+        },
+
+        clear() {
+
         }
     },
 }

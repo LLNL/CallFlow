@@ -73,6 +73,9 @@ class RunProjection:
             proj = TSNE(random_state=random_number).fit_transform(X)
 
         datasets = [key for key in self.states.keys() if key != 'ensemble']
+        max_inclusive_time = [self.states[key].df['time (inc)'].max() for key in self.states.keys() if key != 'ensemble']
+        max_exclusive_time = [self.states[key].df['time'].max() for key in self.states.keys() if key != 'ensemble']
+
         ret = pd.DataFrame(proj, columns=list('xy'))
         ret['dataset'] = datasets
 
@@ -87,5 +90,8 @@ class RunProjection:
         elif self.clustering == 'k_means':
             self.clusters = KMeans(n_clusters=self.n_cluster, random_state=random_number)
             ret['label'] = self.clusters.fit(X).labels_
+
+        ret['max_inclusive_time'] = max_inclusive_time
+        ret['max_exclusive_time'] = max_exclusive_time
 
         return ret
