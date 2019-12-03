@@ -22,7 +22,7 @@ export default {
 		selectedDirection: 'TD',
 		textTruncForNode: 15,
 		color: null,
-		width: null, 
+		width: null,
 		height: null,
 		totalSize: 0,
 		b : {
@@ -32,14 +32,14 @@ export default {
 			name: "split-caller",
 		},
 		splitOptions: [
-			{ 
-				"name": 'split-caller',
-			}, 
-			{ 
-				"name": 'split-callee',
-			}, 
 			{
-				"name":'split-level', 
+				"name": 'split-caller',
+			},
+			{
+				"name": 'split-callee',
+			},
+			{
+				"name":'split-level',
 			}],
 		placeholder: 'Split options',
 		maxLevel: 0,
@@ -50,7 +50,7 @@ export default {
 	watch: {
 		level: {
 			handler: function(val, oldVal) {
-				this.update_level(); 
+				this.update_level();
 			},
 			deep: true
 		}
@@ -58,7 +58,7 @@ export default {
 
 	sockets: {
 		hierarchy(data) {
-			data = JSON.parse(data)	
+			data = JSON.parse(data)
 			console.log("Module hierarchy: ", data)
 			this.update_from_df(data)
 		},
@@ -79,7 +79,7 @@ export default {
 
 	methods: {
 		init() {
-					
+
 		},
 
 		setupSVG() {
@@ -89,8 +89,8 @@ export default {
 			this.width = window.innerWidth*0.3
 			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight - this.icicleToolbarHeight)*0.3
             this.icicleWidth = this.width - this.margin.right - this.margin.left
-			this.icicleHeight = this.height - this.margin.top - this.margin.bottom	
-			
+			this.icicleHeight = this.height - this.margin.top - this.margin.bottom
+
 			this.hierarchySVG = d3.select('#' + this.id)
 				.append('svg')
 				.attrs({
@@ -105,11 +105,11 @@ export default {
 				if(this.maxLevel < value){
 					this.maxLevel = value
 					this.level = [0, value]
-				}	
+				}
             }
 		},
 
-		// TODO: Need to make level view for the icicle plot. 
+		// TODO: Need to make level view for the icicle plot.
 		update_level(){
 			this.clearIcicles()
 			let ret = []
@@ -120,7 +120,7 @@ export default {
 			// console.log(this.minLevel, this.maxLevel)
 			if (this.minLevel > this.maxLevel){
 				console.log("Cannot generate icicle plot, min_level > max_level")
-				return 
+				return
 			}
 
 			for(let i = 0; i < this.path_hierarchy.length; i += 1){
@@ -129,7 +129,7 @@ export default {
 					ret.push(this.path_hierarchy[i])
 				}
 				else if(level >= this.minLevel || level < this.maxLevel){
-					ret.push(this.path_hierarchy[i])					
+					ret.push(this.path_hierarchy[i])
 				}
 				else{
 				}
@@ -289,7 +289,7 @@ export default {
 			console.log(json)
 			let root = d3.hierarchy(json)
 			console.log(root)
-				
+
 			const partition = d3.partition()
 				.size([this.width, this.height])
 
@@ -336,7 +336,7 @@ export default {
 
 			// Get total size of the tree = value of root node from partition.
 			this.totalSize = root.value;
-			
+
 		},
 
 		addNodes() {
@@ -474,7 +474,7 @@ export default {
 					return (sequenceArray.indexOf(node) >= 0)
 				})
 				.style('opacity', 1);
-				
+
 			this.$socket.emit(splitByOption, {
 				// "module":
 			})

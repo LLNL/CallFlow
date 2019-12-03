@@ -22,9 +22,6 @@ function boxPlot() {
             //var boxIndex = 1;
             var d = data.sort(d3.ascending);
 
-            // console.log(boxIndex);
-            //console.log(d);
-
             var g = d3.select(this),
                 n = d.length,
                 min = d[0],
@@ -43,15 +40,10 @@ function boxPlot() {
                 ? d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n))
                 : d3.range(n);
 
-            console.log(0, max)
-
             // Compute the new x-scale.
             var x1 = d3.scaleLinear()
                 .domain([min, max])
                 .range([width, 0]);
-
-            console.log(x1(59000), x1(103284))
-
 
             // Retrieve the old x-scale, if this is an update.
             var x0 = this.__chart__ || d3.scaleLinear()
@@ -69,16 +61,14 @@ function boxPlot() {
 
             // Update center line: the vertical line spanning the whiskers.
 
-
-
-            // // Update innerquartile box.
+            // Update innerquartile box.
             var box = g.selectAll("rect.box")
                 .data([quartileData]);
 
             box.enter().append("rect")
                 .attr("class", "box")
                 .attr("y", 0)
-                .attr("x", function (d) { console.log(d[0], d[1], d[2]); return x0(d[2]); })
+                .attr("x", function (d) { return x0(d[2]); })
                 .attr("height", height)
                 .attr("width", function (d) { return x0(d[0]) - x0(d[2]); })
                 .style('z-index', 1)
