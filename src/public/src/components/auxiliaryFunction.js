@@ -184,7 +184,7 @@ export default {
             }
             var margin = { top: 0, right: 10, bottom: 0, left: 5 };
             this.width = document.getElementById('auxiliary-function-overview').clientWidth - 50
-            this.height = 50;
+            this.height = 60;
             let labels = true;
 
             let textOffset = 25
@@ -200,22 +200,22 @@ export default {
                 .append('svg')
                 .attr('class', 'box')
                 .attr("width", this.width)
-                .attr("height", this.height)
+                .attr("height", this.height )
                 .attr("transform", "translate(" + offset + "," + margin.top + ")")
 
 
             let x = d3.scaleOrdinal()
                 .domain(val)
-                .range([0, this.width - 200]);
+                .range([0, this.width]);
 
             svg.selectAll(".box")
                 .data([val])
                 .enter().append("g")
                 .attr("width", this.width)
-                .attr("height", this.height)
-                // .attr("transform", function (d) {
-                //     return "translate(" + x(d[0]) + "," + 0 + ")";
-                // })
+                .attr("height", this.height - 10)
+                .attr("transform", function (d) {
+                    return "translate(" + x(d[0]) + "," + 0 + ")";
+                })
                 .call(chart.height(this.height));
         },
 

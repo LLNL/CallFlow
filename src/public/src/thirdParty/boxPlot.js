@@ -43,7 +43,7 @@ function boxPlot() {
             // Compute the new x-scale.
             var x1 = d3.scaleLinear()
                 .domain([min, max])
-                .range([width, 0]);
+                .range([0, width]);
 
             // Retrieve the old x-scale, if this is an update.
             var x0 = this.__chart__ || d3.scaleLinear()
@@ -59,38 +59,37 @@ function boxPlot() {
             // and other elements are variable, so we need to exit them! Variable
             // elements also fade in and out.
 
-            // Update center line: the vertical line spanning the whiskers.
-
             // Update innerquartile box.
             var box = g.selectAll("rect.box")
                 .data([quartileData]);
 
             box.enter().append("rect")
                 .attr("class", "box")
-                .attr("y", 0)
-                .attr("x", function (d) { return x0(d[2]); })
-                .attr("height", height)
-                .attr("width", function (d) { return x0(d[0]) - x0(d[2]); })
+                .attr("y", 5)
+                .attr("x", function (d) { return x0(d[0]); })
+                .attr("height", height - 5)
+                .attr("width", function (d) { return - x0(d[0]) + x0(d[2]); })
                 .style('z-index', 1)
                 .transition()
                 .duration(duration)
-                .attr("x", function (d) { return x1(d[2]); })
-                .attr("width", function (d) { return x1(d[0]) - x1(d[2]); });
+                .attr("x", function (d) { return x1(d[0]); })
+                .attr("width", function (d) { return - x1(d[0]) + x1(d[2]); });
 
             box.transition()
                 .duration(duration)
-                .attr("x", function (d) { return x1(d[2]); })
-                .attr("width", function (d) { return x1(d[0]) - x1(d[2]); });
+                .attr("x", function (d) { return x1(d[0]); })
+                .attr("width", function (d) { return - x1(d[0]) + x1(d[2]); });
 
+            // Update center line: the vertical line spanning the whiskers.
             var center = g.selectAll("line.center")
                 .data(whiskerData ? [whiskerData] : []);
 
             //horizontal line
             center.enter().insert("line", "rect")
                 .attr("class", "center")
-                .attr("y1", height / 2)
+                .attr("y1", height / 2 - 5)
                 .attr("x1", function (d) { return x0(d[0]); })
-                .attr("y2", height / 2)
+                .attr("y2", height / 2 - 5)
                 .attr("x2", function (d) { return x0(d[1]); })
                 .style("opacity", 1e-6)
                 .style('z-index', 10)
@@ -190,61 +189,61 @@ function boxPlot() {
                 .style("opacity", 1e-6)
                 .remove();
 
-            // // Compute the tick format.
-            // var format = tickFormat || x1.tickFormat(8);
+            // Compute the tick format.
+            var format = tickFormat || x1.tickFormat(8);
 
-            // // Update box ticks.
-            // var boxTick = g.selectAll("text.box")
-            //     .data(quartileData);
-            // if (showLabels == true) {
-            //     boxTick.enter().append("text")
-            //         .attr("class", "box")
-            //         .attr("dy", ".3em")
-            //         .attr("dx", function (d, i) { return i & 1 ? 6 : -6 })
-            //         .attr("x", function (d, i) { return i & 1 ? + width : 0 })
-            //         .attr("y", x0)
-            //         .attr("text-anchor", function (d, i) { return i & 1 ? "start" : "end"; })
-            //         .text(format)
-            //         .transition()
-            //         .duration(duration)
-            //         .attr("y", x1);
-            // }
+            // Update box ticks.
+            var boxTick = g.selectAll("text.box")
+                .data(quartileData);
+            if (showLabels == true) {
+                boxTick.enter().append("text")
+                    .attr("class", "box")
+                    .attr("dy", ".3em")
+                    .attr("dx", function (d, i) { return i & 1 ? 3 : -3 })
+                    .attr("y", function (d, i) { return i & 1 ? + height - 10 : 10 })
+                    .attr("x", x0)
+                    .attr("text-anchor", function (d, i) { return i & 1 ? "start" : "end"; })
+                    .text(format)
+                    .transition()
+                    .duration(duration)
+                    .attr("x", x1);
+            }
 
-            // boxTick.transition()
-            //     .duration(duration)
-            //     .text(format)
-            //     .attr("y", x1);
+            boxTick.transition()
+                .duration(duration)
+                .text(format)
+                .attr("x", x1);
 
             // // Update whisker ticks. These are handled separately from the box
             // // ticks because they may or may not exist, and we want don't want
             // // to join box ticks pre-transition with whisker ticks post-.
-            // var whiskerTick = g.selectAll("text.whisker")
-            //     .data(whiskerData || []);
-            // if (showLabels == true) {
-            //     whiskerTick.enter().append("text")
-            //         .attr("class", "whisker")
-            //         .attr("dy", ".3em")
-            //         .attr("dx", 6)
-            //         .attr("x", width)
-            //         .attr("y", x0)
-            //         .text(format)
-            //         .style("opacity", 1e-6)
-            //         .transition()
-            //         .duration(duration)
-            //         .attr("y", x1)
-            //         .style("opacity", 1);
-            // }
-            // whiskerTick.transition()
-            //     .duration(duration)
-            //     .text(format)
-            //     .attr("y", x1)
-            //     .style("opacity", 1);
+            var whiskerTick = g.selectAll("text.whisker")
+                .data(whiskerData || []);
+            if (showLabels == true) {
+                whiskerTick.enter().append("text")
+                    .attr("class", "whisker")
+                    .attr("dy", ".3em")
+                    .attr("dx", 6)
+                    .attr("y", height - 10)
+                    .attr("x", x0)
+                    .text(format)
+                    .style("opacity", 1e-6)
+                    .transition()
+                    .duration(duration)
+                    .attr("x", x1)
+                    .style("opacity", 1);
+            }
+            whiskerTick.transition()
+                .duration(duration)
+                .text(format)
+                .attr("x", x1)
+                .style("opacity", 1);
 
-            // whiskerTick.exit().transition()
-            //     .duration(duration)
-            //     .attr("y", x1)
-            //     .style("opacity", 1e-6)
-            //     .remove();
+            whiskerTick.exit().transition()
+                .duration(duration)
+                .attr("x", x1 - 10)
+                .style("opacity", 1e-6)
+                .remove();
         });
     }
 
