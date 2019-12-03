@@ -30,6 +30,7 @@ class DistGraph(nx.Graph):
             "module",
             "show_node",
         ]
+        self.mapper = {}
 
         if construct_graph:
             print("Creating a Graph for {0}.".format(self.state.name))
@@ -45,6 +46,9 @@ class DistGraph(nx.Graph):
         self.callbacks = []
         self.edge_direction = {}
 
+        print(self.mapper)
+
+
         if add_data == True:
             self.add_node_attributes()
             self.add_edge_attributes()
@@ -55,26 +59,31 @@ class DistGraph(nx.Graph):
 
     def no_cycle_path(self, path):
         ret = []
-        mapper = {}
+        moduleMapper = {}
         for idx, elem in enumerate(path):
-            if elem not in mapper:
-                mapper[elem] = 1
+            call_site = elem.split('=')[1]
+            module = self.df.loc[self.df.name == call_site]['module'].tolist()[0]
+            if (module not in moduleMapper and elem in self.mapper):
+                self.mapper[elem] += 1
+                moduleMapper[module] = True
                 ret.append(elem)
+            elif elem not in self.mapper:
+                # ret.append(elem + "_" + str(mapper[elem]))
+                self.mapper[elem] = 0
             else:
-                ret.append(elem + "_" + str(mapper[elem]))
-                mapper[elem] += 1
-
+                self.mapper[elem] += 1
         return tuple(ret)
 
     def add_paths(self, path):
         for idx, row in self.df.iterrows():
-            if row.show_node:
+            if row.show_node == True:
                 if isinstance(row[path], list):
                     path_tuple = row[path]
                 elif isinstance(row[path], str):
                     path_tuple = make_tuple(row[path])
                 corrected_path = self.no_cycle_path(path_tuple)
                 self.g.add_path(corrected_path)
+        print(self.mapper)
 
     def add_node_attributes(self):
         ensemble_mapping = self.ensemble_map(self.g.nodes())

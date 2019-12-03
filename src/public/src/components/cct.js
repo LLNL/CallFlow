@@ -40,19 +40,14 @@ export default {
         firstRender: true,
     }),
 
-    watch: {
-
-    },
-
-
-
     sockets: {
         cct(data) {
-            console.log("CCT data: ", data)
+            this.data = JSON.parse(data)
+            console.log("CCT data: ", JSON.parse(data))
             if (!this.firstRender) {
                 this.clear()
             }
-            this.init(data)
+            this.init(this.data)
         },
     },
 
@@ -90,6 +85,7 @@ export default {
             let nodes = graph.nodes
             let links = graph.links
 
+            console.log(this.data)
             nodes.forEach((node, i) => {
                 g.setNode(node['id'], {
                     label: node['module'] + ':' + node['id'],
@@ -112,7 +108,7 @@ export default {
                 g.setEdge(links[i]['source'], links[i]['target'], {
                     label: edge_label
                 });
-                
+
             }
 
             let self = this
@@ -121,7 +117,7 @@ export default {
                 let node = g.node(v);
                 if (node != undefined) {
                     let color = self.$store.color.getColor(node)
-                    // node.style = "stroke:" + self.$store.color.setContrast(color) 
+                    // node.style = "stroke:" + self.$store.color.setContrast(color)
                     node.style = "fill:" + color
                     node.rx = node.ry = 4;
                 }

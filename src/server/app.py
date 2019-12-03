@@ -423,7 +423,8 @@ class App:
                 }
             )
             result = json_graph.node_link_data(union_cct)
-            emit("dist_cct", result, json=True)
+            result = json.dumps(result)
+            emit("cct", result, json=True)
 
         @sockets.on("dist_group", namespace="/")
         def dist(data):

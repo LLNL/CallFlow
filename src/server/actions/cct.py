@@ -13,7 +13,7 @@
 import pandas as pd
 import networkx as nx
 from ast import literal_eval as make_tuple
-
+import math
 
 class CCT:
     def __init__(self, state, functionsInCCT):
@@ -33,8 +33,8 @@ class CCT:
         time_mapping = self.node_map(self.g.nodes(), 'time')
         nx.set_node_attributes(self.g, name='time', values=time_mapping)
 
-        module_mapping = self.node_map(self.g.nodes(), 'module')
-        nx.set_node_attributes(self.g, name='module', values=module_mapping)
+        # module_mapping = self.node_map(self.g.nodes(), 'module')
+        # nx.set_node_attributes(self.g, name='module', values=module_mapping)
 
         # imbalance_perc_mapping = self.node_map(self.g.nodes(), 'imbalance_perc')
         # nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)
@@ -45,16 +45,24 @@ class CCT:
 
     def node_map(self, nodes, attr):
         ret = {}
-        for node in nodes:  
-            # print("Node is ", node)        
-            data = self.entire_df.loc[self.entire_df['name'] == node][attr]
-            if attr == 'time' or attr == 'time (inc)' or attr == 'imbalance_perc':
-                ret[node] = data.mean()
-            else:
-                if(len(data) > 0):
-                    ret[node] = list(set(data.tolist()))[0]
-                else:
-                    ret[node] = 's'  
+        for node in nodes:
+            node_module = self.entire_df.loc[self.entire_df['name'] == node]['module'].unique()
+            if(len(node_module) > 0):
+                if(node_module[0] != 'nan'):
+
+                    data = self.entire_df.loc[self.entire_df['name'] == node][attr]
+                    if attr == 'time' or attr == 'time (inc)' or attr == 'imbalance_perc':
+                        if( not math.isnan(data.mean())):
+                            ret[node] = data.mean()
+                    else:
+                        if(len(data) > 0):
+                            val = list(set(data.tolist()))[0]
+                            if(val != 'NaN'):
+                                ret[node] = list(set(data.tolist()))[0]
+                            else:
+                                ret[node] = ''
+                        else:
+                            ret[node] = 's'
         return ret
 
     def edge_map(self, edges, attr, source=None, orientation=None):
@@ -83,7 +91,7 @@ class CCT:
             # Nodes in active path.
             active_nodes = {start_node}
             previous_head = None
-            
+
             for edge in nx.edge_dfs(self.g, start_node, orientation):
                 tail, head = tailhead(edge)
                 if(edge not in counter):
@@ -94,16 +102,16 @@ class CCT:
                     counter[edge] = 1
 
         return counter
-    
+
     def add_paths(self, path_name):
         for idx, row in self.entire_df.iterrows():
             if row.show_node:
                 path = row[path_name]
-                # TODO: Sometimes the path becomes a string. Find why it happens. 
+                # TODO: Sometimes the path becomes a string. Find why it happens.
                 # If path becomes a string.
                 if isinstance(path, str):
                     path = make_tuple(row[path_name])
-                self.g.add_path(path[0])  
+                self.g.add_path(path)
 
     def find_cycle(self, G, source=None, orientation=None):
         if not G.is_directed() or orientation in (None, 'original'):
@@ -193,7 +201,7 @@ class CCT:
                 break
         return cycle[i:]
 
-    def run(self):    
+    def run(self):
         self.g = nx.DiGraph()
         self.add_paths('path')
         self.add_node_attributes()
