@@ -1,14 +1,8 @@
 CallFlow v2.0b
 ==============
 
-The hpctoolkit-parser has been replaced by [Hatchet](www.github.com/LLNL/hatchet) to support a standard API and work with many formats (like hpctoolkit, caliper, etc.). Hatchet analyzes performance data that is organized in a tree hierarchy (such as calling context trees, call graphs, nested regions' timers etc.).
-
-For MacOS, create a .dot directory. 
-
 ```
     cd src/server/
-    mkdir .callflow
-    mkdir ./callflow/dataset
 ```
 
 # Input
@@ -34,29 +28,13 @@ To load multiiple datasets into Callflow, you need to provide a json file as inp
 {
     "datasets": [
         {
-            "name": "Dataset1",
-            "path": "./data/dataset/run1",
+            "name": "Dataset",
+            "path": "./data/dataset/run",
             "format": "hpctoolkit",
             "props": {
             },
             "nop": "128"
         },
-        {
-            "name": "Dataset2",
-            "path": "./data/dataset/run2",
-            "format": "hpctoolkit",
-            "props": {
-            },
-            "nop": "128"
-		},
-		{
-            "name": "Dataset3",
-            "path": "./data/dataset/run3",
-            "format": "hpctoolkit",
-            "props": {
-            },
-            "nop": "128"
-        }
     ]
 }
 ```
@@ -66,7 +44,6 @@ To load multiiple datasets into Callflow, you need to provide a json file as inp
 ```
 	cd src
 	npm install
-	bower install
 	python setup.py install (TODO)
 ```
 
@@ -116,6 +93,13 @@ Client side of Callflow uses Vue.js and is in ES6.
 
 Any published work that utilizes this software should include the following
 reference:
+
+```
+Huu Tan Nguyen, Abhinav Bhatele, Nikhil Jain, Suraj Kesavan, Harsh Bhatia, Todd Gamblin, Kwan- Liu Ma, and Peer-Timo Bremer.
+Visualizing Hierarchical Performance Profiles of Parallel Codes using CallFlow
+
+IEEE Transactions on Visualization and Computer Graphics, November 2019 (to appear). LLNL-JRNL-.
+```
 
 ```
 Huu Tan Nguyen, Abhinav Bhatele, Peer-Timo Bremer, Todd Gamblin, Martin Schulz,
