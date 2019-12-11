@@ -221,12 +221,26 @@ body {
 #auxiliary-function-overview {
   max-height: 550px;
   overflow: auto;
+  background:white;
 }
 
-.auxiliary-node{
-    padding: 10px;
-    margin: 3px;
-    border-color: #7b7474;
-    border-width: 3px;
-    border-style: solid;}
+.auxiliary-node {
+  padding: 10px;
+  margin: 3px;
+  border-color: #7b7474;
+  border-width: 3px;
+  border-style: solid;
+}
+
+#compare-button{
+  color:black
+}
+
+.reveal-button{
+  float: right;
+  margin: 2px;
+  border: grey;
+  border-style: outset;
+  padding: 2px;
+}
 </style>

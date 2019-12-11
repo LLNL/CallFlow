@@ -45,7 +45,7 @@ export default {
     },
 
     sockets: {
-        distMiniHistogram(data) {
+        dist_mini_histogram(data) {
             this.data = JSON.parse(data)
             for (const [key, value] of Object.entries(this.data)) {
                 let node = key
@@ -61,12 +61,14 @@ export default {
             this.nodes = graph.nodes
             this.links = graph.links
             this.view = view
-            this.$socket.emit('distMiniHistogram', {})
+            this.$socket.emit('dist-mini-histogram', {
+                'target-datasets': [this.$store.selectedTargetDataset],
+            })
         },
 
         array_unique(arr) {
             return arr.filter(function (value, index, self) {
-              return self.indexOf(value) === index;
+                return self.indexOf(value) === index;
             })
         },
 
@@ -86,14 +88,14 @@ export default {
                 attr_data = data['imbalance']
             }
 
-            let ranks = data['rank'][0]
+            let ranks = data['rank']
             this.MPIcount = this.array_unique(ranks).length
-            for (let i = 0; i < attr_data[0].length; i += 1) {
+            for (let i = 0; i < attr_data.length; i += 1) {
                 for (const [key, value] in Object.entries(attr_data)) {
                     if (dataSorted[i] == undefined) {
                         dataSorted[i] = 0
                     }
-                    dataSorted[i] += attr_data[0][i]
+                    dataSorted[i] += attr_data[i]
                 }
             }
 
@@ -124,11 +126,11 @@ export default {
 
         render(data, node) {
             let node_dict = this.nodes[this.nodeMap[node]]
-            if (node in this.nodeMap){
-                const temp = this.dataProcess(data)
-                let xVals = temp[0]
-                let freq = temp[1]
-                console.log(xVals, freq)
+            if (node in this.nodeMap) {
+                // const targetData = this.dataTarProcess(data['target'])
+                const otherData = this.dataProcess(data['ensemble'][0][0])
+                let xVals = otherData[0]
+                let freq = otherData[1]
 
                 this.minimapXScale = d3.scaleBand()
                     .domain(xVals)
@@ -138,24 +140,59 @@ export default {
                     .domain([0, d3.max(freq)])
                     .range([this.$parent.ySpacing, 0]);
 
-                for(let i = 0; i < freq.length; i += 1){
-                    d3.select('#'+this.id)
-                    .append('rect')
-                    .attrs({
-                        'id': 'histobars',
-                        'width': () => this.minimapXScale.bandwidth(),
-                        'height': (d) => {
-                            return (this.$parent.nodeWidth) - this.minimapYScale(freq[i])
-                        },
-                        'x': (d) => node_dict.x + this.minimapXScale(xVals[i]),
-                        'y': (d) => node_dict.y + this.minimapYScale(freq[i]),
-                        'opacity': 1,
-                        'stroke-width': '0.2px',
-                        'stroke': 'black',
-                        'fill': 'steelblue',
-                    })
+                for (let i = 0; i < freq.length; i += 1) {
+                    d3.select('#' + this.id)
+                        .append('rect')
+                        .attrs({
+                            'id': 'histobars',
+                            'class': 'histogram-bar ensemble',
+                            'width': () => this.minimapXScale.bandwidth(),
+                            'height': (d) => {
+                                return (this.$parent.nodeWidth) - this.minimapYScale(freq[i])
+                            },
+                            'x': (d) => node_dict.x + this.minimapXScale(xVals[i]),
+                            'y': (d) => node_dict.y + this.minimapYScale(freq[i]),
+                            'opacity': 1,
+                            'stroke-width': '0.2px',
+                            'stroke': 'black',
+                            'fill': '#C0C0C0',
+                        })
                 }
+
+                const targetData = this.dataProcess(data['target'][0][this.$store.selectedTargetDataset])
+                let target_x_vals = targetData[0]
+                let target_freq = targetData[1]
+
+                this.minimap_target_x_scale = d3.scaleBand()
+                    .domain(target_x_vals)
+                    .rangeRound([0, this.$parent.nodeWidth])
+
+                this.minimap_target_y_scale = d3.scaleLinear()
+                    .domain([0, d3.max(target_freq)])
+                    .range([this.$parent.ySpacing, 0]);
+
+                for (let i = 0; i < target_freq.length; i += 1) {
+                    d3.select('#' + this.id)
+                        .append('rect')
+                        .attrs({
+                            'id': 'histobars',
+                            'class': 'histogram-bar target',
+                            'width': () => this.minimap_target_x_scale.bandwidth(),
+                            'height': (d) => {
+                                return (this.$parent.nodeWidth) - this.minimapYScale(target_freq[i])
+                            },
+                            'x': (d) => node_dict.x + this.minimapXScale(target_x_vals[i]),
+                            'y': (d) => node_dict.y + this.minimapYScale(target_freq[i]),
+                            'opacity': 1,
+                            'stroke-width': '0.2px',
+                            'stroke': 'black',
+                            'fill': '#8DB188',
+                        })
+                }
+
             }
+
+
 
         }
     }

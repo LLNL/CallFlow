@@ -341,7 +341,7 @@ class CallFlow:
             return ret
 
         elif action_name == "mini-histogram":
-            minihistogram = MiniHistogram(self.states['ensemble'])
+            minihistogram = MiniHistogram(self.states['ensemble'], target_datasets=action['target-datasets'])
             return minihistogram.result
 
         elif action_name == "histogram":
@@ -351,6 +351,10 @@ class CallFlow:
         elif action_name == "auxiliary":
             auxiliary = Auxiliary(self.states['ensemble'], module=action['module'], sortBy=action['sortBy'], datasets=action['datasets'])
             return auxiliary.result
+
+        elif action_name == 'compare':
+            compare = Compare(self.states['ensemble'], target=action['targetDataset'], compare = action['compareDataset'])
+            return compare.result
 
     def displayStats(self, name):
         log.warn("==========================")

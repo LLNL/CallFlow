@@ -4,8 +4,8 @@
 		</v-toolbar-side-icon>
 		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
 		<v-flex xs3 class="ma-2">
-			<v-select label="Set Target run" :items="datasets" v-model="selectedTargetDataset" :menu-props="{ maxHeight: '400' }"
-				box v-on:change="updateTargetDataset()">
+			<v-select label="Set Target run" :items="datasets" v-model="selectedTargetDataset"
+				:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
 			</v-select>
 		</v-flex>
 		<!-- <v-flex xs2 class="ma-2" v-if="selectedMode == 'Distribution'">
@@ -25,9 +25,18 @@
 		</v-flex> -->
 		<v-spacer></v-spacer>
 		<v-flex xs2>
+			<v-btn-toggle v-model="comparisonMode">
+				<v-btn id="compare-button" color="white">
+					Compare
+				</v-btn>
+			</v-btn-toggle>
+		</v-flex>
+
+		<v-flex xs2>
 			<v-select label="Analysis Mode" :items="modes" v-model="selectedMode" box :menu-props="{ maxHeight: '400' }"
 				v-on:change="updateMode()"></v-select>
 		</v-flex>
+
 	</v-toolbar>
 
 	<v-navigation-drawer v-model="left" temporary fixed>
@@ -185,7 +194,8 @@
 				<splitpanes horizontal :splitpanes-size="60">
 					<span>
 						<v-layout class="chip-container">
-							<v-chip class="chip" chips close color="teal" label outlined clearable> {{ summaryChip }} </v-chip>
+							<v-chip class="chip" chips close color="teal" label outlined clearable> {{ summaryChip }}
+							</v-chip>
 						</v-layout>
 						<Distgraph ref="DistgraphA" />
 					</span>
@@ -195,10 +205,10 @@
 						<Projection ref="Projection" />
 					</span>
 					<span>
-						<RunInformation ref="RunInformation"/>
+						<RunInformation ref="RunInformation" />
 					</span>
 					<span>
-						<AuxiliaryFunction ref="AuxiliaryFunction"/>
+						<AuxiliaryFunction ref="AuxiliaryFunction" />
 					</span>
 				</splitpanes>
 

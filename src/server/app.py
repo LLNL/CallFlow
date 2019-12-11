@@ -267,14 +267,6 @@ class App:
             )
             emit("miniHistogram", result, json=True)
 
-        @sockets.on("distMiniHistogram", namespace="/")
-        def histogram(data):
-            if self.debug:
-                self.print("[Request] Mini-histogram", data)
-            result = self.callflow.update_dist(
-                {"name": "mini-histogram"}
-            )
-            emit("distMiniHistogram", result, json=True)
 
         # @sockets.on("hierarchy", namespace="/")
         # def hierarchy(data):
@@ -539,6 +531,32 @@ class App:
                 }
             )
             emit("auxiliary", result, json=True)
+
+        @sockets.on('compare', namespace='/')
+        def compare(data):
+            if self.debug:
+                self.print("[Request] Auxiliary: ", data)
+            result = self.callflow.update_dist(
+                {
+                    "name": "compare",
+                    "targetDataset": data["targetDataset"],
+                    "compareDataset": data['compareDataset']
+                }
+            )
+            emit('compare', result, json=True)
+
+        @sockets.on("dist-mini-histogram", namespace="/")
+        def histogram(data):
+            if self.debug:
+                self.print("[Request] Mini-histogram", data)
+            result = self.callflow.update_dist(
+                {
+                    "name": "mini-histogram",
+                    "target-datasets": data['target-datasets']
+                }
+            )
+            emit("dist_mini_histogram", result, json=True)
+
 
     def create_server(self):
         app.debug = True

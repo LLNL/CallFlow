@@ -65,9 +65,9 @@ function boxPlot() {
 
             box.enter().append("rect")
                 .attr("class", "box")
-                .attr("y", 5)
+                .attr("y", 12.5)
                 .attr("x", function (d) { return x0(d[0]); })
-                .attr("height", height - 5)
+                .attr("height", height - 25)
                 .attr("width", function (d) { return - x0(d[0]) + x0(d[2]); })
                 .style('z-index', 1)
                 .transition()
@@ -163,7 +163,7 @@ function boxPlot() {
                 .style("opacity", 1e-6)
                 .remove();
 
-            // // Update outliers.
+            // Update outliers.
             var outlier = g.selectAll("circle.outlier")
                 .data(outlierIndices, Number);
 
@@ -192,36 +192,34 @@ function boxPlot() {
             // Compute the tick format.
             var format = tickFormat || x1.tickFormat(8);
 
-            // Update box ticks.
-            var boxTick = g.selectAll("text.box")
-                .data(quartileData);
-            if (showLabels == true) {
-                boxTick.enter().append("text")
-                    .attr("class", "box")
-                    .attr("dy", ".3em")
-                    .attr("dx", function (d, i) { return i & 1 ? 3 : -3 })
-                    .attr("y", function (d, i) { return i & 1 ? + height - 10 : 10 })
-                    .attr("x", x0)
-                    .attr("text-anchor", function (d, i) { return i & 1 ? "start" : "end"; })
-                    .text(format)
-                    .transition()
-                    .duration(duration)
-                    .attr("x", x1);
-            }
+            // // Update box ticks.
+            // var boxTick = g.selectAll("text.box")
+            //     .data(quartileData);
+            // if (showLabels == true) {
+            //     boxTick.enter().append("text")
+            //         .attr("class", "box")
+            //         .attr("dy", ".3em")
+            //         .attr("dx", function (d, i) { return i & 1 ? 3 : -3 })
+            //         .attr("y", function (d, i) { return i & 1 ? + height - 10 : 10 })
+            //         .attr("x", x0)
+            //         .attr("text-anchor", function (d, i) { return i & 1 ? "start" : "end"; })
+            //         .text(format)
+            //         .transition()
+            //         .duration(duration)
+            //         .attr("x", x1);
+            // }
 
-            boxTick.transition()
-                .duration(duration)
-                .text(format)
-                .attr("x", x1);
+            // boxTick.transition()
+            //     .duration(duration)
+            //     .text(format)
+            //     .attr("x", x1);
 
-            // // Update whisker ticks. These are handled separately from the box
-            // // ticks because they may or may not exist, and we want don't want
-            // // to join box ticks pre-transition with whisker ticks post-.
-            var whiskerTick = g.selectAll("text.whisker")
-                .data(whiskerData || []);
+            // For min
+            var minWhiskerTick = g.selectAll("text.min-whisker")
+                .data([whiskerData[0]] || []);
             if (showLabels == true) {
-                whiskerTick.enter().append("text")
-                    .attr("class", "whisker")
+                minWhiskerTick.enter().append("text")
+                    .attr("class", "min-whisker")
                     .attr("dy", ".3em")
                     .attr("dx", 6)
                     .attr("y", height - 10)
@@ -233,15 +231,43 @@ function boxPlot() {
                     .attr("x", x1)
                     .style("opacity", 1);
             }
-            whiskerTick.transition()
+            minWhiskerTick.transition()
                 .duration(duration)
                 .text(format)
                 .attr("x", x1)
                 .style("opacity", 1);
 
-            whiskerTick.exit().transition()
+            minWhiskerTick.exit().transition()
                 .duration(duration)
                 .attr("x", x1 - 10)
+                .style("opacity", 1e-6)
+                .remove();
+
+            var maxWhiskerTick = g.selectAll("text.max-whisker")
+                .data([whiskerData[1]] || []);
+            if (showLabels == true) {
+                maxWhiskerTick.enter().append("text")
+                    .attr("class", "max-whisker")
+                    .attr("dy", ".3em")
+                    .attr("dx", width*0.80)
+                    .attr("y", height - 10)
+                    .attr("x", (d) => {console.log(x0); return x0 })
+                    .text(format)
+                    .style("opacity", 1e-6)
+                    .transition()
+                    .duration(duration)
+                    .attr("x", x1)
+                    .style("opacity", 1);
+            }
+            maxWhiskerTick.transition()
+                .duration(duration)
+                .text(format)
+                .attr("x", x1)
+                .style("opacity", 1);
+
+            maxWhiskerTick.exit().transition()
+                .duration(duration)
+                .attr("x", x1)
                 .style("opacity", 1e-6)
                 .remove();
         });

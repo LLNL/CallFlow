@@ -204,6 +204,7 @@ export default {
 
 
             let self = this
+            let selected = undefined
             this.circles = this.svg.selectAll('circle')
                 .data(this.$store.projection)
                 .enter()
@@ -211,25 +212,24 @@ export default {
                 .attrs({
                     class: (d) => { return 'dot' + ' circle' + this.id },
                     id: (d) => { return 'dot-' + self.$store.datasetMap[d[2]] },
-                    // stroke: (d) => { return this.$store.colorset[d[2]] },
                     r: (d) => {
                         if (Object.entries(ts).length < 16) return 6.0
                         else return 4.5
                     },
-                    'stroke-width': 1.0,
+                    'stroke-width': 2.0,
+                    stroke: 'black',
                     fill: (d) => { return this.$store.colorset[d[4]] },
                     cx: (d, i) => { return self.x(d[0]) },
                     cy: (d) => { return self.y(d[1]) },
                 })
                 .on('mouseover', (d) => {
-                    console.log(d)
                     let dataset_name = d[2]
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", .9);
                     tooltip.html("Run: " + dataset_name + "<br/>" +
-                                "Inclusive time: " + d[5] + "<br/>" +
-                                "Exclusive time: " + d[6])
+                        "Inclusive time: " + d[5] + "<br/>" +
+                        "Exclusive time: " + d[6])
                         .style("left", (d3.event.pageX) + "px")
                         .style("top", (d3.event.pageY - 28) + "px");
                 })
@@ -239,6 +239,20 @@ export default {
                         .style("opacity", 0);
                 })
                 .on('click', (d) => {
+                    this.selectedRun = d[2]
+                    d3.select('#dot-' + self.$store.datasetMap[d[2]])
+                        .style('stroke', '#4681B4');
+                    d3.selectall('.dot')
+                        .style('stroke', 'black');
+                    this.compareDataset = d[2]
+
+                    this.$socket.emit('compare', {
+                        targetDataset : self.$store.selectedTargetDataset,
+                        compareDataset: this.compareDataset,
+                    })
+
+                })
+                .on('dblclick', (d) => {
                     let dataset_name = d[2]
                     this.$socket.emit('dist_group_highlight', {
                         datasets: [dataset_name],
@@ -248,21 +262,12 @@ export default {
                     this.$socket.emit('dist_auxiliary', {
                         datasets: [dataset_name],
                         sortBy: this.$store.auxiliarySortBy,
-						module: 'all'
+                        module: 'all'
                     })
                     this.$store.selectedTargetDataset = dataset_name;
                     this.select(dataset_name)
                     EventHandler.$emit('highlight_datasets', this.$store.selectedTargetDataset)
                 })
-            // .on('dblclick', (d) => {
-            //     let dataset_name = d[2]
-            //     EventHandler.$emit('clear_summary_view')
-            //     this.$socket.emit('dist_group', {
-            //         datasets: [dataset_name],
-            //         groupBy: this.$store.selectedGroupBy
-            //     })
-            //     this.select(dataset_name)
-            // })
 
             this.lasso = lasso()
                 .className('lasso' + this.id)
@@ -274,7 +279,7 @@ export default {
                 .on("draw", this.lassoDraw)
                 .on("end", this.lassoEnd);
 
-            this.svg.call(this.lasso)
+            // this.svg.call(this.lasso)
 
             this.highlight(this.$store.selectedTargetDataset)
 

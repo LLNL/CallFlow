@@ -32,7 +32,6 @@ export default {
     sockets: {
         auxiliary(data) {
             data = JSON.parse(data)
-            console.log(data)
             this.dataReady = true
             let d = data.data
             let index = data.index
@@ -54,8 +53,8 @@ export default {
             if (!this.firstRender) {
                 this.clear()
             }
-            else{
-                this.firstRender=false
+            else {
+                this.firstRender = false
             }
             this.callsites = []
             this.number_of_callsites = index.length
@@ -107,13 +106,12 @@ export default {
         createCheckbox(dat) {
             let div = document.createElement('div')
             let container = document.createElement("div");
-            let checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
+            let checkbox = document.createElement("button");
             checkbox.name = dat.name;
             checkbox.node_name = dat['name']
-            checkbox.setAttribute('class', "list_checkbox");
-            let textNode = document.createTextNode('Reveal in Ensemble graph');
-            container.appendChild(textNode)
+            checkbox.setAttribute('class', "reveal-button");
+            checkbox.innerHTML = 'Reveal'
+            // container.appendChild(textNode)
             container.appendChild(checkbox);
             div.appendChild(container)
             return div
@@ -200,7 +198,7 @@ export default {
                 .append('svg')
                 .attr('class', 'box')
                 .attr("width", this.width)
-                .attr("height", this.height )
+                .attr("height", this.height)
                 .attr("transform", "translate(" + offset + "," + margin.top + ")")
 
 
@@ -288,85 +286,5 @@ export default {
         }
 
     }
-}
-
-function functionListUI() {
-    var listViewDiv = document.createElement('table');
-    listViewDiv.setAttribute("id", "list_view");
-    document.getElementById('fList_view').appendChild(listViewDiv);
-
-    $("#list_view").width($("#fList_view").width());
-    $("#list_view").height($("#fList_view").height() - 50);
-    $("#list_view").css("overflow-y", "scroll");
-    $('#list_view').css('max-height', '100')
-    //    document.getElementById("splitNodeByParentBtr").disabled = true;
-}
-
-function displayFunctions(listData) {
-    $('#list_view').empty();
-
-    var button = $('<button/>', {
-        text: 'Split Caller',
-        id: "splitNodeBtr"
-    });
-
-
-    $("#list_view").append(button);
-    document.getElementById("splitNodeBtr").disabled = true;
-    var button2 = $('<button/>', {
-        text: 'Split Callee',
-        id: "splitNodeByParentBtr"
-    });
-    $("#list_view").append(button2);
-
-
-    let entry_funcs = listData['entry_funcs']
-    let other_funcs = listData['other_funcs']
-
-    entry_funcs.sort(function (a, b) {
-        return b["value_exc"] - a["value_exc"];
-    })
-
-    let divHead = document.createElement('label');
-    divHead.appendChild(document.createTextNode("Entry functions: "))
-    document.getElementById('list_view').appendChild(divHead)
-
-    let text = document.createTextNode(' ' + entry_funcs.length + ' in count')
-    divHead.appendChild(text)
-
-    entry_funcs.forEach(function (dat) {
-        boxPlotContainerUI(dat, 'inc')
-    });
-    document.getElementById('list_view').appendChild(document.createElement('br'));
-    document.getElementById('list_view').appendChild(document.createElement('br'));
-
-    // For other_funcs
-    other_funcs.sort(function (a, b) {
-        return b["value_exc"] - a["value_exc"];
-    })
-
-    let otherHead = document.createElement('label');
-    otherHead.appendChild(document.createTextNode("Inside functions: "))
-    document.getElementById('list_view').appendChild(otherHead)
-
-    let othertext = document.createTextNode(' ' + other_funcs.length + ' in count')
-    otherHead.appendChild(othertext)
-
-    let other_funcs_count = 0
-    other_funcs.forEach(function (dat) {
-        boxPlotContainerUI(dat, 'inc')
-    });
-
-    document.getElementById("splitNodeBtr").disabled = false;
-    $('#splitNodeBtr').click(() => {
-        let idList = $('input:checkbox:checked.list_checkbox').map(function () {
-            return this.df_index
-        }).get();
-        splitCaller(idList).then((data) => {
-            self.state = data
-            //                this.render()
-        })
-
-    })
 }
 
