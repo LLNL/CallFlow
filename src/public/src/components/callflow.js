@@ -167,7 +167,7 @@ export default {
 			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment
 			this.$store.colorset = ['#59A14E', '#AF7AA1', '#F18F2C']
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
-
+			this.$store.nodeInfo = {}
 			this.setTargetDataset()
 
 			this.init()

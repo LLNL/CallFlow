@@ -40,7 +40,7 @@ export default {
     sockets: {
         dist_similarity(data){
             console.log("Similarities: ", data)
-            this.processSimilarityMatrix(data)      
+            this.processSimilarityMatrix(data)
         }
     },
     watch: {
@@ -64,7 +64,7 @@ export default {
 				.attr('width', this.width - this.margin.left - this.margin.right)
 				.attr('height', this.height - this.margin.top - this.margin.bottom)
 				.attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
-            
+
             this.matrixLength = Math.min(this.containerHeight, this.containerWidth)
             this.matrixWidth = this.matrixLength * this.matrixScale
             this.matrixHeight = this.matrixLength * this.matrixScale
@@ -76,7 +76,7 @@ export default {
         processSimilarityMatrix(data) {
             this.similarityMatrix = []
             let mat = []
-            
+
             let count = 0
             for(var dataset in data){
                 if(data.hasOwnProperty(dataset)){
@@ -145,7 +145,7 @@ export default {
 
             let matrixData = adjacencyMatrix()
             let self = this
-            
+
             if (!Number.isNaN(matrixData[0].x)) {
                 this.max_weight = 0
                 this.min_weight = 0
@@ -188,7 +188,7 @@ export default {
                     .style('stroke-opacity', 1)
                     .style('fill', d => {
                         let val = (d.weight) / (this.max_weight)
-                        return d3.interpolateReds(val)
+                        return d3.interpolateRdBu(val)
                     })
                     .style('fill-opacity', d => {
                         return 1

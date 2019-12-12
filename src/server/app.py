@@ -374,7 +374,7 @@ class App:
                     "module": data["module"],
                 }
             )
-            emit("dist_histogram", result, json=True)
+            emit("ensemble_histogram", result, json=True)
 
         @sockets.on("comp_cct", namespace="/")
         def compcct(data):

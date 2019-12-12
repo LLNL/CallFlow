@@ -1,4 +1,9 @@
 <v-layout row wrap id="diff-icicle-overview">
+    <v-layout class="chip-container">
+        <v-chip class="chip" chips close color="teal" label outlined clearable>
+            {{ message }}
+        </v-chip>
+    </v-layout>
     <v-toolbar dense id="diff-icicle-toolbar">
         <dropdown v-bind:options="splitOptions" :selected="selectedSplitOption" v-on:updateOption="split()"
             :placeholder="placeholder">

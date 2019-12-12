@@ -419,7 +419,6 @@ export default {
             for (let i = 0; i < this.$store.graph.nodes.length; i++) {
                 if (d == this.$store.graph.nodes[i]) {
                     let node_data = this.$store.graph.nodes[i]
-                    console.log(node_data)
                     let props = JSON.parse(JSON.stringify(node_data['props']))
                     for (const [dataset, val] of Object.entries(props)) {
                         if (dataset != 'xid' && dataset != 'union') {
@@ -518,7 +517,6 @@ export default {
         },
 
         drawBottomLine(y1, y2, node_data, dataset) {
-            console.log(this.graph.nodeMap, node_data['vis_name'], this.graph.nodeMap[node_data['vis_name']])
             d3.select('#dist-node_' + this.graph.nodeMap[node_data['vis_name']]).append('line')
                 .attr("class", 'quantileLines')
                 .attr("id", 'line-2-' + dataset + '-' + node_data['client_idx'])

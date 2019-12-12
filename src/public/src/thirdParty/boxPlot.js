@@ -251,7 +251,7 @@ function boxPlot() {
                     .attr("dy", ".3em")
                     .attr("dx", width*0.80)
                     .attr("y", height - 10)
-                    .attr("x", (d) => {console.log(x0); return x0 })
+                    .attr("x", (d) => { return x0 })
                     .text(format)
                     .style("opacity", 1e-6)
                     .transition()
