@@ -242,7 +242,8 @@ export default {
                     this.selectedRun = d[2]
                     d3.select('#dot-' + self.$store.datasetMap[d[2]])
                         .style('stroke', '#4681B4');
-                    d3.selectall('.dot')
+                    d3.selectAll('.dot')
+
                         .style('stroke', 'black');
                     this.compareDataset = d[2]
 
@@ -250,6 +251,7 @@ export default {
                         targetDataset : self.$store.selectedTargetDataset,
                         compareDataset: this.compareDataset,
                     })
+                    this.$store.selectedCompareDataset = this.compareDataset
 
                 })
                 .on('dblclick', (d) => {
@@ -265,7 +267,7 @@ export default {
                         module: 'all'
                     })
                     this.$store.selectedTargetDataset = dataset_name;
-                    this.select(dataset_name)
+                    // this.select(dataset_name)
                     EventHandler.$emit('highlight_datasets', this.$store.selectedTargetDataset)
                 })
 
@@ -340,7 +342,9 @@ export default {
                 .attr("r", 4.5)
                 .attr("opacity", 0.5);
 
+            EventHandler.$emit('highlight_datasets', this.selectedDatasets)
             EventHandler.$emit('clear_summary_view')
+
             this.$socket.emit('dist_group_highlight', {
                 datasets: this.selectedDatasets,
                 groupBy: this.$store.selectedGroupBy
@@ -351,7 +355,6 @@ export default {
                 sortBy: this.$store.auxiliarySortBy,
                 module: 'all'
             })
-            EventHandler.$emit('highlight_datasets', this.selectedDatasets)
         },
 
         zoom() {
@@ -438,8 +441,17 @@ export default {
         highlight(dataset) {
             let datasetID = this.$store.datasetMap[dataset]
             let self = this
+
+            // this.circles = this.svg.selectAll('#dot-' + datasetID)
+            // .attrs({
+            //     opacity: 1.0
+            //     stroke: (d) => { return self.$store.color.highlight },
+            //     'stroke-width': 3.0,
+            // })
+
             this.circles = this.svg.selectAll('#dot-' + datasetID)
                 .attrs({
+                    opacity: 1.0,
                     stroke: (d) => { return self.$store.color.highlight },
                     'stroke-width': 3.0,
                 })

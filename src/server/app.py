@@ -540,7 +540,7 @@ class App:
                 {
                     "name": "compare",
                     "targetDataset": data["targetDataset"],
-                    "compareDataset": data['compareDataset']
+                    "compareDataset": data["compareDataset"]
                 }
             )
             emit('compare', result, json=True)

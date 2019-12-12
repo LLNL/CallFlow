@@ -26,7 +26,7 @@
 		<v-spacer></v-spacer>
 		<v-flex xs2>
 			<v-btn-toggle v-model="comparisonMode">
-				<v-btn id="compare-button" color="white">
+				<v-btn id="compare-button" color="white" v-on:click="triggerCompare()">
 					Compare
 				</v-btn>
 			</v-btn-toggle>

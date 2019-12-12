@@ -99,7 +99,7 @@ class KDE_gradients:
 
             module = data['module']
             function = data['name']
-            vis_node_name = data['vis_name']
+            vis_node_name = data['name']
             mean_time_inc_map[data['vis_name']] = 0
 
             # Get the runtimes for all the runs.

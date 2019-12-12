@@ -39,6 +39,7 @@ from actions.similarity import Similarity
 from actions.run_projection import RunProjection
 from actions.dist_histogram import DistHistogram
 from actions.dist_auxiliary import Auxiliary
+from actions.compare import Compare
 
 from state import State
 from logger import log
@@ -353,7 +354,9 @@ class CallFlow:
             return auxiliary.result
 
         elif action_name == 'compare':
-            compare = Compare(self.states['ensemble'], target=action['targetDataset'], compare = action['compareDataset'])
+            compareDataset = action['compareDataset']
+            targetDataset = action['targetDataset']
+            compare = Compare(self.states, compareDataset, targetDataset, 'time (inc)')
             return compare.result
 
     def displayStats(self, name):

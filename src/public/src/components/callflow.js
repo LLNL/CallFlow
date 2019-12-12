@@ -578,7 +578,13 @@ export default {
 		updateAuxiliarySortBy(){
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
 			EventHandler.$emit('update_auxiliary_sortBy')
+		},
 
+		triggerCompare(){
+			this.$socket.emit('compare', {
+				targetDataset: this.$store.selectedTargetDataset,
+				compareDataset: this.$store.selectedCompareDataset,
+			})
 		}
 
 	}

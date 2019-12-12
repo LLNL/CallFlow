@@ -21,27 +21,37 @@ export default {
         id: '',
         graph: null,
         nidNameMap: {},
+        renderCenterLine: {}
     }),
     sockets: {
         dist_gradients(data) {
             console.log("Gradient data:", data)
             this.data = data
-            this.setupGradients2(data)
+            this.setupMeanRuntimeGradients(data)
         },
 
-        dist_group_highlight(data){
-			data = JSON.parse(data)
-			console.log("Group highlight for", this.selectedFormat, ": [", this.selectedMode, "]", data)
-			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
-			// if (this.selectedData == 'Dataframe' && this.initLoad) {
-			// 	this.$refs.DistgraphA.init(data)
-			// } else if (this.selectedData == 'Graph' && this.initLoad) {
-			// 	this.$refs.DistgraphB.init(data)
-			// }
-			// else{
-			// 	this.$refs.DistgraphA.init(data)
-			// }
-		},
+        dist_group_highlight(data) {
+            data = JSON.parse(data)
+            console.log("Group highlight for", this.selectedFormat, ": [", this.selectedMode, "]", data)
+            // DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
+            // if (this.selectedData == 'Dataframe' && this.initLoad) {
+            // 	this.$refs.DistgraphA.init(data)
+            // } else if (this.selectedData == 'Graph' && this.initLoad) {
+            // 	this.$refs.DistgraphB.init(data)
+            // }
+            // else{
+            // 	this.$refs.DistgraphA.init(data)
+            // }
+        },
+
+        compare(data) {
+            this.clearGradients()
+            this.clearQuantileLines()
+            this.clearCenterLine()
+            this.renderCenterLine = {}
+            this.setupDiffRuntimeGradients(data)
+            this.diffRectangle()
+        }
     },
     mounted() {
         this.id = 'dist-nodes-' + this._uid
@@ -60,10 +70,6 @@ export default {
                 .rollup(function (d) {
                     return d3.sum(d, function (g) { return g['time (inc)']; });
                 }).entries(this.graph.nodes)
-        },
-
-        filter() {
-            d3.select()
         },
 
         init(graph) {
@@ -122,15 +128,22 @@ export default {
         setNodeIds() {
             let idx = 0
             for (let node of this.graph.nodes) {
-                this.nidNameMap[node.id] = idx
+                this.nidNameMap[node.name] = idx
                 node.client_idx = idx
                 idx += 1
             }
+            console.log(this.nidNameMap)
+        },
+
+        clearRectangle() {
+            d3.selectAll('.dist-callsite').remove()
         },
 
         rectangle() {
             let self = this
             this.nodesSVG.append('rect')
+                .attr('class', 'dist-callsite')
+                .attr('id', (d) => 'callsite-' + d.client_idx)
                 .attr('height', (d) => {
                     this.currentNodeLevel[d.mod_index] = 0;
                     this.nodeHeights[d.n_index] = d.height;
@@ -142,9 +155,9 @@ export default {
                 //     let color = this.$store.color.getColor(d)
                 //     return color
                 // })
-                // .style('fill-opacity', (d) => {
-                //     return 1
-                // })
+                .style('fill-opacity', (d) => {
+                    return 1
+                })
                 .style('shape-rendering', 'crispEdges')
                 .style('stroke', (d) => {
                     return d3.rgb(this.$store.color.getColor(d)).darker(2);
@@ -172,8 +185,8 @@ export default {
                 })
                 .on('mouseout', (d) => {
                     self.$refs.ToolTip.clear()
-                    this.clearLineGradients()
-                    this.setupGradients2(self.data)
+                    // this.clearGradients()
+                    // this.setupMeanRuntimeGradients(self.data)
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
@@ -218,169 +231,143 @@ export default {
                     return 1;
                 })
                 .style("fill", (d, i) => {
-                    return "url(#linear-gradient" + d.client_idx + "-up)"
+                    return "url(#mean-gradient" + d.client_idx + ")"
+                })
+        },
+
+        clearCenterLine() {
+            d3.selectAll('.centerLine').remove()
+            d3.selectAll('.centerLineText').remove()
+        },
+
+        centerLine(node, y1) {
+            if (this.renderCenterLine[node] == undefined) {
+                d3.select('#dist-node_' + this.nidNameMap[node])
+                    .append('line')
+                    .attrs((d) => {
+                        return {
+                            'class': 'centerLine',
+                            "x1": 0,
+                            "y1": y1 * d.height,
+                            "x2": this.nodeWidth,
+                            "y2": y1 * d.height
+                        }
+                    })
+                    .style('opacity', (d) => {
+                        return 1
+                    })
+                    .style("stroke", '#8DB188')
+                    .style("stroke-width", (d) => {
+                        return 5
+                    })
+
+                d3.select('#dist-node_' + this.nidNameMap[node])
+                    .append('text')
+                    .attr('class', 'centerLineText')
+                    .attr('dy', '0')
+                    .attr('x', this.nodeWidth/2 - 10)
+                    .attr('y', (d) => y1 * d.height - 5)
+                    .style('opacity', 1)
+                    .style('font-size', '20px')
+                    .text((d) => {
+                        return 0
+                    })
+                this.renderCenterLine[node] = true
+            }
+            else {
+            }
+        },
+
+        diffRectangle(diff) {
+            let self = this
+            // Transition
+            this.nodes.selectAll('.dist-callsite')
+                .data(this.graph.nodes)
+                .transition()
+                .duration(this.transitionDuration)
+                .attr('opacity', d => {
+                    return 1;
+                })
+                .attr('height', d => d.height)
+                .style('stroke', (d) => {
+                    return 1;
+                })
+                .style("fill", (d, i) => {
+                    return "url(#diff-gradient" + d.client_idx + ")"
                 })
         },
 
         //Gradients
-        clearLineGradients() {
+        clearGradients() {
             d3.selectAll('.linear-gradient').remove()
         },
 
-        setupGradients2(data) {
+        setupMeanRuntimeGradients(data) {
             let method = 'hist'
             for (let d in data) {
-                if (this.nidNameMap[d] != undefined) {
-                    var defs = d3.select('#distgraph-overview-')
-                        .append("defs");
+                var defs = d3.select('#distgraph-overview-')
+                    .append("defs");
 
-                    this.linearGradient = defs.append("linearGradient")
-                        .attr("id", "linear-gradient" + this.nidNameMap[d] + '-up')
-                        .attr("class", 'linear-gradient')
+                this.linearGradient = defs.append("linearGradient")
+                    .attr("id", "mean-gradient" + this.nidNameMap[d])
+                    .attr("class", 'linear-gradient')
 
-                    this.linearGradient
-                        .attr("x1", "0%")
-                        .attr("y1", "0%")
-                        .attr("x2", "0%")
-                        .attr("y2", "100%");
+                this.linearGradient
+                    .attr("x1", "0%")
+                    .attr("y1", "0%")
+                    .attr("x2", "0%")
+                    .attr("y2", "100%");
 
-                    let root_d = 'libmonitor.so.0.0.0=<program root>'
-                    let min_val = data[d][method]['y_min']
-                    let max_val = data[d][method]['y_max']
+                let min_val = data[d][method]['y_min']
+                let max_val = data[d][method]['y_max']
 
-                    let grid = data[d][method]['x']
-                    let val = data[d][method]['y']
+                let grid = data[d][method]['x']
+                let val = data[d][method]['y']
 
-                    for (let i = 0; i < grid.length; i += 1) {
-                        // console.log(d, ':', i, " -- ", 100 * (i / grid.length), (val[i] / (max_val - min_val)))
-                        let x = (i + i + 1) / (2 * grid.length)
-                        this.linearGradient.append("stop")
-                            .attr("offset", 100 * x + "%")
-                            .attr("stop-color", d3.interpolateOranges((val[i] / (max_val - min_val))))
-                    }
+                for (let i = 0; i < grid.length; i += 1) {
+                    let x = (i + i + 1) / (2 * grid.length)
+                    this.linearGradient.append("stop")
+                        .attr("offset", 100 * x + "%")
+                        .attr("stop-color", d3.interpolateReds((val[i] / (max_val - min_val))))
                 }
             }
         },
 
-        cleardebugGradients() {
-            d3.selectAll('.debugLine').remove()
-            d3.selectAll('.axisLabel').remove()
-            d3.selectAll('.axis').remove()
-        },
+        setupDiffRuntimeGradients(data) {
+            let method = 'hist'
+            for (let i = 0; i < data.length; i += 1) {
+                let d = data[i]
+                var defs = d3.select('#distgraph-overview-')
+                    .append("defs");
 
-        debugGradients(data, node, mode) {
-            this.toolbarHeight = document.getElementById('toolbar').clientHeight
-            this.footerHeight = document.getElementById('footer').clientHeight
-            this.width = window.innerWidth * 0.3
-            this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.5
+                this.diffGradient = defs.append("linearGradient")
+                    .attr("id", "diff-gradient" + this.nidNameMap[d['name']])
+                    .attr("class", 'linear-gradient')
 
-            this.margin = {
-                top: 15,
-                right: 10,
-                bottom: 10,
-                left: 15
+                this.diffGradient
+                    .attr("x1", "0%")
+                    .attr("y1", "0%")
+                    .attr("x2", "0%")
+                    .attr("y2", "100%");
+
+                let min_val = d[method]['y_min']
+                let max_val = d[method]['y_max']
+
+                let grid = d[method]['x']
+                let val = d[method]['y']
+
+                for (let i = 0; i < grid.length; i += 1) {
+                    let x = (i + i + 1) / (2 * grid.length)
+
+                    if (grid[i + 1] > 0) {
+                        let center = (i + i + 3) / (2 * grid.length)
+                        this.centerLine(d['name'], center)
+                    }
+                    this.diffGradient.append("stop")
+                        .attr("offset", 100 * x + "%")
+                        .attr("stop-color", d3.interpolateReds((val[i] / (max_val - min_val))))
+                }
             }
-            this.scatterWidth = this.width - this.margin.right - this.margin.left;
-            this.scatterHeight = this.height - this.margin.top - this.margin.bottom;
-
-            this.debugsvg = d3.select('#debug')
-                .attr('width', this.width - this.margin.left - this.margin.right)
-                .attr('height', this.height - this.margin.top - this.margin.bottom)
-                .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
-
-            this.xMin = data[node][mode]['x_min']
-            this.xMax = data[node][mode]['x_max']
-            this.yMin = data[node][mode]['y_min']
-            this.yMax = data[node][mode]['y_max']
-            this.xScale = d3.scaleLinear().domain([this.xMin, this.xMax]).range([0, this.scatterWidth])
-            this.yScale = d3.scaleLinear().domain([this.yMin, this.yMax]).range([this.scatterHeight - this.margin.top - this.margin.bottom, 0])
-
-            var xAxis = d3.axisBottom(this.xScale)
-            // .ticks(5)
-            // .tickFormat((d, i) => {
-            //     console.log(d)
-            //     if (i % 2 == 0 || i == 0 ) {
-            //         return d
-            //     }
-            //     else{
-            //         return ''
-            //     }
-            // });
-
-            var yAxis = d3.axisLeft(this.yScale)
-            // .ticks(5)
-            // .tickFormat((d, i) => {
-            //     console.log(i)
-            //     if (i % 2 == 0 || i == 0) {
-            //         return d
-            //         // return `${this.yMin + i*d/(this.yMax - this.yMin)}`
-            //     }
-            //     else{
-            //         return ''
-            //     }
-            // });
-
-            let xAxisHeightCorrected = this.scatterHeight - this.margin.top - this.margin.bottom
-            var xAxisLine = this.debugsvg.append('g')
-                .attr('class', 'axis')
-                .attr('id', 'xAxis')
-                .attr("transform", "translate(" + 3 * this.margin.left + "," + xAxisHeightCorrected + ")")
-                .call(xAxis)
-
-            this.debugsvg.append('text')
-                .attr('class', 'axisLabel')
-                .attr('x', this.scatterWidth)
-                .attr('y', this.yAxisHeight - this.margin.left * 1.5)
-                .style('font-size', '10px')
-                .style('text-anchor', 'end')
-                .text("Diff")
-
-            var yAxisLine = this.debugsvg.append('g')
-                .attr('id', 'yAxis')
-                .attr('class', 'axis')
-                .attr('transform', "translate(" + 2 * this.margin.left + ", 0)")
-                .call(yAxis)
-
-            this.debugsvg.append("text")
-                .attr('class', 'axisLabel')
-                .attr('transform', 'rotate(-90)')
-                .attr('x', 0)
-                .attr('y', 1 * this.margin.left)
-                .style("text-anchor", "end")
-                .style("font-size", "10px")
-                .text("Histogram count");
-
-            let self = this
-            var plotLine = d3.line()
-                .curve(d3.curveMonotoneX)
-                .x(function (d) {
-                    return self.xScale(d.x);
-                })
-                .y(function (d) {
-                    return self.yScale(d.y);
-                });
-
-            let kde_data = data[node][mode]
-            let data_arr = []
-            for (let i = 0; i < kde_data['x'].length; i++) {
-                data_arr.push({
-                    'x': kde_data['x'][i],
-                    'y': kde_data['y'][i]
-                })
-            }
-            var line = this.debugsvg.append("path")
-                // .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
-                .data([data_arr])
-                .attr('class', 'debugLine')
-                .attr("d", plotLine)
-                .attr("stroke", (d) => {
-                    if (mode == 'hist')
-                        return "blue"
-                    else
-                        return 'red'
-                })
-                .attr("stroke-width", "2")
-                .attr("fill", "none");
         },
 
         // Lines
@@ -465,11 +452,9 @@ export default {
                     let gap = 5
                     y1 = 0
                     y2 = (node_data.height * node_data[dataset]['time (inc)']) / node_data['time (inc)']
-                    console.log(y1, y2)
                     this.drawBottomLine(y1, y2, node_data, dataset)
                 }
             }
-
         },
 
 
@@ -511,7 +496,7 @@ export default {
             function componentToHex(c) {
                 var hex = c.toString(16);
                 return hex.length == 1 ? "0" + hex : hex;
-              }
+            }
 
             return "#" + componentToHex(result.r) + componentToHex(result.g) + componentToHex(result.b);
         },
@@ -644,6 +629,128 @@ export default {
         clear() {
             d3.selectAll('.dist-node').remove()
             this.$refs.ToolTip.clear()
+        },
+
+        // Debugging the gradients using a line plot.
+        cleardebugGradients() {
+            d3.selectAll('.debugLine').remove()
+            d3.selectAll('.axisLabel').remove()
+            d3.selectAll('.axis').remove()
+        },
+
+        debugGradients(data, node, mode) {
+            this.toolbarHeight = document.getElementById('toolbar').clientHeight
+            this.footerHeight = document.getElementById('footer').clientHeight
+            this.width = window.innerWidth * 0.3
+            this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.5
+
+            this.margin = {
+                top: 15,
+                right: 10,
+                bottom: 10,
+                left: 15
+            }
+            this.scatterWidth = this.width - this.margin.right - this.margin.left;
+            this.scatterHeight = this.height - this.margin.top - this.margin.bottom;
+
+            this.debugsvg = d3.select('#debug')
+                .attr('width', this.width - this.margin.left - this.margin.right)
+                .attr('height', this.height - this.margin.top - this.margin.bottom)
+                .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
+
+            this.xMin = data[node][mode]['x_min']
+            this.xMax = data[node][mode]['x_max']
+            this.yMin = data[node][mode]['y_min']
+            this.yMax = data[node][mode]['y_max']
+            this.xScale = d3.scaleLinear().domain([this.xMin, this.xMax]).range([0, this.scatterWidth])
+            this.yScale = d3.scaleLinear().domain([this.yMin, this.yMax]).range([this.scatterHeight - this.margin.top - this.margin.bottom, 0])
+
+            var xAxis = d3.axisBottom(this.xScale)
+            // .ticks(5)
+            // .tickFormat((d, i) => {
+            //     console.log(d)
+            //     if (i % 2 == 0 || i == 0 ) {
+            //         return d
+            //     }
+            //     else{
+            //         return ''
+            //     }
+            // });
+
+            var yAxis = d3.axisLeft(this.yScale)
+            // .ticks(5)
+            // .tickFormat((d, i) => {
+            //     console.log(i)
+            //     if (i % 2 == 0 || i == 0) {
+            //         return d
+            //         // return `${this.yMin + i*d/(this.yMax - this.yMin)}`
+            //     }
+            //     else{
+            //         return ''
+            //     }
+            // });
+
+            let xAxisHeightCorrected = this.scatterHeight - this.margin.top - this.margin.bottom
+            var xAxisLine = this.debugsvg.append('g')
+                .attr('class', 'axis')
+                .attr('id', 'xAxis')
+                .attr("transform", "translate(" + 3 * this.margin.left + "," + xAxisHeightCorrected + ")")
+                .call(xAxis)
+
+            this.debugsvg.append('text')
+                .attr('class', 'axisLabel')
+                .attr('x', this.scatterWidth)
+                .attr('y', this.yAxisHeight - this.margin.left * 1.5)
+                .style('font-size', '10px')
+                .style('text-anchor', 'end')
+                .text("Diff")
+
+            var yAxisLine = this.debugsvg.append('g')
+                .attr('id', 'yAxis')
+                .attr('class', 'axis')
+                .attr('transform', "translate(" + 2 * this.margin.left + ", 0)")
+                .call(yAxis)
+
+            this.debugsvg.append("text")
+                .attr('class', 'axisLabel')
+                .attr('transform', 'rotate(-90)')
+                .attr('x', 0)
+                .attr('y', 1 * this.margin.left)
+                .style("text-anchor", "end")
+                .style("font-size", "10px")
+                .text("Histogram count");
+
+            let self = this
+            var plotLine = d3.line()
+                .curve(d3.curveMonotoneX)
+                .x(function (d) {
+                    return self.xScale(d.x);
+                })
+                .y(function (d) {
+                    return self.yScale(d.y);
+                });
+
+            let kde_data = data[node][mode]
+            let data_arr = []
+            for (let i = 0; i < kde_data['x'].length; i++) {
+                data_arr.push({
+                    'x': kde_data['x'][i],
+                    'y': kde_data['y'][i]
+                })
+            }
+            var line = this.debugsvg.append("path")
+                // .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
+                .data([data_arr])
+                .attr('class', 'debugLine')
+                .attr("d", plotLine)
+                .attr("stroke", (d) => {
+                    if (mode == 'hist')
+                        return "blue"
+                    else
+                        return 'red'
+                })
+                .attr("stroke-width", "2")
+                .attr("fill", "none");
         },
 
     }

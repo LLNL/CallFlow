@@ -202,7 +202,7 @@ export default {
                     .style('stroke-opacity', 1)
                     .style('fill', d => {
                         let val = (d.weight) / (this.max_weight)
-                        return d3.interpolateReds(1 - val)
+                        return d3.interpolateGreys(1 - val)
                     })
                     .style('fill-opacity', d => {
                         return 1
