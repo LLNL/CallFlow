@@ -23,10 +23,8 @@ import json
 def lookup(df, node):
     return df.loc[df["name"] == getNodeName(node)]
 
-
 def lookup_with_name(df, name):
     return df.loc[df["name"] == name]
-
 
 # Input : ./xxx/xxx/yyy
 # Output: yyy

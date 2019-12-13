@@ -128,10 +128,13 @@ class CallFlow:
 
         if self.reProcess and self.processUnion:
             states["ensemble"] = self.pipeline.union(states)
+            print(states['ensemble'].df['module'].unique())
             states["ensemble"] = self.pipeline.filterNetworkX(
                 states, "ensemble", self.config.filter_perc
             )
+            print(states['ensemble'].df['module'].unique())
             states["ensemble"] = self.pipeline.group(states, "ensemble", "module")
+            print(states['ensemble'].df['module'].unique())
             self.pipeline.write_ensemble_gf(states, "ensemble")
 
             similarities = self.pipeline.deltaconSimilarity(datasets, states, "ensemble")
@@ -275,7 +278,7 @@ class CallFlow:
 
         elif action_name == "group":
             self.states['ensemble'].g = DistGraph(
-                self.states["ensemble"], "group_path", construct_graph=True, add_data=True
+                self.states, "group_path", construct_graph=True, add_data=True
             ).g
             return self.states['ensemble'].g
 

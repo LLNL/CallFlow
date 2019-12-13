@@ -11,10 +11,11 @@ class DistGraph(nx.Graph):
     # 3. construct_graph -> To decide if we should construct graph from path
     # 4. add_data => To
     def __init__(
-        self, state, path, group_by_attr="module", construct_graph=True, add_data=True
+        self, states, path, group_by_attr="module", construct_graph=True, add_data=True
     ):
         super(DistGraph, self).__init__()
-        self.state = state
+        self.states = states
+        self.state = self.states['ensemble']
         self.path = path
         self.df = self.state.df
         self.group_by = group_by_attr
@@ -30,6 +31,7 @@ class DistGraph(nx.Graph):
             "module",
             "show_node",
         ]
+        self.runs = self.df["dataset"].unique()
         self.mapper = {}
 
         if construct_graph:
@@ -45,8 +47,6 @@ class DistGraph(nx.Graph):
 
         self.callbacks = []
         self.edge_direction = {}
-
-        print(self.mapper)
 
 
         if add_data == True:
@@ -92,18 +92,18 @@ class DistGraph(nx.Graph):
             nx.set_node_attributes(self.g, name=key, values=ensemble_mapping[key])
 
         dataset_mapping = {}
-        for dataset in self.df["dataset"].unique():
-            dataset_mapping[dataset] = self.dataset_map(self.g.nodes(), dataset)
+        for run in self.runs:
+            dataset_mapping[run] = self.dataset_map(self.g.nodes(), run)
 
             nx.set_node_attributes(
-                self.g, name=dataset, values=dataset_mapping[dataset]
+                self.g, name=run, values=dataset_mapping[run]
             )
 
     def add_edge_attributes(self):
-        # number_of_runs_mapping = self.number_of_runs()
-        # nx.set_edge_attributes(
-        #     self.g, name="number_of_runs", values=number_of_runs_mapping
-        # )
+        number_of_runs_mapping = self.number_of_runs()
+        nx.set_edge_attributes(
+            self.g, name="number_of_runs", values=number_of_runs_mapping
+        )
         capacity_mapping = self.calculate_flows(self.g)
         nx.set_edge_attributes(self.g, name="weight", values=capacity_mapping)
         exc_capacity_mapping = self.calculate_exc_weight(self.g)
@@ -111,11 +111,19 @@ class DistGraph(nx.Graph):
 
     def number_of_runs(self):
         ret = {}
-        for idx, name in enumerate(self.runs):
-            for edge in self.runs[name].edges():
-                if edge not in ret:
-                    ret[edge] = 0
-                ret[edge] += 1
+        print(self.g.edges())
+        for idx, run in enumerate(self.runs):
+            for edge in self.states[run].g.edges():
+                source = edge[0]
+                target = edge[1]
+                source_module = self.df.loc[self.df['name'] == source]['module'].unique()[0]
+                target_module = self.df.loc[self.df['name'] == target]['module'].unique()[0]
+
+                edge_with_module = (source_module + '=' + source, target_module + '=' + target)
+                print(edge_with_module)
+                if edge_with_module not in ret:
+                    ret[edge_with_module] = 0
+                ret[edge_with_module] += 1
         return ret
 
     def add_union_node_attributes(self):
