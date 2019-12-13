@@ -169,7 +169,6 @@ body {
 .box line,
 .box rect,
 .box circle {
-  fill: steelblue;
   stroke: #000;
   stroke-width: 1.5px;
 }

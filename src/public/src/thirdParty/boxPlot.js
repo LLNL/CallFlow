@@ -68,6 +68,7 @@ function boxPlot() {
                 .attr("y", 12.5)
                 .attr("x", function (d) { return x0(d[0]); })
                 .attr("height", height - 25)
+                .attr('fill', '#c0c0c0')
                 .attr("width", function (d) { return - x0(d[0]) + x0(d[2]); })
                 .style('z-index', 1)
                 .transition()

@@ -1,7 +1,6 @@
 import tpl from '../html/distgraph.html'
 import Sankey from './distgraph/sankey'
 import DistNodes from './distgraph/nodes'
-import DistColorMap from './distgraph/colormap'
 // import IntermediateNodes from './callgraph/intermediateNodes'
 import MiniHistograms from './distgraph/miniHistograms'
 import DistEdges from './distgraph/edges'
@@ -17,7 +16,6 @@ export default {
 		// IntermediateNodes,
 		DistEdges,
 		MiniHistograms,
-		DistColorMap,
 		Dataset
 	},
 	props: [

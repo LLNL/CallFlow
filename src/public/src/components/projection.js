@@ -202,7 +202,6 @@ export default {
                 .attr("class", "tooltip")
                 .style("opacity", 0);
 
-
             let self = this
             let selected = undefined
             this.circles = this.svg.selectAll('circle')
@@ -213,12 +212,37 @@ export default {
                     class: (d) => { return 'dot' + ' circle' + this.id },
                     id: (d) => { return 'dot-' + self.$store.datasetMap[d[2]] },
                     r: (d) => {
-                        if (Object.entries(ts).length < 16) return 6.0
-                        else return 4.5
+                        return 6.0
                     },
                     'stroke-width': 2.0,
-                    stroke: 'black',
+                    // stroke: 'black',
                     fill: (d) => { return this.$store.colorset[d[4]] },
+                    cx: (d, i) => { return self.x(d[0]) },
+                    cy: (d) => { return self.y(d[1]) },
+                })
+
+
+            // Outer circle.
+            this.outerCircles = this.svg.selectAll('.outer-circle')
+                .data(this.$store.projection)
+                .enter()
+                .append('circle')
+                .attrs({
+                    class: (d) => { return 'outer-dot' + ' outer-circle' + this.id },
+                    id: (d) => { return 'outer-dot-' + self.$store.datasetMap[d[2]] },
+                    r: (d) => {
+                        return 8.0
+                    },
+                    'stroke-width': 2.0,
+                    stroke: (d) => {
+                        if(d[2] == this.$store.selectedTargetDataset){
+                            return d3.rgb(this.$store.color.target).darker(5)
+                        }
+                        else{
+                            return d3.rgb(this.$store.color.ensemble).darker()
+                        }
+                    },
+                    "fill-opacity": 0,
                     cx: (d, i) => { return self.x(d[0]) },
                     cy: (d) => { return self.y(d[1]) },
                 })
@@ -233,11 +257,6 @@ export default {
                         .style("left", (d3.event.pageX) + "px")
                         .style("top", (d3.event.pageY - 28) + "px");
                 })
-                .on('mouseout', (d) => {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                })
                 .on('click', (d) => {
                     this.selectedRun = d[2]
                     d3.select('#dot-' + self.$store.datasetMap[d[2]])
@@ -248,7 +267,7 @@ export default {
                     this.compareDataset = d[2]
 
                     this.$socket.emit('compare', {
-                        targetDataset : self.$store.selectedTargetDataset,
+                        targetDataset: self.$store.selectedTargetDataset,
                         compareDataset: this.compareDataset,
                     })
                     this.$store.selectedCompareDataset = this.compareDataset
@@ -271,6 +290,7 @@ export default {
                     EventHandler.$emit('highlight_datasets', this.$store.selectedTargetDataset)
                 })
 
+
             this.lasso = lasso()
                 .className('lasso' + this.id)
                 .closePathSelect(true)
@@ -284,7 +304,6 @@ export default {
             // this.svg.call(this.lasso)
 
             this.highlight(this.$store.selectedTargetDataset)
-
         },
 
         // ====================================

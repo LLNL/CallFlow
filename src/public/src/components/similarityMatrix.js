@@ -237,10 +237,10 @@ export default {
             let self = this
             d3.selectAll('.similarityRect-' + dataset_idx)
                 .style('stroke', (d, i) => {
-                    return self.$store.color.highlight
+                    return self.$store.color.target
                 })
                 .style('stroke-width', (d, i) => {
-                    return 3
+                    return 4
                 })
 
         },

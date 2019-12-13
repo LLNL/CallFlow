@@ -409,7 +409,10 @@ export default {
 			console.log("Assigned Color map: ", this.$store.color.datasetColor)
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
-			this.$store.color.highlight = '#b80e0d';//'#4681B4'
+			this.$store.color.highlight = '#AF9B90';//'#4681B4'
+			this.$store.color.target = '#AF9B90';//'#4681B4'
+			this.$store.color.ensemble = '#C0C0C0';//'#4681B4'
+
 		},
 
 		reset() {

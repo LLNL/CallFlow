@@ -133,10 +133,10 @@ export default {
 
             let color = ''
             if (type == 'ensemble') {
-                color = '#C0C0C0'
+                color = this.$store.color.ensemble
             }
             else if (type == 'target') {
-                color = '#8DB188'
+                color = this.$store.color.target
             }
 
             if (type == 'ensemble') {
