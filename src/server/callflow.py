@@ -83,6 +83,7 @@ class CallFlow:
         states = {}
         for idx, dataset_name in enumerate(datasets):
             states[dataset_name] = State(dataset_name)
+            # TODO: Remove this.
             if self.reProcess and self.processEntire:
                 states[dataset_name] = self.pipeline.create(dataset_name)
                 states[dataset_name] = self.pipeline.process(
@@ -128,13 +129,10 @@ class CallFlow:
 
         if self.reProcess and self.processUnion:
             states["ensemble"] = self.pipeline.union(states)
-            print(states['ensemble'].df['module'].unique())
             states["ensemble"] = self.pipeline.filterNetworkX(
                 states, "ensemble", self.config.filter_perc
             )
-            print(states['ensemble'].df['module'].unique())
             states["ensemble"] = self.pipeline.group(states, "ensemble", "module")
-            print(states['ensemble'].df['module'].unique())
             self.pipeline.write_ensemble_gf(states, "ensemble")
 
             similarities = self.pipeline.deltaconSimilarity(datasets, states, "ensemble")
@@ -269,6 +267,7 @@ class CallFlow:
 
         if action_name == "init":
             self.states["ensemble"] = self.pipeline.read_ensemble_gf()
+            print(self.states['ensemble'].g.nodes())
             for idx, dataset in enumerate(datasets):
                 self.states[dataset] = self.pipeline.read_dataset_gf(dataset)
 
