@@ -47,8 +47,8 @@ function boxPlot() {
 
             // Retrieve the old x-scale, if this is an update.
             var x0 = this.__chart__ || d3.scaleLinear()
-                .domain([0, Infinity])
-                // .domain([0, max])
+                // .domain([0, Infinity])
+                .domain([min, max])
                 .range(x1.range());
 
             // Stash the new scale.
@@ -97,20 +97,20 @@ function boxPlot() {
                 .transition()
                 .duration(duration)
                 .style("opacity", 1)
-                .attr("x1", function (d) { return x1(d[0]); })
-                .attr("x2", function (d) { return x1(d[1]); });
+                .attr("x1", function (d) { return x1(min); })
+                .attr("x2", function (d) { return x1(max); });
 
             center.transition()
                 .duration(duration)
                 .style("opacity", 1)
-                .attr("x1", function (d) { return x1(d[0]); })
-                .attr("x2", function (d) { return x1(d[1]); });
+                .attr("x1", function (d) { return x1(min); })
+                .attr("x2", function (d) { return x1(max); });
 
             center.exit().transition()
                 .duration(duration)
                 .style("opacity", 1e-6)
-                .attr("x1", function (d) { return x1(d[0]); })
-                .attr("x2", function (d) { return x1(d[1]); })
+                .attr("x1", function (d) { return x1(min); })
+                .attr("x2", function (d) { return x1(max); })
                 .remove();
 
 
@@ -136,7 +136,7 @@ function boxPlot() {
 
             // Update whiskers.
             var whisker = g.selectAll("line.whisker")
-                .data(whiskerData || []);
+                .data([min, max]);
 
             whisker.enter().insert("line", "circle, text")
                 .attr("class", "whisker")
@@ -171,7 +171,7 @@ function boxPlot() {
             outlier.enter().insert("circle", "text")
                 .attr("class", "outlier")
                 .attr("r", 5)
-                .attr("cy", height / 2)
+                .attr("cy", height / 2 - 5)
                 .attr("cx", function (i) { return x0(d[i]); })
                 .style("opacity", 1e-6)
                 .transition()

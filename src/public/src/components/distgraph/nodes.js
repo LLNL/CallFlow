@@ -256,7 +256,7 @@ export default {
                     .style('opacity', (d) => {
                         return 1
                     })
-                    .style("stroke", '#8DB188')
+                    .style("stroke", '#000')
                     .style("stroke-width", (d) => {
                         return 5
                     })

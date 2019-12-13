@@ -16,6 +16,7 @@ export default {
         dataReady: false,
         number_of_callsites: 0,
         firstRender: true,
+        type: 'inc',
 
     }),
     mounted() {
@@ -67,7 +68,9 @@ export default {
                 }
 
                 this.callsites.push(callsite)
-                this.boxPlotContainerUI(callsite, 'inc')
+                this.ui(callsite)
+                this.visualize(callsite, this.type)
+
             }
         },
 
@@ -135,19 +138,18 @@ export default {
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
-
-        boxPlotContainerUI(dat, type) {
+        ui(data) {
             let container = document.createElement('div')
             let div = document.createElement('div')
-            div.setAttribute('id', dat.id)
+            div.setAttribute('id', data.id)
             div.setAttribute('class', 'auxiliary-node')
 
-            let checkbox = this.createCheckbox(dat)
-            let call_site = this.createLabel("".concat("Call site: ", this.trunc(dat.name, 30)))
+            let checkbox = this.createCheckbox(data)
+            let call_site = this.createLabel("".concat("Call site: ", this.trunc(data.name, 30)))
 
-            let time_inc = dat["mean_time (inc)"].toFixed(2)
+            let time_inc = data["mean_time (inc)"].toFixed(2)
             let inclusive_runtime = this.createLabel("".concat("Inclusive Runtime (mean): ", time_inc));
-            let time = dat["mean_time"].toFixed(2)
+            let time = data["mean_time"].toFixed(2)
             let exclusive_runtime = this.createLabel("".concat("Exclusive Runtime (mean): ", time));
 
 
@@ -158,10 +160,9 @@ export default {
 
             container.appendChild(div)
             document.getElementById('auxiliary-function-overview').append(container);
-            this.boxPlotUI(dat, type)
         },
 
-        boxPlotUI(data, type) {
+        visualize(data, type) {
             let inc_arr = data['time (inc)']
             let exc_arr = data['time']
 
@@ -283,6 +284,144 @@ export default {
             if (rowMin < min) min = rowMin;
 
             return [v1, v2, v3, v4, min, max]
+        },
+
+        box() {
+            // Update innerquartile box.
+            var box = g.selectAll("rect.box")
+                .data([quartileData]);
+
+            box.enter().append("rect")
+                .attr("class", "box")
+                .attr("y", 12.5)
+                .attr("x", function (d) { return x0(d[0]); })
+                .attr("height", height - 25)
+                .attr('fill', '#c0c0c0')
+                .attr("width", function (d) { return - x0(d[0]) + x0(d[2]); })
+                .style('z-index', 1)
+                .transition()
+                .duration(duration)
+                .attr("x", function (d) { return x1(d[0]); })
+                .attr("width", function (d) { return - x1(d[0]) + x1(d[2]); });
+
+            box.transition()
+                .duration(duration)
+                .attr("x", function (d) { return x1(d[0]); })
+                .attr("width", function (d) { return - x1(d[0]) + x1(d[2]); });
+
+        },
+
+        centerLine() {
+            var center = g.selectAll("line.center")
+                .data(whiskerData ? [whiskerData] : []);
+
+            //horizontal line
+            center.enter().insert("line", "rect")
+                .attr("class", "center")
+                .attr("y1", height / 2 - 5)
+                .attr("x1", function (d) { return x0(d[0]); })
+                .attr("y2", height / 2 - 5)
+                .attr("x2", function (d) { return x0(d[1]); })
+                .style("opacity", 1e-6)
+                .style('z-index', 10)
+                .transition()
+                .duration(duration)
+                .style("opacity", 1)
+                .attr("x1", function (d) { return x1(min); })
+                .attr("x2", function (d) { return x1(max); });
+
+            center.transition()
+                .duration(duration)
+                .style("opacity", 1)
+                .attr("x1", function (d) { return x1(min); })
+                .attr("x2", function (d) { return x1(max); });
+
+            center.exit().transition()
+                .duration(duration)
+                .style("opacity", 1e-6)
+                .attr("x1", function (d) { return x1(min); })
+                .attr("x2", function (d) { return x1(max); })
+                .remove();
+        },
+
+        medianLine() {
+            // Update median line.
+            var medianLine = g.selectAll("line.median")
+                .data([quartileData[1]]);
+
+            medianLine.enter().append("line")
+                .attr("class", "median")
+                .attr("y1", 0)
+                .attr("x1", x0)
+                .attr("y2", width)
+                .attr("x2", x0)
+                .transition()
+                .duration(duration)
+                .attr("x1", x1)
+                .attr("x2", x1);
+
+            medianLine.transition()
+                .duration(duration)
+                .attr("x1", x1)
+                .attr("x2", x1);
+        },
+
+        whiskers() {
+            var whisker = g.selectAll("line.whisker")
+                .data([min, max]);
+
+            whisker.enter().insert("line", "circle, text")
+                .attr("class", "whisker")
+                .attr("y1", 0)
+                .attr("x1", x0)
+                .attr("y2", 0 + width)
+                .attr("x2", x0)
+                .style("opacity", 1e-6)
+                .transition()
+                .duration(duration)
+                .attr("x1", x1)
+                .attr("x2", x1)
+                .style("opacity", 1);
+
+            whisker.transition()
+                .duration(duration)
+                .attr("x1", x1)
+                .attr("x2", x1)
+                .style("opacity", 1);
+
+            whisker.exit().transition()
+                .duration(duration)
+                .attr("x1", x1)
+                .attr("x2", x1)
+                .style("opacity", 1e-6)
+                .remove();
+        },
+
+        outliers() {
+            var outlier = g.selectAll("circle.outlier")
+                .data(outlierIndices, Number);
+
+            outlier.enter().insert("circle", "text")
+                .attr("class", "outlier")
+                .attr("r", 5)
+                .attr("cy", height / 2 - 5)
+                .attr("cx", function (i) { return x0(d[i]); })
+                .style("opacity", 1e-6)
+                .transition()
+                .duration(duration)
+                .attr("cx", function (i) { return x1(d[i]); })
+                .style("opacity", 1);
+
+            outlier.transition()
+                .duration(duration)
+                .attr("cx", function (i) { return x1(d[i]); })
+                .style("opacity", 1);
+
+            outlier.exit().transition()
+                .duration(duration)
+                .attr("cx", function (i) { return x1(d[i]); })
+                .style("opacity", 1e-6)
+                .remove();
         }
 
     }
