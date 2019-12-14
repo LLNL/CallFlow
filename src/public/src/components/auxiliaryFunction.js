@@ -17,7 +17,13 @@ export default {
         number_of_callsites: 0,
         firstRender: true,
         type: 'inc',
-
+        margin: { top: 0, right: 10, bottom: 0, left: 5 },
+        textOffset: 25,
+        height: 60,
+        width: 100,
+        duration: 300,
+        iqrFactor: 1.5,
+        outlierRadius: 4
     }),
     mounted() {
         EventHandler.$on('highlight_datasets', (datasets) => {
@@ -32,11 +38,25 @@ export default {
 
     sockets: {
         auxiliary(data) {
-            data = JSON.parse(data)
             this.dataReady = true
-            let d = data.data
-            let index = data.index
-            let columns = data.columns
+
+            this.preprocess_data = {}
+            for (let dataset of Object.keys(data)){
+                if(data.hasOwnProperty(dataset)){
+                    this.preprocess_data[dataset] = this.preprocess(data[dataset])
+                }
+            }
+
+            this.init()
+        },
+    },
+
+    methods: {
+        preprocess(data){
+            let json = JSON.parse(data)
+            let d = json.data
+            let index = json.index
+            let columns = json.columns
 
             let columnMap = {}
             let idx = 0
@@ -44,12 +64,15 @@ export default {
                 columnMap[column] = idx
                 idx += 1
             }
-            this.init(d, index, columns, columnMap)
+            return {
+                data: d,
+                index: index,
+                columns: columns,
+                columnMap: columnMap
+            }
         },
-    },
 
-    methods: {
-        init(data, index, columns, columnMap) {
+        init() {
 
             if (!this.firstRender) {
                 this.clear()
@@ -57,20 +80,27 @@ export default {
             else {
                 this.firstRender = false
             }
+
             this.callsites = []
-            this.number_of_callsites = index.length
 
-            for (let i = 0; i < index.length; i += 1) {
+            let ensemble_data = this.preprocess_data['ensemble']
+            let target_data = this.preprocess_data[this.$store.selectedTargetDataset]
+
+            this.number_of_callsites = ensemble_data['index'].length
+
+            for (let i = 0; i < ensemble_data.index.length; i += 1) {
                 let callsite = {}
+                let target_callsite = {}
 
-                for (let column of columns) {
-                    callsite[column] = data[i][columnMap[column]]
+                for (let column of ensemble_data.columns) {
+                    callsite[column] = ensemble_data.data[i][ensemble_data.columnMap[column]]
+                    target_callsite[column] = target_data.data[i][target_data.columnMap[column]]
                 }
 
                 this.callsites.push(callsite)
                 this.ui(callsite)
-                this.visualize(callsite, this.type)
-
+                console.log(callsite, target_callsite)
+                this.visualize(callsite, target_callsite)
             }
         },
 
@@ -85,18 +115,31 @@ export default {
             return this.labels[idx]
         },
 
-        changeText(idx) {
-            return this.labels[idx]
+        ui(data) {
+            let container = document.createElement('div')
+            let div = document.createElement('div')
+            div.setAttribute('id', data.id)
+            div.setAttribute('class', 'auxiliary-node')
+
+            let checkbox = this.createCheckbox(data)
+            let call_site = this.createLabel("".concat("Call site: ", this.trunc(data.name, 30)))
+
+            let time_inc = data["mean_time (inc)"].toFixed(2)
+            let inclusive_runtime = this.createLabel("".concat("Inclusive Runtime (mean): ", time_inc));
+            let time = data["mean_time"].toFixed(2)
+            let exclusive_runtime = this.createLabel("".concat("Exclusive Runtime (mean): ", time));
+
+
+            div.appendChild(checkbox);
+            div.appendChild(call_site);
+            div.appendChild(inclusive_runtime);
+            div.appendChild(exclusive_runtime);
+
+            container.appendChild(div)
+            document.getElementById('auxiliary-function-overview').append(container);
         },
 
-        select(node) {
-
-        },
-
-        highlight(datasets) {
-
-        },
-
+        // UI supportign functions.
         createLabel(text) {
             let div = document.createElement('div')
             let label = document.createElement("div");
@@ -133,102 +176,88 @@ export default {
             return newLine
         },
 
-
         trunc(str, n) {
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
-        ui(data) {
-            let container = document.createElement('div')
-            let div = document.createElement('div')
-            div.setAttribute('id', data.id)
-            div.setAttribute('class', 'auxiliary-node')
 
-            let checkbox = this.createCheckbox(data)
-            let call_site = this.createLabel("".concat("Call site: ", this.trunc(data.name, 30)))
-
-            let time_inc = data["mean_time (inc)"].toFixed(2)
-            let inclusive_runtime = this.createLabel("".concat("Inclusive Runtime (mean): ", time_inc));
-            let time = data["mean_time"].toFixed(2)
-            let exclusive_runtime = this.createLabel("".concat("Exclusive Runtime (mean): ", time));
-
-
-            div.appendChild(checkbox);
-            div.appendChild(call_site);
-            div.appendChild(inclusive_runtime);
-            div.appendChild(exclusive_runtime);
-
-            container.appendChild(div)
-            document.getElementById('auxiliary-function-overview').append(container);
-        },
-
-        visualize(data, type) {
-            let inc_arr = data['time (inc)']
-            let exc_arr = data['time']
-
-            let q = [];
-            let val = [];
-            let max = 0, min = 0;
-            if (type == 'inc') {
-                val = inc_arr
-                q = this.quartiles(inc_arr)
-                max = data['max_time (inc)']
-                min = data['min_time (inc)']
-            }
-            else {
-                val = exc_arr
-                q = this.quartiles(exc_arr)
-                max = data['max_time']
-                min = data['min_time']
-            }
-            var margin = { top: 0, right: 10, bottom: 0, left: 5 };
+        // boxPlot visualization.
+        visualize(ensemble_data, target_data) {
             this.width = document.getElementById('auxiliary-function-overview').clientWidth - 50
-            this.height = 60;
-            let labels = true;
 
-            let textOffset = 25
-            var chart = boxPlot()
-                .width(this.width - textOffset)
-                .whiskers(this.iqr(1.5))
-                .domain([min, max])
-                .showLabels(labels);
+            this.boxPlot(ensemble_data, target_data)
 
-            let offset = margin.right;
-
-            let svg = d3.select('#' + data.id)
+            this.boxWidth = this.width - this.margin.left - this.margin.right
+            this.boxHeight = this.height - this.margin.top - this.margin.bottom
+            this.svg = d3.select('#' + ensemble_data.id)
                 .append('svg')
                 .attr('class', 'box')
-                .attr("width", this.width)
-                .attr("height", this.height)
-                .attr("transform", "translate(" + offset + "," + margin.top + ")")
+                .attr("width", this.boxWidth)
+                .attr("height", this.boxHeight)
 
-
-            let x = d3.scaleOrdinal()
-                .domain(val)
-                .range([0, this.width]);
-
-            svg.selectAll(".box")
-                .data([val])
-                .enter().append("g")
-                .attr("width", this.width)
-                .attr("height", this.height - 10)
-                .attr("transform", function (d) {
-                    return "translate(" + x(d[0]) + "," + 0 + ")";
-                })
-                .call(chart.height(this.height));
+            this.box()
+            this.targetBox()
+            this.centerLine()
+            this.whiskers()
+            this.outliers()
+            this.medianLine()
         },
 
-        iqr(k) {
-            return function (d, i) {
-                var q1 = d.quartiles[0],
-                    q3 = d.quartiles[2],
-                    iqr = (q3 - q1) * k,
-                    i = -1,
-                    j = d.length;
-                while (d[++i] < q1 - iqr);
-                while (d[--j] > q3 + iqr);
-                return [i, j];
-            };
+        boxPlot(ensemble_data, target_data) {
+            console.log(target_data)
+            let inc_arr = ensemble_data['time (inc)']
+            let exc_arr = ensemble_data['time']
+
+            let inc_arr_target = target_data['time (inc)']
+            let exc_arr_target = target_data['time']
+
+            this.d = [];
+            if (this.type == 'inc') {
+                this.raw_d = inc_arr
+                this.d = inc_arr.sort(d3.ascending)
+                this.q = this.quartiles(this.d)
+
+                this.raw_target_d = inc_arr_target
+                this.targetd = inc_arr_target.sort(d3.ascending)
+                this.targetq = this.quartiles(this.targetd)
+            }
+            else if (this.type == 'exc') {
+                this.raw_d = exc_arr
+                this.d = exc_arr.sort(d3.ascending)
+                this.q = this.quartiles(this.d)
+
+                this.raw_target_d = exc_arr_target
+                this.targetd = exc_arr_target.sort(d3.ascending)
+                this.targetq = this.quartiles(this.targetd)
+            }
+
+            this.whiskerIndices = this.iqrScore(this.d, this.q)
+            this.whiskerIndices_target = this.iqrScore(this.targetd, this.targetq)
+
+            // Compute the new x-scale.
+            this.x1 = d3.scaleLinear()
+                .domain([this.q.min, this.q.max])
+                .range([0, this.boxWidth]);
+
+            // Retrieve the old x-scale, if this is an update.
+            this.x0 = this.x1 || d3.scaleLinear()
+                .domain([this.q.min, this.q.max])
+                .range(x1.range());
+        },
+
+        iqrScore(data, q, factor) {
+            let q1 = q.q1
+            let q3 = q.q3
+            let iqr = (q3 - q1) * factor
+            let i = 0
+            let j = data.length - 1
+            while (data[i] < q1 - iqr) {
+                i++
+            }
+            while (data[j] > q3 + iqr) {
+                j--
+            }
+            return [i, j];
         },
 
         avg(arr) {
@@ -283,147 +312,195 @@ export default {
             if (rowMax > max) max = rowMax;
             if (rowMin < min) min = rowMin;
 
-            return [v1, v2, v3, v4, min, max]
+            let result = {
+                "q1": v1,
+                "q2": v2,
+                "q3": v3,
+                "q4": v4,
+                "min": min,
+                "max": max
+            }
+            return result
         },
 
         box() {
             // Update innerquartile box.
-            var box = g.selectAll("rect.box")
-                .data([quartileData]);
-
-            box.enter().append("rect")
+            this.boxHeight = this.height / 2
+            this.boxSVG = this.svg
+                .append("rect")
                 .attr("class", "box")
                 .attr("y", 12.5)
-                .attr("x", function (d) { return x0(d[0]); })
-                .attr("height", height - 25)
-                .attr('fill', '#c0c0c0')
-                .attr("width", function (d) { return - x0(d[0]) + x0(d[2]); })
+                .attr("x", this.x0(this.q.q1))
+                .attr("height", this.boxHeight)
+                .attr('fill', this.$store.color.ensemble)
+                .attr("width", this.x0(this.q.q3) - this.x0(this.q.q1))
                 .style('z-index', 1)
                 .transition()
-                .duration(duration)
-                .attr("x", function (d) { return x1(d[0]); })
-                .attr("width", function (d) { return - x1(d[0]) + x1(d[2]); });
+                .duration(this.duration)
+                .attr("x", this.x1(this.q.q1))
+                .attr("width", this.x1(this.q.q3) - this.x1(this.q.q1));
 
-            box.transition()
-                .duration(duration)
-                .attr("x", function (d) { return x1(d[0]); })
-                .attr("width", function (d) { return - x1(d[0]) + x1(d[2]); });
+            this.boxSVG.transition()
+                .duration(this.duration)
+                .attr("x", this.x1(this.q.q1))
+                .attr("width", this.x1(this.q.q3) - this.x1(this.q.q1));
+        },
 
+        targetBox(){
+            this.boxHeight = this.height / 2
+            this.targetBoxSVG = this.svg
+                .append("rect")
+                .attr("class", "targetbox")
+                .attr("y", 12.5)
+                .attr("x", this.x0(this.targetq.q1))
+                .attr("height", this.boxHeight)
+                .attr('fill', this.$store.color.target)
+                .attr("width", this.x0(this.targetq.q3) - this.x0(this.targetq.q1))
+                .style('z-index', 1)
+                .transition()
+                .duration(this.duration)
+                .attr("x", this.x1(this.targetq.q1))
+                .attr("width", this.x1(this.targetq.q3) - this.x1(this.targetq.q1));
+
+            this.targetBoxSVG.transition()
+                .duration(this.duration)
+                .attr("x", this.x1(this.targetq.q1))
+                .attr("width", this.x1(this.targetq.q3) - this.x1(this.targetq.q1));
         },
 
         centerLine() {
-            var center = g.selectAll("line.center")
-                .data(whiskerData ? [whiskerData] : []);
-
-            //horizontal line
-            center.enter().insert("line", "rect")
-                .attr("class", "center")
-                .attr("y1", height / 2 - 5)
-                .attr("x1", function (d) { return x0(d[0]); })
-                .attr("y2", height / 2 - 5)
-                .attr("x2", function (d) { return x0(d[1]); })
+            this.centerLineSVG = this.svg
+                .insert("line", "rect")
+                .attr("class", "centerLine")
+                .attr("y1", this.height / 2)
+                .attr("x1", this.x0(this.q.min))
+                .attr("y2", this.height / 2)
+                .attr("x2", this.x0(this.q.max - 1))
+                .attr('stroke', 'black')
+                .style('border', '1px dotted')
                 .style("opacity", 1e-6)
                 .style('z-index', 10)
                 .transition()
-                .duration(duration)
+                .duration(this.duration)
                 .style("opacity", 1)
-                .attr("x1", function (d) { return x1(min); })
-                .attr("x2", function (d) { return x1(max); });
+                .attr("x1", this.x1(this.q.min))
+                .attr("x2", this.x1(this.q.max - 1));
 
-            center.transition()
-                .duration(duration)
+            this.centerLineSVG.transition()
+                .duration(this.duration)
                 .style("opacity", 1)
-                .attr("x1", function (d) { return x1(min); })
-                .attr("x2", function (d) { return x1(max); });
+                .attr("x1", this.x1(this.q.min))
+                .attr("x2", this.x1(this.q.max));
 
-            center.exit().transition()
-                .duration(duration)
-                .style("opacity", 1e-6)
-                .attr("x1", function (d) { return x1(min); })
-                .attr("x2", function (d) { return x1(max); })
-                .remove();
+            // this.centerLineSVG.exit().transition()
+            //     .duration(this.duration)
+            //     .style("opacity", 1e-6)
+            //     .attr("x1", this.x1(this.q.min))
+            //     .attr("x2", this.x1(this.q.max))
+            //     .remove();
         },
 
         medianLine() {
             // Update median line.
-            var medianLine = g.selectAll("line.median")
-                .data([quartileData[1]]);
-
-            medianLine.enter().append("line")
+            var medianLine = this.svg
+                .append("line")
                 .attr("class", "median")
                 .attr("y1", 0)
-                .attr("x1", x0)
-                .attr("y2", width)
-                .attr("x2", x0)
+                .attr("x1", this.x0(this.q.q2))
+                .attr("y2", this.boxWidth)
+                .attr("x2", this.x0(this.q.q2))
                 .transition()
-                .duration(duration)
-                .attr("x1", x1)
-                .attr("x2", x1);
+                .duration(this.duration)
+                .attr("x1", this.x1(this.q.q2))
+                .attr("x2", this.x1(this.q.q2));
 
             medianLine.transition()
-                .duration(duration)
-                .attr("x1", x1)
-                .attr("x2", x1);
+                .duration(this.duration)
+                .attr("x1", this.x1(this.q.q2))
+                .attr("x2", this.x1(this.q.q2));
         },
 
         whiskers() {
-            var whisker = g.selectAll("line.whisker")
-                .data([min, max]);
+            let self = this
+            this.whiskerData = this.whiskerIndices ? this.whiskerIndices.map(function (i) {
+                return self.d[i];
+            })
+                : [this.q.min, this.q.max]
+            for (let i = 0; i < this.whiskerData.length; i += 1) {
+                let d = this.whiskerData[i]
+                let whisker = this.svg
+                    .append("line")
+                    .attr("class", "whisker")
+                    .attr("y1", 0)
+                    .attr("x1", this.x0(d))
+                    .attr("y2", this.width)
+                    .attr("x2", this.x0(d))
+                    .style("opacity", 1e-6)
+                    .transition()
+                    .duration(this.duration)
+                    .attr("x1", this.x1(d))
+                    .attr("x2", this.x1(d))
+                    .style("opacity", 1);
 
-            whisker.enter().insert("line", "circle, text")
-                .attr("class", "whisker")
-                .attr("y1", 0)
-                .attr("x1", x0)
-                .attr("y2", 0 + width)
-                .attr("x2", x0)
-                .style("opacity", 1e-6)
-                .transition()
-                .duration(duration)
-                .attr("x1", x1)
-                .attr("x2", x1)
-                .style("opacity", 1);
+                whisker.transition()
+                    .duration(this.duration)
+                    .attr("x1", this.x1(d))
+                    .attr("x2", this.x1(d))
+                    .style("opacity", 1);
 
-            whisker.transition()
-                .duration(duration)
-                .attr("x1", x1)
-                .attr("x2", x1)
-                .style("opacity", 1);
+            }
 
-            whisker.exit().transition()
-                .duration(duration)
-                .attr("x1", x1)
-                .attr("x2", x1)
-                .style("opacity", 1e-6)
-                .remove();
+            // this.whisker.exit().transition()
+            //     .duration(this.duration)
+            //     .attr("x1", this.x1)
+            //     .attr("x2", this.x1)
+            //     .style("opacity", 1e-6)
+            //     .remove();
         },
 
         outliers() {
-            var outlier = g.selectAll("circle.outlier")
-                .data(outlierIndices, Number);
+            let outlierList = []
+            for (let i = 0; i < this.whiskerIndices[0]; i += 1) {
+                outlierList.push(this.d[i])
+            }
 
-            outlier.enter().insert("circle", "text")
-                .attr("class", "outlier")
-                .attr("r", 5)
-                .attr("cy", height / 2 - 5)
-                .attr("cx", function (i) { return x0(d[i]); })
-                .style("opacity", 1e-6)
-                .transition()
-                .duration(duration)
-                .attr("cx", function (i) { return x1(d[i]); })
-                .style("opacity", 1);
+            for (let i = this.whiskerIndices[1] + 1; i < this.d.length; i += 1) {
+                outlierList.push(this.d[i])
+            }
 
-            outlier.transition()
-                .duration(duration)
-                .attr("cx", function (i) { return x1(d[i]); })
-                .style("opacity", 1);
+            for (let i = 0; i < outlierList.length; i += 1) {
+                this.outlier = this.svg
+                    .insert("circle", "text")
+                    .attr("class", "outlier")
+                    .attr("r", this.outlierRadius)
+                    .attr("cy", this.height / 2 )
+                    .attr("cx", this.x0(outlierList[i] - this.outlierRadius*i))
+                    .style("opacity", 1e-6)
+                    .transition()
+                    .duration(this.duration)
+                    .attr("cx", this.x1(outlierList[i]))
+                    .style("opacity", 1);
 
-            outlier.exit().transition()
-                .duration(duration)
-                .attr("cx", function (i) { return x1(d[i]); })
-                .style("opacity", 1e-6)
-                .remove();
-        }
+                this.outlier.transition()
+                    .duration(this.duration)
+                    .attr("cx", this.x1(outlierList[i]))
+                    .style("opacity", 1);
 
+                // this.outlier.exit().transition()
+                //     .duration(this.duration)
+                //     .attr("cx", this.x1(outlierList[i]))
+                //     .style("opacity", 1e-6)
+                //     .remove();
+            }
+        },
+
+        select(node) {
+
+        },
+
+        highlight(datasets) {
+
+        },
     }
 }
 

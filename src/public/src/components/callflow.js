@@ -203,7 +203,7 @@ export default {
 				// this.$refs.DiffScatterplot.init()
 				this.$refs.Projection.init()
 				this.$refs.SimilarityMatrix.init()
-				this.$refs.AuxiliaryFunction.init()
+				// this.$refs.AuxiliaryFunction.init()
 				// this.$refs.RunInformation.init()
 				this.$refs.DiffHistogram.init()
 				this.initLoad = false
@@ -588,6 +588,10 @@ export default {
 				targetDataset: this.$store.selectedTargetDataset,
 				compareDataset: this.$store.selectedCompareDataset,
 			})
+		},
+
+		updateCompareDataset(){
+
 		}
 
 	}

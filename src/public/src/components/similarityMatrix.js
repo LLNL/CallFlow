@@ -240,7 +240,7 @@ export default {
                     return self.$store.color.target
                 })
                 .style('stroke-width', (d, i) => {
-                    return 4
+                    return this.nodeWidth/3
                 })
 
         },

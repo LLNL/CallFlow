@@ -3,21 +3,22 @@
 		<v-toolbar-side-icon @click.stop="left = !left">
 		</v-toolbar-side-icon>
 		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
-		<v-flex xs3 class="ma-2">
+		<v-flex xs2 class="ma-2">
 			<v-select label="Set Target run" :items="datasets" v-model="selectedTargetDataset"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
 			</v-select>
 		</v-flex>
+		<v-flex xs2 class="ma-2">
+				<v-select label="Set Compare run" :items="datasets" v-model="selectedCompareDataset"
+					:menu-props="{ maxHeight: '400' }" box v-on:change="updateCompareDataset()">
+				</v-select>
+			</v-flex>
 		<!-- <v-flex xs2 class="ma-2" v-if="selectedMode == 'Distribution'">
 			<v-select label="Dataset 2" :items="datasets" v-model="selectedDataset2" :menu-props="{ maxHeight: '400' }"
 				box v-on:change="updateDataset()">
 			</v-select>
 		</v-flex> -->
-		<v-flex xs2 class="ma-2">
-			<v-select label="Graph to visualize" :items="formats" v-model="selectedFormat"
-				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
-			</v-select>
-		</v-flex>
+
 		<!-- <v-flex xs2 class="ma-2">
 			<v-select label="Data" :items="datas" v-model="selectedData" :menu-props="{ maxHeight: '400' }" box
 				v-on:change="updateData()">
@@ -25,11 +26,11 @@
 		</v-flex> -->
 		<v-spacer></v-spacer>
 		<v-flex xs2>
-			<v-btn-toggle v-model="comparisonMode">
+			<!-- <v-btn-toggle v-model="comparisonMode">
 				<v-btn id="compare-button" color="white" v-on:click="triggerCompare()">
 					Compare
 				</v-btn>
-			</v-btn-toggle>
+			</v-btn-toggle> -->
 		</v-flex>
 
 		<v-flex xs2>
@@ -46,6 +47,11 @@
 				<v-btn icon>
 					<v-icon v-on:click="reset()">refresh</v-icon>
 				</v-btn>
+				<v-flex xs12 class="ma-1">
+						<v-select label="Graph to visualize" :items="formats" v-model="selectedFormat"
+							:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
+						</v-select>
+					</v-flex>
 				<v-flex xs12 class="ma-1">
 					<v-select label="Color By" :items="colorBy" v-model="selectedColorBy"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColorBy()">
@@ -112,7 +118,7 @@
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateScatterMode()">
 					</v-select>
 				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat == 'CCT'">
+				<!-- <v-flex xs12 class="ma-1" v-show="selectedFormat == 'CCT'">
 					<v-text-field label="Min. number of functions in CCT" class="mt-0" type="number"
 						v-model="selectedFunctionsInCCT" :menu-props="{ maxHeight: '200' }" persistent-hint
 						v-on:change="updateFunctionsInCCT()">
@@ -122,7 +128,7 @@
 					<v-select label="Align node to" :items="diffNodeAlignment" v-model="selectedDiffNodeAlignment"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateDiffNodeAlignment()">
 					</v-select>
-				</v-flex>
+				</v-flex> -->
 			</v-layout>
 		</v-card>
 	</v-navigation-drawer>

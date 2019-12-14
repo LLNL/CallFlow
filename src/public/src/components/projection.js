@@ -43,7 +43,8 @@ export default {
             let toolbarHeight = document.getElementById('toolbar').clientHeight
 
             this.width = visContainer.clientWidth
-            this.height = (dashboardHeight - toolbarHeight) / 5
+            this.height = (dashboardHeight - toolbarHeight) / 3 - 80
+
             this.padding = { left: 50, top: 0, right: 50, bottom: 30 }
             this.x = d3.scaleLinear().range([0, this.width]);
             this.y = d3.scaleLinear().range([this.height, 0]);

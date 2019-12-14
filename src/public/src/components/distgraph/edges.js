@@ -383,8 +383,8 @@ export default {
                     'r': 15,
                     'stroke': 'black',
                     'fill': 'white',
-                    'cx': d.target.x - 20,
-                    'cy': d.target.y + this.$parent.ySpacing + d.target.height / 2,
+                    'cx': d.target_dict.x - 20,
+                    'cy': d.target_dict.y + this.$parent.ySpacing + d.target_dict.height / 2,
                 })
 
             this.labelContainer.append("text")
