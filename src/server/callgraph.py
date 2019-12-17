@@ -15,8 +15,6 @@ from logger import log
 import math
 import json
 from ast import literal_eval as make_tuple
-import ete3
-
 
 class CallGraph(nx.Graph):
     def __init__(self, state, path_name, add_info, group_by):

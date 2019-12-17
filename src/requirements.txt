@@ -3,6 +3,6 @@ numpy
 flask
 flask-cors
 flask_socketio
-networkx
-eventlet
+networkx==2.2
 colorlog
+statsmodels
