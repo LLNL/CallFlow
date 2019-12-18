@@ -25,7 +25,7 @@ export default {
 		width: null,
 		height: null,
 		totalSize: 0,
-		b : {
+		b: {
 			w: 150, h: 30, s: 3, t: 10
 		},
 		selectedSplitOption: {
@@ -39,17 +39,18 @@ export default {
 				"name": 'split-callee',
 			},
 			{
-				"name":'split-level',
+				"name": 'split-level',
 			}],
 		placeholder: 'Split options',
 		maxLevel: 0,
 		path_hierarchy: [],
-		id: ''
+		id: '',
+		padding: 0,
 	}),
 
 	watch: {
 		level: {
-			handler: function(val, oldVal) {
+			handler: function (val, oldVal) {
 				this.update_level();
 			},
 			deep: true
@@ -63,12 +64,12 @@ export default {
 			this.update_from_df(data)
 		},
 
-		dist_hierarchy(data){
+		dist_hierarchy(data) {
 			data = JSON.parse(data)
 			console.log("Module hierarchy: ", data)
 			this.update_from_df(data)
 		},
-		level_change(data){
+		level_change(data) {
 			this.update_maxlevels(data)
 		}
 	},
@@ -86,9 +87,9 @@ export default {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
 			this.icicleToolbarHeight = document.getElementById('icicle-toolbar').clientHeight
-			this.width = window.innerWidth*0.3
-			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight - this.icicleToolbarHeight)*0.3
-            this.icicleWidth = this.width - this.margin.right - this.margin.left
+			this.width = window.innerWidth * 0.3
+			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight - this.icicleToolbarHeight) * 0.3
+			this.icicleWidth = this.width - this.margin.right - this.margin.left
 			this.icicleHeight = this.height - this.margin.top - this.margin.bottom
 
 			this.hierarchySVG = d3.select('#' + this.id)
@@ -99,18 +100,18 @@ export default {
 				})
 		},
 
-		update_maxlevels(data){
+		update_maxlevels(data) {
 			let levels = data['level']
 			for (const [key, value] of Object.entries(levels)) {
-				if(this.maxLevel < value){
+				if (this.maxLevel < value) {
 					this.maxLevel = value
 					this.level = [0, value]
 				}
-            }
+			}
 		},
 
 		// TODO: Need to make level view for the icicle plot.
-		update_level(){
+		update_level() {
 			this.clearIcicles()
 			let ret = []
 			// console.log("Number of children: ", this.path_hierarchy)
@@ -118,20 +119,20 @@ export default {
 			this.maxLevel = this.level[1]
 
 			// console.log(this.minLevel, this.maxLevel)
-			if (this.minLevel > this.maxLevel){
+			if (this.minLevel > this.maxLevel) {
 				console.log("Cannot generate icicle plot, min_level > max_level")
 				return
 			}
 
-			for(let i = 0; i < this.path_hierarchy.length; i += 1){
+			for (let i = 0; i < this.path_hierarchy.length; i += 1) {
 				let level = this.path_hierarchy[i][0].length
-				if(level == 1){
+				if (level == 1) {
 					ret.push(this.path_hierarchy[i])
 				}
-				else if(level >= this.minLevel || level < this.maxLevel){
+				else if (level >= this.minLevel || level < this.maxLevel) {
 					ret.push(this.path_hierarchy[i])
 				}
-				else{
+				else {
 				}
 			}
 			this.path_hierarchy = ret
@@ -184,12 +185,12 @@ export default {
 				// const component_path = csv[i][5];
 				const parts = sequence;
 				let currentNode = root;
-				console.log(parts)
+
 				for (let j = 0; j < parts.length; j++) {
 					const children = currentNode.children;
 					let nodeName = parts[j];
 					// if(nodeName.includes('=')){
-						// nodeName = nodeName.split('=')[0]
+					// nodeName = nodeName.split('=')[0]
 					// }
 					var childNode;
 					if (j + 1 < parts.length) {
@@ -215,7 +216,7 @@ export default {
 						// Reached the end of the sequence; create a leaf node.
 						childNode = {
 							name: nodeName,
-							value: inc_time,
+							value: 2,
 							exclusive: exclusive,
 							// imbalance_perc,
 							length: parts.length,
@@ -231,7 +232,7 @@ export default {
 			return root;
 		},
 
-		clear(){
+		clear() {
 			// this.clearIcicles()
 		},
 
@@ -242,18 +243,18 @@ export default {
 
 		textSize(text) {
 			const container = d3.select('#' + this.id).append('svg');
-            container.append('text')
-                .attrs({
-                    x: -99999,
-                    y: -99999
-                })
-                .text((d) => text);
-            const size = container.node().getBBox();
-            container.remove();
-            return {
-                width: size.width,
-                height: size.height
-            };
+			container.append('text')
+				.attrs({
+					x: -99999,
+					y: -99999
+				})
+				.text((d) => text);
+			const size = container.node().getBBox();
+			container.remove();
+			return {
+				width: size.width,
+				height: size.height
+			};
 		},
 
 		descendents(root) {
@@ -270,8 +271,64 @@ export default {
 					nodes.push(node);
 					queue.push(node)
 				});
+				console.log(root)
 			}
 			return nodes;
+		},
+
+		partition(root) {
+			var dx = this.width,
+				dy = this.height,
+				padding = 0,
+				round = false;
+
+			var n = root.height + 1;
+			root.x0 = root.y0 = padding;
+			root.x1 = dx/root.children.length;
+			root.y1 = dy / n;
+			root.eachBefore(this.positionNode(dy, n));
+			if (round) root.eachBefore(this.roundNode);
+			return root;
+		},
+
+		positionNode(dy, n) {
+			let self = this
+			return function (node) {
+				if (node.children) {
+					self.dice(node, node.x0, dy * (node.depth + 1) / n, node.x1, dy * (node.depth + 2) / n);
+				}
+				var x0 = node.x0,
+					y0 = node.y0,
+					x1 = node.x1 - self.padding,
+					y1 = node.y1 - self.padding;
+				if (x1 < x0) x0 = x1 = (x0 + x1) / 2;
+				if (y1 < y0) y0 = y1 = (y0 + y1) / 2;
+				node.x0 = x0;
+				node.y0 = y0;
+				node.x1 = x1;
+				node.y1 = y1;
+			};
+		},
+
+		roundNode(node) {
+			node.x0 = Math.round(node.x0);
+			node.y0 = Math.round(node.y0);
+			node.x1 = Math.round(node.x1);
+			node.y1 = Math.round(node.y1);
+			return node
+		},
+
+		dice(parent, x0, y0, x1, y1) {
+			var nodes = parent.children,
+				node,
+				i = -1,
+				n = nodes.length,
+				k = parent.value && (x1 - x0) / parent.value;
+
+			while (++i < n) {
+				node = nodes[i], node.y0 = y0, node.y1 = y1;
+				node.x0 = x0, node.x1 = x0 += node.value * k;
+			}
 		},
 
 		drawIcicles(json) {
@@ -285,14 +342,12 @@ export default {
 						'id': this.icicleSVGid
 					})
 			}
-			// Total size of all segments; we set this later, after loading the data
-			console.log(json)
+			// // Total size of all segments; we set this later, after loading the data
 			let root = d3.hierarchy(json)
-			console.log(root)
 
-			const partition = d3.partition()
-				.size([this.width, this.height])
+			const partition = this.partition(root)
 
+			console.log(partition)
 			// Setup the view components
 			// this.initializeBreadcrumbTrail();
 			//  drawLegend();
@@ -311,22 +366,23 @@ export default {
 				})
 				.style('opacity', 0)
 
-			let partitionRoot = partition(root)
+			// let partitionRoot = partition(root)
+			// console.log(partitionRoot)
 
 			// For efficiency, filter nodes to keep only those large enough to see.
-			this.nodes = this.descendents(partitionRoot)
-				// .filter(d => {
-				// 	console.log(d)
-				// 	console.log(d.data.name, d.value)
-				// 	if(this.selectedDirection == 'TD'){
-				// 		console.log(d.y1, d.y0)
-				// 		return (d.y1 - d.y0 > 0.5)
-				// 	}
-				// 	else{
-				// 		console.log(d.x1, d.x0)
-				// 		return (d.x1 - d.x0 > 0.5)
-				// 	}
-				// });
+			this.nodes = this.descendents(partition)
+			// .filter(d => {
+			// 	console.log(d)
+			// 	console.log(d.data.name, d.value)
+			// 	if(this.selectedDirection == 'TD'){
+			// 		console.log(d.y1, d.y0)
+			// 		return (d.y1 - d.y0 > 0.5)
+			// 	}
+			// 	else{
+			// 		console.log(d.x1, d.x0)
+			// 		return (d.x1 - d.x0 > 0.5)
+			// 	}
+			// });
 
 			this.addNodes()
 			this.addText()
@@ -348,10 +404,10 @@ export default {
 				.attr('class', 'icicleNode')
 				.attr('x', (d) => {
 					if (this.selectedDirection == 'LR') {
-						if(Number.isNaN(d.y0)){
-							return d.data.count * this.width/d.data.length
+						if (Number.isNaN(d.y0)) {
+							return d.data.count * this.width / d.data.length
 						}
-						return d.data.count * this.width/d.data.length
+						return d.data.count * this.width / d.data.length
 					}
 					return d.x0;
 				})
@@ -363,11 +419,10 @@ export default {
 				})
 				.attr('width', (d) => {
 					if (this.selectedDirection == 'LR') {
-						console.log(d)
-						if(Number.isNaN(d.y1 - d.y0)){
-							return this.width/d.data.length
+						if (Number.isNaN(d.y1 - d.y0)) {
+							return this.width / d.data.length
 						}
-						else{
+						else {
 							return d.y1 - d.y0;
 						}
 						// return this.width/d.data.length
@@ -382,7 +437,7 @@ export default {
 					return d.y1 - d.y0;
 				})
 				.style('fill', (d) => {
-					if(d.data.value == 0){
+					if (d.data.value == 0) {
 						return '#e1e1e1'
 					}
 					let color = this.$store.color.getColor(d.data);
@@ -414,10 +469,10 @@ export default {
 				})
 				.attr('x', (d) => {
 					if (this.selectedDirection == 'LR') {
-						if(Number.isNaN(d.y0)){
-							return d.data.count * this.width/d.data.length
+						if (Number.isNaN(d.y0)) {
+							return d.data.count * this.width / d.data.length
 						}
-						return d.data.count * this.width/d.data.length
+						return d.data.count * this.width / d.data.length
 						// return d.y0 * len(d.component_path);
 					}
 					return d.x0 + 15;
@@ -430,14 +485,13 @@ export default {
 				})
 				.attr('width', (d) => {
 					if (this.selectedDirection == 'LR') {
-						if (Number.isNaN(d.y1 - d.y0)){
-							return this.width/d.data.length
+						if (Number.isNaN(d.y1 - d.y0)) {
+							return this.width / d.data.length
 						}
 						// return d.y1 - d.y0 / 2;
-						return this.width/d.data.length
+						return this.width / d.data.length
 
 					}
-					console.log(d)
 					// return d.x1 - d.x0 / 2;
 					return this.width
 				})
@@ -452,15 +506,15 @@ export default {
 
 					let name = d.data.name
 					var textSize = this.textSize(name)['width'];
-                    if (textSize < d.height) {
-                        return name;
-                    } else {
-                        return this.trunc(name, this.textTruncForNode)
-                    }
+					if (textSize < d.height) {
+						return name;
+					} else {
+						return this.trunc(name, this.textTruncForNode)
+					}
 				});
 		},
 
-		click(d){
+		click(d) {
 			let splitByOption = this.selectedSplitOption.name
 
 			// Fade all the segments.

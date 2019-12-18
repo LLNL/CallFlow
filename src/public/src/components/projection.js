@@ -216,7 +216,6 @@ export default {
                         return 6.0
                     },
                     'stroke-width': 2.0,
-                    // stroke: 'black',
                     fill: (d) => { return this.$store.colorset[d[4]] },
                     cx: (d, i) => { return self.x(d[0]) },
                     cy: (d) => { return self.y(d[1]) },
@@ -234,12 +233,12 @@ export default {
                     r: (d) => {
                         return 8.0
                     },
-                    'stroke-width': 2.0,
+                    'stroke-width': 3.0,
                     stroke: (d) => {
-                        if(d[2] == this.$store.selectedTargetDataset){
+                        if (d[2] == this.$store.selectedTargetDataset) {
                             return d3.rgb(this.$store.color.target).darker(5)
                         }
-                        else{
+                        else {
                             return d3.rgb(this.$store.color.ensemble).darker()
                         }
                     },
@@ -260,11 +259,17 @@ export default {
                 })
                 .on('click', (d) => {
                     this.selectedRun = d[2]
-                    d3.select('#dot-' + self.$store.datasetMap[d[2]])
-                        .style('stroke', '#4681B4');
                     d3.selectAll('.dot')
+                        .attr('stroke', self.$store.color.ensemble)
+                        .attr('stroke-width', 3)
 
-                        .style('stroke', 'black');
+                    d3.select('#dot-' + self.$store.datasetMap[d[2]])
+                        .attr('stroke', self.$store.color.compare)
+                        .attr('stroke-width', 3)
+                    d3.select('#outer-dot' + self.$store.datasetMap[self.$store.selectedTargetDataset])
+                        .attr('stroke', self.$store.color.target)
+                        .attr('stroke-width', 3)
+
                     this.compareDataset = d[2]
 
                     this.$socket.emit('compare', {
@@ -469,12 +474,12 @@ export default {
             //     'stroke-width': 3.0,
             // })
 
-            this.circles = this.svg.selectAll('#dot-' + datasetID)
-                .attrs({
-                    opacity: 1.0,
-                    stroke: (d) => { return self.$store.color.highlight },
-                    'stroke-width': 3.0,
-                })
+            // this.circles = this.svg.selectAll('#dot-' + datasetID)
+            //     .attrs({
+            //         opacity: 1.0,
+            //         stroke: (d) => { return self.$store.color.highlight },
+            //         'stroke-width': 3.0,
+            //     })
 
         },
 

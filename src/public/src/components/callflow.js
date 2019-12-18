@@ -101,6 +101,7 @@ export default {
 		selectedTargetDataset: '',
 		initLoad: true,
 		comparisonMode: false,
+		selectedCompareDataset: null,
 	}),
 
 	watch: {},
@@ -412,7 +413,7 @@ export default {
 			this.$store.color.highlight = '#AF9B90';//'#4681B4'
 			this.$store.color.target = '#AF9B90';//'#4681B4'
 			this.$store.color.ensemble = '#C0C0C0';//'#4681B4'
-
+			this.$store.color.compare = '#043060'
 		},
 
 		reset() {
