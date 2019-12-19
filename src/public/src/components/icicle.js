@@ -271,31 +271,43 @@ export default {
 					nodes.push(node);
 					queue.push(node)
 				});
-				console.log(root)
 			}
 			return nodes;
 		},
 
 		partition(root) {
-			var dx = this.width,
-				dy = this.height,
+			var dx = 1,
+				dy = 1,
 				padding = 0,
 				round = false;
 
 			var n = root.height + 1;
-			root.x0 = root.y0 = padding;
-			root.x1 = dx/root.children.length;
+			root.x0 = padding;
+			root.y0 = padding// + dy / (root.depth - 1)
+			let num_of_children = 1
+			if (root.children == undefined) {
+				num_of_children = 1
+			}
+			else {
+				num_of_children = root.children.length
+			}
+			root.x1 = dx /// num_of_children);
 			root.y1 = dy / n;
-			root.eachBefore(this.positionNode(dy, n));
-			if (round) root.eachBefore(this.roundNode);
+			console.log(root)
+			root.eachAfter(this.positionNode(dy, n));
+			// if (round) root.eachBefore(this.roundNode);
+
+			console.log(root.x0, root.x1)
+			console.log(root.y0, root.y1)
 			return root;
 		},
 
 		positionNode(dy, n) {
 			let self = this
 			return function (node) {
+				console.log(node)
 				if (node.children) {
-					self.dice(node, node.x0, dy * (node.depth + 1) / n, node.x1, dy * (node.depth + 2) / n);
+					node = self.dice(node, node.x0, dy * (node.depth + 1) / n, node.x1, dy * (node.depth + 2) / n);
 				}
 				var x0 = node.x0,
 					y0 = node.y0,
@@ -307,6 +319,7 @@ export default {
 				node.y0 = y0;
 				node.x1 = x1;
 				node.y1 = y1;
+				console.log(node)
 			};
 		},
 
@@ -325,10 +338,15 @@ export default {
 				n = nodes.length,
 				k = parent.value && (x1 - x0) / parent.value;
 
+			console.log(k)
 			while (++i < n) {
-				node = nodes[i], node.y0 = y0, node.y1 = y1;
-				node.x0 = x0, node.x1 = x0 += node.value * k;
+				node = nodes[i]
+				node.y0 = y0
+				node.y1 = y1
+				node.x0 = x0
+				node.x1 = x0 += node.value //* k;
 			}
+			return node
 		},
 
 		drawIcicles(json) {
@@ -342,12 +360,10 @@ export default {
 						'id': this.icicleSVGid
 					})
 			}
-			// // Total size of all segments; we set this later, after loading the data
+			// Total size of all segments; we set this later, after loading the data
 			let root = d3.hierarchy(json)
-
 			const partition = this.partition(root)
 
-			console.log(partition)
 			// Setup the view components
 			// this.initializeBreadcrumbTrail();
 			//  drawLegend();
@@ -366,23 +382,17 @@ export default {
 				})
 				.style('opacity', 0)
 
-			// let partitionRoot = partition(root)
-			// console.log(partitionRoot)
-
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition)
-			// .filter(d => {
-			// 	console.log(d)
-			// 	console.log(d.data.name, d.value)
-			// 	if(this.selectedDirection == 'TD'){
-			// 		console.log(d.y1, d.y0)
-			// 		return (d.y1 - d.y0 > 0.5)
-			// 	}
-			// 	else{
-			// 		console.log(d.x1, d.x0)
-			// 		return (d.x1 - d.x0 > 0.5)
-			// 	}
-			// });
+				.filter(d => {
+					console.log(d.x0, d.x1, d.y0, d.y1)
+					if (this.selectedDirection == 'TD') {
+						return (d.y1 - d.y0 > 0.5)
+					}
+					else {
+						return (d.x1 - d.x0 > 0.5)
+					}
+				});
 
 			this.addNodes()
 			this.addText()
@@ -392,7 +402,6 @@ export default {
 
 			// Get total size of the tree = value of root node from partition.
 			this.totalSize = root.value;
-
 		},
 
 		addNodes() {
@@ -489,11 +498,10 @@ export default {
 							return this.width / d.data.length
 						}
 						// return d.y1 - d.y0 / 2;
+						console.log('aaaaa')
 						return this.width / d.data.length
-
 					}
-					// return d.x1 - d.x0 / 2;
-					return this.width
+					return d.x1 - d.x0 / 2;
 				})
 				.style('fill', (d) => {
 					let color = this.$store.color.setContrast(this.$store.color.getColor(d))
