@@ -85,67 +85,20 @@ body {
   font-family: "Open Sans", sans-serif;
   margin-bottom: 0px;
   height: 99%;
+  font-size: 16px;
 }
-
-/* #content{
-	height: 98% !important;
-	padding-top: 15px;
-}
-
-.m-b-reset{
-	margin-bottom: 0px !important;
-}
-
-.padding-reset{
-	padding: 0px !important;
-}
-
-.ui .message{
-	padding-top: 30px !important;
-	padding-bottom:  50px !important;
-}
-
-.m-top-10{
-	margin-top: 10px !important;
-}
-
-.hidden{
-	opacity: 0;
-}
-
-.ui .button{
-	text-transform: capitalize;
-}
-
-.ui.grid{
-	margin-top: -1rem;
-	margin-bottom: -1rem;
-	margin-left: -0.5rem !important;
-	margin-right: -0.5rem !important;
-	height: 100% !important;
-}
-
-.ui.segment{
-	height: 100% !important;
-
-	/*this lines modify the border*/
-/*border: 1px solid !important;*/
-/* } */
 .column#side_vis {
   padding-bottom: 0px !important;
   margin-right: -10em !important;
   padding-right: -10em !important;
 }
-/*#main_vis{
-	height : 100% !important;
-}*/
+
 .ui.vis {
   height: 98% !important;
 }
 
 .tight {
   margin-left: -1em;
-  /*padding-right: -1em;*/
 }
 .ui.segment.vis_container {
   margin-right: -1em;
@@ -154,10 +107,11 @@ body {
 .small_container#control {
   height: 33% !important;
 }
+
 #nodeInfo {
-  /*height: 33% !important;*/
   height: 65% !important;
 }
+
 #other {
   height: 32% !important;
 }
@@ -218,9 +172,9 @@ body {
 }
 
 #auxiliary-function-overview {
-  max-height: 550px;
+  max-height: 400px;
   overflow: auto;
-  background:white;
+  background: white;
 }
 
 .auxiliary-node {
@@ -231,15 +185,17 @@ body {
   border-style: solid;
 }
 
-#compare-button{
-  color:black
-}
-
-.reveal-button{
+.reveal-button {
   float: right;
   margin: 2px;
   border: grey;
   border-style: outset;
   padding: 2px;
+}
+
+.tooltip {
+	padding-left: 10px;
+	font-size: 14px;
+	font-weight: 500;
 }
 </style>

@@ -99,7 +99,6 @@ export default {
 
                 this.callsites.push(callsite)
                 this.ui(callsite)
-                console.log(callsite, target_callsite)
                 this.visualize(callsite, target_callsite)
             }
         },
@@ -204,7 +203,6 @@ export default {
         },
 
         boxPlot(ensemble_data, target_data) {
-            console.log(target_data)
             let inc_arr = ensemble_data['time (inc)']
             let exc_arr = ensemble_data['time']
 

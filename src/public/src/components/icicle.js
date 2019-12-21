@@ -61,7 +61,8 @@ export default {
 		hierarchy(data) {
 			data = JSON.parse(data)
 			console.log("Module hierarchy: ", data)
-			this.update_from_df(data)
+			console.log(data['tree'])
+			this.update_from_df(data['data'])
 		},
 
 		dist_hierarchy(data) {
@@ -177,21 +178,19 @@ export default {
 			};
 			for (let i = 0; i < csv.length; i++) {
 				const sequence = csv[i][0];
-				const inc_time = csv[i][1];
+				const inclusive = csv[i][1];
 				const exclusive = csv[i][2];
 				// const imbalance_perc = csv[i][3];
 				const name = csv[i][4]
 				// const exit = csv[i][4];
-				// const component_path = csv[i][5];
+				// const compo nent_path = csv[i][5];
 				const parts = sequence;
 				let currentNode = root;
 
 				for (let j = 0; j < parts.length; j++) {
 					const children = currentNode.children;
 					let nodeName = parts[j];
-					// if(nodeName.includes('=')){
-					// nodeName = nodeName.split('=')[0]
-					// }
+					
 					var childNode;
 					if (j + 1 < parts.length) {
 						// Not yet at the end of the sequence; move down the tree.
@@ -216,7 +215,8 @@ export default {
 						// Reached the end of the sequence; create a leaf node.
 						childNode = {
 							name: nodeName,
-							value: 2,
+							value: exclusive,
+							inclusive: inclusive,
 							exclusive: exclusive,
 							// imbalance_perc,
 							length: parts.length,
@@ -271,7 +271,6 @@ export default {
 					nodes.push(node);
 					queue.push(node)
 				});
-				console.log(root)
 			}
 			return nodes;
 		},
@@ -284,7 +283,7 @@ export default {
 
 			var n = root.height + 1;
 			root.x0 = root.y0 = padding;
-			root.x1 = dx/root.children.length;
+			root.x1 = dx;
 			root.y1 = dy / n;
 			root.eachBefore(this.positionNode(dy, n));
 			if (round) root.eachBefore(this.roundNode);
@@ -303,10 +302,12 @@ export default {
 					y1 = node.y1 - self.padding;
 				if (x1 < x0) x0 = x1 = (x0 + x1) / 2;
 				if (y1 < y0) y0 = y1 = (y0 + y1) / 2;
+
 				node.x0 = x0;
 				node.y0 = y0;
 				node.x1 = x1;
 				node.y1 = y1;
+				console.log(node.x0, node.x1, node.y0, node.y1)
 			};
 		},
 
@@ -322,12 +323,16 @@ export default {
 			var nodes = parent.children,
 				node,
 				i = -1,
-				n = nodes.length,
-				k = parent.value && (x1 - x0) / parent.value;
+				n = nodes.length;
 
+			let x_offset = 0
 			while (++i < n) {
-				node = nodes[i], node.y0 = y0, node.y1 = y1;
-				node.x0 = x0, node.x1 = x0 += node.value * k;
+				node = nodes[i]
+				node.y0 = y0
+				node.y1 = y1
+				node.x0 = x0 + x_offset
+				x_offset += this.icicleWidth/(n+1)
+				node.x1 = node.x0 + this.icicleWidth/(n+1);
 			}
 		},
 
@@ -342,12 +347,6 @@ export default {
 						'id': this.icicleSVGid
 					})
 			}
-			// // Total size of all segments; we set this later, after loading the data
-			let root = d3.hierarchy(json)
-
-			const partition = this.partition(root)
-
-			console.log(partition)
 			// Setup the view components
 			// this.initializeBreadcrumbTrail();
 			//  drawLegend();
@@ -366,9 +365,10 @@ export default {
 				})
 				.style('opacity', 0)
 
-			// let partitionRoot = partition(root)
-			// console.log(partitionRoot)
-
+			// Total size of all segments; we set this later, after loading the data
+			let root = d3.hierarchy(json)
+			const partition = this.partition(root)
+			
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition)
 			// .filter(d => {
@@ -392,7 +392,6 @@ export default {
 
 			// Get total size of the tree = value of root node from partition.
 			this.totalSize = root.value;
-
 		},
 
 		addNodes() {
@@ -425,10 +424,8 @@ export default {
 						else {
 							return d.y1 - d.y0;
 						}
-						// return this.width/d.data.length
 					}
-					// return d.x1 - d.x0;
-					return this.width
+					return d.x1 - d.x0;
 				})
 				.attr('height', (d) => {
 					if (this.selectedDirection == 'LR') {
@@ -437,6 +434,7 @@ export default {
 					return d.y1 - d.y0;
 				})
 				.style('fill', (d) => {
+					console.log(d)
 					if (d.data.value == 0) {
 						return '#e1e1e1'
 					}

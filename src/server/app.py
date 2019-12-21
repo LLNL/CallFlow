@@ -34,8 +34,8 @@ import utils
 from logger import log
 
 app = Flask(__name__, static_url_path="/public")
-sockets = SocketIO(app, ping_timeout=120)
-CORS(app)
+sockets = SocketIO(app, cors_allowed_origins="*")
+# CORS(app)
 
 
 class App:
