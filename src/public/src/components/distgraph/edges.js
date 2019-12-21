@@ -122,8 +122,8 @@ export default {
                 })
                 .on("mouseover", function (d) {
                     d3.select(this).style("stroke-opacity", "1.0")
-                    self.clearEdgeLabels()
-                    self.drawEdgeLabels(d)
+                    // self.clearEdgeLabels()
+                    // self.drawEdgeLabels(d)
                 })
                 .sort(function (a, b) {
                     return b.dy - a.dy;

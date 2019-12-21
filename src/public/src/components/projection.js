@@ -250,10 +250,13 @@ export default {
                     let dataset_name = d[2]
                     tooltip.transition()
                         .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html("Run: " + dataset_name + "<br/>" +
-                        "Inclusive time: " + d[5] + "<br/>" +
-                        "Exclusive time: " + d[6])
+                        .style("opacity", .9)
+                        .style("left", 10)
+                    let split_dataset = dataset_name.split('.')
+                    let timestamp = split_dataset[split_dataset.length - 1]
+                    tooltip.html("Run: " + timestamp + "<br/>" +
+                        "Inclusive time: " + d[5] + " ms<br/>" +
+                        "Exclusive time: " + d[6] + " ms")
                         .style("left", (d3.event.pageX) + "px")
                         .style("top", (d3.event.pageY - 28) + "px");
                 })
