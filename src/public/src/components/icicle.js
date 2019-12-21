@@ -59,14 +59,14 @@ export default {
 
 	sockets: {
 		hierarchy(data) {
-			data = JSON.parse(data)
+			data = JSON.parse(data['data'])
 			console.log("Module hierarchy: ", data)
-			console.log(data['tree'])
-			this.update_from_df(data['data'])
+			// console.log(data['tree'])
+			// this.update_from_df(JSON.parse(data['data']))
 		},
 
 		dist_hierarchy(data) {
-			data = JSON.parse(data)
+			data = JSON.parse(data['data'])
 			console.log("Module hierarchy: ", data)
 			this.update_from_df(data)
 		},
