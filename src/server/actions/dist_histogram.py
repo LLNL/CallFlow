@@ -33,6 +33,7 @@ class DistHistogram:
                 "time (inc)": self.df.loc[self.df['name'] == func]['time (inc)'].tolist(),
                 "time": self.df.loc[self.df['name'] == func]['time'].tolist(),
                 "rank": self.df.loc[self.df['name'] == func]['rank'].tolist(),
+                "dataset": self.df.loc[self.df['name'] == func]['dataset'].tolist(),
             })
         ret_df = pd.DataFrame(ret)
         return ret_df.to_json(orient="columns")

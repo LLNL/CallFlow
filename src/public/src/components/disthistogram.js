@@ -31,15 +31,13 @@ export default {
         height: null,
         histogramHeight: null,
         histogramWidth: null,
-        histogramSVG: null,
         padding: {
             top: 10,
             right: 10,
             bottom: 10,
-            left: 10,
+            left: 20,
         },
         dataset_index: [],
-        histogramSVG: null,
         id: 'dist_histogram_view',
         firstRender: true,
         xVals: [],
@@ -71,24 +69,26 @@ export default {
             this.toolbarHeight = document.getElementById('toolbar').clientHeight
             this.footerHeight = document.getElementById('footer').clientHeight
             this.footerHeight = document.getElementById('footer').clientHeight
+            
+            // Assign the height and width of container
             this.width = document.getElementById('dist_histogram_view').clientWidth
             this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.3
-            console.log(this.width)
+            
+            // Assign width and height for histogram and rankLine SVG.
             this.boxWidth = this.width - this.padding.right - this.padding.left;
             this.boxHeight = this.height - this.padding.top - this.padding.bottom;
             this.histogramOffset = Math.floor(this.boxHeight / 3);
             this.histogramHeight = this.boxHeight - this.histogramOffset;
             this.histogramWidth = this.boxWidth;
             this.boxWidth = Math.min(this.boxWidth, this.boxHeight)
-            this.histogramSVG = d3.select('#' + this.id)
+
+            // Create the SVG
+            this.svg = d3.select('#' + this.id)
                 .append('svg')
                 .attrs({
-                    "width": this.boxWidth,
-                    "height": this.boxWidth,
+                    "width": this.width,
+                    "height": this.height,
                 })
-                .style("x", this.padding.left + this.padding.right)
-                .style("y", this.padding.top + this.padding.bottom)
-
         },
 
         render(data) {
@@ -127,12 +127,14 @@ export default {
         },
 
         clear() {
-            this.histogramSVG.selectAll('rect.target').remove()
+            this.svg.selectAll('rect.target').remove()
             d3.selectAll('.others').remove()
             d3.select('.x-axis').remove()
             d3.select('.y-axis').remove()
             d3.selectAll('.binRank').remove()
             d3.selectAll('.lineRank').remove()
+            d3.selectAll('.target_lineRank').remove()
+            d3.selectAll('.tick').remove()
             this.$refs.ToolTip.clear()
         },
 
@@ -140,8 +142,8 @@ export default {
             this.bars();
             this.targetBars();
             this.axis();
-            this.rankLineScale();
-            this.brushes()
+            this.rankLines();
+            // this.brushes()
         },
 
         setContainerWidth(newWidth) {
@@ -277,7 +279,7 @@ export default {
 
         bars() {
             let self = this
-            this.histogramSVG.selectAll('.target')
+            this.svg.selectAll('.target')
                 .data(this.freq)
                 .enter()
                 .append('rect')
@@ -319,7 +321,7 @@ export default {
 
         targetBars() {
             let self = this
-            this.histogramSVG.selectAll('.others')
+            this.svg.selectAll('.others')
                 .data(this.targetFreq)
                 .enter()
                 .append('rect')
@@ -366,39 +368,34 @@ export default {
                 .ticks(this.MPIcount)
                 .tickFormat((d, i) => {
                     let temp = this.axis_x[i];
-                    if (i % 4 == 0) {
-                        let value = temp * 0.000001
-                        return `${xFormat(value)}s`
-                    }
-                    return '';
+                    // if (i % 2 == 0) {
+                    //     let value = temp * 0.000001
+                    //     return `${xFormat(value)}s`
+                    // }
+                    return `${temp}ms`;
                 });
 
             const yAxis = d3.axisLeft(this.histogramYScale)
                 .ticks(this.freq.length)
                 .tickFormat((d, i) => {
-                    if (this.logScaleBool) {
-                        if (d % 4 == 0) {
-                            return d;
-                        }
-                        return "";
-                    }
                     return d;
                 })
-                .ticks(this.$store.numbOfRanks, '%');
+            // .ticks(this.$store.numbOfRanks, '%');
 
-            const xAxisLine = this.histogramSVG.append('g')
+            const xAxisLine = this.svg.append('g')
                 .attr('class', 'x-axis')
                 .attr('transform', `translate(${this.padding.left},${this.histogramHeight})`)
-                .call(xAxis);
+                .call(xAxis)
 
-            const yAxisLine = this.histogramSVG.append('g')
+            const yAxisLine = this.svg.append('g')
                 .attr('class', 'y-axis')
-                .call(yAxis);
+                .attr('transform', `translate(${this.padding.left},${0})`)
+                .call(yAxis)
 
             const yAxisLineText = yAxisLine.append('text')
                 .attr('transform', 'rotate(-90)')
-                .attr('y', this.histogramOffset/2)
-                .attr('x', -this.histogramHeight + 50)
+                .attr('y', 0)
+                .attr('x', 0)
                 .attr('dy', '.71em')
                 .style('text-anchor', 'end')
                 .text('Frequency');
@@ -436,103 +433,128 @@ export default {
                 .style('font-weight', 'lighter');
         },
 
-        rankLineScale() {
-            const ranklinescale = d3.scaleLinear()
+        drawRankLines(group, processIDs, index, type) {
+            const binWidth = this.histogramXScale.bandwidth();
+            const widthPerRank = binWidth / processIDs.length;
+            const binLocation = this.histogramXScale(index);
+            let cumulativeBinSpace = 0;
+            let line;
+            if (group.length == 1) {
+                var start = group[0];
+                var end = start + 1;
+                var topX1 = cumulativeBinSpace + binLocation
+                var topX2 = cumulativeBinSpace + binLocation + (1) * widthPerRank;
+
+                var botX3 = this.ranklinescale(start);
+                var botX4 = this.ranklinescale(start);
+
+                var topY = this.boxHeight - this.histogramOffset
+                var botY = this.boxHeight;
+                cumulativeBinSpace += (1) * widthPerRank;
+
+                line = 'M' + topX1 + ' ' + topY +
+                    'L ' + topX2 + ' ' + topY +
+                    'L ' + botX4 + ' ' + botY +
+                    'L ' + botX3 + ' ' + botY;
+            } else {
+                var start = group[0];
+                var end = group[1];
+
+                var topX1 = cumulativeBinSpace + binLocation
+                var topX2 = cumulativeBinSpace + (end - start + 1) * widthPerRank + binLocation;
+
+                var botX3 = this.ranklinescale(start) + this.padding.left;
+                var botX4 = this.ranklinescale(end) + this.padding.left;
+
+                var topY = this.boxHeight - this.histogramOffset;
+                var botY = this.boxHeight - this.padding.bottom;
+
+                cumulativeBinSpace += (end - start + 1) * widthPerRank;
+
+                line = 'M' + topX1 + ' ' + topY +
+                    'L ' + topX2 + ' ' + topY +
+                    'L ' + botX4 + ' ' + botY +
+                    'L ' + botX3 + ' ' + botY;
+            }
+            if (type == 'ensemble') {
+                this.rankLinesG.append('path')
+                    .attr('d', line)
+                    .attr('class', 'lineRank lineRank_' + index)
+                    .style('fill', this.$store.color.ensemble)
+                    .style('fill-opacity', 0.4);
+            }
+            else if (type == 'target') {
+                this.target_rankLinesG.append('path')
+                    .attr('d', line)
+                    .attr('class', 'target_lineRank target_lineRank_' + index)
+                    .style('fill', this.$store.color.target)
+                    .style('fill-opacity', 0.4)
+            }
+        },
+
+        rankLines() {
+            this.ranklinescale = d3.scaleLinear()
                 .domain([0, this.MPIcount])
                 .range([0, this.histogramWidth]);
 
-            this.freq.forEach((fregVal, idx) => {
-                const processIDs = this.binContainsProcID[idx];
+            this.freq.forEach((fregVal, index) => {
+                const processIDs = this.binContainsProcID[index];
+                const target_processIDs = this.target_binContainsProcID[index]
                 if (processIDs) {
-                    const rankLinesG = this.histogramSVG.append('g')
-                        .attr('class', `binRank bin_${idx}`)
-                        .attr('data-name', idx);
+                    this.rankLinesG = this.svg.append('g')
+                        .attr('class', `binRank bin_${index}`)
+                        .attr('data-name', index)
+                        .attr('transform', `translate(${this.padding.left},${0})`)
+
+                    this.target_rankLinesG = this.svg.append('g')
+                        .attr('class', `target_binRank targetbin_${index}`)
+                        .attr('data-name', index)
+                        .attr('transform', `translate(${this.padding.left},${0})`)
+
 
                     processIDs.sort((a, b) => a - b);
+                    target_processIDs.sort((a, b) => a - b)
 
                     const groupArray = this.groupProcess(processIDs).array;
-                    const binWidth = this.histogramXScale.bandwidth();
-                    const widthPerRank = binWidth / processIDs.length;
-                    const binLocation = this.histogramXScale(idx);
-                    let cumulativeBinSpace = 0;
+                    const target_groupArray = this.groupProcess(target_processIDs).array;
 
                     groupArray.forEach((group) => {
-                        let line;
-                        if (group.length == 1) {
-                            var start = group[0];
-                            var end = start + 1;
-                            var topX1 = cumulativeBinSpace + binLocation //this.padding.left;
-                            var topX2 = cumulativeBinSpace + binLocation + (1) * widthPerRank;
-
-                            var botX3 = ranklinescale(start);
-                            var botX4 = ranklinescale(start);
-
-                            var topY = this.boxHeight - this.histogramOffset - this.padding.top;
-                            var botY = this.boxHeight;
-                            cumulativeBinSpace += (1) * widthPerRank;
-
-                            line = 'M' + topX1 + ' ' + topY +
-                                'L ' + topX2 + ' ' + topY +
-                                'L ' + botX4 + ' ' + botY +
-                                'L ' + botX3 + ' ' + botY;
-                        } else {
-                            var start = group[0];
-                            var end = group[1];
-
-                            var topX1 = cumulativeBinSpace + binLocation + this.padding.left;
-                            var topX2 = cumulativeBinSpace + (end - start + 1) * widthPerRank + binLocation + this.padding.left;
-
-                            var botX3 = ranklinescale(start) + this.padding.left;
-                            var botX4 = ranklinescale(end) + this.padding.left;
-
-                            var topY = this.boxHeight - this.histogramOffset;
-                            var botY = this.boxHeight - this.padding.bottom;
-
-                            cumulativeBinSpace += (end - start + 1) * widthPerRank;
-
-                            line = 'M' + topX1 + ' ' + topY +
-                                'L ' + topX2 + ' ' + topY +
-                                'L ' + botX4 + ' ' + botY +
-                                'L ' + botX3 + ' ' + botY;
-                        }
-
-                        rankLinesG.append('path')
-                            .attr('d', line)
-                            .attr('class', 'lineRank lineRank_' + idx)
-                            .style('fill', (d) => {
-                                return "grey";
-                            })
-                            .style('fill-opacity', 0.4);
-                    });
+                        this.drawRankLines(group, processIDs, index, 'ensemble')
+                    })
+                    target_groupArray.forEach((group) => {
+                        this.drawRankLines(group, target_processIDs, index, 'target')
+                    })
                 }
             });
 
-            const rankLineAxis = d3.axisBottom(ranklinescale)
+            const rankLineAxis = d3.axisBottom(this.ranklinescale)
                 .ticks(10)
                 .tickFormat((d, i) => d);
 
-            const rankLineAxisLine = this.histogramSVG.append('g')
+            this.rankLineAxisLine = this.svg.append('g')
                 .attr('class', 'x axis')
                 .attr('transform', `translate(${this.padding.left},${this.boxHeight - 10})`)
                 .call(rankLineAxis);
 
-            const rankLineAxisLineText = rankLineAxisLine.append('text')
+            this.rankLineAxisLineText = this.rankLineAxisLine.append('text')
                 .attr('y', 20)
                 .attr('x', 25)
                 .attr('dy', '.71em')
                 .style('text-anchor', 'end')
                 .text('MPI Ranks');
 
-            rankLineAxisLine.selectAll('path')
+            this.rankLineAxisLine.selectAll('path')
                 .style('fill', 'none')
                 .style('stroke', 'black')
                 .style('stroke-width', '1px');
-            rankLineAxisLine.selectAll('line')
+
+            this.rankLineAxisLine.selectAll('line')
                 .style('fill', 'none')
                 .style('stroke', '#000')
                 .style('stroke-width', '1px')
                 .style('opacity', 0.5);
-            rankLineAxisLine.selectAll('text')
+            
+            this.rankLineAxisLine.selectAll('text')
                 .style('font-size', '9px')
                 .style('font-family', 'sans-serif')
                 .style('font-weight', 'lighter');
@@ -540,7 +562,7 @@ export default {
 
         brushes() {
             this.brushdata = []
-            this.brushSVG = this.histogramSVG
+            this.brushSVG = this.svg
                 .append('svg')
 
             this.brush = d3.brushX()
@@ -575,13 +597,13 @@ export default {
             this.localBrushEnd = Math.ceil(brushEnd * brushPoints)
 
             // highlight rank lines that is brush
-            this.histogramSVG.selectAll('.binRank').attr('opacity', 0);
+            this.svg.selectAll('.binRank').attr('opacity', 0);
             for (let i = this.localBrushStart; i < this.localBrushEnd; i++) {
-                this.histogramSVG.selectAll(`.bin_${i}`).attr('opacity', 1);
+                this.svg.selectAll(`.bin_${i}`).attr('opacity', 1);
             }
 
             if (this.localBrushStart == this.localBrushEnd) {
-                this.histogramSVG.selectAll('.binRank').attr('opacity', 1);
+                this.svg.selectAll('.binRank').attr('opacity', 1);
             }
         },
 
