@@ -1,4 +1,5 @@
-/** *****************************************************************************
+/*
+*****************************************************************************
  * Copyright (c) 2017-19, Lawrence Livermore National Security, LLC.
  * Produced at the Lawrence Livermore National Laboratory.
  *
@@ -69,11 +70,11 @@ export default {
             this.toolbarHeight = document.getElementById('toolbar').clientHeight
             this.footerHeight = document.getElementById('footer').clientHeight
             this.footerHeight = document.getElementById('footer').clientHeight
-            
+
             // Assign the height and width of container
             this.width = document.getElementById('dist_histogram_view').clientWidth
             this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.3
-            
+
             // Assign width and height for histogram and rankLine SVG.
             this.boxWidth = this.width - this.padding.right - this.padding.left;
             this.boxHeight = this.height - this.padding.top - this.padding.bottom;
@@ -98,13 +99,15 @@ export default {
             this.axis_x = temp[2];
             this.binContainsProcID = temp[3];
             this.logScaleBool = false;
+            console.log(temp)
 
             const targetData = data['target'][0][this.$store.selectedTargetDataset]
             const targetTemp = this.dataProcess(targetData)
+            console.log(targetTemp)
             this.targetXVals = targetTemp[0]
             this.targetFreq = targetTemp[1]
             this.target_axis_x = targetTemp[3]
-            this.target_binContainsProcID = temp[3]
+            this.target_binContainsProcID = targetTemp[3]
 
             // this.$refs.ToolTip.init(this.id)
 
@@ -220,11 +223,19 @@ export default {
             return [xVals, freq, axis_x, binContainsProcID];
         },
 
+        removeDuplicates(arr) {
+            var seen = {};
+            return arr.filter(function (item) {
+                return seen.hasOwnProperty(item) ? false : (seen[item] = true);
+            });
+        },
+
         // give an array of ids, group the ids into cosecutive group
         // return a string version and an array version
         // stolen from this: https://gist.github.com/XciA/10572206
         groupProcess(processIDs) {
-            const constData = processIDs.slice();
+            let constData = processIDs.slice();
+            constData = this.removeDuplicates(constData)
             let a = 0;
             let groupArrayStr = '[ ';
             const groupArray = [];
@@ -262,7 +273,7 @@ export default {
                     string = `[${constData[k]}]`;
                     temp.push(constData[k]);
                 }
-                // groupArray.push(temp);
+
                 if (!first) {
                     groupArrayStr += ', ';
                 }
@@ -271,6 +282,7 @@ export default {
                 first = false;
             }
             groupArrayStr += ' ]';
+            console.log(groupArray)
             return {
                 string: groupArrayStr,
                 array: groupArray
@@ -500,27 +512,34 @@ export default {
             this.freq.forEach((fregVal, index) => {
                 const processIDs = this.binContainsProcID[index];
                 const target_processIDs = this.target_binContainsProcID[index]
+                
+                // For ensemble process ids. 
                 if (processIDs) {
                     this.rankLinesG = this.svg.append('g')
                         .attr('class', `binRank bin_${index}`)
                         .attr('data-name', index)
                         .attr('transform', `translate(${this.padding.left},${0})`)
 
+                    processIDs.sort((a, b) => a - b);
+
+                    const groupArray = this.groupProcess(processIDs).array;
+
+                    groupArray.forEach((group) => {
+                        this.drawRankLines(group, processIDs, index, 'ensemble')
+                    })
+                    
+                }
+                // For the target process ids.
+                if (target_processIDs) {
                     this.target_rankLinesG = this.svg.append('g')
                         .attr('class', `target_binRank targetbin_${index}`)
                         .attr('data-name', index)
                         .attr('transform', `translate(${this.padding.left},${0})`)
 
-
-                    processIDs.sort((a, b) => a - b);
                     target_processIDs.sort((a, b) => a - b)
 
-                    const groupArray = this.groupProcess(processIDs).array;
                     const target_groupArray = this.groupProcess(target_processIDs).array;
 
-                    groupArray.forEach((group) => {
-                        this.drawRankLines(group, processIDs, index, 'ensemble')
-                    })
                     target_groupArray.forEach((group) => {
                         this.drawRankLines(group, target_processIDs, index, 'target')
                     })
@@ -553,7 +572,7 @@ export default {
                 .style('stroke', '#000')
                 .style('stroke-width', '1px')
                 .style('opacity', 0.5);
-            
+
             this.rankLineAxisLine.selectAll('text')
                 .style('font-size', '9px')
                 .style('font-family', 'sans-serif')
