@@ -20,7 +20,7 @@ export default {
 		colorByAttr: 'Inclusive',
 		direction: ['LR', 'TD'],
 		selectedDirection: 'TD',
-		textTruncForNode: 15,
+		textTruncForNode: 20,
 		color: null,
 		width: null,
 		height: null,
@@ -115,11 +115,9 @@ export default {
 		update_level() {
 			this.clearIcicles()
 			let ret = []
-			// console.log("Number of children: ", this.path_hierarchy)
 			this.minLevel = this.level[0]
 			this.maxLevel = this.level[1]
 
-			// console.log(this.minLevel, this.maxLevel)
 			if (this.minLevel > this.maxLevel) {
 				console.log("Cannot generate icicle plot, min_level > max_level")
 				return
@@ -372,8 +370,6 @@ export default {
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition)
 			// .filter(d => {
-			// 	console.log(d)
-			// 	console.log(d.data.name, d.value)
 			// 	if(this.selectedDirection == 'TD'){
 			// 		console.log(d.y1, d.y0)
 			// 		return (d.y1 - d.y0 > 0.5)
@@ -434,7 +430,6 @@ export default {
 					return d.y1 - d.y0;
 				})
 				.style('fill', (d) => {
-					console.log(d)
 					if (d.data.value == 0) {
 						return '#e1e1e1'
 					}
@@ -471,7 +466,6 @@ export default {
 							return d.data.count * this.width / d.data.length
 						}
 						return d.data.count * this.width / d.data.length
-						// return d.y0 * len(d.component_path);
 					}
 					return d.x0 + 15;
 				})
@@ -486,11 +480,8 @@ export default {
 						if (Number.isNaN(d.y1 - d.y0)) {
 							return this.width / d.data.length
 						}
-						// return d.y1 - d.y0 / 2;
 						return this.width / d.data.length
-
 					}
-					// return d.x1 - d.x0 / 2;
 					return this.width
 				})
 				.style('fill', (d) => {
@@ -501,8 +492,9 @@ export default {
 					if (d.y1 - d.y0 < 10 || d.x1 - d.x0 < 50) {
 						return '';
 					}
-
 					let name = d.data.name
+					name = name.replace(/<unknown procedure>/g,'proc ');
+
 					var textSize = this.textSize(name)['width'];
 					if (textSize < d.height) {
 						return name;
