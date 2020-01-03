@@ -45,6 +45,7 @@ export default {
         freq: [],
         selectedColorBy: 'Inclusive',
         MPIcount: 0,
+        message: 'MPI Distribution'
     }),
 
     mounted() { },
@@ -313,11 +314,11 @@ export default {
                 .attr('stroke-width', (d, i) => '0.2px')
                 .attr('stroke', (d, i) => 'black')
                 .on('mouseover', function (d, i) {
-                    d3.select(this)
-                        .attr('fill', 'red');
-                    d3.selectAll(`.lineRank_${i}`)
-                        .style('fill', 'orange')
-                        .style('fill-opacity', 1)
+                    // d3.select(this)
+                    //     .attr('fill', 'red');
+                    // d3.selectAll(`.lineRank_${i}`)
+                    //     .style('fill', 'orange')
+                    //     .style('fill-opacity', 1)
                     let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
                     self.$refs.ToolTip.render(groupProcStr, d)
                 })
