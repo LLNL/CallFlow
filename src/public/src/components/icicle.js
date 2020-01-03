@@ -46,6 +46,7 @@ export default {
 		path_hierarchy: [],
 		id: '',
 		padding: 0,
+		message: 'Module Hierarchy'
 	}),
 
 	watch: {
@@ -87,9 +88,9 @@ export default {
 		setupSVG() {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
-			this.icicleToolbarHeight = document.getElementById('icicle-toolbar').clientHeight
+			
 			this.width = window.innerWidth * 0.3
-			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight - this.icicleToolbarHeight) * 0.3
+			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.3
 			this.icicleWidth = this.width - this.margin.right - this.margin.left
 			this.icicleHeight = this.height - this.margin.top - this.margin.bottom
 
@@ -166,6 +167,7 @@ export default {
 		},
 
 		trunc(str, n) {
+			str = str.replace(/<unknown procedure>/g,'proc ');
 			return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
 		},
 
@@ -391,6 +393,7 @@ export default {
 		},
 
 		addNodes() {
+			let self = this 
 			this.hierarchy
 				.selectAll('.icicleNode')
 				.data(this.nodes)
@@ -430,10 +433,11 @@ export default {
 					return d.y1 - d.y0;
 				})
 				.style('fill', (d) => {
-					if (d.data.value == 0) {
-						return '#e1e1e1'
-					}
-					let color = this.$store.color.getColor(d.data);
+					// if (d.data.value == 0) {
+					// 	return '#e1e1e1'
+					// }
+					// let color = this.$store.color.getColor(d.data);
+					let color = self.$store.color.target
 					return color;
 				})
 				.style('stroke', () => '#0e0e0e')
@@ -545,7 +549,6 @@ export default {
 
 		// Fade all but the current sequence, and show it in the breadcrumb trail.
 		mouseover(d) {
-			console.log(d.data.name)
 			const percentage = (100 * d.value / this.totalSize).toPrecision(3);
 			let percentageString = `${percentage}%`;
 			if (percentage < 0.1) {
@@ -556,8 +559,8 @@ export default {
 			this.updateBreadcrumbs(sequenceArray, percentageString);
 
 			// Fade all the segments.
-			d3.selectAll('.icicleNode')
-				.style('opacity', 0.3);
+			// d3.selectAll('.icicleNode')
+			// 	.style('opacity', 0.3);
 
 			// Then highlight only those that are an ancestor of the current segment.
 			this.hierarchy.selectAll('.icicleNode')

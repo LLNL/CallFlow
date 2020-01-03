@@ -176,6 +176,7 @@ export default {
         },
 
         trunc(str, n) {
+            str = str.replace(/<unknown procedure>/g,'proc ')
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
