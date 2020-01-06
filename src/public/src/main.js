@@ -10,7 +10,7 @@ import 'vue-material/dist/vue-material.min.css'
 import 'vue-material/dist/theme/default.css'
 
 let socket = new VueSocketIO({
-  debug: true,
+  debug: false,
   connection: 'http://localhost:5000',
   vuex: {
       store,

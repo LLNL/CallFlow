@@ -4,12 +4,19 @@
 		</v-toolbar-side-icon>
 		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
 		<v-flex xs2 class="ma-2">
-			<v-select label="Set Target run" :items="datasets" v-model="selectedTargetDataset"
-				:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
+			<v-select label="Select Target run" :items="datasets"
+			v-if="selectedMode== 'Ensemble'" v-model="selectedTargetDataset"
+			:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
+			</v-select>
+			<v-select label="Select a run" :items="datasets"
+			v-if="selectedMode== 'Single'" v-model="selectedTargetDataset"
+			:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
 			</v-select>
 		</v-flex>
 		<v-flex xs2 class="ma-2">
-				<v-select label="Set Compare run" :items="datasets" v-model="selectedCompareDataset"
+				<v-select label="Select Compare run" :items="datasets"
+				v-if="selectedMode == 'Ensemble'"
+				v-model="selectedCompareDataset"
 					:menu-props="{ maxHeight: '400' }" box v-on:change="updateCompareDataset()">
 				</v-select>
 			</v-flex>
@@ -113,11 +120,11 @@
 						v-on:change="updateBinCount()">
 					</v-text-field>
 				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
+				<!-- <v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
 					<v-select label="Scatter mode" :items="scatterMode" v-model="selectedScatterMode"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateScatterMode()">
 					</v-select>
-				</v-flex>
+				</v-flex> -->
 				<!-- <v-flex xs12 class="ma-1" v-show="selectedFormat == 'CCT'">
 					<v-text-field label="Min. number of functions in CCT" class="mt-0" type="number"
 						v-model="selectedFunctionsInCCT" :menu-props="{ maxHeight: '200' }" persistent-hint
