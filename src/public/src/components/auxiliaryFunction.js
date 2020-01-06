@@ -1,8 +1,6 @@
 import tpl from '../html/auxiliaryfunction.html'
-import boxPlot from '../thirdParty/boxPlot'
 import EventHandler from './EventHandler'
 import * as d3 from 'd3'
-import Vue from 'vue'
 
 export default {
     name: 'AuxiliaryFunction',
@@ -22,10 +20,13 @@ export default {
         height: 60,
         width: 100,
         duration: 300,
-        iqrFactor: 1.5,
-        outlierRadius: 4
+        iqrFactor: 0.15,
+        outlierRadius: 4,
+        targetOutlierList: {},
+        outlierList: {}
     }),
     mounted() {
+        let self = this
         EventHandler.$on('highlight_datasets', (datasets) => {
             console.log("[Interaction] Highlighting the datasets :", datasets)
             self.highlight(datasets)
@@ -41,8 +42,8 @@ export default {
             this.dataReady = true
 
             this.preprocess_data = {}
-            for (let dataset of Object.keys(data)){
-                if(data.hasOwnProperty(dataset)){
+            for (let dataset of Object.keys(data)) {
+                if (data.hasOwnProperty(dataset)) {
                     this.preprocess_data[dataset] = this.preprocess(data[dataset])
                 }
             }
@@ -52,7 +53,7 @@ export default {
     },
 
     methods: {
-        preprocess(data){
+        preprocess(data) {
             let json = JSON.parse(data)
             let d = json.data
             let index = json.index
@@ -152,11 +153,29 @@ export default {
             let div = document.createElement('div')
             let container = document.createElement("div");
             let checkbox = document.createElement("button");
-            checkbox.name = dat.name;
+            checkbox.name = dat.name
+            checkbox.module = dat.module
             checkbox.node_name = dat['name']
             checkbox.setAttribute('class', "reveal-button");
             checkbox.innerHTML = 'Reveal'
             // container.appendChild(textNode)
+            checkbox.onclick = function(event){
+                event.stopPropagation()
+                let modules = this.module
+                let callsite = this.name
+
+                this.$socket.emit('dist_hierarchy', {
+                    module: modules,
+                    datasets: this.$store.actual_dataset_names,
+                })
+
+                this.$socket.emit('ensemble_histogram', {
+                    datasets: this.$store.actual_dataset_names,
+                    module: modules,
+                    name: callsite
+                })
+
+            }
             container.appendChild(checkbox);
             div.appendChild(container)
             return div
@@ -176,7 +195,7 @@ export default {
         },
 
         trunc(str, n) {
-            str = str.replace(/<unknown procedure>/g,'proc ')
+            str = str.replace(/<unknown procedure>/g, 'proc ')
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
@@ -200,6 +219,7 @@ export default {
             this.centerLine()
             this.whiskers()
             this.outliers()
+            this.targetOutliers()
             this.medianLine()
         },
 
@@ -244,10 +264,10 @@ export default {
                 .range(x1.range());
         },
 
-        iqrScore(data, q, factor) {
+        iqrScore(data, q) {
             let q1 = q.q1
             let q3 = q.q3
-            let iqr = (q3 - q1) * factor
+            let iqr = (q3 - q1) * this.iqrFactor
             let i = 0
             let j = data.length - 1
             while (data[i] < q1 - iqr) {
@@ -345,7 +365,7 @@ export default {
                 .attr("width", this.x1(this.q.q3) - this.x1(this.q.q1));
         },
 
-        targetBox(){
+        targetBox() {
             this.boxHeight = this.height / 2
             this.targetBoxSVG = this.svg
                 .append("rect")
@@ -420,11 +440,7 @@ export default {
         },
 
         whiskers() {
-            let self = this
-            this.whiskerData = this.whiskerIndices ? this.whiskerIndices.map(function (i) {
-                return self.d[i];
-            })
-                : [this.q.min, this.q.max]
+            this.whiskerData = [this.q.min, this.q.max]
             for (let i = 0; i < this.whiskerData.length; i += 1) {
                 let d = this.whiskerData[i]
                 let whisker = this.svg
@@ -446,7 +462,6 @@ export default {
                     .attr("x1", this.x1(d))
                     .attr("x2", this.x1(d))
                     .style("opacity", 1);
-
             }
 
             // this.whisker.exit().transition()
@@ -467,30 +482,101 @@ export default {
                 outlierList.push(this.d[i])
             }
 
-            for (let i = 0; i < outlierList.length; i += 1) {
-                this.outlier = this.svg
-                    .insert("circle", "text")
-                    .attr("class", "outlier")
-                    .attr("r", this.outlierRadius)
-                    .attr("cy", this.height / 2 )
-                    .attr("cx", this.x0(outlierList[i] - this.outlierRadius*i))
-                    .style("opacity", 1e-6)
-                    .transition()
-                    .duration(this.duration)
-                    .attr("cx", this.x1(outlierList[i]))
-                    .style("opacity", 1);
+            this.outlier = this.svg
+                .selectAll(".outlier")
+                .data(this.dodge(outlierList, this.outlierRadius))
+                .join("circle")
+                .attr("r", this.outlierRadius)
+                .attr("cx", d => d.x)
+                .attr("cy", d => this.height/2 - this.outlierRadius - d.y)
+                .attr("class", "outlier")
+                .style("opacity", 1e-6)
+                .transition()
+                .duration(this.duration)
+                .attr("cx", d => d.x)
+                .style("opacity", 1);
+        },
 
-                this.outlier.transition()
-                    .duration(this.duration)
-                    .attr("cx", this.x1(outlierList[i]))
-                    .style("opacity", 1);
-
-                // this.outlier.exit().transition()
-                //     .duration(this.duration)
-                //     .attr("cx", this.x1(outlierList[i]))
-                //     .style("opacity", 1e-6)
-                //     .remove();
+        targetOutliers() {
+            let targetOutlierList = []
+            for (let i = 0; i < this.whiskerIndices_target[0]; i += 1) {
+                targetOutlierList.push(this.targetd[i])
             }
+
+            for (let i = this.whiskerIndices_target[1] + 1; i < this.d.length; i += 1) {
+                targetOutlierList.push(this.targetd[i])
+            }
+
+            this.outlier = this.svg
+                .selectAll(".target-outlier")
+                .data(this.dodge(targetOutlierList, this.outlierRadius))
+                .join("circle")
+                .attr("r", this.outlierRadius)
+                .attr("cx", d => d.x)
+                .attr("cy", d => this.height - this.outlierRadius - d.y)
+                .attr("class", "target-outlier")
+                .style("opacity", 1e-6)
+                .style("fill", this.$store.color.target)
+                .transition()
+                .duration(this.duration)
+                .attr("cx", d => d.x)
+                .style("opacity", 1);
+        },
+
+        dodge(data, radius) {
+            let self = this
+            const radius2 = radius ** 2;
+            const circles = data.map(d => {
+                let x = self.x0(d)
+                if(x == undefined){
+                    x = 0
+                }
+                else{
+                    x = parseInt(x.toFixed(0))
+                }
+                return {
+                    x: x,
+                    data: d
+                }
+            }).sort((a, b) => a.x - b.x);
+            const epsilon = 1e-3;
+            let head = null, tail = null;
+
+            // Returns true if circle ⟨x,y⟩ intersects with any circle in the queue.
+            function intersects(x, y) {
+                let a = head;
+                while (a) {
+                    if (radius2 - epsilon > (a.x - x) ** 2 + (a.y - y) ** 2) {
+                        return true;
+                    }
+                    a = a.next;
+                }
+                return false;
+            }
+
+            // Place each circle sequentially.
+            for (const b of circles) {
+
+                // Remove circles from the queue that can’t intersect the new circle b.
+                while (head && head.x < b.x - radius2) head = head.next;
+
+                // Choose the minimum non-intersecting tangent.
+                if (intersects(b.x, b.y = 0)) {
+                    let a = head;
+                    b.y = Infinity;
+                    do {
+                        let y = a.y + Math.sqrt(radius2 - (a.x - b.x) ** 2);
+                        if (y < b.y && !intersects(b.x, y)) b.y = y;
+                        a = a.next;
+                    } while (a);
+                }
+
+                // Add b to the queue.
+                b.next = null;
+                if (head === null) head = tail = b;
+                else tail = tail.next = b;
+            }
+            return circles;
         },
 
         select(node) {

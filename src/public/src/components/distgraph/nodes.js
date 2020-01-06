@@ -21,7 +21,7 @@ export default {
         id: '',
         graph: null,
         nidNameMap: {},
-        renderCenterLine: {}
+        renderZeroLine: {}
     }),
     sockets: {
         dist_gradients(data) {
@@ -47,8 +47,8 @@ export default {
         compare(data) {
             this.clearGradients()
             this.clearQuantileLines()
-            this.clearCenterLine()
-            this.renderCenterLine = {}
+            this.clearZeroLine()
+            this.renderZeroLine = {}
             this.setupDiffRuntimeGradients(data)
             this.diffRectangle()
         }
@@ -168,25 +168,9 @@ export default {
                 .on('mouseover', (d) => {
                     self.$refs.ToolTip.render(self.graph, d)
                     this.$store.selectedNode = d
-                    let selectedModule = d.id
-
-                    // this.cleardebugGradients()
-                    // this.debugGradients(this.data, selectedModule, 'hist')
-                    // this.debugGradients(this.data, selectedModule, 'kde')
-                    // this.clearQuantileLines()
-                    // TODO: Clear only the gradients for that node only.
-                    // this.clearLineGradients()
-                    // this.quantileLine(d)
-
-                    // this.$socket.emit('dist_hierarchy', {
-                    //     module: selectedModule,
-                    // 	datasets: this.$store.actual_dataset_names,
-                    // })
                 })
                 .on('mouseout', (d) => {
                     self.$refs.ToolTip.clear()
-                    // this.clearGradients()
-                    // this.setupMeanRuntimeGradients(self.data)
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
@@ -235,18 +219,18 @@ export default {
                 })
         },
 
-        clearCenterLine() {
-            d3.selectAll('.centerLine').remove()
-            d3.selectAll('.centerLineText').remove()
+        clearZeroLine() {
+            d3.selectAll('.zeroLine').remove()
+            d3.selectAll('.zeroLineText').remove()
         },
 
-        centerLine(node, y1) {
-            if (this.renderCenterLine[node] == undefined) {
+        zeroLine(node, y1) {
+            if (this.renderZeroLine[node] == undefined) {
                 d3.select('#dist-node_' + this.nidNameMap[node])
                     .append('line')
                     .attrs((d) => {
                         return {
-                            'class': 'centerLine',
+                            'class': 'zeroLine',
                             "x1": 0,
                             "y1": y1 * d.height,
                             "x2": this.nodeWidth,
@@ -263,7 +247,7 @@ export default {
 
                 d3.select('#dist-node_' + this.nidNameMap[node])
                     .append('text')
-                    .attr('class', 'centerLineText')
+                    .attr('class', 'zeroLineText')
                     .attr('dy', '0')
                     .attr('x', this.nodeWidth/2 - 10)
                     .attr('y', (d) => y1 * d.height - 5)
@@ -272,7 +256,7 @@ export default {
                     .text((d) => {
                         return 0
                     })
-                this.renderCenterLine[node] = true
+                this.renderZeroLine[node] = true
             }
             else {
             }
@@ -360,8 +344,8 @@ export default {
                     let x = (i + i + 1) / (2 * grid.length)
 
                     if (grid[i + 1] > 0) {
-                        let center = (i + i + 3) / (2 * grid.length)
-                        this.centerLine(d['name'], center)
+                        let zero = (i + i + 3) / (2 * grid.length)
+                        this.zeroLine(d['name'], zero)
                     }
                     this.diffGradient.append("stop")
                         .attr("offset", 100 * x + "%")

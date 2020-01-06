@@ -74,7 +74,8 @@ class Auxiliary:
                 "mean_time": group_df['time'].mean(),
                 "max_time (inc)": group_df['time (inc)'].max(),
                 "max_time": group_df['time'].max(),
-                "dataset": group_df['dataset'].tolist()
+                "dataset": group_df['dataset'].tolist(),
+                "module": group_df['module'].tolist()[0],
             }
 
     def run(self):

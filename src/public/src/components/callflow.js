@@ -108,15 +108,29 @@ export default {
 
 	mounted() {
 		var socket = io.connect('localhost:8080', {reconnect: true});
+
+		// Check socket connection.
 		console.log('Socket connection check-1 : ', socket.connected);
 		socket.on('connect', function() {
 		  console.log('Socket connection check 2: ', socket.connected);
 		});
+
+		// Raise an exception if the socket fails to connect
 		// socket.on('connect_error', function(err) {
 		// 	console.log('Socket error: ', err);
 		// });
 
 		this.$socket.emit('init')
+
+		EventHandler.$on('compare', function() {
+			console.log('aaaa')
+			this.selectedCompareDataset = this.$store.selectedCompareDataset
+		})
+
+
+		EventHandler.$on('highlight_datasets', function() {
+			this.selectedCompareDataset = this.$store.selectedCompareDataset
+        })
 	},
 
 	sockets: {
@@ -201,12 +215,11 @@ export default {
 			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
 			if (this.selectedData == 'Dataframe' && this.initLoad) {
 				this.$refs.DistgraphA.init(data)
-				// this.$refs.DiffScatterplot.init()
 				this.$refs.Projection.init()
 				this.$refs.SimilarityMatrix.init()
-				// this.$refs.AuxiliaryFunction.init()
-				// this.$refs.RunInformation.init()
-				this.$refs.DiffHistogram.init()
+				this.$refs.AuxiliaryFunction.init()
+				this.$refs.RunInformation.init()
+				this.$refs.DistHistogram.init()
 				this.initLoad = false
 			} else if (this.selectedData == 'Graph' && this.initLoad) {
 				this.$refs.DistgraphB.init(data)
@@ -245,6 +258,9 @@ export default {
 			this.$refs.CCT.init(data['union'], '2')
 		},
 
+		compare(){
+			this.selectedCompareDataset = this.$store.selectedCompareDataset
+		},
 
 		disconnect(){
 			console.log('Disconnected.')
@@ -284,10 +300,12 @@ export default {
 				this.$refs.Scatterplot.clear()
 				this.$refs.Function.clear()
 				this.$refs.Icicle.clear()
+				this.$refs.Projection.clear()
 			}
 		},
 
 		clearLocal() {
+			console.log(this.selectedFormat, 'aaaaaaaaaaaaa')
 			if (this.selectedFormat == 'Callgraph') {
 				if (this.selectedData == 'Dataframe') {
 					this.$refs.CallgraphA.clear()
@@ -298,12 +316,14 @@ export default {
 				this.$refs.Scatterplot.clear()
 				this.$refs.Function.clear()
 				this.$refs.Icicle.clear()
+				this.$refs.Projection.clear()
 			} else if (this.selectedFormat == 'CCT') {
 				this.$refs.CCT.clear()
 			} else if (this.selectedFormat == 'Distgraph') {
 				this.$refs.Distgraph.clear()
 				this.$refs.Icicle.clear()
 				this.$refs.DistHistogram.clear()
+				this.$refs.Projection.clear()
 			}
 		},
 
@@ -479,7 +499,13 @@ export default {
 		},
 
 		updateMode() {
-			this.clear()
+			this.clearLocal()
+			if(this.selectedMode == 'Ensemble'){
+
+			}
+			else if(this.selectedMode == 'Single'){
+
+			}
 			this.init()
 		},
 
