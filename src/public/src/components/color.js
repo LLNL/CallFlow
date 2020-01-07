@@ -392,6 +392,7 @@ export default class Color {
     }
 
     setColorScale(min, max, colorType, colorPoint) {
+        console.log(min, max)
         this.colorMin = min
         this.colorMax = max
         this.colorMap = this.colorbrewer[colorType][colorPoint]

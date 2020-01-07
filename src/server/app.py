@@ -301,8 +301,8 @@ class App:
             g = self.callflow.update(
                 {
                     "name": "cct",
-                    "dataset1": data["dataset"],
-                    "functionInCCT": data["functionInCCT"],
+                    "dataset": data["dataset"],
+                    "functionsInCCT": data["functionsInCCT"],
                 }
             )
             result = json_graph.node_link_data(g)

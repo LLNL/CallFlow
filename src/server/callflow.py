@@ -186,18 +186,18 @@ class CallFlow:
         else:
             action["groupBy"] = "name"
 
-        dataset1 = action["dataset1"]
-        state1 = self.states[dataset1]
+        dataset = action["dataset"]
+        state = self.states[dataset]
 
-        log.info("The selected Dataset is {0}".format(dataset1))
+        log.info("The selected Dataset is {0}".format(dataset))
 
         # Compare against the different operations
         if action_name == "default":
-            groupBy(state1, action["groupBy"])
-            nx = CallGraph(state1, "group_path", True, action["groupBy"])
+            groupBy(state, action["groupBy"])
+            nx = CallGraph(state, "group_path", True, action["groupBy"])
 
         elif action_name == "reset":
-            datasets = [dataset1]
+            datasets = [dataset]
             self.reProcess = True
             self.states = self.pipeline(
                 datasets, action["filterBy"], action["filterPerc"]
@@ -208,56 +208,61 @@ class CallFlow:
 
         elif action_name == "group":
             log.debug("Grouping the Graphframe by: {0}".format(action["groupBy"]))
-            group = groupBy(state1, action["groupBy"])
-            self.states[dataset1].gdf = group.df
-            self.states[dataset1].graph = group.graph
+            group = groupBy(state, action["groupBy"])
+            self.states[dataset].gdf = group.df
+            self.states[dataset].graph = group.graph
             write_graph = False
-            self.write_gf(state1, dataset1, "group", write_graph)
+            self.write_gf(state, dataset, "group", write_graph)
             if action["groupBy"] == "module":
                 path_type = "group_path"
             elif action["groupBy"] == "name":
                 path_type = "path"
-            nx = CallGraph(state1, path_type, True, action["groupBy"])
-            state1.g = nx.g
+            nx = CallGraph(state, path_type, True, action["groupBy"])
+            state.g = nx.g
             return nx.g
 
         elif action_name == "split-level":
-            splitLevel(state1, action["groupBy"])
-            nx = CallGraph(state1, "group_path", True)
+            splitLevel(state, action["groupBy"])
+            nx = CallGraph(state, "group_path", True)
             return nx.g
 
         elif action_name == "split-callee":
-            splitCallee(state1, action["groupBy"])
-            nx = CallGraph(state1, "path", True)
+            splitCallee(state, action["groupBy"])
+            nx = CallGraph(state, "path", True)
             return nx.g
 
         elif action_name == "split-caller":
-            splitCaller(state1, action["groupBy"])
-            nx = CallGraph(state1, "path", True)
+            splitCaller(state, action["groupBy"])
+            nx = CallGraph(state, "path", True)
             return nx.g
 
         elif action_name == "hierarchy":
-            mH = moduleHierarchy(self.states[dataset1], action["module"])
+            mH = moduleHierarchy(self.states[dataset], action["module"])
             return mH.result
 
         elif action_name == "histogram":
-            histogram = Histogram(state1, action["nid"])
+            histogram = Histogram(state, action["nid"])
             return histogram.result
 
         elif action_name == "mini-histogram":
-            minihistogram = MiniHistogram(state1)
+            minihistogram = MiniHistogram(state)
             return minihistogram.result
 
         elif action_name == "cct":
-            nx = CCT(state1, action["functionInCCT"])
+            self.update_dist({
+                "name": "group",
+                "groupBy": "name",
+                "datasets": action["dataset"]
+            })
+            nx = CCT(self.states[action["dataset"]], action["functionsInCCT"])
             return nx.g
 
         elif action_name == "split-rank":
-            ret = splitRank(state1, action["ids"])
+            ret = splitRank(state, action["ids"])
             return ret
 
         elif action_name == "function":
-            functionlist = FunctionList(state1, action["module"], action["nid"])
+            functionlist = FunctionList(state, action["module"], action["nid"])
             return functionlist.result
 
     def update_dist(self, action):
@@ -283,11 +288,11 @@ class CallFlow:
 
         elif action_name == "scatterplot":
             if action["plot"] == "bland-altman":
-                state1 = self.states[action["dataset1"]]
+                state1 = self.states[action["dataset"]]
                 state2 = self.states[action["dataset2"]]
                 col = action["col"]
                 catcol = action["catcol"]
-                dataset1 = action["dataset1"]
+                dataset1 = action["dataset"]
                 dataset2 = action["dataset2"]
                 ret = BlandAltman(
                     state1, state2, col, catcol, dataset1, dataset2
@@ -326,9 +331,11 @@ class CallFlow:
             return mH.result
 
         elif action_name == "cct":
-            self.update_dist(
-                {"name": "group", "groupBy": "name", "datasets": action["datasets"]}
-            )
+            self.update_dist({
+                "name": "group",
+                "groupBy": "name",
+                "datasets": action["datasets"]
+            })
             nx = CCT(self.states["ensemble"], action["functionsInCCT"])
             return nx.g
 

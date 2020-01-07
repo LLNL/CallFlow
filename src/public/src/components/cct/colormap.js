@@ -32,10 +32,11 @@ export default {
 
     methods: {
         init() {
+            this.colorMin = this.$store.selectedColorMin
+            this.colorMax = this.$store.selectedColorMax
+            this.innerHTMLText = [this.colorMin, this.colorMax];
+            // this.$store.color.setColorScale(this.colorMin, this.colorMax, 'OrRd', 3)
             this.color = this.$store.color
-            this.colorMin = this.color.colorMin
-            this.colorMax = this.color.colorMax
-            this.innerHTMLText = [this.$store.colorMin, this.$store.colorMax];
             this.colorMap = this.color.colorMap
             this.colorPoints = this.color.colorPoints
 
@@ -43,13 +44,12 @@ export default {
             this.containerWidth = this.$parent.width
             this.containerHeight = this.$parent.height
 
-            this.scaleG = d3.select('#' + this.parentID)
+            this.scaleG = d3.select('#' + this.id)
             this.render()
         },
 
         render() {
             this.color = this.$store.color
-            console.log(this.colorMax)
             if (this.color.option == "Module") {
 
             } else {
@@ -68,7 +68,6 @@ export default {
                             'fill': color(splitColor)
                         })
                 }
-
             }
 
             this.drawText()
@@ -103,7 +102,6 @@ export default {
         clear() {
             d3.selectAll('.colormap-text').remove()
             d3.selectAll('.colormap-rect').remove()
-            d3.selectAll('#colormap').remove()
         },
     }
 }
