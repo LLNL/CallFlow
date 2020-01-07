@@ -83,7 +83,7 @@ export default {
             }
 
             this.callsites = []
-
+            console.log(this.preprocess_data)
             let ensemble_data = this.preprocess_data['ensemble']
             let target_data = this.preprocess_data[this.$store.selectedTargetDataset]
 
@@ -159,7 +159,7 @@ export default {
             checkbox.setAttribute('class', "reveal-button");
             checkbox.innerHTML = 'Reveal'
             // container.appendChild(textNode)
-            checkbox.onclick = function(event){
+            checkbox.onclick = function (event) {
                 event.stopPropagation()
                 let modules = this.module
                 let callsite = this.name
@@ -259,9 +259,9 @@ export default {
                 .range([0, this.boxWidth]);
 
             // Retrieve the old x-scale, if this is an update.
-            this.x0 = this.x1 || d3.scaleLinear()
+            this.x0 = d3.scaleLinear()
                 .domain([this.q.min, this.q.max])
-                .range(x1.range());
+                .range([0, this.boxWidth]);
         },
 
         iqrScore(data, q) {
@@ -484,16 +484,16 @@ export default {
 
             this.outlier = this.svg
                 .selectAll(".outlier")
-                .data(this.dodge(outlierList, this.outlierRadius))
+                .data(this.groupOutliers(outlierList, this.outlierRadius))
                 .join("circle")
-                .attr("r", this.outlierRadius)
-                .attr("cx", d => d.x)
-                .attr("cy", d => this.height/2 - this.outlierRadius - d.y)
+                .attr("r", d => (d.count/this.max_count)*4 + 4)
+                .attr("cx", d => d.x[0])
+                .attr("cy", d => this.height/2 + this.boxHeight/2)
                 .attr("class", "outlier")
                 .style("opacity", 1e-6)
                 .transition()
                 .duration(this.duration)
-                .attr("cx", d => d.x)
+                .attr("cx", d => d.x[0])
                 .style("opacity", 1);
         },
 
@@ -503,42 +503,90 @@ export default {
                 targetOutlierList.push(this.targetd[i])
             }
 
-            for (let i = this.whiskerIndices_target[1] + 1; i < this.d.length; i += 1) {
+            for (let i = this.whiskerIndices_target[1] + 1; i < this.targetd.length; i += 1) {
                 targetOutlierList.push(this.targetd[i])
             }
 
             this.outlier = this.svg
                 .selectAll(".target-outlier")
-                .data(this.dodge(targetOutlierList, this.outlierRadius))
+                .data(this.groupOutliers(targetOutlierList, this.outlierRadius))
                 .join("circle")
-                .attr("r", this.outlierRadius)
-                .attr("cx", d => d.x)
-                .attr("cy", d => this.height - this.outlierRadius - d.y)
+                .attr("r", d => (d.count/this.max_count)*4 + 4)
+                .attr("cx", d => d.x[0])
+                .attr("cy", d => this.height/2 - this.boxHeight/2)
                 .attr("class", "target-outlier")
                 .style("opacity", 1e-6)
                 .style("fill", this.$store.color.target)
                 .transition()
                 .duration(this.duration)
-                .attr("cx", d => d.x)
+                .attr("cx", d => d.x[0])
                 .style("opacity", 1);
         },
 
-        dodge(data, radius) {
+        groupByBand(data, band) {
+            let ret = []
+            let temp_x = 0
+            let j = 0
+            let count = 0
+            let time = []
+            let x = []
+            let max_count = 0
+            for (let i = 0; i < data.length; i += 1) {
+                let d = data[i]
+                if (i == 0) {
+                    temp_x = d.x
+                    count += 1
+                    time.push(d.d)
+                    x.push(d.x)
+                }
+                else {
+                    if (Math.abs(d.x - temp_x) <= band) {
+                        count += 1
+                        time.push(d.d)
+                        x.push(d.x)
+                    }
+                    else if (d.x - temp_x > band || i == data.length - 1) {
+                        ret[j] = {
+                            data: time,
+                            x: x,
+                            count: count
+                        }
+                        j += 1
+                        if(count > max_count){
+                            max_count = count
+                        }
+                        count = 0
+                        time = []
+                        x = []
+                        temp_x = d.x
+                    }
+                }
+            }
+            return {
+                circles: ret,
+                max_count: max_count
+            }
+        },
+
+        groupOutliers(data, radius) {
             let self = this
             const radius2 = radius ** 2;
+
             const circles = data.map(d => {
                 let x = self.x0(d)
-                if(x == undefined){
+                if (x == undefined) {
                     x = 0
                 }
-                else{
-                    x = parseInt(x.toFixed(0))
+                else {
+                    x = parseInt(x.toFixed(2))
                 }
                 return {
                     x: x,
-                    data: d
+                    d: d
                 }
-            }).sort((a, b) => a.x - b.x);
+            })
+                .sort((a, b) => a.x - b.x);
+
             const epsilon = 1e-3;
             let head = null, tail = null;
 
@@ -566,7 +614,9 @@ export default {
                     b.y = Infinity;
                     do {
                         let y = a.y + Math.sqrt(radius2 - (a.x - b.x) ** 2);
-                        if (y < b.y && !intersects(b.x, y)) b.y = y;
+                        if (y < b.y && !intersects(b.x, y)) {
+                            b.y = y;
+                        }
                         a = a.next;
                     } while (a);
                 }
@@ -576,7 +626,14 @@ export default {
                 if (head === null) head = tail = b;
                 else tail = tail.next = b;
             }
-            return circles;
+
+            let temp = this.groupByBand(circles, 10)
+            this.max_count = temp['max_count']
+            console.log(this.max_count)
+            let group_circles = temp['circles']
+            console.log(group_circles)
+
+            return group_circles;
         },
 
         select(node) {

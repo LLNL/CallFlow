@@ -107,7 +107,7 @@ export default {
 	watch: {},
 
 	mounted() {
-		var socket = io.connect('localhost:8080', {reconnect: true});
+		var socket = io.connect('localhost:5000', {reconnect: false});
 
 		// Check socket connection.
 		console.log('Socket connection check-1 : ', socket.connected);
@@ -116,14 +116,13 @@ export default {
 		});
 
 		// Raise an exception if the socket fails to connect
-		// socket.on('connect_error', function(err) {
-		// 	console.log('Socket error: ', err);
-		// });
+		socket.on('connect_error', function(err) {
+			console.log('Socket error: ', err);
+		});
 
 		this.$socket.emit('init')
 
 		EventHandler.$on('compare', function() {
-			console.log('aaaa')
 			this.selectedCompareDataset = this.$store.selectedCompareDataset
 		})
 
@@ -384,15 +383,6 @@ export default {
 						sortBy: this.$store.auxiliarySortBy,
 						module: 'all'
 					})
-
-					// this.$socket.emit('dist_scatterplot', {
-					//     datasets: this.$store.client_datasets,
-					//     dataset1: this.$store.selectedDataset,
-					//     dataset2: this.$store.selectedDataset2,
-					//     col: 'time (inc)',
-					//     catcol: 'name',
-					//     plot: 'bland-altman'
-					// })
 				}
 			}
 		},
