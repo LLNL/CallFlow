@@ -33,8 +33,8 @@ class CCT:
         time_mapping = self.node_map(self.g.nodes(), 'time')
         nx.set_node_attributes(self.g, name='time', values=time_mapping)
 
-        # module_mapping = self.node_map(self.g.nodes(), 'module')
-        # nx.set_node_attributes(self.g, name='module', values=module_mapping)
+        module_mapping = self.node_map(self.g.nodes(), 'module')
+        nx.set_node_attributes(self.g, name='module', values=module_mapping)
 
         # imbalance_perc_mapping = self.node_map(self.g.nodes(), 'imbalance_perc')
         # nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)

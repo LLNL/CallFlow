@@ -56,7 +56,7 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'Callgraph',
+		selectedFormat: 'CCT',
 		datasets: [],
 		selectedTargetDataset: '',
 		selectedDataset2: '',
@@ -69,7 +69,7 @@ export default {
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 10,
 		colorBy: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
-		selectedColorBy: 'Exclusive',
+		selectedColorBy: 'Inclusive',
 		colorMap: [],
 		selectedColorMap: "OrRd",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
@@ -97,7 +97,6 @@ export default {
 		summaryChip: 'Ensemble Graph',
 		auxiliarySortBy: 'time (inc)',
 		ranks: [],
-		// selectedRank: 10,
 		selectedTargetDataset: '',
 		initLoad: true,
 		comparisonMode: false,
@@ -155,11 +154,11 @@ export default {
 			if (this.numOfDatasets >= 2) {
 				this.enableDist = true
 				this.modes = ['Single', 'Ensemble']
-				this.selectedMode = 'Ensemble'
-				this.selectedDataset2 = data['names'][1]
-				this.$store.selectedDataset2 = data['names'][1]
-
-			} else {
+				this.selectedMode = 'Single'
+				this.selectedDataset = data['names'][0]
+				this.$store.selectedDataset = data['names'][0]
+			}
+			else {
 				this.enableDist = false
 				this.modes = ['Single']
 				this.selectedDataset2 = ''
@@ -304,7 +303,6 @@ export default {
 		},
 
 		clearLocal() {
-			console.log(this.selectedFormat, 'aaaaaaaaaaaaa')
 			if (this.selectedFormat == 'Callgraph') {
 				if (this.selectedData == 'Dataframe') {
 					this.$refs.CallgraphA.clear()
@@ -329,8 +327,9 @@ export default {
 		init() {
 			// Initialize colors
 			this.colors()
-			console.log('Selected mode: ', this.selectedMode)
-
+			console.log("[Mode = ", this.selectedMode, "]")
+			console.log("[Dataset = ", this.selectedDataset, "]")
+			console.log("[Format = ", this.selectedFormat, "]")
 			// Call the appropriate socket to query the server.
 			if (this.selectedMode == 'Single') {
 				if (this.selectedFormat == 'CCT') {
@@ -348,6 +347,7 @@ export default {
 
 			} else if (this.selectedMode == 'Ensemble') {
 				if (this.selectedFormat == 'CCT') {
+					console.log("[Mode = Ensemble]")
 					this.$socket.emit('dist_cct', {
 						datasets: this.$store.actual_dataset_names,
 						functionsInCCT: this.selectedFunctionsInCCT,
@@ -402,11 +402,11 @@ export default {
 			}
 			else if(this.selectedMode == 'Single'){
 				if (this.selectedColorBy == 'Inclusive') {
-					this.selectedColorMin = this.$store.minIncTime[this.selectedDataset]
-					this.selectedColorMax = this.$store.maxIncTime[this.selectedDataset]
+					this.selectedColorMin = this.$store.minIncTime[this.selectedTargetDataset]
+					this.selectedColorMax = this.$store.maxIncTime[this.selectedTargetDataset]
 				} else if (this.selectedColorBy == 'Exclusive') {
-					this.selectedColorMin = this.$store.minExcTime[this.selectedDataset]
-					this.selectedColorMax = this.$store.maxExcTime[this.selectedDataset]
+					this.selectedColorMin = this.$store.minExcTime[this.selectedTargetDataset]
+					this.selectedColorMax = this.$store.maxExcTime[this.selectedTargetDataset]
 				}
 			}
 
@@ -418,8 +418,10 @@ export default {
 				this.$store.color.datasetColor[this.$store.datasets[i]] = this.$store.color.getCatColor(i)
 			}
 			console.log("Assigned Color map: ", this.$store.color.datasetColor)
-			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
-			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
+			this.$store.selectedColorMin = this.selectedColorMin
+			this.$store.selectedColorMax = this.selectedColorMax
+			this.$store.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
+			this.$store.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 			this.$store.color.highlight = '#AF9B90';//'#4681B4'
 			this.$store.color.target = '#AF9B90';//'#4681B4'
 			this.$store.color.ensemble = '#C0C0C0';//'#4681B4'
@@ -451,11 +453,12 @@ export default {
 		},
 
 		updateColor() {
+			this.clearLocal()
 			this.colors()
 			if (this.selectedFormat == 'CCT') {
 				this.$socket.emit('cct', {
 					dataset: this.$store.selectedDataset,
-					functionInCCT: this.selectedFunctionsInCCT,
+					functionsInCCT: this.selectedFunctionsInCCT,
 				})
 			} else if (this.selectedFormat == 'Callgraph') {
 				this.$socket.emit('group', {
@@ -483,7 +486,6 @@ export default {
 
 		updateTargetDataset() {
 			this.clearLocal()
-			this.colors()
 			this.$store.selectedTargetDataset = this.selectedTargetDataset
 			this.init()
 		},

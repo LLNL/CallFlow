@@ -42,12 +42,15 @@ export default {
 
     sockets: {
         cct(data) {
-            this.data = JSON.parse(data)
-            console.log("CCT data: ", JSON.parse(data))
-            if (!this.firstRender) {
-                this.clear()
+            console.log("CCT data: ", data)
+            this.data = data
+            if (this.firstRender) {
+                this.init()
+                this.render()
             }
-            this.init(this.data)
+            else {
+                this.render()
+            }
         },
     },
 
@@ -56,11 +59,7 @@ export default {
     },
 
     methods: {
-        init(data) {
-            if (this.firstRender) {
-                this.firstRender = false
-            }
-            this.data = data
+        init() {
             this.toolbarHeight = document.getElementById('toolbar').clientHeight
             this.footerHeight = document.getElementById('footer').clientHeight
             this.width = window.innerWidth - this.margin.left - this.margin.right
@@ -68,26 +67,26 @@ export default {
 
             this.svg = d3.select('#' + this.id)
                 .attrs({
-                    'class': 'cct',
                     'width': this.width,
                     'height': this.height,
                 })
-            this.$refs.ColorMap.init()
-            this.render()
+            console.log("init")
+
+            // Create a new directed graph
+            this.firstRender = false
         },
 
+
         render() {
-            this.$refs.ColorMap.init()
-            // Create a new directed graph
-            let g = new dagreD3.graphlib.Graph().setGraph({});
+            console.log("render")
+            this.g = new dagreD3.graphlib.Graph().setGraph({});
 
             let graph = this.data
             let nodes = graph.nodes
             let links = graph.links
 
-            console.log(this.data)
             nodes.forEach((node, i) => {
-                g.setNode(node['id'], {
+                this.g.setNode(node['id'], {
                     label: node['module'] + ':' + node['id'],
                     exclusive: node['time'],
                     value: node['time (inc)'],
@@ -99,13 +98,13 @@ export default {
             // Set up the edges
             for (let i = 0; i < links.length; i += 1) {
                 let edge_label = ''
-                if(links[i]['count'] != 1){
+                if (links[i]['count'] != 1) {
                     edge_label = '' + links[i]['count']
                 }
-                else{
+                else {
                     edge_label = ''
                 }
-                g.setEdge(links[i]['source'], links[i]['target'], {
+                this.g.setEdge(links[i]['source'], links[i]['target'], {
                     label: edge_label
                 });
 
@@ -113,50 +112,48 @@ export default {
 
             let self = this
             // Set some general styles
-            g.nodes().forEach(function (v) {
-                let node = g.node(v);
+            this.g.nodes().forEach(function (v) {
+                let node = self.g.node(v);
                 if (node != undefined) {
                     let color = self.$store.color.getColor(node)
                     // node.style = "stroke:" + self.$store.color.setContrast(color)
                     node.style = "fill:" + color
                     node.rx = node.ry = 4;
+                    node.id = 'cct-node'
                 }
             });
 
-            g.edges().forEach((e) => {
-                var edge = g.edge(e)
+            this.g.edges().forEach((e) => {
+                var edge = self.g.edge(e)
+                edge.id = 'cct-edge'
                 // g.edge(e).style = "stroke: 1.5px "
             })
 
-            let svg = d3.select("#" + this.id)
-            let inner = svg.select('g');
+            let inner = this.svg.select('#container');
 
             // Set up zoom support
             var zoom = d3.zoom().on("zoom", function () {
                 inner.attr("transform", d3.event.transform);
             });
-            svg.call(zoom);
+            this.svg.call(zoom);
 
             // Create the renderer
             var render = new dagreD3.render();
 
             // Run the renderer. This is what draws the final graph.
-            render(inner, g);
+            render(inner, this.g);
 
             // Center the graph
             var initialScale = 1;
-            svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
+            this.svg.call(zoom.transform, d3.zoomIdentity.translate((this.svg.attr("width") - this.g.graph().width * initialScale) / 2, 20).scale(initialScale))
 
-            // svg.attr('height', g.graph().height * initialScale + 40);
+            this.$refs.ColorMap.init()
         },
 
         clear() {
-            // d3.select('#' + this.id).remove()
-            d3.selectAll('.output').remove()
-        },
-
-        update(data) {
-
+            d3.selectAll('#cct-node').remove()
+            d3.selectAll('#cct-edge').remove()
+            this.$refs.ColorMap.clear()
         },
     }
 }
