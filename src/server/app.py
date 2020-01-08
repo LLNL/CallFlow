@@ -204,7 +204,7 @@ class App:
             graphFormat = data["format"]
             groupBy = data["groupBy"].lower()
             print("[Group] Dataset: {0}, format: {1}".format(dataset, graphFormat))
-            obj = {"name": "group", "groupBy": groupBy, "dataset1": dataset}
+            obj = {"name": "group", "groupBy": groupBy, "dataset": dataset}
             g = self.callflow.update(obj)
             result = json_graph.node_link_data(g)
             emit("group", result, json=True)
@@ -214,9 +214,9 @@ class App:
             if self.debug:
                 print("[Request] Module hierarchy of the dataset.", data)
             nid = data["nid"]
-            dataset = data["dataset1"]
+            dataset = data["dataset"]
             result = self.callflow.update(
-                {"name": "hierarchy", "nid": nid, "dataset1": dataset,}
+                {"name": "hierarchy", "nid": nid, "dataset": dataset,}
             )
             emit("hierarchy", result, json=True)
 
@@ -231,11 +231,11 @@ class App:
         def histogram(data):
             if self.debug:
                 self.print("[Request] Histogram of a Module", data["nid"])
-            dataset = data["dataset1"]
+            dataset = data["dataset"]
             result = self.callflow.update(
                 {
                     "name": "histogram",
-                    "dataset1": dataset,
+                    "dataset": dataset,
                     "module": data["module"],
                     "nid": data["nid"],
                 }
@@ -246,11 +246,11 @@ class App:
         def scatterplot(data):
             if self.debug:
                 self.print("[Request] ScatterPlot of a Module", data["module"])
-            dataset = data["dataset1"]
+            dataset = data["dataset"]
             result = self.callflow.update(
                 {
                     "name": "histogram",
-                    "dataset1": dataset,
+                    "dataset": dataset,
                     "module": data["module"],
                     "nid": data["nid"],
                 }
@@ -261,9 +261,9 @@ class App:
         def histogram(data):
             if self.debug:
                 self.print("[Request] Mini-histogram", data)
-            dataset = data["dataset1"]
+            dataset = data["dataset"]
             result = self.callflow.update(
-                {"name": "mini-histogram", "dataset1": dataset,}
+                {"name": "mini-histogram", "dataset": dataset,}
             )
             emit("miniHistogram", result, json=True)
 
@@ -288,7 +288,7 @@ class App:
             result = self.callflow.update(
                 {
                     "name": "tooltip",
-                    "dataset1": data["dataset1"],
+                    "dataset": data["dataset"],
                     "module": data["module"],
                 }
             )
@@ -338,7 +338,7 @@ class App:
             result = self.callflow.update(
                 {
                     "name": "function",
-                    "dataset1": data["dataset1"],
+                    "dataset": data["dataset"],
                     "module": data["module"],
                     "nid": data["nid"],
                 }
@@ -353,7 +353,7 @@ class App:
                 {
                     "name": "scatterplot",
                     "datasets": data["datasets"],
-                    "dataset1": data["dataset1"],
+                    "dataset": data["dataset"],
                     "dataset2": data["dataset2"],
                     "col": data["col"],
                     "catcol": data["catcol"],
@@ -415,7 +415,6 @@ class App:
                 }
             )
             result = json_graph.node_link_data(union_cct)
-            result = json.dumps(result)
             emit("cct", result, json=True)
 
         @sockets.on("dist_group", namespace="/")

@@ -74,7 +74,6 @@ export default {
         },
 
         init() {
-
             if (!this.firstRender) {
                 this.clear()
             }
@@ -83,7 +82,6 @@ export default {
             }
 
             this.callsites = []
-            console.log(this.preprocess_data)
             let ensemble_data = this.preprocess_data['ensemble']
             let target_data = this.preprocess_data[this.$store.selectedTargetDataset]
 
@@ -629,9 +627,7 @@ export default {
 
             let temp = this.groupByBand(circles, 10)
             this.max_count = temp['max_count']
-            console.log(this.max_count)
             let group_circles = temp['circles']
-            console.log(group_circles)
 
             return group_circles;
         },

@@ -56,7 +56,7 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'CCT',
+		selectedFormat: 'Callgraph',
 		datasets: [],
 		selectedTargetDataset: '',
 		selectedDataset2: '',
@@ -154,17 +154,17 @@ export default {
 			if (this.numOfDatasets >= 2) {
 				this.enableDist = true
 				this.modes = ['Single', 'Ensemble']
-				this.selectedMode = 'Single'
-				this.selectedDataset = data['names'][0]
-				this.$store.selectedDataset = data['names'][0]
+				this.selectedMode = 'Ensemble'
+				this.selectedTargetDataset = data['names'][0]
+				this.$store.selectedTargetDataset = data['names'][0]
 			}
 			else {
 				this.enableDist = false
 				this.modes = ['Single']
 				this.selectedDataset2 = ''
 				this.selectedMode = 'Single'
-				this.$store.selectedDataset = data['names'][0]
-				this.selectedDataset = data['names'][0]
+				this.$store.selectedTargetDataset = data['names'][0]
+				this.selectedTargetDataset = data['names'][0]
 			}
 			this.$store.maxExcTime = data['max_excTime']
 			this.$store.minExcTime = data['min_excTime']
@@ -172,7 +172,7 @@ export default {
 			this.$store.minIncTime = data['min_incTime']
 			this.$store.numbOfRanks = data['numbOfRanks']
 			this.$store.selectedBinCount = this.selectedBinCount
-			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedDataset] * 0.000001) / 100).toFixed(3)
+			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3)
 			this.$store.selectedScatterMode = this.selectedScatterMode
 			this.$store.selectedData = this.selectedData
 			this.$store.selectedFormat = this.selectedFormat
@@ -247,8 +247,8 @@ export default {
 		// Fetch CCT for distribution mode.
 		comp_cct(data) {
 			console.log("Diff CCT data: ", data)
-			this.$refs.DistCCT1.init(data[this.$store.selectedDataset], '1')
-			this.$refs.DistCCT2.init(data[this.$store.selectedDataset2], '2')
+			this.$refs.DistCCT1.init(data[this.$store.selectedTargetDataset], '1')
+			this.$refs.DistCCT2.init(data[this.$store.selectedTargetDataset], '2')
 		},
 
 		dist_cct(data){
@@ -328,18 +328,18 @@ export default {
 			// Initialize colors
 			this.colors()
 			console.log("[Mode = ", this.selectedMode, "]")
-			console.log("[Dataset = ", this.selectedDataset, "]")
+			console.log("[Dataset = ", this.selectedTargetDataset, "]")
 			console.log("[Format = ", this.selectedFormat, "]")
 			// Call the appropriate socket to query the server.
 			if (this.selectedMode == 'Single') {
 				if (this.selectedFormat == 'CCT') {
 					this.$socket.emit('cct', {
-						dataset: this.$store.selectedDataset,
+						dataset: this.$store.selectedTargetDataset,
 						functionsInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
 					this.$socket.emit('group', {
-						dataset: this.$store.selectedDataset,
+						dataset: this.$store.selectedTargetDataset,
 						format: this.selectedFormat,
 						groupBy: this.selectedGroupBy
 					})
@@ -420,8 +420,8 @@ export default {
 			console.log("Assigned Color map: ", this.$store.color.datasetColor)
 			this.$store.selectedColorMin = this.selectedColorMin
 			this.$store.selectedColorMax = this.selectedColorMax
-			this.$store.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
-			this.$store.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
+			this.selectedColorMinText = this.$store.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
+			this.selectedColorMaxText = this.$store.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 			this.$store.color.highlight = '#AF9B90';//'#4681B4'
 			this.$store.color.target = '#AF9B90';//'#4681B4'
 			this.$store.color.ensemble = '#C0C0C0';//'#4681B4'
@@ -430,7 +430,7 @@ export default {
 
 		reset() {
 			this.$socket.emit('reset', {
-				dataset: this.$store.selectedDataset,
+				dataset: this.$store.selectedTargetDataset,
 				filterBy: this.selectedFilterBy,
 				filterPerc: this.selectedFilterPerc
 			})
@@ -457,12 +457,12 @@ export default {
 			this.colors()
 			if (this.selectedFormat == 'CCT') {
 				this.$socket.emit('cct', {
-					dataset: this.$store.selectedDataset,
+					dataset: this.$store.selectedTargetDataset,
 					functionsInCCT: this.selectedFunctionsInCCT,
 				})
 			} else if (this.selectedFormat == 'Callgraph') {
 				this.$socket.emit('group', {
-					dataset: this.$store.selectedDataset,
+					dataset: this.$store.selectedTargetDataset,
 					format: this.selectedFormat,
 					groupBy: this.selectedGroupBy
 				})
@@ -487,6 +487,7 @@ export default {
 		updateTargetDataset() {
 			this.clearLocal()
 			this.$store.selectedTargetDataset = this.selectedTargetDataset
+			console.log("[Update] Target Dataset: ", this.selectedTargetDataset)
 			this.init()
 		},
 
@@ -522,7 +523,7 @@ export default {
 			Vue.nextTick(() => {
 				this.clearLocal()
 				this.$socket.emit('group', {
-					dataset: this.$store.selectedDataset,
+					dataset: this.$store.selectedTargetDataset,
 					format: this.selectedFormat,
 					groupBy: this.selectedGroupBy,
 				})
@@ -531,7 +532,7 @@ export default {
 
 		updateFilterPerc() {
 			// this.$socket.emit('filter', {
-			// 	dataset: this.$store.selectedDataset,
+			// 	dataset: this.$store.selectedTargetDataset,
 			// 	format: this.selectedFormat,
 			// 	filterBy: this.selectedFilterBy,
 			// 	filterPerc: this.selectedFilterPerc
@@ -541,7 +542,7 @@ export default {
 		updateFilterIncTime() {
 			this.selectedFilterPerc = (this.selectedIncTime / this.maxIncTime) * 100
 			this.$socket.emit('filter', {
-				dataset: this.$store.selectedDataset,
+				dataset: this.$store.selectedTargetDataset,
 				format: this.selectedFormat,
 				filterBy: this.selectedFilterBy,
 				filterPerc: this.selectedFilterPerc
@@ -558,7 +559,7 @@ export default {
 				this.$socket.emit('histogram', {
 					mod_index: d.mod_index[0],
 					module: d.module[0],
-					dataset1: this.$store.selectedDataset,
+					dataset: this.$store.selectedTargetDataset,
 				})
 			}
 			// Call updateMiniHistogram inside callgraph.js
@@ -571,7 +572,7 @@ export default {
 				this.$store.selectedScatterMode = this.selectedScatterMode
 				this.$socket.emit('scatterplot', {
 					module: this.$store.selectedNode,
-					dataset1: this.$store.selectedDataset,
+					dataset1: this.$store.selectedTargetDataset,
 				})
 			} else {
 				console.log('The selected module is :', this.$store.selectedNode)
@@ -580,7 +581,7 @@ export default {
 
 		updateFunctionsInCCT() {
 			this.$socket.emit('cct', {
-				dataset: this.$store.selectedDataset,
+				dataset: this.$store.selectedTargetDataset,
 				functionInCCT: this.selectedFunctionsInCCT,
 			})
 		},

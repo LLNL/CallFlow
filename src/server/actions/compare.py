@@ -30,6 +30,13 @@ class Compare:
         self.col = col
         self.dataset1 = dataset1
         self.dataset2 = dataset2
+
+        # Calculate the max_rank.
+        self.max_rank1 = len(self.df1['rank'].unique())
+        self.max_rank2 = len(self.df1['rank'].unique())
+        self.max_rank = max(self.max_rank1, self.max_rank2)
+
+
         self.result = self.run()
 
     def run(self):
@@ -73,17 +80,30 @@ class Compare:
         else:
             return int(np.ceil((arr.max() - arr.min()) / h))
 
+    def insertZeroRuntime(self, arr, rank_arr):
+        ret = np.zeros([self.max_rank])
+        for idx, rank_idx in enumerate(rank_arr):
+            ret[rank_idx] = arr[idx]
+        return ret
+
     def calculate_diff(self, node):
         node_df1 = self.df1.loc[self.df1["name"] == node]
         node_df2 = self.df2.loc[self.df2["name"] == node]
 
+        print(node_df1[['rank', 'time (inc)']])
+        print(node_df2[['rank', 'time (inc)']])
+
         data1 = np.asarray(node_df1[self.col])
+        rank1 = np.asarray(node_df1["rank"])
         name1 = np.asarray(node_df1["name"])
         dataset1 = np.array([self.dataset1 for _ in range(data1.shape[0])])
         module1 = np.asarray(node_df1["module"])
+        data1 = self.insertZeroRuntime(data1, rank1)
 
         data2 = np.asarray(node_df2[self.col])
         name2 = np.asarray(node_df2["name"])
+        rank2 = np.asarray(node_df2["rank"])
+        data2 = self.insertZeroRuntime(data2, rank2)
         dataset2 = np.array([self.dataset2 for _ in range(data2.shape[0])])
         module2 = np.asarray(node_df2["module"])
 
