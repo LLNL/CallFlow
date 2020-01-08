@@ -27,7 +27,7 @@ export default {
         dist_gradients(data) {
             console.log("Gradient data:", data)
             this.data = data
-            this.setupMeanRuntimeGradients(data)
+            this.setupMeanGradients(data)
         },
 
         dist_group_highlight(data) {
@@ -45,12 +45,18 @@ export default {
         },
 
         compare(data) {
+            this.$store.rankDiff = false
             this.clearGradients()
             this.clearQuantileLines()
             this.clearZeroLine()
             this.renderZeroLine = {}
-            this.setupDiffRuntimeGradients(data)
-            this.diffRectangle()
+            if(this.$store.rankDiff){
+                this.setupRankDiffRuntimeGradients(data)
+                this.rankDiffRectangle()
+            }
+            else{
+                this.meanDiffRectangle(data)
+            }
         }
     },
     mounted() {
@@ -117,7 +123,7 @@ export default {
                 .attr('opacity', 1)
                 .attr('transform', d => `translate(${d.x},${d.y + this.$parent.ySpacing})`)
 
-            this.rectangle()
+            this.meanRectangle()
             this.path()
             this.text()
             this.drawTargetLine()
@@ -135,11 +141,42 @@ export default {
             console.log(this.nidNameMap)
         },
 
+        setupMeanGradients(data) {
+            let method = 'hist'
+            for (let d in data) {
+                var defs = d3.select('#distgraph-overview-')
+                    .append("defs");
+
+                this.linearGradient = defs.append("linearGradient")
+                    .attr("id", "mean-gradient" + this.nidNameMap[d])
+                    .attr("class", 'linear-gradient')
+
+                this.linearGradient
+                    .attr("x1", "0%")
+                    .attr("y1", "0%")
+                    .attr("x2", "0%")
+                    .attr("y2", "100%");
+
+                let min_val = data[d][method]['y_min']
+                let max_val = data[d][method]['y_max']
+
+                let grid = data[d][method]['x']
+                let val = data[d][method]['y']
+
+                for (let i = 0; i < grid.length; i += 1) {
+                    let x = (i + i + 1) / (2 * grid.length)
+                    this.linearGradient.append("stop")
+                        .attr("offset", 100 * x + "%")
+                        .attr("stop-color", d3.interpolateReds((val[i] / (max_val - min_val))))
+                }
+            }
+        },
+
         clearRectangle() {
             d3.selectAll('.dist-callsite').remove()
         },
 
-        rectangle() {
+        meanRectangle() {
             let self = this
             this.nodesSVG.append('rect')
                 .attr('class', 'dist-callsite')
@@ -219,6 +256,30 @@ export default {
                 })
         },
 
+        rankDiffRectangle() {
+            let self = this
+            // Transition
+            this.nodes.selectAll('.dist-callsite')
+                .data(this.graph.nodes)
+                .transition()
+                .duration(this.transitionDuration)
+                .attr('opacity', d => {
+                    return 1;
+                })
+                .attr('height', d => d.height)
+                .style('stroke', (d) => {
+                    return 1;
+                })
+                .style("fill", (d, i) => {
+                    return "url(#diff-gradient" + d.client_idx + ")"
+                })
+        },
+
+        //Gradients
+        clearGradients() {
+            d3.selectAll('.linear-gradient').remove()
+        },
+
         clearZeroLine() {
             d3.selectAll('.zeroLine').remove()
             d3.selectAll('.zeroLineText').remove()
@@ -262,61 +323,6 @@ export default {
             }
         },
 
-        diffRectangle(diff) {
-            let self = this
-            // Transition
-            this.nodes.selectAll('.dist-callsite')
-                .data(this.graph.nodes)
-                .transition()
-                .duration(this.transitionDuration)
-                .attr('opacity', d => {
-                    return 1;
-                })
-                .attr('height', d => d.height)
-                .style('stroke', (d) => {
-                    return 1;
-                })
-                .style("fill", (d, i) => {
-                    return "url(#diff-gradient" + d.client_idx + ")"
-                })
-        },
-
-        //Gradients
-        clearGradients() {
-            d3.selectAll('.linear-gradient').remove()
-        },
-
-        setupMeanRuntimeGradients(data) {
-            let method = 'hist'
-            for (let d in data) {
-                var defs = d3.select('#distgraph-overview-')
-                    .append("defs");
-
-                this.linearGradient = defs.append("linearGradient")
-                    .attr("id", "mean-gradient" + this.nidNameMap[d])
-                    .attr("class", 'linear-gradient')
-
-                this.linearGradient
-                    .attr("x1", "0%")
-                    .attr("y1", "0%")
-                    .attr("x2", "0%")
-                    .attr("y2", "100%");
-
-                let min_val = data[d][method]['y_min']
-                let max_val = data[d][method]['y_max']
-
-                let grid = data[d][method]['x']
-                let val = data[d][method]['y']
-
-                for (let i = 0; i < grid.length; i += 1) {
-                    let x = (i + i + 1) / (2 * grid.length)
-                    this.linearGradient.append("stop")
-                        .attr("offset", 100 * x + "%")
-                        .attr("stop-color", d3.interpolateReds((val[i] / (max_val - min_val))))
-                }
-            }
-        },
-
         setupDiffRuntimeGradients(data) {
             let method = 'hist'
             for (let i = 0; i < data.length; i += 1) {
@@ -354,7 +360,52 @@ export default {
             }
         },
 
+        normalize(min, max) {
+            var delta = max - min;
+            return function (val) {
+                return (val - min) / delta;
+            };
+        },
+
+        meanDiffRectangle(diff) {
+            let self = this
+            let mean_diff = {}
+            let max_diff = 0
+            let min_diff = 0
+            for(let i = 0; i < diff.length; i += 1){
+                let d = diff[i]['diff']
+                let callsite = diff[i]['name']
+                let difference = d.reduce( (total, num) => {
+                    return total + num
+                })
+                mean_diff[callsite] = difference
+                max_diff = Math.max(difference, max_diff)
+                min_diff = Math.min(difference, min_diff)
+            }
+
+            // Transition
+            this.nodes.selectAll('.dist-callsite')
+                .data(this.graph.nodes)
+                .transition()
+                .duration(this.transitionDuration)
+                .attr('opacity', d => {
+                    return 1;
+                })
+                .attr('height', d => d.height)
+                .style('stroke', (d) => {
+                    return 1;
+                })
+                .style("fill", (d, i) => {
+                    console.log(max_diff, min_diff)
+                    if(max_diff == 0 && min_diff == 0){
+                        return 0.5
+                    }
+                    return d3.interpolateRdYlGn((mean_diff[d.name] - min_diff)/ (max_diff - min_diff))
+                })
+        },
+
         // Lines
+        // Not being used.
         clearQuantileLines() {
             d3.selectAll('.quantileLines').remove()
         },
