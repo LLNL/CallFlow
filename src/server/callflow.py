@@ -110,6 +110,8 @@ class CallFlow:
                 )
             elif self.reProcess and self.processUnion:
                 states[dataset_name] = self.pipeline.create(dataset_name)
+                # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
+
                 states[dataset_name] = self.pipeline.process(
                     states[dataset_name], "entire"
                 )

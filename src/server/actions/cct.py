@@ -19,10 +19,10 @@ class CCT:
     def __init__(self, state, functionsInCCT):
         number_of_nodes = len(state.df['name'].unique())
         if(number_of_nodes < int(functionsInCCT)):
-            self.entire_graph = state.graph
+            self.entire_graph = state.g
             self.entire_df = state.df
         else:
-            self.entire_graph = state.graph
+            self.entire_graph = state.g
             self.entire_df = state.df
         self.run()
 
@@ -51,6 +51,8 @@ class CCT:
                 if(node_module[0] != 'nan'):
 
                     data = self.entire_df.loc[self.entire_df['name'] == node][attr]
+                    if(attr == 'time'):
+                        print(node, data.unique())
                     if attr == 'time' or attr == 'time (inc)' or attr == 'imbalance_perc':
                         if( not math.isnan(data.mean())):
                             ret[node] = data.mean()
@@ -204,6 +206,7 @@ class CCT:
     def run(self):
         self.g = nx.DiGraph()
         self.add_paths('path')
+        # self.g = self.entire_graph
         self.add_node_attributes()
         self.add_edge_attributes()
         self.g.cycles = self.find_cycle(self.g)
