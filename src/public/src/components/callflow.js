@@ -25,6 +25,8 @@ import RunInformation from './runInformation'
 import AuxiliaryFunction from './auxiliaryFunction'
 import DistHistogram from './disthistogram'
 
+import UploadButton from './uploadButton'
+
 import io from 'socket.io-client';
 
 export default {
@@ -44,8 +46,10 @@ export default {
 		Projection,
 		RunInformation,
 		AuxiliaryFunction,
-		DistHistogram
+		DistHistogram,
+		UploadButton
 	},
+
 	data: () => ({
 		appName: 'CallFlow',
 		server: 'localhost:5000',
@@ -106,29 +110,29 @@ export default {
 	watch: {},
 
 	mounted() {
-		var socket = io.connect('localhost:5000', {reconnect: false});
+		var socket = io.connect('localhost:5000', { reconnect: false });
 
 		// Check socket connection.
 		console.log('Socket connection check-1 : ', socket.connected);
-		socket.on('connect', function() {
-		  console.log('Socket connection check 2: ', socket.connected);
+		socket.on('connect', function () {
+			console.log('Socket connection check 2: ', socket.connected);
 		});
 
 		// Raise an exception if the socket fails to connect
-		socket.on('connect_error', function(err) {
+		socket.on('connect_error', function (err) {
 			console.log('Socket error: ', err);
 		});
 
 		this.$socket.emit('init')
 
-		EventHandler.$on('compare', function() {
+		EventHandler.$on('compare', function () {
 			this.selectedCompareDataset = this.$store.selectedCompareDataset
 		})
 
 
-		EventHandler.$on('highlight_datasets', function() {
+		EventHandler.$on('highlight_datasets', function () {
 			this.selectedCompareDataset = this.$store.selectedCompareDataset
-        })
+		})
 	},
 
 	sockets: {
@@ -225,12 +229,12 @@ export default {
 				// this.$refs.DistIcicle.init()
 				this.initLoad = false
 			}
-			else{
+			else {
 				this.$refs.DistgraphA.init(data)
 			}
 		},
 
-		dist_group_highlight(data){
+		dist_group_highlight(data) {
 			data = JSON.parse(data)
 			console.log("Group highlight for", this.selectedFormat, ": [", this.selectedMode, "]", data)
 			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
@@ -239,7 +243,7 @@ export default {
 			} else if (this.selectedData == 'Graph' && this.initLoad) {
 				this.$refs.DistgraphB.init(data)
 			}
-			else{
+			else {
 				this.$refs.DistgraphA.init(data)
 			}
 		},
@@ -251,16 +255,16 @@ export default {
 			this.$refs.DistCCT2.init(data[this.$store.selectedTargetDataset], '2')
 		},
 
-		dist_cct(data){
+		dist_cct(data) {
 			console.log("Dist cct data: ", data)
 			this.$refs.CCT.init(data['union'], '2')
 		},
 
-		compare(){
+		compare() {
 			this.selectedCompareDataset = this.$store.selectedCompareDataset
 		},
 
-		disconnect(){
+		disconnect() {
 			console.log('Disconnected.')
 		}
 	},
@@ -390,17 +394,17 @@ export default {
 		colors() {
 			this.$store.color = new Color(this.selectedColorBy)
 			this.colorMap = this.$store.color.getAllColors()
-			if(this.selectedMode == 'Ensemble'){
-				if(this.selectedColorBy == 'Inclusive'){
+			if (this.selectedMode == 'Ensemble') {
+				if (this.selectedColorBy == 'Inclusive') {
 					this.selectedColorMin = this.$store.minIncTime['ensemble']
 					this.selectedColorMax = this.$store.maxIncTime['ensemble']
 				}
-				else if(this.selectedColorBy == 'Exclusive'){
+				else if (this.selectedColorBy == 'Exclusive') {
 					this.selectedColorMin = this.$store.minExcTime['ensemble']
 					this.selectedColorMax = this.$store.maxExcTime['ensemble']
 				}
 			}
-			else if(this.selectedMode == 'Single'){
+			else if (this.selectedMode == 'Single') {
 				if (this.selectedColorBy == 'Inclusive') {
 					this.selectedColorMin = this.$store.minIncTime[this.selectedTargetDataset]
 					this.selectedColorMax = this.$store.maxIncTime[this.selectedTargetDataset]
@@ -436,12 +440,12 @@ export default {
 			})
 		},
 
-		setTargetDataset(){
+		setTargetDataset() {
 			let min_inclusive_dataset = '';
 			let min_inclusive_time = this.$store.maxIncTime['ensemble']
-			for(let dataset in this.$store.maxIncTime){
+			for (let dataset in this.$store.maxIncTime) {
 				if (this.$store.maxIncTime.hasOwnProperty(dataset)) {
-					if(min_inclusive_time > this.$store.maxIncTime[dataset]){
+					if (min_inclusive_time > this.$store.maxIncTime[dataset]) {
 						min_inclusive_dataset = dataset
 					}
 					min_inclusive_time = Math.min(this.$store.maxIncTime[dataset], min_inclusive_time)
@@ -493,10 +497,10 @@ export default {
 
 		updateMode() {
 			this.clearLocal()
-			if(this.selectedMode == 'Ensemble'){
+			if (this.selectedMode == 'Ensemble') {
 
 			}
-			else if(this.selectedMode == 'Single'){
+			else if (this.selectedMode == 'Single') {
 
 			}
 			this.init()
@@ -598,21 +602,31 @@ export default {
 			EventHandler.$emit('update_diff_node_alignment')
 		},
 
-		updateAuxiliarySortBy(){
+		updateAuxiliarySortBy() {
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
 			EventHandler.$emit('update_auxiliary_sortBy')
 		},
 
-		triggerCompare(){
+		triggerCompare() {
 			this.$socket.emit('compare', {
 				targetDataset: this.$store.selectedTargetDataset,
 				compareDataset: this.$store.selectedCompareDataset,
 			})
 		},
 
-		updateCompareDataset(){
+		updateCompareDataset() {
 
-		}
+		},
+
+		fileSelected(e) {
+            if (this.selectedCallback) {
+                if (e.target.files[0]) {
+                    this.selectedCallback(e.target.files[0]);
+                } else {
+                    this.selectedCallback(null);
+                }
+            }
+        }
 
 	}
 }

@@ -6,7 +6,7 @@
 
 <script>
 export default {
-  name: "App"
+  name: 'App'
 };
 </script>
 
@@ -82,7 +82,7 @@ export default {
 
 body {
   top: -10px !important;
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
   margin-bottom: 0px;
   height: 99%;
   font-size: 16px;
@@ -194,8 +194,28 @@ body {
 }
 
 .tooltip {
-	padding-left: 10px;
-	font-size: 14px;
-	font-weight: 500;
+  padding-left: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.jbtn-file {
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.jbtn-file input[type='file'] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 100%;
+  min-height: 100%;
+  text-align: right;
+  filter: alpha(opacity=0);
+  opacity: 0;
+  outline: none;
+  cursor: inherit;
+  display: block;
 }
 </style>
