@@ -32,12 +32,10 @@
 			</v-select>
 		</v-flex> -->
 		<v-spacer></v-spacer>
-		<v-flex xs2>
-			<!-- <v-btn-toggle v-model="comparisonMode">
-				<v-btn id="compare-button" color="white" v-on:click="triggerCompare()">
-					Compare
-				</v-btn>
-			</v-btn-toggle> -->
+		<v-flex xs2 class="ma-1">
+			<v-select label="Select Comparison mode" :items="compareModes" v-model="selectedCompareMode"
+				:menu-props="{ maxHeight: '400' }" box v-on:change="updateCompareMode()">
+			</v-select>
 		</v-flex>
 		<v-flex xs2 class="ma-1">
 			<v-select label="Graph to visualize" :items="formats" v-model="selectedFormat"
@@ -62,7 +60,7 @@
 					<v-icon v-on:click="reset()">refresh</v-icon>
 				</v-btn>
 				<v-flex xs12 class="ma-1">
-					<UploadButton title="Browse" :selectedCallback="fileSelected"></UploadButton>
+					<UploadButton title="Upload the config file" :selectedCallback="fileSelected"></UploadButton>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
 					<v-select label="Node Encoding" :items="colorBy" v-model="selectedColorBy"
@@ -90,11 +88,6 @@
 						v-model="selectedColorMaxText" :menu-props="{ maxHeight: '200' }" persistent-hint
 						v-on:change="updateColorMinMax()">
 					</v-text-field>
-				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
-					<v-select label="Group By" :items="groupBy" v-model="selectedGroupBy"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateGroupBy()">
-					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
 					<v-select label="Group By" :items="groupBy" v-model="selectedGroupBy"

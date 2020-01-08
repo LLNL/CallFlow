@@ -75,9 +75,9 @@ export default {
 		colorBy: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
 		selectedColorBy: 'Inclusive',
 		colorMap: [],
-		selectedColorMap: "OrRd",
+		selectedColorMap: "Reds",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
-		selectedColorPoint: 3,
+		selectedColorPoint: 9,
 		selectedColorMin: null,
 		selectedColorMax: null,
 		selectedColorMinText: '',
@@ -105,6 +105,9 @@ export default {
 		initLoad: true,
 		comparisonMode: false,
 		selectedCompareDataset: null,
+		compareModes: ['meanDiff', 'rankDiff'],
+		selectedCompareMode: 'meanDiff',
+		enableCompareMode: false,
 	}),
 
 	watch: {},
@@ -127,6 +130,8 @@ export default {
 
 		EventHandler.$on('compare', function () {
 			this.selectedCompareDataset = this.$store.selectedCompareDataset
+			this.enableCompareMode = true
+			this.$store.selectedCompareMode = this.selectedCompareMode
 		})
 
 
@@ -182,6 +187,7 @@ export default {
 			this.$store.selectedFormat = this.selectedFormat
 			this.$store.selectedGroupBy = this.selectedGroupBy
 			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment
+			this.$store.selectedCompareMode = this.selectedCompareMode
 			this.$store.colorset = ['#59A14E', '#AF7AA1', '#F18F2C']
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
 			this.$store.nodeInfo = {}
@@ -216,9 +222,9 @@ export default {
 			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
 			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
 			if (this.selectedData == 'Dataframe' && this.initLoad) {
-				this.$refs.DistgraphA.init(data)
 				this.$refs.Projection.init()
 				this.$refs.SimilarityMatrix.init()
+				this.$refs.DistgraphA.init(data)
 				this.$refs.AuxiliaryFunction.init()
 				this.$refs.RunInformation.init()
 				this.$refs.DistHistogram.init()
@@ -393,6 +399,8 @@ export default {
 
 		colors() {
 			this.$store.color = new Color(this.selectedColorBy)
+			this.$store.zeroToOneColor = new Color(this.selectedColorBy)
+
 			this.colorMap = this.$store.color.getAllColors()
 			if (this.selectedMode == 'Ensemble') {
 				if (this.selectedColorBy == 'Inclusive') {
@@ -415,6 +423,8 @@ export default {
 			}
 
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
+			this.$store.zeroToOneColor.setColorScale(0, 1, this.selectedColorMap, this.selectedColorPoint)
+
 			this.$store.colorPoint = this.selectedColorPoint
 			console.log("Datasets are :", this.datasets)
 			this.$store.color.datasetColor = {}
@@ -618,15 +628,23 @@ export default {
 
 		},
 
+		updateCompareMode() {
+			this.$store.selectedCompareMode = this.selectedCompareMode
+			this.$socket.emit('compare', {
+				targetDataset: this.$store.selectedTargetDataset,
+				compareDataset: this.compareDataset,
+			})
+		},
+
 		fileSelected(e) {
-            if (this.selectedCallback) {
-                if (e.target.files[0]) {
-                    this.selectedCallback(e.target.files[0]);
-                } else {
-                    this.selectedCallback(null);
-                }
-            }
-        }
+			if (this.selectedCallback) {
+				if (e.target.files[0]) {
+					this.selectedCallback(e.target.files[0]);
+				} else {
+					this.selectedCallback(null);
+				}
+			}
+		}
 
 	}
 }

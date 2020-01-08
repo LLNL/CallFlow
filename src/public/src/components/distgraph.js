@@ -7,6 +7,7 @@ import DistEdges from './distgraph/edges'
 import Dataset from './distgraph/dataset.js'
 import * as  d3 from 'd3'
 import EventHandler from './EventHandler.js'
+import DistColorMap from './distgraph/colormap'
 
 export default {
 	name: 'Distgraph',
@@ -16,7 +17,8 @@ export default {
 		// IntermediateNodes,
 		DistEdges,
 		MiniHistograms,
-		Dataset
+		Dataset,
+		DistColorMap
 	},
 	props: [
 
@@ -52,12 +54,25 @@ export default {
 		})
 	},
 
+	sockets: {
+		// compare(data){
+		// 	this.$refs.DistColorMap.clear()
+
+		// 	if(this.$store.)
+		// }
+	},
+
 	methods: {
 		init(data) {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
-			this.width = window.innerWidth * 0.7 - this.margin.left - this.margin.right
+			this.projectionViewWidth = document.getElementById('similarity-matrix-view').clientWidth
+			this.auxiliaryViewWidth = document.getElementById('auxiliary-function-overview').clientWidth
+
+			this.width = window.innerWidth  - this.projectionViewWidth - this.auxiliaryViewWidth - this.margin.left - this.margin.right
 			this.height = window.innerHeight - this.margin.top - this.margin.bottom - this.toolbarHeight - this.footerHeight
+
+			console.log(this.width, this.height)
 			this.sankeySVG = d3.select('#' + this.id)
 				.attrs({
 					'width': this.width + this.margin.left + this.margin.right,
@@ -76,7 +91,7 @@ export default {
 			this.$refs.DistEdges.clear()
 			// this.$refs.CallbackEdges.clear()
 			this.$refs.MiniHistograms.clear()
-			// this.$refs.DistColorMap.clear(0)
+			this.$refs.DistColorMap.clear()
 		},
 
 		render(data) {
@@ -94,7 +109,7 @@ export default {
 			this.$refs.DistNodes.init(this.$store.graph, this.view)
 			// this.$refs.IntermediateNodes.init(this.data)
 			this.$refs.DistEdges.init(this.$store.graph, this.view)
-			// this.$refs.DistColorMap.init()
+			this.$refs.DistColorMap.init()
 			// this.$refs.CallbackEdges.init(this.data, this.view)
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view)
 
@@ -121,25 +136,18 @@ export default {
 			let node_names = []
 			let nodes = []
 			for (const node of graph.nodes) {
-					nodes.push(node)
-					node_names.push(node.name)
-				console.log(node.name, node.module, node.show_node, node['time (inc)'], node.time)
+				nodes.push(node)
+				node_names.push(node.name)
 			}
 			graph.nodes = nodes
-			// graph.modules = nodes
 
-			// let edges = []
-			// for (const edge of graph.links) {
-			// 	console.log(edge.source, edge.target, edge.weight, edge.exc_weight)
-			// }
-			// graph.edges = edges
 			return graph
 		},
 
-		addNodeMap(graph){
+		addNodeMap(graph) {
 			let nodeMap = {}
 			let idx = 0
-			for(const node of graph.nodes){
+			for (const node of graph.nodes) {
 				nodeMap[node.id] = idx
 				idx += 1
 			}
@@ -151,13 +159,13 @@ export default {
 		constructModules(graph) {
 			for (const mod of graph.modules) {
 				let module_group_paths = mod['group_path']
-				if(module_group_paths.length > 1){
+				if (module_group_paths.length > 1) {
 
 				}
-				else if(module_group_paths == 1){
+				else if (module_group_paths == 1) {
 
 				}
-				for(let i = 0; i < module_group_paths.length - 1; i += 1){
+				for (let i = 0; i < module_group_paths.length - 1; i += 1) {
 					// if(this.isModuleEdge())
 				}
 			}
@@ -297,36 +305,6 @@ export default {
 			}
 			return graph
 		},
-
-		// filterNodes(graph) {
-		// 	let nodes = []
-		// 	for (const node of graph.nodes) {
-		// 		if (node.height > 20) {
-		// 			nodes.push(node)
-		// 		}
-		// 	}
-		// 	graph.nodes = nodes
-
-		// 	let links = []
-		// 	// for(const link of graph.links){
-		// 	// 	if(link.source in nodes && link.target in nodes){
-		// 	// 		links.push(link)
-		// 	// 	}
-		// 	// }
-		// 	// graph.links = links
-		// 	console.log("After filtering: ", graph)
-		// 	return graph
-		// },
-
-		// addEdges(graph) {
-		// 	let datasets = this.$store.actual_dataset_names
-		// 	for (const edge of graph.edges) {
-		// 		let obj = {}
-		// 		for (const dataset of datasets) {
-		// 			obj[dataset]
-		// 		}
-		// 	}
-		// },
 
 		//Sankey computation
 		initSankey() {
