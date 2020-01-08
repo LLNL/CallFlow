@@ -105,6 +105,7 @@ class DistGraph(nx.Graph):
             # print(show_source)
 
             if row.show_node == True:# or show_source == True:
+                print(row['name'], row['module'])
                 self.add_path(row)
 
     # TODO: Make this a consistent datatype.

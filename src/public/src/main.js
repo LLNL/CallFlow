@@ -8,6 +8,7 @@ import store from './store'
 import VueMaterial from 'vue-material'
 import 'vue-material/dist/vue-material.min.css'
 import 'vue-material/dist/theme/default.css'
+// import VFileInput from 'v-file-input'
 
 let socket = new VueSocketIO({
   debug: false,
@@ -26,6 +27,8 @@ Vue.use(socket)
 Vue.use(Router)
 Vue.use(Vuetify)
 Vue.use(VueMaterial)
+// Vue.use(VFileInput)
+
 
 import 'vuetify/dist/vuetify.min.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
