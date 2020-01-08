@@ -3,7 +3,6 @@ import * as d3 from 'd3'
 import ToolTip from './tooltip'
 import EventHandler from '../../EventHandler'
 
-
 export default {
     template: tpl,
     name: 'DistNodes',
@@ -50,11 +49,14 @@ export default {
             this.clearQuantileLines()
             this.clearZeroLine()
             this.renderZeroLine = {}
-            if(this.$store.rankDiff){
+            console.log(this.$store.selectedCompareMode)
+            if(this.$store.selectedCompareMode == 'rankDiff'){
+                this.$parent.$refs.DistColorMap.update('rankDiff', data)
                 this.setupRankDiffRuntimeGradients(data)
                 this.rankDiffRectangle()
             }
-            else{
+            else if(this.$store.selectedCompareMode == 'meanDiff'){
+                this.$parent.$refs.DistColorMap.update('meanDiff', data)
                 this.meanDiffRectangle(data)
             }
         }
@@ -138,7 +140,6 @@ export default {
                 node.client_idx = idx
                 idx += 1
             }
-            console.log(this.nidNameMap)
         },
 
         setupMeanGradients(data) {
@@ -165,9 +166,10 @@ export default {
 
                 for (let i = 0; i < grid.length; i += 1) {
                     let x = (i + i + 1) / (2 * grid.length)
+                    let current_value = (val[i] / (max_val - min_val))
                     this.linearGradient.append("stop")
                         .attr("offset", 100 * x + "%")
-                        .attr("stop-color", d3.interpolateReds((val[i] / (max_val - min_val))))
+                        .attr("stop-color", this.$store.zeroToOneColor.getColorByValue(current_value))
                 }
             }
         },
@@ -188,10 +190,6 @@ export default {
                 })
                 .attr('width', this.nodeWidth)
                 .attr('opacity', 0)
-                // .style('fill', d => {
-                //     let color = this.$store.color.getColor(d)
-                //     return color
-                // })
                 .style('fill-opacity', (d) => {
                     return 1
                 })
@@ -396,7 +394,6 @@ export default {
                     return 1;
                 })
                 .style("fill", (d, i) => {
-                    console.log(max_diff, min_diff)
                     if(max_diff == 0 && min_diff == 0){
                         return 0.5
                     }

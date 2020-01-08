@@ -39,7 +39,7 @@ export default {
     methods: {
         init() {
             let visContainer = document.getElementById(this.id)
-            let dashboardHeight = document.getElementById('diffgraph-dashboard').clientHeight
+            let dashboardHeight = window.innerHeight
             let toolbarHeight = document.getElementById('toolbar').clientHeight
 
             this.width = visContainer.clientWidth
@@ -55,7 +55,7 @@ export default {
                     width: this.width,
                     height: this.height,
                     transform: 'translate(0, 0)',
-                    class: 'projection-svg'
+                    id: 'projection-svg'
                 })
                 .style('stroke-width', 1)
                 .style('stroke', '#aaaaaa')
@@ -458,7 +458,7 @@ export default {
 
         clear() {
             console.log("clearing projection view")
-            d3.selectAll('.projection-svg').remove()
+            d3.selectAll('#projection-svg').remove()
         }
     },
 }

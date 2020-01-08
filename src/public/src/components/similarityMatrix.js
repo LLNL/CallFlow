@@ -49,7 +49,7 @@ export default {
     },
 
     mounted() {
-        this.id = 'similarity-matrix'
+        this.id = 'similarity-matrix-view'
     },
 
     methods: {
