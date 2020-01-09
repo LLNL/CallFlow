@@ -172,7 +172,7 @@ body {
 }
 
 #auxiliary-function-overview {
-  max-height: 400px;
+  max-height: 350px;
   overflow: auto;
   background: white;
 }
@@ -217,5 +217,18 @@ body {
   outline: none;
   cursor: inherit;
   display: block;
+}
+.vue-slider-dot-tooltip-inner {
+
+    font-size: 14px !important;
+    white-space: nowrap !important;
+    border-radius: 5px !important;
+    padding: 0px 0px !important;
+    border-color: #1A6059 !important;
+    background-color: white !important;
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15) !important;
+    transform: scale(0.9) !important;
+    transition: transform 0.3s !important;
+    color: #1A6059 !important;
 }
 </style>

@@ -95,20 +95,16 @@ export default {
         },
 
         render(callsite) {
-            console.log(this.$store.nodeInfo)
             let data = this.$store.nodeInfo[callsite]
-            console.log(data)
             let temp = this.dataProcess(data['ensemble'][0][0]);
             this.xVals = temp[0];
             this.freq = temp[1];
             this.axis_x = temp[2];
             this.binContainsProcID = temp[3];
             this.logScaleBool = false;
-            console.log(temp)
 
             const targetData = data['target'][0][this.$store.selectedTargetDataset]
             const targetTemp = this.dataProcess(targetData)
-            console.log(targetTemp)
             this.targetXVals = targetTemp[0]
             this.targetFreq = targetTemp[1]
             this.target_axis_x = targetTemp[3]
@@ -287,7 +283,6 @@ export default {
                 first = false;
             }
             groupArrayStr += ' ]';
-            console.log(groupArray)
             return {
                 string: groupArrayStr,
                 array: groupArray
@@ -355,26 +350,30 @@ export default {
                 .attr('height', (d) => {
                     return Math.abs(this.histogramHeight - this.histogramYScale(d));
                 })
-                .attr('fill', this.$store.color.target)
+                .attr('fill', (d) => {
+                    let color = self.$store.color.target
+                    console.log(color)
+                    return color
+                })
                 .attr('opacity', 1)
                 .attr('stroke-width', (d, i) => '0.2px')
                 .attr('stroke', (d, i) => 'black')
                 .on('mouseover', function (d, i) {
-                    d3.select(this)
-                        .attr('fill', 'red');
-                    d3.selectAll(`.lineRank_${i}`)
-                        .style('fill', 'orange')
-                        .style('fill-opacity', 1)
+                    // d3.select(this)
+                    //     .attr('fill', 'red');
+                    // d3.selectAll(`.lineRank_${i}`)
+                    //     .style('fill', 'orange')
+                    //     .style('fill-opacity', 1)
                     let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
                     self.$refs.ToolTip.render(groupProcStr, d)
                 })
                 .on('mouseout', function (d, i) {
-                    d3.select(this)
-                        .attr('fill', 'steelblue');
-                    d3.selectAll(`.lineRank_${i}`)
-                        .style('fill', 'grey')
-                        .style('fill-opacity', 0.4);
-                    self.$refs.ToolTip.clear()
+                    // d3.select(this)
+                    //     .attr('fill', 'steelblue');
+                    // d3.selectAll(`.lineRank_${i}`)
+                    //     .style('fill', 'grey')
+                    //     .style('fill-opacity', 0.4);
+                    // self.$refs.ToolTip.clear()
                 })
         },
 

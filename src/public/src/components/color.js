@@ -11,6 +11,7 @@ export default class Color {
         this.diffColorScale = null;
         this.meanDiffColorScale = null;
         this.loadImbColorScale = null;
+        this.binColorScale = null;
         this.rankDiffColorScale = null;
         this.grey = '#252525'
         this.highlight = '#377eb8'
@@ -426,9 +427,13 @@ export default class Color {
                 // .padding(this.colorPadding)
                 .domain([min, max]);
         } else if (this.option == 'RankDiff') {
-            this.rankDiffColorScale = chroma.scale(this.colorMap)
+            this.rankDiffColorScale = chroma.scale("Purples")
                 // .padding(this.colorPadding)
                 .domain([min, max]);
+        } else if(this.option == 'Bin') {
+            this.binColorScale = chroma.scale("Purples")
+                // .padding(this.colorPadding)
+                .domain([min, max])
         }
     }
 
@@ -449,6 +454,8 @@ export default class Color {
             return this.meanDiffColorScale;
         } else if (option == "RankDiff") {
             return this.rankDiffColorScale;
+        }  else if (option == "Bin") {
+            return this.binColorScale;
         }
     }
 
@@ -472,7 +479,9 @@ export default class Color {
         } else if (this.option == "MeanDiff") {
             return this.meanDiffColorScale(node.mean_diff);
         } else if (this.option == "RankDiff") {
-            return this.rankDiffColorScale(node.mean_diff);
+            return this.rankDiffColorScale(node.rank_diff);
+        } else if (this.option == "Bin") {
+            return this.binColorScale(node.bin);
         }
     }
 
@@ -493,6 +502,8 @@ export default class Color {
             return this.meanDiffColorScale(value)
         } else if (this.option == "RankDiff") {
             return this.rankDiffColorScale(value)
+        } else if (this.option == "Bin") {
+            return this.binColorScale(value)
         }
     }
 
