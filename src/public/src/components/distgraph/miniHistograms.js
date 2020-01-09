@@ -45,16 +45,7 @@ export default {
     },
 
     sockets: {
-        dist_mini_histogram(data) {
-            this.data = JSON.parse(data)
-            for (const [key, value] of Object.entries(this.data)) {
-                let node = key
-                let d = JSON.parse(value)
-                this.render(d, node)
-                let split_node = node.split('=')[1]
-                this.$store.nodeInfo[split_node] = d
-            }
-        }
+
     },
 
     methods: {
@@ -63,9 +54,9 @@ export default {
             this.nodes = graph.nodes
             this.links = graph.links
             this.view = view
-            this.$socket.emit('dist-mini-histogram', {
-                'target-datasets': [this.$store.selectedTargetDataset],
-            })
+            for(let node in graph.nodes){
+                this.render(this.$store.nodeInfo, node)
+            }
         },
 
         array_unique(arr) {

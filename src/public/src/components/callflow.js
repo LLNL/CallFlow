@@ -17,10 +17,10 @@ import Scatterplot from './scatterplot'
 import Histogram from './histogram'
 import Function from './function'
 
+// Ensemble mode imports
 import Distgraph from './distgraph'
 import SimilarityMatrix from './similarityMatrix'
 import Projection from './projection'
-
 import RunInformation from './runInformation'
 import AuxiliaryFunction from './auxiliaryFunction'
 import DistHistogram from './disthistogram'
@@ -52,8 +52,8 @@ export default {
 
 	data: () => ({
 		appName: 'CallFlow',
-		server: '169.237.6.49:5000',
-		// server: 'localhost:5000',
+		// server: '169.237.6.49:5000',
+		server: 'localhost:5000',
 		config: {
 			headers: {
 				'Access-Control-Allow-Origin': '*'
@@ -110,6 +110,7 @@ export default {
 		selectedCompareMode: 'rankDiff',
 		enableCompareMode: false,
 		selectedOutlierBand: 4,
+		defaultCallSite: '<program root>'
 	}),
 
 	watch: {},
@@ -212,13 +213,14 @@ export default {
 			data = JSON.parse(data)
 			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
 			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
+			console.log(this.initLoad, this.selectedData)
 			if (this.selectedData == 'Dataframe' && this.initLoad) {
 				this.$refs.Projection.init()
 				this.$refs.SimilarityMatrix.init()
 				this.$refs.DistgraphA.init(data)
+				this.$refs.DistHistogram.init()
 				this.$refs.AuxiliaryFunction.init()
 				this.$refs.RunInformation.init()
-				this.$refs.DistHistogram.init()
 				this.initLoad = false
 			} else if (this.selectedData == 'Graph' && this.initLoad) {
 				this.$refs.DistgraphB.init(data)
@@ -256,6 +258,12 @@ export default {
 			console.log("Dist cct data: ", data)
 			this.$refs.CCT.init(data['union'], '2')
 		},
+
+		dist_mini_histogram(data) {
+            data = JSON.parse(data)
+			this.createNodeInfoStore(data)
+			this.$refs.DistHistogram.render(this.defaultCallSite)
+        },
 
 		compare() {
 			this.selectedCompareDataset = this.$store.selectedCompareDataset
@@ -363,6 +371,10 @@ export default {
 						groupBy: this.selectedGroupBy
 					})
 
+					this.$socket.emit('dist-mini-histogram', {
+						'target-datasets': [this.$store.selectedTargetDataset],
+					})
+
 					this.$socket.emit('dist_similarity', {
 						datasets: this.$store.actual_dataset_names,
 						algo: 'deltacon',
@@ -384,6 +396,17 @@ export default {
 						sortBy: this.$store.auxiliarySortBy,
 						module: 'all'
 					})
+
+					this.$socket.emit('dist_hierarchy', {
+                        module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
+                        datasets: this.$store.actual_dataset_names,
+                    })
+
+                    // this.$socket.emit('ensemble_histogram', {
+					// 	module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
+					// 	datasets: this.$store.actual_dataset_names,
+                    // })
+
 				}
 			}
 		},
@@ -444,6 +467,16 @@ export default {
 				filterPerc: this.selectedFilterPerc
 			})
 		},
+
+		createNodeInfoStore(data){
+            for (const [key, value] of Object.entries(data)) {
+                let node = key
+                let d = JSON.parse(value)
+                let split_node = node.split('=')[1]
+                this.$store.nodeInfo[split_node] = d
+            }
+            console.log("NodeInfo: ", this.$store.nodeInfo)
+        },
 
 		setTargetDataset() {
 			let min_inclusive_dataset = '';

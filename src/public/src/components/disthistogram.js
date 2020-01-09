@@ -52,15 +52,16 @@ export default {
 
     sockets: {
         ensemble_histogram(data) {
-            data = JSON.parse(data)
-            console.log("Ensemble Histogram Data: ", data)
-            if (this.firstRender) {
-                this.init()
-            }
-            else {
-                this.clear()
-            }
-            this.firstRender = false
+            // data = JSON.parse(data)
+            // console.log("Ensemble Histogram Data: ", data)
+            // if (this.firstRender) {
+            //     this.init()
+            // }
+            // else {
+            //     this.clear()
+            // }
+            // this.firstRender = false
+            console.log(this.$store.nodeInfo, data['name'])
             let nodeData = this.$store.nodeInfo[data['name'][0]]
             this.render(nodeData)
         },
@@ -93,7 +94,10 @@ export default {
                 })
         },
 
-        render(data) {
+        render(callsite) {
+            console.log(this.$store.nodeInfo)
+            let data = this.$store.nodeInfo[callsite]
+            console.log(data)
             let temp = this.dataProcess(data['ensemble'][0][0]);
             this.xVals = temp[0];
             this.freq = temp[1];
@@ -513,8 +517,8 @@ export default {
             this.freq.forEach((fregVal, index) => {
                 const processIDs = this.binContainsProcID[index];
                 const target_processIDs = this.target_binContainsProcID[index]
-                
-                // For ensemble process ids. 
+
+                // For ensemble process ids.
                 if (processIDs) {
                     this.rankLinesG = this.svg.append('g')
                         .attr('class', `binRank bin_${index}`)
@@ -528,7 +532,7 @@ export default {
                     groupArray.forEach((group) => {
                         this.drawRankLines(group, processIDs, index, 'ensemble')
                     })
-                    
+
                 }
                 // For the target process ids.
                 if (target_processIDs) {
