@@ -7,6 +7,7 @@ from ast import literal_eval as make_tuple
 import math
 from networkx.readwrite import json_graph
 
+
 class moduleHierarchyDist:
     def __init__(self, state, modFunc):
         self.graph = state.graph
@@ -21,6 +22,7 @@ class moduleHierarchyDist:
             self.function = modFunc.split("/")[1]
             self.module = modFunc.split("/")[0]
 
+        print(self.modFunc, self.module)
         # Create the Super node's hierarchy.
         self.hierarchy = nx.Graph()
         self.result = self.run()
@@ -188,6 +190,6 @@ class moduleHierarchyDist:
         # tree = nx.minimum_spanning_tree(self.hierarchy)
         return {
             "data": paths_df.to_json(orient="columns"),
-            # "tree": json_graph.tree_data(tree, root=func) 
+            # "tree": json_graph.tree_data(tree, root=func)
         }
 
