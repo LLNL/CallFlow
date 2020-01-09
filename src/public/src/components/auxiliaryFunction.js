@@ -40,14 +40,12 @@ export default {
     sockets: {
         auxiliary(data) {
             this.dataReady = true
-
             this.preprocess_data = {}
             for (let dataset of Object.keys(data)) {
                 if (data.hasOwnProperty(dataset)) {
                     this.preprocess_data[dataset] = this.preprocess(data[dataset])
                 }
             }
-
             this.init()
         },
     },

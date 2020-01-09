@@ -1,8 +1,6 @@
 import tpl from '../../html/distgraph/colormap.html'
 import * as d3 from 'd3'
 import 'd3-selection-multi'
-import { thresholdScott, mean } from 'dagre-d3/dist/dagre-d3'
-import Color from '../color'
 
 export default {
     template: tpl,
@@ -20,7 +18,7 @@ export default {
         colorMax: 0,
         padding: {
             bottom: 30,
-            right: 250,
+            right: 300,
         },
         id: ''
     }),
@@ -70,7 +68,7 @@ export default {
                             'width': this.width / splits,
                             'height': this.height,
                             'x': i * (this.width / splits),
-                            'class': 'dist-colormap-rect',
+                            'class': 'dist-colormap-rect-metric',
                             'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - this.padding.bottom})`,
                             'fill': color(splitColor)
                         })
@@ -86,7 +84,6 @@ export default {
             } else {
                 let splits = this.$store.colorPoint
                 let color = this.color.getScale("RankDiff")
-                console.log(color)
                 for (let i = 0; i < splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
                     this.scaleG.append('rect')
@@ -95,7 +92,7 @@ export default {
                             'height': this.height,
                             'x': i * (this.width / splits),
                             'class': 'dist-colormap-rect',
-                            'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - this.padding.bottom})`,
+                            'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
                             'fill': color(splitColor)
                         })
                 }
@@ -118,7 +115,30 @@ export default {
                             'height': this.height,
                             'x': i * (this.width / splits),
                             'class': 'dist-colormap-rect',
-                            'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - this.padding.bottom})`,
+                            'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
+                            'fill': color(splitColor)
+                        })
+                }
+            }
+        },
+
+        drawBinColorMap() {
+            this.color = this.$store.binColor
+
+            if (this.color.option == "Module") {
+
+            } else {
+                let splits = this.$store.colorPoint
+                let color = this.color.getScale("Bin")
+                for (let i = 0; i < splits; i += 1) {
+                    let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
+                    this.scaleG.append('rect')
+                        .attrs({
+                            'width': this.width / splits,
+                            'height': this.height,
+                            'x': i * (this.width / splits),
+                            'class': 'dist-colormap-rect',
+                            'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
                             'fill': color(splitColor)
                         })
                 }
@@ -133,8 +153,10 @@ export default {
                 .attrs({
                     "dy": ".35em",
                     "text-anchor": "middle",
-                    'class': 'dist-colormap-text',
-                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
+                    'y': 10,
+                    'x': -30,
+                    'class': 'dist-colormap-text-metric',
+                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - this.padding.bottom})`,
                 })
                 .text((this.colorMin * 0.000001).toFixed(3) + 's');
 
@@ -144,8 +166,10 @@ export default {
                 .attrs({
                     "dy": ".35em",
                     "text-anchor": "middle",
-                    "class": "dist-colormap-text",
-                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - 2*this.padding.bottom})`,
+                    'y': 10,
+                    'x': 30,
+                    "class": "dist-colormap-text-metric",
+                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - this.padding.bottom})`,
                 })
                 .text((this.colorMax * 0.000001).toFixed(3) + "s");
 
@@ -158,6 +182,8 @@ export default {
                 .style("font-size", "14px")
                 .attrs({
                     "dy": ".35em",
+                    'y': 10,
+                    'x': -30,
                     "text-anchor": "middle",
                     'class': 'dist-colormap-text',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
@@ -169,6 +195,8 @@ export default {
                 .style("font-size", "14px")
                 .attrs({
                     "dy": ".35em",
+                    "y": 10,
+                    'x': 30,
                     "text-anchor": "middle",
                     "class": "dist-colormap-text",
                     'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - 2*this.padding.bottom})`,
@@ -184,8 +212,10 @@ export default {
                 .style("font-size", "14px")
                 .attrs({
                     "dy": ".35em",
+                    'y': 10,
+                    'x': -30,
                     "text-anchor": "middle",
-                    'class': 'dist-colormap-text',
+                    'class': 'dist-colormap-text-metric',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
                 })
                 .text((this.colorMin * 0.000001).toFixed(3) + 's');
@@ -195,11 +225,42 @@ export default {
                 .style("font-size", "14px")
                 .attrs({
                     "dy": ".35em",
+                    'y': 10,
+                    'x': 30,
                     "text-anchor": "middle",
                     "class": "dist-colormap-text",
                     'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - 2*this.padding.bottom})`,
                 })
                 .text((this.colorMax * 0.000001).toFixed(3) + "s");
+        },
+
+        drawBinText() {
+            // draw the element
+            this.scaleG.append("text")
+                .style("fill", "black")
+                .style("font-size", "14px")
+                .attrs({
+                    "dy": ".35em",
+                    "y": 10,
+                    'x': -30,
+                    "text-anchor": "middle",
+                    'class': 'dist-colormap-text',
+                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
+                })
+                .text(this.colorMin);
+
+            this.scaleG.append("text")
+                .style("fill", "black")
+                .style("font-size", "14px")
+                .attrs({
+                    "dy": ".35em",
+                    "y": 10,
+                    'x': 10,
+                    "text-anchor": "middle",
+                    "class": "dist-colormap-text",
+                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - 2*this.padding.bottom})`,
+                })
+                .text(this.colorMax);
 
         },
 
@@ -231,6 +292,16 @@ export default {
                 this.colorMax = mean_max
                 this.drawMeanDiffColorMap()
                 this.drawMeanDiffText()
+            }
+        },
+
+        updateWithMinMax(mode, min, max){
+            this.clear()
+            this.colorMin = min
+            this.colorMax = max
+            if(mode == 'bin'){
+                this.drawBinColorMap()
+                this.drawBinText()
             }
         }
     }

@@ -110,7 +110,19 @@ export default {
 		selectedCompareMode: 'rankDiff',
 		enableCompareMode: false,
 		selectedOutlierBand: 4,
-		defaultCallSite: '<program root>'
+		defaultCallSite: '<program root>',
+		presentation: true,
+		presentationOrder: [
+			"run_information",
+			"dist_group",
+			"dist_gradients",
+			"dist-mini-histogram",
+			"dist_hierarchy",
+			"dist_auxiliary",
+			"dist_projection",
+			"dist_similarity",
+
+		]
 	}),
 
 	watch: {},
@@ -260,10 +272,10 @@ export default {
 		},
 
 		dist_mini_histogram(data) {
-            data = JSON.parse(data)
+			data = JSON.parse(data)
 			this.createNodeInfoStore(data)
 			this.$refs.DistHistogram.render(this.defaultCallSite)
-        },
+		},
 
 		compare() {
 			this.selectedCompareDataset = this.$store.selectedCompareDataset
@@ -334,6 +346,19 @@ export default {
 		},
 
 		init() {
+			console.log(this.presentation)
+			this.presentationPage = 0
+			if (this.presentation) {
+				let self = this
+				this.addEvent(document, "keypress", function (e) {
+					e = e || window.event;
+					if (e.keyCode == '97') {
+						console.log(self.presentationOrder, self.presentationPage)
+						self.sendRequest(self.presentationOrder[self.presentationPage])
+						self.presentationPage += 1
+					}
+				});
+			}
 			// Initialize colors
 			this.colors()
 			console.log("[Mode = ", this.selectedMode, "]")
@@ -361,7 +386,7 @@ export default {
 						datasets: this.$store.actual_dataset_names,
 						functionsInCCT: this.selectedFunctionsInCCT,
 					})
-				} else if (this.selectedFormat == 'Callgraph') {
+				} else if (this.selectedFormat == 'Callgraph' && !this.presentation) {
 					this.$socket.emit('run_information', {
 						datasets: this.$store.actual_dataset_names,
 					})
@@ -398,22 +423,77 @@ export default {
 					})
 
 					this.$socket.emit('dist_hierarchy', {
-                        module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
-                        datasets: this.$store.actual_dataset_names,
-                    })
+						module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
+						datasets: this.$store.actual_dataset_names,
+					})
 
-                    // this.$socket.emit('ensemble_histogram', {
-					// 	module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
-					// 	datasets: this.$store.actual_dataset_names,
-                    // })
+					this.$socket.emit('ensemble_histogram', {
+						module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
+						datasets: this.$store.actual_dataset_names,
+					})
 
 				}
+			}
+		},
+
+		sendRequest(request) {
+			console.log(request)
+			switch (request) {
+				case 'run_information':
+					this.$socket.emit('run_information', {
+						datasets: this.$store.actual_dataset_names,
+					})
+					break;
+				case 'dist_group':
+					this.$socket.emit('dist_group', {
+						datasets: this.$store.actual_dataset_names,
+						groupBy: this.selectedGroupBy
+					})
+					break;
+				case 'dist-mini-histogram':
+					this.$socket.emit('dist-mini-histogram', {
+						'target-datasets': [this.$store.selectedTargetDataset],
+					})
+					break;
+				case 'dist_similarity':
+					this.$socket.emit('dist_similarity', {
+						datasets: this.$store.actual_dataset_names,
+						algo: 'deltacon',
+						module: 'all'
+					})
+					break;
+				case 'dist_gradients':
+					this.$socket.emit('dist_gradients', {
+						datasets: this.$store.actual_dataset_names,
+						plot: 'kde'
+					})
+					break;
+				case 'dist_projection':
+					this.$socket.emit('dist_projection', {
+						datasets: this.$store.actual_dataset_names,
+						algo: 'tsne'
+					})
+					break;
+				case 'dist_auxiliary':
+					this.$socket.emit('dist_auxiliary', {
+						datasets: this.$store.actual_dataset_names,
+						sortBy: this.$store.auxiliarySortBy,
+						module: 'all'
+					})
+					break;
+				case 'dist_hierarchy':
+					this.$socket.emit('dist_hierarchy', {
+						module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
+						datasets: this.$store.actual_dataset_names,
+					})
+					break;
 			}
 		},
 
 		colors() {
 			this.$store.color = new Color(this.selectedColorBy)
 			this.$store.zeroToOneColor = new Color(this.selectedColorBy)
+			this.$store.binColor = new Color('Bin')
 			this.$store.rankDiffColor = new Color('RankDiff')
 			this.$store.meanDiffColor = new Color('MeanDiff')
 
@@ -455,7 +535,7 @@ export default {
 			this.selectedColorMinText = this.$store.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.$store.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 			this.$store.color.highlight = '#AF9B90';//'#4681B4'
-			this.$store.color.target = '#AF9B90';//'#4681B4'
+			this.$store.color.target = '#4681B4'//'#AF9B90';//'#4681B4'
 			this.$store.color.ensemble = '#C0C0C0';//'#4681B4'
 			this.$store.color.compare = '#043060'
 		},
@@ -468,15 +548,15 @@ export default {
 			})
 		},
 
-		createNodeInfoStore(data){
-            for (const [key, value] of Object.entries(data)) {
-                let node = key
-                let d = JSON.parse(value)
-                let split_node = node.split('=')[1]
-                this.$store.nodeInfo[split_node] = d
-            }
-            console.log("NodeInfo: ", this.$store.nodeInfo)
-        },
+		createNodeInfoStore(data) {
+			for (const [key, value] of Object.entries(data)) {
+				let node = key
+				let d = JSON.parse(value)
+				let split_node = node.split('=')[1]
+				this.$store.nodeInfo[split_node] = d
+			}
+			console.log("NodeInfo: ", this.$store.nodeInfo)
+		},
 
 		setTargetDataset() {
 			let min_inclusive_dataset = '';
@@ -530,7 +610,14 @@ export default {
 			this.clearLocal()
 			this.$store.selectedTargetDataset = this.selectedTargetDataset
 			console.log("[Update] Target Dataset: ", this.selectedTargetDataset)
-			this.init()
+			if(this.presentation){
+				for(let i = 0; i < this.presentationPage - 1; i += 1){
+					this.sendRequest(this.presentationOrder[this.presentationPage])
+				}
+			}
+			else{
+				this.init()
+			}
 		},
 
 		updateMode() {
@@ -676,6 +763,16 @@ export default {
 				} else {
 					this.selectedCallback(null);
 				}
+			}
+		},
+
+		addEvent(element, eventName, callback) {
+			if (element.addEventListener) {
+				element.addEventListener(eventName, callback, false);
+			} else if (element.attachEvent) {
+				element.attachEvent("on" + eventName, callback);
+			} else {
+				element["on" + eventName] = callback;
 			}
 		}
 

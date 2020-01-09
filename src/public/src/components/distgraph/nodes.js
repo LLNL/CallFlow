@@ -62,7 +62,6 @@ export default {
             }
 
             if(this.$store.selectedCompareMode == 'rankDiff'){
-                console.log(this.$store.selectedColorPoint)
                 this.$store.rankDiffColor.setColorScale(this.rank_min, this.rank_max, this.$store.selectedColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.DistColorMap.update('rankDiff', data)
                 this.setupDiffRuntimeGradients(data)
@@ -158,7 +157,18 @@ export default {
 
         setupMeanGradients(data) {
             let method = 'hist'
+            this.hist_min = 0
+            this.hist_max = 0
             for (let d in data) {
+                console.log(d, data[d])
+                this.hist_min = Math.min(this.hist_min, data[d]['hist']['y_min'])
+                this.hist_max = Math.max(this.hist_max, data[d]['hist']['y_max'])
+            }
+            console.log(this.hist_min, this.hist_max)
+            this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedColorMap, this.$store.selectedColorPoint)
+            this.$parent.$refs.DistColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
+
+            for (let d in data){
                 var defs = d3.select('#distgraph-overview-')
                     .append("defs");
 
@@ -183,7 +193,7 @@ export default {
                     let current_value = (val[i] / (max_val - min_val))
                     this.linearGradient.append("stop")
                         .attr("offset", 100 * x + "%")
-                        .attr("stop-color", this.$store.zeroToOneColor.getColorByValue(current_value))
+                        .attr("stop-color", this.$store.binColor.getColorByValue(current_value))
                 }
             }
         },
@@ -209,10 +219,10 @@ export default {
                 })
                 .style('shape-rendering', 'crispEdges')
                 .style('stroke', (d) => {
-                    return d3.rgb(this.$store.color.getColor(d)).darker(2);
+                    return d3.rgb(this.$store.color.getColor(d));
                 })
                 .style('stroke-width', (d) => {
-                    return 1
+                    return 5
                 })
                 .on('mouseover', (d) => {
                     self.$refs.ToolTip.render(self.graph, d)
@@ -240,13 +250,13 @@ export default {
                     })
 
                     this.$socket.emit('ensemble_histogram', {
+                        module: selectedModule,
                         datasets: this.$store.actual_dataset_names,
-                        module: selectedModule
                     })
 
                     this.$socket.emit('dist_auxiliary', {
-                        datasets: this.$store.actual_dataset_names,
                         module: selectedModule,
+                        datasets: this.$store.actual_dataset_names,
                         sortBy: this.$store.auxiliarySortBy,
                     })
                 })
@@ -408,7 +418,6 @@ export default {
                     return 1;
                 })
                 .style("fill", (d, i) => {
-                    console.log(min_diff, max_diff,)
                     if(max_diff == 0 && min_diff == 0){
                         return this.$store.meanDiffColor.getColorByValue(0.5)
                     }
@@ -481,9 +490,10 @@ export default {
         drawTargetLine(d) {
             let mode = this.$store.selectedDiffNodeAlignment
             let dataset = this.$store.selectedTargetDataset
+            console.log(dataset)
             for (let i = 0; i < this.$store.graph.nodes.length; i++) {
                 let node_data = this.$store.graph.nodes[i]
-
+                console.log(node_data)
                 let min_inclusive_data = node_data[dataset]['time (inc)']
                 let x1 = node_data.x - this.nodeWidth
                 let x2 = node_data.x

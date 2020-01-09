@@ -183,11 +183,11 @@ export default {
                     },
                     'stroke-width': 3.0,
                     stroke: (d) => {
-                        if (d[2] == this.$store.selectedTargetDataset) {
-                            return d3.rgb(this.$store.color.target).darker(5)
+                        if (d[2] == self.$store.selectedTargetDataset) {
+                            return d3.rgb(self.$store.color.target)
                         }
                         else {
-                            return d3.rgb(this.$store.color.ensemble).darker()
+                            return d3.rgb(self.$store.color.ensemble)
                         }
                     },
                     "fill-opacity": 0,
@@ -259,7 +259,7 @@ export default {
             this.$store.selectedCompareDataset = this.compareDataset
 
             // Update the UI elements.
-            EventHandler.$emit('compare')
+            this.$emit('compare')
 
             // Send a request to the server to send the information.
             this.$socket.emit('compare', {

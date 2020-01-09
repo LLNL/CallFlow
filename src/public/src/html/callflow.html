@@ -57,7 +57,7 @@
 				<v-flex xs12 class="ma-1">
 					<v-text-field label="Filter Threshold (in seconds)" v-model="selectedIncTime" class="mt-0"
 						type="number" @change="updateFilterIncTime"></v-text-field>
-					<vue-slider id="frequency-slider" :width="200" :process="true" v-model="selectedFilterPerc"
+					<vue-slider id="frequency-slider" :width="200" :process="true" v-model="selectedFilterPerc" :tooltip="'always'"  :tooltip-placement="'top'"
 						:order="false" @change="updateFilterPerc">
 						<template #prepend>
 							<v-text-field v-model="filterPercRange[[0, selectedFilterPerc]]" class="pt-0 mt-0"
