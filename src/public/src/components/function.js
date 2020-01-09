@@ -1,6 +1,5 @@
 import tpl from '../html/function.html'
 import * as  d3 from 'd3'
-import { timingSafeEqual } from 'crypto';
 
 export default {
     name: 'Function',
@@ -36,7 +35,7 @@ export default {
         },
 
         splitcaller(data){
-            console.log("Split caller graph", data)      
+            console.log("Split caller graph", data)
         }
     },
 
@@ -57,7 +56,7 @@ export default {
             this.functionHeight = this.boxHeight - this.histogramOffset;
             this.functionWidth = this.boxWidth;
             this.funcitonSVG = d3.select('#' + this.id)
-                .attrs({    
+                .attrs({
                     "width": this.boxWidth,// + this.padding.right + this.padding.left,
                     "height": this.boxHeight,
                     "transform": `translate(${this.padding.left}, ${this.padding.top})`
@@ -87,7 +86,7 @@ export default {
                     'y': () => {
                         return this.textyOffset + this.textPadding * this.textCount + "px";
                     }
-                })  
+                })
                 .text((d) => {
                     return d
                 })
@@ -141,7 +140,7 @@ export default {
         },
 
         update(data) {
-         
+
         },
     }
 }

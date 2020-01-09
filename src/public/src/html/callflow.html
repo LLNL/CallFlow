@@ -5,21 +5,20 @@
 		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
 		<v-flex xs2 class="ma-2">
 			<v-select label="Select Target run" :items="datasets"
-			v-if="selectedMode == 'Ensemble' && selectedFormat == 'Callgraph'" v-model="selectedTargetDataset"
-			:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
+				v-if="selectedMode == 'Ensemble' && selectedFormat == 'Callgraph'" v-model="selectedTargetDataset"
+				:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
 			</v-select>
-			<v-select label="Select a run" :items="datasets"
-			v-if="selectedMode == 'Single' || selectedFormat == 'CCT'" v-model="selectedTargetDataset"
-			:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
+			<v-select label="Select a run" :items="datasets" v-if="selectedMode == 'Single' || selectedFormat == 'CCT'"
+				v-model="selectedTargetDataset" :menu-props="{ maxHeight: '400' }" box
+				v-on:change="updateTargetDataset()">
 			</v-select>
 		</v-flex>
 		<v-flex xs2 class="ma-2">
-				<v-select label="Select Compare run" :items="datasets"
-				v-if="selectedMode == 'Ensemble' && selectedFormat == 'Callgraph'"
-				v-model="selectedCompareDataset"
-					:menu-props="{ maxHeight: '400' }" box v-on:change="updateCompareDataset()">
-				</v-select>
-			</v-flex>
+			<v-select label="Select Compare run" :items="datasets"
+				v-if="selectedMode == 'Ensemble' && selectedFormat == 'Callgraph'" v-model="selectedCompareDataset"
+				:menu-props="{ maxHeight: '400' }" box v-on:change="updateCompareDataset()">
+			</v-select>
+		</v-flex>
 		<!-- <v-flex xs2 class="ma-2" v-if="selectedMode == 'Distribution'">
 			<v-select label="Dataset 2" :items="datasets" v-model="selectedDataset2" :menu-props="{ maxHeight: '400' }"
 				box v-on:change="updateDataset()">
@@ -32,11 +31,7 @@
 			</v-select>
 		</v-flex> -->
 		<v-spacer></v-spacer>
-		<v-flex xs2 class="ma-1">
-			<v-select label="Select Comparison mode" :items="compareModes" v-model="selectedCompareMode"
-				:menu-props="{ maxHeight: '400' }" box v-on:change="updateCompareMode()">
-			</v-select>
-		</v-flex>
+
 		<v-flex xs2 class="ma-1">
 			<v-select label="Graph to visualize" :items="formats" v-model="selectedFormat"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
@@ -60,10 +55,39 @@
 					<v-icon v-on:click="reset()">refresh</v-icon>
 				</v-btn>
 				<v-flex xs12 class="ma-1">
-					<UploadButton title="Upload the config file" :selectedCallback="fileSelected"></UploadButton>
+					<v-subheader class="teal lighten-4">Pre-processing</v-subheader>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
-					<v-select label="Node Encoding" :items="colorBy" v-model="selectedColorBy"
+					<UploadButton title="Upload the config file" :selectedCallback="fileSelected"></UploadButton>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
+					<v-select label="Group By" :items="groupBy" v-model="selectedGroupBy"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateGroupBy()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-select label="Filter By" :items="filterBy" v-model="selectedFilterBy"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateFilterBy()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-text-field label="Filter Threshold (in seconds)" v-model="selectedIncTime" class="mt-0"
+						type="number" @change="updateFilterIncTime"></v-text-field>
+					<vue-slider id="frequency-slider" :width="200" :process="true" v-model="selectedFilterPerc"
+						:order="false" @change="updateFilterPerc">
+						<template #prepend>
+							<v-text-field v-model="filterPercRange[[0, selectedFilterPerc]]" class="pt-0 mt-0"
+								hide-details single-line type="number" style="width: 30px">
+							</v-text-field>
+						</template>
+					</vue-slider>
+				</v-flex>
+				<v-divider></v-divider>
+				<v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">Encoding</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-select label="Metric" :items="colorBy" v-model="selectedColorBy"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColorBy()">
 					</v-select>
 				</v-flex>
@@ -89,38 +113,24 @@
 						v-on:change="updateColorMinMax()">
 					</v-text-field>
 				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
-					<v-select label="Group By" :items="groupBy" v-model="selectedGroupBy"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateGroupBy()">
-					</v-select>
-				</v-flex>
-				<!-- <v-flex xs12 class="ma-1">
-					<v-select label="Group Mode" :items="groupModes" v-model="selectedGroupMode"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateGroupByMode()"
-						v-show="selectedFormat == 'Callgraph'">
-					</v-select>
-				</v-flex> -->
 				<v-flex xs12 class="ma-1">
-					<v-select label="Filter By" :items="filterBy" v-model="selectedFilterBy"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateFilterBy()">
-					</v-select>
+					<v-subheader class="teal lighten-4">Comparison</v-subheader>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
-					<v-text-field label="Filter Threshold (in seconds)" v-model="selectedIncTime" class="mt-0"
-						type="number" @change="updateFilterIncTime"></v-text-field>
-					<vue-slider id="frequency-slider" :width="200" :process="true" v-model="selectedFilterPerc"
-						:order="false" @change="updateFilterPerc">
-						<template #prepend>
-							<v-text-field v-model="filterPercRange[[0, selectedFilterPerc]]" class="pt-0 mt-0"
-								hide-details single-line type="number" style="width: 30px">
-							</v-text-field>
-						</template>
-					</vue-slider>
+					<v-select label="Select Comparison mode" :items="compareModes" v-model="selectedCompareMode"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateCompareMode()">
+					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
 					<v-text-field label="Number of bins in Histogram" class="mt-0" type="number"
 						v-model="selectedBinCount" :menu-props="{ maxHeight: '200' }" persistent-hint
 						v-on:change="updateBinCount()">
+					</v-text-field>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
+					<v-text-field label="Outlier Bands" class="mt-0" type="number"
+						v-model="selectedOutlierBand" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateOutlierBand()">
 					</v-text-field>
 				</v-flex>
 				<!-- <v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
@@ -201,7 +211,7 @@
 						<RunInformation ref="RunInformation" />
 					</span>
 					<span>
-						<Projection ref="Projection" />
+						<Projection ref="Projection" @compare="updateCompareMode" />
 					</span>
 					<span>
 						<SimilarityMatrix ref="SimilarityMatrix" />

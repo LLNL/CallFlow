@@ -108,6 +108,7 @@ export default {
 		compareModes: ['meanDiff', 'rankDiff'],
 		selectedCompareMode: 'meanDiff',
 		enableCompareMode: false,
+		selectedOutlierBand: 4,
 	}),
 
 	watch: {},
@@ -127,17 +128,6 @@ export default {
 		});
 
 		this.$socket.emit('init')
-
-		EventHandler.$on('compare', function () {
-			this.selectedCompareDataset = this.$store.selectedCompareDataset
-			this.enableCompareMode = true
-			this.$store.selectedCompareMode = this.selectedCompareMode
-		})
-
-
-		EventHandler.$on('highlight_datasets', function () {
-			this.selectedCompareDataset = this.$store.selectedCompareDataset
-		})
 	},
 
 	sockets: {
@@ -400,6 +390,8 @@ export default {
 		colors() {
 			this.$store.color = new Color(this.selectedColorBy)
 			this.$store.zeroToOneColor = new Color(this.selectedColorBy)
+			this.$store.rankDiffColor = new Color(this.selectedColorBy)
+			this.$store.meanDiffColor = new Color('MeanDiff')
 
 			this.colorMap = this.$store.color.getAllColors()
 			if (this.selectedMode == 'Ensemble') {
@@ -434,6 +426,8 @@ export default {
 			console.log("Assigned Color map: ", this.$store.color.datasetColor)
 			this.$store.selectedColorMin = this.selectedColorMin
 			this.$store.selectedColorMax = this.selectedColorMax
+			this.$store.selectedColorMap = this.selectedColorMap
+			this.$store.selectedColorPoints = this.selectedColorPoint
 			this.selectedColorMinText = this.$store.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.$store.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 			this.$store.color.highlight = '#AF9B90';//'#4681B4'
@@ -625,15 +619,20 @@ export default {
 		},
 
 		updateCompareDataset() {
-
+			this.$store.selectedCompareDataset = this.selectedCompareDataset
+			this.$socket.emit('compare', {
+				targetDataset: this.$store.selectedTargetDataset,
+				compareDataset: this.$store.selectedCompareDataset,
+			})
 		},
 
 		updateCompareMode() {
 			this.$store.selectedCompareMode = this.selectedCompareMode
 			this.$socket.emit('compare', {
 				targetDataset: this.$store.selectedTargetDataset,
-				compareDataset: this.compareDataset,
+				compareDataset: this.$store.selectedCompareDataset,
 			})
+			console.log('aaaaa')
 		},
 
 		fileSelected(e) {
