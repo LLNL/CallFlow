@@ -44,18 +44,31 @@ export default {
         },
 
         compare(data) {
-            this.$store.rankDiff = false
+            console.log("Comparison :", data)
             this.clearGradients()
             this.clearQuantileLines()
             this.clearZeroLine()
             this.renderZeroLine = {}
-            console.log(this.$store.selectedCompareMode)
+
+            this.rank_min = 0
+            this.rank_max = 0
+            this.mean_min = 0
+            this.mean_max = 0
+            for(let i = 0; i < data.length; i += 1){
+                this.rank_min = Math.min(this.rank_min, data[i]['hist']['y_min'])
+                this.rank_max = Math.max(this.rank_max, data[i]['hist']['y_max'])
+                this.mean_min = Math.min(this.mean_min, data[i]['hist']['x_min'])
+                this.mean_max = Math.max(this.mean_max, data[i]['hist']['x_max'])
+            }
+
             if(this.$store.selectedCompareMode == 'rankDiff'){
+                this.$store.rankDiffColor.setColorScale(this.rank_min, this.rank_max, this.$store.selectedColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.DistColorMap.update('rankDiff', data)
-                this.setupRankDiffRuntimeGradients(data)
+                this.setupDiffRuntimeGradients(data)
                 this.rankDiffRectangle()
             }
             else if(this.$store.selectedCompareMode == 'meanDiff'){
+                this.$store.meanDiffColor.setColorScale(this.mean_min, this.mean_max, this.$store.selectedColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.DistColorMap.update('meanDiff', data)
                 this.meanDiffRectangle(data)
             }
@@ -353,7 +366,7 @@ export default {
                     }
                     this.diffGradient.append("stop")
                         .attr("offset", 100 * x + "%")
-                        .attr("stop-color", d3.interpolateReds((val[i] / (max_val - min_val))))
+                        .attr("stop-color", this.$store.rankDiffColor.getColor((val[i] / (max_val - min_val))))
                 }
             }
         },
@@ -394,10 +407,12 @@ export default {
                     return 1;
                 })
                 .style("fill", (d, i) => {
+                    console.log(min_diff, max_diff, mean_diff[d.name])
                     if(max_diff == 0 && min_diff == 0){
-                        return 0.5
+                        return this.$store.meanDiffColor.getColor(0.5)
                     }
-                    return d3.interpolateRdYlGn((mean_diff[d.name] - min_diff)/ (max_diff - min_diff))
+                    return this.$store.meanDiffColor.getColorByValue((mean_diff[d.name]))
+                    /// (max_diff - min_diff))
                 })
         },
 

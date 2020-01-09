@@ -9,6 +9,7 @@ export default class Color {
         this.excColorScale = null;
         this.nRangeColorScale = null;
         this.diffColorScale = null;
+        this.meanDiffColorScale = null;
         this.loadImbColorScale = null;
         this.grey = '#252525'
         this.highlight = '#377eb8'
@@ -392,7 +393,6 @@ export default class Color {
     }
 
     setColorScale(min, max, colorType, colorPoint) {
-        console.log(min, max)
         this.colorMin = min
         this.colorMax = max
         this.colorMap = this.colorbrewer[colorType][colorPoint]
@@ -419,6 +419,10 @@ export default class Color {
             this.loadImbColorScale = chroma.scale(this.colorMap)
                 // .padding(this.colorPadding)
                 .domain([0, 1]);
+        } else if (this.option == 'MeanDiff') {
+            this.meanDiffColorScale = chroma.scale('RdYlBu')
+                // .padding(this.colorPadding)
+                .domain([min, max]);
         }
     }
 
@@ -435,6 +439,8 @@ export default class Color {
             return this.diffColorScale;
         } else if (option == "Imbalance") {
             return this.loadImbColorScale;
+        } else if (option == "MeanDiff") {
+            return this.meanDiffColorScale;
         }
     }
 
@@ -455,6 +461,8 @@ export default class Color {
             return this.diffColorScale(node.diff);
         } else if (this.option == "Imbalance") {
             return this.loadImbColorScale(node.imbalance_perc);
+        } else if (this.option == "MeanDiff") {
+            return this.meanDiffColorScale(node.mean_diff);
         }
     }
 
@@ -471,6 +479,8 @@ export default class Color {
             return this.diffColorScale(value)
         } else if (this.option == "Imbalance") {
             return this.loadImbColorScale(value)
+        } else if (this.option == "MeanDiff") {
+            return this.meanDiffColorScale(value)
         }
     }
 
