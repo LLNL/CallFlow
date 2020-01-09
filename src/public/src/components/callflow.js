@@ -119,8 +119,8 @@ export default {
 			"dist-mini-histogram",
 			"dist_hierarchy",
 			"dist_auxiliary",
-			"dist_projection",
 			"dist_similarity",
+			"dist_projection",
 
 		]
 	}),
