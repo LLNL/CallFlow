@@ -62,6 +62,7 @@ export default {
             }
 
             if(this.$store.selectedCompareMode == 'rankDiff'){
+                console.log(this.$store.selectedColorPoint)
                 this.$store.rankDiffColor.setColorScale(this.rank_min, this.rank_max, this.$store.selectedColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.DistColorMap.update('rankDiff', data)
                 this.setupDiffRuntimeGradients(data)
@@ -366,7 +367,7 @@ export default {
                     }
                     this.diffGradient.append("stop")
                         .attr("offset", 100 * x + "%")
-                        .attr("stop-color", this.$store.rankDiffColor.getColor((val[i] / (max_val - min_val))))
+                        .attr("stop-color", this.$store.rankDiffColor.getColorByValue((val[i])))// / (max_val - min_val))))
                 }
             }
         },
@@ -407,9 +408,9 @@ export default {
                     return 1;
                 })
                 .style("fill", (d, i) => {
-                    console.log(min_diff, max_diff, mean_diff[d.name])
+                    console.log(min_diff, max_diff,)
                     if(max_diff == 0 && min_diff == 0){
-                        return this.$store.meanDiffColor.getColor(0.5)
+                        return this.$store.meanDiffColor.getColorByValue(0.5)
                     }
                     return this.$store.meanDiffColor.getColorByValue((mean_diff[d.name]))
                     /// (max_diff - min_diff))

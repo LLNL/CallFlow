@@ -85,7 +85,8 @@ export default {
 
             } else {
                 let splits = this.$store.colorPoint
-                let color = this.color.getScale(this.color.option)
+                let color = this.color.getScale("RankDiff")
+                console.log(color)
                 for (let i = 0; i < splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
                     this.scaleG.append('rect')

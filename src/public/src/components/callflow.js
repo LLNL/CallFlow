@@ -107,7 +107,7 @@ export default {
 		comparisonMode: false,
 		selectedCompareDataset: null,
 		compareModes: ['meanDiff', 'rankDiff'],
-		selectedCompareMode: 'meanDiff',
+		selectedCompareMode: 'rankDiff',
 		enableCompareMode: false,
 		selectedOutlierBand: 4,
 	}),
@@ -391,7 +391,7 @@ export default {
 		colors() {
 			this.$store.color = new Color(this.selectedColorBy)
 			this.$store.zeroToOneColor = new Color(this.selectedColorBy)
-			this.$store.rankDiffColor = new Color(this.selectedColorBy)
+			this.$store.rankDiffColor = new Color('RankDiff')
 			this.$store.meanDiffColor = new Color('MeanDiff')
 
 			this.colorMap = this.$store.color.getAllColors()
@@ -428,7 +428,7 @@ export default {
 			this.$store.selectedColorMin = this.selectedColorMin
 			this.$store.selectedColorMax = this.selectedColorMax
 			this.$store.selectedColorMap = this.selectedColorMap
-			this.$store.selectedColorPoints = this.selectedColorPoint
+			this.$store.selectedColorPoint = this.selectedColorPoint
 			this.selectedColorMinText = this.$store.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.$store.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 			this.$store.color.highlight = '#AF9B90';//'#4681B4'
