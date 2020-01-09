@@ -54,7 +54,8 @@ class App:
         self.config.preprocess = self.args.preprocess
         self.config.entire = self.args.entire
         self.config.filter = self.args.filter
-        self.config.union = self.args.union
+        self.config.ensemble = self.args.ensemble
+        self.config.production = self.args.production
 
         if self.config.preprocess:
             self.create_dot_callflow_folder()
@@ -71,7 +72,6 @@ class App:
             if self.debug:
                 self.print("[Request] Load the graphframe for client")
             groupBy = "module"
-            print(self.config.dataset_names)
             datasets = self.config.dataset_names
 
             self.callflow.update_dist(
@@ -81,7 +81,11 @@ class App:
         # Start server if preprocess is not called.
         if not self.config.preprocess:
             self.create_socket_server()
-            sockets.run(app, debug=self.debug, use_reloader=True)
+            print(self.config.production)
+            if self.config.production == True:
+                sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
+            else:
+                sockets.run(app, debug=self.debug, use_reloader=True)
 
     # Custom print function.
     def print(self, action, data={}):
@@ -98,18 +102,21 @@ class App:
         parser.add_argument(
             "--verbose", action="store_true", help="Display debug points"
         )
+        parser.add_argument(
+            "--production", action="store_false",help="Make the server run on port 80 for production."
+        )
         parser.add_argument("--config", help="Config file to read")
         parser.add_argument(
             "--input_format", default="hpctoolkit", help="caliper | hpctoolkit"
         )
         parser.add_argument(
-            "--filter", action="store_true", help="Save the filtered dataframe."
+            "--filter", action="store_true", help="Filter mode processing. Use --filterby to set the metric to filter by. --filtertheta to specify the threshold to filter by. "
         )
         parser.add_argument(
-            "--entire", action="store_true", help="Save the entire dataframe."
+            "--entire", action="store_true", help="Entire mode processing."
         )
         parser.add_argument(
-            "--union", action="store_true", help="Union all the dataframes."
+            "--ensemble", action="store_true", help="Ensemble mode processing."
         )
         parser.add_argument(
             "--filterBy",
@@ -120,7 +127,7 @@ class App:
             "--filtertheta", default="10", help="Threshold [Default = 10]"
         )
         parser.add_argument(
-            "--preprocess", action="store_true", help="Preprocess the file"
+            "--preprocess", action="store_true", help="Preprocess mode. To preprocess at the required level of granularity, use the options --filter, --entire. If you are preprocessing multiple callgraphs, use --ensemble option."
         )
         self.args = parser.parse_args()
         self.debug = self.args.verbose
@@ -407,14 +414,14 @@ class App:
             if self.debug:
                 self.print("[Request] Dist-CCT for the two datasets.", data)
 
-            union_cct = self.callflow.update_dist(
+            ensemble_cct = self.callflow.update_dist(
                 {
                     "name": "cct",
                     "datasets": data["datasets"],
                     "functionsInCCT": data["functionsInCCT"],
                 }
             )
-            result = json_graph.node_link_data(union_cct)
+            result = json_graph.node_link_data(ensemble_cct)
             emit("cct", result, json=True)
 
         @sockets.on("dist_group", namespace="/")

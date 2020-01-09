@@ -4,6 +4,7 @@
     "description": "Visualization tool for Calling Context Trees",
     "scripts": {
         "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
+        "production": "webpack-dev-server --host 0.0.0.0 --port 80 --config build/webpack.dev.conf.js",
         "start": "npm run dev",
         "build": "node build/build.js",
         "nodemon-build": "nodemon build/build.js"

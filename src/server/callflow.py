@@ -60,7 +60,7 @@ class CallFlow:
         self.reProcess = config.preprocess
         self.processEntire = config.entire
         self.processFilter = config.filter
-        self.processUnion = config.union
+        self.processEnsemble = config.ensemble
 
         # Create states for each dataset.
         # Note: gf would never change from create_gf.
@@ -108,7 +108,7 @@ class CallFlow:
                 states[dataset_name] = self.pipeline.filter(
                     states[dataset_name], filterBy, filterPerc
                 )
-            elif self.reProcess and self.processUnion:
+            elif self.reProcess and self.processEnsemble:
                 states[dataset_name] = self.pipeline.create(dataset_name)
                 # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
 
@@ -129,7 +129,7 @@ class CallFlow:
             # else:
             # states[dataset_name] = self.read_gf(dataset_name, '')
 
-        if self.reProcess and self.processUnion:
+        if self.reProcess and self.processEnsemble:
             states["ensemble"] = self.pipeline.union(states)
             states["ensemble"] = self.pipeline.filterNetworkX(
                 states, "ensemble", self.config.filter_perc

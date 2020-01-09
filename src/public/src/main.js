@@ -12,7 +12,7 @@ import 'vue-material/dist/theme/default.css'
 
 let socket = new VueSocketIO({
   debug: false,
-  connection: 'http://localhost:5000',
+  connection: 'http://169.237.6.49:5000',
   vuex: {
       store,
       actionPrefix: 'SOCKET_',
