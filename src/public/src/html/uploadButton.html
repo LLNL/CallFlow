@@ -1,0 +1,12 @@
+<!-- <v-text-field prepend-icon="attach_file" single-line v-model="filename" label="Upload the config json."
+    :required="required" @click.native="onFocus" :disabled="disabled" ref="fileTextField">
+<input type="file" :accept="accept" :multiple="multiple" :disabled="disabled" ref="fileInput" @change="onFileChange">
+</v-text-file> -->
+
+<v-text-field label="Upload the config file. ">
+    <div class="btn btn-primary jbtn-file">
+        {{ title }}
+        <!-- <input type="file" v-on:change="fileSelected"> -->
+        <input type="file">
+    </div>
+</v-text-field>

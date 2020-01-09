@@ -103,7 +103,7 @@ class App:
             "--verbose", action="store_true", help="Display debug points"
         )
         parser.add_argument(
-            "--production", action="store_false",help="Make the server run on port 80 for production."
+            "--production", action="store_true", help="Make the server run on port 80 for production."
         )
         parser.add_argument("--config", help="Config file to read")
         parser.add_argument(
