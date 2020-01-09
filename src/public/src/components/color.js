@@ -11,6 +11,7 @@ export default class Color {
         this.diffColorScale = null;
         this.meanDiffColorScale = null;
         this.loadImbColorScale = null;
+        this.rankDiffColorScale = null;
         this.grey = '#252525'
         this.highlight = '#377eb8'
         this.colors = ['red', 'green', 'yellow', 'blue', 'black', 'white'];
@@ -395,6 +396,7 @@ export default class Color {
     setColorScale(min, max, colorType, colorPoint) {
         this.colorMin = min
         this.colorMax = max
+        console.log("Setting color: ", colorType, colorPoint)
         this.colorMap = this.colorbrewer[colorType][colorPoint]
         this.colorPadding = this.setColorPadding(colorPoint)
         if (this.option == 'Module') {
@@ -423,6 +425,10 @@ export default class Color {
             this.meanDiffColorScale = chroma.scale('RdYlBu')
                 // .padding(this.colorPadding)
                 .domain([min, max]);
+        } else if (this.option == 'RankDiff') {
+            this.rankDiffColorScale = chroma.scale(this.colorMap)
+                // .padding(this.colorPadding)
+                .domain([min, max]);
         }
     }
 
@@ -441,6 +447,8 @@ export default class Color {
             return this.loadImbColorScale;
         } else if (option == "MeanDiff") {
             return this.meanDiffColorScale;
+        } else if (option == "RankDiff") {
+            return this.rankDiffColorScale;
         }
     }
 
@@ -463,6 +471,8 @@ export default class Color {
             return this.loadImbColorScale(node.imbalance_perc);
         } else if (this.option == "MeanDiff") {
             return this.meanDiffColorScale(node.mean_diff);
+        } else if (this.option == "RankDiff") {
+            return this.rankDiffColorScale(node.mean_diff);
         }
     }
 
@@ -481,6 +491,8 @@ export default class Color {
             return this.loadImbColorScale(value)
         } else if (this.option == "MeanDiff") {
             return this.meanDiffColorScale(value)
+        } else if (this.option == "RankDiff") {
+            return this.rankDiffColorScale(value)
         }
     }
 
