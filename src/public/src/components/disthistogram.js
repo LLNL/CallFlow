@@ -52,16 +52,6 @@ export default {
 
     sockets: {
         ensemble_histogram(data) {
-            // data = JSON.parse(data)
-            // console.log("Ensemble Histogram Data: ", data)
-            // if (this.firstRender) {
-            //     this.init()
-            // }
-            // else {
-            //     this.clear()
-            // }
-            // this.firstRender = false
-            console.log(this.$store.nodeInfo, data['name'])
             let nodeData = this.$store.nodeInfo[data['name'][0]]
             this.render(nodeData)
         },
@@ -131,7 +121,8 @@ export default {
         },
 
         clear() {
-            this.svg.selectAll('rect.target').remove()
+            d3.selectAll('.histogram-bar').remove()
+            d3.selectAll('.target').remove()
             d3.selectAll('.others').remove()
             d3.select('.x-axis').remove()
             d3.select('.y-axis').remove()

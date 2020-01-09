@@ -111,7 +111,8 @@ export default {
 		enableCompareMode: false,
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
-		presentation: true,
+		exhibitModes: ['Presentation', 'Default'],
+		selectedExhibitMode: 'Presentation',
 		presentationOrder: [
 			"run_information",
 			"dist_group",
@@ -338,17 +339,18 @@ export default {
 			} else if (this.selectedFormat == 'CCT') {
 				this.$refs.CCT.clear()
 			} else if (this.selectedFormat == 'Distgraph') {
-				this.$refs.Distgraph.clear()
+				this.$refs.DistgraphA.clear()
 				this.$refs.Icicle.clear()
 				this.$refs.DistHistogram.clear()
 				this.$refs.Projection.clear()
+				this.$refs.RunInformation.clear()
+				this.$refs.AuxiliaryFunction.clear()
 			}
 		},
 
 		init() {
-			console.log(this.presentation)
 			this.presentationPage = 0
-			if (this.presentation) {
+			if (this.selectedExhibitMode == 'Presentation') {
 				let self = this
 				this.addEvent(document, "keypress", function (e) {
 					e = e || window.event;
@@ -386,7 +388,7 @@ export default {
 						datasets: this.$store.actual_dataset_names,
 						functionsInCCT: this.selectedFunctionsInCCT,
 					})
-				} else if (this.selectedFormat == 'Callgraph' && !this.presentation) {
+				} else if (this.selectedFormat == 'Callgraph' && this.selectedExhibitMode == 'Default') {
 					this.$socket.emit('run_information', {
 						datasets: this.$store.actual_dataset_names,
 					})
@@ -610,7 +612,7 @@ export default {
 			this.clearLocal()
 			this.$store.selectedTargetDataset = this.selectedTargetDataset
 			console.log("[Update] Target Dataset: ", this.selectedTargetDataset)
-			if(this.presentation){
+			if(this.selectedExhibitMode == 'Presentation'){
 				for(let i = 0; i < this.presentationPage - 1; i += 1){
 					this.sendRequest(this.presentationOrder[this.presentationPage])
 				}
@@ -753,7 +755,11 @@ export default {
 				targetDataset: this.$store.selectedTargetDataset,
 				compareDataset: this.$store.selectedCompareDataset,
 			})
-			console.log('aaaaa')
+		},
+
+		updateExhibitMode(){
+			this.clearLocal()
+			this.init()
 		},
 
 		fileSelected(e) {
