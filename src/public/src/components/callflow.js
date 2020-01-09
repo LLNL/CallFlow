@@ -52,7 +52,7 @@ export default {
 
 	data: () => ({
 		appName: 'CallFlow',
-		server: 'localhost:5000',
+		server: '169.237.6.49:5000',
 		config: {
 			headers: {
 				'Access-Control-Allow-Origin': '*'
@@ -114,7 +114,7 @@ export default {
 	watch: {},
 
 	mounted() {
-		var socket = io.connect('localhost:5000', { reconnect: false });
+		var socket = io.connect('169.237.6.49:5000', { reconnect: false });
 
 		// Check socket connection.
 		console.log('Socket connection check-1 : ', socket.connected);
