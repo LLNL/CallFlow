@@ -20,7 +20,7 @@ export default {
 		colorByAttr: 'Inclusive',
 		direction: ['LR', 'TD'],
 		selectedDirection: 'TD',
-		textTruncForNode: 20,
+		textTruncForNode: 15,
 		color: null,
 		width: null,
 		height: null,
@@ -88,8 +88,8 @@ export default {
 		setupSVG() {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
-			
-			this.width = window.innerWidth * 0.3
+
+			this.width = document.getElementById(this.id).clientWidth
 			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.3
 			this.icicleWidth = this.width - this.margin.right - this.margin.left
 			this.icicleHeight = this.height - this.margin.top - this.margin.bottom
@@ -190,7 +190,7 @@ export default {
 				for (let j = 0; j < parts.length; j++) {
 					const children = currentNode.children;
 					let nodeName = parts[j];
-					
+
 					var childNode;
 					if (j + 1 < parts.length) {
 						// Not yet at the end of the sequence; move down the tree.
@@ -281,6 +281,7 @@ export default {
 				padding = 0,
 				round = false;
 
+			console.log(root)
 			var n = root.height + 1;
 			root.x0 = root.y0 = padding;
 			root.x1 = dx;
@@ -332,7 +333,7 @@ export default {
 				node.y1 = y1
 				node.x0 = x0 + x_offset
 				x_offset += this.icicleWidth/(n+1)
-				node.x1 = node.x0 + this.icicleWidth/(n+1);
+				node.x1 = node.x0 + this.icicleWidth/(n);
 			}
 		},
 
@@ -368,7 +369,7 @@ export default {
 			// Total size of all segments; we set this later, after loading the data
 			let root = d3.hierarchy(json)
 			const partition = this.partition(root)
-			
+
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition)
 			// .filter(d => {
@@ -393,7 +394,7 @@ export default {
 		},
 
 		addNodes() {
-			let self = this 
+			let self = this
 			this.hierarchy
 				.selectAll('.icicleNode')
 				.data(this.nodes)
@@ -418,7 +419,7 @@ export default {
 				.attr('width', (d) => {
 					if (this.selectedDirection == 'LR') {
 						if (Number.isNaN(d.y1 - d.y0)) {
-							return this.width / d.data.length
+							return this.width / d.data.length - 1
 						}
 						else {
 							return d.y1 - d.y0;
