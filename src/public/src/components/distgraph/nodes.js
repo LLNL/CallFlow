@@ -164,7 +164,6 @@ export default {
                 this.hist_min = Math.min(this.hist_min, data[d]['hist']['y_min'])
                 this.hist_max = Math.max(this.hist_max, data[d]['hist']['y_max'])
             }
-            console.log(this.hist_min, this.hist_max)
             this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedColorMap, this.$store.selectedColorPoint)
             this.$parent.$refs.DistColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
 
@@ -190,7 +189,7 @@ export default {
 
                 for (let i = 0; i < grid.length; i += 1) {
                     let x = (i + i + 1) / (2 * grid.length)
-                    let current_value = (val[i] / (max_val - min_val))
+                    let current_value = (val[i])
                     this.linearGradient.append("stop")
                         .attr("offset", 100 * x + "%")
                         .attr("stop-color", this.$store.binColor.getColorByValue(current_value))

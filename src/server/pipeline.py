@@ -185,6 +185,7 @@ class Pipeline:
 
         return state
 
+    # Read the ensemble graph and dataframe.
     def read_ensemble_gf(self):
         name = "ensemble"
         log.info("[Process] Reading the union dataframe and graph")
@@ -203,6 +204,7 @@ class Pipeline:
 
         return state
 
+    # Read a single dataset, pass the dataset name as a parameter.
     def read_dataset_gf(self, name):
         state = State(name)
         log.info("[Process] Reading the dataframe and graph of state: {0}".format(name))
