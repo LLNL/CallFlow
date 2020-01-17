@@ -90,9 +90,6 @@ class Compare:
         node_df1 = self.df1.loc[self.df1["name"] == node]
         node_df2 = self.df2.loc[self.df2["name"] == node]
 
-        print(node_df1[['rank', 'time (inc)']])
-        print(node_df2[['rank', 'time (inc)']])
-
         data1 = np.asarray(node_df1[self.col])
         rank1 = np.asarray(node_df1["rank"])
         name1 = np.asarray(node_df1["name"])

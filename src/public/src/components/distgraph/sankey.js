@@ -224,7 +224,7 @@ export default function Sankey() {
     function findroot() {
         let ret = []
         nodes.forEach(function (node) {
-            if (node['id'] == "libmonitor.so.0.0.0=<program root>") {
+            if (node['id'] == "Root=main") {
                 ret.push(node)
             }
         })
@@ -242,6 +242,7 @@ export default function Sankey() {
         while (remainingNodes.length) {
             nextNodes = [];
             remainingNodes.forEach(function (node) {
+                console.log(node)
                 node.level = level
                 node.dx = nodeWidth;
                 node.sourceLinks.forEach(function (link) {
@@ -281,8 +282,10 @@ export default function Sankey() {
 
     function scaleNodeBreadths(kx) {
         nodes.forEach(function (node) {
-            let level = node.level
+            let level = node['level']
+            console.log(node, level)
             let x = widthScale(level)
+            console.log(node, " x: ", x)
             node.x = x
         });
     }
@@ -521,14 +524,14 @@ export default function Sankey() {
 
     function computeLinkDepths() {
         nodes.forEach(function (node) {
-            node.sourceLinks.sort(ascendingTargetDepth);
-            node.targetLinks.sort(ascendingSourceDepth);
+            // node.sourceLinks.sort(ascendingTargetDepth);
+            // node.targetLinks.sort(ascendingSourceDepth);
 
             // node.sourceLinks.sort(descendingTargetDepth);
             // node.targetLinks.sort(descendingSourceDepth);
 
-            // node.sourceLinks.sort(ascendingEdgeValue);
-            // node.targetLinks.sort(descendingEdgeValue);
+            node.sourceLinks.sort(ascendingEdgeValue);
+            node.targetLinks.sort(descendingEdgeValue);
 
         });
         nodes.forEach(function (node) {

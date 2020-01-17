@@ -47,8 +47,7 @@ class PreProcess():
                 self.df = state.entire_df
                 self.graph = state.entire_graph
             self.map = {}
-            # self.df_index_name_map = self.bfs()
-        
+
         def bfs(self):
             ret = {}
             node_count = 0
@@ -65,7 +64,7 @@ class PreProcess():
                 print("Total nodes in the graph", node_count)
                 del root
             return ret
-            
+
         def build(self):
             return PreProcess(self)
 
@@ -75,27 +74,27 @@ class PreProcess():
             # self.df['path'] = self.df['node'].apply(lambda node: (node.callpath, node.nid))
             return self
 
-        def _map(self, attr, ):
-            ret = {}
-            for idx, row in self.df.iterrows():
-                node_df = self.state.lookup_with_node(row.node)
-                n_index = node_df['n_index'].tolist()
-                p_incTime  = node_df[attr].tolist()
-                for idx in range(len(n_index)):
-                    if n_index[idx] not in ret:
-                        ret[n_index[idx]] = []
-                    ret[n_index[idx]].append(p_incTime[idx])
-            return ret
+        # def _map(self, attr, ):
+        #     ret = {}
+        #     for idx, row in self.df.iterrows():
+        #         node_df = self.state.lookup_with_node(row.node)
+        #         n_index = node_df['n_index'].tolist()
+        #         p_incTime  = node_df[attr].tolist()
+        #         for idx in range(len(n_index)):
+        #             if n_index[idx] not in ret:
+        #                 ret[n_index[idx]] = []
+        #             ret[n_index[idx]].append(p_incTime[idx])
+        #     return ret
 
-        @tmp_wrap
-        def add_incTime(self):
-            self.map['time (inc)'] = self._map('time (inc)')
-            return self
+        # @tmp_wrap
+        # def add_incTime(self):
+        #     self.map['time (inc)'] = self._map('time (inc)')
+        #     return self
 
-        @tmp_wrap
-        def add_excTime(self):
-            self.map['time'] = self._map('time')
-            return self
+        # @tmp_wrap
+        # def add_excTime(self):
+        #     self.map['time'] = self._map('time')
+        #     return self
 
         # Max of the inclusive Runtimes among all processes
         # node -> max([ inclusive times of process])
@@ -118,12 +117,12 @@ class PreProcess():
             for idx, row in self.df.iterrows():
                 ret[str(row.nid)] = utils.avg(self.state.lookup(row.nid)['time (inc)'])
 
-            self.map['avg_incTime'] = ret    
+            self.map['avg_incTime'] = ret
             self.df['avg_incTime'] = self.df['node'].apply(lambda node: self.map['avg_incTime'][str(node.nid)])
 
             return self
-        
-        # Imbalance percentage Series in the dataframe    
+
+        # Imbalance percentage Series in the dataframe
         @tmp_wrap
         def add_imbalance_perc(self):
             ret = {}
@@ -136,7 +135,7 @@ class PreProcess():
 
             self.df['imbalance_perc'] = self.df['node'].apply(lambda node: ret[node])
             return self
-            
+
         @tmp_wrap
         def add_callers_and_callees(self):
             graph = self.graph
@@ -144,14 +143,14 @@ class PreProcess():
             callers = {}
             path = {}
             module = {}
-            
+
             for root in graph.roots:
                 node_gen = root.traverse()
 
                 root_df = root.path()
                 callers[root_df] = []
                 callees[root_df] = []
-            
+
                 try:
                     while root_df:
                         root = next(node_gen)
@@ -169,7 +168,7 @@ class PreProcess():
                                 if root_name not in callers:
                                     callers[root_name] = []
                                 callers[root_df].append(parent_name)
-                        
+
                 except StopIteration:
                     pass
                 finally:
@@ -177,11 +176,11 @@ class PreProcess():
 
 
             self.df['callees'] = self.df['name'].apply(lambda node: callees[node] if node in callees else [])
-            self.df['callers'] = self.df['name'].apply(lambda node: callers[node] if node in callers else [])    
+            self.df['callers'] = self.df['name'].apply(lambda node: callers[node] if node in callers else [])
             self.df['path'] = self.df['name'].apply(lambda node: path[node] if node in path else [])
-           
+
             return self
-        
+
         @tmp_wrap
         def add_show_node(self):
             self.map['show_node'] = {}
@@ -202,12 +201,12 @@ class PreProcess():
         @tmp_wrap
         def update_node_name(self, node_name_map):
             self.df['node_name'] = self.df['name'].apply(lambda name: node_name_map[name])
-    
+
         @tmp_wrap
         def update_module_name(self):
             self.df['module'] = self.df['module'].apply(lambda name: utils.sanitizeName(name))
             return self
-        
+
         @tmp_wrap
         def add_n_index(self):
             self.df['n_index'] = self.df.groupby('nid').ngroup()
@@ -215,6 +214,7 @@ class PreProcess():
 
         @tmp_wrap
         def add_mod_index(self):
+            print(self.df.columns)
             self.df['mod_index'] = self.df.groupby('module').ngroup()
             return self
 

@@ -11,6 +11,7 @@
 ##############################################################################
 
 import os
+import math
 import fnmatch
 from logger import log
 
@@ -29,7 +30,7 @@ def lookup_with_name(df, name):
 # Input : ./xxx/xxx/yyy
 # Output: yyy
 def sanitizeName(name):
-    if name == None:
+    if name == None or isinstance(name, float):
         return "Unknown(NA)"
     name_split = name.split("/")
     return name_split[len(name_split) - 1]

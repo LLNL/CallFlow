@@ -39,7 +39,6 @@ class MiniHistogram:
             ensemble = []
 
             for idx, func in enumerate(func_in_module):
-
                 for dataset_idx, dataset in enumerate(self.all_datasets):
                     func_df = entire_df.loc[
                         (entire_df["name"] == func) & (entire_df["dataset"] == dataset)

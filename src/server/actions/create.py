@@ -16,12 +16,14 @@ from logger import log
 import os
 import hatchet as ht
 
+
 class Create:
-    '''
+    """
     Creates a graph frame.
     Input : config variable, and dataset name
     Output : State object containing components of graphframe as separate object variables.
-    '''
+    """
+
     def __init__(self, config, name):
         utils.debug("Creating graphframes: ", name)
         self.config = config
@@ -30,20 +32,29 @@ class Create:
         self.run()
 
     def run(self):
-        data_path = os.path.abspath(os.path.join(self.callflow_path, self.config.paths[self.name]))
-        print(data_path)
+        data_path = os.path.abspath(
+            os.path.join(self.callflow_path, self.config.paths[self.name])
+        )
 
-        if self.config.format[self.name] == 'hpctoolkit':
+        if self.config.format[self.name] == "caliper_json":
+            module_path = os.path.abspath(
+                os.path.join(self.callflow_path, self.config.module_paths[self.name])
+            )
+            print(module_path)
+
+        if self.config.format[self.name] == "hpctoolkit":
             self.gf = ht.GraphFrame.from_hpctoolkit(data_path)
-        elif self.config.format[self.name] == 'caliper':
+        elif self.config.format[self.name] == "caliper":
             self.gf = ht.GraphFrame.from_caliper(data_path)
-        elif self.config.format[self.name] == 'caliper_json':
-            self.gf = ht.GraphFrame.from_caliper_json(data_path)
-        elif self.config.format[self.name] == 'gprof':
+        elif self.config.format[self.name] == "caliper_json":
+            self.gf = ht.GraphFrame.from_caliper_json_with_module(
+                data_path, module_path
+            )
+        elif self.config.format[self.name] == "gprof":
             self.gf = ht.GraphFrame.from_grof_dot(data_path)
-        elif self.config.format[self.name] == 'literal':
+        elif self.config.format[self.name] == "literal":
             self.gf = ht.GraphFrame.from_literal(data_path)
-        elif self.config.format[self.name] == 'lists':
+        elif self.config.format[self.name] == "lists":
             self.gf = ht.GraphFrame.from_lists(data_path)
 
         self.df = self.gf.dataframe
