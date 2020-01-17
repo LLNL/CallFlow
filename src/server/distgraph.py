@@ -105,7 +105,6 @@ class DistGraph(nx.Graph):
             # print(show_source)
 
             if row.show_node == True:# or show_source == True:
-                print(row['name'], row['module'])
                 self.add_path(row)
 
     # TODO: Make this a consistent datatype.
@@ -132,10 +131,10 @@ class DistGraph(nx.Graph):
             )
 
     def add_edge_attributes(self):
-        number_of_runs_mapping = self.number_of_runs()
-        nx.set_edge_attributes(
-            self.g, name="number_of_runs", values=number_of_runs_mapping
-        )
+        # number_of_runs_mapping = self.number_of_runs()
+        # nx.set_edge_attributes(
+        #     self.g, name="number_of_runs", values=number_of_runs_mapping
+        # )
         capacity_mapping = self.calculate_flows(self.g)
         nx.set_edge_attributes(self.g, name="weight", values=capacity_mapping)
         exc_capacity_mapping = self.calculate_exc_weight(self.g)
@@ -148,6 +147,7 @@ class DistGraph(nx.Graph):
                 source = edge[0]
                 target = edge[1]
                 source_module = self.df.loc[self.df['name'] == source]['module'].unique()[0]
+                print(source, target)
                 target_module = self.df.loc[self.df['name'] == target]['module'].unique()[0]
 
                 edge_with_module = (source_module + '=' + source, target_module + '=' + target)

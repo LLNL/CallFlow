@@ -424,13 +424,23 @@ export default {
 						module: 'all'
 					})
 
+					// this.$socket.emit('dist_hierarchy', {
+					// 	module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
+					// 	datasets: this.$store.actual_dataset_names,
+					// })
+
 					this.$socket.emit('dist_hierarchy', {
-						module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
+						module: 'Calc=CalcForceForNodes',
 						datasets: this.$store.actual_dataset_names,
 					})
 
+					// this.$socket.emit('ensemble_histogram', {
+					// 	module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
+					// 	datasets: this.$store.actual_dataset_names,
+					// })
+
 					this.$socket.emit('ensemble_histogram', {
-						module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
+						module: 'Calc=CalcForceForNodes',
 						datasets: this.$store.actual_dataset_names,
 					})
 

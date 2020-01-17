@@ -19,17 +19,18 @@ class configFileReader():
         filename = os.path.join(dirname, filepath)
         f = open(filename, 'r').read()
         self.json = self.json_data(f)
-        self.datasets = self.json['datasets']  
+        self.datasets = self.json['datasets']
         self.runName = self.json['runName']
         self.filter_perc = self.json['filter_perc']
         self.callflow_path = self.json['callflow_path']
         self.processed_path = os.path.join(self.callflow_path, self.json['save_path'])
         self.paths = {}
+        self.module_paths = {}
         self.props = {}
         self.nop  = {}
         self.format = {}
         self.fnMap = {}
-        self.fileMap = {} 
+        self.fileMap = {}
         self.names = []
         self.dataset_names = []
         self.run()
@@ -41,7 +42,9 @@ class configFileReader():
             self.dataset_names.append(name)
             # log.info('Config file: {0}'.format(json.dumps(data, indent=4, sort_keys=True)))
             self.paths[name] = data['path']
-            self.format[name] = data['format'] 
+            self.format[name] = data['format']
+            if(self.format[name] == 'caliper_json'):
+                self.module_paths[name] = data['module']
             self.fnMap[name] = self.getFuncMap(data['props'])
             self.fileMap[name] = self.getFileMap(data['props'])
             self.nop[name] = data['nop']
@@ -57,14 +60,14 @@ class configFileReader():
     # Function map from the config file
     def getFuncMap(self, props):
         funcMap = {}
-        for obj in props: 
+        for obj in props:
             name = props[obj]['name']
             funcMap[name] = props[obj]['functions']
         return funcMap
 
     def json_data(self, json_text):
         return self._byteify(json.loads(json_text, object_hook=self._byteify), ignore_dicts=True)
-    
+
     def _byteify(self, data, ignore_dicts = False):
         # if this is a unicode string, return its string representation
         if isinstance(data, bytes):
