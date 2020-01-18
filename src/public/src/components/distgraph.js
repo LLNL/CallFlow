@@ -72,7 +72,6 @@ export default {
 			this.width = window.innerWidth  - this.projectionViewWidth - this.auxiliaryViewWidth - this.margin.left - this.margin.right
 			this.height = window.innerHeight - this.margin.top - this.margin.bottom - this.toolbarHeight - this.footerHeight
 
-			console.log(this.width, this.height)
 			this.sankeySVG = d3.select('#' + this.id)
 				.attrs({
 					'width': this.width + this.margin.left + this.margin.right,

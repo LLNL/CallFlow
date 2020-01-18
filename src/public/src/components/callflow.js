@@ -52,8 +52,8 @@ export default {
 
 	data: () => ({
 		appName: 'CallFlow',
-		// server: '169.237.6.49:5000',
-		server: 'localhost:5000',
+		server: '169.237.6.49:5000',
+		// server: 'localhost:5000',
 		config: {
 			headers: {
 				'Access-Control-Allow-Origin': '*'
@@ -112,7 +112,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
 		exhibitModes: ['Presentation', 'Default'],
-		selectedExhibitMode: 'Presentation',
+		selectedExhibitMode: 'Default',
 		presentationOrder: [
 			"run_information",
 			"dist_group",
@@ -122,7 +122,6 @@ export default {
 			"dist_auxiliary",
 			"dist_similarity",
 			"dist_projection",
-
 		]
 	}),
 
@@ -440,7 +439,7 @@ export default {
 					// })
 
 					this.$socket.emit('ensemble_histogram', {
-						module: 'Calc=CalcForceForNodes',
+						module: 'Calc=CalcForceForNodes		',
 						datasets: this.$store.actual_dataset_names,
 					})
 
