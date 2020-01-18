@@ -101,13 +101,14 @@ export default {
         },
 
         times() {
+            console.log(this.$store.nodeMap)
             this.addText('Name: ' + this.node.id.trunc(40))
-            this.addText('Inclusive Time: ' + (this.node['time (inc)'] * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node['time (inc)'] / this.$store.maxIncTime[this.$store.selectedDataset]) * 100).toFixed(3)) + "%")
-            this.addText('Exclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime[this.$store.selectedDataset]) * 100).toFixed(3)) + "%")
+            this.addText('Inclusive Time: ' + (this.node['time (inc)'] * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node['time (inc)'] / this.$store.maxIncTime['ensemble']) * 100).toFixed(3)) + "%")
+            this.addText('Exclusive Time: ' + (this.node['time'] * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node['time'] / this.$store.maxExcTime['ensemble']) * 100).toFixed(3)) + "%")
         },
 
         paths() {
-            console.log(this.node.callees)
+            console.log(this.graph.nodeMap)
             let entry_functions = this.node.callees
 
             this.rectWidth = "10px"
@@ -171,7 +172,8 @@ export default {
                         'class': 'toolTipContent',
                     })
                     .text(toFunc.trunc(15))
-                let timeInfo = (entry_functions['time (inc)'] / this.$store.maxIncTime[this.$store.selectedDataset] * 100).toFixed(3) + '%'
+                console.log(entry_functions['time (inc)'])
+                let timeInfo = (entry_functions['time (inc)'] / this.$store.maxIncTime['ensemble'] * 100).toFixed(3) + '%'
                 this.toolTipG.append('text')
                     .attrs({
                         'x': xOffset + 270 + 'px',
