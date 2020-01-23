@@ -83,24 +83,7 @@ class CallFlow:
         states = {}
         for idx, dataset_name in enumerate(datasets):
             states[dataset_name] = State(dataset_name)
-            # TODO: Remove this.
-            if self.reProcess and self.processEntire:
-                states[dataset_name] = self.pipeline.create(dataset_name)
-                states[dataset_name] = self.pipeline.process(
-                    states[dataset_name], "entire"
-                )
-                self.pipeline.write_gf(states[dataset_name], dataset_name, "entire")
-                states[dataset_name] = self.pipeline.filter(
-                    states[dataset_name], filterBy, filterPerc
-                )
-                self.pipeline.write_gf(states[dataset_name], dataset_name, "filter")
-                states[dataset_name] = self.pipeline.group(
-                    states[dataset_name], "module"
-                )
-
-                write_graph = False
-                self.write_gf(states[dataset_name], dataset_name, "group")
-            elif self.reUpdate:
+            if self.reUpdate:
                 states[dataset_name] = self.pipeline.create(dataset_name)
                 states[dataset_name] = self.pipeline.process(
                     states[dataset_name], "filter"
@@ -157,7 +140,7 @@ class CallFlow:
                 self.config.max_excTime[state] = utils.getMaxExcTime(self.states[state])
                 self.config.min_incTime[state] = utils.getMinIncTime(self.states[state])
                 self.config.min_excTime[state] = utils.getMinExcTime(self.states[state])
-                self.config.numbOfRanks[state] = self.config.nop
+                # self.config.numbOfRanks[state] = self.config.nop
                 max_exclusive_time = max(
                     self.config.max_excTime[state], max_exclusive_time
                 )

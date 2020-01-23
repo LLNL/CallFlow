@@ -200,11 +200,11 @@ class PreProcess():
 
         @tmp_wrap
         def update_node_name(self, node_name_map):
-            self.df['node_name'] = self.df['name'].apply(lambda name: node_name_map[name])
+            self.df['node_name'] = self.df['name'].apply(lambda name: self.config.name_module_map[name])
 
         @tmp_wrap
-        def update_module_name(self):
-            self.df['module'] = self.df['module'].apply(lambda name: utils.sanitizeName(name))
+        def add_module_name(self, module_map):
+            self.df['module'] = self.df['name'].apply(lambda name: module_map[name])
             return self
 
         @tmp_wrap
@@ -214,7 +214,6 @@ class PreProcess():
 
         @tmp_wrap
         def add_mod_index(self):
-            print(self.df.columns)
             self.df['mod_index'] = self.df.groupby('module').ngroup()
             return self
 
