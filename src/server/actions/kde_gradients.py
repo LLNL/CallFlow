@@ -72,7 +72,7 @@ class KDE_gradients:
 
         return x, y
 
-    def histogram(self, data, nbins=20):
+    def histogram(self, data, nbins=5):
         h, b = np.histogram(data, range=[0, data.max()], bins=nbins)
         return 0.5*(b[1:]+b[:-1]), h
 
@@ -137,8 +137,8 @@ class KDE_gradients:
             dist_list = self.convert_dictmean_to_list(dist)
 
             # Calculate appropriate number of bins automatically.
-            num_of_bins[vis_node_name] = 10
-            num_of_bins[vis_node_name] = min(self.freedman_diaconis_bins(np.array(dist_list)), 50)
+            num_of_bins[vis_node_name] = 5
+            # num_of_bins[vis_node_name] = min(self.freedman_diaconis_bins(np.array(dist_list)), 50)
 
             # Calculate the KDE grid (x, y)
             # kde_grid[vis_node_name] = self.kde(np.array(dist_list), 10)

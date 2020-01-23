@@ -16,6 +16,7 @@ import tpl from '../html/distHistogram.html'
 import * as d3 from 'd3'
 import "d3-selection-multi"
 import ToolTip from './histogram/tooltip'
+import EventHandler from './EventHandler'
 
 // http://plnkr.co/edit/wfOx8615PnZh2CST301F?p=preview
 
@@ -48,13 +49,16 @@ export default {
         message: 'MPI Distribution'
     }),
 
-    mounted() { },
+    mounted() {
+        let self = this
+        EventHandler.$on('ensemble_histogram', function (data) {
+            self.clear()
+            console.log("Disthistogram: ", data['module'])
+            self.render(data['module'])
+        })
+    },
 
     sockets: {
-        ensemble_histogram(data) {
-            let nodeData = this.$store.nodeInfo[data['name'][0]]
-            this.render(nodeData)
-        },
     },
 
     methods: {
@@ -121,9 +125,9 @@ export default {
         },
 
         clear() {
-            d3.selectAll('.histogram-bar').remove()
-            d3.selectAll('.target').remove()
-            d3.selectAll('.others').remove()
+            d3.selectAll('.dist-histogram-bar').remove()
+            d3.selectAll('.dist-histogram-target').remove()
+            d3.selectAll('.dist-histogram-others').remove()
             d3.select('.x-axis').remove()
             d3.select('.y-axis').remove()
             d3.selectAll('.binRank').remove()
@@ -134,8 +138,8 @@ export default {
         },
 
         visualize() {
-            this.bars();
             this.targetBars();
+            this.ensembleBars();
             this.axis();
             this.rankLines();
             // this.brushes()
@@ -280,13 +284,13 @@ export default {
             };
         },
 
-        bars() {
+        targetBars() {
             let self = this
-            this.svg.selectAll('.target')
+            this.svg.selectAll('.dist-target')
                 .data(this.freq)
                 .enter()
                 .append('rect')
-                .attr('class', 'histogram-bar target')
+                .attr('class', 'dist-histogram-bar dist-target')
                 .attr('x', (d, i) => {
                     return this.padding.left + this.histogramXScale(this.xVals[i])
                 })
@@ -322,13 +326,13 @@ export default {
                 })
         },
 
-        targetBars() {
+        ensembleBars() {
             let self = this
-            this.svg.selectAll('.others')
+            this.svg.selectAll('.dist-others')
                 .data(this.targetFreq)
                 .enter()
                 .append('rect')
-                .attr('class', 'histogram-bar others')
+                .attr('class', 'dist-histogram-bar dist-others')
                 .attr('x', (d, i) => {
                     return this.padding.left + this.histogramXScale(this.targetXVals[i])
                 })
@@ -343,7 +347,6 @@ export default {
                 })
                 .attr('fill', (d) => {
                     let color = self.$store.color.target
-                    console.log(color)
                     return color
                 })
                 .attr('opacity', 1)
