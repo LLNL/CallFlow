@@ -52,8 +52,8 @@ export default {
 
 	data: () => ({
 		appName: 'CallFlow',
-		server: '169.237.6.49:5000',
-		// server: 'localhost:5000',
+		// server: '169.237.6.49:5000',
+		server: 'localhost:5000',
 		config: {
 			headers: {
 				'Access-Control-Allow-Origin': '*'
@@ -107,7 +107,7 @@ export default {
 		comparisonMode: false,
 		selectedCompareDataset: null,
 		compareModes: ['meanDiff', 'rankDiff'],
-		selectedCompareMode: 'meanDiff',
+		selectedCompareMode: 'rankDiff',
 		enableCompareMode: false,
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
@@ -428,20 +428,20 @@ export default {
 					// 	datasets: this.$store.actual_dataset_names,
 					// })
 
-					this.$socket.emit('dist_hierarchy', {
-						module: 'Calc=CalcForceForNodes',
-						datasets: this.$store.actual_dataset_names,
-					})
+					// this.$socket.emit('dist_hierarchy', {
+					// 	module: 'Calc=CalcForceForNodes',
+					// 	datasets: this.$store.actual_dataset_names,
+					// })
 
 					// this.$socket.emit('ensemble_histogram', {
 					// 	module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
 					// 	datasets: this.$store.actual_dataset_names,
 					// })
 
-					this.$socket.emit('ensemble_histogram', {
-						module: 'Calc=CalcForceForNodes		',
-						datasets: this.$store.actual_dataset_names,
-					})
+					// this.$socket.emit('ensemble_histogram', {
+					// 	module: 'Calc=CalcForceForNodes		',
+					// 	datasets: this.$store.actual_dataset_names,
+					// })
 
 				}
 			}

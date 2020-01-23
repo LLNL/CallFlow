@@ -1,7 +1,7 @@
 import tpl from '../../html/distgraph/nodes.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
-import EventHandler from '../../EventHandler'
+import EventHandler from '../EventHandler'
 
 export default {
     template: tpl,
@@ -39,7 +39,7 @@ export default {
             // 	this.$refs.DistgraphB.init(data)
             // }
             // else{
-            // 	this.$refs.DistgraphA.init(data)
+            // 	this.$refs.DistgraphA.init(data)ss
             // }
         },
 
@@ -232,7 +232,7 @@ export default {
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
-                    let selectedModule = d.id
+                    this.$store.selectedModule = d.name
 
                     // this.cleardebugGradients()
                     // this.debugGradients(this.data, selectedModule, 'hist')
@@ -244,20 +244,20 @@ export default {
                     // this.quantileLines()
 
                     this.$socket.emit('dist_hierarchy', {
-                        module: selectedModule,
+                        module: d.id,
                         datasets: this.$store.actual_dataset_names,
                     })
 
-                    this.$socket.emit('ensemble_histogram', {
-                        module: selectedModule,
+                    EventHandler.$emit('ensemble_histogram', {
+                        module: this.$store.selectedModule,
                         datasets: this.$store.actual_dataset_names,
                     })
 
-                    this.$socket.emit('dist_auxiliary', {
-                        module: selectedModule,
-                        datasets: this.$store.actual_dataset_names,
-                        sortBy: this.$store.auxiliarySortBy,
-                    })
+                    // this.$socket.emit('dist_auxiliary', {
+                    //     module: this.$store.selectedModule,
+                    //     datasets: this.$store.actual_dataset_names,
+                    //     sortBy: this.$store.auxiliarySortBy,
+                    // })
                 })
 
             // Transition
@@ -421,7 +421,6 @@ export default {
                         return this.$store.meanDiffColor.getColorByValue(0.5)
                     }
                     return this.$store.meanDiffColor.getColorByValue((mean_diff[d.name]))
-                    /// (max_diff - min_diff))
                 })
         },
 

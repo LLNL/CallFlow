@@ -369,19 +369,20 @@ class App:
             )
             emit("dist_scatterplot", result, json=True)
 
-        @sockets.on("ensemble_histogram", namespace="/")
-        def disthistogram(data):
-            if self.debug:
-                self.print("[Request] Dist-Histogram request for module.")
-            datasets = data['datasets']
-            result = self.callflow.update_dist(
-                {
-                    "name": "histogram",
-                    "datasets": datasets,
-                    "module": data["module"],
-                }
-            )
-            emit("ensemble_histogram", result, json=True)
+        # @sockets.on("ensemble_histogram", namespace="/")
+        # def disthistogram(data):
+        #     if self.debug:
+        #         self.print("[Request] Dist-Histogram request for module.")
+        #     datasets = data['datasets']
+        #     result = self.callflow.update_dist(
+        #         {
+        #             "name": "histogram",
+        #             "datasets": datasets,
+        #             "module": data["module"],
+        #         }
+        #     )
+        #     print(result)
+        #     emit("ensemble_histogram", result, json=True)
 
         @sockets.on("comp_cct", namespace="/")
         def compcct(data):
