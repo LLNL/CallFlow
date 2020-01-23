@@ -36,20 +36,21 @@ class Create:
             os.path.join(self.callflow_path, self.config.paths[self.name])
         )
 
-        if self.config.format[self.name] == "caliper_json":
-            module_path = os.path.abspath(
-                os.path.join(self.callflow_path, self.config.module_paths[self.name])
-            )
-            print(module_path)
+        # if self.config.format[self.name] == "caliper_json":
+        #     module_path = os.path.abspath(
+        #         os.path.join(self.callflow_path, self.config.module_paths[self.name])
+        #     )
+        #     print(module_path)
 
         if self.config.format[self.name] == "hpctoolkit":
             self.gf = ht.GraphFrame.from_hpctoolkit(data_path)
         elif self.config.format[self.name] == "caliper":
             self.gf = ht.GraphFrame.from_caliper(data_path)
         elif self.config.format[self.name] == "caliper_json":
-            self.gf = ht.GraphFrame.from_caliper_json_with_module(
-                data_path, module_path
-            )
+            # self.gf = ht.GraphFrame.from_caliper_json_with_module(
+            #     data_path, module_path
+            # )
+            self.gf = ht.GraphFrame.from_caliper(data_path, query='')
         elif self.config.format[self.name] == "gprof":
             self.gf = ht.GraphFrame.from_grof_dot(data_path)
         elif self.config.format[self.name] == "literal":

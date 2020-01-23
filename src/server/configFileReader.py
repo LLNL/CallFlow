@@ -20,22 +20,35 @@ class configFileReader():
         f = open(filename, 'r').read()
         self.json = self.json_data(f)
         self.datasets = self.json['datasets']
-        self.runName = self.json['runName']
-        self.filter_perc = self.json['filter_perc']
+        self.runName = self.json['run_name']
         self.callflow_path = self.json['callflow_path']
+        self.scheme = self.json['scheme']
         self.processed_path = os.path.join(self.callflow_path, self.json['save_path'])
         self.paths = {}
         self.module_paths = {}
-        self.props = {}
-        self.nop  = {}
         self.format = {}
-        self.fnMap = {}
-        self.fileMap = {}
         self.names = []
         self.dataset_names = []
         self.run()
 
+    def process_scheme(self):
+        ret = {}
+
+        for module in self.module_callsite_map:
+            callsites = self.module_callsite_map[module]
+            for callsite in callsites:
+                ret[callsite] = module
+        return ret
+
     def run(self):
+        # Parse scheme.
+        self.filter_perc = self.scheme['filter_perc']
+        self.group_by = self.scheme['group_by']
+        self.module_callsite_map = self.scheme['module_map']
+        self.callsite_module_map  = self.process_scheme()
+
+
+        # Parse the information for each dataset
         for idx, data in enumerate(self.datasets):
             name = data['name']
             self.names.append(name)
@@ -45,25 +58,6 @@ class configFileReader():
             self.format[name] = data['format']
             if(self.format[name] == 'caliper_json'):
                 self.module_paths[name] = data['module']
-            self.fnMap[name] = self.getFuncMap(data['props'])
-            self.fileMap[name] = self.getFileMap(data['props'])
-            self.nop[name] = data['nop']
-
-    # File map from the config file
-    def getFileMap(self, props):
-        fileMap = {}
-        for obj in props:
-            name = props[obj]['name']
-            fileMap[name] = props[obj]['files']
-        return fileMap
-
-    # Function map from the config file
-    def getFuncMap(self, props):
-        funcMap = {}
-        for obj in props:
-            name = props[obj]['name']
-            funcMap[name] = props[obj]['functions']
-        return funcMap
 
     def json_data(self, json_text):
         return self._byteify(json.loads(json_text, object_hook=self._byteify), ignore_dicts=True)

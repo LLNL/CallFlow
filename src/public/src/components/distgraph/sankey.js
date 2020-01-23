@@ -224,8 +224,8 @@ export default function Sankey() {
     function findroot() {
         let ret = []
         nodes.forEach(function (node) {
-            // if (node['id'] == "Root=main") {
-            if(node['id'] == "libmonitor.so.0.0.0=<program root>"){
+            if (node['id'] == "Lulesh=main") {
+            // if(node['id'] == "libmonitor.so.0.0.0=<program root>"){
                 ret.push(node)
             }
         })

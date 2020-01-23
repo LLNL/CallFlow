@@ -24,7 +24,6 @@ import sys
 import json
 import uuid
 import argparse
-from flask_cors import CORS
 from networkx.readwrite import json_graph
 
 # Callflow imports
@@ -35,7 +34,6 @@ from logger import log
 
 app = Flask(__name__, static_url_path="/public")
 sockets = SocketIO(app, cors_allowed_origins="*")
-# CORS(app)
 
 
 class App:
@@ -58,6 +56,7 @@ class App:
         self.config.production = self.args.production
 
         if self.config.preprocess:
+            self.print("Pre-processing the datasets.")
             self.create_dot_callflow_folder()
 
         # self.create_dot_callflow_folder()
@@ -66,11 +65,11 @@ class App:
         self.config.distribution = True
         if self.config.distribution and self.config.preprocess:
             if self.debug:
-                self.print("Pre-processing done.")
+                self.print("Skipping the pre-processing step.")
 
         elif self.config.distribution and not self.config.preprocess:
             if self.debug:
-                self.print("[Request] Load the graphframe for client")
+                self.print("Load the graphframe for client")
             groupBy = "module"
             datasets = self.config.dataset_names
 
@@ -81,7 +80,6 @@ class App:
         # Start server if preprocess is not called.
         if not self.config.preprocess:
             self.create_socket_server()
-            print(self.config.production)
             if self.config.production == True:
                 sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
             else:
@@ -171,7 +169,6 @@ class App:
             for f in files:
                 if not os.path.exists(dataset_dir + "/" + f):
                     open(os.path.join(dataset_dir, f), "w").close()
-                    # os.mknod(dataset_dir + '/' + f)
 
     def create_socket_server(self):
         @sockets.on("init", namespace="/")
@@ -182,7 +179,7 @@ class App:
                 )
             else:
                 self.callflow.update(
-                    {"name": "init",}
+                    {"name": "init"}
                 )
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
             emit("init", config_json, json=True)
@@ -369,21 +366,6 @@ class App:
             )
             emit("dist_scatterplot", result, json=True)
 
-        # @sockets.on("ensemble_histogram", namespace="/")
-        # def disthistogram(data):
-        #     if self.debug:
-        #         self.print("[Request] Dist-Histogram request for module.")
-        #     datasets = data['datasets']
-        #     result = self.callflow.update_dist(
-        #         {
-        #             "name": "histogram",
-        #             "datasets": datasets,
-        #             "module": data["module"],
-        #         }
-        #     )
-        #     print(result)
-        #     emit("ensemble_histogram", result, json=True)
-
         @sockets.on("comp_cct", namespace="/")
         def compcct(data):
             if self.debug:
@@ -563,7 +545,6 @@ class App:
                 }
             )
             emit("dist_mini_histogram", result, json=True)
-
 
     def create_server(self):
         app.debug = True

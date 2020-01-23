@@ -580,8 +580,10 @@ export default {
 					min_inclusive_time = Math.min(this.$store.maxIncTime[dataset], min_inclusive_time)
 				}
 			}
-			this.$store.selectedTargetDataset = min_inclusive_dataset
-			this.selectedTargetDataset = min_inclusive_dataset
+			// this.$store.selectedTargetDataset = min_inclusive_dataset
+			// this.selectedTargetDataset = min_inclusive_dataset
+			this.$store.selectedTargetDataset = '512-cores'
+			this.selectedTargetDataset = '512-cores'
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
 

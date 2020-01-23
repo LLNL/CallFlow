@@ -32,21 +32,19 @@ class Pipeline:
         state.entire_df = create.df
         state.entire_graph = create.graph
 
-        # print("After Creating.")
-        # print(state.df.groupby(['module']).mean())
         return state
 
+    # Pre-process the dataframe and Graph.
     def process(self, state, gf_type):
-        # Pre-process the dataframe and Graph.
         preprocess = (
             PreProcess.Builder(state, gf_type)
             .add_n_index()
-            .add_mod_index()
             .add_callers_and_callees()
             .add_show_node()
             .add_vis_node_name()
             .add_dataset_name()
-            .update_module_name()
+            .add_module_name(self.config.callsite_module_map)
+            .add_mod_index()
             .build()
         )
 
@@ -268,7 +266,6 @@ class Pipeline:
 
         state.group_graph = state.group_gf.graph
         state.group_df = pd.read_csv(group_df_file_path)
-        # state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
 
         state.projection_data = {}
         for line in open(parameters_filepath, "r"):
