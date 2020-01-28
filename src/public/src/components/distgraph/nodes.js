@@ -111,7 +111,7 @@ export default {
                     return 'dist-node'
                 })
                 .attr('opacity', 0)
-                .attr('id', (d, i) => `dist-node_${this.graph.nodeMap[d['vis_name']]}`)
+                .attr('id', (d, i) => `dist-node_${this.graph.nodeMap[d['name']]}`)
                 .attr('transform', (d) => {
                     return `translate(${d.x},${d.y})`
                 })
@@ -127,7 +127,7 @@ export default {
             this.meanRectangle()
             this.path()
             this.text()
-            // this.drawTargetLine()
+            this.drawTargetLine()
 
             this.$refs.ToolTip.init(this.$parent.id)
         },
@@ -470,12 +470,17 @@ export default {
             }
         },
 
+        // come back and remove the dependence on node_data from this.$graph.
         drawTargetLine(d) {
+            console.log(this.$store.callsites)
             let mode = this.$store.selectedDiffNodeAlignment
             let dataset = this.$store.selectedTargetDataset
             for (let i = 0; i < this.$store.graph.nodes.length; i++) {
+                let callsite_name = this.$store.graph.nodes[i].name
                 let node_data = this.$store.graph.nodes[i]
-                let min_inclusive_data = node_data[dataset]['time (inc)']
+                let mean_inclusive_data = this.$store.callsites[dataset][callsite_name]['mean_time (inc)']
+                let max_inclusive_data = this.$store.callsites['ensemble'][callsite_name]['max_time (inc)']
+
                 let x1 = node_data.x - this.nodeWidth
                 let x2 = node_data.x
                 let y1 = 0
@@ -490,15 +495,14 @@ export default {
                 else if (mode == 'Top') {
                     let gap = 5
                     y1 = 0
-                    y2 = (node_data.height * node_data[dataset]['time (inc)']) / node_data['time (inc)']
+                    y2 = (node_data.height * mean_inclusive_data) / max_inclusive_data
                     this.drawBottomLine(y1, y2, node_data, dataset)
                 }
             }
         },
 
-
         drawUpLine(y1, y2, node_data, dataset) {
-            d3.select('#dist-node_' + this.graph.nodeMap[node_data['vis_name']]).append('line')
+            d3.select('#dist-node_' + this.graph.nodeMap[node_data['name']]).append('line')
                 .attrs({
                     'class': 'quantileLines',
                     'id': 'line-1-' + dataset + '-' + node_data['client_idx'],
@@ -516,32 +520,9 @@ export default {
                 })
         },
 
-        CYKToRGB(CMYK) {
-            let result = {}
-            let c = CMYK[0];
-            let m = CMYK[1];
-            let y = CMYK[2];
-            let k = 0;
-
-            result.r = 1 - Math.min(1, c * (1 - k) + k);
-            result.g = 1 - Math.min(1, m * (1 - k) + k);
-            result.b = 1 - Math.min(1, y * (1 - k) + k);
-
-            result.r = Math.round(result.r * 255);
-            result.g = Math.round(result.g * 255);
-            result.b = Math.round(result.b * 255);
-
-
-            function componentToHex(c) {
-                var hex = c.toString(16);
-                return hex.length == 1 ? "0" + hex : hex;
-            }
-
-            return "#" + componentToHex(result.r) + componentToHex(result.g) + componentToHex(result.b);
-        },
-
         drawBottomLine(y1, y2, node_data, dataset) {
-            d3.select('#dist-node_' + this.graph.nodeMap[node_data['vis_name']]).append('line')
+            console.log(this.graph.nodeMap, node_data['vis_name'])
+            d3.select('#dist-node_' + this.graph.nodeMap[node_data['name']]).append('line')
                 .attr("class", 'quantileLines')
                 .attr("id", 'line-2-' + dataset + '-' + node_data['client_idx'])
                 .attr("x1", 0)
@@ -549,12 +530,7 @@ export default {
                 .attr("x2", this.nodeWidth)
                 .attr("y2", y2)
                 .attr("stroke-width", 5)
-                .attr("stroke", (d) => {
-                    if (dataset != 'ensemble') {
-                        return '#4681B4'
-                        // return this.$store.color.colorPallette['pink'];
-                    }
-                })
+                .attr("stroke", this.$store.color.target)
         },
 
         path() {
