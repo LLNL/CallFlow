@@ -106,7 +106,6 @@ export default {
 			this.$refs.DistColorMap.init()
 			// this.$refs.CallbackEdges.init(this.data, this.view)
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view)
-
 		},
 
 		updateMiniHistogram() {
@@ -142,7 +141,7 @@ export default {
 			let nodeMap = {}
 			let idx = 0
 			for (const node of graph.nodes) {
-				nodeMap[node.id] = idx
+				nodeMap[node.name] = idx
 				idx += 1
 			}
 
