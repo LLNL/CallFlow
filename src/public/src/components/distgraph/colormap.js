@@ -16,9 +16,10 @@ export default {
         colorScaleHeight: 30,
         colorMin: 0,
         colorMax: 0,
+        offset: 30,
         padding: {
             bottom: 30,
-            right: 300,
+            right: 400,
         },
         id: ''
     }),
@@ -61,7 +62,7 @@ export default {
                 let splits = this.$store.colorPoint
                 let color = this.color.getScale(this.color.option)
 
-                for (let i = 0; i < splits; i += 1) {
+                for (let i = 0; i <= splits ; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
                     this.scaleG.append('rect')
                         .attrs({
@@ -84,7 +85,7 @@ export default {
             } else {
                 let splits = this.$store.colorPoint
                 let color = this.color.getScale("RankDiff")
-                for (let i = 0; i < splits; i += 1) {
+                for (let i = 0; i <= splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
                     this.scaleG.append('rect')
                         .attrs({
@@ -92,7 +93,7 @@ export default {
                             'height': this.height,
                             'x': i * (this.width / splits),
                             'class': 'dist-colormap-rect',
-                            'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
+                            'transform': `translate(${this.containerWidth - this.padding.right }, ${this.containerHeight - 2*this.padding.bottom})`,
                             'fill': color(splitColor)
                         })
                 }
@@ -107,7 +108,7 @@ export default {
             } else {
                 let splits = this.$store.colorPoint
                 let color = this.color.getScale('MeanDiff')
-                for (let i = 0; i < splits; i += 1) {
+                for (let i = 0; i <= splits; i += 1) {
                     let splitColor = this.colorMin + ((i * (this.colorMax - this.colorMin)) / (splits))
                     this.scaleG.append('rect')
                         .attrs({
@@ -130,7 +131,7 @@ export default {
             } else {
                 let splits = this.$store.colorPoint
                 let color = this.color.getScale("Bin")
-                for (let i = 0; i < splits; i += 1) {
+                for (let i = 0; i <= splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
                     this.scaleG.append('rect')
                         .attrs({
@@ -169,7 +170,7 @@ export default {
                     'y': 10,
                     'x': 30,
                     "class": "dist-colormap-text-metric",
-                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - this.padding.bottom})`,
+                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width + this.offset}, ${this.containerHeight - this.padding.bottom})`,
                 })
                 .text((this.colorMax * 0.000001).toFixed(3) + "s");
 
@@ -229,7 +230,7 @@ export default {
                     'x': 30,
                     "text-anchor": "middle",
                     "class": "dist-colormap-text",
-                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - 2*this.padding.bottom})`,
+                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width + this.offset}, ${this.containerHeight - 2*this.padding.bottom})`,
                 })
                 .text((this.colorMax * 0.000001).toFixed(3) + "s");
         },
@@ -258,7 +259,7 @@ export default {
                     'x': 10,
                     "text-anchor": "middle",
                     "class": "dist-colormap-text",
-                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - 2*this.padding.bottom})`,
+                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width + this.offset}, ${this.containerHeight - 2*this.padding.bottom})`,
                 })
                 .text(this.colorMax);
 
