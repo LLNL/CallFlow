@@ -55,11 +55,6 @@ export default {
 	},
 
 	sockets: {
-		// compare(data){
-		// 	this.$refs.DistColorMap.clear()
-
-		// 	if(this.$store.)
-		// }
 	},
 
 	methods: {
@@ -69,7 +64,7 @@ export default {
 			this.projectionViewWidth = document.getElementById('similarity-matrix-view').clientWidth
 			this.auxiliaryViewWidth = document.getElementById('auxiliary-function-overview').clientWidth
 
-			this.width = window.innerWidth  - this.projectionViewWidth - this.auxiliaryViewWidth - this.margin.left - this.margin.right
+			this.width = window.innerWidth - this.projectionViewWidth - this.auxiliaryViewWidth - this.margin.left - this.margin.right
 			this.height = window.innerHeight - this.margin.top - this.margin.bottom - this.toolbarHeight - this.footerHeight
 
 			this.sankeySVG = d3.select('#' + this.id)
@@ -352,8 +347,8 @@ export default {
 						const tempNode = {
 							sankeyID: intermediate,
 							name: 'intermediate',
-							//                    weight: nodes[i].weight,
-							//		            height: nodes[i].value
+							weight: nodes[i].weight,
+							height: nodes[i].value
 						};
 						nodes.push(tempNode);
 						edges.push({

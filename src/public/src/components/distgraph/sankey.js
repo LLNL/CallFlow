@@ -347,10 +347,11 @@ export default function Sankey() {
 
             let idx = 0, level = {}
             nodesByBreadth.forEach(function (nodes) {
-                // Sort the nodes in a given level
-                let n = nodes.sort(function (a, b) {
-                    return b['time (inc)'] - a['time (inc)'];
-                })
+                // // Sort the nodes in a given level
+                // let n = nodes.sort(function (a, b) {
+                //     return b['time (inc)'] - a['time (inc)'];
+                // })
+                let n = nodes
 
                 // Asssign levels to the nodes based on time (inc)
                 for (let i = 0; i < n.length; i += 1) {

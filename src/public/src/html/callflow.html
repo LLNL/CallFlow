@@ -194,7 +194,7 @@
 		</v-layout>
 
 		<v-layout v-show="selectedMode == 'Ensemble' && selectedFormat == 'Callgraph'">
-			<splitpanes id="diffgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe'">
+			<splitpanes id="diffgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe' && parameter_analysis == true">
 				<splitpanes horizontal :splitpanes-size="20">
 					<span>
 						<RunInformation ref="RunInformation" />

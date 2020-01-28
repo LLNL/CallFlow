@@ -20,12 +20,17 @@ export default {
     sockets: {
         run_information(data) {
             data = JSON.parse(data)
-            this.init(data)
+            this.visualize(data)
         },
     },
 
     methods: {
-        init(data) {
+        init() {
+
+        },
+
+        visualize(data) {
+            console.log(data)
             this.labels = Object.keys(data[0])
             this.runs = data
             this.highlight(this.$store.selectedTargetDataset)
