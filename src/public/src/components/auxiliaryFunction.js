@@ -23,7 +23,8 @@ export default {
         iqrFactor: 0.15,
         outlierRadius: 4,
         targetOutlierList: {},
-        outlierList: {}
+        outlierList: {},
+        data: {}
     }),
     mounted() {
         let self = this
@@ -40,10 +41,9 @@ export default {
     sockets: {
         auxiliary(data) {
             this.dataReady = true
-            this.preprocess_data = {}
             for (let dataset of Object.keys(data)) {
                 if (data.hasOwnProperty(dataset)) {
-                    this.preprocess_data[dataset] = this.preprocess(data[dataset])
+                    this.data[dataset] = this.preprocess(data[dataset])
                 }
             }
             this.init()
@@ -64,7 +64,7 @@ export default {
                 idx += 1
             }
             return {
-                data: d,
+                d: d,
                 index: index,
                 columns: columns,
                 columnMap: columnMap
@@ -78,26 +78,31 @@ export default {
             else {
                 this.firstRender = false
             }
+            this.$store.callsites = {}
+            this.$store.callsites['ensemble'] = this.processCallsite(this.data['ensemble'])
 
-            this.callsites = []
-            let ensemble_data = this.preprocess_data['ensemble']
-            let target_data = this.preprocess_data[this.$store.selectedTargetDataset]
-
-            this.number_of_callsites = ensemble_data['index'].length
-
-            for (let i = 0; i < ensemble_data.index.length; i += 1) {
-                let callsite = {}
-                let target_callsite = {}
-
-                for (let column of ensemble_data.columns) {
-                    callsite[column] = ensemble_data.data[i][ensemble_data.columnMap[column]]
-                    target_callsite[column] = target_data.data[i][target_data.columnMap[column]]
-                }
-
-                this.callsites.push(callsite)
-                this.ui(callsite)
-                this.visualize(callsite, target_callsite)
+            for (let i = 0; i < this.$store.actual_dataset_names.length; i += 1) {
+                let dataset = this.$store.actual_dataset_names[i]
+                this.$store.callsites[dataset] = this.processCallsite(this.data[dataset])
             }
+
+            for (const [idx, callsite] of Object.entries(this.$store.callsites['ensemble'])) {
+                this.ui(callsite.name)
+                this.visualize(callsite.name)
+            }
+        },
+
+        processCallsite(data) {
+            let callsites = {}
+            for (let i = 0; i < data.index.length; i += 1) {
+                let callsite = {}
+                let callsite_name = data.d[i][data.columnMap['name']]
+                for (let column of data.columns) {
+                    callsite[column] = data.d[i][data.columnMap[column]]
+                }
+                callsites[callsite_name] = callsite
+            }
+            return callsites
         },
 
         clear() {
@@ -111,23 +116,25 @@ export default {
             return this.labels[idx]
         },
 
-        ui(data) {
+        ui(callsite_name) {
+            let callsite = this.$store.callsites['ensemble'][callsite_name]
+
             let container = document.createElement('div')
             let div = document.createElement('div')
-            div.setAttribute('id', data.id)
+            div.setAttribute('id', callsite.id)
             div.setAttribute('class', 'auxiliary-node')
 
-            let checkbox = this.createCheckbox(data)
-            let call_site = this.createLabel("".concat("Call site: ", this.trunc(data.name, 30)))
+            let checkbox = this.createCheckbox(callsite)
+            let callsite_label = this.createLabel("".concat("Call site: ", this.trunc(callsite.name, 30)))
 
-            let time_inc = data["mean_time (inc)"].toFixed(2)
+            let time_inc = callsite["mean_time (inc)"].toFixed(2)
             let inclusive_runtime = this.createLabel("".concat("Inclusive Runtime (mean): ", time_inc));
-            let time = data["mean_time"].toFixed(2)
+            let time = callsite["mean_time"].toFixed(2)
             let exclusive_runtime = this.createLabel("".concat("Exclusive Runtime (mean): ", time));
 
 
             div.appendChild(checkbox);
-            div.appendChild(call_site);
+            div.appendChild(callsite_label);
             div.appendChild(inclusive_runtime);
             div.appendChild(exclusive_runtime);
 
@@ -145,13 +152,13 @@ export default {
             return label
         },
 
-        createCheckbox(dat) {
+        createCheckbox(callsite) {
             let div = document.createElement('div')
             let container = document.createElement("div");
             let checkbox = document.createElement("button");
-            checkbox.name = dat.name
-            checkbox.module = dat.module
-            checkbox.node_name = dat['name']
+            checkbox.name = callsite.name
+            checkbox.module = callsite.module
+            checkbox.node_name = callsite.name
             checkbox.setAttribute('class', "reveal-button");
             checkbox.innerHTML = 'Reveal'
             // container.appendChild(textNode)
@@ -197,19 +204,36 @@ export default {
 
 
         // boxPlot visualization.
-        visualize(ensemble_data, target_data) {
+        visualize(callsite_name) {
             this.width = document.getElementById('auxiliary-function-overview').clientWidth - 50
 
-            this.boxPlot(ensemble_data, target_data)
+            let ensemble_callsite_data = this.$store.callsites['ensemble'][callsite_name]
+
+            let target_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset][callsite_name]
+
+            if (target_callsite_data == undefined) {
+                target_callsite_data = {
+                    'dataset': [this.$store.selectedTargetDataset],
+                    'id': ensemble_callsite_data.id,
+                    'max_time': 0,
+                    'max_time (inc)': 0,
+                    'module': ensemble_callsite_data.module,
+                    'name': ensemble_callsite_data.name,
+                    'rank': [],
+                    'time': [],
+                    'time (inc)': []
+                }
+            }
 
             this.boxWidth = this.width - this.margin.left - this.margin.right
             this.boxHeight = this.height - this.margin.top - this.margin.bottom
-            this.svg = d3.select('#' + ensemble_data.id)
+            this.svg = d3.select('#' + ensemble_callsite_data.id)
                 .append('svg')
                 .attr('class', 'box')
                 .attr("width", this.boxWidth)
                 .attr("height", this.boxHeight)
 
+            this.boxPlot(ensemble_callsite_data, target_callsite_data)
             this.box()
             this.targetBox()
             this.centerLine()
@@ -285,6 +309,7 @@ export default {
 
         median(arr) {
             if (arr.length == 0) return 0
+            if (arr.length == 1) return [0]
             let mid = Math.floor(arr.length / 2)
             if (mid % 2) {
                 return [mid]
@@ -295,45 +320,58 @@ export default {
         },
 
         quartiles(arr) {
-            arr.sort(function (a, b) {
-                return a - b;
-            })
-
-            let med_pos = this.median(arr)
-            let med = 0
-            if (med_pos.length == 2) {
-                med = (arr[med_pos[0]] + arr[med_pos[1]]) / 2
+            let result = {}
+            if (arr.length == 0) {
+                result = {
+                    "q1": 0,
+                    "q2": 0,
+                    "q3": 0,
+                    "q4": 0,
+                    "min": 0,
+                    "max": 0
+                }
             }
             else {
-                med = arr[med_pos[0]]
-            }
+                arr.sort(function (a, b) {
+                    return a - b;
+                })
 
-            let min = arr[0]
-            let max = arr[arr.length - 1]
+                let med_pos = this.median(arr)
 
-            let q1 = (min + med) / 2;
-            let q2 = med
-            let q3 = (max + med) / 2
-            let q4 = max
+                let med = 0
+                if (med_pos.length == 2) {
+                    med = (arr[med_pos[0]] + arr[med_pos[1]]) / 2
+                }
+                else {
+                    med = arr[med_pos[0]]
+                }
+                let min = arr[0]
+                let max = arr[arr.length - 1]
 
-            var v1 = Math.floor(q1),
-                v2 = Math.floor(q2),
-                v3 = Math.floor(q3),
-                v4 = Math.floor(q4);
+                let q1 = (min + med) / 2;
+                let q2 = med
+                let q3 = (max + med) / 2
+                let q4 = max
 
-            var rowMax = Math.max(v1, Math.max(v2, Math.max(v3, v4)));
-            var rowMin = Math.min(v1, Math.min(v2, Math.min(v3, v4)));
+                var v1 = Math.floor(q1),
+                    v2 = Math.floor(q2),
+                    v3 = Math.floor(q3),
+                    v4 = Math.floor(q4);
 
-            if (rowMax > max) max = rowMax;
-            if (rowMin < min) min = rowMin;
+                var rowMax = Math.max(v1, Math.max(v2, Math.max(v3, v4)));
+                var rowMin = Math.min(v1, Math.min(v2, Math.min(v3, v4)));
 
-            let result = {
-                "q1": v1,
-                "q2": v2,
-                "q3": v3,
-                "q4": v4,
-                "min": min,
-                "max": max
+                if (rowMax > max) max = rowMax;
+                if (rowMin < min) min = rowMin;
+
+                result = {
+                    "q1": v1,
+                    "q2": v2,
+                    "q3": v3,
+                    "q4": v4,
+                    "min": min,
+                    "max": max
+                }
             }
             return result
         },
@@ -362,6 +400,7 @@ export default {
         },
 
         targetBox() {
+            let self = this
             this.boxHeight = this.height / 2
             this.targetBoxSVG = this.svg
                 .append("rect")
@@ -370,7 +409,12 @@ export default {
                 .attr("x", this.x0(this.targetq.q1))
                 .attr("height", this.boxHeight)
                 .attr('fill', this.$store.color.target)
-                .attr("width", this.x0(this.targetq.q3) - this.x0(this.targetq.q1))
+                .attr("width", (d) => {
+                    if(self.targetq.q1 == self.targetq.q3){
+                        return 3
+                    }
+                    return self.x0(self.targetq.q3) - self.x0(self.targetq.q1)
+                })
                 .style('z-index', 1)
                 .transition()
                 .duration(this.duration)
@@ -380,8 +424,13 @@ export default {
             this.targetBoxSVG.transition()
                 .duration(this.duration)
                 .attr("x", this.x1(this.targetq.q1))
-                .attr("width", this.x1(this.targetq.q3) - this.x1(this.targetq.q1));
-        },
+                .attr("width", (d) => {
+                    if(self.targetq.q1 == self.targetq.q3){
+                        return 3
+                    }
+                    return self.x1(self.targetq.q3) - self.x1(self.targetq.q1)
+                })
+            },
 
         centerLine() {
             this.centerLineSVG = this.svg
@@ -482,9 +531,9 @@ export default {
                 .selectAll(".outlier")
                 .data(this.groupOutliers(outlierList, this.outlierRadius))
                 .join("circle")
-                .attr("r", d => (d.count/this.max_count)*4 + 4)
+                .attr("r", d => (d.count / this.max_count) * 4 + 4)
                 .attr("cx", d => d.x[0])
-                .attr("cy", d => this.height/2 + this.boxHeight/2)
+                .attr("cy", d => this.height / 2 + this.boxHeight / 2)
                 .attr("class", "outlier")
                 .style("opacity", 1e-6)
                 .transition()
@@ -507,9 +556,9 @@ export default {
                 .selectAll(".target-outlier")
                 .data(this.groupOutliers(targetOutlierList, this.outlierRadius))
                 .join("circle")
-                .attr("r", d => (d.count/this.max_count)*4 + 4)
+                .attr("r", d => (d.count / this.max_count) * 4 + 4)
                 .attr("cx", d => d.x[0])
-                .attr("cy", d => this.height/2 - this.boxHeight/2)
+                .attr("cy", d => this.height / 2 - this.boxHeight / 2)
                 .attr("class", "target-outlier")
                 .style("opacity", 1e-6)
                 .style("fill", this.$store.color.target)
@@ -548,7 +597,7 @@ export default {
                             count: count
                         }
                         j += 1
-                        if(count > max_count){
+                        if (count > max_count) {
                             max_count = count
                         }
                         count = 0

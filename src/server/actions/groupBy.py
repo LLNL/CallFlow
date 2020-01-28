@@ -151,7 +151,6 @@ class groupBy:
             component_path[snode] = self.create_component_path(spath, group_path[snode])
             component_level[snode] = len(component_path[snode])
             module[snode] = s_df['module'].tolist()[0]
-            print(snode)
 
             if module[snode] not in module_id_map:
                 module_count += 1
@@ -188,7 +187,6 @@ class groupBy:
         self.update_df('component_level', component_level)
         self.update_df('change_name', change_name)
         self.update_df('mod_index', module_idx)
-        # self.update_df('module', module)
         self.update_df('entry_function', entry_func)
 
         show_nodes = self.df.loc[self.df['show_node'] == True]['vis_name'].unique()

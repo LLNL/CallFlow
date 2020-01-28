@@ -3,6 +3,7 @@ from logger import log
 import math, json, utils
 from ast import literal_eval as make_tuple
 import numpy as np
+from timer import Timer
 
 # TODO: Remove all code with respect to add_paths (very expensive. )
 class DistGraph(nx.Graph):
@@ -16,6 +17,7 @@ class DistGraph(nx.Graph):
     ):
         super(DistGraph, self).__init__()
         self.states = states
+        self.timer = Timer()
 
         # Store the ensemble graph (Since it is already processed.)
         self.state = self.states['ensemble']
@@ -31,11 +33,10 @@ class DistGraph(nx.Graph):
         self.path = path
         self.group_by = group_by_attr
 
-        #
         self.df = self.state.df
 
-        # Columns to consider ,
-        #  TODO: Generalize it either all columns or let user specify the value using config.json
+        # Columns to consider.
+        # TODO: Generalize it either all columns or let user specify the value using config.json
         self.columns = [
             "time (inc)",
             "group_path",
@@ -52,27 +53,30 @@ class DistGraph(nx.Graph):
         # TODO: Change name in the df from 'dataset' to 'run'
         self.runs = self.df["dataset"].unique()
 
-        if construct_graph:
-            print("Creating a Graph for {0}.".format(self.state.name))
-            self.mapper = {}
-            self.g = nx.DiGraph()
-            self.add_paths(path)
-        else:
-            print("Using the existing graph from state {0}".format(state.name))
+        with self.timer.phase("Construct Graph"):
+            if construct_graph:
+                print("Creating a Graph for {0}.".format(self.state.name))
+                self.mapper = {}
+                self.g = nx.DiGraph()
+                self.add_paths(path)
+            else:
+                print("Using the existing graph from state {0}".format(self.state.name))
 
         # Store the A (*adjacency matrix.)
-        self.adj_matrix = nx.adjacency_matrix(self.g)
-        self.dense_adj_matrix = self.adj_matrix.todense()
+        with self.timer.phase("Create adjacency matrix"):
+            self.adj_matrix = nx.adjacency_matrix(self.g)
+            self.dense_adj_matrix = self.adj_matrix.todense()
 
         # Variables to control the data properties globally.
         self.callbacks = []
         self.edge_direction = {}
 
-        if add_data == True:
-            self.add_node_attributes()
-            self.add_edge_attributes()
-        else:
-            print("Creating a Graph without node or edge attributes.")
+        with self.timer.phase("Add graph attributes"):
+            if add_data == True:
+                self.add_node_attributes()
+                self.add_edge_attributes()
+            else:
+                print("Creating a Graph without node or edge attributes.")
 
     def no_cycle_path(self, path):
         ret = []
@@ -91,30 +95,27 @@ class DistGraph(nx.Graph):
                 self.mapper[elem] += 1
         return tuple(ret)
 
+    # TODO: Make this a consistent datatype.
+    def add_path(self, path):
+        if isinstance(path, list):
+            path_tuple = path
+        elif isinstance(path, str):
+            path_tuple = make_tuple(path)
+        # corrected_path = self.no_cycle_path(path_tuple)
+        # self.g.add_path(corrected_path)
+        self.g.add_path(path_tuple)
+
     def add_paths(self, path):
-        for idx, row in self.df.iterrows():
-            source = row.name
-            target = row.path[-2]
-            # print(source, target)
-            # vis_name = source  + '=' + target
+        path_df = self.df[path].fillna("()")
+        paths = path_df.drop_duplicates().tolist()
+        for idx, path in enumerate(paths):
+            source = path[-1]
+            target = path[-2]
             edge = (source, target)
 
-            # source_id = np.any(self.node_list[:, 0] == source)
-            # print(source_id)
-            # show_source = self.nodeMap[vis_name]['show_node']  #.index(source)['show_node']
-            # print(show_source)
+            # if row.show_node == True:# or show_source == True:
+            self.add_path(path)
 
-            if row.show_node == True:# or show_source == True:
-                self.add_path(row)
-
-    # TODO: Make this a consistent datatype.
-    def add_path(self, row):
-        if isinstance(row[self.path], list):
-            path_tuple = row[self.path]
-        elif isinstance(row[self.path], str):
-            path_tuple = make_tuple(row[self.path])
-        corrected_path = self.no_cycle_path(path_tuple)
-        self.g.add_path(corrected_path)
 
     def add_node_attributes(self):
         ensemble_mapping = self.ensemble_map(self.g.nodes())
@@ -131,10 +132,9 @@ class DistGraph(nx.Graph):
             )
 
     def add_edge_attributes(self):
-        # number_of_runs_mapping = self.number_of_runs()
-        # nx.set_edge_attributes(
-        #     self.g, name="number_of_runs", values=number_of_runs_mapping
-        # )
+        number_of_runs_mapping = self.number_of_runs()
+        print(number_of_runs_mapping)
+        nx.set_edge_attributes(self.g, name="number_of_runs", values=number_of_runs_mapping)
         capacity_mapping = self.calculate_flows(self.g)
         nx.set_edge_attributes(self.g, name="weight", values=capacity_mapping)
         exc_capacity_mapping = self.calculate_exc_weight(self.g)
@@ -147,7 +147,6 @@ class DistGraph(nx.Graph):
                 source = edge[0]
                 target = edge[1]
                 source_module = self.df.loc[self.df['name'] == source]['module'].unique()[0]
-                print(source, target)
                 target_module = self.df.loc[self.df['name'] == target]['module'].unique()[0]
 
                 edge_with_module = (source_module + '=' + source, target_module + '=' + target)

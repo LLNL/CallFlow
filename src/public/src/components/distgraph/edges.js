@@ -118,6 +118,7 @@ export default {
                     // return "url(#" + getGradID(d) + ")";
                 })
                 .style('fill-opacity', (d) => {
+                    console.log(d)
                     return d.number_of_runs / this.$store.datasets.length
                 })
                 .on("mouseover", function (d) {

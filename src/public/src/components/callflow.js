@@ -26,8 +26,7 @@ import AuxiliaryFunction from './auxiliaryFunction'
 import DistHistogram from './disthistogram'
 
 import UploadButton from './uploadButton'
-
-import io from 'socket.io-client';
+import io from 'socket.io-client'
 
 export default {
 	name: 'CallFlow',
@@ -122,7 +121,8 @@ export default {
 			"dist_auxiliary",
 			"dist_similarity",
 			"dist_projection",
-		]
+		],
+		parameter_analysis: true,
 	}),
 
 	watch: {},
@@ -388,40 +388,48 @@ export default {
 						functionsInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph' && this.selectedExhibitMode == 'Default') {
-					this.$socket.emit('run_information', {
-						datasets: this.$store.actual_dataset_names,
-					})
-
-					this.$socket.emit('dist_group', {
-						datasets: this.$store.actual_dataset_names,
-						groupBy: this.selectedGroupBy
-					})
-
-					this.$socket.emit('dist-mini-histogram', {
-						'target-datasets': [this.$store.selectedTargetDataset],
-					})
-
-					this.$socket.emit('dist_similarity', {
-						datasets: this.$store.actual_dataset_names,
-						algo: 'deltacon',
-						module: 'all'
-					})
-
-					this.$socket.emit('dist_gradients', {
-						datasets: this.$store.actual_dataset_names,
-						plot: 'kde'
-					})
-
-					this.$socket.emit('dist_projection', {
-						datasets: this.$store.actual_dataset_names,
-						algo: 'tsne'
-					})
+					if (this.parameter_analysis) {
+						this.$socket.emit('run_information', {
+							datasets: this.$store.actual_dataset_names,
+						})
+					}
 
 					this.$socket.emit('dist_auxiliary', {
 						datasets: this.$store.actual_dataset_names,
 						sortBy: this.$store.auxiliarySortBy,
 						module: 'all'
 					})
+
+
+					this.$socket.emit('dist_group', {
+						datasets: this.$store.actual_dataset_names,
+						groupBy: this.selectedGroupBy
+					})
+
+					// this.$socket.emit('dist-mini-histogram', {
+					// 	'target-datasets': [this.$store.selectedTargetDataset],
+					// })
+
+					// if(this.parameter_analysis){
+					// 	this.$socket.emit('dist_similarity', {
+					// 		datasets: this.$store.actual_dataset_names,
+					// 		algo: 'deltacon',
+					// 		module: 'all'
+					// 	})
+					// }
+
+					// this.$socket.emit('dist_gradients', {
+					// 	datasets: this.$store.actual_dataset_names,
+					// 	plot: 'kde'
+					// })
+
+					// if(this.parameter_analysis){
+					// 	this.$socket.emit('dist_projection', {
+					// 		datasets: this.$store.actual_dataset_names,
+					// 		algo: 'tsne'
+					// 	})
+					// }
+
 
 					// this.$socket.emit('dist_hierarchy', {
 					// 	module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
@@ -582,8 +590,8 @@ export default {
 			}
 			// this.$store.selectedTargetDataset = min_inclusive_dataset
 			// this.selectedTargetDataset = min_inclusive_dataset
-			this.$store.selectedTargetDataset = '512-cores'
-			this.selectedTargetDataset = '512-cores'
+			this.$store.selectedTargetDataset = '1-core'
+			this.selectedTargetDataset = '1-core'
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
 
@@ -623,12 +631,12 @@ export default {
 			this.clearLocal()
 			this.$store.selectedTargetDataset = this.selectedTargetDataset
 			console.log("[Update] Target Dataset: ", this.selectedTargetDataset)
-			if(this.selectedExhibitMode == 'Presentation'){
-				for(let i = 0; i < this.presentationPage - 1; i += 1){
+			if (this.selectedExhibitMode == 'Presentation') {
+				for (let i = 0; i < this.presentationPage - 1; i += 1) {
 					this.sendRequest(this.presentationOrder[this.presentationPage])
 				}
 			}
-			else{
+			else {
 				this.init()
 			}
 		},
@@ -768,7 +776,7 @@ export default {
 			})
 		},
 
-		updateExhibitMode(){
+		updateExhibitMode() {
 			this.clearLocal()
 			this.init()
 		},

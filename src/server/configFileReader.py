@@ -23,6 +23,7 @@ class configFileReader():
         self.runName = self.json['run_name']
         self.callflow_path = self.json['callflow_path']
         self.scheme = self.json['scheme']
+        self.parameter_analysis = self.json['parameter_analysis']
         self.processed_path = os.path.join(self.callflow_path, self.json['save_path'])
         self.paths = {}
         self.module_paths = {}
@@ -47,17 +48,13 @@ class configFileReader():
         self.module_callsite_map = self.scheme['module_map']
         self.callsite_module_map  = self.process_scheme()
 
-
         # Parse the information for each dataset
         for idx, data in enumerate(self.datasets):
             name = data['name']
             self.names.append(name)
             self.dataset_names.append(name)
-            # log.info('Config file: {0}'.format(json.dumps(data, indent=4, sort_keys=True)))
             self.paths[name] = data['path']
             self.format[name] = data['format']
-            if(self.format[name] == 'caliper_json'):
-                self.module_paths[name] = data['module']
 
     def json_data(self, json_text):
         return self._byteify(json.loads(json_text, object_hook=self._byteify), ignore_dicts=True)

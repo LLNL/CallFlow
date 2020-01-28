@@ -24,27 +24,13 @@ export default {
     }),
     sockets: {
         dist_gradients(data) {
-            console.log("Gradient data:", data)
+            console.log("[Gradient] Data:", data)
             this.data = data
             this.setupMeanGradients(data)
         },
 
-        dist_group_highlight(data) {
-            data = JSON.parse(data)
-            console.log("Group highlight for", this.selectedFormat, ": [", this.selectedMode, "]", data)
-            // DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
-            // if (this.selectedData == 'Dataframe' && this.initLoad) {
-            // 	this.$refs.DistgraphA.init(data)
-            // } else if (this.selectedData == 'Graph' && this.initLoad) {
-            // 	this.$refs.DistgraphB.init(data)
-            // }
-            // else{
-            // 	this.$refs.DistgraphA.init(data)ss
-            // }
-        },
-
         compare(data) {
-            console.log("Comparison :", data)
+            console.log("[Comparison] Data:", data)
             this.clearGradients()
             this.clearQuantileLines()
             this.clearZeroLine()
@@ -100,23 +86,23 @@ export default {
             this.setNodeIds()
 
             // https://observablehq.com/@geekplux/dragable-d3-sankey-diagram
-            this.drag = d3.drag()
-                .subject((d) => {
-                    return d;
-                })
-                .on("start", function () {
-                    this.parentNode.appendChild(this)
-                })
-                .on("drag", (d) => {
-                    d3.select(`node_${d.mod_index[0]}`).attr("transform",
-                        "translate(" + (
-                            d.x = Math.max(0, Math.min(this.$parent.width - d.dx, d3.event.x))
-                        ) + "," + (
-                            d.y = Math.max(0, Math.min(this.$parent.height - d.dy, d3.event.y))
-                        ) + ")");
-                    // sankey.relayout();
-                    // link.attr("d", path);
-                })
+            // this.drag = d3.drag()
+            //     .subject((d) => {
+            //         return d;
+            //     })
+            //     .on("start", function () {
+            //         this.parentNode.appendChild(this)
+            //     })
+            //     .on("drag", (d) => {
+            //         d3.select(`node_${d.mod_index[0]}`).attr("transform",
+            //             "translate(" + (
+            //                 d.x = Math.max(0, Math.min(this.$parent.width - d.dx, d3.event.x))
+            //             ) + "," + (
+            //                 d.y = Math.max(0, Math.min(this.$parent.height - d.dy, d3.event.y))
+            //             ) + ")");
+            //         sankey.relayout();
+            //         link.attr("d", path);
+            //     })
 
             this.nodesSVG = this.nodes.selectAll('.dist-node')
                 .data(this.graph.nodes)
@@ -141,7 +127,7 @@ export default {
             this.meanRectangle()
             this.path()
             this.text()
-            this.drawTargetLine()
+            // this.drawTargetLine()
 
             this.$refs.ToolTip.init(this.$parent.id)
         },
@@ -223,13 +209,6 @@ export default {
                 .style('stroke-width', (d) => {
                     return 5
                 })
-                .on('mouseover', (d) => {
-                    self.$refs.ToolTip.render(self.graph, d)
-                    this.$store.selectedNode = d
-                })
-                .on('mouseout', (d) => {
-                    self.$refs.ToolTip.clear()
-                })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
                     this.$store.selectedModule = d.name
@@ -258,6 +237,13 @@ export default {
                     //     datasets: this.$store.actual_dataset_names,
                     //     sortBy: this.$store.auxiliarySortBy,
                     // })
+                })
+                .on('mouseover', (d) => {
+                    self.$refs.ToolTip.render(self.graph, d)
+                    this.$store.selectedNode = d
+                })
+                .on('mouseout', (d) => {
+                    // self.$refs.ToolTip.clear()
                 })
 
             // Transition
