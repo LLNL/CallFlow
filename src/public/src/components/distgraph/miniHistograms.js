@@ -81,12 +81,11 @@ export default {
         },
 
         histogram(data, node_dict, type) {
-            var t0 = performance.now();
             const processData = this.dataProcess(data)
-            var t1 = performance.now();
-            console.log(t1 - t0)
             let xVals = processData[0]
             let freq = processData[1]
+
+            console.log(processData)
 
             let color = ''
             if (type == 'ensemble') {

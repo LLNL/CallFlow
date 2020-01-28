@@ -507,6 +507,30 @@ export default class Color {
         }
     }
 
+    CYKToRGB(CMYK) {
+        let result = {}
+        let c = CMYK[0];
+        let m = CMYK[1];
+        let y = CMYK[2];
+        let k = 0;
+
+        result.r = 1 - Math.min(1, c * (1 - k) + k);
+        result.g = 1 - Math.min(1, m * (1 - k) + k);
+        result.b = 1 - Math.min(1, y * (1 - k) + k);
+
+        result.r = Math.round(result.r * 255);
+        result.g = Math.round(result.g * 255);
+        result.b = Math.round(result.b * 255);
+
+
+        function componentToHex(c) {
+            var hex = c.toString(16);
+            return hex.length == 1 ? "0" + hex : hex;
+        }
+
+        return "#" + componentToHex(result.r) + componentToHex(result.g) + componentToHex(result.b);
+    }
+
     setContrast(hex) {
         const rgb = this.hexToRgb(hex);
         const o = Math.round(((parseInt(rgb.r) * 299) +
