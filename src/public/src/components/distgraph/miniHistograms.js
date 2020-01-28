@@ -44,25 +44,15 @@ export default {
         this.id = 'minihistogram-overview-' + this._uid
     },
 
-    sockets: {
-        dist_mini_histogram(data) {
-            this.data = JSON.parse(data)
-            for (const [key, value] of Object.entries(this.data)) {
-                let node = key
-                let d = JSON.parse(value)
-                this.render(d, node)
-            }
-        }
-    },
-
     methods: {
         init(graph, view) {
             this.nodeMap = graph.nodeMap
             this.nodes = graph.nodes
             this.links = graph.links
             this.view = view
-            for(let node in graph.nodes){
-                this.render(this.$store.nodeInfo, node)
+            for(const [idx, callsite] of Object.entries(graph.nodes)){
+                let callsite_name = callsite.name
+                this.render(callsite_name)
             }
         },
 
@@ -73,51 +63,17 @@ export default {
         },
 
         dataProcess(data) {
-            const xVals = [];
-            const freq = [];
-            const dataSorted = []
             let attr_data = {}
 
             if (this.selectedColorBy == 'Inclusive') {
-                attr_data = data['time (inc)']
+                attr_data = data['hist_time (inc)']
             } else if (this.selectedColorBy == 'Exclusive') {
-                attr_data = data['time']
-            } else if (this.selectedColorBy == 'Name') {
-                attr_data = data['rank']
+                attr_data = data['hist_time']
             } else if (this.selectedColorBy == 'Imbalance') {
-                attr_data = data['imbalance']
+                attr_data = data['hist_imbalance']
             }
 
-            let ranks = data['rank']
-            this.MPIcount = this.array_unique(ranks).length
-            for (let i = 0; i < attr_data.length; i += 1) {
-                for (const [key, value] in Object.entries(attr_data)) {
-                    if (dataSorted[i] == undefined) {
-                        dataSorted[i] = 0
-                    }
-                    dataSorted[i] += attr_data[i]
-                }
-            }
-
-            dataSorted.sort((a, b) => a - b)
-            const dataMin = dataSorted[0];
-            const dataMax = dataSorted[dataSorted.length - 1];
-
-            const dataWidth = ((dataMax - dataMin) / this.$store.selectedBinCount);
-            for (let i = 0; i < this.$store.selectedBinCount; i++) {
-                xVals.push(i);
-                freq.push(0);
-            }
-
-            dataSorted.forEach((val, idx) => {
-                let pos = Math.floor((val - dataMin) / dataWidth);
-                if (pos >= this.$store.selectedBinCount) {
-                    pos = this.$store.selectedBinCount - 1;
-                }
-                freq[pos] += 1;
-            });
-
-            return [xVals, freq];
+            return [attr_data['x'], attr_data['y']];
         },
 
         clear() {
@@ -125,7 +81,10 @@ export default {
         },
 
         histogram(data, node_dict, type) {
+            var t0 = performance.now();
             const processData = this.dataProcess(data)
+            var t1 = performance.now();
+            console.log(t1 - t0)
             let xVals = processData[0]
             let freq = processData[1]
 
@@ -167,20 +126,13 @@ export default {
             }
         },
 
-        renderTarget() {
+        render(callsite) {
+            let node_dict = this.nodes[this.nodeMap[callsite]]
+            let ensemble_callsite_data = this.$store.callsites['ensemble'][callsite]
+            let target_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset][callsite]
 
-        },
-
-        render(data, node) {
-            let node_dict = this.nodes[this.nodeMap[node]]
-            if (node in this.nodeMap) {
-
-                let ensemble_data = data['ensemble'][0][0]
-                let target_data = data['target'][0][this.$store.selectedTargetDataset]
-
-                this.histogram(ensemble_data, node_dict, 'ensemble')
-                this.histogram(target_data, node_dict, 'target')
-            }
+            this.histogram(ensemble_callsite_data, node_dict, 'ensemble')
+            this.histogram(target_callsite_data, node_dict, 'target')
         }
     }
 }

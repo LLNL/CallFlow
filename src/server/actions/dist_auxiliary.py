@@ -13,6 +13,7 @@ import pandas as pd
 import json
 import networkx as nx
 from ast import literal_eval as make_tuple
+import numpy as np
 
 class Auxiliary:
     def __init__(self, state, module='all', sortBy='time (inc)', datasets='all'):
@@ -63,7 +64,23 @@ class Auxiliary:
         name = name.replace('>', '')
         return name
 
+    def histogram(self, data, nbins=5):
+        h, b = np.histogram(data, range=[0, data.max()], bins=nbins)
+        return 0.5*(b[1:]+b[:-1]), h
+
     def json_object(self, group_df, node_name):
+        hist_inc_grid = self.histogram(np.array(group_df['time (inc)'].tolist()))
+        hist_x_min_inc = hist_inc_grid[0][0]
+        hist_x_max_inc = hist_inc_grid[0][-1]
+        hist_y_min_inc = np.min(hist_inc_grid[1]).astype(np.float64)
+        hist_y_max_inc = np.max(hist_inc_grid[1]).astype(np.float64)
+
+        hist_exc_grid = self.histogram(np.array(group_df['time'].tolist()))
+        hist_x_min_exc = hist_exc_grid[0][0]
+        hist_x_max_exc = hist_exc_grid[0][-1]
+        hist_y_min_exc = np.min(hist_exc_grid[1]).astype(np.float64)
+        hist_y_max_exc = np.max(hist_exc_grid[1]).astype(np.float64)
+
         return {
                 "name": node_name,
                 "time (inc)": group_df['time (inc)'].tolist(),
@@ -76,6 +93,22 @@ class Auxiliary:
                 "max_time": group_df['time'].max(),
                 "dataset": group_df['dataset'].tolist(),
                 "module": group_df['module'].tolist()[0],
+                "hist_time (inc)": {
+                    "x": hist_inc_grid[0].tolist(),
+                    "y": hist_inc_grid[1].tolist(),
+                    "x_min": hist_x_min_inc,
+                    "x_max": hist_x_max_inc,
+                    "y_min": hist_y_min_inc,
+                    "y_max": hist_y_max_inc,
+                },
+                "hist_time": {
+                    "x": hist_exc_grid[0].tolist(),
+                    "y": hist_exc_grid[1].tolist(),
+                    "x_min": hist_x_min_exc,
+                    "x_max": hist_x_max_exc,
+                    "y_min": hist_y_min_exc,
+                    "y_max": hist_y_max_exc,
+                }
             }
 
     def run(self):

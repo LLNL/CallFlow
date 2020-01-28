@@ -534,17 +534,17 @@ class App:
             )
             emit('compare', result, json=True)
 
-        @sockets.on("dist-mini-histogram", namespace="/")
-        def histogram(data):
-            if self.debug:
-                self.print("[Request] Mini-histogram", data)
-            result = self.callflow.update_dist(
-                {
-                    "name": "mini-histogram",
-                    "target-datasets": data['target-datasets']
-                }
-            )
-            emit("dist_mini_histogram", result, json=True)
+        # @sockets.on("dist-mini-histogram", namespace="/")
+        # def histogram(data):
+        #     if self.debug:
+        #         self.print("[Request] Mini-histogram", data)
+        #     result = self.callflow.update_dist(
+        #         {
+        #             "name": "mini-histogram",
+        #             "target-datasets": data['target-datasets']
+        #         }
+        #     )
+        #     emit("dist_mini_histogram", result, json=True)
 
     def create_server(self):
         app.debug = True

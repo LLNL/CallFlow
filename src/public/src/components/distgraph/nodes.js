@@ -146,7 +146,6 @@ export default {
             this.hist_min = 0
             this.hist_max = 0
             for (let d in data) {
-                console.log(d, data[d])
                 this.hist_min = Math.min(this.hist_min, data[d]['hist']['y_min'])
                 this.hist_max = Math.max(this.hist_max, data[d]['hist']['y_max'])
             }
@@ -474,10 +473,8 @@ export default {
         drawTargetLine(d) {
             let mode = this.$store.selectedDiffNodeAlignment
             let dataset = this.$store.selectedTargetDataset
-            console.log(dataset)
             for (let i = 0; i < this.$store.graph.nodes.length; i++) {
                 let node_data = this.$store.graph.nodes[i]
-                console.log(node_data)
                 let min_inclusive_data = node_data[dataset]['time (inc)']
                 let x1 = node_data.x - this.nodeWidth
                 let x2 = node_data.x
