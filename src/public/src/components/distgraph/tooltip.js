@@ -109,7 +109,6 @@ export default {
         paths() {
             let entry_functions = this.node.callees
 
-            console.log("[Entry functions] = ", entry_functions)
             this.rectWidth = "10px"
 
             this.addText('')
@@ -174,9 +173,7 @@ export default {
 
                 let callsite = entry_functions[tIndex]
 
-                console.log(this.$store.callsites['ensemble'][callsite])
                 let timeInfo = ( this.$store.callsites['ensemble'][callsite]['max_time'] / this.$store.maxIncTime['ensemble'] * 100).toFixed(3) + '%'
-                console.log(timeInfo)
 
                 this.toolTipG.append('text')
                     .attrs({

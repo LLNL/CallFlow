@@ -243,7 +243,6 @@ export default function Sankey() {
         while (remainingNodes.length) {
             nextNodes = [];
             remainingNodes.forEach(function (node) {
-                console.log(node)
                 node.level = level
                 node.dx = nodeWidth;
                 node.sourceLinks.forEach(function (link) {
@@ -355,50 +354,52 @@ export default function Sankey() {
 
                 // Asssign levels to the nodes based on time (inc)
                 for (let i = 0; i < n.length; i += 1) {
-                    level[n[i].id] = i
+                    level[n[i].vis_name] = i
                 }
 
                 n.forEach(function (node, i) {
                     let nodeHeight = 0;
 
-                    links.forEach(function (edge) {
-                        if (edge["target"] == node) {
-                            if (edge["source"] != null && edge["source"]['y'] != null) {
-                                nodeHeight = Math.max(nodeHeight, edge["source"]['y']);
+                    // Offset
+                    links.forEach(function (link) {
+                        if (link.target == node.vis_name) {
+                            if (link.source != '') {
+                                nodeHeight = Math.max(nodeHeight, link.source_dict.y);
+                            }
+                            else{
+                                nodeHeight = link.source_dict.height
                             }
                         }
                     });
-                    node.parY = nodeHeight;
+                    node.offsetY = nodeHeight;
 
-                    node.level = level[node.id]
+                    node.level = level[node.vis_name]
 
                     // Sum the heights of nodes on top of the current node.
                     node.y = 0
                     for (let j = 0; j < i - 1; j += 1) {
                         node.y += n[j].height
                     }
+                    node.y = Math.max(node.y, node.offsetY)
 
-                    node.y = Math.max(node.y, node.parY)
 
+                    let time = Math.max( Math.max(node['time (inc)'], node.out), node.inclusive)
+                    // if (height == 0) {
+                    //     height = node.out
+                    // }
+                    // if (node['time (inc)'] > node.in) {
+                    //     height = node['time (inc)']
+                    // }
+                    console.log(node.name, time)
 
-                    let height = Math.max(node['time (inc)'], node.in)
-                    if (height == 0) {
-                        height = node.out
-                    }
-
-                    if (node.weight > node.in) {
-                        height = node.weight
-                    }
-
-                    node.height = height * minNodeScale * scale
+                    node.height = time * minNodeScale * scale
 
                     node.scale = scale
                 });
 
-                nodes.sort(function (a, b) {
-                    return a.y - b.y
-                    // return a.parY - b.parY
-                })
+                // nodes.sort(function (a, b) {
+                //     return b['time (inc)'] - a['time (inc)']
+                // })
             });
 
             links.forEach(function (link) {

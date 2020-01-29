@@ -109,7 +109,7 @@ class Compare:
         dataset = np.concatenate([dataset1, dataset2], axis=0)
         mean = np.mean([data1, data2], axis=0)
         diff = data1 - data2
-        mean_diff = np.mean(diff)
+        mean_diff = np.mean(data2) - np.mean(data1)
         if math.isnan(mean_diff):
             mean_diff = 0
 

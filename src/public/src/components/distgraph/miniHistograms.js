@@ -51,8 +51,10 @@ export default {
             this.links = graph.links
             this.view = view
             for(const [idx, callsite] of Object.entries(graph.nodes)){
+                let callsite_module = callsite.module
                 let callsite_name = callsite.name
-                this.render(callsite_name)
+                console.log(callsite_module, callsite_name)
+                this.render(callsite_name, callsite_module)
             }
         },
 
@@ -84,8 +86,6 @@ export default {
             const processData = this.dataProcess(data)
             let xVals = processData[0]
             let freq = processData[1]
-
-            console.log(processData)
 
             let color = ''
             if (type == 'ensemble') {
@@ -125,10 +125,14 @@ export default {
             }
         },
 
-        render(callsite) {
-            let node_dict = this.nodes[this.nodeMap[callsite]]
-            let ensemble_callsite_data = this.$store.callsites['ensemble'][callsite]
-            let target_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset][callsite]
+        render(callsite_name, callsite_module) {
+            console.log(callsite_module)
+            console.log(this.$store.modules[this.$store.selectedTargetDataset])
+            let node_dict = this.nodes[this.nodeMap[callsite_name]]
+            let ensemble_callsite_data = this.$store.modules['ensemble'][callsite_module]
+            let target_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module]
+
+            console.log(target_callsite_data)
 
             this.histogram(ensemble_callsite_data, node_dict, 'ensemble')
             this.histogram(target_callsite_data, node_dict, 'target')

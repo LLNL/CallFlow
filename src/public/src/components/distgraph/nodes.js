@@ -40,20 +40,20 @@ export default {
             this.rank_max = 0
             this.mean_min = 0
             this.mean_max = 0
-            for(let i = 0; i < data.length; i += 1){
+            for (let i = 0; i < data.length; i += 1) {
                 this.rank_min = Math.min(this.rank_min, data[i]['hist']['y_min'])
                 this.rank_max = Math.max(this.rank_max, data[i]['hist']['y_max'])
                 this.mean_min = Math.min(this.mean_min, data[i]['hist']['x_min'])
                 this.mean_max = Math.max(this.mean_max, data[i]['hist']['x_max'])
             }
 
-            if(this.$store.selectedCompareMode == 'rankDiff'){
+            if (this.$store.selectedCompareMode == 'rankDiff') {
                 this.$store.rankDiffColor.setColorScale(this.rank_min, this.rank_max, this.$store.selectedColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.DistColorMap.update('rankDiff', data)
                 this.setupDiffRuntimeGradients(data)
                 this.rankDiffRectangle()
             }
-            else if(this.$store.selectedCompareMode == 'meanDiff'){
+            else if (this.$store.selectedCompareMode == 'meanDiff') {
                 this.$store.meanDiffColor.setColorScale(this.mean_min, this.mean_max, this.$store.selectedColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.DistColorMap.update('meanDiff', data)
                 this.meanDiffRectangle(data)
@@ -152,7 +152,7 @@ export default {
             this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedColorMap, this.$store.selectedColorPoint)
             this.$parent.$refs.DistColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
 
-            for (let d in data){
+            for (let d in data) {
                 var defs = d3.select('#distgraph-overview-')
                     .append("defs");
 
@@ -210,7 +210,7 @@ export default {
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
-                    this.$store.selectedModule = d.name
+                    this.$store.selectedModule = d.module
 
                     // this.cleardebugGradients()
                     // this.debugGradients(this.data, selectedModule, 'hist')
@@ -316,7 +316,7 @@ export default {
                     .append('text')
                     .attr('class', 'zeroLineText')
                     .attr('dy', '0')
-                    .attr('x', this.nodeWidth/2 - 10)
+                    .attr('x', this.nodeWidth / 2 - 10)
                     .attr('y', (d) => y1 * d.height - 5)
                     .style('opacity', 1)
                     .style('font-size', '20px')
@@ -378,10 +378,10 @@ export default {
             let mean_diff = {}
             let max_diff = 0
             let min_diff = 0
-            for(let i = 0; i < diff.length; i += 1){
+            for (let i = 0; i < diff.length; i += 1) {
                 let d = diff[i]['diff']
                 let callsite = diff[i]['name']
-                let difference = d.reduce( (total, num) => {
+                let difference = d.reduce((total, num) => {
                     return total + num
                 })
                 mean_diff[callsite] = difference
@@ -402,7 +402,7 @@ export default {
                     return 1;
                 })
                 .style("fill", (d, i) => {
-                    if(max_diff == 0 && min_diff == 0){
+                    if (max_diff == 0 && min_diff == 0) {
                         return this.$store.meanDiffColor.getColorByValue(0.5)
                     }
                     return this.$store.meanDiffColor.getColorByValue((mean_diff[d.name]))
@@ -472,7 +472,6 @@ export default {
 
         // come back and remove the dependence on node_data from this.$graph.
         drawTargetLine(d) {
-            console.log(this.$store.callsites)
             let mode = this.$store.selectedDiffNodeAlignment
             let dataset = this.$store.selectedTargetDataset
             for (let i = 0; i < this.$store.graph.nodes.length; i++) {
@@ -484,53 +483,19 @@ export default {
                 let x1 = node_data.x - this.nodeWidth
                 let x2 = node_data.x
                 let y1 = 0
-                let y2 = 0
-                // Middle alignment is wrong
-                if (mode == 'Middle') {
-                    y1 = (node_data.height - val * node_data.height) * 0.5
-                    y2 = node_data.height - y1
-                    this.drawUpLine(y1, y2, node_data, dataset)
-                    this.drawBottomLine(y1, y2, node_data, dataset)
-                }
-                else if (mode == 'Top') {
-                    let gap = 5
-                    y1 = 0
-                    y2 = (node_data.height * mean_inclusive_data) / max_inclusive_data
-                    this.drawBottomLine(y1, y2, node_data, dataset)
-                }
+                let y2 = (node_data.height * mean_inclusive_data) / max_inclusive_data
+
+                d3.select('#dist-node_' + this.graph.nodeMap[node_data['name']])
+                    .append('line')
+                    .attr("class", 'targetLines')
+                    .attr("id", 'line-2-' + dataset + '-' + node_data['client_idx'])
+                    .attr("x1", 0)
+                    .attr("y1", y2)
+                    .attr("x2", this.nodeWidth)
+                    .attr("y2", y2)
+                    .attr("stroke-width", 5)
+                    .attr("stroke", this.$store.color.target)
             }
-        },
-
-        drawUpLine(y1, y2, node_data, dataset) {
-            d3.select('#dist-node_' + this.graph.nodeMap[node_data['name']]).append('line')
-                .attrs({
-                    'class': 'quantileLines',
-                    'id': 'line-1-' + dataset + '-' + node_data['client_idx'],
-                    "x1": 0,
-                    "y1": y1,
-                    "x2": this.nodeWidth,
-                    "y2": y1
-                })
-                .style('opacity', (d) => {
-                    return 1
-                })
-                .style("stroke", this.$store.color.colorPallette['pink'])
-                .style("stroke-width", (d) => {
-                    return 3
-                })
-        },
-
-        drawBottomLine(y1, y2, node_data, dataset) {
-            console.log(this.graph.nodeMap, node_data['vis_name'])
-            d3.select('#dist-node_' + this.graph.nodeMap[node_data['name']]).append('line')
-                .attr("class", 'quantileLines')
-                .attr("id", 'line-2-' + dataset + '-' + node_data['client_idx'])
-                .attr("x1", 0)
-                .attr("y1", y2)
-                .attr("x2", this.nodeWidth)
-                .attr("y2", y2)
-                .attr("stroke-width", 5)
-                .attr("stroke", this.$store.color.target)
         },
 
         path() {
@@ -643,6 +608,7 @@ export default {
 
         clear() {
             d3.selectAll('.dist-node').remove()
+            d3.selectAll('.targetLines').remove()
             this.$refs.ToolTip.clear()
         },
 

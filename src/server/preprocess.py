@@ -221,3 +221,8 @@ class PreProcess():
         def add_dataset_name(self):
             self.df['dataset'] = self.state.name
             return self
+
+        @tmp_wrap
+        def update_module_name(self):
+            self.df['module'] = self.df['module'].apply(lambda name: utils.sanitizeName(name))
+            return self

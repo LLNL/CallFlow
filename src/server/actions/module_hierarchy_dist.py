@@ -22,13 +22,12 @@ class moduleHierarchyDist:
             self.function = modFunc.split("/")[1]
             self.module = modFunc.split("/")[0]
 
-        print(self.modFunc, self.module)
         # Create the Super node's hierarchy.
         self.hierarchy = nx.Graph()
         self.result = self.run()
 
     def run_graph(self):
-        self.hierarchy = nx.bfs_tree(self.graph, self.modFunc, depth_limit=5)
+        self.hierarchy = nx.bfs_tree(self.graph, self.modFunc, depth_limit=10)
 
     def add_paths(self, df, path_name):
         for idx, row in df.iterrows():
