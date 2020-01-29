@@ -220,19 +220,20 @@ export default {
 		calculateFlow(graph) {
 			const nodes = graph.nodes;
 			const links = graph.links;
+			console.log(nodes, links)
+
 			const outGoing = {};
 			const inComing = {};
 			nodes.forEach((node) => {
-				const nodeLabel = node.name;
+				const nodeLabel = node.vis_name;
 
 				links.forEach((link) => {
 					if (nodes[link.sourceID] != undefined) {
-						const linkLabel = nodes[link.sourceID].id;
+						const linkLabel = nodes[link.sourceID].vis_name;
+						if (outGoing[linkLabel] == undefined) {
+							outGoing[linkLabel] = 0;
+						}
 						if (linkLabel == nodeLabel) {
-							if (outGoing[linkLabel] == undefined) {
-								outGoing[linkLabel] = 0;
-								outGoing[linkLabel] = 0;
-							}
 							if (outGoing[linkLabel] != 0) {
 								outGoing[linkLabel] = Math.max(link.weight, outGoing[linkLabel])
 							}
@@ -241,17 +242,15 @@ export default {
 							}
 						}
 					}
-
 				});
 
 				links.forEach((link) => {
 					if (nodes[link.targetID] != undefined) {
-						const linkLabel = nodes[link.targetID].id;
+						const linkLabel = nodes[link.targetID].vis_name;
+						if (inComing[linkLabel] == undefined) {
+							inComing[linkLabel] = 0;
+						}
 						if (linkLabel == nodeLabel) {
-							if (inComing[linkLabel] == undefined) {
-								inComing[linkLabel] = 0;
-							}
-
 							if (inComing[linkLabel] != 0) {
 								inComing[linkLabel] = Math.max(link.weight, inComing[linkLabel])
 							}
@@ -260,7 +259,6 @@ export default {
 							}
 						}
 					}
-
 				});
 
 				if (outGoing[nodeLabel] == undefined) {
@@ -270,6 +268,8 @@ export default {
 				if (inComing[nodeLabel] == undefined) {
 					inComing[nodeLabel] = 0;
 				}
+
+				console.log(outGoing, inComing)
 
 				node.out = outGoing[nodeLabel];
 				node.in = inComing[nodeLabel];

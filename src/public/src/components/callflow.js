@@ -324,20 +324,21 @@ export default {
 		},
 
 		clearLocal() {
-			if (this.selectedFormat == 'Callgraph') {
-				if (this.selectedData == 'Dataframe') {
-					this.$refs.CallgraphA.clear()
-				} else if (this.selectedData == 'Graph') {
-					this.$refs.CallgraphB.clear()
-				}
-				this.$refs.Histogram.clear()
-				this.$refs.Scatterplot.clear()
-				this.$refs.Function.clear()
-				this.$refs.Icicle.clear()
-				this.$refs.Projection.clear()
-			} else if (this.selectedFormat == 'CCT') {
+			// if (this.selectedFormat == 'Callgraph') {
+			// 	if (this.selectedData == 'Dataframe') {
+			// 		this.$refs.CallgraphA.clear()
+			// 	} else if (this.selectedData == 'Graph') {
+			// 		this.$refs.CallgraphB.clear()
+			// 	}
+			// 	this.$refs.Histogram.clear()
+			// 	this.$refs.Scatterplot.clear()
+			// 	this.$refs.Function.clear()
+			// 	this.$refs.Icicle.clear()
+			// 	this.$refs.Projection.clear()
+			// } else
+			if (this.selectedFormat == 'CCT') {
 				this.$refs.CCT.clear()
-			} else if (this.selectedFormat == 'Distgraph') {
+			} else if (this.selectedFormat == 'Callgraph') {
 				this.$refs.DistgraphA.clear()
 				this.$refs.Icicle.clear()
 				this.$refs.DistHistogram.clear()
@@ -388,11 +389,11 @@ export default {
 						functionsInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph' && this.selectedExhibitMode == 'Default') {
-					if (this.parameter_analysis) {
-						this.$socket.emit('run_information', {
-							datasets: this.$store.actual_dataset_names,
-						})
-					}
+					// if (this.parameter_analysis) {
+					// 	this.$socket.emit('run_information', {
+					// 		datasets: this.$store.actual_dataset_names,
+					// 	})
+					// }
 
 					this.$socket.emit('dist_auxiliary', {
 						datasets: this.$store.actual_dataset_names,
@@ -405,25 +406,25 @@ export default {
 						groupBy: this.selectedGroupBy
 					})
 
-					if(this.parameter_analysis){
-						this.$socket.emit('dist_similarity', {
-							datasets: this.$store.actual_dataset_names,
-							algo: 'deltacon',
-							module: 'all'
-						})
-					}
+					// if(this.parameter_analysis){
+					// 	this.$socket.emit('dist_similarity', {
+					// 		datasets: this.$store.actual_dataset_names,
+					// 		algo: 'deltacon',
+					// 		module: 'all'
+					// 	})
+					// }
 
-					this.$socket.emit('dist_gradients', {
-						datasets: this.$store.actual_dataset_names,
-						plot: 'kde'
-					})
+					// this.$socket.emit('dist_gradients', {
+					// 	datasets: this.$store.actual_dataset_names,
+					// 	plot: 'kde'
+					// })
 
-					if(this.parameter_analysis){
-						this.$socket.emit('dist_projection', {
-							datasets: this.$store.actual_dataset_names,
-							algo: 'tsne'
-						})
-					}
+					// if(this.parameter_analysis){
+					// 	this.$socket.emit('dist_projection', {
+					// 		datasets: this.$store.actual_dataset_names,
+					// 		algo: 'tsne'
+					// 	})
+					// }
 
 					// this.$socket.emit('dist_hierarchy', {
 					// 	module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',

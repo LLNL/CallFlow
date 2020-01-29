@@ -133,7 +133,6 @@ class DistGraph(nx.Graph):
 
     def add_edge_attributes(self):
         number_of_runs_mapping = self.number_of_runs()
-        print(number_of_runs_mapping)
         nx.set_edge_attributes(self.g, name="number_of_runs", values=number_of_runs_mapping)
         capacity_mapping = self.calculate_flows(self.g)
         nx.set_edge_attributes(self.g, name="weight", values=capacity_mapping)

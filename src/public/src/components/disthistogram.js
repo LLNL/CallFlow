@@ -58,9 +58,6 @@ export default {
         })
     },
 
-    sockets: {
-    },
-
     methods: {
         init() {
             this.toolbarHeight = document.getElementById('toolbar').clientHeight
@@ -89,15 +86,15 @@ export default {
         },
 
         render(callsite) {
-            let data = this.$store.nodeInfo[callsite]
-            let temp = this.dataProcess(data['ensemble'][0][0]);
+            let data = this.$store.modules['ensemble'][callsite]
+            let temp = this.dataProcess(data);
             this.xVals = temp[0];
             this.freq = temp[1];
             this.axis_x = temp[2];
             this.binContainsProcID = temp[3];
             this.logScaleBool = false;
 
-            const targetData = data['target'][0][this.$store.selectedTargetDataset]
+            const targetData = this.$store.modules[this.$store.selectedTargetDataset][callsite]
             const targetTemp = this.dataProcess(targetData)
             this.targetXVals = targetTemp[0]
             this.targetFreq = targetTemp[1]
@@ -162,44 +159,29 @@ export default {
         },
 
         dataProcess(data) {
-            const xVals = [];
-            const freq = [];
-            const axis_x = [];
-            const dataSorted = []
-
             let attr_data = {}
+            let axis_x = []
+            let binContainsProcID = {}
+            let dataSorted = []
+            let dataMin = 0
+            let dataMax = 0
+
             if (this.selectedColorBy == 'Inclusive') {
-                attr_data = data['time (inc)']
+                attr_data = data['hist_time (inc)']
+                dataMin = data['min_time (inc)'];
+                dataMax = data['max_time (inc)'];
+                dataSorted = data['sorted_time (inc)']
             } else if (this.selectedColorBy == 'Exclusive') {
-                attr_data = data['time']
-            } else if (this.selectedColorBy == 'Name') {
-                attr_data = data['rank']
+                attr_data = data['hist_time']
+                dataMin = data['min_time']
+                dataMax = data['max_time']
+                dataSorted = data['sorted_time']
             } else if (this.selectedColorBy == 'Imbalance') {
-                attr_data = data['imbalance']
+                attr_data = data['hist_imbalance']
             }
-
-            let funcCount = Object.keys(attr_data).length
-            let ranks = data['rank']
-            this.MPIcount = this.array_unique(ranks).length
-            for (let i = 0; i < attr_data.length; i += 1) {
-                for (const [key, value] in Object.entries(attr_data)) {
-                    if (dataSorted[i] == undefined) {
-                        dataSorted[i] = 0
-                    }
-                    dataSorted[i] += attr_data[i]
-                }
-            }
-
-            dataSorted.sort((a, b) => a - b)
-            const dataMin = dataSorted[0];
-            const dataMax = dataSorted[dataSorted.length - 1];
-
 
             const dataWidth = ((dataMax - dataMin) / this.$store.selectedBinCount);
-            const binContainsProcID = {};
             for (let i = 0; i < this.$store.selectedBinCount; i++) {
-                xVals.push(i);
-                freq.push(0);
                 axis_x.push(dataMin + (i * dataWidth));
             }
 
@@ -208,16 +190,72 @@ export default {
                 if (pos >= this.$store.selectedBinCount) {
                     pos = this.$store.selectedBinCount - 1;
                 }
-                freq[pos] += 1;
-                if (binContainsProcID[pos] == null) {
+                    if (binContainsProcID[pos] == null) {
                     binContainsProcID[pos] = [];
                 }
                 binContainsProcID[pos].push(data['rank'][idx]);
             });
-            this.data = dataSorted
-
-            return [xVals, freq, axis_x, binContainsProcID];
+            console.log(attr_data['x'], attr_data['y'], axis_x, binContainsProcID)
+            return [attr_data['x'], attr_data['y'], axis_x, binContainsProcID];
         },
+
+        // dataProcess(data) {
+        //     const xVals = [];
+        //     const freq = [];
+        //     const axis_x = [];
+        //     const dataSorted = []
+
+        //     let attr_data = {}
+        //     if (this.selectedColorBy == 'Inclusive') {
+        //         attr_data = data['time (inc)']
+        //     } else if (this.selectedColorBy == 'Exclusive') {
+        //         attr_data = data['time']
+        //     } else if (this.selectedColorBy == 'Name') {
+        //         attr_data = data['rank']
+        //     } else if (this.selectedColorBy == 'Imbalance') {
+        //         attr_data = data['imbalance']
+        //     }
+
+        //     let funcCount = Object.keys(attr_data).length
+        //     let ranks = data['rank']
+        //     this.MPIcount = this.array_unique(ranks).length
+        //     for (let i = 0; i < attr_data.length; i += 1) {
+        //         for (const [key, value] in Object.entries(attr_data)) {
+        //             if (dataSorted[i] == undefined) {
+        //                 dataSorted[i] = 0
+        //             }
+        //             dataSorted[i] += attr_data[i]
+        //         }
+        //     }
+
+        //     dataSorted.sort((a, b) => a - b)
+        //     const dataMin = dataSorted[0];
+        //     const dataMax = dataSorted[dataSorted.length - 1];
+
+
+        //     const dataWidth = ((dataMax - dataMin) / this.$store.selectedBinCount);
+        //     const binContainsProcID = {};
+        //     for (let i = 0; i < this.$store.selectedBinCount; i++) {
+        //         xVals.push(i);
+        //         freq.push(0);
+        //         axis_x.push(dataMin + (i * dataWidth));
+        //     }
+
+        //     dataSorted.forEach((val, idx) => {
+        //         let pos = Math.floor((val - dataMin) / dataWidth);
+        //         if (pos >= this.$store.selectedBinCount) {
+        //             pos = this.$store.selectedBinCount - 1;
+        //         }
+        //         freq[pos] += 1;
+        //         if (binContainsProcID[pos] == null) {
+        //             binContainsProcID[pos] = [];
+        //         }
+        //         binContainsProcID[pos].push(data['rank'][idx]);
+        //     });
+        //     this.data = dataSorted
+
+        //     return [xVals, freq, axis_x, binContainsProcID];
+        // },
 
         removeDuplicates(arr) {
             var seen = {};
@@ -287,12 +325,12 @@ export default {
         targetBars() {
             let self = this
             this.svg.selectAll('.dist-target')
-                .data(this.freq)
+                .data(this.targetFreq)
                 .enter()
                 .append('rect')
                 .attr('class', 'dist-histogram-bar dist-target')
                 .attr('x', (d, i) => {
-                    return this.padding.left + this.histogramXScale(this.xVals[i])
+                    return this.padding.left + this.histogramXScale(this.targetXVals[i])
                 })
                 .attr('y', (d, i) => {
                     return this.histogramYScale(d)
@@ -303,7 +341,7 @@ export default {
                 .attr('height', (d) => {
                     return Math.abs(this.histogramHeight - this.histogramYScale(d));
                 })
-                .attr('fill', this.$store.color.ensemble)
+                .attr('fill', this.$store.color.target)
                 .attr('opacity', 1)
                 .attr('stroke-width', (d, i) => '0.2px')
                 .attr('stroke', (d, i) => 'black')
@@ -328,13 +366,13 @@ export default {
 
         ensembleBars() {
             let self = this
-            this.svg.selectAll('.dist-others')
-                .data(this.targetFreq)
+            this.svg.selectAll('.dist-ensemble')
+                .data(this.freq)
                 .enter()
                 .append('rect')
-                .attr('class', 'dist-histogram-bar dist-others')
+                .attr('class', 'dist-histogram-bar dist-ensemble')
                 .attr('x', (d, i) => {
-                    return this.padding.left + this.histogramXScale(this.targetXVals[i])
+                    return this.padding.left + this.histogramXScale(this.xVals)
                 })
                 .attr('y', (d, i) => {
                     return this.histogramYScale(d)
@@ -346,7 +384,7 @@ export default {
                     return Math.abs(this.histogramHeight - this.histogramYScale(d));
                 })
                 .attr('fill', (d) => {
-                    let color = self.$store.color.target
+                    let color = self.$store.color.ensemble
                     return color
                 })
                 .attr('opacity', 1)

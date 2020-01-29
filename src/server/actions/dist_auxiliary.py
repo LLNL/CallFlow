@@ -85,12 +85,16 @@ class Auxiliary:
                 "name": node_name,
                 "time (inc)": group_df['time (inc)'].tolist(),
                 "time": group_df['time'].tolist(),
+                "sorted_time (inc)": group_df['time (inc)'].sort_values().tolist(),
+                "sorted_time": group_df['time'].sort_values().tolist(),
                 "rank": group_df['rank'].tolist(),
                 "id": 'node-' + str(group_df['nid'].tolist()[0]),
                 "mean_time (inc)": group_df['time (inc)'].mean(),
                 "mean_time": group_df['time'].mean(),
                 "max_time (inc)": group_df['time (inc)'].max(),
                 "max_time": group_df['time'].max(),
+                "min_time (inc)": group_df['time (inc)'].min(),
+                "min_time": group_df['time'].min(),
                 "dataset": group_df['dataset'].tolist(),
                 "module": group_df['module'].tolist()[0],
                 "hist_time (inc)": {
@@ -113,15 +117,17 @@ class Auxiliary:
 
     def run(self):
         ret = {}
-        name_grouped = self.module_df.groupby(['name'])
+        callsite_ret = {}
 
+        # Callsite grouped information
+        name_grouped = self.module_df.groupby(['name'])
         ensemble = []
         for name, group_df in name_grouped:
             name_df = self.module_df.loc[self.module_df['name'] == name ]
             ensemble.append(self.json_object(name_df, name))
 
         ensemble_result = pd.DataFrame(ensemble).sort_values(by='mean_time (inc)', ascending=False)
-        ret['ensemble'] = ensemble_result.to_json(orient="split")
+        callsite_ret['ensemble'] = ensemble_result.to_json(orient="split")
 
         for dataset in self.datasets:
             target = []
@@ -130,7 +136,31 @@ class Auxiliary:
                 if( not name_df.empty):
                     target.append(self.json_object(name_df, name))
 
-            target_result = pd.DataFrame(target).sort_values(by='mean_time (inc)', ascending=False)
-            ret[dataset] = target_result.to_json(orient="split")
+            callsite_target_result = pd.DataFrame(target).sort_values(by='mean_time (inc)', ascending=False)
+            callsite_ret[dataset] = callsite_target_result.to_json(orient="split")
+        ret['callsite'] = callsite_ret
 
+        module_ret = {}
+        # Module grouped information
+        modules = self.df['module'].unique()
+        module_information = []
+        for module in modules:
+            module_df = self.df[self.df['module'] == module]
+            module_information.append(self.json_object(module_df, module))
+
+        ensemble_result = pd.DataFrame(module_information).sort_values(by='mean_time (inc)', ascending=False)
+        module_ret['ensemble'] = ensemble_result.to_json(orient='split')
+
+        for dataset in self.datasets:
+            module_target = []
+            for module in modules:
+                module_target_df =  self.target_df[dataset].loc[self.target_df[dataset]['module'] == module]
+
+                if( not module_target_df.empty):
+                    module_target.append(self.json_object(module_target_df, name))
+
+            module_target_result = pd.DataFrame(module_target).sort_values(by="mean_time (inc)", ascending = False)
+            module_ret[dataset] = module_target_result.to_json(orient='split')
+
+        ret['module'] = module_ret
         return ret

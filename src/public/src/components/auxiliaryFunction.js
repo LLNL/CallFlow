@@ -24,7 +24,8 @@ export default {
         outlierRadius: 4,
         targetOutlierList: {},
         outlierList: {},
-        data: {}
+        module_data: {},
+        callsite_data: {}
     }),
     mounted() {
         let self = this
@@ -41,11 +42,21 @@ export default {
     sockets: {
         auxiliary(data) {
             this.dataReady = true
-            for (let dataset of Object.keys(data)) {
-                if (data.hasOwnProperty(dataset)) {
-                    this.data[dataset] = this.preprocess(data[dataset])
+
+            let module_data = data['module']
+            for (let key of Object.keys(module_data)) {
+                if (module_data.hasOwnProperty(key)) {
+                    this.module_data[key] = this.preprocess(module_data[key])
                 }
             }
+
+            let callsite_data = data['callsite']
+            for (let key of Object.keys(callsite_data)) {
+                if (callsite_data.hasOwnProperty(key)) {
+                    this.callsite_data[key] = this.preprocess(callsite_data[key])
+                }
+            }
+
             this.init()
         },
     },
@@ -78,12 +89,20 @@ export default {
             else {
                 this.firstRender = false
             }
+
             this.$store.callsites = {}
-            this.$store.callsites['ensemble'] = this.processCallsite(this.data['ensemble'])
+            this.$store.callsites['ensemble'] = this.processCallsite(this.callsite_data['ensemble'])
+            for (let i = 0; i < this.$store.actual_dataset_names.length; i += 1) {
+                let dataset = this.$store.actual_dataset_names[i]
+                this.$store.callsites[dataset] = this.processCallsite(this.callsite_data[dataset])
+            }
+
+            this.$store.modules = {}
+            this.$store.modules['ensemble'] = this.processModule(this.module_data['ensemble'])
 
             for (let i = 0; i < this.$store.actual_dataset_names.length; i += 1) {
                 let dataset = this.$store.actual_dataset_names[i]
-                this.$store.callsites[dataset] = this.processCallsite(this.data[dataset])
+                this.$store.modules[dataset] = this.processModule(this.module_data[dataset])
             }
 
             for (const [idx, callsite] of Object.entries(this.$store.callsites['ensemble'])) {
@@ -103,6 +122,19 @@ export default {
                 callsites[callsite_name] = callsite
             }
             return callsites
+        },
+
+        processModule(data) {
+            let modules = {}
+            for (let i = 0; i < data.index.length; i += 1) {
+                let module_dict = {}
+                let module_name = data.d[i][data.columnMap['module']]
+                for (let column of data.columns) {
+                    module_dict[column] = data.d[i][data.columnMap[column]]
+                }
+                modules[module_name] = module_dict
+            }
+            return modules
         },
 
         clear() {

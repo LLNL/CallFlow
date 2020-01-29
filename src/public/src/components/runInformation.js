@@ -62,5 +62,9 @@ export default {
         highlight(){
             console.log("[Run information] highlight. ")
         },
+
+        clear(){
+
+        }
     }
 }
