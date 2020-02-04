@@ -136,7 +136,6 @@ export default {
 				}
 			}
 			this.path_hierarchy = ret
-			// console.log("Number of children: ", this.path_hierarchy)
 
 			const json = this.buildHierarchy(this.path_hierarchy)
 			this.drawIcicles(json)
@@ -281,7 +280,6 @@ export default {
 				padding = 0,
 				round = false;
 
-			console.log(root)
 			var n = root.height + 1;
 			root.x0 = root.y0 = padding;
 			root.x1 = dx;
@@ -308,7 +306,6 @@ export default {
 				node.y0 = y0;
 				node.x1 = x1;
 				node.y1 = y1;
-				console.log(node.x0, node.x1, node.y0, node.y1)
 			};
 		},
 
@@ -334,6 +331,7 @@ export default {
 				node.x0 = x0 + x_offset
 				x_offset += this.icicleWidth/(n+1)
 				node.x1 = node.x0 + this.icicleWidth/(n);
+				console.log(node.x0, node.x1)
 			}
 		},
 
@@ -434,10 +432,6 @@ export default {
 					return d.y1 - d.y0;
 				})
 				.style('fill', (d) => {
-					// if (d.data.value == 0) {
-					// 	return '#e1e1e1'
-					// }
-					// let color = this.$store.color.getColor(d.data);
 					let color = self.$store.color.target
 					return color;
 				})
@@ -525,7 +519,6 @@ export default {
 				.style('opacity', 1);
 
 			this.$socket.emit(splitByOption, {
-				// "module":
 			})
 		},
 
