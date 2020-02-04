@@ -357,21 +357,22 @@ export default function Sankey() {
                     level[n[i].vis_name] = i
                 }
 
+                // Calculate the offset
                 n.forEach(function (node, i) {
-                    let nodeHeight = 0;
+                    let nodeOffset = 0;
 
                     // Offset
                     links.forEach(function (link) {
                         if (link.target == node.vis_name) {
                             if (link.source != '') {
-                                nodeHeight = Math.max(nodeHeight, link.source_dict.y);
+                                nodeOffset = Math.max(nodeOffset, link.source_dict.y);
                             }
                             else{
-                                nodeHeight = link.source_dict.height
+                                nodeOffset = link.source_dict.y
                             }
                         }
                     });
-                    node.offsetY = nodeHeight;
+                    node.offsetY = nodeOffset;
 
                     node.level = level[node.vis_name]
 

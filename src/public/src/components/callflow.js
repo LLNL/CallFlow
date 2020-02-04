@@ -389,11 +389,11 @@ export default {
 						functionsInCCT: this.selectedFunctionsInCCT,
 					})
 				} else if (this.selectedFormat == 'Callgraph' && this.selectedExhibitMode == 'Default') {
-					// if (this.parameter_analysis) {
-					// 	this.$socket.emit('run_information', {
-					// 		datasets: this.$store.actual_dataset_names,
-					// 	})
-					// }
+					if (this.parameter_analysis) {
+						this.$socket.emit('run_information', {
+							datasets: this.$store.actual_dataset_names,
+						})
+					}
 
 					this.$socket.emit('dist_auxiliary', {
 						datasets: this.$store.actual_dataset_names,
@@ -406,46 +406,25 @@ export default {
 						groupBy: this.selectedGroupBy
 					})
 
-					// if(this.parameter_analysis){
-					// 	this.$socket.emit('dist_similarity', {
-					// 		datasets: this.$store.actual_dataset_names,
-					// 		algo: 'deltacon',
-					// 		module: 'all'
-					// 	})
-					// }
+					if(this.parameter_analysis){
+						this.$socket.emit('dist_similarity', {
+							datasets: this.$store.actual_dataset_names,
+							algo: 'deltacon',
+							module: 'all'
+						})
+					}
 
-					// this.$socket.emit('dist_gradients', {
-					// 	datasets: this.$store.actual_dataset_names,
-					// 	plot: 'kde'
-					// })
+					this.$socket.emit('dist_gradients', {
+						datasets: this.$store.actual_dataset_names,
+						plot: 'kde'
+					})
 
-					// if(this.parameter_analysis){
-					// 	this.$socket.emit('dist_projection', {
-					// 		datasets: this.$store.actual_dataset_names,
-					// 		algo: 'tsne'
-					// 	})
-					// }
-
-					// this.$socket.emit('dist_hierarchy', {
-					// 	module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
-					// 	datasets: this.$store.actual_dataset_names,
-					// })
-
-					// this.$socket.emit('dist_hierarchy', {
-					// 	module: 'Calc=CalcForceForNodes',
-					// 	datasets: this.$store.actual_dataset_names,
-					// })
-
-					// this.$socket.emit('ensemble_histogram', {
-					// 	module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
-					// 	datasets: this.$store.actual_dataset_names,
-					// })
-
-					// this.$socket.emit('ensemble_histogram', {
-					// 	module: 'Calc=CalcForceForNodes		',
-					// 	datasets: this.$store.actual_dataset_names,
-					// })
-
+					if(this.parameter_analysis){
+						this.$socket.emit('dist_projection', {
+							datasets: this.$store.actual_dataset_names,
+							algo: 'tsne'
+						})
+					}
 				}
 			}
 		},
