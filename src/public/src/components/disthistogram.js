@@ -103,21 +103,23 @@ export default {
 
             // this.$refs.ToolTip.init(this.id)
 
+            console.log(this.xVals, this.histogramWidth)
             this.histogramXScale = d3.scaleBand()
                 .domain(this.xVals)
+                .range(["#c6dbef", "#6baed6", "#2171b5", "#084594"])
                 .rangeRound([0, this.histogramWidth])
 
-            if (d3.max(this.freq) < 50) {
+            // if (d3.max(this.freq) < 50) {
                 this.histogramYScale = d3.scaleLinear()
                     .domain([0, d3.max(this.freq)])
                     .range([this.histogramHeight, 0])
                 this.logScaleBool = false;
-            } else {
-                this.histogramYScale = d3.scaleLog()
-                    .domain([1, d3.max(this.freq)])
-                    .range([this.boxHeight, 10]);
-                this.logScaleBool = true;
-            }
+            // } else {
+                // this.histogramYScale = d3.scaleLog()
+                    // .domain([1, d3.max(this.freq)])
+                    // .range([this.boxHeight, 10]);
+                // this.logScaleBool = true;
+            // }
             this.visualize();
         },
 
@@ -135,8 +137,8 @@ export default {
         },
 
         visualize() {
-            this.targetBars();
             this.ensembleBars();
+            this.targetBars();
             this.axis();
             this.rankLines();
             // this.brushes()
@@ -198,64 +200,6 @@ export default {
             console.log(attr_data['x'], attr_data['y'], axis_x, binContainsProcID)
             return [attr_data['x'], attr_data['y'], axis_x, binContainsProcID];
         },
-
-        // dataProcess(data) {
-        //     const xVals = [];
-        //     const freq = [];
-        //     const axis_x = [];
-        //     const dataSorted = []
-
-        //     let attr_data = {}
-        //     if (this.selectedColorBy == 'Inclusive') {
-        //         attr_data = data['time (inc)']
-        //     } else if (this.selectedColorBy == 'Exclusive') {
-        //         attr_data = data['time']
-        //     } else if (this.selectedColorBy == 'Name') {
-        //         attr_data = data['rank']
-        //     } else if (this.selectedColorBy == 'Imbalance') {
-        //         attr_data = data['imbalance']
-        //     }
-
-        //     let funcCount = Object.keys(attr_data).length
-        //     let ranks = data['rank']
-        //     this.MPIcount = this.array_unique(ranks).length
-        //     for (let i = 0; i < attr_data.length; i += 1) {
-        //         for (const [key, value] in Object.entries(attr_data)) {
-        //             if (dataSorted[i] == undefined) {
-        //                 dataSorted[i] = 0
-        //             }
-        //             dataSorted[i] += attr_data[i]
-        //         }
-        //     }
-
-        //     dataSorted.sort((a, b) => a - b)
-        //     const dataMin = dataSorted[0];
-        //     const dataMax = dataSorted[dataSorted.length - 1];
-
-
-        //     const dataWidth = ((dataMax - dataMin) / this.$store.selectedBinCount);
-        //     const binContainsProcID = {};
-        //     for (let i = 0; i < this.$store.selectedBinCount; i++) {
-        //         xVals.push(i);
-        //         freq.push(0);
-        //         axis_x.push(dataMin + (i * dataWidth));
-        //     }
-
-        //     dataSorted.forEach((val, idx) => {
-        //         let pos = Math.floor((val - dataMin) / dataWidth);
-        //         if (pos >= this.$store.selectedBinCount) {
-        //             pos = this.$store.selectedBinCount - 1;
-        //         }
-        //         freq[pos] += 1;
-        //         if (binContainsProcID[pos] == null) {
-        //             binContainsProcID[pos] = [];
-        //         }
-        //         binContainsProcID[pos].push(data['rank'][idx]);
-        //     });
-        //     this.data = dataSorted
-
-        //     return [xVals, freq, axis_x, binContainsProcID];
-        // },
 
         removeDuplicates(arr) {
             var seen = {};
@@ -372,7 +316,7 @@ export default {
                 .append('rect')
                 .attr('class', 'dist-histogram-bar dist-ensemble')
                 .attr('x', (d, i) => {
-                    return this.padding.left + this.histogramXScale(this.xVals)
+                    return this.padding.left + this.histogramXScale(this.xVals[i])
                 })
                 .attr('y', (d, i) => {
                     return this.histogramYScale(d)
@@ -548,7 +492,7 @@ export default {
             this.freq.forEach((fregVal, index) => {
                 const processIDs = this.binContainsProcID[index];
                 const target_processIDs = this.target_binContainsProcID[index]
-
+                console.log(processIDs, target_processIDs)
                 // For ensemble process ids.
                 if (processIDs) {
                     this.rankLinesG = this.svg.append('g')
