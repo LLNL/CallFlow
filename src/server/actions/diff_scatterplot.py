@@ -9,10 +9,8 @@
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
-
-#!/usr/bin/env python3
-
 import pandas as pd
+
 
 class DiffScatterplot:
     def __init__(self, states, module):
@@ -21,12 +19,12 @@ class DiffScatterplot:
         self.module = module
         self.entry_funcs = {}
         self.run(state)
-        
-    def run(self):    
+
+    def run(self):
         ret = []
         entire_df = self.state.entire_df
         func_in_module = self.df[self.df.module == self.module]['name'].unique().tolist()
-        
+
         for idx, func in enumerate(func_in_module):
             ret.append({
                 "name": func,

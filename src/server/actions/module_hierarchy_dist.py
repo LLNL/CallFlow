@@ -32,6 +32,7 @@ class moduleHierarchyDist:
     def add_paths(self, df, path_name):
         for idx, row in df.iterrows():
             path = row[path_name]
+            # print(path)
             if isinstance(path, str) and path != 'nan':
                 path = make_tuple(row[path_name])
                 self.hierarchy.add_path(path)
@@ -108,7 +109,7 @@ class moduleHierarchyDist:
     def run(self):
         node_df = self.df.loc[self.df["module"] == self.module]
         node_paths = node_df
-        # node_paths = node_df.loc[node_df["component_level"] < 10]
+        print(node_paths)
 
         if "component_path" not in self.df.columns:
             utils.debug("Error: Component path not defined in the df")
@@ -132,26 +133,6 @@ class moduleHierarchyDist:
                         ]
                     )
                     run = self.df.loc[self.df['name'] == func]['dataset'].unique()
-                    # paths.append(
-                    #     {
-                    #         "name": func,
-                    #         "path": path,
-                    #         "time (inc)": self.df.loc[self.df["module"] == module][
-                    #             "time (inc)"
-                    #         ].max(),
-                    #         "time": self.df.loc[self.df["module"] == module][
-                    #             "time"
-                    #         ].max(),
-                    #         # "imbalance_perc": df.loc[df['_module'] == module]['imbalance_perc'].max(),
-                    #         "level": int(
-                    #             self.df.loc[self.df["name"] == func][
-                    #                 "component_level"
-                    #             ].unique()[0]
-                    #         )
-                    #         - 1,
-                    #         "run": run
-                    #     }
-                    # )
                 else:
                     func = node
                     path = self.df.loc[self.df["name"] == func][
@@ -171,7 +152,6 @@ class moduleHierarchyDist:
                                 "time": self.df.loc[self.df["name"] == func][
                                     "time"
                                 ].max(),
-                                # "imbalance_perc": df.loc[df['_module'] == module]['imbalance_perc'].max(),
                                 "level": int(
                                     self.df.loc[self.df["name"] == func][
                                         "component_level"
@@ -185,10 +165,7 @@ class moduleHierarchyDist:
                 existing_nodes[node] = True
 
         paths_df = pd.DataFrame(paths)
-        # self.hierarchy = self.hierarchy.remove_edge('libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]', '41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]')
-        # tree = nx.minimum_spanning_tree(self.hierarchy)
         return {
             "data": paths_df.to_json(orient="columns"),
-            # "tree": json_graph.tree_data(tree, root=func)
         }
 

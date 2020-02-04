@@ -25,7 +25,6 @@ import RunInformation from './runInformation'
 import AuxiliaryFunction from './auxiliaryFunction'
 import DistHistogram from './disthistogram'
 
-import UploadButton from './uploadButton'
 import io from 'socket.io-client'
 
 export default {
@@ -46,7 +45,6 @@ export default {
 		RunInformation,
 		AuxiliaryFunction,
 		DistHistogram,
-		UploadButton
 	},
 
 	data: () => ({
@@ -425,6 +423,11 @@ export default {
 							algo: 'tsne'
 						})
 					}
+
+					this.$socket.emit('dist_hierarchy', {
+						module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
+						datasets: this.$store.actual_dataset_names,
+					})
 				}
 			}
 		},
