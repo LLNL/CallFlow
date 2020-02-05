@@ -1,6 +1,6 @@
 *~
 **/.DS_Store
-src/public/node_modules
+src/node_modules
 src/public/bower_components
 src/public/dist
 tests/.ipynb_checkpoints/*

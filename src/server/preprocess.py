@@ -28,15 +28,13 @@ def tmp_wrap(func):
 # Preprocess.add_X().add_Y().....
 class PreProcess():
     def __init__(self, builder):
-        self.graph = builder.graph
-        self.df = builder.df
-        self.gf = builder.gf
+      pass
 
     def map(self):
         return self.map
 
     class Builder(object):
-        def __init__(self, state, gf_type='filter'):
+        def __init__(self, state, gf_type='entire'):
             self.state = state
             if(gf_type == 'filter'):
                 self.gf = state.gf
@@ -144,34 +142,59 @@ class PreProcess():
             callers = {}
             module = {}
             
-            root = graph.roots[0]
-            node_gen = graph.roots[0].traverse()
+            for root in graph.roots:
+                node_gen = root.traverse()
+                paths = root.paths()
 
-            root_df = root.callpath[-1]
-            callers[root_df] = []
-            callees[root_df] = []
+                root_type = root.frame['type']
+                if(root_type == 'statement'):
+                    root_name = root.frame['file']
+                    root_line = root.frame['line']
+                elif(root_type == 'function'):
+                    root_name = root.frame['name']
+                
+                callers[root_name] = []
+                callees[root_name] = []
             
-            try:
-                while root.callpath != None:
-                    root = next(node_gen)
-                    if root.parents:
-                        for idx, parent in enumerate(root.parents):
-                            root_df = root.callpath[-1]
-                            parent_df = parent.callpath[-1]
-                            if parent_df not in callees:
-                                callees[parent_df] = []
-                    
-                            callees[parent_df].append(root_df)
+                try:    
+                    node = next(node_gen)
+                    while node:
+                        node_type = node.frame['type']
 
-                            if root_df not in callers:
-                                callers[root_df] = []
-                            callers[root_df].append(parent_df)
+                        if(node_type == 'statement'):
+                            node_name = node.frame['file']
+                            node_line = node.frame['line']
+                        elif(node_type == 'function'):
+                            node_name = node.frame['name']
                         
-            except StopIteration:
-                pass
-            finally:
-                del root
+                        node_paths = node.paths()
 
+                        for node_path in node_paths:
+                            if(len(node_path) >= 2):
+                                print(node_name, node_path[-2])
+                                if(node_name not in callers):
+                                    callers[node_name] = []
+                                callers[node_name].append(node_path[-2]['name'])
+                            
+                        node = next(node_gen)
+                        # if root.parents:
+                        #     for idx, parent in enumerate(root.parents):
+                        #         root_df = root.callpath[-1]
+                        #         parent_df = parent.callpath[-1]
+                        #         if parent_df not in callees:
+                        #             callees[parent_df] = []
+                    
+                        #         callees[parent_df].append(root_df)
+
+                        #         if root_df not in callers:
+                        #             callers[root_df] = []
+                        #         callers[root_df].append(parent_df)
+                        
+                except StopIteration:
+                    pass
+                finally:
+                    del root
+            print(callers)
             self.df['callees'] = self.df['name'].apply(lambda node: callees[node] if node in callees else [])
             self.df['callers'] = self.df['name'].apply(lambda node: callers[node] if node in callers else [])        
             
