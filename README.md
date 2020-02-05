@@ -30,7 +30,7 @@ Callflow currently, supports two formats, [hpctoolkit](http://hpctoolkit.org/) a
 
 ## Configuration file
 
-CallFlow requires the user to specify how various data preprocessing operations are performed (i.e., filtering, grouping operations).
+CallFlow requires the user to specify how various data preprocessing operations are performed (i.e., filtering, grouping operations). Checkout some examples in the {$CALLFLOW_PATH}/config_files directory. 
 
 
 

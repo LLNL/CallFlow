@@ -32,7 +32,7 @@ class Create:
     def run(self):
         callflow_path = os.path.abspath(os.path.join(__file__, '../../../..'))
         data_path = os.path.abspath(os.path.join(callflow_path, self.config.paths[self.name]))
-
+        print(data_path)
         gf = GraphFrame()
         if self.config.format[self.name] == 'hpctoolkit':
             gf.from_hpctoolkit(data_path)
