@@ -16,7 +16,6 @@ import utils
 class groupBy:
 	def __init__(self, state, group_by):
 	    self.state = state
-	    self.df = self.state.df
 	    self.group_by = group_by
 	    self.eliminate_funcs = []
 	    self.entry_funcs = {}
@@ -28,8 +27,8 @@ class groupBy:
 	    self.run()
 	    self.df = self.state.df
 	    self.graph = self.state.graph
-	    
-	# Drop all entries user does not want to see. 
+
+	# Drop all entries user does not want to see.
 	def drop_eliminate_funcs(self):
 	    for idx, func in enumerate(self.eliminate_funcs):
 	        self.state.df = self.state.df[self.state.df['module'] != func]
@@ -39,7 +38,7 @@ class groupBy:
 	    group_path = []
 	    self.prev_module_map = {}
 	    prev_module = None
-	    function = path[-1]        
+	    function = path[-1]
 	    change_name = False
 
 	    # Create a map having initial funcs being mapped.
@@ -51,15 +50,15 @@ class groupBy:
 	            self.entry_funcs[module] = []
 	        if module not in self.other_funcs:
 	            self.other_funcs[module] = []
-	    
+
 	    for i, elem in enumerate(path):
 	        grouping = self.state.lookup_with_name(elem)[self.group_by].unique()
 	        if len(grouping) == 0:
 	            break
-	        
+
 	        module = grouping[0]
-	                    
-	        # Append the module into the group path. 
+
+	        # Append the module into the group path.
 	        if module not in self.eliminate_funcs:
 	            if prev_module is None:
 	                prev_module = module
@@ -84,7 +83,7 @@ class groupBy:
 	                continue
 	                if path[i] not in self.other_funcs[module] and path[i] not in self.entry_funcs[module]:
 	                    self.other_funcs[module].append(path[i])
-	    
+
 	    # group_path = (tuple(group_path), nid)
 	    group_path = tuple(group_path)
 	    return (group_path, change_name)
@@ -113,10 +112,10 @@ class groupBy:
 	        if not node_func_df.empty:
 	            if module == node_func_df['module'].tolist()[0]:
 	                component_path.append(node_func)
-	    
+
 	    # if len(component_path) == 0:
 	    #     component_path.append(path[-1])
-	    
+
 	    component_path.insert(0, component_module)
 	    return tuple(component_path)
 
@@ -126,35 +125,35 @@ class groupBy:
 	    for idx, path in enumerate(unique_paths):
 	        ret.append(df.loc[df['path'] == path])
 	    return (ret)
-	        
+
 	def run(self):
 	    group_path = {}
 	    component_path = {}
 	    component_level = {}
 	    entry_func = {}
 	    show_node = {}
-	    node_name = {}    
-	    module = {}   
+	    node_name = {}
+	    module = {}
 	    change_name = {}
 	    module_idx = {}
 	    source_nid = {}
 
 	    module_id_map = {}
 	    module_count = 0
-	
+
 	    roots = self.state.graph.roots
-	    if len(roots) > 1: 
+	    if len(roots) > 1:
 	            ('It is a multi-rooted tree with {0} roots'.format(len(roots)))
-	    
+
 	    for root in roots:
-	        node_gen = root.traverse()       
+	        node_gen = root.traverse()
 	        rootdf = self.state.lookup(root)
-	        
+
 	        if rootdf.empty:
 	            utils.debug('Not accounting the function: {0}'.format(root))
-	        # Check if the dataframe exists for the root node. 
-	        # It might be a function that is eliminated. 
-	        else: 
+	        # Check if the dataframe exists for the root node.
+	        # It might be a function that is eliminated.
+	        else:
 	            temp_group_path_results = self.create_group_path(root.callpath)
 	            group_path[rootdf.node[0].nid] = temp_group_path_results[0]
 	            change_name[rootdf.node[0].nid] = temp_group_path_results[1]
@@ -170,7 +169,7 @@ class groupBy:
 
 	            # print("entry function:", entry_func[rootdf.node[0].nid])
 	            # print('Change name:', change_name[rootdf.node[0].nid])
-	            # print("node path: ", root.callpath)                
+	            # print("node path: ", root.callpath)
 	            # print("group path: ", group_path[rootdf.node[0].nid])
 	            # print("component path: ", component_path[rootdf.node[0].nid])
 	            # print("component level: ", component_level[rootdf.node[0].nid])
@@ -185,8 +184,8 @@ class groupBy:
 	            while root.callpath != None:
 	                root = next(node_gen)
 	                s = self.state.lookup(root)
-	                parents = root.parents 
-	                
+	                parents = root.parents
+
 	                for idx, parent in enumerate(parents):
 	                    t = self.state.lookup(parent)
 	                    t_all = self.find_all_paths(t)
@@ -208,17 +207,17 @@ class groupBy:
 
 	                            tmodule = t[self.group_by].tolist()[0]
 
-	                            temp_group_path_results = self.create_group_path(spath)               
+	                            temp_group_path_results = self.create_group_path(spath)
 	                            group_path[snid] = temp_group_path_results[0]
 	                            change_name[snid] = temp_group_path_results[1]
-	                        
+
 	                            component_path[snid] = self.create_component_path(spath, group_path[snid])
 	                            component_level[snid] = len(component_path[snid])
 	                            module[snid] = component_path[snid][0]
 	                            source_nid[tnid] = snid
-	                        
+
 	                            if module[snid] not in module_id_map:
-	                                module_count += 1 
+	                                module_count += 1
 	                                module_id_map[module[snid]] = module_count
 	                                module_idx[snid] = module_id_map[module[snid]]
 	                            else:
@@ -232,11 +231,11 @@ class groupBy:
 	                                entry_func[snid] = False
 	                                node_name[snid] = "Unknown(NA)"
 	                                show_node[snid] = False
-	                        
-	                    # print('Node: ', snode)        
+
+	                    # print('Node: ', snode)
 	                    # print("entry function:", entry_func[snid])
 	                    # print('Change name:', change_name[snid])
-	                    # print("node path: ", spath)                
+	                    # print("node path: ", spath)
 	                    # print("group path: ", group_path[snid])
 	                    # print("component path: ", component_path[snid])
 	                    # print("component level: ", component_level[snid])
@@ -244,7 +243,7 @@ class groupBy:
 	                    # print("name: ", node_name[snid])
 	                    # print('Module: ', module[snid])
 	                    # print("=================================")
-	            
+
 	        except StopIteration:
 	            pass
 	        finally:
@@ -257,7 +256,7 @@ class groupBy:
 	    self.state.update_df('component_level', component_level)
 	    self.state.update_df('_'+self.group_by, module)
 	    self.state.update_df('change_name', change_name)
-	    self.state.update_df('mod_index', module_idx)   
+	    self.state.update_df('mod_index', module_idx)
 
 	    self.state.entry_funcs = self.entry_funcs
 	    self.state.other_funcs = self.other_funcs

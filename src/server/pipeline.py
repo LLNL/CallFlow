@@ -221,22 +221,6 @@ class Pipeline:
 			graph = json.load(filter_graphFile)
 		state.g = json_graph.node_link_graph(graph)
 
-		# if(graph_type != None):
-		#     with self.timer.phase('Read {0} dataframe'.format(graph_type)):
-		#         with open(group_graph_file_path, 'r') as groupGraphFile:
-		#             data = json.load(groupGraphFile)
-
-		#     state.group_graph = json_graph.node_link_graph(data)
-		#     state.group_df = pd.read_csv(group_df_file_path)
-		# state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
-
-		state.projection_data = {}
-		for line in open(parameters_filepath, "r"):
-			s = 0
-			for num in line.strip().split(","):
-				split_num = num.split("=")
-				state.projection_data[split_num[0]] = split_num[1]
-
 		return state
 
 	def read_group_gf(self, name, graph_type):

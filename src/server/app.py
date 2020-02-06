@@ -53,13 +53,12 @@ class App():
 	    # self.create_dot_callflow_folder()
 	    self.callflow = CallFlow(self.config)
 
-	    self.config.distribution = True
-	    if(self.config.distribution):
-	        if self.debug:
-	            self.print('[Request] Init the diff mode')
-	        groupBy = 'module'
-	        datasets = self.config.names
-	      
+	    # if(self.config.distribution):
+	    #     if self.debug:
+	    #         self.print('[Request] Init the diff mode')
+	    #     groupBy = 'module'
+	    #     datasets = self.config.names
+
 	    # Start server if preprocess is not called.
 	    if not self.config.preprocess:
 	        self.create_socket_server()
@@ -138,8 +137,8 @@ class App():
 	            "name": "reset",
 	            "filterBy": filterBy,
 	            "filterPerc": filterPerc,
-	            "dataset1": dataset,
-	        }   
+	            "dataset": dataset,
+	        }
 	        result = self.callflow.update(obj)
 	        emit('reset', result, json=True)
 
@@ -154,7 +153,7 @@ class App():
 	        obj = {
 	            "name": "group",
 	            "groupBy": groupBy,
-	            "dataset1": dataset
+	            "dataset": dataset
 	        }
 	        g = self.callflow.update(obj)
 	        result = json_graph.node_link_data(g)
@@ -166,7 +165,7 @@ class App():
 	        if self.debug:
 	            print('[Request] Module hierarchy of the dataset.', data)
 	        nid = data['nid']
-	        dataset = data['dataset1']
+	        dataset = data['dataset']
 	        result = self.callflow.update({
 	            "name": 'hierarchy',
 	            "nid": nid,
@@ -185,10 +184,10 @@ class App():
 	    def histogram(data):
 	        if self.debug:
 	            self.print('[Request] Histogram of a Module', data['nid'])
-	        dataset = data['dataset1']
+	        dataset = data['dataset']
 	        result = self.callflow.update({
 	            "name": "histogram",
-	            "dataset1": dataset,
+	            "dataset": dataset,
 	            "module": data['module'],
 	            "nid": data['nid'],
 	        })
@@ -198,10 +197,10 @@ class App():
 	    def scatterplot(data):
 	        if self.debug:
 	            self.print('[Request] ScatterPlot of a Module', data['module'])
-	        dataset = data['dataset1']
+	        dataset = data['dataset']
 	        result = self.callflow.update({
 	            "name": "histogram",
-	            "dataset1": dataset,
+	            "dataset": dataset,
 	            "module": data['module'],
 	            "nid": data['nid'],
 	        })
@@ -211,10 +210,10 @@ class App():
 	    def histogram(data):
 	        if self.debug:
 	            self.print("[Request] Mini-histogram", data)
-	        dataset = data['dataset1']
+	        dataset = data['dataset']
 	        result = self.callflow.update({
 	            "name": "mini-histogram",
-	            "dataset1": dataset,
+	            "dataset": dataset,
 	        })
 	        emit('miniHistogram', result, json=True)
 
@@ -224,7 +223,7 @@ class App():
 	            self.print("[Request] Hierarchy of module", data)
 	        result = self.callflow.update({
 	            "name": "hierarchy",
-	            "dataset1": data['dataset1'],
+	            "dataset": data['dataset'],
 	            "module": data['module']
 	        })
 	        emit('hierarchy', result, json=True)
@@ -235,10 +234,10 @@ class App():
 	            self.print("[Request] Tooltip of node", data)
 	        result = self.callflow.update({
 	            "name": "tooltip",
-	            "dataset1": data['dataset1'],
+	            "dataset": data['dataset'],
 	            "module": data["module"]
 	        })
-	    
+
 	    @sockets.on('cct', namespace="/")
 	    def cct(data):
 	        if self.debug:
@@ -246,7 +245,7 @@ class App():
 
 	        g = self.callflow.update({
 	            "name": "cct",
-	            "dataset1": data['dataset'],
+	            "dataset": data['dataset'],
 	            "functionInCCT": data['functionInCCT'],
 	        })
 	        result = json_graph.node_link_data(g)
@@ -256,28 +255,28 @@ class App():
 	    def split_rank(data):
 	        if self.debug:
 	            self.print("[Request] Split callgraph by rank", data)
-	        
-	        # result = self.callflow.update({
-	        #     "name": "split-caller",
-	        #     "dataset1": data['dataset1'],
-	        #     "split": data['split']
-	        # })
+
+	        result = self.callflow.update({
+	            "name": "split-caller",
+	            "dataset": data['dataset'],
+	            "split": data['split']
+	        })
 	        emit('splitcaller', {}, json=True)
 
 	    @sockets.on('function', namespace='/')
 	    def function(data):
-	        if self.debug: 
+	        if self.debug:
 	            self.print('[Request] Function request for module', data)
 
 	        result = self.callflow.update({
 	            'name': 'function',
-	            'dataset1': data['dataset1'],
+	            'dataset': data['dataset'],
 	            'module': data['module'],
 	            'nid': data['nid']
 	        })
 	        emit('function', result, json=True)
 
-	        
+
 	def create_server(self):
 	    app.debug = True
 	    app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), '')

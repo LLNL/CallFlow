@@ -103,7 +103,7 @@ export default {
 
 			// Enable diff mode only if the number of datasets >= 2
 			let datasetMapping = this.assignUniqueDatasetNames(data['names'])
-			this.$store.datasets = datasetMapping['arr'] 
+			this.$store.datasets = datasetMapping['arr']
 			this.$store.datasetMap = datasetMapping['map']
 			this.$store.datasetRevMap = datasetMapping['revmap']
 			this.$store.actual_dataset_names = data['names']
@@ -139,7 +139,7 @@ export default {
 			this.init()
 		},
 
-		// Reset to the init() function. 
+		// Reset to the init() function.
 		reset(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
 			this.init()
@@ -162,7 +162,7 @@ export default {
 
 		// Fetch aggregated graph (Super graph) for distribution mode.
 		diff_group(data) {
-			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)			
+			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
 			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
 			if (this.selectedData == 'Dataframe') {
 				this.$refs.DiffgraphA.init(data)
@@ -185,8 +185,8 @@ export default {
 	},
 
 	methods: {
-		// Assigns idx to datasets. 
-		// osu_bcast.XX.XX.XX-XX => osu_bcast_1 and so on. 
+		// Assigns idx to datasets.
+		// osu_bcast.XX.XX.XX-XX => osu_bcast_1 and so on.
 		assignUniqueDatasetNames(names){
 			let ret = []
 			let retMap = {}
@@ -203,7 +203,7 @@ export default {
 				"revmap": retRevMap
 			}
 		},
-		
+
 		clear() {
 			if (this.selectedFormat == 'Callgraph') {
 				this.$refs.CCT.clear()
@@ -259,42 +259,6 @@ export default {
 					})
 				}
 
-			} else if (this.selectedMode == 'Distribution') {
-				if (this.selectedFormat == 'CCT') {
-					this.$socket.emit('diff_cct', {
-						dataset1: this.$store.selectedDataset,
-						dataset2: this.$store.selectedDataset2,
-						functionInCCT: this.selectedFunctionsInCCT,
-					})
-				} else if (this.selectedFormat == 'Callgraph') {
-					// this.$socket.emit('diff_init', {
-					// 	datasets: this.$store.actual_dataset_names,
-					// 	groupBy: this.selectedGroupBy
-					// })
-
-					this.$socket.emit('diff_group', {
-						datasets: this.$store.actual_dataset_names,
-						groupBy: this.selectedGroupBy
-					})
-
-					this.$socket.emit('diff_gradients', {
-						datasets: this.$store.actual_dataset_names,
-						plot: 'kde'
-					})
-
-					this.$socket.emit('diff_similarity', {
-						datasets: this.$store.actual_dataset_names,
-						algo: 'deltacon'
-					})
-					// this.$socket.emit('diff_scatterplot', {
-					//     datasets: this.$store.client_datasets,
-					//     dataset1: this.$store.selectedDataset,
-					//     dataset2: this.$store.selectedDataset2,
-					//     col: 'time (inc)',
-					//     catcol: 'name',
-					//     plot: 'bland-altman'
-					// })
-				}
 			}
 		},
 
@@ -308,7 +272,7 @@ export default {
 				this.selectedColorMin = this.$store.minExcTime[this.selectedDataset]
 				this.selectedColorMax = this.$store.maxExcTime[this.selectedDataset]
 			}
-		
+
 			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
 			this.$store.colorPoint = this.selectedColorPoint
 			console.log("Datasets are :", this.datasets)
@@ -434,7 +398,7 @@ export default {
 			}
 			// Call updateMiniHistogram inside callgraph.js
 			this.$refs.Callgraph.updateMiniHistogram()
-			// TODO: Call updateHistogram for diffCallgraph when needed. 
+			// TODO: Call updateHistogram for diffCallgraph when needed.
 		},
 
 		updateScatterMode() {
