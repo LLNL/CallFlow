@@ -18,9 +18,9 @@ Callflow currently, supports two formats, [hpctoolkit](http://hpctoolkit.org/) a
 ```
  {$CALLFLOW_PATH}/data/{hpctoolkit_dataset}
     .../experiment.xml
-	.../experiment-001.metric-db
-	.../experiment-002.metric-db
-	.../experiment-003.metric-db
+	.../experiment-{rank_id}-000-{hash}-{}-{thread_id}.metric-db
+	.../experiment-{rank_id}-000-{hash}-{}-{thread_id}.metric-db
+    .../experiment-{rank_id}-000-{hash}-{}-{thread_id}.metric-db
 	...
 
  {$CALLFLOW_PATH}/data/{caliper_dataset}

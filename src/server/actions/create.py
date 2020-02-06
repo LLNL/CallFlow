@@ -11,21 +11,20 @@
 ##############################################################################
 import pandas as pd
 import time
-import utils
 from logger import log
 import os
 import hatchet as ht
-
+from logger import log
 
 class Create:
     """
-    Creates a graph frame.
-    Input : config variable, and dataset name
-    Output : State object containing components of graphframe as separate object variables.
-    """
+	Creates a graph frame.
+	Input : config variable, and dataset name
+	Output : State object containing components of graphframe as separate object variables.
+	"""
 
     def __init__(self, config, name):
-        utils.debug("Creating graphframes: ", name)
+        log.info(f"Creating graphframes for run: {name}")
         self.config = config
         self.name = name
         self.run()
