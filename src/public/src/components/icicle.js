@@ -182,7 +182,7 @@ export default {
 				// const imbalance_perc = csv[i][3];
 				const name = csv[i][4]
 				// const exit = csv[i][4];
-				// const compo nent_path = csv[i][5];
+				// const component_path = csv[i][5];
 				const parts = sequence;
 				let currentNode = root;
 
@@ -328,10 +328,10 @@ export default {
 				node = nodes[i]
 				node.y0 = y0
 				node.y1 = y1
-				node.x0 = x0 + x_offset
-				x_offset += this.icicleWidth/(n+1)
-				node.x1 = node.x0 + this.icicleWidth/(n);
-				console.log(node.x0, node.x1)
+				node.x0 = parent.x0 + x_offset
+				console.log(parent.x1, parent.x0)
+				x_offset += (parent.x1 - parent.x0)/(n)
+				node.x1 = parent.x0 + x_offset;
 			}
 		},
 
@@ -366,10 +366,12 @@ export default {
 
 			// Total size of all segments; we set this later, after loading the data
 			let root = d3.hierarchy(json)
+			console.log(json)
 			const partition = this.partition(root)
 
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition)
+			console.log("Hierarchy nodes: ", this.nodes)
 			// .filter(d => {
 			// 	if(this.selectedDirection == 'TD'){
 			// 		console.log(d.y1, d.y0)
