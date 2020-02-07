@@ -36,19 +36,35 @@ class Pipeline:
 
     # Pre-process the dataframe and Graph.
     def process(self, state, gf_type):
-        preprocess = (
-            PreProcess.Builder(state, gf_type)
-            .add_n_index()
-            .add_callers_and_callees()
-            .add_show_node()
-            .add_vis_node_name()
-            .add_dataset_name()
-            # .add_module_name(self.config.callsite_module_map)
-            .update_module_name()
-            .add_mod_index()
-            .add_path()
-            .build()
-        )
+        print(self.config.format, state.name)
+        if(self.config.format[state.name] == 'hpctoolkit'):
+            preprocess = (
+                PreProcess.Builder(state, gf_type)
+                    .add_n_index()
+                    .add_callers_and_callees()
+                    .add_show_node()
+                    .add_vis_node_name()
+                    .add_dataset_name()
+                    .add_node_name_hpctoolkit()
+                    .add_module_name_hpctoolkit()
+                    .add_mod_index()
+                    .add_path()
+                    .build()
+                )
+        elif(self.config.format[state.name] == 'caliper_json'):
+            preprocess = (
+                PreProcess.Builder(state, gf_type)
+                    .add_n_index()
+                    .add_callers_and_callees()
+                    .add_show_node()
+                    .add_vis_node_name()
+                    .add_dataset_name()
+                    # .add_node_name_caliper(self.config.callsite_module_map)
+                    .add_module_name_caliper(self.config.callsite_module_map)
+                    .add_mod_index()
+                    .add_path()
+                    .build()
+                )
 
         state.gf = preprocess.gf
         state.df = preprocess.df
