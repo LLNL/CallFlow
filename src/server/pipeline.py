@@ -46,6 +46,7 @@ class Pipeline:
             # .add_module_name(self.config.callsite_module_map)
             .update_module_name()
             .add_mod_index()
+            .add_path()
             .build()
         )
 
@@ -77,7 +78,7 @@ class Pipeline:
         u_df = pd.DataFrame()
         for idx, dataset in enumerate(states):
             u_graph.unionize(states[dataset].g, dataset)
-            u_df = pd.concat([u_df, states[dataset].df])
+            u_df = pd.concat([u_df, states[dataset].df], sort=False )
         # u_graph.add_union_node_attributes()
         # u_graph.add_edge_attributes()
 

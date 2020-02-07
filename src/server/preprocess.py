@@ -1,4 +1,3 @@
-
 ##############################################################################
 # Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -10,219 +9,344 @@
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
-
 import random
-import utils
-from logger import log
 from functools import wraps
 
+import numpy as np
+import utils
+from logger import log
+import bisect
+
+
 def tmp_wrap(func):
-    @wraps(func)
-    def tmp(*args, **kwargs):
-        log.info("Preprocessing : {0}".format(func.__name__))
-        return func(*args, **kwargs)
-    return tmp
+	@wraps(func)
+	def tmp(*args, **kwargs):
+		log.info("Preprocessing : {0}".format(func.__name__))
+		return func(*args, **kwargs)
+
+	return tmp
+
 
 # Preprocess the dataframe
 # Builder object
 # Preprocess.add_X().add_Y().....
-class PreProcess():
-    def __init__(self, builder):
-        self.graph = builder.graph
-        self.df = builder.df
-        self.gf = builder.gf
+class PreProcess:
+	def __init__(self, builder):
+		self.gf = builder.gf
+		self.df = builder.df
+		self.graph = builder.graph
 
-    def map(self):
-        return self.map
+	class Builder(object):
+		def __init__(self, state, gf_type="entire"):
+			self.state = state
 
-    class Builder(object):
-        def __init__(self, state, gf_type='filter'):
-            self.state = state
-            if(gf_type == 'filter'):
-                self.gf = state.gf
-                self.df = state.df
-                self.graph = state.graph
-            elif(gf_type  == 'entire'):
-                self.gf = state.entire_gf
-                self.df = state.entire_df
-                self.graph = state.entire_graph
-            self.map = {}
+			self.callers = {}
+			self.callees = {}
+			self.frames = {}
+			self.paths = {}
+			self.hatchet_nodes = {}
 
-        def bfs(self):
-            ret = {}
-            node_count = 0
-            root = self.graph.roots[0]
-            node_gen = self.graph.roots[0].traverse()
-            try:
-                while root.callpath != None:
-                    node_count += 1
-                    root = next(node_gen)
-                    ret[root.callpath[-1]] = root.df_index
-            except StopIteration:
-                pass
-            finally:
-                print("Total nodes in the graph", node_count)
-                del root
-            return ret
+			if gf_type == "filter":
+				self.gf = state.gf
+				self.df = state.df
+				self.graph = state.entire_graph
+			elif gf_type == "entire":
+				self.gf = state.entire_gf
+				self.df = state.entire_df
+				self.graph = state.entire_graph
 
-        def build(self):
-            return PreProcess(self)
+			# Logger Information
+			self.cct_nodes = []
+			self.callgraph_nodes = []
+			self.supergraph_nodes = []
+			self.unmapped_targets = []
 
-        # Add the path information from the node object
-        @tmp_wrap
-        def add_path(self):
-            # self.df['path'] = self.df['node'].apply(lambda node: (node.callpath, node.nid))
-            return self
+			self.callgraph_nodes_np = np.array([])
+			self.cct_nodes_np = np.array([])
 
-        # def _map(self, attr, ):
-        #     ret = {}
-        #     for idx, row in self.df.iterrows():
-        #         node_df = self.state.lookup_with_node(row.node)
-        #         n_index = node_df['n_index'].tolist()
-        #         p_incTime  = node_df[attr].tolist()
-        #         for idx in range(len(n_index)):
-        #             if n_index[idx] not in ret:
-        #                 ret[n_index[idx]] = []
-        #             ret[n_index[idx]].append(p_incTime[idx])
-        #     return ret
+			# self.dfMapper()
+			self.graphMapper()
 
-        # @tmp_wrap
-        # def add_incTime(self):
-        #     self.map['time (inc)'] = self._map('time (inc)')
-        #     return self
+			self.map = {}
 
-        # @tmp_wrap
-        # def add_excTime(self):
-        #     self.map['time'] = self._map('time')
-        #     return self
+		def dfMapper(self):
+			ret = {}
+			for idx, row in self.df.iterrows():
+				node_df = self.state.lookup_with_node(row.node)
+				n_index = node_df["n_index"].tolist()
+				p_incTime = node_df[attr].tolist()
+				for idx in range(len(n_index)):
+					if n_index[idx] not in ret:
+						ret[n_index[idx]] = []
+					ret[n_index[idx]].append(p_incTime[idx])
+			return ret
 
-        # Max of the inclusive Runtimes among all processes
-        # node -> max([ inclusive times of process])
-        @tmp_wrap
-        def add_max_incTime(self):
-            ret = {}
+		#################### Mapper functions ###############
+		def update_unmapped_target_nodes(self, source, target):
+			print(self.unmapped_targets, type(self.unmapped_targets))
+			if source in self.unmapped_targets:
+				print("already there")
+				self.unmapped_targets.remove(source)
+			elif target not in set(self.unmapped_targets):
+				self.unmapped_targets.append(target)
 
-            for idx, row in self.df.iterrows():
-                ret[str(row.nid)] = max(self.state.lookup(row.nid)['time (inc)'])
+		def graphMapper(self):
+			graph = self.graph
 
-            self.map['max_incTime'] = ret
-            self.df['max_incTime'] = self.df['node'].apply(lambda node: self.map['max_incTime'][str(node.nid)])
-            return self
+			for root in graph.roots:
+				node_gen = root.traverse()
 
-        # Avg of inclusive Runtimes among all processes
-        # node -> avg([ inclusive times of process])
-        @tmp_wrap
-        def add_avg_incTime(self):
-            ret = {}
-            for idx, row in self.df.iterrows():
-                ret[str(row.nid)] = utils.avg(self.state.lookup(row.nid)['time (inc)'])
+				root_dict = utils.getNodeDictFromFrame(root.frame)
+				root_name = root_dict["name"]
+				root_paths = root.paths()
 
-            self.map['avg_incTime'] = ret
-            self.df['avg_incTime'] = self.df['node'].apply(lambda node: self.map['avg_incTime'][str(node.nid)])
+				self.callers[root_name] = []
+				self.callees[root_name] = []
+				self.paths[root_name] = [root_paths]
+				self.hatchet_nodes[root_name] = [root]
 
-            return self
+				node = root
 
-        # Imbalance percentage Series in the dataframe
-        @tmp_wrap
-        def add_imbalance_perc(self):
-            ret = {}
-            for idx, row in self.df.iterrows():
-                max_incTime = self.df.loc[self.df['name'] == row['name']]['time (inc)'].max()
-                avg_incTime = self.df.loc[self.df['name'] == row['name']]['time (inc)'].mean()
-                if(max_incTime == 0.0):
-                    max_incTime = 1.0
-                ret[row.name] = (row['time (inc)'] - avg_incTime)/max_incTime
+				try:
+					while node:
+						node_dict = utils.getNodeDictFromFrame(node.frame)
+						node_name = node_dict["name"]
 
-            self.df['imbalance_perc'] = self.df['node'].apply(lambda node: ret[node])
-            return self
+						# Append all the unique paths belonging to a callsite.
+						node_paths = node.paths()
+						print("=========================")
+						self.paths[node_name] = node_paths
 
-        @tmp_wrap
-        def add_callers_and_callees(self):
-            graph = self.graph
-            callees = {}
-            callers = {}
-            path = {}
-            module = {}
+						# Append the frames to the map.
+						if node_name not in self.frames:
+							self.frames[node_name] = []
+						self.frames[node_name].append(node.frame)
 
-            for root in graph.roots:
-                node_gen = root.traverse()
+						# Append the Hatchet node to the map.
+						if node_name not in self.hatchet_nodes:
+							self.hatchet_nodes[node_name] = []
+						self.hatchet_nodes[node_name].append(node)
 
-                root_df = root.path()
-                callers[root_df] = []
-                callees[root_df] = []
+						# Append the callers and callees.
+						for node_path in node_paths:
+							if len(node_path) >= 2:
 
-                try:
-                    while root_df:
-                        root = next(node_gen)
-                        root_name = utils.getNodeName(root)
-                        path[root_name] = utils.getNodeCallpath(root)
-                        if root.parents:
-                            for idx, parent in enumerate(root.parents):
-                                parent_name = utils.getNodeName(parent)
+								source_node_dict = utils.getNodeDictFromFrame(
+									node_path[-2]
+								)
+								target_node_dict = utils.getNodeDictFromFrame(
+									node_path[-1]
+								)
 
-                                if parent_name not in callees:
-                                    callees[parent_name] = []
+								source_node_name = source_node_dict["name"]
+								target_node_name = target_node_dict["name"]
 
-                                callees[parent_name].append(root_name)
+								print(source_node_name, target_node_name)
+								# Add the callers.
+								if source_node_name not in self.callers:
+									self.callers[source_node_name] = []
+								self.callers[source_node_name].append(target_node_name)
 
-                                if root_name not in callers:
-                                    callers[root_name] = []
-                                callers[root_df].append(parent_name)
+								# Add the callees.
+								if target_node_name not in self.callees:
+									self.callees[target_node_name] = []
+								self.callees[target_node_name].append(source_node_name)
 
-                except StopIteration:
-                    pass
-                finally:
-                    del root
+								self.update_unmapped_target_nodes(source_node_name, target_node_name)
+							# For logger.
+						self.cct_nodes.append(node_name)
+						node = next(node_gen)
 
+					# All logging information is converted to numpy to improve calculation speeds.
 
-            self.df['callees'] = self.df['name'].apply(lambda node: callees[node] if node in callees else [])
-            self.df['callers'] = self.df['name'].apply(lambda node: callers[node] if node in callers else [])
-            self.df['path'] = self.df['name'].apply(lambda node: path[node] if node in path else [])
+				except StopIteration:
+					pass
+				finally:
+					print("Finally")
+					node_dict = utils.getNodeDictFromFrame(node.frame)
+					node_name = node_dict["name"] + ":" + str(node_dict["line"])
+					node_paths = node.paths()
+					self.paths[node_name] = node_paths
 
-            return self
+					# Append the frames to the map.
+					if node_name not in self.frames:
+						self.frames[node_name] = []
+					self.frames[node_name].append(node.frame)
 
-        @tmp_wrap
-        def add_show_node(self):
-            self.map['show_node'] = {}
-            self.df['show_node'] = self.df['name'].apply(lambda node: True)
-            return self
+					# Append the Hatchet node to the map.
+					if node_name not in self.hatchet_nodes:
+						self.hatchet_nodes[node_name] = []
+					self.hatchet_nodes[node_name].append(node)
 
-        @tmp_wrap
-        def update_show_node(self, show_node_map):
-            self.map.show_node = show_node_map
-            self.df['show_node'] = self.df['node'].apply(lambda node: show_node_map[str(node.df_index)])
+					self.callers[node_name] = node_paths[0][-2]
+					self.callees[node_name] = None
 
-        # node_name is different from name in dataframe. So creating a copy of it.
-        @tmp_wrap
-        def add_vis_node_name(self):
-            self.df['vis_node_name'] = self.df['name'].apply(lambda name: name)
-            return self
+					self.cct_nodes.append(node_name)
 
-        @tmp_wrap
-        def update_node_name(self, node_name_map):
-            self.df['node_name'] = self.df['name'].apply(lambda name: self.config.name_module_map[name])
+					self.callgraph_nodes = np.unique(np.array(self.cct_nodes))
 
-        @tmp_wrap
-        def add_module_name(self, module_map):
-            self.df['module'] = self.df['name'].apply(lambda name: module_map[name])
-            return self
+					for node_name in self.unmapped_targets:
+						self.callers[node_name] = []
+					del root
 
-        @tmp_wrap
-        def add_n_index(self):
-            self.df['n_index'] = self.df.groupby('nid').ngroup()
-            return self
+		def build(self):
+			return PreProcess(self)
 
-        @tmp_wrap
-        def add_mod_index(self):
-            self.df['mod_index'] = self.df.groupby('module').ngroup()
-            return self
+		@tmp_wrap
+		def add_hatchet_node(self):
+			self.raiseExceptionIfNodeCountNotEqual(self.hatchet_nodes.keys())
+			self.df["hatchet_node"] = self.df["name"].apply(
+				lambda node_name: self.hatchet_nodes[node_name]
+			)
+			return self
 
-        @tmp_wrap
-        def add_dataset_name(self):
-            self.df['dataset'] = self.state.name
-            return self
+		# Add the path information from the node object
+		@tmp_wrap
+		def add_path(self):
+			self.raiseExceptionIfNodeCountNotEqual(self.paths)
+			self.df["path"] = self.df["name"].apply(
+				lambda node_name: self.paths[node_name]
+			)
+			return self
 
-        @tmp_wrap
-        def update_module_name(self):
-            self.df['module'] = self.df['module'].apply(lambda name: utils.sanitizeName(name))
-            return self
+		def _map(self, attr):
+			ret = {}
+			for idx, row in self.df.iterrows():
+				node_df = self.state.lookup_with_node(row.node)
+				n_index = node_df["n_index"].tolist()
+				p_incTime = node_df[attr].tolist()
+				for idx in range(len(n_index)):
+					if n_index[idx] not in ret:
+						ret[n_index[idx]] = []
+					ret[n_index[idx]].append(p_incTime[idx])
+			return ret
+
+		@tmp_wrap
+		def add_incTime(self):
+			self.map["time (inc)"] = self._map("time (inc)")
+			return self
+
+		@tmp_wrap
+		def add_excTime(self):
+			self.map["time"] = self._map("time")
+			return self
+
+		# Max of the inclusive Runtimes among all processes
+		# node -> max([ inclusive times of process])
+		@tmp_wrap
+		def add_max_incTime(self):
+			ret = {}
+
+			for idx, row in self.df.iterrows():
+				ret[str(row.nid)] = max(self.state.lookup(row.nid)["time (inc)"])
+
+			self.map["max_incTime"] = ret
+			self.df["max_incTime"] = self.df["node"].apply(
+				lambda node: self.map["max_incTime"][str(node.nid)]
+			)
+			return self
+
+		# Avg of inclusive Runtimes among all processes
+		# node -> avg([ inclusive times of process])
+		@tmp_wrap
+		def add_avg_incTime(self):
+			ret = {}
+			for idx, row in self.df.iterrows():
+				ret[str(row.nid)] = utils.avg(self.state.lookup(row.nid)["time (inc)"])
+
+			self.map["avg_incTime"] = ret
+			self.df["avg_incTime"] = self.df["node"].apply(
+				lambda node: self.map["avg_incTime"][str(node.nid)]
+			)
+
+			return self
+
+		# Imbalance percentage Series in the dataframe
+		@tmp_wrap
+		def add_imbalance_perc(self):
+			ret = {}
+			for idx, row in self.df.iterrows():
+				max_incTime = self.map["max_incTime"][str(row.nid)]
+				if max_incTime == 0.0:
+					max_incTime = 1.0
+				ret[str(row.nid)] = (
+					self.map["max_incTime"][str(row.nid)]
+					- self.map["avg_incTime"][str(row.nid)]
+				) / max_incTime
+
+			self.map["imbalance_perc"] = ret
+			self.df["imbalance_perc"] = self.df["node"].apply(
+				lambda node: self.map["imbalance_perc"][str(node.nid)]
+			)
+			return self
+
+		@tmp_wrap
+		def add_callers_and_callees(self):
+			self.df["callees"] = self.df["name"].apply(lambda node: self.callees[node] if node in self.callees else [])
+			self.df["callers"] = self.df["name"].apply(lambda node: self.callers[node] if node in self.callers else [])
+
+			return self
+
+		@tmp_wrap
+		def add_show_node(self):
+			self.map["show_node"] = {}
+			self.df["show_node"] = self.df["name"].apply(lambda node: True)
+			return self
+
+		@tmp_wrap
+		def update_show_node(self, show_node_map):
+			self.map.show_node = show_node_map
+			self.df["show_node"] = self.df["node"].apply(
+				lambda node: show_node_map[str(node.df_index)]
+			)
+
+		# node_name is different from name in dataframe. So creating a copy of it.
+		@tmp_wrap
+		def add_vis_node_name(self):
+			self.df["vis_node_name"] = self.df["name"].apply(lambda name: name)
+			return self
+
+		@tmp_wrap
+		def update_node_name(self, node_name_map):
+			self.df["node_name"] = self.df["name"].apply(
+				lambda name: node_name_map[name]
+			)
+
+		@tmp_wrap
+		def update_module_name(self):
+			print(self.df.columns)
+			self.df["module"] = self.df["name"].apply(
+				lambda name: utils.sanitizeName(name)
+			)
+			return self
+
+		@tmp_wrap
+		def add_n_index(self):
+			self.df["n_index"] = self.df.groupby("nid").ngroup()
+			return self
+
+		@tmp_wrap
+		def add_mod_index(self):
+			self.df["mod_index"] = self.df.groupby("module").ngroup()
+			return self
+
+		@tmp_wrap
+		def add_dataset_name(self):
+			self.df["dataset"] = self.state.name
+			return self
+
+		def raiseExceptionIfNodeCountNotEqual(self, attr):
+			map_node_count = len(attr)
+			callgraph_node_count = self.callgraph_nodes.shape[0]
+			if map_node_count != callgraph_node_count:
+				raise Exception(
+					f"Unmatched Preprocessing maps: Map contains: {map_node_count} nodes, graph contains: {callgraph_node_count} nodes"
+				)
+
+		@tmp_wrap
+		def logInformation(self):
+			log.info(f"CCT node count : {len(self.cct_nodes)}")
+			log.info(f"CallGraph node count: {len(self.callgraph_nodes)}")
+			log.info(f"SuperGraph node count: {len(self.df['module'].unique())}")
+			return self
+
