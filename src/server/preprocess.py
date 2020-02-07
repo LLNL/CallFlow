@@ -83,9 +83,7 @@ class PreProcess:
 
 		#################### Mapper functions ###############
 		def update_unmapped_target_nodes(self, source, target):
-			print(self.unmapped_targets, type(self.unmapped_targets))
 			if source in self.unmapped_targets:
-				print("already there")
 				self.unmapped_targets.remove(source)
 			elif target not in set(self.unmapped_targets):
 				self.unmapped_targets.append(target)
@@ -114,7 +112,6 @@ class PreProcess:
 
 						# Append all the unique paths belonging to a callsite.
 						node_paths = node.paths()
-						print("=========================")
 						self.paths[node_name] = node_paths
 
 						# Append the frames to the map.
@@ -141,7 +138,6 @@ class PreProcess:
 								source_node_name = source_node_dict["name"]
 								target_node_name = target_node_dict["name"]
 
-								print(source_node_name, target_node_name)
 								# Add the callers.
 								if source_node_name not in self.callers:
 									self.callers[source_node_name] = []
@@ -162,7 +158,6 @@ class PreProcess:
 				except StopIteration:
 					pass
 				finally:
-					print("Finally")
 					node_dict = utils.getNodeDictFromFrame(node.frame)
 					node_name = node_dict["name"] + ":" + str(node_dict["line"])
 					node_paths = node.paths()
@@ -299,6 +294,7 @@ class PreProcess:
 			self.df["show_node"] = self.df["node"].apply(
 				lambda node: show_node_map[str(node.df_index)]
 			)
+			return self
 
 		# node_name is different from name in dataframe. So creating a copy of it.
 		@tmp_wrap
@@ -307,18 +303,28 @@ class PreProcess:
 			return self
 
 		@tmp_wrap
-		def update_node_name(self, node_name_map):
+		def add_node_name_hpctoolkit(self, node_name_map):
 			self.df["node_name"] = self.df["name"].apply(
 				lambda name: node_name_map[name]
 			)
+			return self
 
 		@tmp_wrap
-		def update_module_name(self):
-			print(self.df.columns)
-			self.df["module"] = self.df["name"].apply(
+		def add_module_name_hpctoolkit(self):
+			self.df["module"] = self.df["module"].apply(
 				lambda name: utils.sanitizeName(name)
 			)
 			return self
+
+		@tmp_wrap
+		def add_node_name_caliper(self, node_module_map):
+			self.df['node_name'] = self.df['name'].apply(lambda name: name_module_map[name])
+
+		@tmp_wrap
+		def add_module_name_caliper(self, module_map):
+			self.df['module'] = self.df['name'].apply(lambda name: module_map[name])
+			return self
+
 
 		@tmp_wrap
 		def add_n_index(self):
