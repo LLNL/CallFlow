@@ -32,7 +32,6 @@ class moduleHierarchyDist:
     def add_paths(self, df, path_name):
         for idx, row in df.iterrows():
             path = row[path_name]
-            # print(path)
             if isinstance(path, str) and path != 'nan':
                 path = make_tuple(row[path_name])
                 self.hierarchy.add_path(path)
@@ -109,7 +108,6 @@ class moduleHierarchyDist:
     def run(self):
         node_df = self.df.loc[self.df["module"] == self.module]
         node_paths = node_df
-        print(node_paths)
 
         if "component_path" not in self.df.columns:
             utils.debug("Error: Component path not defined in the df")
@@ -148,10 +146,10 @@ class moduleHierarchyDist:
                                 "path": path_tuple,
                                 "time (inc)": self.df.loc[self.df["name"] == func][
                                     "time (inc)"
-                                ].max(),
+                                ].mean(),
                                 "time": self.df.loc[self.df["name"] == func][
                                     "time"
-                                ].max(),
+                                ].mean(),
                                 "level": int(
                                     self.df.loc[self.df["name"] == func][
                                         "component_level"
@@ -165,6 +163,7 @@ class moduleHierarchyDist:
                 existing_nodes[node] = True
 
         paths_df = pd.DataFrame(paths)
+        paths_df.to_csv('/home/vidi/Work/llnl/CallFlow/src/server/hierarchy.csv')
         return {
             "data": paths_df.to_json(orient="columns"),
         }
