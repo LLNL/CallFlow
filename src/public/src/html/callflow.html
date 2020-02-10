@@ -81,8 +81,13 @@
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
-					<v-select label="Color Map" :items="colorMap" v-model="selectedColorMap"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColor()">
+					<v-select label="Runtime Color Map" :items="runtimeColorMap" v-model="selectedRuntimeColorMap"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateRuntimeColorMap()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-select label="Distribution Color Map" :items="distributionColorMap" v-model="selectedDistributionColorMap"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateDistributionColorMap()">
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1">

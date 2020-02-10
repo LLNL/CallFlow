@@ -72,8 +72,10 @@ export default {
 		selectedFilterPerc: 5,
 		colorBy: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
 		selectedColorBy: 'Inclusive',
-		colorMap: [],
-		selectedColorMap: "Reds",
+		runtimeColorMap: [],
+		distributionColorMap: [],
+		selectedRuntimeColorMap: "Reds",
+		selectedDistributionColorMap: "Greys",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
 		selectedColorPoint: 9,
 		selectedColorMin: null,
@@ -322,18 +324,6 @@ export default {
 		},
 
 		clearLocal() {
-			// if (this.selectedFormat == 'Callgraph') {
-			// 	if (this.selectedData == 'Dataframe') {
-			// 		this.$refs.CallgraphA.clear()
-			// 	} else if (this.selectedData == 'Graph') {
-			// 		this.$refs.CallgraphB.clear()
-			// 	}
-			// 	this.$refs.Histogram.clear()
-			// 	this.$refs.Scatterplot.clear()
-			// 	this.$refs.Function.clear()
-			// 	this.$refs.Icicle.clear()
-			// 	this.$refs.Projection.clear()
-			// } else
 			if (this.selectedFormat == 'CCT') {
 				this.$refs.CCT.clear()
 			} else if (this.selectedFormat == 'Callgraph') {
@@ -489,7 +479,8 @@ export default {
 			this.$store.rankDiffColor = new Color('RankDiff')
 			this.$store.meanDiffColor = new Color('MeanDiff')
 
-			this.colorMap = this.$store.color.getAllColors()
+			this.runtimeColorMap = this.$store.color.getAllColors()
+			this.distributionColorMap = this.$store.color.getAllColors()
 			if (this.selectedMode == 'Ensemble') {
 				if (this.selectedColorBy == 'Inclusive') {
 					this.selectedColorMin = this.$store.minIncTime['ensemble']
@@ -510,8 +501,8 @@ export default {
 				}
 			}
 
-			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
-			this.$store.zeroToOneColor.setColorScale(0, 1, this.selectedColorMap, this.selectedColorPoint)
+			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedRuntimeColorMap, this.selectedColorPoint)
+			this.$store.zeroToOneColor.setColorScale(0, 1, this.selectedRuntimeColorMap, this.selectedColorPoint)
 
 			this.$store.colorPoint = this.selectedColorPoint
 			console.log("Datasets are :", this.datasets)
@@ -522,7 +513,8 @@ export default {
 			console.log("Assigned Color map: ", this.$store.color.datasetColor)
 			this.$store.selectedColorMin = this.selectedColorMin
 			this.$store.selectedColorMax = this.selectedColorMax
-			this.$store.selectedColorMap = this.selectedColorMap
+			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap
+			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap
 			this.$store.selectedColorPoint = this.selectedColorPoint
 			this.selectedColorMinText = this.$store.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.$store.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
@@ -568,7 +560,7 @@ export default {
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
 
-		updateColor() {
+		updateDistributionColorMap() {
 			this.clearLocal()
 			this.colors()
 			if (this.selectedFormat == 'CCT') {
@@ -583,11 +575,27 @@ export default {
 					groupBy: this.selectedGroupBy
 				})
 			}
+		},
 
+		updateRuntimeColorMap() {
+			this.clearLocal()
+			this.colors()
+			if (this.selectedFormat == 'CCT') {
+				this.$socket.emit('cct', {
+					dataset: this.$store.selectedTargetDataset,
+					functionsInCCT: this.selectedFunctionsInCCT,
+				})
+			} else if (this.selectedFormat == 'Callgraph') {
+				this.$socket.emit('group', {
+					dataset: this.$store.selectedTargetDataset,
+					format: this.selectedFormat,
+					groupBy: this.selectedGroupBy
+				})
+			}
 		},
 
 		updateColorMinMax() {
-			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedColorMap, this.selectedColorPoint)
+			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedRuntimeColorMap, this.selectedColorPoint)
 			if (this.selectedFormat == 'Callgraph') {
 				this.$refs.Callgraph.render()
 			} else if (this.selectedFormat == 'CCT') {

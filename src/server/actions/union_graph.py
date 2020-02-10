@@ -5,17 +5,18 @@ class UnionGraph():
         # Union is the same type as G
         self.R = nx.DiGraph()
         self.runs = {}
+        self.diffset = {}
         # self.union(G, H, dataset_name, rename, name)
-        
-    # Return the union of graphs G and H.    
+
+    # Return the union of graphs G and H.
     def unionize(self, H, name = None, rename=(None, None)):
         if not self.R.is_multigraph() == H.is_multigraph():
             raise nx.NetworkXError('G and H must both be graphs or multigraphs.')
-        
+
         # add graph attributes, H attributes take precedent over G attributes
         # self.R.graph.update(G.graph)
         self.R.graph.update(H.graph)
-        
+
         renamed_nodes = self.add_prefix(H, rename[1])
 
         debug = True
@@ -27,20 +28,20 @@ class UnionGraph():
                 print("Nodes in R", set(self.R)),
                 print("Nodes in H", set(H))
             print("-=========================-")
-        
+
         if H.is_multigraph():
             H_edges = H.edges(keys=True, data=True)
         else:
             H_edges = H.edges(data=True)
 
-        # add nodes and edges. 
+        # add nodes and edges.
         self.R.add_nodes_from(H)
         self.R.add_edges_from(H_edges)
 
         # add node attributes for each run
         for n in renamed_nodes:
             self.add_node_attributes(H, n, name)
-        
+
         self.runs[name] = H
 
     # rename graph to obtain disjoint node labels
@@ -62,7 +63,7 @@ class UnionGraph():
 
     def number_of_runs(self):
         ret = {}
-        for idx, name in enumerate(self.runs):           
+        for idx, name in enumerate(self.runs):
             for edge in self.runs[name].edges():
                 if edge not in ret:
                     ret[edge] = 0
@@ -82,7 +83,7 @@ class UnionGraph():
             node_data = node[1]
             max_inc_time = 0
             max_exc_time = 0
-            self.R.nodes[node_name]['union'] = {}
+            self.R.nodes[node_name]['ensemble'] = {}
             for dataset in node_data:
                 for idx, key in enumerate(node_data[dataset]):
                     if(key == 'name'):
@@ -94,9 +95,6 @@ class UnionGraph():
                     elif(key == 'entry_functions'):
                         entry_functions = node_data[dataset][key]
 
-            self.R.nodes[node_name]['union']['time (inc)'] = max_inc_time
-            self.R.nodes[node_name]['union']['time'] = max_exc_time
-            self.R.nodes[node_name]['union']['entry_functions'] = entry_functions
-            # print(self.R.nodes[node_name]['union'])
-            # self.R.nodes[node]['union'] = {}
-    
+            self.R.nodes[node_name]['ensemble']['time (inc)'] = max_inc_time
+            self.R.nodes[node_name]['ensemble']['time'] = max_exc_time
+            self.R.nodes[node_name]['ensemble']['entry_functions'] = entry_functions
