@@ -40,11 +40,15 @@ export default {
             this.rank_max = 0
             this.mean_min = 0
             this.mean_max = 0
+            this.mean_diff_min = 0
+            this.mean_diff_max = 0
             for (let i = 0; i < data.length; i += 1) {
                 this.rank_min = Math.min(this.rank_min, data[i]['hist']['y_min'])
                 this.rank_max = Math.max(this.rank_max, data[i]['hist']['y_max'])
                 this.mean_min = Math.min(this.mean_min, data[i]['hist']['x_min'])
                 this.mean_max = Math.max(this.mean_max, data[i]['hist']['x_max'])
+                this.mean_diff_min = Math.min(this.mean_diff_min, data[i]['mean_diff'])
+                this.mean_diff_max = Math.max(this.mean_diff_max, data[i]['mean_diff'])
             }
 
             if (this.$store.selectedCompareMode == 'rankDiff') {
@@ -54,7 +58,7 @@ export default {
                 this.rankDiffRectangle()
             }
             else if (this.$store.selectedCompareMode == 'meanDiff') {
-                this.$store.meanDiffColor.setColorScale(this.mean_min, this.mean_max, this.$store.selectedRuntimeColorMap, this.$store.selectedColorPoint)
+                this.$store.meanDiffColor.setColorScale(this.mean_diff_min, this.mean_diff_max, this.$store.selectedRuntimeColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.DistColorMap.update('meanDiff', data)
                 this.meanDiffRectangle(data)
             }
@@ -379,14 +383,11 @@ export default {
             let max_diff = 0
             let min_diff = 0
             for (let i = 0; i < diff.length; i += 1) {
-                let d = diff[i]['diff']
+                let d = diff[i]['mean_diff']
                 let callsite = diff[i]['name']
-                let difference = d.reduce((total, num) => {
-                    return total + num
-                })
-                mean_diff[callsite] = difference
-                max_diff = Math.max(difference, max_diff)
-                min_diff = Math.min(difference, min_diff)
+                mean_diff[callsite] = d
+                max_diff = Math.max(d, max_diff)
+                min_diff = Math.min(d, min_diff)
             }
 
             // Transition
@@ -592,7 +593,6 @@ export default {
                 .style('opacity', 1)
                 .style('fill', d => {
                     return '#000'
-                    // return this.$store.color.setContrast(this.$store.color.getColor(d))
                 })
                 .text((d) => {
                     if (d.height < this.minHeightForText) {
