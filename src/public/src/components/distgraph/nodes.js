@@ -12,9 +12,9 @@ export default {
     props: [],
     data: () => ({
         currentNodeLevel: {},
-        nodeHeights: {},
         nodeWidth: 50,
         transitionDuration: 1000,
+        nodeHeights: {},
         minHeightForText: 15,
         textTruncForNode: 25,
         id: '',
@@ -48,13 +48,13 @@ export default {
             }
 
             if (this.$store.selectedCompareMode == 'rankDiff') {
-                this.$store.rankDiffColor.setColorScale(this.rank_min, this.rank_max, this.$store.selectedColorMap, this.$store.selectedColorPoint)
+                this.$store.rankDiffColor.setColorScale(this.rank_min, this.rank_max, this.$store.selectedRuntimeColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.DistColorMap.update('rankDiff', data)
                 this.setupDiffRuntimeGradients(data)
                 this.rankDiffRectangle()
             }
             else if (this.$store.selectedCompareMode == 'meanDiff') {
-                this.$store.meanDiffColor.setColorScale(this.mean_min, this.mean_max, this.$store.selectedColorMap, this.$store.selectedColorPoint)
+                this.$store.meanDiffColor.setColorScale(this.mean_min, this.mean_max, this.$store.selectedRuntimeColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.DistColorMap.update('meanDiff', data)
                 this.meanDiffRectangle(data)
             }
@@ -149,7 +149,7 @@ export default {
                 this.hist_min = Math.min(this.hist_min, data[d]['hist']['y_min'])
                 this.hist_max = Math.max(this.hist_max, data[d]['hist']['y_max'])
             }
-            this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedColorMap, this.$store.selectedColorPoint)
+            this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
             this.$parent.$refs.DistColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
 
             for (let d in data) {

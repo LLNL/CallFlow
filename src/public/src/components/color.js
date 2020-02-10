@@ -423,15 +423,15 @@ export default class Color {
                 // .padding(this.colorPadding)
                 .domain([0, 1]);
         } else if (this.option == 'MeanDiff') {
-            this.meanDiffColorScale = chroma.scale('RdYlBu')
+            this.meanDiffColorScale = chroma.scale(this.colorMap)
                 // .padding(this.colorPadding)
                 .domain([min, max]);
         } else if (this.option == 'RankDiff') {
-            this.rankDiffColorScale = chroma.scale("Purples")
+            this.rankDiffColorScale = chroma.scale(this.colorMap)
                 // .padding(this.colorPadding)
                 .domain([min, max]);
         } else if(this.option == 'Bin') {
-            this.binColorScale = chroma.scale("Purples")
+            this.binColorScale = chroma.scale(this.colorMap)
                 // .padding(this.colorPadding)
                 .domain([min, max])
         }

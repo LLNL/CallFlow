@@ -51,8 +51,7 @@ class CCT:
                 if(node_module[0] != 'nan'):
 
                     data = self.entire_df.loc[self.entire_df['name'] == node][attr]
-                    if(attr == 'time'):
-                        print(node, data.unique())
+
                     if attr == 'time' or attr == 'time (inc)' or attr == 'imbalance_perc':
                         if( not math.isnan(data.mean())):
                             ret[node] = data.mean()
