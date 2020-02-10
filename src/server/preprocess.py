@@ -198,6 +198,7 @@ class PreProcess:
 		# Add the path information from the node object
 		@tmp_wrap
 		def add_path(self):
+			print(self.df)
 			self.raiseExceptionIfNodeCountNotEqual(self.paths)
 			self.df["path"] = self.df["name"].apply(
 				lambda node_name: self.paths[node_name]

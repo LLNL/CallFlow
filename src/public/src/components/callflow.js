@@ -70,8 +70,8 @@ export default {
 		selectedIncTime: 0,
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
-		colorBy: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
-		selectedColorBy: 'Inclusive',
+		metrics: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
+		selectedMetric: 'Inclusive',
 		runtimeColorMap: [],
 		distributionColorMap: [],
 		selectedRuntimeColorMap: "Reds",
@@ -195,6 +195,7 @@ export default {
 			this.$store.colorset = ['#59A14E', '#AF7AA1', '#F18F2C']
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
 			this.$store.nodeInfo = {}
+			this.$store.selectedMetric = this.selectedMetric
 			this.setTargetDataset()
 
 			this.init()
@@ -473,8 +474,8 @@ export default {
 		},
 
 		colors() {
-			this.$store.color = new Color(this.selectedColorBy)
-			this.$store.zeroToOneColor = new Color(this.selectedColorBy)
+			this.$store.color = new Color(this.selectedMetric)
+			this.$store.zeroToOneColor = new Color(this.selectedMetric)
 			this.$store.binColor = new Color('Bin')
 			this.$store.rankDiffColor = new Color('RankDiff')
 			this.$store.meanDiffColor = new Color('MeanDiff')
@@ -482,20 +483,20 @@ export default {
 			this.runtimeColorMap = this.$store.color.getAllColors()
 			this.distributionColorMap = this.$store.color.getAllColors()
 			if (this.selectedMode == 'Ensemble') {
-				if (this.selectedColorBy == 'Inclusive') {
+				if (this.selectedMetric == 'Inclusive') {
 					this.selectedColorMin = this.$store.minIncTime['ensemble']
 					this.selectedColorMax = this.$store.maxIncTime['ensemble']
 				}
-				else if (this.selectedColorBy == 'Exclusive') {
+				else if (this.selectedMetric == 'Exclusive') {
 					this.selectedColorMin = this.$store.minExcTime['ensemble']
 					this.selectedColorMax = this.$store.maxExcTime['ensemble']
 				}
 			}
 			else if (this.selectedMode == 'Single') {
-				if (this.selectedColorBy == 'Inclusive') {
+				if (this.selectedMetric == 'Inclusive') {
 					this.selectedColorMin = this.$store.minIncTime[this.selectedTargetDataset]
 					this.selectedColorMax = this.$store.maxIncTime[this.selectedTargetDataset]
-				} else if (this.selectedColorBy == 'Exclusive') {
+				} else if (this.selectedMetric == 'Exclusive') {
 					this.selectedColorMin = this.$store.minExcTime[this.selectedTargetDataset]
 					this.selectedColorMax = this.$store.maxExcTime[this.selectedTargetDataset]
 				}
@@ -555,8 +556,8 @@ export default {
 			}
 			// this.$store.selectedTargetDataset = min_inclusive_dataset
 			// this.selectedTargetDataset = min_inclusive_dataset
-			this.$store.selectedTargetDataset = '1-core'
-			this.selectedTargetDataset = '1-core'
+			this.$store.selectedTargetDataset = '512-cores'
+			this.selectedTargetDataset = '512-cores'
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
 
@@ -633,9 +634,9 @@ export default {
 			this.init()
 		},
 
-		updateColorBy() {
+		updateMetric() {
 			this.clearLocal()
-			this.updateColor(this.selectedColorBy)
+			this.updateColor(this.selectedMetric)
 		},
 
 		updateFilterBy() {

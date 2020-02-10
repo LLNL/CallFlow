@@ -76,8 +76,8 @@
 					<v-subheader class="teal lighten-4">Encoding</v-subheader>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
-					<v-select label="Metric" :items="colorBy" v-model="selectedColorBy"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColorBy()">
+					<v-select label="Metric" :items="metrics" v-model="selectedMetric"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateMetric()">
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
