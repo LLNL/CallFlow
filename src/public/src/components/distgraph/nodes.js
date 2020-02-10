@@ -48,7 +48,7 @@ export default {
             }
 
             if (this.$store.selectedCompareMode == 'rankDiff') {
-                this.$store.rankDiffColor.setColorScale(this.rank_min, this.rank_max, this.$store.selectedRuntimeColorMap, this.$store.selectedColorPoint)
+                this.$store.rankDiffColor.setColorScale(this.rank_min, this.rank_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.DistColorMap.update('rankDiff', data)
                 this.setupDiffRuntimeGradients(data)
                 this.rankDiffRectangle()

@@ -168,7 +168,7 @@ body {
 }
 
 #run-information {
-  max-height: 400px;
+  max-height: 300px;
 }
 
 #auxiliary-function-overview {

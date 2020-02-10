@@ -329,7 +329,6 @@ export default {
 				node.y0 = y0
 				node.y1 = y1
 				node.x0 = parent.x0 + x_offset
-				console.log(parent.x1, parent.x0)
 				x_offset += (parent.x1 - parent.x0)/(n)
 				node.x1 = parent.x0 + x_offset;
 			}
@@ -437,8 +436,21 @@ export default {
 					let color = self.$store.color.target
 					return color;
 				})
-				.style('stroke', () => '#0e0e0e')
-				.style('stroke-width', d => '1px')
+				.style('stroke', (d) => {
+					let runtime = 0
+					if(this.$store.selectedMetric == 'Inclusive'){
+						runtime = d.data.inclusive
+					}
+					else if(this.$store.selectedMetric == 'Exclusive'){
+						runtime = d.data.exclusive
+					}
+					console.log(runtime)
+					if(runtime == undefined){
+						return 'black'
+					}
+					return d3.rgb(this.$store.color.getColorByValue(runtime));
+				})
+				.style('stroke-width', d => '4px')
 				.style('opacity', (d) => {
 					if (d.exit) {
 						return 0.5;
@@ -495,6 +507,10 @@ export default {
 					}
 					let name = d.data.name
 					name = name.replace(/<unknown procedure>/g,'proc ');
+
+					if(name.indexOf('=')){
+						name = name.split('=')[0]
+					}
 
 					var textSize = this.textSize(name)['width'];
 					if (textSize < d.height) {
