@@ -95,7 +95,7 @@ export default {
                 color = this.$store.color.target
             }
 
-            if (type == 'ensemble') {
+            // if (type == 'ensemble') {
                 this.minimapXScale = d3.scaleBand()
                     .domain(xVals)
                     .rangeRound([0, this.$parent.nodeWidth])
@@ -103,8 +103,7 @@ export default {
                 this.minimapYScale = d3.scaleLinear()
                     .domain([0, d3.max(freq)])
                     .range([this.$parent.ySpacing, 0]);
-
-            }
+            // }
 
             for (let i = 0; i < freq.length; i += 1) {
                 d3.select('#' + this.id)
@@ -116,7 +115,10 @@ export default {
                         'height': (d) => {
                             return (this.$parent.nodeWidth) - this.minimapYScale(freq[i])
                         },
-                        'x': (d) => node_dict.x + this.minimapXScale(xVals[i]),
+                        'x': (d) => {
+                            console.log(node_dict.x, xVals[i])
+                            return node_dict.x + this.minimapXScale(xVals[i])
+                        },
                         'y': (d) => node_dict.y + this.minimapYScale(freq[i]),
                         'stroke-width': '0.2px',
                         'stroke': 'black',

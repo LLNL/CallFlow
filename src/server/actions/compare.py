@@ -33,7 +33,7 @@ class Compare:
 
         # Calculate the max_rank.
         self.max_rank1 = len(self.df1['rank'].unique())
-        self.max_rank2 = len(self.df1['rank'].unique())
+        self.max_rank2 = len(self.df2['rank'].unique())
         self.max_rank = max(self.max_rank1, self.max_rank2)
 
 
@@ -109,7 +109,8 @@ class Compare:
         dataset = np.concatenate([dataset1, dataset2], axis=0)
         mean = np.mean([data1, data2], axis=0)
         diff = data1 - data2
-        mean_diff = np.mean(data2) - np.mean(data1)
+        mean_diff = np.mean(data2)/self.max_rank2 - np.mean(data1)/self.max_rank1
+        print(node, np.mean(data2)/self.max_rank2 -np.mean(data1)/self.max_rank1)
         if math.isnan(mean_diff):
             mean_diff = 0
 
@@ -125,9 +126,9 @@ class Compare:
 
         # Calculate appropriate number of bins automatically.
         num_of_bins = 10
-        num_of_bins = min(
-            self.freedman_diaconis_bins(np.array(dist_list)), 50
-        )
+        # num_of_bins = min(
+        #     self.freedman_diaconis_bins(np.array(dist_list)), 50
+        # )
 
         # Calculate the KDE grid (x, y)
         # kde_grid = self.kde(np.array(dist_list), 10)
@@ -158,7 +159,7 @@ class Compare:
         result = {
             'name':node,
             # "dist": diff,
-            "mean": mean_diff,
+            "mean_diff": mean_diff,
             "bins": num_of_bins,
             # "kde": {
             #     "x": kde_grid[vis_node_name][0].tolist(),
