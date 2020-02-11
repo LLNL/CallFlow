@@ -30,7 +30,8 @@ class groupBy:
     # Create a group path for the df.column = group_path.
     def create_group_path(self, path):
         group_path = []
-        path = utils.framesToPathLists(path)[0]
+        # path = utils.framesToPathLists(path)[0]
+
         self.prev_module_map = {}
         prev_module = None
         function = path[len(path) - 1]
@@ -84,7 +85,7 @@ class groupBy:
 
     def create_component_path(self, path, group_path):
         component_path = []
-        path = utils.framesToPathLists(path)[0]
+        # path = utils.framesToPathLists(path)[0]
         component_module = group_path[len(group_path) - 1]
 
         if '=' in component_module:

@@ -315,7 +315,6 @@ class DistGraph(nx.Graph):
                         ret[column][node] = "None"
 
                 elif column == "component_path" or column == "group_path":
-
                     if len(column_data.value_counts() > 0):
                         ret[column][node] = list(make_tuple(column_data.tolist()[0]))
                     else:

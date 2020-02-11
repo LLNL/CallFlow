@@ -114,7 +114,7 @@ export default {
             // Set some general styles
             this.g.nodes().forEach(function (v) {
                 let node = self.g.node(v);
-                console.log(node.exclusive)
+                console.log(node)
                 if (node != undefined) {
                     let color = self.$store.color.getColor(node)
                     console.log(color)

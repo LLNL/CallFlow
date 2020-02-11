@@ -108,8 +108,9 @@ export default {
             } else {
                 let splits = this.$store.colorPoint
                 let color = this.color.getScale('MeanDiff')
+                console.log(this.colorMin, this.colorMax)
                 for (let i = 0; i <= splits; i += 1) {
-                    let splitColor = this.colorMin + ((i * (this.colorMax - this.colorMin)) / (splits))
+                    let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
                     this.scaleG.append('rect')
                         .attrs({
                             'width': this.width / splits,
@@ -289,7 +290,7 @@ export default {
                 this.drawRankDiffText()
             }
             else if(mode == 'meanDiff'){
-                this.colorMin = mean_min
+                this.colorMin = Math.min(this.colorMin, data[i]['hist']['mean_diff'])
                 this.colorMax = mean_max
                 this.drawMeanDiffColorMap()
                 this.drawMeanDiffText()
@@ -303,6 +304,10 @@ export default {
             if(mode == 'bin'){
                 this.drawBinColorMap()
                 this.drawBinText()
+            }
+            if(mode == 'meanDiff'){
+                this.drawMeanDiffColorMap()
+                this.drawMeanDiffText()
             }
         }
     }

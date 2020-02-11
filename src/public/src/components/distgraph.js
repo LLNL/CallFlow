@@ -61,10 +61,11 @@ export default {
 		init(data) {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
-			this.projectionViewWidth = document.getElementById('similarity-matrix-view').clientWidth
+			// this.projectionViewWidth = document.getElementById('similarity-matrix-view').clientWidth
 			this.auxiliaryViewWidth = document.getElementById('auxiliary-function-overview').clientWidth
 
-			this.width = window.innerWidth - this.projectionViewWidth - this.auxiliaryViewWidth - this.margin.left - this.margin.right
+			// this.width = window.innerWidth - this.projectionViewWidth - this.auxiliaryViewWidth - this.margin.left - this.margin.right
+			this.width = window.innerWidth - this.auxiliaryViewWidth - this.margin.left - this.margin.right
 			this.height = window.innerHeight - this.margin.top - this.margin.bottom - this.toolbarHeight - this.footerHeight
 
 			this.sankeySVG = d3.select('#' + this.id)
@@ -268,8 +269,6 @@ export default {
 				if (inComing[nodeLabel] == undefined) {
 					inComing[nodeLabel] = 0;
 				}
-
-				console.log(outGoing, inComing)
 
 				node.out = outGoing[nodeLabel];
 				node.in = inComing[nodeLabel];

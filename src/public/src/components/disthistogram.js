@@ -37,7 +37,7 @@ export default {
             top: 10,
             right: 10,
             bottom: 10,
-            left: 20,
+            left: 30,
         },
         dataset_index: [],
         id: 'dist_histogram_view',
@@ -364,13 +364,13 @@ export default {
                     //     let value = temp * 0.000001
                     //     return `${xFormat(value)}s`
                     // }
-                    return `${temp}ms`;
+                    return `${temp.toFixed(2)}ms`;
                 });
 
             const yAxis = d3.axisLeft(this.histogramYScale)
                 .ticks(this.freq.length)
                 .tickFormat((d, i) => {
-                    return d;
+                    return d
                 })
             // .ticks(this.$store.numbOfRanks, '%');
 
@@ -520,6 +520,7 @@ export default {
 
                     const target_groupArray = this.groupProcess(target_processIDs).array;
 
+                    console.log(target_groupArray)
                     target_groupArray.forEach((group) => {
                         this.drawRankLines(group, target_processIDs, index, 'target')
                     })
