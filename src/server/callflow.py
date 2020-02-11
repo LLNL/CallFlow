@@ -350,7 +350,12 @@ class CallFlow:
         elif action_name == 'compare':
             compareDataset = action['compareDataset']
             targetDataset = action['targetDataset']
-            compare = Compare(self.states, compareDataset, targetDataset, 'time (inc)')
+            if(action['selectedMetric'] == 'Inclusive'):
+                selectedMetric = 'time (inc)'
+            elif(action['selectedMetric'] == 'Exclusive'):
+                selectedMetric = 'time'
+
+            compare = Compare(self.states, compareDataset, targetDataset, selectedMetric)
             return compare.result
 
     def displayStats(self, name):

@@ -42,13 +42,25 @@ export default {
             this.mean_max = 0
             this.mean_diff_min = 0
             this.mean_diff_max = 0
+
             for (let i = 0; i < data.length; i += 1) {
-                this.rank_min = Math.min(this.rank_min, data[i]['hist']['y_min'])
-                this.rank_max = Math.max(this.rank_max, data[i]['hist']['y_max'])
-                this.mean_min = Math.min(this.mean_min, data[i]['hist']['x_min'])
-                this.mean_max = Math.max(this.mean_max, data[i]['hist']['x_max'])
-                this.mean_diff_min = Math.min(this.mean_diff_min, data[i]['mean_diff'])
-                this.mean_diff_max = Math.max(this.mean_diff_max, data[i]['mean_diff'])
+                console.log(data[i]['mean_diff'], this.mean_diff_max, this.mean_diff_min)
+                if(this.$store.selectedMetric == 'Inclusive'){
+                    this.rank_min = Math.min(this.rank_min, data[i]['hist']['y_min'])
+                    this.rank_max = Math.max(this.rank_max, data[i]['hist']['y_max'])
+                    this.mean_min = Math.min(this.mean_min, data[i]['hist']['x_min'])
+                    this.mean_max = Math.max(this.mean_max, data[i]['hist']['x_max'])
+                    this.mean_diff_min = Math.min(this.mean_diff_min, data[i]['mean_diff'])
+                    this.mean_diff_max = Math.max(this.mean_diff_max, data[i]['mean_diff'])
+                }
+                else if(this.$store.selectedMetric == 'Exclusive'){
+                    this.rank_min = Math.min(this.rank_min, data[i]['hist']['y_min'])
+                    this.rank_max = Math.max(this.rank_max, data[i]['hist']['y_max'])
+                    this.mean_min = Math.min(this.mean_min, data[i]['hist']['x_min'])
+                    this.mean_max = Math.max(this.mean_max, data[i]['hist']['x_max'])
+                    this.mean_diff_min = Math.min(this.mean_diff_min, data[i]['mean_diff'])
+                    this.mean_diff_max = Math.max(this.mean_diff_max, data[i]['mean_diff'])
+                }
             }
 
             if (this.$store.selectedCompareMode == 'rankDiff') {
@@ -58,8 +70,9 @@ export default {
                 this.rankDiffRectangle()
             }
             else if (this.$store.selectedCompareMode == 'meanDiff') {
-                this.$store.meanDiffColor.setColorScale(this.mean_diff_min, this.mean_diff_max, this.$store.selectedRuntimeColorMap, this.$store.selectedColorPoint)
-                this.$parent.$refs.DistColorMap.update('meanDiff', data)
+                console.log(this.mean_diff_min, this.mean_diff_max)
+                this.$store.meanDiffColor.setColorScale(this.mean_diff_min, this.mean_diff_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
+                this.$parent.$refs.DistColorMap.updateWithMinMax('meanDiff', this.mean_diff_min, this.mean_diff_max)
                 this.meanDiffRectangle(data)
             }
         }
@@ -119,7 +132,6 @@ export default {
                 .attr('transform', (d) => {
                     return `translate(${d.x},${d.y})`
                 })
-            // .call(this.drag);
 
             this.nodes.selectAll('.dist-node')
                 .data(this.graph.nodes)
@@ -150,8 +162,8 @@ export default {
             this.hist_min = 0
             this.hist_max = 0
             for (let d in data) {
-                this.hist_min = Math.min(this.hist_min, data[d]['hist']['y_min'])
-                this.hist_max = Math.max(this.hist_max, data[d]['hist']['y_max'])
+                this.hist_min = Math.min(this.hist_min, data[d][this.$store.selectedMetric]['hist']['y_min'])
+                this.hist_max = Math.max(this.hist_max, data[d][this.$store.selectedMetric]['hist']['y_max'])
             }
             this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
             this.$parent.$refs.DistColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
@@ -170,11 +182,11 @@ export default {
                     .attr("x2", "0%")
                     .attr("y2", "100%");
 
-                let min_val = data[d][method]['y_min']
-                let max_val = data[d][method]['y_max']
+                let min_val = data[d][this.$store.selectedMetric][method]['y_min']
+                let max_val = data[d][this.$store.selectedMetric][method]['y_max']
 
-                let grid = data[d][method]['x']
-                let val = data[d][method]['y']
+                let grid = data[d][this.$store.selectedMetric][method]['x']
+                let val = data[d][this.$store.selectedMetric][method]['y']
 
                 for (let i = 0; i < grid.length; i += 1) {
                     let x = (i + i + 1) / (2 * grid.length)
@@ -210,20 +222,11 @@ export default {
                     return d3.rgb(this.$store.color.getColor(d));
                 })
                 .style('stroke-width', (d) => {
-                    return 5
+                    return 7
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
                     this.$store.selectedModule = d.module
-
-                    // this.cleardebugGradients()
-                    // this.debugGradients(this.data, selectedModule, 'hist')
-                    // this.debugGradients(this.data, selectedModule, 'kde')
-                    // this.clearQuantileLines()
-
-                    // Bring this back
-                    // this.clearLineGradients()
-                    // this.quantileLines()
 
                     this.$socket.emit('dist_hierarchy', {
                         module: d.id,
@@ -235,18 +238,18 @@ export default {
                         datasets: this.$store.actual_dataset_names,
                     })
 
-                    // this.$socket.emit('dist_auxiliary', {
-                    //     module: this.$store.selectedModule,
-                    //     datasets: this.$store.actual_dataset_names,
-                    //     sortBy: this.$store.auxiliarySortBy,
-                    // })
+                    this.$socket.emit('dist_auxiliary', {
+                        module: this.$store.selectedModule,
+                        datasets: this.$store.actual_dataset_names,
+                        sortBy: this.$store.auxiliarySortBy,
+                    })
                 })
                 .on('mouseover', (d) => {
                     self.$refs.ToolTip.render(self.graph, d)
                     this.$store.selectedNode = d
                 })
                 .on('mouseout', (d) => {
-                    // self.$refs.ToolTip.clear()
+                    self.$refs.ToolTip.clear()
                 })
 
             // Transition
@@ -259,7 +262,7 @@ export default {
                 })
                 .attr('height', d => d.height)
                 .style('stroke', (d) => {
-                    return 1;
+                    return 7;
                 })
                 .style("fill", (d, i) => {
                     return "url(#mean-gradient" + d.client_idx + ")"
@@ -350,6 +353,8 @@ export default {
                     .attr("x2", "0%")
                     .attr("y2", "100%");
 
+                print(d)
+
                 let min_val = d[method]['y_min']
                 let max_val = d[method]['y_max']
 
@@ -365,7 +370,7 @@ export default {
                     }
                     this.diffGradient.append("stop")
                         .attr("offset", 100 * x + "%")
-                        .attr("stop-color", this.$store.rankDiffColor.getColorByValue((val[i])))// / (max_val - min_val))))
+                        .attr("stop-color", this.$store.rankDiffColor.getColorByValue((val[i])))
                 }
             }
         },

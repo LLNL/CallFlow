@@ -248,3 +248,12 @@ def framesToPathLists(paths):
             curr_path.append(frame['name'])
         all_paths.append(curr_path)
     return all_paths
+
+def getPathListFromFrames(frames):
+    paths = []
+    for frame in frames:
+        path = []
+        for f in frame:
+            path.append(f['name'])
+        paths.append(path)
+    return path

@@ -198,24 +198,11 @@ class PreProcess:
 		# Add the path information from the node object
 		@tmp_wrap
 		def add_path(self):
-			print(self.df)
 			self.raiseExceptionIfNodeCountNotEqual(self.paths)
 			self.df["path"] = self.df["name"].apply(
-				lambda node_name: self.paths[node_name]
+				lambda node_name: utils.getPathListFromFrames(self.paths[node_name])
 			)
 			return self
-
-		def _map(self, attr):
-			ret = {}
-			for idx, row in self.df.iterrows():
-				node_df = self.state.lookup_with_node(row.node)
-				n_index = node_df["n_index"].tolist()
-				p_incTime = node_df[attr].tolist()
-				for idx in range(len(n_index)):
-					if n_index[idx] not in ret:
-						ret[n_index[idx]] = []
-					ret[n_index[idx]].append(p_incTime[idx])
-			return ret
 
 		@tmp_wrap
 		def add_incTime(self):

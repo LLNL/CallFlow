@@ -53,7 +53,6 @@ export default {
             for(const [idx, callsite] of Object.entries(graph.nodes)){
                 let callsite_module = callsite.module
                 let callsite_name = callsite.name
-                console.log(callsite_module, callsite_name)
                 this.render(callsite_name, callsite_module)
             }
         },
@@ -116,7 +115,6 @@ export default {
                             return (this.$parent.nodeWidth) - this.minimapYScale(freq[i])
                         },
                         'x': (d) => {
-                            console.log(node_dict.x, xVals[i])
                             return node_dict.x + this.minimapXScale(xVals[i])
                         },
                         'y': (d) => node_dict.y + this.minimapYScale(freq[i]),

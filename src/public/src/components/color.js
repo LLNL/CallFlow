@@ -423,7 +423,8 @@ export default class Color {
                 // .padding(this.colorPadding)
                 .domain([0, 1]);
         } else if (this.option == 'MeanDiff') {
-            this.meanDiffColorScale = chroma.scale('RdYlBu')
+            console.log(min, max)
+            this.meanDiffColorScale = chroma.scale('YlOrRd')
                 // .padding(this.colorPadding)
                 .domain([min, max]);
         } else if (this.option == 'RankDiff') {

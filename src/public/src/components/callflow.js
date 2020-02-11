@@ -71,7 +71,7 @@ export default {
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
 		metrics: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
-		selectedMetric: 'Exclusive',
+		selectedMetric: 'Inclusive',
 		runtimeColorMap: [],
 		distributionColorMap: [],
 		selectedRuntimeColorMap: "Reds",
@@ -179,6 +179,7 @@ export default {
 				this.$store.selectedTargetDataset = data['names'][0]
 				this.selectedTargetDataset = data['names'][0]
 			}
+
 			this.$store.maxExcTime = data['max_excTime']
 			this.$store.minExcTime = data['min_excTime']
 			this.$store.maxIncTime = data['max_incTime']
@@ -225,15 +226,14 @@ export default {
 		dist_group(data) {
 			data = JSON.parse(data)
 			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
-			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
 			console.log(this.initLoad, this.selectedData)
 			if (this.selectedData == 'Dataframe' && this.initLoad) {
-				this.$refs.Projection.init()
-				this.$refs.SimilarityMatrix.init()
+				// this.$refs.Projection.init()
+				// this.$refs.SimilarityMatrix.init()
 				this.$refs.DistgraphA.init(data)
 				this.$refs.DistHistogram.init()
 				this.$refs.AuxiliaryFunction.init()
-				this.$refs.RunInformation.init()
+				// this.$refs.RunInformation.init()
 				this.initLoad = false
 			} else if (this.selectedData == 'Graph' && this.initLoad) {
 				this.$refs.DistgraphB.init(data)
@@ -344,7 +344,6 @@ export default {
 				this.addEvent(document, "keypress", function (e) {
 					e = e || window.event;
 					if (e.keyCode == '97') {
-						console.log(self.presentationOrder, self.presentationPage)
 						self.sendRequest(self.presentationOrder[self.presentationPage])
 						self.presentationPage += 1
 					}
@@ -361,6 +360,7 @@ export default {
 					this.$socket.emit('cct', {
 						dataset: this.$store.selectedTargetDataset,
 						functionsInCCT: this.selectedFunctionsInCCT,
+						selectedMetric: this.selectedMetric,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
 					this.$socket.emit('group', {
@@ -414,9 +414,9 @@ export default {
 							algo: 'tsne'
 						})
 					}
-
 				}
 			}
+			console.log(this.$store)
 		},
 
 		sendRequest(request) {
@@ -739,6 +739,7 @@ export default {
 			this.$socket.emit('compare', {
 				targetDataset: this.$store.selectedTargetDataset,
 				compareDataset: this.$store.selectedCompareDataset,
+				selectedMetric:this.$store.selectedMetric
 			})
 		},
 
@@ -747,6 +748,7 @@ export default {
 			this.$socket.emit('compare', {
 				targetDataset: this.$store.selectedTargetDataset,
 				compareDataset: this.$store.selectedCompareDataset,
+				selectedMetric: this.$store.selectedMetric
 			})
 		},
 

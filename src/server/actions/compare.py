@@ -30,12 +30,12 @@ class Compare:
         self.col = col
         self.dataset1 = dataset1
         self.dataset2 = dataset2
+        print(self.dataset1, self.dataset2)
 
         # Calculate the max_rank.
-        self.max_rank1 = len(self.df1['rank'].unique())
-        self.max_rank2 = len(self.df2['rank'].unique())
+        self.max_rank1 = len(self.df1["rank"].unique())
+        self.max_rank2 = len(self.df2["rank"].unique())
         self.max_rank = max(self.max_rank1, self.max_rank2)
-
 
         self.result = self.run()
 
@@ -95,24 +95,23 @@ class Compare:
         name1 = np.asarray(node_df1["name"])
         dataset1 = np.array([self.dataset1 for _ in range(data1.shape[0])])
         module1 = np.asarray(node_df1["module"])
-        data1 = self.insertZeroRuntime(data1, rank1)
+        zero_inserted_data1 = self.insertZeroRuntime(data1, rank1)
 
         data2 = np.asarray(node_df2[self.col])
         name2 = np.asarray(node_df2["name"])
         rank2 = np.asarray(node_df2["rank"])
-        data2 = self.insertZeroRuntime(data2, rank2)
+        zero_inserted_data2 = self.insertZeroRuntime(data2, rank2)
+        print(len(data1), len(data2))
         dataset2 = np.array([self.dataset2 for _ in range(data2.shape[0])])
         module2 = np.asarray(node_df2["module"])
 
         name = name2
         module = module2
         dataset = np.concatenate([dataset1, dataset2], axis=0)
-        mean = np.mean([data1, data2], axis=0)
-        diff = data1 - data2
-        mean_diff = np.mean(data2)/self.max_rank2 - np.mean(data1)/self.max_rank1
-        print(node, np.mean(data2)/self.max_rank2 -np.mean(data1)/self.max_rank1)
-        if math.isnan(mean_diff):
-            mean_diff = 0
+        mean = np.mean([zero_inserted_data1, zero_inserted_data2], axis=0)
+        diff = zero_inserted_data1 - zero_inserted_data2
+        mean_diff = np.mean(data2) - np.mean(data1)
+        print(node, mean_diff)
 
         # calculate mean runtime.
         # np_mean_dist = np.array(tuple(self.clean_dict(diff).values()))
@@ -137,7 +136,7 @@ class Compare:
         # kde_y_min = np.min(kde_grid[1])
         # kde_y_max = np.max(kde_grid[1])
 
-        if(len(dist_list) != 0):
+        if len(dist_list) != 0:
             hist_grid = self.histogram(np.array(dist_list))
             hist_x_min = hist_grid[0][0]
             hist_x_max = hist_grid[0][-1]
@@ -153,11 +152,14 @@ class Compare:
             x = 0
             y = 0
 
-        print("hist ranges = {} {} {} {}\n"
-            .format(hist_x_min, hist_x_max, hist_y_min, hist_y_max))
+        print(
+            "hist ranges = {} {} {} {}\n".format(
+                hist_x_min, hist_x_max, hist_y_min, hist_y_max
+            )
+        )
 
         result = {
-            'name':node,
+            "name": node,
             # "dist": diff,
             "mean_diff": mean_diff,
             "bins": num_of_bins,
@@ -180,7 +182,6 @@ class Compare:
             "data_min": 0,
             "mean": mean.tolist(),
             "diff": diff.tolist(),
-            # "data_max": np_max_dist.tolist()
         }
 
         return result

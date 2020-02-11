@@ -20,11 +20,11 @@
 			</v-select>
 		</v-flex>
 		<v-spacer></v-spacer>
-		<v-flex xs2 class="ma-1">
+		<!-- <v-flex xs2 class="ma-1">
 			<v-select label="Exhibit mode" :items="exhibitModes" v-model="selectedExhibitMode"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateExhibitMode()">
 			</v-select>
-		</v-flex>
+		</v-flex> -->
 		<v-flex xs2 class="ma-1">
 			<v-select label="Graph to visualize" :items="formats" v-model="selectedFormat"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
@@ -200,7 +200,7 @@
 
 		<v-layout v-show="selectedMode == 'Ensemble' && selectedFormat == 'Callgraph'">
 			<splitpanes id="diffgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe' && parameter_analysis == true">
-				<splitpanes horizontal :splitpanes-size="20">
+				<!-- <splitpanes horizontal :splitpanes-size="20">
 					<span>
 						<RunInformation ref="RunInformation" />
 					</span>
@@ -211,8 +211,8 @@
 						<SimilarityMatrix ref="SimilarityMatrix" />
 					</span>
 
-				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="60">
+				</splitpanes> -->
+				<splitpanes horizontal :splitpanes-size="80">
 					<span>
 						<v-layout class="chip-container">
 							<v-chip class="chip" chips color="teal" label outlined clearable> {{ summaryChip }}

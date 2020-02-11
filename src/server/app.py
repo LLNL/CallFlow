@@ -524,12 +524,13 @@ class App:
         @sockets.on('compare', namespace='/')
         def compare(data):
             if self.debug:
-                self.print("[Request] Auxiliary: ", data)
+                self.print("[Request] Compare: ", data)
             result = self.callflow.update_dist(
                 {
                     "name": "compare",
                     "targetDataset": data["targetDataset"],
-                    "compareDataset": data["compareDataset"]
+                    "compareDataset": data["compareDataset"],
+                    "selectedMetric": data['selectedMetric']
                 }
             )
             emit('compare', result, json=True)

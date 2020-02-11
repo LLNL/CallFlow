@@ -14,10 +14,13 @@ import pandas as pd
 import networkx as nx
 from ast import literal_eval as make_tuple
 import math
+import utils
 
 class CCT:
     def __init__(self, state, functionsInCCT):
         number_of_nodes = len(state.df['name'].unique())
+
+        # Get the top most callsites from the CCT.
         if(number_of_nodes < int(functionsInCCT)):
             self.entire_graph = state.g
             self.entire_df = state.df
@@ -46,24 +49,13 @@ class CCT:
     def node_map(self, nodes, attr):
         ret = {}
         for node in nodes:
-            node_module = self.entire_df.loc[self.entire_df['name'] == node]['module'].unique()
-            if(len(node_module) > 0):
-                if(node_module[0] != 'nan'):
-
-                    data = self.entire_df.loc[self.entire_df['name'] == node][attr]
-
-                    if attr == 'time' or attr == 'time (inc)' or attr == 'imbalance_perc':
-                        if( not math.isnan(data.mean())):
-                            ret[node] = data.mean()
-                    else:
-                        if(len(data) > 0):
-                            val = list(set(data.tolist()))[0]
-                            if(val != 'NaN'):
-                                ret[node] = list(set(data.tolist()))[0]
-                            else:
-                                ret[node] = ''
-                        else:
-                            ret[node] = 's'
+            node_module = self.entire_df[self.entire_df['name'] == node]['module']
+            data = self.entire_df[self.entire_df['name'] == node][attr]
+            if attr == 'time' or attr == 'time (inc)' or attr == 'imbalance_perc':
+                if( not math.isnan(data.mean())):
+                    ret[node] = data.mean()
+            else:
+                ret[node] = list(set(data.tolist()))
         return ret
 
     def edge_map(self, edges, attr, source=None, orientation=None):
@@ -104,15 +96,18 @@ class CCT:
 
         return counter
 
-    def add_paths(self, path_name):
-        for idx, row in self.entire_df.iterrows():
-            if row.show_node:
-                path = row[path_name]
-                # TODO: Sometimes the path becomes a string. Find why it happens.
-                # If path becomes a string.
-                if isinstance(path, str):
-                    path = make_tuple(row[path_name])
-                self.g.add_path(path)
+    def add_paths(self, path):
+        path_df = self.entire_df[path].fillna("()")
+        paths = path_df.drop_duplicates().tolist()
+
+        for idx, path in enumerate(paths):
+            path = path.split(',')
+            if(len(path) >= 2):
+                source = path[-2].replace('[', '').replace(']', '').replace("'", '')
+                target = path[-1].replace('[', '').replace(']', '').replace("'", '')
+                edge = (source, target)
+
+                self.g.add_edge(source, target)
 
     def find_cycle(self, G, source=None, orientation=None):
         if not G.is_directed() or orientation in (None, 'original'):
