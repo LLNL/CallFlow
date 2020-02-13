@@ -1,29 +1,29 @@
 import Vue from 'vue'
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/antd.css'
-import Color from './color';
+import Color from './color/index';
 import Splitpanes from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
-import EventHandler from '../EventHandler'
+import EventHandler from './EventHandler'
 
 // Template import
 import tpl from '../html/callflow.html'
 
 // Single mode imports
-import Callgraph from './callgraph'
-import CCT from './cct'
-import Icicle from './icicle'
-import Scatterplot from './scatterplot'
-import Histogram from './histogram'
-import Function from './function'
+import Callgraph from './supergraph/index'
+import CCT from './cct/index'
+import Icicle from './moduleHierarchy/index'
+import Scatterplot from './runtimeScatterplot/index'
+import Histogram from './histogram/index'
+import Function from './function/index'
 
 // Ensemble mode imports
-import Distgraph from './distgraph'
-import SimilarityMatrix from './similarityMatrix'
-import Projection from './projection'
-import RunInformation from './runInformation'
-import AuxiliaryFunction from './auxiliaryFunction'
-import DistHistogram from './disthistogram'
+import Distgraph from './ensembleSupergraph/index'
+import SimilarityMatrix from './similarityMatrix/index'
+import Projection from './parameterProjection/index'
+import RunInformation from './parameterInformation/index'
+import AuxiliaryFunction from './auxiliaryFunction/index'
+import DistHistogram from './ensembleHistogram/index'
 
 import io from 'socket.io-client'
 
@@ -58,7 +58,7 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'CCT',
+		selectedFormat: 'Callgraph',
 		datasets: [],
 		selectedTargetDataset: '',
 		selectedDataset2: '',

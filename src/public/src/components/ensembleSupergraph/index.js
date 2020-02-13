@@ -1,13 +1,13 @@
-import tpl from '../html/distgraph.html'
-import Sankey from './distgraph/sankey'
-import DistNodes from './distgraph/nodes'
+import tpl from '../../html/distgraph.html'
+import Sankey from './sankey'
+import DistNodes from './nodes'
 // import IntermediateNodes from './callgraph/intermediateNodes'
-import MiniHistograms from './distgraph/miniHistograms'
-import DistEdges from './distgraph/edges'
-import Dataset from './distgraph/dataset.js'
+import MiniHistograms from './miniHistograms'
+import DistEdges from './edges'
+import Dataset from './dataset.js'
 import * as  d3 from 'd3'
-import EventHandler from './EventHandler.js'
-import DistColorMap from './distgraph/colormap'
+import EventHandler from '../EventHandler.js'
+import DistColorMap from './colormap'
 
 export default {
 	name: 'Distgraph',

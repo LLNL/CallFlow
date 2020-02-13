@@ -1,9 +1,9 @@
 import * as d3 from 'd3'
 import "d3-selection-multi";
-import adjacencyMatrixLayout from '../thirdParty/d3-adjacency-matrix-layout'
-import template from '../html/similarityMatrix.html'
+import adjacencyMatrixLayout from '../../thirdParty/d3-adjacency-matrix-layout'
+import template from '../../html/similarityMatrix.html'
 // import LiveMatrixColormap from './LiveMatrixColormap'
-import EventHandler from './EventHandler'
+import EventHandler from '../EventHandler'
 
 
 export default {

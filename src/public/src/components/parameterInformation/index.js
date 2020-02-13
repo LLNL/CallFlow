@@ -1,5 +1,5 @@
-import tpl from '../html/runInformation.html'
-import EventHandler from './EventHandler'
+import tpl from '../../html/runInformation.html'
+import EventHandler from '../EventHandler'
 
 export default {
     name: 'RunInformation',

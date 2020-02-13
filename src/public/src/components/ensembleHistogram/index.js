@@ -12,11 +12,11 @@
  * Please also read the LICENSE file for the MIT License notice.
  ***************************************************************************** */
 
-import tpl from '../html/distHistogram.html'
+import tpl from '../../html/distHistogram.html'
 import * as d3 from 'd3'
 import "d3-selection-multi"
-import ToolTip from './histogram/tooltip'
-import EventHandler from './EventHandler'
+import ToolTip from './tooltip'
+import EventHandler from '../EventHandler'
 
 // http://plnkr.co/edit/wfOx8615PnZh2CST301F?p=preview
 

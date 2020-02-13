@@ -12,15 +12,15 @@
  ***************************************************************************** */
 
 
-import tpl from '../html/callgraph.html'
-import preprocess from './callgraph/preprocess'
-import Sankey from './callgraph/sankey'
-import Nodes from './callgraph/nodes'
-import IntermediateNodes from './callgraph/intermediateNodes'
-import MiniHistograms from './callgraph/miniHistograms'
-import Edges from './callgraph/edges'
+import tpl from '../../html/callgraph.html'
+import preprocess from './preprocess'
+import Sankey from './sankey'
+import Nodes from './nodes'
+import IntermediateNodes from './intermediateNodes'
+import MiniHistograms from './miniHistograms'
+import Edges from './edges'
 // import CallbackEdges from './callgraph/callbackEdges'
-import ColorMap from './callgraph/colormap'
+import ColorMap from './colormap'
 import * as d3 from 'd3'
 
 export default {
@@ -152,7 +152,7 @@ export default {
 			link.attr("d", path);
 		},
 
-		// Add intermediate nodes. 
+		// Add intermediate nodes.
 		postProcess(nodes, edges) {
 			const temp_nodes = nodes.slice();
 			const temp_edges = edges.slice();

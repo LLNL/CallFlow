@@ -1,7 +1,7 @@
-import tpl from '../html/cct.html'
-import Nodes from './cct/nodes'
-import Edges from './cct/edges'
-import ColorMap from './cct/colormap'
+import tpl from '../../html/cct.html'
+import Nodes from './nodes'
+import Edges from './edges'
+import ColorMap from './colormap'
 
 import * as d3 from 'd3'
 import dagreD3 from 'dagre-d3/dist/dagre-d3';

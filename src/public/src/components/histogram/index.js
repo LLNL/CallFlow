@@ -11,10 +11,10 @@
  * Please also read the LICENSE file for the MIT License notice.
  ***************************************************************************** */
 
-import tpl from '../html/histogram.html'
+import tpl from '../../html/histogram.html'
 import * as d3 from 'd3'
 import "d3-selection-multi"
-import ToolTip from './histogram/tooltip'
+import ToolTip from './tooltip'
 
 export default {
     template: tpl,
@@ -73,7 +73,7 @@ export default {
             this.histogramHeight = this.boxHeight - this.histogramOffset;
             this.histogramWidth = this.boxWidth;
             this.histogramSVG = d3.select('#' + this.id)
-                .attrs({    
+                .attrs({
                     "width": this.boxWidth + this.padding.right + this.padding.left,
                     "height": this.boxHeight + this.padding.top + this.padding.bottom,
                     "transform": `translate(${this.padding.left}, ${this.padding.top})`
@@ -136,7 +136,7 @@ export default {
         setContainerHeight(newHeight) {
             this.containerHeight = newHeight
             this.height = this.containerHeight - this.margin.top - this.margin.bottom
-        },      
+        },
 
         array_unique(arr) {
             return arr.filter(function (value, index, self) {
@@ -275,7 +275,7 @@ export default {
                 })
                 .attr('width', (d) => {
                     return this.histogramXScale.bandwidth()
-                })  
+                })
                 .attr('height', (d) => {
                     let histFreq = d;
                     if (d < 1 && this.logScaleBool) {
@@ -444,7 +444,7 @@ export default {
                         }
 
                         rankLinesG.append('path')
-                            .attr('d', line)    
+                            .attr('d', line)
                             .attr('class', 'lineRank lineRank_' + idx)
                             .style('fill', (d) => {
                                 return "grey";

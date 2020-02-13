@@ -1,6 +1,6 @@
 import tpl from '../../html/distgraph/nodes.html'
 import * as d3 from 'd3'
-import EventHandler from '../../EventHandler'
+import EventHandler from '../EventHandler'
 
 export default {
     template: tpl,
@@ -11,7 +11,7 @@ export default {
         nidNameMap: {},
     }),
     sockets: {
-       
+
     },
     mounted() {
         EventHandler.$on('highlight_datasets', (datasets) => {
@@ -22,7 +22,7 @@ export default {
 
     methods: {
         init() {
-            this.svg = 
+            this.svg =
             this.text()
         },
 

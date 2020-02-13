@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
-import { lasso } from '../thirdParty/lasso';
-import template from '../html/projection.html'
-import EventHandler from './EventHandler.js'
+import { lasso } from '../../thirdParty/lasso';
+import template from '../../html/projection.html'
+import EventHandler from '../EventHandler.js'
 
 export default {
     name: 'Projection',
