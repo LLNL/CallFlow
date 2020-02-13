@@ -27,12 +27,21 @@ def lookup_with_name(df, name):
     return df.loc[df["name"] == name]
 
 # Input : ./xxx/xxx/yyy
-# Output: yyy
+# # Output: yyy
+# def sanitizeName(name):
+#     if name == None or isinstance(name, float):
+#         return "Unknown(NA)"
+#     name_split = name.split("/")
+#     return name_split[len(name_split) - 1]
+
 def sanitizeName(name):
-    if name == None or isinstance(name, float):
-        return "Unknown(NA)"
-    name_split = name.split("/")
-    return name_split[len(name_split) - 1]
+    print(name)
+    if('/' in name):
+        name_split = name.split("/")
+        print(name_split[len(name_split) - 1])
+        return name_split[len(name_split) - 1]
+    else:
+        return name
 
 def avg(l):
     """uses floating-point division."""
@@ -41,9 +50,11 @@ def avg(l):
 # Return the Callsite name from frame.
 def getNodeDictFromFrame(frame):
     if frame["type"] == "function":
-        return {"name": frame["name"], "line": "NA"}
+        return {"name": frame["name"], "line": "NA", "type": "function"}
     elif frame["type"] == "statement":
-        return {"name": frame["file"], "line": frame["line"]}
+        return {"name": frame["file"], "line": frame["line"], "type": "statement"}
+    elif frame['type'] == 'loop':
+        return {"name": frame['file'], "line": frame["line"], "type": "loop"}
 
 def getMaxIncTime(state):
     df = state.df
@@ -254,6 +265,11 @@ def getPathListFromFrames(frames):
     for frame in frames:
         path = []
         for f in frame:
-            path.append(f['name'])
+            if f['type'] == 'function':
+                path.append(f['name'])
+            elif f['type'] == 'statement':
+                path.append(f['file'])
+            elif f['type'] == 'loop':
+                path.append(f['file'])
         paths.append(path)
     return path

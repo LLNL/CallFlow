@@ -38,7 +38,7 @@ class Pipeline:
 
     # Pre-process the dataframe and Graph.
     def process(self, state, gf_type):
-        print(self.config.format, state.name)
+        log.info(f"Format: {self.config.format}, dataset: {state.name}")
         if(self.config.format[state.name] == 'hpctoolkit'):
             preprocess = (
                 PreProcess.Builder(state, gf_type)
@@ -47,8 +47,7 @@ class Pipeline:
                     .add_show_node()
                     .add_vis_node_name()
                     .add_dataset_name()
-                    .add_imbalance_perc()
-                    # .add_node_name_hpctoolkit()
+                    # .add_imbalance_perc()
                     .add_module_name_hpctoolkit()
                     .add_mod_index()
                     .add_path()
@@ -208,7 +207,7 @@ class Pipeline:
     # Read the ensemble graph and dataframe.
     def read_ensemble_gf(self):
         name = "ensemble"
-        log.info("[Process] Reading the union dataframe and graph")
+        log.info(f"[Process] Reading the union dataframe and graph : {name}")
         state = State(name)
         dirname = self.config.processed_path
         union_df_filepath = dirname + "/" + self.config.runName + "/" + name + "_df.csv"
@@ -261,12 +260,13 @@ class Pipeline:
         #     state.group_df = pd.read_csv(group_df_file_path)
         # state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
 
-        state.projection_data = {}
-        for line in open(parameters_filepath, "r"):
-            s = 0
-            for num in line.strip().split(","):
-                split_num = num.split("=")
-                state.projection_data[split_num[0]] = split_num[1]
+        if(self.config.runName.split('_')[0] == 'osu_bcast'):
+            state.projection_data = {}
+            for line in open(parameters_filepath, "r"):
+                s = 0
+                for num in line.strip().split(","):
+                    split_num = num.split("=")
+                    state.projection_data[split_num[0]] = split_num[1]
 
         return state
 

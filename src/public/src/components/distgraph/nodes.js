@@ -27,6 +27,7 @@ export default {
             console.log("[Gradient] Data:", data)
             this.data = data
             this.setupMeanGradients(data)
+            console.log("Store:", this.$store)
         },
 
         compare(data) {
@@ -483,25 +484,30 @@ export default {
             for (let i = 0; i < this.$store.graph.nodes.length; i++) {
                 let callsite_name = this.$store.graph.nodes[i].name
                 let node_data = this.$store.graph.nodes[i]
-                let mean_inclusive_data = this.$store.callsites[dataset][callsite_name]['mean_time (inc)']
-                let max_inclusive_data = this.$store.callsites['ensemble'][callsite_name]['max_time (inc)']
+                console.log(this.$store.callsites)
+                if( this.$store.callsites[dataset][callsite_name] != undefined){
+                    console.log(callsite_name)
+                    let mean_inclusive_data = this.$store.callsites[dataset][callsite_name]['mean_time (inc)']
+                    let max_inclusive_data = this.$store.callsites['ensemble'][callsite_name]['max_time (inc)']
 
-                let x1 = node_data.x - this.nodeWidth
-                let x2 = node_data.x
-                let y1 = 0
-                let y2 = (node_data.height * mean_inclusive_data) / max_inclusive_data
+                    let x1 = node_data.x - this.nodeWidth
+                    let x2 = node_data.x
+                    let y1 = 0
+                    let y2 = (node_data.height * mean_inclusive_data) / max_inclusive_data
 
-                d3.select('#dist-node_' + this.graph.nodeMap[node_data['name']])
-                    .append('line')
-                    .attr("class", 'targetLines')
-                    .attr("id", 'line-2-' + dataset + '-' + node_data['client_idx'])
-                    .attr("x1", 0)
-                    .attr("y1", y2)
-                    .attr("x2", this.nodeWidth)
-                    .attr("y2", y2)
-                    .attr("stroke-width", 5)
-                    .attr("stroke", this.$store.color.target)
-            }
+                    d3.select('#dist-node_' + this.graph.nodeMap[node_data['name']])
+                        .append('line')
+                        .attr("class", 'targetLines')
+                        .attr("id", 'line-2-' + dataset + '-' + node_data['client_idx'])
+                        .attr("x1", 0)
+                        .attr("y1", y2)
+                        .attr("x2", this.nodeWidth)
+                        .attr("y2", y2)
+                        .attr("stroke-width", 5)
+                        .attr("stroke", this.$store.color.target)
+                }
+                }
+
         },
 
         path() {

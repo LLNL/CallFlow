@@ -16,7 +16,7 @@ import math
 import json
 from ast import literal_eval as make_tuple
 
-class CallGraph(nx.Graph):
+class SuperGraph(nx.Graph):
     def __init__(self, state, path_name, add_info, group_by):
         super(CallGraph, self).__init__()
         self.state = state

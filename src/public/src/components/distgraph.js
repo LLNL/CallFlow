@@ -87,6 +87,7 @@ export default {
 			// this.$refs.CallbackEdges.clear()
 			this.$refs.MiniHistograms.clear()
 			this.$refs.DistColorMap.clear()
+			this.$refs.DistColorMap.clearMetric()
 		},
 
 		render(data) {

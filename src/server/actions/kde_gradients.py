@@ -109,7 +109,7 @@ class KDE_gradients:
 
             name = node[0]
             data = node[1]
-
+            print(data, name)
             module = data["module"]
             function = data["name"]
             vis_node_name = data["name"]
