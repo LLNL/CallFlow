@@ -78,7 +78,6 @@ export default {
         },
 
         drawText() {
-            console.log(this.colorMin, this.colorMax)
             // draw the element
             this.scaleG.append("text")
                 .style("fill", "black")
@@ -96,13 +95,11 @@ export default {
                 .style("font-size", "14px")
                 .attrs({
                     "dy": ".35em",
-                    "text-anchor": "middle", 
+                    "text-anchor": "middle",
                     "class": "colormap-text",
                     'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - 2*this.padding.bottom})`,
                 })
                 .text(this.colorMax*0.000001 + "s");
-
-            
         },
 
         clear() {

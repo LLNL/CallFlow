@@ -152,6 +152,9 @@
 			<splitpanes id="callgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe'">
 				<splitpanes horizontal :splitpanes-size="30">
 					<span>
+						<Function ref="Function" />
+					</span>
+					<span>
 						<Scatterplot ref="Scatterplot" />
 					</span>
 					<span>
@@ -168,26 +171,6 @@
 					</span>
 				</splitpanes>
 			</splitpanes>
-
-			<splitpanes id="callgraph-dashboard-2" class="default-theme" v-show="selectedData == 'Graph'">
-				<splitpanes horizontal :splitpanes-size="30">
-					<span>
-						<Function ref="Function" />
-					</span>
-					<span>
-						<Icicle ref="Icicle" />
-					</span>
-				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="70">
-					<span>
-						<Callgraph ref="CallgraphB" />
-					</span>
-					<span>
-						<!-- <Callgraph2 ref="Callgraph2" /> -->
-					</span>
-				</splitpanes>
-			</splitpanes>
-
 		</v-layout>
 
 		<v-layout v-show="selectedFormat == 'CCT'">
@@ -208,6 +191,9 @@
 						<Projection ref="Projection" @compare="updateCompareMode" />
 					</span> -->
 					<span>
+						<EnsembleScatterplot ref="EnsembleScatterplot"/>
+					</span>
+					<span>
 						<SimilarityMatrix ref="SimilarityMatrix" />
 					</span>
 
@@ -226,10 +212,10 @@
 						<AuxiliaryFunction ref="AuxiliaryFunction" />
 					</span>
 					<span>
-						<Icicle ref="Icicle" />
+						<ModuleHierarchy ref="ModuleHierarchy" />
 					</span>
 					<span>
-						<DistHistogram ref="DistHistogram" />
+						<EnsembleHistogram ref="EnsembleHistogram" />
 					</span>
 				</splitpanes>
 

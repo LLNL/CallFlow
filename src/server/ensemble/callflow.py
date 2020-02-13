@@ -146,7 +146,6 @@ class EnsembleCallFlow:
                 "datasets": action["datasets"]
             })
             nx = CCT(self.states["ensemble"], action["functionsInCCT"])
-            print(nx.g)
             return nx.g
 
         elif action_name == "group":
@@ -196,7 +195,7 @@ class EnsembleCallFlow:
             return self.similarities
 
         elif action_name == "hierarchy":
-            mH = moduleHierarchyDist(self.states["ensemble"], action["module"])
+            mH = ModuleHierarchy(self.states["ensemble"], action["module"])
             return mH.result
 
         elif action_name == "projection":

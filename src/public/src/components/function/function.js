@@ -1,4 +1,4 @@
-import tpl from '../../html/function.html'
+import tpl from '../../html/function/index.html'
 import * as  d3 from 'd3'
 
 export default {

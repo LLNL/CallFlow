@@ -1,4 +1,4 @@
-import tpl from '../../html/cct.html'
+import tpl from '../../html/cct/index.html'
 import Nodes from './nodes'
 import Edges from './edges'
 import ColorMap from './colormap'

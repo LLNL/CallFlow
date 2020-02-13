@@ -171,7 +171,7 @@ class App:
             })
             print(self.config)
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
-            emit("init", config_json, json=True)
+            emit("config", config_json, json=True)
 
         @sockets.on("reset", namespace="/")
         def filter(data):
@@ -189,18 +189,6 @@ class App:
             result = self.callflow.request(obj)
             emit("reset", result, json=True)
 
-        @sockets.on("tooltip", namespace="/")
-        def tooltip(data):
-            if self.debug:
-                self.print("[Request] Tooltip of node", data)
-            result = self.callflow.update(
-                {
-                    "name": "tooltip",
-                    "dataset": data["dataset"],
-                    "module": data["module"],
-                }
-            )
-
         @sockets.on("single_cct", namespace="/")
         def cct(data):
             if self.debug:
@@ -214,10 +202,10 @@ class App:
                 }
             )
             result = json_graph.node_link_data(g)
-            emit("cct", result, json=True)
+            emit("single_cct", result, json=True)
 
-        @sockets.on("splitcaller", namespace="/")
-        def split_rank(data):
+        @sockets.on("split_caller", namespace="/")
+        def split_caller(data):
             if self.debug:
                 self.print("[Request] Split callgraph by rank", data)
 
@@ -226,11 +214,11 @@ class App:
             #     "dataset1": data['dataset1'],
             #     "split": data['split']
             # })
-            emit("splitcaller", {}, json=True)
+            emit("split_caller", {}, json=True)
 
 
-        @sockets.on("dist_scatterplot", namespace="/")
-        def distscatterplot(data):
+        @sockets.on("ensemble_scatterplot", namespace="/")
+        def ensemble_scatterplot(data):
             if self.debug:
                 self.print("[Request] Dist-Scatterplot request for module.")
             result = self.callflow.request(
@@ -244,10 +232,10 @@ class App:
                     "plot": data["plot"],
                 }
             )
-            emit("dist_scatterplot", result, json=True)
+            emit("ensemble_scatterplot", result, json=True)
 
         @sockets.on("comp_cct", namespace="/")
-        def compcct(data):
+        def comp_cct(data):
             if self.debug:
                 self.print("[Request] Comp-CCT for the two datasets.", data)
             g1 = self.callflow.request(
@@ -273,7 +261,7 @@ class App:
             )
 
         @sockets.on("ensemble_cct", namespace="/")
-        def distcct(data):
+        def ensemble_cct(data):
             if self.debug:
                 self.print("[Request] Dist-CCT for the two datasets.", data)
 
@@ -285,10 +273,10 @@ class App:
                 }
             )
             result = json_graph.node_link_data(ensemble_cct)
-            emit("cct", result, json=True)
+            emit("ensemble_cct", result, json=True)
 
-        @sockets.on("dist_group", namespace="/")
-        def dist(data):
+        @sockets.on("ensemble_supergraph", namespace="/")
+        def ensemble_supergraph(data):
             result = {}
             if self.debug:
                 self.print("[Request] Dist the dataset.", data)
@@ -299,28 +287,10 @@ class App:
             )
             result = json_graph.node_link_data(nx_graph)
             result = json.dumps(result)
-            # print(utils.is_json(json.dumps(result))
-            emit("dist_group", result, json=True)
+            emit("ensemble_supergraph", result, json=True)
 
-        @sockets.on("dist_group_highlight", namespace="/")
-        def dist(data):
-            result = {}
-            if self.debug:
-                self.print("[Group highlight] Dist the dataset.", data)
-            datasets = data["datasets"]
-            groupBy = data["groupBy"].lower()
-            nx_graph = self.callflow.request(
-                {"name": "group", "groupBy": groupBy, "datasets": datasets}
-            )
-            result = json_graph.node_link_data(nx_graph)
-            adjList = nx.adjacency_matrix(nx_graph).todense()
-            # result['adj_matrix'] = json.dumps({'test': adjList}, cls=NDArrayEncoder, indent=4)
-            result = json.dumps(result)
-
-            emit("dist_group_highlight", result, json=True)
-
-        @sockets.on("dist_gradients", namespace="/")
-        def gradients(data):
+        @sockets.on("ensemble_gradients", namespace="/")
+        def ensemble_gradients(data):
             result = {}
             if self.debug:
                 self.print("[Request] Gradients for all datasets", data)
@@ -331,10 +301,10 @@ class App:
                     "plot": data["plot"],
                 }
             )
-            emit("dist_gradients", result, json=True)
+            emit("ensemble_gradients", result, json=True)
 
-        @sockets.on("dist_similarity", namespace="/")
-        def similarity(data):
+        @sockets.on("ensemble_similarity", namespace="/")
+        def ensemble_similarity(data):
             result = {}
             if self.debug:
                 self.print("[Request] Similarity of the datasets", data)
@@ -348,8 +318,8 @@ class App:
             )
             emit("dist_similarity", result, json=True)
 
-        @sockets.on("dist_hierarchy", namespace="/")
-        def dist_hierarchy(data):
+        @sockets.on("module_hierarchy", namespace="/")
+        def module_hierarchy(data):
             if self.debug:
                 self.print("[Request] Topology of the module", data)
             result = self.callflow.request(
@@ -359,11 +329,10 @@ class App:
                     "module": data["module"],
                 }
             )
-            print(result)
-            emit("dist_hierarchy", result, json=True)
+            emit("module_hierarchy", result, json=True)
 
-        @sockets.on("dist_projection", namespace="/")
-        def dist_projection(data):
+        @sockets.on("parameter_projection", namespace="/")
+        def parameter_projection(data):
             if self.debug:
                 self.print("[Request] Projection for the runs", data)
 
@@ -374,21 +343,20 @@ class App:
                     "algo": data["algo"],
                 }
             )
-            emit("dist_projection", result, json=True)
+            emit("parameter_projection", result, json=True)
 
-        @sockets.on("run_information", namespace="/")
-        def run_information(data):
+        @sockets.on("parameter_information", namespace="/")
+        def parameter_information(data):
             if self.debug:
                 self.print("[Request] Run information: ", data)
 
             result = self.callflow.request(
                 {"name": "run-information", "datasets": data["datasets"]}
             )
-            print(result)
-            emit("run_information", json.dumps(result), json=True)
+            emit("parameter_information", json.dumps(result), json=True)
 
-        @sockets.on("dist_auxiliary", namespace="/")
-        def run_information(data):
+        @sockets.on("ensemble_auxiliary", namespace="/")
+        def ensemble_auxiliary(data):
             if self.debug:
                 self.print("[Request] Auxiliary: ", data)
             result = self.callflow.request(
@@ -399,7 +367,7 @@ class App:
                     "module": data['module']
                 }
             )
-            emit("auxiliary", result, json=True)
+            emit("ensemble_auxiliary", result, json=True)
 
         @sockets.on('compare', namespace='/')
         def compare(data):

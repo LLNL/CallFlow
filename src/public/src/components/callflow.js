@@ -1,31 +1,34 @@
 import Vue from 'vue'
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/antd.css'
-import Color from './color/index';
+
+import Color from './color/color';
 import Splitpanes from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
+
 import EventHandler from './EventHandler'
 
 // Template import
 import tpl from '../html/callflow.html'
 
 // Single mode imports
-import Callgraph from './supergraph/index'
-import CCT from './cct/index'
-import Icicle from './moduleHierarchy/index'
-import Scatterplot from './runtimeScatterplot/index'
-import Histogram from './histogram/index'
-import Function from './function/index'
+import Callgraph from './supergraph/supergraph'
+import CCT from './cct/cct'
+import Scatterplot from './runtimeScatterplot/runtimeScatterplot'
+import Histogram from './histogram/histogram'
+import Function from './function/function'
 
 // Ensemble mode imports
-import Distgraph from './ensembleSupergraph/index'
-import SimilarityMatrix from './similarityMatrix/index'
-import Projection from './parameterProjection/index'
-import RunInformation from './parameterInformation/index'
-import AuxiliaryFunction from './auxiliaryFunction/index'
-import DistHistogram from './ensembleHistogram/index'
+import Distgraph from './ensembleSupergraph/ensembleSupergraph'
+import SimilarityMatrix from './similarityMatrix/similarityMatrix'
+import ParameterProjection from './parameterProjection/parameterProjection'
+import RunInformation from './parameterInformation/parameterInformation'
+import AuxiliaryFunction from './auxiliaryFunction/auxiliaryFunction'
+import EnsembleHistogram from './ensembleHistogram/ensembleHistogram'
+import ModuleHierarchy from './moduleHierarchy/moduleHierarchy'
 
 import io from 'socket.io-client'
+import utils from '../utils'
 
 export default {
 	name: 'CallFlow',
@@ -38,13 +41,13 @@ export default {
 		Scatterplot,
 		Function,
 		Histogram,
-		Icicle,
+		ModuleHierarchy,
 		Distgraph,
 		SimilarityMatrix,
-		Projection,
-		RunInformation,
+		// ParameterProjection,
+		// RunInformation,
 		AuxiliaryFunction,
-		DistHistogram,
+		EnsembleHistogram,
 	},
 
 	data: () => ({
@@ -114,13 +117,13 @@ export default {
 		selectedExhibitMode: 'Default',
 		presentationOrder: [
 			"run_information",
-			"dist_group",
-			"dist_gradients",
-			"dist-mini-histogram",
-			"dist_hierarchy",
-			"dist_auxiliary",
-			"dist_similarity",
-			"dist_projection",
+			"ensemble_supergraph",
+			"ensemble_gradients",
+			"ensemble_mini_histogram",
+			"module_hierarchy",
+			"ensemble_auxiliary",
+			"ensemble_similarity",
+			"ensemble_projection",
 		],
 		parameter_analysis: true,
 	}),
@@ -129,17 +132,6 @@ export default {
 
 	mounted() {
 		var socket = io.connect(this.server, { reconnect: false });
-
-		// Check socket connection.
-		console.log('Socket connection check-1 : ', socket.connected);
-		socket.on('connect', function () {
-			console.log('Socket connection check 2: ', socket.connected);
-		});
-
-		// Raise an exception if the socket fails to connect
-		socket.on('connect_error', function (err) {
-			console.log('Socket error: ', err);
-		});
 
 		this.$socket.emit('config')
 	},
@@ -151,7 +143,7 @@ export default {
 
 		// Assign variables for the store and Callflow ui component.
 		// Assign colors and min, max inclusive and exclusive times.
-		init(data) {
+		config(data) {
 			data = JSON.parse(data)
 			console.log("Config file contains: ", data)
 			this.numOfDatasets = data['datasets'].length
@@ -209,7 +201,7 @@ export default {
 		},
 
 		// Fetch aggregated graph for single mode.
-		group(data) {
+		single_supergraph(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
 			if (this.selectedData == 'Dataframe') {
 				this.$refs.CallgraphA.init(data)
@@ -222,13 +214,17 @@ export default {
 			this.$refs.Icicle.init()
 		},
 
+		cct(data){
+			this.$refs.CCT.init(data['union'], '2')
+		},
+
 		// Fetch aggregated graph (Super graph) for distribution mode.
-		dist_group(data) {
+		ensemble_supergraph(data) {
 			data = JSON.parse(data)
 			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
 			console.log(this.initLoad, this.selectedData)
 			if (this.selectedData == 'Dataframe' && this.initLoad) {
-				this.$refs.Projection.init()
+				// this.$refs.ParameterProjection.init()
 				this.$refs.SimilarityMatrix.init()
 				this.$refs.DistgraphA.init(data)
 				this.$refs.DistHistogram.init()
@@ -246,20 +242,6 @@ export default {
 			}
 		},
 
-		dist_group_highlight(data) {
-			data = JSON.parse(data)
-			console.log("Group highlight for", this.selectedFormat, ": [", this.selectedMode, "]", data)
-			// DFS(data, "libmonitor.so.0.0.0=<program root>", true, true)
-			if (this.selectedData == 'Dataframe' && this.initLoad) {
-				this.$refs.DistgraphA.init(data)
-			} else if (this.selectedData == 'Graph' && this.initLoad) {
-				this.$refs.DistgraphB.init(data)
-			}
-			else {
-				this.$refs.DistgraphA.init(data)
-			}
-		},
-
 		// Fetch CCT for distribution mode.
 		comp_cct(data) {
 			console.log("Diff CCT data: ", data)
@@ -267,12 +249,12 @@ export default {
 			this.$refs.DistCCT2.init(data[this.$store.selectedTargetDataset], '2')
 		},
 
-		dist_cct(data) {
+		ensemble_cct(data) {
 			console.log("Dist cct data: ", data)
 			this.$refs.CCT.init(data['union'], '2')
 		},
 
-		dist_mini_histogram(data) {
+		ensemble_mini_histogram(data) {
 			data = JSON.parse(data)
 			this.createNodeInfoStore(data)
 			this.$refs.DistHistogram.render(this.defaultCallSite)
@@ -340,14 +322,7 @@ export default {
 		init() {
 			this.presentationPage = 0
 			if (this.selectedExhibitMode == 'Presentation') {
-				let self = this
-				this.addEvent(document, "keypress", function (e) {
-					e = e || window.event;
-					if (e.keyCode == '97') {
-						self.sendRequest(self.presentationOrder[self.presentationPage])
-						self.presentationPage += 1
-					}
-				});
+				this.enablePresentationMode()
 			}
 			// Initialize colors
 			this.colors()
@@ -363,7 +338,7 @@ export default {
 						selectedMetric: this.selectedMetric,
 					})
 				} else if (this.selectedFormat == 'Callgraph') {
-					this.$socket.emit('group', {
+					this.$socket.emit('single_supergraph', {
 						dataset: this.$store.selectedTargetDataset,
 						format: this.selectedFormat,
 						groupBy: this.selectedGroupBy
@@ -379,31 +354,31 @@ export default {
 					})
 				} else if (this.selectedFormat == 'Callgraph' && this.selectedExhibitMode == 'Default') {
 					if (this.parameter_analysis) {
-						this.$socket.emit('run_information', {
+						this.$socket.emit('parameter_information', {
 							datasets: this.$store.actual_dataset_names,
 						})
 					}
 
-					this.$socket.emit('dist_auxiliary', {
+					this.$socket.emit('ensemble_auxiliary', {
 						datasets: this.$store.actual_dataset_names,
 						sortBy: this.$store.auxiliarySortBy,
 						module: 'all'
 					})
 
-					this.$socket.emit('dist_group', {
+					this.$socket.emit('ensemble_supergraph', {
 						datasets: this.$store.actual_dataset_names,
 						groupBy: this.selectedGroupBy
 					})
 
-					// if(this.parameter_analysis){
-					// 	this.$socket.emit('dist_similarity', {
-					// 		datasets: this.$store.actual_dataset_names,
-					// 		algo: 'deltacon',
-					// 		module: 'all'
-					// 	})
-					// }
+					if(this.parameter_analysis){
+						this.$socket.emit('ensemble_similarity', {
+							datasets: this.$store.actual_dataset_names,
+							algo: 'deltacon',
+							module: 'all'
+						})
+					}
 
-					this.$socket.emit('dist_gradients', {
+					this.$socket.emit('ensemble_gradients', {
 						datasets: this.$store.actual_dataset_names,
 						plot: 'kde'
 					})
@@ -418,59 +393,6 @@ export default {
 			}
 		},
 
-		sendRequest(request) {
-			console.log(request)
-			switch (request) {
-				case 'run_information':
-					this.$socket.emit('run_information', {
-						datasets: this.$store.actual_dataset_names,
-					})
-					break;
-				case 'dist_group':
-					this.$socket.emit('dist_group', {
-						datasets: this.$store.actual_dataset_names,
-						groupBy: this.selectedGroupBy
-					})
-					break;
-				case 'dist-mini-histogram':
-					this.$socket.emit('dist-mini-histogram', {
-						'target-datasets': [this.$store.selectedTargetDataset],
-					})
-					break;
-				case 'dist_similarity':
-					this.$socket.emit('dist_similarity', {
-						datasets: this.$store.actual_dataset_names,
-						algo: 'deltacon',
-						module: 'all'
-					})
-					break;
-				case 'dist_gradients':
-					this.$socket.emit('dist_gradients', {
-						datasets: this.$store.actual_dataset_names,
-						plot: 'kde'
-					})
-					break;
-				case 'dist_projection':
-					this.$socket.emit('dist_projection', {
-						datasets: this.$store.actual_dataset_names,
-						algo: 'tsne'
-					})
-					break;
-				case 'dist_auxiliary':
-					this.$socket.emit('dist_auxiliary', {
-						datasets: this.$store.actual_dataset_names,
-						sortBy: this.$store.auxiliarySortBy,
-						module: 'all'
-					})
-					break;
-				case 'dist_hierarchy':
-					this.$socket.emit('dist_hierarchy', {
-						module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
-						datasets: this.$store.actual_dataset_names,
-					})
-					break;
-			}
-		},
 
 		colors() {
 			this.$store.color = new Color(this.selectedMetric)
@@ -555,14 +477,14 @@ export default {
 			}
 			// this.$store.selectedTargetDataset = min_inclusive_dataset
 			// this.selectedTargetDataset = min_inclusive_dataset
-			// this.$store.selectedTargetDataset = '512-cores'
-			// this.selectedTargetDataset = '512-cores'
-			this.$store.selectedTargetDataset = 'impi'
-			this.selectedTargetDataset = 'impi'
+			this.$store.selectedTargetDataset = '512-cores'
+			this.selectedTargetDataset = '512-cores'
+			// this.$store.selectedTargetDataset = 'impi'
+			// this.selectedTargetDataset = 'impi'
 			// this.$store.selectedTargetDataset = 'osu_bcast.1.10.2019-09-04_00-28-19'
 			// this.selectedTargetDataset = 'osu_bcast.1.10.2019-09-04_00-28-19'
-			this.$store.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
-			this.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
+			// this.$store.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
+			// this.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
 
@@ -652,7 +574,6 @@ export default {
 
 			})
 		},
-
 
 		updateColor() {
 			this.clearLocal()
@@ -781,16 +702,7 @@ export default {
 			this.init()
 		},
 
-		fileSelected(e) {
-			if (this.selectedCallback) {
-				if (e.target.files[0]) {
-					this.selectedCallback(e.target.files[0]);
-				} else {
-					this.selectedCallback(null);
-				}
-			}
-		},
-
+		// Presentation mode.
 		addEvent(element, eventName, callback) {
 			if (element.addEventListener) {
 				element.addEventListener(eventName, callback, false);
@@ -798,6 +710,71 @@ export default {
 				element.attachEvent("on" + eventName, callback);
 			} else {
 				element["on" + eventName] = callback;
+			}
+		},
+
+		enablePresentationMode(){
+			let self = this
+			this.addEvent(document, "keypress", function (e) {
+				e = e || window.event;
+				if (e.keyCode == '97') {
+					self.sendPresentationRequest(self.presentationOrder[self.presentationPage])
+					self.presentationPage += 1
+				}
+			});
+		},
+
+		sendPresentationRequest(request) {
+			console.log(request)
+			switch (request) {
+				case 'run_information':
+					this.$socket.emit('run_information', {
+						datasets: this.$store.actual_dataset_names,
+					})
+					break;
+				case 'dist_group':
+					this.$socket.emit('dist_group', {
+						datasets: this.$store.actual_dataset_names,
+						groupBy: this.selectedGroupBy
+					})
+					break;
+				case 'dist-mini-histogram':
+					this.$socket.emit('dist-mini-histogram', {
+						'target-datasets': [this.$store.selectedTargetDataset],
+					})
+					break;
+				case 'dist_similarity':
+					this.$socket.emit('dist_similarity', {
+						datasets: this.$store.actual_dataset_names,
+						algo: 'deltacon',
+						module: 'all'
+					})
+					break;
+				case 'dist_gradients':
+					this.$socket.emit('dist_gradients', {
+						datasets: this.$store.actual_dataset_names,
+						plot: 'kde'
+					})
+					break;
+				case 'dist_projection':
+					this.$socket.emit('dist_projection', {
+						datasets: this.$store.actual_dataset_names,
+						algo: 'tsne'
+					})
+					break;
+				case 'dist_auxiliary':
+					this.$socket.emit('dist_auxiliary', {
+						datasets: this.$store.actual_dataset_names,
+						sortBy: this.$store.auxiliarySortBy,
+						module: 'all'
+					})
+					break;
+				case 'dist_hierarchy':
+					this.$socket.emit('dist_hierarchy', {
+						module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
+						datasets: this.$store.actual_dataset_names,
+					})
+					break;
 			}
 		}
 
