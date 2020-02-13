@@ -17,7 +17,7 @@ Array.prototype.SumArray = function (arr) {
 }
 
 /** Deep copy the given object considering circular structure.
- **This function caches all nested objects and its copies.*If it detects 
+ **This function caches all nested objects and its copies.*If it detects
  circular structure, use cached copy to avoid infinite loop.*
     *
     @param {
@@ -59,4 +59,17 @@ export function deepCopy(obj, cache = []) {
     })
 
     return copy
+}
+
+export function checkSocketConnection(socket){
+    	// Check socket connection.
+		console.log('Socket connection check-1 : ', socket.connected);
+		socket.on('connect', function () {
+			console.log('Socket connection check 2: ', socket.connected);
+		});
+
+		// Raise an exception if the socket fails to connect
+		socket.on('connect_error', function (err) {
+			console.log('Socket error: ', err);
+		});
 }

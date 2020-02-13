@@ -22,7 +22,6 @@ class Auxiliary:
         self.sortBy = sortBy
         self.target_df = {}
         self.datasets = datasets
-        # self.df['id'] = self.df['name'].apply(self.addID)
 
         if module != 'all':
             # Processing for the module format to get the module name

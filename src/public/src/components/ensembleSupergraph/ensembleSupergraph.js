@@ -1,4 +1,4 @@
-import tpl from '../../html/distgraph.html'
+import tpl from '../../html/ensembleSupergraph/index.html'
 import Sankey from './sankey'
 import DistNodes from './nodes'
 // import IntermediateNodes from './callgraph/intermediateNodes'

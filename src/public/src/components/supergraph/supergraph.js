@@ -12,7 +12,7 @@
  ***************************************************************************** */
 
 
-import tpl from '../../html/callgraph.html'
+import tpl from '../../html/supergraph/index.html'
 import preprocess from './preprocess'
 import Sankey from './sankey'
 import Nodes from './nodes'

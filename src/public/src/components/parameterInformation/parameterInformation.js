@@ -1,8 +1,8 @@
-import tpl from '../../html/runInformation.html'
+import tpl from '../../html/parameterInformation/index.html'
 import EventHandler from '../EventHandler'
 
 export default {
-    name: 'RunInformation',
+    name: 'ParameterInformation',
     template: tpl,
     data: () => ({
         selected: {},

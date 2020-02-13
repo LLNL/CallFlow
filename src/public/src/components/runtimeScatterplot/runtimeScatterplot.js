@@ -10,12 +10,12 @@
  * https://github.com/LLNL/CallFlow
  * Please also read the LICENSE file for the MIT License notice.
  ******************************************************************************/
-import tpl from '../../html/scatterplot.html'
+import tpl from '../../html/runtimeScatterplot/index.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
 
 export default {
-	name: 'Scatterplot',
+	name: 'RuntimeScatterplot',
 	template: tpl,
 	components: {
 		ToolTip

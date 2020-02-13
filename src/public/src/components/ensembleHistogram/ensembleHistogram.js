@@ -12,7 +12,7 @@
  * Please also read the LICENSE file for the MIT License notice.
  ***************************************************************************** */
 
-import tpl from '../../html/distHistogram.html'
+import tpl from '../../html/ensembleHistogram/index.html'
 import * as d3 from 'd3'
 import "d3-selection-multi"
 import ToolTip from './tooltip'

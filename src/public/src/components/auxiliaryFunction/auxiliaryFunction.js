@@ -1,4 +1,4 @@
-import tpl from '../../html/auxiliaryfunction.html'
+import tpl from '../../html/auxiliaryFunction/index.html'
 import EventHandler from '../EventHandler'
 import * as d3 from 'd3'
 
