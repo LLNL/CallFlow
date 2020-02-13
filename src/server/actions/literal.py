@@ -42,7 +42,7 @@ def trees_to_literal(graph, dataframe):
         node_id = node_df['nid'].unique()[0]
         node_name = hnode.callpath[-1]
         children = []
-    
+
         for child in hnode.children:
             # print(child, child.nid)
             child_df = dataframe.loc[(dataframe['name'] == child.callpath[-1]) & (dataframe['nid'] == child.nid)]
@@ -54,14 +54,14 @@ def trees_to_literal(graph, dataframe):
                     source_idx = adj_idx_map[node_name]
                     target_idx = adj_idx_map[child_name]
                     if(adj_matrix[source_idx][target_idx] == 0.0):
-                        adj_matrix[source_idx, target_idx] = 1.0                
+                        adj_matrix[source_idx, target_idx] = 1.0
                 children.append(add_nodes_and_children(child))
 
         return {
             "name": node_name,
             "children": children,
             "nid": int(node_id),
-            "metrics": { 
+            "metrics": {
                 "time (inc)": node_df['time (inc)'].mean(),
                 "time": node_df['time'].mean(),
             }
@@ -84,7 +84,7 @@ def dfs(graph, dataframe, limit):
                 inclusive_runtime = " time (inc) = " + str(node_df['time (inc)'].mean())
                 exclusive_runtime = " time = " + str(node_df['time'].mean())
                 module = "Module = " + str(node_df['module'].unique()[0])
-                result += 'Node = ' + node.callpath[-1] + '[' + module + ':' + str(node.nid) + ']' + inclusive_runtime + exclusive_runtime 
+                result += 'Node = ' + node.callpath[-1] + '[' + module + ':' + str(node.nid) + ']' + inclusive_runtime + exclusive_runtime
                 print(result)
                 level += 1
                 dfs_recurse(node, level)

@@ -58,7 +58,7 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'Callgraph',
+		selectedFormat: 'CCT',
 		datasets: [],
 		selectedTargetDataset: '',
 		selectedDataset2: '',
@@ -88,7 +88,7 @@ export default {
 		selectedScatterMode: 'all',
 		modes: [],
 		selectedMode: '',
-		selectedBinCount: 5,
+		selectedBinCount: 100,
 		selectedFunctionsInCCT: 70,
 		selectedDiffNodeAlignment: 'Top',
 		diffNodeAlignment: ['Middle', 'Top'],
@@ -228,12 +228,12 @@ export default {
 			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
 			console.log(this.initLoad, this.selectedData)
 			if (this.selectedData == 'Dataframe' && this.initLoad) {
-				// this.$refs.Projection.init()
-				// this.$refs.SimilarityMatrix.init()
+				this.$refs.Projection.init()
+				this.$refs.SimilarityMatrix.init()
 				this.$refs.DistgraphA.init(data)
 				this.$refs.DistHistogram.init()
 				this.$refs.AuxiliaryFunction.init()
-				// this.$refs.RunInformation.init()
+				this.$refs.RunInformation.init()
 				this.initLoad = false
 			} else if (this.selectedData == 'Graph' && this.initLoad) {
 				this.$refs.DistgraphB.init(data)
@@ -331,8 +331,8 @@ export default {
 				this.$refs.DistgraphA.clear()
 				this.$refs.Icicle.clear()
 				this.$refs.DistHistogram.clear()
-				this.$refs.Projection.clear()
-				this.$refs.RunInformation.clear()
+				// this.$refs.Projection.clear()
+				// this.$refs.RunInformation.clear()
 				this.$refs.AuxiliaryFunction.clear()
 			}
 		},
@@ -395,28 +395,27 @@ export default {
 						groupBy: this.selectedGroupBy
 					})
 
-					if(this.parameter_analysis){
-						this.$socket.emit('dist_similarity', {
-							datasets: this.$store.actual_dataset_names,
-							algo: 'deltacon',
-							module: 'all'
-						})
-					}
+					// if(this.parameter_analysis){
+					// 	this.$socket.emit('dist_similarity', {
+					// 		datasets: this.$store.actual_dataset_names,
+					// 		algo: 'deltacon',
+					// 		module: 'all'
+					// 	})
+					// }
 
 					this.$socket.emit('dist_gradients', {
 						datasets: this.$store.actual_dataset_names,
 						plot: 'kde'
 					})
 
-					if(this.parameter_analysis){
-						this.$socket.emit('dist_projection', {
-							datasets: this.$store.actual_dataset_names,
-							algo: 'tsne'
-						})
-					}
+					// if(this.parameter_analysis){
+					// 	this.$socket.emit('dist_projection', {
+					// 		datasets: this.$store.actual_dataset_names,
+					// 		algo: 'tsne'
+					// 	})
+					// }
 				}
 			}
-			console.log(this.$store)
 		},
 
 		sendRequest(request) {
@@ -556,8 +555,14 @@ export default {
 			}
 			// this.$store.selectedTargetDataset = min_inclusive_dataset
 			// this.selectedTargetDataset = min_inclusive_dataset
-			this.$store.selectedTargetDataset = '512-cores'
-			this.selectedTargetDataset = '512-cores'
+			// this.$store.selectedTargetDataset = '512-cores'
+			// this.selectedTargetDataset = '512-cores'
+			this.$store.selectedTargetDataset = 'impi'
+			this.selectedTargetDataset = 'impi'
+			// this.$store.selectedTargetDataset = 'osu_bcast.1.10.2019-09-04_00-28-19'
+			// this.selectedTargetDataset = 'osu_bcast.1.10.2019-09-04_00-28-19'
+			this.$store.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
+			this.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
 
@@ -635,14 +640,24 @@ export default {
 		},
 
 		updateMetric() {
+			this.$store.selectedMetric = this.selectedMetric
 			this.clearLocal()
-			this.updateColor(this.selectedMetric)
+			this.colors()
+			this.init()
 		},
 
 		updateFilterBy() {
 			Vue.nextTick(() => {
 
 			})
+		},
+
+
+		updateColor() {
+			this.clearLocal()
+			this.colors()
+			this.init()
+
 		},
 
 		updateColorPoint() {

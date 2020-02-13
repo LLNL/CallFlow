@@ -101,7 +101,6 @@ class Compare:
         name2 = np.asarray(node_df2["name"])
         rank2 = np.asarray(node_df2["rank"])
         zero_inserted_data2 = self.insertZeroRuntime(data2, rank2)
-        print(len(data1), len(data2))
         dataset2 = np.array([self.dataset2 for _ in range(data2.shape[0])])
         module2 = np.asarray(node_df2["module"])
 
@@ -111,7 +110,6 @@ class Compare:
         mean = np.mean([zero_inserted_data1, zero_inserted_data2], axis=0)
         diff = zero_inserted_data1 - zero_inserted_data2
         mean_diff = np.mean(data2) - np.mean(data1)
-        print(node, mean_diff)
 
         # calculate mean runtime.
         # np_mean_dist = np.array(tuple(self.clean_dict(diff).values()))
@@ -152,11 +150,11 @@ class Compare:
             x = 0
             y = 0
 
-        print(
-            "hist ranges = {} {} {} {}\n".format(
-                hist_x_min, hist_x_max, hist_y_min, hist_y_max
-            )
-        )
+        # print(
+        #     "hist ranges = {} {} {} {}\n".format(
+        #         hist_x_min, hist_x_max, hist_y_min, hist_y_max
+        #     )
+        # )
 
         result = {
             "name": node,

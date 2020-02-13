@@ -217,7 +217,7 @@ export default {
                     'y': 10,
                     'x': -30,
                     "text-anchor": "middle",
-                    'class': 'dist-colormap-text-metric',
+                    'class': 'dist-colormap-text',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
                 })
                 .text((this.colorMin * 0.000001).toFixed(3) + 's');
@@ -269,6 +269,11 @@ export default {
         clear() {
             d3.selectAll('.dist-colormap-text').remove()
             d3.selectAll('.dist-colormap-rect').remove()
+        },
+
+        clearMetric(){
+            d3.selectAll('.dist-colormap-text-metric').remove()
+            d3.selectAll('.dist-colormap-rect-metric').remove()
         },
 
         update(mode, data){

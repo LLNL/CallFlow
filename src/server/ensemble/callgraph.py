@@ -6,7 +6,7 @@ import numpy as np
 from timer import Timer
 
 # TODO: Remove all code with respect to add_paths (very expensive. )
-class DistGraph(nx.Graph):
+class EnsembleGraph(nx.Graph):
     # Attributes:
     # 1. State => Pass the state which needs to be handled.
     # 2. path => '', 'path', 'group_path' or 'component_path'
@@ -15,7 +15,7 @@ class DistGraph(nx.Graph):
     def __init__(
         self, states, path, group_by_attr="module", construct_graph=True, add_data=True
     ):
-        super(DistGraph, self).__init__()
+        super(EnsembleGraph, self).__init__()
         self.states = states
         self.timer = Timer()
 

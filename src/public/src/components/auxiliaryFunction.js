@@ -41,6 +41,7 @@ export default {
 
     sockets: {
         auxiliary(data) {
+            console.log("Auxiliary Data: ", data)
             this.dataReady = true
 
             let module_data = data['module']
@@ -237,6 +238,7 @@ export default {
 
         // boxPlot visualization.
         visualize(callsite_name) {
+            console.log(this.$store.callsites)
             this.width = document.getElementById('auxiliary-function-overview').clientWidth - 50
 
             let ensemble_callsite_data = this.$store.callsites['ensemble'][callsite_name]

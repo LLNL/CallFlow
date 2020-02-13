@@ -224,8 +224,8 @@ export default function Sankey() {
     function findroot() {
         let ret = []
         nodes.forEach(function (node) {
-            if (node['id'] == "Lulesh=main") {
-            // if(node['id'] == "libmonitor.so.0.0.0=<program root>"){
+            // if (node['id'] == "Lulesh=main") {
+            if(node['id'] == "libmonitor.so.0.0.0=<thread root>" || node['id'] == "libmonitor.so.0.0.0=<program root>"){
                 ret.push(node)
             }
         })
@@ -251,6 +251,7 @@ export default function Sankey() {
             });
             remainingNodes = nextNodes;
             ++level
+            console.log(remainingNodes.length)
         }
         nodes.forEach(function (node) {
             node.dx = nodeWidth
@@ -275,6 +276,7 @@ export default function Sankey() {
             if (!node.sourceLinks.length) {
                 //		node.x = x - 1;
             }
+            //	    node.x = d3.min(node.sourceLinks, function(d) { return d.target.x; });
             //	    node.x = d3.min(node.sourceLinks, function(d) { return d.target.x; });
             //            node.x = node.x + 1;
         });
@@ -354,6 +356,7 @@ export default function Sankey() {
 
                 // Asssign levels to the nodes based on time (inc)
                 for (let i = 0; i < n.length; i += 1) {
+                    console.log(n[i])
                     level[n[i].vis_name] = i
                 }
 

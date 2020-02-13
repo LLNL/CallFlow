@@ -200,18 +200,8 @@ class PreProcess:
 		def add_path(self):
 			self.raiseExceptionIfNodeCountNotEqual(self.paths)
 			self.df["path"] = self.df["name"].apply(
-				lambda node_name: utils.getPathListFromFrames(self.paths[node_name])
+				lambda node_name: utils.getPathListFromFrames(self.paths[node_name]) if node_name in self.paths else []
 			)
-			return self
-
-		@tmp_wrap
-		def add_incTime(self):
-			self.map["time (inc)"] = self._map("time (inc)")
-			return self
-
-		@tmp_wrap
-		def add_excTime(self):
-			self.map["time"] = self._map("time")
 			return self
 
 		# Max of the inclusive Runtimes among all processes
@@ -219,9 +209,7 @@ class PreProcess:
 		@tmp_wrap
 		def add_max_incTime(self):
 			ret = {}
-
-			for idx, row in self.df.iterrows():
-				ret[str(row.nid)] = max(self.state.lookup(row.nid)["time (inc)"])
+			ret[str(row.nid)] = max(self.state.lookup(row.nid)["time (inc)"])
 
 			self.map["max_incTime"] = ret
 			self.df["max_incTime"] = self.df["node"].apply(
@@ -248,19 +236,14 @@ class PreProcess:
 		@tmp_wrap
 		def add_imbalance_perc(self):
 			ret = {}
-			for idx, row in self.df.iterrows():
-				max_incTime = self.map["max_incTime"][str(row.nid)]
+			for node_name in self.df['name'].unique():
+				max_incTime = self.df.loc[self.df['name'] == node_name]['time (inc)'].max()
+				avg_incTime = self.df.loc[self.df['name'] == node_name]['time (inc)'].mean()
 				if max_incTime == 0.0:
 					max_incTime = 1.0
-				ret[str(row.nid)] = (
-					self.map["max_incTime"][str(row.nid)]
-					- self.map["avg_incTime"][str(row.nid)]
-				) / max_incTime
+				ret[node_name] = (max_incTime - avg_incTime) / max_incTime
 
-			self.map["imbalance_perc"] = ret
-			self.df["imbalance_perc"] = self.df["node"].apply(
-				lambda node: self.map["imbalance_perc"][str(node.nid)]
-			)
+			self.df["imbalance_perc"] = self.df['name'].apply(lambda name: ret[name])
 			return self
 
 		@tmp_wrap
@@ -300,7 +283,7 @@ class PreProcess:
 		@tmp_wrap
 		def add_module_name_hpctoolkit(self):
 			self.df["module"] = self.df["module"].apply(
-				lambda name: utils.sanitizeName(name)
+				lambda name: name
 			)
 			return self
 

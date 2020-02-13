@@ -200,18 +200,18 @@
 
 		<v-layout v-show="selectedMode == 'Ensemble' && selectedFormat == 'Callgraph'">
 			<splitpanes id="diffgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe' && parameter_analysis == true">
-				<!-- <splitpanes horizontal :splitpanes-size="20">
-					<span>
+				<splitpanes horizontal :splitpanes-size="20">
+					<!-- <span>
 						<RunInformation ref="RunInformation" />
 					</span>
 					<span>
 						<Projection ref="Projection" @compare="updateCompareMode" />
-					</span>
+					</span> -->
 					<span>
 						<SimilarityMatrix ref="SimilarityMatrix" />
 					</span>
 
-				</splitpanes> -->
+				</splitpanes>
 				<splitpanes horizontal :splitpanes-size="80">
 					<span>
 						<v-layout class="chip-container">

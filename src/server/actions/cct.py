@@ -29,18 +29,126 @@ class CCT:
             self.entire_df = state.df
         self.run()
 
-    def add_node_attributes(self):
-        time_inc_mapping = self.node_map(self.g.nodes(), 'time (inc)')
-        nx.set_node_attributes(self.g, name='time (inc)', values=time_inc_mapping)
+    # def add_node_attributes(self):
+    #     time_inc_mapping = self.node_map(self.g.nodes(), 'time (inc)')
+    #     nx.set_node_attributes(self.g, name='time (inc)', values=time_inc_mapping)
 
-        time_mapping = self.node_map(self.g.nodes(), 'time')
-        nx.set_node_attributes(self.g, name='time', values=time_mapping)
+    #     time_mapping = self.node_map(self.g.nodes(), 'time')
+    #     nx.set_node_attributes(self.g, name='time', values=time_mapping)
 
-        module_mapping = self.node_map(self.g.nodes(), 'module')
-        nx.set_node_attributes(self.g, name='module', values=module_mapping)
+        # module_mapping = self.node_map(self.g.nodes(), 'module')
+        # nx.set_node_attributes(self.g, name='module', values=module_mapping)
+
 
         # imbalance_perc_mapping = self.node_map(self.g.nodes(), 'imbalance_perc')
         # nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)
+
+    def ensemble_map(self, nodes):
+        ret = {}
+
+        ensemble_columns = []
+        for column in self.entire_df.columns:
+            ensemble_columns.append(column)
+
+        # loop through the nodes
+        for node in self.g.nodes():
+            print(node)
+
+            # Get their dataframe
+            node_df = self.entire_df.loc[self.entire_df["name"] == node]
+            column_data = node_df[column]
+
+            for column in ensemble_columns:
+                if column not in ret:
+                    ret[column] = {}
+
+                if (
+                    column == "time (inc)"
+                    or column == "time"
+                    or column == "component_level"
+                ):
+                    if len(column_data.value_counts() > 0):
+                        ret[column][node] = column_data.max()
+                    else:
+                        ret[column][node] = -1
+
+                # elif column == "callers" or column == "callees":
+
+                #     if len(column_data.value_counts()) > 0:
+                #         ret[column][node] = make_tuple(column_data.tolist()[0])
+                #     else:
+                #         ret[column][node] = []
+
+                elif (
+                    column == "name"
+                    or column == "vis_name"
+                    or column == "module"
+                    or column == "show_node"
+                ):
+
+                    if len(column_data.value_counts() > 0):
+                        ret[column][node] = column_data.tolist()[0]
+                    else:
+                        ret[column][node] = "None"
+
+
+        return ret
+
+    def dataset_map(self, nodes, dataset):
+        ret = {}
+        for node in self.g.nodes():
+            if "=" in node:
+                node_name = node.split("=")[1]
+            else:
+                node_name = node
+
+            if node not in ret:
+                ret[node] = {}
+
+            node_df = self.entire_df.loc[
+                (self.entire_df["name"] == node_name) & (self.entire_df["dataset"] == dataset)
+            ]
+
+            for column in self.entire_df.columns:
+                column_data = node_df[column]
+
+                if (
+                    column == "time (inc)"
+                    or column == "time"
+                    or column == "component_level"
+                ):
+                    if len(column_data.value_counts()) > 0:
+                        ret[node][column] = column_data.max()
+                    else:
+                        ret[node][column] = -1
+
+                elif (
+                    column == "name"
+                    or column == "vis_name"
+                    or column == "module"
+                    or column == "show_node"
+                ):
+                    if len(column_data.value_counts()) > 0:
+                        ret[node][column] = column_data.tolist()[0]
+
+                    else:
+                        ret[node][column] = "None"
+
+        return ret
+
+    def add_node_attributes(self):
+        ensemble_mapping = self.ensemble_map(self.g.nodes())
+
+        for idx, key in enumerate(ensemble_mapping):
+            nx.set_node_attributes(self.g, name=key, values=ensemble_mapping[key])
+
+        # dataset_mapping = {}
+        # for run in self.runs:
+        #     dataset_mapping[run] = self.dataset_map(self.g.nodes(), run)
+
+        #     nx.set_node_attributes(
+        #         self.g, name=run, values=dataset_mapping[run]
+        #     )
 
     def add_edge_attributes(self):
         num_of_calls_mapping = self.edge_map(self.g.edges(), 'component_path')
@@ -48,14 +156,16 @@ class CCT:
 
     def node_map(self, nodes, attr):
         ret = {}
+        # print(self.entire_df['name'])
         for node in nodes:
-            node_module = self.entire_df[self.entire_df['name'] == node]['module']
-            data = self.entire_df[self.entire_df['name'] == node][attr]
+            data = self.entire_df.loc[self.entire_df['name'] == node]
+            print(node, data[attr].unique())
             if attr == 'time' or attr == 'time (inc)' or attr == 'imbalance_perc':
-                if( not math.isnan(data.mean())):
-                    ret[node] = data.mean()
+                if( not math.isnan(data[attr].mean())):
+                    ret[node] = data[attr].mean()
             else:
-                ret[node] = list(set(data.tolist()))
+                ret[node] = data[attr].unique()
+                print(ret[node])
         return ret
 
     def edge_map(self, edges, attr, source=None, orientation=None):
@@ -200,7 +310,6 @@ class CCT:
     def run(self):
         self.g = nx.DiGraph()
         self.add_paths('path')
-        # self.g = self.entire_graph
         self.add_node_attributes()
         self.add_edge_attributes()
         self.g.cycles = self.find_cycle(self.g)

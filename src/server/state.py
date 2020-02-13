@@ -32,8 +32,6 @@ class State(object):
         return ret
 
     def lookup(self, node):
-        # print(self.df['name'].unique())
-        # print(self.df.loc[self.df['name'] == node.callpath[-1]])
         return self.df.loc[
             (self.df["name"] == node.callpath[-1]) & (self.df["nid"] == node.nid)
         ]

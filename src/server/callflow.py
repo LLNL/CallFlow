@@ -18,9 +18,8 @@ from timer import Timer
 
 from networkx.readwrite import json_graph
 
-from callgraph import CallGraph
-from distgraph import DistGraph
-
+from single.callgraph import SuperGraph
+from ensemble.callgraph import EnsembleGraph
 
 from actions.mini_histogram import MiniHistogram
 from actions.histogram import Histogram
@@ -43,7 +42,7 @@ from actions.compare import Compare
 
 from state import State
 from logger import log
-from pipeline import Pipeline
+from pipeline.index import Pipeline
 
 import time
 import networkx as nx
@@ -108,9 +107,7 @@ class CallFlow:
                 self.pipeline.write_dataset_gf(
                     states[dataset_name], dataset_name, "filter"
                 )
-                self.pipeline.write_hatchet_graph(states, dataset_name)
-            # else:
-            # states[dataset_name] = self.read_gf(dataset_name, '')
+                # self.pipeline.write_hatchet_graph(states, dataset_name)
 
         if self.reProcess and self.processEnsemble:
             states["ensemble"] = self.pipeline.union(states)
@@ -266,7 +263,7 @@ class CallFlow:
             return self.config
 
         elif action_name == "group":
-            self.states['ensemble'].g = DistGraph(
+            self.states['ensemble'].g = EnsembleGraph(
                 self.states, "group_path", construct_graph=True, add_data=True
             ).g
             return self.states['ensemble'].g
