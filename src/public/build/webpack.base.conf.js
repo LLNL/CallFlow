@@ -16,7 +16,7 @@ module.exports = {
 		ignored: /node_modules/,
 	},
 	context: path.resolve(__dirname, '../'),
-	entry: './src/main.js',
+	entry: './src/app.js',
 	output: {
 		path: config.build.assetsRoot,
 		filename: '[name].js',
@@ -29,11 +29,11 @@ module.exports = {
 			path.resolve(__dirname, '../node_modules'),
 			// path.resolve(__dirname, '../../'),
 		],
-		extensions: ['.js', '.vue', '.json'],
+		extensions: ['.ts', '.tsx', '.js', '.vue', '.json'],
 		alias: {
 			'vue$': 'vue/dist/vue.esm.js',
 			'@': resolve('src'),
-		}, 
+		},
 		// symlink: false,
 	},
 	module: {
@@ -43,7 +43,7 @@ module.exports = {
 				options: vueLoaderConfig
 			},
 			{
-				test: /\.js$/,
+				test: /\.js|ts|vs$/,
 				loader: 'babel-loader',
 				include: [resolve('src'), resolve('test'), resolve('node_modules/webpack-dev-server/client')]
 			},
@@ -76,6 +76,19 @@ module.exports = {
 					limit: 10000,
 					name: utils.assetsPath('fonts/[name].[hash:7].[ext]')
 				}
+			},
+			{
+				test: /\.ts(x?)$/,
+				exclude: /node_modules/,
+				use: [
+					{
+						loader: 'ts-loader',
+						options: {
+							appendTsSuffixTo: [/\.vue$/],
+							allowTsInNodeModules: true
+						}
+					}
+				]
 			}
 		]
 	},

@@ -1,4 +1,4 @@
-import tpl from '../../html/distgraph/edges.html'
+import tpl from '../../html/ensembleSupergraph/edges.html'
 import * as d3 from 'd3'
 
 export default {

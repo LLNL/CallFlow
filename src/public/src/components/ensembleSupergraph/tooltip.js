@@ -1,4 +1,4 @@
-import tpl from '../../html/distgraph/tooltip.html'
+import tpl from '../../html/ensembleSupergraph/tooltip.html'
 import * as d3 from 'd3'
 
 export default {

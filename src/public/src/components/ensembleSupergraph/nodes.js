@@ -1,4 +1,4 @@
-import tpl from '../../html/distgraph/nodes.html'
+import tpl from '../../html/ensembleSupergraph/nodes.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
 import EventHandler from '../EventHandler'

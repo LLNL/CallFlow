@@ -1,4 +1,4 @@
-import tpl from '../../html/callgraph/colormap.html'
+import tpl from '../../html/supergraph/colormap.html'
 import * as d3 from 'd3'
 import 'd3-selection-multi'
 

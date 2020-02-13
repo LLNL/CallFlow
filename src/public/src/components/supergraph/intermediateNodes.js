@@ -1,4 +1,4 @@
-import tpl from '../../html/callgraph/intermediateNodes.html'
+import tpl from '../../html/supergraph/intermediateNodes.html'
 import * as  d3 from 'd3'
 
 export default {

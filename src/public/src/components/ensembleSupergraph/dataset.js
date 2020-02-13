@@ -1,4 +1,4 @@
-import tpl from '../../html/distgraph/nodes.html'
+import tpl from '../../html/ensembleSupergraph/dataset.html'
 import * as d3 from 'd3'
 import EventHandler from '../EventHandler'
 
