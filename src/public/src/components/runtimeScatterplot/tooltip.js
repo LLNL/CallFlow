@@ -1,4 +1,4 @@
-import tpl from '../../html/scatterplot/tooltip.html'
+import tpl from '../../html/runtimeScatterplot/tooltip.html'
 import * as d3 from 'd3'
 
 export default {
@@ -64,9 +64,9 @@ export default {
                     'x': () => {
                         if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth - 25) {
                             return (this.mousePosX - this.width) + 'px';
-                        } 
+                        }
                         return (this.mousePosX) + 'px';
-                        
+
                     },
                     'y': () => {
                         return (this.mousePosY) + "px";
@@ -88,9 +88,9 @@ export default {
                     'x': () => {
                         if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth - 25) {
                             return (this.mousePosX - this.width + this.offset) + 'px';
-                        } 
+                        }
                         return (this.mousePosX) + this.offset +  'px';
-                        
+
                     },
                     'y': () => {
                         return (this.mousePosY) + 2*this.offset + "px";

@@ -1,4 +1,4 @@
-import tpl from '../../html/callgraph/nodes.html'
+import tpl from '../../html/supergraph/nodes.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
 

@@ -11,7 +11,7 @@
  * Please also read the LICENSE file for the MIT License notice.
  ***************************************************************************** */
 
-import tpl from '../../html/callgraph/miniHistograms.html'
+import tpl from '../../html/supergraph/miniHistograms.html'
 import * as d3 from 'd3'
 import 'd3-selection-multi'
 
@@ -69,7 +69,7 @@ export default {
 
         getNode(node_name) {
             let ret = {}
-            // TODO: Since there are two multihistogram socket calls, 
+            // TODO: Since there are two multihistogram socket calls,
             // There is an extra minihistogram function that gets executed,
             // Avoid this.
             if(this.nodes == undefined){
@@ -84,7 +84,7 @@ export default {
         },
 
         array_unique(arr) {
-            return arr.filter(function (value, index, self) { 
+            return arr.filter(function (value, index, self) {
               return self.indexOf(value) === index;
             })
         },

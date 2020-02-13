@@ -1,4 +1,4 @@
-import tpl from '../../html/callgraph/edges.html'
+import tpl from '../../html/cct/edges.html'
 import * as  d3 from 'd3'
 
 export default {
@@ -58,12 +58,12 @@ export default {
                     const rightMoveDown = By1 - Ty1;
 
                     return `M${Tx0},${Ty0}
-		                    C${Tx2},${Ty0} 
-		                    ${Tx3}, ${Ty1} 
-		                    ${Tx1}, ${Ty1} 
+		                    C${Tx2},${Ty0}
+		                    ${Tx3}, ${Ty1}
+		                    ${Tx1}, ${Ty1}
 		                    ` + ` v ${rightMoveDown}
-		                    C${Bx3},${By1} 
-		                    ${Bx2},${By0} 
+		                    C${Bx3},${By1}
+		                    ${Bx2},${By0}
 		                    ${Bx0},${By0}`;
                 })
                 .style('fill', d =>
