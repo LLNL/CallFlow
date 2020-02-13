@@ -81,6 +81,7 @@ class Auxiliary:
         hist_y_min_exc = np.min(hist_exc_grid[1]).astype(np.float64)
         hist_y_max_exc = np.max(hist_exc_grid[1]).astype(np.float64)
 
+
         return {
                 "name": node_name,
                 "time (inc)": group_df['time (inc)'].tolist(),

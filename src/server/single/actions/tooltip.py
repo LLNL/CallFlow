@@ -8,34 +8,35 @@
 #
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
-##############################################################################
-
+##############################################################################  
 import pandas as pd
+import json
 
-class DistHistogram:
-    def __init__(self, state, name):
-        self.graph = state.g
+
+class ToolTip:
+    def __init__(self, state, module):
+        self.state = state
+        self.graph = state.graph
         self.df = state.df
         self.entire_df = state.entire_df
-        self.name = name
-        self.entry_funcs = {}
+        self.module = module
         self.result = self.run()
-
-    def run(self):
+        
+    def run(self):    
         ret = []
-        module = self.name.split('=')[0]
-        func_in_module = self.df[self.df.module == module]['name'].unique().tolist()
-
-        print(func_in_module)
+        func_in_module = self.df[df.module == module]['name'].unique().tolist()
+        
         for idx, func in enumerate(func_in_module):
+            name_entire_df = self.entire_df.loc[self.entire_df['name'] == func]
+            name_df = self.df.loc[self.df['name'] == func]
             ret.append({
                 "name": func,
-                "time (inc)": self.df.loc[self.df['name'] == func]['time (inc)'].tolist(),
-                "time": self.df.loc[self.df['name'] == func]['time'].tolist(),
-                "rank": self.df.loc[self.df['name'] == func]['rank'].tolist(),
-                "dataset": self.df.loc[self.df['name'] == func]['dataset'].tolist(),
+                "time (inc)": name_entire_df['time (inc)'].tolist(),
+                "time": name_entire_df['time'].tolist(),
+                "rank": name_entire_df['rank'].tolist(),
+                "callers": name_df['callers'].tolist(),
+                "callees": name_df['callees'].tolist()
             })
         ret_df = pd.DataFrame(ret)
         return ret_df.to_json(orient="columns")
-
 

@@ -112,13 +112,11 @@ export default {
                 // })
                 .style('fill', (d) => {
                     return this.$store.color.grey
-                    // return this.$store.color.datasetColor[this.$store.selectedDataset]
                 })
                 .style('stroke', (d) => {
-                    // return "url(#" + getGradID(d) + ")";
+                    return this.$store.color.datasetColor[this.$store.selectedDataset]
                 })
                 .style('fill-opacity', (d) => {
-                    console.log(d)
                     return d.number_of_runs / this.$store.datasets.length
                 })
                 .on("mouseover", function (d) {

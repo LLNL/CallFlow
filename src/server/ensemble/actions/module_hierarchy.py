@@ -8,7 +8,7 @@ import math
 from networkx.readwrite import json_graph
 
 
-class moduleHierarchyDist:
+class ModuleHierarchy:
     def __init__(self, state, modFunc):
         self.graph = state.graph
         self.df = state.df
