@@ -1,5 +1,5 @@
-import tpl from '../html/auxiliaryfunction.html'
-import EventHandler from './EventHandler'
+import tpl from '../../html/auxiliaryfunction.html'
+import EventHandler from '../EventHandler'
 import * as d3 from 'd3'
 
 export default {

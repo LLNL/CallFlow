@@ -1,4 +1,4 @@
-import tpl from '../html/icicle.html'
+import tpl from '../../html/icicle.html'
 import * as d3 from 'd3'
 import dropdown from 'vue-dropdowns'
 

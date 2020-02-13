@@ -1,6 +1,5 @@
 import * as d3 from 'd3'
 import * as chroma from 'chroma-js';
-import miniHistograms from './callgraph/miniHistograms';
 
 export default class Color {
     constructor(option, scale) {

@@ -10,9 +10,9 @@
  * https://github.com/LLNL/CallFlow
  * Please also read the LICENSE file for the MIT License notice.
  ******************************************************************************/
-import tpl from '../html/scatterplot.html'
+import tpl from '../../html/scatterplot.html'
 import * as d3 from 'd3'
-import ToolTip from './scatterplot/tooltip'
+import ToolTip from './tooltip'
 
 export default {
 	name: 'Scatterplot',
@@ -161,7 +161,7 @@ export default {
 
 			var b1 = term1 / term2;
 			var b0 = y_mean - (b1 * x_mean);
-			// perform regression 
+			// perform regression
 
 			let yhat = [];
 			// fit line using coeffs
@@ -328,7 +328,7 @@ export default {
 				.style('font-family', 'sans-serif')
 				.style('font-weight', 'lighter');
 		},
-	
+
 		trendline() {
 			let self = this
 			var line = d3.line()
