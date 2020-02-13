@@ -136,18 +136,18 @@ class EnsembleCallFlow:
                 "groupBy": "name",
                 "dataset": action["dataset"]
             })
-            graph = CCT(self.states["ensemble"], action["functionsInCCT"])
+            graph = CCT(self.states[action["dataset"]], action["functionsInCCT"])
             return graph.g
 
         elif action_name == "ensemble_cct":
-            self.callflow.request({
+            self.request({
                 "name": "group",
                 "groupBy": "name",
                 "datasets": action["datasets"]
             })
-            graph = CCT(self.states["ensemble"], action["functionsInCCT"])
-            return graph.g
-
+            nx = CCT(self.states["ensemble"], action["functionsInCCT"])
+            print(nx.g)
+            return nx.g
 
         elif action_name == "group":
             self.states['ensemble'].g = SuperGraph(

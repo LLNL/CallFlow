@@ -121,7 +121,7 @@ class CCT:
         return ret
 
     def add_node_attributes(self):
-        ensemble_mapping = self.ensemble_map(self.g.nodes())
+        ensemble_mapping = self.ensemble_map(self.entire_df, self.g.nodes())
 
         for idx, key in enumerate(ensemble_mapping):
             nx.set_node_attributes(self.g, name=key, values=ensemble_mapping[key])

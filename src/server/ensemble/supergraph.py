@@ -15,7 +15,7 @@ class SuperGraph(nx.Graph):
     def __init__(
         self, states, path, group_by_attr="module", construct_graph=True, add_data=True
     ):
-        super(EnsembleGraph, self).__init__()
+        super(SuperGraph, self).__init__()
         self.states = states
         self.timer = Timer()
 

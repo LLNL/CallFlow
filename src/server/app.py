@@ -272,14 +272,14 @@ class App:
                 json=True,
             )
 
-        @sockets.on("dist_cct", namespace="/")
+        @sockets.on("ensemble_cct", namespace="/")
         def distcct(data):
             if self.debug:
                 self.print("[Request] Dist-CCT for the two datasets.", data)
 
             ensemble_cct = self.callflow.request(
                 {
-                    "name": "cct",
+                    "name": "ensemble_cct",
                     "datasets": data["datasets"],
                     "functionsInCCT": data["functionsInCCT"],
                 }
