@@ -141,7 +141,7 @@ export default {
 			console.log('Socket error: ', err);
 		});
 
-		this.$socket.emit('init')
+		this.$socket.emit('config')
 	},
 
 	sockets: {
@@ -357,7 +357,7 @@ export default {
 			// Call the appropriate socket to query the server.
 			if (this.selectedMode == 'Single') {
 				if (this.selectedFormat == 'CCT') {
-					this.$socket.emit('cct', {
+					this.$socket.emit('single_cct', {
 						dataset: this.$store.selectedTargetDataset,
 						functionsInCCT: this.selectedFunctionsInCCT,
 						selectedMetric: this.selectedMetric,
@@ -373,7 +373,7 @@ export default {
 			} else if (this.selectedMode == 'Ensemble') {
 				if (this.selectedFormat == 'CCT') {
 					console.log("[Mode = Ensemble]")
-					this.$socket.emit('dist_cct', {
+					this.$socket.emit('ensemble_cct', {
 						datasets: this.$store.actual_dataset_names,
 						functionsInCCT: this.selectedFunctionsInCCT,
 					})
@@ -566,11 +566,12 @@ export default {
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
 
+		// TODO: Write the ensemble and single version.
 		updateDistributionColorMap() {
 			this.clearLocal()
 			this.colors()
 			if (this.selectedFormat == 'CCT') {
-				this.$socket.emit('cct', {
+				this.$socket.emit('ensemble_cct', {
 					dataset: this.$store.selectedTargetDataset,
 					functionsInCCT: this.selectedFunctionsInCCT,
 				})

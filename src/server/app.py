@@ -27,7 +27,8 @@ import argparse
 from networkx.readwrite import json_graph
 
 # Callflow imports
-from callflow import CallFlow
+from single.callflow import SingleCallFlow
+from ensemble.callflow import EnsembleCallFlow
 from pipeline.config_file_reader import ConfigFileReader
 from utils.logger import log
 
@@ -42,50 +43,44 @@ class App:
         self.verify_parser()
 
         self.debug = True
+
         self.config = ConfigFileReader(self.args.config)
         self.config.server_dir = os.getcwd()
         self.config.callflow_dir = (
             self.callflow_path + '/' + self.config.save_path + '/' + self.config.runName
         )
-        self.config.preprocess = self.args.preprocess
+        self.config.process = self.args.process
         self.config.entire = self.args.entire
         self.config.filter = self.args.filter
         self.config.ensemble = self.args.ensemble
         self.config.production = self.args.production
 
-        if self.config.preprocess:
+        # Create the save path folder for saving the processed data.
+        if self.config.process:
             self.print("Pre-processing the datasets.")
             self.create_dot_callflow_folder()
 
-        # self.create_dot_callflow_folder()
-        self.callflow = CallFlow(self.config)
-
-        self.config.distribution = True
-        if self.config.distribution and self.config.preprocess:
-            if self.debug:
-                self.print("Skipping the pre-processing step.")
-
-        elif self.config.distribution and not self.config.preprocess:
-            if self.debug:
-                self.print("Load the graphframe for client")
-            groupBy = "module"
-            datasets = self.config.dataset_names
-
-            self.callflow.update_dist(
-                {"name": "init", "groupBy": groupBy, "datasets": datasets}
-            )
+        if(self.config.ensemble):
+            self.callflow = EnsembleCallFlow(self.config)
+        else:
+            self.callflow = SingleCallFlow(self.config)
 
         # Start server if preprocess is not called.
-        if not self.config.preprocess:
+        if not self.config.process:
+            self.callflow.request({
+                "name": "init",
+                "groupBy": self.config.group_by,
+                "datasets": self.config.dataset_names
+            })
             self.create_socket_server()
             if self.config.production == True:
                 sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
             else:
-                sockets.run(app, debug=self.debug, use_reloader=True)
+                sockets.run(app, debug=False, use_reloader=True)
 
     # Custom print function.
     def print(self, action, data={}):
-        action = "Action: {0}".format(action)
+        action = "[Request] {0}".format(action)
         if bool(data):
             data_string = "Data: " + json.dumps(data, indent=4, sort_keys=True)
         else:
@@ -123,7 +118,7 @@ class App:
             "--filtertheta", default="10", help="Threshold [Default = 10]"
         )
         parser.add_argument(
-            "--preprocess", action="store_true", help="Preprocess mode. To preprocess at the required level of granularity, use the options --filter, --entire. If you are preprocessing multiple callgraphs, use --ensemble option."
+            "--process", action="store_true", help="Process mode. To preprocess at the required level of granularity, use the options --filter, --entire. If you are preprocessing multiple callgraphs, use --ensemble option."
         )
         self.args = parser.parse_args()
         self.debug = self.args.verbose
@@ -169,16 +164,12 @@ class App:
                     open(os.path.join(dataset_dir, f), "w").close()
 
     def create_socket_server(self):
-        @sockets.on("init", namespace="/")
-        def init():
-            if self.config.distribution:
-                self.callflow.update_dist(
-                    {"name": "init", "datasets": self.config.datasets}
-                )
-            else:
-                self.callflow.update(
-                    {"name": "init"}
-                )
+        @sockets.on("config", namespace="/")
+        def config():
+            self.config = self.callflow.request({
+                "name":"config"
+            })
+            print(self.config)
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
             emit("init", config_json, json=True)
 
@@ -195,93 +186,8 @@ class App:
                 "filterPerc": filterPerc,
                 "dataset1": dataset,
             }
-            result = self.callflow.update(obj)
+            result = self.callflow.request(obj)
             emit("reset", result, json=True)
-
-        @sockets.on("group", namespace="/")
-        def group(data):
-            if self.debug:
-                self.print("[Request] Group the dataset.", data)
-            dataset = data["dataset"]
-            graphFormat = data["format"]
-            groupBy = data["groupBy"].lower()
-            print("[Group] Dataset: {0}, format: {1}".format(dataset, graphFormat))
-            obj = {"name": "group", "groupBy": groupBy, "dataset": dataset}
-            g = self.callflow.update(obj)
-            result = json_graph.node_link_data(g)
-            emit("group", result, json=True)
-
-        @sockets.on("hierarchy", namespace="/")
-        def module_hierarchy(data):
-            if self.debug:
-                print("[Request] Module hierarchy of the dataset.", data)
-            nid = data["nid"]
-            dataset = data["dataset"]
-            result = self.callflow.update(
-                {"name": "hierarchy", "nid": nid, "dataset": dataset,}
-            )
-            emit("hierarchy", result, json=True)
-
-        @sockets.on("uncertainity", namespace="/")
-        def uncertainity(data):
-            if self.debug:
-                self.print("[Request] Uncertainity of the dataset.")
-            result = {}
-            emit("uncertainity", result, json=True)
-
-        @sockets.on("histogram", namespace="/")
-        def histogram(data):
-            if self.debug:
-                self.print("[Request] Histogram of a Module", data["nid"])
-            dataset = data["dataset"]
-            result = self.callflow.update(
-                {
-                    "name": "histogram",
-                    "dataset": dataset,
-                    "module": data["module"],
-                    "nid": data["nid"],
-                }
-            )
-            emit("histogram", result, json=True)
-
-        @sockets.on("scatterplot", namespace="/")
-        def scatterplot(data):
-            if self.debug:
-                self.print("[Request] ScatterPlot of a Module", data["module"])
-            dataset = data["dataset"]
-            result = self.callflow.update(
-                {
-                    "name": "histogram",
-                    "dataset": dataset,
-                    "module": data["module"],
-                    "nid": data["nid"],
-                }
-            )
-            emit("scatterplot", result, json=True)
-
-        @sockets.on("miniHistogram", namespace="/")
-        def histogram(data):
-            if self.debug:
-                self.print("[Request] Mini-histogram", data)
-            dataset = data["dataset"]
-            result = self.callflow.update(
-                {"name": "mini-histogram", "dataset": dataset,}
-            )
-            emit("miniHistogram", result, json=True)
-
-
-        # @sockets.on("hierarchy", namespace="/")
-        # def hierarchy(data):
-        #     if self.debug:
-        #         self.print("[Request] Hierarchy of module", data)
-        #     result = self.callflow.update(
-        #         {
-        #             "name": "hierarchy",
-        #             "dataset1": data["dataset1"],
-        #             "module": data["module"],
-        #         }
-        #     )
-        #     emit("hierarchy", result, json=True)
 
         @sockets.on("tooltip", namespace="/")
         def tooltip(data):
@@ -295,7 +201,7 @@ class App:
                 }
             )
 
-        @sockets.on("cct", namespace="/")
+        @sockets.on("single_cct", namespace="/")
         def cct(data):
             if self.debug:
                 self.print("[Request] CCT of the run", data)
@@ -322,36 +228,12 @@ class App:
             # })
             emit("splitcaller", {}, json=True)
 
-        @sockets.on("dist_init", namespace="/")
-        def distinit(data):
-            if self.debug:
-                self.print("[Request] Init the dist mode")
-            groupBy = data["groupBy"].lower()
-            datasets = data["datasets"]
-            self.callflow.update_dist(
-                {"name": "init", "groupBy": groupBy, "datasets": datasets}
-            )
-
-        @sockets.on("function", namespace="/")
-        def function(data):
-            if self.debug:
-                self.print("[Request] Function request for module", data)
-
-            result = self.callflow.update(
-                {
-                    "name": "function",
-                    "dataset": data["dataset"],
-                    "module": data["module"],
-                    "nid": data["nid"],
-                }
-            )
-            emit("function", result, json=True)
 
         @sockets.on("dist_scatterplot", namespace="/")
         def distscatterplot(data):
             if self.debug:
                 self.print("[Request] Dist-Scatterplot request for module.")
-            result = self.callflow.update_dist(
+            result = self.callflow.request(
                 {
                     "name": "scatterplot",
                     "datasets": data["datasets"],
@@ -368,7 +250,7 @@ class App:
         def compcct(data):
             if self.debug:
                 self.print("[Request] Comp-CCT for the two datasets.", data)
-            g1 = self.callflow.update_dist(
+            g1 = self.callflow.request(
                 {
                     "name": "cct",
                     "dataset1": data["dataset1"],
@@ -395,7 +277,7 @@ class App:
             if self.debug:
                 self.print("[Request] Dist-CCT for the two datasets.", data)
 
-            ensemble_cct = self.callflow.update_dist(
+            ensemble_cct = self.callflow.request(
                 {
                     "name": "cct",
                     "datasets": data["datasets"],
@@ -412,7 +294,7 @@ class App:
                 self.print("[Request] Dist the dataset.", data)
             datasets = data["datasets"]
             groupBy = data["groupBy"].lower()
-            nx_graph = self.callflow.update_dist(
+            nx_graph = self.callflow.request(
                 {"name": "group", "groupBy": groupBy, "datasets": datasets}
             )
             result = json_graph.node_link_data(nx_graph)
@@ -427,7 +309,7 @@ class App:
                 self.print("[Group highlight] Dist the dataset.", data)
             datasets = data["datasets"]
             groupBy = data["groupBy"].lower()
-            nx_graph = self.callflow.update_dist(
+            nx_graph = self.callflow.request(
                 {"name": "group", "groupBy": groupBy, "datasets": datasets}
             )
             result = json_graph.node_link_data(nx_graph)
@@ -442,7 +324,7 @@ class App:
             result = {}
             if self.debug:
                 self.print("[Request] Gradients for all datasets", data)
-            result = self.callflow.update_dist(
+            result = self.callflow.request(
                 {
                     "name": "gradients",
                     "datasets": data["datasets"],
@@ -456,7 +338,7 @@ class App:
             result = {}
             if self.debug:
                 self.print("[Request] Similarity of the datasets", data)
-            result = self.callflow.update_dist(
+            result = self.callflow.request(
                 {
                     "name": "similarity",
                     "datasets": data["datasets"],
@@ -470,7 +352,7 @@ class App:
         def dist_hierarchy(data):
             if self.debug:
                 self.print("[Request] Topology of the module", data)
-            result = self.callflow.update_dist(
+            result = self.callflow.request(
                 {
                     "name": "hierarchy",
                     "datasets": data["datasets"],
@@ -485,7 +367,7 @@ class App:
             if self.debug:
                 self.print("[Request] Projection for the runs", data)
 
-            result = self.callflow.update_dist(
+            result = self.callflow.request(
                 {
                     "name": "projection",
                     "datasets": data["datasets"],
@@ -499,7 +381,7 @@ class App:
             if self.debug:
                 self.print("[Request] Run information: ", data)
 
-            result = self.callflow.update_dist(
+            result = self.callflow.request(
                 {"name": "run-information", "datasets": data["datasets"]}
             )
             print(result)
@@ -509,7 +391,7 @@ class App:
         def run_information(data):
             if self.debug:
                 self.print("[Request] Auxiliary: ", data)
-            result = self.callflow.update_dist(
+            result = self.callflow.request(
                 {
                     "name": "auxiliary",
                     "datasets": data["datasets"],
@@ -523,7 +405,7 @@ class App:
         def compare(data):
             if self.debug:
                 self.print("[Request] Compare: ", data)
-            result = self.callflow.update_dist(
+            result = self.callflow.request(
                 {
                     "name": "compare",
                     "targetDataset": data["targetDataset"],
@@ -538,7 +420,7 @@ class App:
             if self.debug:
                 self.print("[Request] Dist-Histogram request for module.")
             datasets = data['datasets']
-            result = self.callflow.update_dist(
+            result = self.callflow.request(
                 {
                     "name": "histogram",
                     "datasets": datasets,

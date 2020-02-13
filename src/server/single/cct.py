@@ -16,7 +16,7 @@ from ast import literal_eval as make_tuple
 import math
 import utils
 
-class CCT:
+class singleCCT:
     def __init__(self, state, functionsInCCT):
         number_of_nodes = len(state.df['name'].unique())
 

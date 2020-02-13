@@ -10,13 +10,16 @@
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
 
+import sys
+sys.path.append('/home/vidi/Work/llnl/CallFlow/src/server')
 import networkx as nx
-from logger import log
 import math
 import json
 from ast import literal_eval as make_tuple
+from utils.logger import log
 
-class CallGraph(nx.Graph):
+
+class SuperGraph(nx.Graph):
     def __init__(self, state, path_name, add_info, group_by):
         super(CallGraph, self).__init__()
         self.state = state
@@ -25,9 +28,7 @@ class CallGraph(nx.Graph):
         self.df = self.state.df
         self.root = state.lookup_with_node(self.graph.roots[0])['vis_node_name'][0]
         self.group_by = group_by
-        # self.callbacks = self.state.callbacks
         self.callbacks = []
-
 
         self.rootRunTimeInc = self.root_runtime_inc()
         self.edge_direction = {}

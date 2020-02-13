@@ -444,7 +444,6 @@ export default {
 					else if(this.$store.selectedMetric == 'Exclusive'){
 						runtime = d.data.exclusive
 					}
-					console.log(runtime)
 					if(runtime == undefined){
 						return 'black'
 					}

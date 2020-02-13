@@ -20,9 +20,9 @@ from sklearn.preprocessing import scale
 from .similarity import Similarity
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
-from actions.algorithm.k_medoids import KMedoids
+from algorithm.k_medoids import KMedoids
 
-class RunProjection:
+class ParameterProjection:
     def __init__(self, states, similarities):
         self.similarities = similarities
         self.states = states

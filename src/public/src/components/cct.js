@@ -114,11 +114,8 @@ export default {
             // Set some general styles
             this.g.nodes().forEach(function (v) {
                 let node = self.g.node(v);
-                console.log(node)
                 if (node != undefined) {
                     let color = self.$store.color.getColor(node)
-                    console.log(color)
-                    // node.style = "stroke:" + self.$store.color.setContrast(color)
                     node.style = "fill:" + color
                     node.rx = node.ry = 4;
                     node.id = 'cct-node'
