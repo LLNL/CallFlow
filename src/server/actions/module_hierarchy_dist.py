@@ -2,7 +2,7 @@ import pandas as pd
 import time
 import networkx as nx
 import utils
-from logger import log
+from utils.logger import log
 from ast import literal_eval as make_tuple
 import math
 from networkx.readwrite import json_graph

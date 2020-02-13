@@ -13,13 +13,14 @@
 import hatchet as ht
 import time
 import utils
-from logger import log
-from timer import Timer
+from utils.logger import log
+from utils.timer import Timer
+from utils.df import getMaxExcTime, getMinExcTime, getMaxIncTime, getMinIncTime
 
 from networkx.readwrite import json_graph
 
-from single.callgraph import SuperGraph
-from ensemble.callgraph import EnsembleGraph
+from single.supergraph import SuperGraph
+from ensemble.supergraph import SuperGraph
 
 from actions.mini_histogram import MiniHistogram
 from actions.histogram import Histogram
@@ -40,8 +41,8 @@ from actions.dist_histogram import DistHistogram
 from actions.dist_auxiliary import Auxiliary
 from actions.compare import Compare
 
-from state import State
-from logger import log
+from pipeline.state import State
+from utils.logger import log
 from pipeline.index import Pipeline
 
 import time
@@ -73,9 +74,9 @@ class CallFlow:
 
     def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
         if self.reProcess:
-            utils.debug("Processing with filter.")
+            log.info("Processing with filter.")
         else:
-            utils.debug("Reading from the processed files.")
+            log.info("Reading from the processed files.")
 
         self.pipeline = Pipeline(self.config)
 
@@ -133,10 +134,10 @@ class CallFlow:
         min_exclusive_time = 0
         for idx, state in enumerate(self.states):
             if state != "ensemble":
-                self.config.max_incTime[state] = utils.getMaxIncTime(self.states[state])
-                self.config.max_excTime[state] = utils.getMaxExcTime(self.states[state])
-                self.config.min_incTime[state] = utils.getMinIncTime(self.states[state])
-                self.config.min_excTime[state] = utils.getMinExcTime(self.states[state])
+                self.config.max_incTime[state] = getMaxIncTime(self.states[state])
+                self.config.max_excTime[state] = getMaxExcTime(self.states[state])
+                self.config.min_incTime[state] = getMinIncTime(self.states[state])
+                self.config.min_excTime[state] = getMinExcTime(self.states[state])
                 # self.config.numbOfRanks[state] = self.config.nop
                 max_exclusive_time = max(
                     self.config.max_excTime[state], max_exclusive_time
@@ -155,206 +156,6 @@ class CallFlow:
         self.config.min_incTime["ensemble"] = min_inclusive_time
         self.config.min_excTime["ensemble"] = min_exclusive_time
 
-    def update(self, action):
-        utils.debug("Update", action)
-        action_name = action["name"]
-
-        if action_name == "init":
-            self.setConfig()
-            return self.config
-
-        if "groupBy" in action:
-            log.debug("Grouping by: {0}".format(action["groupBy"]))
-        else:
-            action["groupBy"] = "name"
-
-        dataset = action["dataset"]
-        state = self.states[dataset]
-
-        log.info("The selected Dataset is {0}".format(dataset))
-
-        # Compare against the different operations
-        if action_name == "default":
-            groupBy(state, action["groupBy"])
-            nx = CallGraph(state, "group_path", True, action["groupBy"])
-
-        elif action_name == "reset":
-            datasets = [dataset]
-            self.reProcess = True
-            self.states = self.pipeline(
-                datasets, action["filterBy"], action["filterPerc"]
-            )
-            self.reProcess = False
-            self.states = self.pipeline(datasets)
-            return {}
-
-        elif action_name == "group":
-            log.debug("Grouping the Graphframe by: {0}".format(action["groupBy"]))
-            group = groupBy(state, action["groupBy"])
-            self.states[dataset].gdf = group.df
-            self.states[dataset].graph = group.graph
-            write_graph = False
-            self.write_gf(state, dataset, "group", write_graph)
-            if action["groupBy"] == "module":
-                path_type = "group_path"
-            elif action["groupBy"] == "name":
-                path_type = "path"
-            nx = CallGraph(state, path_type, True, action["groupBy"])
-            state.g = nx.g
-            return nx.g
-
-        elif action_name == "split-level":
-            splitLevel(state, action["groupBy"])
-            nx = CallGraph(state, "group_path", True)
-            return nx.g
-
-        elif action_name == "split-callee":
-            splitCallee(state, action["groupBy"])
-            nx = CallGraph(state, "path", True)
-            return nx.g
-
-        elif action_name == "split-caller":
-            splitCaller(state, action["groupBy"])
-            nx = CallGraph(state, "path", True)
-            return nx.g
-
-        elif action_name == "hierarchy":
-            mH = moduleHierarchy(self.states[dataset], action["module"])
-            return mH.result
-
-        elif action_name == "histogram":
-            histogram = Histogram(state, action["nid"])
-            return histogram.result
-
-        elif action_name == "mini-histogram":
-            minihistogram = MiniHistogram(state)
-            return minihistogram.result
-
-        elif action_name == "cct":
-            self.update_dist({
-                "name": "group",
-                "groupBy": "name",
-                "datasets": action["dataset"]
-            })
-            nx = CCT(self.states[action["dataset"]], action["functionsInCCT"])
-            return nx.g
-
-        elif action_name == "split-rank":
-            ret = splitRank(state, action["ids"])
-            return ret
-
-        elif action_name == "function":
-            functionlist = FunctionList(state, action["module"], action["nid"])
-            return functionlist.result
-
-    def update_dist(self, action):
-        action_name = action["name"]
-        print("Action: ", action_name)
-        datasets = self.config.dataset_names
-
-        if action_name == "init":
-            self.states["ensemble"] = self.pipeline.read_ensemble_gf()
-            print(self.states['ensemble'].g.nodes())
-            for idx, dataset in enumerate(datasets):
-                self.states[dataset] = self.pipeline.read_dataset_gf(dataset)
-
-            # Read all datasets but the filtered versions.
-            self.setConfig()
-            return self.config
-
-        elif action_name == "group":
-            self.states['ensemble'].g = EnsembleGraph(
-                self.states, "group_path", construct_graph=True, add_data=True
-            ).g
-            return self.states['ensemble'].g
-
-        elif action_name == "scatterplot":
-            if action["plot"] == "bland-altman":
-                state1 = self.states[action["dataset"]]
-                state2 = self.states[action["dataset2"]]
-                col = action["col"]
-                catcol = action["catcol"]
-                dataset1 = action["dataset"]
-                dataset2 = action["dataset2"]
-                ret = BlandAltman(
-                    state1, state2, col, catcol, dataset1, dataset2
-                ).results
-            return ret
-
-        elif action_name == "gradients":
-            if action["plot"] == "kde":
-                ret = KDE_gradients(self.states).results
-            return ret
-
-        elif action_name == "Gromov-wasserstein":
-            ret = {}
-            return ret
-
-        elif action_name == "similarity":
-            if (action['module'] == 'all'):
-                dirname = self.config.callflow_dir
-                name = self.config.runName
-                similarity_filepath = dirname  + '/' + 'similarity.json'
-                with open(similarity_filepath, 'r') as similarity_file:
-                    self.similarities = json.load(similarity_file)
-            else:
-                self.similarities = {}
-                for idx, dataset in enumerate(datasets):
-                    self.similarities[dataset] = []
-                    for idx_2, dataset2 in enumerate(datasets):
-                        union_similarity = Similarity(
-                            self.states[dataset2].g, self.states[dataset].g
-                        )
-                    self.similarities[dataset].append(union_similarity.result)
-            return self.similarities
-
-        elif action_name == "hierarchy":
-            mH = moduleHierarchyDist(self.states["ensemble"], action["module"])
-            return mH.result
-
-        elif action_name == "cct":
-            self.update_dist({
-                "name": "group",
-                "groupBy": "name",
-                "datasets": action["datasets"]
-            })
-            nx = CCT(self.states["ensemble"], action["functionsInCCT"])
-            return nx.g
-
-        elif action_name == "projection":
-            result = RunProjection(self.states, self.similarities).result
-            return result.to_json(orient="columns")
-
-        elif action_name == "run-information":
-            ret = []
-            for idx, state in enumerate(self.states):
-                self.states[state].projection_data["dataset"] = state
-                ret.append(self.states[state].projection_data)
-            return ret
-
-        elif action_name == "mini-histogram":
-            minihistogram = MiniHistogram(self.states['ensemble'], target_datasets=action['target-datasets'])
-            return minihistogram.result
-
-        elif action_name == "histogram":
-            histogram = DistHistogram(self.states['ensemble'], action["module"])
-            return histogram.result
-
-        elif action_name == "auxiliary":
-            auxiliary = Auxiliary(self.states['ensemble'], module=action['module'], sortBy=action['sortBy'], datasets=action['datasets'])
-            return auxiliary.result
-
-        elif action_name == 'compare':
-            compareDataset = action['compareDataset']
-            targetDataset = action['targetDataset']
-            if(action['selectedMetric'] == 'Inclusive'):
-                selectedMetric = 'time (inc)'
-            elif(action['selectedMetric'] == 'Exclusive'):
-                selectedMetric = 'time'
-
-            compare = Compare(self.states, compareDataset, targetDataset, selectedMetric)
-            return compare.result
-
     def displayStats(self, name):
         log.warn("==========================")
         log.info("Number of datasets : {0}".format(len(self.config[name].paths.keys())))
@@ -371,4 +172,3 @@ class CallFlow:
         log.info("Avg Inclusive time = {0} ".format(avg_inclusive_time))
         log.info("Avg Exclusive time = {0} ".format(avg_exclusive_time))
         log.info("Number of nodes in CCT = {0}".format(num_of_nodes))
-

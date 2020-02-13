@@ -13,7 +13,7 @@
 import os
 import math
 import fnmatch
-from logger import log
+from .logger import log
 
 # For converting graphml to json
 import networkx as nx
