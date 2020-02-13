@@ -29,8 +29,7 @@ from networkx.readwrite import json_graph
 # Callflow imports
 from callflow import CallFlow
 from pipeline.config_file_reader import ConfigFileReader
-import utils
-from logger import log
+from utils.logger import log
 
 app = Flask(__name__, static_url_path="/public")
 sockets = SocketIO(app, cors_allowed_origins="*")
@@ -46,7 +45,7 @@ class App:
         self.config = ConfigFileReader(self.args.config)
         self.config.server_dir = os.getcwd()
         self.config.callflow_dir = (
-            self.callflow_path + self.config.save_path + self.config.runName
+            self.callflow_path + '/' + self.config.save_path + '/' + self.config.runName
         )
         self.config.preprocess = self.args.preprocess
         self.config.entire = self.args.entire
@@ -144,8 +143,7 @@ class App:
 
     def create_dot_callflow_folder(self):
         if self.debug:
-            self.print("Create .callflow directiory.")
-        print(self.config.callflow_dir)
+            self.print(f"Create .callflow directiory.: {self.config.callflow_dir}")
         if not os.path.exists(self.config.callflow_dir):
             os.makedirs(self.config.callflow_dir)
 
