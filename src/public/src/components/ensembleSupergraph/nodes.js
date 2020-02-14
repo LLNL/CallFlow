@@ -484,7 +484,7 @@ export default {
             for (let i = 0; i < this.$store.graph.nodes.length; i++) {
                 let callsite_name = this.$store.graph.nodes[i].name
                 let node_data = this.$store.graph.nodes[i]
-                console.log(this.$store.callsites)
+                console.log(this.$store)
                 if( this.$store.callsites[dataset][callsite_name] != undefined){
                     console.log(callsite_name)
                     let mean_inclusive_data = this.$store.callsites[dataset][callsite_name]['mean_time (inc)']
