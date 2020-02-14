@@ -10,12 +10,12 @@
  * https://github.com/LLNL/CallFlow
  * Please also read the LICENSE file for the MIT License notice.
  ******************************************************************************/
-import tpl from '../html/diffScatterplot.html'
+import tpl from '../../html/ensembleScatterplot/index.html'
 import * as d3 from 'd3'
-import ToolTip from './diffScatterplot/tooltip'
+import ToolTip from './tooltip'
 
 export default {
-	name: 'diffScatterplot',
+	name: 'EnsembleScatterplot',
 	template: tpl,
 	components: {
 		ToolTip
@@ -323,7 +323,7 @@ export default {
 
 			var b1 = term1 / term2;
 			var b0 = y_mean - (b1 * x_mean);
-			// perform regression 
+			// perform regression
 
 			let yhat = [];
 			// fit line using coeffs

@@ -26,6 +26,7 @@ import RunInformation from './parameterInformation/parameterInformation'
 import AuxiliaryFunction from './auxiliaryFunction/auxiliaryFunction'
 import EnsembleHistogram from './ensembleHistogram/ensembleHistogram'
 import ModuleHierarchy from './moduleHierarchy/moduleHierarchy'
+import EnsembleScatterplot from './ensembleScatterplot/ensembleScatterplot'
 
 import io from 'socket.io-client'
 import utils from '../utils'
@@ -48,6 +49,7 @@ export default {
 		// RunInformation,
 		AuxiliaryFunction,
 		EnsembleHistogram,
+		EnsembleScatterplot,
 	},
 
 	data: () => ({
@@ -441,7 +443,7 @@ export default {
 			this.selectedColorMinText = this.$store.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.$store.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 			this.$store.color.highlight = '#AF9B90';//'#4681B4'
-			this.$store.color.target = '#4681B4'//'#AF9B90';//'#4681B4'
+			this.$store.color.target = '#4681B4	'//'#AF9B90';//'#4681B4'
 			this.$store.color.ensemble = '#C0C0C0';//'#4681B4'
 			this.$store.color.compare = '#043060'
 		},
