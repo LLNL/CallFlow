@@ -7,11 +7,11 @@ import EventHandler from '../EventHandler'
 
 
 export default {
-    name: 'SimilarityMatrix',
+    name: 'EnsembleDistribution',
     template: template,
     props: [],
     components: {
-        // LiveMatrixColormap
+
     },
     data: () => ({
         id: null,
@@ -21,7 +21,7 @@ export default {
         container: null,
         height: 0,
         width: 0,
-        message: "DeltaCon Similarity Matrix",
+        message: "Distribution matrix",
         matrix: null,
         matrixScale: 0.7,
         offset: 10,
@@ -40,20 +40,22 @@ export default {
         },
     }),
     sockets: {
-        // ensemble_similarity(data) {
-        //     console.log("Similarities: ", data)
-        //     this.processSimilarityMatrix(data)
-        // }
+        ensemble_similarity(data) {
+
+            console.log("distribution")
+            this.processSimilarityMatrix()
+        }
     },
     watch: {
     },
 
     mounted() {
-        this.id = 'similarity-matrix-view'
+        this.id = 'ensemble-distribution-view'
     },
 
     methods: {
         init() {
+            console.log
             this.toolbarHeight = document.getElementById('toolbar').clientHeight
             this.footerHeight = document.getElementById('footer').clientHeight
             this.width = window.innerWidth * 0.2
@@ -71,44 +73,48 @@ export default {
             this.matrixWidth = this.matrixLength * this.matrixScale
             this.matrixHeight = this.matrixLength * this.matrixScale
             // this.$refs.LiveMatrixColormap.init('live-kpmatrix-overview')
-            console.log("Similarity matrix started")
         },
 
 
-        processSimilarityMatrix(data) {
+        processSimilarityMatrix() {
             this.similarityMatrix = []
-            let mat = []
 
-            this.datasetMap = {}
-            this.datasetRevMap = {}
-            let idx = 0
-            for (var dataset in data) {
-                if (data.hasOwnProperty(dataset)) {
-                    this.datasetMap[dataset] = idx
-                    this.datasetRevMap[idx] = dataset
-                    idx += 1
-                }
-            }
-
-            let count = 0
-            for (var dataset in data) {
-                if (data.hasOwnProperty(dataset)) {
-                    let similarity = data[dataset]
-                    for (let i = 0; i < similarity.length; i += 1) {
-                        if (this.similarityMatrix[count] == undefined) {
-                            this.similarityMatrix[count] = []
-                        }
-                        this.similarityMatrix[count][i] = {
-                            x: count,
-                            j: i,
-                            z: similarity[i],
-                            id_x: this.datasetMap[dataset],
-                            id_y: i
-                        }
+            console.log(this.$store.callsites)
+            let callsites = Object.keys(this.$store.callsites['ensemble'])
+            for(let i = 0 ; i < callsites.length; i += 1){
+                for(let j = 0; j < callsites.length; j += 1){
+                    if(this.similarityMatrix[i] == undefined){
+                        this.similarityMatrix[i] = []
                     }
-                    count += 1
+                    let callsite = callsites[i]
+                    let data = this.$store.callsites['ensemble'][callsite]
+
+                    console.log(data)
+                    console.log(callsite)
+                    this.similarityMatrix[i][j] = {
+                        x: i,
+                        j: j,
+                        z: data["max_time"],
+                        id_x: 0,
+                        id_y: i
+                    }
                 }
             }
+
+
+            // let count = 0
+            // for (var dataset in data) {
+            //     if (data.hasOwnProperty(dataset)) {
+            //         let similarity = data[dataset]
+            //         for (let i = 0; i < similarity.length; i += 1) {
+            //             if (this.similarityMatrix[count] == undefined) {
+            //                 this.similarityMatrix[count] = []
+            //             }
+
+            //         }
+            //         count += 1
+            //     }
+            // }
             this.visualize()
         },
 
@@ -119,7 +125,7 @@ export default {
                 this.firstRender = false
             }
 
-            this.visualize()
+            // this.visualize()
         },
 
         addDummySVG() {
@@ -239,9 +245,9 @@ export default {
                 .style('stroke', (d, i) => {
                     return self.$store.color.target
                 })
-                // .style('stroke-width', (d, i) => {
-                //     return this.nodeWidth/3
-                // })
+                .style('stroke-width', (d, i) => {
+                    return this.nodeWidth/3
+                })
 
         },
 

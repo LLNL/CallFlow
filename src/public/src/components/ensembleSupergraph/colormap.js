@@ -43,6 +43,7 @@ export default {
             this.parentID = this.$parent.id
             this.containerWidth = this.$parent.width
             this.containerHeight = this.$parent.height
+            console.log(this.containerWidth, this.containerHeight)
 
             this.scaleG = d3.select('#' + this.parentID)
                 .append('g')

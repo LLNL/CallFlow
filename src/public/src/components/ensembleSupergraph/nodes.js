@@ -354,8 +354,6 @@ export default {
                     .attr("x2", "0%")
                     .attr("y2", "100%");
 
-                print(d)
-
                 let min_val = d[method]['y_min']
                 let max_val = d[method]['y_max']
 
