@@ -13,14 +13,15 @@ import EventHandler from './EventHandler'
 import tpl from '../html/callflow.html'
 
 // Single mode imports
-import Callgraph from './supergraph/supergraph'
+import SuperGraph from './supergraph/supergraph'
 import CCT from './cct/cct'
 import Scatterplot from './runtimeScatterplot/runtimeScatterplot'
 import Histogram from './histogram/histogram'
 import Function from './function/function'
 
 // Ensemble mode imports
-import Distgraph from './ensembleSupergraph/ensembleSupergraph'
+import EnsembleSuperGraph from './ensembleSupergraph/ensembleSupergraph'
+import EnsembleCCT from './ensembleCCT/cct'
 import SimilarityMatrix from './similarityMatrix/similarityMatrix'
 import ParameterProjection from './parameterProjection/parameterProjection'
 import RunInformation from './parameterInformation/parameterInformation'
@@ -38,13 +39,14 @@ export default {
 	components: {
 		Splitpanes,
 		VueSlider,
-		Callgraph,
+		SuperGraph,
 		CCT,
 		Scatterplot,
 		Function,
 		Histogram,
 		ModuleHierarchy,
-		Distgraph,
+		EnsembleSuperGraph,
+		EnsembleCCT,
 		SimilarityMatrix,
 		// ParameterProjection,
 		// RunInformation,
@@ -81,7 +83,7 @@ export default {
 		runtimeColorMap: [],
 		distributionColorMap: [],
 		selectedRuntimeColorMap: "Reds",
-		selectedDistributionColorMap: "Greys",
+		selectedDistributionColorMap: "Blues",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
 		selectedColorPoint: 9,
 		selectedColorMin: null,
@@ -226,6 +228,10 @@ export default {
 				this.$store.modules[dataset] = this.processModule(module_data[dataset])
 			}
 			console.log("Done processing ")
+			this.$socket.emit('ensemble_supergraph', {
+				datasets: this.$store.runNames,
+				groupBy: this.selectedGroupBy
+			})
 		},
 
 		// Reset to the init() function.
@@ -237,11 +243,7 @@ export default {
 		// Fetch aggregated graph for single mode.
 		single_supergraph(data) {
 			console.log("Data for", this.selectedFormat, ": ", data)
-			if (this.selectedData == 'Dataframe') {
-				this.$refs.CallgraphA.init(data)
-			} else if (this.selectedData == 'Graph') {
-				this.$refs.CallgraphB.init(data)
-			}
+			this.$refs.SuperGraph.init(data)
 			this.$refs.Scatterplot.init()
 			this.$refs.Histogram.init()
 			this.$refs.Function.init()
@@ -256,42 +258,46 @@ export default {
 		ensemble_supergraph(data) {
 			data = JSON.parse(data)
 			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
-			if (this.selectedData == 'Dataframe' && this.initLoad) {
+			if (this.initLoad) {
 				// this.$refs.ParameterProjection.init()
-				this.$refs.DistgraphA.init(data)
+				this.$refs.EnsembleSuperGraph.init(data)
 				this.$refs.AuxiliaryFunction.init()
 				this.$refs.EnsembleHistogram.init()
 				// this.$refs.RunInformation.init()
 				this.$refs.SimilarityMatrix.init()
 				this.initLoad = false
-			} else if (this.selectedData == 'Graph' && this.initLoad) {
-				this.$refs.DistgraphB.init(data)
-				// this.$refs.DistFunction.init()
-				// this.$refs.DistIcicle.init()
-				this.initLoad = false
 			}
-			else {
-				this.$refs.DistgraphA.init(data)
-			}
+
+			this.$socket.emit('ensemble_gradients', {
+				datasets: this.$store.runNames,
+				plot: 'kde'
+			})
 		},
 
 		ensemble_gradients(data) {
 			console.log("[Gradient] Data:", data)
 			this.data = data
-			this.setupMeanGradients(data)
+			this.$refs.EnsembleSuperGraph.setupGradients(data)
 			console.log("Store:", this.$store)
+
+
+			this.$socket.emit('ensemble_similarity', {
+				datasets: this.$store.runNames,
+				algo: 'deltacon',
+				module: 'all'
+			})
 		},
 
 		// Fetch CCT for distribution mode.
 		comp_cct(data) {
 			console.log("Diff CCT data: ", data)
-			this.$refs.DistCCT1.init(data[this.$store.selectedTargetDataset], '1')
-			this.$refs.DistCCT2.init(data[this.$store.selectedTargetDataset], '2')
+			this.$refs.EnsembleCCT1.init(data[this.$store.selectedTargetDataset], '1')
+			this.$refs.EnsembleCCT2.init(data[this.$store.selectedTargetDataset], '2')
 		},
 
 		ensemble_cct(data) {
 			console.log("Dist cct data: ", data)
-			this.$refs.CCT.init(data['union'], '2')
+			this.$refs.EnsembleCCT.init(data['union'], '2')
 		},
 
 		ensemble_mini_histogram(data) {
@@ -399,32 +405,27 @@ export default {
 				})
 			} else if (this.selectedFormat == 'Callgraph' && this.selectedExhibitMode == 'Default') {
 
-				this.socketPromise('callsite_data', {
-					datasets: this.$store.runNames,
-					sortBy: this.$store.auxiliarySortBy,
-					module: 'all'
-				}).then(() => {
-					this.socketPromise('ensemble_supergraph', {
-						datasets: this.$store.runNames,
-						groupBy: this.selectedGroupBy
-					})
-				}).then(() => {
-					this.socketPromise('ensemble_gradients', {
-						datasets: this.$store.runNames,
-						plot: 'kde'
-					})
-				})
-				// this.$socket.emit('callsite_data', {
+				// this.socketPromise('callsite_data', {
 				// 	datasets: this.$store.runNames,
 				// 	sortBy: this.$store.auxiliarySortBy,
 				// 	module: 'all'
+				// }).then(() => {
+				// 	this.socketPromise('ensemble_supergraph', {
+				// 		datasets: this.$store.runNames,
+				// 		groupBy: this.selectedGroupBy
+				// 	})
+				// }).then(() => {
+				// 	this.socketPromise('ensemble_gradients', {
+				// 		datasets: this.$store.runNames,
+				// 		plot: 'kde'
+				// 	})
 				// })
+				this.$socket.emit('callsite_data', {
+					datasets: this.$store.runNames,
+					sortBy: this.$store.auxiliarySortBy,
+					module: 'all'
+				})
 
-				// this.$socket.emit('ensemble_similarity', {
-				// 	datasets: this.$store.runNames,
-				// 	algo: 'deltacon',
-				// 	module: 'all'
-				// })
 
 				// if(this.parameter_analysis){
 				// 	this.$socket.emit('dist_projection', {

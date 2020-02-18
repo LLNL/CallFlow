@@ -164,16 +164,13 @@
 				</splitpanes>
 				<splitpanes horizontal :splitpanes-size="70">
 					<span>
-						<Callgraph ref="CallgraphA" />
-					</span>
-					<span>
-						<!-- <Callgraph2 ref="Callgraph2" /> -->
+						<SuperGraph ref="SuperGraph" />
 					</span>
 				</splitpanes>
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-show="selectedFormat == 'CCT'">
+		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Ensemble'">
 			<splitpanes id="cct-dashboard">
 				<span>
 					<CCT ref="CCT" />
@@ -182,7 +179,7 @@
 		</v-layout>
 
 		<v-layout v-show="selectedMode == 'Ensemble' && selectedFormat == 'Callgraph'">
-			<splitpanes id="diffgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe' && parameter_analysis == true">
+			<splitpanes id="ensemble-supergraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe' && parameter_analysis == true">
 				<splitpanes horizontal :splitpanes-size="20">
 					<!-- <span>
 						<RunInformation ref="RunInformation" />
@@ -191,11 +188,12 @@
 						<Projection ref="Projection" @compare="updateCompareMode" />
 					</span> -->
 					<span>
-						<EnsembleScatterplot ref="EnsembleScatterplot"/>
-					</span>
-					<span>
 						<SimilarityMatrix ref="SimilarityMatrix" />
 					</span>
+					<span>
+						<EnsembleScatterplot ref="EnsembleScatterplot"/>
+					</span>
+
 
 				</splitpanes>
 				<splitpanes horizontal :splitpanes-size="80">
@@ -204,7 +202,7 @@
 							<v-chip class="chip" chips color="teal" label outlined clearable> {{ summaryChip }}
 							</v-chip>
 						</v-layout>
-						<Distgraph ref="DistgraphA" />
+						<EnsembleSuperGraph ref="EnsembleSuperGraph" />
 					</span>
 				</splitpanes>
 				<splitpanes horizontal :splitpanes-size="20">
@@ -220,29 +218,13 @@
 				</splitpanes>
 
 			</splitpanes>
-			<!-- <splitpanes id="diffgraph-dashboard-2" class="default-theme" v-show="selectedData == 'Graph'">
-				<splitpanes horizontal :splitpanes-size="30">
-					<span>
-						<diffFunction ref="DiffFunction" />
-					</span>
-					<span>
-						<DiffHistogram ref="DiffHistogram" />
-						<diffIcicle ref="DiffIcicle" />
-					</span>
-				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="70">
-					<span>
-						<Distgraph ref="DistgraphB" />
-					</span>
-				</splitpanes>
-			</splitpanes> -->
 		</v-layout>
 
 		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Ensemble'">
-			<splitpanes id="cct-dashboard">
+			<splitpanes id="ensemble-cct-dashboard">
 				<splitpanes horizontal :splitpanes-size="50">
 					<span>
-						<!-- <DiffCCT ref="DiffCCT1" id="diff-cct-1"/> -->
+						<EnsembleCCT ref="EnsembleCCT" id="ensemble-cct"/>
 					</span>
 					a
 					</span>
@@ -254,7 +236,7 @@
 	<v-footer id="footer" color="teal" class="white--text" app>
 		<span> Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis </span>
 		<v-spacer></v-spacer>
-		<span>&copy; 2017 - 2019</span>
+		<span>&copy; 2017 - 2020</span>
 	</v-footer>
 
 </v-app>
