@@ -2,7 +2,7 @@
 
 import {
     deepCopy
-} from '../utils'
+} from '../core/utils'
 
 export default function createLogger({
     collapsed = true,

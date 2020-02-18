@@ -11,6 +11,10 @@ export default {
 </script>
 
 <style>
+body, html {
+  
+}
+
 #toolbar {
   padding: 0px 0px 0px;
 }
@@ -22,6 +26,7 @@ export default {
 #vis {
   border: 2px solid #e1e1e1;
 }
+
 .node rect {
   stroke: #333;
   fill: #fff;

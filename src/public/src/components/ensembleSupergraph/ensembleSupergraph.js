@@ -308,7 +308,7 @@ export default {
 				.levelSpacing(this.levelSpacing)
 				.maxLevel(this.graph.maxLevel)
 				//    .setReferenceValue(this.data.rootRunTimeInc)
-				.datasets(this.$store.actual_dataset_names)
+				.datasets(this.$store.runNames)
 				.setMinNodeScale(this.nodeScale)
 				.store(this.$store)
 

@@ -50,7 +50,7 @@ class EnsembleCallFlow:
         self.pipeline = Pipeline(self.config)
         if config.process:
             log.info("[Ensemble] Process Mode.")
-            self.states = self.process(self.config.dataset_names)
+            self.states = self.processState(self.config.dataset_names)
         else:
             log.info("[Ensemble] Read Mode.")
             self.states = self.readState(self.config.dataset_names)

@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import { mapState, mapActions } from 'vuex';
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/antd.css'
 
@@ -29,7 +30,7 @@ import ModuleHierarchy from './moduleHierarchy/moduleHierarchy'
 import EnsembleScatterplot from './ensembleScatterplot/ensembleScatterplot'
 
 import io from 'socket.io-client'
-import utils from '../utils'
+import utils from '@/core/utils'
 
 export default {
 	name: 'CallFlow',
@@ -91,8 +92,6 @@ export default {
 		selectedGroupMode: 'include callbacks',
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
-		modes: [],
-		selectedMode: '',
 		selectedBinCount: 100,
 		selectedFunctionsInCCT: 70,
 		selectedDiffNodeAlignment: 'Top',
@@ -102,7 +101,6 @@ export default {
 		datas: ['Dataframe', 'Graph'],
 		selectedData: 'Dataframe',
 		firstRender: false,
-		enableDist: false,
 		summaryChip: 'Ensemble Graph',
 		auxiliarySortBy: 'time (inc)',
 		ranks: [],
@@ -112,11 +110,14 @@ export default {
 		selectedCompareDataset: null,
 		compareModes: ['meanDiff', 'rankDiff'],
 		selectedCompareMode: 'meanDiff',
-		enableCompareMode: false,
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
+		modes: ['Ensemble', 'Single'],
+		selectedMode: 'Ensemble',
+		// Presentation mode variables
 		exhibitModes: ['Presentation', 'Default'],
 		selectedExhibitMode: 'Default',
+		presentationPage: 0,
 		presentationOrder: [
 			"run_information",
 			"ensemble_supergraph",
@@ -134,41 +135,37 @@ export default {
 
 	mounted() {
 		var socket = io.connect(this.server, { reconnect: false });
+	},
 
+	created() {
 		this.$socket.emit('config')
 	},
 
-	sockets: {
-		connect() {
-			console.log('socket connected')
-		},
+	beforeDestroy() {
+		//Unsubscribe on destroy
+		this.$socket.emit('disconnect');
+	},
 
+	sockets: {
 		// Assign variables for the store and Callflow ui component.
 		// Assign colors and min, max inclusive and exclusive times.
 		config(data) {
 			data = JSON.parse(data)
 			console.log("Config file contains: ", data)
-			this.numOfDatasets = data['datasets'].length
+			this.$store.numOfRuns = data['datasets'].length
+			this.$store.runNames = data['names']
+			this.datasets = this.$store.runNames
 
 			// Enable diff mode only if the number of datasets >= 2
-			let datasetMapping = this.assignUniqueDatasetNames(data['names'])
-			this.$store.datasets = datasetMapping['arr']
-			this.$store.datasetMap = datasetMapping['map']
-			this.$store.datasetRevMap = datasetMapping['revmap']
-			this.$store.actual_dataset_names = data['names']
-			this.datasets = this.$store.actual_dataset_names
-
-			if (this.numOfDatasets >= 2) {
-				this.enableDist = true
+			if (this.numOfRuns >= 2) {
 				this.modes = ['Single', 'Ensemble']
 				this.selectedMode = 'Ensemble'
 				this.selectedTargetDataset = data['names'][0]
 				this.$store.selectedTargetDataset = data['names'][0]
 			}
-			else {
+			else if (this.numOfRuns == 1) {
 				this.enableDist = false
 				this.modes = ['Single']
-				this.selectedDataset2 = ''
 				this.selectedMode = 'Single'
 				this.$store.selectedTargetDataset = data['names'][0]
 				this.selectedTargetDataset = data['names'][0]
@@ -178,7 +175,7 @@ export default {
 			this.$store.minExcTime = data['min_excTime']
 			this.$store.maxIncTime = data['max_incTime']
 			this.$store.minIncTime = data['min_incTime']
-			this.$store.numbOfRanks = data['numbOfRanks']
+			this.$store.numOfRanks = data['numbOfRanks']
 			this.$store.selectedBinCount = this.selectedBinCount
 			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3)
 			this.$store.selectedScatterMode = this.selectedScatterMode
@@ -194,6 +191,41 @@ export default {
 			this.setTargetDataset()
 
 			this.init()
+		},
+
+		callsite_data(data) {
+			console.log("Auxiliary Data: ", data)
+			this.dataReady = true
+
+			let module_data = data['module']
+			for (let key of Object.keys(module_data)) {
+				if (module_data.hasOwnProperty(key)) {
+					module_data[key] = this.processJSON(module_data[key])
+				}
+			}
+
+			let callsite_data = data['callsite']
+			for (let key of Object.keys(callsite_data)) {
+				if (callsite_data.hasOwnProperty(key)) {
+					callsite_data[key] = this.processJSON(callsite_data[key])
+				}
+			}
+			this.$store.callsites = {}
+			let ensemble = this.processCallsite(callsite_data['ensemble'])
+			this.$store.callsites['ensemble'] = ensemble
+			for (let i = 0; i < this.$store.runNames.length; i += 1) {
+				let dataset = this.$store.runNames[i]
+				this.$store.callsites[dataset] = this.processCallsite(callsite_data[dataset])
+			}
+
+			this.$store.modules = {}
+			this.$store.modules['ensemble'] = this.processModule(module_data['ensemble'])
+
+			for (let i = 0; i < this.$store.runNames.length; i += 1) {
+				let dataset = this.$store.runNames[i]
+				this.$store.modules[dataset] = this.processModule(module_data[dataset])
+			}
+			console.log("Done processing ")
 		},
 
 		// Reset to the init() function.
@@ -216,7 +248,7 @@ export default {
 			this.$refs.Icicle.init()
 		},
 
-		cct(data){
+		cct(data) {
 			this.$refs.CCT.init(data['union'], '2')
 		},
 
@@ -224,14 +256,13 @@ export default {
 		ensemble_supergraph(data) {
 			data = JSON.parse(data)
 			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
-			console.log(this.initLoad, this.selectedData)
 			if (this.selectedData == 'Dataframe' && this.initLoad) {
 				// this.$refs.ParameterProjection.init()
-				this.$refs.SimilarityMatrix.init()
 				this.$refs.DistgraphA.init(data)
-				this.$refs.DistHistogram.init()
 				this.$refs.AuxiliaryFunction.init()
-				this.$refs.RunInformation.init()
+				this.$refs.EnsembleHistogram.init()
+				// this.$refs.RunInformation.init()
+				this.$refs.SimilarityMatrix.init()
 				this.initLoad = false
 			} else if (this.selectedData == 'Graph' && this.initLoad) {
 				this.$refs.DistgraphB.init(data)
@@ -242,6 +273,13 @@ export default {
 			else {
 				this.$refs.DistgraphA.init(data)
 			}
+		},
+
+		ensemble_gradients(data) {
+			console.log("[Gradient] Data:", data)
+			this.data = data
+			this.setupMeanGradients(data)
+			console.log("Store:", this.$store)
 		},
 
 		// Fetch CCT for distribution mode.
@@ -259,7 +297,7 @@ export default {
 		ensemble_mini_histogram(data) {
 			data = JSON.parse(data)
 			this.createNodeInfoStore(data)
-			this.$refs.DistHistogram.render(this.defaultCallSite)
+			this.$refs.EnsembleHistogram.render(this.defaultCallSite)
 		},
 
 		compare() {
@@ -272,23 +310,14 @@ export default {
 	},
 
 	methods: {
-		// Assigns idx to datasets.
-		// osu_bcast.XX.XX.XX-XX => osu_bcast_1 and so on.
-		assignUniqueDatasetNames(names) {
-			let ret = []
-			let retMap = {}
-			let retRevMap = {}
-			for (let i = 0; i < names.length; i += 1) {
-				let name = names[i].split('.')[0]
-				ret.push(name + '_' + i)
-				retMap[names[i]] = name + '_' + i
-				retRevMap[name + '_' + i] = names[i]
-			}
-			return {
-				"arr": ret,
-				"map": retMap,
-				"revmap": retRevMap
-			}
+		socketPromise(socket_name, socket_params) {
+			return new Promise((resolve) => {
+				this.$socket.emit(socket_name, socket_params, resolve)
+				console.log(this.$socket)
+				this.$socket.on(socket_name, (data) => {
+					console.log(data)
+				})
+			});
 		},
 
 		clear() {
@@ -314,7 +343,7 @@ export default {
 			} else if (this.selectedFormat == 'Callgraph') {
 				this.$refs.DistgraphA.clear()
 				this.$refs.Icicle.clear()
-				this.$refs.DistHistogram.clear()
+				this.$refs.EnsembleHistogram.clear()
 				// this.$refs.Projection.clear()
 				// this.$refs.RunInformation.clear()
 				this.$refs.AuxiliaryFunction.clear()
@@ -322,79 +351,89 @@ export default {
 		},
 
 		init() {
-			this.presentationPage = 0
 			if (this.selectedExhibitMode == 'Presentation') {
 				this.enablePresentationMode()
 			}
-			// Initialize colors
-			this.colors()
-			console.log("[Mode = ", this.selectedMode, "]")
-			console.log("[Dataset = ", this.selectedTargetDataset, "]")
-			console.log("[Format = ", this.selectedFormat, "]")
+
+			console.log("Mode : ", this.selectedMode)
+			console.log("Number of runs :", this.$store.numOfRuns)
+			console.log("Dataset : ", this.selectedTargetDataset)
+			console.log("Format = ", this.selectedFormat)
+
 			// Call the appropriate socket to query the server.
 			if (this.selectedMode == 'Single') {
-				if (this.selectedFormat == 'CCT') {
-					this.$socket.emit('single_cct', {
-						dataset: this.$store.selectedTargetDataset,
-						functionsInCCT: this.selectedFunctionsInCCT,
-						selectedMetric: this.selectedMetric,
-					})
-				} else if (this.selectedFormat == 'Callgraph') {
-					this.$socket.emit('single_supergraph', {
-						dataset: this.$store.selectedTargetDataset,
-						format: this.selectedFormat,
-						groupBy: this.selectedGroupBy
-					})
-				}
+				this.initSingleMode()
+			}
+			else if (this.selectedMode == 'Ensemble') {
+				this.initEnsembleMode()
+			}
 
-			} else if (this.selectedMode == 'Ensemble') {
-				if (this.selectedFormat == 'CCT') {
-					console.log("[Mode = Ensemble]")
-					this.$socket.emit('ensemble_cct', {
-						datasets: this.$store.actual_dataset_names,
-						functionsInCCT: this.selectedFunctionsInCCT,
-					})
-				} else if (this.selectedFormat == 'Callgraph' && this.selectedExhibitMode == 'Default') {
-					if (this.parameter_analysis) {
-						this.$socket.emit('parameter_information', {
-							datasets: this.$store.actual_dataset_names,
-						})
-					}
+			// Initialize colors
+			this.colors()
+		},
 
-					this.$socket.emit('ensemble_auxiliary', {
-						datasets: this.$store.actual_dataset_names,
-						sortBy: this.$store.auxiliarySortBy,
-						module: 'all'
-					})
-
-					this.$socket.emit('ensemble_supergraph', {
-						datasets: this.$store.actual_dataset_names,
-						groupBy: this.selectedGroupBy
-					})
-
-					if(this.parameter_analysis){
-						this.$socket.emit('ensemble_similarity', {
-							datasets: this.$store.actual_dataset_names,
-							algo: 'deltacon',
-							module: 'all'
-						})
-					}
-
-					this.$socket.emit('ensemble_gradients', {
-						datasets: this.$store.actual_dataset_names,
-						plot: 'kde'
-					})
-
-					// if(this.parameter_analysis){
-					// 	this.$socket.emit('dist_projection', {
-					// 		datasets: this.$store.actual_dataset_names,
-					// 		algo: 'tsne'
-					// 	})
-					// }
-				}
+		initSingleMode() {
+			console.log("Single mode")
+			if (this.selectedFormat == 'CCT') {
+				this.$socket.emit('single_cct', {
+					dataset: this.$store.selectedTargetDataset,
+					functionsInCCT: this.selectedFunctionsInCCT,
+					selectedMetric: this.selectedMetric,
+				})
+			} else if (this.selectedFormat == 'Callgraph') {
+				this.$socket.emit('single_supergraph', {
+					dataset: this.$store.selectedTargetDataset,
+					format: this.selectedFormat,
+					groupBy: this.selectedGroupBy
+				})
 			}
 		},
 
+		initEnsembleMode() {
+			console.log("Ensemble mode")
+			if (this.selectedFormat == 'CCT') {
+				console.log("[Mode = Ensemble]")
+				this.$socket.emit('ensemble_cct', {
+					datasets: this.$store.runNames,
+					functionsInCCT: this.selectedFunctionsInCCT,
+				})
+			} else if (this.selectedFormat == 'Callgraph' && this.selectedExhibitMode == 'Default') {
+
+				this.socketPromise('callsite_data', {
+					datasets: this.$store.runNames,
+					sortBy: this.$store.auxiliarySortBy,
+					module: 'all'
+				}).then(() => {
+					this.socketPromise('ensemble_supergraph', {
+						datasets: this.$store.runNames,
+						groupBy: this.selectedGroupBy
+					})
+				}).then(() => {
+					this.socketPromise('ensemble_gradients', {
+						datasets: this.$store.runNames,
+						plot: 'kde'
+					})
+				})
+				// this.$socket.emit('callsite_data', {
+				// 	datasets: this.$store.runNames,
+				// 	sortBy: this.$store.auxiliarySortBy,
+				// 	module: 'all'
+				// })
+
+				// this.$socket.emit('ensemble_similarity', {
+				// 	datasets: this.$store.runNames,
+				// 	algo: 'deltacon',
+				// 	module: 'all'
+				// })
+
+				// if(this.parameter_analysis){
+				// 	this.$socket.emit('dist_projection', {
+				// 		datasets: this.$store.actual_dataset_names,
+				// 		algo: 'tsne'
+				// 	})
+				// }
+			}
+		},
 
 		colors() {
 			this.$store.color = new Color(this.selectedMetric)
@@ -430,11 +469,7 @@ export default {
 
 			this.$store.colorPoint = this.selectedColorPoint
 			console.log("Datasets are :", this.datasets)
-			this.$store.color.datasetColor = {}
-			for (let i = 0; i < this.$store.datasets.length; i += 1) {
-				this.$store.color.datasetColor[this.$store.datasets[i]] = this.$store.color.getCatColor(i)
-			}
-			console.log("Assigned Color map: ", this.$store.color.datasetColor)
+
 			this.$store.selectedColorMin = this.selectedColorMin
 			this.$store.selectedColorMax = this.selectedColorMax
 			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap
@@ -456,14 +491,50 @@ export default {
 			})
 		},
 
-		createNodeInfoStore(data) {
-			for (const [key, value] of Object.entries(data)) {
-				let node = key
-				let d = JSON.parse(value)
-				let split_node = node.split('=')[1]
-				this.$store.nodeInfo[split_node] = d
+		processJSON(data) {
+			let json = JSON.parse(data)
+			let d = json.data
+			let index = json.index
+			let columns = json.columns
+
+			let columnMap = {}
+			let idx = 0
+			for (let column of columns) {
+				columnMap[column] = idx
+				idx += 1
 			}
-			console.log("NodeInfo: ", this.$store.nodeInfo)
+			return {
+				d: d,
+				index: index,
+				columns: columns,
+				columnMap: columnMap
+			}
+		},
+
+		processCallsite(data) {
+			let callsites = {}
+			for (let i = 0; i < data.index.length; i += 1) {
+				let callsite = {}
+				let callsite_name = data.d[i][data.columnMap['name']]
+				for (let column of data.columns) {
+					callsite[column] = data.d[i][data.columnMap[column]]
+				}
+				callsites[callsite_name] = callsite
+			}
+			return callsites
+		},
+
+		processModule(data) {
+			let modules = {}
+			for (let i = 0; i < data.index.length; i += 1) {
+				let module_dict = {}
+				let module_name = data.d[i][data.columnMap['module']]
+				for (let column of data.columns) {
+					module_dict[column] = data.d[i][data.columnMap[column]]
+				}
+				modules[module_name] = module_dict
+			}
+			return modules
 		},
 
 		setTargetDataset() {
@@ -678,7 +749,7 @@ export default {
 			this.$socket.emit('compare', {
 				targetDataset: this.$store.selectedTargetDataset,
 				compareDataset: this.$store.selectedCompareDataset,
-				selectedMetric:this.$store.selectedMetric
+				selectedMetric: this.$store.selectedMetric
 			})
 		},
 
@@ -715,7 +786,7 @@ export default {
 			}
 		},
 
-		enablePresentationMode(){
+		enablePresentationMode() {
 			let self = this
 			this.addEvent(document, "keypress", function (e) {
 				e = e || window.event;
@@ -731,12 +802,12 @@ export default {
 			switch (request) {
 				case 'run_information':
 					this.$socket.emit('run_information', {
-						datasets: this.$store.actual_dataset_names,
+						datasets: this.$store.runNames,
 					})
 					break;
 				case 'dist_group':
 					this.$socket.emit('dist_group', {
-						datasets: this.$store.actual_dataset_names,
+						datasets: this.$store.runNames,
 						groupBy: this.selectedGroupBy
 					})
 					break;
@@ -747,26 +818,26 @@ export default {
 					break;
 				case 'dist_similarity':
 					this.$socket.emit('dist_similarity', {
-						datasets: this.$store.actual_dataset_names,
+						datasets: this.$store.runNames,
 						algo: 'deltacon',
 						module: 'all'
 					})
 					break;
 				case 'dist_gradients':
 					this.$socket.emit('dist_gradients', {
-						datasets: this.$store.actual_dataset_names,
+						datasets: this.$store.runNames,
 						plot: 'kde'
 					})
 					break;
 				case 'dist_projection':
 					this.$socket.emit('dist_projection', {
-						datasets: this.$store.actual_dataset_names,
+						datasets: this.$store.runNames,
 						algo: 'tsne'
 					})
 					break;
 				case 'dist_auxiliary':
 					this.$socket.emit('dist_auxiliary', {
-						datasets: this.$store.actual_dataset_names,
+						datasets: this.$store.runNames,
 						sortBy: this.$store.auxiliarySortBy,
 						module: 'all'
 					})
@@ -774,7 +845,7 @@ export default {
 				case 'dist_hierarchy':
 					this.$socket.emit('dist_hierarchy', {
 						module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
-						datasets: this.$store.actual_dataset_names,
+						datasets: this.$store.runNames,
 					})
 					break;
 			}

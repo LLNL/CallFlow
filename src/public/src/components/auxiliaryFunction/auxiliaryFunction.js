@@ -39,50 +39,7 @@ export default {
         })
     },
 
-    sockets: {
-        auxiliary(data) {
-            console.log("Auxiliary Data: ", data)
-            this.dataReady = true
-
-            let module_data = data['module']
-            for (let key of Object.keys(module_data)) {
-                if (module_data.hasOwnProperty(key)) {
-                    this.module_data[key] = this.preprocess(module_data[key])
-                }
-            }
-
-            let callsite_data = data['callsite']
-            for (let key of Object.keys(callsite_data)) {
-                if (callsite_data.hasOwnProperty(key)) {
-                    this.callsite_data[key] = this.preprocess(callsite_data[key])
-                }
-            }
-
-            this.init()
-        },
-    },
-
     methods: {
-        preprocess(data) {
-            let json = JSON.parse(data)
-            let d = json.data
-            let index = json.index
-            let columns = json.columns
-
-            let columnMap = {}
-            let idx = 0
-            for (let column of columns) {
-                columnMap[column] = idx
-                idx += 1
-            }
-            return {
-                d: d,
-                index: index,
-                columns: columns,
-                columnMap: columnMap
-            }
-        },
-
         init() {
             if (!this.firstRender) {
                 this.clear()
@@ -90,52 +47,11 @@ export default {
             else {
                 this.firstRender = false
             }
-
-            this.$store.callsites = {}
-            this.$store.callsites['ensemble'] = this.processCallsite(this.callsite_data['ensemble'])
-            for (let i = 0; i < this.$store.actual_dataset_names.length; i += 1) {
-                let dataset = this.$store.actual_dataset_names[i]
-                this.$store.callsites[dataset] = this.processCallsite(this.callsite_data[dataset])
-            }
-
-            this.$store.modules = {}
-            this.$store.modules['ensemble'] = this.processModule(this.module_data['ensemble'])
-
-            for (let i = 0; i < this.$store.actual_dataset_names.length; i += 1) {
-                let dataset = this.$store.actual_dataset_names[i]
-                this.$store.modules[dataset] = this.processModule(this.module_data[dataset])
-            }
-
+            
             for (const [idx, callsite] of Object.entries(this.$store.callsites['ensemble'])) {
                 this.ui(callsite.name)
                 this.visualize(callsite.name)
             }
-        },
-
-        processCallsite(data) {
-            let callsites = {}
-            for (let i = 0; i < data.index.length; i += 1) {
-                let callsite = {}
-                let callsite_name = data.d[i][data.columnMap['name']]
-                for (let column of data.columns) {
-                    callsite[column] = data.d[i][data.columnMap[column]]
-                }
-                callsites[callsite_name] = callsite
-            }
-            return callsites
-        },
-
-        processModule(data) {
-            let modules = {}
-            for (let i = 0; i < data.index.length; i += 1) {
-                let module_dict = {}
-                let module_name = data.d[i][data.columnMap['module']]
-                for (let column of data.columns) {
-                    module_dict[column] = data.d[i][data.columnMap[column]]
-                }
-                modules[module_name] = module_dict
-            }
-            return modules
         },
 
         clear() {
@@ -202,11 +118,11 @@ export default {
 
                 this.$socket.emit('dist_hierarchy', {
                     module: modules,
-                    datasets: this.$store.actual_dataset_names,
+                    datasets: this.$store.runNames,
                 })
 
                 this.$socket.emit('ensemble_histogram', {
-                    datasets: this.$store.actual_dataset_names,
+                    datasets: this.$store.runNames,
                     module: modules,
                     name: callsite
                 })
