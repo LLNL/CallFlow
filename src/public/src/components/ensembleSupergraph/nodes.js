@@ -45,8 +45,7 @@ export default {
             this.mean_diff_max = 0
 
             for (let i = 0; i < data.length; i += 1) {
-                console.log(data[i]['mean_diff'], this.mean_diff_max, this.mean_diff_min)
-                if(this.$store.selectedMetric == 'Inclusive'){
+                if (this.$store.selectedMetric == 'Inclusive') {
                     this.rank_min = Math.min(this.rank_min, data[i]['hist']['y_min'])
                     this.rank_max = Math.max(this.rank_max, data[i]['hist']['y_max'])
                     this.mean_min = Math.min(this.mean_min, data[i]['hist']['x_min'])
@@ -54,7 +53,7 @@ export default {
                     this.mean_diff_min = Math.min(this.mean_diff_min, data[i]['mean_diff'])
                     this.mean_diff_max = Math.max(this.mean_diff_max, data[i]['mean_diff'])
                 }
-                else if(this.$store.selectedMetric == 'Exclusive'){
+                else if (this.$store.selectedMetric == 'Exclusive') {
                     this.rank_min = Math.min(this.rank_min, data[i]['hist']['y_min'])
                     this.rank_max = Math.max(this.rank_max, data[i]['hist']['y_max'])
                     this.mean_min = Math.min(this.mean_min, data[i]['hist']['x_min'])
@@ -229,17 +228,17 @@ export default {
                     this.$store.selectedNode = d
                     this.$store.selectedModule = d.module
 
-                    this.$socket.emit('dist_hierarchy', {
+                    this.$socket.emit('module_hierarchy', {
                         module: d.id,
                         datasets: this.$store.runNames,
                     })
 
-                    EventHandler.$emit('ensemble_histogram', {
+                    this.$socket.emit('ensemble_histogram', {
                         module: this.$store.selectedModule,
                         datasets: this.$store.runNames,
                     })
 
-                    this.$socket.emit('dist_auxiliary', {
+                    this.$socket.emit('ensemble_auxiliary', {
                         module: this.$store.selectedModule,
                         datasets: this.$store.runNames,
                         sortBy: this.$store.auxiliarySortBy,
@@ -483,7 +482,7 @@ export default {
                 let callsite_name = this.$store.graph.nodes[i].name
                 let node_data = this.$store.graph.nodes[i]
                 console.log(this.$store.callsites)
-                if( this.$store.callsites[dataset][callsite_name] != undefined){
+                if (this.$store.callsites[dataset][callsite_name] != undefined) {
                     console.log(callsite_name)
                     let mean_inclusive_data = this.$store.callsites[dataset][callsite_name]['mean_time (inc)']
                     let max_inclusive_data = this.$store.callsites['ensemble'][callsite_name]['max_time (inc)']
@@ -504,7 +503,7 @@ export default {
                         .attr("stroke-width", 5)
                         .attr("stroke", this.$store.color.target)
                 }
-                }
+            }
 
         },
 
@@ -619,128 +618,6 @@ export default {
             d3.selectAll('.dist-node').remove()
             d3.selectAll('.targetLines').remove()
             this.$refs.ToolTip.clear()
-        },
-
-        // Debugging the gradients using a line plot.
-        cleardebugGradients() {
-            d3.selectAll('.debugLine').remove()
-            d3.selectAll('.axisLabel').remove()
-            d3.selectAll('.axis').remove()
-        },
-
-        debugGradients(data, node, mode) {
-            this.toolbarHeight = document.getElementById('toolbar').clientHeight
-            this.footerHeight = document.getElementById('footer').clientHeight
-            this.width = window.innerWidth * 0.3
-            this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.5
-
-            this.margin = {
-                top: 15,
-                right: 10,
-                bottom: 10,
-                left: 15
-            }
-            this.scatterWidth = this.width - this.margin.right - this.margin.left;
-            this.scatterHeight = this.height - this.margin.top - this.margin.bottom;
-
-            this.debugsvg = d3.select('#debug')
-                .attr('width', this.width - this.margin.left - this.margin.right)
-                .attr('height', this.height - this.margin.top - this.margin.bottom)
-                .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
-
-            this.xMin = data[node][mode]['x_min']
-            this.xMax = data[node][mode]['x_max']
-            this.yMin = data[node][mode]['y_min']
-            this.yMax = data[node][mode]['y_max']
-            this.xScale = d3.scaleLinear().domain([this.xMin, this.xMax]).range([0, this.scatterWidth])
-            this.yScale = d3.scaleLinear().domain([this.yMin, this.yMax]).range([this.scatterHeight - this.margin.top - this.margin.bottom, 0])
-
-            var xAxis = d3.axisBottom(this.xScale)
-            // .ticks(5)
-            // .tickFormat((d, i) => {
-            //     console.log(d)
-            //     if (i % 2 == 0 || i == 0 ) {
-            //         return d
-            //     }
-            //     else{
-            //         return ''
-            //     }
-            // });
-
-            var yAxis = d3.axisLeft(this.yScale)
-            // .ticks(5)
-            // .tickFormat((d, i) => {
-            //     console.log(i)
-            //     if (i % 2 == 0 || i == 0) {
-            //         return d
-            //         // return `${this.yMin + i*d/(this.yMax - this.yMin)}`
-            //     }
-            //     else{
-            //         return ''
-            //     }
-            // });
-
-            let xAxisHeightCorrected = this.scatterHeight - this.margin.top - this.margin.bottom
-            var xAxisLine = this.debugsvg.append('g')
-                .attr('class', 'axis')
-                .attr('id', 'xAxis')
-                .attr("transform", "translate(" + 3 * this.margin.left + "," + xAxisHeightCorrected + ")")
-                .call(xAxis)
-
-            this.debugsvg.append('text')
-                .attr('class', 'axisLabel')
-                .attr('x', this.scatterWidth)
-                .attr('y', this.yAxisHeight - this.margin.left * 1.5)
-                .style('font-size', '10px')
-                .style('text-anchor', 'end')
-                .text("Diff")
-
-            var yAxisLine = this.debugsvg.append('g')
-                .attr('id', 'yAxis')
-                .attr('class', 'axis')
-                .attr('transform', "translate(" + 2 * this.margin.left + ", 0)")
-                .call(yAxis)
-
-            this.debugsvg.append("text")
-                .attr('class', 'axisLabel')
-                .attr('transform', 'rotate(-90)')
-                .attr('x', 0)
-                .attr('y', 1 * this.margin.left)
-                .style("text-anchor", "end")
-                .style("font-size", "10px")
-                .text("Histogram count");
-
-            let self = this
-            var plotLine = d3.line()
-                .curve(d3.curveMonotoneX)
-                .x(function (d) {
-                    return self.xScale(d.x);
-                })
-                .y(function (d) {
-                    return self.yScale(d.y);
-                });
-
-            let kde_data = data[node][mode]
-            let data_arr = []
-            for (let i = 0; i < kde_data['x'].length; i++) {
-                data_arr.push({
-                    'x': kde_data['x'][i],
-                    'y': kde_data['y'][i]
-                })
-            }
-            var line = this.debugsvg.append("path")
-                // .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
-                .data([data_arr])
-                .attr('class', 'debugLine')
-                .attr("d", plotLine)
-                .attr("stroke", (d) => {
-                    if (mode == 'hist')
-                        return "blue"
-                    else
-                        return 'red'
-                })
-                .attr("stroke-width", "2")
-                .attr("fill", "none");
         },
 
     }

@@ -63,7 +63,7 @@ class Auxiliary:
         name = name.replace('>', '')
         return name
 
-    def histogram(self, data, nbins=5):
+    def histogram(self, data, nbins=20):
         h, b = np.histogram(data, range=[0, data.max()], bins=nbins)
         return 0.5*(b[1:]+b[:-1]), h
 

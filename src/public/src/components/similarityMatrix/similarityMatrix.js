@@ -40,10 +40,10 @@ export default {
         },
     }),
     sockets: {
-        // ensemble_similarity(data) {
-        //     console.log("Similarities: ", data)
-        //     this.processSimilarityMatrix(data)
-        // }
+        ensemble_similarity(data) {
+            console.log("Similarities: ", data)
+            this.processSimilarityMatrix(data)
+        }
     },
     watch: {
     },

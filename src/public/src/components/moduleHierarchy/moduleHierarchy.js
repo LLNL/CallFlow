@@ -62,11 +62,9 @@ export default {
 		hierarchy(data) {
 			data = JSON.parse(data['data'])
 			console.log("Module hierarchy: ", data)
-			// console.log(data['tree'])
-			// this.update_from_df(JSON.parse(data['data']))
 		},
 
-		dist_hierarchy(data) {
+		module_hierarchy(data) {
 			data = JSON.parse(data['data'])
 			console.log("Module hierarchy: ", data)
 			this.update_from_df(data)
@@ -77,7 +75,7 @@ export default {
 	},
 
 	mounted() {
-		this.id = 'icicle-overview-' + this._uid
+		this.id = 'module-hierarchy-overview'
 	},
 
 	methods: {
@@ -97,6 +95,7 @@ export default {
 			this.hierarchySVG = d3.select('#' + this.id)
 				.append('svg')
 				.attrs({
+					"id": "module-hierarchy-svg",
 					'width': this.icicleWidth + this.margin.right + this.margin.left,
 					'height': this.icicleHeight + this.margin.top + this.margin.bottom,
 				})
@@ -114,7 +113,7 @@ export default {
 
 		// TODO: Need to make level view for the icicle plot.
 		update_level() {
-			this.clearIcicles()
+			this.clear()
 			let ret = []
 			this.minLevel = this.level[0]
 			this.maxLevel = this.level[1]
@@ -166,7 +165,7 @@ export default {
 		},
 
 		trunc(str, n) {
-			str = str.replace(/<unknown procedure>/g,'proc ');
+			str = str.replace(/<unknown procedure>/g, 'proc ');
 			return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
 		},
 
@@ -232,16 +231,13 @@ export default {
 		},
 
 		clear() {
-			// this.clearIcicles()
-		},
-
-		clearIcicles() {
 			d3.selectAll('.icicleNode').remove()
 			d3.selectAll('.icicleText').remove()
 		},
 
 		textSize(text) {
-			const container = d3.select('#' + this.id).append('svg');
+			const container = d3.select('#' + this.id)
+				.append('svg')
 			container.append('text')
 				.attrs({
 					x: -99999,
@@ -329,7 +325,7 @@ export default {
 				node.y0 = y0
 				node.y1 = y1
 				node.x0 = parent.x0 + x_offset
-				x_offset += (parent.x1 - parent.x0)/(n)
+				x_offset += (parent.x1 - parent.x0) / (n)
 				node.x1 = parent.x0 + x_offset;
 			}
 		},
@@ -337,7 +333,7 @@ export default {
 		drawIcicles(json) {
 			json = json.children[0]
 			if (this.hierarchy != undefined) {
-				this.clearIcicles();
+				this.clear();
 			} else {
 				this.setupSVG()
 				this.hierarchy = this.hierarchySVG.append('g')
@@ -365,22 +361,10 @@ export default {
 
 			// Total size of all segments; we set this later, after loading the data
 			let root = d3.hierarchy(json)
-			console.log(json)
 			const partition = this.partition(root)
 
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition)
-			console.log("Hierarchy nodes: ", this.nodes)
-			// .filter(d => {
-			// 	if(this.selectedDirection == 'TD'){
-			// 		console.log(d.y1, d.y0)
-			// 		return (d.y1 - d.y0 > 0.5)
-			// 	}
-			// 	else{
-			// 		console.log(d.x1, d.x0)
-			// 		return (d.x1 - d.x0 > 0.5)
-			// 	}
-			// });
 
 			this.addNodes()
 			this.addText()
@@ -392,14 +376,94 @@ export default {
 			this.totalSize = root.value;
 		},
 
+		setupMeanGradients() {
+			let module = this.$store.selectedModule
+			let callsites = this.$store.moduleCallsiteMap[module]
+
+			let method = ''
+			// let mode = 'Horizontal'
+			let mode = ''
+			if (this.$store.selectedMetric == 'Inclusive') {
+				method = 'hist_time (inc)'
+			}
+			else if (this.$store.selectedMetric == 'Exclusive') {
+				method = 'hist_time (inc)'
+			}
+			this.hist_min = 0
+			this.hist_max = 0
+			let callsiteStore = this.$store.callsites['ensemble']
+			for (let idx = 0; idx < callsites.length; idx += 1) {
+				let callsite = callsites[idx]
+				let data = callsiteStore[callsite]
+				this.hist_min = Math.min(this.hist_min, data[method]['y_min'])
+				this.hist_max = Math.max(this.hist_max, data[method]['y_max'])
+			}
+
+			this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
+
+			for (let idx = 0; idx < callsites.length; idx += 1) {
+				let callsite = callsites[idx]
+				let data = callsiteStore[callsite]
+				let id = data.id
+				var defs = d3.select('#module-hierarchy-svg')
+					.append("defs");
+
+				this.linearGradient = defs.append("linearGradient")
+					.attr("id", "mean-gradient-" + id)
+					.attr("class", 'linear-gradient')
+
+				if (mode == 'Horizontal') {
+					this.linearGradient
+						.attr("x1", "0%")
+						.attr("y1", "0%")
+						.attr("x2", "100%")
+						.attr("y2", "0%");
+				}
+				else {
+					this.linearGradient
+						.attr("x1", "0%")
+						.attr("y1", "0%")
+						.attr("x2", "0%")
+						.attr("y2", "100%");
+				}
+
+				let min_val = data[method]['y_min']
+				let max_val = data[method]['y_max']
+
+				let grid = data[method]['x']
+				console.log(grid)
+				let val = data[method]['y']
+
+				for (let i = 0; i < grid.length; i += 1) {
+					let x = (i + i + 1) / (2 * grid.length)
+					let current_value = (val[i])
+					this.linearGradient.append("stop")
+						.attr("offset", 100 * x + "%")
+						.attr("stop-color", this.$store.binColor.getColorByValue(current_value))
+				}
+			}
+		},
+
 		addNodes() {
 			let self = this
+			this.setupMeanGradients()
 			this.hierarchy
 				.selectAll('.icicleNode')
 				.data(this.nodes)
 				.enter()
 				.append('rect')
 				.attr('class', 'icicleNode')
+				.attr('id', (d) => {
+					let name
+					if (d.data.name.indexOf('=') === -1) {
+						name = d.data.name
+					}
+					else {
+						name = d.data.name.split('=')[1]
+					}
+					let id = self.$store.callsites['ensemble'][name].id
+					return id
+				})
 				.attr('x', (d) => {
 					if (this.selectedDirection == 'LR') {
 						if (Number.isNaN(d.y0)) {
@@ -432,20 +496,23 @@ export default {
 					}
 					return d.y1 - d.y0;
 				})
-				.style('fill', (d) => {
-					let color = self.$store.color.target
-					return color;
+				.style("fill", (d, i) => {
+					if (d.data.name.indexOf('=') === -1) {
+						let id = this.$store.callsites['ensemble'][d.data.name].id
+						return "url(#mean-gradient-" + id + ")"
+					}
+					return 'transparent'
 				})
 				.style('stroke', (d) => {
 					let runtime = 0
-					if(this.$store.selectedMetric == 'Inclusive'){
+					if (this.$store.selectedMetric == 'Inclusive') {
 						runtime = d.data.inclusive
 					}
-					else if(this.$store.selectedMetric == 'Exclusive'){
+					else if (this.$store.selectedMetric == 'Exclusive') {
 						runtime = d.data.exclusive
 					}
-					if(runtime == undefined){
-						return 'black'
+					if (runtime == undefined) {
+						return 'transparent'
 					}
 					return d3.rgb(this.$store.color.getColorByValue(runtime));
 				})
@@ -456,8 +523,10 @@ export default {
 					}
 					return 1;
 				})
+
 				.on('click', this.click)
 				.on('mouseover', this.mouseover);
+
 		},
 
 		addText() {
@@ -505,9 +574,9 @@ export default {
 						return '';
 					}
 					let name = d.data.name
-					name = name.replace(/<unknown procedure>/g,'proc ');
+					name = name.replace(/<unknown procedure>/g, 'proc ');
 
-					if(name.indexOf('=')){
+					if (name.indexOf('=')) {
 						name = name.split('=')[0]
 					}
 

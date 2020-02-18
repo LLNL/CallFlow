@@ -40,11 +40,11 @@ export default {
         },
     }),
     sockets: {
-        ensemble_similarity(data) {
+        // ensemble_similarity(data) {
 
-            console.log("distribution")
-            this.processSimilarityMatrix()
-        }
+        //     console.log("distribution")
+        //     this.processSimilarityMatrix()
+        // }
     },
     watch: {
     },
@@ -75,11 +75,50 @@ export default {
             // this.$refs.LiveMatrixColormap.init('live-kpmatrix-overview')
         },
 
+        setupMeanGradients(data) {
+            let method = 'hist'
+            this.hist_min = 0
+            this.hist_max = 0
+            for (let d in data) {
+                this.hist_min = Math.min(this.hist_min, data[d][this.$store.selectedMetric]['hist']['y_min'])
+                this.hist_max = Math.max(this.hist_max, data[d][this.$store.selectedMetric]['hist']['y_max'])
+            }
+            this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
+            this.$parent.$refs.DistColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
+
+            for (let d in data) {
+                var defs = d3.select('#ensemble-supergraph-overview')
+                    .append("defs");
+
+                this.linearGradient = defs.append("linearGradient")
+                    .attr("id", "mean-gradient" + this.nidNameMap[d])
+                    .attr("class", 'linear-gradient')
+
+                this.linearGradient
+                    .attr("x1", "0%")
+                    .attr("y1", "0%")
+                    .attr("x2", "0%")
+                    .attr("y2", "100%");
+
+                let min_val = data[d][this.$store.selectedMetric][method]['y_min']
+                let max_val = data[d][this.$store.selectedMetric][method]['y_max']
+
+                let grid = data[d][this.$store.selectedMetric][method]['x']
+                let val = data[d][this.$store.selectedMetric][method]['y']
+
+                for (let i = 0; i < grid.length; i += 1) {
+                    let x = (i + i + 1) / (2 * grid.length)
+                    let current_value = (val[i])
+                    this.linearGradient.append("stop")
+                        .attr("offset", 100 * x + "%")
+                        .attr("stop-color", this.$store.binColor.getColorByValue(current_value))
+                }
+            }
+        },
 
         processSimilarityMatrix() {
             this.similarityMatrix = []
 
-            console.log(this.$store.callsites)
             let callsites = Object.keys(this.$store.callsites['ensemble'])
             for(let i = 0 ; i < callsites.length; i += 1){
                 for(let j = 0; j < callsites.length; j += 1){
@@ -89,32 +128,15 @@ export default {
                     let callsite = callsites[i]
                     let data = this.$store.callsites['ensemble'][callsite]
 
-                    console.log(data)
-                    console.log(callsite)
                     this.similarityMatrix[i][j] = {
                         x: i,
                         j: j,
                         z: data["max_time"],
-                        id_x: 0,
-                        id_y: i
+                        gradient: this.setupMeanGradients(data)
                     }
                 }
             }
 
-
-            // let count = 0
-            // for (var dataset in data) {
-            //     if (data.hasOwnProperty(dataset)) {
-            //         let similarity = data[dataset]
-            //         for (let i = 0; i < similarity.length; i += 1) {
-            //             if (this.similarityMatrix[count] == undefined) {
-            //                 this.similarityMatrix[count] = []
-            //             }
-
-            //         }
-            //         count += 1
-            //     }
-            // }
             this.visualize()
         },
 

@@ -81,7 +81,7 @@ export default {
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
 		metrics: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
-		selectedMetric: 'Inclusive',
+		selectedMetric: 'Exclusive',
 		runtimeColorMap: [],
 		distributionColorMap: [],
 		selectedRuntimeColorMap: "Reds",
@@ -180,6 +180,8 @@ export default {
 			this.$store.maxIncTime = data['max_incTime']
 			this.$store.minIncTime = data['min_incTime']
 			this.$store.numOfRanks = data['numbOfRanks']
+			this.$store.moduleCallsiteMap = data['module_callsite_map']
+			this.$store.callsiteModuleMap = data['callsite_module_map']
 			this.$store.selectedBinCount = this.selectedBinCount
 			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3)
 			this.$store.selectedScatterMode = this.selectedScatterMode
@@ -230,10 +232,7 @@ export default {
 				this.$store.modules[dataset] = this.processModule(module_data[dataset])
 			}
 			console.log("Done processing ")
-			this.$socket.emit('ensemble_supergraph', {
-				datasets: this.$store.runNames,
-				groupBy: this.selectedGroupBy
-			})
+
 		},
 
 		// Reset to the init() function.
@@ -270,11 +269,6 @@ export default {
 				this.$refs.SimilarityMatrix.init()
 				// this.initLoad = false
 			}
-
-			this.$socket.emit('ensemble_gradients', {
-				datasets: this.$store.runNames,
-				plot: 'kde'
-			})
 		},
 
 		ensemble_gradients(data) {
@@ -282,13 +276,6 @@ export default {
 			this.data = data
 			this.$refs.EnsembleSuperGraph.setupGradients(data)
 			console.log("Store:", this.$store)
-
-
-			this.$socket.emit('ensemble_similarity', {
-				datasets: this.$store.runNames,
-				algo: 'deltacon',
-				module: 'all'
-			})
 		},
 
 		ensemble_mini_histogram(data) {
@@ -412,6 +399,21 @@ export default {
 					module: 'all'
 				})
 
+				this.$socket.emit('ensemble_supergraph', {
+					datasets: this.$store.runNames,
+					groupBy: this.selectedGroupBy
+				})
+
+				this.$socket.emit('ensemble_gradients', {
+					datasets: this.$store.runNames,
+					plot: 'kde'
+				})
+
+				this.$socket.emit('ensemble_similarity', {
+					datasets: this.$store.runNames,
+					algo: 'deltacon',
+					module: 'all'
+				})
 
 				// if(this.parameter_analysis){
 				// 	this.$socket.emit('dist_projection', {
