@@ -169,7 +169,6 @@ class App:
             self.config = self.callflow.request({
                 "name":"config"
             })
-            print(self.config)
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
             emit("config", config_json, json=True)
 
@@ -316,7 +315,7 @@ class App:
                     "module": data["module"]
                 }
             )
-            emit("dist_similarity", result, json=True)
+            emit("ensemble_similarity", result, json=True)
 
         @sockets.on("module_hierarchy", namespace="/")
         def module_hierarchy(data):
@@ -355,10 +354,10 @@ class App:
             )
             emit("parameter_information", json.dumps(result), json=True)
 
-        @sockets.on("ensemble_auxiliary", namespace="/")
-        def ensemble_auxiliary(data):
+        @sockets.on("callsite_data", namespace="/")
+        def callsites(data):
             if self.debug:
-                self.print("[Request] Auxiliary: ", data)
+                self.print("[Request] Callsite information: ", data)
             result = self.callflow.request(
                 {
                     "name": "auxiliary",
@@ -367,7 +366,7 @@ class App:
                     "module": data['module']
                 }
             )
-            emit("ensemble_auxiliary", result, json=True)
+            emit("callsite_data", result, json=True)
 
         @sockets.on('compare', namespace='/')
         def compare(data):

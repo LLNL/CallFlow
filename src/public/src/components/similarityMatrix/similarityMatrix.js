@@ -40,7 +40,7 @@ export default {
         },
     }),
     sockets: {
-        dist_similarity(data) {
+        ensemble_similarity(data) {
             console.log("Similarities: ", data)
             this.processSimilarityMatrix(data)
         }

@@ -16,7 +16,7 @@ module.exports = {
 		ignored: /node_modules/,
 	},
 	context: path.resolve(__dirname, '../'),
-	entry: './src/app.js',
+	entry: './src/init.js',
 	output: {
 		path: config.build.assetsRoot,
 		filename: '[name].js',

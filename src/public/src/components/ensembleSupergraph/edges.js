@@ -29,7 +29,7 @@ export default {
 
             this.$store.selectedAlignmentShow = 'Ensemble'
 
-            let datasets = this.$store.actual_dataset_names
+            let datasets = this.$store.runNames
             if (this.$store.selectedAlignmentShow == 'All') {
                 for (let i = 0; i < datasets.length; i += 1) {
                     let dataset = datasets[i]
@@ -38,7 +38,7 @@ export default {
                 }
             }
             else {
-                let client_dataset_name = this.$store.datasetMap[this.$store.selectedDataset]
+                // let client_dataset_name = this.$store.datasetMap[this.$store.selectedDataset]
                 this.initEdges('ensemble')
             }
 
@@ -113,11 +113,11 @@ export default {
                 .style('fill', (d) => {
                     return this.$store.color.grey
                 })
-                .style('stroke', (d) => {
-                    return this.$store.color.datasetColor[this.$store.selectedDataset]
-                })
+                // .style('stroke', (d) => {
+                //     return this.$store.color.datasetColor[this.$store.selectedTargetDataset]
+                // })
                 .style('fill-opacity', (d) => {
-                    return d.number_of_runs / this.$store.datasets.length
+                    return d.number_of_runs / this.$store.numOfRuns
                 })
                 .on("mouseover", function (d) {
                     d3.select(this).style("stroke-opacity", "1.0")
@@ -231,15 +231,6 @@ export default {
         },
 
         drawTopEdges(dataset) {
-            let client_dataset_name = ''
-            if (dataset == 'ensmeble') {
-                client_dataset_name = dataset
-            }
-            else {
-                client_dataset_name = this.$store.datasetMap[dataset]
-            }
-            console.log(this.links)
-            // console.log(client_dataset_name, dataset, this.$store.datasetMap[dataset])
             this.edges.selectAll('#dist-edge-' + dataset)
                 .data(this.links)
                 .attr('d', (d) => {

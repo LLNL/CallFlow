@@ -23,7 +23,7 @@ export default {
         renderZeroLine: {}
     }),
     sockets: {
-        dist_gradients(data) {
+        ensemble_gradients(data) {
             console.log("[Gradient] Data:", data)
             this.data = data
             this.setupMeanGradients(data)
@@ -231,17 +231,17 @@ export default {
 
                     this.$socket.emit('dist_hierarchy', {
                         module: d.id,
-                        datasets: this.$store.actual_dataset_names,
+                        datasets: this.$store.runNames,
                     })
 
                     EventHandler.$emit('ensemble_histogram', {
                         module: this.$store.selectedModule,
-                        datasets: this.$store.actual_dataset_names,
+                        datasets: this.$store.runNames,
                     })
 
                     this.$socket.emit('dist_auxiliary', {
                         module: this.$store.selectedModule,
-                        datasets: this.$store.actual_dataset_names,
+                        datasets: this.$store.runNames,
                         sortBy: this.$store.auxiliarySortBy,
                     })
                 })
@@ -484,7 +484,7 @@ export default {
             for (let i = 0; i < this.$store.graph.nodes.length; i++) {
                 let callsite_name = this.$store.graph.nodes[i].name
                 let node_data = this.$store.graph.nodes[i]
-                console.log(this.$store)
+                console.log(this.$store.callsites)
                 if( this.$store.callsites[dataset][callsite_name] != undefined){
                     console.log(callsite_name)
                     let mean_inclusive_data = this.$store.callsites[dataset][callsite_name]['mean_time (inc)']
