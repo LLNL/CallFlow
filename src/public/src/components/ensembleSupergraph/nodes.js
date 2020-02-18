@@ -23,12 +23,12 @@ export default {
         renderZeroLine: {}
     }),
     sockets: {
-        ensemble_gradients(data) {
-            console.log("[Gradient] Data:", data)
-            this.data = data
-            this.setupMeanGradients(data)
-            console.log("Store:", this.$store)
-        },
+        // ensemble_gradients(data) {
+        //     console.log("[Gradient] Data:", data)
+        //     this.data = data
+        //     this.setupMeanGradients(data)
+        //     console.log("Store:", this.$store)
+        // },
 
         compare(data) {
             console.log("[Comparison] Data:", data)
@@ -170,7 +170,7 @@ export default {
             this.$parent.$refs.DistColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
 
             for (let d in data) {
-                var defs = d3.select('#distgraph-overview-')
+                var defs = d3.select('#ensemble-supergraph-overview')
                     .append("defs");
 
                 this.linearGradient = defs.append("linearGradient")
@@ -341,7 +341,7 @@ export default {
             let method = 'hist'
             for (let i = 0; i < data.length; i += 1) {
                 let d = data[i]
-                var defs = d3.select('#distgraph-overview-')
+                var defs = d3.select('#ensemble-supergraph-overview')
                     .append("defs");
 
                 this.diffGradient = defs.append("linearGradient")

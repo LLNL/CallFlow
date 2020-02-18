@@ -24,7 +24,7 @@ import ColorMap from './colormap'
 import * as d3 from 'd3'
 
 export default {
-	name: 'Callgraph',
+	name: 'SuperGraph',
 	template: tpl,
 	components: {
 		Nodes,
@@ -36,8 +36,8 @@ export default {
 	},
 	props: [],
 	data: () => ({
-		id: '',
-		dashboardID: 'callgraph-dashboard',
+		id: 'supergraph-overview',
+		dashboardID: 'supergraph-dashboard',
 		nodeWidth: 50,
 		levelSpacing: 40,
 		ySpacing: 50,
@@ -58,7 +58,6 @@ export default {
 	watch: {},
 
 	mounted() {
-		this.id = 'callgraph-overview-' + this._uid
 	},
 
 	methods: {

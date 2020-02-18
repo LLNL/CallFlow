@@ -10,7 +10,7 @@ import EventHandler from '../EventHandler.js'
 import DistColorMap from './colormap'
 
 export default {
-	name: 'Distgraph',
+	name: 'EnsembleSuperGraph',
 	template: tpl,
 	components: {
 		DistNodes,
@@ -25,8 +25,8 @@ export default {
 	],
 	data: () => ({
 		graph: null,
-		id: 'distgraph-overview',
-		dashboardID: 'distgraph-dashboard',
+		id: 'ensemble-supergraph-overview',
+		dashboardID: 'ensemble-supergraph-dashboard',
 		nodeWidth: 50,
 		nodeScale: 1.0,
 		ySpacing: 50,
@@ -46,7 +46,7 @@ export default {
 	},
 
 	mounted() {
-		this.id = 'distgraph-overview-'
+		this.id = 'ensemble-supergraph-overview'
 		let self = this
 		EventHandler.$on('clear_summary_view', function () {
 			console.log("Clearing Summary view")
@@ -401,5 +401,9 @@ export default {
 				remainingNodes = nextNodes;
 			}
 		},
+
+		setupGradients(data){
+			this.$refs.DistNodes.setupMeanGradients(data)
+		}
 	}
 }
