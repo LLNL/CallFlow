@@ -38,6 +38,7 @@ export default {
         id: '',
         nodes: null,
         edges: null,
+        offset: 4
     }),
 
     mounted() {
@@ -117,7 +118,7 @@ export default {
                         'x': (d) => {
                             return node_dict.x + this.minimapXScale(xVals[i])
                         },
-                        'y': (d) => node_dict.y + this.minimapYScale(freq[i]),
+                        'y': (d) => node_dict.y + this.minimapYScale(freq[i]) - this.offset,
                         'stroke-width': '0.2px',
                         'stroke': 'black',
                         'fill': color,

@@ -21,7 +21,7 @@ import Function from './function/function'
 
 // Ensemble mode imports
 import EnsembleSuperGraph from './ensembleSupergraph/ensembleSupergraph'
-import EnsembleCCT from './ensembleCCT/cct'
+import EnsembleCCT from './ensembleCCT/ensembleCCT'
 import SimilarityMatrix from './similarityMatrix/similarityMatrix'
 import ParameterProjection from './parameterProjection/parameterProjection'
 import RunInformation from './parameterInformation/parameterInformation'
@@ -83,7 +83,7 @@ export default {
 		runtimeColorMap: [],
 		distributionColorMap: [],
 		selectedRuntimeColorMap: "Reds",
-		selectedDistributionColorMap: "Blues",
+		selectedDistributionColorMap: "Greens",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
 		selectedColorPoint: 9,
 		selectedColorMin: null,
@@ -288,18 +288,6 @@ export default {
 			})
 		},
 
-		// Fetch CCT for distribution mode.
-		comp_cct(data) {
-			console.log("Diff CCT data: ", data)
-			this.$refs.EnsembleCCT1.init(data[this.$store.selectedTargetDataset], '1')
-			this.$refs.EnsembleCCT2.init(data[this.$store.selectedTargetDataset], '2')
-		},
-
-		ensemble_cct(data) {
-			console.log("Dist cct data: ", data)
-			this.$refs.EnsembleCCT.init(data['union'], '2')
-		},
-
 		ensemble_mini_histogram(data) {
 			data = JSON.parse(data)
 			this.createNodeInfoStore(data)
@@ -328,27 +316,22 @@ export default {
 
 		clear() {
 			if (this.selectedFormat == 'Callgraph') {
-				this.$refs.CCT.clear()
+				this.$refs.EnsembleCCT.clear()
 			} else if (this.selectedFormat == 'CCT') {
-				if (this.selectedData == 'Dataframe') {
-					this.$refs.CallgraphA.clear()
-				} else if (this.selectedData == 'Graph') {
-					this.$refs.CallgraphB.clear()
-				}
-				this.$refs.Histogram.clear()
+				this.$refs.EnsembleSuperGraph.clear()
+				this.$refs.EnsembleHistogram.clear()
 				this.$refs.Scatterplot.clear()
-				this.$refs.Function.clear()
-				this.$refs.Icicle.clear()
-				this.$refs.Projection.clear()
+				this.$refs.AuxiliaryFunction.clear()
+				this.$refs.ModuleHierarchy.clear()
 			}
 		},
 
 		clearLocal() {
 			if (this.selectedFormat == 'CCT') {
-				this.$refs.CCT.clear()
+				this.$refs.EnsembleCCT.clear()
 			} else if (this.selectedFormat == 'Callgraph') {
-				this.$refs.DistgraphA.clear()
-				this.$refs.Icicle.clear()
+				this.$refs.EnsembleSuperGraph.clear()
+				this.$refs.ModuleHierarchy.clear()
 				this.$refs.EnsembleHistogram.clear()
 				// this.$refs.Projection.clear()
 				// this.$refs.RunInformation.clear()
@@ -360,6 +343,9 @@ export default {
 			if (this.selectedExhibitMode == 'Presentation') {
 				this.enablePresentationMode()
 			}
+
+			// Initialize colors
+			this.colors()
 
 			console.log("Mode : ", this.selectedMode)
 			console.log("Number of runs :", this.$store.numOfRuns)
@@ -373,9 +359,6 @@ export default {
 			else if (this.selectedMode == 'Ensemble') {
 				this.initEnsembleMode()
 			}
-
-			// Initialize colors
-			this.colors()
 		},
 
 		initSingleMode() {
@@ -453,6 +436,9 @@ export default {
 				else if (this.selectedMetric == 'Exclusive') {
 					this.selectedColorMin = this.$store.minExcTime['ensemble']
 					this.selectedColorMax = this.$store.maxExcTime['ensemble']
+				} else if(this.selectedMetric == 'Imbalance') {
+					this.selectedColorMin = 0.0
+					this.selectedColorMax = 1.0
 				}
 			}
 			else if (this.selectedMode == 'Single') {
@@ -462,6 +448,9 @@ export default {
 				} else if (this.selectedMetric == 'Exclusive') {
 					this.selectedColorMin = this.$store.minExcTime[this.selectedTargetDataset]
 					this.selectedColorMax = this.$store.maxExcTime[this.selectedTargetDataset]
+				} else if(this.selectedMetric == 'Imbalance') {
+					this.selectedColorMin = 0.0
+					this.selectedColorMax = 1.0
 				}
 			}
 

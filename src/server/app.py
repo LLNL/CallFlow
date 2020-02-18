@@ -262,7 +262,7 @@ class App:
         @sockets.on("ensemble_cct", namespace="/")
         def ensemble_cct(data):
             if self.debug:
-                self.print("[Request] Dist-CCT for the two datasets.", data)
+                self.print("[Request] Ensemble-CCT for the datasets", data)
 
             ensemble_cct = self.callflow.request(
                 {

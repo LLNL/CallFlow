@@ -1,4 +1,4 @@
-import tpl from '../../html/cct/colormap.html'
+import tpl from '../../html/ensembleCCT/colormap.html'
 import * as d3 from 'd3'
 import 'd3-selection-multi'
 
@@ -45,18 +45,19 @@ export default {
             this.containerHeight = this.$parent.height
 
             this.scaleG = d3.select('#' + this.id)
-            this.render()
+            this.drawColorMap()
+            this.drawText()
         },
 
-        render() {
+        drawColorMap() {
             this.color = this.$store.color
             if (this.color.option == "Module") {
 
             } else {
-                let splits = 1024
+                let splits = this.$store.colorPoint
                 let color = this.color.getScale(this.color.option)
 
-                for (let i = 0; i < splits; i += 1) {
+                for (let i = 0; i <= splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
                     this.scaleG.append('rect')
                         .attrs({
@@ -69,11 +70,19 @@ export default {
                         })
                 }
             }
-
-            this.drawText()
         },
 
         drawText() {
+            if(this.$store.selectedMetric == 'Inclusive' ||
+                this.$store.selectedMetric == 'Exclusive'){
+                    this.colorMinText = (this.colorMin * 0.000001).toFixed(3) + 's'
+                    this.colorMaxText = (this.colorMax * 0.000001).toFixed(3) + 's'
+            }
+            else if (this.$store.selectedMetric == 'Imbalance'){
+                this.colorMinText = this.colorMin.toFixed(1)
+                this.colorMaxText = this.colorMax.toFixed(1)
+            }
+            console.log(this.colorMin, this.colorMax)
             // draw the element
             this.scaleG.append("text")
                 .style("fill", "black")
@@ -84,7 +93,7 @@ export default {
                     'class': 'colormap-text',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
                 })
-                .text(this.colorMin * 0.000001 + 's');
+                .text(this.colorMinText);
 
             this.scaleG.append("text")
                 .style("fill", "black")
@@ -95,7 +104,7 @@ export default {
                     "class": "colormap-text",
                     'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - 2*this.padding.bottom})`,
                 })
-                .text(this.colorMax * 0.000001 + "s");
+                .text(this.colorMaxText);
 
         },
 
