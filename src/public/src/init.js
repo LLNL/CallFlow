@@ -22,7 +22,6 @@ const socket = new VueSocketIO({
 		actionPrefix: 'SOCKET_',
 		mutationPrefix: 'SOCKET_'
 	},
-	// options: { path: "/my-app/" } //Optional options
 })
 
 const router = new Router({

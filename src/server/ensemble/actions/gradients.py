@@ -81,7 +81,7 @@ class KDE_gradients:
 
         return x, y
 
-    def histogram(self, data, nbins=5):
+    def histogram(self, data, nbins=20):
         h, b = np.histogram(data, range=[0, data.max()], bins=nbins)
         return 0.5 * (b[1:] + b[:-1]), h
 
@@ -109,7 +109,6 @@ class KDE_gradients:
 
             name = node[0]
             data = node[1]
-            print(data, name)
             module = data["module"]
             function = data["name"]
             vis_node_name = data["name"]
@@ -242,6 +241,5 @@ class KDE_gradients:
                     },
                 },
             }
-        # print(results)
         return results
 

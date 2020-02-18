@@ -214,7 +214,7 @@ class EnsembleCallFlow:
             return minihistogram.result
 
         elif action_name == "histogram":
-            histogram = DistHistogram(self.states['ensemble'], action["module"])
+            histogram = Histogram(self.states['ensemble'], action["module"])
             return histogram.result
 
         elif action_name == "auxiliary":
