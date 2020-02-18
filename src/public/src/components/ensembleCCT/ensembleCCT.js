@@ -1,6 +1,4 @@
-import tpl from '../../html/cct/index.html'
-import Nodes from './nodes'
-import Edges from './edges'
+import tpl from '../../html/ensembleCCT/index.html'
 import ColorMap from './colormap'
 
 import * as d3 from 'd3'
@@ -10,8 +8,6 @@ export default {
     name: 'EnsembleCCT',
     template: tpl,
     components: {
-        Nodes,
-        Edges,
         ColorMap
     },
 
@@ -41,7 +37,7 @@ export default {
     }),
 
     sockets: {
-        cct(data) {
+        ensemble_cct(data) {
             console.log("CCT data: ", data)
             this.data = data
             if (this.firstRender) {
@@ -52,6 +48,13 @@ export default {
                 this.render()
             }
         },
+
+        // Fetch CCT for distribution mode.
+		comp_cct(data) {
+			console.log("Diff CCT data: ", data)
+			this.$refs.EnsembleCCT1.init(data[this.$store.selectedTargetDataset], '1')
+			this.$refs.EnsembleCCT2.init(data[this.$store.selectedTargetDataset], '2')
+		},
     },
 
     mounted() {
@@ -78,7 +81,6 @@ export default {
 
 
         render() {
-            console.log("render")
             this.g = new dagreD3.graphlib.Graph().setGraph({});
 
             let graph = this.data

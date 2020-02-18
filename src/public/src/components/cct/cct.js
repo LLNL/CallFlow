@@ -1,6 +1,4 @@
 import tpl from '../../html/cct/index.html'
-import Nodes from './nodes'
-import Edges from './edges'
 import ColorMap from './colormap'
 
 import * as d3 from 'd3'
@@ -10,8 +8,6 @@ export default {
     name: 'CCT',
     template: tpl,
     components: {
-        Nodes,
-        Edges,
         ColorMap
     },
 

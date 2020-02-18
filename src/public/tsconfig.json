@@ -32,6 +32,7 @@
 		"./src/**/*",
 	],
 	"exclude": [
+		"./src/components/ensembleCCT/d3-graphviz.js",
 		"./src/components/cct/d3-graphviz.js"
 	]
 }
