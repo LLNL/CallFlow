@@ -29,6 +29,7 @@ import AuxiliaryFunction from './auxiliaryFunction/auxiliaryFunction'
 import EnsembleHistogram from './ensembleHistogram/ensembleHistogram'
 import ModuleHierarchy from './moduleHierarchy/moduleHierarchy'
 import EnsembleScatterplot from './ensembleScatterplot/ensembleScatterplot'
+import EnsembleDistribution from './ensembleDistribution/ensembleDistribution'
 
 import io from 'socket.io-client'
 import utils from '@/core/utils'
@@ -53,6 +54,7 @@ export default {
 		AuxiliaryFunction,
 		EnsembleHistogram,
 		EnsembleScatterplot,
+		EnsembleDistribution
 	},
 
 	data: () => ({
@@ -263,9 +265,10 @@ export default {
 				this.$refs.EnsembleSuperGraph.init(data)
 				this.$refs.AuxiliaryFunction.init()
 				this.$refs.EnsembleHistogram.init()
+				this.$refs.EnsembleDistribution.init()
 				// this.$refs.RunInformation.init()
 				this.$refs.SimilarityMatrix.init()
-				this.initLoad = false
+				// this.initLoad = false
 			}
 
 			this.$socket.emit('ensemble_gradients', {

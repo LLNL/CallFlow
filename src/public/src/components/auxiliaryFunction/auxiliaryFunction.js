@@ -47,7 +47,7 @@ export default {
             else {
                 this.firstRender = false
             }
-            
+
             for (const [idx, callsite] of Object.entries(this.$store.callsites['ensemble'])) {
                 this.ui(callsite.name)
                 this.visualize(callsite.name)
