@@ -26,9 +26,8 @@ class groupBy:
             self.state.df = self.state.df[self.state.df['module'] != func]
 
     # Create a group path for the df.column = group_path.
-    def create_group_path(self, path):
+    def create_group_path_old(self, path):
         group_path = []
-        # path = utils.framesToPathLists(path)[0]
 
         self.prev_module_map = {}
         prev_module = None
@@ -57,7 +56,6 @@ class groupBy:
                 if prev_module is None:
                     prev_module = module
                     group_path.append(module + '=' + path[i])
-                    # group_path.append(module)
                 elif module != prev_module:
                     if module in group_path:
                         from_module = group_path[len(group_path) - 1]
@@ -68,7 +66,6 @@ class groupBy:
                         change_name = True
                     else:
                         group_path.append(module + '=' + path[i])
-                        # group_path.append(module)
                         prev_module = module
                         if path[i] not in self.entry_funcs[module]:
                             self.entry_funcs[module].append(path[i])
@@ -77,7 +74,60 @@ class groupBy:
                     continue
                     if path[i] not in self.other_funcs[module] and path[i] not in self.entry_funcs[module]:
                         self.other_funcs[module].append(path[i])
+        # print(path, group_path)
+        group_path = tuple(group_path)
+        return (group_path, change_name)
 
+        # Create a group path for the df.column = group_path.
+    def create_group_path(self, path):
+        group_path = []
+
+        self.prev_module_map = {}
+        prev_module = None
+        function = path[len(path) - 1]
+        change_name = False
+
+        # Create a map having initial funcs being mapped.
+        module_df = self.df.groupby(['module'])
+        for module, df in module_df:
+            if module not in self.module_func_map:
+                self.module_func_map[module] = []
+            if module not in self.entry_funcs:
+                self.entry_funcs[module] = []
+            if module not in self.other_funcs:
+                self.other_funcs[module] = []
+
+        for i, elem in enumerate(path):
+            grouping = self.df.loc[self.df['name'] == elem][self.group_by].unique()
+            if len(grouping) == 0:
+                break
+
+            module = grouping[0]
+
+            # Append the module into the group path.
+            if module not in self.eliminate_funcs:
+                if prev_module is None:
+                    prev_module = module
+                    group_path.append(module + '=' + path[i])
+                elif module != prev_module:
+                    if module in group_path:
+                        from_module = group_path[len(group_path) - 1]
+                        to_module = module
+                        group_path.append(module + '/' + path[i])
+                        prev_module = module
+                        self.module_func_map[module].append(module + '/' + path[i])
+                        change_name = True
+                    else:
+                        group_path.append(module + '=' + path[i])
+                        prev_module = module
+                        if path[i] not in self.entry_funcs[module]:
+                            self.entry_funcs[module].append(path[i])
+                else:
+                    prev_module = module
+                    continue
+                    if path[i] not in self.other_funcs[module] and path[i] not in self.entry_funcs[module]:
+                        self.other_funcs[module].append(path[i])
+        # print(path, group_path)
         group_path = tuple(group_path)
         return (group_path, change_name)
 
@@ -144,6 +194,19 @@ class groupBy:
             spath = s_df['path'].tolist()[0]
             tpath = t_df['path'].tolist()[0]
 
+            # print(snode, tnode, spath, tpath)
+
+            key = get_same_module_key(u, v, data, G, G_agg)
+
+             # Update frequency if same edge exists
+            if key is not None:
+                G_agg[u][v][key]['freq'] += 1
+
+            # Else create a new edge with same data and a new key `freq` set to 1
+            else:
+                G_agg.add_edge(u, v, **dict({'freq': 1}, **data))
+
+
             temp_group_path_results = self.create_group_path(spath)
             group_path[snode] = temp_group_path_results[0]
             change_name[snode] = temp_group_path_results[1]
@@ -151,6 +214,14 @@ class groupBy:
             component_path[snode] = self.create_component_path(spath, group_path[snode])
             component_level[snode] = len(component_path[snode])
             module[snode] = s_df['module'].tolist()[0]
+
+            temp_group_path_results = self.create_group_path(tpath)
+            group_path[tnode] = temp_group_path_results[0]
+            change_name[tnode] = temp_group_path_results[1]
+
+            component_path[tnode] = self.create_component_path(tpath, group_path[tnode])
+            component_level[tnode] = len(component_path[tnode])
+            module[tnode] = t_df['module'].tolist()[0]
 
             if module[snode] not in module_id_map:
                 module_count += 1
@@ -217,3 +288,35 @@ class groupBy:
                 nodeData['component_path'] = component_path[nodeName]
             else:
                 nodeData['component_path'] = []
+
+
+    def get_same_module_key(u, v, module, G, G_agg):
+
+        # First check if edge exists in new Graph
+        if G_agg.has_edge(u, v) is None:
+            return None
+
+        # Get data for all edges between u and v
+        new_edge_data = G_agg.get_edge_data(u, v)
+
+
+        if new_edge_data:
+            # This index will be used to update frequency in new graph
+            idx = 0
+
+        # For each edge between u and v, check the attributes
+        for dict_attrs in new_edge_data:
+
+            # Example 1: If G1 has edge from 1-->2 with data {'group': 1}
+            # and G2 has edge from 1-->2 with data {'group': 1, 'freq': 2},
+            # this if statement will return True
+            #
+            # Example 2: If G1 has edge from 1-->2 with data {'group': 1}
+            # and G2 has edge from 1-->2 with data {'group': 1, 'freq': 2, 'xyz':3},
+            # this if statement will return False
+            if len(new_edge_data[dict_attrs].items()-data.items())==1:
+                return idx
+            idx += 1
+
+        # No match found, hence return None
+        return None
