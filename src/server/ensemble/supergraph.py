@@ -114,6 +114,7 @@ class SuperGraph(nx.Graph):
             edge = (source, target)
 
             # if row.show_node == True:# or show_source == True:
+            print(edge, path)
             self.add_path(path)
 
 
