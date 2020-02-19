@@ -404,16 +404,16 @@ export default {
 					groupBy: this.selectedGroupBy
 				})
 
-				this.$socket.emit('ensemble_gradients', {
-					datasets: this.$store.runNames,
-					plot: 'kde'
-				})
+				// this.$socket.emit('ensemble_gradients', {
+				// 	datasets: this.$store.runNames,
+				// 	plot: 'kde'
+				// })
 
-				this.$socket.emit('ensemble_similarity', {
-					datasets: this.$store.runNames,
-					algo: 'deltacon',
-					module: 'all'
-				})
+				// this.$socket.emit('ensemble_similarity', {
+				// 	datasets: this.$store.runNames,
+				// 	algo: 'deltacon',
+				// 	module: 'all'
+				// })
 
 				// if(this.parameter_analysis){
 				// 	this.$socket.emit('dist_projection', {
