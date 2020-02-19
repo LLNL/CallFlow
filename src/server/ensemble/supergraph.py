@@ -24,9 +24,9 @@ class SuperGraph(nx.Graph):
         self.ensemble_g = self.states['ensemble'].g
         self.node_list = np.array(list(self.ensemble_g.nodes()))
 
-        self.nodeMap = {}
-        for node in self.ensemble_g.nodes(data=True):
-            self.nodeMap[node[0]] = node[1]
+        # self.nodeMap = {}
+        # for node in self.ensemble_g.nodes(data=True):
+        #     self.nodeMap[node[0]] = node[1]
 
         # Path type to group by
         # TODO: Generalize to any group the user provides.
@@ -77,6 +77,7 @@ class SuperGraph(nx.Graph):
                 self.add_edge_attributes()
             else:
                 print("Creating a Graph without node or edge attributes.")
+        print(self.timer)
 
     def no_cycle_path(self, path):
         ret = []
@@ -89,34 +90,26 @@ class SuperGraph(nx.Graph):
                 moduleMapper[module] = True
                 ret.append(elem)
             elif elem not in self.mapper:
-                # ret.append(elem + "_" + str(mapper[elem]))
                 self.mapper[elem] = 0
             else:
                 self.mapper[elem] += 1
         return tuple(ret)
 
-    # TODO: Make this a consistent datatype.
-    def add_path(self, path):
-        if isinstance(path, list):
-            path_tuple = path
-        elif isinstance(path, str):
-            path_tuple = make_tuple(path)
-        # corrected_path = self.no_cycle_path(path_tuple)
-        # self.g.add_path(corrected_path)
-        self.g.add_path(path_tuple)
-
     def add_paths(self, path):
         path_df = self.df[path].fillna("()")
         paths = path_df.drop_duplicates().tolist()
-        for idx, path in enumerate(paths):
-            source = path[-1]
-            target = path[-2]
-            edge = (source, target)
+        for idx, path_str in enumerate(paths):
+            path_tuple = make_tuple(path_str)
+            if(len(path_tuple) >= 2):
+                source_module = path_tuple[-2].split('=')[0]
+                target_module = path_tuple[-1].split('=')[0]
 
-            # if row.show_node == True:# or show_source == True:
-            print(edge, path)
-            self.add_path(path)
-
+                source_name = path_tuple[-2].split('=')[1]
+                target_name = path_tuple[-1].split('=')[1]
+                self.g.add_edge(source_module, target_module, attr_dict={
+                    "source_callsite": source_name,
+                    "target_callsite": target_name
+                })
 
     def add_node_attributes(self):
         ensemble_mapping = self.ensemble_map(self.g.nodes())
@@ -198,63 +191,44 @@ class SuperGraph(nx.Graph):
 
     def calculate_flows(self, graph):
         ret = {}
-        edges = graph.edges()
         additional_flow = {}
-        for edge in edges:
-            if "=" in edge[0]:
-                source_name = edge[0].split("=")[1]
-                source_module = edge[0].split("=")[0]
-            else:
-                source_name = edge[1]
-                source_module = self.df.loc[self.df["name"] == source_name]["module"][0]
-
-            if "=" in edge[1]:
-                target_name = edge[1].split("=")[1]
-                target_module = edge[1].split("=")[0]
-            else:
-                target_name = edge[1]
-                target_module = self.df.loc[self.df["name"] == target_name]["module"][0]
+        for edge in graph.edges(data=True):
+            source_module = edge[0]
+            target_module = edge[1]
+            source_name = edge[2]['attr_dict']['source_callsite']
+            target_name = edge[2]['attr_dict']['target_callsite']
 
             source_inc = self.df.loc[(self.df["name"] == source_name)][
                 "time (inc)"
             ].max()
             target_inc = self.df.loc[(self.df["name"] == target_name)][
-                "time (inc)"
+                "time"
             ].max()
 
+            print(source_inc, target_inc)
             if source_inc == target_inc:
-                ret[edge] = source_inc
+                ret[(edge[0], edge[1])] = source_inc
             else:
-                ret[edge] = target_inc
+                ret[(edge[0], edge[1])] = target_inc
 
         return ret
 
     def calculate_exc_weight(self, graph):
         ret = {}
-        edges = graph.edges()
         additional_flow = {}
-        for edge in edges:
-            if "=" in edge[0]:
-                source_name = edge[0].split("=")[1]
-                source_module = edge[0].split("=")[0]
-            else:
-                source_name = edge[1]
-                source_module = self.df.loc[self.df["name"] == source_name]["module"][0]
-
-            if "=" in edge[1]:
-                target_name = edge[1].split("=")[1]
-                target_module = edge[1].split("=")[0]
-            else:
-                target_name = edge[1]
-                target_module = self.df.loc[self.df["name"] == target_name]["module"][0]
+        for edge in graph.edges(data=True):
+            source_module = edge[0]
+            target_module = edge[1]
+            source_name = edge[2]['attr_dict']['source_callsite']
+            target_name = edge[2]['attr_dict']['target_callsite']
 
             source_inc = self.df.loc[(self.df["name"] == source_name)]["time"].max()
             target_inc = self.df.loc[(self.df["name"] == target_name)]["time"].max()
 
             if source_inc == target_inc:
-                ret[edge] = source_inc
+                ret[(edge[0], edge[1])] = source_inc
             else:
-                ret[edge] = target_inc
+                ret[(edge[0], edge[1])] = target_inc
 
         return ret
 
@@ -271,13 +245,14 @@ class SuperGraph(nx.Graph):
 
         # loop through the nodes
         for node in self.g.nodes():
+            print(node)
             if "=" in node:
                 node_name = node.split("=")[1]
             else:
                 node_name = node
 
             # Get their dataframe
-            node_df = self.df.loc[self.df["name"] == node_name]
+            node_df = self.df.loc[self.df["module"] == node_name]
 
             for column in ensemble_columns:
                 if column not in ret:
@@ -346,7 +321,7 @@ class SuperGraph(nx.Graph):
                 ret[node] = {}
 
             node_df = self.df.loc[
-                (self.df["name"] == node_name) & (self.df["dataset"] == dataset)
+                (self.df["module"] == node_name) & (self.df["dataset"] == dataset)
             ]
 
             for column in self.columns:

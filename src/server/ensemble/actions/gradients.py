@@ -107,6 +107,7 @@ class KDE_gradients:
             max_exc_dist = {}
             mean_time_inc_map = {}
 
+            print(node)
             name = node[0]
             data = node[1]
             module = data["module"]

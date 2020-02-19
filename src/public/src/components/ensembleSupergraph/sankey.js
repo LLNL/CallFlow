@@ -224,7 +224,7 @@ export default function Sankey() {
     function findroot() {
         let ret = []
         nodes.forEach(function (node) {
-            if (node['id'] == "Lulesh=main") {
+            if (node['id'] == "Lulesh") {
             // if(node['id'] == "libmonitor.so.0.0.0=<thread root>" || node['id'] == "libmonitor.so.0.0.0=<program root>"){
                 ret.push(node)
             }
@@ -251,7 +251,6 @@ export default function Sankey() {
             });
             remainingNodes = nextNodes;
             ++level
-            console.log(remainingNodes.length)
         }
         nodes.forEach(function (node) {
             node.dx = nodeWidth
