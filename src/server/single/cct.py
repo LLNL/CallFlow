@@ -20,64 +20,36 @@ class singleCCT:
     def __init__(self, state, functionsInCCT):
         number_of_nodes = len(state.df['name'].unique())
 
-        # Get the top most callsites from the CCT.
-        if(number_of_nodes < int(functionsInCCT)):
-            self.entire_graph = state.g
-            self.entire_df = state.df
-        else:
-            self.entire_graph = state.g
-            self.entire_df = state.df
+        self.g = state.g
+        self.df = state.df
+
+        self.columns = ['time (inc)', 'time', 'name', 'module', 'imbalance_perc']
+
         self.run()
 
-    # def add_node_attributes(self):
-    #     time_inc_mapping = self.node_map(self.g.nodes(), 'time (inc)')
-    #     nx.set_node_attributes(self.g, name='time (inc)', values=time_inc_mapping)
-
-    #     time_mapping = self.node_map(self.g.nodes(), 'time')
-    #     nx.set_node_attributes(self.g, name='time', values=time_mapping)
-
-        # module_mapping = self.node_map(self.g.nodes(), 'module')
-        # nx.set_node_attributes(self.g, name='module', values=module_mapping)
-
-
-        # imbalance_perc_mapping = self.node_map(self.g.nodes(), 'imbalance_perc')
-        # nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)
-
-    def ensemble_map(self, nodes):
+    def dataset_map(self, nodes):
         ret = {}
-
-        ensemble_columns = []
-        for column in self.entire_df.columns:
-            ensemble_columns.append(column)
 
         # loop through the nodes
         for node in self.g.nodes():
-            print(node)
+            node = node.strip()
+            node_df = self.df.loc[self.df["name"] == node]
 
-            # Get their dataframe
-            node_df = self.entire_df.loc[self.entire_df["name"] == node]
-            column_data = node_df[column]
+            for column in self.columns:
+                column_data = node_df[column]
 
-            for column in ensemble_columns:
                 if column not in ret:
                     ret[column] = {}
 
                 if (
                     column == "time (inc)"
                     or column == "time"
-                    or column == "component_level"
+                    or column == "imbalance_perc"
                 ):
                     if len(column_data.value_counts() > 0):
                         ret[column][node] = column_data.max()
                     else:
                         ret[column][node] = -1
-
-                # elif column == "callers" or column == "callees":
-
-                #     if len(column_data.value_counts()) > 0:
-                #         ret[column][node] = make_tuple(column_data.tolist()[0])
-                #     else:
-                #         ret[column][node] = []
 
                 elif (
                     column == "name"
@@ -94,79 +66,15 @@ class singleCCT:
 
         return ret
 
-    def dataset_map(self, nodes, dataset):
-        ret = {}
-        for node in self.g.nodes():
-            if "=" in node:
-                node_name = node.split("=")[1]
-            else:
-                node_name = node
-
-            if node not in ret:
-                ret[node] = {}
-
-            node_df = self.entire_df.loc[
-                (self.entire_df["name"] == node_name) & (self.entire_df["dataset"] == dataset)
-            ]
-
-            for column in self.entire_df.columns:
-                column_data = node_df[column]
-
-                if (
-                    column == "time (inc)"
-                    or column == "time"
-                    or column == "component_level"
-                ):
-                    if len(column_data.value_counts()) > 0:
-                        ret[node][column] = column_data.max()
-                    else:
-                        ret[node][column] = -1
-
-                elif (
-                    column == "name"
-                    or column == "vis_name"
-                    or column == "module"
-                    or column == "show_node"
-                ):
-                    if len(column_data.value_counts()) > 0:
-                        ret[node][column] = column_data.tolist()[0]
-
-                    else:
-                        ret[node][column] = "None"
-
-        return ret
-
     def add_node_attributes(self):
-        ensemble_mapping = self.ensemble_map(self.g.nodes())
+        dataset_mapping = self.dataset_map(self.g.nodes())
 
-        for idx, key in enumerate(ensemble_mapping):
-            nx.set_node_attributes(self.g, name=key, values=ensemble_mapping[key])
-
-        # dataset_mapping = {}
-        # for run in self.runs:
-        #     dataset_mapping[run] = self.dataset_map(self.g.nodes(), run)
-
-        #     nx.set_node_attributes(
-        #         self.g, name=run, values=dataset_mapping[run]
-        #     )
+        for idx, key in enumerate(dataset_mapping):
+            nx.set_node_attributes(self.g, name=key, values=dataset_mapping[key])
 
     def add_edge_attributes(self):
         num_of_calls_mapping = self.edge_map(self.g.edges(), 'component_path')
         nx.set_edge_attributes(self.g, name='count', values=num_of_calls_mapping)
-
-    def node_map(self, nodes, attr):
-        ret = {}
-        # print(self.entire_df['name'])
-        for node in nodes:
-            data = self.entire_df.loc[self.entire_df['name'] == node]
-            print(node, data[attr].unique())
-            if attr == 'time' or attr == 'time (inc)' or attr == 'imbalance_perc':
-                if( not math.isnan(data[attr].mean())):
-                    ret[node] = data[attr].mean()
-            else:
-                ret[node] = data[attr].unique()
-                print(ret[node])
-        return ret
 
     def edge_map(self, edges, attr, source=None, orientation=None):
         counter = {}
@@ -207,7 +115,7 @@ class singleCCT:
         return counter
 
     def add_paths(self, path):
-        path_df = self.entire_df[path].fillna("()")
+        path_df = self.df[path].fillna("()")
         paths = path_df.drop_duplicates().tolist()
 
         for idx, path in enumerate(paths):
@@ -215,8 +123,8 @@ class singleCCT:
             if(len(path) >= 2):
                 source = path[-2].replace('[', '').replace(']', '').replace("'", '')
                 target = path[-1].replace('[', '').replace(']', '').replace("'", '')
-                edge = (source, target)
-
+                source = source.strip()
+                target = target.strip()
                 self.g.add_edge(source, target)
 
     def find_cycle(self, G, source=None, orientation=None):

@@ -53,7 +53,7 @@ export default {
             if (this.color.option == "Module") {
 
             } else {
-                let splits = 1024
+                let splits = this.$store.colorPoint
                 let color = this.color.getScale(this.color.option)
 
                 for (let i = 0; i < splits; i += 1) {

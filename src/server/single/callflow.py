@@ -183,14 +183,15 @@ class SingleCallFlow:
             minihistogram = MiniHistogram(state)
             return minihistogram.result
 
-        elif action_name == "cct":
-            self.update_dist({
-                "name": "group",
+        elif action_name == 'cct':
+            self.request({
+                "name": "supergraph",
                 "groupBy": "name",
-                "datasets": action["dataset"]
+                "dataset": action["dataset"]
             })
-            nx = CCT(self.states[action["dataset"]], action["functionsInCCT"])
-            return nx.g
+            graph = singleCCT(self.states[action["dataset"]], action["functionsInCCT"])
+            return graph.g
+
 
         elif action_name == "function":
             functionlist = FunctionList(state, action["module"], action["nid"])

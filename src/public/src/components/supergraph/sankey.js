@@ -25,7 +25,8 @@ export default function Sankey() {
         minNodeScale = 0,
         maxLevel = 1,
         nodeMap = {},
-        debug = true;
+        debug = true,
+        dataset = '';
 
     var widthScale;
     var minDistanceBetweenNode = 0;
@@ -78,6 +79,12 @@ export default function Sankey() {
 
     sankey.getLinks = function () {
         return links
+    }
+
+    sankey.dataset = function (_) {
+        if (!arguments.length) return dataset
+        dataset = _
+        return sankey
     }
 
     sankey.layout = function (iterations) {
@@ -294,7 +301,7 @@ export default function Sankey() {
                     divValue = referenceValue;
                 }
                 else {
-                    divValue = d3.sum(nodes, d => d['512-cores']['time (inc)']);
+                    divValue = d3.sum(nodes, d => d[dataset]['time (inc)']);
                 }
                 return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
             });

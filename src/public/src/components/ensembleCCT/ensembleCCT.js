@@ -13,7 +13,7 @@ export default {
 
     data: () => ({
         graph: null,
-        id: 'cct-overview',
+        id: 'ensemble-cct-overview',
         sankey: {
             nodeWidth: 50,
             xSpacing: 0,
@@ -58,7 +58,6 @@ export default {
     },
 
     mounted() {
-        this.id = this.id
     },
 
     methods: {
@@ -130,7 +129,7 @@ export default {
                 // g.edge(e).style = "stroke: 1.5px "
             })
 
-            let inner = this.svg.select('#container');
+            let inner = this.svg.select('#ensemble-cct-container');
 
             // Set up zoom support
             var zoom = d3.zoom().on("zoom", function () {
@@ -141,6 +140,7 @@ export default {
             // Create the renderer
             var render = new dagreD3.render();
 
+            console.log(this.g)
             // Run the renderer. This is what draws the final graph.
             render(inner, this.g);
 
