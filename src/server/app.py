@@ -376,7 +376,7 @@ class App:
             )
             emit("parameter_information", json.dumps(result), json=True)
 
-        @sockets.on("callsite_data", namespace="/")
+        @sockets.on("ensemble_callsite_data", namespace="/")
         def callsites(data):
             if self.debug:
                 self.print("[Request] Callsite information: ", data)
@@ -388,7 +388,7 @@ class App:
                     "module": data['module']
                 }
             )
-            emit("callsite_data", result, json=True)
+            emit("ensemble_callsite_data", result, json=True)
 
         @sockets.on("single_callsite_data", namespace="/")
         def callsites(data):

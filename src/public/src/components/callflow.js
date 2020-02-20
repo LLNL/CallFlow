@@ -224,6 +224,41 @@ export default {
 			this.$store.modules = {}
 			this.$store.modules[dataset] = this.processModule(module_data[dataset])
 			console.log("Done processing ")
+		},
+
+		ensemble_callsite_data(data) {
+			console.log("Auxiliary Data: ", data)
+			this.dataReady = true
+
+			let module_data = data['module']
+			for (let key of Object.keys(module_data)) {
+				if (module_data.hasOwnProperty(key)) {
+					module_data[key] = this.processJSON(module_data[key])
+				}
+			}
+
+			let callsite_data = data['callsite']
+			for (let key of Object.keys(callsite_data)) {
+				if (callsite_data.hasOwnProperty(key)) {
+					callsite_data[key] = this.processJSON(callsite_data[key])
+				}
+			}
+			this.$store.callsites = {}
+			let ensemble = this.processCallsite(callsite_data['ensemble'])
+			this.$store.callsites['ensemble'] = ensemble
+			for (let i = 0; i < this.$store.runNames.length; i += 1) {
+				let dataset = this.$store.runNames[i]
+				this.$store.callsites[dataset] = this.processCallsite(callsite_data[dataset])
+			}
+
+			this.$store.modules = {}
+			this.$store.modules['ensemble'] = this.processModule(module_data['ensemble'])
+
+			for (let i = 0; i < this.$store.runNames.length; i += 1) {
+				let dataset = this.$store.runNames[i]
+				this.$store.modules[dataset] = this.processModule(module_data[dataset])
+			}
+			console.log("Done processing ")
 
 		},
 
@@ -394,7 +429,7 @@ export default {
 				// 		plot: 'kde'
 				// 	})
 				// })
-				this.$socket.emit('callsite_data', {
+				this.$socket.emit('ensemble_callsite_data', {
 					datasets: this.$store.runNames,
 					sortBy: this.$store.auxiliarySortBy,
 					module: 'all'
@@ -405,16 +440,16 @@ export default {
 					groupBy: this.selectedGroupBy
 				})
 
-				// this.$socket.emit('ensemble_gradients', {
-				// 	datasets: this.$store.runNames,
-				// 	plot: 'kde'
-				// })
+				this.$socket.emit('ensemble_gradients', {
+					datasets: this.$store.runNames,
+					plot: 'kde'
+				})
 
-				// this.$socket.emit('ensemble_similarity', {
-				// 	datasets: this.$store.runNames,
-				// 	algo: 'deltacon',
-				// 	module: 'all'
-				// })
+				this.$socket.emit('ensemble_similarity', {
+					datasets: this.$store.runNames,
+					algo: 'deltacon',
+					module: 'all'
+				})
 
 				// if(this.parameter_analysis){
 				// 	this.$socket.emit('dist_projection', {
@@ -509,7 +544,6 @@ export default {
 
 		processCallsite(data) {
 			let callsites = {}
-			console.log(data)
 			for (let i = 0; i < data.index.length; i += 1) {
 				let callsite = {}
 				let callsite_name = data.d[i][data.columnMap['name']]

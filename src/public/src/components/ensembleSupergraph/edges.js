@@ -109,8 +109,24 @@ export default {
             this.edges.selectAll('#dist-edge-' + dataset)
                 .data(this.links)
                 .attr('d', (d) => {
-                    let Tx0 = d.source_data.x + d.source_data.dx + this.offset,
-                        Tx1 = d.target_data.x - this.offset,
+                    let edge_source_offset = 0
+                    if(d.source.split('_')[0] == "intermediate"){
+                        edge_source_offset = -1
+                    }
+                    else{
+                        edge_source_offset = this.offset
+                    }
+
+                    let edge_target_offset = 0
+                    if(d.target.split('_')[0] == "intermediate"){
+                        edge_target_offset = -1
+                    }
+                    else{
+                        edge_target_offset = this.offset
+                    }
+
+                    let Tx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
+                        Tx1 = d.target_data.x - edge_target_offset,
                         Txi = d3.interpolateNumber(Tx0, Tx1),
                         Tx2 = Txi(0.4),
                         Tx3 = Txi(1 - 0.4),
@@ -121,20 +137,16 @@ export default {
                     //		.sy is the y point of the source  (for top)
                     //		.dy is width of the edge
 
-                    let Bx0 = d.source_data.x + d.source_data.dx + this.offset,
-                        Bx1 = d.target_data.x - this.offset,
+                    let Bx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
+                        Bx1 = d.target_data.x - edge_target_offset,
                         Bxi = d3.interpolateNumber(Bx0, Bx1),
                         Bx2 = Bxi(0.4),
                         Bx3 = Bxi(1 - 0.4)
 
 
                     let By0 = 0, By1 = 0;
-                    d.source_adjust = d.height['ensemble']
-                    d.target_adjust = d.height['ensemble']
-                    // console.log(d.source_proportion, d.target_proportion)
-
-                    By0 = d.source_data.y + this.$parent.ySpacing + d.sy + d.height * 1.0//d.source_proportion
-                    By1 = d.target_data.y + this.$parent.ySpacing + d.ty + d.height * 1.0 //d.target_proportion
+                    By0 = d.source_data.y + this.$parent.ySpacing + d.sy + d.height * 1.0
+                    By1 = d.target_data.y + this.$parent.ySpacing + d.ty + d.height * 1.0
 
                     const rightMoveDown = By1 - Ty1
                     return `M${Tx0},${Ty0

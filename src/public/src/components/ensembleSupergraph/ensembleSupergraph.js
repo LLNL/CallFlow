@@ -107,23 +107,24 @@ export default {
 			if (this.debug) {
 				for (let i = 0; i < this.graph['links'].length; i += 1) {
 					let link = this.graph['links'][i]
-					let source_callsite = link['attr_dict']['source_callsite']
-					let target_callsite = link['attr_dict']['target_callsite']
+					let source_callsite = link['source_data']['id']
+					let target_callsite = link['target_data']['id']
 					let weight = link['weight']
 					let exc_weight = link['exc_weight']
-					let source_inclusive = link['source_data']['512-cores']['time (inc)']
-					let source_exclusive = link['source_data']['512-cores']['time']
-					let target_inclusive = link['target_data']['512-cores']['time (inc)']
-					let target_exclusive = link['target_data']['512-cores']['time']
+					let source_inclusive = link['source_data']['time (inc)']
+					let source_exclusive = link['source_data']['time']
+					let target_inclusive = link['target_data']['time (inc)']
+					let target_exclusive = link['target_data']['time']
 
-					console.log("[Single SuperGraph] Source Name :", source_callsite)
-					console.log("[Single SuperGraph] Target Name :", target_callsite)
-					console.log("[Single SuperGraph] Weight: ", weight)
-					console.log("[Single SuperGraph] Exc weight: ", exc_weight)
-					console.log("[Single SuperGraph] Source Inclusive: ", source_inclusive)
-					console.log("[Single SuperGraph] Source Exclusive: ", source_exclusive)
-					console.log("[Single SuperGraph] Target Inclusive: ", target_inclusive)
-					console.log("[Single SuperGraph] Target Exclusive: ", target_exclusive)
+					console.log("=============================================")
+					console.log("[Ensemble SuperGraph] Source Name :", source_callsite)
+					console.log("[Ensemble SuperGraph] Target Name :", target_callsite)
+					console.log("[Ensemble SuperGraph] Weight: ", weight)
+					console.log("[Ensemble SuperGraph] Exc weight: ", exc_weight)
+					console.log("[Ensemble SuperGraph] Source Inclusive: ", source_inclusive)
+					console.log("[Ensemble SuperGraph] Source Exclusive: ", source_exclusive)
+					console.log("[Ensemble SuperGraph] Target Inclusive: ", target_inclusive)
+					console.log("[Ensemble SuperGraph] Target Exclusive: ", target_exclusive)
 				}
 			}
 		},

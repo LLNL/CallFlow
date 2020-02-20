@@ -20,7 +20,8 @@ export default {
         id: '',
         graph: null,
         nidNameMap: {},
-        renderZeroLine: {}
+        renderZeroLine: {},
+        stroke_width: 7
     }),
     sockets: {
         compare(data) {
@@ -115,12 +116,12 @@ export default {
                 })
 
             this.zoom = d3.zoom()
-				.scaleExtent([0.5, 2])
-				.on('zoom', () => {
-					let tx = Math.min(0, Math.min(d3.event.transform.x, this.width * d3.event.transform.k))
-					let ty = Math.min(0, Math.min(d3.event.transform.y, this.height * d3.event.transform.k))
-					this.sankeySVG.attr("transform", "translate(" + [tx, ty] + ")scale(" + d3.event.transform.k + ")")
-				});
+                .scaleExtent([0.5, 2])
+                .on('zoom', () => {
+                    let tx = Math.min(0, Math.min(d3.event.transform.x, this.width * d3.event.transform.k))
+                    let ty = Math.min(0, Math.min(d3.event.transform.y, this.height * d3.event.transform.k))
+                    this.sankeySVG.attr("transform", "translate(" + [tx, ty] + ")scale(" + d3.event.transform.k + ")")
+                });
 
 
             this.nodesSVG = this.nodes.selectAll('.dist-node')
@@ -217,14 +218,29 @@ export default {
                 .attr('width', this.nodeWidth)
                 .attr('opacity', 0)
                 .style('fill-opacity', (d) => {
-                    return 1
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return 0.0
+                    }
+                    else {
+                        return 1.0;
+                    }
                 })
                 .style('shape-rendering', 'crispEdges')
                 .style('stroke', (d) => {
-                    return d3.rgb(this.$store.color.getColor(d));
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return this.$store.color.ensemble
+                    }
+                    else {
+                        return d3.rgb(this.$store.color.getColor(d));
+                    }
                 })
                 .style('stroke-width', (d) => {
-                    return 7
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return 0
+                    }
+                    else {
+                        return this.stroke_width;
+                    }
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
@@ -260,19 +276,25 @@ export default {
                 .transition()
                 .duration(this.transitionDuration)
                 .attr('opacity', d => {
-                    return 1;
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return 0.0
+                    }
+                    else {
+                        return 1.0;
+                    }
                 })
                 .attr('height', d => d.height)
-                .style('stroke', (d) => {
-                    return 7;
-                })
                 .style("fill", (d, i) => {
-                    return "url(#mean-gradient" + d.client_idx + ")"
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return this.$store.color.ensemble
+                    }
+                    else{
+                        return "url(#mean-gradient" + d.client_idx + ")"
+                    }
                 })
         },
 
         rankDiffRectangle() {
-            let self = this
             // Transition
             this.nodes.selectAll('.dist-callsite')
                 .data(this.graph.nodes)
@@ -512,16 +534,30 @@ export default {
         path() {
             this.nodesSVG.append('path')
                 .attr('d', (d) => {
-                    return `m${0} ${0
-                        }h ${this.nodeWidth
-                        }v ${(1) * 0
-                        }h ${(-1) * this.nodeWidth}`;
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return "m" + 0 + " " + 0
+                            + "h " + this.nodeWidth
+                            + "v " + (1) * d.height
+                            + "h " + (-1) * this.nodeWidth;
+                    }
                 })
                 .style('fill', (d) => {
-                    return this.$store.color.getColor(d);
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return this.$store.color.ensemble
+                    }
                 })
                 .style('fill-opacity', (d) => {
-                    return 0;
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return 0.0;
+                    }
+                    else {
+                        return 0;
+                    }
+                })
+                .style("stroke", function (d) {
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return 'grey'
+                    }
                 })
                 .style('stroke-opacity', '0.0');
 
@@ -564,15 +600,7 @@ export default {
                 .style('opacity', 1)
                 .style('font-size', '14px')
                 .text((d) => {
-                    if (d.height < this.minHeightForText) {
-                        return '';
-                    }
-                    var textSize = this.textSize(d.id)['width'];
-                    if (textSize < d.height) {
-                        return d.id[0];
-                    } else {
-                        return this.trunc(d.name, Math.floor(d.height / 14))
-                    }
+                    return '';
                 })
                 .on('mouseover', function (d) {
                     // if (d.name[0] != 'intermediate') {
@@ -605,14 +633,17 @@ export default {
                     return '#000'
                 })
                 .text((d) => {
-                    if (d.height < this.minHeightForText) {
-                        return '';
+                    if (d.id.split('_')[0] != "intermediate") {
+
+                        if (d.height < this.minHeightForText) {
+                            return '';
+                        }
+                        var textSize = this.textSize(d.id.split('=')[0])['width'];
+                        if (textSize < d.height) {
+                            return d.id.split('=')[0];
+                        }
+                        return this.trunc(d.id.split('=')[0], Math.floor(d.height / 14));
                     }
-                    var textSize = this.textSize(d.id.split('=')[0])['width'];
-                    if (textSize < d.height) {
-                        return d.id.split('=')[0];
-                    }
-                    return this.trunc(d.id.split('=')[0], Math.floor(d.height / 14));
                 });
         },
 
