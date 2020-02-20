@@ -62,8 +62,9 @@ class App:
 
         if(self.config.ensemble):
             self.callflow = EnsembleCallFlow(self.config)
+            self.single_callflow = SingleCallFlow(self.config)
         else:
-            self.callflow = SingleCallFlow(self.config)
+            self.single_callflow = SingleCallFlow(self.config)
 
         # Start server if preprocess is not called.
         if not self.config.process:
@@ -274,15 +275,36 @@ class App:
             result = json_graph.node_link_data(ensemble_cct)
             emit("ensemble_cct", result, json=True)
 
+        @sockets.on("single_supergraph", namespace="/")
+        def single_supergraph(data):
+            result = {}
+            if self.debug:
+                self.print("[Request] Single SuperGraph.", data)
+            dataset = data["dataset"]
+            groupBy = data["groupBy"].lower()
+            nx_graph = self.single_callflow.request(
+                {
+                    "name": "supergraph",
+                    "groupBy": groupBy,
+                    "dataset": dataset
+                }
+            )
+            result = json_graph.node_link_data(nx_graph)
+            result = json.dumps(result)
+            emit("single_supergraph", result, json=True)
+
         @sockets.on("ensemble_supergraph", namespace="/")
         def ensemble_supergraph(data):
             result = {}
             if self.debug:
-                self.print("[Request] Dist the dataset.", data)
+                self.print("[Request] Ensemble SuperGraph.", data)
             datasets = data["datasets"]
             groupBy = data["groupBy"].lower()
             nx_graph = self.callflow.request(
-                {"name": "group", "groupBy": groupBy, "datasets": datasets}
+                {
+                    "name": "supergraph",
+                    "groupBy": groupBy,
+                    "datasets": datasets}
             )
             result = json_graph.node_link_data(nx_graph)
             result = json.dumps(result)

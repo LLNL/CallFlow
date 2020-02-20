@@ -31,21 +31,20 @@ class SingleCallFlow:
     def __init__(self, config):
         # Config contains properties set by the input config file.
         self.config = config
-        self.reUpdate = False
-        self.reProcess = config.preprocess
-        self.processEntire = config.entire
-        self.processFilter = config.filter
-        self.processEnsemble = config.ensemble
-
-        # Create states for each dataset.
-        # Note: gf would never change from create_gf.
-        # Note: fgf would be changed when filter props are changed by client.
-        # Note: df is always updated.
-        # Note: graph is always updated.
-        # Note: map -> not sure if it can be used.
         self.timer = Timer()
-        self.dataset_names = self.config.dataset_names
-        self.states = self.pipeline(self.dataset_names)
+
+        self.pipeline = Pipeline(self.config)
+        if config.process:
+           pass
+        else:
+            log.info("[Ensemble] Read Mode.")
+            self.states = self.readState(self.config.dataset_names)
+
+    def readState(self, datasets):
+        states = {}
+        for idx, dataset in enumerate(datasets):
+            states[dataset] = self.pipeline.read_dataset_gf(dataset)
+        return states
 
     def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
         if self.reProcess:
@@ -121,7 +120,7 @@ class SingleCallFlow:
         self.config.min_incTime["ensemble"] = min_inclusive_time
         self.config.min_excTime["ensemble"] = min_exclusive_time
 
-    def singleMode(self, action):
+    def request(self, action):
         log.info("[Single Mode]", action)
         action_name = action["name"]
 
@@ -154,20 +153,11 @@ class SingleCallFlow:
             self.states = self.pipeline(datasets)
             return {}
 
-        elif action_name == "group":
-            log.debug("Grouping the Graphframe by: {0}".format(action["groupBy"]))
-            group = groupBy(state, action["groupBy"])
-            self.states[dataset].gdf = group.df
-            self.states[dataset].graph = group.graph
-            write_graph = False
-            self.write_gf(state, dataset, "group", write_graph)
-            if action["groupBy"] == "module":
-                path_type = "group_path"
-            elif action["groupBy"] == "name":
-                path_type = "path"
-            nx = CallGraph(state, path_type, True, action["groupBy"])
-            state.g = nx.g
-            return nx.g
+        elif action_name == "supergraph":
+            self.states[dataset].g = SuperGraph(
+                self.states, dataset, "group_path", construct_graph=True, add_data=True
+            ).g
+            return self.states[dataset].g
 
         elif action_name == "split-callee":
             splitCallee(state, action["groupBy"])
@@ -199,115 +189,6 @@ class SingleCallFlow:
         elif action_name == "function":
             functionlist = FunctionList(state, action["module"], action["nid"])
             return functionlist.result
-
-
-    def ensembleMode(self, action):
-        action_name = action["name"]
-        print("Action: ", action_name)
-        datasets = self.config.dataset_names
-
-        if action_name == "init":
-            self.states["ensemble"] = self.pipeline.read_ensemble_gf()
-            for idx, dataset in enumerate(datasets):
-                self.states[dataset] = self.pipeline.read_dataset_gf(dataset)
-
-            # Read all datasets but the filtered versions.
-            self.setConfig()
-            return self.config
-
-        elif action_name == "group":
-            self.states['ensemble'].g = EnsembleGraph(
-                self.states, "group_path", construct_graph=True, add_data=True
-            ).g
-            return self.states['ensemble'].g
-
-        elif action_name == "scatterplot":
-            if action["plot"] == "bland-altman":
-                state1 = self.states[action["dataset"]]
-                state2 = self.states[action["dataset2"]]
-                col = action["col"]
-                catcol = action["catcol"]
-                dataset1 = action["dataset"]
-                dataset2 = action["dataset2"]
-                ret = BlandAltman(
-                    state1, state2, col, catcol, dataset1, dataset2
-                ).results
-            return ret
-
-        elif action_name == "gradients":
-            if action["plot"] == "kde":
-                ret = KDE_gradients(self.states).results
-            return ret
-
-        elif action_name == "Gromov-wasserstein":
-            ret = {}
-            return ret
-
-        elif action_name == "similarity":
-            if (action['module'] == 'all'):
-                dirname = self.config.callflow_dir
-                name = self.config.runName
-                similarity_filepath = dirname  + '/' + 'similarity.json'
-                with open(similarity_filepath, 'r') as similarity_file:
-                    self.similarities = json.load(similarity_file)
-            else:
-                self.similarities = {}
-                for idx, dataset in enumerate(datasets):
-                    self.similarities[dataset] = []
-                    for idx_2, dataset2 in enumerate(datasets):
-                        union_similarity = Similarity(
-                            self.states[dataset2].g, self.states[dataset].g
-                        )
-                    self.similarities[dataset].append(union_similarity.result)
-            return self.similarities
-
-        elif action_name == "hierarchy":
-            mH = moduleHierarchyDist(self.states["ensemble"], action["module"])
-            return mH.result
-
-        elif action_name == "cct":
-            self.update_dist({
-                "name": "group",
-                "groupBy": "name",
-                "datasets": action["datasets"]
-            })
-            graph = CCT(self.states["ensemble"], action["functionsInCCT"])
-            return graph.g
-
-        elif action_name == "projection":
-            result = RunProjection(self.states, self.similarities).result
-            return result.to_json(orient="columns")
-
-        elif action_name == "run-information":
-            ret = []
-            for idx, state in enumerate(self.states):
-                self.states[state].projection_data["dataset"] = state
-                ret.append(self.states[state].projection_data)
-            return ret
-
-        elif action_name == "mini-histogram":
-            minihistogram = MiniHistogram(self.states['ensemble'], target_datasets=action['target-datasets'])
-            return minihistogram.result
-
-        elif action_name == "histogram":
-            histogram = DistHistogram(self.states['ensemble'], action["module"])
-            return histogram.result
-
-        elif action_name == "auxiliary":
-            auxiliary = Auxiliary(self.states['ensemble'], module=action['module'], sortBy=action['sortBy'], datasets=action['datasets'])
-            return auxiliary.result
-
-        elif action_name == 'compare':
-            compareDataset = action['compareDataset']
-            targetDataset = action['targetDataset']
-            if(action['selectedMetric'] == 'Inclusive'):
-                selectedMetric = 'time (inc)'
-            elif(action['selectedMetric'] == 'Exclusive'):
-                selectedMetric = 'time'
-
-            compare = Compare(self.states, compareDataset, targetDataset, selectedMetric)
-            return compare.result
-
 
     def displayStats(self, name):
         log.warn("==========================")

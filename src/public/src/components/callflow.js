@@ -117,7 +117,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
 		modes: ['Ensemble', 'Single'],
-		selectedMode: 'Ensemble',
+		selectedMode: 'Single',
 		// Presentation mode variables
 		exhibitModes: ['Presentation', 'Default'],
 		selectedExhibitMode: 'Default',
@@ -243,12 +243,13 @@ export default {
 
 		// Fetch aggregated graph for single mode.
 		single_supergraph(data) {
+			data = JSON.parse(data)
 			console.log("Data for", this.selectedFormat, ": ", data)
+
 			this.$refs.SuperGraph.init(data)
 			this.$refs.Scatterplot.init()
 			this.$refs.Histogram.init()
 			this.$refs.Function.init()
-			this.$refs.Icicle.init()
 		},
 
 		cct(data) {

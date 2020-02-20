@@ -41,7 +41,7 @@ class groupBy:
         change_name = False
 
         # Create a map having initial funcs being mapped.
-        module_df = self.df.groupby(['module'])
+        module_df = self.df.groupby([self.group_by])
         for module, df in module_df:
             if module not in self.module_func_map:
                 self.module_func_map[module] = []
@@ -68,60 +68,9 @@ class groupBy:
                         to_module = module
                         group_path.append(module + '=' + path[i])
                         prev_module = module
-                        self.module_func_map[module].append(module + '/' + path[i])
                         change_name = True
                     else:
                         group_path.append(module + '=' + path[i])
-                        prev_module = module
-                        if path[i] not in self.entry_funcs[module]:
-                            self.entry_funcs[module].append(path[i])
-                else:
-                    prev_module = module
-                    continue
-                    if path[i] not in self.other_funcs[module] and path[i] not in self.entry_funcs[module]:
-                        self.other_funcs[module].append(path[i])
-        # print(path, group_path)
-        group_path = tuple(group_path)
-        return (group_path, change_name)
-
-        # Create a group path for the df.column = group_path.
-    def create_group_path_replace(self, path):
-        group_path = []
-
-        self.prev_module_map = {}
-        prev_module = None
-        function = path[len(path) - 1]
-        change_name = False
-
-        # Create a map having initial funcs being mapped.
-        module_df = self.df.groupby(['module'])
-        for module, df in module_df:
-            if module not in self.entry_funcs:
-                self.entry_funcs[module] = []
-            if module not in self.other_funcs:
-                self.other_funcs[module] = []
-
-        for i, elem in enumerate(path):
-            grouping = self.df.loc[self.df['name'] == elem][self.group_by].unique()
-            if len(grouping) == 0:
-                break
-
-            module = grouping[0]
-
-            # Append the module into the group path.
-            if module not in self.eliminate_funcs:
-                if prev_module is None:
-                    prev_module = module
-                    group_path.append(module)
-                elif module != prev_module:
-                    if module in group_path:
-                        from_module = group_path[len(group_path) - 1]
-                        to_module = module
-                        group_path.append(module)
-                        prev_module = module
-                        change_name = True
-                    else:
-                        group_path.append(module)
                         prev_module = module
                         if path[i] not in self.entry_funcs[module]:
                             self.entry_funcs[module].append(path[i])

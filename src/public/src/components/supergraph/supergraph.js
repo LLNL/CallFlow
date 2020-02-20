@@ -22,6 +22,9 @@ import Edges from './edges'
 // import CallbackEdges from './callgraph/callbackEdges'
 import ColorMap from './colormap'
 import * as d3 from 'd3'
+import { max, min, sum } from "d3-array";
+import { scalePow } from 'd3-scale';
+
 
 export default {
 	name: 'SuperGraph',
@@ -81,7 +84,7 @@ export default {
 					"height": this.height + this.margin.top + this.margin.bottom,
 					"top": this.toolbarHeight
 				})
-				// .call(this.zoom)
+			// .call(this.zoom)
 
 			this.data = data
 			this.clear()
@@ -99,9 +102,22 @@ export default {
 		render() {
 			this.graph = preprocess(this.data, false)
 			console.log("Preprocessing done.")
-			this.d3sankey = this.initSankey(this.graph)
+			this.sankey = this.initSankey(this.graph)
+			// console.log(this.sankey.nodes())
 			console.log("Layout Calculation.")
-			// this.postProcess(this.data.nodes, this.data.links)
+			// this.graph.nodes = this.sankey.getNodes()
+			// this.graph.links = this.sankey.getLinks()
+			// console.log(this.sankey.getNodes())
+
+
+			let postProcess = this.postProcess(this.graph.nodes, this.graph.links)
+			this.graph.nodes = postProcess['nodes']
+			this.graph.links = postProcess['links']
+
+			// console.log(this.graph.nodes, this.graph.links)
+			// this.graph = preprocess(this.graph, false)
+			this.initSankey(this.graph)
+
 			console.log("Post-processing done.")
 
 			this.$refs.Nodes.init(this.graph, this.view)
@@ -111,6 +127,28 @@ export default {
 			this.$refs.MiniHistograms.init(this.graph, this.view)
 			this.$refs.ColorMap.init()
 
+			if(this.debug){
+				for (let i = 0; i < this.graph['links'].length; i += 1) {
+					let link = this.graph['links'][i]
+					let source_callsite = link['attr_dict']['source_callsite']
+					let target_callsite = link['attr_dict']['target_callsite']
+					let weight = link['weight']
+					let exc_weight = link['exc_weight']
+					let source_inclusive = link['source_data']['512-cores']['time (inc)']
+					let source_exclusive = link['source_data']['512-cores']['time']
+					let target_inclusive = link['target_data']['512-cores']['time (inc)']
+					let target_exclusive = link['target_data']['512-cores']['time']
+
+					console.log("Source Name :", source_callsite)
+					console.log("Target Name :", target_callsite)
+					console.log("Weight: ", weight)
+					console.log("Exc weight: ", exc_weight)
+					console.log("Source Inclusive: ", source_inclusive)
+					console.log("Source Exclusive: ", source_exclusive)
+					console.log("Target Inclusive: ", target_inclusive)
+					console.log("Target Exclusive: ", target_exclusive)
+				}
+			}
 		},
 
 		updateMiniHistogram() {
@@ -118,28 +156,42 @@ export default {
 			this.$refs.MiniHistograms.init(this.graph, this.view)
 		},
 
-		updateColorMap(){
+		updateColorMap() {
 			this.$refs.ColorMap.clear()
-			// this.$refs.ColorMap.init()
+			this.$refs.ColorMap.init()
+		},
+
+		resetStat() {
+			this.maxInc = 0;
+			this.minInc = Number.MAX_SAFE_INTEGER;
+			this.maxExc = 0;
+			this.minExc = Number.MAX_SAFE_INTEGER;
+		},
+
+		calcStat(incTime, excTime) {
+			this.maxInc = Math.max(this.maxInc, incTime);
+			this.minInc = Math.min(this.minInc, incTime);
+
+			this.maxExc = Math.max(this.maxExc, excTime);
+			this.minExc = Math.min(this.minExc, excTime);
 		},
 
 		//Sankey computation
 		initSankey() {
-			let sankey = Sankey()
+			this.size = [this.width * 1.05, this.height - this.ySpacing]
+			this.sankey = Sankey()
 				.nodeWidth(this.nodeWidth)
 				.nodePadding(this.ySpacing)
-				.size([this.width * 1.05, this.height - this.ySpacing])
+				.size(this.size)
 				.levelSpacing(this.levelSpacing)
 				.maxLevel(this.graph.maxLevel)
-				//    .setReferenceValue(this.data.rootRunTimeInc)
 				.setMinNodeScale(this.nodeScale);
 
-			let path = sankey.link()
+			let path = this.sankey.link()
 
-			sankey.nodes(this.graph.nodes)
+			return this.sankey.nodes(this.graph.nodes)
 				.links(this.graph.links)
 				.layout(32)
-			return sankey
 		},
 
 		dragMove() {
@@ -153,85 +205,100 @@ export default {
 
 		// Add intermediate nodes.
 		postProcess(nodes, edges) {
+			console.log("===================Adding intermediate nodes==================")
 			const temp_nodes = nodes.slice();
 			const temp_edges = edges.slice();
 
-			this.computeNodeEdges(temp_nodes, temp_edges);
-			console.log("Compute node edges (Post process)")
-			this.computeNodeBreadths(temp_nodes, temp_edges)
-			console.log("Compute node breadths (Post process)")
-
 			for (let i = 0; i < temp_edges.length; i++) {
-				const source = temp_edges[i].sourceID;
-				const target = temp_edges[i].targetID;
+				const source = temp_edges[i].source;
+				const target = temp_edges[i].target;
 
-				if (source != undefined && target != undefined) {
-					const source_x = nodes[source].level;
-					const target_x = nodes[target].level;
-					const dx = target_x - source_x;
+				if(this.debug){
+					console.log("==============================")
+					console.log("Source Name", source)
+					console.log("Target Name", target)
+					console.log("This edge: ", temp_edges[i])
 
-					// Put in intermediate nodes.
-					for (let j = dx; j > 1; j--) {
-						const intermediate = nodes.length;
-						const tempNode = {
-							sankeyID: intermediate,
-							name: 'intermediate',
-							weight: nodes[i].weight,
-							height: nodes[i].value
-						};
-						nodes.push(tempNode);
-						edges.push({
-							source: intermediate,
-							target: (j == dx ? target : intermediate - 1),
-							value: edges[i].value,
-						});
-						if (j == dx) {
-							edges[i].original_target = target;
-							edges[i].last_leg_source = intermediate;
-						}
+				}
+
+				let source_node = temp_edges[i].source_data
+				let target_node = temp_edges[i].target_data
+
+				if(this.debug){
+					console.log("Source Node", source_node, target_node.level)
+					console.log("Target Node", target_node, target_node.level)
+				}
+
+				const source_level = source_node.level;
+				const target_level = target_node.level;
+				const shift_level = target_level - source_level;
+
+				if(this.debug){
+					console.log(source_level, target_level)
+					console.log("Number of levels to shift: ",shift_level)
+				}
+
+				// Put in intermediate nodes.
+				for (let j = shift_level; j > 1; j--) {
+					const intermediate_idx = nodes.length;
+					const tempNode = {
+						'512-cores': target_node['512-cores'],
+						'attr_dict': temp_edges[i]['attr_dict'],
+						id: 'intermediate_' + target_node.id,
+						level: j - 1,
+						height: temp_edges[i].height,
+						name: target_node.id,
+						// weight: nodes[i].weight,
+						// x: this.widthScale(source_level) + this.widthScale(j - 1),
+						// y: temp_edges[i].sy + 50,
+					};
+					if(this.debug){
+						console.log("Adding intermediate node: ", tempNode);
+					}
+					nodes.push(tempNode);
+					const sourceTempEdge = {
+						source: source_node.id,
+						target: tempNode.id,
+						weight: temp_edges[i].weight,
+					}
+					if(this.debug){
+						console.log("Adding intermediate source edge: ", sourceTempEdge);
+					}
+					edges.push(sourceTempEdge)
+
+					if (j == shift_level) {
+						edges[i].original_target = target
+					}
+					edges[i].target_data = nodes[intermediate_idx]
+					if(this.debug){
+						console.log("Updating this edge:", edges[i])
+					}
+
+					const targetTempEdge = {
+						source: tempNode.id,
+						target: target_node.id,
+						weight: temp_edges[i].weight
+					}
+					edges.push(targetTempEdge)
+					if(this.debug){
+						console.log("Adding intermediate target edge: ", targetTempEdge);
+					}
+
+					if (j == shift_level) {
+						edges[i].original_target = target;
+					}
+					edges[i].target_data = nodes[intermediate_idx]
+					if(this.debug){
+						console.log("Updating this edge:", edges[i])
 					}
 				}
 			}
-		},
-
-		computeNodeEdges(nodes, edges) {
-			nodes.forEach((node) => {
-				node.sourceLinks = [];
-				node.targetLinks = [];
-			});
-			edges.forEach((edge) => {
-				let source = edge.sourceID,
-					target = edge.targetID;
-
-				if (source != undefined && target != undefined) {
-					nodes[source].sourceLinks.push(edge);
-					nodes[target].targetLinks.push(edge);
-				}
-			});
 
 			return {
-				nodes,
-				edges,
-			};
-		},
-
-		computeNodeBreadths(nodes, edges) {
-			let remainingNodes = nodes.map((d) => d);
-			let nextNodes;
-			let level = 0;
-			while (remainingNodes.length) {
-				nextNodes = [];
-				remainingNodes.forEach((node) => {
-					node.level = level;
-					node.sourceLinks.forEach((link) => {
-						if (nextNodes.indexOf(link.target) < 0) {
-							nextNodes.push(link.target);
-						}
-					});
-				});
-				remainingNodes = nextNodes
-				++level
+				nodes: nodes,
+				links: edges
 			}
 		},
+
 	}
 }
