@@ -199,7 +199,7 @@ export default {
 			this.init()
 		},
 
-		callsite_data(data) {
+		single_callsite_data(data) {
 			console.log("Auxiliary Data: ", data)
 			this.dataReady = true
 
@@ -216,21 +216,14 @@ export default {
 					callsite_data[key] = this.processJSON(callsite_data[key])
 				}
 			}
+			console.log(module_data, callsite_data)
+
 			this.$store.callsites = {}
-			let ensemble = this.processCallsite(callsite_data['ensemble'])
-			this.$store.callsites['ensemble'] = ensemble
-			for (let i = 0; i < this.$store.runNames.length; i += 1) {
-				let dataset = this.$store.runNames[i]
-				this.$store.callsites[dataset] = this.processCallsite(callsite_data[dataset])
-			}
+			let dataset = this.$store.selectedTargetDataset
+			this.$store.callsites[dataset] = this.processCallsite(callsite_data[dataset])
 
 			this.$store.modules = {}
-			this.$store.modules['ensemble'] = this.processModule(module_data['ensemble'])
-
-			for (let i = 0; i < this.$store.runNames.length; i += 1) {
-				let dataset = this.$store.runNames[i]
-				this.$store.modules[dataset] = this.processModule(module_data[dataset])
-			}
+			this.$store.modules[dataset] = this.processModule(module_data[dataset])
 			console.log("Done processing ")
 
 		},
@@ -361,11 +354,19 @@ export default {
 					selectedMetric: this.selectedMetric,
 				})
 			} else if (this.selectedFormat == 'Callgraph') {
+				this.$socket.emit('single_callsite_data', {
+					dataset: this.$store.selectedTargetDataset,
+					sortBy: this.$store.auxiliarySortBy,
+					module: 'all'
+				})
+
 				this.$socket.emit('single_supergraph', {
 					dataset: this.$store.selectedTargetDataset,
 					format: this.selectedFormat,
 					groupBy: this.selectedGroupBy
 				})
+
+				this.$socket.emit()
 			}
 		},
 
@@ -509,6 +510,7 @@ export default {
 
 		processCallsite(data) {
 			let callsites = {}
+			console.log(data)
 			for (let i = 0; i < data.index.length; i += 1) {
 				let callsite = {}
 				let callsite_name = data.d[i][data.columnMap['name']]
