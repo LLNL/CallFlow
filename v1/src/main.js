@@ -29,6 +29,7 @@ if(!argv.d){
 else{
 	dataSetFile = argv.d;
 }
+console.log(dataSetFile)
 if(!fs.existsSync(dataSetFile)){
 	console.log('Sorry no such dataset exist at', dataSetFile);
 	return;
@@ -72,7 +73,7 @@ var path = require('path'),
     TreeModel = require('tree-model'),
     server = require('http').Server(app);
 var port = process.env.PORT || portNumber || 8500,
-host = process.env.HOST || "localhost"; 
+host = process.env.HOST || "localhost";
 // host = process.env.HOST || "detoo.cs.ucdavis.edu";
 
 app.use(express.static(__dirname + '/public'));
@@ -169,7 +170,7 @@ nodeMetricReader.on('end', function(){
 	console.log('done with reading metric data, begin reading xml file');
 	// var xmlFile = new fileLoader('../../data/miranda1/experiment.xml', myCallBack);
 	date1 = new Date();
-	var xml2 = new sankeySplitNode(xmlTree, xmlFile, sankeySplitNodeCallBack,configFile , [-99999], nodeMetric, [], nodeIDKeep);		
+	var xml2 = new sankeySplitNode(xmlTree, xmlFile, sankeySplitNodeCallBack,configFile , [-99999], nodeMetric, [], nodeIDKeep);
 
 });
 
@@ -222,7 +223,7 @@ function sankeySplitNodeCallBack(data){
 
 	server.listen(port, host, function(){
 		console.log("Sever started, listening", host, port);
-	})		
+	})
 }
 
 app.get('/', function(req, res){
@@ -281,18 +282,18 @@ app.get('/splitNode', function(req, res){
 		var myID = parseInt(sID);
 		if(procIDArray.indexOf(myID) == -1 || procIDArray.length == 0){
 			procIDArray.push(myID);
-		}		
+		}
 	})
 
 	res_global = res;
 
 	// var xml2 = new sankeySplitNode('../../data/miranda1/experiment.xml', splitNodeCallBack, procIDArray);
-	var xml2 = new sankeySplitNode(xmlTree, xmlFile, splitNodeCallBack2,configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep);	
+	var xml2 = new sankeySplitNode(xmlTree, xmlFile, splitNodeCallBack2,configFile, procIDArray, nodeMetric, splitByParentList, nodeIDKeep);
 })
 
 app.get('/getList', function(req, res){
 	var level = parseInt( req.query["nodeLevel"] )
-	var specialID = req.query["specialID"];	
+	var specialID = req.query["specialID"];
 
 
 	var tempList = [];
@@ -402,12 +403,12 @@ app.get('/splitNodeByParents', function(req,res){
 
 	res_global = res;
 
-	var xml2 = new sankeySplitNode(xmlTree, xmlFile, splitNodeCallBack2,configFile , procIDArray, nodeMetric, splitByParentList, nodeIDKeep);	
+	var xml2 = new sankeySplitNode(xmlTree, xmlFile, splitNodeCallBack2,configFile , procIDArray, nodeMetric, splitByParentList, nodeIDKeep);
 })
 
 app.get('/getHistogramScatterData', function(req, res){
 
-	var sankeyID = req.query["sankeyID"];	
+	var sankeyID = req.query["sankeyID"];
 	var specialID = req.query["specialID"];
 
 	var node = sankeyData["nodes"][specialID];
@@ -427,9 +428,9 @@ app.get('/getHistogramScatterData', function(req, res){
 			tempInc = tempInc.SumArray( incRuntime );
 			tempExc = tempExc.SumArray( excRuntime );
 		}
-	});	
+	});
 
-	res.json({"inc": tempInc, "exc": tempExc});	
+	res.json({"inc": tempInc, "exc": tempExc});
 })
 
 app.get('/calcEdgeValues', function(req, res){
@@ -449,9 +450,9 @@ app.get('/calcEdgeValues', function(req, res){
 	tempEdges.forEach(function(edge){
 		var idList = edge["nodeIDList"];
 		var edgeValueForBrush = 0;
-		
+
 		var edgeValueForNonBrush = 0;
-		
+
 
 		idList.forEach(function(id){
 			var runTime = nodeMetric[id]["inc"];
@@ -488,7 +489,7 @@ app.get('/calcEdgeValues', function(req, res){
 		tempE2["value"] = edgeValueForNonBrush;
 
 		edgeSet2.push(tempE2);
-	});	
+	});
 
 	res.json( {"brush" : edgeSet1, "nonBrush" : edgeSet2} );
 })
@@ -500,7 +501,7 @@ function splitNodeCallBack(data){
 	var lmcalc = new calcLM3(nodeArray, nodeMetric, sanKeyMetricDataLM);
 	var result = lmcalc.compute();
 	sankeyData = result["newSankey"];
-	nodeRemove = result["nodeRemove"];	
+	nodeRemove = result["nodeRemove"];
 
 	console.log('done with split node');
 	res_global.json(sankeyData);
@@ -530,7 +531,7 @@ function splitNodeCallBack2(data){
 	// var lmcalc = new calcMiranda(finalTree, nodeList, nodePaths, nodeMetric, keepEdges);
 
 	var result = lmcalc.compute();
-	sankeyData = result["newSankey"];	
+	sankeyData = result["newSankey"];
 	console.log('done with split node');
 
 	// var temp = {"nodes" : sankeyData["nodes"], "edges" : sankeyData["edges"]};
@@ -540,7 +541,7 @@ function splitNodeCallBack2(data){
 	var resData = {"graph" : sankeyData, "histogramData" :  hisData}
 
 	// res_global.json(sankeyData);
-	res_global.json(resData);	
+	res_global.json(resData);
 }
 
 //this function compute a mini histogram for each speical ID
@@ -566,7 +567,7 @@ function computeHistogram(){
 			else{
 				tempInc = tempInc.SumArray( incRuntime );
 			}
-		});	
+		});
 
 		//This section will bin the data////
 
@@ -600,7 +601,7 @@ function computeHistogram(){
 		for(var i = 0; i < numbOfBins; i++){
 			xVals.push(i);
 			freq.push(0);
-		};		
+		};
 
 		tempInc.forEach(function(val, idx){
 			var pos = Math.floor( (val - dataMin) / dataWidth );

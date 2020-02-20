@@ -79,7 +79,6 @@ export default {
                     return color
                 })
                 .style('fill-opacity', (d) => {
-                    console.log(d.name[0], d.height, d.out, d.in, d.value)
                     return 1
                 })
                 .style('shape-rendering', 'crispEdges')
@@ -209,9 +208,9 @@ export default {
                     }
                     var textSize = this.textSize(d.id)['width'];
                     if (textSize < d.height) {
-                        return d.id[0].split('=')[0];
+                        return d.id;
                     } else {
-                        return this.trunc(d.id.split('=')[0], this.textTruncForNode)
+                        return this.trunc(d.id, this.textTruncForNode)
                     }
                 })
                 .on('mouseover', function (d) {

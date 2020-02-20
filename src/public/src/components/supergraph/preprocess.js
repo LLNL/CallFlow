@@ -28,7 +28,7 @@ function addLinkID(graph) {
         nodeMap[node.id] = idx;
         let debug = true
         if(debug){
-            console.log("Assigning", node.id, " with map index: ", idx)
+            console.log("[Preprocess] Assigning", node.id, " with map index: ", idx)
         }
     }
 
@@ -44,12 +44,11 @@ function addLinkID(graph) {
             nodeMap[link.source] = idx
             idx += 1
         }
-        
+
         if(nodeMap[link.target] == undefined){
             nodeMap[link.target] = idx
             idx += 1
         }
-
         link['sourceID'] = nodeMap[link.source]
         link['targetID'] = nodeMap[link.target]
     }
@@ -70,15 +69,14 @@ function calculateFlow(graph) {
                 const linkLabel = nodes[link.sourceID].id;
                 if (linkLabel == nodeLabel) {
                     if (outGoing[linkLabel] == undefined) {
-                        outGoing[linkLabel] = 0;
+                        outGoing[linkLabel] = 0
                     }
-                    if(outGoing[linkLabel] != 0){
-                        outGoing[linkLabel] = Math.max(link.weight, outGoing[linkLabel])
+                    if(outGoing[linkLabel] == 0){
+                        outGoing[linkLabel] = link.weight
                     }
                     else{
                         outGoing[linkLabel] += link.weight;
                     }
-                    
                 }
             }
         });
@@ -90,9 +88,9 @@ function calculateFlow(graph) {
                     if (inComing[linkLabel] == undefined) {
                         inComing[linkLabel] = 0;
                     }
-                    
-                    if(inComing[linkLabel] != 0) {
-                        inComing[linkLabel] = Math.max(link.weight, inComing[linkLabel])
+
+                    if(inComing[linkLabel] == 0) {
+                        inComing[linkLabel] = link.weight
                     }
                     else{
                         inComing[linkLabel] += link.weight;
@@ -101,20 +99,21 @@ function calculateFlow(graph) {
             }
         });
 
+        // Set the outgoing as 0 for nodes with no target nodes.
         if (outGoing[nodeLabel] == undefined) {
             outGoing[nodeLabel] = 0;
         }
 
+        // Set the incoming as 0 for nodes with no source nodes.
         if (inComing[nodeLabel] == undefined) {
             inComing[nodeLabel] = 0;
         }
-  
+
         node.out = outGoing[nodeLabel];
         node.in = inComing[nodeLabel];
 
         node.inclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]);
         node.exclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel]
-
     });
 
 

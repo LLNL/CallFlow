@@ -5,7 +5,6 @@ from ast import literal_eval as make_tuple
 import numpy as np
 from utils.timer import Timer
 
-# TODO: Remove all code with respect to add_paths (very expensive. )
 class SuperGraph(nx.Graph):
     # Attributes:
     # 1. State => Pass the state which needs to be handled.
@@ -198,14 +197,13 @@ class SuperGraph(nx.Graph):
             source_name = edge[2]['attr_dict']['source_callsite']
             target_name = edge[2]['attr_dict']['target_callsite']
 
-            source_inc = self.df.loc[(self.df["name"] == source_name)][
+            source_inc = self.df.loc[(self.df["module"] == source_module)][
                 "time (inc)"
             ].max()
-            target_inc = self.df.loc[(self.df["name"] == target_name)][
-                "time"
+            target_inc = self.df.loc[(self.df["module"] == target_module)][
+                "time (inc)"
             ].max()
 
-            print(source_inc, target_inc)
             if source_inc == target_inc:
                 ret[(edge[0], edge[1])] = source_inc
             else:
@@ -222,13 +220,15 @@ class SuperGraph(nx.Graph):
             source_name = edge[2]['attr_dict']['source_callsite']
             target_name = edge[2]['attr_dict']['target_callsite']
 
-            source_inc = self.df.loc[(self.df["name"] == source_name)]["time"].max()
-            target_inc = self.df.loc[(self.df["name"] == target_name)]["time"].max()
+            print(edge)
 
-            if source_inc == target_inc:
-                ret[(edge[0], edge[1])] = source_inc
+            source_exc = self.df.loc[(self.df["name"] == source_name)]["time"].max()
+            target_exc = self.df.loc[(self.df["name"] == target_name)]["time"].max()
+
+            if source_exc == target_exc:
+                ret[(edge[0], edge[1])] = source_exc
             else:
-                ret[(edge[0], edge[1])] = target_inc
+                ret[(edge[0], edge[1])] = target_exc
 
         return ret
 

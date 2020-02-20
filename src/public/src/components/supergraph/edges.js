@@ -40,39 +40,41 @@ export default {
                 .attr('class', (d) => {
                     return 'edge';
                 })
-                .attr('d', (d) => {
-                    console.log(d.source.x, d.source.height, d.target.x, d.source.y, d.sy, d.target.y, d.ty)
-                    let Tx0 = d.source.x + d.source.height,
-                        Tx1 = d.target.x,
-                        Txi = d3.interpolateNumber(Tx0, Tx1),
-                        Tx2 = Txi(0.4),
-                        Tx3 = Txi(1 - 0.4),
-                        Ty0 = d.source.y + d.sy,
-                        Ty1 = d.target.y + d.ty
+                // .attr('d', (d) => {
+                //     let source_data = d.source_data
+                //     let target_data = d.target_data
+                //     console.log("source link: ", source_data);
+                //     console.log("target link: ", target_data);
+                //     let Tx0 = source_data.x + source_data.height,
+                //         Tx1 = target_data.x,
+                //         Txi = d3.interpolateNumber(Tx0, Tx1),
+                //         Tx2 = Txi(0.4),
+                //         Tx3 = Txi(1 - 0.4),
+                //         Ty0 = source_data.y + d.sy,
+                //         Ty1 = target_data.y + d.ty
 
-                    // note .ty is the y point that the edge meet the target(for top)
-                    //		.sy is the y point of the source  (for top)
-                    //		.dy is width of the edge
+                //     // note .ty is the y point that the edge meet the target(for top)
+                //     //		.sy is the y point of the source  (for top)
+                //     //		.dy is width of the edge
 
-                    let Bx0 = d.source.x + d.source.height,
-                        Bx1 = d.target.x,
-                        Bxi = d3.interpolateNumber(Bx0, Bx1),
-                        Bx2 = Bxi(0.4),
-                        Bx3 = Bxi(1 - 0.4),
-                        By0 = d.source.y + d.height + d.sy,
-                        By1 = d.target.y + d.ty + d.height
+                //     let Bx0 = source_data.x + source_data.height,
+                //         Bx1 = target_data.x,
+                //         Bxi = d3.interpolateNumber(Bx0, Bx1),
+                //         Bx2 = Bxi(0.4),
+                //         Bx3 = Bxi(1 - 0.4),
+                //         By0 = source_data.y + d.sy + source_data.height/2,
+                //         By1 = target_data.y + d.ty + source_data.height/2
 
-                    const rightMoveDown = By1 - Ty1;
-                    console.log(d)
-                    return `M${Tx0},${Ty0}
-		                    C${Tx2},${Ty0}
-		                    ${Tx3}, ${Ty1}
-		                    ${Tx1}, ${Ty1}
-		                    ` + ` v ${rightMoveDown}
-		                    C${Bx3},${By1}
-		                    ${Bx2},${By0}
-		                    ${Bx0},${By0}`;
-                })
+                //     const rightMoveDown = By1 - Ty1;
+                //     return `M${Tx0},${Ty0}
+		        //             C${Tx2},${Ty0}
+		        //             ${Tx3}, ${Ty1}
+		        //             ${Tx1}, ${Ty1}
+		        //             ` + ` v ${rightMoveDown}
+		        //             C${Bx3},${By1}
+		        //             ${Bx2},${By0}
+		        //             ${Bx0},${By0}`;
+                // })
                 .style('fill', d => {
                     return '#202020'
                 })
@@ -98,35 +100,36 @@ export default {
                 .data(links)
                 .style('fill-opacity', 0)
                 .attr('d', (d) => {
-                    if (d.sy == undefined) {
-                        d.sy = 0
-                        return
-                    }
-                    if (d.ty == undefined) {
-                        d.ty = 0
-                        return
-                    }
-                    let Tx0 = d.source.x + d.source.dx,
-                        Tx1 = d.target.x,
+                    let source_data = d.source_data
+                    let target_data = d.target_data
+                    // if (d.sy == undefined) {
+                    //     d.sy = 0
+                    //     return
+                    // }
+                    // if (d.ty == undefined) {
+                    //     d.ty = 0
+                    //     return
+                    // }
+                    let Tx0 = source_data.x + source_data.dx,
+                        Tx1 = target_data.x,
                         Txi = d3.interpolateNumber(Tx0, Tx1),
                         Tx2 = Txi(0.4),
                         Tx3 = Txi(1 - 0.4),
-                        Ty0 = d.source.y + d.sy + this.$parent.ySpacing,
-                        Ty1 = d.target.y + d.ty + this.$parent.ySpacing;
+                        Ty0 = source_data.y + d.sy + this.$parent.ySpacing,
+                        Ty1 = target_data.y + d.ty + this.$parent.ySpacing;
 
                     // note .ty is the y point that the edge meet the target(for top)
                     //		.sy is the y point of the source  (for top)
                     //		.dy is width of the edge
 
                     // var rightMoveDown = d.target.y + d.dy / 2;
-
-                    let Bx0 = d.source.x + d.source.dx,
-                        Bx1 = d.target.x,
+                    let Bx0 = source_data.x + source_data.dx,
+                        Bx1 = target_data.x,
                         Bxi = d3.interpolateNumber(Bx0, Bx1),
                         Bx2 = Bxi(0.4),
                         Bx3 = Bxi(1 - 0.4),
-                        By0 = d.source.y + d.height + d.sy + this.$parent.ySpacing,
-                        By1 = d.target.y + d.ty + d.height + this.$parent.ySpacing;
+                        By0 = source_data.y + d.height + d.sy + this.$parent.ySpacing,
+                        By1 = target_data.y + d.ty + d.height + this.$parent.ySpacing;
 
                     const rightMoveDown = By1 - Ty1
                     return `M${Tx0},${Ty0

@@ -56,7 +56,6 @@ class EnsembleCallFlow:
             self.states = self.readState(self.config.dataset_names)
 
     def processState(self, datasets, filterBy="Inclusive", filterPerc="10"):
-
         states = {}
         for idx, dataset_name in enumerate(datasets):
             states[dataset_name] = State(dataset_name)
@@ -65,6 +64,7 @@ class EnsembleCallFlow:
 
             states[dataset_name] = self.pipeline.process(states[dataset_name], "entire")
             states[dataset_name] = self.pipeline.convertToNetworkX(states[dataset_name], "path")
+            states[dataset_name] = self.pipeline.group(states, dataset_name, "module")
             # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
             # states[dataset_name] = self.pipeline.filterNetworkX(states, dataset_name, self.config.filter_perc)
             self.pipeline.write_dataset_gf(states[dataset_name], dataset_name, "filter")
@@ -132,7 +132,7 @@ class EnsembleCallFlow:
 
         elif action_name == 'single_cct':
             self.callflow.request({
-                "name": "group",
+                "name": "supergraph",
                 "groupBy": "name",
                 "dataset": action["dataset"]
             })
@@ -141,14 +141,14 @@ class EnsembleCallFlow:
 
         elif action_name == "ensemble_cct":
             self.request({
-                "name": "group",
+                "name": "supergraph",
                 "groupBy": "name",
                 "datasets": action["datasets"]
             })
             nx = CCT(self.states["ensemble"], action["functionsInCCT"])
             return nx.g
 
-        elif action_name == "group":
+        elif action_name == "supergraph":
             self.states['ensemble'].g = SuperGraph(
                 self.states, "group_path", construct_graph=True, add_data=True
             ).g

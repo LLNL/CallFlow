@@ -17,24 +17,45 @@ import math
 import json
 from ast import literal_eval as make_tuple
 from utils.logger import log
+from utils.timer import Timer
 
 
 class SuperGraph(nx.Graph):
-    def __init__(self, state, path_name, add_info, group_by):
-        super(CallGraph, self).__init__()
-        self.state = state
-        self.path_name = path_name
-        self.graph = self.state.graph
+    def __init__(
+        self, states, dataset, path, group_by_attr="module", construct_graph=True, add_data=True, debug=True
+    ):
+        super(SuperGraph, self).__init__()
+        self.state = states[dataset]
+        self.dataset = dataset
+        self.timer = Timer()
+
         self.df = self.state.df
-        self.root = state.lookup_with_node(self.graph.roots[0])['vis_node_name'][0]
-        self.group_by = group_by
-        self.callbacks = []
+        self.graph = self.state.graph
 
-        self.rootRunTimeInc = self.root_runtime_inc()
-        self.edge_direction = {}
-        self.g = nx.DiGraph(rootRunTimeInc = int(self.rootRunTimeInc))
+        self.group_by = group_by_attr
+        self.g = self.state.g
 
-        debug = True
+        self.columns = [
+            "time (inc)",
+            "group_path",
+            "name",
+            "time",
+            "callers",
+            "callees",
+            "vis_name",
+            "module",
+            "show_node",
+        ]
+
+        with self.timer.phase("Construct Graph"):
+            if construct_graph:
+                print("Creating a Graph for {0}.".format(self.state.name))
+                self.mapper = {}
+                self.g = nx.DiGraph()
+                self.add_paths(path)
+            else:
+                print("Using the existing graph from state {0}".format(self.state.name))
+
         if(debug):
             log.warn('Modules: {0}'.format(self.df['module'].unique()))
             log.warn('Top 10 Inclusive time: ')
@@ -49,27 +70,29 @@ class SuperGraph(nx.Graph):
             for name, row in top_exclusive_df.iterrows():
                 log.info('{0} [{1}]'.format(name, row["time"]))
 
-        self.add_paths(path_name)
-        # self.add_callback_paths()
 
-        if add_info == True:
-            log.info('Creating a Graph with node or edge attributes.', self.path_name)
-            self.add_node_attributes()
-            self.add_edge_attributes()
-        else:
-            log.info('Creating a Graph without node or edge attributes.')
-            pass
+            for node in self.g.nodes(data=True):
+                log.info("Node: {0}".format(node))
+            for edge in self.g.edges():
+                log.info("Edge: {0}".format(edge))
 
-        for node in self.g.nodes(data=True):
-            log.info("Node: {0}".format(node))
-        for edge in self.g.edges():
-            log.info("Edge: {0}".format(edge))
-
-        if debug:
             log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
             log.warn("Edges in the tree: {0}".format(len(self.g.edges)))
             log.warn("Is it a tree? : {0}".format(nx.is_tree(self.g)))
             log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
+
+        # Variables to control the data properties globally.
+        self.callbacks = []
+        self.edge_direction = {}
+
+        with self.timer.phase("Add graph attributes"):
+            if add_data == True:
+                self.add_node_attributes()
+                self.add_edge_attributes()
+            else:
+                print("Creating a Graph without node or edge attributes.")
+
+        log.info(self.timer)
 
     def root_runtime_inc(self):
         root = self.graph.roots[0]
@@ -78,32 +101,36 @@ class SuperGraph(nx.Graph):
 
     def no_cycle_path(self, path):
         ret = []
-        mapper = {}
+        moduleMapper = {}
         for idx, elem in enumerate(path):
-            if elem not in mapper:
-                mapper[elem] = 1
+            call_site = elem.split('=')[1]
+            module = self.df.loc[self.df.name == call_site]['module'].tolist()[0]
+            if (module not in moduleMapper and elem in self.mapper):
+                self.mapper[elem] += 1
+                moduleMapper[module] = True
                 ret.append(elem)
+            elif elem not in self.mapper:
+                self.mapper[elem] = 0
             else:
-                ret.append(elem + "/" + str(mapper[elem]))
-                mapper[elem] += 1
+                self.mapper[elem] += 1
         return tuple(ret)
 
-    def add_paths(self, path_name):
-        for idx, row in self.df.iterrows():
-            # if row.show_node:
-                path = row[path_name]
-                # TODO: Sometimes the path becomes a string. Find why it happens.
-                # If it becomes a string
-                if isinstance(path, str):
-                    path = make_tuple(path)
+    def add_paths(self, path):
+        path_df = self.df[path].fillna("()")
+        paths = path_df.drop_duplicates().tolist()
+        for idx, path_str in enumerate(paths):
+            path_tuple = make_tuple(path_str)
+            if(len(path_tuple) >= 2):
+                source_module = path_tuple[-2].split('=')[0]
+                target_module = path_tuple[-1].split('=')[0]
+                print(source_module, target_module)
 
-                corrected_path = self.no_cycle_path(path)
-                if(len(corrected_path) >= 2):
-                    source = corrected_path[-2]
-                    target = corrected_path[-1]
-
-                    if not self.g.has_edge(source, target):
-                        self.g.add_edge(source, target)
+                source_name = path_tuple[-2].split('=')[1]
+                target_name = path_tuple[-1].split('=')[1]
+                self.g.add_edge(source_module, target_module, attr_dict={
+                    "source_callsite": source_name,
+                    "target_callsite": target_name
+                })
 
     def add_callback_paths(self):
         for from_module, to_modules in self.callbacks.items():
@@ -111,205 +138,127 @@ class SuperGraph(nx.Graph):
                 self.g.add_edge(from_module, to_module, type="callback")
 
     def add_node_attributes(self):
-        time_inc_mapping = self.generic_map(self.g.nodes(), 'time (inc)')
-        nx.set_node_attributes(self.g, name='time (inc)', values=time_inc_mapping)
-
-        time_mapping = self.generic_map(self.g.nodes(), 'time')
-        nx.set_node_attributes(self.g, name="time", values=time_mapping)
-
-        name_mapping = self.generic_map(self.g.nodes(), 'vis_node_name')
-        nx.set_node_attributes(self.g, name='name', values=name_mapping)
-
-        nid_mapping = self.generic_map(self.g.nodes(), 'nid')
-        nx.set_node_attributes(self.g, name='nid', values=nid_mapping)
-
-        # type_mapping = self.generic_map(self.g.nodes(), 'type')
-        # nx.set_node_attributes(self.g, name='type', values=type_mapping)
-
-        # n_index_mapping = self.generic_map(self.g.nodes(), 'n_index')
-        # nx.set_node_attributes(self.g, name='n_index', values=n_index_mapping)
-
-        # module_mapping = self.generic_map(self.g.nodes(), 'module')
-        # nx.set_node_attributes(self.g, name='module', values=module_mapping)
-
-        # mod_index_mapping = self.generic_map(self.g.nodes(), 'mod_index')
-        # nx.set_node_attributes(self.g, name='mod_index', values=mod_index_mapping)
-
-        # imbalance_perc_mapping = self.generic_map(self.g.nodes(), 'imbalance_perc')
-        # nx.set_node_attributes(self.g, name='imbalance_perc', values=imbalance_perc_mapping)
-
-        # show_node_mapping = self.generic_map(self.g.nodes(), 'show_node')
-        # nx.set_node_attributes(self.g, name='show_node', values=imbalance_perc_mapping)
-
-        # self.level_mapping = self.assign_levels()
-        # nx.set_node_attributes(self.g, name='level', values=self.level_mapping)
-
-        # children_mapping = self.immediate_children()
-        # nx.set_node_attributes(self.g, name='children', values=children_mapping)
-
-        entry_function_mapping = self.generic_map(self.g.nodes(), 'entry_functions')
-        nx.set_node_attributes(self.g, name='entry_functions', values=entry_function_mapping)
-
-    def generic_map(self, nodes, attr):
-        ret = {}
-        for node in nodes:
-            if self.group_by == 'module':
-                groupby = 'module'
-            elif self.group_by == 'name':
-                groupby = 'name'
-            elif self.path_name == 'path':
-                groupby = '_name'
-
-            if "=" in node:
-                log.info('Super node: {0}'.format(node))
-                corrected_module = node.split('=')[0]
-                corrected_function = node.split('=')[1]
-                corrected_node = corrected_module
-                groupby = 'module'
-            elif '/' in node:
-                log.info('Meta node: {0}'.format(node))
-                corrected_module = node.split('/')[0]
-                corrected_function = node.split('/')[1]
-                corrected_node = corrected_function
-                log.info("Getting dets of [module={0}], function={1}".format(corrected_module, corrected_node))
-                groupby = 'name'
-            else:
-                log.info('Node: {0}'.format(node))
-                corrected_node = node
-                corrected_function = node
-                groupby = 'module'
-
-            if attr == 'time (inc)':
-                group_df = self.df.groupby([groupby]).max()
-                # log.info("Group df by {0} = \n {1}".format(groupby, group_df))
-                ret[node] = group_df.loc[corrected_node, 'time (inc)']
-
-            elif attr == 'entry_functions':
-                module_df = self.df.loc[self.df['module'] == corrected_node]
-                entry_func_df = module_df.loc[(module_df['component_level'] == 2)]
-                if(entry_func_df.empty):
-                    ret[node] = json.dumps({
-                        'name': '',
-                        'time': [],
-                        'time (inc)': []
-                    })
-                else:
-                    name = entry_func_df['name'].unique().tolist()
-                    time = entry_func_df['time'].mean().tolist()
-                    time_inc = entry_func_df['time (inc)'].mean().tolist()
-
-                    ret[node] = json.dumps({
-                        'name': entry_func_df['name'].unique().tolist(),
-                        'time': entry_func_df['time'].mean().tolist(),
-                        'time (inc)': entry_func_df['time (inc)'].mean().tolist()
-                    })
-
-            elif attr == 'imbalance_perc':
-                module_df = self.df.loc[self.df['module'] == corrected_node]
-                max_incTime = module_df['time (inc)'].max()
-                min_incTime = module_df['time (inc)'].min()
-                avg_incTime = module_df['time (inc)'].mean()
-
-                ret[node] = (max_incTime - avg_incTime)/max_incTime
-
-            elif attr == 'time':
-                module_df = self.df.loc[self.df['module'] == corrected_node]
-                if self.group_by == 'module':
-                    group_df = self.df.groupby([groupby]).max()
-                elif self.group_by == 'name':
-                    group_df = self.df.groupby([groupby]).mean()
-                ret[node] = group_df.loc[corrected_node, 'time']
-
-            elif attr == 'vis_node_name':
-                ret[node] = [node]
-
-            elif attr == 'nid':
-                ret[node] = self.df.loc[self.df['name'] == corrected_function]['nid'].tolist()
-
-            else:
-                group_df = self.df.groupby(['name']).mean()
-                ret[node] = group_df.loc[corrected_node, attr]
-        return ret
-
-    def tailhead(self, edge):
-        return edge[0], edge[1]
-
-    def tailheadDir(self, edge):
-        return str(edge[0]), str(edge[1]), self.edge_direction[edge]
+        dataset_mapping = {}
+        dataset_mapping[self.dataset] = self.dataset_map(self.g.nodes(), self.dataset)
+        nx.set_node_attributes(self.g, name=self.dataset, values=dataset_mapping[self.dataset])
 
     def add_edge_attributes(self):
-        log.warn('=============Edges==============')
         capacity_mapping = self.calculate_flows(self.g)
-        # type_mapping = self.edge_type(self.g)
-        # flow_mapping = self.flow_map()
-        nx.set_edge_attributes(self.g, name='weight', values=capacity_mapping)
-        # nx.set_edge_attributes(self.g, name='type', values=type_mapping)
-        # nx.set_edge_attributes(self.g, name='flow', values=flow_mapping)
+        nx.set_edge_attributes(self.g, name="weight", values=capacity_mapping)
+        exc_capacity_mapping = self.calculate_exc_weight(self.g)
+        nx.set_edge_attributes(self.g, name="exc_weight", values=exc_capacity_mapping)
+
+    def calculate_exc_weight(self, graph):
+        ret = {}
+        additional_flow = {}
+        for edge in graph.edges(data=True):
+            print(edge)
+            source_module = edge[0]
+            target_module = edge[1]
+            source_name = edge[2]['attr_dict']['source_callsite']
+            target_name = edge[2]['attr_dict']['target_callsite']
+
+            source_exc = self.df.loc[(self.df["name"] == source_name)]["time"].max()
+            target_exc = self.df.loc[(self.df["name"] == target_name)]["time"].max()
+
+            if source_exc == target_exc:
+                ret[(edge[0], edge[1])] = source_exc
+            else:
+                ret[(edge[0], edge[1])] = target_exc
+
+        return ret
 
     # Calculate the sankey flows from source node to target node.
     def calculate_flows(self, graph):
         ret = {}
-        edges = graph.edges(data=True)
         additional_flow = {}
+        for edge in graph.edges(data=True):
+            source_module = edge[0]
+            target_module = edge[1]
+            source_name = edge[2]['attr_dict']['source_callsite']
+            target_name = edge[2]['attr_dict']['target_callsite']
 
-        # # Calculates the costs in cycles and aggregates to one node.
-        # for edge in edges:
-        #     source = edge[0]
-        #     target = edge[1]
+            source_inc = self.df.loc[(self.df["name"] == source_name)][
+                "time (inc)"
+            ].max()
+            target_inc = self.df.loc[(self.df["name"] == target_name)][
+                "time (inc)"
+            ].max()
 
-        #     if source.endswith('_'):
-        #         cycle_node = source
-        #         cycle_node_df = self.state.lookup_with_vis_nodeName(cycle_node[:-1])
-        #         additional_flow[cycle_node] = cycle_node_df['time (inc)'].max()
-        #     elif target.endswith('_'):
-        #         cycle_node = target
-        #         cycle_node_df = self.state.lookup_with_vis_nodeName(cycle_node[:-1])
-        #         additional_flow[cycle_node] = cycle_node_df['time (inc)'].max()
+            # if source_inc == target_inc:
+            #     ret[(edge[0], edge[1])] = source_inc
+            # else:
+            ret[(edge[0], edge[1])] = target_inc
 
-        for edge in edges:
-            log.warn('--------------------------------')
-            added_flow = 0
-            # if edge[0].endswith('_'):
-            #     ret[edge] = additional_flow[edge[0]]
-            #     continue
-            # elif edge[1].endswith('_'):
-            #     ret[edge] = additional_flow[edge[1]]
-            #     continue
+        return ret
 
-            # source edge
-            if '/' in edge[0]:
-                source_module = edge[0].split('/')[0]
-                source_function = edge[0].split('/')[1]
-                source_df = self.df.loc[(self.df['name'] == source_function)]
-            elif '=' in edge[0]:
-                source_module = edge[0].split('=')[0]
-                source_function = edge[0].split('=')[1]
-                source_df = self.df.loc[(self.df['module'] == source_module)]
+    def tailhead(self, edge):
+        return (edge[0], edge[1])
 
-            source_inc = source_df['time (inc)'].mean()
-            # print(source_df)
+    def tailheadDir(self, edge):
+        return (str(edge[0]), str(edge[1]), self.edge_direction[edge])
 
-            # For target edge
-            if '/' in edge[1]:
-                target_module = edge[1].split('/')[0]
-                target_function = edge[1].split('/')[1]
-                target_df = self.df.loc[(self.df['name'] == target_function)]
-            elif '=' in edge[1]:
-                target_module = edge[1].split('=')[0]
-                target_function = edge[1].split('=')[1]
-                target_df = self.df.loc[(self.df['module'] == target_module)]
+    def leaves_below(self, graph, node):
+        return set(
+            sum(
+                (
+                    [vv for vv in v if graph.out_degree(vv) == 0]
+                    for k, v in nx.dfs_successors(graph, node).items()
+                ),
+                [],
+            )
+        )
 
-            target_inc = target_df['time (inc)'].mean()
-            # print(target_df)
-
-            log.info("Source node : {0}[{1}], time : {2}".format(source_function, source_module, source_inc))
-            log.info("Target node : {0}[{1}], time : {2}".format(target_function, target_module, target_inc))
-
-            if source_inc == target_inc:
-                ret[(edge[0], edge[1])] = source_inc
+    def dataset_map(self, nodes, dataset):
+        ret = {}
+        for node in self.g.nodes():
+            if "=" in node:
+                node_name = node.split("=")[1]
             else:
-                ret[(edge[0], edge[1])] = target_inc
+                node_name = node
 
-            if math.isnan(ret[(edge[0], edge[1])]):
-                ret[(edge[0], edge[1])] = 0
+            if node not in ret:
+                ret[node] = {}
+
+            node_df = self.df.loc[
+                (self.df["module"] == node_name) & (self.df["dataset"] == dataset)
+            ]
+
+            for column in self.columns:
+                column_data = node_df[column]
+
+                if (
+                    column == "time (inc)"
+                    or column == "time"
+                    or column == "component_level"
+                ):
+                    if len(column_data.value_counts()) > 0:
+                        ret[node][column] = column_data.max()
+                    else:
+                        ret[node][column] = -1
+
+                elif column == "callers" or column == "callees":
+                    if len(column_data.value_counts()) > 0:
+                        ret[node][column] = make_tuple(column_data.tolist()[0])
+                    else:
+                        ret[node][column] = []
+
+                elif (
+                    column == "name"
+                    or column == "vis_name"
+                    or column == "module"
+                    or column == "show_node"
+                ):
+                    if len(column_data.value_counts()) > 0:
+                        ret[node][column] = column_data.tolist()[0]
+
+                    else:
+                        ret[node][column] = "None"
+
+                elif column == "component_path" or column == "group_path":
+
+                    if len(column_data.value_counts() > 0):
+                        ret[node][column] = list(make_tuple(column_data.tolist()[0]))
+                    else:
+                        ret[node][column] = []
         return ret
