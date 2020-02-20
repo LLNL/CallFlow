@@ -32,7 +32,6 @@ import EnsembleScatterplot from './ensembleScatterplot/ensembleScatterplot'
 import EnsembleDistribution from './ensembleDistribution/ensembleDistribution'
 
 import io from 'socket.io-client'
-import utils from '@/core/utils'
 
 export default {
 	name: 'CallFlow',
@@ -117,7 +116,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
 		modes: ['Ensemble', 'Single'],
-		selectedMode: 'Single',
+		selectedMode: 'Ensemble',
 		// Presentation mode variables
 		exhibitModes: ['Presentation', 'Default'],
 		selectedExhibitMode: 'Default',

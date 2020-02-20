@@ -109,20 +109,20 @@ export default {
             this.edges.selectAll('#dist-edge-' + dataset)
                 .data(this.links)
                 .attr('d', (d) => {
-                    let Tx0 = d.source_dict.x + d.source_dict.dx + this.offset,
-                        Tx1 = d.target_dict.x - this.offset,
+                    let Tx0 = d.source_data.x + d.source_data.dx + this.offset,
+                        Tx1 = d.target_data.x - this.offset,
                         Txi = d3.interpolateNumber(Tx0, Tx1),
                         Tx2 = Txi(0.4),
                         Tx3 = Txi(1 - 0.4),
-                        Ty0 = d.source_dict.y + this.$parent.ySpacing + d.sy,
-                        Ty1 = d.target_dict.y + this.$parent.ySpacing
+                        Ty0 = d.source_data.y + this.$parent.ySpacing + d.sy,
+                        Ty1 = d.target_data.y + this.$parent.ySpacing + d.ty
 
                     // note .ty is the y point that the edge meet the target(for top)
                     //		.sy is the y point of the source  (for top)
                     //		.dy is width of the edge
 
-                    let Bx0 = d.source_dict.x + d.source_dict.dx + this.offset,
-                        Bx1 = d.target_dict.x - this.offset,
+                    let Bx0 = d.source_data.x + d.source_data.dx + this.offset,
+                        Bx1 = d.target_data.x - this.offset,
                         Bxi = d3.interpolateNumber(Bx0, Bx1),
                         Bx2 = Bxi(0.4),
                         Bx3 = Bxi(1 - 0.4)
@@ -131,9 +131,10 @@ export default {
                     let By0 = 0, By1 = 0;
                     d.source_adjust = d.height['ensemble']
                     d.target_adjust = d.height['ensemble']
+                    // console.log(d.source_proportion, d.target_proportion)
 
-                    By0 = d.source_dict.y + this.$parent.ySpacing + d.sy + d.height['ensemble'] * d.source_proportion
-                    By1 = d.target_dict.y + this.$parent.ySpacing + d.ty + d.height['ensemble'] * d.target_proportion //(d.target.union['time (inc)']/d.max_height) * d.target.scale
+                    By0 = d.source_data.y + this.$parent.ySpacing + d.sy + d.height * 1.0//d.source_proportion
+                    By1 = d.target_data.y + this.$parent.ySpacing + d.ty + d.height * 1.0 //d.target_proportion
 
                     const rightMoveDown = By1 - Ty1
                     return `M${Tx0},${Ty0
@@ -187,8 +188,8 @@ export default {
                     'r': 15,
                     'stroke': 'black',
                     'fill': 'white',
-                    'cx': d.target_dict.x - 20,
-                    'cy': d.target_dict.y + this.$parent.ySpacing + d.target_dict.height / 2,
+                    'cx': d.target_data.x - 20,
+                    'cy': d.target_data.y + this.$parent.ySpacing + d.target_data.height / 2,
                 })
 
             this.labelContainer.append("text")

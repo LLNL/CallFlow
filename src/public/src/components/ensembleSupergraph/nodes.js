@@ -23,13 +23,6 @@ export default {
         renderZeroLine: {}
     }),
     sockets: {
-        // ensemble_gradients(data) {
-        //     console.log("[Gradient] Data:", data)
-        //     this.data = data
-        //     this.setupMeanGradients(data)
-        //     console.log("Store:", this.$store)
-        // },
-
         compare(data) {
             console.log("[Comparison] Data:", data)
             this.clearGradients()
@@ -103,23 +96,32 @@ export default {
             this.setNodeIds()
 
             // https://observablehq.com/@geekplux/dragable-d3-sankey-diagram
-            // this.drag = d3.drag()
-            //     .subject((d) => {
-            //         return d;
-            //     })
-            //     .on("start", function () {
-            //         this.parentNode.appendChild(this)
-            //     })
-            //     .on("drag", (d) => {
-            //         d3.select(`node_${d.mod_index[0]}`).attr("transform",
-            //             "translate(" + (
-            //                 d.x = Math.max(0, Math.min(this.$parent.width - d.dx, d3.event.x))
-            //             ) + "," + (
-            //                 d.y = Math.max(0, Math.min(this.$parent.height - d.dy, d3.event.y))
-            //             ) + ")");
-            //         sankey.relayout();
-            //         link.attr("d", path);
-            //     })
+            this.drag = d3.drag()
+                .subject((d) => {
+                    return d;
+                })
+                .on("start", function () {
+                    this.parentNode.appendChild(this)
+                })
+                .on("drag", (d) => {
+                    d3.select(`node_${d.mod_index[0]}`).attr("transform",
+                        "translate(" + (
+                            d.x = Math.max(0, Math.min(this.$parent.width - d.dx, d3.event.x))
+                        ) + "," + (
+                            d.y = Math.max(0, Math.min(this.$parent.height - d.dy, d3.event.y))
+                        ) + ")");
+                    sankey.relayout();
+                    link.attr("d", path);
+                })
+
+            this.zoom = d3.zoom()
+				.scaleExtent([0.5, 2])
+				.on('zoom', () => {
+					let tx = Math.min(0, Math.min(d3.event.transform.x, this.width * d3.event.transform.k))
+					let ty = Math.min(0, Math.min(d3.event.transform.y, this.height * d3.event.transform.k))
+					this.sankeySVG.attr("transform", "translate(" + [tx, ty] + ")scale(" + d3.event.transform.k + ")")
+				});
+
 
             this.nodesSVG = this.nodes.selectAll('.dist-node')
                 .data(this.graph.nodes)
@@ -143,7 +145,7 @@ export default {
             this.meanRectangle()
             this.path()
             this.text()
-            this.drawTargetLine()
+            // this.drawTargetLine()
 
             this.$refs.ToolTip.init(this.$parent.id)
         },

@@ -25,10 +25,13 @@ export default function Sankey() {
         minNodeScale = 0,
         maxLevel = 1,
         nodeMap = {},
+        dataset = '',
+        store = {},
+        datasets = [],
         debug = true;
 
-    var widthScale;
-    var minDistanceBetweenNode = 0;
+    let widthScale;
+    let minDistanceBetweenNode = 0;
 
     sankey.nodeWidth = function (_) {
         if (!arguments.length) return nodeWidth;
@@ -72,12 +75,22 @@ export default function Sankey() {
         return sankey
     };
 
-    sankey.getNodes = function () {
-        return nodes
+    sankey.dataset = function (_) {
+        if(!arguments.length) return dataset
+        dataset = _
+        return sankey
     }
 
-    sankey.getLinks = function () {
-        return links
+    sankey.datasets = function (_) {
+        if (!arguments.length) return datasets
+        datasets = _
+        return sankey
+    }
+
+    sankey.store = function (_) {
+        if (!arguments.length) return store
+        store = _
+        return sankey
     }
 
     sankey.layout = function (iterations) {
@@ -225,7 +238,6 @@ export default function Sankey() {
             remainingNodes.forEach(function (node) {
                 node.level = level
                 node.dx = nodeWidth;
-                // console.log(node.id, node.level, level)
                 node.sourceLinks.forEach(function (link) {
                     nextNodes.push(link.target_data);
                 });
@@ -294,7 +306,14 @@ export default function Sankey() {
                     divValue = referenceValue;
                 }
                 else {
-                    divValue = d3.sum(nodes, d => d['512-cores']['time (inc)']);
+                    divValue = d3.sum(nodes, (d) => {
+                        if(dataset == 'ensemble'){
+                            return d['time (inc)']
+                        }
+                        else{
+                            return d[dataset]['time (inc)']
+                        }
+                    });
                 }
                 return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
             });

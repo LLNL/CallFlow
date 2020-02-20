@@ -485,7 +485,6 @@ function Sankey(args){
 		    	toolTipG.selectAll('*').remove();
 		    })
 		    .on('click', function(d){
-		    	console.log(d);
 		    	if(d.name != "intermediate"){
 			    	var ret = getFunctionListOfNode(d);
 			    	var fromProcToProc = ret["fromProcToProc"];
