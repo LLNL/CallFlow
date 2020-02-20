@@ -45,7 +45,7 @@ export default {
                     return 'node'
                 })
                 .attr('opacity', 0)
-                .attr('id', d => `node_${d.mod_index}`)
+                .attr('id', d => `node_${d.id}`)
                 .attr('transform', (d) => {
                     return `translate(${d.x},${d.y})`
                 })
@@ -75,18 +75,38 @@ export default {
                 .attr('width', this.nodeWidth)
                 .attr('opacity', 0)
                 .style('fill', d => {
-                    let color = this.$store.color.getColor(d)
-                    return color
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return '#202020'
+                    }
+                    else {
+                        let color = this.$store.color.getColor(d)
+                        return color
+                    }
                 })
                 .style('fill-opacity', (d) => {
-                    return 1
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return '0'
+                    }
+                    else {
+                        return '1';
+                    }
                 })
                 .style('shape-rendering', 'crispEdges')
                 .style('stroke', (d) => {
-                    return d3.rgb(this.$store.color.getColor(d)).darker(2);
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return 'grey'
+                    }
+                    else {
+                        return d3.rgb(this.$store.color.getColor(d)).darker(2);
+                    }
                 })
                 .style('stroke-width', (d) => {
-                    return 1
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return '0'
+                    }
+                    else {
+                        return '1';
+                    }
                 })
                 .on('mouseover', function (d) {
                     self.$refs.ToolTip.render(self.graph, d)
@@ -138,30 +158,52 @@ export default {
                 .transition()
                 .duration(this.transitionDuration)
                 .attr('opacity', d => {
-                    return 1;
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return '0'
+                    }
+                    else {
+                        return '1';
+                    }
                 })
                 .attr('height', d => d.height)
                 .style('fill', (d) => {
-                    return d.color = this.$store.color.getColor(d);
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return '#202020'
+                    }
+                    else {
+                        let color = this.$store.color.getColor(d)
+                        return color
+                    }
                 })
-                .style('stroke', (d) => {
-                    return 1;
-                });
         },
 
         path(node) {
             node.append('path')
                 .attr('d', (d) => {
-                    return `m${0} ${0
-                        }h ${this.nodeWidth
-                        }v ${(1) * 0
-                        }h ${(-1) * this.nodeWidth}`;
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return "m" + 0 + " " + 0
+                            + "h " + this.nodeWidth
+                            + "v " + (1) * d.height
+                            + "h " + (-1) * this.nodeWidth;
+                    }
                 })
                 .style('fill', (d) => {
-                    return this.$store.color.getColor(d);
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return 'grey'
+                    }
                 })
                 .style('fill-opacity', (d) => {
-                    return 0;
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return 0.0;
+                    }
+                    else {
+                        return 0;
+                    }
+                })
+                .style("stroke", function (d) {
+                    if (d.id.split('_')[0] == "intermediate") {
+                        return 'grey'
+                    }
                 })
                 .style('stroke-opacity', '0.0');
 
@@ -203,15 +245,7 @@ export default {
                 .attr('y', '-10')
                 .style('opacity', 1)
                 .text((d) => {
-                    if (d.height < this.minHeightForText) {
-                        return '';
-                    }
-                    var textSize = this.textSize(d.id)['width'];
-                    if (textSize < d.height) {
-                        return d.id;
-                    } else {
-                        return this.trunc(d.id, this.textTruncForNode)
-                    }
+                    return ''
                 })
                 .on('mouseover', function (d) {
                     // if (d.name[0] != 'intermediate') {
@@ -244,21 +278,20 @@ export default {
                     return this.$store.color.setContrast(this.$store.color.getColor(d))
                 })
                 .text((d) => {
-                    // let name_splits = name.split('/').reverse()
-                    // if (name_splits.length == 1) {
-                    //     d.name = name
-                    // } else {
-                    //     d.name = name_splits[0]
-                    // }
-
-                    if (d.height < this.minHeightForText) {
-                        return '';
+                    if (d.id.split('_')[0] != "intermediate") {
+                        if (d.height < this.minHeightForText) {
+                            return '';
+                        }
+                        var textSize = this.textSize(d.id)['width'];
+                        if (textSize < d.height) {
+                            return d.id;
+                        } else {
+                            return this.trunc(d.id, this.textTruncForNode)
+                        }
                     }
-                    var textSize = this.textSize(d.id.split('=')[0])['width'];
-                    if (textSize < d.height) {
-                        return d.id.split('=')[0];
+                    else {
+                        return "";
                     }
-                    return this.trunc(d.id.split('=')[0], this.textTruncForNode);
                 });
         },
 
