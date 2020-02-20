@@ -185,6 +185,7 @@ export default {
 				.size(this.size)
 				.levelSpacing(this.levelSpacing)
 				.maxLevel(this.graph.maxLevel)
+				.dataset(this.$store.selectedTargetDataset)
 				.setMinNodeScale(this.nodeScale);
 
 			let path = this.sankey.link()

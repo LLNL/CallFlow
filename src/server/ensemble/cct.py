@@ -169,8 +169,6 @@ class CCT:
                 target = path[-1].replace('[', '').replace(']', '').replace("'", '')
                 source = source.strip()
                 target = target.strip()
-                edge = (source, target)
-
                 self.g.add_edge(source, target)
 
     def find_cycle(self, G, source=None, orientation=None):

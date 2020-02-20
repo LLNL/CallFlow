@@ -189,12 +189,41 @@ class App:
             result = self.callflow.request(obj)
             emit("reset", result, json=True)
 
+        @sockets.on("ensemble_callsite_data", namespace="/")
+        def callsites(data):
+            if self.debug:
+                self.print("[Request] Callsite information: ", data)
+            result = self.callflow.request(
+                {
+                    "name": "auxiliary",
+                    "datasets": data["datasets"],
+                    "sortBy": data['sortBy'],
+                    "module": data['module']
+                }
+            )
+            emit("ensemble_callsite_data", result, json=True)
+
+        @sockets.on("single_callsite_data", namespace="/")
+        def callsites(data):
+            if self.debug:
+                self.print("[Request] Callsite information: ", data)
+            result = self.single_callflow.request(
+                {
+                    "name": "auxiliary",
+                    "dataset": data["dataset"],
+                    "sortBy": data['sortBy'],
+                    "module": data['module']
+                }
+            )
+            emit("single_callsite_data", result, json=True)
+
+        ################## CCT requests #########################
         @sockets.on("single_cct", namespace="/")
         def cct(data):
             if self.debug:
                 self.print("[Request] CCT of the run", data)
 
-            g = self.callflow.update(
+            g = self.single_callflow.request(
                 {
                     "name": "cct",
                     "dataset": data["dataset"],
@@ -203,36 +232,6 @@ class App:
             )
             result = json_graph.node_link_data(g)
             emit("single_cct", result, json=True)
-
-        @sockets.on("split_caller", namespace="/")
-        def split_caller(data):
-            if self.debug:
-                self.print("[Request] Split callgraph by rank", data)
-
-            # result = self.callflow.update({
-            #     "name": "split-caller",
-            #     "dataset1": data['dataset1'],
-            #     "split": data['split']
-            # })
-            emit("split_caller", {}, json=True)
-
-
-        @sockets.on("ensemble_scatterplot", namespace="/")
-        def ensemble_scatterplot(data):
-            if self.debug:
-                self.print("[Request] Dist-Scatterplot request for module.")
-            result = self.callflow.request(
-                {
-                    "name": "scatterplot",
-                    "datasets": data["datasets"],
-                    "dataset": data["dataset"],
-                    "dataset2": data["dataset2"],
-                    "col": data["col"],
-                    "catcol": data["catcol"],
-                    "plot": data["plot"],
-                }
-            )
-            emit("ensemble_scatterplot", result, json=True)
 
         @sockets.on("comp_cct", namespace="/")
         def comp_cct(data):
@@ -245,7 +244,7 @@ class App:
                     "functionInCCT": data["functionInCCT"],
                 }
             )
-            g2 = self.callflow.update(
+            g2 = self.callflow.request(
                 {
                     "name": "cct",
                     "dataset1": data["dataset2"],
@@ -275,6 +274,8 @@ class App:
             result = json_graph.node_link_data(ensemble_cct)
             emit("ensemble_cct", result, json=True)
 
+
+        ################## CCT requests #########################
         @sockets.on("single_supergraph", namespace="/")
         def single_supergraph(data):
             result = {}
@@ -376,33 +377,6 @@ class App:
             )
             emit("parameter_information", json.dumps(result), json=True)
 
-        @sockets.on("ensemble_callsite_data", namespace="/")
-        def callsites(data):
-            if self.debug:
-                self.print("[Request] Callsite information: ", data)
-            result = self.callflow.request(
-                {
-                    "name": "auxiliary",
-                    "datasets": data["datasets"],
-                    "sortBy": data['sortBy'],
-                    "module": data['module']
-                }
-            )
-            emit("ensemble_callsite_data", result, json=True)
-
-        @sockets.on("single_callsite_data", namespace="/")
-        def callsites(data):
-            if self.debug:
-                self.print("[Request] Callsite information: ", data)
-            result = self.single_callflow.request(
-                {
-                    "name": "auxiliary",
-                    "dataset": data["dataset"],
-                    "sortBy": data['sortBy'],
-                    "module": data['module']
-                }
-            )
-            emit("single_callsite_data", result, json=True)
 
         @sockets.on('compare', namespace='/')
         def compare(data):
@@ -418,8 +392,22 @@ class App:
             )
             emit('compare', result, json=True)
 
+        @sockets.on("single_histogram", namespace="/")
+        def ensembleHistogram(data):
+            if self.debug:
+                self.print("[Request] Dist-Histogram request for module.")
+            datasets = data['datasets']
+            result = self.single_callflow.request(
+                {
+                    "name": "histogram",
+                    "datasets": datasets,
+                    "module": data["module"],
+                }
+            )
+            emit("single_histogram", result, json=True)
+
         @sockets.on("ensemble_histogram", namespace="/")
-        def disthistogram(data):
+        def ensembleHistogram(data):
             if self.debug:
                 self.print("[Request] Dist-Histogram request for module.")
             datasets = data['datasets']
@@ -431,6 +419,50 @@ class App:
                 }
             )
             emit("ensemble_histogram", result, json=True)
+
+        @sockets.on("split_caller", namespace="/")
+        def split_caller(data):
+            if self.debug:
+                self.print("[Request] Split callgraph by rank", data)
+
+            # result = self.callflow.update({
+            #     "name": "split-caller",
+            #     "dataset1": data['dataset1'],
+            #     "split": data['split']
+            # })
+            emit("split_caller", {}, json=True)
+
+        @sockets.on("split_callee", namespace="/")
+        def split_caller(data):
+            if self.debug:
+                self.print("[Request] Split callgraph by rank", data)
+
+            # result = self.callflow.update({
+            #     "name": "split-caller",
+            #     "dataset1": data['dataset1'],
+            #     "split": data['split']
+            # })
+            emit("split_caller", {}, json=True)
+
+        @sockets.on("ensemble_scatterplot", namespace="/")
+        def ensemble_scatterplot(data):
+            if self.debug:
+                self.print("[Request] Dist-Scatterplot request for module.")
+            result = self.callflow.request(
+                {
+                    "name": "scatterplot",
+                    "datasets": data["datasets"],
+                    "dataset": data["dataset"],
+                    "dataset2": data["dataset2"],
+                    "col": data["col"],
+                    "catcol": data["catcol"],
+                    "plot": data["plot"],
+                }
+            )
+            emit("ensemble_scatterplot", result, json=True)
+
+
+
 
     def create_server(self):
         app.debug = True

@@ -130,15 +130,6 @@ class EnsembleCallFlow:
             self.addIncExcTime()
             return self.config
 
-        elif action_name == 'single_cct':
-            self.callflow.request({
-                "name": "supergraph",
-                "groupBy": "name",
-                "dataset": action["dataset"]
-            })
-            graph = CCT(self.states[action["dataset"]], action["functionsInCCT"])
-            return graph.g
-
         elif action_name == "ensemble_cct":
             self.request({
                 "name": "supergraph",

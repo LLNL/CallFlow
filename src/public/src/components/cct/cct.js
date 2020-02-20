@@ -13,7 +13,7 @@ export default {
 
     data: () => ({
         graph: null,
-        id: 'cct-overview',
+        id: 'single-cct-overview',
         sankey: {
             nodeWidth: 50,
             xSpacing: 0,
@@ -37,7 +37,7 @@ export default {
     }),
 
     sockets: {
-        cct(data) {
+        single_cct(data) {
             console.log("CCT data: ", data)
             this.data = data
             if (this.firstRender) {
@@ -51,7 +51,6 @@ export default {
     },
 
     mounted() {
-        this.id = this.id
     },
 
     methods: {
@@ -61,12 +60,14 @@ export default {
             this.width = window.innerWidth - this.margin.left - this.margin.right
             this.height = window.innerHeight - this.margin.bottom - this.margin.top - this.toolbarHeight - this.footerHeight
 
+            console.log(this.width, this.height)
             this.svg = d3.select('#' + this.id)
                 .attrs({
                     'width': this.width,
                     'height': this.height,
                 })
             console.log("init")
+            console.log(this.svg)
 
             // Create a new directed graph
             this.firstRender = false
@@ -74,7 +75,6 @@ export default {
 
 
         render() {
-            console.log("render")
             this.g = new dagreD3.graphlib.Graph().setGraph({});
 
             let graph = this.data
@@ -144,6 +144,7 @@ export default {
 
             this.$refs.ColorMap.init()
         },
+
 
         clear() {
             d3.selectAll('#cct-node').remove()

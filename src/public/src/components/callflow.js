@@ -67,7 +67,7 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'Callgraph',
+		selectedFormat: 'CCT',
 		datasets: [],
 		selectedTargetDataset: '',
 		selectedDataset2: '',
@@ -116,7 +116,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
 		modes: ['Ensemble', 'Single'],
-		selectedMode: 'Ensemble',
+		selectedMode: 'Single',
 		// Presentation mode variables
 		exhibitModes: ['Presentation', 'Default'],
 		selectedExhibitMode: 'Default',
@@ -279,9 +279,10 @@ export default {
 			this.$refs.Function.init()
 		},
 
-		cct(data) {
-			this.$refs.CCT.init(data['union'], '2')
-		},
+		// single_cct(data) {
+		// 	console.log(data)
+		// 	this.$refs.CCT.init(data['union'], '2')
+		// },
 
 		// Fetch aggregated graph (Super graph) for distribution mode.
 		ensemble_supergraph(data) {
