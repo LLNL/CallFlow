@@ -98,10 +98,20 @@ export default {
 			this.$refs.ColorMap.clear(0)
 		},
 
+		dragmove(d) {
+			d3.select(this).attr("transform",
+				"translate(" + (
+			d.x = Math.max(0, Math.min(width - d.dx, d3.event.x))) + "," + (
+			d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
+			this.sankey.relayout();
+			// link.attr("d", path);
+			// positionGrads();
+		},
+
 		render() {
 			this.graph = preprocess(this.data, false)
 			console.log("[Single SuperGraph] Preprocessing done.")
-			this.sankey = this.initSankey(this.graph)
+			this.initSankey(this.graph)
 			console.log("[Single SuperGraph] Layout Calculation.")
 
 			let postProcess = this.postProcess(this.graph.nodes, this.graph.links)
@@ -111,6 +121,7 @@ export default {
 
 			console.log("[Single SuperGraph] Post-processing done.")
 
+			this.$store.graph = this.graph
 			this.$refs.Nodes.init(this.graph, this.view)
 			this.$refs.Edges.init(this.graph, this.view)
 			this.$refs.MiniHistograms.init(this.graph, this.view)
@@ -178,7 +189,7 @@ export default {
 
 			let path = this.sankey.link()
 
-			return this.sankey.nodes(this.graph.nodes)
+			this.sankey.nodes(this.graph.nodes)
 				.links(this.graph.links)
 				.layout(32)
 		},

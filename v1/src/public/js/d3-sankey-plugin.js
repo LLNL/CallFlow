@@ -156,12 +156,8 @@ function d3sankey() {
             //it has no outgoing links
             maxOfInandOut = node.targetLinks.length;
         }
-
-        // var maxOfInandOut = node.sourceLinks.length + node.targetLinks.length;
-
         node["maxLinks"] = maxOfInandOut;
     })
-
   }
 
   // Compute the value (size) of each node by summing the associated links.

@@ -1,7 +1,6 @@
 import tpl from '../../html/ensembleSupergraph/index.html'
 import Sankey from './sankey'
 import DistNodes from './nodes'
-// import IntermediateNodes from './callgraph/intermediateNodes'
 import MiniHistograms from './miniHistograms'
 import DistEdges from './edges'
 import Dataset from './dataset.js'
@@ -14,7 +13,6 @@ export default {
 	template: tpl,
 	components: {
 		DistNodes,
-		// IntermediateNodes,
 		DistEdges,
 		MiniHistograms,
 		Dataset,
@@ -39,6 +37,7 @@ export default {
 		treeHeight: null,
 		data: null,
 		message: "Summary Graph View",
+		debug: true
 	}),
 
 	watch: {
@@ -79,10 +78,8 @@ export default {
 
 
 		clear() {
-			// this.$refs.Dataset.clear()
 			this.$refs.DistNodes.clear()
 			this.$refs.DistEdges.clear()
-			// this.$refs.CallbackEdges.clear()
 			this.$refs.MiniHistograms.clear()
 			this.$refs.DistColorMap.clear()
 			this.$refs.DistColorMap.clearMetric()
@@ -91,21 +88,44 @@ export default {
 		render(data) {
 			this.graph = this.preprocess(this.data, false)
 
-			console.log("Preprocessing done.")
-			this.d3sankey = this.initSankey(this.graph)
-			console.log("Layout Calculation.")
-			// this.postProcess(this.data.nodes, this.data.links)
-			console.log("Post-processing done.")
-			// this.graph = this.filterNodes(this.graph)
+			console.log("[Ensemble SuperGraph] Preprocessing done.")
+			this.initSankey(this.graph)
+			console.log("[Ensemble SuperGraph] Layout Calculation.")
+
+			let postProcess = this.postProcess(this.graph.nodes, this.graph.links)
+			this.graph.nodes = postProcess['nodes']
+			this.graph.links = postProcess['links']
+			this.initSankey(this.graph)
+			console.log("[Ensemble SuperGraph] Post-processing done.")
+
 			this.$store.graph = this.graph
-			this.$store.graph.graph.total_out = this.d3sankey.total_out
-			this.$store.graph.graph.total_in = this.d3sankey.total_in
 			this.$refs.DistNodes.init(this.$store.graph, this.view)
-			// this.$refs.IntermediateNodes.init(this.data)
 			this.$refs.DistEdges.init(this.$store.graph, this.view)
 			this.$refs.DistColorMap.init()
-			// this.$refs.CallbackEdges.init(this.data, this.view)
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view)
+
+			if (this.debug) {
+				for (let i = 0; i < this.graph['links'].length; i += 1) {
+					let link = this.graph['links'][i]
+					let source_callsite = link['attr_dict']['source_callsite']
+					let target_callsite = link['attr_dict']['target_callsite']
+					let weight = link['weight']
+					let exc_weight = link['exc_weight']
+					let source_inclusive = link['source_data']['512-cores']['time (inc)']
+					let source_exclusive = link['source_data']['512-cores']['time']
+					let target_inclusive = link['target_data']['512-cores']['time (inc)']
+					let target_exclusive = link['target_data']['512-cores']['time']
+
+					console.log("[Single SuperGraph] Source Name :", source_callsite)
+					console.log("[Single SuperGraph] Target Name :", target_callsite)
+					console.log("[Single SuperGraph] Weight: ", weight)
+					console.log("[Single SuperGraph] Exc weight: ", exc_weight)
+					console.log("[Single SuperGraph] Source Inclusive: ", source_inclusive)
+					console.log("[Single SuperGraph] Source Exclusive: ", source_exclusive)
+					console.log("[Single SuperGraph] Target Inclusive: ", target_inclusive)
+					console.log("[Single SuperGraph] Target Exclusive: ", target_exclusive)
+				}
+			}
 		},
 
 		updateMiniHistogram() {
@@ -115,9 +135,6 @@ export default {
 
 		// Preprocessing the graph.
 		preprocess(graph, refresh) {
-			graph = this.filterShowNodes(graph)
-			// graph = this.findMaxGraph(graph)
-			// graph = this.addLines(graph)
 			graph = this.addNodeMap(graph)
 			graph = this.addLinkID(graph)
 			graph = this.calculateFlow(graph)
@@ -125,23 +142,14 @@ export default {
 			return graph;
 		},
 
-		filterShowNodes(graph) {
-			let node_names = []
-			let nodes = []
-			for (const node of graph.nodes) {
-				nodes.push(node)
-				node_names.push(node.name)
-			}
-			graph.nodes = nodes
-
-			return graph
-		},
-
 		addNodeMap(graph) {
 			let nodeMap = {}
 			let idx = 0
 			for (const node of graph.nodes) {
 				nodeMap[node.name] = idx
+				if (this.debug) {
+					console.log("[Preprocess] Assigning", node.id, " with map index: ", idx)
+				}
 				idx += 1
 			}
 
@@ -149,69 +157,27 @@ export default {
 			return graph
 		},
 
-		constructModules(graph) {
-			for (const mod of graph.modules) {
-				let module_group_paths = mod['group_path']
-				if (module_group_paths.length > 1) {
-
-				}
-				else if (module_group_paths == 1) {
-
-				}
-				for (let i = 0; i < module_group_paths.length - 1; i += 1) {
-					// if(this.isModuleEdge())
-				}
-			}
-		},
-
-		containsNode(node, list) {
-			var i;
-			for (i = 0; i < list.length; i++) {
-				if (list[i] === node) {
-					return true;
-				}
-			}
-			return false;
-		},
-
-		findMaxGraph(graph) {
-			let datasets = this.$store.actual_dataset_names
-			for (const node of graph.nodes) {
-				let obj = {
-					'name': '',
-					'time': 0,
-					'time (inc)': 0,
-				}
-				for (const dataset of datasets) {
-					if (node.hasOwnProperty(dataset)) {
-						if (node[dataset]['time'] > obj['time']) {
-							obj['time'] = node[dataset]['time']
-						}
-						if (node[dataset]['time (inc)'] > obj['time (inc)']) {
-							obj['time (inc)'] = node[dataset]['time (inc)']
-						}
-						obj['id'] = node[dataset]['id']
-					}
-				}
-				for (const [key, value] of Object.entries(obj)) {
-					node[key] = value
-				}
-			}
-			return graph
-		},
-
 		/* Link: {
 		   sourceID : int, targetID: int , target: str, source: str
 		   } */
 		addLinkID(graph) {
-			const nodeMap = {};
-			for (const [idx, node] of graph.nodes.entries()) {
-				nodeMap[node.id] = idx;
-			}
-
+			let idx = 0
 			for (const link of graph.links) {
-				link['sourceID'] = nodeMap[link.source];
-				link['targetID'] = nodeMap[link.target];
+				if (link.source == undefined || link.target == undefined) {
+					continue;
+				}
+
+				if (graph.nodeMap[link.source] == undefined) {
+					graph.nodeMap[link.source] = idx
+					idx += 1
+				}
+
+				if (graph.nodeMap[link.target] == undefined) {
+					graph.nodeMap[link.target] = idx
+					idx += 1
+				}
+				link['sourceID'] = graph.nodeMap[link.source]
+				link['targetID'] = graph.nodeMap[link.target]
 			}
 
 			return graph;
@@ -220,22 +186,21 @@ export default {
 		calculateFlow(graph) {
 			const nodes = graph.nodes;
 			const links = graph.links;
-			console.log(nodes, links)
+			const outGoing = [];
+			const inComing = [];
 
-			const outGoing = {};
-			const inComing = {};
+			let debug = true
 			nodes.forEach((node) => {
-				const nodeLabel = node.vis_name;
-
+				const nodeLabel = node.id;
 				links.forEach((link) => {
 					if (nodes[link.sourceID] != undefined) {
-						const linkLabel = nodes[link.sourceID].vis_name;
-						if (outGoing[linkLabel] == undefined) {
-							outGoing[linkLabel] = 0;
-						}
+						const linkLabel = nodes[link.sourceID].id;
 						if (linkLabel == nodeLabel) {
-							if (outGoing[linkLabel] != 0) {
-								outGoing[linkLabel] = Math.max(link.weight, outGoing[linkLabel])
+							if (outGoing[linkLabel] == undefined) {
+								outGoing[linkLabel] = 0
+							}
+							if (outGoing[linkLabel] == 0) {
+								outGoing[linkLabel] = link.weight
 							}
 							else {
 								outGoing[linkLabel] += link.weight;
@@ -246,13 +211,14 @@ export default {
 
 				links.forEach((link) => {
 					if (nodes[link.targetID] != undefined) {
-						const linkLabel = nodes[link.targetID].vis_name;
-						if (inComing[linkLabel] == undefined) {
-							inComing[linkLabel] = 0;
-						}
+						const linkLabel = nodes[link.targetID].id;
 						if (linkLabel == nodeLabel) {
-							if (inComing[linkLabel] != 0) {
-								inComing[linkLabel] = Math.max(link.weight, inComing[linkLabel])
+							if (inComing[linkLabel] == undefined) {
+								inComing[linkLabel] = 0;
+							}
+
+							if (inComing[linkLabel] == 0) {
+								inComing[linkLabel] = link.weight
 							}
 							else {
 								inComing[linkLabel] += link.weight;
@@ -261,10 +227,12 @@ export default {
 					}
 				});
 
+				// Set the outgoing as 0 for nodes with no target nodes.
 				if (outGoing[nodeLabel] == undefined) {
 					outGoing[nodeLabel] = 0;
 				}
 
+				// Set the incoming as 0 for nodes with no source nodes.
 				if (inComing[nodeLabel] == undefined) {
 					inComing[nodeLabel] = 0;
 				}
@@ -273,134 +241,156 @@ export default {
 				node.in = inComing[nodeLabel];
 
 				node.inclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]);
-				node.exclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel];
+				node.exclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel]
 			});
 
-			return graph;
-		},
 
-		addLines(graph) {
-			let datasets = this.$store.actual_dataset_names
-			let count = 0
-			for (const node of graph.nodes) {
-				let obj = {}
-				for (const dataset of datasets) {
-					if (node.hasOwnProperty(dataset)) {
-						obj[dataset] = node[dataset]['time (inc)'] / node['time (inc)']
-						obj['id'] = node[dataset]['id']
-					}
-				}
-				obj['ensemble'] = node['ensemble']['time (inc)'] / node['time (inc)']
-				node['props'] = obj
-				count += 1
+			if (this.debug) {
+				links.forEach((link) => {
+					let sourceLabel = link.source
+					let targetLabel = link.target
+					console.log("[Preprocess] Outgoing flow: {", sourceLabel, "}:", outGoing[sourceLabel])
+					console.log("[Preprocess] Incoming flow {", targetLabel, "}: ", inComing[targetLabel])
+				})
+
 			}
-			return graph
+			return graph;
 		},
 
 		//Sankey computation
 		initSankey() {
-			let sankey = Sankey()
+			this.sankey = Sankey()
 				.nodeWidth(this.nodeWidth)
 				.nodePadding(this.ySpacing)
-				.size([this.width * 1.05, this.height - this.ySpacing])
+				.size([this.width * 1.05, this.height*.9 - this.ySpacing])
 				.levelSpacing(this.levelSpacing)
 				.maxLevel(this.graph.maxLevel)
-				//    .setReferenceValue(this.data.rootRunTimeInc)
 				.datasets(this.$store.runNames)
 				.setMinNodeScale(this.nodeScale)
+				.dataset('ensemble')
 				.store(this.$store)
 
-			let path = sankey.link()
+			let path = this.sankey.link()
 
-			sankey.nodes(this.graph.nodes)
+			this.sankey.nodes(this.graph.nodes)
 				.links(this.graph.links)
 				.layout(32)
-
-			return sankey
 		},
 
+		// Add intermediate nodes.
 		postProcess(nodes, edges) {
+			console.log("===================Adding intermediate nodes==================")
 			const temp_nodes = nodes.slice();
 			const temp_edges = edges.slice();
 
-			this.computeNodeEdges(temp_nodes, temp_edges);
-			console.log("Compute node edges (Post process)")
-			this.computeNodeBreadths(temp_nodes, temp_edges)
-			console.log("Compute node breadths (Post process)")
-
+			let removeActualEdges = []
 
 			for (let i = 0; i < temp_edges.length; i++) {
-				const source = temp_edges[i].sourceID;
-				const target = temp_edges[i].targetID;
+				const source = temp_edges[i].source;
+				const target = temp_edges[i].target;
 
-				if (source != undefined && target != undefined) {
-					const source_x = nodes[source].level;
-					const target_x = nodes[target].level;
-					const dx = target_x - source_x;
+				if (this.debug) {
+					console.log("==============================")
+					console.log("[Single SuperGraph] Source Name", source)
+					console.log("[Single SuperGraph] Target Name", target)
+					console.log("[Single SuperGraph] This edge: ", temp_edges[i])
 
-					// Put in intermediate steps
-					for (let j = dx; j > 1; j--) {
-						const intermediate = nodes.length;
-						const tempNode = {
-							sankeyID: intermediate,
-							name: 'intermediate',
-							weight: nodes[i].weight,
-							height: nodes[i].value
-						};
-						nodes.push(tempNode);
-						edges.push({
-							source: intermediate,
-							target: (j == dx ? target : intermediate - 1),
-							value: edges[i].value,
-						});
-						if (j == dx) {
-							edges[i].original_target = target;
-							edges[i].last_leg_source = intermediate;
-						}
+				}
+
+				let source_node = temp_edges[i].source_data
+				let target_node = temp_edges[i].target_data
+
+				if (this.debug) {
+					console.log("[Single SuperGraph] Source Node", source_node, target_node.level)
+					console.log("[Single SuperGraph] Target Node", target_node, target_node.level)
+				}
+
+				const source_level = source_node.level;
+				const target_level = target_node.level;
+				const shift_level = target_level - source_level;
+
+				if (this.debug) {
+					console.log(source_level, target_level)
+					console.log("[Single SuperGraph] Number of levels to shift: ", shift_level)
+				}
+
+				// Put in intermediate nodes.
+				for (let j = shift_level; j > 1; j--) {
+					const intermediate_idx = nodes.length;
+					const tempNode = {
+						'ensemble': target_node['ensemble'],
+						'attr_dict': temp_edges[i]['attr_dict'],
+						id: 'intermediate_' + target_node.id,
+						level: j - 1,
+						height: temp_edges[i].height,
+						name: target_node.id,
+					};
+					if (this.debug) {
+						console.log("[Single SuperGraph] Adding intermediate node: ", tempNode);
+					}
+					nodes.push(tempNode);
+					const sourceTempEdge = {
+						source: source_node.id,
+						target: tempNode.id,
+						weight: temp_edges[i].weight,
+					}
+					if (this.debug) {
+						console.log("[Single SuperGraph] Adding intermediate source edge: ", sourceTempEdge);
+					}
+					edges.push(sourceTempEdge)
+
+					if (j == shift_level) {
+						edges[i].original_target = target
+					}
+					edges[i].target_data = nodes[intermediate_idx]
+					if (this.debug) {
+						console.log("[Single SuperGraph] Updating this edge:", edges[i])
+					}
+
+					const targetTempEdge = {
+						source: tempNode.id,
+						target: target_node.id,
+						weight: temp_edges[i].weight
+					}
+					edges.push(targetTempEdge)
+					if (this.debug) {
+						console.log("[Single SuperGraph] Adding intermediate target edge: ", targetTempEdge);
+					}
+
+					if (j == shift_level) {
+						edges[i].original_target = target;
+					}
+					edges[i].target_data = nodes[intermediate_idx]
+					if (this.debug) {
+						console.log("[Single SuperGraph] Updating this edge:", edges[i])
+					}
+
+					removeActualEdges.push({
+						source,
+						target
+					})
+				}
+			}
+			for (let i = 0; i < removeActualEdges.length; i += 1) {
+				let removeEdge = removeActualEdges[i]
+				if (this.debug) {
+					console.log("[Single SuperGraph] Removing", removeActualEdges.length, "actual edge: ", removeEdge)
+				}
+				for(let edge_idx = 0; edge_idx < edges.length; edge_idx += 1){
+					let curr_edge = edges[edge_idx]
+					if(removeEdge.source == curr_edge.source && removeEdge.target == curr_edge.target){
+						edges.splice(edge_idx, 1)
 					}
 				}
 			}
-		},
-
-		computeNodeEdges(nodes, edges) {
-			nodes.forEach((node) => {
-				node.sourceLinks = [];
-				node.targetLinks = [];
-			});
-			edges.forEach((edge) => {
-				let source = edge.sourceID,
-					target = edge.targetID;
-
-				if (source != undefined && target != undefined) {
-					nodes[source].sourceLinks.push(edge);
-					nodes[target].targetLinks.push(edge);
-				}
-			});
 
 			return {
-				nodes,
-				edges,
-			};
-		},
-
-		computeNodeBreadths(nodes, edges) {
-			let remainingNodes = nodes.map((d) => d);
-			let nextNodes;
-			console.log("Bug here. Correct me.")
-			while (remainingNodes.length) {
-				nextNodes = [];
-				remainingNodes.forEach((node) => {
-					node.sourceLinks.forEach((link) => {
-						if (nextNodes.indexOf(link.target) < 0) {
-							nextNodes.push(link.target);
-						}
-					});
-				});
-				remainingNodes = nextNodes;
+				nodes: nodes,
+				links: edges
 			}
 		},
 
-		setupGradients(data){
+		setupGradients(data) {
 			this.$refs.DistNodes.setupMeanGradients(data)
 		}
 	}
