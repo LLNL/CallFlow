@@ -51,10 +51,12 @@ export default {
             this.nodes = graph.nodes
             this.links = graph.links
             this.view = view
-            for(const [idx, callsite] of Object.entries(graph.nodes)){
-                let callsite_module = callsite.module
-                let callsite_name = callsite.name
-                this.render(callsite_name, callsite_module)
+            for(const callsite of this.nodes){
+                if(callsite['id'].split('_')[0] != "intermediate"){
+                    let callsite_module = callsite.module
+                    let callsite_name = callsite.name
+                    this.render(callsite_name, callsite_module)
+                }
             }
         },
 
@@ -127,12 +129,15 @@ export default {
         },
 
         render(callsite_name, callsite_module) {
+            console.log(callsite_module)
             let node_dict = this.nodes[this.nodeMap[callsite_name]]
-            let ensemble_callsite_data = this.$store.modules['ensemble'][callsite_module]
-            let target_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module]
+            if(callsite_module.split('_')[0] != "intermediate"){
+                let ensemble_callsite_data = this.$store.modules['ensemble'][callsite_module]
+                let target_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module]
 
-            this.histogram(ensemble_callsite_data, node_dict, 'ensemble')
-            this.histogram(target_callsite_data, node_dict, 'target')
+                this.histogram(ensemble_callsite_data, node_dict, 'ensemble')
+                this.histogram(target_callsite_data, node_dict, 'target')
+            }
         }
     }
 }
