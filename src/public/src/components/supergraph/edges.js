@@ -40,41 +40,6 @@ export default {
                 .attr('class', (d) => {
                     return 'edge';
                 })
-                // .attr('d', (d) => {
-                //     let source_data = d.source_data
-                //     let target_data = d.target_data
-                //     console.log("source link: ", source_data);
-                //     console.log("target link: ", target_data);
-                //     let Tx0 = source_data.x + source_data.height,
-                //         Tx1 = target_data.x,
-                //         Txi = d3.interpolateNumber(Tx0, Tx1),
-                //         Tx2 = Txi(0.4),
-                //         Tx3 = Txi(1 - 0.4),
-                //         Ty0 = source_data.y + d.sy,
-                //         Ty1 = target_data.y + d.ty
-
-                //     // note .ty is the y point that the edge meet the target(for top)
-                //     //		.sy is the y point of the source  (for top)
-                //     //		.dy is width of the edge
-
-                //     let Bx0 = source_data.x + source_data.height,
-                //         Bx1 = target_data.x,
-                //         Bxi = d3.interpolateNumber(Bx0, Bx1),
-                //         Bx2 = Bxi(0.4),
-                //         Bx3 = Bxi(1 - 0.4),
-                //         By0 = source_data.y + d.sy + source_data.height/2,
-                //         By1 = target_data.y + d.ty + source_data.height/2
-
-                //     const rightMoveDown = By1 - Ty1;
-                //     return `M${Tx0},${Ty0}
-		        //             C${Tx2},${Ty0}
-		        //             ${Tx3}, ${Ty1}
-		        //             ${Tx1}, ${Ty1}
-		        //             ` + ` v ${rightMoveDown}
-		        //             C${Bx3},${By1}
-		        //             ${Bx2},${By0}
-		        //             ${Bx0},${By0}`;
-                // })
                 .style('fill', d => {
                     return '#202020'
                 })
@@ -83,18 +48,6 @@ export default {
                     // return "url(#" + getGradID(d) + ")";
                 })
                 .style('stroke-opacity', '0.4');
-            // .on("mouseover", function() {
-            // 	// d3.select(this).style("stroke-opacity", "0.7")
-            // 	d3.select(this).style("fill-opacity", "0.7")
-
-            // } )
-            // .on("mouseout", function() {
-            // 	// d3.select(this).style("stroke-opacity", "0.4")
-            // 	d3.select(this).style("fill-opacity", "0.4")
-            // } )
-            // .sort(function (a, b) {
-            //     return b.dy - a.dy;
-            // });
 
             this.edges.selectAll('.edge')
                 .data(links)
@@ -102,14 +55,7 @@ export default {
                 .attr('d', (d) => {
                     let source_data = d.source_data
                     let target_data = d.target_data
-                    // if (d.sy == undefined) {
-                    //     d.sy = 0
-                    //     return
-                    // }
-                    // if (d.ty == undefined) {
-                    //     d.ty = 0
-                    //     return
-                    // }
+
                     let Tx0 = source_data.x + source_data.dx,
                         Tx1 = target_data.x,
                         Txi = d3.interpolateNumber(Tx0, Tx1),
@@ -122,7 +68,6 @@ export default {
                     //		.sy is the y point of the source  (for top)
                     //		.dy is width of the edge
 
-                    // var rightMoveDown = d.target.y + d.dy / 2;
                     let Bx0 = source_data.x + source_data.dx,
                         Bx1 = target_data.x,
                         Bxi = d3.interpolateNumber(Bx0, Bx1),

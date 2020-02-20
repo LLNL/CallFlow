@@ -13,24 +13,19 @@
 import * as  d3 from 'd3'
 import { scalePow } from 'd3-scale';
 
-
 export default function Sankey() {
-    let sankey = {}
-    let nodeWidth = 24
-    let nodePadding = 8
-    let size = [1, 1]
-    let nodes = []
-    let links = []
-    let levelSpacing = 10
-    let referenceValue = 0
-    let minNodeScale = 0
-    let maxLevel = 1
-    let datasets = []
-    let store = {}
-    let nodesByBreadth
-    let total_in = {}
-    let total_out = {}
-
+    var sankey = {},
+        nodeWidth = 24,
+        nodePadding = 8,
+        size = [1, 1],
+        nodes = [],
+        links = [],
+        levelSpacing = 10,
+        referenceValue = 0,
+        minNodeScale = 0,
+        maxLevel = 1,
+        nodeMap = {},
+        debug = true;
 
     var widthScale;
     var minDistanceBetweenNode = 0;
@@ -77,32 +72,26 @@ export default function Sankey() {
         return sankey
     };
 
-    sankey.datasets = function (_) {
-        if (!arguments.length) return datasets
-        datasets = _
-        return sankey
+    sankey.getNodes = function () {
+        return nodes
     }
 
-    sankey.store = function (_) {
-        if (!arguments.length) return store
-        store = _
-        return sankey
+    sankey.getLinks = function () {
+        return links
     }
 
     sankey.layout = function (iterations) {
-        computeNodeLinks()
-        console.log("Computed Node links.")
-        computeNodeValues()
-        console.log("Computed node values.")
-        computeNodeBreadths()
-        console.log("Computed node breadths.")
-
+        addLinkID()
+        computeNodeLinks();
+        console.log("[Sankey] Computed Node links.")
+        computeNodeValues();
+        console.log("[Sankey] Computed node values.")
+        computeNodeBreadths();
+        console.log("[Sankey] Computed node breadths.")
         computeNodeDepths(iterations);
-        console.log("Computed node depths")
-        computeLinkDepths()
-        console.log("Computed link depths.")
-        sankey.total_in = total_in
-        sankey.total_out = total_out
+        console.log("[Sankey] Computed node depths")
+        computeLinkDepths();
+        console.log("[Sankey] Computed linke depths.")
         return sankey;
     };
 
@@ -139,8 +128,8 @@ export default function Sankey() {
                 xi = d3.interpolateNumber(x0, x1),
                 x2 = xi(curvature),
                 x3 = xi(1 - curvature),
-                y0 = d.source.y + d.sy + d.height / 2,
-                y1 = d.target.y + d.ty + d.height / 2;
+                y0 = d.source.y + d.sy + d.source.height / 2,
+                y1 = d.target.y + d.ty + d.target.height / 2;
             return "M" + x0 + "," + y0
                 + "C" + x2 + "," + y0
                 + " " + x3 + "," + y1
@@ -155,6 +144,32 @@ export default function Sankey() {
         return link;
     };
 
+    function addLinkID() {
+        let idx = 0, node;
+        nodes.forEach(function (node) {
+            nodeMap[node.id] = node;
+            if (debug) {
+                console.log("[Sankey] Assigning", node.id, "with map index: ", idx)
+            }
+            idx += 1
+        })
+
+        links.forEach(function (link) {
+            if (nodeMap[link.source] == undefined) {
+                nodeMap[link.source] = idx
+                idx += 1
+            }
+
+            if (nodeMap[link.target] == undefined) {
+                nodeMap[link.target] = idx
+                idx += 1
+            }
+            link.source_data = nodeMap[link.source]
+            link.target_data = nodeMap[link.target]
+        })
+    }
+
+
     // Populate the sourceLinks and targetLinks for each node.
     // Also, if the source and target are not objects, assume they are indices.
     function computeNodeLinks() {
@@ -164,52 +179,28 @@ export default function Sankey() {
             node["maxLinkVal"] = 0;
             node["minLinkVal"] = 1000000000000000;
         });
-
         links.forEach(function (link) {
-            // if (link.sourceID != undefined || link.targetID != undefined) {
-            var source = link.sourceID,
-                target = link.targetID;
+            if (link.source != undefined || link.target != undefined) {
+                link.source_data.sourceLinks.push(link);
+                link.target_data.targetLinks.push(link);
 
-            source = link.source_dict = nodes[link.sourceID];
-            target = link.target_dict = nodes[link.targetID];
+                link.target_data.maxLinkVal = Math.max(link.target_data.maxLinkVal, link["weight"]);
+                link.source_data.maxLinkVal = Math.max(link.source_data.maxLinkVal, link["weight"]);
 
-            // Come back here and correct this bug.
-            if (source != undefined && target != undefined) {
-                source.sourceLinks.push(link);
-                target.targetLinks.push(link);
-
-                target["maxLinkVal"] = Math.max(target["maxLinkVal"], link["weight"]);
-                source["maxLinkVal"] = Math.max(source["maxLinkVal"], link["weight"]);
-
-                target["minLinkVal"] = Math.min(target["minLinkVal"], link["weight"]);
-                source["minLinkVal"] = Math.min(source["minLinkVal"], link["weight"]);
+                link.target_data.minLinkVal = Math.min(link.target_data.minLinkVal, link["weight"]);
+                link.source_data.minLinkVal = Math.min(link.source_data.minLinkVal, link["weight"]);
             }
         });
 
         nodes.forEach(function (node) {
-            var maxOfInandOut = Math.max(node.sourceLinks.length, node.targetLinks.length);
+            let numberOfLinks = Math.max(node.sourceLinks.length, node.targetLinks.length);
 
             if (node.sourceLinks.length == 0) {
                 //it has no outgoing links
-                maxOfInandOut = node.targetLinks.length;
+                numberOfLinks = node.targetLinks.length;
             }
-            node["maxLinks"] = maxOfInandOut;
+            node["maxLinks"] = numberOfLinks;
         })
-
-        // // swap the source links and target links
-        // links.forEach(function (link) {
-        //     let temp = link.sourceLinks;
-        //     link.sourceLinks = link.targetLinks
-        //     link.targetLinks = temp
-        // })
-    }
-
-    function d3sum(values, attr) {
-        let sum = 0, value
-        for (let i = 0; i < values.length; i++) {
-            sum += values[i][attr] / values.length
-        }
-        return sum
     }
 
     // Compute the value (size) of each node by summing the associated links.
@@ -221,23 +212,12 @@ export default function Sankey() {
         });
     }
 
-    function findroot() {
-        let ret = []
-        nodes.forEach(function (node) {
-            if (node['id'] == "Lulesh") {
-            // if(node['id'] == "libmonitor.so.0.0.0=<thread root>" || node['id'] == "libmonitor.so.0.0.0=<program root>"){
-                ret.push(node)
-            }
-        })
-        return ret
-    }
-
     // Iteratively assign the breadth (x-position) for each node.
     // Nodes are assigned the maximum breadth of incoming neighbors plus one;
     // nodes with no incoming links are assigned breadth zero, while
     // nodes with no outgoing links are assigned the maximum breadth.
     function computeNodeBreadths() {
-        let remainingNodes = findroot()
+        let remainingNodes = nodes
         let nextNodes = [];
         let level = 0
         while (remainingNodes.length) {
@@ -245,84 +225,58 @@ export default function Sankey() {
             remainingNodes.forEach(function (node) {
                 node.level = level
                 node.dx = nodeWidth;
+                // console.log(node.id, node.level, level)
                 node.sourceLinks.forEach(function (link) {
-                    nextNodes.push(link.target_dict);
+                    nextNodes.push(link.target_data);
                 });
-            });
+            })
             remainingNodes = nextNodes;
-            ++level
+            level += 1
         }
-        nodes.forEach(function (node) {
-            node.dx = nodeWidth
-        })
 
-        minDistanceBetweenNode = nodeWidth
+        minDistanceBetweenNode = nodeWidth * 2
         widthScale = scalePow().domain([0, level + 1]).range([minDistanceBetweenNode, size[0]])
         scaleNodeBreadths((size[0] - nodeWidth / 2) / (maxLevel - 1));
+
+        // moveSinksRight()
+        scaleNodeBreadths((size[0] - nodeWidth) / (level - 1));
+
     }
 
     function moveSourcesRight() {
         nodes.forEach(function (node) {
             if (!node.targetLinks.length) {
-                node.x = d3.min(node.sourceLinks, function (d) { return d.target.level; }) - 1;
+                node.level = d3.min(node.sourceLinks, function (d) {
+                    return d.target_data.level;
+                }) - 1;
             }
         });
     }
 
     function moveSinksRight(x) {
         nodes.forEach(function (node) {
-            // basically fix the last leaf in the graph as maximum possible level
             if (!node.sourceLinks.length) {
-                //		node.x = x - 1;
+                node.level = d3.min(node.sourceLinks, function (d) { return d.target.x; });
+                node.level = node.level + 1;
             }
-            //	    node.x = d3.min(node.sourceLinks, function(d) { return d.target.x; });
-            //	    node.x = d3.min(node.sourceLinks, function(d) { return d.target.x; });
-            //            node.x = node.x + 1;
+
         });
     }
 
     function scaleNodeBreadths(kx) {
         nodes.forEach(function (node) {
-            let level = node['level']
-            console.log(node, level)
-            let x = widthScale(level)
-            console.log(node, " x: ", x)
+            let x = widthScale(node.level)
             node.x = x
         });
     }
 
-    function calculateTotalLevelFlow(){
-        let level = 0
-        nodesByBreadth.forEach(function (nodes) {
-            nodes.forEach(function (node) {
-                total_in[level] = 0
-                total_out[level] = 0
-
-                links.forEach(function (link) {
-                    if (link.target == node) {
-                        // if (link.source != null && link.source.y != null) {
-                            total_in[level] += link.target.in;
-                        // }
-                    }
-                    if (link.source == node) {
-                        // if (edge.target != null && edge.target.y != null) {
-                            total_out[level] += link.source.out;
-                        // }
-                    }
-                });
-            })
-            level += 1
-        })
-    }
-
     function computeNodeDepths(iterations) {
-        nodesByBreadth = d3.nest()
+        var nodesByBreadth = d3.nest()
             .key(function (d) { return d.level; })
             .sortKeys(d3.ascending)
             .entries(nodes)
-            .map(function (d) { return d.values; })
+            .map(function (d) { return d.values; });
 
-        // calculateTotalLevelFlow()
         initializeNodeDepth();
         resolveCollisions();
         iterations = 32
@@ -334,125 +288,44 @@ export default function Sankey() {
         }
 
         function initializeNodeDepth() {
-            let scale = d3.min(nodesByBreadth, function (nodes) {
+            var scale = d3.min(nodesByBreadth, function (nodes) {
                 var divValue = 1;
                 if (referenceValue > 0) {
                     divValue = referenceValue;
                 }
                 else {
-                    divValue = d3.sum(nodes, d => d['time (inc)']);
+                    divValue = d3.sum(nodes, d => d['512-cores']['time (inc)']);
                 }
                 return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
             });
 
-            let idx = 0, level = {}
             nodesByBreadth.forEach(function (nodes) {
-                // // Sort the nodes in a given level
-                // let n = nodes.sort(function (a, b) {
-                //     return b['time (inc)'] - a['time (inc)'];
-                // })
-                let n = nodes
-
-                // Asssign levels to the nodes based on time (inc)
-                for (let i = 0; i < n.length; i += 1) {
-                    console.log(n[i])
-                    level[n[i].vis_name] = i
-                }
-
-                // Calculate the offset
-                n.forEach(function (node, i) {
-                    let nodeOffset = 0;
-
-                    // Offset
-                    links.forEach(function (link) {
-                        if (link.target == node.vis_name) {
-                            if (link.source != '') {
-                                nodeOffset = Math.max(nodeOffset, link.source_dict.y);
-                            }
-                            else{
-                                nodeOffset = link.source_dict.y
+                nodes.forEach(function (node, i) {
+                    let nodeHeight = 0;
+                    links.forEach(function (edge) {
+                        if (edge["target"] == node) {
+                            if (edge["source"] != null && edge["source"]['y'] != null) {
+                                nodeHeight = Math.max(nodeHeight, edge["source"]['y']);
                             }
                         }
                     });
-                    node.offsetY = nodeOffset;
+                    node.y = Math.max(nodeHeight, i)
+                    node.parY = node.y;
 
-                    node.level = level[node.vis_name]
+                    nodes.sort(function (a, b) {
+                        return a["parY"] - b["parY"];
+                    })
 
-                    // Sum the heights of nodes on top of the current node.
-                    node.y = 0
-                    for (let j = 0; j < i - 1; j += 1) {
-                        node.y += n[j].height
-                    }
-                    node.y = Math.max(node.y, node.offsetY)
-
-
-                    let time = Math.max( Math.max(node['time (inc)'], node.out), node.inclusive)
-                    // if (height == 0) {
-                    //     height = node.out
-                    // }
-                    // if (node['time (inc)'] > node.in) {
-                    //     height = node['time (inc)']
-                    // }
-                    console.log(node.name, time)
-
-                    node.height = time * minNodeScale * scale
-
-                    node.scale = scale
+                    node.height = node.value * minNodeScale * scale;
                 });
-
-                // nodes.sort(function (a, b) {
-                //     return b['time (inc)'] - a['time (inc)']
-                // })
             });
 
             links.forEach(function (link) {
-                let source_max_weight = 0
-                let target_max_weight = 0
-                if (datasets.length == 0) {
-                    weight = link.weight
+                let weight = link.weight
+                if (link.source.value < weight) {
+                    weight = link.source_data.minLinkVal
                 }
-
-                link.height = {}
-                let source_link_weight = 0
-                let target_link_weight = 0
-
-                for (let i = 0; i < datasets.length; i += 1) {
-                    let source_link = link['source_dict'][datasets[i]]
-                    let target_link = link['target_dict'][datasets[i]]
-
-                    if (source_link == undefined) {
-                        source_link_weight = 0
-                    }
-                    else {
-                        source_link_weight = source_link['time (inc)']
-                    }
-                    source_max_weight = Math.max(source_max_weight, source_link_weight)
-
-                    if (target_link == undefined) {
-                        target_link_weight = 0
-                    }
-                    else {
-                        target_link_weight = target_link['time (inc)']
-                    }
-                    target_max_weight = Math.max(target_max_weight, target_link_weight)
-                    link.height[datasets[i]] = target_link_weight * scale * minNodeScale
-                }
-                // console.log(link.weight, total_out[link.target.level])
-
-                // if(dataset != 'ensemble'){
-                //     link.source_proportion = link.weight / link.source_dict[dataset].weight
-                //     link.target_proportion = link.weight / link.target_dict[dataset].weight
-                // }
-                // else{
-                    link.source_proportion = 1.0
-                    link.target_proportion = 1.0
-                // }
-                console.log(target_max_weight, source_link_weight, target_link_weight)
-
-                console.log(link.source, link.target)
-
-                link.height['ensemble'] = target_max_weight * scale * minNodeScale//* proportion
-                link.max_height = target_max_weight * scale * minNodeScale //* proportion
+                link.height = weight * scale * minNodeScale;
             });
         }
 
@@ -520,24 +393,23 @@ export default function Sankey() {
         }
 
         function ascendingDepth(a, b) {
-            // if(a["parY"] > b["parY"]){
-            //     return a["parY"] > b["parY"];
-            // }
-            // return a["maxLinks"] - b["maxLinks"];
-            return a.parY - b.parY
+            if (a["parY"] > b["parY"]) {
+                return a["parY"] - b["parY"];
+            }
+            return a["maxLinks"] - b["maxLinks"];
         }
     }
 
     function computeLinkDepths() {
         nodes.forEach(function (node) {
-            // node.sourceLinks.sort(ascendingTargetDepth);
-            // node.targetLinks.sort(ascendingSourceDepth);
+            node.sourceLinks.sort(ascendingTargetDepth);
+            node.targetLinks.sort(ascendingSourceDepth);
 
             // node.sourceLinks.sort(descendingTargetDepth);
             // node.targetLinks.sort(descendingSourceDepth);
 
-            node.sourceLinks.sort(ascendingEdgeValue);
-            node.targetLinks.sort(descendingEdgeValue);
+            // node.sourceLinks.sort(ascendingEdgeValue);
+            // node.targetLinks.sort(descendingEdgeValue);
 
         });
         nodes.forEach(function (node) {
@@ -545,13 +417,14 @@ export default function Sankey() {
             node.sourceLinks.forEach(function (link) {
                 if (link.type != 'back_edge') {
                     link.sy = sy;
-                    sy += link.height['ensemble'];
+                    // console.log("Sy: ", link.sy)
+                    sy += link.height;
                 }
             });
             node.targetLinks.forEach(function (link) {
                 if (link.type != 'back_edge') {
                     link.ty = ty;
-                    ty += link.height['ensemble']
+                    ty += link.height
                 };
             });
         });
@@ -587,6 +460,42 @@ export default function Sankey() {
 
     function value(link) {
         return link.weight;
+    }
+
+    function computeNodeLayers(nodes) {
+        let x0 = 0, y0 = 0, x1 = 1, y1 = 1; // extent
+        const x = max(nodes, d => d.level) + 1;
+        const kx = (x1 - x0 - this.nodeWidth) / (x - 1);
+        const columns = new Array(x);
+        for (const node of nodes) {
+            const i = Math.max(0, Math.min(x - 1, Math.floor(this.justify.call(null, node, x))));
+            node.layer = i;
+            node.x = x0 + i * kx;
+            // node.x1 = node.x0 + this.nodeWidth;
+            if (columns[i]) columns[i].push(node);
+            else columns[i] = [node];
+        }
+
+        for (const column of columns) {
+            column.sort(this.ascendingBreadth);
+        }
+        return columns;
+    }
+
+    function targetDepth(d) {
+        return d.target.depth;
+    }
+
+    function left(node) {
+        return node.depth;
+    }
+
+    function right(node, n) {
+        return n - 1 - node.height;
+    }
+
+    function justify(node, n) {
+        return node.sourceLinks.length ? node.level : n - 1;
     }
 
     return sankey;
