@@ -84,7 +84,7 @@ export default {
 					"height": this.height + this.margin.top + this.margin.bottom,
 					"top": this.toolbarHeight
 				})
-			// .call(this.zoom)
+			.call(this.zoom)
 
 			this.data = data
 			this.clear()
@@ -94,40 +94,29 @@ export default {
 		clear() {
 			this.$refs.Nodes.clear()
 			this.$refs.Edges.clear()
-			// this.$refs.CallbackEdges.clear()
 			this.$refs.MiniHistograms.clear()
 			this.$refs.ColorMap.clear(0)
 		},
 
 		render() {
 			this.graph = preprocess(this.data, false)
-			console.log("Preprocessing done.")
+			console.log("[Single SuperGraph] Preprocessing done.")
 			this.sankey = this.initSankey(this.graph)
-			// console.log(this.sankey.nodes())
-			console.log("Layout Calculation.")
-			// this.graph.nodes = this.sankey.getNodes()
-			// this.graph.links = this.sankey.getLinks()
-			// console.log(this.sankey.getNodes())
-
+			console.log("[Single SuperGraph] Layout Calculation.")
 
 			let postProcess = this.postProcess(this.graph.nodes, this.graph.links)
 			this.graph.nodes = postProcess['nodes']
 			this.graph.links = postProcess['links']
-
-			// console.log(this.graph.nodes, this.graph.links)
-			// this.graph = preprocess(this.graph, false)
 			this.initSankey(this.graph)
 
-			console.log("Post-processing done.")
+			console.log("[Single SuperGraph] Post-processing done.")
 
 			this.$refs.Nodes.init(this.graph, this.view)
-			// this.$refs.IntermediateNodes.init(this.data)
 			this.$refs.Edges.init(this.graph, this.view)
-			// this.$refs.CallbackEdges.init(this.data, this.view)
 			this.$refs.MiniHistograms.init(this.graph, this.view)
 			this.$refs.ColorMap.init()
 
-			if(this.debug){
+			if (this.debug) {
 				for (let i = 0; i < this.graph['links'].length; i += 1) {
 					let link = this.graph['links'][i]
 					let source_callsite = link['attr_dict']['source_callsite']
@@ -139,14 +128,14 @@ export default {
 					let target_inclusive = link['target_data']['512-cores']['time (inc)']
 					let target_exclusive = link['target_data']['512-cores']['time']
 
-					console.log("Source Name :", source_callsite)
-					console.log("Target Name :", target_callsite)
-					console.log("Weight: ", weight)
-					console.log("Exc weight: ", exc_weight)
-					console.log("Source Inclusive: ", source_inclusive)
-					console.log("Source Exclusive: ", source_exclusive)
-					console.log("Target Inclusive: ", target_inclusive)
-					console.log("Target Exclusive: ", target_exclusive)
+					console.log("[Single SuperGraph] Source Name :", source_callsite)
+					console.log("[Single SuperGraph] Target Name :", target_callsite)
+					console.log("[Single SuperGraph] Weight: ", weight)
+					console.log("[Single SuperGraph] Exc weight: ", exc_weight)
+					console.log("[Single SuperGraph] Source Inclusive: ", source_inclusive)
+					console.log("[Single SuperGraph] Source Exclusive: ", source_exclusive)
+					console.log("[Single SuperGraph] Target Inclusive: ", target_inclusive)
+					console.log("[Single SuperGraph] Target Exclusive: ", target_exclusive)
 				}
 			}
 		},
@@ -209,33 +198,35 @@ export default {
 			const temp_nodes = nodes.slice();
 			const temp_edges = edges.slice();
 
+			let removeActualEdges = []
+
 			for (let i = 0; i < temp_edges.length; i++) {
 				const source = temp_edges[i].source;
 				const target = temp_edges[i].target;
 
-				if(this.debug){
+				if (this.debug) {
 					console.log("==============================")
-					console.log("Source Name", source)
-					console.log("Target Name", target)
-					console.log("This edge: ", temp_edges[i])
+					console.log("[Single SuperGraph] Source Name", source)
+					console.log("[Single SuperGraph] Target Name", target)
+					console.log("[Single SuperGraph] This edge: ", temp_edges[i])
 
 				}
 
 				let source_node = temp_edges[i].source_data
 				let target_node = temp_edges[i].target_data
 
-				if(this.debug){
-					console.log("Source Node", source_node, target_node.level)
-					console.log("Target Node", target_node, target_node.level)
+				if (this.debug) {
+					console.log("[Single SuperGraph] Source Node", source_node, target_node.level)
+					console.log("[Single SuperGraph] Target Node", target_node, target_node.level)
 				}
 
 				const source_level = source_node.level;
 				const target_level = target_node.level;
 				const shift_level = target_level - source_level;
 
-				if(this.debug){
+				if (this.debug) {
 					console.log(source_level, target_level)
-					console.log("Number of levels to shift: ",shift_level)
+					console.log("[Single SuperGraph] Number of levels to shift: ", shift_level)
 				}
 
 				// Put in intermediate nodes.
@@ -248,12 +239,9 @@ export default {
 						level: j - 1,
 						height: temp_edges[i].height,
 						name: target_node.id,
-						// weight: nodes[i].weight,
-						// x: this.widthScale(source_level) + this.widthScale(j - 1),
-						// y: temp_edges[i].sy + 50,
 					};
-					if(this.debug){
-						console.log("Adding intermediate node: ", tempNode);
+					if (this.debug) {
+						console.log("[Single SuperGraph] Adding intermediate node: ", tempNode);
 					}
 					nodes.push(tempNode);
 					const sourceTempEdge = {
@@ -261,8 +249,8 @@ export default {
 						target: tempNode.id,
 						weight: temp_edges[i].weight,
 					}
-					if(this.debug){
-						console.log("Adding intermediate source edge: ", sourceTempEdge);
+					if (this.debug) {
+						console.log("[Single SuperGraph] Adding intermediate source edge: ", sourceTempEdge);
 					}
 					edges.push(sourceTempEdge)
 
@@ -270,8 +258,8 @@ export default {
 						edges[i].original_target = target
 					}
 					edges[i].target_data = nodes[intermediate_idx]
-					if(this.debug){
-						console.log("Updating this edge:", edges[i])
+					if (this.debug) {
+						console.log("[Single SuperGraph] Updating this edge:", edges[i])
 					}
 
 					const targetTempEdge = {
@@ -280,16 +268,33 @@ export default {
 						weight: temp_edges[i].weight
 					}
 					edges.push(targetTempEdge)
-					if(this.debug){
-						console.log("Adding intermediate target edge: ", targetTempEdge);
+					if (this.debug) {
+						console.log("[Single SuperGraph] Adding intermediate target edge: ", targetTempEdge);
 					}
 
 					if (j == shift_level) {
 						edges[i].original_target = target;
 					}
 					edges[i].target_data = nodes[intermediate_idx]
-					if(this.debug){
-						console.log("Updating this edge:", edges[i])
+					if (this.debug) {
+						console.log("[Single SuperGraph] Updating this edge:", edges[i])
+					}
+
+					removeActualEdges.push({
+						source,
+						target
+					})
+				}
+			}
+			for (let i = 0; i < removeActualEdges.length; i += 1) {
+				let removeEdge = removeActualEdges[i]
+				if (this.debug) {
+					console.log("[Single SuperGraph] Removing", removeActualEdges.length, "actual edge: ", removeEdge)
+				}
+				for(let edge_idx = 0; edge_idx < edges.length; edge_idx += 1){
+					let curr_edge = edges[edge_idx]
+					if(removeEdge.source == curr_edge.source && removeEdge.target == curr_edge.target){
+						edges.splice(edge_idx, 1)
 					}
 				}
 			}
