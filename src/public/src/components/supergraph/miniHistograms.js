@@ -38,114 +38,72 @@ export default {
         id: '',
         nodes: null,
         edges: null,
+        offset: 4,
     }),
 
     mounted() {
         this.id = 'minihistogram-overview-' + this._uid
     },
 
-    sockets: {
-        miniHistogram(data) {
-            this.data = JSON.parse(data)
-            for (const [key, value] of Object.entries(this.data)) {
-                let node = this.getNode(key)
-                let d = JSON.parse(value)
-                if(node != null){
-                    this.render(d, node)
-                }
-            }
-        }
-    },
-
     methods: {
         init(graph, view) {
             this.nodes = graph.nodes
             this.links = graph.links
+            this.nodeMap = graph.nodeMap
             this.view = view
-            this.$socket.emit('miniHistogram', {
-                'dataset1': this.$store.selectedDataset,
-            })
-        },
-
-        getNode(node_name) {
-            let ret = {}
-            // TODO: Since there are two multihistogram socket calls,
-            // There is an extra minihistogram function that gets executed,
-            // Avoid this.
-            if(this.nodes == undefined){
-                return null
-            }
-            for (let i = 0; i < this.nodes.length; i += 1) {
-                let node = this.nodes[i]
-                if (node.name == node_name) {
-                    return node
-                }
+            for (const [idx, callsite] of Object.entries(graph.nodes)) {
+                let callsite_module = callsite[this.$store.selectedTargetDataset].module
+                let callsite_name = callsite[this.$store.selectedTargetDataset].name
+                console.log(callsite_name, callsite_module)
+                this.render(callsite_name, callsite_module)
             }
         },
 
         array_unique(arr) {
             return arr.filter(function (value, index, self) {
-              return self.indexOf(value) === index;
+                return self.indexOf(value) === index;
             })
         },
 
         dataProcess(data) {
-            const xVals = [];
-            const freq = [];
-            const dataSorted = []
             let attr_data = {}
 
             if (this.selectedColorBy == 'Inclusive') {
-                attr_data = data['time (inc)']
+                attr_data = data['hist_time (inc)']
             } else if (this.selectedColorBy == 'Exclusive') {
-                attr_data = data['time']
-            } else if (this.selectedColorBy == 'Name') {
-                attr_data = data['rank']
+                attr_data = data['hist_time']
             } else if (this.selectedColorBy == 'Imbalance') {
-                attr_data = data['imbalance']
+                attr_data = data['hist_imbalance']
             }
 
-            let ranks = data['rank'][0]
-            this.MPIcount = this.array_unique(ranks).length
-            for (let i = 0; i < attr_data[0].length; i += 1) {
-                for (const [key, value] in Object.entries(attr_data)) {
-                    if (dataSorted[i] == undefined) {
-                        dataSorted[i] = 0
-                    }
-                    dataSorted[i] += attr_data[0][i]
-                }
-            }
-
-            dataSorted.sort((a, b) => a - b)
-            const dataMin = dataSorted[0];
-            const dataMax = dataSorted[dataSorted.length - 1];
-
-            const dataWidth = ((dataMax - dataMin) / this.$store.selectedBinCount);
-            for (let i = 0; i < this.$store.selectedBinCount; i++) {
-                xVals.push(i);
-                freq.push(0);
-            }
-
-            dataSorted.forEach((val, idx) => {
-                let pos = Math.floor((val - dataMin) / dataWidth);
-                if (pos >= this.$store.selectedBinCount) {
-                    pos = this.$store.selectedBinCount - 1;
-                }
-                freq[pos] += 1;
-            });
-
-            return [xVals, freq];
+            return [attr_data['x'], attr_data['y']];
         },
 
         clear() {
             d3.selectAll('#histobars').remove()
         },
 
-        render(data, node) {
-            const temp = this.dataProcess(data)
-            let xVals = temp[0]
-            let freq = temp[1]
+        render(callsite_name, callsite_module) {
+            console.log(this.nodeMap, callsite_name)
+            let node_dict = this.nodes[this.nodeMap[callsite_module]]
+            console.log(node_dict)
+            let target_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module]
 
+            this.histogram(target_callsite_data, node_dict, 'target')
+        },
+
+        histogram(data, node_dict, type) {
+            const processData = this.dataProcess(data)
+            let xVals = processData[0]
+            let freq = processData[1]
+
+            let color = ''
+            if (type == 'ensemble') {
+                color = this.$store.color.ensemble
+            }
+            else if (type == 'target') {
+                color = this.$store.color.target
+            }
             this.minimapXScale = d3.scaleBand()
                 .domain(xVals)
                 .rangeRound([0, this.$parent.nodeWidth])
@@ -154,22 +112,25 @@ export default {
                 .domain([0, d3.max(freq)])
                 .range([this.$parent.ySpacing, 0]);
 
-            for(let i = 0; i < freq.length; i += 1){
-                d3.select('#'+this.id)
-                .append('rect')
-                .attrs({
-                    'id': 'histobars',
-                    'width': () => this.minimapXScale.bandwidth(),
-                    'height': (d) => {
-                        return (this.$parent.nodeWidth) - this.minimapYScale(freq[i])
-                    },
-                    'x': (d) => node.x + this.minimapXScale(xVals[i]),
-                    'y': (d) => node.y + this.minimapYScale(freq[i]),
-                    'opacity': 1,
-                    'stroke-width': '0.2px',
-                    'stroke': 'black',
-                    'fill': 'steelblue',
-                })
+
+            for (let i = 0; i < freq.length; i += 1) {
+                d3.select('#' + this.id)
+                    .append('rect')
+                    .attrs({
+                        'id': 'histobars',
+                        'class': 'histogram-bar ' + type,
+                        'width': () => this.minimapXScale.bandwidth(),
+                        'height': (d) => {
+                            return (this.$parent.nodeWidth) - this.minimapYScale(freq[i])
+                        },
+                        'x': (d) => {
+                            return node_dict.x + this.minimapXScale(xVals[i])
+                        },
+                        'y': (d) => node_dict.y + this.minimapYScale(freq[i]) - this.offset,
+                        'stroke-width': '0.2px',
+                        'stroke': 'black',
+                        'fill': color,
+                    })
             }
         }
     }

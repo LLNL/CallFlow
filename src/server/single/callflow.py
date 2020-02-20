@@ -22,6 +22,7 @@ from utils.df import getMaxExcTime, getMinExcTime, getMaxIncTime, getMinIncTime
 
 from single.cct import singleCCT
 from single.supergraph import SuperGraph
+from single.actions.auxiliary import Auxiliary
 from single.actions.mini_histogram import MiniHistogram
 from single.actions.histogram import Histogram
 from single.actions.scatterplot import Scatterplot
@@ -152,6 +153,11 @@ class SingleCallFlow:
             self.reProcess = False
             self.states = self.pipeline(datasets)
             return {}
+
+        elif action_name == "auxiliary":
+            auxiliary = Auxiliary(self.states[action['dataset']], module=action['module'], sortBy=action['sortBy'], dataset=action['dataset'])
+            return auxiliary.result
+
 
         elif action_name == "supergraph":
             self.states[dataset].g = SuperGraph(

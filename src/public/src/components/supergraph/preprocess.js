@@ -12,9 +12,22 @@
  ***************************************************************************** */
 
 export default function preprocess(graph) {
+    graph = addNodeMap(graph)
     graph = addLinkID(graph)
     graph = calculateFlow(graph)
     console.log("Graph after preprocessing: ", graph)
+    return graph
+}
+
+function addNodeMap(graph) {
+    let nodeMap = {}
+    let idx = 0
+    for (const node of graph.nodes) {
+        nodeMap[node.id] = idx
+        idx += 1
+    }
+
+    graph.nodeMap = nodeMap
     return graph
 }
 
@@ -31,6 +44,7 @@ function addLinkID(graph) {
             console.log("[Preprocess] Assigning", node.id, " with map index: ", idx)
         }
     }
+    graph.nodeMap = nodeMap
 
     idx += 1
 

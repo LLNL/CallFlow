@@ -390,6 +390,20 @@ class App:
             )
             emit("callsite_data", result, json=True)
 
+        @sockets.on("single_callsite_data", namespace="/")
+        def callsites(data):
+            if self.debug:
+                self.print("[Request] Callsite information: ", data)
+            result = self.single_callflow.request(
+                {
+                    "name": "auxiliary",
+                    "dataset": data["dataset"],
+                    "sortBy": data['sortBy'],
+                    "module": data['module']
+                }
+            )
+            emit("single_callsite_data", result, json=True)
+
         @sockets.on('compare', namespace='/')
         def compare(data):
             if self.debug:
