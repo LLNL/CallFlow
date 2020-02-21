@@ -82,7 +82,8 @@ export default {
             div.appendChild(exclusive_runtime);
 
             container.appendChild(div)
-            document.getElementById('function-overview').style.maxHeight = (window.innerHeight - document.getElementById('toolbar').innerHeight) + "px"
+            let maxHeight = window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight
+            document.getElementById('function-overview').style.maxHeight = maxHeight + "px"
 
             document.getElementById('function-overview').append(container);
 
