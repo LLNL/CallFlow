@@ -64,9 +64,9 @@ export default {
                     'x': () => {
                         if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth - 25) {
                             return (this.mousePosX - this.width) + 'px';
-                        } 
+                        }
                         return (this.mousePosX) + 'px';
-                        
+
                     },
                     'y': () => {
                         return (this.mousePosY) + "px";
@@ -76,6 +76,12 @@ export default {
             this.data = data
             this.processes()
         },
+
+        trunc(str, n) {
+            str = str.replace(/<unknown procedure>/g, 'proc ')
+            return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
+        },
+
 
         addText(text) {
             this.textCount += 1
@@ -88,9 +94,9 @@ export default {
                     'x': () => {
                         if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth - 25) {
                             return (this.mousePosX - this.width + this.offset) + 'px';
-                        } 
+                        }
                         return (this.mousePosX) + this.offset +  'px';
-                        
+
                     },
                     'y': () => {
                         return (this.mousePosY) + 2*this.offset + "px";

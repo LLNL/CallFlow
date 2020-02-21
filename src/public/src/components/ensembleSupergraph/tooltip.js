@@ -101,11 +101,16 @@ export default {
         },
 
         times() {
-            console.log(this.node)
-            this.addText('Name: ' + this.node.id)
+            this.addText('Name: ' + this.trunc(this.node.id, 40))
             this.addText('Inclusive Time: ' + (this.node['time (inc)'] * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node['time (inc)'] / this.$store.maxIncTime['ensemble']) * 100).toFixed(3)) + "%")
             this.addText('Exclusive Time: ' + (this.node['time'] * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node['time'] / this.$store.maxExcTime['ensemble']) * 100).toFixed(3)) + "%")
         },
+
+        trunc(str, n) {
+            str = str.replace(/<unknown procedure>/g, 'proc ')
+            return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
+        },
+
 
         paths() {
             let entry_functions = this.node.callees
@@ -142,8 +147,7 @@ export default {
                         'y': yOffset + "px",
                         'class': 'toolTipContent',
                     })
-                    .text(fromFunc.trunc)
-                    // .text(fromFunc.trunc(15))
+                    .text(this.trunc(fromFunc, 15))
 
                 this.toolTipG
                     .append('text')
@@ -171,8 +175,7 @@ export default {
                         'y': yOffset + "px",
                         'class': 'toolTipContent',
                     })
-                    .text(toFunc)
-                    // .text(toFunc.trunc(15))
+                    .text(this.trunc(toFunc, 15))
 
                 let callsite = entry_functions[tIndex]
 

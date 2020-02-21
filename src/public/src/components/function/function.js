@@ -53,21 +53,27 @@ export default {
             }
         },
 
+        trunc(str, n) {
+            str = str.replace(/<unknown procedure>/g, 'proc ')
+            return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
+        },
+
         ui(callsite_name) {
             let callsite = this.$store.callsites[this.$store.selectedTargetDataset][callsite_name]
 
             let container = document.createElement('div')
             let div = document.createElement('div')
+            div.style.width = (document.getElementById('function-overview').clientWidth - 20) + 'px'
             div.setAttribute('id', callsite.id)
             div.setAttribute('class', 'auxiliary-node')
 
             let checkbox = this.createCheckbox(callsite)
-            let callsite_label = this.createLabel("".concat("Call site: ", this.trunc(callsite.name, 30)))
+            let callsite_label = this.createLabel("".concat(this.trunc(callsite.name, 25)))
 
             let time_inc = callsite["mean_time (inc)"].toFixed(2)
-            let inclusive_runtime = this.createLabel("".concat("Inclusive Runtime (mean): ", time_inc));
+            let inclusive_runtime = this.createLabel("".concat("Inclusive time (mean): ", (time_inc * 0.000001).toFixed(2), "s"));
             let time = callsite["mean_time"].toFixed(2)
-            let exclusive_runtime = this.createLabel("".concat("Exclusive Runtime (mean): ", time));
+            let exclusive_runtime = this.createLabel("".concat("Exclusive time (mean): ", (time * 0.000001).toFixed(2), "s"));
 
 
             div.appendChild(checkbox);
@@ -76,7 +82,7 @@ export default {
             div.appendChild(exclusive_runtime);
 
             container.appendChild(div)
-            document.getElementById('function-overview').style.maxHeight = window.innerHeight - document.getElementById('toolbar').innerHeight + "px"
+            document.getElementById('function-overview').style.maxHeight = (window.innerHeight - document.getElementById('toolbar').innerHeight) + "px"
 
             document.getElementById('function-overview').append(container);
 
