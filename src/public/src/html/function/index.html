@@ -1,16 +1,6 @@
-<v-layout row wrap :id="id">
+<v-layout row wrap id="function-overview">
     <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
     <span>     Contains {{number_of_callsites}} callsites.
         </span>
     </v-text>
-<!--
-    <ul v-if="dataReady == true">
-        <li v-for="callsite in callsites">
-            <div :id="callsite.id">
-                    <input type="checkbox" value="sound" />
-                    <span class="md-list-item-text">{{ callsite.name }}</span>
-            </div>
-        </li>
-    </ul> -->
-
 </v-layout>

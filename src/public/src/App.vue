@@ -12,7 +12,7 @@ export default {
 
 <style>
 body, html {
-  
+
 }
 
 #toolbar {
@@ -180,6 +180,11 @@ body {
   max-height: 350px;
   overflow: auto;
   background: white;
+}
+
+#function-overview {
+  overflow: auto;
+  background: white
 }
 
 .auxiliary-node {

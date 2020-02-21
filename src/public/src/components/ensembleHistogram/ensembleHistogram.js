@@ -53,7 +53,7 @@ export default {
         let self = this
         EventHandler.$on('ensemble_histogram', function (data) {
             self.clear()
-            console.log("Disthistogram: ", data['module'])
+            console.log("Ensemble Histogram: ", data['module'])
             self.render(data['module'])
         })
     },
