@@ -14,7 +14,7 @@ export default {
         textCount: 0,
         textxOffset: 20,
         textyOffset: 20,
-        textPadding: 13,
+        textPadding: 15,
     }),
     sockets: {
         tooltip(data) {
@@ -101,13 +101,18 @@ export default {
         },
 
         times() {
-            console.log(this.node)
-            this.addText('Name: ' + this.node.id.trunc(40))
-            this.addText('Inclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime[this.$store.selectedDataset]) * 100).toFixed(3)) + "%")
-            this.addText('Exclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime[this.$store.selectedDataset]) * 100).toFixed(3)) + "%")
+            this.addText('Name: ' + this.trunc(this.node.id, 40))
+            this.addText('Inclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime[this.$store.selectedTargetDataset]) * 100).toFixed(3)) + "%")
+            this.addText('Exclusive Time: ' + (this.node.exclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.exclusive / this.$store.maxIncTime[this.$store.selectedTargetDataset]) * 100).toFixed(3)) + "%")
+        },
+
+        trunc(str, n) {
+            str = str.replace(/<unknown procedure>/g, 'proc ')
+            return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
         paths() {
+            console.log(this.node)
             let entry_functions = JSON.parse(this.node.entry_functions)
 
             this.rectWidth = "10px"
@@ -142,7 +147,7 @@ export default {
                         'y': yOffset + "px",
                         'class': 'toolTipContent',
                     })
-                    .text(fromFunc.trunc(15))
+                    .text(this.trunc(fromFunc, 15))
 
                 this.toolTipG
                     .append('text')
@@ -170,7 +175,7 @@ export default {
                         'y': yOffset + "px",
                         'class': 'toolTipContent',
                     })
-                    .text(toFunc.trunc(15))
+                    .text(this.trunc(toFunc, 15))
                 let timeInfo = (entry_functions['time (inc)'] / this.$store.maxIncTime[this.$store.selectedDataset] * 100).toFixed(3) + '%'
                 this.toolTipG.append('text')
                     .attrs({
