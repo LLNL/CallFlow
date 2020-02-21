@@ -1,6 +1,7 @@
 import tpl from '../../html/supergraph/nodes.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
+import EventHandler from '../EventHandler'
 
 export default {
     template: tpl,
@@ -116,30 +117,21 @@ export default {
                 })
                 .on('click', (d) => {
                     console.log("Selected node: ", d)
-                    this.$store.selectedNode = d
-                    let selectedNid = 0
-                    let selectedModule = ''
-                    if (d.id.indexOf(':') > -1) {
-                        selectedModule = d.id.split(':')[0]
-                    } else {
-                        selectedModule = d.id
-                    }
-
-                    selectedNid = d.nid[0]
+                    this.$store.selectedModule = d.id
+                    let selectedModule = d.id
 
                     this.$socket.emit('scatterplot', {
-                        module: selectedModule,
-                        nid: selectedNid,
+                        module: this.$store.selectedModule,
                         dataset1: this.$store.selectedDataset,
                     })
 
                     EventHandler.$emit('single_histogram', {
-                        module: selectedModule,
+                        module: this.$store.selectedModule,
                         dataset: this.$store.selectedDataset,
                     })
 
                     this.$socket.emit('function', {
-                        module: selectedModule,
+                        module: this.$store.selectedModule,
                         dataset1: this.$store.selectedDataset,
                     })
                 })

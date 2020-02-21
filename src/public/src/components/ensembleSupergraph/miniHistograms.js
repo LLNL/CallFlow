@@ -51,8 +51,8 @@ export default {
             this.nodes = graph.nodes
             this.links = graph.links
             this.view = view
-            for(const callsite of this.nodes){
-                if(callsite['id'].split('_')[0] != "intermediate"){
+            for (const callsite of this.nodes) {
+                if (callsite['id'].split('_')[0] != "intermediate") {
                     let callsite_module = callsite.module
                     let callsite_name = callsite.name
                     this.render(callsite_name, callsite_module)
@@ -69,11 +69,18 @@ export default {
         dataProcess(data) {
             let attr_data = {}
 
-            if (this.selectedColorBy == 'Inclusive') {
+            console.log("aaaaaaaaaaaaaaaaaaaaaa", this.$store.selectedMetric)
+            if (this.$store.selectedMetric == 'Inclusive') {
                 attr_data = data['hist_time (inc)']
-            } else if (this.selectedColorBy == 'Exclusive') {
+                dataMin = data['min_time (inc)'];
+                dataMax = data['max_time (inc)'];
+                dataSorted = data['sorted_time (inc)']
+            } else if (this.$store.selectedMetric == 'Exclusive') {
                 attr_data = data['hist_time']
-            } else if (this.selectedColorBy == 'Imbalance') {
+                dataMin = data['min_time']
+                dataMax = data['max_time']
+                dataSorted = data['sorted_time']
+            } else if (this.$store.selectedMetric == 'Imbalance') {
                 attr_data = data['hist_imbalance']
             }
 
@@ -97,15 +104,13 @@ export default {
                 color = this.$store.color.target
             }
 
-            // if (type == 'ensemble') {
-                this.minimapXScale = d3.scaleBand()
-                    .domain(xVals)
-                    .rangeRound([0, this.$parent.nodeWidth])
+            this.minimapXScale = d3.scaleBand()
+                .domain(xVals)
+                .rangeRound([0, this.$parent.nodeWidth])
 
-                this.minimapYScale = d3.scaleLinear()
-                    .domain([0, d3.max(freq)])
-                    .range([this.$parent.ySpacing, 0]);
-            // }
+            this.minimapYScale = d3.scaleLinear()
+                .domain([0, d3.max(freq)])
+                .range([this.$parent.ySpacing, 0]);
 
             for (let i = 0; i < freq.length; i += 1) {
                 d3.select('#' + this.id)
@@ -129,10 +134,8 @@ export default {
         },
 
         render(callsite_name, callsite_module) {
-            console.log(callsite_module)
-            console.log(this.$store.modules)
             let node_dict = this.nodes[this.nodeMap[callsite_name]]
-            if(callsite_module.split('_')[0] != "intermediate"){
+            if (callsite_module.split('_')[0] != "intermediate") {
                 let ensemble_callsite_data = this.$store.modules['ensemble'][callsite_module]
                 let target_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module]
 

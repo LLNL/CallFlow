@@ -152,12 +152,11 @@
 			<splitpanes id="callgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe'">
 				<splitpanes horizontal :splitpanes-size="20">
 					<span>
-						<Scatterplot ref="Scatterplot" />
-					</span>
-					<span>
 						<SingleHistogram ref="SingleHistogram" />
 					</span>
-
+					<span>
+						<Scatterplot ref="Scatterplot" />
+					</span>
 				</splitpanes>
 				<splitpanes horizontal :splitpanes-size="60">
 					<span>

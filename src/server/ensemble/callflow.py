@@ -209,7 +209,7 @@ class EnsembleCallFlow:
             return histogram.result
 
         elif action_name == "auxiliary":
-            auxiliary = Auxiliary(self.states['ensemble'], module=action['module'], sortBy=action['sortBy'], datasets=action['datasets'])
+            auxiliary = Auxiliary(self.states['ensemble'], module=action['module'], sortBy=action['sortBy'], binCount=action["binCount"], datasets=action['datasets'])
             return auxiliary.result
 
         elif action_name == 'compare':

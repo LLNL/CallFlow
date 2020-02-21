@@ -80,7 +80,7 @@ export default {
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
 		metrics: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
-		selectedMetric: 'Inclusive',
+		selectedMetric: 'Exclusive',
 		runtimeColorMap: [],
 		distributionColorMap: [],
 		selectedRuntimeColorMap: "Reds",
@@ -95,7 +95,7 @@ export default {
 		selectedGroupMode: 'include callbacks',
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
-		selectedBinCount: 100,
+		selectedBinCount: 20,
 		selectedFunctionsInCCT: 70,
 		selectedDiffNodeAlignment: 'Top',
 		diffNodeAlignment: ['Middle', 'Top'],
@@ -328,27 +328,53 @@ export default {
 		},
 
 		clear() {
-			if (this.selectedFormat == 'Callgraph') {
-				this.$refs.EnsembleCCT.clear()
-			} else if (this.selectedFormat == 'CCT') {
-				this.$refs.EnsembleSuperGraph.clear()
-				this.$refs.EnsembleHistogram.clear()
-				this.$refs.Scatterplot.clear()
-				this.$refs.AuxiliaryFunction.clear()
-				this.$refs.ModuleHierarchy.clear()
+			if(this.selectedMode == 'Ensemble'){
+				if (this.selectedFormat == 'Callgraph') {
+					this.$refs.EnsembleCCT.clear()
+				} else if (this.selectedFormat == 'CCT') {
+					this.$refs.EnsembleSuperGraph.clear()
+					this.$refs.EnsembleHistogram.clear()
+					this.$refs.Scatterplot.clear()
+					this.$refs.AuxiliaryFunction.clear()
+					this.$refs.ModuleHierarchy.clear()
+				}
+			}
+			else if(this.selectedMode == 'Single'){
+				if(this.selectedFormat == 'Callgraph'){
+					this.$refs.CCT.clear()
+				}
+				else if(this.selectedFormat == 'CCT'){
+					this.$refs.SuperGraph.clear()
+					this.$refs.Function.clear()
+					this.$refs.Histogram.clear()
+					this.$refs.Scatterplot.clear()
+				}
 			}
 		},
 
 		clearLocal() {
-			if (this.selectedFormat == 'CCT') {
-				this.$refs.EnsembleCCT.clear()
-			} else if (this.selectedFormat == 'Callgraph') {
-				this.$refs.EnsembleSuperGraph.clear()
-				this.$refs.ModuleHierarchy.clear()
-				this.$refs.EnsembleHistogram.clear()
-				// this.$refs.Projection.clear()
-				// this.$refs.RunInformation.clear()
-				this.$refs.AuxiliaryFunction.clear()
+			if(this.selectedMode == 'Ensemble'){
+				if (this.selectedFormat == 'CCT') {
+					this.$refs.EnsembleCCT.clear()
+				} else if (this.selectedFormat == 'Callgraph') {
+					this.$refs.EnsembleSuperGraph.clear()
+					this.$refs.ModuleHierarchy.clear()
+					this.$refs.EnsembleHistogram.clear()
+					// this.$refs.Projection.clear()
+					// this.$refs.RunInformation.clear()
+					this.$refs.AuxiliaryFunction.clear()
+				}
+			}
+			else if(this.selectedMode == 'Single'){
+				if(this.selectedFormat == 'CCT'){
+					this.$refs.CCT.clear()
+				}
+				else if(this.selectedFormat == 'Callgraph'){
+					this.$refs.SuperGraph.clear()
+					this.$refs.Function.clear()
+					this.$refs.SingleHistogram.clear()
+					this.$refs.Scatterplot.clear()
+				}
 			}
 		},
 
@@ -386,6 +412,7 @@ export default {
 				this.$socket.emit('single_callsite_data', {
 					dataset: this.$store.selectedTargetDataset,
 					sortBy: this.$store.auxiliarySortBy,
+					binCount: this.$store.selectedBinCount,
 					module: 'all'
 				})
 
@@ -407,25 +434,10 @@ export default {
 					functionsInCCT: this.selectedFunctionsInCCT,
 				})
 			} else if (this.selectedFormat == 'Callgraph' && this.selectedExhibitMode == 'Default') {
-
-				// this.socketPromise('callsite_data', {
-				// 	datasets: this.$store.runNames,
-				// 	sortBy: this.$store.auxiliarySortBy,
-				// 	module: 'all'
-				// }).then(() => {
-				// 	this.socketPromise('ensemble_supergraph', {
-				// 		datasets: this.$store.runNames,
-				// 		groupBy: this.selectedGroupBy
-				// 	})
-				// }).then(() => {
-				// 	this.socketPromise('ensemble_gradients', {
-				// 		datasets: this.$store.runNames,
-				// 		plot: 'kde'
-				// 	})
-				// })
 				this.$socket.emit('ensemble_callsite_data', {
 					datasets: this.$store.runNames,
 					sortBy: this.$store.auxiliarySortBy,
+					binCount: this.$store.selectedBinCount,
 					module: 'all'
 				})
 
@@ -716,22 +728,28 @@ export default {
 			})
 		},
 
+		// updateBinCount() {
+		// 	// Update the binCount in the store
+		// 	this.$store.selectedBinCount = this.selectedBinCount
+		// 	// Clear the existing histogram if there is one.
+		// 	if (this.$store.selectedNode != null) {
+		// 		this.$refs.Histogram.clear()
+		// 		let d = this.$store.selectedNode
+		// 		this.$socket.emit('histogram', {
+		// 			mod_index: d.mod_index[0],
+		// 			module: d.module[0],
+		// 			dataset: this.$store.selectedTargetDataset,
+		// 		})
+		// 	}
+		// 	// Call updateMiniHistogram inside callgraph.js
+		// 	this.$refs.Callgraph.updateMiniHistogram()
+		// 	// TODO: Call updateHistogram for diffCallgraph when needed.
+		// },
+
 		updateBinCount() {
-			// Update the binCount in the store
 			this.$store.selectedBinCount = this.selectedBinCount
-			// Clear the existing histogram if there is one.
-			if (this.$store.selectedNode != null) {
-				this.$refs.Histogram.clear()
-				let d = this.$store.selectedNode
-				this.$socket.emit('histogram', {
-					mod_index: d.mod_index[0],
-					module: d.module[0],
-					dataset: this.$store.selectedTargetDataset,
-				})
-			}
-			// Call updateMiniHistogram inside callgraph.js
-			this.$refs.Callgraph.updateMiniHistogram()
-			// TODO: Call updateHistogram for diffCallgraph when needed.
+			this.clearLocal()
+			this.init()
 		},
 
 		updateScatterMode() {

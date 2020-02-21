@@ -35,7 +35,7 @@ export default {
             top: 10,
             right: 10,
             bottom: 10,
-            left: 10,
+            left: 20,
         },
         dataset_index: [],
         histogramSVG: null,
@@ -164,17 +164,17 @@ export default {
             let dataSorted = []
             let dataMin = 0
             let dataMax = 0
-            if (this.selectedColorBy == 'Inclusive') {
+            if (this.$store.selectedMetric == 'Inclusive') {
                 attr_data = data['hist_time (inc)']
                 dataMin = data['min_time (inc)'];
                 dataMax = data['max_time (inc)'];
                 dataSorted = data['sorted_time (inc)']
-            } else if (this.selectedColorBy == 'Exclusive') {
+            } else if (this.$store.selectedMetric == 'Exclusive') {
                 attr_data = data['hist_time']
                 dataMin = data['min_time']
                 dataMax = data['max_time']
                 dataSorted = data['sorted_time']
-            } else if (this.selectedColorBy == 'Imbalance') {
+            } else if (this.$store.selectedMetric == 'Imbalance') {
                 attr_data = data['hist_imbalance']
             }
 
@@ -310,23 +310,35 @@ export default {
                 .ticks(this.MPIcount)
                 .tickFormat((d, i) => {
                     let temp = this.axis_x[i];
-                    if (i % 4 == 0) {
+                    if (i % 2 == 0) {
                         let value = temp * 0.000001
-                        return `${temp.toFixed(2)}ms`;
+                        return `${value.toFixed(2)}s`;
                     }
                 });
 
             const yAxis = d3.axisLeft(this.histogramYScale)
                 .ticks(this.freq.length)
                 .tickFormat((d, i) => {
-                    return d
+                    if((d*10) % 10 == 0)
+                        return d
+                    else{
+                        return ''
+                    }
                 })
-            // .ticks(this.$store.numbOfRanks, '%');
 
             const xAxisLine = this.svg.append('g')
                 .attr('class', 'x-axis')
                 .attr('transform', `translate(${this.padding.left},${this.histogramHeight})`)
                 .call(xAxis)
+
+            const xAxisLineText = xAxisLine.append('text')
+                // .attr('transform', 'rotate(-90)')
+                .attr('y', 0)
+                .attr('x', 0)
+                .attr('dy', '.71em')
+                .style('text-anchor', 'end')
+                .text(this.$store.selectedMetric + ' Runtime');
+
 
             const yAxisLine = this.svg.append('g')
                 .attr('class', 'y-axis')

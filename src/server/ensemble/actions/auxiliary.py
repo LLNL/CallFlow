@@ -16,11 +16,12 @@ from ast import literal_eval as make_tuple
 import numpy as np
 
 class Auxiliary:
-    def __init__(self, state, module='all', sortBy='time (inc)', datasets='all'):
+    def __init__(self, state, module='all', sortBy='time (inc)', binCount="20", datasets='all'):
         self.graph = state.g
         self.df = state.df
         self.sortBy = sortBy
         self.target_df = {}
+        self.binCount = binCount
         self.datasets = datasets
 
         if module != 'all':
@@ -63,8 +64,8 @@ class Auxiliary:
         name = name.replace('>', '')
         return name
 
-    def histogram(self, data, nbins=20):
-        h, b = np.histogram(data, range=[0, data.max()], bins=nbins)
+    def histogram(self, data):
+        h, b = np.histogram(data, range=[0, data.max()], bins=int(self.binCount))
         return 0.5*(b[1:]+b[:-1]), h
 
     def json_object(self, group_df, node_name):

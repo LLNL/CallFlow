@@ -79,7 +79,7 @@ export default {
             }
 
             this.times()
-            this.paths()
+            // this.paths()
         },
 
         addText(text) {
@@ -101,7 +101,6 @@ export default {
         },
 
         times() {
-            console.log(this.$store.callsites)
             this.addText('Name: ' + this.trunc(this.node.id, 40))
             this.addText('Inclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime[this.$store.selectedTargetDataset]) * 100).toFixed(3)) + "%")
             this.addText('Exclusive Time: ' + (this.node.exclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.exclusive / this.$store.maxIncTime[this.$store.selectedTargetDataset]) * 100).toFixed(3)) + "%")

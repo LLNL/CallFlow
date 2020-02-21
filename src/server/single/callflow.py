@@ -155,7 +155,7 @@ class SingleCallFlow:
             return {}
 
         elif action_name == "auxiliary":
-            auxiliary = Auxiliary(self.states[action['dataset']], module=action['module'], sortBy=action['sortBy'], dataset=action['dataset'])
+            auxiliary = Auxiliary(self.states[action['dataset']], module=action['module'], sortBy=action['sortBy'], binCount=action['binCount'], dataset=action['dataset'])
             return auxiliary.result
 
 

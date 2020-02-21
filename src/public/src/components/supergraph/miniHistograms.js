@@ -68,11 +68,11 @@ export default {
         dataProcess(data) {
             let attr_data = {}
 
-            if (this.selectedColorBy == 'Inclusive') {
+            if (this.$store.selectedMetric == 'Inclusive') {
                 attr_data = data['hist_time (inc)']
-            } else if (this.selectedColorBy == 'Exclusive') {
+            } else if (this.$store.selectedMetric == 'Exclusive') {
                 attr_data = data['hist_time']
-            } else if (this.selectedColorBy == 'Imbalance') {
+            } else if (this.$store.selectedMetric== 'Imbalance') {
                 attr_data = data['hist_imbalance']
             }
 
