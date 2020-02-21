@@ -9,8 +9,6 @@ class KDE_gradients:
     def __init__(self, states, binCount="20"):
         self.states = states
         self.binCount = binCount
-        self.nodes = states["ensemble"].g.nodes()
-        # self.results = self.run()
 
     def iqr(self, arr):
         """Calculate the IQR for an array of numbers."""
