@@ -26,7 +26,6 @@ class Histogram:
         module = self.name.split('=')[0]
         func_in_module = self.df[self.df.module == module]['name'].unique().tolist()
 
-        print(func_in_module)
         for idx, func in enumerate(func_in_module):
             ret.append({
                 "name": func,
@@ -37,5 +36,3 @@ class Histogram:
             })
         ret_df = pd.DataFrame(ret)
         return ret_df.to_json(orient="columns")
-
-

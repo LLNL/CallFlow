@@ -244,14 +244,14 @@ export default {
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
-                    this.$store.selectedModule = d.module
-
+                    this.$store.selectedModule = d.module + '=' + d.name
+                    console.log(this.$store.selectedModule)
                     this.$socket.emit('module_hierarchy', {
-                        module: d.id,
+                        module: this.$store.selectedModule,
                         datasets: this.$store.runNames,
                     })
 
-                    this.$socket.emit('ensemble_histogram', {
+                    EventHandler.emit('ensemble_histogram', {
                         module: this.$store.selectedModule,
                         datasets: this.$store.runNames,
                     })

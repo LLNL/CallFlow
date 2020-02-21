@@ -85,10 +85,10 @@ export default {
                 })
                 .style('fill-opacity', (d) => {
                     if (d.id.split('_')[0] == "intermediate") {
-                        return '0'
+                        return 0.0
                     }
                     else {
-                        return '1';
+                        return 1.0;
                     }
                 })
                 .style('shape-rendering', 'crispEdges')
@@ -102,10 +102,10 @@ export default {
                 })
                 .style('stroke-width', (d) => {
                     if (d.id.split('_')[0] == "intermediate") {
-                        return '0'
+                        return 0.0
                     }
                     else {
-                        return '1';
+                        return 1.0;
                     }
                 })
                 .on('mouseover', function (d) {
@@ -127,29 +127,21 @@ export default {
 
                     selectedNid = d.nid[0]
 
-                    if (this.$store.selectedData == 'Dataframe') {
-                        this.$socket.emit('scatterplot', {
-                            module: selectedModule,
-                            nid: selectedNid,
-                            dataset1: this.$store.selectedDataset,
-                        })
-                        this.$socket.emit('histogram', {
-                            nid: selectedNid,
-                            module: selectedModule,
-                            dataset1: this.$store.selectedDataset,
-                        })
-                    } else if (this.$store.selectedData == 'Graph') {
-                        this.$socket.emit('function', {
-                            module: selectedModule,
-                            nid: selectedNid,
-                            dataset1: this.$store.selectedDataset,
-                        })
-                        this.$socket.emit('hierarchy', {
-                            module: selectedModule,
-                            dataset1: this.$store.selectedDataset,
-                        })
-                    }
+                    this.$socket.emit('scatterplot', {
+                        module: selectedModule,
+                        nid: selectedNid,
+                        dataset1: this.$store.selectedDataset,
+                    })
 
+                    EventHandler.$emit('single_histogram', {
+                        module: selectedModule,
+                        dataset: this.$store.selectedDataset,
+                    })
+
+                    this.$socket.emit('function', {
+                        module: selectedModule,
+                        dataset1: this.$store.selectedDataset,
+                    })
                 })
 
             // Transition
@@ -159,16 +151,16 @@ export default {
                 .duration(this.transitionDuration)
                 .attr('opacity', d => {
                     if (d.id.split('_')[0] == "intermediate") {
-                        return '0'
+                        return 0.0
                     }
                     else {
-                        return '1';
+                        return 1.0;
                     }
                 })
                 .attr('height', d => d.height)
                 .style('fill', (d) => {
                     if (d.id.split('_')[0] == "intermediate") {
-                        return '#202020'
+                        return this.$store.color.ensemble
                     }
                     else {
                         let color = this.$store.color.getColor(d)

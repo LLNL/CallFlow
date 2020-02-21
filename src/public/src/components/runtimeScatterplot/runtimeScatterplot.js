@@ -40,7 +40,8 @@ export default {
 		firstRender: true,
 		scatterHeight: 0,
 		scatterWidth: 0,
-		id: ''
+		id: '',
+		message: "Correlation View"
 
 	}),
 

@@ -129,7 +129,7 @@ export default {
                 // g.edge(e).style = "stroke: 1.5px "
             })
 
-            let inner = this.svg.select('#ensemble-cct-container');
+            let inner = this.svg.select('#container');
 
             // Set up zoom support
             var zoom = d3.zoom().on("zoom", function () {

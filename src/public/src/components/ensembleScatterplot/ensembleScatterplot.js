@@ -42,6 +42,7 @@ export default {
 		xData: [],
 		yData: [],
 		nameData: [],
+		message: "Bland Altman Plot"
 	}),
 
 	sockets: {

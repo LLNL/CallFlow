@@ -152,7 +152,6 @@ class SuperGraph(nx.Graph):
         ret = {}
         additional_flow = {}
         for edge in graph.edges(data=True):
-            print(edge)
             source_module = edge[0]
             target_module = edge[1]
             source_name = edge[2]['attr_dict']['source_callsite']

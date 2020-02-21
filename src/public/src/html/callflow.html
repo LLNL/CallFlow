@@ -150,28 +150,30 @@
 	<v-content class="pt-auto">
 		<v-layout v-show="selectedFormat == 'Callgraph' && selectedMode == 'Single'">
 			<splitpanes id="callgraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe'">
-				<splitpanes horizontal :splitpanes-size="30">
-					<span>
-						<Function ref="Function" />
-					</span>
+				<splitpanes horizontal :splitpanes-size="20">
 					<span>
 						<Scatterplot ref="Scatterplot" />
 					</span>
 					<span>
-						<Histogram ref="Histogram" />
+						<SingleHistogram ref="SingleHistogram" />
 					</span>
 
 				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="70">
+				<splitpanes horizontal :splitpanes-size="60">
 					<span>
 						<SuperGraph ref="SuperGraph" />
+					</span>
+				</splitpanes>
+				<splitpanes horizontal :splitpanes-size="20">
+					<span>
+						<Function ref="Function" />
 					</span>
 				</splitpanes>
 			</splitpanes>
 		</v-layout>
 
 		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Single'">
-			<splitpanes id="cct-dashboard">
+			<splitpanes id="single-cct-dashboard">
 				<span>
 					<CCT ref="CCT" />
 				</span>
@@ -225,9 +227,26 @@
 
 		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Ensemble'">
 			<splitpanes id="ensemble-cct-dashboard">
+				<splitpanes horizontal :splitpanes-size="100">
+					<span>
+						<EnsembleCCT ref="EnsembleCCT"/>
+					</span>
+					</span>
+				</splitpanes>
+			</splitpanes>
+		</v-layout>
+
+		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Compare'">
+			<splitpanes id="compare-cct-dashboard">
 				<splitpanes horizontal :splitpanes-size="50">
 					<span>
-						<EnsembleCCT ref="EnsembleCCT" id="ensemble-cct"/>
+						<EnsembleCCT ref="EnsembleCCT1"/>
+					</span>
+					</span>
+				</splitpanes>
+				<splitpanes horizontal :splitpanes-size="50">
+					<span>
+						<EnsembleCCT ref="EnsembleCCT2"/>
 					</span>
 					</span>
 				</splitpanes>
