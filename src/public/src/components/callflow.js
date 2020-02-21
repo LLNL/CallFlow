@@ -104,7 +104,7 @@ export default {
 		datas: ['Dataframe', 'Graph'],
 		selectedData: 'Dataframe',
 		firstRender: false,
-		summaryChip: 'Ensemble Graph',
+		summaryChip: 'Ensemble SuperGraph',
 		auxiliarySortBy: 'time (inc)',
 		ranks: [],
 		selectedTargetDataset: '',
@@ -257,6 +257,8 @@ export default {
 				let dataset = this.$store.runNames[i]
 				this.$store.modules[dataset] = this.processModule(module_data[dataset])
 			}
+
+			this.$store.gradients = data['gradients']
 			console.log("[Socket] Ensemble Callsite data processing done.")
 
 		},
@@ -287,17 +289,11 @@ export default {
 				this.$refs.EnsembleSuperGraph.init(data)
 				this.$refs.AuxiliaryFunction.init()
 				this.$refs.EnsembleHistogram.init()
+				this.$refs.EnsembleDistribution.init()
 				// this.$refs.RunInformation.init()
 				this.$refs.SimilarityMatrix.init()
 				// this.initLoad = false
 			}
-		},
-
-		ensemble_gradients(data) {
-			console.log("[Gradient] Data:", data)
-			this.$store.gradients = data
-			this.$refs.EnsembleSuperGraph.setupGradients(data)
-			this.$refs.EnsembleDistribution.init()
 		},
 
 		ensemble_mini_histogram(data) {
@@ -445,12 +441,6 @@ export default {
 				this.$socket.emit('ensemble_supergraph', {
 					datasets: this.$store.runNames,
 					groupBy: this.selectedGroupBy
-				})
-
-				this.$socket.emit('ensemble_gradients', {
-					datasets: this.$store.runNames,
-					binCount: this.$store.selectedBinCount,
-					plot: 'kde'
 				})
 
 				this.$socket.emit('ensemble_similarity', {

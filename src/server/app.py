@@ -313,20 +313,20 @@ class App:
             result = json.dumps(result)
             emit("ensemble_supergraph", result, json=True)
 
-        @sockets.on("ensemble_gradients", namespace="/")
-        def ensemble_gradients(data):
-            result = {}
-            if self.debug:
-                self.print("[Request] Gradients for all datasets", data)
-            result = self.callflow.request(
-                {
-                    "name": "gradients",
-                    "datasets": data["datasets"],
-                    "binCount": data["binCount"],
-                    "plot": data["plot"],
-                }
-            )
-            emit("ensemble_gradients", result, json=True)
+        # @sockets.on("ensemble_gradients", namespace="/")
+        # def ensemble_gradients(data):
+        #     result = {}
+        #     if self.debug:
+        #         self.print("[Request] Gradients for all datasets", data)
+        #     result = self.callflow.request(
+        #         {
+        #             "name": "gradients",
+        #             "datasets": data["datasets"],
+        #             "binCount": data["binCount"],
+        #             "plot": data["plot"],
+        #         }
+        #     )
+        #     emit("ensemble_gradients", result, json=True)
 
         @sockets.on("ensemble_similarity", namespace="/")
         def ensemble_similarity(data):

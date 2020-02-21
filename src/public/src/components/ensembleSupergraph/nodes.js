@@ -143,6 +143,7 @@ export default {
                 .attr('opacity', 1)
                 .attr('transform', d => `translate(${d.x},${d.y + this.$parent.ySpacing})`)
 
+            this.setupMeanGradients()
             this.meanRectangle()
             this.path()
             this.text()
@@ -160,7 +161,8 @@ export default {
             }
         },
 
-        setupMeanGradients(data) {
+        setupMeanGradients() {
+            let data = this.$store.gradients
             let method = 'hist'
             this.hist_min = 0
             this.hist_max = 0
@@ -169,8 +171,9 @@ export default {
                 this.hist_min = Math.min(this.hist_min, data[d][this.$store.selectedMetric]['hist']['y_min'])
                 this.hist_max = Math.max(this.hist_max, data[d][this.$store.selectedMetric]['hist']['y_max'])
             }
+            console.log(this.hist_min, this.hist_max)
             this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
-            this.$parent.$refs.DistColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
+            // this.$parent.$refs.DistColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
 
             for (let d in data) {
                 var defs = d3.select('#ensemble-supergraph-overview')

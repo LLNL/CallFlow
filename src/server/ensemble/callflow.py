@@ -158,11 +158,6 @@ class EnsembleCallFlow:
                 ).results
             return ret
 
-        elif action_name == "gradients":
-            if action["plot"] == "kde":
-                ret = KDE_gradients(self.states, binCount=action["binCount"]).results
-            return ret
-
         elif action_name == "Gromov-wasserstein":
             ret = {}
             return ret
@@ -209,7 +204,7 @@ class EnsembleCallFlow:
             return histogram.result
 
         elif action_name == "auxiliary":
-            auxiliary = Auxiliary(self.states['ensemble'], module=action['module'], sortBy=action['sortBy'], binCount=action["binCount"], datasets=action['datasets'])
+            auxiliary = Auxiliary(self.states, module=action['module'], sortBy=action['sortBy'], binCount=action["binCount"], datasets=action['datasets'])
             return auxiliary.result
 
         elif action_name == 'compare':
