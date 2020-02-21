@@ -72,7 +72,7 @@ export default {
                 attr_data = data['hist_time (inc)']
             } else if (this.$store.selectedMetric == 'Exclusive') {
                 attr_data = data['hist_time']
-            } else if (this.$store.selectedMetric== 'Imbalance') {
+            } else if (this.$store.selectedMetric == 'Imbalance') {
                 attr_data = data['hist_imbalance']
             }
 

@@ -164,6 +164,7 @@ export default {
             let method = 'hist'
             this.hist_min = 0
             this.hist_max = 0
+            console.log(this.$store.selectedMetric, data)
             for (let d in data) {
                 this.hist_min = Math.min(this.hist_min, data[d][this.$store.selectedMetric]['hist']['y_min'])
                 this.hist_max = Math.max(this.hist_max, data[d][this.$store.selectedMetric]['hist']['y_max'])
@@ -177,7 +178,7 @@ export default {
 
                 this.linearGradient = defs.append("linearGradient")
                     .attr("id", "mean-gradient" + this.nidNameMap[d])
-                    .attr("class", 'linear-gradient')
+                    .attr("class", 'mean-gradient')
 
                 this.linearGradient
                     .attr("x1", "0%")
@@ -190,6 +191,8 @@ export default {
 
                 let grid = data[d][this.$store.selectedMetric][method]['x']
                 let val = data[d][this.$store.selectedMetric][method]['y']
+
+                console.log(val, grid)
 
                 for (let i = 0; i < grid.length; i += 1) {
                     let x = (i + i + 1) / (2 * grid.length)
@@ -244,14 +247,17 @@ export default {
                 })
                 .on('click', (d) => {
                     this.$store.selectedNode = d
-                    this.$store.selectedModule = d.module + '=' + d.name
+                    this.$store.selectedModule = d.module
+                    this.$store.selectedName = d.name
+
                     console.log(this.$store.selectedModule)
                     this.$socket.emit('module_hierarchy', {
                         module: this.$store.selectedModule,
+                        name: this.$store.selectedName,
                         datasets: this.$store.runNames,
                     })
 
-                    EventHandler.emit('ensemble_histogram', {
+                    EventHandler.$emit('ensemble_histogram', {
                         module: this.$store.selectedModule,
                         datasets: this.$store.runNames,
                     })
@@ -314,7 +320,7 @@ export default {
 
         //Gradients
         clearGradients() {
-            d3.selectAll('.linear-gradient').remove()
+            d3.selectAll('.mean-gradient').remove()
         },
 
         clearZeroLine() {
@@ -650,6 +656,7 @@ export default {
         clear() {
             d3.selectAll('.dist-node').remove()
             d3.selectAll('.targetLines').remove()
+            this.clearGradients()
             this.$refs.ToolTip.clear()
         },
 

@@ -322,6 +322,7 @@ class App:
                 {
                     "name": "gradients",
                     "datasets": data["datasets"],
+                    "binCount": data["binCount"],
                     "plot": data["plot"],
                 }
             )

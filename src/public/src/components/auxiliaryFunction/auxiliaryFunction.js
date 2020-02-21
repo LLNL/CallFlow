@@ -9,12 +9,11 @@ export default {
         selected: {},
         id: 'auxiliary-function-overview',
         people: [],
-        message: "Auxiliary Call Sites",
+        message: "Callsite Information",
         callsites: [],
         dataReady: false,
         number_of_callsites: 0,
         firstRender: true,
-        type: 'inc',
         margin: { top: 0, right: 10, bottom: 0, left: 5 },
         textOffset: 25,
         height: 60,
@@ -48,6 +47,7 @@ export default {
                 this.firstRender = false
             }
 
+            this.number_of_callsites = Object.keys(this.$store.callsites['ensemble']).length
             for (const [idx, callsite] of Object.entries(this.$store.callsites['ensemble'])) {
                 this.ui(callsite.name)
                 this.visualize(callsite.name)
@@ -74,12 +74,12 @@ export default {
             div.setAttribute('class', 'auxiliary-node')
 
             let checkbox = this.createCheckbox(callsite)
-            let callsite_label = this.createLabel("".concat("Call site: ", this.trunc(callsite.name, 30)))
+            let callsite_label = this.createLabel("".concat(this.trunc(callsite.name, 30)))
 
             let time_inc = callsite["mean_time (inc)"].toFixed(2)
-            let inclusive_runtime = this.createLabel("".concat("Inclusive Runtime (mean): ", time_inc));
+            let inclusive_runtime = this.createLabel("".concat("Inclusive Runtime (mean): ", (time_inc*0.000001).toFixed(2), "s"));
             let time = callsite["mean_time"].toFixed(2)
-            let exclusive_runtime = this.createLabel("".concat("Exclusive Runtime (mean): ", time));
+            let exclusive_runtime = this.createLabel("".concat("Exclusive Runtime (mean): ", (time*0.000001).toFixed(2), "s"));
 
 
             div.appendChild(checkbox);
@@ -193,6 +193,7 @@ export default {
         },
 
         boxPlot(ensemble_data, target_data) {
+            console.log(ensemble_data, target_data)
             let inc_arr = ensemble_data['time (inc)']
             let exc_arr = ensemble_data['time']
 
@@ -200,7 +201,7 @@ export default {
             let exc_arr_target = target_data['time']
 
             this.d = [];
-            if (this.type == 'inc') {
+            if (this.$store.selectedMetric == 'Inclusive') {
                 this.raw_d = inc_arr
                 this.d = inc_arr.sort(d3.ascending)
                 this.q = this.quartiles(this.d)
@@ -209,10 +210,11 @@ export default {
                 this.targetd = inc_arr_target.sort(d3.ascending)
                 this.targetq = this.quartiles(this.targetd)
             }
-            else if (this.type == 'exc') {
+            else if (this.$store.selectedMetric == 'Exclusive') {
                 this.raw_d = exc_arr
                 this.d = exc_arr.sort(d3.ascending)
                 this.q = this.quartiles(this.d)
+                console.log(this.q)
 
                 this.raw_target_d = exc_arr_target
                 this.targetd = exc_arr_target.sort(d3.ascending)
@@ -322,6 +324,7 @@ export default {
                     "max": max
                 }
             }
+            console.log("Q: ", result)
             return result
         },
 

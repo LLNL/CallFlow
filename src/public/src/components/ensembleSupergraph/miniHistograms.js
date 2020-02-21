@@ -38,7 +38,8 @@ export default {
         id: '',
         nodes: null,
         edges: null,
-        offset: 4
+        offset: 4,
+        bandWidth: 0,
     }),
 
     mounted() {
@@ -69,17 +70,10 @@ export default {
         dataProcess(data) {
             let attr_data = {}
 
-            console.log("aaaaaaaaaaaaaaaaaaaaaa", this.$store.selectedMetric)
             if (this.$store.selectedMetric == 'Inclusive') {
                 attr_data = data['hist_time (inc)']
-                dataMin = data['min_time (inc)'];
-                dataMax = data['max_time (inc)'];
-                dataSorted = data['sorted_time (inc)']
             } else if (this.$store.selectedMetric == 'Exclusive') {
                 attr_data = data['hist_time']
-                dataMin = data['min_time']
-                dataMax = data['max_time']
-                dataSorted = data['sorted_time']
             } else if (this.$store.selectedMetric == 'Imbalance') {
                 attr_data = data['hist_imbalance']
             }
@@ -88,6 +82,7 @@ export default {
         },
 
         clear() {
+            this.bandWidth = 0
             d3.selectAll('#histobars').remove()
         },
 
@@ -104,21 +99,24 @@ export default {
                 color = this.$store.color.target
             }
 
-            this.minimapXScale = d3.scaleBand()
-                .domain(xVals)
-                .rangeRound([0, this.$parent.nodeWidth])
+            if (type == 'ensemble') {
+                this.minimapXScale = d3.scaleBand()
+                    .domain(xVals)
+                    .rangeRound([0, this.$parent.nodeWidth])
 
-            this.minimapYScale = d3.scaleLinear()
-                .domain([0, d3.max(freq)])
-                .range([this.$parent.ySpacing, 0]);
+                this.minimapYScale = d3.scaleLinear()
+                    .domain([0, d3.max(freq)])
+                    .range([this.$parent.ySpacing, 0]);
+            }
 
+            this.bandWidth = this.minimapXScale.bandwidth()
             for (let i = 0; i < freq.length; i += 1) {
                 d3.select('#' + this.id)
                     .append('rect')
                     .attrs({
                         'id': 'histobars',
                         'class': 'histogram-bar ' + type,
-                        'width': () => this.minimapXScale.bandwidth(),
+                        'width': () => this.bandWidth,
                         'height': (d) => {
                             return (this.$parent.nodeWidth) - this.minimapYScale(freq[i])
                         },
