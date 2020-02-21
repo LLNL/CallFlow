@@ -1,5 +1,7 @@
-<v-layout row wrap :id="id">
-    <svg :id="id">
-        <ToolTip ref="ToolTip"></ToolTip>
-    </svg>
-</v-layout>
+<div>
+    <v-layout class="chip-container">
+        <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
+    </v-layout>
+    <svg :id="id"></svg>
+    <ToolTip ref="ToolTip" />
+</div>

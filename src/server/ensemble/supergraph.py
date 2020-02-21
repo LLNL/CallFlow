@@ -125,8 +125,8 @@ class SuperGraph(nx.Graph):
             )
 
     def add_edge_attributes(self):
-        number_of_runs_mapping = self.number_of_runs()
-        nx.set_edge_attributes(self.g, name="number_of_runs", values=number_of_runs_mapping)
+        # number_of_runs_mapping = self.number_of_runs()
+        # nx.set_edge_attributes(self.g, name="number_of_runs", values=number_of_runs_mapping)
         capacity_mapping = self.calculate_flows(self.g)
         nx.set_edge_attributes(self.g, name="weight", values=capacity_mapping)
         exc_capacity_mapping = self.calculate_exc_weight(self.g)
@@ -220,7 +220,6 @@ class SuperGraph(nx.Graph):
             source_name = edge[2]['attr_dict']['source_callsite']
             target_name = edge[2]['attr_dict']['target_callsite']
 
-            print(edge)
 
             source_exc = self.df.loc[(self.df["name"] == source_name)]["time"].max()
             target_exc = self.df.loc[(self.df["name"] == target_name)]["time"].max()
@@ -245,7 +244,6 @@ class SuperGraph(nx.Graph):
 
         # loop through the nodes
         for node in self.g.nodes():
-            print(node)
             if "=" in node:
                 node_name = node.split("=")[1]
             else:

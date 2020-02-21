@@ -14,6 +14,7 @@ class ModuleHierarchy:
         self.df = state.df
 
         self.modFunc = modFunc
+        print(modFunc)
         # Processing for the modFunc format to get the module name
         if "=" in modFunc:
             self.function = modFunc.split("=")[1]

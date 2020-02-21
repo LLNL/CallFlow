@@ -392,33 +392,32 @@ class App:
             )
             emit('compare', result, json=True)
 
-        @sockets.on("single_histogram", namespace="/")
-        def ensembleHistogram(data):
-            if self.debug:
-                self.print("[Request] Dist-Histogram request for module.")
-            datasets = data['datasets']
-            result = self.single_callflow.request(
-                {
-                    "name": "histogram",
-                    "datasets": datasets,
-                    "module": data["module"],
-                }
-            )
-            emit("single_histogram", result, json=True)
+        # @sockets.on("single_histogram", namespace="/")
+        # def singleHistogram(data):
+        #     if self.debug:
+        #         self.print("Single Histogram request for module.")
+        #     result = self.single_callflow.request(
+        #         {
+        #             "name": "histogram",
+        #             "dataset": data['dataset'],
+        #             "module": data["module"],
+        #         }
+        #     )
+        #     emit("single_histogram", result, json=True)
 
-        @sockets.on("ensemble_histogram", namespace="/")
-        def ensembleHistogram(data):
-            if self.debug:
-                self.print("[Request] Dist-Histogram request for module.")
-            datasets = data['datasets']
-            result = self.callflow.request(
-                {
-                    "name": "histogram",
-                    "datasets": datasets,
-                    "module": data["module"],
-                }
-            )
-            emit("ensemble_histogram", result, json=True)
+        # @sockets.on("ensemble_histogram", namespace="/")
+        # def ensembleHistogram(data):
+        #     if self.debug:
+        #         self.print("Ensemble Histogram request for module.")
+        #     datasets = data['datasets']
+        #     result = self.callflow.request(
+        #         {
+        #             "name": "histogram",
+        #             "datasets": datasets,
+        #             "module": data["module"],
+        #         }
+        #     )
+        #     emit("ensemble_histogram", result, json=True)
 
         @sockets.on("split_caller", namespace="/")
         def split_caller(data):

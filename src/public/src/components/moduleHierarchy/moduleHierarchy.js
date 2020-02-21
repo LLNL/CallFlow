@@ -65,6 +65,7 @@ export default {
 		},
 
 		module_hierarchy(data) {
+			console.log(data)
 			data = JSON.parse(data['data'])
 			console.log("Module hierarchy: ", data)
 			this.update_from_df(data)

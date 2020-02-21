@@ -301,7 +301,10 @@ export default function Sankey() {
                     divValue = referenceValue;
                 }
                 else {
-                    divValue = d3.sum(nodes, d => d[dataset]['time (inc)']);
+                    divValue = d3.sum(nodes, d => {
+                        console.log(d)
+                        return d[dataset]['time (inc)']
+                    });
                 }
                 return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
             });

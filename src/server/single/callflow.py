@@ -175,10 +175,6 @@ class SingleCallFlow:
             nx = CallGraph(state, "path", True)
             return nx.g
 
-        elif action_name == "histogram":
-            histogram = Histogram(state, action["nid"])
-            return histogram.result
-
         elif action_name == "mini-histogram":
             minihistogram = MiniHistogram(state)
             return minihistogram.result
@@ -191,7 +187,6 @@ class SingleCallFlow:
             })
             graph = singleCCT(self.states[action["dataset"]], action["functionsInCCT"])
             return graph.g
-
 
         elif action_name == "function":
             functionlist = FunctionList(state, action["module"], action["nid"])

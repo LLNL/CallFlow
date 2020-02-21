@@ -241,17 +241,19 @@ export default {
 					console.log("[Single SuperGraph] Number of levels to shift: ", shift_level)
 				}
 
+				let dataset = this.$store.selectedTargetDataset
 				// Put in intermediate nodes.
 				for (let j = shift_level; j > 1; j--) {
 					const intermediate_idx = nodes.length;
 					const tempNode = {
-						'512-cores': target_node['512-cores'],
 						'attr_dict': temp_edges[i]['attr_dict'],
 						id: 'intermediate_' + target_node.id,
 						level: j - 1,
 						height: temp_edges[i].height,
 						name: target_node.id,
 					};
+					tempNode[dataset] = target_node[this.$store.selectedTargetDataset]
+
 					if (this.debug) {
 						console.log("[Single SuperGraph] Adding intermediate node: ", tempNode);
 					}

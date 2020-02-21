@@ -15,10 +15,11 @@ import tpl from '../../html/histogram/index.html'
 import * as d3 from 'd3'
 import "d3-selection-multi"
 import ToolTip from './tooltip'
+import EventHandler from '../EventHandler'
 
 export default {
     template: tpl,
-    name: 'Histogram',
+    name: 'SingleHistogram',
     components: {
         ToolTip
     },
@@ -38,94 +39,106 @@ export default {
         },
         dataset_index: [],
         histogramSVG: null,
-        id: 'histogram_view',
+        id: 'single-histogram-view',
         firstRender: true,
         xVals: [],
         freq: [],
         selectedColorBy: 'Inclusive',
         MPIcount: 0,
+        message: "MPI Distribution"
     }),
 
-    mounted() {},
-
-    sockets: {
-        histogram(data) {
-            data = JSON.parse(data)
-            console.log("Histogram Data: ", data)
-            if(this.firstRender) {
-                this.init()
-            }
-            this.render(data)
-        },
+    mounted() {
+        let self = this
+        EventHandler.$on('single_histogram', function (data) {
+            self.clear()
+            console.log("Single histogram: ", data['module'])
+            self.render(data['module'])
+        })
     },
 
     methods: {
         init() {
             this.toolbarHeight = document.getElementById('toolbar').clientHeight
-			this.footerHeight = document.getElementById('footer').clientHeight
-			this.footerHeight = document.getElementById('footer').clientHeight
-            this.width = window.innerWidth*0.3
-            this.height = (window.innerHeight - this.toolbarHeight - 2* this.footerHeight)*0.5
+            this.footerHeight = document.getElementById('footer').clientHeight
+            this.footerHeight = document.getElementById('footer').clientHeight
+            this.width = window.innerWidth * 0.2
+            this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.5
 
-            this.boxWidth = this.width - this.padding.right - this.padding.left;
+            this.boxWidth = this.width - this.padding.right - this.padding.left - 20;
             this.boxHeight = this.height - this.padding.top - this.padding.bottom - 20;
             this.histogramOffset = Math.floor(this.boxHeight / 3);
             this.histogramHeight = this.boxHeight - this.histogramOffset;
             this.histogramWidth = this.boxWidth;
-            this.histogramSVG = d3.select('#' + this.id)
+            this.svg = d3.select('#' + this.id)
                 .attrs({
                     "width": this.boxWidth + this.padding.right + this.padding.left,
                     "height": this.boxHeight + this.padding.top + this.padding.bottom,
                     "transform": `translate(${this.padding.left}, ${this.padding.top})`
                 })
+
+            EventHandler.$emit('single_histogram', {
+                module: "Lulesh",
+                name: "main",
+                dataset: this.$store.selectedTargetDataset,
+            })
         },
 
-        render(data) {
-            if (!this.firstRender) {
-                this.clear()
-            }
-
-            this.firstRender = false
-            const temp = this.dataProcess(data);
+        render(callsite) {
+            let data = this.$store.modules[this.$store.selectedTargetDataset][callsite]
+            let temp = this.dataProcess(data);
             this.xVals = temp[0];
             this.freq = temp[1];
             this.axis_x = temp[2];
             this.binContainsProcID = temp[3];
             this.logScaleBool = false;
 
-            this.$refs.ToolTip.init(this.id)
+            const targetData = this.$store.modules[this.$store.selectedTargetDataset][callsite]
+            const targetTemp = this.dataProcess(targetData)
+            this.targetXVals = targetTemp[0]
+            this.targetFreq = targetTemp[1]
+            this.target_axis_x = targetTemp[3]
+            this.target_binContainsProcID = targetTemp[3]
 
+            // this.$refs.ToolTip.init(this.id)
+
+            // console.log(this.xVals, this.histogramWidth)
             this.histogramXScale = d3.scaleBand()
                 .domain(this.xVals)
+                .range(["#c6dbef", "#6baed6", "#2171b5", "#084594"])
                 .rangeRound([0, this.histogramWidth])
 
-            if (d3.max(this.freq) < 50) {
-                this.histogramYScale = d3.scaleLinear()
-                    .domain([0, d3.max(this.freq)])
-                    .range([this.histogramHeight, 0])
-                this.logScaleBool = false;
-            } else {
-                this.histogramYScale = d3.scaleLog()
-                    .domain([1, d3.max(this.freq)])
-                    .range([this.histogramHeight, 10]);
-                this.logScaleBool = true;
-            }
+            // if (d3.max(this.freq) < 50) {
+            this.histogramYScale = d3.scaleLinear()
+                .domain([0, d3.max(this.freq)])
+                .range([this.histogramHeight, 0])
+            this.logScaleBool = false;
+            // } else {
+            // this.histogramYScale = d3.scaleLog()
+            // .domain([1, d3.max(this.freq)])
+            // .range([this.boxHeight, 10]);
+            // this.logScaleBool = true;
+            // }
             this.visualize();
         },
 
         clear() {
-            d3.selectAll('.selectBars').remove()
-            d3.selectAll('.histogram-axis').remove()
+            d3.selectAll('.single-histogram-bar').remove()
+            d3.selectAll('.single-histogram-target').remove()
+            d3.select('.x-axis').remove()
+            d3.select('.y-axis').remove()
             d3.selectAll('.binRank').remove()
             d3.selectAll('.lineRank').remove()
+            d3.selectAll('.target_lineRank').remove()
+            d3.selectAll('.tick').remove()
             this.$refs.ToolTip.clear()
         },
 
         visualize() {
-            this.bars();
+            this.targetBars();
             this.axis();
-            this.rankLineScale();
-            this.brushes ()
+            // this.rankLineScale();
+            // this.brushes()
         },
 
         setContainerWidth(newWidth) {
@@ -145,44 +158,28 @@ export default {
         },
 
         dataProcess(data) {
-            const xVals = [];
-            const freq = [];
-            const axis_x = [];
-            const dataSorted = []
-
             let attr_data = {}
+            let axis_x = []
+            let binContainsProcID = {}
+            let dataSorted = []
+            let dataMin = 0
+            let dataMax = 0
             if (this.selectedColorBy == 'Inclusive') {
-                attr_data = data['time (inc)']
+                attr_data = data['hist_time (inc)']
+                dataMin = data['min_time (inc)'];
+                dataMax = data['max_time (inc)'];
+                dataSorted = data['sorted_time (inc)']
             } else if (this.selectedColorBy == 'Exclusive') {
-                attr_data = data['time']
-            } else if (this.selectedColorBy == 'Name') {
-                attr_data = data['rank']
+                attr_data = data['hist_time']
+                dataMin = data['min_time']
+                dataMax = data['max_time']
+                dataSorted = data['sorted_time']
             } else if (this.selectedColorBy == 'Imbalance') {
-                attr_data = data['imbalance']
+                attr_data = data['hist_imbalance']
             }
-
-            let funcCount = Object.keys(attr_data).length
-            let ranks = data['rank'][0]
-            this.MPIcount = this.array_unique(ranks).length
-            for (let i = 0; i < attr_data[0].length; i += 1) {
-                for (const [key, value] in Object.entries(attr_data)) {
-                    if (dataSorted[i] == undefined) {
-                        dataSorted[i] = 0
-                    }
-                    dataSorted[i] += attr_data[0][i]
-                }
-            }
-
-            dataSorted.sort((a, b) => a - b)
-            const dataMin = dataSorted[0];
-            const dataMax = dataSorted[dataSorted.length - 1];
-
 
             const dataWidth = ((dataMax - dataMin) / this.$store.selectedBinCount);
-            const binContainsProcID = {};
             for (let i = 0; i < this.$store.selectedBinCount; i++) {
-                xVals.push(i);
-                freq.push(0);
                 axis_x.push(dataMin + (i * dataWidth));
             }
 
@@ -191,16 +188,20 @@ export default {
                 if (pos >= this.$store.selectedBinCount) {
                     pos = this.$store.selectedBinCount - 1;
                 }
-                freq[pos] += 1;
                 if (binContainsProcID[pos] == null) {
                     binContainsProcID[pos] = [];
                 }
-                binContainsProcID[pos].push(data['rank'][0][idx]);
+                binContainsProcID[pos].push(data['rank'][idx]);
             });
-            this.data = dataSorted
+            // console.log(attr_data['x'], attr_data['y'], axis_x, binContainsProcID)
+            return [attr_data['x'], attr_data['y'], axis_x, binContainsProcID];
+        },
 
-            // console.log(xVals, freq, axis_x, binContainsProcID)
-            return [xVals, freq, axis_x, binContainsProcID];
+        removeDuplicates(arr) {
+            var seen = {};
+            return arr.filter(function (item) {
+                return seen.hasOwnProperty(item) ? false : (seen[item] = true);
+            });
         },
 
         // give an array of ids, group the ids into cosecutive group
@@ -260,15 +261,15 @@ export default {
             };
         },
 
-        bars() {
+        targetBars() {
             let self = this
-            this.histogramSVG.selectAll('.selectBars')
-                .data(this.freq)
+            this.svg.selectAll('.single-target')
+                .data(this.targetFreq)
                 .enter()
                 .append('rect')
-                .attr('class', 'selectBars')
+                .attr('class', 'single-histogram-bar single-target')
                 .attr('x', (d, i) => {
-                    return this.histogramXScale(this.xVals[i])
+                    return this.padding.left + this.histogramXScale(this.targetXVals[i])
                 })
                 .attr('y', (d, i) => {
                     return this.histogramYScale(d)
@@ -277,29 +278,24 @@ export default {
                     return this.histogramXScale.bandwidth()
                 })
                 .attr('height', (d) => {
-                    let histFreq = d;
-                    if (d < 1 && this.logScaleBool) {
-                        histFreq = 1;
-                        return 0;
-                    }
-                    return this.histogramHeight - this.histogramYScale(d);
+                    return Math.abs(this.histogramHeight - this.histogramYScale(d));
                 })
-                .attr('fill', 'steelblue')
+                .attr('fill', this.$store.color.target)
                 .attr('opacity', 1)
                 .attr('stroke-width', (d, i) => '0.2px')
                 .attr('stroke', (d, i) => 'black')
                 .on('mouseover', function (d, i) {
-                    d3.select(this)
-                        .attr('fill', 'red');
-                    d3.selectAll(`.lineRank_${i}`)
-                        .style('fill', 'orange')
-                        .style('fill-opacity', 1)
+                    // d3.select(this)
+                    //     .attr('fill', 'red');
+                    // d3.selectAll(`.lineRank_${i}`)
+                    //     .style('fill', 'orange')
+                    //     .style('fill-opacity', 1)
                     let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
                     self.$refs.ToolTip.render(groupProcStr, d)
                 })
                 .on('mouseout', function (d, i) {
                     d3.select(this)
-                        .attr('fill', 'steelblue');
+                        .attr('fill', this.$store.color.ensemble);
                     d3.selectAll(`.lineRank_${i}`)
                         .style('fill', 'grey')
                         .style('fill-opacity', 0.4);
@@ -316,39 +312,31 @@ export default {
                     let temp = this.axis_x[i];
                     if (i % 4 == 0) {
                         let value = temp * 0.000001
-                        return `${xFormat(value)}s`
+                        return `${temp.toFixed(2)}ms`;
                     }
-                    return '';
                 });
 
             const yAxis = d3.axisLeft(this.histogramYScale)
                 .ticks(this.freq.length)
                 .tickFormat((d, i) => {
-                    if (this.logScaleBool) {
-                        if (d % 4 == 0) {
-                            return d;
-                        }
-                        return "";
-                    }
-                    return d;
+                    return d
                 })
-                .ticks(this.$store.numbOfRanks, '%');
+            // .ticks(this.$store.numbOfRanks, '%');
 
-            const xAxisLine = this.histogramSVG.append('g')
-                .attr('class', 'histogram-axis')
-                .attr('id', 'x-axis')
-                .attr('transform', `translate(0,${this.histogramHeight})`)
-                .call(xAxis);
+            const xAxisLine = this.svg.append('g')
+                .attr('class', 'x-axis')
+                .attr('transform', `translate(${this.padding.left},${this.histogramHeight})`)
+                .call(xAxis)
 
-            const yAxisLine = this.histogramSVG.append('g')
-                .attr('class', 'histogram-axis')
-                .attr('id', 'y-axis')
-                .call(yAxis);
+            const yAxisLine = this.svg.append('g')
+                .attr('class', 'y-axis')
+                .attr('transform', `translate(${this.padding.left},${0})`)
+                .call(yAxis)
 
             const yAxisLineText = yAxisLine.append('text')
                 .attr('transform', 'rotate(-90)')
-                .attr('y', -30)
-                .attr('x', -this.histogramHeight + 50)
+                .attr('y', 0)
+                .attr('x', 0)
                 .attr('dy', '.71em')
                 .style('text-anchor', 'end')
                 .text('Frequency');

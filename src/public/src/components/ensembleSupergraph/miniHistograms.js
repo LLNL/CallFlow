@@ -130,6 +130,7 @@ export default {
 
         render(callsite_name, callsite_module) {
             console.log(callsite_module)
+            console.log(this.$store.modules)
             let node_dict = this.nodes[this.nodeMap[callsite_name]]
             if(callsite_module.split('_')[0] != "intermediate"){
                 let ensemble_callsite_data = this.$store.modules['ensemble'][callsite_module]

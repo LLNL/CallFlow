@@ -463,7 +463,6 @@
                     // }
 
                     dy = y0 - nodePadding - size[1]
-                    console.log(dy)
                     if (dy > 0) {
                         max_dy = Math.max(dy, max_dy)
                     }

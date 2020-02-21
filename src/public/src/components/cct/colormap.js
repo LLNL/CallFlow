@@ -20,7 +20,7 @@ export default {
             bottom: 30,
             right: 250,
         },
-        id: 'colormap'
+        id: 'single-colormap'
     }),
 
     watch: {
@@ -84,7 +84,7 @@ export default {
                     'class': 'colormap-text',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
                 })
-                .text(this.colorMin * 0.000001 + 's');
+                .text((this.colorMin * 0.000001).toFixed(3) + 's');
 
             this.scaleG.append("text")
                 .style("fill", "black")
@@ -95,7 +95,7 @@ export default {
                     "class": "colormap-text",
                     'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - 2*this.padding.bottom})`,
                 })
-                .text(this.colorMax * 0.000001 + "s");
+                .text((this.colorMax * 0.000001).toFixed(3) + "s");
 
         },
 

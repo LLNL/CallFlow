@@ -20,7 +20,9 @@ export default {
         textyOffset: 10,
         textPadding: 0,
         textCount:0,
-        textSize: 15
+        textSize: 15,
+        message: "Callsite Information",
+        number_of_callsites: 0,
     }),
 
     watch: {

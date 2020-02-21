@@ -22,7 +22,7 @@ import EventHandler from '../EventHandler'
 
 export default {
     template: tpl,
-    name: 'DiffHistogram',
+    name: 'EnsembleHistogram',
     components: {
         ToolTip
     },
@@ -40,7 +40,7 @@ export default {
             left: 30,
         },
         dataset_index: [],
-        id: 'dist_histogram_view',
+        id: 'ensemble-histogram-view',
         firstRender: true,
         xVals: [],
         freq: [],
@@ -65,7 +65,7 @@ export default {
             this.footerHeight = document.getElementById('footer').clientHeight
 
             // Assign the height and width of container
-            this.width = document.getElementById('dist_histogram_view').clientWidth
+            this.width = document.getElementById(this.id).clientWidth
             this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.3
 
             // Assign width and height for histogram and rankLine SVG.

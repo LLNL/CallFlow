@@ -16,7 +16,7 @@ import tpl from '../html/callflow.html'
 import SuperGraph from './supergraph/supergraph'
 import CCT from './cct/cct'
 import Scatterplot from './runtimeScatterplot/runtimeScatterplot'
-import Histogram from './histogram/histogram'
+import SingleHistogram from './histogram/histogram'
 import Function from './function/function'
 
 // Ensemble mode imports
@@ -43,7 +43,7 @@ export default {
 		CCT,
 		Scatterplot,
 		Function,
-		Histogram,
+		SingleHistogram,
 		ModuleHierarchy,
 		EnsembleSuperGraph,
 		EnsembleCCT,
@@ -67,7 +67,7 @@ export default {
 		},
 		left: false,
 		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'CCT',
+		selectedFormat: 'Callgraph',
 		datasets: [],
 		selectedTargetDataset: '',
 		selectedDataset2: '',
@@ -80,7 +80,7 @@ export default {
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
 		metrics: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
-		selectedMetric: 'Exclusive',
+		selectedMetric: 'Inclusive',
 		runtimeColorMap: [],
 		distributionColorMap: [],
 		selectedRuntimeColorMap: "Reds",
@@ -215,7 +215,6 @@ export default {
 					callsite_data[key] = this.processJSON(callsite_data[key])
 				}
 			}
-			console.log(module_data, callsite_data)
 
 			this.$store.callsites = {}
 			let dataset = this.$store.selectedTargetDataset
@@ -223,7 +222,7 @@ export default {
 
 			this.$store.modules = {}
 			this.$store.modules[dataset] = this.processModule(module_data[dataset])
-			console.log("Done processing ")
+			console.log("[Socket] Single Callsite data processing done.")
 		},
 
 		ensemble_callsite_data(data) {
@@ -258,7 +257,7 @@ export default {
 				let dataset = this.$store.runNames[i]
 				this.$store.modules[dataset] = this.processModule(module_data[dataset])
 			}
-			console.log("Done processing ")
+			console.log("[Socket] Ensemble Callsite data processing done.")
 
 		},
 
@@ -275,14 +274,9 @@ export default {
 
 			this.$refs.SuperGraph.init(data)
 			this.$refs.Scatterplot.init()
-			this.$refs.Histogram.init()
+			this.$refs.SingleHistogram.init()
 			this.$refs.Function.init()
 		},
-
-		// single_cct(data) {
-		// 	console.log(data)
-		// 	this.$refs.CCT.init(data['union'], '2')
-		// },
 
 		// Fetch aggregated graph (Super graph) for distribution mode.
 		ensemble_supergraph(data) {
@@ -401,7 +395,6 @@ export default {
 					groupBy: this.selectedGroupBy
 				})
 
-				this.$socket.emit()
 			}
 		},
 
@@ -582,12 +575,12 @@ export default {
 			}
 			// this.$store.selectedTargetDataset = min_inclusive_dataset
 			// this.selectedTargetDataset = min_inclusive_dataset
-			this.$store.selectedTargetDataset = '512-cores'
-			this.selectedTargetDataset = '512-cores'
+			this.$store.selectedTargetDataset = '1-core'
+			this.selectedTargetDataset = '1-core'
 			// this.$store.selectedTargetDataset = 'impi'
 			// this.selectedTargetDataset = 'impi'
 			// this.$store.selectedTargetDataset = 'osu_bcast.1.10.2019-09-04_00-28-19'
-			// this.selectedTargetDataset = 'osu_bcast.1.10.2019-09-04_00-28-19'
+			// this.selectedTargetDataset =	 'osu_bcast.1.10.2019-09-04_00-28-19'
 			// this.$store.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
 			// this.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
@@ -638,7 +631,7 @@ export default {
 		},
 
 		updateFormat() {
-			this.clearLocal()
+			this.clear()
 			this.init()
 		},
 
