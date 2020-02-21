@@ -2,9 +2,7 @@ import * as d3 from 'd3'
 import "d3-selection-multi";
 import adjacencyMatrixLayout from '../../thirdParty/d3-adjacency-matrix-layout'
 import template from '../../html/ensembleDistribution/index.html'
-// import LiveMatrixColormap from './LiveMatrixColormap'
 import EventHandler from '../EventHandler'
-import { CardPlugin } from 'bootstrap-vue';
 
 
 export default {
@@ -23,7 +21,7 @@ export default {
         container: null,
         height: 0,
         width: 0,
-        message: "Distribution matrix",
+        message: "Mean Distribution matrix",
         matrix: null,
         matrixScale: 0.7,
         offset: 10,
@@ -79,6 +77,10 @@ export default {
             })
         },
 
+        isConnection(row, column){
+            return true
+        },
+
         setupMeanGradients(data, callsite, row, column) {
             let method = 'hist'
 
@@ -97,13 +99,17 @@ export default {
 
             if ((callsite in data)) {
                 let grid = [], val = []
-                if (row != column) {
+                if (row != column && column < row && this.isConnection(row, column)) {
                     grid = data[callsite]["Inclusive"][method]['x']
                     val = data[callsite]['Inclusive'][method]['y']
                 }
-                else {
+                else if(row == column) {
                     grid = data[callsite]["Exclusive"][method]['x']
                     val = data[callsite]["Exclusive"][method]['y']
+                }
+                else{
+                    grid = []
+                    val = []
                 }
 
                 for (let i = 0; i < grid.length; i += 1) {

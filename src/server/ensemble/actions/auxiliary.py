@@ -14,11 +14,13 @@ import json
 import networkx as nx
 from ast import literal_eval as make_tuple
 import numpy as np
+from .gradients import KDE_gradients
 
 class Auxiliary:
-    def __init__(self, state, module='all', sortBy='time (inc)', binCount="20", datasets='all'):
-        self.graph = state.g
-        self.df = state.df
+    def __init__(self, states, module='all', sortBy='time (inc)', binCount="20", datasets='all'):
+        self.states = states
+        self.graph = states['ensemble'].g
+        self.df = states['ensemble'].df
         self.sortBy = sortBy
         self.target_df = {}
         self.binCount = binCount
@@ -163,4 +165,9 @@ class Auxiliary:
             module_ret[dataset] = module_target_result.to_json(orient='split')
 
         ret['module'] = module_ret
+
+        ret['gradients'] = {}
+        for name, group_df in name_grouped:
+            ret['gradients'][name] = KDE_gradients(self.states, binCount=self.binCount).run(name)
+
         return ret

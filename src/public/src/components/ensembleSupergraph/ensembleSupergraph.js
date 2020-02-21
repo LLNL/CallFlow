@@ -99,6 +99,7 @@ export default {
 			console.log("[Ensemble SuperGraph] Post-processing done.")
 
 			this.$store.graph = this.graph
+			this.setupGradients()
 			this.$refs.DistNodes.init(this.$store.graph, this.view)
 			this.$refs.DistEdges.init(this.$store.graph, this.view)
 			this.$refs.DistColorMap.init()
@@ -391,8 +392,8 @@ export default {
 			}
 		},
 
-		setupGradients(data) {
-			this.$refs.DistNodes.setupMeanGradients(data)
+		setupGradients() {
+			this.$refs.DistNodes.setupMeanGradients(this.$store.gradients)
 		}
 	}
 }
