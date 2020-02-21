@@ -101,6 +101,7 @@ export default {
         },
 
         times() {
+            console.log(this.$store.callsites)
             this.addText('Name: ' + this.trunc(this.node.id, 40))
             this.addText('Inclusive Time: ' + (this.node.inclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.inclusive / this.$store.maxIncTime[this.$store.selectedTargetDataset]) * 100).toFixed(3)) + "%")
             this.addText('Exclusive Time: ' + (this.node.exclusive * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node.exclusive / this.$store.maxIncTime[this.$store.selectedTargetDataset]) * 100).toFixed(3)) + "%")
@@ -111,21 +112,48 @@ export default {
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
+        replaceAll(str, find, replace) {
+            return str.replace(new RegExp(find, 'g'), replace);
+        },
+
+        cleanup(string_object){
+            let string = JSON.stringify(string_object)
+            // string = string.replace(/"/g, '')
+            string = this.replaceAll(string, '/[]"','')
+            // string = string.replace(/`]`/g, '')
+            // string = string.replace(/'/g, '')
+            console.log(string, typeof(string))
+            return JSON.parse(string)
+        },
+
         paths() {
-            console.log(this.node)
-            let entry_functions = JSON.parse(this.node.entry_functions)
+            let callsite_name = this.node[this.$store.selectedTargetDataset].name
+            let entry_functions = this.cleanup(this.$store.callsites[this.$store.selectedTargetDataset][callsite_name].callers)
+            console.log(entry_functions, typeof(entry_functions))
+
+            let selectedMetric = ''
+            if(this.$store.selectedMetric == "Inclusive"){
+                selectedMetric = 'max_time (inc)'
+            }
+            else if(this.$store.selectedMetric == "Exclusive"){
+                selectedMetric = 'max_time'
+            }
 
             this.rectWidth = "10px"
 
             this.addText('')
             this.addText('Entry Functions: ')
 
-            for (var tIndex = 0; tIndex < entry_functions.name.length; tIndex++) {
+            for (var tIndex = 0; tIndex < entry_functions[0].length; tIndex++) {
+                console.log(entry_functions[0][tIndex])
                 this.textCount += 1
                 let fromColor = this.$store.color.getColor(this.node)
-                let toColor = this.$store.color.getColorByValue(entry_functions['time (inc)'])
+
+                let toMetric = this.$store.callsites[this.$store.selectedTargetDataset][entry_functions[tIndex]][selectedMetric]
+                console.log(toMetric)
+                let toColor = this.$store.color.getColorByValue(toMetric)
                 let fromFunc = this.node.id
-                let toFunc = entry_functions['name'][tIndex]
+                let toFunc = entry_functions[0][tIndex]
                 let xOffset = this.xOffset
                 let yOffset = this.mousePosY + 50 + this.textyOffset + this.textPadding * this.textCount
 

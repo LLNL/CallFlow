@@ -47,7 +47,7 @@ class Pipeline:
                     .add_show_node()
                     .add_vis_node_name()
                     .add_dataset_name()
-                    # .add_imbalance_perc()
+                    .add_imbalance_perc()
                     .add_module_name_hpctoolkit()
                     .add_mod_index()
                     .add_path()
