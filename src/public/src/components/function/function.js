@@ -71,9 +71,9 @@ export default {
             let callsite_label = this.createLabel("".concat(this.trunc(callsite.name, 25)))
 
             let time_inc = callsite["mean_time (inc)"].toFixed(2)
-            let inclusive_runtime = this.createLabel("".concat("Inclusive time (mean): ", (time_inc * 0.000001).toFixed(2), "s"));
+            let inclusive_runtime = this.createLabel("".concat("Inclusive Runtime (mean): ", (time_inc * 0.000001).toFixed(2), "s"));
             let time = callsite["mean_time"].toFixed(2)
-            let exclusive_runtime = this.createLabel("".concat("Exclusive time (mean): ", (time * 0.000001).toFixed(2), "s"));
+            let exclusive_runtime = this.createLabel("".concat("Exclusive Runtime (mean): ", (time * 0.000001).toFixed(2), "s"));
 
 
             div.appendChild(checkbox);
