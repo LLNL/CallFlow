@@ -6,8 +6,9 @@ import math
 
 
 class KDE_gradients:
-    def __init__(self, states):
+    def __init__(self, states, binCount='20'):
         self.states = states
+        self.binCount = binCount
         self.nodes = states["ensemble"].g.nodes()
         self.results = self.run()
 
@@ -81,8 +82,8 @@ class KDE_gradients:
 
         return x, y
 
-    def histogram(self, data, nbins=20):
-        h, b = np.histogram(data, range=[0, data.max()], bins=nbins)
+    def histogram(self, data):
+        h, b = np.histogram(data, range=[0, data.max()], bins=int(self.binCount))
         return 0.5 * (b[1:] + b[:-1]), h
 
     def clean_dict(self, in_dict):
@@ -170,7 +171,7 @@ class KDE_gradients:
             dist_exc_list = self.convert_dictmean_to_list(dist_exc)
 
             # Calculate appropriate number of bins automatically.
-            num_of_bins[vis_node_name] = 5
+            num_of_bins[vis_node_name] = self.binCount
             # num_of_bins[vis_node_name] = min(self.freedman_diaconis_bins(np.array(dist_list)), 50)
 
             # Calculate the KDE grid (x, y)

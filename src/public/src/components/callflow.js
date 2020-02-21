@@ -116,7 +116,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
 		modes: ['Ensemble', 'Single'],
-		selectedMode: 'Single',
+		selectedMode: 'Ensemble',
 		// Presentation mode variables
 		exhibitModes: ['Presentation', 'Default'],
 		selectedExhibitMode: 'Default',
@@ -448,6 +448,7 @@ export default {
 
 				this.$socket.emit('ensemble_gradients', {
 					datasets: this.$store.runNames,
+					binCount: this.$store.selectedBinCount,
 					plot: 'kde'
 				})
 

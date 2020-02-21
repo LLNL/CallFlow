@@ -65,7 +65,7 @@ export default {
             this.footerHeight = document.getElementById('footer').clientHeight
 
             // Assign the height and width of container
-            this.width = document.getElementById(this.id).clientWidth
+            this.width = document.getElementById('auxiliary-function-overview').clientWidth
             this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.3
 
             // Assign width and height for histogram and rankLine SVG.
@@ -78,11 +78,18 @@ export default {
 
             // Create the SVG
             this.svg = d3.select('#' + this.id)
-                .append('svg')
                 .attrs({
                     "width": this.width,
                     "height": this.height,
                 })
+
+            let modules_arr = Object.keys(this.$store.modules['ensemble'])
+
+            EventHandler.$emit('ensemble_histogram', {
+                module: modules_arr[0],
+                name: "main",
+                dataset: this.$store.runNames,
+            })
         },
 
         render(callsite) {
@@ -103,22 +110,21 @@ export default {
 
             // this.$refs.ToolTip.init(this.id)
 
-            console.log(this.xVals, this.histogramWidth)
             this.histogramXScale = d3.scaleBand()
                 .domain(this.xVals)
                 .range(["#c6dbef", "#6baed6", "#2171b5", "#084594"])
                 .rangeRound([0, this.histogramWidth])
 
             // if (d3.max(this.freq) < 50) {
-                this.histogramYScale = d3.scaleLinear()
-                    .domain([0, d3.max(this.freq)])
-                    .range([this.histogramHeight, 0])
-                this.logScaleBool = false;
+            this.histogramYScale = d3.scaleLinear()
+                .domain([0, d3.max(this.freq)])
+                .range([this.histogramHeight, 0])
+            this.logScaleBool = false;
             // } else {
-                // this.histogramYScale = d3.scaleLog()
-                    // .domain([1, d3.max(this.freq)])
-                    // .range([this.boxHeight, 10]);
-                // this.logScaleBool = true;
+            // this.histogramYScale = d3.scaleLog()
+            // .domain([1, d3.max(this.freq)])
+            // .range([this.boxHeight, 10]);
+            // this.logScaleBool = true;
             // }
             this.visualize();
         },
@@ -192,7 +198,7 @@ export default {
                 if (pos >= this.$store.selectedBinCount) {
                     pos = this.$store.selectedBinCount - 1;
                 }
-                    if (binContainsProcID[pos] == null) {
+                if (binContainsProcID[pos] == null) {
                     binContainsProcID[pos] = [];
                 }
                 binContainsProcID[pos].push(data['rank'][idx]);
@@ -360,17 +366,20 @@ export default {
                 .ticks(this.MPIcount)
                 .tickFormat((d, i) => {
                     let temp = this.axis_x[i];
-                    // if (i % 2 == 0) {
-                    //     let value = temp * 0.000001
-                    //     return `${xFormat(value)}s`
-                    // }
-                    return `${temp.toFixed(2)}ms`;
+                    if (i % 2 == 0) {
+                        let value = temp * 0.000001
+                        return `${value.toFixed(2)}s`;
+                    }
                 });
 
             const yAxis = d3.axisLeft(this.histogramYScale)
                 .ticks(this.freq.length)
                 .tickFormat((d, i) => {
-                    return d
+                    if ((d * 10) % 10 == 0)
+                        return d
+                    else {
+                        return ''
+                    }
                 })
             // .ticks(this.$store.numbOfRanks, '%');
 

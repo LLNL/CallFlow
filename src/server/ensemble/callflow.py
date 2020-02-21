@@ -160,7 +160,7 @@ class EnsembleCallFlow:
 
         elif action_name == "gradients":
             if action["plot"] == "kde":
-                ret = KDE_gradients(self.states).results
+                ret = KDE_gradients(self.states, binCount=action["binCount"]).results
             return ret
 
         elif action_name == "Gromov-wasserstein":
