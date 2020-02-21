@@ -192,7 +192,6 @@ export default {
                 let grid = data[d][this.$store.selectedMetric][method]['x']
                 let val = data[d][this.$store.selectedMetric][method]['y']
 
-                console.log(val, grid)
 
                 for (let i = 0; i < grid.length; i += 1) {
                     let x = (i + i + 1) / (2 * grid.length)
@@ -250,7 +249,6 @@ export default {
                     this.$store.selectedModule = d.module
                     this.$store.selectedName = d.name
 
-                    console.log(this.$store.selectedModule)
                     this.$socket.emit('module_hierarchy', {
                         module: this.$store.selectedModule,
                         name: this.$store.selectedName,
@@ -258,6 +256,11 @@ export default {
                     })
 
                     EventHandler.$emit('ensemble_histogram', {
+                        module: this.$store.selectedModule,
+                        datasets: this.$store.runNames,
+                    })
+
+                    EventHandler.$emit('ensemble_distribution', {
                         module: this.$store.selectedModule,
                         datasets: this.$store.runNames,
                     })

@@ -214,7 +214,6 @@ export default {
                 this.raw_d = exc_arr
                 this.d = exc_arr.sort(d3.ascending)
                 this.q = this.quartiles(this.d)
-                console.log(this.q)
 
                 this.raw_target_d = exc_arr_target
                 this.targetd = exc_arr_target.sort(d3.ascending)
