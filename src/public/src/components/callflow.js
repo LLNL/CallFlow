@@ -287,7 +287,6 @@ export default {
 				this.$refs.EnsembleSuperGraph.init(data)
 				this.$refs.AuxiliaryFunction.init()
 				this.$refs.EnsembleHistogram.init()
-				this.$refs.EnsembleDistribution.init()
 				// this.$refs.RunInformation.init()
 				this.$refs.SimilarityMatrix.init()
 				// this.initLoad = false
@@ -296,9 +295,9 @@ export default {
 
 		ensemble_gradients(data) {
 			console.log("[Gradient] Data:", data)
-			this.data = data
+			this.$store.gradients = data
 			this.$refs.EnsembleSuperGraph.setupGradients(data)
-			console.log("Store:", this.$store)
+			this.$refs.EnsembleDistribution.init()
 		},
 
 		ensemble_mini_histogram(data) {
@@ -334,6 +333,7 @@ export default {
 				} else if (this.selectedFormat == 'CCT') {
 					this.$refs.EnsembleSuperGraph.clear()
 					this.$refs.EnsembleHistogram.clear()
+					this.$refs.EnsembleDistribution.clear()
 					this.$refs.Scatterplot.clear()
 					this.$refs.AuxiliaryFunction.clear()
 					this.$refs.ModuleHierarchy.clear()
@@ -360,6 +360,7 @@ export default {
 					this.$refs.EnsembleSuperGraph.clear()
 					this.$refs.ModuleHierarchy.clear()
 					this.$refs.EnsembleHistogram.clear()
+					this.$refs.EnsembleDistribution.clear()
 					// this.$refs.Projection.clear()
 					// this.$refs.RunInformation.clear()
 					this.$refs.AuxiliaryFunction.clear()

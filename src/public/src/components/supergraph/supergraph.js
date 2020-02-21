@@ -22,9 +22,6 @@ import Edges from './edges'
 // import CallbackEdges from './callgraph/callbackEdges'
 import ColorMap from './colormap'
 import * as d3 from 'd3'
-import { max, min, sum } from "d3-array";
-import { scalePow } from 'd3-scale';
-
 
 export default {
 	name: 'SuperGraph',
