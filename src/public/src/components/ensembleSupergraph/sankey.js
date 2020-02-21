@@ -347,7 +347,15 @@
                     return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
                 });
 
+                let levelCount = 0
                 nodesByBreadth.forEach(function (nodes) {
+                    if(levelCount == 2){
+                        nodes.sort(function (a, b){
+                            return a['time'] - b['time']
+                            // return a['height'] - b['height']
+                        })
+                    }
+
                     nodes.forEach(function (node, i) {
                         let nodeHeight = 0;
                         links.forEach(function (edge) {
@@ -366,6 +374,7 @@
 
                         node.height = node.value * minNodeScale * scale;
                     });
+                    levelCount += 1
                 });
 
                 links.forEach(function (link) {
