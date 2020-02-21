@@ -189,20 +189,6 @@ class App:
             result = self.callflow.request(obj)
             emit("reset", result, json=True)
 
-        @sockets.on("ensemble_callsite_data", namespace="/")
-        def callsites(data):
-            if self.debug:
-                self.print("[Request] Callsite information: ", data)
-            result = self.callflow.request(
-                {
-                    "name": "auxiliary",
-                    "datasets": data["datasets"],
-                    "sortBy": data['sortBy'],
-                    "module": data['module']
-                }
-            )
-            emit("ensemble_callsite_data", result, json=True)
-
         @sockets.on("single_callsite_data", namespace="/")
         def callsites(data):
             if self.debug:
@@ -212,10 +198,26 @@ class App:
                     "name": "auxiliary",
                     "dataset": data["dataset"],
                     "sortBy": data['sortBy'],
+                    "binCount": data['binCount'],
                     "module": data['module']
                 }
             )
             emit("single_callsite_data", result, json=True)
+
+        @sockets.on("ensemble_callsite_data", namespace="/")
+        def callsites(data):
+            if self.debug:
+                self.print("[Request] Callsite information: ", data)
+            result = self.callflow.request(
+                {
+                    "name": "auxiliary",
+                    "datasets": data["datasets"],
+                    "sortBy": data['sortBy'],
+                    "binCount": data['binCount'],
+                    "module": data['module']
+                }
+            )
+            emit("ensemble_callsite_data", result, json=True)
 
         ################## CCT requests #########################
         @sockets.on("single_cct", namespace="/")
