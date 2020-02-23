@@ -223,20 +223,13 @@ export default {
                         let target_dataset = this.$store.actual_dataset_names[d.target]
                         highlight_datasets.push(source_dataset)
                         highlight_datasets.push(target_dataset)
-                        EventHandler.$emit('highlight_datasets', highlight_datasets)
-                    })
+                        })
                     .on('mouseover', d => {
 
                     })
                     .on('mouseout', (d) => {
 
                     })
-
-                d3.select('.KpMatrix')
-                    .call(adjacencyMatrix.xAxis);
-
-                d3.select('.KpMatrix')
-                    .call(adjacencyMatrix.yAxis);
 
                 // this.highlight_dataset(this.$store.selectedTargetDataset)
             }

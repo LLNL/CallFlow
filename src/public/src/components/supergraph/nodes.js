@@ -80,6 +80,7 @@ export default {
                         return '#202020'
                     }
                     else {
+                        console.log(d)
                         let color = this.$store.color.getColor(d)
                         return color
                     }

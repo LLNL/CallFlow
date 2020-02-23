@@ -233,8 +233,12 @@
             let remainingNodes = nodes
             let nextNodes = [];
             let level = 0
+            let x  = 0
             while (remainingNodes.length) {
                 nextNodes = [];
+                if(x > 10){
+                    break
+                }
                 remainingNodes.forEach(function (node) {
                     node.level = level
                     node.dx = nodeWidth;
@@ -244,6 +248,7 @@
                 })
                 remainingNodes = nextNodes;
                 level += 1
+                x += 1
             }
 
             minDistanceBetweenNode = nodeWidth * 2
