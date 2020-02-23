@@ -116,7 +116,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
 		modes: ['Ensemble', 'Single'],
-		selectedMode: 'Ensemble',
+		selectedMode: 'Single',
 		// Presentation mode variables
 		exhibitModes: ['Presentation', 'Default'],
 		selectedExhibitMode: 'Default',
@@ -583,8 +583,8 @@ export default {
 			this.selectedTargetDataset = '1-core'
 			// this.$store.selectedTargetDataset = 'impi'
 			// this.selectedTargetDataset = 'impi'
-			// this.$store.selectedTargetDataset = 'osu_bcast.1.10.2019-09-04_00-28-19'
-			// this.selectedTargetDataset =	 'osu_bcast.1.10.2019-09-04_00-28-19'
+			// this.$store.selectedTargetDataset = 'osu_bcast.1.10.2019-09-03_20-45-50'
+			// this.selectedTargetDataset =	 'osu_bcast.1.10.2019-09-03_20-45-50'
 			// this.$store.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
 			// this.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)

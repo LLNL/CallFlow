@@ -86,26 +86,14 @@ class groupBy:
     def create_component_path(self, path, group_path):
         component_path = []
         # path = utils.framesToPathLists(path)[0]
-        component_module = group_path[len(group_path) - 1]
-
-        # if '=' in component_module:
-        #     module = component_module.split('=')[0]
-        # elif '/' in component_module:
-        #     module = component_module.split('/')[0]
+        component_module = group_path[len(group_path) - 1].split('=')[0]
 
         for idx, node in enumerate(path):
-            # if '=' in node:
-            #     node_module = node.split('=')[0]
-            #     node_func = node.split('=')[1]
-            # elif '/' in node:
-            #     node_module = node.split('/')[0]
-            #     node_func = node.split('/')[1]
-            # else:
-            #     node_func = node
-
             node_func = node
+
             node_func_df = self.df.loc[self.df['name'] == node_func]
             if not node_func_df.empty:
+                # print(component_module, node_func_df['module'].tolist()[0])
                 if component_module == node_func_df['module'].tolist()[0]:
                     component_path.append(node_func)
 

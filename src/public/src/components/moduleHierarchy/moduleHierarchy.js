@@ -1,12 +1,14 @@
 import tpl from '../../html/moduleHierarchy/index.html'
 import * as d3 from 'd3'
 import dropdown from 'vue-dropdowns'
+import ToolTipModuleHierarchy from './tooltip'
 
 export default {
-	name: 'Icicle',
+	name: 'ModuleHierarchy',
 	template: tpl,
 	components: {
-		'dropdown': dropdown
+		dropdown,
+		// ToolTipModuleHierarchy
 	},
 	props: [],
 	data: () => ({
@@ -20,7 +22,7 @@ export default {
 		colorByAttr: 'Inclusive',
 		direction: ['LR', 'TD'],
 		selectedDirection: 'TD',
-		textTruncForNode: 15,
+		textTruncForNode: 10,
 		color: null,
 		width: null,
 		height: null,
@@ -70,6 +72,7 @@ export default {
 			console.log("Module hierarchy: ", data)
 			this.update_from_df(data)
 		},
+
 		level_change(data) {
 			this.update_maxlevels(data)
 		}
@@ -81,7 +84,7 @@ export default {
 
 	methods: {
 		init() {
-
+			// this.$refs.ToolTip.init(this.id)
 		},
 
 		setupSVG() {
@@ -100,6 +103,7 @@ export default {
 					'width': this.icicleWidth + this.margin.right + this.margin.left,
 					'height': this.icicleHeight + this.margin.top + this.margin.bottom,
 				})
+
 		},
 
 		update_maxlevels(data) {
@@ -234,6 +238,7 @@ export default {
 		clear() {
 			d3.selectAll('.icicleNode').remove()
 			d3.selectAll('.icicleText').remove()
+			// this.$refs.ToolTipModuleHierarchy.clear()
 		},
 
 		textSize(text) {
@@ -432,7 +437,6 @@ export default {
 				let max_val = data[method]['y_max']
 
 				let grid = data[method]['x']
-				console.log(grid)
 				let val = data[method]['y']
 
 				for (let i = 0; i < grid.length; i += 1) {
@@ -462,8 +466,8 @@ export default {
 					else {
 						name = d.data.name.split('=')[1]
 					}
-					let id = self.$store.callsites['ensemble'][name].id
-					return id
+					// let id = self.$store.callsites['ensemble'][name].id
+					return name
 				})
 				.attr('x', (d) => {
 					if (this.selectedDirection == 'LR') {
@@ -499,8 +503,7 @@ export default {
 				})
 				.style("fill", (d, i) => {
 					if (d.data.name.indexOf('=') === -1) {
-						let id = this.$store.callsites['ensemble'][d.data.name].id
-						return "url(#mean-gradient-" + id + ")"
+						return "url(#mean-gradient-" + d.data.name + ")"
 					}
 					return 'transparent'
 				})

@@ -9,19 +9,11 @@ from networkx.readwrite import json_graph
 
 
 class ModuleHierarchy:
-    def __init__(self, state, modFunc):
+    def __init__(self, state, module):
         self.graph = state.graph
         self.df = state.df
 
-        self.modFunc = modFunc
-        print(modFunc)
-        # Processing for the modFunc format to get the module name
-        if "=" in modFunc:
-            self.function = modFunc.split("=")[1]
-            self.module = modFunc.split("=")[0]
-        elif "/" in modFunc:
-            self.function = modFunc.split("/")[1]
-            self.module = modFunc.split("/")[0]
+        self.module = module
 
         # Create the Super node's hierarchy.
         self.hierarchy = nx.Graph()
@@ -31,10 +23,12 @@ class ModuleHierarchy:
         self.hierarchy = nx.bfs_tree(self.graph, self.modFunc, depth_limit=10)
 
     def add_paths(self, df, path_name):
-        for idx, row in df.iterrows():
-            path = row[path_name]
+        print(df[path_name])
+        for idx, path in enumerate(df[path_name].unique()):
+            # path = row[path_name]
+            print(path)
             if isinstance(path, str) and path != 'nan':
-                path = make_tuple(row[path_name])
+                path = make_tuple(path)
                 self.hierarchy.add_path(path)
 
     def generic_map(self, nodes, attr):
@@ -134,32 +128,29 @@ class ModuleHierarchy:
                     run = self.df.loc[self.df['name'] == func]['dataset'].unique()
                 else:
                     func = node
-                    path = self.df.loc[self.df["name"] == func][
-                        "component_path"
-                    ].unique()[0]
-                    run = self.df.loc[self.df['name'] == func]['dataset'].unique()
+                    if(func == self.module):
+                        df = self.df.loc[self.df['module'] == func]
+                    else:
+                        df = self.df.loc[self.df["name"] == func]
+
+                    path = df['component_path'].unique()[0]
+                    level = df['component_level'].unique()[0]
+
+                    run = df['dataset'].unique()
 
                     if type(path) == str:
                         path_tuple = make_tuple(path)
-                        paths.append(
-                            {
-                                "name": func,
-                                "path": path_tuple,
-                                "time (inc)": self.df.loc[self.df["name"] == func][
-                                    "time (inc)"
-                                ].mean(),
-                                "time": self.df.loc[self.df["name"] == func][
-                                    "time"
-                                ].mean(),
-                                "level": int(
-                                    self.df.loc[self.df["name"] == func][
-                                        "component_level"
-                                    ].unique()[0]
-                                )
-                                - 1,
-                                "run": run
-                            }
-                        )
+                    else:
+                        path_tuple = path
+
+                    paths.append({
+                        "name": func,
+                        "path": path_tuple,
+                        "time (inc)": df["time (inc)"].mean(),
+                        "time": df["time"].mean(),
+                        "level": int(df["component_level"].unique()[0]) - 1,
+                        "run": df['dataset'].unique()
+                    })
 
                 existing_nodes[node] = True
 

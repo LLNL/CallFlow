@@ -166,12 +166,10 @@ export default {
             let method = 'hist'
             this.hist_min = 0
             this.hist_max = 0
-            console.log(this.$store.selectedMetric, data)
             for (let d in data) {
                 this.hist_min = Math.min(this.hist_min, data[d][this.$store.selectedMetric]['hist']['y_min'])
                 this.hist_max = Math.max(this.hist_max, data[d][this.$store.selectedMetric]['hist']['y_max'])
             }
-            console.log(this.hist_min, this.hist_max)
             this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
             // this.$parent.$refs.DistColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
 
@@ -180,7 +178,7 @@ export default {
                     .append("defs");
 
                 this.linearGradient = defs.append("linearGradient")
-                    .attr("id", "mean-gradient" + this.nidNameMap[d])
+                    .attr("id", "mean-gradient-" + d)
                     .attr("class", 'mean-gradient')
 
                 this.linearGradient
@@ -301,7 +299,7 @@ export default {
                         return this.$store.color.ensemble
                     }
                     else{
-                        return "url(#mean-gradient" + d.client_idx + ")"
+                        return "url(#mean-gradient-" + d.name + ")"
                     }
                 })
         },

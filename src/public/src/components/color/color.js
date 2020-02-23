@@ -39,7 +39,7 @@ export default class Color {
             pink: '#610121',
             brown: [0.61, 0.46, 0.38],
             gray: [0.73, 0.69, 0.67]
-          };
+        };
 
         // This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
         // JavaScript specs as packaged in the D3 library (d3js.org). Please see license at http://colorbrewer.org/export/LICENSE.txt
@@ -430,7 +430,7 @@ export default class Color {
             this.rankDiffColorScale = chroma.scale(this.colorMap)
                 // .padding(this.colorPadding)
                 .domain([min, max]);
-        } else if(this.option == 'Bin') {
+        } else if (this.option == 'Bin') {
             this.binColorScale = chroma.scale(this.colorMap)
                 // .padding(this.colorPadding)
                 .domain([min, max])
@@ -454,7 +454,7 @@ export default class Color {
             return this.meanDiffColorScale;
         } else if (option == "RankDiff") {
             return this.rankDiffColorScale;
-        }  else if (option == "Bin") {
+        } else if (option == "Bin") {
             return this.binColorScale;
         }
     }
@@ -551,6 +551,19 @@ export default class Color {
             g: parseInt(result[2], 16),
             b: parseInt(result[3], 16),
         } : null;
+    }
+
+    rgbToHex(r, g, b) {
+        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
+    rgbArrayToHex(color_arr){
+        color_arr = color_arr._rgb
+        let r = Math.floor(color_arr[0])
+        let g = Math.floor(color_arr[1])
+        let b = Math.floor(color_arr[2])
+        console.log(r, g, b)
+        return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     }
 
     getCatColor(id) {

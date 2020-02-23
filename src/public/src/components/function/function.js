@@ -68,7 +68,9 @@ export default {
             div.setAttribute('class', 'auxiliary-node')
 
             let checkbox = this.createCheckbox(callsite)
-            let callsite_label = this.createLabel("".concat(this.trunc(callsite.name, 25)))
+
+            let callsite_fullname = this.trunc(callsite.module, 25) + '-' + this.trunc(callsite.name, 25)
+            let callsite_label = this.createNameLabel(callsite)
 
             let time_inc = callsite["mean_time (inc)"].toFixed(2)
             let inclusive_runtime = this.createLabel("".concat("Inclusive Runtime (mean): ", (time_inc * 0.000001).toFixed(2), "s"));
@@ -84,11 +86,26 @@ export default {
             container.appendChild(div)
             let maxHeight = window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight
             document.getElementById('function-overview').style.maxHeight = maxHeight + "px"
-
             document.getElementById('function-overview').append(container);
-
         },
 
+        // UI supportign functions.
+        createNameLabel(callsite) {
+            let id = callsite.module + '-' + callsite.name
+            let name = this.trunc(callsite.module, 25) + '-' + this.trunc(callsite.name, 25)
+            let div = document.createElement('div')
+            let label = document.createElement("div");
+            let textNode = document.createTextNode(name);
+
+            let highlightSVG = document.createElement('svg');
+            highlightSVG.id = id
+            this.addHighlightBox(callsite)
+            label.appendChild(highlightSVG)
+
+            label.appendChild(textNode);
+            div.appendChild(label)
+            return label
+        },
 
         // UI supportign functions.
         createLabel(text) {
@@ -101,6 +118,7 @@ export default {
         },
 
         createCheckbox(callsite) {
+            let self = this
             let div = document.createElement('div')
             let container = document.createElement("div");
             let checkbox = document.createElement("button");
@@ -112,37 +130,30 @@ export default {
             // container.appendChild(textNode)
             checkbox.onclick = function (event) {
                 event.stopPropagation()
-                let modules = this.module
-                let callsite = this.name
+                let thisModule = this.module
+                let thisCallsite = this.name
 
-                this.$socket.emit('dist_hierarchy', {
-                    module: modules,
-                    datasets: this.$store.runNames,
+                self.$socket.emit('reveal_callsite', {
+                    module: thisModule,
+                    callsite: thisCallsite,
+                    dataset: self.$store.selectedTargetDataset
                 })
 
-                this.$socket.emit('ensemble_histogram', {
-                    datasets: this.$store.runNames,
-                    module: modules,
-                    name: callsite
+                EventHandler.$emit('single_histogram', {
+                    datasets: self.$store.selectedTargetDataset,
+                    module: thisModule,
+                    name: thisCallsite
                 })
 
+                EventHandler.$emit('single_scatterplot', {
+                    datasets: self.$store.selectedTargetDataset,
+                    module: thisModule,
+                    name: thisCallsite
+                })
             }
             container.appendChild(checkbox);
             div.appendChild(container)
             return div
-        },
-
-        drawLine() {
-            let div = document.createElement('div')
-            var newLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            newLine.setAttribute('id', 'line2');
-            newLine.setAttribute('x1', '0');
-            newLine.setAttribute('y1', '0');
-            newLine.setAttribute('x2', '200');
-            newLine.setAttribute('y2', '200');
-            newLine.setAttribute("stroke", "black")
-            div.appendChild(newLine);
-            return newLine
         },
 
         trunc(str, n) {
@@ -150,12 +161,34 @@ export default {
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
+
+        addHighlightBox(callsite){
+            let d = ''
+            let id = callsite.module + '-' + callsite.name
+            if(this.$store.selectedMetric == 'Inclusive'){
+                d = callsite['mean_time (inc)']
+            }
+            else if(this.$store.selectedMetric == 'Exclusive'){
+                d = callsite['mean_time']
+            }
+            let color_arr = this.$store.color.getColorByValue(d)
+            let color_rgb = this.$store.color.rgbArrayToHex(color_arr)
+            console.log(d3.select('#' + id))
+            let rect = d3.select('#' + id).append('rect')
+                        .attrs({
+                            width: 20,
+                            height: 20,
+                            fill: color_rgb
+                        })
+            console.log(rect)
+
+        },
+
         addText(text, isBold = false) {
             this.textCount += 1
             this.toolTipText = d3.select('#' + this.id)
                 .data([text])
                 .append('text')
-                // .attr('type', 'checkbox')
                 .style('font-family', 'sans-serif')
                 .style('font-weight', (d, i) => {
                     if (isBold) {
@@ -179,7 +212,7 @@ export default {
                 .style('pointer-events', 'auto')
                 .on('click', (d) => {
                     console.log("Selected split-caller", d)
-                    this.$socket.emit('splitcaller', {
+                    self.$socket.emit('splitcaller', {
                         "name": "split-caller",
                         "dataset1": this.$store.selectedDataset,
                         "split": d
