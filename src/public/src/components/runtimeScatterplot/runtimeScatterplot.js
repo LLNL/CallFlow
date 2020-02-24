@@ -13,6 +13,8 @@
 import tpl from '../../html/runtimeScatterplot/index.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
+import EventHandler from '../EventHandler'
+
 
 export default {
 	name: 'RuntimeScatterplot',
@@ -40,40 +42,92 @@ export default {
 		firstRender: true,
 		scatterHeight: 0,
 		scatterWidth: 0,
-		id: '',
+		id: 'scatterplot-view',
+		svgID: 'scatterplot-view-svg',
 		message: "Correlation View"
 
 	}),
 
-	sockets: {
-		scatterplot(data) {
-			data = JSON.parse(data)
-			console.log("Scatter data: ", data)
-			if (this.firstRender) {
-				this.init()
-			}
-			this.render(data)
-		},
-	},
 
 	mounted() {
-		this.id = 'scatterplot-view-' + this._uid
+		let self = this
+		EventHandler.$on('single_scatterplot', function (data) {
+			self.clear()
+			console.log("Single Scatterplot: ", data['module'])
+			self.render(data['module'])
+		})
 	},
 
 	methods: {
 		init() {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
-			this.width = window.innerWidth * 0.3
-			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.5
+			this.width = window.innerWidth * 0.2
+			this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.5
 
-			this.scatterWidth = this.width - this.margin.right - this.margin.left;
-			this.scatterHeight = this.height - this.margin.top - this.margin.bottom;
+			this.boxWidth = this.width - this.margin.right - this.margin.left;
+			this.boxHeight = this.height - this.margin.top - this.margin.bottom;
 
-			this.svg = d3.select('#' + this.id)
-				.attr('width', this.width - this.margin.left - this.margin.right)
-				.attr('height', this.height - this.margin.top - this.margin.bottom)
+			this.svg = d3.select('#' + this.svgID)
+				.attr('width', this.boxWidth + this.margin.left - this.margin.right)
+				.attr('height', this.boxHeight + this.margin.top - this.margin.bottom)
 				.attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")");
+
+			EventHandler.$emit('single_scatterplot', {
+				module: "Lulesh",
+				name: "main",
+				dataset: this.$store.selectedTargetDataset,
+			})
+		},
+
+		render(module) {
+			if (!this.firstRender) {
+				this.clear()
+			}
+			this.firstRender = false
+			let data = this.$store.modules[this.$store.selectedTargetDataset][module]
+
+			this.process(data)
+			this.xAxis()
+			this.yAxis()
+			this.trendline()
+			this.dots()
+			this.correlationText()
+		},
+
+		process(data) {
+			this.yData = data["time (inc)"]
+			this.xData = data["time"]
+			this.nameData = data['name']
+
+			let temp
+			if (this.$store.selectedScatterMode == 'mean') {
+				console.log('mean')
+				temp = this.scatterMean()
+			}
+			else if (this.$store.selectedScatterMode == 'all') {
+				console.log('all')
+				temp = this.scatterAll()
+			}
+			this.xMin = temp[0]
+			this.yMin = temp[1]
+			this.xMax = temp[2]
+			this.yMax = temp[3]
+			this.xArray = temp[4]
+			this.yArray = temp[5]
+
+			console.log('X-axis:', this.xArray)
+			console.log('Y-axis:', this.yArray)
+
+			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice())
+			this.regressionY = this.leastSquaresCoeff["y_res"];
+			this.corre_coef = this.leastSquaresCoeff["corre_coef"];
+
+			this.xAxisHeight = this.boxWidth - 4 * this.margin.left
+			this.yAxisHeight = this.boxHeight - 4 * this.margin.left
+			console.log(this.xAxisHeight, this.yAxisHeight)
+			this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.xAxisHeight])
+			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.yAxisHeight, 0])
 		},
 
 		scatterAll() {
@@ -85,19 +139,25 @@ export default {
 			let yMax = 0
 
 			for (const [idx, d] of Object.entries(this.yData)) {
-				for (let rank = 0; rank < d.length; rank += 1) {
-					yMin = Math.min(yMin, d[rank])
-					yMax = Math.max(yMax, d[rank])
-					yArray.push(d[rank])
-				}
+				//for (let rank = 0; rank < d.length; rank += 1) {
+				// yMin = Math.min(yMin, d[rank])
+				// yMax = Math.max(yMax, d[rank])
+				// yArray.push(d[rank])
+				// }
+				yMin = Math.min(yMin, d)
+				yMax = Math.max(yMax, d)
+				yArray.push(d)
 			}
 
 			for (const [idx, d] of Object.entries(this.xData)) {
-				for (let rank = 0; rank < d.length; rank += 1) {
-					xMin = Math.min(xMin, d[rank]);
-					xMax = Math.max(xMax, d[rank]);
-					xArray.push(d[rank])
-				}
+				// for (let rank = 0; rank < d.length; rank += 1) {
+				// xMin = Math.min(xMin, d[rank]);
+				// xMax = Math.max(xMax, d[rank]);
+				// xArray.push(d[rank])
+				// }
+				xMin = Math.min(xMin, d)
+				xMax = Math.max(xMax, d)
+				xArray.push(d)
 			}
 
 			return [xMin, yMin, xMax, yMax, xArray, yArray]
@@ -208,55 +268,30 @@ export default {
 
 		},
 
-		process(data) {
-			this.yData = data["time (inc)"]
-			this.xData = data["time"]
-			this.nameData = data['name']
-
-			let temp
-			if (this.$store.selectedScatterMode == 'mean') {
-				console.log('mean')
-				temp = this.scatterMean()
-			}
-			else if (this.$store.selectedScatterMode == 'all') {
-				console.log('all')
-				temp = this.scatterAll()
-			}
-			this.xMin = temp[0]
-			this.yMin = temp[1]
-			this.xMax = temp[2]
-			this.yMax = temp[3]
-			this.xArray = temp[4]
-			this.yArray = temp[5]
-
-			console.log('X-axis:', this.xArray)
-			console.log('Y-axis:', this.yArray)
-
-			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice())
-			this.regressionY = this.leastSquaresCoeff["y_res"];
-			this.corre_coef = this.leastSquaresCoeff["corre_coef"];
-
-			this.xAxisHeight = this.scatterWidth - 4 * this.margin.left
-			this.yAxisHeight = this.scatterHeight - 4 * this.margin.left
-			this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.xAxisHeight])
-			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.yAxisHeight, 0])
-		},
-
-		xAxis(){
+		xAxis() {
 			let self = this
 			const xFormat = d3.format('0.1s');
-			var xAxis = d3.axisBottom(self.xScale)
+			var xAxis = d3.axisBottom(this.xScale)
 				.ticks(5)
-				.tickFormat( (d, i) => {
+				.tickFormat((d, i) => {
 					let temp = d;
-                    if (i % 2 == 0 ) {
-                        let value = temp * 0.000001
-                        return `${xFormat(value)}s`
-                    }
-                    return '';
+					if (i % 2 == 0) {
+						let value = temp * 0.000001
+						return `${xFormat(value)}s`
+					}
+					return '';
 				});
 
-			let xAxisHeightCorrected = self.yAxisHeight //this.margin.left
+			this.svg.append('text')
+				.attr('class', 'axisLabel')
+				.attr('x', self.boxWidth)
+				.attr('y', self.yAxisHeight - this.margin.top)
+				.style('font-size', '10px')
+				.style('text-anchor', 'end')
+				.text("Exclusive Runtime")
+
+
+			let xAxisHeightCorrected = this.yAxisHeight //this.margin.left
 			var xAxisLine = this.svg.append('g')
 				.attr('class', 'axis')
 				.attr('id', 'xAxis')
@@ -278,27 +313,19 @@ export default {
 				.style('font-weight', 'lighter');
 		},
 
-		yAxis(){
+		yAxis() {
 			let self = this
 			const yFormat = d3.format('0.2s')
 			let yAxis = d3.axisLeft(self.yScale)
 				.ticks(5)
 				.tickFormat((d, i) => {
 					let temp = d;
-                    if (i % 2 == 0) {
-                        let value = temp * 0.000001
-                        return `${yFormat(value)}s`
-                    }
-                    return '';
+					if (i % 2 == 0) {
+						let value = temp * 0.000001
+						return `${yFormat(value)}s`
+					}
+					return '';
 				});
-
-			this.svg.append('text')
-				.attr('class', 'axisLabel')
-				.attr('x', self.scatterWidth)
-				.attr('y', self.yAxisHeight - this.margin.top)
-				.style('font-size', '10px')
-				.style('text-anchor', 'end')
-				.text("Exclusive Runtime")
 
 			var yAxisLine = this.svg.append('g')
 				.attr('id', 'yAxis')
@@ -349,7 +376,7 @@ export default {
 				.style("opacity", 0.5);
 		},
 
-		dots(){
+		dots() {
 			let self = this
 			this.svg.selectAll('.dot')
 				.data(this.yArray)
@@ -357,39 +384,26 @@ export default {
 				.attr('class', 'dot')
 				.attr('r', 5)
 				.attr('cx', function (d, i) {
-					return self.xScale(d) + 3 * self.margin.left;
+					return self.xScale(self.xArray[i]) + 3 * self.margin.left;
 				})
 				.attr('cy', function (d, i) {
-					return self.yScale(d);
+					return self.yScale(self.yArray[i]);
 				})
 				.style('fill', "#4682b4")
 		},
 
-		correlationText(){
+		correlationText() {
 			let self = this
 			let decimalFormat = d3.format("0.2f");
 			this.svg.append('g').append('text')
 				.attr('class', 'text')
 				.text("corr-coef: " + decimalFormat(this.corre_coef))
 				.attr("x", function (d) {
-					return self.scatterWidth - 100;
+					return self.boxWidth - self.width / 3;
 				})
 				.attr("y", function (d) {
-					return 10;
+					return 20;
 				});
-		},
-
-		render(data) {
-			if (!this.firstRender) {
-				this.clear()
-			}
-			this.firstRender = false
-			this.process(data)
-			this.xAxis()
-			this.yAxis()
-			this.trendline()
-			this.dots()
-			this.correlationText()
 		},
 
 		setContainerWidth(newWidth) {

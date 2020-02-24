@@ -121,7 +121,7 @@ export default {
                     this.$store.selectedModule = d.id
                     let selectedModule = d.id
 
-                    this.$socket.emit('scatterplot', {
+                    EventHandler.$emit('single_scatterplot', {
                         module: this.$store.selectedModule,
                         dataset1: this.$store.selectedDataset,
                     })
@@ -131,7 +131,7 @@ export default {
                         dataset: this.$store.selectedDataset,
                     })
 
-                    this.$socket.emit('function', {
+                    EventHandler.$emit('function', {
                         module: this.$store.selectedModule,
                         dataset1: this.$store.selectedDataset,
                     })

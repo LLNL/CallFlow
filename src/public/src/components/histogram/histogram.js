@@ -40,6 +40,7 @@ export default {
         dataset_index: [],
         histogramSVG: null,
         id: 'single-histogram-view',
+        svgID: 'single-histogram-view-svg',
         firstRender: true,
         xVals: [],
         freq: [],
@@ -70,7 +71,7 @@ export default {
             this.histogramOffset = Math.floor(this.boxHeight / 3);
             this.histogramHeight = this.boxHeight - this.histogramOffset;
             this.histogramWidth = this.boxWidth;
-            this.svg = d3.select('#' + this.id)
+            this.svg = d3.select('#' + this.svgID)
                 .attrs({
                     "width": this.boxWidth + this.padding.right + this.padding.left,
                     "height": this.boxHeight + this.padding.top + this.padding.bottom,
