@@ -92,8 +92,8 @@ class SingleCallFlow:
         self.config.max_excTime = {}
         self.config.min_incTime = {}
         self.config.min_excTime = {}
-        self.config.numbOfRanks = {}
-        max_inclusvie_time = 0
+        self.config.numOfRanks = {}
+        max_inclusive_time = 0
         max_exclusive_time = 0
         min_inclusive_time = 0
         min_exclusive_time = 0
@@ -103,7 +103,8 @@ class SingleCallFlow:
                 self.config.max_excTime[state] = getMaxExcTime(self.states[state])
                 self.config.min_incTime[state] = getMinIncTime(self.states[state])
                 self.config.min_excTime[state] = getMinExcTime(self.states[state])
-                # self.config.numbOfRanks[state] = self.config.nop
+                self.config.numOfRanks[state] = len(self.states[state].df['rank'].unique())
+                print(self.config.numOfRanks)
                 max_exclusive_time = max(
                     self.config.max_excTime[state], max_exclusive_time
                 )
@@ -116,10 +117,12 @@ class SingleCallFlow:
                 min_inclusive_time = min(
                     self.config.min_incTime[state], min_inclusive_time
                 )
-        self.config.max_incTime["ensemble"] = max_inclusvie_time
+        self.config.max_incTime["ensemble"] = max_inclusive_time
         self.config.max_excTime["ensemble"] = max_exclusive_time
         self.config.min_incTime["ensemble"] = min_inclusive_time
         self.config.min_excTime["ensemble"] = min_exclusive_time
+
+        print(self.config)
 
     def request(self, action):
         log.info("[Single Mode]", action)

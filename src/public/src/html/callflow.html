@@ -150,7 +150,7 @@
 	<v-content class="pt-auto">
 		<v-layout v-show="selectedFormat == 'Callgraph' && selectedMode == 'Single'">
 			<splitpanes id="callgraph-dashboard" class="default-theme">
-				<splitpanes horizontal :splitpanes-size="20">
+				<splitpanes horizontal :splitpanes-size="25">
 					<span>
 						<SingleHistogram ref="SingleHistogram" />
 					</span>
@@ -158,7 +158,7 @@
 						<RuntimeScatterplot ref="RuntimeScatterplot" />
 					</span>
 				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="60">
+				<splitpanes horizontal :splitpanes-size="55">
 					<span>
 						<SuperGraph ref="SuperGraph" />
 					</span>

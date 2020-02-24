@@ -40,11 +40,12 @@ export default {
 		yMin: 0,
 		yMax: 0,
 		firstRender: true,
-		scatterHeight: 0,
-		scatterWidth: 0,
+		boxHeight: 0,
+		boxWidth: 0,
 		id: 'scatterplot-view',
 		svgID: 'scatterplot-view-svg',
-		message: "Correlation View"
+		message: "Runtime Correlation",
+		boxOffset: 20,
 
 	}),
 
@@ -62,7 +63,7 @@ export default {
 		init() {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
-			this.width = window.innerWidth * 0.2
+			this.width = window.innerWidth * 0.25
 			this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.5
 
 			this.boxWidth = this.width - this.margin.right - this.margin.left;
@@ -116,8 +117,8 @@ export default {
 			this.xArray = temp[4]
 			this.yArray = temp[5]
 
-			console.log('X-axis:', this.xArray)
-			console.log('Y-axis:', this.yArray)
+			// console.log('X-axis:', this.xArray)
+			// console.log('Y-axis:', this.yArray)
 
 			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice())
 			this.regressionY = this.leastSquaresCoeff["y_res"];
@@ -283,15 +284,15 @@ export default {
 				});
 
 			this.svg.append('text')
-				.attr('class', 'axisLabel')
+				.attr('class', 'axis-label')
 				.attr('x', self.boxWidth)
 				.attr('y', self.yAxisHeight - this.margin.top)
-				.style('font-size', '10px')
+				.style('font-size', '12px')
 				.style('text-anchor', 'end')
 				.text("Exclusive Runtime")
 
 
-			let xAxisHeightCorrected = this.yAxisHeight //this.margin.left
+			let xAxisHeightCorrected = this.yAxisHeight
 			var xAxisLine = this.svg.append('g')
 				.attr('class', 'axis')
 				.attr('id', 'xAxis')
@@ -302,13 +303,15 @@ export default {
 				.style("fill", "none")
 				.style("stroke", "black")
 				.style("stroke-width", "1px");
+
 			xAxisLine.selectAll('line')
 				.style("fill", "none")
 				.style("stroke", "#000")
 				.style("stroke-width", "1px")
 				.style("opacity", 0.5);
+
 			xAxisLine.selectAll("text")
-				.style('font-size', '10px')
+				.style('font-size', '12px')
 				.style('font-family', 'sans-serif')
 				.style('font-weight', 'lighter');
 		},
@@ -325,7 +328,7 @@ export default {
 						return `${yFormat(value)}s`
 					}
 					return '';
-				});
+				})
 
 			var yAxisLine = this.svg.append('g')
 				.attr('id', 'yAxis')
@@ -334,25 +337,27 @@ export default {
 				.call(yAxis)
 
 			this.svg.append("text")
-				.attr('class', 'axisLabel')
+				.attr('class', 'axis-label')
 				.attr('transform', 'rotate(-90)')
 				.attr('x', 0)
 				.attr('y', 4 * this.margin.left)
 				.style("text-anchor", "end")
-				.style("font-size", "10px")
+				.style("font-size", "12px")
 				.text("Inclusive Runtime")
 
 			yAxisLine.selectAll('path')
 				.style("fill", "none")
 				.style("stroke", "black")
 				.style("stroke-width", "1px");
+
 			yAxisLine.selectAll('line')
 				.style("fill", "none")
 				.style("stroke", "#000")
 				.style("stroke-width", "1px")
 				.style("opacity", 0.5);
+
 			yAxisLine.selectAll("text")
-				.style('font-size', '10px')
+				.style('font-size', '12px')
 				.style('font-family', 'sans-serif')
 				.style('font-weight', 'lighter');
 		},
@@ -367,9 +372,10 @@ export default {
 					return self.yScale(self.yArray[i]);
 				});
 
-			var trendline = this.svg.append('g').append("path")
+			var trendline = this.svg.append('g')
+				.attr('class', 'trend-line')
+				.append("path")
 				.datum(this.regressionY)
-				.attr("class", "res_line")
 				.attr("d", line)
 				.style("stroke", "black")
 				.style("stroke-width", "1px")
@@ -414,13 +420,9 @@ export default {
 		clear() {
 			d3.selectAll('.dot').remove()
 			d3.selectAll('.axis').remove()
-			d3.selectAll('.res_line').remove()
-			d3.selectAll('.axisLabel').remove()
+			d3.selectAll('.trend-line').remove()
+			d3.selectAll('.axis-label').remove()
 			d3.selectAll('.text').remove()
-		},
-
-		update(data) {
-
 		},
 	}
 }
