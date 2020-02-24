@@ -562,7 +562,6 @@ export default class Color {
         let r = Math.floor(color_arr[0])
         let g = Math.floor(color_arr[1])
         let b = Math.floor(color_arr[2])
-        console.log(r, g, b)
         return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     }
 

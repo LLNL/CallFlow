@@ -40,9 +40,11 @@ export default {
                 this.firstRender = false
             }
             this.number_of_callsites = Object.keys(this.$store.callsites[this.$store.selectedTargetDataset]).length
+            let index = 1
             for (const [idx, callsite] of Object.entries(this.$store.callsites[this.$store.selectedTargetDataset])) {
-                this.ui(callsite.name)
+                this.ui(callsite, index)
                 // this.visualize(callsite.name)
+                index += 1
             }
         },
 
@@ -58,9 +60,7 @@ export default {
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
-        ui(callsite_name) {
-            let callsite = this.$store.callsites[this.$store.selectedTargetDataset][callsite_name]
-
+        ui(callsite, idx) {
             let container = document.createElement('div')
             let div = document.createElement('div')
             div.style.width = (document.getElementById('function-overview').clientWidth - 20) + 'px'
@@ -69,9 +69,7 @@ export default {
 
             let checkbox = this.createCheckbox(callsite)
 
-            let callsite_fullname = this.trunc(callsite.module, 25) + '-' + this.trunc(callsite.name, 25)
-            let callsite_label = this.createNameLabel(callsite)
-
+            let callsite_label = this.createNameLabel(callsite, idx)
             let time_inc = callsite["mean_time (inc)"].toFixed(2)
             let inclusive_runtime = this.createLabel("".concat("Inclusive Runtime (mean): ", (time_inc * 0.000001).toFixed(2), "s"));
             let time = callsite["mean_time"].toFixed(2)
@@ -90,9 +88,9 @@ export default {
         },
 
         // UI supportign functions.
-        createNameLabel(callsite) {
+        createNameLabel(callsite, idx) {
             let id = callsite.module + '-' + callsite.name
-            let name = this.trunc(callsite.module, 25) + '-' + this.trunc(callsite.name, 25)
+            let name = idx + '. ' + this.trunc(callsite.module, 25) + '-' + this.trunc(callsite.name, 25)
             let div = document.createElement('div')
             let label = document.createElement("div");
             let textNode = document.createTextNode(name);
@@ -173,15 +171,12 @@ export default {
             }
             let color_arr = this.$store.color.getColorByValue(d)
             let color_rgb = this.$store.color.rgbArrayToHex(color_arr)
-            console.log(d3.select('#' + id))
             let rect = d3.select('#' + id).append('rect')
                         .attrs({
                             width: 20,
                             height: 20,
                             fill: color_rgb
                         })
-            console.log(rect)
-
         },
 
         addText(text, isBold = false) {

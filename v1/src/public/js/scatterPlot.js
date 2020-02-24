@@ -20,7 +20,7 @@ function Scatter(args){
 		xData = args.xData,
 		label = args.label,
 		sort =  args.sort,
-		clickCallBack = args.clickCallBack;	
+		clickCallBack = args.clickCallBack;
 
 	// console.log("in scatter", label, sort);
 
@@ -75,12 +75,12 @@ function Scatter(args){
 					.orient('bottom')
 					.ticks(5)
 					// .tickFormat(d3.formatPrefix(".1", 1e6));
-					.tickFormat(d3.format(".1e"));	
+					.tickFormat(d3.format(".1e"));
 		var yAxis = d3.svg.axis()
 					.scale(yScale)
 					.orient('left')
 					.ticks(5)
-					.tickFormat(d3.format(".1e"));		
+					.tickFormat(d3.format(".1e"));
 
 		var xAxisLine = svg.append('g')
 						.attr('class', 'xAxis')
@@ -129,14 +129,14 @@ function Scatter(args){
 	        .attr("d", line)
 	        .style("stroke", "black")
 			.style("stroke-width", "1px")
-			.style("opacity", 0.5);	
+			.style("opacity", 0.5);
 
 		var coefText = svg.append('g');
 		var decimalFormat = d3.format("0.2f");
 		coefText.append('text')
 				.text("corr-coef: " + decimalFormat(corre_coef))
 				.attr("x", function(d) {return width - 100;})
-				.attr("y", function(d) {return 10;});	
+				.attr("y", function(d) {return 10;});
 
         xAxisLine.selectAll('path')
 				.style("fill", "none")
@@ -150,7 +150,7 @@ function Scatter(args){
         xAxisLine.selectAll("text")
 				.style('font-size', '10px')
 				.style('font-family', 'sans-serif')
-				.style('font-weight', 'lighter');		
+				.style('font-weight', 'lighter');
 
         yAxisLine.selectAll('path')
 				.style("fill", "none")
@@ -164,7 +164,7 @@ function Scatter(args){
         yAxisLine.selectAll("text")
 				.style('font-size', '10px')
 				.style('font-family', 'sans-serif')
-				.style('font-weight', 'lighter');						
+				.style('font-weight', 'lighter');
 	}
 
 	visualize();
@@ -217,7 +217,7 @@ function Scatter(args){
 
         var b1 = term1 / term2;
         var b0 = y_mean - (b1 * x_mean);
-        // perform regression 
+        // perform regression
 
         yhat = [];
         // fit line using coeffs
@@ -229,7 +229,7 @@ function Scatter(args){
         var xy = [];
 	    var x2 = [];
 	    var y2 = [];
-	  
+
 	    for(var i=0; i<n; i++) {
 	        xy.push(xSeries[i] * ySeries[i]);
 	        x2.push(xSeries[i] * xSeries[i]);
@@ -241,7 +241,7 @@ function Scatter(args){
 	    var sum_xy = 0;
 	    var sum_x2 = 0;
 	    var sum_y2 = 0;
-	  
+
 	    for(var i=0; i< n; i++) {
 	        sum_x += xSeries[i];
 	        sum_y += ySeries[i];

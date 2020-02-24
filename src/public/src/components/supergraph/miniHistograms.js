@@ -54,7 +54,6 @@ export default {
             for (const [idx, callsite] of Object.entries(graph.nodes)) {
                 let callsite_module = callsite[this.$store.selectedTargetDataset].module
                 let callsite_name = callsite[this.$store.selectedTargetDataset].name
-                console.log(callsite_name, callsite_module)
                 this.render(callsite_name, callsite_module)
             }
         },
@@ -84,9 +83,7 @@ export default {
         },
 
         render(callsite_name, callsite_module) {
-            console.log(this.nodeMap, callsite_name)
             let node_dict = this.nodes[this.nodeMap[callsite_module]]
-            console.log(node_dict)
             let target_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module]
 
             this.histogram(target_callsite_data, node_dict, 'target')

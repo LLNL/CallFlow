@@ -15,7 +15,7 @@ import tpl from '../html/callflow.html'
 // Single mode imports
 import SuperGraph from './supergraph/supergraph'
 import CCT from './cct/cct'
-import Scatterplot from './runtimeScatterplot/runtimeScatterplot'
+import RuntimeScatterplot from './runtimeScatterplot/runtimeScatterplot'
 import SingleHistogram from './histogram/histogram'
 import Function from './function/function'
 
@@ -41,7 +41,7 @@ export default {
 		VueSlider,
 		SuperGraph,
 		CCT,
-		Scatterplot,
+		RuntimeScatterplot,
 		Function,
 		SingleHistogram,
 		ModuleHierarchy,
@@ -275,9 +275,9 @@ export default {
 			console.log("Data for", this.selectedFormat, ": ", data)
 
 			this.$refs.SuperGraph.init(data)
-			this.$refs.Scatterplot.init()
 			this.$refs.SingleHistogram.init()
 			this.$refs.Function.init()
+			this.$refs.RuntimeScatterplot.init()
 		},
 
 		// Fetch aggregated graph (Super graph) for distribution mode.
