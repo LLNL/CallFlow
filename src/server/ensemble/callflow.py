@@ -91,7 +91,7 @@ class EnsembleCallFlow:
         self.config.max_excTime = {}
         self.config.min_incTime = {}
         self.config.min_excTime = {}
-        self.config.numbOfRanks = {}
+        self.config.numOfRanks = {}
         max_inclusvie_time = 0
         max_exclusive_time = 0
         min_inclusive_time = 0
@@ -102,7 +102,7 @@ class EnsembleCallFlow:
                 self.config.max_excTime[state] = getMaxExcTime(self.states[state])
                 self.config.min_incTime[state] = getMinIncTime(self.states[state])
                 self.config.min_excTime[state] = getMinExcTime(self.states[state])
-                # self.config.numbOfRanks[state] = self.config.nop
+                self.config.numOfRanks[state] = len(self.states[state].df['rank'].unique())
                 max_exclusive_time = max(
                     self.config.max_excTime[state], max_exclusive_time
                 )

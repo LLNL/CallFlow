@@ -35,7 +35,7 @@ export default {
             top: 10,
             right: 10,
             bottom: 10,
-            left: 20,
+            left: 10,
         },
         dataset_index: [],
         histogramSVG: null,
@@ -46,7 +46,9 @@ export default {
         freq: [],
         selectedColorBy: 'Inclusive',
         MPIcount: 0,
-        message: "MPI Distribution"
+        message: "MPI Distribution",
+        axisLabelFactor: 2.5,
+        boxOffset: 20
     }),
 
     mounted() {
@@ -63,11 +65,11 @@ export default {
             this.toolbarHeight = document.getElementById('toolbar').clientHeight
             this.footerHeight = document.getElementById('footer').clientHeight
             this.footerHeight = document.getElementById('footer').clientHeight
-            this.width = window.innerWidth * 0.2
+            this.width = window.innerWidth * 0.25
             this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.5
 
-            this.boxWidth = this.width - this.padding.right - this.padding.left - 20;
-            this.boxHeight = this.height - this.padding.top - this.padding.bottom - 20;
+            this.boxWidth = this.width - this.padding.right - this.padding.left - this.boxOffset;
+            this.boxHeight = this.height - this.padding.top - this.padding.bottom ;
             this.histogramOffset = Math.floor(this.boxHeight / 3);
             this.histogramHeight = this.boxHeight - this.histogramOffset;
             this.histogramWidth = this.boxWidth;
@@ -75,7 +77,8 @@ export default {
                 .attrs({
                     "width": this.boxWidth + this.padding.right + this.padding.left,
                     "height": this.boxHeight + this.padding.top + this.padding.bottom,
-                    "transform": `translate(${this.padding.left}, ${this.padding.top})`
+                    'transform': "translate(" + this.padding.left + "," + this.padding.top + ")"
+
                 })
 
             EventHandler.$emit('single_histogram', {
@@ -101,18 +104,18 @@ export default {
             this.target_axis_x = targetTemp[3]
             this.target_binContainsProcID = targetTemp[3]
 
-            // this.$refs.ToolTip.init(this.id)
+            // this.$refs.ToolTip   .init(this.id)
 
-            // console.log(this.xVals, this.histogramWidth)
+            console.log(this.xVals, this.histogramWidth)
             this.histogramXScale = d3.scaleBand()
                 .domain(this.xVals)
                 .range(["#c6dbef", "#6baed6", "#2171b5", "#084594"])
-                .rangeRound([0, this.histogramWidth])
+                .rangeRound([0, this.histogramWidth - this.padding.left])
 
             // if (d3.max(this.freq) < 50) {
             this.histogramYScale = d3.scaleLinear()
                 .domain([0, d3.max(this.freq)])
-                .range([this.histogramHeight, 0])
+                .range([this.histogramHeight - this.padding.top, 0])
             this.logScaleBool = false;
             // } else {
             // this.histogramYScale = d3.scaleLog()
@@ -128,6 +131,7 @@ export default {
             d3.selectAll('.single-histogram-target').remove()
             d3.select('.x-axis').remove()
             d3.select('.y-axis').remove()
+            d3.selectAll('.histogram-axis-label').remove()
             d3.selectAll('.binRank').remove()
             d3.selectAll('.lineRank').remove()
             d3.selectAll('.target_lineRank').remove()
@@ -137,19 +141,10 @@ export default {
 
         visualize() {
             this.targetBars();
-            this.axis();
-            // this.rankLineScale();
+            this.xAxis()
+            this.yAxis()
+            this.rankLineScale();
             // this.brushes()
-        },
-
-        setContainerWidth(newWidth) {
-            this.containerWidth = newWidth
-            this.width = this.containterWidth - this.margin.left - this.margin.right
-        },
-
-        setContainerHeight(newHeight) {
-            this.containerHeight = newHeight
-            this.height = this.containerHeight - this.margin.top - this.margin.bottom
         },
 
         array_unique(arr) {
@@ -194,7 +189,7 @@ export default {
                 }
                 binContainsProcID[pos].push(data['rank'][idx]);
             });
-            // console.log(attr_data['x'], attr_data['y'], axis_x, binContainsProcID)
+            console.log(attr_data['x'], attr_data['y'], axis_x, binContainsProcID)
             return [attr_data['x'], attr_data['y'], axis_x, binContainsProcID];
         },
 
@@ -270,16 +265,16 @@ export default {
                 .append('rect')
                 .attr('class', 'single-histogram-bar single-target')
                 .attr('x', (d, i) => {
-                    return this.padding.left + this.histogramXScale(this.targetXVals[i])
+                    return this.histogramXScale(this.targetXVals[i]) + this.axisLabelFactor*this.padding.left
                 })
                 .attr('y', (d, i) => {
-                    return this.histogramYScale(d)
+                    return Math.floor(this.histogramYScale(d))
                 })
                 .attr('width', (d) => {
                     return this.histogramXScale.bandwidth()
                 })
                 .attr('height', (d) => {
-                    return Math.abs(this.histogramHeight - this.histogramYScale(d));
+                    return Math.floor(this.histogramHeight - this.histogramYScale(d)) - this.padding.top;
                 })
                 .attr('fill', this.$store.color.target)
                 .attr('opacity', 1)
@@ -305,59 +300,35 @@ export default {
         },
 
         /* Axis for the histogram */
-        axis() {
+        xAxis() {
             const xFormat = d3.format('.1e');
             const xAxis = d3.axisBottom(this.histogramXScale)
                 .ticks(this.MPIcount)
                 .tickFormat((d, i) => {
                     let temp = this.axis_x[i];
-                    if (i % 2 == 0) {
+                    if (i % 2 == 1 || i == this.MPIcount.length - 1) {
                         let value = temp * 0.000001
                         return `${value.toFixed(2)}s`;
                     }
                 });
 
-            const yAxis = d3.axisLeft(this.histogramYScale)
-                .ticks(this.freq.length)
-                .tickFormat((d, i) => {
-                    if((d*10) % 10 == 0)
-                        return d
-                    else{
-                        return ''
-                    }
-                })
+            this.svg.append('text')
+                .attr('class', 'histogram-axis-label')
+                .attr('x', this.boxWidth)
+                .attr('y', this.histogramHeight - this.padding.top* this.axisLabelFactor)
+                .style('font-size', '12px')
+                .style('text-anchor', 'end')
+                .text(this.$store.selectedMetric + " Runtime")
 
             const xAxisLine = this.svg.append('g')
                 .attr('class', 'x-axis')
-                .attr('transform', `translate(${this.padding.left},${this.histogramHeight})`)
+                .attr('transform', `translate(${this.axisLabelFactor*this.padding.left},${this.histogramHeight - this.padding.top})`)
                 .call(xAxis)
-
-            const xAxisLineText = xAxisLine.append('text')
-                // .attr('transform', 'rotate(-90)')
-                .attr('y', 0)
-                .attr('x', 0)
-                .attr('dy', '.71em')
-                .style('text-anchor', 'end')
-                .text(this.$store.selectedMetric + ' Runtime');
-
-
-            const yAxisLine = this.svg.append('g')
-                .attr('class', 'y-axis')
-                .attr('transform', `translate(${this.padding.left},${0})`)
-                .call(yAxis)
-
-            const yAxisLineText = yAxisLine.append('text')
-                .attr('transform', 'rotate(-90)')
-                .attr('y', 0)
-                .attr('x', 0)
-                .attr('dy', '.71em')
-                .style('text-anchor', 'end')
-                .text('Frequency');
 
             xAxisLine.selectAll('path')
                 .style('fill', 'none')
                 .style('stroke', 'black')
-                .style('stroke-width', '1px');
+                .style('stroke-width', '1px')
 
             xAxisLine.selectAll('line')
                 .style('fill', 'none')
@@ -366,9 +337,31 @@ export default {
                 .style('opacity', 0.5);
 
             xAxisLine.selectAll('text')
-                .style('font-size', '9px')
+                .style('font-size', '12px')
                 .style('font-family', 'sans-serif')
-                .style('font-weight', 'lighter');
+                .style('font-weight', 'lighter')
+        },
+
+        yAxis() {
+            const yAxis = d3.axisLeft(this.histogramYScale)
+                .ticks(this.freq.length)
+                .tickFormat((d, i) => {
+                    return d
+                })
+
+            this.svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('class', 'histogram-axis-label')
+                .attr('y', this.axisLabelFactor*2*this.padding.left)
+                .attr('x', -this.padding.top)
+                .style('font-size', '12px')
+                .style('text-anchor', 'end')
+                .text("Frequency")
+
+            const yAxisLine = this.svg.append('g')
+                .attr('class', 'y-axis')
+                .attr('transform', `translate(${this.axisLabelFactor*this.padding.left},${0})`)
+                .call(yAxis)
 
             yAxisLine.selectAll('path')
                 .style('fill', 'none')
@@ -382,17 +375,22 @@ export default {
                 .style('opacity', 0.2);
 
             yAxisLine.selectAll('text')
-                .style('font-size', '9px')
+                .style('font-size', '12px')
                 .style('font-family', 'sans-serif')
                 .style('font-weight', 'lighter');
         },
 
         rankLineScale() {
-            const ranklinescale = d3.scaleLinear().domain([0, this.MPIcount]).range([0, this.histogramWidth]);
-            this.freq.forEach((fregVal, idx) => {
+            console.log(this.$store.numOfRanks[this.$store.selectedTargetDataset])
+            const ranklinescale = d3.scaleLinear()
+                .domain([0, parseInt(this.$store.numOfRanks[this.$store.selectedTargetDataset])])
+                .range([0, this.boxWidth]);
+            console.log(this.binContainsProcID)
+            this.freq.forEach((freqVal, idx) => {
                 const processIDs = this.binContainsProcID[idx];
+                console.log(processIDs)
                 if (processIDs) {
-                    const rankLinesG = this.histogramSVG.append('g')
+                    const rankLinesG = this.svg.append('g')
                         .attr('class', `binRank bin_${idx}`)
                         .attr('data-name', idx);
 
@@ -401,7 +399,7 @@ export default {
                     const groupArray = this.groupProcess(processIDs).array;
                     const binWidth = this.histogramXScale.bandwidth();
                     const widthPerRank = binWidth / processIDs.length;
-                    const binLocation = this.histogramXScale(idx);
+                    const binLocation = this.histogramXScale(this.xVals[idx]);
                     let cumulativeBinSpace = 0;
 
                     groupArray.forEach((group) => {
@@ -409,13 +407,13 @@ export default {
                         if (group.length == 1) {
                             var start = group[0];
                             var end = start + 1;
-                            var topX1 = cumulativeBinSpace + binLocation;
+                            var topX1 = cumulativeBinSpace + binLocation
                             var topX2 = cumulativeBinSpace + binLocation + (1) * widthPerRank;
 
                             var botX3 = ranklinescale(start);
                             var botX4 = ranklinescale(start);
 
-                            var topY = this.boxHeight - this.histogramOffset;
+                            var topY = this.boxHeight - this.histogramOffset
                             var botY = this.boxHeight;
                             cumulativeBinSpace += (1) * widthPerRank;
 
@@ -443,6 +441,7 @@ export default {
                                 'L ' + botX4 + ' ' + botY +
                                 'L ' + botX3 + ' ' + botY;
                         }
+                        console.log(line)
 
                         rankLinesG.append('path')
                             .attr('d', line)
@@ -450,46 +449,54 @@ export default {
                             .style('fill', (d) => {
                                 return "grey";
                             })
-                            .style('fill-opacity', 0.4);
+                            .style('fill-opacity', 0.4)
+                            .attr('transform', `translate(${this.axisLabelFactor*this.padding.left},${-this.padding.bottom})`)
                     });
                 }
             });
 
             const rankLineAxis = d3.axisBottom(ranklinescale)
-                .ticks(10)
-                .tickFormat((d, i) => d);
+                .ticks(this.$store.selectedBinCount)
+                .tickFormat((d, i) => {
+                    if(i% 10 == 0 || i == this.$store.numOfRanks[this.$store.selectedTargetDataset] - 1){
+                        return d
+                    }
+                });
 
-            const rankLineAxisLine = this.histogramSVG.append('g')
-                .attr('class', 'x axis')
-                .attr('transform', `translate(0,${this.boxHeight - 0})`)
-                .call(rankLineAxis);
-
-            const rankLineAxisLineText = rankLineAxisLine.append('text')
-                // .attr("transform", "rotate(-90)")
-                .attr('y', 20)
-                .attr('x', 25)
-                .attr('dy', '.71em')
+            this.svg.append('text')
+                .attr('class', 'histogram-axis-label')
+                .attr('x', 0)
+                .attr('y', this.boxHeight)
+                .style('font-size', '12px')
                 .style('text-anchor', 'end')
                 .text('MPI Ranks');
+
+            const rankLineAxisLine = this.svg.append('g')
+                .attr('class', 'histogram-rank-axis')
+                .attr('id', 'rankAxis')
+                .attr('transform', `translate(${this.axisLabelFactor*this.padding.left},${this.boxHeight - this.padding.bottom})`)
+                .call(rankLineAxis);
 
             rankLineAxisLine.selectAll('path')
                 .style('fill', 'none')
                 .style('stroke', 'black')
                 .style('stroke-width', '1px');
+
             rankLineAxisLine.selectAll('line')
                 .style('fill', 'none')
                 .style('stroke', '#000')
                 .style('stroke-width', '1px')
                 .style('opacity', 0.5);
+
             rankLineAxisLine.selectAll('text')
-                .style('font-size', '9px')
+                .style('font-size', '12px')
                 .style('font-family', 'sans-serif')
                 .style('font-weight', 'lighter');
         },
 
         brushes() {
             this.brushdata = []
-            this.brushSVG = this.histogramSVG
+            this.brushSVG = this.svg
                 .append('svg')
 
             this.brush = d3.brushX()

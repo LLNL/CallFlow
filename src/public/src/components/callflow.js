@@ -178,7 +178,7 @@ export default {
 			this.$store.minExcTime = data['min_excTime']
 			this.$store.maxIncTime = data['max_incTime']
 			this.$store.minIncTime = data['min_incTime']
-			this.$store.numOfRanks = data['numbOfRanks']
+			this.$store.numOfRanks = data['numOfRanks']
 			this.$store.moduleCallsiteMap = data['module_callsite_map']
 			this.$store.callsiteModuleMap = data['callsite_module_map']
 			this.$store.selectedBinCount = this.selectedBinCount
@@ -342,15 +342,15 @@ export default {
 				else if(this.selectedFormat == 'CCT'){
 					this.$refs.SuperGraph.clear()
 					this.$refs.Function.clear()
-					this.$refs.Histogram.clear()
-					this.$refs.Scatterplot.clear()
+					this.$refs.SingleHistogram.clear()
+					this.$refs.RuntimeScatterplot.clear()
 				}
 			}
 		},
 
 		clearLocal() {
 			if(this.selectedMode == 'Ensemble'){
-				if (this.selectedFormat == 'CCT') {
+				if (this.selectedFormat	 == 'CCT') {
 					this.$refs.EnsembleCCT.clear()
 				} else if (this.selectedFormat == 'Callgraph') {
 					this.$refs.EnsembleSuperGraph.clear()
@@ -370,7 +370,7 @@ export default {
 					this.$refs.SuperGraph.clear()
 					this.$refs.Function.clear()
 					this.$refs.SingleHistogram.clear()
-					this.$refs.Scatterplot.clear()
+					this.$refs.RuntimeScatterplot.clear()
 				}
 			}
 		},
@@ -507,7 +507,7 @@ export default {
 			this.selectedColorMinText = this.$store.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.$store.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 			this.$store.color.highlight = '#AF9B90';//'#4681B4'
-			this.$store.color.target = '#4681B4	'//'#AF9B90';//'#4681B4'
+			this.$store.color.target = '#4681B4'//'#AF9B90';//'#4681B4'
 			this.$store.color.ensemble = '#C0C0C0';//'#4681B4'
 			this.$store.color.compare = '#043060'
 		},

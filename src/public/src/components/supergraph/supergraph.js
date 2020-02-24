@@ -64,7 +64,7 @@ export default {
 		init(data) {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
-			this.width = window.innerWidth * 0.6 - this.margin.left - this.margin.right
+			this.width = window.innerWidth * 0.5 - this.margin.left - this.margin.right
 			this.height = window.innerHeight - this.margin.top - this.margin.bottom - this.toolbarHeight - this.footerHeight
 
 			this.zoom = d3.zoom()
