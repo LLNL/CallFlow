@@ -38,7 +38,7 @@ export default {
         id: '',
         nodes: null,
         edges: null,
-        offset: 4,
+        offset: 1,
     }),
 
     mounted() {

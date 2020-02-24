@@ -47,7 +47,7 @@ export default {
         selectedColorBy: 'Inclusive',
         MPIcount: 0,
         message: "MPI Distribution",
-        axisLabelFactor: 2.5,
+        axisLabelFactor: 3.5,
         boxOffset: 20
     }),
 
@@ -69,16 +69,19 @@ export default {
             this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.5
 
             this.boxWidth = this.width - this.padding.right - this.padding.left - this.boxOffset;
-            this.boxHeight = this.height - this.padding.top - this.padding.bottom ;
+            this.boxHeight = this.height - this.padding.top - this.padding.bottom;
             this.histogramOffset = Math.floor(this.boxHeight / 3);
             this.histogramHeight = this.boxHeight - this.histogramOffset;
-            this.histogramWidth = this.boxWidth;
+            this.histogramWidth = this.boxWidth - this.padding.left - this.padding.right;
+
+            this.rankScaleHeight = this.boxHeight - this.histogramHeight
+            this.rankScaleWidth = this.histogramWidth - this.padding.left
+
             this.svg = d3.select('#' + this.svgID)
                 .attrs({
                     "width": this.boxWidth + this.padding.right + this.padding.left,
                     "height": this.boxHeight + this.padding.top + this.padding.bottom,
-                    'transform': "translate(" + this.padding.left + "," + this.padding.top + ")"
-
+                    'transform': "translate(" + this.padding.left + "," + this.padding.top  + ")"
                 })
 
             EventHandler.$emit('single_histogram', {
@@ -104,7 +107,7 @@ export default {
             this.target_axis_x = targetTemp[3]
             this.target_binContainsProcID = targetTemp[3]
 
-            // this.$refs.ToolTip   .init(this.id)
+            this.$refs.ToolTip.init(this.svgID)
 
             console.log(this.xVals, this.histogramWidth)
             this.histogramXScale = d3.scaleBand()
@@ -144,7 +147,7 @@ export default {
             this.xAxis()
             this.yAxis()
             this.rankLineScale();
-            // this.brushes()
+            this.brushes()
         },
 
         array_unique(arr) {
@@ -189,7 +192,6 @@ export default {
                 }
                 binContainsProcID[pos].push(data['rank'][idx]);
             });
-            console.log(attr_data['x'], attr_data['y'], axis_x, binContainsProcID)
             return [attr_data['x'], attr_data['y'], axis_x, binContainsProcID];
         },
 
@@ -281,17 +283,17 @@ export default {
                 .attr('stroke-width', (d, i) => '0.2px')
                 .attr('stroke', (d, i) => 'black')
                 .on('mouseover', function (d, i) {
-                    // d3.select(this)
-                    //     .attr('fill', 'red');
-                    // d3.selectAll(`.lineRank_${i}`)
-                    //     .style('fill', 'orange')
-                    //     .style('fill-opacity', 1)
+                    d3.select(this)
+                        .attr('fill', 'red');
+                    d3.selectAll(`.lineRank_${i}`)
+                        .style('fill', 'orange')
+                        .style('fill-opacity', 1)
                     let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
                     self.$refs.ToolTip.render(groupProcStr, d)
                 })
                 .on('mouseout', function (d, i) {
                     d3.select(this)
-                        .attr('fill', this.$store.color.ensemble);
+                        .attr('fill', self.$store.color.target);
                     d3.selectAll(`.lineRank_${i}`)
                         .style('fill', 'grey')
                         .style('fill-opacity', 0.4);
@@ -315,7 +317,7 @@ export default {
             this.svg.append('text')
                 .attr('class', 'histogram-axis-label')
                 .attr('x', this.boxWidth)
-                .attr('y', this.histogramHeight - this.padding.top* this.axisLabelFactor)
+                .attr('y', this.histogramHeight + this.padding.top* this.axisLabelFactor)
                 .style('font-size', '12px')
                 .style('text-anchor', 'end')
                 .text(this.$store.selectedMetric + " Runtime")
@@ -352,8 +354,10 @@ export default {
             this.svg.append('text')
                 .attr('transform', 'rotate(-90)')
                 .attr('class', 'histogram-axis-label')
-                .attr('y', this.axisLabelFactor*2*this.padding.left)
-                .attr('x', -this.padding.top)
+                // .attr('y', this.axisLabelFactor*2*this.padding.left)
+                // .attr('x', -this.padding.top)
+                .attr('x', - this.histogramHeight + this.padding.top)
+                .attr('y', this.padding.left)
                 .style('font-size', '12px')
                 .style('text-anchor', 'end')
                 .text("Frequency")
@@ -381,14 +385,15 @@ export default {
         },
 
         rankLineScale() {
-            console.log(this.$store.numOfRanks[this.$store.selectedTargetDataset])
+            let rankCount = parseInt(this.$store.numOfRanks[this.$store.selectedTargetDataset])
+
             const ranklinescale = d3.scaleLinear()
-                .domain([0, parseInt(this.$store.numOfRanks[this.$store.selectedTargetDataset])])
-                .range([0, this.boxWidth]);
-            console.log(this.binContainsProcID)
+                .domain([0, rankCount])
+                .range([0, this.rankScaleWidth])
+
             this.freq.forEach((freqVal, idx) => {
                 const processIDs = this.binContainsProcID[idx];
-                console.log(processIDs)
+
                 if (processIDs) {
                     const rankLinesG = this.svg.append('g')
                         .attr('class', `binRank bin_${idx}`)
@@ -441,7 +446,6 @@ export default {
                                 'L ' + botX4 + ' ' + botY +
                                 'L ' + botX3 + ' ' + botY;
                         }
-                        console.log(line)
 
                         rankLinesG.append('path')
                             .attr('d', line)
@@ -496,16 +500,18 @@ export default {
 
         brushes() {
             this.brushdata = []
+
             this.brushSVG = this.svg
                 .append('svg')
 
             this.brush = d3.brushX()
                 .extent([
-                    [this.padding.left, this.padding.top],
-                    [this.width - this.padding.right, this.height - this.padding.bottom]
+                    [this.axisLabelFactor*this.padding.left, this.histogramHeight - this.padding.top ],
+                    [this.boxWidth, this.boxHeight - this.padding.top]
                 ])
                 .on('brush', this.brushing)
                 .on('end', this.brushend)
+
             let id = 0
             this.brushdata.push({
                 id: id,
@@ -522,7 +528,10 @@ export default {
         },
 
         brushing() {
-            const brushScale = d3.scaleLinear().domain(this.histogramXScale.domain()).range(this.histogramXScale.range());
+            const brushScale = d3.scaleLinear()
+                .domain(this.histogramXScale.domain())
+                .range(this.histogramXScale.range());
+
             let brushStart = d3.event.selection.map(brushScale.invert)[0]
             let brushEnd = d3.event.selection.map(brushScale.invert)[1]
             let brushPoints = this.histogramXScale.domain().length
