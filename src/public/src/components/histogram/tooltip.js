@@ -11,13 +11,15 @@ export default {
     ],
 
     data: () => ({
-        id: '',
+        id: 'single-histogram-tooltip',
         textCount: 0,
         textxOffset: 20,
         textyOffset: 20,
         textPadding: 13,
         offset: 10,
         fontSize: 12,
+        containerHeight: 50,
+        containerWidth: 200
     }),
     sockets: {
         tooltip(data) {
@@ -37,15 +39,16 @@ export default {
                 .attr('class', 'toolTipSVG')
 
             this.toolTipG = this.toolTipDiv.append('g')
-            this.height = document.getElementById('callgraph-dashboard').clientHeight
-            this.halfWidth = document.getElementById('histogram_view').clientWidth / 2
+            this.height = document.getElementById(this.parentID).clientHeight
+            this.halfWidth = document.getElementById(this.parentID).clientWidth / 2
         },
 
         render(data, node) {
             this.clear()
             this.width = data.length*this.fontSize + 10*this.fontSize
-            var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
-            this.mousePos = d3.mouse(d3.select('#' + this.id).node())
+            var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150])
+            console.log(d3.select('#' + this.parentID))
+            this.mousePos = d3.mouse(d3.select('#' + this.parentID).node())
             this.mousePosX = this.mousePos[0]
             this.mousePosY = this.mousePos[1]
             this.toolTipG.attr('height', svgScale(10) + "px")
@@ -57,13 +60,14 @@ export default {
                     "stroke": "black",
                     "rx": "10px",
                     "fill-opacity": 1,
-                    "width": this.width,
-                    "height": this.height,
+                    "z-index": 100,
+                    "width": this.containerWidth,
+                    "height": this.containerHeight,
                 })
                 .attrs({
                     'x': () => {
-                        if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth - 25) {
-                            return (this.mousePosX - this.width) + 'px';
+                        if (this.mousePosX + this.halfWidth > document.getElementById(this.parentID).clientWidth - 25) {
+                            return (this.mousePosX - this.containerWidth) + 'px';
                         }
                         return (this.mousePosX) + 'px';
 
@@ -92,8 +96,8 @@ export default {
                 .attrs({
                     'class': 'toolTipContent',
                     'x': () => {
-                        if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth - 25) {
-                            return (this.mousePosX - this.width + this.offset) + 'px';
+                        if (this.mousePosX + this.halfWidth > document.getElementById(this.parentID).clientWidth - 25) {
+                            return (this.mousePosX - this.containerWidth + this.offset) + 'px';
                         }
                         return (this.mousePosX) + this.offset +  'px';
 

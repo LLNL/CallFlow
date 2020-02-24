@@ -30,7 +30,7 @@ export default {
 		margin: {
 			top: 10,
 			right: 10,
-			bottom: 10,
+			bottom: 15,
 			left: 15
 		},
 		xData: null,
@@ -44,7 +44,7 @@ export default {
 		boxWidth: 0,
 		id: 'scatterplot-view',
 		svgID: 'scatterplot-view-svg',
-		message: "Runtime Correlation",
+		message: "Runtime Scatterplot",
 		boxOffset: 20,
 
 	}),
@@ -91,7 +91,7 @@ export default {
 			this.process(data)
 			this.xAxis()
 			this.yAxis()
-			this.trendline()
+			// this.trendline()
 			this.dots()
 			this.correlationText()
 		},
