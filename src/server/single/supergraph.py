@@ -94,11 +94,6 @@ class SuperGraph(nx.Graph):
 
         log.info(self.timer)
 
-    def root_runtime_inc(self):
-        root = self.graph.roots[0]
-        root_metrics = self.state.lookup_with_node(root)
-        return root_metrics['time (inc)'].max()
-
     def no_cycle_path(self, path):
         ret = []
         moduleMapper = {}
@@ -116,21 +111,23 @@ class SuperGraph(nx.Graph):
         return tuple(ret)
 
     def add_paths(self, path):
-        path_df = self.df[path].fillna("()")
-        paths = path_df.drop_duplicates().tolist()
+        # path_df = self.df[path].fillna("()")
+        # paths = path_df.drop_duplicates().tolist()
+        paths = self.df[path].unique()
         for idx, path_str in enumerate(paths):
-            path_tuple = make_tuple(path_str)
-            if(len(path_tuple) >= 2):
-                source_module = path_tuple[-2].split('=')[0]
-                target_module = path_tuple[-1].split('=')[0]
-                print(source_module, target_module)
+            if(not  isinstance(path_str, float)):
+                path_tuple = make_tuple(path_str)
+                if(len(path_tuple) >= 2):
+                    source_module = path_tuple[-2].split('=')[0]
+                    target_module = path_tuple[-1].split('=')[0]
+                    print(source_module, target_module)
 
-                source_name = path_tuple[-2].split('=')[1]
-                target_name = path_tuple[-1].split('=')[1]
-                self.g.add_edge(source_module, target_module, attr_dict={
-                    "source_callsite": source_name,
-                    "target_callsite": target_name
-                })
+                    source_name = path_tuple[-2].split('=')[1]
+                    target_name = path_tuple[-1].split('=')[1]
+                    self.g.add_edge(source_module, target_module, attr_dict={
+                        "source_callsite": source_name,
+                        "target_callsite": target_name
+                    })
 
     def add_callback_paths(self):
         for from_module, to_modules in self.callbacks.items():
@@ -184,9 +181,6 @@ class SuperGraph(nx.Graph):
                 "time (inc)"
             ].max()
 
-            # if source_inc == target_inc:
-            #     ret[(edge[0], edge[1])] = source_inc
-            # else:
             ret[(edge[0], edge[1])] = target_inc
 
         return ret
@@ -210,6 +204,7 @@ class SuperGraph(nx.Graph):
 
     def dataset_map(self, nodes, dataset):
         ret = {}
+        print(f"Nodes: {self.g.nodes()}")
         for node in self.g.nodes():
             if "=" in node:
                 node_name = node.split("=")[1]
@@ -243,9 +238,7 @@ class SuperGraph(nx.Graph):
                         ret[node][column] = []
 
                 elif (
-                    column == "name"
-                    or column == "vis_name"
-                    or column == "module"
+                    column == "module"
                     or column == "show_node"
                 ):
                     if len(column_data.value_counts()) > 0:
@@ -260,4 +253,5 @@ class SuperGraph(nx.Graph):
                         ret[node][column] = list(make_tuple(column_data.tolist()[0]))
                     else:
                         ret[node][column] = []
+        print(ret)
         return ret

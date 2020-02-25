@@ -45,6 +45,7 @@ class ConfigFileReader():
     def run(self):
         # Parse scheme.
         self.filter_perc = self.scheme['filter_perc']
+        self.filter_by = self.scheme['filter_by']
         self.group_by = self.scheme['group_by']
         self.module_callsite_map = self.scheme['module_map']
         self.callsite_module_map  = self.process_scheme()

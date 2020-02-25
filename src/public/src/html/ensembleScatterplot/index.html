@@ -2,14 +2,6 @@
     <v-layout class="chip-container">
         <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
     </v-layout>
-    <!-- <v-toolbar dense id="icicle-toolbar">
-        <v-range-slider label="Level" v-model="level" v-bind:max="maxLevel" :min="0" :step="1">
-        <template #prepend>
-            <v-text-field v-model="level[0]" class="pa-0" hide-details single-line type="number" style="width: 30px">
-            </v-text-field>
-            <v-text-field v-model="level[1]" class="pa-0" hide-details single-line type="number" style="width: 30px">
-            </v-text-field>
-        </template>
-        </v-range-slider>
-    </v-toolbar>-->
+    <svg :id="svgID"></svg>
+    <ToolTip ref="ToolTip"/>
 </v-layout>

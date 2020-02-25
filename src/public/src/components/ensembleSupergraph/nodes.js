@@ -72,7 +72,7 @@ export default {
         }
     },
     mounted() {
-        this.id = 'dist-nodes-' + this._uid
+        this.id = 'ensemble-nodes'
 
         let self = this
         EventHandler.$on('update_diff_node_alignment', function () {
@@ -124,19 +124,21 @@ export default {
                 });
 
 
-            this.nodesSVG = this.nodes.selectAll('.dist-node')
+            this.nodesSVG = this.nodes.selectAll('.ensemble-callsite')
                 .data(this.graph.nodes)
                 .enter().append('g')
                 .attr('class', (d) => {
-                    return 'dist-node'
+                    return 'ensemble-callsite'
                 })
                 .attr('opacity', 0)
-                .attr('id', (d, i) => `dist-node_${this.graph.nodeMap[d['name']]}`)
+                .attr('id', (d, i) => {
+                    return 'ensemble-callsite-' + d.id
+                })
                 .attr('transform', (d) => {
                     return `translate(${d.x},${d.y})`
                 })
 
-            this.nodes.selectAll('.dist-node')
+            this.nodes.selectAll('.ensemble-callsite')
                 .data(this.graph.nodes)
                 .transition()
                 .duration(this.transitionDuration)
@@ -162,7 +164,7 @@ export default {
         },
 
         setupMeanGradients() {
-            let data = this.$store.gradients
+            let data = this.$store.gradients['module']
             let method = 'hist'
             this.hist_min = 0
             this.hist_max = 0
@@ -211,8 +213,11 @@ export default {
         meanRectangle() {
             let self = this
             this.nodesSVG.append('rect')
-                .attr('class', 'dist-callsite')
-                .attr('id', (d) => 'callsite-' + d.client_idx)
+                // .attr('class', 'dist-callsite')
+                .attr('id', (d) => {
+                    console.log(d.client_idx, d)
+                    return 'callsite-' + d.client_idx
+                })
                 .attr('height', (d) => {
                     this.currentNodeLevel[d.mod_index] = 0;
                     this.nodeHeights[d.n_index] = d.height;
@@ -266,6 +271,11 @@ export default {
                         datasets: this.$store.runNames,
                     })
 
+                    EventHandler.$emit('ensemble_scatterplot', {
+                        module: this.$store.selectedModule,
+                        dataset1: this.$store.selectedDataset,
+                    })
+
                     this.$socket.emit('ensemble_auxiliary', {
                         module: this.$store.selectedModule,
                         datasets: this.$store.runNames,
@@ -299,7 +309,7 @@ export default {
                         return this.$store.color.ensemble
                     }
                     else{
-                        return "url(#mean-gradient-" + d.name + ")"
+                        return "url(#mean-gradient-" + d.id + ")"
                     }
                 })
         },

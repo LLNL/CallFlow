@@ -38,7 +38,7 @@ class SingleCallFlow:
         if config.process:
            pass
         else:
-            log.info("[Ensemble] Read Mode.")
+            log.info("[Single] Read Mode.")
             self.states = self.readState(self.config.dataset_names)
 
     def readState(self, datasets):
@@ -47,45 +47,45 @@ class SingleCallFlow:
             states[dataset] = self.pipeline.read_dataset_gf(dataset)
         return states
 
-    def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
-        if self.reProcess:
-            log.info("Processing with filter.")
-        else:
-            log.info("Reading from the processed files.")
+    # def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
+    #     if self.reProcess:
+    #         log.info("Processing with filter.")
+    #     else:
+    #         log.info("Reading from the processed files.")
 
-        self.pipeline = Pipeline(self.config)
+    #     self.pipeline = Pipeline(self.config)
 
-        states = {}
-        for idx, dataset_name in enumerate(datasets):
-            states[dataset_name] = State(dataset_name)
-            if self.reUpdate:
-                states[dataset_name] = self.pipeline.create(dataset_name)
-                states[dataset_name] = self.pipeline.process(
-                    states[dataset_name], "filter"
-                )
-                states[dataset_name] = self.pipeline.filter(
-                    states[dataset_name], filterBy, filterPerc
-                )
-            elif self.reProcess and self.processEnsemble:
-                states[dataset_name] = self.pipeline.create(dataset_name)
-                # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
+    #     states = {}
+    #     for idx, dataset_name in enumerate(datasets):
+    #         states[dataset_name] = State(dataset_name)
+    #         if self.reUpdate:
+    #             states[dataset_name] = self.pipeline.create(dataset_name)
+    #             states[dataset_name] = self.pipeline.process(
+    #                 states[dataset_name], "filter"
+    #             )
+    #             states[dataset_name] = self.pipeline.filter(
+    #                 states[dataset_name], filterBy, filterPerc
+    #             )
+    #         elif self.reProcess and self.processEnsemble:
+    #             states[dataset_name] = self.pipeline.create(dataset_name)
+    #             # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
 
-                states[dataset_name] = self.pipeline.process(
-                    states[dataset_name], "entire"
-                )
-                states[dataset_name] = self.pipeline.convertToNetworkX(
-                    states[dataset_name], "path"
-                )
-                # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
-                states[dataset_name] = self.pipeline.filterNetworkX(
-                    states, dataset_name, self.config.filter_perc
-                )
-                self.pipeline.write_dataset_gf(
-                    states[dataset_name], dataset_name, "filter"
-                )
-                # self.pipeline.write_hatchet_graph(states, dataset_name)
+    #             states[dataset_name] = self.pipeline.process(
+    #                 states[dataset_name], "entire"
+    #             )
+    #             states[dataset_name] = self.pipeline.convertToNetworkX(
+    #                 states[dataset_name], "path"
+    #             )
+    #             # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
+    #             states[dataset_name] = self.pipeline.filterNetworkX(
+    #                 states, dataset_name, self.config.filter_perc
+    #             )
+    #             self.pipeline.write_dataset_gf(
+    #                 states[dataset_name], dataset_name, "filter"
+    #             )
+    #             # self.pipeline.write_hatchet_graph(states, dataset_name)
 
-        return states
+    #     return states
 
     def setConfig(self):
         self.config.max_incTime = {}
@@ -143,11 +143,7 @@ class SingleCallFlow:
         log.info("The selected Dataset is {0}".format(dataset))
 
         # Compare against the different operations
-        if action_name == "default":
-            groupBy(state, action["groupBy"])
-            nx = CallGraph(state, "group_path", True, action["groupBy"])
-
-        elif action_name == "reset":
+        if action_name == "reset":
             datasets = [dataset]
             self.reProcess = True
             self.states = self.pipeline(
@@ -160,7 +156,6 @@ class SingleCallFlow:
         elif action_name == "auxiliary":
             auxiliary = Auxiliary(self.states[action['dataset']], module=action['module'], sortBy=action['sortBy'], binCount=action['binCount'], dataset=action['dataset'])
             return auxiliary.result
-
 
         elif action_name == "supergraph":
             self.states[dataset].g = SuperGraph(

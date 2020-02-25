@@ -335,12 +335,14 @@
 
             function initializeNodeDepth() {
                 var scale = d3.min(nodesByBreadth, function (nodes) {
+                    console.log(dataset)
                     var divValue = 1;
                     if (referenceValue > 0) {
                         divValue = referenceValue;
                     }
                     else {
                         divValue = d3.sum(nodes, (d) => {
+                            console.log(d)
                             if (dataset == 'ensemble') {
                                 return d['time (inc)']
                             }
@@ -349,6 +351,7 @@
                             }
                         });
                     }
+                    console.log(size[1], nodes.length, nodePadding, divValue)
                     return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
                 });
 
@@ -376,7 +379,7 @@
                         nodes.sort(function (a, b) {
                             return a["y"] - b["y"];
                         })
-
+                        console.log(node.value, minNodeScale, scale)
                         node.height = node.value * minNodeScale * scale;
                     });
                     levelCount += 1

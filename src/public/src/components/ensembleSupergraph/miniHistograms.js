@@ -43,7 +43,7 @@ export default {
     }),
 
     mounted() {
-        this.id = 'minihistogram-overview-' + this._uid
+        this.id = 'minihistogram-overview'
     },
 
     methods: {
@@ -77,7 +77,7 @@ export default {
             } else if (this.$store.selectedMetric == 'Imbalance') {
                 attr_data = data['hist_imbalance']
             }
-
+            console.log(attr_data['x'], attr_data['y'])
             return [attr_data['x'], attr_data['y']];
         },
 
@@ -132,7 +132,7 @@ export default {
         },
 
         render(callsite_name, callsite_module) {
-            let node_dict = this.nodes[this.nodeMap[callsite_name]]
+            let node_dict = this.nodes[this.nodeMap[callsite_module]]
             if (callsite_module.split('_')[0] != "intermediate") {
                 let ensemble_callsite_data = this.$store.modules['ensemble'][callsite_module]
                 let target_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module]

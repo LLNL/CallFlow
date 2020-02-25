@@ -13,6 +13,7 @@
 import tpl from '../../html/ensembleScatterplot/index.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
+import EventHandler from '../EventHandler'
 
 export default {
 	name: 'EnsembleScatterplot',
@@ -23,7 +24,6 @@ export default {
 
 	data: () => ({
 		graph: null,
-		id: '',
 		width: null,
 		height: null,
 		margin: {
@@ -42,87 +42,43 @@ export default {
 		xData: [],
 		yData: [],
 		nameData: [],
-		message: "Bland Altman Plot"
+		id: 'ensemble-scatterplot-view',
+		svgID: 'ensemble-scatterplot-view-svg',
+		message: "Runtime Scatterplot",
+		boxOffset: 20,
 	}),
 
-	sockets: {
-		diff_scatterplot(result) {
-			let data = JSON.parse(result['data'])
-			console.log("Scatter data: ", data)
-			if (this.firstRender) {
-				this.init()
-			}
-			this.preprocess(data)
-			this.render()
-		},
-	},
-
 	mounted() {
-		this.id = 'diff-scatterplot-view'
+		let self = this
+		EventHandler.$on('ensemble_scatterplot', function (data) {
+			self.clear()
+			console.log("Ensemble Scatterplot: ", data['module'])
+			self.render(data['module'])
+		})
 	},
 
 	methods: {
 		init() {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
-			this.width = window.innerWidth * 0.3
-			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.5
+			this.width = window.innerWidth * 0.25
+			this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.33
 
-			this.scatterWidth = this.width - this.margin.right - this.margin.left;
-			this.scatterHeight = this.height - this.margin.top - this.margin.bottom;
+			this.boxWidth = this.width - this.margin.right - this.margin.left;
+			this.boxHeight = this.height - this.margin.top - this.margin.bottom;
 
-			this.svg = d3.select('#' + this.id)
-				.attr('width', this.width - this.margin.left - this.margin.right)
-				.attr('height', this.height - this.margin.top - this.margin.bottom)
+			this.svg = d3.select('#' + this.svgID)
+				.attr('width', this.boxWidth + this.margin.left + this.margin.right)
+				.attr('height', this.boxHeight + this.margin.top + this.margin.bottom)
 				.attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
-		},
 
-		scatterAll() {
-			let xArray = []
-			let yArray = []
-			let yMin = 0
-			let xMin = 0
-			let xMax = 0
-			let yMax = 0
-			for (let i = 0; i < this.yData.length; i += 1) {
-				let d = this.yData[i]
-				yMin = Math.min(yMin, d)
-				yMax = Math.max(yMax, d)
-				yArray.push(d)
-			}
+			let modules_arr = Object.keys(this.$store.modules['ensemble'])
 
-			for (let i = 0; i < this.xData.length; i += 1) {
-				let d = this.xData[i]
-				xMin = Math.min(xMin, d);
-				xMax = Math.max(xMax, d);
-				xArray.push(d)
-
-			}
-			console.log(xMin, yMin, xMax, yMax, xArray, yArray)
-			return [xMin, yMin, xMax, yMax, xArray, yArray]
-		},
-
-		scatterMean() {
-			for (const [idx, d] of Object.entries(this.yData)) {
-				let ySum = 0
-				for (let rank = 0; rank < d.length; rank += 1) {
-					yMin = Math.min(yMin, d[rank])
-					yMax = Math.max(yMax, d[rank])
-					ySum += d[rank]
-				}
-				yArray.push(ySum / d.length)
-			}
-
-			for (const [idx, d] of Object.entries(this.xData)) {
-				let xSum = 0
-				for (let rank = 0; rank < d.length; rank += 1) {
-					xMin = Math.min(xMin, d[rank]);
-					xMax = Math.max(xMax, d[rank]);
-					xSum += d[rank]
-				}
-				yArray.push(xSum / d.length)
-			}
-			return [xMin, yMin, xMax, yMax, xArray, yArray]
+			EventHandler.$emit('ensemble_scatterplot', {
+				module: modules_arr[0],
+				name: "main",
+				dataset: this.$store.runNames,
+			})
 		},
 
 		preprocess(data, dataset_name) {
@@ -131,19 +87,40 @@ export default {
 			}
 
 			for (let key in data["diff"]) {
-					this.xData.push(data['diff'][key])
-					this.nameData.push(key)
+				this.xData.push(data['diff'][key])
+				this.nameData.push(key)
 			}
 		},
 
-		process() {
+		render(module) {
+			if (!this.firstRender) {
+				this.clear()
+			}
+			this.firstRender = false
+			this.module = module
+
+			this.ensembleProcess()
+			this.targetProcess()
+			this.xAxis()
+			this.yAxis()
+			this.ensembleDots()
+			this.targetDots()
+			this.correlationText()
+		},
+
+		ensembleProcess() {
+			let data = this.$store.modules['ensemble'][this.module]
+
+			this.yData = data["time (inc)"]
+			this.xData = data["time"]
+			this.nameData = data['name']
+
 			let temp
 			if (this.$store.selectedScatterMode == 'mean') {
-				console.log('mean')
-				temp = this.scatterMean()
-			} else if (this.$store.selectedScatterMode == 'all') {
-				console.log('all')
-				temp = this.scatterAll()
+				temp = this.scatterMean(this.xData, this.yData)
+			}
+			else if (this.$store.selectedScatterMode == 'all') {
+				temp = this.scatterAll(this.xData, this.yData)
 			}
 			this.xMin = temp[0]
 			this.yMin = temp[1]
@@ -156,142 +133,90 @@ export default {
 			this.regressionY = this.leastSquaresCoeff["y_res"];
 			this.corre_coef = this.leastSquaresCoeff["corre_coef"];
 
-			this.xAxisHeight = this.scatterWidth //- 4 * this.margin.left
-			this.yAxisHeight = this.scatterHeight - 4 * this.margin.left
-			this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.xAxisHeight])
-			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.yAxisHeight, 0])
+			this.xAxisHeight = this.boxWidth - 4 * this.margin.left
+			this.yAxisHeight = this.boxHeight - 4 * this.margin.left
+
+			this.xScale = d3.scaleLinear().domain([this.xMin, 1.2 * this.xMax]).range([0, this.xAxisHeight])
+			this.yScale = d3.scaleLinear().domain([this.yMin, 1.2 * this.yMax]).range([this.yAxisHeight, 0])
 		},
 
-		render(data) {
-			if (!this.firstRender) {
-				this.clear()
+		targetProcess() {
+			console.log(this.$store.selectedTargetDataset)
+			let data = this.$store.modules[this.$store.selectedTargetDataset][this.module]
+
+			this.ytargetData = data["time (inc)"]
+			this.xtargetData = data["time"]
+			this.nametargetData = data['name']
+			console.log(data)
+
+			let temp
+			if (this.$store.selectedScatterMode == 'mean') {
+				temp = this.scatterMean(this.xtargetData, this.ytargetData)
 			}
-			this.firstRender = false
-			let self = this
-			this.process()
+			else if (this.$store.selectedScatterMode == 'all') {
+				temp = this.scatterAll(this.xtargetData, this.ytargetData)
+			}
+			this.xtargetMin = temp[0]
+			this.ytargetMin = temp[1]
+			this.xtargetMax = temp[2]
+			this.ytargetMax = temp[3]
+			this.xtargetArray = temp[4]
+			this.ytargetArray = temp[5]
+			console.log(this.xtargetArray, this.ytargetArray)
+		},
 
-			const xFormat = d3.format('0.1s');
-			var xAxis = d3.axisBottom(self.xScale)
-				.ticks(5)
-				.tickFormat((d, i) => {
-					let temp = d;
-					if (i % 2 == 0) {
-						let value = temp * 0.000001
-						return `${xFormat(value)}s`
-					}
-					return '';
-				});
+		scatterAll(xData, yData) {
+			let xArray = []
+			let yArray = []
+			let yMin = 0
+			let xMin = 0
+			let xMax = 0
+			let yMax = 0
 
-			const yFormat = d3.format('0.2s')
-			var yAxis = d3.axisLeft(self.yScale)
-				.ticks(5)
-				.tickFormat((d, i) => {
-					let temp = d;
-					if (i % 2 == 0) {
-						let value = temp * 0.000001
-						return `${xFormat(value)}s`
-					}
-					return '';
-				});
+			for (const [idx, d] of Object.entries(xData)) {
+				xMin = Math.min(xMin, d)
+				xMax = Math.max(xMax, d)
+				xArray.push(d)
+			}
 
-			let xAxisHeightCorrected = this.xAxisHeight + this.margin.left
-			var xAxisLine = this.svg.append('g')
-				.attr('class', 'axis')
-				.attr('id', 'xAxis')
-				.attr("transform", "translate(" + 3 * self.margin.left + "," + xAxisHeightCorrected + ")")
-				.call(xAxis)
+			for (const [idx, d] of Object.entries(yData)) {
+				yMin = Math.min(yMin, d)
+				yMax = Math.max(yMax, d)
+				yArray.push(d)
+			}
 
-			this.svg.append('text')
-				.attr('class', 'axisLabel')
-				.attr('x', self.scatterWidth)
-				.attr('y', self.yAxisHeight - this.margin.left*1.5)
-				.style('font-size', '10px')
-				.style('text-anchor', 'end')
-				.text("Diff")
+			return [xMin, yMin, xMax, yMax, xArray, yArray]
+		},
 
-			var yAxisLine = this.svg.append('g')
-				.attr('id', 'yAxis')
-				.attr('class', 'axis')
-				.attr('transform', "translate(" + 3 * self.margin.left + ", 0)")
-				.call(yAxis)
+		scatterMean(xData, yData) {
+			let xArray = []
+			let yArray = []
+			let yMin = 0
+			let xMin = 0
+			let xMax = 0
+			let yMax = 0
 
-			this.svg.append("text")
-				.attr('class', 'axisLabel')
-				.attr('transform', 'rotate(-90)')
-				.attr('x', 0)
-				.attr('y', 4 * this.margin.left)
-				.style("text-anchor", "end")
-				.style("font-size", "10px")
-				.text("Mean");
+			for (const [idx, d] of Object.entries(xData)) {
+				let xSum = 0
+				for (let rank = 0; rank < d.length; rank += 1) {
+					xMin = Math.min(xMin, d[rank]);
+					xMax = Math.max(xMax, d[rank]);
+					xSum += d[rank]
+				}
+				yArray.push(xSum / d.length)
+			}
 
-			this.svg.selectAll('.dot')
-				.data(this.yArray)
-				.enter().append('circle')
-				.attr('class', 'dot')
-				.attr('r', 3)
-				.attr('cx', function (d, i) {
-					return self.xScale(d) + 3 * self.margin.left;
-				})
-				.attr('cy', function (d, i) {
-					return self.yScale(d);
-				})
-				.style('fill', "#4682b4")
+			for (const [idx, d] of Object.entries(yData)) {
+				let ySum = 0
+				for (let rank = 0; rank < d.length; rank += 1) {
+					yMin = Math.min(yMin, d[rank])
+					yMax = Math.max(yMax, d[rank])
+					ySum += d[rank]
+				}
+				yArray.push(ySum / d.length)
+			}
 
-			var line = d3.line()
-				.x(function (d, i) {
-					return self.xScale(self.xArray[i]) + 3 * self.margin.left;
-				})
-				.y(function (d, i) {
-					return self.yScale(self.yArray[i]);
-				});
-
-			var mdline = this.svg.append('g').append("path")
-				.datum(this.md)
-				.attr("class", "res_line")
-				.attr("d", line)
-				.style("stroke", "black")
-				.style("stroke-width", "1px")
-				.style("opacity", 0.5);
-
-			// var coefText = this.svg.append('g');
-			// var decimalFormat = d3.format("0.2f");
-			// coefText.append('text')
-			// 	.attr('class', 'text')
-			// 	.text("corr-coef: " + decimalFormat(this.corre_coef))
-			// 	.attr("x", function (d) {
-			// 		return self.scatterWidth - 100;
-			// 	})
-			// 	.attr("y", function (d) {
-			// 		return 10;
-			// 	});
-
-			xAxisLine.selectAll('path')
-				.style("fill", "none")
-				.style("stroke", "black")
-				.style("stroke-width", "1px");
-			xAxisLine.selectAll('line')
-				.style("fill", "none")
-				.style("stroke", "#000")
-				.style("stroke-width", "1px")
-				.style("opacity", 0.5);
-			xAxisLine.selectAll("text")
-				.style('font-size', '10px')
-				.style('font-family', 'sans-serif')
-				.style('font-weight', 'lighter');
-
-			yAxisLine.selectAll('path')
-				.style("fill", "none")
-				.style("stroke", "black")
-				.style("stroke-width", "1px");
-			yAxisLine.selectAll('line')
-				.style("fill", "none")
-				.style("stroke", "#000")
-				.style("stroke-width", "1px")
-				.style("opacity", 0.5);
-			yAxisLine.selectAll("text")
-				.style('font-size', '10px')
-				.style('font-family', 'sans-serif')
-				.style('font-weight', 'lighter');
+			return [xMin, yMin, xMax, yMax, xArray, yArray]
 		},
 
 		// returns slope, intercept and r-square of the line
@@ -370,6 +295,165 @@ export default {
 
 		},
 
+		xAxis() {
+			let self = this
+			const xFormat = d3.format('0.1s');
+			var xAxis = d3.axisBottom(this.xScale)
+				.ticks(5)
+				.tickFormat((d, i) => {
+					let temp = d;
+					if (i % 2 == 0) {
+						let value = temp * 0.000001
+						return `${xFormat(value)}s`
+					}
+					return '';
+				});
+
+			this.svg.append('text')
+				.attr('class', 'axis-label')
+				.attr('x', self.boxWidth)
+				.attr('y', self.yAxisHeight - this.margin.top)
+				.style('font-size', '12px')
+				.style('text-anchor', 'end')
+				.text("Exclusive Runtime")
+
+
+			let xAxisHeightCorrected = this.yAxisHeight
+			var xAxisLine = this.svg.append('g')
+				.attr('class', 'axis')
+				.attr('id', 'xAxis')
+				.attr("transform", "translate(" + 3 * self.margin.left + "," + xAxisHeightCorrected + ")")
+				.call(xAxis)
+
+			xAxisLine.selectAll('path')
+				.style("fill", "none")
+				.style("stroke", "black")
+				.style("stroke-width", "1px");
+
+			xAxisLine.selectAll('line')
+				.style("fill", "none")
+				.style("stroke", "#000")
+				.style("stroke-width", "1px")
+				.style("opacity", 0.5);
+
+			xAxisLine.selectAll("text")
+				.style('font-size', '12px')
+				.style('font-family', 'sans-serif')
+				.style('font-weight', 'lighter');
+		},
+
+		yAxis() {
+			let self = this
+			const yFormat = d3.format('0.2s')
+			let yAxis = d3.axisLeft(self.yScale)
+				.ticks(5)
+				.tickFormat((d, i) => {
+					let temp = d;
+					if (i % 2 == 0) {
+						let value = temp * 0.000001
+						return `${yFormat(value)}s`
+					}
+					return '';
+				})
+
+			var yAxisLine = this.svg.append('g')
+				.attr('id', 'yAxis')
+				.attr('class', 'axis')
+				.attr('transform', "translate(" + 3 * self.margin.left + ", 0)")
+				.call(yAxis)
+
+			this.svg.append("text")
+				.attr('class', 'axis-label')
+				.attr('transform', 'rotate(-90)')
+				.attr('x', 0)
+				.attr('y', 4 * this.margin.left)
+				.style("text-anchor", "end")
+				.style("font-size", "12px")
+				.text("Inclusive Runtime")
+
+			yAxisLine.selectAll('path')
+				.style("fill", "none")
+				.style("stroke", "black")
+				.style("stroke-width", "1px");
+
+			yAxisLine.selectAll('line')
+				.style("fill", "none")
+				.style("stroke", "#000")
+				.style("stroke-width", "1px")
+				.style("opacity", 0.5);
+
+			yAxisLine.selectAll("text")
+				.style('font-size', '12px')
+				.style('font-family', 'sans-serif')
+				.style('font-weight', 'lighter');
+		},
+
+		trendline() {
+			let self = this
+			var line = d3.line()
+				.x(function (d, i) {
+					return self.xScale(self.xArray[i]) + 3 * self.margin.left;
+				})
+				.y(function (d, i) {
+					return self.yScale(self.yArray[i]);
+				});
+
+			var trendline = this.svg.append('g')
+				.attr('class', 'trend-line')
+				.append("path")
+				.datum(this.regressionY)
+				.attr("d", line)
+				.style("stroke", "black")
+				.style("stroke-width", "1px")
+				.style("opacity", 0.5);
+		},
+
+		ensembleDots() {
+			let self = this
+			this.svg.selectAll('.ensemble-dot')
+				.data(this.yArray)
+				.enter().append('circle')
+				.attr('class', 'ensemble-dot')
+				.attr('r', 5)
+				.attr('cx', function (d, i) {
+					return self.xScale(self.xArray[i]) + 3 * self.margin.left;
+				})
+				.attr('cy', function (d, i) {
+					return self.yScale(self.yArray[i]);
+				})
+				.style('fill', this.$store.color.ensemble)
+		},
+
+		targetDots() {
+			let self = this
+			this.svg.selectAll('.target-dot')
+				.data(this.ytargetArray)
+				.enter().append('circle')
+				.attr('class', 'target-dot')
+				.attr('r', 5)
+				.attr('cx', function (d, i) {
+					return self.xScale(self.xtargetArray[i]) + 3 * self.margin.left;
+				})
+				.attr('cy', function (d, i) {
+					return self.yScale(self.ytargetArray[i]);
+				})
+				.style('fill', this.$store.color.target)
+		},
+
+		correlationText() {
+			let self = this
+			let decimalFormat = d3.format("0.2f");
+			this.svg.append('g').append('text')
+				.attr('class', 'text')
+				.text("corr-coef: " + decimalFormat(this.corre_coef))
+				.attr("x", function (d) {
+					return self.boxWidth - self.width / 3;
+				})
+				.attr("y", function (d) {
+					return 20;
+				});
+		},
+
 		setContainerWidth(newWidth) {
 			containerWidth = newWidth;
 			width = containerWidth - margin.left - margin.right;
@@ -377,7 +461,8 @@ export default {
 
 
 		clear() {
-			d3.selectAll('.dot').remove()
+			d3.selectAll('.ensemble-dot').remove()
+			d3.selectAll('.target-dot').remove()
 			d3.selectAll('.axis').remove()
 			d3.selectAll('.res_line').remove()
 			d3.selectAll('.axisLabel').remove()

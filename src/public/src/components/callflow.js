@@ -116,7 +116,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
 		modes: ['Ensemble', 'Single'],
-		selectedMode: 'Single',
+		selectedMode: 'Ensemble',
 		// Presentation mode variables
 		exhibitModes: ['Presentation', 'Default'],
 		selectedExhibitMode: 'Default',
@@ -132,6 +132,8 @@ export default {
 			"ensemble_projection",
 		],
 		parameter_analysis: true,
+		caseStudy: 'Lulesh-Scaling'
+		// caseStudy: 'Kripke-MPI'
 	}),
 
 	watch: {},
@@ -222,6 +224,8 @@ export default {
 
 			this.$store.modules = {}
 			this.$store.modules[dataset] = this.processModule(module_data[dataset])
+
+			console.log(this.$store)
 			console.log("[Socket] Single Callsite data processing done.")
 		},
 
@@ -282,6 +286,7 @@ export default {
 
 		// Fetch aggregated graph (Super graph) for distribution mode.
 		ensemble_supergraph(data) {
+			console.log(data)
 			data = JSON.parse(data)
 			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
 			if (this.initLoad) {
@@ -291,15 +296,10 @@ export default {
 				this.$refs.EnsembleHistogram.init()
 				this.$refs.EnsembleDistribution.init()
 				// this.$refs.RunInformation.init()
+				this.$refs.EnsembleScatterplot.init()
 				this.$refs.SimilarityMatrix.init()
 				// this.initLoad = false
 			}
-		},
-
-		ensemble_mini_histogram(data) {
-			data = JSON.parse(data)
-			this.createNodeInfoStore(data)
-			this.$refs.EnsembleHistogram.render(this.defaultCallSite)
 		},
 
 		compare() {
@@ -323,23 +323,24 @@ export default {
 		},
 
 		clear() {
-			if(this.selectedMode == 'Ensemble'){
+			if (this.selectedMode == 'Ensemble') {
 				if (this.selectedFormat == 'Callgraph') {
 					this.$refs.EnsembleCCT.clear()
 				} else if (this.selectedFormat == 'CCT') {
 					this.$refs.EnsembleSuperGraph.clear()
 					this.$refs.EnsembleHistogram.clear()
 					this.$refs.EnsembleDistribution.clear()
+					this.$refs.EnsembleScatterplot.clear()
 					this.$refs.Scatterplot.clear()
 					this.$refs.AuxiliaryFunction.clear()
 					this.$refs.ModuleHierarchy.clear()
 				}
 			}
-			else if(this.selectedMode == 'Single'){
-				if(this.selectedFormat == 'Callgraph'){
+			else if (this.selectedMode == 'Single') {
+				if (this.selectedFormat == 'Callgraph') {
 					this.$refs.CCT.clear()
 				}
-				else if(this.selectedFormat == 'CCT'){
+				else if (this.selectedFormat == 'CCT') {
 					this.$refs.SuperGraph.clear()
 					this.$refs.Function.clear()
 					this.$refs.SingleHistogram.clear()
@@ -349,8 +350,8 @@ export default {
 		},
 
 		clearLocal() {
-			if(this.selectedMode == 'Ensemble'){
-				if (this.selectedFormat	 == 'CCT') {
+			if (this.selectedMode == 'Ensemble') {
+				if (this.selectedFormat == 'CCT') {
 					this.$refs.EnsembleCCT.clear()
 				} else if (this.selectedFormat == 'Callgraph') {
 					this.$refs.EnsembleSuperGraph.clear()
@@ -362,11 +363,11 @@ export default {
 					this.$refs.AuxiliaryFunction.clear()
 				}
 			}
-			else if(this.selectedMode == 'Single'){
-				if(this.selectedFormat == 'CCT'){
+			else if (this.selectedMode == 'Single') {
+				if (this.selectedFormat == 'CCT') {
 					this.$refs.CCT.clear()
 				}
-				else if(this.selectedFormat == 'Callgraph'){
+				else if (this.selectedFormat == 'Callgraph') {
 					this.$refs.SuperGraph.clear()
 					this.$refs.Function.clear()
 					this.$refs.SingleHistogram.clear()
@@ -443,11 +444,11 @@ export default {
 					groupBy: this.selectedGroupBy
 				})
 
-				this.$socket.emit('ensemble_similarity', {
-					datasets: this.$store.runNames,
-					algo: 'deltacon',
-					module: 'all'
-				})
+				// this.$socket.emit('ensemble_similarity', {
+				// 	datasets: this.$store.runNames,
+				// 	algo: 'deltacon',
+				// 	module: 'all'
+				// })
 
 				// if(this.parameter_analysis){
 				// 	this.$socket.emit('dist_projection', {
@@ -475,7 +476,8 @@ export default {
 				else if (this.selectedMetric == 'Exclusive') {
 					this.selectedColorMin = this.$store.minExcTime['ensemble']
 					this.selectedColorMax = this.$store.maxExcTime['ensemble']
-				} else if(this.selectedMetric == 'Imbalance') {
+				}
+				else if (this.selectedMetric == 'Imbalance') {
 					this.selectedColorMin = 0.0
 					this.selectedColorMax = 1.0
 				}
@@ -484,10 +486,13 @@ export default {
 				if (this.selectedMetric == 'Inclusive') {
 					this.selectedColorMin = this.$store.minIncTime[this.selectedTargetDataset]
 					this.selectedColorMax = this.$store.maxIncTime[this.selectedTargetDataset]
-				} else if (this.selectedMetric == 'Exclusive') {
+				}
+				else if (this.selectedMetric == 'Exclusive') {
+					console.log(this.$store.minExcTime[this.selectedTargetDataset])
 					this.selectedColorMin = this.$store.minExcTime[this.selectedTargetDataset]
 					this.selectedColorMax = this.$store.maxExcTime[this.selectedTargetDataset]
-				} else if(this.selectedMetric == 'Imbalance') {
+				}
+				else if (this.selectedMetric == 'Imbalance') {
 					this.selectedColorMin = 0.0
 					this.selectedColorMax = 1.0
 				}
@@ -504,8 +509,9 @@ export default {
 			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap
 			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap
 			this.$store.selectedColorPoint = this.selectedColorPoint
-			this.selectedColorMinText = this.$store.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
-			this.selectedColorMaxText = this.$store.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
+			console.log(this.selectedColorMin)
+			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
+			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 			this.$store.color.highlight = '#AF9B90';//'#4681B4'
 			this.$store.color.target = '#4681B4'//'#AF9B90';//'#4681B4'
 			this.$store.color.ensemble = '#C0C0C0';//'#4681B4'
@@ -577,16 +583,24 @@ export default {
 					min_inclusive_time = Math.min(this.$store.maxIncTime[dataset], min_inclusive_time)
 				}
 			}
-			// this.$store.selectedTargetDataset = min_inclusive_dataset
-			// this.selectedTargetDataset = min_inclusive_dataset
-			this.$store.selectedTargetDataset = '1-core'
-			this.selectedTargetDataset = '1-core'
-			// this.$store.selectedTargetDataset = 'impi'
-			// this.selectedTargetDataset = 'impi'
-			// this.$store.selectedTargetDataset = 'osu_bcast.1.10.2019-09-03_20-45-50'
-			// this.selectedTargetDataset =	 'osu_bcast.1.10.2019-09-03_20-45-50'
-			// this.$store.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
-			// this.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
+
+			if (this.caseStudy == 'Lulesh-Scaling') {
+				this.$store.selectedTargetDataset = '1-core'
+				this.selectedTargetDataset = '1-core'
+			}
+			else if (this.caseStudy == 'Kripke-MPI') {
+				this.$store.selectedTargetDataset = 'impi'
+				this.selectedTargetDataset = 'impi'
+			}
+			else if (this.caseStudy == 'Kripke-Scaling') {
+				this.$store.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
+				this.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
+			}
+			else if (this.caseStudy == 'OSU-Bcast') {
+				this.$store.selectedTargetDataset = 'osu_bcast.1.10.2019-09-03_20-45-50'
+				this.selectedTargetDataset = 'osu_bcast.1.10.2019-09-03_20-45-50'
+			}
+
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
 
@@ -654,13 +668,7 @@ export default {
 		},
 
 		updateMode() {
-			this.clearLocal()
-			if (this.selectedMode == 'Ensemble') {
-
-			}
-			else if (this.selectedMode == 'Single') {
-
-			}
+			this.clear()
 			this.init()
 		},
 
