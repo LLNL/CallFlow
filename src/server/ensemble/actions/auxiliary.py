@@ -126,6 +126,7 @@ class Auxiliary:
     def run(self):
         ret = {}
         callsite_ret = {}
+        ret['gradients'] = {}
 
         # # Callsite grouped information
         name_grouped = self.module_df.groupby(['name'])
@@ -146,6 +147,11 @@ class Auxiliary:
 
             callsite_target_result = pd.DataFrame(target).sort_values(by='mean_time (inc)', ascending=False)
             callsite_ret[dataset] = callsite_target_result.to_json(orient="split")
+
+        ret['gradients']['callsite'] = {}
+        for name, group_df in name_grouped:
+            ret['gradients']['callsite'][name] = KDE_gradients(self.states, binCount=self.binCount).runCallsite(name)
+
         ret['callsite'] = callsite_ret
 
         module_ret = {}
@@ -170,10 +176,10 @@ class Auxiliary:
             module_target_result = pd.DataFrame(module_target).sort_values(by="mean_time (inc)", ascending = False)
             module_ret[dataset] = module_target_result.to_json(orient='split')
 
-        ret['module'] = module_ret
+        ret['gradients']['module'] = {}
+        for module in modules:
+            ret['gradients']['module'][module] = KDE_gradients(self.states, binCount=self.binCount).runModule(module)
 
-        ret['gradients'] = {}
-        for name, group_df in name_grouped:
-            ret['gradients'][name] = KDE_gradients(self.states, binCount=self.binCount).run(name)
+        ret['module'] = module_ret
 
         return ret
