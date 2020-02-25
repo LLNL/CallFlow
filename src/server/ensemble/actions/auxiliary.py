@@ -15,6 +15,8 @@ import networkx as nx
 from ast import literal_eval as make_tuple
 import numpy as np
 from .gradients import KDE_gradients
+from utils.logger import log
+from utils.timer import Timer
 
 class Auxiliary:
     def __init__(self, states, module='all', sortBy='time (inc)', binCount="20", datasets='all'):
@@ -45,7 +47,11 @@ class Auxiliary:
 
         self.module_df = self.module_df
 
-        self.result = self.run()
+        self.timer = Timer()
+
+        with self.timer.phase("Auxiliary information"):
+            self.result = self.run()
+        print(self.timer)
 
     def addID(self, name):
         name = ''.join([i for i in name if not i.isdigit()])
@@ -121,7 +127,7 @@ class Auxiliary:
         ret = {}
         callsite_ret = {}
 
-        # Callsite grouped information
+        # # Callsite grouped information
         name_grouped = self.module_df.groupby(['name'])
         ensemble = []
         for name, group_df in name_grouped:
