@@ -177,7 +177,7 @@ body {
 }
 
 #auxiliary-function-overview {
-  max-height: 350px;
+  max-height: 550px;
   overflow: auto;
   background: white;
 }

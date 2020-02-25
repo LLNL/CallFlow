@@ -149,7 +149,7 @@ export default {
             this.meanRectangle()
             this.path()
             this.text()
-            // this.drawTargetLine()
+            this.drawTargetLine()
 
             this.$refs.ToolTip.init(this.$parent.id)
         },
@@ -194,7 +194,6 @@ export default {
 
                 let grid = data[d][this.$store.selectedMetric][method]['x']
                 let val = data[d][this.$store.selectedMetric][method]['y']
-
 
                 for (let i = 0; i < grid.length; i += 1) {
                     let x = (i + i + 1) / (2 * grid.length)
@@ -308,7 +307,7 @@ export default {
                     if (d.id.split('_')[0] == "intermediate") {
                         return this.$store.color.ensemble
                     }
-                    else{
+                    else {
                         return "url(#mean-gradient-" + d.id + ")"
                     }
                 })
@@ -518,25 +517,49 @@ export default {
             }
         },
 
-        // come back and remove the dependence on node_data from this.$graph.
-        drawTargetLine(d) {
-            let mode = this.$store.selectedDiffNodeAlignment
+        drawTargetLine() {
             let dataset = this.$store.selectedTargetDataset
-            for (let i = 0; i < this.$store.graph.nodes.length; i++) {
-                let callsite_name = this.$store.graph.nodes[i].name
-                let node_data = this.$store.graph.nodes[i]
-                console.log(this.$store.callsites)
-                if (this.$store.callsites[dataset][callsite_name] != undefined) {
-                    console.log(callsite_name)
-                    let mean_inclusive_data = this.$store.callsites[dataset][callsite_name]['mean_time (inc)']
-                    let max_inclusive_data = this.$store.callsites['ensemble'][callsite_name]['max_time (inc)']
+
+            let data = this.$store.gradients['module']
+
+            for (let i = 0; i < this.graph.nodes.length; i++) {
+                let node_data = this.graph.nodes[i]
+
+                let module_name = this.graph.nodes[i].id
+                if (module_name.split('_')[0] != 'intermediate') {
+                    console.log(module_name)
+                    let module_data = data[module_name][this.$store.selectedMetric]['dist'][this.$store.selectedTargetDataset]
+                    let module_arr = Object.values(module_data)
+
+                    const mean = arr => arr.reduce((p, c) => p + c, 0) / arr.length
+                    let module_mean = mean(module_arr)
+                    console.log(module_mean)
+
+                    let gradients = data[module_name][this.$store.selectedMetric]['hist']
+                    let grid = gradients.x
+                    let vals = gradients.y
+
+                    console.log(grid, module_mean)
+
+                    let targetPos = 0
+                    let binWidth = node_data.height / this.$store.selectedBinCount
+                    for (let idx = 0; idx < grid.length; idx += 1) {
+                        console.log(grid[idx], module_mean)
+                        if (grid[idx] > module_mean) {
+                            targetPos = idx
+                            break
+                        }
+                    }
+
+                    console.log(targetPos)
 
                     let x1 = node_data.x - this.nodeWidth
                     let x2 = node_data.x
                     let y1 = 0
-                    let y2 = (node_data.height * mean_inclusive_data) / max_inclusive_data
+                    let y2 = binWidth * targetPos
+                    console.log(y2)
 
-                    d3.select('#dist-node_' + this.graph.nodeMap[node_data['name']])
+                    d3.select('#ensemble-callsite-' + node_data.id)
                         .append('line')
                         .attr("class", 'targetLines')
                         .attr("id", 'line-2-' + dataset + '-' + node_data['client_idx'])
@@ -547,6 +570,7 @@ export default {
                         .attr("stroke-width", 5)
                         .attr("stroke", this.$store.color.target)
                 }
+
             }
 
         },

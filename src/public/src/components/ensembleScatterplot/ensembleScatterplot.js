@@ -141,13 +141,11 @@ export default {
 		},
 
 		targetProcess() {
-			console.log(this.$store.selectedTargetDataset)
 			let data = this.$store.modules[this.$store.selectedTargetDataset][this.module]
 
 			this.ytargetData = data["time (inc)"]
 			this.xtargetData = data["time"]
 			this.nametargetData = data['name']
-			console.log(data)
 
 			let temp
 			if (this.$store.selectedScatterMode == 'mean') {
@@ -366,7 +364,7 @@ export default {
 				.attr('class', 'scatterplot-axis-label')
 				.attr('transform', 'rotate(-90)')
 				.attr('x', 0)
-				.attr('y', 4 * this.margin.left)
+				.attr('y', 1 * this.margin.left)
 				.style("text-anchor", "end")
 				.style("font-size", "12px")
 				.text("Inclusive Runtime")
@@ -421,6 +419,8 @@ export default {
 				.attr('cy', function (d, i) {
 					return self.yScale(self.yArray[i]);
 				})
+				.style('stroke', '#202020')
+				.style('stroke-width', 0.5)
 				.style('fill', this.$store.color.ensemble)
 		},
 
