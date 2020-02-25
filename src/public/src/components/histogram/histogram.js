@@ -468,14 +468,6 @@ export default {
                     }
                 });
 
-            this.svg.append('text')
-                .attr('class', 'histogram-axis-label')
-                .attr('x', 0)
-                .attr('y', this.boxHeight)
-                .style('font-size', '12px')
-                .style('text-anchor', 'end')
-                .text('MPI Ranks');
-
             const rankLineAxisLine = this.svg.append('g')
                 .attr('class', 'histogram-rank-axis')
                 .attr('id', 'rankAxis')

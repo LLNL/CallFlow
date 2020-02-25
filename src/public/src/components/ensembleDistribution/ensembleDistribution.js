@@ -126,7 +126,7 @@ export default {
         process(selectedModule) {
             let ret = []
 
-            let callsites = this.$store.moduleCallsiteMap[selectedModule]
+            let callsites = Object.keys(this.$store.callsites['ensemble'])
 
             for (let i = 0; i < callsites.length; i += 1) {
                 for (let j = 0; j < callsites.length; j += 1) {
@@ -136,7 +136,7 @@ export default {
                     let callsite = callsites[i]
                     let data = this.$store.callsites['ensemble'][callsite]
 
-                    this.setupMeanGradients(this.$store.gradients, callsites[i], i, j)
+                    this.setupMeanGradients(this.$store.gradients['callsite'], callsites[i], i, j)
                     ret[i][j] = {
                         x: i,
                         j: j,
