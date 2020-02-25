@@ -193,7 +193,6 @@ export default {
         },
 
         boxPlot(ensemble_data, target_data) {
-            console.log(ensemble_data, target_data)
             let inc_arr = ensemble_data['time (inc)']
             let exc_arr = ensemble_data['time']
 
@@ -323,7 +322,6 @@ export default {
                     "max": max
                 }
             }
-            console.log("Q: ", result)
             return result
         },
 

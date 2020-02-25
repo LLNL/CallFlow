@@ -227,8 +227,12 @@ export default function Sankey() {
         let remainingNodes = nodes
         let nextNodes = [];
         let level = 0
+        let x = 0
         while (remainingNodes.length) {
             nextNodes = [];
+            if(x > 10){
+                break
+            }
             remainingNodes.forEach(function (node) {
                 node.level = level
                 node.dx = nodeWidth;
@@ -239,6 +243,7 @@ export default function Sankey() {
             })
             remainingNodes = nextNodes;
             level += 1
+            x += 1
         }
 
         minDistanceBetweenNode = nodeWidth * 2
@@ -302,7 +307,6 @@ export default function Sankey() {
                 }
                 else {
                     divValue = d3.sum(nodes, d => {
-                        console.log(d)
                         return d[dataset]['time (inc)']
                     });
                 }

@@ -64,12 +64,13 @@ export default {
         init() {
             this.toolbarHeight = document.getElementById('toolbar').clientHeight
             this.footerHeight = document.getElementById('footer').clientHeight
-            this.footerHeight = document.getElementById('footer').clientHeight
+
             this.width = window.innerWidth * 0.25
             this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.5
 
             this.boxWidth = this.width - this.padding.right - this.padding.left - this.boxOffset;
             this.boxHeight = this.height - this.padding.top - this.padding.bottom;
+
             this.histogramOffset = Math.floor(this.boxHeight / 3);
             this.histogramHeight = this.boxHeight - this.histogramOffset;
             this.histogramWidth = this.boxWidth - this.padding.left - this.padding.right;

@@ -181,7 +181,7 @@
 
 		<v-layout v-show="selectedMode == 'Ensemble' && selectedFormat == 'Callgraph'">
 			<splitpanes id="ensemble-supergraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe' && parameter_analysis == true">
-				<splitpanes horizontal :splitpanes-size="20">
+				<splitpanes horizontal :splitpanes-size="25">
 					<!-- <span>
 						<RunInformation ref="RunInformation" />
 					</span>
@@ -189,18 +189,17 @@
 						<Projection ref="Projection" @compare="updateCompareMode" />
 					</span> -->
 					<span>
-						<SimilarityMatrix ref="SimilarityMatrix" />
+						<AuxiliaryFunction ref="AuxiliaryFunction" />
 					</span>
 					<span>
-						<EnsembleDistribution ref="EnsembleDistribution" />
+						<EnsembleHistogram ref="EnsembleHistogram" />
 					</span>
 					<span>
 						<EnsembleScatterplot ref="EnsembleScatterplot"/>
 					</span>
 
-
 				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="80">
+				<splitpanes horizontal :splitpanes-size="50">
 					<span>
 						<v-layout class="chip-container">
 							<v-chip class="chip" chips color="teal" label outlined clearable> {{ summaryChip }}
@@ -209,16 +208,18 @@
 						<EnsembleSuperGraph ref="EnsembleSuperGraph" />
 					</span>
 				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="20">
-					<span>
-						<AuxiliaryFunction ref="AuxiliaryFunction" />
-					</span>
+				<splitpanes horizontal :splitpanes-size="25">
+
 					<span>
 						<ModuleHierarchy ref="ModuleHierarchy" />
 					</span>
 					<span>
-						<EnsembleHistogram ref="EnsembleHistogram" />
+						<SimilarityMatrix ref="SimilarityMatrix" />
 					</span>
+					<span>
+						<EnsembleDistribution ref="EnsembleDistribution" />
+					</span>
+
 				</splitpanes>
 
 			</splitpanes>

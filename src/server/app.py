@@ -313,21 +313,6 @@ class App:
             result = json.dumps(result)
             emit("ensemble_supergraph", result, json=True)
 
-        # @sockets.on("ensemble_gradients", namespace="/")
-        # def ensemble_gradients(data):
-        #     result = {}
-        #     if self.debug:
-        #         self.print("[Request] Gradients for all datasets", data)
-        #     result = self.callflow.request(
-        #         {
-        #             "name": "gradients",
-        #             "datasets": data["datasets"],
-        #             "binCount": data["binCount"],
-        #             "plot": data["plot"],
-        #         }
-        #     )
-        #     emit("ensemble_gradients", result, json=True)
-
         @sockets.on("ensemble_similarity", namespace="/")
         def ensemble_similarity(data):
             result = {}
@@ -395,33 +380,6 @@ class App:
             )
             emit('compare', result, json=True)
 
-        # @sockets.on("single_histogram", namespace="/")
-        # def singleHistogram(data):
-        #     if self.debug:
-        #         self.print("Single Histogram request for module.")
-        #     result = self.single_callflow.request(
-        #         {
-        #             "name": "histogram",
-        #             "dataset": data['dataset'],
-        #             "module": data["module"],
-        #         }
-        #     )
-        #     emit("single_histogram", result, json=True)
-
-        # @sockets.on("ensemble_histogram", namespace="/")
-        # def ensembleHistogram(data):
-        #     if self.debug:
-        #         self.print("Ensemble Histogram request for module.")
-        #     datasets = data['datasets']
-        #     result = self.callflow.request(
-        #         {
-        #             "name": "histogram",
-        #             "datasets": datasets,
-        #             "module": data["module"],
-        #         }
-        #     )
-        #     emit("ensemble_histogram", result, json=True)
-
         @sockets.on("split_caller", namespace="/")
         def split_caller(data):
             if self.debug:
@@ -462,9 +420,6 @@ class App:
                 }
             )
             emit("ensemble_scatterplot", result, json=True)
-
-
-
 
     def create_server(self):
         app.debug = True

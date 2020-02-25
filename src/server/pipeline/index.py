@@ -5,6 +5,7 @@ import os
 
 from .create_graphframe import CreateGraphFrame
 from .group_by_module import groupBy
+from .ensemble_group_by_module import ensembleGroupBy
 from .filter_hatchet import FilterHatchet
 from .filter_networkx import FilterNetworkX
 from .hatchet_to_networkx import HatchetToNetworkX
@@ -21,9 +22,11 @@ class Pipeline:
     def __init__(self, config):
         self.config = config
         self.dirname = self.config.processed_path + "/" + self.config.runName
-
+        self.debug = True
     ##################### Pipeline Functions ###########################
+    # All pipeline functions avoid the state being mutated by reference to create separate instances of State variables.
 
+    # Create the State from the hatchet's graphframe.
     def create(self, name):
         state = State(name)
         create = CreateGraphFrame(self.config, name)
@@ -36,7 +39,8 @@ class Pipeline:
 
         return state
 
-    # Pre-process the dataframe and Graph.
+    # Pre-process the dataframe and Graph to add attributes to the networkX graph.
+    # PreProcess class is a builder. Additional attributes can be added by chained calls.
     def process(self, state, gf_type):
         log.info(f"Format: {self.config.format}, dataset: {state.name}")
         if(self.config.format[state.name] == 'hpctoolkit'):
@@ -75,12 +79,14 @@ class Pipeline:
 
         return state
 
+    # Converts a hatchet graph to networkX graph.
     def convertToNetworkX(self, state, path):
         convert = HatchetToNetworkX(state, path, construct_graph=True, add_data=False)
 
         state.g = convert.g
         return state
 
+    # Uses the hatchet's filter method.
     # Filter by hatchet graphframe.
     def filterHatchet(self, state, filterBy, filterPerc):
         filter_obj = Filter(state, filterBy, filterPerc)
@@ -91,27 +97,44 @@ class Pipeline:
 
         return state
 
-    # Union of all the networkX graphs provided.
+
+    # Union of all the networkX graphs.
     def union(self, states):
         u_graph = UnionGraph()
         u_df = pd.DataFrame()
         for idx, dataset in enumerate(states):
             u_graph.unionize(states[dataset].g, dataset)
             u_df = pd.concat([u_df, states[dataset].df], sort=False )
-        # u_graph.add_union_node_attributes()
-        # u_graph.add_edge_attributes()
 
         state = State("union")
         state.df = u_df
         state.g = u_graph.R
 
+        if(self.debug):
+            log.info("Done with Union.")
+            log.info(f"Number of callsites in dataframe: {len(state.df['name'].unique())}")
+            log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
+
         return state
 
-    def filterNetworkX(self, states, state_name, perc):
-        state = states[state_name]
+    # Filter the networkX graph based on the attribute specified in the config file.
+    def filterNetworkX(self, state, perc):
         filter_obj = FilterNetworkX(state)
-        state.df = filter_obj.filter_time_inc_overall(perc)
-        state.g = filter_obj.filter_graph_nodes(state.df, state.g)
+        if(self.config.filter_by == "time (inc)"):
+            df = filter_obj.filter_df_by_time_inc(perc)
+            g = filter_obj.filter_graph_by_time_inc(df, state.g)
+        elif(self.config.filter_by == 'time'):
+            df = filter_obj.filter_df_by_time(perc)
+            g = filter_obj.filter_graph_by_time(df, state.g)
+
+        state = State("filter_union")
+        state.df = df
+        state.g = g
+
+        if(self.debug):
+            log.info("Done with Filtering the Union graph.")
+            log.info(f"Number of callsites in dataframe: {len(state.df['name'].unique())}")
+            log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
 
         return state
 
@@ -122,10 +145,19 @@ class Pipeline:
         state.df = grouped_graph.df
         return state
 
+    def ensemble_group(self, state, attr):
+        grouped_graph = ensembleGroupBy(state['ensemble_entire'], state['ensemble_filter'], attr).run()
+
+        state = State('ensemble_union')
+        state.g = grouped_graph['g']
+        state.df = grouped_graph['df']
+        return state
+
     ##################### Write Functions ###########################
 
+    # Write a graphframe to a file. (i.e., df => .csv, graph => .json)
     def write_gf(self, state, state_name, format_of_df, write_graph=True):
-        utils.debug("writing file for {0} format".format(format_of_df))
+        log.info("writing file for {0} format".format(format_of_df))
         if write_graph:
             # dump the entire_graph as literal
             graph_literal = state.graph.to_literal(
@@ -140,8 +172,9 @@ class Pipeline:
 
         # dump the filtered dataframe to csv.
         df_filepath = self.dirname + "/" + state_name + "/" + format_of_df + "_df.csv"
-        state.df.to_csv(df_filepath)
+        state.entire_df.to_csv(df_filepath)
 
+    # Write the dataset's graphframe to the file.
     def write_dataset_gf(self, state, state_name, format_of_df, write_graph=True):
         log.info("writing file for {0} format".format(format_of_df))
 
@@ -157,6 +190,7 @@ class Pipeline:
         with open(graph_filepath, "w") as graphFile:
             json.dump(g_data, graphFile)
 
+    # Write the ensemble State to the file.
     def write_ensemble_gf(self, states, state_name):
         state = states[state_name]
         log.info("writing file for {0} format".format(state_name))
@@ -171,6 +205,7 @@ class Pipeline:
         with open(graph_filepath, "w") as graphFile:
             json.dump(g_data, graphFile)
 
+    # Write the hatchet graph to a text file.
     def write_hatchet_graph(self, states, state_name):
         state = states[state_name]
         gf = state.gf
@@ -186,7 +221,7 @@ class Pipeline:
             hatchet_graphFile.write(gf.tree(color=False, threshold=0.10))
 
     ##################### Read Functions ###########################
-
+    # Read the unprocessed dataframe and graph.
     def read_entire_gf(self, dataset):
         log.info("[Process] Reading the entire dataframe and graph")
         state = State(dataset)
@@ -228,9 +263,9 @@ class Pipeline:
         state = State(name)
         log.info("[Process] Reading the dataframe and graph of state: {0}".format(name))
         dataset_dirname = os.path.abspath(os.path.join(__file__, "../../..")) + "/data"
-        df_filepath = self.dirname + "/" + name + "/filter_df.csv"
+        df_filepath = self.dirname + "/" + name + "/entire_df.csv"
         entire_df_filepath = self.dirname + "/" + name + "/entire_df.csv"
-        graph_filepath = self.dirname + "/" + name + "/filter_graph.json"
+        graph_filepath = self.dirname + "/" + name + "/entire_graph.json"
         entire_graph_filepath = self.dirname + "/" + name + "/entire_graph.json"
         # if(graph_type != None):
         #     group_df_file_path = self.config.callflow_dir + '/' + name + '/' + graph_type + '_df.csv'
@@ -298,6 +333,7 @@ class Pipeline:
 
         return state
 
+    # Write the graph similarities to a file.
     def deltaconSimilarity(self, datasets, states, type):
         ret = {}
         for idx, dataset in enumerate(datasets):

@@ -1,5 +1,6 @@
 import numpy as np
 import networkx as nx
+from utils.logger import log
 
 
 class FilterNetworkX:
@@ -40,37 +41,59 @@ class FilterNetworkX:
         self.max_time_exc = np.max(self.max_time_exc_list)
         self.min_time_exc = np.min(self.min_time_exc_list)
 
-    def filter_time_inc_overall(self, perc):
+    def filter_df_by_time_inc(self, perc):
+        log.debug(f"[Filter] By Inclusive time : {perc}")
         df = self.df.loc[(self.df["time (inc)"] > perc * 0.01 * self.max_time_inc)]
         filter_call_sites = df["name"].unique()
-        print("Number of nodes left in dataframe: ", len(filter_call_sites))
         return df[df["name"].isin(filter_call_sites)]
 
-    def filter_graph_nodes(self, df, g):
-        call_sites = df["name"].unique()
+    def filter_df_by_time(self, perc):
+        log.debug(f"[Filter] By Exclusive time : {perc}")
+        df = self.df.loc[self.df['time'] > perc * 0.01 * self.max_time_exc]
+        filter_call_sites = df["name"].unique()
+        return df[df["name"].isin(filter_call_sites)]
+
+    def filter_graph_by_time_inc(self, df, g):
+        callsites = df["name"].unique()
 
         ret = nx.DiGraph()
 
         for edge in g.edges():
-            if edge[0] in call_sites and edge[1] in call_sites:
+            # If source is present in the callsites list
+            if(edge[0] in callsites and edge[1] in callsites):
                 ret.add_edge(edge[0], edge[1])
+            else:
+                log.info(f"Removing the edge: {edge}")
 
-        # self.add_node_attributes(df, ret)
         return ret
 
-    def generic_map(self, df, g):
-        df = df.reset_index(["rank"])
-        columns = list(df.columns)
-        for column in columns:
-            values = {}
-            non_unique_columns = ["time", "time (inc)", "dataset", "rank"]
-            for node in g.nodes():
-                name_df = df.loc[df["name"] == node][column]
-                if column in non_unique_columns:
-                    values[node] = name_df.tolist()
-                else:
-                    values[node] = name_df.tolist()[0]
-            nx.set_node_attributes(g, name=column, values=values)
+    # Refer https://stackoverflow.com/questions/28095646/finding-all-paths-walks-of-given-length-in-a-networkx-graph
+    def findPaths(self, g, u, n,excludeSet = None):
+        if excludeSet == None:
+            excludeSet = set([u])
+        else:
+            excludeSet.add(u)
+        if n == 0:
+            return [[u]]
 
-    def add_node_attributes(self, df, g):
-        generic_map = self.generic_map(df, g)
+        print("Callsite: ", u)
+        for neighbor in g.neighbors(u):
+            print(neighbor)
+        # print("neighbors: ", g.neighbors(u))
+        paths = [[].append(path) for neighbor in g.neighbors(u) if neighbor not in excludeSet for path in self.findPaths(g, neighbor, n-1, excludeSet)]
+        excludeSet.remove(u)
+        return paths
+
+    def filter_graph_by_time(self, df, g):
+        callsites = df["name"].unique()
+
+        ret = nx.DiGraph()
+
+        for callsite in callsites:
+            path = self.df.loc[self.df['name'] == callsite]['path'].tolist()[0]
+            # print(self.findPaths(g, callsite, 10))
+            ret.add_path(path)
+
+        return ret
+
+

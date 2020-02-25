@@ -37,8 +37,8 @@ export default {
                 .attr('class', 'toolTipSVG')
 
             this.toolTipG = this.toolTipDiv.append('g')
-            this.height = document.getElementById('callgraph-dashboard').clientHeight
-            this.halfWidth = document.getElementById('histogram_view').clientWidth / 2
+            this.height = document.getElementById(this.parentID).clientHeight
+            this.halfWidth = document.getElementById(this.parentID).clientWidth / 2
         },
 
         render(data, node) {
@@ -64,9 +64,9 @@ export default {
                     'x': () => {
                         if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth - 25) {
                             return (this.mousePosX - this.width) + 'px';
-                        } 
+                        }
                         return (this.mousePosX) + 'px';
-                        
+
                     },
                     'y': () => {
                         return (this.mousePosY) + "px";
@@ -88,9 +88,9 @@ export default {
                     'x': () => {
                         if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth - 25) {
                             return (this.mousePosX - this.width + this.offset) + 'px';
-                        } 
+                        }
                         return (this.mousePosX) + this.offset +  'px';
-                        
+
                     },
                     'y': () => {
                         return (this.mousePosY) + 2*this.offset + "px";

@@ -91,10 +91,12 @@ class EnsembleCallFlow:
         self.config.min_incTime = {}
         self.config.min_excTime = {}
         self.config.numOfRanks = {}
+
         max_inclusvie_time = 0
         max_exclusive_time = 0
         min_inclusive_time = 0
         min_exclusive_time = 0
+        max_numOfRanks = 0
         for idx, state in enumerate(self.states):
             if state != "ensemble":
                 self.config.max_incTime[state] = getMaxIncTime(self.states[state])
@@ -114,10 +116,12 @@ class EnsembleCallFlow:
                 min_inclusive_time = min(
                     self.config.min_incTime[state], min_inclusive_time
                 )
+                max_numOfRanks = max(self.config.numOfRanks[state], max_numOfRanks)
         self.config.max_incTime["ensemble"] = max_inclusvie_time
         self.config.max_excTime["ensemble"] = max_exclusive_time
         self.config.min_incTime["ensemble"] = min_inclusive_time
         self.config.min_excTime["ensemble"] = min_exclusive_time
+        self.config.numOfRanks['ensemble'] = max_numOfRanks
 
 
     def request(self, action):

@@ -129,11 +129,10 @@ class groupBy:
             snode = edge[0]
             tnode = edge[1]
 
-            print(snode, tnode)
+            # print(snode, tnode)
             s_df = self.df.loc[self.df['name'] == edge[0]]
             t_df = self.df.loc[self.df['name'] == edge[1]]
 
-            # print(s_df.shape, t_df.shape)
             if(s_df.shape[0] == 0 or t_df.shape[0] == 0):
                 continue
 
