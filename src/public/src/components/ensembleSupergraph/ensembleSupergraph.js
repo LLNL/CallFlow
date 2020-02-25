@@ -28,7 +28,7 @@ export default {
 		nodeWidth: 50,
 		nodeScale: 1.0,
 		ySpacing: 50,
-		levelSpacing: 40,
+		levelSpacing: 50,
 		margin: {
 			top: 10, right: 10, bottom: 20, left: 10
 		},

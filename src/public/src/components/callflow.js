@@ -132,8 +132,8 @@ export default {
 			"ensemble_projection",
 		],
 		parameter_analysis: true,
-		caseStudy: 'Lulesh-Scaling'
-		// caseStudy: 'Kripke-MPI'
+		// caseStudy: 'Lulesh-Scaling'
+		caseStudy: 'Kripke-MPI'
 	}),
 
 	watch: {},
