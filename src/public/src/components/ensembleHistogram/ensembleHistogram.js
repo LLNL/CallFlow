@@ -67,7 +67,7 @@ export default {
 
             // Assign the height and width of container
             this.width = window.innerWidth * 0.25
-            this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.40
+            this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.33
 
             // Assign width and height for histogram and rankLine SVG.
             this.boxWidth = this.width - this.padding.right - this.padding.left;
@@ -512,7 +512,6 @@ export default {
         },
 
         rankLines() {
-            console.log(this.$store.numOfRanks)
             let rankCount = parseInt(this.$store.numOfRanks['ensemble'])
 
             this.ranklinescale = d3.scaleLinear()

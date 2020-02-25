@@ -84,7 +84,14 @@ export default {
 
 	methods: {
 		init() {
-			// this.$refs.ToolTip.init(this.id)
+			console.log()
+			let modules_arr = Object.keys(this.$store.modules['ensemble'])
+
+			this.$socket.emit('module_hierarchy', {
+				module: modules_arr[0],
+				// name: this.$store.selectedName,
+				datasets: this.$store.runNames,
+			})
 		},
 
 		setupSVG() {
@@ -384,7 +391,7 @@ export default {
 
 		setupMeanGradients() {
 			let module = this.$store.selectedModule
-			let callsites = this.$store.moduleCallsiteMap[module]
+			let callsites = Object.keys(this.$store.callsites['ensemble'])
 
 			let method = ''
 			// let mode = 'Horizontal'
@@ -415,7 +422,7 @@ export default {
 					.append("defs");
 
 				this.linearGradient = defs.append("linearGradient")
-					.attr("id", "mean-gradient-" + id)
+					.attr("id", "mean-callsite-gradient-" + data.name	)
 					.attr("class", 'linear-gradient')
 
 				if (mode == 'Horizontal') {
@@ -466,7 +473,6 @@ export default {
 					else {
 						name = d.data.name.split('=')[1]
 					}
-					// let id = self.$store.callsites['ensemble'][name].id
 					return name
 				})
 				.attr('x', (d) => {
@@ -502,10 +508,11 @@ export default {
 					return d.y1 - d.y0;
 				})
 				.style("fill", (d, i) => {
-					if (d.data.name.indexOf('=') === -1) {
+					console.log(d)
+					if (d.data.value == undefined) {
 						return "url(#mean-gradient-" + d.data.name + ")"
 					}
-					return 'transparent'
+					return "url(#mean-callsite-gradient-" + d.data.name + ")"
 				})
 				.style('stroke', (d) => {
 					let runtime = 0

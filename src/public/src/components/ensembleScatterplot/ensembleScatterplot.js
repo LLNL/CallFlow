@@ -310,7 +310,7 @@ export default {
 				});
 
 			this.svg.append('text')
-				.attr('class', 'axis-label')
+				.attr('class', 'scatterplot-axis-label')
 				.attr('x', self.boxWidth)
 				.attr('y', self.yAxisHeight - this.margin.top)
 				.style('font-size', '12px')
@@ -363,7 +363,7 @@ export default {
 				.call(yAxis)
 
 			this.svg.append("text")
-				.attr('class', 'axis-label')
+				.attr('class', 'scatterplot-axis-label')
 				.attr('transform', 'rotate(-90)')
 				.attr('x', 0)
 				.attr('y', 4 * this.margin.left)
@@ -467,6 +467,7 @@ export default {
 			d3.selectAll('.res_line').remove()
 			d3.selectAll('.axisLabel').remove()
 			d3.selectAll('.text').remove()
+			d3.selectAll('.scatterplot-axis-label').remove()
 		},
 
 		update(data) {

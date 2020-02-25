@@ -30,7 +30,7 @@ export default {
 		ySpacing: 50,
 		levelSpacing: 40,
 		margin: {
-			top: 10, right: 10, bottom: 10, left: 10
+			top: 10, right: 10, bottom: 20, left: 10
 		},
 		width: null,
 		height: null,

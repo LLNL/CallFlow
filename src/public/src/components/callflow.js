@@ -296,6 +296,7 @@ export default {
 				this.$refs.EnsembleHistogram.init()
 				this.$refs.EnsembleDistribution.init()
 				// this.$refs.RunInformation.init()
+				this.$refs.ModuleHierarchy.init()
 				this.$refs.EnsembleScatterplot.init()
 				this.$refs.SimilarityMatrix.init()
 				// this.initLoad = false
@@ -432,6 +433,7 @@ export default {
 					functionsInCCT: this.selectedFunctionsInCCT,
 				})
 			} else if (this.selectedFormat == 'Callgraph' && this.selectedExhibitMode == 'Default') {
+
 				this.$socket.emit('ensemble_callsite_data', {
 					datasets: this.$store.runNames,
 					sortBy: this.$store.auxiliarySortBy,
@@ -444,11 +446,14 @@ export default {
 					groupBy: this.selectedGroupBy
 				})
 
-				// this.$socket.emit('ensemble_similarity', {
-				// 	datasets: this.$store.runNames,
-				// 	algo: 'deltacon',
-				// 	module: 'all'
-				// })
+
+				this.$socket.emit('ensemble_similarity', {
+					datasets: this.$store.runNames,
+					algo: 'deltacon',
+					module: 'all'
+				})
+
+
 
 				// if(this.parameter_analysis){
 				// 	this.$socket.emit('dist_projection', {

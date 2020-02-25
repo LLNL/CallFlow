@@ -114,16 +114,13 @@ class ModuleHierarchy:
         existing_nodes = {}
         for idx, node in enumerate(self.hierarchy.nodes()):
             if node not in existing_nodes:
-
                 if "=" in node:
                     split = node.split("=")
                     module = split[0]
                     func = split[1]
                     root = func
                     path = make_tuple(
-                        self.df.loc[self.df["name"] == func]["component_path"].unique()[
-                            0
-                        ]
+                        self.df.loc[self.df["name"] == func]["component_path"].unique()[0]
                     )
                     run = self.df.loc[self.df['name'] == func]['dataset'].unique()
                 else:
@@ -143,14 +140,25 @@ class ModuleHierarchy:
                     else:
                         path_tuple = path
 
-                    paths.append({
-                        "name": func,
-                        "path": path_tuple,
-                        "time (inc)": df["time (inc)"].mean(),
-                        "time": df["time"].mean(),
-                        "level": int(df["component_level"].unique()[0]) - 1,
-                        "run": df['dataset'].unique()
-                    })
+                    if(func == self.module):
+                        path_tuple = (self.module)
+                        # paths.append({
+                        #     "name": func,
+                        #     "path": make_tuple(path_tuple),
+                        #     "time (inc)": df["time (inc)"].mean(),
+                        #     "time": df["time"].mean(),
+                        #     "level": int(df["component_level"].unique()[0]) - 1,
+                        #     "run": df['dataset'].unique()
+                        # })
+                    else:
+                        paths.append({
+                            "name": func,
+                            "path": path_tuple,
+                            "time (inc)": df["time (inc)"].mean(),
+                            "time": df["time"].mean(),
+                            "level": int(df["component_level"].unique()[0]) - 1,
+                            "run": df['dataset'].unique()
+                        })
 
                 existing_nodes[node] = True
 
@@ -159,4 +167,3 @@ class ModuleHierarchy:
         return {
             "data": paths_df.to_json(orient="columns"),
         }
-
