@@ -62,9 +62,9 @@ class SuperGraph(nx.Graph):
                 print("Using the existing graph from state {0}".format(self.state.name))
 
         # Store the A (*adjacency matrix.)
-        with self.timer.phase("Create adjacency matrix"):
-            self.adj_matrix = nx.adjacency_matrix(self.g)
-            self.dense_adj_matrix = self.adj_matrix.todense()
+        # with self.timer.phase("Create adjacency matrix"):
+        #     self.adj_matrix = nx.adjacency_matrix(self.g)
+        #     self.dense_adj_matrix = self.adj_matrix.todense()
 
         # Variables to control the data properties globally.
         self.callbacks = []
@@ -107,10 +107,11 @@ class SuperGraph(nx.Graph):
 
                     source_name = path_tuple[-2].split('=')[1]
                     target_name = path_tuple[-1].split('=')[1]
-                    self.g.add_edge(source_module, target_module, attr_dict={
-                        "source_callsite": source_name,
-                        "target_callsite": target_name
-                    })
+                    if(target_name != 'libmonitor.so.0.0.0'):
+                        self.g.add_edge(source_module, target_module, attr_dict={
+                            "source_callsite": source_name,
+                            "target_callsite": target_name
+                                })
 
     def add_node_attributes(self):
         ensemble_mapping = self.ensemble_map(self.g.nodes())

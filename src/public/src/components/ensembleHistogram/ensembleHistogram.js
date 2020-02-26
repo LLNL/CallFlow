@@ -414,14 +414,14 @@ export default {
             const yAxis = d3.axisLeft(this.histogramYScale)
                 .ticks(this.freq.length)
                 .tickFormat((d, i) => {
-                    return d
+                    if(i% 4 == 0){
+                        return d
+                    }
                 })
 
             this.svg.append('text')
                 .attr('transform', 'rotate(-90)')
                 .attr('class', 'histogram-axis-label')
-                // .attr('y', this.axisLabelFactor*2*this.padding.left)
-                // .attr('x', -this.padding.top)
                 .attr('x', - this.histogramHeight + this.padding.top)
                 .attr('y', this.padding.left)
                 .style('font-size', '12px')

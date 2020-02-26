@@ -54,6 +54,7 @@ class Pipeline:
                     .add_imbalance_perc()
                     .add_module_name_hpctoolkit()
                     .add_mod_index()
+                    .add_something()
                     .add_path()
                     .build()
                 )
@@ -76,6 +77,8 @@ class Pipeline:
         state.gf = preprocess.gf
         state.df = preprocess.df
         state.graph = preprocess.graph
+
+        self.entire_df = state.df
 
         return state
 
@@ -114,6 +117,8 @@ class Pipeline:
             log.info("Done with Union.")
             log.info(f"Number of callsites in dataframe: {len(state.df['name'].unique())}")
             log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
+            log.info(f"Number of modules in the graph: {len(state.df['module'].unique())}")
+
 
         return state
 
@@ -125,7 +130,7 @@ class Pipeline:
             g = filter_obj.filter_graph_by_time_inc(df, state.g)
         elif(self.config.filter_by == 'time'):
             df = filter_obj.filter_df_by_time(perc)
-            g = filter_obj.filter_graph_by_time(df, state.g)
+            g = filter_obj.filter_graph_by_time(self.entire_df, state.g)
 
         state = State("filter_union")
         state.df = df
@@ -135,6 +140,7 @@ class Pipeline:
             log.info("Done with Filtering the Union graph.")
             log.info(f"Number of callsites in dataframe: {len(state.df['name'].unique())}")
             log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
+            log.info(f"Number of modules in the graph: {len(state.df['module'].unique())}")
 
         return state
 
@@ -151,6 +157,13 @@ class Pipeline:
         state = State('ensemble_union')
         state.g = grouped_graph['g']
         state.df = grouped_graph['df']
+
+
+        if(self.debug):
+            log.info("Done with Ensemb;le supergraph.")
+            log.info(f"Number of callsites in dataframe: {len(state.df['name'].unique())}")
+            log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
+            log.info(f"Number of modules in the graph: {len(state.df['module'].unique())}")
         return state
 
     ##################### Write Functions ###########################

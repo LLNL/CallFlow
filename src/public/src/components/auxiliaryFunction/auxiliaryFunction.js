@@ -47,6 +47,12 @@ export default {
                 this.firstRender = false
             }
 
+            this.toolbarHeight = document.getElementById('toolbar').clientHeight
+			this.footerHeight = document.getElementById('footer').clientHeight
+
+            document.getElementById('auxiliary-function-overview').style.maxHeight = window.innerHeight - this.toolbarHeight - this.footerHeight + "px"
+            console.log(document.getElementById('auxiliary-function-overview').style)
+
             this.number_of_callsites = Object.keys(this.$store.callsites['ensemble']).length
             for (const [idx, callsite] of Object.entries(this.$store.callsites['ensemble'])) {
                 this.ui(callsite.name)
@@ -488,6 +494,7 @@ export default {
                 .transition()
                 .duration(this.duration)
                 .attr("cx", d => d.x[0])
+                .style("fill", this.$store.color.ensemble)
                 .style("opacity", 1);
         },
 

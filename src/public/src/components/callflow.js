@@ -22,14 +22,13 @@ import Function from './function/function'
 // Ensemble mode imports
 import EnsembleSuperGraph from './ensembleSupergraph/ensembleSupergraph'
 import EnsembleCCT from './ensembleCCT/ensembleCCT'
-import SimilarityMatrix from './similarityMatrix/similarityMatrix'
-import ParameterProjection from './parameterProjection/parameterProjection'
-import RunInformation from './parameterInformation/parameterInformation'
+// import SimilarityMatrix from './similarityMatrix/similarityMatrix'
+// import ParameterProjection from './parameterProjection/parameterProjection'
 import AuxiliaryFunction from './auxiliaryFunction/auxiliaryFunction'
 import EnsembleHistogram from './ensembleHistogram/ensembleHistogram'
 import ModuleHierarchy from './moduleHierarchy/moduleHierarchy'
 import EnsembleScatterplot from './ensembleScatterplot/ensembleScatterplot'
-import EnsembleDistribution from './ensembleDistribution/ensembleDistribution'
+// import EnsembleDistribution from './ensembleDistribution/ensembleDistribution'
 
 import io from 'socket.io-client'
 
@@ -47,13 +46,12 @@ export default {
 		ModuleHierarchy,
 		EnsembleSuperGraph,
 		EnsembleCCT,
-		SimilarityMatrix,
+		// SimilarityMatrix,
 		// ParameterProjection,
-		// RunInformation,
 		AuxiliaryFunction,
 		EnsembleHistogram,
 		EnsembleScatterplot,
-		EnsembleDistribution
+		// EnsembleDistribution
 	},
 
 	data: () => ({
@@ -132,8 +130,8 @@ export default {
 			"ensemble_projection",
 		],
 		parameter_analysis: true,
-		// caseStudy: 'Lulesh-Scaling'
-		caseStudy: 'Kripke-MPI'
+		caseStudy: 'Lulesh-Scaling'
+		// caseStudy: 'Kripke-MPI'
 	}),
 
 	watch: {},
@@ -294,11 +292,12 @@ export default {
 				this.$refs.EnsembleSuperGraph.init(data)
 				this.$refs.AuxiliaryFunction.init()
 				this.$refs.EnsembleHistogram.init()
-				this.$refs.EnsembleDistribution.init()
 				// this.$refs.RunInformation.init()
 				this.$refs.ModuleHierarchy.init()
 				this.$refs.EnsembleScatterplot.init()
-				this.$refs.SimilarityMatrix.init()
+				// this.$refs.SimilarityMatrix.init()
+// 				this.$refs.EnsembleDistribution.init()
+
 				// this.initLoad = false
 			}
 		},
@@ -330,7 +329,7 @@ export default {
 				} else if (this.selectedFormat == 'CCT') {
 					this.$refs.EnsembleSuperGraph.clear()
 					this.$refs.EnsembleHistogram.clear()
-					this.$refs.EnsembleDistribution.clear()
+					// this.$refs.EnsembleDistribution.clear()
 					this.$refs.EnsembleScatterplot.clear()
 					this.$refs.Scatterplot.clear()
 					this.$refs.AuxiliaryFunction.clear()
@@ -358,7 +357,7 @@ export default {
 					this.$refs.EnsembleSuperGraph.clear()
 					this.$refs.ModuleHierarchy.clear()
 					this.$refs.EnsembleHistogram.clear()
-					this.$refs.EnsembleDistribution.clear()
+					// this.$refs.EnsembleDistribution.clear()
 					// this.$refs.Projection.clear()
 					// this.$refs.RunInformation.clear()
 					this.$refs.AuxiliaryFunction.clear()
