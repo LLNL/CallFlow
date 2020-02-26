@@ -77,7 +77,6 @@ export default {
             } else if (this.$store.selectedMetric == 'Imbalance') {
                 attr_data = data['hist_imbalance']
             }
-            console.log(attr_data['x'], attr_data['y'])
             return [attr_data['x'], attr_data['y']];
         },
 
@@ -100,13 +99,20 @@ export default {
             }
 
             if (type == 'ensemble') {
+                if(freq < 50){
+                    this.minimapYScale = d3.scaleLinear()
+                    .domain([0, d3.max(freq)])
+                    .range([this.$parent.ySpacing, 0]);
+                }
+                else{
+                    this.minimapYScale = d3.scaleLog()
+                    .domain([0.1, d3.max(freq)])
+                    .range([this.$parent.ySpacing, 0]);
+                }
                 this.minimapXScale = d3.scaleBand()
                     .domain(xVals)
                     .rangeRound([0, this.$parent.nodeWidth])
 
-                this.minimapYScale = d3.scaleLinear()
-                    .domain([0, d3.max(freq)])
-                    .range([this.$parent.ySpacing, 0]);
             }
 
             this.bandWidth = this.minimapXScale.bandwidth()

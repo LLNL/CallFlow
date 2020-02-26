@@ -51,7 +51,6 @@ export default {
 			this.footerHeight = document.getElementById('footer').clientHeight
 
             document.getElementById('auxiliary-function-overview').style.maxHeight = window.innerHeight - this.toolbarHeight - this.footerHeight + "px"
-            console.log(document.getElementById('auxiliary-function-overview').style)
 
             this.number_of_callsites = Object.keys(this.$store.callsites['ensemble']).length
             for (const [idx, callsite] of Object.entries(this.$store.callsites['ensemble'])) {
@@ -332,7 +331,6 @@ export default {
         },
 
         box() {
-            // Update innerquartile box.
             this.boxHeight = this.height / 2
             this.boxSVG = this.svg
                 .append("rect")
@@ -352,6 +350,7 @@ export default {
                 .duration(this.duration)
                 .attr("x", this.x1(this.q.q1))
                 .attr("width", this.x1(this.q.q3) - this.x1(this.q.q1));
+
         },
 
         targetBox() {
@@ -410,17 +409,9 @@ export default {
                 .style("opacity", 1)
                 .attr("x1", this.x1(this.q.min))
                 .attr("x2", this.x1(this.q.max));
-
-            // this.centerLineSVG.exit().transition()
-            //     .duration(this.duration)
-            //     .style("opacity", 1e-6)
-            //     .attr("x1", this.x1(this.q.min))
-            //     .attr("x2", this.x1(this.q.max))
-            //     .remove();
         },
 
         medianLine() {
-            // Update median line.
             var medianLine = this.svg
                 .append("line")
                 .attr("class", "median")
@@ -463,13 +454,6 @@ export default {
                     .attr("x2", this.x1(d))
                     .style("opacity", 1);
             }
-
-            // this.whisker.exit().transition()
-            //     .duration(this.duration)
-            //     .attr("x1", this.x1)
-            //     .attr("x2", this.x1)
-            //     .style("opacity", 1e-6)
-            //     .remove();
         },
 
         outliers() {

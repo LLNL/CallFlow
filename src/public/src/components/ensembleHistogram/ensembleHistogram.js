@@ -75,17 +75,14 @@ export default {
 
             this.histogramOffset = Math.floor(this.boxHeight / 3);
             this.histogramHeight = this.boxHeight - this.histogramOffset - this.padding.top
-            this.histogramWidth = this.boxWidth - this.padding.left - this.padding.right
-
+            this.histogramWidth = this.boxWidth - this.padding.left*this.axisLabelFactor - this.padding.right
             this.rankScaleHeight = this.boxHeight - this.histogramHeight
-            this.rankScaleWidth = this.histogramWidth - this.padding.left
-
+            this.rankScaleWidth = this.histogramWidth
             // Create the SVG
             this.svg = d3.select('#' + this.svgID)
                 .attrs({
-                    "width": this.boxWidth - this.padding.right - this.padding.left,
-                    "height": this.boxHeight - this.padding.top - this.padding.bottom,
-                    'transform': "translate(" + this.padding.left + "," + this.padding.top + ")"
+                    "width": this.boxWidth,
+                    "height": this.boxHeight,
                 })
 
             let modules_arr = Object.keys(this.$store.modules['ensemble'])
@@ -110,27 +107,43 @@ export default {
             const targetTemp = this.dataProcess(targetData)
             this.targetXVals = targetTemp[0]
             this.targetFreq = targetTemp[1]
-            this.target_axis_x = targetTemp[3]
+            this.target_axis_x = targetTemp[2]
             this.target_binContainsProcID = targetTemp[3]
 
             this.$refs.ToolTip.init(this.svgID)
 
+            this.rankCount = parseInt(this.$store.numOfRanks['ensemble'])
+            console.log(this.axis_x, this.target_axis_x)
+
+            let minXVal = Math.min(this.axis_x[0], this.target_axis_x[0])
+            let maxXVal = Math.max(this.axis_x[this.axis_x.length - 1], this.target_axis_x[this.target_axis_x.length - 1])
+
+            // console.log(minXVal, maxXVal)
+            // this.concatenatedXVals = []
+            // for(let i = 0; i <= this.$store.selectedBinCount; i += 1){
+            //     let val = minXVal + ((maxXVal - minXVal)/this.$store.selectedBinCount)*i
+            //     this.concatenatedXVals.push(val)
+            // }
+            // console.log(this.concatenatedXVals)
+
+            this.concatenatedXVals = this.xVals.concat(this.targetXVals)
+            this.concatenatedXVals = this.concatenatedXVals.sort((a, b) => a.toFixed(2) - b.toFixed(2))
+
             this.histogramXScale = d3.scaleBand()
-                .domain(this.xVals)
-                .range(["#c6dbef", "#6baed6", "#2171b5", "#084594"])
+                .domain(this.concatenatedXVals)
                 .rangeRound([0, this.histogramWidth])
 
-            // if (d3.max(this.freq) < 50) {
-            this.histogramYScale = d3.scaleLinear()
-                .domain([0, d3.max(this.freq)])
-                .range([this.histogramHeight, 0])
-            this.logScaleBool = false;
-            // } else {
-            // this.histogramYScale = d3.scaleLog()
-            // .domain([1, d3.max(this.freq)])
-            // .range([this.boxHeight, 10]);
-            // this.logScaleBool = true;
-            // }
+            if (d3.max(this.freq) < 50) {
+                this.histogramYScale = d3.scaleLinear()
+                    .domain([0, d3.max(this.freq)])
+                    .range([this.histogramHeight, 0])
+                this.logScaleBool = false;
+            } else {
+                this.histogramYScale = d3.scaleLog()
+                    .domain([0.1, d3.max(this.freq)])
+                    .range([this.histogramHeight, 0]);
+                this.logScaleBool = true;
+            }
             this.visualize();
         },
 
@@ -145,6 +158,7 @@ export default {
             d3.selectAll('.target_lineRank').remove()
             d3.selectAll('.tick').remove()
             d3.selectAll('.histogram-axis-label').remove()
+            d3.selectAll('.ensemble-histogram-rank-axis').remove()
             this.$refs.ToolTip.clear()
         },
 
@@ -181,17 +195,17 @@ export default {
             let dataMin = 0
             let dataMax = 0
 
-            if (this.selectedColorBy == 'Inclusive') {
+            if (this.$store.selectedMetric == 'Inclusive') {
                 attr_data = data['hist_time (inc)']
                 dataMin = data['min_time (inc)'];
                 dataMax = data['max_time (inc)'];
                 dataSorted = data['sorted_time (inc)']
-            } else if (this.selectedColorBy == 'Exclusive') {
+            } else if (this.$store.selectedMetric == 'Exclusive') {
                 attr_data = data['hist_time']
                 dataMin = data['min_time']
                 dataMax = data['max_time']
                 dataSorted = data['sorted_time']
-            } else if (this.selectedColorBy == 'Imbalance') {
+            } else if (this.$store.selectedMetric == 'Imbalance') {
                 attr_data = data['hist_imbalance']
             }
 
@@ -286,22 +300,26 @@ export default {
                 .enter()
                 .append('rect')
                 .attr('class', 'dist-histogram-bar dist-target')
-                .attr('x', (d, i) => {
-                    return this.padding.left + this.histogramXScale(this.targetXVals[i])
+                .attrs({
+                    'x': (d, i) => {
+                        console.log(this.targetXVals[i], this.histogramXScale(this.targetXVals[i]))
+                        return this.histogramXScale(this.targetXVals[i])
+                    },
+                    'y': (d, i) => {
+                        return this.histogramYScale(d)
+                    },
+                    'width': (d) => {
+                        return this.histogramXScale.bandwidth()
+                    },
+                    'height': (d) => {
+                        return Math.abs(this.histogramHeight - this.histogramYScale(d));
+                    },
+                    'fill': this.$store.color.target,
+                    'opacity': 1,
+                    'stroke-width': '0.2px',
+                    'stroke': '#202020',
+                    'transform': "translate(" + this.axisLabelFactor * this.padding.left + "," + 0 + ")"
                 })
-                .attr('y', (d, i) => {
-                    return this.histogramYScale(d)
-                })
-                .attr('width', (d) => {
-                    return this.histogramXScale.bandwidth()
-                })
-                .attr('height', (d) => {
-                    return Math.abs(this.histogramHeight - this.histogramYScale(d)) - this.padding.top;
-                })
-                .attr('fill', this.$store.color.target)
-                .attr('opacity', 1)
-                .attr('stroke-width', (d, i) => '0.2px')
-                .attr('stroke', (d, i) => 'black')
                 .on('mouseover', function (d, i) {
                     d3.select(this)
                         .attr('fill', 'red');
@@ -328,25 +346,28 @@ export default {
                 .enter()
                 .append('rect')
                 .attr('class', 'dist-histogram-bar dist-ensemble')
-                .attr('x', (d, i) => {
-                    return this.padding.left + this.histogramXScale(this.xVals[i])
+                .attrs({
+                    'x': (d, i) => {
+                        return this.histogramXScale(this.xVals[i])
+                    },
+                    'y': (d, i) => {
+                        return this.histogramYScale(d)
+                    },
+                    'width': (d) => {
+                        return this.histogramXScale.bandwidth()
+                    },
+                    'height': (d) => {
+                        return Math.abs(this.histogramHeight - this.histogramYScale(d));
+                    },
+                    'fill': (d) => {
+                        let color = self.$store.color.ensemble
+                        return color
+                    },
+                    'opacity': 1,
+                    'stroke-width': '0.2px',
+                    'stroke': '#202020',
+                    'transform': "translate(" + this.axisLabelFactor * this.padding.left + "," + 0 + ")"
                 })
-                .attr('y', (d, i) => {
-                    return this.histogramYScale(d)
-                })
-                .attr('width', (d) => {
-                    return this.histogramXScale.bandwidth()
-                })
-                .attr('height', (d) => {
-                    return Math.abs(this.histogramHeight - this.histogramYScale(d));
-                })
-                .attr('fill', (d) => {
-                    let color = self.$store.color.ensemble
-                    return color
-                })
-                .attr('opacity', 1)
-                .attr('stroke-width', (d, i) => '0.2px')
-                .attr('stroke', (d, i) => 'black')
                 .on('mouseover', function (d, i) {
                     d3.select(this)
                         .attr('fill', 'red');
@@ -358,7 +379,7 @@ export default {
                 })
                 .on('mouseout', function (d, i) {
                     d3.select(this)
-                        .attr('fill', this.$store.color.ensemble);
+                        .attr('fill', self.$store.color.ensemble);
                     d3.selectAll(`.lineRank_${i}`)
                         .style('fill', 'grey')
                         .style('fill-opacity', 0.4);
@@ -371,10 +392,11 @@ export default {
         xAxis() {
             const xFormat = d3.format('.1e');
             const xAxis = d3.axisBottom(this.histogramXScale)
-                .ticks(this.MPIcount)
+                .ticks(this.$store.selectedBinCount)
                 .tickFormat((d, i) => {
-                    let temp = this.axis_x[i];
-                    if (i % 3 == 1 || i == this.MPIcount.length - 1) {
+                    console.log(d, i)
+                    let temp = this.concatenatedXVals[i];
+                    if (i % 4 == 0 && i == this.$store.numOfRanks['ensemble']) {
                         let value = temp * 0.000001
                         return `${value.toFixed(2)}s`;
                     }
@@ -414,7 +436,7 @@ export default {
             const yAxis = d3.axisLeft(this.histogramYScale)
                 .ticks(this.freq.length)
                 .tickFormat((d, i) => {
-                    if(i% 4 == 0){
+                    if (i % 4 == 0) {
                         return d
                     }
                 })
@@ -480,11 +502,11 @@ export default {
                 var topX1 = cumulativeBinSpace + binLocation
                 var topX2 = cumulativeBinSpace + (end - start + 1) * widthPerRank + binLocation;
 
-                var botX3 = this.ranklinescale(start) + this.padding.left;
-                var botX4 = this.ranklinescale(end) + this.padding.left;
+                var botX3 = this.ranklinescale(start);
+                var botX4 = this.ranklinescale(end);
 
                 var topY = this.boxHeight - this.histogramOffset;
-                var botY = this.boxHeight - 3*this.padding.bottom
+                var botY = this.boxHeight - 3 * this.padding.bottom
 
                 cumulativeBinSpace += (end - start + 1) * widthPerRank;
 
@@ -512,10 +534,8 @@ export default {
         },
 
         rankLines() {
-            let rankCount = parseInt(this.$store.numOfRanks['ensemble'])
-
             this.ranklinescale = d3.scaleLinear()
-                .domain([0, rankCount])
+                .domain([0, this.rankCount])
                 .range([0, this.rankScaleWidth]);
 
             this.freq.forEach((fregVal, idx) => {
@@ -548,24 +568,26 @@ export default {
 
                     const target_groupArray = this.groupProcess(target_processIDs).array;
 
-                    console.log(target_groupArray)
                     target_groupArray.forEach((group) => {
                         this.drawRankLines(group, target_processIDs, idx, 'target')
                     })
                 }
             });
 
+            console.log(this.$store.selectedBinCount)
+
             const rankLineAxis = d3.axisBottom(this.ranklinescale)
                 .ticks(this.$store.selectedBinCount)
                 .tickFormat((d, i) => {
-                    if (i % 10 == 0 || i == this.$store.numOfRanks[this.$store.selectedTargetDataset] - 1) {
+                    console.log(i, d)
+                    if (i % 10 == 0 || i == this.$store.numOfRanks['ensemble'] - 1) {
                         return d
                     }
                 });
 
             this.rankLineAxisLine = this.svg.append('g')
                 .attr('class', 'ensemble-histogram-rank-axis')
-                .attr('transform', `translate(${this.axisLabelFactor * this.padding.left},${this.boxHeight - 4*this.padding.bottom})`)
+                .attr('transform', `translate(${this.axisLabelFactor * this.padding.left},${this.boxHeight - 4 * this.padding.bottom})`)
                 .call(rankLineAxis);
 
             this.rankLineAxisLine.selectAll('path')
@@ -600,8 +622,8 @@ export default {
 
             this.brush = d3.brushX()
                 .extent([
-                    [this.padding.left, this.padding.top],
-                    [this.width - this.padding.right, this.height - this.padding.bottom]
+                    [this.axisLabelFactor * this.padding.left, this.histogramHeight - this.padding.top],
+                    [this.boxWidth, this.boxHeight - this.padding.top]
                 ])
                 .on('brush', this.brushing)
                 .on('end', this.brushend)
