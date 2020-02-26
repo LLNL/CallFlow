@@ -329,7 +329,6 @@ export default {
 				} else if (this.selectedFormat == 'CCT') {
 					this.$refs.EnsembleSuperGraph.clear()
 					this.$refs.EnsembleHistogram.clear()
-					// this.$refs.EnsembleDistribution.clear()
 					this.$refs.EnsembleScatterplot.clear()
 					this.$refs.Scatterplot.clear()
 					this.$refs.AuxiliaryFunction.clear()
@@ -357,10 +356,8 @@ export default {
 					this.$refs.EnsembleSuperGraph.clear()
 					this.$refs.ModuleHierarchy.clear()
 					this.$refs.EnsembleHistogram.clear()
-					// this.$refs.EnsembleDistribution.clear()
-					// this.$refs.Projection.clear()
-					// this.$refs.RunInformation.clear()
 					this.$refs.AuxiliaryFunction.clear()
+					this.$refs.EnsembleScatterplot.clear()
 				}
 			}
 			else if (this.selectedMode == 'Single') {

@@ -64,7 +64,6 @@ export default {
                 this.rankDiffRectangle()
             }
             else if (this.$store.selectedCompareMode == 'meanDiff') {
-                console.log(this.mean_diff_min, this.mean_diff_max)
                 this.$store.meanDiffColor.setColorScale(this.mean_diff_min, this.mean_diff_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.DistColorMap.updateWithMinMax('meanDiff', this.mean_diff_min, this.mean_diff_max)
                 this.meanDiffRectangle(data)
@@ -212,9 +211,7 @@ export default {
         meanRectangle() {
             let self = this
             this.nodesSVG.append('rect')
-                // .attr('class', 'dist-callsite')
                 .attr('id', (d) => {
-                    console.log(d.client_idx, d)
                     return 'callsite-' + d.client_idx
                 })
                 .attr('height', (d) => {
@@ -527,37 +524,51 @@ export default {
 
                 let module_name = this.graph.nodes[i].id
                 if (module_name.split('_')[0] != 'intermediate') {
-                    console.log(module_name)
+                    console.log("-----------------------------")
+                    console.log("Module: ", module_name)
                     let module_data = data[module_name][this.$store.selectedMetric]['dist'][this.$store.selectedTargetDataset]
                     let module_arr = Object.values(module_data)
 
                     const mean = arr => arr.reduce((p, c) => p + c, 0) / arr.length
+                    const max = arr => Math.max(...arr)
+
                     let module_mean = mean(module_arr)
-                    console.log(module_mean)
+                    let module_max = max(module_arr)
+
+                    console.log("Array: ", module_arr)
+                    console.log("Mean: ", module_mean)
+                    console.log("Max: ", module_max)
 
                     let gradients = data[module_name][this.$store.selectedMetric]['hist']
                     let grid = gradients.x
                     let vals = gradients.y
 
-                    console.log(grid, module_mean)
-
                     let targetPos = 0
+                    let targetDiff = 0
                     let binWidth = node_data.height / this.$store.selectedBinCount
+                    let timeWidth = node_data.height / module_max
+                    console.log("Time width: ", timeWidth)
                     for (let idx = 0; idx < grid.length; idx += 1) {
-                        console.log(grid[idx], module_mean)
+                        console.log("grid val at ", idx, ":", grid[idx])
                         if (grid[idx] > module_mean) {
-                            targetPos = idx
+                            targetPos = idx - 1
+                            targetDiff = module_mean - grid[idx - 1]
                             break
                         }
+                        if(idx == grid.length - 1){
+                            targetPos = grid.length - 1
+                            targetDiff = module_mean - grid[idx - 1]
+                        }
                     }
-
-                    console.log(targetPos)
+                    console.log("Chosen grid index", targetPos)
+                    console.log("Target diff: ", targetDiff)
+                    console.log("timeHeight: ", timeWidth*targetDiff)
 
                     let x1 = node_data.x - this.nodeWidth
                     let x2 = node_data.x
                     let y1 = 0
-                    let y2 = binWidth * targetPos
-                    console.log(y2)
+                    let y2 = binWidth * targetPos + timeWidth * targetDiff
+                    console.log("height: ", y2)
 
                     d3.select('#ensemble-callsite-' + node_data.id)
                         .append('line')
@@ -692,7 +703,7 @@ export default {
         },
 
         clear() {
-            d3.selectAll('.dist-node').remove()
+            d3.selectAll('.ensemble-callsite').remove()
             d3.selectAll('.targetLines').remove()
             this.clearGradients()
             this.$refs.ToolTip.clear()

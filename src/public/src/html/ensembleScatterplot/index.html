@@ -3,21 +3,15 @@
         <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
         <v-spacer> </v-spacer>
         <v-menu offset-y>
-            <template v-slot:activator="{ on }">
-                <v-btn outline class="setting-button">
-                    <v-icon>list</v-icon>
-                </v-btn>
-            </template>
-            <v-list>
-              <v-list-item
-                v-for="(item, index) in items"
-                :key="index"
-                @click=""
-              >
-                <v-list-item-title>{{ item.title }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
+            <v-btn outline class="setting-button">
+                <v-icon>list</v-icon>
+            </v-btn>
+            <!-- <v-list>
+                <v-list-item v-for="(item, index) in items" :key="index" @click="">
+                    <v-list-item-title>{{ item.title }}</v-list-item-title>
+                </v-list-item>
+            </v-list> -->
+        </v-menu>
     </v-layout>
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
