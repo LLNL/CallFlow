@@ -90,7 +90,7 @@ class FilterNetworkX:
         ret = nx.DiGraph()
 
         for callsite in callsites:
-            path = self.df.loc[self.df['name'] == callsite]['path'].tolist()[0]
+            path = df.loc[df['name'] == callsite]['path'].tolist()[0]
             # print(self.findPaths(g, callsite, 10))
             ret.add_path(path)
 

@@ -6,13 +6,13 @@
 
 <script>
 export default {
-  name: 'App'
+  name: "App"
 };
 </script>
 
 <style>
-body, html {
-
+body,
+html {
 }
 
 #toolbar {
@@ -87,7 +87,7 @@ body, html {
 
 body {
   top: -10px !important;
-  font-family: 'Open Sans', sans-serif;
+  font-family: "Open Sans", sans-serif;
   margin-bottom: 0px;
   height: 99%;
   font-size: 16px;
@@ -177,14 +177,13 @@ body {
 }
 
 #auxiliary-function-overview {
-  max-height: 550px;
   overflow: auto;
   background: white;
 }
 
 #function-overview {
   overflow: auto;
-  background: white
+  background: white;
 }
 
 .auxiliary-node {
@@ -215,7 +214,7 @@ body {
   overflow: hidden;
 }
 
-.jbtn-file input[type='file'] {
+.jbtn-file input[type="file"] {
   position: absolute;
   top: 0;
   right: 0;
@@ -229,16 +228,22 @@ body {
   display: block;
 }
 .vue-slider-dot-tooltip-inner {
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  border-radius: 5px !important;
+  padding: 0px 0px !important;
+  border-color: #1a6059 !important;
+  background-color: white !important;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15) !important;
+  transform: scale(0.9) !important;
+  transition: transform 0.3s !important;
+  color: #1a6059 !important;
+}
 
-    font-size: 14px !important;
-    white-space: nowrap !important;
-    border-radius: 5px !important;
-    padding: 0px 0px !important;
-    border-color: #1A6059 !important;
-    background-color: white !important;
-    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15) !important;
-    transform: scale(0.9) !important;
-    transition: transform 0.3s !important;
-    color: #1A6059 !important;
+.setting-button{
+  border: 0px solid !important;
+  right: 0px !important;
+  color: #009688 !important;
+  font-size: 36px !important;
 }
 </style>

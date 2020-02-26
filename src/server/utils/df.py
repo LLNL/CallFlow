@@ -28,7 +28,8 @@ def lookup_with_name(df, name):
 #     return name_split[len(name_split) - 1]
 
 def sanitizeName(name):
-    print(name)
+    if name is None:
+        return 'Unknown'
     if('/' in name):
         name_split = name.split("/")
         print(name_split[len(name_split) - 1])

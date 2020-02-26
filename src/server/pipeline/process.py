@@ -15,6 +15,7 @@ from functools import wraps
 import numpy as np
 from utils.hatchet import getNodeDictFromFrame, getPathListFromFrames
 from utils.logger import log
+from utils.df import sanitizeName
 import bisect
 
 
@@ -283,7 +284,7 @@ class PreProcess:
 		@tmp_wrap
 		def add_module_name_hpctoolkit(self):
 			self.df["module"] = self.df["module"].apply(
-				lambda name: name
+				lambda name: sanitizeName(name)
 			)
 			return self
 

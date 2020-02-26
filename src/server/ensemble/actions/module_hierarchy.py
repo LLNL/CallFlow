@@ -23,10 +23,7 @@ class ModuleHierarchy:
         self.hierarchy = nx.bfs_tree(self.graph, self.modFunc, depth_limit=10)
 
     def add_paths(self, df, path_name):
-        print(df[path_name])
         for idx, path in enumerate(df[path_name].unique()):
-            # path = row[path_name]
-            print(path)
             if isinstance(path, str) and path != 'nan':
                 path = make_tuple(path)
                 self.hierarchy.add_path(path)

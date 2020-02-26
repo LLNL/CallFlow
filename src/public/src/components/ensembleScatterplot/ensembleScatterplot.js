@@ -13,6 +13,7 @@
 import tpl from '../../html/ensembleScatterplot/index.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
+import Vuetify from 'vuetify';
 import EventHandler from '../EventHandler'
 
 export default {
@@ -46,6 +47,7 @@ export default {
 		svgID: 'ensemble-scatterplot-view-svg',
 		message: "Runtime Scatterplot",
 		boxOffset: 20,
+		items: [{title: 'Difference plot'},]
 	}),
 
 	mounted() {
@@ -160,7 +162,6 @@ export default {
 			this.ytargetMax = temp[3]
 			this.xtargetArray = temp[4]
 			this.ytargetArray = temp[5]
-			console.log(this.xtargetArray, this.ytargetArray)
 		},
 
 		scatterAll(xData, yData) {
@@ -438,6 +439,8 @@ export default {
 					return self.yScale(self.ytargetArray[i]);
 				})
 				.style('fill', this.$store.color.target)
+				.style('stroke', '#202020')
+				.style('stroke-width', 0.5)
 		},
 
 		correlationText() {

@@ -74,7 +74,7 @@ class EnsembleCallFlow:
         states["ensemble"] = self.pipeline.ensemble_group(states, "module")
         self.pipeline.write_ensemble_gf(states, "ensemble")
 
-        similarities = self.pipeline.deltaconSimilarity(datasets, states, "ensemble")
+        # similarities = self.pipeline.deltaconSimilarity(datasets, states, "ensemble")
 
         return states
 

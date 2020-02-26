@@ -157,6 +157,7 @@ class Auxiliary:
         module_ret = {}
         # Module grouped information
         modules = self.df['module'].unique()
+        print(modules)
         module_information = []
         for module in modules:
             module_df = self.df[self.df['module'] == module]
