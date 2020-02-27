@@ -74,42 +74,90 @@ class SuperGraph(nx.Graph):
                 print("Creating a Graph without node or edge attributes.")
         print(self.timer)
 
+    # def no_cycle_path(self, path):
+    #     ret = []
+    #     moduleMapper = {}
+    #     for idx, elem in enumerate(path):
+    #         call_site = elem.split('=')[1]
+    #         module = elem.split('=')[0]
+    #         if (module not in moduleMapper and elem in self.mapper):
+    #             self.mapper[elem] += 1
+    #             moduleMapper[module] = True
+    #             ret.append(elem)
+    #         elif elem not in self.mapper:
+    #             self.mapper[elem] = 0
+    #         else:
+    #             self.mapper[elem] += 1
+    #     return tuple(ret)
+
     def no_cycle_path(self, path):
         ret = []
         moduleMapper = {}
+        dataMap = {}
+
+        if(isinstance(path, float)):
+            return []
+        path = make_tuple(path)
+        print(path)
         for idx, elem in enumerate(path):
-            call_site = elem.split('=')[1]
-            module = self.df.loc[self.df.name == call_site]['module'].tolist()[0]
-            if (module not in moduleMapper and elem in self.mapper):
-                self.mapper[elem] += 1
-                moduleMapper[module] = True
-                ret.append(elem)
-            elif elem not in self.mapper:
-                self.mapper[elem] = 0
-            else:
-                self.mapper[elem] += 1
-        return tuple(ret)
+            callsite = elem.split('=')[1]
+            module = elem.split('=')[0]
+            if (module not in moduleMapper):
+                moduleMapper[module] = 0
+                dataMap[module] =  {
+                    'callsite': callsite,
+                    'module': module,
+                    'level': idx
+                }
+                ret.append({
+                    'callsite': callsite,
+                    'module': module,
+                    'level': idx
+                })
+            elif module in moduleMapper and 'level' in dataMap[module]:
+                if dataMap[module]['level'] != idx:
+                    moduleMapper[module] += 1
+                    dataMap[module] =  {
+                        'callsite': elem,
+                        'module': module,
+                        'level': idx
+                    }
+                    ret.append({
+                        'module': elem,
+                        'callsite': callsite,
+                        'level': idx
+                    })
+                else:
+                    dataMap[module] =  {
+                        'callsite': callsite,
+                        'module': module,
+                        'level': idx
+                    }
+                ret.append({
+                    'callsite': callsite,
+                    'module': module,
+                    'level': idx
+                })
+        return ret
 
     def add_paths(self, path):
         paths = self.df[path].unique()
         for idx, path_str in enumerate(paths):
-            print(path_str)
-            if(not isinstance(path_str, float)):
-                path_tuple = make_tuple(path_str)
-                if(len(path_tuple) >= 2):
-                    source_module = path_tuple[-2].split('=')[0]
-                    target_module = path_tuple[-1].split('=')[0]
+            path_list = self.no_cycle_path(path_str)
+            if(len(path_list) >= 2):
+                source_module = path_list[-2]['module']
+                target_module = path_list[-1]['module']
 
-                    source_name = path_tuple[-2].split('=')[1]
-                    target_name = path_tuple[-1].split('=')[1]
+                source_name = path_list[-2]['callsite']
+                target_name = path_list[-1]['callsite']
                     # self.g.add_edge(source_module + '=' + source_name, target_module + '=' + target_name, attr_dict={
                     #     "source_callsite": source_name,
                     #     "target_callsite": target_name
                     # })
-                    self.g.add_edge(source_module, target_module, attr_dict={
-                        "source_callsite": source_name,
-                        "target_callsite": target_name
-                    })
+                self.g.add_edge(source_module, target_module, attr_dict={
+                    "source_callsite": source_name,
+                    "target_callsite": target_name
+                })
 
     def add_node_attributes(self):
         ensemble_mapping = self.ensemble_map(self.g.nodes())

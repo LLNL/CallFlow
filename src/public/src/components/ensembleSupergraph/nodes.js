@@ -148,7 +148,7 @@ export default {
             this.meanRectangle()
             this.path()
             this.text()
-            this.drawTargetLine()
+            // this.drawTargetLine()
 
             this.$refs.ToolTip.init(this.$parent.id)
         },
@@ -527,10 +527,10 @@ export default {
             let dataset = this.$store.selectedTargetDataset
 
             let data = this.$store.gradients['module']
+            console.log(this.$store.modules)
 
             for (let i = 0; i < this.graph.nodes.length; i++) {
                 let node_data = this.graph.nodes[i]
-
                 let module_name = this.graph.nodes[i].module
                 if (this.graph.nodes[i].id.split('_')[0] != 'intermediate') {
                     console.log("-----------------------------")
@@ -577,7 +577,7 @@ export default {
                     let x1 = node_data.x - this.nodeWidth
                     let x2 = node_data.x
                     let y1 = 0
-                    let y2 = binWidth * targetPos + timeWidth * targetDiff
+                    let y2 = binWidth * targetPos //+ timeWidth * targetDiff
                     console.log("height: ", y2)
 
                     d3.select('#ensemble-callsite-' + node_data.id)
