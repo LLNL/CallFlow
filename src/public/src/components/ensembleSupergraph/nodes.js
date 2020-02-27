@@ -148,7 +148,7 @@ export default {
             this.meanRectangle()
             this.path()
             this.text()
-            // this.drawTargetLine()
+            this.drawTargetLine()
 
             this.$refs.ToolTip.init(this.$parent.id)
         },
