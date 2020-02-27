@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "Visualization tool for Calling Context Trees",
     "dependencies": {
+        "@mdi/font": "^4.9.95",
         "axios": "^0.18.0",
         "bootstrap": "^4.4.1",
         "bootstrap-vue": "^2.5.0",

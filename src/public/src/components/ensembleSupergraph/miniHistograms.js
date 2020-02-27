@@ -123,7 +123,7 @@ export default {
                         'id': 'histobars',
                         'class': 'histogram-bar ' + type,
                         'width': () => this.bandWidth,
-                        'height': (d, i) => {
+                        'height': (d) => {
                             return this.$parent.nodeWidth - this.minimapYScale(freq[i])
                         },
                         'x': (d) => {

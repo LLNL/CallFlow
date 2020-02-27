@@ -13,14 +13,15 @@
 import tpl from '../../html/ensembleScatterplot/index.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
-import Vuetify from 'vuetify';
+import Settings from './settings'
 import EventHandler from '../EventHandler'
 
 export default {
 	name: 'EnsembleScatterplot',
 	template: tpl,
 	components: {
-		ToolTip
+		ToolTip,
+		Settings
 	},
 
 	data: () => ({
@@ -44,7 +45,7 @@ export default {
 		svgID: 'ensemble-scatterplot-view-svg',
 		message: "Runtime Scatterplot",
 		boxOffset: 20,
-		items: [{title: 'Difference plot'},]
+		settings: [{title: 'Show Difference plot'},]
 	}),
 
 	mounted() {

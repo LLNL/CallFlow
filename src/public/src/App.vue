@@ -189,17 +189,17 @@ body {
 .auxiliary-node {
   padding: 10px;
   margin: 3px;
-  border-color: #7b7474;
-  border-width: 3px;
+  border-width: 5px;
   border-style: solid;
 }
 
 .reveal-button {
   float: right;
   margin: 2px;
-  border: grey;
+  color: #009688;
+  border-radius: 4px;
   border-style: outset;
-  padding: 2px;
+  padding: 8px;
 }
 
 .tooltip {
@@ -245,5 +245,15 @@ body {
   right: 0px !important;
   color: #009688 !important;
   font-size: 36px !important;
+  background-color: white !important;
+}
+
+.component-info{
+  color: #009688;
+  padding: 8px;
+}
+
+.v-list{
+  padding: 8px;
 }
 </style>
