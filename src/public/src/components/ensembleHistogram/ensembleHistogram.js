@@ -48,7 +48,8 @@ export default {
         selectedColorBy: 'Inclusive',
         MPIcount: 0,
         message: 'MPI Distribution',
-        axisLabelFactor: 3.5
+        axisLabelFactor: 3.5,
+        thisNode: '',
     }),
 
     mounted() {
@@ -56,6 +57,12 @@ export default {
         EventHandler.$on('ensemble_histogram', function (data) {
             self.clear()
             console.log("Ensemble Histogram: ", data['module'])
+            if(data['callsite'] != undefined){
+                self.thisNode = data["module"] + '=' + data['callsite']
+            }
+            else{
+                self.thisNode = data['module']
+            }
             self.render(data['module'])
         })
     },

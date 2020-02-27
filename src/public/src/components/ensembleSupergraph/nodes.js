@@ -273,13 +273,24 @@ export default {
                         datasets: this.$store.runNames,
                         sortBy: this.$store.auxiliarySortBy,
                     })
+
+                    EventHandler.$emit('select_module', {
+                        module: this.$store.selectedModule,
+                    })
                 })
                 .on('mouseover', (d) => {
                     self.$refs.ToolTip.render(self.graph, d)
                     this.$store.selectedNode = d
+                    this.$store.selectedModule = d.module
+
+                    EventHandler.$emit('highlight_module', {
+                        module: this.$store.selectedModule,
+                    })
                 })
                 .on('mouseout', (d) => {
                     self.$refs.ToolTip.clear()
+
+                    EventHandler.$emit('unhighlight_module')
                 })
 
             // Transition

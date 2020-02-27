@@ -122,8 +122,6 @@ class SingleCallFlow:
         self.config.min_incTime["ensemble"] = min_inclusive_time
         self.config.min_excTime["ensemble"] = min_exclusive_time
 
-        print(self.config)
-
     def request(self, action):
         log.info("[Single Mode]", action)
         action_name = action["name"]
