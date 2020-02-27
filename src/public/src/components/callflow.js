@@ -130,10 +130,11 @@ export default {
 			"ensemble_projection",
 		],
 		parameter_analysis: true,
-		// caseStudy: 'Lulesh-Scaling'
-		// caseStudy: 'Kripke-MPI',
-		caseStudy: 'OSU-Bcast',
-		// caseStudy: "Kripke-Scaling"
+		caseStudy: ['Lulesh-Scaling-3-runs', 'Lulesh-Scaling-8-runs', 'Kripke-MPI', 'OSU-Bcast', 'Kripke-Scaling'],
+		selectedCaseStudy: 'Lulesh-Scaling-3-runs'
+		// selectedCaseStudy: 'Kripke-MPI',
+		// selectedCaseStudy: 'OSU-Bcast',
+		// selectedCaseStudy: "Kripke-Scaling"
 	}),
 
 	watch: {},
@@ -143,7 +144,9 @@ export default {
 	},
 
 	created() {
-		this.$socket.emit('config')
+		this.$socket.emit('init', {
+			caseStudy: this.selectedCaseStudy
+		})
 	},
 
 	beforeDestroy() {
@@ -154,9 +157,9 @@ export default {
 	sockets: {
 		// Assign variables for the store and Callflow ui component.
 		// Assign colors and min, max inclusive and exclusive times.
-		config(data) {
+		init(data) {
 			data = JSON.parse(data)
-			console.log("Config file contains: ", data)
+			console.log("Config file contains: 	", data)
 			this.$store.numOfRuns = data['datasets'].length
 			this.$store.runNames = data['names']
 			this.datasets = this.$store.runNames
@@ -165,15 +168,11 @@ export default {
 			if (this.numOfRuns >= 2) {
 				this.modes = ['Single', 'Ensemble']
 				this.selectedMode = 'Ensemble'
-				this.selectedTargetDataset = data['names'][0]
-				this.$store.selectedTargetDataset = data['names'][0]
 			}
 			else if (this.numOfRuns == 1) {
 				this.enableDist = false
 				this.modes = ['Single']
 				this.selectedMode = 'Single'
-				this.$store.selectedTargetDataset = data['names'][0]
-				this.selectedTargetDataset = data['names'][0]
 			}
 
 			this.$store.maxExcTime = data['max_excTime']
@@ -225,7 +224,6 @@ export default {
 			this.$store.modules = {}
 			this.$store.modules[dataset] = this.processModule(module_data[dataset])
 
-			console.log(this.$store)
 			console.log("[Socket] Single Callsite data processing done.")
 		},
 
@@ -264,7 +262,6 @@ export default {
 
 			this.$store.gradients = data['gradients']
 			console.log("[Socket] Ensemble Callsite data processing done.")
-
 		},
 
 		// Reset to the init() function.
@@ -290,16 +287,15 @@ export default {
 			data = JSON.parse(data)
 			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
 			if (this.initLoad) {
-				// this.$refs.ParameterProjection.init()
 				this.$refs.EnsembleSuperGraph.init(data)
 				this.$refs.AuxiliaryFunction.init()
 				this.$refs.EnsembleHistogram.init()
-				// this.$refs.RunInformation.init()
 				this.$refs.ModuleHierarchy.init()
 				this.$refs.EnsembleScatterplot.init()
+				// this.$refs.RunInformation.init()
 				// this.$refs.SimilarityMatrix.init()
-// 				this.$refs.EnsembleDistribution.init()
-
+	 			// this.$refs.EnsembleDistribution.init()
+				// this.$refs.ParameterProjection.init()
 				// this.initLoad = false
 			}
 		},
@@ -314,16 +310,6 @@ export default {
 	},
 
 	methods: {
-		socketPromise(socket_name, socket_params) {
-			return new Promise((resolve) => {
-				this.$socket.emit(socket_name, socket_params, resolve)
-				console.log(this.$socket)
-				this.$socket.on(socket_name, (data) => {
-					console.log(data)
-				})
-			});
-		},
-
 		clear() {
 			if (this.selectedMode == 'Ensemble') {
 				if (this.selectedFormat == 'Callgraph') {
@@ -443,7 +429,6 @@ export default {
 					datasets: this.$store.runNames,
 					groupBy: this.selectedGroupBy
 				})
-
 
 				this.$socket.emit('ensemble_similarity', {
 					datasets: this.$store.runNames,
@@ -567,34 +552,23 @@ export default {
 		},
 
 		setTargetDataset() {
-			let min_inclusive_dataset = '';
-			let min_inclusive_time = this.$store.maxIncTime['ensemble']
+			let max_inclusive_dataset = '';
+			let max_inclusive_time = this.$store.maxIncTime['ensemble']
+			let current_max_inclusive_time = 0.0
+			console.log(this.$store.maxIncTime)
 			for (let dataset in this.$store.maxIncTime) {
 				if (this.$store.maxIncTime.hasOwnProperty(dataset)) {
-					if (min_inclusive_time > this.$store.maxIncTime[dataset]) {
-						min_inclusive_dataset = dataset
+					if(dataset != 'ensemble'){
+						if(current_max_inclusive_time < this.$store.maxIncTime[dataset]){
+							current_max_inclusive_time = this.$store.maxIncTime[dataset]
+							max_inclusive_dataset = dataset
+						}
 					}
-					min_inclusive_time = Math.min(this.$store.maxIncTime[dataset], min_inclusive_time)
 				}
 			}
 
-			if (this.caseStudy == 'Lulesh-Scaling') {
-				this.$store.selectedTargetDataset = '1-core'
-				this.selectedTargetDataset = '1-core'
-			}
-			else if (this.caseStudy == 'Kripke-MPI') {
-				this.$store.selectedTargetDataset = 'impi'
-				this.selectedTargetDataset = 'impi'
-			}
-			else if (this.caseStudy == 'Kripke-Scaling') {
-				this.$store.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
-				this.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
-
-			}
-			else if (this.caseStudy == 'OSU-Bcast') {
-				this.$store.selectedTargetDataset = 'osu_bcast.1.10.2019-09-04_07-05-12'
-				this.selectedTargetDataset = 'osu_bcast.1.10.2019-09-04_07-05-12'
-			}
+			this.$store.selectedTargetDataset = max_inclusive_dataset
+			this.selectedTargetDataset = max_inclusive_dataset
 
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
@@ -615,6 +589,15 @@ export default {
 					groupBy: this.selectedGroupBy
 				})
 			}
+		},
+
+		updateCaseStudy(){
+			this.clearLocal()
+			this.$socket.emit('config', {
+				caseStudy: this.selectedCaseStudy
+			})
+
+			this.init()
 		},
 
 		updateRuntimeColorMap() {

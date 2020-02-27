@@ -26,6 +26,11 @@
 			</v-select>
 		</v-flex> -->
 		<v-flex xs2 class="ma-1">
+			<v-select label="Case study" :items="caseStudy" v-model="selectedCaseStudy"
+				:menu-props="{ maxHeight: '400' }" box v-on:change="updateCaseStudy()">
+			</v-select>
+		</v-flex>
+		<v-flex xs2 class="ma-1">
 			<v-select label="Graph to visualize" :items="formats" v-model="selectedFormat"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
 			</v-select>
