@@ -1,10 +1,14 @@
 import tpl from '../../html/auxiliaryFunction/index.html'
 import EventHandler from '../EventHandler'
+import Settings from '../settings/settings'
 import * as d3 from 'd3'
 
 export default {
     name: 'AuxiliaryFunction',
     template: tpl,
+    components: {
+        Settings
+    },
     data: () => ({
         selected: {},
         id: 'auxiliary-function-overview',
@@ -26,6 +30,9 @@ export default {
         module_data: {},
         callsite_data: {},
         callsiteIDMap: {},
+        settings: [
+            {'title':'Sort by Inclusive runtime'},
+            {'title':'Sort by Exclusive Runtime'}]
     }),
     mounted() {
         let self = this
@@ -186,7 +193,6 @@ export default {
 
         // boxPlot visualization.
         visualize(callsite_name) {
-            console.log(callsite_name)
             this.width = document.getElementById('auxiliary-function-overview').clientWidth - 50
 
             let ensemble_callsite_data = this.$store.callsites['ensemble'][callsite_name]
@@ -524,17 +530,29 @@ export default {
                 .selectAll(".target-outlier")
                 .data(this.groupOutliers(targetOutlierList, this.outlierRadius))
                 .join("circle")
-                .attr("r", d => (d.count / this.max_count) * 4 + 4)
-                .attr("cx", d => d.x[0])
-                .attr("cy", d => this.height / 2 - this.boxHeight / 2)
-                .attr("class", "target-outlier")
+                .attrs({
+                    "r": d => (d.count / this.max_count) * 4 + 4,
+                    "cx": d => d.x[0],
+                    "cy": d => this.height / 2 - this.boxHeight / 2,
+                    "class": "target-outlier"
+                })
                 .style("opacity", 1e-6)
                 .style("fill", this.$store.color.target)
+                .on('click', (d) => {
+                    console.log(d)
+                })
+                .on('mouseover', (d) => {
+                    console.log(d)
+                })
+                .on('mouseout', (d) => {
+                    console.log(d)
+                })
                 .transition()
                 .duration(this.duration)
+                .style("opacity", 1)
                 .attr("cx", d => d.x[0])
-                .style("opacity", 1);
-        },
+
+            },
 
         groupByBand(data, band) {
             let ret = []
@@ -667,7 +685,7 @@ export default {
 
             for(let i = 0; i < all_callsites.length; i += 1){
                 document.getElementById(this.callsiteIDMap[all_callsites[i]]).style.opacity = 0.2
-                document.getElementById(this.callsiteIDMap[all_callsites[i]]).style.borderStyle = 'solid'
+                document.getElementById(this.callsiteIDMap[all_callsites[i]]).style.borderStyle = 'dotted'
             }
 
             let highlight_callsites = this.$store.moduleCallsiteMap[thismodule]
@@ -677,7 +695,7 @@ export default {
 
             let selected_callsites = this.$store.moduleCallsiteMap[this.$store.selectedModule]
             for(let i = 0; i < selected_callsites.length; i += 1){
-                document.getElementById(this.callsiteIDMap[selected_callsites[i]]).style.borderStyle = 'dotted'
+                document.getElementById(this.callsiteIDMap[selected_callsites[i]]).style.borderStyle = 'solid'
             }
 
         },
@@ -687,12 +705,12 @@ export default {
 
             for(let i = 0; i < all_callsites.length; i += 1){
                 document.getElementById(this.callsiteIDMap[all_callsites[i]]).style.opacity = 1
-                document.getElementById(this.callsiteIDMap[all_callsites[i]]).style.borderStyle = 'solid'
+                document.getElementById(this.callsiteIDMap[all_callsites[i]]).style.borderStyle = 'dotted'
             }
 
             let selected_callsites = this.$store.moduleCallsiteMap[this.$store.selectedModule]
             for(let i = 0; i < selected_callsites.length; i += 1){
-                document.getElementById(this.callsiteIDMap[selected_callsites[i]]).style.borderStyle = 'dotted'
+                document.getElementById(this.callsiteIDMap[selected_callsites[i]]).style.borderStyle = 'solid'
             }
         },
 

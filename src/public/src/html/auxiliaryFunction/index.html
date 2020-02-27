@@ -1,8 +1,9 @@
 <v-layout row wrap :id="id">
     <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
     <v-spacer></v-spacer>
-    <span class="component-info">
-         Contains {{number_of_callsites}} callsites.
-    </span>
 
+    <Settings :settings="settings"/>
+    <span class="component-info">
+        SuperGraph contains {{number_of_callsites}} callsites.
+   </span>
 </v-layout>

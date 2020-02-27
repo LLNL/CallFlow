@@ -593,7 +593,8 @@ export default {
 
 		updateCaseStudy(){
 			this.clearLocal()
-			this.$socket.emit('config', {
+			console.log("[Update] Case study: ", this.selectedCaseStudy)
+			this.$socket.emit('init', {
 				caseStudy: this.selectedCaseStudy
 			})
 

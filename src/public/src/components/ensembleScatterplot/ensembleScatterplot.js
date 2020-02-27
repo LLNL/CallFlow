@@ -13,7 +13,7 @@
 import tpl from '../../html/ensembleScatterplot/index.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
-import Settings from './settings'
+import Settings from '../settings/settings'
 import EventHandler from '../EventHandler'
 
 export default {
@@ -45,7 +45,7 @@ export default {
 		svgID: 'ensemble-scatterplot-view-svg',
 		message: "Runtime Scatterplot",
 		boxOffset: 20,
-		settings: [{title: 'Show Difference plot'},]
+		settings: [{title: 'Show Difference plot'}, {title: 'aaa'}]
 	}),
 
 	mounted() {
