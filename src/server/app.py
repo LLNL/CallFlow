@@ -40,25 +40,30 @@ class App:
         self.callflow_path = os.path.abspath(os.path.join(__file__, "../../.."))
 
         self.create_parser()
-        self.verify_parser()
+        # self.verify_parser()
 
         self.debug = True
+        self.production = False
 
-        self.config = ConfigFileReader(self.args.config)
+        if (self.args.process):
+            self.print("Pre-processing the datasets.")
+            self.processPipeline()
+            self.create_dot_callflow_folder()
+        else:
+            self.create_socket_server()
+            if self.production == True:
+                sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
+            else:
+                sockets.run(app, debug=False, use_reloader=True)
+
+    def processPipeline(self):
+        self.config = ConfigFileReader(self.args.config_dir + self.args.run + '.json')
         self.config.server_dir = os.getcwd()
         self.config.callflow_dir = (
             self.callflow_path + '/' + self.config.save_path + '/' + self.config.runName
         )
         self.config.process = self.args.process
-        self.config.entire = self.args.entire
-        self.config.filter = self.args.filter
         self.config.ensemble = self.args.ensemble
-        self.config.production = self.args.production
-
-        # Create the save path folder for saving the processed data.
-        if self.config.process:
-            self.print("Pre-processing the datasets.")
-            self.create_dot_callflow_folder()
 
         if(self.config.ensemble):
             self.callflow = EnsembleCallFlow(self.config)
@@ -66,18 +71,20 @@ class App:
         else:
             self.single_callflow = SingleCallFlow(self.config)
 
-        # Start server if preprocess is not called.
-        if not self.config.process:
-            self.callflow.request({
-                "name": "init",
-                "groupBy": self.config.group_by,
-                "datasets": self.config.dataset_names
-            })
-            self.create_socket_server()
-            if self.config.production == True:
-                sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
-            else:
-                sockets.run(app, debug=False, use_reloader=True)
+    def renderPipeline(self, config_file_name):
+        self.config = ConfigFileReader(self.args.config_dir + config_file_name + '.json')
+        self.config.server_dir = os.getcwd()
+        self.config.callflow_dir = (
+            self.callflow_path + '/' + self.config.save_path + '/' + self.config.runName
+        )
+        self.config.ensemble = self.args.ensemble
+        self.config.process = self.args.process
+
+        if(self.config.ensemble):
+            self.callflow = EnsembleCallFlow(self.config)
+            self.single_callflow = SingleCallFlow(self.config)
+        else:
+            self.single_callflow = SingleCallFlow(self.config)
 
     # Custom print function.
     def print(self, action, data={}):
@@ -97,26 +104,12 @@ class App:
         parser.add_argument(
             "--production", action="store_true", help="Make the server run on port 80 for production."
         )
-        parser.add_argument("--config", help="Config file to read")
+        parser.add_argument("--config_dir", help="Config file directory.")
         parser.add_argument(
-            "--input_format", default="hpctoolkit", help="caliper | hpctoolkit"
-        )
-        parser.add_argument(
-            "--filter", action="store_true", help="Filter mode processing. Use --filterby to set the metric to filter by. --filtertheta to specify the threshold to filter by. "
-        )
-        parser.add_argument(
-            "--entire", action="store_true", help="Entire mode processing."
+            "--run", default="", help="Config file name to be processed."
         )
         parser.add_argument(
             "--ensemble", action="store_true", help="Ensemble mode processing."
-        )
-        parser.add_argument(
-            "--filterBy",
-            default="IncTime",
-            help="IncTime | ExcTime, [Default = IncTime] ",
-        )
-        parser.add_argument(
-            "--filtertheta", default="10", help="Threshold [Default = 10]"
         )
         parser.add_argument(
             "--process", action="store_true", help="Process mode. To preprocess at the required level of granularity, use the options --filter, --entire. If you are preprocessing multiple callgraphs, use --ensemble option."
@@ -165,13 +158,17 @@ class App:
                     open(os.path.join(dataset_dir, f), "w").close()
 
     def create_socket_server(self):
-        @sockets.on("config", namespace="/")
-        def config():
+        @sockets.on("init", namespace="/")
+        def init(data):
+            caseStudy = data['caseStudy']
+            log.info(f"Case Study: {caseStudy}")
+            self.renderPipeline(caseStudy)
             self.config = self.callflow.request({
-                "name":"config"
+                "name":"init"
             })
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
-            emit("config", config_json, json=True)
+            print(config_json)
+            emit("init", config_json, json=True)
 
         @sockets.on("reset", namespace="/")
         def filter(data):

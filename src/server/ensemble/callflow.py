@@ -129,8 +129,9 @@ class EnsembleCallFlow:
         log.info(f"Action: {action_name}")
         datasets = self.config.dataset_names
 
-        if action_name == "config":
+        if action_name == "init":
             self.addIncExcTime()
+            print(self.config)
             return self.config
 
         elif action_name == "ensemble_cct":
