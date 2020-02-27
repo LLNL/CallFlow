@@ -130,8 +130,10 @@ export default {
 			"ensemble_projection",
 		],
 		parameter_analysis: true,
-		caseStudy: 'Lulesh-Scaling'
-		// caseStudy: 'Kripke-MPI'
+		// caseStudy: 'Lulesh-Scaling'
+		// caseStudy: 'Kripke-MPI',
+		caseStudy: 'OSU-Bcast',
+		// caseStudy: "Kripke-Scaling"
 	}),
 
 	watch: {},
@@ -448,15 +450,6 @@ export default {
 					algo: 'deltacon',
 					module: 'all'
 				})
-
-
-
-				// if(this.parameter_analysis){
-				// 	this.$socket.emit('dist_projection', {
-				// 		datasets: this.$store.actual_dataset_names,
-				// 		algo: 'tsne'
-				// 	})
-				// }
 			}
 		},
 
@@ -596,10 +589,11 @@ export default {
 			else if (this.caseStudy == 'Kripke-Scaling') {
 				this.$store.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
 				this.selectedTargetDataset = 'hpctoolkit-kripke-database-2589460'
+
 			}
 			else if (this.caseStudy == 'OSU-Bcast') {
-				this.$store.selectedTargetDataset = 'osu_bcast.1.10.2019-09-03_20-45-50'
-				this.selectedTargetDataset = 'osu_bcast.1.10.2019-09-03_20-45-50'
+				this.$store.selectedTargetDataset = 'osu_bcast.1.10.2019-09-04_07-05-12'
+				this.selectedTargetDataset = 'osu_bcast.1.10.2019-09-04_07-05-12'
 			}
 
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)

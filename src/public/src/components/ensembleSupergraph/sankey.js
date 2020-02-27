@@ -222,6 +222,7 @@
                 node.value = Math.max(
                     d3.sum(node.sourceLinks, value),
                     d3.sum(node.targetLinks, value));
+
             });
         }
 

@@ -147,7 +147,7 @@ export default {
 			let nodeMap = {}
 			let idx = 0
 			for (const node of graph.nodes) {
-				nodeMap[node.name] = idx
+				nodeMap[node.module] = idx
 				if (this.debug) {
 					console.log("[Preprocess] Assigning", node.id, " with map index: ", idx)
 				}
