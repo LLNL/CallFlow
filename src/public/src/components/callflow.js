@@ -78,7 +78,7 @@ export default {
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
 		metrics: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
-		selectedMetric: 'Exclusive',
+		selectedMetric: 'Inclusive',
 		runtimeColorMap: [],
 		distributionColorMap: [],
 		selectedRuntimeColorMap: "Reds",
@@ -131,9 +131,9 @@ export default {
 		],
 		parameter_analysis: true,
 		caseStudy: ['Lulesh-Scaling-3-runs', 'Lulesh-Scaling-8-runs', 'Kripke-MPI', 'OSU-Bcast', 'Kripke-Scaling'],
-		selectedCaseStudy: 'Lulesh-Scaling-3-runs'
+		// selectedCaseStudy: 'Lulesh-Scaling-3-runs'
 		// selectedCaseStudy: 'Kripke-MPI',
-		// selectedCaseStudy: 'OSU-Bcast',
+		selectedCaseStudy: 'OSU-Bcast',
 		// selectedCaseStudy: "Kripke-Scaling"
 	}),
 
