@@ -148,7 +148,7 @@ export default {
             this.meanRectangle()
             this.path()
             this.text()
-            this.drawTargetLine()
+            // this.drawTargetLine()
 
             this.$refs.ToolTip.init(this.$parent.id)
         },
@@ -211,22 +211,18 @@ export default {
         meanRectangle() {
             let self = this
             this.nodesSVG.append('rect')
-                .attr('id', (d) => {
-                    return 'callsite-' + d.client_idx
-                })
-                .attr('height', (d) => {
-                    this.currentNodeLevel[d.mod_index] = 0;
-                    this.nodeHeights[d.n_index] = d.height;
-                    return d.height;
-                })
-                .attr('width', this.nodeWidth)
-                .attr('opacity', 0)
-                .style('fill-opacity', (d) => {
-                    if (d.id.split('_')[0] == "intermediate") {
-                        return 0.0
-                    }
-                    else {
-                        return 1.0;
+                .attrs({
+                    'id': (d) => { return 'callsite-' + d.id },
+                    'height': (d) => { return d.height; },
+                    'width': this.nodeWidth,
+                    'opacity': 0,
+                    'fill-opacity': (d) => {
+                        if (d.id.split('_')[0] == "intermediate") {
+                            return 0.0
+                        }
+                        else {
+                            return 1.0;
+                        }
                     }
                 })
                 .style('shape-rendering', 'crispEdges')
@@ -291,21 +287,23 @@ export default {
                 .data(this.graph.nodes)
                 .transition()
                 .duration(this.transitionDuration)
-                .attr('opacity', d => {
-                    if (d.id.split('_')[0] == "intermediate") {
-                        return 0.0
-                    }
-                    else {
-                        return 1.0;
-                    }
+                .attrs({
+                    'opacity': d => {
+                        if (d.id.split('_')[0] == "intermediate") {
+                            return 0.0
+                        }
+                        else {
+                            return 1.0;
+                        }
+                    },
+                    'height': (d) => d.height
                 })
-                .attr('height', d => d.height)
                 .style("fill", (d, i) => {
                     if (d.id.split('_')[0] == "intermediate") {
                         return this.$store.color.ensemble
                     }
                     else {
-                        return "url(#mean-gradient-" + d.id + ")"
+                        return "url(#mean-gradient-" + d.module + ")"
                     }
                 })
         },
@@ -522,10 +520,11 @@ export default {
             for (let i = 0; i < this.graph.nodes.length; i++) {
                 let node_data = this.graph.nodes[i]
 
-                let module_name = this.graph.nodes[i].id
-                if (module_name.split('_')[0] != 'intermediate') {
+                let module_name = this.graph.nodes[i].module
+                if (this.graph.nodes[i].id.split('_')[0] != 'intermediate') {
                     console.log("-----------------------------")
                     console.log("Module: ", module_name)
+                    console.log("Selected dataset:", this.$store.selectedTargetDataset)
                     let module_data = data[module_name][this.$store.selectedMetric]['dist'][this.$store.selectedTargetDataset]
                     let module_arr = Object.values(module_data)
 
@@ -555,14 +554,14 @@ export default {
                             targetDiff = module_mean - grid[idx - 1]
                             break
                         }
-                        if(idx == grid.length - 1){
+                        if (idx == grid.length - 1) {
                             targetPos = grid.length - 1
                             targetDiff = module_mean - grid[idx - 1]
                         }
                     }
                     console.log("Chosen grid index", targetPos)
                     console.log("Target diff: ", targetDiff)
-                    console.log("timeHeight: ", timeWidth*targetDiff)
+                    console.log("timeHeight: ", timeWidth * targetDiff)
 
                     let x1 = node_data.x - this.nodeWidth
                     let x2 = node_data.x

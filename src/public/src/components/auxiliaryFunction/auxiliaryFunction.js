@@ -156,7 +156,6 @@ export default {
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
-
         // boxPlot visualization.
         visualize(callsite_name) {
             this.width = document.getElementById('auxiliary-function-overview').clientWidth - 50

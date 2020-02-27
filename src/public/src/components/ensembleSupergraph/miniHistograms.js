@@ -99,16 +99,16 @@ export default {
             }
 
             if (type == 'ensemble') {
-                if(freq < 50){
+                // if(freq < 50){
                     this.minimapYScale = d3.scaleLinear()
                     .domain([0, d3.max(freq)])
                     .range([this.$parent.ySpacing, 0]);
-                }
-                else{
-                    this.minimapYScale = d3.scaleLog()
-                    .domain([0.1, d3.max(freq)])
-                    .range([this.$parent.ySpacing, 0]);
-                }
+                // }
+                // else{
+                //     this.minimapYScale = d3.scaleLog()
+                //     .domain([0.1, d3.max(freq)])
+                //     .range([this.$parent.ySpacing, 0]);
+                // }
                 this.minimapXScale = d3.scaleBand()
                     .domain(xVals)
                     .rangeRound([0, this.$parent.nodeWidth])
@@ -123,8 +123,8 @@ export default {
                         'id': 'histobars',
                         'class': 'histogram-bar ' + type,
                         'width': () => this.bandWidth,
-                        'height': (d) => {
-                            return (this.$parent.nodeWidth) - this.minimapYScale(freq[i])
+                        'height': (d, i) => {
+                            return this.$parent.nodeWidth - this.minimapYScale(freq[i])
                         },
                         'x': (d) => {
                             return node_dict.x + this.minimapXScale(xVals[i])

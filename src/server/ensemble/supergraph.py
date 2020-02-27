@@ -23,10 +23,6 @@ class SuperGraph(nx.Graph):
         self.ensemble_g = self.states['ensemble'].g
         self.node_list = np.array(list(self.ensemble_g.nodes()))
 
-        # self.nodeMap = {}
-        # for node in self.ensemble_g.nodes(data=True):
-        #     self.nodeMap[node[0]] = node[1]
-
         # Path type to group by
         # TODO: Generalize to any group the user provides.
         self.path = path
@@ -95,11 +91,10 @@ class SuperGraph(nx.Graph):
         return tuple(ret)
 
     def add_paths(self, path):
-        # path_df = self.df[path].fillna("()")
-        # paths = path_df.drop_duplicates().tolist()
         paths = self.df[path].unique()
         for idx, path_str in enumerate(paths):
-            if(not  isinstance(path_str, float)):
+            print(path_str)
+            if(not isinstance(path_str, float)):
                 path_tuple = make_tuple(path_str)
                 if(len(path_tuple) >= 2):
                     source_module = path_tuple[-2].split('=')[0]
@@ -107,11 +102,14 @@ class SuperGraph(nx.Graph):
 
                     source_name = path_tuple[-2].split('=')[1]
                     target_name = path_tuple[-1].split('=')[1]
-                    if(target_name != 'libmonitor.so.0.0.0'):
-                        self.g.add_edge(source_module, target_module, attr_dict={
-                            "source_callsite": source_name,
-                            "target_callsite": target_name
-                                })
+                    # self.g.add_edge(source_module + '=' + source_name, target_module + '=' + target_name, attr_dict={
+                    #     "source_callsite": source_name,
+                    #     "target_callsite": target_name
+                    # })
+                    self.g.add_edge(source_module, target_module, attr_dict={
+                        "source_callsite": source_name,
+                        "target_callsite": target_name
+                    })
 
     def add_node_attributes(self):
         ensemble_mapping = self.ensemble_map(self.g.nodes())
@@ -195,10 +193,15 @@ class SuperGraph(nx.Graph):
         ret = {}
         additional_flow = {}
         for edge in graph.edges(data=True):
-            source_module = edge[0]
-            target_module = edge[1]
-            source_name = edge[2]['attr_dict']['source_callsite']
-            target_name = edge[2]['attr_dict']['target_callsite']
+            if('=' in edge[0]):
+                source_module = edge[0].split('=')[0]
+            else:
+                source_module = edge[0]
+
+            if('=' in edge[1]):
+                target_module = edge[1].split('=')[0]
+            else:
+                target_module = edge[1]
 
             source_inc = self.df.loc[(self.df["module"] == source_module)][
                 "time (inc)"
@@ -215,11 +218,8 @@ class SuperGraph(nx.Graph):
         ret = {}
         additional_flow = {}
         for edge in graph.edges(data=True):
-            source_module = edge[0]
-            target_module = edge[1]
             source_name = edge[2]['attr_dict']['source_callsite']
             target_name = edge[2]['attr_dict']['target_callsite']
-
 
             source_exc = self.df.loc[(self.df["name"] == source_name)]["time"].max()
             target_exc = self.df.loc[(self.df["name"] == target_name)]["time"].max()
@@ -235,18 +235,19 @@ class SuperGraph(nx.Graph):
         for column in self.columns:
             ensemble_columns.append(column)
 
-        # new_columns = ["max_inc_time", "max_exc_time", "dist_inc_time", "dist_exc_time"]
-        # ensemble_columns.append("dist_inc_time")
-        # ensemble_columns.append("dist_exc_time")
-
-        new_columns = []
+        new_columns = ["max_inc_time", "max_exc_time", "dist_inc_time", "dist_exc_time"]
+        ensemble_columns.append("dist_inc_time")
+        ensemble_columns.append("dist_exc_time")
 
         # loop through the nodes
         for node in self.g.nodes():
+            print(node)
             if "=" in node:
-                node_name = node.split("=")[1]
+                node_name = node.split("=")[0]
             else:
                 node_name = node
+
+            print(node_name)
 
             # Get their dataframe
             node_df = self.df.loc[self.df["module"] == node_name]
@@ -276,7 +277,8 @@ class SuperGraph(nx.Graph):
                         ret[column][node] = []
 
                 elif (
-                    column == "module"
+                    column == "name"
+                    or column == "module"
                     or column == "show_node"
                 ):
 
@@ -308,7 +310,7 @@ class SuperGraph(nx.Graph):
         ret = {}
         for node in self.g.nodes():
             if "=" in node:
-                node_name = node.split("=")[1]
+                node_name = node.split("=")[0]
             else:
                 node_name = node
 

@@ -54,7 +54,6 @@ class Pipeline:
                     .add_imbalance_perc()
                     .add_module_name_hpctoolkit()
                     .add_mod_index()
-                    .add_something()
                     .add_path()
                     .build()
                 )
