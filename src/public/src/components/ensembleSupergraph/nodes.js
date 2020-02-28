@@ -148,7 +148,7 @@ export default {
             this.meanRectangle()
             this.path()
             this.text()
-            // this.drawTargetLine()
+            this.drawTargetLine()
 
             this.$refs.ToolTip.init(this.$parent.id)
         },
@@ -591,9 +591,7 @@ export default {
                         .attr("stroke-width", 5)
                         .attr("stroke", this.$store.color.target)
                 }
-
             }
-
         },
 
         path() {

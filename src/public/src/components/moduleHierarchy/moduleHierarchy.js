@@ -48,7 +48,8 @@ export default {
 		path_hierarchy: [],
 		id: '',
 		padding: 0,
-		message: 'Module Hierarchy'
+		message: 'Module Hierarchy',
+		offset: 4,
 	}),
 
 	watch: {
@@ -486,44 +487,47 @@ export default {
 				})
 				.attr('y', (d) => {
 					if (this.selectedDirection == 'LR') {
-						return d.x0;
+						return d.x0 + this.offset;
 					}
 					return d.y0;
 				})
 				.attr('width', (d) => {
 					if (this.selectedDirection == 'LR') {
 						if (Number.isNaN(d.y1 - d.y0)) {
-							return this.width / d.data.length - 1
+							return this.width / d.data.length - this.offset
 						}
 						else {
-							return d.y1 - d.y0;
+							return d.y1 - d.y0 - this.offset;
 						}
 					}
-					return d.x1 - d.x0;
+					return d.x1 - d.x0 - this.offset;
 				})
 				.attr('height', (d) => {
 					if (this.selectedDirection == 'LR') {
-						return d.x1 - d.x0;
+						return d.x1 - d.x0 - this.offset;
 					}
-					return d.y1 - d.y0;
+					return d.y1 - d.y0 - this.offset;
 				})
 				.style("fill", (d, i) => {
-					console.log(d)
 					if (d.data.value == undefined) {
 						return "url(#mean-gradient-" + d.data.name + ")"
 					}
 					return "url(#mean-callsite-gradient-" + d.data.name + ")"
 				})
 				.style('stroke', (d) => {
+					let metric_attr = ''
 					let runtime = 0
 					if (this.$store.selectedMetric == 'Inclusive') {
+						metric_attr = 'mean_time (inc)'
 						runtime = d.data.inclusive
 					}
 					else if (this.$store.selectedMetric == 'Exclusive') {
+						metric_attr = 'mean_time'
 						runtime = d.data.exclusive
+
 					}
 					if (runtime == undefined) {
-						return 'transparent'
+						runtime = this.$store.modules[this.$store.selectedTargetDataset][d.data.name][metric_attr]
 					}
 					return d3.rgb(this.$store.color.getColorByValue(runtime));
 				})
@@ -534,7 +538,6 @@ export default {
 					}
 					return 1;
 				})
-
 				.on('click', this.click)
 				.on('mouseover', this.mouseover);
 
@@ -559,7 +562,7 @@ export default {
 						}
 						return d.data.count * this.width / d.data.length
 					}
-					return d.x0 + 15;
+					return d.x0 + this.offset*2 ;
 				})
 				.attr('y', (d) => {
 					if (this.selectedDirection == 'LR') {
@@ -580,19 +583,21 @@ export default {
 					let color = this.$store.color.setContrast(this.$store.color.getColor(d))
 					return color
 				})
+				.style('font-size', '10px')
 				.text((d) => {
 					if (d.y1 - d.y0 < 10 || d.x1 - d.x0 < 50) {
 						return '';
 					}
 					let name = d.data.name
 					name = name.replace(/<unknown procedure>/g, 'proc ');
+					name = name.replace(/MPI_/g, '');
 
 					if (name.indexOf('=')) {
 						name = name.split('=')[0]
 					}
 
 					var textSize = this.textSize(name)['width'];
-					if (textSize < d.height) {
+					if (textSize < d.width) {
 						return name;
 					} else {
 						return this.trunc(name, this.textTruncForNode)

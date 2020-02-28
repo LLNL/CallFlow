@@ -40,10 +40,6 @@ export default {
 		debug: false
 	}),
 
-	watch: {
-
-	},
-
 	mounted() {
 		this.id = 'ensemble-supergraph-overview'
 		let self = this
@@ -54,10 +50,15 @@ export default {
 	},
 
 	sockets: {
+		ensemble_supergraph(data) {
+			data = JSON.parse(data)
+			console.log("Data: ", data)
+			this.render(data)
+		},
 	},
 
 	methods: {
-		init(data) {
+		init() {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
 			this.auxiliaryViewWidth = document.getElementById('auxiliary-function-overview').clientWidth
@@ -72,9 +73,12 @@ export default {
 					"top": this.toolbarHeight
 				})
 
-			this.data = data
-			this.render(data)
+			this.$socket.emit('ensemble_supergraph', {
+				datasets: this.$store.runNames,
+				groupBy: 'module'
+			})
 		},
+
 
 
 		clear() {
@@ -86,7 +90,7 @@ export default {
 		},
 
 		render(data) {
-			this.graph = this.preprocess(this.data, false)
+			this.graph = this.preprocess(data, false)
 
 			console.log("[Ensemble SuperGraph] Preprocessing done.")
 			this.initSankey(this.graph)
@@ -263,7 +267,7 @@ export default {
 			this.sankey = Sankey()
 				.nodeWidth(this.nodeWidth)
 				.nodePadding(this.ySpacing)
-				.size([this.width * 1.05, this.height*.9 - this.ySpacing])
+				.size([this.width * 1.05, this.height * .9 - this.ySpacing])
 				.levelSpacing(this.levelSpacing)
 				.maxLevel(this.graph.maxLevel)
 				.datasets(this.$store.runNames)
@@ -377,9 +381,9 @@ export default {
 				if (this.debug) {
 					console.log("[Single SuperGraph] Removing", removeActualEdges.length, "actual edge: ", removeEdge)
 				}
-				for(let edge_idx = 0; edge_idx < edges.length; edge_idx += 1){
+				for (let edge_idx = 0; edge_idx < edges.length; edge_idx += 1) {
 					let curr_edge = edges[edge_idx]
-					if(removeEdge.source == curr_edge.source && removeEdge.target == curr_edge.target){
+					if (removeEdge.source == curr_edge.source && removeEdge.target == curr_edge.target) {
 						edges.splice(edge_idx, 1)
 					}
 				}

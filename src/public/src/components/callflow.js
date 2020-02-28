@@ -64,8 +64,8 @@ export default {
 			}
 		},
 		left: false,
-		formats: ['Callgraph', 'CCT'],
-		selectedFormat: 'Callgraph',
+		formats: ['CCT', 'CallGraph', 'SuperGraph'],
+		selectedFormat: 'SuperGraph',
 		datasets: [],
 		selectedTargetDataset: '',
 		selectedDataset2: '',
@@ -131,9 +131,9 @@ export default {
 		],
 		parameter_analysis: true,
 		caseStudy: ['Lulesh-Scaling-3-runs', 'Lulesh-Scaling-8-runs', 'Kripke-MPI', 'OSU-Bcast', 'Kripke-Scaling'],
-		// selectedCaseStudy: 'Lulesh-Scaling-3-runs'
+		selectedCaseStudy: 'Lulesh-Scaling-3-runs',
 		// selectedCaseStudy: 'Kripke-MPI',
-		selectedCaseStudy: 'OSU-Bcast',
+		// selectedCaseStudy: 'OSU-Bcast',
 		// selectedCaseStudy: "Kripke-Scaling"
 	}),
 
@@ -141,12 +141,14 @@ export default {
 
 	mounted() {
 		var socket = io.connect(this.server, { reconnect: false });
-	},
-
-	created() {
 		this.$socket.emit('init', {
 			caseStudy: this.selectedCaseStudy
 		})
+	},
+
+	created() {
+
+
 	},
 
 	beforeDestroy() {
@@ -158,45 +160,26 @@ export default {
 		// Assign variables for the store and Callflow ui component.
 		// Assign colors and min, max inclusive and exclusive times.
 		init(data) {
-			data = JSON.parse(data)
-			console.log("Config file contains: 	", data)
-			this.$store.numOfRuns = data['datasets'].length
-			this.$store.runNames = data['names']
-			this.datasets = this.$store.runNames
-
-			// Enable diff mode only if the number of datasets >= 2
-			if (this.numOfRuns >= 2) {
-				this.modes = ['Single', 'Ensemble']
-				this.selectedMode = 'Ensemble'
-			}
-			else if (this.numOfRuns == 1) {
-				this.enableDist = false
-				this.modes = ['Single']
-				this.selectedMode = 'Single'
-			}
-
-			this.$store.maxExcTime = data['max_excTime']
-			this.$store.minExcTime = data['min_excTime']
-			this.$store.maxIncTime = data['max_incTime']
-			this.$store.minIncTime = data['min_incTime']
-			this.$store.numOfRanks = data['numOfRanks']
-			this.$store.moduleCallsiteMap = data['module_callsite_map']
-			this.$store.callsiteModuleMap = data['callsite_module_map']
-			this.$store.selectedBinCount = this.selectedBinCount
-			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3)
-			this.$store.selectedScatterMode = this.selectedScatterMode
-			this.$store.selectedData = this.selectedData
-			this.$store.selectedFormat = this.selectedFormat
-			this.$store.selectedGroupBy = this.selectedGroupBy
-			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment
-			this.$store.selectedCompareMode = this.selectedCompareMode
-			this.$store.colorset = ['#59A14E', '#AF7AA1', '#F18F2C']
-			this.$store.auxiliarySortBy = this.auxiliarySortBy
-			this.$store.nodeInfo = {}
-			this.$store.selectedMetric = this.selectedMetric
+			this.setupStore(data)
 			this.setTargetDataset()
+			this.setComponentMap()
 
-			this.init()
+			if (this.selectedMode == 'Single') {
+				this.$socket.emit('single_callsite_data', {
+					dataset: this.$store.selectedTargetDataset,
+					sortBy: this.$store.auxiliarySortBy,
+					binCount: this.$store.selectedBinCount,
+					module: 'all'
+				})
+			}
+			else if(this.selectedMode == 'Ensemble'){
+				this.$socket.emit('ensemble_callsite_data', {
+					datasets: this.$store.runNames,
+					sortBy: this.$store.auxiliarySortBy,
+					binCount: this.$store.selectedBinCount,
+					module: 'all'
+				})
+			}
 		},
 
 		single_callsite_data(data) {
@@ -225,6 +208,7 @@ export default {
 			this.$store.modules[dataset] = this.processModule(module_data[dataset])
 
 			console.log("[Socket] Single Callsite data processing done.")
+			this.init()
 		},
 
 		ensemble_callsite_data(data) {
@@ -244,6 +228,7 @@ export default {
 					callsite_data[key] = this.processJSON(callsite_data[key])
 				}
 			}
+
 			this.$store.callsites = {}
 			let ensemble = this.processCallsite(callsite_data['ensemble'])
 			this.$store.callsites['ensemble'] = ensemble
@@ -262,6 +247,7 @@ export default {
 
 			this.$store.gradients = data['gradients']
 			console.log("[Socket] Ensemble Callsite data processing done.")
+			this.init()
 		},
 
 		// Reset to the init() function.
@@ -270,175 +256,92 @@ export default {
 			this.init()
 		},
 
-		// Fetch aggregated graph for single mode.
-		single_supergraph(data) {
-			data = JSON.parse(data)
-			console.log("Data for", this.selectedFormat, ": ", data)
-
-			this.$refs.SuperGraph.init(data)
-			this.$refs.SingleHistogram.init()
-			this.$refs.Function.init()
-			this.$refs.RuntimeScatterplot.init()
-		},
-
-		// Fetch aggregated graph (Super graph) for distribution mode.
-		ensemble_supergraph(data) {
-			console.log(data)
-			data = JSON.parse(data)
-			console.log("Data for", this.selectedFormat, ": [", this.selectedMode, "]", data)
-			if (this.initLoad) {
-				this.$refs.EnsembleSuperGraph.init(data)
-				this.$refs.AuxiliaryFunction.init()
-				this.$refs.EnsembleHistogram.init()
-				this.$refs.ModuleHierarchy.init()
-				this.$refs.EnsembleScatterplot.init()
-				// this.$refs.RunInformation.init()
-				// this.$refs.SimilarityMatrix.init()
-	 			// this.$refs.EnsembleDistribution.init()
-				// this.$refs.ParameterProjection.init()
-				// this.initLoad = false
-			}
-		},
-
-		compare() {
-			this.selectedCompareDataset = this.$store.selectedCompareDataset
-		},
-
 		disconnect() {
 			console.log('Disconnected.')
 		}
 	},
 
 	methods: {
-		clear() {
-			if (this.selectedMode == 'Ensemble') {
-				if (this.selectedFormat == 'Callgraph') {
-					this.$refs.EnsembleCCT.clear()
-				} else if (this.selectedFormat == 'CCT') {
-					this.$refs.EnsembleSuperGraph.clear()
-					this.$refs.EnsembleHistogram.clear()
-					this.$refs.EnsembleScatterplot.clear()
-					this.$refs.Scatterplot.clear()
-					this.$refs.AuxiliaryFunction.clear()
-					this.$refs.ModuleHierarchy.clear()
-				}
+		setupStore(data) {
+			data = JSON.parse(data)
+			console.log("Config file contains: 	", data)
+			this.$store.numOfRuns = data['datasets'].length
+			this.$store.runNames = data['names']
+			this.datasets = this.$store.runNames
+
+			// Enable diff mode only if the number of datasets >= 2
+			if (this.numOfRuns >= 2) {
+				this.modes = ['Single', 'Ensemble']
+				this.selectedMode = 'Ensemble'
 			}
-			else if (this.selectedMode == 'Single') {
-				if (this.selectedFormat == 'Callgraph') {
-					this.$refs.CCT.clear()
-				}
-				else if (this.selectedFormat == 'CCT') {
-					this.$refs.SuperGraph.clear()
-					this.$refs.Function.clear()
-					this.$refs.SingleHistogram.clear()
-					this.$refs.RuntimeScatterplot.clear()
-				}
+			else if (this.numOfRuns == 1) {
+				this.enableDist = false
+				this.modes = ['Single']
+				this.selectedMode = 'Single'
 			}
+
+			this.$store.maxExcTime = data['max_excTime']
+			this.$store.minExcTime = data['min_excTime']
+			this.$store.maxIncTime = data['max_incTime']
+			this.$store.minIncTime = data['min_incTime']
+			this.$store.numOfRanks = data['numOfRanks']
+			this.$store.moduleCallsiteMap = data['module_callsite_map']
+			this.$store.callsiteModuleMap = data['callsite_module_map']
+			this.$store.selectedBinCount = this.selectedBinCount
+
+			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3)
+
+			this.$store.auxiliarySortBy = this.auxiliarySortBy
+			this.$store.nodeInfo = {}
+			this.$store.selectedMetric = this.selectedMetric
 		},
 
-		clearLocal() {
-			if (this.selectedMode == 'Ensemble') {
-				if (this.selectedFormat == 'CCT') {
-					this.$refs.EnsembleCCT.clear()
-				} else if (this.selectedFormat == 'Callgraph') {
-					this.$refs.EnsembleSuperGraph.clear()
-					this.$refs.ModuleHierarchy.clear()
-					this.$refs.EnsembleHistogram.clear()
-					this.$refs.AuxiliaryFunction.clear()
-					this.$refs.EnsembleScatterplot.clear()
+
+		setTargetDataset() {
+			let max_inclusive_dataset = '';
+			let max_inclusive_time = this.$store.maxIncTime['ensemble']
+			let current_max_inclusive_time = 0.0
+			console.log(this.$store.maxIncTime)
+			for (let dataset in this.$store.maxIncTime) {
+				if (this.$store.maxIncTime.hasOwnProperty(dataset)) {
+					if (dataset != 'ensemble') {
+						if (current_max_inclusive_time < this.$store.maxIncTime[dataset]) {
+							current_max_inclusive_time = this.$store.maxIncTime[dataset]
+							max_inclusive_dataset = dataset
+						}
+					}
 				}
 			}
-			else if (this.selectedMode == 'Single') {
-				if (this.selectedFormat == 'CCT') {
-					this.$refs.CCT.clear()
-				}
-				else if (this.selectedFormat == 'Callgraph') {
-					this.$refs.SuperGraph.clear()
-					this.$refs.Function.clear()
-					this.$refs.SingleHistogram.clear()
-					this.$refs.RuntimeScatterplot.clear()
-				}
-			}
+
+			this.$store.selectedTargetDataset = max_inclusive_dataset
+			this.selectedTargetDataset = max_inclusive_dataset
+
+			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
 
-		init() {
-			if (this.selectedExhibitMode == 'Presentation') {
-				this.enablePresentationMode()
-			}
+		setComponentMap() {
+			this.currentSingleCCTComponents = [this.$refs.CCT]
+			this.currentSingleCallGraphComponents = []
+			this.currentSingleSuperGraphComponents = [
+				this.$refs.SuperGraph,
+				this.$refs.Histogram,
+				this.$refs.Scatterplot,
+				this.$refs.Function
+			]
 
-			// Initialize colors
-			this.colors()
+			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT]
+			this.currentEnsembleCallGraphComponents = []
+			this.currentEnsembleSuperGraphComponents = [
+				this.$refs.EnsembleSuperGraph,
+				this.$refs.EnsembleHistogram,
+				this.$refs.EnsembleScatterplot,
+				this.$refs.AuxiliaryInformation,
+				this.$refs.ModuleHierarchy
+			]
 
-			console.log("Mode : ", this.selectedMode)
-			console.log("Number of runs :", this.$store.numOfRuns)
-			console.log("Dataset : ", this.selectedTargetDataset)
-			console.log("Format = ", this.selectedFormat)
-
-			// Call the appropriate socket to query the server.
-			if (this.selectedMode == 'Single') {
-				this.initSingleMode()
-			}
-			else if (this.selectedMode == 'Ensemble') {
-				this.initEnsembleMode()
-			}
 		},
 
-		initSingleMode() {
-			console.log("Single mode")
-			if (this.selectedFormat == 'CCT') {
-				this.$socket.emit('single_cct', {
-					dataset: this.$store.selectedTargetDataset,
-					functionsInCCT: this.selectedFunctionsInCCT,
-					selectedMetric: this.selectedMetric,
-				})
-			} else if (this.selectedFormat == 'Callgraph') {
-				this.$socket.emit('single_callsite_data', {
-					dataset: this.$store.selectedTargetDataset,
-					sortBy: this.$store.auxiliarySortBy,
-					binCount: this.$store.selectedBinCount,
-					module: 'all'
-				})
-
-				this.$socket.emit('single_supergraph', {
-					dataset: this.$store.selectedTargetDataset,
-					format: this.selectedFormat,
-					groupBy: this.selectedGroupBy
-				})
-
-			}
-		},
-
-		initEnsembleMode() {
-			console.log("Ensemble mode")
-			if (this.selectedFormat == 'CCT') {
-				console.log("[Mode = Ensemble]")
-				this.$socket.emit('ensemble_cct', {
-					datasets: this.$store.runNames,
-					functionsInCCT: this.selectedFunctionsInCCT,
-				})
-			} else if (this.selectedFormat == 'Callgraph' && this.selectedExhibitMode == 'Default') {
-
-				this.$socket.emit('ensemble_callsite_data', {
-					datasets: this.$store.runNames,
-					sortBy: this.$store.auxiliarySortBy,
-					binCount: this.$store.selectedBinCount,
-					module: 'all'
-				})
-
-				this.$socket.emit('ensemble_supergraph', {
-					datasets: this.$store.runNames,
-					groupBy: this.selectedGroupBy
-				})
-
-				this.$socket.emit('ensemble_similarity', {
-					datasets: this.$store.runNames,
-					algo: 'deltacon',
-					module: 'all'
-				})
-			}
-		},
-
-		colors() {
+		setupColors() {
 			this.$store.color = new Color(this.selectedMetric)
 			this.$store.zeroToOneColor = new Color(this.selectedMetric)
 			this.$store.binColor = new Color('Bin')
@@ -497,11 +400,112 @@ export default {
 			this.$store.color.compare = '#043060'
 		},
 
+
+		clear() {
+			if (this.selectedMode == 'Ensemble') {
+				if (this.selectedFormat == 'CCT') {
+					this.clearComponents(this.currentSingleCallGraphComponents)
+				}
+				else if (this.selectedFormat == 'Callgraph') {
+					this.clearComponents(this.currentSingleCallGraphComponents)
+				}
+				else if(this.selectedFormat == 'SuperGraph'){
+					this.clearComponents(this.currentSingleSuperGraphComponents)
+				}
+			}
+			else if (this.selectedMode == 'Single') {
+				if (this.selectedFormat == 'CCT') {
+					this.clearComponents(this.currentEnsembleCCTComponents)
+				}
+				else if (this.selectedFormat == 'CallGraph') {
+					this.clearComponents(this.currentEnsembleCallGraphComponents)
+				}
+				else if (this.selectedFormat == 'SuperGraph'){
+					this.clearComponents(this.currentEnsembleSuperGraphComponents)
+				}
+			}
+		},
+
+		clearLocal() {
+			if (this.selectedMode == 'Ensemble') {
+				if (this.selectedFormat == 'CCT') {
+					this.clearComponents(this.currentEnsembleCCTComponents)
+				}
+				else if (this.selectedFormat == 'CallGraph') {
+					this.clearComponents(this.currentEnsembleCallGraphComponents)
+				}
+				else if(this.selectedFormat == 'SuperGraph'){
+					this.clearComponents(this.currentEnsembleSuperGraphComponents)
+				}
+			}
+			else if (this.selectedMode == 'Single') {
+				if (this.selectedFormat == 'CCT') {
+					this.clearComponents(this.currentSingleCCTComponents)
+				}
+				else if (this.selectedFormat == 'CallGraph') {
+					this.clearComponents(this.currentEnsembleCallGraphComponents)
+				}
+				else if(this.selectedFormat == 'SuperGraph'){
+					this.clearComponents(this.currentEnsembleSuperGraphComponents)
+				}
+			}
+		},
+
+		initComponents(componentList){
+			for (let i = 0; i < componentList.length; i++) {
+				console.log(componentList[i])
+				componentList[i].init()
+			}
+		},
+
+		clearComponents(componentList){
+			for (let i = 0; i < componentList.length; i++) {
+				componentList[i].clear()
+			}
+		},
+
+		init() {
+			if (this.selectedExhibitMode == 'Presentation') {
+				this.enablePresentationMode()
+			}
+
+			// Initialize colors
+			this.setupColors()
+
+			console.log("Mode : ", this.selectedMode)
+			console.log("Number of runs :", this.$store.numOfRuns)
+			console.log("Dataset : ", this.selectedTargetDataset)
+			console.log("Format = ", this.selectedFormat)
+
+			// Call the appropriate socket to query the server.
+			if (this.selectedMode == 'Single') {
+
+				if(this.selectedFormat == 'SuperGraph'){
+					this.initComponents(this.currentSingleSuperGraphComponents)
+				}
+				else if(this.selectedFormat == 'CallGraph'){
+					this.initComponents(this.currentSingleCallGraphComponents)
+				}
+				else if(this.selectedFormat == 'CCT'){
+					this.initComponents(this.currentSingleCCTComponents)
+				}
+			}
+			else if (this.selectedMode == 'Ensemble') {
+				if(this.selectedFormat == 'SuperGraph'){
+					this.initComponents(this.currentEnsembleSuperGraphComponents)
+				}
+				else if(this.selectedFormat == 'CallGraph'){
+					this.loadComponents(this.currentEnsembleCallGraphComponents)
+				}
+				else if(this.selectedFormat == 'CCT'){
+					this.loadComponents(this.currentEnsembleCCTComponents)
+				}
+			}
+		},
+
 		reset() {
-			this.$socket.emit('reset', {
-				dataset: this.$store.selectedTargetDataset,
-				filterBy: this.selectedFilterBy,
-				filterPerc: this.selectedFilterPerc
+			this.$socket.emit('init', {
+				caseStudy: this.selectedCaseStudy
 			})
 		},
 
@@ -551,53 +555,20 @@ export default {
 			return modules
 		},
 
-		setTargetDataset() {
-			let max_inclusive_dataset = '';
-			let max_inclusive_time = this.$store.maxIncTime['ensemble']
-			let current_max_inclusive_time = 0.0
-			console.log(this.$store.maxIncTime)
-			for (let dataset in this.$store.maxIncTime) {
-				if (this.$store.maxIncTime.hasOwnProperty(dataset)) {
-					if(dataset != 'ensemble'){
-						if(current_max_inclusive_time < this.$store.maxIncTime[dataset]){
-							current_max_inclusive_time = this.$store.maxIncTime[dataset]
-							max_inclusive_dataset = dataset
-						}
-					}
-				}
-			}
-
-			this.$store.selectedTargetDataset = max_inclusive_dataset
-			this.selectedTargetDataset = max_inclusive_dataset
-
-			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
-		},
-
-		// TODO: Write the ensemble and single version.
-		updateDistributionColorMap() {
-			this.clearLocal()
-			this.colors()
-			if (this.selectedFormat == 'CCT') {
-				this.$socket.emit('ensemble_cct', {
-					dataset: this.$store.selectedTargetDataset,
-					functionsInCCT: this.selectedFunctionsInCCT,
-				})
-			} else if (this.selectedFormat == 'Callgraph') {
-				this.$socket.emit('group', {
-					dataset: this.$store.selectedTargetDataset,
-					format: this.selectedFormat,
-					groupBy: this.selectedGroupBy
-				})
-			}
-		},
-
-		updateCaseStudy(){
+		updateCaseStudy() {
 			this.clearLocal()
 			console.log("[Update] Case study: ", this.selectedCaseStudy)
 			this.$socket.emit('init', {
 				caseStudy: this.selectedCaseStudy
 			})
 
+			this.init()
+		},
+
+		// TODO: Write the ensemble and single version.
+		updateDistributionColorMap() {
+			this.clearLocal()
+			this.colors()
 			this.init()
 		},
 
@@ -629,6 +600,9 @@ export default {
 
 		updateFormat() {
 			this.clear()
+			this.$socket.emit('init', {
+				caseStudy: this.selectedCaseStudy
+			})
 			this.init()
 		},
 
@@ -636,14 +610,7 @@ export default {
 			this.clearLocal()
 			this.$store.selectedTargetDataset = this.selectedTargetDataset
 			console.log("[Update] Target Dataset: ", this.selectedTargetDataset)
-			if (this.selectedExhibitMode == 'Presentation') {
-				for (let i = 0; i < this.presentationPage - 1; i += 1) {
-					this.sendRequest(this.presentationOrder[this.presentationPage])
-				}
-			}
-			else {
-				this.init()
-			}
+			this.init()
 		},
 
 		updateMode() {
@@ -658,17 +625,10 @@ export default {
 			this.init()
 		},
 
-		updateFilterBy() {
-			Vue.nextTick(() => {
-
-			})
-		},
-
 		updateColor() {
 			this.clearLocal()
 			this.colors()
 			this.init()
-
 		},
 
 		updateColorPoint() {
@@ -677,70 +637,10 @@ export default {
 			this.init()
 		},
 
-		updateGroupBy() {
-			Vue.nextTick(() => {
-				this.clearLocal()
-				this.$socket.emit('group', {
-					dataset: this.$store.selectedTargetDataset,
-					format: this.selectedFormat,
-					groupBy: this.selectedGroupBy,
-				})
-			})
-		},
-
-		updateFilterPerc() {
-			// this.$socket.emit('filter', {
-			// 	dataset: this.$store.selectedTargetDataset,
-			// 	format: this.selectedFormat,
-			// 	filterBy: this.selectedFilterBy,
-			// 	filterPerc: this.selectedFilterPerc
-			// })
-		},
-
-		updateFilterIncTime() {
-			this.selectedFilterPerc = (this.selectedIncTime / this.maxIncTime) * 100
-			this.$socket.emit('filter', {
-				dataset: this.$store.selectedTargetDataset,
-				format: this.selectedFormat,
-				filterBy: this.selectedFilterBy,
-				filterPerc: this.selectedFilterPerc
-			})
-		},
-
-		// updateBinCount() {
-		// 	// Update the binCount in the store
-		// 	this.$store.selectedBinCount = this.selectedBinCount
-		// 	// Clear the existing histogram if there is one.
-		// 	if (this.$store.selectedNode != null) {
-		// 		this.$refs.Histogram.clear()
-		// 		let d = this.$store.selectedNode
-		// 		this.$socket.emit('histogram', {
-		// 			mod_index: d.mod_index[0],
-		// 			module: d.module[0],
-		// 			dataset: this.$store.selectedTargetDataset,
-		// 		})
-		// 	}
-		// 	// Call updateMiniHistogram inside callgraph.js
-		// 	this.$refs.Callgraph.updateMiniHistogram()
-		// 	// TODO: Call updateHistogram for diffCallgraph when needed.
-		// },
-
 		updateBinCount() {
 			this.$store.selectedBinCount = this.selectedBinCount
 			this.clearLocal()
 			this.init()
-		},
-
-		updateScatterMode() {
-			if (this.$store.selectedNode != undefined) {
-				this.$store.selectedScatterMode = this.selectedScatterMode
-				this.$socket.emit('scatterplot', {
-					module: this.$store.selectedNode,
-					dataset1: this.$store.selectedTargetDataset,
-				})
-			} else {
-				console.log('The selected module is :', this.$store.selectedNode)
-			}
 		},
 
 		updateFunctionsInCCT() {
@@ -748,12 +648,6 @@ export default {
 				dataset: this.$store.selectedTargetDataset,
 				functionInCCT: this.selectedFunctionsInCCT,
 			})
-		},
-
-		updateData() {
-			this.$store.selectedData = this.selectedData
-			this.clear()
-			this.init()
 		},
 
 		updateDiffNodeAlignment() {
@@ -765,14 +659,6 @@ export default {
 		updateAuxiliarySortBy() {
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
 			EventHandler.$emit('update_auxiliary_sortBy')
-		},
-
-		triggerCompare() {
-			this.$socket.emit('compare', {
-				targetDataset: this.$store.selectedTargetDataset,
-				compareDataset: this.$store.selectedCompareDataset,
-				selectedMetric: this.$store.selectedMetric
-			})
 		},
 
 		updateCompareDataset() {
@@ -791,87 +677,5 @@ export default {
 				compareDataset: this.$store.selectedCompareDataset,
 			})
 		},
-
-		updateExhibitMode() {
-			this.clearLocal()
-			this.init()
-		},
-
-		// Presentation mode.
-		addEvent(element, eventName, callback) {
-			if (element.addEventListener) {
-				element.addEventListener(eventName, callback, false);
-			} else if (element.attachEvent) {
-				element.attachEvent("on" + eventName, callback);
-			} else {
-				element["on" + eventName] = callback;
-			}
-		},
-
-		enablePresentationMode() {
-			let self = this
-			this.addEvent(document, "keypress", function (e) {
-				e = e || window.event;
-				if (e.keyCode == '97') {
-					self.sendPresentationRequest(self.presentationOrder[self.presentationPage])
-					self.presentationPage += 1
-				}
-			});
-		},
-
-		sendPresentationRequest(request) {
-			console.log(request)
-			switch (request) {
-				case 'run_information':
-					this.$socket.emit('run_information', {
-						datasets: this.$store.runNames,
-					})
-					break;
-				case 'dist_group':
-					this.$socket.emit('dist_group', {
-						datasets: this.$store.runNames,
-						groupBy: this.selectedGroupBy
-					})
-					break;
-				case 'dist-mini-histogram':
-					this.$socket.emit('dist-mini-histogram', {
-						'target-datasets': [this.$store.selectedTargetDataset],
-					})
-					break;
-				case 'dist_similarity':
-					this.$socket.emit('dist_similarity', {
-						datasets: this.$store.runNames,
-						algo: 'deltacon',
-						module: 'all'
-					})
-					break;
-				case 'dist_gradients':
-					this.$socket.emit('dist_gradients', {
-						datasets: this.$store.runNames,
-						plot: 'kde'
-					})
-					break;
-				case 'dist_projection':
-					this.$socket.emit('dist_projection', {
-						datasets: this.$store.runNames,
-						algo: 'tsne'
-					})
-					break;
-				case 'dist_auxiliary':
-					this.$socket.emit('dist_auxiliary', {
-						datasets: this.$store.runNames,
-						sortBy: this.$store.auxiliarySortBy,
-						module: 'all'
-					})
-					break;
-				case 'dist_hierarchy':
-					this.$socket.emit('dist_hierarchy', {
-						module: 'libpsm_infinipath.so.1.16=41:<unknown procedure> 0x188fe [libpsm_infinipath.so.1.16]',
-						datasets: this.$store.runNames,
-					})
-					break;
-			}
-		}
-
 	}
 }
