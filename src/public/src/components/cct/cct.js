@@ -71,6 +71,12 @@ export default {
 
             // Create a new directed graph
             this.firstRender = false
+
+            this.$socket.emit('single_cct', {
+                dataset: this.$store.selectedTargetDataset,
+                functionsInCCT: this.selectedFunctionsInCCT,
+                selectedMetric: this.selectedMetric,
+            })
         },
 
 

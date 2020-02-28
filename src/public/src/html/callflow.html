@@ -153,7 +153,7 @@
 	</v-navigation-drawer>
 
 	<v-content class="pt-auto">
-		<v-layout v-show="selectedFormat == 'Callgraph' && selectedMode == 'Single'">
+		<v-layout v-show="selectedFormat == 'SuperGaph' && selectedMode == 'Single'">
 			<splitpanes id="callgraph-dashboard" class="default-theme">
 				<splitpanes horizontal :splitpanes-size="25">
 					<span>
@@ -184,7 +184,7 @@
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-show="selectedMode == 'Ensemble' && selectedFormat == 'Callgraph'">
+		<v-layout v-show="selectedMode == 'Ensemble' && selectedFormat == 'SuperGraph'">
 			<splitpanes id="ensemble-supergraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe' && parameter_analysis == true">
 				<splitpanes horizontal :splitpanes-size="25">
 					<!-- <span>

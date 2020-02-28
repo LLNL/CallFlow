@@ -66,6 +66,7 @@ class SuperGraph(nx.Graph):
         self.callbacks = []
         self.edge_direction = {}
 
+        add_data = True
         with self.timer.phase("Add graph attributes"):
             if add_data == True:
                 self.add_node_attributes()
@@ -100,50 +101,43 @@ class SuperGraph(nx.Graph):
         path = make_tuple(path)
         print(path)
         for idx, elem in enumerate(path):
+            print("Element; ", elem)
             callsite = elem.split('=')[1]
             module = elem.split('=')[0]
-            if (module not in moduleMapper):
+            if (module not in dataMap):
                 moduleMapper[module] = 0
-                dataMap[module] =  {
+                dataMap[module] =  [{
                     'callsite': callsite,
                     'module': module,
                     'level': idx
-                }
-                ret.append({
-                    'callsite': callsite,
-                    'module': module,
-                    'level': idx
-                })
-            elif module in moduleMapper and 'level' in dataMap[module]:
-                if dataMap[module]['level'] != idx:
+                }]
+            else:
+                flag = [p['level'] == idx for p in dataMap[module]]
+                if np.any(np.array(flag)):
                     moduleMapper[module] += 1
-                    dataMap[module] =  {
-                        'callsite': elem,
-                        'module': module,
-                        'level': idx
-                    }
-                    ret.append({
-                        'module': elem,
-                        'callsite': callsite,
-                        'level': idx
+                    dataMap[module].append({
+                    'callsite': elem,
+                    'module': module,
+                    'level': idx
                     })
                 else:
-                    dataMap[module] =  {
+                    dataMap[module].append({
                         'callsite': callsite,
                         'module': module,
                         'level': idx
-                    }
-                ret.append({
-                    'callsite': callsite,
-                    'module': module,
-                    'level': idx
-                })
+                    })
+            ret.append(dataMap[module][-1])
+
+            print(f"dataMap for {module} is {dataMap[module]}")
+            print("---------------")
         return ret
+
 
     def add_paths(self, path):
         paths = self.df[path].unique()
         for idx, path_str in enumerate(paths):
             path_list = self.no_cycle_path(path_str)
+            print(f"Path list: {path_list}")
             if(len(path_list) >= 2):
                 source_module = path_list[-2]['module']
                 target_module = path_list[-1]['module']
