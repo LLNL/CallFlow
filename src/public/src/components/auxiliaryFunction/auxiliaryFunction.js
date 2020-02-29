@@ -88,6 +88,7 @@ export default {
             EventHandler.$emit('highlight_dataset', {
                 dataset: this.$store.selectedTargetDataset
             })
+            console.log(this)
         },
 
         clear() {

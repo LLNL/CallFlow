@@ -290,7 +290,7 @@ export default {
 			this.$store.selectedBinCount = this.selectedBinCount
 
 			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3)
-
+			this.$store.selectedScatterMode = 'mean'
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
 			this.$store.nodeInfo = {}
 			this.$store.selectedMetric = this.selectedMetric
@@ -301,7 +301,6 @@ export default {
 			let max_inclusive_dataset = '';
 			let max_inclusive_time = this.$store.maxIncTime['ensemble']
 			let current_max_inclusive_time = 0.0
-			console.log(this.$store.maxIncTime)
 			for (let dataset in this.$store.maxIncTime) {
 				if (this.$store.maxIncTime.hasOwnProperty(dataset)) {
 					if (dataset != 'ensemble') {
@@ -331,14 +330,15 @@ export default {
 
 			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT]
 			this.currentEnsembleCallGraphComponents = []
+			console.log(this.$refs)
 			this.currentEnsembleSuperGraphComponents = [
 				this.$refs.EnsembleSuperGraph,
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
-				this.$refs.AuxiliaryInformation,
+				this.$refs.AuxiliaryFunction,
 				this.$refs.ModuleHierarchy
 			]
-
+			console.log(this.currentEnsembleSuperGraphComponents)
 		},
 
 		setupColors() {
@@ -391,7 +391,6 @@ export default {
 			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap
 			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap
 			this.$store.selectedColorPoint = this.selectedColorPoint
-			console.log(this.selectedColorMin)
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 			this.$store.color.highlight = '#AF9B90';//'#4681B4'
@@ -399,7 +398,6 @@ export default {
 			this.$store.color.ensemble = '#C0C0C0';//'#4681B4'
 			this.$store.color.compare = '#043060'
 		},
-
 
 		clear() {
 			if (this.selectedMode == 'Ensemble') {
@@ -452,6 +450,7 @@ export default {
 		},
 
 		initComponents(componentList){
+			console.log(componentList)
 			for (let i = 0; i < componentList.length; i++) {
 				console.log(componentList[i])
 				componentList[i].init()

@@ -4,7 +4,6 @@ import statsmodels.nonparametric.api as smnp
 import matplotlib.pyplot as plt
 import math
 
-
 class KDE_gradients:
     def __init__(self, states, binCount="20"):
         self.states = states
@@ -513,6 +512,4 @@ class KDE_gradients:
                 },
             },
         }
-
         return results
-
