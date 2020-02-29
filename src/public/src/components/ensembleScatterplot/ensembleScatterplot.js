@@ -51,7 +51,7 @@ export default {
 	mounted() {
 		let self = this
 		EventHandler.$on('ensemble_scatterplot', function (data) {
-			self.clear()
+			// self.clear()
 			console.log("Ensemble Scatterplot: ", data['module'])
 			self.render(data['module'])
 		})
@@ -68,8 +68,8 @@ export default {
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
 
 			this.svg = d3.select('#' + this.svgID)
-				.attr('width', this.boxWidth + this.padding.left + this.padding.right)
-				.attr('height', this.boxHeight + this.padding.top + this.padding.bottom)
+				.attr('width', this.boxWidth - this.padding.left - this.padding.right)
+				.attr('height', this.boxHeight - this.padding.top - this.padding.bottom)
 				.attr('transform', "translate(" + this.padding.left + "," + this.padding.top + ")")
 
 			let modules_arr = Object.keys(this.$store.modules['ensemble'])
@@ -109,25 +109,32 @@ export default {
 		},
 
 		ensembleProcess() {
-			let data = this.$store.modules['ensemble'][this.module]
+			let mean_time = []
+			let mean_time_inc = []
+			for(let i = 0; i < this.$store.runNames.length; i += 1){
+				if(this.$store.runNames[i] != this.$store.selectedTargetDataset){
+					mean_time.push(this.$store.modules[this.$store.runNames[i]][this.module]['mean_time'])
+					mean_time_inc.push(this.$store.modules[this.$store.runNames[i]][this.module]['mean_time (inc)'])
+				}
+			}
 
-			this.yData = data["time (inc)"]
-			this.xData = data["time"]
-			this.nameData = data['name']
-
+			let all_data = this.$store.modules['ensemble'][this.module]
 			let temp
 			if (this.$store.selectedScatterMode == 'mean') {
-				temp = this.scatterMean(this.xData, this.yData)
+				temp = this.scatterMean(mean_time, mean_time_inc)
 			}
 			else if (this.$store.selectedScatterMode == 'all') {
-				temp = this.scatterAll(this.xData, this.yData)
+				temp = this.scatterAll(data['time'], data['time (inc)'])
 			}
+
 			this.xMin = temp[0]
 			this.yMin = temp[1]
 			this.xMax = temp[2]
 			this.yMax = temp[3]
 			this.xArray = temp[4]
 			this.yArray = temp[5]
+
+			console.log(this.xMin, this.xMax, this.xArray)
 
 			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice())
 			this.regressionY = this.leastSquaresCoeff["y_res"];
@@ -143,16 +150,13 @@ export default {
 		targetProcess() {
 			let data = this.$store.modules[this.$store.selectedTargetDataset][this.module]
 
-			this.ytargetData = data["time (inc)"]
-			this.xtargetData = data["time"]
-			this.nametargetData = data['name']
-
 			let temp
+			this.$store.selectedScatterMode = 'mean'
 			if (this.$store.selectedScatterMode == 'mean') {
-				temp = this.scatterMean(this.xtargetData, this.ytargetData)
+				temp = this.scatterMean(data['mean_time'], data['mean_time (inc)'])
 			}
 			else if (this.$store.selectedScatterMode == 'all') {
-				temp = this.scatterAll(this.xtargetData, this.ytargetData)
+				temp = this.scatterAll(data['time'], data['time (inc)'])
 			}
 			this.xtargetMin = temp[0]
 			this.ytargetMin = temp[1]
@@ -194,23 +198,15 @@ export default {
 			let yMax = 0
 
 			for (const [idx, d] of Object.entries(xData)) {
-				let xSum = 0
-				for (let rank = 0; rank < d.length; rank += 1) {
-					xMin = Math.min(xMin, d[rank]);
-					xMax = Math.max(xMax, d[rank]);
-					xSum += d[rank]
-				}
-				yArray.push(xSum / d.length)
+				xMin = Math.min(xMin, d)
+				xMax = Math.max(xMax, d)
+				xArray.push(d)
 			}
 
 			for (const [idx, d] of Object.entries(yData)) {
-				let ySum = 0
-				for (let rank = 0; rank < d.length; rank += 1) {
-					yMin = Math.min(yMin, d[rank])
-					yMax = Math.max(yMax, d[rank])
-					ySum += d[rank]
-				}
-				yArray.push(ySum / d.length)
+				yMin = Math.min(yMin, d)
+				yMax = Math.max(yMax, d)
+				yArray.push(d)
 			}
 
 			return [xMin, yMin, xMax, yMax, xArray, yArray]
@@ -413,6 +409,7 @@ export default {
 				.attr('class', 'ensemble-dot')
 				.attr('r', 5)
 				.attr('cx', function (d, i) {
+					console.log(self.xArray, self.padding.left)
 					return self.xScale(self.xArray[i]) + 3 * self.padding.left;
 				})
 				.attr('cy', function (d, i) {

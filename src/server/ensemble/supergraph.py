@@ -75,22 +75,6 @@ class SuperGraph(nx.Graph):
                 print("Creating a Graph without node or edge attributes.")
         print(self.timer)
 
-    # def no_cycle_path(self, path):
-    #     ret = []
-    #     moduleMapper = {}
-    #     for idx, elem in enumerate(path):
-    #         call_site = elem.split('=')[1]
-    #         module = elem.split('=')[0]
-    #         if (module not in moduleMapper and elem in self.mapper):
-    #             self.mapper[elem] += 1
-    #             moduleMapper[module] = True
-    #             ret.append(elem)
-    #         elif elem not in self.mapper:
-    #             self.mapper[elem] = 0
-    #         else:
-    #             self.mapper[elem] += 1
-    #     return tuple(ret)
-
     def no_cycle_path(self, path):
         ret = []
         moduleMapper = {}
