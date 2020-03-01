@@ -196,9 +196,7 @@ body {
 .reveal-button {
   float: right;
   margin: 2px;
-  color: #009688;
-  border-radius: 4px;
-  border-style: outset;
+  color: #009688 !important;
   padding: 8px;
 }
 

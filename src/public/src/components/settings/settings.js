@@ -3,7 +3,9 @@ import tpl from '../../html/settings/index.html'
 export default {
     name: "Settings",
     template: tpl,
-
+    props: [
+        "settings"
+    ],
     data: () => ({
         items: [],
     }),

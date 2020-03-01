@@ -22,13 +22,13 @@ import Function from './function/function'
 // Ensemble mode imports
 import EnsembleSuperGraph from './ensembleSupergraph/ensembleSupergraph'
 import EnsembleCCT from './ensembleCCT/ensembleCCT'
-// import SimilarityMatrix from './similarityMatrix/similarityMatrix'
-// import ParameterProjection from './parameterProjection/parameterProjection'
 import AuxiliaryFunction from './auxiliaryFunction/auxiliaryFunction'
 import EnsembleHistogram from './ensembleHistogram/ensembleHistogram'
 import ModuleHierarchy from './moduleHierarchy/moduleHierarchy'
 import EnsembleScatterplot from './ensembleScatterplot/ensembleScatterplot'
 // import EnsembleDistribution from './ensembleDistribution/ensembleDistribution'
+// import ParameterProjection from './parameterProjection/parameterProjection'
+// import SimilarityMatrix from './similarityMatrix/similarityMatrix'
 
 import io from 'socket.io-client'
 
@@ -330,7 +330,6 @@ export default {
 
 			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT]
 			this.currentEnsembleCallGraphComponents = []
-			console.log(this.$refs)
 			this.currentEnsembleSuperGraphComponents = [
 				this.$refs.EnsembleSuperGraph,
 				this.$refs.EnsembleHistogram,
@@ -450,7 +449,6 @@ export default {
 		},
 
 		initComponents(componentList){
-			console.log(componentList)
 			for (let i = 0; i < componentList.length; i++) {
 				console.log(componentList[i])
 				componentList[i].init()
@@ -464,6 +462,7 @@ export default {
 		},
 
 		init() {
+			console.log(this.$refs)
 			if (this.selectedExhibitMode == 'Presentation') {
 				this.enablePresentationMode()
 			}

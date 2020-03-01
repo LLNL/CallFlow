@@ -92,6 +92,7 @@ export default {
         init(graph) {
             this.graph = graph
             this.nodes = d3.select('#' + this.id)
+            console.log(this.nodes)
             this.group()
             this.setNodeIds()
 
