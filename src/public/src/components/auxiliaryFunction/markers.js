@@ -12,6 +12,8 @@ export default {
         paddingTop: 10,
         textOffset: 40,
         fontSize: 10,
+        informationHeight: 70,
+        outlierHeight: 20,
     }),
 
     mounted() {
@@ -33,12 +35,10 @@ export default {
                     "transform": "translate(0, " + this.paddingTop + ")"
                 })
 
-            this.informationHeight = 30
-
             this.height = this.$parent.containerHeight
             this.width = this.$parent.containerWidth
 
-            this.boxHeight = this.height - this.paddingTop - this.informationHeight
+            this.boxHeight = this.height - this.informationHeight/2
             this.boxWidth = this.width
 
             this.min_x = Math.min(this.q.min, this.targetq.min)
@@ -84,9 +84,9 @@ export default {
                 this.g.append("line")
                     .attrs({
                         "class": "whisker",
-                        "y1": this.informationHeight / 2,
+                        "y1": 0,
                         "x1": this.x0(d),
-                        "y2": this.boxHeight - this.informationHeight / 2,
+                        "y2": this.boxHeight,
                         "x2": this.x0(d),
                         'stroke': fill
                     })
@@ -99,9 +99,9 @@ export default {
                 this.g.append("line")
                     .attrs({
                         "class": "whisker",
-                        "y1": this.informationHeight / 2,
+                        "y1": 0,
                         "x1": this.x0(d),
-                        "y2": this.boxHeight - this.informationHeight / 2,
+                        "y2": this.boxHeight,
                         "x2": this.x0(d),
                         'stroke': 'black'
                     })
@@ -113,7 +113,7 @@ export default {
                 .attrs({
                     "class": "whiskerText",
                     "x": this.x0(min_val) + 0.5 * this.fontSize,
-                    "y": this.boxHeight + (this.informationHeight) * 0.66,
+                    "y": this.boxHeight * 1.20,
                     "fill": d3.rgb(fill).darker(1)
                 })
                 .style('stroke-width', '1')
@@ -124,7 +124,7 @@ export default {
                 .attrs({
                     "class": "whiskerText",
                     "x": this.x0(max_val) - 8.5 * this.fontSize,
-                    "y": this.boxHeight + (this.informationHeight) * 0.66,
+                    "y": this.boxHeight * 1.20,
                     "fill": d3.rgb(fill).darker(1)
                 })
                 .style('stroke-width', '1')
@@ -135,7 +135,7 @@ export default {
                 .attrs({
                     "class": "whiskerText",
                     "x": this.boxWidth/2 - 4.5*this.fontSize,
-                    "y": this.boxHeight + (this.informationHeight) * 0.66,
+                    "y": this.boxHeight * 1.20,
                     "fill": d3.rgb(fill).darker(1)
                 })
                 .style('stroke-width', '1')
@@ -160,10 +160,10 @@ export default {
                     "class": "whiskerText",
                     // "x": this.x0(this.qData[0]) - 4.5*this.fontSize,
                     "x": this.boxWidth / 3,
-                    "y": (this.informationHeight) * 0.33,
+                    "y": (this.informationHeight) * 0.20,
                     "fill": d3.rgb(fill).darker(1)
                 })
-                .style('stroke-width', '1')
+                .style('stroke-width', '2')
                 .text("q1: " + this.formatRuntime(this.qData[0]))
 
             this.g.append("text")
@@ -171,7 +171,7 @@ export default {
                     "class": "whiskerText",
                     // "x": this.x0(this.qData[1]) + 0.5*this.fontSize,
                     "x": ((this.boxWidth / 3) * 2),
-                    "y": this.informationHeight * 0.33,
+                    "y": this.informationHeight * 0.20,
                     "fill": d3.rgb(fill).darker(1)
                 })
                 .style('stroke-width', '1')

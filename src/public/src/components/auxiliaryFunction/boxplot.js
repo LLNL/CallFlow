@@ -31,6 +31,7 @@ export default {
         containerHeight: 150,
         containerWidth: 0,
         parentID:'',
+        iqrFactor: 0.15
     }),
     components: {
         QuartileBox,
@@ -108,8 +109,8 @@ export default {
                 this.targetq = this.quartiles(this.targetd)
             }
 
-            this.whiskerIndices = this.iqrScore(this.d, this.q)
-            this.whiskerIndices_target = this.iqrScore(this.targetd, this.targetq)
+            this.ensembleWhiskerIndices = this.iqrScore(this.d, this.q)
+            this.targetWhiskerIndices = this.iqrScore(this.targetd, this.targetq)
 
             // Compute the new x-scale.
             this.x1 = d3.scaleLinear()
@@ -207,7 +208,6 @@ export default {
                     "min": min,
                     "max": max
                 }
-                console.log(result)
             }
             return result
         },
@@ -215,7 +215,7 @@ export default {
         visualize() {
             this.$refs.QuartileBox.init(this.q, this.targetq)
             this.$refs.Markers.init(this.q, this.targetq)
-            this.$refs.Outliers.init(this.q, this.targetq)
+            this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, )
         },
     }
 }
