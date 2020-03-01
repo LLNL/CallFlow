@@ -5,7 +5,7 @@
 		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
 		<v-flex xs2 class="ma-2">
 			<v-select label="Select Target run" :items="datasets"
-				v-if="selectedMode == 'Ensemble' && selectedFormat == 'Callgraph'" v-model="selectedTargetDataset"
+				v-if="selectedMode == 'Ensemble' && selectedFormat == 'SuperGraph'" v-model="selectedTargetDataset"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
 			</v-select>
 			<v-select label="Select a run" :items="datasets" v-if="selectedMode == 'Single' || selectedFormat == 'CCT'"
@@ -15,7 +15,7 @@
 		</v-flex>
 		<v-flex xs2 class="ma-2">
 			<v-select label="Select Compare run" :items="datasets"
-				v-if="selectedMode == 'Ensemble' && selectedFormat == 'Callgraph'" v-model="selectedCompareDataset"
+				v-if="selectedMode == 'Ensemble' && selectedFormat == 'SuperGraph'" v-model="selectedCompareDataset"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateCompareDataset()">
 			</v-select>
 		</v-flex>
@@ -153,7 +153,7 @@
 	</v-navigation-drawer>
 
 	<v-content class="pt-auto">
-		<v-layout v-show="selectedFormat == 'SuperGaph' && selectedMode == 'Single'">
+		<v-layout v-show="selectedFormat == 'SuperGraph' && selectedMode == 'Single'">
 			<splitpanes id="callgraph-dashboard" class="default-theme">
 				<splitpanes horizontal :splitpanes-size="25">
 					<span>

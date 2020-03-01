@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 
 export default {
     template: tpl,
-    name: 'DistEdges',
+    name: 'EnsembleEdges',
     components: {
     },
     props: [],
@@ -16,7 +16,7 @@ export default {
 
     },
     mounted() {
-        this.id = 'dist-edges-' + this._uid
+        this.id = 'ensemble-edges'
     },
 
     methods: {
@@ -28,64 +28,43 @@ export default {
                 return link.type != "callback"
             })
 
-            this.$store.selectedAlignmentShow = 'Ensemble'
+            this.initEdges('ensemble')
+            // this.initEdges(this.$store.selectedTargetDataset)
 
-            let datasets = this.$store.runNames
-            if (this.$store.selectedAlignmentShow == 'All') {
-                for (let i = 0; i < datasets.length; i += 1) {
-                    let dataset = datasets[i]
-                    let client_dataset_name = this.$store.datasetMap[dataset]
-                    this.initEdges(client_dataset_name)
-                }
-            }
-            else {
-                // let client_dataset_name = this.$store.datasetMap[this.$store.selectedDataset]
-                this.initEdges('ensemble')
-            }
+            this.$store.selectedEdgeAlignment = 'Top'
 
-            if (this.$store.selectedDiffNodeAlignment == 'Middle') {
-                if (this.$store.selectedAlignmentShow == 'All') {
-                    for (let i = 0; i < datasets.length; i += 1) {
-                        let dataset = datasets[i]
-                        this.drawMiddleEdges(dataset)
-                    }
-                }
-                else if (this.$store.selectedAlignmentShow == 'Single') {
-                    this.drawMiddleEdges(this.$store.selectedDataset)
-                }
-                // this.drawMiddleEdges2()
+            if (this.$store.selectedEdgeAlignment == 'Middle') {
+                this.drawMiddleEdges('ensemble')
+                // this.drawMiddleEdges(this.$store.selectedTargetDataset)
             }
-            else if (this.$store.selectedDiffNodeAlignment == 'Top') {
-                if (this.$store.selectedAlignmentShow == 'All') {
-                    for (let i = 0; i < datasets.length; i += 1) {
-                        let dataset = datasets[i]
-                        this.drawTopEdges('ensemble')
-                    }
-                }
-                else if (this.$store.selectedAlignmentShow == 'Ensemble') {
-                    this.drawTopEdges('ensemble')
-                }
+            else if (this.$store.selectedEdgeAlignment == 'Top') {
+                this.drawTopEdges('ensemble')
+                // this.drawTopEdges(this.$store.selectedTargetDataset)
             }
         },
 
         initEdges(dataset) {
             let self = this
-            this.edges.selectAll('#dist-edge-' + dataset)
+            this.edges.selectAll('#ensemble-edge-' + dataset)
                 .data(this.links)
                 .enter().append('path')
-                .attr('class', 'dist-edge')
+                .attr('class', (d) => {
+                    return 'target-edge'
+                })
                 .attr('id', (d) => {
-                    return 'dist-edge-' + dataset;
+                    return 'ensemble-edge-' + dataset;
                 })
                 .style('fill', (d) => {
-                    return this.$store.color.ensemble
+                    if (dataset == 'ensemble') {
+                        return this.$store.color.ensemble
+                    }
+                    else {
+                        return this.$store.color.target
+                    }
                 })
-                // .style('stroke', (d) => {
-                //     return this.$store.color.datasetColor[this.$store.selectedTargetDataset]
+                // .style('fill-opacity', (d) => {
+                //     return d.number_of_runs / this.$store.numOfRuns
                 // })
-                .style('fill-opacity', (d) => {
-                    return d.number_of_runs / this.$store.numOfRuns
-                })
                 .on("mouseover", function (d) {
                     d3.select(this).style("stroke-opacity", "1.0")
                     // self.clearEdgeLabels()
@@ -106,22 +85,22 @@ export default {
         },
 
         drawTopEdges(dataset) {
-            this.edges.selectAll('#dist-edge-' + dataset)
+            this.edges.selectAll('#ensemble-edge-' + dataset)
                 .data(this.links)
                 .attr('d', (d) => {
                     let edge_source_offset = 0
-                    if(d.source.split('_')[0] == "intermediate"){
+                    if (d.source.split('_')[0] == "intermediate") {
                         edge_source_offset = -1
                     }
-                    else{
+                    else {
                         edge_source_offset = this.offset
                     }
 
                     let edge_target_offset = 0
-                    if(d.target.split('_')[0] == "intermediate"){
+                    if (d.target.split('_')[0] == "intermediate") {
                         edge_target_offset = -1
                     }
-                    else{
+                    else {
                         edge_target_offset = this.offset
                     }
 
@@ -143,10 +122,17 @@ export default {
                         Bx2 = Bxi(0.4),
                         Bx3 = Bxi(1 - 0.4)
 
+                    let linkHeight = 0
+                    if(dataset == 'ensemble'){
+                        linkHeight = d.height
+                    }
+                    else {
+                        linkHeight = d.targetHeight
+                    }
 
                     let By0 = 0, By1 = 0;
-                    By0 = d.source_data.y + this.$parent.ySpacing + d.sy + d.height * 1.0
-                    By1 = d.target_data.y + this.$parent.ySpacing + d.ty + d.height * 1.0
+                    By0 = d.source_data.y + this.$parent.ySpacing + d.sy + linkHeight
+                    By1 = d.target_data.y + this.$parent.ySpacing + d.ty + linkHeight
 
                     const rightMoveDown = By1 - Ty1
                     return `M${Tx0},${Ty0
@@ -158,9 +144,14 @@ export default {
                         } ${Bx2},${By0
                         } ${Bx0},${By0}`;
                 })
-            // .style('fill', (d) => {
-            //     return this.$store.color.datasetColor[client_dataset_name]
-            // })
+                .style('fill', (d) => {
+                    if (dataset == 'ensemble') {
+                        return this.$store.color.ensemble
+                    }
+                    else {
+                        return this.$store.color.target
+                    }
+                })
 
         },
 
@@ -176,12 +167,12 @@ export default {
         },
 
         clear() {
-            this.edges.selectAll('.dist-edge').remove()
+            this.edges.selectAll('.ensemble-edge').remove()
             this.edges.selectAll('.edgelabel').remove()
             this.edges.selectAll('.edgelabelText').remove()
         },
 
-        clearEdgeLabels(){
+        clearEdgeLabels() {
             d3.selectAll('edgelabelhover').remove()
             d3.selectAll('edgelabelTexthover').remove()
         },
@@ -215,7 +206,7 @@ export default {
                 .text((d, i) => d.number_of_runs)
         },
 
-        clearAllEdgeLabels(){
+        clearAllEdgeLabels() {
             d3.selectAll('edgelabel').remove()
             d3.selectAll('edgelabelText').remove()
         },

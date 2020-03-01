@@ -1,22 +1,20 @@
 import tpl from '../../html/ensembleSupergraph/index.html'
 import Sankey from './sankey'
-import DistNodes from './nodes'
+import EnsembleNodes from './nodes'
 import MiniHistograms from './miniHistograms'
-import DistEdges from './edges'
-import Dataset from './dataset.js'
+import EnsembleEdges from './edges'
 import * as  d3 from 'd3'
 import EventHandler from '../EventHandler.js'
-import DistColorMap from './colormap'
+import EnsembleColorMap from './colormap'
 
 export default {
 	name: 'EnsembleSuperGraph',
 	template: tpl,
 	components: {
-		DistNodes,
-		DistEdges,
+		EnsembleNodes,
+		EnsembleEdges,
 		MiniHistograms,
-		Dataset,
-		DistColorMap
+		EnsembleColorMap
 	},
 	props: [
 
@@ -79,14 +77,12 @@ export default {
 			})
 		},
 
-
-
 		clear() {
-			this.$refs.DistNodes.clear()
-			this.$refs.DistEdges.clear()
+			this.$refs.EnsembleNodes.clear()
+			this.$refs.EnsembleEdges.clear()
 			this.$refs.MiniHistograms.clear()
-			this.$refs.DistColorMap.clear()
-			this.$refs.DistColorMap.clearMetric()
+			this.$refs.EnsembleColorMap.clear()
+			this.$refs.EnsembleColorMap.clearMetric()
 		},
 
 		render(data) {
@@ -103,9 +99,9 @@ export default {
 			console.log("[Ensemble SuperGraph] Post-processing done.")
 
 			this.$store.graph = this.graph
-			this.$refs.DistNodes.init(this.$store.graph, this.view)
-			this.$refs.DistEdges.init(this.$store.graph, this.view)
-			this.$refs.DistColorMap.init()
+			this.$refs.EnsembleNodes.init(this.$store.graph, this.view)
+			this.$refs.EnsembleEdges.init(this.$store.graph, this.view)
+			this.$refs.EnsembleColorMap.init()
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view)
 
 			if (this.debug) {
@@ -273,6 +269,7 @@ export default {
 				.datasets(this.$store.runNames)
 				.setMinNodeScale(this.nodeScale)
 				.dataset('ensemble')
+				.targetDataset(this.$store.selectedTargetDataset)
 				.store(this.$store)
 
 			let path = this.sankey.link()
@@ -319,6 +316,7 @@ export default {
 					console.log("[Single SuperGraph] Number of levels to shift: ", shift_level)
 				}
 
+				let targetDataset = this.$store.selectedTargetDataset
 				// Put in intermediate nodes.
 				for (let j = shift_level; j > 1; j--) {
 					const intermediate_idx = nodes.length;
@@ -330,6 +328,7 @@ export default {
 						height: temp_edges[i].height,
 						name: target_node.id,
 					};
+					tempNode[targetDataset] = target_node[targetDataset]
 					if (this.debug) {
 						console.log("[Single SuperGraph] Adding intermediate node: ", tempNode);
 					}

@@ -78,7 +78,7 @@ export default {
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
 		metrics: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
-		selectedMetric: 'Inclusive',
+		selectedMetric: 'Exclusive',
 		runtimeColorMap: [],
 		distributionColorMap: [],
 		selectedRuntimeColorMap: "Reds",
@@ -331,11 +331,11 @@ export default {
 			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT]
 			this.currentEnsembleCallGraphComponents = []
 			this.currentEnsembleSuperGraphComponents = [
-				this.$refs.EnsembleSuperGraph,
-				this.$refs.EnsembleHistogram,
-				this.$refs.EnsembleScatterplot,
+				// this.$refs.EnsembleSuperGraph,
+				// this.$refs.EnsembleHistogram,
+				// this.$refs.EnsembleScatterplot,
 				this.$refs.AuxiliaryFunction,
-				this.$refs.ModuleHierarchy
+				// this.$refs.ModuleHierarchy
 			]
 			console.log(this.currentEnsembleSuperGraphComponents)
 		},
