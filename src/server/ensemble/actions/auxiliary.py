@@ -97,8 +97,8 @@ class Auxiliary:
                 "sorted_time": group_df['time'].sort_values().tolist(),
                 "rank": group_df['rank'].tolist(),
                 "id": 'node-' + str(group_df['nid'].tolist()[0]),
-                "mean_time (inc)": group_df['time (inc)'].mean(),
-                "mean_time": group_df['time'].mean(),
+                "mean_time (inc)": round(group_df['time (inc)'].mean(),2),
+                "mean_time": round(group_df['time'].mean(), 2),
                 "max_time (inc)": group_df['time (inc)'].max(),
                 "max_time": group_df['time'].max(),
                 "min_time (inc)": group_df['time (inc)'].min(),
@@ -157,7 +157,6 @@ class Auxiliary:
         module_ret = {}
         # Module grouped information
         modules = self.df['module'].unique()
-        print(modules)
         module_information = []
         for module in modules:
             module_df = self.df[self.df['module'] == module]

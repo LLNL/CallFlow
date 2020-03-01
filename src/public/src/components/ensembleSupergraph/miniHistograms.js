@@ -116,6 +116,7 @@ export default {
             }
 
             this.bandWidth = this.minimapXScale.bandwidth()
+            console.log(xVals, freq)
             for (let i = 0; i < freq.length; i += 1) {
                 d3.select('#' + this.id)
                     .append('rect')

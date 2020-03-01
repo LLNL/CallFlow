@@ -2,8 +2,23 @@
     <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
     <v-spacer></v-spacer>
 
-    <!-- <Settings :settings="settings"/> -->
+    <Settings ref="Settings" :settings="settings"/>
     <span class="component-info">
         SuperGraph contains {{number_of_callsites}} callsites.
-   </span>
+    </span>
+
+    <div v-for="callsite in callsites" class="auxiliary-node" :id="callsite.id"
+    :style="{ width: boxplotWidth + 'px', height: boxplotHeight + 'px' }">
+        <v-btn class="ma-2 reveal-button" tile outlined color="white" @click="clickCallsite">Reveal</v-btn>
+        <h4>{{callsite.module}}={{formatName(callsite.name)}}</h4>
+        <div>Exclusive Runtime (mean) : {{formatRuntime(callsite['mean_time'])}} s</div>
+        <div>Inclusive Runtime (mean) : {{formatRuntime(callsite['mean_time (inc)'])}} s</div>
+        <template v-if="compareMode == true">
+            <div>Mean Difference: {{}}</div>
+            <div>Standard deviation : {{}}</div>
+        </template>
+        <BoxPlot ref="callsite" :callsite="callsite"/>
+    </div>
+
+    </Callsite>
 </v-layout>
