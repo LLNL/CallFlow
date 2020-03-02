@@ -167,7 +167,6 @@ class App:
                 "name":"init"
             })
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
-            print(config_json)
             emit("init", config_json, json=True)
 
         @sockets.on("reset", namespace="/")

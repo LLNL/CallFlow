@@ -139,19 +139,6 @@ class groupBy:
             spath = s_df['path'].tolist()[0]
             tpath = t_df['path'].tolist()[0]
 
-            # print(snode, tnode, spath, tpath)
-
-            # key = self.get_same_module_key(u, v, data, G, G_agg)
-
-            #  # Update frequency if same edge exists
-            # if key is not None:
-            #     G_agg[u][v][key]['freq'] += 1
-
-            # # Else create a new edge with same data and a new key `freq` set to 1
-            # else:
-            #     G_agg.add_edge(u, v, **dict({'freq': 1}, **data))
-
-
             temp_group_path_results = self.create_group_path(spath)
             group_path[snode] = temp_group_path_results[0]
             change_name[snode] = temp_group_path_results[1]
@@ -234,8 +221,7 @@ class groupBy:
             else:
                 nodeData['component_path'] = []
 
-
-    def get_same_module(self, src, tgt, module, G, G_agg):
+    def get_callsites_with_module(self, src, tgt, module, G, G_agg):
 
         # First check if edge exists in new Graph
         if G_agg.has_edge(src, tgt) is None:
@@ -243,7 +229,6 @@ class groupBy:
 
         # Get data for all edges between u and v
         new_edge_data = G_agg.get_edge_data(src, tgt)
-        print(new_edge_data)
 
 
         if new_edge_data:

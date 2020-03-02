@@ -143,57 +143,76 @@ export default {
         selectCallsitesByModule(thismodule) {
             let all_callsites = Object.keys(this.$store.callsites[this.$store.selectedTargetDataset])
 
-            for (let i = 0; i < all_callsites.length; i += 1) {
-                document.getElementById(this.callsiteIDMap[all_callsites[i]]).style.opacity = 0.2
-                document.getElementById(this.callsiteIDMap[all_callsites[i]]).style.borderStyle = 'solid'
+            for (let callsite in all_callsites) {
+                if(all_callsites.hasOwnProperty(callsite)){
+                    document.getElementById(all_callsites[callsite].id).style.opacity = 0.2
+                    document.getElementById(all_callsites[callsite].id).style.borderStyle = 'solid'
+                }
             }
 
             let highlight_callsites = this.$store.moduleCallsiteMap[thismodule]
-            for (let i = 0; i < highlight_callsites.length; i += 1) {
-                document.getElementById(this.callsiteIDMap[highlight_callsites[i]]).style.opacity = 1
-                document.getElementById(this.callsiteIDMap[highlight_callsites[i]]).style.borderStyle = 'dotted'
+            for (let callsite in highlight_callsites) {
+                if(ensemble_callsites.hasOwnProperty(callsite)){
+                    document.getElementById(ensemble_callsites[callsite].id).style.opacity = 1
+                    document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'dotted'
+                }
             }
         },
 
         highlightCallsitesByModule(thismodule) {
-            let all_callsites = Object.keys(this.$store.callsites[this.$store.selectedTargetDataset])
+            let all_callsites = this.$store.callsites[this.$store.selectedTargetDataset]
+            let ensemble_callsites = this.$store.callsites['ensemble']
 
-            for (let i = 0; i < all_callsites.length; i += 1) {
-                document.getElementById(this.callsiteIDMap[all_callsites[i]]).style.opacity = 0.2
-                document.getElementById(this.callsiteIDMap[all_callsites[i]]).style.borderStyle = 'dotted'
+            for (let callsite in all_callsites) {
+                if(ensemble_callsites.hasOwnProperty(callsite)){
+                    document.getElementById(ensemble_callsites[callsite].id).style.opacity = 0.2
+                    document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'dotted'
+                }
             }
 
             let highlight_callsites = this.$store.moduleCallsiteMap[thismodule]
-            for (let i = 0; i < highlight_callsites.length; i += 1) {
-                document.getElementById(this.callsiteIDMap[highlight_callsites[i]]).style.opacity = 1
+            for (let callsite in highlight_callsites) {
+                if(ensemble_callsites.hasOwnProperty(callsite)){
+                    document.getElementById(ensemble_callsites[callsite].id).style.opacity = 1
+                }
             }
 
             let selected_callsites = this.$store.moduleCallsiteMap[this.$store.selectedModule]
-            for (let i = 0; i < selected_callsites.length; i += 1) {
-                document.getElementById(this.callsiteIDMap[selected_callsites[i]]).style.borderStyle = 'solid'
+            for (let callsite in selected_callsites) {
+                if(ensemble_callsites.hasOwnProperty(callsite)){
+                    document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'solid'
+                }
             }
 
         },
 
         unhighlightCallsitesByModule() {
+            let ensemble_callsites = this.$store.callsites['ensemble']
             let all_callsites = this.$store.callsites[this.$store.selectedTargetDataset]
 
             for (let callsite in all_callsites) {
-                document.getElementById(all_callsites[callsite]).style.opacity = 1
-                document.getElementById(all_callsites[callsite]).style.borderStyle = 'dotted'
+                if(ensemble_callsites.hasOwnProperty(callsite)){
+                    document.getElementById(ensemble_callsites[callsite].id).style.opacity = 1
+                    document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'dotted'
+                }
             }
 
             let selected_callsites = this.$store.moduleCallsiteMap[this.$store.selectedModule]
             for (let callsite in selected_callsites) {
-                document.getElementById(selected_callsites[callsite]).style.borderStyle = 'solid'
+                if(ensemble_callsites.hasOwnProperty(callsite)){
+                    document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'solid'
+                }
             }
         },
 
         highlightCallsitesByDataset(dataset) {
             let callsites = this.$store.callsites[dataset]
+            let ensemble_callsites = this.$store.callsites['ensemble']
 
             for(let callsite in callsites){
-                document.getElementById(callsites[callsite].id).style.borderColor = this.$store.color.target
+                if(ensemble_callsites.hasOwnProperty(callsite)){
+                    document.getElementById(ensemble_callsites[callsite].id).style.borderColor = this.$store.color.target
+                }
             }
         }
     }

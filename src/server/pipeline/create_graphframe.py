@@ -51,5 +51,4 @@ class CreateGraphFrame:
             self.gf = ht.GraphFrame.from_lists(data_path)
 
         self.df = self.gf.dataframe
-        print(self.df.columns)
         self.graph = self.gf.graph
