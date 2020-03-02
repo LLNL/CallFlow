@@ -143,8 +143,7 @@ class Pipeline:
 
         return state
 
-    def group(self, states, state_name, attr):
-        state = states[state_name]
+    def group(self, state, attr):
         grouped_graph = groupBy(state, attr)
         state.g = grouped_graph.g
         state.df = grouped_graph.df

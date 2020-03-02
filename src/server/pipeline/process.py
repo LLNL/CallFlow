@@ -65,7 +65,7 @@ class PreProcess:
 			self.callgraph_nodes_np = np.array([])
 			self.cct_nodes_np = np.array([])
 
-			self.graphMapper2()
+			self.graphMapper()
 			self.map = {}
 
 		def dfMapper(self):
@@ -87,13 +87,15 @@ class PreProcess:
 			elif target not in set(self.unmapped_targets):
 				self.unmapped_targets.append(target)
 
-		def graphMapper2(self):
+		def graphMapper(self):
 			graph = self.graph
 
 			for node in graph.traverse():
 				node_dict = getNodeDictFromFrame(node.frame)
 
-				if(node_dict['type'] == 'statement'):
+				if(node_dict['type'] == 'loop'):
+					node_name = 'Loop@' + sanitizeName(node_dict['name'] + ':' + str(node_dict['line']))
+				elif(node_dict['type'] == 'statement'):
 					node_name = sanitizeName(node_dict['name']) + ":" + str(node_dict['line'])
 				else:
 				 	node_name = node_dict['name']
@@ -234,12 +236,11 @@ class PreProcess:
 
 		def raiseExceptionIfNodeCountNotEqual(self, attr):
 			map_node_count = len(attr.keys())
-
 			df_node_count = len(self.df['name'].unique())
-
+			print(f"Map contains: {map_node_count}, graph contains: {df_node_count}")
 			if map_node_count != df_node_count:
 				raise Exception(
-					f"Unmatched Preprocessing maps: Map contains: {map_node_count} nodes, graph contains: {callgraph_node_count} nodes"
+					f"Unmatched Preprocessing maps: Map contains: {map_node_count} nodes, graph contains: {df_node_count} nodes"
 				)
 
 		@logger

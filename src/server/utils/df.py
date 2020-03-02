@@ -28,13 +28,16 @@ def lookup_with_name(df, name):
 #     return name_split[len(name_split) - 1]
 
 def sanitizeName(name):
+    ret_name = ''
     if name is None:
-        return 'Unknown'
+        ret_name = 'Unknown'
+        return ret_name
     if('/' in name):
         name_split = name.split("/")
-        return name_split[len(name_split) - 1]
+        ret_name = name_split[len(name_split) - 1]
     else:
-        return name
+        ret_name = name
+    return ret_name
 
 def avg(l):
     """uses floating-point division."""
