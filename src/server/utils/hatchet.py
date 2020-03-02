@@ -12,7 +12,6 @@ def getPathListFromFrames(frames):
         paths.append(path)
     return path
 
-
 def framesToPathLists(paths):
     all_paths = []
     for path in paths:
@@ -21,7 +20,6 @@ def framesToPathLists(paths):
             curr_path.append(frame['name'])
         all_paths.append(curr_path)
     return all_paths
-
 
 def bfs_hatchet(graph):
     ret = {}
@@ -64,6 +62,15 @@ def getNodeName(node):
     else:
         return node.frame.get("file")
 
+def sanitizeName(name):
+    if name is None:
+        return 'Unknown'
+    if('/' in name):
+        name_split = name.split("/")
+        return name_split[len(name_split) - 1]
+    else:
+        return name
+
 # Return the Callsite name from frame.
 def getNodeDictFromFrame(frame):
     if frame["type"] == "function":
@@ -72,3 +79,5 @@ def getNodeDictFromFrame(frame):
         return {"name": frame["file"], "line": frame["line"], "type": "statement"}
     elif frame['type'] == 'loop':
         return {"name": frame['file'], "line": frame["line"], "type": "loop"}
+    else:
+        return {}

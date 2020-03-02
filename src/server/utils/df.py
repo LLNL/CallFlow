@@ -32,7 +32,6 @@ def sanitizeName(name):
         return 'Unknown'
     if('/' in name):
         name_split = name.split("/")
-        print(name_split[len(name_split) - 1])
         return name_split[len(name_split) - 1]
     else:
         return name

@@ -19,7 +19,7 @@ from utils.df import sanitizeName
 import bisect
 
 
-def tmp_wrap(func):
+def logger(func):
 	@wraps(func)
 	def tmp(*args, **kwargs):
 		log.info("Preprocessing : {0}".format(func.__name__))
@@ -65,9 +65,7 @@ class PreProcess:
 			self.callgraph_nodes_np = np.array([])
 			self.cct_nodes_np = np.array([])
 
-			# self.dfMapper()
-			self.graphMapper()
-
+			self.graphMapper2()
 			self.map = {}
 
 		def dfMapper(self):
@@ -89,106 +87,27 @@ class PreProcess:
 			elif target not in set(self.unmapped_targets):
 				self.unmapped_targets.append(target)
 
-		def graphMapper(self):
+		def graphMapper2(self):
 			graph = self.graph
 
-			for root in graph.roots:
-				node_gen = root.traverse()
+			for node in graph.traverse():
+				node_dict = getNodeDictFromFrame(node.frame)
 
-				root_dict = getNodeDictFromFrame(root.frame)
-				root_name = root_dict["name"]
-				root_paths = root.paths()
+				if(node_dict['type'] == 'statement'):
+					node_name = sanitizeName(node_dict['name']) + ":" + str(node_dict['line'])
+				else:
+				 	node_name = node_dict['name']
 
-				self.callers[root_name] = []
-				self.callees[root_name] = []
-				self.paths[root_name] = [root_paths]
-				self.hatchet_nodes[root_name] = [root]
-
-				node = root
-
-				try:
-					while node:
-						node_dict = getNodeDictFromFrame(node.frame)
-						node_name = node_dict["name"]
-
-						# Append all the unique paths belonging to a callsite.
-						node_paths = node.paths()
-						self.paths[node_name] = node_paths
-
-						# Append the frames to the map.
-						if node_name not in self.frames:
-							self.frames[node_name] = []
-						self.frames[node_name].append(node.frame)
-
-						# Append the Hatchet node to the map.
-						if node_name not in self.hatchet_nodes:
-							self.hatchet_nodes[node_name] = []
-						self.hatchet_nodes[node_name].append(node)
-
-						# Append the callers and callees.
-						for node_path in node_paths:
-							if len(node_path) >= 2:
-
-								source_node_dict = getNodeDictFromFrame(
-									node_path[-2]
-								)
-								target_node_dict = getNodeDictFromFrame(
-									node_path[-1]
-								)
-
-								source_node_name = source_node_dict["name"]
-								target_node_name = target_node_dict["name"]
-
-								# Add the callers.
-								if source_node_name not in self.callers:
-									self.callers[source_node_name] = []
-								self.callers[source_node_name].append(target_node_name)
-
-								# Add the callees.
-								if target_node_name not in self.callees:
-									self.callees[target_node_name] = []
-								self.callees[target_node_name].append(source_node_name)
-
-								self.update_unmapped_target_nodes(source_node_name, target_node_name)
-							# For logger.
-						self.cct_nodes.append(node_name)
-						node = next(node_gen)
-
-					# All logging information is converted to numpy to improve calculation speeds.
-
-				except StopIteration:
-					pass
-				finally:
-					node_dict = getNodeDictFromFrame(node.frame)
-					node_name = node_dict["name"] + ":" + str(node_dict["line"])
-					node_paths = node.paths()
-					self.paths[node_name] = node_paths
-
-					# Append the frames to the map.
-					if node_name not in self.frames:
-						self.frames[node_name] = []
-					self.frames[node_name].append(node.frame)
-
-					# Append the Hatchet node to the map.
-					if node_name not in self.hatchet_nodes:
-						self.hatchet_nodes[node_name] = []
-					self.hatchet_nodes[node_name].append(node)
-
-					self.callers[node_name] = node_paths[0][-2]
-					self.callees[node_name] = None
-
-					self.cct_nodes.append(node_name)
-
-					self.callgraph_nodes = np.unique(np.array(self.cct_nodes))
-
-					for node_name in self.unmapped_targets:
-						self.callers[node_name] = []
-					del root
+				node_paths = node.paths()
+				self.paths[node_name] = node_paths
+				self.callers[node_name] = node.parents
+				self.callees[node_name] = node.children
+				self.hatchet_nodes[node_name] = node
 
 		def build(self):
 			return PreProcess(self)
 
-		@tmp_wrap
+		@logger
 		def add_hatchet_node(self):
 			self.raiseExceptionIfNodeCountNotEqual(self.hatchet_nodes.keys())
 			self.df["hatchet_node"] = self.df["name"].apply(
@@ -197,17 +116,17 @@ class PreProcess:
 			return self
 
 		# Add the path information from the node object
-		@tmp_wrap
+		@logger
 		def add_path(self):
 			self.raiseExceptionIfNodeCountNotEqual(self.paths)
 			self.df["path"] = self.df["name"].apply(
-				lambda node_name: getPathListFromFrames(self.paths[node_name]) if node_name in self.paths else []
+				lambda node_name: getPathListFromFrames(self.paths[node_name])
 			)
 			return self
 
 		# Max of the inclusive Runtimes among all processes
 		# node -> max([ inclusive times of process])
-		@tmp_wrap
+		@logger
 		def add_max_incTime(self):
 			ret = {}
 			ret[str(row.nid)] = max(self.state.lookup(row.nid)["time (inc)"])
@@ -220,7 +139,7 @@ class PreProcess:
 
 		# Avg of inclusive Runtimes among all processes
 		# node -> avg([ inclusive times of process])
-		@tmp_wrap
+		@logger
 		def add_avg_incTime(self):
 			ret = {}
 			for idx, row in self.df.iterrows():
@@ -234,7 +153,7 @@ class PreProcess:
 			return self
 
 		# Imbalance percentage Series in the dataframe
-		@tmp_wrap
+		@logger
 		def add_imbalance_perc(self):
 			ret = {}
 			for node_name in self.df['name'].unique():
@@ -247,20 +166,20 @@ class PreProcess:
 			self.df["imbalance_perc"] = self.df['name'].apply(lambda name: ret[name])
 			return self
 
-		@tmp_wrap
+		@logger
 		def add_callers_and_callees(self):
-			self.df["callees"] = self.df["name"].apply(lambda node: self.callees[node] if node in self.callees else [])
-			self.df["callers"] = self.df["name"].apply(lambda node: self.callers[node] if node in self.callers else [])
+			self.df["callees"] = self.df["name"].apply(lambda node: self.callees[node] )
+			self.df["callers"] = self.df["name"].apply(lambda node: self.callers[node] )
 
 			return self
 
-		@tmp_wrap
+		@logger
 		def add_show_node(self):
 			self.map["show_node"] = {}
 			self.df["show_node"] = self.df["name"].apply(lambda node: True)
 			return self
 
-		@tmp_wrap
+		@logger
 		def update_show_node(self, show_node_map):
 			self.map.show_node = show_node_map
 			self.df["show_node"] = self.df["node"].apply(
@@ -269,59 +188,61 @@ class PreProcess:
 			return self
 
 		# node_name is different from name in dataframe. So creating a copy of it.
-		@tmp_wrap
+		@logger
 		def add_vis_node_name(self):
 			self.df["vis_node_name"] = self.df["name"].apply(lambda name: name)
 			return self
 
-		@tmp_wrap
+		@logger
 		def add_node_name_hpctoolkit(self, node_name_map):
 			self.df["node_name"] = self.df["name"].apply(
 				lambda name: node_name_map[name]
 			)
 			return self
 
-		@tmp_wrap
+		@logger
 		def add_module_name_hpctoolkit(self):
 			self.df["module"] = self.df["module"].apply(
 				lambda name: sanitizeName(name)
 			)
 			return self
 
-		@tmp_wrap
+		@logger
 		def add_node_name_caliper(self, node_module_map):
 			self.df['node_name'] = self.df['name'].apply(lambda name: name_module_map[name])
 
-		@tmp_wrap
+		@logger
 		def add_module_name_caliper(self, module_map):
 			self.df['module'] = self.df['name'].apply(lambda name: module_map[name])
 			return self
 
 
-		@tmp_wrap
+		@logger
 		def add_n_index(self):
 			self.df["n_index"] = self.df.groupby("nid").ngroup()
 			return self
 
-		@tmp_wrap
+		@logger
 		def add_mod_index(self):
 			self.df["mod_index"] = self.df.groupby("module").ngroup()
 			return self
 
-		@tmp_wrap
+		@logger
 		def add_dataset_name(self):
 			self.df["dataset"] = self.state.name
 			return self
 
 		def raiseExceptionIfNodeCountNotEqual(self, attr):
-			map_node_count = len(attr)
-			callgraph_node_count = self.callgraph_nodes.shape[0]
-			if map_node_count != callgraph_node_count:
+			map_node_count = len(attr.keys())
+
+			df_node_count = len(self.df['name'].unique())
+
+			if map_node_count != df_node_count:
 				raise Exception(
 					f"Unmatched Preprocessing maps: Map contains: {map_node_count} nodes, graph contains: {callgraph_node_count} nodes"
 				)
 
-		@tmp_wrap
+		@logger
 		def logInformation(self):
 			log.info(f"CCT node count : {len(self.cct_nodes)}")
 			log.info(f"CallGraph node count: {len(self.callgraph_nodes)}")

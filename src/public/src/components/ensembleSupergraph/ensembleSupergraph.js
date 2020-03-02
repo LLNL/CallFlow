@@ -327,6 +327,7 @@ export default {
 						level: j - 1,
 						height: temp_edges[i].height,
 						name: target_node.id,
+						module: target_node.module
 					};
 					tempNode[targetDataset] = target_node[targetDataset]
 					if (this.debug) {

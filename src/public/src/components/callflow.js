@@ -131,9 +131,9 @@ export default {
 		],
 		parameter_analysis: true,
 		caseStudy: ['Lulesh-Scaling-3-runs', 'Lulesh-Scaling-8-runs', 'Kripke-MPI', 'OSU-Bcast', 'Kripke-Scaling'],
-		selectedCaseStudy: 'Lulesh-Scaling-3-runs',
+		// selectedCaseStudy: 	'Lulesh-Scaling-3-runs',
 		// selectedCaseStudy: 'Kripke-MPI',
-		// selectedCaseStudy: 'OSU-Bcast',
+		selectedCaseStudy: 'OSU-Bcast',
 		// selectedCaseStudy: "Kripke-Scaling"
 	}),
 
@@ -331,11 +331,11 @@ export default {
 			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT]
 			this.currentEnsembleCallGraphComponents = []
 			this.currentEnsembleSuperGraphComponents = [
-				// this.$refs.EnsembleSuperGraph,
-				// this.$refs.EnsembleHistogram,
-				// this.$refs.EnsembleScatterplot,
+				this.$refs.EnsembleSuperGraph,
+				this.$refs.EnsembleHistogram,
+				this.$refs.EnsembleScatterplot,
 				this.$refs.AuxiliaryFunction,
-				// this.$refs.ModuleHierarchy
+				this.$refs.ModuleHierarchy
 			]
 			console.log(this.currentEnsembleSuperGraphComponents)
 		},
@@ -566,13 +566,13 @@ export default {
 		// TODO: Write the ensemble and single version.
 		updateDistributionColorMap() {
 			this.clearLocal()
-			this.colors()
+			this.setupColors()
 			this.init()
 		},
 
 		updateRuntimeColorMap() {
 			this.clearLocal()
-			this.colors()
+			this.setupColors()
 			if (this.selectedFormat == 'CCT') {
 				this.$socket.emit('cct', {
 					dataset: this.$store.selectedTargetDataset,
@@ -619,19 +619,19 @@ export default {
 		updateMetric() {
 			this.$store.selectedMetric = this.selectedMetric
 			this.clearLocal()
-			this.colors()
+			this.setupColors()
 			this.init()
 		},
 
 		updateColor() {
 			this.clearLocal()
-			this.colors()
+			this.setupColors()
 			this.init()
 		},
 
 		updateColorPoint() {
 			this.clearLocal()
-			this.colors()
+			this.setupColors()
 			this.init()
 		},
 

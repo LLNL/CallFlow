@@ -167,7 +167,6 @@ export default {
         },
 
         outliers() {
-            console.log(this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d)
             let outlierList = []
             for (let i = 0; i < this.ensembleWhiskerIndices[0]; i += 1) {
                 outlierList.push(this.d[i])
@@ -176,10 +175,6 @@ export default {
             for (let i = this.ensembleWhiskerIndices[1] + 1; i < this.d.length; i += 1) {
                 outlierList.push(this.d[i])
             }
-            console.log(outlierList)
-
-            console.log(this.groupOutliers(outlierList, this.outlierRadius))
-
             this.outlier = this.g
                 .selectAll(".ensemble-outlier")
                 .data(this.groupOutliers(outlierList, this.outlierRadius))

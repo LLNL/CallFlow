@@ -1,5 +1,6 @@
 import tpl from '../../html/auxiliaryFunction/quartileBox.html'
 import * as d3 from 'd3'
+import EventHandler from '../EventHandler'
 
 export default {
     name: "QuartileBox",
