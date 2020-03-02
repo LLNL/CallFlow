@@ -87,12 +87,13 @@ export default {
                 .rollup(function (d) {
                     return d3.sum(d, function (g) { return g['time (inc)']; });
                 }).entries(this.graph.nodes)
+
+            console.log(this.total_weight)
         },
 
         init(graph) {
             this.graph = graph
             this.nodes = d3.select('#' + this.id)
-            console.log(this.nodes)
             this.group()
             this.setNodeIds()
 
@@ -132,7 +133,7 @@ export default {
                 })
                 .attr('opacity', 0)
                 .attr('id', (d, i) => {
-                    return 'ensemble-callsite-' + d.id
+                    return 'ensemble-callsite-' + d.client_idx
                 })
                 .attr('transform', (d) => {
                     return `translate(${d.x},${d.y})`
@@ -149,7 +150,7 @@ export default {
             this.meanRectangle()
             this.path()
             this.text()
-            this.drawTargetLine()
+            // this.drawTargetLine()
 
             this.$refs.ToolTip.init(this.$parent.id)
         },
@@ -157,30 +158,36 @@ export default {
         setNodeIds() {
             let idx = 0
             for (let node of this.graph.nodes) {
-                this.nidNameMap[node.name] = idx
-                node.client_idx = idx
+                this.nidNameMap[node.id] = idx
+                node.client_idx =  idx
+                console.log("[EnsembleSupergraph] Node ", node.id, "assigned client_idx as", node.client_idx)
                 idx += 1
             }
+            console.log(this.nidNameMap)
         },
 
         setupMeanGradients() {
             let data = this.$store.gradients['module']
+            console.log(data)
+            let nodes = this.graph.nodes
             let method = 'hist'
             this.hist_min = 0
             this.hist_max = 0
-            for (let d in data) {
-                this.hist_min = Math.min(this.hist_min, data[d][this.$store.selectedMetric]['hist']['y_min'])
-                this.hist_max = Math.max(this.hist_max, data[d][this.$store.selectedMetric]['hist']['y_max'])
+            for (let node of nodes) {
+                console.log(node.module)
+                this.hist_min = Math.min(this.hist_min, data[node.module][this.$store.selectedMetric]['hist']['y_min'])
+                this.hist_max = Math.max(this.hist_max, data[node.module][this.$store.selectedMetric]['hist']['y_max'])
             }
+            console.log(this.hist_max, this.hist_min)
             this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
             // this.$parent.$refs.DistColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
 
-            for (let d in data) {
+            for (let node of nodes) {
                 var defs = d3.select('#ensemble-supergraph-overview')
                     .append("defs");
 
                 this.linearGradient = defs.append("linearGradient")
-                    .attr("id", "mean-gradient-" + d)
+                    .attr("id", "mean-gradient" + node.client_idx)
                     .attr("class", 'mean-gradient')
 
                 this.linearGradient
@@ -189,11 +196,11 @@ export default {
                     .attr("x2", "0%")
                     .attr("y2", "100%");
 
-                let min_val = data[d][this.$store.selectedMetric][method]['y_min']
-                let max_val = data[d][this.$store.selectedMetric][method]['y_max']
+                let min_val = data[node.module][this.$store.selectedMetric][method]['y_min']
+                let max_val = data[node.module][this.$store.selectedMetric][method]['y_max']
 
-                let grid = data[d][this.$store.selectedMetric][method]['x']
-                let val = data[d][this.$store.selectedMetric][method]['y']
+                let grid = data[node.module][this.$store.selectedMetric][method]['x']
+                let val = data[node.module][this.$store.selectedMetric][method]['y']
 
                 for (let i = 0; i < grid.length; i += 1) {
                     let x = (i + i + 1) / (2 * grid.length)
@@ -206,14 +213,14 @@ export default {
         },
 
         clearRectangle() {
-            d3.selectAll('.dist-callsite').remove()
+            d3.selectAll('.ensemble-callsite').remove()
         },
 
         meanRectangle() {
             let self = this
             this.nodesSVG.append('rect')
                 .attrs({
-                    'id': (d) => { return 'callsite-' + d.id },
+                    'id': (d) => { return 'callsite-' + d.client_idx },
                     'height': (d) => { return d.height; },
                     'width': this.nodeWidth,
                     'opacity': 0,
@@ -315,7 +322,8 @@ export default {
                         return this.$store.color.ensemble
                     }
                     else {
-                        return "url(#mean-gradient-" + d.module + ")"
+                        console.log(d.client_idx)
+                        return "url(#mean-gradient" + d.client_idx + ")"
                     }
                 })
         },

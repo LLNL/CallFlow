@@ -49,7 +49,7 @@ export default {
                 .data(this.links)
                 .enter().append('path')
                 .attr('class', (d) => {
-                    return 'target-edge'
+                    return 'ensemble-edge'
                 })
                 .attr('id', (d) => {
                     return 'ensemble-edge-' + dataset;

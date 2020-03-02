@@ -3,6 +3,7 @@ import QuartileBox from './quartlieBox'
 import Markers from './markers'
 import Outliers from './outlier'
 import * as d3 from 'd3'
+import EventHandler from '../EventHandler'
 
 export default {
     name: "BoxPlot",
@@ -83,7 +84,6 @@ export default {
         },
 
         process(ensemble_data, target_data) {
-            console.log(ensemble_data['name'])
             let inc_arr = ensemble_data['time (inc)']
             let exc_arr = ensemble_data['time']
 
@@ -215,7 +215,11 @@ export default {
         visualize() {
             this.$refs.QuartileBox.init(this.q, this.targetq)
             this.$refs.Markers.init(this.q, this.targetq)
-            this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, )
+            this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd)
+            EventHandler.$emit('highlight_dataset', {
+                dataset: this.$store.selectedTargetDataset
+            })
+
         },
     }
 }

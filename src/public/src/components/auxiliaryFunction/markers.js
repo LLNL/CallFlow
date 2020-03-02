@@ -112,7 +112,7 @@ export default {
             this.g.append("text")
                 .attrs({
                     "class": "whiskerText",
-                    "x": this.x0(min_val) + 0.5 * this.fontSize,
+                    "x":  0.5 * this.fontSize,
                     "y": this.boxHeight * 1.20,
                     "fill": d3.rgb(fill).darker(1)
                 })
@@ -123,7 +123,7 @@ export default {
             this.g.append("text")
                 .attrs({
                     "class": "whiskerText",
-                    "x": this.x0(max_val) - 8.5 * this.fontSize,
+                    "x": this.boxWidth - 8.5 * this.fontSize,
                     "y": this.boxHeight * 1.20,
                     "fill": d3.rgb(fill).darker(1)
                 })

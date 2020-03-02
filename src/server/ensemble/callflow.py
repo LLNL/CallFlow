@@ -59,10 +59,10 @@ class EnsembleCallFlow:
         states = {}
         for idx, dataset_name in enumerate(datasets):
             states[dataset_name] = State(dataset_name)
-            states[dataset_name] = self.pipeline.create(dataset_name)
+            states[dataset_name] = self.pipeline.create_gf(dataset_name)
             self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
 
-            states[dataset_name] = self.pipeline.process(states[dataset_name], "entire")
+            states[dataset_name] = self.pipeline.process_gf(states[dataset_name], "entire")
             states[dataset_name] = self.pipeline.convertToNetworkX(states[dataset_name], "path")
             states[dataset_name] = self.pipeline.group(states, dataset_name, "module")
             self.pipeline.write_dataset_gf(states[dataset_name], dataset_name, "entire", write_graph=False)

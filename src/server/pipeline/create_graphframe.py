@@ -35,7 +35,7 @@ class CreateGraphFrame:
         data_path = os.path.abspath(
             os.path.join(self.callflow_path, self.config.paths[self.name])
         )
-        print(data_path)
+        log.info(f"Data path: {data_path}")
 
         if self.config.format[self.name] == "hpctoolkit":
             self.gf = ht.GraphFrame.from_hpctoolkit(data_path)
@@ -51,4 +51,5 @@ class CreateGraphFrame:
             self.gf = ht.GraphFrame.from_lists(data_path)
 
         self.df = self.gf.dataframe
+        print(self.df.columns)
         self.graph = self.gf.graph

@@ -68,11 +68,18 @@ export default {
     },
 
     methods: {
+        formatModule(module){
+            if(module.length < 15){
+                return module
+            }
+            return this.trunc(module, 15)
+        },
+
         formatName(name) {
-            if (name.length < 20) {
+            if (name.length < 15) {
                 return name
             }
-            let ret = this.trunc(name, 20)
+            let ret = this.trunc(name, 15)
             return ret
         },
 
@@ -101,17 +108,10 @@ export default {
             this.number_of_callsites = Object.keys(this.$store.callsites['ensemble']).length
 
             this.callsites = this.$store.callsites['ensemble']
-            // EventHandler.$emit('highlight_dataset', {
-            //     dataset: this.$store.selectedTargetDataset
-            // })
-
         },
 
         clear() {
-            var els = document.querySelectorAll('.auxiliary-node')
-            for (var i = 0; i < els.length; i++) {
-                els[i].parentNode.innerHTML = ''
-            }
+
         },
 
         dataset(idx) {
@@ -176,24 +176,24 @@ export default {
         },
 
         unhighlightCallsitesByModule() {
-            let all_callsites = Object.keys(this.$store.callsites[this.$store.selectedTargetDataset])
+            let all_callsites = this.$store.callsites[this.$store.selectedTargetDataset]
 
-            for (let i = 0; i < all_callsites.length; i += 1) {
-                document.getElementById(this.callsiteIDMap[all_callsites[i]]).style.opacity = 1
-                document.getElementById(this.callsiteIDMap[all_callsites[i]]).style.borderStyle = 'dotted'
+            for (let callsite in all_callsites) {
+                document.getElementById(all_callsites[callsite]).style.opacity = 1
+                document.getElementById(all_callsites[callsite]).style.borderStyle = 'dotted'
             }
 
             let selected_callsites = this.$store.moduleCallsiteMap[this.$store.selectedModule]
-            for (let i = 0; i < selected_callsites.length; i += 1) {
-                document.getElementById(this.callsiteIDMap[selected_callsites[i]]).style.borderStyle = 'solid'
+            for (let callsite in selected_callsites) {
+                document.getElementById(selected_callsites[callsite]).style.borderStyle = 'solid'
             }
         },
 
         highlightCallsitesByDataset(dataset) {
-            let callsites = Object.keys(this.$store.callsites[dataset])
+            let callsites = this.$store.callsites[dataset]
 
-            for (let i = 0; i < callsites.length; i += 1) {
-                document.getElementById(this.callsiteIDMap[callsites[i]]).style.borderColor = this.$store.color.target
+            for(let callsite in callsites){
+                document.getElementById(callsites[callsite].id).style.borderColor = this.$store.color.target
             }
         }
     }

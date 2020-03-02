@@ -27,7 +27,7 @@ class Pipeline:
     # All pipeline functions avoid the state being mutated by reference to create separate instances of State variables.
 
     # Create the State from the hatchet's graphframe.
-    def create(self, name):
+    def create_gf(self, name):
         state = State(name)
         create = CreateGraphFrame(self.config, name)
 
@@ -35,17 +35,18 @@ class Pipeline:
         state.entire_df = create.df
         state.entire_graph = create.graph
 
-        log.info(f"Number of call sites in CCT: {len(state.entire_df['name'].unique())}")
+        log.info(f"Number of call sites in CCT (From dataframe): {len(state.entire_df['name'].unique())}")
 
         return state
 
     # Pre-process the dataframe and Graph to add attributes to the networkX graph.
     # PreProcess class is a builder. Additional attributes can be added by chained calls.
-    def process(self, state, gf_type):
+    def process_gf(self, state, gf_type):
         log.info(f"Format: {self.config.format}, dataset: {state.name}")
         if(self.config.format[state.name] == 'hpctoolkit'):
             preprocess = (
                 PreProcess.Builder(state, gf_type)
+                    .add_path()
                     .add_n_index()
                     .add_callers_and_callees()
                     .add_show_node()
@@ -54,7 +55,6 @@ class Pipeline:
                     .add_imbalance_perc()
                     .add_module_name_hpctoolkit()
                     .add_mod_index()
-                    .add_path()
                     .build()
                 )
         elif(self.config.format[state.name] == 'caliper_json'):
@@ -291,7 +291,6 @@ class Pipeline:
 
         # with open(entire_graph_filepath, 'r') as entire_graphFile:
         #     entire_graph = json.load(entire_graphFile)
-        # print(entire_graph)
         # state.entire_g = json_graph.node_link_graph(entire_graph)
 
         with open(graph_filepath, "r") as filter_graphFile:

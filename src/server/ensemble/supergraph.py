@@ -75,7 +75,7 @@ class SuperGraph(nx.Graph):
                 print("Creating a Graph without node or edge attributes.")
         print(self.timer)
 
-    def no_cycle_path(self, path):
+    def rename_cycle_path(self, path):
         ret = []
         moduleMapper = {}
         dataMap = {}
@@ -100,14 +100,14 @@ class SuperGraph(nx.Graph):
                 if np.any(np.array(flag)):
                     moduleMapper[module] += 1
                     dataMap[module].append({
-                    'callsite': elem,
+                    'callsite': callsite,
                     'module': module,
                     'level': idx
                     })
                 else:
                     dataMap[module].append({
                         'callsite': callsite,
-                        'module': module,
+                        'module': elem,
                         'level': idx
                     })
             ret.append(dataMap[module][-1])
@@ -120,7 +120,7 @@ class SuperGraph(nx.Graph):
     def add_paths(self, path):
         paths = self.df[path].unique()
         for idx, path_str in enumerate(paths):
-            path_list = self.no_cycle_path(path_str)
+            path_list = self.rename_cycle_path(path_str)
             print(f"Path list: {path_list}")
             if(len(path_list) >= 2):
                 source_module = path_list[-2]['module']
@@ -298,7 +298,7 @@ class SuperGraph(nx.Graph):
                 elif column == "callers" or column == "callees":
 
                     if len(column_data.value_counts()) > 0:
-                        ret[column][node] = make_tuple(column_data.tolist()[0])
+                        ret[column][node] = column_data.tolist()
                     else:
                         ret[column][node] = []
 
@@ -362,7 +362,7 @@ class SuperGraph(nx.Graph):
 
                 elif column == "callers" or column == "callees":
                     if len(column_data.value_counts()) > 0:
-                        ret[node][column] = make_tuple(column_data.tolist()[0])
+                        ret[node][column] = column_data.tolist()
                     else:
                         ret[node][column] = []
 
