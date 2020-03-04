@@ -187,18 +187,18 @@ export default {
 			this.dataReady = true
 
 			let module_data = data['module']
-			for (let key of Object.keys(module_data)) {
-				if (module_data.hasOwnProperty(key)) {
-					module_data[key] = this.processJSON(module_data[key])
-				}
-			}
+			// for (let key of Object.keys(module_data)) {
+			// 	if (module_data.hasOwnProperty(key)) {
+			// 		module_data[key] = this.processJSON(module_data[key])
+			// 	}
+			// }
 
 			let callsite_data = data['callsite']
-			for (let key of Object.keys(callsite_data)) {
-				if (callsite_data.hasOwnProperty(key)) {
-					callsite_data[key] = this.processJSON(callsite_data[key])
-				}
-			}
+			// for (let key of Object.keys(callsite_data)) {
+			// 	if (callsite_data.hasOwnProperty(key)) {
+			// 		callsite_data[key] = this.processJSON(callsite_data[key])
+			// 	}
+			// }
 
 			this.$store.callsites = {}
 			let dataset = this.$store.selectedTargetDataset
@@ -215,36 +215,8 @@ export default {
 			console.log("Auxiliary Data: ", data)
 			this.dataReady = true
 
-			let module_data = data['module']
-			for (let key of Object.keys(module_data)) {
-				if (module_data.hasOwnProperty(key)) {
-					module_data[key] = this.processJSON(module_data[key])
-				}
-			}
-
-			let callsite_data = data['callsite']
-			for (let key of Object.keys(callsite_data)) {
-				if (callsite_data.hasOwnProperty(key)) {
-					callsite_data[key] = this.processJSON(callsite_data[key])
-				}
-			}
-
-			this.$store.callsites = {}
-			let ensemble = this.processCallsite(callsite_data['ensemble'])
-			this.$store.callsites['ensemble'] = ensemble
-			for (let i = 0; i < this.$store.runNames.length; i += 1) {
-				let dataset = this.$store.runNames[i]
-				this.$store.callsites[dataset] = this.processCallsite(callsite_data[dataset])
-			}
-
-			this.$store.modules = {}
-			this.$store.modules['ensemble'] = this.processModule(module_data['ensemble'])
-
-			for (let i = 0; i < this.$store.runNames.length; i += 1) {
-				let dataset = this.$store.runNames[i]
-				this.$store.modules[dataset] = this.processModule(module_data[dataset])
-			}
-
+			this.$store.modules = data['module']
+			this.$store.callsites = data['callsite']
 			this.$store.gradients = data['gradients']
 			console.log("[Socket] Ensemble Callsite data processing done.")
 			this.init()
@@ -337,7 +309,6 @@ export default {
 				this.$refs.AuxiliaryFunction,
 				this.$refs.ModuleHierarchy
 			]
-			console.log(this.currentEnsembleSuperGraphComponents)
 		},
 
 		setupColors() {
@@ -369,7 +340,6 @@ export default {
 					this.selectedColorMax = this.$store.maxIncTime[this.selectedTargetDataset]
 				}
 				else if (this.selectedMetric == 'Exclusive') {
-					console.log(this.$store.minExcTime[this.selectedTargetDataset])
 					this.selectedColorMin = this.$store.minExcTime[this.selectedTargetDataset]
 					this.selectedColorMax = this.$store.maxExcTime[this.selectedTargetDataset]
 				}
@@ -450,7 +420,6 @@ export default {
 
 		initComponents(componentList){
 			for (let i = 0; i < componentList.length; i++) {
-				console.log(componentList[i])
 				componentList[i].init()
 			}
 		},
@@ -462,7 +431,6 @@ export default {
 		},
 
 		init() {
-			console.log(this.$refs)
 			if (this.selectedExhibitMode == 'Presentation') {
 				this.enablePresentationMode()
 			}
@@ -507,8 +475,7 @@ export default {
 			})
 		},
 
-		processJSON(data) {
-			let json = JSON.parse(data)
+		processJSON(json) {
 			let d = json.data
 			let index = json.index
 			let columns = json.columns

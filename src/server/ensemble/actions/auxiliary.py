@@ -1,4 +1,4 @@
-##############################################################################
+    ##############################################################################
 # Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -17,16 +17,18 @@ import numpy as np
 from .gradients import KDE_gradients
 from utils.logger import log
 from utils.timer import Timer
+import os
 
 class Auxiliary:
-    def __init__(self, states, module='all', sortBy='time (inc)', binCount="20", datasets='all'):
-        self.states = states
+    def __init__(self, states, module='all', sortBy='time (inc)', binCount="20", datasets='all', config={}):
         self.graph = states['ensemble'].g
         self.df = states['ensemble'].df
         self.sortBy = sortBy
         self.target_df = {}
         self.binCount = binCount
         self.datasets = datasets
+        self.config = config
+        self.states = states
 
         if module != 'all':
             # Processing for the module format to get the module name
@@ -76,20 +78,17 @@ class Auxiliary:
         h, b = np.histogram(data, range=[0, data.max()], bins=int(self.binCount))
         return 0.5*(b[1:]+b[:-1]), h
 
-    def json_object(self, group_df, node_name):
+    def pack_json(self, group_df, node_name, data_type):
         hist_inc_grid = self.histogram(np.array(group_df['time (inc)'].tolist()))
-        hist_x_min_inc = hist_inc_grid[0][0]
-        hist_x_max_inc = hist_inc_grid[0][-1]
-        hist_y_min_inc = np.min(hist_inc_grid[1]).astype(np.float64)
-        hist_y_max_inc = np.max(hist_inc_grid[1]).astype(np.float64)
-
         hist_exc_grid = self.histogram(np.array(group_df['time'].tolist()))
-        hist_x_min_exc = hist_exc_grid[0][0]
-        hist_x_max_exc = hist_exc_grid[0][-1]
-        hist_y_min_exc = np.min(hist_exc_grid[1]).astype(np.float64)
-        hist_y_max_exc = np.max(hist_exc_grid[1]).astype(np.float64)
 
-        return {
+        if(data_type == 'callsite'):
+            gradients = KDE_gradients(self.states, binCount=self.binCount).run(columnName='name', callsiteOrModule=node_name)
+
+        elif(data_type == 'module'):
+            gradients = KDE_gradients(self.states, binCount=self.binCount).run(columnName='module', callsiteOrModule=node_name)
+
+        result = {
                 "name": node_name,
                 "time (inc)": group_df['time (inc)'].tolist(),
                 "time": group_df['time'].tolist(),
@@ -97,8 +96,8 @@ class Auxiliary:
                 "sorted_time": group_df['time'].sort_values().tolist(),
                 "rank": group_df['rank'].tolist(),
                 "id": 'node-' + str(group_df['nid'].tolist()[0]),
-                "mean_time (inc)": round(group_df['time (inc)'].mean(),2),
-                "mean_time": round(group_df['time'].mean(), 2),
+                "mean_time (inc)": group_df['time (inc)'].mean(),
+                "mean_time": group_df['time'].mean(),
                 "max_time (inc)": group_df['time (inc)'].max(),
                 "max_time": group_df['time'].max(),
                 "min_time (inc)": group_df['time (inc)'].min(),
@@ -108,78 +107,88 @@ class Auxiliary:
                 "hist_time (inc)": {
                     "x": hist_inc_grid[0].tolist(),
                     "y": hist_inc_grid[1].tolist(),
-                    "x_min": hist_x_min_inc,
-                    "x_max": hist_x_max_inc,
-                    "y_min": hist_y_min_inc,
-                    "y_max": hist_y_max_inc,
+                    "x_min": hist_inc_grid[0][0],
+                    "x_max": hist_inc_grid[0][-1],
+                    "y_min": np.min(hist_inc_grid[1]).astype(np.float64),
+                    "y_max": np.max(hist_inc_grid[1]).astype(np.float64),
                 },
                 "hist_time": {
                     "x": hist_exc_grid[0].tolist(),
                     "y": hist_exc_grid[1].tolist(),
-                    "x_min": hist_x_min_exc,
-                    "x_max": hist_x_max_exc,
-                    "y_min": hist_y_min_exc,
-                    "y_max": hist_y_max_exc,
-                }
+                    "x_min": hist_exc_grid[0][0],
+                    "x_max": hist_exc_grid[0][-1],
+                    "y_min": np.min(hist_exc_grid[1]).astype(np.float64),
+                    "y_max": np.max(hist_exc_grid[1]).astype(np.float64),
+                },
+                "gradients": gradients
             }
+        return result
 
-    def run(self):
+    # # Callsite grouped information
+    def callsite_data(self):
+        data_type = 'callsite'
         ret = {}
-        callsite_ret = {}
-        ret['gradients'] = {}
-
-        # # Callsite grouped information
+        ## Ensemble data.
+        # Group callsite by the name
         name_grouped = self.module_df.groupby(['name'])
-        ensemble = []
+
+        # Create the data dict.
+        ensemble = {}
         for name, group_df in name_grouped:
             name_df = self.module_df.loc[self.module_df['name'] == name ]
-            ensemble.append(self.json_object(name_df, name))
+            ensemble[name] = self.pack_json(name_df, name, data_type)
 
-        ensemble_result = pd.DataFrame(ensemble).sort_values(by='mean_time (inc)', ascending=False)
-        callsite_ret['ensemble'] = ensemble_result.to_json(orient="split")
+        ret['ensemble'] = ensemble
 
+        ## Target data.
+        # Loop through datasets and group the callsite by name.
         for dataset in self.datasets:
-            target = []
+            target = {}
             for name, group_df in name_grouped:
                 name_df = self.target_df[dataset].loc[self.target_df[dataset]['name'] == name ]
-                if( not name_df.empty):
-                    target.append(self.json_object(name_df, name))
 
-            callsite_target_result = pd.DataFrame(target).sort_values(by='mean_time (inc)', ascending=False)
-            callsite_ret[dataset] = callsite_target_result.to_json(orient="split")
+                # Create the dict.
+                if(not name_df.empty):
+                    target[name] = self.pack_json(name_df, name, data_type)
+            ret[dataset] = target
 
-        ret['gradients']['callsite'] = {}
-        for name, group_df in name_grouped:
-            ret['gradients']['callsite'][name] = KDE_gradients(self.states, binCount=self.binCount).runCallsite(name)
+        return ret
 
-        ret['callsite'] = callsite_ret
-
-        module_ret = {}
+    def module_data(self):
+        data_type = 'module'
+        ret = {}
         # Module grouped information
         modules = self.df['module'].unique()
-        module_information = []
+        ensemble = {}
         for module in modules:
             module_df = self.df[self.df['module'] == module]
-            module_information.append(self.json_object(module_df, module))
+            ensemble[module] = self.pack_json(module_df, module, data_type)
 
-        ensemble_result = pd.DataFrame(module_information).sort_values(by='mean_time (inc)', ascending=False)
-        module_ret['ensemble'] = ensemble_result.to_json(orient='split')
+        ret['ensemble'] = ensemble
 
         for dataset in self.datasets:
-            module_target = []
+            target = {}
             for module in modules:
                 module_target_df =  self.target_df[dataset].loc[self.target_df[dataset]['module'] == module]
 
                 if( not module_target_df.empty):
-                    module_target.append(self.json_object(module_target_df, name))
+                    target[module] = self.pack_json(module_target_df, module, data_type)
 
-            module_target_result = pd.DataFrame(module_target).sort_values(by="mean_time (inc)", ascending = False)
-            module_ret[dataset] = module_target_result.to_json(orient='split')
+            ret[dataset] = target
 
-        ret['gradients']['module'] = {}
-        for module in modules:
-            ret['gradients']['module'][module] = KDE_gradients(self.states, binCount=self.binCount).runModule(module)
+        return ret
 
-        ret['module'] = module_ret
+    def run(self):
+        ret = {}
+        process = True
+        path = self.config.processed_path + f'/{self.config.runName}' + f'/all_data.json'
 
+        if os.path.exists(path) or process != True:
+            with open(path, 'r') as f:
+                ret = json.load(f)
+        else:
+            ret['callsite'] = self.callsite_data()
+            ret['module'] = self.module_data()
+            with open(path, 'w') as f:
+                json.dump(ret, f)
         return ret

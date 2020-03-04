@@ -80,3 +80,7 @@ class ConfigFileReader():
     def __repr__(self):
         items = ("%s = %r" % (k, v) for k, v in self.__dict__.items())
         return "<%s: {%s}> \n" % (self.__class__.__name__, ', '.join(items))
+
+    def __str__(self):
+        items = ("%s = %r" % (k, v) for k, v in self.__dict__.items())
+        return "<%s: {%s}> \n" % (self.__class__.__name__, ', '.join(items))

@@ -74,7 +74,11 @@ class EnsembleCallFlow:
         states["ensemble"] = self.pipeline.ensemble_group(states, "module")
         self.pipeline.write_ensemble_gf(states, "ensemble")
 
+        self.pipeline.callsite_information(states)
+
         # similarities = self.pipeline.deltaconSimilarity(datasets, states, "ensemble")
+
+
 
         return states
 
@@ -208,7 +212,7 @@ class EnsembleCallFlow:
             return histogram.result
 
         elif action_name == "auxiliary":
-            auxiliary = Auxiliary(self.states, module=action['module'], sortBy=action['sortBy'], binCount=action["binCount"], datasets=action['datasets'])
+            auxiliary = Auxiliary(self.states, module=action['module'], sortBy=action['sortBy'], binCount=action["binCount"], datasets=action['datasets'], config=self.config)
             return auxiliary.result
 
         elif action_name == 'compare':

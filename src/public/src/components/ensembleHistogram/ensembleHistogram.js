@@ -401,7 +401,6 @@ export default {
             const xAxis = d3.axisBottom(this.histogramXScale)
                 .ticks(this.$store.selectedBinCount)
                 .tickFormat((d, i) => {
-                    console.log(d, i)
                     let temp = this.concatenatedXVals[i];
                     if (i % 4 == 0 && i == this.$store.numOfRanks['ensemble']) {
                         let value = temp * 0.000001
@@ -586,7 +585,6 @@ export default {
             const rankLineAxis = d3.axisBottom(this.ranklinescale)
                 .ticks(this.$store.selectedBinCount)
                 .tickFormat((d, i) => {
-                    console.log(i, d)
                     if (i % 10 == 0 || i == this.$store.numOfRanks['ensemble'] - 1) {
                         return d
                     }

@@ -21,13 +21,14 @@ export default {
     },
 
     methods: {
-        init(q, targetq, ensembleWhiskerIndices, targetWhiskerIndices, d, targetd) {
+        init(q, targetq, ensembleWhiskerIndices, targetWhiskerIndices, d, targetd, xScale) {
             this.q = q
             this.targetq = targetq
             this.ensembleWhiskerIndices = ensembleWhiskerIndices
             this.targetWhiskerIndices = targetWhiskerIndices
             this.d = d
             this.targetd = targetd
+            this.xScale = xScale
 
             // Get the SVG belonging to this callsite.
             this.svg = d3.select('#' + this.callsiteID)
@@ -47,11 +48,11 @@ export default {
             let min_x = Math.min(this.q.min, this.targetq.min)
             let max_x = Math.max(this.q.max, this.targetq.max)
 
-            this.x0 = d3.scaleLinear()
+            this.xScale = d3.scaleLinear()
                 .domain([min_x, max_x])
                 .range([0, this.boxWidth]);
 
-           this.outliers()
+           this.ensembleOutliers()
            this.targetOutliers()
         },
 
@@ -101,17 +102,10 @@ export default {
         },
 
         groupOutliers(data, radius) {
-            let self = this
             const radius2 = radius ** 2;
 
             const circles = data.map(d => {
-                let x = self.x0(d)
-                if (x == undefined) {
-                    x = 0
-                }
-                else {
-                    x = parseInt(x.toFixed(2))
-                }
+                let x = this.xScale(d)
                 return {
                     x: x,
                     d: d
@@ -166,7 +160,7 @@ export default {
             return group_circles;
         },
 
-        outliers() {
+        ensembleOutliers() {
             let outlierList = []
             for (let i = 0; i < this.ensembleWhiskerIndices[0]; i += 1) {
                 outlierList.push(this.d[i])
@@ -175,12 +169,16 @@ export default {
             for (let i = this.ensembleWhiskerIndices[1] + 1; i < this.d.length; i += 1) {
                 outlierList.push(this.d[i])
             }
+
+            this.data = this.groupOutliers(outlierList, this.outlierRadius)
             this.outlier = this.g
                 .selectAll(".ensemble-outlier")
-                .data(this.groupOutliers(outlierList, this.outlierRadius))
+                .data(this.data)
                 .join("circle")
                 .attr("r", d => (d.count / this.max_count) * 4 + 4)
-                .attr("cx", d => d.x[0])
+                .attr("cx", d => {
+                    return d.x[0]
+                })
                 .attr("cy", d => this.boxHeight / 2 + this.informationHeight)
                 .attr("class", "ensemble-outlier")
                 .style("opacity", 1)
@@ -204,7 +202,7 @@ export default {
                 .attrs({
                     "r": d => (d.count / this.max_count) * 4 + 4,
                     "cx": d => d.x[0],
-                    "cy": d => this.boxHeight/2 - this.informationHeight/2,
+                    "cy": d => this.boxHeight/2 - this.informationHeight/4,
                     "class": "target-outlier"
                 })
                 .style("opacity", 1)
