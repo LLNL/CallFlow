@@ -66,7 +66,6 @@ class Pipeline:
                     .add_vis_node_name()
                     .add_dataset_name()
                     .add_imbalance_perc()
-                    # .add_node_name_caliper(self.config.callsite_module_map)
                     .add_module_name_caliper(self.config.callsite_module_map)
                     .add_mod_index()
                     .add_path()

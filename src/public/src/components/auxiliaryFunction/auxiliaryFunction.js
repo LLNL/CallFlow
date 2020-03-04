@@ -35,6 +35,8 @@ export default {
             { 'title': 'Sort by Inclusive runtime' },
             { 'title': 'Sort by Exclusive Runtime' }],
         compareMode: false,
+        selectedModule: '',
+        selectedCallsite: ''
     }),
     mounted() {
         let self = this
@@ -104,14 +106,18 @@ export default {
             this.boxplotWidth = this.width - this.padding.left - this.padding.right
 
             document.getElementById('auxiliary-function-overview').style.maxHeight =  this.height + "px"
-
-            this.number_of_callsites = Object.keys(this.$store.callsites['ensemble']).length
-
-            this.callsites = this.$store.callsites['ensemble']
+            this.setInfo()
         },
 
         clear() {
 
+        },
+
+        setInfo(){
+            this.number_of_callsites = Object.keys(this.$store.callsites['ensemble']).length
+            this.callsites = this.$store.callsites['ensemble']
+            this.selectedModule = this.$store.selectedModule
+            this.selectedCallsite = this.$store.selectedCallsite
         },
 
         dataset(idx) {
@@ -141,12 +147,16 @@ export default {
         },
 
         selectCallsitesByModule(thismodule) {
+            this.selectedModule = thismodule
+            this.selectedCallsite = ''
+
             let all_callsites = Object.keys(this.$store.callsites[this.$store.selectedTargetDataset])
+            let ensemble_callsites = this.$store.callsites['ensemble']
 
             for (let callsite in all_callsites) {
-                if(all_callsites.hasOwnProperty(callsite)){
-                    document.getElementById(all_callsites[callsite].id).style.opacity = 0.2
-                    document.getElementById(all_callsites[callsite].id).style.borderStyle = 'solid'
+                if(ensemble_callsites.hasOwnProperty(callsite)){
+                    document.getElementById(ensemble_callsites[callsite].id).style.opacity = 0.2
+                    document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'solid'
                 }
             }
 

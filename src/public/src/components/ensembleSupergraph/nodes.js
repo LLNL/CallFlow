@@ -167,16 +167,14 @@ export default {
         },
 
         setupMeanGradients() {
-            let data = this.$store.gradients['module']
-            console.log(data)
+            let data = this.$store.modules['ensemble']
             let nodes = this.graph.nodes
             let method = 'hist'
             this.hist_min = 0
             this.hist_max = 0
             for (let node of nodes) {
-                console.log(node.module)
-                this.hist_min = Math.min(this.hist_min, data[node.module][this.$store.selectedMetric]['hist']['y_min'])
-                this.hist_max = Math.max(this.hist_max, data[node.module][this.$store.selectedMetric]['hist']['y_max'])
+                this.hist_min = Math.min(this.hist_min, data[node.module]['gradients'][this.$store.selectedMetric]['hist']['y_min'])
+                this.hist_max = Math.max(this.hist_max, data[node.module]['gradients'][this.$store.selectedMetric]['hist']['y_max'])
             }
             console.log(this.hist_max, this.hist_min)
             this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
@@ -196,11 +194,8 @@ export default {
                     .attr("x2", "0%")
                     .attr("y2", "100%");
 
-                let min_val = data[node.module][this.$store.selectedMetric][method]['y_min']
-                let max_val = data[node.module][this.$store.selectedMetric][method]['y_max']
-
-                let grid = data[node.module][this.$store.selectedMetric][method]['x']
-                let val = data[node.module][this.$store.selectedMetric][method]['y']
+                let grid = data[node.module]['gradients'][this.$store.selectedMetric][method]['x']
+                let val = data[node.module]['gradients'][this.$store.selectedMetric][method]['y']
 
                 for (let i = 0; i < grid.length; i += 1) {
                     let x = (i + i + 1) / (2 * grid.length)

@@ -45,7 +45,7 @@ export default {
 		svgID: 'ensemble-scatterplot-view-svg',
 		message: "Runtime Scatterplot",
 		boxOffset: 20,
-		settings: [{title: 'Show Difference plot'}, {title: 'aaa'}]
+		settings: [{ title: 'Show Difference plot' }, { title: 'aaa' }]
 	}),
 
 	mounted() {
@@ -111,12 +111,28 @@ export default {
 		ensembleProcess() {
 			let mean_time = []
 			let mean_time_inc = []
-			for(let i = 0; i < this.$store.runNames.length; i += 1){
-				if(this.$store.runNames[i] != this.$store.selectedTargetDataset){
-					mean_time.push(this.$store.modules[this.$store.runNames[i]][this.module]['mean_time'])
-					mean_time_inc.push(this.$store.modules[this.$store.runNames[i]][this.module]['mean_time (inc)'])
+			for (let i = 0; i < this.$store.runNames.length; i += 1) {
+				if (this.$store.runNames[i] != this.$store.selectedTargetDataset) {
+					let callsites_in_module = this.$store.moduleCallsiteMap[this.module]
+					for (let i = 0; i < callsites_in_module.length; i += 1) {
+						let thiscallsite = callsites_in_module[i]
+
+						let thisdata = this.$store.callsites[this.$store.runNames[i]][thiscallsite]
+						mean_time.push({
+							'callsite': thiscallsite,
+							'val': thisdata['mean_time'],
+							'run': this.$store.runNames[i]
+						})
+						mean_time_inc.push({
+							'callsite': thiscallsite,
+							'val': thisdata['mean_time (inc)'],
+							'run': this.$store.runNames[i]
+						})
+					}
 				}
 			}
+
+			console.log(mean_time, mean_time_inc)
 
 			let all_data = this.$store.modules['ensemble'][this.module]
 			let temp
@@ -127,14 +143,14 @@ export default {
 				temp = this.scatterAll(data['time'], data['time (inc)'])
 			}
 
+			console.log(temp)
+
 			this.xMin = temp[0]
 			this.yMin = temp[1]
 			this.xMax = temp[2]
 			this.yMax = temp[3]
 			this.xArray = temp[4]
 			this.yArray = temp[5]
-
-			console.log(this.xMin, this.xMax, this.xArray)
 
 			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice())
 			this.regressionY = this.leastSquaresCoeff["y_res"];
@@ -143,19 +159,38 @@ export default {
 			this.xAxisHeight = this.boxWidth - 4 * this.padding.left
 			this.yAxisHeight = this.boxHeight - 4 * this.padding.left
 
+			console.log(this.xMin, this.xMax, this.yMin, this.yMax)
 			this.xScale = d3.scaleLinear().domain([this.xMin, 1.2 * this.xMax]).range([0, this.xAxisHeight])
 			this.yScale = d3.scaleLinear().domain([this.yMin, 1.2 * this.yMax]).range([this.yAxisHeight, 0])
 		},
 
 		targetProcess() {
-			let data = this.$store.modules[this.$store.selectedTargetDataset][this.module]
+			let mean_time = []
+			let mean_time_inc = []
+
+			let callsites_in_module = this.$store.moduleCallsiteMap[this.module]
+			for (let i = 0; i < callsites_in_module.length; i += 1) {
+				let thiscallsite = callsites_in_module[i]
+				let thisdata = this.$store.callsites[this.$store.selectedTargetDataset][thiscallsite]
+				mean_time.push({
+					'callsite': thiscallsite,
+					'val': thisdata['mean_time'],
+					'run': this.$store.selectedTargetDataset
+				})
+				mean_time_inc.push({
+					'callsite': thiscallsite,
+					'val': thisdata['mean_time (inc)'],
+					'run': this.$store.selectedTargetDataset
+				})
+			}
 
 			let temp
 			this.$store.selectedScatterMode = 'mean'
 			if (this.$store.selectedScatterMode == 'mean') {
-				temp = this.scatterMean(data['mean_time'], data['mean_time (inc)'])
+				temp = this.scatterMean(mean_time, mean_time_inc)
 			}
 			else if (this.$store.selectedScatterMode == 'all') {
+				let data = this.$store.modules[this.$store.selectedTargetDataset][this.module]
 				temp = this.scatterAll(data['time'], data['time (inc)'])
 			}
 			this.xtargetMin = temp[0]
@@ -198,14 +233,15 @@ export default {
 			let yMax = 0
 
 			for (const [idx, d] of Object.entries(xData)) {
-				xMin = Math.min(xMin, d)
-				xMax = Math.max(xMax, d)
+				console.log(d)
+				xMin = Math.min(xMin, d.val)
+				xMax = Math.max(xMax, d.val)
 				xArray.push(d)
 			}
 
 			for (const [idx, d] of Object.entries(yData)) {
-				yMin = Math.min(yMin, d)
-				yMax = Math.max(yMax, d)
+				yMin = Math.min(yMin, d.val)
+				yMax = Math.max(yMax, d.val)
 				yArray.push(d)
 			}
 
@@ -304,8 +340,8 @@ export default {
 
 			this.svg.append('text')
 				.attr('class', 'scatterplot-axis-label')
-				.attr('x', self.boxWidth)
-				.attr('y', self.yAxisHeight - this.padding.top)
+				.attr('x', this.boxWidth)
+				.attr('y', this.yAxisHeight - this.padding.top)
 				.style('font-size', '12px')
 				.style('text-anchor', 'end')
 				.text("Exclusive Runtime")
@@ -315,7 +351,7 @@ export default {
 			var xAxisLine = this.svg.append('g')
 				.attr('class', 'axis')
 				.attr('id', 'xAxis')
-				.attr("transform", "translate(" + 3 * self.padding.left + "," + xAxisHeightCorrected + ")")
+				.attr("transform", "translate(" + 3 * this.padding.left + "," + xAxisHeightCorrected + ")")
 				.call(xAxis)
 
 			xAxisLine.selectAll('path')
@@ -338,7 +374,7 @@ export default {
 		yAxis() {
 			let self = this
 			const yFormat = d3.format('0.2s')
-			let yAxis = d3.axisLeft(self.yScale)
+			let yAxis = d3.axisLeft(this.yScale)
 				.ticks(5)
 				.tickFormat((d, i) => {
 					let temp = d;
@@ -352,7 +388,7 @@ export default {
 			var yAxisLine = this.svg.append('g')
 				.attr('id', 'yAxis')
 				.attr('class', 'axis')
-				.attr('transform', "translate(" + 3 * self.padding.left + ", 0)")
+				.attr('transform', "translate(" + 3 * this.padding.left + ", 0)")
 				.call(yAxis)
 
 			this.svg.append("text")
@@ -402,22 +438,24 @@ export default {
 		},
 
 		ensembleDots() {
-			let self = this
-			this.svg.selectAll('.ensemble-dot')
-				.data(this.yArray)
-				.enter().append('circle')
-				.attr('class', 'ensemble-dot')
-				.attr('r', 5)
-				.attr('cx', function (d, i) {
-					console.log(self.xArray, self.padding.left)
-					return self.xScale(self.xArray[i]) + 3 * self.padding.left;
-				})
-				.attr('cy', function (d, i) {
-					return self.yScale(self.yArray[i]);
-				})
-				.style('stroke', '#202020')
-				.style('stroke-width', 0.5)
-				.style('fill', this.$store.color.ensemble)
+			for (let i = 0; i < this.xArray.length; i += 1) {
+				this.svg
+					.append('circle')
+					.attrs({
+						'class': 'ensemble-dot',
+						'r': 5,
+						'cx': () => {
+							console.log(this.xScale(this.xArray[i].val), this.padding.left)
+							return this.xScale(this.xArray[i].val) + 3 * this.padding.left
+						},
+						'cy': () => {
+							return this.yScale(this.yArray[i].val)
+						}
+					})
+					.style('stroke', '#202020')
+					.style('stroke-width', 0.5)
+					.style('fill', this.$store.color.ensemble)
+			}
 		},
 
 		targetDots() {
@@ -428,10 +466,10 @@ export default {
 				.attr('class', 'target-dot')
 				.attr('r', 5)
 				.attr('cx', function (d, i) {
-					return self.xScale(self.xtargetArray[i]) + 3 * self.padding.left;
+					return self.xScale(self.xtargetArray[i].val) + 3 * self.padding.left;
 				})
 				.attr('cy', function (d, i) {
-					return self.yScale(self.ytargetArray[i]);
+					return self.yScale(self.ytargetArray[i].val);
 				})
 				.style('fill', this.$store.color.target)
 				.style('stroke', '#202020')

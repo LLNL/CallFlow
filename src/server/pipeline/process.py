@@ -237,7 +237,7 @@ class PreProcess:
 		def raiseExceptionIfNodeCountNotEqual(self, attr):
 			map_node_count = len(attr.keys())
 			df_node_count = len(self.df['name'].unique())
-			print(f"Map contains: {map_node_count}, graph contains: {df_node_count}")
+			print(f"Map contains: {map_node_count} callsites, graph contains: {df_node_count} callsites")
 			if map_node_count != df_node_count:
 				raise Exception(
 					f"Unmatched Preprocessing maps: Map contains: {map_node_count} nodes, graph contains: {df_node_count} nodes"

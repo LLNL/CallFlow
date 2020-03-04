@@ -88,7 +88,7 @@ class App:
 
     # Custom print function.
     def print(self, action, data={}):
-        action = "[Request] {0}".format(action)
+        action = "{0}".format(action)
         if bool(data):
             data_string = "Data: " + json.dumps(data, indent=4, sort_keys=True)
         else:
@@ -172,7 +172,7 @@ class App:
         @sockets.on("reset", namespace="/")
         def filter(data):
             if self.debug:
-                self.print("[Request] Filter the dataset.", data)
+                self.print("Filter the dataset.", data)
             dataset = data["dataset"]
             filterBy = data["filterBy"]
             filterPerc = data["filterPerc"]
@@ -188,7 +188,7 @@ class App:
         @sockets.on("single_callsite_data", namespace="/")
         def callsites(data):
             if self.debug:
-                self.print("[Request] Callsite information: ", data)
+                self.print("Callsite information: ", data)
             result = self.single_callflow.request(
                 {
                     "name": "auxiliary",
@@ -203,7 +203,7 @@ class App:
         @sockets.on("ensemble_callsite_data", namespace="/")
         def callsites(data):
             if self.debug:
-                self.print("[Request] Callsite information: ", data)
+                self.print("Callsite information: ", data)
             result = self.callflow.request(
                 {
                     "name": "auxiliary",
@@ -213,13 +213,14 @@ class App:
                     "module": data['module']
                 }
             )
+            print(type(result))
             emit("ensemble_callsite_data", result, json=True)
 
         ################## CCT requests #########################
         @sockets.on("single_cct", namespace="/")
         def cct(data):
             if self.debug:
-                self.print("[Request] CCT of the run", data)
+                self.print("CCT of the run", data)
 
             g = self.single_callflow.request(
                 {
@@ -234,7 +235,7 @@ class App:
         @sockets.on("comp_cct", namespace="/")
         def comp_cct(data):
             if self.debug:
-                self.print("[Request] Comp-CCT for the two datasets.", data)
+                self.print("Comp-CCT for the two datasets.", data)
             g1 = self.callflow.request(
                 {
                     "name": "cct",
@@ -260,7 +261,7 @@ class App:
         @sockets.on("ensemble_cct", namespace="/")
         def ensemble_cct(data):
             if self.debug:
-                self.print("[Request] Ensemble-CCT for the datasets", data)
+                self.print("Ensemble-CCT for the datasets", data)
 
             ensemble_cct = self.callflow.request(
                 {
@@ -278,7 +279,7 @@ class App:
         def single_supergraph(data):
             result = {}
             if self.debug:
-                self.print("[Request] Single SuperGraph.", data)
+                self.print("Single SuperGraph.", data)
             dataset = data["dataset"]
             groupBy = data["groupBy"].lower()
             nx_graph = self.single_callflow.request(
@@ -296,7 +297,7 @@ class App:
         def ensemble_supergraph(data):
             result = {}
             if self.debug:
-                self.print("[Request] Ensemble SuperGraph.", data)
+                self.print("Ensemble SuperGraph.", data)
             datasets = data["datasets"]
             groupBy = data["groupBy"].lower()
             nx_graph = self.callflow.request(
@@ -313,7 +314,7 @@ class App:
         def ensemble_similarity(data):
             result = {}
             if self.debug:
-                self.print("[Request] Similarity of the datasets", data)
+                self.print("Similarity of the datasets", data)
             result = self.callflow.request(
                 {
                     "name": "similarity",
@@ -327,7 +328,7 @@ class App:
         @sockets.on("module_hierarchy", namespace="/")
         def module_hierarchy(data):
             if self.debug:
-                self.print("[Request] Topology of the module", data)
+                self.print("Topology of the module", data)
             result = self.callflow.request(
                 {
                     "name": "hierarchy",
@@ -340,7 +341,7 @@ class App:
         @sockets.on("parameter_projection", namespace="/")
         def parameter_projection(data):
             if self.debug:
-                self.print("[Request] Projection for the runs", data)
+                self.print("Projection for the runs", data)
 
             result = self.callflow.request(
                 {
@@ -354,7 +355,7 @@ class App:
         @sockets.on("parameter_information", namespace="/")
         def parameter_information(data):
             if self.debug:
-                self.print("[Request] Run information: ", data)
+                self.print("Run information: ", data)
 
             result = self.callflow.request(
                 {"name": "run-information", "datasets": data["datasets"]}
@@ -365,7 +366,7 @@ class App:
         @sockets.on('compare', namespace='/')
         def compare(data):
             if self.debug:
-                self.print("[Request] Compare: ", data)
+                self.print("Compare: ", data)
             result = self.callflow.request(
                 {
                     "name": "compare",
@@ -379,7 +380,7 @@ class App:
         @sockets.on("split_caller", namespace="/")
         def split_caller(data):
             if self.debug:
-                self.print("[Request] Split callgraph by rank", data)
+                self.print("Split callgraph by rank", data)
 
             # result = self.callflow.update({
             #     "name": "split-caller",
@@ -391,7 +392,7 @@ class App:
         @sockets.on("split_callee", namespace="/")
         def split_caller(data):
             if self.debug:
-                self.print("[Request] Split callgraph by rank", data)
+                self.print("Split callgraph by rank", data)
 
             # result = self.callflow.update({
             #     "name": "split-caller",
@@ -403,7 +404,7 @@ class App:
         @sockets.on("ensemble_scatterplot", namespace="/")
         def ensemble_scatterplot(data):
             if self.debug:
-                self.print("[Request] Dist-Scatterplot request for module.")
+                self.print("Dist-Scatterplot request for module.")
             result = self.callflow.request(
                 {
                     "name": "scatterplot",

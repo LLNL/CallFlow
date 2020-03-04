@@ -1,5 +1,5 @@
 import tpl from '../../html/auxiliaryFunction/boxplot.html'
-import QuartileBox from './quartlieBox'
+import Box from './box'
 import Markers from './markers'
 import Outliers from './outlier'
 import * as d3 from 'd3'
@@ -31,11 +31,11 @@ export default {
         targetBoxY: 0,
         containerHeight: 150,
         containerWidth: 0,
-        parentID:'',
+        parentID: '',
         iqrFactor: 0.15
     }),
     components: {
-        QuartileBox,
+        Box,
         Outliers,
         Markers
     },
@@ -45,7 +45,7 @@ export default {
         this.init()
     },
 
-    created(){
+    created() {
         this.callsiteID = this.callsite.id
     },
 
@@ -111,13 +111,6 @@ export default {
 
             this.ensembleWhiskerIndices = this.iqrScore(this.d, this.q)
             this.targetWhiskerIndices = this.iqrScore(this.targetd, this.targetq)
-
-            // Compute the new x-scale.
-            this.x1 = d3.scaleLinear()
-                .domain([this.q.min, this.q.max])
-                .range([0, this.boxWidth]);
-
-
         },
 
         iqrScore(data, q) {
@@ -213,9 +206,17 @@ export default {
         },
 
         visualize() {
-            this.$refs.QuartileBox.init(this.q, this.targetq)
-            this.$refs.Markers.init(this.q, this.targetq)
-            this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd)
+            let min_x = Math.min(this.q.min, this.targetq.min)
+            let max_x = Math.max(this.q.max, this.targetq.max)
+
+            this.xScale = d3.scaleLinear()
+                .domain([min_x, max_x])
+                .range([0.01 * this.containerWidth, this.containerWidth - 0.01 * this.containerWidth]);
+
+            this.$refs.Box.init(this.q, this.targetq, this.xScale)
+            this.$refs.Markers.init(this.q, this.targetq, this.xScale)
+            this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale)
+
             EventHandler.$emit('highlight_dataset', {
                 dataset: this.$store.selectedTargetDataset
             })
