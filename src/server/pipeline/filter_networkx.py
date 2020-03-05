@@ -49,7 +49,8 @@ class FilterNetworkX:
 
     def filter_df_by_time(self, perc):
         log.debug(f"[Filter] By Exclusive time : {perc}")
-        df = self.df.loc[self.df['time'] > perc * 0.01 * self.max_time_exc]
+        # df = self.df.loc[self.df['time'] > perc * 0.01 * self.max_time_exc]
+        df = self.df.loc[self.df['time'] > perc]
         filter_call_sites = df["name"].unique()
         return df[df["name"].isin(filter_call_sites)]
 

@@ -113,7 +113,7 @@ export default {
 			let mean_time_inc = []
 			for (let i = 0; i < this.$store.runNames.length; i += 1) {
 				if (this.$store.runNames[i] != this.$store.selectedTargetDataset) {
-					let callsites_in_module = this.$store.moduleCallsiteMap[this.module]
+					let callsites_in_module = this.$store.moduleCallsiteMap['ensemble'][this.module]
 					for (let i = 0; i < callsites_in_module.length; i += 1) {
 						let thiscallsite = callsites_in_module[i]
 
@@ -168,7 +168,7 @@ export default {
 			let mean_time = []
 			let mean_time_inc = []
 
-			let callsites_in_module = this.$store.moduleCallsiteMap[this.module]
+			let callsites_in_module = this.$store.moduleCallsiteMap[this.$store.selectedTargetDataset][this.module]
 			for (let i = 0; i < callsites_in_module.length; i += 1) {
 				let thiscallsite = callsites_in_module[i]
 				let thisdata = this.$store.callsites[this.$store.selectedTargetDataset][thiscallsite]

@@ -9,14 +9,15 @@
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
+import bisect
 import random
 from functools import wraps
 
 import numpy as np
+from scipy.stats import kurtosis, skew
+from utils.df import sanitizeName
 from utils.hatchet import getNodeDictFromFrame, getPathListFromFrames
 from utils.logger import log
-from utils.df import sanitizeName
-import bisect
 
 
 def logger(func):
@@ -157,16 +158,56 @@ class PreProcess:
 		# Imbalance percentage Series in the dataframe
 		@logger
 		def add_imbalance_perc(self):
-			ret = {}
-			for node_name in self.df['name'].unique():
-				max_incTime = self.df.loc[self.df['name'] == node_name]['time (inc)'].max()
-				avg_incTime = self.df.loc[self.df['name'] == node_name]['time (inc)'].mean()
-				if max_incTime == 0.0:
-					max_incTime = 1.0
-				ret[node_name] = (max_incTime - avg_incTime) / max_incTime
+			inclusive = {}
+			exclusive = {}
+			std_deviation_inclusive = {}
+			std_deviation_exclusive = {}
 
-			self.df["imbalance_perc"] = self.df['name'].apply(lambda name: ret[name])
+			skewness_inclusive = {}
+			skewness_exclusive = {}
+
+			kurtosis_inclusive = {}
+			kurtosis_exclusive = {}
+
+			for node_name in self.df['name'].unique():
+				node_df = self.df.loc[self.df['name'] == node_name]
+
+				max_incTime = node_df['time'].mean()
+				mean_incTime = node_df['time (inc)'].mean()
+
+				max_excTime = node_df['time'].max()
+				mean_excTime = node_df['time'].mean()
+
+				if mean_incTime == 0.0:
+					mean_incTime = 1.0
+
+				inclusive[node_name] = (max_incTime - mean_incTime) / mean_incTime
+				exclusive[node_name] = (max_excTime - mean_excTime) / mean_excTime
+
+				std_deviation_inclusive[node_name] = np.std(node_df['time (inc)'].tolist(), ddof=1)
+				std_deviation_exclusive[node_name] = np.std(node_df['time'].tolist(), ddof=1)
+
+				skewness_inclusive[node_name] = skew(node_df['time (inc)'].tolist())
+				skewness_exclusive[node_name] = skew(node_df['time'].tolist())
+
+				kurtosis_inclusive[node_name] = kurtosis(node_df['time (inc)'].tolist())
+				kurtosis_exclusive[node_name] = kurtosis(node_df['time'].tolist())
+
+			self.df["imbalance_perc_inclusive"] = self.df['name'].apply(lambda name: inclusive[name])
+			self.df["imbalance_perc_exclusive"] = self.df['name'].apply(lambda name: exclusive[name])
+
+			self.df["std_deviation_inclusive"] = self.df['name'].apply(lambda name: std_deviation_inclusive[name])
+			self.df["std_deviation_exclusive"] = self.df['name'].apply(lambda name: std_deviation_exclusive[name])
+
+			self.df["skewness_inclusive"] = self.df['name'].apply(lambda name: skewness_inclusive[name])
+			self.df["skewness_exclusive"] = self.df['name'].apply(lambda name: skewness_exclusive[name])
+
+			self.df["kurtosis_inclusive"] = self.df['name'].apply(lambda name: kurtosis_inclusive[name])
+			self.df["kurtosis_exclusive"] = self.df['name'].apply(lambda name: kurtosis_exclusive[name])
+
 			return self
+
+
 
 		@logger
 		def add_callers_and_callees(self):
@@ -249,4 +290,3 @@ class PreProcess:
 			log.info(f"CallGraph node count: {len(self.callgraph_nodes)}")
 			log.info(f"SuperGraph node count: {len(self.df['module'].unique())}")
 			return self
-

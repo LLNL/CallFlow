@@ -50,6 +50,7 @@ class App:
             self.processPipeline()
             self.create_dot_callflow_folder()
         else:
+            self.renderPipeline(self.args.runName)
             self.create_socket_server()
             if self.production == True:
                 sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
@@ -67,11 +68,12 @@ class App:
 
         if(self.config.ensemble):
             self.callflow = EnsembleCallFlow(self.config)
-            self.single_callflow = SingleCallFlow(self.config)
+            # self.single_callflow = SingleCallFlow(self.config)
         else:
             self.single_callflow = SingleCallFlow(self.config)
 
     def renderPipeline(self, config_file_name):
+        print(config_file_name)
         self.config = ConfigFileReader(self.args.config_dir + config_file_name + '.json')
         self.config.server_dir = os.getcwd()
         self.config.callflow_dir = (
@@ -82,7 +84,7 @@ class App:
 
         if(self.config.ensemble):
             self.callflow = EnsembleCallFlow(self.config)
-            self.single_callflow = SingleCallFlow(self.config)
+            # self.single_callflow = SingleCallFlow(self.config)
         else:
             self.single_callflow = SingleCallFlow(self.config)
 
@@ -114,7 +116,11 @@ class App:
         parser.add_argument(
             "--process", action="store_true", help="Process mode. To preprocess at the required level of granularity, use the options --filter, --entire. If you are preprocessing multiple callgraphs, use --ensemble option."
         )
+        parser.add_argument(
+            "--runName", help="Run name."
+        )
         self.args = parser.parse_args()
+        print(self.args)
         self.debug = self.args.verbose
 
     # Raises expections if something is not provided
@@ -162,7 +168,7 @@ class App:
         def init(data):
             caseStudy = data['caseStudy']
             log.info(f"Case Study: {caseStudy}")
-            self.renderPipeline(caseStudy)
+            # self.renderPipeline(caseStudy)
             self.config = self.callflow.request({
                 "name":"init"
             })
@@ -213,7 +219,6 @@ class App:
                     "module": data['module']
                 }
             )
-            print(type(result))
             emit("ensemble_callsite_data", result, json=True)
 
         ################## CCT requests #########################
