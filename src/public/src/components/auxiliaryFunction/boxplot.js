@@ -84,11 +84,11 @@ export default {
         },
 
         process(ensemble_data, target_data) {
-            let inc_arr = ensemble_data['time (inc)']
-            let exc_arr = ensemble_data['time']
+            let inc_arr = ensemble_data['sorted_time (inc)']
+            let exc_arr = ensemble_data['sorted_time']
 
-            let inc_arr_target = target_data['time (inc)']
-            let exc_arr_target = target_data['time']
+            let inc_arr_target = target_data['sorted_time (inc)']
+            let exc_arr_target = target_data['sorted_time']
 
             if (this.$store.selectedMetric == 'Inclusive') {
                 this.raw_d = inc_arr

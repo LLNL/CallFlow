@@ -166,7 +166,7 @@ class KDE_gradients:
 
         results = {
             "Inclusive": {
-                "dist": dist_inc,
+                # "dist": dist_inc,
                 "mean": mean_inc_dist,
                 "max": max_inc_dist,
                 "bins": num_of_bins,
@@ -188,7 +188,7 @@ class KDE_gradients:
                 },
             },
             "Exclusive": {
-                "dist": dist_exc,
+                # "dist": dist_exc,
                 "mean": mean_exc_dist,
                 "max": max_exc_dist,
                 "bins": num_of_bins,

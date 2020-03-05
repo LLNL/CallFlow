@@ -20,39 +20,21 @@ from utils.timer import Timer
 import os
 
 class Auxiliary:
-    def __init__(self, states, module='all', sortBy='time (inc)', binCount="20", datasets='all', config={}):
+    def __init__(self, states, binCount="20", datasets=[], config={}, process=True):
         self.graph = states['ensemble'].g
         self.df = states['ensemble'].df
-        self.sortBy = sortBy
-        self.target_df = {}
         self.binCount = binCount
-        self.datasets = datasets
         self.config = config
         self.states = states
+        self.process = process
+        self.datasets = datasets
 
-        if module != 'all':
-            # Processing for the module format to get the module name
-            if '=' in module:
-                self.function = module.split('=')[1]
-                self.module = module.split('=')[0]
-            elif '/' in module:
-                self.function = module.split('/')[1]
-                self.module = module.split('/')[0]
-            self.module_df = self.df.loc[self.df['module'] == self.module]
-        else:
-            self.module_df = self.df
-
-        ret_df = pd.DataFrame([])
+        self.target_df = {}
         for dataset in datasets:
-            dataset_df = self.module_df.loc[self.module_df['dataset'] == dataset]
-            self.target_df[dataset] = dataset_df
-
-        self.module_df = self.module_df
+            self.target_df[dataset] = self.df.loc[self.df['dataset'] == dataset]
 
         self.timer = Timer()
-
-        with self.timer.phase("Auxiliary information"):
-            self.result = self.run()
+        self.result = self.run()
         print(self.timer)
 
     def addID(self, name):
@@ -78,31 +60,72 @@ class Auxiliary:
         h, b = np.histogram(data, range=[0, data.max()], bins=int(self.binCount))
         return 0.5*(b[1:]+b[:-1]), h
 
+    def get_module_callsite_map(self):
+        ret = {}
+        ret['ensemble'] = {}
+        modules = self.df['module'].unique().tolist()
+        for module in modules:
+            callsites = self.df.loc[self.df['module'] == module]['name'].unique().tolist()
+            ret['ensemble'][module] = callsites
+
+        for dataset in self.datasets:
+            ret[dataset] = {}
+            for module in modules:
+                callsites = self.target_df[dataset].loc[self.target_df[dataset]['module'] == module]['name'].unique().tolist()
+                ret[dataset][module] = callsites
+        return ret
+
+    def get_callsite_module_map(self):
+        ret = {}
+        callsites = self.df['name'].unique().tolist()
+        for callsite in callsites:
+            module = self.df.loc[self.df['name'] == callsite]['module'].unique().tolist()
+            ret[callsite] = module
+
+        for dataset in self.datasets:
+            ret[dataset] = {}
+            for callsite in callsites:
+                module = self.target_df[dataset].loc[self.target_df[dataset]['name'] == callsite]['name'].unique().tolist()
+                ret[dataset][callsite] = module
+        return ret
+
     def pack_json(self, group_df, node_name, data_type):
-        hist_inc_grid = self.histogram(np.array(group_df['time (inc)'].tolist()))
-        hist_exc_grid = self.histogram(np.array(group_df['time'].tolist()))
 
-        if(data_type == 'callsite'):
-            gradients = KDE_gradients(self.states, binCount=self.binCount).run(columnName='name', callsiteOrModule=node_name)
+        with self.timer.phase("Calculate Histograms"):
+            hist_inc_grid = self.histogram(np.array(group_df['time (inc)'].tolist()))
+            hist_exc_grid = self.histogram(np.array(group_df['time'].tolist()))
 
-        elif(data_type == 'module'):
-            gradients = KDE_gradients(self.states, binCount=self.binCount).run(columnName='module', callsiteOrModule=node_name)
+        with self.timer.phase("Calculate Gradients"):
+            if(data_type == 'callsite'):
+                gradients = KDE_gradients(self.states, binCount=self.binCount).run(columnName='name', callsiteOrModule=node_name)
 
-        result = {
+            elif(data_type == 'module'):
+                gradients = KDE_gradients(self.states, binCount=self.binCount).run(columnName='module', callsiteOrModule=node_name)
+
+        with self.timer.phase("Pack data"):
+            result = {
                 "name": node_name,
                 "time (inc)": group_df['time (inc)'].tolist(),
                 "time": group_df['time'].tolist(),
-                "sorted_time (inc)": group_df['time (inc)'].sort_values().tolist(),
-                "sorted_time": group_df['time'].sort_values().tolist(),
                 "rank": group_df['rank'].tolist(),
                 "id": 'node-' + str(group_df['nid'].tolist()[0]),
+                "sorted_time (inc)": group_df['time (inc)'].sort_values().tolist(),
+                "sorted_time": group_df['time'].sort_values().tolist(),
                 "mean_time (inc)": group_df['time (inc)'].mean(),
                 "mean_time": group_df['time'].mean(),
                 "max_time (inc)": group_df['time (inc)'].max(),
                 "max_time": group_df['time'].max(),
                 "min_time (inc)": group_df['time (inc)'].min(),
                 "min_time": group_df['time'].min(),
-                "dataset": group_df['dataset'].tolist(),
+                "variance_time": np.var(np.array(group_df['time'])),
+                "variance_time (inc)": np.var(np.array(group_df['time (inc)'])),
+                "imbalance_perc_inclusive": group_df['imbalance_perc_inclusive'].tolist()[0],
+                "imbalance_perc_exclusive": group_df['imbalance_perc_exclusive'].tolist()[0],
+                "std_deviation_inclusive": group_df['std_deviation_inclusive'].tolist()[0],
+                "std_deviation_exclusive": group_df['std_deviation_exclusive'].tolist()[0],
+                "skewness_inclusive": group_df['skewness_inclusive'].tolist()[0],
+                "skewness_exclusive": group_df['skewness_exclusive'].tolist()[0],
+                "dataset": group_df['dataset'].tolist()[0],
                 "module": group_df['module'].tolist()[0],
                 "hist_time (inc)": {
                     "x": hist_inc_grid[0].tolist(),
@@ -130,12 +153,12 @@ class Auxiliary:
         ret = {}
         ## Ensemble data.
         # Group callsite by the name
-        name_grouped = self.module_df.groupby(['name'])
+        name_grouped = self.df.groupby(['name'])
 
         # Create the data dict.
         ensemble = {}
         for name, group_df in name_grouped:
-            name_df = self.module_df.loc[self.module_df['name'] == name ]
+            name_df = self.df.loc[self.df['name'] == name ]
             ensemble[name] = self.pack_json(name_df, name, data_type)
 
         ret['ensemble'] = ensemble
@@ -180,15 +203,26 @@ class Auxiliary:
 
     def run(self):
         ret = {}
-        process = True
         path = self.config.processed_path + f'/{self.config.runName}' + f'/all_data.json'
 
-        if os.path.exists(path) or process != True:
-            with open(path, 'r') as f:
-                ret = json.load(f)
+        # self.process = True
+        if os.path.exists(path) and not self.process:
+            print(f"[Callsite info] Reading the data from file {path}")
+            with self.timer.phase("Reading data"):
+                with open(path, 'r') as f:
+                    ret = json.load(f)
         else:
+            print("Processing the data again.")
+            # with self.timer.phase("Pack Callsite data"):
             ret['callsite'] = self.callsite_data()
+            # with self.timer.phase("Pack Module data"):
             ret['module'] = self.module_data()
-            with open(path, 'w') as f:
-                json.dump(ret, f)
+            with self.timer.phase("Module callsite map data"):
+                ret['moduleCallsiteMap'] = self.get_module_callsite_map()
+            # with self.timer.phase("Callsite module map data"):
+            #     ret['callsiteModuleMap'] = self.get_callsite_module_map()
+            with self.timer.phase("Writing data"):
+                with open(path, 'w') as f:
+                    json.dump(ret, f)
+
         return ret

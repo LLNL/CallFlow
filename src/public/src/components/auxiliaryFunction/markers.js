@@ -50,12 +50,14 @@ export default {
         medianMarker() {
             this.medianLine = this.g
                 .append("line")
-                .attr("class", "median")
-                .attr("y1", 0)
-                .attr("x1", this.xScale(this.q.q2))
-                .attr("y2", this.boxHeight)
-                .attr("x2", this.xScale(this.q.q2))
-                .attr('stroke', 'black')
+                .attrs({
+                    "class": "median",
+                    "y1": 0,
+                    "x1": this.xScale(this.q.q2),
+                    "y2": this.boxHeight,
+                    "x2": this.xScale(this.q.q2),
+                    'stroke': 'black'
+                })
                 .style('stroke-width', '2')
                 .style('z-index', 10)
         },

@@ -218,6 +218,8 @@ export default {
 			this.$store.modules = data['module']
 			this.$store.callsites = data['callsite']
 			this.$store.gradients = data['gradients']
+			this.$store.moduleCallsiteMap = data['moduleCallsiteMap']
+			this.$store.callsiteModuleMap = data['callsiteModuleMap']
 			console.log("[Socket] Ensemble Callsite data processing done.")
 			this.init()
 		},

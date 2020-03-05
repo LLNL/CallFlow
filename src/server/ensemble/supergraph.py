@@ -83,9 +83,7 @@ class SuperGraph(nx.Graph):
         if(isinstance(path, float)):
             return []
         path = make_tuple(path)
-        print(path)
         for idx, elem in enumerate(path):
-            print("Element; ", elem)
             callsite = elem.split('=')[1]
             module = elem.split('=')[0]
             if (module not in dataMap):
@@ -112,8 +110,6 @@ class SuperGraph(nx.Graph):
                     })
             ret.append(dataMap[module][-1])
 
-            print(f"dataMap for {module} is {dataMap[module]}")
-            print("---------------")
         return ret
 
 
@@ -121,7 +117,6 @@ class SuperGraph(nx.Graph):
         paths = self.df[path].unique()
         for idx, path_str in enumerate(paths):
             path_list = self.rename_cycle_path(path_str)
-            print(f"Path list: {path_list}")
             if(len(path_list) >= 2):
                 source_module = path_list[-2]['module']
                 target_module = path_list[-1]['module']
@@ -267,13 +262,10 @@ class SuperGraph(nx.Graph):
 
         # loop through the nodes
         for node in self.g.nodes():
-            print(node)
             if "=" in node:
                 node_name = node.split("=")[0]
             else:
                 node_name = node
-
-            print(node_name)
 
             # Get their dataframe
             node_df = self.df.loc[self.df["module"] == node_name]

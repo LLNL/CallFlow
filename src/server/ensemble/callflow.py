@@ -53,7 +53,9 @@ class EnsembleCallFlow:
             self.states = self.processState(self.config.dataset_names)
         else:
             log.info("[Ensemble] Read Mode.")
-            self.states = self.readState(self.config.dataset_names)
+            self.states = self.readState(self.config.dataset_names)\
+
+        self.currentBinCount = 0
 
     def processState(self, datasets, filterBy="Inclusive", filterPerc="10"):
         states = {}
@@ -73,12 +75,9 @@ class EnsembleCallFlow:
         states["ensemble_filter"] = self.pipeline.filterNetworkX(states['ensemble_entire'], self.config.filter_perc)
         states["ensemble"] = self.pipeline.ensemble_group(states, "module")
         self.pipeline.write_ensemble_gf(states, "ensemble")
-
-        self.pipeline.callsite_information(states)
+        # self.pipeline.write_callsite_information(states)
 
         # similarities = self.pipeline.deltaconSimilarity(datasets, states, "ensemble")
-
-
 
         return states
 
@@ -135,7 +134,6 @@ class EnsembleCallFlow:
 
         if action_name == "init":
             self.addIncExcTime()
-            print(self.config)
             return self.config
 
         elif action_name == "ensemble_cct":
@@ -212,7 +210,12 @@ class EnsembleCallFlow:
             return histogram.result
 
         elif action_name == "auxiliary":
-            auxiliary = Auxiliary(self.states, module=action['module'], sortBy=action['sortBy'], binCount=action["binCount"], datasets=action['datasets'], config=self.config)
+            if(self.currentBinCount != action['binCount']):
+                auxiliary = Auxiliary(self.states, binCount=action["binCount"], datasets=action['datasets'], config=self.config, process=False)
+            else:
+                auxiliary = Auxiliary(self.states, binCount=action["binCount"], datasets=action['datasets'], config=self.config, process=False)
+            self.currentBinCount = action['binCount']
+
             return auxiliary.result
 
         elif action_name == 'compare':

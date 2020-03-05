@@ -12,6 +12,7 @@ from .hatchet_to_networkx import HatchetToNetworkX
 from .union_graph import UnionGraph
 from .deltacon_similarity import Similarity
 from .process import PreProcess
+from ensemble.actions.auxiliary import Auxiliary
 
 from utils.logger import log
 from pipeline.state import State
@@ -163,6 +164,12 @@ class Pipeline:
             log.info(f"Number of modules in the graph: {len(state.df['module'].unique())}")
         return state
 
+    def write_callsite_information(self, states):
+        auxiliary = Auxiliary(states,
+                              module=action['module'], \
+                              sortBy=action['sortBy'],
+                              binCount=action["binCount"], datasets=action['datasets'], config=self.config, process=True)
+
     ##################### Write Functions ###########################
 
     # Write a graphframe to a file. (i.e., df => .csv, graph => .json)
@@ -311,34 +318,6 @@ class Pipeline:
                 for num in line.strip().split(","):
                     split_num = num.split("=")
                     state.projection_data[split_num[0]] = split_num[1]
-
-        return state
-
-    def read_group_gf(self, name, graph_type):
-        state = State(name)
-        dirname = self.config.callflow_dir
-        dataset_dirname = os.path.abspath(os.path.join(__file__, "../../..")) + "/data"
-        group_df_file_path = dirname + "/" + name + "/" + graph_type + "_df.csv"
-        group_graph_file_path = dirname + "/" + name + "/" + "group" + "_graph.json"
-        parameters_filepath = (
-            dataset_dirname + "/" + self.config.runName + "/" + name + "/env_params.txt"
-        )
-
-        with self.timer.phase("Read {0} dataframe".format(graph_type)):
-            with open(group_graph_file_path, "r") as groupGraphFile:
-                data = json.load(groupGraphFile)
-
-        state.group_gf = ht.GraphFrame.from_literal(data)
-
-        state.group_graph = state.group_gf.graph
-        state.group_df = pd.read_csv(group_df_file_path)
-
-        state.projection_data = {}
-        for line in open(parameters_filepath, "r"):
-            s = 0
-            for num in line.strip().split(","):
-                split_num = num.split("=")
-                state.projection_data[split_num[0]] = split_num[1]
 
         return state
 
