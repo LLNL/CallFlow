@@ -150,7 +150,7 @@ export default {
             this.meanRectangle()
             this.path()
             this.text()
-            // this.drawTargetLine()
+            this.drawTargetLine()
 
             this.$refs.ToolTip.init(this.$parent.id)
         },
@@ -466,125 +466,41 @@ export default {
                 })
         },
 
-        // Lines
-        // Not being used.
-        clearQuantileLines() {
-            d3.selectAll('.quantileLines').remove()
-        },
-
-        quantileLines() {
-            let mode = this.$store.selectedDiffNodeAlignment
-            for (let i = 0; i < this.$store.graph.nodes.length; i++) {
-                let node_data = this.$store.graph.nodes[i]
-                let props = JSON.parse(JSON.stringify(node_data['props']))
-                for (const [dataset, val] of Object.entries(props)) {
-                    let x1 = node_data.x - this.nodeWidth
-                    let x2 = node_data.x
-                    let y1 = 0
-                    let y2 = 0
-                    if (mode == 'Middle') {
-                        y1 = (node_data.height - val * node_data.height) * 0.5
-                        y2 = node_data.height - y1
-                        this.drawUpLine(y1, y2, node_data, dataset)
-                        this.drawBottomLine(y1, y2, node_data, dataset)
-                    } else if (mode == 'Top') {
-                        let gap = 5
-                        y1 = 0
-                        count += 1
-                        y2 = node_data.height * val
-                        this.drawBottomLine(y1, y2, node_data, dataset)
-                    }
-                }
-            }
-        },
-
-        quantileLine(d) {
-            let mode = this.$store.selectedDiffNodeAlignment
-            for (let i = 0; i < this.$store.graph.nodes.length; i++) {
-                if (d == this.$store.graph.nodes[i]) {
-                    let node_data = this.$store.graph.nodes[i]
-                    let props = JSON.parse(JSON.stringify(node_data['props']))
-                    for (const [dataset, val] of Object.entries(props)) {
-                        if (dataset != 'xid' && dataset != 'union') {
-                            let x1 = node_data.x - this.nodeWidth
-                            let x2 = node_data.x
-                            let y1 = 0
-                            let y2 = 0
-                            if (mode == 'Middle') {
-                                y1 = (node_data.height - val * node_data.height) * 0.5
-                                y2 = node_data.height - y1
-                                this.drawUpLine(y1, y2, node_data, dataset)
-                                this.drawBottomLine(y1, y2, node_data, dataset)
-                            } else if (mode == 'Top') {
-                                let gap = 5
-                                y1 = 0
-                                y2 = node_data.height * val
-                                this.drawBottomLine(y1, y2, node_data, dataset)
-                            }
-                        }
-                    }
-                }
-            }
-        },
-
         drawTargetLine() {
             let dataset = this.$store.selectedTargetDataset
 
-            let data = this.$store.gradients['module']
-            console.log(this.$store.modules)
+            let data = this.$store.modules
 
             for (let i = 0; i < this.graph.nodes.length; i++) {
                 let node_data = this.graph.nodes[i]
                 let module_name = this.graph.nodes[i].module
                 if (this.graph.nodes[i].id.split('_')[0] != 'intermediate') {
-                    console.log("-----------------------------")
-                    console.log("Module: ", module_name)
-                    console.log("Selected dataset:", this.$store.selectedTargetDataset)
-                    let module_data = data[module_name][this.$store.selectedMetric]['dist'][this.$store.selectedTargetDataset]
-                    let module_arr = Object.values(module_data)
 
-                    const mean = arr => arr.reduce((p, c) => p + c, 0) / arr.length
-                    const max = arr => Math.max(...arr)
+                    let module_mean= data[this.$store.selectedTargetDataset][module_name]['gradients'][this.$store.selectedMetric]['dataset'][this.$store.selectedTargetDataset]
 
-                    let module_mean = mean(module_arr)
-                    let module_max = max(module_arr)
-
-                    console.log("Array: ", module_arr)
-                    console.log("Mean: ", module_mean)
-                    console.log("Max: ", module_max)
-
-                    let gradients = data[module_name][this.$store.selectedMetric]['hist']
+                    let gradients = data['ensemble'][module_name]['gradients'][this.$store.selectedMetric]['hist']
                     let grid = gradients.x
                     let vals = gradients.y
 
                     let targetPos = 0
-                    let targetDiff = 0
                     let binWidth = node_data.height / this.$store.selectedBinCount
-                    let timeWidth = node_data.height / module_max
-                    console.log("Time width: ", timeWidth)
+
                     for (let idx = 0; idx < grid.length; idx += 1) {
-                        console.log("grid val at ", idx, ":", grid[idx])
                         if (grid[idx] > module_mean) {
-                            targetPos = idx - 1
-                            targetDiff = module_mean - grid[idx - 1]
+                            targetPos = idx
                             break
                         }
                         if (idx == grid.length - 1) {
                             targetPos = grid.length - 1
-                            targetDiff = module_mean - grid[idx - 1]
                         }
                     }
-                    console.log("Chosen grid index", targetPos)
-                    console.log("Target diff: ", targetDiff)
-                    console.log("timeHeight: ", timeWidth * targetDiff)
 
                     let x1 = node_data.x - this.nodeWidth
                     let x2 = node_data.x
                     let y1 = 0
-                    let y2 = binWidth * targetPos //+ timeWidth * targetDiff
-                    console.log("height: ", y2)
+                    let y2 = binWidth * targetPos
 
-                    d3.select('#ensemble-callsite-' + node_data.id)
+                    d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('line')
                         .attr("class", 'targetLines')
                         .attr("id", 'line-2-' + dataset + '-' + node_data['client_idx'])

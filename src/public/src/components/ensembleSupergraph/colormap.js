@@ -43,18 +43,63 @@ export default {
             this.parentID = this.$parent.id
             this.containerWidth = this.$parent.width
             this.containerHeight = this.$parent.height
-            console.log(this.containerWidth, this.containerHeight)
 
-            console.log(this.parentID)
             this.svg = d3.select('#' + this.parentID)
                 .append('g')
                 .attrs({
                     'id': 'dist-colormap',
                 })
 
+            this.drawTargetEnsembleLegend()
             this.drawMeanColorMap()
             this.drawMeanText()
         },
+
+        drawTargetEnsembleLegend() {
+            this.svg.append('circle')
+                .attrs({
+                    'r': 10,
+                    'cx': 10,
+                    'cy': 10,
+                    'class': 'target-circle-legend',
+                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 3 * this.padding.bottom})`,
+                    'fill': this.$store.color.target
+                })
+
+            this.svg.append('circle')
+                .attrs({
+                    'r': 10,
+                    'cx': 10,
+                    'cy': 10,
+                    'class': 'target-circle-legend',
+                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 4 * this.padding.bottom})`,
+                    'fill': this.$store.color.ensemble
+                })
+
+            this.svg.append('text')
+                .attrs({
+                    'x': 30,
+                    'y': 15,
+                    'class': 'target-circle-legend-text',
+                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 3 * this.padding.bottom})`,
+                })
+                .text('Target')
+                .style('font-size', 14)
+                .style('fill', '#444444');
+
+            this.svg.append('text')
+                .attrs({
+                    'x': 30,
+                    'y': 15,
+                    'class': 'target-circle-legend-text',
+                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 4 * this.padding.bottom})`,
+                })
+                .text('Ensemble')
+                .style('font-size', 14)
+                .style('fill', '#444444');
+
+        },
+
 
         drawMeanColorMap() {
             this.color = this.$store.color
@@ -64,7 +109,7 @@ export default {
                 let splits = this.$store.colorPoint
                 let color = this.color.getScale(this.color.option)
 
-                for (let i = 0; i <= splits ; i += 1) {
+                for (let i = 0; i <= splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
                     this.svg.append('rect')
                         .attrs({
@@ -95,7 +140,7 @@ export default {
                             'height': this.height,
                             'x': i * (this.width / splits),
                             'class': 'dist-colormap-rect',
-                            'transform': `translate(${this.containerWidth - this.padding.right }, ${this.containerHeight - 2*this.padding.bottom})`,
+                            'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2 * this.padding.bottom})`,
                             'fill': color(splitColor)
                         })
                 }
@@ -110,7 +155,6 @@ export default {
             } else {
                 let splits = this.$store.colorPoint
                 let color = this.color.getScale('MeanDiff')
-                console.log(this.colorMin, this.colorMax)
                 for (let i = 0; i <= splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
                     this.svg.append('rect')
@@ -119,7 +163,7 @@ export default {
                             'height': this.height,
                             'x': i * (this.width / splits),
                             'class': 'dist-colormap-rect',
-                            'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
+                            'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2 * this.padding.bottom})`,
                             'fill': color(splitColor)
                         })
                 }
@@ -142,7 +186,7 @@ export default {
                             'height': this.height,
                             'x': i * (this.width / splits),
                             'class': 'dist-colormap-rect',
-                            'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
+                            'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2 * this.padding.bottom})`,
                             'fill': color(splitColor)
                         })
                 }
@@ -173,7 +217,7 @@ export default {
                     'y': 10,
                     'x': 30,
                     "class": "dist-colormap-text-metric",
-                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width + this.offset}, ${this.containerHeight - this.padding.bottom})`,
+                    'transform': `translate(${this.containerWidth - this.padding.right + this.width + this.offset}, ${this.containerHeight - this.padding.bottom})`,
                 })
                 .text((this.colorMax * 0.000001).toFixed(3) + "s");
 
@@ -190,7 +234,7 @@ export default {
                     'x': -30,
                     "text-anchor": "middle",
                     'class': 'dist-colormap-text',
-                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
+                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2 * this.padding.bottom})`,
                 })
                 .text(this.colorMin);
 
@@ -203,7 +247,7 @@ export default {
                     'x': 30,
                     "text-anchor": "middle",
                     "class": "dist-colormap-text",
-                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - 2*this.padding.bottom})`,
+                    'transform': `translate(${this.containerWidth - this.padding.right + this.width}, ${this.containerHeight - 2 * this.padding.bottom})`,
                 })
                 .text(this.colorMax);
 
@@ -220,7 +264,7 @@ export default {
                     'x': -30,
                     "text-anchor": "middle",
                     'class': 'dist-colormap-text',
-                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
+                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2 * this.padding.bottom})`,
                 })
                 .text((this.colorMin * 0.000001).toFixed(3) + 's');
 
@@ -233,7 +277,7 @@ export default {
                     'x': 30,
                     "text-anchor": "middle",
                     "class": "dist-colormap-text",
-                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width + this.offset}, ${this.containerHeight - 2*this.padding.bottom})`,
+                    'transform': `translate(${this.containerWidth - this.padding.right + this.width + this.offset}, ${this.containerHeight - 2 * this.padding.bottom})`,
                 })
                 .text((this.colorMax * 0.000001).toFixed(3) + "s");
         },
@@ -249,7 +293,7 @@ export default {
                     'x': -30,
                     "text-anchor": "middle",
                     'class': 'dist-colormap-text',
-                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
+                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2 * this.padding.bottom})`,
                 })
                 .text(this.colorMin);
 
@@ -262,7 +306,7 @@ export default {
                     'x': 10,
                     "text-anchor": "middle",
                     "class": "dist-colormap-text",
-                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width + this.offset}, ${this.containerHeight - 2*this.padding.bottom})`,
+                    'transform': `translate(${this.containerWidth - this.padding.right + this.width + this.offset}, ${this.containerHeight - 2 * this.padding.bottom})`,
                 })
                 .text(this.colorMax);
 
@@ -271,32 +315,34 @@ export default {
         clear() {
             d3.selectAll('.dist-colormap-text').remove()
             d3.selectAll('.dist-colormap-rect').remove()
+            // d3.selectAll('.target-circle-legend').remove()
+            // d3.selectAll('.target-circle-legend-text').remove()
         },
 
-        clearMetric(){
+        clearMetric() {
             d3.selectAll('.dist-colormap-text-metric').remove()
             d3.selectAll('.dist-colormap-rect-metric').remove()
         },
 
-        update(mode, data){
+        update(mode, data) {
             this.clear()
             let rank_min = 0
             let rank_max = 0
             let mean_min = 0
             let mean_max = 0
-            for(let i = 0; i < data.length; i += 1){
+            for (let i = 0; i < data.length; i += 1) {
                 rank_min = Math.min(rank_min, data[i]['hist']['y_min'])
                 rank_max = Math.max(rank_max, data[i]['hist']['y_max'])
                 mean_min = Math.min(mean_min, data[i]['hist']['x_min'])
                 mean_max = Math.max(mean_max, data[i]['hist']['x_max'])
             }
-            if(mode == 'rankDiff'){
+            if (mode == 'rankDiff') {
                 this.colorMin = rank_min
                 this.colorMax = rank_max
                 this.drawRankDiffColorMap()
                 this.drawRankDiffText()
             }
-            else if(mode == 'meanDiff'){
+            else if (mode == 'meanDiff') {
                 this.colorMin = Math.min(this.colorMin, data[i]['hist']['mean_diff'])
                 this.colorMax = mean_max
                 this.drawMeanDiffColorMap()
@@ -304,15 +350,15 @@ export default {
             }
         },
 
-        updateWithMinMax(mode, min, max){
+        updateWithMinMax(mode, min, max) {
             this.clear()
             this.colorMin = min
             this.colorMax = max
-            if(mode == 'bin'){
+            if (mode == 'bin') {
                 this.drawBinColorMap()
                 this.drawBinText()
             }
-            if(mode == 'meanDiff'){
+            if (mode == 'meanDiff') {
                 this.drawMeanDiffColorMap()
                 this.drawMeanDiffText()
             }
