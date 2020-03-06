@@ -245,6 +245,7 @@ export default {
 		clear() {
 			d3.selectAll('.icicleNode').remove()
 			d3.selectAll('.icicleText').remove()
+			d3.selectAll('.hierarchy-targetLines').remove()
 			// this.$refs.ToolTipModuleHierarchy.clear()
 		},
 
@@ -548,13 +549,10 @@ export default {
 
 				let x = binWidth * targetPos
 
-				console.log(targetPos, x)
-
-				// d3.select('#hierarchy-callsite-' + node_data.name)
-				this.hierarchySVG
+	 			this.hierarchySVG
 					.append('line')
 					.attrs({
-						"class": 'targetLines',
+						"class": 'hierarchy-targetLines',
 						"x1": x,
 						"y1": this.nodeHeight * (this.nodes[i].depth),
 						"x2": x,
