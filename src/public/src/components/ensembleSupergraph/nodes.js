@@ -80,6 +80,11 @@ export default {
     },
 
     methods: {
+        formatRuntime(val) {
+            let ret = (val * 0.000001).toFixed(2) + 's'
+            return ret
+        },
+
         group() {
             this.total_weight = d3.nest()
                 .key(function (d) { return d.level; })
@@ -159,7 +164,7 @@ export default {
             let idx = 0
             for (let node of this.graph.nodes) {
                 this.nidNameMap[node.id] = idx
-                node.client_idx =  idx
+                node.client_idx = idx
                 console.log("[EnsembleSupergraph] Node ", node.id, "assigned client_idx as", node.client_idx)
                 idx += 1
             }
@@ -280,18 +285,22 @@ export default {
                     })
                 })
                 .on('mouseover', (d) => {
-                    self.$refs.ToolTip.render(self.graph, d)
-                    this.$store.selectedNode = d
-                    this.$store.selectedModule = d.module
+                    // self.$refs.ToolTip.render(self.graph, d)
+                    // this.$store.selectedNode = d
+                    // this.$store.selectedModule = d.module
 
-                    EventHandler.$emit('highlight_module', {
-                        module: this.$store.selectedModule,
-                    })
+                    // EventHandler.$emit('highlight_module', {
+                    //     module: this.$store.selectedModule,
+                    // })
+
+                    this.drawGuides(d)
                 })
                 .on('mouseout', (d) => {
-                    self.$refs.ToolTip.clear()
+                    // self.$refs.ToolTip.clear()
 
-                    EventHandler.$emit('unhighlight_module')
+                    // EventHandler.$emit('unhighlight_module')
+
+                    this.clearGuides()
                 })
 
             // Transition
@@ -474,7 +483,7 @@ export default {
                 let module_name = this.graph.nodes[i].module
                 if (this.graph.nodes[i].id.split('_')[0] != 'intermediate') {
 
-                    let module_mean= data[this.$store.selectedTargetDataset][module_name]['gradients'][this.$store.selectedMetric]['dataset'][this.$store.selectedTargetDataset]
+                    let module_mean = data[this.$store.selectedTargetDataset][module_name]['gradients'][this.$store.selectedMetric]['dataset'][this.$store.selectedTargetDataset]
 
                     let gradients = data['ensemble'][module_name]['gradients'][this.$store.selectedMetric]['hist']
                     let grid = gradients.x
@@ -509,6 +518,51 @@ export default {
                         .attr("stroke-width", 5)
                         .attr("stroke", this.$store.color.target)
                 }
+            }
+        },
+
+        clearGuides(){
+            d3.selectAll('.gradientGuides').remove()
+            d3.selectAll('.gradientGuidesText').remove()
+        },
+
+        drawGuides(node_data) {
+            let modules_data = this.$store.modules
+            let module_name = node_data.module
+
+            let gradients = modules_data['ensemble'][module_name]['gradients'][this.$store.selectedMetric]['hist']
+            let grid = gradients.x
+            let vals = gradients.y
+
+            let targetPos = 0
+            let binWidth = node_data.height / this.$store.selectedBinCount
+
+            for (let idx = 0; idx < grid.length; idx += 1) {
+                let y= binWidth * idx
+
+                d3.select('#ensemble-callsite-' + node_data.client_idx)
+                    .append('line')
+                    .attr("class", 'gradientGuides')
+                    .attr("id", 'line-2-' + node_data['client_idx'])
+                    .attr("x1", 0)
+                    .attr("y1", y)
+                    .attr("x2", this.nodeWidth)
+                    .attr("y2", y)
+                    .attr("stroke-width", 1.5)
+                    .attr('opacity', 0.4)
+                    .attr("stroke", '#202020')
+
+                d3.select('#ensemble-callsite-' + node_data.client_idx)
+                    .append('text')
+                    .attr("class", 'gradientGuidesText')
+                    .attr("id", 'line-2-' + node_data['client_idx'])
+                    .attr("x", this.nodeWidth + 5)
+                    .attr("y", y + binWidth/2)
+                    .attr("stroke-width", 1)
+                    .attr('opacity', 0.4)
+                    .attr("stroke", 'black')
+                    .style('z-index', 100)
+                    .text(this.formatRuntime(grid[idx]) )
             }
         },
 

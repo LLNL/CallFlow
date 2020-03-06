@@ -90,10 +90,19 @@ class Auxiliary:
         return ret
 
     def pack_json(self, group_df, node_name, data_type):
-
+        df = self.df.loc[self.df['name'] == node_name ]
         with self.timer.phase("Calculate Histograms"):
-            hist_inc_grid = self.histogram(np.array(group_df['time (inc)'].tolist()))
-            hist_exc_grid = self.histogram(np.array(group_df['time'].tolist()))
+            time_inc_ensemble_arr = np.array(df['time (inc)'].tolist())
+            time_exc_ensemble_arr = np.array(df['time'].tolist())
+
+            time_inc_target_arr = np.array(group_df['time (inc)'].tolist())
+            time_exc_target_arr = np.array(group_df['time'].tolist())
+
+            histogram_inc_array = np.concatenate((time_inc_target_arr, time_inc_ensemble_arr), axis=0)
+            histogram_exc_array = np.concatenate((time_exc_target_arr, time_exc_ensemble_arr), axis=0)
+
+            hist_inc_grid = self.histogram(histogram_inc_array)
+            hist_exc_grid = self.histogram(histogram_exc_array)
 
         with self.timer.phase("Calculate Gradients"):
             if(data_type == 'callsite'):

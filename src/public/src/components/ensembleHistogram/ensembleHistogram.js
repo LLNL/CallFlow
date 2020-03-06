@@ -232,6 +232,7 @@ export default {
                 binContainsProcID[pos].push(data['rank'][idx]);
             });
 
+            console.log(attr_data['x'], attr_data['y'], axis_x, binContainsProcID)
             return [attr_data['x'], attr_data['y'], axis_x, binContainsProcID];
         },
 
@@ -484,6 +485,7 @@ export default {
             const binLocation = this.histogramXScale(xVals);
             let cumulativeBinSpace = 0;
             let line;
+
             if (group.length == 1) {
                 var start = group[0];
                 var end = start + 1;
@@ -494,14 +496,16 @@ export default {
                 var botX4 = this.ranklinescale(start);
 
                 var topY = this.boxHeight - this.histogramOffset
-                var botY = this.boxHeight;
+                var botY = this.boxHeight - 3 * this.padding.bottom;
                 cumulativeBinSpace += (1) * widthPerRank;
 
                 line = 'M' + topX1 + ' ' + topY +
                     'L ' + topX2 + ' ' + topY +
                     'L ' + botX4 + ' ' + botY +
                     'L ' + botX3 + ' ' + botY;
-            } else {
+            }
+            else {
+                console.log(cumulativeBinSpace, binLocation)
                 var start = group[0];
                 var end = group[1];
 
@@ -521,6 +525,7 @@ export default {
                     'L ' + botX4 + ' ' + botY +
                     'L ' + botX3 + ' ' + botY;
             }
+            console.log(line)
             if (type == 'ensemble') {
                 this.rankLinesG.append('path')
                     .attr('d', line)
@@ -545,6 +550,7 @@ export default {
                 .range([0, this.rankScaleWidth]);
 
             this.freq.forEach((fregVal, idx) => {
+                console.log(this.target_binContainsProcID)
                 const processIDs = this.binContainsProcID[idx];
                 const target_processIDs = this.target_binContainsProcID[idx]
                 // For ensemble process ids.
@@ -561,8 +567,9 @@ export default {
                     groupArray.forEach((group) => {
                         this.drawRankLines(group, processIDs, this.xVals[idx], idx, 'ensemble')
                     })
-
                 }
+
+                console.log(target_processIDs)
                 // For the target process ids.
                 if (target_processIDs) {
                     this.target_rankLinesG = this.svg.append('g')
@@ -573,9 +580,10 @@ export default {
                     target_processIDs.sort((a, b) => a - b)
 
                     const target_groupArray = this.groupProcess(target_processIDs).array;
-
+                    console.log(target_groupArray)
                     target_groupArray.forEach((group) => {
-                        this.drawRankLines(group, target_processIDs, idx, 'target')
+                        console.log(group)
+                        this.drawRankLines(group, target_processIDs, this.targetXVals[idx], idx, 'target')
                     })
                 }
             });
