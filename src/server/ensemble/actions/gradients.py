@@ -44,11 +44,14 @@ class KDE_gradients:
 
     def convert_dictmean_to_list(self, dictionary):
         ret = []
+        dataset = {}
         for state in dictionary:
             d = list(dictionary[state].values())
-            ret.append(max(d))
-            # ret.append(np.mean(np.array(d)))
-        return ret
+            # ret.append(max(d))
+            ret.append(np.mean(np.array(d)))
+            dataset[state] = np.mean(np.array(d))
+        return [ret, dataset]
+
 
     def kde(
         self,
@@ -129,22 +132,14 @@ class KDE_gradients:
                 dist_inc[state] = self.get_runtime_data(node_df, 'time (inc)')
                 dist_exc[state] = self.get_runtime_data(node_df, 'time')
 
-        #         mean_inc_dist[state] = np.mean(dist_inc[state])
-        #         max_inc_dist[state] = np.max(dist_inc[state])
-
-        #         mean_exc_dist[state] = mean_time
-        #         max_exc_dist[state] = max_time
-
-        # # calculate mean runtime.
-        # np_mean_inc_dist = self.clean_dict(mean_inc_dist).values()
-        # np_mean_exc_dist = self.clean_dict(mean_exc_dist).values()
-
-        # np_max_inc_dist = self.clean_dict(max_inc_dist).values()
-        # np_max_exc_dist = self.clean_dict(max_exc_dist).values()
-
         # convert the dictionary of values to list of values.
-        dist_inc_list = self.convert_dictmean_to_list(dist_inc)
-        dist_exc_list = self.convert_dictmean_to_list(dist_exc)
+        temp_inc = self.convert_dictmean_to_list(dist_inc)
+        dist_inc_list = temp_inc[0]
+        dataset_inc_list = temp_inc[1]
+
+        temp_exc = self.convert_dictmean_to_list(dist_exc)
+        dist_exc_list = temp_exc[0]
+        dataset_exc_list = temp_exc[1]
 
         # Calculate appropriate number of bins automatically.
         num_of_bins = self.binCount
@@ -166,10 +161,8 @@ class KDE_gradients:
 
         results = {
             "Inclusive": {
-                # "dist": dist_inc,
-                "mean": mean_inc_dist,
-                "max": max_inc_dist,
                 "bins": num_of_bins,
+                "dataset": dataset_inc_list,
                 # "kde": {
                 #     "x": kde_grid[vis_node_name][0].tolist(),
                 #     "y": kde_grid[vis_node_name][1].tolist(),
@@ -188,10 +181,8 @@ class KDE_gradients:
                 },
             },
             "Exclusive": {
-                # "dist": dist_exc,
-                "mean": mean_exc_dist,
-                "max": max_exc_dist,
                 "bins": num_of_bins,
+                "dataset": dataset_exc_list,
                 # "kde": {
                 #     "x": kde_grid[vis_node_name][0].tolist(),
                 #     "y": kde_grid[vis_node_name][1].tolist(),
