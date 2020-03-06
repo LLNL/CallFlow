@@ -114,20 +114,25 @@ export default {
 			for (let i = 0; i < this.$store.runNames.length; i += 1) {
 				if (this.$store.runNames[i] != this.$store.selectedTargetDataset) {
 					let callsites_in_module = this.$store.moduleCallsiteMap['ensemble'][this.module]
-					for (let i = 0; i < callsites_in_module.length; i += 1) {
-						let thiscallsite = callsites_in_module[i]
+					console.log(callsites_in_module)
+					for (let j = 0; j < callsites_in_module.length; j += 1) {
+						let thiscallsite = callsites_in_module[j]
+						console.log(thiscallsite)
 
 						let thisdata = this.$store.callsites[this.$store.runNames[i]][thiscallsite]
-						mean_time.push({
-							'callsite': thiscallsite,
-							'val': thisdata['mean_time'],
-							'run': this.$store.runNames[i]
-						})
-						mean_time_inc.push({
-							'callsite': thiscallsite,
-							'val': thisdata['mean_time (inc)'],
-							'run': this.$store.runNames[i]
-						})
+						if (thisdata != undefined) {
+							mean_time.push({
+								'callsite': thiscallsite,
+								'val': thisdata['mean_time'],
+								'run': this.$store.runNames[i]
+							})
+							mean_time_inc.push({
+								'callsite': thiscallsite,
+								'val': thisdata['mean_time (inc)'],
+								'run': this.$store.runNames[i]
+							})
+
+						}
 					}
 				}
 			}
@@ -340,7 +345,7 @@ export default {
 
 			this.svg.append('text')
 				.attr('class', 'scatterplot-axis-label')
-				.attr('x', this.boxWidth)
+				.attr('x', this.boxWidth - 2*this.padding.right)
 				.attr('y', this.yAxisHeight - this.padding.top)
 				.style('font-size', '12px')
 				.style('text-anchor', 'end')
