@@ -120,13 +120,13 @@
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateCompareMode()">
 					</v-select>
 				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
 					<v-text-field label="Number of bins in Histogram" class="mt-0" type="number"
 						v-model="selectedBinCount" :menu-props="{ maxHeight: '200' }" persistent-hint
 						v-on:change="updateBinCount()">
 					</v-text-field>
 				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
 					<v-text-field label="Outlier Bands" class="mt-0" type="number"
 						v-model="selectedOutlierBand" :menu-props="{ maxHeight: '200' }" persistent-hint
 						v-on:change="updateOutlierBand()">

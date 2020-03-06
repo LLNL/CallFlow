@@ -5,7 +5,7 @@ import EventHandler from '../EventHandler'
 
 export default {
     template: tpl,
-    name: 'DistNodes',
+    name: 'EnsembleNodes',
     components: {
         ToolTip
     },
@@ -178,7 +178,7 @@ export default {
             }
             console.log(this.hist_max, this.hist_min)
             this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
-            // this.$parent.$refs.DistColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
+            this.$parent.$refs.EnsembleColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
 
             for (let node of nodes) {
                 var defs = d3.select('#ensemble-supergraph-overview')

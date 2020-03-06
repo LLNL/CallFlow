@@ -118,7 +118,6 @@ class Pipeline:
             log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
             log.info(f"Number of modules in the graph: {len(state.df['module'].unique())}")
 
-
         return state
 
     # Filter the networkX graph based on the attribute specified in the config file.
@@ -129,7 +128,7 @@ class Pipeline:
             g = filter_obj.filter_graph_by_time_inc(df, state.g)
         elif(self.config.filter_by == 'time'):
             df = filter_obj.filter_df_by_time(perc)
-            g = filter_obj.filter_graph_by_time(self.entire_df, state.g)
+            g = filter_obj.filter_graph_by_time(df, state.g)
 
         state = State("filter_union")
         state.df = df

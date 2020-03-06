@@ -4,7 +4,7 @@ import 'd3-selection-multi'
 
 export default {
     template: tpl,
-    name: 'DistColorMap',
+    name: 'EnsembleColorMap',
     components: {},
 
     props: [],
@@ -29,7 +29,7 @@ export default {
     },
 
     mounted() {
-        this.id = 'dist-colormap-' + this._uid
+        this.id = 'ensemble-colormap'
     },
 
     methods: {
@@ -45,7 +45,8 @@ export default {
             this.containerHeight = this.$parent.height
             console.log(this.containerWidth, this.containerHeight)
 
-            this.scaleG = d3.select('#' + this.parentID)
+            console.log(this.parentID)
+            this.svg = d3.select('#' + this.parentID)
                 .append('g')
                 .attrs({
                     'id': 'dist-colormap',
@@ -65,7 +66,7 @@ export default {
 
                 for (let i = 0; i <= splits ; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
-                    this.scaleG.append('rect')
+                    this.svg.append('rect')
                         .attrs({
                             'width': this.width / splits,
                             'height': this.height,
@@ -88,7 +89,7 @@ export default {
                 let color = this.color.getScale("RankDiff")
                 for (let i = 0; i <= splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
-                    this.scaleG.append('rect')
+                    this.svg.append('rect')
                         .attrs({
                             'width': this.width / splits,
                             'height': this.height,
@@ -112,7 +113,7 @@ export default {
                 console.log(this.colorMin, this.colorMax)
                 for (let i = 0; i <= splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
-                    this.scaleG.append('rect')
+                    this.svg.append('rect')
                         .attrs({
                             'width': this.width / splits,
                             'height': this.height,
@@ -135,7 +136,7 @@ export default {
                 let color = this.color.getScale("Bin")
                 for (let i = 0; i <= splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
-                    this.scaleG.append('rect')
+                    this.svg.append('rect')
                         .attrs({
                             'width': this.width / splits,
                             'height': this.height,
@@ -150,7 +151,7 @@ export default {
 
         drawMeanText() {
             // draw the element
-            this.scaleG.append("text")
+            this.svg.append("text")
                 .style("fill", "black")
                 .style("font-size", "14px")
                 .attrs({
@@ -163,7 +164,7 @@ export default {
                 })
                 .text((this.colorMin * 0.000001).toFixed(3) + 's');
 
-            this.scaleG.append("text")
+            this.svg.append("text")
                 .style("fill", "black")
                 .style("font-size", "14px")
                 .attrs({
@@ -180,7 +181,7 @@ export default {
 
         drawRankDiffText() {
             // draw the element
-            this.scaleG.append("text")
+            this.svg.append("text")
                 .style("fill", "black")
                 .style("font-size", "14px")
                 .attrs({
@@ -193,7 +194,7 @@ export default {
                 })
                 .text(this.colorMin);
 
-            this.scaleG.append("text")
+            this.svg.append("text")
                 .style("fill", "black")
                 .style("font-size", "14px")
                 .attrs({
@@ -210,7 +211,7 @@ export default {
 
         drawMeanDiffText() {
             // draw the element
-            this.scaleG.append("text")
+            this.svg.append("text")
                 .style("fill", "black")
                 .style("font-size", "14px")
                 .attrs({
@@ -223,7 +224,7 @@ export default {
                 })
                 .text((this.colorMin * 0.000001).toFixed(3) + 's');
 
-            this.scaleG.append("text")
+            this.svg.append("text")
                 .style("fill", "black")
                 .style("font-size", "14px")
                 .attrs({
@@ -239,7 +240,7 @@ export default {
 
         drawBinText() {
             // draw the element
-            this.scaleG.append("text")
+            this.svg.append("text")
                 .style("fill", "black")
                 .style("font-size", "14px")
                 .attrs({
@@ -252,7 +253,7 @@ export default {
                 })
                 .text(this.colorMin);
 
-            this.scaleG.append("text")
+            this.svg.append("text")
                 .style("fill", "black")
                 .style("font-size", "14px")
                 .attrs({
