@@ -85,7 +85,6 @@ export default {
 
 	methods: {
 		init() {
-			console.log()
 			let modules_arr = Object.keys(this.$store.modules['ensemble'])
 
 			this.$socket.emit('module_hierarchy', {
@@ -380,8 +379,11 @@ export default {
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition)
 
+			this.setupModuleMeanGradients()
+			this.setupCallsiteMeanGradients()
 			this.addNodes()
 			this.addText()
+			this.drawTargetLine()
 
 			// Add the mouseleave handler to the bounding rect.
 			d3.select('#container').on('mouseleave', this.mouseleave);
@@ -505,10 +507,67 @@ export default {
 			}
 		},
 
+		drawTargetLine() {
+			let dataset = this.$store.selectedTargetDataset
+
+			let data = this.$store.modules
+
+			for (let i = 0; i < this.nodes.length; i++) {
+				let node_data = this.nodes[i].data
+
+				let mean = 0
+				let gradients = []
+				if(this.nodes[i].depth == 0){
+					mean = this.$store.modules[dataset][node_data.name]['gradients'][this.$store.selectedMetric]['dataset'][dataset]
+					gradients = this.$store.modules['ensemble'][node_data.name]['gradients'][this.$store.selectedMetric]['hist']
+				}
+				else{
+					console.log(node_data.name)
+					mean = this.$store.callsites[dataset][node_data.name]['gradients'][this.$store.selectedMetric]['dataset'][dataset]
+					gradients = this.$store.callsites['ensemble'][node_data.name]['gradients'][this.$store.selectedMetric]['hist']
+				}
+
+				console.log(mean)
+
+				let grid = gradients.x
+				let vals = gradients.y
+
+				let targetPos = 0
+				console.log(node_data)
+				let binWidth = this.width / this.$store.selectedBinCount
+
+				for (let idx = 0; idx < grid.length; idx += 1) {
+					if (grid[idx] > mean) {
+						targetPos = idx
+						break
+					}
+					if (idx == grid.length - 1) {
+						targetPos = grid.length - 1
+					}
+				}
+
+				let x = binWidth * targetPos
+
+				console.log(targetPos, x)
+
+				// d3.select('#hierarchy-callsite-' + node_data.name)
+				this.hierarchySVG
+					.append('line')
+					.attrs({
+						"class": 'targetLines',
+						"x1": x,
+						"y1": this.nodeHeight * (this.nodes[i].depth),
+						"x2": x,
+						"y2": this.nodeHeight * (this.nodes[i].depth + 1),
+						"stroke-width": 5,
+						"stroke": this.$store.color.target
+					})
+			}
+		},
+
 		addNodes() {
 			let self = this
-			this.setupModuleMeanGradients()
-			this.setupCallsiteMeanGradients()
+
 			this.hierarchy
 				.selectAll('.icicleNode')
 				.data(this.nodes)
@@ -518,10 +577,10 @@ export default {
 				.attr('id', (d) => {
 					let name
 					if (d.data.name.indexOf('=') === -1) {
-						name = d.data.name
+						name = 'hierarchy-callsite-' + d.data.name
 					}
 					else {
-						name = d.data.name.split('=')[1]
+						name = 'hierarchy-callsite-' + d.data.name.split('=')[1]
 					}
 					return name
 				})
@@ -555,6 +614,7 @@ export default {
 					if (this.selectedDirection == 'LR') {
 						return d.x1 - d.x0 - this.offset;
 					}
+					self.nodeHeight = d.y1 - d.y0 - this.offset
 					return d.y1 - d.y0 - this.offset;
 				})
 				.style("fill", (d, i) => {
@@ -611,7 +671,7 @@ export default {
 						}
 						return d.data.count * this.width / d.data.length
 					}
-					return d.x0 + this.offset*2 ;
+					return d.x0 + this.offset * 2;
 				})
 				.attr('y', (d) => {
 					if (this.selectedDirection == 'LR') {
