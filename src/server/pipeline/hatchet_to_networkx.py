@@ -3,6 +3,7 @@ from utils.logger import log
 import math
 import json
 from utils.hatchet import getNodeDictFromFrame
+from utils.df import sanitizeName
 from ast import literal_eval as make_tuple
 
 class HatchetToNetworkX(nx.Graph):
@@ -102,9 +103,14 @@ class HatchetToNetworkX(nx.Graph):
 							source_node_dict = getNodeDictFromFrame(node_path[-2])
 							target_node_dict = getNodeDictFromFrame(node_path[-1])
 
-							source_node_name = source_node_dict["name"]
-							target_node_name = target_node_dict["name"]
-
+							if(source_node_dict['line'] != 'NA'):
+								source_node_name = sanitizeName(source_node_dict["name"]) + ':' + str(source_node_dict['line'])
+							else:
+								source_node_name = sanitizeName(source_node_dict['name'])
+							if(target_node_dict['line'] != 'NA'):
+	 							target_node_name = sanitizeName(target_node_dict["name"]) + ':' + str(target_node_dict['line'])
+							else:
+								target_node_name = sanitizeName(target_node_dict['name'])
 							self.g.add_edge(source_node_name, target_node_name)
 					node = next(node_gen)
 

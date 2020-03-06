@@ -52,6 +52,7 @@ class FilterNetworkX:
         # df = self.df.loc[self.df['time'] > perc * 0.01 * self.max_time_exc]
         df = self.df.loc[self.df['time'] > perc]
         filter_call_sites = df["name"].unique()
+        print(filter_call_sites)
         return df[df["name"].isin(filter_call_sites)]
 
     def filter_graph_by_time_inc(self, df, g):

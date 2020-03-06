@@ -21,7 +21,7 @@ export default {
         firstRender: true,
         padding: { top: 0, right: 10, bottom: 0, left: 5 },
         textOffset: 25,
-        boxplotHeight: 250,
+        boxplotHeight: 350,
         boxplotWidth: 0,
         duration: 300,
         iqrFactor: 0.15,
@@ -116,6 +116,8 @@ export default {
         setInfo(){
             this.number_of_callsites = Object.keys(this.$store.callsites['ensemble']).length
             this.callsites = this.$store.callsites['ensemble']
+            console.log(this.callsites)
+            console.log("------------------------------------")
             this.selectedModule = this.$store.selectedModule
             this.selectedCallsite = this.$store.selectedCallsite
         },

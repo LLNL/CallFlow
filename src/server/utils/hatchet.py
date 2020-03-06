@@ -6,9 +6,9 @@ def getPathListFromFrames(frames):
             if f['type'] == 'function':
                 path.append(f['name'])
             elif f['type'] == 'statement':
-                path.append(f['file'])
+                path.append(f['file'] + ':' + str(f['line']))
             elif f['type'] == 'loop':
-                path.append(f['file'])
+                path.append(f['file'] + ':' + str(f['line']))
         paths.append(path)
     return path
 

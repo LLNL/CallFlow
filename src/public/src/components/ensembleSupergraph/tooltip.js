@@ -178,6 +178,7 @@ export default {
                     .text(this.trunc(toFunc, 15))
 
                 let callsite = entry_functions[tIndex]
+                console.log(typeof(entry_functions[tIndex]))
 
                 let timeInfo = ( this.$store.callsites['ensemble'][callsite]['max_time'] / this.$store.maxIncTime['ensemble'] * 100).toFixed(3) + '%'
 
