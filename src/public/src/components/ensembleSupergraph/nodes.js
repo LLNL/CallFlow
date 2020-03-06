@@ -163,7 +163,6 @@ export default {
                 console.log("[EnsembleSupergraph] Node ", node.id, "assigned client_idx as", node.client_idx)
                 idx += 1
             }
-            console.log(this.nidNameMap)
         },
 
         setupMeanGradients() {
@@ -176,7 +175,6 @@ export default {
                 this.hist_min = Math.min(this.hist_min, data[node.module]['gradients'][this.$store.selectedMetric]['hist']['y_min'])
                 this.hist_max = Math.max(this.hist_max, data[node.module]['gradients'][this.$store.selectedMetric]['hist']['y_max'])
             }
-            console.log(this.hist_max, this.hist_min)
             this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
             this.$parent.$refs.EnsembleColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
 

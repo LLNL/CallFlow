@@ -83,7 +83,7 @@ export default {
                     'class': 'target-circle-legend-text',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 3 * this.padding.bottom})`,
                 })
-                .text('Target')
+                .text('Target run')
                 .style('font-size', 14)
                 .style('fill', '#444444');
 
@@ -94,7 +94,7 @@ export default {
                     'class': 'target-circle-legend-text',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 4 * this.padding.bottom})`,
                 })
-                .text('Ensemble')
+                .text('Ensemble of runs')
                 .style('font-size', 14)
                 .style('fill', '#444444');
 

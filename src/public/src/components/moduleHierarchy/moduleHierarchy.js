@@ -22,7 +22,7 @@ export default {
 		colorByAttr: 'Inclusive',
 		direction: ['LR', 'TD'],
 		selectedDirection: 'TD',
-		textTruncForNode: 10,
+		textTruncForNode: 15,
 		color: null,
 		width: null,
 		height: null,
@@ -390,27 +390,21 @@ export default {
 			this.totalSize = root.value;
 		},
 
-		setupMeanGradients() {
+		setupCallsiteMeanGradients() {
 			let module = this.$store.selectedModule
 			let callsites = Object.keys(this.$store.callsites['ensemble'])
 
 			let method = ''
-			// let mode = 'Horizontal'
-			let mode = ''
-			if (this.$store.selectedMetric == 'Inclusive') {
-				method = 'hist_time (inc)'
-			}
-			else if (this.$store.selectedMetric == 'Exclusive') {
-				method = 'hist_time (inc)'
-			}
+			let mode = 'Horizontal'
+
 			this.hist_min = 0
 			this.hist_max = 0
 			let callsiteStore = this.$store.callsites['ensemble']
 			for (let idx = 0; idx < callsites.length; idx += 1) {
 				let callsite = callsites[idx]
 				let data = callsiteStore[callsite]
-				this.hist_min = Math.min(this.hist_min, data[method]['y_min'])
-				this.hist_max = Math.max(this.hist_max, data[method]['y_max'])
+				this.hist_min = Math.min(this.hist_min, data['gradients'][this.$store.selectedMetric]['hist']['y_min'])
+				this.hist_max = Math.max(this.hist_max, data['gradients'][this.$store.selectedMetric]['hist']['y_max'])
 			}
 
 			this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
@@ -423,7 +417,7 @@ export default {
 					.append("defs");
 
 				this.linearGradient = defs.append("linearGradient")
-					.attr("id", "mean-callsite-gradient-" + data.name	)
+					.attr("id", "mean-callsite-gradient-" + data.name)
 					.attr("class", 'linear-gradient')
 
 				if (mode == 'Horizontal') {
@@ -441,11 +435,65 @@ export default {
 						.attr("y2", "100%");
 				}
 
-				let min_val = data[method]['y_min']
-				let max_val = data[method]['y_max']
+				let grid = data['gradients'][this.$store.selectedMetric]['hist']['x']
+				let val = data['gradients'][this.$store.selectedMetric]['hist']['y']
 
-				let grid = data[method]['x']
-				let val = data[method]['y']
+				for (let i = 0; i < grid.length; i += 1) {
+					let x = (i + i + 1) / (2 * grid.length)
+					let current_value = (val[i])
+					this.linearGradient.append("stop")
+						.attr("offset", 100 * x + "%")
+						.attr("stop-color", this.$store.binColor.getColorByValue(current_value))
+				}
+			}
+		},
+
+		setupModuleMeanGradients() {
+			let modules = Object.keys(this.$store.modules['ensemble'])
+
+			let method = ''
+			let mode = 'Horizontal'
+
+			this.hist_min = 0
+			this.hist_max = 0
+			let moduleStore = this.$store.modules['ensemble']
+			for (let idx = 0; idx < modules.length; idx += 1) {
+				let thismodule = modules[idx]
+				let data = moduleStore[thismodule]
+				this.hist_min = Math.min(this.hist_min, data['gradients'][this.$store.selectedMetric]['hist']['y_min'])
+				this.hist_max = Math.max(this.hist_max, data['gradients'][this.$store.selectedMetric]['hist']['y_max'])
+			}
+
+			this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
+
+			for (let idx = 0; idx < modules.length; idx += 1) {
+				let thismodule = modules[idx]
+				let data = moduleStore[thismodule]
+				let id = data.id
+				var defs = d3.select('#module-hierarchy-svg')
+					.append("defs");
+
+				this.linearGradient = defs.append("linearGradient")
+					.attr("id", "mean-module-gradient-" + data.name)
+					.attr("class", 'linear-gradient')
+
+				if (mode == 'Horizontal') {
+					this.linearGradient
+						.attr("x1", "0%")
+						.attr("y1", "0%")
+						.attr("x2", "100%")
+						.attr("y2", "0%");
+				}
+				else {
+					this.linearGradient
+						.attr("x1", "0%")
+						.attr("y1", "0%")
+						.attr("x2", "0%")
+						.attr("y2", "100%");
+				}
+
+				let grid = data['gradients'][this.$store.selectedMetric]['hist']['x']
+				let val = data['gradients'][this.$store.selectedMetric]['hist']['y']
 
 				for (let i = 0; i < grid.length; i += 1) {
 					let x = (i + i + 1) / (2 * grid.length)
@@ -459,7 +507,8 @@ export default {
 
 		addNodes() {
 			let self = this
-			this.setupMeanGradients()
+			this.setupModuleMeanGradients()
+			this.setupCallsiteMeanGradients()
 			this.hierarchy
 				.selectAll('.icicleNode')
 				.data(this.nodes)
@@ -510,7 +559,7 @@ export default {
 				})
 				.style("fill", (d, i) => {
 					if (d.data.value == undefined) {
-						return "url(#mean-gradient-" + d.data.name + ")"
+						return "url(#mean-module-gradient-" + d.data.name + ")"
 					}
 					return "url(#mean-callsite-gradient-" + d.data.name + ")"
 				})
@@ -583,7 +632,7 @@ export default {
 					let color = this.$store.color.setContrast(this.$store.color.getColor(d))
 					return color
 				})
-				.style('font-size', '10px')
+				.style('font-size', '14px')
 				.text((d) => {
 					if (d.y1 - d.y0 < 10 || d.x1 - d.x0 < 50) {
 						return '';
@@ -597,10 +646,11 @@ export default {
 					}
 
 					var textSize = this.textSize(name)['width'];
-					if (textSize < d.width) {
+					console.log(textSize, d.x1 - d.x0)
+					if (textSize < d.x1 - d.x0) {
 						return name;
 					} else {
-						return this.trunc(name, this.textTruncForNode)
+						return this.trunc(name, this.textTruncForNode - 10)
 					}
 				});
 		},
