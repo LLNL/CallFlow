@@ -34,6 +34,9 @@
 	"exclude": [
 		"./src/components/ensembleCCT/d3-graphviz.js",
 		"./src/components/cct/d3-graphviz.js",
-		"./src/components/ensembleSupergraph/debugGradients.js"
+		"./src/components/ensembleSupergraph/debugGradients.js",
+		"./src/components/presentation.js",
+		"./src/components/ensembleSupergraph/quantileLines.js"
+
 	]
 }
