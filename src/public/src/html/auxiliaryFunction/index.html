@@ -14,10 +14,9 @@
         <h4>{{formatModule(callsite.module)}}={{formatName(callsite.name)}}</h4>
         <div>Exclusive Runtime (mean) : {{formatRuntime(callsite['mean_time'])}} s</div>
         <div>Inclusive Runtime (mean) : {{formatRuntime(callsite['mean_time (inc)'])}} s</div>
-        <template v-if="compareMode == true">
-            <div>Mean Difference: {{}}</div>
-            <div>Standard deviation : {{}}</div>
-        </template>
+        <div>Percentage imbalance : {{callsite['imbalance_perc_inclusive']}}</div>
+        <div>Skewness: {{callsite['skewness_inclusive']}}</div>
+        <div>Kurtosis: {{callsite['kurtosis_inclusive']}}</div>
         <BoxPlot ref="callsite" :callsite="callsite" />
     </div>
 

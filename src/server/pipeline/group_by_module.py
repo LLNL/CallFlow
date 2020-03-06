@@ -79,7 +79,6 @@ class groupBy:
                     continue
                     if path[i] not in self.other_funcs[module] and path[i] not in self.entry_funcs[module]:
                         self.other_funcs[module].append(path[i])
-        # print(path, group_path)
         group_path = tuple(group_path)
         return (group_path, change_name)
 
@@ -125,9 +124,14 @@ class groupBy:
         module_id_map = {}
         module_count = 0
 
+        edge_count = 0
+        print(f"Total number of edges: {len(self.g.edges())}")
         for edge in self.g.edges():
+            edge_count += 1
             snode = edge[0]
             tnode = edge[1]
+
+            print(snode, tnode, edge_count)
 
             # print(snode, tnode)
             s_df = self.df.loc[self.df['name'] == edge[0]]
@@ -195,59 +199,28 @@ class groupBy:
         show_nodes = self.df.loc[self.df['show_node'] == True]['vis_name'].unique()
         print("Number of nodes shown in group graph: {0}".format(show_nodes))
 
-        for node in self.g.nodes(data=True):
-            nodeName = node[0]
-            nodeData = node[1]
-            if nodeName in show_node:
-                if show_node[nodeName] == True:
-                    nodeData['show_node'] = True
-                else:
-                    nodeData['show_node'] = False
-            else:
-                nodeData['show_node'] = False
+        # for node in self.g.nodes(data=True):
+        #     nodeName = node[0]
+        #     nodeData = node[1]
+        #     if nodeName in show_node:
+        #         if show_node[nodeName] == True:
+        #             nodeData['show_node'] = True
+        #         else:
+        #             nodeData['show_node'] = False
+        #     else:
+        #         nodeData['show_node'] = False
 
-            if nodeName in module:
-                nodeData['module'] = module[nodeName]
-            else:
-                nodeData['module'] = 'Unknown (NA)'
+        #     if nodeName in module:
+        #         nodeData['module'] = module[nodeName]
+        #     else:
+        #         nodeData['module'] = 'Unknown (NA)'
 
-            if nodeName in group_path:
-                nodeData['group_path'] = group_path[nodeName]
-            else:
-                nodeData['group_path'] = []
+        #     if nodeName in group_path:
+        #         nodeData['group_path'] = group_path[nodeName]
+        #     else:
+        #         nodeData['group_path'] = []
 
-            if nodeName in component_path:
-                nodeData['component_path'] = component_path[nodeName]
-            else:
-                nodeData['component_path'] = []
-
-    def get_callsites_with_module(self, src, tgt, module, G, G_agg):
-
-        # First check if edge exists in new Graph
-        if G_agg.has_edge(src, tgt) is None:
-            return None
-
-        # Get data for all edges between u and v
-        new_edge_data = G_agg.get_edge_data(src, tgt)
-
-
-        if new_edge_data:
-            # This index will be used to update frequency in new graph
-            idx = 0
-
-        # For each edge between u and v, check the attributes
-        for dict_attrs in new_edge_data:
-
-            # Example 1: If G1 has edge from 1-->2 with data {'group': 1}
-            # and G2 has edge from 1-->2 with data {'group': 1, 'freq': 2},
-            # this if statement will return True
-            #
-            # Example 2: If G1 has edge from 1-->2 with data {'group': 1}
-            # and G2 has edge from 1-->2 with data {'group': 1, 'freq': 2, 'xyz':3},
-            # this if statement will return False
-            if len(new_edge_data[dict_attrs].items() - data.items())==1:
-                return idx
-            idx += 1
-
-        # No match found, hence return None
-        return None
+        #     if nodeName in component_path:
+        #         nodeData['component_path'] = component_path[nodeName]
+        #     else:
+        #         nodeData['component_path'] = []

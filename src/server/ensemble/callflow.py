@@ -67,11 +67,12 @@ class EnsembleCallFlow:
             states[dataset_name] = self.pipeline.process_gf(states[dataset_name], "entire")
             states[dataset_name] = self.pipeline.convertToNetworkX(states[dataset_name], "path")
             states[dataset_name] = self.pipeline.group(states[dataset_name], "module")
-            # self.pipeline.write_dataset_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
+            self.pipeline.write_dataset_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
             # states[dataset_name] = self.pipeline.filterNetworkX(states, dataset_name, self.config.filter_perc)
             # self.pipeline.write_hatchet_graph(states, dataset_name)
 
         states["ensemble_entire"] = self.pipeline.union(states)
+        self.pipeline.write_ensemble_gf(states, "union")
         states["ensemble_filter"] = self.pipeline.filterNetworkX(states['ensemble_entire'], self.config.filter_perc)
         states["ensemble"] = self.pipeline.ensemble_group(states, "module")
         self.pipeline.write_ensemble_gf(states, "ensemble")
