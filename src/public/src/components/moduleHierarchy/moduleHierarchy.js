@@ -50,7 +50,8 @@ export default {
 		padding: 0,
 		message: 'Module Hierarchy',
 		offset: 4,
-		stroke_width: 4
+		stroke_width: 4,
+		widthType: 'Uniform'
 	}),
 
 	watch: {
@@ -199,7 +200,6 @@ export default {
 				let currentNode = root;
 
 				for (let j = 0; j < parts.length; j++) {
-					console.log(parts)
 					const children = currentNode.children;
 					let nodeName = parts[j];
 
@@ -241,6 +241,7 @@ export default {
 					}
 				}
 			}
+			console.log(root)
 			return root;
 		},
 
@@ -296,6 +297,7 @@ export default {
 			root.x0 = root.y0 = padding;
 			root.x1 = dx;
 			root.y1 = dy / n;
+			console.log(root.x1)
 			root.eachBefore(this.positionNode(dy, n));
 			if (round) root.eachBefore(this.roundNode);
 			return root;
@@ -305,7 +307,12 @@ export default {
 			let self = this
 			return function (node) {
 				if (node.children) {
-					self.dice(node, node.x0, dy * (node.depth + 1) / n, node.x1, dy * (node.depth + 2) / n);
+					if(self.widthType == 'Exclusive'){
+						self.diceByValue(node, node.x0, dy * (node.depth + 1)/n, node.x1, dy * (node.depth + 2)/n)
+					}
+					else if(self.widthType == 'Uniform'){
+						self.dice(node, node.x0, dy * (node.depth + 1) / n, node.x1, dy * (node.depth + 2) / n);
+					}
 				}
 				var x0 = node.x0,
 					y0 = node.y0,
@@ -344,6 +351,31 @@ export default {
 				x_offset += (parent.x1 - parent.x0) / (n)
 				node.x1 = parent.x0 + x_offset;
 			}
+		},
+
+		diceByValue(parent, x0, y0, x1, y1) {
+			let value = 1
+			console.log(parent)
+			if(parent.parent == null){
+				console.log(parent)
+				value = this.$store.modules['ensemble'][parent.data.name]['max_time']
+			}
+			console.log(value)
+
+			var nodes = parent.children,
+				node,
+				i = -1,
+				n = nodes.length,
+				k = value && (x1 - x0) / value;
+
+			while (++i < n) {
+				node = nodes[i], node.y0 = y0, node.y1 = y1;
+				console.log(node)
+				node.x0 = x0
+				node.x1 = x0 += node.data.value * k;
+			}
+
+			console.log(node)
 		},
 
 		drawIcicles(json) {
@@ -520,11 +552,11 @@ export default {
 
 				let mean = 0
 				let gradients = []
-				if(this.nodes[i].depth == 0){
+				if (this.nodes[i].depth == 0) {
 					mean = this.$store.modules[dataset][node_data.name]['gradients'][this.$store.selectedMetric]['dataset'][dataset]
 					gradients = this.$store.modules['ensemble'][node_data.name]['gradients'][this.$store.selectedMetric]['hist']
 				}
-				else{
+				else {
 					console.log(node_data.name)
 					mean = this.$store.callsites[dataset][node_data.name]['gradients'][this.$store.selectedMetric]['dataset'][dataset]
 					gradients = this.$store.callsites['ensemble'][node_data.name]['gradients'][this.$store.selectedMetric]['hist']
@@ -548,9 +580,7 @@ export default {
 
 				let x = this.nodes[i].x0 + binWidth * targetPos
 
-				console.log(this.nodes[i], x)
-
-	 			this.hierarchySVG
+				this.hierarchySVG
 					.append('line')
 					.attrs({
 						"class": 'hierarchy-targetLines',

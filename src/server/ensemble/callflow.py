@@ -59,20 +59,20 @@ class EnsembleCallFlow:
 
     def processState(self, datasets, filterBy="Inclusive", filterPerc="10"):
         states = {}
-        # for idx, dataset_name in enumerate(datasets):
-        #     states[dataset_name] = State(dataset_name)
-        #     states[dataset_name] = self.pipeline.create_gf(dataset_name)
-        #     # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
-
-        #     states[dataset_name] = self.pipeline.process_gf(states[dataset_name], "entire")
-        #     states[dataset_name] = self.pipeline.convertToNetworkX(states[dataset_name], "path")
-        #     states[dataset_name] = self.pipeline.group(states[dataset_name], "module")
-        #     self.pipeline.write_dataset_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
-        #     # states[dataset_name] = self.pipeline.filterNetworkX(states, dataset_name, self.config.filter_perc)
-        #     # self.pipeline.write_hatchet_graph(states, dataset_name)
-
         for idx, dataset_name in enumerate(datasets):
-            states[dataset_name] = self.pipeline.read_dataset_gf(dataset_name)
+            states[dataset_name] = State(dataset_name)
+            states[dataset_name] = self.pipeline.create_gf(dataset_name)
+            # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
+
+            states[dataset_name] = self.pipeline.process_gf(states[dataset_name], "entire")
+            states[dataset_name] = self.pipeline.convertToNetworkX(states[dataset_name], "path")
+            states[dataset_name] = self.pipeline.group(states[dataset_name], "module")
+            self.pipeline.write_dataset_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
+            # states[dataset_name] = self.pipeline.filterNetworkX(states, dataset_name, self.config.filter_perc)
+            # self.pipeline.write_hatchet_graph(states, dataset_name)
+
+        # for idx, dataset_name in enumerate(datasets):
+        #     states[dataset_name] = self.pipeline.read_dataset_gf(dataset_name)
 
         states["ensemble_entire"] = self.pipeline.union(states)
         self.pipeline.write_ensemble_gf(states, "ensemble_entire")
