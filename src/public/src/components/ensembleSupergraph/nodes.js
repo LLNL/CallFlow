@@ -300,7 +300,9 @@ export default {
 
                     // EventHandler.$emit('unhighlight_module')
 
-                    this.clearGuides()
+                    // this.clearGuides()
+                    // d3.selectAll('.ensemble-edge')
+                        // .style('opacity', 1.0)
                 })
 
             // Transition
@@ -521,7 +523,7 @@ export default {
             }
         },
 
-        clearGuides(){
+        clearGuides() {
             d3.selectAll('.gradientGuides').remove()
             d3.selectAll('.gradientGuidesText').remove()
         },
@@ -538,31 +540,73 @@ export default {
             let binWidth = node_data.height / this.$store.selectedBinCount
 
             for (let idx = 0; idx < grid.length; idx += 1) {
-                let y= binWidth * idx
+                let y = binWidth * idx
 
-                d3.select('#ensemble-callsite-' + node_data.client_idx)
-                    .append('line')
-                    .attr("class", 'gradientGuides')
-                    .attr("id", 'line-2-' + node_data['client_idx'])
-                    .attr("x1", 0)
-                    .attr("y1", y)
-                    .attr("x2", this.nodeWidth)
-                    .attr("y2", y)
-                    .attr("stroke-width", 1.5)
-                    .attr('opacity', 0.4)
-                    .attr("stroke", '#202020')
+                d3.selectAll('.ensemble-edge')
+                    .style('opacity', 0.5)
 
-                d3.select('#ensemble-callsite-' + node_data.client_idx)
-                    .append('text')
-                    .attr("class", 'gradientGuidesText')
-                    .attr("id", 'line-2-' + node_data['client_idx'])
-                    .attr("x", this.nodeWidth + 5)
-                    .attr("y", y + binWidth/2)
-                    .attr("stroke-width", 1)
-                    .attr('opacity', 0.4)
-                    .attr("stroke", 'black')
-                    .style('z-index', 100)
-                    .text(this.formatRuntime(grid[idx]) )
+                if (vals[idx] != 0) {
+                    d3.select('#ensemble-callsite-' + node_data.client_idx)
+                        .append('line')
+                        .attr("class", 'gradientGuides')
+                        .attr("id", 'line-2-' + node_data['client_idx'])
+                        .attr("x1", 0)
+                        .attr("y1", y)
+                        .attr("x2", this.nodeWidth)
+                        .attr("y2", y)
+                        .attr("stroke-width", 1.0)
+                        .attr('opacity', 0.4)
+                        .attr("stroke", '#202020')
+
+                    d3.select('#ensemble-callsite-' + node_data.client_idx)
+                        .append('text')
+                        .attr("class", 'gradientGuidesText')
+                        .attr("id", 'line-2-' + node_data['client_idx'])
+                        .attr("x", this.nodeWidth / 2 - 5)
+                        .attr("y", y + binWidth / 2)
+                        .attr('fill', 'black')
+                        .style('z-index', 100)
+                        .style('font-size', '14px')
+                        .text(vals[idx])
+
+                    if (idx != 0 && idx != grid.length - 1) {
+                        d3.select('#ensemble-callsite-' + node_data.client_idx)
+                            .append('text')
+                            .attr("class", 'gradientGuidesText')
+                            .attr("id", 'line-2-' + node_data['client_idx'])
+                            .attr("x", this.nodeWidth + 10)
+                            .attr("y", y + binWidth / 2)
+                            .attr('fill', 'black')
+                            .style('z-index', 100)
+                            .style('font-size', '12px')
+                            .text(this.formatRuntime(grid[idx]))
+                    }
+                }
+
+                if (idx == 0) {
+                    d3.select('#ensemble-callsite-' + node_data.client_idx)
+                        .append('text')
+                        .attr("class", 'gradientGuidesText')
+                        .attr("id", 'line-2-' + node_data['client_idx'])
+                        .attr("x", this.nodeWidth + 10)
+                        .attr("y", y + binWidth / 2)
+                        .attr('fill', 'black')
+                        .style('z-index', 100)
+                        .style('font-size', '12px')
+                        .text('Min. = ' + this.formatRuntime(grid[idx]))
+                }
+                else if (idx == grid.length - 1) {
+                    d3.select('#ensemble-callsite-' + node_data.client_idx)
+                        .append('text')
+                        .attr("class", 'gradientGuidesText')
+                        .attr("id", 'line-2-' + node_data['client_idx'])
+                        .attr("x", this.nodeWidth + 10)
+                        .attr("y", y + binWidth / 2)
+                        .attr('fill', 'black')
+                        .style('z-index', 100)
+                        .style('font-size', '12px')
+                        .text('Max. = ' + this.formatRuntime(grid[idx]))
+                }
             }
         },
 

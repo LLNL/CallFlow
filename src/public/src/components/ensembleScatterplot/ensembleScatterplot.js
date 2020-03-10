@@ -105,7 +105,7 @@ export default {
 			this.yAxis()
 			this.ensembleDots()
 			this.targetDots()
-			this.correlationText()
+			// this.correlationText()
 		},
 
 		ensembleProcess() {

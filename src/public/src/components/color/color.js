@@ -294,6 +294,17 @@ export default class Color {
                 10: ["#9e0142", "#d53e4f", "#f46d43", "#fdae61", "#fee08b", "#e6f598", "#abdda4", "#66c2a5", "#3288bd", "#5e4fa2"],
                 11: ["#9e0142", "#d53e4f", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#e6f598", "#abdda4", "#66c2a5", "#3288bd", "#5e4fa2"]
             },
+            AntiSpectral: {
+                3: ["#99d594", "#ffffbf", "#fc8d59"],
+                4: ["#2b83ba", "#abdda4", "#fdae61", "#d7191c"],
+                5: ["#d7191c", "#fdae61", "#ffffbf", "#abdda4", "#2b83ba"],
+                6: ["#d53e4f", "#fc8d59", "#fee08b", "#e6f598", "#99d594", "#3288bd"],
+                7: ["#d53e4f", "#fc8d59", "#fee08b", "#ffffbf", "#e6f598", "#99d594", "#3288bd"],
+                8: ["#d53e4f", "#f46d43", "#fdae61", "#fee08b", "#e6f598", "#abdda4", "#66c2a5", "#3288bd"],
+                9: ["#3288bd", "#66c2a5", "#abdda4", "#ffffbf", "#fee08b", "#e6f598", , "#fdae61", "#f46d43", "#d53e4f"],
+                10: ["#9e0142", "#d53e4f", "#f46d43", "#fdae61", "#fee08b", "#e6f598", "#abdda4", "#66c2a5", "#3288bd", "#5e4fa2"],
+                11: ["#9e0142", "#d53e4f", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#e6f598", "#abdda4", "#66c2a5", "#3288bd", "#5e4fa2"]
+            },
             RdYlGn: {
                 3: ["#fc8d59", "#ffffbf", "#91cf60"],
                 4: ["#d7191c", "#fdae61", "#a6d96a", "#1a9641"],
@@ -432,8 +443,15 @@ export default class Color {
                 .domain([min, max]);
         } else if (this.option == 'Bin') {
             this.binColorScale = chroma.scale(this.colorMap)
-                // .padding(this.colorPadding)
+                .padding([0.0, 0.0])
+                .gamma(0.5)
                 .domain([min, max])
+            // this.binColorScale = chroma.cubehelix()
+            //     .start(200)
+            //     .rotations(-0.35)
+            //     .gamma(1.0)
+            //     .lightness([1.0, 0.8])
+            //     .scale()
         }
     }
 
@@ -557,7 +575,7 @@ export default class Color {
         return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     }
 
-    rgbArrayToHex(color_arr){
+    rgbArrayToHex(color_arr) {
         color_arr = color_arr._rgb
         let r = Math.floor(color_arr[0])
         let g = Math.floor(color_arr[1])

@@ -81,15 +81,15 @@ export default {
 		selectedMetric: 'Exclusive',
 		runtimeColorMap: [],
 		distributionColorMap: [],
-		selectedRuntimeColorMap: "Reds",
-		selectedDistributionColorMap: "Greens",
+		selectedRuntimeColorMap: "Greys",
+		selectedDistributionColorMap: "YlOrRd",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
 		selectedColorPoint: 9,
 		selectedColorMin: null,
 		selectedColorMax: null,
 		selectedColorMinText: '',
 		selectedColorMaxText: '',
-		groupModes: ['include callbacks', 'exclude callbacks'],
+		groupModes: ['	include callbacks', 'exclude callbacks'],
 		selectedGroupMode: 'include callbacks',
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
@@ -532,37 +532,10 @@ export default {
 			this.init()
 		},
 
-		// TODO: Write the ensemble and single version.
-		updateDistributionColorMap() {
+		updateColors() {
 			this.clearLocal()
 			this.setupColors()
 			this.init()
-		},
-
-		updateRuntimeColorMap() {
-			this.clearLocal()
-			this.setupColors()
-			if (this.selectedFormat == 'CCT') {
-				this.$socket.emit('cct', {
-					dataset: this.$store.selectedTargetDataset,
-					functionsInCCT: this.selectedFunctionsInCCT,
-				})
-			} else if (this.selectedFormat == 'Callgraph') {
-				this.$socket.emit('group', {
-					dataset: this.$store.selectedTargetDataset,
-					format: this.selectedFormat,
-					groupBy: this.selectedGroupBy
-				})
-			}
-		},
-
-		updateColorMinMax() {
-			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedRuntimeColorMap, this.selectedColorPoint)
-			if (this.selectedFormat == 'Callgraph') {
-				this.$refs.Callgraph.render()
-			} else if (this.selectedFormat == 'CCT') {
-				this.$refs.CCT.render()
-			}
 		},
 
 		updateFormat() {

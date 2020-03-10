@@ -87,29 +87,29 @@
 				</v-flex>
 				<v-flex xs12 class="ma-1">
 					<v-select label="Runtime Color Map" :items="runtimeColorMap" v-model="selectedRuntimeColorMap"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateRuntimeColorMap()">
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColors()">
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
 					<v-select label="Distribution Color Map" :items="distributionColorMap" v-model="selectedDistributionColorMap"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateDistributionColorMap()">
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColors()">
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
 					<v-text-field label="Color points (3-9)" class="mt-0" type="number" v-model="selectedColorPoint"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColor()">
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColors()">
 					</v-text-field>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
 					<v-text-field label="Color minimum (in seconds)" class="mt-0" type="number"
 						v-model="selectedColorMinText" :menu-props="{ maxHeight: '200' }" persistent-hint
-						v-on:change="updateColorMinMax()">
+						v-on:change="updateColors()">
 					</v-text-field>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
 					<v-text-field label="Color maximum (in seconds)" class="mt-0" type="number"
 						v-model="selectedColorMaxText" :menu-props="{ maxHeight: '200' }" persistent-hint
-						v-on:change="updateColorMinMax()">
+						v-on:change="updateColors()">
 					</v-text-field>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
@@ -128,7 +128,7 @@
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
 					<v-text-field label="Outlier Bands" class="mt-0" type="number"
-						v-model="selectedOutlierBand" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-model="selectedOutlierBand" :menu-props="{ maxHeight: '200' }" persi	stent-hint
 						v-on:change="updateOutlierBand()">
 					</v-text-field>
 				</v-flex>
@@ -204,7 +204,7 @@
 					</span>
 
 				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="50">
+				<splitpanes horizontal :splitpanes-size="55">
 					<span>
 						<v-layout class="chip-container">
 							<v-chip class="chip" chips color="teal" label outlined clearable> {{ summaryChip }}
@@ -213,7 +213,7 @@
 						<EnsembleSuperGraph ref="EnsembleSuperGraph" />
 					</span>
 				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="25">
+				<splitpanes horizontal :splitpanes-size="20">
 					<span>
 						<AuxiliaryFunction ref="AuxiliaryFunction" />
 					</span>
@@ -258,10 +258,10 @@
 		</v-layout>
 	</v-content>
 
-	<v-footer id="footer" color="teal" class="white--text" app>
-		<span> Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis </span>
+	<v-footer id="footer" color="teal" class="white--	text" app>
+		<!-- <span> Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis </span> -->
 		<v-spacer></v-spacer>
-		<span>&copy; 2017 - 2020</span>
+		<!-- <span>&copy; 2017 - 2020</span> -->
 	</v-footer>
 
 </v-app>

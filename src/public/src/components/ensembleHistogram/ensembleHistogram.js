@@ -133,7 +133,7 @@ export default {
             // }
             // console.log(this.concatenatedXVals)
 
-            this.concatenatedXVals = this.xVals.concat(this.targetXVals)
+            this.concatenatedXVals = this.xVals//.concat(this.targetXVals)
             this.concatenatedXVals = this.concatenatedXVals.sort((a, b) => a.toFixed(2) - b.toFixed(2))
 
             this.histogramXScale = d3.scaleBand()
@@ -232,7 +232,7 @@ export default {
                 binContainsProcID[pos].push(data['rank'][idx]);
             });
 
-            console.log(attr_data['x'], attr_data['y'], axis_x, binContainsProcID)
+                console.log(attr_data['x'], attr_data['y'], axis_x, binContainsProcID)
             return [attr_data['x'], attr_data['y'], axis_x, binContainsProcID];
         },
 

@@ -111,7 +111,6 @@ export default {
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
-
         paths() {
             let entry_functions = this.node.callees
 

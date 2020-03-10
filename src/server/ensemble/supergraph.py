@@ -34,14 +34,14 @@ class SuperGraph(nx.Graph):
         # TODO: Generalize it either all columns or let user specify the value using config.json
         self.columns = [
             "time (inc)",
-            "group_path",
+            # "group_path",
             "name",
             "time",
-            "callers",
-            "callees",
-            "vis_name",
+            # "callers",
+            # "callees",
+            # "vis_name",
             "module",
-            "show_node",
+            # "show_node",
         ]
 
         # Store all the names of runs in self.runs.
@@ -151,8 +151,8 @@ class SuperGraph(nx.Graph):
         # nx.set_edge_attributes(self.g, name="number_of_runs", values=number_of_runs_mapping)
         capacity_mapping = self.calculate_flows(self.g)
         nx.set_edge_attributes(self.g, name="weight", values=capacity_mapping)
-        exc_capacity_mapping = self.calculate_exc_weight(self.g)
-        nx.set_edge_attributes(self.g, name="exc_weight", values=exc_capacity_mapping)
+        # exc_capacity_mapping = self.calculate_exc_weight(self.g)
+        # nx.set_edge_attributes(self.g, name="exc_weight", values=exc_capacity_mapping)
 
     def number_of_runs(self):
         ret = {}
