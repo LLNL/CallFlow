@@ -85,6 +85,15 @@ export default {
             return ret
         },
 
+        formatRunCounts(val) {
+            if (val == 1) {
+                return val + ' run';
+            }
+            else {
+                return val + ' runs';
+            }
+        },
+
         group() {
             this.total_weight = d3.nest()
                 .key(function (d) { return d.level; })
@@ -249,6 +258,10 @@ export default {
                     }
                 })
                 .on('click', (d) => {
+                    this.drawGuides(d, 'permanent')
+                    d3.selectAll('.ensemble-edge')
+                        .style('opacity', 0.3)
+
                     this.$store.selectedNode = d
                     this.$store.selectedModule = d.module
                     this.$store.selectedName = d.name
@@ -284,6 +297,12 @@ export default {
                         module: this.$store.selectedModule,
                     })
                 })
+                .on('dblclick', (d) => {
+                    d3.selectAll('.ensemble-edge')
+                        .style('opacity', 1.0)
+
+                    this.permanentGuides = true
+                })
                 .on('mouseover', (d) => {
                     // self.$refs.ToolTip.render(self.graph, d)
                     // this.$store.selectedNode = d
@@ -293,16 +312,18 @@ export default {
                     //     module: this.$store.selectedModule,
                     // })
 
-                    this.drawGuides(d)
+                    this.drawGuides(d, 'temporary')
                 })
                 .on('mouseout', (d) => {
                     // self.$refs.ToolTip.clear()
 
                     // EventHandler.$emit('unhighlight_module')
 
-                    // this.clearGuides()
-                    // d3.selectAll('.ensemble-edge')
-                        // .style('opacity', 1.0)
+                    this.clearGuides('temporary')
+                    if (this.permanentGuides == false) {
+                        d3.selectAll('.ensemble-edge')
+                            .style('opacity', 1.0)
+                    }
                 })
 
             // Transition
@@ -496,11 +517,11 @@ export default {
 
                     for (let idx = 0; idx < grid.length; idx += 1) {
                         if (grid[idx] > module_mean) {
-                            targetPos = idx
+                            targetPos = idx + 1
                             break
                         }
                         if (idx == grid.length - 1) {
-                            targetPos = grid.length - 1
+                            targetPos = grid.length
                         }
                     }
 
@@ -523,12 +544,12 @@ export default {
             }
         },
 
-        clearGuides() {
-            d3.selectAll('.gradientGuides').remove()
-            d3.selectAll('.gradientGuidesText').remove()
+        clearGuides(type) {
+            d3.selectAll('.gradientGuides-' + type).remove()
+            d3.selectAll('.gradientGuidesText-' + type).remove()
         },
 
-        drawGuides(node_data) {
+        drawGuides(node_data, type) {
             let modules_data = this.$store.modules
             let module_name = node_data.module
 
@@ -540,45 +561,48 @@ export default {
             let binWidth = node_data.height / this.$store.selectedBinCount
 
             for (let idx = 0; idx < grid.length; idx += 1) {
-                let y = binWidth * idx
+                let y = binWidth * (idx + 1)
 
                 d3.selectAll('.ensemble-edge')
                     .style('opacity', 0.5)
 
                 if (vals[idx] != 0) {
+                    // For drawing the guide lines that have the value.
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('line')
-                        .attr("class", 'gradientGuides')
+                        .attr("class", 'gradientGuides-' + type)
                         .attr("id", 'line-2-' + node_data['client_idx'])
                         .attr("x1", 0)
                         .attr("y1", y)
                         .attr("x2", this.nodeWidth)
                         .attr("y2", y)
                         .attr("stroke-width", 1.0)
-                        .attr('opacity', 0.4)
+                        .attr('opacity', 0.3)
                         .attr("stroke", '#202020')
 
+                    // For placing the run count values.
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('text')
-                        .attr("class", 'gradientGuidesText')
+                        .attr("class", 'gradientGuidesText-' + type)
                         .attr("id", 'line-2-' + node_data['client_idx'])
-                        .attr("x", this.nodeWidth / 2 - 5)
+                        .attr("x", -40)
                         .attr("y", y + binWidth / 2)
                         .attr('fill', 'black')
                         .style('z-index', 100)
                         .style('font-size', '14px')
-                        .text(vals[idx])
+                        .text(this.formatRunCounts(vals[idx]))
 
+                    // For placing the runtime values.
                     if (idx != 0 && idx != grid.length - 1) {
                         d3.select('#ensemble-callsite-' + node_data.client_idx)
                             .append('text')
-                            .attr("class", 'gradientGuidesText')
+                            .attr("class", 'gradientGuidesText-' + type)
                             .attr("id", 'line-2-' + node_data['client_idx'])
                             .attr("x", this.nodeWidth + 10)
                             .attr("y", y + binWidth / 2)
                             .attr('fill', 'black')
                             .style('z-index', 100)
-                            .style('font-size', '12px')
+                            .style('font-size', '14px')
                             .text(this.formatRuntime(grid[idx]))
                     }
                 }
@@ -586,25 +610,25 @@ export default {
                 if (idx == 0) {
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('text')
-                        .attr("class", 'gradientGuidesText')
+                        .attr("class", 'gradientGuidesText-' + type)
                         .attr("id", 'line-2-' + node_data['client_idx'])
                         .attr("x", this.nodeWidth + 10)
                         .attr("y", y + binWidth / 2)
                         .attr('fill', 'black')
                         .style('z-index', 100)
-                        .style('font-size', '12px')
+                        .style('font-size', '14px')
                         .text('Min. = ' + this.formatRuntime(grid[idx]))
                 }
                 else if (idx == grid.length - 1) {
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('text')
-                        .attr("class", 'gradientGuidesText')
+                        .attr("class", 'gradientGuidesText-' + type)
                         .attr("id", 'line-2-' + node_data['client_idx'])
                         .attr("x", this.nodeWidth + 10)
                         .attr("y", y + binWidth / 2)
                         .attr('fill', 'black')
                         .style('z-index', 100)
-                        .style('font-size', '12px')
+                        .style('font-size', '14px')
                         .text('Max. = ' + this.formatRuntime(grid[idx]))
                 }
             }
