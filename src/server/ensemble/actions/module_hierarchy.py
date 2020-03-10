@@ -110,6 +110,7 @@ class ModuleHierarchy:
         paths = []
         existing_nodes = {}
         for idx, node in enumerate(self.hierarchy.nodes()):
+            print(node)
             if node not in existing_nodes:
                 if "=" in node:
                     split = node.split("=")

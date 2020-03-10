@@ -50,6 +50,7 @@ export default {
 		padding: 0,
 		message: 'Module Hierarchy',
 		offset: 4,
+		stroke_width: 4
 	}),
 
 	watch: {
@@ -107,7 +108,7 @@ export default {
 				.append('svg')
 				.attrs({
 					"id": "module-hierarchy-svg",
-					'width': this.icicleWidth + this.margin.right + this.margin.left,
+					'width': this.icicleWidth + this.margin.right + this.margin.left + 10,
 					'height': this.icicleHeight + this.margin.top + this.margin.bottom,
 				})
 
@@ -156,7 +157,7 @@ export default {
 			const path = hierarchy['path']
 			const inc_time = hierarchy['time (inc)']
 			const exclusive = hierarchy['time']
-			const imbalance_perc = hierarchy['imbalance_perc']
+			// const imbalance_perc = hierarchy['imbalance_perc']
 			const name = hierarchy['name']
 			// const exit = hierarchy.exit;
 			// const component_path = hierarchy.component_path;
@@ -198,6 +199,7 @@ export default {
 				let currentNode = root;
 
 				for (let j = 0; j < parts.length; j++) {
+					console.log(parts)
 					const children = currentNode.children;
 					let nodeName = parts[j];
 
@@ -375,7 +377,7 @@ export default {
 
 			// Total size of all segments; we set this later, after loading the data
 			let root = d3.hierarchy(json)
-			const partition = this.partition(root)
+			let partition = this.partition(root)
 
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition)
@@ -528,18 +530,15 @@ export default {
 					gradients = this.$store.callsites['ensemble'][node_data.name]['gradients'][this.$store.selectedMetric]['hist']
 				}
 
-				console.log(mean)
-
 				let grid = gradients.x
 				let vals = gradients.y
 
 				let targetPos = 0
-				console.log(node_data)
-				let binWidth = this.width / this.$store.selectedBinCount
+				let binWidth = (this.nodes[i].x1 - this.nodes[i].x0) / (this.$store.selectedBinCount - 1)
 
 				for (let idx = 0; idx < grid.length; idx += 1) {
 					if (grid[idx] > mean) {
-						targetPos = idx
+						targetPos = idx - 1
 						break
 					}
 					if (idx == grid.length - 1) {
@@ -547,16 +546,18 @@ export default {
 					}
 				}
 
-				let x = binWidth * targetPos
+				let x = this.nodes[i].x0 + binWidth * targetPos
+
+				console.log(this.nodes[i], x)
 
 	 			this.hierarchySVG
 					.append('line')
 					.attrs({
 						"class": 'hierarchy-targetLines',
 						"x1": x,
-						"y1": this.nodeHeight * (this.nodes[i].depth),
+						"y1": (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth),
 						"x2": x,
-						"y2": this.nodeHeight * (this.nodes[i].depth + 1),
+						"y2": (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth + 1),
 						"stroke-width": 5,
 						"stroke": this.$store.color.target
 					})
@@ -593,27 +594,26 @@ export default {
 				})
 				.attr('y', (d) => {
 					if (this.selectedDirection == 'LR') {
-						return d.x0 + this.offset;
+						return d.x0 + this.offset + this.stroke_width
 					}
-					return d.y0;
+					return d.y0 // + this.offset + this.stroke_width
 				})
 				.attr('width', (d) => {
 					if (this.selectedDirection == 'LR') {
 						if (Number.isNaN(d.y1 - d.y0)) {
-							return this.width / d.data.length - this.offset
+							return this.width / d.data.length - this.offset - this.stroke_width
 						}
 						else {
-							return d.y1 - d.y0 - this.offset;
+							return d.y1 - d.y0 - this.offset - this.stroke_width
 						}
 					}
-					return d.x1 - d.x0 - this.offset;
+					return d.x1 - d.x0 - this.offset - this.stroke_width
 				})
 				.attr('height', (d) => {
 					if (this.selectedDirection == 'LR') {
 						return d.x1 - d.x0 - this.offset;
 					}
-					self.nodeHeight = d.y1 - d.y0 - this.offset
-					return d.y1 - d.y0 - this.offset;
+					return d.y1 - d.y0 //- this.offset - this.stroke_width;
 				})
 				.style("fill", (d, i) => {
 					if (d.data.value == undefined) {
@@ -638,7 +638,7 @@ export default {
 					}
 					return d3.rgb(this.$store.color.getColorByValue(runtime));
 				})
-				.style('stroke-width', d => '4px')
+				.style('stroke-width', this.stroke_width)
 				.style('opacity', (d) => {
 					if (d.exit) {
 						return 0.5;
@@ -704,7 +704,6 @@ export default {
 					}
 
 					var textSize = this.textSize(name)['width'];
-					console.log(textSize, d.x1 - d.x0)
 					if (textSize < d.x1 - d.x0) {
 						return name;
 					} else {

@@ -558,10 +558,10 @@ export default {
             let vals = gradients.y
 
             let targetPos = 0
-            let binWidth = node_data.height / this.$store.selectedBinCount
+            let binWidth = node_data.height / (this.$store.selectedBinCount - 1)
 
             for (let idx = 0; idx < grid.length; idx += 1) {
-                let y = binWidth * (idx + 1)
+                let y = binWidth * (idx)
 
                 d3.selectAll('.ensemble-edge')
                     .style('opacity', 0.5)
@@ -576,7 +576,7 @@ export default {
                         .attr("y1", y)
                         .attr("x2", this.nodeWidth)
                         .attr("y2", y)
-                        .attr("stroke-width", 1.0)
+                        .attr("stroke-width", 1.5)
                         .attr('opacity', 0.3)
                         .attr("stroke", '#202020')
 
@@ -585,8 +585,8 @@ export default {
                         .append('text')
                         .attr("class", 'gradientGuidesText-' + type)
                         .attr("id", 'line-2-' + node_data['client_idx'])
-                        .attr("x", -40)
-                        .attr("y", y + binWidth / 2)
+                        .attr("x", -50)
+                        .attr("y", y)
                         .attr('fill', 'black')
                         .style('z-index', 100)
                         .style('font-size', '14px')
@@ -599,7 +599,7 @@ export default {
                             .attr("class", 'gradientGuidesText-' + type)
                             .attr("id", 'line-2-' + node_data['client_idx'])
                             .attr("x", this.nodeWidth + 10)
-                            .attr("y", y + binWidth / 2)
+                            .attr("y", y)
                             .attr('fill', 'black')
                             .style('z-index', 100)
                             .style('font-size', '14px')
@@ -613,7 +613,7 @@ export default {
                         .attr("class", 'gradientGuidesText-' + type)
                         .attr("id", 'line-2-' + node_data['client_idx'])
                         .attr("x", this.nodeWidth + 10)
-                        .attr("y", y + binWidth / 2)
+                        .attr("y", y)
                         .attr('fill', 'black')
                         .style('z-index', 100)
                         .style('font-size', '14px')
