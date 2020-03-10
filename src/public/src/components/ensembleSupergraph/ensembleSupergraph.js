@@ -49,6 +49,7 @@ export default {
 
 	sockets: {
 		ensemble_supergraph(data) {
+			console.log(data)
 			data = JSON.parse(data)
 			console.log("Data: ", data)
 			this.render(data)
@@ -100,8 +101,8 @@ export default {
 
 			this.$store.graph = this.graph
 			this.$refs.EnsembleColorMap.init()
-			this.$refs.EnsembleNodes.init(this.$store.graph, this.view)
 			this.$refs.EnsembleEdges.init(this.$store.graph, this.view)
+			this.$refs.EnsembleNodes.init(this.$store.graph, this.view)
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view)
 
 			if (this.debug) {
