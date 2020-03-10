@@ -101,8 +101,8 @@ class Auxiliary:
             histogram_inc_array = np.concatenate((time_inc_target_arr, time_inc_ensemble_arr), axis=0)
             histogram_exc_array = np.concatenate((time_exc_target_arr, time_exc_ensemble_arr), axis=0)
 
-            hist_inc_grid = self.histogram(histogram_inc_array)
-            hist_exc_grid = self.histogram(histogram_exc_array)
+            hist_inc_grid = self.histogram(time_inc_target_arr)
+            hist_exc_grid = self.histogram(time_exc_target_arr)
 
         with self.timer.phase("Calculate Gradients"):
             if(data_type == 'callsite'):
@@ -118,6 +118,7 @@ class Auxiliary:
                 "time (inc)": group_df['time (inc)'].tolist(),
                 "time": group_df['time'].tolist(),
                 "rank": group_df['rank'].tolist(),
+                "names": group_df['name'].tolist(),
                 "id": 'node-' + str(group_df['nid'].tolist()[0]),
                 "sorted_time (inc)": group_df['time (inc)'].sort_values().tolist(),
                 "sorted_time": group_df['time'].sort_values().tolist(),
@@ -129,14 +130,14 @@ class Auxiliary:
                 "min_time": group_df['time'].min(),
                 "variance_time": np.var(np.array(group_df['time'])),
                 "variance_time (inc)": np.var(np.array(group_df['time (inc)'])),
-                # "imbalance_perc_inclusive": group_df['imbalance_perc_inclusive'].tolist()[0],
-                # "imbalance_perc_exclusive": group_df['imbalance_perc_exclusive'].tolist()[0],
+                "imbalance_perc_inclusive": group_df['imbalance_perc_inclusive'].tolist()[0],
+                "imbalance_perc_exclusive": group_df['imbalance_perc_exclusive'].tolist()[0],
                 # "std_deviation_inclusive": group_df['std_deviation_inclusive'].tolist()[0],
                 # "std_deviation_exclusive": group_df['std_deviation_exclusive'].tolist()[0],
-                # "skewness_inclusive": group_df['skewness_inclusive'].tolist()[0],
-                # "skewness_exclusive": group_df['skewness_exclusive'].tolist()[0],
-                # "kurtosis_inclusive": group_df['kurtosis_inclusive'].tolist()[0],
-                # "kurtosis_exclusive": group_df['kurtosis_exclusive'].tolist()[0],
+                "skewness_inclusive": group_df['skewness_inclusive'].tolist()[0],
+                "skewness_exclusive": group_df['skewness_exclusive'].tolist()[0],
+                "kurtosis_inclusive": group_df['kurtosis_inclusive'].tolist()[0],
+                "kurtosis_exclusive": group_df['kurtosis_exclusive'].tolist()[0],
                 "dataset": group_df['dataset'].tolist()[0],
                 "module": group_df['module'].tolist()[0],
                 "hist_time (inc)": {
