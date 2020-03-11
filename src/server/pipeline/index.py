@@ -160,7 +160,7 @@ class Pipeline:
             log.info("Done with Ensemb;le supergraph.")
             log.info(f"Number of callsites in dataframe: {len(state.df['name'].unique())}")
             log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
-            log.info(f"Number of modules in the graph: {len(state.df['module'].unique())}")
+            log.info(f"Modules in the graph: {state.df['module'].unique()}")
         return state
 
     def write_callsite_information(self, states):
@@ -256,8 +256,7 @@ class Pipeline:
         return state
 
     # Read the ensemble graph and dataframe.
-    def read_ensemble_gf(self):
-        name = "ensemble"
+    def read_ensemble_gf(self, name):
         log.info(f"[Process] Reading the union dataframe and graph : {name}")
         state = State(name)
         dirname = self.config.processed_path
