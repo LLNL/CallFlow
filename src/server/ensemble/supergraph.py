@@ -19,8 +19,10 @@ class SuperGraph(nx.Graph):
         self.timer = Timer()
 
         # Store the ensemble graph (Since it is already processed.)
-        self.state = self.states['ensemble']
-        self.ensemble_g = self.states['ensemble'].g
+        self.state_entire = self.states['ensemble_entire']
+        self.state_filter = self.states['ensemble_filter']
+        self.state_group = self.states['ensemble_group']
+        self.ensemble_g = self.state_group.g
         self.node_list = np.array(list(self.ensemble_g.nodes()))
 
         # Path type to group by
@@ -28,12 +30,13 @@ class SuperGraph(nx.Graph):
         self.path = path
         self.group_by = group_by_attr
 
-        self.df = self.state.df
-
+        self.entire_df = self.state_entire.df
+        self.group_df = self.state_group.df
         # Columns to consider.
         # TODO: Generalize it either all columns or let user specify the value using config.json
         self.columns = [
             "time (inc)",
+            "module",
             # "group_path",
             "name",
             "time",
@@ -46,11 +49,11 @@ class SuperGraph(nx.Graph):
 
         # Store all the names of runs in self.runs.
         # TODO: Change name in the df from 'dataset' to 'run'
-        self.runs = self.df["dataset"].unique()
+        self.runs = self.entire_df["dataset"].unique()
 
         with self.timer.phase("Construct Graph"):
             if construct_graph:
-                print("Creating a Graph for {0}.".format(self.state.name))
+                print("Creating a Graph for {0}.".format(self.state_group.name))
                 self.mapper = {}
                 self.g = nx.DiGraph()
                 self.add_paths(path)
@@ -114,9 +117,11 @@ class SuperGraph(nx.Graph):
 
 
     def add_paths(self, path):
-        paths = self.df[path].unique()
+        paths = self.group_df[path].unique()
+        print(paths)
         for idx, path_str in enumerate(paths):
             path_list = self.rename_cycle_path(path_str)
+            print(path_list)
             if(len(path_list) >= 2):
                 source_module = path_list[-2]['module']
                 target_module = path_list[-1]['module']
@@ -127,10 +132,35 @@ class SuperGraph(nx.Graph):
                     #     "source_callsite": source_name,
                     #     "target_callsite": target_name
                     # })
+                print(source_module, target_module)
                 self.g.add_edge(source_module, target_module, attr_dict={
                     "source_callsite": source_name,
                     "target_callsite": target_name
                 })
+
+    def add_paths(self, path):
+        paths = self.group_df[path].unique()
+        for idx, path_str in enumerate(paths):
+            path_list = self.rename_cycle_path(path_str)
+
+            for callsite_idx, callsite in enumerate(path_list):
+                if callsite_idx != len(path_list) - 1:
+                    source = path_list[callsite_idx]
+                    target = path_list[callsite_idx + 1]
+
+                    if(not self.g.has_edge(source['module'], target['module'])):
+                        source_module = source['module']
+                        target_module = target['module']
+
+                        source_name = source['callsite']
+                        target_name = target['callsite']
+
+                        print(source_module, target_module)
+                        self.g.add_edge(source_module, target_module, attr_dict={
+                            "source_callsite": source_name,
+                            "target_callsite": target_name
+                        })
+
 
     def add_node_attributes(self):
         ensemble_mapping = self.ensemble_map(self.g.nodes())
@@ -169,30 +199,6 @@ class SuperGraph(nx.Graph):
                 ret[edge_with_module] += 1
         return ret
 
-    def add_union_node_attributes(self):
-        for node in self.R.nodes(data=True):
-            node_name = node[0]
-            node_data = node[1]
-            max_inc_time = 0
-            max_exc_time = 0
-            self.R.nodes[node_name]["ensemble"] = {}
-            for dataset in node_data:
-                for idx, key in enumerate(node_data[dataset]):
-                    if key == "name":
-                        self.R.nodes[node_name]["union"]["name"] = node_data[dataset][
-                            key
-                        ]
-                    elif key == "time (inc)":
-                        max_inc_time = max(max_inc_time, node_data[dataset][key])
-                    elif key == "time":
-                        max_exc_time = max(max_exc_time, node_data[dataset][key])
-                    elif key == "entry_functions":
-                        entry_functions = node_data[dataset][key]
-
-            self.R.nodes[node_name]["ensemble"]["time (inc)"] = max_inc_time
-            self.R.nodes[node_name]["ensemble"]["time"] = max_exc_time
-            self.R.nodes[node_name]["ensemble"]["entry_functions"] = entry_functions
-
     def tailhead(self, edge):
         return (edge[0], edge[1])
 
@@ -224,10 +230,10 @@ class SuperGraph(nx.Graph):
             else:
                 target_module = edge[1]
 
-            source_inc = self.df.loc[(self.df["module"] == source_module)][
+            source_inc = self.entire_df.loc[(self.entire_df["module"] == source_module)][
                 "time (inc)"
             ].max()
-            target_inc = self.df.loc[(self.df["module"] == target_module)][
+            target_inc = self.entire_df.loc[(self.entire_df["module"] == target_module)][
                 "time (inc)"
             ].max()
 
@@ -268,7 +274,7 @@ class SuperGraph(nx.Graph):
                 node_name = node
 
             # Get their dataframe
-            node_df = self.df.loc[self.df["module"] == node_name]
+            node_df = self.entire_df.loc[self.entire_df["module"] == node_name]
 
             for column in ensemble_columns:
                 if column not in ret:
@@ -335,8 +341,8 @@ class SuperGraph(nx.Graph):
             if node not in ret:
                 ret[node] = {}
 
-            node_df = self.df.loc[
-                (self.df["module"] == node_name) & (self.df["dataset"] == dataset)
+            node_df = self.entire_df.loc[
+                (self.entire_df["module"] == node_name) & (self.entire_df["dataset"] == dataset)
             ]
 
             for column in self.columns:

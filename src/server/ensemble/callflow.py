@@ -69,16 +69,17 @@ class EnsembleCallFlow:
             states[dataset_name] = self.pipeline.group(states[dataset_name], "module")
             self.pipeline.write_dataset_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
             # states[dataset_name] = self.pipeline.filterNetworkX(states, dataset_name, self.config.filter_perc)
-            # self.pipeline.write_hatchet_graph(states, dataset_name)
+            self.pipeline.write_hatchet_graph(states, dataset_name)
 
-        # for idx, dataset_name in enumerate(datasets):
-        #     states[dataset_name] = self.pipeline.read_dataset_gf(dataset_name)
+        for idx, dataset_name in enumerate(datasets):
+            states[dataset_name] = self.pipeline.read_dataset_gf(dataset_name)
 
         states["ensemble_entire"] = self.pipeline.union(states)
         self.pipeline.write_ensemble_gf(states, "ensemble_entire")
         states["ensemble_filter"] = self.pipeline.filterNetworkX(states['ensemble_entire'], self.config.filter_perc)
-        states["ensemble"] = self.pipeline.ensemble_group(states, "module")
-        self.pipeline.write_ensemble_gf(states, "ensemble")
+        self.pipeline.write_ensemble_gf(states, "ensemble_filter")
+        states["ensemble_group"] = self.pipeline.ensemble_group(states, "module")
+        self.pipeline.write_ensemble_gf(states, "ensemble_group")
         # self.pipeline.write_callsite_information(states)
 
         # similarities = self.pipeline.deltaconSimilarity(datasets, states, "ensemble")
@@ -87,7 +88,9 @@ class EnsembleCallFlow:
 
     def readState(self, datasets):
         states = {}
-        states["ensemble"] = self.pipeline.read_ensemble_gf()
+        states["ensemble_entire"] = self.pipeline.read_ensemble_gf('ensemble_entire')
+        states["ensemble_filter"] = self.pipeline.read_ensemble_gf('ensemble_filter')
+        states["ensemble_group"] = self.pipeline.read_ensemble_gf('ensemble_group')
         for idx, dataset in enumerate(datasets):
             states[dataset] = self.pipeline.read_dataset_gf(dataset)
         return states
@@ -150,10 +153,10 @@ class EnsembleCallFlow:
             return nx.g
 
         elif action_name == "supergraph":
-            self.states['ensemble'].g = SuperGraph(
+            self.states['ensemble_group'].g = SuperGraph(
                 self.states, "group_path", construct_graph=True, add_data=True
             ).g
-            return self.states['ensemble'].g
+            return self.states['ensemble_group'].g
 
         elif action_name == "scatterplot":
             if action["plot"] == "bland-altman":
@@ -191,7 +194,7 @@ class EnsembleCallFlow:
             return self.similarities
 
         elif action_name == "hierarchy":
-            mH = ModuleHierarchy(self.states["ensemble"], action["module"])
+            mH = ModuleHierarchy(self.states["ensemble_entire"], action["module"])
             return mH.result
 
         elif action_name == "projection":
