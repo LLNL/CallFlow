@@ -6,7 +6,7 @@ from utils.logger import log
 from ast import literal_eval as make_tuple
 import math
 from networkx.readwrite import json_graph
-
+from utils.timer import Timer
 
 class ModuleHierarchy:
     def __init__(self, state, module):
@@ -16,7 +16,9 @@ class ModuleHierarchy:
         self.module = module
 
         # Create the Super node's hierarchy.
-        self.hierarchy = nx.Graph()
+        self.hierarchy = nx.DiGraph()
+        self.timer = Timer()
+
         self.result = self.run()
 
     def run_graph(self):
@@ -85,15 +87,15 @@ class ModuleHierarchy:
 
     def add_node_attributes(self):
         # time_mapping = self.generic_map(self.hierarchy.nodes(), 'time (inc)')
-        mapper = self.generic_map(self.hierarchy.nodes(), "time (inc)")
+        self.mapper = self.generic_map(self.hierarchy.nodes(), "time (inc)")
 
         nx.set_node_attributes(
-            self.hierarchy, name="time (inc)", values=mapper["time (inc)"]
+            self.hierarchy, name="time (inc)", values=self.mapper["time (inc)"]
         )
-        nx.set_node_attributes(self.hierarchy, name="time", values=mapper["time"])
+        nx.set_node_attributes(self.hierarchy, name="time", values=self.mapper["time"])
         # nx.set_node_attributes(self.hierarchy, name='imbalance_perc', values=mapper['imbalance_perc'])
         nx.set_node_attributes(
-            self.hierarchy, name="component_path", values=mapper["component_path"]
+            self.hierarchy, name="component_path", values=self.mapper["component_path"]
         )
 
     # instead of nid, get by module. nid seems very vulnerable rn.
@@ -104,64 +106,70 @@ class ModuleHierarchy:
         if "component_path" not in self.df.columns:
             utils.debug("Error: Component path not defined in the df")
 
-        self.add_paths(node_paths, "component_path")
-        self.add_node_attributes()
 
-        paths = []
-        existing_nodes = {}
-        for idx, node in enumerate(self.hierarchy.nodes()):
-            print(node)
-            if node not in existing_nodes:
-                if "=" in node:
-                    split = node.split("=")
-                    module = split[0]
-                    func = split[1]
-                    root = func
-                    path = make_tuple(
-                        self.df.loc[self.df["name"] == func]["component_path"].unique()[0]
-                    )
-                    run = self.df.loc[self.df['name'] == func]['dataset'].unique()
-                else:
-                    func = node
-                    if(func == self.module):
-                        df = self.df.loc[self.df['module'] == func]
-                    else:
-                        df = self.df.loc[self.df["name"] == func]
+        with self.timer.phase("Add paths"):
+            self.add_paths(node_paths, "component_path")
 
-                    path = df['component_path'].unique()[0]
-                    level = df['component_level'].unique()[0]
+        print(self.hierarchy.nodes())
+        # with self.timer.phase("Add attributes"):
+        #     self.add_node_attributes()
 
-                    run = df['dataset'].unique()
+        return self.hierarchy
 
-                    if type(path) == str:
-                        path_tuple = make_tuple(path)
-                    else:
-                        path_tuple = path
+        # paths = []
+        # existing_nodes = {}
+        # for idx, node in enumerate(self.hierarchy.nodes()):
+        #     print(node)
+        #     if node not in existing_nodes:
+        #         if "=" in node:
+        #             split = node.split("=")
+        #             module = split[0]
+        #             func = split[1]
+        #             root = func
+        #             path = make_tuple(
+        #                 self.df.loc[self.df["name"] == func]["component_path"].unique()[0]
+        #             )
+        #             run = self.df.loc[self.df['name'] == func]['dataset'].unique()
+        #         else:
+        #             func = node
+        #             if(func == self.module):
+        #                 df = self.df.loc[self.df['module'] == func]
+        #             else:
+        #                 df = self.df.loc[self.df["name"] == func]
 
-                    if(func == self.module):
-                        path_tuple = (self.module)
-                        # paths.append({
-                        #     "name": func,
-                        #     "path": make_tuple(path_tuple),
-                        #     "time (inc)": df["time (inc)"].mean(),
-                        #     "time": df["time"].mean(),
-                        #     "level": int(df["component_level"].unique()[0]) - 1,
-                        #     "run": df['dataset'].unique()
-                        # })
-                    else:
-                        paths.append({
-                            "name": func,
-                            "path": path_tuple,
-                            "time (inc)": df["time (inc)"].mean(),
-                            "time": df["time"].mean(),
-                            "level": int(df["component_level"].unique()[0]) - 1,
-                            "run": df['dataset'].unique()
-                        })
+        #             path = df['component_path'].unique()[0]
+        #             level = df['component_level'].unique()[0]
 
-                existing_nodes[node] = True
+        #             run = df['dataset'].unique()
 
-        paths_df = pd.DataFrame(paths)
-        paths_df.to_csv('/home/vidi/Work/llnl/CallFlow/src/server/hierarchy.csv')
-        return {
-            "data": paths_df.to_json(orient="columns"),
-        }
+        #             if type(path) == str:
+        #                 path_tuple = make_tuple(path)
+        #             else:
+        #                 path_tuple = path
+
+        #             if(func == self.module):
+        #                 path_tuple = (self.module)
+        #                 # paths.append({
+        #                 #     "name": func,
+        #                 #     "path": make_tuple(path_tuple),
+        #                 #     "time (inc)": df["time (inc)"].mean(),
+        #                 #     "time": df["time"].mean(),
+        #                 #     "level": int(df["component_level"].unique()[0]) - 1,
+        #                 #     "run": df['dataset'].unique()
+        #                 # })
+        #             else:
+        #                 paths.append({
+        #                     "name": func,
+        #                     "path": path_tuple,
+        #                     "time (inc)": df["time (inc)"].mean(),
+        #                     "time": df["time"].mean(),
+        #                     "level": int(df["component_level"].unique()[0]) - 1,
+        #                     "run": df['dataset'].unique()
+        #                 })
+
+        #         existing_nodes[node] = True
+
+        # paths_df = pd.DataFrame(paths)
+        # return {
+        #     "data": paths_df.to_json(orient="columns"),
+        # }
