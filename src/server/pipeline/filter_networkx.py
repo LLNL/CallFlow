@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 from utils.logger import log
-
+from ast import literal_eval as make_list\
 
 class FilterNetworkX:
     def __init__(self, state):
@@ -93,6 +93,7 @@ class FilterNetworkX:
 
         for callsite in callsites:
             path = df.loc[df['name'] == callsite]['path'].tolist()[0]
+            path = make_list(path)
             # print(self.findPaths(g, callsite, 10))
             ret.add_path(path)
 
