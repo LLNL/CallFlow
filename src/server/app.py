@@ -312,8 +312,8 @@ class App:
                     "datasets": datasets}
             )
             result = json_graph.node_link_data(nx_graph)
-            result = json.dumps(result)
-            emit("ensemble_supergraph", result, json=True)
+            json_result = json.dumps(result)
+            emit("ensemble_supergraph", json_result, json=True)
 
         @sockets.on("ensemble_similarity", namespace="/")
         def ensemble_similarity(data):
@@ -334,14 +334,17 @@ class App:
         def module_hierarchy(data):
             if self.debug:
                 self.print("Topology of the module", data)
-            result = self.callflow.request(
+            hierarchy_graph = self.callflow.request(
                 {
                     "name": "hierarchy",
                     "datasets": data["datasets"],
                     "module": data["module"],
                 }
             )
-            emit("module_hierarchy", result, json=True)
+            print(hierarchy_graph.nodes())
+            result = json_graph.tree_data(hierarchy_graph, root=data['module'])
+            json_result = json.dumps(result)
+            emit("module_hierarchy", json_result, json=True)
 
         @sockets.on("parameter_projection", namespace="/")
         def parameter_projection(data):

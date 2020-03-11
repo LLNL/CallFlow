@@ -277,7 +277,7 @@ export default {
 			let current_max_inclusive_time = 0.0
 			for (let dataset in this.$store.maxIncTime) {
 				if (this.$store.maxIncTime.hasOwnProperty(dataset)) {
-					if (dataset != 'ensemble') {
+					if (dataset.split('_')[0] != 'ensemble') {
 						if (current_max_inclusive_time < this.$store.maxIncTime[dataset]) {
 							current_max_inclusive_time = this.$store.maxIncTime[dataset]
 							max_inclusive_dataset = dataset
@@ -307,9 +307,9 @@ export default {
 			this.currentEnsembleSuperGraphComponents = [
 				this.$refs.EnsembleSuperGraph,
 				this.$refs.EnsembleHistogram,
-				this.$refs.EnsembleScatterplot,
-				this.$refs.AuxiliaryFunction,
-				this.$refs.ModuleHierarchy
+				// this.$refs.EnsembleScatterplot,
+				// this.$refs.AuxiliaryFunction,
+				// this.$refs.ModuleHierarchy
 			]
 		},
 

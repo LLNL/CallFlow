@@ -2,6 +2,8 @@ import tpl from '../../html/moduleHierarchy/index.html'
 import * as d3 from 'd3'
 import dropdown from 'vue-dropdowns'
 import ToolTipModuleHierarchy from './tooltip'
+import Queue from '../../core/queue';
+import { start } from 'repl';
 
 export default {
 	name: 'ModuleHierarchy',
@@ -64,16 +66,11 @@ export default {
 	},
 
 	sockets: {
-		hierarchy(data) {
-			data = JSON.parse(data['data'])
-			console.log("Module hierarchy: ", data)
-		},
-
 		module_hierarchy(data) {
 			console.log(data)
-			data = JSON.parse(data['data'])
+			data = JSON.parse(data)
 			console.log("Module hierarchy: ", data)
-			this.update_from_df(data)
+			this.update_from_graph(data)
 		},
 
 		level_change(data) {
@@ -175,6 +172,54 @@ export default {
 				}
 			}
 			const json = this.buildHierarchy(this.path_hierarchy)
+			this.drawIcicles(json)
+		},
+
+		bfs(graph) {
+			const vertexQueue = new Queue();
+
+			// Do initial queue setup.
+			let startVertex = graph
+
+			let module = startVertex.id
+			let moduleData = this.$store.modules['ensemble'][module]
+
+			startVertex.data = moduleData
+
+			vertexQueue.enqueue(startVertex);
+
+			let previousVertex = null;
+
+			// Traverse all vertices from the queue.
+			while (!vertexQueue.isEmpty()) {
+				const currentVertex = vertexQueue.dequeue();
+
+				let callsite = currentVertex.id
+				let callsiteData = this.$store.callsites['ensemble'][callsite]
+
+				currentVertex.data = callsiteData
+
+				console.log(callsite, callsiteData)
+				if (currentVertex.hasOwnProperty('children')) {
+					// Add all neighbors to the queue for future traversals.
+					currentVertex['children'].forEach((nextVertex) => {
+						// if (callbacks.allowTraversal({ previousVertex, currentVertex, nextVertex })) {
+						vertexQueue.enqueue(nextVertex);
+						// }
+					});
+
+				}
+
+				// Memorize current vertex before next loop.
+				previousVertex = currentVertex;
+			}
+		},
+
+		update_from_graph(json) {
+			let thismodule = json.id
+			let module_data = this.$store.modules['ensemble'][thismodule]
+
+			this.bfs(json);
 			this.drawIcicles(json)
 		},
 
@@ -307,10 +352,10 @@ export default {
 			let self = this
 			return function (node) {
 				if (node.children) {
-					if(self.widthType == 'Exclusive'){
-						self.diceByValue(node, node.x0, dy * (node.depth + 1)/n, node.x1, dy * (node.depth + 2)/n)
+					if (self.widthType == 'Exclusive') {
+						self.diceByValue(node, node.x0, dy * (node.depth + 1) / n, node.x1, dy * (node.depth + 2) / n)
 					}
-					else if(self.widthType == 'Uniform'){
+					else if (self.widthType == 'Uniform') {
 						self.dice(node, node.x0, dy * (node.depth + 1) / n, node.x1, dy * (node.depth + 2) / n);
 					}
 				}
@@ -356,7 +401,7 @@ export default {
 		diceByValue(parent, x0, y0, x1, y1) {
 			let value = 1
 			console.log(parent)
-			if(parent.parent == null){
+			if (parent.parent == null) {
 				console.log(parent)
 				value = this.$store.modules['ensemble'][parent.data.name]['max_time']
 			}
@@ -418,7 +463,7 @@ export default {
 			this.setupCallsiteMeanGradients()
 			this.addNodes()
 			this.addText()
-			this.drawTargetLine()
+			// this.drawTargetLine()
 
 			// Add the mouseleave handler to the bounding rect.
 			d3.select('#container').on('mouseleave', this.mouseleave);
@@ -545,6 +590,7 @@ export default {
 		drawTargetLine() {
 			let dataset = this.$store.selectedTargetDataset
 
+			console.log(dataset)
 			let data = this.$store.modules
 
 			for (let i = 0; i < this.nodes.length; i++) {
@@ -553,13 +599,12 @@ export default {
 				let mean = 0
 				let gradients = []
 				if (this.nodes[i].depth == 0) {
-					mean = this.$store.modules[dataset][node_data.name]['gradients'][this.$store.selectedMetric]['dataset'][dataset]
-					gradients = this.$store.modules['ensemble'][node_data.name]['gradients'][this.$store.selectedMetric]['hist']
+					mean = this.$store.modules[dataset][node_data.id]['gradients'][this.$store.selectedMetric]['dataset'][dataset]
+					gradients = this.$store.modules['ensemble'][node_data.id]['gradients'][this.$store.selectedMetric]['hist']
 				}
 				else {
-					console.log(node_data.name)
-					mean = this.$store.callsites[dataset][node_data.name]['gradients'][this.$store.selectedMetric]['dataset'][dataset]
-					gradients = this.$store.callsites['ensemble'][node_data.name]['gradients'][this.$store.selectedMetric]['hist']
+					mean = this.$store.callsites[dataset][node_data.id]['gradients'][this.$store.selectedMetric]['dataset'][dataset]
+					gradients = this.$store.callsites['ensemble'][node_data.id]['gradients'][this.$store.selectedMetric]['hist']
 				}
 
 				let grid = gradients.x
@@ -604,14 +649,7 @@ export default {
 				.append('rect')
 				.attr('class', 'icicleNode')
 				.attr('id', (d) => {
-					let name
-					if (d.data.name.indexOf('=') === -1) {
-						name = 'hierarchy-callsite-' + d.data.name
-					}
-					else {
-						name = 'hierarchy-callsite-' + d.data.name.split('=')[1]
-					}
-					return name
+					return d.data.id
 				})
 				.attr('x', (d) => {
 					if (this.selectedDirection == 'LR') {
@@ -647,25 +685,21 @@ export default {
 				})
 				.style("fill", (d, i) => {
 					if (d.data.value == undefined) {
-						return "url(#mean-module-gradient-" + d.data.name + ")"
+						return "url(#mean-module-gradient-" + d.data.id + ")"
 					}
-					return "url(#mean-callsite-gradient-" + d.data.name + ")"
+					return "url(#mean-callsite-gradient-" + d.data.id + ")"
 				})
 				.style('stroke', (d) => {
 					let metric_attr = ''
 					let runtime = 0
 					if (this.$store.selectedMetric == 'Inclusive') {
 						metric_attr = 'mean_time (inc)'
-						runtime = d.data.inclusive
 					}
 					else if (this.$store.selectedMetric == 'Exclusive') {
 						metric_attr = 'mean_time'
-						runtime = d.data.exclusive
+					}
+					runtime = d.data.metric_attr
 
-					}
-					if (runtime == undefined) {
-						runtime = this.$store.modules[this.$store.selectedTargetDataset][d.data.name][metric_attr]
-					}
 					return d3.rgb(this.$store.color.getColorByValue(runtime));
 				})
 				.style('stroke-width', this.stroke_width)
@@ -725,7 +759,7 @@ export default {
 					if (d.y1 - d.y0 < 10 || d.x1 - d.x0 < 50) {
 						return '';
 					}
-					let name = d.data.name
+					let name = d.data.id
 					name = name.replace(/<unknown procedure>/g, 'proc ');
 					name = name.replace(/MPI_/g, '');
 
