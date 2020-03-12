@@ -21,7 +21,8 @@ export default {
         graph: null,
         nidNameMap: {},
         renderZeroLine: {},
-        stroke_width: 7
+        stroke_width: 7,
+        intermediateColor: '#d9d9d9'
     }),
     sockets: {
         compare(data) {
@@ -186,6 +187,7 @@ export default {
             this.hist_min = 0
             this.hist_max = 0
             for (let node of nodes) {
+                console.log(node)
                 this.hist_min = Math.min(this.hist_min, data[node.module]['gradients'][this.$store.selectedMetric]['hist']['y_min'])
                 this.hist_max = Math.max(this.hist_max, data[node.module]['gradients'][this.$store.selectedMetric]['hist']['y_max'])
             }
@@ -344,10 +346,10 @@ export default {
                 })
                 .style("fill", (d, i) => {
                     if (d.id.split('_')[0] == "intermediate") {
-                        return this.$store.color.ensemble
+                        // return this.$store.color.ensemble
+                        return this.intermediateColor
                     }
                     else {
-                        console.log(d.client_idx)
                         return "url(#mean-gradient" + d.client_idx + ")"
                     }
                 })
@@ -558,7 +560,7 @@ export default {
             let vals = gradients.y
 
             let targetPos = 0
-            let binWidth = node_data.height / (this.$store.selectedBinCount - 1)
+            let binWidth = node_data.height / (grid.length)
 
             for (let idx = 0; idx < grid.length; idx += 1) {
                 let y = binWidth * (idx)
@@ -566,7 +568,7 @@ export default {
                 d3.selectAll('.ensemble-edge')
                     .style('opacity', 0.5)
 
-                if (vals[idx] != 0) {
+                if (true) {
                     // For drawing the guide lines that have the value.
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('line')
@@ -579,17 +581,20 @@ export default {
                         .attr("stroke-width", 1.5)
                         .attr('opacity', 0.3)
                         .attr("stroke", '#202020')
+                }
 
+                let fontSize = 14
+                if(vals[idx] != 0){
                     // For placing the run count values.
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('text')
                         .attr("class", 'gradientGuidesText-' + type)
                         .attr("id", 'line-2-' + node_data['client_idx'])
                         .attr("x", -50)
-                        .attr("y", y)
+                        .attr("y", y + fontSize/2)
                         .attr('fill', 'black')
                         .style('z-index', 100)
-                        .style('font-size', '14px')
+                        .style('font-size', fontSize + 'px')
                         .text(this.formatRunCounts(vals[idx]))
 
                     // For placing the runtime values.
@@ -599,7 +604,7 @@ export default {
                             .attr("class", 'gradientGuidesText-' + type)
                             .attr("id", 'line-2-' + node_data['client_idx'])
                             .attr("x", this.nodeWidth + 10)
-                            .attr("y", y)
+                            .attr("y", y + fontSize/2)
                             .attr('fill', 'black')
                             .style('z-index', 100)
                             .style('font-size', '14px')
@@ -646,7 +651,8 @@ export default {
                 })
                 .style('fill', (d) => {
                     if (d.id.split('_')[0] == "intermediate") {
-                        return this.$store.color.ensemble
+                        // return this.$store.color.ensemble
+                        return this.intermediateColor
                     }
                 })
                 .style('fill-opacity', (d) => {
@@ -659,7 +665,7 @@ export default {
                 })
                 .style("stroke", function (d) {
                     if (d.id.split('_')[0] == "intermediate") {
-                        return 'grey'
+                        return this.intermediateColor
                     }
                 })
                 .style('stroke-opacity', '0.0');

@@ -65,6 +65,8 @@ export default {
                 // .style('fill-opacity', (d) => {
                 //     return d.number_of_runs / this.$store.numOfRuns
                 // })
+
+                .style('opacity', 0.5)
                 .on("mouseover", function (d) {
                     d3.select(this).style("stroke-opacity", "1.0")
                     // self.clearEdgeLabels()
