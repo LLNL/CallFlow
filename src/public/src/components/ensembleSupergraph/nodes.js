@@ -527,19 +527,16 @@ export default {
                         }
                     }
 
-                    let x1 = node_data.x - this.nodeWidth
-                    let x2 = node_data.x
-                    let y1 = 0
-                    let y2 = binWidth * targetPos
+                    let y = binWidth * targetPos
 
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('line')
                         .attr("class", 'targetLines')
                         .attr("id", 'line-2-' + dataset + '-' + node_data['client_idx'])
                         .attr("x1", 0)
-                        .attr("y1", y2)
+                        .attr("y1", y)
                         .attr("x2", this.nodeWidth)
-                        .attr("y2", y2)
+                        .attr("y2", y)
                         .attr("stroke-width", 5)
                         .attr("stroke", this.$store.color.target)
                 }

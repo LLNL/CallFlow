@@ -198,7 +198,13 @@ class EnsembleCallFlow:
             return mH.result
 
         elif action_name == "projection":
-            result = RunProjection(self.states, self.similarities).result
+            self.similarities = {}
+            # dirname = self.config.callflow_dir
+            # name = self.config.runName
+            # similarity_filepath = dirname  + '/' + 'similarity.json'
+            # with open(similarity_filepath, 'r') as similarity_file:
+            #     self.similarities = json.load(similarity_file)
+            result = ParameterProjection(self.states, self.similarities, action['targetDataset']).result
             return result.to_json(orient="columns")
 
         elif action_name == "run-information":

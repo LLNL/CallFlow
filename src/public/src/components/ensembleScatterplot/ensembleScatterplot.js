@@ -137,8 +137,6 @@ export default {
 				}
 			}
 
-			console.log(mean_time, mean_time_inc)
-
 			let all_data = this.$store.modules['ensemble'][this.module]
 			let temp
 			if (this.$store.selectedScatterMode == 'mean') {
@@ -147,8 +145,6 @@ export default {
 			else if (this.$store.selectedScatterMode == 'all') {
 				temp = this.scatterAll(data['time'], data['time (inc)'])
 			}
-
-			console.log(temp)
 
 			this.xMin = temp[0]
 			this.yMin = temp[1]
@@ -335,12 +331,13 @@ export default {
 			var xAxis = d3.axisBottom(this.xScale)
 				.ticks(5)
 				.tickFormat((d, i) => {
-					let temp = d;
-					if (i % 2 == 0) {
-						let value = temp * 0.000001
-						return `${xFormat(value)}s`
-					}
-					return '';
+					// let temp = d;
+					// if (i % 2 == 0) {
+					// 	let value = temp * 0.000001
+					// 	return `${xFormat(value)}s`
+					// }
+					console.log(d)
+					return `${d}`;
 				});
 
 			this.svg.append('text')
@@ -450,7 +447,6 @@ export default {
 						'class': 'ensemble-dot',
 						'r': 5,
 						'cx': () => {
-							console.log(this.xScale(this.xArray[i].val), this.padding.left)
 							return this.xScale(this.xArray[i].val) + 3 * this.padding.left
 						},
 						'cy': () => {
