@@ -189,9 +189,6 @@
 				<splitpanes horizontal :splitpanes-size="25">
 					<!-- <span>
 						<RunInformation ref="RunInformation" />
-					</span>
-					<span>
-						<Projection ref="Projection" @compare="updateCompareMode" />
 					</span> -->
 					<span>
 						<ModuleHierarchy ref="ModuleHierarchy" />
@@ -216,6 +213,9 @@
 				<splitpanes horizontal :splitpanes-size="20">
 					<span>
 						<AuxiliaryFunction ref="AuxiliaryFunction" />
+					</span>
+					<span>
+						<ParameterProjection ref="ParameterProjection" @compare="updateCompareMode" />
 					</span>
 					<!-- <span>
 						<SimilarityMatrix ref="SimilarityMatrix" />

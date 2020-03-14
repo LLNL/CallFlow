@@ -48,7 +48,6 @@ class App:
         if (self.args.process):
             self.print("Pre-processing the datasets.")
             self.processPipeline()
-            self.create_dot_callflow_folder()
         else:
             self.renderPipeline(self.args.runName)
             self.create_socket_server()
@@ -65,6 +64,8 @@ class App:
         )
         self.config.process = self.args.process
         self.config.ensemble = self.args.ensemble
+
+        self.create_dot_callflow_folder()
 
         if(self.config.ensemble):
             self.callflow = EnsembleCallFlow(self.config)
@@ -144,6 +145,7 @@ class App:
 
         for dataset in self.config.datasets:
             dataset_dir = self.config.callflow_dir + "/" + dataset["name"]
+            print(dataset_dir)
             if not os.path.exists(dataset_dir):
                 if self.debug:
                     print(
@@ -341,7 +343,6 @@ class App:
                     "module": data["module"],
                 }
             )
-            print(hierarchy_graph.nodes())
             result = json_graph.tree_data(hierarchy_graph, root=data['module'])
             json_result = json.dumps(result)
             emit("module_hierarchy", json_result, json=True)
@@ -355,7 +356,8 @@ class App:
                 {
                     "name": "projection",
                     "datasets": data["datasets"],
-                    "algo": data["algo"],
+                    "targetDataset": data['targetDataset'],
+                    # "algo": data["algo"],
                 }
             )
             emit("parameter_projection", result, json=True)
