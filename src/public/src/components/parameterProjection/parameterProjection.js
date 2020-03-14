@@ -20,16 +20,17 @@ export default {
         yMax: 0,
         message: 'Parameter Projection',
         showMessage: false,
+        colorset: ['#FF7F00', '#984EA3', '#4daf4a']
     }),
     sockets: {
-        dist_projection(data) {
+        parameter_projection(data) {
             data = JSON.parse(data)
             console.log("Projections: ", data)
             this.visualize(data)
         }
     },
     mounted() {
-        this.id = 'dim-overview' + this._uid
+        this.id = 'parameter-projection-view'
         let self = this
         EventHandler.$on('highlight_dataset', (dataset) => {
             console.log("[Projection] Highlighting the dataset :", dataset)
@@ -43,19 +44,18 @@ export default {
             let toolbarHeight = document.getElementById('toolbar').clientHeight
 
             this.width = visContainer.clientWidth
-            this.height = (dashboardHeight - toolbarHeight) / 3 - 80
+            this.height = this.$store.componentHeight * 0.33
 
             this.padding = { left: 50, top: 0, right: 50, bottom: 30 }
             this.x = d3.scaleLinear().range([0, this.width]);
             this.y = d3.scaleLinear().range([this.height, 0]);
-            // this.d3zoom = d3.zoom()
-            //     .on("zoom", this.zoom())
+
             this.svg = d3.select('#' + this.id).append('svg')
                 .attrs({
                     width: this.width,
                     height: this.height,
                     transform: 'translate(0, 0)',
-                    id: 'projection-svg'
+                    id: 'parameter-projection-svg'
                 })
                 .style('stroke-width', 1)
                 .style('stroke', '#aaaaaa')
@@ -66,6 +66,12 @@ export default {
                 .duration(750);
 
             this.axis()
+
+            this.$socket.emit('parameter_projection', {
+				datasets: this.$store.runNames,
+                targetDataset: this.$store.selectedTargetDataset,
+				groupBy: 'module'
+			})
         },
 
         axis() {
@@ -159,12 +165,12 @@ export default {
                 .append('circle')
                 .attrs({
                     class: (d) => { return 'dot' + ' circle' + this.id },
-                    id: (d) => { return 'dot-' + self.$store.datasetMap[d[2]] },
+                    id: (d) => { console.log(d); return 'dot-' + this.$store.datasetMap[d[2]] },
                     r: (d) => {
                         return 6.0
                     },
                     'stroke-width': 2.0,
-                    fill: (d) => { return this.$store.colorset[d[4]] },
+                    fill: (d) => { return this.colorset[d[4]] },
                     cx: (d, i) => { return self.x(d[0]) },
                     cy: (d) => { return self.y(d[1]) },
                 })

@@ -27,7 +27,7 @@ import EnsembleHistogram from './ensembleHistogram/ensembleHistogram'
 import ModuleHierarchy from './moduleHierarchy/moduleHierarchy'
 import EnsembleScatterplot from './ensembleScatterplot/ensembleScatterplot'
 // import EnsembleDistribution from './ensembleDistribution/ensembleDistribution'
-// import ParameterProjection from './parameterProjection/parameterProjection'
+import ParameterProjection from './parameterProjection/parameterProjection'
 // import SimilarityMatrix from './similarityMatrix/similarityMatrix'
 
 import io from 'socket.io-client'
@@ -47,7 +47,7 @@ export default {
 		EnsembleSuperGraph,
 		EnsembleCCT,
 		// SimilarityMatrix,
-		// ParameterProjection,
+		ParameterProjection,
 		AuxiliaryFunction,
 		EnsembleHistogram,
 		EnsembleScatterplot,
@@ -81,7 +81,7 @@ export default {
 		selectedMetric: 'Exclusive',
 		runtimeColorMap: [],
 		distributionColorMap: [],
-		selectedRuntimeColorMap: "Greys",
+		selectedRuntimeColorMap: "PuBu",
 		selectedDistributionColorMap: "YlOrRd",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
 		selectedColorPoint: 9,
@@ -268,6 +268,11 @@ export default {
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
 			this.$store.nodeInfo = {}
 			this.$store.selectedMetric = this.selectedMetric
+
+			this.$store.datasetMap = this.$store.runNames.map((run, i) => "run-" + i)
+			console.log(this.$store.datasetMap)
+
+			this.$store.componentHeight = (window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight)
 		},
 
 
@@ -307,9 +312,10 @@ export default {
 			this.currentEnsembleSuperGraphComponents = [
 				this.$refs.EnsembleSuperGraph,
 				this.$refs.EnsembleHistogram,
-				// this.$refs.EnsembleScatterplot,
-				// this.$refs.AuxiliaryFunction,
-				// this.$refs.ModuleHierarchy
+				this.$refs.EnsembleScatterplot,
+				this.$refs.AuxiliaryFunction,
+				this.$refs.ModuleHierarchy,
+				this.$refs.ParameterProjection
 			]
 		},
 

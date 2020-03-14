@@ -90,6 +90,16 @@ export default {
             let inc_arr_target = target_data['sorted_time (inc)']
             let exc_arr_target = target_data['sorted_time']
 
+            // check if the target exists or not.
+            if(exc_arr == undefined){
+                exc_arr = []
+            }
+
+            if(exc_arr_target == undefined){
+                exc_arr_target = []
+            }
+
+
             if (this.$store.selectedMetric == 'Inclusive') {
                 this.raw_d = inc_arr
                 this.d = inc_arr.sort(d3.ascending)

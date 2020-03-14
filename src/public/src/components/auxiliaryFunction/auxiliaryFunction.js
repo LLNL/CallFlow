@@ -102,10 +102,11 @@ export default {
             this.footerHeight = document.getElementById('footer').clientHeight
 
             this.width = document.getElementById('auxiliary-function-overview').clientWidth
-            this.height = window.innerHeight - this.toolbarHeight - this.footerHeight
+            this.height = 0.66*this.$store.componentHeight
+            console.log(this.height)
             this.boxplotWidth = this.width - this.padding.left - this.padding.right
 
-            document.getElementById('auxiliary-function-overview').style.maxHeight =  this.height + "px"
+            document.getElementById('auxiliary-function-overview').style.maxHeight = this.height + "px"
             this.setInfo()
         },
 
@@ -116,8 +117,6 @@ export default {
         setInfo(){
             this.number_of_callsites = Object.keys(this.$store.callsites['ensemble']).length
             this.callsites = this.$store.callsites['ensemble']
-            console.log(this.callsites)
-            console.log("------------------------------------")
             this.selectedModule = this.$store.selectedModule
             this.selectedCallsite = this.$store.selectedCallsite
         },

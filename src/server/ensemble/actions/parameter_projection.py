@@ -23,13 +23,15 @@ from sklearn.cluster import KMeans
 from algorithm.k_medoids import KMedoids
 
 class ParameterProjection:
-    def __init__(self, states, similarities):
-        self.similarities = similarities
+    def __init__(self, states, similarities={}, targetDataset=''):
+        # self.similarities = similarities[targetDataset]
+        # self.datasetOrder = {k: idx for idx, (k, v) in enumerate(similarities.items())}
         self.states = states
         self.projection = 'MDS'
         # self.clustering = 'k_medoids'
         self.clustering = 'k_means'
         self.n_cluster = 3
+        self.targetDataset = targetDataset
         self.result = self.run()
 
     def add_df_params(self, state):
@@ -37,13 +39,17 @@ class ParameterProjection:
         ret['max_inclusive_time'] = state.df['time (inc)'].max()
         ret['max_exclusive_time'] = state.df['time'].max()
         ret['rank_count'] = len(state.df['rank'].unique())
-        ret['similarity'] = Similarity(state.g, self.states['ensemble'].g).result
+        # ret['similarity'] = self.similarities[self.datasetOrder[self.targetDataset]]
+        print(ret, state.df['rank'].unique())
         return ret
 
     def run(self):
+        rows = []
         for idx, state in enumerate(self.states):
-            if(state != 'ensemble'):
+            if(state.split('_')[0] != 'ensemble'):
+                print(state)
                 df_params = self.add_df_params(self.states[state])
+                rows.append(df_params)
                 # self.states[state].projection_data.update(df_params)
 
         row_list = []
@@ -51,13 +57,15 @@ class ParameterProjection:
             if(state != 'ensemble'):
                 row_list.append(self.states[state].projection_data)
 
-        df = pd.DataFrame(row_list)
+        df = pd.DataFrame(rows)
 
         # TODO: Remove all string columns from the dataframe.
         if 'dataset' in df.columns:
             print('Removing {0} column from the dataframe'.format('dataset'))
             df = df.drop(columns = ['dataset'])
         x = df.values #returns a numpy array
+
+        print(df)
 
         # Scale the values to value between 0 to 1
         min_max_scaler = preprocessing.MinMaxScaler()
@@ -72,9 +80,9 @@ class ParameterProjection:
         elif self.projection == 'TSNE':
             proj = TSNE(random_state=random_number).fit_transform(X)
 
-        datasets = [key for key in self.states.keys() if key != 'ensemble']
-        max_inclusive_time = [self.states[key].df['time (inc)'].max() for key in self.states.keys() if key != 'ensemble']
-        max_exclusive_time = [self.states[key].df['time'].max() for key in self.states.keys() if key != 'ensemble']
+        datasets = [key for key in self.states.keys() if key.split('_')[0] != 'ensemble']
+        max_inclusive_time = [self.states[key].df['time (inc)'].max() for key in self.states.keys() if key.split('_')[0] != 'ensemble']
+        max_exclusive_time = [self.states[key].df['time'].max() for key in self.states.keys() if key.split('_')[0] != 'ensemble']
 
         ret = pd.DataFrame(proj, columns=list('xy'))
         ret['dataset'] = datasets
