@@ -4,6 +4,7 @@ import dropdown from 'vue-dropdowns'
 import ToolTipModuleHierarchy from './tooltip'
 import Queue from '../../core/queue';
 import { start } from 'repl';
+import { throws } from 'assert';
 
 export default {
 	name: 'ModuleHierarchy',
@@ -53,7 +54,8 @@ export default {
 		message: 'Module Hierarchy',
 		offset: 4,
 		stroke_width: 4,
-		widthType: 'Uniform'
+		widthType: 'Uniform',
+		metric: '',
 	}),
 
 	watch: {
@@ -67,7 +69,6 @@ export default {
 
 	sockets: {
 		module_hierarchy(data) {
-			console.log(data)
 			data = JSON.parse(data)
 			console.log("Module hierarchy: ", data)
 			this.update_from_graph(data)
@@ -86,9 +87,15 @@ export default {
 		init() {
 			let modules_arr = Object.keys(this.$store.modules['ensemble'])
 
+			if(this.$store.selectedMetric == 'Inclusive'){
+				this.metric = 'mean_time (inc)'
+			}
+			else if(this.$store.selectedMetric == 'Exclusive'){
+				this.metric = 'mean_time'
+			}
+
 			this.$socket.emit('module_hierarchy', {
 				module: modules_arr[0],
-				// name: this.$store.selectedName,
 				datasets: this.$store.runNames,
 			})
 		},
@@ -151,42 +158,20 @@ export default {
 			this.drawIcicles(json)
 		},
 
-		update_from_df(hierarchy) {
-			const path = hierarchy['path']
-			const inc_time = hierarchy['time (inc)']
-			const exclusive = hierarchy['time']
-			// const imbalance_perc = hierarchy['imbalance_perc']
-			const name = hierarchy['name']
-			// const exit = hierarchy.exit;
-			// const component_path = hierarchy.component_path;
-			for (const i in path) {
-				if (path.hasOwnProperty(i)) {
-					this.path_hierarchy[i] = []
-					this.path_hierarchy[i].push(path[i])
-					this.path_hierarchy[i].push(inc_time[i])
-					this.path_hierarchy[i].push(exclusive[i])
-					// this.path_hierarchy[i].push(imbalance_perc[i])
-					this.path_hierarchy[i].push(name[i])
-					// path_hierarchy_format[i].push(exit[i]);
-					// path_hierarchy_format[i].push(component_path[i]);
-				}
-			}
-			const json = this.buildHierarchy(this.path_hierarchy)
-			this.drawIcicles(json)
-		},
-
 		bfs(graph) {
 			const vertexQueue = new Queue();
 
 			// Do initial queue setup.
 			let startVertex = graph
 
-			let module = startVertex.id
-			let moduleData = this.$store.modules['ensemble'][module]
+			let thismodule = startVertex.id
+			let moduleData = this.$store.modules['ensemble'][thismodule]
 
 			startVertex.data = moduleData
 
 			vertexQueue.enqueue(startVertex);
+
+			let startVertexData = true
 
 			let previousVertex = null;
 
@@ -194,100 +179,43 @@ export default {
 			while (!vertexQueue.isEmpty()) {
 				const currentVertex = vertexQueue.dequeue();
 
-				let callsite = currentVertex.id
-				let callsiteData = this.$store.callsites['ensemble'][callsite]
+				let callsiteData = {}
+				if(!startVertexData){
+					let callsite = currentVertex.id
+					callsiteData = this.$store.callsites['ensemble'][callsite]
+				}
+				else{
+					let module = currentVertex.id
+					callsiteData = this.$store.modules['ensemble'][module]
+					startVertexData = false
+				}
 
 				currentVertex.data = callsiteData
 
-				console.log(callsite, callsiteData)
+				currentVertex.data.count = vertexQueue.length
+
 				if (currentVertex.hasOwnProperty('children')) {
 					// Add all neighbors to the queue for future traversals.
 					currentVertex['children'].forEach((nextVertex) => {
-						// if (callbacks.allowTraversal({ previousVertex, currentVertex, nextVertex })) {
 						vertexQueue.enqueue(nextVertex);
-						// }
 					});
-
 				}
 
 				// Memorize current vertex before next loop.
 				previousVertex = currentVertex;
 			}
+			return graph
 		},
 
 		update_from_graph(json) {
-			let thismodule = json.id
-			let module_data = this.$store.modules['ensemble'][thismodule]
-
-			this.bfs(json);
-			this.drawIcicles(json)
+			let hierarchy = this.bfs(json)
+			console.log(hierarchy)
+			this.drawIcicles(hierarchy)
 		},
 
 		trunc(str, n) {
 			str = str.replace(/<unknown procedure>/g, 'proc ');
 			return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
-		},
-
-		buildHierarchy(csv) {
-			const root = {
-				name: ['root'],
-				children: []
-			};
-			for (let i = 0; i < csv.length; i++) {
-				const sequence = csv[i][0];
-				const inclusive = csv[i][1];
-				const exclusive = csv[i][2];
-				// const imbalance_perc = csv[i][3];
-				const name = csv[i][4]
-				// const exit = csv[i][4];
-				// const component_path = csv[i][5];
-				const parts = sequence;
-				let currentNode = root;
-
-				for (let j = 0; j < parts.length; j++) {
-					const children = currentNode.children;
-					let nodeName = parts[j];
-
-					var childNode;
-					if (j + 1 < parts.length) {
-						// Not yet at the end of the sequence; move down the tree.
-						let foundChild = false;
-						for (let k = 0; k < children.length; k++) {
-							if (children[k].name == nodeName) {
-								childNode = children[k];
-								foundChild = true;
-								break;
-							}
-						}
-						// If we don't already have a child node for this branch, create it.
-						if (!foundChild) {
-							childNode = {
-								name: nodeName,
-								children: []
-							};
-							children.push(childNode);
-						}
-						currentNode = childNode;
-					} else {
-						// Reached the end of the sequence; create a leaf node.
-						childNode = {
-							name: nodeName,
-							value: exclusive,
-							inclusive: inclusive,
-							exclusive: exclusive,
-							// imbalance_perc,
-							length: parts.length,
-							count: j,
-							// exit,
-							// component_path,
-							children: [],
-						};
-						children.push(childNode);
-					}
-				}
-			}
-			console.log(root)
-			return root;
 		},
 
 		clear() {
@@ -325,6 +253,7 @@ export default {
 					continue
 				}
 				root.children.forEach(function (node) {
+					console.log(node)
 					nodes.push(node);
 					queue.push(node)
 				});
@@ -342,7 +271,6 @@ export default {
 			root.x0 = root.y0 = padding;
 			root.x1 = dx;
 			root.y1 = dy / n;
-			console.log(root.x1)
 			root.eachBefore(this.positionNode(dy, n));
 			if (round) root.eachBefore(this.roundNode);
 			return root;
@@ -400,12 +328,9 @@ export default {
 
 		diceByValue(parent, x0, y0, x1, y1) {
 			let value = 1
-			console.log(parent)
 			if (parent.parent == null) {
-				console.log(parent)
-				value = this.$store.modules['ensemble'][parent.data.name]['max_time']
+				value = this.$store.modules['ensemble'][parent.data.name][this.metric]
 			}
-			console.log(value)
 
 			var nodes = parent.children,
 				node,
@@ -415,12 +340,9 @@ export default {
 
 			while (++i < n) {
 				node = nodes[i], node.y0 = y0, node.y1 = y1;
-				console.log(node)
 				node.x0 = x0
-				node.x1 = x0 += node.data.value * k;
+				node.x1 = x0 += node.data[this.metric] * k;
 			}
-
-			console.log(node)
 		},
 
 		drawIcicles(json) {
@@ -458,6 +380,8 @@ export default {
 
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition)
+
+			console.log(json, this.nodes)
 
 			this.setupModuleMeanGradients()
 			this.setupCallsiteMeanGradients()
@@ -499,7 +423,7 @@ export default {
 					.append("defs");
 
 				this.linearGradient = defs.append("linearGradient")
-					.attr("id", "mean-callsite-gradient-" + data.name)
+					.attr("id", "mean-callsite-gradient-" + data.id)
 					.attr("class", 'linear-gradient')
 
 				if (mode == 'Horizontal') {
@@ -556,7 +480,7 @@ export default {
 					.append("defs");
 
 				this.linearGradient = defs.append("linearGradient")
-					.attr("id", "mean-module-gradient-" + data.name)
+					.attr("id", "mean-module-gradient-" + data.id)
 					.attr("class", 'linear-gradient')
 
 				if (mode == 'Horizontal') {
@@ -590,7 +514,6 @@ export default {
 		drawTargetLine() {
 			let dataset = this.$store.selectedTargetDataset
 
-			console.log(dataset)
 			let data = this.$store.modules
 
 			for (let i = 0; i < this.nodes.length; i++) {
@@ -649,7 +572,8 @@ export default {
 				.append('rect')
 				.attr('class', 'icicleNode')
 				.attr('id', (d) => {
-					return d.data.id
+					console.log(d)
+					return d.data.data.id
 				})
 				.attr('x', (d) => {
 					if (this.selectedDirection == 'LR') {
@@ -684,10 +608,12 @@ export default {
 					return d.y1 - d.y0 //- this.offset - this.stroke_width;
 				})
 				.style("fill", (d, i) => {
-					if (d.data.value == undefined) {
-						return "url(#mean-module-gradient-" + d.data.id + ")"
+					if (d.depth == 0) {
+						return "url(#mean-module-gradient-" + d.data.data.id + ")"
 					}
-					return "url(#mean-callsite-gradient-" + d.data.id + ")"
+					else{
+						return "url(#mean-callsite-gradient-" + d.data.data.id + ")"
+					}
 				})
 				.style('stroke', (d) => {
 					let metric_attr = ''

@@ -35,7 +35,7 @@ export default {
 		treeHeight: null,
 		data: null,
 		message: "Summary Graph View",
-		debug: false
+		debug: true
 	}),
 
 	mounted() {
@@ -286,6 +286,8 @@ export default {
 			const temp_nodes = nodes.slice();
 			const temp_edges = edges.slice();
 
+			this.existingIntermediateNodes = {}
+
 			let removeActualEdges = []
 
 			for (let i = 0; i < temp_edges.length; i++) {
@@ -294,9 +296,9 @@ export default {
 
 				if (this.debug) {
 					console.log("==============================")
-					console.log("[Single SuperGraph] Source Name", source)
-					console.log("[Single SuperGraph] Target Name", target)
-					console.log("[Single SuperGraph] This edge: ", temp_edges[i])
+					console.log("[Ensemble SuperGraph] Source Name", source)
+					console.log("[Ensemble SuperGraph] Target Name", target)
+					console.log("[Ensemble SuperGraph] This edge: ", temp_edges[i])
 
 				}
 
@@ -304,8 +306,8 @@ export default {
 				let target_node = temp_edges[i].target_data
 
 				if (this.debug) {
-					console.log("[Single SuperGraph] Source Node", source_node, target_node.level)
-					console.log("[Single SuperGraph] Target Node", target_node, target_node.level)
+					console.log("[Ensemble SuperGraph] Source Node", source_node, target_node.level)
+					console.log("[Ensemble SuperGraph] Target Node", target_node, target_node.level)
 				}
 
 				const source_level = source_node.level;
@@ -314,13 +316,15 @@ export default {
 
 				if (this.debug) {
 					console.log(source_level, target_level)
-					console.log("[Single SuperGraph] Number of levels to shift: ", shift_level)
+					console.log("[Ensemble SuperGraph] Number of levels to shift: ", shift_level)
 				}
 
 				let targetDataset = this.$store.selectedTargetDataset
 				// Put in intermediate nodes.
 				for (let j = shift_level; j > 1; j--) {
 					const intermediate_idx = nodes.length;
+
+					// Add the intermediate node to the array
 					const tempNode = {
 						'ensemble': target_node['ensemble'],
 						'attr_dict': temp_edges[i]['attr_dict'],
@@ -331,17 +335,17 @@ export default {
 						module: target_node.module
 					};
 					tempNode[targetDataset] = target_node[targetDataset]
-					if (this.debug) {
-						console.log("[Single SuperGraph] Adding intermediate node: ", tempNode);
-					}
-					nodes.push(tempNode);
+
+					nodes.push(tempNode)
+
+					// Add the source edge.
 					const sourceTempEdge = {
 						source: source_node.id,
 						target: tempNode.id,
 						weight: temp_edges[i].weight,
 					}
 					if (this.debug) {
-						console.log("[Single SuperGraph] Adding intermediate source edge: ", sourceTempEdge);
+						console.log("[Ensemble SuperGraph] Adding intermediate source edge: ", sourceTempEdge);
 					}
 					edges.push(sourceTempEdge)
 
@@ -350,7 +354,7 @@ export default {
 					}
 					edges[i].target_data = nodes[intermediate_idx]
 					if (this.debug) {
-						console.log("[Single SuperGraph] Updating this edge:", edges[i])
+						console.log("[Ensemble SuperGraph] Updating this edge:", edges[i])
 					}
 
 					const targetTempEdge = {
@@ -360,7 +364,7 @@ export default {
 					}
 					edges.push(targetTempEdge)
 					if (this.debug) {
-						console.log("[Single SuperGraph] Adding intermediate target edge: ", targetTempEdge);
+						console.log("[Ensemble SuperGraph] Adding intermediate target edge: ", targetTempEdge);
 					}
 
 					if (j == shift_level) {
@@ -368,7 +372,7 @@ export default {
 					}
 					edges[i].target_data = nodes[intermediate_idx]
 					if (this.debug) {
-						console.log("[Single SuperGraph] Updating this edge:", edges[i])
+						console.log("[Ensemble SuperGraph] Updating this edge:", edges[i])
 					}
 
 					removeActualEdges.push({
@@ -380,7 +384,7 @@ export default {
 			for (let i = 0; i < removeActualEdges.length; i += 1) {
 				let removeEdge = removeActualEdges[i]
 				if (this.debug) {
-					console.log("[Single SuperGraph] Removing", removeActualEdges.length, "actual edge: ", removeEdge)
+					console.log("[Ensemble SuperGraph] Removing", removeActualEdges.length, "actual edge: ", removeEdge)
 				}
 				for (let edge_idx = 0; edge_idx < edges.length; edge_idx += 1) {
 					let curr_edge = edges[edge_idx]
