@@ -29,7 +29,9 @@ class CCT:
             self.entire_df = state.df
 
         self.runs = self.entire_df['dataset'].unique()
-        self.columns = ['time (inc)', 'time', 'name', 'module', 'imbalance_perc']
+        self.columns = ['time (inc)', 'time', 'name', 'module']
+
+        # 'imbalance_perc']
 
         self.run()
 

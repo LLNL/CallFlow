@@ -85,7 +85,7 @@ class App:
 
         if(self.config.ensemble):
             self.callflow = EnsembleCallFlow(self.config)
-            # self.single_callflow = SingleCallFlow(self.config)
+            self.single_callflow = SingleCallFlow(self.config)
         else:
             self.single_callflow = SingleCallFlow(self.config)
 

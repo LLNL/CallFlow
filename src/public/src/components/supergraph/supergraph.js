@@ -55,7 +55,6 @@
 		}),
 
 		sockets: {
-
 			single_supergraph(data){
 				data = JSON.parse(data)
 				console.log("Data :", data)
@@ -90,8 +89,8 @@
 
 				this.$socket.emit('single_supergraph', {
 					dataset: this.$store.selectedTargetDataset,
-					format: this.selectedFormat,
-					groupBy: this.selectedGroupBy
+					format: this.$store.selectedFormat,
+					groupBy: this.$store.selectedGroupBy
 				})
 			},
 
