@@ -94,7 +94,7 @@ export default {
             this.centerLineSVG = this.g
                 .insert("line", "rect")
                 .attr("class", "centerLine")
-                .attr("y1", (this.boxHeight - this.informationHeight/4)/2)
+                .attr("y1", (this.boxHeight - this.informationHeight/8)/2)
                 .attr("x1", this.xScale(this.q.min))
                 .attr("y2", (this.boxHeight - this.informationHeight/4)/2)
                 .attr("x2", this.xScale(this.q.max))
