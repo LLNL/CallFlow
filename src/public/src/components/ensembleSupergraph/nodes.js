@@ -515,7 +515,7 @@ export default {
                     let vals = gradients.y
 
                     let targetPos = 0
-                    let binWidth = node_data.height / this.$store.selectedBinCount
+                    let binWidth = node_data.height / this.$store.selectedMPIBinCount
 
                     for (let idx = 0; idx < grid.length; idx += 1) {
                         if (grid[idx] > module_mean) {
@@ -588,7 +588,7 @@ export default {
                         .attr("class", 'gradientGuidesText-' + type)
                         .attr("id", 'line-2-' + node_data['client_idx'])
                         .attr("x", -50)
-                        .attr("y", y + fontSize/2)
+                        .attr("y", y + fontSize/2 + binWidth/2)
                         .attr('fill', 'black')
                         .style('z-index', 100)
                         .style('font-size', fontSize + 'px')
@@ -601,7 +601,7 @@ export default {
                             .attr("class", 'gradientGuidesText-' + type)
                             .attr("id", 'line-2-' + node_data['client_idx'])
                             .attr("x", this.nodeWidth + 10)
-                            .attr("y", y + fontSize/2)
+                            .attr("y", y + fontSize/2 + binWidth/2)
                             .attr('fill', 'black')
                             .style('z-index', 100)
                             .style('font-size', '14px')

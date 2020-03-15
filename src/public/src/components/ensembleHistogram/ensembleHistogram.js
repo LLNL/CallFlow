@@ -37,7 +37,7 @@ export default {
             top: 10,
             right: 10,
             bottom: 10,
-            left: 10,
+            left: 15,
         },
         dataset_index: [],
         id: 'ensemble-histogram-view',
@@ -74,7 +74,7 @@ export default {
 
             // Assign the height and width of container
             this.width = window.innerWidth * 0.25
-            this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.33
+            this.height = this.$store.viewHeight * 0.33
 
             // Assign width and height for histogram and rankLine SVG.
             this.boxWidth = this.width - this.padding.right - this.padding.left;
@@ -343,7 +343,7 @@ export default {
                 })
                 .on('mouseout', function (d, i) {
                     d3.select(this)
-                        .attr('fill', this.$store.color.target);
+                        .attr('fill', self.$store.color.target);
                     d3.selectAll(`.lineRank_${i}`)
                         .style('fill', 'grey')
                         .style('fill-opacity', 0.4);
@@ -416,7 +416,7 @@ export default {
             this.svg.append('text')
                 .attr('class', 'histogram-axis-label')
                 .attr('x', this.boxWidth)
-                .attr('y', this.histogramHeight + 4 * this.padding.top)
+                .attr('y', this.histogramHeight + 2 * this.padding.top)
                 .style('font-size', '12px')
                 .style('text-anchor', 'end')
                 .text(this.$store.selectedMetric + " Runtime")
@@ -445,9 +445,12 @@ export default {
 
         yAxis() {
             const yAxis = d3.axisLeft(this.histogramYScale)
-                .ticks(this.freq.length)
+                .ticks(5)
                 .tickFormat((d, i) => {
-                    if (i % 4 == 0) {
+                    if(d == 1){
+                        return d
+                    }
+                    else if (d % 10 == 0 && i % 4 == 0) {
                         return d
                     }
                 })
@@ -455,7 +458,7 @@ export default {
             this.svg.append('text')
                 .attr('transform', 'rotate(-90)')
                 .attr('class', 'histogram-axis-label')
-                .attr('x', - this.histogramHeight + this.padding.top)
+                .attr('x', - this.histogramHeight + 3*this.padding.top)
                 .attr('y', this.padding.left)
                 .style('font-size', '12px')
                 .style('text-anchor', 'end')
@@ -574,7 +577,6 @@ export default {
                     })
                 }
 
-                console.log(target_processIDs)
                 // For the target process ids.
                 if (target_processIDs) {
                     this.target_rankLinesG = this.svg.append('g')
@@ -594,7 +596,7 @@ export default {
 
 
             const rankLineAxis = d3.axisBottom(this.ranklinescale)
-                .ticks(this.$store.numOfRanks['ensemble'])
+                .ticks(10)
                 .tickFormat((d, i) => {
                     if(this.$store.numOfRanks['ensemble'] <= 20){
                         return d

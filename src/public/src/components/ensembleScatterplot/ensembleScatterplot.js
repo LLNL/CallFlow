@@ -62,7 +62,7 @@ export default {
 			this.toolbarHeight = document.getElementById('toolbar').clientHeight
 			this.footerHeight = document.getElementById('footer').clientHeight
 			this.width = window.innerWidth * 0.25
-			this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.33
+			this.height = (this.$store.viewHeight) * 0.33
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
@@ -74,6 +74,8 @@ export default {
 
 			let modules_arr = Object.keys(this.$store.modules['ensemble'])
 
+
+			this.$refs.ToolTip.init(this.svgID)
 			EventHandler.$emit('ensemble_scatterplot', {
 				module: modules_arr[0],
 				name: "main",
@@ -331,18 +333,16 @@ export default {
 			var xAxis = d3.axisBottom(this.xScale)
 				.ticks(5)
 				.tickFormat((d, i) => {
-					// let temp = d;
-					// if (i % 2 == 0) {
-					// 	let value = temp * 0.000001
-					// 	return `${xFormat(value)}s`
-					// }
-					console.log(d)
-					return `${d}`;
+					let temp = d;
+					if (i % 2 == 0) {
+						let value = temp * 0.000001
+						return `${xFormat(value)}s`
+					}
 				});
 
 			this.svg.append('text')
 				.attr('class', 'scatterplot-axis-label')
-				.attr('x', this.boxWidth - 2*this.padding.right)
+				.attr('x', this.boxWidth - 3 * this.padding.right)
 				.attr('y', this.yAxisHeight - this.padding.top)
 				.style('font-size', '12px')
 				.style('text-anchor', 'end')
@@ -441,11 +441,28 @@ export default {
 
 		ensembleDots() {
 			for (let i = 0; i < this.xArray.length; i += 1) {
+				let callsite = this.xArray[i]['callsite']
+				let run = this.xArray[i]['run']
+				let mean = 0
+				let variance = 0
+				if (this.$store.selectedMetric == 'Inclusive') {
+					mean = this.$store.callsites[run][callsite]['mean_time (inc)'] * this.$store.timeScale
+					variance = this.$store.callsites[run][callsite]['variance_time (inc)'] * this.$store.timeScale
+				}
+				else if (this.$store.selectedMetric == 'Exclusive') {
+					mean = this.$store.callsites[run][callsite]['mean_time'] * this.$store.timeScale
+					variance = this.$store.callsites[run][callsite]['variance_time'] * this.$store.timeScale
+				}
+
+				let undesirability = 1 - Math.exp(-mean * variance)
+
+				let self = this
 				this.svg
 					.append('circle')
 					.attrs({
 						'class': 'ensemble-dot',
-						'r': 5,
+						'r': 7.5,
+						'opacity': 0.5 * (1 + undesirability),
 						'cx': () => {
 							return this.xScale(this.xArray[i].val) + 3 * this.padding.left
 						},
@@ -456,25 +473,68 @@ export default {
 					.style('stroke', '#202020')
 					.style('stroke-width', 0.5)
 					.style('fill', this.$store.color.ensemble)
+					.on('mouseover', () => {
+						let data = {
+							'callsite': callsite,
+							'undesirability': undesirability,
+							'value': self.xArray[i].val,
+							'run': self.xArray[i].run
+						}
+						self.$refs.ToolTip.render(data)
+					})
+					.on('mouseout', () => {
+						self.$refs.ToolTip.clear()
+					})
 			}
 		},
 
 		targetDots() {
 			let self = this
-			this.svg.selectAll('.target-dot')
-				.data(this.ytargetArray)
-				.enter().append('circle')
-				.attr('class', 'target-dot')
-				.attr('r', 5)
-				.attr('cx', function (d, i) {
-					return self.xScale(self.xtargetArray[i].val) + 3 * self.padding.left;
-				})
-				.attr('cy', function (d, i) {
-					return self.yScale(self.ytargetArray[i].val);
-				})
-				.style('fill', this.$store.color.target)
-				.style('stroke', '#202020')
-				.style('stroke-width', 0.5)
+
+			for (let i = 0; i < this.xtargetArray.length; i++) {
+				let callsite = this.xtargetArray[i]['callsite']
+				let run = this.$store.selectedTargetDataset
+				let mean = 0
+				let variance = 0
+				if (this.$store.selectedMetric == 'Inclusive') {
+					mean = this.$store.callsites[run][callsite]['mean_time (inc)'] * this.$store.timeScale
+					variance = this.$store.callsites[run][callsite]['variance_time (inc)'] * this.$store.timeScale
+				}
+				else if (this.$store.selectedMetric == 'Exclusive') {
+					mean = this.$store.callsites[run][callsite]['mean_time'] * this.$store.timeScale
+					variance = this.$store.callsites[run][callsite]['variance_time'] * this.$store.timeScale
+				}
+				let undesirability = 1 - Math.exp(-mean * variance)
+
+				this.svg
+					.append('circle')
+					.attrs({
+						'class': 'target-dot',
+						'r': 7.5,
+						'opacity': 0.5*(1 + undesirability),
+						'cx': () => {
+							return this.xScale(this.xtargetArray[i].val) + 3 * this.padding.left;
+						},
+						'cy': (d, i) => {
+							return this.yScale(self.ytargetArray[i].val)
+						}
+					})
+					.style('fill', this.$store.color.target)
+					.style('stroke', '#202020')
+					.style('stroke-width', 0.5)
+					.on('mouseover', () => {
+						let data = {
+							'callsite': callsite,
+							'undesirability': undesirability,
+							'value': self.xArray[i].val,
+							'run': self.xArray[i].run
+						}
+						self.$refs.ToolTip.render(data)
+					})
+					.on('mouseout', () => {
+						self.$refs.ToolTip.clear()
+					})
+			}
 		},
 
 		correlationText() {

@@ -40,14 +40,12 @@ class ParameterProjection:
         ret['max_exclusive_time'] = state.df['time'].max()
         ret['rank_count'] = len(state.df['rank'].unique())
         # ret['similarity'] = self.similarities[self.datasetOrder[self.targetDataset]]
-        print(ret, state.df['rank'].unique())
         return ret
 
     def run(self):
         rows = []
         for idx, state in enumerate(self.states):
             if(state.split('_')[0] != 'ensemble'):
-                print(state)
                 df_params = self.add_df_params(self.states[state])
                 rows.append(df_params)
                 # self.states[state].projection_data.update(df_params)

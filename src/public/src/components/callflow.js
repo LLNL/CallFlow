@@ -93,7 +93,7 @@ export default {
 		selectedGroupMode: 'include callbacks',
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
-		selectedBinCount: 20,
+		selectedMPIBinCount: 20,
 		selectedFunctionsInCCT: 70,
 		selectedDiffNodeAlignment: 'Top',
 		diffNodeAlignment: ['Middle', 'Top'],
@@ -134,7 +134,14 @@ export default {
 		selectedCaseStudy: 	'Lulesh-Scaling-3-runs',
 		// selectedCaseStudy: 'Kripke-MPI',
 		// selectedCaseStudy: 'OSU-Bcast',
-		// selectedCaseStudy: "Kripke-Scaling"
+		// selectedCaseStudy: "Kripke-Scaling",
+		selectedRunBinCount: 10,
+		selectedHierarchyMode: 'Exclusive',
+		hierarchyModes: ['Uniform', 'Exclusive'],
+		selectedRuntimeSortBy: 'Inclusive',
+		sortByModes: ['Inclusive', 'Exclusive', 'Percent Imbalance', 'Skewness', 'Kurtosis'],
+		scales: ['log', 'linear'],
+		selectedScale: 'log'
 	}),
 
 	watch: {},
@@ -168,7 +175,7 @@ export default {
 				this.$socket.emit('single_callsite_data', {
 					dataset: this.$store.selectedTargetDataset,
 					sortBy: this.$store.auxiliarySortBy,
-					binCount: this.$store.selectedBinCount,
+					binCount: this.$store.selectedMPIBinCount,
 					module: 'all'
 				})
 			}
@@ -176,7 +183,7 @@ export default {
 				this.$socket.emit('ensemble_callsite_data', {
 					datasets: this.$store.runNames,
 					sortBy: this.$store.auxiliarySortBy,
-					binCount: this.$store.selectedBinCount,
+					binCount: this.$store.selectedMPIBinCount,
 					module: 'all'
 				})
 			}
@@ -261,7 +268,7 @@ export default {
 			this.$store.numOfRanks = data['numOfRanks']
 			this.$store.moduleCallsiteMap = data['module_callsite_map']
 			this.$store.callsiteModuleMap = data['callsite_module_map']
-			this.$store.selectedBinCount = this.selectedBinCount
+			this.$store.selectedMPIBinCount = this.selectedMPIBinCount
 
 			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3)
 			this.$store.selectedScatterMode = 'mean'
@@ -270,9 +277,9 @@ export default {
 			this.$store.selectedMetric = this.selectedMetric
 
 			this.$store.datasetMap = this.$store.runNames.map((run, i) => "run-" + i)
-			console.log(this.$store.datasetMap)
 
-			this.$store.componentHeight = (window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight)
+			this.$store.timeScale = 0.000001
+			this.$store.viewHeight = (window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight)
 		},
 
 
@@ -584,7 +591,7 @@ export default {
 		},
 
 		updateBinCount() {
-			this.$store.selectedBinCount = this.selectedBinCount
+			this.$store.selectedMPIBinCount = this.selectedMPIBinCount
 			this.clearLocal()
 			this.init()
 		},
