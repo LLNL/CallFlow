@@ -4,31 +4,16 @@ import * as d3 from 'd3'
 export default {
     template: tpl,
     name: 'ToolTip',
-    components: {},
-
-    props: [
-
-    ],
-
     data: () => ({
         id: '',
         textCount: 0,
         textxOffset: 20,
         textyOffset: 20,
-        textPadding: 13,
+        textPadding: 18,
         offset: 10,
         fontSize: 12,
     }),
-    sockets: {
-        tooltip(data) {
-            this.render(data)
-        },
-    },
-    watch: {
 
-    },
-
-    mounted() {},
     methods: {
         init(id) {
             this.id = id
@@ -37,17 +22,53 @@ export default {
                 .attr('class', 'toolTipSVG')
 
             this.toolTipG = this.toolTipDiv.append('g')
-            this.height = document.getElementById(this.id).clientHeight/10
-            this.halfWidth = document.getElementById(this.id).clientWidth / 2
+            this.height = document.getElementById(this.id).clientHeight/4
+            this.halfWidth = document.getElementById(this.id).clientWidth /2
         },
 
-        render(data, node) {
+        formatRuntime(val) {
+            let ret = (val * 0.000001).toFixed(2) + 's'
+            return ret
+        },
+
+        addText(text) {
+            this.toolTipText = this.toolTipG
+                .append('text')
+                .style('font-family', 'sans-serif')
+                .style('font-size', '')
+                .attrs({
+                    'class': 'toolTipContent',
+                    'x': () => {
+                        return (this.xOffset - 10) + 'px'
+                    },
+                    'y': () => {
+                        return (this.mousePosY) + this.textyOffset + this.textPadding * this.textCount + "px";
+                    }
+                })
+                .text(text)
+                this.textCount += 1
+        },
+
+        trunc(str, n) {
+            str = str.replace(/<unknown procedure>/g, 'proc ')
+            return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
+        },
+
+        info() {
+            this.addText('Callsite: ' + this.trunc(this.data.callsite, 10))
+            this.addText(this.$store.selectedMetric + ' Time: ' + this.formatRuntime(this.data.value))
+            this.addText('Run: ' + this.data.run)
+            this.addText('Desirability: ' + (1 - this.data.undesirability).toFixed(3))
+        },
+
+        render(data) {
             this.clear()
-            this.width = data.length*this.fontSize + 10*this.fontSize
+            this.width = 19*this.fontSize
             var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
             this.mousePos = d3.mouse(d3.select('#' + this.id).node())
             this.mousePosX = this.mousePos[0]
             this.mousePosY = this.mousePos[1]
+            console.log(this.mousePosX, this.mousePosY)
             this.toolTipG.attr('height', svgScale(10) + "px")
             this.toolTipRect = this.toolTipG
                 .append('rect')
@@ -72,37 +93,17 @@ export default {
                         return (this.mousePosY) + "px";
                     }
                 })
-            this.node = node
             this.data = data
-            this.processes()
-        },
 
-        addText(text) {
-            this.textCount += 1
-            this.toolTipText = this.toolTipG
-                .append('text')
-                .style('font-family', 'sans-serif')
-                .style('font-size', this.fontSize)
-                .attrs({
-                    'class': 'toolTipContent',
-                    'x': () => {
-                        if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth - 25) {
-                            return (this.mousePosX - this.width + this.offset) + 'px';
-                        }
-                        return (this.mousePosX) + this.offset +  'px';
+            if (this.mousePosX + this.halfWidth > this.callgraphOverviewWidth) {
+                this.xOffset = this.mousePosX - 200 + this.textxOffset
+            } else if (this.mousePosX < 100) {
+                this.xOffset = this.mousePosX + this.textxOffset
+            } else {
+                this.xOffset = this.mousePosX - 200 + this.textxOffset
+            }
 
-                    },
-                    'y': () => {
-                        return (this.mousePosY) + 2*this.offset + "px";
-                    }
-                })
-                .text(text)
-        },
-
-        processes() {
-            let self = this
-            this.addText('Processes (MPI ranks): ' + this.data)
-
+            this.info()
         },
 
         clear() {

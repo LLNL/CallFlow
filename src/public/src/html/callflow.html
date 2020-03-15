@@ -26,11 +26,6 @@
 			</v-select>
 		</v-flex> -->
 		<v-flex xs2 class="ma-1">
-			<v-select label="Case study" :items="caseStudy" v-model="selectedCaseStudy"
-				:menu-props="{ maxHeight: '400' }" box v-on:change="updateCaseStudy()">
-			</v-select>
-		</v-flex>
-		<v-flex xs2 class="ma-1">
 			<v-select label="Graph to visualize" :items="formats" v-model="selectedFormat"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
 			</v-select>
@@ -78,6 +73,14 @@
 				</v-flex>
 				<v-divider></v-divider> -->
 				<v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">General</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-select label="Case study" :items="caseStudy" v-model="selectedCaseStudy"
+						:menu-props="{ maxHeight: '400' }" box v-on:change="updateCaseStudy()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
 					<v-subheader class="teal lighten-4">Encoding</v-subheader>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
@@ -121,10 +124,40 @@
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
-					<v-text-field label="Number of bins in Histogram" class="mt-0" type="number"
-						v-model="selectedBinCount" :menu-props="{ maxHeight: '200' }" persistent-hint
-						v-on:change="updateBinCount()">
+					<v-text-field label="Number of bins for Run Distribution" class="mt-0" type="number"
+						v-model="selectedRunBinCount" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateRunBinCount()">
 					</v-text-field>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">SuperNode Hierarchy</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-select label="Assign width by" :items="hierarchyModes" v-model="selectedHierarchyMode"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateHierarchyMode()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">MPI Distribution</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-text-field label="Number of bins for MPI Distribution" class="mt-0" type="number"
+						v-model="selectedMPIBinCount" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateMPIBinCount()">
+					</v-text-field>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-select label="Scale" :items="scales" v-model="selectedScale"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateScale()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">Callsite Information</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-select label="Sort by" :items="sortByModes" v-model="selectedRuntimeSortBy"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateRuntimeSortBy()">
+					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
 					<v-text-field label="Outlier Bands" class="mt-0" type="number"
@@ -194,10 +227,10 @@
 						<ModuleHierarchy ref="ModuleHierarchy" />
 					</span>
 					<span>
-						<EnsembleHistogram ref="EnsembleHistogram" />
+						<EnsembleScatterplot ref="EnsembleScatterplot"/>
 					</span>
 					<span>
-						<EnsembleScatterplot ref="EnsembleScatterplot"/>
+						<EnsembleHistogram ref="EnsembleHistogram" />
 					</span>
 
 				</splitpanes>

@@ -102,7 +102,7 @@ export default {
             this.footerHeight = document.getElementById('footer').clientHeight
 
             this.width = document.getElementById('auxiliary-function-overview').clientWidth
-            this.height = 0.66*this.$store.componentHeight
+            this.height = 0.66 * this.$store.viewHeight
             console.log(this.height)
             this.boxplotWidth = this.width - this.padding.left - this.padding.right
 

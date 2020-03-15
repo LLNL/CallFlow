@@ -3,8 +3,7 @@ import * as d3 from 'd3'
 import dropdown from 'vue-dropdowns'
 import ToolTipModuleHierarchy from './tooltip'
 import Queue from '../../core/queue';
-import { start } from 'repl';
-import { throws } from 'assert';
+
 
 export default {
 	name: 'ModuleHierarchy',
@@ -51,7 +50,7 @@ export default {
 		path_hierarchy: [],
 		id: '',
 		padding: 0,
-		message: 'Module Hierarchy',
+		message: 'SuperNode Hierarchy',
 		offset: 4,
 		stroke_width: 4,
 		widthType: 'Uniform',

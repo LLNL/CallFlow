@@ -40,11 +40,11 @@ export default {
     methods: {
         init() {
             let visContainer = document.getElementById(this.id)
-            let dashboardHeight = window.innerHeight
-            let toolbarHeight = document.getElementById('toolbar').clientHeight
 
             this.width = visContainer.clientWidth
-            this.height = this.$store.componentHeight * 0.33
+            this.tooltipHeight = 100
+
+            this.height = this.$store.viewHeight * 0.33 - this.tooltipHeight
 
             this.padding = { left: 50, top: 0, right: 50, bottom: 30 }
             this.x = d3.scaleLinear().range([0, this.width]);
@@ -221,7 +221,7 @@ export default {
                 .on("draw", this.lassoDraw)
                 .on("end", this.lassoEnd);
 
-            // this.svg.call(this.lasso)
+            this.svg.call(this.lasso)
             this.highlight(this.$store.selectedTargetDataset)
         },
 
@@ -237,10 +237,9 @@ export default {
             let nodes = split_dataset[2]
             let timestamp = split_dataset[split_dataset.length - 1]
             this.tooltip.html(
-                "Run: " + dataset + " on " + cores + " cores, " + nodes + " nodes" + "<br/>" +
-                "Timestamp: " + timestamp + "<br/>" +
-                "Inclusive time (max): " + d[5] + " ms<br/>" +
-                "Exclusive time (max): " + d[6] + " ms")
+                "Run: " + dataset + "<br/>" +
+                "Inclusive time (mean): " + d[5] + " ms<br/>" +
+                "Exclusive time (mean): " + d[6] + " ms")
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY - 28) + "px");
 
