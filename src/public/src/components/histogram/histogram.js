@@ -88,12 +88,14 @@ export default {
             EventHandler.$emit('single_histogram', {
                 module: "Lulesh",
                 name: "main",
+                groupBy: this.$store.selectedGroupBy,
                 dataset: this.$store.selectedTargetDataset,
             })
         },
 
         render(callsite) {
             let data = this.$store.modules[this.$store.selectedTargetDataset][callsite]
+            console.log(this.$store.modules)
             let temp = this.dataProcess(data);
             this.xVals = temp[0];
             this.freq = temp[1];
@@ -164,6 +166,8 @@ export default {
             let dataSorted = []
             let dataMin = 0
             let dataMax = 0
+
+            console.log(data)
             if (this.$store.selectedMetric == 'Inclusive') {
                 attr_data = data['hist_time (inc)']
                 dataMin = data['min_time (inc)'];

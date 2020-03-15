@@ -23,7 +23,9 @@ class singleCCT:
         self.g = state.g
         self.df = state.df
 
-        self.columns = ['time (inc)', 'time', 'name', 'module', 'imbalance_perc']
+        self.columns = ['time (inc)', 'time', 'name', 'module']
+
+                        # 'imbalance_perc']
 
         self.run()
 

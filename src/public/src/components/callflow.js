@@ -14,7 +14,7 @@ import tpl from '../html/callflow.html'
 
 // Single mode imports
 import SuperGraph from './supergraph/supergraph'
-import CCT from './cct/cct'
+import SingleCCT from './cct/cct'
 import RuntimeScatterplot from './runtimeScatterplot/runtimeScatterplot'
 import SingleHistogram from './histogram/histogram'
 import Function from './function/function'
@@ -39,7 +39,7 @@ export default {
 		Splitpanes,
 		VueSlider,
 		SuperGraph,
-		CCT,
+		SingleCCT,
 		RuntimeScatterplot,
 		Function,
 		SingleHistogram,
@@ -65,7 +65,7 @@ export default {
 		},
 		left: false,
 		formats: ['CCT', 'CallGraph', 'SuperGraph'],
-		selectedFormat: 'SuperGraph',
+		selectedFormat: 'CCT',
 		datasets: [],
 		selectedTargetDataset: '',
 		selectedDataset2: '',
@@ -114,7 +114,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
 		modes: ['Ensemble', 'Single'],
-		selectedMode: 'Ensemble',
+		selectedMode: 'Single',
 		// Presentation mode variables
 		exhibitModes: ['Presentation', 'Default'],
 		selectedExhibitMode: 'Default',
@@ -153,11 +153,6 @@ export default {
 		})
 	},
 
-	created() {
-
-
-	},
-
 	beforeDestroy() {
 		//Unsubscribe on destroy
 		this.$socket.emit('disconnect');
@@ -193,28 +188,13 @@ export default {
 			console.log("Auxiliary Data: ", data)
 			this.dataReady = true
 
-			let module_data = data['module']
-			// for (let key of Object.keys(module_data)) {
-			// 	if (module_data.hasOwnProperty(key)) {
-			// 		module_data[key] = this.processJSON(module_data[key])
-			// 	}
-			// }
-
-			let callsite_data = data['callsite']
-			// for (let key of Object.keys(callsite_data)) {
-			// 	if (callsite_data.hasOwnProperty(key)) {
-			// 		callsite_data[key] = this.processJSON(callsite_data[key])
-			// 	}
-			// }
-
-			this.$store.callsites = {}
-			let dataset = this.$store.selectedTargetDataset
-			this.$store.callsites[dataset] = this.processCallsite(callsite_data[dataset])
-
-			this.$store.modules = {}
-			this.$store.modules[dataset] = this.processModule(module_data[dataset])
-
+			this.$store.modules = data['module']
+			this.$store.callsites = data['callsite']
+			this.$store.gradients = data['gradients']
+			this.$store.moduleCallsiteMap = data['moduleCallsiteMap']
+			this.$store.callsiteModuleMap = data['callsiteModuleMap']
 			console.log("[Socket] Single Callsite data processing done.")
+			console.log(data)
 			this.init()
 		},
 
@@ -276,7 +256,7 @@ export default {
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
 			this.$store.nodeInfo = {}
 			this.$store.selectedMetric = this.selectedMetric
-
+			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT
 			this.$store.datasetMap = this.$store.runNames.map((run, i) => "run-" + i)
 
 			this.$store.timeScale = 0.000001
@@ -306,12 +286,12 @@ export default {
 		},
 
 		setComponentMap() {
-			this.currentSingleCCTComponents = [this.$refs.CCT]
+			this.currentSingleCCTComponents = [this.$refs.SingleCCT]
 			this.currentSingleCallGraphComponents = []
 			this.currentSingleSuperGraphComponents = [
 				this.$refs.SuperGraph,
-				this.$refs.Histogram,
-				this.$refs.Scatterplot,
+				this.$refs.SingleHistogram,
+				this.$refs.RuntimeScatterplot,
 				this.$refs.Function
 			]
 
@@ -426,10 +406,10 @@ export default {
 					this.clearComponents(this.currentSingleCCTComponents)
 				}
 				else if (this.selectedFormat == 'CallGraph') {
-					this.clearComponents(this.currentEnsembleCallGraphComponents)
+					this.clearComponents(this.currentSingleCallGraphComponents)
 				}
 				else if(this.selectedFormat == 'SuperGraph'){
-					this.clearComponents(this.currentEnsembleSuperGraphComponents)
+					this.clearComponents(this.currentSingleSuperGraphComponents)
 				}
 			}
 		},
@@ -441,6 +421,7 @@ export default {
 		},
 
 		clearComponents(componentList){
+			console.log(componentList)
 			for (let i = 0; i < componentList.length; i++) {
 				componentList[i].clear()
 			}
@@ -480,7 +461,7 @@ export default {
 					this.loadComponents(this.currentEnsembleCallGraphComponents)
 				}
 				else if(this.selectedFormat == 'CCT'){
-					this.loadComponents(this.currentEnsembleCCTComponents)
+					this.initComponents(this.currentEnsembleCCTComponents)
 				}
 			}
 		},
@@ -553,7 +534,7 @@ export default {
 		},
 
 		updateFormat() {
-			this.clear()
+			this.clearLocal()
 			this.$socket.emit('init', {
 				caseStudy: this.selectedCaseStudy
 			})

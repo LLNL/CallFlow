@@ -149,7 +149,7 @@ class EnsembleCallFlow:
                 "groupBy": "name",
                 "datasets": action["datasets"]
             })
-            nx = CCT(self.states["ensemble"], action["functionsInCCT"])
+            nx = CCT(self.states["ensemble_entire"], action["functionsInCCT"])
             return nx.g
 
         elif action_name == "supergraph":

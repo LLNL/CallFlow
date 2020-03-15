@@ -5,7 +5,7 @@ import * as d3 from 'd3'
 import dagreD3 from 'dagre-d3/dist/dagre-d3';
 
 export default {
-    name: 'CCT',
+    name: 'SingleCCT',
     template: tpl,
     components: {
         ColorMap
@@ -74,8 +74,8 @@ export default {
 
             this.$socket.emit('single_cct', {
                 dataset: this.$store.selectedTargetDataset,
-                functionsInCCT: this.selectedFunctionsInCCT,
-                selectedMetric: this.selectedMetric,
+                functionsInCCT: this.$store.selectedFunctionsInCCT,
+                selectedMetric: this.$store.selectedMetric,
             })
         },
 

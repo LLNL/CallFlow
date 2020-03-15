@@ -38,7 +38,7 @@ export default {
 
     sockets: {
         ensemble_cct(data) {
-            console.log("CCT data: ", data)
+            console.log("Ensemble CCT data: ", data)
             this.data = data
             if (this.firstRender) {
                 this.init()
@@ -76,6 +76,12 @@ export default {
 
             // Create a new directed graph
             this.firstRender = false
+
+            this.$socket.emit('ensemble_cct', {
+                datasets: this.$store.selectedTargetDataset,
+                functionsInCCT: this.$store.selectedFunctionsInCCT,
+                selectedMetric: this.$store.selectedMetric,
+            })
         },
 
 

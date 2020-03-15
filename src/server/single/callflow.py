@@ -152,7 +152,7 @@ class SingleCallFlow:
             return {}
 
         elif action_name == "auxiliary":
-            auxiliary = Auxiliary(self.states[action['dataset']], module=action['module'], sortBy=action['sortBy'], binCount=action['binCount'], dataset=action['dataset'])
+            auxiliary = Auxiliary(self.states[action['dataset']],binCount=action['binCount'], dataset=action['dataset'], config=self.config)
             return auxiliary.result
 
         elif action_name == "supergraph":
@@ -176,11 +176,6 @@ class SingleCallFlow:
             return minihistogram.result
 
         elif action_name == 'cct':
-            self.request({
-                "name": "supergraph",
-                "groupBy": "name",
-                "dataset": action["dataset"]
-            })
             graph = singleCCT(self.states[action["dataset"]], action["functionsInCCT"])
             return graph.g
 
