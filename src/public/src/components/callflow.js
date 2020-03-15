@@ -135,7 +135,7 @@ export default {
 		// selectedCaseStudy: 'Kripke-MPI',
 		// selectedCaseStudy: 'OSU-Bcast',
 		// selectedCaseStudy: "Kripke-Scaling",
-		selectedRunBinCount: 10,
+		selectedRunBinCount: 20,
 		selectedHierarchyMode: 'Exclusive',
 		hierarchyModes: ['Uniform', 'Exclusive'],
 		selectedRuntimeSortBy: 'Inclusive',
@@ -269,6 +269,7 @@ export default {
 			this.$store.moduleCallsiteMap = data['module_callsite_map']
 			this.$store.callsiteModuleMap = data['callsite_module_map']
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount
+			this.$store.selectedRunBinCount = this.selectedRunBinCount
 
 			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3)
 			this.$store.selectedScatterMode = 'mean'
