@@ -68,7 +68,6 @@ export default {
             this.mousePos = d3.mouse(d3.select('#' + this.id).node())
             this.mousePosX = this.mousePos[0]
             this.mousePosY = this.mousePos[1]
-            console.log(this.mousePosX, this.mousePosY)
             this.toolTipG.attr('height', svgScale(10) + "px")
             this.toolTipRect = this.toolTipG
                 .append('rect')

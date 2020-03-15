@@ -86,10 +86,10 @@ export default {
 		init() {
 			let modules_arr = Object.keys(this.$store.modules['ensemble'])
 
-			if(this.$store.selectedMetric == 'Inclusive'){
+			if (this.$store.selectedMetric == 'Inclusive') {
 				this.metric = 'mean_time (inc)'
 			}
-			else if(this.$store.selectedMetric == 'Exclusive'){
+			else if (this.$store.selectedMetric == 'Exclusive') {
 				this.metric = 'mean_time'
 			}
 
@@ -179,11 +179,11 @@ export default {
 				const currentVertex = vertexQueue.dequeue();
 
 				let callsiteData = {}
-				if(!startVertexData){
+				if (!startVertexData) {
 					let callsite = currentVertex.id
 					callsiteData = this.$store.callsites['ensemble'][callsite]
 				}
-				else{
+				else {
 					let module = currentVertex.id
 					callsiteData = this.$store.modules['ensemble'][module]
 					startVertexData = false
@@ -345,7 +345,6 @@ export default {
 		},
 
 		drawIcicles(json) {
-			json = json.children[0]
 			if (this.hierarchy != undefined) {
 				this.clear();
 			} else {
@@ -386,7 +385,7 @@ export default {
 			this.setupCallsiteMeanGradients()
 			this.addNodes()
 			this.addText()
-			// this.drawTargetLine()
+			this.drawTargetLine()
 
 			// Add the mouseleave handler to the bounding rect.
 			d3.select('#container').on('mouseleave', this.mouseleave);
@@ -533,16 +532,17 @@ export default {
 				let vals = gradients.y
 
 				let targetPos = 0
-				let binWidth = (this.nodes[i].x1 - this.nodes[i].x0) / (this.$store.selectedBinCount - 1)
+				let binWidth = (this.nodes[i].x1 - this.nodes[i].x0) / (this.$store.selectedRunBinCount)
 
 				for (let idx = 0; idx < grid.length; idx += 1) {
 					if (grid[idx] > mean) {
-						targetPos = idx - 1
+						targetPos = idx
 						break
 					}
 					if (idx == grid.length - 1) {
 						targetPos = grid.length - 1
 					}
+
 				}
 
 				let x = this.nodes[i].x0 + binWidth * targetPos
@@ -558,6 +558,120 @@ export default {
 						"stroke-width": 5,
 						"stroke": this.$store.color.target
 					})
+			}
+		},
+
+		clearGuides(d){
+			d3.selectAll('.hierarchy-guideLines').remove()
+		},
+
+		drawGuides(d) {
+			console.log(d)
+			let dataset = this.$store.selectedTargetDataset
+
+			let data = this.$store.modules
+			let node_data = d.data
+
+			let mean = 0
+			let gradients = []
+			if (d.depth == 0) {
+				mean = this.$store.modules[dataset][node_data.id]['gradients'][this.$store.selectedMetric]['dataset'][dataset]
+				gradients = this.$store.modules['ensemble'][node_data.id]['gradients'][this.$store.selectedMetric]['hist']
+			}
+			else {
+				mean = this.$store.callsites[dataset][node_data.id]['gradients'][this.$store.selectedMetric]['dataset'][dataset]
+				gradients = this.$store.callsites['ensemble'][node_data.id]['gradients'][this.$store.selectedMetric]['hist']
+			}
+
+			let grid = gradients.x
+			let vals = gradients.y
+			let binWidth = (d.x1 - d.x0) / (this.$store.selectedRunBinCount)
+
+			for (let idx = 0; idx < grid.length; idx += 1) {
+				let x = binWidth * (idx)
+
+				this.hierarchySVG
+					.append('line')
+					.attrs({
+						"class": 'hierarchy-guideLines',
+						"x1": x,
+						"y1": (d.y1 - d.y0) * (d.depth),
+						"x2": x,
+						"y2": (d.y1 - d.y0) * (d.depth + 1),
+						"stroke-width": 3,
+						"stroke": '#202020'
+					})
+
+
+				// d3.selectAll('.ensemble-edge')
+				// 	.style('opacity', 0.5)
+
+				// // For drawing the guide lines that have the value.
+				// d3.select('#ensemble-callsite-' + node_data.client_idx)
+				// 	.append('line')
+				// 	.attr("class", 'gradientGuides-' + type)
+				// 	.attr("id", 'line-2-' + node_data['client_idx'])
+				// 	.attr("x1", 0)
+				// 	.attr("y1", y)
+				// 	.attr("x2", this.nodeWidth)
+				// 	.attr("y2", y)
+				// 	.attr("stroke-width", 1.5)
+				// 	.attr('opacity', 0.3)
+				// 	.attr("stroke", '#202020')
+
+				// let fontSize = 14
+				// if (vals[idx] != 0) {
+				// 	// For placing the run count values.
+				// 	d3.select('#ensemble-callsite-' + node_data.client_idx)
+				// 		.append('text')
+				// 		.attr("class", 'gradientGuidesText-' + type)
+				// 		.attr("id", 'line-2-' + node_data['client_idx'])
+				// 		.attr("x", -50)
+				// 		.attr("y", y + fontSize / 2 + binWidth / 2)
+				// 		.attr('fill', 'black')
+				// 		.style('z-index', 100)
+				// 		.style('font-size', fontSize + 'px')
+				// 		.text(this.formatRunCounts(vals[idx]))
+
+				// 	// For placing the runtime values.
+				// 	if (idx != 0 && idx != grid.length - 1) {
+				// 		d3.select('#ensemble-callsite-' + node_data.client_idx)
+				// 			.append('text')
+				// 			.attr("class", 'gradientGuidesText-' + type)
+				// 			.attr("id", 'line-2-' + node_data['client_idx'])
+				// 			.attr("x", this.nodeWidth + 10)
+				// 			.attr("y", y + fontSize / 2 + binWidth / 2)
+				// 			.attr('fill', 'black')
+				// 			.style('z-index', 100)
+				// 			.style('font-size', '14px')
+				// 			.text(this.formatRuntime(grid[idx]))
+				// 	}
+				// }
+
+				// if (idx == 0) {
+				// 	d3.select('#ensemble-callsite-' + node_data.client_idx)
+				// 		.append('text')
+				// 		.attr("class", 'gradientGuidesText-' + type)
+				// 		.attr("id", 'line-2-' + node_data['client_idx'])
+				// 		.attr("x", this.nodeWidth + 10)
+				// 		.attr("y", y)
+				// 		.attr('fill', 'black')
+				// 		.style('z-index', 100)
+				// 		.style('font-size', '14px')
+				// 		.text('Min. = ' + this.formatRuntime(grid[idx]))
+				// }
+				// else if (idx == grid.length - 1) {
+				// 	d3.select('#ensemble-callsite-' + node_data.client_idx)
+				// 		.append('text')
+				// 		.attr("class", 'gradientGuidesText-' + type)
+				// 		.attr("id", 'line-2-' + node_data['client_idx'])
+				// 		.attr("x", this.nodeWidth + 10)
+				// 		.attr("y", y + binWidth / 2)
+				// 		.attr('fill', 'black')
+				// 		.style('z-index', 100)
+				// 		.style('font-size', '14px')
+				// 		.text('Max. = ' + this.formatRuntime(grid[idx]))
+				// }
 			}
 		},
 
@@ -610,7 +724,7 @@ export default {
 					if (d.depth == 0) {
 						return "url(#mean-module-gradient-" + d.data.data.id + ")"
 					}
-					else{
+					else {
 						return "url(#mean-callsite-gradient-" + d.data.data.id + ")"
 					}
 				})
@@ -635,8 +749,8 @@ export default {
 					return 1;
 				})
 				.on('click', this.click)
-				.on('mouseover', this.mouseover);
-
+				.on('mouseover', this.mouseover)
+				.on('mouseout', this.mouseout)
 		},
 
 		addText() {
@@ -757,7 +871,13 @@ export default {
 			// Then highlight only those that are an ancestor of the current segment.
 			this.hierarchy.selectAll('.icicleNode')
 				.filter(node => (sequenceArray.indexOf(node) >= 0))
-				.style('opacity', 1);
+				.style('opacity', 1)
+
+			// this.drawGuides(d)
+		},
+
+		mouseout(d){
+			// this.clearGuides()
 		},
 
 		// Given a node in a partition layout, return an array of all of its ancestor
