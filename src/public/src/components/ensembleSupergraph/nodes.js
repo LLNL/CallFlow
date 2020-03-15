@@ -565,30 +565,28 @@ export default {
                 d3.selectAll('.ensemble-edge')
                     .style('opacity', 0.5)
 
-                if (true) {
-                    // For drawing the guide lines that have the value.
-                    d3.select('#ensemble-callsite-' + node_data.client_idx)
-                        .append('line')
-                        .attr("class", 'gradientGuides-' + type)
-                        .attr("id", 'line-2-' + node_data['client_idx'])
-                        .attr("x1", 0)
-                        .attr("y1", y)
-                        .attr("x2", this.nodeWidth)
-                        .attr("y2", y)
-                        .attr("stroke-width", 1.5)
-                        .attr('opacity', 0.3)
-                        .attr("stroke", '#202020')
-                }
+                // For drawing the guide lines that have the value.
+                d3.select('#ensemble-callsite-' + node_data.client_idx)
+                    .append('line')
+                    .attr("class", 'gradientGuides-' + type)
+                    .attr("id", 'line-2-' + node_data['client_idx'])
+                    .attr("x1", 0)
+                    .attr("y1", y)
+                    .attr("x2", this.nodeWidth)
+                    .attr("y2", y)
+                    .attr("stroke-width", 1.5)
+                    .attr('opacity', 0.3)
+                    .attr("stroke", '#202020')
 
                 let fontSize = 14
-                if(vals[idx] != 0){
+                if (vals[idx] != 0) {
                     // For placing the run count values.
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('text')
                         .attr("class", 'gradientGuidesText-' + type)
                         .attr("id", 'line-2-' + node_data['client_idx'])
                         .attr("x", -50)
-                        .attr("y", y + fontSize/2 + binWidth/2)
+                        .attr("y", y + fontSize / 2 + binWidth / 2)
                         .attr('fill', 'black')
                         .style('z-index', 100)
                         .style('font-size', fontSize + 'px')
@@ -601,7 +599,7 @@ export default {
                             .attr("class", 'gradientGuidesText-' + type)
                             .attr("id", 'line-2-' + node_data['client_idx'])
                             .attr("x", this.nodeWidth + 10)
-                            .attr("y", y + fontSize/2 + binWidth/2)
+                            .attr("y", y + fontSize / 2 + binWidth / 2)
                             .attr('fill', 'black')
                             .style('z-index', 100)
                             .style('font-size', '14px')

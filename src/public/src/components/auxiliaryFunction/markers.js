@@ -48,13 +48,15 @@ export default {
         },
 
         medianMarker() {
+            let y1 = this.$parent.$parent.informationHeight/4
+            let y2 = this.boxHeight - this.$parent.$parent.informationHeight/8
             this.medianLine = this.g
                 .append("line")
                 .attrs({
                     "class": "median",
-                    "y1": 0,
+                    "y1": y1,
                     "x1": this.xScale(this.q.q2),
-                    "y2": this.boxHeight,
+                    "y2": y2,
                     "x2": this.xScale(this.q.q2),
                     'stroke': 'black'
                 })
@@ -80,12 +82,14 @@ export default {
         },
 
         minMaxEnsembleMarker() {
+            let y1 = this.$parent.$parent.informationHeight/2
+            let y2 = this.boxHeight - this.$parent.$parent.informationHeight/4
             this.g.append("line")
                 .attrs({
                     "class": "whisker",
-                    "y1": 0,
+                    "y1": y1,
                     "x1": this.xScale(this.q.min),
-                    "y2": this.boxHeight,
+                    "y2": y2,
                     "x2": this.xScale(this.q.min),
                     'stroke': this.$store.color.ensemble
                 })
@@ -94,9 +98,9 @@ export default {
             this.g.append("line")
                 .attrs({
                     "class": "whisker",
-                    "y1": 0,
+                    "y1": y1,
                     "x1": this.xScale(this.q.max),
-                    "y2": this.boxHeight,
+                    "y2": y2,
                     "x2": this.xScale(this.q.max),
                     'stroke': this.$store.color.ensemble
                 })
@@ -104,12 +108,14 @@ export default {
         },
 
         minMaxTargetMarker() {
+            let y1 = this.$parent.$parent.informationHeight/2
+            let y2 = this.boxHeight - this.$parent.$parent.informationHeight/4
             this.g.append("line")
                 .attrs({
                     "class": "whisker",
-                    "y1": 0,
+                    "y1": y1,
                     "x1": this.xScale(this.data.min),
-                    "y2": this.boxHeight,
+                    "y2": y2,
                     "x2": this.xScale(this.data.min),
                     'stroke': this.fill
                 })
@@ -118,9 +124,9 @@ export default {
             this.g.append("line")
                 .attrs({
                     "class": "whisker",
-                    "y1": 0,
+                    "y1": y1,
                     "x1": this.xScale(this.data.max),
-                    "y2": this.boxHeight,
+                    "y2": y2,
                     "x2": this.xScale(this.data.max),
                     'stroke': this.fill
                 })

@@ -36,7 +36,9 @@ export default {
             { 'title': 'Sort by Exclusive Runtime' }],
         compareMode: false,
         selectedModule: '',
-        selectedCallsite: ''
+        selectedCallsite: '',
+        informationHeight: 70,
+
     }),
     mounted() {
         let self = this
