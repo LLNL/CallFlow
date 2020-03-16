@@ -65,7 +65,7 @@ export default {
 		},
 		left: false,
 		formats: ['CCT', 'CallGraph', 'SuperGraph'],
-		selectedFormat: 'CCT',
+		selectedFormat: 'SuperGraph',
 		datasets: [],
 		selectedTargetDataset: '',
 		selectedDataset2: '',
@@ -114,7 +114,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
 		modes: ['Ensemble', 'Single'],
-		selectedMode: 'Single',
+		selectedMode: 'Ensemble',
 		// Presentation mode variables
 		exhibitModes: ['Presentation', 'Default'],
 		selectedExhibitMode: 'Default',
