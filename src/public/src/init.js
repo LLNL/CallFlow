@@ -9,7 +9,7 @@ import 'vue-material/dist/theme/default.css';
 import 'vuetify/dist/vuetify.min.css';
 import 'material-design-icons-iconfont/dist/material-design-icons.css';
 
-import store from './store/index.ts';
+import store from './store/index';
 import App from './App';
 import CallFlow from './components/callflow';
 

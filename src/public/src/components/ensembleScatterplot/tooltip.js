@@ -22,8 +22,10 @@ export default {
                 .attr('class', 'toolTipSVG')
 
             this.toolTipG = this.toolTipDiv.append('g')
-            this.height = document.getElementById(this.id).clientHeight/4
+            this.height = 80
             this.halfWidth = document.getElementById(this.id).clientWidth /2
+            this.halfHeight = document.getElementById(this.id).clientHeight /2
+
         },
 
         formatRuntime(val) {
@@ -39,9 +41,16 @@ export default {
                 .attrs({
                     'class': 'toolTipContent',
                     'x': () => {
-                        return (this.xOffset - 10) + 'px'
+                        console.log(this.mousePosX, this.halfWidth, document.getElementById(this.id).clientWidth)
+                        if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth) {
+                            return (this.mousePosX - this.width) + this.textxOffset + 'px'
+                        }
+                        return this.mousePosX + this.textxOffset + 'px'
                     },
                     'y': () => {
+                        if (this.mousePosY + this.halfHeight > document.getElementById(this.id).clientHeight) {
+                            return ((this.mousePosY) + this.textyOffset + this.textPadding * this.textCount) - this.height + 'px'
+                        }
                         return (this.mousePosY) + this.textyOffset + this.textPadding * this.textCount + "px";
                     }
                 })
@@ -79,28 +88,31 @@ export default {
                     "fill-opacity": 1,
                     "width": this.width,
                     "height": this.height,
-                })
-                .attrs({
                     'x': () => {
-                        if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth - 25) {
+                        if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth) {
                             return (this.mousePosX - this.width) + 'px';
                         }
                         return (this.mousePosX) + 'px';
 
                     },
                     'y': () => {
+                        if (this.mousePosY + this.halfHeight > document.getElementById(this.id).clientHeight) {
+                            return (this.mousePosY - this.height) + 'px';
+                        }
                         return (this.mousePosY) + "px";
                     }
                 })
             this.data = data
 
-            if (this.mousePosX + this.halfWidth > this.callgraphOverviewWidth) {
-                this.xOffset = this.mousePosX - 200 + this.textxOffset
-            } else if (this.mousePosX < 100) {
-                this.xOffset = this.mousePosX + this.textxOffset
-            } else {
-                this.xOffset = this.mousePosX - 200 + this.textxOffset
-            }
+            // if (this.mousePosX + this.halfWidth > this.callgraphOverviewWidth) {
+            //     this.xOffset = this.mousePosX - this.halfWidth + this.textxOffset
+            // } else if (this.mousePosX < this.halfWidth) {
+            //     this.xOffset = this.mousePosX + this.textxOffset
+            // } else {
+            //     this.xOffset = this.mousePosX - this.halfWidth + this.textxOffset
+            // }
+
+            // console.log(this.xOffset)
 
             this.info()
         },
