@@ -57,7 +57,7 @@ class App:
                 sockets.run(app, debug=False, use_reloader=True)
 
     def processPipeline(self):
-        self.config = ConfigFileReader(self.args.config_dir + self.args.run + '.json')
+        self.config = ConfigFileReader(self.args.config_dir + self.args.runName + '.json')
         self.config.server_dir = os.getcwd()
         self.config.callflow_dir = (
             self.callflow_path + '/' + self.config.save_path + '/' + self.config.runName
@@ -74,7 +74,6 @@ class App:
             self.single_callflow = SingleCallFlow(self.config)
 
     def renderPipeline(self, config_file_name):
-        print(config_file_name)
         self.config = ConfigFileReader(self.args.config_dir + config_file_name + '.json')
         self.config.server_dir = os.getcwd()
         self.config.callflow_dir = (
@@ -109,19 +108,15 @@ class App:
         )
         parser.add_argument("--config_dir", help="Config file directory.")
         parser.add_argument(
-            "--run", default="", help="Config file name to be processed."
-        )
-        parser.add_argument(
             "--ensemble", action="store_true", help="Ensemble mode processing."
         )
         parser.add_argument(
             "--process", action="store_true", help="Process mode. To preprocess at the required level of granularity, use the options --filter, --entire. If you are preprocessing multiple callgraphs, use --ensemble option."
         )
         parser.add_argument(
-            "--runName", help="Run name."
+            "--runName", help="Config file name to be processed."
         )
         self.args = parser.parse_args()
-        print(self.args)
         self.debug = self.args.verbose
 
     # Raises expections if something is not provided
@@ -132,9 +127,7 @@ class App:
             raise Exception()
         else:
             if not os.path.isfile(self.args.config):
-                log.info(
-                    "Please check the config file path. There exists no such file in the path provided"
-                )
+                log.info("Please check the config file path. There exists no such file in the path provided")
                 raise Exception()
 
     def create_dot_callflow_folder(self):
@@ -145,14 +138,10 @@ class App:
 
         for dataset in self.config.datasets:
             dataset_dir = self.config.callflow_dir + "/" + dataset["name"]
-            print(dataset_dir)
+            log.info(dataset_dir)
             if not os.path.exists(dataset_dir):
                 if self.debug:
-                    print(
-                        "Creating .callflow directory for dataset : {0}".format(
-                            dataset["name"]
-                        )
-                    )
+                    log.info(f"Creating .callflow directory for dataset : {dataset['name']}")
                 os.makedirs(dataset_dir)
 
             files = [
@@ -418,6 +407,23 @@ class App:
             result = self.callflow.request(
                 {
                     "name": "scatterplot",
+                    "datasets": data["datasets"],
+                    "dataset": data["dataset"],
+                    "dataset2": data["dataset2"],
+                    "col": data["col"],
+                    "catcol": data["catcol"],
+                    "plot": data["plot"],
+                }
+            )
+            emit("ensemble_scatterplot", result, json=True)
+
+        @sockets.on("reveal_callsite", namespace="/")
+        def reveal_callsite(data):
+            if self.debug:
+                self.print(f"Reveal calliste: {data['callsite']} of module: {data['module']}.")
+            result = self.callflow.request(
+                {
+                    "name": "",
                     "datasets": data["datasets"],
                     "dataset": data["dataset"],
                     "dataset2": data["dataset2"],

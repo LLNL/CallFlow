@@ -256,7 +256,7 @@ export default {
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
 			this.$store.nodeInfo = {}
 			this.$store.selectedMetric = this.selectedMetric
-			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT
+			this.$store.selectedFunctionsInCCT = this.selectedFaunctionsInCCT
 			this.$store.datasetMap = this.$store.runNames.map((run, i) => "run-" + i)
 
 			this.$store.timeScale = 0.000001

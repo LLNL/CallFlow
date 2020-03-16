@@ -163,8 +163,8 @@ export default {
 			this.yAxisHeight = this.boxHeight - 4 * this.padding.left
 
 			console.log(this.xMin, this.xMax, this.yMin, this.yMax)
-			this.xScale = d3.scaleLinear().domain([this.xMin, 1.2 * this.xMax]).range([0, this.xAxisHeight])
-			this.yScale = d3.scaleLinear().domain([this.yMin, 1.2 * this.yMax]).range([this.yAxisHeight, 0])
+			this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.xAxisHeight])
+			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.yAxisHeight, 0])
 		},
 
 		targetProcess() {
@@ -236,7 +236,6 @@ export default {
 			let yMax = 0
 
 			for (const [idx, d] of Object.entries(xData)) {
-				console.log(d)
 				xMin = Math.min(xMin, d.val)
 				xMax = Math.max(xMax, d.val)
 				xArray.push(d)
@@ -494,6 +493,7 @@ export default {
 			for (let i = 0; i < this.xtargetArray.length; i++) {
 				let callsite = this.xtargetArray[i]['callsite']
 				let run = this.$store.selectedTargetDataset
+				console.log(run)
 				let mean = 0
 				let variance = 0
 				if (this.$store.selectedMetric == 'Inclusive') {
@@ -526,8 +526,8 @@ export default {
 						let data = {
 							'callsite': callsite,
 							'undesirability': undesirability,
-							'value': self.xArray[i].val,
-							'run': self.xArray[i].run
+							'value': self.xtargetArray[i].val,
+							'run': run
 						}
 						self.$refs.ToolTip.render(data)
 					})

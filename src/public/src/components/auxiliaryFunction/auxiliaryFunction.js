@@ -21,7 +21,7 @@ export default {
         firstRender: true,
         padding: { top: 0, right: 10, bottom: 0, left: 5 },
         textOffset: 25,
-        boxplotHeight: 250,
+        boxplotHeight: 350,
         boxplotWidth: 0,
         duration: 300,
         iqrFactor: 0.15,
@@ -73,10 +73,10 @@ export default {
 
     methods: {
         formatModule(module){
-            if(module.length < 15){
+            if(module.length < 10){
                 return module
             }
-            return this.trunc(module, 15)
+            return this.trunc(module, 10)
         },
 
         formatName(name) {
@@ -105,7 +105,6 @@ export default {
 
             this.width = document.getElementById('auxiliary-function-overview').clientWidth
             this.height = 0.66 * this.$store.viewHeight
-            console.log(this.height)
             this.boxplotWidth = this.width - this.padding.left - this.padding.right
 
             document.getElementById('auxiliary-function-overview').style.maxHeight = this.height + "px"
@@ -129,18 +128,14 @@ export default {
 
         clickCallsite(event) {
             event.stopPropagation()
-            let modules = this.module
+            let module = this.module
             let callsite = this.name
 
-            this.$socket.emit('dist_hierarchy', {
-                module: modules,
-                datasets: this.$store.runNames,
-            })
+            console.log(module, callsite)
 
-            this.$socket.emit('ensemble_histogram', {
+            this.$socket.emit('reveal_callsite', {
+                module: module,
                 datasets: this.$store.runNames,
-                module: modules,
-                name: callsite
             })
         },
 
@@ -151,7 +146,7 @@ export default {
 
         selectCallsitesByModule(thismodule) {
             this.selectedModule = thismodule
-            this.selectedCallsite = ''
+            this.selectedCallsite = ''  
 
             let all_callsites = Object.keys(this.$store.callsites[this.$store.selectedTargetDataset])
             let ensemble_callsites = this.$store.callsites['ensemble']

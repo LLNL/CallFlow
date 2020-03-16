@@ -32,10 +32,10 @@ export default {
     mounted() {
         this.id = 'parameter-projection-view'
         let self = this
-        EventHandler.$on('highlight_dataset', (dataset) => {
-            console.log("[Projection] Highlighting the dataset :", dataset)
-            self.highlight(dataset)
-        })
+        // EventHandler.$on('highlight_dataset', (dataset) => {
+        //     console.log("[Projection] Highlighting the dataset :", dataset)
+        //     self.highlight(dataset)
+        // })
     },
     methods: {
         init() {
