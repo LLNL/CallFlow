@@ -35,7 +35,7 @@ export default {
 		treeHeight: null,
 		data: null,
 		message: "Summary Graph View",
-		debug: true
+		debug: false
 	}),
 
 	mounted() {

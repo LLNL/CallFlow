@@ -162,7 +162,6 @@ export default {
 			this.xAxisHeight = this.boxWidth - 4 * this.padding.left
 			this.yAxisHeight = this.boxHeight - 4 * this.padding.left
 
-			console.log(this.xMin, this.xMax, this.yMin, this.yMax)
 			this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.xAxisHeight])
 			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.yAxisHeight, 0])
 		},

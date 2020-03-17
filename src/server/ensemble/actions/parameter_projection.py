@@ -36,7 +36,7 @@ class ParameterProjection:
 
     def add_df_params(self, state):
         ret = {}
-        ret['max_inclusive_time'] = state.df['time (inc)'].max()
+        # ret['max_inclusive_time'] = state.df['time (inc)'].max()
         ret['max_exclusive_time'] = state.df['time'].max()
         ret['rank_count'] = len(state.df['rank'].unique())
         # ret['similarity'] = self.similarities[self.datasetOrder[self.targetDataset]]

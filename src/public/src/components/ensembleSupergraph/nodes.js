@@ -187,7 +187,6 @@ export default {
             this.hist_min = 0
             this.hist_max = 0
             for (let node of nodes) {
-                console.log(node)
                 this.hist_min = Math.min(this.hist_min, data[node.module]['gradients'][this.$store.selectedMetric]['hist']['y_min'])
                 this.hist_max = Math.max(this.hist_max, data[node.module]['gradients'][this.$store.selectedMetric]['hist']['y_max'])
             }
