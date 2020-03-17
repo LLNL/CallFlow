@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 
 export default {
     template: tpl,
-    name: 'ToolTipModuleHierarchy',
+    name: 'ToolTip',
     components: {},
 
     data: () => ({

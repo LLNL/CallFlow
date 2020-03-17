@@ -136,7 +136,7 @@ export default {
 		// selectedCaseStudy: 'OSU-Bcast',
 		// selectedCaseStudy: "Kripke-Scaling",
 		selectedRunBinCount: 20,
-		selectedHierarchyMode: 'Exclusive',
+		selectedHierarchyMode: 'Uniform',
 		hierarchyModes: ['Uniform', 'Exclusive'],
 		selectedRuntimeSortBy: 'Inclusive',
 		sortByModes: ['Inclusive', 'Exclusive', 'Percent Imbalance', 'Skewness', 'Kurtosis'],
@@ -258,6 +258,7 @@ export default {
 			this.$store.selectedMetric = this.selectedMetric
 			this.$store.selectedFunctionsInCCT = this.selectedFaunctionsInCCT
 			this.$store.datasetMap = this.$store.runNames.map((run, i) => "run-" + i)
+			this.$store.selectedHierarchyMode = this.selectedHierarchyMode
 
 			this.$store.timeScale = 0.000001
 			this.$store.viewHeight = (window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight)

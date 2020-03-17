@@ -1,7 +1,6 @@
 import tpl from '../../html/moduleHierarchy/index.html'
 import * as d3 from 'd3'
-import dropdown from 'vue-dropdowns'
-import ToolTipModuleHierarchy from './tooltip'
+import ToolTip from './tooltip'
 import Queue from '../../core/queue';
 
 
@@ -9,8 +8,7 @@ export default {
 	name: 'ModuleHierarchy',
 	template: tpl,
 	components: {
-		dropdown,
-		// ToolTipModuleHierarchy
+		ToolTip
 	},
 	props: [],
 	data: () => ({
@@ -53,7 +51,6 @@ export default {
 		message: 'SuperNode Hierarchy',
 		offset: 4,
 		stroke_width: 4,
-		widthType: 'Uniform',
 		metric: '',
 	}),
 
@@ -87,12 +84,12 @@ export default {
 			let modules_arr = Object.keys(this.$store.modules['ensemble'])
 
 			if (this.$store.selectedMetric == 'Inclusive') {
-				this.metric = 'mean_time (inc)'
+				this.metric = 'max_time (inc)'
 			}
 			else if (this.$store.selectedMetric == 'Exclusive') {
-				this.metric = 'mean_time'
+				this.metric = 'max_time'
 			}
-
+			// this.setupSVG()
 			this.$socket.emit('module_hierarchy', {
 				module: modules_arr[0],
 				datasets: this.$store.runNames,
@@ -115,7 +112,9 @@ export default {
 					'width': this.icicleWidth + this.margin.right + this.margin.left + 10,
 					'height': this.icicleHeight + this.margin.top + this.margin.bottom,
 				})
-
+			
+			console.log(this.$refs)
+			this.$refs.ToolTip.init()
 		},
 
 		update_maxlevels(data) {
@@ -252,7 +251,6 @@ export default {
 					continue
 				}
 				root.children.forEach(function (node) {
-					console.log(node)
 					nodes.push(node);
 					queue.push(node)
 				});
@@ -279,10 +277,11 @@ export default {
 			let self = this
 			return function (node) {
 				if (node.children) {
-					if (self.widthType == 'Exclusive') {
+					console.log(self.$store.selectedHierarchyMode)
+					if (self.$store.selectedHierarchyMode == 'Exclusive') {
 						self.diceByValue(node, node.x0, dy * (node.depth + 1) / n, node.x1, dy * (node.depth + 2) / n)
 					}
-					else if (self.widthType == 'Uniform') {
+					else if (self.$store.selectedHierarchyMode == 'Uniform') {
 						self.dice(node, node.x0, dy * (node.depth + 1) / n, node.x1, dy * (node.depth + 2) / n);
 					}
 				}
@@ -328,19 +327,27 @@ export default {
 		diceByValue(parent, x0, y0, x1, y1) {
 			let value = 1
 			if (parent.parent == null) {
-				value = this.$store.modules['ensemble'][parent.data.name][this.metric]
+				value = this.$store.modules['ensemble'][parent.data.id]['max_time']
+			}
+			else{
+				value = this.$store.callsites['ensemble'][parent.data.id][this.metric]
 			}
 
 			var nodes = parent.children,
 				node,
 				i = -1,
 				n = nodes.length,
-				k = value && (x1 - x0) / value;
+				k = value && (parent.x1 - parent.x0) / value;
+
+			console.log(k, value, x1, x0, x1 - x0)
 
 			while (++i < n) {
 				node = nodes[i], node.y0 = y0, node.y1 = y1;
 				node.x0 = x0
-				node.x1 = x0 += node.data[this.metric] * k;
+				node.x1 = x0 += node.data.data[this.metric] * k;
+				console.log(node.data.id, node.data)
+				console.log("x0: ", node.x0)
+				console.log("x1: ", node.x1)
 			}
 		},
 

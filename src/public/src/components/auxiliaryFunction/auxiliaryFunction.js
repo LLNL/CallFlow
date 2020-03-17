@@ -21,7 +21,7 @@ export default {
         firstRender: true,
         padding: { top: 0, right: 10, bottom: 0, left: 5 },
         textOffset: 25,
-        boxplotHeight: 350,
+        boxplotHeight: 300,
         boxplotWidth: 0,
         duration: 300,
         iqrFactor: 0.15,
