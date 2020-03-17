@@ -81,107 +81,38 @@ class Auxiliary:
                 ret[dataset][callsite] = module
         return ret
 
-    def pack_json_module(self, group_df, node_name, gradients, hists):
+    def pack_json(self, df=pd.DataFrame(), name='', all_ranks_hist={}, gradients={}, prop_hists={}):
         with self.timer.phase("Pack data"):
             result = {
-                "name": node_name,
-                # "time (inc)": group_df['time (inc)'].tolist(),
-                # "time": group_df['time'].tolist(),
-                # "rank": group_df['rank'].tolist(),
-                # "names": group_df['name'].tolist(),
-                "id": 'node-' + str(group_df['nid'].tolist()[0]),
-                # "sorted_time (inc)": group_df['time (inc)'].sort_values().tolist(),
-                # "sorted_time": group_df['time'].sort_values().tolist(),
-                "mean_time (inc)": group_df['time (inc)'].mean(),
-                "mean_time": group_df['time'].mean(),
-                "max_time (inc)": group_df['time (inc)'].max(),
-                "max_time": group_df['time'].max(),
-                "min_time (inc)": group_df['time (inc)'].min(),
-                "min_time": group_df['time'].min(),
-                "variance_time": np.var(np.array(group_df['time'])),
-                "variance_time (inc)": np.var(np.array(group_df['time (inc)'])),
-                # "imbalance_perc_inclusive": group_df['imbalance_perc_inclusive'].tolist()[0],
-                # "imbalance_perc_exclusive": group_df['imbalance_perc_exclusive'].tolist()[0],
-                # # "std_deviation_inclusive": group_df['std_deviation_inclusive'].tolist()[0],
-                # # "std_deviation_exclusive": group_df['std_deviation_exclusive'].tolist()[0],
-                # "skewness_inclusive": group_df['skewness_inclusive'].tolist()[0],
-                # "skewness_exclusive": group_df['skewness_exclusive'].tolist()[0],
-                # "kurtosis_inclusive": group_df['kurtosis_inclusive'].tolist()[0],
-                # "kurtosis_exclusive": group_df['kurtosis_exclusive'].tolist()[0],
-                "dataset": group_df['dataset'].tolist()[0],
-                "module": group_df['module'].tolist()[0],
+                "name": name,
+                # "time (inc)": df['time (inc)'].tolist(),
+                # "time": df['time'].tolist(),
+                # "rank": df['rank'].tolist(),
+                # "names": df['name'].tolist(),
+                "id": 'node-' + str(df['nid'].tolist()[0]),
+                # "sorted_time (inc)": df['time (inc)'].sort_values().tolist(),
+                # "sorted_time": df['time'].sort_values().tolist(),
+                "mean_time (inc)": df['time (inc)'].mean(),
+                "mean_time": df['time'].mean(),
+                "max_time (inc)": df['time (inc)'].max(),
+                "max_time": df['time'].max(),
+                "min_time (inc)": df['time (inc)'].min(),
+                "min_time": df['time'].min(),
+                "variance_time": np.var(np.array(df['time'])),
+                "variance_time (inc)": np.var(np.array(df['time (inc)'])),
+                # "imbalance_perc_inclusive": df['imbalance_perc_inclusive'].tolist()[0],
+                # "imbalance_perc_exclusive": df['imbalance_perc_exclusive'].tolist()[0],
+                # # "std_deviation_inclusive": df['std_deviation_inclusive'].tolist()[0],
+                # # "std_deviation_exclusive": df['std_deviation_exclusive'].tolist()[0],
+                # "skewness_inclusive": df['skewness_inclusive'].tolist()[0],
+                # "skewness_exclusive": df['skewness_exclusive'].tolist()[0],
+                # "kurtosis_inclusive": df['kurtosis_inclusive'].tolist()[0],
+                # "kurtosis_exclusive": df['kurtosis_exclusive'].tolist()[0],
+                "dataset": df['dataset'].tolist()[0],
+                "module": df['module'].tolist()[0],
+                "all_rank_histogram": all_ranks_hist,
                 "gradients": gradients,
-                "hists": hists
-            }
-        return result
-
-    def pack_json_old(self, group_df, node_name, data_type):
-        df = self.df.loc[self.df['name'] == node_name ]
-        with self.timer.phase("Calculate Histograms"):
-            time_inc_ensemble_arr = np.array(df['time (inc)'].tolist())
-            time_exc_ensemble_arr = np.array(df['time'].tolist())
-
-            time_inc_target_arr = np.array(group_df['time (inc)'].tolist())
-            time_exc_target_arr = np.array(group_df['time'].tolist())
-
-            histogram_inc_array = np.concatenate((time_inc_target_arr, time_inc_ensemble_arr), axis=0)
-            histogram_exc_array = np.concatenate((time_exc_target_arr, time_exc_ensemble_arr), axis=0)
-
-            hist_inc_grid = self.histogram(time_inc_target_arr)
-            hist_exc_grid = self.histogram(time_exc_target_arr)
-
-        with self.timer.phase("Calculate Gradients"):
-            if(data_type == 'callsite'):
-                gradients = KDE_gradients(self.dataset_states, binCount=self.binCount).run(columnName='name', callsiteOrModule=node_name)
-
-            elif(data_type == 'module'):
-                gradients = KDE_gradients(self.dataset_states, binCount=self.binCount).run(columnName='module', callsiteOrModule=node_name)
-
-        with self.timer.phase("Pack data"):
-            result = {
-                "name": node_name,
-                # "time (inc)": group_df['time (inc)'].tolist(),
-                # "time": group_df['time'].tolist(),
-                # "rank": group_df['rank'].tolist(),
-                # "names": group_df['name'].tolist(),
-                "id": 'node-' + str(group_df['nid'].tolist()[0]),
-                # "sorted_time (inc)": group_df['time (inc)'].sort_values().tolist(),
-                # "sorted_time": group_df['time'].sort_values().tolist(),
-                "mean_time (inc)": group_df['time (inc)'].mean(),
-                "mean_time": group_df['time'].mean(),
-                "max_time (inc)": group_df['time (inc)'].max(),
-                "max_time": group_df['time'].max(),
-                "min_time (inc)": group_df['time (inc)'].min(),
-                "min_time": group_df['time'].min(),
-                "variance_time": np.var(np.array(group_df['time'])),
-                "variance_time (inc)": np.var(np.array(group_df['time (inc)'])),
-                # "imbalance_perc_inclusive": group_df['imbalance_perc_inclusive'].tolist()[0],
-                # "imbalance_perc_exclusive": group_df['imbalance_perc_exclusive'].tolist()[0],
-                # # "std_deviation_inclusive": group_df['std_deviation_inclusive'].tolist()[0],
-                # # "std_deviation_exclusive": group_df['std_deviation_exclusive'].tolist()[0],
-                # "skewness_inclusive": group_df['skewness_inclusive'].tolist()[0],
-                # "skewness_exclusive": group_df['skewness_exclusive'].tolist()[0],
-                # "kurtosis_inclusive": group_df['kurtosis_inclusive'].tolist()[0],
-                # "kurtosis_exclusive": group_df['kurtosis_exclusive'].tolist()[0],
-                "dataset": group_df['dataset'].tolist()[0],
-                "module": group_df['module'].tolist()[0],
-                "hist_time (inc)": {
-                    "x": hist_inc_grid[0].tolist(),
-                    "y": hist_inc_grid[1].tolist(),
-                    "x_min": hist_inc_grid[0][0],
-                    "x_max": hist_inc_grid[0][-1],
-                    "y_min": np.min(hist_inc_grid[1]).astype(np.float64),
-                    "y_max": np.max(hist_inc_grid[1]).astype(np.float64),
-                },
-                "hist_time": {
-                    "x": hist_exc_grid[0].tolist(),
-                    "y": hist_exc_grid[1].tolist(),
-                    "x_min": hist_exc_grid[0][0],
-                    "x_max": hist_exc_grid[0][-1],
-                    "y_min": np.min(hist_exc_grid[1]).astype(np.float64),
-                    "y_max": np.max(hist_exc_grid[1]).astype(np.float64),
-                },
-                "gradients": gradients
+                "prop_histograms": prop_hists
             }
         return result
 
@@ -195,20 +126,11 @@ class Auxiliary:
             "y_max": np.max(histogram_grid[1]).astype(np.float64),
         }
 
-    def all_ranks(self, df, target_df, attr):
+    def all_ranks(self, df, attr):
         ret = {}
-
-        time_ensemble_arr = np.array(df[attr].tolist())
-        time_target_arr = np.array(target_df[attr].tolist())
-
-        combined_array = np.concatenate((time_target_arr, time_ensemble_arr), axis=0)
-            
-        histogram_ensemble_grid = self.histogram(time_ensemble_arr)
-        histogram_target_grid = self.histogram(time_target_arr)
-
-        ret['ensemble'] = self.histogram_format(histogram_ensemble_grid)
-        ret['target'] = self.histogram_format(histogram_target_grid)
-
+        time_arr = np.array(df[attr].tolist())            
+        histogram_grid = self.histogram(time_arr)
+        ret = self.histogram_format(histogram_grid)
         return ret
 
     # Prop can be dataset, rank, name
@@ -239,7 +161,6 @@ class Auxiliary:
         with self.timer.phase("For all MPI ranks"):
             ret['histogram_all_ranks (inc)'] = self.all_ranks()
             
-
         with self.timer.phase("Calculate Gradients"):
             gradients = KDE_gradients(self.states, binCount=self.binCount).run(columnName='module', callsiteOrModule=module_name)
 
@@ -255,6 +176,8 @@ class Auxiliary:
         ensemble = {}
         for name, group_df in name_grouped:
             name_df = self.df.loc[self.df['name'] == name ]
+            gradients = KDE_gradients(self.dataset_states, binCount=self.binCount).run(columnName='name', callsiteOrModule=node_name)
+
             ensemble[name] = self.pack_json_callsite(name_df, name, data_type)
 
         ret['ensemble'] = ensemble
@@ -280,29 +203,42 @@ class Auxiliary:
         modules = self.df['module'].unique()
         ensemble = {}
         for module in modules:
+            all_ranks_hist = {}
             module_df = self.df[self.df['module'] == module]
-            ensemble[module] = self.pack_json_old(module_df, module, data_type)
+
+            # Calculate all MPI ranks
+            all_ranks_hist['Inclusive'] = self.all_ranks(module_df, 'time (inc)')
+            all_ranks_hist['Exclusive'] = self.all_ranks(module_df, 'time')
+
+            # Calculate gradients
+            gradients = KDE_gradients(self.dataset_states, binCount=self.binCount).run(columnName='module', callsiteOrModule=module)
+
+            ensemble[module] = self.pack_json(df=module_df, name=module, all_ranks_hist=all_ranks_hist, gradients=gradients)
 
         ret['ensemble'] = ensemble
         
         for dataset in self.datasets:
             target = {}
             for module in modules:
+                # Calculate all MPI ranks
+                all_ranks_hist['Inclusive'] = self.all_ranks(self.target_df[dataset], 'time (inc)')
+                all_ranks_hist['Exclusive'] = self.all_ranks(self.target_df[dataset], 'time')
+
                 gradients = KDE_gradients(self.dataset_states, binCount=self.binCount).run(columnName='module', callsiteOrModule=module)
 
                 module_ensemble_df = self.df[self.df['module'] == module]
                 module_target_df = self.target_df[dataset].loc[self.target_df[dataset]['module'] == module]
 
                 hists = {}
-                hists['inclusive'] = {}
-                hists['exclusive'] = {}
+                hists['Inclusive'] = {}
+                hists['Exclusive'] = {}
                 if( not module_target_df.empty):
                     for prop in self.props:
-                        hists['inclusive'][prop] = self.average_by_property(module_ensemble_df, module_target_df, 'time (inc)', prop)
+                        hists['Inclusive'][prop] = self.average_by_property(module_ensemble_df, module_target_df, 'time (inc)', prop)
 
-                        hists['exclusive'][prop] = self.average_by_property(module_ensemble_df, module_target_df, 'time', prop)
+                        hists['Exclusive'][prop] = self.average_by_property(module_ensemble_df, module_target_df, 'time', prop)
 
-                    target[module] = self.pack_json_module(module_target_df, module, gradients, hists)
+                    target[module] = self.pack_json(df=module_target_df, name=module, all_ranks_hist=all_ranks_hist, gradients=gradients, prop_hists=hists)
 
             ret[dataset] = target
 
