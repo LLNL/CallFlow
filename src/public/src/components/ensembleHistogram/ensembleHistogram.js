@@ -48,8 +48,10 @@ export default {
         selectedColorBy: 'Inclusive',
         MPIcount: 0,
         message: 'MPI Distribution',
-        paddingFactor: 3,
+        paddingFactor: 3.5,
         thisNode: '',
+        selectedPropLabel: '',
+        selectedPropSum: 0
     }),
 
     mounted() {
@@ -73,7 +75,7 @@ export default {
 
             // Assign the height and width of container
             this.width = window.innerWidth * 0.25
-            this.height = this.$store.viewHeight * 0.30
+            this.height = this.$store.viewHeight * 0.33
 
             // Assign width and height for histogram and rankLine SVG.
             this.boxWidth = this.width - 1*(this.padding.right + this.padding.left)
@@ -171,9 +173,6 @@ export default {
 
             this.rankCount = parseInt(this.$store.numOfRanks['ensemble'])
 
-            let minXVal = Math.min(this.axis_x[0], this.target_axis_x[0])
-            let maxXVal = Math.max(this.axis_x[this.axis_x.length - 1], this.target_axis_x[this.target_axis_x.length - 1])
-
             this.sortedXVals = this.xVals.sort((a, b) => a - b)
 
             this.histogramXScale = d3.scaleBand()
@@ -201,8 +200,22 @@ export default {
             this.targetBars()
             this.xAxis()
             this.yAxis()
+            this.setTitle()
             // this.rankLines()
             // this.brushes()        
+        },
+
+        setTitle(){
+            if(this.$store.selectedProp == 'rank'){
+                this.selectedPropLabel = 'Ranks'
+            }
+            else if(this.$store.selectedProp == 'name'){
+                this.selectedPropLabel = 'Callsites'
+            }
+            else if(this.$store.selectedProp == 'dataset'){
+                this.selectedPropLabel = 'Runs'
+            }
+            this.selectedPropSum = this.freq.reduce((acc, val) => {return acc + val})
         },
 
         clear() {
@@ -389,7 +402,7 @@ export default {
         xAxis() {
             const xFormat = d3.format('.1');
             const xAxis = d3.axisBottom(this.histogramXScale)
-                .ticks(10)
+                .ticks(5)
                 .tickFormat((d, i) => {
                     if(i % 3 == 0){
                         return `${xFormat(d)}`;    
@@ -399,7 +412,7 @@ export default {
             let label = this.$store.selectedMetric  + " Runtime (" + "\u03BCs)"
             this.svg.append('text')
                 .attr('class', 'histogram-axis-label')
-                .attr('x', this.boxWidth)
+                .attr('x', this.boxWidth - this.padding.left)
                 .attr('y', this.yAxisHeight + 3 * this.padding.top)
                 .style('font-size', '12px')
                 .style('text-anchor', 'end')
@@ -407,7 +420,7 @@ export default {
 
             const xAxisLine = this.svg.append('g')
                 .attr('class', 'x-axis')
-				.attr("transform", "translate(" + 3 * this.padding.left + "," + this.yAxisHeight + ")")
+				.attr("transform", "translate(" + this.paddingFactor * this.padding.left + "," + this.yAxisHeight + ")")
                 .call(xAxis)
 
             xAxisLine.selectAll('path')
@@ -473,7 +486,7 @@ export default {
 
             const yAxisLine = this.svg.append('g')
                 .attr('class', 'y-axis')
-				.attr('transform', "translate(" + 3 * this.padding.left + ", 0)")
+				.attr('transform', "translate(" + this.paddingFactor * this.padding.left + ", 0)")
                 .call(yAxis)
 
             yAxisLine.selectAll('path')

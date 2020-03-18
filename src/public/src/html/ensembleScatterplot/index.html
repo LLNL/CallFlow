@@ -2,8 +2,10 @@
     <v-layout class="chip-container">
         <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
         <v-spacer> </v-spacer>
-        <!-- <Settings/> -->
     </v-layout>
+    <span class="component-info">
+        Module undesirability = {{moduleUnDesirability}}
+    </span>
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
 </v-layout>

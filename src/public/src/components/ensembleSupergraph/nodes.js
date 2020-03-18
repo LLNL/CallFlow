@@ -267,6 +267,8 @@ export default {
                     this.$store.selectedModule = d.module
                     this.$store.selectedName = d.name
 
+                    console.log(this.$store.selectedModule)
+
                     this.$socket.emit('module_hierarchy', {
                         module: this.$store.selectedModule,
                         name: this.$store.selectedName,

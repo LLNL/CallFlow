@@ -52,6 +52,7 @@ export default {
 		offset: 4,
 		stroke_width: 4,
 		metric: '',
+		selectedModule: ''
 	}),
 
 	watch: {
@@ -113,8 +114,8 @@ export default {
 					'height': this.icicleHeight + this.margin.top + this.margin.bottom,
 				})
 			
-			console.log(this.$refs)
 			this.$refs.ToolTip.init()
+			this.selectedModule = this.$store.selectedModule
 		},
 
 		update_maxlevels(data) {

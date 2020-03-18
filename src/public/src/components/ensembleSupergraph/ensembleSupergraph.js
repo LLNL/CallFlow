@@ -46,7 +46,6 @@ export default {
 
 	sockets: {
 		ensemble_supergraph(data) {
-			console.log(data)
 			data = JSON.parse(data)
 			console.log("Data: ", data)
 			for(let i = 0; i < data.nodes.length; i+=1){

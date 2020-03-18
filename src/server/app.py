@@ -400,23 +400,6 @@ class App:
             # })
             emit("split_caller", {}, json=True)
 
-        @sockets.on("ensemble_scatterplot", namespace="/")
-        def ensemble_scatterplot(data):
-            if self.debug:
-                self.print("Dist-Scatterplot request for module.")
-            result = self.callflow.request(
-                {
-                    "name": "scatterplot",
-                    "datasets": data["datasets"],
-                    "dataset": data["dataset"],
-                    "dataset2": data["dataset2"],
-                    "col": data["col"],
-                    "catcol": data["catcol"],
-                    "plot": data["plot"],
-                }
-            )
-            emit("ensemble_scatterplot", result, json=True)
-
         @sockets.on("reveal_callsite", namespace="/")
         def reveal_callsite(data):
             if self.debug:

@@ -44,12 +44,12 @@ export default {
 
             this.medianMarker()
             this.extremeMarkers()
-            this.qTexts()
+            // this.qTexts()
         },
 
         medianMarker() {
-            let y1 = this.$parent.$parent.informationHeight/4
-            let y2 = this.boxHeight - this.$parent.$parent.informationHeight/8
+            let y1 = this.$parent.$parent.informationHeight / 4
+            let y2 = this.boxHeight - this.$parent.$parent.informationHeight / 8
             this.medianLine = this.g
                 .append("line")
                 .attrs({
@@ -65,14 +65,12 @@ export default {
         },
 
         extremeMarkers() {
-            if (this.$store.selectedMarker == 'target') {
-                this.data = this.targetq
-                this.fill = this.$store.color.target
-            }
-            else if (this.$store.selectedMarker == 'ensemble') {
-                this.data = this.q
-                this.fill = this.$store.color.ensemble
-            }
+            // if (this.$store.selectedMarker == 'target') {
+            this.targetData = this.targetq
+            // }
+            // else if (this.$store.selectedMarker == 'ensemble') {
+            this.data = this.q
+            // }
 
             this.minMaxEnsembleMarker()
             this.minMaxTargetMarker()
@@ -82,8 +80,8 @@ export default {
         },
 
         minMaxEnsembleMarker() {
-            let y1 = this.$parent.$parent.informationHeight/2
-            let y2 = this.boxHeight - this.$parent.$parent.informationHeight/4
+            let y1 = this.$parent.$parent.informationHeight / 2
+            let y2 = this.boxHeight - this.$parent.$parent.informationHeight / 4
             this.g.append("line")
                 .attrs({
                     "class": "whisker",
@@ -108,16 +106,16 @@ export default {
         },
 
         minMaxTargetMarker() {
-            let y1 = this.$parent.$parent.informationHeight/2
-            let y2 = this.boxHeight - this.$parent.$parent.informationHeight/4
+            let y1 = this.$parent.$parent.informationHeight / 2
+            let y2 = this.boxHeight - this.$parent.$parent.informationHeight / 4
             this.g.append("line")
                 .attrs({
                     "class": "whisker",
                     "y1": y1,
-                    "x1": this.xScale(this.data.min),
+                    "x1": this.xScale(this.targetData.min),
                     "y2": y2,
-                    "x2": this.xScale(this.data.min),
-                    'stroke': this.fill
+                    "x2": this.xScale(this.targetData.min),
+                    'stroke': this.$store.color.target
                 })
                 .style('stroke-width', '1.5')
 
@@ -125,51 +123,84 @@ export default {
                 .attrs({
                     "class": "whisker",
                     "y1": y1,
-                    "x1": this.xScale(this.data.max),
+                    "x1": this.xScale(this.targetData.max),
                     "y2": y2,
-                    "x2": this.xScale(this.data.max),
-                    'stroke': this.fill
+                    "x2": this.xScale(this.targetData.max),
+                    'stroke': this.$store.color.target
                 })
                 .style('stroke-width', '1.5')
         },
 
         minText() {
-            let min_val = this.data.min
+            let min_target_val = this.targetData.min
+            this.g.append("text")
+                .attrs({
+                    "class": "whiskerText",
+                    "x": 0.5 * this.fontSize,
+                    "y": this.boxHeight * 0.10,
+                    "fill": d3.rgb(this.$store.color.target).darker(1)
+                })
+                .style('stroke-width', '1')
+                .text("Min: " + this.formatRuntime(min_target_val))
+
+            let min_ensemble_val = this.data.min
             this.g.append("text")
                 .attrs({
                     "class": "whiskerText",
                     "x": 0.5 * this.fontSize,
                     "y": this.boxHeight * 1.20,
-                    "fill": d3.rgb(this.fill).darker(1)
+                    "fill": d3.rgb(this.$store.color.ensemble).darker(1)
                 })
                 .style('stroke-width', '1')
-                .text("Min: " + this.formatRuntime(min_val))
+                .text("Min: " + this.formatRuntime(min_ensemble_val))
         },
 
         maxText() {
-            let max_val = this.data.max
+            let max_target_val = this.targetData.max
             this.g.append("text")
                 .attrs({
                     "class": "whiskerText",
-                    "x": this.boxWidth - 8.5 * this.fontSize,
-                    "y": this.boxHeight * 1.20,
-                    "fill": d3.rgb(this.fill).darker(1)
+                    "x": this.boxWidth - 7 * this.fontSize,
+                    "y": this.boxHeight * .10,
+                    "fill": d3.rgb(this.$store.color.target).darker(1)
                 })
                 .style('stroke-width', '1')
-                .text("Max:" + this.formatRuntime(max_val))
+                .text("Max:" + this.formatRuntime(max_target_val))
+
+            let max_ensemble_val = this.data.max
+            this.g.append("text")
+                .attrs({
+                    "class": "whiskerText",
+                    "x": this.boxWidth - 7 * this.fontSize,
+                    "y": this.boxHeight * 1.20,
+                    "fill": d3.rgb(this.$store.color.ensemble).darker(1)
+                })
+                .style('stroke-width', '1')
+                .text("Max:" + this.formatRuntime(max_ensemble_val))
         },
 
         medianText() {
-            let median_val = this.data.q2
+            let median_target_val = this.targetData.q2
+            this.g.append("text")
+                .attrs({
+                    "class": "whiskerText",
+                    "x": this.boxWidth / 2 - 4.5 * this.fontSize,
+                    "y": this.boxHeight * 0.10,
+                    "fill": d3.rgb(this.$store.color.target).darker(1)
+                })
+                .style('stroke-width', '1')
+                .text("Median:" + this.formatRuntime(median_target_val))
+
+            let median_ensemble_val = this.data.q2
             this.g.append("text")
                 .attrs({
                     "class": "whiskerText",
                     "x": this.boxWidth / 2 - 4.5 * this.fontSize,
                     "y": this.boxHeight * 1.20,
-                    "fill": d3.rgb(this.fill).darker(1)
+                    "fill": d3.rgb(this.$store.color.ensemble).darker(1)
                 })
                 .style('stroke-width', '1')
-                .text("Median:" + this.formatRuntime(median_val))
+                .text("Median:" + this.formatRuntime(median_ensemble_val))
         },
 
         qTexts() {
