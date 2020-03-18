@@ -26,12 +26,10 @@ class Auxiliary:
         self.binCount = binCount
         self.config = config
         self.states = states
-        self.dataset_states = self.get_dataset_states()
-
+        
         self.process = process
         self.datasets = datasets
-        self.props = ['rank', 'name', 'dataset']
-
+        self.props = ['rank', 'name', 'dataset', 'all_ranks']
 
         self.target_df = {}
         for dataset in datasets:
@@ -44,13 +42,17 @@ class Auxiliary:
 
     def get_dataset_states(self):
         ret = {}
-        for idx, state in enumerate(self.states):
+        for idx, state in enumerate(self.conf):
+            print(state)
             if(state.split('_')[0] != 'ensemble'):
                 ret[state] = self.states[state]
         return ret
 
-    def histogram(self, data):
-        h, b = np.histogram(data, range=[0, data.max()], bins=int(self.binCount))
+    def histogram(self, data, data_min=np.nan, data_max=np.nan):
+        if(np.isnan(data_min) or np.isnan(data_max) ):
+            data_min = data.min()
+            data_max = data.max()
+        h, b = np.histogram(data, range=[data_min, data_max], bins=int(self.binCount))
         return 0.5*(b[1:]+b[:-1]), h
 
     def get_module_callsite_map(self):
@@ -102,7 +104,7 @@ class Auxiliary:
                 # # "std_deviation": df['std_deviation_inclusive'].tolist()[0],
                 # "kurtosis": df['kurtosis_inclusive'].tolist()[0],
                 # "skewness": df['skewness_inclusive'].tolist()[0],
-                "all_rank_histogram": all_ranks_hist['Inclusive'],
+                # "all_rank_histogram": all_ranks_hist['Inclusive'],
                 "gradients": gradients['Inclusive'],
                 "prop_histograms": prop_hists['Inclusive']
             },
@@ -118,7 +120,7 @@ class Auxiliary:
                 # # "std_deviation": df['std_deviation_exclusive'].tolist()[0],
                 # "skewness": df['skewness_exclusive'].tolist()[0],
                 # "kurtosis": df['kurtosis_exclusive'].tolist()[0],
-                "all_rank_histogram": all_ranks_hist['Exclusive'],
+                # "all_rank_histogram": all_ranks_hist['Exclusive'],
                 "gradients": gradients['Exclusive'],
                 "prop_histograms": prop_hists['Exclusive']
             }
@@ -135,29 +137,35 @@ class Auxiliary:
             "y_max": np.max(histogram_grid[1]).astype(np.float64),
         }
 
-    def all_ranks(self, df, attr):
-        ret = {}
-        time_arr = np.array(df[attr].tolist())            
-        histogram_grid = self.histogram(time_arr)
-        ret = self.histogram_format(histogram_grid)
-        return ret
-
     # Prop can be dataset, rank, name
     def histogram_by_property(self, ensemble_df, target_df, prop):
         ret = {}
-        ensemble_prop_grouped = ensemble_df.groupby([prop])[['time', 'time (inc)']].mean()
-        target_prop_grouped = target_df.groupby([prop])[['time', 'time (inc)']].mean()
 
-        time_ensemble_inclusive_arr = ensemble_prop_grouped['time (inc)']
-        time_ensemble_exclusive_arr = ensemble_prop_grouped['time']
+        if(prop == 'all_ranks'):
+            time_ensemble_inclusive_arr = np.array(ensemble_df['time (inc)'].tolist())
+            time_ensemble_exclusive_arr = np.array(ensemble_df['time'].tolist())
+            
+            time_target_inclusive_arr = np.array(target_df['time (inc)'].tolist())
+            time_target_exclusive_arr = np.array(target_df['time'].tolist())
+        else:
+            ensemble_prop = ensemble_df.groupby([prop])[['time', 'time (inc)']].mean()
+            target_prop = target_df.groupby([prop])[['time', 'time (inc)']].mean()
 
-        time_target_inclusive_arr = target_prop_grouped['time (inc)']
-        time_target_exclusive_arr = target_prop_grouped['time'] 
+            time_ensemble_inclusive_arr = np.array(ensemble_prop['time (inc)'])
+            time_ensemble_exclusive_arr = np.array(ensemble_prop['time'])
 
-        histogram_ensemble_inclusive_grid = self.histogram(np.array(time_ensemble_inclusive_arr))
-        histogram_ensemble_exclusive_grid = self.histogram(np.array(time_ensemble_exclusive_arr))
-        histogram_target_inclusive_grid = self.histogram(np.array(time_target_inclusive_arr))
-        histogram_target_exclusive_grid = self.histogram(np.array(time_target_exclusive_arr))
+            time_target_inclusive_arr = np.array(target_prop['time (inc)'])
+            time_target_exclusive_arr = np.array(target_prop['time'])
+
+        inclusive_max = max(time_ensemble_inclusive_arr.max(), time_target_inclusive_arr.max())
+        inclusive_min = min(time_ensemble_inclusive_arr.min(), time_target_inclusive_arr.min())
+        histogram_ensemble_inclusive_grid = self.histogram(time_ensemble_inclusive_arr, inclusive_min, inclusive_max)
+        histogram_target_inclusive_grid = self.histogram(time_target_inclusive_arr, inclusive_min, inclusive_max)
+
+        exclusive_max = max(time_ensemble_exclusive_arr.max(), time_target_exclusive_arr.max())
+        exclusive_min = min(time_ensemble_exclusive_arr.min(), time_target_exclusive_arr.min())
+        histogram_ensemble_exclusive_grid = self.histogram(time_ensemble_exclusive_arr, exclusive_min, exclusive_max)
+        histogram_target_exclusive_grid = self.histogram(time_target_exclusive_arr, exclusive_min, exclusive_max)
 
         ret['Inclusive'] = {
             'ensemble': self.histogram_format(histogram_ensemble_inclusive_grid),
@@ -183,11 +191,8 @@ class Auxiliary:
         all_ranks_hist = {}
         ensemble = {}
         for callsite, callsite_df in name_grouped:
-            all_ranks_hist['Inclusive'] = self.all_ranks(callsite_df, 'time (inc)')
-            all_ranks_hist['Exclusive'] = self.all_ranks(callsite_df, 'time')
-
-            gradients = KDE_gradients(self.dataset_states, binCount=self.binCount).run(columnName='name', callsiteOrModule=callsite)
-
+            gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(columnName='name', callsiteOrModule=callsite)
+            # gradients = {'Inclusive': {}, 'Exclusive': {}}
             ensemble[callsite] = self.pack_json(callsite_df, callsite, gradients=gradients, all_ranks_hist=all_ranks_hist)
 
         ret['ensemble'] = ensemble
@@ -199,11 +204,6 @@ class Auxiliary:
             name_grouped = self.target_df[dataset].groupby(['name'])
             target = {}
             for callsite, callsite_df in name_grouped:
-                # Create the dict.
-
-                all_ranks_hist['Inclusive'] = self.all_ranks(self.target_df[dataset].loc[self.target_df[dataset]['name'] == callsite], 'time (inc)')
-                all_ranks_hist['Exclusive'] = self.all_ranks(self.target_df[dataset].loc[self.target_df[dataset]['name'] == callsite], 'time')
-
                 callsite_ensemble_df = self.df[self.df['name'] == callsite]
                 # callsite_target_df = self.target_df[dataset].loc[self.target_df[dataset]['name'] == callsite]
                 callsite_target_df = callsite_df
@@ -230,13 +230,8 @@ class Auxiliary:
             all_ranks_hist = {}
             module_df = self.df[self.df['module'] == module]
 
-            # Calculate all MPI ranks
-            all_ranks_hist['Inclusive'] = self.all_ranks(module_df, 'time (inc)')
-            all_ranks_hist['Exclusive'] = self.all_ranks(module_df, 'time')
-
             # Calculate gradients
-            gradients = KDE_gradients(self.dataset_states, binCount=self.binCount).run(columnName='module', callsiteOrModule=module)
-
+            gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(columnName='module', callsiteOrModule=module)
             ensemble[module] = self.pack_json(df=module_df, name=module, all_ranks_hist=all_ranks_hist, gradients=gradients)
 
         ret['ensemble'] = ensemble
@@ -244,12 +239,6 @@ class Auxiliary:
         for dataset in self.datasets:
             target = {}
             for module in modules:
-                # Calculate all MPI ranks
-                all_ranks_hist['Inclusive'] = self.all_ranks(self.target_df[dataset], 'time (inc)')
-                all_ranks_hist['Exclusive'] = self.all_ranks(self.target_df[dataset], 'time')
-
-                gradients = KDE_gradients(self.dataset_states, binCount=self.binCount).run(columnName='module', callsiteOrModule=module)
-
                 module_ensemble_df = self.df[self.df['module'] == module]
                 module_target_df = self.target_df[dataset].loc[self.target_df[dataset]['module'] == module]
 
@@ -271,7 +260,7 @@ class Auxiliary:
         ret = {}
         path = self.config.processed_path + f'/{self.config.runName}' + f'/all_data.json'
 
-        # self.process = True
+        self.process = True
         if os.path.exists(path) and not self.process:
             print(f"[Callsite info] Reading the data from file {path}")
             with open(path, 'r') as f:
