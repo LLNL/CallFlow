@@ -17,6 +17,7 @@ import numpy as np
 from .gradients import KDE_gradients
 from utils.logger import log
 from utils.timer import Timer
+import time
 import os
 
 class Auxiliary:
@@ -142,37 +143,41 @@ class Auxiliary:
         return ret
 
     # Prop can be dataset, rank, name
-    def average_by_property(self, ensemble_df, target_df, attr, prop):
+    def histogram_by_property(self, ensemble_df, target_df, prop):
         ret = {}
-        ensemble_prop_grouped = ensemble_df.groupby([str(prop)])
-        time_ensemble_arr = []
-        for prp, prop_df in ensemble_prop_grouped:
-            time_ensemble_arr.append(prop_df[attr].mean())
+        ensemble_prop_grouped = ensemble_df.groupby([prop])[['time', 'time (inc)']].mean()
+        target_prop_grouped = target_df.groupby([prop])[['time', 'time (inc)']].mean()
 
+        time_ensemble_inclusive_arr = ensemble_prop_grouped['time (inc)']
+        time_ensemble_exclusive_arr = ensemble_prop_grouped['time']
 
-        target_prop_grouped = target_df.groupby([prop])
-        time_target_arr = []
-        for prp, prop_df in target_prop_grouped:
-            time_target_arr.append(prop_df[attr].mean())
+        time_target_inclusive_arr = target_prop_grouped['time (inc)']
+        time_target_exclusive_arr = target_prop_grouped['time'] 
 
-        histogram_ensemble_grid = self.histogram(np.array(time_ensemble_arr))
-        histogram_target_grid = self.histogram(np.array(time_target_arr))
+        histogram_ensemble_inclusive_grid = self.histogram(np.array(time_ensemble_inclusive_arr))
+        histogram_ensemble_exclusive_grid = self.histogram(np.array(time_ensemble_exclusive_arr))
+        histogram_target_inclusive_grid = self.histogram(np.array(time_target_inclusive_arr))
+        histogram_target_exclusive_grid = self.histogram(np.array(time_target_exclusive_arr))
 
-        ret['ensemble'] = self.histogram_format(histogram_ensemble_grid)
-        ret['target'] = self.histogram_format(histogram_target_grid)
-
+        ret['Inclusive'] = {
+            'ensemble': self.histogram_format(histogram_ensemble_inclusive_grid),
+            'target': self.histogram_format(histogram_target_inclusive_grid)
+        }
+        ret['Exclusive'] = {
+            'ensemble': self.histogram_format(histogram_ensemble_exclusive_grid),
+            'target': self.histogram_format(histogram_target_exclusive_grid)
+        }
         return ret
 
     # Callsite grouped information
     def callsite_data(self):
         ret = {}
-
-        filtered_df = self.df.loc[self.df['time'] > 0.05*self.df['time'].max() ]
+        filtered_df = self.df.loc[self.df['time'] > 0.01*self.config.filter_perc*self.df['time'].max() ]
 
         print(len(self.df['name'].unique()), len(filtered_df['name'].unique()))
         # Ensemble data.
         # Group callsite by the name
-        name_grouped = self.df.groupby(['name'])
+        name_grouped = filtered_df.groupby(['name'])
 
         # Create the data dict.
         all_ranks_hist = {}
@@ -208,16 +213,15 @@ class Auxiliary:
                     hists['Inclusive'] = {}
                     hists['Exclusive'] = {}
                     for prop in self.props:
-                        hists['Inclusive'][prop] = self.average_by_property(callsite_ensemble_df, callsite_target_df, 'time (inc)', prop)
-                        hists['Exclusive'][prop] = self.average_by_property(callsite_ensemble_df, callsite_target_df, 'time', prop)
-
+                        prop_histograms = self.histogram_by_property(callsite_ensemble_df, callsite_target_df, prop)
+                        hists['Inclusive'][prop] = prop_histograms['Inclusive']
+                        hists['Exclusive'][prop] = prop_histograms['Exclusive']
                     target[callsite] = self.pack_json(df=callsite_target_df, name=callsite, all_ranks_hist=all_ranks_hist, prop_hists=hists)
             ret[dataset] = target
 
         return ret
 
     def module_data(self):
-        data_type = 'module'
         ret = {}
         # Module grouped information
         modules = self.df['module'].unique()
@@ -244,7 +248,6 @@ class Auxiliary:
                 all_ranks_hist['Inclusive'] = self.all_ranks(self.target_df[dataset], 'time (inc)')
                 all_ranks_hist['Exclusive'] = self.all_ranks(self.target_df[dataset], 'time')
 
-
                 gradients = KDE_gradients(self.dataset_states, binCount=self.binCount).run(columnName='module', callsiteOrModule=module)
 
                 module_ensemble_df = self.df[self.df['module'] == module]
@@ -255,9 +258,9 @@ class Auxiliary:
                 hists['Exclusive'] = {}
                 if( not module_target_df.empty):
                     for prop in self.props:
-                        hists['Inclusive'][prop] = self.average_by_property(module_ensemble_df, module_target_df, 'time (inc)', prop)
-                        hists['Exclusive'][prop] = self.average_by_property(module_ensemble_df, module_target_df, 'time', prop)
-
+                        prop_histograms =  self.histogram_by_property(module_ensemble_df, module_target_df, prop)
+                        hists['Inclusive'][prop] = prop_histograms['Inclusive']
+                        hists['Exclusive'][prop] = prop_histograms['Exclusive']
                     target[module] = self.pack_json(df=module_target_df, name=module, all_ranks_hist=all_ranks_hist, gradients=gradients, prop_hists=hists)
 
             ret[dataset] = target
