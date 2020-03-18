@@ -51,9 +51,8 @@ export default {
 	mounted() {
 		let self = this
 		EventHandler.$on('ensemble_scatterplot', function (data) {
-			// self.clear()
 			console.log("Ensemble Scatterplot: ", data['module'])
-			self.render(data['module'])
+			self.visualize(data['module'])
 		})
 	},
 
@@ -68,12 +67,11 @@ export default {
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
 
 			this.svg = d3.select('#' + this.svgID)
-				.attr('width', this.boxWidth - this.padding.left - this.padding.right)
-				.attr('height', this.boxHeight - this.padding.top - this.padding.bottom)
+				.attr('width', this.boxWidth)
+				.attr('height', this.boxHeight - this.padding.top)
 				.attr('transform', "translate(" + this.padding.left + "," + this.padding.top + ")")
 
 			let modules_arr = Object.keys(this.$store.modules['ensemble'])
-
 
 			this.$refs.ToolTip.init(this.svgID)
 			EventHandler.$emit('ensemble_scatterplot', {
@@ -94,7 +92,7 @@ export default {
 			}
 		},
 
-		render(module) {
+		visualize(module) {
 			if (!this.firstRender) {
 				this.clear()
 			}
@@ -160,8 +158,8 @@ export default {
 			this.xAxisHeight = this.boxWidth - 4 * this.padding.left
 			this.yAxisHeight = this.boxHeight - 4 * this.padding.left
 
-			this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.xAxisHeight])
-			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.yAxisHeight, 0])
+			this.xScale = d3.scaleLinear().domain([this.xMin, 1.2 * this.xMax]).range([this.padding.left, this.xAxisHeight])
+			this.yScale = d3.scaleLinear().domain([this.yMin, 1.2 * this.yMax]).range([this.yAxisHeight, this.padding.top])
 		},
 
 		targetProcess() {
@@ -324,32 +322,28 @@ export default {
 		},
 
 		xAxis() {
-			let self = this
-			const xFormat = d3.format('0.1s');
-			var xAxis = d3.axisBottom(this.xScale)
-				.ticks(5)
+			const xFormat = d3.format('.1');
+			const xAxis = d3.axisBottom(this.xScale)
+				.ticks(10)
 				.tickFormat((d, i) => {
-					let temp = d;
-					if (i % 2 == 0) {
-						let value = temp * 0.000001
-						return `${xFormat(value)}s`
+					if (i % 3 == 0) {
+						return `${xFormat(d)}`
 					}
 				});
-
+			
+			this.xAxisLabel = "Exclusive Runtime (" + "\u03BCs)"
 			this.svg.append('text')
 				.attr('class', 'scatterplot-axis-label')
-				.attr('x', this.boxWidth - 3 * this.padding.right)
-				.attr('y', this.yAxisHeight - this.padding.top)
+				.attr('x', this.boxWidth - 1 * this.padding.right)
+				.attr('y', this.yAxisHeight + 3*this.padding.top)
 				.style('font-size', '12px')
 				.style('text-anchor', 'end')
-				.text("Exclusive Runtime")
+				.text(this.xAxisLabel)
 
-
-			let xAxisHeightCorrected = this.yAxisHeight
 			var xAxisLine = this.svg.append('g')
 				.attr('class', 'axis')
 				.attr('id', 'xAxis')
-				.attr("transform", "translate(" + 3 * this.padding.left + "," + xAxisHeightCorrected + ")")
+				.attr("transform", "translate(" + 3 * this.padding.left + "," + this.yAxisHeight + ")")
 				.call(xAxis)
 
 			xAxisLine.selectAll('path')
@@ -371,32 +365,30 @@ export default {
 
 		yAxis() {
 			let self = this
-			const yFormat = d3.format('0.2s')
+			const yFormat = d3.format('.1')
 			let yAxis = d3.axisLeft(this.yScale)
-				.ticks(5)
+				.ticks(10)
 				.tickFormat((d, i) => {
-					let temp = d;
-					if (i % 2 == 0) {
-						let value = temp * 0.000001
-						return `${yFormat(value)}s`
+					if (i % 3 == 0) {
+						return `${yFormat(d)}`
 					}
-					return '';
 				})
 
 			var yAxisLine = this.svg.append('g')
 				.attr('id', 'yAxis')
 				.attr('class', 'axis')
-				.attr('transform', "translate(" + 3 * this.padding.left + ", 0)")
+				.attr('transform', "translate(" + 4 * this.padding.left + ", 0)")
 				.call(yAxis)
 
+			this.yAxisLabel = "Inclusive Runtime (" + "\u03BCs)"
 			this.svg.append("text")
 				.attr('class', 'scatterplot-axis-label')
 				.attr('transform', 'rotate(-90)')
-				.attr('x', 0)
-				.attr('y', 1 * this.padding.left)
+				.attr('x', -this.padding.top)
+				.attr('y', this.padding.left)
 				.style("text-anchor", "end")
 				.style("font-size", "12px")
-				.text("Inclusive Runtime")
+				.text(this.yAxisLabel)
 
 			yAxisLine.selectAll('path')
 				.style("fill", "none")

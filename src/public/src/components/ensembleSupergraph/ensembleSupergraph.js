@@ -16,9 +16,6 @@ export default {
 		MiniHistograms,
 		EnsembleColorMap
 	},
-	props: [
-
-	],
 	data: () => ({
 		graph: null,
 		id: 'ensemble-supergraph-overview',

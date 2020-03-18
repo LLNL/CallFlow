@@ -53,7 +53,11 @@ class EnsembleCallFlow:
             self.states = self.processState(self.config.dataset_names)
         else:
             log.info("[Ensemble] Read Mode.")
-            self.states = self.readState(self.config.dataset_names)\
+            self.states = self.readState(self.config.dataset_names)
+
+        self.target_df = {}
+        for dataset in self.config.dataset_names:
+            self.target_df[dataset] = self.states['ensemble_entire'].df.loc[self.states['ensemble_entire'].df['dataset'] == dataset]
 
         self.currentBinCount = 0
 
@@ -91,8 +95,8 @@ class EnsembleCallFlow:
         states["ensemble_entire"] = self.pipeline.read_ensemble_gf('ensemble_entire')
         states["ensemble_filter"] = self.pipeline.read_ensemble_gf('ensemble_filter')
         states["ensemble_group"] = self.pipeline.read_ensemble_gf('ensemble_group')
-        for idx, dataset in enumerate(datasets):
-            states[dataset] = self.pipeline.read_dataset_gf(dataset)
+        # for idx, dataset in enumerate(datasets):
+        #     states[dataset] = self.pipeline.read_dataset_gf(dataset)
         return states
 
     def addIncExcTime(self):
@@ -107,26 +111,25 @@ class EnsembleCallFlow:
         min_inclusive_time = 0
         min_exclusive_time = 0
         max_numOfRanks = 0
-        for idx, state in enumerate(self.states):
-            if state != "ensemble":
-                self.config.max_incTime[state] = getMaxIncTime(self.states[state])
-                self.config.max_excTime[state] = getMaxExcTime(self.states[state])
-                self.config.min_incTime[state] = getMinIncTime(self.states[state])
-                self.config.min_excTime[state] = getMinExcTime(self.states[state])
-                self.config.numOfRanks[state] = len(self.states[state].df['rank'].unique())
-                max_exclusive_time = max(
-                    self.config.max_excTime[state], max_exclusive_time
-                )
-                max_inclusvie_time = max(
-                    self.config.max_incTime[state], max_exclusive_time
-                )
-                min_exclusive_time = min(
-                    self.config.min_excTime[state], min_exclusive_time
-                )
-                min_inclusive_time = min(
-                    self.config.min_incTime[state], min_inclusive_time
-                )
-                max_numOfRanks = max(self.config.numOfRanks[state], max_numOfRanks)
+        for idx, dataset in enumerate(self.config.dataset_names):
+            self.config.max_incTime[dataset] = self.target_df[dataset]['time (inc)'].max()
+            self.config.max_excTime[dataset] = self.target_df[dataset]['time'].max()
+            self.config.min_incTime[dataset] = self.target_df[dataset]['time (inc)'].min()
+            self.config.min_excTime[dataset] = self.target_df[dataset]['time'].min()
+            self.config.numOfRanks[dataset] = len(self.target_df[dataset]['rank'].unique())
+            max_exclusive_time = max(
+                self.config.max_excTime[dataset], max_exclusive_time
+            )
+            max_inclusvie_time = max(
+                self.config.max_incTime[dataset], max_exclusive_time
+            )
+            min_exclusive_time = min(
+                self.config.min_excTime[dataset], min_exclusive_time
+            )
+            min_inclusive_time = min(
+                self.config.min_incTime[dataset], min_inclusive_time
+            )
+            max_numOfRanks = max(self.config.numOfRanks[dataset], max_numOfRanks)
         self.config.max_incTime["ensemble"] = max_inclusvie_time
         self.config.max_excTime["ensemble"] = max_exclusive_time
         self.config.min_incTime["ensemble"] = min_inclusive_time
@@ -208,7 +211,7 @@ class EnsembleCallFlow:
             # similarity_filepath = dirname  + '/' + 'similarity.json'
             # with open(similarity_filepath, 'r') as similarity_file:
             #     self.similarities = json.load(similarity_file)
-            result = ParameterProjection(self.states, self.similarities, action['targetDataset']).result
+            result = ParameterProjection(self.states['ensemble_entire'], self.similarities, action['targetDataset']).result
             return result.to_json(orient="columns")
 
         elif action_name == "run-information":
