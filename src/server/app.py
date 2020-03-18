@@ -304,7 +304,6 @@ class App:
             )
             result = json_graph.node_link_data(nx_graph)
             json_result = json.dumps(result)
-            print(json_result)
             emit("ensemble_supergraph", json_result, json=True)
 
         @sockets.on("ensemble_similarity", namespace="/")
@@ -421,19 +420,18 @@ class App:
         @sockets.on("reveal_callsite", namespace="/")
         def reveal_callsite(data):
             if self.debug:
-                self.print(f"Reveal calliste: {data['callsite']} of module: {data['module']}.")
-            result = self.callflow.request(
+                self.print(f"Reveal calliste: {data}.")
+            nx_graph = self.callflow.request(
                 {
-                    "name": "",
-                    "datasets": data["datasets"],
-                    "dataset": data["dataset"],
-                    "dataset2": data["dataset2"],
-                    "col": data["col"],
-                    "catcol": data["catcol"],
-                    "plot": data["plot"],
+                    "name": "supergraph",
+                    "groupBy": 'module',
+                    "datasets": data['datasets'],
+                    "reveal_callsites": data['reveal_callsites']
                 }
             )
-            emit("ensemble_scatterplot", result, json=True)
+            result = json_graph.node_link_data(nx_graph)
+            json_result = json.dumps(result)
+            emit("ensemble_supergraph", json_result, json=True)
 
     def create_server(self):
         app.debug = True

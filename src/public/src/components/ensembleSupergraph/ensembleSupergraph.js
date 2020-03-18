@@ -52,6 +52,9 @@ export default {
 			console.log(data)
 			data = JSON.parse(data)
 			console.log("Data: ", data)
+			for(let i = 0; i < data.nodes.length; i+=1){
+				console.log(data.nodes[i].id)
+			}
 			this.render(data)
 		},
 	},

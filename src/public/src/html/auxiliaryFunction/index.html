@@ -8,7 +8,7 @@
 
     <div v-for="callsite in callsites" class="auxiliary-node" :id="callsite.id"
         :style="{ width: boxplotWidth + 'px', height: boxplotHeight + 'px' }">
-        <v-btn class="ma-2 reveal-button" tile outlined color="white" @click="clickCallsite">
+        <v-btn :id="callsite.name" class="ma-2 reveal-button" tile outlined color="white" @click="clickCallsite">
             Show
         </v-btn>
         <h4>{{formatModule(callsite.module)}}={{formatName(callsite.name)}}</h4>

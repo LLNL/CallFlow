@@ -38,6 +38,7 @@ export default {
         selectedModule: '',
         selectedCallsite: '',
         informationHeight: 70,
+        reveal_callsites: [],
 
     }),
     mounted() {
@@ -128,13 +129,11 @@ export default {
 
         clickCallsite(event) {
             event.stopPropagation()
-            let module = this.module
-            let callsite = this.name
-
-            console.log(module, callsite)
-
+            let callsite = event.currentTarget.id
+            this.reveal_callsites.push(callsite)
+            console.log(this.reveal_callsites)
             this.$socket.emit('reveal_callsite', {
-                module: module,
+                reveal_callsites: this.reveal_callsites,
                 datasets: this.$store.runNames,
             })
         },

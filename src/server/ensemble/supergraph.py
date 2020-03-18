@@ -12,7 +12,7 @@ class SuperGraph(nx.Graph):
     # 3. construct_graph -> To decide if we should construct graph from path
     # 4. add_data => To
     def __init__(
-        self, states, path, group_by_attr="module", construct_graph=True, add_data=False
+        self, states, path, group_by_attr="module", construct_graph=True, add_data=False, reveal_callsites=[]
     ):
         super(SuperGraph, self).__init__()
         self.states = states
@@ -50,6 +50,8 @@ class SuperGraph(nx.Graph):
         # Store all the names of runs in self.runs.
         # TODO: Change name in the df from 'dataset' to 'run'
         self.runs = self.entire_df["dataset"].unique()
+
+        self.reveal_callsites = reveal_callsites
 
         with self.timer.phase("Construct Graph"):
             if construct_graph:
@@ -115,31 +117,21 @@ class SuperGraph(nx.Graph):
 
         return ret
 
+    def add_reveal_paths(self):
+        paths = []
+        for callsite in self.reveal_callsites:
+            df = self.entire_df.loc[self.entire_df['name'] == callsite]
+            paths.append(df['group_path'].unique()[0])
+        return np.array(paths)
 
     def add_paths(self, path):
         paths = self.group_df[path].unique()
-        print(paths)
-        for idx, path_str in enumerate(paths):
-            path_list = self.rename_cycle_path(path_str)
-            print(path_list)
-            if(len(path_list) >= 2):
-                source_module = path_list[-2]['module']
-                target_module = path_list[-1]['module']
+        # print(paths, type(paths))
+        # reveal_paths = self.add_reveal_paths()
+        # print(reveal_paths, type(reveal_paths))
 
-                source_name = path_list[-2]['callsite']
-                target_name = path_list[-1]['callsite']
-                    # self.g.add_edge(source_module + '=' + source_name, target_module + '=' + target_name, attr_dict={
-                    #     "source_callsite": source_name,
-                    #     "target_callsite": target_name
-                    # })
-                print(source_module, target_module)
-                self.g.add_edge(source_module, target_module, attr_dict={
-                    "source_callsite": source_name,
-                    "target_callsite": target_name
-                })
+        # paths = np.concatenate((paths, reveal_paths), axis=0)
 
-    def add_paths(self, path):
-        paths = self.group_df[path].unique()
         for idx, path_str in enumerate(paths):
             path_list = self.rename_cycle_path(path_str)
 
@@ -155,13 +147,31 @@ class SuperGraph(nx.Graph):
                         source_name = source['callsite']
                         target_name = target['callsite']
 
-                        print(source_module, target_module)
                         self.g.add_edge(source_module, target_module, attr_dict={
                             "source_callsite": source_name,
                             "target_callsite": target_name
                         })
+        reveal_paths = self.add_reveal_paths()
+        for reveal_path_str in reveal_paths:
+            reveal_path_list = self.rename_cycle_path(reveal_path_str)
+            print(reveal_path_list)
+            callsite_idx = len(reveal_path_list) - 2
+            source = reveal_path_list[callsite_idx]
+            target = reveal_path_list[callsite_idx + 1]
 
+            if(not self.g.has_edge(target['module'], target['module'] + '=' + target_name)):
+                source_module = source['module']
+                target_module = target['module']
 
+                source_name = self.reveal_callsites[0]
+                target_name = target['callsite']
+
+                print(f"Adding edge: {source_name}, {target_name}")
+                self.g.add_edge(target_module, target_module + '=' + target_name, attr_dict={
+                    "source_callsite": source_name,
+                    "target_callsite": target_name
+                })
+            
     def add_node_attributes(self):
         ensemble_mapping = self.ensemble_map(self.g.nodes())
 
