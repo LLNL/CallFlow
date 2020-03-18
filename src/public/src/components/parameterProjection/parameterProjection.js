@@ -109,14 +109,16 @@ export default {
             this.numberOfPoints = Object.entries(data['x']).length
 
             for (let id = 0; id < this.numberOfPoints; id += 1) {
+                let dataset = data['dataset'][id]
+                console.log(this.$store.maxIncTime[dataset])
                 ret[id] = []
                 ret[id].push(data['x'][id])
                 ret[id].push(data['y'][id])
                 ret[id].push(data['dataset'][id])
                 ret[id].push(id)
                 ret[id].push(data['label'][id])
-                ret[id].push(data['max_inclusive_time'][id])
-                ret[id].push(data['max_exclusive_time'][id])
+                ret[id].push(this.$store.maxIncTime[dataset])
+                ret[id].push(this.$store.maxExcTime[dataset])
 
                 let x = data['x'][id]
                 let y = data['y'][id]
@@ -154,8 +156,11 @@ export default {
             // Define the div for the tooltip
             this.tooltip = d3.select("#" + this.id)
                 .append("div")
-                .attr("class", "tooltip")
-                .style("opacity", 0);
+                .attrs({
+                    "class": "tooltip",
+                    "id": 'parameter-projection-tooltip'
+                })
+                .style("opacity", 1);
 
             let self = this
             let selected = undefined
@@ -223,6 +228,16 @@ export default {
 
             this.svg.call(this.lasso)
             this.highlight(this.$store.selectedTargetDataset)
+            this.showDetails(this.$store.selectedTargetDataset)
+        },
+
+        showDetails(dataset) {
+            this.tooltip.html(
+                "Run: " + dataset + "<br/>" +
+                "Inclusive time (max): " + this.$store.maxIncTime[dataset] + " ms<br/>" +
+                "Exclusive time (max): " + this.$store.maxExcTime[dataset] + " ms")
+                // .style("left", (d3.event.pageX) + "px")
+                // .style("top", (d3.event.pageY - 28) + "px");
         },
 
         mouseover(d) {
@@ -231,18 +246,7 @@ export default {
                 .duration(200)
                 .style("opacity", .9)
                 .style("left", 10)
-            let split_dataset = dataset_name.split('.')
-            let dataset = split_dataset[0]
-            let cores = split_dataset[1]
-            let nodes = split_dataset[2]
-            let timestamp = split_dataset[split_dataset.length - 1]
-            this.tooltip.html(
-                "Run: " + dataset + "<br/>" +
-                "Inclusive time (mean): " + d[5] + " ms<br/>" +
-                "Exclusive time (mean): " + d[6] + " ms")
-                .style("left", (d3.event.pageX) + "px")
-                .style("top", (d3.event.pageY - 28) + "px");
-
+            this.showDetails(dataset_name)
         },
 
         click(d) {
@@ -463,6 +467,7 @@ export default {
 
         clear() {
             d3.selectAll('#parameter-projection-svg').remove()
+            d3.selectAll('#parameter-projection-tooltip').remove()
         }
     },
 }

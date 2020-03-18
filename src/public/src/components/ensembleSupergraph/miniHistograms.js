@@ -74,8 +74,8 @@ export default {
 
         histogram(data, node_dict, type) {
 
-            let xVals = data['all_rank_histogram'].x
-            let freq = data['all_rank_histogram'].y
+            let xVals = data[type].x
+            let freq = data[type].y
 
             let color = ''
             if (type == 'ensemble') {
@@ -127,8 +127,10 @@ export default {
         render(callsite_name, callsite_module) {
             let node_dict = this.nodes[this.nodeMap[callsite_module]]
             if (callsite_module.split('_')[0] != "intermediate") {
-                let ensemble_callsite_data = this.$store.modules['ensemble'][callsite_module][this.$store.selectedMetric]
-                let target_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module][this.$store.selectedMetric]
+                let ensemble_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module][this.$store.selectedMetric]['prop_histograms']['all_ranks']
+                let target_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module][this.$store.selectedMetric]['prop_histograms']['all_ranks']
+
+                console.log(ensemble_callsite_data)
 
                 this.histogram(ensemble_callsite_data, node_dict, 'ensemble')
                 this.histogram(target_callsite_data, node_dict, 'target')

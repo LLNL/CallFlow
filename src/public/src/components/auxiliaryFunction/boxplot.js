@@ -66,7 +66,7 @@ export default {
                     'max_time (inc)': 0,
                     'module': ensemble_callsite_data.module,
                     'name': ensemble_callsite_data.name,
-                    'rank': [],
+                    'rank': [], 
                     'time': [],
                     'time (inc)': []
                 }
