@@ -153,8 +153,12 @@ class EnsembleCallFlow:
             return nx.g
 
         elif action_name == "supergraph":
+            if('reveal_callsites' in action):
+                reveal_callsites = action['reveal_callsites']
+            else:
+                reveal_callsites = []
             self.states['ensemble_group'].g = SuperGraph(
-                self.states, "group_path", construct_graph=True, add_data=True
+                self.states, "group_path", construct_graph=True, add_data=True, reveal_callsites=reveal_callsites
             ).g
             return self.states['ensemble_group'].g
 
