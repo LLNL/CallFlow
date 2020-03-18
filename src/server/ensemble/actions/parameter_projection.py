@@ -23,10 +23,12 @@ from sklearn.cluster import KMeans
 from algorithm.k_medoids import KMedoids
 
 class ParameterProjection:
-    def __init__(self, states, similarities={}, targetDataset=''):
+    def __init__(self, state, similarities={}, targetDataset=''):
         # self.similarities = similarities[targetDataset]
         # self.datasetOrder = {k: idx for idx, (k, v) in enumerate(similarities.items())}
-        self.states = states
+        self.state = state
+        self.df = state.df
+        self.datasets = state.df['dataset'].unique()
         self.projection = 'MDS'
         # self.clustering = 'k_medoids'
         self.clustering = 'k_means'
@@ -34,26 +36,25 @@ class ParameterProjection:
         self.targetDataset = targetDataset
         self.result = self.run()
 
-    def add_df_params(self, state):
+    def add_df_params(self, dataset):
         ret = {}
-        # ret['max_inclusive_time'] = state.df['time (inc)'].max()
-        ret['max_exclusive_time'] = state.df['time'].max()
-        ret['rank_count'] = len(state.df['rank'].unique())
+        ret['max_inclusive_time'] = self.df.loc[self.df['dataset'] == dataset]['time (inc)'].max()
+        ret['max_exclusive_time'] = self.df.loc[self.df['dataset'] == dataset]['time'].max()
+        ret['rank_count'] = len(self.df.loc[self.df['dataset'] == dataset]['rank'].unique())
         # ret['similarity'] = self.similarities[self.datasetOrder[self.targetDataset]]
         return ret
 
     def run(self):
         rows = []
-        for idx, state in enumerate(self.states):
-            if(state.split('_')[0] != 'ensemble'):
-                df_params = self.add_df_params(self.states[state])
-                rows.append(df_params)
-                # self.states[state].projection_data.update(df_params)
+        for idx, dataset in enumerate(self.datasets):
+            df_params = self.add_df_params(dataset)
+            rows.append(df_params)
+            # self.states[state].projection_data.update(df_params)
 
-        row_list = []
-        for idx, state in enumerate(self.states):
-            if(state != 'ensemble'):
-                row_list.append(self.states[state].projection_data)
+        # row_list = []
+        # for idx, state in enumerate(self.states):
+        #     if(state != 'ensemble'):
+        #         row_list.append(self.states[state].projection_data)
 
         df = pd.DataFrame(rows)
 
@@ -78,12 +79,11 @@ class ParameterProjection:
         elif self.projection == 'TSNE':
             proj = TSNE(random_state=random_number).fit_transform(X)
 
-        datasets = [key for key in self.states.keys() if key.split('_')[0] != 'ensemble']
-        max_inclusive_time = [self.states[key].df['time (inc)'].max() for key in self.states.keys() if key.split('_')[0] != 'ensemble']
-        max_exclusive_time = [self.states[key].df['time'].max() for key in self.states.keys() if key.split('_')[0] != 'ensemble']
+        # max_inclusive_time = [self.df.loc['time (inc)'].max() for key in self.datasets ]
+        # max_exclusive_time = [self.states[key].df['time'].max() for key in self.states.keys() if key.split('_')[0] != 'ensemble']
 
         ret = pd.DataFrame(proj, columns=list('xy'))
-        ret['dataset'] = datasets
+        ret['dataset'] = self.datasets
 
         if self.clustering == 'prog_k_means':
             self.clusters = ProgKMeans(n_clusters=self.n_cluster)
@@ -97,7 +97,7 @@ class ParameterProjection:
             self.clusters = KMeans(n_clusters=self.n_cluster, random_state=random_number)
             ret['label'] = self.clusters.fit(X).labels_
 
-        ret['max_inclusive_time'] = max_inclusive_time
-        ret['max_exclusive_time'] = max_exclusive_time
+        # ret['max_inclusive_time'] = max_inclusive_time
+        # ret['max_exclusive_time'] = max_exclusive_time
 
         return ret

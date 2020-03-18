@@ -5,16 +5,16 @@ import matplotlib.pyplot as plt
 import math
 
 class KDE_gradients:
-    def __init__(self, states, binCount="20"):
-        self.states = states
+    def __init__(self, dfs, binCount="20"):
+        self.dfs = dfs
         self.binCount = binCount
 
         # Find the rank information.
         self.num_of_ranks = {}
         max_ranks = 0
-        for state in states:
-            self.num_of_ranks[state] = len(self.states[state].df["rank"].unique())
-            max_ranks = max(max_ranks, self.num_of_ranks[state])
+        for dataset in self.dfs:
+            self.num_of_ranks[dataset] = len(self.dfs[dataset]['rank'].unique())
+            max_ranks = max(max_ranks, self.num_of_ranks[dataset])
         self.max_ranks = max_ranks
 
 
@@ -81,9 +81,12 @@ class KDE_gradients:
 
         return x, y
 
-    def histogram(self, data):
-        h, b = np.histogram(data, range=[0, data.max()], bins=int(self.binCount))
-        return 0.5 * (b[1:] + b[:-1]), h
+    def histogram(self, data, data_min=np.nan, data_max=np.nan):
+        if(np.isnan(data_min) or np.isnan(data_max) ):
+            data_min = 0
+            data_max = data.max()
+        h, b = np.histogram(data, range=[data_min, data_max], bins=int(self.binCount))
+        return 0.5*(b[1:]+b[:-1]), h
 
     def clean_dict(self, in_dict):
         ret = {k: in_dict[k] for k in in_dict if not math.isnan(in_dict[k])}
@@ -123,14 +126,11 @@ class KDE_gradients:
         hist_exc_grid = {}
 
         # Get the runtimes for all the runs.
-        for idx, state in enumerate(self.states):
-            if state != "ensemble":
-                node_df = self.states[state].df.loc[
-                    (self.states[state].df[columnName] == callsiteOrModule)
-                ]
+        for idx, dataset in enumerate(self.dfs):
+            node_df = self.dfs[dataset].loc[(self.dfs[dataset][columnName] == callsiteOrModule)]
 
-                dist_inc[state] = self.get_runtime_data(node_df, 'time (inc)')
-                dist_exc[state] = self.get_runtime_data(node_df, 'time')
+            dist_inc[dataset] = self.get_runtime_data(node_df, 'time (inc)')
+            dist_exc[dataset] = self.get_runtime_data(node_df, 'time')
 
         # convert the dictionary of values to list of values.
         temp_inc = self.convert_dictmean_to_list(dist_inc)
