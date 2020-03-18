@@ -67,28 +67,15 @@ export default {
             })
         },
 
-        dataProcess(data) {
-            let attr_data = {}
-
-            if (this.$store.selectedMetric == 'Inclusive') {
-                attr_data = data['hist_time (inc)']
-            } else if (this.$store.selectedMetric == 'Exclusive') {
-                attr_data = data['hist_time']
-            } else if (this.$store.selectedMetric == 'Imbalance') {
-                attr_data = data['hist_imbalance']
-            }
-            return [attr_data['x'], attr_data['y']];
-        },
-
         clear() {
             this.bandWidth = 0
             d3.selectAll('#histobars').remove()
         },
 
         histogram(data, node_dict, type) {
-            const processData = this.dataProcess(data)
-            let xVals = processData[0]
-            let freq = processData[1]
+
+            let xVals = data['all_rank_histogram'].x
+            let freq = data['all_rank_histogram'].y
 
             let color = ''
             if (type == 'ensemble') {
@@ -98,7 +85,7 @@ export default {
                 color = this.$store.color.target
             }
 
-            if (type == 'ensemble') {
+            // if (type == 'ensemble') {
                 // if(freq < 50){
                     this.minimapYScale = d3.scaleLinear()
                     .domain([0, d3.max(freq)])
@@ -112,10 +99,9 @@ export default {
                 this.minimapXScale = d3.scaleBand()
                     .domain(xVals)
                     .rangeRound([0, this.$parent.nodeWidth])
+                this.bandWidth = this.minimapXScale.bandwidth()
+            // }
 
-            }
-
-            this.bandWidth = this.minimapXScale.bandwidth()
 
             for (let i = 0; i < freq.length; i += 1) {
                 d3.select('#' + this.id)
@@ -141,10 +127,10 @@ export default {
         render(callsite_name, callsite_module) {
             let node_dict = this.nodes[this.nodeMap[callsite_module]]
             if (callsite_module.split('_')[0] != "intermediate") {
-                // let ensemble_callsite_data = this.$store.modules['ensemble'][callsite_module]
-                let target_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module]
+                let ensemble_callsite_data = this.$store.modules['ensemble'][callsite_module][this.$store.selectedMetric]
+                let target_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module][this.$store.selectedMetric]
 
-                // this.histogram(ensemble_callsite_data, node_dict, 'ensemble')
+                this.histogram(ensemble_callsite_data, node_dict, 'ensemble')
                 this.histogram(target_callsite_data, node_dict, 'target')
             }
         }

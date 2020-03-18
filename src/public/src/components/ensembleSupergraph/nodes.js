@@ -187,8 +187,8 @@ export default {
             this.hist_min = 0
             this.hist_max = 0
             for (let node of nodes) {
-                this.hist_min = Math.min(this.hist_min, data[node.module]['gradients'][this.$store.selectedMetric]['hist']['y_min'])
-                this.hist_max = Math.max(this.hist_max, data[node.module]['gradients'][this.$store.selectedMetric]['hist']['y_max'])
+                this.hist_min = Math.min(this.hist_min, data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_min'])
+                this.hist_max = Math.max(this.hist_max, data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_max'])
             }
             this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
             this.$parent.$refs.EnsembleColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
@@ -207,8 +207,8 @@ export default {
                     .attr("x2", "0%")
                     .attr("y2", "100%");
 
-                let grid = data[node.module]['gradients'][this.$store.selectedMetric][method]['x']
-                let val = data[node.module]['gradients'][this.$store.selectedMetric][method]['y']
+                let grid = data[node.module][this.$store.selectedMetric]['gradients'][method]['x']
+                let val = data[node.module][this.$store.selectedMetric]['gradients'][method]['y']
 
                 for (let i = 0; i < grid.length; i += 1) {
                     let x = (i + i + 1) / (2 * grid.length)
@@ -507,11 +507,11 @@ export default {
                 let module_name = this.graph.nodes[i].module
                 if (this.graph.nodes[i].id.split('_')[0] != 'intermediate') {
 
-                    let module_mean = data[this.$store.selectedTargetDataset][module_name]['gradients'][this.$store.selectedMetric]['dataset'][this.$store.selectedTargetDataset]
+                    let module_mean = data[this.$store.selectedTargetDataset][module_name][this.$store.selectedMetric]['max_time']
 
-                    let gradients = data['ensemble'][module_name]['gradients'][this.$store.selectedMetric]['hist']
-                    let grid = gradients.x
-                    let vals = gradients.y
+                    let gradients = data['ensemble'][module_name][this.$store.selectedMetric]['gradients']
+                    let grid = gradients.hist.x
+                    let vals = gradients.hist.y
 
                     let targetPos = 0
                     let binWidth = node_data.height / this.$store.selectedMPIBinCount
@@ -551,7 +551,7 @@ export default {
             let modules_data = this.$store.modules
             let module_name = node_data.module
 
-            let gradients = modules_data['ensemble'][module_name]['gradients'][this.$store.selectedMetric]['hist']
+            let gradients = modules_data['ensemble'][module_name][this.$store.selectedMetric]['gradients']['hist']
             let grid = gradients.x
             let vals = gradients.y
 

@@ -304,6 +304,7 @@ class App:
             )
             result = json_graph.node_link_data(nx_graph)
             json_result = json.dumps(result)
+            print(json_result)
             emit("ensemble_supergraph", json_result, json=True)
 
         @sockets.on("ensemble_similarity", namespace="/")

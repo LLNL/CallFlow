@@ -140,8 +140,10 @@ export default {
 		hierarchyModes: ['Uniform', 'Exclusive'],
 		selectedRuntimeSortBy: 'Inclusive',
 		sortByModes: ['Inclusive', 'Exclusive', 'Percent Imbalance', 'Skewness', 'Kurtosis'],
-		scales: ['log', 'linear'],
-		selectedScale: 'log'
+		scales: ['Log', 'Linear'],
+		selectedScale: 'Linear',
+		props: ['name', 'rank', 'dataset'],
+		selectedProp: 'name'
 	}),
 
 	watch: {},
@@ -259,6 +261,8 @@ export default {
 			this.$store.selectedFunctionsInCCT = this.selectedFaunctionsInCCT
 			this.$store.datasetMap = this.$store.runNames.map((run, i) => "run-" + i)
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode
+			this.$store.selectedProp = this.selectedProp
+			this.$store.selectedScale = this.selectedScale
 
 			this.$store.timeScale = 0.000001
 			this.$store.viewHeight = (window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight)
@@ -422,7 +426,6 @@ export default {
 		},
 
 		clearComponents(componentList){
-			console.log(componentList)
 			for (let i = 0; i < componentList.length; i++) {
 				componentList[i].clear()
 			}
@@ -456,7 +459,7 @@ export default {
 			}
 			else if (this.selectedMode == 'Ensemble') {
 				if(this.selectedFormat == 'SuperGraph'){
-					this.initComponents(this.currentEnsembleSuperGraphComponents)
+						this.initComponents(this.currentEnsembleSuperGraphComponents)
 				}
 				else if(this.selectedFormat == 'CallGraph'){
 					this.loadComponents(this.currentEnsembleCallGraphComponents)
@@ -613,5 +616,19 @@ export default {
 				compareDataset: this.$store.selectedCompareDataset,
 			})
 		},
+
+		updateProp(){
+			this.$store.selectedProp = this.selectedProp
+			this.clearLocal()
+			this.setupColors()
+			this.init()
+		},
+
+		updateScale() {
+			this.$store.selectedScale = this.selectedScale
+			this.clearLocal()
+			this.setupColors()
+			this.init()
+		}
 	}
 }

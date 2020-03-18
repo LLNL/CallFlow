@@ -55,12 +55,11 @@ export default {
     mounted() {
         let self = this
         EventHandler.$on('ensemble_histogram', function (data) {
-            self.clear()
             console.log("Ensemble Histogram: ", data['module'])
-            if(data['callsite'] != undefined){
+            if (data['callsite'] != undefined) {
                 self.thisNode = data["module"] + '=' + data['callsite']
             }
-            else{
+            else {
                 self.thisNode = data['module']
             }
             self.render(data['module'])
@@ -82,7 +81,7 @@ export default {
 
             this.histogramOffset = Math.floor(this.boxHeight / 3);
             this.histogramHeight = this.boxHeight - this.histogramOffset - this.padding.top
-            this.histogramWidth = this.boxWidth - this.padding.left*this.axisLabelFactor - this.padding.right
+            this.histogramWidth = this.boxWidth - this.padding.left * this.axisLabelFactor - this.padding.right
             this.rankScaleHeight = this.boxHeight - this.histogramHeight
             this.rankScaleWidth = this.histogramWidth
             // Create the SVG
@@ -102,15 +101,18 @@ export default {
         },
 
         render(callsite) {
-            let data = this.$store.modules['ensemble'][callsite]
-            let temp = this.dataProcess(data);
+            this.clear()
+            let data = this.$store.modules[this.$store.selectedTargetDataset][callsite][this.$store.selectedMetric]['prop_histograms']
+
+            let ensembleData = data[this.$store.selectedProp]['ensemble']
+            let temp = this.dataProcess(ensembleData);
             this.xVals = temp[0];
             this.freq = temp[1];
             this.axis_x = temp[2];
             this.binContainsProcID = temp[3];
             this.logScaleBool = false;
 
-            const targetData = this.$store.modules[this.$store.selectedTargetDataset][callsite]
+            const targetData = data[this.$store.selectedProp]['target']
             const targetTemp = this.dataProcess(targetData)
             this.targetXVals = targetTemp[0]
             this.targetFreq = targetTemp[1]
@@ -120,7 +122,7 @@ export default {
             this.$refs.ToolTip.init(this.svgID)
 
             this.rankCount = parseInt(this.$store.numOfRanks['ensemble'])
-            console.log(this.axis_x, this.target_axis_x)
+            console.log(ensembleData, targetData)
 
             let minXVal = Math.min(this.axis_x[0], this.target_axis_x[0])
             let maxXVal = Math.max(this.axis_x[this.axis_x.length - 1], this.target_axis_x[this.target_axis_x.length - 1])
@@ -140,12 +142,13 @@ export default {
                 .domain(this.concatenatedXVals)
                 .rangeRound([0, this.histogramWidth])
 
-            if (d3.max(this.freq) < 50) {
+            if (this.$store.selectedScale == 'Linear') {
                 this.histogramYScale = d3.scaleLinear()
                     .domain([0, d3.max(this.freq)])
                     .range([this.histogramHeight, 0])
                 this.logScaleBool = false;
-            } else {
+            } 
+            else if(this.$store.selectedScale == 'Log'){
                 this.histogramYScale = d3.scaleLog()
                     .domain([0.1, d3.max(this.freq)])
                     .range([this.histogramHeight, 0]);
@@ -202,22 +205,13 @@ export default {
             let dataMin = 0
             let dataMax = 0
 
-            if (this.$store.selectedMetric == 'Inclusive') {
-                attr_data = data['hist_time (inc)']
-                dataMin = data['min_time (inc)'];
-                dataMax = data['max_time (inc)'];
-                dataSorted = data['sorted_time (inc)']
-            } else if (this.$store.selectedMetric == 'Exclusive') {
-                attr_data = data['hist_time']
-                dataMin = data['min_time']
-                dataMax = data['max_time']
-                dataSorted = data['sorted_time']
-            } else if (this.$store.selectedMetric == 'Imbalance') {
-                attr_data = data['hist_imbalance']
-            }
+            attr_data = data
+            dataMin = data['x_min'];
+            dataMax = data['x_max'];
+            // dataSorted = data['sorted_time (inc)']
 
             let dataWidth = ((dataMax - dataMin) / this.$store.selectedBinCount);
-            if(dataWidth == 0){
+            if (dataWidth == 0) {
                 dataWidth = 1
             }
 
@@ -225,16 +219,16 @@ export default {
                 axis_x.push(dataMin + (i * dataWidth));
             }
 
-            dataSorted.forEach((val, idx) => {
-                let pos = Math.floor((val - dataMin) / dataWidth);
-                if (pos >= this.$store.selectedBinCount) {
-                    pos = this.$store.selectedBinCount - 1;
-                }
-                if (binContainsProcID[pos] == null) {
-                    binContainsProcID[pos] = [];
-                }
-                binContainsProcID[pos].push(data['rank'][idx]);
-            });
+            // dataSorted.forEach((val, idx) => {
+            //     let pos = Math.floor((val - dataMin) / dataWidth);
+            //     if (pos >= this.$store.selectedBinCount) {
+            //         pos = this.$store.selectedBinCount - 1;
+            //     }
+            //     if (binContainsProcID[pos] == null) {
+            //         binContainsProcID[pos] = [];
+            //     }
+            //     binContainsProcID[pos].push(data['rank'][idx]);
+            // });
 
             console.log(attr_data['x'], attr_data['y'], axis_x, binContainsProcID)
             return [attr_data['x'], attr_data['y'], axis_x, binContainsProcID];
@@ -314,7 +308,6 @@ export default {
                 .attr('class', 'dist-histogram-bar dist-target')
                 .attrs({
                     'x': (d, i) => {
-                        console.log(this.targetXVals[i], this.histogramXScale(this.targetXVals[i]))
                         return this.histogramXScale(this.targetXVals[i])
                     },
                     'y': (d, i) => {
@@ -407,16 +400,16 @@ export default {
                 .ticks(this.$store.selectedBinCount)
                 .tickFormat((d, i) => {
                     let temp = this.concatenatedXVals[i];
-                    if (i % 4 == 0 && i == this.$store.numOfRanks['ensemble']) {
+                    if(i % 2 == 0){
                         let value = temp * 0.000001
-                        return `${value.toFixed(2)}s`;
+                        return `${value.toFixed(2)}s`;    
                     }
                 });
 
             this.svg.append('text')
                 .attr('class', 'histogram-axis-label')
                 .attr('x', this.boxWidth)
-                .attr('y', this.histogramHeight + 2 * this.padding.top)
+                .attr('y', this.histogramHeight + 3 * this.padding.top)
                 .style('font-size', '12px')
                 .style('text-anchor', 'end')
                 .text(this.$store.selectedMetric + " Runtime")
@@ -447,22 +440,45 @@ export default {
             const yAxis = d3.axisLeft(this.histogramYScale)
                 .ticks(5)
                 .tickFormat((d, i) => {
-                    if(d == 1){
-                        return d
+                    if(this.$store.selectedProp == 'rank'){
+                        if (d == 1) {
+                            return d
+                        }
+                        else if (d % 10 == 0) {
+                            return d
+                        }    
                     }
-                    else if (d % 10 == 0 && i % 4 == 0) {
-                        return d
+                    else if(this.$store.selectedProp == 'dataset'){
+                        if(d % 1 == 0){
+                            return d
+                        }
+                    }
+                    else if(this.$store.selectedProp == 'name'){
+                        if( d % 1 == 0){
+                            return d
+                        }
                     }
                 })
-
+            
+            let yAxisText = ''
+            if(this.$store.selectedProp == 'name'){
+                yAxisText = 'Number of callsites'
+            }
+            else if(this.$store.selectedProp == 'dataset'){
+                yAxisText = 'Number of runs'
+            }
+            else if(this.$store.selectedProp == 'rank'){
+                yAxisText = 'Number of ranks'
+            }
+            
             this.svg.append('text')
                 .attr('transform', 'rotate(-90)')
                 .attr('class', 'histogram-axis-label')
-                .attr('x', - this.histogramHeight + 3*this.padding.top)
+                .attr('x', - this.histogramHeight + 3 * this.padding.top)
                 .attr('y', this.padding.left)
                 .style('font-size', '12px')
                 .style('text-anchor', 'end')
-                .text("Frequency")
+                .text(yAxisText)
 
             const yAxisLine = this.svg.append('g')
                 .attr('class', 'y-axis')
@@ -529,7 +545,7 @@ export default {
 
                 cumulativeBinSpace += (end - start + 1) * widthPerRank;
 
-            console.log(botX3, botX4)
+                console.log(botX3, botX4)
                 line = 'M' + topX1 + ' ' + topY +
                     'L ' + topX2 + ' ' + topY +
                     'L ' + botX4 + ' ' + botY +
@@ -598,10 +614,10 @@ export default {
             const rankLineAxis = d3.axisBottom(this.ranklinescale)
                 .ticks(10)
                 .tickFormat((d, i) => {
-                    if(this.$store.numOfRanks['ensemble'] <= 20){
+                    if (this.$store.numOfRanks['ensemble'] <= 20) {
                         return d
                     }
-                    else{
+                    else {
                         if (d % 10 == 0 || d == this.$store.numOfRanks['ensemble'] - 1) {
                             return d
                         }

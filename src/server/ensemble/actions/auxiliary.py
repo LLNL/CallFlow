@@ -88,6 +88,8 @@ class Auxiliary:
             "dataset": df['dataset'].tolist()[0],
             "module": df['module'].tolist()[0],
             # "rank": df['rank'].tolist(),
+            "sorted_time": df['time (inc)'].sort_values().tolist(),
+            "sorted_time": df['time'].sort_values().tolist(),
             "Inclusive": {
                 # "time": df['time (inc)'].tolist(),
                 # "sorted_time": df['time (inc)'].sort_values().tolist(),
@@ -164,6 +166,10 @@ class Auxiliary:
     # Callsite grouped information
     def callsite_data(self):
         ret = {}
+
+        filtered_df = self.df.loc[self.df['time'] > 0.05*self.df['time'].max() ]
+
+        print(len(self.df['name'].unique()), len(filtered_df['name'].unique()))
         # Ensemble data.
         # Group callsite by the name
         name_grouped = self.df.groupby(['name'])

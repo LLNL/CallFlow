@@ -462,8 +462,7 @@ export default {
         },
 
         clear() {
-            console.log("clearing projection view")
-            d3.selectAll('#projection-svg').remove()
+            d3.selectAll('#parameter-projection-svg').remove()
         }
     },
 }

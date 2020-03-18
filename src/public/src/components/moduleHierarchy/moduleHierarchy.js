@@ -414,8 +414,8 @@ export default {
 			for (let idx = 0; idx < callsites.length; idx += 1) {
 				let callsite = callsites[idx]
 				let data = callsiteStore[callsite]
-				this.hist_min = Math.min(this.hist_min, data['gradients'][this.$store.selectedMetric]['hist']['y_min'])
-				this.hist_max = Math.max(this.hist_max, data['gradients'][this.$store.selectedMetric]['hist']['y_max'])
+				this.hist_min = Math.min(this.hist_min, data[this.$store.selectedMetric]['gradients']['hist']['y_min'])
+				this.hist_max = Math.max(this.hist_max, data[this.$store.selectedMetric]['gradients']['hist']['y_max'])
 			}
 
 			this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
@@ -446,8 +446,8 @@ export default {
 						.attr("y2", "100%");
 				}
 
-				let grid = data['gradients'][this.$store.selectedMetric]['hist']['x']
-				let val = data['gradients'][this.$store.selectedMetric]['hist']['y']
+				let grid = data[this.$store.selectedMetric]['gradients']['hist']['x']
+				let val = data[this.$store.selectedMetric]['gradients']['hist']['y']
 
 				for (let i = 0; i < grid.length; i += 1) {
 					let x = (i + i + 1) / (2 * grid.length)
@@ -471,8 +471,8 @@ export default {
 			for (let idx = 0; idx < modules.length; idx += 1) {
 				let thismodule = modules[idx]
 				let data = moduleStore[thismodule]
-				this.hist_min = Math.min(this.hist_min, data['gradients'][this.$store.selectedMetric]['hist']['y_min'])
-				this.hist_max = Math.max(this.hist_max, data['gradients'][this.$store.selectedMetric]['hist']['y_max'])
+				this.hist_min = Math.min(this.hist_min, data[this.$store.selectedMetric]['gradients']['hist']['y_min'])
+				this.hist_max = Math.max(this.hist_max, data[this.$store.selectedMetric]['gradients']['hist']['y_max'])
 			}
 
 			this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
@@ -503,8 +503,8 @@ export default {
 						.attr("y2", "100%");
 				}
 
-				let grid = data['gradients'][this.$store.selectedMetric]['hist']['x']
-				let val = data['gradients'][this.$store.selectedMetric]['hist']['y']
+				let grid = data[this.$store.selectedMetric]['gradients']['hist']['x']
+				let val = data[this.$store.selectedMetric]['gradients']['hist']['y']
 
 				for (let i = 0; i < grid.length; i += 1) {
 					let x = (i + i + 1) / (2 * grid.length)
@@ -527,12 +527,12 @@ export default {
 				let mean = 0
 				let gradients = []
 				if (this.nodes[i].depth == 0) {
-					mean = this.$store.modules[dataset][node_data.id]['gradients'][this.$store.selectedMetric]['dataset'][dataset]
-					gradients = this.$store.modules['ensemble'][node_data.id]['gradients'][this.$store.selectedMetric]['hist']
+					mean = this.$store.modules[dataset][node_data.id][this.$store.selectedMetric]['gradients']['dataset'][dataset]
+					gradients = this.$store.modules['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']['hist']
 				}
 				else {
-					mean = this.$store.callsites[dataset][node_data.id]['gradients'][this.$store.selectedMetric]['dataset'][dataset]
-					gradients = this.$store.callsites['ensemble'][node_data.id]['gradients'][this.$store.selectedMetric]['hist']
+					mean = this.$store.callsites['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']['dataset'][dataset]
+					gradients = this.$store.callsites['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']['hist']
 				}
 
 				let grid = gradients.x

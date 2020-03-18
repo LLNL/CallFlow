@@ -116,21 +116,19 @@ export default {
 			for (let i = 0; i < this.$store.runNames.length; i += 1) {
 				if (this.$store.runNames[i] != this.$store.selectedTargetDataset) {
 					let callsites_in_module = this.$store.moduleCallsiteMap['ensemble'][this.module]
-					console.log(callsites_in_module)
 					for (let j = 0; j < callsites_in_module.length; j += 1) {
 						let thiscallsite = callsites_in_module[j]
-						console.log(thiscallsite)
 
 						let thisdata = this.$store.callsites[this.$store.runNames[i]][thiscallsite]
 						if (thisdata != undefined) {
 							mean_time.push({
 								'callsite': thiscallsite,
-								'val': thisdata['mean_time'],
+								'val': thisdata['Exclusive']['mean_time'],
 								'run': this.$store.runNames[i]
 							})
 							mean_time_inc.push({
 								'callsite': thiscallsite,
-								'val': thisdata['mean_time (inc)'],
+								'val': thisdata['Inclusive']['mean_time'],
 								'run': this.$store.runNames[i]
 							})
 
@@ -176,12 +174,12 @@ export default {
 				let thisdata = this.$store.callsites[this.$store.selectedTargetDataset][thiscallsite]
 				mean_time.push({
 					'callsite': thiscallsite,
-					'val': thisdata['mean_time'],
+					'val': thisdata['Exclusive']['mean_time'],
 					'run': this.$store.selectedTargetDataset
 				})
 				mean_time_inc.push({
 					'callsite': thiscallsite,
-					'val': thisdata['mean_time (inc)'],
+					'val': thisdata['Inclusive']['mean_time'],
 					'run': this.$store.selectedTargetDataset
 				})
 			}
@@ -297,7 +295,7 @@ export default {
 				x2.push(xSeries[i] * xSeries[i]);
 				y2.push(ySeries[i] * ySeries[i]);
 			}
-
+			
 			var sum_x = 0;
 			var sum_y = 0;
 			var sum_xy = 0;
@@ -444,12 +442,12 @@ export default {
 				let mean = 0
 				let variance = 0
 				if (this.$store.selectedMetric == 'Inclusive') {
-					mean = this.$store.callsites[run][callsite]['mean_time (inc)'] * this.$store.timeScale
-					variance = this.$store.callsites[run][callsite]['variance_time (inc)'] * this.$store.timeScale
+					mean = this.$store.callsites[run][callsite][this.$store.selectedMetric]['mean_time'] * this.$store.timeScale
+					variance = this.$store.callsites[run][callsite][this.$store.selectedMetric]['variance_time'] * this.$store.timeScale
 				}
 				else if (this.$store.selectedMetric == 'Exclusive') {
-					mean = this.$store.callsites[run][callsite]['mean_time'] * this.$store.timeScale
-					variance = this.$store.callsites[run][callsite]['variance_time'] * this.$store.timeScale
+					mean = this.$store.callsites[run][callsite][this.$store.selectedMetric]['mean_time'] * this.$store.timeScale
+					variance = this.$store.callsites[run][callsite][this.$store.selectedMetric]['variance_time'] * this.$store.timeScale
 				}
 
 				let undesirability = 1 - Math.exp(-mean * variance)
