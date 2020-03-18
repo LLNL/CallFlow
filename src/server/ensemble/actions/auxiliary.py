@@ -18,6 +18,7 @@ from .gradients import KDE_gradients
 from utils.logger import log
 from utils.timer import Timer
 import time
+import math
 import os
 
 class Auxiliary:
@@ -39,14 +40,6 @@ class Auxiliary:
         self.result = self.run()
 
         print(self.timer)
-
-    def get_dataset_states(self):
-        ret = {}
-        for idx, state in enumerate(self.conf):
-            print(state)
-            if(state.split('_')[0] != 'ensemble'):
-                ret[state] = self.states[state]
-        return ret
 
     def histogram(self, data, data_min=np.nan, data_max=np.nan):
         if(np.isnan(data_min) or np.isnan(data_max) ):
@@ -85,6 +78,12 @@ class Auxiliary:
         return ret
 
     def pack_json(self, df=pd.DataFrame(), name='', all_ranks_hist={}, gradients={'Inclusive': {}, 'Exclusive': {}}, prop_hists={'Inclusive': {}, 'Exclusive': {}}):
+        inclusive_variance = math.sqrt(df['time (inc)'].var())
+        exclusive_variance = math.sqrt(df['time'].var())
+        if(math.isnan(inclusive_variance)):
+            inclusive_variance = 0
+        if(math.isnan(exclusive_variance)):
+            exclusive_variance = 0
         result = {
             "name": name,
             "id": 'node-' + str(df['nid'].tolist()[0]),
@@ -99,12 +98,11 @@ class Auxiliary:
                 "mean_time": df['time (inc)'].mean(),
                 "max_time": df['time (inc)'].max(),
                 "min_time": df['time (inc)'].min(),
-                "variance_time": np.var(np.array(df['time (inc)'])),
+                "variance_time": exclusive_variance,
                 # "imbalance_perc": df['imbalance_perc_inclusive'].tolist()[0],
                 # # "std_deviation": df['std_deviation_inclusive'].tolist()[0],
                 # "kurtosis": df['kurtosis_inclusive'].tolist()[0],
                 # "skewness": df['skewness_inclusive'].tolist()[0],
-                # "all_rank_histogram": all_ranks_hist['Inclusive'],
                 "gradients": gradients['Inclusive'],
                 "prop_histograms": prop_hists['Inclusive']
             },
@@ -115,12 +113,11 @@ class Auxiliary:
                 "mean_time": df['time'].mean(),            
                 "max_time": df['time'].max(),
                 "min_time": df['time'].min(),
-                "variance_time": np.var(np.array(df['time'])),
+                "variance_time": inclusive_variance,
                 # "imbalance_perc": df['imbalance_perc_exclusive'].tolist()[0],
                 # # "std_deviation": df['std_deviation_exclusive'].tolist()[0],
                 # "skewness": df['skewness_exclusive'].tolist()[0],
                 # "kurtosis": df['kurtosis_exclusive'].tolist()[0],
-                # "all_rank_histogram": all_ranks_hist['Exclusive'],
                 "gradients": gradients['Exclusive'],
                 "prop_histograms": prop_hists['Exclusive']
             }
@@ -260,7 +257,7 @@ class Auxiliary:
         ret = {}
         path = self.config.processed_path + f'/{self.config.runName}' + f'/all_data.json'
 
-        # self.process = True
+        self.process    = True
         if os.path.exists(path) and not self.process:
             print(f"[Callsite info] Reading the data from file {path}")
             with open(path, 'r') as f:

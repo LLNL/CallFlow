@@ -45,13 +45,14 @@ export default {
 		svgID: 'ensemble-scatterplot-view-svg',
 		message: "Runtime Scatterplot",
 		boxOffset: 20,
-		settings: [{ title: 'Show Difference plot' }, { title: 'aaa' }]
+		settings: [{ title: 'Show Difference plot' }, { title: 'aaa' }],
+		moduleUnDesirability: 1
 	}),
 
 	mounted() {
 		let self = this
 		EventHandler.$on('ensemble_scatterplot', function (data) {
-			console.log("Ensemble Scatterplot: ", data['module'])
+			console.log("Ensemble Scatterplot: ", data)
 			self.visualize(data['module'])
 		})
 	},
@@ -71,11 +72,11 @@ export default {
 				.attr('height', this.boxHeight - this.padding.top)
 				.attr('transform', "translate(" + this.padding.left + "," + this.padding.top + ")")
 
-			let modules_arr = Object.keys(this.$store.modules['ensemble'])
+			this.$store.selectedModule = Object.keys(this.$store.modules['ensemble'])[0]
 
 			this.$refs.ToolTip.init(this.svgID)
 			EventHandler.$emit('ensemble_scatterplot', {
-				module: modules_arr[0],
+				module: this.$store.selectedModule,
 				name: "main",
 				dataset: this.$store.runNames,
 			})
@@ -97,15 +98,35 @@ export default {
 				this.clear()
 			}
 			this.firstRender = false
-			this.module = module
+			this.selectedModule = module
+			this.selectedTargetModuleData = this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule][this.$store.selectedMetric]
+			this.selectedEnsembleModuleData = this.$store.modules['ensemble'][this.selectedModule][this.$store.selectedMetric]
 
 			this.ensembleProcess()
 			this.targetProcess()
+
+			let xScaleMax = Math.max(this.xMax, this.xtargetMax)
+			let xScaleMin = Math.min(this.xMin, this.xtargetMin) 
+			let yScaleMax = Math.max(this.yMax, this.ytargetMax)
+			let yScaleMin = Math.min(this.yMin, this.ytargetMin)
+
+			this.xScale = d3.scaleLinear().domain([xScaleMin, xScaleMax]).range([this.padding.left, this.xAxisHeight])
+			this.yScale = d3.scaleLinear().domain([yScaleMin, yScaleMax]).range([this.yAxisHeight, this.padding.top])
+
 			this.xAxis()
 			this.yAxis()
 			this.ensembleDots()
 			this.targetDots()
 			// this.correlationText()
+			this.setTitle()
+		},
+
+		setTitle(){
+			let mean = this.selectedTargetModuleData['mean_time']
+			let variance = this.selectedTargetModuleData['variance_time']
+			console.log(mean, variance)
+			this.moduleUnDesirability =  1 - Math.exp(-mean * variance)
+			console.log(this.moduleUnDesirability)
 		},
 
 		ensembleProcess() {
@@ -113,7 +134,8 @@ export default {
 			let mean_time_inc = []
 			for (let i = 0; i < this.$store.runNames.length; i += 1) {
 				if (this.$store.runNames[i] != this.$store.selectedTargetDataset) {
-					let callsites_in_module = this.$store.moduleCallsiteMap['ensemble'][this.module]
+					console.log(this.selectedModule)
+					let callsites_in_module = this.$store.moduleCallsiteMap['ensemble'][this.selectedModule]
 					for (let j = 0; j < callsites_in_module.length; j += 1) {
 						let thiscallsite = callsites_in_module[j]
 
@@ -135,7 +157,7 @@ export default {
 				}
 			}
 
-			let all_data = this.$store.modules['ensemble'][this.module]
+			let all_data = this.$store.modules['ensemble'][this.selectedModule]
 			let temp
 			if (this.$store.selectedScatterMode == 'mean') {
 				temp = this.scatterMean(mean_time, mean_time_inc)
@@ -157,16 +179,13 @@ export default {
 
 			this.xAxisHeight = this.boxWidth - 4 * this.padding.left
 			this.yAxisHeight = this.boxHeight - 4 * this.padding.left
-
-			this.xScale = d3.scaleLinear().domain([this.xMin, 1.2 * this.xMax]).range([this.padding.left, this.xAxisHeight])
-			this.yScale = d3.scaleLinear().domain([this.yMin, 1.2 * this.yMax]).range([this.yAxisHeight, this.padding.top])
 		},
 
 		targetProcess() {
 			let mean_time = []
 			let mean_time_inc = []
 
-			let callsites_in_module = this.$store.moduleCallsiteMap[this.$store.selectedTargetDataset][this.module]
+			let callsites_in_module = this.$store.moduleCallsiteMap[this.$store.selectedTargetDataset][this.selectedModule]
 			for (let i = 0; i < callsites_in_module.length; i += 1) {
 				let thiscallsite = callsites_in_module[i]
 				let thisdata = this.$store.callsites[this.$store.selectedTargetDataset][thiscallsite]
@@ -188,7 +207,7 @@ export default {
 				temp = this.scatterMean(mean_time, mean_time_inc)
 			}
 			else if (this.$store.selectedScatterMode == 'all') {
-				let data = this.$store.modules[this.$store.selectedTargetDataset][this.module]
+				let data = this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule]
 				temp = this.scatterAll(data['time'], data['time (inc)'])
 			}
 			this.xtargetMin = temp[0]
@@ -324,7 +343,7 @@ export default {
 		xAxis() {
 			const xFormat = d3.format('.1');
 			const xAxis = d3.axisBottom(this.xScale)
-				.ticks(10)
+				.ticks(this.$store.selectedMPIBinCount)
 				.tickFormat((d, i) => {
 					if (i % 3 == 0) {
 						return `${xFormat(d)}`
@@ -364,12 +383,13 @@ export default {
 		},
 
 		yAxis() {
-			let self = this
+			let tickCount = 10
 			const yFormat = d3.format('.1')
 			let yAxis = d3.axisLeft(this.yScale)
-				.ticks(10)
+				.ticks(tickCount)
 				.tickFormat((d, i) => {
-					if (i % 3 == 0) {
+					console.log(i)
+					if (i % 3 == 0 || i == tickCount - 1) {
 						return `${yFormat(d)}`
 					}
 				})

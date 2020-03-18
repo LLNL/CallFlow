@@ -50,7 +50,7 @@ export default {
 
             this.xScale = d3.scaleLinear()
                 .domain([min_x, max_x])
-                .range([0, this.boxWidth]);
+                .range([10, this.boxWidth]);
 
            this.ensembleOutliers()
            this.targetOutliers()
