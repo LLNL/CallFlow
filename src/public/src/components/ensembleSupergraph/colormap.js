@@ -49,7 +49,8 @@ export default {
                 .attrs({
                     'id': 'dist-colormap',
                 })
-
+            
+            this.clearLegends()
             this.drawTargetEnsembleLegend()
             this.drawMeanColorMap()
             this.drawMeanText()
@@ -315,13 +316,17 @@ export default {
         clear() {
             d3.selectAll('.dist-colormap-text').remove()
             d3.selectAll('.dist-colormap-rect').remove()
-            // d3.selectAll('.target-circle-legend').remove()
-            // d3.selectAll('.target-circle-legend-text').remove()
+            
         },
 
         clearMetric() {
             d3.selectAll('.dist-colormap-text-metric').remove()
             d3.selectAll('.dist-colormap-rect-metric').remove()
+        },
+
+        clearLegends() {
+            d3.selectAll('.target-circle-legend').remove()
+            d3.selectAll('.target-circle-legend-text').remove()
         },
 
         update(mode, data) {

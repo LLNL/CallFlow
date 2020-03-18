@@ -71,7 +71,7 @@ export default {
 					"height": this.height,
 					"top": this.toolbarHeight
 				})
-
+			
 			this.$socket.emit('ensemble_supergraph', {
 				datasets: this.$store.runNames,
 				groupBy: 'module'
