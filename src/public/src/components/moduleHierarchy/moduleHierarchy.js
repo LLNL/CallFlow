@@ -52,7 +52,8 @@ export default {
 		offset: 4,
 		stroke_width: 4,
 		metric: '',
-		selectedModule: ''
+		selectedModule: '',
+		svgID: "module-hierarchy-svg",
 	}),
 
 	watch: {
@@ -109,12 +110,12 @@ export default {
 			this.hierarchySVG = d3.select('#' + this.id)
 				.append('svg')
 				.attrs({
-					"id": "module-hierarchy-svg",
+					"id": this.svgID,
 					'width': this.icicleWidth + this.margin.right + this.margin.left + 10,
 					'height': this.icicleHeight + this.margin.top + this.margin.bottom,
 				})
-			
-			this.$refs.ToolTip.init()
+
+			this.$refs.ToolTip.init(this.svgID)
 			this.selectedModule = this.$store.selectedModule
 		},
 
@@ -208,7 +209,6 @@ export default {
 
 		update_from_graph(json) {
 			let hierarchy = this.bfs(json)
-			console.log(hierarchy)
 			this.drawIcicles(hierarchy)
 		},
 
@@ -278,7 +278,6 @@ export default {
 			let self = this
 			return function (node) {
 				if (node.children) {
-					console.log(self.$store.selectedHierarchyMode)
 					if (self.$store.selectedHierarchyMode == 'Exclusive') {
 						self.diceByValue(node, node.x0, dy * (node.depth + 1) / n, node.x1, dy * (node.depth + 2) / n)
 					}
@@ -330,7 +329,7 @@ export default {
 			if (parent.parent == null) {
 				value = this.$store.modules['ensemble'][parent.data.id]['max_time']
 			}
-			else{
+			else {
 				value = this.$store.callsites['ensemble'][parent.data.id][this.metric]
 			}
 
@@ -357,9 +356,9 @@ export default {
 				this.clear();
 			} else {
 				this.setupSVG()
-				this.hierarchy = this.hierarchySVG.append('g')
+				this.hierarchy = this.hierarchySVG
 					.attrs({
-						'id': this.icicleSVGid
+						'id': this.svgID
 					})
 			}
 			// Setup the view components
@@ -386,8 +385,6 @@ export default {
 
 			// For efficiency, filter nodes to keep only those large enough to see.
 			this.nodes = this.descendents(partition)
-
-			console.log(json, this.nodes)
 
 			this.setupModuleMeanGradients()
 			this.setupCallsiteMeanGradients()
@@ -570,7 +567,7 @@ export default {
 			}
 		},
 
-		clearGuides(d){
+		clearGuides(d) {
 			d3.selectAll('.hierarchy-guideLines').remove()
 		},
 
@@ -693,7 +690,6 @@ export default {
 				.append('rect')
 				.attr('class', 'icicleNode')
 				.attr('id', (d) => {
-					console.log(d)
 					return d.data.data.id
 				})
 				.attr('x', (d) => {
@@ -757,8 +753,33 @@ export default {
 					return 1;
 				})
 				.on('click', this.click)
-				.on('mouseover', this.mouseover)
-				.on('mouseout', this.mouseout)
+				.on('mouseover', (d) => {
+					// const percentage = (100 * d.value / this.totalSize).toPrecision(3);
+					// let percentageString = `${percentage}%`;
+					// if (percentage < 0.1) {
+					// 	percentageString = '< 0.1%';
+					// }
+
+					// const sequenceArray = this.getAncestors(d);
+					// this.updateBreadcrumbs(sequenceArray, percentageString);
+
+					// Fade all the segments.
+					// d3.selectAll('.icicleNode')
+					// 	.style('opacity', 0.3);
+
+					// Then highlight only those that are an ancestor of the current segment.
+					// this.hierarchy.selectAll('.icicleNode')
+					// 	.filter(node => (sequenceArray.indexOf(node) >= 0))
+					// 	.style('opacity', 1)
+
+					// this.drawGuides(d)
+					this.$refs.ToolTip.render(d)
+				})
+				.on('mouseout', (d) => {
+					// this.clearGuides()
+					this.$refs.ToolTip.clear()
+				},
+				)
 		},
 
 		addText() {
@@ -863,29 +884,31 @@ export default {
 
 		// Fade all but the current sequence, and show it in the breadcrumb trail.
 		mouseover(d) {
-			const percentage = (100 * d.value / this.totalSize).toPrecision(3);
-			let percentageString = `${percentage}%`;
-			if (percentage < 0.1) {
-				percentageString = '< 0.1%';
-			}
+			// const percentage = (100 * d.value / this.totalSize).toPrecision(3);
+			// let percentageString = `${percentage}%`;
+			// if (percentage < 0.1) {
+			// 	percentageString = '< 0.1%';
+			// }
 
-			const sequenceArray = this.getAncestors(d);
-			this.updateBreadcrumbs(sequenceArray, percentageString);
+			// const sequenceArray = this.getAncestors(d);
+			// this.updateBreadcrumbs(sequenceArray, percentageString);
 
 			// Fade all the segments.
 			// d3.selectAll('.icicleNode')
 			// 	.style('opacity', 0.3);
 
 			// Then highlight only those that are an ancestor of the current segment.
-			this.hierarchy.selectAll('.icicleNode')
-				.filter(node => (sequenceArray.indexOf(node) >= 0))
-				.style('opacity', 1)
+			// this.hierarchy.selectAll('.icicleNode')
+			// 	.filter(node => (sequenceArray.indexOf(node) >= 0))
+			// 	.style('opacity', 1)
 
 			// this.drawGuides(d)
+			this.$refs.ToolTip.render(d)
 		},
 
-		mouseout(d){
+		mouseout(d) {
 			// this.clearGuides()
+			this.$refs.ToolTip.clear()
 		},
 
 		// Given a node in a partition layout, return an array of all of its ancestor
@@ -903,7 +926,7 @@ export default {
 
 		initializeBreadcrumbTrail() {
 			// Add the svg area.
-			const width = document.getElementById(this.icicleSVGid).clientWidth;
+			const width = document.getElementById(this.svgID).clientWidth;
 			const trail = d3.select('#sequence').append('svg:svg')
 				.attr('width', this.icicleWidth)
 				.attr('height', 50)
