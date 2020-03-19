@@ -91,7 +91,6 @@ export default {
 			else if (this.$store.selectedMetric == 'Exclusive') {
 				this.metric = 'max_time'
 			}
-			// this.setupSVG()
 			this.$socket.emit('module_hierarchy', {
 				module: modules_arr[0],
 				datasets: this.$store.runNames,
