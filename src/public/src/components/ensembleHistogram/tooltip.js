@@ -1,21 +1,18 @@
-import tpl from '../../html/histogram/tooltip.html'
+import tpl from '../../html/ensembleHistogram/tooltip.html'
 import * as d3 from 'd3'
+import * as utils from '../utils'
 
 export default {
     template: tpl,
     name: 'ToolTip',
     components: {},
 
-    props: [
-
-    ],
-
     data: () => ({
         id: '',
         textCount: 0,
         textxOffset: 20,
         textyOffset: 20,
-        textPadding: 13,
+        textPadding: 18,
         offset: 10,
         fontSize: 12,
     }),
@@ -24,32 +21,55 @@ export default {
             this.render(data)
         },
     },
-    watch: {
 
-    },
-
-    mounted() {},
     methods: {
         init(id) {
-            this.parentID = id
-            this.toolTipDiv = d3.select('#' + this.parentID)
-                .append('svg')
-                .attr('class', 'toolTipSVG')
+            this.id = id
+            this.toolTipDiv = d3.select('#' + this.id)
 
-            this.toolTipG = this.toolTipDiv.append('g')
-            this.height = document.getElementById(this.parentID).clientHeight
-            this.halfWidth = document.getElementById(this.parentID).clientWidth / 2
+            this.height = 80
+            this.halfWidth = document.getElementById(this.id).clientWidth / 2
+            this.halfHeight = document.getElementById(this.id).clientHeight / 2
         },
 
-        render(data, node) {
+        addText(text) {
+            this.toolTipText = this.toolTipDiv
+                .append('text')
+                .style('font-family', 'sans-serif')
+                .style('font-size', '')
+                .attrs({
+                    'class': 'toolTipContent',
+                    'x': () => {
+                        if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth) {
+                            return (this.mousePosX - this.width) + this.textxOffset + 'px'
+                        }
+                        return this.mousePosX + this.textxOffset + 'px'
+                    },
+                    'y': () => {
+                        if (this.mousePosY + this.halfHeight > document.getElementById(this.id).clientHeight) {
+                            return ((this.mousePosY) + this.textyOffset + this.textPadding * this.textCount) - this.height + 'px'
+                        }
+                        return (this.mousePosY) + this.textyOffset + this.textPadding * this.textCount + "px";
+                    }
+                })
+                .text(text)
+            this.textCount += 1
+        },
+
+        info() {
+            this.addText('Count: ' + this.data)
+        },
+
+        render(data) {
             this.clear()
-            this.width = data.length*this.fontSize + 10*this.fontSize
+            this.data = data
+            this.width = 10 * this.fontSize
             var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
             this.mousePos = d3.mouse(d3.select('#' + this.id).node())
             this.mousePosX = this.mousePos[0]
             this.mousePosY = this.mousePos[1]
-            this.toolTipG.attr('height', svgScale(10) + "px")
-            this.toolTipRect = this.toolTipG
+
+            this.toolTipRect = this.toolTipDiv
                 .append('rect')
                 .attrs({
                     "class": "toolTipContent",
@@ -58,57 +78,32 @@ export default {
                     "rx": "10px",
                     "fill-opacity": 1,
                     "width": this.width,
-                    "height": this.height,
-                })
-                .attrs({
+                    "height": "50",
                     'x': () => {
-                        if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth - 25) {
+                        if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth) {
                             return (this.mousePosX - this.width) + 'px';
                         }
                         return (this.mousePosX) + 'px';
-
                     },
                     'y': () => {
+                        if (this.mousePosY + this.halfHeight > document.getElementById(this.id).clientHeight) {
+                            return (this.mousePosY - this.height) + 'px';
+                        }
                         return (this.mousePosY) + "px";
                     }
                 })
-            this.node = node
-            this.data = data
-            this.processes()
+
+            this.info()
         },
 
-        addText(text) {
-            this.textCount += 1
-            this.toolTipText = this.toolTipG
-                .append('text')
-                .style('font-family', 'sans-serif')
-                .style('font-size', this.fontSize)
-                .attrs({
-                    'class': 'toolTipContent',
-                    'x': () => {
-                        if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth - 25) {
-                            return (this.mousePosX - this.width + this.offset) + 'px';
-                        }
-                        return (this.mousePosX) + this.offset +  'px';
-
-                    },
-                    'y': () => {
-                        return (this.mousePosY) + 2*this.offset + "px";
-                    }
-                })
-                .text(text)
-        },
-
-        processes() {
-            let self = this
-            this.addText('Processes (MPI ranks): ' + this.data)
-
+        trunc(str, n) {
+            str = str.replace(/<unknown procedure>/g, 'proc ')
+            return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
         clear() {
             this.textCount = 0
             d3.selectAll('.toolTipContent').remove()
         },
-
     }
 }

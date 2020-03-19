@@ -26,7 +26,6 @@ export default {
             this.height = 80
             this.halfWidth = document.getElementById(this.id).clientWidth /2
             this.halfHeight = document.getElementById(this.id).clientHeight /2
-
         },
 
         addText(text) {
@@ -99,17 +98,6 @@ export default {
                     }
                 })
             this.data = data
-
-            // if (this.mousePosX + this.halfWidth > this.callgraphOverviewWidth) {
-            //     this.xOffset = this.mousePosX - this.halfWidth + this.textxOffset
-            // } else if (this.mousePosX < this.halfWidth) {
-            //     this.xOffset = this.mousePosX + this.textxOffset
-            // } else {
-            //     this.xOffset = this.mousePosX - this.halfWidth + this.textxOffset
-            // }
-
-            // console.log(this.xOffset)
-
             this.info()
         },
 

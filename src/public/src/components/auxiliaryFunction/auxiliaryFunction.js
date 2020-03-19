@@ -2,6 +2,7 @@ import tpl from '../../html/auxiliaryFunction/index.html'
 import EventHandler from '../EventHandler'
 import Settings from '../settings/settings'
 import BoxPlot from './boxplot'
+import * as d3 from 'd3'
 
 export default {
     name: 'AuxiliaryFunction',
@@ -73,8 +74,8 @@ export default {
     },
 
     methods: {
-        formatModule(module){
-            if(module.length < 10){
+        formatModule(module) {
+            if (module.length < 10) {
                 return module
             }
             return this.trunc(module, 10)
@@ -89,7 +90,8 @@ export default {
         },
 
         formatRuntime(val) {
-            let ret = (val * 0.000001).toFixed(2)
+            let format = d3.format('.2')
+            let ret = format(val)
             return ret
         },
 
@@ -116,7 +118,7 @@ export default {
 
         },
 
-        setInfo(){
+        setInfo() {
             this.number_of_callsites = Object.keys(this.$store.callsites['ensemble']).length
             this.callsites = this.$store.callsites['ensemble']
             this.selectedModule = this.$store.selectedModule
@@ -146,13 +148,13 @@ export default {
 
         selectCallsitesByModule(thismodule) {
             this.selectedModule = thismodule
-            this.selectedCallsite = ''  
+            this.selectedCallsite = ''
 
             let all_callsites = Object.keys(this.$store.callsites[this.$store.selectedTargetDataset])
             let ensemble_callsites = this.$store.callsites['ensemble']
 
             for (let callsite in all_callsites) {
-                if(ensemble_callsites.hasOwnProperty(callsite)){
+                if (ensemble_callsites.hasOwnProperty(callsite)) {
                     document.getElementById(ensemble_callsites[callsite].id).style.opacity = 0.2
                     document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'solid'
                 }
@@ -160,7 +162,7 @@ export default {
 
             let highlight_callsites = this.$store.moduleCallsiteMap[thismodule]
             for (let callsite in highlight_callsites) {
-                if(ensemble_callsites.hasOwnProperty(callsite)){
+                if (ensemble_callsites.hasOwnProperty(callsite)) {
                     document.getElementById(ensemble_callsites[callsite].id).style.opacity = 1
                     document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'dotted'
                 }
@@ -172,7 +174,7 @@ export default {
             let ensemble_callsites = this.$store.callsites['ensemble']
 
             for (let callsite in all_callsites) {
-                if(ensemble_callsites.hasOwnProperty(callsite)){
+                if (ensemble_callsites.hasOwnProperty(callsite)) {
                     document.getElementById(ensemble_callsites[callsite].id).style.opacity = 0.2
                     document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'dotted'
                 }
@@ -180,14 +182,14 @@ export default {
 
             let highlight_callsites = this.$store.moduleCallsiteMap[thismodule]
             for (let callsite in highlight_callsites) {
-                if(ensemble_callsites.hasOwnProperty(callsite)){
+                if (ensemble_callsites.hasOwnProperty(callsite)) {
                     document.getElementById(ensemble_callsites[callsite].id).style.opacity = 1
                 }
             }
 
             let selected_callsites = this.$store.moduleCallsiteMap[this.$store.selectedModule]
             for (let callsite in selected_callsites) {
-                if(ensemble_callsites.hasOwnProperty(callsite)){
+                if (ensemble_callsites.hasOwnProperty(callsite)) {
                     document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'solid'
                 }
             }
@@ -199,7 +201,7 @@ export default {
             let all_callsites = this.$store.callsites[this.$store.selectedTargetDataset]
 
             for (let callsite in all_callsites) {
-                if(ensemble_callsites.hasOwnProperty(callsite)){
+                if (ensemble_callsites.hasOwnProperty(callsite)) {
                     document.getElementById(ensemble_callsites[callsite].id).style.opacity = 1
                     document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'dotted'
                 }
@@ -207,7 +209,7 @@ export default {
 
             let selected_callsites = this.$store.moduleCallsiteMap[this.$store.selectedModule]
             for (let callsite in selected_callsites) {
-                if(ensemble_callsites.hasOwnProperty(callsite)){
+                if (ensemble_callsites.hasOwnProperty(callsite)) {
                     document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'solid'
                 }
             }
@@ -217,8 +219,8 @@ export default {
             let callsites = this.$store.callsites[dataset]
             let ensemble_callsites = this.$store.callsites['ensemble']
 
-            for(let callsite in callsites){
-                if(ensemble_callsites.hasOwnProperty(callsite)){
+            for (let callsite in callsites) {
+                if (ensemble_callsites.hasOwnProperty(callsite)) {
                     document.getElementById(ensemble_callsites[callsite].id).style.borderColor = this.$store.color.target
                 }
             }

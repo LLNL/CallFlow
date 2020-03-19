@@ -339,6 +339,7 @@ export default {
                     //     .style('fill-opacity', 1)
                     // let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
                     // self.$refs.ToolTip.render(groupProcStr, d)
+                    self.$refs.ToolTip.render(d)
                 })
                 .on('mouseout', function (d, i) {
                     // d3.select(this)
@@ -387,6 +388,7 @@ export default {
                     //     .style('fill-opacity', 1)
                     // let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
                     // self.$refs.ToolTip.render(groupProcStr, d)
+                    self.$refs.ToolTip.render(d)
                 })
                 .on('mouseout', function (d, i) {
                     // d3.select(this)

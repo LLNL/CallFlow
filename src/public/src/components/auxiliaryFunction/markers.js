@@ -161,7 +161,7 @@ export default {
             this.g.append("text")
                 .attrs({
                     "class": "whiskerText",
-                    "x": this.boxWidth - 7 * this.fontSize,
+                    "x": this.boxWidth - 9 * this.fontSize,
                     "y": this.boxHeight * .10,
                     "fill": d3.rgb(this.$store.color.target).darker(1)
                 })
@@ -172,7 +172,7 @@ export default {
             this.g.append("text")
                 .attrs({
                     "class": "whiskerText",
-                    "x": this.boxWidth - 7 * this.fontSize,
+                    "x": this.boxWidth - 9 * this.fontSize,
                     "y": this.boxHeight * 1.20,
                     "fill": d3.rgb(this.$store.color.ensemble).darker(1)
                 })
@@ -190,7 +190,7 @@ export default {
                     "fill": d3.rgb(this.$store.color.target).darker(1)
                 })
                 .style('stroke-width', '1')
-                .text("Median:" + utils.formatRuntimeWithoutUnits(median_target_val))
+                .text("Med.:" + utils.formatRuntimeWithoutUnits(median_target_val))
 
             let median_ensemble_val = this.data.q2
             this.g.append("text")
@@ -201,7 +201,7 @@ export default {
                     "fill": d3.rgb(this.$store.color.ensemble).darker(1)
                 })
                 .style('stroke-width', '1')
-                .text("Median:" + utils.formatRuntimeWithoutUnits(median_ensemble_val))
+                .text("Med.:" + utils.formatRuntimeWithoutUnits(median_ensemble_val))
         },
 
         qTexts() {
