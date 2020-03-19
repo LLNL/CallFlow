@@ -88,7 +88,6 @@ export default {
                             return (this.mousePosX - this.width) + 'px';
                         }
                         return (this.mousePosX) + 'px';
-
                     },
                     'y': () => {
                         if (this.mousePosY + this.halfHeight > document.getElementById(this.id).clientHeight) {

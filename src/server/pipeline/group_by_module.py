@@ -22,6 +22,9 @@ class groupBy:
         self.module_id_map = {}
 
         self.drop_eliminate_funcs()
+        self.name_module_map = self.entire_df.set_index('name')['module'].to_dict()
+        self.name_path_map = self.entire_df.set_index('name')['path'].to_dict()
+
         self.run()
         self.df = self.state.df
         self.graph = self.state.graph
@@ -84,17 +87,13 @@ class groupBy:
 
     def create_component_path(self, path, group_path):
         component_path = []
-        # path = utils.framesToPathLists(path)[0]
         component_module = group_path[len(group_path) - 1].split('=')[0]
 
         for idx, node in enumerate(path):
             node_func = node
-
-            node_func_df = self.df.loc[self.df['name'] == node_func]
-            if not node_func_df.empty:
-                # print(component_module, node_func_df['module'].tolist()[0])
-                if component_module == node_func_df['module'].tolist()[0]:
-                    component_path.append(node_func)
+            module = self.name_module_map[node_func]
+            if component_module == module:
+                component_path.append(node_func)
 
         component_path.insert(0, component_module)
         return tuple(component_path)
@@ -132,16 +131,17 @@ class groupBy:
             tnode = edge[1]
 
             print(snode, tnode, edge_count)
+            # # s_df = self.df.loc[self.df['name'] == edge[0]]
+            # t_df = self.df.loc[self.df['name'] == edge[1]]
 
-            # print(snode, tnode)
-            s_df = self.df.loc[self.df['name'] == edge[0]]
-            t_df = self.df.loc[self.df['name'] == edge[1]]
+            # if(s_df.shape[0] == 0 or t_df.shape[0] == 0):
+            #     continue
 
-            if(s_df.shape[0] == 0 or t_df.shape[0] == 0):
-                continue
+            # spath = s_df['path'].tolist()[0]
+            # tpath = t_df['path'].tolist()[0]
 
-            spath = s_df['path'].tolist()[0]
-            tpath = t_df['path'].tolist()[0]
+            spath = self.name_path_map[snode]
+            tpath = self.name_path_map[tnode]
 
             temp_group_path_results = self.create_group_path(spath)
             group_path[snode] = temp_group_path_results[0]
@@ -159,12 +159,12 @@ class groupBy:
             component_level[tnode] = len(component_path[tnode])
             module[tnode] = t_df['module'].tolist()[0]
 
-            if module[snode] not in module_id_map:
-                module_count += 1
-                module_id_map[module[snode]] = module_count
-                module_idx[snode] = module_id_map[module[snode]]
-            else:
-                module_idx[snode] = module_id_map[module[snode]]
+            # if module[snode] not in module_id_map:
+            #     module_count += 1
+            #     module_id_map[module[snode]] = module_count
+            #     module_idx[snode] = module_id_map[module[snode]]
+            # else:
+            #     module_idx[snode] = module_id_map[module[snode]]
 
             if component_level[snode] == 2:
                 entry_func[snode] = True
@@ -173,7 +173,7 @@ class groupBy:
                 entry_func[snode] = False
                 show_node[snode] = False
 
-            node_name[snode] = module[snode]  + '=' + snode
+            node_name[snode] = self.name_module_map[snode]  + '=' + snode
 
             # print('Node: ', snode)
             # print("entry function:", entry_func[snode])
@@ -198,29 +198,3 @@ class groupBy:
 
         show_nodes = self.df.loc[self.df['show_node'] == True]['vis_name'].unique()
         print("Number of nodes shown in group graph: {0}".format(show_nodes))
-
-        # for node in self.g.nodes(data=True):
-        #     nodeName = node[0]
-        #     nodeData = node[1]
-        #     if nodeName in show_node:
-        #         if show_node[nodeName] == True:
-        #             nodeData['show_node'] = True
-        #         else:
-        #             nodeData['show_node'] = False
-        #     else:
-        #         nodeData['show_node'] = False
-
-        #     if nodeName in module:
-        #         nodeData['module'] = module[nodeName]
-        #     else:
-        #         nodeData['module'] = 'Unknown (NA)'
-
-        #     if nodeName in group_path:
-        #         nodeData['group_path'] = group_path[nodeName]
-        #     else:
-        #         nodeData['group_path'] = []
-
-        #     if nodeName in component_path:
-        #         nodeData['component_path'] = component_path[nodeName]
-        #     else:
-        #         nodeData['component_path'] = []
