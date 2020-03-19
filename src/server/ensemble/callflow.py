@@ -63,27 +63,65 @@ class EnsembleCallFlow:
 
     def processState(self, datasets, filterBy="Inclusive", filterPerc="10"):
         states = {}
-        for idx, dataset_name in enumerate(datasets):
-            states[dataset_name] = State(dataset_name)
-            states[dataset_name] = self.pipeline.create_gf(dataset_name)
-            # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
+        # for idx, dataset_name in enumerate(datasets):
+        #     states[dataset_name] = State(dataset_name)
+        #     stage1 = time.perf_counter()
+        #     states[dataset_name] = self.pipeline.create_gf(dataset_name)
+        #     stage2 = time.perf_counter()
+        #     print(f"Create GraphFrame: {stage2 - stage1}")
+        #     # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
 
-            states[dataset_name] = self.pipeline.process_gf(states[dataset_name], "entire")
-            states[dataset_name] = self.pipeline.convertToNetworkX(states[dataset_name], "path")
-            states[dataset_name] = self.pipeline.group(states[dataset_name], "module")
-            self.pipeline.write_dataset_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
-            # states[dataset_name] = self.pipeline.filterNetworkX(states, dataset_name, self.config.filter_perc)
-            self.pipeline.write_hatchet_graph(states, dataset_name)
+        #     states[dataset_name] = self.pipeline.process_gf(states[dataset_name], "entire")
+        #     stage3 = time.perf_counter()
+        #     print(f"Preprocess GraphFrame: {stage3 - stage2}")
+
+        #     states[dataset_name] = self.pipeline.convertToNetworkX(states[dataset_name], "path")
+        #     stage4 = time.perf_counter()
+        #     print(f"Convert to NetworkX graph: {stage4 - stage3}")
+
+        #     states[dataset_name] = self.pipeline.group(states[dataset_name], "module")
+        #     stage5 = time.perf_counter()
+        #     print(f"Group GraphFrame: {stage5 - stage4}")
+
+        #     self.pipeline.write_dataset_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
+        #     stage6 = time.perf_counter()
+        #     print(f"Write GraphFrame: {stage6 - stage5}")
+
+        #     # states[dataset_name] = self.pipeline.filterNetworkX(states, dataset_name, self.config.filter_perc)
+        #     self.pipeline.write_hatchet_graph(states, dataset_name)
 
         for idx, dataset_name in enumerate(datasets):
             states[dataset_name] = self.pipeline.read_dataset_gf(dataset_name)
 
+        stage7 = time.perf_counter()
         states["ensemble_entire"] = self.pipeline.union(states)
+        stage8 = time.perf_counter()
+        print(f"Union GraphFrame: {stage8 - stage7}")
+
         self.pipeline.write_ensemble_gf(states, "ensemble_entire")
+        stage9 = time.perf_counter()
+        print(f"Writing ensemble graph: {stage9 - stage8}")
+
+        stage10 = time.perf_counter()
         states["ensemble_filter"] = self.pipeline.filterNetworkX(states['ensemble_entire'], self.config.filter_perc)
+        stage11 = time.perf_counter()
+        print(f"Filter ensemble graph: {stage11 - stage10}")
+
+        stage12 = time.perf_counter()
         self.pipeline.write_ensemble_gf(states, "ensemble_filter")
+        stage13 = time.perf_counter()
+        print(f"Writing ensemble graph: {stage13 - stage12}")
+
+        stage14 = time.perf_counter()
         states["ensemble_group"] = self.pipeline.ensemble_group(states, "module")
+        stage15 = time.perf_counter()
+        print(f"Group ensemble graph: {stage15 - stage14}")
+
+        stage16 = time.perf_counter()
         self.pipeline.write_ensemble_gf(states, "ensemble_group")
+        stage17 = time.perf_counter()
+        print(f"Write group ensemble graph: {stage17 - stage16}")
+
         # self.pipeline.write_callsite_information(states)
 
         # similarities = self.pipeline.deltaconSimilarity(datasets, states, "ensemble")

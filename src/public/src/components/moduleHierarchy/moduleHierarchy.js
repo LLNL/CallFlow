@@ -767,7 +767,7 @@ export default {
 					// d3.selectAll('.icicleNode')
 					// 	.style('opacity', 0.3);
 
-					// Then highlight only those that are an ancestor of the current segment.
+						// Then highlight only those that are an ancestor of the current segment.
 					// this.hierarchy.selectAll('.icicleNode')
 					// 	.filter(node => (sequenceArray.indexOf(node) >= 0))
 					// 	.style('opacity', 1)
