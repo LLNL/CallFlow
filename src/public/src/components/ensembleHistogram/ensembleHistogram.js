@@ -215,7 +215,7 @@ export default {
             else if(this.$store.selectedProp == 'dataset'){
                 this.selectedPropLabel = 'Runs'
             }
-            this.selectedPropSum = this.targetFreq.reduce((acc, val) => {return acc + val})
+            this.selectedPropSum = this.freq.reduce((acc, val) => {return acc + val})
         },
 
         clear() {

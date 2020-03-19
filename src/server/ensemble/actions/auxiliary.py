@@ -144,6 +144,17 @@ class Auxiliary:
             
             time_target_inclusive_arr = np.array(target_df['time (inc)'].tolist())
             time_target_exclusive_arr = np.array(target_df['time'].tolist())
+        elif(prop == 'rank'):
+            ensemble_prop = ensemble_df.groupby(['dataset', prop])[['time', 'time (inc)']].mean()
+            target_prop = target_df.groupby(['dataset', prop])[['time', 'time (inc)']].mean()
+
+            time_ensemble_inclusive_arr = np.array(ensemble_prop['time (inc)'])
+            time_ensemble_exclusive_arr = np.array(ensemble_prop['time'])
+
+            time_target_inclusive_arr = np.array(target_prop['time (inc)'])
+            time_target_exclusive_arr = np.array(target_prop['time'])
+
+            print(time_ensemble_inclusive_arr.shape)
         else:
             ensemble_prop = ensemble_df.groupby([prop])[['time', 'time (inc)']].mean()
             target_prop = target_df.groupby([prop])[['time', 'time (inc)']].mean()
@@ -257,7 +268,7 @@ class Auxiliary:
         ret = {}
         path = self.config.processed_path + f'/{self.config.runName}' + f'/all_data.json'
 
-        # self.process = True
+        self.process = True
         if os.path.exists(path) and not self.process:
             print(f"[Callsite info] Reading the data from file {path}")
             with open(path, 'r') as f:
