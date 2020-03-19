@@ -246,7 +246,7 @@ class EnsembleCallFlow:
             elif(action['selectedMetric'] == 'Exclusive'):
                 selectedMetric = 'time'
 
-            compare = Compare(self.states, compareDataset, targetDataset, selectedMetric)
+            compare = Compare(self.states['ensemble_entire'], compareDataset, targetDataset, selectedMetric)
             return compare.result
 
 

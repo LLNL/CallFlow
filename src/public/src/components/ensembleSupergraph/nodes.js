@@ -28,7 +28,6 @@ export default {
         compare(data) {
             console.log("[Comparison] Data:", data)
             this.clearGradients()
-            this.clearQuantileLines()
             this.clearZeroLine()
             this.renderZeroLine = {}
 
@@ -60,13 +59,13 @@ export default {
 
             if (this.$store.selectedCompareMode == 'rankDiff') {
                 this.$store.rankDiffColor.setColorScale(this.rank_min, this.rank_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
-                this.$parent.$refs.DistColorMap.update('rankDiff', data)
+                this.$parent.$refs.EnsembleColorMap.update('rankDiff', data)
                 this.setupDiffRuntimeGradients(data)
                 this.rankDiffRectangle()
             }
             else if (this.$store.selectedCompareMode == 'meanDiff') {
                 this.$store.meanDiffColor.setColorScale(this.mean_diff_min, this.mean_diff_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
-                this.$parent.$refs.DistColorMap.updateWithMinMax('meanDiff', this.mean_diff_min, this.mean_diff_max)
+                this.$parent.$refs.EnsembleColorMap.updateWithMinMax('meanDiff', this.mean_diff_min, this.mean_diff_max)
                 this.meanDiffRectangle(data)
             }
         }
@@ -228,7 +227,8 @@ export default {
             let self = this
             this.nodesSVG.append('rect')
                 .attrs({
-                    'id': (d) => { return 'callsite-' + d.client_idx },
+                    'id': (d) => { return 'callsite-rect' + d.client_idx },
+                    'class': 'callsite-rect',
                     'height': (d) => { return d.height; },
                     'width': this.nodeWidth,
                     'opacity': 0,
@@ -467,6 +467,7 @@ export default {
         },
 
         meanDiffRectangle(diff) {
+            console.log(diff)
             let self = this
             let mean_diff = {}
             let max_diff = 0
@@ -480,11 +481,12 @@ export default {
             }
 
             // Transition
-            this.nodes.selectAll('.dist-callsite')
+            this.nodes.selectAll('.callsite-rect')
                 .data(this.graph.nodes)
                 .transition()
                 .duration(this.transitionDuration)
                 .attr('opacity', d => {
+                    console.log(d)
                     return 1;
                 })
                 .attr('height', d => d.height)
@@ -492,10 +494,13 @@ export default {
                     return 1;
                 })
                 .style("fill", (d, i) => {
+                    console.log(mean_diff, d.name, mean_diff[d.module], this.$store.meanDiffColor.getColorByValue(mean_diff[d.module]))
                     if (max_diff == 0 && min_diff == 0) {
                         return this.$store.meanDiffColor.getColorByValue(0.5)
                     }
-                    return this.$store.meanDiffColor.getColorByValue((mean_diff[d.name]))
+                    let color = d3.rgb(this.$store.meanDiffColor.getColorByValue((mean_diff[d.module])))
+                    console.log(color)
+                    return color
                 })
         },
 
