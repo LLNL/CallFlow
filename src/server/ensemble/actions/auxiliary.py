@@ -153,8 +153,6 @@ class Auxiliary:
 
             time_target_inclusive_arr = np.array(target_prop['time (inc)'])
             time_target_exclusive_arr = np.array(target_prop['time'])
-
-            print(time_ensemble_inclusive_arr.shape)
         else:
             ensemble_prop = ensemble_df.groupby([prop])[['time', 'time (inc)']].mean()
             target_prop = target_df.groupby([prop])[['time', 'time (inc)']].mean()
@@ -249,7 +247,7 @@ class Auxiliary:
             for module in modules:
                 module_ensemble_df = self.df[self.df['module'] == module]
                 module_target_df = self.target_df[dataset].loc[self.target_df[dataset]['module'] == module]
-
+                gradients = {'Inclusive': {}, 'Exclusive': {}}
                 hists = {}
                 hists['Inclusive'] = {}
                 hists['Exclusive'] = {}

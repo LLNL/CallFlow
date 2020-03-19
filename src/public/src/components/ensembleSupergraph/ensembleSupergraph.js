@@ -42,6 +42,10 @@ export default {
 			console.log("Clearing Summary view")
 			self.clear()
 		})
+
+		EventHandler.$on('reveal_callsite', function() {
+			self.clear()
+		})
 	},
 
 	sockets: {

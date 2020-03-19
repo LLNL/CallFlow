@@ -528,7 +528,7 @@ export default {
 				let mean = 0
 				let gradients = []
 				if (this.nodes[i].depth == 0) {
-					mean = this.$store.modules[dataset][node_data.id][this.$store.selectedMetric]['gradients']['dataset'][dataset]
+					mean = this.$store.modules['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']['dataset'][dataset]
 					gradients = this.$store.modules['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']['hist']
 				}
 				else {
@@ -538,6 +538,7 @@ export default {
 
 				let grid = gradients.x
 				let vals = gradients.y
+
 
 				let targetPos = 0
 				let binWidth = (this.nodes[i].x1 - this.nodes[i].x0) / (this.$store.selectedRunBinCount)
@@ -574,7 +575,6 @@ export default {
 		},
 
 		drawGuides(d) {
-			console.log(d)
 			let dataset = this.$store.selectedTargetDataset
 
 			let data = this.$store.modules
