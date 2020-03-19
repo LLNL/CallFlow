@@ -81,7 +81,8 @@ export default {
 
     methods: {
         formatRuntime(val) {
-            let ret = (val * 0.000001).toFixed(2) + 's'
+            let format = d3.format('.1')
+            let ret = format(val) + '\u03BCs'
             return ret
         },
 
