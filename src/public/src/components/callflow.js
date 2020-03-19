@@ -142,7 +142,7 @@ export default {
 		sortByModes: ['Inclusive', 'Exclusive', 'Percent Imbalance', 'Skewness', 'Kurtosis'],
 		scales: ['Log', 'Linear'],
 		selectedScale: 'Linear',
-		props: ['name', 'rank', 'dataset'],
+		props: ['name', 'rank', 'dataset', 'all_ranks'],
 		selectedProp: 'name'
 	}),
 
@@ -263,6 +263,7 @@ export default {
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode
 			this.$store.selectedProp = this.selectedProp
 			this.$store.selectedScale = this.selectedScale
+			this.$store.selectedCompareMode = this.selectedCompareMode
 
 			this.$store.timeScale = 0.000001
 			this.$store.viewHeight = (window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight)

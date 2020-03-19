@@ -257,7 +257,7 @@ class Auxiliary:
         ret = {}
         path = self.config.processed_path + f'/{self.config.runName}' + f'/all_data.json'
 
-        self.process    = True
+        # self.process = True
         if os.path.exists(path) and not self.process:
             print(f"[Callsite info] Reading the data from file {path}")
             with open(path, 'r') as f:

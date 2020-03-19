@@ -17,16 +17,14 @@ import math
 
 
 class Compare:
-    def __init__(self, states, dataset1, dataset2, col):
-        self.states = states
-        self.state1 = self.states[dataset1]
-        self.state2 = self.states[dataset2]
-        self.state_ensemble = self.states["ensemble"]
-        self.graph1 = self.state1.graph
-        self.df1 = self.state1.df
-        self.graph2 = self.state2.graph
-        self.df2 = self.state2.df
-        self.df_ensemble = self.state_ensemble.df
+    def __init__(self, state, dataset1, dataset2, col):
+        self.state = state
+        self.df1 = self.state.df.loc[self.state.df['dataset'] == dataset1]
+        self.df2 = self.state.df.loc[self.state.df['dataset'] == dataset2]
+        # self.graph1 = self.state1.graph
+        # self.df1 = self.state1.df
+        # self.graph2 = self.state2.graph
+        # self.df2 = self.state2.df
         self.col = col
         self.dataset1 = dataset1
         self.dataset2 = dataset2
@@ -42,11 +40,9 @@ class Compare:
     def run(self):
         results = []
 
-        nodes = (
-            self.df_ensemble.loc[self.df_ensemble["show_node"] == True]["name"]
-            .unique()
-            .tolist()
-        )
+        # nodes = (self.df_ensemble.loc[self.df_ensemble["show_node"] == True]["name"].unique().tolist())
+
+        nodes = self.state.df['module'].unique()
 
         for node in nodes:
             results.append(self.calculate_diff(node))
@@ -87,8 +83,8 @@ class Compare:
         return ret
 
     def calculate_diff(self, node):
-        node_df1 = self.df1.loc[self.df1["name"] == node]
-        node_df2 = self.df2.loc[self.df2["name"] == node]
+        node_df1 = self.df1.loc[self.df1["module"] == node]
+        node_df2 = self.df2.loc[self.df2["module"] == node]
 
         data1 = np.asarray(node_df1[self.col])
         rank1 = np.asarray(node_df1["rank"])
@@ -106,6 +102,7 @@ class Compare:
 
         name = name2
         module = module2
+        print(data1, data2)
         dataset = np.concatenate([dataset1, dataset2], axis=0)
         mean = np.mean([zero_inserted_data1, zero_inserted_data2], axis=0)
         diff = zero_inserted_data1 - zero_inserted_data2
@@ -150,11 +147,11 @@ class Compare:
             x = 0
             y = 0
 
-        # print(
-        #     "hist ranges = {} {} {} {}\n".format(
-        #         hist_x_min, hist_x_max, hist_y_min, hist_y_max
-        #     )
-        # )
+        print(
+            "hist ranges = {} {} {} {}\n".format(
+                hist_x_min, hist_x_max, hist_y_min, hist_y_max
+            )
+        )
 
         result = {
             "name": node,
@@ -181,6 +178,6 @@ class Compare:
             "mean": mean.tolist(),
             "diff": diff.tolist(),
         }
-
+        # print(result)
         return result
 
