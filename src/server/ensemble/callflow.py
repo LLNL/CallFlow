@@ -63,6 +63,8 @@ class EnsembleCallFlow:
 
     def processState(self, datasets, filterBy="Inclusive", filterPerc="10"):
         states = {}
+        col_names = ['stage', 'time']
+        time_perf_df = pd.DataFrame(columns = col_names)
         # for idx, dataset_name in enumerate(datasets):
         #     states[dataset_name] = State(dataset_name)
         #     stage1 = time.perf_counter()
@@ -90,6 +92,7 @@ class EnsembleCallFlow:
         #     # states[dataset_name] = self.pipeline.filterNetworkX(states, dataset_name, self.config.filter_perc)
         #     self.pipeline.write_hatchet_graph(states, dataset_name)
 
+        
         for idx, dataset_name in enumerate(datasets):
             states[dataset_name] = self.pipeline.read_dataset_gf(dataset_name)
 
