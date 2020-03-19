@@ -1,6 +1,7 @@
 import tpl from '../../html/ensembleSupergraph/colormap.html'
 import * as d3 from 'd3'
 import 'd3-selection-multi'
+import * as utils from '../utils'
 
 export default {
     template: tpl,
@@ -207,7 +208,7 @@ export default {
                     'class': 'dist-colormap-text-metric',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - this.padding.bottom})`,
                 })
-                .text((this.colorMin * 0.000001).toFixed(3) + 's');
+                .text(utils.formatRuntimeWithUnits(this.colorMin))
 
             this.svg.append("text")
                 .style("fill", "black")
@@ -220,7 +221,7 @@ export default {
                     "class": "dist-colormap-text-metric",
                     'transform': `translate(${this.containerWidth - this.padding.right + this.width + this.offset}, ${this.containerHeight - this.padding.bottom})`,
                 })
-                .text((this.colorMax * 0.000001).toFixed(3) + "s");
+                .text(utils.formatRuntimeWithUnits(this.colorMax))
 
         },
 

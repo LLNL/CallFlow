@@ -16,6 +16,7 @@ import tpl from '../../html/ensembleHistogram/index.html'
 import * as d3 from 'd3'
 import "d3-selection-multi"
 import ToolTip from './tooltip'
+import * as utils from '../utils'
 import EventHandler from '../EventHandler'
 
 // http://plnkr.co/edit/wfOx8615PnZh2CST301F?p=preview
@@ -175,18 +176,18 @@ export default {
 
             this.sortedXVals = this.xVals.sort((a, b) => a - b)
 
-            this.histogramXScale = d3.scaleBand()
+            this.xScale = d3.scaleBand()
                 .domain(this.sortedXVals)
                 .rangeRound([0, this.xAxisHeight])
 
             if (this.$store.selectedScale == 'Linear') {
-                this.histogramYScale = d3.scaleLinear()
+                this.yScale = d3.scaleLinear()
                     .domain([0, d3.max(this.freq)])
                     .range([this.yAxisHeight, this.padding.top])
                 this.logScaleBool = false;
             } 
             else if(this.$store.selectedScale == 'Log'){
-                this.histogramYScale = d3.scaleLog()
+                this.yScale = d3.scaleLog()
                     .domain([0.1, d3.max(this.freq)])
                     .range([this.boxHeight, this.padding.top]);
                 this.logScaleBool = true;
@@ -313,16 +314,16 @@ export default {
                 .attr('class', 'dist-histogram-bar dist-target')
                 .attrs({
                     'x': (d, i) => {
-                        return this.histogramXScale(this.targetXVals[i])
+                        return this.xScale(this.targetXVals[i])
                     },
                     'y': (d, i) => {
-                        return this.histogramYScale(d)
+                        return this.yScale(d)
                     },
                     'width': (d) => {
-                        return this.histogramXScale.bandwidth()
+                        return this.xScale.bandwidth()
                     },
                     'height': (d) => {
-                        return Math.abs(this.yAxisHeight - this.histogramYScale(d));
+                        return Math.abs(this.yAxisHeight - this.yScale(d));
                     },
                     'fill': this.$store.color.target,
                     'opacity': 1,
@@ -345,7 +346,7 @@ export default {
                     // d3.selectAll(`.lineRank_${i}`)
                     //     .style('fill', 'grey')
                     //     .style('fill-opacity', 0.4);
-                    // self.$refs.ToolTip.clear()
+                    self.$refs.ToolTip.clear()
                 })
         },
 
@@ -358,16 +359,16 @@ export default {
                 .attr('class', 'dist-histogram-bar dist-ensemble')
                 .attrs({
                     'x': (d, i) => {
-                        return this.histogramXScale(this.xVals[i])
+                        return this.xScale(this.xVals[i])
                     },
                     'y': (d, i) => {
-                        return this.histogramYScale(d)
+                        return this.yScale(d)
                     },
                     'width': (d) => {
-                        return this.histogramXScale.bandwidth()
+                        return this.xScale.bandwidth()
                     },
                     'height': (d) => {
-                        return Math.abs(this.yAxisHeight - this.histogramYScale(d));
+                        return Math.abs(this.yAxisHeight - this.yScale(d));
                     },
                     'fill': (d) => {
                         let color = self.$store.color.ensemble
@@ -379,20 +380,20 @@ export default {
                     'transform': "translate(" + this.paddingFactor * this.padding.left + "," + 0 + ")"
                 })
                 .on('mouseover', function (d, i) {
-                    d3.select(this)
-                        .attr('fill', 'red');
-                    d3.selectAll(`.lineRank_${i}`)
-                        .style('fill', 'orange')
-                        .style('fill-opacity', 1)
-                    let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
-                    self.$refs.ToolTip.render(groupProcStr, d)
+                    // d3.select(this)
+                    //     .attr('fill', 'red');
+                    // d3.selectAll(`.lineRank_${i}`)
+                    //     .style('fill', 'orange')
+                    //     .style('fill-opacity', 1)
+                    // let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
+                    // self.$refs.ToolTip.render(groupProcStr, d)
                 })
                 .on('mouseout', function (d, i) {
-                    d3.select(this)
-                        .attr('fill', self.$store.color.ensemble);
-                    d3.selectAll(`.lineRank_${i}`)
-                        .style('fill', 'grey')
-                        .style('fill-opacity', 0.4);
+                    // d3.select(this)
+                    //     .attr('fill', self.$store.color.ensemble);
+                    // d3.selectAll(`.lineRank_${i}`)
+                    //     .style('fill', 'grey')
+                    //     .style('fill-opacity', 0.4);
                     self.$refs.ToolTip.clear()
                 })
         },
@@ -400,12 +401,11 @@ export default {
         /* Axis for the histogram */
         /* Axis for the histogram */
         xAxis() {
-            const xFormat = d3.format('.1');
-            const xAxis = d3.axisBottom(this.histogramXScale)
+            const xAxis = d3.axisBottom(this.xScale)
                 .ticks(5)
                 .tickFormat((d, i) => {
                     if(i % 3 == 0){
-                        return `${xFormat(d)}`;    
+                        return `${utils.formatRuntimeWithoutUnits(d)}`;    
                     }
                 });
 
@@ -441,7 +441,7 @@ export default {
         },
 
         yAxis() {
-            const yAxis = d3.axisLeft(this.histogramYScale)
+            const yAxis = d3.axisLeft(this.yScale)
                 .ticks(10)
                 .tickFormat((d, i) => {
                     if(this.$store.selectedProp == 'rank'){
@@ -507,9 +507,9 @@ export default {
         },
 
         drawRankLines(group, processIDs, xVals, idx, type) {
-            const binWidth = this.histogramXScale.bandwidth();
+            const binWidth = this.xScale.bandwidth();
             const widthPerRank = binWidth / processIDs.length;
-            const binLocation = this.histogramXScale(xVals);
+            const binLocation = this.xScale(xVals);
             let cumulativeBinSpace = 0;
             let line;
             if (group.length == 1) {
@@ -518,8 +518,8 @@ export default {
                 var topX1 = cumulativeBinSpace + binLocation
                 var topX2 = cumulativeBinSpace + binLocation + (1) * widthPerRank;
 
-                var botX3 = this.histogramXScale(start);
-                var botX4 = this.histogramXScale(start);
+                var botX3 = this.xScale(start);
+                var botX4 = this.xScale(start);
 
                 var topY = this.boxHeight - this.histogramOffset
                 var botY = this.boxHeight - 3 * this.padding.bottom;
@@ -531,7 +531,6 @@ export default {
                     'L ' + botX3 + ' ' + botY;
             }
             else {
-                console.log(cumulativeBinSpace, binLocation)
                 var start = group[0];
                 var end = group[1];
 
@@ -539,9 +538,8 @@ export default {
                 var topX2 = cumulativeBinSpace + (end - start + 1) * widthPerRank + binLocation;
 
 
-                console.log(this.histoframXScale, xVals[start], xVals[end])
-                var botX3 = this.histogramXScale(xVals[start]);
-                var botX4 = this.histogramXScale(xVals[end]);
+                var botX3 = this.xScale(xVals[start]);
+                var botX4 = this.xScale(xVals[end]);
 
                 var topY = this.boxHeight - this.histogramOffset;
                 var botY = this.boxHeight - 3 * this.padding.bottom
@@ -686,12 +684,12 @@ export default {
 
         brushing() {
             const brushScale = d3.scaleLinear()
-                .domain(this.histogramXScale.domain())
-                .range(this.histogramXScale.range());
+                .domain(this.xScale.domain())
+                .range(this.xScale.range());
 
             let brushStart = d3.event.selection.map(brushScale.invert)[0]
             let brushEnd = d3.event.selection.map(brushScale.invert)[1]
-            let brushPoints = this.histogramXScale.domain().length
+            let brushPoints = this.xScale.domain().length
 
             this.localBrushStart = Math.floor(brushStart * brushPoints)
             this.localBrushEnd = Math.ceil(brushEnd * brushPoints)

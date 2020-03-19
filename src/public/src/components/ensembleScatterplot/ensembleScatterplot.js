@@ -14,6 +14,7 @@ import tpl from '../../html/ensembleScatterplot/index.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
 import Settings from '../settings/settings'
+import * as utils from '../utils'
 import EventHandler from '../EventHandler'
 
 export default {
@@ -134,7 +135,6 @@ export default {
 			let mean_time_inc = []
 			for (let i = 0; i < this.$store.runNames.length; i += 1) {
 				if (this.$store.runNames[i] != this.$store.selectedTargetDataset) {
-					console.log(this.selectedModule)
 					let callsites_in_module = this.$store.moduleCallsiteMap['ensemble'][this.selectedModule]
 					for (let j = 0; j < callsites_in_module.length; j += 1) {
 						let thiscallsite = callsites_in_module[j]
@@ -341,12 +341,11 @@ export default {
 		},
 
 		xAxis() {
-			const xFormat = d3.format('.1');
 			const xAxis = d3.axisBottom(this.xScale)
 				.ticks(this.$store.selectedMPIBinCount)
 				.tickFormat((d, i) => {
 					if (i % 3 == 0) {
-						return `${xFormat(d)}`
+						return `${utils.formatRuntimeWithoutUnits(d)}`
 					}
 				});
 			
@@ -384,13 +383,12 @@ export default {
 
 		yAxis() {
 			let tickCount = 10
-			const yFormat = d3.format('.1')
 			let yAxis = d3.axisLeft(this.yScale)
 				.ticks(tickCount)
 				.tickFormat((d, i) => {
 					console.log(i)
 					if (i % 3 == 0 || i == tickCount - 1) {
-						return `${yFormat(d)}`
+						return `${utils.formatRuntimeWithoutUnits(d)}`
 					}
 				})
 

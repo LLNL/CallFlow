@@ -1,5 +1,6 @@
 import tpl from '../../html/auxiliaryFunction/markers.html'
 import * as d3 from 'd3'
+import * as utils from '../utils'
 
 export default {
     name: "Markers",
@@ -81,7 +82,7 @@ export default {
 
         minMaxEnsembleMarker() {
             let y1 = this.$parent.$parent.informationHeight / 2
-            let y2 = this.boxHeight - this.$parent.$parent.informationHeight / 4
+            let y2 = this.boxHeight - this.$parent.$parent.informationHeight / 8
             this.g.append("line")
                 .attrs({
                     "class": "whisker",
@@ -141,7 +142,7 @@ export default {
                     "fill": d3.rgb(this.$store.color.target).darker(1)
                 })
                 .style('stroke-width', '1')
-                .text("Min: " + this.formatRuntime(min_target_val))
+                .text("Min: " + utils.formatRuntimeWithoutUnits(min_target_val))
 
             let min_ensemble_val = this.data.min
             this.g.append("text")
@@ -152,7 +153,7 @@ export default {
                     "fill": d3.rgb(this.$store.color.ensemble).darker(1)
                 })
                 .style('stroke-width', '1')
-                .text("Min: " + this.formatRuntime(min_ensemble_val))
+                .text("Min: " + utils.formatRuntimeWithoutUnits(min_ensemble_val))
         },
 
         maxText() {
@@ -165,7 +166,7 @@ export default {
                     "fill": d3.rgb(this.$store.color.target).darker(1)
                 })
                 .style('stroke-width', '1')
-                .text("Max:" + this.formatRuntime(max_target_val))
+                .text("Max:" + utils.formatRuntimeWithoutUnits(max_target_val))
 
             let max_ensemble_val = this.data.max
             this.g.append("text")
@@ -176,7 +177,7 @@ export default {
                     "fill": d3.rgb(this.$store.color.ensemble).darker(1)
                 })
                 .style('stroke-width', '1')
-                .text("Max:" + this.formatRuntime(max_ensemble_val))
+                .text("Max:" + utils.formatRuntimeWithoutUnits(max_ensemble_val))
         },
 
         medianText() {
@@ -189,7 +190,7 @@ export default {
                     "fill": d3.rgb(this.$store.color.target).darker(1)
                 })
                 .style('stroke-width', '1')
-                .text("Median:" + this.formatRuntime(median_target_val))
+                .text("Median:" + utils.formatRuntimeWithoutUnits(median_target_val))
 
             let median_ensemble_val = this.data.q2
             this.g.append("text")
@@ -200,7 +201,7 @@ export default {
                     "fill": d3.rgb(this.$store.color.ensemble).darker(1)
                 })
                 .style('stroke-width', '1')
-                .text("Median:" + this.formatRuntime(median_ensemble_val))
+                .text("Median:" + utils.formatRuntimeWithoutUnits(median_ensemble_val))
         },
 
         qTexts() {
@@ -218,7 +219,7 @@ export default {
                     "fill": d3.rgb(this.fill).darker(1)
                 })
                 .style('stroke-width', '2')
-                .text("q1: " + this.formatRuntime(this.q.q1))
+                .text("q1: " + utils.formatRuntimeWithoutUnits(this.q.q1))
         },
 
         q3Text() {
@@ -231,7 +232,7 @@ export default {
                     "fill": d3.rgb(this.fill).darker(1)
                 })
                 .style('stroke-width', '1')
-                .text("q3: " + this.formatRuntime(this.q.q3))
+                .text("q3: " + utils.formatRuntimeWithoutUnits(this.q.q3))
         },
 
         formatName(name) {
@@ -239,11 +240,6 @@ export default {
                 return name
             }
             let ret = this.trunc(name, 20)
-            return ret
-        },
-
-        formatRuntime(val) {
-            let ret = (val * 0.000001).toFixed(2)
             return ret
         },
     }

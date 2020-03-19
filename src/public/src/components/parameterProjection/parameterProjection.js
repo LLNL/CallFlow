@@ -2,6 +2,7 @@ import * as d3 from 'd3'
 import { lasso } from '../../thirdParty/lasso';
 import template from '../../html/parameterProjection/index.html'
 import EventHandler from '../EventHandler.js'
+import * as utils from '../utils'
 
 export default {
     name: 'ParameterProjection',
@@ -234,8 +235,8 @@ export default {
         showDetails(dataset) {
             this.tooltip.html(
                 "Run: " + dataset + "<br/>" +
-                "Inclusive time (max): " + this.$store.maxIncTime[dataset] + " ms<br/>" +
-                "Exclusive time (max): " + this.$store.maxExcTime[dataset] + " ms")
+                "Inc. time (max): " + utils.formatRuntimeWithUnits(this.$store.maxIncTime[dataset]) + "<br/>" +
+                "Exc. time (max): " + utils.formatRuntimeWithUnits(this.$store.maxExcTime[dataset]))
                 // .style("left", (d3.event.pageX) + "px")
                 // .style("top", (d3.event.pageY - 28) + "px");
         },
