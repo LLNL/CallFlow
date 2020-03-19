@@ -131,11 +131,12 @@ export default {
             event.stopPropagation()
             let callsite = event.currentTarget.id
             this.reveal_callsites.push(callsite)
-            console.log(this.reveal_callsites)
             this.$socket.emit('reveal_callsite', {
                 reveal_callsites: this.reveal_callsites,
                 datasets: this.$store.runNames,
             })
+
+            EventHandler.$emit('reveal_callsite')
         },
 
         trunc(str, n) {

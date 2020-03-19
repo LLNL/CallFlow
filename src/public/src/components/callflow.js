@@ -143,7 +143,7 @@ export default {
 		scales: ['Log', 'Linear'],
 		selectedScale: 'Linear',
 		props: ['name', 'rank', 'dataset', 'all_ranks'],
-		selectedProp: 'name'
+		selectedProp: 'rank'
 	}),
 
 	watch: {},
