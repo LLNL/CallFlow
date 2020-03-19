@@ -1,5 +1,6 @@
 import tpl from '../../html/ensembleScatterplot/tooltip.html'
 import * as d3 from 'd3'
+import * as utils from '../utils'
 
 export default {
     template: tpl,
@@ -26,11 +27,6 @@ export default {
             this.halfWidth = document.getElementById(this.id).clientWidth /2
             this.halfHeight = document.getElementById(this.id).clientHeight /2
 
-        },
-
-        formatRuntime(val) {
-            let ret = (val * 0.000001).toFixed(2) + 's'
-            return ret
         },
 
         addText(text) {
@@ -65,7 +61,7 @@ export default {
 
         info() {
             this.addText('Callsite: ' + this.trunc(this.data.callsite, 10))
-            this.addText(this.$store.selectedMetric + ' Time: ' + this.formatRuntime(this.data.value))
+            this.addText(this.$store.selectedMetric + ' Time: ' + utils.formatRuntimeWithUnits(this.data.value))
             this.addText('Run: ' + this.data.run)
             this.addText('Desirability: ' + (1 - this.data.undesirability).toFixed(3))
         },

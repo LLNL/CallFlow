@@ -2,6 +2,7 @@ import tpl from '../../html/ensembleSupergraph/nodes.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
 import EventHandler from '../EventHandler'
+import * as utils from '../utils'
 
 export default {
     template: tpl,
@@ -80,11 +81,6 @@ export default {
     },
 
     methods: {
-        formatRuntime(val) {
-            let format = d3.format('.1')
-            let ret = format(val) + '\u03BCs'
-            return ret
-        },
 
         formatRunCounts(val) {
             if (val == 1) {
@@ -610,7 +606,7 @@ export default {
                             .attr('fill', 'black')
                             .style('z-index', 100)
                             .style('font-size', '14px')
-                            .text(this.formatRuntime(grid[idx]))
+                            .text(utils.formatRuntimeWithUnits(grid[idx]))
                     }
                 }
 
@@ -624,7 +620,7 @@ export default {
                         .attr('fill', 'black')
                         .style('z-index', 100)
                         .style('font-size', '14px')
-                        .text('Min. = ' + this.formatRuntime(grid[idx]))
+                        .text('Min. = ' + utils.formatRuntimeWithUnits(grid[idx]))
                 }
                 else if (idx == grid.length - 1) {
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
@@ -636,7 +632,7 @@ export default {
                         .attr('fill', 'black')
                         .style('z-index', 100)
                         .style('font-size', '14px')
-                        .text('Max. = ' + this.formatRuntime(grid[idx]))
+                        .text('Max. = ' + utils.formatRuntimeWithUnits(grid[idx]))
                 }
             }
         },
