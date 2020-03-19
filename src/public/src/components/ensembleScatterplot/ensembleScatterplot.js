@@ -386,7 +386,6 @@ export default {
 			let yAxis = d3.axisLeft(this.yScale)
 				.ticks(tickCount)
 				.tickFormat((d, i) => {
-					console.log(i)
 					if (i % 3 == 0 || i == tickCount - 1) {
 						return `${utils.formatRuntimeWithoutUnits(d)}`
 					}
