@@ -271,7 +271,7 @@ class ensembleGroupBy:
         self.update_df('mod_index', module_idx)
         self.update_df('entry_function', entry_func)
 
-        print(self.filter_df[['group_path', 'component_path']])
+        # print(self.filter_df[['group_path', 'component_path']])
         return {
                 'df': self.filter_df,
                 'g': self.filter_g

@@ -79,8 +79,8 @@ export default {
             this.height = this.$store.viewHeight * 0.33
 
             // Assign width and height for histogram and rankLine SVG.
-            this.boxWidth = this.width - 1*(this.padding.right + this.padding.left)
-            this.boxHeight = this.height - 2*(this.padding.top + this.padding.bottom)
+            this.boxWidth = this.width - 1 * (this.padding.right + this.padding.left)
+            this.boxHeight = this.height - 2 * (this.padding.top + this.padding.bottom)
 
             //uncomment to include the rank scale
             // this.histogramOffset = Math.floor(this.boxHeight / 3);
@@ -96,12 +96,12 @@ export default {
             this.rankScaleWidth = this.histogramWidth
 
             this.xAxisHeight = this.boxWidth - (this.paddingFactor + 1) * this.padding.left
-			this.yAxisHeight = this.boxHeight - (this.paddingFactor + 1) * this.padding.left
+            this.yAxisHeight = this.boxHeight - (this.paddingFactor + 1) * this.padding.left
 
             // Create the SVG
             this.svg = d3.select('#' + this.svgID)
                 .attrs({
-                    "width":  this.boxWidth,
+                    "width": this.boxWidth,
                     "height": this.boxHeight,
                     'transform': "translate(" + this.padding.left + "," + this.padding.top + ")"
                 })
@@ -148,11 +148,10 @@ export default {
             //     binContainsProcID[pos].push(data['rank'][idx]);
             // });
 
-            console.log(attr_data['x'], attr_data['y'], axis_x, binContainsProcID)
             return [attr_data['x'], attr_data['y'], axis_x, binContainsProcID];
         },
 
-        setupScale(callsite){
+        setupScale(callsite) {
             let data = this.$store.modules[this.$store.selectedTargetDataset][callsite][this.$store.selectedMetric]['prop_histograms']
 
             let ensembleData = data[this.$store.selectedProp]['ensemble']
@@ -185,8 +184,8 @@ export default {
                     .domain([0, d3.max(this.freq)])
                     .range([this.yAxisHeight, this.padding.top])
                 this.logScaleBool = false;
-            } 
-            else if(this.$store.selectedScale == 'Log'){
+            }
+            else if (this.$store.selectedScale == 'Log') {
                 this.yScale = d3.scaleLog()
                     .domain([0.1, d3.max(this.freq)])
                     .range([this.boxHeight, this.padding.top]);
@@ -206,17 +205,17 @@ export default {
             // this.brushes()        
         },
 
-        setTitle(){
-            if(this.$store.selectedProp == 'rank'){
+        setTitle() {
+            if (this.$store.selectedProp == 'rank') {
                 this.selectedPropLabel = 'Ranks'
             }
-            else if(this.$store.selectedProp == 'name'){
+            else if (this.$store.selectedProp == 'name') {
                 this.selectedPropLabel = 'Callsites'
             }
-            else if(this.$store.selectedProp == 'dataset'){
+            else if (this.$store.selectedProp == 'dataset') {
                 this.selectedPropLabel = 'Runs'
             }
-            this.selectedPropSum = this.freq.reduce((acc, val) => {return acc + val})
+            this.selectedPropSum = this.freq.reduce((acc, val) => { return acc + val })
         },
 
         clear() {
@@ -406,12 +405,12 @@ export default {
             const xAxis = d3.axisBottom(this.xScale)
                 .ticks(5)
                 .tickFormat((d, i) => {
-                    if(i % 3 == 0){
-                        return `${utils.formatRuntimeWithoutUnits(d)}`;    
+                    if (i % 3 == 0) {
+                        return `${utils.formatRuntimeWithoutUnits(d)}`;
                     }
                 });
 
-            let label = this.$store.selectedMetric  + " Runtime (" + "\u03BCs)"
+            let label = this.$store.selectedMetric + " Runtime (" + "\u03BCs)"
             this.svg.append('text')
                 .attr('class', 'histogram-axis-label')
                 .attr('x', this.boxWidth - this.padding.left)
@@ -422,7 +421,7 @@ export default {
 
             const xAxisLine = this.svg.append('g')
                 .attr('class', 'x-axis')
-				.attr("transform", "translate(" + this.paddingFactor * this.padding.left + "," + this.yAxisHeight + ")")
+                .attr("transform", "translate(" + this.paddingFactor * this.padding.left + "," + this.yAxisHeight + ")")
                 .call(xAxis)
 
             xAxisLine.selectAll('path')
@@ -446,37 +445,40 @@ export default {
             const yAxis = d3.axisLeft(this.yScale)
                 .ticks(10)
                 .tickFormat((d, i) => {
-                    if(this.$store.selectedProp == 'rank'){
+                    if (this.$store.selectedProp == 'rank') {
                         if (d == 1) {
                             return d
                         }
                         else if (d % 10 == 0) {
                             return d
-                        }    
+                        }
                     }
-                    else if(this.$store.selectedProp == 'dataset'){
-                        if(d % 1 == 0){
+                    else if (this.$store.selectedProp == 'dataset') {
+                        if (d % 1 == 0) {
                             return d
                         }
                     }
-                    else if(this.$store.selectedProp == 'name'){
-                        if( d % 1 == 0){
+                    else if (this.$store.selectedProp == 'name') {
+                        if (d % 1 == 0) {
                             return d
                         }
                     }
                 })
-            
+
             let yAxisText = ''
-            if(this.$store.selectedProp == 'name'){
+            if (this.$store.selectedProp == 'name') {
                 yAxisText = 'Number of Callsites'
             }
-            else if(this.$store.selectedProp == 'dataset'){
+            else if (this.$store.selectedProp == 'dataset') {
                 yAxisText = 'Number of Runs'
             }
-            else if(this.$store.selectedProp == 'rank'){
+            else if (this.$store.selectedProp == 'rank') {
                 yAxisText = 'Number of Ranks'
             }
-            
+            else if (this.$store.selectedProp == 'all_ranks') {
+                yAxisText = 'Number of Processes'
+            }
+
             this.svg.append('text')
                 .attr('transform', 'rotate(-90)')
                 .attr('class', 'histogram-axis-label')
@@ -488,7 +490,7 @@ export default {
 
             const yAxisLine = this.svg.append('g')
                 .attr('class', 'y-axis')
-				.attr('transform', "translate(" + this.paddingFactor * this.padding.left + ", 0)")
+                .attr('transform', "translate(" + this.paddingFactor * this.padding.left + ", 0)")
                 .call(yAxis)
 
             yAxisLine.selectAll('path')
@@ -606,7 +608,6 @@ export default {
                     target_processIDs.sort((a, b) => a - b)
 
                     const target_groupArray = this.groupProcess(target_processIDs).array;
-                    console.log(target_groupArray)
                     target_groupArray.forEach((group) => {
                         this.drawRankLines(group, target_processIDs, this.targetXVals[idx], idx, 'target')
                     })

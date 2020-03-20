@@ -85,25 +85,25 @@ export default {
                 color = this.$store.color.target
             }
 
-            // if (type == 'ensemble') {
-                // if(freq < 50){
+            if(type == 'ensemble'){
+                if (this.$store.selectedScale == 'Linear') {
                     this.minimapYScale = d3.scaleLinear()
-                    .domain([0, d3.max(freq)])
-                    .range([this.$parent.ySpacing, 0]);
-                // }
-                // else{
-                //     this.minimapYScale = d3.scaleLog()
-                //     .domain([0.1, d3.max(freq)])
-                //     .range([this.$parent.ySpacing, 0]);
-                // }
+                        .domain([0, d3.max(freq)])
+                        .range([this.$parent.ySpacing, 0]);
+                }
+                else if (this.$store.selectedScale == 'Log') {
+                    this.minimapYScale = d3.scaleLog()
+                        .domain([0, d3.max(freq)])
+                        .range([this.$parent.ySpacing, 0]);
+                }
                 this.minimapXScale = d3.scaleBand()
                     .domain(xVals)
                     .rangeRound([0, this.$parent.nodeWidth])
-                this.bandWidth = this.minimapXScale.bandwidth()
-            // }
-
+                this.bandWidth = this.minimapXScale.bandwidth()    
+            }
 
             for (let i = 0; i < freq.length; i += 1) {
+                console.log(freq[i])
                 d3.select('#' + this.id)
                     .append('rect')
                     .attrs({
@@ -112,6 +112,8 @@ export default {
                         'width': () => this.bandWidth,
                         'height': (d) => {
                             return this.$parent.nodeWidth - this.minimapYScale(freq[i])
+                            console.log(type, this.minimapYScale(freq[i]))
+                            return this.minimapYScale(freq[i])
                         },
                         'x': (d) => {
                             return node_dict.x + this.minimapXScale(xVals[i])
@@ -127,13 +129,10 @@ export default {
         render(callsite_name, callsite_module) {
             let node_dict = this.nodes[this.nodeMap[callsite_module]]
             if (callsite_module.split('_')[0] != "intermediate") {
-                let ensemble_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module][this.$store.selectedMetric]['prop_histograms']['all_ranks']
-                let target_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module][this.$store.selectedMetric]['prop_histograms']['all_ranks']
+                let callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module][this.$store.selectedMetric]['prop_histograms'][this.$store.selectedProp]
 
-                console.log(ensemble_callsite_data)
-
-                this.histogram(ensemble_callsite_data, node_dict, 'ensemble')
-                this.histogram(target_callsite_data, node_dict, 'target')
+                this.histogram(callsite_data, node_dict, 'ensemble')
+                this.histogram(callsite_data, node_dict, 'target')
             }
         }
     }
