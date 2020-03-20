@@ -285,11 +285,11 @@ export default {
 				}
 			}
 
-			// this.$store.selectedTargetDataset = max_inclusive_dataset
-			// this.selectedTargetDataset = max_inclusive_dataset
+			this.$store.selectedTargetDataset = max_inclusive_dataset
+			this.selectedTargetDataset = max_inclusive_dataset
 
-			this.$store.selectedTargetDataset = '1-core'
-			this.selectedTargetDataset = '1-core'
+			// this.$store.selectedTargetDataset = '1-core'
+			// this.selectedTargetDataset = '1-core'
 
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},

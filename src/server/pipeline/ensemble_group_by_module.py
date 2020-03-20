@@ -128,10 +128,9 @@ class ensembleGroupBy:
 
         for idx, node in enumerate(path):
             node_func = node
-            print(node_func)
+            if ('/' in node):
+                node = node.split('/')[-1]
             module = self.name_module_map[node]
-            # node_func_df = self.entire_df.loc[self.entire_df['name'] == node_func]
-            # if not node_func_df.empty:
             if component_module == module:
                 component_path.append(node_func)
 
@@ -171,23 +170,13 @@ class ensembleGroupBy:
 
             print(snode, tnode)
 
-            # s_df = self.entire_df.loc[self.entire_df['name'] == edge[0]]
-            # t_df = self.entire_df.loc[self.entire_df['name'] == edge[1]]
-
-            # if(s_df.shape[0] == 0 or t_df.shape[0] == 0):
-            #     continue
-
-            # spath = s_df['path'].tolist()[0]
-            # tpath = t_df['path'].tolist()[0]
+            if ('/' in snode):
+                snode = snode.split('/')[-1]
+            if ('/' in tnode):
+                tnode = tnode.split('/')[-1]
 
             spath = self.name_path_map[snode]
             tpath = self.name_path_map[tnode]
-
-            print(type(spath))
-
-            # print(f"Source : {snode}, Target : {tnode}")
-            # print(f"Source path : {spath}")
-            # print(f"Target path : {tpath}")
 
             stage1 = time.perf_counter()
             temp_group_path_results = self.create_group_path_time(spath)
@@ -201,14 +190,11 @@ class ensembleGroupBy:
             stage4 = time.perf_counter()
             print(f"Component path: {stage3 - stage2}")
 
-            # module[snode] = s_df['module'].tolist()[0]
-
             temp_group_path_results = self.create_group_path_time(tpath)
             group_path[tnode] = temp_group_path_results
 
             component_path[tnode] = self.create_component_path(tpath, group_path[tnode])
             component_level[tnode] = len(component_path[tnode])
-            # module[tnode] = t_df['module'].tolist()[0]
 
             # if module[snode] not in module_id_map:
             #     module_count += 1
@@ -271,7 +257,6 @@ class ensembleGroupBy:
         self.update_df('mod_index', module_idx)
         self.update_df('entry_function', entry_func)
 
-        # print(self.filter_df[['group_path', 'component_path']])
         return {
                 'df': self.filter_df,
                 'g': self.filter_g

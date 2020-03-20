@@ -60,7 +60,8 @@ export default {
 
         EventHandler.$on('select_module', (data) => {
             let thismodule = data['module']
-            self.selectCallsitesByModule(thismodule)
+            // self.selectCallsitesByModule(thismodule)
+            self.selectModule(thismodule)
         })
 
         EventHandler.$on('unhighlight_module', (data) => {
@@ -144,6 +145,21 @@ export default {
         trunc(str, n) {
             str = str.replace(/<unknown procedure>/g, 'proc ')
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
+        },
+
+        selectModule(thismodule){
+            console.log(thismodule, this.$store.moduleCallsiteMap)
+            let module_callsites = this.$store.moduleCallsiteMap['ensemble'][thismodule]
+            console.log(module_callsites)
+            this.callsites = {}
+            let all_callsites = Object.keys(this.$store.callsites['ensemble'])
+            for(let callsite of all_callsites){
+                console.log(callsite)
+                if(module_callsites.indexOf(callsite) > -1 ){
+                    this.callsites[callsite] = this.$store.callsites['ensemble'][callsite]
+                }
+            }
+            this.number_of_callsites = Object.keys(this.callsites).length
         },
 
         selectCallsitesByModule(thismodule) {
