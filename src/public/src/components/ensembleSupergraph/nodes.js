@@ -10,7 +10,6 @@ export default {
     components: {
         ToolTip
     },
-    props: [],
     data: () => ({
         currentNodeLevel: {},
         nodeWidth: 50,
@@ -98,8 +97,6 @@ export default {
                 .rollup(function (d) {
                     return d3.sum(d, function (g) { return g['time (inc)']; });
                 }).entries(this.graph.nodes)
-
-            console.log(this.total_weight)
         },
 
         init(graph) {
@@ -134,7 +131,6 @@ export default {
                     let ty = Math.min(0, Math.min(d3.event.transform.y, this.height * d3.event.transform.k))
                     this.sankeySVG.attr("transform", "translate(" + [tx, ty] + ")scale(" + d3.event.transform.k + ")")
                 });
-
 
             this.nodesSVG = this.nodes.selectAll('.ensemble-callsite')
                 .data(this.graph.nodes)
@@ -359,10 +355,12 @@ export default {
                 .data(this.graph.nodes)
                 .transition()
                 .duration(this.transitionDuration)
-                .attr('opacity', d => {
-                    return 1;
+                .attrs({
+                    'opacity': d => {
+                        return 1;
+                    },
+                    'height': d => d.height
                 })
-                .attr('height', d => d.height)
                 .style('stroke', (d) => {
                     return 1;
                 })
@@ -404,10 +402,12 @@ export default {
 
                 d3.select('#dist-node_' + this.nidNameMap[node])
                     .append('text')
-                    .attr('class', 'zeroLineText')
-                    .attr('dy', '0')
-                    .attr('x', this.nodeWidth / 2 - 10)
-                    .attr('y', (d) => y1 * d.height - 5)
+                    .attrs({
+                        'class': 'zeroLineText',
+                        'dy': '0',
+                        'x': this.nodeWidth / 2 - 10,
+                        'y': (d) => y1 * d.height - 5
+                    })
                     .style('opacity', 1)
                     .style('font-size', '20px')
                     .text((d) => {
@@ -427,14 +427,18 @@ export default {
                     .append("defs");
 
                 this.diffGradient = defs.append("linearGradient")
-                    .attr("id", "diff-gradient" + this.nidNameMap[d['name']])
-                    .attr("class", 'linear-gradient')
+                    .attrs({
+                        "id": "diff-gradient" + this.nidNameMap[d['name']],
+                        "class": 'linear-gradient'
+                    })
 
                 this.diffGradient
-                    .attr("x1", "0%")
-                    .attr("y1", "0%")
-                    .attr("x2", "0%")
-                    .attr("y2", "100%");
+                    .attrs({
+                        "x1": "0%",
+                        "y1": "0%",
+                        "x2": "0%",
+                        "y2": "100%"
+                    })
 
                 let min_val = d[method]['y_min']
                 let max_val = d[method]['y_max']
@@ -450,8 +454,10 @@ export default {
                         this.zeroLine(d['name'], zero)
                     }
                     this.diffGradient.append("stop")
-                        .attr("offset", 100 * x + "%")
-                        .attr("stop-color", this.$store.rankDiffColor.getColorByValue((val[i])))
+                        .attrs({
+                            "offset": 100 * x + "%",
+                            "stop-color": this.$store.rankDiffColor.getColorByValue((val[i]))
+                        })
                 }
             }
         },
@@ -464,7 +470,6 @@ export default {
         },
 
         meanDiffRectangle(diff) {
-            console.log(diff)
             let self = this
             let mean_diff = {}
             let max_diff = 0
@@ -482,21 +487,20 @@ export default {
                 .data(this.graph.nodes)
                 .transition()
                 .duration(this.transitionDuration)
-                .attr('opacity', d => {
-                    console.log(d)
-                    return 1;
+                .attrs({
+                    'opacity': d => {
+                        return 1;
+                    },
+                    'height': d => d.height
                 })
-                .attr('height', d => d.height)
                 .style('stroke', (d) => {
                     return 1;
                 })
                 .style("fill", (d, i) => {
-                    console.log(mean_diff, d.name, mean_diff[d.module], this.$store.meanDiffColor.getColorByValue(mean_diff[d.module]))
                     if (max_diff == 0 && min_diff == 0) {
                         return this.$store.meanDiffColor.getColorByValue(0.5)
                     }
                     let color = d3.rgb(this.$store.meanDiffColor.getColorByValue((mean_diff[d.module])))
-                    console.log(color)
                     return color
                 })
         },
@@ -534,14 +538,16 @@ export default {
 
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('line')
-                        .attr("class", 'targetLines')
-                        .attr("id", 'line-2-' + dataset + '-' + node_data['client_idx'])
-                        .attr("x1", 0)
-                        .attr("y1", y)
-                        .attr("x2", this.nodeWidth)
-                        .attr("y2", y)
-                        .attr("stroke-width", 5)
-                        .attr("stroke", this.$store.color.target)
+                        .attrs({
+                            "class": 'targetLines',
+                            "id": 'line-2-' + dataset + '-' + node_data['client_idx'],
+                            "x1": 0,
+                            "y1": y,
+                            "x2": this.nodeWidth,
+                            "y2": y,
+                            "stroke-width": 5,
+                            "stroke": this.$store.color.target
+                        })
                 }
             }
         },
@@ -571,26 +577,30 @@ export default {
                 // For drawing the guide lines that have the value.
                 d3.select('#ensemble-callsite-' + node_data.client_idx)
                     .append('line')
-                    .attr("class", 'gradientGuides-' + type)
-                    .attr("id", 'line-2-' + node_data['client_idx'])
-                    .attr("x1", 0)
-                    .attr("y1", y)
-                    .attr("x2", this.nodeWidth)
-                    .attr("y2", y)
-                    .attr("stroke-width", 1.5)
-                    .attr('opacity', 0.3)
-                    .attr("stroke", '#202020')
+                    .attrs({
+                        "class": 'gradientGuides-' + type,
+                        "id": 'line-2-' + node_data['client_idx'],
+                        "x1": 0,
+                        "y1": y,
+                        "x2": this.nodeWidth,
+                        "y2": y,
+                        "stroke-width": 1.5,
+                        'opacity': 0.3,
+                        "stroke": '#202020'
+                    })
 
                 let fontSize = 14
                 if (vals[idx] != 0) {
                     // For placing the run count values.
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('text')
-                        .attr("class", 'gradientGuidesText-' + type)
-                        .attr("id", 'line-2-' + node_data['client_idx'])
-                        .attr("x", -50)
-                        .attr("y", y + fontSize / 2 + binWidth / 2)
-                        .attr('fill', 'black')
+                        .attrs({
+                            "class": 'gradientGuidesText-' + type,
+                            "id": 'line-2-' + node_data['client_idx'],
+                            "x": -50,
+                            "y": y + fontSize / 2 + binWidth / 2,
+                            'fill': 'black'
+                        })
                         .style('z-index', 100)
                         .style('font-size', fontSize + 'px')
                         .text(this.formatRunCounts(vals[idx]))
@@ -599,11 +609,13 @@ export default {
                     if (idx != 0 && idx != grid.length - 1) {
                         d3.select('#ensemble-callsite-' + node_data.client_idx)
                             .append('text')
-                            .attr("class", 'gradientGuidesText-' + type)
-                            .attr("id", 'line-2-' + node_data['client_idx'])
-                            .attr("x", this.nodeWidth + 10)
-                            .attr("y", y + fontSize / 2 + binWidth / 2)
-                            .attr('fill', 'black')
+                            .attrs({
+                                "class": 'gradientGuidesText-' + type,
+                                "id": 'line-2-' + node_data['client_idx'],
+                                "x": this.nodeWidth + 10,
+                                "y": y + fontSize / 2 + binWidth / 2,
+                                'fill': 'black'
+                            })
                             .style('z-index', 100)
                             .style('font-size', '14px')
                             .text(utils.formatRuntimeWithUnits(grid[idx]))
@@ -613,11 +625,13 @@ export default {
                 if (idx == 0) {
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('text')
-                        .attr("class", 'gradientGuidesText-' + type)
-                        .attr("id", 'line-2-' + node_data['client_idx'])
-                        .attr("x", this.nodeWidth + 10)
-                        .attr("y", y)
-                        .attr('fill', 'black')
+                        .attrs({
+                            "class": 'gradientGuidesText-' + type,
+                            "id": 'line-2-' + node_data['client_idx'],
+                            "x": this.nodeWidth + 10,
+                            "y": y,
+                            'fill': 'black'
+                        })
                         .style('z-index', 100)
                         .style('font-size', '14px')
                         .text('Min. = ' + utils.formatRuntimeWithUnits(grid[idx]))
@@ -625,11 +639,13 @@ export default {
                 else if (idx == grid.length - 1) {
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('text')
-                        .attr("class", 'gradientGuidesText-' + type)
-                        .attr("id", 'line-2-' + node_data['client_idx'])
-                        .attr("x", this.nodeWidth + 10)
-                        .attr("y", y + binWidth / 2)
-                        .attr('fill', 'black')
+                        .attrs({
+                            "class": 'gradientGuidesText-' + type,
+                            "id": 'line-2-' + node_data['client_idx'],
+                            "x": this.nodeWidth + 10,
+                            "y": y + binWidth / 2,
+                            'fill': 'black'
+                        })
                         .style('z-index', 100)
                         .style('font-size', '14px')
                         .text('Max. = ' + utils.formatRuntimeWithUnits(grid[idx]))
@@ -639,12 +655,14 @@ export default {
 
         path() {
             this.nodesSVG.append('path')
-                .attr('d', (d) => {
-                    if (d.id.split('_')[0] == "intermediate") {
-                        return "m" + 0 + " " + 0
-                            + "h " + this.nodeWidth
-                            + "v " + (1) * d.height
-                            + "h " + (-1) * this.nodeWidth;
+                .attrs({
+                    'd': (d) => {
+                        if (d.id.split('_')[0] == "intermediate") {
+                            return "m" + 0 + " " + 0
+                                + "h " + this.nodeWidth
+                                + "v " + (1) * d.height
+                                + "h " + (-1) * this.nodeWidth;
+                        }
                     }
                 })
                 .style('fill', (d) => {
@@ -760,6 +778,5 @@ export default {
             this.clearGradients()
             this.$refs.ToolTip.clear()
         },
-
     }
 }

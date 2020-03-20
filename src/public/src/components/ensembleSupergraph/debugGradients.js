@@ -21,9 +21,11 @@ debugGradients(data, node, mode) {
     this.scatterHeight = this.height - this.margin.top - this.margin.bottom;
 
     this.debugsvg = d3.select('#debug')
-        .attr('width', this.width - this.margin.left - this.margin.right)
-        .attr('height', this.height - this.margin.top - this.margin.bottom)
-        .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")")
+        .attrs({
+            'width': this.width - this.margin.left - this.margin.right,
+            'height': this.height - this.margin.top - this.margin.bottom,
+            'transform': "translate(" + this.margin.left + "," + this.margin.top + ")"
+        })
 
     this.xMin = data[node][mode]['x_min']
     this.xMax = data[node][mode]['x_max']
@@ -59,30 +61,38 @@ debugGradients(data, node, mode) {
 
     let xAxisHeightCorrected = this.scatterHeight - this.margin.top - this.margin.bottom
     var xAxisLine = this.debugsvg.append('g')
-        .attr('class', 'axis')
-        .attr('id', 'xAxis')
-        .attr("transform", "translate(" + 3 * this.margin.left + "," + xAxisHeightCorrected + ")")
+        .attrs({
+            'class': 'axis',
+            'id': 'xAxis',
+            "transform": "translate(" + 3 * this.margin.left + "," + xAxisHeightCorrected + ")"
+        })
         .call(xAxis)
 
     this.debugsvg.append('text')
-        .attr('class', 'axisLabel')
-        .attr('x', this.scatterWidth)
-        .attr('y', this.yAxisHeight - this.margin.left * 1.5)
+        .attrs({
+            'class': 'axisLabel',
+            'x': this.scatterWidth,
+            'y': this.yAxisHeight - this.margin.left * 1.5
+        })
         .style('font-size', '10px')
         .style('text-anchor', 'end')
         .text("Diff")
 
     var yAxisLine = this.debugsvg.append('g')
-        .attr('id', 'yAxis')
-        .attr('class', 'axis')
-        .attr('transform', "translate(" + 2 * this.margin.left + ", 0)")
+        .attrs({
+            'id': 'yAxis',
+            'class': 'axis',
+            'transform': "translate(" + 2 * this.margin.left + ", 0)"
+        })
         .call(yAxis)
 
     this.debugsvg.append("text")
-        .attr('class', 'axisLabel')
-        .attr('transform', 'rotate(-90)')
-        .attr('x', 0)
-        .attr('y', 1 * this.margin.left)
+        .attrs({
+            'class': 'axisLabel',
+            'transform': 'rotate(-90)',
+            'x': 0,
+            'y': 1 * this.margin.left
+        })
         .style("text-anchor", "end")
         .style("font-size", "10px")
         .text("Histogram count");
@@ -108,14 +118,17 @@ debugGradients(data, node, mode) {
     var line = this.debugsvg.append("path")
         // .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
         .data([data_arr])
-        .attr('class', 'debugLine')
-        .attr("d", plotLine)
-        .attr("stroke", (d) => {
-            if (mode == 'hist')
-                return "blue"
-            else
-                return 'red'
+        .attrs({
+            'class': 'debugLine',
+            "d": plotLine,
+            "stroke": (d) => {
+                if (mode == 'hist')
+                    return "blue"
+                else
+                    return 'red'
+            },
+            "stroke-width": "2",
+            "fill": "none"
         })
-        .attr("stroke-width", "2")
-        .attr("fill", "none");
-},
+    }
+}

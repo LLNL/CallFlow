@@ -3,7 +3,6 @@ import * as d3 from 'd3'
 import ToolTip from './tooltip'
 import Queue from '../../core/queue';
 
-
 export default {
 	name: 'ModuleHierarchy',
 	template: tpl,

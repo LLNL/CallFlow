@@ -48,11 +48,11 @@ export default {
             this.edges.selectAll('#ensemble-edge-' + dataset)
                 .data(this.links)
                 .enter().append('path')
-                .attr('class', (d) => {
-                    return 'ensemble-edge'
-                })
-                .attr('id', (d) => {
-                    return 'ensemble-edge-' + dataset;
+                .attrs({
+                    'class': (d) => { return 'ensemble-edge' },
+                    'id': (d) => {
+                        return 'ensemble-edge-' + dataset;
+                    }
                 })
                 .style('fill', (d) => {
                     if (dataset == 'ensemble') {
@@ -89,62 +89,64 @@ export default {
         drawTopEdges(dataset) {
             this.edges.selectAll('#ensemble-edge-' + dataset)
                 .data(this.links)
-                .attr('d', (d) => {
-                    let edge_source_offset = 0
-                    if (d.source.split('_')[0] == "intermediate") {
-                        edge_source_offset = -1
+                .attrs({
+                    'd': (d) => {
+                        let edge_source_offset = 0
+                        if (d.source.split('_')[0] == "intermediate") {
+                            edge_source_offset = -1
+                        }
+                        else {
+                            edge_source_offset = this.offset
+                        }
+
+                        let edge_target_offset = 0
+                        if (d.target.split('_')[0] == "intermediate") {
+                            edge_target_offset = -1
+                        }
+                        else {
+                            edge_target_offset = this.offset
+                        }
+
+                        let Tx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
+                            Tx1 = d.target_data.x - edge_target_offset,
+                            Txi = d3.interpolateNumber(Tx0, Tx1),
+                            Tx2 = Txi(0.4),
+                            Tx3 = Txi(1 - 0.4),
+                            Ty0 = d.source_data.y + this.$parent.ySpacing + d.sy,
+                            Ty1 = d.target_data.y + this.$parent.ySpacing + d.ty
+
+                        // note .ty is the y point that the edge meet the target(for top)
+                        //		.sy is the y point of the source  (for top)
+                        //		.dy is width of the edge
+
+                        let Bx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
+                            Bx1 = d.target_data.x - edge_target_offset,
+                            Bxi = d3.interpolateNumber(Bx0, Bx1),
+                            Bx2 = Bxi(0.4),
+                            Bx3 = Bxi(1 - 0.4)
+
+                        let linkHeight = 0
+                        if (dataset == 'ensemble') {
+                            linkHeight = d.height
+                        }
+                        else {
+                            linkHeight = d.targetHeight
+                        }
+
+                        let By0 = 0, By1 = 0;
+                        By0 = d.source_data.y + this.$parent.ySpacing + d.sy + linkHeight
+                        By1 = d.target_data.y + this.$parent.ySpacing + d.ty + linkHeight
+
+                        const rightMoveDown = By1 - Ty1
+                        return `M${Tx0},${Ty0
+                            }C${Tx2},${Ty0
+                            } ${Tx3},${Ty1
+                            } ${Tx1},${Ty1
+                            } ` + ` v ${rightMoveDown
+                            }C${Bx3},${By1
+                            } ${Bx2},${By0
+                            } ${Bx0},${By0}`;
                     }
-                    else {
-                        edge_source_offset = this.offset
-                    }
-
-                    let edge_target_offset = 0
-                    if (d.target.split('_')[0] == "intermediate") {
-                        edge_target_offset = -1
-                    }
-                    else {
-                        edge_target_offset = this.offset
-                    }
-
-                    let Tx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
-                        Tx1 = d.target_data.x - edge_target_offset,
-                        Txi = d3.interpolateNumber(Tx0, Tx1),
-                        Tx2 = Txi(0.4),
-                        Tx3 = Txi(1 - 0.4),
-                        Ty0 = d.source_data.y + this.$parent.ySpacing + d.sy,
-                        Ty1 = d.target_data.y + this.$parent.ySpacing + d.ty
-
-                    // note .ty is the y point that the edge meet the target(for top)
-                    //		.sy is the y point of the source  (for top)
-                    //		.dy is width of the edge
-
-                    let Bx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
-                        Bx1 = d.target_data.x - edge_target_offset,
-                        Bxi = d3.interpolateNumber(Bx0, Bx1),
-                        Bx2 = Bxi(0.4),
-                        Bx3 = Bxi(1 - 0.4)
-
-                    let linkHeight = 0
-                    if(dataset == 'ensemble'){
-                        linkHeight = d.height
-                    }
-                    else {
-                        linkHeight = d.targetHeight
-                    }
-
-                    let By0 = 0, By1 = 0;
-                    By0 = d.source_data.y + this.$parent.ySpacing + d.sy + linkHeight
-                    By1 = d.target_data.y + this.$parent.ySpacing + d.ty + linkHeight
-
-                    const rightMoveDown = By1 - Ty1
-                    return `M${Tx0},${Ty0
-                        }C${Tx2},${Ty0
-                        } ${Tx3},${Ty1
-                        } ${Tx1},${Ty1
-                        } ` + ` v ${rightMoveDown
-                        }C${Bx3},${By1
-                        } ${Bx2},${By0
-                        } ${Bx0},${By0}`;
                 })
                 .style('fill', (d) => {
                     if (dataset == 'ensemble') {
