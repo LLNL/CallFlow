@@ -47,7 +47,9 @@ export default {
 		message: "Runtime Scatterplot",
 		boxOffset: 20,
 		settings: [{ title: 'Show Difference plot' }, { title: 'aaa' }],
-		moduleUnDesirability: 1
+		moduleUnDesirability: 1,
+		x_min_exponent: 0,
+		y_min_exponent: 0
 	}),
 
 	mounted() {
@@ -107,7 +109,7 @@ export default {
 			this.targetProcess()
 
 			let xScaleMax = Math.max(this.xMax, this.xtargetMax)
-			let xScaleMin = Math.min(this.xMin, this.xtargetMin) 
+			let xScaleMin = Math.min(this.xMin, this.xtargetMin)
 			let yScaleMax = Math.max(this.yMax, this.ytargetMax)
 			let yScaleMin = Math.min(this.yMin, this.ytargetMin)
 
@@ -122,10 +124,10 @@ export default {
 			this.setTitle()
 		},
 
-		setTitle(){
+		setTitle() {
 			let mean = this.selectedTargetModuleData['mean_time']
 			let variance = this.selectedTargetModuleData['variance_time']
-			this.moduleUnDesirability =  1 - Math.exp(-mean * variance)
+			this.moduleUnDesirability = 1 - Math.exp(-mean * variance)
 		},
 
 		ensembleProcess() {
@@ -310,7 +312,7 @@ export default {
 				x2.push(xSeries[i] * xSeries[i]);
 				y2.push(ySeries[i] * ySeries[i]);
 			}
-			
+
 			var sum_x = 0;
 			var sum_y = 0;
 			var sum_xy = 0;
@@ -338,23 +340,30 @@ export default {
 
 		},
 
+		addxAxisLabel(label) {
+			this.svg.append('text')
+				.attr('class', 'scatterplot-axis-label')
+				.attr('x', this.boxWidth - 1 * this.padding.right)
+				.attr('y', this.yAxisHeight + 3 * this.padding.top)
+				.style('font-size', '12px')
+				.style('text-anchor', 'end')
+				.text(label)
+		},
+
 		xAxis() {
 			const xAxis = d3.axisBottom(this.xScale)
 				.ticks(this.$store.selectedMPIBinCount)
 				.tickFormat((d, i) => {
+					if (i == 1) {
+						this.x_min_exponent = utils.formatRuntimeWithExponent(d, true)[2]
+						let label = '(e+' + this.x_min_exponent + ') ' + "Exclusive Runtime (" + "\u03BCs)"
+						this.addxAxisLabel(label)
+					}
 					if (i % 3 == 0) {
-						return `${utils.formatRuntimeWithoutUnits(d)}`
+						let runtime = utils.formatRuntimeWithExponent(d, false, this.x_min_exponent)
+						return `${runtime[0]}`;
 					}
 				});
-			
-			this.xAxisLabel = "Exclusive Runtime (" + "\u03BCs)"
-			this.svg.append('text')
-				.attr('class', 'scatterplot-axis-label')
-				.attr('x', this.boxWidth - 1 * this.padding.right)
-				.attr('y', this.yAxisHeight + 3*this.padding.top)
-				.style('font-size', '12px')
-				.style('text-anchor', 'end')
-				.text(this.xAxisLabel)
 
 			var xAxisLine = this.svg.append('g')
 				.attr('class', 'axis')
@@ -379,13 +388,31 @@ export default {
 				.style('font-weight', 'lighter');
 		},
 
+		addyAxisLabel(label) {
+			this.svg.append("text")
+				.attr('class', 'scatterplot-axis-label')
+				.attr('transform', 'rotate(-90)')
+				.attr('x', -this.padding.top)
+				.attr('y', this.padding.left)
+				.style("text-anchor", "end")
+				.style("font-size", "12px")
+				.text(label)
+
+		},
+
 		yAxis() {
 			let tickCount = 10
 			let yAxis = d3.axisLeft(this.yScale)
 				.ticks(tickCount)
 				.tickFormat((d, i) => {
+					if (i == 1) {
+						this.y_min_exponent = utils.formatRuntimeWithExponent(d, true)[2]
+						let label = '(e+' + this.y_min_exponent + ') ' + "Inclusive Runtime (" + "\u03BCs)"
+						this.addyAxisLabel(label)
+					}
 					if (i % 3 == 0 || i == tickCount - 1) {
-						return `${utils.formatRuntimeWithoutUnits(d)}`
+						let runtime = utils.formatRuntimeWithExponent(d, false, this.y_min_exponent)
+						return `${runtime[0]}`;
 					}
 				})
 
@@ -394,16 +421,6 @@ export default {
 				.attr('class', 'axis')
 				.attr('transform', "translate(" + 4 * this.padding.left + ", 0)")
 				.call(yAxis)
-
-			this.yAxisLabel = "Inclusive Runtime (" + "\u03BCs)"
-			this.svg.append("text")
-				.attr('class', 'scatterplot-axis-label')
-				.attr('transform', 'rotate(-90)')
-				.attr('x', -this.padding.top)
-				.attr('y', this.padding.left)
-				.style("text-anchor", "end")
-				.style("font-size", "12px")
-				.text(this.yAxisLabel)
 
 			yAxisLine.selectAll('path')
 				.style("fill", "none")
@@ -447,8 +464,7 @@ export default {
 				let callsite = this.xArray[i]['callsite']
 				let run = this.xArray[i]['run']
 				let mean = this.$store.callsites[run][callsite][this.$store.selectedMetric]['mean_time']
-				let variance = this.$store.callsites[run][callsite][this.$store.selectedMetric]['variance_time'] 
-				console.log(callsite, run, mean, variance)
+				let variance = this.$store.callsites[run][callsite][this.$store.selectedMetric]['variance_time']
 				let undesirability = 1 - Math.exp(-mean * variance)
 
 				let self = this
@@ -492,14 +508,12 @@ export default {
 				let mean = this.$store.callsites[run][callsite][this.$store.selectedMetric]['mean_time']
 				let variance = this.$store.callsites[run][callsite][this.$store.selectedMetric]['variance_time']
 				let undesirability = 1 - Math.exp(-mean * variance)
-				console.log(callsite, run, mean, variance)
-
 				this.svg
 					.append('circle')
 					.attrs({
 						'class': 'target-dot',
 						'r': 7.5,
-						'opacity': 0.5*(1 + undesirability),
+						'opacity': 0.5 * (1 + undesirability),
 						'cx': () => {
 							return this.xScale(this.xtargetArray[i].val) + 3 * this.padding.left;
 						},
