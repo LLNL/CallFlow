@@ -718,10 +718,12 @@ export default {
 
         text() {
             this.nodesSVG.append('text')
-                .attr('dy', '0.35em')
-                .attr('transform', 'rotate(90)')
-                .attr('x', '5')
-                .attr('y', '-10')
+                .attrs({
+                    'dy': '0.35em',
+                    'transform': 'rotate(90)',
+                    'x': '5',
+                    'y': '-10'
+                })
                 .style('opacity', 1)
                 .style('font-size', '14px')
                 .text((d) => {
