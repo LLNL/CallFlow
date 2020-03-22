@@ -143,7 +143,10 @@ export default {
 		scales: ['Log', 'Linear'],
 		selectedScale: 'Linear',
 		props: ['name', 'rank', 'dataset', 'all_ranks'],
-		selectedProp: 'rank'
+		selectedProp: 'rank',
+		dimensions: ['max_inclusive_time', 'max_exclusive_time', 'rank_count'],
+		selectedPC1: 'max_inclusive_time',
+		selectedPC2: 'max_exclusive_time',
 	}),
 
 	watch: {},

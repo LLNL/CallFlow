@@ -171,6 +171,19 @@
 						v-on:change="updateOutlierBand()">
 					</v-text-field>
 				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">Projection parameters</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-select label="PC1" :items="dimensions" v-model="selectedPC1"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updatePC1()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-select label="PC2" :items="dimensions" v-model="selectedPC2"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updatePC2()">
+					</v-select>
+				</v-flex>
 				<!-- <v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
 					<v-select label="Scatter mode" :items="scatterMode" v-model="selectedScatterMode"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateScatterMode()">
