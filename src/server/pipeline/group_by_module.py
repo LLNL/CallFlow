@@ -22,8 +22,8 @@ class groupBy:
         self.module_id_map = {}
 
         self.drop_eliminate_funcs()
-        self.name_module_map = self.entire_df.set_index('name')['module'].to_dict()
-        self.name_path_map = self.entire_df.set_index('name')['path'].to_dict()
+        self.name_module_map = self.df.set_index('name')['module'].to_dict()
+        self.name_path_map = self.df.set_index('name')['path'].to_dict()
 
         self.run()
         self.df = self.state.df
@@ -91,9 +91,11 @@ class groupBy:
 
         for idx, node in enumerate(path):
             node_func = node
-            module = self.name_module_map[node_func]
+            if ('/' in node):
+                node = node.split('/')[-1]
+            module = self.name_module_map[node]
             if component_module == module:
-                component_path.append(node_func)
+                component_path.append(node)
 
         component_path.insert(0, component_module)
         return tuple(component_path)
@@ -131,14 +133,6 @@ class groupBy:
             tnode = edge[1]
 
             print(snode, tnode, edge_count)
-            # # s_df = self.df.loc[self.df['name'] == edge[0]]
-            # t_df = self.df.loc[self.df['name'] == edge[1]]
-
-            # if(s_df.shape[0] == 0 or t_df.shape[0] == 0):
-            #     continue
-
-            # spath = s_df['path'].tolist()[0]
-            # tpath = t_df['path'].tolist()[0]
 
             spath = self.name_path_map[snode]
             tpath = self.name_path_map[tnode]
@@ -149,7 +143,7 @@ class groupBy:
 
             component_path[snode] = self.create_component_path(spath, group_path[snode])
             component_level[snode] = len(component_path[snode])
-            module[snode] = s_df['module'].tolist()[0]
+            module[snode] = self.name_module_map[snode]
 
             temp_group_path_results = self.create_group_path(tpath)
             group_path[tnode] = temp_group_path_results[0]
@@ -157,7 +151,7 @@ class groupBy:
 
             component_path[tnode] = self.create_component_path(tpath, group_path[tnode])
             component_level[tnode] = len(component_path[tnode])
-            module[tnode] = t_df['module'].tolist()[0]
+            module[tnode] = self.name_module_map[tnode]
 
             # if module[snode] not in module_id_map:
             #     module_count += 1
