@@ -22,7 +22,8 @@ export default {
         nidNameMap: {},
         renderZeroLine: {},
         stroke_width: 7,
-        intermediateColor: '#d9d9d9'
+        intermediateColor: '#d9d9d9',
+        drawGuidesMap: {}
     }),
     sockets: {
         compare(data) {
@@ -80,7 +81,6 @@ export default {
     },
 
     methods: {
-
         formatRunCounts(val) {
             if (val == 1) {
                 return val + ' run';
@@ -252,7 +252,10 @@ export default {
                     }
                 })
                 .on('click', (d) => {
-                    this.drawGuides(d, 'permanent')
+                    if(!this.drawGuidesMap[d.name]){
+                        this.drawGuides(d, 'permanent')
+                        this.drawGuidesMap[d.name] = true
+                    }
                     d3.selectAll('.ensemble-edge')
                         .style('opacity', 0.3)
 
@@ -718,10 +721,12 @@ export default {
 
         text() {
             this.nodesSVG.append('text')
-                .attr('dy', '0.35em')
-                .attr('transform', 'rotate(90)')
-                .attr('x', '5')
-                .attr('y', '-10')
+                .attrs({
+                    'dy': '0.35em',
+                    'transform': 'rotate(90)',
+                    'x': '5',
+                    'y': '-10'
+                })
                 .style('opacity', 1)
                 .style('font-size', '14px')
                 .text((d) => {

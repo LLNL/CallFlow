@@ -52,7 +52,8 @@ export default {
         paddingFactor: 3.5,
         thisNode: '',
         selectedPropLabel: '',
-        selectedPropSum: 0
+        selectedPropSum: 0,
+        min_exponent: 0
     }),
 
     mounted() {
@@ -399,29 +400,40 @@ export default {
                 })
         },
 
+        addxAxisLabel(){
+            let max_value = this.xScale.domain()[1]
+            this.x_min_exponent = utils.formatExponent(max_value)
+            let label = '(e+' + this.x_min_exponent + ') ' + this.$store.selectedMetric + " Runtime (" + "\u03BCs)"
+            this.svg.append('text')
+                .attrs({
+                    'class': 'histogram-axis-label',
+                    'x': this.boxWidth - this.padding.left,
+                    'y': this.yAxisHeight + 3 * this.padding.top
+                })
+                .style('font-size', '12px')
+                .style('text-anchor', 'end')
+                .text(label)
+        },
+
         /* Axis for the histogram */
         /* Axis for the histogram */
         xAxis() {
+            let self = this
+            this.addxAxisLabel()
             const xAxis = d3.axisBottom(this.xScale)
                 .ticks(5)
                 .tickFormat((d, i) => {
                     if (i % 3 == 0) {
-                        return `${utils.formatRuntimeWithoutUnits(d)}`;
+                        let runtime = utils.formatRuntimeWithExponent(d, self.x_min_exponent)
+                        return `${runtime[0]}`;
                     }
                 });
 
-            let label = this.$store.selectedMetric + " Runtime (" + "\u03BCs)"
-            this.svg.append('text')
-                .attr('class', 'histogram-axis-label')
-                .attr('x', this.boxWidth - this.padding.left)
-                .attr('y', this.yAxisHeight + 3 * this.padding.top)
-                .style('font-size', '12px')
-                .style('text-anchor', 'end')
-                .text(label)
-
             const xAxisLine = this.svg.append('g')
-                .attr('class', 'x-axis')
-                .attr("transform", "translate(" + this.paddingFactor * this.padding.left + "," + this.yAxisHeight + ")")
+                .attrs({
+                    'class': 'x-axis',
+                    "transform": "translate(" + this.paddingFactor * this.padding.left + "," + this.yAxisHeight + ")"
+                })
                 .call(xAxis)
 
             xAxisLine.selectAll('path')
@@ -480,17 +492,21 @@ export default {
             }
 
             this.svg.append('text')
-                .attr('transform', 'rotate(-90)')
-                .attr('class', 'histogram-axis-label')
-                .attr('x', -this.padding.top)
-                .attr('y', this.padding.left)
+                .attrs({
+                    'transform': 'rotate(-90)',
+                    'class': 'histogram-axis-label',
+                    'x': -this.padding.top,
+                    'y': this.padding.left
+                })
                 .style('font-size', '12px')
                 .style('text-anchor', 'end')
                 .text(yAxisText)
 
             const yAxisLine = this.svg.append('g')
-                .attr('class', 'y-axis')
-                .attr('transform', "translate(" + this.paddingFactor * this.padding.left + ", 0)")
+                .attrs({
+                    'class': 'y-axis',
+                    'transform': "translate(" + this.paddingFactor * this.padding.left + ", 0)"
+                })
                 .call(yAxis)
 
             yAxisLine.selectAll('path')
@@ -550,7 +566,6 @@ export default {
 
                 cumulativeBinSpace += (end - start + 1) * widthPerRank;
 
-                console.log(botX3, botX4)
                 line = 'M' + topX1 + ' ' + topY +
                     'L ' + topX2 + ' ' + topY +
                     'L ' + botX4 + ' ' + botY +
@@ -558,16 +573,20 @@ export default {
             }
             if (type == 'ensemble') {
                 this.rankLinesG.append('path')
-                    .attr('d', line)
-                    .attr('class', 'lineRank lineRank_' + idx)
+                    .attrs({
+                        'd': line,
+                        'class': 'lineRank lineRank_' + idx
+                    })
                     .style('fill', this.$store.color.ensemble)
                     .style('fill-opacity', 0.4)
                     .attr('transform', `translate(${this.axisLabelFactor * this.padding.left},${-this.padding.bottom})`)
             }
             else if (type == 'target') {
                 this.target_rankLinesG.append('path')
-                    .attr('d', line)
-                    .attr('class', 'target_lineRank target_lineRank_' + idx)
+                    .attrs({
+                        'd': line,
+                        'class': 'target_lineRank target_lineRank_' + idx
+                    })
                     .style('fill', this.$store.color.target)
                     .style('fill-opacity', 0.4)
                     .attr('transform', `translate(${this.axisLabelFactor * this.padding.left},${-this.padding.bottom})`)
@@ -585,9 +604,11 @@ export default {
                 // For ensemble process ids.
                 if (processIDs) {
                     this.rankLinesG = this.svg.append('g')
-                        .attr('class', `binRank bin_${idx}`)
-                        .attr('data-name', idx)
-                        .attr('transform', `translate(${this.padding.left},${0})`)
+                        .attrs({
+                            'class': `binRank bin_${idx}`,
+                            'data-name': idx,
+                            'transform': `translate(${this.padding.left},${0})`
+                        })
 
                     processIDs.sort((a, b) => a - b);
 
@@ -601,9 +622,11 @@ export default {
                 // For the target process ids.
                 if (target_processIDs) {
                     this.target_rankLinesG = this.svg.append('g')
-                        .attr('class', `target_binRank targetbin_${idx}`)
-                        .attr('data-name', idx)
-                        .attr('transform', `translate(${this.padding.left},${0})`)
+                        .attrs({
+                            'class': `target_binRank targetbin_${idx}`,
+                            'data-name': idx,
+                            'transform': `translate(${this.padding.left},${0})`
+                        })
 
                     target_processIDs.sort((a, b) => a - b)
 
@@ -629,8 +652,10 @@ export default {
                 });
 
             this.rankLineAxisLine = this.svg.append('g')
-                .attr('class', 'ensemble-histogram-rank-axis')
-                .attr('transform', `translate(${this.axisLabelFactor * this.padding.left},${this.boxHeight - 4 * this.padding.bottom})`)
+                .attrs({
+                    'class': 'ensemble-histogram-rank-axis',
+                    'transform': `translate(${this.axisLabelFactor * this.padding.left},${this.boxHeight - 4 * this.padding.bottom})`
+                })
                 .call(rankLineAxis);
 
             this.rankLineAxisLine.selectAll('path')
@@ -651,9 +676,11 @@ export default {
 
             this.rankLineAxisLineText = this.rankLineAxisLine
                 .append('text')
-                .attr('y', 20)
-                .attr('x', 25)
-                .attr('dy', '.71em')
+                .attrs({
+                    'y': 20,
+                    'x': 25,
+                    'dy': '.71em'
+                })
                 .style('text-anchor', 'end')
                 .text('MPI Ranks');
         },
