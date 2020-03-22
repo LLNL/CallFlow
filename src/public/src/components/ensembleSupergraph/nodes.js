@@ -143,6 +143,7 @@ export default {
                     return 'ensemble-callsite-' + d.client_idx
                 })
                 .attr('transform', (d) => {
+                    console.log('x: ', d.x, ' y: ', d.y)
                     return `translate(${d.x},${d.y})`
                 })
 

@@ -56,14 +56,15 @@ class SuperGraph(nx.Graph):
         for run in self.runs:
             self.target_df[run] = self.entire_df.loc[self.entire_df['dataset'] == run]
 
-        self.module_time_map = self.entire_df.set_index('module')['time'].to_dict()
-        self.module_time_inc_map = self.entire_df.set_index('module')['time (inc)'].to_dict()
+        self.module_time_map = self.entire_df.groupby(['module'])['time'].max().to_dict()
+        self.module_time_inc_map = self.entire_df.groupby(['module'])['time (inc)'].max().to_dict()
+        print(self.module_time_map)
 
-        self.name_time_map = self.entire_df.set_index('name')['time'].to_dict()
-        self.name_time_inc_map = self.entire_df.set_index('name')['time (inc)'].to_dict()
+        self.name_time_map = self.entire_df.groupby(['name'])['time'].max().to_dict()
+        self.name_time_inc_map = self.entire_df.groupby('name')['time (inc)'].max().to_dict()
         
         # self.entire_df['group_path'] = self.entire_df['group_path'].apply(lambda path: make_list(path))
-        # self.name_path_map = self.entire_df.set_index('name')['group_path'].to_dict()
+        # self.name_path_map = self.entire_df.set_index( 'name')['group_path'].to_dict()
 
         self.reveal_callsites = reveal_callsites
 
@@ -74,7 +75,7 @@ class SuperGraph(nx.Graph):
                 self.g = nx.DiGraph()
                 self.add_paths(path)
                 # self.add_reveal_paths()
-            else:
+            else:   
                 print("Using the existing graph from state {0}".format(self.state.name))
 
         # Variables to control the data properties globally.
@@ -120,8 +121,8 @@ class SuperGraph(nx.Graph):
                 else:
                     dataMap[module].append({
                         'callsite': callsite,
-                        # 'module': elem,
-                        'module': module,
+                        'module': elem,
+                        # 'module': module,
                         'level': idx
                     })
             ret.append(dataMap[module][-1])
@@ -288,7 +289,7 @@ class SuperGraph(nx.Graph):
             else:
                 node_name = node
 
-            # node_df = self.modul[node_name]
+            print(self.module_time_map)
 
             for column in ensemble_columns:
                 if column not in ret:
@@ -309,11 +310,11 @@ class SuperGraph(nx.Graph):
 
     def dataset_map(self, nodes, dataset):
         ret = {}
-        target_module_time_map = self.target_df[dataset].set_index('module')['time'].to_dict()
-        target_module_time_inc_map = self.target_df[dataset].set_index('module')['time (inc)'].to_dict()
+        target_module_time_map = self.target_df[dataset].groupby(['module'])['time'].max().to_dict()
+        target_module_time_inc_map = self.target_df[dataset].groupby(['module'])['time (inc)'].max().to_dict()
 
-        target_name_time_map = self.target_df[dataset].set_index('name')['time'].to_dict()
-        target_name_time_inc_map = self.target_df[dataset].set_index('name')['time (inc)'].to_dict()
+        target_name_time_map = self.target_df[dataset].groupby(['module'])['time'].max().to_dict()
+        target_name_time_inc_map = self.target_df[dataset].groupby(['module'])['time (inc)'].max().to_dict()
 
         for node in self.g.nodes():
             if "=" in node:
