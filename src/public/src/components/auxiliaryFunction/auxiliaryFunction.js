@@ -40,7 +40,7 @@ export default {
         selectedCallsite: '',
         informationHeight: 70,
         reveal_callsites: [],
-
+        selectedMetric: ''
     }),
     mounted() {
         let self = this
@@ -92,7 +92,7 @@ export default {
 
         formatRuntime(val) {
             let format = d3.format('.2')
-            let ret = format(val)
+            let ret = format(val) + ' \u03BCs'
             return ret
         },
 
@@ -124,6 +124,7 @@ export default {
             this.callsites = this.$store.callsites['ensemble']
             this.selectedModule = this.$store.selectedModule
             this.selectedCallsite = this.$store.selectedCallsite
+            this.selectedMetric = this.$store.selectedMetric
         },
 
         dataset(idx) {
@@ -148,13 +149,10 @@ export default {
         },
 
         selectModule(thismodule){
-            console.log(thismodule, this.$store.moduleCallsiteMap)
             let module_callsites = this.$store.moduleCallsiteMap['ensemble'][thismodule]
-            console.log(module_callsites)
             this.callsites = {}
             let all_callsites = Object.keys(this.$store.callsites['ensemble'])
             for(let callsite of all_callsites){
-                console.log(callsite)
                 if(module_callsites.indexOf(callsite) > -1 ){
                     this.callsites[callsite] = this.$store.callsites['ensemble'][callsite]
                 }

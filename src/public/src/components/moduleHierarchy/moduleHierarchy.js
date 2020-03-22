@@ -558,7 +558,7 @@ export default {
 						"x1": x,
 						"y1": (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth),
 						"x2": x,
-						"y2": (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth + 1),
+						"y2": (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth + 1) - this.offset - this.stroke_width,
 						"stroke-width": 5,
 						"stroke": this.$store.color.target
 					})
@@ -720,7 +720,7 @@ export default {
 					if (this.selectedDirection == 'LR') {
 						return d.x1 - d.x0 - this.offset;
 					}
-					return d.y1 - d.y0 //- this.offset - this.stroke_width;
+					return d.y1 - d.y0 - this.offset - this.stroke_width;
 				})
 				.style("fill", (d, i) => {
 					if (d.depth == 0) {
@@ -731,16 +731,7 @@ export default {
 					}
 				})
 				.style('stroke', (d) => {
-					let metric_attr = ''
-					let runtime = 0
-					if (this.$store.selectedMetric == 'Inclusive') {
-						metric_attr = 'mean_time (inc)'
-					}
-					else if (this.$store.selectedMetric == 'Exclusive') {
-						metric_attr = 'mean_time'
-					}
-					runtime = d.data.metric_attr
-
+					let runtime = d.data.data[this.$store.selectedMetric]['max_time']
 					return d3.rgb(this.$store.color.getColorByValue(runtime));
 				})
 				.style('stroke-width', this.stroke_width)

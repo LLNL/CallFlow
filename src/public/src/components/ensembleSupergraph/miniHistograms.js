@@ -103,7 +103,6 @@ export default {
             }
 
             for (let i = 0; i < freq.length; i += 1) {
-                console.log(freq[i])
                 d3.select('#' + this.id)
                     .append('rect')
                     .attrs({
@@ -112,8 +111,6 @@ export default {
                         'width': () => this.bandWidth,
                         'height': (d) => {
                             return this.$parent.nodeWidth - this.minimapYScale(freq[i])
-                            console.log(type, this.minimapYScale(freq[i]))
-                            return this.minimapYScale(freq[i])
                         },
                         'x': (d) => {
                             return node_dict.x + this.minimapXScale(xVals[i])
