@@ -100,7 +100,7 @@ export default {
 			this.graph.nodes = postProcess['nodes']
 			this.graph.links = postProcess['links']
 			this.initSankey(this.graph)
-			console.log("[Ensemble SuperGraph] Post-processing done.")
+			// console.log("[Ensemble SuperGraph] Post-processing done.")
 
 			this.$store.graph = this.graph
 			this.$refs.EnsembleColorMap.init()
@@ -302,7 +302,6 @@ export default {
 					console.log("[Ensemble SuperGraph] Source Name", source)
 					console.log("[Ensemble SuperGraph] Target Name", target)
 					console.log("[Ensemble SuperGraph] This edge: ", temp_edges[i])
-
 				}
 
 				let source_node = temp_edges[i].source_data

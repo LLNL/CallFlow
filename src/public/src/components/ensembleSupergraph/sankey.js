@@ -186,7 +186,9 @@ export default function Sankey() {
             }
             link.source_data = nodeMap[link.source]
             link.target_data = nodeMap[link.target]
+            console.log(link.source, link.target)
         })
+        console.log(nodeMap)
     }
 
 
@@ -234,7 +236,6 @@ export default function Sankey() {
                 d3.sum(node.sourceLinks, targetValue),
                 d3.sum(node.targetLinks, targetValue)
             )
-
         });
     }
 
@@ -249,9 +250,10 @@ export default function Sankey() {
         let x = 0
         while (remainingNodes.length) {
             nextNodes = [];
-            if (x > 10) {
-                break
-            }
+            // if (x > 10) {
+            //     console.log('breaking the loop')
+            //     break
+            // }
             remainingNodes.forEach(function (node) {
                 node.level = level
                 node.dx = nodeWidth;
@@ -272,6 +274,8 @@ export default function Sankey() {
 
         // moveSinksRight()
         scaleNodeBreadths((size[0] - nodeWidth) / (level - 1));
+
+        console.log()
 
     }
 
@@ -349,34 +353,34 @@ export default function Sankey() {
             })
         }
 
-        function pushIntermediateNodeBottom(nodes){
+        function pushIntermediateNodeBottom(nodes) {
             let tempNode
-            for(let i = 0; i < nodes.length; i += 1){
-                if(nodes[i].id.split('_')[0] == 'intermediate'){
+            for (let i = 0; i < nodes.length; i += 1) {
+                if (nodes[i].id.split('_')[0] == 'intermediate') {
                     tempNode = nodes[i]
                     nodes.splice(i, 1);
                 }
             }
-            if(tempNode != undefined){
+            if (tempNode != undefined) {
                 nodes.push(tempNode)
             }
             return nodes
         }
 
-        function pushNodeBottomIfIntermediateTargets(nodes){
+        function pushNodeBottomIfIntermediateTargets(nodes) {
             let tempNode
-            for(let i = 0; i < nodes.length; i += 1){
+            for (let i = 0; i < nodes.length; i += 1) {
                 let targets = nodes[i].targetLinks
-                for(let j = 0; j < targets.length; j += 1){
+                for (let j = 0; j < targets.length; j += 1) {
                     let target = targets[j].target
                     console.log(target)
-                    if(target.split('_')[0] == 'intermediate'){
+                    if (target.split('_')[0] == 'intermediate') {
                         tempNode = nodes[i]
                         nodes.splice(i, 1);
                     }
                 }
             }
-            if(tempNode != undefined){
+            if (tempNode != undefined) {
                 nodes.push(tempNode)
             }
             return nodes
@@ -417,21 +421,18 @@ export default function Sankey() {
 
 
             let levelCount = 0
-
+            console.log(nodesByBreadth)
             nodesByBreadth.forEach(function (nodes) {
-                console.log(nodes)
                 if (levelCount == 2) {
                     nodes.sort(function (a, b) {
-                        if(a.name.split('_')[0] != 'intermediate' || b.name.split('_')[0] != 'intermediate'){
+                        if (a.name.split('_')[0] != 'intermediate' || b.name.split('_')[0] != 'intermediate') {
                             return a['height'] - b['height']
                         }
                     })
                 }
 
                 nodes = pushIntermediateNodeBottom(nodes)
-                // nodes = pushNodeBottomIfIntermediateTargets(nodes)
-
-                console.log(nodes)
+                //         // nodes = pushNodeBottomIfIntermediateTargets(nodes)
 
                 nodes.forEach(function (node, i) {
                     let nodeHeight = 0;
@@ -449,6 +450,8 @@ export default function Sankey() {
                     // nodes.sort(function (a, b) {
                     //     return a["y"] - b["y"];
                     // })
+
+                    console.log(node.name, node.y)
                     console.log("Value: ", node.value, minNodeScale, scale)
                     node.height = node.value * minNodeScale * scale;
                     console.log("Height ", node.height)
@@ -467,7 +470,7 @@ export default function Sankey() {
 
 
                 link.height = weight * minNodeScale * scale
-                link.targetHeight = weight * minNodeScale * scale *(weight/targetWeight)
+                link.targetHeight = weight * minNodeScale * scale * (weight / targetWeight)
             });
         }
 
@@ -627,11 +630,11 @@ export default function Sankey() {
         nodes.forEach(function (node) {
             var sy = 0, ty = 0;
 
-            node.sourceLinks.sort(function(a, b) {
+            node.sourceLinks.sort(function (a, b) {
                 return a.source_data.y - b.source_data.y
             })
 
-            node.targetLinks.sort(function(a, b) {
+            node.targetLinks.sort(function (a, b) {
                 return a.target_data.y - b.target_data.y
             })
 
@@ -682,8 +685,7 @@ export default function Sankey() {
         return link.weight;
     }
 
-    function targetValue(link){
-        console.log(link.source)
+    function targetValue(link) {
         return link.source_data[targetDataset]['time (inc)']
     }
 
