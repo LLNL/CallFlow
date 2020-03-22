@@ -4,6 +4,7 @@ import math, json, utils
 from ast import literal_eval as make_tuple
 import numpy as np
 from utils.timer import Timer
+from ast import literal_eval as make_list
 
 class SuperGraph(nx.Graph):
     # Attributes:
@@ -51,6 +52,19 @@ class SuperGraph(nx.Graph):
         # TODO: Change name in the df from 'dataset' to 'run'
         self.runs = self.entire_df["dataset"].unique()
 
+        self.target_df = {}
+        for run in self.runs:
+            self.target_df[run] = self.entire_df.loc[self.entire_df['dataset'] == run]
+
+        self.module_time_map = self.entire_df.set_index('module')['time'].to_dict()
+        self.module_time_inc_map = self.entire_df.set_index('module')['time (inc)'].to_dict()
+
+        self.name_time_map = self.entire_df.set_index('name')['time'].to_dict()
+        self.name_time_inc_map = self.entire_df.set_index('name')['time (inc)'].to_dict()
+        
+        # self.entire_df['group_path'] = self.entire_df['group_path'].apply(lambda path: make_list(path))
+        # self.name_path_map = self.entire_df.set_index('name')['group_path'].to_dict()
+
         self.reveal_callsites = reveal_callsites
 
         with self.timer.phase("Construct Graph"):
@@ -59,13 +73,9 @@ class SuperGraph(nx.Graph):
                 self.mapper = {}
                 self.g = nx.DiGraph()
                 self.add_paths(path)
+                # self.add_reveal_paths()
             else:
                 print("Using the existing graph from state {0}".format(self.state.name))
-
-        # Store the A (*adjacency matrix.)
-        # with self.timer.phase("Create adjacency matrix"):
-        #     self.adj_matrix = nx.adjacency_matrix(self.g)
-        #     self.dense_adj_matrix = self.adj_matrix.todense()
 
         # Variables to control the data properties globally.
         self.callbacks = []
@@ -110,7 +120,8 @@ class SuperGraph(nx.Graph):
                 else:
                     dataMap[module].append({
                         'callsite': callsite,
-                        'module': elem,
+                        # 'module': elem,
+                        'module': module,
                         'level': idx
                     })
             ret.append(dataMap[module][-1])
@@ -122,39 +133,11 @@ class SuperGraph(nx.Graph):
         for callsite in self.reveal_callsites:
             df = self.entire_df.loc[self.entire_df['name'] == callsite]
             paths.append(df['group_path'].unique()[0])
-        return np.array(paths)
 
-    def add_paths(self, path):
-        paths = self.group_df[path].unique()
-        # print(paths, type(paths))
-        # reveal_paths = self.add_reveal_paths()
-        # print(reveal_paths, type(reveal_paths))
+        reveal_paths = np.array(paths)
 
-        # paths = np.concatenate((paths, reveal_paths), axis=0)
-
-        for idx, path_str in enumerate(paths):
-            path_list = self.rename_cycle_path(path_str)
-
-            for callsite_idx, callsite in enumerate(path_list):
-                if callsite_idx != len(path_list) - 1:
-                    source = path_list[callsite_idx]
-                    target = path_list[callsite_idx + 1]
-
-                    if(not self.g.has_edge(source['module'], target['module'])):
-                        source_module = source['module']
-                        target_module = target['module']
-
-                        source_name = source['callsite']
-                        target_name = target['callsite']
-
-                        self.g.add_edge(source_module, target_module, attr_dict={
-                            "source_callsite": source_name,
-                            "target_callsite": target_name
-                        })
-        reveal_paths = self.add_reveal_paths()
         for reveal_path_str in reveal_paths:
             reveal_path_list = self.rename_cycle_path(reveal_path_str)
-            print(reveal_path_list)
             callsite_idx = len(reveal_path_list) - 2
             source = reveal_path_list[callsite_idx]
             target = reveal_path_list[callsite_idx + 1]
@@ -171,6 +154,32 @@ class SuperGraph(nx.Graph):
                     "source_callsite": source_name,
                     "target_callsite": target_name
                 })
+
+    def add_paths(self, path):
+        paths = self.group_df[path].unique()
+
+        for idx, path_str in enumerate(paths):
+            path_list = self.rename_cycle_path(path_str)
+
+            for callsite_idx, callsite in enumerate(path_list):
+                if callsite_idx != len(path_list) - 1:
+                    source = path_list[callsite_idx]
+                    target = path_list[callsite_idx + 1]
+
+                    print(source['module'], target['module'])
+
+                    if(not self.g.has_edge(source['module'], target['module'])):
+                        source_module = source['module']
+                        target_module = target['module']
+
+                        source_name = source['callsite']
+                        target_name = target['callsite']
+                        
+                        print(source_module, target_module)
+                        self.g.add_edge(source_module, target_module, attr_dict={
+                            "source_callsite": source_name,
+                            "target_callsite": target_name
+                        })        
             
     def add_node_attributes(self):
         ensemble_mapping = self.ensemble_map(self.g.nodes())
@@ -240,12 +249,8 @@ class SuperGraph(nx.Graph):
             else:
                 target_module = edge[1]
 
-            source_inc = self.entire_df.loc[(self.entire_df["module"] == source_module)][
-                "time (inc)"
-            ].max()
-            target_inc = self.entire_df.loc[(self.entire_df["module"] == target_module)][
-                "time (inc)"
-            ].max()
+            source_inc = self.module_time_inc_map[source_module]
+            target_inc = self.module_time_inc_map[target_module]
 
             ret[(edge[0], edge[1])] = target_inc
 
@@ -258,8 +263,8 @@ class SuperGraph(nx.Graph):
             source_name = edge[2]['attr_dict']['source_callsite']
             target_name = edge[2]['attr_dict']['target_callsite']
 
-            source_exc = self.entire_df.loc[(self.entire_df["name"] == source_name)]["time"].max()
-            target_exc = self.entire_df.loc[(self.entire_df["name"] == target_name)]["time"].max()
+            source_exc = self.name_time_map[source_name]
+            target_exc = self.name_time_map[target_name]
 
             ret[(edge[0], edge[1])] = target_exc
 
@@ -283,65 +288,33 @@ class SuperGraph(nx.Graph):
             else:
                 node_name = node
 
-            # Get their dataframe
-            node_df = self.entire_df.loc[self.entire_df["module"] == node_name]
+            # node_df = self.modul[node_name]
 
             for column in ensemble_columns:
                 if column not in ret:
                     ret[column] = {}
 
-                if(column not in new_columns):
-                    column_data = node_df[column]
+                if (column == "time (inc)"):
+                    ret[column][node] = self.module_time_inc_map[node_name]
+                    
+                elif( column == 'time'):
+                    ret[column][node] = self.module_time_map[node_name]
 
-                if (
-                    column == "time (inc)"
-                    or column == "time"
-                    or column == "component_level"
-                ):
-                    if len(column_data.value_counts() > 0):
-                        ret[column][node] = column_data.max()
-                    else:
-                        ret[column][node] = -1
+                elif ( column == "module"):
+                    ret[column][node] = node_name
 
-                elif column == "callers" or column == "callees":
-
-                    if len(column_data.value_counts()) > 0:
-                        ret[column][node] = column_data.tolist()
-                    else:
-                        ret[column][node] = []
-
-                elif (
-                    column == "name"
-                    or column == "module"
-                    or column == "show_node"
-                ):
-
-                    if len(column_data.value_counts() > 0):
-                        ret[column][node] = column_data.tolist()[0]
-                    else:
-                        ret[column][node] = "None"
-
-                elif column == "component_path" or column == "group_path":
-                    if len(column_data.value_counts() > 0):
-                        ret[column][node] = list(make_tuple(column_data.tolist()[0]))
-                    else:
-                        ret[column][node] = []
-
-                elif column == 'dist_inc_time':
-                    if len(node_df['time (inc)'].value_counts() > 0):
-                        ret[column][node] = node_df['time (inc)'].tolist()
-                    else:
-                        ret[column][node] = []
-
-                elif column == 'dist_exc_time':
-                    if len(node_df['time'].value_counts() > 0):
-                        ret[column][node] = node_df['time'].tolist()
-                    else:
-                        ret[column][node] = []
+                elif (column == 'name'):
+                    ret[column][node] = node
         return ret
 
     def dataset_map(self, nodes, dataset):
         ret = {}
+        target_module_time_map = self.target_df[dataset].set_index('module')['time'].to_dict()
+        target_module_time_inc_map = self.target_df[dataset].set_index('module')['time (inc)'].to_dict()
+
+        target_name_time_map = self.target_df[dataset].set_index('name')['time'].to_dict()
+        target_name_time_inc_map = self.target_df[dataset].set_index('name')['time (inc)'].to_dict()
+
         for node in self.g.nodes():
             if "=" in node:
                 node_name = node.split("=")[0]
@@ -351,45 +324,24 @@ class SuperGraph(nx.Graph):
             if node not in ret:
                 ret[node] = {}
 
-            node_df = self.entire_df.loc[
-                (self.entire_df["module"] == node_name) & (self.entire_df["dataset"] == dataset)
-            ]
-
             for column in self.columns:
-                column_data = node_df[column]
-
-                if (
-                    column == "time (inc)"
-                    or column == "time"
-                    or column == "component_level"
-                ):
-                    if len(column_data.value_counts()) > 0:
-                        ret[node][column] = column_data.max()
+                if (column == "time (inc)"):
+                    if node_name not in target_module_time_inc_map:
+                        ret[node][column] = 0.0
                     else:
-                        ret[node][column] = -1
+                        ret[node][column] = target_module_time_inc_map[node_name]
 
-                elif column == "callers" or column == "callees":
-                    if len(column_data.value_counts()) > 0:
-                        ret[node][column] = column_data.tolist()
+                if (column == "time"):
+                    if node_name not in target_module_time_map:
+                        ret[node][column] = 0.0
                     else:
-                        ret[node][column] = []
+                        ret[node][column] = target_module_time_map[node_name]
 
-                elif (
-                    column == "name"
-                    or column == "vis_name"
-                    or column == "module"
-                    or column == "show_node"
-                ):
-                    if len(column_data.value_counts()) > 0:
-                        ret[node][column] = column_data.tolist()[0]
 
-                    else:
-                        ret[node][column] = "None"
+                elif (column == "module"):
+                    ret[node][column] = node_name
 
-                elif column == "component_path" or column == "group_path":
+                elif (column == 'name'):
+                    ret[node][column] = node
 
-                    if len(column_data.value_counts() > 0):
-                        ret[node][column] = list(make_tuple(column_data.tolist()[0]))
-                    else:
-                        ret[node][column] = []
         return ret

@@ -683,6 +683,7 @@ export default function Sankey() {
     }
 
     function targetValue(link){
+        console.log(link.source)
         return link.source_data[targetDataset]['time (inc)']
     }
 
