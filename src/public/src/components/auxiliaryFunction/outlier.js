@@ -45,13 +45,6 @@ export default {
             this.boxHeight = this.height - this.paddingTop - this.informationHeight
             this.boxWidth = this.width
 
-            let min_x = Math.min(this.q.min, this.targetq.min)
-            let max_x = Math.max(this.q.max, this.targetq.max)
-
-            this.xScale = d3.scaleLinear()
-                .domain([min_x, max_x])
-                .range([10, this.boxWidth]);
-
            this.ensembleOutliers()
            this.targetOutliers()
         },
@@ -160,6 +153,16 @@ export default {
             return group_circles;
         },
 
+        cleanUpEmptyOutliers(data){
+            let ret = []
+            for(let i = 0; i < data.length; i += 1){
+                if(data[i].count != 0){
+                    ret.push(data[i])
+                }
+            }
+            return ret
+        },
+
         ensembleOutliers() {
             let outlierList = []
             for (let i = 0; i < this.ensembleWhiskerIndices[0]; i += 1) {
@@ -171,6 +174,8 @@ export default {
             }
 
             this.data = this.groupOutliers(outlierList, this.outlierRadius)
+            this.data = this.cleanUpEmptyOutliers(this.data)
+            console.log(this.data)
             this.outlier = this.g
                 .selectAll(".ensemble-outlier")
                 .data(this.data)
@@ -195,9 +200,12 @@ export default {
                 targetOutlierList.push(this.targetd[i])
             }
 
+            this.data = this.groupOutliers(targetOutlierList, this.outlierRadius)
+            this.data = this.cleanUpEmptyOutliers(this.data)
+
             this.outlier = this.g
                 .selectAll(".target-outlier")
-                .data(this.groupOutliers(targetOutlierList, this.outlierRadius))
+                .data(this.data)
                 .join("circle")
                 .attrs({
                     "r": d => (d.count / this.max_count) * 4 + 4,
