@@ -32,9 +32,12 @@ export default {
         containerHeight: 150,
         containerWidth: 0,
         parentID: '',
-        iqrFactor: 0.15,
         informationHeight: 70,
         outlierHeight: 20,
+        rectHeight: 0,
+        centerLinePosition: 0,
+        boxHeight: 0,
+        boxWidth: 0
     }),
     components: {
         Box,
@@ -80,6 +83,13 @@ export default {
                     'width': this.containerWidth,
                     'height': this.containerHeight
                 })
+        
+            this.boxHeight = this.containerHeight - this.informationHeight
+            this.boxWidth = this.containerWidth
+            
+            this.boxPosition = this.informationHeight/2 + this.outlierHeight/2
+            this.centerLinePosition = (this.boxHeight - this.informationHeight/4)/2
+            this.rectHeight = this.boxHeight - this.informationHeight/4 - this.outlierHeight/4
 
             this.process(ensemble_callsite_data, target_callsite_data)
             this.visualize()
@@ -128,7 +138,7 @@ export default {
         iqrScore(data, q) {
             let q1 = q.q1
             let q3 = q.q3
-            let iqr = (q3 - q1) * this.iqrFactor
+            let iqr = (q3 - q1) * this.$store.selectedIQRFactor
             let i = 0
             let j = data.length - 1
             while (data[i] < q1 - iqr) {

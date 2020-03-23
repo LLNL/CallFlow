@@ -290,6 +290,10 @@ class EnsembleCallFlow:
             compare = Compare(self.states['ensemble_entire'], compareDataset, targetDataset, selectedMetric)
             return compare.result
 
+        elif action_name == 'mpi_range_data':
+            self.states['ensemble_entire']
+
+
 
     def displayStats(self, name):
         log.warn("==========================")

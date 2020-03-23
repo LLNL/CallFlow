@@ -7,14 +7,14 @@ export default {
     template: tpl,
     props: [
         "callsiteID"
-    ],
+    ],  
     data: () => ({
         id: 'markers',
         paddingTop: 10,
         textOffset: 40,
         fontSize: 10,
-        informationHeight: 70,
-        outlierHeight: 20,
+        topPosition: -0.2,
+        bottomPosition: 0.7
     }),
 
     mounted() {
@@ -34,14 +34,11 @@ export default {
             this.g = this.svg
                 .select('#' + this.id)
                 .attrs({
-                    "transform": "translate(0, " + this.paddingTop + ")"
+                    "transform": "translate(0, " + this.$parent.boxPosition + ")"
                 })
 
-            this.height = this.$parent.containerHeight
-            this.width = this.$parent.containerWidth
-
-            this.boxHeight = this.height - this.informationHeight / 2
-            this.boxWidth = this.width
+            this.markery1 = this.$parent.centerLinePosition - this.$parent.rectHeight/2
+            this.markery2 = this.$parent.centerLinePosition + this.$parent.rectHeight/2
 
             this.medianMarker()
             this.extremeMarkers()
@@ -49,15 +46,15 @@ export default {
         },
 
         medianMarker() {
-            let y1 = this.$parent.$parent.informationHeight / 4
-            let y2 = this.boxHeight - this.$parent.$parent.informationHeight / 8
+            this.medianMarkery1 = this.$parent.centerLinePosition - this.$parent.rectHeight
+            this.medianMarkery2 = this.$parent.centerLinePosition + this.$parent.rectHeight
             this.medianLine = this.g
                 .append("line")
                 .attrs({
                     "class": "median",
-                    "y1": y1,
+                    "y1": this.medianMarkery1,
                     "x1": this.xScale(this.q.q2),
-                    "y2": y2,
+                    "y2": this.medianMarkery2,
                     "x2": this.xScale(this.q.q2),
                     'stroke': 'black'
                 })
@@ -66,12 +63,8 @@ export default {
         },
 
         extremeMarkers() {
-            // if (this.$store.selectedMarker == 'target') {
             this.targetData = this.targetq
-            // }
-            // else if (this.$store.selectedMarker == 'ensemble') {
             this.data = this.q
-            // }
 
             this.minMaxEnsembleMarker()
             this.minMaxTargetMarker()
@@ -81,14 +74,12 @@ export default {
         },
 
         minMaxEnsembleMarker() {
-            let y1 = this.$parent.$parent.informationHeight / 2
-            let y2 = this.boxHeight - this.$parent.$parent.informationHeight / 8
             this.g.append("line")
                 .attrs({
                     "class": "whisker",
-                    "y1": y1,
+                    "y1": this.markery1,
                     "x1": this.xScale(this.q.min),
-                    "y2": y2,
+                    "y2": this.markery2,
                     "x2": this.xScale(this.q.min),
                     'stroke': this.$store.color.ensemble
                 })
@@ -97,9 +88,9 @@ export default {
             this.g.append("line")
                 .attrs({
                     "class": "whisker",
-                    "y1": y1,
+                    "y1": this.markery1,
                     "x1": this.xScale(this.q.max),
-                    "y2": y2,
+                    "y2": this.markery2,
                     "x2": this.xScale(this.q.max),
                     'stroke': this.$store.color.ensemble
                 })
@@ -107,14 +98,12 @@ export default {
         },
 
         minMaxTargetMarker() {
-            let y1 = this.$parent.$parent.informationHeight / 2
-            let y2 = this.boxHeight - this.$parent.$parent.informationHeight / 4
             this.g.append("line")
                 .attrs({
                     "class": "whisker",
-                    "y1": y1,
+                    "y1": this.markery1,    
                     "x1": this.xScale(this.targetData.min),
-                    "y2": y2,
+                    "y2": this.markery2,
                     "x2": this.xScale(this.targetData.min),
                     'stroke': this.$store.color.target
                 })
@@ -123,9 +112,9 @@ export default {
             this.g.append("line")
                 .attrs({
                     "class": "whisker",
-                    "y1": y1,
+                    "y1": this.markery1,
                     "x1": this.xScale(this.targetData.max),
-                    "y2": y2,
+                    "y2": this.markery2,
                     "x2": this.xScale(this.targetData.max),
                     'stroke': this.$store.color.target
                 })
@@ -138,7 +127,7 @@ export default {
                 .attrs({
                     "class": "whiskerText",
                     "x": 0.5 * this.fontSize,
-                    "y": this.boxHeight * 0.10,
+                    "y": this.$parent.containerHeight * this.topPosition,
                     "fill": d3.rgb(this.$store.color.target).darker(1)
                 })
                 .style('stroke-width', '1')
@@ -149,7 +138,7 @@ export default {
                 .attrs({
                     "class": "whiskerText",
                     "x": 0.5 * this.fontSize,
-                    "y": this.boxHeight * 1.20,
+                    "y": this.$parent.containerHeight * this.bottomPosition,
                     "fill": d3.rgb(this.$store.color.ensemble).darker(1)
                 })
                 .style('stroke-width', '1')
@@ -161,8 +150,8 @@ export default {
             this.g.append("text")
                 .attrs({
                     "class": "whiskerText",
-                    "x": this.boxWidth - 9 * this.fontSize,
-                    "y": this.boxHeight * .10,
+                    "x": this.$parent.containerWidth - 9 * this.fontSize,
+                    "y": this.$parent.containerHeight * this.topPosition,
                     "fill": d3.rgb(this.$store.color.target).darker(1)
                 })
                 .style('stroke-width', '1')
@@ -172,8 +161,8 @@ export default {
             this.g.append("text")
                 .attrs({
                     "class": "whiskerText",
-                    "x": this.boxWidth - 9 * this.fontSize,
-                    "y": this.boxHeight * 1.20,
+                    "x": this.$parent.containerWidth - 9 * this.fontSize,
+                    "y": this.$parent.containerHeight * this.bottomPosition,
                     "fill": d3.rgb(this.$store.color.ensemble).darker(1)
                 })
                 .style('stroke-width', '1')
@@ -185,8 +174,8 @@ export default {
             this.g.append("text")
                 .attrs({
                     "class": "whiskerText",
-                    "x": this.boxWidth / 2 - 4.5 * this.fontSize,
-                    "y": this.boxHeight * 0.10,
+                    "x": this.$parent.containerWidth / 2 - 4.5 * this.fontSize,
+                    "y": this.$parent.containerHeight * this.topPosition,
                     "fill": d3.rgb(this.$store.color.target).darker(1)
                 })
                 .style('stroke-width', '1')
@@ -196,8 +185,8 @@ export default {
             this.g.append("text")
                 .attrs({
                     "class": "whiskerText",
-                    "x": this.boxWidth / 2 - 4.5 * this.fontSize,
-                    "y": this.boxHeight * 1.20,
+                    "x": this.$parent.containerWidth / 2 - 4.5 * this.fontSize,
+                    "y": this.$parent.containerHeight * this.bottomPosition,
                     "fill": d3.rgb(this.$store.color.ensemble).darker(1)
                 })
                 .style('stroke-width', '1')
@@ -214,8 +203,8 @@ export default {
                 .attrs({
                     "class": "whiskerText",
                     // "x": this.xScale(this.qData[0]) - 4.5*this.fontSize,
-                    "x": this.boxWidth / 3,
-                    "y": (this.informationHeight) * 0.10,
+                    "x": this.$parent.containerWidth / 3,
+                    "y": (this.informationHeight) * this.topPosition,
                     "fill": d3.rgb(this.fill).darker(1)
                 })
                 .style('stroke-width', '2')
@@ -227,8 +216,8 @@ export default {
                 .attrs({
                     "class": "whiskerText",
                     // "x": this.xScale(this.qData[1]) + 0.5*this.fontSize,
-                    "x": ((this.boxWidth / 3) * 2),
-                    "y": this.informationHeight * 0.10,
+                    "x": ((this.$parent.boxWidth / 3) * 2),
+                    "y": this.informationHeight * this.topPosition,
                     "fill": d3.rgb(this.fill).darker(1)
                 })
                 .style('stroke-width', '1')
