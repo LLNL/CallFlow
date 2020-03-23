@@ -53,7 +53,8 @@ export default {
         thisNode: '',
         selectedPropLabel: '',
         selectedPropSum: 0,
-        min_exponent: 0
+        x_max_exponent: 0,
+        superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
     }),
 
     mounted() {
@@ -388,6 +389,11 @@ export default {
                     //     .style('fill-opacity', 1)
                     // let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
                     // self.$refs.ToolTip.render(groupProcStr, d)
+                    self.$socket.emit('mpi_range_data', {
+                        'from_': this.xVals[i-1],
+                        'to_': this.xVals[i]
+
+                    })
                     self.$refs.ToolTip.render(d)
                 })
                 .on('mouseout', function (d, i) {
@@ -402,8 +408,9 @@ export default {
 
         addxAxisLabel(){
             let max_value = this.xScale.domain()[1]
-            this.x_min_exponent = utils.formatExponent(max_value)
-            let label = '(e+' + this.x_min_exponent + ') ' + this.$store.selectedMetric + " Runtime (" + "\u03BCs)"
+            this.x_max_exponent = utils.formatExponent(max_value)
+            let exponent_string = this.superscript[this.x_max_exponent]
+            let label = '(e' + exponent_string + ') ' + this.$store.selectedMetric + " Runtime (" + "\u03BCs)"
             this.svg.append('text')
                 .attrs({
                     'class': 'histogram-axis-label',
@@ -424,7 +431,7 @@ export default {
                 .ticks(5)
                 .tickFormat((d, i) => {
                     if (i % 3 == 0) {
-                        let runtime = utils.formatRuntimeWithExponent(d, self.x_min_exponent)
+                        let runtime = utils.formatRuntimeWithExponent(d, self.x_max_exponent)
                         return `${runtime[0]}`;
                     }
                 });

@@ -48,8 +48,9 @@ export default {
 		boxOffset: 20,
 		settings: [{ title: 'Show Difference plot' }, { title: 'aaa' }],
 		moduleUnDesirability: 1,
-		x_min_exponent: 0,
-		y_min_exponent: 0
+		x_max_exponent: 0,
+		y_max_exponent: 0,
+		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
 	}),
 
 	mounted() {
@@ -342,8 +343,8 @@ export default {
 
 		addxAxisLabel() {
 			let max_value = this.xScale.domain()[1]
-			this.x_min_exponent = utils.formatExponent(max_value)
-			let label = '(e+' + this.x_min_exponent + ') ' + "Exclusive Runtime (" + "\u03BCs)"
+			this.x_max_exponent = utils.formatExponent(max_value)
+			let label = '(e' + this.superscript[this.x_max_exponent] + ') ' + "Exclusive Runtime (" + "\u03BCs)"
 			this.svg.append('text')
 				.attr('class', 'scatterplot-axis-label')
 				.attr('x', this.boxWidth - 1 * this.padding.right)
@@ -359,7 +360,7 @@ export default {
 				.ticks(this.$store.selectedMPIBinCount)
 				.tickFormat((d, i) => {
 					if (i % 3 == 0) {
-						let runtime = utils.formatRuntimeWithExponent(d, this.x_min_exponent)
+						let runtime = utils.formatRuntimeWithExponent(d, this.x_max_exponent)
 						return `${runtime[0]}`;
 					}
 				});
@@ -382,15 +383,15 @@ export default {
 				.style("opacity", 0.5);
 
 			xAxisLine.selectAll("text")
-				.style('font-size', '12px')
+				.style('font-size', '14px')
 				.style('font-family', 'sans-serif')
 				.style('font-weight', 'lighter');
 		},
 
 		addyAxisLabel() {
 			let max_value = this.yScale.domain()[1]
-			this.y_min_exponent = utils.formatExponent(max_value)
-			let label = '(e+' + this.y_min_exponent + ') ' + "Inclusive Runtime (" + "\u03BCs)"
+			this.y_max_exponent = utils.formatExponent(max_value)
+			let label = '(e' + this.superscript[this.y_max_exponent] + ') ' + "Inclusive Runtime (" + "\u03BCs)"
 			this.svg.append("text")
 				.attr('class', 'scatterplot-axis-label')
 				.attr('transform', 'rotate(-90)')
@@ -408,7 +409,7 @@ export default {
 				.ticks(tickCount)
 				.tickFormat((d, i) => {
 					if (i % 3 == 0 || i == tickCount - 1) {
-						let runtime = utils.formatRuntimeWithExponent(d, this.y_min_exponent)
+						let runtime = utils.formatRuntimeWithExponent(d, this.y_max_exponent)
 						return `${runtime[0]}`;
 					}
 				})
@@ -431,7 +432,7 @@ export default {
 				.style("opacity", 0.5);
 
 			yAxisLine.selectAll("text")
-				.style('font-size', '12px')
+				.style('font-size', '14px')
 				.style('font-family', 'sans-serif')
 				.style('font-weight', 'lighter');
 		},
