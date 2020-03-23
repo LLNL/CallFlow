@@ -3,7 +3,7 @@
     <v-spacer></v-spacer>
     <!-- <Settings ref="Settings" :settings="settings" /> -->
     <span class="component-info">
-        <p>{{number_of_callsites}} Callsites. </p>
+        <p>{{numberOfCallsites}} Callsites. </p>
     </span>
 
     <div v-for="callsite in callsites" class="auxiliary-node" :id="callsite.id"
@@ -19,6 +19,5 @@
         <div>Kurtosis: {{callsite['kurtosis_inclusive']}}</div> -->
         <BoxPlot ref="callsite" :callsite="callsite" />
     </div>
-
-    </Callsite>
+    <ToolTip ref="ToolTip"/>
 </v-layout>

@@ -166,9 +166,9 @@
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
-					<v-text-field label="Outlier Bands" class="mt-0" type="number"
-						v-model="selectedOutlierBand" :menu-props="{ maxHeight: '200' }" persi	stent-hint
-						v-on:change="updateOutlierBand()">
+					<v-text-field label="IQR Factor" class="mt-0" type="float"
+					v-model="selectedIQRFactor" :menu-props="{ maxHeight: '200' }" persi	stent-hint
+					v-on:change="updateIQRFactor()">
 					</v-text-field>
 				</v-flex>
 				<v-flex xs12 class="ma-1">

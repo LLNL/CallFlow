@@ -32,7 +32,9 @@ export default {
         containerHeight: 150,
         containerWidth: 0,
         parentID: '',
-        iqrFactor: 0.15
+        iqrFactor: 0.15,
+        informationHeight: 70,
+        outlierHeight: 20,
     }),
     components: {
         Box,
@@ -221,7 +223,7 @@ export default {
 
             this.xScale = d3.scaleLinear()
                 .domain([min_x, max_x])
-                .range([0.01 * this.containerWidth, this.containerWidth - 0.01 * this.containerWidth]);
+                .range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
 
             this.$refs.Box.init(this.q, this.targetq, this.xScale)
             this.$refs.Markers.init(this.q, this.targetq, this.xScale)

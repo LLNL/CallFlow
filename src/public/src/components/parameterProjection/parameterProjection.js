@@ -235,10 +235,8 @@ export default {
         showDetails(dataset) {
             this.tooltip.html(
                 "Run: " + dataset + "<br/>" +
-                "Inc. time (max): " + utils.formatRuntimeWithUnits(this.$store.maxIncTime[dataset]) + "<br/>" +
-                "Exc. time (max): " + utils.formatRuntimeWithUnits(this.$store.maxExcTime[dataset]))
-                // .style("left", (d3.event.pageX) + "px")
-                // .style("top", (d3.event.pageY - 28) + "px");
+                "[PC1] Inc. time (max): " + utils.formatRuntimeWithUnits(this.$store.maxIncTime[dataset]) + "<br/>" +
+                "[PC2] Exc. time (max): " + utils.formatRuntimeWithUnits(this.$store.maxExcTime[dataset]))
         },
 
         mouseover(d) {

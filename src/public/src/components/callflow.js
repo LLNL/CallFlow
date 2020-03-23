@@ -147,6 +147,7 @@ export default {
 		dimensions: ['max_inclusive_time', 'max_exclusive_time', 'rank_count'],
 		selectedPC1: 'max_inclusive_time',
 		selectedPC2: 'max_exclusive_time',
+		selectedIQRFactor: 0.15,
 	}),
 
 	watch: {},
@@ -267,6 +268,7 @@ export default {
 			this.$store.selectedProp = this.selectedProp
 			this.$store.selectedScale = this.selectedScale
 			this.$store.selectedCompareMode = this.selectedCompareMode
+			this.$store.selectedIQRFactor = this.selectedIQRFactor
 
 			this.$store.timeScale = 0.000001
 			this.$store.viewHeight = (window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight)
@@ -640,6 +642,13 @@ export default {
 
 		updateHierarchyMode(){
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode
+			this.clearLocal()
+			this.setupColors()
+			this.init()
+		},
+
+		updateIQRFactor(){
+			this.$store.selectedIQRFactor = this.selectedIQRFactor
 			this.clearLocal()
 			this.setupColors()
 			this.init()

@@ -2,6 +2,7 @@ import tpl from '../../html/auxiliaryFunction/index.html'
 import EventHandler from '../EventHandler'
 import Settings from '../settings/settings'
 import BoxPlot from './boxplot'
+import ToolTip from './tooltip'
 import * as d3 from 'd3'
 
 export default {
@@ -9,7 +10,8 @@ export default {
     template: tpl,
     components: {
         Settings,
-        BoxPlot
+        BoxPlot, 
+        ToolTip
     },
     data: () => ({
         selected: {},
@@ -18,9 +20,9 @@ export default {
         message: "Callsite Information",
         callsites: [],
         dataReady: false,
-        number_of_callsites: 0,
+        numberOfCallsites: 0,
         firstRender: true,
-        padding: { top: 0, right: 10, bottom: 0, left: 5 },
+        padding: { top: 0, right: 10, bottom: 0, left: 10 },
         textOffset: 25,
         boxplotHeight: 300,
         boxplotWidth: 0,
@@ -29,8 +31,6 @@ export default {
         outlierRadius: 4,
         targetOutlierList: {},
         outlierList: {},
-        module_data: {},
-        callsite_data: {},
         callsiteIDMap: {},
         settings: [
             { 'title': 'Sort by Inclusive runtime' },
@@ -39,7 +39,7 @@ export default {
         selectedModule: '',
         selectedCallsite: '',
         informationHeight: 70,
-        reveal_callsites: [],
+        revealCallsites: [],
         selectedMetric: ''
     }),
     mounted() {
@@ -104,23 +104,17 @@ export default {
                 this.firstRender = false
             }
 
-            this.toolbarHeight = document.getElementById('toolbar').clientHeight
-            this.footerHeight = document.getElementById('footer').clientHeight
-
-            this.width = document.getElementById('auxiliary-function-overview').clientWidth
+            this.width = document.getElementById(this.id).clientWidth
             this.height = 0.66 * this.$store.viewHeight
             this.boxplotWidth = this.width - this.padding.left - this.padding.right
 
-            document.getElementById('auxiliary-function-overview').style.maxHeight = this.height + "px"
+            document.getElementById(this.id).style.maxHeight = this.height + "px"
             this.setInfo()
-        },
-
-        clear() {
-
+            this.$refs.ToolTip.init(this.id)
         },
 
         setInfo() {
-            this.number_of_callsites = Object.keys(this.$store.callsites['ensemble']).length
+            this.numberOfCallsites = Object.keys(this.$store.callsites['ensemble']).length
             this.callsites = this.$store.callsites['ensemble']
             this.selectedModule = this.$store.selectedModule
             this.selectedCallsite = this.$store.selectedCallsite
@@ -134,9 +128,9 @@ export default {
         clickCallsite(event) {
             event.stopPropagation()
             let callsite = event.currentTarget.id
-            this.reveal_callsites.push(callsite)
+            this.revealCallsites.push(callsite)
             this.$socket.emit('reveal_callsite', {
-                reveal_callsites: this.reveal_callsites,
+                reveal_callsites: this.revealCallsites,
                 datasets: this.$store.runNames,
             })
 
