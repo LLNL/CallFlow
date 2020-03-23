@@ -15,6 +15,8 @@ export default {
         fontSize: 10,
         informationHeight: 70,
         outlierHeight: 20,
+        rectHeight: 0,
+        centerLinePosition: 0,
     }),
 
     mounted() {
@@ -33,18 +35,11 @@ export default {
             // Get the SVG belonging to this callsite.
             this.svg = d3.select('#' + this.callsiteID)
 
-            let translateY = this.informationHeight/2 + this.outlierHeight/2
             this.g = this.svg
                 .select('#' + this.id)
                 .attrs({
-                    "transform": "translate(0, " + translateY + ")"
+                    "transform": "translate(0, " + this.$parent.boxPosition + ")"
                 })
-
-            this.height = this.$parent.containerHeight
-            this.width = this.$parent.containerWidth
-
-            this.boxHeight = this.height - this.informationHeight
-            this.boxWidth = this.width
 
             this.ensembleBox()
             this.targetBox()
@@ -58,7 +53,7 @@ export default {
                     "class": "box",
                     "y": 0,
                     "x": this.xScale(this.q.q1),
-                    "height": this.boxHeight - this.informationHeight/4 - this.outlierHeight/4,
+                    "height": this.$parent.rectHeight,
                     'fill': this.$store.color.ensemble,
                     "width": this.xScale(this.q.q3) - this.xScale(this.q.q1),
                     "stroke": '#202020',
@@ -76,7 +71,7 @@ export default {
                 .attrs({
                     "y": 0,
                     "x": this.xScale(this.targetq.q1),
-                    "height": this.boxHeight - this.informationHeight/4 - this.outlierHeight/4,
+                    "height": this.$parent.rectHeight,
                     'fill': this.$store.color.target,
                     "width": (d) => {
                         if (self.targetq.q1 == self.targetq.q3) {
@@ -91,12 +86,13 @@ export default {
         },
 
         centerLine() {
+            console.log(this.$parent)
             this.centerLineSVG = this.g
                 .insert("line", "rect")
                 .attr("class", "centerLine")
-                .attr("y1", (this.boxHeight - this.informationHeight/4)/2)
+                .attr("y1", this.$parent.centerLinePosition)
                 .attr("x1", this.xScale(this.q.min))
-                .attr("y2", (this.boxHeight - this.informationHeight/4)/2)
+                .attr("y2", this.$parent.centerLinePosition)
                 .attr("x2", this.xScale(this.q.max))
                 .attr('stroke', 'black')
                 .style('stroke-width', '1.5')

@@ -416,6 +416,19 @@ class App:
             json_result = json.dumps(result)
             emit("ensemble_supergraph", json_result, json=True)
 
+        @sockets.on("mpi_range_data", namespace="/")
+        def mpi_range_data(data):
+            if self.debug:
+                self.print(f"MPI range data: {data}.")
+            nx_graph = self.callflow.request(
+                {
+                    "name": "mpi_range_data",
+                    "datasets": data['datasets'],
+                    "range_from": data['range_from'],
+                    "range_to": data['range_to']
+                }
+            )
+
     def create_server(self):
         app.debug = True
         app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), "")
