@@ -92,7 +92,7 @@ export default {
 			}
 			this.$socket.emit('module_hierarchy', {
 				module: modules_arr[0],
-				datasets: this.$store.runNames,
+				datasets: this.$store.selectedDatasets,
 			})
 		},
 
@@ -219,6 +219,7 @@ export default {
 			d3.selectAll('.icicleNode').remove()
 			d3.selectAll('.icicleText').remove()
 			d3.selectAll('.hierarchy-targetLines').remove()
+			d3.selectAll('.linear-gradient').remove()
 			// this.$refs.ToolTipModuleHierarchy.clear()
 		},
 

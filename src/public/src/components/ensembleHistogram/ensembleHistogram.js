@@ -154,6 +154,7 @@ export default {
         },
 
         setupScale(callsite) {
+            console.log(this.$store.modules)
             let data = this.$store.modules[this.$store.selectedTargetDataset][callsite][this.$store.selectedMetric]['prop_histograms']
 
             let ensembleData = data[this.$store.selectedProp]['ensemble']

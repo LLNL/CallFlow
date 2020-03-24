@@ -183,7 +183,7 @@ class App:
             emit("reset", result, json=True)
 
         @sockets.on("single_callsite_data", namespace="/")
-        def callsites(data):
+        def single_callsite_data(data):
             if self.debug:
                 self.print("Callsite information: ", data)
             result = self.single_callflow.request(
@@ -198,7 +198,7 @@ class App:
             emit("single_callsite_data", result, json=True)
 
         @sockets.on("ensemble_callsite_data", namespace="/")
-        def callsites(data):
+        def ensemble_callsite_data(data):
             if self.debug:
                 self.print("Callsite information: ", data)
             result = self.callflow.request(
@@ -324,7 +324,7 @@ class App:
         @sockets.on("module_hierarchy", namespace="/")
         def module_hierarchy(data):
             if self.debug:
-                self.print("Topology of the module", data)
+                self.print("Hierarchy of the module", data)
             hierarchy_graph = self.callflow.request(
                 {
                     "name": "hierarchy",

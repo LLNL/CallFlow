@@ -268,27 +268,27 @@ export default {
                     this.$socket.emit('module_hierarchy', {
                         module: this.$store.selectedModule,
                         name: this.$store.selectedName,
-                        datasets: this.$store.runNames,
+                        datasets: this.$store.selectedDatasets,
                     })
 
                     EventHandler.$emit('ensemble_histogram', {
                         module: this.$store.selectedModule,
-                        datasets: this.$store.runNames,
+                        datasets: this.$store.selectedDatasets,
                     })
 
                     EventHandler.$emit('ensemble_distribution', {
                         module: this.$store.selectedModule,
-                        datasets: this.$store.runNames,
+                        datasets: this.$store.selectedDatasets,
                     })
 
                     EventHandler.$emit('ensemble_scatterplot', {
                         module: this.$store.selectedModule,
-                        dataset1: this.$store.selectedDataset,
+                        dataset1: this.$store.selectedDatasets,
                     })
 
                     this.$socket.emit('ensemble_auxiliary', {
                         module: this.$store.selectedModule,
-                        datasets: this.$store.runNames,
+                        datasets: this.$store.selectedDatasets,
                         sortBy: this.$store.auxiliarySortBy,
                     })
 

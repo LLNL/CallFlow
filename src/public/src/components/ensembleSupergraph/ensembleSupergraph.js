@@ -76,7 +76,7 @@ export default {
 				})
 			
 			this.$socket.emit('ensemble_supergraph', {
-				datasets: this.$store.runNames,
+				datasets: this.$store.selectedDatasets,
 				groupBy: 'module'
 			})
 		},

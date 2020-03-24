@@ -69,9 +69,10 @@ export default {
             this.axis()
 
             this.$socket.emit('parameter_projection', {
-                datasets: this.$store.runNames,
+                datasets: this.$store.selectedDatasets,
                 targetDataset: this.$store.selectedTargetDataset,
-                groupBy: 'module'
+                groupBy: 'module',
+                numOfClusters: this.$store.selectedNumOfClusters
             })
         },
 
@@ -410,19 +411,9 @@ export default {
                 .attr("r", 4.5)
                 .attr("opacity", 0.5);
 
-            EventHandler.$emit('highlight_datasets', this.selectedDatasets)
-            EventHandler.$emit('clear_summary_view')
-
-            this.$socket.emit('dist_group_highlight', {
-                datasets: this.selectedDatasets,
-                groupBy: this.$store.selectedGroupBy
-            })
-
-            this.$socket.emit('dist_auxiliary', {
-                datasets: this.selectedDatasets,
-                sortBy: this.$store.auxiliarySortBy,
-                module: 'all'
-            })
+            // EventHandler.$emit('highlight_datasets', this.selectedDatasets)
+            this.$store.selectedDatasets = this.selectedDatasets
+            EventHandler.$emit('lasso_selection', this.$store.selectedDatasets)
         },
 
         zoom() {
