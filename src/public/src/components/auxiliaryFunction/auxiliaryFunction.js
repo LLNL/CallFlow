@@ -2,7 +2,6 @@ import tpl from '../../html/auxiliaryFunction/index.html'
 import EventHandler from '../EventHandler'
 import Settings from '../settings/settings'
 import BoxPlot from './boxplot'
-import ToolTip from './tooltip'
 import * as d3 from 'd3'
 
 export default {
@@ -11,7 +10,6 @@ export default {
     components: {
         Settings,
         BoxPlot, 
-        ToolTip
     },
     data: () => ({
         selected: {},
@@ -110,7 +108,6 @@ export default {
 
             document.getElementById(this.id).style.maxHeight = this.height + "px"
             this.setInfo()
-            this.$refs.ToolTip.init(this.id)
         },
 
         setInfo() {
