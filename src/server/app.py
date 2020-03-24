@@ -347,6 +347,7 @@ class App:
                     "datasets": data["datasets"],
                     "targetDataset": data['targetDataset'],
                     # "algo": data["algo"],
+                    "numOfClusters": data['numOfClusters']
                 }
             )
             emit("parameter_projection", result, json=True)
