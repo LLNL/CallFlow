@@ -13,17 +13,13 @@ export default {
         paddingTop: 10,
         textOffset: 40,
         fontSize: 10,
-        informationHeight: 70,
-        outlierHeight: 20,
-        rectHeight: 0,
-        centerLinePosition: 0,
     }),
 
     mounted() {
-        this.id = 'box'
     },
 
     created() {
+        this.id = 'box-' + this.callsiteID
     },
 
     methods: {
@@ -34,7 +30,6 @@ export default {
 
             // Get the SVG belonging to this callsite.
             this.svg = d3.select('#' + this.callsiteID)
-
             this.g = this.svg
                 .select('#' + this.id)
                 .attrs({
@@ -44,9 +39,11 @@ export default {
             this.ensembleBox()
             this.targetBox()
             this.centerLine()
+            this.$parent.$refs.ToolTip.init(this.id)
         },
 
         ensembleBox() {
+            let self = this
             this.boxSVG = this.g
                 .append("rect")
                 .attrs({
@@ -60,8 +57,13 @@ export default {
                     "stroke-width": 0.5
                 })
                 .style('z-index', 1)
-
-            },
+                .on('mouseover', (d) => {
+                    self.$parent.$refs.ToolTip.renderQ(self.q)
+                })
+                .on('mouseout', (d) => {
+                    self.$parent.$refs.ToolTip.clear()
+                })
+        },
 
         targetBox() {
             let self = this
@@ -83,20 +85,29 @@ export default {
                     "stroke-width": 0.5
                 })
                 .style('z-index', 1)
+                .on('mouseover', (d) => {
+                    self.$parent.$refs.ToolTip.renderQ(self.targetq)
+                })
+                .on('mouseout', (d) => {
+                    self.$parent.$refs.ToolTip.clear()
+                })
         },
 
         centerLine() {
-            console.log(this.$parent)
+            let self = this
             this.centerLineSVG = this.g
                 .insert("line", "rect")
-                .attr("class", "centerLine")
-                .attr("y1", this.$parent.centerLinePosition)
-                .attr("x1", this.xScale(this.q.min))
-                .attr("y2", this.$parent.centerLinePosition)
-                .attr("x2", this.xScale(this.q.max))
-                .attr('stroke', 'black')
+                .attrs({
+                    "class": "centerLine",
+                    "y1": this.$parent.centerLinePosition,
+                    "x1": this.xScale(this.q.min),
+                    "y2": this.$parent.centerLinePosition,
+                    "x2": this.xScale(this.q.max),
+                    'stroke': 'black'
+                })
                 .style('stroke-width', '1.5')
                 .style('z-index', 10)
+               
         },
     }
 }

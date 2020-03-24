@@ -8,7 +8,6 @@ export default {
         "callsiteID"
     ],
     data: () => ({
-        id: 'outliers',
         paddingTop: 10,
         textOffset: 40,
         fontSize: 10,
@@ -16,8 +15,8 @@ export default {
         informationHeight: 70
     }),
 
-    mounted() {
-        this.id = 'outliers'
+    created() {
+        this.id = 'outliers-' + this.callsiteID
     },
 
     methods: {
@@ -47,6 +46,7 @@ export default {
 
            this.ensembleOutliers()
            this.targetOutliers()
+           this.$parent.$refs.ToolTip.init(this.id)
         },
 
         groupByBand(data, band) {
@@ -164,6 +164,7 @@ export default {
         },
 
         ensembleOutliers() {
+            let self = this
             let outlierList = []
             for (let i = 0; i < this.ensembleWhiskerIndices[0]; i += 1) {
                 outlierList.push(this.d[i])
@@ -175,22 +176,34 @@ export default {
 
             this.data = this.groupOutliers(outlierList, this.outlierRadius)
             this.data = this.cleanUpEmptyOutliers(this.data)
-            console.log(this.data)
             this.outlier = this.g
                 .selectAll(".ensemble-outlier")
                 .data(this.data)
                 .join("circle")
-                .attr("r", d => (d.count / this.max_count) * 4 + 4)
-                .attr("cx", d => {
-                    return d.x[0]
+                .attrs({
+                    "r": d => (d.count / this.max_count) * 4 + 4,
+                    "cx": d => {
+                        return d.x[0]
+                    },
+                    "cy": d => this.boxHeight / 2 + this.informationHeight,
+                    "class": "ensemble-outlier",
+                
                 })
-                .attr("cy", d => this.boxHeight / 2 + this.informationHeight)
-                .attr("class", "ensemble-outlier")
                 .style("opacity", 1)
                 .style("fill", this.$store.color.ensemble)
+                .on('click', (d) => {
+                    console.log(d)
+                })
+                .on('mouseover', (d) => {
+                    self.$parent.$refs.ToolTip.renderOutliers(d)
+                })
+                .on('mouseout', (d) => {
+                    self.$parent.$refs.ToolTip.clear()
+                })
         },
 
         targetOutliers() {
+            let self = this
             let targetOutlierList = []
             for (let i = 0; i < this.targetWhiskerIndices[0]; i += 1) {
                 targetOutlierList.push(this.targetd[i])
@@ -219,10 +232,10 @@ export default {
                     console.log(d)
                 })
                 .on('mouseover', (d) => {
-                    console.log(d)
+                    self.$parent.$refs.ToolTip.renderOutliers(d)
                 })
                 .on('mouseout', (d) => {
-                    console.log(d)
+                    self.$parent.$refs.ToolTip.clear()
                 })
         },
     }

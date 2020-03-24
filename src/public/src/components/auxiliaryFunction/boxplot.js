@@ -2,6 +2,7 @@ import tpl from '../../html/auxiliaryFunction/boxplot.html'
 import Box from './box'
 import Markers from './markers'
 import Outliers from './outlier'
+import ToolTip from './tooltip'
 import * as d3 from 'd3'
 import EventHandler from '../EventHandler'
 
@@ -42,7 +43,8 @@ export default {
     components: {
         Box,
         Outliers,
-        Markers
+        Markers,
+        ToolTip
     },
 
     mounted() {
@@ -110,7 +112,6 @@ export default {
             if(exc_arr_target == undefined){
                 exc_arr_target = []
             }
-
 
             if (this.$store.selectedMetric == 'Inclusive') {
                 this.raw_d = inc_arr
@@ -242,7 +243,6 @@ export default {
             EventHandler.$emit('highlight_dataset', {
                 dataset: this.$store.selectedTargetDataset
             })
-
         },
     }
 }
