@@ -21,7 +21,7 @@ export default {
         yMax: 0,
         message: 'Parameter Projection',
         showMessage: false,
-        colorset: ['#FF7F00', '#984EA3', '#4daf4a']
+        colorset: ['#FF7F00', '#984EA3', '#4daf4a', '#D62728', '#9466BD', '#8C564B', '#E377C2', '#7F7F7F', '#BCBD21', '#16BECF' ]
     }),
     sockets: {
         parameter_projection(data) {
@@ -33,10 +33,22 @@ export default {
     mounted() {
         this.id = 'parameter-projection-view'
         let self = this
-        // EventHandler.$on('highlight_dataset', (dataset) => {
-        //     console.log("[Projection] Highlighting the dataset :", dataset)
-        //     self.highlight(dataset)
-        // })
+        EventHandler.$on('highlight_dataset', (dataset) => {
+            console.log("[Projection] Highlighting the dataset :", dataset)
+            self.highlight(dataset)
+        })
+
+        EventHandler.$on('update_number_of_clusters', (data) => {
+            self.clear()
+            self.$socket.emit('parameter_projection', {
+                datasets: self.$store.selectedDatasets,
+                targetDataset: self.$store.selectedTargetDataset,
+                groupBy: 'module',
+                numOfClusters: self.$store.selectedNumOfClusters
+            })
+        })
+
+
     },
     methods: {
         init() {
@@ -50,23 +62,6 @@ export default {
             this.padding = { left: 50, top: 0, right: 50, bottom: 30 }
             this.x = d3.scaleLinear().range([0, this.width]);
             this.y = d3.scaleLinear().range([this.height, 0]);
-
-            this.svg = d3.select('#' + this.id).append('svg')
-                .attrs({
-                    width: this.width,
-                    height: this.height,
-                    transform: 'translate(0, 0)',
-                    id: 'parameter-projection-svg'
-                })
-                .style('stroke-width', 1)
-                .style('stroke', '#aaaaaa')
-
-            // set the transition
-            this.t = this.svg
-                .transition()
-                .duration(750);
-
-            this.axis()
 
             this.$socket.emit('parameter_projection', {
                 datasets: this.$store.selectedDatasets,
@@ -120,9 +115,9 @@ export default {
 
             this.svg.append("line")
                 .attr("x1", this.padding.bottom)
-                .attr("y1", this.height - this.padding.bottom/2)
+                .attr("y1", this.height - this.padding.bottom / 2)
                 .attr("x2", this.lineLength)
-                .attr("y2", this.height - this.padding.bottom/2)          
+                .attr("y2", this.height - this.padding.bottom / 2)
                 .attr("stroke-width", 1.5)
                 .attr("stroke", "black")
                 // .attr("marker-end", "url(#triangle)")
@@ -130,9 +125,9 @@ export default {
 
             this.svg.append("line")
                 .attr("x1", this.padding.bottom)
-                .attr("y1", this.height - this.padding.bottom/2)
+                .attr("y1", this.height - this.padding.bottom / 2)
                 .attr("x2", this.padding.bottom)
-                .attr("y2", this.height - this.lineLength*0.75)          
+                .attr("y2", this.height - this.lineLength * 0.75)
                 .attr("stroke-width", 1.5)
                 .attr("stroke", "black")
                 // .attr("marker-end", "url(#triangle)")
@@ -156,8 +151,8 @@ export default {
             this.svg.append("text")
                 .attrs({
                     'class': 'projection-axis-label',
-                    'x': - this.height + this.lineLength*0.75,
-                    'y': this.padding.bottom*0.75,
+                    'x': - this.height + this.lineLength * 0.75,
+                    'y': this.padding.bottom * 0.75,
                     'transform': 'rotate(-90)'
                 })
                 .style("text-anchor", "end")
@@ -204,7 +199,25 @@ export default {
         },
 
         visualize(data) {
+            this.svg = d3.select('#' + this.id).append('svg')
+                .attrs({
+                    width: this.width,
+                    height: this.height,
+                    transform: 'translate(0, 0)',
+                    id: 'parameter-projection-svg'
+                })
+                .style('stroke-width', 1)
+                .style('stroke', '#aaaaaa')
+
+            // set the transition
+            this.t = this.svg
+                .transition()
+                .duration(750);
+
+            this.axis()
+
             this.$store.projection = this.preprocess(data)
+            console.log(this.$store.projection)
             this.x.domain([2.0 * this.xMin, 2.0 * this.xMax])
             this.y.domain([2.0 * this.yMin, 2.0 * this.yMax])
 
@@ -412,7 +425,6 @@ export default {
                 .attr("opacity", 0.5);
 
             // EventHandler.$emit('highlight_datasets', this.selectedDatasets)
-            this.$store.selectedDatasets = this.selectedDatasets
             EventHandler.$emit('lasso_selection', this.$store.selectedDatasets)
         },
 
@@ -520,6 +532,7 @@ export default {
         clear() {
             d3.selectAll('#parameter-projection-svg').remove()
             d3.selectAll('#parameter-projection-tooltip').remove()
+            d3.selectAll()
         }
     },
 }

@@ -23,7 +23,7 @@ from sklearn.cluster import KMeans
 from algorithm.k_medoids import KMedoids
 
 class ParameterProjection:
-    def __init__(self, state, similarities={}, targetDataset=''):
+    def __init__(self, state, similarities={}, targetDataset='', n_cluster=3):
         # self.similarities = similarities[targetDataset]
         # self.datasetOrder = {k: idx for idx, (k, v) in enumerate(similarities.items())}
         self.state = state
@@ -32,7 +32,7 @@ class ParameterProjection:
         self.projection = 'MDS'
         # self.clustering = 'k_medoids'
         self.clustering = 'k_means'
-        self.n_cluster = 3
+        self.n_cluster = int(n_cluster)
         self.targetDataset = targetDataset
         self.result = self.run()
 

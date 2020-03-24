@@ -660,6 +660,11 @@ export default {
 		updateRuntimeSortBy() {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy
 			EventHandler.$emit('callsite_information_sort')
+		},
+		
+		updateNumOfClusters(){
+			this.$store.selectedNumOfClusters = this.selectedNumOfClusters
+			EventHandler.$emit('update_number_of_clusters')
 		}
 	}
 }

@@ -252,7 +252,7 @@ class EnsembleCallFlow:
             # similarity_filepath = dirname  + '/' + 'similarity.json'
             # with open(similarity_filepath, 'r') as similarity_file:
             #     self.similarities = json.load(similarity_file)
-            result = ParameterProjection(self.states['ensemble_entire'], self.similarities, action['targetDataset']).result
+            result = ParameterProjection(self.states['ensemble_entire'], self.similarities, action['targetDataset'], n_cluster=action['numOfClusters']).result
             return result.to_json(orient="columns")
 
         elif action_name == "run-information":
