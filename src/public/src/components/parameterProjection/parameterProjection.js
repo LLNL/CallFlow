@@ -69,10 +69,10 @@ export default {
             this.axis()
 
             this.$socket.emit('parameter_projection', {
-				datasets: this.$store.runNames,
+                datasets: this.$store.runNames,
                 targetDataset: this.$store.selectedTargetDataset,
-				groupBy: 'module'
-			})
+                groupBy: 'module'
+            })
         },
 
         axis() {
@@ -103,6 +103,69 @@ export default {
                     color: '#fff'
                 })
                 .call(this.yAxis);
+
+            this.lineLength = 75
+
+            this.svg.append("svg:defs").append("svg:marker")
+                .attr("id", "triangle")
+                .attr("refX", 15)
+                .attr("refY", -1.5)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 6)
+                .attr("orient", "auto")
+                .append("path")
+                .attr("d", "M 0 -5 10 10")
+                .style("stroke", "black");
+
+            this.svg.append("line")
+                .attr("x1", this.padding.bottom)
+                .attr("y1", this.height - this.padding.bottom/2)
+                .attr("x2", this.lineLength)
+                .attr("y2", this.height - this.padding.bottom/2)          
+                .attr("stroke-width", 1.5)
+                .attr("stroke", "black")
+                // .attr("marker-end", "url(#triangle)")
+                .style("opacity", 0.5)
+
+            this.svg.append("line")
+                .attr("x1", this.padding.bottom)
+                .attr("y1", this.height - this.padding.bottom/2)
+                .attr("x2", this.padding.bottom)
+                .attr("y2", this.height - this.lineLength*0.75)          
+                .attr("stroke-width", 1.5)
+                .attr("stroke", "black")
+                // .attr("marker-end", "url(#triangle)")
+                .style("opacity", 0.5)
+
+            this.svg.append("text")
+                .attrs({
+                    'class': 'projection-axis-label',
+                    'x': this.lineLength,
+                    'y': this.height,
+                })
+                .style("text-anchor", "end")
+                .style("font-size", "10px")
+                .style("fill", "none")
+                .style("font-size", "10px")
+                .style("stroke", "black")
+                .style("stroke-width", "1px")
+                .style("opacity", 0.5)
+                .text('PC1')
+
+            this.svg.append("text")
+                .attrs({
+                    'class': 'projection-axis-label',
+                    'x': - this.height + this.lineLength*0.75,
+                    'y': this.padding.bottom*0.75,
+                    'transform': 'rotate(-90)'
+                })
+                .style("text-anchor", "end")
+                .style("fill", "none")
+                .style("font-size", "10px")
+                .style("stroke", "black")
+                .style("stroke-width", "1px")
+                .style("opacity", 0.5)
+                .text('PC2')
         },
 
         preprocess(data) {
@@ -111,7 +174,6 @@ export default {
 
             for (let id = 0; id < this.numberOfPoints; id += 1) {
                 let dataset = data['dataset'][id]
-                console.log(this.$store.maxIncTime[dataset])
                 ret[id] = []
                 ret[id].push(data['x'][id])
                 ret[id].push(data['y'][id])
