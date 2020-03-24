@@ -89,7 +89,7 @@ export default {
 		selectedColorMax: null,
 		selectedColorMinText: '',
 		selectedColorMaxText: '',
-		groupModes: ['	include callbacks', 'exclude callbacks'],
+		groupModes: ['include callbacks', 'exclude callbacks'],
 		selectedGroupMode: 'include callbacks',
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
@@ -139,7 +139,7 @@ export default {
 		selectedHierarchyMode: 'Uniform',
 		hierarchyModes: ['Uniform', 'Exclusive'],
 		selectedRuntimeSortBy: 'Inclusive',
-		sortByModes: ['Inclusive', 'Exclusive', 'Percent Imbalance', 'Skewness', 'Kurtosis'],
+		sortByModes: ['Inclusive', 'Exclusive', 'Percent Imbalance', 'Variance'],
 		scales: ['Log', 'Linear'],
 		selectedScale: 'Linear',
 		props: ['name', 'rank', 'dataset', 'all_ranks'],
@@ -269,6 +269,7 @@ export default {
 			this.$store.selectedScale = this.selectedScale
 			this.$store.selectedCompareMode = this.selectedCompareMode
 			this.$store.selectedIQRFactor = this.selectedIQRFactor
+			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy
 
 			this.$store.timeScale = 0.000001
 			this.$store.viewHeight = (window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight)
@@ -652,6 +653,11 @@ export default {
 			this.clearLocal()
 			this.setupColors()
 			this.init()
+		},
+
+		updateRuntimeSortBy(){
+			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy
+			EventHandler.$emit('callsite_information_sort')
 		}
 	}
 }

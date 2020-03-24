@@ -9,7 +9,7 @@ export default {
     template: tpl,
     components: {
         Settings,
-        BoxPlot, 
+        BoxPlot,
     },
     data: () => ({
         selected: {},
@@ -70,6 +70,11 @@ export default {
             let dataset = data['dataset']
             self.highlightCallsitesByDataset(dataset)
         })
+
+        EventHandler.$on('callsite_information_sort', (data) => {
+            let attribute = self.$store.selectedRuntimeSortBy
+            self.sortByAttribute(attribute)
+        })
     },
 
     methods: {
@@ -113,6 +118,8 @@ export default {
         setInfo() {
             this.numberOfCallsites = Object.keys(this.$store.callsites['ensemble']).length
             this.callsites = this.$store.callsites['ensemble']
+            console.log(this.$store.selectedRuntimeSortBy)
+            this.sortByAttribute(this.$store.selectedRuntimeSortBy)
             this.selectedModule = this.$store.selectedModule
             this.selectedCallsite = this.$store.selectedCallsite
             this.selectedMetric = this.$store.selectedMetric
@@ -139,12 +146,12 @@ export default {
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
-        selectModule(thismodule){
+        selectModule(thismodule) {
             let module_callsites = this.$store.moduleCallsiteMap['ensemble'][thismodule]
             this.callsites = {}
             let all_callsites = Object.keys(this.$store.callsites['ensemble'])
-            for(let callsite of all_callsites){
-                if(module_callsites.indexOf(callsite) > -1 ){
+            for (let callsite of all_callsites) {
+                if (module_callsites.indexOf(callsite) > -1) {
                     this.callsites[callsite] = this.$store.callsites['ensemble'][callsite]
                 }
             }
@@ -229,7 +236,33 @@ export default {
                     document.getElementById(ensemble_callsites[callsite].id).style.borderColor = this.$store.color.target
                 }
             }
-        }
+        },
+
+        sortByAttribute(attribute) {
+            // Create items array
+            let self = this
+            let items = Object.keys(this.callsites).map(function (key) {
+                return [key, self.callsites[key]];
+            });
+
+            // Sort the array based on the second element
+            if(attribute == 'Exclusive' || attribute == 'Inclusive'){
+                items.sort(function (first, second) {
+                    return second[1][attribute]['mean_time'] - first[1][attribute]['mean_time'];
+                });    
+            }
+            else if(attribute == 'Variance'){
+                items.sort(function (first, second) {
+                    return second[1][self.$store.selectedMetric]['variance_time'] - first[1][self.$store.selectedMetric]['variance_time'];
+                });       
+            }
+
+            this.callsites = items.reduce(function(map, obj) {
+                map[obj[0]] = obj[1];
+                return map;
+            }, {});
+        },
+
     }
 }
 
