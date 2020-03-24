@@ -390,11 +390,11 @@ export default {
                     //     .style('fill-opacity', 1)
                     // let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
                     // self.$refs.ToolTip.render(groupProcStr, d)
-                    self.$socket.emit('mpi_range_data', {
-                        'from_': this.xVals[i-1],
-                        'to_': this.xVals[i]
+                    // self.$socket.emit('mpi_range_data', {
+                    //     'from_': this.xVals[i-1],
+                    //     'to_': this.xVals[i]
 
-                    })
+                    // })
                     self.$refs.ToolTip.render(d)
                 })
                 .on('mouseout', function (d, i) {

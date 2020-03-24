@@ -139,7 +139,7 @@ export default {
 		selectedHierarchyMode: 'Uniform',
 		hierarchyModes: ['Uniform', 'Exclusive'],
 		selectedRuntimeSortBy: 'Inclusive',
-		sortByModes: ['Inclusive', 'Exclusive', 'Percent Imbalance', 'Variance'],
+		sortByModes: ['Inclusive', 'Exclusive', 'Variance'],
 		scales: ['Log', 'Linear'],
 		selectedScale: 'Linear',
 		props: ['name', 'rank', 'dataset', 'all_ranks'],
@@ -158,8 +158,7 @@ export default {
 		this.$socket.emit('init', {
 			caseStudy: this.selectedCaseStudy
 		})
-		EventHandler.$on('lasso_selection', (datasets) => {
-			this.$store.selectedDatasets = datasets
+		EventHandler.$on('lasso_selection', () => {
 			this.clearLocal()
 			this.setTargetDataset()
 			this.$socket.emit('ensemble_callsite_data', {
