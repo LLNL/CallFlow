@@ -24,8 +24,8 @@ import os
 class Auxiliary:
     def __init__(self, states, binCount="20", datasets=[], config={}, process=True):
         self.timer = Timer()
-        with self.timer.phase("Filter datasets"):
-            self.df = self.select_rows(states['ensemble_entire'].df, datasets)
+        # with self.timer.phase("Filter datasets"):
+        self.df = self.select_rows(states['ensemble_entire'].df, datasets)
         self.binCount = binCount
         self.config = config
         self.states = states
@@ -97,7 +97,7 @@ class Auxiliary:
             "dataset": df['dataset'].tolist()[0],
             "module": df['module'].tolist()[0],
             # "rank": df['rank'].tolist(),
-            "sorted_time": df['time (inc)'].sort_values().tolist(),
+            "sorted_time (inc)": df['time (inc)'].sort_values().tolist(),
             "sorted_time": df['time'].sort_values().tolist(),
             "Inclusive": {
                 # "time": df['time (inc)'].tolist(),

@@ -423,7 +423,8 @@ export default {
             this.lasso.notSelectedItems()
                 .attr("r", 4.5)
                 .attr("opacity", 0.5);
-
+                
+            this.$store.selectedDatasets = this.selectedDatasets
             // EventHandler.$emit('highlight_datasets', this.selectedDatasets)
             EventHandler.$emit('lasso_selection', this.$store.selectedDatasets)
         },
