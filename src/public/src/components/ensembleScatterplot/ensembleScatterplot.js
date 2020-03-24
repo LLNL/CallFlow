@@ -380,7 +380,6 @@ export default {
 				.style("fill", "none")
 				.style("stroke", "#000")
 				.style("stroke-width", "1px")
-				.style("opacity", 0.5);
 
 			xAxisLine.selectAll("text")
 				.style('font-size', '14px')
