@@ -39,7 +39,7 @@ export default {
             this.ensembleBox()
             this.targetBox()
             this.centerLine()
-            this.$parent.$refs.ToolTip.init(this.id)
+            this.$parent.$refs.ToolTip.init(this.callsiteID)
         },
 
         ensembleBox() {
