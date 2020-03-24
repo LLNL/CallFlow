@@ -131,7 +131,7 @@ export default {
 		],
 		parameter_analysis: true,
 		caseStudy: ['Lulesh-Scaling-3-runs', 'Lulesh-Scaling-8-runs', 'Kripke-MPI', 'OSU-Bcast', 'Kripke-Scaling'],
-		selectedCaseStudy: 	'Lulesh-Scaling-3-runs',
+		selectedCaseStudy: 'Lulesh-Scaling-3-runs',
 		// selectedCaseStudy: 'Kripke-MPI',
 		// selectedCaseStudy: 'OSU-Bcast',
 		// selectedCaseStudy: "Kripke-Scaling",
@@ -148,6 +148,7 @@ export default {
 		selectedPC1: 'max_inclusive_time',
 		selectedPC2: 'max_exclusive_time',
 		selectedIQRFactor: 0.15,
+		selectedNumOfClusters: 3,
 	}),
 
 	watch: {},
@@ -156,6 +157,17 @@ export default {
 		var socket = io.connect(this.server, { reconnect: false });
 		this.$socket.emit('init', {
 			caseStudy: this.selectedCaseStudy
+		})
+		EventHandler.$on('lasso_selection', (datasets) => {
+			this.$store.selectedDatasets = datasets
+			this.clearLocal()
+			this.setTargetDataset()
+			this.$socket.emit('ensemble_callsite_data', {
+				datasets: this.$store.selectedDatasets,
+				sortBy: this.$store.auxiliarySortBy,
+				binCount: this.$store.selectedMPIBinCount,
+				module: 'all'
+			})
 		})
 	},
 
@@ -180,9 +192,9 @@ export default {
 					module: 'all'
 				})
 			}
-			else if(this.selectedMode == 'Ensemble'){
+			else if (this.selectedMode == 'Ensemble') {
 				this.$socket.emit('ensemble_callsite_data', {
-					datasets: this.$store.runNames,
+					datasets: this.$store.selectedDatasets,
 					sortBy: this.$store.auxiliarySortBy,
 					binCount: this.$store.selectedMPIBinCount,
 					module: 'all'
@@ -233,8 +245,8 @@ export default {
 			data = JSON.parse(data)
 			console.log("Config file contains: 	", data)
 			this.$store.numOfRuns = data['datasets'].length
-			this.$store.runNames = data['names']
-			this.datasets = this.$store.runNames
+			this.$store.selectedDatasets = data['names']
+			this.datasets = this.$store.selectedDatasets
 
 			// Enable diff mode only if the number of datasets >= 2
 			if (this.numOfRuns >= 2) {
@@ -263,15 +275,15 @@ export default {
 			this.$store.nodeInfo = {}
 			this.$store.selectedMetric = this.selectedMetric
 			this.$store.selectedFunctionsInCCT = this.selectedFaunctionsInCCT
-			this.$store.datasetMap = this.$store.runNames.map((run, i) => "run-" + i)
+			this.$store.datasetMap = this.$store.selectedDatasets.map((run, i) => "run-" + i)
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode
 			this.$store.selectedProp = this.selectedProp
 			this.$store.selectedScale = this.selectedScale
 			this.$store.selectedCompareMode = this.selectedCompareMode
 			this.$store.selectedIQRFactor = this.selectedIQRFactor
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy
+			this.$store.selectedNumOfClusters = this.selectedNumOfClusters
 
-			this.$store.timeScale = 0.000001
 			this.$store.viewHeight = (window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight)
 		},
 
@@ -280,14 +292,12 @@ export default {
 			let max_inclusive_dataset = '';
 			let max_inclusive_time = this.$store.maxIncTime['ensemble']
 			let current_max_inclusive_time = 0.0
-			for (let dataset in this.$store.maxIncTime) {
-				if (this.$store.maxIncTime.hasOwnProperty(dataset)) {
-					if (dataset.split('_')[0] != 'ensemble') {
-						if (current_max_inclusive_time < this.$store.maxIncTime[dataset]) {
-							current_max_inclusive_time = this.$store.maxIncTime[dataset]
-							max_inclusive_dataset = dataset
-						}
-					}
+			console.log(this.$store.selectedDatasets)
+			for (let dataset of this.$store.selectedDatasets) {
+				console.log(dataset)
+				if (current_max_inclusive_time < this.$store.maxIncTime[dataset]) {
+					current_max_inclusive_time = this.$store.maxIncTime[dataset]
+					max_inclusive_dataset = dataset
 				}
 			}
 
@@ -364,8 +374,6 @@ export default {
 			this.$store.zeroToOneColor.setColorScale(0, 1, this.selectedRuntimeColorMap, this.selectedColorPoint)
 
 			this.$store.colorPoint = this.selectedColorPoint
-			console.log("Datasets are :", this.datasets)
-
 			this.$store.selectedColorMin = this.selectedColorMin
 			this.$store.selectedColorMax = this.selectedColorMax
 			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap
@@ -387,7 +395,7 @@ export default {
 				else if (this.selectedFormat == 'Callgraph') {
 					this.clearComponents(this.currentSingleCallGraphComponents)
 				}
-				else if(this.selectedFormat == 'SuperGraph'){
+				else if (this.selectedFormat == 'SuperGraph') {
 					this.clearComponents(this.currentSingleSuperGraphComponents)
 				}
 			}
@@ -398,7 +406,7 @@ export default {
 				else if (this.selectedFormat == 'CallGraph') {
 					this.clearComponents(this.currentEnsembleCallGraphComponents)
 				}
-				else if (this.selectedFormat == 'SuperGraph'){
+				else if (this.selectedFormat == 'SuperGraph') {
 					this.clearComponents(this.currentEnsembleSuperGraphComponents)
 				}
 			}
@@ -412,7 +420,7 @@ export default {
 				else if (this.selectedFormat == 'CallGraph') {
 					this.clearComponents(this.currentEnsembleCallGraphComponents)
 				}
-				else if(this.selectedFormat == 'SuperGraph'){
+				else if (this.selectedFormat == 'SuperGraph') {
 					this.clearComponents(this.currentEnsembleSuperGraphComponents)
 				}
 			}
@@ -423,20 +431,21 @@ export default {
 				else if (this.selectedFormat == 'CallGraph') {
 					this.clearComponents(this.currentSingleCallGraphComponents)
 				}
-				else if(this.selectedFormat == 'SuperGraph'){
+				else if (this.selectedFormat == 'SuperGraph') {
 					this.clearComponents(this.currentSingleSuperGraphComponents)
 				}
 			}
 		},
 
-		initComponents(componentList){
+		initComponents(componentList) {
 			for (let i = 0; i < componentList.length; i++) {
 				componentList[i].init()
 			}
 		},
 
-		clearComponents(componentList){
+		clearComponents(componentList) {
 			for (let i = 0; i < componentList.length; i++) {
+				console.log(componentList[i])
 				componentList[i].clear()
 			}
 		},
@@ -457,24 +466,24 @@ export default {
 			// Call the appropriate socket to query the server.
 			if (this.selectedMode == 'Single') {
 
-				if(this.selectedFormat == 'SuperGraph'){
+				if (this.selectedFormat == 'SuperGraph') {
 					this.initComponents(this.currentSingleSuperGraphComponents)
 				}
-				else if(this.selectedFormat == 'CallGraph'){
+				else if (this.selectedFormat == 'CallGraph') {
 					this.initComponents(this.currentSingleCallGraphComponents)
 				}
-				else if(this.selectedFormat == 'CCT'){
+				else if (this.selectedFormat == 'CCT') {
 					this.initComponents(this.currentSingleCCTComponents)
 				}
 			}
 			else if (this.selectedMode == 'Ensemble') {
-				if(this.selectedFormat == 'SuperGraph'){
-						this.initComponents(this.currentEnsembleSuperGraphComponents)
+				if (this.selectedFormat == 'SuperGraph') {
+					this.initComponents(this.currentEnsembleSuperGraphComponents)
 				}
-				else if(this.selectedFormat == 'CallGraph'){
+				else if (this.selectedFormat == 'CallGraph') {
 					this.loadComponents(this.currentEnsembleCallGraphComponents)
 				}
-				else if(this.selectedFormat == 'CCT'){
+				else if (this.selectedFormat == 'CCT') {
 					this.initComponents(this.currentEnsembleCCTComponents)
 				}
 			}
@@ -570,19 +579,16 @@ export default {
 		updateMetric() {
 			this.$store.selectedMetric = this.selectedMetric
 			this.clearLocal()
-			this.setupColors()
 			this.init()
 		},
 
 		updateColor() {
 			this.clearLocal()
-			this.setupColors()
 			this.init()
 		},
 
 		updateColorPoint() {
 			this.clearLocal()
-			this.setupColors()
 			this.init()
 		},
 
@@ -627,35 +633,31 @@ export default {
 			})
 		},
 
-		updateProp(){
+		updateProp() {
 			this.$store.selectedProp = this.selectedProp
 			this.clearLocal()
-			this.setupColors()
 			this.init()
 		},
 
 		updateScale() {
 			this.$store.selectedScale = this.selectedScale
 			this.clearLocal()
-			this.setupColors()
 			this.init()
 		},
 
-		updateHierarchyMode(){
+		updateHierarchyMode() {
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode
 			this.clearLocal()
-			this.setupColors()
 			this.init()
 		},
 
-		updateIQRFactor(){
+		updateIQRFactor() {
 			this.$store.selectedIQRFactor = this.selectedIQRFactor
 			this.clearLocal()
-			this.setupColors()
 			this.init()
 		},
 
-		updateRuntimeSortBy(){
+		updateRuntimeSortBy() {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy
 			EventHandler.$emit('callsite_information_sort')
 		}

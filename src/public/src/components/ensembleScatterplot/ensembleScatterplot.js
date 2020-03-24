@@ -82,7 +82,7 @@ export default {
 			EventHandler.$emit('ensemble_scatterplot', {
 				module: this.$store.selectedModule,
 				name: "main",
-				dataset: this.$store.runNames,
+				dataset: this.$store.selectedDatasets,
 			})
 		},
 
@@ -134,23 +134,23 @@ export default {
 		ensembleProcess() {
 			let mean_time = []
 			let mean_time_inc = []
-			for (let i = 0; i < this.$store.runNames.length; i += 1) {
-				if (this.$store.runNames[i] != this.$store.selectedTargetDataset) {
+			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
+				if (this.$store.selectedDatasets[i] != this.$store.selectedTargetDataset) {
 					let callsites_in_module = this.$store.moduleCallsiteMap['ensemble'][this.selectedModule]
 					for (let j = 0; j < callsites_in_module.length; j += 1) {
 						let thiscallsite = callsites_in_module[j]
 
-						let thisdata = this.$store.callsites[this.$store.runNames[i]][thiscallsite]
+						let thisdata = this.$store.callsites[this.$store.selectedDatasets[i]][thiscallsite]
 						if (thisdata != undefined) {
 							mean_time.push({
 								'callsite': thiscallsite,
 								'val': thisdata['Exclusive']['mean_time'],
-								'run': this.$store.runNames[i]
+								'run': this.$store.selectedDatasets[i]
 							})
 							mean_time_inc.push({
 								'callsite': thiscallsite,
 								'val': thisdata['Inclusive']['mean_time'],
-								'run': this.$store.runNames[i]
+								'run': this.$store.selectedDatasets[i]
 							})
 
 						}

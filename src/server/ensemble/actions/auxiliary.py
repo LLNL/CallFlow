@@ -23,7 +23,9 @@ import os
 
 class Auxiliary:
     def __init__(self, states, binCount="20", datasets=[], config={}, process=True):
-        self.df = states['ensemble_entire'].df
+        self.timer = Timer()
+        with self.timer.phase("Filter datasets"):
+            self.df = self.select_rows(states['ensemble_entire'].df, datasets)
         self.binCount = binCount
         self.config = config
         self.states = states
@@ -33,13 +35,18 @@ class Auxiliary:
         self.props = ['rank', 'name', 'dataset', 'all_ranks']
 
         self.target_df = {}
-        for dataset in datasets:
+        for dataset in self.datasets:
             self.target_df[dataset] = self.df.loc[self.df['dataset'] == dataset]
 
-        self.timer = Timer()
         self.result = self.run()
 
         print(self.timer)
+
+    def select_rows(self, df, search_strings):
+        unq, IDs = np.unique(df['dataset'], return_inverse=True)
+        unqIDs = np.searchsorted(unq, search_strings)
+        mask = np.isin(IDs, unqIDs)
+        return df[mask]
 
     def histogram(self, data, data_min=np.nan, data_max=np.nan):
         if(np.isnan(data_min) or np.isnan(data_max) ):
@@ -266,7 +273,7 @@ class Auxiliary:
         ret = {}
         path = self.config.processed_path + f'/{self.config.runName}' + f'/all_data.json'
 
-        # self.process = True
+        self.process = True
         if os.path.exists(path) and not self.process:
             print(f"[Callsite info] Reading the data from file {path}")
             with open(path, 'r') as f:

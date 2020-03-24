@@ -66,10 +66,10 @@ export default {
             self.unhighlightCallsitesByModule()
         })
 
-        EventHandler.$on('highlight_dataset', (data) => {
-            let dataset = data['dataset']
-            self.highlightCallsitesByDataset(dataset)
-        })
+        // EventHandler.$on('highlight_dataset', (data) => {
+        //     let dataset = data['dataset']
+        //     self.highlightCallsitesByDataset(dataset)
+        // })
 
         EventHandler.$on('callsite_information_sort', (data) => {
             let attribute = self.$store.selectedRuntimeSortBy
@@ -113,6 +113,10 @@ export default {
 
             document.getElementById(this.id).style.maxHeight = this.height + "px"
             this.setInfo()
+        },
+
+        clear(){
+
         },
 
         setInfo() {
