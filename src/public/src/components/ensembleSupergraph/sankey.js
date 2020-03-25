@@ -228,13 +228,13 @@ export default function Sankey() {
             let sourceSum = sum(node.sourceLinks, (link) => {
                 if (link.source.split('_')[0] != 'intermediate' && link.target.split('_')[0] != "intermediate") {
                     return link.weight
-                } 
+                }
             })
 
             let targetSum = sum(node.targetLinks, (link) => {
                 if (link.source.split('_')[0] != 'intermediate' && link.target.split('_')[0] != "intermediate") {
                     return link.weight
-                } 
+                }
             })
 
             node.value = Math.max(sourceSum, targetSum)
@@ -325,9 +325,9 @@ export default function Sankey() {
             .entries(nodes)
             .map(function (d) {
                 let ret = []
-                for(let i = 0; i < d.values.length; i += 1){
+                for (let i = 0; i < d.values.length; i += 1) {
                     let node = d.values[i]
-                    if(node.id.split('_')[0] != 'intermediate'){
+                    if (node.id.split('_')[0] != 'intermediate') {
                         ret.push(d.values[i])
                     }
                 }
@@ -405,9 +405,8 @@ export default function Sankey() {
             return nodes
         }
 
-        function initializeNodeDepth() {
-
-            var scale = min(nodesByBreadth, (column) => {
+        function fixEnsembleScale() {
+            let ensembleScale = min(nodesByBreadth, (column) => {
                 var divValue = 1;
                 let nodeCount = 0
                 if (referenceValue > 0) {
@@ -417,12 +416,7 @@ export default function Sankey() {
                     divValue = sum(column, (node) => {
                         if (node.id.split('_')[0] != 'intermediate') {
                             nodeCount += 1
-                            if (dataset == 'ensemble') {
                                 return node['time (inc)']
-                            }
-                            else {
-                                return node[dataset]['time (inc)']
-                            }
                         }
                         else {
                             return 0
@@ -433,25 +427,42 @@ export default function Sankey() {
                 return Math.abs((size[1] - (nodeCount - 1) * nodePadding)) / divValue
             });
 
-            // var targetScale = d3.min(nodesByBreadth, function (nodes) {
-            //     var divValue = 1;
-            //     if (referenceValue > 0) {
-            //         divValue = referenceValue;
-            //     }
-            //     else {
-            //         divValue = d3.sum(nodes, (d) => {
-            //             return d[targetDataset]['time (inc)']
-            //         })
-            //     }
-            //     return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
-            // });
+            return ensembleScale
+        }
 
+        function fixTargetScale() {
+            let targetScale = d3.min(nodesByBreadth, function (nodes) {
+                var divValue = 1;
+                if (referenceValue > 0) {
+                    divValue = referenceValue;
+                }
+                else {
+                    divValue = d3.sum(nodes, (d) => {
+                        if (node.id.split('_')[0] != 'intermediate') {
+                            nodeCount += 1
+                            if (dataset == 'ensemble') {
+                                return node[dataset]['time (inc)']
+                            }
+                        }
+                        else {
+                            return 0
+                        }
+                        return d[targetDataset]['time (inc)']
+                    })
+                }
+                return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
+            });
+            return targetScale
+        }
+
+        function initializeNodeDepth() {
+            let scale = fixEnsembleScale()
             let levelCount = 0
 
             nodesByBreadth.forEach(function (nodes) {
                 if (levelCount == 0) {
                     nodes.sort(function (a, b) {
-                        return b['y'] - a['y']
+                        return b['time'] - a['time']
                     })
                 }
                 if (levelCount == 2) {
@@ -462,69 +473,67 @@ export default function Sankey() {
                     })
                 }
 
-                // nodes = pushIntermediateNodeBottom(nodes)
+                nodes = pushIntermediateNodeBottom(nodes)
                 // nodes = pushNodeBottomIfIntermediateTargets(nodes)
 
-                console.log(nodes)
+                nodes.forEach(function (node, i) {
+                    let nodeHeight = 0;
+                    links.forEach(function (edge) {
+                        if (edge["target"] == node) {
+                            if (edge["source"] != null && edge["source"]['y'] != null) {
+                                nodeHeight = Math.max(nodeHeight, edge["source"]['y']);
+                            }
+                        }
+                    });
+                    node.y = Math.max(nodeHeight, i)
+                    node.parY = node.y;
 
-                // nodes.forEach(function (node, i) {
-                //     let nodeHeight = 0;
-                //     links.forEach(function (edge) {
-                //         if (edge["target"] == node) {
-                //             if (edge["source"] != null && edge["source"]['y'] != null) {
-                //                 nodeHeight = Math.max(nodeHeight, edge["source"]['y']);
-                //             }
-                //         }
-                //     });
-                //     node.y = Math.max(nodeHeight, i)
-                //     node.parY = node.y;
-
-                //     // nodes.sort(function (a, b) {
-                //     //     return a["y"] - b["y"];
-                //     // })
-                //     console.log("Value: ", node.value, minNodeScale, scale)
-                //     node.height = node['time (inc)'] * minNodeScale * scale;
-                //     console.log("Height ", node.height)
-                //     // node.targetHeight = node.value * minNodeScale * targetScale
-                // });
+                    // nodes.sort(function (a, b) {
+                    //     return a["y"] - b["y"];
+                    // })
+                    console.log("Value: ", node.value, minNodeScale, scale)
+                    node.height = node['time (inc)'] * minNodeScale * scale;
+                    console.log("Height ", node.height)
+                    // node.targetHeight = node.value * minNodeScale * targetScale
+                });
                 levelCount += 1
             });
 
-            // links.forEach(function (link) {
-            //     let weight = link.weight
+            links.forEach(function (link) {
+                let weight = link.source_data['time (inc)']
 
-            //     let targetWeight = link.source_data[targetDataset]['time (inc)']
-            //     if (link.source.value < weight) {
-            //         weight = link.source_data.minLinkVal
-            //     }
+                let targetWeight = link.source_data['targetDataset']['time (inc)']
+                if (link.source.value < weight) {
+                    weight = link.source_data.minLinkVal
+                }
 
-            //     link.height = weight * minNodeScale * scale
-            //     link.targetHeight = weight * minNodeScale * scale * (weight / targetWeight)
-            // });
+                // link.height = weight * minNodeScale * scale
+                // link.targetHeight = weight * minNodeScale * scale * (weight / targetWeight)
+            });
         }
 
-        // // Reposition each node based on its incoming (target) links.
-        // function relaxLeftToRight(columns, alpha, beta) {
-        //     for (let i = 1, n = columns.length; i < n; ++i) {
-        //         const column = columns[i];
-        //         for (const target of column) {
-        //             let y = 0;
-        //             let w = 0;
-        //             for (const { source, value } of target.targetLinks) {
-        //                 let v = value * (target.layer - source.layer);
-        //                 y += targetTop(source, target) * v;
-        //                 w += v;
-        //             }
-        //             if (!(w > 0)) continue;
-        //             let dy = (y / w - target.y0) * alpha;
-        //             target.y0 += dy;
-        //             target.y1 += dy;
-        //             reorderNodeLinks(target);
-        //         }
-        //         if (sort === undefined) column.sort(ascendingBreadth);
-        //         resolveCollisions(column, beta);
-        //     }
-        // }
+        // Reposition each node based on its incoming (target) links.
+        function relaxLeftToRight(columns, alpha, beta) {
+            for (let i = 1, n = columns.length; i < n; ++i) {
+                const column = columns[i];
+                for (const target of column) {
+                    let y = 0;
+                    let w = 0;
+                    for (const { source, value } of target.targetLinks) {
+                        let v = value * (target.layer - source.layer);
+                        y += targetTop(source, target) * v;
+                        w += v;
+                    }
+                    if (!(w > 0)) continue;
+                    let dy = (y / w - target.y0) * alpha;
+                    target.y0 += dy;
+                    target.y1 += dy;
+                    reorderNodeLinks(target);
+                }
+                if (sort === undefined) column.sort(ascendingBreadth);
+                resolveCollisions(column, beta);
+            }
+        }
 
         function relaxLeftToRight(alpha) {
             nodesByBreadth.forEach(function (nodes, breadth) {
