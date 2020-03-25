@@ -400,7 +400,10 @@ export default {
                 })
         },
 
-        addxAxisLabel(label){
+        addxAxisLabel(){
+            let max_value = this.xScale.domain()[1]
+            this.x_min_exponent = utils.formatExponent(max_value)
+            let label = '(e+' + this.x_min_exponent + ') ' + this.$store.selectedMetric + " Runtime (" + "\u03BCs)"
             this.svg.append('text')
                 .attrs({
                     'class': 'histogram-axis-label',
@@ -416,16 +419,12 @@ export default {
         /* Axis for the histogram */
         xAxis() {
             let self = this
+            this.addxAxisLabel()
             const xAxis = d3.axisBottom(this.xScale)
                 .ticks(5)
                 .tickFormat((d, i) => {
-                    if(i == 0) {
-                        self.x_min_exponent = utils.formatRuntimeWithExponent(d, true)[2]
-                        let label = '(e+' + self.x_min_exponent + ') ' + self.$store.selectedMetric + " Runtime (" + "\u03BCs)"
-                        self.addxAxisLabel(label)
-                    }
                     if (i % 3 == 0) {
-                        let runtime = utils.formatRuntimeWithExponent(d,    false, self.x_min_exponent)
+                        let runtime = utils.formatRuntimeWithExponent(d, self.x_min_exponent)
                         return `${runtime[0]}`;
                     }
                 });
@@ -567,7 +566,6 @@ export default {
 
                 cumulativeBinSpace += (end - start + 1) * widthPerRank;
 
-                console.log(botX3, botX4)
                 line = 'M' + topX1 + ' ' + topY +
                     'L ' + topX2 + ' ' + topY +
                     'L ' + botX4 + ' ' + botY +

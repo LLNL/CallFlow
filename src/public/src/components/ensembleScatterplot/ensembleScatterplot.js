@@ -340,7 +340,10 @@ export default {
 
 		},
 
-		addxAxisLabel(label) {
+		addxAxisLabel() {
+			let max_value = this.xScale.domain()[1]
+			this.x_min_exponent = utils.formatExponent(max_value)
+			let label = '(e+' + this.x_min_exponent + ') ' + "Exclusive Runtime (" + "\u03BCs)"
 			this.svg.append('text')
 				.attr('class', 'scatterplot-axis-label')
 				.attr('x', this.boxWidth - 1 * this.padding.right)
@@ -351,16 +354,12 @@ export default {
 		},
 
 		xAxis() {
+			this.addxAxisLabel()
 			const xAxis = d3.axisBottom(this.xScale)
 				.ticks(this.$store.selectedMPIBinCount)
 				.tickFormat((d, i) => {
-					if (i == 1) {
-						this.x_min_exponent = utils.formatRuntimeWithExponent(d, true)[2]
-						let label = '(e+' + this.x_min_exponent + ') ' + "Exclusive Runtime (" + "\u03BCs)"
-						this.addxAxisLabel(label)
-					}
 					if (i % 3 == 0) {
-						let runtime = utils.formatRuntimeWithExponent(d, false, this.x_min_exponent)
+						let runtime = utils.formatRuntimeWithExponent(d, this.x_min_exponent)
 						return `${runtime[0]}`;
 					}
 				});
@@ -388,7 +387,10 @@ export default {
 				.style('font-weight', 'lighter');
 		},
 
-		addyAxisLabel(label) {
+		addyAxisLabel() {
+			let max_value = this.yScale.domain()[1]
+			this.y_min_exponent = utils.formatExponent(max_value)
+			let label = '(e+' + this.y_min_exponent + ') ' + "Inclusive Runtime (" + "\u03BCs)"
 			this.svg.append("text")
 				.attr('class', 'scatterplot-axis-label')
 				.attr('transform', 'rotate(-90)')
@@ -397,21 +399,16 @@ export default {
 				.style("text-anchor", "end")
 				.style("font-size", "12px")
 				.text(label)
-
 		},
 
 		yAxis() {
 			let tickCount = 10
+			this.addyAxisLabel()
 			let yAxis = d3.axisLeft(this.yScale)
 				.ticks(tickCount)
 				.tickFormat((d, i) => {
-					if (i == 1) {
-						this.y_min_exponent = utils.formatRuntimeWithExponent(d, true)[2]
-						let label = '(e+' + this.y_min_exponent + ') ' + "Inclusive Runtime (" + "\u03BCs)"
-						this.addyAxisLabel(label)
-					}
 					if (i % 3 == 0 || i == tickCount - 1) {
-						let runtime = utils.formatRuntimeWithExponent(d, false, this.y_min_exponent)
+						let runtime = utils.formatRuntimeWithExponent(d, this.y_min_exponent)
 						return `${runtime[0]}`;
 					}
 				})
