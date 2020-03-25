@@ -95,7 +95,7 @@ class groupBy:
                 node_func = node_func.split('/')[-1]
             module = self.name_module_map[node_func]
             if component_module == module:
-                component_path.append(node_func)
+                component_path.append(node)
 
         component_path.insert(0, component_module)
         return tuple(component_path)
@@ -133,14 +133,6 @@ class groupBy:
             tnode = edge[1]
 
             print(snode, tnode, edge_count)
-            # # s_df = self.df.loc[self.df['name'] == edge[0]]
-            # t_df = self.df.loc[self.df['name'] == edge[1]]
-
-            # if(s_df.shape[0] == 0 or t_df.shape[0] == 0):
-            #     continue
-
-            # spath = s_df['path'].tolist()[0]
-            # tpath = t_df['path'].tolist()[0]
 
             spath = self.name_path_map[snode]
             tpath = self.name_path_map[tnode]

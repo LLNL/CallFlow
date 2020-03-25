@@ -22,7 +22,8 @@ export default {
         nidNameMap: {},
         renderZeroLine: {},
         stroke_width: 7,
-        intermediateColor: '#d9d9d9'
+        intermediateColor: '#d9d9d9',
+        drawGuidesMap: {}
     }),
     sockets: {
         compare(data) {
@@ -80,7 +81,6 @@ export default {
     },
 
     methods: {
-
         formatRunCounts(val) {
             if (val == 1) {
                 return val + ' run';
@@ -143,6 +143,7 @@ export default {
                     return 'ensemble-callsite-' + d.client_idx
                 })
                 .attr('transform', (d) => {
+                    console.log('x: ', d.x, ' y: ', d.y)
                     return `translate(${d.x},${d.y})`
                 })
 
@@ -252,7 +253,10 @@ export default {
                     }
                 })
                 .on('click', (d) => {
-                    this.drawGuides(d, 'permanent')
+                    if(!this.drawGuidesMap[d.name]){
+                        this.drawGuides(d, 'permanent')
+                        this.drawGuidesMap[d.name] = true
+                    }
                     d3.selectAll('.ensemble-edge')
                         .style('opacity', 0.3)
 
