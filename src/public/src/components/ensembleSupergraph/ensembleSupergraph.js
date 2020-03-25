@@ -95,10 +95,10 @@ export default {
 			this.initSankey(this.graph)
 			console.log("[Ensemble SuperGraph] Layout Calculation.")
 
-			let postProcess = this.postProcess(this.graph.nodes, this.graph.links)
-			this.graph.nodes = postProcess['nodes']
-			this.graph.links = postProcess['links']
-			this.initSankey(this.graph)
+			// let postProcess = this.postProcess(this.graph.nodes, this.graph.links)
+			// this.graph.nodes = postProcess['nodes']
+			// this.graph.links = postProcess['links']
+			// this.initSankey(this.graph)
 			// console.log("[Ensemble SuperGraph] Post-processing done.")
 
 			this.$store.graph = this.graph
@@ -136,121 +136,6 @@ export default {
 			this.$refs.MiniHistograms.clear()
 			this.$refs.MiniHistograms.init(this.graph, this.view)
 		},
-
-		// addNodeMap(graph) {
-		// 	let nodeMap = {}
-		// 	let idx = 0
-		// 	for (const node of graph.nodes) {
-		// 		nodeMap[node.module] = idx
-		// 		if (this.debug) {
-		// 			console.log("[Preprocess] Assigning", node.id, " with map index: ", idx)
-		// 		}
-		// 		idx += 1
-		// 	}
-
-		// 	graph.nodeMap = nodeMap
-		// 	return graph
-		// },
-
-		// /* Link: {
-		//    sourceID : int, targetID: int , target: str, source: str
-		//    } */
-		// addLinkID(graph) {
-		// 	let idx = 0
-		// 	for (const link of graph.links) {
-		// 		if (link.source == undefined || link.target == undefined) {
-		// 			continue;
-		// 		}
-
-		// 		if (graph.nodeMap[link.source] == undefined) {
-		// 			graph.nodeMap[link.source] = idx
-		// 			idx += 1
-		// 		}
-
-		// 		if (graph.nodeMap[link.target] == undefined) {
-		// 			graph.nodeMap[link.target] = idx
-		// 			idx += 1
-		// 		}
-		// 		link['sourceID'] = graph.nodeMap[link.source]
-		// 		link['targetID'] = graph.nodeMap[link.target]
-		// 	}
-
-		// 	return graph;
-		// },
-
-		// calculateFlow(graph) {
-		// 	const nodes = graph.nodes;
-		// 	const links = graph.links;
-		// 	const outGoing = [];
-		// 	const inComing = [];
-
-		// 	let debug = true
-		// 	nodes.forEach((node) => {
-		// 		const nodeLabel = node.id;
-		// 		links.forEach((link) => {
-		// 			if (nodes[link.sourceID] != undefined) {
-		// 				const linkLabel = nodes[link.sourceID].id;
-		// 				if (linkLabel == nodeLabel) {
-		// 					if (outGoing[linkLabel] == undefined) {
-		// 						outGoing[linkLabel] = 0
-		// 					}
-		// 					if (outGoing[linkLabel] == 0) {
-		// 						outGoing[linkLabel] = link.weight
-		// 					}
-		// 					else {
-		// 						outGoing[linkLabel] += link.weight;
-		// 					}
-		// 				}
-		// 			}
-		// 		});
-
-		// 		links.forEach((link) => {
-		// 			if (nodes[link.targetID] != undefined) {
-		// 				const linkLabel = nodes[link.targetID].id;
-		// 				if (linkLabel == nodeLabel) {
-		// 					if (inComing[linkLabel] == undefined) {
-		// 						inComing[linkLabel] = 0;
-		// 					}
-
-		// 					if (inComing[linkLabel] == 0) {
-		// 						inComing[linkLabel] = link.weight
-		// 					}
-		// 					else {
-		// 						inComing[linkLabel] += link.weight;
-		// 					}
-		// 				}
-		// 			}
-		// 		});
-
-		// 		// Set the outgoing as 0 for nodes with no target nodes.
-		// 		if (outGoing[nodeLabel] == undefined) {
-		// 			outGoing[nodeLabel] = 0;
-		// 		}
-
-		// 		// Set the incoming as 0 for nodes with no source nodes.
-		// 		if (inComing[nodeLabel] == undefined) {
-		// 			inComing[nodeLabel] = 0;
-		// 		}
-
-		// 		node.out = outGoing[nodeLabel];
-		// 		node.in = inComing[nodeLabel];
-
-		// 		node.inclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]);
-		// 		node.exclusive = Math.max(inComing[nodeLabel], outGoing[nodeLabel]) - outGoing[nodeLabel]
-		// 	});
-
-
-		// 	if (this.debug) {
-		// 		links.forEach((link) => {
-		// 			let sourceLabel = link.source
-		// 			let targetLabel = link.target
-		// 			console.log("[Preprocess] Outgoing flow: {", sourceLabel, "}:", outGoing[sourceLabel])
-		// 			console.log("[Preprocess] Incoming flow {", targetLabel, "}: ", inComing[targetLabel])
-		// 		})
-
-		// 	}
-		// 	return graph;
-		// },
 
 		//Sankey computation
 		initSankey() {
