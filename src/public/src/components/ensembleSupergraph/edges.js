@@ -125,7 +125,7 @@ export default {
                             Bx2 = Bxi(0.4),
                             Bx3 = Bxi(1 - 0.4)
 
-                        let linkHeight = 0
+                        let linkHeight = undefined
                         if (dataset == 'ensemble') {
                             linkHeight = d.height
                         }
