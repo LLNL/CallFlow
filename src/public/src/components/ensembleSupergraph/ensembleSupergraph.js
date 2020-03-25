@@ -7,6 +7,11 @@ import * as  d3 from 'd3'
 import EventHandler from '../EventHandler.js'
 import EnsembleColorMap from './colormap'
 
+import Graph from '../../core/graph'
+import GraphVertex from '../../core/node'
+import GraphEdge from '../../core/edge'
+import detectDirectedCycle from '../../core/detectcycle'
+
 export default {
 	name: 'EnsembleSuperGraph',
 	template: tpl,
@@ -91,10 +96,46 @@ export default {
 
 		render(data) {
 			this.graph = data
-			console.log("[Ensemble SuperGraph] Preprocessing done.")
-			this.initSankey(this.graph)
-			console.log("[Ensemble SuperGraph] Layout Calculation.")
+			this.graphStructure = this.createGraphStructure(data)
+			console.log(this.graphStructure)
 
+			// check cycle. 
+			let detectcycle = detectDirectedCycle(this.graphStructure)
+			console.log(detectcycle)
+			if(Object.keys(detectcycle).length != 0){
+				console.log("cycle detected. Sankey cannot be created. ")
+			}
+			else{
+				console.log("No cycles detected.")
+			}
+
+			if (this.debug) {
+				for (let i = 0; i < this.graph['links'].length; i += 1) {
+					let link = this.graph['links'][i]
+					console.log(link)
+					let source_callsite = link['source']
+					let target_callsite = link['target']
+					let weight = link['weight']
+					let exc_weight = link['exc_weight']
+					// let source_inclusive = link['source_data']['time (inc)']
+					// let source_exclusive = link['source_data']['time']
+					// let target_inclusive = link['target_data']['time (inc)']
+					// let target_exclusive = link['target_data']['time']
+
+					console.log("=============================================")
+					console.log("[Ensemble SuperGraph] Source Name :", source_callsite)
+					console.log("[Ensemble SuperGraph] Target Name :", target_callsite)
+					console.log("[Ensemble SuperGraph] Weight: ", weight)
+					console.log("[Ensemble SuperGraph] Exc weight: ", exc_weight)
+					// console.log("[Ensemble SuperGraph] Source Inclusive: ", source_inclusive)
+					// console.log("[Ensemble SuperGraph] Source Exclusive: ", source_exclusive)
+					// console.log("[Ensemble SuperGraph] Target Inclusive: ", target_inclusive)
+					// console.log("[Ensemble SuperGraph] Target Exclusive: ", target_exclusive)
+				}
+			}
+			// this.initSankey(this.graph)
+
+			console.log("[Ensemble SuperGraph] Layout Calculation.")
 			// let postProcess = this.postProcess(this.graph.nodes, this.graph.links)
 			// this.graph.nodes = postProcess['nodes']
 			// this.graph.links = postProcess['links']
@@ -106,30 +147,19 @@ export default {
 			this.$refs.EnsembleEdges.init(this.$store.graph, this.view)
 			this.$refs.EnsembleNodes.init(this.$store.graph, this.view)
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view)
+		},
 
-			if (this.debug) {
-				for (let i = 0; i < this.graph['links'].length; i += 1) {
-					let link = this.graph['links'][i]
-					let source_callsite = link['source_data']['id']
-					let target_callsite = link['target_data']['id']
-					let weight = link['weight']
-					let exc_weight = link['exc_weight']
-					let source_inclusive = link['source_data']['time (inc)']
-					let source_exclusive = link['source_data']['time']
-					let target_inclusive = link['target_data']['time (inc)']
-					let target_exclusive = link['target_data']['time']
+		createGraphStructure(data) {
+			let graph = new Graph(true)
 
-					console.log("=============================================")
-					console.log("[Ensemble SuperGraph] Source Name :", source_callsite)
-					console.log("[Ensemble SuperGraph] Target Name :", target_callsite)
-					console.log("[Ensemble SuperGraph] Weight: ", weight)
-					console.log("[Ensemble SuperGraph] Exc weight: ", exc_weight)
-					console.log("[Ensemble SuperGraph] Source Inclusive: ", source_inclusive)
-					console.log("[Ensemble SuperGraph] Source Exclusive: ", source_exclusive)
-					console.log("[Ensemble SuperGraph] Target Inclusive: ", target_inclusive)
-					console.log("[Ensemble SuperGraph] Target Exclusive: ", target_exclusive)
-				}
+			for(let i = 0; i < data.links.length; i += 1){
+				let source = new GraphVertex(data.links[i].source)
+				let target = new GraphVertex(data.links[i].target)
+				let weight = data.links[i].weight
+				let edge = new GraphEdge(source, target, weight);
+				graph.addEdge(edge)
 			}
+			return graph
 		},
 
 		updateMiniHistogram() {

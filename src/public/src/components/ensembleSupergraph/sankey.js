@@ -462,7 +462,7 @@ export default function Sankey() {
             nodesByBreadth.forEach(function (nodes) {
                 if (levelCount == 0) {
                     nodes.sort(function (a, b) {
-                        return b['time'] - a['time']
+                        return b['time (inc)'] - a['time (inc)']
                     })
                 }
                 if (levelCount == 2) {
@@ -488,9 +488,6 @@ export default function Sankey() {
                     node.y = Math.max(nodeHeight, i)
                     node.parY = node.y;
 
-                    // nodes.sort(function (a, b) {
-                    //     return a["y"] - b["y"];
-                    // })
                     console.log("Value: ", node.value, minNodeScale, scale)
                     node.height = node['time (inc)'] * minNodeScale * scale;
                     console.log("Height ", node.height)
@@ -500,13 +497,14 @@ export default function Sankey() {
             });
 
             links.forEach(function (link) {
-                let weight = link.source_data['time (inc)']
+                let weight = link.weight//source_data['time (inc)']
 
-                let targetWeight = link.source_data['targetDataset']['time (inc)']
+                let targetWeight = link.source_data[targetDataset]['time (inc)']
                 if (link.source.value < weight) {
                     weight = link.source_data.minLinkVal
                 }
 
+                console.log(link.height)
                 // link.height = weight * minNodeScale * scale
                 // link.targetHeight = weight * minNodeScale * scale * (weight / targetWeight)
             });
