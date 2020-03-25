@@ -12,6 +12,7 @@
  ******************************************************************************/
 import * as  d3 from 'd3'
 import { scalePow } from 'd3-scale';
+import {max, min, sum} from "d3-array";
 
 export default function Sankey() {
     var sankey = {},
@@ -201,14 +202,16 @@ export default function Sankey() {
         });
         links.forEach(function (link) {
             if (link.source != undefined || link.target != undefined) {
-                link.source_data.sourceLinks.push(link);
-                link.target_data.targetLinks.push(link);
-
-                link.target_data.maxLinkVal = Math.max(link.target_data.maxLinkVal, link["weight"]);
-                link.source_data.maxLinkVal = Math.max(link.source_data.maxLinkVal, link["weight"]);
-
-                link.target_data.minLinkVal = Math.min(link.target_data.minLinkVal, link["weight"]);
-                link.source_data.minLinkVal = Math.min(link.source_data.minLinkVal, link["weight"]);
+                if(link.source.split('_')[0] != "intermediate"){
+                    link.source_data.sourceLinks.push(link);
+                    link.source_data.maxLinkVal = Math.max(link.source_data.maxLinkVal, link["weight"]);
+                    link.source_data.minLinkVal = Math.min(link.source_data.minLinkVal, link["weight"]);
+                }
+                if(link.target.split('_')[0] != "intermediate"){
+                    link.target_data.targetLinks.push(link);
+                    link.target_data.minLinkVal = Math.min(link.target_data.minLinkVal, link["weight"]);
+                    link.target_data.maxLinkVal = Math.max(link.target_data.maxLinkVal, link["weight"]);
+                }
             }
         });
 
@@ -227,12 +230,12 @@ export default function Sankey() {
     function computeNodeValues() {
         nodes.forEach(function (node) {
             node.value = Math.max(
-                d3.sum(node.sourceLinks, value),
-                d3.sum(node.targetLinks, value))
+                sum(node.sourceLinks, value),
+                sum(node.targetLinks, value))
 
             node.targetValue = Math.max(
-                d3.sum(node.sourceLinks, targetValue),
-                d3.sum(node.targetLinks, targetValue)
+                sum(node.sourceLinks, targetValue),
+                sum(node.targetLinks, targetValue)
             )
 
         });
@@ -249,9 +252,9 @@ export default function Sankey() {
         let x = 0
         while (remainingNodes.length) {
             nextNodes = [];
-            if (x > 10) {
-                break
-            }
+            // if (x > 10) {
+            //     break
+            // }
             remainingNodes.forEach(function (node) {
                 node.level = level
                 node.dx = nodeWidth;
@@ -304,7 +307,6 @@ export default function Sankey() {
 
     function computeNodeDepths(iterations) {
         var nodesByBreadth = d3.nest()
-            // .key(function (d) { if(d.id.split('_')[0] == 'intermediate') return d.level; })
             .key(function (d) { return d.level; })
             .sortKeys(d3.ascending)
             .entries(nodes)
@@ -331,7 +333,7 @@ export default function Sankey() {
             }
 
             for (let link of links) {
-                link.height *= (1 - max_dy / size[1])
+                link.height *= (1 - max_dy / size[1]) 
             }
 
             nodesByBreadth.forEach(function (nodes) {
@@ -383,48 +385,53 @@ export default function Sankey() {
         }
 
         function initializeNodeDepth() {
-            var scale = d3.min(nodesByBreadth, function (nodes) {
+
+            var scale = min(nodesByBreadth, (column) => {
                 var divValue = 1;
+                let nodeCount = 0
                 if (referenceValue > 0) {
                     divValue = referenceValue;
                 }
                 else {
-                    divValue = d3.sum(nodes, (d) => {
-                        if (dataset == 'ensemble') {
-                            return d['time (inc)']
+                    divValue = sum(column, (node) => {
+                        if(node.id.split('_')[0] != 'intermediate'){
+                            nodeCount += 1
+                            console.log(node['time (inc)'])
+                            if (dataset == 'ensemble') {
+                                return node['time (inc)']
+                            }
+                            else {
+                                return node[dataset]['time (inc)']
+                            }
                         }
-                        else {
-                            return d[dataset]['time (inc)']
+                        else{
+                            return 0
                         }
                     });
                 }
-                console.log(divValue, size[1], nodes.length, nodePadding)
-                return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue
+                console.log(divValue, size[1], nodeCount, column.length, nodePadding)
+                return Math.abs((size[1] - (nodeCount - 1) * nodePadding)) / divValue
             });
 
-            var targetScale = d3.min(nodesByBreadth, function (nodes) {
-                var divValue = 1;
-                if (referenceValue > 0) {
-                    divValue = referenceValue;
-                }
-                else {
-                    divValue = d3.sum(nodes, (d) => {
-                        return d[targetDataset]['time (inc)']
-                    })
-                }
-                return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
-            });
-
+            // var targetScale = d3.min(nodesByBreadth, function (nodes) {
+            //     var divValue = 1;
+            //     if (referenceValue > 0) {
+            //         divValue = referenceValue;
+            //     }
+            //     else {
+            //         divValue = d3.sum(nodes, (d) => {
+            //             return d[targetDataset]['time (inc)']
+            //         })
+            //     }
+            //     return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
+            // });
 
             let levelCount = 0
 
             nodesByBreadth.forEach(function (nodes) {
-                console.log(nodes)
-                if (levelCount == 2) {
+                if (levelCount == 0) {
                     nodes.sort(function (a, b) {
-                        if(a.name.split('_')[0] != 'intermediate' || b.name.split('_')[0] != 'intermediate'){
-                            return a['height'] - b['height']
-                        }
+                        return b['y'] - a['y']
                     })
                 }
 
@@ -442,7 +449,6 @@ export default function Sankey() {
                             }
                         }
                     });
-                    console.log(nodeHeight, i)
                     node.y = Math.max(nodeHeight, i)
                     node.parY = node.y;
 
@@ -450,7 +456,7 @@ export default function Sankey() {
                     //     return a["y"] - b["y"];
                     // })
                     console.log("Value: ", node.value, minNodeScale, scale)
-                    node.height = node.value * minNodeScale * scale;
+                    node.height = node['time (inc)'] * minNodeScale * scale;
                     console.log("Height ", node.height)
                     // node.targetHeight = node.value * minNodeScale * targetScale
                 });
@@ -464,7 +470,6 @@ export default function Sankey() {
                 if (link.source.value < weight) {
                     weight = link.source_data.minLinkVal
                 }
-
 
                 link.height = weight * minNodeScale * scale
                 link.targetHeight = weight * minNodeScale * scale *(weight/targetWeight)

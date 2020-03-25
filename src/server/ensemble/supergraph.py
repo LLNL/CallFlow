@@ -110,7 +110,7 @@ class SuperGraph(nx.Graph):
                 else:
                     dataMap[module].append({
                         'callsite': callsite,
-                        'module': elem,
+                        'module': module,
                         'level': idx
                     })
             ret.append(dataMap[module][-1])
@@ -147,30 +147,38 @@ class SuperGraph(nx.Graph):
                         source_name = source['callsite']
                         target_name = target['callsite']
 
-                        self.g.add_edge(source_module, target_module, attr_dict={
-                            "source_callsite": source_name,
-                            "target_callsite": target_name
-                        })
-        reveal_paths = self.add_reveal_paths()
-        for reveal_path_str in reveal_paths:
-            reveal_path_list = self.rename_cycle_path(reveal_path_str)
-            print(reveal_path_list)
-            callsite_idx = len(reveal_path_list) - 2
-            source = reveal_path_list[callsite_idx]
-            target = reveal_path_list[callsite_idx + 1]
+                        if(self.g.has_edge(target['module'], source['module'])):
+                            edge_type = 'callback'
+                        else:
+                            edge_type = 'normal'
 
-            if(not self.g.has_edge(target['module'], target['module'] + '=' + target_name)):
-                source_module = source['module']
-                target_module = target['module']
+                        if(edge_type == 'normal'):
+                            self.g.add_edge(source_module, target_module,   attr_dict={
+                                "source_callsite": source_name,
+                                "target_callsite": target_name,
+                                "edge_type": edge_type
+                            })
 
-                source_name = self.reveal_callsites[0]
-                target_name = target['callsite']
+        # reveal_paths = self.add_reveal_paths()
+        # for reveal_path_str in reveal_paths:
+        #     reveal_path_list = self.rename_cycle_path(reveal_path_str)
+        #     print(reveal_path_list)
+        #     callsite_idx = len(reveal_path_list) - 2
+        #     source = reveal_path_list[callsite_idx]
+        #     target = reveal_path_list[callsite_idx + 1]
 
-                print(f"Adding edge: {source_name}, {target_name}")
-                self.g.add_edge(target_module, target_module + '=' + target_name, attr_dict={
-                    "source_callsite": source_name,
-                    "target_callsite": target_name
-                })
+        #     if(not self.g.has_edge(target['module'], target['module'] + '=' + target_name)):
+        #         source_module = source['module']
+        #         target_module = target['module']
+
+        #         source_name = self.reveal_callsites[0]
+        #         target_name = target['callsite']
+
+        #         print(f"Adding edge: {source_name}, {target_name}")
+        #         self.g.add_edge(target_module, target_module + '=' + target_name, attr_dict={
+        #             "source_callsite": source_name,
+        #             "target_callsite": target_name
+        #         })
             
     def add_node_attributes(self):
         ensemble_mapping = self.ensemble_map(self.g.nodes())

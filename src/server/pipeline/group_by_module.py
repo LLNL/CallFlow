@@ -22,8 +22,8 @@ class groupBy:
         self.module_id_map = {}
 
         self.drop_eliminate_funcs()
-        self.name_module_map = self.entire_df.set_index('name')['module'].to_dict()
-        self.name_path_map = self.entire_df.set_index('name')['path'].to_dict()
+        self.name_module_map = self.df.set_index('name')['module'].to_dict()
+        self.name_path_map = self.df.set_index('name')['path'].to_dict()
 
         self.run()
         self.df = self.state.df
@@ -91,6 +91,8 @@ class groupBy:
 
         for idx, node in enumerate(path):
             node_func = node
+            if( '/' in node_func):
+                node_func = node_func.split('/')[-1]
             module = self.name_module_map[node_func]
             if component_module == module:
                 component_path.append(node_func)
@@ -149,7 +151,7 @@ class groupBy:
 
             component_path[snode] = self.create_component_path(spath, group_path[snode])
             component_level[snode] = len(component_path[snode])
-            module[snode] = s_df['module'].tolist()[0]
+            module[snode] = self.name_module_map[snode]
 
             temp_group_path_results = self.create_group_path(tpath)
             group_path[tnode] = temp_group_path_results[0]
@@ -157,7 +159,7 @@ class groupBy:
 
             component_path[tnode] = self.create_component_path(tpath, group_path[tnode])
             component_level[tnode] = len(component_path[tnode])
-            module[tnode] = t_df['module'].tolist()[0]
+            module[tnode] = self.name_module_map[tnode]
 
             # if module[snode] not in module_id_map:
             #     module_count += 1
