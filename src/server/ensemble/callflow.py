@@ -15,6 +15,7 @@ import json
 
 from pipeline.state import State
 from pipeline.index import Pipeline
+import pandas as pd
 
 from utils.logger import log
 from utils.timer import Timer
