@@ -30,7 +30,9 @@ export default function Sankey() {
         targetDataset = '',
         store = {},
         datasets = [],
-        debug = true;
+        debug = true,
+        nodesByBreadth = [],
+        max_dy = 0
 
     let widthScale;
     let minDistanceBetweenNode = 0;
@@ -208,7 +210,6 @@ export default function Sankey() {
             link.target_data.targetLinks.push(link);
             link.target_data.minLinkVal = Math.min(link.target_data.minLinkVal, link["weight"]);
             link.target_data.maxLinkVal = Math.max(link.target_data.maxLinkVal, link["weight"]);
-
         });
 
         nodes.forEach(function (node) {
@@ -225,19 +226,26 @@ export default function Sankey() {
     // Compute the value (size) of each node by summing the associated links.
     function computeNodeValues() {
         nodes.forEach(function (node) {
+            console.log(node)
             let sourceSum = sum(node.sourceLinks, (link) => {
-                if (link.source.split('_')[0] != 'intermediate' && link.target.split('_')[0] != "intermediate") {
-                    return link.weight
-                }
+                // if (link.source.split('_')[0] != 'intermediate' && link.target.split('_')[0] != "intermediate") {
+                console.log(link.source, link.target)    
+                return link.weight
+                // }
             })
 
             let targetSum = sum(node.targetLinks, (link) => {
-                if (link.source.split('_')[0] != 'intermediate' && link.target.split('_')[0] != "intermediate") {
-                    return link.weight
-                }
+                // if (link.source.split('_')[0] != 'intermediate' && link.target.split('_')[0] != "intermediate") {
+                console.log(link.source, link.target)
+                return link.weight
+                // }
             })
 
-            node.value = Math.max(sourceSum, targetSum)
+            console.log(sourceSum, targetSum, node['time'])
+
+            node.value = Math.max(sourceSum, targetSum) + node['time']
+
+            console.log("Adjusted Node flow : ", node.value)
 
             // let sourceDatasetSum = sum(node.sourceLinks, (node) => {
             //     if (node.id.split('_')[0] != 'intermediate') {
@@ -255,42 +263,8 @@ export default function Sankey() {
         });
     }
 
-    // Iteratively assign the breadth (x-position) for each node.
-    // Nodes are assigned the maximum breadth of incoming neighbors plus one;
-    // nodes with no incoming links are assigned breadth zero, while
-    // nodes with no outgoing links are assigned the maximum breadth.
-    function computeNodeBreadths() {
-        let remainingNodes = nodes
-        let nextNodes = [];
-        let level = 0
-        let x = 0
-        while (remainingNodes.length) {
-            nextNodes = [];
-            // if (x > 10) {
-            //     break
-            // }
-            remainingNodes.forEach(function (node) {
-                node.level = level
-                node.dx = nodeWidth;
-                node.sourceLinks.forEach(function (link) {
-                    nextNodes.push(link.target_data);
-                });
-            })
-            remainingNodes = nextNodes;
-            level += 1
 
-            MPI => MPI = function_name
-            x += 1
-        }
-
-        minDistanceBetweenNode = nodeWidth * 2
-        widthScale = scalePow().domain([0, level + 1]).range([minDistanceBetweenNode, size[0]])
-        scaleNodeBreadths((size[0] - nodeWidth / 2) / (maxLevel - 1));
-
-        // moveSinksRight()
-        scaleNodeBreadths((size[0] - nodeWidth) / (level - 1));
-    }
-
+    //////////////////// Associated functions for : computeNodeBreadths /////////////////
     function moveSourcesRight() {
         nodes.forEach(function (node) {
             if (!node.targetLinks.length) {
@@ -307,7 +281,6 @@ export default function Sankey() {
                 node.level = d3.min(node.sourceLinks, function (d) { return d.target.x; });
                 node.level = node.level + 1;
             }
-
         });
     }
 
@@ -318,8 +291,340 @@ export default function Sankey() {
         });
     }
 
+    // Iteratively assign the breadth (x-position) for each node.
+    // Nodes are assigned the maximum breadth of incoming neighbors plus one;
+    // nodes with no incoming links are assigned breadth zero, while
+    // nodes with no outgoing links are assigned the maximum breadth.
+    function computeNodeBreadths() {
+        let remainingNodes = nodes
+        let nextNodes = [];
+        let level = 0
+        while (remainingNodes.length) {
+            nextNodes = [];
+            remainingNodes.forEach(function (node) {
+                node.level = level
+                node.dx = nodeWidth;
+                node.sourceLinks.forEach(function (link) {
+                    nextNodes.push(link.target_data);
+                });
+            })
+            remainingNodes = nextNodes;
+            level += 1
+            // MPI => MPI = function_name
+        }
+
+        minDistanceBetweenNode = nodeWidth * 2
+        widthScale = scalePow().domain([0, level + 1]).range([minDistanceBetweenNode, size[0]])
+        scaleNodeBreadths((size[0] - nodeWidth) / (maxLevel - 1));
+    }
+
+    
+    //////////////////// Associated functions for : ComputeNodeDepths /////////////////
+    function resolveOutsidePositioning() {
+        for (let node of nodes) {
+            node.height *= (1 - max_dy / size[1])
+            console.log(node.height)
+        }
+
+        for (let link of links) {
+            link.height *= (1 - max_dy / size[1])
+        }
+
+        nodesByBreadth.forEach(function (nodes) {
+            nodes.sort(ascendingDepth);
+
+            for (let i = nodes.length - 1; i >= 0; --i) {
+                let node = nodes[i]
+                let dy = node.y - node.y * (1 - max_dy / size[1]);
+                node.y -= dy
+
+                if (i != 0) {
+                    node.y += i * nodePadding
+                }
+            }
+        })
+    }
+
+    function pushIntermediateNodeBottom(nodes) {
+        let tempNode
+        for (let i = 0; i < nodes.length; i += 1) {
+            if (nodes[i].id.split('_')[0] == 'intermediate') {
+                tempNode = nodes[i]
+                nodes.splice(i, 1);
+            }
+        }
+        if (tempNode != undefined) {
+            nodes.push(tempNode)
+        }
+        return nodes
+    }
+
+    function pushNodeBottomIfIntermediateTargets(nodes) {
+        let tempNode
+        for (let i = 0; i < nodes.length; i += 1) {
+            let targets = nodes[i].targetLinks
+            for (let j = 0; j < targets.length; j += 1) {
+                let target = targets[j].target
+                if (target.split('_')[0] == 'intermediate') {
+                    tempNode = nodes[i]
+                    nodes.splice(i, 1);
+                }
+            }
+        }
+        if (tempNode != undefined) {
+            nodes.push(tempNode)
+        }
+        return nodes
+    }
+
+    function fixEnsembleScale() {
+        let ensembleScale = min(nodesByBreadth, (column) => {
+            var divValue = 0;
+            let nodeCount = 0
+            if (referenceValue > 0) {
+                divValue = referenceValue;
+            }
+            else {
+                divValue = sum(column, (node) => {
+                    // if (node.id.split('_')[0] != 'intermediate') {
+                        nodeCount += 1
+                        return node['time (inc)']
+                    // }
+                    // else {
+                        // return 0
+                    // }
+                });
+            }
+            console.log(divValue, size[1], nodeCount, column.length, nodePadding)
+            return Math.abs((size[1] - (nodeCount - 1) * nodePadding)) / divValue
+        });
+
+        return ensembleScale
+    }
+
+    function fixTargetScale() {
+        let targetScale = d3.min(nodesByBreadth, function (nodes) {
+            var divValue = 1;
+            if (referenceValue > 0) {
+                divValue = referenceValue;
+            }
+            else {
+                divValue = d3.sum(nodes, (d) => {
+                    if (node.id.split('_')[0] != 'intermediate') {
+                        nodeCount += 1
+                        if (dataset == 'ensemble') {
+                            return node[dataset]['time (inc)']
+                        }
+                    }
+                    else {
+                        return 0
+                    }
+                    return d[targetDataset]['time (inc)']
+                })
+            }
+            return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
+        });
+        return targetScale
+    }
+
+    function initializeNodeDepth() {
+        let scale = fixEnsembleScale()
+        let levelCount = 0
+
+        nodesByBreadth.forEach(function (nodes) {
+            if (levelCount == 0) {
+                nodes.sort(function (a, b) {
+                    return b['time (inc)'] - a['time (inc)']
+                })
+            }
+            if (levelCount == 2) {
+                nodes.sort(function (a, b) {
+                    if (a.name.split('_')[0] != 'intermediate' || b.name.split('_')[0] != 'intermediate') {
+                        return a['height'] - b['height']
+                    }
+                })
+            }
+
+            nodes = pushIntermediateNodeBottom(nodes)
+            // nodes = pushNodeBottomIfIntermediateTargets(nodes)
+
+            nodes.forEach(function (node, i) {
+                let nodeHeight = 0;
+                links.forEach(function (edge) {
+                    if (edge["target"] == node) {
+                        if (edge["source"] != null && edge["source"]['y'] != null) {
+                            nodeHeight = Math.max(nodeHeight, edge["source"]['y']);
+                        }
+                    }
+                });
+                node.y = Math.max(nodeHeight, i)
+                node.parY = node.y;
+
+                console.log("Value: ", node.value, minNodeScale, scale)
+                node.height = node.value* minNodeScale * scale;
+                console.log("Height ", node.height)
+                // node.targetHeight = node.value * minNodeScale * targetScale
+            });
+            levelCount += 1
+        });
+
+        links.forEach(function (link) {
+            let weight = link.weight//source_data['time (inc)']
+
+            let targetWeight = link.source_data[targetDataset]['time (inc)']
+            if (link.source.value < weight) {
+                weight = link.source_data.minLinkVal
+            }
+
+            console.log(link.height)
+            link.height = weight * scale
+            // link.targetHeight = weight * minNodeScale * scale * (weight / targetWeight)
+        });
+    }
+
+    // Reposition each node based on its incoming (target) links.
+    function relaxLeftToRight(columns, alpha, beta) {
+        for (let i = 1, n = columns.length; i < n; ++i) {
+            const column = columns[i];
+            for (const target of column) {
+                let y = 0;
+                let w = 0;
+                for (const { source, value } of target.targetLinks) {
+                    let v = value * (target.layer - source.layer);
+                    y += targetTop(source, target) * v;
+                    w += v;
+                }
+                if (!(w > 0)) continue;
+                let dy = (y / w - target.y0) * alpha;
+                target.y0 += dy;
+                target.y1 += dy;
+                reorderNodeLinks(target);
+            }
+            if (sort === undefined) column.sort(ascendingBreadth);
+            resolveCollisions(column, beta);
+        }
+    }
+
+    function relaxLeftToRight(alpha) {
+        nodesByBreadth.forEach(function (nodes, breadth) {
+            nodes.forEach(function (node) {
+                if (node.targetLinks.length) {
+                    var y = d3.sum(node.targetLinks, weightedSource) / d3.sum(node.targetLinks, value);
+                    node.y += (y - center(node)) * alpha;
+                }
+            });
+        });
+
+        function weightedSource(link) {
+            return center(link.source) * link.weight
+        }
+    }
+
+    function relaxRightToLeft(alpha) {
+        nodesByBreadth.slice().reverse().forEach(function (nodes) {
+            nodes.forEach(function (node) {
+                if (node.sourceLinks.length) {
+                    var y = d3.sum(node.sourceLinks, weightedTarget) / d3.sum(node.sourceLinks, value);
+
+                    node.y += (y + center(node)) * alpha;
+                }
+            });
+        });
+
+        function weightedTarget(link) {
+            return center(link.target) * link.weight;
+        }
+    }
+
+    function resolveCollisions() {
+        let max_dy = 0
+        nodesByBreadth.forEach(function (nodes) {
+            var node,
+                dy,
+                y0 = 0;
+
+            // Push any overlapping nodes down.
+            nodes.sort(ascendingDepth);
+
+            for (node of nodes) {
+                dy = y0 - node.y;
+                if (dy > 0) {
+                    node.y += dy;
+                }
+                y0 = node.y + node.height + nodePadding;
+            }
+
+            // // If the bottommost node goes outside the bounds, push it back up.
+            // dy = y0 - nodePadding - size[1];
+            // if (dy > 0) {
+            //     y0 = node.y -= dy;
+            //     // Push any overlapping nodes back up.
+            //     for (let i = nodes.length - 2; i > 0; --i) {
+            //         node = nodes[i];
+            //         dy = node.y + node.height + nodePadding - y0;
+            //         if (dy > 0) node.y -= dy;
+            //         y0 = node.y;
+            //     }
+            // }
+
+            dy = y0 - nodePadding - size[1]
+            if (dy > 0) {
+                max_dy = Math.max(dy, max_dy)
+            }
+        });
+
+        return max_dy
+    }
+
+    function resolveCollisions_old(alpha) {
+        const i = nodesByBreadth.length >> 1;
+        const subject = nodesByBreadth[i];
+        subject.y = resolveCollisionsBottomToTop(nodesByBreadth, subject.y - nodePadding, i - 1, alpha);
+        // resolveCollisionsTopToBottom(nodesByBreadth, subject.y1 + nodePadding, i + 1, alpha);
+        subject.y = resolveCollisionsBottomToTop(nodesByBreadth, subject.y, nodesByBreadth.length - 1, alpha);
+        // resolveCollisionsTopToBottom(nodesByBreadth, y0, 0, alpha);
+    }
+
+    // Push any overlapping nodes down.
+    function resolveCollisionsTopToBottom(nodes, y, i, alpha) {
+        for (; i < nodes.length; ++i) {
+            const node = nodes[i];
+            const dy = (y - node.y0) * alpha;
+            if (dy > 1e-6) node.y0 += dy, node.y1 += dy;
+            y = node.y1 + nodePadding;
+        }
+    }
+
+    // Push any overlapping nodes up.
+    function resolveCollisionsBottomToTop(nodes, y, i, alpha) {
+        for (; i >= 0; --i) {
+            const node = nodes[i];
+            const dy = (node.y1 - y) * alpha;
+            if (dy > 1e-6) node.y0 -= dy, node.y1 -= dy;
+            y = node.y0 - nodePadding;
+        }
+        return y
+    }
+
+    // function ascendingDepth(a, b) {
+    //     console.log(a['parY'], b['parY'])
+    //     if (a["parY"] > b["parY"]) {
+    //         return a["parY"] - b["parY"];
+    //     }
+    //     return a["maxLinks"] - b["maxLinks"];
+    // }
+
+    function ascendingDepth(a, b) {
+        // if (a["parY"] > b["parY"]) {
+        //     return a["parY"] - b["parY"];
+        // }
+        // return a["maxLinks"] - b["maxLinks"];
+        return a['y'] - b['y']
+    }
+
     function computeNodeDepths(iterations) {
-        var nodesByBreadth = d3.nest()
+        // Nodes by breadth does not consider the intermediate nodes. 
+        nodesByBreadth = d3.nest()
             .key(function (d) { return d.level; })
             .sortKeys(d3.ascending)
             .entries(nodes)
@@ -327,18 +632,16 @@ export default function Sankey() {
                 let ret = []
                 for (let i = 0; i < d.values.length; i += 1) {
                     let node = d.values[i]
-                    if (node.id.split('_')[0] != 'intermediate') {
+                    // if (node.id.split('_')[0] != 'intermediate') {
                         ret.push(d.values[i])
-                    }
+                    // }
                 }
-                console.log(ret)
                 return ret;
             });
 
         initializeNodeDepth();
         resolveCollisions();
 
-        let max_dy = 0
         for (var i = 0; i < iterations; ++i) {
             let alpha = Math.pow(0.99, i)
             let beta = Math.max(1 - alpha, (i + 1) / iterations);
@@ -348,307 +651,13 @@ export default function Sankey() {
             max_dy = resolveCollisions(beta);
         }
 
+        console.log(max_dy)
+
         if (max_dy > 0) {
-            for (let node of nodes) {
-                node.height *= (1 - max_dy / size[1])
-            }
-
-            for (let link of links) {
-                link.height *= (1 - max_dy / size[1])
-            }
-
-            nodesByBreadth.forEach(function (nodes) {
-                nodes.sort(ascendingDepth);
-
-                for (let i = nodes.length - 1; i >= 0; --i) {
-                    let node = nodes[i]
-                    let dy = node.y - node.y * (1 - max_dy / size[1]);
-                    node.y -= dy
-
-                    if (i != 0) {
-                        node.y += i * nodePadding
-                    }
-                }
-            })
+            resolveOutsidePositioning()
         }
 
-        function pushIntermediateNodeBottom(nodes) {
-            let tempNode
-            for (let i = 0; i < nodes.length; i += 1) {
-                if (nodes[i].id.split('_')[0] == 'intermediate') {
-                    tempNode = nodes[i]
-                    nodes.splice(i, 1);
-                }
-            }
-            if (tempNode != undefined) {
-                nodes.push(tempNode)
-            }
-            return nodes
-        }
 
-        function pushNodeBottomIfIntermediateTargets(nodes) {
-            let tempNode
-            for (let i = 0; i < nodes.length; i += 1) {
-                let targets = nodes[i].targetLinks
-                for (let j = 0; j < targets.length; j += 1) {
-                    let target = targets[j].target
-                    console.log(target)
-                    if (target.split('_')[0] == 'intermediate') {
-                        tempNode = nodes[i]
-                        nodes.splice(i, 1);
-                    }
-                }
-            }
-            if (tempNode != undefined) {
-                nodes.push(tempNode)
-            }
-            return nodes
-        }
-
-        function fixEnsembleScale() {
-            let ensembleScale = min(nodesByBreadth, (column) => {
-                var divValue = 1;
-                let nodeCount = 0
-                if (referenceValue > 0) {
-                    divValue = referenceValue;
-                }
-                else {
-                    divValue = sum(column, (node) => {
-                        if (node.id.split('_')[0] != 'intermediate') {
-                            nodeCount += 1
-                                return node['time (inc)']
-                        }
-                        else {
-                            return 0
-                        }
-                    });
-                }
-                console.log(divValue, size[1], nodeCount, column.length, nodePadding)
-                return Math.abs((size[1] - (nodeCount - 1) * nodePadding)) / divValue
-            });
-
-            return ensembleScale
-        }
-
-        function fixTargetScale() {
-            let targetScale = d3.min(nodesByBreadth, function (nodes) {
-                var divValue = 1;
-                if (referenceValue > 0) {
-                    divValue = referenceValue;
-                }
-                else {
-                    divValue = d3.sum(nodes, (d) => {
-                        if (node.id.split('_')[0] != 'intermediate') {
-                            nodeCount += 1
-                            if (dataset == 'ensemble') {
-                                return node[dataset]['time (inc)']
-                            }
-                        }
-                        else {
-                            return 0
-                        }
-                        return d[targetDataset]['time (inc)']
-                    })
-                }
-                return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;
-            });
-            return targetScale
-        }
-
-        function initializeNodeDepth() {
-            let scale = fixEnsembleScale()
-            let levelCount = 0
-
-            nodesByBreadth.forEach(function (nodes) {
-                if (levelCount == 0) {
-                    nodes.sort(function (a, b) {
-                        return b['time (inc)'] - a['time (inc)']
-                    })
-                }
-                if (levelCount == 2) {
-                    nodes.sort(function (a, b) {
-                        if (a.name.split('_')[0] != 'intermediate' || b.name.split('_')[0] != 'intermediate') {
-                            return a['height'] - b['height']
-                        }
-                    })
-                }
-
-                nodes = pushIntermediateNodeBottom(nodes)
-                // nodes = pushNodeBottomIfIntermediateTargets(nodes)
-
-                nodes.forEach(function (node, i) {
-                    let nodeHeight = 0;
-                    links.forEach(function (edge) {
-                        if (edge["target"] == node) {
-                            if (edge["source"] != null && edge["source"]['y'] != null) {
-                                nodeHeight = Math.max(nodeHeight, edge["source"]['y']);
-                            }
-                        }
-                    });
-                    node.y = Math.max(nodeHeight, i)
-                    node.parY = node.y;
-
-                    console.log("Value: ", node.value, minNodeScale, scale)
-                    node.height = node['time (inc)'] * minNodeScale * scale;
-                    console.log("Height ", node.height)
-                    // node.targetHeight = node.value * minNodeScale * targetScale
-                });
-                levelCount += 1
-            });
-
-            links.forEach(function (link) {
-                let weight = link.weight//source_data['time (inc)']
-
-                let targetWeight = link.source_data[targetDataset]['time (inc)']
-                if (link.source.value < weight) {
-                    weight = link.source_data.minLinkVal
-                }
-
-                console.log(link.height)
-                // link.height = weight * minNodeScale * scale
-                // link.targetHeight = weight * minNodeScale * scale * (weight / targetWeight)
-            });
-        }
-
-        // Reposition each node based on its incoming (target) links.
-        function relaxLeftToRight(columns, alpha, beta) {
-            for (let i = 1, n = columns.length; i < n; ++i) {
-                const column = columns[i];
-                for (const target of column) {
-                    let y = 0;
-                    let w = 0;
-                    for (const { source, value } of target.targetLinks) {
-                        let v = value * (target.layer - source.layer);
-                        y += targetTop(source, target) * v;
-                        w += v;
-                    }
-                    if (!(w > 0)) continue;
-                    let dy = (y / w - target.y0) * alpha;
-                    target.y0 += dy;
-                    target.y1 += dy;
-                    reorderNodeLinks(target);
-                }
-                if (sort === undefined) column.sort(ascendingBreadth);
-                resolveCollisions(column, beta);
-            }
-        }
-
-        function relaxLeftToRight(alpha) {
-            nodesByBreadth.forEach(function (nodes, breadth) {
-                nodes.forEach(function (node) {
-                    if (node.targetLinks.length) {
-                        var y = d3.sum(node.targetLinks, weightedSource) / d3.sum(node.targetLinks, value);
-                        node.y += (y - center(node)) * alpha;
-                    }
-                });
-            });
-
-            function weightedSource(link) {
-                return center(link.source) * link.weight
-            }
-        }
-
-        function relaxRightToLeft(alpha) {
-            nodesByBreadth.slice().reverse().forEach(function (nodes) {
-                nodes.forEach(function (node) {
-                    if (node.sourceLinks.length) {
-                        var y = d3.sum(node.sourceLinks, weightedTarget) / d3.sum(node.sourceLinks, value);
-
-                        node.y += (y + center(node)) * alpha;
-                    }
-                });
-            });
-
-            function weightedTarget(link) {
-                return center(link.target) * link.weight;
-            }
-        }
-
-        function resolveCollisions() {
-            let max_dy = 0
-            nodesByBreadth.forEach(function (nodes) {
-                var node,
-                    dy,
-                    y0 = 0;
-
-                // Push any overlapping nodes down.
-                nodes.sort(ascendingDepth);
-
-                for (node of nodes) {
-                    dy = y0 - node.y;
-                    if (dy > 0) {
-                        node.y += dy;
-                    }
-                    y0 = node.y + node.height + nodePadding;
-                }
-
-                // // If the bottommost node goes outside the bounds, push it back up.
-                // dy = y0 - nodePadding - size[1];
-                // if (dy > 0) {
-                //     y0 = node.y -= dy;
-                //     // Push any overlapping nodes back up.
-                //     for (let i = nodes.length - 2; i > 0; --i) {
-                //         node = nodes[i];
-                //         dy = node.y + node.height + nodePadding - y0;
-                //         if (dy > 0) node.y -= dy;
-                //         y0 = node.y;
-                //     }
-                // }
-
-                dy = y0 - nodePadding - size[1]
-                if (dy > 0) {
-                    max_dy = Math.max(dy, max_dy)
-                }
-            });
-
-            return max_dy
-        }
-
-        function resolveCollisions_old(alpha) {
-            const i = nodesByBreadth.length >> 1;
-            const subject = nodesByBreadth[i];
-            subject.y = resolveCollisionsBottomToTop(nodesByBreadth, subject.y - nodePadding, i - 1, alpha);
-            // resolveCollisionsTopToBottom(nodesByBreadth, subject.y1 + nodePadding, i + 1, alpha);
-            subject.y = resolveCollisionsBottomToTop(nodesByBreadth, subject.y, nodesByBreadth.length - 1, alpha);
-            // resolveCollisionsTopToBottom(nodesByBreadth, y0, 0, alpha);
-        }
-
-        // Push any overlapping nodes down.
-        function resolveCollisionsTopToBottom(nodes, y, i, alpha) {
-            for (; i < nodes.length; ++i) {
-                const node = nodes[i];
-                const dy = (y - node.y0) * alpha;
-                if (dy > 1e-6) node.y0 += dy, node.y1 += dy;
-                y = node.y1 + nodePadding;
-            }
-        }
-
-        // Push any overlapping nodes up.
-        function resolveCollisionsBottomToTop(nodes, y, i, alpha) {
-            for (; i >= 0; --i) {
-                const node = nodes[i];
-                const dy = (node.y1 - y) * alpha;
-                if (dy > 1e-6) node.y0 -= dy, node.y1 -= dy;
-                y = node.y0 - nodePadding;
-            }
-            return y
-        }
-
-        // function ascendingDepth(a, b) {
-        //     console.log(a['parY'], b['parY'])
-        //     if (a["parY"] > b["parY"]) {
-        //         return a["parY"] - b["parY"];
-        //     }
-        //     return a["maxLinks"] - b["maxLinks"];
-        // }
-
-        function ascendingDepth(a, b) {
-            // if (a["parY"] > b["parY"]) {
-            //     return a["parY"] - b["parY"];
-            // }
-            // return a["maxLinks"] - b["maxLinks"];
-            return a['y'] - b['y']
-        }
     }
 
     function computeLinkDepths() {

@@ -137,9 +137,9 @@ export default {
                         By0 = d.source_data.y + this.$parent.ySpacing + d.sy + linkHeight
                         By1 = d.target_data.y + this.$parent.ySpacing + d.ty + linkHeight
 
-                        console.log(Tx0, Tx1, Tx2, Tx3, Ty0, Ty1)
-                        console.log(Bx0, Bx1, Bx2, Bx3, By0, By1)
-                        console.log(d.source_data.y, this.$parent.ySpacing, d.sy, linkHeight)
+                        console.log(d.source, d.target, Ty0, Ty1)//, Tx2, Tx3, Ty0, Ty1)
+                        console.log(d.source, d.target, By0, By1)//, Bx2, Bx3, By0, By1)
+                        // console.log(d.source_data.y, this.$parent.ySpacing, d.sy, linkHeight)
                         const rightMoveDown = By1 - Ty1
                         return `M${Tx0},${Ty0
                             }C${Tx2},${Ty0
@@ -158,6 +158,9 @@ export default {
                     else {
                         return this.$store.color.target
                     }
+                })
+                .on('mouseover', (d) => {
+                    console.log(d.weight, d.exc_weight)
                 })
 
         },
