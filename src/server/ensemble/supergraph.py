@@ -58,10 +58,12 @@ class SuperGraph(nx.Graph):
 
         self.module_time_map = self.entire_df.groupby(['module'])['time'].max().to_dict()
         self.module_time_inc_map = self.entire_df.groupby(['module'])['time (inc)'].max().to_dict()
-        print(self.module_time_map)
 
-        self.name_time_map = self.entire_df.groupby(['name'])['time'].max().to_dict()
-        self.name_time_inc_map = self.entire_df.groupby('name')['time (inc)'].max().to_dict()
+
+        self.module_name_group_df = self.entire_df.groupby(['module', 'name'])
+
+        self.name_time_map = self.entire_df.groupby(['module','name'])['time'].max().to_dict()
+        self.name_time_inc_map = self.entire_df.groupby(['module','name'])['time (inc)'].max().to_dict()
         
         # self.entire_df['group_path'] = self.entire_df['group_path'].apply(lambda path: make_list(path))
         # self.name_path_map = self.entire_df.set_index( 'name')['group_path'].to_dict()
@@ -175,6 +177,7 @@ class SuperGraph(nx.Graph):
                         source_name = source['callsite']
                         target_name = target['callsite']
 
+                        # if(self.name_time_map[target_name] != 0):
                         if(self.g.has_edge(target['module'], source['module'])):
                             edge_type = 'callback'
                         else:
@@ -283,15 +286,52 @@ class SuperGraph(nx.Graph):
 
         return ret
 
+    def callsite_time(self, module, callsite)
+        callsite_df = self.module_name_group_df.get_group((module, callsite))
+        max_inc_time = callsite_df['time (inc)'].max()
+        max_exc_time = callsite_df['time'].max()
+
+        return {
+            'Inclusive': max_inc_time,
+            'Exclusive': max_exc_time
+        } 
+
+    def module_time(self, module):
+        exc_time_sum = 0
+        inc_time_max = 0
+        module_df = df.loc[df['module'] == module]
+        callsites = module_df['name'].unique()
+        for callsite in callsites:
+            callsite_df = self.module_name_group_df.get_group((module, callsite))
+            max_inc_time = callsite_df['time (inc)'].max()
+            inc_time_max = max(inc_time_max, max_inc_time)
+            max_exc_time = callsite_df['time'].max()
+            exc_time_sum += max_exc_time
+            # print(callsite, max_exc_time, max_inc_time)
+        return {
+            'Inclusive': inc_time_max,
+            'Exclusive': exc_time_sum
+        }
+
     def calculate_exc_weight(self, graph):
         ret = {}
         additional_flow = {}
         for edge in graph.edges(data=True):
-            source_name = edge[2]['attr_dict']['source_callsite']
-            target_name = edge[2]['attr_dict']['target_callsite']
+            if('=' in edge[0]):
+                source_module = edge[0].split('=')[0]
+            else:
+                source_module = edge[0]
 
-            source_exc = self.name_time_map[source_name]
-            target_exc = self.name_time_map[target_name]
+            if('=' in edge[1]):
+                target_module = edge[1].split('=')[0]
+            else:
+                target_module = edge[1]
+
+            source_callsite = edge[2]['attr_dict']['source_callsite']
+            target_callsite = edge[2]['attr_dict']['target_callsite']
+
+            source_exc = self.name_time_map[(source_module, source_callsite)]
+            target_exc = self.name_time_map[(target_module, target_callsite)]
 
             ret[(edge[0], edge[1])] = target_exc
 
@@ -314,8 +354,6 @@ class SuperGraph(nx.Graph):
                 node_name = node.split("=")[0]
             else:
                 node_name = node
-
-            print(self.module_time_map)
 
             for column in ensemble_columns:
                 if column not in ret:
