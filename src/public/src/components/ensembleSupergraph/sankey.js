@@ -121,18 +121,6 @@ export default function Sankey() {
     sankey.relayout = function () {
         computeLinkDepths();
         return sankey;
-    };
-
-    sankey.setXSpacing = function (_) {
-        if (!arguments.length) return xSpacing;
-        xSpacing = +_;
-        return sankey;
-    }
-
-    sankey.setReferenceValue = function (_) {
-        if (!arguments.length) return referenceValue;
-        referenceValue = +_;
-        return sankey;
     }
 
     sankey.setMinNodeScale = function (_) {
@@ -229,14 +217,14 @@ export default function Sankey() {
             console.log(node)
             let sourceSum = sum(node.sourceLinks, (link) => {
                 // if (link.source.split('_')[0] != 'intermediate' && link.target.split('_')[0] != "intermediate") {
-                console.log(link.source, link.target)    
+                console.log(link.source, link.target, link.weight)    
                 return link.weight
                 // }
             })
 
             let targetSum = sum(node.targetLinks, (link) => {
                 // if (link.source.split('_')[0] != 'intermediate' && link.target.split('_')[0] != "intermediate") {
-                console.log(link.source, link.target)
+                console.log(link.source, link.target, link.weight)
                 return link.weight
                 // }
             })
@@ -653,11 +641,9 @@ export default function Sankey() {
 
         console.log(max_dy)
 
-        if (max_dy > 0) {
-            resolveOutsidePositioning()
-        }
-
-
+        // if (max_dy > 0) {
+        //     resolveOutsidePositioning()
+        // }
     }
 
     function computeLinkDepths() {

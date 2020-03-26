@@ -91,4 +91,4 @@ export default function detectDirectedCycle(graph) {
     }
 
     return [cycle, graySet, blackSet, whiteSet];
-}
+} 
