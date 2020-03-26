@@ -5,6 +5,7 @@ from ast import literal_eval as make_tuple
 import numpy as np
 from utils.timer import Timer
 from ast import literal_eval as make_list
+import pandas as pd
 
 class SuperGraph(nx.Graph):
     # Attributes:
@@ -13,7 +14,7 @@ class SuperGraph(nx.Graph):
     # 3. construct_graph -> To decide if we should construct graph from path
     # 4. add_data => To
     def __init__(
-        self, states, path, group_by_attr="module", construct_graph=True, add_data=False, reveal_callsites=[]
+        self, states, path, group_by_attr="module", construct_graph=True, add_data=False, reveal_callsites=[], reveal_modules=[]
     ):
         super(SuperGraph, self).__init__()
         self.states = states
@@ -45,6 +46,7 @@ class SuperGraph(nx.Graph):
             # "callees",
             # "vis_name",
             "module",
+            "actual_time",
             # "show_node",
         ]
 
@@ -52,22 +54,10 @@ class SuperGraph(nx.Graph):
         # TODO: Change name in the df from 'dataset' to 'run'
         self.runs = self.entire_df["dataset"].unique()
 
-        self.target_df = {}
-        for run in self.runs:
-            self.target_df[run] = self.entire_df.loc[self.entire_df['dataset'] == run]
-
-        self.module_time_map = self.entire_df.groupby(['module'])['time'].max().to_dict()
-        self.module_time_inc_map = self.entire_df.groupby(['module'])['time (inc)'].max().to_dict()
-
-
-        self.module_name_group_df = self.entire_df.groupby(['module', 'name'])
-
-        self.name_time_map = self.entire_df.groupby(['module','name'])['time'].max().to_dict()
-        self.name_time_inc_map = self.entire_df.groupby(['module','name'])['time (inc)'].max().to_dict()
+        with self.timer.phase("Creating data maps"):
+            self.create_ensemble_maps()
+            self.create_target_maps()
         
-        # self.entire_df['group_path'] = self.entire_df['group_path'].apply(lambda path: make_list(path))
-        # self.name_path_map = self.entire_df.set_index( 'name')['group_path'].to_dict()
-
         self.reveal_callsites = reveal_callsites
 
         with self.timer.phase("Construct Graph"):
@@ -84,7 +74,7 @@ class SuperGraph(nx.Graph):
         self.callbacks = []
         self.edge_direction = {}
 
-        add_data = True
+        add_data = True 
         with self.timer.phase("Add graph attributes"):
             if add_data == True:
                 self.add_node_attributes()
@@ -92,6 +82,58 @@ class SuperGraph(nx.Graph):
             else:
                 print("Creating a Graph without node or edge attributes.")
         print(self.timer)
+
+    def create_target_maps(self):
+        self.target_df = {}
+        self.target_modules = {}
+        self.target_module_group_df = {}
+        self.target_module_name_group_df = {}
+        self.target_module_callsite_map = {}
+        self.target_module_time_inc_map = {}
+        self.target_module_time_exc_map = {}
+        self.target_name_time_inc_map = {}
+        self.target_name_time_exc_map = {}
+
+        for run in self.runs:
+            # Reduce the entire_df to respective target dfs. 
+            self.target_df[run] = self.entire_df.loc[self.entire_df['dataset'] == run]
+            
+            # Unique modules in the target run
+            self.target_modules[run] = self.target_df[run]['module'].unique()
+
+            # Group the dataframe in two ways.
+            # 1. by module
+            # 2. by module and callsite
+            self.target_module_group_df[run] = self.target_df[run].groupby(['module'])
+            self.target_module_name_group_df[run] = self.target_df[run].groupby(['module', 'name'])
+
+            # Module map for target run {'module': [Array of callsites]}
+            self.target_module_callsite_map[run] = self.target_module_group_df[run]['name'].unique()
+
+            # Inclusive time maps for the module level and callsite level. 
+            self.target_module_time_inc_map[run] = self.target_module_group_df[run]['time (inc)'].max().to_dict()
+            self.target_name_time_inc_map[run] = self.target_module_name_group_df[run]['time (inc)'].max().to_dict()
+
+            # Exclusive time maps for the module level and callsite level. 
+            self.target_module_time_exc_map[run] = self.target_module_group_df[run]['time'].max().to_dict()
+            self.target_name_time_exc_map[run] = self.target_module_name_group_df[run]['time'].max().to_dict()
+
+    def create_ensemble_maps(self):
+        self.modules = self.entire_df['module'].unique()
+
+        self.module_name_group_df = self.entire_df.groupby(['module', 'name'])
+        self.module_group_df = self.entire_df.groupby(['module'])
+
+        # Module map for ensemble {'module': [Array of callsites]}
+        self.module_callsite_map = self.module_group_df['name'].unique()
+
+        # Inclusive time maps for the module level and callsite level. 
+        self.module_time_inc_map = self.module_group_df['time (inc)'].max().to_dict()
+        self.name_time_inc_map = self.module_name_group_df['time (inc)'].max().to_dict()
+
+        # Exclusive time maps for the module level and callsite level.
+        self.module_time_exc_map = self.module_group_df['time'].max().to_dict()
+        self.name_time_exc_map = self.module_name_group_df['time'].max().to_dict()
 
     def rename_cycle_path(self, path):
         ret = []
@@ -286,8 +328,8 @@ class SuperGraph(nx.Graph):
 
         return ret
 
-    def callsite_time(self, module, callsite)
-        callsite_df = self.module_name_group_df.get_group((module, callsite))
+    def callsite_time(self, group_df, module, callsite):
+        callsite_df = group_df.get_group((module, callsite))
         max_inc_time = callsite_df['time (inc)'].max()
         max_exc_time = callsite_df['time'].max()
 
@@ -296,13 +338,12 @@ class SuperGraph(nx.Graph):
             'Exclusive': max_exc_time
         } 
 
-    def module_time(self, module):
+    # is expensive....
+    def module_time(self, group_df=pd.DataFrame([]), module_callsite_map={}, module=''):
         exc_time_sum = 0
         inc_time_max = 0
-        module_df = df.loc[df['module'] == module]
-        callsites = module_df['name'].unique()
-        for callsite in callsites:
-            callsite_df = self.module_name_group_df.get_group((module, callsite))
+        for callsite in module_callsite_map[module]:
+            callsite_df = group_df.get_group((module, callsite))
             max_inc_time = callsite_df['time (inc)'].max()
             inc_time_max = max(inc_time_max, max_inc_time)
             max_exc_time = callsite_df['time'].max()
@@ -330,8 +371,8 @@ class SuperGraph(nx.Graph):
             source_callsite = edge[2]['attr_dict']['source_callsite']
             target_callsite = edge[2]['attr_dict']['target_callsite']
 
-            source_exc = self.name_time_map[(source_module, source_callsite)]
-            target_exc = self.name_time_map[(target_module, target_callsite)]
+            source_exc = self.name_time_exc_map[(source_module, source_callsite)]
+            target_exc = self.name_time_exc_map[(target_module, target_callsite)]
 
             ret[(edge[0], edge[1])] = target_exc
 
@@ -350,63 +391,62 @@ class SuperGraph(nx.Graph):
 
         # loop through the nodes
         for node in self.g.nodes():
-            if "=" in node:
-                node_name = node.split("=")[0]
+            if '=' in node:
+                module = node.split('=')[0]
+                callsite = node.split('=')[1]
             else:
-                node_name = node
+                module = node
+                callsite = self.module_callsite_map[module].tolist()
 
             for column in ensemble_columns:
                 if column not in ret:
                     ret[column] = {}
 
                 if (column == "time (inc)"):
-                    ret[column][node] = self.module_time_inc_map[node_name]
+                    ret[column][node] = self.module_time_inc_map[module]
                     
                 elif( column == 'time'):
-                    ret[column][node] = self.module_time_map[node_name]
+                    ret[column][node] = self.module_time_exc_map[module]
+
+                elif( column == 'actual_time'):
+                    ret[column][node] = self.module_time(group_df=self.module_name_group_df, module_callsite_map=self.module_callsite_map, module=module)
 
                 elif ( column == "module"):
-                    ret[column][node] = node_name
+                    ret[column][node] = module
 
                 elif (column == 'name'):
-                    ret[column][node] = node
+                    ret[column][node] = callsite
         return ret
 
-    def dataset_map(self, nodes, dataset):
+    def dataset_map(self, nodes, run):
         ret = {}
-        target_module_time_map = self.target_df[dataset].groupby(['module'])['time'].max().to_dict()
-        target_module_time_inc_map = self.target_df[dataset].groupby(['module'])['time (inc)'].max().to_dict()
-
-        target_name_time_map = self.target_df[dataset].groupby(['module'])['time'].max().to_dict()
-        target_name_time_inc_map = self.target_df[dataset].groupby(['module'])['time (inc)'].max().to_dict()
-
+        
         for node in self.g.nodes():
-            if "=" in node:
-                node_name = node.split("=")[0]
-            else:
-                node_name = node
+            if( node in self.target_module_callsite_map[run].keys()):
+                if '=' in node:
+                    module = node.split("=")[0]
+                    callsite = node.split('=')[1]
+                else:
+                    module = node
+                    callsite = self.target_module_callsite_map[run][module].tolist()
 
-            if node not in ret:
-                ret[node] = {}
+                if node not in ret:
+                    ret[node] = {}
 
-            for column in self.columns:
-                if (column == "time (inc)"):
-                    if node_name not in target_module_time_inc_map:
-                        ret[node][column] = 0.0
-                    else:
-                        ret[node][column] = target_module_time_inc_map[node_name]
+                for column in self.columns:
+                    if (column == "time (inc)"):
+                        ret[node][column] = self.target_module_time_inc_map[run][module]
 
-                if (column == "time"):
-                    if node_name not in target_module_time_map:
-                        ret[node][column] = 0.0
-                    else:
-                        ret[node][column] = target_module_time_map[node_name]
+                    elif (column == "time"):
+                        ret[node][column] = self.target_module_time_exc_map[run][module]
 
+                    elif (column == "module"):
+                        ret[node][column] = module
 
-                elif (column == "module"):
-                    ret[node][column] = node_name
+                    elif column == "actual_time":
+                        ret[node][column] = self.module_time(group_df=self.target_module_name_group_df[run], module_callsite_map=self.target_module_callsite_map[run], module=module)
 
-                elif (column == 'name'):
-                    ret[node][column] = node
+                    elif (column == 'name'):
+                        ret[node][column] = callsite
 
         return ret
