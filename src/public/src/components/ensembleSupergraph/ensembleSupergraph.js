@@ -58,7 +58,9 @@ export default {
 			data = JSON.parse(data)
 			console.log("Data: ", data)
 			for(let i = 0; i < data.nodes.length; i+=1){
-				console.log(data.nodes[i].id)
+				console.log("Node name: ", data.nodes[i].id )
+				console.log("Time (inc): ", data.nodes[i]['time (inc)'])
+				console.log("Time: ", data.nodes[i]['time'])
 			}
 			this.render(data)
 		},
@@ -112,7 +114,6 @@ export default {
 			if (this.debug) {
 				for (let i = 0; i < this.graph['links'].length; i += 1) {
 					let link = this.graph['links'][i]
-					console.log(link)
 					let source_callsite = link['source']
 					let target_callsite = link['target']
 					let weight = link['weight']
@@ -133,7 +134,7 @@ export default {
 					// console.log("[Ensemble SuperGraph] Target Exclusive: ", target_exclusive)
 				}
 			}
-			// this.initSankey(this.graph)
+			this.initSankey(this.graph)
 
 			console.log("[Ensemble SuperGraph] Layout Calculation.")
 			// let postProcess = this.postProcess(this.graph.nodes, this.graph.links)
