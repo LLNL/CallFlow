@@ -97,12 +97,11 @@ export default {
 		},
 
 		render(data) {
-			this.graph = data
-			this.graphStructure = this.createGraphStructure(data)
-			console.log(this.graphStructure)
+			this.data = data
+			this.data.graph = this.createGraphStructure(this.data)
 
 			// check cycle. 
-			let detectcycle = detectDirectedCycle(this.graphStructure)
+			let detectcycle = detectDirectedCycle(this.data.graph)
 			console.log(detectcycle)
 			if(Object.keys(detectcycle).length != 0){
 				console.log("cycle detected. Sankey cannot be created. ")
@@ -112,8 +111,8 @@ export default {
 			}
 
 			if (this.debug) {
-				for (let i = 0; i < this.graph['links'].length; i += 1) {
-					let link = this.graph['links'][i]
+				for (let i = 0; i < this.data['links'].length; i += 1) {
+					let link = this.data['links'][i]
 					let source_callsite = link['source']
 					let target_callsite = link['target']
 					let weight = link['weight']
@@ -134,16 +133,16 @@ export default {
 					// console.log("[Ensemble SuperGraph] Target Exclusive: ", target_exclusive)
 				}
 			}
-			this.initSankey(this.graph)
+			this.initSankey(this.data)
 
 			console.log("[Ensemble SuperGraph] Layout Calculation.")
-			// let postProcess = this.postProcess(this.graph.nodes, this.graph.links)
-			// this.graph.nodes = postProcess['nodes']
-			// this.graph.links = postProcess['links']
-			// this.initSankey(this.graph)
+			// let postProcess = this.postProcess(this.data.nodes, this.data.links)
+			// this.data.nodes = postProcess['nodes']
+			// this.data.links = postProcess['links']
+			// this.initSankey(this.data)
 			// console.log("[Ensemble SuperGraph] Post-processing done.")
 
-			this.$store.graph = this.graph
+			this.$store.graph = this.data
 			this.$refs.EnsembleColorMap.init()
 			this.$refs.EnsembleEdges.init(this.$store.graph, this.view)
 			this.$refs.EnsembleNodes.init(this.$store.graph, this.view)
@@ -175,7 +174,7 @@ export default {
 				.nodePadding(this.ySpacing)
 				.size([this.width * 1.05, this.height * .9 - this.ySpacing])
 				.levelSpacing(this.levelSpacing)
-				.maxLevel(this.graph.maxLevel)
+				.maxLevel(this.data.maxLevel)
 				.datasets(this.$store.runNames)
 				.setMinNodeScale(this.nodeScale)
 				.dataset('ensemble')
@@ -184,8 +183,8 @@ export default {
 
 			let path = this.sankey.link()
 
-			this.sankey.nodes(this.graph.nodes)
-				.links(this.graph.links)
+			this.sankey.nodes(this.data.nodes)
+				.links(this.data.links)
 				.layout(32)
 		},
 
@@ -243,7 +242,8 @@ export default {
 						name: target_node.id,
 						module: target_node.module,
 						"time (inc)": source_node['time (inc)'],
-						"time" : source_node['time']
+						"time" : source_node['time'],
+						"actual_time": source_node['actual_time']
 					};
 					tempNode[targetDataset] = target_node[targetDataset]
 					

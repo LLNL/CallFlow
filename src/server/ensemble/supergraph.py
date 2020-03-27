@@ -199,7 +199,7 @@ class SuperGraph(nx.Graph):
                     "target_callsite": target_name
                 })
 
-    def add_paths(self, path):
+    def add_paths_backup(self, path):
         paths = self.group_df[path].unique()
 
         for idx, path_str in enumerate(paths):
@@ -210,7 +210,7 @@ class SuperGraph(nx.Graph):
                     source = path_list[callsite_idx]
                     target = path_list[callsite_idx + 1]
 
-                    print(source['module'], target['module'])
+                    print(source['module'], target['module'], source['callsite'], target['callsite'])
 
                     if(not self.g.has_edge(source['module'], target['module'])):
                         source_module = source['module']
@@ -253,6 +253,38 @@ class SuperGraph(nx.Graph):
         #             "target_callsite": target_name
         #         })
             
+    def add_paths(self, path):
+        print(self.group_df[['dataset', 'name', 'module', 'group_path']])
+        paths = self.group_df[path].unique()
+
+        for idx, path_str in enumerate(paths):
+            path_list = self.rename_cycle_path(path_str)
+
+            for callsite_idx, callsite in enumerate(path_list):
+                if callsite_idx != len(path_list) - 1:
+                    source = path_list[callsite_idx]
+                    target = path_list[callsite_idx + 1]
+
+                    print(source['module'], target['module'], source['callsite'], target['callsite'])
+
+                    source_module = source['module']
+                    target_module = target['module']
+
+                    source_name = source['callsite']
+                    target_name = target['callsite']
+
+                    if(self.g.has_edge(target['module'], source['module'])):
+                        edge_type = 'callback'
+                    else:
+                        edge_type = 'normal'
+
+                    if(edge_type == 'normal'):
+                        self.g.add_edge(source_module, target_module,   attr_dict={
+                            "source_callsite": source_name,
+                            "target_callsite": target_name,
+                            "edge_type": edge_type
+                        })
+
     def add_node_attributes(self):
         ensemble_mapping = self.ensemble_map(self.g.nodes())
 
@@ -307,27 +339,6 @@ class SuperGraph(nx.Graph):
             )
         )
 
-    def calculate_flows(self, graph):
-        ret = {}
-        additional_flow = {}
-        for edge in graph.edges(data=True):
-            if('=' in edge[0]):
-                source_module = edge[0].split('=')[0]
-            else:
-                source_module = edge[0]
-
-            if('=' in edge[1]):
-                target_module = edge[1].split('=')[0]
-            else:
-                target_module = edge[1]
-
-            source_inc = self.module_time_inc_map[source_module]
-            target_inc = self.module_time_inc_map[target_module]
-
-            ret[(edge[0], edge[1])] = target_inc
-
-        return ret
-
     def callsite_time(self, group_df, module, callsite):
         callsite_df = group_df.get_group((module, callsite))
         max_inc_time = callsite_df['time (inc)'].max()
@@ -348,11 +359,58 @@ class SuperGraph(nx.Graph):
             inc_time_max = max(inc_time_max, max_inc_time)
             max_exc_time = callsite_df['time'].max()
             exc_time_sum += max_exc_time
-            # print(callsite, max_exc_time, max_inc_time)
         return {
             'Inclusive': inc_time_max,
             'Exclusive': exc_time_sum
         }
+
+    def calculate_flows(self, graph):
+        ret = {}
+        additional_flow = {}
+        for edge in graph.edges(data=True):
+            if('=' in edge[0]):
+                source_module = edge[0].split('=')[0]
+            else:
+                source_module = edge[0]
+
+            if('=' in edge[1]):
+                target_module = edge[1].split('=')[0]
+            else:
+                target_module = edge[1]
+
+            source_callsite = edge[2]['attr_dict']['source_callsite']
+            target_callsite = edge[2]['attr_dict']['target_callsite']
+
+            print(f' Source: {source_module} => {source_callsite}')
+            print(f' Target: {target_module} => {target_callsite}')
+
+            source_inc = self.module_time_inc_map[source_module]
+            target_inc = self.module_time_inc_map[target_module]
+            source_module_inc = self.module_time_inc_map[source_module]
+
+            target_module_inc = self.module_time_inc_map[source_module]
+
+            source_callsite_exc = self.name_time_exc_map[(source_module, source_callsite)]
+            target_callsite_exc = self.name_time_exc_map[(target_module, target_callsite)]
+
+            print(source_callsite_exc, target_callsite_exc)
+            print(source_module_inc, target_module_inc)
+
+
+            # if(target_callsite_exc == 0 and source_callsite_exc == 0 ):
+            #     ret[(edge[0], edge[1])] = target_module_inc
+            # else:
+            #     ret[(edge[0], edge[1])] = (source_module_inc - source_callsite_exc) - (target_module_inc - target_callsite_exc)
+
+            # For Lulesh. 
+
+            if(target_callsite_exc == 0):
+                edge_weight = target_inc
+
+            ret[(edge[0], edge[1])] = target_inc
+
+        return ret
+
 
     def calculate_exc_weight(self, graph):
         ret = {}
