@@ -231,7 +231,9 @@ export default function Sankey() {
 
             console.log(sourceSum, targetSum, node['time'])
 
-            node.value = Math.max(sourceSum, targetSum) + node['time']
+            // node.value = Math.max(sourceSum, targetSum) + node['time']
+
+            node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
 
             console.log("Adjusted Node flow : ", node.value)
 
@@ -427,7 +429,7 @@ export default function Sankey() {
             }
             if (levelCount == 2) {
                 nodes.sort(function (a, b) {
-                    if (a.name.split('_')[0] != 'intermediate' || b.name.split('_')[0] != 'intermediate') {
+                    if (a.id.split('_')[0] != 'intermediate' || b.id.split('_')[0] != 'intermediate') {
                         return a['height'] - b['height']
                     }
                 })
