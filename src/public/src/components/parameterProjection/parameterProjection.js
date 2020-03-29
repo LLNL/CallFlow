@@ -217,7 +217,6 @@ export default {
             this.axis()
 
             this.$store.projection = this.preprocess(data)
-            console.log(this.$store.projection)
             this.x.domain([2.0 * this.xMin, 2.0 * this.xMax])
             this.y.domain([2.0 * this.yMin, 2.0 * this.yMax])
 
@@ -271,7 +270,7 @@ export default {
                     },
                     'stroke-width': 3.0,
                     stroke: (d) => {
-                        if (d[2] == self.$store.selectedTargetDataset) {
+                        if (d[2] == self.$store.selectedTargetDataset && self.$store.showTarget) {
                             return d3.rgb(self.$store.color.target)
                         }
                         else {

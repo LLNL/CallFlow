@@ -54,6 +54,19 @@ export default {
 		// EnsembleDistribution
 	},
 
+	watch: {
+		showTarget: (val) => {
+			this.showTarget = !(this.showTarget)
+			
+			this.clearLocal()
+			this.init()
+
+			EventHandler.$emit('show_target_auxiliary', {
+				
+			})
+		}
+	},
+
 	data: () => ({
 		appName: 'CallFlow',
 		// server: '169.237.6.49:5000',
@@ -159,9 +172,8 @@ export default {
 		selectedTargetColor: '',
 		selectedTargetColorText: 'Green',
 		showTarget: true,
+		targetInfo: 'Show Target info.'
 	}),
-
-	watch: {},
 
 	mounted() {
 		var socket = io.connect(this.server, { reconnect: false });
