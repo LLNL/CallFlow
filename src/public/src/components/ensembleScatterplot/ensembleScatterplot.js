@@ -120,7 +120,9 @@ export default {
 			this.xAxis()
 			this.yAxis()
 			this.ensembleDots()
-			this.targetDots()
+			if(this.$store.showTarget){
+				this.targetDots()
+			}
 			// this.correlationText()
 			this.setTitle()
 		},

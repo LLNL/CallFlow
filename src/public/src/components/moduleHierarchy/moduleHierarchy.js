@@ -389,7 +389,9 @@ export default {
 			this.setupCallsiteMeanGradients()
 			this.addNodes()
 			this.addText()
-			this.drawTargetLine()
+			if (this.$store.showTarget) {
+				this.drawTargetLine()
+			}
 
 			// Add the mouseleave handler to the bounding rect.
 			d3.select('#container').on('mouseleave', this.mouseleave);
@@ -526,13 +528,13 @@ export default {
 					let data = this.$store.modules['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']
 					mean = data['dataset']['mean'][dataset]
 					gradients = data['hist']
-					targetPos = data['dataset']['position'][dataset]
+					targetPos = data['dataset']['position'][dataset] + 1
 				}
 				else {
 					let data = this.$store.callsites['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']
 					mean = data['dataset']['mean'][dataset]
 					gradients = data['hist']
-					targetPos = data['dataset']['position'][dataset]
+					targetPos = data['dataset']['position'][dataset] + 1
 				}
 
 				let grid = gradients.x
@@ -540,7 +542,7 @@ export default {
 
 				let binWidth = (this.nodes[i].x1 - this.nodes[i].x0) / (this.$store.selectedRunBinCount)
 
-				let x = this.nodes[i].x0 + binWidth * targetPos - binWidth/2
+				let x = this.nodes[i].x0 + binWidth * targetPos - binWidth / 2
 
 				this.hierarchySVG
 					.append('line')
@@ -747,7 +749,7 @@ export default {
 					// d3.selectAll('.icicleNode')
 					// 	.style('opacity', 0.3);
 
-						// Then highlight only those that are an ancestor of the current segment.
+					// Then highlight only those that are an ancestor of the current segment.
 					// this.hierarchy.selectAll('.icicleNode')
 					// 	.filter(node => (sequenceArray.indexOf(node) >= 0))
 					// 	.style('opacity', 1)

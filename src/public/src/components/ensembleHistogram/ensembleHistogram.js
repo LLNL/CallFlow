@@ -154,7 +154,6 @@ export default {
         },
 
         setupScale(callsite) {
-            console.log(this.$store.modules)
             let data = this.$store.modules[this.$store.selectedTargetDataset][callsite][this.$store.selectedMetric]['prop_histograms']
 
             let ensembleData = data[this.$store.selectedProp]['ensemble']
@@ -200,12 +199,15 @@ export default {
             this.clear()
             this.setupScale(callsite)
             this.ensembleBars()
-            this.targetBars()
             this.xAxis()
             this.yAxis()
             this.setTitle()
             // this.rankLines()
             // this.brushes()        
+
+            if (this.$store.showTarget) {
+                this.targetBars()
+            }
         },
 
         setTitle() {
@@ -407,7 +409,7 @@ export default {
                 })
         },
 
-        addxAxisLabel(){
+        addxAxisLabel() {
             let max_value = this.xScale.domain()[1]
             this.x_max_exponent = utils.formatExponent(max_value)
             let exponent_string = this.superscript[this.x_max_exponent]
