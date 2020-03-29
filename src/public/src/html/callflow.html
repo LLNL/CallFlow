@@ -100,6 +100,11 @@
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
+					<v-select label="Target Color" :items="targetColors" v-model="selectedTargetColor"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateTargetColor()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
 					<v-text-field label="Color points (3-9)" class="mt-0" type="number" v-model="selectedColorPoint"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColors()">
 					</v-text-field>

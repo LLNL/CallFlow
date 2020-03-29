@@ -82,7 +82,7 @@ export default {
 		runtimeColorMap: [],
 		distributionColorMap: [],
 		selectedRuntimeColorMap: "PuBu",
-		selectedDistributionColorMap: "YlOrRd",
+		selectedDistributionColorMap: "Reds",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
 		selectedColorPoint: 9,
 		selectedColorMin: null,
@@ -93,7 +93,6 @@ export default {
 		selectedGroupMode: 'include callbacks',
 		scatterMode: ['mean', 'all'],
 		selectedScatterMode: 'all',
-		selectedMPIBinCount: 20,
 		selectedFunctionsInCCT: 70,
 		selectedDiffNodeAlignment: 'Top',
 		diffNodeAlignment: ['Middle', 'Top'],
@@ -136,6 +135,7 @@ export default {
 		// selectedCaseStudy: 'OSU-Bcast',
 		// selectedCaseStudy: "Kripke-Scaling",
 		selectedRunBinCount: 20,
+		selectedMPIBinCount: 20,
 		selectedHierarchyMode: 'Uniform',
 		hierarchyModes: ['Uniform', 'Exclusive'],
 		selectedRuntimeSortBy: 'Inclusive',
@@ -149,6 +149,13 @@ export default {
 		selectedPC2: 'max_exclusive_time',
 		selectedIQRFactor: 0.15,
 		selectedNumOfClusters: 3,
+		targetColorMap: {
+			'green':'#4EAF4A',
+			'red': '#4681B4', 
+			'brown': '#AF9B90'
+		},
+		targetColors: [],
+		selectedTargetColor: ''
 	}),
 
 	watch: {},
@@ -349,10 +356,7 @@ export default {
 					this.selectedColorMin = this.$store.minExcTime['ensemble']
 					this.selectedColorMax = this.$store.maxExcTime['ensemble']
 				}
-				else if (this.selectedMetric == 'Imbalance') {
-					this.selectedColorMin = 0.0
-					this.selectedColorMax = 1.0
-				}
+				this.selectedColorMin = 0.0
 			}
 			else if (this.selectedMode == 'Single') {
 				if (this.selectedMetric == 'Inclusive') {
@@ -381,9 +385,12 @@ export default {
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
 			this.$store.color.highlight = '#AF9B90';//'#4681B4'
-			this.$store.color.target = '#4681B4'//'#AF9B90';//'#4681B4'
+			this.selectedTargetColor = this.targetColorMap['green']
+			this.$store.color.target =  this.selectedTargetColor
 			this.$store.color.ensemble = '#C0C0C0';//'#4681B4'
 			this.$store.color.compare = '#043060'
+
+			this.targetColors = Object.keys(this.targetColorMap)
 		},
 
 		clear() {

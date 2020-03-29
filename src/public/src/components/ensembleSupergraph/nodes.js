@@ -516,28 +516,32 @@ export default {
             for (let i = 0; i < this.graph.nodes.length; i++) {
                 let node_data = this.graph.nodes[i]
                 let module_name = this.graph.nodes[i].module
+                console.log(module_name)
                 if (this.graph.nodes[i].id.split('_')[0] != 'intermediate') {
-
-                    let module_mean = data[this.$store.selectedTargetDataset][module_name][this.$store.selectedMetric]['max_time']
-
                     let gradients = data['ensemble'][module_name][this.$store.selectedMetric]['gradients']
+                    let module_mean = gradients['dataset']['mean'][this.$store.selectedTargetDataset]
+    
                     let grid = gradients.hist.x
                     let vals = gradients.hist.y
 
-                    let targetPos = 0
-                    let binWidth = node_data.height / this.$store.selectedMPIBinCount
+                    let targetPos = gradients['dataset']['position'][this.$store.selectedTargetDataset] + 1
+                    let binWidth = node_data.height / (this.$store.selectedRunBinCount)
 
-                    for (let idx = 0; idx < grid.length; idx += 1) {
-                        if (grid[idx] > module_mean) {
-                            targetPos = idx + 1
-                            break
-                        }
-                        if (idx == grid.length - 1) {
-                            targetPos = grid.length
-                        }
-                    }
+                    // for (let idx = 0; idx < grid.length; idx += 1) {
+                    //     console.log(module_mean, grid[idx])
+                    //     if (grid[idx] >= module_mean) {
+                    //         targetPos = idx
+                    //         break
+                    //     }
+                    //     if (idx == grid.length - 1) {
+                    //         targetPos = grid.length
+                    //     }
+                    // }
 
-                    let y = binWidth * targetPos
+
+                    console.log(targetPos, grid)
+
+                    let y = binWidth * targetPos - binWidth/2
 
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('line')

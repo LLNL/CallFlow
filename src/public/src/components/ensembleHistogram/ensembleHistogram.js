@@ -130,7 +130,7 @@ export default {
             dataMax = data['x_max'];
             // dataSorted = data['sorted_time (inc)']
 
-            let dataWidth = ((dataMax - dataMin) / this.$store.selectedBinCount);
+            let dataWidth = ((dataMax - dataMin) / this.$store.selectedMPIBinCount);
             if (dataWidth == 0) {
                 dataWidth = 1
             }
