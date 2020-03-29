@@ -68,12 +68,20 @@ export default {
 
         EventHandler.$on('highlight_dataset', (data) => {
             let dataset = data['dataset']
-            self.highlightCallsitesByDataset(dataset)
+            if(self.$store.showTarget){
+                self.highlightCallsitesByDataset(dataset)
+            }
         })
 
         EventHandler.$on('callsite_information_sort', (data) => {
             let attribute = self.$store.selectedRuntimeSortBy
             self.sortByAttribute(attribute)
+        })
+
+        EventHandler.$on('show_target_auxiliary', (data) => {
+            console.log('aa')
+            self.callsites = []
+            // self.init()
         })
     },
 
@@ -122,7 +130,6 @@ export default {
         setInfo() {
             this.numberOfCallsites = Object.keys(this.$store.callsites['ensemble']).length
             this.callsites = this.$store.callsites['ensemble']
-            console.log(this.$store.selectedRuntimeSortBy)
             this.sortByAttribute(this.$store.selectedRuntimeSortBy)
             this.selectedModule = this.$store.selectedModule
             this.selectedCallsite = this.$store.selectedCallsite

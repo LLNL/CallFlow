@@ -27,6 +27,9 @@
 			</v-select>
 		</v-flex> -->
 		<v-flex xs2 class="ma-1">
+			<v-switch v-model="showTarget" :label="targetInfo" v-on:change="updateTargetColor()"></v-switch>
+		</v-flex>
+		<v-flex xs2 class="ma-1">
 			<v-select label="Graph to visualize" :items="formats" v-model="selectedFormat"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
 			</v-select>
@@ -95,8 +98,9 @@
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
-					<v-select label="Distribution Color Map" :items="distributionColorMap" v-model="selectedDistributionColorMap"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColors()">
+					<v-select label="Distribution Color Map" :items="distributionColorMap"
+						v-model="selectedDistributionColorMap" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateColors()">
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
@@ -153,8 +157,8 @@
 					</v-text-field>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
-					<v-select label="Scale" :items="scales" v-model="selectedScale"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateScale()">
+					<v-select label="Scale" :items="scales" v-model="selectedScale" :menu-props="{ maxHeight: '200' }"
+						persistent-hint v-on:change="updateScale()">
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
@@ -171,28 +175,26 @@
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
-					<v-text-field label="IQR Factor" class="mt-0" type="float"
-					v-model="selectedIQRFactor" :menu-props="{ maxHeight: '200' }" persistent-hint
-					v-on:change="updateIQRFactor()">
+					<v-text-field label="IQR Factor" class="mt-0" type="float" v-model="selectedIQRFactor"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateIQRFactor()">
 					</v-text-field>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
 					<v-subheader class="teal lighten-4">Projection parameters</v-subheader>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
-					<v-text-field label="Number of clusters" class="mt-0" type="float"
-					v-model="selectedNumOfClusters" :menu-props="{ maxHeight: '200' }" persistent-hint
-					v-on:change="updateNumOfClusters()">
+					<v-text-field label="Number of clusters" class="mt-0" type="float" v-model="selectedNumOfClusters"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateNumOfClusters()">
 					</v-text-field>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
-					<v-select label="PC1" :items="dimensions" v-model="selectedPC1"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updatePC1()">
+					<v-select label="PC1" :items="dimensions" v-model="selectedPC1" :menu-props="{ maxHeight: '200' }"
+						persistent-hint v-on:change="updatePC1()">
 					</v-select>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
-					<v-select label="PC2" :items="dimensions" v-model="selectedPC2"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updatePC2()">
+					<v-select label="PC2" :items="dimensions" v-model="selectedPC2" :menu-props="{ maxHeight: '200' }"
+						persistent-hint v-on:change="updatePC2()">
 					</v-select>
 				</v-flex>
 				<!-- <v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
@@ -248,7 +250,8 @@
 		</v-layout>
 
 		<v-layout v-show="selectedMode == 'Ensemble' && selectedFormat == 'SuperGraph'">
-			<splitpanes id="ensemble-supergraph-dashboard" class="default-theme" v-show="selectedData == 'Dataframe' && parameter_analysis == true">
+			<splitpanes id="ensemble-supergraph-dashboard" class="default-theme"
+				v-show="selectedData == 'Dataframe' && parameter_analysis == true">
 				<splitpanes horizontal :splitpanes-size="25">
 					<!-- <span>
 						<RunInformation ref="RunInformation" />
@@ -257,7 +260,7 @@
 						<ModuleHierarchy ref="ModuleHierarchy" />
 					</span>
 					<span>
-						<EnsembleScatterplot ref="EnsembleScatterplot"/>
+						<EnsembleScatterplot ref="EnsembleScatterplot" />
 					</span>
 					<span>
 						<EnsembleHistogram ref="EnsembleHistogram" />
@@ -296,7 +299,7 @@
 			<splitpanes id="ensemble-cct-dashboard">
 				<splitpanes horizontal :splitpanes-size="100">
 					<span>
-						<EnsembleCCT ref="EnsembleCCT"/>
+						<EnsembleCCT ref="EnsembleCCT" />
 					</span>
 					</span>
 				</splitpanes>
@@ -307,13 +310,13 @@
 			<splitpanes id="compare-cct-dashboard">
 				<splitpanes horizontal :splitpanes-size="50">
 					<span>
-						<EnsembleCCT ref="EnsembleCCT1"/>
+						<EnsembleCCT ref="EnsembleCCT1" />
 					</span>
 					</span>
 				</splitpanes>
 				<splitpanes horizontal :splitpanes-size="50">
 					<span>
-						<EnsembleCCT ref="EnsembleCCT2"/>
+						<EnsembleCCT ref="EnsembleCCT2" />
 					</span>
 					</span>
 				</splitpanes>
