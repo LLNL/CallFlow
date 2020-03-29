@@ -159,7 +159,7 @@ export default {
                     this.callsites[callsite] = this.$store.callsites['ensemble'][callsite]
                 }
             }
-            this.number_of_callsites = Object.keys(this.callsites).length
+            this.numberOfCallsites = Object.keys(this.callsites).length
         },
 
         selectCallsitesByModule(thismodule) {

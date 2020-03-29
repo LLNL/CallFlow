@@ -516,41 +516,31 @@ export default {
 		drawTargetLine() {
 			let dataset = this.$store.selectedTargetDataset
 
-			let data = this.$store.modules
-
 			for (let i = 0; i < this.nodes.length; i++) {
 				let node_data = this.nodes[i].data
 
 				let mean = 0
 				let gradients = []
+				let targetPos = 0
 				if (this.nodes[i].depth == 0) {
-					mean = this.$store.modules['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']['dataset'][dataset]
-					gradients = this.$store.modules['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']['hist']
+					let data = this.$store.modules['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']
+					mean = data['dataset']['mean'][dataset]
+					gradients = data['hist']
+					targetPos = data['dataset']['position'][dataset]
 				}
 				else {
-					mean = this.$store.callsites['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']['dataset'][dataset]
-					gradients = this.$store.callsites['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']['hist']
+					let data = this.$store.callsites['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']
+					mean = data['dataset']['mean'][dataset]
+					gradients = data['hist']
+					targetPos = data['dataset']['position'][dataset]
 				}
 
 				let grid = gradients.x
 				let vals = gradients.y
 
-
-				let targetPos = 0
 				let binWidth = (this.nodes[i].x1 - this.nodes[i].x0) / (this.$store.selectedRunBinCount)
 
-				for (let idx = 0; idx < grid.length; idx += 1) {
-					if (grid[idx] > mean) {
-						targetPos = idx
-						break
-					}
-					if (idx == grid.length - 1) {
-						targetPos = grid.length - 1
-					}
-
-				}
-
-				let x = this.nodes[i].x0 + binWidth * targetPos
+				let x = this.nodes[i].x0 + binWidth * targetPos - binWidth/2
 
 				this.hierarchySVG
 					.append('line')

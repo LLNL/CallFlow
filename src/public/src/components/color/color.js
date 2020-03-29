@@ -414,12 +414,15 @@ export default class Color {
             this.colorScale = d3.scaleOrdinal(d3.schemeCategory10)
         } else if (this.option == 'Inclusive') {
             this.incColorScale = chroma.scale(this.colorMap)
-                // .padding(this.colorPadding)
+                .padding([0.1, 0.0])
+                .gamma(0.5)
                 .domain([min, max])
         } else if (this.option == 'Exclusive') {
-            this.excColorScale = chroma.scale(this.colorMap)
-                // .padding(this.colorPadding)
-                .domain([min, max]);
+            this.excColorScale = chroma.scale(['white', '#023858'])
+                .padding([0.0, 0.0])
+                .gamma(2)
+                .domain([min, max])
+                .correctLightness()
         } else if (this.option == 'nRange') {
             this.nRangeColorScale = chroma.scale(this.colorMap)
                 // .padding(this.colorPadding)
@@ -444,13 +447,14 @@ export default class Color {
                 .domain([min, max]);
         } else if (this.option == 'Bin') {
             this.binColorScale = chroma.scale(this.colorMap)
-                .padding([0.0, 0.0])
+                .padding([0.05, 0.0])
                 .gamma(0.5)
                 .domain([min, max])
+
             // this.binColorScale = chroma.cubehelix()
-            //     .start(200)
+            //     .start(0)
             //     .rotations(-0.35)
-            //     .gamma(1.0)
+            //     .gamma(0.2)
             //     .lightness([1.0, 0.8])
             //     .scale()
         }

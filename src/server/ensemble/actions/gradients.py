@@ -43,15 +43,14 @@ class KDE_gradients:
             return int(np.ceil((arr.max() - arr.min()) / h))
 
     def convert_dictmean_to_list(self, dictionary):
-        ret = []
+        mean = []
         dataset = {}
         for state in dictionary:
             d = list(dictionary[state].values())
             # ret.append(max(d))
-            ret.append(np.mean(np.array(d)))
+            mean.append(np.mean(np.array(d)))
             dataset[state] = np.mean(np.array(d))
-        return [ret, dataset]
-
+        return [mean, dataset]
 
     def kde(
         self,
@@ -81,12 +80,24 @@ class KDE_gradients:
 
         return x, y
 
-    def histogram(self, data, data_min=np.nan, data_max=np.nan):
+    def histogram(self, data,  dataset_dict={}, data_min=np.nan, data_max=np.nan,):
         if(np.isnan(data_min) or np.isnan(data_max) ):
             data_min = 0
             data_max = data.max()
         h, b = np.histogram(data, range=[data_min, data_max], bins=int(self.binCount))
-        return 0.5*(b[1:]+b[:-1]), h
+
+        # Map the datasets to their histogram indexes.  
+        dataset_position_dict = {}
+        for dataset in dataset_dict:
+            mean = dataset_dict[dataset]
+            for idx, x in np.ndenumerate(b):
+                if( x < float(mean) and b[idx[0]+1] > float(mean)):
+                    dataset_position_dict[dataset] = idx[0]
+                    break
+                if (idx[0] == len(b) - 1):
+                    dataset_position_dict[dataset] = len(b) - 2
+
+        return 0.5*(b[1:]+b[:-1]), h, dataset_position_dict
 
     def clean_dict(self, in_dict):
         ret = {k: in_dict[k] for k in in_dict if not math.isnan(in_dict[k])}
@@ -144,8 +155,8 @@ class KDE_gradients:
         # Calculate appropriate number of bins automatically.
         num_of_bins = self.binCount
 
-        hist_inc_grid = self.histogram(np.array(dist_inc_list))
-        hist_exc_grid = self.histogram(np.array(dist_exc_list))
+        hist_inc_grid = self.histogram(np.array(dist_inc_list), dataset_inc_list)
+        hist_exc_grid = self.histogram(np.array(dist_exc_list), dataset_exc_list)
 
         # max_num_of_bins = min(self.freedman_diaconis_bins(np.array(dist_list)), 50)
 
@@ -162,7 +173,10 @@ class KDE_gradients:
         results = {
             "Inclusive": {
                 "bins": num_of_bins,
-                "dataset": dataset_inc_list,
+                "dataset": {
+                    'mean': dataset_inc_list,
+                    'position': hist_inc_grid[2]
+                },
                 # "kde": {
                 #     "x": kde_grid[vis_node_name][0].tolist(),
                 #     "y": kde_grid[vis_node_name][1].tolist(),
@@ -182,7 +196,10 @@ class KDE_gradients:
             },
             "Exclusive": {
                 "bins": num_of_bins,
-                "dataset": dataset_exc_list,
+                "dataset": 
+            {       'mean': dataset_exc_list,
+                    'position': hist_exc_grid[2]
+                },
                 # "kde": {
                 #     "x": kde_grid[vis_node_name][0].tolist(),
                 #     "y": kde_grid[vis_node_name][1].tolist(),
@@ -194,10 +211,10 @@ class KDE_gradients:
                 "hist": {
                     "x": hist_exc_grid[0].tolist(),
                     "y": hist_exc_grid[1].tolist(),
-                    "x_min": hist_inc_grid[0][0],
-                    "x_max": hist_inc_grid[0][-1],
-                    "y_min": np.min(hist_inc_grid[1]).astype(np.float64),
-                    "y_max": np.max(hist_inc_grid[1]).astype(np.float64),
+                    "x_min": hist_exc_grid[0][0],
+                    "x_max": hist_exc_grid[0][-1],
+                    "y_min": np.min(hist_exc_grid[1]).astype(np.float64),
+                    "y_max": np.max(hist_exc_grid[1]).astype(np.float64),
                 },
             },
         }
