@@ -150,12 +150,15 @@ export default {
 		selectedIQRFactor: 0.15,
 		selectedNumOfClusters: 3,
 		targetColorMap: {
-			'green':'#4EAF4A',
-			'red': '#4681B4', 
-			'brown': '#AF9B90'
+			'Green':'#4EAF4A',
+			'Blue': '#4681B4', 
+			'Brown': '#AF9B90',
+			'Red': '#A90400'
 		},
-		targetColors: [],
-		selectedTargetColor: ''
+		targetColors: ['Green', 'Blue', 'Brown'],
+		selectedTargetColor: '',
+		selectedTargetColorText: 'Green',
+		showTarget: true,
 	}),
 
 	watch: {},
@@ -218,7 +221,6 @@ export default {
 			this.$store.moduleCallsiteMap = data['moduleCallsiteMap']
 			this.$store.callsiteModuleMap = data['callsiteModuleMap']
 			console.log("[Socket] Single Callsite data processing done.")
-			console.log(data)
 			this.init()
 		},
 
@@ -298,7 +300,6 @@ export default {
 			let max_inclusive_dataset = '';
 			let max_inclusive_time = this.$store.maxIncTime['ensemble']
 			let current_max_inclusive_time = 0.0
-			console.log(this.$store.selectedDatasets)
 			for (let dataset of this.$store.selectedDatasets) {
 				console.log(dataset)
 				if (current_max_inclusive_time < this.$store.maxIncTime[dataset]) {
@@ -309,9 +310,6 @@ export default {
 
 			this.$store.selectedTargetDataset = max_inclusive_dataset
 			this.selectedTargetDataset = max_inclusive_dataset
-
-			// this.$store.selectedTargetDataset = '1-core'
-			// this.selectedTargetDataset = '1-core'
 
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
@@ -384,11 +382,12 @@ export default {
 			this.$store.selectedColorPoint = this.selectedColorPoint
 			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
 			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
-			this.$store.color.highlight = '#AF9B90';//'#4681B4'
-			this.selectedTargetColor = this.targetColorMap['green']
+			this.$store.color.highlight = '#AF9B90'//'#4681B4'
+			this.selectedTargetColor = this.targetColorMap[this.selectedTargetColorText]
 			this.$store.color.target =  this.selectedTargetColor
-			this.$store.color.ensemble = '#C0C0C0';//'#4681B4'
+			this.$store.color.ensemble = '#C0C0C0'//'#4681B4'
 			this.$store.color.compare = '#043060'
+			this.$store.showTarget = this.showTarget
 
 			this.targetColors = Object.keys(this.targetColorMap)
 		},
@@ -671,6 +670,11 @@ export default {
 		updateNumOfClusters(){
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters
 			EventHandler.$emit('update_number_of_clusters')
+		},
+
+		updateTargetColor(){
+			this.clearLocal()
+			this.init()
 		}
 	}
 }

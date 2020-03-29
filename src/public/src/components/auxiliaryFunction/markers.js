@@ -67,7 +67,9 @@ export default {
             this.data = this.q
 
             this.minMaxEnsembleMarker()
-            this.minMaxTargetMarker()
+            if(this.$store.showTarget){
+                this.minMaxTargetMarker()
+            }
             this.minText()
             this.maxText()
             this.medianText()
@@ -122,16 +124,18 @@ export default {
         },
 
         minText() {
-            let min_target_val = this.targetData.min
-            this.g.append("text")
-                .attrs({
-                    "class": "whiskerText",
-                    "x": 0.5 * this.fontSize,
-                    "y": this.$parent.containerHeight * this.topPosition,
-                    "fill": d3.rgb(this.$store.color.target).darker(1)
-                })
-                .style('stroke-width', '1')
-                .text("Min: " + utils.formatRuntimeWithoutUnits(min_target_val))
+            if(this.$store.showTarget){
+                let min_target_val = this.targetData.min
+                this.g.append("text")
+                    .attrs({
+                        "class": "whiskerText",
+                        "x": 0.5 * this.fontSize,
+                        "y": this.$parent.containerHeight * this.topPosition,
+                        "fill": d3.rgb(this.$store.color.target).darker(1)
+                    })
+                    .style('stroke-width', '1')
+                    .text("Min: " + utils.formatRuntimeWithoutUnits(min_target_val))    
+            }
 
             let min_ensemble_val = this.data.min
             this.g.append("text")
@@ -146,16 +150,18 @@ export default {
         },
 
         maxText() {
-            let max_target_val = this.targetData.max
-            this.g.append("text")
-                .attrs({
-                    "class": "whiskerText",
-                    "x": this.$parent.containerWidth - 9 * this.fontSize,
-                    "y": this.$parent.containerHeight * this.topPosition,
-                    "fill": d3.rgb(this.$store.color.target).darker(1)
-                })
-                .style('stroke-width', '1')
-                .text("Max:" + utils.formatRuntimeWithoutUnits(max_target_val))
+            if(this.$store.showTarget){
+                let max_target_val = this.targetData.max
+                this.g.append("text")
+                    .attrs({
+                        "class": "whiskerText",
+                        "x": this.$parent.containerWidth - 9 * this.fontSize,
+                        "y": this.$parent.containerHeight * this.topPosition,
+                        "fill": d3.rgb(this.$store.color.target).darker(1)
+                    })
+                    .style('stroke-width', '1')
+                    .text("Max:" + utils.formatRuntimeWithoutUnits(max_target_val))    
+            }
 
             let max_ensemble_val = this.data.max
             this.g.append("text")
@@ -170,16 +176,18 @@ export default {
         },
 
         medianText() {
-            let median_target_val = this.targetData.q2
-            this.g.append("text")
-                .attrs({
-                    "class": "whiskerText",
-                    "x": this.$parent.containerWidth / 2 - 4.5 * this.fontSize,
-                    "y": this.$parent.containerHeight * this.topPosition,
-                    "fill": d3.rgb(this.$store.color.target).darker(1)
-                })
-                .style('stroke-width', '1')
-                .text("Med.:" + utils.formatRuntimeWithoutUnits(median_target_val))
+            if(this.$store.showTarget){
+                let median_target_val = this.targetData.q2
+                this.g.append("text")
+                    .attrs({
+                        "class": "whiskerText",
+                        "x": this.$parent.containerWidth / 2 - 4.5 * this.fontSize,
+                        "y": this.$parent.containerHeight * this.topPosition,
+                        "fill": d3.rgb(this.$store.color.target).darker(1)
+                    })
+                    .style('stroke-width', '1')
+                    .text("Med.:" + utils.formatRuntimeWithoutUnits(median_target_val))    
+            }
 
             let median_ensemble_val = this.data.q2
             this.g.append("text")

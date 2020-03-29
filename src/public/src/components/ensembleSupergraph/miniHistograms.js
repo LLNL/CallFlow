@@ -129,7 +129,9 @@ export default {
                 let callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module][this.$store.selectedMetric]['prop_histograms'][this.$store.selectedProp]
 
                 this.histogram(callsite_data, node_dict, 'ensemble')
-                this.histogram(callsite_data, node_dict, 'target')
+                if(this.$store.showTarget){
+                    this.histogram(callsite_data, node_dict, 'target')
+                }
             }
         }
     }

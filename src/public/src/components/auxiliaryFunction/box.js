@@ -37,7 +37,9 @@ export default {
                 })
 
             this.ensembleBox()
-            this.targetBox()
+            if(this.$store.showTarget){
+                this.targetBox()
+            }
             this.centerLine()
             this.$parent.$refs.ToolTip.init(this.callsiteID)
         },

@@ -157,7 +157,9 @@ export default {
             this.meanRectangle()
             this.path()
             this.text()
-            this.drawTargetLine()
+            if (this.$store.showTarget) {
+                this.drawTargetLine()
+            }
 
             this.$refs.ToolTip.init(this.$parent.id)
         },
@@ -252,7 +254,7 @@ export default {
                     }
                 })
                 .on('click', (d) => {
-                    if(!this.drawGuidesMap[d.name]){
+                    if (!this.drawGuidesMap[d.name]) {
                         this.drawGuides(d, 'permanent')
                         this.drawGuidesMap[d.name] = true
                     }
@@ -510,38 +512,22 @@ export default {
 
         drawTargetLine() {
             let dataset = this.$store.selectedTargetDataset
-
             let data = this.$store.modules
 
             for (let i = 0; i < this.graph.nodes.length; i++) {
                 let node_data = this.graph.nodes[i]
                 let module_name = this.graph.nodes[i].module
-                console.log(module_name)
                 if (this.graph.nodes[i].id.split('_')[0] != 'intermediate') {
                     let gradients = data['ensemble'][module_name][this.$store.selectedMetric]['gradients']
                     let module_mean = gradients['dataset']['mean'][this.$store.selectedTargetDataset]
-    
+
                     let grid = gradients.hist.x
                     let vals = gradients.hist.y
 
                     let targetPos = gradients['dataset']['position'][this.$store.selectedTargetDataset] + 1
                     let binWidth = node_data.height / (this.$store.selectedRunBinCount)
 
-                    // for (let idx = 0; idx < grid.length; idx += 1) {
-                    //     console.log(module_mean, grid[idx])
-                    //     if (grid[idx] >= module_mean) {
-                    //         targetPos = idx
-                    //         break
-                    //     }
-                    //     if (idx == grid.length - 1) {
-                    //         targetPos = grid.length
-                    //     }
-                    // }
-
-
-                    console.log(targetPos, grid)
-
-                    let y = binWidth * targetPos - binWidth/2
+                    let y = binWidth * targetPos - binWidth / 2
 
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
                         .append('line')

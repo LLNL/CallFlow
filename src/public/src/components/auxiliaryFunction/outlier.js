@@ -11,7 +11,7 @@ export default {
         paddingTop: 10,
         textOffset: 40,
         fontSize: 10,
-        outlierRadius:4,
+        outlierRadius: 4,
         informationHeight: 70
     }),
 
@@ -44,9 +44,11 @@ export default {
             this.boxHeight = this.height - this.paddingTop - this.informationHeight
             this.boxWidth = this.width
 
-           this.ensembleOutliers()
-           this.targetOutliers()
-           this.$parent.$refs.ToolTip.init(this.id)
+            this.ensembleOutliers()
+            if (this.$store.showTarget) {
+                this.targetOutliers()
+            }
+            this.$parent.$refs.ToolTip.init(this.id)
         },
 
         groupByBand(data, band) {
@@ -104,7 +106,7 @@ export default {
                     d: d
                 }
             })
-            .sort((a, b) => a.x - b.x);
+                .sort((a, b) => a.x - b.x);
 
             const epsilon = 1e-3;
             let head = null, tail = null;
@@ -153,10 +155,10 @@ export default {
             return group_circles;
         },
 
-        cleanUpEmptyOutliers(data){
+        cleanUpEmptyOutliers(data) {
             let ret = []
-            for(let i = 0; i < data.length; i += 1){
-                if(data[i].count != 0){
+            for (let i = 0; i < data.length; i += 1) {
+                if (data[i].count != 0) {
                     ret.push(data[i])
                 }
             }
@@ -187,7 +189,7 @@ export default {
                     },
                     "cy": d => this.boxHeight / 2 + this.informationHeight,
                     "class": "ensemble-outlier",
-                
+
                 })
                 .style("opacity", 1)
                 .style("fill", this.$store.color.ensemble)
@@ -223,7 +225,7 @@ export default {
                 .attrs({
                     "r": d => (d.count / this.max_count) * 4 + 4,
                     "cx": d => d.x[0],
-                    "cy": d => this.boxHeight/2 - this.informationHeight/4,
+                    "cy": d => this.boxHeight / 2 - this.informationHeight / 4,
                     "class": "target-outlier"
                 })
                 .style("opacity", 1)
