@@ -339,12 +339,12 @@ export default {
 			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT]
 			this.currentEnsembleCallGraphComponents = []
 			this.currentEnsembleSuperGraphComponents = [
-				this.$refs.EnsembleSuperGraph,
-				this.$refs.EnsembleHistogram,
-				this.$refs.EnsembleScatterplot,
+				// this.$refs.EnsembleSuperGraph,
+				// this.$refs.EnsembleHistogram,
+				// this.$refs.EnsembleScatterplot,
 				this.$refs.AuxiliaryFunction,
-				this.$refs.ModuleHierarchy,
-				this.$refs.ParameterProjection
+				// this.$refs.ModuleHierarchy,
+				// this.$refs.ParameterProjection
 			]
 		},
 

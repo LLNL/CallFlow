@@ -193,7 +193,8 @@ class Auxiliary:
     # Callsite grouped information
     def callsite_data(self):
         ret = {}
-        filtered_df = self.df.loc[self.df['time'] > 0.01*self.config.filter_perc*self.df['time'].max() ]
+        # filtered_df = self.df.loc[self.df['time'] > 0.01*self.config.filter_perc*self.df['time'].max() ]
+        filtered_df =self.df
 
         print(len(self.df['name'].unique()), len(filtered_df['name'].unique()))
         # Ensemble data.
@@ -273,7 +274,7 @@ class Auxiliary:
         ret = {}
         path = self.config.processed_path + f'/{self.config.runName}' + f'/all_data.json'
 
-        self.process = True
+        # self.process = True
         if os.path.exists(path) and not self.process:
             print(f"[Callsite info] Reading the data from file {path}")
             with open(path, 'r') as f:

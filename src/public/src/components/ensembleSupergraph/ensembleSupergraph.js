@@ -100,17 +100,17 @@ export default {
 			this.data = data
 
 			// Remove the Libmonitor -> Libmpi link.
-			// let links = []	
-			// for(let i = 0; i < this.data.links.length; i += 1){
-			// 	let link = this.data.links[i]
-			// 	if(link.source == 'libmonitor.so.0.0.0' && link.target == 'libmpi.so.12.1.1'){
-			// 		continue
-			// 	}
-			// 	else{
-			// 		links.push(link)
-			// 	}
-			// }
-			// this.data.links = links
+			let links = []	
+			for(let i = 0; i < this.data.links.length; i += 1){
+				let link = this.data.links[i]
+				if(link.source == 'libmonitor.so.0.0.0' && link.target == 'libmpi.so.12.1.1'){
+					continue
+				}
+				else{
+					links.push(link)
+				}
+			}
+			this.data.links = links
 
 			this.data = this.addNodeMap(this.data)
 			this.data.graph = this.createGraphStructure(this.data)

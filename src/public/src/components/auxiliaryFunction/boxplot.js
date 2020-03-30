@@ -98,7 +98,6 @@ export default {
         },
 
         process(ensemble_data, target_data) {
-            console.log(ensemble_data)
             let inc_arr = ensemble_data['sorted_time (inc)']
             let exc_arr = ensemble_data['sorted_time']
 

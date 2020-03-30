@@ -345,8 +345,9 @@ export default {
 
 		addxAxisLabel() {
 			let max_value = this.xScale.domain()[1]
-			this.x_max_exponent = utils.formatExponent(max_value)
-			let label = '(e' + this.superscript[this.x_max_exponent] + ') ' + "Exclusive Runtime (" + "\u03BCs)"
+			this.x_max_exponent = utils.formatRuntimeWithExponent(max_value)[2]
+			let exponent_string =  this.superscript[this.x_max_exponent]
+			let label = '(e+' + this.x_max_exponent + ') ' + "Exclusive Runtime (" + "\u03BCs)"
 			this.svg.append('text')
 				.attr('class', 'scatterplot-axis-label')
 				.attr('x', this.boxWidth - 1 * this.padding.right)
@@ -359,10 +360,11 @@ export default {
 		xAxis() {
 			this.addxAxisLabel()
 			const xAxis = d3.axisBottom(this.xScale)
-				.ticks(this.$store.selectedMPIBinCount)
+				.ticks(10)
 				.tickFormat((d, i) => {
 					if (i % 3 == 0) {
 						let runtime = utils.formatRuntimeWithExponent(d, this.x_max_exponent)
+						console.log(runtime)
 						return `${runtime[0]}`;
 					}
 				});
@@ -392,7 +394,8 @@ export default {
 		addyAxisLabel() {
 			let max_value = this.yScale.domain()[1]
 			this.y_max_exponent = utils.formatExponent(max_value)
-			let label = '(e' + this.superscript[this.y_max_exponent] + ') ' + "Inclusive Runtime (" + "\u03BCs)"
+			let exponent_string = this.superscript[this.y_max_exponent]
+			let label = '(e+' + this.y_max_exponent + ') ' + "Inclusive Runtime (" + "\u03BCs)"
 			this.svg.append("text")
 				.attr('class', 'scatterplot-axis-label')
 				.attr('transform', 'rotate(-90)')
