@@ -15,7 +15,7 @@ from functools import wraps
 
 import numpy as np
 from scipy.stats import kurtosis, skew
-from utils.df import sanitizeName
+from utils.df import sanitizeName, visModuleCallsiteName
 from utils.hatchet import getNodeDictFromFrame, getPathListFromFrames
 from utils.logger import log
 
@@ -65,7 +65,6 @@ class PreProcess:
 
 			self.callgraph_nodes_np = np.array([])
 			self.cct_nodes_np = np.array([])
-
 			self.graphMapper()
 			self.map = {}
 
@@ -207,8 +206,6 @@ class PreProcess:
 
 			return self
 
-
-
 		@logger
 		def add_callers_and_callees(self):
 			self.df["callees"] = self.df["name"].apply(lambda node: self.callees[node] )
@@ -233,7 +230,14 @@ class PreProcess:
 		# node_name is different from name in dataframe. So creating a copy of it.
 		@logger
 		def add_vis_node_name(self):
-			self.df["vis_node_name"] = self.df["name"].apply(lambda name: name)
+			self.module_group_df = self.df.groupby(['module'])
+			self.module_callsite_map = self.module_group_df['name'].unique()
+
+			self.name_group_df = self.df.groupby(['name'])
+			self.callsite_module_map = self.name_group_df['module'].unique().to_dict()
+			print(self.callsite_module_map, type(self.callsite_module_map))
+
+			self.df["vis_node_name"] = self.df["name"].apply(lambda name: sanitizeName(self.callsite_module_map[name][0]) + '=' + name)
 			return self
 
 		@logger

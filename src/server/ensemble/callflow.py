@@ -12,9 +12,11 @@
 
 import time
 import json
+import pandas as pd
 
 from pipeline.state import State
 from pipeline.index import Pipeline
+import pandas as pd
 
 from utils.logger import log
 from utils.timer import Timer
@@ -65,32 +67,32 @@ class EnsembleCallFlow:
         states = {}
         col_names = ['stage', 'time']
         time_perf_df = pd.DataFrame(columns = col_names)
-        # for idx, dataset_name in enumerate(datasets):
-        #     states[dataset_name] = State(dataset_name)
-        #     stage1 = time.perf_counter()
-        #     states[dataset_name] = self.pipeline.create_gf(dataset_name)
-        #     stage2 = time.perf_counter()
-        #     print(f"Create GraphFrame: {stage2 - stage1}")
-        #     # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
+        for idx, dataset_name in enumerate(datasets):
+            states[dataset_name] = State(dataset_name)
+            stage1 = time.perf_counter()
+            states[dataset_name] = self.pipeline.create_gf(dataset_name)
+            stage2 = time.perf_counter()
+            print(f"Create GraphFrame: {stage2 - stage1}")
+            # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
 
-        #     states[dataset_name] = self.pipeline.process_gf(states[dataset_name], "entire")
-        #     stage3 = time.perf_counter()
-        #     print(f"Preprocess GraphFrame: {stage3 - stage2}")
+            states[dataset_name] = self.pipeline.process_gf(states[dataset_name], "entire")
+            stage3 = time.perf_counter()
+            print(f"Preprocess GraphFrame: {stage3 - stage2}")
 
-        #     states[dataset_name] = self.pipeline.convertToNetworkX(states[dataset_name], "path")
-        #     stage4 = time.perf_counter()
-        #     print(f"Convert to NetworkX graph: {stage4 - stage3}")
+            states[dataset_name] = self.pipeline.convertToNetworkX(states[dataset_name], "path")
+            stage4 = time.perf_counter()
+            print(f"Convert to NetworkX graph: {stage4 - stage3}")
 
-        #     states[dataset_name] = self.pipeline.group(states[dataset_name], "module")
-        #     stage5 = time.perf_counter()
-        #     print(f"Group GraphFrame: {stage5 - stage4}")
+            states[dataset_name] = self.pipeline.group(states[dataset_name], "module")
+            stage5 = time.perf_counter()
+            print(f"Group GraphFrame: {stage5 - stage4}")
 
-        #     self.pipeline.write_dataset_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
-        #     stage6 = time.perf_counter()
-        #     print(f"Write GraphFrame: {stage6 - stage5}")
+            self.pipeline.write_dataset_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
+            stage6 = time.perf_counter()
+            print(f"Write GraphFrame: {stage6 - stage5}")
 
-        #     # states[dataset_name] = self.pipeline.filterNetworkX(states, dataset_name, self.config.filter_perc)
-        #     self.pipeline.write_hatchet_graph(states, dataset_name)
+            # states[dataset_name] = self.pipeline.filterNetworkX(states, dataset_name, self.config.filter_perc)
+            self.pipeline.write_hatchet_graph(states, dataset_name)
 
         
         for idx, dataset_name in enumerate(datasets):
@@ -188,11 +190,11 @@ class EnsembleCallFlow:
             return self.config
 
         elif action_name == "ensemble_cct":
-            self.request({
-                "name": "supergraph",
-                "groupBy": "name",
-                "datasets": action["datasets"]
-            })
+            # self.request({
+            #     "name": "supergraph",
+            #     "groupBy": "name",
+            #     "datasets": action["datasets"]
+            # })
             nx = CCT(self.states["ensemble_entire"], action["functionsInCCT"])
             return nx.g
 

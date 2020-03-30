@@ -91,8 +91,8 @@ class KDE_gradients:
         for dataset in dataset_dict:
             mean = dataset_dict[dataset]
             for idx, x in np.ndenumerate(b):
-                if( x < float(mean) and b[idx[0]+1] > float(mean)):
-                    dataset_position_dict[dataset] = idx[0]
+                if ( x > float(mean)):
+                    dataset_position_dict[dataset] = idx[0] - 1
                     break
                 if (idx[0] == len(b) - 1):
                     dataset_position_dict[dataset] = len(b) - 2

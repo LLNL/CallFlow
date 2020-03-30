@@ -30,6 +30,23 @@ class ModuleHierarchy:
                 path = make_tuple(path)
                 self.hierarchy.add_path(path)
 
+    def as_spanning_trees(G):
+        """
+        For a given graph with multiple sub graphs, find the components
+        and draw a spanning tree.
+
+        Returns a new Graph with components as spanning trees (i.e. without cycles).
+        """
+        ret = nx.Graph()
+        graphs = nx.connected_component_subgraphs(G, copy=False)
+
+        for g in graphs:
+            T = nx.minimum_spanning_tree(g)
+            ret.add_edges_from(T.edges())
+            ret.add_nodes_from(T.nodes())
+
+        return ret
+
     # instead of nid, get by module. nid seems very vulnerable rn.
     def run(self):
         node_df = self.df.loc[self.df["module"] == self.module]

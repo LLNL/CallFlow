@@ -124,7 +124,9 @@ export default {
         },
 
         render(callsite_name, callsite_module) {
+            console.log(this.nodeMap)
             let node_dict = this.nodes[this.nodeMap[callsite_module]]
+            console.log(node_dict)
             if (callsite_module.split('_')[0] != "intermediate") {
                 let callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module][this.$store.selectedMetric]['prop_histograms'][this.$store.selectedProp]
 
