@@ -26,9 +26,22 @@ export function formatRuntimeWithExponent(val, min_exponent=0) {
     if(ret == 0){
         return [0, 0, min_exponent]
     }
-    let exponent = parseInt(ret.toString().split('e')[1].split('+')[1])
-    let multiplier = (parseInt(exponent) - min_exponent)
-    let mantessa = ret.toString().split('e')[0]* (10**multiplier)
+
+    let exponent = 0
+    let multiplier = 0
+    let mantessa = 0
+    console.log("Ret: ", ret)
+    if(ret.indexOf('e') != -1){
+        let split_ret_by_e = ret.toString().split('e')
+        console.log(split_ret_by_e)
+
+        exponent = parseInt(split_ret_by_e[1].split('+')[1])
+        console.log(min_exponent, exponent)
+        multiplier = parseInt(exponent) - min_exponent
+        mantessa  = parseFloat(split_ret_by_e[0]* (10**multiplier))
+    }
+
+    console.log(exponent, mantessa, multiplier)
 
     return [mantessa.toFixed(2), exponent, min_exponent]
 }
@@ -36,7 +49,10 @@ export function formatRuntimeWithExponent(val, min_exponent=0) {
 export function formatExponent(val){
     let format = d3.format('.2')
     let ret = format(val)    
-    let exponent = parseInt(ret.toString().split('e')[1].split('+')[1])
+    let exponent = ret
+    if(ret.indexOf('e') != -1){
+        exponent = parseInt(ret.toString().split('e')[1].split('+')[1])
+    }
     return exponent
 }
 

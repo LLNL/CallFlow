@@ -34,7 +34,7 @@ export default {
         this.id = 'parameter-projection-view'
         let self = this
         EventHandler.$on('highlight_dataset', (dataset) => {
-            console.log("[Projection] Highlighting the dataset :", dataset)
+            // console.log("[Projection] Highlighting the dataset :", dataset)
             self.highlight(dataset)
         })
 

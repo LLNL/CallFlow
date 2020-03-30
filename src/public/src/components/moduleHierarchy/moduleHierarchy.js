@@ -190,6 +190,8 @@ export default {
 
 				currentVertex.data = callsiteData
 
+				console.log(currentVertex)
+
 				currentVertex.data.count = vertexQueue.length
 
 				if (currentVertex.hasOwnProperty('children')) {
