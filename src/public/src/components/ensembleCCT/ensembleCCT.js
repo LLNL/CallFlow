@@ -76,7 +76,8 @@ export default {
 
             // Create a new directed graph
             this.firstRender = false
-
+            
+            console.log(this.$store.selectedFunctionsInCCT)
             this.$socket.emit('ensemble_cct', {
                 datasets: this.$store.selectedTargetDataset,
                 functionsInCCT: this.$store.selectedFunctionsInCCT,

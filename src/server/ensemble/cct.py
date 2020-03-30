@@ -14,93 +14,135 @@ import pandas as pd
 import networkx as nx
 from ast import literal_eval as make_tuple
 import math
-import utils
+from utils.timer import Timer
 
 class CCT:
     def __init__(self, state, functionsInCCT):
+        self.timer = Timer()
         number_of_nodes = len(state.df['name'].unique())
+        self.functionsInCCT = int(functionsInCCT)
 
-        # Get the top most callsites from the CCT.
-        if(number_of_nodes < int(functionsInCCT)):
-            self.entire_graph = state.g
-            self.entire_df = state.df
-        else:
-            self.entire_graph = state.g
-            self.entire_df = state.df
+        self.entire_graph = state.g
+        self.entire_df = state.df
 
         self.runs = self.entire_df['dataset'].unique()
         self.columns = ['time (inc)', 'time', 'name', 'module']
-
         # 'imbalance_perc']
 
+        attr = 'time (inc)'
+        self.callsites = self.get_top_n_callsites_by(self.functionsInCCT, attr)
+        print(self.callsites)
+
+        with self.timer.phase("Creating data maps"):
+            self.create_ensemble_maps()
+            self.create_target_maps()
+
         self.run()
+
+    def get_top_n_callsites_by(self, count, attr):
+        callsites_df = self.entire_df.groupby(['vis_node_name']).mean().nlargest(self.functionsInCCT, attr)
+        print(callsites_df, self.functionsInCCT)
+        return callsites_df.index.values.tolist()
+
+    def create_target_maps(self):
+        self.target_df = {}
+        self.target_modules = {}
+        self.target_module_group_df = {}
+        self.target_module_name_group_df = {}
+        self.target_module_callsite_map = {}
+        self.target_module_time_inc_map = {}
+        self.target_module_time_exc_map = {}
+        self.target_name_time_inc_map = {}
+        self.target_name_time_exc_map = {}
+
+        for run in self.runs:
+            # Reduce the entire_df to respective target dfs. 
+            self.target_df[run] = self.entire_df.loc[self.entire_df['dataset'] == run]
+            
+            # Unique modules in the target run
+            self.target_modules[run] = self.target_df[run]['module'].unique()
+
+            # Group the dataframe in two ways.
+            # 1. by module
+            # 2. by module and callsite
+            self.target_module_group_df[run] = self.target_df[run].groupby(['module'])
+            self.target_module_name_group_df[run] = self.target_df[run].groupby(['name'])
+
+            # Module map for target run {'module': [Array of callsites]}
+            self.target_module_callsite_map[run] = self.target_module_group_df[run]['name'].unique()
+
+            # Inclusive time maps for the module level and callsite level. 
+            self.target_module_time_inc_map[run] = self.target_module_group_df[run]['time (inc)'].max().to_dict()
+            self.target_name_time_inc_map[run] = self.target_module_name_group_df[run]['time (inc)'].max().to_dict()
+
+            # Exclusive time maps for the module level and callsite level. 
+            self.target_module_time_exc_map[run] = self.target_module_group_df[run]['time'].max().to_dict()
+            self.target_name_time_exc_map[run] = self.target_module_name_group_df[run]['time'].max().to_dict()
+
+    def create_ensemble_maps(self):
+        self.modules = self.entire_df['module'].unique()
+
+        self.module_name_group_df = self.entire_df.groupby(['module','name'])
+        self.module_group_df = self.entire_df.groupby(['module'])
+
+        # Module map for ensemble {'module': [Array of callsites]}
+        self.module_callsite_map = self.module_group_df['name'].unique()
+
+        # Inclusive time maps for the module level and callsite level. 
+        self.module_time_inc_map = self.module_group_df['time (inc)'].max().to_dict()
+        self.name_time_inc_map = self.module_name_group_df['time (inc)'].max().to_dict()
+
+        # Exclusive time maps for the module level and callsite level.
+        self.module_time_exc_map = self.module_group_df['time'].max().to_dict()
+        self.name_time_exc_map = self.module_name_group_df['time'].max().to_dict()
+
 
     def ensemble_map(self, df, nodes):
         ret = {}
 
         # loop through the nodes
-        for node in self.entire_df['name'].unique():
+        for node in self.callsites:
             node = node.strip()
-            # Get their dataframe
-            node_df = self.entire_df.loc[self.entire_df['name'] == node]
+            callsite = node.split('=')[1]
+            module = node.split('=')[0]
 
             for column in self.columns:
-                column_data = node_df[column]
-
                 if column not in ret:
                     ret[column] = {}
-
-                if (
-                    column == "time (inc)"
-                    or column == "time"
-                    or column == "imbalance_perc"
-                ):
-                    if len(column_data.value_counts() > 0):
-                        ret[column][node] = column_data.mean()
-                    else:
-                        ret[column][node] = -1
-
-                elif (
-                    column == "name"
-                    or column == "module"
-                ):
-                    if len(column_data.value_counts() > 0):
-                        ret[column][node] = column_data.tolist()[0]
-                    else:
-                        ret[column][node] = "None"
+                if(column == "time (inc)"):
+                    ret[column][callsite] = self.name_time_inc_map[(module, callsite)]
+                elif( column == 'time'):
+                    ret[column][callsite] = self.name_time_exc_map[(module, callsite)]
+                elif (column == "name"):
+                    ret[column][callsite] = callsite
+                elif (column == "module"):
+                    ret[column][callsite] = module
 
         return ret
 
-    def dataset_map(self, nodes, dataset):
+    def dataset_map(self, nodes, run):
         ret = {}
-        for node in self.entire_df['name'].unique():
+        for node in self.callsites:
             node = node.strip()
-            if node not in ret:
-                ret[node] = {}
+            callsite = node.split('=')[1]
+            module = node.split('=')[0]
 
-            node_df = self.entire_df.loc[
-                (self.entire_df["name"] == node) & (self.entire_df["dataset"] == dataset)
-            ]
+            if( callsite in self.target_module_callsite_map[run].keys()):
+                if node not in ret:
+                    ret[node] = {}
 
-            for column in self.columns:
-                column_data = node_df[column]
+                for column in self.columns:
+                    if (column == "time (inc)"):
+                        ret[node][column] = self.target_module_time_inc_map[run][module]
 
-                if (
-                    column == "time (inc)"
-                    or column == "time"
-                    or column == "imbalance_perc"
-                ):
-                    if len(column_data.value_counts()) > 0:
-                        ret[node][column] = column_data.mean()
-                    else:
-                        ret[node][column] = -1
+                    elif (column == "time"):
+                        ret[node][column] = self.target_module_time_exc_map[run][module]
 
-                elif (
-                    column == "name"
-                    or column == "module"
-                ):
-                    if len(column_data.value_counts()) > 0:
-                        ret[node][column] = column_data.tolist()[0]
+                    elif (column == "module"):
+                        ret[node][column] = module
+
+                    elif (column == 'name'):
+                        ret[node][column] = callsite
 
         return ret
 

@@ -407,7 +407,7 @@ export default {
 		clear() {
 			if (this.selectedMode == 'Ensemble') {
 				if (this.selectedFormat == 'CCT') {
-					this.clearComponents(this.currentSingleCallGraphComponents)
+					this.clearComponents(this.currentSingleCCTComponents)
 				}
 				else if (this.selectedFormat == 'Callgraph') {
 					this.clearComponents(this.currentSingleCallGraphComponents)

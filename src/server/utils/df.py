@@ -39,6 +39,9 @@ def sanitizeName(name):
         ret_name = name
     return ret_name
 
+def visModuleCallsiteName(name, df):
+    return df.groupby(['name']).unique()['module']
+
 def avg(l):
     """uses floating-point division."""
     return sum(l) / float(len(l))
