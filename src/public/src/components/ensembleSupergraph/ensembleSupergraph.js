@@ -98,6 +98,20 @@ export default {
 
 		render(data) {
 			this.data = data
+
+			// Remove the Libmonitor -> Libmpi link.
+			let links = []	
+			for(let i = 0; i < this.data.links.length; i += 1){
+				let link = this.data.links[i]
+				if(link.source == 'libmonitor.so.0.0.0' && link.target == 'libmpi.so.12.1.1'){
+					continue
+				}
+				else{
+					links.push(link)
+				}
+			}
+			this.data.links = links
+
 			this.data.graph = this.createGraphStructure(this.data)
 
 			// check cycle. 
@@ -136,11 +150,11 @@ export default {
 			this.initSankey(this.data)
 
 			console.log("[Ensemble SuperGraph] Layout Calculation.")
-			// let postProcess = this.postProcess(this.data.nodes, this.data.links)
-			// this.data.nodes = postProcess['nodes']
-			// this.data.links = postProcess['links']
-			// this.initSankey(this.data)
-			// console.log("[Ensemble SuperGraph] Post-processing done.")
+			let postProcess = this.postProcess(this.data.nodes, this.data.links)
+			this.data.nodes = postProcess['nodes']
+			this.data.links = postProcess['links']
+			this.initSankey(this.data)
+			console.log("[Ensemble SuperGraph] Post-processing done.")
 
 			this.$store.graph = this.data
 			this.$refs.EnsembleColorMap.init()
@@ -243,7 +257,8 @@ export default {
 						module: target_node.module,
 						"time (inc)": source_node['time (inc)'],
 						"time" : source_node['time'],
-						"actual_time": source_node['actual_time']
+						"actual_time": source_node['actual_time'],
+						'type': 'intermediate'
 					};
 					tempNode[targetDataset] = target_node[targetDataset]
 					

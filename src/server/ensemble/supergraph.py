@@ -108,7 +108,7 @@ class SuperGraph(nx.Graph):
             self.target_module_name_group_df[run] = self.target_df[run].groupby(['module', 'name'])
 
             # Module map for target run {'module': [Array of callsites]}
-            self.target_module_callsite_map[run] = self.target_module_group_df[run]['name'].unique()
+            self.target_module_callsite_map[run] = self.target_module_group_df[run]['name'].unique().to_dict()
 
             # Inclusive time maps for the module level and callsite level. 
             self.target_module_time_inc_map[run] = self.target_module_group_df[run]['time (inc)'].max().to_dict()
@@ -125,7 +125,7 @@ class SuperGraph(nx.Graph):
         self.module_group_df = self.entire_df.groupby(['module'])
 
         # Module map for ensemble {'module': [Array of callsites]}
-        self.module_callsite_map = self.module_group_df['name'].unique()
+        self.module_callsite_map = self.module_group_df['name'].unique().to_dict()
 
         # Inclusive time maps for the module level and callsite level. 
         self.module_time_inc_map = self.module_group_df['time (inc)'].max().to_dict()
@@ -386,10 +386,13 @@ class SuperGraph(nx.Graph):
 
             source_inc = self.module_time_inc_map[source_module]
             target_inc = self.module_time_inc_map[target_module]
-            source_module_inc = self.module_time_inc_map[source_module]
 
+            source_module_inc = self.module_time_inc_map[source_module]
             target_module_inc = self.module_time_inc_map[source_module]
 
+            source_callsite_inc = self.name_time_inc_map[(source_module, source_callsite)]
+            target_callsite_inc = self.name_time_inc_map[(target_module, target_callsite)]
+            
             source_callsite_exc = self.name_time_exc_map[(source_module, source_callsite)]
             target_callsite_exc = self.name_time_exc_map[(target_module, target_callsite)]
 
@@ -397,17 +400,17 @@ class SuperGraph(nx.Graph):
             print(source_module_inc, target_module_inc)
 
 
-            # if(target_callsite_exc == 0 and source_callsite_exc == 0 ):
-            #     ret[(edge[0], edge[1])] = target_module_inc
-            # else:
-            #     ret[(edge[0], edge[1])] = (source_module_inc - source_callsite_exc) - (target_module_inc - target_callsite_exc)
+            if(target_callsite_exc == 0 and source_callsite_exc == 0 ):
+                ret[(edge[0], edge[1])] = target_callsite_inc
+            else:
+                ret[(edge[0], edge[1])] = target_callsite_inc
 
             # For Lulesh. 
 
-            if(target_callsite_exc == 0):
-                edge_weight = target_inc
+            # if(target_callsite_exc == 0):
+            #     edge_weight = target_inc
 
-            ret[(edge[0], edge[1])] = target_inc
+            # ret[(edge[0], edge[1])] = target_inc
 
         return ret
 

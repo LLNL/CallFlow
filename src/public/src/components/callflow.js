@@ -261,7 +261,7 @@ export default {
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
 			this.$store.nodeInfo = {}
 			this.$store.selectedMetric = this.selectedMetric
-			this.$store.selectedFunctionsInCCT = this.selectedFaunctionsInCCT
+			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT
 			this.$store.datasetMap = this.$store.runNames.map((run, i) => "run-" + i)
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode
 			this.$store.selectedProp = this.selectedProp
@@ -311,11 +311,11 @@ export default {
 			this.currentEnsembleCallGraphComponents = []
 			this.currentEnsembleSuperGraphComponents = [
 				this.$refs.EnsembleSuperGraph,
-				// this.$refs.EnsembleHistogram,
-				// this.$refs.EnsembleScatterplot,
-				// this.$refs.AuxiliaryFunction,
-				// this.$refs.ModuleHierarchy,
-				// this.$refs.ParameterProjection
+				this.$refs.EnsembleHistogram,
+				this.$refs.EnsembleScatterplot,
+				this.$refs.AuxiliaryFunction,
+				this.$refs.ModuleHierarchy,
+				this.$refs.ParameterProjection
 			]
 		},
 
@@ -379,7 +379,7 @@ export default {
 		clear() {
 			if (this.selectedMode == 'Ensemble') {
 				if (this.selectedFormat == 'CCT') {
-					this.clearComponents(this.currentSingleCallGraphComponents)
+					this.clearComponents(this.currentSingleCCTComponents)
 				}
 				else if (this.selectedFormat == 'Callgraph') {
 					this.clearComponents(this.currentSingleCallGraphComponents)

@@ -190,11 +190,11 @@ class EnsembleCallFlow:
             return self.config
 
         elif action_name == "ensemble_cct":
-            self.request({
-                "name": "supergraph",
-                "groupBy": "name",
-                "datasets": action["datasets"]
-            })
+            # self.request({
+            #     "name": "supergraph",
+            #     "groupBy": "name",
+            #     "datasets": action["datasets"]
+            # })
             nx = CCT(self.states["ensemble_entire"], action["functionsInCCT"])
             return nx.g
 

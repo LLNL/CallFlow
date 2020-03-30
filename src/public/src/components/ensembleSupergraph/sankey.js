@@ -231,9 +231,14 @@ export default function Sankey() {
 
             console.log(sourceSum, targetSum, node['time'])
 
-            // node.value = Math.max(sourceSum, targetSum) + node['time']
+            if(node.type == 'intermediate'){
+                node.value = Math.max(Math.max(sourceSum, targetSum), node['actual_time']['Exclusive'])
+            }
+            else{
+                node.value = Math.max(Math.max(Math.max(sourceSum, targetSum), node['actual_time']['Exclusive']), node['actual_time']['Inclusive'])
+            }
 
-            node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
+            // node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
 
             console.log("Adjusted Node flow : ", node.value)
 
@@ -376,17 +381,10 @@ export default function Sankey() {
             }
             else {
                 divValue = sum(column, (node) => {
-                    // if (node.id.split('_')[0] != 'intermediate') {
-                        nodeCount += 1
-                        return node['time (inc)']
-                    // }
-                    // else {
-                        // return 0
-                    // }
+                        return node.value
                 });
             }
-            console.log(divValue, size[1], nodeCount, column.length, nodePadding)
-            return Math.abs((size[1] - (nodeCount - 1) * nodePadding)) / divValue
+            return Math.abs((size[1] - (column.length) * nodePadding)) / divValue
         });
 
         return ensembleScale
@@ -451,7 +449,7 @@ export default function Sankey() {
                 node.parY = node.y;
 
                 console.log("Value: ", node.value, minNodeScale, scale)
-                node.height = node.value* minNodeScale * scale;
+                node.height = node.value * minNodeScale * scale;
                 console.log("Height ", node.height)
                 // node.targetHeight = node.value * minNodeScale * targetScale
             });
@@ -628,6 +626,8 @@ export default function Sankey() {
                 }
                 return ret;
             });
+
+        console.log(nodesByBreadth)
 
         initializeNodeDepth();
         resolveCollisions();
