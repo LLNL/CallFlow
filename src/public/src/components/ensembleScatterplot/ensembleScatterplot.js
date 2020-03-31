@@ -51,6 +51,7 @@ export default {
 		x_max_exponent: 0,
 		y_max_exponent: 0,
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
+		includesTarget: true,
 	}),
 
 	mounted() {
@@ -137,7 +138,7 @@ export default {
 			let mean_time = []
 			let mean_time_inc = []
 			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
-				if (this.$store.selectedDatasets[i] != this.$store.selectedTargetDataset) {
+				if (this.$store.selectedDatasets[i] != this.$store.selectedTargetDataset || this.includesTarget) {
 					let callsites_in_module = this.$store.moduleCallsiteMap['ensemble'][this.selectedModule]
 					for (let j = 0; j < callsites_in_module.length; j += 1) {
 						let thiscallsite = callsites_in_module[j]
@@ -345,7 +346,8 @@ export default {
 
 		addxAxisLabel() {
 			let max_value = this.xScale.domain()[1]
-			this.x_max_exponent = utils.formatRuntimeWithExponent(max_value)[2]
+			this.x_max_exponent = utils.formatExponent(max_value)
+			console.log(this.x_max_exponent)
 			let exponent_string =  this.superscript[this.x_max_exponent]
 			let label = '(e+' + this.x_max_exponent + ') ' + "Exclusive Runtime (" + "\u03BCs)"
 			this.svg.append('text')

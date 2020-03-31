@@ -33,20 +33,30 @@ class Auxiliary:
         self.datasets = datasets
 
         self.props = ['rank', 'name', 'dataset', 'all_ranks']
-        self.module_name_group_df = self.df.groupby(['module', 'name'])
-        self.module_group_df = self.df.groupby(['module'])
-
-        self.target_df = {}
-        self.target_module_group_df = {}
-        self.target_module_name_group_df = {}
-        for dataset in self.datasets:
-            self.target_df[dataset] = self.df.loc[self.df['dataset'] == dataset]
-            self.target_module_group_df[dataset] = self.target_df[dataset].groupby(['module'])
-            self.target_module_name_group_df[dataset] = self.target_df[dataset].groupby(['module', 'name'])
+        self.filter = False 
 
         self.result = self.run()
 
         print(self.timer)
+
+    def group_frames(self):
+        if(self.filter):
+            self.df = self.df.loc[self.df['time'] > 0.01*self.config.filter_perc*self.df['time'].max() ]
+
+        self.module_name_group_df = self.df.groupby(['module', 'name'])
+        self.module_group_df = self.df.groupby(['module'])
+        self.name_group_df = self.df.groupby(['name'])
+
+        self.target_df = {}
+        self.target_module_group_df = {}
+        self.target_module_name_group_df = {}
+        self.target_name_group_df = {}
+        for dataset in self.datasets:
+            self.target_df[dataset] = self.df.loc[self.df['dataset'] == dataset]
+            self.target_module_group_df[dataset] = self.target_df[dataset].groupby(['module'])
+            self.target_module_name_group_df[dataset] = self.target_df[dataset].groupby(['module', 'name'])
+            self.target_name_group_df[dataset] = self.target_df[dataset].groupby(['name'])
+
 
     def select_rows(self, df, search_strings):
         unq, IDs = np.unique(df['dataset'], return_inverse=True)
@@ -196,17 +206,10 @@ class Auxiliary:
     # Callsite grouped information
     def callsite_data(self):
         ret = {}
-        # filtered_df = self.df.loc[self.df['time'] > 0.01*self.config.filter_perc*self.df['time'].max() ]
-        filtered_df =self.df
-
-        # Ensemble data.
-        # Group callsite by the name
-        name_grouped = filtered_df.groupby(['name'])
-        module_name_grouped = filtered_df.groupby(['module', 'name'])
 
         # Create the data dict.
         ensemble = {}
-        for callsite, callsite_df in name_grouped:
+        for callsite, callsite_df in self.name_group_df:
             gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(columnName='name', callsiteOrModule=callsite)
             boxplot = BoxPlot(callsite_df)
             ensemble[callsite] = self.pack_json(callsite_df, callsite, gradients=gradients, q= boxplot.q, outliers=boxplot.outliers)
@@ -216,10 +219,10 @@ class Auxiliary:
         ## Target data.
         # Loop through datasets and group the callsite by name.
         for dataset in self.datasets:
-            name_grouped = self.target_df[dataset].groupby(['name'])
+            name_grouped = self.target_name_group_df[dataset]
             target = {}
             for callsite, callsite_df in name_grouped:
-                callsite_ensemble_df = self.df[self.df['name'] == callsite]
+                callsite_ensemble_df = self.name_group_df.get_group(callsite)
                 callsite_target_df = callsite_df
 
                 if(not callsite_df.empty):
@@ -242,9 +245,7 @@ class Auxiliary:
         # Module grouped information
         modules = self.df['module'].unique()
         ensemble = {}
-        for module in modules:
-            module_df = self.df[self.df['module'] == module]
-
+        for module, module_df in self.module_group_df:
             # Calculate gradients
             gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(columnName='module', callsiteOrModule=module)
             ensemble[module] = self.pack_json(df=module_df, name=module, gradients=gradients)
@@ -253,13 +254,12 @@ class Auxiliary:
         
         for dataset in self.datasets:
             target = {}
-            for module in modules:
-                module_ensemble_df = self.df[self.df['module'] == module]
-                module_target_df = self.target_df[dataset].loc[self.target_df[dataset]['module'] == module]
+            module_group_df = self.target_module_group_df[dataset]
+            for module, module_df in module_group_df:
+                module_ensemble_df = self.module_group_df.get_group(module)
+                module_target_df = module_df
                 gradients = {'Inclusive': {}, 'Exclusive': {}}
-                hists = {}
-                hists['Inclusive'] = {}
-                hists['Exclusive'] = {}
+                hists = {'Inclusive': {}, 'Exclusive': {}}
                 if( not module_target_df.empty):
                     for prop in self.props:
                         prop_histograms =  self.histogram_by_property(module_ensemble_df, module_target_df, prop)
@@ -275,13 +275,15 @@ class Auxiliary:
         ret = {}
         path = self.config.processed_path + f'/{self.config.runName}' + f'/all_data.json'
 
-        self.process = True
+        # self.process = True
         if os.path.exists(path) and not self.process:
             print(f"[Callsite info] Reading the data from file {path}")
             with open(path, 'r') as f:
                 ret = json.load(f)
         else:
             print("Processing the data again.")
+            with self.timer.phase('Process data'):
+                self.group_frames()
             with self.timer.phase("Collect Callsite data"):
                 ret['callsite'] = self.callsite_data()
             with self.timer.phase("Collect Module data"):

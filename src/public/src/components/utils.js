@@ -20,6 +20,7 @@ export function formatRuntimeWithoutUnits(val){
     return ret
 }
 
+// Returns [mantessa, exponent, max_exponent]
 export function formatRuntimeWithExponent(val, min_exponent=0) {
     let format = d3.format('.2')
     let ret = format(val)
@@ -30,22 +31,18 @@ export function formatRuntimeWithExponent(val, min_exponent=0) {
     let exponent = 0
     let multiplier = 0
     let mantessa = 0
-    console.log("Ret: ", ret)
+    console.log(ret)
     if(ret.indexOf('e') != -1){
         let split_ret_by_e = ret.toString().split('e')
-        console.log(split_ret_by_e)
-
         exponent = parseInt(split_ret_by_e[1].split('+')[1])
-        console.log(min_exponent, exponent)
         multiplier = parseInt(exponent) - min_exponent
         mantessa  = parseFloat(split_ret_by_e[0]* (10**multiplier))
     }
 
-    console.log(exponent, mantessa, multiplier)
-
     return [mantessa.toFixed(2), exponent, min_exponent]
 }
 
+// Returns only the exponenet of the value. 
 export function formatExponent(val){
     let format = d3.format('.2')
     let ret = format(val)    

@@ -323,6 +323,9 @@ export default {
 			this.$store.selectedTargetDataset = max_inclusive_dataset
 			this.selectedTargetDataset = max_inclusive_dataset
 
+			this.$store.selectedTargetDataset = '27-cores'
+			this.selectedTargetDataset = '27-cores'
+
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
 
@@ -339,12 +342,12 @@ export default {
 			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT]
 			this.currentEnsembleCallGraphComponents = []
 			this.currentEnsembleSuperGraphComponents = [
-				// this.$refs.EnsembleSuperGraph,
-				// this.$refs.EnsembleHistogram,
-				// this.$refs.EnsembleScatterplot,
+				this.$refs.EnsembleSuperGraph,
+				this.$refs.EnsembleHistogram,
+				this.$refs.EnsembleScatterplot,
 				this.$refs.AuxiliaryFunction,
-				// this.$refs.ModuleHierarchy,
-				// this.$refs.ParameterProjection
+				this.$refs.ModuleHierarchy,
+				this.$refs.ParameterProjection
 			]
 		},
 
