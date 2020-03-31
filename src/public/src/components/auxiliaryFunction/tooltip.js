@@ -52,9 +52,8 @@ export default {
 
         quartiles() {
             this.addText('Q1: ' + utils.formatRuntimeWithUnits(this.data.q1))
-            this.addText('Q2: ' + utils.formatRuntimeWithUnits(this.data.q2))
+            // this.addText('Q2: ' + utils.formatRuntimeWithUnits(this.data.q2))
             this.addText('Q3: ' + utils.formatRuntimeWithUnits(this.data.q3))
-            this.addText('Q4: ' + utils.formatRuntimeWithUnits(this.data.q4))
         },
 
         outliers(){
@@ -97,13 +96,12 @@ export default {
 
         renderQ(data) {
             this.data = data
-            this.drawRect(13, 8)
+            this.drawRect(13, 4)
             this.quartiles()
         },
 
         renderOutliers(data){
             this.data = data
-            console.log(this.data)
             this.drawRect(10, 4)
             this.outliers()
         },

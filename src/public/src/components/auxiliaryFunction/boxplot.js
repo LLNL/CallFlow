@@ -84,29 +84,6 @@ export default {
         process() {
             this.q = this.qFormat(this.ensemble_data)
             this.targetq = this.qFormat(this.target_data)
-
-            // this.ensembleWhiskerIndices = this.iqrScore(this.d, this.q)
-            // this.targetWhiskerIndices = this.iqrScore(this.targetd, this.targetq)
-        },
-
-        avg(arr) {
-            let sum = 0;
-            for (let i = 0; i < arr.length; i++) {
-                sum += arr[i]
-            }
-            return sum / arr.length
-        },
-
-        median(arr) {
-            if (arr.length == 0) return 0
-            if (arr.length == 1) return [0]
-            let mid = Math.floor(arr.length / 2)
-            if (mid % 2) {
-                return [mid]
-            }
-            else {
-                return [mid - 1, mid]
-            }
         },
 
         qFormat(arr) {
@@ -124,15 +101,13 @@ export default {
             let min_x = Math.min(this.q.min, this.targetq.min)
             let max_x = Math.max(this.q.max, this.targetq.max)
 
-            console.log(this.callsite.name)
-
             this.xScale = d3.scaleLinear()
                 .domain([min_x, max_x])
                 .range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
 
             this.$refs.Box.init(this.q, this.targetq, this.xScale)
             this.$refs.Markers.init(this.q, this.targetq, this.xScale)
-            // this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale)
+            this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite)
 
             EventHandler.$emit('highlight_dataset', {
                 dataset: this.$store.selectedTargetDataset

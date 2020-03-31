@@ -20,7 +20,7 @@ export default {
     },
 
     methods: {
-        init(q, targetq, ensembleWhiskerIndices, targetWhiskerIndices, d, targetd, xScale) {
+        init(q, targetq, ensembleWhiskerIndices, targetWhiskerIndices, d, targetd, xScale, callsite) {
             this.q = q
             this.targetq = targetq
             this.ensembleWhiskerIndices = ensembleWhiskerIndices
@@ -28,6 +28,7 @@ export default {
             this.d = d
             this.targetd = targetd
             this.xScale = xScale
+            this.callsite = callsite
 
             // Get the SVG belonging to this callsite.
             this.svg = d3.select('#' + this.callsiteID)
@@ -56,39 +57,89 @@ export default {
             let temp_x = 0
             let j = 0
             let count = 0
-            let time = []
-            let x = []
             let max_count = 0
+            let values, x, datasets, ranks;
             for (let i = 0; i < data.length; i += 1) {
                 let d = data[i]
+
+                // Assign the temp value for the case i == 0
                 if (i == 0) {
                     temp_x = d.x
-                    count += 1
-                    time.push(d.d)
+                    values = []
+                    x = []
+                    datasets = []
+                    ranks = []
+                }
+
+                let diff = Math.abs(d.x - temp_x)
+                // Check if it intersects within the bandLimit
+                if (diff <= band) {
                     x.push(d.x)
+                    values.push(d.value)
+                    datasets.push(d.dataset)
+                    ranks.push(d.rank)
+
+                    count += 1
                 }
-                else {
-                    if (Math.abs(d.x - temp_x) <= band) {
-                        count += 1
-                        time.push(d.d)
-                        x.push(d.x)
+
+                // If it falls beyond the bandlimit, we push the result in group and start a new group
+                else if (diff > band) {
+                    ret.push({
+                        values: values,
+                        x: x,
+                        count: count,
+                        ranks: ranks,
+                        datasets: datasets
+                    })
+                    if (count > max_count) {
+                        max_count = count
                     }
-                    else if (d.x - temp_x > band || i == data.length - 1) {
-                        ret[j] = {
-                            data: time,
+                    values = []
+                    x = []
+                    datasets = []
+                    ranks = []
+
+                    values.push(d.value)
+                    x.push(d.x)
+                    datasets.push(d.dataset)
+                    ranks.push(d.rank)
+
+                    count = 1
+                    temp_x = d.x
+                }
+                
+                // For data.length - 1 case, we need to create a new group if needed. 
+                if(i == data.length - 1){
+                    if(diff > band){
+                        ret.push({
+                            values: values, 
                             x: x,
+                            datasets: datasets,
+                            ranks:ranks,
                             count: count
-                        }
-                        j += 1
-                        if (count > max_count) {
-                            max_count = count
-                        }
-                        count = 0
-                        time = []
+                        })
+                    }
+                    else if(diff > band){
+                        values = []
                         x = []
-                        temp_x = d.x
+                        datasets = []
+                        ranks = []
+
+                        values.push(d.value)
+                        x.push(d.x)
+                        ranks.push(d.rank)
+                        datasets.push(d.dataset)
+                        count = 1
+                        ret.push({
+                            values: values, 
+                            x: x,
+                            datasets: datasets,
+                            ranks: ranks,
+                            count: count
+                        })
                     }
                 }
+
             }
             return {
                 circles: ret,
@@ -96,14 +147,16 @@ export default {
             }
         },
 
-        groupOutliers(data, radius) {
+        groupOutliers(data, radius, datatype) {
             const radius2 = radius ** 2;
 
             const circles = data.map(d => {
-                let x = this.xScale(d)
+                let x = this.xScale(d.value)
                 return {
                     x: x,
-                    d: d
+                    value: d.value,
+                    rank: d.rank,
+                    dataset: d.dataset
                 }
             })
                 .sort((a, b) => a.x - b.x);
@@ -148,8 +201,10 @@ export default {
                 else tail = tail.next = b;
             }
 
-            let temp = this.groupByBand(circles, 10)
-            this.max_count = temp['max_count']
+            let temp = this.groupByBand(circles, this.$store.bandWidth)
+            if(datatype == 'ensemble'){
+                this.max_count = temp['max_count']
+            }
             let group_circles = temp['circles']
 
             return group_circles;
@@ -166,21 +221,26 @@ export default {
         },
 
         ensembleOutliers() {
+            this.$store.bandWidth  = 10
             let self = this
-            let outlierList = []
-            for (let i = 0; i < this.ensembleWhiskerIndices[0]; i += 1) {
-                outlierList.push(this.d[i])
+
+            let data = this.$store.callsites['ensemble'][this.callsite.name][this.$store.selectedMetric]['outliers']
+            let ensembleOutlierList = []
+            for (let idx = 0; idx < data['values'].length; idx += 1) {
+                if (data['values'][idx] != 0) {
+                    ensembleOutlierList.push({
+                        'value': data['values'][idx],
+                        'dataset': data['datasets'][idx],
+                        'rank': data['ranks'][idx]
+                    })
+                }
             }
 
-            for (let i = this.ensembleWhiskerIndices[1] + 1; i < this.d.length; i += 1) {
-                outlierList.push(this.d[i])
-            }
+            this.ensemble_outliers = this.groupOutliers(ensembleOutlierList, this.outlierRadius, 'ensemble')
 
-            this.data = this.groupOutliers(outlierList, this.outlierRadius)
-            this.data = this.cleanUpEmptyOutliers(this.data)
             this.outlier = this.g
                 .selectAll(".ensemble-outlier")
-                .data(this.data)
+                .data(this.ensemble_outliers)
                 .join("circle")
                 .attrs({
                     "r": d => (d.count / this.max_count) * 4 + 4,
@@ -206,21 +266,24 @@ export default {
 
         targetOutliers() {
             let self = this
+
+            let data = this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name][this.$store.selectedMetric]['outliers']
             let targetOutlierList = []
-            for (let i = 0; i < this.targetWhiskerIndices[0]; i += 1) {
-                targetOutlierList.push(this.targetd[i])
+            for (let idx = 0; idx < data['values'].length; idx += 1) {
+                if (data['values'][idx] != 0) {
+                    targetOutlierList.push({
+                        'value': data['values'][idx],
+                        'dataset': data['datasets'][idx],
+                        'rank': data['ranks'][idx]
+                    })
+                }
             }
 
-            for (let i = this.targetWhiskerIndices[1] + 1; i < this.targetd.length; i += 1) {
-                targetOutlierList.push(this.targetd[i])
-            }
-
-            this.data = this.groupOutliers(targetOutlierList, this.outlierRadius)
-            this.data = this.cleanUpEmptyOutliers(this.data)
-
+            this.target_outliers = this.groupOutliers(targetOutlierList, this.$store.bandWidth, "target")
+            
             this.outlier = this.g
                 .selectAll(".target-outlier")
-                .data(this.data)
+                .data(this.target_outliers)
                 .join("circle")
                 .attrs({
                     "r": d => (d.count / this.max_count) * 4 + 4,
