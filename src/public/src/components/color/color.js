@@ -510,7 +510,6 @@ export default class Color {
         } else if (this.option == "Inclusive") {
             return this.incColorScale(value)
         } else if (this.option == "Exclusive") {
-            console.log(this.excColorScale(value))
             return this.excColorScale(value)
         } else if (this.option == "nRange") {
             return this.nRangeColorScale(value)

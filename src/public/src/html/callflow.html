@@ -27,9 +27,6 @@
 			</v-select>
 		</v-flex> -->
 		<v-flex xs2 class="ma-1">
-			<v-switch v-model="showTarget" :label="targetInfo" v-on:change="updateTargetColor()"></v-switch>
-		</v-flex>
-		<v-flex xs2 class="ma-1">
 			<v-select label="Graph to visualize" :items="formats" v-model="selectedFormat"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
 			</v-select>
@@ -83,6 +80,9 @@
 					<v-select label="Case study" :items="caseStudy" v-model="selectedCaseStudy"
 						:menu-props="{ maxHeight: '400' }" box v-on:change="updateCaseStudy()">
 					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-switch v-model="showTarget" :label="targetInfo" v-on:change="updateTargetColor()"></v-switch>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
 					<v-subheader class="teal lighten-4">Encoding</v-subheader>
@@ -272,6 +272,10 @@
 						<v-layout class="chip-container">
 							<v-chip class="chip" chips color="teal" label outlined clearable> {{ summaryChip }}
 							</v-chip>
+							<v-spacer></v-spacer>
+							<span class="component-info">
+								Encoding = {{selectedMetric}} runtime.
+							</span>
 						</v-layout>
 						<EnsembleSuperGraph ref="EnsembleSuperGraph" />
 					</span>

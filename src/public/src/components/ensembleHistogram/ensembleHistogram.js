@@ -154,31 +154,38 @@ export default {
         },
 
         setupScale(callsite) {
-            let data = this.$store.modules[this.$store.selectedTargetDataset][callsite][this.$store.selectedMetric]['prop_histograms']
+            let ensemble_store = this.$store.modules[this.$store.selectedTargetDataset][callsite]
+            let target_store = this.$store.modules[this.$store.selectedTargetDataset][callsite]
 
-            let ensembleData = data[this.$store.selectedProp]['ensemble']
+            let ensembleData = ensemble_store[this.$store.selectedMetric]['prop_histograms'][this.$store.selectedProp]['ensemble']
             let temp = this.dataProcess(ensembleData);
             this.xVals = temp[0];
             this.freq = temp[1];
             this.axis_x = temp[2];
             this.binContainsProcID = temp[3];
             this.logScaleBool = false;
-
-            const targetData = data[this.$store.selectedProp]['target']
-            const targetTemp = this.dataProcess(targetData)
-            this.targetXVals = targetTemp[0]
-            this.targetFreq = targetTemp[1]
-            this.target_axis_x = targetTemp[2]
-            this.target_binContainsProcID = targetTemp[3]
+            let isTargetThere = true
+            
+            // If the module is not present in the target run. 
+            if (target_store == undefined) {
+                isTargetThere = false
+            }
+            else {
+                const targetData = target_store[this.$store.selectedMetric]['prop_histograms'][this.$store.selectedProp]['target']
+                const targetTemp = this.dataProcess(targetData)
+                this.targetXVals = targetTemp[0]
+                this.targetFreq = targetTemp[1]
+                this.target_axis_x = targetTemp[2]
+                this.target_binContainsProcID = targetTemp[3]
+                isTargetThere = true
+            }
 
             this.$refs.ToolTip.init(this.svgID)
 
             this.rankCount = parseInt(this.$store.numOfRanks['ensemble'])
 
-            this.sortedXVals = this.xVals.sort((a, b) => a - b)
-
             this.xScale = d3.scaleBand()
-                .domain(this.sortedXVals)
+                .domain(this.xVals)
                 .rangeRound([0, this.xAxisHeight])
 
             if (this.$store.selectedScale == 'Linear') {
@@ -193,11 +200,12 @@ export default {
                     .range([this.boxHeight, this.padding.top]);
                 this.logScaleBool = true;
             }
+            return isTargetThere
         },
 
         visualize(callsite) {
             this.clear()
-            this.setupScale(callsite)
+            let isTargetThere = this.setupScale(callsite)
             this.ensembleBars()
             this.xAxis()
             this.yAxis()
@@ -205,7 +213,7 @@ export default {
             // this.rankLines()
             // this.brushes()        
 
-            if (this.$store.showTarget) {
+            if (this.$store.showTarget && isTargetThere) {
                 this.targetBars()
             }
         },

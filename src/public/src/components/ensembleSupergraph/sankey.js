@@ -458,13 +458,11 @@ export default function Sankey() {
 
         links.forEach(function (link) {
             let weight = link.weight//source_data['time (inc)']
-
-            let targetWeight = link.source_data[targetDataset]['time (inc)']
+            // let targetWeight = link.source_data[targetDataset]['time (inc)']
             if (link.source.value < weight) {
                 weight = link.source_data.minLinkVal
             }
 
-            console.log(link.height)
             link.height = weight * scale
             // link.targetHeight = weight * minNodeScale * scale * (weight / targetWeight)
         });
