@@ -15,6 +15,7 @@ import networkx as nx
 from ast import literal_eval as make_tuple
 import numpy as np
 from .gradients import KDE_gradients
+from .boxplot import BoxPlot
 from utils.logger import log
 from utils.timer import Timer
 import time
@@ -24,19 +25,24 @@ import os
 class Auxiliary:
     def __init__(self, states, binCount="20", datasets=[], config={}, process=True):
         self.timer = Timer()
-        # with self.timer.phase("Filter datasets"):
         self.df = self.select_rows(states['ensemble_entire'].df, datasets)
         self.binCount = binCount
         self.config = config
-        self.states = states
-        
+        self.states = states        
         self.process = process
         self.datasets = datasets
+
         self.props = ['rank', 'name', 'dataset', 'all_ranks']
+        self.module_name_group_df = self.df.groupby(['module', 'name'])
+        self.module_group_df = self.df.groupby(['module'])
 
         self.target_df = {}
+        self.target_module_group_df = {}
+        self.target_module_name_group_df = {}
         for dataset in self.datasets:
             self.target_df[dataset] = self.df.loc[self.df['dataset'] == dataset]
+            self.target_module_group_df[dataset] = self.target_df[dataset].groupby(['module'])
+            self.target_module_name_group_df[dataset] = self.target_df[dataset].groupby(['module', 'name'])
 
         self.result = self.run()
 
@@ -55,19 +61,18 @@ class Auxiliary:
         h, b = np.histogram(data, range=[data_min, data_max], bins=int(self.binCount))
         return 0.5*(b[1:]+b[:-1]), h
 
+    def convert_pandas_array_to_list(self, series):
+        return series.apply(lambda d: d.tolist())
+
     def get_module_callsite_map(self):
         ret = {}
-        ret['ensemble'] = {}
-        modules = self.df['module'].unique().tolist()
-        for module in modules:
-            callsites = self.df.loc[self.df['module'] == module]['name'].unique().tolist()
-            ret['ensemble'][module] = callsites
+        np_data = self.module_group_df['name'].unique()
+        ret['ensemble'] = self.convert_pandas_array_to_list(np_data).to_dict()
 
         for dataset in self.datasets:
-            ret[dataset] = {}
-            for module in modules:
-                callsites = self.target_df[dataset].loc[self.target_df[dataset]['module'] == module]['name'].unique().tolist()
-                ret[dataset][module] = callsites
+            np_data = self.target_module_group_df[dataset]['name'].unique()
+            ret[dataset] = self.convert_pandas_array_to_list(np_data).to_dict()
+        
         return ret
 
     def get_callsite_module_map(self):
@@ -84,7 +89,7 @@ class Auxiliary:
                 ret[dataset][callsite] = module
         return ret
 
-    def pack_json(self, df=pd.DataFrame(), name='', all_ranks_hist={}, gradients={'Inclusive': {}, 'Exclusive': {}}, prop_hists={'Inclusive': {}, 'Exclusive': {}}):
+    def pack_json(self, df=pd.DataFrame(), name='', gradients={'Inclusive': {}, 'Exclusive': {}}, prop_hists={'Inclusive': {}, 'Exclusive': {}}, q={'Inclusive': {}, 'Exclusive': {}}, outliers={'Inclusive': {}, 'Exclusive': {}}):
         inclusive_variance = math.sqrt(df['time (inc)'].var())
         exclusive_variance = math.sqrt(df['time'].var())
         if(math.isnan(inclusive_variance)):
@@ -96,31 +101,28 @@ class Auxiliary:
             "id": 'node-' + str(df['nid'].tolist()[0]),
             "dataset": df['dataset'].tolist()[0],
             "module": df['module'].tolist()[0],
-            # "rank": df['rank'].tolist(),
-            "sorted_time (inc)": df['time (inc)'].sort_values().tolist(),
-            "sorted_time": df['time'].sort_values().tolist(),
             "Inclusive": {
-                # "time": df['time (inc)'].tolist(),
-                # "sorted_time": df['time (inc)'].sort_values().tolist(),
                 "mean_time": df['time (inc)'].mean(),
                 "max_time": df['time (inc)'].max(),
                 "min_time": df['time (inc)'].min(),
                 "variance_time": exclusive_variance,
+                "q": q['Inclusive'],
+                "outliers": outliers['Inclusive'],
                 # "imbalance_perc": df['imbalance_perc_inclusive'].tolist()[0],
                 # # "std_deviation": df['std_deviation_inclusive'].tolist()[0],
                 # "kurtosis": df['kurtosis_inclusive'].tolist()[0],
                 # "skewness": df['skewness_inclusive'].tolist()[0],
+                # "outliers": self.outliers.iqr_outlier(df['time (inc)'].tolist(), axis=0),
                 "gradients": gradients['Inclusive'],
                 "prop_histograms": prop_hists['Inclusive']
             },
             "Exclusive": {
-                # "time": df['time'].tolist(),
-                # "names": df['name'].tolist(),
-                # "sorted_time": df['time'].sort_values().tolist(),
                 "mean_time": df['time'].mean(),            
                 "max_time": df['time'].max(),
                 "min_time": df['time'].min(),
                 "variance_time": inclusive_variance,
+                "q": q['Exclusive'],
+                "outliers": outliers['Exclusive'],
                 # "imbalance_perc": df['imbalance_perc_exclusive'].tolist()[0],
                 # # "std_deviation": df['std_deviation_exclusive'].tolist()[0],
                 # "skewness": df['skewness_exclusive'].tolist()[0],
@@ -131,6 +133,7 @@ class Auxiliary:
         }
         return result
 
+    # Return the histogram in the required form. 
     def histogram_format(self, histogram_grid):
         return {
             "x": histogram_grid[0].tolist(),
@@ -196,22 +199,20 @@ class Auxiliary:
         # filtered_df = self.df.loc[self.df['time'] > 0.01*self.config.filter_perc*self.df['time'].max() ]
         filtered_df =self.df
 
-        print(len(self.df['name'].unique()), len(filtered_df['name'].unique()))
         # Ensemble data.
         # Group callsite by the name
         name_grouped = filtered_df.groupby(['name'])
+        module_name_grouped = filtered_df.groupby(['module', 'name'])
 
         # Create the data dict.
-        all_ranks_hist = {}
         ensemble = {}
         for callsite, callsite_df in name_grouped:
             gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(columnName='name', callsiteOrModule=callsite)
-            # gradients = {'Inclusive': {}, 'Exclusive': {}}
-            ensemble[callsite] = self.pack_json(callsite_df, callsite, gradients=gradients, all_ranks_hist=all_ranks_hist)
+            boxplot = BoxPlot(callsite_df)
+            ensemble[callsite] = self.pack_json(callsite_df, callsite, gradients=gradients, q= boxplot.q, outliers=boxplot.outliers)
 
         ret['ensemble'] = ensemble
 
-        all_ranks_hist = {}
         ## Target data.
         # Loop through datasets and group the callsite by name.
         for dataset in self.datasets:
@@ -219,7 +220,6 @@ class Auxiliary:
             target = {}
             for callsite, callsite_df in name_grouped:
                 callsite_ensemble_df = self.df[self.df['name'] == callsite]
-                # callsite_target_df = self.target_df[dataset].loc[self.target_df[dataset]['name'] == callsite]
                 callsite_target_df = callsite_df
 
                 if(not callsite_df.empty):
@@ -230,7 +230,9 @@ class Auxiliary:
                         prop_histograms = self.histogram_by_property(callsite_ensemble_df, callsite_target_df, prop)
                         hists['Inclusive'][prop] = prop_histograms['Inclusive']
                         hists['Exclusive'][prop] = prop_histograms['Exclusive']
-                    target[callsite] = self.pack_json(df=callsite_target_df, name=callsite, all_ranks_hist=all_ranks_hist, prop_hists=hists)
+
+                    boxplot = BoxPlot(callsite_df)
+                    target[callsite] = self.pack_json(df=callsite_target_df, name=callsite, prop_hists=hists, q=boxplot.q, outliers=boxplot.outliers)
             ret[dataset] = target
 
         return ret
@@ -241,12 +243,11 @@ class Auxiliary:
         modules = self.df['module'].unique()
         ensemble = {}
         for module in modules:
-            all_ranks_hist = {}
             module_df = self.df[self.df['module'] == module]
 
             # Calculate gradients
             gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(columnName='module', callsiteOrModule=module)
-            ensemble[module] = self.pack_json(df=module_df, name=module, all_ranks_hist=all_ranks_hist, gradients=gradients)
+            ensemble[module] = self.pack_json(df=module_df, name=module, gradients=gradients)
 
         ret['ensemble'] = ensemble
         
@@ -264,7 +265,7 @@ class Auxiliary:
                         prop_histograms =  self.histogram_by_property(module_ensemble_df, module_target_df, prop)
                         hists['Inclusive'][prop] = prop_histograms['Inclusive']
                         hists['Exclusive'][prop] = prop_histograms['Exclusive']
-                    target[module] = self.pack_json(df=module_target_df, name=module, all_ranks_hist=all_ranks_hist, gradients=gradients, prop_hists=hists)
+                    target[module] = self.pack_json(df=module_target_df, name=module, gradients=gradients, prop_hists=hists)
 
             ret[dataset] = target
 
@@ -274,7 +275,7 @@ class Auxiliary:
         ret = {}
         path = self.config.processed_path + f'/{self.config.runName}' + f'/all_data.json'
 
-        # self.process = True
+        self.process = True
         if os.path.exists(path) and not self.process:
             print(f"[Callsite info] Reading the data from file {path}")
             with open(path, 'r') as f:

@@ -60,44 +60,30 @@ export default {
         init() {
             this.containerWidth = this.$parent.boxplotWidth - 2 * this.padding.right - 1 * this.padding.left
 
-            let ensemble_callsite_data = this.$store.callsites['ensemble'][this.callsite.name]
-
-            let target_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name]
-
-            // Create a dummy object when a target callsite does not exist
-            if (target_callsite_data == undefined) {
-                target_callsite_data = {
-                    'dataset': [this.$store.selectedTargetDataset],
-                    'id': ensemble_callsite_data.id,
-                    'max_time': 0,
-                    'max_time (inc)': 0,
-                    'module': ensemble_callsite_data.module,
-                    'name': ensemble_callsite_data.name,
-                    'rank': [], 
-                    'time': [],
-                    'time (inc)': []
-                }
-            }
-
             this.svg = d3.select('#' + this.id)
                 .attrs({
                     'class': 'boxplot',
                     'width': this.containerWidth,
                     'height': this.containerHeight
                 })
-        
+
             this.boxHeight = this.containerHeight - this.informationHeight
             this.boxWidth = this.containerWidth
-            
-            this.boxPosition = this.informationHeight/2 + this.outlierHeight/2
-            this.centerLinePosition = (this.boxHeight - this.informationHeight/4)/2
-            this.rectHeight = this.boxHeight - this.informationHeight/4 - this.outlierHeight/4
 
-            this.process(ensemble_callsite_data, target_callsite_data)
+            this.boxPosition = this.informationHeight / 2 + this.outlierHeight / 2
+            this.centerLinePosition = (this.boxHeight - this.informationHeight / 4) / 2
+            this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4
+
+            this.ensemble_data = this.$store.callsites['ensemble'][this.callsite.name][this.$store.selectedMetric]['q']
+            this.target_data = this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name][this.$store.selectedMetric]['q']
+
+            console.log(this.target_data, this.ensemble_data)
+
+            this.process()
             this.visualize()
         },
 
-        process(ensemble_data, target_data) {
+        process_old(ensemble_data, target_data) {
             let inc_arr = ensemble_data['sorted_time (inc)']
             let exc_arr = ensemble_data['sorted_time']
 
@@ -105,11 +91,11 @@ export default {
             let exc_arr_target = target_data['sorted_time']
 
             // check if the target exists or not.
-            if(exc_arr == undefined){
+            if (exc_arr == undefined) {
                 exc_arr = []
             }
 
-            if(exc_arr_target == undefined){
+            if (exc_arr_target == undefined) {
                 exc_arr_target = []
             }
 
@@ -134,6 +120,15 @@ export default {
 
             this.ensembleWhiskerIndices = this.iqrScore(this.d, this.q)
             this.targetWhiskerIndices = this.iqrScore(this.targetd, this.targetq)
+        },
+
+
+        process() {
+            this.q = this.qFormat(this.ensemble_data)
+            this.targetq = this.qFormat(this.target_data)
+
+            // this.ensembleWhiskerIndices = this.iqrScore(this.d, this.q)
+            // this.targetWhiskerIndices = this.iqrScore(this.targetd, this.targetq)
         },
 
         iqrScore(data, q) {
@@ -224,6 +219,17 @@ export default {
                     "min": min,
                     "max": max
                 }
+            }
+            return result
+        },
+
+        qFormat(arr) {
+            let result = {
+                "min": arr[0],
+                "q1": arr[1],
+                "q2": arr[2],
+                "q3": arr[3],
+                "max": arr[4]
             }
             return result
         },
