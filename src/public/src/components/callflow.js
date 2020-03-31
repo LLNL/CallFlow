@@ -323,8 +323,8 @@ export default {
 			this.$store.selectedTargetDataset = max_inclusive_dataset
 			this.selectedTargetDataset = max_inclusive_dataset
 
-			// this.$store.selectedTargetDataset = '27-cores'
-			// this.selectedTargetDataset = '27-cores'
+			this.$store.selectedTargetDataset = '27-cores'
+			this.selectedTargetDataset = '27-cores'
 
 			// this.$store.selectedTargetDataset = 'osu_bcast.1.18.2019-09-03_10-33-44'
 			// this.selectedTargetDataset = 'osu_bcast.1.18.2019-09-03_10-33-44'
