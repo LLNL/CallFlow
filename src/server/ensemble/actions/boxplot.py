@@ -15,8 +15,45 @@ class BoxPlot:
         self.outliers['Inclusive'] = self.iqr_outlier(df, attr='time (inc)', axis=0)
         self.outliers['Exclusive'] = self.iqr_outlier(df, attr='time', axis=0)
 
+    def median(self, arr):
+        indices = []
+
+        list_size = len(arr)
+        median = 0
+        if list_size % 2 == 0:
+            indices.append(int(list_size / 2) - 1)  # -1 because index starts from 0
+            indices.append(int(list_size / 2))
+
+            median = (arr[indices[0]] + arr[indices[1]]) / 2
+            pass
+        else:
+            indices.append(int(list_size / 2))
+
+            median = arr[indices[0]]
+            pass
+
+        return median, indices
+        pass
+
     def quartiles(self, df, attr=''):
-        return np.quantile(np.array(df[attr].tolist()), [0, 0.25, 0.5, 0.75, 1.0]).tolist()
+        samples = sorted(df[attr].tolist())
+        if(len(samples) == 1):
+            quartiles = [samples[0]]*5
+        else:
+            median, median_indices = self.median(samples)
+            # print(median, median_indices)
+            q1, q1_indices = self.median(samples[:median_indices[0]])
+            # print("q1 index: ", q1_indices)
+            q3, q3_indices = self.median(samples[median_indices[-1] + 1:])
+            # print("q3 index: ", q3_indices)
+        
+            minimum = samples[0]
+            maximum = samples[len(samples) - 1]
+
+            quartiles = [minimum, q1, median, q3, maximum]
+        # quartiles = np.quantile(np.array(samples), [0, 0.25, 0.5, 0.75, 1.0]).tolist()
+        print("Percentiles: ", quartiles)
+        return quartiles
 
     def q1(self, x, axis = None):
         return np.percentile(x, 25, axis = axis)
@@ -28,6 +65,8 @@ class BoxPlot:
         assert side in ['gt', 'lt', 'both'], 'Side should be `gt`, `lt` or `both`.'
 
         data = np.array(df[attr])
+        dataset_data = np.array(df['dataset'])
+        rank_data = np.array(df['rank'])
         d_iqr = iqr(data, axis = axis)
         d_q1 = self.q1(data, axis = axis)
         d_q3 = self.q3(data, axis = axis)
@@ -50,8 +89,14 @@ class BoxPlot:
             lower_outlier = np.less(data - lower_range.reshape(stat_shape), 0)
 
         if side == 'gt':
-            return upper_outlier.tolist()
+            mask = upper_outlier
         if side == 'lt':
-            return lower_outlier.tolist()
+            mask = lower_outlier
         if side == 'both':
-            return np.logical_or(upper_outlier, lower_outlier).tolist()
+            mask = np.logical_or(upper_outlier, lower_outlier)
+
+        return {
+            'values': (mask*data).tolist(),
+            'datasets': (mask*dataset_data).tolist(),
+            'ranks': (mask*rank_data).tolist()
+        }

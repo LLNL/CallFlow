@@ -211,6 +211,7 @@ class Auxiliary:
         ensemble = {}
         for callsite, callsite_df in self.name_group_df:
             gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(columnName='name', callsiteOrModule=callsite)
+            print(callsite)
             boxplot = BoxPlot(callsite_df)
             ensemble[callsite] = self.pack_json(callsite_df, callsite, gradients=gradients, q= boxplot.q, outliers=boxplot.outliers)
 
@@ -275,7 +276,7 @@ class Auxiliary:
         ret = {}
         path = self.config.processed_path + f'/{self.config.runName}' + f'/all_data.json'
 
-        # self.process = True
+        self.process = True
         if os.path.exists(path) and not self.process:
             print(f"[Callsite info] Reading the data from file {path}")
             with open(path, 'r') as f:
