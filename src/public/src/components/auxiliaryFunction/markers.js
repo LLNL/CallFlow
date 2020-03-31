@@ -173,7 +173,7 @@ export default {
                 })
                 .style('stroke-width', '1')
                 .text("Max:" + utils.formatRuntimeWithoutUnits(max_ensemble_val))
-        },
+            },
 
         medianText() {
             if(this.$store.showTarget){

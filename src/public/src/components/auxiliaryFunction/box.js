@@ -24,6 +24,8 @@ export default {
 
     methods: {
         init(q, targetq, xScale) {
+            console.log("Ensemble q: ", q)
+            console.log("Target q: ", targetq)
             this.q = q
             this.targetq = targetq
             this.xScale = xScale
