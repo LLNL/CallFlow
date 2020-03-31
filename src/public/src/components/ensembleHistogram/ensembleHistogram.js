@@ -411,11 +411,9 @@ export default {
 
         addxAxisLabel() {
             let max_value = this.xScale.domain()[1]
-            this.x_max_exponent = utils.formatRuntimeWithExponent(max_value)[2]
-            console.log(this.x_max_exponent, this.superscript)
+            this.x_max_exponent = utils.formatExponent(max_value)
             let exponent_string = this.superscript[this.x_max_exponent]
             let label = '(e+' + this.x_max_exponent + ') ' + this.$store.selectedMetric + " Runtime (" + "\u03BCs)"
-            console.log(label)
             this.svg.append('text')
                 .attrs({
                     'class': 'histogram-axis-label',

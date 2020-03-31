@@ -243,6 +243,7 @@ export default {
                         return this.$store.color.ensemble
                     }
                     else {
+                        console.log(d)
                         return d3.rgb(this.$store.color.getColor(d));
                     }
                 })

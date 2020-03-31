@@ -486,13 +486,9 @@ export default class Color {
         if (this.option == "Module") {
             return this.colorScale(node.module);
         } else if (this.option == "Inclusive") {
-            if (node['time (inc)'] == undefined) {
-                return this.incColorScale(node.value)
-            } else {
-                return this.incColorScale(node["time (inc)"])
-            }
+            return this.incColorScale(node["time (inc)"])
         } else if (this.option == "Exclusive") {
-            return this.excColorScale(node.exclusive)
+            return this.excColorScale(node['time'])
         } else if (this.option == "nRange") {
             return this.nRangeColorScale(node.nRange)
         } else if (this.option == "Diff") {
@@ -514,6 +510,7 @@ export default class Color {
         } else if (this.option == "Inclusive") {
             return this.incColorScale(value)
         } else if (this.option == "Exclusive") {
+            console.log(this.excColorScale(value))
             return this.excColorScale(value)
         } else if (this.option == "nRange") {
             return this.nRangeColorScale(value)

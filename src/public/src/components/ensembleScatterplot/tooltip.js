@@ -58,9 +58,18 @@ export default {
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
+        truncTimeLabel(str){
+            if(str == 'Inclusive'){
+                return 'Inc.'
+            }
+            else if(str == 'Exclusive'){
+                return 'Exc.'
+            }
+        },
+
         info() {
             this.addText('Callsite: ' + this.trunc(this.data.callsite, 10))
-            this.addText(this.$store.selectedMetric + ' Time: ' + utils.formatRuntimeWithUnits(this.data.value))
+            this.addText('Mean ' + this.truncTimeLabel(this.$store.selectedMetric) + ' Time: ' + utils.formatRuntimeWithUnits(this.data.value))
             this.addText('Run: ' + this.data.run)
             this.addText('Desirability: ' + (1 - this.data.undesirability).toFixed(3))
         },
