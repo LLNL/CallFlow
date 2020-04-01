@@ -72,7 +72,7 @@ export default {
 			this.footerHeight = document.getElementById('footer').clientHeight
 			this.auxiliaryViewWidth = document.getElementById('auxiliary-function-overview').clientWidth
 
-			this.width = window.innerWidth - 2 * this.auxiliaryViewWidth - this.margin.left - this.margin.right
+			this.width = 0.5 * this.$store.viewWidth
 			this.height = window.innerHeight - this.margin.top - this.margin.bottom - this.toolbarHeight - this.footerHeight
 
 			this.sankeySVG = d3.select('#' + this.id)

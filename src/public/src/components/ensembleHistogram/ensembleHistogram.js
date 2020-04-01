@@ -108,10 +108,10 @@ export default {
                     'transform': "translate(" + this.padding.left + "," + this.padding.top + ")"
                 })
 
-            let modules_arr = Object.keys(this.$store.modules['ensemble'])
+            this.selectedModule = Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0]
 
             EventHandler.$emit('ensemble_histogram', {
-                module: modules_arr[0],
+                module: this.selectedModule,
                 name: "main",
                 dataset: this.$store.runNames,
             })

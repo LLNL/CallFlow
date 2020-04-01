@@ -26,8 +26,6 @@ export default {
         init(id) {
             this.id = id
             this.toolTipDiv = d3.select('#' + this.id)
-                // .append('g')
-                // .attr('class', 'toolTipG')
 
             this.height = 80
             this.halfWidth = document.getElementById(this.id).clientWidth / 2

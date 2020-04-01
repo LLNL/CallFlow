@@ -41,11 +41,8 @@ class BoxPlot:
             quartiles = [samples[0]]*5
         else:
             median, median_indices = self.median(samples)
-            # print(median, median_indices)
             q1, q1_indices = self.median(samples[:median_indices[0]])
-            # print("q1 index: ", q1_indices)
             q3, q3_indices = self.median(samples[median_indices[-1] + 1:])
-            # print("q3 index: ", q3_indices)
         
             minimum = samples[0]
             maximum = samples[len(samples) - 1]

@@ -303,5 +303,10 @@ export default {
                     self.$parent.$refs.ToolTip.clear()
                 })
         },
+
+        clear(){
+            this.g.selectAll('.ensemble-outlier').remove()
+            this.g.selectAll('.target-outlier').remove()    
+        }
     }
 }

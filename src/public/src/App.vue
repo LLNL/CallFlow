@@ -59,11 +59,8 @@ html {
 
 .link {
   fill: none;
-  /*stroke: #ccc;*/
-  /*stroke: #555;*/
   stroke: black;
   stroke-width: 5px;
-  /*opacity: 0;*/
 }
 
 .selected {

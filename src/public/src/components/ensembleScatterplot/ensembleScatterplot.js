@@ -77,7 +77,8 @@ export default {
 				.attr('height', this.boxHeight - this.padding.top)
 				.attr('transform', "translate(" + this.padding.left + "," + this.padding.top + ")")
 
-			this.$store.selectedModule = Object.keys(this.$store.modules['ensemble'])[0]
+			console.log(this.$store.modules)
+			this.$store.selectedModule = Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0]
 
 			this.$refs.ToolTip.init(this.svgID)
 			EventHandler.$emit('ensemble_scatterplot', {
