@@ -100,8 +100,6 @@ class Auxiliary:
         return ret
 
     def pack_json(self, df=pd.DataFrame(), name='', gradients={'Inclusive': {}, 'Exclusive': {}}, prop_hists={'Inclusive': {}, 'Exclusive': {}}, q={'Inclusive': {}, 'Exclusive': {}}, outliers={'Inclusive': {}, 'Exclusive': {}}):
-        # inclusive_variance = math.sqrt(df['time (inc)'].var())
-        # exclusive_variance = math.sqrt(df['time'].var())
         inclusive_variance = df['time (inc)'].var()
         exclusive_variance = df['time'].var()
         if(math.isnan(inclusive_variance)):
@@ -124,7 +122,6 @@ class Auxiliary:
                 # # "std_deviation": df['std_deviation_inclusive'].tolist()[0],
                 # "kurtosis": df['kurtosis_inclusive'].tolist()[0],
                 # "skewness": df['skewness_inclusive'].tolist()[0],
-                # "outliers": self.outliers.iqr_outlier(df['time (inc)'].tolist(), axis=0),
                 "gradients": gradients['Inclusive'],
                 "prop_histograms": prop_hists['Inclusive']
             },

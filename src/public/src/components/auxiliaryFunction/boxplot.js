@@ -50,6 +50,11 @@ export default {
     mounted() {
         this.id = "boxplot-" + this.callsite.id
         this.init()
+        let self = this
+        EventHandler.$on('show_target_auxiliary', (data) => {
+            self.clear()
+            self.init()
+        })
     },
 
     created() {
@@ -62,7 +67,6 @@ export default {
 
             this.svg = d3.select('#' + this.id)
                 .attrs({
-                    'class': 'boxplot',
                     'width': this.containerWidth,
                     'height': this.containerHeight
                 })
@@ -113,5 +117,11 @@ export default {
                 dataset: this.$store.selectedTargetDataset
             })
         },
+
+        clear(){
+            this.$refs.Box.clear()
+            this.$refs.Markers.clear()
+            this.$refs.Outliers.clear()
+        }
     }
 }

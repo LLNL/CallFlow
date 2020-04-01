@@ -3,6 +3,7 @@ import EventHandler from '../EventHandler'
 import Settings from '../settings/settings'
 import BoxPlot from './boxplot'
 import * as d3 from 'd3'
+import * as utils from '../utils'
 
 export default {
     name: 'AuxiliaryFunction',
@@ -38,7 +39,10 @@ export default {
         selectedCallsite: '',
         informationHeight: 70,
         revealCallsites: [],
-        selectedMetric: ''
+        selectedMetric: '',
+        means: {},
+        variance: {},
+        targetColor: ''
     }),
     mounted() {
         let self = this
@@ -77,12 +81,6 @@ export default {
             let attribute = self.$store.selectedRuntimeSortBy
             self.sortByAttribute(attribute)
         })
-
-        EventHandler.$on('show_target_auxiliary', (data) => {
-            console.log('aa')
-            self.callsites = []
-            // self.init()
-        })
     },
 
     methods: {
@@ -108,32 +106,37 @@ export default {
         },
 
         init() {
-            if (!this.firstRender) {
-                this.clear()
-            }
-            else {
+            if (this.firstRender) {
+                this.width = document.getElementById(this.id).clientWidth
+                this.height = 0.66 * this.$store.viewHeight
+                this.boxplotWidth = this.width - this.padding.left - this.padding.right
+                document.getElementById(this.id).style.maxHeight = this.height + "px"            
                 this.firstRender = false
             }
-
-            this.width = document.getElementById(this.id).clientWidth
-            this.height = 0.66 * this.$store.viewHeight
-            this.boxplotWidth = this.width - this.padding.left - this.padding.right
-
-            document.getElementById(this.id).style.maxHeight = this.height + "px"
-            this.setInfo()
-        },
-
-        clear(){
-
-        },
-
-        setInfo() {
+    
             this.numberOfCallsites = Object.keys(this.$store.callsites['ensemble']).length
             this.callsites = this.$store.callsites['ensemble']
+            this.targetCallsites = this.$store.callsites[this.$store.selectedTargetDataset]
             this.sortByAttribute(this.$store.selectedRuntimeSortBy)
             this.selectedModule = this.$store.selectedModule
             this.selectedCallsite = this.$store.selectedCallsite
             this.selectedMetric = this.$store.selectedMetric
+            this.targetColor = d3.rgb(this.$store.color.target).darker(1)
+
+            for(let callsite in this.callsites){
+                if(this.targetCallsites[callsite] != undefined){
+                    this.means[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['mean_time'])
+                    this.variance[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['variance_time'])
+                }
+                else{
+                    this.means[callsite] = '-'
+                    this.variance[callsite] = '-'
+                }
+            }
+        },       
+
+        clear(){
+
         },
 
         dataset(idx) {

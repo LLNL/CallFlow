@@ -239,5 +239,11 @@ export default {
             let ret = this.trunc(name, 20)
             return ret
         },
+
+        clear(){
+            this.g.selectAll('.whiskerText').remove()
+            this.g.selectAll('.whisker').remove()
+            this.g.selectAll('.median').remove()    
+        }
     }
 }

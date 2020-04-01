@@ -304,6 +304,7 @@ export default {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters
 
+			this.$store.viewWidth = window.innerWidth
 			this.$store.viewHeight = (window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight)
 		},
 
@@ -313,7 +314,6 @@ export default {
 			let max_inclusive_time = this.$store.maxIncTime['ensemble']
 			let current_max_inclusive_time = 0.0
 			for (let dataset of this.$store.selectedDatasets) {
-				console.log(dataset)
 				if (current_max_inclusive_time < this.$store.maxIncTime[dataset]) {
 					current_max_inclusive_time = this.$store.maxIncTime[dataset]
 					max_inclusive_dataset = dataset
@@ -322,12 +322,6 @@ export default {
 
 			this.$store.selectedTargetDataset = max_inclusive_dataset
 			this.selectedTargetDataset = max_inclusive_dataset
-
-			this.$store.selectedTargetDataset = '27-cores'
-			this.selectedTargetDataset = '27-cores'
-
-			// this.$store.selectedTargetDataset = 'osu_bcast.1.18.2019-09-03_10-33-44'
-			// this.selectedTargetDataset = 'osu_bcast.1.18.2019-09-03_10-33-44'
 
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
@@ -592,6 +586,9 @@ export default {
 			this.$store.selectedTargetDataset = this.selectedTargetDataset
 			console.log("[Update] Target Dataset: ", this.selectedTargetDataset)
 			this.init()
+			EventHandler.$emit('show_target_auxiliary', {
+				
+			})
 		},
 
 		updateMode() {

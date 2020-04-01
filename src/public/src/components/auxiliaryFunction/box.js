@@ -113,5 +113,11 @@ export default {
                 .style('z-index', 10)
                
         },
+
+        clear(){
+            this.g.selectAll('.box').remove()
+            this.g.selectAll('.targetbox').remove()
+            this.g.selectAll('.centerLine').remove()
+        }
     }
 }
