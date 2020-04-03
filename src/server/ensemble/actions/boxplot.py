@@ -48,8 +48,10 @@ class BoxPlot:
             maximum = samples[len(samples) - 1]
 
             quartiles = [minimum, q1, median, q3, maximum]
-        # quartiles = np.quantile(np.array(samples), [0, 0.25, 0.5, 0.75, 1.0]).tolist()
-        print("Percentiles: ", quartiles)
+        # np_quartiles = np.quantile(np.array(samples), [0, 0.25, 0.5, 0.75, 1.0]).tolist()
+        # print("Samples: ", samples)
+        # print("Numpy Percentiles: ", np_quartiles)
+        # print("Percentiles: ", quartiles)
         return quartiles
 
     def q1(self, x, axis = None):
