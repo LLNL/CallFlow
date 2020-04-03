@@ -65,7 +65,10 @@ class SuperGraph(nx.Graph):
                 print("Creating a Graph for {0}.".format(self.state_group.name))
                 self.mapper = {}
                 self.g = nx.DiGraph()
+                self.cct = nx.DiGraph()
+                self.agg_g = nx.DiGraph()
                 self.add_paths(path)
+                self.add_paths_new(path)
                 # self.add_reveal_paths()
             else:   
                 print("Using the existing graph from state {0}".format(self.state.name))
@@ -73,6 +76,15 @@ class SuperGraph(nx.Graph):
         # Variables to control the data properties globally.
         self.callbacks = []
         self.edge_direction = {}
+
+        self.weight_map = {}
+        for edge in self.agg_g.edges(data=True):
+            if( (edge[0], edge[1]) not in self.weight_map):
+                self.weight_map[(edge[0], edge[1])] = 0
+       
+            attr_dict = edge[2]['attr_dict']
+            for d in attr_dict:
+                self.weight_map[(edge[0], edge[1])] += d['weight']
 
         add_data = True 
         with self.timer.phase("Add graph attributes"):
@@ -135,7 +147,7 @@ class SuperGraph(nx.Graph):
         self.module_time_exc_map = self.module_group_df['time'].max().to_dict()
         self.name_time_exc_map = self.module_name_group_df['time'].max().to_dict()
 
-    def rename_cycle_path(self, path):
+    def construct_cycle_free_paths(self, path):
         ret = []
         moduleMapper = {}
         dataMap = {}
@@ -181,7 +193,7 @@ class SuperGraph(nx.Graph):
         reveal_paths = np.array(paths)
 
         for reveal_path_str in reveal_paths:
-            reveal_path_list = self.rename_cycle_path(reveal_path_str)
+            reveal_path_list = self.construct_cycle_free_paths(reveal_path_str)
             callsite_idx = len(reveal_path_list) - 2
             source = reveal_path_list[callsite_idx]
             target = reveal_path_list[callsite_idx + 1]
@@ -203,14 +215,12 @@ class SuperGraph(nx.Graph):
         paths = self.group_df[path].unique()
 
         for idx, path_str in enumerate(paths):
-            path_list = self.rename_cycle_path(path_str)
+            path_list = self.construct_cycle_free_paths(path_str)
 
             for callsite_idx, callsite in enumerate(path_list):
                 if callsite_idx != len(path_list) - 1:
                     source = path_list[callsite_idx]
                     target = path_list[callsite_idx + 1]
-
-                    print(source['module'], target['module'], source['callsite'], target['callsite'])
 
                     if(not self.g.has_edge(source['module'], target['module'])):
                         source_module = source['module']
@@ -226,7 +236,7 @@ class SuperGraph(nx.Graph):
                             edge_type = 'normal'
 
                         if(edge_type == 'normal'):
-                            self.g.add_edge(source_module, target_module,   attr_dict={
+                            self.g.add_edge(source_module, target_module,  attr_dict={
                                 "source_callsite": source_name,
                                 "target_callsite": target_name,
                                 "edge_type": edge_type
@@ -254,11 +264,10 @@ class SuperGraph(nx.Graph):
         #         })
             
     def add_paths(self, path):
-        print(self.group_df[['dataset', 'name', 'module', 'group_path']])
         paths = self.group_df[path].unique()
 
         for idx, path_str in enumerate(paths):
-            path_list = self.rename_cycle_path(path_str)
+            path_list = self.construct_cycle_free_paths(path_str)
 
             for callsite_idx, callsite in enumerate(path_list):
                 if callsite_idx != len(path_list) - 1:
@@ -279,11 +288,71 @@ class SuperGraph(nx.Graph):
                         edge_type = 'normal'
 
                     if(edge_type == 'normal'):
-                        self.g.add_edge(source_module, target_module,   attr_dict={
+                        self.g.add_edge(source_module, target_module,  attr_dict={
                             "source_callsite": source_name,
                             "target_callsite": target_name,
                             "edge_type": edge_type
                         })
+
+    def add_paths_new(self, path):
+        paths = self.group_df[path].unique()
+
+        for idx, path_str in enumerate(paths):
+            path_list = self.construct_cycle_free_paths(path_str)
+            for callsite_idx, callsite in enumerate(path_list):
+                if callsite_idx != len(path_list) - 1:
+                    source = path_list[callsite_idx]
+                    target = path_list[callsite_idx + 1]
+
+    #                 print(source['module'], target['module'], source['callsite'], target['callsite'])
+
+                    source_module = source['module']
+                    target_module = target['module']
+
+                    source_name = source['callsite']
+                    target_name = target['callsite']
+
+                    if(source_name == '119:MPI_Finalize'):
+                        source_module = 'osu_bcast'
+                
+                    has_caller_edge = self.agg_g.has_edge(source_module, target_module)
+                    has_callback_edge = self.agg_g.has_edge(target_module, source_module)
+                    has_cct_edge = self.cct.has_edge(source_name, target_name)
+                
+                    weight = self.module_name_group_df.get_group((target_module, target_name))['time (inc)'].max()
+
+                    if(has_callback_edge):
+                        edge_type = 'callback'
+                        weight = 0
+                    else:
+                        edge_type = 'caller'
+                    
+                    attr_dict = {
+                                    "source_callsite": source_name,
+                                    "target_callsite": target_name,
+                                    "edge_type": edge_type,
+                                    "weight": weight 
+                                }
+                
+    #                 print(f"Caller edge: {has_caller_edge}")
+    #                 print(f"Callback edge: {has_callback_edge}")
+                    
+                    # If the module-module edge does not exist. 
+                    if(not has_caller_edge and not has_cct_edge):
+                        print(f"Create a new edge for : {source_module}--{target_module}")
+                        self.agg_g.add_edge(source_module, target_module,  attr_dict=[attr_dict])
+                
+                    elif(not has_cct_edge):
+                        # print(f"Edge already exists for : {source_module}--{target_module}")
+                        edge_data = self.agg_g.get_edge_data(*(source_module, target_module))
+                        self.agg_g[source_module][target_module]['attr_dict'].append(attr_dict)
+                        # print(agg_g[source_module][target_module])
+                    
+                    if(not has_cct_edge):
+                        self.cct.add_edge(source_name, target_name, attr_dict={
+                            "weight": weight
+                        })
+                
 
     def add_node_attributes(self):
         ensemble_mapping = self.ensemble_map(self.g.nodes())
@@ -404,13 +473,21 @@ class SuperGraph(nx.Graph):
 
             print(source_outdegree, target_indegree)
 
+            edge_tuple = (edge[0], edge[1])
+
             # Come back here. 
             # if(source_outdegree > 2 ):
             #     ret[(edge[0], edge[1])] = target_module_inc
             # else:
             #     ret[(edge[0], edge[1])] = target_callsite_inc
 
-            ret[(edge[0], edge[1])] = target_callsite_inc
+            # ret[(edge[0], edge[1])] = target_callsite_inc
+
+            if( edge_tuple not in self.weight_map):
+                ret[edge_tuple] = 0
+
+            else:
+                ret[edge_tuple] = self.weight_map[edge_tuple]
 
             # For Lulesh. 
 
