@@ -81,8 +81,32 @@ export default {
 	},
 
 	methods: {
+		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime. 
+		sortModulesByMetric(arr) {
+			let module_list = Object.keys(this.$store.modules['ensemble'])
+
+			// Create a map for each dataset mapping the respective mean times. 
+			let map = {}
+			for (let module_name of module_list) {
+				map[module_name] = this.$store.modules['ensemble'][module_name][this.$store.selectedMetric]['mean_time']
+			}
+
+			// Create items array
+			let items = Object.keys(map).map(function (key) {
+				return [key, map[key]];
+			});
+
+			// Sort the array based on the second element
+			items.sort(function (first, second) {
+				return second[1] - first[1];
+			});
+
+			return items
+		},
+
 		init() {
-			let modules_arr = Object.keys(this.$store.modules['ensemble'])
+			let modules_sorted_list_by_metric = this.sortModulesByMetric()
+
 
 			if (this.$store.selectedMetric == 'Inclusive') {
 				this.metric = 'max_time (inc)'
@@ -91,7 +115,7 @@ export default {
 				this.metric = 'max_time'
 			}
 			this.$socket.emit('module_hierarchy', {
-				module: modules_arr[0],
+				module: modules_sorted_list_by_metric[0][0],
 				datasets: this.$store.selectedDatasets,
 			})
 		},
@@ -551,9 +575,9 @@ export default {
 					.attrs({
 						"class": 'hierarchy-targetLines',
 						"x1": x,
-						"y1": (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth),
+						"y1": (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth) + this.offset,
 						"x2": x,
-						"y2": (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth + 1) - this.offset - this.stroke_width,
+						"y2": (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth + 1) - this.offset,
 						"stroke-width": 5,
 						"stroke": this.$store.color.target
 					})
@@ -698,7 +722,7 @@ export default {
 					if (this.selectedDirection == 'LR') {
 						return d.x0 + this.offset + this.stroke_width
 					}
-					return d.y0 // + this.offset + this.stroke_width
+					return d.y0 + this.offset //+ this.stroke_width
 				})
 				.attr('width', (d) => {
 					if (this.selectedDirection == 'LR') {
@@ -791,7 +815,7 @@ export default {
 					if (this.selectedDirection == 'LR') {
 						return d.x0;
 					}
-					return d.y0 + 15;
+					return d.y0 + 2.5 * (this.stroke_width + this.offset);
 				})
 				.attr('width', (d) => {
 					if (this.selectedDirection == 'LR') {

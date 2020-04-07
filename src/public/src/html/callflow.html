@@ -27,11 +27,11 @@
 				v-if="selectedMode == 'Ensemble' && selectedFormat == 'SuperGraph'" v-model="selectedCompareDataset"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateCompareDataset()">
 				<template slot="selection" slot-scope="{item}">
-					{{ datasets.indexOf(item)}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+					{{ datasets.indexOf(item) + 1}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
 				</template>
 				<template slot="item" slot-scope="{item}">
 					<!-- HTML that describe how select should render items when the select is open -->
-					{{ datasets.indexOf(item)}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+					{{ datasets.indexOf(item) + 1}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
 				</template>
 			</v-select>
 		</v-flex>
