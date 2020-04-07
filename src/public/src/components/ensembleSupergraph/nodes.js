@@ -314,7 +314,7 @@ export default {
                     this.permanentGuides = true
                 })
                 .on('mouseover', (d) => {
-                    // self.$refs.ToolTip.render(self.graph, d)
+                    self.$refs.ToolTip.render(self.graph, d)
                     // this.$store.selectedNode = d
                     // this.$store.selectedModule = d.module
 
@@ -325,7 +325,7 @@ export default {
                     this.drawGuides(d, 'temporary')
                 })
                 .on('mouseout', (d) => {
-                    // self.$refs.ToolTip.clear()
+                    self.$refs.ToolTip.clear()
 
                     // EventHandler.$emit('unhighlight_module')
 

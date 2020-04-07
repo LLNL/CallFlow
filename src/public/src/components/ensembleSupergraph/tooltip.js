@@ -1,5 +1,6 @@
 import tpl from '../../html/ensembleSupergraph/tooltip.html'
 import * as d3 from 'd3'
+import * as utils from '../utils'
 
 export default {
     template: tpl,
@@ -14,7 +15,7 @@ export default {
         textCount: 0,
         textxOffset: 20,
         textyOffset: 20,
-        textPadding: 13,
+        textPadding: 15,
     }),
     sockets: {
         tooltip(data) {
@@ -25,7 +26,7 @@ export default {
 
     },
 
-    mounted() {},
+    mounted() { },
     methods: {
         init(id) {
             this.id = id
@@ -46,12 +47,12 @@ export default {
                 .append('rect')
                 .attrs({
                     "class": "toolTipContent",
-                    'fill': 'white',
+                    'fill': '#e0e0e0',
                     "stroke": "black",
                     "rx": "10px",
                     "fill-opacity": 1,
-                    "width": "375",
-                    "height": "150",
+                    "width": "325",
+                    "height": "200",
                 })
                 .attrs({
                     'x': () => {
@@ -102,8 +103,13 @@ export default {
 
         times() {
             this.addText('Name: ' + this.trunc(this.node.id, 40))
-            this.addText('Inclusive Time: ' + (this.node['time (inc)'] * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node['time (inc)'] / this.$store.maxIncTime['ensemble']) * 100).toFixed(3)) + "%")
-            this.addText('Exclusive Time: ' + (this.node['time'] * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node['time'] / this.$store.maxExcTime['ensemble']) * 100).toFixed(3)) + "%")
+            // this.addText('Inclusive Time: ' + (this.node['time (inc)'] * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node['time (inc)'] / this.$store.maxIncTime['ensemble']) * 100).toFixed(3)) + "%")
+            // this.addText('Exclusive Time: ' + (this.node['time'] * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node['time'] / this.$store.maxExcTime['ensemble']) * 100).toFixed(3)) + "%")
+            this.addText('Inclusive Time: ' + utils.formatRuntimeWithUnits(this.node.actual_time['Inclusive']))
+            this.addText('Exclusive Time: ' + utils.formatRuntimeWithUnits(this.node.actual_time['Exclusive']))
+            this.addText('Node value: ' + utils.formatRuntimeWithUnits(this.node.value))
+            this.addText('Node height: ' + this.node.height)
+
         },
 
         trunc(str, n) {
@@ -112,19 +118,35 @@ export default {
         },
 
         paths() {
-            let entry_functions = this.node.callees
+            let entry_functions = this.$store.modules['ensemble'][this.node.id]['callers']
+
+            let entry_function_runtimes = {}
+            for (let i = 0; i < entry_functions.length; i += 1) {
+                let callsite = entry_functions[i].replace("'", '').replace("'", '').replace("[", "").replace("]", "")
+                entry_function_runtimes[callsite] = this.$store.callsites['ensemble'][callsite][this.$store.selectedMetric]['mean_time']
+            }
+
+            // Create items array
+            let items = Object.keys(entry_function_runtimes).map(function (key) {
+                return [key, entry_function_runtimes[key]];
+            });
+
+            // Sort the array based on the second element
+            let entry_function_data = items.sort(function (first, second) {
+                return second[1] - first[1];
+            });
 
             this.rectWidth = "10px"
 
             this.addText('')
             this.addText('Entry Functions: ')
 
-            for (var tIndex = 0; tIndex < entry_functions.length; tIndex++) {
+            for (var tIndex = 0; tIndex < 3; tIndex++) {
                 this.textCount += 1
                 let fromColor = this.$store.color.getColor(this.node)
-                let toColor = this.$store.color.getColorByValue(entry_functions['time (inc)'])
+                let toColor = this.$store.color.getColorByValue(entry_function_data[tIndex][1])
                 let fromFunc = this.node.id
-                let toFunc = entry_functions[tIndex]
+                let toFunc = entry_function_data[tIndex][0]
                 let xOffset = this.xOffset
                 let yOffset = this.mousePosY + 50 + this.textyOffset + this.textPadding * this.textCount
 
@@ -177,7 +199,6 @@ export default {
                     .text(this.trunc(toFunc, 15))
 
                 let callsite = entry_functions[tIndex]
-                console.log(typeof(entry_functions[tIndex]))
 
                 // let timeInfo = ( this.$store.callsites['ensemble'][callsite]['max_time'] / this.$store.maxIncTime['ensemble'] * 100).toFixed(3) + '%'
 
@@ -189,6 +210,10 @@ export default {
                 //     })
                 //     .text(timeInfo)
             }
+
+            let left_callsites = entry_function_data.length - 3
+            this.addText('and ' + left_callsites + ' call sites more.')
+
         },
 
         clear() {
