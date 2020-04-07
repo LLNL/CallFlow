@@ -92,10 +92,10 @@ export default {
         },
 
         formatName(name) {
-            if (name.length < 15) {
+            if (name.length < 40) {
                 return name
             }
-            let ret = this.trunc(name, 15)
+            let ret = this.trunc(name, 40)
             return ret
         },
 

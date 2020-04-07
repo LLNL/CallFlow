@@ -120,6 +120,8 @@ export default {
         paths() {
             let entry_functions = this.$store.modules['ensemble'][this.node.id]['callers']
 
+            console.log(entry_functions)
+
             let entry_function_runtimes = {}
             for (let i = 0; i < entry_functions.length; i += 1) {
                 let callsite = entry_functions[i].replace("'", '').replace("'", '').replace("[", "").replace("]", "")
@@ -139,14 +141,14 @@ export default {
             this.rectWidth = "10px"
 
             this.addText('')
-            this.addText('Entry Functions: ')
+            this.addText('Entry call sites: ')
 
             for (var tIndex = 0; tIndex < 3; tIndex++) {
                 this.textCount += 1
-                let fromColor = this.$store.color.getColor(this.node)
-                let toColor = this.$store.color.getColorByValue(entry_function_data[tIndex][1])
-                let fromFunc = this.node.id
-                let toFunc = entry_function_data[tIndex][0]
+                let fromColor = this.$store.color.getColorByValue(entry_function_data[tIndex][1])
+                let toColor = this.$store.color.getColor(this.node)
+                let fromFunc = entry_function_data[tIndex][0]
+                let toFunc = this.node.id
                 let xOffset = this.xOffset
                 let yOffset = this.mousePosY + 50 + this.textyOffset + this.textPadding * this.textCount
 
@@ -168,7 +170,7 @@ export default {
                         'y': yOffset + "px",
                         'class': 'toolTipContent',
                     })
-                    .text(this.trunc(fromFunc, 15))
+                    .text(this.trunc(fromFunc, 10))
 
                 this.toolTipG
                     .append('text')
@@ -196,7 +198,7 @@ export default {
                         'y': yOffset + "px",
                         'class': 'toolTipContent',
                     })
-                    .text(this.trunc(toFunc, 15))
+                    .text(this.trunc(toFunc, 10))
 
                 let callsite = entry_functions[tIndex]
 
