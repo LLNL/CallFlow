@@ -68,24 +68,30 @@ class PreProcess:
 			self.graphMapper()
 			self.map = {}
 
-		def dfMapper(self):
-			ret = {}
-			for idx, row in self.df.iterrows():
-				node_df = self.state.lookup_with_node(row.node)
-				n_index = node_df["n_index"].tolist()
-				p_incTime = node_df[attr].tolist()
-				for idx in range(len(n_index)):
-					if n_index[idx] not in ret:
-						ret[n_index[idx]] = []
-					ret[n_index[idx]].append(p_incTime[idx])
-			return ret
+		# def dfMapper(self):
+		# 	ret = {}
+		# 	for idx, row in self.df.iterrows():
+		# 		node_df = self.state.lookup_with_node(row.node)
+		# 		n_index = node_df["n_index"].tolist()
+		# 		p_incTime = node_df[attr].tolist()
+		# 		for idx in range(len(n_index)):
+		# 			if n_index[idx] not in ret:
+		# 				ret[n_index[idx]] = []
+		# 			ret[n_index[idx]].append(p_incTime[idx])
+		# 	return ret
 
 		#################### Mapper functions ###############
-		def update_unmapped_target_nodes(self, source, target):
-			if source in self.unmapped_targets:
-				self.unmapped_targets.remove(source)
-			elif target not in set(self.unmapped_targets):
-				self.unmapped_targets.append(target)
+		# def update_unmapped_target_nodes(self, source, target):
+		# 	if source in self.unmapped_targets:
+		# 		self.unmapped_targets.remove(source)
+		# 	elif target not in set(self.unmapped_targets):
+		# 		self.unmapped_targets.append(target)
+
+		def convertFrameList(self, nodes):
+			ret = []
+			for node in nodes:
+				ret.append(node.frame.get('name'))
+			return ret
 
 		def graphMapper(self):
 			graph = self.graph
@@ -102,20 +108,20 @@ class PreProcess:
 
 				node_paths = node.paths()
 				self.paths[node_name] = node_paths
-				self.callers[node_name] = node.parents
-				self.callees[node_name] = node.children
+				self.callers[node_name] = self.convertFrameList(node.parents)
+				self.callees[node_name] = self.convertFrameList(node.children)
 				self.hatchet_nodes[node_name] = node
 
 		def build(self):
 			return PreProcess(self)
 
-		@logger
-		def add_hatchet_node(self):
-			self.raiseExceptionIfNodeCountNotEqual(self.hatchet_nodes.keys())
-			self.df["hatchet_node"] = self.df["name"].apply(
-				lambda node_name: self.hatchet_nodes[node_name]
-			)
-			return self
+		# @logger
+		# def add_hatchet_node(self):
+		# 	self.raiseExceptionIfNodeCountNotEqual(self.hatchet_nodes.keys())
+		# 	self.df["hatchet_node"] = self.df["name"].apply(
+		# 		lambda node_name: self.hatchet_nodes[node_name]
+		# 	)
+		# 	return self
 
 		# Add the path information from the node object
 		@logger
@@ -124,34 +130,6 @@ class PreProcess:
 			self.df["path"] = self.df["name"].apply(
 				lambda node_name: getPathListFromFrames(self.paths[node_name])
 			)
-			return self
-
-		# Max of the inclusive Runtimes among all processes
-		# node -> max([ inclusive times of process])
-		@logger
-		def add_max_incTime(self):
-			ret = {}
-			ret[str(row.nid)] = max(self.state.lookup(row.nid)["time (inc)"])
-
-			self.map["max_incTime"] = ret
-			self.df["max_incTime"] = self.df["node"].apply(
-				lambda node: self.map["max_incTime"][str(node.nid)]
-			)
-			return self
-
-		# Avg of inclusive Runtimes among all processes
-		# node -> avg([ inclusive times of process])
-		@logger
-		def add_avg_incTime(self):
-			ret = {}
-			for idx, row in self.df.iterrows():
-				ret[str(row.nid)] = utils.avg(self.state.lookup(row.nid)["time (inc)"])
-
-			self.map["avg_incTime"] = ret
-			self.df["avg_incTime"] = self.df["node"].apply(
-				lambda node: self.map["avg_incTime"][str(node.nid)]
-			)
-
 			return self
 
 		# Imbalance percentage Series in the dataframe
@@ -219,13 +197,13 @@ class PreProcess:
 			self.df["show_node"] = self.df["name"].apply(lambda node: True)
 			return self
 
-		@logger
-		def update_show_node(self, show_node_map):
-			self.map.show_node = show_node_map
-			self.df["show_node"] = self.df["node"].apply(
-				lambda node: show_node_map[str(node.df_index)]
-			)
-			return self
+		# @logger
+		# def update_show_node(self, show_node_map):
+		# 	self.map.show_node = show_node_map
+		# 	self.df["show_node"] = self.df["node"].apply(
+		# 		lambda node: show_node_map[str(node.df_index)]
+		# 	)
+		# 	return self
 
 		# node_name is different from name in dataframe. So creating a copy of it.
 		@logger
@@ -235,7 +213,6 @@ class PreProcess:
 
 			self.name_group_df = self.df.groupby(['name'])
 			self.callsite_module_map = self.name_group_df['module'].unique().to_dict()
-			print(self.callsite_module_map, type(self.callsite_module_map))
 
 			self.df["vis_node_name"] = self.df["name"].apply(lambda name: sanitizeName(self.callsite_module_map[name][0]) + '=' + name)
 			return self
@@ -261,17 +238,6 @@ class PreProcess:
 		@logger
 		def add_module_name_caliper(self, module_map):
 			self.df['module'] = self.df['name'].apply(lambda name: module_map[name])
-			return self
-
-
-		@logger
-		def add_n_index(self):
-			self.df["n_index"] = self.df.groupby("nid").ngroup()
-			return self
-
-		@logger
-		def add_mod_index(self):
-			self.df["mod_index"] = self.df.groupby("module").ngroup()
 			return self
 
 		@logger

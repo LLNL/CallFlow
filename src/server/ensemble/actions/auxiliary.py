@@ -1,4 +1,4 @@
-    ##############################################################################
+##############################################################################
 # Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -41,7 +41,13 @@ class Auxiliary:
 
     def group_frames(self):
         if(self.filter):
-            self.df = self.df.loc[self.df['time'] > 0.01*self.config.filter_perc*self.df['time'].max() ]
+            # self.df = self.df.loc[self.df['time'] > 0.01*self.config.filter_perc*self.df['time'].max() ]
+            # self.df = self.df.loc[self.df['time (inc)'] > self.config.filter_perc]['name'].unique()
+            group_df = self.df.groupby(['name']).mean()
+            f_group_df = group_df.loc[group_df['time'] > self.config.filter_perc/10]
+            callsites = f_group_df.index.values.tolist()
+            self.df =  self.df[self.df['name'].isin(callsites)]
+
 
         self.module_name_group_df = self.df.groupby(['module', 'name'])
         self.module_group_df = self.df.groupby(['module'])
@@ -109,7 +115,7 @@ class Auxiliary:
         result = {
             "name": name,
             "id": 'node-' + str(df['nid'].tolist()[0]),
-            "dataset": df['dataset'].tolist()[0],
+            "dataset": df['dataset'].unique().tolist(),
             "module": df['module'].tolist()[0],
             "Inclusive": {
                 "mean_time": df['time (inc)'].mean(),
@@ -210,7 +216,6 @@ class Auxiliary:
         ensemble = {}
         for callsite, callsite_df in self.name_group_df:
             gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(columnName='name', callsiteOrModule=callsite)
-            print(callsite)
             boxplot = BoxPlot(callsite_df)
             ensemble[callsite] = self.pack_json(callsite_df, callsite, gradients=gradients, q= boxplot.q, outliers=boxplot.outliers)
 
