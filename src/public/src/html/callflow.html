@@ -8,6 +8,14 @@
 			<v-select label="Select Target run" :items="datasets"
 				v-if="selectedMode == 'Ensemble' && selectedFormat == 'SuperGraph'" v-model="selectedTargetDataset"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
+				<template slot="selection" slot-scope="{item}">
+					{{ datasets.indexOf(item) + 1}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+				</template>
+				<template slot="item" slot-scope="{item}">
+					<!-- HTML that describe how select should render items when the select is open -->
+					{{ datasets.indexOf(item) + 1 }}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+				</template>
+
 			</v-select>
 			<v-select label="Select a run" :items="datasets" v-if="selectedMode == 'Single' || selectedFormat == 'CCT'"
 				v-model="selectedTargetDataset" :menu-props="{ maxHeight: '400' }" box
@@ -18,6 +26,13 @@
 			<v-select label="Select Compare run" :items="datasets"
 				v-if="selectedMode == 'Ensemble' && selectedFormat == 'SuperGraph'" v-model="selectedCompareDataset"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateCompareDataset()">
+				<template slot="selection" slot-scope="{item}">
+					{{ datasets.indexOf(item)}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+				</template>
+				<template slot="item" slot-scope="{item}">
+					<!-- HTML that describe how select should render items when the select is open -->
+					{{ datasets.indexOf(item)}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+				</template>
 			</v-select>
 		</v-flex>
 		<v-spacer></v-spacer>

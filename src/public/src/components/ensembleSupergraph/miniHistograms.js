@@ -124,15 +124,16 @@ export default {
         },
 
         render(callsite_name, callsite_module) {
-            console.log(this.nodeMap)
             let node_dict = this.nodes[this.nodeMap[callsite_module]]
-            console.log(node_dict)
             if (callsite_module.split('_')[0] != "intermediate") {
-                let callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module][this.$store.selectedMetric]['prop_histograms'][this.$store.selectedProp]
+                let data = this.$store.modules[this.$store.selectedTargetDataset]
+                if(data[callsite_module] != undefined){
+                    let callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module][this.$store.selectedMetric]['prop_histograms'][this.$store.selectedProp]
 
-                this.histogram(callsite_data, node_dict, 'ensemble')
-                if(this.$store.showTarget){
-                    this.histogram(callsite_data, node_dict, 'target')
+                    this.histogram(callsite_data, node_dict, 'ensemble')
+                    if(this.$store.showTarget){
+                        this.histogram(callsite_data, node_dict, 'target')
+                    }    
                 }
             }
         }

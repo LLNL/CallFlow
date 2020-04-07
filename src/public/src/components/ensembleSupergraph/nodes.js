@@ -182,8 +182,14 @@ export default {
             this.hist_min = 0
             this.hist_max = 0
             for (let node of nodes) {
-                this.hist_min = Math.min(this.hist_min, data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_min'])
-                this.hist_max = Math.max(this.hist_max, data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_max'])
+                // TODO: remove this fuse.
+                if (data[node.module] != undefined) {
+                    this.hist_min = Math.min(this.hist_min, data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_min'])
+                    this.hist_max = Math.max(this.hist_max, data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_max'])
+                }
+                else {
+
+                }
             }
             this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
             this.$parent.$refs.EnsembleColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
@@ -202,8 +208,13 @@ export default {
                     .attr("x2", "0%")
                     .attr("y2", "100%");
 
-                let grid = data[node.module][this.$store.selectedMetric]['gradients'][method]['x']
-                let val = data[node.module][this.$store.selectedMetric]['gradients'][method]['y']
+                let grid = []
+                let val = []
+                // TODO: remove this fuse.
+                if (data[node.module] != undefined) {
+                    grid = data[node.module][this.$store.selectedMetric]['gradients'][method]['x']
+                    val = data[node.module][this.$store.selectedMetric]['gradients'][method]['y']
+                }
 
                 for (let i = 0; i < grid.length; i += 1) {
                     let x = (i + i + 1) / (2 * grid.length)
@@ -520,29 +531,32 @@ export default {
                 let node_data = this.graph.nodes[i]
                 let module_name = this.graph.nodes[i].module
                 if (this.graph.nodes[i].id.split('_')[0] != 'intermediate') {
-                    let gradients = data['ensemble'][module_name][this.$store.selectedMetric]['gradients']
-                    let module_mean = gradients['dataset']['mean'][this.$store.selectedTargetDataset]
 
-                    let grid = gradients.hist.x
-                    let vals = gradients.hist.y
+                    if (data['ensemble'][module_name] != undefined) {
+                        let gradients = data['ensemble'][module_name][this.$store.selectedMetric]['gradients']
+                        // // let module_mean = gradients['dataset']['mean'][this.$store.selectedTargetDataset]
 
-                    let targetPos = gradients['dataset']['position'][this.$store.selectedTargetDataset] + 1
-                    let binWidth = node_data.height / (this.$store.selectedRunBinCount)
+                        // let grid = gradients.hist.x
+                        // let vals = gradients.hist.y
 
-                    let y = binWidth * targetPos - binWidth / 2
+                        let targetPos = gradients['dataset']['position'][this.$store.selectedTargetDataset] + 1
+                        let binWidth = node_data.height / (this.$store.selectedRunBinCount)
 
-                    d3.select('#ensemble-callsite-' + node_data.client_idx)
-                        .append('line')
-                        .attrs({
-                            "class": 'targetLines',
-                            "id": 'line-2-' + dataset + '-' + node_data['client_idx'],
-                            "x1": 0,
-                            "y1": y,
-                            "x2": this.nodeWidth,
-                            "y2": y,
-                            "stroke-width": 5,
-                            "stroke": this.$store.color.target
-                        })
+                        let y = binWidth * targetPos - binWidth / 2
+
+                        d3.select('#ensemble-callsite-' + node_data.client_idx)
+                            .append('line')
+                            .attrs({
+                                "class": 'targetLines',
+                                "id": 'line-2-' + dataset + '-' + node_data['client_idx'],
+                                "x1": 0,
+                                "y1": y,
+                                "x2": this.nodeWidth,
+                                "y2": y,
+                                "stroke-width": 5,
+                                "stroke": this.$store.color.target
+                            })
+                    }
                 }
             }
         },

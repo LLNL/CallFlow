@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import * as d3 from 'd3'
 import { mapState, mapActions } from 'vuex';
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/antd.css'
@@ -31,6 +32,7 @@ import ParameterProjection from './parameterProjection/parameterProjection'
 // import SimilarityMatrix from './similarityMatrix/similarityMatrix'
 
 import io from 'socket.io-client'
+import * as utils from './utils'
 
 export default {
 	name: 'CallFlow',
@@ -57,12 +59,12 @@ export default {
 	watch: {
 		showTarget: (val) => {
 			this.showTarget = !(this.showTarget)
-			
+
 			this.clearLocal()
 			this.init()
 
 			EventHandler.$emit('show_target_auxiliary', {
-				
+
 			})
 		}
 	},
@@ -144,9 +146,6 @@ export default {
 		parameter_analysis: true,
 		caseStudy: ['Lulesh-Scaling-3-runs', 'Lulesh-Scaling-8-runs', 'Kripke-MPI', 'OSU-Bcast', 'Kripke-Scaling'],
 		selectedCaseStudy: 'Lulesh-Scaling-3-runs',
-		// selectedCaseStudy: 'Kripke-MPI',
-		// selectedCaseStudy: 'OSU-Bcast',
-		// selectedCaseStudy: "Kripke-Scaling",
 		selectedRunBinCount: 20,
 		selectedMPIBinCount: 20,
 		selectedHierarchyMode: 'Uniform',
@@ -163,8 +162,8 @@ export default {
 		selectedIQRFactor: 0.15,
 		selectedNumOfClusters: 3,
 		targetColorMap: {
-			'Green':'#4EAF4A',
-			'Blue': '#4681B4', 
+			'Green': '#4EAF4A',
+			'Blue': '#4681B4',
 			'Brown': '#AF9B90',
 			'Red': '#A90400'
 		},
@@ -172,7 +171,8 @@ export default {
 		selectedTargetColor: '',
 		selectedTargetColorText: 'Green',
 		showTarget: true,
-		targetInfo: 'Show Target info.'
+		targetInfo: 'Show Target info.',
+		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time)
 	}),
 
 	mounted() {
@@ -261,6 +261,32 @@ export default {
 	},
 
 	methods: {
+		// Feature: Sortby the datasets and show the time. 
+		formatRuntimeWithoutUnits(val) {
+			let format = d3.format('.2')
+			let ret = format(val)
+			return ret
+		},
+
+		// Feature: Sortby the datasets and show the time. 
+		sortDatasetsByAttr(datasets) {
+			let ret = datasets.sort((a, b) => {
+				let x = 0, y = 0
+				if (this.$store.selectedMetric == 'Inclusive') {
+					x = this.$store.maxIncTime[a]
+					y = this.$store.maxIncTime[b]
+					this.metricTimeMap = this.$store.maxIncTime
+				}
+				else if (this.$store.selectedMetric == 'Exclusive') {
+					x = this.$store.maxExcTime[a]
+					y = this.$store.maxExcTime[b]
+					this.metricTimeMap = this.$store.maxExcTime
+				}
+				return parseFloat(x) - parseFloat(y);
+			})
+			return ret;
+		},
+
 		setupStore(data) {
 			data = JSON.parse(data)
 			console.log("Config file contains: 	", data)
@@ -283,17 +309,25 @@ export default {
 			this.$store.minExcTime = data['min_excTime']
 			this.$store.maxIncTime = data['max_incTime']
 			this.$store.minIncTime = data['min_incTime']
+
 			this.$store.numOfRanks = data['numOfRanks']
 			this.$store.moduleCallsiteMap = data['module_callsite_map']
 			this.$store.callsiteModuleMap = data['callsite_module_map']
+
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount
 			this.$store.selectedRunBinCount = this.selectedRunBinCount
 
 			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3)
-			this.$store.selectedScatterMode = 'mean'
+
+			this.$store.viewWidth = window.innerWidth
+			this.$store.viewHeight = (window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight)
+
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
+		},
+
+		setOtherData() {
+			this.$store.selectedScatterMode = 'mean'
 			this.$store.nodeInfo = {}
-			this.$store.selectedMetric = this.selectedMetric
 			this.$store.selectedFunctionsInCCT = this.selectedFaunctionsInCCT
 			this.$store.datasetMap = this.$store.selectedDatasets.map((run, i) => "run-" + i)
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode
@@ -303,25 +337,32 @@ export default {
 			this.$store.selectedIQRFactor = this.selectedIQRFactor
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters
-
-			this.$store.viewWidth = window.innerWidth
-			this.$store.viewHeight = (window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight)
 		},
 
-
 		setTargetDataset() {
-			let max_inclusive_dataset = '';
-			let max_inclusive_time = this.$store.maxIncTime['ensemble']
-			let current_max_inclusive_time = 0.0
+			this.$store.selectedMetric = this.selectedMetric
+			this.datasets = this.sortDatasetsByAttr(this.$store.selectedDatasets)
+
+			let max_dataset = '';
+			let current_max_time = 0.0
+
+			let data = {}
+			if (this.$store.selectedMetric == 'Inclusive') {
+				data = this.$store.maxIncTime
+			}
+			else if (this.$store.selectedMetric == 'Exclusive') {
+				data = this.$store.maxExcTime
+			}
+
 			for (let dataset of this.$store.selectedDatasets) {
-				if (current_max_inclusive_time < this.$store.maxIncTime[dataset]) {
-					current_max_inclusive_time = this.$store.maxIncTime[dataset]
-					max_inclusive_dataset = dataset
+				if (current_max_time < data[dataset]) {
+					current_max_time = data[dataset]
+					max_dataset = dataset
 				}
 			}
 
-			this.$store.selectedTargetDataset = max_inclusive_dataset
-			this.selectedTargetDataset = max_inclusive_dataset
+			this.$store.selectedTargetDataset = max_dataset
+			this.selectedTargetDataset = max_dataset
 
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
@@ -359,12 +400,12 @@ export default {
 			this.distributionColorMap = this.$store.color.getAllColors()
 			if (this.selectedMode == 'Ensemble') {
 				if (this.selectedMetric == 'Inclusive') {
-					this.selectedColorMin = this.$store.minIncTime['ensemble']
-					this.selectedColorMax = this.$store.maxIncTime['ensemble']
+					this.selectedColorMin = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.minIncTime['ensemble']))
+					this.selectedColorMax = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.maxIncTime['ensemble']))
 				}
 				else if (this.selectedMetric == 'Exclusive') {
-					this.selectedColorMin = this.$store.minExcTime['ensemble']
-					this.selectedColorMax = this.$store.maxExcTime['ensemble']
+					this.selectedColorMin = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.minExcTime['ensemble']))
+					this.selectedColorMax = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.maxExcTime['ensemble']))
 				}
 				this.selectedColorMin = 0.0
 			}
@@ -392,11 +433,11 @@ export default {
 			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap
 			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap
 			this.$store.selectedColorPoint = this.selectedColorPoint
-			this.selectedColorMinText = this.selectedColorMin.toFixed(3) * 0.000001
-			this.selectedColorMaxText = this.selectedColorMax.toFixed(3) * 0.000001
+			this.selectedColorMinText = this.selectedColorMin
+			this.selectedColorMaxText = this.selectedColorMax
 			this.$store.color.highlight = '#AF9B90'//'#4681B4'
 			this.selectedTargetColor = this.targetColorMap[this.selectedTargetColorText]
-			this.$store.color.target =  this.selectedTargetColor
+			this.$store.color.target = this.selectedTargetColor
 			this.$store.color.ensemble = '#C0C0C0'//'#4681B4'
 			this.$store.color.compare = '#043060'
 			this.$store.showTarget = this.showTarget
@@ -462,7 +503,6 @@ export default {
 
 		clearComponents(componentList) {
 			for (let i = 0; i < componentList.length; i++) {
-				console.log(componentList[i])
 				componentList[i].clear()
 			}
 		},
@@ -474,6 +514,8 @@ export default {
 
 			// Initialize colors
 			this.setupColors()
+			this.setOtherData()
+			this.setTargetDataset()
 
 			console.log("Mode : ", this.selectedMode)
 			console.log("Number of runs :", this.$store.numOfRuns)
@@ -587,7 +629,7 @@ export default {
 			console.log("[Update] Target Dataset: ", this.selectedTargetDataset)
 			this.init()
 			EventHandler.$emit('show_target_auxiliary', {
-				
+
 			})
 		},
 
@@ -681,13 +723,13 @@ export default {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy
 			EventHandler.$emit('callsite_information_sort')
 		},
-		
-		updateNumOfClusters(){
+
+		updateNumOfClusters() {
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters
 			EventHandler.$emit('update_number_of_clusters')
 		},
 
-		updateTargetColor(){
+		updateTargetColor() {
 			this.clearLocal()
 			this.init()
 		}

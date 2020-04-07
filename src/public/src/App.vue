@@ -175,12 +175,10 @@ body {
 
 #auxiliary-function-overview {
   overflow: auto;
-  background: white;
 }
 
 #function-overview {
   overflow: auto;
-  background: white;
 }
 
 .auxiliary-node {
@@ -235,7 +233,7 @@ body {
   color: #1a6059 !important;
 }
 
-.setting-button{
+.setting-button {
   border: 0px solid !important;
   right: 0px !important;
   color: #009688 !important;
@@ -243,12 +241,20 @@ body {
   background-color: white !important;
 }
 
-.component-info{
+.component-info {
   color: #009688;
   padding: 8px;
 }
 
-.v-list{
+.v-list {
   padding: 8px;
+}
+
+.splitpanes.default-theme .splitpanes__pane {
+  background: #f7f7f7 !important;
+}
+
+#parameter-projection-view {
+  background: #f7f7f7 !important;
 }
 </style>

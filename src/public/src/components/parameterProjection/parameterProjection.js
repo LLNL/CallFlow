@@ -21,7 +21,7 @@ export default {
         yMax: 0,
         message: 'Parameter Projection',
         showMessage: false,
-        colorset: ['#FF7F00', '#984EA3', '#4daf4a', '#D62728', '#9466BD', '#8C564B', '#E377C2', '#7F7F7F', '#BCBD21', '#16BECF' ]
+        colorset: ['#FF7F00', '#984EA3', '#4daf4a', '#D62728', '#9466BD', '#8C564B', '#E377C2', '#7F7F7F', '#BCBD21', '#16BECF']
     }),
     sockets: {
         parameter_projection(data) {
@@ -208,6 +208,7 @@ export default {
                 })
                 .style('stroke-width', 1)
                 .style('stroke', '#aaaaaa')
+                .style('background-color', this.$store.ensemble)
 
             // set the transition
             this.t = this.svg
@@ -246,12 +247,19 @@ export default {
                 .append('circle')
                 .attrs({
                     class: (d) => { return 'dot' + ' circle' + this.id },
-                    id: (d) => { console.log(d); return 'dot-' + this.$store.datasetMap[d[2]] },
+                    id: (d) => { return 'dot-' + this.$store.datasetMap[d[2]] },
                     r: (d) => {
                         return 6.0
                     },
                     'stroke-width': 2.0,
-                    fill: (d) => { return this.colorset[d[4]] },
+                    fill: (d) => {
+                        if (d[2] == self.$store.selectedTargetDataset && self.$store.showTarget) {
+                            return d3.rgb(self.$store.color.ensemble)
+                        }
+                        else {
+                            return this.colorset[d[4]]
+                        }
+                    },
                     cx: (d, i) => { return self.x(d[0]) },
                     cy: (d) => { return self.y(d[1]) },
                 })
@@ -267,11 +275,13 @@ export default {
                     id: (d) => { return 'outer-dot-' + self.$store.datasetMap[d[2]] },
                     r: (d) => {
                         return 8.0
+
                     },
                     'stroke-width': 3.0,
                     stroke: (d) => {
                         if (d[2] == self.$store.selectedTargetDataset && self.$store.showTarget) {
-                            return d3.rgb(self.$store.color.target)
+                            // return d3.rgb(self.$store.color.target)
+                            return this.colorset[d[4]]
                         }
                         else {
                             return d3.rgb(self.$store.color.ensemble)
@@ -422,7 +432,7 @@ export default {
             this.lasso.notSelectedItems()
                 .attr("r", 4.5)
                 .attr("opacity", 0.5);
-                
+
             this.$store.selectedDatasets = this.selectedDatasets
             // EventHandler.$emit('highlight_datasets', this.selectedDatasets)
             EventHandler.$emit('lasso_selection', this.$store.selectedDatasets)
