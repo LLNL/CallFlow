@@ -22,133 +22,153 @@ import time
 import math
 import os
 
+
 class Auxiliary:
     def __init__(self, states, binCount="20", datasets=[], config={}, process=True):
         self.timer = Timer()
-        self.df = self.select_rows(states['ensemble_entire'].df, datasets)
+        self.df = self.select_rows(states["ensemble_entire"].df, datasets)
         self.binCount = binCount
         self.config = config
-        self.states = states        
+        self.states = states
         self.process = process
         self.datasets = datasets
 
-        self.props = ['rank', 'name', 'dataset', 'all_ranks']
-        self.filter = False 
+        self.props = ["rank", "name", "dataset", "all_ranks"]
+        self.filter = False
 
         self.result = self.run()
 
         print(self.timer)
 
     def group_frames(self):
-        if(self.filter):
+        if self.filter:
             # self.df = self.df.loc[self.df['time'] > 0.01*self.config.filter_perc*self.df['time'].max() ]
             # self.df = self.df.loc[self.df['time (inc)'] > self.config.filter_perc]['name'].unique()
-            group_df = self.df.groupby(['name']).mean()
-            f_group_df = group_df.loc[group_df['time'] > self.config.filter_perc/10]
+            group_df = self.df.groupby(["name"]).mean()
+            f_group_df = group_df.loc[group_df["time"] > self.config.filter_perc / 10]
             callsites = f_group_df.index.values.tolist()
-            self.df =  self.df[self.df['name'].isin(callsites)]
+            self.df = self.df[self.df["name"].isin(callsites)]
 
-
-        self.module_name_group_df = self.df.groupby(['module', 'name'])
-        self.module_group_df = self.df.groupby(['module'])
-        self.name_group_df = self.df.groupby(['name'])
+        self.module_name_group_df = self.df.groupby(["module", "name"])
+        self.module_group_df = self.df.groupby(["module"])
+        self.name_group_df = self.df.groupby(["name"])
 
         self.target_df = {}
         self.target_module_group_df = {}
         self.target_module_name_group_df = {}
         self.target_name_group_df = {}
         for dataset in self.datasets:
-            self.target_df[dataset] = self.df.loc[self.df['dataset'] == dataset]
-            self.target_module_group_df[dataset] = self.target_df[dataset].groupby(['module'])
-            self.target_module_name_group_df[dataset] = self.target_df[dataset].groupby(['module', 'name'])
-            self.target_name_group_df[dataset] = self.target_df[dataset].groupby(['name'])
-
+            self.target_df[dataset] = self.df.loc[self.df["dataset"] == dataset]
+            self.target_module_group_df[dataset] = self.target_df[dataset].groupby(
+                ["module"]
+            )
+            self.target_module_name_group_df[dataset] = self.target_df[dataset].groupby(
+                ["module", "name"]
+            )
+            self.target_name_group_df[dataset] = self.target_df[dataset].groupby(
+                ["name"]
+            )
 
     def select_rows(self, df, search_strings):
-        unq, IDs = np.unique(df['dataset'], return_inverse=True)
+        unq, IDs = np.unique(df["dataset"], return_inverse=True)
         unqIDs = np.searchsorted(unq, search_strings)
         mask = np.isin(IDs, unqIDs)
         return df[mask]
 
     def histogram(self, data, data_min=np.nan, data_max=np.nan):
-        if(np.isnan(data_min) or np.isnan(data_max) ):
+        if np.isnan(data_min) or np.isnan(data_max):
             data_min = data.min()
             data_max = data.max()
         h, b = np.histogram(data, range=[data_min, data_max], bins=int(self.binCount))
-        return 0.5*(b[1:]+b[:-1]), h
+        return 0.5 * (b[1:] + b[:-1]), h
 
     def convert_pandas_array_to_list(self, series):
         return series.apply(lambda d: d.tolist())
 
     def get_module_callsite_map(self):
         ret = {}
-        np_data = self.module_group_df['name'].unique()
-        ret['ensemble'] = self.convert_pandas_array_to_list(np_data).to_dict()
+        np_data = self.module_group_df["name"].unique()
+        ret["ensemble"] = self.convert_pandas_array_to_list(np_data).to_dict()
 
         for dataset in self.datasets:
-            np_data = self.target_module_group_df[dataset]['name'].unique()
+            np_data = self.target_module_group_df[dataset]["name"].unique()
             ret[dataset] = self.convert_pandas_array_to_list(np_data).to_dict()
-        
+
         return ret
 
     def get_callsite_module_map(self):
         ret = {}
-        callsites = self.df['name'].unique().tolist()
+        callsites = self.df["name"].unique().tolist()
         for callsite in callsites:
-            module = self.df.loc[self.df['name'] == callsite]['module'].unique().tolist()
+            module = (
+                self.df.loc[self.df["name"] == callsite]["module"].unique().tolist()
+            )
             ret[callsite] = module
 
         for dataset in self.datasets:
             ret[dataset] = {}
             for callsite in callsites:
-                module = self.target_df[dataset].loc[self.target_df[dataset]['name'] == callsite]['name'].unique().tolist()
+                module = (
+                    self.target_df[dataset]
+                    .loc[self.target_df[dataset]["name"] == callsite]["name"]
+                    .unique()
+                    .tolist()
+                )
                 ret[dataset][callsite] = module
         return ret
 
-    def pack_json(self, df=pd.DataFrame(), name='', gradients={'Inclusive': {}, 'Exclusive': {}}, prop_hists={'Inclusive': {}, 'Exclusive': {}}, q={'Inclusive': {}, 'Exclusive': {}}, outliers={'Inclusive': {}, 'Exclusive': {}}):
-        inclusive_variance = df['time (inc)'].var()
-        exclusive_variance = df['time'].var()
-        if(math.isnan(inclusive_variance)):
+    def pack_json(
+        self,
+        df=pd.DataFrame(),
+        name="",
+        gradients={"Inclusive": {}, "Exclusive": {}},
+        prop_hists={"Inclusive": {}, "Exclusive": {}},
+        q={"Inclusive": {}, "Exclusive": {}},
+        outliers={"Inclusive": {}, "Exclusive": {}},
+    ):
+        inclusive_variance = df["time (inc)"].var()
+        exclusive_variance = df["time"].var()
+        if math.isnan(inclusive_variance):
             inclusive_variance = 0
-        if(math.isnan(exclusive_variance)):
+        if math.isnan(exclusive_variance):
             exclusive_variance = 0
         result = {
             "name": name,
-            "id": 'node-' + str(df['nid'].tolist()[0]),
-            "dataset": df['dataset'].unique().tolist(),
-            "module": df['module'].tolist()[0],
+            "id": "node-" + str(df["nid"].tolist()[0]),
+            "dataset": df["dataset"].unique().tolist(),
+            "module": df["module"].tolist()[0],
             "Inclusive": {
-                "mean_time": df['time (inc)'].mean(),
-                "max_time": df['time (inc)'].max(),
-                "min_time": df['time (inc)'].min(),
-                "variance_time": exclusive_variance,
-                "q": q['Inclusive'],
-                "outliers": outliers['Inclusive'],
+                "mean_time": df["time (inc)"].mean(),
+                "max_time": df["time (inc)"].max(),
+                "min_time": df["time (inc)"].min(),
+                "variance_time": inclusive_variance,
+                "q": q["Inclusive"],
+                "outliers": outliers["Inclusive"],
                 # "imbalance_perc": df['imbalance_perc_inclusive'].tolist()[0],
                 # # "std_deviation": df['std_deviation_inclusive'].tolist()[0],
                 # "kurtosis": df['kurtosis_inclusive'].tolist()[0],
                 # "skewness": df['skewness_inclusive'].tolist()[0],
-                "gradients": gradients['Inclusive'],
-                "prop_histograms": prop_hists['Inclusive']
+                "gradients": gradients["Inclusive"],
+                "prop_histograms": prop_hists["Inclusive"],
             },
             "Exclusive": {
-                "mean_time": df['time'].mean(),            
-                "max_time": df['time'].max(),
-                "min_time": df['time'].min(),
-                "variance_time": inclusive_variance,
-                "q": q['Exclusive'],
-                "outliers": outliers['Exclusive'],
+                "mean_time": df["time"].mean(),
+                "max_time": df["time"].max(),
+                "min_time": df["time"].min(),
+                "variance_time": exclusive_variance,
+                "q": q["Exclusive"],
+                "outliers": outliers["Exclusive"],
                 # "imbalance_perc": df['imbalance_perc_exclusive'].tolist()[0],
                 # # "std_deviation": df['std_deviation_exclusive'].tolist()[0],
                 # "skewness": df['skewness_exclusive'].tolist()[0],
                 # "kurtosis": df['kurtosis_exclusive'].tolist()[0],
-                "gradients": gradients['Exclusive'],
-                "prop_histograms": prop_hists['Exclusive']
-            }
+                "gradients": gradients["Exclusive"],
+                "prop_histograms": prop_hists["Exclusive"],
+            },
         }
         return result
 
-    # Return the histogram in the required form. 
+    # Return the histogram in the required form.
     def histogram_format(self, histogram_grid):
         return {
             "x": histogram_grid[0].tolist(),
@@ -163,48 +183,68 @@ class Auxiliary:
     def histogram_by_property(self, ensemble_df, target_df, prop):
         ret = {}
 
-        if(prop == 'all_ranks'):
-            time_ensemble_inclusive_arr = np.array(ensemble_df['time (inc)'].tolist())
-            time_ensemble_exclusive_arr = np.array(ensemble_df['time'].tolist())
-            
-            time_target_inclusive_arr = np.array(target_df['time (inc)'].tolist())
-            time_target_exclusive_arr = np.array(target_df['time'].tolist())
-        elif(prop == 'rank'):
-            ensemble_prop = ensemble_df.groupby(['dataset', prop])[['time', 'time (inc)']].mean()
-            target_prop = target_df.groupby(['dataset', prop])[['time', 'time (inc)']].mean()
+        if prop == "all_ranks":
+            time_ensemble_inclusive_arr = np.array(ensemble_df["time (inc)"].tolist())
+            time_ensemble_exclusive_arr = np.array(ensemble_df["time"].tolist())
 
-            time_ensemble_inclusive_arr = np.array(ensemble_prop['time (inc)'])
-            time_ensemble_exclusive_arr = np.array(ensemble_prop['time'])
+            time_target_inclusive_arr = np.array(target_df["time (inc)"].tolist())
+            time_target_exclusive_arr = np.array(target_df["time"].tolist())
+        elif prop == "rank":
+            ensemble_prop = ensemble_df.groupby(["dataset", prop])[
+                ["time", "time (inc)"]
+            ].mean()
+            target_prop = target_df.groupby(["dataset", prop])[
+                ["time", "time (inc)"]
+            ].mean()
 
-            time_target_inclusive_arr = np.array(target_prop['time (inc)'])
-            time_target_exclusive_arr = np.array(target_prop['time'])
+            time_ensemble_inclusive_arr = np.array(ensemble_prop["time (inc)"])
+            time_ensemble_exclusive_arr = np.array(ensemble_prop["time"])
+
+            time_target_inclusive_arr = np.array(target_prop["time (inc)"])
+            time_target_exclusive_arr = np.array(target_prop["time"])
         else:
-            ensemble_prop = ensemble_df.groupby([prop])[['time', 'time (inc)']].mean()
-            target_prop = target_df.groupby([prop])[['time', 'time (inc)']].mean()
+            ensemble_prop = ensemble_df.groupby([prop])[["time", "time (inc)"]].mean()
+            target_prop = target_df.groupby([prop])[["time", "time (inc)"]].mean()
 
-            time_ensemble_inclusive_arr = np.array(ensemble_prop['time (inc)'])
-            time_ensemble_exclusive_arr = np.array(ensemble_prop['time'])
+            time_ensemble_inclusive_arr = np.array(ensemble_prop["time (inc)"])
+            time_ensemble_exclusive_arr = np.array(ensemble_prop["time"])
 
-            time_target_inclusive_arr = np.array(target_prop['time (inc)'])
-            time_target_exclusive_arr = np.array(target_prop['time'])
+            time_target_inclusive_arr = np.array(target_prop["time (inc)"])
+            time_target_exclusive_arr = np.array(target_prop["time"])
 
-        inclusive_max = max(time_ensemble_inclusive_arr.max(), time_target_inclusive_arr.max())
-        inclusive_min = min(time_ensemble_inclusive_arr.min(), time_target_inclusive_arr.min())
-        histogram_ensemble_inclusive_grid = self.histogram(time_ensemble_inclusive_arr, inclusive_min, inclusive_max)
-        histogram_target_inclusive_grid = self.histogram(time_target_inclusive_arr, inclusive_min, inclusive_max)
+        inclusive_max = max(
+            time_ensemble_inclusive_arr.max(), time_target_inclusive_arr.max()
+        )
+        inclusive_min = min(
+            time_ensemble_inclusive_arr.min(), time_target_inclusive_arr.min()
+        )
+        histogram_ensemble_inclusive_grid = self.histogram(
+            time_ensemble_inclusive_arr, inclusive_min, inclusive_max
+        )
+        histogram_target_inclusive_grid = self.histogram(
+            time_target_inclusive_arr, inclusive_min, inclusive_max
+        )
 
-        exclusive_max = max(time_ensemble_exclusive_arr.max(), time_target_exclusive_arr.max())
-        exclusive_min = min(time_ensemble_exclusive_arr.min(), time_target_exclusive_arr.min())
-        histogram_ensemble_exclusive_grid = self.histogram(time_ensemble_exclusive_arr, exclusive_min, exclusive_max)
-        histogram_target_exclusive_grid = self.histogram(time_target_exclusive_arr, exclusive_min, exclusive_max)
+        exclusive_max = max(
+            time_ensemble_exclusive_arr.max(), time_target_exclusive_arr.max()
+        )
+        exclusive_min = min(
+            time_ensemble_exclusive_arr.min(), time_target_exclusive_arr.min()
+        )
+        histogram_ensemble_exclusive_grid = self.histogram(
+            time_ensemble_exclusive_arr, exclusive_min, exclusive_max
+        )
+        histogram_target_exclusive_grid = self.histogram(
+            time_target_exclusive_arr, exclusive_min, exclusive_max
+        )
 
-        ret['Inclusive'] = {
-            'ensemble': self.histogram_format(histogram_ensemble_inclusive_grid),
-            'target': self.histogram_format(histogram_target_inclusive_grid)
+        ret["Inclusive"] = {
+            "ensemble": self.histogram_format(histogram_ensemble_inclusive_grid),
+            "target": self.histogram_format(histogram_target_inclusive_grid),
         }
-        ret['Exclusive'] = {
-            'ensemble': self.histogram_format(histogram_ensemble_exclusive_grid),
-            'target': self.histogram_format(histogram_target_exclusive_grid)
+        ret["Exclusive"] = {
+            "ensemble": self.histogram_format(histogram_ensemble_exclusive_grid),
+            "target": self.histogram_format(histogram_target_exclusive_grid),
         }
         return ret
 
@@ -215,11 +255,19 @@ class Auxiliary:
         # Create the data dict.
         ensemble = {}
         for callsite, callsite_df in self.name_group_df:
-            gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(columnName='name', callsiteOrModule=callsite)
+            gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(
+                columnName="name", callsiteOrModule=callsite
+            )
             boxplot = BoxPlot(callsite_df)
-            ensemble[callsite] = self.pack_json(callsite_df, callsite, gradients=gradients, q= boxplot.q, outliers=boxplot.outliers)
+            ensemble[callsite] = self.pack_json(
+                callsite_df,
+                callsite,
+                gradients=gradients,
+                q=boxplot.q,
+                outliers=boxplot.outliers,
+            )
 
-        ret['ensemble'] = ensemble
+        ret["ensemble"] = ensemble
 
         ## Target data.
         # Loop through datasets and group the callsite by name.
@@ -230,17 +278,25 @@ class Auxiliary:
                 callsite_ensemble_df = self.name_group_df.get_group(callsite)
                 callsite_target_df = callsite_df
 
-                if(not callsite_df.empty):
+                if not callsite_df.empty:
                     hists = {}
-                    hists['Inclusive'] = {}
-                    hists['Exclusive'] = {}
+                    hists["Inclusive"] = {}
+                    hists["Exclusive"] = {}
                     for prop in self.props:
-                        prop_histograms = self.histogram_by_property(callsite_ensemble_df, callsite_target_df, prop)
-                        hists['Inclusive'][prop] = prop_histograms['Inclusive']
-                        hists['Exclusive'][prop] = prop_histograms['Exclusive']
+                        prop_histograms = self.histogram_by_property(
+                            callsite_ensemble_df, callsite_target_df, prop
+                        )
+                        hists["Inclusive"][prop] = prop_histograms["Inclusive"]
+                        hists["Exclusive"][prop] = prop_histograms["Exclusive"]
 
                     boxplot = BoxPlot(callsite_df)
-                    target[callsite] = self.pack_json(df=callsite_target_df, name=callsite, prop_hists=hists, q=boxplot.q, outliers=boxplot.outliers)
+                    target[callsite] = self.pack_json(
+                        df=callsite_target_df,
+                        name=callsite,
+                        prop_hists=hists,
+                        q=boxplot.q,
+                        outliers=boxplot.outliers,
+                    )
             ret[dataset] = target
 
         return ret
@@ -248,29 +304,40 @@ class Auxiliary:
     def module_data(self):
         ret = {}
         # Module grouped information
-        modules = self.df['module'].unique()
+        modules = self.df["module"].unique()
         ensemble = {}
         for module, module_df in self.module_group_df:
             # Calculate gradients
-            gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(columnName='module', callsiteOrModule=module)
-            ensemble[module] = self.pack_json(df=module_df, name=module, gradients=gradients)
+            gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(
+                columnName="module", callsiteOrModule=module
+            )
+            ensemble[module] = self.pack_json(
+                df=module_df, name=module, gradients=gradients
+            )
 
-        ret['ensemble'] = ensemble
-        
+        ret["ensemble"] = ensemble
+
         for dataset in self.datasets:
             target = {}
             module_group_df = self.target_module_group_df[dataset]
             for module, module_df in module_group_df:
                 module_ensemble_df = self.module_group_df.get_group(module)
                 module_target_df = module_df
-                gradients = {'Inclusive': {}, 'Exclusive': {}}
-                hists = {'Inclusive': {}, 'Exclusive': {}}
-                if( not module_target_df.empty):
+                gradients = {"Inclusive": {}, "Exclusive": {}}
+                hists = {"Inclusive": {}, "Exclusive": {}}
+                if not module_target_df.empty:
                     for prop in self.props:
-                        prop_histograms =  self.histogram_by_property(module_ensemble_df, module_target_df, prop)
-                        hists['Inclusive'][prop] = prop_histograms['Inclusive']
-                        hists['Exclusive'][prop] = prop_histograms['Exclusive']
-                    target[module] = self.pack_json(df=module_target_df, name=module, gradients=gradients, prop_hists=hists)
+                        prop_histograms = self.histogram_by_property(
+                            module_ensemble_df, module_target_df, prop
+                        )
+                        hists["Inclusive"][prop] = prop_histograms["Inclusive"]
+                        hists["Exclusive"][prop] = prop_histograms["Exclusive"]
+                    target[module] = self.pack_json(
+                        df=module_target_df,
+                        name=module,
+                        gradients=gradients,
+                        prop_hists=hists,
+                    )
 
             ret[dataset] = target
 
@@ -278,27 +345,29 @@ class Auxiliary:
 
     def run(self):
         ret = {}
-        path = self.config.processed_path + f'/{self.config.runName}' + f'/all_data.json'
+        path = (
+            self.config.processed_path + f"/{self.config.runName}" + f"/all_data.json"
+        )
 
         self.process = True
         if os.path.exists(path) and not self.process:
             print(f"[Callsite info] Reading the data from file {path}")
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 ret = json.load(f)
         else:
             print("Processing the data again.")
-            with self.timer.phase('Process data'):
+            with self.timer.phase("Process data"):
                 self.group_frames()
             with self.timer.phase("Collect Callsite data"):
-                ret['callsite'] = self.callsite_data()
+                ret["callsite"] = self.callsite_data()
             with self.timer.phase("Collect Module data"):
-                ret['module'] = self.module_data()
+                ret["module"] = self.module_data()
             with self.timer.phase("Module callsite map data"):
-                ret['moduleCallsiteMap'] = self.get_module_callsite_map()
+                ret["moduleCallsiteMap"] = self.get_module_callsite_map()
             # with self.timer.phase("Callsite module map data"):
             #     ret['callsiteModuleMap'] = self.get_callsite_module_map()
             with self.timer.phase("Writing data"):
-                with open(path, 'w') as f:
+                with open(path, "w") as f:
                     json.dump(ret, f)
 
         return ret
