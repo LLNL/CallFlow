@@ -22,7 +22,7 @@ const socket = new VueSocketIO({
 		actionPrefix: 'SOCKET_',
 		mutationPrefix: 'SOCKET_'
 	},
-	pingTimeout: 5000
+	pingTimeout: 500000
 })
 
 const router = new Router({
