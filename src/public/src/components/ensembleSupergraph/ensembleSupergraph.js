@@ -48,7 +48,7 @@ export default {
 			self.clear()
 		})
 
-		EventHandler.$on('reveal_callsite', function() {
+		EventHandler.$on('reveal_callsite', function () {
 			self.clear()
 		})
 	},
@@ -57,8 +57,8 @@ export default {
 		ensemble_supergraph(data) {
 			data = JSON.parse(data)
 			console.log("Data: ", data)
-			for(let i = 0; i < data.nodes.length; i+=1){
-				console.log("Node name: ", data.nodes[i].id )
+			for (let i = 0; i < data.nodes.length; i += 1) {
+				console.log("Node name: ", data.nodes[i].id)
 				console.log("Time (inc): ", data.nodes[i]['time (inc)'])
 				console.log("Time: ", data.nodes[i]['time'])
 			}
@@ -81,7 +81,7 @@ export default {
 					"height": this.height,
 					"top": this.toolbarHeight
 				})
-			
+
 			this.$socket.emit('ensemble_supergraph', {
 				datasets: this.$store.selectedDatasets,
 				groupBy: 'module'
@@ -97,20 +97,19 @@ export default {
 		},
 
 		render(data) {
-			this.data = data
 
-			// // Remove the Libmonitor -> Libmpi link.
-			// let links = []	
-			// for(let i = 0; i < this.data.links.length; i += 1){
-			// 	let link = this.data.links[i]
-			// 	if(link.source == 'libmonitor.so.0.0.0' && link.target == 'libmpi.so.12.1.1'){
-			// 		continue
+			// let links = []
+			// for (let i = 0; i < data.links.length; i += 1){
+			// 	if(data.links[i].source == 'libmonitor.so.0.0.0' && data.links[i].target == 'osu_bcast'){
+
 			// 	}
 			// 	else{
-			// 		links.push(link)
+			// 		links.push(data.links[i])
 			// 	}
 			// }
-			// this.data.links = links
+			// data.links = links
+
+			this.data = data
 
 			this.data = this.addNodeMap(this.data)
 			this.data.graph = this.createGraphStructure(this.data)
@@ -118,10 +117,10 @@ export default {
 			// check cycle. 
 			let detectcycle = detectDirectedCycle(this.data.graph)
 			console.log(detectcycle)
-			if(Object.keys(detectcycle).length != 0){
+			if (Object.keys(detectcycle).length != 0) {
 				console.log("cycle detected. Sankey cannot be created. ")
 			}
-			else{
+			else {
 				console.log("No cycles detected.")
 			}
 
@@ -151,10 +150,10 @@ export default {
 			this.initSankey(this.data)
 
 			console.log("[Ensemble SuperGraph] Layout Calculation.")
-			let postProcess = this.postProcess(this.data.nodes, this.data.links)
-			this.data.nodes = postProcess['nodes']
-			this.data.links = postProcess['links']
-			this.initSankey(this.data)
+			// let postProcess = this.postProcess(this.data.nodes, this.data.links)
+			// this.data.nodes = postProcess['nodes']
+			// this.data.links = postProcess['links']
+			// this.initSankey(this.data)
 			console.log("[Ensemble SuperGraph] Post-processing done.")
 
 			this.$store.graph = this.data
@@ -182,7 +181,7 @@ export default {
 		createGraphStructure(data) {
 			let graph = new Graph(true)
 
-			for(let i = 0; i < data.links.length; i += 1){
+			for (let i = 0; i < data.links.length; i += 1) {
 				let source = new GraphVertex(data.links[i].source)
 				let target = new GraphVertex(data.links[i].target)
 				let weight = data.links[i].weight
@@ -272,13 +271,13 @@ export default {
 						name: target_node.id,
 						module: target_node.module,
 						"time (inc)": source_node['time (inc)'],
-						"time" : source_node['time'],
+						"time": source_node['time'],
 						"actual_time": source_node['actual_time'],
 						'type': 'intermediate'
 					};
 					tempNode[targetDataset] = target_node[targetDataset]
-					
-					if(firstNode){
+
+					if (firstNode) {
 						console.log(tempNode)
 						nodes.push(tempNode)
 						firstNode = false

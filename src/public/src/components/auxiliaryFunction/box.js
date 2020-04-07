@@ -13,6 +13,7 @@ export default {
         paddingTop: 10,
         textOffset: 40,
         fontSize: 10,
+        debug: false
     }),
 
     mounted() {
@@ -24,8 +25,10 @@ export default {
 
     methods: {
         init(q, targetq, xScale) {
-            console.log("Ensemble q: ", q)
-            console.log("Target q: ", targetq)
+            if (this.debug) {
+                console.log("Ensemble q: ", q)
+                console.log("Target q: ", targetq)
+            }
             this.q = q
             this.targetq = targetq
             this.xScale = xScale
@@ -39,7 +42,7 @@ export default {
                 })
 
             this.ensembleBox()
-            if(this.$store.showTarget){
+            if (this.$store.showTarget) {
                 this.targetBox()
             }
             this.centerLine()
@@ -111,10 +114,10 @@ export default {
                 })
                 .style('stroke-width', '1.5')
                 .style('z-index', 10)
-               
+
         },
 
-        clear(){
+        clear() {
             this.g.selectAll('.box').remove()
             this.g.selectAll('.targetbox').remove()
             this.g.selectAll('.centerLine').remove()
