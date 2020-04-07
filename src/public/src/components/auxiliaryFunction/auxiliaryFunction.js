@@ -72,7 +72,7 @@ export default {
 
         EventHandler.$on('highlight_dataset', (data) => {
             let dataset = data['dataset']
-            if(self.$store.showTarget){
+            if (self.$store.showTarget) {
                 self.highlightCallsitesByDataset(dataset)
             }
         })
@@ -110,32 +110,32 @@ export default {
                 this.width = document.getElementById(this.id).clientWidth
                 this.height = 0.66 * this.$store.viewHeight
                 this.boxplotWidth = this.width - this.padding.left - this.padding.right
-                document.getElementById(this.id).style.maxHeight = this.height + "px"            
+                document.getElementById(this.id).style.maxHeight = this.height + "px"
                 this.firstRender = false
             }
-    
+
             this.numberOfCallsites = Object.keys(this.$store.callsites['ensemble']).length
             this.callsites = this.$store.callsites['ensemble']
             this.targetCallsites = this.$store.callsites[this.$store.selectedTargetDataset]
-            this.sortByAttribute(this.$store.selectedRuntimeSortBy)
+            this.sortByAttribute(this.$store.selectedMetric)
             this.selectedModule = this.$store.selectedModule
             this.selectedCallsite = this.$store.selectedCallsite
             this.selectedMetric = this.$store.selectedMetric
             this.targetColor = d3.rgb(this.$store.color.target).darker(1)
 
-            for(let callsite in this.callsites){
-                if(this.targetCallsites[callsite] != undefined){
+            for (let callsite in this.callsites) {
+                if (this.targetCallsites[callsite] != undefined) {
                     this.means[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['mean_time'])
                     this.variance[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['variance_time'])
                 }
-                else{
+                else {
                     this.means[callsite] = '-'
                     this.variance[callsite] = '-'
                 }
             }
-        },       
+        },
 
-        clear(){
+        clear() {
 
         },
 
@@ -258,20 +258,19 @@ export default {
             let items = Object.keys(this.callsites).map(function (key) {
                 return [key, self.callsites[key]];
             });
-
             // Sort the array based on the second element
-            if(attribute == 'Exclusive' || attribute == 'Inclusive'){
-                items.sort(function (first, second) {
+            if (attribute == 'Exclusive' || attribute == 'Inclusive') {
+                items = items.sort(function (first, second) {
                     return second[1][attribute]['mean_time'] - first[1][attribute]['mean_time'];
-                });    
+                });
             }
-            else if(attribute == 'Variance'){
+            else if (attribute == 'Variance') {
                 items.sort(function (first, second) {
                     return second[1][self.$store.selectedMetric]['variance_time'] - first[1][self.$store.selectedMetric]['variance_time'];
-                });       
+                });
             }
 
-            this.callsites = items.reduce(function(map, obj) {
+            this.callsites = items.reduce(function (map, obj) {
                 map[obj[0]] = obj[1];
                 return map;
             }, {});

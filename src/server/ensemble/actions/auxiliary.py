@@ -137,6 +137,8 @@ class Auxiliary:
             "id": "node-" + str(df["nid"].tolist()[0]),
             "dataset": df["dataset"].unique().tolist(),
             "module": df["module"].tolist()[0],
+            "callers": df["callers"].unique().tolist(),
+            "callees": df["callees"].unique().tolist(),
             "Inclusive": {
                 "mean_time": df["time (inc)"].mean(),
                 "max_time": df["time (inc)"].max(),
@@ -349,7 +351,7 @@ class Auxiliary:
             self.config.processed_path + f"/{self.config.runName}" + f"/all_data.json"
         )
 
-        self.process = True
+        # self.process = True
         if os.path.exists(path) and not self.process:
             print(f"[Callsite info] Reading the data from file {path}")
             with open(path, "r") as f:
