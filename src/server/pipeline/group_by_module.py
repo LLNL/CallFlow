@@ -3,6 +3,7 @@ import time
 import networkx as nx
 from ast import literal_eval as make_list
 
+
 class Callsite:
     def __init__(self, name, module):
         self.name = name
@@ -22,8 +23,8 @@ class groupBy:
         self.module_id_map = {}
 
         self.drop_eliminate_funcs()
-        self.name_module_map = self.df.set_index('name')['module'].to_dict()
-        self.name_path_map = self.df.set_index('name')['path'].to_dict()
+        self.name_module_map = self.df.set_index("name")["module"].to_dict()
+        self.name_path_map = self.df.set_index("name")["path"].to_dict()
 
         self.run()
         self.df = self.state.df
@@ -32,15 +33,15 @@ class groupBy:
     # Drop all entries user does not want to see.
     def drop_eliminate_funcs(self):
         for idx, func in enumerate(self.eliminate_funcs):
-            self.state.df = self.state.df[self.state.df['module'] != func]
+            self.state.df = self.state.df[self.state.df["module"] != func]
 
     def create_group_path(self, path):
-        if(isinstance(path, str)):
+        if isinstance(path, str):
             path = make_list(path)
         group_path = []
         prev_module = None
         for idx, callsite in enumerate(path):
-            if(idx == 0):
+            if idx == 0:
                 # Assign the first callsite as from_callsite and not push into an array.
                 from_callsite = callsite
                 # from_module = self.entire_df.loc[self.entire_df['name'] == from_callsite]['module'].unique()[0]
@@ -59,18 +60,18 @@ class groupBy:
                 self.entry_funcs[from_module].append(from_callsite)
 
                 # Append to the group path.
-                group_path.append(from_module + '=' + from_callsite)
+                group_path.append(from_module + "=" + from_callsite)
 
-            elif(idx == len(path) - 1):
+            elif idx == len(path) - 1:
                 # Final callsite in the path.
                 to_callsite = callsite
-                if('/' in to_callsite):
-                    to_callsite = to_callsite.split('/')[-1]
+                if "/" in to_callsite:
+                    to_callsite = to_callsite.split("/")[-1]
                 # to_module = self.entire_df.loc[self.entire_df['name'] == to_callsite]['module'].unique()[0]
                 to_module = self.name_module_map[to_callsite]
 
                 if prev_module != to_module:
-                    group_path.append(to_module + '=' + to_callsite)
+                    group_path.append(to_module + "=" + to_callsite)
 
                 if to_module not in self.entry_funcs:
                     self.entry_funcs[to_module] = []
@@ -106,7 +107,7 @@ class groupBy:
                     if to_module in group_path:
                         prev_module = to_module
                     else:
-                        group_path.append(to_module + '=' + to_callsite)
+                        group_path.append(to_module + "=" + to_callsite)
                         prev_module = to_module
                         if to_callsite not in self.entry_funcs[to_module]:
                             self.entry_funcs[to_module].append(to_callsite)
@@ -125,12 +126,13 @@ class groupBy:
 
     def create_component_path(self, path, group_path):
         component_path = []
-        component_module = group_path[len(group_path) - 1].split('=')[0]
+        print(group_path)
+        component_module = group_path[len(group_path) - 1].split("=")[0]
 
         for idx, node in enumerate(path):
             node_func = node
-            if ('/' in node):
-                node = node.split('/')[-1]
+            if "/" in node:
+                node = node.split("/")[-1]
             module = self.name_module_map[node]
             if component_module == module:
                 component_path.append(node_func)
@@ -140,13 +142,15 @@ class groupBy:
 
     def find_all_paths(self, df):
         ret = []
-        unique_paths = df['path'].unique()
+        unique_paths = df["path"].unique()
         for idx, path in enumerate(unique_paths):
-            ret.append(df.loc[df['path'] == path])
-        return (ret)
+            ret.append(df.loc[df["path"] == path])
+        return ret
 
     def update_df(self, col_name, mapping):
-        self.df[col_name] = self.df['name'].apply(lambda node: mapping[node] if node in mapping.keys() else '')
+        self.df[col_name] = self.df["name"].apply(
+            lambda node: mapping[node] if node in mapping.keys() else ""
+        )
 
     def run(self):
         group_path = {}
@@ -176,14 +180,14 @@ class groupBy:
             tpath = self.name_path_map[tnode]
 
             temp_group_path_results = self.create_group_path(spath)
-            group_path[snode] = temp_group_path_results[0]
+            group_path[snode] = temp_group_path_results
 
             component_path[snode] = self.create_component_path(spath, group_path[snode])
             component_level[snode] = len(component_path[snode])
             module[snode] = self.name_module_map[snode]
 
             temp_group_path_results = self.create_group_path(tpath)
-            group_path[tnode] = temp_group_path_results[0]
+            group_path[tnode] = temp_group_path_results
 
             component_path[tnode] = self.create_component_path(tpath, group_path[tnode])
             component_level[tnode] = len(component_path[tnode])
@@ -203,7 +207,7 @@ class groupBy:
                 entry_func[snode] = False
                 show_node[snode] = False
 
-            node_name[snode] = self.name_module_map[snode]  + '=' + snode
+            node_name[snode] = self.name_module_map[snode] + "=" + snode
 
             # print('Node: ', snode)
             # print("entry function:", entry_func[snode])
@@ -217,11 +221,11 @@ class groupBy:
             # print('Module: ', module[snode])
             # print("=================================")
 
-        self.update_df('group_path', group_path)
-        self.update_df('component_path', component_path)
-        self.update_df('show_node', entry_func)
-        self.update_df('vis_name', node_name)
-        self.update_df('component_level', component_level)
-        self.update_df('change_name', change_name)
-        self.update_df('mod_index', module_idx)
-        self.update_df('entry_function', entry_func)
+        self.update_df("group_path", group_path)
+        self.update_df("component_path", component_path)
+        self.update_df("show_node", entry_func)
+        self.update_df("vis_name", node_name)
+        self.update_df("component_level", component_level)
+        self.update_df("change_name", change_name)
+        self.update_df("mod_index", module_idx)
+        self.update_df("entry_function", entry_func)

@@ -88,7 +88,7 @@ export default {
                 .attrs({
                     transform: `translate(${this.padding.left}, ${this.height - this.padding.bottom})`,
                     class: 'x-axis',
-                    'color': '#fff',
+                    color: 'transparent',
                 })
                 .call(this.xAxis);
 
@@ -96,7 +96,7 @@ export default {
                 .attrs({
                     transform: `translate(${this.padding.left}, ${this.padding.top})`,
                     class: 'y-axis',
-                    color: '#fff'
+                    color: 'transparent'
                 })
                 .call(this.yAxis);
 
@@ -207,7 +207,7 @@ export default {
                     id: 'parameter-projection-svg'
                 })
                 .style('stroke-width', 1)
-                .style('stroke', '#aaaaaa')
+                .style('stroke', this.$store.ensemble)
                 .style('background-color', this.$store.ensemble)
 
             // set the transition

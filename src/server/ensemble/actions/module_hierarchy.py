@@ -8,6 +8,7 @@ import math
 from networkx.readwrite import json_graph
 from utils.timer import Timer
 
+
 class ModuleHierarchy:
     def __init__(self, state, module):
         self.graph = state.graph
@@ -22,15 +23,15 @@ class ModuleHierarchy:
         self.result = self.run()
 
     def run_graph(self):
-        self.hierarchy = nx.bfs_tree(self.graph, self.modFunc, depth_limit=10)
+        self.hierarchy = nx.bfs_tree(self.graph, self.module, depth_limit=10)
 
     def add_paths(self, df, path_name):
         for idx, path in enumerate(df[path_name].unique()):
-            if isinstance(path, str) and path != 'nan':
+            if isinstance(path, str) and path != "nan":
                 path = make_tuple(path)
                 self.hierarchy.add_path(path)
 
-    def as_spanning_trees(G):
+    def as_spanning_trees(self, G):
         """
         For a given graph with multiple sub graphs, find the components
         and draw a spanning tree.

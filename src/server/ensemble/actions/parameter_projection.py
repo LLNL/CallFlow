@@ -22,25 +22,32 @@ from sklearn import preprocessing
 from sklearn.cluster import KMeans
 from algorithm.k_medoids import KMedoids
 
+
 class ParameterProjection:
-    def __init__(self, state, similarities={}, targetDataset='', n_cluster=3):
+    def __init__(self, state, similarities={}, targetDataset="", n_cluster=3):
         # self.similarities = similarities[targetDataset]
         # self.datasetOrder = {k: idx for idx, (k, v) in enumerate(similarities.items())}
         self.state = state
         self.df = state.df
-        self.datasets = state.df['dataset'].unique()
-        self.projection = 'MDS'
+        self.datasets = state.df["dataset"].unique()
+        self.projection = "MDS"
         # self.clustering = 'k_medoids'
-        self.clustering = 'k_means'
+        self.clustering = "k_means"
         self.n_cluster = int(n_cluster)
         self.targetDataset = targetDataset
         self.result = self.run()
 
     def add_df_params(self, dataset):
         ret = {}
-        ret['max_inclusive_time'] = self.df.loc[self.df['dataset'] == dataset]['time (inc)'].max()
-        ret['max_exclusive_time'] = self.df.loc[self.df['dataset'] == dataset]['time'].max()
-        ret['rank_count'] = len(self.df.loc[self.df['dataset'] == dataset]['rank'].unique())
+        ret["max_inclusive_time"] = self.df.loc[self.df["dataset"] == dataset][
+            "time (inc)"
+        ].max()
+        ret["max_exclusive_time"] = self.df.loc[self.df["dataset"] == dataset][
+            "time"
+        ].max()
+        ret["rank_count"] = len(
+            self.df.loc[self.df["dataset"] == dataset]["rank"].unique()
+        )
         # ret['similarity'] = self.similarities[self.datasetOrder[self.targetDataset]]
         return ret
 
@@ -59,10 +66,10 @@ class ParameterProjection:
         df = pd.DataFrame(rows)
 
         # TODO: Remove all string columns from the dataframe.
-        if 'dataset' in df.columns:
-            print('Removing {0} column from the dataframe'.format('dataset'))
-            df = df.drop(columns = ['dataset'])
-        x = df.values #returns a numpy array
+        if "dataset" in df.columns:
+            print("Removing {0} column from the dataframe".format("dataset"))
+            df = df.drop(columns=["dataset"])
+        x = df.values  # returns a numpy array
 
         print(df)
 
@@ -73,31 +80,27 @@ class ParameterProjection:
         X = np.vstack([df.values.tolist()])
 
         random_number = 20150101
-        if self.projection == 'MDS':
+        if self.projection == "MDS":
             proj = MDS(random_state=random_number).fit_transform(X)
 
-        elif self.projection == 'TSNE':
+        elif self.projection == "TSNE":
             proj = TSNE(random_state=random_number).fit_transform(X)
 
-        # max_inclusive_time = [self.df.loc['time (inc)'].max() for key in self.datasets ]
-        # max_exclusive_time = [self.states[key].df['time'].max() for key in self.states.keys() if key.split('_')[0] != 'ensemble']
+        ret = pd.DataFrame(proj, columns=list("xy"))
+        ret["dataset"] = self.datasets
 
-        ret = pd.DataFrame(proj, columns=list('xy'))
-        ret['dataset'] = self.datasets
-
-        if self.clustering == 'prog_k_means':
+        if self.clustering == "prog_k_means":
             self.clusters = ProgKMeans(n_clusters=self.n_cluster)
             self.clusters.progressive_fit(X, latency_limit_in_msec=100)
-            ret['label'] = self.clusters.predict(X).tolist()
+            ret["label"] = self.clusters.predict(X).tolist()
 
-        elif self.clustering == 'k_medoids':
+        elif self.clustering == "k_medoids":
             self.clusters = KMedoids(n_cluster=self.n_cluster)
-            ret['label'] = self.clusters.fit(X)
-        elif self.clustering == 'k_means':
-            self.clusters = KMeans(n_clusters=self.n_cluster, random_state=random_number)
-            ret['label'] = self.clusters.fit(X).labels_
-
-        # ret['max_inclusive_time'] = max_inclusive_time
-        # ret['max_exclusive_time'] = max_exclusive_time
+            ret["label"] = self.clusters.fit(X)
+        elif self.clustering == "k_means":
+            self.clusters = KMeans(
+                n_clusters=self.n_cluster, random_state=random_number
+            )
+            ret["label"] = self.clusters.fit(X).labels_
 
         return ret
