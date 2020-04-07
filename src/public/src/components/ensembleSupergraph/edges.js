@@ -1,10 +1,12 @@
 import tpl from '../../html/ensembleSupergraph/edges.html'
 import * as d3 from 'd3'
+import ToolTip from './edge_tooltip'
 
 export default {
     template: tpl,
     name: 'EnsembleEdges',
     components: {
+        ToolTip
     },
     props: [],
     data: () => ({
@@ -41,6 +43,7 @@ export default {
                 this.drawTopEdges('ensemble')
                 // this.drawTopEdges(this.$store.selectedTargetDataset)
             }
+            this.$refs.ToolTip.init(this.$parent.id)
         },
 
         initEdges(dataset) {
@@ -87,6 +90,7 @@ export default {
         },
 
         drawTopEdges(dataset) {
+            let self = this
             this.edges.selectAll('#ensemble-edge-' + dataset)
                 .data(this.links)
                 .attrs({
@@ -160,7 +164,11 @@ export default {
                     }
                 })
                 .on('mouseover', (d) => {
+                    self.$refs.ToolTip.render(self.graph, d)
                     console.log(d.weight, d.exc_weight)
+                })
+                .on('mouseout', (d) => {
+                    self.$refs.ToolTip.clear()
                 })
 
         },
