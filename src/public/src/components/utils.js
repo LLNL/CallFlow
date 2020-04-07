@@ -31,7 +31,6 @@ export function formatRuntimeWithExponent(val, min_exponent = 0) {
     let exponent = 0
     let multiplier = 0
     let mantessa = 0
-    console.log(ret)
     if (ret.indexOf('e') != -1) {
         let split_ret_by_e = ret.toString().split('e')
         exponent = parseInt(split_ret_by_e[1].split('+')[1])

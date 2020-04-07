@@ -79,7 +79,12 @@ export default {
             this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4
 
             this.ensemble_data = this.$store.callsites['ensemble'][this.callsite.name][this.$store.selectedMetric]['q']
-            this.target_data = this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name][this.$store.selectedMetric]['q']
+            if (this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name] != undefined) {
+                this.target_data = this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name][this.$store.selectedMetric]['q']
+            }
+            else {
+                this.target_data = [-1, -1, -1, -1, -1]
+            }
 
             this.process()
             this.visualize()
@@ -118,7 +123,7 @@ export default {
             })
         },
 
-        clear(){
+        clear() {
             this.$refs.Box.clear()
             this.$refs.Markers.clear()
             this.$refs.Outliers.clear()

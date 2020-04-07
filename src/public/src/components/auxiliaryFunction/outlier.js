@@ -107,19 +107,19 @@ export default {
                     count = 1
                     temp_x = d.x
                 }
-                
+
                 // For data.length - 1 case, we need to create a new group if needed. 
-                if(i == data.length - 1){
-                    if(diff > band){
+                if (i == data.length - 1) {
+                    if (diff > band) {
                         ret.push({
-                            values: values, 
+                            values: values,
                             x: x,
                             datasets: datasets,
-                            ranks:ranks,
+                            ranks: ranks,
                             count: count
                         })
                     }
-                    else if(diff > band){
+                    else if (diff > band) {
                         values = []
                         x = []
                         datasets = []
@@ -131,7 +131,7 @@ export default {
                         datasets.push(d.dataset)
                         count = 1
                         ret.push({
-                            values: values, 
+                            values: values,
                             x: x,
                             datasets: datasets,
                             ranks: ranks,
@@ -202,7 +202,7 @@ export default {
             }
 
             let temp = this.groupByBand(circles, this.$store.bandWidth)
-            if(datatype == 'ensemble'){
+            if (datatype == 'ensemble') {
                 this.max_count = temp['max_count']
             }
             let group_circles = temp['circles']
@@ -221,7 +221,7 @@ export default {
         },
 
         ensembleOutliers() {
-            this.$store.bandWidth  = 10
+            this.$store.bandWidth = 10
             let self = this
 
             let data = this.$store.callsites['ensemble'][this.callsite.name][this.$store.selectedMetric]['outliers']
@@ -267,46 +267,55 @@ export default {
         targetOutliers() {
             let self = this
 
-            let data = this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name][this.$store.selectedMetric]['outliers']
-            let targetOutlierList = []
-            for (let idx = 0; idx < data['values'].length; idx += 1) {
-                if (data['values'][idx] != 0) {
-                    targetOutlierList.push({
-                        'value': data['values'][idx],
-                        'dataset': data['datasets'][idx],
-                        'rank': data['ranks'][idx]
-                    })
+            let callsite_data = this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name]
+            let data = []
+            if (callsite_data != undefined) {
+                data = callsite_data[this.$store.selectedMetric]['outliers']
+
+
+                let targetOutlierList = []
+                for (let idx = 0; idx < data['values'].length; idx += 1) {
+                    if (data['values'][idx] != 0) {
+                        targetOutlierList.push({
+                            'value': data['values'][idx],
+                            'dataset': data['datasets'][idx],
+                            'rank': data['ranks'][idx]
+                        })
+                    }
                 }
+                this.target_outliers = this.groupOutliers(targetOutlierList, this.$store.bandWidth, "target")
+                this.outlier = this.g
+                    .selectAll(".target-outlier")
+                    .data(this.target_outliers)
+                    .join("circle")
+                    .attrs({
+                        "r": d => (d.count / this.max_count) * 4 + 4,
+                        "cx": d => d.x[0],
+                        "cy": d => this.boxHeight / 2 - this.informationHeight / 4,
+                        "class": "target-outlier"
+                    })
+                    .style("opacity", 1)
+                    .style("fill", this.$store.color.target)
+                    .on('click', (d) => {
+                        console.log(d)
+                    })
+                    .on('mouseover', (d) => {
+                        self.$parent.$refs.ToolTip.renderOutliers(d)
+                    })
+                    .on('mouseout', (d) => {
+                        self.$parent.$refs.ToolTip.clear()
+                    })
+            }
+            else {
+                this.target_outliers = []
             }
 
-            this.target_outliers = this.groupOutliers(targetOutlierList, this.$store.bandWidth, "target")
-            
-            this.outlier = this.g
-                .selectAll(".target-outlier")
-                .data(this.target_outliers)
-                .join("circle")
-                .attrs({
-                    "r": d => (d.count / this.max_count) * 4 + 4,
-                    "cx": d => d.x[0],
-                    "cy": d => this.boxHeight / 2 - this.informationHeight / 4,
-                    "class": "target-outlier"
-                })
-                .style("opacity", 1)
-                .style("fill", this.$store.color.target)
-                .on('click', (d) => {
-                    console.log(d)
-                })
-                .on('mouseover', (d) => {
-                    self.$parent.$refs.ToolTip.renderOutliers(d)
-                })
-                .on('mouseout', (d) => {
-                    self.$parent.$refs.ToolTip.clear()
-                })
+
         },
 
-        clear(){
+        clear() {
             this.g.selectAll('.ensemble-outlier').remove()
-            this.g.selectAll('.target-outlier').remove()    
+            this.g.selectAll('.target-outlier').remove()
         }
     }
 }

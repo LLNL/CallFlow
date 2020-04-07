@@ -143,7 +143,6 @@ export default {
                     return 'ensemble-callsite-' + d.client_idx
                 })
                 .attr('transform', (d) => {
-                    console.log('x: ', d.x, ' y: ', d.y)
                     return `translate(${d.x},${d.y})`
                 })
 
@@ -254,7 +253,6 @@ export default {
                         return this.$store.color.ensemble
                     }
                     else {
-                        console.log(d)
                         return d3.rgb(this.$store.color.getColor(d));
                     }
                 })
@@ -277,8 +275,6 @@ export default {
                     this.$store.selectedNode = d
                     this.$store.selectedModule = d.module
                     this.$store.selectedName = d.name
-
-                    console.log(this.$store.selectedModule)
 
                     this.$socket.emit('module_hierarchy', {
                         module: this.$store.selectedModule,

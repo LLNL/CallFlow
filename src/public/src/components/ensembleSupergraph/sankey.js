@@ -214,47 +214,30 @@ export default function Sankey() {
     // Compute the value (size) of each node by summing the associated links.
     function computeNodeValues() {
         nodes.forEach(function (node) {
-            console.log(node)
             let sourceSum = sum(node.sourceLinks, (link) => {
-                // if (link.source.split('_')[0] != 'intermediate' && link.target.split('_')[0] != "intermediate") {
-                console.log(link.source, link.target, link.weight)    
                 return link.weight
-                // }
             })
 
             let targetSum = sum(node.targetLinks, (link) => {
-                // if (link.source.split('_')[0] != 'intermediate' && link.target.split('_')[0] != "intermediate") {
-                console.log(link.source, link.target, link.weight)
                 return link.weight
-                // }
             })
+            node.max_flow = Math.max(sourceSum, targetSum)
 
             console.log(sourceSum, targetSum, node['time'])
 
-            if(node.type == 'intermediate'){
-                node.value = Math.max(Math.max(sourceSum, targetSum), node['actual_time']['Exclusive'])
-            }
-            else{
-                node.value = Math.max(Math.max(Math.max(sourceSum, targetSum), node['actual_time']['Exclusive']), node['actual_time']['Inclusive'])
-            }
+            // Does not work to add the link weights to the node's height
+            // if (node.type == 'intermediate') {
+            //     node.value = Math.max(Math.max(sourceSum, targetSum), node['actual_time']['Exclusive'])
+            // }
+            // else {
+            //     node.value = Math.max(Math.max(Math.max(sourceSum, targetSum), node['actual_time']['Exclusive']), node['actual_time']['Inclusive'])
+            // }
 
-            // node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
+            node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
+            // node.value = node['actual_time']['Inclusive']
 
             console.log("Adjusted Node flow : ", node.value)
 
-            // let sourceDatasetSum = sum(node.sourceLinks, (node) => {
-            //     if (node.id.split('_')[0] != 'intermediate') {
-            //         return node[dataset]['time (inc)']
-            //     } 
-            // })
-
-            // let targetDatasetSum = sum(node.targetLinks, (node) => {
-            //     if (node.id.split('_')[0] != 'intermediate') {
-            //         return node[dataset]['time (inc)']
-            //     } 
-            // })
-
-            // node.targetValue = Math.max(sourceDatasetSum, targetDatasetSum)
         });
     }
 
@@ -313,12 +296,11 @@ export default function Sankey() {
         scaleNodeBreadths((size[0] - nodeWidth) / (maxLevel - 1));
     }
 
-    
+
     //////////////////// Associated functions for : ComputeNodeDepths /////////////////
     function resolveOutsidePositioning() {
         for (let node of nodes) {
             node.height *= (1 - max_dy / size[1])
-            console.log(node.height)
         }
 
         for (let link of links) {
@@ -381,7 +363,7 @@ export default function Sankey() {
             }
             else {
                 divValue = sum(column, (node) => {
-                        return node.value
+                    return node.value
                 });
             }
             return Math.abs((size[1] - (column.length) * nodePadding)) / divValue
@@ -420,18 +402,18 @@ export default function Sankey() {
         let levelCount = 0
 
         nodesByBreadth.forEach(function (nodes) {
-            if (levelCount == 0) {
-                nodes.sort(function (a, b) {
-                    return b['time (inc)'] - a['time (inc)']
-                })
-            }
-            if (levelCount == 2) {
-                nodes.sort(function (a, b) {
-                    if (a.id.split('_')[0] != 'intermediate' || b.id.split('_')[0] != 'intermediate') {
-                        return a['height'] - b['height']
-                    }
-                })
-            }
+            // if (levelCount == 0) {
+            nodes.sort(function (a, b) {
+                return b['time (inc)'] - a['time (inc)']
+            })
+            // }
+            // if (levelCount == 2) {
+            //     nodes.sort(function (a, b) {
+            //         if (a.id.split('_')[0] != 'intermediate' || b.id.split('_')[0] != 'intermediate') {
+            //             return a['height'] - b['height']
+            //         }
+            //     })
+            // }
 
             nodes = pushIntermediateNodeBottom(nodes)
             // nodes = pushNodeBottomIfIntermediateTargets(nodes)
@@ -457,7 +439,8 @@ export default function Sankey() {
         });
 
         links.forEach(function (link) {
-            let weight = link.weight//source_data['time (inc)']
+            let weight = link.weight * (link.source_data['actual_time']['Inclusive'] / link.source_data.max_flow)
+
             // let targetWeight = link.source_data[targetDataset]['time (inc)']
             if (link.source.value < weight) {
                 weight = link.source_data.minLinkVal
@@ -619,7 +602,7 @@ export default function Sankey() {
                 for (let i = 0; i < d.values.length; i += 1) {
                     let node = d.values[i]
                     // if (node.id.split('_')[0] != 'intermediate') {
-                        ret.push(d.values[i])
+                    ret.push(d.values[i])
                     // }
                 }
                 return ret;
