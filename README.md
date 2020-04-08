@@ -32,8 +32,10 @@ Callflow currently, supports two formats, [hpctoolkit](http://hpctoolkit.org/) a
 CallFlow requires the user to specify how various data preprocessing operations are performed (i.e., filtering, grouping operations).
 
 To process the datasets,
+```
 cd src/server
 python3 app.py --config {config_file_path} --runName {config_file_name} --ensemble --process
+```
 
 To run the server,
 
