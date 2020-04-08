@@ -149,7 +149,7 @@ export default {
             this.revealCallsites.push(callsite)
             this.$socket.emit('reveal_callsite', {
                 reveal_callsites: this.revealCallsites,
-                datasets: this.$store.runNames,
+                datasets: this.$store.selectedDatasets,
             })
 
             EventHandler.$emit('reveal_callsite')

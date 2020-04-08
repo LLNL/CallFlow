@@ -772,9 +772,9 @@ export default {
                         }
                         var textSize = this.textSize(d.id.split('=')[0])['width'];
                         if (textSize < d.height) {
-                            return d.id.split('=')[0];
+                            return d.id;
                         }
-                        return this.trunc(d.id.split('=')[0], Math.floor(d.height / 14));
+                        return this.trunc(d.id, Math.floor(d.height / 14));
                     }
                 });
         },
