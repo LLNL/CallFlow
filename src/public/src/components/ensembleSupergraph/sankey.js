@@ -637,10 +637,14 @@ export default function Sankey() {
             // node.sourceLinks.sort(descendingTargetDepth);
             // node.targetLinks.sort(descendingSourceDepth);
 
+            // Push links having less weight to the bottom. 
             // node.sourceLinks.sort(ascendingEdgeValue);
             // node.targetLinks.sort(descendingEdgeValue);
 
         });
+
+
+
         nodes.forEach(function (node) {
             var sy = 0, ty = 0;
 
@@ -683,11 +687,11 @@ export default function Sankey() {
         }
 
         function ascendingEdgeValue(a, b) {
-            return a["value"] - b["value"];
+            return a["weight"] - b["weight"];
         }
 
         function descendingEdgeValue(a, b) {
-            return b["value"] - a["value"];
+            return b["weight"] - a["weight"];
         }
     }
 

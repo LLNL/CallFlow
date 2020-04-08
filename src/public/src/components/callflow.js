@@ -326,9 +326,10 @@ export default {
 		},
 
 		setOtherData() {
+			console.log("Setting other data")
 			this.$store.selectedScatterMode = 'mean'
 			this.$store.nodeInfo = {}
-			this.$store.selectedFunctionsInCCT = this.selectedFaunctionsInCCT
+			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT
 			this.$store.datasetMap = this.$store.selectedDatasets.map((run, i) => "run-" + i)
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode
 			this.$store.selectedProp = this.selectedProp
@@ -384,8 +385,8 @@ export default {
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
 				this.$refs.AuxiliaryFunction,
-				this.$refs.ModuleHierarchy,
-				this.$refs.ParameterProjection
+				this.$refs.ParameterProjection,
+				// this.$refs.ModuleHierarchy,
 			]
 		},
 
