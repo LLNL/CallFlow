@@ -24,6 +24,7 @@ class Pipeline:
         self.config = config
         self.dirname = self.config.processed_path + "/" + self.config.runName
         self.debug = True
+
     ##################### Pipeline Functions ###########################
     # All pipeline functions avoid the state being mutated by reference to create separate instances of State variables.
 
@@ -36,7 +37,9 @@ class Pipeline:
         state.entire_df = create.df
         state.entire_graph = create.graph
 
-        log.info(f"Number of call sites in CCT (From dataframe): {len(state.entire_df['name'].unique())}")
+        log.info(
+            f"Number of call sites in CCT (From dataframe): {len(state.entire_df['name'].unique())}"
+        )
 
         return state
 
@@ -44,33 +47,33 @@ class Pipeline:
     # PreProcess class is a builder. Additional attributes can be added by chained calls.
     def process_gf(self, state, gf_type):
         log.info(f"Format: {self.config.format}, dataset: {state.name}")
-        if(self.config.format[state.name] == 'hpctoolkit'):
+        if self.config.format[state.name] == "hpctoolkit":
             preprocess = (
                 PreProcess.Builder(state, gf_type)
-                    .add_path()
-                    # .add_n_index()
-                    .add_callers_and_callees()
-                    # .add_show_node()
-                    .add_vis_node_name()
-                    .add_dataset_name()
-                    .add_imbalance_perc()
-                    .add_module_name_hpctoolkit()
-                    .build()
-                )
-        elif(self.config.format[state.name] == 'caliper_json'):
+                .add_path()
+                # .add_n_index()
+                .add_callers_and_callees()
+                # .add_show_node()
+                .add_vis_node_name()
+                .add_dataset_name()
+                .add_imbalance_perc()
+                .add_module_name_hpctoolkit()
+                .build()
+            )
+        elif self.config.format[state.name] == "caliper_json":
             preprocess = (
                 PreProcess.Builder(state, gf_type)
-                    # .add_n_index()
-                    .add_callers_and_callees()
-                    # .add_show_node()
-                    .add_dataset_name()
-                    .add_imbalance_perc()
-                    .add_module_name_caliper(self.config.callsite_module_map)
-                    # .add_mod_index()
-                    .add_vis_node_name()
-                    .add_path()
-                    .build()
-                )
+                # .add_n_index()
+                .add_callers_and_callees()
+                # .add_show_node()
+                .add_dataset_name()
+                .add_imbalance_perc()
+                .add_module_name_caliper(self.config.callsite_module_map)
+                # .add_mod_index()
+                .add_vis_node_name()
+                .add_path()
+                .build()
+            )
 
         state.gf = preprocess.gf
         state.df = preprocess.df
@@ -98,34 +101,37 @@ class Pipeline:
 
         return state
 
-
     # Union of all the networkX graphs.
     def union(self, states):
         u_graph = UnionGraph()
         u_df = pd.DataFrame()
         for idx, dataset in enumerate(states):
             u_graph.unionize(states[dataset].g, dataset)
-            u_df = pd.concat([u_df, states[dataset].df], sort=False )
+            u_df = pd.concat([u_df, states[dataset].df], sort=False)
 
         state = State("union")
         state.df = u_df
         state.g = u_graph.R
 
-        if(self.debug):
+        if self.debug:
             log.info("Done with Union.")
-            log.info(f"Number of callsites in dataframe: {len(state.df['name'].unique())}")
+            log.info(
+                f"Number of callsites in dataframe: {len(state.df['name'].unique())}"
+            )
             log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
-            log.info(f"Number of modules in the graph: {len(state.df['module'].unique())}")
+            log.info(
+                f"Number of modules in the graph: {len(state.df['module'].unique())}"
+            )
 
         return state
 
     # Filter the networkX graph based on the attribute specified in the config file.
     def filterNetworkX(self, state, perc):
         filter_obj = FilterNetworkX(state)
-        if(self.config.filter_by == "time (inc)"):
+        if self.config.filter_by == "time (inc)":
             df = filter_obj.filter_df_by_time_inc(perc)
             g = filter_obj.filter_graph_by_time_inc(df, state.g)
-        elif(self.config.filter_by == 'time'):
+        elif self.config.filter_by == "time":
             df = filter_obj.filter_df_by_time(perc)
             g = filter_obj.filter_graph_by_time(df, state.g)
 
@@ -133,11 +139,15 @@ class Pipeline:
         state.df = df
         state.g = g
 
-        if(self.debug):
+        if self.debug:
             log.info("Done with Filtering the Union graph.")
-            log.info(f"Number of callsites in dataframe: {len(state.df['name'].unique())}")
+            log.info(
+                f"Number of callsites in dataframe: {len(state.df['name'].unique())}"
+            )
             log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
-            log.info(f"Number of modules in the graph: {len(state.df['module'].unique())}")
+            log.info(
+                f"Number of modules in the graph: {len(state.df['module'].unique())}"
+            )
 
         return state
 
@@ -148,25 +158,33 @@ class Pipeline:
         return state
 
     def ensemble_group(self, state, attr):
-        grouped_graph = ensembleGroupBy(state['ensemble_entire'], state['ensemble_filter'], attr).run()
+        grouped_graph = ensembleGroupBy(
+            state["ensemble_entire"], state["ensemble_filter"], attr
+        ).run()
 
-        state = State('ensemble_union')
-        state.g = grouped_graph['g']
-        state.df = grouped_graph['df']
+        state = State("ensemble_union")
+        state.g = grouped_graph["g"]
+        state.df = grouped_graph["df"]
 
-
-        if(self.debug):
+        if self.debug:
             log.info("Done with Ensemb;le supergraph.")
-            log.info(f"Number of callsites in dataframe: {len(state.df['name'].unique())}")
+            log.info(
+                f"Number of callsites in dataframe: {len(state.df['name'].unique())}"
+            )
             log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
             log.info(f"Modules in the graph: {state.df['module'].unique()}")
         return state
 
     def write_callsite_information(self, states):
-        auxiliary = Auxiliary(states,
-                              module=action['module'], \
-                              sortBy=action['sortBy'],
-                              binCount=action["binCount"], datasets=action['datasets'], config=self.config, process=True)
+        auxiliary = Auxiliary(
+            states,
+            module=action["module"],
+            sortBy=action["sortBy"],
+            binCount=action["binCount"],
+            datasets=action["datasets"],
+            config=self.config,
+            process=True,
+        )
 
     ##################### Write Functions ###########################
 
@@ -308,7 +326,7 @@ class Pipeline:
         #     state.group_df = pd.read_csv(group_df_file_path)
         # state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
 
-        if(self.config.runName.split('_')[0] == 'osu_bcast'):
+        if self.config.runName.split("_")[0] == "osu_bcast":
             state.projection_data = {}
             for line in open(parameters_filepath, "r"):
                 s = 0
@@ -324,13 +342,21 @@ class Pipeline:
         for idx, dataset in enumerate(datasets):
             ret[dataset] = []
             for idx_2, dataset2 in enumerate(datasets):
-                union_similarity = Similarity(
-                    states[dataset2].g, states[dataset].g
-                )
+                union_similarity = Similarity(states[dataset2].g, states[dataset].g)
                 ret[dataset].append(union_similarity.result)
 
         dirname = self.config.callflow_dir
         name = self.config.runName
-        similarity_filepath = dirname  + '/' + 'similarity.json'
-        with open(similarity_filepath, 'w') as json_file:
-                json.dump(ret, json_file)
+        similarity_filepath = dirname + "/" + "similarity.json"
+        with open(similarity_filepath, "w") as json_file:
+            json.dump(ret, json_file)
+
+    def read_all_data(self):
+        dirname = self.config.callflow_dir
+        all_data_filepath = (
+            self.config.processed_path + f"/{self.config.runName}" + f"/all_data.json"
+        )
+        log.info(f"[Read] {all_data_filepath}")
+        with open(all_data_filepath, "r") as filter_graphFile:
+            data = json.load(filter_graphFile)
+        return data

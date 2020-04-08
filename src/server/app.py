@@ -35,6 +35,7 @@ from utils.logger import log
 app = Flask(__name__, static_url_path="/public")
 sockets = SocketIO(app, cors_allowed_origins="*")
 
+
 class App:
     def __init__(self):
         self.callflow_path = os.path.abspath(os.path.join(__file__, "../../.."))
@@ -45,7 +46,7 @@ class App:
         self.debug = True
         self.production = False
 
-        if (self.args.process):
+        if self.args.process:
             self.print("Pre-processing the datasets.")
             self.processPipeline()
         else:
@@ -57,32 +58,36 @@ class App:
                 sockets.run(app, debug=False, use_reloader=True)
 
     def processPipeline(self):
-        self.config = ConfigFileReader(self.args.config_dir + self.args.runName + '.json')
+        self.config = ConfigFileReader(
+            self.args.config_dir + self.args.runName + ".json"
+        )
         self.config.server_dir = os.getcwd()
         self.config.callflow_dir = (
-            self.callflow_path + '/' + self.config.save_path + '/' + self.config.runName
+            self.callflow_path + "/" + self.config.save_path + "/" + self.config.runName
         )
         self.config.process = self.args.process
         self.config.ensemble = self.args.ensemble
 
         self.create_dot_callflow_folder()
 
-        if(self.config.ensemble):
+        if self.config.ensemble:
             self.callflow = EnsembleCallFlow(self.config)
             # self.single_callflow = SingleCallFlow(self.config)
         else:
             self.single_callflow = SingleCallFlow(self.config)
 
     def renderPipeline(self, config_file_name):
-        self.config = ConfigFileReader(self.args.config_dir + config_file_name + '.json')
+        self.config = ConfigFileReader(
+            self.args.config_dir + config_file_name + ".json"
+        )
         self.config.server_dir = os.getcwd()
         self.config.callflow_dir = (
-            self.callflow_path + '/' + self.config.save_path + '/' + self.config.runName
+            self.callflow_path + "/" + self.config.save_path + "/" + self.config.runName
         )
         self.config.ensemble = self.args.ensemble
         self.config.process = self.args.process
 
-        if(self.config.ensemble):
+        if self.config.ensemble:
             self.callflow = EnsembleCallFlow(self.config)
             # self.single_callflow = SingleCallFlow(self.config)
         else:
@@ -104,18 +109,20 @@ class App:
             "--verbose", action="store_true", help="Display debug points"
         )
         parser.add_argument(
-            "--production", action="store_true", help="Make the server run on port 80 for production."
+            "--production",
+            action="store_true",
+            help="Make the server run on port 80 for production.",
         )
         parser.add_argument("--config_dir", help="Config file directory.")
         parser.add_argument(
             "--ensemble", action="store_true", help="Ensemble mode processing."
         )
         parser.add_argument(
-            "--process", action="store_true", help="Process mode. To preprocess at the required level of granularity, use the options --filter, --entire. If you are preprocessing multiple callgraphs, use --ensemble option."
+            "--process",
+            action="store_true",
+            help="Process mode. To preprocess at the required level of granularity, use the options --filter, --entire. If you are preprocessing multiple callgraphs, use --ensemble option.",
         )
-        parser.add_argument(
-            "--runName", help="Config file name to be processed."
-        )
+        parser.add_argument("--runName", help="Config file name to be processed.")
         self.args = parser.parse_args()
         self.debug = self.args.verbose
 
@@ -127,7 +134,9 @@ class App:
             raise Exception()
         else:
             if not os.path.isfile(self.args.config):
-                log.info("Please check the config file path. There exists no such file in the path provided")
+                log.info(
+                    "Please check the config file path. There exists no such file in the path provided"
+                )
                 raise Exception()
 
     def create_dot_callflow_folder(self):
@@ -141,7 +150,9 @@ class App:
             log.info(dataset_dir)
             if not os.path.exists(dataset_dir):
                 if self.debug:
-                    log.info(f"Creating .callflow directory for dataset : {dataset['name']}")
+                    log.info(
+                        f"Creating .callflow directory for dataset : {dataset['name']}"
+                    )
                 os.makedirs(dataset_dir)
 
             files = [
@@ -157,12 +168,10 @@ class App:
     def create_socket_server(self):
         @sockets.on("init", namespace="/")
         def init(data):
-            caseStudy = data['caseStudy']
+            caseStudy = data["caseStudy"]
             log.info(f"Case Study: {caseStudy}")
             # self.renderPipeline(caseStudy)
-            self.config = self.callflow.request({
-                "name":"init"
-            })
+            self.config = self.callflow.request({"name": "init"})
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
             emit("init", config_json, json=True)
 
@@ -190,9 +199,9 @@ class App:
                 {
                     "name": "auxiliary",
                     "dataset": data["dataset"],
-                    "sortBy": data['sortBy'],
-                    "binCount": data['binCount'],
-                    "module": data['module']
+                    "sortBy": data["sortBy"],
+                    "binCount": data["binCount"],
+                    "module": data["module"],
                 }
             )
             emit("single_callsite_data", result, json=True)
@@ -205,9 +214,9 @@ class App:
                 {
                     "name": "auxiliary",
                     "datasets": data["datasets"],
-                    "sortBy": data['sortBy'],
-                    "binCount": data['binCount'],
-                    "module": data['module']
+                    "sortBy": data["sortBy"],
+                    "binCount": data["binCount"],
+                    "module": data["module"],
                 }
             )
             emit("ensemble_callsite_data", result, json=True)
@@ -269,7 +278,6 @@ class App:
             result = json_graph.node_link_data(ensemble_cct)
             emit("ensemble_cct", result, json=True)
 
-
         ################## CCT requests #########################
         @sockets.on("single_supergraph", namespace="/")
         def single_supergraph(data):
@@ -279,11 +287,7 @@ class App:
             dataset = data["dataset"]
             groupBy = data["groupBy"].lower()
             nx_graph = self.single_callflow.request(
-                {
-                    "name": "supergraph",
-                    "groupBy": groupBy,
-                    "dataset": dataset
-                }
+                {"name": "supergraph", "groupBy": groupBy, "dataset": dataset}
             )
             result = json_graph.node_link_data(nx_graph)
             result = json.dumps(result)
@@ -297,10 +301,7 @@ class App:
             datasets = data["datasets"]
             groupBy = data["groupBy"].lower()
             nx_graph = self.callflow.request(
-                {
-                    "name": "supergraph",
-                    "groupBy": groupBy,
-                    "datasets": datasets}
+                {"name": "supergraph", "groupBy": groupBy, "datasets": datasets}
             )
             result = json_graph.node_link_data(nx_graph)
             json_result = json.dumps(result)
@@ -316,7 +317,7 @@ class App:
                     "name": "similarity",
                     "datasets": data["datasets"],
                     "algo": data["algo"],
-                    "module": data["module"]
+                    "module": data["module"],
                 }
             )
             emit("ensemble_similarity", result, json=True)
@@ -332,7 +333,8 @@ class App:
                     "module": data["module"],
                 }
             )
-            result = json_graph.tree_data(hierarchy_graph, root=data['module'])
+            print(hierarchy_graph)
+            result = json_graph.tree_data(hierarchy_graph, root=data["module"])
             json_result = json.dumps(result)
             emit("module_hierarchy", json_result, json=True)
 
@@ -345,9 +347,9 @@ class App:
                 {
                     "name": "projection",
                     "datasets": data["datasets"],
-                    "targetDataset": data['targetDataset'],
+                    "targetDataset": data["targetDataset"],
                     # "algo": data["algo"],
-                    "numOfClusters": data['numOfClusters']
+                    "numOfClusters": data["numOfClusters"],
                 }
             )
             emit("parameter_projection", result, json=True)
@@ -361,9 +363,7 @@ class App:
                 {"name": "run-information", "datasets": data["datasets"]}
             )
             emit("parameter_information", json.dumps(result), json=True)
-
-
-        @sockets.on('compare', namespace='/')
+        @sockets.on("compare", namespace="/")
         def compare(data):
             if self.debug:
                 self.print("Compare: ", data)
@@ -372,10 +372,10 @@ class App:
                     "name": "compare",
                     "targetDataset": data["targetDataset"],
                     "compareDataset": data["compareDataset"],
-                    "selectedMetric": data['selectedMetric']
+                    "selectedMetric": data["selectedMetric"],
                 }
             )
-            emit('compare', result, json=True)
+            emit("compare", result, json=True)
 
         @sockets.on("split_caller", namespace="/")
         def split_caller(data):
@@ -408,9 +408,9 @@ class App:
             nx_graph = self.callflow.request(
                 {
                     "name": "supergraph",
-                    "groupBy": 'module',
-                    "datasets": data['datasets'],
-                    "reveal_callsites": data['reveal_callsites']
+                    "groupBy": "module",
+                    "datasets": data["datasets"],
+                    "reveal_callsites": data["reveal_callsites"],
                 }
             )
             result = json_graph.node_link_data(nx_graph)
@@ -424,9 +424,9 @@ class App:
             nx_graph = self.callflow.request(
                 {
                     "name": "mpi_range_data",
-                    "datasets": data['datasets'],
-                    "range_from": data['range_from'],
-                    "range_to": data['range_to']
+                    "datasets": data["datasets"],
+                    "range_from": data["range_from"],
+                    "range_to": data["range_to"],
                 }
             )
 
