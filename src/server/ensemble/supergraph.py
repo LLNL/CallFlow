@@ -78,7 +78,7 @@ class SuperGraph(nx.Graph):
                 self.agg_g = nx.DiGraph()
                 self.add_paths(path)
                 self.add_paths_new(path)
-                # self.add_reveal_paths()
+                self.add_reveal_paths()
             else:
                 print("Using the existing graph from state {0}".format(self.state.name))
 
@@ -165,6 +165,7 @@ class SuperGraph(nx.Graph):
 
         self.module_name_group_df = self.entire_df.groupby(["module", "name"])
         self.module_group_df = self.entire_df.groupby(["module"])
+        self.name_group_df = self.entire_df.groupby(["name"])
 
         # Module map for ensemble {'module': [Array of callsites]}
         self.module_callsite_map = self.module_group_df["name"].unique().to_dict()
@@ -208,94 +209,144 @@ class SuperGraph(nx.Graph):
 
         return ret
 
+    def create_source_targets(self, component_path):
+        module = ""
+        edges = []
+        for idx, callsite in enumerate(component_path):
+            if idx == 0:
+                module = component_path[0]
+                # edges.append(
+                #     {
+                #         "module": module,
+                #         "source": module,
+                #         "target": module + "=" + component_path[idx + 1],
+                #     }
+                # )
+            elif idx == len(component_path) - 1:
+                pass
+            else:
+                edges.append(
+                    {
+                        "module": module,
+                        "source": module + "=" + component_path[idx],
+                        "target": module + "=" + component_path[idx + 1],
+                    }
+                )
+
+        return edges
+
     def add_reveal_paths(self):
         paths = []
         for callsite in self.reveal_callsites:
-            df = self.entire_df.loc[self.entire_df["name"] == callsite]
-            paths.append(df["group_path"].unique()[0])
+            df = self.name_group_df.get_group(callsite)
+            print(df["path"])
+            paths.append(
+                {
+                    "group_path": make_list(df["group_path"].unique()[0]),
+                    "path": make_list(df["path"].unique()[0]),
+                    "component_path": make_list(df["component_path"].unique()[0]),
+                }
+            )
 
-        reveal_paths = np.array(paths)
+        # print(f"Reveal path is : {reveal_paths}")
 
-        for reveal_path_str in reveal_paths:
-            reveal_path_list = self.construct_cycle_free_paths(reveal_path_str)
-            callsite_idx = len(reveal_path_list) - 2
-            source = reveal_path_list[callsite_idx]
-            target = reveal_path_list[callsite_idx + 1]
+        for path in paths:
+            component_edges = self.create_source_targets(path["component_path"])
+            for idx, edge in enumerate(component_edges):
+                module = edge["module"]
 
-            if not self.g.has_edge(
-                target["module"], target["module"] + "=" + target_name
-            ):
-                source_module = source["module"]
-                target_module = target["module"]
+                # format module +  '=' + callsite
+                source = edge["source"]
+                target = edge["target"]
 
-                source_name = self.reveal_callsites[0]
-                target_name = target["callsite"]
+                if not self.g.has_edge(source, target):
 
-                print(f"Adding edge: {source_name}, {target_name}")
-                self.g.add_edge(
-                    target_module,
-                    target_module + "=" + target_name,
-                    attr_dict={
-                        "source_callsite": source_name,
-                        "target_callsite": target_name,
-                    },
-                )
+                    # if idx == 0:
+                    #     source_callsite = source
+                    #     source_df = self.module_group_df.get_group((module))
+                    # else:
+                    source_callsite = source.split("=")[1]
+                    source_df = self.module_name_group_df.get_group(
+                        (module, source_callsite)
+                    )
 
-    def add_paths_backup(self, path):
-        paths = self.group_df[path].unique()
+                    target_callsite = target.split("=")[1]
+                    target_df = self.module_name_group_df.get_group(
+                        (module, target_callsite)
+                    )
 
-        for idx, path_str in enumerate(paths):
-            path_list = self.construct_cycle_free_paths(path_str)
+                    source_weight = source_df["time (inc)"].max()
+                    target_weight = target_df["time (inc)"].max()
 
-            for callsite_idx, callsite in enumerate(path_list):
-                if callsite_idx != len(path_list) - 1:
-                    source = path_list[callsite_idx]
-                    target = path_list[callsite_idx + 1]
+                    edge_type = "normal"
 
-                    if not self.g.has_edge(source["module"], target["module"]):
-                        source_module = source["module"]
-                        target_module = target["module"]
+                    print(f"Adding edge: {source_callsite}, {target_callsite}")
+                    self.g.add_edge(
+                        source,
+                        target,
+                        attr_dict={
+                            "source_callsite": source_callsite,
+                            "target_callsite": target_callsite,
+                            "edge_type": edge_type,
+                            "weight": target_weight,
+                        },
+                    )
 
-                        source_name = source["callsite"]
-                        target_name = target["callsite"]
+    # def add_paths_backup(self, path):
+    #     paths = self.group_df[path].unique()
 
-                        # if(self.name_time_map[target_name] != 0):
-                        if self.g.has_edge(target["module"], source["module"]):
-                            edge_type = "callback"
-                        else:
-                            edge_type = "normal"
+    #     for idx, path_str in enumerate(paths):
+    #         path_list = self.construct_cycle_free_paths(path_str)
 
-                        if edge_type == "normal":
-                            self.g.add_edge(
-                                source_module,
-                                target_module,
-                                attr_dict={
-                                    "source_callsite": source_name,
-                                    "target_callsite": target_name,
-                                    "edge_type": edge_type,
-                                },
-                            )
+    #         for callsite_idx, callsite in enumerate(path_list):
+    #             if callsite_idx != len(path_list) - 1:
+    #                 source = path_list[callsite_idx]
+    #                 target = path_list[callsite_idx + 1]
 
-        # reveal_paths = self.add_reveal_paths()
-        # for reveal_path_str in reveal_paths:
-        #     reveal_path_list = self.rename_cycle_path(reveal_path_str)
-        #     print(reveal_path_list)
-        #     callsite_idx = len(reveal_path_list) - 2
-        #     source = reveal_path_list[callsite_idx]
-        #     target = reveal_path_list[callsite_idx + 1]
+    #                 if not self.g.has_edge(source["module"], target["module"]):
+    #                     source_module = source["module"]
+    #                     target_module = target["module"]
 
-        #     if(not self.g.has_edge(target['module'], target['module'] + '=' + target_name)):
-        #         source_module = source['module']
-        #         target_module = target['module']
+    #                     source_name = source["callsite"]
+    #                     target_name = target["callsite"]
 
-        #         source_name = self.reveal_callsites[0]
-        #         target_name = target['callsite']
+    #                     # if(self.name_time_map[target_name] != 0):
+    #                     if self.g.has_edge(target["module"], source["module"]):
+    #                         edge_type = "callback"
+    #                     else:
+    #                         edge_type = "normal"
 
-        #         print(f"Adding edge: {source_name}, {target_name}")
-        #         self.g.add_edge(target_module, target_module + '=' + target_name, attr_dict={
-        #             "source_callsite": source_name,
-        #             "target_callsite": target_name
-        #         })
+    #                     if edge_type == "normal":
+    #                         self.g.add_edge(
+    #                             source_module,
+    #                             target_module,
+    #                             attr_dict={
+    #                                 "source_callsite": source_name,
+    #                                 "target_callsite": target_name,
+    #                                 "edge_type": edge_type,
+    #                             },
+    #                         )
+
+    # reveal_paths = self.add_reveal_paths()
+    # for reveal_path_str in reveal_paths:
+    #     reveal_path_list = self.rename_cycle_path(reveal_path_str)
+    #     print(reveal_path_list)
+    #     callsite_idx = len(reveal_path_list) - 2
+    #     source = reveal_path_list[callsite_idx]
+    #     target = reveal_path_list[callsite_idx + 1]
+
+    #     if(not self.g.has_edge(target['module'], target['module'] + '=' + target_name)):
+    #         source_module = source['module']
+    #         target_module = target['module']
+
+    #         source_name = self.reveal_callsites[0]
+    #         target_name = target['callsite']
+
+    #         print(f"Adding edge: {source_name}, {target_name}")
+    #         self.g.add_edge(target_module, target_module + '=' + target_name, attr_dict={
+    #             "source_callsite": source_name,
+    #             "target_callsite": target_name
+    #         })
 
     def add_paths(self, path):
         paths = self.group_df[path].unique()
@@ -573,8 +624,6 @@ class SuperGraph(nx.Graph):
             source_outdegree = graph.out_degree(edge[0])
             target_indegree = graph.in_degree(edge[1])
 
-            print(source_outdegree, target_indegree)
-
             edge_tuple = (edge[0], edge[1])
 
             # Come back here.
@@ -590,7 +639,7 @@ class SuperGraph(nx.Graph):
             else:
                 ret[edge_tuple] = self.weight_map[edge_tuple]
 
-            # if( edge_tuple not in self.max_exit):
+            # if edge_tuple not in self.max_exit:
             #     ret[edge_tuple] = 0
             # else:
             #     ret[edge_tuple] = self.max_exit[edge_tuple]

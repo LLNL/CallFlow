@@ -135,7 +135,7 @@ class EnsembleCallFlow:
         self.pipeline.write_ensemble_gf(states, "ensemble_group")
         stage17 = time.perf_counter()
         print(f"Write group ensemble graph: {stage17 - stage16}")
-
+        # Need to remove the dependence on reading the dataframe again.
         states = {}
         states["ensemble_entire"] = self.pipeline.read_ensemble_gf("ensemble_entire")
 
@@ -317,7 +317,6 @@ class EnsembleCallFlow:
                 ).result
             else:
                 result = self.states["all_data"]
-                print(result)
             self.currentBinCount = action["binCount"]
 
             return result
