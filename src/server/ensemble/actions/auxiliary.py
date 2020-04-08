@@ -352,11 +352,7 @@ class Auxiliary:
         )
 
         # self.process = True
-        if os.path.exists(path) and not self.process:
-            print(f"[Callsite info] Reading the data from file {path}")
-            with open(path, "r") as f:
-                ret = json.load(f)
-        else:
+        if self.process:
             print("Processing the data again.")
             with self.timer.phase("Process data"):
                 self.group_frames()

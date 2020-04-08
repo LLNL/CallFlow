@@ -34,6 +34,7 @@ from ensemble.actions.auxiliary import Auxiliary
 from ensemble.actions.compare import Compare
 from ensemble.actions.split_callee import SplitCallee
 from ensemble.actions.split_caller import SplitCaller
+
 # from ensemble.actions.split_rank import SplitRank
 # from ensemble.actions.split_level import SplitLevel
 
@@ -48,6 +49,7 @@ class EnsembleCallFlow:
         # Config contains properties set by the input config file.
         self.config = config
         self.timer = Timer()
+        self.currentBinCount = 20
 
         self.pipeline = Pipeline(self.config)
         if config.process:
@@ -59,14 +61,14 @@ class EnsembleCallFlow:
 
         self.target_df = {}
         for dataset in self.config.dataset_names:
-            self.target_df[dataset] = self.states['ensemble_entire'].df.loc[self.states['ensemble_entire'].df['dataset'] == dataset]
-
-        self.currentBinCount = 0
+            self.target_df[dataset] = self.states["ensemble_entire"].df.loc[
+                self.states["ensemble_entire"].df["dataset"] == dataset
+            ]
 
     def processState(self, datasets, filterBy="Inclusive", filterPerc="10"):
         states = {}
-        col_names = ['stage', 'time']
-        time_perf_df = pd.DataFrame(columns = col_names)
+        col_names = ["stage", "time"]
+        time_perf_df = pd.DataFrame(columns=col_names)
         for idx, dataset_name in enumerate(datasets):
             states[dataset_name] = State(dataset_name)
             stage1 = time.perf_counter()
@@ -75,11 +77,15 @@ class EnsembleCallFlow:
             print(f"Create GraphFrame: {stage2 - stage1}")
             # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
 
-            states[dataset_name] = self.pipeline.process_gf(states[dataset_name], "entire")
+            states[dataset_name] = self.pipeline.process_gf(
+                states[dataset_name], "entire"
+            )
             stage3 = time.perf_counter()
             print(f"Preprocess GraphFrame: {stage3 - stage2}")
 
-            states[dataset_name] = self.pipeline.convertToNetworkX(states[dataset_name], "path")
+            states[dataset_name] = self.pipeline.convertToNetworkX(
+                states[dataset_name], "path"
+            )
             stage4 = time.perf_counter()
             print(f"Convert to NetworkX graph: {stage4 - stage3}")
 
@@ -87,14 +93,15 @@ class EnsembleCallFlow:
             stage5 = time.perf_counter()
             print(f"Group GraphFrame: {stage5 - stage4}")
 
-            self.pipeline.write_dataset_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
+            self.pipeline.write_dataset_gf(
+                states[dataset_name], dataset_name, "entire", write_graph=False
+            )
             stage6 = time.perf_counter()
             print(f"Write GraphFrame: {stage6 - stage5}")
 
             # states[dataset_name] = self.pipeline.filterNetworkX(states, dataset_name, self.config.filter_perc)
             self.pipeline.write_hatchet_graph(states, dataset_name)
 
-        
         for idx, dataset_name in enumerate(datasets):
             states[dataset_name] = self.pipeline.read_dataset_gf(dataset_name)
 
@@ -108,7 +115,9 @@ class EnsembleCallFlow:
         print(f"Writing ensemble graph: {stage9 - stage8}")
 
         stage10 = time.perf_counter()
-        states["ensemble_filter"] = self.pipeline.filterNetworkX(states['ensemble_entire'], self.config.filter_perc)
+        states["ensemble_filter"] = self.pipeline.filterNetworkX(
+            states["ensemble_entire"], self.config.filter_perc
+        )
         stage11 = time.perf_counter()
         print(f"Filter ensemble graph: {stage11 - stage10}")
 
@@ -127,6 +136,19 @@ class EnsembleCallFlow:
         stage17 = time.perf_counter()
         print(f"Write group ensemble graph: {stage17 - stage16}")
 
+        states = {}
+        states["ensemble_entire"] = self.pipeline.read_ensemble_gf("ensemble_entire")
+
+        stage18 = time.perf_counter()
+        Auxiliary(
+            states,
+            binCount=self.currentBinCount,
+            datasets=self.config.dataset_names,
+            config=self.config,
+            process=True,
+        )
+        stage19 = time.perf_counter()
+        print(f"Create all data json file: {stage19 - stage18}")
         # self.pipeline.write_callsite_information(states)
 
         # similarities = self.pipeline.deltaconSimilarity(datasets, states, "ensemble")
@@ -135,9 +157,10 @@ class EnsembleCallFlow:
 
     def readState(self, datasets):
         states = {}
-        states["ensemble_entire"] = self.pipeline.read_ensemble_gf('ensemble_entire')
-        states["ensemble_filter"] = self.pipeline.read_ensemble_gf('ensemble_filter')
-        states["ensemble_group"] = self.pipeline.read_ensemble_gf('ensemble_group')
+        states["ensemble_entire"] = self.pipeline.read_ensemble_gf("ensemble_entire")
+        states["ensemble_filter"] = self.pipeline.read_ensemble_gf("ensemble_filter")
+        states["ensemble_group"] = self.pipeline.read_ensemble_gf("ensemble_group")
+        states["all_data"] = self.pipeline.read_all_data()
         # for idx, dataset in enumerate(datasets):
         #     states[dataset] = self.pipeline.read_dataset_gf(dataset)
         return states
@@ -155,11 +178,17 @@ class EnsembleCallFlow:
         min_exclusive_time = 0
         max_numOfRanks = 0
         for idx, dataset in enumerate(self.config.dataset_names):
-            self.config.max_incTime[dataset] = self.target_df[dataset]['time (inc)'].max()
-            self.config.max_excTime[dataset] = self.target_df[dataset]['time'].max()
-            self.config.min_incTime[dataset] = self.target_df[dataset]['time (inc)'].min()
-            self.config.min_excTime[dataset] = self.target_df[dataset]['time'].min()
-            self.config.numOfRanks[dataset] = len(self.target_df[dataset]['rank'].unique())
+            self.config.max_incTime[dataset] = self.target_df[dataset][
+                "time (inc)"
+            ].max()
+            self.config.max_excTime[dataset] = self.target_df[dataset]["time"].max()
+            self.config.min_incTime[dataset] = self.target_df[dataset][
+                "time (inc)"
+            ].min()
+            self.config.min_excTime[dataset] = self.target_df[dataset]["time"].min()
+            self.config.numOfRanks[dataset] = len(
+                self.target_df[dataset]["rank"].unique()
+            )
             max_exclusive_time = max(
                 self.config.max_excTime[dataset], max_exclusive_time
             )
@@ -177,8 +206,7 @@ class EnsembleCallFlow:
         self.config.max_excTime["ensemble"] = max_exclusive_time
         self.config.min_incTime["ensemble"] = min_inclusive_time
         self.config.min_excTime["ensemble"] = min_exclusive_time
-        self.config.numOfRanks['ensemble'] = max_numOfRanks
-
+        self.config.numOfRanks["ensemble"] = max_numOfRanks
 
     def request(self, action):
         action_name = action["name"]
@@ -190,23 +218,22 @@ class EnsembleCallFlow:
             return self.config
 
         elif action_name == "ensemble_cct":
-            # self.request({
-            #     "name": "supergraph",
-            #     "groupBy": "name",
-            #     "datasets": action["datasets"]
-            # })
             nx = CCT(self.states["ensemble_entire"], action["functionsInCCT"])
             return nx.g
 
         elif action_name == "supergraph":
-            if('reveal_callsites' in action):
-                reveal_callsites = action['reveal_callsites']
+            if "reveal_callsites" in action:
+                reveal_callsites = action["reveal_callsites"]
             else:
                 reveal_callsites = []
-            self.states['ensemble_group'].g = SuperGraph(
-                self.states, "group_path", construct_graph=True, add_data=True, reveal_callsites=reveal_callsites
+            self.states["ensemble_group"].g = SuperGraph(
+                self.states,
+                "group_path",
+                construct_graph=True,
+                add_data=True,
+                reveal_callsites=reveal_callsites,
             ).g
-            return self.states['ensemble_group'].g
+            return self.states["ensemble_group"].g
 
         elif action_name == "scatterplot":
             if action["plot"] == "bland-altman":
@@ -226,11 +253,11 @@ class EnsembleCallFlow:
             return ret
 
         elif action_name == "similarity":
-            if (action['module'] == 'all'):
+            if action["module"] == "all":
                 dirname = self.config.callflow_dir
                 name = self.config.runName
-                similarity_filepath = dirname  + '/' + 'similarity.json'
-                with open(similarity_filepath, 'r') as similarity_file:
+                similarity_filepath = dirname + "/" + "similarity.json"
+                with open(similarity_filepath, "r") as similarity_file:
                     self.similarities = json.load(similarity_file)
             else:
                 self.similarities = {}
@@ -254,7 +281,12 @@ class EnsembleCallFlow:
             # similarity_filepath = dirname  + '/' + 'similarity.json'
             # with open(similarity_filepath, 'r') as similarity_file:
             #     self.similarities = json.load(similarity_file)
-            result = ParameterProjection(self.states['ensemble_entire'], self.similarities, action['targetDataset'], n_cluster=action['numOfClusters']).result
+            result = ParameterProjection(
+                self.states["ensemble_entire"],
+                self.similarities,
+                action["targetDataset"],
+                n_cluster=action["numOfClusters"],
+            ).result
             return result.to_json(orient="columns")
 
         elif action_name == "run-information":
@@ -265,37 +297,49 @@ class EnsembleCallFlow:
             return ret
 
         elif action_name == "mini-histogram":
-            minihistogram = MiniHistogram(self.states['ensemble'], target_datasets=action['target-datasets'])
+            minihistogram = MiniHistogram(
+                self.states["ensemble"], target_datasets=action["target-datasets"]
+            )
             return minihistogram.result
 
         elif action_name == "histogram":
-            histogram = Histogram(self.states['ensemble'], action["module"])
+            histogram = Histogram(self.states["ensemble"], action["module"])
             return histogram.result
 
         elif action_name == "auxiliary":
-            if(self.currentBinCount != action['binCount']):
-                auxiliary = Auxiliary(self.states, binCount=action["binCount"], datasets=action['datasets'], config=self.config, process=False)
+            if self.currentBinCount != action["binCount"]:
+                result = Auxiliary(
+                    self.states,
+                    binCount=action["binCount"],
+                    datasets=action["datasets"],
+                    config=self.config,
+                    process=False,
+                ).result
             else:
-                auxiliary = Auxiliary(self.states, binCount=action["binCount"], datasets=action['datasets'], config=self.config, process=False)
-            self.currentBinCount = action['binCount']
+                result = self.states["all_data"]
+                print(result)
+            self.currentBinCount = action["binCount"]
 
-            return auxiliary.result
+            return result
 
-        elif action_name == 'compare':
-            compareDataset = action['compareDataset']
-            targetDataset = action['targetDataset']
-            if(action['selectedMetric'] == 'Inclusive'):
-                selectedMetric = 'time (inc)'
-            elif(action['selectedMetric'] == 'Exclusive'):
-                selectedMetric = 'time'
+        elif action_name == "compare":
+            compareDataset = action["compareDataset"]
+            targetDataset = action["targetDataset"]
+            if action["selectedMetric"] == "Inclusive":
+                selectedMetric = "time (inc)"
+            elif action["selectedMetric"] == "Exclusive":
+                selectedMetric = "time"
 
-            compare = Compare(self.states['ensemble_entire'], compareDataset, targetDataset, selectedMetric)
+            compare = Compare(
+                self.states["ensemble_entire"],
+                compareDataset,
+                targetDataset,
+                selectedMetric,
+            )
             return compare.result
 
-        elif action_name == 'mpi_range_data':
-            self.states['ensemble_entire']
-
-
+        elif action_name == "mpi_range_data":
+            self.states["ensemble_entire"]
 
     def displayStats(self, name):
         log.warn("==========================")
@@ -313,4 +357,3 @@ class EnsembleCallFlow:
         log.info("Avg Inclusive time = {0} ".format(avg_inclusive_time))
         log.info("Avg Exclusive time = {0} ".format(avg_exclusive_time))
         log.info("Number of nodes in CCT = {0}".format(num_of_nodes))
-
