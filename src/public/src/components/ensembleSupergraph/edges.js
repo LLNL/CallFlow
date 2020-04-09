@@ -23,6 +23,7 @@ export default {
 
     methods: {
         init(graph) {
+            console.log('Second')
             this.graph = graph
             this.edges = d3.select('#' + this.id)
 
@@ -44,6 +45,7 @@ export default {
                 // this.drawTopEdges(this.$store.selectedTargetDataset)
             }
             this.$refs.ToolTip.init(this.$parent.id)
+
         },
 
         initEdges(dataset) {
@@ -90,6 +92,7 @@ export default {
         },
 
         drawTopEdges(dataset) {
+            console.log('aaaa')
             let self = this
             this.edges.selectAll('#ensemble-edge-' + dataset)
                 .data(this.links)
@@ -141,8 +144,8 @@ export default {
                         By0 = d.source_data.y + this.$parent.ySpacing + d.sy + linkHeight
                         By1 = d.target_data.y + this.$parent.ySpacing + d.ty + linkHeight
 
-                        console.log(d.source, d.target, Ty0, Ty1)//, Tx2, Tx3, Ty0, Ty1)
-                        console.log(d.source, d.target, By0, By1)//, Bx2, Bx3, By0, By1)
+                        // console.log(d.source, d.target, Ty0, Ty1)//, Tx2, Tx3, Ty0, Ty1)
+                        // console.log(d.source, d.target, By0, By1)//, Bx2, Bx3, By0, By1)
                         // console.log(d.source_data.y, this.$parent.ySpacing, d.sy, linkHeight)
                         const rightMoveDown = By1 - Ty1
                         return `M${Tx0},${Ty0
@@ -158,14 +161,17 @@ export default {
                 .style('fill', (d) => {
                     if (dataset == 'ensemble') {
                         return this.$store.color.ensemble
+                        // return '#EDEDED'
                     }
                     else {
                         return this.$store.color.target
                     }
                 })
+                .style('stroke', (d) => {
+                    return '#888888'
+                })
                 .on('mouseover', (d) => {
                     self.$refs.ToolTip.render(self.graph, d)
-                    console.log(d.weight, d.exc_weight)
                 })
                 .on('mouseout', (d) => {
                     self.$refs.ToolTip.clear()

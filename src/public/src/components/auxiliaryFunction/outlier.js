@@ -243,7 +243,7 @@ export default {
                 .data(this.ensemble_outliers)
                 .join("circle")
                 .attrs({
-                    "r": d => (d.count / this.max_count) * 4 + 4,
+                    "r": d => (d.count / this.max_count) + 4,
                     "cx": d => {
                         return d.x[0]
                     },
@@ -289,7 +289,7 @@ export default {
                     .data(this.target_outliers)
                     .join("circle")
                     .attrs({
-                        "r": d => (d.count / this.max_count) * 4 + 4,
+                        "r": d => (d.count / this.max_count) + 4,
                         "cx": d => d.x[0],
                         "cy": d => this.boxHeight / 2 - this.informationHeight / 4,
                         "class": "target-outlier"
