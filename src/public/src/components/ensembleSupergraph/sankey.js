@@ -223,21 +223,14 @@ export default function Sankey() {
             })
             node.max_flow = Math.max(sourceSum, targetSum)
 
-            console.log(sourceSum, targetSum, node['time'])
+            if (node.type == 'intermediate') {
+                node.value = node.value
+            }
+            else {
+                node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
+            }
 
-            // Does not work to add the link weights to the node's height
-            // if (node.type == 'intermediate') {
-            //     node.value = Math.max(Math.max(sourceSum, targetSum), node['actual_time']['Exclusive'])
-            // }
-            // else {
-            //     node.value = Math.max(Math.max(Math.max(sourceSum, targetSum), node['actual_time']['Exclusive']), node['actual_time']['Inclusive'])
-            // }
-
-            node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
-            // node.value = node['actual_time']['Inclusive']
-
-            console.log("Adjusted Node flow : ", node.value)
-
+            console.log("Adjusted flow for", node.id, ": ", node.value)
         });
     }
 
@@ -288,14 +281,12 @@ export default function Sankey() {
             })
             remainingNodes = nextNodes;
             level += 1
-            // MPI => MPI = function_name
         }
 
         minDistanceBetweenNode = nodeWidth * 2
         widthScale = scalePow().domain([0, level + 1]).range([minDistanceBetweenNode, size[0]])
         scaleNodeBreadths((size[0] - nodeWidth) / (maxLevel - 1));
     }
-
 
     //////////////////// Associated functions for : ComputeNodeDepths /////////////////
     function resolveOutsidePositioning() {
@@ -406,14 +397,6 @@ export default function Sankey() {
             nodes.sort(function (a, b) {
                 return b['time (inc)'] - a['time (inc)']
             })
-            // }
-            // if (levelCount == 2) {
-            //     nodes.sort(function (a, b) {
-            //         if (a.id.split('_')[0] != 'intermediate' || b.id.split('_')[0] != 'intermediate') {
-            //             return a['height'] - b['height']
-            //         }
-            //     })
-            // }
 
             nodes = pushIntermediateNodeBottom(nodes)
             // nodes = pushNodeBottomIfIntermediateTargets(nodes)
@@ -431,7 +414,10 @@ export default function Sankey() {
                 node.parY = node.y;
 
                 console.log("Value: ", node.value, minNodeScale, scale)
+
+
                 node.height = node.value * minNodeScale * scale;
+
                 console.log("Height ", node.height)
                 // node.targetHeight = node.value * minNodeScale * targetScale
             });
@@ -439,12 +425,26 @@ export default function Sankey() {
         });
 
         links.forEach(function (link) {
-            let weight = link.weight * (link.source_data['actual_time']['Inclusive'] / link.source_data.max_flow)
+            let weight = 0
+            if (link.type == 'source_intermediate') {
+                weight = link.weight * (link.source_data.actual_time['Inclusive'] / link.source_data.max_flow)
+            }
+            else if (link.type == 'target_intermediate') {
+                if (link.target == 'Unknown') {
+                    weight = link.weight * (link.actual_time['Inclusive'] / link.target_data.max_flow)
+                }
+                else {
+                    weight = link.weight * (link.target_data.actual_time['Inclusive'] / link.target_data.max_flow)
+                }
+            }
+            else {
+                weight = link.weight * (link.source_data.actual_time['Inclusive'] / link.source_data.max_flow)
+            }
 
             // let targetWeight = link.source_data[targetDataset]['time (inc)']
-            if (link.source.value < weight) {
-                weight = link.source_data.minLinkVal
-            }
+            // if (link.source.value < weight) {
+            //     weight = link.source_data.minLinkVal
+            // }
 
             link.height = weight * scale
             // link.targetHeight = weight * minNodeScale * scale * (weight / targetWeight)
@@ -523,18 +523,18 @@ export default function Sankey() {
                 y0 = node.y + node.height + nodePadding;
             }
 
-            // // If the bottommost node goes outside the bounds, push it back up.
-            // dy = y0 - nodePadding - size[1];
-            // if (dy > 0) {
-            //     y0 = node.y -= dy;
-            //     // Push any overlapping nodes back up.
-            //     for (let i = nodes.length - 2; i > 0; --i) {
-            //         node = nodes[i];
-            //         dy = node.y + node.height + nodePadding - y0;
-            //         if (dy > 0) node.y -= dy;
-            //         y0 = node.y;
-            //     }
-            // }
+            // If the bottommost node goes outside the bounds, push it back up.
+            dy = y0 - nodePadding - size[1];
+            if (dy > 0) {
+                y0 = node.y -= dy;
+                // Push any overlapping nodes back up.
+                for (let i = nodes.length - 2; i > 0; --i) {
+                    node = nodes[i];
+                    dy = node.y + node.height + nodePadding - y0;
+                    if (dy > 0) node.y -= dy;
+                    y0 = node.y;
+                }
+            }
 
             dy = y0 - nodePadding - size[1]
             if (dy > 0) {
@@ -601,14 +601,10 @@ export default function Sankey() {
                 let ret = []
                 for (let i = 0; i < d.values.length; i += 1) {
                     let node = d.values[i]
-                    // if (node.id.split('_')[0] != 'intermediate') {
                     ret.push(d.values[i])
-                    // }
                 }
                 return ret;
             });
-
-        console.log(nodesByBreadth)
 
         initializeNodeDepth();
         resolveCollisions();
@@ -631,11 +627,11 @@ export default function Sankey() {
 
     function computeLinkDepths() {
         nodes.forEach(function (node) {
-            node.sourceLinks.sort(ascendingTargetDepth);
-            node.targetLinks.sort(ascendingSourceDepth);
+            // node.sourceLinks.sort(ascendingTargetDepth);
+            // node.targetLinks.sort(ascendingSourceDepth);
 
-            // node.sourceLinks.sort(descendingTargetDepth);
-            // node.targetLinks.sort(descendingSourceDepth);
+            node.sourceLinks.sort(descendingTargetDepth);
+            node.targetLinks.sort(descendingSourceDepth);
 
             // Push links having less weight to the bottom. 
             // node.sourceLinks.sort(ascendingEdgeValue);

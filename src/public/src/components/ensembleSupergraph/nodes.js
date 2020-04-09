@@ -164,12 +164,12 @@ export default {
             this.$refs.ToolTip.init(this.$parent.id)
         },
 
+        // TODO: Remove this.
         setNodeIds() {
             let idx = 0
             for (let node of this.graph.nodes) {
                 this.nidNameMap[node.id] = idx
                 node.client_idx = idx
-                console.log("[EnsembleSupergraph] Node ", node.id, "assigned client_idx as", node.client_idx)
                 idx += 1
             }
         },
@@ -233,7 +233,7 @@ export default {
             let self = this
             this.nodesSVG.append('rect')
                 .attrs({
-                    'id': (d) => { return 'callsite-rect' + d.client_idx },
+                    'id': (d) => { return d.id + ' callsite-rect' + d.client_idx },
                     'class': 'callsite-rect',
                     'height': (d) => { return d.height; },
                     'width': this.nodeWidth,

@@ -86,6 +86,12 @@ export default {
 				datasets: this.$store.selectedDatasets,
 				groupBy: 'module'
 			})
+
+			let self = this
+			var zoom = d3.zoom().on("zoom", function () {
+				self.sankeySVG.attr("transform", d3.event.transform);
+			});
+			this.sankeySVG.call(zoom);
 		},
 
 		clear() {
@@ -150,17 +156,17 @@ export default {
 			this.initSankey(this.data)
 
 			console.log("[Ensemble SuperGraph] Layout Calculation.")
-			// let postProcess = this.postProcess(this.data.nodes, this.data.links)
-			// this.data.nodes = postProcess['nodes']
-			// this.data.links = postProcess['links']
-			// this.initSankey(this.data)
-			console.log("[Ensemble SuperGraph] Post-processing done.")
+			let postProcess = this.postProcess(this.data.nodes, this.data.links)
+			this.data.nodes = postProcess['nodes']
+			this.data.links = postProcess['links']
+			this.initSankey(this.data)
+			console.log("[Ensemble SuperGraph] Post-processing done.", this.data)
 
 			this.$store.graph = this.data
 			this.$refs.EnsembleColorMap.init()
 			this.$refs.EnsembleEdges.init(this.$store.graph, this.view)
-			this.$refs.EnsembleNodes.init(this.$store.graph, this.view)
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view)
+			this.$refs.EnsembleNodes.init(this.$store.graph, this.view)
 		},
 
 		addNodeMap(graph) {
@@ -226,6 +232,7 @@ export default {
 			this.existingIntermediateNodes = {}
 
 			let removeActualEdges = []
+			let count = {}
 
 			for (let i = 0; i < temp_edges.length; i++) {
 				const source = temp_edges[i].source;
@@ -261,38 +268,58 @@ export default {
 				for (let j = shift_level; j > 1; j--) {
 					const intermediate_idx = nodes.length;
 
-					// Add the intermediate node to the array
-					const tempNode = {
-						'ensemble': target_node['ensemble'],
-						'attr_dict': temp_edges[i]['attr_dict'],
-						id: 'intermediate_' + target_node.id,
-						level: j - 1,
-						height: temp_edges[i].height,
-						name: target_node.id,
-						module: target_node.module,
-						"time (inc)": source_node['time (inc)'],
-						"time": source_node['time'],
-						"actual_time": source_node['actual_time'],
-						'type': 'intermediate'
-					};
-					tempNode[targetDataset] = target_node[targetDataset]
+					let tempNode = {}
+					let actual_time = source_node['actual_time']
+					let max_flow = source_node['max_flow']
+					if (this.existingIntermediateNodes[target_node.id] == undefined) {
+						// Add the intermediate node to the array
+						tempNode = {
+							// attr_dict: temp_edges[i]['attr_dict'],
+							id: 'intermediate_' + target_node.id,
+							level: j - 1,
+							value: temp_edges[i].weight,
+							// value: target_node.value,
+							// name: target_node.name,
+							module: target_node.module,
+							// actual_time: source_node['actual_time'],
+							type: 'intermediate',
+							count: 1
+						};
+						tempNode[targetDataset] = target_node[targetDataset]
 
-					if (firstNode) {
-						console.log(tempNode)
-						nodes.push(tempNode)
-						firstNode = false
+						if (firstNode) {
+							console.log(tempNode)
+							nodes.push(tempNode)
+							firstNode = false
+						}
+
+						this.existingIntermediateNodes[target_node.id] = tempNode
+					}
+					else {
+						if (count[temp_edges[i].source] == undefined) {
+							count[temp_edges[i].source] = 0
+							console.log(temp_edges[i].weight, temp_edges[i].source, temp_edges[i].target)
+							this.existingIntermediateNodes[target_node.id].value += temp_edges[i].weight
+						}
+						else {
+							count[temp_edges[i].source] += 1
+						}
+						tempNode = this.existingIntermediateNodes[target_node.id]
 					}
 
 					// Add the source edge.
 					const sourceTempEdge = {
+						type: 'source_intermediate',
 						source: source_node.id,
 						target: tempNode.id,
 						weight: temp_edges[i].weight,
+						actual_time: actual_time,
+						max_flow: max_flow
 					}
+					edges.push(sourceTempEdge)
 					if (this.debug) {
 						console.log("[Ensemble SuperGraph] Adding intermediate source edge: ", sourceTempEdge);
 					}
-					edges.push(sourceTempEdge)
 
 					if (j == shift_level) {
 						edges[i].original_target = target
@@ -303,9 +330,12 @@ export default {
 					}
 
 					const targetTempEdge = {
+						type: 'target_intermediate',
 						source: tempNode.id,
 						target: target_node.id,
-						weight: temp_edges[i].weight
+						actual_time: actual_time,
+						weight: temp_edges[i].weight,
+						max_flow: max_flow
 					}
 					edges.push(targetTempEdge)
 					if (this.debug) {
@@ -326,10 +356,17 @@ export default {
 					})
 				}
 			}
+			console.log(temp_edges.length, removeActualEdges.length, edges.length)
+
+
+			if (this.debug) {
+				console.log("[Ensemble SuperGraph] Removing", removeActualEdges.length, " edges.")
+			}
+
 			for (let i = 0; i < removeActualEdges.length; i += 1) {
 				let removeEdge = removeActualEdges[i]
 				if (this.debug) {
-					console.log("[Ensemble SuperGraph] Removing", removeActualEdges.length, "actual edge: ", removeEdge)
+					console.log("[Ensemble SuperGraph] Removing edge: ", removeEdge)
 				}
 				for (let edge_idx = 0; edge_idx < edges.length; edge_idx += 1) {
 					let curr_edge = edges[edge_idx]
@@ -338,7 +375,7 @@ export default {
 					}
 				}
 			}
-
+			console.log(edges.length)
 			return {
 				nodes: nodes,
 				links: edges
