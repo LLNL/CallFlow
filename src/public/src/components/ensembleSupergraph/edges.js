@@ -23,7 +23,6 @@ export default {
 
     methods: {
         init(graph) {
-            console.log('Second')
             this.graph = graph
             this.edges = d3.select('#' + this.id)
 
@@ -42,10 +41,9 @@ export default {
             }
             else if (this.$store.selectedEdgeAlignment == 'Top') {
                 this.drawTopEdges('ensemble')
-                // this.drawTopEdges(this.$store.selectedTargetDataset)
+                this.drawTopEdges(this.$store.selectedTargetDataset)
             }
             this.$refs.ToolTip.init(this.$parent.id)
-
         },
 
         initEdges(dataset) {
@@ -91,13 +89,60 @@ export default {
                 }).entries(this.graph.nodes)
         },
 
+        drawPath(d, linkHeight, edge_source_offset, edge_target_offset) {
+            let Tx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
+                Tx1 = d.target_data.x - edge_target_offset,
+                Txi = d3.interpolateNumber(Tx0, Tx1),
+                Tx2 = Txi(0.4),
+                Tx3 = Txi(1 - 0.4),
+                Ty0 = d.source_data.y + this.$parent.ySpacing + d.sy,
+                Ty1 = d.target_data.y + this.$parent.ySpacing + d.ty
+
+            // note .ty is the y point that the edge meet the target(for top)
+            //		.sy is the y point of the source  (for top)
+            //		.dy is width of the edge
+
+            let Bx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
+                Bx1 = d.target_data.x - edge_target_offset,
+                Bxi = d3.interpolateNumber(Bx0, Bx1),
+                Bx2 = Bxi(0.4),
+                Bx3 = Bxi(1 - 0.4)
+
+            let By0 = 0, By1 = 0;
+            By0 = d.source_data.y + this.$parent.ySpacing + d.sy + linkHeight
+            By1 = d.target_data.y + this.$parent.ySpacing + d.ty + linkHeight
+            const rightMoveDown = By1 - Ty1
+
+            // console.log(d.source, d.target, Ty0, Ty1)//, Tx2, Tx3, Ty0, Ty1)
+            // console.log(d.source, d.target, By0, By1)//, Bx2, Bx3, By0, By1)
+            // console.log(d.source_data.y, this.$parent.ySpacing, d.sy, linkHeight)
+            return `M${Tx0},${Ty0
+                }C${Tx2},${Ty0
+                } ${Tx3},${Ty1
+                } ${Tx1},${Ty1
+                } ` + ` v ${rightMoveDown
+                }C${Bx3},${By1
+                } ${Bx2},${By0
+                } ${Bx0},${By0}`;
+
+        },
+
         drawTopEdges(dataset) {
-            console.log('aaaa')
             let self = this
             this.edges.selectAll('#ensemble-edge-' + dataset)
                 .data(this.links)
                 .attrs({
                     'd': (d) => {
+                        // Set link height
+                        let link_height = 0
+                        if (dataset == 'ensemble') {
+                            link_height = d.height
+                        }
+                        else {
+                            link_height = d.height[dataset]
+                        }
+
+                        // Set source offset
                         let edge_source_offset = 0
                         if (d.source.split('_')[0] == "intermediate") {
                             edge_source_offset = -1
@@ -106,6 +151,7 @@ export default {
                             edge_source_offset = this.offset
                         }
 
+                        // Set target offset
                         let edge_target_offset = 0
                         if (d.target.split('_')[0] == "intermediate") {
                             edge_target_offset = -1
@@ -114,61 +160,17 @@ export default {
                             edge_target_offset = this.offset
                         }
 
-                        let Tx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
-                            Tx1 = d.target_data.x - edge_target_offset,
-                            Txi = d3.interpolateNumber(Tx0, Tx1),
-                            Tx2 = Txi(0.4),
-                            Tx3 = Txi(1 - 0.4),
-                            Ty0 = d.source_data.y + this.$parent.ySpacing + d.sy,
-                            Ty1 = d.target_data.y + this.$parent.ySpacing + d.ty
-
-                        // note .ty is the y point that the edge meet the target(for top)
-                        //		.sy is the y point of the source  (for top)
-                        //		.dy is width of the edge
-
-                        let Bx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
-                            Bx1 = d.target_data.x - edge_target_offset,
-                            Bxi = d3.interpolateNumber(Bx0, Bx1),
-                            Bx2 = Bxi(0.4),
-                            Bx3 = Bxi(1 - 0.4)
-
-                        let linkHeight = undefined
+                        return this.drawPath(d, link_height, edge_source_offset, edge_target_offset)
+                    },
+                    'fill': (d) => {
                         if (dataset == 'ensemble') {
-                            linkHeight = d.height
+                            return this.$store.color.ensemble
                         }
                         else {
-                            linkHeight = d.targetHeight
+                            return this.$store.color.target
                         }
-
-                        let By0 = 0, By1 = 0;
-                        By0 = d.source_data.y + this.$parent.ySpacing + d.sy + linkHeight
-                        By1 = d.target_data.y + this.$parent.ySpacing + d.ty + linkHeight
-
-                        // console.log(d.source, d.target, Ty0, Ty1)//, Tx2, Tx3, Ty0, Ty1)
-                        // console.log(d.source, d.target, By0, By1)//, Bx2, Bx3, By0, By1)
-                        // console.log(d.source_data.y, this.$parent.ySpacing, d.sy, linkHeight)
-                        const rightMoveDown = By1 - Ty1
-                        return `M${Tx0},${Ty0
-                            }C${Tx2},${Ty0
-                            } ${Tx3},${Ty1
-                            } ${Tx1},${Ty1
-                            } ` + ` v ${rightMoveDown
-                            }C${Bx3},${By1
-                            } ${Bx2},${By0
-                            } ${Bx0},${By0}`;
-                    }
-                })
-                .style('fill', (d) => {
-                    if (dataset == 'ensemble') {
-                        return this.$store.color.ensemble
-                        // return '#EDEDED'
-                    }
-                    else {
-                        return this.$store.color.target
-                    }
-                })
-                .style('stroke', (d) => {
-                    return '#888888'
+                    },
+                    'stroke': this.$store.color.edgeStrokeColor,
                 })
                 .on('mouseover', (d) => {
                     self.$refs.ToolTip.render(self.graph, d)
