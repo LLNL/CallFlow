@@ -257,7 +257,6 @@ export default {
                         else {
                             color = this.colorset[d[4]]
                         }
-                        console.log(color, d)
                         return color
                     },
                     cx: (d, i) => { return self.x(d[0]) },
@@ -355,6 +354,7 @@ export default {
             this.$socket.emit('compare', {
                 targetDataset: self.$store.selectedTargetDataset,
                 compareDataset: this.compareDataset,
+                selectedMetric: this.$store.selectedMetric
             })
         },
 

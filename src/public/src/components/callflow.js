@@ -699,6 +699,7 @@ export default {
 			this.$socket.emit('compare', {
 				targetDataset: this.$store.selectedTargetDataset,
 				compareDataset: this.$store.selectedCompareDataset,
+				selectedMetric: this.$store.selectedMetric
 			})
 		},
 

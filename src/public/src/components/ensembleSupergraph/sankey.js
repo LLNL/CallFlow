@@ -447,7 +447,23 @@ export default function Sankey() {
             // }
 
             link.height = weight * scale
-            // link.targetHeight = weight * minNodeScale * scale * (weight / targetWeight)
+
+            let source = ''
+            if (link.type == 'source_intermediate') {
+                source = link.source
+            }
+            else if (link.type == 'target_intermediate') {
+                source = link.source.split('_')[1]
+            }
+            else {
+                source = link.source
+            }
+            console.log(source, link.source, link.target, link.type)
+
+            let ensemble_mean = store.modules['ensemble'][source]["Inclusive"]["max_time"]
+            let target_mean = store.modules[store.selectedTargetDataset][source]['Inclusive']["mean_time"]
+            console.log(ensemble_mean, target_mean)
+            link.targetHeight = weight * scale * (target_mean / ensemble_mean)
         });
     }
 
