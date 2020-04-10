@@ -202,6 +202,7 @@ class App:
                     "sortBy": data["sortBy"],
                     "binCount": data["binCount"],
                     "module": data["module"],
+                    "re-process": data["re-process"],
                 }
             )
             emit("single_callsite_data", result, json=True)
@@ -217,6 +218,7 @@ class App:
                     "sortBy": data["sortBy"],
                     "binCount": data["binCount"],
                     "module": data["module"],
+                    "re-process": data["re_process"],
                 }
             )
             emit("ensemble_callsite_data", result, json=True)
@@ -363,6 +365,7 @@ class App:
                 {"name": "run-information", "datasets": data["datasets"]}
             )
             emit("parameter_information", json.dumps(result), json=True)
+
         @sockets.on("compare", namespace="/")
         def compare(data):
             if self.debug:
