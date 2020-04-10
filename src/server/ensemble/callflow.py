@@ -232,7 +232,7 @@ class EnsembleCallFlow:
                 construct_graph=True,
                 add_data=True,
                 reveal_callsites=reveal_callsites,
-            ).g
+            ).agg_g
             return self.states["ensemble_group"].g
 
         elif action_name == "scatterplot":
@@ -307,7 +307,7 @@ class EnsembleCallFlow:
             return histogram.result
 
         elif action_name == "auxiliary":
-            if self.currentBinCount != action["binCount"]:
+            if action["re-process"] == 1:
                 result = Auxiliary(
                     self.states,
                     binCount=action["binCount"],

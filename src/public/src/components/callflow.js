@@ -147,7 +147,7 @@ export default {
 		caseStudy: ['Lulesh-Scaling-3-runs', 'Lulesh-Scaling-8-runs', 'Kripke-MPI', 'OSU-Bcast', 'Kripke-Scaling'],
 		selectedCaseStudy: 'Lulesh-Scaling-3-runs',
 		selectedRunBinCount: 20,
-		selectedMPIBinCount: 20,
+		selectedMPIBinCount: 5,
 		selectedHierarchyMode: 'Uniform',
 		hierarchyModes: ['Uniform', 'Exclusive'],
 		selectedRuntimeSortBy: 'Inclusive',
@@ -187,7 +187,8 @@ export default {
 				datasets: this.$store.selectedDatasets,
 				sortBy: this.$store.auxiliarySortBy,
 				binCount: this.$store.selectedMPIBinCount,
-				module: 'all'
+				module: 'all',
+				're_process': 1
 			})
 		})
 	},
@@ -218,7 +219,8 @@ export default {
 					datasets: this.$store.selectedDatasets,
 					sortBy: this.$store.auxiliarySortBy,
 					binCount: this.$store.selectedMPIBinCount,
-					module: 'all'
+					module: 'all',
+					re_process: 0
 				})
 			}
 		},
@@ -386,7 +388,7 @@ export default {
 				this.$refs.EnsembleScatterplot,
 				this.$refs.AuxiliaryFunction,
 				this.$refs.ParameterProjection,
-				// this.$refs.ModuleHierarchy,
+				this.$refs.ModuleHierarchy,
 			]
 		},
 

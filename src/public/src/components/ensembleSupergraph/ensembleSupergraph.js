@@ -103,18 +103,6 @@ export default {
 		},
 
 		render(data) {
-
-			// let links = []
-			// for (let i = 0; i < data.links.length; i += 1){
-			// 	if(data.links[i].source == 'libmonitor.so.0.0.0' && data.links[i].target == 'osu_bcast'){
-
-			// 	}
-			// 	else{
-			// 		links.push(data.links[i])
-			// 	}
-			// }
-			// data.links = links
-
 			this.data = data
 
 			this.data = this.addNodeMap(this.data)
@@ -164,9 +152,9 @@ export default {
 
 			this.$store.graph = this.data
 			this.$refs.EnsembleColorMap.init()
+			this.$refs.EnsembleNodes.init(this.$store.graph, this.view)
 			this.$refs.EnsembleEdges.init(this.$store.graph, this.view)
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view)
-			this.$refs.EnsembleNodes.init(this.$store.graph, this.view)
 		},
 
 		addNodeMap(graph) {
