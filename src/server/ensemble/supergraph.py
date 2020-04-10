@@ -323,7 +323,11 @@ class SuperGraph(nx.Graph):
                     #                 print(f"Callback edge: {has_callback_edge}")
 
                     # If the module-module edge does not exist.
-                    if not has_caller_edge and not has_cct_edge:
+                    if (
+                        not has_caller_edge
+                        and not has_cct_edge
+                        and not has_callback_edge
+                    ):
                         print(
                             f"Create a new edge for : {source_module}--{target_module}"
                         )
@@ -331,7 +335,7 @@ class SuperGraph(nx.Graph):
                             source_module, target_module, attr_dict=[attr_dict]
                         )
 
-                    elif not has_cct_edge:
+                    elif not has_cct_edge and not has_callback_edge:
                         # print(f"Edge already exists for : {source_module}--{target_module}")
                         edge_data = self.agg_g.get_edge_data(
                             *(source_module, target_module)
@@ -351,8 +355,12 @@ class SuperGraph(nx.Graph):
     def add_edge_attributes(self):
         # runs_mapping = self.run_counts(self.agg_g)
         # nx.set_edge_attributes(self.agg_g, name="number_of_runs", values=runs_mapping)
+        edge_type_mapping = self.edge_type(self.agg_g)
+        nx.set_edge_attributes(self.agg_g, name="edge_type", values=edge_type_mapping)
         flow_mapping = self.flows(self.agg_g)
         nx.set_edge_attributes(self.agg_g, name="weight", values=flow_mapping)
+        # target_flow_mapping = self.target_flows(self.agg_g)
+        # nx.set_edge_attributes(self.agg_g, name="target_weight", values=target_flow_mapping)
         entry_functions_mapping = self.entry_functions(self.agg_g)
         nx.set_edge_attributes(
             self.agg_g, name="entry_callsites", values=entry_functions_mapping
@@ -368,7 +376,40 @@ class SuperGraph(nx.Graph):
             ret[(edge[0], edge[1])] = len(edge[2]["attr_dict"])
         return ret
 
+    def edge_type(self, graph):
+        ret = {}
+        for edge in graph.edges(data=True):
+            ret[(edge[0], edge[1])] = edge[2]["attr_dict"][0]["edge_type"]
+        return ret
+
     def flows(self, graph):
+        self.weight_map = {}
+        for edge in self.agg_g.edges(data=True):
+            if (edge[0], edge[1]) not in self.weight_map:
+                self.weight_map[(edge[0], edge[1])] = 0
+
+            attr_dict = edge[2]["attr_dict"]
+            for d in attr_dict:
+                self.weight_map[(edge[0], edge[1])] += d["weight"]
+
+        ret = {}
+        for edge in graph.edges(data=True):
+            edge_tuple = (edge[0], edge[1])
+            if edge_tuple not in self.weight_map:
+                # Check if it s a reveal edge
+                attr_dict = edge[2]["attr_dict"]
+                print(attr_dict)
+                if attr_dict["edge_type"] == "reveal_edge":
+                    self.weight_map[edge_tuple] = attr_dict["weight"]
+                    ret[edge_tuple] = self.weight_map[edge_tuple]
+                else:
+                    ret[edge_tuple] = 0
+            else:
+                ret[edge_tuple] = self.weight_map[edge_tuple]
+
+        return ret
+
+    def target_flows(self, graph):
         self.weight_map = {}
         for edge in self.agg_g.edges(data=True):
             if (edge[0], edge[1]) not in self.weight_map:

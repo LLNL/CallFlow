@@ -31,7 +31,7 @@ export default {
             })
 
             this.initEdges('ensemble')
-            // this.initEdges(this.$store.selectedTargetDataset)
+            this.initEdges('target')
 
             this.$store.selectedEdgeAlignment = 'Top'
 
@@ -41,7 +41,7 @@ export default {
             }
             else if (this.$store.selectedEdgeAlignment == 'Top') {
                 this.drawTopEdges('ensemble')
-                this.drawTopEdges(this.$store.selectedTargetDataset)
+                this.drawTopEdges('target')
             }
             this.$refs.ToolTip.init(this.$parent.id)
         },
@@ -128,26 +128,30 @@ export default {
         },
 
         drawTopEdges(dataset) {
+            console.log(dataset)
             let self = this
             this.edges.selectAll('#ensemble-edge-' + dataset)
                 .data(this.links)
                 .attrs({
                     'd': (d) => {
+                        console.log(d)
                         // Set link height
                         let link_height = 0
                         if (dataset == 'ensemble') {
                             link_height = d.height
                         }
-                        else {
-                            link_height = d.height[dataset]
+                        else if (dataset == 'target') {
+                            link_height = d.targetHeight
                         }
+
+                        console.log(link_height)
 
                         // Set source offset
                         let edge_source_offset = 0
                         if (d.source.split('_')[0] == "intermediate") {
                             edge_source_offset = -1
                         }
-                        else {
+                        else if (dataset == 'target') {
                             edge_source_offset = this.offset
                         }
 
@@ -156,7 +160,7 @@ export default {
                         if (d.target.split('_')[0] == "intermediate") {
                             edge_target_offset = -1
                         }
-                        else {
+                        else if (dataset == 'target') {
                             edge_target_offset = this.offset
                         }
 
@@ -166,7 +170,7 @@ export default {
                         if (dataset == 'ensemble') {
                             return this.$store.color.ensemble
                         }
-                        else {
+                        else if (dataset == 'target') {
                             return this.$store.color.target
                         }
                     },

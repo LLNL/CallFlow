@@ -173,7 +173,6 @@ export default {
                 idx += 1
             }
         },
-
         setupMeanGradients() {
             let data = this.$store.modules['ensemble']
             let nodes = this.graph.nodes
@@ -511,9 +510,10 @@ export default {
                     return 1;
                 })
                 .style("fill", (d, i) => {
-                    if (max_diff == 0 && min_diff == 0) {
-                        return this.$store.meanDiffColor.getColorByValue(0.5)
-                    }
+                    // if (max_diff == 0 && min_diff == 0) {
+                    //     return this.$store.meanDiffColor.getColorByValue(0.5)
+                    // }
+                    // console.log(mean_diff)
                     let color = d3.rgb(this.$store.meanDiffColor.getColorByValue((mean_diff[d.module])))
                     return color
                 })

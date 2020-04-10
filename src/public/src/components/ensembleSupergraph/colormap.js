@@ -50,7 +50,7 @@ export default {
                 .attrs({
                     'id': 'dist-colormap',
                 })
-            
+
             this.clearLegends()
             this.drawTargetEnsembleLegend()
             this.drawMeanColorMap()
@@ -268,7 +268,7 @@ export default {
                     'class': 'dist-colormap-text',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2 * this.padding.bottom})`,
                 })
-                .text((this.colorMin * 0.000001).toFixed(3) + 's');
+                .text(utils.formatRuntimeWithUnits(this.colorMin));
 
             this.svg.append("text")
                 .style("fill", "black")
@@ -281,7 +281,7 @@ export default {
                     "class": "dist-colormap-text",
                     'transform': `translate(${this.containerWidth - this.padding.right + this.width + this.offset}, ${this.containerHeight - 2 * this.padding.bottom})`,
                 })
-                .text((this.colorMax * 0.000001).toFixed(3) + "s");
+                .text(utils.formatRuntimeWithUnits(this.colorMax));
         },
 
         drawBinText() {
@@ -317,7 +317,7 @@ export default {
         clear() {
             d3.selectAll('.dist-colormap-text').remove()
             d3.selectAll('.dist-colormap-rect').remove()
-            
+
         },
 
         clearMetric() {
