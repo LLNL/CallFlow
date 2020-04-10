@@ -121,7 +121,7 @@ export default {
 			this.xAxis()
 			this.yAxis()
 			this.ensembleDots()
-			if(this.$store.showTarget){
+			if (this.$store.showTarget) {
 				this.targetDots()
 			}
 			// this.correlationText()
@@ -137,28 +137,28 @@ export default {
 		ensembleProcess() {
 			let mean_time = []
 			let mean_time_inc = []
+			console.log(this.$store.selectedDatasets)
 			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
-				if (this.$store.selectedDatasets[i] != this.$store.selectedTargetDataset || this.includesTarget) {
-					let callsites_in_module = this.$store.moduleCallsiteMap['ensemble'][this.selectedModule]
-					for (let j = 0; j < callsites_in_module.length; j += 1) {
-						let thiscallsite = callsites_in_module[j]
+				// if (this.$store.selectedDatasets[i] != this.$store.selectedTargetDataset || this.includesTarget) {
+				let callsites_in_module = this.$store.moduleCallsiteMap['ensemble'][this.selectedModule]
+				for (let j = 0; j < callsites_in_module.length; j += 1) {
+					let thiscallsite = callsites_in_module[j]
+					let thisdata = this.$store.callsites[this.$store.selectedDatasets[i]][thiscallsite]
+					if (thisdata != undefined) {
+						mean_time.push({
+							'callsite': thiscallsite,
+							'val': thisdata['Exclusive']['mean_time'],
+							'run': this.$store.selectedDatasets[i]
+						})
+						mean_time_inc.push({
+							'callsite': thiscallsite,
+							'val': thisdata['Inclusive']['mean_time'],
+							'run': this.$store.selectedDatasets[i]
+						})
 
-						let thisdata = this.$store.callsites[this.$store.selectedDatasets[i]][thiscallsite]
-						if (thisdata != undefined) {
-							mean_time.push({
-								'callsite': thiscallsite,
-								'val': thisdata['Exclusive']['mean_time'],
-								'run': this.$store.selectedDatasets[i]
-							})
-							mean_time_inc.push({
-								'callsite': thiscallsite,
-								'val': thisdata['Inclusive']['mean_time'],
-								'run': this.$store.selectedDatasets[i]
-							})
-
-						}
 					}
 				}
+				// }
 			}
 
 			let all_data = this.$store.modules['ensemble'][this.selectedModule]
@@ -348,7 +348,7 @@ export default {
 			let max_value = this.xScale.domain()[1]
 			this.x_max_exponent = utils.formatExponent(max_value)
 			console.log(this.x_max_exponent)
-			let exponent_string =  this.superscript[this.x_max_exponent]
+			let exponent_string = this.superscript[this.x_max_exponent]
 			let label = '(e+' + this.x_max_exponent + ') ' + "Exclusive Runtime (" + "\u03BCs)"
 			this.svg.append('text')
 				.attr('class', 'scatterplot-axis-label')
@@ -464,6 +464,7 @@ export default {
 		},
 
 		ensembleDots() {
+			let self = this
 			for (let i = 0; i < this.xArray.length; i += 1) {
 				let callsite = this.xArray[i]['callsite']
 				let run = this.xArray[i]['run']
@@ -471,7 +472,6 @@ export default {
 				let variance = this.$store.callsites[run][callsite][this.$store.selectedMetric]['variance_time']
 				let undesirability = 1 - Math.exp(-mean * variance)
 
-				let self = this
 				this.svg
 					.append('circle')
 					.attrs({
@@ -505,7 +505,6 @@ export default {
 
 		targetDots() {
 			let self = this
-
 			for (let i = 0; i < this.xtargetArray.length; i++) {
 				let callsite = this.xtargetArray[i]['callsite']
 				let run = this.$store.selectedTargetDataset
@@ -526,7 +525,7 @@ export default {
 						}
 					})
 					.style('fill', this.$store.color.target)
-					.style('stroke', '#202020')
+					.style('stroke', this.$store.color.edgeStrokeColor)
 					.style('stroke-width', 0.5)
 					.on('mouseover', () => {
 						let data = {
@@ -564,7 +563,6 @@ export default {
 
 
 		clear() {
-			console.log("clearing")
 			d3.selectAll('.ensemble-dot').remove()
 			d3.selectAll('.target-dot').remove()
 			d3.selectAll('.axis').remove()
@@ -572,10 +570,6 @@ export default {
 			d3.selectAll('.scatterplot-axis-label').remove()
 			d3.selectAll('.text').remove()
 			d3.selectAll('.scatterplot-axis-label').remove()
-		},
-
-		update(data) {
-
 		},
 	}
 }

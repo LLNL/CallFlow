@@ -88,19 +88,26 @@
 					</vue-slider>
 				</v-flex>
 				<v-divider></v-divider> -->
+
+				<!-- --------------------------- General Information ----------------------------------->
 				<v-flex xs12 class="ma-1">
 					<v-subheader class="teal lighten-4">General</v-subheader>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
-					<v-select label="Case study" :items="caseStudy" v-model="selectedCaseStudy"
+					<!-- <v-select label="Case study" :items="caseStudy" v-model="selectedCaseStudy"
 						:menu-props="{ maxHeight: '400' }" box v-on:change="updateCaseStudy()">
-					</v-select>
+					</v-select> -->
+					<v-text-field rows="1" label="Simulation" v-model="selectedCaseStudy" readonly>
+					</v-text-field>
 				</v-flex>
-				<v-flex xs12 class="ma-1">
-					<v-switch v-model="showTarget" :label="targetInfo" v-on:change="updateTargetColor()"></v-switch>
-				</v-flex>
+
+				<!-- --------------------------- Encoding ----------------------------------->
 				<v-flex xs12 class="ma-1">
 					<v-subheader class="teal lighten-4">Encoding</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-switch v-model="showTarget" :label="targetInfo" v-on:change="updateTargetColor()"
+						color="#009687"></v-switch>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
 					<v-select label="Metric" :items="metrics" v-model="selectedMetric"

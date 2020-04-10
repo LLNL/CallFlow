@@ -58,11 +58,6 @@ export default {
 
 	watch: {
 		showTarget: (val) => {
-			this.showTarget = !(this.showTarget)
-
-			this.clearLocal()
-			this.init()
-
 			EventHandler.$emit('show_target_auxiliary', {
 
 			})
@@ -170,7 +165,7 @@ export default {
 		targetColors: ['Green', 'Blue', 'Brown'],
 		selectedTargetColor: '',
 		selectedTargetColorText: 'Green',
-		showTarget: true,
+		showTarget: false,
 		targetInfo: 'Show Target info.',
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time)
 	}),
@@ -190,6 +185,11 @@ export default {
 				module: 'all',
 				're_process': 1
 			})
+		})
+
+		EventHandler.$on('show_target_auxiliary', (data) => {
+			this.clearLocal()
+			this.init()
 		})
 	},
 
@@ -443,6 +443,7 @@ export default {
 			this.$store.color.target = this.selectedTargetColor
 			this.$store.color.ensemble = '#C0C0C0'//'#4681B4'
 			this.$store.color.compare = '#043060'
+			this.$store.color.edgeStrokeColor = '#888888'
 			this.$store.showTarget = this.showTarget
 
 			this.targetColors = Object.keys(this.targetColorMap)
@@ -632,7 +633,6 @@ export default {
 			console.log("[Update] Target Dataset: ", this.selectedTargetDataset)
 			this.init()
 			EventHandler.$emit('show_target_auxiliary', {
-
 			})
 		},
 

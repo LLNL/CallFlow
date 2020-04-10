@@ -6,9 +6,6 @@ export default {
     template: tpl,
     name: 'ToolTip',
     components: {},
-    props: [
-
-    ],
 
     data: () => ({
         id: '',
@@ -17,16 +14,13 @@ export default {
         textyOffset: 20,
         textPadding: 15,
     }),
+
     sockets: {
         tooltip(data) {
             this.render(data)
         },
     },
-    watch: {
 
-    },
-
-    mounted() { },
     methods: {
         init(id) {
             this.id = id
@@ -120,7 +114,7 @@ export default {
         paths() {
             let entry_functions = this.$store.modules['ensemble'][this.node.id]['callers']
 
-            console.log(entry_functions)
+            console.log(this.node)
 
             let entry_function_runtimes = {}
             for (let i = 0; i < entry_functions.length; i += 1) {
