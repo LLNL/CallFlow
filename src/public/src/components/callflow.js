@@ -87,11 +87,11 @@ export default {
 		selectedIncTime: 0,
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
-		metrics: ['Module', 'Exclusive', 'Inclusive', 'Imbalance'],
+		metrics: ['Exclusive', 'Inclusive', 'Imbalance'],
 		selectedMetric: 'Exclusive',
 		runtimeColorMap: [],
 		distributionColorMap: [],
-		selectedRuntimeColorMap: "PuBu",
+		selectedRuntimeColorMap: "Default",
 		selectedDistributionColorMap: "Reds",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
 		selectedColorPoint: 9,
@@ -165,7 +165,7 @@ export default {
 		targetColors: ['Green', 'Blue', 'Brown'],
 		selectedTargetColor: '',
 		selectedTargetColorText: 'Green',
-		showTarget: false,
+		showTarget: true,
 		targetInfo: 'Show Target info.',
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time)
 	}),
@@ -328,11 +328,9 @@ export default {
 		},
 
 		setOtherData() {
-			console.log("Setting other data")
 			this.$store.selectedScatterMode = 'mean'
 			this.$store.nodeInfo = {}
 			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT
-			this.$store.datasetMap = this.$store.selectedDatasets.map((run, i) => "run-" + i)
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode
 			this.$store.selectedProp = this.selectedProp
 			this.$store.selectedScale = this.selectedScale
@@ -340,6 +338,12 @@ export default {
 			this.$store.selectedIQRFactor = this.selectedIQRFactor
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters
+
+
+			this.$store.datasetMap = {}
+			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
+				this.$store.datasetMap[this.$store.selectedDatasets[i]] = 'run-' + i
+			}
 		},
 
 		setTargetDataset() {
@@ -735,6 +739,12 @@ export default {
 		updateTargetColor() {
 			this.clearLocal()
 			this.init()
+			EventHandler.$emit('show_target_auxiliary', {
+			})
+		},
+
+		updateColorMin() {
+			// this.
 		}
 	}
 }
