@@ -134,7 +134,6 @@ export default {
                 .data(this.links)
                 .attrs({
                     'd': (d) => {
-                        console.log(d)
                         // Set link height
                         let link_height = 0
                         if (dataset == 'ensemble') {
@@ -144,7 +143,6 @@ export default {
                             link_height = d.targetHeight
                         }
 
-                        console.log(link_height)
 
                         // Set source offset
                         let edge_source_offset = 0
@@ -198,6 +196,7 @@ export default {
 
         clear() {
             this.edges.selectAll('.ensemble-edge').remove()
+            this.edges.selectAll('.target-edge').remove()
             this.edges.selectAll('.edgelabel').remove()
             this.edges.selectAll('.edgelabelText').remove()
         },

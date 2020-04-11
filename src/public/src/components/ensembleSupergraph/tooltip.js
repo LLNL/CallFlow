@@ -13,6 +13,8 @@ export default {
         textxOffset: 20,
         textyOffset: 20,
         textPadding: 15,
+        height: 200,
+        margin: 35
     }),
 
     sockets: {
@@ -26,12 +28,31 @@ export default {
             this.id = id
             this.toolTipDiv = d3.select('#' + this.id)
             this.toolTipG = this.toolTipDiv.append('g')
-            this.callgraphOverviewWidth = window.innerWidth
+            this.callgraphOverviewWidth = document.getElementById(this.id).clientWidth
             this.halfWidth = this.callgraphOverviewWidth / 2
+        },
+
+        positionX() {
+            let ret = 0
+            if (this.mousePosX >= this.halfWidth) {
+                ret = this.mousePosX - this.height + this.textxOffset
+            } else if (this.mousePosX < this.halfWidth) {
+                ret = this.mousePosX + this.textxOffset
+            } else {
+                ret = this.mousePosX - this.height + this.textxOffset
+            }
+            return ret
+        },
+
+        positionY(node) {
+            return this.mousePosY + node.height
         },
 
         render(graph, node) {
             this.clear()
+            this.xOffset = this.positionX()
+            this.yOffset = this.positionY(node)
+            this.nodeHeight = node.height
             var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
             this.mousePos = d3.mouse(d3.select('#' + this.id).node())
             this.mousePosX = this.mousePos[0]
@@ -46,38 +67,22 @@ export default {
                     "rx": "10px",
                     "fill-opacity": 1,
                     "width": "325",
-                    "height": "200",
+                    "height": this.height,
                 })
                 .attrs({
-                    'x': () => {
-                        if (this.mousePosX + this.halfWidth > this.callgraphOverviewWidth) {
-                            return (this.mousePosX - 200) + 'px';
-                        } else if (this.mousePosX < 100) {
-                            return (this.mousePosX) + 'px'
-                        } else {
-                            return (this.mousePosX - 200) + 'px';
-                        }
-                    },
-                    'y': () => {
-                        return (this.mousePosY + 50) + "px";
-                    }
+                    'x': this.xOffset,
+                    'y': this.yOffset
                 })
             this.graph = graph
             this.node = node
 
-            if (this.mousePosX + this.halfWidth > this.callgraphOverviewWidth) {
-                this.xOffset = this.mousePosX - 200 + this.textxOffset
-            } else if (this.mousePosX < 100) {
-                this.xOffset = this.mousePosX + this.textxOffset
-            } else {
-                this.xOffset = this.mousePosX - 200 + this.textxOffset
-            }
 
             this.times()
             this.paths()
         },
 
         addText(text) {
+            let self = this
             this.textCount += 1
             this.toolTipText = this.toolTipG
                 .append('text')
@@ -86,10 +91,10 @@ export default {
                 .attrs({
                     'class': 'toolTipContent',
                     'x': () => {
-                        return this.xOffset + 'px'
+                        return this.xOffset + this.margin
                     },
                     'y': () => {
-                        return (this.mousePosY + 50) + this.textyOffset + this.textPadding * this.textCount + "px";
+                        return this.yOffset + this.textyOffset + this.textPadding * this.textCount + "px";
                     }
                 })
                 .text(text)
@@ -113,8 +118,6 @@ export default {
 
         paths() {
             let entry_functions = this.$store.modules['ensemble'][this.node.id]['callers']
-
-            console.log(this.node)
 
             let entry_function_runtimes = {}
             for (let i = 0; i < entry_functions.length; i += 1) {
@@ -143,8 +146,8 @@ export default {
                 let toColor = this.$store.color.getColor(this.node)
                 let fromFunc = entry_function_data[tIndex][0]
                 let toFunc = this.node.id
-                let xOffset = this.xOffset
-                let yOffset = this.mousePosY + 50 + this.textyOffset + this.textPadding * this.textCount
+                let xOffset = this.xOffset + this.margin
+                let yOffset = this.yOffset + this.textyOffset + this.textPadding * this.textCount
 
                 this.toolTipG
                     .append('rect')
