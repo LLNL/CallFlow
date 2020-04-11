@@ -12,7 +12,8 @@ export default {
     props: [
         "callsite",
         "width",
-        "height"
+        "height",
+        "showTarget"
     ],
     data: () => ({
         id: '',
@@ -114,9 +115,9 @@ export default {
                 .domain([min_x, max_x])
                 .range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
 
-            this.$refs.Box.init(this.q, this.targetq, this.xScale)
-            this.$refs.Markers.init(this.q, this.targetq, this.xScale)
-            this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite)
+            this.$refs.Box.init(this.q, this.targetq, this.xScale, this.showTarget)
+            this.$refs.Markers.init(this.q, this.targetq, this.xScale, this.showTarget)
+            this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget)
 
             EventHandler.$emit('highlight_dataset', {
                 dataset: this.$store.selectedTargetDataset

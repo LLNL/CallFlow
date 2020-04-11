@@ -42,7 +42,9 @@ export default {
         selectedMetric: '',
         means: {},
         variance: {},
-        targetColor: ''
+        targetColor: '',
+        differenceCallsites: {},
+        intersectionCallsites: {}
     }),
     mounted() {
         let self = this
@@ -105,6 +107,21 @@ export default {
             return ret
         },
 
+        KNC() {
+            let callsites = new Set(Object.keys(this.$store.callsites['ensemble']))
+            let targetCallsites = new Set(Object.keys(this.$store.callsites[this.$store.selectedTargetDataset]))
+            let difference = new Set(
+                [...callsites].filter(x => !targetCallsites.has(x)));
+
+            let intersection = new Set(
+                [...callsites].filter(x => targetCallsites.has(x)));
+
+            return {
+                'difference': Array.from(difference),
+                'intersection': Array.from(intersection)
+            }
+        },
+
         init() {
             if (this.firstRender) {
                 this.width = document.getElementById(this.id).clientWidth
@@ -114,10 +131,18 @@ export default {
                 this.firstRender = false
             }
 
-            this.numberOfCallsites = Object.keys(this.$store.callsites['ensemble']).length
             this.callsites = this.$store.callsites['ensemble']
             this.targetCallsites = this.$store.callsites[this.$store.selectedTargetDataset]
-            this.sortByAttribute(this.$store.selectedMetric)
+
+            this.knc = this.KNC()
+            console.log(this.knc['difference'], this.knc['intersection'])
+
+            this.numberOfDifferenceCallsites = Object.keys(this.knc['difference']).length
+            this.numberOfIntersectionCallsites = Object.keys(this.knc['intersection']).length
+
+            this.differenceCallsites = this.sortByAttribute(this.knc['difference'], this.$store.selectedMetric)
+            this.intersectionCallsites = this.sortByAttribute(this.knc['intersection'], this.$store.selectedMetric)
+
             this.selectedModule = this.$store.selectedModule
             this.selectedCallsite = this.$store.selectedCallsite
             this.selectedMetric = this.$store.selectedMetric
@@ -252,10 +277,10 @@ export default {
             }
         },
 
-        sortByAttribute(attribute) {
+        sortByAttribute(callsites, attribute) {
             // Create items array
             let self = this
-            let items = Object.keys(this.callsites).map(function (key) {
+            let items = callsites.map(function (key) {
                 return [key, self.callsites[key]];
             });
             // Sort the array based on the second element
@@ -270,10 +295,12 @@ export default {
                 });
             }
 
-            this.callsites = items.reduce(function (map, obj) {
+            callsites = items.reduce(function (map, obj) {
                 map[obj[0]] = obj[1];
                 return map;
             }, {});
+
+            return callsites
         },
 
     }

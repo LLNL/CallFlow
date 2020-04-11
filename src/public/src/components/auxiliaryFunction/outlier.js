@@ -20,7 +20,7 @@ export default {
     },
 
     methods: {
-        init(q, targetq, ensembleWhiskerIndices, targetWhiskerIndices, d, targetd, xScale, callsite) {
+        init(q, targetq, ensembleWhiskerIndices, targetWhiskerIndices, d, targetd, xScale, callsite, showTarget) {
             this.q = q
             this.targetq = targetq
             this.ensembleWhiskerIndices = ensembleWhiskerIndices
@@ -46,7 +46,7 @@ export default {
             this.boxWidth = this.width
 
             this.ensembleOutliers()
-            if (this.$store.showTarget) {
+            if (this.$store.showTarget && showTarget) {
                 this.targetOutliers()
             }
             this.$parent.$refs.ToolTip.init(this.id)

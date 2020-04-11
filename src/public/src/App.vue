@@ -246,6 +246,11 @@ body {
   padding: 8px;
 }
 
+.component-data {
+  color: #009688;
+  padding: 0px;
+}
+
 .v-list {
   padding: 8px;
 }

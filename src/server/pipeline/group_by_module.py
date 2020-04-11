@@ -126,7 +126,6 @@ class groupBy:
 
     def create_component_path(self, path, group_path):
         component_path = []
-        print(group_path)
         component_module = group_path[len(group_path) - 1].split("=")[0]
 
         for idx, node in enumerate(path):
@@ -173,8 +172,6 @@ class groupBy:
             edge_count += 1
             snode = edge[0]
             tnode = edge[1]
-
-            print(snode, tnode, edge_count)
 
             spath = self.name_path_map[snode]
             tpath = self.name_path_map[tnode]
