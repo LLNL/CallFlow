@@ -24,7 +24,7 @@ export default {
     },
 
     methods: {
-        init(q, targetq, xScale) {
+        init(q, targetq, xScale, showTarget) {
             if (this.debug) {
                 console.log("Ensemble q: ", q)
                 console.log("Target q: ", targetq)
@@ -42,7 +42,7 @@ export default {
                 })
 
             this.ensembleBox()
-            if (this.$store.showTarget) {
+            if (this.$store.showTarget && showTarget) {
                 this.targetBox()
             }
             this.centerLine()

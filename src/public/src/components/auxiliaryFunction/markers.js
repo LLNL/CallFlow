@@ -7,7 +7,7 @@ export default {
     template: tpl,
     props: [
         "callsiteID"
-    ],  
+    ],
     data: () => ({
         id: 'markers',
         paddingTop: 10,
@@ -22,7 +22,7 @@ export default {
     },
 
     methods: {
-        init(q, targetq, xScale) {
+        init(q, targetq, xScale, showTarget) {
             this.$store.selectedMarker = 'target'
             this.q = q
             this.targetq = targetq
@@ -37,8 +37,8 @@ export default {
                     "transform": "translate(0, " + this.$parent.boxPosition + ")"
                 })
 
-            this.markery1 = this.$parent.centerLinePosition - this.$parent.rectHeight/2
-            this.markery2 = this.$parent.centerLinePosition + this.$parent.rectHeight/2
+            this.markery1 = this.$parent.centerLinePosition - this.$parent.rectHeight / 2
+            this.markery2 = this.$parent.centerLinePosition + this.$parent.rectHeight / 2
 
             this.medianMarker()
             this.extremeMarkers()
@@ -67,7 +67,7 @@ export default {
             this.data = this.q
 
             this.minMaxEnsembleMarker()
-            if(this.$store.showTarget){
+            if (this.$store.showTarget) {
                 this.minMaxTargetMarker()
             }
             this.minText()
@@ -103,7 +103,7 @@ export default {
             this.g.append("line")
                 .attrs({
                     "class": "whisker",
-                    "y1": this.markery1,    
+                    "y1": this.markery1,
                     "x1": this.xScale(this.targetData.min),
                     "y2": this.markery2,
                     "x2": this.xScale(this.targetData.min),
@@ -124,7 +124,7 @@ export default {
         },
 
         minText() {
-            if(this.$store.showTarget){
+            if (this.$store.showTarget) {
                 let min_target_val = this.targetData.min
                 this.g.append("text")
                     .attrs({
@@ -134,7 +134,7 @@ export default {
                         "fill": d3.rgb(this.$store.color.target).darker(1)
                     })
                     .style('stroke-width', '1')
-                    .text("Min: " + utils.formatRuntimeWithoutUnits(min_target_val))    
+                    .text("Min: " + utils.formatRuntimeWithoutUnits(min_target_val))
             }
 
             let min_ensemble_val = this.data.min
@@ -150,7 +150,7 @@ export default {
         },
 
         maxText() {
-            if(this.$store.showTarget){
+            if (this.$store.showTarget) {
                 let max_target_val = this.targetData.max
                 this.g.append("text")
                     .attrs({
@@ -160,7 +160,7 @@ export default {
                         "fill": d3.rgb(this.$store.color.target).darker(1)
                     })
                     .style('stroke-width', '1')
-                    .text("Max:" + utils.formatRuntimeWithoutUnits(max_target_val))    
+                    .text("Max:" + utils.formatRuntimeWithoutUnits(max_target_val))
             }
 
             let max_ensemble_val = this.data.max
@@ -173,10 +173,10 @@ export default {
                 })
                 .style('stroke-width', '1')
                 .text("Max:" + utils.formatRuntimeWithoutUnits(max_ensemble_val))
-            },
+        },
 
         medianText() {
-            if(this.$store.showTarget){
+            if (this.$store.showTarget) {
                 let median_target_val = this.targetData.q2
                 this.g.append("text")
                     .attrs({
@@ -186,7 +186,7 @@ export default {
                         "fill": d3.rgb(this.$store.color.target).darker(1)
                     })
                     .style('stroke-width', '1')
-                    .text("Med.:" + utils.formatRuntimeWithoutUnits(median_target_val))    
+                    .text("Med.:" + utils.formatRuntimeWithoutUnits(median_target_val))
             }
 
             let median_ensemble_val = this.data.q2
@@ -240,10 +240,10 @@ export default {
             return ret
         },
 
-        clear(){
+        clear() {
             this.g.selectAll('.whiskerText').remove()
             this.g.selectAll('.whisker').remove()
-            this.g.selectAll('.median').remove()    
+            this.g.selectAll('.median').remove()
         }
     }
 }

@@ -3,10 +3,13 @@
     <v-spacer></v-spacer>
     <!-- <Settings ref="Settings" :settings="settings" /> -->
     <span class="component-info">
-        <p>{{numberOfCallsites}} Callsites. </p>
+        <p> </p>
     </span>
 
-    <div v-for="callsite in callsites" class="auxiliary-node" :id="callsite.id"
+    <span class="component-data">
+        <p>Target uKNC ({{numberOfDifferenceCallsites}} call sites). </p>
+    </span>
+    <div v-for="callsite in differenceCallsites" class="auxiliary-node" :id="callsite.id"
         :style="{ width: boxplotWidth + 'px', height: boxplotHeight + 'px' }">
         <v-btn :id="callsite.name" class="ma-2 reveal-button" tile outlined color="white" @click="clickCallsite">
             Show
@@ -18,5 +21,22 @@
         <div>Skewness: {{callsite['skewness_inclusive']}}</div>
         <div>Kurtosis: {{callsite['kurtosis_inclusive']}}</div> -->
         <BoxPlot :ref="callsite.id" :callsite="callsite" />
+    </div>
+
+    <span class="component-data">
+        <p>Target KNC ({{numberOfIntersectionCallsites}} call sites).</p>
+    </span>
+    <div v-for="callsite in intersectionCallsites" class="auxiliary-node" :id="callsite.id"
+        :style="{ width: boxplotWidth + 'px', height: boxplotHeight + 'px' }">
+        <v-btn :id="callsite.name" class="ma-2 reveal-button" tile outlined color="white" @click="clickCallsite">
+            Show
+        </v-btn>
+        <h4>{{formatModule(callsite.module)}}={{formatName(callsite.name)}}</h4>
+        <div :style="'color: ' + targetColor">Mean : {{means[callsite.name]}}</div>
+        <div :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}</div>
+        <!-- <div>Percentage imbalance : {{callsite['imbalance_perc_inclusive']}}</div>
+        <div>Skewness: {{callsite['skewness_inclusive']}}</div>
+        <div>Kurtosis: {{callsite['kurtosis_inclusive']}}</div> -->
+        <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget=false />
     </div>
 </v-layout>

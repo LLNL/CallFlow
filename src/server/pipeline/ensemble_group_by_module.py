@@ -3,10 +3,12 @@ import time
 import networkx as nx
 from ast import literal_eval as make_list
 
+
 class Callsite:
     def __init__(self, name, module):
         self.name = name
         self.module = module
+
 
 class ensembleGroupBy:
     def __init__(self, state_entire, state_filter, group_by):
@@ -24,22 +26,24 @@ class ensembleGroupBy:
         self.module_id_map = {}
 
         self.drop_eliminate_funcs()
-        self.name_module_map = self.entire_df.set_index('name')['module'].to_dict()
-        self.entire_df['path'] = self.entire_df['path'].apply(lambda path: make_list(path))
-        self.name_path_map = self.entire_df.set_index('name')['path'].to_dict()
+        self.name_module_map = self.entire_df.set_index("name")["module"].to_dict()
+        self.entire_df["path"] = self.entire_df["path"].apply(
+            lambda path: make_list(path)
+        )
+        self.name_path_map = self.entire_df.set_index("name")["path"].to_dict()
 
     # Drop all entries user does not want to see.
     def drop_eliminate_funcs(self):
         for idx, func in enumerate(self.eliminate_funcs):
-            self.state.df = self.state.df[self.state.df['module'] != func]
+            self.state.df = self.state.df[self.state.df["module"] != func]
 
     def create_group_path_time(self, path):
-        if(isinstance(path, str)):
+        if isinstance(path, str):
             path = make_list(path)
         group_path = []
         prev_module = None
         for idx, callsite in enumerate(path):
-            if(idx == 0):
+            if idx == 0:
                 # Assign the first callsite as from_callsite and not push into an array.
                 from_callsite = callsite
                 # from_module = self.entire_df.loc[self.entire_df['name'] == from_callsite]['module'].unique()[0]
@@ -58,18 +62,18 @@ class ensembleGroupBy:
                 self.entry_funcs[from_module].append(from_callsite)
 
                 # Append to the group path.
-                group_path.append(from_module + '=' + from_callsite)
+                group_path.append(from_module + "=" + from_callsite)
 
-            elif(idx == len(path) - 1):
+            elif idx == len(path) - 1:
                 # Final callsite in the path.
                 to_callsite = callsite
-                if('/' in to_callsite):
-                    to_callsite = to_callsite.split('/')[-1]
+                if "/" in to_callsite:
+                    to_callsite = to_callsite.split("/")[-1]
                 # to_module = self.entire_df.loc[self.entire_df['name'] == to_callsite]['module'].unique()[0]
                 to_module = self.name_module_map[to_callsite]
 
                 if prev_module != to_module:
-                    group_path.append(to_module + '=' + to_callsite)
+                    group_path.append(to_module + "=" + to_callsite)
 
                 if to_module not in self.entry_funcs:
                     self.entry_funcs[to_module] = []
@@ -105,7 +109,7 @@ class ensembleGroupBy:
                     if to_module in group_path:
                         prev_module = to_module
                     else:
-                        group_path.append(to_module + '=' + to_callsite)
+                        group_path.append(to_module + "=" + to_callsite)
                         prev_module = to_module
                         if to_callsite not in self.entry_funcs[to_module]:
                             self.entry_funcs[to_module].append(to_callsite)
@@ -124,12 +128,12 @@ class ensembleGroupBy:
 
     def create_component_path(self, path, group_path):
         component_path = []
-        component_module = group_path[len(group_path) - 1].split('=')[0]
+        component_module = group_path[len(group_path) - 1].split("=")[0]
 
         for idx, node in enumerate(path):
             node_func = node
-            if ('/' in node):
-                node = node.split('/')[-1]
+            if "/" in node:
+                node = node.split("/")[-1]
             module = self.name_module_map[node]
             if component_module == module:
                 component_path.append(node_func)
@@ -139,13 +143,15 @@ class ensembleGroupBy:
 
     def find_all_paths(self, df):
         ret = []
-        unique_paths = df['path'].unique()
+        unique_paths = df["path"].unique()
         for idx, path in enumerate(unique_paths):
-            ret.append(df.loc[df['path'] == path])
-        return (ret)
+            ret.append(df.loc[df["path"] == path])
+        return ret
 
     def update_df(self, col_name, mapping):
-        self.filter_df[col_name] = self.filter_df['name'].apply(lambda node: mapping[node] if node in mapping.keys() else '')
+        self.filter_df[col_name] = self.filter_df["name"].apply(
+            lambda node: mapping[node] if node in mapping.keys() else ""
+        )
 
     def run(self):
         group_path = {}
@@ -162,18 +168,18 @@ class ensembleGroupBy:
         module_id_map = {}
         module_count = 0
 
-        print(f"Nodes: {len(self.filter_g.nodes())}, Edges: {len(self.filter_g.edges())}")
+        print(
+            f"Nodes: {len(self.filter_g.nodes())}, Edges: {len(self.filter_g.edges())}"
+        )
 
         for idx, edge in enumerate(self.filter_g.edges()):
             snode = edge[0]
             tnode = edge[1]
 
-            print(snode, tnode)
-
-            if ('/' in snode):
-                snode = snode.split('/')[-1]
-            if ('/' in tnode):
-                tnode = tnode.split('/')[-1]
+            if "/" in snode:
+                snode = snode.split("/")[-1]
+            if "/" in tnode:
+                tnode = tnode.split("/")[-1]
 
             spath = self.name_path_map[snode]
             tpath = self.name_path_map[tnode]
@@ -182,13 +188,13 @@ class ensembleGroupBy:
             temp_group_path_results = self.create_group_path_time(spath)
             group_path[snode] = temp_group_path_results
             stage2 = time.perf_counter()
-            print(f"Group path: {stage2 - stage1}")
+            # print(f"Group path: {stage2 - stage1}")
 
             stage3 = time.perf_counter()
             component_path[snode] = self.create_component_path(spath, group_path[snode])
             component_level[snode] = len(component_path[snode])
             stage4 = time.perf_counter()
-            print(f"Component path: {stage3 - stage2}")
+            # print(f"Component path: {stage3 - stage2}")
 
             temp_group_path_results = self.create_group_path_time(tpath)
             group_path[tnode] = temp_group_path_results
@@ -210,7 +216,7 @@ class ensembleGroupBy:
                 entry_func[snode] = False
                 show_node[snode] = False
 
-            node_name[snode] = self.name_module_map[snode]  + '=' + snode
+            node_name[snode] = self.name_module_map[snode] + "=" + snode
 
             # if module[tnode] not in module_id_map:
             #     module_count += 1
@@ -226,7 +232,7 @@ class ensembleGroupBy:
                 entry_func[tnode] = False
                 show_node[tnode] = False
 
-            node_name[tnode] = self.name_module_map[snode]  + '=' + tnode
+            node_name[tnode] = self.name_module_map[snode] + "=" + tnode
 
             # print('Node: ', snode)
             # print("entry function:", entry_func[snode])
@@ -249,15 +255,13 @@ class ensembleGroupBy:
             # print('Module: ', module[tnode])
             # print('#################################')
 
-        self.update_df('group_path', group_path)
-        self.update_df('component_path', component_path)
-        self.update_df('show_node', entry_func)
-        self.update_df('vis_name', node_name)
-        self.update_df('component_level', component_level)
-        self.update_df('mod_index', module_idx)
-        self.update_df('entry_function', entry_func)
+        self.update_df("group_path", group_path)
+        self.update_df("component_path", component_path)
+        self.update_df("show_node", entry_func)
+        self.update_df("vis_name", node_name)
+        self.update_df("component_level", component_level)
+        self.update_df("mod_index", module_idx)
+        self.update_df("entry_function", entry_func)
 
-        return {
-                'df': self.filter_df,
-                'g': self.filter_g
-        }
+        return {"df": self.filter_df, "g": self.filter_g}
+

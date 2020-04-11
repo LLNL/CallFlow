@@ -107,7 +107,7 @@ class Pipeline:
         u_df = pd.DataFrame()
         for idx, dataset in enumerate(states):
             u_graph.unionize(states[dataset].g, dataset)
-            u_df = pd.concat([u_df, states[dataset].df], sort=False)
+            u_df = pd.concat([u_df, states[dataset].df], sort=True)
 
         state = State("union")
         state.df = u_df

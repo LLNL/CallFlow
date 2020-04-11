@@ -76,7 +76,6 @@ export default {
             this.graph = graph
             this.node = node
 
-
             this.times()
             this.paths()
         },
@@ -196,18 +195,6 @@ export default {
                         'class': 'toolTipContent',
                     })
                     .text(this.trunc(toFunc, 10))
-
-                let callsite = entry_functions[tIndex]
-
-                // let timeInfo = ( this.$store.callsites['ensemble'][callsite]['max_time'] / this.$store.maxIncTime['ensemble'] * 100).toFixed(3) + '%'
-
-                // this.toolTipG.append('text')
-                //     .attrs({
-                //         'x': xOffset + 270 + 'px',
-                //         'y': (yOffset) + "px",
-                //         'class': 'toolTipContent',
-                //     })
-                //     .text(timeInfo)
             }
 
             let left_callsites = entry_function_data.length - 3
