@@ -334,6 +334,9 @@ export default {
                             .style('opacity', 1.0)
                     }
                 })
+                .on('contextmenu', (d) => {
+                    return d3.contextMenu(self.$store.contextMenu)(d);
+                });
 
             // Transition
             this.nodes.selectAll('rect')

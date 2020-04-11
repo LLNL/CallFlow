@@ -191,6 +191,7 @@ export default {
 
 		//Sankey computation
 		initSankey() {
+			console.log("Initiating sankey again:", this.$store.selectedTargetDataset)
 			this.sankey = Sankey()
 				.nodeWidth(this.nodeWidth)
 				.nodePadding(this.ySpacing)

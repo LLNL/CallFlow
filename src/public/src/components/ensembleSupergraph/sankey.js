@@ -246,15 +246,6 @@ export default function Sankey() {
         });
     }
 
-    function moveSinksRight(x) {
-        nodes.forEach(function (node) {
-            if (!node.sourceLinks.length) {
-                node.level = d3.min(node.sourceLinks, function (d) { return d.target.x; });
-                node.level = node.level + 1;
-            }
-        });
-    }
-
     function scaleNodeBreadths(kx) {
         nodes.forEach(function (node) {
             let x = widthScale(node.level)
@@ -414,12 +405,9 @@ export default function Sankey() {
                 node.parY = node.y;
 
                 console.log("Value: ", node.value, minNodeScale, scale)
-
-
                 node.height = node.value * minNodeScale * scale;
 
                 console.log("Height ", node.height)
-                // node.targetHeight = node.value * minNodeScale * targetScale
             });
             levelCount += 1
         });
@@ -460,9 +448,14 @@ export default function Sankey() {
             }
             console.log(source, link.source, link.target, link.type)
 
-            let ensemble_mean = store.modules['ensemble'][source]["Inclusive"]["max_time"]
-            let target_mean = store.modules[store.selectedTargetDataset][source]['Inclusive']["mean_time"]
-            console.log(ensemble_mean, target_mean)
+            console.log(store.selectedTargetDataset)
+            let ensemble_mean = store.modules['ensemble'][source]["Inclusive"]["mean_time"]
+
+            let target_mean = 0
+            if (store.modules[store.selectedTargetDataset][source] != undefined) {
+                target_mean = store.modules[store.selectedTargetDataset][source]['Inclusive']["mean_time"]
+            }
+            console.log(ensemble_mean, target_mean, target_mean / ensemble_mean)
             link.targetHeight = weight * scale * (target_mean / ensemble_mean)
         });
     }

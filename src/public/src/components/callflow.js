@@ -31,6 +31,8 @@ import EnsembleScatterplot from './ensembleScatterplot/ensembleScatterplot'
 import ParameterProjection from './parameterProjection/parameterProjection'
 // import SimilarityMatrix from './similarityMatrix/similarityMatrix'
 
+import contextMenu from './contextmenu'
+
 import io from 'socket.io-client'
 import * as utils from './utils'
 
@@ -118,7 +120,7 @@ export default {
 		initLoad: true,
 		comparisonMode: false,
 		selectedCompareDataset: null,
-		compareModes: ['meanDiff', 'rankDiff'],
+		compareModes: ['Mean Differences', 'Rank-wise Differences'],
 		selectedCompareMode: 'meanDiff',
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
@@ -168,6 +170,21 @@ export default {
 		showTarget: true,
 		targetInfo: 'Show Target info.',
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time)
+		firstRender: true,
+		contextMenu: [
+			{
+				title: 'Split by caller',
+				action(elm, d, i) {
+
+				},
+			},
+			{
+				title: 'Split by callee',
+				action(elm, d, i) {
+				},
+			},
+
+		]
 	}),
 
 	mounted() {
@@ -344,6 +361,9 @@ export default {
 			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
 				this.$store.datasetMap[this.$store.selectedDatasets[i]] = 'run-' + i
 			}
+
+			this.$store.contextMenu = contextMenu
+
 		},
 
 		setTargetDataset() {
@@ -368,10 +388,13 @@ export default {
 				}
 			}
 
-			this.$store.selectedTargetDataset = max_dataset
-			this.selectedTargetDataset = max_dataset
+			if (this.firstRender) {
+				this.$store.selectedTargetDataset = max_dataset
+				this.selectedTargetDataset = max_dataset
+				this.firstRender = false
 
-			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
+				console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
+			}
 		},
 
 		setComponentMap() {
@@ -392,7 +415,7 @@ export default {
 				this.$refs.EnsembleScatterplot,
 				this.$refs.AuxiliaryFunction,
 				this.$refs.ParameterProjection,
-				this.$refs.ModuleHierarchy,
+				// this.$refs.ModuleHierarchy,
 			]
 		},
 
@@ -451,6 +474,7 @@ export default {
 			this.$store.showTarget = this.showTarget
 
 			this.targetColors = Object.keys(this.targetColorMap)
+
 		},
 
 		clear() {
