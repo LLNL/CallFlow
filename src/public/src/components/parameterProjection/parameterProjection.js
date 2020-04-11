@@ -55,7 +55,7 @@ export default {
             let visContainer = document.getElementById(this.id)
 
             this.width = visContainer.clientWidth
-            this.tooltipHeight = 100
+            this.tooltipHeight = 110
 
             this.height = this.$store.viewHeight * 0.33 - this.tooltipHeight
 

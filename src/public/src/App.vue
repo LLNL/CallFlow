@@ -257,4 +257,8 @@ body {
 #parameter-projection-view {
   background: #f7f7f7 !important;
 }
+
+.md-theme-default a:not(.md-button) {
+  color: #009687 !important;
+}
 </style>

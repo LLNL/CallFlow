@@ -30,19 +30,31 @@ export default {
                 return link.type != "callback"
             })
 
-            this.initEdges('ensemble')
-            this.initEdges('target')
-
             this.$store.selectedEdgeAlignment = 'Top'
 
+
+            this.initEdges('ensemble')
             if (this.$store.selectedEdgeAlignment == 'Middle') {
                 this.drawMiddleEdges('ensemble')
-                // this.drawMiddleEdges(this.$store.selectedTargetDataset)
             }
             else if (this.$store.selectedEdgeAlignment == 'Top') {
                 this.drawTopEdges('ensemble')
                 this.drawTopEdges('target')
             }
+
+            if (this.$store.showTarget) {
+                this.initEdges('target')
+
+                if (this.$store.selectedEdgeAlignment == 'Middle') {
+                    this.drawMiddleEdges('target')
+                }
+                else {
+                    this.drawTopEdges('target')
+
+                }
+            }
+
+
             this.$refs.ToolTip.init(this.$parent.id)
         },
 
@@ -128,7 +140,6 @@ export default {
         },
 
         drawTopEdges(dataset) {
-            console.log(dataset)
             let self = this
             this.edges.selectAll('#ensemble-edge-' + dataset)
                 .data(this.links)

@@ -57,7 +57,6 @@ export default class Color {
     setColorScale(min, max, colorType, colorPoint) {
         this.colorMin = min
         this.colorMax = max
-        console.log("Setting color: ", colorType, colorPoint)
         if (colorType == 'Default') {
             this.colorMap = ['white', '#023858']
         }
@@ -73,7 +72,6 @@ export default class Color {
                 .gamma(0.5)
                 .domain([min, max])
         } else if (this.option == 'Exclusive') {
-            console.log(this.colorMap)
             this.excColorScale = chroma.scale(this.colorMap)
                 .padding([0.0, 0.0])
                 .gamma(2)
@@ -92,7 +90,6 @@ export default class Color {
                 // .padding(this.colorPadding)
                 .domain([0, 1]);
         } else if (this.option == 'MeanDiff') {
-            console.log(min, max)
             this.meanDiffColorScale = chroma.scale('RdYlGn')
                 .padding([0.0, 0.0])
                 .gamma(0.5)

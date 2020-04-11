@@ -121,11 +121,9 @@ export default {
 		},
 
 		setupSVG() {
-			this.toolbarHeight = document.getElementById('toolbar').clientHeight
-			this.footerHeight = document.getElementById('footer').clientHeight
 
 			this.width = document.getElementById(this.id).clientWidth
-			this.height = (window.innerHeight - this.toolbarHeight - this.footerHeight) * 0.3
+			this.height = this.$store.viewHeight * 0.3
 			this.icicleWidth = this.width - this.margin.right - this.margin.left
 			this.icicleHeight = this.height - this.margin.top - this.margin.bottom
 

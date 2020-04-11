@@ -101,9 +101,9 @@
 					</v-text-field>
 				</v-flex>
 
-				<!-- --------------------------- Encoding ----------------------------------->
+				<!-- --------------------------- Visual Encoding ----------------------------------->
 				<v-flex xs12 class="ma-1">
-					<v-subheader class="teal lighten-4">Encoding</v-subheader>
+					<v-subheader class="teal lighten-4">Visual Encoding</v-subheader>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
 					<v-subheader>
@@ -118,6 +118,52 @@
 					<v-select label="Metric" :items="metrics" v-model="selectedMetric"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateMetric()">
 					</v-select>
+				</v-flex>
+
+				<v-flex xs12 class="ma-1">
+					<v-select label="Difference mode" :items="compareModes" v-model="selectedCompareMode"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateCompareMode()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-text-field label="Number of bins for Run Distribution" class="mt-0" type="number"
+						v-model="selectedRunBinCount" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateRunBinCount()">
+					</v-text-field>
+				</v-flex>
+
+				<!-- --------------------------- Hierarchy ----------------------------------->
+				<!-- <v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">SuperNode Hierarchy</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-select label="Assign width by" :items="hierarchyModes" v-model="selectedHierarchyMode"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateHierarchyMode()">
+					</v-select>
+				</v-flex> -->
+				<!-- <v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">Distribution</v-subheader>
+				</v-flex> -->
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-text-field label="Number of bins for MPI Distribution" class="mt-0" type="number"
+						v-model="selectedMPIBinCount" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateMPIBinCount()">
+					</v-text-field>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-select label="Scale" :items="scales" v-model="selectedScale" :menu-props="{ maxHeight: '200' }"
+						persistent-hint v-on:change="updateScale()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-select label="Bin by attribute" :items="props" v-model="selectedProp"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateProp()">
+					</v-select>
+				</v-flex>
+
+				<!-- --------------------------- Encoding ----------------------------------->
+				<v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">Colors</v-subheader>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
 					<v-select label="Runtime Color Map" :items="runtimeColorMap" v-model="selectedRuntimeColorMap"
@@ -153,52 +199,9 @@
 					</v-text-field>
 				</v-flex>
 
-				<!-- --------------------------- Comparison ----------------------------------->
+				<!----------------------------- Callsite information ----------------------------------->
 				<v-flex xs12 class="ma-1">
-					<v-subheader class="teal lighten-4">Comparison</v-subheader>
-				</v-flex>
-				<v-flex xs12 class="ma-1">
-					<v-select label="Select Comparison mode" :items="compareModes" v-model="selectedCompareMode"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateCompareMode()">
-					</v-select>
-				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
-					<v-text-field label="Number of bins for Run Distribution" class="mt-0" type="number"
-						v-model="selectedRunBinCount" :menu-props="{ maxHeight: '200' }" persistent-hint
-						v-on:change="updateRunBinCount()">
-					</v-text-field>
-				</v-flex>
-
-				<!-- --------------------------- Hierarchy ----------------------------------->
-				<v-flex xs12 class="ma-1">
-					<v-subheader class="teal lighten-4">SuperNode Hierarchy</v-subheader>
-				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
-					<v-select label="Assign width by" :items="hierarchyModes" v-model="selectedHierarchyMode"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateHierarchyMode()">
-					</v-select>
-				</v-flex>
-				<v-flex xs12 class="ma-1">
-					<v-subheader class="teal lighten-4">Distribution</v-subheader>
-				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
-					<v-text-field label="Number of bins for MPI Distribution" class="mt-0" type="number"
-						v-model="selectedMPIBinCount" :menu-props="{ maxHeight: '200' }" persistent-hint
-						v-on:change="updateMPIBinCount()">
-					</v-text-field>
-				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
-					<v-select label="Scale" :items="scales" v-model="selectedScale" :menu-props="{ maxHeight: '200' }"
-						persistent-hint v-on:change="updateScale()">
-					</v-select>
-				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
-					<v-select label="Bin by attribute" :items="props" v-model="selectedProp"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateProp()">
-					</v-select>
-				</v-flex>
-				<v-flex xs12 class="ma-1">
-					<v-subheader class="teal lighten-4">Callsite Information</v-subheader>
+					<v-subheader class="teal lighten-4">Call site Correspondence</v-subheader>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
 					<v-select label="Sort by" :items="sortByModes" v-model="selectedRuntimeSortBy"
@@ -211,7 +214,7 @@
 					</v-text-field>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
-					<v-subheader class="teal lighten-4">Projection parameters</v-subheader>
+					<v-subheader class="teal lighten-4">Projection view</v-subheader>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
 					<v-text-field label="Number of clusters" class="mt-0" type="float" v-model="selectedNumOfClusters"
@@ -359,10 +362,10 @@
 		</v-layout>
 	</v-content>
 
-	<v-footer id="footer" color="teal" class="white-text" app>
+	<!-- <v-footer id="footer" color="teal" class="white-text" app>
 		Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis
 		<v-spacer></v-spacer>
 		<span>&copy; 2017 - 2020</span>
-	</v-footer>
+	</v-footer> -->
 
 </v-app>
