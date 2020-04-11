@@ -58,13 +58,13 @@ export default {
                 }
             }
 
-            if (this.$store.selectedCompareMode == 'rankDiff') {
+            if (this.$store.selectedCompareMode == 'Rank Differences') {
                 this.$store.rankDiffColor.setColorScale(this.rank_min, this.rank_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.EnsembleColorMap.update('rankDiff', data)
                 this.setupDiffRuntimeGradients(data)
                 this.rankDiffRectangle()
             }
-            else if (this.$store.selectedCompareMode == 'meanDiff') {
+            else if (this.$store.selectedCompareMode == 'Mean Differences') {
                 this.$store.meanDiffColor.setColorScale(this.mean_diff_min, this.mean_diff_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.EnsembleColorMap.updateWithMinMax('meanDiff', this.mean_diff_min, this.mean_diff_max)
                 this.meanDiffRectangle(data)

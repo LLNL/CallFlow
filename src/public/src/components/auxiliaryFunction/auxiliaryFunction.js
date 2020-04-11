@@ -16,7 +16,7 @@ export default {
         selected: {},
         id: 'auxiliary-function-overview',
         people: [],
-        message: "Callsite Information",
+        message: "Call site Correspondence",
         callsites: [],
         dataReady: false,
         numberOfCallsites: 0,

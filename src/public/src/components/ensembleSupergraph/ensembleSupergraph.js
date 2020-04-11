@@ -37,7 +37,7 @@ export default {
 		treeHeight: null,
 		data: null,
 		message: "Summary Graph View",
-		debug: true
+		debug: false
 	}),
 
 	mounted() {
@@ -68,12 +68,10 @@ export default {
 
 	methods: {
 		init() {
-			this.toolbarHeight = document.getElementById('toolbar').clientHeight
-			this.footerHeight = document.getElementById('footer').clientHeight
 			this.auxiliaryViewWidth = document.getElementById('auxiliary-function-overview').clientWidth
 
 			this.width = 0.5 * this.$store.viewWidth
-			this.height = window.innerHeight - this.margin.top - this.margin.bottom - this.toolbarHeight - this.footerHeight
+			this.height = this.$store.viewHeight - this.margin.top - this.margin.bottom
 
 			this.sankeySVG = d3.select('#' + this.id)
 				.attrs({

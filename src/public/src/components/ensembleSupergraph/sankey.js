@@ -160,7 +160,7 @@ export default function Sankey() {
         nodes.forEach(function (node) {
             nodeMap[node.id] = node;
             if (debug) {
-                console.log("[Sankey] Assigning", node.id, "with map index: ", idx)
+                console.log("[Assign Link ids] ", node.id, "with index: ", idx)
             }
             idx += 1
         })
@@ -230,7 +230,7 @@ export default function Sankey() {
                 node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
             }
 
-            console.log("Adjusted flow for", node.id, ": ", node.value)
+            console.log("[Compute node values] Adjusted flow", node.id, ": ", node.value)
         });
     }
 
@@ -272,7 +272,10 @@ export default function Sankey() {
             })
             remainingNodes = nextNodes;
             level += 1
+
         }
+
+        console.log("[Compute node breadths] Number of levels: ", level)
 
         minDistanceBetweenNode = nodeWidth * 2
         widthScale = scalePow().domain([0, level + 1]).range([minDistanceBetweenNode, size[0]])
@@ -404,10 +407,12 @@ export default function Sankey() {
                 node.y = Math.max(nodeHeight, i)
                 node.parY = node.y;
 
-                console.log("Value: ", node.value, minNodeScale, scale)
+                console.log("[Compute node depths] Node: ", node.id)
+                console.log("[Compute node depths] value: ", node.value)
+                console.log("[Compute node depths] minNodeScale: ", minNodeScale)
+                console.log("[Compute node depths] Ensemble scaling: ", scale)
                 node.height = node.value * minNodeScale * scale;
-
-                console.log("Height ", node.height)
+                console.log("[Compute node depths] Node height: ", node.height)
             });
             levelCount += 1
         });
@@ -429,11 +434,6 @@ export default function Sankey() {
                 weight = link.weight * (link.source_data.actual_time['Inclusive'] / link.source_data.max_flow)
             }
 
-            // let targetWeight = link.source_data[targetDataset]['time (inc)']
-            // if (link.source.value < weight) {
-            //     weight = link.source_data.minLinkVal
-            // }
-
             link.height = weight * scale
 
             let source = ''
@@ -446,9 +446,9 @@ export default function Sankey() {
             else {
                 source = link.source
             }
+
             console.log(source, link.source, link.target, link.type)
 
-            console.log(store.selectedTargetDataset)
             let ensemble_mean = store.modules['ensemble'][source]["Inclusive"]["mean_time"]
 
             let target_mean = 0

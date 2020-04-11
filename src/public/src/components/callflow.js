@@ -76,7 +76,7 @@ export default {
 			}
 		},
 		left: false,
-		formats: ['CCT', 'CallGraph', 'SuperGraph'],
+		formats: ['CCT', 'SuperGraph'],
 		selectedFormat: 'SuperGraph',
 		datasets: [],
 		selectedTargetDataset: '',
@@ -121,7 +121,7 @@ export default {
 		comparisonMode: false,
 		selectedCompareDataset: null,
 		compareModes: ['Mean Differences', 'Rank-wise Differences'],
-		selectedCompareMode: 'meanDiff',
+		selectedCompareMode: 'Mean Differences',
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
 		modes: ['Ensemble', 'Single'],
@@ -168,7 +168,7 @@ export default {
 		selectedTargetColor: '',
 		selectedTargetColorText: 'Green',
 		showTarget: true,
-		targetInfo: 'Show Target info.',
+		targetInfo: 'Target Guides',
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time)
 		firstRender: true,
 		contextMenu: [
@@ -306,6 +306,27 @@ export default {
 			return ret;
 		},
 
+		setViewDimensions() {
+			this.$store.viewWidth = window.innerWidth
+
+			let toolbarHeight = 0
+			let footerHeight = 0
+			// Set toolbar height as 0 if undefined
+			if (document.getElementById('toolbar') == null) {
+				toolbarHeight = 0
+			}
+			else {
+				toolbarHeight = document.getElementById('toolbar').clientHeight
+			}
+			if (document.getElementById('footer') == null) {
+				footerHeight = 0
+			}
+			else {
+				footerHeight = document.getElementById('footer').clientHeight
+			}
+			this.$store.viewHeight = window.innerHeight - toolbarHeight - footerHeight
+		},
+
 		setupStore(data) {
 			data = JSON.parse(data)
 			console.log("Config file contains: 	", data)
@@ -338,8 +359,7 @@ export default {
 
 			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3)
 
-			this.$store.viewWidth = window.innerWidth
-			this.$store.viewHeight = (window.innerHeight - document.getElementById('toolbar').clientHeight - document.getElementById('footer').clientHeight)
+			this.setViewDimensions()
 
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
 		},
@@ -362,7 +382,7 @@ export default {
 				this.$store.datasetMap[this.$store.selectedDatasets[i]] = 'run-' + i
 			}
 
-			this.$store.contextMenu = contextMenu
+			this.$store.contextMenu = this.contextMenu
 
 		},
 
@@ -415,7 +435,7 @@ export default {
 				this.$refs.EnsembleScatterplot,
 				this.$refs.AuxiliaryFunction,
 				this.$refs.ParameterProjection,
-				// this.$refs.ModuleHierarchy,
+				this.$refs.ModuleHierarchy,
 			]
 		},
 

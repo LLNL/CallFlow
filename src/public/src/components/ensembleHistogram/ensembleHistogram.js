@@ -48,7 +48,7 @@ export default {
         freq: [],
         selectedColorBy: 'Inclusive',
         MPIcount: 0,
-        message: 'MPI Distribution',
+        message: 'Runtime Distribution',
         paddingFactor: 3.5,
         thisNode: '',
         selectedPropLabel: '',
@@ -73,9 +73,6 @@ export default {
 
     methods: {
         init() {
-            this.toolbarHeight = document.getElementById('toolbar').clientHeight
-            this.footerHeight = document.getElementById('footer').clientHeight
-
             // Assign the height and width of container
             this.width = window.innerWidth * 0.25
             this.height = this.$store.viewHeight * 0.33
@@ -165,7 +162,7 @@ export default {
             this.binContainsProcID = temp[3];
             this.logScaleBool = false;
             let isTargetThere = true
-            
+
             // If the module is not present in the target run. 
             if (target_store == undefined) {
                 isTargetThere = false

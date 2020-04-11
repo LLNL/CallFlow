@@ -29,7 +29,7 @@ export default {
 		padding: {
 			top: 10,
 			right: 10,
-			bottom: 10,
+			bottom: 15,
 			left: 15
 		},
 		xData: null,
@@ -64,8 +64,6 @@ export default {
 
 	methods: {
 		init() {
-			this.toolbarHeight = document.getElementById('toolbar').clientHeight
-			this.footerHeight = document.getElementById('footer').clientHeight
 			this.width = window.innerWidth * 0.25
 			this.height = (this.$store.viewHeight) * 0.33
 
@@ -137,7 +135,6 @@ export default {
 		ensembleProcess() {
 			let mean_time = []
 			let mean_time_inc = []
-			console.log(this.$store.selectedDatasets)
 			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
 				// if (this.$store.selectedDatasets[i] != this.$store.selectedTargetDataset || this.includesTarget) {
 				let callsites_in_module = this.$store.moduleCallsiteMap['ensemble'][this.selectedModule]
@@ -347,7 +344,6 @@ export default {
 		addxAxisLabel() {
 			let max_value = this.xScale.domain()[1]
 			this.x_max_exponent = utils.formatExponent(max_value)
-			console.log(this.x_max_exponent)
 			let exponent_string = this.superscript[this.x_max_exponent]
 			let label = '(e+' + this.x_max_exponent + ') ' + "Exclusive Runtime (" + "\u03BCs)"
 			this.svg.append('text')
@@ -366,7 +362,6 @@ export default {
 				.tickFormat((d, i) => {
 					if (i % 3 == 0) {
 						let runtime = utils.formatRuntimeWithExponent(d, this.x_max_exponent)
-						console.log(runtime)
 						return `${runtime[0]}`;
 					}
 				});
