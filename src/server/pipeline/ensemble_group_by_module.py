@@ -264,4 +264,3 @@ class ensembleGroupBy:
         self.update_df("entry_function", entry_func)
 
         return {"df": self.filter_df, "g": self.filter_g}
-

@@ -4,6 +4,7 @@ import Settings from '../settings/settings'
 import BoxPlot from './boxplot'
 import * as d3 from 'd3'
 import * as utils from '../utils'
+import { TableSimplePlugin } from 'bootstrap-vue'
 
 export default {
     name: 'AuxiliaryFunction',
@@ -19,11 +20,12 @@ export default {
         message: "Call site Correspondence",
         callsites: [],
         dataReady: false,
-        numberOfCallsites: 0,
+        numberOfIntersectionCallsites: 0,
+        numberOfDifferenceCallsites: 0,
         firstRender: true,
         padding: { top: 0, right: 10, bottom: 0, left: 10 },
         textOffset: 25,
-        boxplotHeight: 300,
+        boxplotHeight: 250,
         boxplotWidth: 0,
         duration: 300,
         iqrFactor: 0.15,
@@ -42,9 +44,13 @@ export default {
         selectedMetric: '',
         means: {},
         variance: {},
+        ensembleMeans: {},
+        ensembleVariance: {},
         targetColor: '',
         differenceCallsites: {},
-        intersectionCallsites: {}
+        intersectionCallsites: {},
+        isModuleSelected: false,
+        selectClassName: {}
     }),
     mounted() {
         let self = this
@@ -65,6 +71,7 @@ export default {
         EventHandler.$on('select_module', (data) => {
             let thismodule = data['module']
             // self.selectCallsitesByModule(thismodule)
+            this.isModuleSelected = true
             self.selectModule(thismodule)
         })
 
@@ -86,6 +93,38 @@ export default {
     },
 
     methods: {
+        changeSelectedClassName() {
+            event.stopPropagation()
+            let callsite = event.currentTarget.id
+            // If it was already selected
+            if (this.selectClassName[callsite] == 'select-callsite') {
+                this.revealCallsites.splice(this.revealCallsites.indexOf(callsite), 1)
+                event.target.className = 'flex text-xs-center unselect-callsite'
+                this.selectClassName[callsite] = 'unselect-callsite';
+            }
+            else {
+                this.selectClassName[callsite] = 'select-callsite';
+                event.target.className = 'flex text-xs-center select-callsite'
+                this.revealCallsites.push(callsite)
+            }
+
+            if (this.revealCallsites.length == 0) {
+                this.switchIsSelectedModule(false)
+            }
+            else {
+                this.switchIsSelectedModule(true)
+            }
+            console.log("Selected callsites: ", this.revealCallsites)
+        },
+
+        switchIsSelectedModule(val) {
+            this.isModuleSelected = val
+        },
+
+        selectedClassName(callsite) {
+            return this.selectClassName[callsite]
+        },
+
         formatModule(module) {
             if (module.length < 10) {
                 return module
@@ -94,11 +133,16 @@ export default {
         },
 
         formatName(name) {
-            if (name.length < 40) {
+            if (name.length < 15) {
                 return name
             }
-            let ret = this.trunc(name, 40)
+            let ret = this.trunc(name, 15)
             return ret
+        },
+
+        formatNumberOfHops(name) {
+            // console.log(typeof (name), name)
+            return name[0] - 1//.replace('[', '').replace(']', '')
         },
 
         formatRuntime(val) {
@@ -135,7 +179,6 @@ export default {
             this.targetCallsites = this.$store.callsites[this.$store.selectedTargetDataset]
 
             this.knc = this.KNC()
-            console.log(this.knc['difference'], this.knc['intersection'])
 
             this.numberOfDifferenceCallsites = Object.keys(this.knc['difference']).length
             this.numberOfIntersectionCallsites = Object.keys(this.knc['intersection']).length
@@ -146,17 +189,23 @@ export default {
             this.selectedModule = this.$store.selectedModule
             this.selectedCallsite = this.$store.selectedCallsite
             this.selectedMetric = this.$store.selectedMetric
+            this.ensembleColor = d3.rgb(this.$store.color.ensemble).darker(1)
             this.targetColor = d3.rgb(this.$store.color.target).darker(1)
 
             for (let callsite in this.callsites) {
                 if (this.targetCallsites[callsite] != undefined) {
                     this.means[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['mean_time'])
                     this.variance[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['variance_time'])
+                    this.ensembleMeans[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]['mean_time'])
+                    this.ensembleVariance[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]['variance_time'])
                 }
                 else {
-                    this.means[callsite] = '-'
-                    this.variance[callsite] = '-'
+                    this.means[callsite] = '0.0'
+                    this.variance[callsite] = '0.0'
+                    this.ensembleMeans[callsite] = '0.0'
+                    this.ensembleVariance[callsite] = '0.0'
                 }
+                this.selectClassName[callsite] = 'unselect-callsite'
             }
         },
 
@@ -171,7 +220,6 @@ export default {
         clickCallsite(event) {
             event.stopPropagation()
             let callsite = event.currentTarget.id
-            this.revealCallsites.push(callsite)
             this.$socket.emit('reveal_callsite', {
                 reveal_callsites: this.revealCallsites,
                 datasets: this.$store.selectedDatasets,
@@ -180,21 +228,42 @@ export default {
             EventHandler.$emit('reveal_callsite')
         },
 
+        splitByEntryFunctions(event) {
+            event.stopPropagation()
+            let callsite = event.currentTarget.id
+
+        },
+
+        splitByCallees(event) {
+
+        },
+
         trunc(str, n) {
             str = str.replace(/<unknown procedure>/g, 'proc ')
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
         selectModule(thismodule) {
+            console.log(thismodule)
             let module_callsites = this.$store.moduleCallsiteMap['ensemble'][thismodule]
-            this.callsites = {}
-            let all_callsites = Object.keys(this.$store.callsites['ensemble'])
-            for (let callsite of all_callsites) {
+            this.differenceCallsites = {}
+            console.log(this.knc['difference'])
+            this.knc['difference'].forEach((callsite) => {
                 if (module_callsites.indexOf(callsite) > -1) {
-                    this.callsites[callsite] = this.$store.callsites['ensemble'][callsite]
+                    this.differenceCallsites[callsite] = this.$store.callsites['ensemble'][callsite]
                 }
-            }
-            this.numberOfCallsites = Object.keys(this.callsites).length
+            })
+            this.numberOfDifferenceCallsites = Object.keys(this.differenceCallsites).length
+
+            this.intersectionCallsites = {}
+            this.knc['intersection'].forEach((callsite) => {
+                console.log(callsite)
+                if (module_callsites.indexOf(callsite) > -1) {
+                    console.log('In module')
+                    this.intersectionCallsites[callsite] = this.$store.callsites['ensemble'][callsite]
+                }
+            })
+            this.numberOfIntersectionCallsites = Object.keys(this.intersectionCallsites).length
         },
 
         selectCallsitesByModule(thismodule) {
@@ -272,7 +341,7 @@ export default {
 
             for (let callsite in callsites) {
                 if (ensemble_callsites.hasOwnProperty(callsite)) {
-                    document.getElementById(ensemble_callsites[callsite].id).style.borderColor = this.$store.color.target
+                    document.getElementById(ensemble_callsites[callsite].id).style.borderColor = '#009688' //this.$store.color.target
                 }
             }
         },
