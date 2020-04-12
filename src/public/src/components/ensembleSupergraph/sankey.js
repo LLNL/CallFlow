@@ -449,11 +449,26 @@ export default function Sankey() {
 
             console.log(source, link.source, link.target, link.type)
 
-            let ensemble_mean = store.modules['ensemble'][source]["Inclusive"]["mean_time"]
 
-            let target_mean = 0
+            let data = {}
+            let targetData = {}
+            let node = ''
+            if (source.indexOf('=') > -1) {
+                data = store.callsites['ensemble']
+                targetData = store.callsites[store.selectedTargetDataset]
+                node = source.split('=')[1]
+            }
+            else {
+                data = store.modules['ensemble']
+                targetData = store.modules[store.selectedTargetDataset]
+                node = source
+            }
+            let ensemble_mean = data[node]["Inclusive"]["mean_time"]
+
+
+            let target_mean = 0.0
             if (store.modules[store.selectedTargetDataset][source] != undefined) {
-                target_mean = store.modules[store.selectedTargetDataset][source]['Inclusive']["mean_time"]
+                target_mean = targetData[node]['Inclusive']["mean_time"]
             }
             console.log(ensemble_mean, target_mean, target_mean / ensemble_mean)
             link.targetHeight = weight * scale * (target_mean / ensemble_mean)

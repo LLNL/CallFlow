@@ -768,16 +768,24 @@ export default {
                     return '#000'
                 })
                 .text((d) => {
+                    let node_name = ''
                     if (d.id.split('_')[0] != "intermediate") {
-
                         if (d.height < this.minHeightForText) {
                             return '';
                         }
-                        var textSize = this.textSize(d.id.split('=')[0])['width'];
-                        if (textSize < d.height) {
-                            return d.id;
+
+                        if (d.id.indexOf('=') > -1) {
+                            node_name = d.id.split('=')[1]
                         }
-                        return this.trunc(d.id, Math.floor(d.height / 14));
+                        else {
+                            node_name = d.id
+                        }
+
+                        var textSize = this.textSize(node_name)['width'];
+                        if (textSize < d.height) {
+                            return node_name;
+                        }
+                        return this.trunc(node_name, Math.floor(d.height / 14));
                     }
                 });
         },

@@ -71,7 +71,9 @@ class SuperGraph(nx.Graph):
                 self.cct = nx.DiGraph()
                 self.agg_g = nx.DiGraph()
                 self.add_paths(path)
-                self.add_reveal_paths()
+                self.add_reveal_paths(self.reveal_callsites)
+                # self.add_entry_callsite_paths()
+                # self.add_callees_paths()
             else:
                 print("Using the existing graph from state {0}".format(self.state.name))
 
@@ -185,14 +187,14 @@ class SuperGraph(nx.Graph):
         edges = []
         for idx, callsite in enumerate(component_path):
             if idx == 0:
-                # module = component_path[0]
-                # edges.append(
-                #     {
-                #         "module": module,
-                #         "source": module,
-                #         "target": module + "=" + component_path[idx + 1],
-                #     }
-                # )
+                module = component_path[0]
+                edges.append(
+                    {
+                        "module": module,
+                        "source": module,
+                        "target": module + "=" + component_path[idx + 1],
+                    }
+                )
                 pass
             elif idx == len(component_path) - 1:
                 pass
@@ -207,9 +209,9 @@ class SuperGraph(nx.Graph):
 
         return edges
 
-    def add_reveal_paths(self):
+    def callsitePathInformation(self, callsites):
         paths = []
-        for callsite in self.reveal_callsites:
+        for callsite in callsites:
             df = self.name_group_df.get_group(callsite)
             paths.append(
                 {
@@ -218,8 +220,10 @@ class SuperGraph(nx.Graph):
                     "component_path": make_list(df["component_path"].unique()[0]),
                 }
             )
+        return paths
 
-        # print(f"Reveal path is : {reveal_paths}")
+    def add_reveal_paths(self, reveal_callsites):
+        paths = self.callsitePathInformation(reveal_callsites)
 
         for path in paths:
             component_edges = self.create_source_targets(path["component_path"])
@@ -230,41 +234,40 @@ class SuperGraph(nx.Graph):
                 source = edge["source"]
                 target = edge["target"]
 
-                if not self.g.has_edge(source, target):
+                if not self.agg_g.has_edge(source, target):
                     if idx == 0:
-                        pass
+                        source_callsite = source
+                        source_df = self.module_group_df.get_group((module))
                     else:
-                        if idx == 1:
-                            source_callsite = source
-                            source_df = self.module_group_df.get_group((module))
-                        else:
-                            source_callsite = source.split("=")[1]
-                            source_df = self.module_name_group_df.get_group(
-                                (module, source_callsite)
-                            )
-
-                        target_callsite = target.split("=")[1]
-                        target_df = self.module_name_group_df.get_group(
-                            (module, target_callsite)
+                        source_callsite = source.split("=")[1]
+                        source_df = self.module_name_group_df.get_group(
+                            (module, source_callsite)
                         )
 
-                        source_weight = source_df["time (inc)"].max()
-                        target_weight = target_df["time (inc)"].max()
+                    target_callsite = target.split("=")[1]
+                    target_df = self.module_name_group_df.get_group(
+                        (module, target_callsite)
+                    )
 
-                        edge_type = "normal"
+                    source_weight = source_df["time (inc)"].max()
+                    target_weight = target_df["time (inc)"].max()
 
-                        print(f"Adding edge: {source_callsite}, {target_callsite}")
-                        self.g.add_edge(
-                            source,
-                            target,
-                            attr_dict={
+                    edge_type = "normal"
+
+                    print(f"Adding edge: {source_callsite}, {target_callsite}")
+                    self.agg_g.add_edge(
+                        source,
+                        target,
+                        attr_dict=[
+                            {
                                 "source_callsite": source_callsite,
                                 "target_callsite": target_callsite,
                                 "edge_type": edge_type,
                                 "weight": target_weight,
                                 "edge_type": "reveal_edge",
-                            },
-                        )
+                            }
+                        ],
+                    )
 
     def add_paths(self, path):
         paths_df = self.group_df.groupby(["name", "group_path"])
@@ -530,11 +533,18 @@ class SuperGraph(nx.Graph):
                     ret[column][node] = self.module_time_exc_map[module]
 
                 elif column == "actual_time":
-                    ret[column][node] = self.module_time(
-                        group_df=self.module_name_group_df,
-                        module_callsite_map=self.module_callsite_map,
-                        module=module,
-                    )
+                    if ":" not in node:
+                        ret[column][node] = self.module_time(
+                            group_df=self.module_name_group_df,
+                            module_callsite_map=self.module_callsite_map,
+                            module=module,
+                        )
+                    else:
+                        ret[column][node] = self.callsite_time(
+                            group_df=self.name_group_df,
+                            module=module,
+                            callsite=node.split(":")[1],
+                        )
 
                 elif column == "module":
                     ret[column][node] = module
