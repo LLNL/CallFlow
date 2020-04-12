@@ -139,6 +139,8 @@ class Auxiliary:
             "module": df["module"].tolist()[0],
             "callers": df["callers"].unique().tolist(),
             "callees": df["callees"].unique().tolist(),
+            "component_path": df["component_path"].unique().tolist(),
+            "component_level": df["component_level"].unique().tolist(),
             "Inclusive": {
                 "mean_time": df["time (inc)"].mean(),
                 "max_time": df["time (inc)"].max(),

@@ -6,6 +6,15 @@
         <p> </p>
     </span>
 
+    <v-row v-if="isModuleSelected == true">
+        <v-btn class="ma-1 reveal-button" tile outlined color="white" @click="splitByEntryFunctions">
+            Split
+        </v-btn>
+        <v-btn class="ma-1 reveal-button" tile outlined color="white" @click="clickCallsite">
+            Reveal
+        </v-btn>
+    </v-row>
+
     <span class="component-data">
         <p>Target uKNC ({{numberOfDifferenceCallsites}} call sites). </p>
     </span>
@@ -26,17 +35,62 @@
     <span class="component-data">
         <p>Target KNC ({{numberOfIntersectionCallsites}} call sites).</p>
     </span>
-    <div v-for="callsite in intersectionCallsites" class="auxiliary-node" :id="callsite.id"
-        :style="{ width: boxplotWidth + 'px', height: boxplotHeight + 'px' }">
-        <v-btn :id="callsite.name" class="ma-2 reveal-button" tile outlined color="white" @click="clickCallsite">
-            Show
-        </v-btn>
-        <h4>{{formatModule(callsite.module)}}={{formatName(callsite.name)}}</h4>
-        <div :style="'color: ' + targetColor">Mean : {{means[callsite.name]}}</div>
-        <div :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}</div>
+    <v-container class="grey lighten-5" v-for="callsite in intersectionCallsites" class="auxiliary-node"
+        :id="callsite.id" :style="{ width: boxplotWidth + 'px', height: boxplotHeight + 'px' }">
+
+        <v-layout row wrap>
+            <v-col cols=1>
+                <v-card width="20px" class="mx-auto" tile outlined>
+                    <v-flex :id="callsite.name" text-xs-center :class="selectClassName[callsite.name]"
+                        @click="changeSelectedClassName" style='cursor:pointer'>
+                        {{formatNumberOfHops(callsite.component_level)}}
+                    </v-flex>
+                </v-card>
+            </v-col>
+            <v-col cols=11>
+                <template>
+                    <v-tooltip bottom>
+                        <template v-slot:activator="{ on }">
+                            <v-flex class="pl-2 subtitle-2 font-weight-black" v-on="on">
+                                {{formatModule(callsite.module)}}={{formatName(callsite.name)}}
+                            </v-flex>
+                        </template>
+                        <span>{{callsite.module}}={{callsite.name}}</span>
+                    </v-tooltip>
+                </template>
+            </v-col>
+        </v-layout>
+
+        <v-layout row wrap>
+            <div class="subtitle-2" :style="'color: ' + targetColor">Mean : {{means[callsite.name]}}</div>
+            <v-spacer></v-spacer>
+            <div class="subtitle-2" :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}</div>
+        </v-layout>
         <!-- <div>Percentage imbalance : {{callsite['imbalance_perc_inclusive']}}</div>
         <div>Skewness: {{callsite['skewness_inclusive']}}</div>
         <div>Kurtosis: {{callsite['kurtosis_inclusive']}}</div> -->
         <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget=false />
-    </div>
+        <!-- <v-layout row wrap>
+            <v-btn-toggle :id="callsite.name" class="ma-1 reveal-button" tile outlined color="white"
+                @click="splitByEntryFunctions">
+                Split caller
+            </v-btn-toggle>
+            <v-btn-toggle :id="callsite.name" class="ma-1 reveal-button" tile outlined color="white"
+                @click="splitByCallees">
+                Split callee
+            </v-btn-toggle>
+            <v-btn-toggle :id="callsite.name" class="ma-1 reveal-button" tile outlined color="white"
+                @click="clickCallsite">
+                show call site
+            </v-btn-toggle>
+        </v-layout> -->
+
+        <v-layout row wrap>
+            <div class="subtitle-2" :style="'color: ' + ensembleColor">Mean : {{ensembleMeans[callsite.name]}}</div>
+            <v-spacer></v-spacer>
+            <div class="subtitle-2" :style="'color: ' + ensembleColor">Variance : {{ensembleVariance[callsite.name]}}
+            </div>
+        </v-layout>
+
+    </v-container>
 </v-layout>

@@ -190,9 +190,10 @@ body {
 
 .reveal-button {
   float: right;
-  margin: 2px;
+  margin: 1px;
   color: #009688 !important;
-  padding: 8px;
+  font-size: 75%;
+  padding: 2px;
 }
 
 .tooltip {
@@ -265,5 +266,27 @@ body {
 
 .md-theme-default a:not(.md-button) {
   color: #009687 !important;
+}
+
+.whiskerText {
+  font-weight: 100 !important;
+}
+
+.valueText {
+  font-weight: 700 !important;
+}
+
+.chip {
+  font-weight: 500 !important;
+}
+
+.unselect-callsite {
+  color: #009688;
+  background: white;
+}
+
+.select-callsite {
+  color: white;
+  background: #009688;
 }
 </style>

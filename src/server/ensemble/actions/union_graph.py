@@ -1,6 +1,7 @@
 import networkx as nx
 
-class UnionGraph():
+
+class UnionGraph:
     def __init__(self):
         # Union is the same type as G
         self.R = nx.DiGraph()
@@ -9,9 +10,9 @@ class UnionGraph():
         # self.union(G, H, dataset_name, rename, name)
 
     # Return the union of graphs G and H.
-    def unionize(self, H, name = None, rename=(None, None)):
+    def unionize(self, H, name=None, rename=(None, None)):
         if not self.R.is_multigraph() == H.is_multigraph():
-            raise nx.NetworkXError('G and H must both be graphs or multigraphs.')
+            raise nx.NetworkXError("G and H must both be graphs or multigraphs.")
 
         # add graph attributes, H attributes take precedent over G attributes
         # self.R.graph.update(G.graph)
@@ -19,11 +20,11 @@ class UnionGraph():
 
         renamed_nodes = self.add_prefix(H, rename[1])
 
-        debug = True
+        debug = False
         if debug:
             print("-=========================-")
             print("Nodes in R and H are same? ", set(self.R) == set(H))
-            if (set(self.R) != set(H)):
+            if set(self.R) != set(H):
                 print("Difference is ", list(set(H) - set(self.R)))
                 print("Nodes in R", set(self.R)),
                 print("Nodes in H", set(H))
@@ -55,11 +56,14 @@ class UnionGraph():
             else:
                 name = prefix + repr(x)
             return name
+
         return nx.relabel_nodes(graph, label)
 
     def add_edge_attributes(self):
         number_of_runs_mapping = self.number_of_runs()
-        nx.set_edge_attributes(self.R, name="number_of_runs", values=number_of_runs_mapping)
+        nx.set_edge_attributes(
+            self.R, name="number_of_runs", values=number_of_runs_mapping
+        )
 
     def number_of_runs(self):
         ret = {}
@@ -72,8 +76,8 @@ class UnionGraph():
 
     def add_node_attributes(self, H, node, dataset_name):
         for idx, (key, val) in enumerate(H.nodes.items()):
-            if(key == node):
-                if(dataset_name not in self.R.nodes[node]):
+            if key == node:
+                if dataset_name not in self.R.nodes[node]:
                     self.R.nodes[node][dataset_name] = {}
                 self.R.nodes[node][dataset_name] = val
 
@@ -83,18 +87,20 @@ class UnionGraph():
             node_data = node[1]
             max_inc_time = 0
             max_exc_time = 0
-            self.R.nodes[node_name]['ensemble'] = {}
+            self.R.nodes[node_name]["ensemble"] = {}
             for dataset in node_data:
                 for idx, key in enumerate(node_data[dataset]):
-                    if(key == 'name'):
-                        self.R.nodes[node_name]['union']['name'] = node_data[dataset][key]
-                    elif(key == 'time (inc)'):
+                    if key == "name":
+                        self.R.nodes[node_name]["union"]["name"] = node_data[dataset][
+                            key
+                        ]
+                    elif key == "time (inc)":
                         max_inc_time = max(max_inc_time, node_data[dataset][key])
-                    elif(key == 'time'):
+                    elif key == "time":
                         max_exc_time = max(max_exc_time, node_data[dataset][key])
-                    elif(key == 'entry_functions'):
+                    elif key == "entry_functions":
                         entry_functions = node_data[dataset][key]
 
-            self.R.nodes[node_name]['ensemble']['time (inc)'] = max_inc_time
-            self.R.nodes[node_name]['ensemble']['time'] = max_exc_time
-            self.R.nodes[node_name]['ensemble']['entry_functions'] = entry_functions
+            self.R.nodes[node_name]["ensemble"]["time (inc)"] = max_inc_time
+            self.R.nodes[node_name]["ensemble"]["time"] = max_exc_time
+            self.R.nodes[node_name]["ensemble"]["entry_functions"] = entry_functions
