@@ -6,30 +6,58 @@
         <p> </p>
     </span>
 
-    <v-layout row wrap v-if="isModuleSelected == true">
-        <v-btn class="ma-1 reveal-button" tile outlined color="white" @click="splitByEntryFunctions">
-            Split
+    <!-- <v-layout row wrap v-if="isModuleSelected == true">
+        <v-btn class="ma-1 reveal-button" small tile outlined color="white" @click="splitByEntryFunctions">
+            Split entry callsites
         </v-btn>
-        <v-btn class="ma-1 reveal-button" tile outlined color="white" @click="clickCallsite">
+        <v-btn class="ma-1 reveal-button" small tile outlined color="white" @click="splitByEntryFunctions">
+            Split callees
+        </v-btn>
+    </v-layout> -->
+
+    <v-layout row wrap v-if="isCallsiteSelected == true">
+        <v-btn class="ma-1 reveal-button" small tile outlined color="white" @click="clickCallsite">
             Reveal
         </v-btn>
     </v-layout>
 
-    <span class="component-data">
-        <p>Target uKNC ({{numberOfDifferenceCallsites}} call sites). </p>
-    </span>
-    <v-container class="auxiliary-node" v-for="callsite in differenceCallsites" :id="callsite.id"
+    <v-layout row wrap v-if="isModuleSelected == true">
+        <v-btn class="ma-1 reveal-button" small tile outlined color="white" :class="isEntryFunctionSelected"
+            @click="showEntryFunctions">
+            Entry call sites
+        </v-btn>
+        <v-btn class="ma-1 reveal-button" small tile outlined color="white" :class="isCalleeSelected"
+            @click="showExitFunctions">
+            Callees
+        </v-btn>
+        <v-spacer></v-spacer>
+        <v-btn class="ma-1 reveal-button" small tile outlined color="white" v-if="showSplitButton == 'true'"
+            @click="split">
+            Split
+        </v-btn>
+    </v-layout>
+
+    <v-layout class="component-data">
+        <p class="subtitle-2">Target uKNC ({{numberOfDifferenceCallsites}} call sites). </p>
+    </v-layout>
+    <v-container class="auxiliary-node" v-for="callsite in differenceCallsites" :id="callsite.id" :key="callsite.id"
         :style="{ width: boxplotWidth + 'px', height: boxplotHeight + 'px' }">
         <v-layout row wrap>
-            <v-col cols=1>
-                <v-card width="20px" class="mx-auto" tile outlined>
-                    <v-flex :id="callsite.name" text-xs-center :class="selectClassName[callsite.name]"
-                        @click="changeSelectedClassName" style='cursor:pointer'>
-                        {{formatNumberOfHops(callsite.component_level)}}
-                    </v-flex>
-                </v-card>
-            </v-col>
-            <v-col cols=11>
+            <v-flex md1>
+                <template>
+                    <v-tooltip bottom>
+                        <template v-slot:activator="{ on }">
+                            <v-flex :id="callsite.name" text-xs-center :class="selectClassName[callsite.name]"
+                                @click="changeSelectedClassName" style=''>
+                                {{formatNumberOfHops(callsite.component_level)}}
+                            </v-flex>
+                        </template>
+                        <span>Component level: {{formatNumberOfHops(callsite.component_level)}}</span>
+                    </v-tooltip>
+                </template>
+
+            </v-flex>
+            <v-flex md11>
                 <template>
                     <v-tooltip bottom>
                         <template v-slot:activator="{ on }">
@@ -40,7 +68,7 @@
                         <span>{{callsite.module}}={{callsite.name}}</span>
                     </v-tooltip>
                 </template>
-            </v-col>
+            </v-flex>
         </v-layout>
 
 
@@ -64,21 +92,21 @@
 
 
     <span class="component-data">
-        <p>Target KNC ({{numberOfIntersectionCallsites}} call sites).</p>
+        <p class="subtitle-2">Target KNC ({{numberOfIntersectionCallsites}} call sites).</p>
     </span>
-    <v-container class="auxiliary-node" v-for="callsite in intersectionCallsites" :id="callsite.id"
+    <v-container class="auxiliary-node" v-for="callsite in intersectionCallsites" :id="callsite.id" :key="callsite.id"
         :style="{ width: boxplotWidth + 'px', height: boxplotHeight + 'px' }">
 
         <v-layout row wrap>
-            <v-col cols=1>
+            <v-flex md1>
                 <v-card width="20px" class="mx-auto" tile outlined>
                     <v-flex :id="callsite.name" text-xs-center :class="selectClassName[callsite.name]"
                         @click="changeSelectedClassName" style='cursor:pointer'>
                         {{formatNumberOfHops(callsite.component_level)}}
                     </v-flex>
                 </v-card>
-            </v-col>
-            <v-col cols=11>
+            </v-flex>
+            <v-flex md11>
                 <template>
                     <v-tooltip bottom>
                         <template v-slot:activator="{ on }">
@@ -89,7 +117,7 @@
                         <span>{{callsite.module}}={{callsite.name}}</span>
                     </v-tooltip>
                 </template>
-            </v-col>
+            </v-flex>
         </v-layout>
 
         <v-layout row wrap>
@@ -101,20 +129,7 @@
         <div>Skewness: {{callsite['skewness_inclusive']}}</div>
         <div>Kurtosis: {{callsite['kurtosis_inclusive']}}</div> -->
         <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget=false />
-        <!-- <v-layout row wrap>
-            <v-btn-toggle :id="callsite.name" class="ma-1 reveal-button" tile outlined color="white"
-                @click="splitByEntryFunctions">
-                Split caller
-            </v-btn-toggle>
-            <v-btn-toggle :id="callsite.name" class="ma-1 reveal-button" tile outlined color="white"
-                @click="splitByCallees">
-                Split callee
-            </v-btn-toggle>
-            <v-btn-toggle :id="callsite.name" class="ma-1 reveal-button" tile outlined color="white"
-                @click="clickCallsite">
-                show call site
-            </v-btn-toggle>
-        </v-layout> -->
+
 
         <v-layout row wrap>
             <div class="subtitle-2" :style="'color: ' + ensembleColor">Mean : {{ensembleMeans[callsite.name]}}</div>

@@ -90,20 +90,9 @@ export default {
             }
         },
 
-        group() {
-            this.total_weight = d3.nest()
-                .key(function (d) { return d.level; })
-                .key(function (d) { return d.sourceLinks.length; })
-                .rollup(function (d) {
-                    return d3.sum(d, function (g) { return g['time (inc)']; });
-                }).entries(this.graph.nodes)
-        },
-
         init(graph) {
             this.graph = graph
             this.nodes = d3.select('#' + this.id)
-            this.group()
-            this.setNodeIds()
 
             // https://observablehq.com/@geekplux/dragable-d3-sankey-diagram
             this.drag = d3.drag()
@@ -114,7 +103,7 @@ export default {
                     this.parentNode.appendChild(this)
                 })
                 .on("drag", (d) => {
-                    d3.select(`node_${d.mod_index[0]}`).attr("transform",
+                    d3.select(`node_${d.client_idx}`).attr("transform",
                         "translate(" + (
                             d.x = Math.max(0, Math.min(this.$parent.width - d.dx, d3.event.x))
                         ) + "," + (
@@ -131,6 +120,17 @@ export default {
                     let ty = Math.min(0, Math.min(d3.event.transform.y, this.height * d3.event.transform.k))
                     this.sankeySVG.attr("transform", "translate(" + [tx, ty] + ")scale(" + d3.event.transform.k + ")")
                 });
+
+            this.ensemble_module_data = this.$store.modules['ensemble']
+            this.ensemble_callsite_data = this.$store.callsites['ensemble']
+
+            this.visualize()
+        },
+
+        visualize() {
+            this.setClientIds()
+            this.meanColorScale()
+            this.meanGradients()
 
             this.nodesSVG = this.nodes.selectAll('.ensemble-callsite')
                 .data(this.graph.nodes)
@@ -153,8 +153,9 @@ export default {
                 .attr('opacity', 1)
                 .attr('transform', d => `translate(${d.x},${d.y + this.$parent.ySpacing})`)
 
-            this.setupMeanGradients()
+
             this.meanRectangle()
+
             this.path()
             this.text()
             if (this.$store.showTarget) {
@@ -165,7 +166,7 @@ export default {
         },
 
         // TODO: Remove this.
-        setNodeIds() {
+        setClientIds() {
             let idx = 0
             for (let node of this.graph.nodes) {
                 this.nidNameMap[node.id] = idx
@@ -173,24 +174,29 @@ export default {
                 idx += 1
             }
         },
-        setupMeanGradients() {
-            let data = this.$store.modules['ensemble']
+
+        meanColorScale() {
             let nodes = this.graph.nodes
-            let method = 'hist'
+
             this.hist_min = 0
             this.hist_max = 0
             for (let node of nodes) {
                 // TODO: remove this fuse.
-                if (data[node.module] != undefined) {
-                    this.hist_min = Math.min(this.hist_min, data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_min'])
-                    this.hist_max = Math.max(this.hist_max, data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_max'])
+                if (node.type == 'super-node') {
+                    this.hist_min = Math.min(this.hist_min, this.ensemble_module_data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_min'])
+                    this.hist_max = Math.max(this.hist_max, this.ensemble_module_data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_max'])
                 }
-                else {
-
+                else if (node.type == 'component-node') {
+                    this.hist_min = Math.min(this.hist_min, this.ensemble_callsite_data[node.name][this.$store.selectedMetric]['gradients']['hist']['y_min'])
+                    this.hist_max = Math.max(this.hist_max, this.ensemble_callsite_data[node.name][this.$store.selectedMetric]['gradients']['hist']['y_max'])
                 }
             }
             this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
             this.$parent.$refs.EnsembleColorMap.updateWithMinMax('bin', this.hist_min, this.hist_max)
+        },
+
+        meanGradients() {
+            let nodes = this.graph.nodes
 
             for (let node of nodes) {
                 var defs = d3.select('#ensemble-supergraph-overview')
@@ -208,11 +214,25 @@ export default {
 
                 let grid = []
                 let val = []
-                // TODO: remove this fuse.
-                if (data[node.module] != undefined) {
-                    grid = data[node.module][this.$store.selectedMetric]['gradients'][method]['x']
-                    val = data[node.module][this.$store.selectedMetric]['gradients'][method]['y']
+                console.log(node.type, node.module, node.name)
+                if (node.type == 'super-node') {
+                    // if (this.ensemble_module_data[node.module] != undefined) {
+                    grid = this.ensemble_module_data[node.module][this.$store.selectedMetric]['gradients']['hist']['x']
+                    val = this.ensemble_module_data[node.module][this.$store.selectedMetric]['gradients']['hist']['y']
+                    // }
                 }
+                else if (node.type == 'component-node') {
+                    // if (this.ensemble_callsite_data[node.name] != undefined) {
+                    grid = this.ensemble_callsite_data[node.name][this.$store.selectedMetric]['gradients']['hist']['x']
+                    val = this.ensemble_callsite_data[node.name][this.$store.selectedMetric]['gradients']['hist']['y']
+                    // }
+                }
+                else if (node.type == "intermediate") {
+                    grid = []
+                    val = []
+                }
+
+                console.log(grid, val)
 
                 for (let i = 0; i < grid.length; i += 1) {
                     let x = (i + i + 1) / (2 * grid.length)
@@ -513,10 +533,6 @@ export default {
                     return 1;
                 })
                 .style("fill", (d, i) => {
-                    // if (max_diff == 0 && min_diff == 0) {
-                    //     return this.$store.meanDiffColor.getColorByValue(0.5)
-                    // }
-                    // console.log(mean_diff)
                     let color = d3.rgb(this.$store.meanDiffColor.getColorByValue((mean_diff[d.module])))
                     return color
                 })
@@ -524,38 +540,42 @@ export default {
 
         drawTargetLine() {
             let dataset = this.$store.selectedTargetDataset
-            let data = this.$store.modules
+            let data = {}
+            let node_name = ''
 
             for (let i = 0; i < this.graph.nodes.length; i++) {
                 let node_data = this.graph.nodes[i]
-                let module_name = this.graph.nodes[i].module
-                if (this.graph.nodes[i].id.split('_')[0] != 'intermediate') {
 
-                    if (data['ensemble'][module_name] != undefined) {
-                        let gradients = data['ensemble'][module_name][this.$store.selectedMetric]['gradients']
-                        // // let module_mean = gradients['dataset']['mean'][this.$store.selectedTargetDataset]
+                if (this.graph.nodes[i].type == 'super-node') {
+                    node_name = this.graph.nodes[i].module
+                    data = this.$store.modules
+                }
+                else if (this.graph.nodes[i].type == 'component-node') {
+                    node_name = this.graph.nodes[i].name
+                    data = this.$store.callsites
+                }
 
-                        // let grid = gradients.hist.x
-                        // let vals = gradients.hist.y
 
-                        let targetPos = gradients['dataset']['position'][this.$store.selectedTargetDataset] + 1
-                        let binWidth = node_data.height / (this.$store.selectedRunBinCount)
+                if (data['ensemble'][node_name] != undefined) {
+                    let gradients = data['ensemble'][node_name][this.$store.selectedMetric]['gradients']
 
-                        let y = binWidth * targetPos - binWidth / 2
+                    let targetPos = gradients['dataset']['position'][this.$store.selectedTargetDataset] + 1
+                    let binWidth = node_data.height / (this.$store.selectedRunBinCount)
 
-                        d3.select('#ensemble-callsite-' + node_data.client_idx)
-                            .append('line')
-                            .attrs({
-                                "class": 'targetLines',
-                                "id": 'line-2-' + dataset + '-' + node_data['client_idx'],
-                                "x1": 0,
-                                "y1": y,
-                                "x2": this.nodeWidth,
-                                "y2": y,
-                                "stroke-width": 5,
-                                "stroke": this.$store.color.target
-                            })
-                    }
+                    let y = binWidth * targetPos - binWidth / 2
+
+                    d3.select('#ensemble-callsite-' + node_data.client_idx)
+                        .append('line')
+                        .attrs({
+                            "class": 'targetLines',
+                            "id": 'line-2-' + dataset + '-' + node_data['client_idx'],
+                            "x1": 0,
+                            "y1": y,
+                            "x2": this.nodeWidth,
+                            "y2": y,
+                            "stroke-width": 5,
+                            "stroke": this.$store.color.target
+                        })
                 }
             }
         },
@@ -781,6 +801,7 @@ export default {
                             node_name = d.id
                         }
 
+                        console.log(d.id, node_name)
                         var textSize = this.textSize(node_name)['width'];
                         if (textSize < d.height) {
                             return node_name;

@@ -158,7 +158,12 @@ export default {
 			let nodeMap = {}
 			let idx = 0
 			for (const node of graph.nodes) {
-				nodeMap[node.module] = idx
+				if (node.type == 'super-node') {
+					nodeMap[node.module] = idx
+				}
+				else if (node.type == 'component-node') {
+					nodeMap[node.name] = idx
+				}
 				if (this.debug) {
 					console.log("[Preprocess] Assigning", node.id, " with map index: ", idx)
 				}

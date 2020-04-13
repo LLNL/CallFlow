@@ -50,6 +50,10 @@ export default {
         differenceCallsites: {},
         intersectionCallsites: {},
         isModuleSelected: false,
+        isCallsiteSelected: false,
+        isEntryFunctionSelected: 'unselect-callsite',
+        isCalleeSelected: 'unselect-callsite',
+        showSplitButton: 'false',
         selectClassName: {}
     }),
     mounted() {
@@ -109,12 +113,16 @@ export default {
             }
 
             if (this.revealCallsites.length == 0) {
-                this.switchIsSelectedModule(false)
+                this.switchIsSelectedCallsite(false)
             }
             else {
-                this.switchIsSelectedModule(true)
+                this.switchIsSelectedCallsite(true)
             }
             console.log("Selected callsites: ", this.revealCallsites)
+        },
+
+        switchIsSelectedCallsite(val) {
+            this.isCallsiteSelected = val
         },
 
         switchIsSelectedModule(val) {
@@ -141,8 +149,7 @@ export default {
         },
 
         formatNumberOfHops(name) {
-            // console.log(typeof (name), name)
-            return name[0] - 1//.replace('[', '').replace(']', '')
+            return name[0] - 1
         },
 
         formatRuntime(val) {
@@ -228,14 +235,29 @@ export default {
             EventHandler.$emit('reveal_callsite')
         },
 
-        splitByEntryFunctions(event) {
+        showEntryFunctions(event) {
             event.stopPropagation()
-            let callsite = event.currentTarget.id
+            if (this.isEntryFunctionSelected == 'unselect-callsite') {
+                this.isEntryFunctionSelected = 'select-callsite'
+                this.isCalleeSelected = 'unselect-callsite'
+            }
+            else {
+                this.isEntryFunctionSelected = 'unselect-callsite'
+            }
+            this.showSplitButton = 'true'
 
         },
 
-        splitByCallees(event) {
-
+        showExitFunctions(event) {
+            event.stopPropagation()
+            if (this.isCalleeSelected == 'unselect-callsite') {
+                this.isCalleeSelected = 'select-callsite'
+                this.isEntryFunctionSelected = 'unselect-callsite'
+            }
+            else {
+                this.isCalleeSelected = 'unselect-callsite'
+            }
+            this.showSplitButton = 'true'
         },
 
         trunc(str, n) {
@@ -244,10 +266,8 @@ export default {
         },
 
         selectModule(thismodule) {
-            console.log(thismodule)
             let module_callsites = this.$store.moduleCallsiteMap['ensemble'][thismodule]
             this.differenceCallsites = {}
-            console.log(this.knc['difference'])
             this.knc['difference'].forEach((callsite) => {
                 if (module_callsites.indexOf(callsite) > -1) {
                     this.differenceCallsites[callsite] = this.$store.callsites['ensemble'][callsite]
@@ -257,9 +277,7 @@ export default {
 
             this.intersectionCallsites = {}
             this.knc['intersection'].forEach((callsite) => {
-                console.log(callsite)
                 if (module_callsites.indexOf(callsite) > -1) {
-                    console.log('In module')
                     this.intersectionCallsites[callsite] = this.$store.callsites['ensemble'][callsite]
                 }
             })
