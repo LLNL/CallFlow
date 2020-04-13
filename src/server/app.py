@@ -216,7 +216,8 @@ class App:
                     "name": "auxiliary",
                     "datasets": data["datasets"],
                     "sortBy": data["sortBy"],
-                    "binCount": data["binCount"],
+                    "MPIBinCount": data["MPIBinCount"],
+                    "RunBinCount": data["RunBinCount"],
                     "module": data["module"],
                     "re-process": data["re_process"],
                 }
