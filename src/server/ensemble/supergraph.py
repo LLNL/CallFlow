@@ -49,8 +49,7 @@ class SuperGraph(nx.Graph):
             "module",
             "name",
             "time",
-            # "callers",
-            # "callees",
+            "type",
             "module",
             "actual_time",
         ]
@@ -238,11 +237,13 @@ class SuperGraph(nx.Graph):
                     if idx == 0:
                         source_callsite = source
                         source_df = self.module_group_df.get_group((module))
+                        node_type = "super-node"
                     else:
                         source_callsite = source.split("=")[1]
                         source_df = self.module_name_group_df.get_group(
                             (module, source_callsite)
                         )
+                        node_type = "component-node"
 
                     target_callsite = target.split("=")[1]
                     target_df = self.module_name_group_df.get_group(
@@ -255,6 +256,8 @@ class SuperGraph(nx.Graph):
                     edge_type = "normal"
 
                     print(f"Adding edge: {source_callsite}, {target_callsite}")
+                    self.agg_g.add_node(source, attr_dict={"type": node_type})
+                    self.agg_g.add_node(target, attr_dict={"type": node_type})
                     self.agg_g.add_edge(
                         source,
                         target,
@@ -313,7 +316,7 @@ class SuperGraph(nx.Graph):
                     if source_callsite == "119:MPI_Finalize":
                         source_module = "osu_bcast"
 
-                    attr_dict = {
+                    edge_dict = {
                         "source_callsite": source_callsite,
                         "target_callsite": target_callsite,
                         "edge_type": edge_type,
@@ -321,6 +324,8 @@ class SuperGraph(nx.Graph):
                         "source_dataset": source_dataset,
                         "target_dataset": target_dataset,
                     }
+
+                    node_dict = {"type": "super-node"}
 
                     #                 print(f"Caller edge: {has_caller_edge}")
                     #                 print(f"Callback edge: {has_callback_edge}")
@@ -332,10 +337,12 @@ class SuperGraph(nx.Graph):
                         and not has_callback_edge
                     ):
                         print(
-                            f"Create a new edge for : {source_module}--{target_module}"
+                            f"Add {edge_type} edge for : {source_module}--{target_module}"
                         )
+                        self.agg_g.add_node(source_module, attr_dict=node_dict)
+                        self.agg_g.add_node(target_module, attr_dict=node_dict)
                         self.agg_g.add_edge(
-                            source_module, target_module, attr_dict=[attr_dict]
+                            source_module, target_module, attr_dict=[edge_dict]
                         )
 
                     elif not has_cct_edge and not has_callback_edge:
@@ -344,7 +351,7 @@ class SuperGraph(nx.Graph):
                             *(source_module, target_module)
                         )
                         self.agg_g[source_module][target_module]["attr_dict"].append(
-                            attr_dict
+                            edge_dict
                         )
                         # print(agg_g[source_module][target_module])
 
@@ -505,87 +512,104 @@ class SuperGraph(nx.Graph):
     def ensemble_map(self, nodes):
         ret = {}
 
-        ensemble_columns = []
-        for column in self.columns:
-            ensemble_columns.append(column)
-
-        new_columns = ["max_inc_time", "max_exc_time", "dist_inc_time", "dist_exc_time"]
-        ensemble_columns.append("dist_inc_time")
-        ensemble_columns.append("dist_exc_time")
-
         # loop through the nodes
-        for node in nodes:
-            if "=" in node:
-                module = node.split("=")[0]
-                callsite = node.split("=")[1]
-            else:
-                module = node
-                callsite = self.module_callsite_map[module].tolist()
+        for node in self.agg_g.nodes(data=True):
+            node_name = node[0]
+            node_dict = node[1]["attr_dict"]
+            if node_dict["type"] == "component-node":
+                module = node_name.split("=")[0]
+                callsite = node_name.split("=")[1]
+                actual_time = self.callsite_time(
+                    group_df=self.module_name_group_df,
+                    module=module,
+                    callsite=callsite,
+                )
+                time_inc = self.name_time_inc_map[(module, callsite)]
+                time_exc = self.name_time_exc_map[(module, callsite)]
 
-            for column in ensemble_columns:
+            elif node_dict["type"] == "super-node":
+                module = node_name
+                callsite = self.module_callsite_map[module].tolist()
+                actual_time = self.module_time(
+                    group_df=self.module_name_group_df,
+                    module_callsite_map=self.module_callsite_map,
+                    module=module,
+                )
+                time_inc = self.module_time_inc_map[module]
+                time_exc = self.module_time_exc_map[module]
+
+            for column in self.columns:
                 if column not in ret:
                     ret[column] = {}
 
                 if column == "time (inc)":
-                    ret[column][node] = self.module_time_inc_map[module]
+                    ret[column][node_name] = time_inc
 
                 elif column == "time":
-                    ret[column][node] = self.module_time_exc_map[module]
+                    ret[column][node_name] = time_exc
 
                 elif column == "actual_time":
-                    if ":" not in node:
-                        ret[column][node] = self.module_time(
-                            group_df=self.module_name_group_df,
-                            module_callsite_map=self.module_callsite_map,
-                            module=module,
-                        )
-                    else:
-                        ret[column][node] = self.callsite_time(
-                            group_df=self.name_group_df,
-                            module=module,
-                            callsite=node.split(":")[1],
-                        )
+                    ret[column][node_name] = actual_time
 
                 elif column == "module":
-                    ret[column][node] = module
+                    ret[column][node_name] = module
 
                 elif column == "name":
-                    ret[column][node] = callsite
+                    ret[column][node_name] = callsite
+
+                elif column == "type":
+                    ret[column][node_name] = node_dict["type"]
+
         return ret
 
     def dataset_map(self, nodes, run):
         ret = {}
+        for node in self.agg_g.nodes(data=True):
+            node_name = node[0]
+            node_dict = node[1]["attr_dict"]
+            if node_name in self.target_module_callsite_map[run].keys():
+                if node_dict["type"] == "component-node":
+                    module = node_name.split("=")[0]
+                    callsite = node_name.split("=")[1]
+                    actual_time = self.callsite_time(
+                        group_df=self.target_module_group_df,
+                        module=module,
+                        callsite=callsite,
+                    )
+                    time_inc = self.target_name_time_inc_map[run][(module, callsite)]
+                    time_exc = self.target_name_time_exc_map[run][(module, callsite)]
 
-        for node in nodes:
-            if node in self.target_module_callsite_map[run].keys():
-                if "=" in node:
-                    module = node.split("=")[0]
-                    callsite = node.split("=")[1]
-                else:
-                    module = node
+                elif node_dict["type"] == "super-node":
+                    module = node_name
                     callsite = self.target_module_callsite_map[run][module].tolist()
+                    actual_time = self.module_time(
+                        group_df=self.target_module_name_group_df[run],
+                        module_callsite_map=self.target_module_callsite_map[run],
+                        module=module,
+                    )
+                    time_inc = self.target_module_time_inc_map[run][module]
+                    time_exc = self.target_module_time_exc_map[run][module]
 
-                if node not in ret:
-                    ret[node] = {}
+                if node_name not in ret:
+                    ret[node_name] = {}
 
                 for column in self.columns:
                     if column == "time (inc)":
-                        ret[node][column] = self.target_module_time_inc_map[run][module]
+                        ret[node_name][column] = time_inc
 
                     elif column == "time":
-                        ret[node][column] = self.target_module_time_exc_map[run][module]
+                        ret[node_name][column] = time_exc
 
                     elif column == "module":
-                        ret[node][column] = module
+                        ret[node_name][column] = module
 
                     elif column == "actual_time":
-                        ret[node][column] = self.module_time(
-                            group_df=self.target_module_name_group_df[run],
-                            module_callsite_map=self.target_module_callsite_map[run],
-                            module=module,
-                        )
+                        ret[node_name][column] = actual_time
 
                     elif column == "name":
-                        ret[node][column] = callsite
+                        ret[node_name][column] = callsite
+
+                    elif column == "type":
+                        ret[node_name][column] = node_dict["type"]
 
         return ret

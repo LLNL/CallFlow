@@ -52,11 +52,25 @@ export default {
             this.nodes = graph.nodes
             this.links = graph.links
             this.view = view
-            for (const callsite of this.nodes) {
-                if (callsite['id'].split('_')[0] != "intermediate") {
-                    let callsite_module = callsite.module
-                    let callsite_name = callsite.name
-                    this.render(callsite_name, callsite_module)
+            this.target_module_data = this.$store.modules[this.$store.selectedTargetDataset]
+            this.target_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset]
+
+            for (const node of this.nodes) {
+                console.log(node.id, node.name, node.module, node.type)
+                if (node.type == "super-node") {
+                    let module = node.module
+                    let callsite = node.name
+                    let data = this.target_module_data[module][this.$store.selectedMetric]['prop_histograms'][this.$store.selectedProp]
+                    this.render(data, module)
+                }
+                else if (node.type == 'component-node') {
+                    let module = node.module
+                    let callsite = node.name
+                    let data = this.target_callsite_data[callsite][this.$store.selectedMetric]['prop_histograms'][this.$store.selectedProp]
+                    this.render(data, callsite)
+                }
+                else if (node.type == 'intermediate') {
+
                 }
             }
         },
@@ -85,7 +99,7 @@ export default {
                 color = this.$store.color.target
             }
 
-            if(type == 'ensemble'){
+            if (type == 'ensemble') {
                 if (this.$store.selectedScale == 'Linear') {
                     this.minimapYScale = d3.scaleLinear()
                         .domain([0, d3.max(freq)])
@@ -99,7 +113,7 @@ export default {
                 this.minimapXScale = d3.scaleBand()
                     .domain(xVals)
                     .rangeRound([0, this.$parent.nodeWidth])
-                this.bandWidth = this.minimapXScale.bandwidth()    
+                this.bandWidth = this.minimapXScale.bandwidth()
             }
 
             for (let i = 0; i < freq.length; i += 1) {
@@ -123,19 +137,16 @@ export default {
             }
         },
 
-        render(callsite_name, callsite_module) {
-            let node_dict = this.nodes[this.nodeMap[callsite_module]]
-            if (callsite_module.split('_')[0] != "intermediate") {
-                let data = this.$store.modules[this.$store.selectedTargetDataset]
-                if(data[callsite_module] != undefined){
-                    let callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module][this.$store.selectedMetric]['prop_histograms'][this.$store.selectedProp]
-
-                    this.histogram(callsite_data, node_dict, 'ensemble')
-                    if(this.$store.showTarget){
-                        this.histogram(callsite_data, node_dict, 'target')
-                    }    
-                }
+        render(data, node) {
+            console.log(this.nodeMap)
+            let node_dict = this.nodes[this.nodeMap[node]]
+            console.log(data)
+            // if (data[this.$store.selectedTargetDataset][module] != undefined) {
+            this.histogram(data, node_dict, 'ensemble')
+            if (this.$store.showTarget) {
+                this.histogram(data, node_dict, 'target')
             }
+            // }
         }
     }
 }

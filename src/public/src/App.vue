@@ -281,12 +281,14 @@ body {
 }
 
 .unselect-callsite {
-  color: #009688;
-  background: white;
+  color: #009688 !important;
+  background: white !important;
+  cursor: pointer;
 }
 
 .select-callsite {
-  color: white;
-  background: #009688;
+  color: white !important;
+  background: #009688 !important;
+  cursor: pointer;
 }
 </style>
