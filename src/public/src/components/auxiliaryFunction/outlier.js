@@ -254,7 +254,15 @@ export default {
                 .style("opacity", 1)
                 .style("fill", this.$store.color.ensemble)
                 .on('click', (d) => {
-                    console.log(d)
+                    // self.$parent.$parent.selectedOutlierRanks[self.callsite.name] = d['ranks'].sort((a, b) => a - b)
+                    // self.$parent.$parent.selectedOutlierDatasets[self.callsite.name] = d['datasets'].filter((value, index, self) => {
+                    //     return self.indexOf(value) === index;
+                    // })
+                    self.$parent.$parent.selectedOutlierRanks = d['ranks'].sort((a, b) => a - b)
+                    self.$parent.$parent.selectedOutlierDatasets = d['datasets'].filter((value, index, self) => {
+                        return self.indexOf(value) === index;
+                    })
+                    console.log(self.$parent.$parent.selectedOutlierRanks)
                 })
                 .on('mouseover', (d) => {
                     self.$parent.$refs.ToolTip.renderOutliers(d)
@@ -303,7 +311,14 @@ export default {
                     .style("opacity", 1)
                     .style("fill", this.$store.color.target)
                     .on('click', (d) => {
-                        console.log(d)
+                        // self.$parent.$parent.selectedOutlierRanks[self.callsite.name] = d['ranks'].sort((a, b) => a - b)
+                        // self.$parent.$parent.selectedOutlierDatasets[self.callsite.name] = d['datasets'].filter((value, index, self) => {
+                        //     return self.indexOf(value) === index;
+                        // })
+                        self.$parent.$parent.selectedOutlierRanks = d['ranks'].sort((a, b) => a - b)
+                        self.$parent.$parent.selectedOutlierDatasets = d['datasets'].filter((value, index, self) => {
+                            return self.indexOf(value) === index;
+                        })
                     })
                     .on('mouseover', (d) => {
                         self.$parent.$refs.ToolTip.renderOutliers(d)

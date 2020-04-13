@@ -24,7 +24,7 @@ export default {
         firstRender: true,
         padding: { top: 0, right: 10, bottom: 0, left: 10 },
         textOffset: 25,
-        boxplotHeight: 250,
+        boxplotHeight: 340,
         boxplotWidth: 0,
         duration: 300,
         iqrFactor: 0.15,
@@ -53,7 +53,9 @@ export default {
         isEntryFunctionSelected: 'unselect-callsite',
         isCalleeSelected: 'unselect-callsite',
         showSplitButton: 'false',
-        selectClassName: {}
+        selectClassName: {},
+        selectedOutlierRanks: {},
+        selectedOutlierDatasets: {}
     }),
     mounted() {
         let self = this
@@ -390,6 +392,13 @@ export default {
             return callsites
         },
 
+        getSelectedOutlierDatasets(callsite) {
+            return this.selectedOutlierDatasets[callsite]
+        },
+
+        getSelectedOutlierRanks(callsite) {
+            return this.selectedOutlierRanks[callsite]
+        }
     }
 }
 

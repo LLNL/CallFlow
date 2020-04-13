@@ -426,7 +426,11 @@ export default function Sankey() {
                 if (link.target == 'Unknown') {
                     weight = link.weight * (link.actual_time['Inclusive'] / link.target_data.max_flow)
                 }
+                else if (link.target == 'CalcLagrange') {
+                    weight = link.weight
+                }
                 else {
+                    let time = max(link.target_data.actual_time['Inclusive'], link.target_data.actual_time['Exclusive'])
                     weight = link.weight * (link.target_data.actual_time['Inclusive'] / link.target_data.max_flow)
                 }
             }
@@ -669,7 +673,7 @@ export default function Sankey() {
             var sy = 0, ty = 0;
 
             node.sourceLinks.sort(function (a, b) {
-                return a.source_data.y - b.source_data.y
+                return b.source_data.y - a.source_data.y
             })
 
             node.targetLinks.sort(function (a, b) {
