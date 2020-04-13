@@ -411,13 +411,13 @@ export default {
 				}
 			}
 
-			// if (this.firstRender || setAgain) {
-			this.$store.selectedTargetDataset = max_dataset
-			this.selectedTargetDataset = max_dataset
-			this.firstRender = false
+			if (this.firstRender) {
+				this.$store.selectedTargetDataset = max_dataset
+				this.selectedTargetDataset = max_dataset
+				this.firstRender = false
 
-			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
-			// }
+				console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
+			}
 		},
 
 		setComponentMap() {
