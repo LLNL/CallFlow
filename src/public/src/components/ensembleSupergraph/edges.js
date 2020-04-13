@@ -123,7 +123,20 @@ export default {
             let By0 = 0, By1 = 0;
             By0 = d.source_data.y + this.$parent.ySpacing + d.sy + linkHeight
             By1 = d.target_data.y + this.$parent.ySpacing + d.ty + linkHeight
-            const rightMoveDown = By1 - Ty1
+
+            let sourceSum = 0
+            for (let i = 0; i < d.target_data.targetLinks.length; i += 1) {
+                let link_height = d.target_data.targetLinks[i].height
+                sourceSum += link_height
+            }
+
+            let rightMoveDown = d.height
+            if (d.target_data.targetLinks.length > 1) {
+                rightMoveDown += 0
+            }
+            else {
+                rightMoveDown += d.target_data.height - (By1 - Ty1)
+            }
 
             // console.log(d.source, d.target, Ty0, Ty1)//, Tx2, Tx3, Ty0, Ty1)
             // console.log(d.source, d.target, By0, By1)//, Bx2, Bx3, By0, By1)
@@ -153,7 +166,6 @@ export default {
                         else if (dataset == 'target') {
                             link_height = d.targetHeight
                         }
-
 
                         // Set source offset
                         let edge_source_offset = 0
