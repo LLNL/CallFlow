@@ -56,7 +56,6 @@ export default {
             this.target_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset]
 
             for (const node of this.nodes) {
-                console.log(node.id, node.name, node.module, node.type)
                 if (node.type == "super-node") {
                     let module = node.module
                     let callsite = node.name
@@ -107,7 +106,7 @@ export default {
                 }
                 else if (this.$store.selectedScale == 'Log') {
                     this.minimapYScale = d3.scaleLog()
-                        .domain([0, d3.max(freq)])
+                        .domain([0.1, d3.max(freq)])
                         .range([this.$parent.ySpacing, 0]);
                 }
                 this.minimapXScale = d3.scaleBand()
@@ -138,15 +137,11 @@ export default {
         },
 
         render(data, node) {
-            console.log(this.nodeMap)
             let node_dict = this.nodes[this.nodeMap[node]]
-            console.log(data)
-            // if (data[this.$store.selectedTargetDataset][module] != undefined) {
             this.histogram(data, node_dict, 'ensemble')
             if (this.$store.showTarget) {
                 this.histogram(data, node_dict, 'target')
             }
-            // }
         }
     }
 }

@@ -49,7 +49,8 @@ class EnsembleCallFlow:
         # Config contains properties set by the input config file.
         self.config = config
         self.timer = Timer()
-        self.currentBinCount = 20
+        self.currentMPIBinCount = 20
+        self.currentRunBinCount = 20
 
         self.pipeline = Pipeline(self.config)
         if config.process:
@@ -142,7 +143,8 @@ class EnsembleCallFlow:
         stage18 = time.perf_counter()
         Auxiliary(
             states,
-            binCount=self.currentBinCount,
+            MPIBinCount=self.currentMPIBinCount,
+            RunBinCount=self.currentRunBinCount,
             datasets=self.config.dataset_names,
             config=self.config,
             process=True,
@@ -307,17 +309,20 @@ class EnsembleCallFlow:
             return histogram.result
 
         elif action_name == "auxiliary":
+            print(f"Reprocessing: {action['re-process']}")
             if action["re-process"] == 1:
                 result = Auxiliary(
                     self.states,
-                    binCount=action["binCount"],
+                    MPIBinCount=action["MPIBinCount"],
+                    RunBinCount=action["RunBinCount"],
                     datasets=action["datasets"],
                     config=self.config,
-                    process=False,
+                    process=True,
                 ).result
             else:
                 result = self.states["all_data"]
-            self.currentBinCount = action["binCount"]
+            self.currentMPIBinCount = action["MPIBinCount"]
+            self.currentRunBinCount = action["RunBinCount"]
 
             return result
 

@@ -4,7 +4,6 @@ import Settings from '../settings/settings'
 import BoxPlot from './boxplot'
 import * as d3 from 'd3'
 import * as utils from '../utils'
-import { TableSimplePlugin } from 'bootstrap-vue'
 
 export default {
     name: 'AuxiliaryFunction',
@@ -92,7 +91,8 @@ export default {
 
         EventHandler.$on('callsite_information_sort', (data) => {
             let attribute = self.$store.selectedRuntimeSortBy
-            self.sortByAttribute(attribute)
+            self.differenceCallsites = self.sortByAttribute(self.knc['difference'], attribute)
+            self.intersectionCallsites = self.sortByAttribute(self.knc['intersection'], attribute)
         })
     },
 

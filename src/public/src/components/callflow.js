@@ -89,7 +89,7 @@ export default {
 		selectedIncTime: 0,
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
-		metrics: ['Exclusive', 'Inclusive', 'Imbalance'],
+		metrics: ['Exclusive', 'Inclusive'],//, 'Imbalance'],
 		selectedMetric: 'Exclusive',
 		runtimeColorMap: [],
 		distributionColorMap: [],
@@ -144,7 +144,7 @@ export default {
 		caseStudy: ['Lulesh-Scaling-3-runs', 'Lulesh-Scaling-8-runs', 'Kripke-MPI', 'OSU-Bcast', 'Kripke-Scaling'],
 		selectedCaseStudy: 'Lulesh-Scaling-3-runs',
 		selectedRunBinCount: 20,
-		selectedMPIBinCount: 5,
+		selectedMPIBinCount: 20,
 		selectedHierarchyMode: 'Uniform',
 		hierarchyModes: ['Uniform', 'Exclusive'],
 		selectedRuntimeSortBy: 'Inclusive',
@@ -198,7 +198,8 @@ export default {
 			this.$socket.emit('ensemble_callsite_data', {
 				datasets: this.$store.selectedDatasets,
 				sortBy: this.$store.auxiliarySortBy,
-				binCount: this.$store.selectedMPIBinCount,
+				MPIBinCount: this.$store.selectedMPIBinCount,
+				RunBinCount: this.$store.selectedRunBinCount,
 				module: 'all',
 				're_process': 1
 			})
@@ -235,9 +236,10 @@ export default {
 				this.$socket.emit('ensemble_callsite_data', {
 					datasets: this.$store.selectedDatasets,
 					sortBy: this.$store.auxiliarySortBy,
-					binCount: this.$store.selectedMPIBinCount,
+					MPIBinCount: this.$store.selectedMPIBinCount,
+					RunBinCount: this.$store.selectedRunBinCount,
 					module: 'all',
-					re_process: 0
+					re_process: this.$store.reprocess
 				})
 			}
 		},
@@ -362,6 +364,7 @@ export default {
 			this.setViewDimensions()
 
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
+			this.$store.reprocess = 0
 		},
 
 		setOtherData() {
@@ -408,13 +411,13 @@ export default {
 				}
 			}
 
-			if (this.firstRender) {
-				this.$store.selectedTargetDataset = max_dataset
-				this.selectedTargetDataset = max_dataset
-				this.firstRender = false
+			// if (this.firstRender || setAgain) {
+			this.$store.selectedTargetDataset = max_dataset
+			this.selectedTargetDataset = max_dataset
+			this.firstRender = false
 
-				console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
-			}
+			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
+			// }
 		},
 
 		setComponentMap() {
@@ -705,11 +708,11 @@ export default {
 			this.init()
 		},
 
-		updateBinCount() {
-			this.$store.selectedMPIBinCount = this.selectedMPIBinCount
-			this.clearLocal()
-			this.init()
-		},
+		// updateBinCount() {
+		// 	this.$store.selectedMPIBinCount = this.selectedMPIBinCount
+		// 	this.clearLocal()
+		// 	this.init()
+		// },
 
 		updateFunctionsInCCT() {
 			this.$socket.emit('cct', {
@@ -789,7 +792,35 @@ export default {
 		},
 
 		updateColorMin() {
-			// this.
+		},
+
+		updateRunBinCount() {
+			this.$store.selectedRunBinCount = this.selectedRunBinCount
+			this.$socket.emit('ensemble_callsite_data', {
+				datasets: this.$store.selectedDatasets,
+				sortBy: this.$store.auxiliarySortBy,
+				MPIBinCount: this.$store.selectedMPIBinCount,
+				RunBinCount: this.$store.selectedRunBinCount,
+				module: 'all',
+				re_process: 1
+			})
+			this.clearLocal()
+			this.init()
+		},
+
+		updateMPIBinCount() {
+			this.$store.selectedMPIBinCount = this.selectedMPIBinCount
+			this.$store.reprocess = 1
+			this.$socket.emit('ensemble_callsite_data', {
+				datasets: this.$store.selectedDatasets,
+				sortBy: this.$store.auxiliarySortBy,
+				MPIBinCount: this.$store.selectedMPIBinCount,
+				RunBinCount: this.$store.selectedRunBinCount,
+				module: 'all',
+				re_process: 1
+			})
+			this.clearLocal()
+			this.init()
 		}
 	}
 }

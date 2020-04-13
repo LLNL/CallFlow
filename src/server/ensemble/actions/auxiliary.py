@@ -24,10 +24,19 @@ import os
 
 
 class Auxiliary:
-    def __init__(self, states, binCount="20", datasets=[], config={}, process=True):
+    def __init__(
+        self,
+        states,
+        MPIBinCount="20",
+        RunBinCount="20",
+        datasets=[],
+        config={},
+        process=True,
+    ):
         self.timer = Timer()
         self.df = self.select_rows(states["ensemble_entire"].df, datasets)
-        self.binCount = binCount
+        self.MPIBinCount = MPIBinCount
+        self.RunBinCount = RunBinCount
         self.config = config
         self.states = states
         self.process = process
@@ -79,7 +88,9 @@ class Auxiliary:
         if np.isnan(data_min) or np.isnan(data_max):
             data_min = data.min()
             data_max = data.max()
-        h, b = np.histogram(data, range=[data_min, data_max], bins=int(self.binCount))
+        h, b = np.histogram(
+            data, range=[data_min, data_max], bins=int(self.MPIBinCount)
+        )
         return 0.5 * (b[1:] + b[:-1]), h
 
     def convert_pandas_array_to_list(self, series):
@@ -259,7 +270,7 @@ class Auxiliary:
         # Create the data dict.
         ensemble = {}
         for callsite, callsite_df in self.name_group_df:
-            gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(
+            gradients = KDE_gradients(self.target_df, binCount=self.RunBinCount).run(
                 columnName="name", callsiteOrModule=callsite
             )
             boxplot = BoxPlot(callsite_df)
@@ -312,7 +323,7 @@ class Auxiliary:
         ensemble = {}
         for module, module_df in self.module_group_df:
             # Calculate gradients
-            gradients = KDE_gradients(self.target_df, binCount=self.binCount).run(
+            gradients = KDE_gradients(self.target_df, binCount=self.RunBinCount).run(
                 columnName="module", callsiteOrModule=module
             )
             ensemble[module] = self.pack_json(
