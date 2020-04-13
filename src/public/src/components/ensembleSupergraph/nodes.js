@@ -214,7 +214,6 @@ export default {
 
                 let grid = []
                 let val = []
-                console.log(node.type, node.module, node.name)
                 if (node.type == 'super-node') {
                     // if (this.ensemble_module_data[node.module] != undefined) {
                     grid = this.ensemble_module_data[node.module][this.$store.selectedMetric]['gradients']['hist']['x']
@@ -231,8 +230,6 @@ export default {
                     grid = []
                     val = []
                 }
-
-                console.log(grid, val)
 
                 for (let i = 0; i < grid.length; i += 1) {
                     let x = (i + i + 1) / (2 * grid.length)
@@ -354,9 +351,6 @@ export default {
                             .style('opacity', 1.0)
                     }
                 })
-                .on('contextmenu', (d) => {
-                    return d3.contextMenu(self.$store.contextMenu)(d);
-                });
 
             // Transition
             this.nodes.selectAll('rect')
@@ -555,8 +549,7 @@ export default {
                     data = this.$store.callsites
                 }
 
-
-                if (data['ensemble'][node_name] != undefined) {
+                if (data['ensemble'][node_name] != undefined && this.graph.nodes[i].type != 'intermediate') {
                     let gradients = data['ensemble'][node_name][this.$store.selectedMetric]['gradients']
 
                     let targetPos = gradients['dataset']['position'][this.$store.selectedTargetDataset] + 1
@@ -801,7 +794,6 @@ export default {
                             node_name = d.id
                         }
 
-                        console.log(d.id, node_name)
                         var textSize = this.textSize(node_name)['width'];
                         if (textSize < d.height) {
                             return node_name;

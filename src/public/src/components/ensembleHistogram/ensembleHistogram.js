@@ -151,7 +151,6 @@ export default {
         },
 
         setupScale(callsite) {
-            console.log(callsite)
             let ensemble_store = this.$store.modules[this.$store.selectedTargetDataset][callsite]
             let target_store = this.$store.modules[this.$store.selectedTargetDataset][callsite]
 
