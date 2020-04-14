@@ -142,7 +142,7 @@ export default {
 		],
 		parameter_analysis: true,
 		caseStudy: ['Lulesh-Scaling-3-runs', 'Lulesh-Scaling-8-runs', 'Kripke-MPI', 'OSU-Bcast', 'Kripke-Scaling'],
-		selectedCaseStudy: 'Lulesh-Scaling-3-runs',
+		selectedCaseStudy: '',
 		selectedRunBinCount: 20,
 		selectedMPIBinCount: 20,
 		selectedHierarchyMode: 'Uniform',
@@ -365,6 +365,7 @@ export default {
 
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
 			this.$store.reprocess = 0
+			this.selectedCaseStudy = data['runName']
 		},
 
 		setOtherData() {
@@ -386,6 +387,8 @@ export default {
 			}
 
 			this.$store.contextMenu = this.contextMenu
+
+			this.$store.selectedSuperNodePositionMode = 'Minimal edge crossing'
 
 		},
 

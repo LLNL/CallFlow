@@ -151,6 +151,9 @@ export default {
         },
 
         formatNumberOfHops(name) {
+            if (name == undefined || name[0] == undefined) {
+                return '-'
+            }
             return name[0] - 1
         },
 

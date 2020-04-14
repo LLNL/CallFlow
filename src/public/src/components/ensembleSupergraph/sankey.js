@@ -225,12 +225,20 @@ export default function Sankey() {
 
             if (node.type == 'intermediate') {
                 node.value = node.value
+                node.targetValue = node.targetValue
             }
             else {
                 node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
+                // node.value = node['actual_time']['Inclusive']
+                node.targetValue = 0
+                if (node[store.selectedTargetDataset] != undefined) {
+                    node.targetValue = Math.max(node[store.selectedTargetDataset]['actual_time']['Inclusive'], node[store.selectedTargetDataset]['actual_time']['Exclusive'])
+                }
             }
 
             console.log("[Compute node values] Adjusted flow", node.id, ": ", node.value)
+            console.log("[Compute node values] Adjusted target flow", node.id, ": ", node.targetValue)
+
         });
     }
 
@@ -272,7 +280,6 @@ export default function Sankey() {
             })
             remainingNodes = nextNodes;
             level += 1
-
         }
 
         console.log("[Compute node breadths] Number of levels: ", level)
@@ -387,11 +394,18 @@ export default function Sankey() {
         let levelCount = 0
 
         nodesByBreadth.forEach(function (nodes) {
-            // if (levelCount == 0) {
-            nodes.sort(function (a, b) {
-                return b['time (inc)'] - a['time (inc)']
-            })
-
+            if (store.selectedSuperNodePositionMode == 'Minimal edge crossing') {
+            }
+            else {
+                nodes.sort(function (a, b) {
+                    if (store.selectedSuperNodePositionMode == 'Inclusive') {
+                        return b['time (inc)'] - a['time (inc)']
+                    }
+                    else if (store.selectedSuperNodePositionMode == 'Exclusive') {
+                        return b['time'] - a['time']
+                    }
+                })
+            }
             nodes = pushIntermediateNodeBottom(nodes)
             // nodes = pushNodeBottomIfIntermediateTargets(nodes)
 
@@ -411,6 +425,7 @@ export default function Sankey() {
                 console.log("[Compute node depths] value: ", node.value)
                 console.log("[Compute node depths] minNodeScale: ", minNodeScale)
                 console.log("[Compute node depths] Ensemble scaling: ", scale)
+
                 node.height = node.value * minNodeScale * scale;
                 console.log("[Compute node depths] Node height: ", node.height)
             });
@@ -418,27 +433,9 @@ export default function Sankey() {
         });
 
         links.forEach(function (link) {
-            let weight = 0
-            if (link.type == 'source_intermediate') {
-                weight = link.weight * (link.source_data.actual_time['Inclusive'] / link.source_data.max_flow)
-            }
-            else if (link.type == 'target_intermediate') {
-                if (link.target == 'Unknown') {
-                    weight = link.weight * (link.actual_time['Inclusive'] / link.target_data.max_flow)
-                }
-                else if (link.target == 'CalcLagrange') {
-                    weight = link.weight
-                }
-                else {
-                    let time = max(link.target_data.actual_time['Inclusive'], link.target_data.actual_time['Exclusive'])
-                    weight = link.weight * (link.target_data.actual_time['Inclusive'] / link.target_data.max_flow)
-                }
-            }
-            else {
-                weight = link.weight * (link.source_data.actual_time['Inclusive'] / link.source_data.max_flow)
-            }
-
-            link.height = weight * scale
+            let flowScale = (link.source_data.value / link.source_data.max_flow)
+            link.scaled_weight = link.weight * flowScale
+            link.height = link.scaled_weight * scale
 
             let source = ''
             if (link.type == 'source_intermediate') {
@@ -451,31 +448,11 @@ export default function Sankey() {
                 source = link.source
             }
 
-            console.log(source, link.source, link.target, link.type)
+            console.log(link.source, link.target, link.type)
 
-
-            let data = {}
-            let targetData = {}
-            let node = ''
-            if (source.indexOf('=') > -1) {
-                data = store.callsites['ensemble']
-                targetData = store.callsites[store.selectedTargetDataset]
-                node = source.split('=')[1]
-            }
-            else {
-                data = store.modules['ensemble']
-                targetData = store.modules[store.selectedTargetDataset]
-                node = source
-            }
-            let ensemble_mean = data[node]["Inclusive"]["mean_time"]
-
-
-            let target_mean = 0.0
-            if (store.modules[store.selectedTargetDataset][source] != undefined) {
-                target_mean = targetData[node]['Inclusive']["mean_time"]
-            }
-            console.log(ensemble_mean, target_mean, target_mean / ensemble_mean)
-            link.targetHeight = weight * scale * (target_mean / ensemble_mean)
+            let targetScale = (link.source_data.targetValue / link.source_data.value)
+            link.target_scaled_weight = link.weight * targetScale
+            link.targetHeight = link.target_scaled_weight * scale
         });
     }
 
