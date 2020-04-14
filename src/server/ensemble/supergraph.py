@@ -237,18 +237,19 @@ class SuperGraph(nx.Graph):
                     if idx == 0:
                         source_callsite = source
                         source_df = self.module_group_df.get_group((module))
-                        node_type = "super-node"
+                        source_node_type = "super-node"
                     else:
                         source_callsite = source.split("=")[1]
                         source_df = self.module_name_group_df.get_group(
                             (module, source_callsite)
                         )
-                        node_type = "component-node"
+                        source_node_type = "component-node"
 
                     target_callsite = target.split("=")[1]
                     target_df = self.module_name_group_df.get_group(
                         (module, target_callsite)
                     )
+                    target_node_type = "component-node"
 
                     source_weight = source_df["time (inc)"].max()
                     target_weight = target_df["time (inc)"].max()
@@ -256,8 +257,8 @@ class SuperGraph(nx.Graph):
                     edge_type = "normal"
 
                     print(f"Adding edge: {source_callsite}, {target_callsite}")
-                    self.agg_g.add_node(source, attr_dict={"type": node_type})
-                    self.agg_g.add_node(target, attr_dict={"type": node_type})
+                    self.agg_g.add_node(source, attr_dict={"type": source_node_type})
+                    self.agg_g.add_node(target, attr_dict={"type": target_node_type})
                     self.agg_g.add_edge(
                         source,
                         target,
@@ -516,7 +517,10 @@ class SuperGraph(nx.Graph):
         for node in self.agg_g.nodes(data=True):
             node_name = node[0]
             node_dict = node[1]["attr_dict"]
+            print(node_name, node_dict)
+
             if node_dict["type"] == "component-node":
+                print(node_name, node_dict)
                 module = node_name.split("=")[0]
                 callsite = node_name.split("=")[1]
                 actual_time = self.callsite_time(
