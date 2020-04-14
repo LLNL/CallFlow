@@ -122,6 +122,8 @@ export default {
             this.intersectionCallsites = this.sortByAttribute(this.knc['intersection'], this.$store.selectedMetric)
 
             this.intersectionCallsites = this.hideAllCallsites(this.intersectionCallsites)
+            this.differenceCallsites = this.hideAllCallsites(this.differenceCallsites)
+
 
             this.selectedModule = this.$store.selectedModule
             this.selectedCallsite = this.$store.selectedCallsite

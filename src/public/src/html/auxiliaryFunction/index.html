@@ -31,8 +31,7 @@
     <v-layout class="component-data">
         <p class="subtitle-2">Target uKNC ({{numberOfDifferenceCallsites}} call sites). </p>
     </v-layout>
-    <v-container class="auxiliary-node" v-for="callsite in differenceCallsites" :id="callsite.id"
-        :style="{ width: boxplotWidth + 'px', height: boxplotHeight + 'px' }">
+    <v-container class="auxiliary-node" v-for="callsite in differenceCallsites" :id="callsite.id">
         <v-layout row wrap>
             <v-flex md1>
                 <template>
@@ -48,7 +47,7 @@
                 </template>
 
             </v-flex>
-            <v-flex md11>
+            <v-flex md9>
                 <template>
                     <v-tooltip bottom>
                         <template v-slot:activator="{ on }">
@@ -60,25 +59,40 @@
                     </v-tooltip>
                 </template>
             </v-flex>
+
+            <v-flex md2>
+                <v-btn :id="callsite.name" icon color=" lighten-2" v-if="callsite.reveal == false"
+                    @click=showIntersectionBoxPlot>
+                    <v-icon>input</v-icon>
+                </v-btn>
+                <v-btn :id="callsite.name" icon color="lighten-2" v-if="callsite.reveal == true"
+                    @click=hideIntersectionBoxPlot>
+                    <v-icon>close</v-icon>
+                </v-btn>
+            </v-flex>
         </v-layout>
 
-
-        <v-layout row wrap>
-            <div class="subtitle-2" :style="'color: ' + targetColor">Mean : {{means[callsite.name]}}</div>
-            <v-spacer></v-spacer>
-            <div class="subtitle-2" :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}</div>
-        </v-layout>
+        <template v-if="callsite.reveal == false">
+            <v-layout row wrap>
+                <div class="subtitle-2" :style="'color: ' + targetColor">Mean : {{means[callsite.name]}}</div>
+                <v-spacer></v-spacer>
+                <div class="subtitle-2" :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}</div>
+            </v-layout>
+        </template>
         <!-- <div>Percentage imbalance : {{callsite['imbalance_perc_inclusive']}}</div>
         <div>Skewness: {{callsite['skewness_inclusive']}}</div>
         <div>Kurtosis: {{callsite['kurtosis_inclusive']}}</div> -->
-        <BoxPlot :ref="callsite.id" :callsite="callsite" />
+        <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget=false />
 
-        <v-layout row wrap>
-            <div class="subtitle-2" :style="'color: ' + ensembleColor">Mean : {{ensembleMeans[callsite.name]}}</div>
-            <v-spacer></v-spacer>
-            <div class="subtitle-2" :style="'color: ' + ensembleColor">Variance : {{ensembleVariance[callsite.name]}}
-            </div>
-        </v-layout>
+        <template v-if="callsite.reveal == false">
+            <v-layout row wrap>
+                <div class="subtitle-2" :style="'color: ' + ensembleColor">Mean : {{ensembleMeans[callsite.name]}}</div>
+                <v-spacer></v-spacer>
+                <div class="subtitle-2" :style="'color: ' + ensembleColor">Variance :
+                    {{ensembleVariance[callsite.name]}}
+                </div>
+            </v-layout>
+        </template>
     </v-container>
 
 
