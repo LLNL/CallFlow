@@ -56,6 +56,15 @@ export default {
             self.clear()
             self.init()
         })
+
+        EventHandler.$on('show_boxplot', (callsite) => {
+            self.visualize(callsite)
+        })
+
+        EventHandler.$on('hide_boxplot', (callsite) => {
+            self.clear()
+        })
+
     },
 
     created() {
@@ -64,31 +73,17 @@ export default {
 
     methods: {
         init() {
-            this.containerWidth = this.$parent.boxplotWidth - 2 * this.padding.right - 1 * this.padding.left
-
-            this.svg = d3.select('#' + this.id)
-                .attrs({
-                    'width': this.containerWidth,
-                    'height': this.containerHeight
-                })
-
-            this.boxHeight = this.containerHeight - this.informationHeight
-            this.boxWidth = this.containerWidth
-
-            this.boxPosition = this.informationHeight / 2 + this.outlierHeight / 2
-            this.centerLinePosition = (this.boxHeight - this.informationHeight / 4) / 2
-            this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4
-
+            this.containerHeight = 0
             this.ensemble_data = this.$store.callsites['ensemble'][this.callsite.name][this.$store.selectedMetric]['q']
             if (this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name] != undefined) {
                 this.target_data = this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name][this.$store.selectedMetric]['q']
             }
             else {
-                this.target_data = [-1, -1, -1, -1, -1]
+                this.target_data = [0, 0, 0, 0, 0]
             }
 
             this.process()
-            this.visualize()
+            // this.visualize()
         },
 
         process() {
@@ -107,7 +102,23 @@ export default {
             return result
         },
 
-        visualize() {
+        visualize(callsite) {
+            this.containerWidth = this.$parent.boxplotWidth - 2 * this.padding.right - 1 * this.padding.left
+            this.containerHeight = 150
+
+            this.boxHeight = this.containerHeight - this.informationHeight
+            this.boxWidth = this.containerWidth
+
+            this.boxPosition = this.informationHeight / 2 + this.outlierHeight / 2
+            this.centerLinePosition = (this.boxHeight - this.informationHeight / 4) / 2
+            this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4
+
+            this.svg = d3.select('#' + callsite.id)
+                .attrs({
+                    'width': this.containerWidth,
+                    'height': this.containerHeight
+                })
+
             let min_x = Math.min(this.q.min, this.targetq.min)
             let max_x = Math.max(this.q.max, this.targetq.max)
 
