@@ -101,7 +101,7 @@ export default {
                 }).entries(this.graph.nodes)
         },
 
-        drawPath(d, linkHeight, edge_source_offset, edge_target_offset) {
+        drawPath(d, linkHeight, edge_source_offset, edge_target_offset, dataset) {
             let Tx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
                 Tx1 = d.target_data.x - edge_target_offset,
                 Txi = d3.interpolateNumber(Tx0, Tx1),
@@ -124,19 +124,7 @@ export default {
             By0 = d.source_data.y + this.$parent.ySpacing + d.sy + linkHeight
             By1 = d.target_data.y + this.$parent.ySpacing + d.ty + linkHeight
 
-            let sourceSum = 0
-            for (let i = 0; i < d.target_data.targetLinks.length; i += 1) {
-                let link_height = d.target_data.targetLinks[i].height
-                sourceSum += link_height
-            }
-
-            let rightMoveDown = d.height
-            if (d.target_data.targetLinks.length > 1) {
-                rightMoveDown += 0
-            }
-            else {
-                rightMoveDown += d.target_data.height - (By1 - Ty1)
-            }
+            let rightMoveDown = By1 - Ty1
 
             // console.log(d.source, d.target, Ty0, Ty1)//, Tx2, Tx3, Ty0, Ty1)
             // console.log(d.source, d.target, By0, By1)//, Bx2, Bx3, By0, By1)
@@ -170,7 +158,7 @@ export default {
                         // Set source offset
                         let edge_source_offset = 0
                         if (d.source.split('_')[0] == "intermediate") {
-                            edge_source_offset = -1
+                            edge_source_offset = 0
                         }
                         else if (dataset == 'target') {
                             edge_source_offset = this.offset
@@ -179,13 +167,14 @@ export default {
                         // Set target offset
                         let edge_target_offset = 0
                         if (d.target.split('_')[0] == "intermediate") {
-                            edge_target_offset = -1
+                            edge_target_offset = 0
                         }
                         else if (dataset == 'target') {
                             edge_target_offset = this.offset
                         }
 
-                        return this.drawPath(d, link_height, edge_source_offset, edge_target_offset)
+                        return this.drawPath(d, link_height, edge_source_offset, edge_target_offset, dataset)
+
                     },
                     'fill': (d) => {
                         if (dataset == 'ensemble') {
