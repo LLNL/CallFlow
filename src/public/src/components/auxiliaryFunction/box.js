@@ -102,6 +102,7 @@ export default {
 
         centerLine() {
             let self = this
+            console.log(this.q.min, this.q.max)
             this.centerLineSVG = this.g
                 .insert("line", "rect")
                 .attrs({
@@ -114,7 +115,6 @@ export default {
                 })
                 .style('stroke-width', '1.5')
                 .style('z-index', 10)
-
         },
 
         clear() {

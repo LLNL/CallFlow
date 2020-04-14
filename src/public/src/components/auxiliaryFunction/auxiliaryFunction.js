@@ -55,7 +55,9 @@ export default {
         showSplitButton: 'false',
         selectClassName: {},
         selectedOutlierRanks: {},
-        selectedOutlierDatasets: {}
+        selectedOutlierDatasets: {},
+        showKNCCallsite: {},
+        showuKNCCallsite: {}
     }),
     mounted() {
         let self = this
@@ -99,6 +101,51 @@ export default {
     },
 
     methods: {
+        init() {
+            if (this.firstRender) {
+                this.width = document.getElementById(this.id).clientWidth
+                this.height = 0.66 * this.$store.viewHeight
+                this.boxplotWidth = this.width - this.padding.left - this.padding.right
+                document.getElementById(this.id).style.maxHeight = this.height + "px"
+                this.firstRender = false
+            }
+
+            this.callsites = this.$store.callsites['ensemble']
+            this.targetCallsites = this.$store.callsites[this.$store.selectedTargetDataset]
+
+            this.knc = this.KNC()
+
+            this.numberOfDifferenceCallsites = Object.keys(this.knc['difference']).length
+            this.numberOfIntersectionCallsites = Object.keys(this.knc['intersection']).length
+
+            this.differenceCallsites = this.sortByAttribute(this.knc['difference'], this.$store.selectedMetric)
+            this.intersectionCallsites = this.sortByAttribute(this.knc['intersection'], this.$store.selectedMetric)
+
+            this.intersectionCallsites = this.hideAllCallsites(this.intersectionCallsites)
+
+            this.selectedModule = this.$store.selectedModule
+            this.selectedCallsite = this.$store.selectedCallsite
+            this.selectedMetric = this.$store.selectedMetric
+            this.ensembleColor = d3.rgb(this.$store.color.ensemble).darker(1)
+            this.targetColor = d3.rgb(this.$store.color.target).darker(1)
+
+            for (let callsite in this.callsites) {
+                if (this.targetCallsites[callsite] != undefined) {
+                    this.means[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['mean_time'])
+                    this.variance[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['variance_time'])
+                    this.ensembleMeans[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]['mean_time'])
+                    this.ensembleVariance[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]['variance_time'])
+                }
+                else {
+                    this.means[callsite] = '0.0'
+                    this.variance[callsite] = '0.0'
+                    this.ensembleMeans[callsite] = '0.0'
+                    this.ensembleVariance[callsite] = '0.0'
+                }
+                this.selectClassName[callsite] = 'unselect-callsite'
+            }
+        },
+
         changeSelectedClassName() {
             event.stopPropagation()
             let callsite = event.currentTarget.id
@@ -178,47 +225,31 @@ export default {
             }
         },
 
-        init() {
-            if (this.firstRender) {
-                this.width = document.getElementById(this.id).clientWidth
-                this.height = 0.66 * this.$store.viewHeight
-                this.boxplotWidth = this.width - this.padding.left - this.padding.right
-                document.getElementById(this.id).style.maxHeight = this.height + "px"
-                this.firstRender = false
+        // Show/hide the boxplots
+        showAllCallsites(callsites) {
+            for (let i = 0; i < callsites.length; i++) {
+                callsites[i].reveal = true
             }
+        },
 
-            this.callsites = this.$store.callsites['ensemble']
-            this.targetCallsites = this.$store.callsites[this.$store.selectedTargetDataset]
-
-            this.knc = this.KNC()
-
-            this.numberOfDifferenceCallsites = Object.keys(this.knc['difference']).length
-            this.numberOfIntersectionCallsites = Object.keys(this.knc['intersection']).length
-
-            this.differenceCallsites = this.sortByAttribute(this.knc['difference'], this.$store.selectedMetric)
-            this.intersectionCallsites = this.sortByAttribute(this.knc['intersection'], this.$store.selectedMetric)
-
-            this.selectedModule = this.$store.selectedModule
-            this.selectedCallsite = this.$store.selectedCallsite
-            this.selectedMetric = this.$store.selectedMetric
-            this.ensembleColor = d3.rgb(this.$store.color.ensemble).darker(1)
-            this.targetColor = d3.rgb(this.$store.color.target).darker(1)
-
-            for (let callsite in this.callsites) {
-                if (this.targetCallsites[callsite] != undefined) {
-                    this.means[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['mean_time'])
-                    this.variance[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['variance_time'])
-                    this.ensembleMeans[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]['mean_time'])
-                    this.ensembleVariance[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]['variance_time'])
-                }
-                else {
-                    this.means[callsite] = '0.0'
-                    this.variance[callsite] = '0.0'
-                    this.ensembleMeans[callsite] = '0.0'
-                    this.ensembleVariance[callsite] = '0.0'
-                }
-                this.selectClassName[callsite] = 'unselect-callsite'
+        hideAllCallsites(callsites) {
+            for (let callsite in callsites) {
+                callsites[callsite].reveal = false
             }
+            return callsites
+        },
+
+        showIntersectionBoxPlot(callsite) {
+            event.stopPropagation()
+            let callsite_name = event.currentTarget.id
+            this.intersectionCallsites[callsite_name].reveal = true
+            EventHandler.$emit('show_boxplot', this.intersectionCallsites[callsite_name])
+        },
+
+        closeIntersectionBoxPlot(callsite) {
+            event.stopPropagation()
+            let callsite_name = event.currentTarget.id
+            EventHandler.$emit('hide_boxplot', this.intersectionCallsites[callsite_name])
         },
 
         clear() {
@@ -250,7 +281,6 @@ export default {
                 this.isEntryFunctionSelected = 'unselect-callsite'
             }
             this.showSplitButton = 'true'
-
         },
 
         showExitFunctions(event) {
