@@ -451,7 +451,7 @@ export default function Sankey() {
             console.log(link.source, link.target, link.type)
 
             let targetScale = (link.source_data.targetValue / link.source_data.value)
-            link.target_scaled_weight = link.weight * targetScale
+            link.target_scaled_weight = link.scaled_weight * targetScale
             link.targetHeight = link.target_scaled_weight * scale
         });
     }
