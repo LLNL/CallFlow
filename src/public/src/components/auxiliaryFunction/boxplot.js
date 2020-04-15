@@ -49,7 +49,6 @@ export default {
     },
 
     mounted() {
-        this.id = "boxplot-" + this.callsite.id
         this.init()
         let self = this
         EventHandler.$on('show_target_auxiliary', (data) => {
@@ -58,7 +57,11 @@ export default {
         })
 
         EventHandler.$on('show_boxplot', (callsite) => {
-            self.visualize(callsite)
+            let thisid = self.id.split('-')[1] + '-' + self.id.split('-')[2]
+            if (callsite.id == thisid) {
+                console.log("Showing boxpliot of ", callsite)
+                self.visualize(callsite)
+            }
         })
 
         EventHandler.$on('hide_boxplot', (callsite) => {
@@ -68,25 +71,25 @@ export default {
     },
 
     created() {
-        this.callsiteID = this.callsite.id
+        this.id = "boxplot-" + this.callsite.id
+
     },
 
     methods: {
         init() {
             this.containerHeight = 0
-            this.ensemble_data = this.$store.callsites['ensemble'][this.callsite.name][this.$store.selectedMetric]['q']
-            if (this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name] != undefined) {
-                this.target_data = this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name][this.$store.selectedMetric]['q']
+            this.containerWidth = this.$parent.boxplotWidth - 2 * this.padding.right - 1 * this.padding.left
+        },
+
+        process(callsite) {
+            this.ensemble_data = this.$store.callsites['ensemble'][callsite.name][this.$store.selectedMetric]['q']
+            if (this.$store.callsites[this.$store.selectedTargetDataset][callsite.name] != undefined) {
+                this.target_data = this.$store.callsites[this.$store.selectedTargetDataset][callsite.name][this.$store.selectedMetric]['q']
             }
             else {
                 this.target_data = [0, 0, 0, 0, 0]
             }
 
-            this.process()
-            // this.visualize()
-        },
-
-        process() {
             this.q = this.qFormat(this.ensemble_data)
             this.targetq = this.qFormat(this.target_data)
         },
@@ -102,8 +105,7 @@ export default {
             return result
         },
 
-        visualize(callsite) {
-            this.containerWidth = this.$parent.boxplotWidth - 2 * this.padding.right - 1 * this.padding.left
+        drawSVG(callsite) {
             this.containerHeight = 150
 
             this.boxHeight = this.containerHeight - this.informationHeight
@@ -113,7 +115,7 @@ export default {
             this.centerLinePosition = (this.boxHeight - this.informationHeight / 4) / 2
             this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4
 
-            this.svg = d3.select('#' + callsite.id)
+            this.svg = d3.select('#boxplot-' + callsite.id)
                 .attrs({
                     'width': this.containerWidth,
                     'height': this.containerHeight
@@ -125,14 +127,19 @@ export default {
             this.xScale = d3.scaleLinear()
                 .domain([min_x, max_x])
                 .range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
+        },
 
-            this.$refs.Box.init(this.q, this.targetq, this.xScale, this.showTarget)
-            this.$refs.Markers.init(this.q, this.targetq, this.xScale, this.showTarget)
+        visualize(callsite) {
+            this.process(callsite)
+            this.drawSVG(callsite)
+
+            this.$refs.Box.init(callsite, this.q, this.targetq, this.xScale, this.showTarget)
+            this.$refs.Markers.init(callsite, this.q, this.targetq, this.xScale, this.showTarget)
             this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget)
 
-            EventHandler.$emit('highlight_dataset', {
-                dataset: this.$store.selectedTargetDataset
-            })
+            // EventHandler.$emit('highlight_dataset', {
+            //     dataset: this.$store.selectedTargetDataset
+            // })
         },
 
         clear() {

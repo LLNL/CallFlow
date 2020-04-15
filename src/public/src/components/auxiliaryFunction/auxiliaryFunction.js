@@ -124,7 +124,6 @@ export default {
             this.intersectionCallsites = this.hideAllCallsites(this.intersectionCallsites)
             this.differenceCallsites = this.hideAllCallsites(this.differenceCallsites)
 
-
             this.selectedModule = this.$store.selectedModule
             this.selectedCallsite = this.$store.selectedCallsite
             this.selectedMetric = this.$store.selectedMetric
@@ -148,6 +147,12 @@ export default {
             }
         },
 
+        // create unique ID for each callsite.
+        getID(callsiteID) {
+            return "callsite-information-" + callsiteID
+        },
+
+        // Code to select the callsite by the component-level button
         changeSelectedClassName() {
             event.stopPropagation()
             let callsite = event.currentTarget.id
@@ -184,6 +189,8 @@ export default {
             return this.selectClassName[callsite]
         },
 
+
+        // Formatting for the html view
         formatModule(module) {
             if (module.length < 10) {
                 return module
@@ -212,6 +219,7 @@ export default {
             return ret
         },
 
+        // Find the known node correspondence. 
         KNC() {
             let callsites = new Set(Object.keys(this.$store.callsites['ensemble']))
             let targetCallsites = new Set(Object.keys(this.$store.callsites[this.$store.selectedTargetDataset]))
@@ -241,6 +249,7 @@ export default {
             return callsites
         },
 
+        // Reveal the boxplots on request. 
         showIntersectionBoxPlot(callsite) {
             event.stopPropagation()
             let callsite_name = event.currentTarget.id

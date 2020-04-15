@@ -19,6 +19,7 @@ export default {
 
     methods: {
         init(id) {
+            console.log(id)
             this.id = id
             this.toolTipDiv = d3.select('#' + this.id)
             this.height = 80
@@ -56,11 +57,11 @@ export default {
             this.addText('Q3: ' + utils.formatRuntimeWithUnits(this.data.q3))
         },
 
-        outliers(){
+        outliers() {
             this.addText(this.data.count + " outliers")
         },
 
-        drawRect(widthCount, heightCount){
+        drawRect(widthCount, heightCount) {
             this.clear()
             this.width = widthCount * this.fontSize
             var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
@@ -77,7 +78,7 @@ export default {
                     "rx": "10px",
                     "fill-opacity": 1,
                     "width": this.width,
-                    "height": heightCount*this.fontSize,
+                    "height": heightCount * this.fontSize,
                     'x': () => {
                         if (this.mousePosX > this.halfWidth) {
                             return (this.mousePosX - this.halfWidth) + 'px';
@@ -100,7 +101,7 @@ export default {
             this.quartiles()
         },
 
-        renderOutliers(data){
+        renderOutliers(data) {
             this.data = data
             this.drawRect(10, 4)
             this.outliers()

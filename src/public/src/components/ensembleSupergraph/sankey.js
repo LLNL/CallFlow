@@ -371,17 +371,8 @@ export default function Sankey() {
                 divValue = referenceValue;
             }
             else {
-                divValue = d3.sum(nodes, (d) => {
-                    if (node.id.split('_')[0] != 'intermediate') {
-                        nodeCount += 1
-                        if (dataset == 'ensemble') {
-                            return node[dataset]['time (inc)']
-                        }
-                    }
-                    else {
-                        return 0
-                    }
-                    return d[targetDataset]['time (inc)']
+                divValue = sum(column, (node) => {
+                    return node.targetValue
                 })
             }
             return Math.abs((size[1] - (nodes.length - 1) * nodePadding)) / divValue;

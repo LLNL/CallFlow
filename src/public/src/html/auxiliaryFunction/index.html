@@ -31,7 +31,7 @@
     <v-layout class="component-data">
         <p class="subtitle-2">Target uKNC ({{numberOfDifferenceCallsites}} call sites). </p>
     </v-layout>
-    <v-container class="auxiliary-node" v-for="callsite in differenceCallsites" :id="callsite.id">
+    <v-container class="auxiliary-node" v-for="callsite in differenceCallsites" :id="getID(callsite.id)">
         <v-layout row wrap>
             <v-flex md1>
                 <template>
@@ -99,7 +99,7 @@
     <span class="component-data">
         <p class="subtitle-2">Target KNC ({{numberOfIntersectionCallsites}} call sites).</p>
     </span>
-    <v-container class="auxiliary-node" v-for="callsite in intersectionCallsites" :id="callsite.id">
+    <v-container class="auxiliary-node" v-for="callsite in intersectionCallsites" :id="getID(callsite.id)">
         <v-layout row wrap>
             <v-flex md1>
                 <v-card width="20px" class="mx-auto" tile outlined>

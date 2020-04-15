@@ -18,18 +18,18 @@ export default {
     }),
 
     mounted() {
-        this.id = 'markers'
     },
 
     methods: {
-        init(q, targetq, xScale, showTarget) {
+        init(callsite, q, targetq, xScale, showTarget) {
             this.$store.selectedMarker = 'target'
             this.q = q
             this.targetq = targetq
             this.xScale = xScale
 
             // Get the SVG belonging to this callsite.
-            this.svg = d3.select('#' + this.callsiteID)
+            this.svg = d3.select('#' + callsite.id)
+            this.id = 'markers-' + callsite.id
 
             this.g = this.svg
                 .select('#' + this.id)
