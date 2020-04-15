@@ -269,7 +269,11 @@ export default function Sankey() {
         let remainingNodes = nodes
         let nextNodes = [];
         let level = 0
+        let count = 0
         while (remainingNodes.length) {
+            if (count > 10) {
+                break;
+            }
             nextNodes = [];
             remainingNodes.forEach(function (node) {
                 node.level = level
@@ -280,6 +284,7 @@ export default function Sankey() {
             })
             remainingNodes = nextNodes;
             level += 1
+            count += 1
         }
 
         console.log("[Compute node breadths] Number of levels: ", level)
@@ -439,7 +444,7 @@ export default function Sankey() {
                 source = link.source
             }
 
-            console.log(link.source, link.target, link.type)
+            console.log(link.source, link.target)
 
             let targetScale = (link.source_data.targetValue / link.source_data.value)
             link.target_scaled_weight = link.scaled_weight * targetScale

@@ -128,6 +128,7 @@ export default {
         },
 
         visualize() {
+            this.graph.nodes = this.filterNodes(this.graph.nodes)
             this.setClientIds()
             this.meanColorScale()
             this.meanGradients()
@@ -175,13 +176,26 @@ export default {
             }
         },
 
+        filterNodes() {
+            let ret = []
+            let nodes = this.graph.nodes
+
+            for (let node of nodes) {
+                if (this.ensemble_module_data[node.module] != undefined) {
+                    ret.push(node)
+                }
+            }
+            return ret
+        },
+
         meanColorScale() {
             let nodes = this.graph.nodes
 
             this.hist_min = 0
             this.hist_max = 0
             for (let node of nodes) {
-                // TODO: remove this fuse.
+                console.log(node)
+
                 if (node.type == 'super-node') {
                     this.hist_min = Math.min(this.hist_min, this.ensemble_module_data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_min'])
                     this.hist_max = Math.max(this.hist_max, this.ensemble_module_data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_max'])
