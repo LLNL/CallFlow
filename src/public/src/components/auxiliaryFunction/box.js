@@ -20,11 +20,10 @@ export default {
     },
 
     created() {
-        this.id = 'box-' + this.callsiteID
     },
 
     methods: {
-        init(q, targetq, xScale, showTarget) {
+        init(callsite, q, targetq, xScale, showTarget) {
             if (this.debug) {
                 console.log("Ensemble q: ", q)
                 console.log("Target q: ", targetq)
@@ -34,19 +33,25 @@ export default {
             this.xScale = xScale
 
             // Get the SVG belonging to this callsite.
-            this.svg = d3.select('#' + this.callsiteID)
+            this.svg = d3.select('#callsite-information-' + callsite.id)
+            this.id = 'box-' + callsite.id
+
+
             this.g = this.svg
                 .select('#' + this.id)
                 .attrs({
                     "transform": "translate(0, " + this.$parent.boxPosition + ")"
                 })
 
+            console.log(this.id, this.svg, this.g)
+
+
             this.ensembleBox()
             if (this.$store.showTarget && showTarget) {
                 this.targetBox()
             }
             this.centerLine()
-            this.$parent.$refs.ToolTip.init(this.callsiteID)
+            this.$parent.$refs.ToolTip.init(this.id)
         },
 
         ensembleBox() {
@@ -102,7 +107,6 @@ export default {
 
         centerLine() {
             let self = this
-            console.log(this.q.min, this.q.max)
             this.centerLineSVG = this.g
                 .insert("line", "rect")
                 .attrs({
