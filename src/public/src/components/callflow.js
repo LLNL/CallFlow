@@ -77,7 +77,7 @@ export default {
 		},
 		left: false,
 		formats: ['CCT', 'SuperGraph'],
-		selectedFormat: 'SuperGraph',
+		selectedFormat: 'CCT',
 		datasets: [],
 		selectedTargetDataset: '',
 		selectedDataset2: '',

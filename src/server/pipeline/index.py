@@ -57,7 +57,8 @@ class Pipeline:
                 .add_vis_node_name()
                 .add_dataset_name()
                 # .add_imbalance_perc()
-                .add_module_name_hpctoolkit()
+                .add_module_name_hpctoolkit(self.config.callsite_module_map)
+                .printModuleMap(self.config.callsite_module_map)
                 .build()
             )
         elif self.config.format[state.name] == "caliper_json":
@@ -80,6 +81,7 @@ class Pipeline:
         state.graph = preprocess.graph
 
         self.entire_df = state.df
+        print("Module", self.entire_df["module"].unique())
 
         return state
 

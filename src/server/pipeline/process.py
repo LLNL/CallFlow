@@ -68,6 +68,10 @@ class PreProcess:
             self.graphMapper()
             self.map = {}
 
+            self.name_module_map = (
+                self.df.groupby(["name"])["module"].unique().to_dict()
+            )
+
         # def dfMapper(self):
         # 	ret = {}
         # 	for idx, row in self.df.iterrows():
@@ -252,9 +256,23 @@ class PreProcess:
             )
             return self
 
+        # @logger
+        # def add_module_name_hpctoolkit(self):
+        #     self.df["module"] = self.df["module"].apply(lambda name: sanitizeName(name))
+        #     return self
+
         @logger
-        def add_module_name_hpctoolkit(self):
-            self.df["module"] = self.df["module"].apply(lambda name: sanitizeName(name))
+        def printModuleMap(self, module_map):
+            print(module_map)
+            return self
+
+        @logger
+        def add_module_name_hpctoolkit(self, module_map):
+            self.df["module"] = self.df["name"].apply(
+                lambda name: module_map[name]
+                if name in module_map
+                else sanitizeName(self.name_module_map[name][0])
+            )
             return self
 
         @logger
