@@ -220,7 +220,9 @@ class EnsembleCallFlow:
             return self.config
 
         elif action_name == "ensemble_cct":
-            nx = CCT(self.states["ensemble_entire"], action["functionsInCCT"])
+            nx = CCT(
+                self.states["ensemble_entire"], action["functionsInCCT"], self.config
+            )
             return nx.g
 
         elif action_name == "supergraph":

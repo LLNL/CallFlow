@@ -50,11 +50,11 @@ export default {
         },
 
         // Fetch CCT for distribution mode.
-		comp_cct(data) {
-			console.log("Diff CCT data: ", data)
-			this.$refs.EnsembleCCT1.init(data[this.$store.selectedTargetDataset], '1')
-			this.$refs.EnsembleCCT2.init(data[this.$store.selectedTargetDataset], '2')
-		},
+        comp_cct(data) {
+            console.log("Diff CCT data: ", data)
+            this.$refs.EnsembleCCT1.init(data[this.$store.selectedTargetDataset], '1')
+            this.$refs.EnsembleCCT2.init(data[this.$store.selectedTargetDataset], '2')
+        },
     },
 
     mounted() {
@@ -62,11 +62,8 @@ export default {
 
     methods: {
         init() {
-            this.toolbarHeight = document.getElementById('toolbar').clientHeight
-            this.footerHeight = document.getElementById('footer').clientHeight
-            this.width = window.innerWidth - this.margin.left - this.margin.right
-            this.height = window.innerHeight - this.margin.bottom - this.margin.top - this.toolbarHeight - this.footerHeight
-
+            this.width = this.$store.viewWidth - this.margin.left - this.margin.right
+            this.height = this.$store.viewHeight - this.margin.bottom - this.margin.top
             this.svg = d3.select('#' + this.id)
                 .attrs({
                     'width': this.width,
@@ -76,8 +73,7 @@ export default {
 
             // Create a new directed graph
             this.firstRender = false
-            
-            console.log(this.$store.selectedFunctionsInCCT)
+
             this.$socket.emit('ensemble_cct', {
                 datasets: this.$store.selectedTargetDataset,
                 functionsInCCT: this.$store.selectedFunctionsInCCT,
@@ -147,7 +143,6 @@ export default {
             // Create the renderer
             var render = new dagreD3.render();
 
-            console.log(this.g)
             // Run the renderer. This is what draws the final graph.
             render(inner, this.g);
 

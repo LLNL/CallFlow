@@ -16,22 +16,24 @@ from ast import literal_eval as make_tuple
 import math
 from utils.timer import Timer
 
+
 class CCT:
-    def __init__(self, state, functionsInCCT):
+    def __init__(self, state, functionsInCCT, config):
         self.timer = Timer()
-        number_of_nodes = len(state.df['name'].unique())
+        self.config = config
+        number_of_nodes = len(state.df["name"].unique())
         self.functionsInCCT = int(functionsInCCT)
 
         self.entire_graph = state.g
         self.entire_df = state.df
 
-        self.runs = self.entire_df['dataset'].unique()
-        self.columns = ['time (inc)', 'time', 'name', 'module']
+        self.runs = self.entire_df["dataset"].unique()
+        self.columns = ["time (inc)", "time", "name", "module"]
         # 'imbalance_perc']
 
-        attr = 'time (inc)'
+        attr = "time (inc)"
         self.callsites = self.get_top_n_callsites_by(self.functionsInCCT, attr)
-        print(self.callsites)
+        self.entire_df = self.entire_df[self.entire_df["name"].isin(self.callsites)]
 
         with self.timer.phase("Creating data maps"):
             self.create_ensemble_maps()
@@ -40,8 +42,10 @@ class CCT:
         self.run()
 
     def get_top_n_callsites_by(self, count, attr):
-        callsites_df = self.entire_df.groupby(['vis_node_name']).mean().nlargest(self.functionsInCCT, attr)
-        print(callsites_df, self.functionsInCCT)
+        xgroup_df = self.entire_df.groupby(["name"]).mean()
+        sort_xgroup_df = xgroup_df.sort_values(by=["time (inc)"], ascending=False)
+        callsites_df = sort_xgroup_df.nlargest(100, "time (inc)")
+
         return callsites_df.index.values.tolist()
 
     def create_target_maps(self):
@@ -56,93 +60,114 @@ class CCT:
         self.target_name_time_exc_map = {}
 
         for run in self.runs:
-            # Reduce the entire_df to respective target dfs. 
-            self.target_df[run] = self.entire_df.loc[self.entire_df['dataset'] == run]
-            
+            # Reduce the entire_df to respective target dfs.
+            self.target_df[run] = self.entire_df.loc[self.entire_df["dataset"] == run]
+
             # Unique modules in the target run
-            self.target_modules[run] = self.target_df[run]['module'].unique()
+            self.target_modules[run] = self.target_df[run]["module"].unique()
 
             # Group the dataframe in two ways.
             # 1. by module
             # 2. by module and callsite
-            self.target_module_group_df[run] = self.target_df[run].groupby(['module'])
-            self.target_module_name_group_df[run] = self.target_df[run].groupby(['name'])
+            self.target_module_group_df[run] = self.target_df[run].groupby(["module"])
+            self.target_module_name_group_df[run] = self.target_df[run].groupby(
+                ["name"]
+            )
 
             # Module map for target run {'module': [Array of callsites]}
-            self.target_module_callsite_map[run] = self.target_module_group_df[run]['name'].unique()
+            self.target_module_callsite_map[run] = self.target_module_group_df[run][
+                "name"
+            ].unique()
 
-            # Inclusive time maps for the module level and callsite level. 
-            self.target_module_time_inc_map[run] = self.target_module_group_df[run]['time (inc)'].max().to_dict()
-            self.target_name_time_inc_map[run] = self.target_module_name_group_df[run]['time (inc)'].max().to_dict()
+            # Inclusive time maps for the module level and callsite level.
+            self.target_module_time_inc_map[run] = (
+                self.target_module_group_df[run]["time (inc)"].max().to_dict()
+            )
+            self.target_name_time_inc_map[run] = (
+                self.target_module_name_group_df[run]["time (inc)"].max().to_dict()
+            )
 
-            # Exclusive time maps for the module level and callsite level. 
-            self.target_module_time_exc_map[run] = self.target_module_group_df[run]['time'].max().to_dict()
-            self.target_name_time_exc_map[run] = self.target_module_name_group_df[run]['time'].max().to_dict()
+            # Exclusive time maps for the module level and callsite level.
+            self.target_module_time_exc_map[run] = (
+                self.target_module_group_df[run]["time"].max().to_dict()
+            )
+            self.target_name_time_exc_map[run] = (
+                self.target_module_name_group_df[run]["time"].max().to_dict()
+            )
 
     def create_ensemble_maps(self):
-        self.modules = self.entire_df['module'].unique()
+        self.modules = self.entire_df["module"].unique()
 
-        self.module_name_group_df = self.entire_df.groupby(['module','name'])
-        self.module_group_df = self.entire_df.groupby(['module'])
+        self.module_name_group_df = self.entire_df.groupby(["module", "name"])
+        self.module_group_df = self.entire_df.groupby(["module"])
 
         # Module map for ensemble {'module': [Array of callsites]}
-        self.module_callsite_map = self.module_group_df['name'].unique()
+        self.module_callsite_map = self.module_group_df["name"].unique()
 
-        # Inclusive time maps for the module level and callsite level. 
-        self.module_time_inc_map = self.module_group_df['time (inc)'].max().to_dict()
-        self.name_time_inc_map = self.module_name_group_df['time (inc)'].max().to_dict()
+        # Inclusive time maps for the module level and callsite level.
+        self.module_time_inc_map = self.module_group_df["time (inc)"].max().to_dict()
+        self.name_time_inc_map = self.module_name_group_df["time (inc)"].max().to_dict()
 
         # Exclusive time maps for the module level and callsite level.
-        self.module_time_exc_map = self.module_group_df['time'].max().to_dict()
-        self.name_time_exc_map = self.module_name_group_df['time'].max().to_dict()
-
+        self.module_time_exc_map = self.module_group_df["time"].max().to_dict()
+        self.name_time_exc_map = self.module_name_group_df["time"].max().to_dict()
 
     def ensemble_map(self, df, nodes):
         ret = {}
 
         # loop through the nodes
-        for node in self.callsites:
-            node = node.strip()
-            callsite = node.split('=')[1]
-            module = node.split('=')[0]
+        for callsite in self.callsites:
+            if callsite not in self.config.callsite_module_map:
+                module = self.entire_df.loc[self.entire_df["name"] == callsite][
+                    "module"
+                ].unique()[0]
+            else:
+                module = self.config.callsite_module_map[callsite]
 
             for column in self.columns:
                 if column not in ret:
                     ret[column] = {}
-                if(column == "time (inc)"):
+                if column == "time (inc)":
                     ret[column][callsite] = self.name_time_inc_map[(module, callsite)]
-                elif( column == 'time'):
+                elif column == "time":
                     ret[column][callsite] = self.name_time_exc_map[(module, callsite)]
-                elif (column == "name"):
+                elif column == "name":
                     ret[column][callsite] = callsite
-                elif (column == "module"):
+                elif column == "module":
                     ret[column][callsite] = module
 
         return ret
 
     def dataset_map(self, nodes, run):
         ret = {}
-        for node in self.callsites:
-            node = node.strip()
-            callsite = node.split('=')[1]
-            module = node.split('=')[0]
+        for callsite in self.callsites:
+            if callsite not in self.config.callsite_module_map:
+                module = self.entire_df.loc[self.entire_df["name"] == callsite][
+                    "module"
+                ].unique()[0]
+            else:
+                module = self.config.callsite_module_map[callsite]
 
-            if( callsite in self.target_module_callsite_map[run].keys()):
-                if node not in ret:
-                    ret[node] = {}
+            if callsite in self.target_module_callsite_map[run].keys():
+                if callsite not in ret:
+                    ret[callsite] = {}
 
                 for column in self.columns:
-                    if (column == "time (inc)"):
-                        ret[node][column] = self.target_module_time_inc_map[run][module]
+                    if column == "time (inc)":
+                        ret[callsite][column] = self.target_module_time_inc_map[run][
+                            module
+                        ]
 
-                    elif (column == "time"):
-                        ret[node][column] = self.target_module_time_exc_map[run][module]
+                    elif column == "time":
+                        ret[callsite][column] = self.target_module_time_exc_map[run][
+                            module
+                        ]
 
-                    elif (column == "module"):
-                        ret[node][column] = module
+                    elif column == "module":
+                        ret[callsite][column] = module
 
-                    elif (column == 'name'):
-                        ret[node][column] = callsite
+                    elif column == "name":
+                        ret[callsite][column] = callsite
 
         return ret
 
@@ -156,27 +181,31 @@ class CCT:
         for run in self.runs:
             dataset_mapping[run] = self.dataset_map(self.g.nodes(), run)
 
-            nx.set_node_attributes(
-                self.g, name=run, values=dataset_mapping[run]
-            )
+            nx.set_node_attributes(self.g, name=run, values=dataset_mapping[run])
 
     def add_edge_attributes(self):
-        num_of_calls_mapping = self.edge_map(self.g.edges(), 'component_path')
-        nx.set_edge_attributes(self.g, name='count', values=num_of_calls_mapping)
+        num_of_calls_mapping = self.edge_map(self.g.edges(), "component_path")
+        nx.set_edge_attributes(self.g, name="count", values=num_of_calls_mapping)
 
     def edge_map(self, edges, attr, source=None, orientation=None):
         counter = {}
-        if not self.g.is_directed() or orientation in (None, 'original'):
+        if not self.g.is_directed() or orientation in (None, "original"):
+
             def tailhead(edge):
                 return edge[:2]
-        elif orientation == 'reverse':
+
+        elif orientation == "reverse":
+
             def tailhead(edge):
                 return edge[1], edge[0]
-        elif orientation == 'ignore':
+
+        elif orientation == "ignore":
+
             def tailhead(edge):
-                if edge[-1] == 'reverse':
+                if edge[-1] == "reverse":
                     return edge[1], edge[0]
                 return edge[:2]
+
         ret = {}
         explored = []
         for start_node in self.g.nbunch_iter(source):
@@ -193,9 +222,9 @@ class CCT:
 
             for edge in nx.edge_dfs(self.g, start_node, orientation):
                 tail, head = tailhead(edge)
-                if(edge not in counter):
+                if edge not in counter:
                     counter[edge] = 0
-                if(tail == head):
+                if tail == head:
                     counter[edge] += 1
                 else:
                     counter[edge] = 1
@@ -207,24 +236,29 @@ class CCT:
         paths = path_df.drop_duplicates().tolist()
 
         for idx, path in enumerate(paths):
-            path = path.split(',')
-            if(len(path) >= 2):
-                source = path[-2].replace('[', '').replace(']', '').replace("'", '')
-                target = path[-1].replace('[', '').replace(']', '').replace("'", '')
+            path = path.split(",")
+            if len(path) >= 2:
+                source = path[-2].replace("[", "").replace("]", "").replace("'", "")
+                target = path[-1].replace("[", "").replace("]", "").replace("'", "")
                 source = source.strip()
                 target = target.strip()
                 self.g.add_edge(source, target)
 
     def find_cycle(self, G, source=None, orientation=None):
-        if not G.is_directed() or orientation in (None, 'original'):
+        if not G.is_directed() or orientation in (None, "original"):
+
             def tailhead(edge):
                 return edge[:2]
-        elif orientation == 'reverse':
+
+        elif orientation == "reverse":
+
             def tailhead(edge):
                 return edge[1], edge[0]
-        elif orientation == 'ignore':
+
+        elif orientation == "ignore":
+
             def tailhead(edge):
-                if edge[-1] == 'reverse':
+                if edge[-1] == "reverse":
                     return edge[1], edge[0]
                 return edge[:2]
 
@@ -291,7 +325,7 @@ class CCT:
                 explored.update(seen)
 
         else:
-            assert(len(cycle) == 0)
+            assert len(cycle) == 0
             # raise nx.exception.NetworkXNoCycle('No cycle found.')
 
         # We now have a list of edges which ends on a cycle.
@@ -305,7 +339,7 @@ class CCT:
 
     def run(self):
         self.g = nx.DiGraph()
-        self.add_paths('path')
+        self.add_paths("path")
         self.add_node_attributes()
         self.add_edge_attributes()
         self.g.cycles = self.find_cycle(self.g)
