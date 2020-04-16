@@ -31,20 +31,21 @@ class CCT:
         self.columns = ["time (inc)", "time", "name", "module"]
         # 'imbalance_perc']
 
-        attr = "time (inc)"
-        self.callsites = self.get_top_n_callsites_by(self.functionsInCCT, attr)
-        self.entire_df = self.entire_df[self.entire_df["name"].isin(self.callsites)]
+        self.sort_attr = "time"
+        self.callsites = self.get_top_n_callsites_by(self.functionsInCCT)
 
         with self.timer.phase("Creating data maps"):
             self.create_ensemble_maps()
             self.create_target_maps()
 
+        self.entire_df = self.entire_df[self.entire_df["name"].isin(self.callsites)]
+
         self.run()
 
-    def get_top_n_callsites_by(self, count, attr):
+    def get_top_n_callsites_by(self, count):
         xgroup_df = self.entire_df.groupby(["name"]).mean()
-        sort_xgroup_df = xgroup_df.sort_values(by=["time (inc)"], ascending=False)
-        callsites_df = sort_xgroup_df.nlargest(100, "time (inc)")
+        sort_xgroup_df = xgroup_df.sort_values(by=[self.sort_attr], ascending=False)
+        callsites_df = sort_xgroup_df.nlargest(self.functionsInCCT, "time (inc)")
 
         return callsites_df.index.values.tolist()
 
@@ -231,18 +232,33 @@ class CCT:
 
         return counter
 
+    def create_source_targets(self, path):
+        module = ""
+        edges = []
+
+        for idx, callsite in enumerate(path):
+            if idx == len(path) - 1:
+                break
+
+            edges.append(
+                {"source": path[idx], "target": path[idx + 1],}
+            )
+        return edges
+
     def add_paths(self, path):
-        path_df = self.entire_df[path].fillna("()")
-        paths = path_df.drop_duplicates().tolist()
+        paths = self.entire_df[path].tolist()
+        # paths = path_df.drop_duplicates().tolist()
 
         for idx, path in enumerate(paths):
-            path = path.split(",")
-            if len(path) >= 2:
-                source = path[-2].replace("[", "").replace("]", "").replace("'", "")
-                target = path[-1].replace("[", "").replace("]", "").replace("'", "")
-                source = source.strip()
-                target = target.strip()
-                self.g.add_edge(source, target)
+            if isinstance(path, float):
+                return []
+            path = make_tuple(path)
+            source_targets = self.create_source_targets(path)
+            for edge in source_targets:
+                source = edge["source"]
+                target = edge["target"]
+                if not self.g.has_edge(source, target):
+                    self.g.add_edge(source, target)
 
     def find_cycle(self, G, source=None, orientation=None):
         if not G.is_directed() or orientation in (None, "original"):
