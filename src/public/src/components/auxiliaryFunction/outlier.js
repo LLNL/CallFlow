@@ -1,12 +1,9 @@
-import tpl from '../../html/auxiliaryFunction/markers.html'
+import tpl from '../../html/auxiliaryFunction/outlier.html'
 import * as d3 from 'd3'
 
 export default {
     name: "Outliers",
     template: tpl,
-    props: [
-        "callsiteID"
-    ],
     data: () => ({
         paddingTop: 10,
         textOffset: 40,
@@ -31,13 +28,14 @@ export default {
             this.callsite = callsite
 
             // Get the SVG belonging to this callsite.
-            this.svg = d3.select('#' + this.callsiteID)
-
+            this.svg = d3.select('#boxplot-' + callsite.id)
+            console.log(this.svg)
             this.g = this.svg
-                .select('#' + this.id)
+                .select('.outlier')
                 .attrs({
                     "transform": "translate(0, " + this.paddingTop + ")"
                 })
+
 
             this.height = this.$parent.containerHeight
             this.width = this.$parent.containerWidth
@@ -49,7 +47,7 @@ export default {
             if (this.$store.showTarget && showTarget) {
                 this.targetOutliers()
             }
-            this.$parent.$refs.ToolTip.init(this.id)
+            // this.$parent.$refs.ToolTip.init(this.id)
         },
 
         groupByBand(data, band) {
