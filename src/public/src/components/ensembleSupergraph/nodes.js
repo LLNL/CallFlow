@@ -69,6 +69,9 @@ export default {
                 this.$parent.$refs.EnsembleColorMap.updateWithMinMax('meanDiff', this.mean_diff_min, this.mean_diff_max)
                 this.meanDiffRectangle(data)
             }
+
+            d3.selectAll('.targetLines').remove()
+            d3.selectAll('#ensemble-edge-target').remove()
         }
     },
     mounted() {
