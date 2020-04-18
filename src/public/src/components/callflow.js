@@ -224,24 +224,30 @@ export default {
 			this.setTargetDataset()
 			this.setComponentMap()
 
-			if (this.selectedMode == 'Single') {
-				this.$socket.emit('single_callsite_data', {
-					dataset: this.$store.selectedTargetDataset,
-					sortBy: this.$store.auxiliarySortBy,
-					binCount: this.$store.selectedMPIBinCount,
-					module: 'all'
-				})
+			if (this.selectedFormat == 'SuperGraph') {
+				if (this.selectedMode == 'Single') {
+					this.$socket.emit('single_callsite_data', {
+						dataset: this.$store.selectedTargetDataset,
+						sortBy: this.$store.auxiliarySortBy,
+						binCount: this.$store.selectedMPIBinCount,
+						module: 'all'
+					})
+				}
+				else if (this.selectedMode == 'Ensemble') {
+					this.$socket.emit('ensemble_callsite_data', {
+						datasets: this.$store.selectedDatasets,
+						sortBy: this.$store.auxiliarySortBy,
+						MPIBinCount: this.$store.selectedMPIBinCount,
+						RunBinCount: this.$store.selectedRunBinCount,
+						module: 'all',
+						re_process: this.$store.reprocess
+					})
+				}
 			}
-			else if (this.selectedMode == 'Ensemble') {
-				this.$socket.emit('ensemble_callsite_data', {
-					datasets: this.$store.selectedDatasets,
-					sortBy: this.$store.auxiliarySortBy,
-					MPIBinCount: this.$store.selectedMPIBinCount,
-					RunBinCount: this.$store.selectedRunBinCount,
-					module: 'all',
-					re_process: this.$store.reprocess
-				})
+			else if (this.selectedFormat == 'CCT') {
+				this.init()
 			}
+
 		},
 
 		single_callsite_data(data) {

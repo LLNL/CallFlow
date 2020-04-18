@@ -89,7 +89,7 @@ class App:
 
         if self.config.ensemble:
             self.callflow = EnsembleCallFlow(self.config)
-            # self.single_callflow = SingleCallFlow(self.config)
+            self.single_callflow = SingleCallFlow(self.config)
         else:
             self.single_callflow = SingleCallFlow(self.config)
 
@@ -202,7 +202,7 @@ class App:
                     "sortBy": data["sortBy"],
                     "binCount": data["binCount"],
                     "module": data["module"],
-                    "re-process": data["re-process"],
+                    # "re-process": data["re-process"],
                 }
             )
             emit("single_callsite_data", result, json=True)

@@ -14,83 +14,117 @@ import pandas as pd
 import networkx as nx
 from ast import literal_eval as make_tuple
 import math
-import utils
+from utils.timer import Timer
+from utils.df import sanitizeName
+
 
 class singleCCT:
-    def __init__(self, state, functionsInCCT):
-        number_of_nodes = len(state.df['name'].unique())
+    def __init__(self, state, functionsInCCT, config):
+        self.timer = Timer()
 
         self.g = state.g
         self.df = state.df
+        self.functionsInCCT = int(functionsInCCT)
+        self.config = config
 
-        self.columns = ['time (inc)', 'time', 'name', 'module']
+        self.columns = ["time (inc)", "time", "name", "module"]
+        # 'imbalance_perc']
 
-                        # 'imbalance_perc']
+        self.sort_attr = "time"
 
-        self.run()
+        print(f"Total callsite in CCT: {len(self.df['name'].unique())}")
 
-    def dataset_map(self, nodes):
+        with self.timer.phase("Creating data maps"):
+            self.create_ensemble_maps()
+
+        self.callsites = self.get_top_n_callsites_by(self.functionsInCCT)
+        self.fdf = self.df[self.df["name"].isin(self.callsites)]
+
+        self.dataset = self.fdf["dataset"].unique()
+        with self.timer.phase(f"Creating the single CCT {self.dataset}"):
+            self.run()
+        print(self.timer)
+
+    def get_top_n_callsites_by(self, count):
+        xgroup_df = self.df.groupby(["name"]).mean()
+        sort_xgroup_df = xgroup_df.sort_values(by=[self.sort_attr], ascending=False)
+        callsites_df = sort_xgroup_df.nlargest(self.functionsInCCT, self.sort_attr)
+
+        return callsites_df.index.values.tolist()
+
+    def create_ensemble_maps(self):
+        self.modules = self.df["module"].unique()
+
+        self.module_name_group_df = self.df.groupby(["module", "name"])
+        self.module_group_df = self.df.groupby(["module"])
+
+        # Module map for ensemble {'module': [Array of callsites]}
+        self.module_callsite_map = self.module_group_df["name"].unique()
+
+        # Inclusive time maps for the module level and callsite level.
+        self.module_time_inc_map = self.module_group_df["time (inc)"].max().to_dict()
+        self.name_time_inc_map = self.module_name_group_df["time (inc)"].max().to_dict()
+
+        # Exclusive time maps for the module level and callsite level.
+        self.module_time_exc_map = self.module_group_df["time"].max().to_dict()
+        self.name_time_exc_map = self.module_name_group_df["time"].max().to_dict()
+
+    def dataset_map(self):
         ret = {}
-
-        # loop through the nodes
-        for node in self.g.nodes():
-            node = node.strip()
-            node_df = self.df.loc[self.df["name"] == node]
+        for callsite in self.g.nodes():
+            print(callsite)
+            if callsite not in self.config.callsite_module_map:
+                module = self.df.loc[self.df["name"] == callsite]["module"].unique()[0]
+            else:
+                module = self.config.callsite_module_map[callsite]
 
             for column in self.columns:
-                column_data = node_df[column]
-
                 if column not in ret:
                     ret[column] = {}
 
-                if (
-                    column == "time (inc)"
-                    or column == "time"
-                    or column == "imbalance_perc"
-                ):
-                    if len(column_data.value_counts() > 0):
-                        ret[column][node] = column_data.max()
-                    else:
-                        ret[column][node] = -1
+                if column == "time (inc)":
+                    ret[column][callsite] = self.name_time_inc_map[(module, callsite)]
 
-                elif (
-                    column == "name"
-                    or column == "vis_name"
-                    or column == "module"
-                    or column == "show_node"
-                ):
+                elif column == "time":
+                    ret[column][callsite] = self.name_time_exc_map[(module, callsite)]
 
-                    if len(column_data.value_counts() > 0):
-                        ret[column][node] = column_data.tolist()[0]
-                    else:
-                        ret[column][node] = "None"
+                elif column == "module":
+                    ret[column][callsite] = module
 
+                elif column == "name":
+                    ret[column][callsite] = callsite
 
         return ret
 
     def add_node_attributes(self):
-        dataset_mapping = self.dataset_map(self.g.nodes())
+        dataset_mapping = self.dataset_map()
 
         for idx, key in enumerate(dataset_mapping):
             nx.set_node_attributes(self.g, name=key, values=dataset_mapping[key])
 
     def add_edge_attributes(self):
-        num_of_calls_mapping = self.edge_map(self.g.edges(), 'component_path')
-        nx.set_edge_attributes(self.g, name='count', values=num_of_calls_mapping)
+        num_of_calls_mapping = self.edge_map(self.g.edges(), "component_path")
+        nx.set_edge_attributes(self.g, name="count", values=num_of_calls_mapping)
 
     def edge_map(self, edges, attr, source=None, orientation=None):
         counter = {}
-        if not self.g.is_directed() or orientation in (None, 'original'):
+        if not self.g.is_directed() or orientation in (None, "original"):
+
             def tailhead(edge):
                 return edge[:2]
-        elif orientation == 'reverse':
+
+        elif orientation == "reverse":
+
             def tailhead(edge):
                 return edge[1], edge[0]
-        elif orientation == 'ignore':
+
+        elif orientation == "ignore":
+
             def tailhead(edge):
-                if edge[-1] == 'reverse':
+                if edge[-1] == "reverse":
                     return edge[1], edge[0]
                 return edge[:2]
+
         ret = {}
         explored = []
         for start_node in self.g.nbunch_iter(source):
@@ -107,38 +141,60 @@ class singleCCT:
 
             for edge in nx.edge_dfs(self.g, start_node, orientation):
                 tail, head = tailhead(edge)
-                if(edge not in counter):
+                if edge not in counter:
                     counter[edge] = 0
-                if(tail == head):
+                if tail == head:
                     counter[edge] += 1
                 else:
                     counter[edge] = 1
 
         return counter
 
+    def create_source_targets(self, path):
+        module = ""
+        edges = []
+
+        for idx, callsite in enumerate(path):
+            if idx == len(path) - 1:
+                break
+
+            source = sanitizeName(path[idx])
+            target = sanitizeName(path[idx + 1])
+
+            edges.append(
+                {"source": source, "target": target,}
+            )
+        return edges
+
     def add_paths(self, path):
-        path_df = self.df[path].fillna("()")
-        paths = path_df.drop_duplicates().tolist()
+        paths = self.fdf[path].tolist()
 
         for idx, path in enumerate(paths):
-            path = path.split(',')
-            if(len(path) >= 2):
-                source = path[-2].replace('[', '').replace(']', '').replace("'", '')
-                target = path[-1].replace('[', '').replace(']', '').replace("'", '')
-                source = source.strip()
-                target = target.strip()
-                self.g.add_edge(source, target)
+            if isinstance(path, float):
+                return []
+            path = make_tuple(path)
+            source_targets = self.create_source_targets(path)
+            for edge in source_targets:
+                source = edge["source"]
+                target = edge["target"]
+                if not self.g.has_edge(source, target):
+                    self.g.add_edge(source, target)
 
     def find_cycle(self, G, source=None, orientation=None):
-        if not G.is_directed() or orientation in (None, 'original'):
+        if not G.is_directed() or orientation in (None, "original"):
+
             def tailhead(edge):
                 return edge[:2]
-        elif orientation == 'reverse':
+
+        elif orientation == "reverse":
+
             def tailhead(edge):
                 return edge[1], edge[0]
-        elif orientation == 'ignore':
+
+        elif orientation == "ignore":
+
             def tailhead(edge):
-                if edge[-1] == 'reverse':
+                if edge[-1] == "reverse":
                     return edge[1], edge[0]
                 return edge[:2]
 
@@ -205,7 +261,7 @@ class singleCCT:
                 explored.update(seen)
 
         else:
-            assert(len(cycle) == 0)
+            assert len(cycle) == 0
             # raise nx.exception.NetworkXNoCycle('No cycle found.')
 
         # We now have a list of edges which ends on a cycle.
@@ -219,7 +275,7 @@ class singleCCT:
 
     def run(self):
         self.g = nx.DiGraph()
-        self.add_paths('path')
+        self.add_paths("path")
         self.add_node_attributes()
         self.add_edge_attributes()
         self.g.cycles = self.find_cycle(self.g)

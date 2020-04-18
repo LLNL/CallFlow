@@ -15,6 +15,7 @@ import networkx as nx
 from ast import literal_eval as make_tuple
 import math
 from utils.timer import Timer
+from utils.df import sanitizeName
 
 
 class CCT:
@@ -34,13 +35,26 @@ class CCT:
         self.sort_attr = "time"
         self.callsites = self.get_top_n_callsites_by(self.functionsInCCT)
 
-        with self.timer.phase("Creating data maps"):
-            self.create_ensemble_maps()
-            self.create_target_maps()
+        self.fdf = self.entire_df[self.entire_df["name"].isin(self.callsites)]
 
-        self.entire_df = self.entire_df[self.entire_df["name"].isin(self.callsites)]
+        self.datasets = self.fdf["dataset"].unique()
+        with self.timer.phase(f"Creating the ensemble CCT: {self.datasets}"):
+            self.g = nx.DiGraph()
+            self.add_paths("path")
 
-        self.run()
+        with self.timer.phase(f"Creating the data maps."):
+            self.cct_df = self.entire_df[self.entire_df["name"].isin(self.g.nodes())]
+            self.create_ensemble_maps(self.cct_df)
+            self.create_target_maps(self.cct_df)
+
+        with self.timer.phase(f"Add node and edge attributes."):
+            self.add_node_attributes()
+            self.add_edge_attributes()
+
+        with self.timer.phase(f"Find cycles"):
+            self.g.cycles = self.find_cycle(self.g)
+
+        print(self.timer)
 
     def get_top_n_callsites_by(self, count):
         xgroup_df = self.entire_df.groupby(["name"]).mean()
@@ -49,7 +63,7 @@ class CCT:
 
         return callsites_df.index.values.tolist()
 
-    def create_target_maps(self):
+    def create_target_maps(self, df):
         self.target_df = {}
         self.target_modules = {}
         self.target_module_group_df = {}
@@ -62,7 +76,7 @@ class CCT:
 
         for run in self.runs:
             # Reduce the entire_df to respective target dfs.
-            self.target_df[run] = self.entire_df.loc[self.entire_df["dataset"] == run]
+            self.target_df[run] = df.loc[df["dataset"] == run]
 
             # Unique modules in the target run
             self.target_modules[run] = self.target_df[run]["module"].unique()
@@ -96,14 +110,14 @@ class CCT:
                 self.target_module_name_group_df[run]["time"].max().to_dict()
             )
 
-    def create_ensemble_maps(self):
-        self.modules = self.entire_df["module"].unique()
+    def create_ensemble_maps(self, df):
+        self.modules = df["module"].unique()
 
-        self.module_name_group_df = self.entire_df.groupby(["module", "name"])
-        self.module_group_df = self.entire_df.groupby(["module"])
+        self.module_name_group_df = df.groupby(["module", "name"])
+        self.module_group_df = df.groupby(["module"])
 
         # Module map for ensemble {'module': [Array of callsites]}
-        self.module_callsite_map = self.module_group_df["name"].unique()
+        self.module_callsite_map = df["name"].unique()
 
         # Inclusive time maps for the module level and callsite level.
         self.module_time_inc_map = self.module_group_df["time (inc)"].max().to_dict()
@@ -117,7 +131,7 @@ class CCT:
         ret = {}
 
         # loop through the nodes
-        for callsite in self.callsites:
+        for callsite in self.g.nodes():
             if callsite not in self.config.callsite_module_map:
                 module = self.entire_df.loc[self.entire_df["name"] == callsite][
                     "module"
@@ -141,7 +155,7 @@ class CCT:
 
     def dataset_map(self, nodes, run):
         ret = {}
-        for callsite in self.callsites:
+        for callsite in self.g.nodes():
             if callsite not in self.config.callsite_module_map:
                 module = self.entire_df.loc[self.entire_df["name"] == callsite][
                     "module"
@@ -178,11 +192,11 @@ class CCT:
         for idx, key in enumerate(ensemble_mapping):
             nx.set_node_attributes(self.g, name=key, values=ensemble_mapping[key])
 
-        dataset_mapping = {}
-        for run in self.runs:
-            dataset_mapping[run] = self.dataset_map(self.g.nodes(), run)
+        # dataset_mapping = {}
+        # for run in self.runs:
+        #     dataset_mapping[run] = self.dataset_map(self.g.nodes(), run)
 
-            nx.set_node_attributes(self.g, name=run, values=dataset_mapping[run])
+        #     nx.set_node_attributes(self.g, name=run, values=dataset_mapping[run])
 
     def add_edge_attributes(self):
         num_of_calls_mapping = self.edge_map(self.g.edges(), "component_path")
@@ -240,14 +254,16 @@ class CCT:
             if idx == len(path) - 1:
                 break
 
+            source = sanitizeName(path[idx])
+            target = sanitizeName(path[idx + 1])
+
             edges.append(
-                {"source": path[idx], "target": path[idx + 1],}
+                {"source": source, "target": target,}
             )
         return edges
 
     def add_paths(self, path):
-        paths = self.entire_df[path].tolist()
-        # paths = path_df.drop_duplicates().tolist()
+        paths = self.fdf[path].tolist()
 
         for idx, path in enumerate(paths):
             if isinstance(path, float):
@@ -352,10 +368,3 @@ class CCT:
             if tail == final_node:
                 break
         return cycle[i:]
-
-    def run(self):
-        self.g = nx.DiGraph()
-        self.add_paths("path")
-        self.add_node_attributes()
-        self.add_edge_attributes()
-        self.g.cycles = self.find_cycle(self.g)

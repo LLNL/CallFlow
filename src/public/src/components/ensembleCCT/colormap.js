@@ -1,6 +1,7 @@
 import tpl from '../../html/ensembleCCT/colormap.html'
 import * as d3 from 'd3'
 import 'd3-selection-multi'
+import * as utils from '../utils'
 
 export default {
     template: tpl,
@@ -83,9 +84,9 @@ export default {
                     "dy": ".35em",
                     "text-anchor": "middle",
                     'class': 'colormap-text',
-                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2*this.padding.bottom})`,
+                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2 * this.padding.bottom})`,
                 })
-                .text(this.colorMin * 0.000001 + 's');
+                .text(utils.formatRuntimeWithUnits(this.colorMin));
 
             this.scaleG.append("text")
                 .style("fill", "black")
@@ -94,9 +95,9 @@ export default {
                     "dy": ".35em",
                     "text-anchor": "middle",
                     "class": "colormap-text",
-                    'transform': `translate(${this.containerWidth - this.padding.right +  this.width}, ${this.containerHeight - 2*this.padding.bottom})`,
+                    'transform': `translate(${this.containerWidth - this.padding.right + this.width}, ${this.containerHeight - 2 * this.padding.bottom})`,
                 })
-                .text(this.colorMax * 0.000001 + "s");
+                .text(utils.formatRuntimeWithUnits(this.colorMax));
 
         },
 

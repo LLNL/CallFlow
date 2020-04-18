@@ -256,10 +256,10 @@ class PreProcess:
             )
             return self
 
-        # @logger
-        # def add_module_name_hpctoolkit(self):
-        #     self.df["module"] = self.df["module"].apply(lambda name: sanitizeName(name))
-        #     return self
+        @logger
+        def add_module_name(self):
+            self.df["module"] = self.df["module"].apply(lambda name: sanitizeName(name))
+            return self
 
         @logger
         def printModuleMap(self, module_map):
