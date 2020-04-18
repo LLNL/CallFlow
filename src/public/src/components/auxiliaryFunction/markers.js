@@ -5,11 +5,7 @@ import * as utils from '../utils'
 export default {
     name: "Markers",
     template: tpl,
-    props: [
-        "callsiteID"
-    ],
     data: () => ({
-        id: 'markers',
         paddingTop: 10,
         textOffset: 40,
         fontSize: 10,
@@ -28,11 +24,10 @@ export default {
             this.xScale = xScale
 
             // Get the SVG belonging to this callsite.
-            this.svg = d3.select('#' + callsite.id)
-            this.id = 'markers-' + callsite.id
+            this.svg = d3.select('#boxplot-' + callsite.id)
 
             this.g = this.svg
-                .select('#' + this.id)
+                .select('.marker')
                 .attrs({
                     "transform": "translate(0, " + this.$parent.boxPosition + ")"
                 })
@@ -128,7 +123,7 @@ export default {
                 let min_target_val = this.targetData.min
                 this.g.append("text")
                     .attrs({
-                        "class": "whiskerText",
+                        "class": "whiskerText body-1",
                         "x": 0.5 * this.fontSize,
                         "y": this.$parent.containerHeight * this.topPosition,
                         "fill": d3.rgb(this.$store.color.target).darker(1)
@@ -140,7 +135,7 @@ export default {
             let min_ensemble_val = this.data.min
             this.g.append("text")
                 .attrs({
-                    "class": "whiskerText",
+                    "class": "whiskerText body-1",
                     "x": 0.5 * this.fontSize,
                     "y": this.$parent.containerHeight * this.bottomPosition,
                     "fill": d3.rgb(this.$store.color.ensemble).darker(1)
@@ -154,7 +149,7 @@ export default {
                 let max_target_val = this.targetData.max
                 this.g.append("text")
                     .attrs({
-                        "class": "whiskerText",
+                        "class": "whiskerText body-1",
                         "x": this.$parent.containerWidth - 9 * this.fontSize,
                         "y": this.$parent.containerHeight * this.topPosition,
                         "fill": d3.rgb(this.$store.color.target).darker(1)
@@ -166,7 +161,7 @@ export default {
             let max_ensemble_val = this.data.max
             this.g.append("text")
                 .attrs({
-                    "class": "whiskerText",
+                    "class": "whiskerText body-1",
                     "x": this.$parent.containerWidth - 9 * this.fontSize,
                     "y": this.$parent.containerHeight * this.bottomPosition,
                     "fill": d3.rgb(this.$store.color.ensemble).darker(1)
@@ -180,7 +175,7 @@ export default {
                 let median_target_val = this.targetData.q2
                 this.g.append("text")
                     .attrs({
-                        "class": "whiskerText",
+                        "class": "whiskerText body-1",
                         "x": this.$parent.containerWidth / 2 - 4.5 * this.fontSize,
                         "y": this.$parent.containerHeight * this.topPosition,
                         "fill": d3.rgb(this.$store.color.target).darker(1)
@@ -192,7 +187,7 @@ export default {
             let median_ensemble_val = this.data.q2
             this.g.append("text")
                 .attrs({
-                    "class": "whiskerText",
+                    "class": "whiskerText body-1",
                     "x": this.$parent.containerWidth / 2 - 4.5 * this.fontSize,
                     "y": this.$parent.containerHeight * this.bottomPosition,
                     "fill": d3.rgb(this.$store.color.ensemble).darker(1)

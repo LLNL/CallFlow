@@ -72,13 +72,12 @@ export default {
 
     created() {
         this.id = "boxplot-" + this.callsite.id
-
     },
 
     methods: {
         init() {
             this.containerHeight = 0
-            this.containerWidth = this.$parent.boxplotWidth - 2 * this.padding.right - 1 * this.padding.left
+
         },
 
         process(callsite) {
@@ -107,7 +106,7 @@ export default {
 
         drawSVG(callsite) {
             this.containerHeight = 150
-
+            this.containerWidth = this.$parent.boxplotWidth - 2 * this.padding.right - 1 * this.padding.left
             this.boxHeight = this.containerHeight - this.informationHeight
             this.boxWidth = this.containerWidth
 
@@ -137,9 +136,9 @@ export default {
             this.$refs.Markers.init(callsite, this.q, this.targetq, this.xScale, this.showTarget)
             this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget)
 
-            // EventHandler.$emit('highlight_dataset', {
-            //     dataset: this.$store.selectedTargetDataset
-            // })
+            EventHandler.$emit('color_by_metric', {
+                dataset: this.$store.selectedTargetDataset
+            })
         },
 
         clear() {

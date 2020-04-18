@@ -1,13 +1,10 @@
 import tpl from '../../html/auxiliaryFunction/quartileBox.html'
 import * as d3 from 'd3'
-import EventHandler from '../EventHandler'
 
 export default {
     name: "Box",
     template: tpl,
-    props: [
-        "callsiteID"
-    ],
+
     data: () => ({
         id: 'box',
         paddingTop: 10,
@@ -33,25 +30,22 @@ export default {
             this.xScale = xScale
 
             // Get the SVG belonging to this callsite.
-            this.svg = d3.select('#callsite-information-' + callsite.id)
+            this.svg = d3.select('#boxplot-' + callsite.id)
             this.id = 'box-' + callsite.id
 
 
             this.g = this.svg
-                .select('#' + this.id)
+                .select('.box')
                 .attrs({
                     "transform": "translate(0, " + this.$parent.boxPosition + ")"
                 })
-
-            console.log(this.id, this.svg, this.g)
-
 
             this.ensembleBox()
             if (this.$store.showTarget && showTarget) {
                 this.targetBox()
             }
             this.centerLine()
-            this.$parent.$refs.ToolTip.init(this.id)
+            // this.$parent.$refs.ToolTip.init(this.id)
         },
 
         ensembleBox() {
@@ -70,10 +64,10 @@ export default {
                 })
                 .style('z-index', 1)
                 .on('mouseover', (d) => {
-                    self.$parent.$refs.ToolTip.renderQ(self.q)
+                    // self.$parent.$refs.ToolTip.renderQ(self.q)
                 })
                 .on('mouseout', (d) => {
-                    self.$parent.$refs.ToolTip.clear()
+                    // self.$parent.$refs.ToolTip.clear()
                 })
         },
 
@@ -98,10 +92,10 @@ export default {
                 })
                 .style('z-index', 1)
                 .on('mouseover', (d) => {
-                    self.$parent.$refs.ToolTip.renderQ(self.targetq)
+                    // self.$parent.$refs.ToolTip.renderQ(self.targetq)
                 })
                 .on('mouseout', (d) => {
-                    self.$parent.$refs.ToolTip.clear()
+                    // self.$parent.$refs.ToolTip.clear()
                 })
         },
 

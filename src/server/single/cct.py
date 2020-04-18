@@ -72,7 +72,6 @@ class singleCCT:
     def dataset_map(self):
         ret = {}
         for callsite in self.g.nodes():
-            print(callsite)
             if callsite not in self.config.callsite_module_map:
                 module = self.df.loc[self.df["name"] == callsite]["module"].unique()[0]
             else:

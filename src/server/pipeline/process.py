@@ -68,10 +68,6 @@ class PreProcess:
             self.graphMapper()
             self.map = {}
 
-            self.name_module_map = (
-                self.df.groupby(["name"])["module"].unique().to_dict()
-            )
-
         # def dfMapper(self):
         # 	ret = {}
         # 	for idx, row in self.df.iterrows():
@@ -289,6 +285,13 @@ class PreProcess:
         @logger
         def add_dataset_name(self):
             self.df["dataset"] = self.state.name
+            return self
+
+        @logger
+        def create_name_module_map(self):
+            self.name_module_map = (
+                self.df.groupby(["name"])["module"].unique().to_dict()
+            )
             return self
 
         def raiseExceptionIfNodeCountNotEqual(self, attr):

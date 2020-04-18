@@ -59,6 +59,11 @@ export default {
         showKNCCallsite: {},
         showuKNCCallsite: {}
     }),
+
+    created() {
+        this.borderColorByMetric()
+    },
+
     mounted() {
         let self = this
         EventHandler.$on('highlight_datasets', (datasets) => {
@@ -144,6 +149,16 @@ export default {
                     this.ensembleVariance[callsite] = '0.0'
                 }
                 this.selectClassName[callsite] = 'unselect-callsite'
+            }
+        },
+
+        borderColorByMetric() {
+            for (let callsite in this.intersectionCallsites) {
+                let callsite_data = this.intersectionCallsites[callsite]
+                let data = callsite_data[this.$store.selectedMetric]['mean_time']
+                let id = 'callsite-information-' + callsite_data.id
+                console.log(id, data, document.getElementById(id))
+                document.getElementById(id).style.borderColor = this.$store.color.getColorByValue(data)
             }
         },
 
