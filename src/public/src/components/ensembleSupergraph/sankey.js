@@ -271,7 +271,8 @@ export default function Sankey() {
         let level = 0
         let count = 0
         while (remainingNodes.length) {
-            if (count > 10) {
+            console.log(count)
+            if (count >= 17) {
                 break;
             }
             nextNodes = [];

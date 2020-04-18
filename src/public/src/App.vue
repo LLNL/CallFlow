@@ -268,10 +268,6 @@ body {
   color: #009687 !important;
 }
 
-.whiskerText {
-  font-weight: 100 !important;
-}
-
 .valueText {
   font-weight: 700 !important;
 }

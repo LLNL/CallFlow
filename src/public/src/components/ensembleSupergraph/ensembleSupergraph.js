@@ -57,11 +57,27 @@ export default {
 		ensemble_supergraph(data) {
 			data = JSON.parse(data)
 			console.log("Data: ", data)
+			let nodes = []
 			for (let i = 0; i < data.nodes.length; i += 1) {
 				console.log("Node name: ", data.nodes[i].id)
 				console.log("Time (inc): ", data.nodes[i]['time (inc)'])
 				console.log("Time: ", data.nodes[i]['time'])
+				if (data.nodes[i]['time'] > 10000) {
+					nodes.push(data.nodes[i]['time'])
+				}
 			}
+
+
+			let links = []
+			for (let i = 0; i < data.links.length; i += 1) {
+				console.log("Source: ", data.links[i].source)
+				console.log("Target: ", data.links[i].target)
+				console.log("Weight: ", data.links[i].weight)
+				if (data.links[i].weight > 100000) {
+					links.push(data.links[i])
+				}
+			}
+			data.links = links
 			this.render(data)
 		},
 	},

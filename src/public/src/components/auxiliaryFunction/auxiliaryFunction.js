@@ -59,11 +59,6 @@ export default {
         showKNCCallsite: {},
         showuKNCCallsite: {}
     }),
-
-    created() {
-        this.borderColorByMetric()
-    },
-
     mounted() {
         let self = this
         EventHandler.$on('highlight_datasets', (datasets) => {
@@ -150,6 +145,8 @@ export default {
                 }
                 this.selectClassName[callsite] = 'unselect-callsite'
             }
+
+            // this.borderColorByMetric()
         },
 
         borderColorByMetric() {
