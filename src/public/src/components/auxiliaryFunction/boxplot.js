@@ -136,9 +136,7 @@ export default {
             this.$refs.Markers.init(callsite, this.q, this.targetq, this.xScale, this.showTarget)
             this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget)
 
-            EventHandler.$emit('color_by_metric', {
-                dataset: this.$store.selectedTargetDataset
-            })
+
         },
 
         clear() {

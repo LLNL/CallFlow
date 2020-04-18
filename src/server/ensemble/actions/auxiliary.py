@@ -43,7 +43,7 @@ class Auxiliary:
         self.datasets = datasets
 
         self.props = ["rank", "name", "dataset", "all_ranks"]
-        self.filter = False
+        self.filter = True
 
         self.result = self.run()
 
@@ -55,7 +55,7 @@ class Auxiliary:
             # self.df = self.df.loc[self.df['time (inc)'] > self.config.filter_perc]['name'].unique()
             xgroup_df = self.df.groupby(["name"]).mean()
             sort_xgroup_df = xgroup_df.sort_values(by=["time (inc)"], ascending=False)
-            top100callsites = sort_xgroup_df.nlargest(200, "time (inc)")
+            top100callsites = sort_xgroup_df.nlargest(50, "time (inc)")
             self.df = self.df[self.df["name"].isin(top100callsites.index.values)]
 
         self.module_name_group_df = self.df.groupby(["module", "name"])
@@ -150,8 +150,8 @@ class Auxiliary:
             "module": df["module"].tolist()[0],
             "callers": df["callers"].unique().tolist(),
             "callees": df["callees"].unique().tolist(),
-            "component_path": df["component_path"].unique().tolist(),
-            "component_level": df["component_level"].unique().tolist(),
+            # "component_path": df["component_path"].unique().tolist(),
+            # "component_level": df["component_level"].unique().tolist(),
             "Inclusive": {
                 "mean_time": df["time (inc)"].mean(),
                 "max_time": df["time (inc)"].max(),
