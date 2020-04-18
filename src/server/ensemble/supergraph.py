@@ -171,7 +171,11 @@ class SuperGraph(nx.Graph):
                 if np.any(np.array(flag)):
                     moduleMapper[module] += 1
                     dataMap[module].append(
-                        {"callsite": callsite, "module": module, "level": idx}
+                        {
+                            "callsite": callsite,
+                            "module": module + "=" + callsite,
+                            "level": idx,
+                        }
                     )
                 else:
                     dataMap[module].append(

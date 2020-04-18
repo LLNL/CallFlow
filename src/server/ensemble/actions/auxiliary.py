@@ -43,7 +43,7 @@ class Auxiliary:
         self.datasets = datasets
 
         self.props = ["rank", "name", "dataset", "all_ranks"]
-        self.filter = True
+        self.filter = False
 
         self.result = self.run()
 
@@ -53,12 +53,6 @@ class Auxiliary:
         if self.filter:
             # self.df = self.df.loc[self.df['time'] > 0.01*self.config.filter_perc*self.df['time'].max() ]
             # self.df = self.df.loc[self.df['time (inc)'] > self.config.filter_perc]['name'].unique()
-
-            # group_df = self.df.groupby(["name"]).mean()
-            # f_group_df = group_df.loc[group_df["time"] > self.config.filter_perc / 10]
-            # callsites = f_group_df.index.values.tolist()
-            # self.df = self.df[self.df["name"].isin(callsites)]
-
             xgroup_df = self.df.groupby(["name"]).mean()
             sort_xgroup_df = xgroup_df.sort_values(by=["time (inc)"], ascending=False)
             top100callsites = sort_xgroup_df.nlargest(200, "time (inc)")
@@ -156,8 +150,8 @@ class Auxiliary:
             "module": df["module"].tolist()[0],
             "callers": df["callers"].unique().tolist(),
             "callees": df["callees"].unique().tolist(),
-            # "component_path": df["component_path"].unique().tolist(),
-            # "component_level": df["component_level"].unique().tolist(),
+            "component_path": df["component_path"].unique().tolist(),
+            "component_level": df["component_level"].unique().tolist(),
             "Inclusive": {
                 "mean_time": df["time (inc)"].mean(),
                 "max_time": df["time (inc)"].max(),

@@ -40,13 +40,7 @@ export default {
         single_cct(data) {
             console.log("CCT data: ", data)
             this.data = data
-            if (this.firstRender) {
-                this.init()
-                this.render()
-            }
-            else {
-                this.render()
-            }
+            this.render()
         },
     },
 
@@ -55,23 +49,6 @@ export default {
 
     methods: {
         init() {
-            this.toolbarHeight = document.getElementById('toolbar').clientHeight
-            this.footerHeight = document.getElementById('footer').clientHeight
-            this.width = window.innerWidth - this.margin.left - this.margin.right
-            this.height = window.innerHeight - this.margin.bottom - this.margin.top - this.toolbarHeight - this.footerHeight
-
-            console.log(this.width, this.height)
-            this.svg = d3.select('#' + this.id)
-                .attrs({
-                    'width': this.width,
-                    'height': this.height,
-                })
-            console.log("init")
-            console.log(this.svg)
-
-            // Create a new directed graph
-            this.firstRender = false
-
             this.$socket.emit('single_cct', {
                 dataset: this.$store.selectedTargetDataset,
                 functionsInCCT: this.$store.selectedFunctionsInCCT,
@@ -81,6 +58,15 @@ export default {
 
 
         render() {
+            this.width = this.$store.viewWidth - this.margin.left - this.margin.right
+            this.height = this.$store.viewHeight - this.margin.bottom - this.margin.top
+
+            this.svg = d3.select('#' + this.id)
+                .attrs({
+                    'width': this.width,
+                    'height': this.height,
+                })
+
             this.g = new dagreD3.graphlib.Graph().setGraph({});
 
             let graph = this.data
@@ -90,8 +76,8 @@ export default {
             nodes.forEach((node, i) => {
                 this.g.setNode(node['id'], {
                     label: node['module'] + ':' + node['id'],
-                    exclusive: node['time'],
-                    value: node['time (inc)'],
+                    'time': node['time'],
+                    'time (inc)': node['time (inc)'],
                     module: node['module'],
                     imbalance_perc: node['imbalance_perc'],
                 })

@@ -28,6 +28,7 @@ from single.actions.histogram import Histogram
 from single.actions.scatterplot import Scatterplot
 from single.actions.function_list import FunctionList
 
+
 class SingleCallFlow:
     def __init__(self, config):
         # Config contains properties set by the input config file.
@@ -36,7 +37,7 @@ class SingleCallFlow:
 
         self.pipeline = Pipeline(self.config)
         if config.process:
-           pass
+            pass
         else:
             log.info("[Single] Read Mode.")
             self.states = self.readState(self.config.dataset_names)
@@ -103,7 +104,9 @@ class SingleCallFlow:
                 self.config.max_excTime[state] = getMaxExcTime(self.states[state])
                 self.config.min_incTime[state] = getMinIncTime(self.states[state])
                 self.config.min_excTime[state] = getMinExcTime(self.states[state])
-                self.config.numOfRanks[state] = len(self.states[state].df['rank'].unique())
+                self.config.numOfRanks[state] = len(
+                    self.states[state].df["rank"].unique()
+                )
                 print(self.config.numOfRanks)
                 max_exclusive_time = max(
                     self.config.max_excTime[state], max_exclusive_time
@@ -152,7 +155,12 @@ class SingleCallFlow:
             return {}
 
         elif action_name == "auxiliary":
-            auxiliary = Auxiliary(self.states[action['dataset']],binCount=action['binCount'], dataset=action['dataset'], config=self.config)
+            auxiliary = Auxiliary(
+                self.states[action["dataset"]],
+                binCount=action["binCount"],
+                dataset=action["dataset"],
+                config=self.config,
+            )
             return auxiliary.result
 
         elif action_name == "supergraph":
@@ -175,8 +183,10 @@ class SingleCallFlow:
             minihistogram = MiniHistogram(state)
             return minihistogram.result
 
-        elif action_name == 'cct':
-            graph = singleCCT(self.states[action["dataset"]], action["functionsInCCT"])
+        elif action_name == "cct":
+            graph = singleCCT(
+                self.states[action["dataset"]], action["functionsInCCT"], self.config
+            )
             return graph.g
 
         elif action_name == "function":
@@ -199,4 +209,3 @@ class SingleCallFlow:
         log.info("Avg Inclusive time = {0} ".format(avg_inclusive_time))
         log.info("Avg Exclusive time = {0} ".format(avg_exclusive_time))
         log.info("Number of nodes in CCT = {0}".format(num_of_nodes))
-
