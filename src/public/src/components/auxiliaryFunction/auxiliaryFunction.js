@@ -143,12 +143,12 @@ export default {
                     this.ensembleStandardDeviation[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]['std_deviation'])
                 }
                 else {
-                    this.targetMeans[callsite] = '0.0'
-                    this.targetVariance[callsite] = '0.0'
-                    this.targetStandardDeviation[callsite] = '0.0'
-                    this.ensembleMeans[callsite] = '0.0'
-                    this.ensembleVariance[callsite] = '0.0'
-                    this.ensembleStandardDeviation = '0.0'
+                    this.targetMeans[callsite] = 0
+                    this.targetVariance[callsite] = 0
+                    this.targetStandardDeviation[callsite] = 0
+                    this.ensembleMeans[callsite] = 0
+                    this.ensembleVariance[callsite] = 0
+                    this.ensembleStandardDeviation[callsite] = 0
                 }
                 this.selectClassName[callsite] = 'unselect-callsite'
             }
