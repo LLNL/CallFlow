@@ -230,12 +230,25 @@ class EnsembleCallFlow:
                 reveal_callsites = action["reveal_callsites"]
             else:
                 reveal_callsites = []
+
+            if "split_entry_module" in action:
+                split_entry_module = action["split_entry_module"]
+            else:
+                split_entry_module = ""
+
+            if "split_callee_module" in action:
+                split_callee_module = action["split_callee_module"]
+            else:
+                split_callee_module = ""
+
             self.states["ensemble_group"].g = SuperGraph(
                 self.states,
                 "group_path",
                 construct_graph=True,
                 add_data=True,
                 reveal_callsites=reveal_callsites,
+                split_entry_module=split_entry_module,
+                split_callee_module=split_callee_module,
             ).agg_g
             return self.states["ensemble_group"].g
 
@@ -312,17 +325,20 @@ class EnsembleCallFlow:
 
         elif action_name == "auxiliary":
             print(f"Reprocessing: {action['re-process']}")
+            aux = Auxiliary(
+                self.states,
+                MPIBinCount=action["MPIBinCount"],
+                RunBinCount=action["RunBinCount"],
+                datasets=action["datasets"],
+                config=self.config,
+                process=True,
+            )
             if action["re-process"] == 1:
-                result = Auxiliary(
-                    self.states,
-                    MPIBinCount=action["MPIBinCount"],
-                    RunBinCount=action["RunBinCount"],
-                    datasets=action["datasets"],
-                    config=self.config,
-                    process=True,
-                ).result
+                result = aux.run()
             else:
                 result = self.states["all_data"]
+                # result = aux.filter_dict(result)
+
             self.currentMPIBinCount = action["MPIBinCount"]
             self.currentRunBinCount = action["RunBinCount"]
 

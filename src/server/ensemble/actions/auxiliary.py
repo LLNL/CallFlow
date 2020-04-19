@@ -49,6 +49,39 @@ class Auxiliary:
 
         print(self.timer)
 
+    def filter_dict(self, result):
+        ret = {}
+
+        # Modules will be the same as original.
+        ret["module"] = result["module"]
+        ret["moduleCallsiteMap"] = result["moduleCallsiteMap"]
+
+        ret["callsite"] = {}
+
+        group_df = self.df.groupby(["name"]).mean()
+        if self.config.filter_by == "time":
+            f_group_df = group_df.loc[
+                group_df[self.config.filter_by] > self.config.filter_below
+            ]
+        elif self.config.filter_by == "time (inc)":
+            f_group_df = group_df.loc[
+                group_df[self.config.filter_by]
+                > 0.01 * self.config.filter_perc * group_df["time (inc)"].max()
+            ]
+        callsites = f_group_df.index.values.tolist()
+
+        count = 0
+        for dataset in result["callsite"]:
+            ret["callsite"][dataset] = {}
+            for callsite in callsites:
+                if callsite in result["callsite"][dataset]:
+                    ret["callsite"][dataset][callsite] = result["callsite"][dataset][
+                        callsite
+                    ]
+                    count += 1
+        print(count)
+        return ret
+
     def group_frames(self):
         if self.filter:
             # self.df = self.df.loc[self.df['time'] > 0.01*self.config.filter_perc*self.df['time'].max() ]
@@ -150,8 +183,8 @@ class Auxiliary:
             "module": df["module"].tolist()[0],
             "callers": df["callers"].unique().tolist(),
             "callees": df["callees"].unique().tolist(),
-            # "component_path": df["component_path"].unique().tolist(),
-            # "component_level": df["component_level"].unique().tolist(),
+            "component_path": df["component_path"].unique().tolist(),
+            "component_level": df["component_level"].unique().tolist(),
             "Inclusive": {
                 "mean_time": df["time (inc)"].mean(),
                 "max_time": df["time (inc)"].max(),

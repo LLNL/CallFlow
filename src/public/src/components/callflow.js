@@ -420,13 +420,10 @@ export default {
 				}
 			}
 
-			if (this.firstRender) {
-				this.$store.selectedTargetDataset = max_dataset
-				this.selectedTargetDataset = max_dataset
-				this.firstRender = false
+			this.$store.selectedTargetDataset = max_dataset
+			this.selectedTargetDataset = max_dataset
 
-				console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
-			}
+			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
 
 		setComponentMap() {
