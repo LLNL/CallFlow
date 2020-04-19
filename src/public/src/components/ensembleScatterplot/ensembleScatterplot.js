@@ -52,6 +52,9 @@ export default {
 		y_max_exponent: 0,
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
 		includesTarget: true,
+		undesirability: {},
+		maxUndesirability: 0,
+		maxVarianceCallsite: ''
 	}),
 
 	mounted() {
@@ -59,6 +62,7 @@ export default {
 		EventHandler.$on('ensemble_scatterplot', function (data) {
 			console.log("Ensemble Scatterplot: ", data)
 			self.visualize(data['module'])
+
 		})
 	},
 
@@ -74,8 +78,6 @@ export default {
 				.attr('width', this.boxWidth)
 				.attr('height', this.boxHeight - this.padding.top)
 				.attr('transform', "translate(" + this.padding.left + "," + this.padding.top + ")")
-
-			this.$store.selectedModule = Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0]
 
 			this.$refs.ToolTip.init(this.svgID)
 			EventHandler.$emit('ensemble_scatterplot', {
@@ -101,6 +103,8 @@ export default {
 				this.clear()
 			}
 			this.firstRender = false
+			this.maxVarianceCallsite = ''
+			this.maxUndesirability = 0
 			this.selectedModule = module
 			this.selectedTargetModuleData = this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule][this.$store.selectedMetric]
 			this.selectedEnsembleModuleData = this.$store.modules['ensemble'][this.selectedModule][this.$store.selectedMetric]
@@ -127,9 +131,7 @@ export default {
 		},
 
 		setTitle() {
-			let mean = this.selectedTargetModuleData['mean_time']
-			let variance = this.selectedTargetModuleData['variance_time']
-			this.moduleUnDesirability = 1 - Math.exp(-mean * variance)
+			this.moduleUnDesirability = this.maxUndesirability
 		},
 
 		ensembleProcess() {
@@ -458,21 +460,37 @@ export default {
 				.style("opacity", 0.5);
 		},
 
+		calculateQDC(callsite, run) {
+			let q = this.$store.callsites[run][callsite][this.$store.selectedMetric]['q']
+			this.undesirability[callsite] = (q[3] - q[1]) / (q[3] + q[1]) * 100
+			if (this.maxUndesirability < this.undesirability[callsite]) {
+				this.maxVarianceCallsite = callsite
+			}
+			this.maxUndesirability = Math.max(this.undesirability[callsite], this.maxUndesirability).toFixed(3)
+		},
+
 		ensembleDots() {
 			let self = this
 			for (let i = 0; i < this.xArray.length; i += 1) {
 				let callsite = this.xArray[i]['callsite']
 				let run = this.xArray[i]['run']
-				let mean = this.$store.callsites[run][callsite][this.$store.selectedMetric]['mean_time']
-				let variance = this.$store.callsites[run][callsite][this.$store.selectedMetric]['variance_time']
-				let undesirability = 1 - Math.exp(-mean * variance)
+				this.calculateQDC(callsite, run)
+			}
 
+			for (let i = 0; i < this.xArray.length; i += 1) {
+				let callsite = this.xArray[i]['callsite']
+				let relative_undesirability = this.undesirability[callsite] / this.maxUndesirability
+				console.log(callsite)
+				console.log(this.maxUndesirability, this.undesirability[callsite])
+				let opacity = relative_undesirability
+				console.log("Opacity", opacity)
 				this.svg
 					.append('circle')
 					.attrs({
 						'class': 'ensemble-dot',
 						'r': 7.5,
-						'opacity': 0.5 * (1 + undesirability),
+						// 'opacity': 0.5 * (1 + undesirability),
+						opacity: opacity,
 						'cx': () => {
 							return this.xScale(this.xArray[i].val) + 3 * this.padding.left
 						},
@@ -486,7 +504,7 @@ export default {
 					.on('mouseover', () => {
 						let data = {
 							'callsite': callsite,
-							'undesirability': undesirability,
+							'QCD': relative_undesirability,
 							'value': self.xArray[i].val,
 							'run': self.xArray[i].run
 						}
@@ -502,16 +520,23 @@ export default {
 			let self = this
 			for (let i = 0; i < this.xtargetArray.length; i++) {
 				let callsite = this.xtargetArray[i]['callsite']
-				let run = this.$store.selectedTargetDataset
-				let mean = this.$store.callsites[run][callsite][this.$store.selectedMetric]['mean_time']
-				let variance = this.$store.callsites[run][callsite][this.$store.selectedMetric]['variance_time']
-				let undesirability = 1 - Math.exp(-mean * variance)
+				let run = this.xArray[i]['run']
+				this.calculateQDC(callsite, run)
+			}
+
+			for (let i = 0; i < this.xtargetArray.length; i++) {
+				let callsite = this.xtargetArray[i]['callsite']
+				let relative_undesirability = this.undesirability[callsite] / this.maxUndesirability
+				console.log(callsite)
+				console.log(this.maxUndesirability, this.undesirability[callsite])
+				let opacity = 1 - relative_undesirability
+				console.log("Opacity", opacity)
 				this.svg
 					.append('circle')
 					.attrs({
 						'class': 'target-dot',
 						'r': 7.5,
-						'opacity': 0.5 * (1 + undesirability),
+						'opacity': opacity,
 						'cx': () => {
 							return this.xScale(this.xtargetArray[i].val) + 3 * this.padding.left;
 						},
@@ -525,7 +550,7 @@ export default {
 					.on('mouseover', () => {
 						let data = {
 							'callsite': callsite,
-							'undesirability': undesirability,
+							'QCD': relative_undesirability,
 							'value': self.xtargetArray[i].val,
 							'run': run
 						}

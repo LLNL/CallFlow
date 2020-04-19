@@ -24,8 +24,8 @@ export default {
 
             this.toolTipG = this.toolTipDiv.append('g')
             this.height = 80
-            this.halfWidth = document.getElementById(this.id).clientWidth /2
-            this.halfHeight = document.getElementById(this.id).clientHeight /2
+            this.halfWidth = document.getElementById(this.id).clientWidth / 2
+            this.halfHeight = document.getElementById(this.id).clientHeight / 2
         },
 
         addText(text) {
@@ -36,7 +36,6 @@ export default {
                 .attrs({
                     'class': 'toolTipContent',
                     'x': () => {
-                        console.log(this.mousePosX, this.halfWidth, document.getElementById(this.id).clientWidth)
                         if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth) {
                             return (this.mousePosX - this.width) + this.textxOffset + 'px'
                         }
@@ -50,7 +49,7 @@ export default {
                     }
                 })
                 .text(text)
-                this.textCount += 1
+            this.textCount += 1
         },
 
         trunc(str, n) {
@@ -58,11 +57,11 @@ export default {
             return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
-        truncTimeLabel(str){
-            if(str == 'Inclusive'){
+        truncTimeLabel(str) {
+            if (str == 'Inclusive') {
                 return 'Inc.'
             }
-            else if(str == 'Exclusive'){
+            else if (str == 'Exclusive') {
                 return 'Exc.'
             }
         },
@@ -71,12 +70,12 @@ export default {
             this.addText('Callsite: ' + this.trunc(this.data.callsite, 10))
             this.addText('Mean ' + this.truncTimeLabel(this.$store.selectedMetric) + ' Time: ' + utils.formatRuntimeWithUnits(this.data.value))
             this.addText('Run: ' + this.data.run)
-            this.addText('Desirability: ' + (1 - this.data.undesirability).toFixed(3))
+            this.addText('QCD: ' + this.data.QCD.toFixed(3))
         },
 
         render(data) {
             this.clear()
-            this.width = 19*this.fontSize
+            this.width = 19 * this.fontSize
             var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
             this.mousePos = d3.mouse(d3.select('#' + this.id).node())
             this.mousePosX = this.mousePos[0]

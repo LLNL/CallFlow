@@ -420,8 +420,14 @@ export default {
 				}
 			}
 
-			this.$store.selectedTargetDataset = max_dataset
-			this.selectedTargetDataset = max_dataset
+			if (this.firstRender) {
+				this.$store.selectedTargetDataset = max_dataset
+				this.selectedTargetDataset = max_dataset
+				this.firstRender = false
+			}
+			else {
+				this.$store.selectedTargetDataset = this.selectedTargetDataset
+			}
 
 			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
 		},
@@ -503,7 +509,37 @@ export default {
 			this.$store.showTarget = this.showTarget
 
 			this.targetColors = Object.keys(this.targetColorMap)
+		},
 
+		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime. 
+		sortModulesByMetric(attr) {
+			let module_list = Object.keys(this.$store.modules['ensemble'])
+
+			// Create a map for each dataset mapping the respective mean times. 
+			let map = {}
+			for (let module_name of module_list) {
+				map[module_name] = this.$store.modules['ensemble'][module_name][this.$store.selectedMetric]['mean_time']
+			}
+
+			// Create items array
+			let items = Object.keys(map).map(function (key) {
+				return [key, map[key]];
+			});
+
+			// Sort the array based on the second element
+			items.sort(function (first, second) {
+				return second[1] - first[1];
+			});
+
+			console.log(items)
+			return items
+		},
+
+		setSelectedModule() {
+			let modules_sorted_list_by_metric = this.sortModulesByMetric()
+			this.selectedModule = modules_sorted_list_by_metric[0][0]
+			console.log(this.selectedModule)
+			this.$store.selectedModule = this.selectedModule
 		},
 
 		clear() {
@@ -577,6 +613,7 @@ export default {
 			this.setupColors()
 			this.setOtherData()
 			this.setTargetDataset()
+			this.setSelectedModule()
 
 			console.log("Mode : ", this.selectedMode)
 			console.log("Number of runs :", this.$store.numOfRuns)

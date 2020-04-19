@@ -291,8 +291,8 @@ export default function Sankey() {
         console.log("[Compute node breadths] Number of levels: ", level)
 
         minDistanceBetweenNode = nodeWidth * 2
-        widthScale = scalePow().domain([0, level + 1]).range([minDistanceBetweenNode, size[0]])
-        scaleNodeBreadths((size[0] - nodeWidth) / (maxLevel - 1));
+        widthScale = scalePow().domain([0, level]).range([minDistanceBetweenNode, size[0]])
+        scaleNodeBreadths((size[0] - nodeWidth) / (maxLevel));
     }
 
     //////////////////// Associated functions for : ComputeNodeDepths /////////////////
