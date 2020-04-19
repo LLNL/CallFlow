@@ -45,7 +45,7 @@ class Auxiliary:
         self.props = ["rank", "name", "dataset", "all_ranks"]
         self.filter = True
 
-        self.result = self.run()
+        # self.result = self.run()
 
         print(self.timer)
 
@@ -172,10 +172,16 @@ class Auxiliary:
     ):
         inclusive_variance = df["time (inc)"].var()
         exclusive_variance = df["time"].var()
+        inclusive_std_deviation = math.sqrt(df["time (inc)"].var())
+        exclusive_std_deviation = math.sqrt(df["time"].var())
+
         if math.isnan(inclusive_variance):
             inclusive_variance = 0
+            inclusive_std_deviation = 0
         if math.isnan(exclusive_variance):
             exclusive_variance = 0
+            exclusive_std_deviation = 0
+
         result = {
             "name": name,
             "id": "node-" + str(df["nid"].tolist()[0]),
@@ -189,11 +195,11 @@ class Auxiliary:
                 "mean_time": df["time (inc)"].mean(),
                 "max_time": df["time (inc)"].max(),
                 "min_time": df["time (inc)"].min(),
-                "variance_time": inclusive_variance,
+                "variance": inclusive_variance,
                 "q": q["Inclusive"],
                 "outliers": outliers["Inclusive"],
                 # "imbalance_perc": df['imbalance_perc_inclusive'].tolist()[0],
-                # # "std_deviation": df['std_deviation_inclusive'].tolist()[0],
+                "std_deviation": inclusive_std_deviation,
                 # "kurtosis": df['kurtosis_inclusive'].tolist()[0],
                 # "skewness": df['skewness_inclusive'].tolist()[0],
                 "gradients": gradients["Inclusive"],
@@ -203,11 +209,11 @@ class Auxiliary:
                 "mean_time": df["time"].mean(),
                 "max_time": df["time"].max(),
                 "min_time": df["time"].min(),
-                "variance_time": exclusive_variance,
+                "variance": exclusive_variance,
                 "q": q["Exclusive"],
                 "outliers": outliers["Exclusive"],
                 # "imbalance_perc": df['imbalance_perc_exclusive'].tolist()[0],
-                # # "std_deviation": df['std_deviation_exclusive'].tolist()[0],
+                "std_deviation": exclusive_std_deviation,
                 # "skewness": df['skewness_exclusive'].tolist()[0],
                 # "kurtosis": df['kurtosis_exclusive'].tolist()[0],
                 "gradients": gradients["Exclusive"],

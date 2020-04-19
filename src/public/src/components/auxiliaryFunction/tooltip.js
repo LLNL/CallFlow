@@ -8,7 +8,6 @@ export default {
     components: {},
 
     data: () => ({
-        id: '',
         textCount: 0,
         textxOffset: 20,
         textyOffset: 20,
@@ -21,7 +20,7 @@ export default {
         init(id) {
             console.log(id)
             this.id = id
-            this.toolTipDiv = d3.select('#' + this.id)
+            this.toolTipDiv = d3.select('#' + id)
             this.height = 80
             this.halfWidth = document.getElementById(this.id).clientWidth / 2
             this.halfHeight = document.getElementById(this.id).clientHeight / 2

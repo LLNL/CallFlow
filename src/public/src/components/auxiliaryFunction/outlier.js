@@ -47,7 +47,7 @@ export default {
             if (this.$store.showTarget && showTarget) {
                 this.targetOutliers()
             }
-            this.$parent.$refs.ToolTip.init('boxplot' + callsite.id)
+            this.$parent.$refs.ToolTip.init('boxplot-' + callsite.id)
         },
 
         groupByBand(data, band) {

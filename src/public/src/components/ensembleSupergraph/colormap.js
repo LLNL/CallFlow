@@ -2,6 +2,7 @@ import tpl from '../../html/ensembleSupergraph/colormap.html'
 import * as d3 from 'd3'
 import 'd3-selection-multi'
 import * as utils from '../utils'
+import EventHandler from '../EventHandler'
 
 export default {
     template: tpl,
@@ -25,12 +26,12 @@ export default {
         id: ''
     }),
 
-    watch: {
-
-    },
-
     mounted() {
         this.id = 'ensemble-colormap'
+
+        EventHandler.$on('show_target_auxiliary', (data) => {
+            this.init()
+        })
     },
 
     methods: {
@@ -51,30 +52,26 @@ export default {
                     'id': 'dist-colormap',
                 })
 
-            this.clearLegends()
-            this.drawTargetEnsembleLegend()
+            if (this.$store.showTarget == true) {
+                this.drawTargetLegend()
+            }
+            else {
+                this.clearTargetLegends()
+            }
+            this.clearEnsembleLegends()
+            this.drawEnsembleLegend()
             this.drawMeanColorMap()
             this.drawMeanText()
         },
 
-        drawTargetEnsembleLegend() {
+        drawEnsembleLegend() {
             this.svg.append('circle')
                 .attrs({
                     'r': 10,
                     'cx': 10,
                     'cy': 10,
-                    'class': 'target-circle-legend',
+                    'class': 'ensemble-circle-legend',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 3 * this.padding.bottom})`,
-                    'fill': this.$store.color.target
-                })
-
-            this.svg.append('circle')
-                .attrs({
-                    'r': 10,
-                    'cx': 10,
-                    'cy': 10,
-                    'class': 'target-circle-legend',
-                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 4 * this.padding.bottom})`,
                     'fill': this.$store.color.ensemble
                 })
 
@@ -82,12 +79,26 @@ export default {
                 .attrs({
                     'x': 30,
                     'y': 15,
-                    'class': 'target-circle-legend-text',
+                    'class': 'ensemble-circle-legend-text',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 3 * this.padding.bottom})`,
                 })
-                .text('Target run')
+                .text('Ensemble of runs')
                 .style('font-size', 14)
                 .style('fill', '#444444');
+
+
+        },
+
+        drawTargetLegend() {
+            this.svg.append('circle')
+                .attrs({
+                    'r': 10,
+                    'cx': 10,
+                    'cy': 10,
+                    'class': 'target-circle-legend',
+                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 4 * this.padding.bottom})`,
+                    'fill': this.$store.color.target
+                })
 
             this.svg.append('text')
                 .attrs({
@@ -96,12 +107,10 @@ export default {
                     'class': 'target-circle-legend-text',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 4 * this.padding.bottom})`,
                 })
-                .text('Ensemble of runs')
+                .text('Target run')
                 .style('font-size', 14)
                 .style('fill', '#444444');
-
         },
-
 
         drawMeanColorMap() {
             this.color = this.$store.color
@@ -317,7 +326,6 @@ export default {
         clear() {
             d3.selectAll('.dist-colormap-text').remove()
             d3.selectAll('.dist-colormap-rect').remove()
-
         },
 
         clearMetric() {
@@ -325,9 +333,14 @@ export default {
             d3.selectAll('.dist-colormap-rect-metric').remove()
         },
 
-        clearLegends() {
+        clearTargetLegends() {
             d3.selectAll('.target-circle-legend').remove()
             d3.selectAll('.target-circle-legend-text').remove()
+        },
+
+        clearEnsembleLegends() {
+            d3.selectAll('.ensemble-circle-legend').remove()
+            d3.selectAll('.ensemble-circle-legend-text').remove()
         },
 
         update(mode, data) {

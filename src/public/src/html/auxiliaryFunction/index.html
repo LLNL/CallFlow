@@ -74,9 +74,12 @@
 
         <template v-if="callsite.reveal == false">
             <v-layout row wrap>
-                <div class="subtitle-2" :style="'color: ' + targetColor">Mean : {{means[callsite.name]}}</div>
+                <div class="subtitle-2" :style="'color: ' + targetColor">Mean : {{targetMeans[callsite.name]}}</div>
                 <v-spacer></v-spacer>
-                <div class="subtitle-2" :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}</div>
+                <!-- <div class="subtitle-2" :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}</div> -->
+                <div class="subtitle-2" :style="'color: ' + targetColor">Std. Dev. :
+                    {{targetStandardDeviation[callsite.name]}}
+                </div>
             </v-layout>
         </template>
         <!-- <div>Percentage imbalance : {{callsite['imbalance_perc_inclusive']}}</div>
@@ -88,8 +91,11 @@
             <v-layout row wrap>
                 <div class="subtitle-2" :style="'color: ' + ensembleColor">Mean : {{ensembleMeans[callsite.name]}}</div>
                 <v-spacer></v-spacer>
-                <div class="subtitle-2" :style="'color: ' + ensembleColor">Variance :
+                <!-- <div class="subtitle-2" :style="'color: ' + ensembleColor">Variance :
                     {{ensembleVariance[callsite.name]}}
+                </div> -->
+                <div class="subtitle-2" :style="'color: ' + ensembleColor">Std. Dev. :
+                    {{ensembleStandardDeviation[callsite.name]}}
                 </div>
             </v-layout>
         </template>
@@ -135,9 +141,12 @@
 
         <template v-if="callsite.reveal == false">
             <v-layout row wrap>
-                <div class="subtitle-2" :style="'color: ' + targetColor">Mean : {{means[callsite.name]}}</div>
+                <div class="subtitle-2" :style="'color: ' + targetColor">Mean : {{targetMeans[callsite.name]}}</div>
                 <v-spacer></v-spacer>
-                <div class="subtitle-2" :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}
+                <!-- <div class="subtitle-2" :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}
+                </div> -->
+                <div class="subtitle-2" :style="'color: ' + targetColor">Std. Dev. :
+                    {{targetStandardDeviation[callsite.name]}}
                 </div>
             </v-layout>
             <!-- <div>Percentage imbalance : {{callsite['imbalance_perc_inclusive']}}</div>
@@ -155,8 +164,11 @@
             <div class="subtitle-2" :style="'color: ' + ensembleColor">Mean :
                 {{ensembleMeans[callsite.name]}}</div>
             <v-spacer></v-spacer>
-            <div class="subtitle-2" :style="'color: ' + ensembleColor">Variance :
+            <!-- <div class="subtitle-2" :style="'color: ' + ensembleColor">Std. Dev. :
                 {{ensembleVariance[callsite.name]}}
+            </div> -->
+            <div class="subtitle-2" :style="'color: ' + ensembleColor">Std. Dev. :
+                {{ensembleStandardDeviation[callsite.name]}}
             </div>
         </v-layout>
 
