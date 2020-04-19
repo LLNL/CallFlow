@@ -381,30 +381,6 @@ class App:
             )
             emit("compare", result, json=True)
 
-        @sockets.on("split_caller", namespace="/")
-        def split_caller(data):
-            if self.debug:
-                self.print("Split callgraph by rank", data)
-
-            # result = self.callflow.update({
-            #     "name": "split-caller",
-            #     "dataset1": data['dataset1'],
-            #     "split": data['split']
-            # })
-            emit("split_caller", {}, json=True)
-
-        @sockets.on("split_callee", namespace="/")
-        def split_caller(data):
-            if self.debug:
-                self.print("Split callgraph by rank", data)
-
-            # result = self.callflow.update({
-            #     "name": "split-caller",
-            #     "dataset1": data['dataset1'],
-            #     "split": data['split']
-            # })
-            emit("split_caller", {}, json=True)
-
         @sockets.on("reveal_callsite", namespace="/")
         def reveal_callsite(data):
             if self.debug:
@@ -415,6 +391,38 @@ class App:
                     "groupBy": "module",
                     "datasets": data["datasets"],
                     "reveal_callsites": data["reveal_callsites"],
+                }
+            )
+            result = json_graph.node_link_data(nx_graph)
+            json_result = json.dumps(result)
+            emit("ensemble_supergraph", json_result, json=True)
+
+        @sockets.on("split_by_entry_callsites", namespace="/")
+        def split_by_entry_callsites(data):
+            if self.debug:
+                self.print(f"Reveal callsite: {data}.")
+            nx_graph = self.callflow.request(
+                {
+                    "name": "supergraph",
+                    "groupBy": "module",
+                    "datasets": data["datasets"],
+                    "split_entry_module": data["selectedModule"],
+                }
+            )
+            result = json_graph.node_link_data(nx_graph)
+            json_result = json.dumps(result)
+            emit("ensemble_supergraph", json_result, json=True)
+
+        @sockets.on("split_by_callees", namespace="/")
+        def split_by_callees(data):
+            if self.debug:
+                self.print(f"Reveal callsite: {data}.")
+            nx_graph = self.callflow.request(
+                {
+                    "name": "supergraph",
+                    "groupBy": "module",
+                    "datasets": data["datasets"],
+                    "split_by_callees": data["selectedModule"],
                 }
             )
             result = json_graph.node_link_data(nx_graph)

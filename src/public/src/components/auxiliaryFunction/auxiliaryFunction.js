@@ -422,6 +422,7 @@ export default {
             }
         },
 
+        // Sort the callsite information view by the attribute. 
         sortByAttribute(callsites, attribute) {
             // Create items array
             let self = this
@@ -448,12 +449,32 @@ export default {
             return callsites
         },
 
+        // Outlier interactions
         getSelectedOutlierDatasets(callsite) {
             return this.selectedOutlierDatasets[callsite]
         },
 
         getSelectedOutlierRanks(callsite) {
             return this.selectedOutlierRanks[callsite]
+        },
+
+        // Split interactions
+        split() {
+            if (this.isEntryFunctionSelected == 'select-callsite') {
+                this.$socket.emit('split_by_entry_callsites', {
+                    selectedModule: this.$store.selectedModule,
+                    datasets: this.$store.selectedDatasets,
+                })
+                EventHandler.$emit('split_by_entry_callsites')
+            }
+            else if (this.isCalleeSelected == 'select-callsite') {
+                this.$socket.emit('split_by_callees', {
+                    selectedModule: this.$store.selectedModule,
+                    datasets: this.$store.selectedDatasets,
+                })
+                EventHandler.$emit('split_by_callees')
+            }
+
         }
     }
 }

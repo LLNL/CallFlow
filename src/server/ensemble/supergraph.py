@@ -22,7 +22,8 @@ class SuperGraph(nx.Graph):
         construct_graph=True,
         add_data=False,
         reveal_callsites=[],
-        reveal_modules=[],
+        split_entry_module="",
+        split_callee_module="",
     ):
         super(SuperGraph, self).__init__()
         self.states = states
@@ -63,6 +64,8 @@ class SuperGraph(nx.Graph):
             self.create_target_maps()
 
         self.reveal_callsites = reveal_callsites
+        self.split_entry_module = split_entry_module
+        self.split_callee_module = split_callee_module
 
         with self.timer.phase("Construct Graph"):
             if construct_graph:
@@ -71,8 +74,10 @@ class SuperGraph(nx.Graph):
                 self.agg_g = nx.DiGraph()
                 self.add_paths(path)
                 self.add_reveal_paths(self.reveal_callsites)
-                # self.add_entry_callsite_paths()
-                # self.add_callees_paths()
+                if self.split_entry_module != "":
+                    self.add_entry_callsite_paths(self.split_entry_module)
+                if self.split_callee_module != "":
+                    self.add_exit_callees_paths()
             else:
                 print("Using the existing graph from state {0}".format(self.state.name))
 
@@ -276,6 +281,123 @@ class SuperGraph(nx.Graph):
                             }
                         ],
                     )
+
+    ######################### Entry function interaction ################################
+
+    def module_entry_functions_map(self, graph):
+        entry_functions = {}
+        for edge in graph.edges(data=True):
+            attr_dict = edge[2]["attr_dict"]
+            edge_tuple = (edge[0], edge[1])
+            print(edge_tuple)
+            for edge_attr in attr_dict:
+                if edge_tuple[1] not in entry_functions:
+                    entry_functions[edge_tuple[1]] = []
+                entry_functions[edge_tuple[1]].append(edge_attr["target_callsite"])
+        return entry_functions
+
+    def create_source_targets_from_group_path(self, path):
+        module = ""
+        edges = []
+        for idx, callsite in enumerate(path):
+            if idx == len(path) - 1:
+                break
+            source = path[idx].split("=")
+            target = path[idx + 1].split("=")
+            edges.append(
+                {
+                    "source": source[0],
+                    "target": target[0],
+                    "source_callsite": source[1],
+                    "target_callsite": target[1],
+                }
+            )
+        return edges
+
+    def same_source_edges(self, component_edges, reveal_module):
+        ret = []
+        for idx, edge in enumerate(component_edges):
+            source = edge["source"]
+            target = edge["target"]
+
+            if source == reveal_module:
+                ret.append(edge)
+        return ret
+
+    def same_target_edges(self, component_edges, reveal_module):
+        ret = []
+        for idx, edge in enumerate(component_edges):
+            source = edge["source"]
+            target = edge["target"]
+
+            if target == reveal_module:
+                ret.append(edge)
+        return ret
+
+    def add_entry_callsite_paths(self, reveal_module):
+        entry_functions_map = self.module_entry_functions_map(self.agg_g)
+        reveal_callsites = entry_functions_map[reveal_module]
+        paths = self.callsitePathInformation(reveal_callsites)
+
+        for path in paths:
+            component_edges = self.create_source_targets_from_group_path(
+                path["group_path"]
+            )
+            source_edges_to_remove = self.same_source_edges(
+                component_edges, reveal_module
+            )
+            target_edges_to_remove = self.same_target_edges(
+                component_edges, reveal_module
+            )
+
+            if len(source_edges_to_remove) != 0:
+                for edge in source_edges_to_remove:
+                    if self.agg_g.has_edge(edge["source"], edge["target"]):
+                        self.agg_g.remove_edge((edge["source"], edge["target"]))
+                    self.agg_g.add_node(
+                        reveal_module + "=" + edge["source_callsite"],
+                        attr_dict={"type": "component-node"},
+                    )
+                    self.agg_g.add_edge(
+                        (reveal_module + "=" + edge["source_callsite"], edge["target"]),
+                        attr_dict=[
+                            {
+                                "source_callsite": edge["source_callsite"],
+                                "target_callsite": edge["target_callsite"],
+                                "edge_type": "normal",
+                                "weight": self.module_name_group_df.get_group(
+                                    (reveal_module, edge["source_callsite"])
+                                )["time (inc)"].max(),
+                                "edge_type": "reveal_edge",
+                            }
+                        ],
+                    )
+
+            if len(target_edges_to_remove) != 0:
+                for edge in target_edges_to_remove:
+                    if self.agg_g.has_edge(edge["source"], edge["target"]):
+                        self.agg_g.remove_edge(edge["source"], edge["target"])
+                    self.agg_g.add_node(
+                        reveal_module + "=" + edge["target_callsite"],
+                        attr_dict={"type": "component-node"},
+                    )
+                    self.agg_g.add_edge(
+                        edge["source"],
+                        reveal_module + "=" + edge["target_callsite"],
+                        attr_dict=[
+                            {
+                                "source_callsite": edge["source_callsite"],
+                                "target_callsite": edge["target_callsite"],
+                                "edge_type": "normal",
+                                "weight": self.module_name_group_df.get_group(
+                                    (edge["target"], edge["target_callsite"])
+                                )["time (inc)"].max(),
+                                "edge_type": "reveal_edge",
+                            }
+                        ],
+                    )
+
+        self.agg_g.remove_node(reveal_module)
 
     def add_paths(self, path):
         paths_df = self.group_df.groupby(["name", "group_path"])

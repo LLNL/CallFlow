@@ -51,6 +51,14 @@ export default {
 		EventHandler.$on('reveal_callsite', function () {
 			self.clear()
 		})
+
+		EventHandler.$on('split_by_entry_callsites', function () {
+			self.clear()
+		})
+
+		EventHandler.$on('split_by_callees', function () {
+			self.clear()
+		})
 	},
 
 	sockets: {
