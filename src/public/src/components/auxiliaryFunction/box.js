@@ -13,12 +13,6 @@ export default {
         debug: false
     }),
 
-    mounted() {
-    },
-
-    created() {
-    },
-
     methods: {
         init(callsite, q, targetq, xScale, showTarget) {
             if (this.debug) {
@@ -33,7 +27,6 @@ export default {
             this.svg = d3.select('#boxplot-' + callsite.id)
             this.id = 'box-' + callsite.id
 
-
             this.g = this.svg
                 .select('.box')
                 .attrs({
@@ -45,7 +38,7 @@ export default {
                 this.targetBox()
             }
             this.centerLine()
-            // this.$parent.$refs.ToolTip.init(this.id)
+            this.$parent.$refs.ToolTip.init('boxplot-' + callsite.id)
         },
 
         ensembleBox() {
@@ -53,7 +46,7 @@ export default {
             this.boxSVG = this.g
                 .append("rect")
                 .attrs({
-                    "class": "box",
+                    "class": "ensembleBox",
                     "y": 0,
                     "x": this.xScale(this.q.q1),
                     "height": this.$parent.rectHeight,
@@ -64,10 +57,10 @@ export default {
                 })
                 .style('z-index', 1)
                 .on('mouseover', (d) => {
-                    // self.$parent.$refs.ToolTip.renderQ(self.q)
+                    self.$parent.$refs.ToolTip.renderQ(self.q)
                 })
                 .on('mouseout', (d) => {
-                    // self.$parent.$refs.ToolTip.clear()
+                    self.$parent.$refs.ToolTip.clear()
                 })
         },
 
@@ -92,10 +85,10 @@ export default {
                 })
                 .style('z-index', 1)
                 .on('mouseover', (d) => {
-                    // self.$parent.$refs.ToolTip.renderQ(self.targetq)
+                    self.$parent.$refs.ToolTip.renderQ(self.targetq)
                 })
                 .on('mouseout', (d) => {
-                    // self.$parent.$refs.ToolTip.clear()
+                    self.$parent.$refs.ToolTip.clear()
                 })
         },
 
@@ -116,8 +109,10 @@ export default {
         },
 
         clear() {
-            this.g.selectAll('.box').remove()
-            this.g.selectAll('.targetbox').remove()
+            this.g.selectAll('.ensembleBox').remove()
+            if (this.$store.showTarget) {
+                this.g.selectAll('.targetbox').remove()
+            }
             this.g.selectAll('.centerLine').remove()
         }
     }

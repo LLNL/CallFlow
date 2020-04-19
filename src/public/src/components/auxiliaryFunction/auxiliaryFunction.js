@@ -41,10 +41,12 @@ export default {
         informationHeight: 70,
         revealCallsites: [],
         selectedMetric: '',
-        means: {},
-        variance: {},
+        targetMeans: {},
+        targetVariance: {},
+        targetStandardDeviation: {},
         ensembleMeans: {},
         ensembleVariance: {},
+        ensembleStandardDeviation: {},
         targetColor: '',
         differenceCallsites: {},
         intersectionCallsites: {},
@@ -132,16 +134,21 @@ export default {
 
             for (let callsite in this.callsites) {
                 if (this.targetCallsites[callsite] != undefined) {
-                    this.means[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['mean_time'])
-                    this.variance[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['variance_time'])
+                    this.targetMeans[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['mean_time'])
+                    this.targetVariance[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['variance'])
+                    this.targetStandardDeviation[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]['std_deviation'])
+
                     this.ensembleMeans[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]['mean_time'])
-                    this.ensembleVariance[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]['variance_time'])
+                    this.ensembleVariance[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]['variance'])
+                    this.ensembleStandardDeviation[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]['std_deviation'])
                 }
                 else {
-                    this.means[callsite] = '0.0'
-                    this.variance[callsite] = '0.0'
+                    this.targetMeans[callsite] = '0.0'
+                    this.targetVariance[callsite] = '0.0'
+                    this.targetStandardDeviation[callsite] = '0.0'
                     this.ensembleMeans[callsite] = '0.0'
                     this.ensembleVariance[callsite] = '0.0'
+                    this.ensembleStandardDeviation = '0.0'
                 }
                 this.selectClassName[callsite] = 'unselect-callsite'
             }

@@ -141,7 +141,7 @@ class EnsembleCallFlow:
         states["ensemble_entire"] = self.pipeline.read_ensemble_gf("ensemble_entire")
 
         stage18 = time.perf_counter()
-        Auxiliary(
+        aux = Auxiliary(
             states,
             MPIBinCount=self.currentMPIBinCount,
             RunBinCount=self.currentRunBinCount,
@@ -149,6 +149,7 @@ class EnsembleCallFlow:
             config=self.config,
             process=True,
         )
+        aux.run()
         stage19 = time.perf_counter()
         print(f"Create all data json file: {stage19 - stage18}")
         # self.pipeline.write_callsite_information(states)
@@ -338,7 +339,6 @@ class EnsembleCallFlow:
             else:
                 result = self.states["all_data"]
                 # result = aux.filter_dict(result)
-
             self.currentMPIBinCount = action["MPIBinCount"]
             self.currentRunBinCount = action["RunBinCount"]
 
