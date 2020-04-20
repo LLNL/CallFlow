@@ -296,15 +296,15 @@ export default {
 		},
 
 		// Feature: Sortby the datasets and show the time. 
-		sortDatasetsByAttr(datasets) {
+		sortDatasetsByAttr(datasets, attr) {
 			let ret = datasets.sort((a, b) => {
 				let x = 0, y = 0
-				if (this.$store.selectedMetric == 'Inclusive') {
+				if (attr == 'Inclusive') {
 					x = this.$store.maxIncTime[a]
 					y = this.$store.maxIncTime[b]
 					this.metricTimeMap = this.$store.maxIncTime
 				}
-				else if (this.$store.selectedMetric == 'Exclusive') {
+				else if (attr == 'Exclusive') {
 					x = this.$store.maxExcTime[a]
 					y = this.$store.maxExcTime[b]
 					this.metricTimeMap = this.$store.maxExcTime
@@ -400,7 +400,7 @@ export default {
 
 		setTargetDataset() {
 			this.$store.selectedMetric = this.selectedMetric
-			this.datasets = this.sortDatasetsByAttr(this.$store.selectedDatasets)
+			this.datasets = this.sortDatasetsByAttr(this.$store.selectedDatasets, 'Inclusive')
 
 			let max_dataset = '';
 			let current_max_time = 0.0
@@ -531,14 +531,12 @@ export default {
 				return second[1] - first[1];
 			});
 
-			console.log(items)
 			return items
 		},
 
 		setSelectedModule() {
 			let modules_sorted_list_by_metric = this.sortModulesByMetric()
 			this.selectedModule = modules_sorted_list_by_metric[0][0]
-			console.log(this.selectedModule)
 			this.$store.selectedModule = this.selectedModule
 		},
 

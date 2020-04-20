@@ -5,7 +5,7 @@
 		</v-toolbar-side-icon>
 		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
 		<v-flex xs2 class="ma-2">
-			<v-select label="Select Target run" :items="datasets"
+			<v-select label="Select Target run (Sorted by inclusive runtime)" :items="datasets"
 				v-if="selectedMode == 'Ensemble' && selectedFormat == 'SuperGraph'" v-model="selectedTargetDataset"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
 				<template slot="selection" slot-scope="{item}">
