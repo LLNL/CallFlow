@@ -68,25 +68,6 @@ class PreProcess:
             self.graphMapper()
             self.map = {}
 
-        # def dfMapper(self):
-        # 	ret = {}
-        # 	for idx, row in self.df.iterrows():
-        # 		node_df = self.state.lookup_with_node(row.node)
-        # 		n_index = node_df["n_index"].tolist()
-        # 		p_incTime = node_df[attr].tolist()
-        # 		for idx in range(len(n_index)):
-        # 			if n_index[idx] not in ret:
-        # 				ret[n_index[idx]] = []
-        # 			ret[n_index[idx]].append(p_incTime[idx])
-        # 	return ret
-
-        #################### Mapper functions ###############
-        # def update_unmapped_target_nodes(self, source, target):
-        # 	if source in self.unmapped_targets:
-        # 		self.unmapped_targets.remove(source)
-        # 	elif target not in set(self.unmapped_targets):
-        # 		self.unmapped_targets.append(target)
-
         def convertFrameList(self, nodes):
             ret = []
             for node in nodes:
@@ -285,6 +266,12 @@ class PreProcess:
         @logger
         def add_dataset_name(self):
             self.df["dataset"] = self.state.name
+            return self
+
+        @logger
+        def add_rank_column(self):
+            if "rank" not in self.df.columns:
+                self.df["rank"] = 0
             return self
 
         @logger
