@@ -170,7 +170,7 @@ export default {
                             edge_target_offset = 0
                         }
                         else if (dataset == 'target') {
-                            edge_target_offset = this.offset
+                            edge_target_offset = 0
                         }
 
                         return this.drawPath(d, link_height, edge_source_offset, edge_target_offset, dataset)

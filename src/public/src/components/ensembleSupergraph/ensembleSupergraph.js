@@ -28,7 +28,7 @@ export default {
 		nodeWidth: 50,
 		nodeScale: 1.0,
 		ySpacing: 50,
-		levelSpacing: 50,
+		levelSpacing: 75,
 		margin: {
 			top: 10, right: 10, bottom: 20, left: 10
 		},
@@ -114,6 +114,7 @@ export default {
 				self.sankeySVG.attr("transform", d3.event.transform);
 			});
 			this.sankeySVG.call(zoom);
+			console.log(this.$store.selectedMetric)
 		},
 
 		clear() {
