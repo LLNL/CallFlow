@@ -221,6 +221,16 @@ export default function Sankey() {
             let targetSum = sum(node.targetLinks, (link) => {
                 return link.weight
             })
+
+
+            let sourceTargetSum = sum(node.sourceLinks, (link) => {
+                return link.targetWeight
+            })
+
+            let targetTargetSum = sum(node.targetLinks, (link) => {
+                return link.targetWeight
+            })
+
             node.max_flow = Math.max(sourceSum, targetSum)
 
             if (node.type == 'intermediate') {
@@ -228,17 +238,21 @@ export default function Sankey() {
                 node.targetValue = node.targetValue
             }
             else {
-                node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
-                // node.value = node['actual_time']['Inclusive']
+                // node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
+                node.value = node['actual_time']['Inclusive']
                 node.targetValue = 0
                 if (node[store.selectedTargetDataset] != undefined) {
                     node.targetValue = Math.max(node[store.selectedTargetDataset]['actual_time']['Inclusive'], node[store.selectedTargetDataset]['actual_time']['Exclusive'])
+                    // node.targetValue = node[store.selectedTargetDataset]['actual_time']['Inclusive']
                 }
             }
-
+            // Relaxing the edges a nodes a bit to account for the flow. But target edges arent correct.
+            node.value = Math.max(node.value, Math.max(sourceSum, targetSum))
+            if (node[store.selectedTargetDataset] != undefined) {
+                node.targetValue = Math.max(node.targetValue, Math.max(sourceTargetSum, targetTargetSum))
+            }
             console.log("[Compute node values] Adjusted flow", node.id, ": ", node.value)
             console.log("[Compute node values] Adjusted target flow", node.id, ": ", node.targetValue)
-
         });
     }
 
@@ -271,10 +285,6 @@ export default function Sankey() {
         let level = 0
         let count = 0
         while (remainingNodes.length) {
-            console.log(count)
-            // if (count >= 17) {
-            //     break;
-            // }
             nextNodes = [];
             remainingNodes.forEach(function (node) {
                 node.level = level
@@ -431,7 +441,7 @@ export default function Sankey() {
 
         links.forEach(function (link) {
             let flowScale = (link.source_data.value / link.source_data.max_flow)
-            link.scaled_weight = link.weight * flowScale
+            link.scaled_weight = link.weight //* flowScale
             link.height = link.scaled_weight * scale
 
             let source = ''
