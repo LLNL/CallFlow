@@ -7,6 +7,7 @@ from ast import literal_eval as make_tuple
 import math
 from networkx.readwrite import json_graph
 from utils.timer import Timer
+from utils.df import sanitizeName
 
 
 class ModuleHierarchy:
@@ -25,11 +26,34 @@ class ModuleHierarchy:
     def run_graph(self):
         self.hierarchy = nx.bfs_tree(self.graph, self.module, depth_limit=10)
 
+    def create_source_targets(self, path):
+        module = ""
+        edges = []
+
+        for idx, callsite in enumerate(path):
+            if idx == len(path) - 1:
+                break
+
+            source = sanitizeName(path[idx])
+            target = sanitizeName(path[idx + 1])
+
+            edges.append(
+                {"source": source, "target": target,}
+            )
+        return edges
+
     def add_paths(self, df, path_name):
-        for idx, path in enumerate(df[path_name].unique()):
-            if isinstance(path, str) and path != "nan":
-                path = make_tuple(path)
-                self.hierarchy.add_path(path)
+        paths = df[path_name].unique()
+        for idx, path in enumerate(paths):
+            if isinstance(path, float):
+                return []
+            path = make_tuple(path)
+            source_targets = self.create_source_targets(path)
+            for edge in source_targets:
+                source = edge["source"]
+                target = edge["target"]
+                if not self.hierarchy.has_edge(source, target):
+                    self.hierarchy.add_edge(source, target)
 
     def as_spanning_trees(self, G):
         """
@@ -48,6 +72,30 @@ class ModuleHierarchy:
 
         return ret
 
+    def check_cycles(self, G):
+        try:
+            cycles = list(nx.find_cycle(self.hierarchy, orientation="ignore"))
+        except:
+            cycles = []
+
+        return cycles
+
+    def remove_cycles(self, G, cycles):
+        for cycle in cycles:
+            source = cycle[0]
+            target = cycle[1]
+            print("Removing edge:", source, target)
+            if source == target:
+                print("here")
+                G.remove_edge(source, target)
+                G.remove_node(source)
+                G.remove_node
+
+            if cycle[2] == "reverse":
+                print("Removing edge:", source, target)
+                G.remove_edge(source, target)
+        return G
+
     # instead of nid, get by module. nid seems very vulnerable rn.
     def run(self):
         node_df = self.df.loc[self.df["module"] == self.module]
@@ -59,4 +107,13 @@ class ModuleHierarchy:
         with self.timer.phase("Add paths"):
             self.add_paths(node_paths, "component_path")
 
+        cycles = self.check_cycles(self.hierarchy)
+        while len(cycles) != 0:
+            self.hierarchy = self.remove_cycles(self.hierarchy, cycles)
+            cycles = self.check_cycles(self.hierarchy)
+            print(f"cycles: {cycles}")
+
+        print(len(self.hierarchy.nodes()), len(self.hierarchy.edges()))
+        for edge in self.hierarchy.edges():
+            print(edge)
         return self.hierarchy
