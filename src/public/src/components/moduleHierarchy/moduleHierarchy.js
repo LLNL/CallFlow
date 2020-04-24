@@ -1,6 +1,7 @@
 import tpl from '../../html/moduleHierarchy/index.html'
 import * as d3 from 'd3'
 import ToolTip from './tooltip'
+import * as utils from '../utils'
 import Queue from '../../core/queue';
 
 export default {
@@ -227,23 +228,6 @@ export default {
 			d3.selectAll('.hierarchy-targetLines').remove()
 			d3.selectAll('.linear-gradient').remove()
 			// this.$refs.ToolTipModuleHierarchy.clear()
-		},
-
-		textSize(text) {
-			const container = d3.select('#' + this.id)
-				.append('svg')
-			container.append('text')
-				.attrs({
-					x: -99999,
-					y: -99999
-				})
-				.text((d) => text);
-			const size = container.node().getBBox();
-			container.remove();
-			return {
-				width: size.width,
-				height: size.height
-			};
 		},
 
 		descendents(root) {
@@ -742,28 +726,30 @@ export default {
 				})
 				.on('click', this.click)
 				.on('mouseover', (d) => {
-					// const percentage = (100 * d.value / this.totalSize).toPrecision(3);
-					// let percentageString = `${percentage}%`;
-					// if (percentage < 0.1) {
-					// 	percentageString = '< 0.1%';
-					// }
+					const percentage = (100 * d.value / this.totalSize).toPrecision(3);
+					this.percentageString = `${percentage}%`;
+					if (percentage < 0.1) {
+						this.percentageString = '< 0.1%';
+					}
 
-					// const sequenceArray = this.getAncestors(d);
+					const sequenceArray = this.getAncestors(d);
 					// this.updateBreadcrumbs(sequenceArray, percentageString);
 
 					// Fade all the segments.
-					// d3.selectAll('.icicleNode')
-					// 	.style('opacity', 0.3);
+					d3.selectAll('.icicleNode')
+						.style('opacity', 0.3);
 
 					// Then highlight only those that are an ancestor of the current segment.
-					// this.hierarchy.selectAll('.icicleNode')
-					// 	.filter(node => (sequenceArray.indexOf(node) >= 0))
-					// 	.style('opacity', 1)
+					this.hierarchy.selectAll('.icicleNode')
+						.filter(node => (sequenceArray.indexOf(node) >= 0))
+						.style('opacity', 1)
 
 					// this.drawGuides(d)
 					this.$refs.ToolTip.render(d)
 				})
-				.on('mouseout', (d) => {
+				.on('mouseout', (d) => {// Fade all the segments.
+					d3.selectAll('.icicleNode')
+						.style('opacity', 1);
 					// this.clearGuides()
 					this.$refs.ToolTip.clear()
 				},
@@ -816,19 +802,14 @@ export default {
 						return '';
 					}
 					let name = d.data.id
-					name = name.replace(/<unknown procedure>/g, 'proc ');
-					name = name.replace(/MPI_/g, '');
+					let textSize = utils.textSize(this.id, name)['width'];
+					let fontSize = 14
 
-					if (name.indexOf('=')) {
-						name = name.split('=')[0]
-					}
-
-					var textSize = this.textSize(name)['width'];
-					if (textSize < d.x1 - d.x0) {
-						return name;
-					} else {
-						return this.trunc(name, this.textTruncForNode - 10)
-					}
+					let textThatFits = Math.floor((d.x1 - d.x0) / fontSize)
+					console.log(textThatFits)
+					name = utils.truncNames(name, textThatFits)
+					console.log(name)
+					return name
 				});
 		},
 

@@ -57,15 +57,15 @@ export default {
         },
 
         info() {
-            this.addText('Name: ' + this.trunc(this.data.data.id, 40))
+            this.addText('Name: ' + utils.truncNames(this.data.data.id, 40))
             let label = ''
-            if(this.$store.selectedMetric == 'Exclusive'){
+            if (this.$store.selectedMetric == 'Exclusive') {
                 label = 'Exc.'
             }
-            else if(this.$store.selectedMetric == 'Inclusive'){
+            else if (this.$store.selectedMetric == 'Inclusive') {
                 label = 'Inc.'
             }
-            this.addText('Target ' + label + ' time: ' +  utils.formatRuntimeWithUnits(this.data.data.data[this.$store.selectedMetric]['max_time']))
+            this.addText('Target ' + label + ' time: ' + utils.formatRuntimeWithUnits(this.data.data.data[this.$store.selectedMetric]['max_time']))
         },
 
         render(data) {
@@ -102,11 +102,6 @@ export default {
                 })
 
             this.info()
-        },
-
-        trunc(str, n) {
-            str = str.replace(/<unknown procedure>/g, 'proc ')
-            return (str.length > n) ? str.substr(0, n - 1) + '...' : str;
         },
 
         clear() {

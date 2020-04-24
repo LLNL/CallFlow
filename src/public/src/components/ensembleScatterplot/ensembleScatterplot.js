@@ -462,11 +462,20 @@ export default {
 
 		calculateQDC(callsite, run) {
 			let q = this.$store.callsites[run][callsite][this.$store.selectedMetric]['q']
-			this.undesirability[callsite] = (q[3] - q[1]) / (q[3] + q[1]) * 100
+
+			if (q[3] == 0 && q[1] == 0) {
+				this.undesirability[callsite] = 1
+			}
+			else {
+				this.undesirability[callsite] = (q[3] - q[1]) / (q[3] + q[1]) * 100
+			}
 			if (this.maxUndesirability < this.undesirability[callsite]) {
-				this.maxVarianceCallsite = callsite
+				this.maxVarianceCallsite = utils.truncNames(callsite, 10)
 			}
 			this.maxUndesirability = Math.max(this.undesirability[callsite], this.maxUndesirability).toFixed(3)
+
+			let opacity = this.undesirability[callsite] / this.maxUndesirability
+			return opacity
 		},
 
 		ensembleDots() {
@@ -474,22 +483,13 @@ export default {
 			for (let i = 0; i < this.xArray.length; i += 1) {
 				let callsite = this.xArray[i]['callsite']
 				let run = this.xArray[i]['run']
-				this.calculateQDC(callsite, run)
-			}
+				let opacity = this.calculateQDC(callsite, run)
 
-			for (let i = 0; i < this.xArray.length; i += 1) {
-				let callsite = this.xArray[i]['callsite']
-				let relative_undesirability = this.undesirability[callsite] / this.maxUndesirability
-				console.log(callsite)
-				console.log(this.maxUndesirability, this.undesirability[callsite])
-				let opacity = relative_undesirability
-				console.log("Opacity", opacity)
 				this.svg
 					.append('circle')
 					.attrs({
 						'class': 'ensemble-dot',
 						'r': 7.5,
-						// 'opacity': 0.5 * (1 + undesirability),
 						opacity: opacity,
 						'cx': () => {
 							return this.xScale(this.xArray[i].val) + 3 * this.padding.left
@@ -504,7 +504,7 @@ export default {
 					.on('mouseover', () => {
 						let data = {
 							'callsite': callsite,
-							'QCD': relative_undesirability,
+							'QCD': opacity,
 							'value': self.xArray[i].val,
 							'run': self.xArray[i].run
 						}
@@ -521,16 +521,8 @@ export default {
 			for (let i = 0; i < this.xtargetArray.length; i++) {
 				let callsite = this.xtargetArray[i]['callsite']
 				let run = this.xArray[i]['run']
-				this.calculateQDC(callsite, run)
-			}
+				let opacity = this.calculateQDC(callsite, run)
 
-			for (let i = 0; i < this.xtargetArray.length; i++) {
-				let callsite = this.xtargetArray[i]['callsite']
-				let relative_undesirability = this.undesirability[callsite] / this.maxUndesirability
-				console.log(callsite)
-				console.log(this.maxUndesirability, this.undesirability[callsite])
-				let opacity = 1 - relative_undesirability
-				console.log("Opacity", opacity)
 				this.svg
 					.append('circle')
 					.attrs({

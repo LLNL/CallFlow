@@ -37,9 +37,7 @@ class ModuleHierarchy:
             source = sanitizeName(path[idx])
             target = sanitizeName(path[idx + 1])
 
-            edges.append(
-                {"source": source, "target": target,}
-            )
+            edges.append({"source": source, "target": target})
         return edges
 
     def add_paths(self, df, path_name):
