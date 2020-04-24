@@ -94,8 +94,12 @@ export default {
 		init() {
 			this.auxiliaryViewWidth = document.getElementById('auxiliary-function-overview').clientWidth
 
-			this.width = 0.5 * this.$store.viewWidth
-			this.height = this.$store.viewHeight - this.margin.top - this.margin.bottom
+
+			this.width = 5 * this.$store.viewWidth
+			this.height = 2 * this.$store.viewHeight
+
+			this.sankeyWidth = 0.5 * this.$store.viewWidth
+			this.sankeyHeight = 0.8 * this.$store.viewHeight - this.margin.top - this.margin.bottom
 
 			this.sankeySVG = d3.select('#' + this.id)
 				.attrs({
@@ -109,12 +113,12 @@ export default {
 				groupBy: 'module'
 			})
 
-			let self = this
+			let inner = this.sankeySVG.select('#container');
+
 			var zoom = d3.zoom().on("zoom", function () {
-				self.sankeySVG.attr("transform", d3.event.transform);
+				inner.attr("transform", d3.event.transform);
 			});
 			this.sankeySVG.call(zoom);
-			console.log(this.$store.selectedMetric)
 		},
 
 		clear() {
@@ -223,7 +227,7 @@ export default {
 			this.sankey = Sankey()
 				.nodeWidth(this.nodeWidth)
 				.nodePadding(this.ySpacing)
-				.size([this.width * 1.05, this.height * .9 - this.ySpacing])
+				.size([this.sankeyWidth, this.sankeyHeight])
 				.levelSpacing(this.levelSpacing)
 				.maxLevel(this.data.maxLevel)
 				.datasets(this.$store.runNames)
