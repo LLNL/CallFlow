@@ -459,20 +459,21 @@ export default function Sankey() {
                 console.log("[Compute node depths] Ensemble scaling: ", scale)
 
                 node.height = node.value * minNodeScale * scale;
+                node.targetHeight = node.targetValue * minNodeScale * scale
                 console.log("[Compute node depths] Node height: ", node.height)
             });
             levelCount += 1
         });
 
         links.forEach(function (link) {
-            // let flowScale = (link.source_data.value / link.source_data.max_flow)
-            let flowScale = fixFlowScale(link)
+            let flowScale = (link.source_data.value / link.source_data.max_flow)
+            // let flowScale = fixFlowScale(link)
 
             link.scaled_weight = link.weight * flowScale
             link.height = link.scaled_weight * scale
 
             let targetEnsembleRatio = (link.source_data.targetValue / link.source_data.value)
-            link.target_scaled_weight = link.scaled_weight * targetEnsembleRatio
+            link.target_scaled_weight = link.weight * targetEnsembleRatio
             link.targetHeight = link.target_scaled_weight * scale
 
             let heightRatio = link.targetHeight / link.height
