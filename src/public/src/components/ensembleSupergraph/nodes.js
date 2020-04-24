@@ -279,12 +279,27 @@ export default {
                 })
                 .style('shape-rendering', 'crispEdges')
                 .style('stroke', (d) => {
+                    let runtimeColor = ''
                     if (d.type == "intermediate") {
-                        return this.$store.color.ensemble
+                        runtimeColor = this.$store.color.ensemble
                     }
-                    else {
-                        return d3.rgb(this.$store.color.getColor(d));
+                    else if (d.type == 'component-node') {
+                        if (this.$store.callsites[this.$store.selectedTargetDataset][d.id] != undefined) {
+                            runtimeColor = d3.rgb(this.$store.color.getColor(d));
+                        }
+                        else {
+                            runtimeColor = this.$store.color.ensemble
+                        }
                     }
+                    else if (d.type == 'super-node') {
+                        if (this.$store.modules[this.$store.selectedTargetDataset][d.id] != undefined) {
+                            runtimeColor = d3.rgb(this.$store.color.getColor(d));
+                        }
+                        else {
+                            runtimeColor = this.$store.color.ensemble
+                        }
+                    }
+                    return runtimeColor
                 })
                 .style('stroke-width', (d) => {
                     if (d.type == "intermediate") {
@@ -344,7 +359,6 @@ export default {
                     this.permanentGuides = true
                     this.drawGuides(d, 'permanent')
                     this.drawGuidesMap[d.id] = true
-                    console.log(this.drawGuidesMap)
                 })
                 .on('mouseover', (d) => {
                     self.$refs.ToolTip.render(self.graph, d)
@@ -387,11 +401,23 @@ export default {
                 })
                 .style("fill", (d, i) => {
                     if (d.type == "intermediate") {
-                        // return this.$store.color.ensemble
-                        return this.intermediateColor
+                        return this.$store.intermediateColor
                     }
-                    else {
-                        return "url(#mean-gradient" + d.client_idx + ")"
+                    else if (d.type == 'super-node') {
+                        if (this.$store.modules[this.$store.selectedTargetDataset][d.id] == undefined) {
+                            return this.intermediateColor
+                        }
+                        else {
+                            return "url(#mean-gradient" + d.client_idx + ")"
+                        }
+                    }
+                    else if (d.type == 'component-node') {
+                        if (this.$store.callsites[this.$store.selectedTargetDataset][d.id] == undefined) {
+                            return this.intermediateColor
+                        }
+                        else {
+                            return "url(#mean-gradient" + d.client_idx + ")"
+                        }
                     }
                 })
         },
@@ -549,43 +575,47 @@ export default {
                 })
         },
 
+        renderTargetLine(data, node_data, node_name) {
+            let gradients = data['ensemble'][node_name][this.$store.selectedMetric]['gradients']
+
+            let targetPos = gradients['dataset']['position'][this.$store.selectedTargetDataset] + 1
+            let binWidth = node_data.height / (this.$store.selectedRunBinCount)
+
+            let y = binWidth * targetPos - binWidth / 2
+
+            d3.select('#ensemble-callsite-' + node_data.client_idx)
+                .append('line')
+                .attrs({
+                    "class": 'targetLines',
+                    "id": 'line-2-' + this.$store.selectedTargetDataset + '-' + node_data['client_idx'],
+                    "x1": 0,
+                    "y1": y,
+                    "x2": this.nodeWidth,
+                    "y2": y,
+                    "stroke-width": 5,
+                    "stroke": this.$store.color.target
+                })
+        },
+
         drawTargetLine() {
-            let dataset = this.$store.selectedTargetDataset
+            let targetDataset = this.$store.selectedTargetDataset
             let data = {}
             let node_name = ''
 
             for (let i = 0; i < this.graph.nodes.length; i++) {
                 let node_data = this.graph.nodes[i]
-
-                if (this.graph.nodes[i].type == 'super-node') {
+                if (this.graph.nodes[i].type == 'super-node' && this.$store.modules[targetDataset][node_data["module"]] != undefined) {
                     node_name = this.graph.nodes[i].module
                     data = this.$store.modules
+                    this.renderTargetLine(data, node_data, node_name)
                 }
-                else if (this.graph.nodes[i].type == 'component-node') {
+                else if (this.graph.nodes[i].type == 'component-node' && this.$store.callsites[targetDataset][node_data["name"]] != undefined) {
                     node_name = this.graph.nodes[i].name
                     data = this.$store.callsites
+                    this.renderTargetLine(data, node_data, node_name)
                 }
+                else {
 
-                if (data['ensemble'][node_name] != undefined && this.graph.nodes[i].type != 'intermediate') {
-                    let gradients = data['ensemble'][node_name][this.$store.selectedMetric]['gradients']
-
-                    let targetPos = gradients['dataset']['position'][this.$store.selectedTargetDataset] + 1
-                    let binWidth = node_data.height / (this.$store.selectedRunBinCount)
-
-                    let y = binWidth * targetPos - binWidth / 2
-
-                    d3.select('#ensemble-callsite-' + node_data.client_idx)
-                        .append('line')
-                        .attrs({
-                            "class": 'targetLines',
-                            "id": 'line-2-' + dataset + '-' + node_data['client_idx'],
-                            "x1": 0,
-                            "y1": y,
-                            "x2": this.nodeWidth,
-                            "y2": y,
-                            "stroke-width": 5,
-                            "stroke": this.$store.color.target
-                        })
                 }
             }
         },

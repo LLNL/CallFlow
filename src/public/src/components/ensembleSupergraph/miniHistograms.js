@@ -56,15 +56,15 @@ export default {
             this.target_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset]
 
             for (const node of this.nodes) {
-                if (node.type == "super-node") {
-                    let module = node.module
-                    let callsite = node.name
+                let module = node.module
+                let callsite = node.name
+
+                if (node.type == "super-node" && this.target_module_data[module] != undefined) {
                     let data = this.target_module_data[module][this.$store.selectedMetric]['prop_histograms'][this.$store.selectedProp]
                     this.render(data, module)
                 }
-                else if (node.type == 'component-node') {
-                    let module = node.module
-                    let callsite = node.name
+                else if (node.type == 'component-node' && this.target_callsite_data[callsite] != undefined) {
+
                     let data = this.target_callsite_data[callsite][this.$store.selectedMetric]['prop_histograms'][this.$store.selectedProp]
                     this.render(data, callsite)
                 }

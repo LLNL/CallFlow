@@ -62,7 +62,6 @@ export default {
 		EventHandler.$on('ensemble_scatterplot', function (data) {
 			console.log("Ensemble Scatterplot: ", data)
 			self.visualize(data['module'])
-
 		})
 	},
 
@@ -106,11 +105,14 @@ export default {
 			this.maxVarianceCallsite = ''
 			this.maxUndesirability = 0
 			this.selectedModule = module
-			this.selectedTargetModuleData = this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule][this.$store.selectedMetric]
-			this.selectedEnsembleModuleData = this.$store.modules['ensemble'][this.selectedModule][this.$store.selectedMetric]
 
+			this.selectedEnsembleModuleData = this.$store.modules['ensemble'][this.selectedModule][this.$store.selectedMetric]
 			this.ensembleProcess()
-			this.targetProcess()
+
+			if (this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule] != undefined) {
+				this.selectedTargetModuleData = this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule][this.$store.selectedMetric]
+				this.targetProcess()
+			}
 
 			let xScaleMax = Math.max(this.xMax, this.xtargetMax)
 			let xScaleMin = Math.min(this.xMin, this.xtargetMin)
@@ -123,7 +125,7 @@ export default {
 			this.xAxis()
 			this.yAxis()
 			this.ensembleDots()
-			if (this.$store.showTarget) {
+			if (this.$store.showTarget && this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule] != undefined) {
 				this.targetDots()
 			}
 			// this.correlationText()
