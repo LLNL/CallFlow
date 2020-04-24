@@ -19,8 +19,8 @@ import math
 class Compare:
     def __init__(self, state, dataset1, dataset2, col):
         self.state = state
-        self.df1 = self.state.df.loc[self.state.df['dataset'] == dataset1]
-        self.df2 = self.state.df.loc[self.state.df['dataset'] == dataset2]
+        self.df1 = self.state.df.loc[self.state.df["dataset"] == dataset1]
+        self.df2 = self.state.df.loc[self.state.df["dataset"] == dataset2]
         # self.graph1 = self.state1.graph
         # self.df1 = self.state1.df
         # self.graph2 = self.state2.graph
@@ -42,7 +42,7 @@ class Compare:
 
         # nodes = (self.df_ensemble.loc[self.df_ensemble["show_node"] == True]["name"].unique().tolist())
 
-        nodes = self.state.df['module'].unique()
+        nodes = self.state.df["module"].unique()
 
         for node in nodes:
             results.append(self.calculate_diff(node))
@@ -102,11 +102,21 @@ class Compare:
 
         name = name2
         module = module2
-        print(data1, data2)
         dataset = np.concatenate([dataset1, dataset2], axis=0)
         mean = np.mean([zero_inserted_data1, zero_inserted_data2], axis=0)
         diff = zero_inserted_data1 - zero_inserted_data2
-        mean_diff = np.mean(data2) - np.mean(data1)
+
+        if len(data1) == 0:
+            mean1 = 0
+        else:
+            mean1 = np.mean(data1)
+
+        if len(data2) == 0:
+            mean2 = 0
+        else:
+            mean2 = np.mean(data2)
+
+        mean_diff = mean2 - mean1
 
         # calculate mean runtime.
         # np_mean_dist = np.array(tuple(self.clean_dict(diff).values()))
@@ -147,11 +157,11 @@ class Compare:
             x = 0
             y = 0
 
-        print(
-            "hist ranges = {} {} {} {}\n".format(
-                hist_x_min, hist_x_max, hist_y_min, hist_y_max
-            )
-        )
+        # print(
+        #     "hist ranges = {} {} {} {}\n".format(
+        #         hist_x_min, hist_x_max, hist_y_min, hist_y_max
+        #     )
+        # )
 
         result = {
             "name": node,
@@ -178,6 +188,5 @@ class Compare:
             "mean": mean.tolist(),
             "diff": diff.tolist(),
         }
-        # print(result)
+        print(result)
         return result
-

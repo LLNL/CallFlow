@@ -242,8 +242,8 @@ export default function Sankey() {
                 node.value = node['actual_time']['Inclusive']
                 node.targetValue = 0
                 if (node[store.selectedTargetDataset] != undefined) {
-                    node.targetValue = Math.max(node[store.selectedTargetDataset]['actual_time']['Inclusive'], node[store.selectedTargetDataset]['actual_time']['Exclusive'])
-                    // node.targetValue = node[store.selectedTargetDataset]['actual_time']['Inclusive']
+                    // node.targetValue = Math.max(node[store.selectedTargetDataset]['actual_time']['Inclusive'], node[store.selectedTargetDataset]['actual_time']['Exclusive'])
+                    node.targetValue = node[store.selectedTargetDataset]['actual_time']['Inclusive']
                 }
             }
             // Relaxing the edges a nodes a bit to account for the flow. But target edges arent correct.
@@ -396,6 +396,31 @@ export default function Sankey() {
         return targetScale
     }
 
+    function fixFlowScale(link) {
+        let sourceSum = sum(link.source_data.sourceLinks, (link) => {
+            return link.weight
+        })
+
+        let targetSum = sum(link.target_data.targetLinks, (link) => {
+            return link.weight
+        })
+
+
+        // let sourceTargetSum = sum(node.sourceLinks, (link) => {
+        //     return link.targetWeight
+        // })
+
+        // let targetTargetSum = sum(node.targetLinks, (link) => {
+        //     return link.targetWeight
+        // })
+
+        let total_value = Math.max(link.source_data.value, link.source_data.max_flow)
+
+        // let total_value = Math.max(sourceSum, targetSum)
+
+        return (total_value / link.source_data.max_flow)
+    }
+
     function initializeNodeDepth() {
         let scale = fixEnsembleScale()
         let levelCount = 0
@@ -440,26 +465,34 @@ export default function Sankey() {
         });
 
         links.forEach(function (link) {
-            let flowScale = (link.source_data.value / link.source_data.max_flow)
-            link.scaled_weight = link.weight //* flowScale
+            // let flowScale = (link.source_data.value / link.source_data.max_flow)
+            let flowScale = fixFlowScale(link)
+
+            link.scaled_weight = link.weight * flowScale
             link.height = link.scaled_weight * scale
 
-            let source = ''
-            if (link.type == 'source_intermediate') {
-                source = link.source
-            }
-            else if (link.type == 'target_intermediate') {
-                source = link.source.split('_')[1]
-            }
-            else {
-                source = link.source
-            }
+            // let source = ''
+            // if (link.type == 'source_intermediate') {
+            //     source = link.source
+            // }
+            // else if (link.type == 'target_intermediate') {
+            //     source = link.source.split('_')[1]
+            // }
+            // else {
+            //     source = link.source
+            // }
 
             console.log(link.source, link.target)
 
-            let targetScale = (link.source_data.targetValue / link.source_data.value)
-            link.target_scaled_weight = link.scaled_weight * targetScale
+            let targetEnsembleRatio = (link.source_data.targetValue / link.source_data.value)
+            console.log(targetEnsembleRatio)
+            link.target_scaled_weight = link.scaled_weight * targetEnsembleRatio
             link.targetHeight = link.target_scaled_weight * scale
+
+            let heightRatio = link.targetHeight / link.height
+            if (heightRatio != targetEnsembleRatio) {
+                console.log("Error: The target-ensemble link height ratio is incosistent with the link's value")
+            }
         });
     }
 

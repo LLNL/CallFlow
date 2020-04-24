@@ -57,8 +57,7 @@ export default {
                     this.mean_diff_max = Math.max(this.mean_diff_max, data[i]['mean_diff'])
                 }
             }
-
-            if (this.$store.selectedCompareMode == 'Rank Differences') {
+            if (this.$store.selectedCompareMode == 'Rank-wise Differences') {
                 this.$store.rankDiffColor.setColorScale(this.rank_min, this.rank_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
                 this.$parent.$refs.EnsembleColorMap.update('rankDiff', data)
                 this.setupDiffRuntimeGradients(data)
@@ -298,9 +297,9 @@ export default {
                     }
                 })
                 .on('click', (d) => {
-                    if (!this.drawGuidesMap[d.name]) {
+                    if (!this.drawGuidesMap[d.id]) {
                         this.drawGuides(d, 'permanent')
-                        this.drawGuidesMap[d.name] = true
+                        this.drawGuidesMap[d.id] = true
                     }
                     d3.selectAll('.ensemble-edge')
                         .style('opacity', 0.3)
@@ -345,6 +344,9 @@ export default {
                         .style('opacity', 1.0)
 
                     this.permanentGuides = true
+                    this.drawGuides(d, 'permanent')
+                    this.drawGuidesMap[d.id] = true
+                    console.log(this.drawGuidesMap)
                 })
                 .on('mouseover', (d) => {
                     self.$refs.ToolTip.render(self.graph, d)
@@ -398,7 +400,7 @@ export default {
 
         rankDiffRectangle() {
             // Transition
-            this.nodes.selectAll('.dist-callsite')
+            this.nodes.selectAll('.callsite-rect')
                 .data(this.graph.nodes)
                 .transition()
                 .duration(this.transitionDuration)
@@ -412,7 +414,7 @@ export default {
                     return 1;
                 })
                 .style("fill", (d, i) => {
-                    return "url(#diff-gradient" + d.client_idx + ")"
+                    return "url(#diff-gradient-" + d.client_idx + ")"
                 })
         },
 
@@ -470,12 +472,13 @@ export default {
             let method = 'hist'
             for (let i = 0; i < data.length; i += 1) {
                 let d = data[i]
+                console.log(d)
                 var defs = d3.select('#ensemble-supergraph-overview')
                     .append("defs");
 
                 this.diffGradient = defs.append("linearGradient")
                     .attrs({
-                        "id": "diff-gradient" + this.nidNameMap[d['name']],
+                        "id": "diff-gradient-" + this.nidNameMap[d.name],
                         "class": 'linear-gradient'
                     })
 
