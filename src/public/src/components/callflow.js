@@ -121,7 +121,7 @@ export default {
 		comparisonMode: false,
 		selectedCompareDataset: null,
 		compareModes: ['Mean Differences', 'Rank-wise Differences'],
-		selectedCompareMode: 'Rank-wise Differences',
+		selectedCompareMode: 'Mean Differences',
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
 		modes: ['Ensemble', 'Single'],

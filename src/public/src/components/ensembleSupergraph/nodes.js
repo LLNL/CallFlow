@@ -196,8 +196,6 @@ export default {
             this.hist_min = 0
             this.hist_max = 0
             for (let node of nodes) {
-                console.log(node)
-
                 if (node.type == 'super-node') {
                     this.hist_min = Math.min(this.hist_min, this.ensemble_module_data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_min'])
                     this.hist_max = Math.max(this.hist_max, this.ensemble_module_data[node.module][this.$store.selectedMetric]['gradients']['hist']['y_max'])
@@ -271,7 +269,7 @@ export default {
                     'width': this.nodeWidth,
                     'opacity': 0,
                     'fill-opacity': (d) => {
-                        if (d.id.split('_')[0] == "intermediate") {
+                        if (d.type == "intermediate") {
                             return 0.0
                         }
                         else {
@@ -281,7 +279,7 @@ export default {
                 })
                 .style('shape-rendering', 'crispEdges')
                 .style('stroke', (d) => {
-                    if (d.id.split('_')[0] == "intermediate") {
+                    if (d.type == "intermediate") {
                         return this.$store.color.ensemble
                     }
                     else {
@@ -289,8 +287,8 @@ export default {
                     }
                 })
                 .style('stroke-width', (d) => {
-                    if (d.id.split('_')[0] == "intermediate") {
-                        return 0
+                    if (d.type == "intermediate") {
+                        return 1
                     }
                     else {
                         return this.stroke_width;
@@ -378,7 +376,7 @@ export default {
                 .duration(this.transitionDuration)
                 .attrs({
                     'opacity': d => {
-                        if (d.id.split('_')[0] == "intermediate") {
+                        if (d.type == "intermediate") {
                             return 0.0
                         }
                         else {
@@ -388,7 +386,7 @@ export default {
                     'height': (d) => d.height
                 })
                 .style("fill", (d, i) => {
-                    if (d.id.split('_')[0] == "intermediate") {
+                    if (d.type == "intermediate") {
                         // return this.$store.color.ensemble
                         return this.intermediateColor
                     }
@@ -472,7 +470,6 @@ export default {
             let method = 'hist'
             for (let i = 0; i < data.length; i += 1) {
                 let d = data[i]
-                console.log(d)
                 var defs = d3.select('#ensemble-supergraph-overview')
                     .append("defs");
 
@@ -698,7 +695,7 @@ export default {
             this.nodesSVG.append('path')
                 .attrs({
                     'd': (d) => {
-                        if (d.id.split('_')[0] == "intermediate") {
+                        if (d.type == "intermediate") {
                             return "m" + 0 + " " + 0
                                 + "h " + this.nodeWidth
                                 + "v " + (1) * d.height
@@ -707,13 +704,13 @@ export default {
                     }
                 })
                 .style('fill', (d) => {
-                    if (d.id.split('_')[0] == "intermediate") {
+                    if (d.type == "intermediate") {
                         // return this.$store.color.ensemble
                         return this.intermediateColor
                     }
                 })
                 .style('fill-opacity', (d) => {
-                    if (d.id.split('_')[0] == "intermediate") {
+                    if (d.type == "intermediate") {
                         return 0.0;
                     }
                     else {
@@ -721,7 +718,7 @@ export default {
                     }
                 })
                 .style("stroke", function (d) {
-                    if (d.id.split('_')[0] == "intermediate") {
+                    if (d.type == "intermediate") {
                         return this.intermediateColor
                     }
                 })

@@ -471,21 +471,7 @@ export default function Sankey() {
             link.scaled_weight = link.weight * flowScale
             link.height = link.scaled_weight * scale
 
-            // let source = ''
-            // if (link.type == 'source_intermediate') {
-            //     source = link.source
-            // }
-            // else if (link.type == 'target_intermediate') {
-            //     source = link.source.split('_')[1]
-            // }
-            // else {
-            //     source = link.source
-            // }
-
-            console.log(link.source, link.target)
-
             let targetEnsembleRatio = (link.source_data.targetValue / link.source_data.value)
-            console.log(targetEnsembleRatio)
             link.target_scaled_weight = link.scaled_weight * targetEnsembleRatio
             link.targetHeight = link.target_scaled_weight * scale
 
