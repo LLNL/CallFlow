@@ -35,17 +35,22 @@ export default {
         positionX() {
             let ret = 0
             if (this.mousePosX >= this.halfWidth) {
-                ret = this.mousePosX - this.height + this.textxOffset
-            } else if (this.mousePosX < this.halfWidth) {
-                ret = this.mousePosX + this.textxOffset
-            } else {
-                ret = this.mousePosX - this.height + this.textxOffset
+                ret = this.mousePosX - this.halfWidth + this.textxOffset
+            }
+            // else if (this.mousePosX < this.halfWidth) {
+            //     ret = this.mousePosX + this.textxOffset
+            // } 
+            else {
+                ret = this.halfWidth - this.mousePosX + this.textxOffset
             }
             return ret
         },
 
         positionY(node) {
-            return this.mousePosY + node.height
+            if (this.mousePosY < node.y) {
+                return node.y - this.mousePosY + node.height / 2
+            }
+            return this.mousePosY - node.y + node.height / 2
         },
 
         render(graph, node) {
@@ -103,10 +108,12 @@ export default {
             this.addText('Name: ' + this.trunc(this.node.id, 40))
             // this.addText('Inclusive Time: ' + (this.node['time (inc)'] * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node['time (inc)'] / this.$store.maxIncTime['ensemble']) * 100).toFixed(3)) + "%")
             // this.addText('Exclusive Time: ' + (this.node['time'] * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node['time'] / this.$store.maxExcTime['ensemble']) * 100).toFixed(3)) + "%")
-            this.addText('Inclusive Time: ' + utils.formatRuntimeWithUnits(this.node.actual_time['Inclusive']))
-            this.addText('Exclusive Time: ' + utils.formatRuntimeWithUnits(this.node.actual_time['Exclusive']))
-            this.addText('Node value: ' + utils.formatRuntimeWithUnits(this.node.value))
-            this.addText('Node height: ' + this.node.height)
+            // this.addText('Inclusive Time: ' + utils.formatRuntimeWithUnits(this.node.actual_time['Inclusive']))
+            // this.addText('Exclusive Time: ' + utils.formatRuntimeWithUnits(this.node.actual_time['Exclusive']))
+            this.addText('Inclusive Time: ' + utils.formatRuntimeWithUnits(this.node['time (inc)']))
+            this.addText('Exclusive Time: ' + utils.formatRuntimeWithUnits(this.node['time']))
+            // this.addText('Node value: ' + utils.formatRuntimeWithUnits(this.node.value))
+            // this.addText('Node height: ' + this.node.height)
 
         },
 

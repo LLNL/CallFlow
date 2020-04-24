@@ -194,9 +194,6 @@ export default {
 				}
 
 				currentVertex.data = callsiteData
-
-				console.log(currentVertex)
-
 				currentVertex.data.count = vertexQueue.length
 
 				if (currentVertex.hasOwnProperty('children')) {
@@ -513,18 +510,20 @@ export default {
 
 				let mean = 0
 				let gradients = []
-				let targetPos = 0
-				if (this.nodes[i].depth == 0) {
+				let targetPos = undefined
+				if (this.nodes[i].depth == 0 && this.$store.modules['ensemble'][node_data.id] != undefined) {
 					let data = this.$store.modules['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']
 					mean = data['dataset']['mean'][dataset]
 					gradients = data['hist']
 					targetPos = data['dataset']['position'][dataset] + 1
 				}
 				else {
-					let data = this.$store.callsites['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']
-					mean = data['dataset']['mean'][dataset]
-					gradients = data['hist']
-					targetPos = data['dataset']['position'][dataset] + 1
+					if (this.$store.callsites['ensemble'][node_data.id] != undefined) {
+						let data = this.$store.callsites['ensemble'][node_data.id][this.$store.selectedMetric]['gradients']
+						mean = data['dataset']['mean'][dataset]
+						gradients = data['hist']
+						targetPos = data['dataset']['position'][dataset] + 1
+					}
 				}
 
 				let grid = gradients.x
@@ -706,12 +705,20 @@ export default {
 					return d.y1 - d.y0 - this.offset - this.stroke_width;
 				})
 				.style("fill", (d, i) => {
-					if (d.depth == 0) {
-						return "url(#mean-module-gradient-" + d.data.data.id + ")"
+					let gradients = undefined
+					console.log(d.data.data.name)
+					if (d.depth == 0 && this.$store.modules[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
+						gradients = "url(#mean-module-gradient-" + d.data.data.id + ")"
 					}
 					else {
-						return "url(#mean-callsite-gradient-" + d.data.data.id + ")"
+						if (this.$store.callsites[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
+							gradients = "url(#mean-callsite-gradient-" + d.data.data.id + ")"
+						}
+						else {
+							gradients = this.$store.color.ensemble
+						}
 					}
+					return gradients
 				})
 				.style('stroke', (d) => {
 					let runtime = d.data.data[this.$store.selectedMetric]['max_time']
@@ -806,9 +813,7 @@ export default {
 					let fontSize = 14
 
 					let textThatFits = Math.floor((d.x1 - d.x0) / fontSize)
-					console.log(textThatFits)
 					name = utils.truncNames(name, textThatFits)
-					console.log(name)
 					return name
 				});
 		},
