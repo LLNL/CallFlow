@@ -64,8 +64,9 @@ export default {
                 this.rankDiffRectangle()
             }
             else if (this.$store.selectedCompareMode == 'Mean Differences') {
-                this.$store.meanDiffColor.setColorScale(this.mean_diff_min, this.mean_diff_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
-                this.$parent.$refs.EnsembleColorMap.updateWithMinMax('meanDiff', this.mean_diff_min, this.mean_diff_max)
+                let max_diff = Math.max(Math.abs(this.mean_diff_min), Math.abs(this.mean_diff_max))
+                this.$store.meanDiffColor.setColorScale(-max_diff, max_diff, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
+                this.$parent.$refs.EnsembleColorMap.updateWithMinMax('meanDiff', -max_diff, max_diff)
                 this.meanDiffRectangle(data)
             }
 
