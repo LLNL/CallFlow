@@ -43,8 +43,8 @@ export default {
             this.colorPoint = this.$store.colorPoint
 
             this.parentID = this.$parent.id
-            this.containerWidth = this.$parent.width
-            this.containerHeight = this.$parent.height
+            this.containerWidth = this.$store.viewWidth / 2
+            this.containerHeight = this.$store.viewHeight - this.$parent.margin.top - this.$parent.margin.bottom
 
             this.svg = d3.select('#' + this.parentID)
                 .append('g')
