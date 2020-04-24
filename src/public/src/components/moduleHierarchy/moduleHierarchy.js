@@ -95,6 +95,14 @@ export default {
 			})
 		},
 
+		// Formatting for the html view
+		formatModule(module) {
+			if (module.length < 10) {
+				return module
+			}
+			return this.trunc(module, 10)
+		},
+
 		setupSVG() {
 
 			this.width = document.getElementById(this.id).clientWidth
