@@ -211,7 +211,7 @@ export default {
                 .attrs({
                     "dy": ".35em",
                     "y": 10,
-                    'x': -120,
+                    'x': -110,
                     "text-anchor": "middle",
                     'class': 'dist-colormap-text-metric',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - this.padding.bottom})`,

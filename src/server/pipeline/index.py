@@ -66,6 +66,7 @@ class Pipeline:
         elif self.config.format[state.name] == "caliper_json":
             preprocess = (
                 PreProcess.Builder(state, gf_type)
+                .add_time_columns()
                 .add_rank_column()
                 .add_callers_and_callees()
                 # .add_show_node()

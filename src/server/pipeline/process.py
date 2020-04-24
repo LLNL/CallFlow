@@ -275,6 +275,15 @@ class PreProcess:
             return self
 
         @logger
+        def add_time_columns(self):
+            if "time (inc)" not in self.df.columns:
+                self.df["time (inc)"] = self.df["inclusive#time.duration"]
+
+            if "time" not in self.df.columns:
+                self.df["time"] = self.df["sum#time.duration"]
+            return self
+
+        @logger
         def create_name_module_map(self):
             self.name_module_map = (
                 self.df.groupby(["name"])["module"].unique().to_dict()
