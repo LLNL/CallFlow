@@ -28,7 +28,7 @@ export default {
             this.id = id
             this.toolTipDiv = d3.select('#' + this.id)
             this.toolTipG = this.toolTipDiv.append('g')
-            this.callgraphOverviewWidth = document.getElementById(this.id).clientWidth
+            this.callgraphOverviewWidth = this.$store.viewWidth
             this.halfWidth = this.callgraphOverviewWidth / 2
         },
 

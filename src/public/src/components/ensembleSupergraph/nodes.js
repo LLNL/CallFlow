@@ -402,7 +402,9 @@ export default {
                 })
                 .style("fill", (d, i) => {
                     if (d.type == "intermediate") {
-                        return this.$store.intermediateColor
+                        console.log('a')
+                        // return this.$store.intermediateColor
+                        return this.$store.color.target
                     }
                     else if (d.type == 'super-node') {
                         if (this.$store.modules[this.$store.selectedTargetDataset][d.id] == undefined) {
@@ -725,6 +727,7 @@ export default {
         path() {
             this.nodesSVG.append('path')
                 .attrs({
+                    'class': 'ensemble-path',
                     'd': (d) => {
                         if (d.type == "intermediate") {
                             return "m" + 0 + " " + 0
@@ -738,7 +741,11 @@ export default {
                     if (d.type == "intermediate") {
                         // return this.$store.color.ensemble
                         return this.intermediateColor
+
                     }
+                })
+                .style('opacity', (d) => {
+                    return 0.5
                 })
                 .style('fill-opacity', (d) => {
                     if (d.type == "intermediate") {
@@ -755,7 +762,46 @@ export default {
                 })
                 .style('stroke-opacity', '0.0');
 
-            this.nodes.selectAll('path')
+            this.nodesSVG.append('path')
+                .attrs({
+                    'class': 'target-path',
+                    'd': (d) => {
+                        if (d.type == "intermediate") {
+                            return "m" + 0 + " " + 0
+                                + "h " + this.nodeWidth
+                                + "v " + (1) * d.targetHeight
+                                + "h " + (-1) * this.nodeWidth;
+                        }
+                    }
+                })
+                .style('fill', (d) => {
+                    if (d.type == "intermediate") {
+                        // return this.$store.color.ensemble
+                        // return this.intermediateColor
+                        return this.$store.color.target
+                    }
+                })
+                .style('opacity', (d) => {
+                    return 0.6
+                })
+                .style('fill-opacity', (d) => {
+                    if (d.type == "intermediate") {
+                        return 0.0;
+                    }
+                    else {
+                        return 0;
+                    }
+                })
+                .style("stroke", function (d) {
+                    if (d.type == "intermediate") {
+                        return this.intermediateColor
+                    }
+                })
+                .style('stroke-opacity', '0.0');
+
+
+
+            this.nodes.selectAll('.ensemble-path')
                 .data(this.graph.nodes)
                 .transition()
                 .duration(this.transitionDuration)
@@ -763,6 +809,16 @@ export default {
                 .style('fill-opacity', (d) => {
                     return 1.0;
                 });
+
+            this.nodes.selectAll('.target-path')
+                .data(this.graph.nodes)
+                .transition()
+                .duration(this.transitionDuration)
+                .delay(this.transitionDuration / 3)
+                .style('fill-opacity', (d) => {
+                    return 1.0;
+                });
+
         },
 
         textSize(text) {

@@ -116,7 +116,10 @@ export default {
 			let inner = this.sankeySVG.select('#container');
 
 			var zoom = d3.zoom().on("zoom", function () {
-				inner.attr("transform", d3.event.transform);
+				inner.attrs({
+					"transform": d3.event.transform,
+					"scale": d3.event.scale
+				});
 			});
 			this.sankeySVG.call(zoom);
 		},
