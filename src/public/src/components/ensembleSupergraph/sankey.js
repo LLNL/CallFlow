@@ -236,6 +236,7 @@ export default function Sankey() {
             if (node.type == 'intermediate') {
                 node.value = node.value
                 node.targetValue = node.targetValue
+                console.log(node.name, node.value, node.targetValue)
             }
             else {
                 // node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
@@ -251,6 +252,9 @@ export default function Sankey() {
             if (node[store.selectedTargetDataset] != undefined) {
                 node.targetValue = Math.max(node.targetValue, Math.max(sourceTargetSum, targetTargetSum))
             }
+
+            console.log(node.id, node.value, node.targetValue)
+
             console.log("[Compute node values] Adjusted flow", node.id, ": ", node.value)
             console.log("[Compute node values] Adjusted target flow", node.id, ": ", node.targetValue)
         });
@@ -460,6 +464,7 @@ export default function Sankey() {
 
                 node.height = node.value * minNodeScale * scale;
                 node.targetHeight = node.targetValue * minNodeScale * scale
+
                 console.log("[Compute node depths] Node height: ", node.height)
             });
             levelCount += 1
@@ -467,14 +472,12 @@ export default function Sankey() {
 
         links.forEach(function (link) {
             let flowScale = (link.source_data.value / link.source_data.max_flow)
-            // let flowScale = fixFlowScale(link)
-
             link.scaled_weight = link.weight * flowScale
             link.height = link.scaled_weight * scale
 
             let targetEnsembleRatio = (link.source_data.targetValue / link.source_data.value)
-            link.target_scaled_weight = link.weight * targetEnsembleRatio
-            link.targetHeight = link.target_scaled_weight * scale
+            link.targetWeight = link.weight * targetEnsembleRatio
+            link.targetHeight = link.targetWeight * scale
 
             let heightRatio = link.targetHeight / link.height
             if (heightRatio != targetEnsembleRatio) {

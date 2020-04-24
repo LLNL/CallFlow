@@ -297,15 +297,15 @@ export default {
 					if (this.existingIntermediateNodes[target_node.id] == undefined) {
 						// Add the intermediate node to the array
 						tempNode = {
-							// attr_dict: temp_edges[i]['attr_dict'],
 							id: 'intermediate_' + target_node.id,
 							level: j - 1,
-							value: temp_edges[i].scaled_weight,
-							targetValue: temp_edges[i].target_scaled_weight,
+							value: temp_edges[i].weight,
+							targetValue: temp_edges[i].targetWeight,
+							height: temp_edges[i].height,
+							targetHeight: temp_edges[i].targetHeight,
 							// value: target_node.value,
 							// name: target_node.name,
 							module: target_node.module,
-							// actual_time: source_node['actual_time'],
 							type: 'intermediate',
 							count: 1
 						};
@@ -337,6 +337,7 @@ export default {
 						source: source_node.id,
 						target: tempNode.id,
 						weight: temp_edges[i].weight,
+						targetWeight: temp_edges[i].targetWeight,
 						actual_time: actual_time,
 						max_flow: max_flow
 					}
@@ -359,6 +360,7 @@ export default {
 						target: target_node.id,
 						actual_time: actual_time,
 						weight: temp_edges[i].weight,
+						targetWeight: temp_edges[i].targetWeight,
 						max_flow: max_flow
 					}
 					edges.push(targetTempEdge)
