@@ -234,6 +234,48 @@ class Auxiliary:
         }
 
     # Prop can be dataset, rank, name
+    def histogram_by_property_ensemble(self, ensemble_df, prop):
+        ret = {}
+
+        if prop == "all_ranks":
+            time_ensemble_inclusive_arr = np.array(ensemble_df["time (inc)"].tolist())
+            time_ensemble_exclusive_arr = np.array(ensemble_df["time"].tolist())
+
+        elif prop == "rank":
+            ensemble_prop = ensemble_df.groupby(["dataset", prop])[
+                ["time", "time (inc)"]
+            ].mean()
+            time_ensemble_inclusive_arr = np.array(ensemble_prop["time (inc)"])
+            time_ensemble_exclusive_arr = np.array(ensemble_prop["time"])
+
+        else:
+            ensemble_prop = ensemble_df.groupby([prop])[["time", "time (inc)"]].mean()
+
+            time_ensemble_inclusive_arr = np.array(ensemble_prop["time (inc)"])
+            time_ensemble_exclusive_arr = np.array(ensemble_prop["time"])
+
+        inclusive_max = time_ensemble_inclusive_arr.max()
+        inclusive_min = time_ensemble_inclusive_arr.min()
+
+        histogram_ensemble_inclusive_grid = self.histogram(
+            time_ensemble_inclusive_arr, inclusive_min, inclusive_max
+        )
+
+        exclusive_max = time_ensemble_exclusive_arr.max()
+        exclusive_min = time_ensemble_exclusive_arr.min()
+        histogram_ensemble_exclusive_grid = self.histogram(
+            time_ensemble_exclusive_arr, exclusive_min, exclusive_max
+        )
+
+        ret["Inclusive"] = {
+            "ensemble": self.histogram_format(histogram_ensemble_inclusive_grid),
+        }
+        ret["Exclusive"] = {
+            "ensemble": self.histogram_format(histogram_ensemble_exclusive_grid),
+        }
+        return ret
+
+    # Prop can be dataset, rank, name
     def histogram_by_property(self, ensemble_df, target_df, prop):
         ret = {}
 
@@ -309,6 +351,17 @@ class Auxiliary:
         # Create the data dict.
         ensemble = {}
         for callsite, callsite_df in self.name_group_df:
+            callsite_ensemble_df = self.name_group_df.get_group(callsite)
+            hists = {}
+            hists["Inclusive"] = {}
+            hists["Exclusive"] = {}
+            for prop in self.props:
+                prop_histograms = self.histogram_by_property_ensemble(
+                    callsite_ensemble_df, prop
+                )
+                hists["Inclusive"][prop] = prop_histograms["Inclusive"]
+                hists["Exclusive"][prop] = prop_histograms["Exclusive"]
+
             gradients = KDE_gradients(self.target_df, binCount=self.RunBinCount).run(
                 columnName="name", callsiteOrModule=callsite
             )
@@ -319,6 +372,7 @@ class Auxiliary:
                 gradients=gradients,
                 q=boxplot.q,
                 outliers=boxplot.outliers,
+                prop_hists=hists,
             )
 
         ret["ensemble"] = ensemble
@@ -361,12 +415,21 @@ class Auxiliary:
         modules = self.df["module"].unique()
         ensemble = {}
         for module, module_df in self.module_group_df:
+            module_ensemble_df = self.module_group_df.get_group(module)
+            hists = {"Inclusive": {}, "Exclusive": {}}
+            for prop in self.props:
+                prop_histograms = self.histogram_by_property_ensemble(
+                    module_ensemble_df, prop
+                )
+                hists["Inclusive"][prop] = prop_histograms["Inclusive"]
+                hists["Exclusive"][prop] = prop_histograms["Exclusive"]
+
             # Calculate gradients
             gradients = KDE_gradients(self.target_df, binCount=self.RunBinCount).run(
                 columnName="module", callsiteOrModule=module
             )
             ensemble[module] = self.pack_json(
-                df=module_df, name=module, gradients=gradients
+                df=module_df, name=module, gradients=gradients, prop_hists=hists
             )
 
         ret["ensemble"] = ensemble

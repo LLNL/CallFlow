@@ -506,6 +506,7 @@ export default {
 			this.$store.color.ensemble = '#C0C0C0'//'#4681B4'
 			this.$store.color.compare = '#043060'
 			this.$store.color.edgeStrokeColor = '#888888'
+			this.$store.intermediateColor = '#d9d9d9'
 			this.$store.showTarget = this.showTarget
 
 			this.targetColors = Object.keys(this.targetColorMap)

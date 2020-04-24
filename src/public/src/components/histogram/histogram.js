@@ -82,7 +82,7 @@ export default {
                 .attrs({
                     "width": this.boxWidth + this.padding.right + this.padding.left,
                     "height": this.boxHeight + this.padding.top + this.padding.bottom,
-                    'transform': "translate(" + this.padding.left + "," + this.padding.top  + ")"
+                    'transform': "translate(" + this.padding.left + "," + this.padding.top + ")"
                 })
 
             EventHandler.$emit('single_histogram', {
@@ -272,7 +272,7 @@ export default {
                 .append('rect')
                 .attr('class', 'single-histogram-bar single-target')
                 .attr('x', (d, i) => {
-                    return this.histogramXScale(this.targetXVals[i]) + this.axisLabelFactor*this.padding.left
+                    return this.histogramXScale(this.targetXVals[i]) + this.axisLabelFactor * this.padding.left
                 })
                 .attr('y', (d, i) => {
                     return Math.floor(this.histogramYScale(d))
@@ -322,14 +322,14 @@ export default {
             this.svg.append('text')
                 .attr('class', 'histogram-axis-label')
                 .attr('x', this.boxWidth)
-                .attr('y', this.histogramHeight + this.padding.top* this.axisLabelFactor)
+                .attr('y', this.histogramHeight + this.padding.top * this.axisLabelFactor)
                 .style('font-size', '12px')
                 .style('text-anchor', 'end')
                 .text(this.$store.selectedMetric + " Runtime")
 
             const xAxisLine = this.svg.append('g')
                 .attr('class', 'x-axis')
-                .attr('transform', `translate(${this.axisLabelFactor*this.padding.left},${this.histogramHeight - this.padding.top})`)
+                .attr('transform', `translate(${this.axisLabelFactor * this.padding.left},${this.histogramHeight - this.padding.top})`)
                 .call(xAxis)
 
             xAxisLine.selectAll('path')
@@ -369,7 +369,7 @@ export default {
 
             const yAxisLine = this.svg.append('g')
                 .attr('class', 'y-axis')
-                .attr('transform', `translate(${this.axisLabelFactor*this.padding.left},${0})`)
+                .attr('transform', `translate(${this.axisLabelFactor * this.padding.left},${0})`)
                 .call(yAxis)
 
             yAxisLine.selectAll('path')
@@ -459,7 +459,7 @@ export default {
                                 return "grey";
                             })
                             .style('fill-opacity', 0.4)
-                            .attr('transform', `translate(${this.axisLabelFactor*this.padding.left},${-this.padding.bottom})`)
+                            .attr('transform', `translate(${this.axisLabelFactor * this.padding.left},${-this.padding.bottom})`)
                     });
                 }
             });
@@ -467,7 +467,7 @@ export default {
             const rankLineAxis = d3.axisBottom(ranklinescale)
                 .ticks(this.$store.selectedBinCount)
                 .tickFormat((d, i) => {
-                    if(i% 10 == 0 || i == this.$store.numOfRanks[this.$store.selectedTargetDataset] - 1){
+                    if (i % 10 == 0 || i == this.$store.numOfRanks[this.$store.selectedTargetDataset] - 1) {
                         return d
                     }
                 });
@@ -475,7 +475,7 @@ export default {
             const rankLineAxisLine = this.svg.append('g')
                 .attr('class', 'histogram-rank-axis')
                 .attr('id', 'rankAxis')
-                .attr('transform', `translate(${this.axisLabelFactor*this.padding.left},${this.boxHeight - this.padding.bottom})`)
+                .attr('transform', `translate(${this.axisLabelFactor * this.padding.left},${this.boxHeight - this.padding.bottom})`)
                 .call(rankLineAxis);
 
             rankLineAxisLine.selectAll('path')
@@ -503,7 +503,7 @@ export default {
 
             this.brush = d3.brushX()
                 .extent([
-                    [this.axisLabelFactor*this.padding.left, this.histogramHeight - this.padding.top ],
+                    [this.axisLabelFactor * this.padding.left, this.histogramHeight - this.padding.top],
                     [this.boxWidth, this.boxHeight - this.padding.top]
                 ])
                 .on('brush', this.brushing)
