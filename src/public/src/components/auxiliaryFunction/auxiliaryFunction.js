@@ -442,9 +442,9 @@ export default {
                     return second[1][attribute]['mean_time'] - first[1][attribute]['mean_time'];
                 });
             }
-            else if (attribute == 'Variance') {
+            else if (attribute == 'Standard Deviation') {
                 items.sort(function (first, second) {
-                    return second[1][self.$store.selectedMetric]['variance_time'] - first[1][self.$store.selectedMetric]['variance_time'];
+                    return second[1][self.$store.selectedMetric]['std_deviation'] - first[1][self.$store.selectedMetric]['std_deviation'];
                 });
             }
 

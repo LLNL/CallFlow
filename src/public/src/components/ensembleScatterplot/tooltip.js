@@ -67,10 +67,10 @@ export default {
         },
 
         info() {
-            this.addText('Callsite: ' + this.trunc(this.data.callsite, 10))
+            this.addText('Callsite: ' + utils.truncNames(this.data.callsite, 10))
             this.addText('Mean ' + this.truncTimeLabel(this.$store.selectedMetric) + ' Time: ' + utils.formatRuntimeWithUnits(this.data.value))
             this.addText('Run: ' + this.data.run)
-            this.addText('QCD: ' + this.data.QCD.toFixed(3))
+            // this.addText('QCD: ' + this.data.QCD.toFixed(3))
         },
 
         render(data) {

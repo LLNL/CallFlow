@@ -64,8 +64,8 @@ html {
 }
 
 .selected {
-  stroke: #009688;
-  stroke-width: 3px;
+  stroke: #343838;
+  stroke-width: 1px;
 }
 
 .unselected {
