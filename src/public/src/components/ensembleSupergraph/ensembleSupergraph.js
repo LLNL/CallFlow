@@ -98,8 +98,8 @@ export default {
 			this.width = 5 * this.$store.viewWidth
 			this.height = 2 * this.$store.viewHeight
 
-			this.sankeyWidth = 0.5 * this.$store.viewWidth
-			this.sankeyHeight = 0.8 * this.$store.viewHeight - this.margin.top - this.margin.bottom
+			this.sankeyWidth = 0.7 * this.$store.viewWidth
+			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom
 
 			this.sankeySVG = d3.select('#' + this.id)
 				.attrs({

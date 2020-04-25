@@ -221,7 +221,7 @@ export default {
             if (name.length < 15) {
                 return name
             }
-            let ret = this.trunc(name, 15)
+            let ret = utils.truncNames(name, 15)
             return ret
         },
 
