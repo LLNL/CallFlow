@@ -148,7 +148,7 @@ export default {
 		selectedHierarchyMode: 'Uniform',
 		hierarchyModes: ['Uniform', 'Exclusive'],
 		selectedRuntimeSortBy: 'Inclusive',
-		sortByModes: ['Inclusive', 'Exclusive', 'Variance'],
+		sortByModes: ['Inclusive', 'Exclusive', 'Standard Deviation'],
 		scales: ['Log', 'Linear'],
 		selectedScale: 'Linear',
 		props: ['name', 'rank', 'dataset', 'all_ranks'],

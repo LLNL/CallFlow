@@ -237,8 +237,11 @@ export default {
                 }
                 else if (node.type == 'component-node') {
                     // if (this.ensemble_callsite_data[node.name] != undefined) {
+                    console.log(node.name)
                     grid = this.ensemble_callsite_data[node.name][this.$store.selectedMetric]['gradients']['hist']['x']
                     val = this.ensemble_callsite_data[node.name][this.$store.selectedMetric]['gradients']['hist']['y']
+
+                    console.log(grid, val)
                     // }
                 }
                 else if (node.type == "intermediate") {
@@ -414,7 +417,7 @@ export default {
                         }
                     }
                     else if (d.type == 'component-node') {
-                        if (this.$store.callsites[this.$store.selectedTargetDataset][d.id] == undefined) {
+                        if (this.$store.callsites[this.$store.selectedTargetDataset][d.name] == undefined) {
                             return this.intermediateColor
                         }
                         else {
@@ -631,12 +634,27 @@ export default {
             let modules_data = this.$store.modules
             let module_name = node_data.module
 
-            let gradients = modules_data['ensemble'][module_name][this.$store.selectedMetric]['gradients']['hist']
+            let data = modules_data['ensemble'][module_name][this.$store.selectedMetric]['gradients']
+
+            let gradients = data['hist']
+            let datasetPositionMap = data['dataset']['position']
+
             let grid = gradients.x
             let vals = gradients.y
 
             let targetPos = 0
             let binWidth = node_data.height / (grid.length)
+
+            let positionDatasetMap = {}
+            // Create a position -> dataset map
+            for (let dataset in datasetPositionMap) {
+                let datasetPosition = datasetPositionMap[dataset]
+                if (positionDatasetMap[datasetPosition] == undefined) {
+                    positionDatasetMap[datasetPosition] = []
+                }
+                positionDatasetMap[datasetPosition].push(dataset)
+            }
+            console.log(positionDatasetMap)
 
             for (let idx = 0; idx < grid.length; idx += 1) {
                 let y = binWidth * (idx)
@@ -662,18 +680,21 @@ export default {
                 let fontSize = 10
                 if (vals[idx] != 0) {
                     // For placing the run count values.
-                    d3.select('#ensemble-callsite-' + node_data.client_idx)
-                        .append('text')
-                        .attrs({
-                            "class": 'gradientGuidesText-' + type,
-                            "id": 'line-2-' + node_data['client_idx'],
-                            "x": -50,
-                            "y": y + fontSize / 2 + binWidth / 2,
-                            'fill': 'black'
-                        })
-                        .style('z-index', 100)
-                        .style('font-size', fontSize + 'px')
-                        .text(this.formatRunCounts(vals[idx]))
+                    for (let i = 0; i < positionDatasetMap[idx].length; i += 1) {
+                        d3.select('#ensemble-callsite-' + node_data.client_idx)
+                            .append('text')
+                            .attrs({
+                                "class": 'gradientGuidesText-' + type,
+                                "id": 'line-2-' + node_data['client_idx'],
+                                "x": -50,
+                                "y": y + fontSize / 2 + binWidth / 2 + fontSize * i,
+                                'fill': 'black'
+                            })
+                            .style('z-index', 100)
+                            .style('font-size', fontSize + 'px')
+                            .text(positionDatasetMap[idx][i])
+                    }
+
 
                     // For placing the runtime values.
                     if (idx != 0 && idx != grid.length - 1) {
@@ -761,44 +782,6 @@ export default {
                 })
                 .style('stroke-opacity', '0.0');
 
-            this.nodesSVG.append('path')
-                .attrs({
-                    'class': 'target-path',
-                    'd': (d) => {
-                        if (d.type == "intermediate") {
-                            return "m" + 0 + " " + 0
-                                + "h " + this.nodeWidth
-                                + "v " + (1) * d.targetHeight
-                                + "h " + (-1) * this.nodeWidth;
-                        }
-                    }
-                })
-                .style('fill', (d) => {
-                    if (d.type == "intermediate") {
-                        // return this.$store.color.ensemble
-                        // return this.intermediateColor
-                        return this.$store.color.target
-                    }
-                })
-                .style('opacity', (d) => {
-                    return 0.6
-                })
-                .style('fill-opacity', (d) => {
-                    if (d.type == "intermediate") {
-                        return 0.0;
-                    }
-                    else {
-                        return 0;
-                    }
-                })
-                .style("stroke", function (d) {
-                    if (d.type == "intermediate") {
-                        return this.intermediateColor
-                    }
-                })
-                .style('stroke-opacity', '0.0');
-
-
 
             this.nodes.selectAll('.ensemble-path')
                 .data(this.graph.nodes)
@@ -809,15 +792,53 @@ export default {
                     return 1.0;
                 });
 
-            this.nodes.selectAll('.target-path')
-                .data(this.graph.nodes)
-                .transition()
-                .duration(this.transitionDuration)
-                .delay(this.transitionDuration / 3)
-                .style('fill-opacity', (d) => {
-                    return 1.0;
-                });
+            if (this.$store.showTarget) {
+                this.nodesSVG.append('path')
+                    .attrs({
+                        'class': 'target-path',
+                        'd': (d) => {
+                            if (d.type == "intermediate") {
+                                return "m" + 0 + " " + 0
+                                    + "h " + this.nodeWidth
+                                    + "v " + (1) * d.targetHeight
+                                    + "h " + (-1) * this.nodeWidth;
+                            }
+                        }
+                    })
+                    .style('fill', (d) => {
+                        if (d.type == "intermediate") {
+                            // return this.$store.color.ensemble
+                            // return this.intermediateColor
+                            return this.$store.color.target
+                        }
+                    })
+                    .style('opacity', (d) => {
+                        return 0.6
+                    })
+                    .style('fill-opacity', (d) => {
+                        if (d.type == "intermediate") {
+                            return 0.0;
+                        }
+                        else {
+                            return 0;
+                        }
+                    })
+                    .style("stroke", function (d) {
+                        if (d.type == "intermediate") {
+                            return this.intermediateColor
+                        }
+                    })
+                    .style('stroke-opacity', '0.0');
 
+                this.nodes.selectAll('.target-path')
+                    .data(this.graph.nodes)
+                    .transition()
+                    .duration(this.transitionDuration)
+                    .delay(this.transitionDuration / 3)
+                    .style('fill-opacity', (d) => {
+                        return 1.0;
+                    });
+            }
         },
 
         textSize(text) {

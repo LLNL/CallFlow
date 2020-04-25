@@ -744,7 +744,7 @@ export default {
 
 					// Fade all the segments.
 					d3.selectAll('.icicleNode')
-						.style('opacity', 0.3);
+						.style('opacity', 0.1);
 
 					// Then highlight only those that are an ancestor of the current segment.
 					this.hierarchy.selectAll('.icicleNode')
@@ -758,7 +758,7 @@ export default {
 					d3.selectAll('.icicleNode')
 						.style('opacity', 1);
 					// this.clearGuides()
-					this.$refs.ToolTip.clear()
+					// this.$refs.ToolTip.clear()
 				},
 				)
 		},

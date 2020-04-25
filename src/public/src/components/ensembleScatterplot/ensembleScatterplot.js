@@ -546,14 +546,14 @@ export default {
 					.on('mouseover', () => {
 						let data = {
 							'callsite': callsite,
-							'QCD': relative_undesirability,
+							'QCD': opacity,
 							'value': self.xtargetArray[i].val,
 							'run': run
 						}
 						self.$refs.ToolTip.render(data)
 					})
 					.on('mouseout', () => {
-						self.$refs.ToolTip.clear()
+						// self.$refs.ToolTip.clear()
 					})
 			}
 		},

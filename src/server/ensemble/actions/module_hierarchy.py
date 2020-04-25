@@ -11,10 +11,10 @@ from utils.df import sanitizeName
 
 
 class ModuleHierarchy:
-    def __init__(self, state, module):
+    def __init__(self, state, module, config={}):
         self.graph = state.graph
         self.df = state.df
-
+        self.config = config
         self.module = module
 
         # Create the Super node's hierarchy.
@@ -40,7 +40,17 @@ class ModuleHierarchy:
             edges.append({"source": source, "target": target})
         return edges
 
-    def add_paths(self, df, path_name):
+    def add_paths(self, df, path_name, filterTopCallsites=True):
+        module_df = self.df.loc[self.df["module"] == self.module]
+        if filterTopCallsites:
+            group_df = module_df.groupby(["name"]).mean()
+            f_group_df = group_df.loc[group_df[self.config.filter_by] > 500000]
+            callsites = f_group_df.index.values.tolist()
+
+        print(len(callsites))
+
+        df = df[df["name"].isin(callsites)]
+        print(df["name"].unique().tolist())
         paths = df[path_name].unique()
         for idx, path in enumerate(paths):
             if isinstance(path, float):

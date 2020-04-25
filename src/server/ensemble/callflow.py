@@ -148,10 +148,11 @@ class EnsembleCallFlow:
             datasets=self.config.dataset_names,
             config=self.config,
             process=True,
+            write=True,
         )
         aux.run()
         stage19 = time.perf_counter()
-        print(f"Create all data json file: {stage19 - stage18}")
+        print(f"Dump Gradient, distribution and variations: {stage19 - stage18}")
         # self.pipeline.write_callsite_information(states)
 
         # similarities = self.pipeline.deltaconSimilarity(datasets, states, "ensemble")
@@ -289,7 +290,9 @@ class EnsembleCallFlow:
             return self.similarities
 
         elif action_name == "hierarchy":
-            mH = ModuleHierarchy(self.states["ensemble_entire"], action["module"])
+            mH = ModuleHierarchy(
+                self.states["ensemble_entire"], action["module"], config=self.config
+            )
             return mH.result
 
         elif action_name == "projection":
@@ -333,6 +336,7 @@ class EnsembleCallFlow:
                 datasets=action["datasets"],
                 config=self.config,
                 process=True,
+                write=False,
             )
             if action["re-process"] == 1:
                 result = aux.run()

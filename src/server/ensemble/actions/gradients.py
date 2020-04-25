@@ -4,6 +4,7 @@ import statsmodels.nonparametric.api as smnp
 import matplotlib.pyplot as plt
 import math
 
+
 class KDE_gradients:
     def __init__(self, dfs, binCount="20"):
         self.dfs = dfs
@@ -13,10 +14,9 @@ class KDE_gradients:
         self.num_of_ranks = {}
         max_ranks = 0
         for dataset in self.dfs:
-            self.num_of_ranks[dataset] = len(self.dfs[dataset]['rank'].unique())
+            self.num_of_ranks[dataset] = len(self.dfs[dataset]["rank"].unique())
             max_ranks = max(max_ranks, self.num_of_ranks[dataset])
         self.max_ranks = max_ranks
-
 
     def iqr(self, arr):
         """Calculate the IQR for an array of numbers."""
@@ -24,7 +24,6 @@ class KDE_gradients:
         self.q1 = stats.scoreatpercentile(a, 25)
         self.q2 = stats.scoreatpercentile(a, 50)
         self.q3 = stats.scoreatpercentile(a, 75)
-
 
     def freedman_diaconis_bins(self, arr):
         """Calculate number of hist bins using Freedman-Diaconis rule."""
@@ -80,24 +79,27 @@ class KDE_gradients:
 
         return x, y
 
-    def histogram(self, data,  dataset_dict={}, data_min=np.nan, data_max=np.nan,):
-        if(np.isnan(data_min) or np.isnan(data_max) ):
-            data_min = 0
+    def histogram(
+        self, data, dataset_dict={}, data_min=np.nan, data_max=np.nan,
+    ):
+        if np.isnan(data_min) or np.isnan(data_max):
+            data_min = data.min()
             data_max = data.max()
+
         h, b = np.histogram(data, range=[data_min, data_max], bins=int(self.binCount))
 
-        # Map the datasets to their histogram indexes.  
+        # Map the datasets to their histogram indexes.
         dataset_position_dict = {}
         for dataset in dataset_dict:
             mean = dataset_dict[dataset]
             for idx, x in np.ndenumerate(b):
-                if ( x > float(mean)):
+                if x > float(mean):
                     dataset_position_dict[dataset] = idx[0] - 1
                     break
-                if (idx[0] == len(b) - 1):
+                if idx[0] == len(b) - 1:
                     dataset_position_dict[dataset] = len(b) - 2
 
-        return 0.5*(b[1:]+b[:-1]), h, dataset_position_dict
+        return 0.5 * (b[1:] + b[:-1]), h, dataset_position_dict
 
     def clean_dict(self, in_dict):
         ret = {k: in_dict[k] for k in in_dict if not math.isnan(in_dict[k])}
@@ -106,14 +108,14 @@ class KDE_gradients:
     def packByRankDistribution(self, df, metric):
         ret = {}
         if df.empty:
-            ret = dict((rank,0) for rank in range(0, self.max_ranks))
+            ret = dict((rank, 0) for rank in range(0, self.max_ranks))
         else:
-            ranks = df['rank'].tolist()
-            metric_vals = df[metric].tolist()
+            ranks = df["rank"].tolist()
+            metric_vals = df.groupby("rank").mean()[metric].tolist()
             ret = dict(zip(ranks, metric_vals))
         return ret
 
-    def get_runtime_data(self, df, column_name):
+    def get_runtime_data(self, df, column_name, debug=False):
         time_df = df[column_name]
         time_list = time_df.tolist()
 
@@ -123,7 +125,7 @@ class KDE_gradients:
         ret = self.packByRankDistribution(df, column_name)
         return ret
 
-    def run(self, columnName='name', callsiteOrModule='', targetDataset=''):
+    def run(self, columnName="name", callsiteOrModule="", targetDataset=""):
         dist_inc = {}
         dist_exc = {}
         mean_inc_dist = {}
@@ -138,10 +140,12 @@ class KDE_gradients:
 
         # Get the runtimes for all the runs.
         for idx, dataset in enumerate(self.dfs):
-            node_df = self.dfs[dataset].loc[(self.dfs[dataset][columnName] == callsiteOrModule)]
-
-            dist_inc[dataset] = self.get_runtime_data(node_df, 'time (inc)')
-            dist_exc[dataset] = self.get_runtime_data(node_df, 'time')
+            node_df = self.dfs[dataset].loc[
+                (self.dfs[dataset][columnName] == callsiteOrModule)
+            ]
+            debug = False
+            dist_inc[dataset] = self.get_runtime_data(node_df, "time (inc)", debug)
+            dist_exc[dataset] = self.get_runtime_data(node_df, "time", debug)
 
         # convert the dictionary of values to list of values.
         temp_inc = self.convert_dictmean_to_list(dist_inc)
@@ -173,10 +177,7 @@ class KDE_gradients:
         results = {
             "Inclusive": {
                 "bins": num_of_bins,
-                "dataset": {
-                    'mean': dataset_inc_list,
-                    'position': hist_inc_grid[2]
-                },
+                "dataset": {"mean": dataset_inc_list, "position": hist_inc_grid[2]},
                 # "kde": {
                 #     "x": kde_grid[vis_node_name][0].tolist(),
                 #     "y": kde_grid[vis_node_name][1].tolist(),
@@ -196,10 +197,7 @@ class KDE_gradients:
             },
             "Exclusive": {
                 "bins": num_of_bins,
-                "dataset": 
-            {       'mean': dataset_exc_list,
-                    'position': hist_exc_grid[2]
-                },
+                "dataset": {"mean": dataset_exc_list, "position": hist_exc_grid[2]},
                 # "kde": {
                 #     "x": kde_grid[vis_node_name][0].tolist(),
                 #     "y": kde_grid[vis_node_name][1].tolist(),

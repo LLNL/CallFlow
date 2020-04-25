@@ -32,6 +32,7 @@ class Auxiliary:
         datasets=[],
         config={},
         process=True,
+        write=False,
     ):
         self.timer = Timer()
         self.df = self.select_rows(states["ensemble_entire"].df, datasets)
@@ -40,6 +41,7 @@ class Auxiliary:
         self.config = config
         self.states = states
         self.process = process
+        self.write = write
         self.datasets = datasets
 
         self.props = ["rank", "name", "dataset", "all_ranks"]
@@ -466,9 +468,8 @@ class Auxiliary:
             self.config.processed_path + f"/{self.config.runName}" + f"/all_data.json"
         )
 
-        # self.process = True
         if self.process:
-            print("Processing the data again.")
+            print("Calculating Gradients, Mean runtime variations, and Distribution.")
             with self.timer.phase("Process data"):
                 self.group_frames()
             with self.timer.phase("Collect Callsite data"):
@@ -479,8 +480,11 @@ class Auxiliary:
                 ret["moduleCallsiteMap"] = self.get_module_callsite_map()
             # with self.timer.phase("Callsite module map data"):
             #     ret['callsiteModuleMap'] = self.get_callsite_module_map()
-            with self.timer.phase("Writing data"):
-                with open(path, "w") as f:
-                    json.dump(ret, f)
+            if self.write:
+                with self.timer.phase("Writing data"):
+                    with open(path, "w") as f:
+                        json.dump(ret, f)
+
+            print(self.timer)
 
         return ret
