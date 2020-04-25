@@ -198,8 +198,7 @@ export default {
             return ret
         },
 
-        visualize(data) {
-            let self = this
+        setup() {
             this.svg = d3.select('#' + this.id).append('svg')
                 .attrs({
                     width: this.width,
@@ -217,17 +216,9 @@ export default {
                 .duration(750);
 
             this.axis()
+        },
 
-            this.$store.projection = this.preprocess(data)
-            this.x.domain([2.0 * this.xMin, 2.0 * this.xMax])
-            this.y.domain([2.0 * this.yMin, 2.0 * this.yMax])
-
-            this.xAxisSVG
-                .call(this.xAxis)
-
-            this.yAxisSVG
-                .call(this.yAxis)
-
+        addTooltipTextBlock() {
             // Define the div for the tooltip
             this.tooltip = d3.select("#" + this.id)
                 .append("div")
@@ -236,7 +227,10 @@ export default {
                     "id": 'parameter-projection-tooltip'
                 })
                 .style("opacity", 1);
+        },
 
+        drawInnerCircle() {
+            let self = this
             let selected = undefined
             this.circles = this.svg.selectAll('circle')
                 .data(this.$store.projection)
@@ -248,11 +242,12 @@ export default {
                     r: (d) => {
                         return 6.0
                     },
-                    'stroke-width': 2.0,
+                    // 'stroke-width': 2.0,
                     fill: (d) => {
                         let color = ''
                         if (d[2] == self.$store.selectedTargetDataset && self.$store.showTarget) {
-                            color = d3.rgb(self.$store.color.ensemble)
+                            // color = d3.rgb(self.$store.color.ensemble)
+                            color = this.colorset[d[4]]
                         }
                         else {
                             color = this.colorset[d[4]]
@@ -262,8 +257,10 @@ export default {
                     cx: (d, i) => { return self.x(d[0]) },
                     cy: (d) => { return self.y(d[1]) },
                 })
+        },
 
 
+        drawOuterDisc() {
             // Outer circle.
             this.outerCircles = this.svg.selectAll('.outer-circle')
                 .data(this.$store.projection)
@@ -291,13 +288,15 @@ export default {
                     this.mouseover(d)
                 })
                 .on('click', (d) => {
-                    this.click(d)
+                    // this.click(d)
                 })
                 .on('dblclick', (d) => {
-                    this.dblclick(d)
+                    // this.dblclick(d)
                 })
 
+        },
 
+        addLassoFeature() {
             this.lasso = lasso()
                 .className('lasso' + this.id)
                 .closePathSelect(true)
@@ -309,6 +308,27 @@ export default {
                 .on("end", this.lassoEnd);
 
             this.svg.call(this.lasso)
+        },
+
+        visualize(data) {
+            let self = this
+
+            this.setup()
+
+            this.$store.projection = this.preprocess(data)
+            this.x.domain([2.0 * this.xMin, 2.0 * this.xMax])
+            this.y.domain([2.0 * this.yMin, 2.0 * this.yMax])
+
+            this.xAxisSVG
+                .call(this.xAxis)
+
+            this.yAxisSVG
+                .call(this.yAxis)
+
+            this.drawInnerCircle()
+            this.addTooltipTextBlock()
+
+            this.addLassoFeature()
             this.highlight(this.$store.selectedTargetDataset)
             this.showDetails(this.$store.selectedTargetDataset)
         },
@@ -322,14 +342,20 @@ export default {
 
         mouseover(d) {
             let dataset_name = d[2]
+
+            d3.selectAll('.dot')
+                .style('opacity', 0.5)
+
+
             this.tooltip.transition()
                 .duration(200)
-                .style("opacity", .9)
+                .style("opacity", 1)
                 .style("left", 10)
             this.showDetails(dataset_name)
         },
 
         click(d) {
+            console.log("click event")
             let self = this;
             this.selectedRun = d[2]
             d3.selectAll('.dot')
@@ -407,7 +433,7 @@ export default {
         lassoEnd() {
             d3.selectAll('.dot')
                 .attrs({
-                    opacity: 0.3,
+                    opacity: 0.5,
                 })
 
             this.selectedDatasets = []
@@ -420,7 +446,7 @@ export default {
             this.lasso.selectedItems()
                 .classed("selected", true)
                 .attr("r", (d) => {
-                    return 6.0
+                    return 4.5
                 })
                 .attr("id", (d) => { this.selectedDatasets.push(d[2]) })
                 .attr("opacity", 1)
@@ -428,7 +454,7 @@ export default {
             // Reset the style of the not selected dots
             this.lasso.notSelectedItems()
                 .attr("r", 4.5)
-                .attr("opacity", 0.5);
+                .attr("opacity", 0.3);
 
             this.$store.selectedDatasets = this.selectedDatasets
             // EventHandler.$emit('highlight_datasets', this.selectedDatasets)
@@ -519,28 +545,28 @@ export default {
         highlight(dataset) {
             let datasetID = this.$store.datasetMap[dataset]
 
-            // this.circles = this.svg.selectAll('#dot-' + datasetID)
-            //     .attrs({
-            //         opacity: 1.0,
-            //         stroke: this.$store.color.highlight,
-            //         "stroke-width": 3.0,
-            //     })
+            this.circles = this.svg.selectAll('#dot-' + datasetID)
+                .attrs({
+                    opacity: 1.0,
+                    stroke: this.$store.color.target,
+                    "stroke-width": 3.0,
+                })
 
-            // this.circles = this.svg.selectAll('#dot-' + datasetID)
-            //     .attrs({
-            //         opacity: 1.0,
-            //         stroke: this.$store.color.highlight,
-            //         "stroke-width": 3.0,
-            //     })
+            this.circles = this.svg.selectAll('#dot-' + datasetID)
+                .attrs({
+                    opacity: 1.0,
+                    stroke: this.$store.color.target,
+                    "stroke-width": 4.5,
+                })
 
         },
 
         clear() {
-            d3.selectAll('#parameter-projection-svg').remove()
-            d3.selectAll('#parameter-projection-tooltip').remove()
-            d3.selectAll('.dot').remove()
-            d3.selectAll('.outer-circle').remove()
-            d3.selectAll('.lasso').remove()
+            // d3.selectAll('#parameter-projection-svg').remove()
+            // d3.selectAll('#parameter-projection-tooltip').remove()
+            // d3.selectAll('.dot').remove()
+            // d3.selectAll('.outer-circle').remove()
+            // d3.selectAll('.lasso').remove()
         }
     },
 }

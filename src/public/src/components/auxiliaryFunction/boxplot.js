@@ -131,6 +131,7 @@ export default {
         visualize(callsite) {
             this.process(callsite)
             this.drawSVG(callsite)
+            console.log(callsite)
 
             this.$refs.Box.init(callsite, this.q, this.targetq, this.xScale, this.showTarget)
             this.$refs.Markers.init(callsite, this.q, this.targetq, this.xScale, this.showTarget)

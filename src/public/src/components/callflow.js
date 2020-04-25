@@ -193,6 +193,8 @@ export default {
 			caseStudy: this.selectedCaseStudy
 		})
 		EventHandler.$on('lasso_selection', () => {
+			this.$store.resetTargetDataset = true
+
 			this.clearLocal()
 			this.setTargetDataset()
 			this.$socket.emit('ensemble_callsite_data', {
@@ -399,6 +401,9 @@ export default {
 		},
 
 		setTargetDataset() {
+			if (this.firstRender) {
+				this.$store.resetTargetDataset = true
+			}
 			this.$store.selectedMetric = this.selectedMetric
 			this.datasets = this.sortDatasetsByAttr(this.$store.selectedDatasets, 'Inclusive')
 
@@ -413,17 +418,21 @@ export default {
 				data = this.$store.maxExcTime
 			}
 
+			console.log(this.$store.selectedDatasets)
 			for (let dataset of this.$store.selectedDatasets) {
 				if (current_max_time < data[dataset]) {
 					current_max_time = data[dataset]
 					max_dataset = dataset
 				}
 			}
+			console.log(this.$store.resetTargetDataset)
 
-			if (this.firstRender) {
+			if (this.firstRender || this.$store.resetTargetDataset) {
+				console.log("here")
 				this.$store.selectedTargetDataset = max_dataset
 				this.selectedTargetDataset = max_dataset
 				this.firstRender = false
+				this.$store.resetTargetDataset = false
 			}
 			else {
 				this.$store.selectedTargetDataset = this.selectedTargetDataset

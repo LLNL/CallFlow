@@ -485,7 +485,8 @@ export default {
 			for (let i = 0; i < this.xArray.length; i += 1) {
 				let callsite = this.xArray[i]['callsite']
 				let run = this.xArray[i]['run']
-				let opacity = this.calculateQDC(callsite, run)
+				// let opacity = this.calculateQDC(callsite, run)
+				let opacity = 1
 
 				this.svg
 					.append('circle')
@@ -523,8 +524,9 @@ export default {
 			for (let i = 0; i < this.xtargetArray.length; i++) {
 				let callsite = this.xtargetArray[i]['callsite']
 				let run = this.xArray[i]['run']
-				let opacity = this.calculateQDC(callsite, run)
+				// let opacity = this.calculateQDC(callsite, run)
 
+				let opacity = 1
 				this.svg
 					.append('circle')
 					.attrs({

@@ -65,12 +65,12 @@ html {
 
 .selected {
   stroke: #009688;
-  stroke-width: 5px;
+  stroke-width: 3px;
 }
 
 .unselected {
-  stroke: black;
-  stroke-width: 2px;
+  stroke: #dbdbdb;
+  stroke-width: 3px;
 }
 
 .big_text {

@@ -402,7 +402,6 @@ export default {
                 })
                 .style("fill", (d, i) => {
                     if (d.type == "intermediate") {
-                        console.log('a')
                         // return this.$store.intermediateColor
                         return this.$store.color.target
                     }
@@ -660,7 +659,7 @@ export default {
                         "stroke": '#202020'
                     })
 
-                let fontSize = 14
+                let fontSize = 10
                 if (vals[idx] != 0) {
                     // For placing the run count values.
                     d3.select('#ensemble-callsite-' + node_data.client_idx)
@@ -688,7 +687,7 @@ export default {
                                 'fill': 'black'
                             })
                             .style('z-index', 100)
-                            .style('font-size', '14px')
+                            .style('font-size', fontSize + 'px')
                             .text(utils.formatRuntimeWithUnits(grid[idx]))
                     }
                 }
@@ -704,7 +703,7 @@ export default {
                             'fill': 'black'
                         })
                         .style('z-index', 100)
-                        .style('font-size', '14px')
+                        .style('font-size', fontSize + 'px')
                         .text('Min. = ' + utils.formatRuntimeWithUnits(grid[idx]))
                 }
                 else if (idx == grid.length - 1) {
@@ -718,7 +717,7 @@ export default {
                             'fill': 'black'
                         })
                         .style('z-index', 100)
-                        .style('font-size', '14px')
+                        .style('font-size', fontSize + 'px')
                         .text('Max. = ' + utils.formatRuntimeWithUnits(grid[idx]))
                 }
             }
