@@ -40,17 +40,14 @@ class ModuleHierarchy:
             edges.append({"source": source, "target": target})
         return edges
 
-    def add_paths(self, df, path_name, filterTopCallsites=True):
+    def add_paths(self, df, path_name, filterTopCallsites=False):
         module_df = self.df.loc[self.df["module"] == self.module]
         if filterTopCallsites:
             group_df = module_df.groupby(["name"]).mean()
             f_group_df = group_df.loc[group_df[self.config.filter_by] > 500000]
             callsites = f_group_df.index.values.tolist()
+            df = df[df["name"].isin(callsites)]
 
-        print(len(callsites))
-
-        df = df[df["name"].isin(callsites)]
-        print(df["name"].unique().tolist())
         paths = df[path_name].unique()
         for idx, path in enumerate(paths):
             if isinstance(path, float):

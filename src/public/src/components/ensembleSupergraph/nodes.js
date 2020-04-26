@@ -632,15 +632,27 @@ export default {
 
         drawGuides(node_data, type) {
             let modules_data = this.$store.modules
-            let module_name = node_data.module
+            let callsite_data = this.$store.callsites
 
-            let data = modules_data['ensemble'][module_name][this.$store.selectedMetric]['gradients']
+            let node_name = ''
+            let gradients = {}
+            if (node_data.type == 'super-node') {
+                node_name = node_data.module
+                gradients = modules_data['ensemble'][node_name][this.$store.selectedMetric]['gradients']
+            }
+            else if (node_data.type == 'component-node') {
+                node_name = node_data.name
+                gradients = callsite_data['ensemble'][node_name][this.$store.selectedMetric]['gradients']
+            }
+            else {
+                gradients = {}
+            }
 
-            let gradients = data['hist']
-            let datasetPositionMap = data['dataset']['position']
+            let histogram = gradients['hist']
+            let datasetPositionMap = gradients['dataset']['position']
 
-            let grid = gradients.x
-            let vals = gradients.y
+            let grid = histogram.x
+            let vals = histogram.y
 
             let targetPos = 0
             let binWidth = node_data.height / (grid.length)
@@ -654,7 +666,9 @@ export default {
                 }
                 positionDatasetMap[datasetPosition].push(dataset)
             }
-            console.log(positionDatasetMap)
+
+            this.guidesG = d3.select('#ensemble-callsite-' + node_data.client_idx)
+                .append('g')
 
             for (let idx = 0; idx < grid.length; idx += 1) {
                 let y = binWidth * (idx)
@@ -663,7 +677,7 @@ export default {
                     .style('opacity', 0.5)
 
                 // For drawing the guide lines that have the value.
-                d3.select('#ensemble-callsite-' + node_data.client_idx)
+                this.guidesG
                     .append('line')
                     .attrs({
                         "class": 'gradientGuides-' + type,
@@ -677,34 +691,41 @@ export default {
                         "stroke": '#202020'
                     })
 
-                let fontSize = 10
+                let fontSize = 13
                 if (vals[idx] != 0) {
                     // For placing the run count values.
                     for (let i = 0; i < positionDatasetMap[idx].length; i += 1) {
-                        d3.select('#ensemble-callsite-' + node_data.client_idx)
+                        let text = positionDatasetMap[idx][0]
+                        if (positionDatasetMap[idx].length - 1 != 0) {
+                            let count = positionDatasetMap[idx].length - 1
+                            text = text + '+' + count
+                        }
+                        this.guidesG
                             .append('text')
                             .attrs({
                                 "class": 'gradientGuidesText-' + type,
                                 "id": 'line-2-' + node_data['client_idx'],
-                                "x": -50,
+                                "x": -65,
                                 "y": y + fontSize / 2 + binWidth / 2 + fontSize * i,
                                 'fill': 'black'
                             })
                             .style('z-index', 100)
                             .style('font-size', fontSize + 'px')
+                            // .text(text)
+                            // .text(this.formatRunCounts(vals[idx]))
                             .text(positionDatasetMap[idx][i])
                     }
 
 
                     // For placing the runtime values.
                     if (idx != 0 && idx != grid.length - 1) {
-                        d3.select('#ensemble-callsite-' + node_data.client_idx)
+                        this.guidesG
                             .append('text')
                             .attrs({
                                 "class": 'gradientGuidesText-' + type,
                                 "id": 'line-2-' + node_data['client_idx'],
                                 "x": this.nodeWidth + 10,
-                                "y": y + fontSize / 2 + binWidth / 2,
+                                "y": y + fontSize / 2 + binWidth,
                                 'fill': 'black'
                             })
                             .style('z-index', 100)
@@ -714,7 +735,7 @@ export default {
                 }
 
                 if (idx == 0) {
-                    d3.select('#ensemble-callsite-' + node_data.client_idx)
+                    this.guidesG
                         .append('text')
                         .attrs({
                             "class": 'gradientGuidesText-' + type,
@@ -728,13 +749,13 @@ export default {
                         .text('Min. = ' + utils.formatRuntimeWithUnits(grid[idx]))
                 }
                 else if (idx == grid.length - 1) {
-                    d3.select('#ensemble-callsite-' + node_data.client_idx)
+                    this.guidesG
                         .append('text')
                         .attrs({
                             "class": 'gradientGuidesText-' + type,
                             "id": 'line-2-' + node_data['client_idx'],
                             "x": this.nodeWidth + 10,
-                            "y": y + binWidth / 2,
+                            "y": y + 2 * binWidth,
                             'fill': 'black'
                         })
                         .style('z-index', 100)
@@ -765,7 +786,10 @@ export default {
                     }
                 })
                 .style('opacity', (d) => {
-                    return 0.5
+                    if (this.$store.showTarget && this.$store.compareAnalysisMode == false) {
+                        return 0.5
+                    }
+                    return 1
                 })
                 .style('fill-opacity', (d) => {
                     if (d.type == "intermediate") {
@@ -867,10 +891,10 @@ export default {
                     'dy': '0.35em',
                     'transform': 'rotate(90)',
                     'x': '5',
-                    'y': '-10'
+                    'y': '-11.5'
                 })
                 .style('opacity', 1)
-                .style('font-size', '14px')
+                .style('font-size', '18px')
                 .text((d) => {
                     return '';
                 })
