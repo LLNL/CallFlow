@@ -226,7 +226,7 @@ export default {
                     "dy": ".35em",
                     "text-anchor": "middle",
                     'y': 10,
-                    'x': -30,
+                    'x': -40,
                     'class': 'dist-colormap-text-metric',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - this.padding.bottom})`,
                 })
@@ -255,7 +255,7 @@ export default {
                 .attrs({
                     "dy": ".35em",
                     'y': 10,
-                    'x': -30,
+                    'x': -40,
                     "text-anchor": "middle",
                     'class': 'dist-colormap-text',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2 * this.padding.bottom})`,
@@ -285,7 +285,7 @@ export default {
                 .attrs({
                     "dy": ".35em",
                     'y': 10,
-                    'x': -30,
+                    'x': -40,
                     "text-anchor": "middle",
                     'class': 'dist-colormap-text',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2 * this.padding.bottom})`,

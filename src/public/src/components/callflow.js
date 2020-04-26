@@ -785,6 +785,7 @@ export default {
 
 		updateCompareDataset() {
 			this.$store.selectedCompareDataset = this.selectedCompareDataset
+			this.$store.compareAnalysisMode = true
 			this.$socket.emit('compare', {
 				targetDataset: this.$store.selectedTargetDataset,
 				compareDataset: this.$store.selectedCompareDataset,
