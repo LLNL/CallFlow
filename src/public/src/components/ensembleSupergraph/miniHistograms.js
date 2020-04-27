@@ -38,7 +38,8 @@ export default {
         id: '',
         nodes: null,
         edges: null,
-        offset: 4,
+        offset: 7,
+        // offset: 0,
         bandWidth: 0,
     }),
 
@@ -102,7 +103,7 @@ export default {
                 if (this.$store.selectedScale == 'Linear') {
                     this.minimapYScale = d3.scaleLinear()
                         .domain([0, d3.max(freq)])
-                        .range([this.$parent.ySpacing, 0]);
+                        .range([this.$parent.ySpacing - 10, 0]);
                 }
                 else if (this.$store.selectedScale == 'Log') {
                     this.minimapYScale = d3.scaleLog()
@@ -128,7 +129,7 @@ export default {
                         'x': (d) => {
                             return node_dict.x + this.minimapXScale(xVals[i])
                         },
-                        'y': (d) => node_dict.y + this.minimapYScale(freq[i]) - this.offset,
+                        'y': (d) => node_dict.y + this.minimapYScale(freq[i]) + this.offset,
                         'stroke-width': '0.2px',
                         'stroke': 'black',
                         'fill': color,

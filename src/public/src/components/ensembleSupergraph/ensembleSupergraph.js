@@ -27,7 +27,7 @@ export default {
 		dashboardID: 'ensemble-supergraph-dashboard',
 		nodeWidth: 50,
 		nodeScale: 1.0,
-		ySpacing: 50,
+		ySpacing: 60,
 		levelSpacing: 50,
 		margin: {
 			top: 10, right: 10, bottom: 20, left: 10
