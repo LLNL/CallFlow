@@ -111,7 +111,8 @@ class KDE_gradients:
             ret = dict((rank, 0) for rank in range(0, self.max_ranks))
         else:
             ranks = df["rank"].tolist()
-            metric_vals = df.groupby("rank").mean()[metric].tolist()
+            metric_vals = df[metric].tolist()
+            # metric_vals = df.groupby("rank").max()[metric].tolist()
             ret = dict(zip(ranks, metric_vals))
         return ret
 

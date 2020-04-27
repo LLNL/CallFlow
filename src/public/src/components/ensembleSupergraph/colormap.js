@@ -278,6 +278,19 @@ export default {
         },
 
         drawMeanDiffText() {
+            this.svg.append("text")
+                .style("fill", "black")
+                .style("font-size", "14px")
+                .attrs({
+                    "dy": ".35em",
+                    "y": 10,
+                    'x': -160,
+                    "text-anchor": "middle",
+                    'class': 'dist-colormap-text',
+                    'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - 2 * this.padding.bottom})`,
+                })
+                .text("Mean Difference colormap");
+
             // draw the element
             this.svg.append("text")
                 .style("fill", "black")

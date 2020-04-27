@@ -269,7 +269,10 @@ export default {
                 .attrs({
                     'id': (d) => { return d.id + ' callsite-rect' + d.client_idx },
                     'class': 'callsite-rect',
-                    'height': (d) => { return d.height; },
+                    'height': (d) => {
+                        console.log(d.id)
+                        return d.height
+                    },
                     'width': this.nodeWidth,
                     'opacity': 0,
                     'fill-opacity': (d) => {
@@ -401,7 +404,14 @@ export default {
                             return 1.0;
                         }
                     },
-                    'height': (d) => d.height
+                    'height': (d) => {
+                        if (d.id == "LeapFrog") {
+                            return 352.328692
+                        }
+                        else {
+                            return d.height;
+                        }
+                    },
                 })
                 .style("fill", (d, i) => {
                     if (d.type == "intermediate") {
@@ -569,7 +579,14 @@ export default {
                     'opacity': d => {
                         return 1;
                     },
-                    'height': d => d.height
+                    'height': d => {
+                        if (d.id == "LeapFrog") {
+                            return 352.328692
+                        }
+                        else {
+                            return d.height;
+                        }
+                    },
                 })
                 .style('stroke', (d) => {
                     return 1;
@@ -586,7 +603,13 @@ export default {
             let targetPos = gradients['dataset']['position'][this.$store.selectedTargetDataset] + 1
             let binWidth = node_data.height / (this.$store.selectedRunBinCount)
 
-            let y = binWidth * targetPos - binWidth / 2
+            let y = 0
+            if (node_name == 'LeapFrog') {
+                y = binWidth * targetPos - binWidth / 2 - 10
+            }
+            else {
+                y = binWidth * targetPos - binWidth / 2
+            }
 
             d3.select('#ensemble-callsite-' + node_data.client_idx)
                 .append('line')
@@ -691,7 +714,7 @@ export default {
                         "stroke": '#202020'
                     })
 
-                let fontSize = 13
+                let fontSize = 12
                 if (vals[idx] != 0) {
                     // For placing the run count values.
                     for (let i = 0; i < positionDatasetMap[idx].length; i += 1) {
@@ -725,7 +748,7 @@ export default {
                                 "class": 'gradientGuidesText-' + type,
                                 "id": 'line-2-' + node_data['client_idx'],
                                 "x": this.nodeWidth + 10,
-                                "y": y + fontSize / 2 + binWidth,
+                                "y": y + fontSize / 2,
                                 'fill': 'black'
                             })
                             .style('z-index', 100)
