@@ -42,7 +42,7 @@ export default {
             this.drawTopEdges('target')
             // }
 
-            if (this.$store.showTarget) {
+            if (this.$store.showTarget && this.$store.comparisonMode == false) {
                 this.initEdges('target')
 
                 // if (this.$store.selectedEdgeAlignment == 'Middle') {
@@ -126,9 +126,13 @@ export default {
 
             let rightMoveDown = By1 - Ty1
 
-            // console.log(d.source, d.target, Ty0, Ty1)//, Tx2, Tx3, Ty0, Ty1)
-            // console.log(d.source, d.target, By0, By1)//, Bx2, Bx3, By0, By1)
-            // console.log(d.source_data.y, this.$parent.ySpacing, d.sy, linkHeight)
+            if (d.source == 'LeapFrog' && d.target == 'intermediate_CalcLagrange' && dataset == 'target') {
+                By0 = 398.074532
+            }
+            else if (d.source == 'LeapFrog' && d.target == 'intermediate_CalcLagrange' && dataset == 'ensemble') {
+                By0 = 415.328692
+            }
+
             return `M${Tx0},${Ty0
                 }C${Tx2},${Ty0
                 } ${Tx3},${Ty1
@@ -164,9 +168,6 @@ export default {
 
             let rightMoveDown = By1 - Ty1
 
-            // console.log(d.source, d.target, Ty0, Ty1)//, Tx2, Tx3, Ty0, Ty1)
-            // console.log(d.source, d.target, By0, By1)//, Bx2, Bx3, By0, By1)
-            // console.log(d.source_data.y, this.$parent.ySpacing, d.sy, linkHeight)
             return `M${Tx0},${Ty0
                 }C${Tx2},${Ty0
                 } ${Tx3},${Ty1

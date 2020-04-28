@@ -152,7 +152,7 @@ export default {
 		scales: ['Log', 'Linear'],
 		selectedScale: 'Linear',
 		props: ['name', 'rank', 'dataset', 'all_ranks'],
-		selectedProp: 'rank',
+		selectedProp: 'name',
 		dimensions: ['max_inclusive_time', 'max_exclusive_time', 'rank_count'],
 		selectedPC1: 'max_inclusive_time',
 		selectedPC2: 'max_exclusive_time',
@@ -374,6 +374,7 @@ export default {
 			this.$store.auxiliarySortBy = this.auxiliarySortBy
 			this.$store.reprocess = 0
 			this.selectedCaseStudy = data['runName']
+			this.$store.comparisonMode = this.comparisonMode
 		},
 
 		setOtherData() {
@@ -784,6 +785,7 @@ export default {
 		},
 
 		updateCompareDataset() {
+			this.summaryChip = 'Diff SuperGraph'
 			this.$store.selectedCompareDataset = this.selectedCompareDataset
 			this.$store.compareAnalysisMode = true
 			this.$socket.emit('compare', {

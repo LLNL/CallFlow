@@ -454,9 +454,6 @@ class SuperGraph(nx.Graph):
 
                     node_dict = {"type": "super-node"}
 
-                    #                 print(f"Caller edge: {has_caller_edge}")
-                    #                 print(f"Callback edge: {has_callback_edge}")
-
                     # If the module-module edge does not exist.
                     if (
                         not has_caller_edge

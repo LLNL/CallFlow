@@ -82,9 +82,42 @@ class Compare:
             ret[rank_idx] = arr[idx]
         return ret
 
-    def calculate_diff(self, node):
-        node_df1 = self.df1.loc[self.df1["module"] == node]
-        node_df2 = self.df2.loc[self.df2["module"] == node]
+    def mean(self, df1, selectCol, node, col):
+        node_df1 = df1.loc[df1[selectCol] == node]
+
+        data1 = np.asarray(node_df1[col])
+
+        if len(data1) == 0:
+            mean1 = 0
+        else:
+            mean1 = np.mean(data1)
+        return mean1
+
+    def mean_difference(self, module):
+        callsite_in_module1 = self.df1.loc[self.df1["module"] == module][
+            "name"
+        ].unique()
+        callsite_in_module2 = self.df2.loc[self.df2["module"] == module][
+            "name"
+        ].unique()
+
+        print(callsite_in_module1, callsite_in_module2)
+
+        mean1 = 0
+        for callsite in callsite_in_module1:
+            mean = self.mean(self.df1, "name", callsite, "time")
+            mean1 += mean
+
+        mean2 = 0
+        for callsite in callsite_in_module2:
+            mean = self.mean(self.df2, "name", callsite, "time")
+            mean2 += mean
+
+        return mean2 - mean1
+
+    def calculate_diff(self, module):
+        node_df1 = self.df1.loc[self.df1["module"] == module]
+        node_df2 = self.df2.loc[self.df2["module"] == module]
 
         data1 = np.asarray(node_df1[self.col])
         rank1 = np.asarray(node_df1["rank"])
@@ -116,7 +149,10 @@ class Compare:
         else:
             mean2 = np.mean(data2)
 
-        mean_diff = mean2 - mean1
+        print("module", module)
+        mean_diff = self.mean_difference(module[0])
+
+        print(mean_diff)
 
         # calculate mean runtime.
         # np_mean_dist = np.array(tuple(self.clean_dict(diff).values()))
@@ -164,7 +200,7 @@ class Compare:
         # )
 
         result = {
-            "name": node,
+            "name": module[0],
             # "dist": diff,
             "mean_diff": mean_diff,
             "bins": num_of_bins,
@@ -188,5 +224,4 @@ class Compare:
             "mean": mean.tolist(),
             "diff": diff.tolist(),
         }
-        print(result)
         return result
