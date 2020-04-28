@@ -79,21 +79,18 @@ export default class Color {
                 .correctLightness()
         } else if (this.option == 'nRange') {
             this.nRangeColorScale = chroma.scale(this.colorMap)
-                // .padding(this.colorPadding)
                 .domain([0, 1])
         } else if (this.option == 'Dist') {
             this.diffColorScale = chroma.scale(this.colorMap)
-                // .padding(this.colorPadding)
                 .domain([-1, 1]);
         } else if (this.option == 'Imbalance') {
             this.loadImbColorScale = chroma.scale(this.colorMap)
-                // .padding(this.colorPadding)
                 .domain([0, 1]);
         } else if (this.option == 'MeanDiff') {
+            let mmax = Math.max(Math.abs(min), Math.abs(max))
             this.meanDiffColorScale = chroma.scale('RdYlGn')
                 .padding([0.0, 0.0])
-                .gamma(0.5)
-                .domain([min, max]);
+                .domain([mmax, -mmax]);
         } else if (this.option == 'RankDiff') {
             this.rankDiffColorScale = chroma.scale(this.colorMap)
                 // .padding(this.colorPadding)

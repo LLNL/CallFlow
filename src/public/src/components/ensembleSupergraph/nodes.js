@@ -65,13 +65,31 @@ export default {
             }
             else if (this.$store.selectedCompareMode == 'Mean Differences') {
                 let max_diff = Math.max(Math.abs(this.mean_diff_min), Math.abs(this.mean_diff_max))
-                this.$store.meanDiffColor.setColorScale(-max_diff, max_diff, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
-                this.$parent.$refs.EnsembleColorMap.updateWithMinMax('meanDiff', -max_diff, max_diff)
+
+                // this.$store.meanDiffColor.setColorScale(-1 * max_diff, max_diff, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
+                // this.$parent.$refs.EnsembleColorMap.updateWithMinMax('meanDiff', -1 * max_diff, max_diff)
+
+                this.$store.meanDiffColor.setColorScale(this.mean_diff_min, this.mean_diff_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint)
+                this.$parent.$refs.EnsembleColorMap.updateWithMinMax('meanDiff', this.mean_diff_min, this.mean_diff_max)
+
                 this.meanDiffRectangle(data)
             }
-
+            this.clearPaths()
             d3.selectAll('.targetLines').remove()
+            d3.selectAll('.histogram-bar-target').remove()
             d3.selectAll('#ensemble-edge-target').remove()
+
+            // remove target legend
+            d3.selectAll('.target-circle-legend').remove()
+            d3.selectAll('.target-circle-legend-text').remove()
+            // remove ensemble legend
+            d3.selectAll('.ensemble-circle-legend').remove()
+            d3.selectAll('.ensemble-circle-legend-text').remove()
+
+            // remove colormap container
+
+            d3.selectAll('.dist-colormap').remove()
+
         }
     },
     mounted() {
@@ -270,7 +288,6 @@ export default {
                     'id': (d) => { return d.id + ' callsite-rect' + d.client_idx },
                     'class': 'callsite-rect',
                     'height': (d) => {
-                        console.log(d.id)
                         return d.height
                     },
                     'width': this.nodeWidth,
@@ -838,8 +855,8 @@ export default {
                 .style('fill-opacity', (d) => {
                     return 1.0;
                 });
-
-            if (this.$store.showTarget) {
+            console.log(this.$store.comparisonMode)
+            if (this.$store.showTarget && this.$store.comparisonMode == false) {
                 this.nodesSVG.append('path')
                     .attrs({
                         'class': 'target-path',
@@ -854,8 +871,6 @@ export default {
                     })
                     .style('fill', (d) => {
                         if (d.type == "intermediate") {
-                            // return this.$store.color.ensemble
-                            // return this.intermediateColor
                             return this.$store.color.target
                         }
                     })
@@ -974,10 +989,15 @@ export default {
                 });
         },
 
+        clearPaths() {
+            d3.selectAll('.target-path').remove()
+        },
+
         clear() {
             d3.selectAll('.ensemble-callsite').remove()
             d3.selectAll('.targetLines').remove()
             this.clearGradients()
+            this.clearPaths()
             this.$refs.ToolTip.clear()
         },
     }

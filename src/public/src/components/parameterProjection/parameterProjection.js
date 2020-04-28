@@ -21,7 +21,7 @@ export default {
         yMax: 0,
         message: 'Parameter Projection',
         showMessage: false,
-        colorset: ['#FF7F00', '#984EA3', '#D62728', '#4daf4a', '#9466BD', '#8C564B', '#E377C2', '#7F7F7F', '#BCBD21', '#16BECF']
+        colorset: ['#FF7F00', '#16BECF', '#984EA3', '#8C564B', '#E377C2', '#7F7F7F', '#BCBD21', '#4daf4a', '#D62728']
     }),
     sockets: {
         parameter_projection(data) {

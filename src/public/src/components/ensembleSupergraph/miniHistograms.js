@@ -121,7 +121,7 @@ export default {
                     .append('rect')
                     .attrs({
                         'id': 'histobars',
-                        'class': 'histogram-bar ' + type,
+                        'class': 'histogram-bar-' + type,
                         'width': () => this.bandWidth,
                         'height': (d) => {
                             return this.$parent.nodeWidth - this.minimapYScale(freq[i])
@@ -140,7 +140,7 @@ export default {
         render(data, node) {
             let node_dict = this.nodes[this.nodeMap[node]]
             this.histogram(data, node_dict, 'ensemble')
-            if (this.$store.showTarget) {
+            if (this.$store.showTarget && this.$store.comparisonMode == false) {
                 this.histogram(data, node_dict, 'target')
             }
         }
