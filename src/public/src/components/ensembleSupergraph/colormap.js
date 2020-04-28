@@ -46,17 +46,16 @@ export default {
             this.containerWidth = this.$store.viewWidth / 2
             this.containerHeight = this.$store.viewHeight - this.$parent.margin.top - this.$parent.margin.bottom
 
+            this.clearColorMap()
             this.svg = d3.select('#' + this.parentID)
                 .append('g')
                 .attrs({
                     'id': 'dist-colormap',
                 })
 
+            this.clearTargetLegends()
             if (this.$store.showTarget == true) {
                 this.drawTargetLegend()
-            }
-            else {
-                this.clearTargetLegends()
             }
             this.clearEnsembleLegends()
             this.drawEnsembleLegend()
@@ -120,7 +119,7 @@ export default {
                 let splits = this.$store.colorPoint
                 let color = this.color.getScale(this.color.option)
 
-                for (let i = 0; i <= splits; i += 1) {
+                for (let i = 0; i < splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
                     this.svg.append('rect')
                         .attrs({
@@ -158,16 +157,23 @@ export default {
             }
         },
 
-        drawMeanDiffColorMap() {
+        drawMeanDiffColorMap(splits, colorscale) {
             this.color = this.$store.meanDiffColor
 
             if (this.color.option == "Module") {
 
             } else {
-                let splits = this.$store.colorPoint
+                // let splits = this.$store.colorPoint
+                let splits = 9
                 let color = this.color.getScale('MeanDiff')
-                for (let i = 0; i <= splits; i += 1) {
-                    let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
+                let domain = color.domain()
+                let colorMin = domain[0]
+                let colorMax = domain[1]
+                let dcolor = (colorMax - colorMin) / (splits - 1)
+                for (let i = 0; i < splits; i += 1) {
+                    let splitColor = colorMin + dcolor * (splits - 1 - i)
+                    console.log(color(splitColor))
+                    console.log(i, splits, splitColor, colorMin, colorMax)
                     this.svg.append('rect')
                         .attrs({
                             'width': this.width / splits,
@@ -189,7 +195,7 @@ export default {
             } else {
                 let splits = this.$store.colorPoint
                 let color = this.color.getScale("Bin")
-                for (let i = 0; i <= splits; i += 1) {
+                for (let i = 0; i < splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
                     this.svg.append('rect')
                         .attrs({
@@ -211,12 +217,12 @@ export default {
                 .attrs({
                     "dy": ".35em",
                     "y": 10,
-                    'x': -110,
+                    'x': -150,
                     "text-anchor": "middle",
                     'class': 'dist-colormap-text-metric',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - this.padding.bottom})`,
                 })
-                .text("Runtime colormap");
+                .text("Exc. Runtime colormap");
 
             // draw the element
             this.svg.append("text")
@@ -361,6 +367,10 @@ export default {
 
         },
 
+        clearColorMap() {
+            d3.selectAll('.dist-colormap').remove()
+        },
+
         clear() {
             d3.selectAll('.dist-colormap-text').remove()
             d3.selectAll('.dist-colormap-rect').remove()
@@ -416,6 +426,8 @@ export default {
                 this.drawBinText()
             }
             if (mode == 'meanDiff') {
+                this.colorMin = -1 * Math.max(Math.abs(min), Math.abs(max))
+                this.colorMax = 1 * Math.max(Math.abs(min), Math.abs(max))
                 this.drawMeanDiffColorMap()
                 this.drawMeanDiffText()
             }

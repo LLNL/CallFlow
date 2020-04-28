@@ -745,7 +745,7 @@ export default {
                             .attrs({
                                 "class": 'gradientGuidesText-' + type,
                                 "id": 'line-2-' + node_data['client_idx'],
-                                "x": -65,
+                                "x": -130,
                                 "y": y + fontSize / 2 + binWidth / 2 + fontSize * i,
                                 'fill': 'black'
                             })

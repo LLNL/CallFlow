@@ -184,8 +184,9 @@ body {
 .auxiliary-node {
   padding: 10px;
   margin: 3px;
-  border-width: 5px;
+  border-width: 1px;
   border-style: solid;
+  border-color: #a7a7a7;
 }
 
 .reveal-button {
