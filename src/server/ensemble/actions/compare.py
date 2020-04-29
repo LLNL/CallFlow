@@ -133,8 +133,8 @@ class Compare:
         dataset2 = np.array([self.dataset2 for _ in range(data2.shape[0])])
         module2 = np.asarray(node_df2["module"])
 
-        name = name2
-        module = module2
+        # name = name2
+        # module = module2
         dataset = np.concatenate([dataset1, dataset2], axis=0)
         mean = np.mean([zero_inserted_data1, zero_inserted_data2], axis=0)
         diff = zero_inserted_data1 - zero_inserted_data2
@@ -150,9 +150,9 @@ class Compare:
             mean2 = np.mean(data2)
 
         print("module", module)
-        mean_diff = self.mean_difference(module[0])
+        mean_diff = self.mean_difference(module)
 
-        print(mean_diff)
+        # print(mean_diff)
 
         # calculate mean runtime.
         # np_mean_dist = np.array(tuple(self.clean_dict(diff).values()))
@@ -165,7 +165,7 @@ class Compare:
         dist_list = np.sort(diff).tolist()
 
         # Calculate appropriate number of bins automatically.
-        num_of_bins = 10
+        num_of_bins = 20
         # num_of_bins = min(
         #     self.freedman_diaconis_bins(np.array(dist_list)), 50
         # )
@@ -200,7 +200,7 @@ class Compare:
         # )
 
         result = {
-            "name": module[0],
+            "name": module,
             # "dist": diff,
             "mean_diff": mean_diff,
             "bins": num_of_bins,

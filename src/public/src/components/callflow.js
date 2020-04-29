@@ -152,7 +152,7 @@ export default {
 		scales: ['Log', 'Linear'],
 		selectedScale: 'Linear',
 		props: ['name', 'rank', 'dataset', 'all_ranks'],
-		selectedProp: 'name',
+		selectedProp: 'rank',
 		dimensions: ['max_inclusive_time', 'max_exclusive_time', 'rank_count'],
 		selectedPC1: 'max_inclusive_time',
 		selectedPC2: 'max_exclusive_time',
@@ -167,7 +167,7 @@ export default {
 		targetColors: ['Green', 'Blue', 'Brown'],
 		selectedTargetColor: '',
 		selectedTargetColorText: 'Green',
-		showTarget: true,
+		showTarget: false,
 		targetInfo: 'Target Guides',
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time)
 		firstRender: true,
