@@ -94,6 +94,7 @@ export default class Color {
         } else if (this.option == 'RankDiff') {
             this.rankDiffColorScale = chroma.scale(this.colorMap)
                 // .padding(this.colorPadding)
+                .gamma(0.5)
                 .domain([min, max]);
         } else if (this.option == 'Bin') {
             this.binColorScale = chroma.scale(this.colorMap)

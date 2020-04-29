@@ -486,7 +486,7 @@ export default {
 
         zeroLine(node, y1) {
             if (this.renderZeroLine[node] == undefined) {
-                d3.select('#dist-node_' + this.nidNameMap[node])
+                d3.select('#ensemble-callsite-' + this.nidNameMap[node])
                     .append('line')
                     .attrs((d) => {
                         return {
@@ -505,7 +505,7 @@ export default {
                         return 5
                     })
 
-                d3.select('#dist-node_' + this.nidNameMap[node])
+                d3.select('#ensemble-callsite-' + this.nidNameMap[node])
                     .append('text')
                     .attrs({
                         'class': 'zeroLineText',
@@ -528,6 +528,7 @@ export default {
             let method = 'hist'
             for (let i = 0; i < data.length; i += 1) {
                 let d = data[i]
+                console.log(d)
                 var defs = d3.select('#ensemble-supergraph-overview')
                     .append("defs");
 
@@ -745,7 +746,7 @@ export default {
                             .attrs({
                                 "class": 'gradientGuidesText-' + type,
                                 "id": 'line-2-' + node_data['client_idx'],
-                                "x": -130,
+                                "x": -60,
                                 "y": y + fontSize / 2 + binWidth / 2 + fontSize * i,
                                 'fill': 'black'
                             })
@@ -759,6 +760,7 @@ export default {
 
                     // For placing the runtime values.
                     if (idx != 0 && idx != grid.length - 1) {
+                        let text = utils.formatRuntimeWithUnits(grid[idx]) //+ this.formatRunCounts(vals[idx])
                         this.guidesG
                             .append('text')
                             .attrs({
@@ -770,7 +772,7 @@ export default {
                             })
                             .style('z-index', 100)
                             .style('font-size', fontSize + 'px')
-                            .text(utils.formatRuntimeWithUnits(grid[idx]))
+                            .text(text)
                     }
                 }
 

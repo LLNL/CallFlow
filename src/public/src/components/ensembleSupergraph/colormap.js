@@ -142,7 +142,7 @@ export default {
             } else {
                 let splits = this.$store.colorPoint
                 let color = this.color.getScale("RankDiff")
-                for (let i = 0; i <= splits; i += 1) {
+                for (let i = 0; i < splits; i += 1) {
                     let splitColor = this.colorMin + ((i * this.colorMax) / (splits))
                     this.svg.append('rect')
                         .attrs({
@@ -217,7 +217,7 @@ export default {
                 .attrs({
                     "dy": ".35em",
                     "y": 10,
-                    'x': -150,
+                    'x': -125,
                     "text-anchor": "middle",
                     'class': 'dist-colormap-text-metric',
                     'transform': `translate(${this.containerWidth - this.padding.right}, ${this.containerHeight - this.padding.bottom})`,
