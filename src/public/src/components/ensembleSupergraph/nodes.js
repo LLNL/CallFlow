@@ -735,27 +735,64 @@ export default {
                 let fontSize = 12
                 if (vals[idx] != 0) {
                     // For placing the run count values.
-                    for (let i = 0; i < positionDatasetMap[idx].length; i += 1) {
+                    // for (let i = 0; i < positionDatasetMap[idx].length; i += 1) {
+                    let textGuideType = 'summary'
+                    let leftSideText = ''
+                    if (textGuideType == 'detailed') {
                         let text = positionDatasetMap[idx][0]
-                        if (positionDatasetMap[idx].length - 1 != 0) {
-                            let count = positionDatasetMap[idx].length - 1
-                            text = text + '+' + count
+                        if (positionDatasetMap[idx].length < 3) {
+                            for (let i = 0; i < 3; i += 1) {
+                                leftSideText = positionDatasetMap[idx][i]
+                                this.guidesG
+                                    .append('text')
+                                    .attrs({
+                                        "class": 'gradientGuidesText-' + type,
+                                        "id": 'line-2-' + node_data['client_idx'],
+                                        "x": -60,
+                                        "y": y + fontSize / 2 + binWidth / 2 + fontSize * i,
+                                        'fill': 'black'
+                                    })
+                                    .style('z-index', 100)
+                                    .style('font-size', fontSize + 'px')
+                                    .text(leftSideText)
+
+                            }
                         }
+                        else {
+                            let count = positionDatasetMap[idx].length - 3
+                            text = text + '+' + count
+
+                            this.guidesG
+                                .append('text')
+                                .attrs({
+                                    "class": 'gradientGuidesText-' + type,
+                                    "id": 'line-2-' + node_data['client_idx'],
+                                    "x": -60,
+                                    "y": y + fontSize / 2 + binWidth / 2 + fontSize * i,
+                                    'fill': 'black'
+                                })
+                                .style('z-index', 100)
+                                .style('font-size', fontSize + 'px')
+                                .text(leftSideText)
+                        }
+
+                    }
+                    else if (textGuideType == 'summary') {
+                        leftSideText = this.formatRunCounts(vals[idx])
                         this.guidesG
                             .append('text')
                             .attrs({
                                 "class": 'gradientGuidesText-' + type,
                                 "id": 'line-2-' + node_data['client_idx'],
                                 "x": -60,
-                                "y": y + fontSize / 2 + binWidth / 2 + fontSize * i,
+                                "y": y + fontSize / 2 + binWidth / 2, //+ fontSize * i,
                                 'fill': 'black'
                             })
                             .style('z-index', 100)
                             .style('font-size', fontSize + 'px')
-                            // .text(text)
-                            // .text(this.formatRunCounts(vals[idx]))
-                            .text(positionDatasetMap[idx][i])
+                            .text(leftSideText)
                     }
+
 
 
                     // For placing the runtime values.
