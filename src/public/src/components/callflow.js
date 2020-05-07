@@ -1,6 +1,4 @@
-import Vue from 'vue'
 import * as d3 from 'd3'
-import { mapState, mapActions } from 'vuex';
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/antd.css'
 
@@ -30,8 +28,6 @@ import EnsembleScatterplot from './ensembleScatterplot/ensembleScatterplot'
 // import EnsembleDistribution from './ensembleDistribution/ensembleDistribution'
 import ParameterProjection from './parameterProjection/parameterProjection'
 // import SimilarityMatrix from './similarityMatrix/similarityMatrix'
-
-import contextMenu from './contextmenu'
 
 import io from 'socket.io-client'
 import * as utils from './utils'

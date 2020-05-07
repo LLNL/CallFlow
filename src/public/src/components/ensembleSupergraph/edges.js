@@ -1,6 +1,6 @@
 import tpl from '../../html/ensembleSupergraph/edges.html'
 import * as d3 from 'd3'
-import ToolTip from './edge_tooltip'
+import ToolTip from './edgeTooltip'
 
 export default {
     template: tpl,

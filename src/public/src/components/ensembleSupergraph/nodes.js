@@ -1,6 +1,6 @@
 import tpl from '../../html/ensembleSupergraph/nodes.html'
 import * as d3 from 'd3'
-import ToolTip from './tooltip'
+import ToolTip from './nodeTooltip'
 import EventHandler from '../EventHandler'
 import * as utils from '../utils'
 

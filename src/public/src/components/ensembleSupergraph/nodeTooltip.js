@@ -146,6 +146,7 @@ export default {
             this.addText('')
             this.addText('Entry call sites: ')
 
+            // TODO: Bug here
             for (var tIndex = 0; tIndex < 3; tIndex++) {
                 this.textCount += 1
                 let fromColor = this.$store.color.getColorByValue(entry_function_data[tIndex][1])
