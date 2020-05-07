@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import * as Vuex from "vuex";
 import Router from 'vue-router';
 import Vuetify from 'vuetify';
 import BootstrapVue from 'bootstrap-vue';
@@ -9,9 +10,11 @@ import 'vue-material/dist/theme/default.css';
 import 'vuetify/dist/vuetify.min.css';
 import 'material-design-icons-iconfont/dist/material-design-icons.css';
 
-import store from './store/index';
 import App from './App';
 import CallFlow from './components/callflow';
+
+Vue.use(Vuex)
+const store = new Vuex.Store()
 
 const socket = new VueSocketIO({
 	debug: false,
