@@ -34,3 +34,8 @@ config_files/osu-50.json
 config_files/scatter-1024.json
 config_files/scatter.json
 config_files/allgather.json
+*.ipynb
+*.json
+*.txt
+*.csv
+*.h5
