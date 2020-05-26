@@ -1,6 +1,6 @@
 import tpl from '../../html/ensembleSupergraph/edges.html'
 import * as d3 from 'd3'
-import ToolTip from './edgeTooltip'
+import ToolTip from './edges/tooltip'
 
 export default {
     template: tpl,
@@ -55,7 +55,7 @@ export default {
             }
 
 
-            this.$refs.ToolTip.init(this.$parent.id)
+            // this.$refs.ToolTip.init(this.$parent.id)
         },
 
         initEdges(dataset) {
@@ -92,14 +92,6 @@ export default {
                 });
         },
 
-        group() {
-            this.total_weight = d3.nest()
-                .key(function (d) { return d.level; })
-                .key(function (d) { return d.sourceLinks.length; })
-                .rollup(function (d) {
-                    return d3.sum(d, function (g) { return g['time (inc)']; });
-                }).entries(this.graph.nodes)
-        },
 
         drawPath(d, linkHeight, edge_source_offset, edge_target_offset, dataset) {
             let Tx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
@@ -230,10 +222,10 @@ export default {
                     'stroke': this.$store.color.edgeStrokeColor,
                 })
                 .on('mouseover', (d) => {
-                    self.$refs.ToolTip.render(self.graph, d)
+                    // self.$refs.ToolTip.render(self.graph, d)
                 })
                 .on('mouseout', (d) => {
-                    self.$refs.ToolTip.clear()
+                    // self.$refs.ToolTip.clear()
                 })
         },
 
@@ -253,103 +245,6 @@ export default {
             this.edges.selectAll('.target-edge').remove()
             this.edges.selectAll('.edgelabel').remove()
             this.edges.selectAll('.edgelabelText').remove()
-        },
-
-        clearEdgeLabels() {
-            d3.selectAll('edgelabelhover').remove()
-            d3.selectAll('edgelabelTexthover').remove()
-        },
-
-        drawEdgeLabels(d) {
-            this.labelContainer = this.edges.selectAll('label')
-                .data([d])
-                .enter()
-                .append('g')
-
-            this.labelContainer
-                .append('circle')
-                .attrs({
-                    'class': 'edgelabelhover',
-                    'id': 'label-' + d.client_idx,
-                    'r': 15,
-                    'stroke': 'black',
-                    'fill': 'white',
-                    'cx': d.target_data.x - 20,
-                    'cy': d.target_data.y + this.$parent.ySpacing + d.target_data.height / 2,
-                })
-
-            this.labelContainer.append("text")
-                .attrs({
-                    "x": d.target.x - 20,
-                    "dx": -5,
-                    "dy": +5,
-                    "y": d.target.y + this.$parent.ySpacing + d.target.height / 2,
-                    "class": 'edgelabelTexthover'
-                })
-                .text((d, i) => d.number_of_runs)
-        },
-
-        clearAllEdgeLabels() {
-            d3.selectAll('edgelabel').remove()
-            d3.selectAll('edgelabelText').remove()
-        },
-
-        drawAllEdgeLabels() {
-            this.labelContainer = this.edges.selectAll('label')
-                .data(this.links)
-                .enter()
-                .append('g')
-
-            this.labelContainer
-                .append('circle')
-                .attrs({
-                    'class': 'edgelabel',
-                    'id': (d, i) => { return 'label-' + d.client_idx },
-                    'r': 10,
-                    'stroke': 'black',
-                    'fill': 'white',
-                    'cx': (d, i) => {
-                        // return (d.source.x + d.target.x)/2
-                        return d.target.x - 20
-                    },
-                    'cy': (d, i) => {
-                        // let y_offset = d.target.y
-                        // if(d.source.y > d.target.y){
-                        //     y_offset = d.source.y
-                        // }
-                        // let y_height = d.ty
-                        // if(d.sy > d.ty){
-                        //     y_height = d.sy
-                        // }
-                        // return y_offset + this.$parent.ySpacing
-                        return d.target.y + this.$parent.ySpacing + d.target.height / 2
-                    }
-                })
-
-            this.labelContainer.append("text")
-                .attrs({
-                    "x": (d, i) => {
-                        // return (d.source.x + d.target.x)/2
-                        return d.target.x - 20
-                    },
-                    "dx": (d) => -5,
-                    "dy": (d) => +5,
-                    "y": (d, i) => {
-                        // let y_offset = d.target.y
-                        // if(d.source.y > d.target.y){
-                        //     y_offset = d.source.y
-                        // }
-                        // let y_height = d.ty
-                        // if(d.sy > d.ty){
-                        //     y_height = d.sy
-                        // }
-                        // return y_offset + this.$parent.ySpacing
-
-                        return d.target.y + this.$parent.ySpacing + d.target.height / 2
-                    },
-                    "class": 'edgelabelText'
-                })
-                .text((d, i) => d.number_of_runs)
-        },
+        }
     }
 }

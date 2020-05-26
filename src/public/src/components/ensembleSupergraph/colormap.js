@@ -1,11 +1,10 @@
-import tpl from '../../html/ensembleSupergraph/colormap.html'
 import * as d3 from 'd3'
 import 'd3-selection-multi'
 import * as utils from '../utils'
 import EventHandler from '../EventHandler'
 
 export default {
-    template: tpl,
+    template: '<g :id="id"></g>',
     name: 'EnsembleColorMap',
     components: {},
 
@@ -172,8 +171,7 @@ export default {
                 let dcolor = (colorMax - colorMin) / (splits - 1)
                 for (let i = 0; i < splits; i += 1) {
                     let splitColor = colorMin + dcolor * (splits - 1 - i)
-                    console.log(color(splitColor))
-                    console.log(i, splits, splitColor, colorMin, colorMax)
+
                     this.svg.append('rect')
                         .attrs({
                             'width': this.width / splits,

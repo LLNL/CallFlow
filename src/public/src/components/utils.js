@@ -17,6 +17,15 @@ export function formatRuntimeWithUnits(val) {
     return ret
 }
 
+export function formatRunCounts(val) {
+    if (val == 1) {
+        return val + ' run';
+    }
+    else {
+        return val + ' runs';
+    }
+}
+
 export function formatRuntimeWithoutUnits(val) {
     let format = d3.format('.2')
     let ret = format(val)
@@ -102,4 +111,22 @@ export function textSize(id, text) {
         width: size.width,
         height: size.height
     };
+}
+
+
+export function getGradients(store, node) {
+    let nodeName = ''
+    let gradients = {}
+    if (node.type == 'super-node') {
+        nodeName = node.module
+        gradients = store.modules['ensemble'][nodeName][store.selectedMetric]['gradients']
+    }
+    else if (node.type == 'component-node') {
+        nodeName = node.name
+        gradients = store.callsites['ensemble'][nodeName][tore.selectedMetric]['gradients']
+    }
+    else if (node.type == 'intermediate') {
+        gradients = {}
+    }
+    return gradients
 }

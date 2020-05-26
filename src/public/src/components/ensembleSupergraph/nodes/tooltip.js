@@ -1,9 +1,8 @@
-import tpl from '../../html/ensembleSupergraph/tooltip.html'
 import * as d3 from 'd3'
-import * as utils from '../utils'
+import * as utils from '../../utils'
 
 export default {
-    template: tpl,
+    template: '<g id="tooltip"> </g>',
     name: 'ToolTip',
     components: {},
 
@@ -37,9 +36,6 @@ export default {
             if (this.mousePosX >= this.halfWidth) {
                 ret = this.mousePosX - this.halfWidth + this.textxOffset
             }
-            // else if (this.mousePosX < this.halfWidth) {
-            //     ret = this.mousePosX + this.textxOffset
-            // } 
             else {
                 ret = this.halfWidth - this.mousePosX + this.textxOffset
             }
@@ -53,7 +49,7 @@ export default {
             return this.mousePosY - node.y + node.height / 2
         },
 
-        render(graph, node) {
+        visualize(graph, node) {
             this.clear()
             this.xOffset = this.positionX()
             this.yOffset = this.positionY(node)
@@ -147,7 +143,7 @@ export default {
             this.addText('Entry call sites: ')
 
             // TODO: Bug here
-            for (var tIndex = 0; tIndex < 3; tIndex++) {
+            for (var tIndex = 0; tIndex < Math.min(3, entry_function_data.length); tIndex++) {
                 this.textCount += 1
                 let fromColor = this.$store.color.getColorByValue(entry_function_data[tIndex][1])
                 let toColor = this.$store.color.getColor(this.node)

@@ -56,9 +56,7 @@ export default {
 
 	watch: {
 		showTarget: (val) => {
-			EventHandler.$emit('show_target_auxiliary', {
-
-			})
+			EventHandler.$emit('show_target_auxiliary')
 		}
 	},
 
@@ -116,8 +114,8 @@ export default {
 		initLoad: true,
 		comparisonMode: false,
 		selectedCompareDataset: null,
-		compareModes: ['Mean Differences', 'Rank-wise Differences'],
-		selectedCompareMode: 'Mean Differences',
+		compareModes: ['mean-diff', 'rank-diff'],
+		selectedCompareMode: 'mean-diff',
 		selectedOutlierBand: 4,
 		defaultCallSite: '<program root>',
 		modes: ['Ensemble', 'Single'],
@@ -163,24 +161,11 @@ export default {
 		targetColors: ['Green', 'Blue', 'Brown'],
 		selectedTargetColor: '',
 		selectedTargetColorText: 'Green',
-		showTarget: false,
+		showTarget: true,
 		targetInfo: 'Target Guides',
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time)
 		firstRender: true,
-		contextMenu: [
-			{
-				title: 'Split by caller',
-				action(elm, d, i) {
 
-				},
-			},
-			{
-				title: 'Split by callee',
-				action(elm, d, i) {
-				},
-			},
-
-		]
 	}),
 
 	mounted() {
@@ -371,6 +356,8 @@ export default {
 			this.$store.reprocess = 0
 			this.selectedCaseStudy = data['runName']
 			this.$store.comparisonMode = this.comparisonMode
+			this.$store.fontSize = 14
+			this.$store.transitionDuration = 1000
 		},
 
 		setOtherData() {
@@ -415,17 +402,14 @@ export default {
 				data = this.$store.maxExcTime
 			}
 
-			console.log(this.$store.selectedDatasets)
 			for (let dataset of this.$store.selectedDatasets) {
 				if (current_max_time < data[dataset]) {
 					current_max_time = data[dataset]
 					max_dataset = dataset
 				}
 			}
-			console.log(this.$store.resetTargetDataset)
 
 			if (this.firstRender || this.$store.resetTargetDataset) {
-				console.log("here")
 				this.$store.selectedTargetDataset = max_dataset
 				this.selectedTargetDataset = max_dataset
 				this.firstRender = false
@@ -755,12 +739,6 @@ export default {
 			this.clearLocal()
 			this.init()
 		},
-
-		// updateBinCount() {
-		// 	this.$store.selectedMPIBinCount = this.selectedMPIBinCount
-		// 	this.clearLocal()
-		// 	this.init()
-		// },
 
 		updateFunctionsInCCT() {
 			this.$socket.emit('cct', {

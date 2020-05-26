@@ -72,20 +72,11 @@ export default {
             self.updateSortBy(sortBy)
         })
 
-        EventHandler.$on('highlight_module', (data) => {
-            let thismodule = data['module']
-            self.highlightCallsitesByModule(thismodule)
-        })
-
         EventHandler.$on('select_module', (data) => {
             let thismodule = data['module']
             // self.selectCallsitesByModule(thismodule)
             this.isModuleSelected = true
             self.selectModule(thismodule)
-        })
-
-        EventHandler.$on('unhighlight_module', (data) => {
-            self.unhighlightCallsitesByModule()
         })
 
         EventHandler.$on('highlight_dataset', (data) => {
@@ -372,63 +363,6 @@ export default {
             }
         },
 
-        highlightCallsitesByModule(thismodule) {
-            let all_callsites = this.$store.callsites[this.$store.selectedTargetDataset]
-            let ensemble_callsites = this.$store.callsites['ensemble']
-
-            for (let callsite in all_callsites) {
-                if (ensemble_callsites.hasOwnProperty(callsite)) {
-                    document.getElementById(ensemble_callsites[callsite].id).style.opacity = 0.2
-                    document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'dotted'
-                }
-            }
-
-            let highlight_callsites = this.$store.moduleCallsiteMap[thismodule]
-            for (let callsite in highlight_callsites) {
-                if (ensemble_callsites.hasOwnProperty(callsite)) {
-                    document.getElementById(ensemble_callsites[callsite].id).style.opacity = 1
-                }
-            }
-
-            let selected_callsites = this.$store.moduleCallsiteMap[this.$store.selectedModule]
-            for (let callsite in selected_callsites) {
-                if (ensemble_callsites.hasOwnProperty(callsite)) {
-                    document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'solid'
-                }
-            }
-
-        },
-
-        unhighlightCallsitesByModule() {
-            let ensemble_callsites = this.$store.callsites['ensemble']
-            let all_callsites = this.$store.callsites[this.$store.selectedTargetDataset]
-
-            for (let callsite in all_callsites) {
-                if (ensemble_callsites.hasOwnProperty(callsite)) {
-                    document.getElementById(ensemble_callsites[callsite].id).style.opacity = 1
-                    document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'dotted'
-                }
-            }
-
-            let selected_callsites = this.$store.moduleCallsiteMap[this.$store.selectedModule]
-            for (let callsite in selected_callsites) {
-                if (ensemble_callsites.hasOwnProperty(callsite)) {
-                    document.getElementById(ensemble_callsites[callsite].id).style.borderStyle = 'solid'
-                }
-            }
-        },
-
-        highlightCallsitesByDataset(dataset) {
-            let callsites = this.$store.callsites[dataset]
-            let ensemble_callsites = this.$store.callsites['ensemble']
-
-            for (let callsite in callsites) {
-                if (ensemble_callsites.hasOwnProperty(callsite)) {
-                    document.getElementById(ensemble_callsites[callsite].id).style.borderColor = '#009688' //this.$store.color.target
-                }
-            }
-        },
-
         // Sort the callsite information view by the attribute. 
         sortByAttribute(callsites, attribute) {
             // Create items array
@@ -481,7 +415,6 @@ export default {
                 })
                 EventHandler.$emit('split_by_callees')
             }
-
         }
     }
 }

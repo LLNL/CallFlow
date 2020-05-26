@@ -18,7 +18,6 @@ export default {
 
     methods: {
         init(id) {
-            console.log(id)
             this.id = id
             this.toolTipDiv = d3.select('#' + id)
             this.height = 80

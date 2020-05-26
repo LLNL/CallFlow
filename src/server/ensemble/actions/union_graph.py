@@ -7,7 +7,6 @@ class UnionGraph:
         self.R = nx.DiGraph()
         self.runs = {}
         self.diffset = {}
-        # self.union(G, H, dataset_name, rename, name)
 
     # Return the union of graphs G and H.
     def unionize(self, H, name=None, rename=(None, None)):
@@ -15,7 +14,6 @@ class UnionGraph:
             raise nx.NetworkXError("G and H must both be graphs or multigraphs.")
 
         # add graph attributes, H attributes take precedent over G attributes
-        # self.R.graph.update(G.graph)
         self.R.graph.update(H.graph)
 
         renamed_nodes = self.add_prefix(H, rename[1])
@@ -81,26 +79,26 @@ class UnionGraph:
                     self.R.nodes[node][dataset_name] = {}
                 self.R.nodes[node][dataset_name] = val
 
-    def add_union_node_attributes(self):
-        for node in self.R.nodes(data=True):
-            node_name = node[0]
-            node_data = node[1]
-            max_inc_time = 0
-            max_exc_time = 0
-            self.R.nodes[node_name]["ensemble"] = {}
-            for dataset in node_data:
-                for idx, key in enumerate(node_data[dataset]):
-                    if key == "name":
-                        self.R.nodes[node_name]["union"]["name"] = node_data[dataset][
-                            key
-                        ]
-                    elif key == "time (inc)":
-                        max_inc_time = max(max_inc_time, node_data[dataset][key])
-                    elif key == "time":
-                        max_exc_time = max(max_exc_time, node_data[dataset][key])
-                    elif key == "entry_functions":
-                        entry_functions = node_data[dataset][key]
+    # def add_union_node_attributes(self):
+    #     for node in self.R.nodes(data=True):
+    #         node_name = node[0]
+    #         node_data = node[1]
+    #         max_inc_time = 0
+    #         max_exc_time = 0
+    #         self.R.nodes[node_name]["ensemble"] = {}
+    #         for dataset in node_data:
+    #             for idx, key in enumerate(node_data[dataset]):
+    #                 if key == "name":
+    #                     self.R.nodes[node_name]["union"]["name"] = node_data[dataset][
+    #                         key
+    #                     ]
+    #                 elif key == "time (inc)":
+    #                     max_inc_time = max(max_inc_time, node_data[dataset][key])
+    #                 elif key == "time":
+    #                     max_exc_time = max(max_exc_time, node_data[dataset][key])
+    #                 elif key == "entry_functions":
+    #                     entry_functions = node_data[dataset][key]
 
-            self.R.nodes[node_name]["ensemble"]["time (inc)"] = max_inc_time
-            self.R.nodes[node_name]["ensemble"]["time"] = max_exc_time
-            self.R.nodes[node_name]["ensemble"]["entry_functions"] = entry_functions
+    #         self.R.nodes[node_name]["ensemble"]["time (inc)"] = max_inc_time
+    #         self.R.nodes[node_name]["ensemble"]["time"] = max_exc_time
+    #         self.R.nodes[node_name]["ensemble"]["entry_functions"] = entry_functions

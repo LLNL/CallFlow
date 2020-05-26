@@ -19,8 +19,6 @@ import ToolTip from './tooltip'
 import * as utils from '../utils'
 import EventHandler from '../EventHandler'
 
-// http://plnkr.co/edit/wfOx8615PnZh2CST301F?p=preview
-
 export default {
     template: tpl,
     name: 'EnsembleHistogram',

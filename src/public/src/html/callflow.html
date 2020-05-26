@@ -34,7 +34,6 @@
 					slot="item"
 					slot-scope="{item}"
 				>
-					<!-- HTML that describe how select should render items when the select is open -->
 					{{ datasets.indexOf(item) + 1 }}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
 				</template>
 
@@ -51,7 +50,7 @@
 			</v-select>
 		</v-flex>
 		<v-flex
-			xs2
+			xs3
 			class="ma-2"
 		>
 			<v-select
@@ -79,11 +78,7 @@
 			</v-select>
 		</v-flex>
 		<v-spacer></v-spacer>
-		<!-- <v-flex xs2 class="ma-1">
-			<v-select label="Exhibit mode" :items="exhibitModes" v-model="selectedExhibitMode"
-				:menu-props="{ maxHeight: '400' }" box v-on:change="updateExhibitMode()">
-			</v-select>
-		</v-flex> -->
+
 		<v-flex
 			xs2
 			class="ma-1"

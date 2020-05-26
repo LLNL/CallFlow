@@ -45,7 +45,7 @@ class Auxiliary:
         self.datasets = datasets
 
         self.props = ["rank", "name", "dataset", "all_ranks"]
-        self.filter = False
+        self.filter = True
 
         # self.result = self.run()
 

@@ -153,7 +153,6 @@ class EnsembleCallFlow:
         aux.run()
         stage19 = time.perf_counter()
         print(f"Dump Gradient, distribution and variations: {stage19 - stage18}")
-        # self.pipeline.write_callsite_information(states)
 
         # similarities = self.pipeline.deltaconSimilarity(datasets, states, "ensemble")
 

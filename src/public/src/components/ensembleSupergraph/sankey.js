@@ -653,8 +653,6 @@ export default function Sankey() {
             max_dy = resolveCollisions(beta);
         }
 
-        console.log(max_dy)
-
         // if (max_dy > 0) {
         //     resolveOutsidePositioning()
         // }

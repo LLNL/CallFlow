@@ -70,22 +70,13 @@ export default {
 				console.log("Node name: ", data.nodes[i].id)
 				console.log("Time (inc): ", data.nodes[i]['time (inc)'])
 				console.log("Time: ", data.nodes[i]['time'])
-				// if (data.nodes[i]['time'] > 10000) {
-				// 	nodes.push(data.nodes[i]['time'])
-				// }
 			}
 
-
-			// let links = []
 			for (let i = 0; i < data.links.length; i += 1) {
 				console.log("Source: ", data.links[i].source)
 				console.log("Target: ", data.links[i].target)
 				console.log("Weight: ", data.links[i].weight)
-				// 	if (data.links[i].weight > 100000) {
-				// 		links.push(data.links[i])
-				// 	}
 			}
-			// data.links = links
 			this.render(data)
 		},
 	},
@@ -154,20 +145,12 @@ export default {
 					let source_callsite = link['source']
 					let target_callsite = link['target']
 					let weight = link['weight']
-					let exc_weight = link['exc_weight']
-					// let source_inclusive = link['source_data']['time (inc)']
-					// let source_exclusive = link['source_data']['time']
-					// let target_inclusive = link['target_data']['time (inc)']
-					// let target_exclusive = link['target_data']['time']
 
 					console.log("=============================================")
 					console.log("[Ensemble SuperGraph] Source Name :", source_callsite)
 					console.log("[Ensemble SuperGraph] Target Name :", target_callsite)
 					console.log("[Ensemble SuperGraph] Weight: ", weight)
-					// console.log("[Ensemble SuperGraph] Source Inclusive: ", source_inclusive)
-					// console.log("[Ensemble SuperGraph] Source Exclusive: ", source_exclusive)
-					// console.log("[Ensemble SuperGraph] Target Inclusive: ", target_inclusive)
-					// console.log("[Ensemble SuperGraph] Target Exclusive: ", target_exclusive)
+
 				}
 			}
 			this.initSankey(this.data)

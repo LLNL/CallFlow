@@ -1,9 +1,8 @@
-import tpl from '../../html/ensembleSupergraph/tooltip.html'
 import * as d3 from 'd3'
-import * as utils from '../utils'
+import * as utils from '../../utils'
 
 export default {
-    template: tpl,
+    template: '<g id="tooltip"> </g>',
     name: 'ToolTip',
     components: {},
     props: [

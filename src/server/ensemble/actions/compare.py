@@ -21,14 +21,10 @@ class Compare:
         self.state = state
         self.df1 = self.state.df.loc[self.state.df["dataset"] == dataset1]
         self.df2 = self.state.df.loc[self.state.df["dataset"] == dataset2]
-        # self.graph1 = self.state1.graph
-        # self.df1 = self.state1.df
-        # self.graph2 = self.state2.graph
-        # self.df2 = self.state2.df
+
         self.col = col
         self.dataset1 = dataset1
         self.dataset2 = dataset2
-        print(self.dataset1, self.dataset2)
 
         # Calculate the max_rank.
         self.max_rank1 = len(self.df1["rank"].unique())
@@ -39,9 +35,6 @@ class Compare:
 
     def run(self):
         results = []
-
-        # nodes = (self.df_ensemble.loc[self.df_ensemble["show_node"] == True]["name"].unique().tolist())
-
         nodes = self.state.df["module"].unique()
 
         for node in nodes:
@@ -101,8 +94,6 @@ class Compare:
             "name"
         ].unique()
 
-        print(callsite_in_module1, callsite_in_module2)
-
         mean1 = 0
         for callsite in callsite_in_module1:
             mean = self.mean(self.df1, "name", callsite, "time")
@@ -133,8 +124,6 @@ class Compare:
         dataset2 = np.array([self.dataset2 for _ in range(data2.shape[0])])
         module2 = np.asarray(node_df2["module"])
 
-        # name = name2
-        # module = module2
         dataset = np.concatenate([dataset1, dataset2], axis=0)
         mean = np.mean([zero_inserted_data1, zero_inserted_data2], axis=0)
         diff = zero_inserted_data1 - zero_inserted_data2
@@ -149,33 +138,14 @@ class Compare:
         else:
             mean2 = np.mean(data2)
 
-        print("module", module)
         mean_diff = self.mean_difference(module)
 
-        # print(mean_diff)
-
-        # calculate mean runtime.
-        # np_mean_dist = np.array(tuple(self.clean_dict(diff).values()))
-
-        # np_max_dist = np.array(tuple(self.clean_dict(max_dist).values()))
-
-        #     # convert the dictionary of values to list of values.
-        #     dist_list = self.convert_dictmean_to_list(dist)
+        print("Mean differences", mean_diff)
 
         dist_list = np.sort(diff).tolist()
 
         # Calculate appropriate number of bins automatically.
         num_of_bins = 20
-        # num_of_bins = min(
-        #     self.freedman_diaconis_bins(np.array(dist_list)), 50
-        # )
-
-        # Calculate the KDE grid (x, y)
-        # kde_grid = self.kde(np.array(dist_list), 10)
-        # kde_x_min = np.min(kde_grid[0])
-        # kde_x_max = np.max(kde_grid[0])
-        # kde_y_min = np.min(kde_grid[1])
-        # kde_y_max = np.max(kde_grid[1])
 
         if len(dist_list) != 0:
             hist_grid = self.histogram(np.array(dist_list))
@@ -193,25 +163,10 @@ class Compare:
             x = 0
             y = 0
 
-        # print(
-        #     "hist ranges = {} {} {} {}\n".format(
-        #         hist_x_min, hist_x_max, hist_y_min, hist_y_max
-        #     )
-        # )
-
         result = {
             "name": module,
-            # "dist": diff,
             "mean_diff": mean_diff,
             "bins": num_of_bins,
-            # "kde": {
-            #     "x": kde_grid[vis_node_name][0].tolist(),
-            #     "y": kde_grid[vis_node_name][1].tolist(),
-            #     "x_min": kde_x_min,
-            #     "x_max": kde_x_max,
-            #     "y_min": kde_y_min,
-            #     "y_max": kde_y_max,
-            # },
             "hist": {
                 "x": x,
                 "y": y,

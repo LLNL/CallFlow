@@ -181,38 +181,7 @@ class Pipeline:
             log.info(f"Modules in the graph: {state.df['module'].unique()}")
         return state
 
-    def write_callsite_information(self, states):
-        auxiliary = Auxiliary(
-            states,
-            module=action["module"],
-            sortBy=action["sortBy"],
-            binCount=action["binCount"],
-            datasets=action["datasets"],
-            config=self.config,
-            process=True,
-        )
-
     ##################### Write Functions ###########################
-
-    # Write a graphframe to a file. (i.e., df => .csv, graph => .json)
-    def write_gf(self, state, state_name, format_of_df, write_graph=True):
-        log.info("writing file for {0} format".format(format_of_df))
-        if write_graph:
-            # dump the entire_graph as literal
-            graph_literal = state.graph.to_literal(
-                graph=state.graph, dataframe=state.df
-            )
-            graph_filepath = (
-                self.dirname + "/" + state_name + "/" + format_of_df + "_graph.json"
-            )
-            utils.debug("File path: {0}".format(graph_filepath))
-            with open(graph_filepath, "w") as graphFile:
-                json.dump(graph_literal, graphFile)
-
-        # dump the filtered dataframe to csv.
-        df_filepath = self.dirname + "/" + state_name + "/" + format_of_df + "_df.csv"
-        state.entire_df.to_csv(df_filepath)
-
     # Write the dataset's graphframe to the file.
     def write_dataset_gf(self, state, state_name, format_of_df, write_graph=True):
         log.info("writing file for {0} format".format(format_of_df))
@@ -260,24 +229,6 @@ class Pipeline:
             hatchet_graphFile.write(gf.tree(color=False, threshold=0.10))
 
     ##################### Read Functions ###########################
-    # Read the unprocessed dataframe and graph.
-    def read_entire_gf(self, dataset):
-        log.info("[Process] Reading the entire dataframe and graph")
-        state = State(dataset)
-        dirname = self.config.processed_path
-        entire_df_filepath = dirname + "/" + dataset + "/entire_df.csv"
-        entire_graph_filepath = dirname + "/" + dataset + "/entire_graph.json"
-
-        with open(entire_graph_filepath, "r") as entire_graphFile:
-            entire_data = json.load(entire_graphFile)
-
-        state.entire_gf = ht.GraphFrame.from_literal(entire_data)
-
-        state.entire_df = pd.read_csv(entire_df_filepath)
-        state.entire_graph = state.entire_gf.graph
-
-        return state
-
     # Read the ensemble graph and dataframe.
     def read_ensemble_gf(self, name):
         log.info(f"[Process] Reading the union dataframe and graph : {name}")
@@ -305,32 +256,16 @@ class Pipeline:
         entire_df_filepath = self.dirname + "/" + name + "/entire_df.csv"
         graph_filepath = self.dirname + "/" + name + "/entire_graph.json"
         entire_graph_filepath = self.dirname + "/" + name + "/entire_graph.json"
-        # if(graph_type != None):
-        #     group_df_file_path = self.config.callflow_dir + '/' + name + '/' + graph_type + '_df.csv'
-        #     group_graph_file_path = self.config.callflow_dir + '/' + name + '/' + graph_type + '_graph.json'
+
         parameters_filepath = (
             dataset_dirname + "/" + self.config.runName + "/" + name + "/env_params.txt"
         )
 
         state.df = pd.read_csv(df_filepath)
-        # state.entire_df = pd.read_csv(entire_df_filepath)
-
-        # with open(entire_graph_filepath, 'r') as entire_graphFile:
-        #     entire_graph = json.load(entire_graphFile)
-        # state.entire_g = json_graph.node_link_graph(entire_graph)
 
         with open(graph_filepath, "r") as filter_graphFile:
             graph = json.load(filter_graphFile)
         state.g = json_graph.node_link_graph(graph)
-
-        # if(graph_type != None):
-        #     with self.timer.phase('Read {0} dataframe'.format(graph_type)):
-        #         with open(group_graph_file_path, 'r') as groupGraphFile:
-        #             data = json.load(groupGraphFile)
-
-        #     state.group_graph = json_graph.node_link_graph(data)
-        #     state.group_df = pd.read_csv(group_df_file_path)
-        # state.group_df = self.replace_str_with_Node(state.group_df, state.group_graph)
 
         if self.config.runName.split("_")[0] == "osu_bcast":
             state.projection_data = {}

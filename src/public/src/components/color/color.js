@@ -88,7 +88,7 @@ export default class Color {
                 .domain([0, 1]);
         } else if (this.option == 'MeanDiff') {
             let mmax = Math.max(Math.abs(min), Math.abs(max))
-            this.meanDiffColorScale = chroma.scale('RdYlGn')
+            this.meanDiffColorScale = chroma.scale(this.colorMap)
                 .padding([0.0, 0.0])
                 .domain([mmax, -mmax]);
         } else if (this.option == 'RankDiff') {
