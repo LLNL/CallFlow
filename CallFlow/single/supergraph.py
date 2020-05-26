@@ -57,7 +57,6 @@ class SuperGraph(nx.Graph):
         with self.timer.phase("Construct Graph"):
             if construct_graph:
                 log.info("Creating the SuperGraph for {0}.".format(self.state.name))
-
                 self.mapper = {}
                 self.g = nx.DiGraph()
                 self.add_paths(path)
@@ -96,6 +95,8 @@ class SuperGraph(nx.Graph):
             if add_data == True:
                 self.add_node_attributes()
                 self.add_edge_attributes()
+            # else:
+            # print("Creating a Graph without node or edge attributes.")
 
         log.info(self.timer)
 
@@ -151,16 +152,7 @@ class SuperGraph(nx.Graph):
         )
 
     def add_edge_attributes(self):
-        capacity_m<<<<<<< task/CAL-16-single-callflow-jupyter-notebook
-103
- 
-            # else:
-104
- 
-            # print("Creating a Graph without node or edge attributes.")
-105
- 
-=======apping = self.calculate_flows(self.g)
+        capacity_mapping = self.calculate_flows(self.g)
         nx.set_edge_attributes(self.g, name="weight", values=capacity_mapping)
         exc_capacity_mapping = self.calculate_exc_weight(self.g)
         nx.set_edge_attributes(self.g, name="exc_weight", values=exc_capacity_mapping)
@@ -224,7 +216,7 @@ class SuperGraph(nx.Graph):
 
     def dataset_map(self, nodes, dataset):
         ret = {}
-
+        print(f"Nodes: {self.g.nodes()}")
         for node in self.g.nodes():
             if "=" in node:
                 node_name = node.split("=")[1]

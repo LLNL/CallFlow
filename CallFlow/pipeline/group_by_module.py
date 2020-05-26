@@ -39,7 +39,7 @@ class groupBy:
         if isinstance(path, str):
             path = make_list(path)
 
-           group_path = []
+        group_path = []
         prev_module = None
         for idx, callsite in enumerate(path):
             if idx == 0:
@@ -135,10 +135,7 @@ class groupBy:
                 node = node.split("/")[-1]
             module = self.name_module_map[node]
             if component_module == module:
-                component_path.a<<<<<<< task/CAL-16-single-callflow-jupyter-notebook
-49
- 
-ppend(node_func)
+                component_path.append(node_func)
 
         component_path.insert(0, component_module)
         return tuple(component_path)
@@ -164,7 +161,7 @@ ppend(node_func)
         module_count = 0
 
         edge_count = 0
-        
+
         for edge in self.g.edges():
             edge_count += 1
             snode = edge[0]
