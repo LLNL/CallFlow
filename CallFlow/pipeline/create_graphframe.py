@@ -11,7 +11,8 @@
 ##############################################################################
 import pandas as pd
 import time
-from ..utils.logger import log
+from CallFlow.utils.logger import log
+
 import os
 import hatchet as ht
 
@@ -19,7 +20,7 @@ import hatchet as ht
 class CreateGraphFrame:
     """
     Creates a graph frame.
-    Input : config variable, and dataset name
+    Input : config variable, and run name
     Output : State object containing components of graphframe as separate object variables.
     """
 
@@ -38,14 +39,19 @@ class CreateGraphFrame:
 
         if self.config.format[self.name] == "hpctoolkit":
             self.gf = ht.GraphFrame.from_hpctoolkit(data_path)
+
         elif self.config.format[self.name] == "caliper":
             self.gf = ht.GraphFrame.from_caliper(data_path)
+
         elif self.config.format[self.name] == "caliper_json":
             self.gf = ht.GraphFrame.from_caliper(data_path, query="")
+
         elif self.config.format[self.name] == "gprof":
             self.gf = ht.GraphFrame.from_grof_dot(data_path)
+
         elif self.config.format[self.name] == "literal":
             self.gf = ht.GraphFrame.from_literal(data_path)
+
         elif self.config.format[self.name] == "lists":
             self.gf = ht.GraphFrame.from_lists(data_path)
 

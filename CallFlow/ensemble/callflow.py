@@ -47,7 +47,7 @@ from CallFlow.ensemble import (
 # Note: df is always updated.
 # Note: graph is always updated.
 class EnsembleCallFlow:
-    def __init__(self, config):
+    def __init__(self, config=None, process=None):
         # Config contains properties set by the input config file.
         self.config = config
         self.timer = Timer()
@@ -55,90 +55,107 @@ class EnsembleCallFlow:
         self.currentRunBinCount = 20
 
         self.pipeline = Pipeline(self.config)
-        if config.process:
+        if process:
             log.info("[Ensemble] Process Mode.")
-            self.states = self.processState(self.config.dataset_names)
+            self.states = self.processState()
         else:
             log.info("[Ensemble] Read Mode.")
-            self.states = self.readState(self.config.dataset_names)
-
+            self.states = self.readState()
+            
         self.target_df = {}
         for dataset in self.config.dataset_names:
             self.target_df[dataset] = self.states["ensemble_entire"].df.loc[
                 self.states["ensemble_entire"].df["dataset"] == dataset
             ]
 
-    def processState(self, datasets, filterBy="Inclusive", filterPerc="10"):
+    def processState(self, filterBy="Inclusive", filterPerc="10"):
         states = {}
         col_names = ["stage", "time"]
         time_perf_df = pd.DataFrame(columns=col_names)
-        for idx, dataset_name in enumerate(datasets):
+        for idx, dataset_name in enumerate(self.config.dataset_names):
             states[dataset_name] = State(dataset_name)
+            log.info("#########################################")
+            log.debug(f"Run: {dataset_name}")
+            log.info("#########################################")
+
             stage1 = time.perf_counter()
             states[dataset_name] = self.pipeline.create_gf(dataset_name)
             stage2 = time.perf_counter()
-            print(f"Create GraphFrame: {stage2 - stage1}")
-            # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
+            log.debug(f"Create GraphFrame: {stage2 - stage1}")
+            log.info("-----------------------------------------")
 
             states[dataset_name] = self.pipeline.process_gf(
                 states[dataset_name], "entire"
             )
             stage3 = time.perf_counter()
-            print(f"Preprocess GraphFrame: {stage3 - stage2}")
 
-            states[dataset_name] = self.pipeline.convertToNetworkX(
+            log.debug(f"Preprocess GraphFrame: {stage3 - stage2}")
+            log.info("-----------------------------------------")
+
+            states[dataset_name] = self.pipeline.hatchetToNetworkX(
                 states[dataset_name], "path"
             )
             stage4 = time.perf_counter()
-            print(f"Convert to NetworkX graph: {stage4 - stage3}")
+            log.debug(f"Convert to NetworkX graph: {stage4 - stage3}")
+            log.info("-----------------------------------------")
 
             states[dataset_name] = self.pipeline.group(states[dataset_name], "module")
             stage5 = time.perf_counter()
-            print(f"Group GraphFrame: {stage5 - stage4}")
+            log.debug(f"Convert to NetworkX graph: {stage4 - stage3}")
+            log.info("-----------------------------------------")
 
             self.pipeline.write_dataset_gf(
                 states[dataset_name], dataset_name, "entire", write_graph=False
             )
             stage6 = time.perf_counter()
-            print(f"Write GraphFrame: {stage6 - stage5}")
-
-            # states[dataset_name] = self.pipeline.filterNetworkX(states, dataset_name, self.config.filter_perc)
+            log.debug(f"Write GraphFrame: {stage6 - stage5}")
+            log.info("-----------------------------------------")
             self.pipeline.write_hatchet_graph(states, dataset_name)
 
-        for idx, dataset_name in enumerate(datasets):
+        for idx, dataset_name in enumerate(self.config.dataset_names):
             states[dataset_name] = self.pipeline.read_dataset_gf(dataset_name)
 
         stage7 = time.perf_counter()
         states["ensemble_entire"] = self.pipeline.union(states)
         stage8 = time.perf_counter()
-        print(f"Union GraphFrame: {stage8 - stage7}")
+
+        log.debug(f"Union GraphFrame: {stage8 - stage7}")
+        log.info("-----------------------------------------")
 
         self.pipeline.write_ensemble_gf(states, "ensemble_entire")
         stage9 = time.perf_counter()
-        print(f"Writing ensemble graph: {stage9 - stage8}")
+        log.debug(f"Writing ensemble graph: {stage9 - stage8}")
+        log.info("-----------------------------------------")
 
         stage10 = time.perf_counter()
         states["ensemble_filter"] = self.pipeline.filterNetworkX(
             states["ensemble_entire"], self.config.filter_perc
         )
         stage11 = time.perf_counter()
-        print(f"Filter ensemble graph: {stage11 - stage10}")
+
+        log.debug(f"Filter ensemble graph: {stage11 - stage10}")
+        log.info("-----------------------------------------")
 
         stage12 = time.perf_counter()
         self.pipeline.write_ensemble_gf(states, "ensemble_filter")
         stage13 = time.perf_counter()
-        print(f"Writing ensemble graph: {stage13 - stage12}")
+        log.debug(f"Writing ensemble graph: {stage13 - stage12}")
+        log.info("-----------------------------------------")
 
         stage14 = time.perf_counter()
         states["ensemble_group"] = self.pipeline.ensemble_group(states, "module")
         stage15 = time.perf_counter()
-        print(f"Group ensemble graph: {stage15 - stage14}")
 
+        log.debug(f"Group ensemble graph: {stage15 - stage14}")
+        log.info("-----------------------------------------")
         stage16 = time.perf_counter()
         self.pipeline.write_ensemble_gf(states, "ensemble_group")
         stage17 = time.perf_counter()
-        print(f"Write group ensemble graph: {stage17 - stage16}")
-        # Need to remove the dependence on reading the dataframe again.
+
+        log.debug(f"Write group ensemble graph: {stage17 - stage16}")
+        log.info("-----------------------------------------")
+
+    # Need to remove the dependence on reading the dataframe again.
         states = {}
         states["ensemble_entire"] = self.pipeline.read_ensemble_gf("ensemble_entire")
 
@@ -154,20 +171,18 @@ class EnsembleCallFlow:
         )
         aux.run()
         stage19 = time.perf_counter()
-        print(f"Dump Gradient, distribution and variations: {stage19 - stage18}")
-
-        # similarities = self.pipeline.deltaconSimilarity(datasets, states, "ensemble")
+        log.debug(f"Dump Gradient, distribution and variations: {stage19 - stage18}")
+        log.info("-----------------------------------------")
 
         return states
 
-    def readState(self, datasets):
+    def readState(self):
         states = {}
         states["ensemble_entire"] = self.pipeline.read_ensemble_gf("ensemble_entire")
         states["ensemble_filter"] = self.pipeline.read_ensemble_gf("ensemble_filter")
         states["ensemble_group"] = self.pipeline.read_ensemble_gf("ensemble_group")
         states["all_data"] = self.pipeline.read_all_data()
-        # for idx, dataset in enumerate(datasets):
-        #     states[dataset] = self.pipeline.read_dataset_gf(dataset)
+
         return states
 
     def addIncExcTime(self):

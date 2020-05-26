@@ -33,8 +33,10 @@ class HatchetToNetworkX(nx.Graph):
         else:
             self.df = state.df
             self.graph = state.graph
+
         if construct_graph:
-            print("Creating a Graph for {0}.".format(self.state.name))
+            # print("Creating a Graph for {0}.".format(self.state.name))
+
             self.g = nx.DiGraph()
             self.add_paths_from_graph()
         else:

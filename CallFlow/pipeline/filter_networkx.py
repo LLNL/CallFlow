@@ -32,11 +32,12 @@ class FilterNetworkX:
                 [self.min_time_exc_list, df["time"].min()]
             )
             count += 1
-        print("Dataset idx: ", self.dataset_idx)
-        print("Min. time (inc): ", self.min_time_inc_list)
-        print("Max. time (inc): ", self.max_time_inc_list)
-        print("Min. time (exc): ", self.min_time_exc_list)
-        print("Max. time (exc): ", self.max_time_exc_list)
+        log.info("Dataset idx: ", self.dataset_idx)
+        log.info(f"Min. time (inc): {self.min_time_inc_list}")
+        log.info(f"Max. time (inc): {self.max_time_inc_list}")
+        log.info(f"Min. time (exc): {self.min_time_exc_list}")
+        log.info(f"Max. time (exc): {self.max_time_exc_list}")
+
         self.max_time_inc = np.max(self.max_time_inc_list)
         self.min_time_inc = np.min(self.min_time_inc_list)
         self.max_time_exc = np.max(self.max_time_exc_list)

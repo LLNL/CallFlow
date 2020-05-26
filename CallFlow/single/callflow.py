@@ -36,14 +36,14 @@ from CallFlow.single import (
 
 
 class SingleCallFlow:
-    def __init__(self, config):
+    def __init__(self, config=None, process=False):
         # Config contains properties set by the input config file.
         self.config = config
         self.timer = Timer()
 
         self.pipeline = Pipeline(self.config)
-        if config.process:
-            pass
+        if process:
+            self.process()
         else:
             log.info("[Single] Read Mode.")
             self.states = self.readState(self.config.dataset_names)
@@ -54,45 +54,43 @@ class SingleCallFlow:
             states[dataset] = self.pipeline.read_dataset_gf(dataset)
         return states
 
-    # def pipeline(self, datasets, filterBy="Inclusive", filterPerc="10"):
-    #     if self.reProcess:
-    #         log.info("Processing with filter.")
-    #     else:
-    #         log.info("Reading from the processed files.")
+    def process(self):
+        for dataset_name in self.config.dataset_names:
+            state = State(dataset_name)
+            log.info("#########################################")
+            log.debug(f"Run: {dataset_name}")
+            log.info("#########################################")
 
-    #     self.pipeline = Pipeline(self.config)
+            stage1 = time.perf_counter()
+            state = self.pipeline.create_gf(dataset_name)
+            stage2 = time.perf_counter()
+            log.debug(f"Create GraphFrame: {stage2 - stage1}")
+            log.info("-----------------------------------------")
 
-    #     states = {}
-    #     for idx, dataset_name in enumerate(datasets):
-    #         states[dataset_name] = State(dataset_name)
-    #         if self.reUpdate:
-    #             states[dataset_name] = self.pipeline.create(dataset_name)
-    #             states[dataset_name] = self.pipeline.process(
-    #                 states[dataset_name], "filter"
-    #             )
-    #             states[dataset_name] = self.pipeline.filter(
-    #                 states[dataset_name], filterBy, filterPerc
-    #             )
-    #         elif self.reProcess and self.processEnsemble:
-    #             states[dataset_name] = self.pipeline.create(dataset_name)
-    #             # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire_unprocessed", write_graph=False)
+            states = self.pipeline.process_gf(state, "entire")
+            stage3 = time.perf_counter()
+            log.debug(f"Preprocess GraphFrame: {stage3 - stage2}")
+            log.info("-----------------------------------------")
 
-    #             states[dataset_name] = self.pipeline.process(
-    #                 states[dataset_name], "entire"
-    #             )
-    #             states[dataset_name] = self.pipeline.convertToNetworkX(
-    #                 states[dataset_name], "path"
-    #             )
-    #             # self.pipeline.write_gf(states[dataset_name], dataset_name, "entire", write_graph=False)
-    #             states[dataset_name] = self.pipeline.filterNetworkX(
-    #                 states, dataset_name, self.config.filter_perc
-    #             )
-    #             self.pipeline.write_dataset_gf(
-    #                 states[dataset_name], dataset_name, "filter"
-    #             )
-    #             # self.pipeline.write_hatchet_graph(states, dataset_name)
+            state = self.pipeline.hatchetToNetworkX(state, "path")
+            stage4 = time.perf_counter()
+            log.debug(f"Convert to NetworkX graph: {stage4 - stage3}")
+            log.info("-----------------------------------------")
 
-    #     return states
+            state = self.pipeline.group(state, "module")
+            stage5 = time.perf_counter()
+            log.debug(f"Group GraphFrame: {stage5 - stage4}")
+            log.info("-----------------------------------------")
+
+            self.pipeline.write_dataset_gf(
+                state, dataset_name, "entire", write_graph=False
+            )
+            stage6 = time.perf_counter()
+            log.debug(f"Write GraphFrame: {stage6 - stage5}")
+            log.info("-----------------------------------------")
+            log.info(f'Module: {state.df["module"].unique()}')
+
+        return state
 
     def setConfig(self):
         self.config.max_incTime = {}

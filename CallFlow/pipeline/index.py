@@ -4,6 +4,7 @@ import pandas as pd
 import os
 
 from .create_graphframe import CreateGraphFrame
+
 from .group_by_module import groupBy
 from .ensemble_group_by_module import ensembleGroupBy
 from .filter_hatchet import FilterHatchet
@@ -13,9 +14,10 @@ from .union_graph import UnionGraph
 from .deltacon_similarity import Similarity
 from .process import PreProcess
 from .auxiliary import Auxiliary
-
-from ..utils.logger import log
 from .state import State
+
+from CallFlow.utils import log
+
 
 
 class Pipeline:
@@ -45,13 +47,11 @@ class Pipeline:
     # Pre-process the dataframe and Graph to add attributes to the networkX graph.
     # PreProcess class is a builder. Additional attributes can be added by chained calls.
     def process_gf(self, state, gf_type):
-        log.info(f"Format: {self.config.format}, dataset: {state.name}")
         if self.config.format[state.name] == "hpctoolkit":
             preprocess = (
                 PreProcess.Builder(state, gf_type)
                 .add_path()
                 .create_name_module_map()
-                # .add_n_index()
                 .add_callers_and_callees()
                 # .add_show_node()
                 .add_vis_node_name()
@@ -84,12 +84,10 @@ class Pipeline:
         state.graph = preprocess.graph
 
         self.entire_df = state.df
-        print("Module", self.entire_df["module"].unique())
-
         return state
 
     # Converts a hatchet graph to networkX graph.
-    def convertToNetworkX(self, state, path):
+    def hatchetToNetworkX(self, state, path):
         convert = HatchetToNetworkX(state, path, construct_graph=True, add_data=False)
 
         state.g = convert.g
@@ -183,8 +181,6 @@ class Pipeline:
     ##################### Write Functions ###########################
     # Write the dataset's graphframe to the file.
     def write_dataset_gf(self, state, state_name, format_of_df, write_graph=True):
-        log.info("writing file for {0} format".format(format_of_df))
-
         # dump the filtered dataframe to csv.
         df_filepath = self.dirname + "/" + state_name + "/" + format_of_df + "_df.csv"
         graph_filepath = (
@@ -200,8 +196,7 @@ class Pipeline:
     # Write the ensemble State to the file.
     def write_ensemble_gf(self, states, state_name):
         state = states[state_name]
-        log.info("writing file for {0} format".format(state_name))
-
+                     
         # dump the filtered dataframe to csv.
         df_filepath = self.dirname + "/" + state_name + "_df.csv"
         graph_filepath = self.dirname + "/" + state_name + "_graph.json"

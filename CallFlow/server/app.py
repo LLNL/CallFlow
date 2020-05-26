@@ -32,7 +32,6 @@ from CallFlow.ensemble import EnsembleCallFlow
 from CallFlow.pipeline import ConfigFileReader
 from CallFlow.utils import log
 
-
 app = Flask(__name__, static_url_path="/public")
 sockets = SocketIO(app, cors_allowed_origins="*")
 
@@ -72,10 +71,10 @@ class App:
         self.create_dot_callflow_folder()
 
         if self.config.ensemble:
-            self.callflow = EnsembleCallFlow(self.config)
+            self.callflow = EnsembleCallFlow(self.config, process=True)
             # self.single_callflow = SingleCallFlow(self.config)
         else:
-            self.single_callflow = SingleCallFlow(self.config)
+            self.single_callflow = SingleCallFlow(self.config, process=True)
 
     def renderPipeline(self, config_file_name):
         self.config = ConfigFileReader(
@@ -107,7 +106,10 @@ class App:
     def create_parser(self):
         parser = argparse.ArgumentParser()
         parser.add_argument(
-            "--verbose", action="store_true", help="Display debug points"
+            "--verbose", action="store_true", help="Display debug points"<<<<<<< task/CAL-16-single-callflow-jupyter-notebook
+79
+ 
+
         )
         parser.add_argument(
             "--production",

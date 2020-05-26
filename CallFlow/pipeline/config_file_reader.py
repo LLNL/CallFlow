@@ -15,11 +15,17 @@ import os
 
 
 class ConfigFileReader:
-    def __init__(self, filepath):
-        dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, filepath)
-        f = open(filename, "r").read()
-        self.json = self.json_data(f)
+    def __init__(self, filepath=None, config_json=None):
+        if filepath:
+            dirname = os.path.dirname(__file__)
+            filename = os.path.join(dirname, filepath)
+            f = open(filename, "r").read()
+            self.json = self.json_data(f)
+
+        if config_json:
+            self.json = config_json
+
+
         self.datasets = self.json["datasets"]
         self.runName = self.json["run_name"]
         self.callflow_path = self.json["callflow_path"]
@@ -27,11 +33,7 @@ class ConfigFileReader:
         self.scheme = self.json["scheme"]
         self.parameter_analysis = self.json["parameter_analysis"]
         self.processed_path = os.path.join(self.callflow_path, self.json["save_path"])
-        self.paths = {}
-        self.module_paths = {}
-        self.format = {}
-        self.names = []
-        self.dataset_names = []
+
         self.run()
 
     def process_scheme(self):
@@ -44,6 +46,12 @@ class ConfigFileReader:
         return ret
 
     def run(self):
+        self.paths = {}
+        self.module_paths = {}
+        self.format = {}
+        self.names = []
+        self.dataset_names = []
+
         # Parse scheme.
         self.filter_perc = self.scheme["filter_perc"]
         self.filter_by = self.scheme["filter_by"]

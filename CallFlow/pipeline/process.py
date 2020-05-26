@@ -16,10 +16,13 @@ from functools import wraps
 import numpy as np
 from scipy.stats import kurtosis, skew
 
-from ..utils.df import sanitizeName, visModuleCallsiteName
-from ..utils.hatchet import getNodeDictFromFrame, getPathListFromFrames
-from ..utils.logger import log
-
+from CallFlow.utils import (
+    sanitizeName,
+    visModuleCallsiteName,
+    getNodeDictFromFrame,
+    getPathListFromFrames,
+    log,
+)
 
 def logger(func):
     @wraps(func)
@@ -30,10 +33,13 @@ def logger(func):
     return tmp
 
 
-# Preprocess the dataframe
-# Builder object
-# Preprocess.add_X().add_Y().....
 class PreProcess:
+    """
+    Preprocess the dataframe
+    Builder object
+    Preprocess.add_X().add_Y().....
+    """
+    
     def __init__(self, builder):
         self.gf = builder.gf
         self.df = builder.df
@@ -100,14 +106,6 @@ class PreProcess:
 
         def build(self):
             return PreProcess(self)
-
-        # @logger
-        # def add_hatchet_node(self):
-        # 	self.raiseExceptionIfNodeCountNotEqual(self.hatchet_nodes.keys())
-        # 	self.df["hatchet_node"] = self.df["name"].apply(
-        # 		lambda node_name: self.hatchet_nodes[node_name]
-        # 	)
-        # 	return self
 
         # Add the path information from the node object
         @logger
@@ -203,13 +201,6 @@ class PreProcess:
             self.df["show_node"] = self.df["name"].apply(lambda node: True)
             return self
 
-        # @logger
-        # def update_show_node(self, show_node_map):
-        # 	self.map.show_node = show_node_map
-        # 	self.df["show_node"] = self.df["node"].apply(
-        # 		lambda node: show_node_map[str(node.df_index)]
-        # 	)
-        # 	return self
 
         # node_name is different from name in dataframe. So creating a copy of it.
         @logger
@@ -294,8 +285,9 @@ class PreProcess:
         def raiseExceptionIfNodeCountNotEqual(self, attr):
             map_node_count = len(attr.keys())
             df_node_count = len(self.df["name"].unique())
-            print(
-                f"Map contains: {map_node_count} callsites, graph contains: {df_node_count} callsites"
+            log.debug(
+                f"[Validation] Map contains: {map_node_count} callsites, graph contains: {df_node_count} callsites"
+
             )
             if map_node_count != df_node_count:
                 raise Exception(

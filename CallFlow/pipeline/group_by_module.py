@@ -38,13 +38,14 @@ class groupBy:
     def create_group_path(self, path):
         if isinstance(path, str):
             path = make_list(path)
-        group_path = []
+
+           group_path = []
         prev_module = None
         for idx, callsite in enumerate(path):
             if idx == 0:
                 # Assign the first callsite as from_callsite and not push into an array.
                 from_callsite = callsite
-                # from_module = self.entire_df.loc[self.entire_df['name'] == from_callsite]['module'].unique()[0]
+
                 from_module = self.name_module_map[from_callsite]
 
                 # Store the previous module to check the hierarchy later.
@@ -134,17 +135,13 @@ class groupBy:
                 node = node.split("/")[-1]
             module = self.name_module_map[node]
             if component_module == module:
-                component_path.append(node_func)
+                component_path.a<<<<<<< task/CAL-16-single-callflow-jupyter-notebook
+49
+ 
+ppend(node_func)
 
         component_path.insert(0, component_module)
         return tuple(component_path)
-
-    def find_all_paths(self, df):
-        ret = []
-        unique_paths = df["path"].unique()
-        for idx, path in enumerate(unique_paths):
-            ret.append(df.loc[df["path"] == path])
-        return ret
 
     def update_df(self, col_name, mapping):
         self.df[col_name] = self.df["name"].apply(
@@ -167,7 +164,7 @@ class groupBy:
         module_count = 0
 
         edge_count = 0
-        print(f"Total number of edges: {len(self.g.edges())}")
+        
         for edge in self.g.edges():
             edge_count += 1
             snode = edge[0]
@@ -190,13 +187,6 @@ class groupBy:
             component_level[tnode] = len(component_path[tnode])
             module[tnode] = self.name_module_map[tnode]
 
-            # if module[snode] not in module_id_map:
-            #     module_count += 1
-            #     module_id_map[module[snode]] = module_count
-            #     module_idx[snode] = module_id_map[module[snode]]
-            # else:
-            #     module_idx[snode] = module_id_map[module[snode]]
-
             if component_level[snode] == 2:
                 entry_func[snode] = True
                 show_node[snode] = True
@@ -205,18 +195,6 @@ class groupBy:
                 show_node[snode] = False
 
             node_name[snode] = self.name_module_map[snode] + "=" + snode
-
-            # print('Node: ', snode)
-            # print("entry function:", entry_func[snode])
-            # print('Change name:', change_name[snode])
-            # print("node path: ", spath)
-            # print("group path: ", group_path[snode])
-            # print("component path: ", component_path[snode])
-            # print("component level: ", component_level[snode])
-            # print("Show node: ", show_node[snode])
-            # print("name: ", node_name[snode])
-            # print('Module: ', module[snode])
-            # print("=================================")
 
         self.update_df("group_path", group_path)
         self.update_df("component_path", component_path)

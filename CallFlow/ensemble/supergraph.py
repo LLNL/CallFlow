@@ -68,7 +68,8 @@ class EnsembleSuperGraph(nx.Graph):
 
         with self.timer.phase("Construct Graph"):
             if construct_graph:
-                print("Creating a Graph for {0}.".format(self.state_group.name))
+                log.info("Creating a SuperGraph for {0}.".format(self.state_group.name))
+
                 self.cct = nx.DiGraph()
                 self.agg_g = nx.DiGraph()
                 self.add_paths(path)
@@ -85,8 +86,8 @@ class EnsembleSuperGraph(nx.Graph):
             if add_data == True:
                 self.add_node_attributes()
                 self.add_edge_attributes()
-            else:
-                print("Creating a Graph without node or edge attributes.")
+            # else:
+            # print("Creating a Graph without node or edge attributes.")
         print(self.timer)
 
     def create_target_maps(self):
