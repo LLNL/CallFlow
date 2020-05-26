@@ -2,7 +2,7 @@
 **/.DS_Store
 .vscode/*
 
-CallFlow/public/node_modules
+CallFlow/public/node_modules/*
 CallFlow/public/dist
 
 .ipynb_checkpoints/*
