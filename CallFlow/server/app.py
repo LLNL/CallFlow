@@ -27,10 +27,11 @@ import argparse
 from networkx.readwrite import json_graph
 
 # Callflow imports
-from single.callflow import SingleCallFlow
-from ensemble.callflow import EnsembleCallFlow
-from pipeline.config_file_reader import ConfigFileReader
-from utils.logger import log
+from CallFlow.single import SingleCallFlow
+from CallFlow.ensemble import EnsembleCallFlow
+from CallFlow.pipeline import ConfigFileReader
+from CallFlow.utils import log
+
 
 app = Flask(__name__, static_url_path="/public")
 sockets = SocketIO(app, cors_allowed_origins="*")

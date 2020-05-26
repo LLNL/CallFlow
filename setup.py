@@ -20,7 +20,7 @@ setup(
     description="",
     url="https://github.com/LLNL/CallFlow",
     author="Suraj Kesavan",
-    author_email="bhatele@cs.umd.edu",
+    author_email="spkesavan@ucdavis.edu",
     license="MIT",
     classifiers=[
         "Development Status :: 1 - Planning",
@@ -30,9 +30,13 @@ setup(
     packages=[
         "CallFlow",
         "CallFlow.server",
-        "CallFlow.server.pipeline",
-        "CallFlow.server.ensemble",
-        "CallFlow.server.single",
+        "CallFlow.pipeline",
+        "CallFlow.ensemble",
+        "CallFlow.ensemble.actions",
+        "CallFlow.single",
+        "CallFlow.single.actions",
+        "CallFlow.utils",
+        "CallFlow.algorithm",
     ],
     install_requires=[
         "pandas",
