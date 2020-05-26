@@ -14,7 +14,7 @@ import json
 import networkx as nx
 from ast import literal_eval as make_tuple
 import numpy as np
-from CallFlow.utils import Timer
+from callflow.utils import Timer
 import os
 
 

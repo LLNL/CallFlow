@@ -10,7 +10,7 @@
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
 import json
-from CallFlow.utils import log
+from callflow.utils import log
 import os
 
 
@@ -25,18 +25,15 @@ class ConfigFileReader:
         if config_json:
             self.json = config_json
 
-
         self.datasets = self.json["datasets"]
         self.runName = self.json["run_name"]
-        self.callflow_path = self.json["callflow_path"]
-        self.save_path = self.json["save_path"]
+        self.callflow_path = os.path.abspath(os.path.join(__file__, "../../.."))
+        self.save_path = os.path.join(self.callflow_path, self.json["save_path"])
         self.scheme = self.json["scheme"]
-        self.parameter_analysis = self.json["parameter_analysis"]
-        self.processed_path = os.path.join(self.callflow_path, self.json["save_path"])
 
         self.run()
 
-    def process_scheme(self):
+    def process_module_map(self):
         ret = {}
 
         for module in self.module_callsite_map:
@@ -55,10 +52,10 @@ class ConfigFileReader:
         # Parse scheme.
         self.filter_perc = self.scheme["filter_perc"]
         self.filter_by = self.scheme["filter_by"]
-        self.filter_below = self.scheme["filter_below"]
         self.group_by = self.scheme["group_by"]
-        self.module_callsite_map = self.scheme["module_map"]
-        self.callsite_module_map = self.process_scheme()
+        if "module_map" in self.scheme:
+            self.module_callsite_map = self.scheme["module_map"]
+            self.callsite_module_map = self.process_module_map()
 
         # Parse the information for each dataset
         for idx, data in enumerate(self.datasets):

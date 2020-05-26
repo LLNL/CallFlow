@@ -27,10 +27,10 @@ import argparse
 from networkx.readwrite import json_graph
 
 # Callflow imports
-from CallFlow.single import SingleCallFlow
-from CallFlow.ensemble import EnsembleCallFlow
-from CallFlow.pipeline import ConfigFileReader
-from CallFlow.utils import log
+from callflow.single import SingleCallFlow
+from callflow.ensemble import EnsembleCallFlow
+from callflow.pipeline import ConfigFileReader
+from callflow.utils import log
 
 app = Flask(__name__, static_url_path="/public")
 sockets = SocketIO(app, cors_allowed_origins="*")
@@ -38,10 +38,8 @@ sockets = SocketIO(app, cors_allowed_origins="*")
 
 class App:
     def __init__(self):
-        self.callflow_path = os.path.abspath(os.path.join(__file__, "../../.."))
-
         self.create_parser()
-        # self.verify_parser()
+        self.verify_parser()
 
         self.debug = True
         self.production = False
@@ -50,7 +48,7 @@ class App:
             self.print("Pre-processing the datasets.")
             self.processPipeline()
         else:
-            self.renderPipeline(self.args.runName)
+            self.renderPipeline()
             self.create_socket_server()
             if self.production == True:
                 sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
@@ -58,40 +56,18 @@ class App:
                 sockets.run(app, debug=False, use_reloader=True)
 
     def processPipeline(self):
-        self.config = ConfigFileReader(
-            self.args.config_dir + self.args.runName + ".json"
-        )
-        self.config.server_dir = os.getcwd()
-        self.config.callflow_dir = (
-            self.callflow_path + "/" + self.config.save_path + "/" + self.config.runName
-        )
-        self.config.process = self.args.process
-        self.config.ensemble = self.args.ensemble
-
+        # Parse the config file and schema
+        self.config = ConfigFileReader(self.args.config)
         self.create_dot_callflow_folder()
 
-        if self.config.ensemble:
-            self.callflow = EnsembleCallFlow(self.config, process=True)
-            # self.single_callflow = SingleCallFlow(self.config)
-        else:
-            self.single_callflow = SingleCallFlow(self.config, process=True)
+        self.callflow = EnsembleCallFlow(self.config, process=True)
+        self.single_callflow = SingleCallFlow(self.config)
 
-    def renderPipeline(self, config_file_name):
-        self.config = ConfigFileReader(
-            self.args.config_dir + config_file_name + ".json"
-        )
-        self.config.server_dir = os.getcwd()
-        self.config.callflow_dir = (
-            self.callflow_path + "/" + self.config.save_path + "/" + self.config.runName
-        )
-        self.config.ensemble = self.args.ensemble
-        self.config.process = self.args.process
+    def renderPipeline(self):
+        self.config = ConfigFileReader(self.args.config)
 
-        if self.config.ensemble:
-            self.callflow = EnsembleCallFlow(self.config)
-            self.single_callflow = SingleCallFlow(self.config)
-        else:
-            self.single_callflow = SingleCallFlow(self.config)
+        self.callflow = EnsembleCallFlow(self.config)
+        self.single_callflow = SingleCallFlow(self.config)
 
     # Custom print function.
     def print(self, action, data={}):
@@ -108,21 +84,12 @@ class App:
         parser.add_argument(
             "--verbose", action="store_true", help="Display debug points"
         )
-        parser.add_argument(
-            "--production",
-            action="store_true",
-            help="Make the server run on port 80 for production.",
-        )
-        parser.add_argument("--config_dir", help="Config file directory.")
-        parser.add_argument(
-            "--ensemble", action="store_true", help="Ensemble mode processing."
-        )
+        parser.add_argument("--config", help="Config file to be processed.")
         parser.add_argument(
             "--process",
             action="store_true",
             help="Process mode. To preprocess at the required level of granularity, use the options --filter, --entire. If you are preprocessing multiple callgraphs, use --ensemble option.",
         )
-        parser.add_argument("--runName", help="Config file name to be processed.")
         self.args = parser.parse_args()
         self.debug = self.args.verbose
 
@@ -141,12 +108,12 @@ class App:
 
     def create_dot_callflow_folder(self):
         if self.debug:
-            self.print(f"Create .callflow directiory.: {self.config.callflow_dir}")
-        if not os.path.exists(self.config.callflow_dir):
-            os.makedirs(self.config.callflow_dir)
+            self.print(f"Create .callflow directiory.: {self.config.save_path}")
+        if not os.path.exists(self.config.save_path):
+            os.makedirs(self.config.save_path)
 
         for dataset in self.config.datasets:
-            dataset_dir = self.config.callflow_dir + "/" + dataset["name"]
+            dataset_dir = os.path.join(self.config.save_path, dataset["name"])
             log.info(dataset_dir)
             if not os.path.exists(dataset_dir):
                 if self.debug:

@@ -11,7 +11,7 @@
 ##############################################################################
 import pandas as pd
 import time
-from CallFlow.utils.logger import log
+from callflow.utils.logger import log
 
 import os
 import hatchet as ht

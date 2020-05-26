@@ -4,7 +4,7 @@ import networkx as nx
 from ast import literal_eval as make_tuple
 import math
 from networkx.readwrite import json_graph
-from CallFlow.utils import Timer, sanitizeName, log
+from callflow.utils import Timer, sanitizeName, log
 
 
 class ModuleHierarchy:

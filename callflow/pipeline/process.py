@@ -16,13 +16,14 @@ from functools import wraps
 import numpy as np
 from scipy.stats import kurtosis, skew
 
-from CallFlow.utils import (
+from callflow.utils import (
     sanitizeName,
     visModuleCallsiteName,
     getNodeDictFromFrame,
     getPathListFromFrames,
     log,
 )
+
 
 def logger(func):
     @wraps(func)
@@ -39,7 +40,7 @@ class PreProcess:
     Builder object
     Preprocess.add_X().add_Y().....
     """
-    
+
     def __init__(self, builder):
         self.gf = builder.gf
         self.df = builder.df
@@ -195,13 +196,6 @@ class PreProcess:
 
             return self
 
-        @logger
-        def add_show_node(self):
-            self.map["show_node"] = {}
-            self.df["show_node"] = self.df["name"].apply(lambda node: True)
-            return self
-
-
         # node_name is different from name in dataframe. So creating a copy of it.
         @logger
         def add_vis_node_name(self):
@@ -226,22 +220,8 @@ class PreProcess:
             return self
 
         @logger
-        def add_module_name(self):
+        def add_module_name_hpctoolkit(self):
             self.df["module"] = self.df["module"].apply(lambda name: sanitizeName(name))
-            return self
-
-        @logger
-        def printModuleMap(self, module_map):
-            print(module_map)
-            return self
-
-        @logger
-        def add_module_name_hpctoolkit(self, module_map):
-            self.df["module"] = self.df["name"].apply(
-                lambda name: module_map[name]
-                if name in module_map
-                else sanitizeName(self.name_module_map[name][0])
-            )
             return self
 
         @logger
@@ -287,7 +267,6 @@ class PreProcess:
             df_node_count = len(self.df["name"].unique())
             log.debug(
                 f"[Validation] Map contains: {map_node_count} callsites, graph contains: {df_node_count} callsites"
-
             )
             if map_node_count != df_node_count:
                 raise Exception(

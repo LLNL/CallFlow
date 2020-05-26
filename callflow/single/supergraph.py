@@ -17,7 +17,7 @@ import networkx as nx
 import math
 import json
 from ast import literal_eval as make_tuple
-from CallFlow.utils import log, Timer
+from callflow.utils import log, Timer
 
 
 class SuperGraph(nx.Graph):

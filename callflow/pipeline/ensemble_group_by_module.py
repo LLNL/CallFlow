@@ -3,8 +3,7 @@ import time
 import networkx as nx
 from ast import literal_eval as make_list
 
-from CallFlow.utils import log
-
+from callflow.utils import log
 
 
 class ensembleGroupBy:

@@ -13,9 +13,9 @@
 import time
 import json
 
-from CallFlow.pipeline import State, Pipeline
+from callflow.pipeline import State, Pipeline
 
-from CallFlow.utils import (
+from callflow.utils import (
     getMaxExcTime,
     getMinExcTime,
     getMaxIncTime,
@@ -24,7 +24,7 @@ from CallFlow.utils import (
     Timer,
 )
 
-from CallFlow.single import (
+from callflow.single import (
     SingleCCT,
     SuperGraph,
     Auxiliary,

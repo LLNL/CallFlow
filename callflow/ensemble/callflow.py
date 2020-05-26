@@ -14,9 +14,9 @@ import time
 import json
 import pandas as pd
 
-from CallFlow.pipeline import State, Pipeline
+from callflow.pipeline import State, Pipeline
 
-from CallFlow.utils import (
+from callflow.utils import (
     log,
     Timer,
     getMaxExcTime,
@@ -25,7 +25,7 @@ from CallFlow.utils import (
     getMinIncTime,
 )
 
-from CallFlow.ensemble import (
+from callflow.ensemble import (
     EnsembleCCT,
     EnsembleSuperGraph,
     ModuleHierarchy,
@@ -61,7 +61,7 @@ class EnsembleCallFlow:
         else:
             log.info("[Ensemble] Read Mode.")
             self.states = self.readState()
-            
+
         self.target_df = {}
         for dataset in self.config.dataset_names:
             self.target_df[dataset] = self.states["ensemble_entire"].df.loc[
@@ -155,7 +155,7 @@ class EnsembleCallFlow:
         log.debug(f"Write group ensemble graph: {stage17 - stage16}")
         log.info("-----------------------------------------")
 
-    # Need to remove the dependence on reading the dataframe again.
+        # Need to remove the dependence on reading the dataframe again.
         states = {}
         states["ensemble_entire"] = self.pipeline.read_ensemble_gf("ensemble_entire")
 

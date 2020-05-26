@@ -20,7 +20,7 @@ from sklearn.preprocessing import scale
 from .similarity import Similarity
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
-from CallFlow.algorithm import KMedoids
+from callflow.algorithm import KMedoids
 
 
 class ParameterProjection:
@@ -29,13 +29,15 @@ class ParameterProjection:
         # self.datasetOrder = {k: idx for idx, (k, v) in enumerate(similarities.items())}
         self.state = state
         self.df = state.df
-        self.datasets = state.df["dataset"].unique()
+        self.datasets = state.df["dataset"].unique().tolist()
         self.projection = "MDS"
-        # self.clustering = 'k_medoids'
         self.clustering = "k_means"
         self.n_cluster = int(n_cluster)
         self.targetDataset = targetDataset
-        self.result = self.run()
+        if len(self.datasets) > self.n_cluster:
+            self.result = self.run()
+        else:
+            self.result = pd.DataFrame({})
 
     def add_df_params(self, dataset):
         ret = {}
@@ -70,8 +72,6 @@ class ParameterProjection:
             print("Removing {0} column from the dataframe".format("dataset"))
             df = df.drop(columns=["dataset"])
         x = df.values  # returns a numpy array
-
-        print(df)
 
         # Scale the values to value between 0 to 1
         min_max_scaler = preprocessing.MinMaxScaler()

@@ -16,14 +16,13 @@ from .process import PreProcess
 from .auxiliary import Auxiliary
 from .state import State
 
-from CallFlow.utils import log
-
+from callflow.utils import log
 
 
 class Pipeline:
     def __init__(self, config):
         self.config = config
-        self.dirname = self.config.processed_path + "/" + self.config.runName
+        self.dirname = self.config.save_path
         self.debug = True
 
     ##################### Pipeline Functions ###########################
@@ -53,13 +52,10 @@ class Pipeline:
                 .add_path()
                 .create_name_module_map()
                 .add_callers_and_callees()
-                # .add_show_node()
-                .add_vis_node_name()
                 .add_dataset_name()
-                # .add_imbalance_perc()
-                # .add_module_name()
-                .add_module_name_hpctoolkit(self.config.callsite_module_map)
-                .printModuleMap(self.config.callsite_module_map)
+                .add_imbalance_perc()
+                .add_module_name_hpctoolkit()
+                .add_vis_node_name()
                 .build()
             )
         elif self.config.format[state.name] == "caliper_json":
@@ -68,12 +64,10 @@ class Pipeline:
                 .add_time_columns()
                 .add_rank_column()
                 .add_callers_and_callees()
-                # .add_show_node()
                 .add_dataset_name()
                 .add_imbalance_perc()
                 .add_module_name_caliper(self.config.callsite_module_map)
                 .create_name_module_map()
-                # .add_mod_index()
                 .add_vis_node_name()
                 .add_path()
                 .build()
@@ -170,7 +164,6 @@ class Pipeline:
         state.df = grouped_graph["df"]
 
         if self.debug:
-            log.info("Done with Ensemb;le supergraph.")
             log.info(
                 f"Number of callsites in dataframe: {len(state.df['name'].unique())}"
             )
@@ -196,7 +189,7 @@ class Pipeline:
     # Write the ensemble State to the file.
     def write_ensemble_gf(self, states, state_name):
         state = states[state_name]
-                     
+
         # dump the filtered dataframe to csv.
         df_filepath = self.dirname + "/" + state_name + "_df.csv"
         graph_filepath = self.dirname + "/" + state_name + "_graph.json"
@@ -227,11 +220,9 @@ class Pipeline:
     def read_ensemble_gf(self, name):
         log.info(f"[Process] Reading the union dataframe and graph : {name}")
         state = State(name)
-        dirname = self.config.processed_path
-        union_df_filepath = dirname + "/" + self.config.runName + "/" + name + "_df.csv"
-        union_graph_filepath = (
-            dirname + "/" + self.config.runName + "/" + name + "_graph.json"
-        )
+        dirname = self.config.save_path
+        union_df_filepath = dirname + "/" + name + "_df.csv"
+        union_graph_filepath = dirname + "/" + name + "_graph.json"
 
         with open(union_graph_filepath, "r") as union_graphFile:
             union_graph = json.load(union_graphFile)
@@ -287,10 +278,8 @@ class Pipeline:
             json.dump(ret, json_file)
 
     def read_all_data(self):
-        dirname = self.config.callflow_dir
-        all_data_filepath = (
-            self.config.processed_path + f"/{self.config.runName}" + f"/all_data.json"
-        )
+        dirname = self.config.callflow_path
+        all_data_filepath = os.path.join(self.config.save_path, "all_data.json")
         log.info(f"[Read] {all_data_filepath}")
         with open(all_data_filepath, "r") as filter_graphFile:
             data = json.load(filter_graphFile)

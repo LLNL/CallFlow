@@ -464,9 +464,7 @@ class Auxiliary:
 
     def run(self):
         ret = {}
-        path = (
-            self.config.processed_path + f"/{self.config.runName}" + f"/all_data.json"
-        )
+        path = self.config.save_path + f"/all_data.json"
 
         if self.process:
             print("Calculating Gradients, Mean runtime variations, and Distribution.")
@@ -478,8 +476,8 @@ class Auxiliary:
                 ret["module"] = self.module_data()
             with self.timer.phase("Module callsite map data"):
                 ret["moduleCallsiteMap"] = self.get_module_callsite_map()
-            # with self.timer.phase("Callsite module map data"):
-            #     ret['callsiteModuleMap'] = self.get_callsite_module_map()
+            with self.timer.phase("Callsite module map data"):
+                ret["callsiteModuleMap"] = self.get_callsite_module_map()
             if self.write:
                 with self.timer.phase("Writing data"):
                     with open(path, "w") as f:

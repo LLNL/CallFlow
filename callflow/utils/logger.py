@@ -12,31 +12,39 @@
 import logging
 import colorlog
 
+
 class Log:
-
-    aliases = {
-        logging.ERROR:    ("error", "err", "e"),
-        logging.WARNING:  ("warning", "warn", "w"),
-        logging.INFO:     ("info", "inf", "nfo", "i"),
-        }
-
     def __init__(self, lvl=logging.DEBUG):
         self.lvl = lvl
-#        format  ="\033[1m CallFlow: [" + action + "] %(log_color)s%(message)s%(reset)s"
-        format  ="\033[1m #  %(log_color)s%(message)s%(reset)s"
-        self.format = format
-        logging.root.setLevel(self.lvl)
-        self.formatter = colorlog.ColoredFormatter(self.format)
+        aliases = {
+            logging.DEBUG: "%(log_color)s(%(module)s:%(lineno)d) %(msg)s ",
+            logging.ERROR: "\033 %(log_color)s(%(module)s:%(lineno)d)ERROR: %(msg)s",
+            logging.WARNING: "\033 %(log_color)s(%(module)s:%(lineno)d)WARN: %(msg)s",
+            logging.INFO: "%(log_color)s%(msg)s",
+        }
+        log_colors = {
+            "DEBUG": "cyan",
+            "INFO": "green",
+            "WARNING": "yellow",
+            "ERROR": "red",
+        }
+        logging.root.setLevel(lvl)
+
+        self.formatter = colorlog.ColoredFormatter(aliases[lvl], log_colors=log_colors)
+
         self.stream = logging.StreamHandler()
-        self.stream.setLevel(self.lvl)
+        self.stream.setLevel(lvl)
         self.stream.setFormatter(self.formatter)
-        self.logger = logging.getLogger('pythonConfig')
-        self.logger.setLevel(self.lvl)
+
+        self.logger = logging.getLogger("pythonConfig")
+        self.logger.setLevel(lvl)
         self.logger.addHandler(self.stream)
 
     def debug(self, msg, *args, **kwargs):
+        print(args, kwargs)
         for line in str(msg).splitlines():
             self.logger.error(line, *args, **kwargs)
+
     dbg = d = debug
 
     def warn(self, msg, *args, **kwargs):
@@ -55,7 +63,7 @@ class Log:
         for log_level in self.aliases:
             if lvl == log_level or lvl in self.aliases[log_level]:
                 return log_level
-        raise TypeError('not a logging level: %s'%lvl)
+        raise TypeError("not a logging level: %s" % lvl)
 
     def level(self, lvl=None):
         if not lvl:
@@ -63,5 +71,6 @@ class Log:
         self.lvl = self._parse_level(lvl)
         self.stream.setLevel(self.lvl)
         self.logging.root.setLevel(self.lvl)
+
 
 log = Log()
