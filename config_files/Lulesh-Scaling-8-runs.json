@@ -1,6 +1,6 @@
 {
     "run_name": "lulesh-8-runs",
-    "callflow_path": "/home/suraj/Work/llnl/CallFlow/",
+    "callflow_path": "/Users/bhatia4/work/repo/CallFlow/",
     "save_path": "data/processed",
     "parameter_analysis": false,
     "datasets": [

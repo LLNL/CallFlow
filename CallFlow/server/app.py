@@ -59,12 +59,10 @@ class App:
 
     def processPipeline(self):
         self.config = ConfigFileReader(
-            self.args.config_dir + self.args.runName + ".json"
+            os.path.join(self.args.config_dir, self.args.runName + ".json")
         )
         self.config.server_dir = os.getcwd()
-        self.config.callflow_dir = (
-            self.callflow_path + "/" + self.config.save_path + "/" + self.config.runName
-        )
+        self.config.callflow_dir = os.path.join(self.callflow_path, self.config.save_path, self.config.runName)
         self.config.process = self.args.process
         self.config.ensemble = self.args.ensemble
 
@@ -78,12 +76,12 @@ class App:
 
     def renderPipeline(self, config_file_name):
         self.config = ConfigFileReader(
-            self.args.config_dir + config_file_name + ".json"
+            os.path.join(self.args.config_dir, config_file_name + ".json")
         )
         self.config.server_dir = os.getcwd()
-        self.config.callflow_dir = (
-            self.callflow_path + "/" + self.config.save_path + "/" + self.config.runName
-        )
+        self.config.callflow_dir = os.path.join(self.callflow_path,
+                                                self.config.save_path,
+                                                self.config.runName)
         self.config.ensemble = self.args.ensemble
         self.config.process = self.args.process
 
@@ -106,11 +104,7 @@ class App:
     def create_parser(self):
         parser = argparse.ArgumentParser()
         parser.add_argument(
-            "--verbose", action="store_true", help="Display debug points"<<<<<<< task/CAL-16-single-callflow-jupyter-notebook
-79
- 
-
-        )
+            "--verbose", action="store_true", help="Display debug points")
         parser.add_argument(
             "--production",
             action="store_true",

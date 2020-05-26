@@ -18,6 +18,7 @@ class ConfigFileReader:
     def __init__(self, filepath=None, config_json=None):
         if filepath:
             dirname = os.path.dirname(__file__)
+            print (__file__, dirname, filepath)
             filename = os.path.join(dirname, filepath)
             f = open(filename, "r").read()
             self.json = self.json_data(f)
