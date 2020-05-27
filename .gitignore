@@ -22,3 +22,5 @@ config_files*
 *.egg-info
 build/*
 dist/*
+
+*.callflow

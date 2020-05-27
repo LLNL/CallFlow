@@ -21,18 +21,13 @@ CCTs.
 
 
 # Installation
-To install CallFlow use the following command.
-
+ ```
+pip install .
 ```
-pip install -e . --prefix={directory/to/install}
-```
+ 
+ For the web app, install the required packages.
 
-Currently, ``` pip install .``` 
-
-
-# App server
-
-CallFlow 
+ ## App server
 ```
 cd app
 npm install
