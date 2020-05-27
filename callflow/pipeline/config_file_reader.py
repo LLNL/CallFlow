@@ -35,7 +35,6 @@ class ConfigFileReader:
 
     def process_module_map(self):
         ret = {}
-
         for module in self.module_callsite_map:
             callsites = self.module_callsite_map[module]
             for callsite in callsites:
@@ -53,9 +52,14 @@ class ConfigFileReader:
         self.filter_perc = self.scheme["filter_perc"]
         self.filter_by = self.scheme["filter_by"]
         self.group_by = self.scheme["group_by"]
+
+        # Module map is only needed for caliper format.
+        # For HPCToolkit, we have a module field from the data.
         if "module_map" in self.scheme:
             self.module_callsite_map = self.scheme["module_map"]
             self.callsite_module_map = self.process_module_map()
+        else:
+            self.callsite_module_map = {}
 
         # Parse the information for each dataset
         for idx, data in enumerate(self.datasets):
