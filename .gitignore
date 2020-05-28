@@ -2,8 +2,8 @@
 **/.DS_Store
 .vscode/*
 
-CallFlow/public/node_modules*
-CallFlow/public/dist
+app/node_modules*
+app/dist
 
 .ipynb_checkpoints/*
 data/*
@@ -12,8 +12,6 @@ old-code/*
 config_files*
 
 *.ipynb
-*.json
-*.txt
 *.csv
 *.h5
 
@@ -24,3 +22,5 @@ config_files*
 *.egg-info
 build/*
 dist/*
+
+*.callflow

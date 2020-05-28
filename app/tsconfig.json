@@ -1,0 +1,42 @@
+{
+	"compilerOptions": {
+		"outDir": "./dist/",
+		"sourceMap": true,
+		"declaration": false,
+		"strict": true,
+		"module": "es2015",
+		"moduleResolution": "node",
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"allowSyntheticDefaultImports": true,
+		"target": "es5",
+		"noImplicitAny": false,
+		"skipLibCheck": true,
+		"allowJs": true,
+		"jsx": "preserve",
+		"baseUrl": "./src",
+		"types": [
+			"node"
+		],
+		"typeRoots": [
+			"node_modules/@types",
+			"node_modules/**/types",
+			"./src/@types"
+		],
+		"lib": [
+			"es2016",
+			"dom"
+		]
+	},
+	"include": [
+		"./src/**/*",
+	],
+	"exclude": [
+		"./src/components/ensembleCCT/d3-graphviz.js",
+		"./src/components/cct/d3-graphviz.js",
+		"./src/components/ensembleSupergraph/debugGradients.js",
+		"./src/components/presentation.js",
+		"./src/components/ensembleSupergraph/quantileLines.js"
+
+	]
+}

@@ -6,13 +6,11 @@
 from setuptools import setup
 from codecs import open
 from os import path
-from CallFlow import __version__
+
+__version_info__ = ("0", "0", "1")
+__version__ = ".".join(__version_info__)
 
 here = path.abspath(path.dirname(__file__))
-
-# Get the long description from the README file
-with open(path.join(here, "README.md"), encoding="utf-8") as f:
-    long_description = f.read()
 
 setup(
     name="CallFlow",
@@ -28,15 +26,15 @@ setup(
     ],
     keywords="",
     packages=[
-        "CallFlow",
-        "CallFlow.server",
-        "CallFlow.pipeline",
-        "CallFlow.ensemble",
-        "CallFlow.ensemble.actions",
-        "CallFlow.single",
-        "CallFlow.single.actions",
-        "CallFlow.utils",
-        "CallFlow.algorithm",
+        "callflow",
+        "callflow.server",
+        "callflow.pipeline",
+        "callflow.ensemble",
+        "callflow.ensemble.actions",
+        "callflow.single",
+        "callflow.single.actions",
+        "callflow.utils",
+        "callflow.algorithm",
     ],
     install_requires=[
         "pandas",
