@@ -57,15 +57,39 @@ class App:
                 sockets.run(app, debug=False, use_reloader=True)
 
     def processPipeline(self):
+<<<<<<< HEAD:callflow/server/app.py
         # Parse the config file and schema
         self.config = ConfigFileReader(self.args.config)
+=======
+        self.config = ConfigFileReader(
+            os.path.join(self.args.config_dir, self.args.runName + ".json")
+        )
+        self.config.server_dir = os.getcwd()
+        self.config.callflow_dir = os.path.join(self.callflow_path, self.config.save_path, self.config.runName)
+        self.config.process = self.args.process
+        self.config.ensemble = self.args.ensemble
+
+>>>>>>> fdd86a06a9c51f8210862bfa9ea8c06d7f31c19b:CallFlow/server/app.py
         self.create_dot_callflow_folder()
 
         self.callflow = EnsembleCallFlow(self.config, process=True)
         self.single_callflow = SingleCallFlow(self.config)
 
+<<<<<<< HEAD:callflow/server/app.py
     def renderPipeline(self):
         self.config = ConfigFileReader(self.args.config)
+=======
+    def renderPipeline(self, config_file_name):
+        self.config = ConfigFileReader(
+            os.path.join(self.args.config_dir, config_file_name + ".json")
+        )
+        self.config.server_dir = os.getcwd()
+        self.config.callflow_dir = os.path.join(self.callflow_path,
+                                                self.config.save_path,
+                                                self.config.runName)
+        self.config.ensemble = self.args.ensemble
+        self.config.process = self.args.process
+>>>>>>> fdd86a06a9c51f8210862bfa9ea8c06d7f31c19b:CallFlow/server/app.py
 
         self.callflow = EnsembleCallFlow(self.config)
         self.single_callflow = SingleCallFlow(self.config)
@@ -83,7 +107,19 @@ class App:
     def create_parser(self):
         parser = argparse.ArgumentParser()
         parser.add_argument(
+<<<<<<< HEAD:callflow/server/app.py
             "--verbose", action="store_true", help="Display debug points"
+=======
+            "--verbose", action="store_true", help="Display debug points")
+        parser.add_argument(
+            "--production",
+            action="store_true",
+            help="Make the server run on port 80 for production.",
+        )
+        parser.add_argument("--config_dir", help="Config file directory.")
+        parser.add_argument(
+            "--ensemble", action="store_true", help="Ensemble mode processing."
+>>>>>>> fdd86a06a9c51f8210862bfa9ea8c06d7f31c19b:CallFlow/server/app.py
         )
         parser.add_argument("--config", help="Config file to be processed.")
         parser.add_argument(
