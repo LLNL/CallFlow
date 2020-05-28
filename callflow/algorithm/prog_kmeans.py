@@ -62,11 +62,9 @@ class ProgKMeans(prog_kmeans_cpp.ProgKMeans):
 
         super().__init__(n_clusters, batch_size)
 
-    def progressive_fit(self,
-                        X,
-                        latency_limit_in_msec=1000,
-                        point_choice_method="as_is",
-                        verbose=False):
+    def progressive_fit(
+        self, X, latency_limit_in_msec=1000, point_choice_method="as_is", verbose=False
+    ):
         """Progressive fit with data points, X. With this, clusters (or macro
         clusters) and micro clusters are updated progressively and
         incrementally within an indicated latency limit.
@@ -103,33 +101,42 @@ class ProgKMeans(prog_kmeans_cpp.ProgKMeans):
         latency_limit = latency_limit_in_msec / 1000.0
 
         order = [i for i in range(n)]
-        if point_choice_method == 'random':
+        if point_choice_method == "random":
             shuffle(order)
-        elif point_choice_method == 'as_is':
+        elif point_choice_method == "as_is":
             None  # Do nothing
-        elif point_choice_method == 'reverse':
+        elif point_choice_method == "reverse":
             order.reverse()
-        elif point_choice_method in ("fromPrevCluster", "from_prev_cluster",
-                                     "from_prev_macro", "fromPrevMacro"):
+        elif point_choice_method in (
+            "fromPrevCluster",
+            "from_prev_cluster",
+            "from_prev_macro",
+            "fromPrevMacro",
+        ):
             if self.kmeans is not None:
                 labels = self.kmeans.predict(self.X)
                 order = ProgKMeans.random_order_from_each_cluster(n, labels)
         else:
-            print("point_choice_method-", point_choice_method,
-                  " is not supported. We used as_is instead of this.")
+            print(
+                "point_choice_method-",
+                point_choice_method,
+                " is not supported. We used as_is instead of this.",
+            )
 
         # incrementally applying clustering
         self.kmeans = MiniBatchKMeans(
-            n_clusters=self.n_clusters, batch_size=self.batch_size)
+            n_clusters=self.n_clusters, batch_size=self.batch_size
+        )
         self.X = X
         duration = 0
         n_processed = 0
         while True:
             self.kmeans = self.kmeans.partial_fit(
-                X[order[n_processed:n_processed + self.batch_size], :])
+                X[order[n_processed : n_processed + self.batch_size], :]
+            )
             n_processed += self.batch_size
             duration = time.time() - start_time
-            if (duration >= latency_limit or n_processed >= n):
+            if duration >= latency_limit or n_processed >= n:
                 break
         if verbose:
             print(str(n_processed), " data points are processed")
@@ -148,11 +155,9 @@ class ProgKMeans(prog_kmeans_cpp.ProgKMeans):
         """
         return self.kmeans.predict(X)
 
-    def consistent_labels(self,
-                          prev_labels,
-                          current_labels,
-                          latency_limit_in_msec=1000,
-                          verbose=False):
+    def consistent_labels(
+        self, prev_labels, current_labels, latency_limit_in_msec=1000, verbose=False
+    ):
         """Find consistent labels with previous labels to avoid dramatically
         changing cluster labels from previous to current.
         Parameters
@@ -172,8 +177,9 @@ class ProgKMeans(prog_kmeans_cpp.ProgKMeans):
             Dictionary from the current label to the corresponding previous
             label.
         """
-        return super().consistent_labels(prev_labels, current_labels,
-                                         latency_limit_in_msec, verbose)
+        return super().consistent_labels(
+            prev_labels, current_labels, latency_limit_in_msec, verbose
+        )
 
     def get_centers(self):
         centers = None

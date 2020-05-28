@@ -9,8 +9,8 @@ from numpy import trace
 from numpy import amax
 from math import sqrt
 
-class Similarity:
 
+class Similarity:
     def __init__(self, g1, g2):
         self.R = nx.DiGraph()
         self.R.add_nodes_from(g1)

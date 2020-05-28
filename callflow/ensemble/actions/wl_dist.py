@@ -13,10 +13,11 @@ import networkx as nx
 import copy
 
 
-class GK_WL():
+class GK_WL:
     """
     Weisfeiler_Lehman graph kernel.
     """
+
     def compare_list(self, graph_list, h=1, node_label=True):
         """Compute the all-pairs kernel values for a list of graphs.
 
@@ -58,7 +59,7 @@ class GK_WL():
             # Computing the maximum number of nodes in the graphs. It
             # will be used in the computation of vectorial
             # representation.
-            if(n_max < graph_list[i].number_of_nodes()):
+            if n_max < graph_list[i].number_of_nodes():
                 n_max = graph_list[i].number_of_nodes()
 
         phi = np.zeros((n_max, n), dtype=np.uint64)
@@ -76,8 +77,7 @@ class GK_WL():
 
         if node_label is True:
             for i in range(n):
-                l_aux = nx.get_node_attributes(graph_list[i],
-                                               'node_label').values()
+                l_aux = nx.get_node_attributes(graph_list[i], "node_label").values()
                 # It is assumed that the graph has an attribute
                 # 'node_label'
                 labels[i] = np.zeros(len(l_aux), dtype=np.int32)
@@ -120,9 +120,9 @@ class GK_WL():
                     # form a multiset label of the node v of the i'th graph
                     # and convert it to a string
 
-                    long_label = np.concatenate((np.array([labels[i][v]]),
-                                                 np.sort(labels[i]
-                                                 [lists[i][v]])))
+                    long_label = np.concatenate(
+                        (np.array([labels[i][v]]), np.sort(labels[i][lists[i][v]]))
+                    )
                     long_label_string = str(long_label)
                     # if the multiset label has not yet occurred, add it to the
                     # lookup table and assign a number to it

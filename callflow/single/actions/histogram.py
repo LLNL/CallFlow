@@ -12,6 +12,7 @@
 
 import pandas as pd
 
+
 class Histogram:
     def __init__(self, state, name):
         self.graph = state.g
@@ -23,16 +24,20 @@ class Histogram:
 
     def run(self):
         ret = []
-        module = self.name.split('=')[0]
-        func_in_module = self.df[self.df.module == module]['name'].unique().tolist()
+        module = self.name.split("=")[0]
+        func_in_module = self.df[self.df.module == module]["name"].unique().tolist()
 
         for idx, func in enumerate(func_in_module):
-            ret.append({
-                "name": func,
-                "time (inc)": self.df.loc[self.df['name'] == func]['time (inc)'].tolist(),
-                "time": self.df.loc[self.df['name'] == func]['time'].tolist(),
-                "rank": self.df.loc[self.df['name'] == func]['rank'].tolist(),
-                "dataset": self.df.loc[self.df['name'] == func]['dataset'].tolist(),
-            })
+            ret.append(
+                {
+                    "name": func,
+                    "time (inc)": self.df.loc[self.df["name"] == func][
+                        "time (inc)"
+                    ].tolist(),
+                    "time": self.df.loc[self.df["name"] == func]["time"].tolist(),
+                    "rank": self.df.loc[self.df["name"] == func]["rank"].tolist(),
+                    "dataset": self.df.loc[self.df["name"] == func]["dataset"].tolist(),
+                }
+            )
         ret_df = pd.DataFrame(ret)
         return ret_df.to_json(orient="columns")

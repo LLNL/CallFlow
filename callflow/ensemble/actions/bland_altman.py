@@ -25,19 +25,19 @@ class BlandAltman:
         self.dataset1 = dataset1
         self.dataset2 = dataset2
         self.results = self.run()
-        
-    def run(self):    
+
+    def run(self):
         ret = []
 
         data1 = np.asarray(self.df1[self.col])
-        name1 = np.asarray(self.df1['name'])
+        name1 = np.asarray(self.df1["name"])
         dataset1 = np.array([self.dataset1 for _ in range(data1.shape[0])])
-        module1 = np.asarray(self.df1['module'])
+        module1 = np.asarray(self.df1["module"])
 
         data2 = np.asarray(self.df2[self.col])
-        name2 = np.asarray(self.df2['name'])
+        name2 = np.asarray(self.df2["name"])
         dataset2 = np.array([self.dataset2 for _ in range(data2.shape[0])])
-        module2 = np.asarray(self.df2['module'])
+        module2 = np.asarray(self.df2["module"])
 
         name = name2
         module = module2
@@ -53,20 +53,18 @@ class BlandAltman:
 
         data = {
             # 'dataset': dataset.tolist(),
-            'name': name.tolist(),
-            'module': module.tolist(),
-            'mean': mean.tolist(),
-            'diff': diff.tolist(),
+            "name": name.tolist(),
+            "module": module.tolist(),
+            "mean": mean.tolist(),
+            "diff": diff.tolist(),
         }
-        
+
         data_df = pd.DataFrame(data)
-        group_df = data_df.groupby(['name']).mean()
+        group_df = data_df.groupby(["name"]).mean()
         result = {
-            'data': data_df.to_json(orient="columns"),
-            'color': colordict,
-            'md': md.tolist(),
-            'sd': sd.tolist(),
+            "data": data_df.to_json(orient="columns"),
+            "color": colordict,
+            "md": md.tolist(),
+            "sd": sd.tolist(),
         }
         return result
-
-

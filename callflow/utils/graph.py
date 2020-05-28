@@ -19,4 +19,3 @@ def graphmltojson(graphfile, outfile):
     fo = open(outfile, "w")
     fo.write(json_data)
     fo.close()
-

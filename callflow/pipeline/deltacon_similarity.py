@@ -6,8 +6,8 @@ from scipy.sparse import diags
 from numpy.linalg import inv
 from numpy import square, trace, amax, sqrt
 
-class Similarity:
 
+class Similarity:
     def __init__(self, g1, g2):
         self.R = nx.DiGraph()
         self.R.add_nodes_from(g1)

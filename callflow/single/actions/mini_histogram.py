@@ -71,4 +71,3 @@ class MiniHistogram:
             ret_df[module] = pd.DataFrame(ret[module])
             ret[module] = ret_df[module].to_json(orient="columns")
         return json.dumps(ret)
-

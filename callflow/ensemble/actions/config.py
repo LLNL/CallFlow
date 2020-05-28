@@ -1,6 +1,7 @@
 from utils.df import getMaxExcTime, getMinExcTime, getMaxIncTime, getMinIncTime
 
-class Config():
+
+class Config:
     def __init__(self, config, states):
         self.states = states
         self.config = config

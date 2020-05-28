@@ -14,15 +14,15 @@
 
 import pandas as pd
 
+
 class splitCallee:
     def __init__(self, state, mod_index):
         self.graph = state.graph
         self.df = state.df
         self.mod_index = mod_index
         self.run(state)
-        
-    def run(self, state):    
+
+    def run(self, state):
         # print(self.df[self.df['mod_index'] == self.mod_index])
         ret = {}
         return ret
-

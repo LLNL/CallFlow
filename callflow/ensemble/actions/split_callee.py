@@ -12,6 +12,7 @@
 
 import pandas as pd
 
+
 class SplitCallee:
     def __init__(self, state, mod_index):
         self.graph = state.graph
@@ -23,4 +24,3 @@ class SplitCallee:
         # print(self.df[self.df['mod_index'] == self.mod_index])
         ret = {}
         return ret
-

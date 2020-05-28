@@ -8,11 +8,12 @@
 #
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
-##############################################################################  
+##############################################################################
 import pandas as pd
 import json
 import networkx as nx
 from ast import literal_eval as make_tuple
+
 
 class FunctionList:
     def __init__(self, state, modFunc, nid):
@@ -21,14 +22,14 @@ class FunctionList:
         self.entire_df = state.entire_df
 
         # Processing for the modFunc format to get the module name
-        if '=' in modFunc:
-            self.function = modFunc.split('=')[1]
-            self.module = modFunc.split('=')[0]
-        elif '/' in modFunc:
-            self.function = modFunc.split('/')[1]
-            self.module = modFunc.split('/')[0]        
-            
-        self.module_df = self.df.loc[self.df['module'] == self.module]
+        if "=" in modFunc:
+            self.function = modFunc.split("=")[1]
+            self.module = modFunc.split("=")[0]
+        elif "/" in modFunc:
+            self.function = modFunc.split("/")[1]
+            self.module = modFunc.split("/")[0]
+
+        self.module_df = self.df.loc[self.df["module"] == self.module]
 
         # self.entry_funcs = state.entry_funcs[module]
         # self.other_funcs = state.other_funcs[module]
@@ -37,14 +38,14 @@ class FunctionList:
     # Convert "['<unknown procedure>']" to Array([<unknown procedure>])
     def sanitize(self, string):
         # strip_1 = string.strip(['"'])
-        strip_2 = string.strip(']')
-        strip_3 = strip_2.strip('[')
-        return strip_3.split(',')
+        strip_2 = string.strip("]")
+        strip_3 = strip_2.strip("[")
+        return strip_3.split(",")
 
     # def add_paths(self, path_name):
     #     for idx, row in self.entire_df.iterrows():
     #         path = row[path_name][0]
-    #         # TODO: Sometimes the path becomes a string. Find why it happens. 
+    #         # TODO: Sometimes the path becomes a string. Find why it happens.
     #         # If path becomes a string.
     #         if isinstance(path, str):
     #             path = make_tuple(row[path_name])
@@ -54,22 +55,22 @@ class FunctionList:
     def add_paths(self, path_name):
         for idx, row in self.df.iterrows():
             # if row.show_node:
-                path = row[path_name]
-                print(path)
-                # TODO: Sometimes the path becomes a string. Find why it happens. 
-                # If it becomes a string 
-                if isinstance(path, str):
-                    path = make_tuple(path)
- 
-                corrected_path = path[0]
-                if(len(corrected_path) >= 2):   
-                    source = corrected_path[-2]
-                    target = corrected_path[-1]
+            path = row[path_name]
+            print(path)
+            # TODO: Sometimes the path becomes a string. Find why it happens.
+            # If it becomes a string
+            if isinstance(path, str):
+                path = make_tuple(path)
 
-                    if not self.entire_g.has_edge(source, target):
-                        self.entire_g.add_edge(source, target)
-        
-    def run(self):    
+            corrected_path = path[0]
+            if len(corrected_path) >= 2:
+                source = corrected_path[-2]
+                target = corrected_path[-1]
+
+                if not self.entire_g.has_edge(source, target):
+                    self.entire_g.add_edge(source, target)
+
+    def run(self):
         callers = {}
         callees = {}
         entry_func = []
@@ -77,28 +78,29 @@ class FunctionList:
 
         # Create a networkX graph.
         self.entire_g = nx.DiGraph()
-        self.add_paths('path')
+        self.add_paths("path")
         print(self.entire_g.nodes())
 
-        entry_func_df = self.module_df.loc[self.module_df['component_level'] == 2] 
-        entry_funcs = entry_func_df['name'].unique()
-        other_func_df = self.module_df.loc[self.module_df['component_level'] > 2]
-        other_funcs = other_func_df['name'].unique()
+        entry_func_df = self.module_df.loc[self.module_df["component_level"] == 2]
+        entry_funcs = entry_func_df["name"].unique()
+        other_func_df = self.module_df.loc[self.module_df["component_level"] > 2]
+        other_funcs = other_func_df["name"].unique()
         for idx, entry_func in enumerate(entry_funcs):
             print("Entry func: ", entry_func)
 
             print("predecessors", self.entire_g.predecessors(entry_func))
             callers[entry_func] = list(self.entire_g.predecessors(entry_func))
-            
+
             for idx, caller in enumerate(callers[entry_func]):
                 callees[caller] = list(self.entire_g.predecessors(caller))
 
-        ret.append({
-            "entry_functions": entry_funcs,
-            "other_functions": other_funcs,
-            "callers": callers,
-            "callees": callees,
-        })
+        ret.append(
+            {
+                "entry_functions": entry_funcs,
+                "other_functions": other_funcs,
+                "callers": callers,
+                "callees": callees,
+            }
+        )
         ret_df = pd.DataFrame(ret)
         return ret_df.to_json(orient="columns")
-

@@ -7,12 +7,10 @@ class UnionGraph:
         self.runs = {}
         self.diffset = {}
 
-
     # Return the union of graphs G and H.
     def unionize(self, H, name=None, rename=(None, None)):
         if not self.R.is_multigraph() == H.is_multigraph():
             raise nx.NetworkXError("G and H must both be graphs or multigraphs.")
-
 
         self.R.graph.update(H.graph)
 
