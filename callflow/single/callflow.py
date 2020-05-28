@@ -26,7 +26,7 @@ from callflow.utils import (
 
 from callflow.single import (
     SingleCCT,
-    SuperGraph,
+    SingleSuperGraph,
     Auxiliary,
     MiniHistogram,
     Histogram,

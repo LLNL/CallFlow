@@ -11,8 +11,6 @@
 ##############################################################################
 
 import sys
-
-sys.path.append("/home/vidi/Work/llnl/CallFlow/src/server")
 import networkx as nx
 import math
 import json
@@ -20,7 +18,7 @@ from ast import literal_eval as make_tuple
 from callflow.utils import Log, Timer
 
 
-class SuperGraph(nx.Graph):
+class SingleSuperGraph(nx.Graph):
     def __init__(
         self,
         states,
@@ -31,8 +29,8 @@ class SuperGraph(nx.Graph):
         add_data=True,
         debug=True,
     ):
-        super(SuperGraph, self).__init__()
-        self.log = log("supergraph")
+        super(SingleSuperGraph, self).__init__()
+        self.log = Log("supergraph")
         self.state = states[dataset]
         self.dataset = dataset
         self.timer = Timer()
@@ -217,7 +215,6 @@ class SuperGraph(nx.Graph):
 
     def dataset_map(self, nodes, dataset):
         ret = {}
-        print(f"Nodes: {self.g.nodes()}")
         for node in self.g.nodes():
             if "=" in node:
                 node_name = node.split("=")[1]
@@ -248,14 +245,7 @@ class SuperGraph(nx.Graph):
                     if len(column_data.value_counts()) > 0:
                         ret[node][column] = make_tuple(column_data.tolist()[0])
                     else:
-                        ret[node][column] = []
-
-                elif column == "module" or column == "show_node":
-                    if len(column_data.value_counts()) > 0:
-                        ret[node][column] = column_data.tolist()[0]
-
-                    else:
-                        ret[node][column] = "None"
+                        sys.path.append("/home/vidi/Work/llnl/CallFlow/src/server")
 
                 elif column == "component_path" or column == "group_path":
 
@@ -263,5 +253,4 @@ class SuperGraph(nx.Graph):
                         ret[node][column] = list(make_tuple(column_data.tolist()[0]))
                     else:
                         ret[node][column] = []
-        print(ret)
         return ret

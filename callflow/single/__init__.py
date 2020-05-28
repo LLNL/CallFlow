@@ -1,4 +1,4 @@
-from .cct import *
-from .supergraph import *
 from .actions import *
-from .callflow import *
+from .cct import SingleCCT
+from .supergraph import SingleSuperGraph
+from .callflow import SingleCallFlow
