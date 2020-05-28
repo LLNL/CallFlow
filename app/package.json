@@ -112,6 +112,9 @@
         "last 2 versions",
         "not ie <= 8"
     ],
+    "pre-commit": [
+        "lint"
+    ],
     "resolutions": {
         "babel-core": "7.0.0-bridge.0"
     }
