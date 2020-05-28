@@ -2,9 +2,7 @@
 **/.DS_Store
 .vscode/*
 
-app/node_modules*
-app/dist
-app/src/unused/*
+
 
 .ipynb_checkpoints/*
 data/*

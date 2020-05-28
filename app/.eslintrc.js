@@ -1,19 +1,51 @@
-var OFF = 0, WARN = 1, ERROR = 2;
-
 module.exports = {
-    "extends": "airbnb-base",
-    "rules":{
-	"radix": OFF,
-	"indent": [WARN, 4], 
-        "no-mixed-spaces-and-tabs": OFF,
-	"no-tabs": OFF,
-	"no-use-before-define": OFF,
-	"no-console": OFF,
-	"max-len": OFF,
-	"eqeqeq": OFF,
-	"no-plusplus": OFF
-    },
-    "parserOptions": {
-	"ecmaVersion": 6
-    }
+	"env": {
+		"browser": true,
+		"es6": true
+	},
+	"extends": [
+		"eslint:recommended",
+		"plugin:vue/essential"
+	],
+	"globals": {
+		"Atomics": "readonly",
+		"SharedArrayBuffer": "readonly"
+	},
+	"parserOptions": {
+		"ecmaVersion": 2018,
+		"sourceType": "module"
+	},
+	"plugins": [
+		"vue"
+	],
+	"overrides": [
+		{
+			"files": ["node_modules/*", "src/thirdParty/*", "src/unused/*"],
+			"rules": {
+				"require-jsdoc": "off"
+			}
+		}
+	],
+	"rules": {
+		"indent": [
+			"error",
+			"tab"
+		],
+		"linebreak-style": [
+			"error",
+			"unix"
+		],
+		"quotes": [
+			"error",
+			"double"
+		],
+		"semi": [
+			"error",
+			"always"
+		],
+		"no-unused-vars": "off",
+		"no-console": "off",
+		"global-require": "off",
+		"no-prototype-builtins": "off",
+	}
 };

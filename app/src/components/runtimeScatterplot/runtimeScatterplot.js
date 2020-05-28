@@ -10,14 +10,14 @@
  * https://github.com/LLNL/CallFlow
  * Please also read the LICENSE file for the MIT License notice.
  ******************************************************************************/
-import tpl from '../../html/runtimeScatterplot/index.html'
-import * as d3 from 'd3'
-import ToolTip from './tooltip'
-import EventHandler from '../EventHandler'
+import tpl from "../../html/runtimeScatterplot/index.html";
+import * as d3 from "d3";
+import ToolTip from "./tooltip";
+import EventHandler from "../EventHandler";
 
 
 export default {
-	name: 'RuntimeScatterplot',
+	name: "RuntimeScatterplot",
 	template: tpl,
 	components: {
 		ToolTip
@@ -42,8 +42,8 @@ export default {
 		firstRender: true,
 		boxHeight: 0,
 		boxWidth: 0,
-		id: 'scatterplot-view',
-		svgID: 'scatterplot-view-svg',
+		id: "scatterplot-view",
+		svgID: "scatterplot-view-svg",
 		message: "Runtime Scatterplot",
 		boxOffset: 20,
 
@@ -51,93 +51,93 @@ export default {
 
 
 	mounted() {
-		let self = this
-		EventHandler.$on('single_scatterplot', function (data) {
-			self.clear()
-			console.log("Single Scatterplot: ", data['module'])
-			self.render(data['module'])
-		})
+		let self = this;
+		EventHandler.$on("single_scatterplot", function (data) {
+			self.clear();
+			console.log("Single Scatterplot: ", data["module"]);
+			self.render(data["module"]);
+		});
 	},
 
 	methods: {
 		init() {
-			this.toolbarHeight = document.getElementById('toolbar').clientHeight
-			this.footerHeight = document.getElementById('footer').clientHeight
-			this.width = window.innerWidth * 0.25
-			this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.5
+			this.toolbarHeight = document.getElementById("toolbar").clientHeight;
+			this.footerHeight = document.getElementById("footer").clientHeight;
+			this.width = window.innerWidth * 0.25;
+			this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.5;
 
 			this.boxWidth = this.width - this.margin.right - this.margin.left;
 			this.boxHeight = this.height - this.margin.top - this.margin.bottom;
 
-			this.svg = d3.select('#' + this.svgID)
-				.attr('width', this.boxWidth + this.margin.left - this.margin.right)
-				.attr('height', this.boxHeight + this.margin.top - this.margin.bottom)
-				.attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")");
+			this.svg = d3.select("#" + this.svgID)
+				.attr("width", this.boxWidth + this.margin.left - this.margin.right)
+				.attr("height", this.boxHeight + this.margin.top - this.margin.bottom)
+				.attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
 
-			EventHandler.$emit('single_scatterplot', {
+			EventHandler.$emit("single_scatterplot", {
 				module: "Lulesh",
 				name: "main",
 				dataset: this.$store.selectedTargetDataset,
-			})
+			});
 		},
 
 		render(module) {
 			if (!this.firstRender) {
-				this.clear()
+				this.clear();
 			}
-			this.firstRender = false
-			let data = this.$store.modules[this.$store.selectedTargetDataset][module]
+			this.firstRender = false;
+			let data = this.$store.modules[this.$store.selectedTargetDataset][module];
 
-			this.process(data)
-			this.xAxis()
-			this.yAxis()
+			this.process(data);
+			this.xAxis();
+			this.yAxis();
 			// this.trendline()
-			this.dots()
-			this.correlationText()
+			this.dots();
+			this.correlationText();
 		},
 
 		process(data) {
-			this.yData = data["time (inc)"]
-			this.xData = data["time"]
-			this.nameData = data['name']
+			this.yData = data["time (inc)"];
+			this.xData = data["time"];
+			this.nameData = data["name"];
 
-			let temp
-			if (this.$store.selectedScatterMode == 'mean') {
-				console.log('mean')
-				temp = this.scatterMean()
+			let temp;
+			if (this.$store.selectedScatterMode == "mean") {
+				console.log("mean");
+				temp = this.scatterMean();
 			}
-			else if (this.$store.selectedScatterMode == 'all') {
-				console.log('all')
-				temp = this.scatterAll()
+			else if (this.$store.selectedScatterMode == "all") {
+				console.log("all");
+				temp = this.scatterAll();
 			}
-			this.xMin = temp[0]
-			this.yMin = temp[1]
-			this.xMax = temp[2]
-			this.yMax = temp[3]
-			this.xArray = temp[4]
-			this.yArray = temp[5]
+			this.xMin = temp[0];
+			this.yMin = temp[1];
+			this.xMax = temp[2];
+			this.yMax = temp[3];
+			this.xArray = temp[4];
+			this.yArray = temp[5];
 
 			// console.log('X-axis:', this.xArray)
 			// console.log('Y-axis:', this.yArray)
 
-			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice())
+			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice());
 			this.regressionY = this.leastSquaresCoeff["y_res"];
 			this.corre_coef = this.leastSquaresCoeff["corre_coef"];
 
-			this.xAxisHeight = this.boxWidth - 4 * this.margin.left
-			this.yAxisHeight = this.boxHeight - 4 * this.margin.left
-			console.log(this.xAxisHeight, this.yAxisHeight)
-			this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.xAxisHeight])
-			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.yAxisHeight, 0])
+			this.xAxisHeight = this.boxWidth - 4 * this.margin.left;
+			this.yAxisHeight = this.boxHeight - 4 * this.margin.left;
+			console.log(this.xAxisHeight, this.yAxisHeight);
+			this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.xAxisHeight]);
+			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.yAxisHeight, 0]);
 		},
 
 		scatterAll() {
-			let xArray = []
-			let yArray = []
-			let yMin = 0
-			let xMin = 0
-			let xMax = 0
-			let yMax = 0
+			let xArray = [];
+			let yArray = [];
+			let yMin = 0;
+			let xMin = 0;
+			let xMax = 0;
+			let yMax = 0;
 
 			for (const [idx, d] of Object.entries(this.yData)) {
 				//for (let rank = 0; rank < d.length; rank += 1) {
@@ -145,9 +145,9 @@ export default {
 				// yMax = Math.max(yMax, d[rank])
 				// yArray.push(d[rank])
 				// }
-				yMin = Math.min(yMin, d)
-				yMax = Math.max(yMax, d)
-				yArray.push(d)
+				yMin = Math.min(yMin, d);
+				yMax = Math.max(yMax, d);
+				yArray.push(d);
 			}
 
 			for (const [idx, d] of Object.entries(this.xData)) {
@@ -156,41 +156,41 @@ export default {
 				// xMax = Math.max(xMax, d[rank]);
 				// xArray.push(d[rank])
 				// }
-				xMin = Math.min(xMin, d)
-				xMax = Math.max(xMax, d)
-				xArray.push(d)
+				xMin = Math.min(xMin, d);
+				xMax = Math.max(xMax, d);
+				xArray.push(d);
 			}
 
-			return [xMin, yMin, xMax, yMax, xArray, yArray]
+			return [xMin, yMin, xMax, yMax, xArray, yArray];
 		},
 
 		scatterMean() {
-			let xArray = []
-			let yArray = []
-			let yMin = 0
-			let xMin = 0
-			let xMax = 0
-			let yMax = 0
+			let xArray = [];
+			let yArray = [];
+			let yMin = 0;
+			let xMin = 0;
+			let xMax = 0;
+			let yMax = 0;
 			for (const [idx, d] of Object.entries(this.yData)) {
-				let ySum = 0
+				let ySum = 0;
 				for (let rank = 0; rank < d.length; rank += 1) {
-					yMin = Math.min(yMin, d[rank])
-					yMax = Math.max(yMax, d[rank])
-					ySum += d[rank]
+					yMin = Math.min(yMin, d[rank]);
+					yMax = Math.max(yMax, d[rank]);
+					ySum += d[rank];
 				}
-				yArray.push(ySum / d.length)
+				yArray.push(ySum / d.length);
 			}
 
 			for (const [idx, d] of Object.entries(this.xData)) {
-				let xSum = 0
+				let xSum = 0;
 				for (let rank = 0; rank < d.length; rank += 1) {
 					xMin = Math.min(xMin, d[rank]);
 					xMax = Math.max(xMax, d[rank]);
-					xSum += d[rank]
+					xSum += d[rank];
 				}
-				yArray.push(xSum / d.length)
+				yArray.push(xSum / d.length);
 			}
-			return [xMin, yMin, xMax, yMax, xArray, yArray]
+			return [xMin, yMin, xMax, yMax, xArray, yArray];
 		},
 
 		// returns slope, intercept and r-square of the line
@@ -236,7 +236,7 @@ export default {
 			var x2 = [];
 			var y2 = [];
 
-			for (var i = 0; i < n; i++) {
+			for (let i = 0; i < n; i++) {
 				xy.push(xSeries[i] * ySeries[i]);
 				x2.push(xSeries[i] * xSeries[i]);
 				y2.push(ySeries[i] * ySeries[i]);
@@ -248,7 +248,7 @@ export default {
 			var sum_x2 = 0;
 			var sum_y2 = 0;
 
-			for (var i = 0; i < n; i++) {
+			for (let i = 0; i < n; i++) {
 				sum_x += xSeries[i];
 				sum_y += ySeries[i];
 				sum_xy += xy[i];
@@ -270,100 +270,100 @@ export default {
 		},
 
 		xAxis() {
-			let self = this
-			const xFormat = d3.format('0.1s');
+			let self = this;
+			const xFormat = d3.format("0.1s");
 			var xAxis = d3.axisBottom(this.xScale)
 				.ticks(5)
 				.tickFormat((d, i) => {
 					let temp = d;
 					if (i % 2 == 0) {
-						let value = temp * 0.000001
-						return `${xFormat(value)}s`
+						let value = temp * 0.000001;
+						return `${xFormat(value)}s`;
 					}
-					return '';
+					return "";
 				});
 
-			this.svg.append('text')
-				.attr('class', 'axis-label')
-				.attr('x', self.boxWidth)
-				.attr('y', self.yAxisHeight - this.margin.top)
-				.style('font-size', '12px')
-				.style('text-anchor', 'end')
-				.text("Exclusive Runtime")
+			this.svg.append("text")
+				.attr("class", "axis-label")
+				.attr("x", self.boxWidth)
+				.attr("y", self.yAxisHeight - this.margin.top)
+				.style("font-size", "12px")
+				.style("text-anchor", "end")
+				.text("Exclusive Runtime");
 
 
-			let xAxisHeightCorrected = this.yAxisHeight
-			var xAxisLine = this.svg.append('g')
-				.attr('class', 'axis')
-				.attr('id', 'xAxis')
+			let xAxisHeightCorrected = this.yAxisHeight;
+			var xAxisLine = this.svg.append("g")
+				.attr("class", "axis")
+				.attr("id", "xAxis")
 				.attr("transform", "translate(" + 3 * self.margin.left + "," + xAxisHeightCorrected + ")")
-				.call(xAxis)
+				.call(xAxis);
 
-			xAxisLine.selectAll('path')
+			xAxisLine.selectAll("path")
 				.style("fill", "none")
 				.style("stroke", "black")
 				.style("stroke-width", "1px");
 
-			xAxisLine.selectAll('line')
+			xAxisLine.selectAll("line")
 				.style("fill", "none")
 				.style("stroke", "#000")
 				.style("stroke-width", "1px")
 				.style("opacity", 0.5);
 
 			xAxisLine.selectAll("text")
-				.style('font-size', '12px')
-				.style('font-family', 'sans-serif')
-				.style('font-weight', 'lighter');
+				.style("font-size", "12px")
+				.style("font-family", "sans-serif")
+				.style("font-weight", "lighter");
 		},
 
 		yAxis() {
-			let self = this
-			const yFormat = d3.format('0.2s')
+			let self = this;
+			const yFormat = d3.format("0.2s");
 			let yAxis = d3.axisLeft(self.yScale)
 				.ticks(5)
 				.tickFormat((d, i) => {
 					let temp = d;
 					if (i % 2 == 0) {
-						let value = temp * 0.000001
-						return `${yFormat(value)}s`
+						let value = temp * 0.000001;
+						return `${yFormat(value)}s`;
 					}
-					return '';
-				})
+					return "";
+				});
 
-			var yAxisLine = this.svg.append('g')
-				.attr('id', 'yAxis')
-				.attr('class', 'axis')
-				.attr('transform', "translate(" + 3 * self.margin.left + ", 0)")
-				.call(yAxis)
+			var yAxisLine = this.svg.append("g")
+				.attr("id", "yAxis")
+				.attr("class", "axis")
+				.attr("transform", "translate(" + 3 * self.margin.left + ", 0)")
+				.call(yAxis);
 
 			this.svg.append("text")
-				.attr('class', 'axis-label')
-				.attr('transform', 'rotate(-90)')
-				.attr('x', 0)
-				.attr('y', 4 * this.margin.left)
+				.attr("class", "axis-label")
+				.attr("transform", "rotate(-90)")
+				.attr("x", 0)
+				.attr("y", 4 * this.margin.left)
 				.style("text-anchor", "end")
 				.style("font-size", "12px")
-				.text("Inclusive Runtime")
+				.text("Inclusive Runtime");
 
-			yAxisLine.selectAll('path')
+			yAxisLine.selectAll("path")
 				.style("fill", "none")
 				.style("stroke", "black")
 				.style("stroke-width", "1px");
 
-			yAxisLine.selectAll('line')
+			yAxisLine.selectAll("line")
 				.style("fill", "none")
 				.style("stroke", "#000")
 				.style("stroke-width", "1px")
 				.style("opacity", 0.5);
 
 			yAxisLine.selectAll("text")
-				.style('font-size', '12px')
-				.style('font-family', 'sans-serif')
-				.style('font-weight', 'lighter');
+				.style("font-size", "12px")
+				.style("font-family", "sans-serif")
+				.style("font-weight", "lighter");
 		},
 
 		trendline() {
-			let self = this
+			let self = this;
 			var line = d3.line()
 				.x(function (d, i) {
 					return self.xScale(self.xArray[i]) + 3 * self.margin.left;
@@ -372,8 +372,8 @@ export default {
 					return self.yScale(self.yArray[i]);
 				});
 
-			var trendline = this.svg.append('g')
-				.attr('class', 'trend-line')
+			var trendline = this.svg.append("g")
+				.attr("class", "trend-line")
 				.append("path")
 				.datum(this.regressionY)
 				.attr("d", line)
@@ -383,26 +383,26 @@ export default {
 		},
 
 		dots() {
-			let self = this
-			this.svg.selectAll('.dot')
+			let self = this;
+			this.svg.selectAll(".dot")
 				.data(this.yArray)
-				.enter().append('circle')
-				.attr('class', 'dot')
-				.attr('r', 5)
-				.attr('cx', function (d, i) {
+				.enter().append("circle")
+				.attr("class", "dot")
+				.attr("r", 5)
+				.attr("cx", function (d, i) {
 					return self.xScale(self.xArray[i]) + 3 * self.margin.left;
 				})
-				.attr('cy', function (d, i) {
+				.attr("cy", function (d, i) {
 					return self.yScale(self.yArray[i]);
 				})
-				.style('fill', "#4682b4")
+				.style("fill", "#4682b4");
 		},
 
 		correlationText() {
-			let self = this
+			let self = this;
 			let decimalFormat = d3.format("0.2f");
-			this.svg.append('g').append('text')
-				.attr('class', 'text')
+			this.svg.append("g").append("text")
+				.attr("class", "text")
 				.text("corr-coef: " + decimalFormat(this.corre_coef))
 				.attr("x", function (d) {
 					return self.boxWidth - self.width / 3;
@@ -412,17 +412,12 @@ export default {
 				});
 		},
 
-		setContainerWidth(newWidth) {
-			containerWidth = newWidth;
-			width = containerWidth - margin.left - margin.right;
-		},
-
 		clear() {
-			d3.selectAll('.dot').remove()
-			d3.selectAll('.axis').remove()
-			d3.selectAll('.trend-line').remove()
-			d3.selectAll('.axis-label').remove()
-			d3.selectAll('.text').remove()
+			d3.selectAll(".dot").remove();
+			d3.selectAll(".axis").remove();
+			d3.selectAll(".trend-line").remove();
+			d3.selectAll(".axis-label").remove();
+			d3.selectAll(".text").remove();
 		},
 	}
-}
+};

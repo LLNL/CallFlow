@@ -5,9 +5,9 @@
     "scripts": {
         "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
         "production": "webpack-dev-server --host 0.0.0.0 --port 80 --config build/webpack.dev.conf.js",
+        "lint": "./node_modules/.bin/eslint --fix .",
         "start": "npm run dev",
-        "build": "node build/build.js",
-        "nodemon-build": "nodemon build/build.js"
+        "build": "node build/build.js"
     },
     "dependencies": {
         "@mdi/js": "^4.9.95",
@@ -64,6 +64,10 @@
         "chalk": "^2.4.2",
         "copy-webpack-plugin": "^5.0.3",
         "css-loader": "^3.0.0",
+        "eslint": "^6.8.0",
+        "eslint-config-airbnb-base": "^14.1.0",
+        "eslint-plugin-import": "^2.20.2",
+        "eslint-plugin-vue": "^7.0.0-alpha.4",
         "extract-text-webpack-plugin": "^3.0.2",
         "file-loader": "^4.0.0",
         "friendly-errors-webpack-plugin": "^1.7.0",

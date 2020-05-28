@@ -1,12 +1,12 @@
-(function (f) { if (typeof exports === "object" && typeof module !== "undefined") { module.exports = f() } else if (typeof define === "function" && define.amd) { define([], f) } else { var g; if (typeof window !== "undefined") { g = window } else if (typeof global !== "undefined") { g = global } else if (typeof self !== "undefined") { g = self } else { g = this } g.TreeModel = f() } })(function () {
-	var define, module, exports; return (function e(t, n, r) { function s(o, u) { if (!n[o]) { if (!t[o]) { var a = typeof require == "function" && require; if (!u && a) return a(o, !0); if (i) return i(o, !0); var f = new Error("Cannot find module '" + o + "'"); throw f.code = "MODULE_NOT_FOUND", f } var l = n[o] = { exports: {} }; t[o][0].call(l.exports, function (e) { var n = t[o][1][e]; return s(n ? n : e) }, l, l.exports, e, t, n, r) } return n[o].exports } var i = typeof require == "function" && require; for (var o = 0; o < r.length; o++)s(r[o]); return s })({
+(function (f) { if (typeof exports === "object" && typeof module !== "undefined") { module.exports = f(); } else if (typeof define === "function" && define.amd) { define([], f); } else { var g; if (typeof window !== "undefined") { g = window; } else if (typeof global !== "undefined") { g = global; } else if (typeof self !== "undefined") { g = self; } else { g = this; } g.TreeModel = f(); } })(function () {
+	var define, module, exports; return (function e(t, n, r) { function s(o, u) { if (!n[o]) { if (!t[o]) { var a = typeof require == "function" && require; if (!u && a) return a(o, !0); if (i) return i(o, !0); var f = new Error("Cannot find module '" + o + "'"); throw f.code = "MODULE_NOT_FOUND", f; } var l = n[o] = { exports: {} }; t[o][0].call(l.exports, function (e) { var n = t[o][1][e]; return s(n ? n : e); }, l, l.exports, e, t, n, r); } return n[o].exports; } var i = typeof require == "function" && require; for (var o = 0; o < r.length; o++)s(r[o]); return s; })({
 		1: [function (require, module, exports) {
 			var mergeSort, findInsertIndex;
-			mergeSort = require('mergesort');
-			findInsertIndex = require('find-insert-index');
+			mergeSort = require("mergesort");
+			findInsertIndex = require("find-insert-index");
 
 			module.exports = (function () {
-				'use strict';
+				"use strict";
 
 				var walkStrategies;
 
@@ -21,7 +21,7 @@
 				function TreeModel(config) {
 					config = config || {};
 					this.config = config;
-					this.config.childrenPropertyName = config.childrenPropertyName || 'children';
+					this.config.childrenPropertyName = config.childrenPropertyName || "children";
 					this.config.modelComparatorFn = config.modelComparatorFn;
 				}
 
@@ -29,7 +29,7 @@
 					var i, childCount, node;
 
 					if (!(model instanceof Object)) {
-						throw new TypeError('Model must be of type object.');
+						throw new TypeError("Model must be of type object.");
 					}
 
 					node = new Node(this.config, model);
@@ -53,7 +53,7 @@
 				}
 
 				function hasComparatorFunction(node) {
-					return typeof node.config.modelComparatorFn === 'function';
+					return typeof node.config.modelComparatorFn === "function";
 				}
 
 				function Node(config, model) {
@@ -76,7 +76,7 @@
 
 				Node.prototype.addChildAtIndex = function (child, index) {
 					if (hasComparatorFunction(this)) {
-						throw new Error('Cannot add child at index when using a comparator function.');
+						throw new Error("Cannot add child at index when using a comparator function.");
 					}
 
 					return addChild(this, child, index);
@@ -84,18 +84,18 @@
 
 				Node.prototype.setIndex = function (index) {
 					if (hasComparatorFunction(this)) {
-						throw new Error('Cannot set node index when using a comparator function.');
+						throw new Error("Cannot set node index when using a comparator function.");
 					}
 
 					if (this.isRoot()) {
 						if (index === 0) {
 							return this;
 						}
-						throw new Error('Invalid index.');
+						throw new Error("Invalid index.");
 					}
 
 					if (index < 0 || index >= this.parent.children.length) {
-						throw new Error('Invalid index.');
+						throw new Error("Invalid index.");
 					}
 
 					var oldIndex = this.parent.children.indexOf(this);
@@ -112,7 +112,7 @@
 					var index;
 
 					if (!(child instanceof Node)) {
-						throw new TypeError('Child must be of type Node.');
+						throw new TypeError("Child must be of type Node.");
 					}
 
 					child.parent = self;
@@ -138,7 +138,7 @@
 							self.children.push(child);
 						} else {
 							if (insertIndex < 0 || insertIndex > self.children.length) {
-								throw new Error('Invalid index.');
+								throw new Error("Invalid index.");
 							}
 							self.model[self.config.childrenPropertyName].splice(insertIndex, 0, child.model);
 							self.children.splice(insertIndex, 0, child);
@@ -178,13 +178,13 @@
 				function parseArgs() {
 					var args = {};
 					if (arguments.length === 1) {
-						if (typeof arguments[0] === 'function') {
+						if (typeof arguments[0] === "function") {
 							args.fn = arguments[0];
 						} else {
 							args.options = arguments[0];
 						}
 					} else if (arguments.length === 2) {
-						if (typeof arguments[0] === 'function') {
+						if (typeof arguments[0] === "function") {
 							args.fn = arguments[0];
 							args.ctx = arguments[1];
 						} else {
@@ -198,10 +198,10 @@
 					}
 					args.options = args.options || {};
 					if (!args.options.strategy) {
-						args.options.strategy = 'pre';
+						args.options.strategy = "pre";
 					}
 					if (!walkStrategies[args.options.strategy]) {
-						throw new Error('Unknown tree walk strategy. Valid strategies are \'pre\' [default], \'post\' and \'breadth\'.');
+						throw new Error("Unknown tree walk strategy. Valid strategies are 'pre' [default], 'post' and 'breadth'.");
 					}
 					return args;
 				}
@@ -295,7 +295,7 @@
 
 		}, { "find-insert-index": 2, "mergesort": 3 }], 2: [function (require, module, exports) {
 			module.exports = (function () {
-				'use strict';
+				"use strict";
 
 				/**
 				 * Find the index to insert an element in array keeping the sort order.
@@ -319,7 +319,7 @@
 
 		}, {}], 3: [function (require, module, exports) {
 			module.exports = (function () {
-				'use strict';
+				"use strict";
 
 				/**
 				 * Sort an array using the merge sort algorithm.
@@ -370,5 +370,5 @@
 			})();
 
 		}, {}]
-	}, {}, [1])(1)
+	}, {}, [1])(1);
 });

@@ -1,19 +1,19 @@
-import tpl from '../../html/ensembleSupergraph/index.html'
-import Sankey from './sankey'
-import EnsembleNodes from './nodes'
-import MiniHistograms from './miniHistograms'
-import EnsembleEdges from './edges'
-import * as  d3 from 'd3'
-import EventHandler from '../EventHandler.js'
-import EnsembleColorMap from './colormap'
+import tpl from "../../html/ensembleSupergraph/index.html";
+import Sankey from "./sankey";
+import EnsembleNodes from "./nodes";
+import MiniHistograms from "./miniHistograms";
+import EnsembleEdges from "./edges";
+import * as  d3 from "d3";
+import EventHandler from "../EventHandler.js";
+import EnsembleColorMap from "./colormap";
 
-import Graph from '../../core/graph'
-import GraphVertex from '../../core/node'
-import GraphEdge from '../../core/edge'
-import detectDirectedCycle from '../../core/detectcycle'
+import Graph from "../../core/graph";
+import GraphVertex from "../../core/node";
+import GraphEdge from "../../core/edge";
+import detectDirectedCycle from "../../core/detectcycle";
 
 export default {
-	name: 'EnsembleSuperGraph',
+	name: "EnsembleSuperGraph",
 	template: tpl,
 	components: {
 		EnsembleNodes,
@@ -23,8 +23,8 @@ export default {
 	},
 	data: () => ({
 		graph: null,
-		id: 'ensemble-supergraph-overview',
-		dashboardID: 'ensemble-supergraph-dashboard',
+		id: "ensemble-supergraph-overview",
+		dashboardID: "ensemble-supergraph-dashboard",
 		nodeWidth: 50,
 		nodeScale: 1.0,
 		ySpacing: 60,
@@ -41,70 +41,70 @@ export default {
 	}),
 
 	mounted() {
-		this.id = 'ensemble-supergraph-overview'
-		let self = this
-		EventHandler.$on('clear_summary_view', function () {
-			console.log("Clearing Summary view")
-			self.clear()
-		})
+		this.id = "ensemble-supergraph-overview";
+		let self = this;
+		EventHandler.$on("clear_summary_view", function () {
+			console.log("Clearing Summary view");
+			self.clear();
+		});
 
-		EventHandler.$on('reveal_callsite', function () {
-			self.clear()
-		})
+		EventHandler.$on("reveal_callsite", function () {
+			self.clear();
+		});
 
-		EventHandler.$on('split_by_entry_callsites', function () {
-			self.clear()
-		})
+		EventHandler.$on("split_by_entry_callsites", function () {
+			self.clear();
+		});
 
-		EventHandler.$on('split_by_callees', function () {
-			self.clear()
-		})
+		EventHandler.$on("split_by_callees", function () {
+			self.clear();
+		});
 	},
 
 	sockets: {
 		ensemble_supergraph(data) {
-			data = JSON.parse(data)
-			console.log("Data: ", data)
-			let nodes = []
+			data = JSON.parse(data);
+			console.log("Data: ", data);
+			let nodes = [];
 			for (let i = 0; i < data.nodes.length; i += 1) {
-				console.log("Node name: ", data.nodes[i].id)
-				console.log("Time (inc): ", data.nodes[i]['time (inc)'])
-				console.log("Time: ", data.nodes[i]['time'])
+				console.log("Node name: ", data.nodes[i].id);
+				console.log("Time (inc): ", data.nodes[i]["time (inc)"]);
+				console.log("Time: ", data.nodes[i]["time"]);
 			}
 
 			for (let i = 0; i < data.links.length; i += 1) {
-				console.log("Source: ", data.links[i].source)
-				console.log("Target: ", data.links[i].target)
-				console.log("Weight: ", data.links[i].weight)
+				console.log("Source: ", data.links[i].source);
+				console.log("Target: ", data.links[i].target);
+				console.log("Weight: ", data.links[i].weight);
 			}
-			this.render(data)
+			this.render(data);
 		},
 	},
 
 	methods: {
 		init() {
-			this.auxiliaryViewWidth = document.getElementById('auxiliary-function-overview').clientWidth
+			this.auxiliaryViewWidth = document.getElementById("auxiliary-function-overview").clientWidth;
 
 
-			this.width = 5 * this.$store.viewWidth
-			this.height = 2 * this.$store.viewHeight
+			this.width = 5 * this.$store.viewWidth;
+			this.height = 2 * this.$store.viewHeight;
 
-			this.sankeyWidth = 0.7 * this.$store.viewWidth
-			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom
+			this.sankeyWidth = 0.7 * this.$store.viewWidth;
+			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
-			this.sankeySVG = d3.select('#' + this.id)
+			this.sankeySVG = d3.select("#" + this.id)
 				.attrs({
-					'width': this.width,
+					"width": this.width,
 					"height": this.height,
 					"top": this.toolbarHeight
-				})
+				});
 
-			this.$socket.emit('ensemble_supergraph', {
+			this.$socket.emit("ensemble_supergraph", {
 				datasets: this.$store.selectedDatasets,
-				groupBy: 'module'
-			})
+				groupBy: "module"
+			});
 
-			let inner = this.sankeySVG.select('#container');
+			let inner = this.sankeySVG.select("#container");
 
 			var zoom = d3.zoom().on("zoom", function () {
 				inner.attrs({
@@ -116,100 +116,100 @@ export default {
 		},
 
 		clear() {
-			this.$refs.EnsembleNodes.clear()
-			this.$refs.EnsembleEdges.clear()
-			this.$refs.MiniHistograms.clear()
-			this.$refs.EnsembleColorMap.clear()
-			this.$refs.EnsembleColorMap.clearMetric()
+			this.$refs.EnsembleNodes.clear();
+			this.$refs.EnsembleEdges.clear();
+			this.$refs.MiniHistograms.clear();
+			this.$refs.EnsembleColorMap.clear();
+			this.$refs.EnsembleColorMap.clearMetric();
 		},
 
 		render(data) {
-			this.data = data
+			this.data = data;
 
-			this.data = this.addNodeMap(this.data)
-			this.data.graph = this.createGraphStructure(this.data)
+			this.data = this.addNodeMap(this.data);
+			this.data.graph = this.createGraphStructure(this.data);
 
 			// check cycle. 
-			let detectcycle = detectDirectedCycle(this.data.graph)
-			console.log(detectcycle)
+			let detectcycle = detectDirectedCycle(this.data.graph);
+			console.log(detectcycle);
 			if (Object.keys(detectcycle).length != 0) {
-				console.log("cycle detected. Sankey cannot be created. ")
+				console.log("cycle detected. Sankey cannot be created. ");
 			}
 			else {
-				console.log("No cycles detected.")
+				console.log("No cycles detected.");
 			}
 
 			if (this.debug) {
-				for (let i = 0; i < this.data['links'].length; i += 1) {
-					let link = this.data['links'][i]
-					let source_callsite = link['source']
-					let target_callsite = link['target']
-					let weight = link['weight']
+				for (let i = 0; i < this.data["links"].length; i += 1) {
+					let link = this.data["links"][i];
+					let source_callsite = link["source"];
+					let target_callsite = link["target"];
+					let weight = link["weight"];
 
-					console.log("=============================================")
-					console.log("[Ensemble SuperGraph] Source Name :", source_callsite)
-					console.log("[Ensemble SuperGraph] Target Name :", target_callsite)
-					console.log("[Ensemble SuperGraph] Weight: ", weight)
+					console.log("=============================================");
+					console.log("[Ensemble SuperGraph] Source Name :", source_callsite);
+					console.log("[Ensemble SuperGraph] Target Name :", target_callsite);
+					console.log("[Ensemble SuperGraph] Weight: ", weight);
 
 				}
 			}
-			this.initSankey(this.data)
+			this.initSankey(this.data);
 
-			console.log("[Ensemble SuperGraph] Layout Calculation.")
-			let postProcess = this.postProcess(this.data.nodes, this.data.links)
-			this.data.nodes = postProcess['nodes']
-			this.data.links = postProcess['links']
-			this.initSankey(this.data)
-			console.log("[Ensemble SuperGraph] Post-processing done.", this.data)
+			console.log("[Ensemble SuperGraph] Layout Calculation.");
+			let postProcess = this.postProcess(this.data.nodes, this.data.links);
+			this.data.nodes = postProcess["nodes"];
+			this.data.links = postProcess["links"];
+			this.initSankey(this.data);
+			console.log("[Ensemble SuperGraph] Post-processing done.", this.data);
 
-			this.$store.graph = this.data
-			this.$refs.EnsembleColorMap.init()
-			this.$refs.EnsembleNodes.init(this.$store.graph, this.view)
-			this.$refs.EnsembleEdges.init(this.$store.graph, this.view)
-			this.$refs.MiniHistograms.init(this.$store.graph, this.view)
+			this.$store.graph = this.data;
+			this.$refs.EnsembleColorMap.init();
+			this.$refs.EnsembleNodes.init(this.$store.graph, this.view);
+			this.$refs.EnsembleEdges.init(this.$store.graph, this.view);
+			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
 		},
 
 		addNodeMap(graph) {
-			let nodeMap = {}
-			let idx = 0
+			let nodeMap = {};
+			let idx = 0;
 			for (const node of graph.nodes) {
-				if (node.type == 'super-node') {
-					nodeMap[node.module] = idx
+				if (node.type == "super-node") {
+					nodeMap[node.module] = idx;
 				}
-				else if (node.type == 'component-node') {
-					nodeMap[node.name] = idx
+				else if (node.type == "component-node") {
+					nodeMap[node.name] = idx;
 				}
 				if (this.debug) {
-					console.log("[Preprocess] Assigning", node.id, " with map index: ", idx)
+					console.log("[Preprocess] Assigning", node.id, " with map index: ", idx);
 				}
-				idx += 1
+				idx += 1;
 			}
 
-			graph.nodeMap = nodeMap
-			return graph
+			graph.nodeMap = nodeMap;
+			return graph;
 		},
 
 		createGraphStructure(data) {
-			let graph = new Graph(true)
+			let graph = new Graph(true);
 
 			for (let i = 0; i < data.links.length; i += 1) {
-				let source = new GraphVertex(data.links[i].source)
-				let target = new GraphVertex(data.links[i].target)
-				let weight = data.links[i].weight
+				let source = new GraphVertex(data.links[i].source);
+				let target = new GraphVertex(data.links[i].target);
+				let weight = data.links[i].weight;
 				let edge = new GraphEdge(source, target, weight);
-				graph.addEdge(edge)
+				graph.addEdge(edge);
 			}
-			return graph
+			return graph;
 		},
 
 		updateMiniHistogram() {
-			this.$refs.MiniHistograms.clear()
-			this.$refs.MiniHistograms.init(this.graph, this.view)
+			this.$refs.MiniHistograms.clear();
+			this.$refs.MiniHistograms.init(this.graph, this.view);
 		},
 
 		//Sankey computation
 		initSankey() {
-			console.log("Initiating sankey again:", this.$store.selectedTargetDataset)
+			console.log("Initiating sankey again:", this.$store.selectedTargetDataset);
 			this.sankey = Sankey()
 				.nodeWidth(this.nodeWidth)
 				.nodePadding(this.ySpacing)
@@ -218,45 +218,45 @@ export default {
 				.maxLevel(this.data.maxLevel)
 				.datasets(this.$store.runNames)
 				.setMinNodeScale(this.nodeScale)
-				.dataset('ensemble')
+				.dataset("ensemble")
 				.targetDataset(this.$store.selectedTargetDataset)
-				.store(this.$store)
+				.store(this.$store);
 
-			let path = this.sankey.link()
+			let path = this.sankey.link();
 
 			this.sankey.nodes(this.data.nodes)
 				.links(this.data.links)
-				.layout(32)
+				.layout(32);
 		},
 
 		// Add intermediate nodes.
 		postProcess(nodes, edges) {
-			console.log("===================Adding intermediate nodes==================")
+			console.log("===================Adding intermediate nodes==================");
 			const temp_nodes = nodes.slice();
 			const temp_edges = edges.slice();
 
-			this.existingIntermediateNodes = {}
+			this.existingIntermediateNodes = {};
 
-			let removeActualEdges = []
-			let count = {}
+			let removeActualEdges = [];
+			let count = {};
 
 			for (let i = 0; i < temp_edges.length; i++) {
 				const source = temp_edges[i].source;
 				const target = temp_edges[i].target;
 
 				if (this.debug) {
-					console.log("==============================")
-					console.log("[Ensemble SuperGraph] Source Name", source)
-					console.log("[Ensemble SuperGraph] Target Name", target)
-					console.log("[Ensemble SuperGraph] This edge: ", temp_edges[i])
+					console.log("==============================");
+					console.log("[Ensemble SuperGraph] Source Name", source);
+					console.log("[Ensemble SuperGraph] Target Name", target);
+					console.log("[Ensemble SuperGraph] This edge: ", temp_edges[i]);
 				}
 
-				let source_node = temp_edges[i].source_data
-				let target_node = temp_edges[i].target_data
+				let source_node = temp_edges[i].source_data;
+				let target_node = temp_edges[i].target_data;
 
 				if (this.debug) {
-					console.log("[Ensemble SuperGraph] Source Node", source_node, target_node.level)
-					console.log("[Ensemble SuperGraph] Target Node", target_node, target_node.level)
+					console.log("[Ensemble SuperGraph] Source Node", source_node, target_node.level);
+					console.log("[Ensemble SuperGraph] Target Node", target_node, target_node.level);
 				}
 
 				const source_level = source_node.level;
@@ -264,23 +264,23 @@ export default {
 				const shift_level = target_level - source_level;
 
 				if (this.debug) {
-					console.log(source_level, target_level)
-					console.log("[Ensemble SuperGraph] Number of levels to shift: ", shift_level)
+					console.log(source_level, target_level);
+					console.log("[Ensemble SuperGraph] Number of levels to shift: ", shift_level);
 				}
 
-				let targetDataset = this.$store.selectedTargetDataset
+				let targetDataset = this.$store.selectedTargetDataset;
 				// Put in intermediate nodes.
-				let firstNode = true
+				let firstNode = true;
 				for (let j = shift_level; j > 1; j--) {
 					const intermediate_idx = nodes.length;
 
-					let tempNode = {}
-					let actual_time = source_node['actual_time']
-					let max_flow = source_node['max_flow']
+					let tempNode = {};
+					let actual_time = source_node["actual_time"];
+					let max_flow = source_node["max_flow"];
 					if (this.existingIntermediateNodes[target_node.id] == undefined) {
 						// Add the intermediate node to the array
 						tempNode = {
-							id: 'intermediate_' + target_node.id,
+							id: "intermediate_" + target_node.id,
 							level: j - 1,
 							value: temp_edges[i].weight,
 							targetValue: temp_edges[i].targetWeight,
@@ -289,64 +289,64 @@ export default {
 							// value: target_node.value,
 							// name: target_node.name,
 							module: target_node.module,
-							type: 'intermediate',
+							type: "intermediate",
 							count: 1
 						};
-						tempNode[targetDataset] = target_node[targetDataset]
+						tempNode[targetDataset] = target_node[targetDataset];
 
 						if (firstNode) {
-							console.log(tempNode)
-							nodes.push(tempNode)
-							firstNode = false
+							console.log(tempNode);
+							nodes.push(tempNode);
+							firstNode = false;
 						}
 
-						this.existingIntermediateNodes[target_node.id] = tempNode
+						this.existingIntermediateNodes[target_node.id] = tempNode;
 					}
 					else {
 						if (count[temp_edges[i].source] == undefined) {
-							count[temp_edges[i].source] = 0
-							console.log(temp_edges[i].weight, temp_edges[i].source, temp_edges[i].target)
-							this.existingIntermediateNodes[target_node.id].value += temp_edges[i].weight
+							count[temp_edges[i].source] = 0;
+							console.log(temp_edges[i].weight, temp_edges[i].source, temp_edges[i].target);
+							this.existingIntermediateNodes[target_node.id].value += temp_edges[i].weight;
 						}
 						else {
-							count[temp_edges[i].source] += 1
+							count[temp_edges[i].source] += 1;
 						}
-						tempNode = this.existingIntermediateNodes[target_node.id]
+						tempNode = this.existingIntermediateNodes[target_node.id];
 					}
 
 					// Add the source edge.
 					const sourceTempEdge = {
-						type: 'source_intermediate',
+						type: "source_intermediate",
 						source: source_node.id,
 						target: tempNode.id,
 						weight: temp_edges[i].weight,
 						targetWeight: temp_edges[i].targetWeight,
 						actual_time: actual_time,
 						max_flow: max_flow
-					}
-					edges.push(sourceTempEdge)
+					};
+					edges.push(sourceTempEdge);
 					if (this.debug) {
 						console.log("[Ensemble SuperGraph] Adding intermediate source edge: ", sourceTempEdge);
 					}
 
 					if (j == shift_level) {
-						edges[i].original_target = target
+						edges[i].original_target = target;
 					}
-					edges[i].target_data = nodes[intermediate_idx]
+					edges[i].target_data = nodes[intermediate_idx];
 					if (this.debug) {
-						console.log("[Ensemble SuperGraph] Updating this edge:", edges[i])
+						console.log("[Ensemble SuperGraph] Updating this edge:", edges[i]);
 					}
 
 					const targetTempEdge = {
-						type: 'target_intermediate',
+						type: "target_intermediate",
 						source: tempNode.id,
 						target: target_node.id,
 						actual_time: actual_time,
 						weight: temp_edges[i].weight,
 						targetWeight: temp_edges[i].targetWeight,
 						max_flow: max_flow
-					}
-					edges.push(targetTempEdge)
+					};
+					edges.push(targetTempEdge);
 					if (this.debug) {
 						console.log("[Ensemble SuperGraph] Adding intermediate target edge: ", targetTempEdge);
 					}
@@ -354,41 +354,41 @@ export default {
 					if (j == shift_level) {
 						edges[i].original_target = target;
 					}
-					edges[i].target_data = nodes[intermediate_idx]
+					edges[i].target_data = nodes[intermediate_idx];
 					if (this.debug) {
-						console.log("[Ensemble SuperGraph] Updating this edge:", edges[i])
+						console.log("[Ensemble SuperGraph] Updating this edge:", edges[i]);
 					}
 
 					removeActualEdges.push({
 						source,
 						target
-					})
+					});
 				}
 			}
-			console.log(temp_edges.length, removeActualEdges.length, edges.length)
+			console.log(temp_edges.length, removeActualEdges.length, edges.length);
 
 
 			if (this.debug) {
-				console.log("[Ensemble SuperGraph] Removing", removeActualEdges.length, " edges.")
+				console.log("[Ensemble SuperGraph] Removing", removeActualEdges.length, " edges.");
 			}
 
 			for (let i = 0; i < removeActualEdges.length; i += 1) {
-				let removeEdge = removeActualEdges[i]
+				let removeEdge = removeActualEdges[i];
 				if (this.debug) {
-					console.log("[Ensemble SuperGraph] Removing edge: ", removeEdge)
+					console.log("[Ensemble SuperGraph] Removing edge: ", removeEdge);
 				}
 				for (let edge_idx = 0; edge_idx < edges.length; edge_idx += 1) {
-					let curr_edge = edges[edge_idx]
+					let curr_edge = edges[edge_idx];
 					if (removeEdge.source == curr_edge.source && removeEdge.target == curr_edge.target) {
-						edges.splice(edge_idx, 1)
+						edges.splice(edge_idx, 1);
 					}
 				}
 			}
-			console.log(edges.length)
+			console.log(edges.length);
 			return {
 				nodes: nodes,
 				links: edges
-			}
+			};
 		},
 	}
-}
+};

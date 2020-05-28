@@ -1,39 +1,39 @@
-import * as d3 from 'd3'
-import VueSlider from 'vue-slider-component'
-import 'vue-slider-component/theme/antd.css'
+import * as d3 from "d3";
+import VueSlider from "vue-slider-component";
+import "vue-slider-component/theme/antd.css";
 
-import Color from './color/color';
-import Splitpanes from 'splitpanes'
-import 'splitpanes/dist/splitpanes.css'
+import Color from "./color/color";
+import Splitpanes from "splitpanes";
+import "splitpanes/dist/splitpanes.css";
 
-import EventHandler from './EventHandler'
+import EventHandler from "./EventHandler";
 
 // Template import
-import tpl from '../html/callflow.html'
+import tpl from "../html/callflow.html";
 
 // Single mode imports
-import SuperGraph from './supergraph/supergraph'
-import SingleCCT from './cct/cct'
-import RuntimeScatterplot from './runtimeScatterplot/runtimeScatterplot'
-import SingleHistogram from './histogram/histogram'
-import Function from './function/function'
+import SuperGraph from "./supergraph/supergraph";
+import SingleCCT from "./cct/cct";
+import RuntimeScatterplot from "./runtimeScatterplot/runtimeScatterplot";
+import SingleHistogram from "./histogram/histogram";
+import Function from "./function/function";
 
 // Ensemble mode imports
-import EnsembleSuperGraph from './ensembleSupergraph/ensembleSupergraph'
-import EnsembleCCT from './ensembleCCT/ensembleCCT'
-import AuxiliaryFunction from './auxiliaryFunction/auxiliaryFunction'
-import EnsembleHistogram from './ensembleHistogram/ensembleHistogram'
-import ModuleHierarchy from './moduleHierarchy/moduleHierarchy'
-import EnsembleScatterplot from './ensembleScatterplot/ensembleScatterplot'
+import EnsembleSuperGraph from "./ensembleSupergraph/ensembleSupergraph";
+import EnsembleCCT from "./ensembleCCT/ensembleCCT";
+import AuxiliaryFunction from "./auxiliaryFunction/auxiliaryFunction";
+import EnsembleHistogram from "./ensembleHistogram/ensembleHistogram";
+import ModuleHierarchy from "./moduleHierarchy/moduleHierarchy";
+import EnsembleScatterplot from "./ensembleScatterplot/ensembleScatterplot";
 // import EnsembleDistribution from './ensembleDistribution/ensembleDistribution'
-import ParameterProjection from './parameterProjection/parameterProjection'
+import ParameterProjection from "./parameterProjection/parameterProjection";
 // import SimilarityMatrix from './similarityMatrix/similarityMatrix'
 
-import io from 'socket.io-client'
-import * as utils from './utils'
+import io from "socket.io-client";
+import * as utils from "./utils";
 
 export default {
-	name: 'CallFlow',
+	name: "CallFlow",
 	template: tpl,
 	components: {
 		Splitpanes,
@@ -56,35 +56,35 @@ export default {
 
 	watch: {
 		showTarget: (val) => {
-			EventHandler.$emit('show_target_auxiliary')
+			EventHandler.$emit("show_target_auxiliary");
 		}
 	},
 
 	data: () => ({
-		appName: 'CallFlow',
+		appName: "CallFlow",
 		// server: '169.237.6.49:5000',
-		server: 'localhost:5000',
+		server: "localhost:5000",
 		config: {
 			headers: {
-				'Access-Control-Allow-Origin': '*'
+				"Access-Control-Allow-Origin": "*"
 			}
 		},
 		left: false,
-		formats: ['CCT', 'SuperGraph'],
-		selectedFormat: 'SuperGraph',
+		formats: ["CCT", "SuperGraph"],
+		selectedFormat: "SuperGraph",
 		datasets: [],
-		selectedTargetDataset: '',
-		selectedDataset2: '',
-		groupBy: ['Name', 'Module', 'File'],
-		selectedGroupBy: 'Module',
-		filterBy: ['Inclusive', 'Exclusive'],
+		selectedTargetDataset: "",
+		selectedDataset2: "",
+		groupBy: ["Name", "Module", "File"],
+		selectedGroupBy: "Module",
+		filterBy: ["Inclusive", "Exclusive"],
 		filterRange: [0, 100],
-		selectedFilterBy: 'Inclusive',
+		selectedFilterBy: "Inclusive",
 		selectedIncTime: 0,
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
-		metrics: ['Exclusive', 'Inclusive'],//, 'Imbalance'],
-		selectedMetric: 'Exclusive',
+		metrics: ["Exclusive", "Inclusive"],//, 'Imbalance'],
+		selectedMetric: "Exclusive",
 		runtimeColorMap: [],
 		distributionColorMap: [],
 		selectedRuntimeColorMap: "Default",
@@ -93,36 +93,35 @@ export default {
 		selectedColorPoint: 9,
 		selectedColorMin: null,
 		selectedColorMax: null,
-		selectedColorMinText: '',
-		selectedColorMaxText: '',
-		groupModes: ['include callbacks', 'exclude callbacks'],
-		selectedGroupMode: 'include callbacks',
-		scatterMode: ['mean', 'all'],
-		selectedScatterMode: 'all',
+		selectedColorMinText: "",
+		selectedColorMaxText: "",
+		groupModes: ["include callbacks", "exclude callbacks"],
+		selectedGroupMode: "include callbacks",
+		scatterMode: ["mean", "all"],
+		selectedScatterMode: "all",
 		selectedFunctionsInCCT: 70,
-		selectedDiffNodeAlignment: 'Top',
-		diffNodeAlignment: ['Middle', 'Top'],
+		selectedDiffNodeAlignment: "Top",
+		diffNodeAlignment: ["Middle", "Top"],
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
-		datas: ['Dataframe', 'Graph'],
-		selectedData: 'Dataframe',
-		firstRender: false,
-		summaryChip: 'Ensemble SuperGraph',
-		auxiliarySortBy: 'time (inc)',
+		datas: ["Dataframe", "Graph"],
+		selectedData: "Dataframe",
+		firstRender: true,
+		summaryChip: "Ensemble SuperGraph",
+		auxiliarySortBy: "time (inc)",
 		ranks: [],
-		selectedTargetDataset: '',
 		initLoad: true,
 		comparisonMode: false,
 		selectedCompareDataset: null,
-		compareModes: ['mean-diff', 'rank-diff'],
-		selectedCompareMode: 'mean-diff',
+		compareModes: ["mean-diff", "rank-diff"],
+		selectedCompareMode: "mean-diff",
 		selectedOutlierBand: 4,
-		defaultCallSite: '<program root>',
-		modes: ['Ensemble', 'Single'],
-		selectedMode: 'Ensemble',
+		defaultCallSite: "<program root>",
+		modes: ["Ensemble", "Single"],
+		selectedMode: "Ensemble",
 		// Presentation mode variables
-		exhibitModes: ['Presentation', 'Default'],
-		selectedExhibitMode: 'Default',
+		exhibitModes: ["Presentation", "Default"],
+		selectedExhibitMode: "Default",
 		presentationPage: 0,
 		presentationOrder: [
 			"run_information",
@@ -135,305 +134,302 @@ export default {
 			"ensemble_projection",
 		],
 		parameter_analysis: true,
-		caseStudy: ['Lulesh-Scaling-3-runs', 'Lulesh-Scaling-8-runs', 'Kripke-MPI', 'OSU-Bcast', 'Kripke-Scaling'],
-		selectedCaseStudy: '',
+		caseStudy: ["Lulesh-Scaling-3-runs", "Lulesh-Scaling-8-runs", "Kripke-MPI", "OSU-Bcast", "Kripke-Scaling"],
+		selectedCaseStudy: "",
 		selectedRunBinCount: 20,
 		selectedMPIBinCount: 20,
-		selectedHierarchyMode: 'Uniform',
-		hierarchyModes: ['Uniform', 'Exclusive'],
-		selectedRuntimeSortBy: 'Inclusive',
-		sortByModes: ['Inclusive', 'Exclusive', 'Standard Deviation'],
-		scales: ['Log', 'Linear'],
-		selectedScale: 'Linear',
-		props: ['name', 'rank', 'dataset', 'all_ranks'],
-		selectedProp: 'rank',
-		dimensions: ['max_inclusive_time', 'max_exclusive_time', 'rank_count'],
-		selectedPC1: 'max_inclusive_time',
-		selectedPC2: 'max_exclusive_time',
+		selectedHierarchyMode: "Uniform",
+		hierarchyModes: ["Uniform", "Exclusive"],
+		selectedRuntimeSortBy: "Inclusive",
+		sortByModes: ["Inclusive", "Exclusive", "Standard Deviation"],
+		scales: ["Log", "Linear"],
+		selectedScale: "Linear",
+		props: ["name", "rank", "dataset", "all_ranks"],
+		selectedProp: "rank",
+		dimensions: ["max_inclusive_time", "max_exclusive_time", "rank_count"],
+		selectedPC1: "max_inclusive_time",
+		selectedPC2: "max_exclusive_time",
 		selectedIQRFactor: 0.15,
 		selectedNumOfClusters: 3,
 		targetColorMap: {
-			'Green': '#4EAF4A',
-			'Blue': '#4681B4',
-			'Brown': '#AF9B90',
-			'Red': '#A90400'
+			"Green": "#4EAF4A",
+			"Blue": "#4681B4",
+			"Brown": "#AF9B90",
+			"Red": "#A90400"
 		},
-		targetColors: ['Green', 'Blue', 'Brown'],
-		selectedTargetColor: '',
-		selectedTargetColorText: 'Green',
+		targetColors: ["Green", "Blue", "Brown"],
+		selectedTargetColor: "",
+		selectedTargetColorText: "Green",
 		showTarget: true,
-		targetInfo: 'Target Guides',
+		targetInfo: "Target Guides",
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time)
-		firstRender: true,
-
 	}),
 
 	mounted() {
 		var socket = io.connect(this.server, { reconnect: false });
-		this.$socket.emit('init', {
+		this.$socket.emit("init", {
 			caseStudy: this.selectedCaseStudy
-		})
-		EventHandler.$on('lasso_selection', () => {
-			this.$store.resetTargetDataset = true
+		});
+		EventHandler.$on("lasso_selection", () => {
+			this.$store.resetTargetDataset = true;
 
-			this.clearLocal()
-			this.setTargetDataset()
-			this.$socket.emit('ensemble_callsite_data', {
+			this.clearLocal();
+			this.setTargetDataset();
+			this.$socket.emit("ensemble_callsite_data", {
 				datasets: this.$store.selectedDatasets,
 				sortBy: this.$store.auxiliarySortBy,
 				MPIBinCount: this.$store.selectedMPIBinCount,
 				RunBinCount: this.$store.selectedRunBinCount,
-				module: 'all',
-				're_process': 1
-			})
-		})
+				module: "all",
+				"re_process": 1
+			});
+		});
 
-		EventHandler.$on('show_target_auxiliary', (data) => {
-			this.clearLocal()
-			this.init()
-		})
+		EventHandler.$on("show_target_auxiliary", (data) => {
+			this.clearLocal();
+			this.init();
+		});
 	},
 
 	beforeDestroy() {
 		//Unsubscribe on destroy
-		this.$socket.emit('disconnect');
+		this.$socket.emit("disconnect");
 	},
 
 	sockets: {
 		// Assign variables for the store and Callflow ui component.
 		// Assign colors and min, max inclusive and exclusive times.
 		init(data) {
-			this.setupStore(data)
-			this.setTargetDataset()
-			this.setComponentMap()
+			this.setupStore(data);
+			this.setTargetDataset();
+			this.setComponentMap();
 
-			if (this.selectedFormat == 'SuperGraph') {
-				if (this.selectedMode == 'Single') {
-					this.$socket.emit('single_callsite_data', {
+			if (this.selectedFormat == "SuperGraph") {
+				if (this.selectedMode == "Single") {
+					this.$socket.emit("single_callsite_data", {
 						dataset: this.$store.selectedTargetDataset,
 						sortBy: this.$store.auxiliarySortBy,
 						binCount: this.$store.selectedMPIBinCount,
-						module: 'all'
-					})
+						module: "all"
+					});
 				}
-				else if (this.selectedMode == 'Ensemble') {
-					this.$socket.emit('ensemble_callsite_data', {
+				else if (this.selectedMode == "Ensemble") {
+					this.$socket.emit("ensemble_callsite_data", {
 						datasets: this.$store.selectedDatasets,
 						sortBy: this.$store.auxiliarySortBy,
 						MPIBinCount: this.$store.selectedMPIBinCount,
 						RunBinCount: this.$store.selectedRunBinCount,
-						module: 'all',
+						module: "all",
 						re_process: this.$store.reprocess
-					})
+					});
 				}
 			}
-			else if (this.selectedFormat == 'CCT') {
-				this.init()
+			else if (this.selectedFormat == "CCT") {
+				this.init();
 			}
 
 		},
 
 		single_callsite_data(data) {
-			console.log("Auxiliary Data: ", data)
-			this.dataReady = true
+			console.log("Auxiliary Data: ", data);
+			this.dataReady = true;
 
-			this.$store.modules = data['module']
-			this.$store.callsites = data['callsite']
-			this.$store.gradients = data['gradients']
-			this.$store.moduleCallsiteMap = data['moduleCallsiteMap']
-			this.$store.callsiteModuleMap = data['callsiteModuleMap']
-			console.log("[Socket] Single Callsite data processing done.")
-			this.init()
+			this.$store.modules = data["module"];
+			this.$store.callsites = data["callsite"];
+			this.$store.gradients = data["gradients"];
+			this.$store.moduleCallsiteMap = data["moduleCallsiteMap"];
+			this.$store.callsiteModuleMap = data["callsiteModuleMap"];
+			console.log("[Socket] Single Callsite data processing done.");
+			this.init();
 		},
 
 		ensemble_callsite_data(data) {
-			console.log("Auxiliary Data: ", data)
-			this.dataReady = true
+			console.log("Auxiliary Data: ", data);
+			this.dataReady = true;
 
-			this.$store.modules = data['module']
-			this.$store.callsites = data['callsite']
-			this.$store.gradients = data['gradients']
-			this.$store.moduleCallsiteMap = data['moduleCallsiteMap']
-			this.$store.callsiteModuleMap = data['callsiteModuleMap']
-			console.log("[Socket] Ensemble Callsite data processing done.")
-			this.init()
+			this.$store.modules = data["module"];
+			this.$store.callsites = data["callsite"];
+			this.$store.gradients = data["gradients"];
+			this.$store.moduleCallsiteMap = data["moduleCallsiteMap"];
+			this.$store.callsiteModuleMap = data["callsiteModuleMap"];
+			console.log("[Socket] Ensemble Callsite data processing done.");
+			this.init();
 		},
 
 		// Reset to the init() function.
 		reset(data) {
-			console.log("Data for", this.selectedFormat, ": ", data)
-			this.init()
+			console.log("Data for", this.selectedFormat, ": ", data);
+			this.init();
 		},
 
 		disconnect() {
-			console.log('Disconnected.')
+			console.log("Disconnected.");
 		}
 	},
 
 	methods: {
 		// Feature: Sortby the datasets and show the time. 
 		formatRuntimeWithoutUnits(val) {
-			let format = d3.format('.2')
-			let ret = format(val)
-			return ret
+			let format = d3.format(".2");
+			let ret = format(val);
+			return ret;
 		},
 
 		// Feature: Sortby the datasets and show the time. 
 		sortDatasetsByAttr(datasets, attr) {
 			let ret = datasets.sort((a, b) => {
-				let x = 0, y = 0
-				if (attr == 'Inclusive') {
-					x = this.$store.maxIncTime[a]
-					y = this.$store.maxIncTime[b]
-					this.metricTimeMap = this.$store.maxIncTime
+				let x = 0, y = 0;
+				if (attr == "Inclusive") {
+					x = this.$store.maxIncTime[a];
+					y = this.$store.maxIncTime[b];
+					this.metricTimeMap = this.$store.maxIncTime;
 				}
-				else if (attr == 'Exclusive') {
-					x = this.$store.maxExcTime[a]
-					y = this.$store.maxExcTime[b]
-					this.metricTimeMap = this.$store.maxExcTime
+				else if (attr == "Exclusive") {
+					x = this.$store.maxExcTime[a];
+					y = this.$store.maxExcTime[b];
+					this.metricTimeMap = this.$store.maxExcTime;
 				}
 				return parseFloat(x) - parseFloat(y);
-			})
+			});
 			return ret;
 		},
 
 		setViewDimensions() {
-			this.$store.viewWidth = window.innerWidth
+			this.$store.viewWidth = window.innerWidth;
 
-			let toolbarHeight = 0
-			let footerHeight = 0
+			let toolbarHeight = 0;
+			let footerHeight = 0;
 			// Set toolbar height as 0 if undefined
-			if (document.getElementById('toolbar') == null) {
-				toolbarHeight = 0
+			if (document.getElementById("toolbar") == null) {
+				toolbarHeight = 0;
 			}
 			else {
-				toolbarHeight = document.getElementById('toolbar').clientHeight
+				toolbarHeight = document.getElementById("toolbar").clientHeight;
 			}
-			if (document.getElementById('footer') == null) {
-				footerHeight = 0
+			if (document.getElementById("footer") == null) {
+				footerHeight = 0;
 			}
 			else {
-				footerHeight = document.getElementById('footer').clientHeight
+				footerHeight = document.getElementById("footer").clientHeight;
 			}
-			this.$store.viewHeight = window.innerHeight - toolbarHeight - footerHeight
+			this.$store.viewHeight = window.innerHeight - toolbarHeight - footerHeight;
 		},
 
 		setupStore(data) {
-			data = JSON.parse(data)
-			console.log("Config file contains: 	", data)
-			this.$store.numOfRuns = data['datasets'].length
-			this.$store.selectedDatasets = data['names']
-			this.datasets = this.$store.selectedDatasets
+			data = JSON.parse(data);
+			console.log("Config file contains: 	", data);
+			this.$store.numOfRuns = data["datasets"].length;
+			this.$store.selectedDatasets = data["names"];
+			this.datasets = this.$store.selectedDatasets;
 
 			// Enable diff mode only if the number of datasets >= 2
 			if (this.numOfRuns >= 2) {
-				this.modes = ['Single', 'Ensemble']
-				this.selectedMode = 'Ensemble'
+				this.modes = ["Single", "Ensemble"];
+				this.selectedMode = "Ensemble";
 			}
 			else if (this.numOfRuns == 1) {
-				this.enableDist = false
-				this.modes = ['Single']
-				this.selectedMode = 'Single'
+				this.enableDist = false;
+				this.modes = ["Single"];
+				this.selectedMode = "Single";
 			}
 
-			this.$store.maxExcTime = data['max_excTime']
-			this.$store.minExcTime = data['min_excTime']
-			this.$store.maxIncTime = data['max_incTime']
-			this.$store.minIncTime = data['min_incTime']
+			this.$store.maxExcTime = data["max_excTime"];
+			this.$store.minExcTime = data["min_excTime"];
+			this.$store.maxIncTime = data["max_incTime"];
+			this.$store.minIncTime = data["min_incTime"];
 
-			this.$store.numOfRanks = data['numOfRanks']
-			this.$store.moduleCallsiteMap = data['module_callsite_map']
-			this.$store.callsiteModuleMap = data['callsite_module_map']
+			this.$store.numOfRanks = data["numOfRanks"];
+			this.$store.moduleCallsiteMap = data["module_callsite_map"];
+			this.$store.callsiteModuleMap = data["callsite_module_map"];
 
-			this.$store.selectedMPIBinCount = this.selectedMPIBinCount
-			this.$store.selectedRunBinCount = this.selectedRunBinCount
+			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
+			this.$store.selectedRunBinCount = this.selectedRunBinCount;
 
-			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3)
+			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3);
 
-			this.setViewDimensions()
+			this.setViewDimensions();
 
-			this.$store.auxiliarySortBy = this.auxiliarySortBy
-			this.$store.reprocess = 0
-			this.selectedCaseStudy = data['runName']
-			this.$store.comparisonMode = this.comparisonMode
-			this.$store.fontSize = 14
-			this.$store.transitionDuration = 1000
+			this.$store.auxiliarySortBy = this.auxiliarySortBy;
+			this.$store.reprocess = 0;
+			this.selectedCaseStudy = data["runName"];
+			this.$store.comparisonMode = this.comparisonMode;
+			this.$store.fontSize = 14;
+			this.$store.transitionDuration = 1000;
 		},
 
 		setOtherData() {
-			this.$store.selectedScatterMode = 'mean'
-			this.$store.nodeInfo = {}
-			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT
-			this.$store.selectedHierarchyMode = this.selectedHierarchyMode
-			this.$store.selectedProp = this.selectedProp
-			this.$store.selectedScale = this.selectedScale
-			this.$store.selectedCompareMode = this.selectedCompareMode
-			this.$store.selectedIQRFactor = this.selectedIQRFactor
-			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy
-			this.$store.selectedNumOfClusters = this.selectedNumOfClusters
+			this.$store.selectedScatterMode = "mean";
+			this.$store.nodeInfo = {};
+			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
+			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
+			this.$store.selectedProp = this.selectedProp;
+			this.$store.selectedScale = this.selectedScale;
+			this.$store.selectedCompareMode = this.selectedCompareMode;
+			this.$store.selectedIQRFactor = this.selectedIQRFactor;
+			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
+			this.$store.selectedNumOfClusters = this.selectedNumOfClusters;
 
 
-			this.$store.datasetMap = {}
+			this.$store.datasetMap = {};
 			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
-				this.$store.datasetMap[this.$store.selectedDatasets[i]] = 'run-' + i
+				this.$store.datasetMap[this.$store.selectedDatasets[i]] = "run-" + i;
 			}
 
-			this.$store.contextMenu = this.contextMenu
+			this.$store.contextMenu = this.contextMenu;
 
-			this.$store.selectedSuperNodePositionMode = 'Minimal edge crossing'
+			this.$store.selectedSuperNodePositionMode = "Minimal edge crossing";
 
 		},
 
 		setTargetDataset() {
 			if (this.firstRender) {
-				this.$store.resetTargetDataset = true
+				this.$store.resetTargetDataset = true;
 			}
-			this.$store.selectedMetric = this.selectedMetric
-			this.datasets = this.sortDatasetsByAttr(this.$store.selectedDatasets, 'Inclusive')
+			this.$store.selectedMetric = this.selectedMetric;
+			this.datasets = this.sortDatasetsByAttr(this.$store.selectedDatasets, "Inclusive");
 
-			let max_dataset = '';
-			let current_max_time = 0.0
+			let max_dataset = "";
+			let current_max_time = 0.0;
 
-			let data = {}
-			if (this.$store.selectedMetric == 'Inclusive') {
-				data = this.$store.maxIncTime
+			let data = {};
+			if (this.$store.selectedMetric == "Inclusive") {
+				data = this.$store.maxIncTime;
 			}
-			else if (this.$store.selectedMetric == 'Exclusive') {
-				data = this.$store.maxExcTime
+			else if (this.$store.selectedMetric == "Exclusive") {
+				data = this.$store.maxExcTime;
 			}
 
 			for (let dataset of this.$store.selectedDatasets) {
 				if (current_max_time < data[dataset]) {
-					current_max_time = data[dataset]
-					max_dataset = dataset
+					current_max_time = data[dataset];
+					max_dataset = dataset;
 				}
 			}
-
 			if (this.firstRender || this.$store.resetTargetDataset) {
-				this.$store.selectedTargetDataset = max_dataset
-				this.selectedTargetDataset = max_dataset
-				this.firstRender = false
-				this.$store.resetTargetDataset = false
+				this.$store.selectedTargetDataset = max_dataset;
+				this.selectedTargetDataset = max_dataset;
+				this.firstRender = false;
+				this.$store.resetTargetDataset = false;
 			}
 			else {
-				this.$store.selectedTargetDataset = this.selectedTargetDataset
+				this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			}
 
-			console.log('Minimum among all runtimes: ', this.selectedTargetDataset)
+			console.log("Minimum among all runtimes: ", this.selectedTargetDataset);
 		},
 
 		setComponentMap() {
-			this.currentSingleCCTComponents = [this.$refs.SingleCCT]
-			this.currentSingleCallGraphComponents = []
+			this.currentSingleCCTComponents = [this.$refs.SingleCCT];
+			this.currentSingleCallGraphComponents = [];
 			this.currentSingleSuperGraphComponents = [
 				this.$refs.SuperGraph,
 				this.$refs.SingleHistogram,
 				this.$refs.RuntimeScatterplot,
 				this.$refs.Function
-			]
+			];
 
-			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT]
-			this.currentEnsembleCallGraphComponents = []
+			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT];
+			this.currentEnsembleCallGraphComponents = [];
 			this.currentEnsembleSuperGraphComponents = [
 				this.$refs.EnsembleSuperGraph,
 				this.$refs.EnsembleHistogram,
@@ -441,75 +437,75 @@ export default {
 				this.$refs.AuxiliaryFunction,
 				this.$refs.ParameterProjection,
 				this.$refs.ModuleHierarchy,
-			]
+			];
 		},
 
 		setupColors() {
-			this.$store.color = new Color(this.selectedMetric)
-			this.$store.zeroToOneColor = new Color(this.selectedMetric)
-			this.$store.binColor = new Color('Bin')
-			this.$store.rankDiffColor = new Color('RankDiff')
-			this.$store.meanDiffColor = new Color('MeanDiff')
+			this.$store.color = new Color(this.selectedMetric);
+			this.$store.zeroToOneColor = new Color(this.selectedMetric);
+			this.$store.binColor = new Color("Bin");
+			this.$store.rankDiffColor = new Color("RankDiff");
+			this.$store.meanDiffColor = new Color("MeanDiff");
 
-			this.runtimeColorMap = this.$store.color.getAllColors()
-			this.distributionColorMap = this.$store.color.getAllColors()
-			if (this.selectedMode == 'Ensemble') {
-				if (this.selectedMetric == 'Inclusive') {
-					this.selectedColorMin = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.minIncTime['ensemble']))
-					this.selectedColorMax = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.maxIncTime['ensemble']))
+			this.runtimeColorMap = this.$store.color.getAllColors();
+			this.distributionColorMap = this.$store.color.getAllColors();
+			if (this.selectedMode == "Ensemble") {
+				if (this.selectedMetric == "Inclusive") {
+					this.selectedColorMin = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.minIncTime["ensemble"]));
+					this.selectedColorMax = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.maxIncTime["ensemble"]));
 				}
-				else if (this.selectedMetric == 'Exclusive') {
-					this.selectedColorMin = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.minExcTime['ensemble']))
-					this.selectedColorMax = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.maxExcTime['ensemble']))
+				else if (this.selectedMetric == "Exclusive") {
+					this.selectedColorMin = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.minExcTime["ensemble"]));
+					this.selectedColorMax = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.maxExcTime["ensemble"]));
 				}
-				this.selectedColorMin = 0.0
+				this.selectedColorMin = 0.0;
 			}
-			else if (this.selectedMode == 'Single') {
-				if (this.selectedMetric == 'Inclusive') {
-					this.selectedColorMin = this.$store.minIncTime[this.selectedTargetDataset]
-					this.selectedColorMax = this.$store.maxIncTime[this.selectedTargetDataset]
+			else if (this.selectedMode == "Single") {
+				if (this.selectedMetric == "Inclusive") {
+					this.selectedColorMin = this.$store.minIncTime[this.selectedTargetDataset];
+					this.selectedColorMax = this.$store.maxIncTime[this.selectedTargetDataset];
 				}
-				else if (this.selectedMetric == 'Exclusive') {
-					this.selectedColorMin = this.$store.minExcTime[this.selectedTargetDataset]
-					this.selectedColorMax = this.$store.maxExcTime[this.selectedTargetDataset]
+				else if (this.selectedMetric == "Exclusive") {
+					this.selectedColorMin = this.$store.minExcTime[this.selectedTargetDataset];
+					this.selectedColorMax = this.$store.maxExcTime[this.selectedTargetDataset];
 				}
-				else if (this.selectedMetric == 'Imbalance') {
-					this.selectedColorMin = 0.0
-					this.selectedColorMax = 1.0
+				else if (this.selectedMetric == "Imbalance") {
+					this.selectedColorMin = 0.0;
+					this.selectedColorMax = 1.0;
 				}
 			}
 
-			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedRuntimeColorMap, this.selectedColorPoint)
-			this.$store.zeroToOneColor.setColorScale(0, 1, this.selectedRuntimeColorMap, this.selectedColorPoint)
+			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedRuntimeColorMap, this.selectedColorPoint);
+			this.$store.zeroToOneColor.setColorScale(0, 1, this.selectedRuntimeColorMap, this.selectedColorPoint);
 
-			this.$store.colorPoint = this.selectedColorPoint
-			this.$store.selectedColorMin = this.selectedColorMin
-			this.$store.selectedColorMax = this.selectedColorMax
-			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap
-			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap
-			this.$store.selectedColorPoint = this.selectedColorPoint
-			this.selectedColorMinText = this.selectedColorMin
-			this.selectedColorMaxText = this.selectedColorMax
-			this.$store.color.highlight = '#AF9B90'//'#4681B4'
-			this.selectedTargetColor = this.targetColorMap[this.selectedTargetColorText]
-			this.$store.color.target = this.selectedTargetColor
-			this.$store.color.ensemble = '#C0C0C0'//'#4681B4'
-			this.$store.color.compare = '#043060'
-			this.$store.color.edgeStrokeColor = '#888888'
-			this.$store.intermediateColor = '#d9d9d9'
-			this.$store.showTarget = this.showTarget
+			this.$store.colorPoint = this.selectedColorPoint;
+			this.$store.selectedColorMin = this.selectedColorMin;
+			this.$store.selectedColorMax = this.selectedColorMax;
+			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap;
+			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap;
+			this.$store.selectedColorPoint = this.selectedColorPoint;
+			this.selectedColorMinText = this.selectedColorMin;
+			this.selectedColorMaxText = this.selectedColorMax;
+			this.$store.color.highlight = "#AF9B90";//'#4681B4'
+			this.selectedTargetColor = this.targetColorMap[this.selectedTargetColorText];
+			this.$store.color.target = this.selectedTargetColor;
+			this.$store.color.ensemble = "#C0C0C0";//'#4681B4'
+			this.$store.color.compare = "#043060";
+			this.$store.color.edgeStrokeColor = "#888888";
+			this.$store.intermediateColor = "#d9d9d9";
+			this.$store.showTarget = this.showTarget;
 
-			this.targetColors = Object.keys(this.targetColorMap)
+			this.targetColors = Object.keys(this.targetColorMap);
 		},
 
 		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime. 
 		sortModulesByMetric(attr) {
-			let module_list = Object.keys(this.$store.modules['ensemble'])
+			let module_list = Object.keys(this.$store.modules["ensemble"]);
 
 			// Create a map for each dataset mapping the respective mean times. 
-			let map = {}
+			let map = {};
 			for (let module_name of module_list) {
-				map[module_name] = this.$store.modules['ensemble'][module_name][this.$store.selectedMetric]['mean_time']
+				map[module_name] = this.$store.modules["ensemble"][module_name][this.$store.selectedMetric]["mean_time"];
 			}
 
 			// Create items array
@@ -522,333 +518,333 @@ export default {
 				return second[1] - first[1];
 			});
 
-			return items
+			return items;
 		},
 
 		setSelectedModule() {
-			let modules_sorted_list_by_metric = this.sortModulesByMetric()
-			this.selectedModule = modules_sorted_list_by_metric[0][0]
-			this.$store.selectedModule = this.selectedModule
+			let modules_sorted_list_by_metric = this.sortModulesByMetric();
+			this.selectedModule = modules_sorted_list_by_metric[0][0];
+			this.$store.selectedModule = this.selectedModule;
 		},
 
 		clear() {
-			if (this.selectedMode == 'Ensemble') {
-				if (this.selectedFormat == 'CCT') {
-					this.clearComponents(this.currentSingleCCTComponents)
+			if (this.selectedMode == "Ensemble") {
+				if (this.selectedFormat == "CCT") {
+					this.clearComponents(this.currentSingleCCTComponents);
 				}
-				else if (this.selectedFormat == 'Callgraph') {
-					this.clearComponents(this.currentSingleCallGraphComponents)
+				else if (this.selectedFormat == "Callgraph") {
+					this.clearComponents(this.currentSingleCallGraphComponents);
 				}
-				else if (this.selectedFormat == 'SuperGraph') {
-					this.clearComponents(this.currentSingleSuperGraphComponents)
+				else if (this.selectedFormat == "SuperGraph") {
+					this.clearComponents(this.currentSingleSuperGraphComponents);
 				}
 			}
-			else if (this.selectedMode == 'Single') {
-				if (this.selectedFormat == 'CCT') {
-					this.clearComponents(this.currentEnsembleCCTComponents)
+			else if (this.selectedMode == "Single") {
+				if (this.selectedFormat == "CCT") {
+					this.clearComponents(this.currentEnsembleCCTComponents);
 				}
-				else if (this.selectedFormat == 'CallGraph') {
-					this.clearComponents(this.currentEnsembleCallGraphComponents)
+				else if (this.selectedFormat == "CallGraph") {
+					this.clearComponents(this.currentEnsembleCallGraphComponents);
 				}
-				else if (this.selectedFormat == 'SuperGraph') {
-					this.clearComponents(this.currentEnsembleSuperGraphComponents)
+				else if (this.selectedFormat == "SuperGraph") {
+					this.clearComponents(this.currentEnsembleSuperGraphComponents);
 				}
 			}
 		},
 
 		clearLocal() {
-			if (this.selectedMode == 'Ensemble') {
-				if (this.selectedFormat == 'CCT') {
-					this.clearComponents(this.currentEnsembleCCTComponents)
+			if (this.selectedMode == "Ensemble") {
+				if (this.selectedFormat == "CCT") {
+					this.clearComponents(this.currentEnsembleCCTComponents);
 				}
-				else if (this.selectedFormat == 'CallGraph') {
-					this.clearComponents(this.currentEnsembleCallGraphComponents)
+				else if (this.selectedFormat == "CallGraph") {
+					this.clearComponents(this.currentEnsembleCallGraphComponents);
 				}
-				else if (this.selectedFormat == 'SuperGraph') {
-					this.clearComponents(this.currentEnsembleSuperGraphComponents)
+				else if (this.selectedFormat == "SuperGraph") {
+					this.clearComponents(this.currentEnsembleSuperGraphComponents);
 				}
 			}
-			else if (this.selectedMode == 'Single') {
-				if (this.selectedFormat == 'CCT') {
-					this.clearComponents(this.currentSingleCCTComponents)
+			else if (this.selectedMode == "Single") {
+				if (this.selectedFormat == "CCT") {
+					this.clearComponents(this.currentSingleCCTComponents);
 				}
-				else if (this.selectedFormat == 'CallGraph') {
-					this.clearComponents(this.currentSingleCallGraphComponents)
+				else if (this.selectedFormat == "CallGraph") {
+					this.clearComponents(this.currentSingleCallGraphComponents);
 				}
-				else if (this.selectedFormat == 'SuperGraph') {
-					this.clearComponents(this.currentSingleSuperGraphComponents)
+				else if (this.selectedFormat == "SuperGraph") {
+					this.clearComponents(this.currentSingleSuperGraphComponents);
 				}
 			}
 		},
 
 		initComponents(componentList) {
 			for (let i = 0; i < componentList.length; i++) {
-				componentList[i].init()
+				componentList[i].init();
 			}
 		},
 
 		clearComponents(componentList) {
 			for (let i = 0; i < componentList.length; i++) {
-				componentList[i].clear()
+				componentList[i].clear();
 			}
 		},
 
 		init() {
-			if (this.selectedExhibitMode == 'Presentation') {
-				this.enablePresentationMode()
+			if (this.selectedExhibitMode == "Presentation") {
+				this.enablePresentationMode();
 			}
 
 			// Initialize colors
-			this.setupColors()
-			this.setOtherData()
-			this.setTargetDataset()
-			this.setSelectedModule()
+			this.setupColors();
+			this.setOtherData();
+			this.setTargetDataset();
+			this.setSelectedModule();
 
-			console.log("Mode : ", this.selectedMode)
-			console.log("Number of runs :", this.$store.numOfRuns)
-			console.log("Dataset : ", this.selectedTargetDataset)
-			console.log("Format = ", this.selectedFormat)
+			console.log("Mode : ", this.selectedMode);
+			console.log("Number of runs :", this.$store.numOfRuns);
+			console.log("Dataset : ", this.selectedTargetDataset);
+			console.log("Format = ", this.selectedFormat);
 
 			// Call the appropriate socket to query the server.
-			if (this.selectedMode == 'Single') {
+			if (this.selectedMode == "Single") {
 
-				if (this.selectedFormat == 'SuperGraph') {
-					this.initComponents(this.currentSingleSuperGraphComponents)
+				if (this.selectedFormat == "SuperGraph") {
+					this.initComponents(this.currentSingleSuperGraphComponents);
 				}
-				else if (this.selectedFormat == 'CallGraph') {
-					this.initComponents(this.currentSingleCallGraphComponents)
+				else if (this.selectedFormat == "CallGraph") {
+					this.initComponents(this.currentSingleCallGraphComponents);
 				}
-				else if (this.selectedFormat == 'CCT') {
-					this.initComponents(this.currentSingleCCTComponents)
+				else if (this.selectedFormat == "CCT") {
+					this.initComponents(this.currentSingleCCTComponents);
 				}
 			}
-			else if (this.selectedMode == 'Ensemble') {
-				if (this.selectedFormat == 'SuperGraph') {
-					this.initComponents(this.currentEnsembleSuperGraphComponents)
+			else if (this.selectedMode == "Ensemble") {
+				if (this.selectedFormat == "SuperGraph") {
+					this.initComponents(this.currentEnsembleSuperGraphComponents);
 				}
-				else if (this.selectedFormat == 'CallGraph') {
-					this.loadComponents(this.currentEnsembleCallGraphComponents)
+				else if (this.selectedFormat == "CallGraph") {
+					this.loadComponents(this.currentEnsembleCallGraphComponents);
 				}
-				else if (this.selectedFormat == 'CCT') {
-					this.initComponents(this.currentEnsembleCCTComponents)
+				else if (this.selectedFormat == "CCT") {
+					this.initComponents(this.currentEnsembleCCTComponents);
 				}
 			}
 		},
 
 		reset() {
-			this.$socket.emit('init', {
+			this.$socket.emit("init", {
 				caseStudy: this.selectedCaseStudy
-			})
+			});
 		},
 
 		processJSON(json) {
-			let d = json.data
-			let index = json.index
-			let columns = json.columns
+			let d = json.data;
+			let index = json.index;
+			let columns = json.columns;
 
-			let columnMap = {}
-			let idx = 0
+			let columnMap = {};
+			let idx = 0;
 			for (let column of columns) {
-				columnMap[column] = idx
-				idx += 1
+				columnMap[column] = idx;
+				idx += 1;
 			}
 			return {
 				d: d,
 				index: index,
 				columns: columns,
 				columnMap: columnMap
-			}
+			};
 		},
 
 		processCallsite(data) {
-			let callsites = {}
+			let callsites = {};
 			for (let i = 0; i < data.index.length; i += 1) {
-				let callsite = {}
-				let callsite_name = data.d[i][data.columnMap['name']]
+				let callsite = {};
+				let callsite_name = data.d[i][data.columnMap["name"]];
 				for (let column of data.columns) {
-					callsite[column] = data.d[i][data.columnMap[column]]
+					callsite[column] = data.d[i][data.columnMap[column]];
 				}
-				callsites[callsite_name] = callsite
+				callsites[callsite_name] = callsite;
 			}
-			return callsites
+			return callsites;
 		},
 
 		processModule(data) {
-			let modules = {}
+			let modules = {};
 			for (let i = 0; i < data.index.length; i += 1) {
-				let module_dict = {}
-				let module_name = data.d[i][data.columnMap['module']]
+				let module_dict = {};
+				let module_name = data.d[i][data.columnMap["module"]];
 				for (let column of data.columns) {
-					module_dict[column] = data.d[i][data.columnMap[column]]
+					module_dict[column] = data.d[i][data.columnMap[column]];
 				}
-				modules[module_name] = module_dict
+				modules[module_name] = module_dict;
 			}
-			return modules
+			return modules;
 		},
 
 		updateCaseStudy() {
-			this.clearLocal()
-			console.log("[Update] Case study: ", this.selectedCaseStudy)
-			this.$socket.emit('init', {
+			this.clearLocal();
+			console.log("[Update] Case study: ", this.selectedCaseStudy);
+			this.$socket.emit("init", {
 				caseStudy: this.selectedCaseStudy
-			})
+			});
 
-			this.init()
+			this.init();
 		},
 
 		updateColors() {
-			this.clearLocal()
-			this.setupColors()
-			this.init()
+			this.clearLocal();
+			this.setupColors();
+			this.init();
 		},
 
 		updateFormat() {
-			this.clearLocal()
-			this.$socket.emit('init', {
+			this.clearLocal();
+			this.$socket.emit("init", {
 				caseStudy: this.selectedCaseStudy
-			})
-			this.init()
+			});
+			this.init();
 		},
 
 		updateTargetDataset() {
-			this.clearLocal()
-			this.$store.selectedTargetDataset = this.selectedTargetDataset
-			console.log("[Update] Target Dataset: ", this.selectedTargetDataset)
-			this.init()
-			EventHandler.$emit('show_target_auxiliary', {
-			})
+			this.clearLocal();
+			this.$store.selectedTargetDataset = this.selectedTargetDataset;
+			console.log("[Update] Target Dataset: ", this.selectedTargetDataset);
+			this.init();
+			EventHandler.$emit("show_target_auxiliary", {
+			});
 		},
 
 		updateMode() {
-			this.clear()
-			this.init()
+			this.clear();
+			this.init();
 		},
 
 		updateMetric() {
-			this.$store.selectedMetric = this.selectedMetric
-			this.clearLocal()
-			this.init()
+			this.$store.selectedMetric = this.selectedMetric;
+			this.clearLocal();
+			this.init();
 		},
 
 		updateColor() {
-			this.clearLocal()
-			this.init()
+			this.clearLocal();
+			this.init();
 		},
 
 		updateColorPoint() {
-			this.clearLocal()
-			this.init()
+			this.clearLocal();
+			this.init();
 		},
 
 		updateFunctionsInCCT() {
-			this.$socket.emit('cct', {
+			this.$socket.emit("cct", {
 				dataset: this.$store.selectedTargetDataset,
 				functionInCCT: this.selectedFunctionsInCCT,
-			})
+			});
 		},
 
 		updateDiffNodeAlignment() {
-			console.log('Alignment mode: ', this.selectedDiffNodeAlignment)
-			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment
-			EventHandler.$emit('update_diff_node_alignment')
+			console.log("Alignment mode: ", this.selectedDiffNodeAlignment);
+			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment;
+			EventHandler.$emit("update_diff_node_alignment");
 		},
 
 		updateAuxiliarySortBy() {
-			this.$store.auxiliarySortBy = this.auxiliarySortBy
-			EventHandler.$emit('update_auxiliary_sortBy')
+			this.$store.auxiliarySortBy = this.auxiliarySortBy;
+			EventHandler.$emit("update_auxiliary_sortBy");
 		},
 
 		updateCompareDataset() {
-			this.summaryChip = 'Diff SuperGraph'
-			this.$store.selectedCompareDataset = this.selectedCompareDataset
-			this.$store.compareAnalysisMode = true
-			this.$socket.emit('compare', {
+			this.summaryChip = "Diff SuperGraph";
+			this.$store.selectedCompareDataset = this.selectedCompareDataset;
+			this.$store.compareAnalysisMode = true;
+			this.$socket.emit("compare", {
 				targetDataset: this.$store.selectedTargetDataset,
 				compareDataset: this.$store.selectedCompareDataset,
 				selectedMetric: this.$store.selectedMetric
-			})
+			});
 		},
 
 		updateCompareMode() {
-			this.$store.selectedCompareMode = this.selectedCompareMode
-			this.$socket.emit('compare', {
+			this.$store.selectedCompareMode = this.selectedCompareMode;
+			this.$socket.emit("compare", {
 				targetDataset: this.$store.selectedTargetDataset,
 				compareDataset: this.$store.selectedCompareDataset,
 				selectedMetric: this.$store.selectedMetric
-			})
+			});
 		},
 
 		updateProp() {
-			this.$store.selectedProp = this.selectedProp
-			this.clearLocal()
-			this.init()
+			this.$store.selectedProp = this.selectedProp;
+			this.clearLocal();
+			this.init();
 		},
 
 		updateScale() {
-			this.$store.selectedScale = this.selectedScale
-			this.clearLocal()
-			this.init()
+			this.$store.selectedScale = this.selectedScale;
+			this.clearLocal();
+			this.init();
 		},
 
 		updateHierarchyMode() {
-			this.$store.selectedHierarchyMode = this.selectedHierarchyMode
-			this.clearLocal()
-			this.init()
+			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
+			this.clearLocal();
+			this.init();
 		},
 
 		updateIQRFactor() {
-			this.$store.selectedIQRFactor = this.selectedIQRFactor
-			this.clearLocal()
-			this.init()
+			this.$store.selectedIQRFactor = this.selectedIQRFactor;
+			this.clearLocal();
+			this.init();
 		},
 
 		updateRuntimeSortBy() {
-			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy
-			EventHandler.$emit('callsite_information_sort')
+			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
+			EventHandler.$emit("callsite_information_sort");
 		},
 
 		updateNumOfClusters() {
-			this.$store.selectedNumOfClusters = this.selectedNumOfClusters
-			EventHandler.$emit('update_number_of_clusters')
+			this.$store.selectedNumOfClusters = this.selectedNumOfClusters;
+			EventHandler.$emit("update_number_of_clusters");
 		},
 
 		updateTargetColor() {
-			this.clearLocal()
-			this.init()
-			EventHandler.$emit('show_target_auxiliary', {
-			})
+			this.clearLocal();
+			this.init();
+			EventHandler.$emit("show_target_auxiliary", {
+			});
 		},
 
 		updateColorMin() {
 		},
 
 		updateRunBinCount() {
-			this.$store.selectedRunBinCount = this.selectedRunBinCount
-			this.$socket.emit('ensemble_callsite_data', {
+			this.$store.selectedRunBinCount = this.selectedRunBinCount;
+			this.$socket.emit("ensemble_callsite_data", {
 				datasets: this.$store.selectedDatasets,
 				sortBy: this.$store.auxiliarySortBy,
 				MPIBinCount: this.$store.selectedMPIBinCount,
 				RunBinCount: this.$store.selectedRunBinCount,
-				module: 'all',
+				module: "all",
 				re_process: 1
-			})
-			this.clearLocal()
-			this.init()
+			});
+			this.clearLocal();
+			this.init();
 		},
 
 		updateMPIBinCount() {
-			this.$store.selectedMPIBinCount = this.selectedMPIBinCount
-			this.$store.reprocess = 1
-			this.$socket.emit('ensemble_callsite_data', {
+			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
+			this.$store.reprocess = 1;
+			this.$socket.emit("ensemble_callsite_data", {
 				datasets: this.$store.selectedDatasets,
 				sortBy: this.$store.auxiliarySortBy,
 				MPIBinCount: this.$store.selectedMPIBinCount,
 				RunBinCount: this.$store.selectedRunBinCount,
-				module: 'all',
+				module: "all",
 				re_process: 1
-			})
-			this.clearLocal()
-			this.init()
+			});
+			this.clearLocal();
+			this.init();
 		}
 	}
-}
+};
