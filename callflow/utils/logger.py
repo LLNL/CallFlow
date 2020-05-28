@@ -14,12 +14,12 @@ import colorlog
 
 
 class Log:
-    def __init__(self, lvl=logging.DEBUG):
+    def __init__(self, loggerName, lvl=logging.DEBUG):
         self.lvl = lvl
         aliases = {
-            logging.DEBUG: "%(log_color)s(%(module)s:%(lineno)d) %(msg)s ",
-            logging.ERROR: "\033 %(log_color)s(%(module)s:%(lineno)d)ERROR: %(msg)s",
-            logging.WARNING: "\033 %(log_color)s(%(module)s:%(lineno)d)WARN: %(msg)s",
+            logging.DEBUG: "%(log_color)s(%(name)s.py) %(msg)s ",
+            logging.ERROR: "\033 %(log_color)s(%(name)s.py) ERROR: %(msg)s",
+            logging.WARNING: "\033 %(log_color)s(%(name)s.py) WARN: %(msg)s",
             logging.INFO: "%(log_color)s%(msg)s",
         }
         log_colors = {
@@ -36,12 +36,11 @@ class Log:
         self.stream.setLevel(lvl)
         self.stream.setFormatter(self.formatter)
 
-        self.logger = logging.getLogger("pythonConfig")
+        self.logger = logging.getLogger(loggerName)
         self.logger.setLevel(lvl)
         self.logger.addHandler(self.stream)
 
     def debug(self, msg, *args, **kwargs):
-        print(args, kwargs)
         for line in str(msg).splitlines():
             self.logger.error(line, *args, **kwargs)
 
@@ -71,6 +70,3 @@ class Log:
         self.lvl = self._parse_level(lvl)
         self.stream.setLevel(self.lvl)
         self.logging.root.setLevel(self.lvl)
-
-
-log = Log()

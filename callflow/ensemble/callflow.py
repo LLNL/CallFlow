@@ -17,7 +17,7 @@ import pandas as pd
 from callflow.pipeline import State, Pipeline
 
 from callflow.utils import (
-    log,
+    Log,
     Timer,
     getMaxExcTime,
     getMinExcTime,
@@ -49,6 +49,7 @@ from callflow.ensemble import (
 class EnsembleCallFlow:
     def __init__(self, config=None, process=None):
         # Config contains properties set by the input config file.
+        self.log = Log("ensemble_callflow")
         self.config = config
         self.timer = Timer()
         self.currentMPIBinCount = 20
@@ -56,10 +57,10 @@ class EnsembleCallFlow:
 
         self.pipeline = Pipeline(self.config)
         if process:
-            log.info("[Ensemble] Process Mode.")
+            self.log.info("[Ensemble] Process Mode.")
             self.states = self.processState()
         else:
-            log.info("[Ensemble] Read Mode.")
+            self.log.info("[Ensemble] Read Mode.")
             self.states = self.readState()
 
         self.target_df = {}
@@ -74,42 +75,42 @@ class EnsembleCallFlow:
         time_perf_df = pd.DataFrame(columns=col_names)
         for idx, dataset_name in enumerate(self.config.dataset_names):
             states[dataset_name] = State(dataset_name)
-            log.info("#########################################")
-            log.debug(f"Run: {dataset_name}")
-            log.info("#########################################")
+            self.log.info("#########################################")
+            self.log.debug(f"Run: {dataset_name}")
+            self.log.info("#########################################")
 
             stage1 = time.perf_counter()
             states[dataset_name] = self.pipeline.create_gf(dataset_name)
             stage2 = time.perf_counter()
-            log.debug(f"Create GraphFrame: {stage2 - stage1}")
-            log.info("-----------------------------------------")
+            self.log.debug(f"Create GraphFrame: {stage2 - stage1}")
+            self.log.info("-----------------------------------------")
 
             states[dataset_name] = self.pipeline.process_gf(
                 states[dataset_name], "entire"
             )
             stage3 = time.perf_counter()
 
-            log.debug(f"Preprocess GraphFrame: {stage3 - stage2}")
-            log.info("-----------------------------------------")
+            self.log.debug(f"Preprocess GraphFrame: {stage3 - stage2}")
+            self.log.info("-----------------------------------------")
 
             states[dataset_name] = self.pipeline.hatchetToNetworkX(
                 states[dataset_name], "path"
             )
             stage4 = time.perf_counter()
-            log.debug(f"Convert to NetworkX graph: {stage4 - stage3}")
-            log.info("-----------------------------------------")
+            self.log.debug(f"Convert to NetworkX graph: {stage4 - stage3}")
+            self.log.info("-----------------------------------------")
 
             states[dataset_name] = self.pipeline.group(states[dataset_name], "module")
             stage5 = time.perf_counter()
-            log.debug(f"Convert to NetworkX graph: {stage4 - stage3}")
-            log.info("-----------------------------------------")
+            self.log.debug(f"Convert to NetworkX graph: {stage4 - stage3}")
+            self.log.info("-----------------------------------------")
 
             self.pipeline.write_dataset_gf(
                 states[dataset_name], dataset_name, "entire", write_graph=False
             )
             stage6 = time.perf_counter()
-            log.debug(f"Write GraphFrame: {stage6 - stage5}")
-            log.info("-----------------------------------------")
+            self.log.debug(f"Write GraphFrame: {stage6 - stage5}")
+            self.log.info("-----------------------------------------")
             self.pipeline.write_hatchet_graph(states, dataset_name)
 
         for idx, dataset_name in enumerate(self.config.dataset_names):
@@ -119,13 +120,13 @@ class EnsembleCallFlow:
         states["ensemble_entire"] = self.pipeline.union(states)
         stage8 = time.perf_counter()
 
-        log.debug(f"Union GraphFrame: {stage8 - stage7}")
-        log.info("-----------------------------------------")
+        self.log.debug(f"Union GraphFrame: {stage8 - stage7}")
+        self.log.info("-----------------------------------------")
 
         self.pipeline.write_ensemble_gf(states, "ensemble_entire")
         stage9 = time.perf_counter()
-        log.debug(f"Writing ensemble graph: {stage9 - stage8}")
-        log.info("-----------------------------------------")
+        self.log.debug(f"Writing ensemble graph: {stage9 - stage8}")
+        self.log.info("-----------------------------------------")
 
         stage10 = time.perf_counter()
         states["ensemble_filter"] = self.pipeline.filterNetworkX(
@@ -133,27 +134,27 @@ class EnsembleCallFlow:
         )
         stage11 = time.perf_counter()
 
-        log.debug(f"Filter ensemble graph: {stage11 - stage10}")
-        log.info("-----------------------------------------")
+        self.log.debug(f"Filter ensemble graph: {stage11 - stage10}")
+        self.log.info("-----------------------------------------")
 
         stage12 = time.perf_counter()
         self.pipeline.write_ensemble_gf(states, "ensemble_filter")
         stage13 = time.perf_counter()
-        log.debug(f"Writing ensemble graph: {stage13 - stage12}")
-        log.info("-----------------------------------------")
+        self.log.debug(f"Writing ensemble graph: {stage13 - stage12}")
+        self.log.info("-----------------------------------------")
 
         stage14 = time.perf_counter()
         states["ensemble_group"] = self.pipeline.ensemble_group(states, "module")
         stage15 = time.perf_counter()
 
-        log.debug(f"Group ensemble graph: {stage15 - stage14}")
-        log.info("-----------------------------------------")
+        self.log.debug(f"Group ensemble graph: {stage15 - stage14}")
+        self.log.info("-----------------------------------------")
         stage16 = time.perf_counter()
         self.pipeline.write_ensemble_gf(states, "ensemble_group")
         stage17 = time.perf_counter()
 
-        log.debug(f"Write group ensemble graph: {stage17 - stage16}")
-        log.info("-----------------------------------------")
+        self.log.debug(f"Write group ensemble graph: {stage17 - stage16}")
+        self.log.info("-----------------------------------------")
 
         # Need to remove the dependence on reading the dataframe again.
         states = {}
@@ -171,8 +172,10 @@ class EnsembleCallFlow:
         )
         aux.run()
         stage19 = time.perf_counter()
-        log.debug(f"Dump Gradient, distribution and variations: {stage19 - stage18}")
-        log.info("-----------------------------------------")
+        self.log.debug(
+            f"Dump Gradient, distribution and variations: {stage19 - stage18}"
+        )
+        self.log.info("-----------------------------------------")
 
         return states
 
@@ -230,7 +233,7 @@ class EnsembleCallFlow:
 
     def request(self, action):
         action_name = action["name"]
-        log.info(f"Action: {action_name}")
+        self.log.info(f"Action: {action_name}")
         datasets = self.config.dataset_names
 
         if action_name == "init":
@@ -382,20 +385,3 @@ class EnsembleCallFlow:
 
         elif action_name == "mpi_range_data":
             self.states["ensemble_entire"]
-
-    def displayStats(self, name):
-        log.warn("==========================")
-        log.info("Number of datasets : {0}".format(len(self.config[name].paths.keys())))
-        log.info("Stats: Dataset ({0}) ".format(name))
-        log.warn("==========================")
-        max_inclusive_time = utils.getMaxIncTime(gf)
-        max_exclusive_time = utils.getMaxExcTime(gf)
-        avg_inclusive_time = utils.getAvgIncTime(gf)
-        avg_exclusive_time = utils.getAvgExcTime(gf)
-        num_of_nodes = utils.getNumOfNodes(gf)
-        log.info("[] Rows in dataframe: {0}".format(self.states[name].df.shape[0]))
-        log.info("Max Inclusive time = {0} ".format(max_inclusive_time))
-        log.info("Max Exclusive time = {0} ".format(max_exclusive_time))
-        log.info("Avg Inclusive time = {0} ".format(avg_inclusive_time))
-        log.info("Avg Exclusive time = {0} ".format(avg_exclusive_time))
-        log.info("Number of nodes in CCT = {0}".format(num_of_nodes))

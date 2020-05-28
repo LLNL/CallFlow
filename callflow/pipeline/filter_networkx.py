@@ -1,11 +1,12 @@
 import numpy as np
 import networkx as nx
-from ..utils.logger import log
+from ..utils.logger import Log
 from ast import literal_eval as make_list
 
 
 class FilterNetworkX:
     def __init__(self, state):
+        self.log = Log("filter_networkx")
         self.df = state.df
         self.dataset_df = self.df.groupby(["dataset"])
         self.dataset_idx = {}
@@ -32,11 +33,11 @@ class FilterNetworkX:
                 [self.min_time_exc_list, df["time"].min()]
             )
             count += 1
-        log.info("Dataset idx: ", self.dataset_idx)
-        log.info(f"Min. time (inc): {self.min_time_inc_list}")
-        log.info(f"Max. time (inc): {self.max_time_inc_list}")
-        log.info(f"Min. time (exc): {self.min_time_exc_list}")
-        log.info(f"Max. time (exc): {self.max_time_exc_list}")
+        self.log.info("Dataset idx: ", self.dataset_idx)
+        self.log.info(f"Min. time (inc): {self.min_time_inc_list}")
+        self.log.info(f"Max. time (inc): {self.max_time_inc_list}")
+        self.log.info(f"Min. time (exc): {self.min_time_exc_list}")
+        self.log.info(f"Max. time (exc): {self.max_time_exc_list}")
 
         self.max_time_inc = np.max(self.max_time_inc_list)
         self.min_time_inc = np.min(self.min_time_inc_list)
@@ -44,13 +45,13 @@ class FilterNetworkX:
         self.min_time_exc = np.min(self.min_time_exc_list)
 
     def filter_df_by_time_inc(self, perc):
-        log.debug(f"[Filter] By Inclusive time : {perc}")
+        self.log.debug(f"[Filter] By Inclusive time : {perc}")
         df = self.df.loc[(self.df["time (inc)"] > perc * 0.01 * self.max_time_inc)]
         filter_call_sites = df["name"].unique()
         return df[df["name"].isin(filter_call_sites)]
 
     def filter_df_by_time(self, perc):
-        log.debug(f"[Filter] By Exclusive time : {perc}")
+        self.log.debug(f"[Filter] By Exclusive time : {perc}")
         # df = self.df.loc[self.df['time'] > perc * 0.01 * self.max_time_exc]
         df = self.df.loc[self.df["time"] > perc]
         filter_call_sites = df["name"].unique()
@@ -67,7 +68,7 @@ class FilterNetworkX:
             if edge[0] in callsites and edge[1] in callsites:
                 ret.add_edge(edge[0], edge[1])
             else:
-                log.info(f"Removing the edge: {edge}")
+                self.log.info(f"Removing the edge: {edge}")
 
         return ret
 

@@ -25,9 +25,9 @@ CCTs.
 pip install .
 ```
  
- For the web app, install the required packages.
 
  ## App server
+  For the web app, install the required packages.
 ```
 cd app
 npm install
@@ -99,7 +99,7 @@ CallFlow requires the user to specify how various data preprocessing operations 
 ```
 
 
-# Running
+# Running the web app
 
 To process the datasets,
 ```

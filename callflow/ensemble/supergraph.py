@@ -4,7 +4,7 @@ import pandas as pd
 import math, json
 from ast import literal_eval as make_list
 
-from callflow.utils import Timer, log
+from callflow.utils import Timer, Log
 
 
 class EnsembleSuperGraph(nx.Graph):
@@ -25,6 +25,7 @@ class EnsembleSuperGraph(nx.Graph):
         split_callee_module="",
     ):
         super(EnsembleSuperGraph, self).__init__()
+        self.log = Log("ensemble_super_graph")
         self.states = states
         self.timer = Timer()
 
@@ -68,7 +69,9 @@ class EnsembleSuperGraph(nx.Graph):
 
         with self.timer.phase("Construct Graph"):
             if construct_graph:
-                log.info("Creating a SuperGraph for {0}.".format(self.state_group.name))
+                self.log.info(
+                    "Creating a SuperGraph for {0}.".format(self.state_group.name)
+                )
 
                 self.cct = nx.DiGraph()
                 self.agg_g = nx.DiGraph()

@@ -17,7 +17,7 @@ import networkx as nx
 import math
 import json
 from ast import literal_eval as make_tuple
-from callflow.utils import log, Timer
+from callflow.utils import Log, Timer
 
 
 class SuperGraph(nx.Graph):
@@ -32,6 +32,7 @@ class SuperGraph(nx.Graph):
         debug=True,
     ):
         super(SuperGraph, self).__init__()
+        self.log = log("supergraph")
         self.state = states[dataset]
         self.dataset = dataset
         self.timer = Timer()

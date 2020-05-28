@@ -16,11 +16,12 @@ from .process import PreProcess
 from .auxiliary import Auxiliary
 from .state import State
 
-from callflow.utils import log
+from callflow.utils import Log
 
 
 class Pipeline:
     def __init__(self, config):
+        self.log = Log("pipeline")
         self.config = config
         self.dirname = self.config.save_path
         self.debug = True
@@ -37,7 +38,7 @@ class Pipeline:
         state.entire_df = create.df
         state.entire_graph = create.graph
 
-        log.info(
+        self.log.info(
             f"Number of call sites in CCT (From dataframe): {len(state.entire_df['name'].unique())}"
         )
 
@@ -111,12 +112,12 @@ class Pipeline:
         state.g = u_graph.R
 
         if self.debug:
-            log.info("Done with Union.")
-            log.info(
+            self.log.info("Done with Union.")
+            self.log.info(
                 f"Number of callsites in dataframe: {len(state.df['name'].unique())}"
             )
-            log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
-            log.info(
+            self.log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
+            self.log.info(
                 f"Number of modules in the graph: {len(state.df['module'].unique())}"
             )
 
@@ -137,12 +138,12 @@ class Pipeline:
         state.g = g
 
         if self.debug:
-            log.info("Done with Filtering the Union graph.")
-            log.info(
+            self.log.info("Done with Filtering the Union graph.")
+            self.log.info(
                 f"Number of callsites in dataframe: {len(state.df['name'].unique())}"
             )
-            log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
-            log.info(
+            self.log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
+            self.log.info(
                 f"Number of modules in the graph: {len(state.df['module'].unique())}"
             )
 
@@ -164,11 +165,11 @@ class Pipeline:
         state.df = grouped_graph["df"]
 
         if self.debug:
-            log.info(
+            self.log.info(
                 f"Number of callsites in dataframe: {len(state.df['name'].unique())}"
             )
-            log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
-            log.info(f"Modules in the graph: {state.df['module'].unique()}")
+            self.log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
+            self.log.info(f"Modules in the graph: {state.df['module'].unique()}")
         return state
 
     ##################### Write Functions ###########################
@@ -218,7 +219,7 @@ class Pipeline:
     ##################### Read Functions ###########################
     # Read the ensemble graph and dataframe.
     def read_ensemble_gf(self, name):
-        log.info(f"[Process] Reading the union dataframe and graph : {name}")
+        self.log.info(f"[Process] Reading the union dataframe and graph : {name}")
         state = State(name)
         dirname = self.config.save_path
         union_df_filepath = dirname + "/" + name + "_df.csv"
@@ -235,7 +236,9 @@ class Pipeline:
     # Read a single dataset, pass the dataset name as a parameter.
     def read_dataset_gf(self, name):
         state = State(name)
-        log.info("[Process] Reading the dataframe and graph of state: {0}".format(name))
+        self.log.info(
+            "[Process] Reading the dataframe and graph of state: {0}".format(name)
+        )
         dataset_dirname = os.path.abspath(os.path.join(__file__, "../../..")) + "/data"
         df_filepath = self.dirname + "/" + name + "/entire_df.csv"
         entire_df_filepath = self.dirname + "/" + name + "/entire_df.csv"
@@ -280,7 +283,7 @@ class Pipeline:
     def read_all_data(self):
         dirname = self.config.callflow_path
         all_data_filepath = os.path.join(self.config.save_path, "all_data.json")
-        log.info(f"[Read] {all_data_filepath}")
+        self.log.info(f"[Read] {all_data_filepath}")
         with open(all_data_filepath, "r") as filter_graphFile:
             data = json.load(filter_graphFile)
         return data

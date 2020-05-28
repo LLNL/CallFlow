@@ -3,11 +3,12 @@ import time
 import networkx as nx
 from ast import literal_eval as make_list
 
-from callflow.utils import log
+from callflow.utils import Log
 
 
 class ensembleGroupBy:
     def __init__(self, state_entire, state_filter, group_by):
+        self.log = Log("ensemble_group_by_module")
         self.state_filter = state_filter
         self.state_entire = state_entire
         self.entire_df = self.state_entire.df
@@ -164,7 +165,7 @@ class ensembleGroupBy:
         module_id_map = {}
         module_count = 0
 
-        log.debug(
+        self.log.debug(
             f"Nodes: {len(self.filter_g.nodes())}, Edges: {len(self.filter_g.edges())}"
         )
 

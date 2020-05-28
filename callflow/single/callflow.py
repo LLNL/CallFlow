@@ -20,7 +20,7 @@ from callflow.utils import (
     getMinExcTime,
     getMaxIncTime,
     getMinIncTime,
-    log,
+    Log,
     Timer,
 )
 
@@ -38,6 +38,7 @@ from callflow.single import (
 class SingleCallFlow:
     def __init__(self, config=None, process=False):
         # Config contains properties set by the input config file.
+        self.log = Log("single_callflow")
         self.config = config
         self.timer = Timer()
 
@@ -45,7 +46,7 @@ class SingleCallFlow:
         if process:
             self.process()
         else:
-            log.info("[Single] Read Mode.")
+            self.log.info("[Single] Read Mode.")
             self.states = self.readState(self.config.dataset_names)
 
     def readState(self, datasets):
@@ -57,38 +58,38 @@ class SingleCallFlow:
     def process(self):
         for dataset_name in self.config.dataset_names:
             state = State(dataset_name)
-            log.info("#########################################")
-            log.debug(f"Run: {dataset_name}")
-            log.info("#########################################")
+            self.log.info("#########################################")
+            self.log.debug(f"Run: {dataset_name}")
+            self.log.info("#########################################")
 
             stage1 = time.perf_counter()
             state = self.pipeline.create_gf(dataset_name)
             stage2 = time.perf_counter()
-            log.debug(f"Create GraphFrame: {stage2 - stage1}")
-            log.info("-----------------------------------------")
+            self.log.debug(f"Create GraphFrame: {stage2 - stage1}")
+            self.log.info("-----------------------------------------")
 
             states = self.pipeline.process_gf(state, "entire")
             stage3 = time.perf_counter()
-            log.debug(f"Preprocess GraphFrame: {stage3 - stage2}")
-            log.info("-----------------------------------------")
+            self.log.debug(f"Preprocess GraphFrame: {stage3 - stage2}")
+            self.log.info("-----------------------------------------")
 
             state = self.pipeline.hatchetToNetworkX(state, "path")
             stage4 = time.perf_counter()
-            log.debug(f"Convert to NetworkX graph: {stage4 - stage3}")
-            log.info("-----------------------------------------")
+            self.log.debug(f"Convert to NetworkX graph: {stage4 - stage3}")
+            self.log.info("-----------------------------------------")
 
             state = self.pipeline.group(state, "module")
             stage5 = time.perf_counter()
-            log.debug(f"Group GraphFrame: {stage5 - stage4}")
-            log.info("-----------------------------------------")
+            self.log.debug(f"Group GraphFrame: {stage5 - stage4}")
+            self.log.info("-----------------------------------------")
 
             self.pipeline.write_dataset_gf(
                 state, dataset_name, "entire", write_graph=False
             )
             stage6 = time.perf_counter()
-            log.debug(f"Write GraphFrame: {stage6 - stage5}")
-            log.info("-----------------------------------------")
-            log.info(f'Module: {state.df["module"].unique()}')
+            self.log.debug(f"Write GraphFrame: {stage6 - stage5}")
+            self.log.info("-----------------------------------------")
+            self.log.info(f'Module: {state.df["module"].unique()}')
 
         return state
 

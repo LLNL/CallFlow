@@ -16,7 +16,7 @@ from ast import literal_eval as make_tuple
 import numpy as np
 from .gradients import Gradients
 from .boxplot import BoxPlot
-from ..utils.logger import log
+from ..utils.logger import Log
 from ..utils.timer import Timer
 import time
 import math
@@ -34,6 +34,7 @@ class Auxiliary:
         process=True,
         write=False,
     ):
+        self.log = Log("auxiliary")
         self.timer = Timer()
         self.df = self.select_rows(states["ensemble_entire"].df, datasets)
         self.MPIBinCount = MPIBinCount
@@ -459,12 +460,10 @@ class Auxiliary:
 
     def run(self):
         ret = {}
-        path = (
-            self.config.processed_path + f"/{self.config.runName}" + f"/all_data.json"
-        )
+        path = os.path.join(self.config.save_path, "all_data.json")
 
         if self.process:
-            log.info(
+            self.log.info(
                 "Calculating Gradients, Mean runtime variations, and Distribution."
             )
             with self.timer.phase("Process data"):
@@ -482,6 +481,6 @@ class Auxiliary:
                     with open(path, "w") as f:
                         json.dump(ret, f)
 
-            log.debug(self.timer)
+            self.log.debug(self.timer)
 
         return ret

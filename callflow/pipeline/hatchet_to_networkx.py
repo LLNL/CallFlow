@@ -2,7 +2,7 @@ import networkx as nx
 import math
 import json
 
-from ..utils.logger import log
+from ..utils.logger import Log
 from ..utils.hatchet import getNodeDictFromFrame
 from ..utils.df import sanitizeName
 from ast import literal_eval as make_tuple
@@ -23,7 +23,7 @@ class HatchetToNetworkX(nx.Graph):
         add_data=True,
     ):
         super(HatchetToNetworkX, self).__init__()
-
+        self.log = Log("hatchet_to_networkx")
         self.path_column_name = path_column_name
         self.state = state
 

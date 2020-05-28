@@ -21,13 +21,14 @@ from callflow.utils import (
     visModuleCallsiteName,
     getNodeDictFromFrame,
     getPathListFromFrames,
-    log,
+    Log,
 )
 
 
 def logger(func):
     @wraps(func)
     def tmp(*args, **kwargs):
+        log = Log("process")
         log.info("Preprocessing : {0}".format(func.__name__))
         return func(*args, **kwargs)
 
@@ -48,6 +49,7 @@ class PreProcess:
 
     class Builder(object):
         def __init__(self, state, gf_type="entire"):
+            self.log = Log("process")
             self.state = state
 
             self.callers = {}
@@ -265,7 +267,7 @@ class PreProcess:
         def raiseExceptionIfNodeCountNotEqual(self, attr):
             map_node_count = len(attr.keys())
             df_node_count = len(self.df["name"].unique())
-            log.debug(
+            self.log.debug(
                 f"[Validation] Map contains: {map_node_count} callsites, graph contains: {df_node_count} callsites"
             )
             if map_node_count != df_node_count:
@@ -275,7 +277,7 @@ class PreProcess:
 
         @logger
         def logInformation(self):
-            log.info(f"CCT node count : {len(self.cct_nodes)}")
-            log.info(f"CallGraph node count: {len(self.callgraph_nodes)}")
-            log.info(f"SuperGraph node count: {len(self.df['module'].unique())}")
+            self.log.info(f"CCT node count : {len(self.cct_nodes)}")
+            self.log.info(f"CallGraph node count: {len(self.callgraph_nodes)}")
+            self.log.info(f"SuperGraph node count: {len(self.df['module'].unique())}")
             return self

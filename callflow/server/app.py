@@ -30,7 +30,7 @@ from networkx.readwrite import json_graph
 from callflow.single import SingleCallFlow
 from callflow.ensemble import EnsembleCallFlow
 from callflow.pipeline import ConfigFileReader
-from callflow.utils import log
+from callflow.utils import Log
 
 app = Flask(__name__, static_url_path="/public")
 sockets = SocketIO(app, cors_allowed_origins="*")
@@ -38,6 +38,7 @@ sockets = SocketIO(app, cors_allowed_origins="*")
 
 class App:
     def __init__(self):
+        self.log = Log("app")
         self.create_parser()
         self.verify_parser()
 
@@ -76,7 +77,7 @@ class App:
             data_string = "Data: " + json.dumps(data, indent=4, sort_keys=True)
         else:
             data_string = ""
-        log.info("[app.py] {0} {1}".format(action, data_string))
+        self.log.info("{0} {1}".format(action, data_string))
 
     # Parse the input arguments
     def create_parser(self):
@@ -97,11 +98,11 @@ class App:
     def verify_parser(self):
         # Check if the config file is provided and exists!
         if not self.args.config:
-            log.info("Please provide a config file. To see options, use --help")
+            self.log.info("Please provide a config file. To see options, use --help")
             raise Exception()
         else:
             if not os.path.isfile(self.args.config):
-                log.info(
+                self.log.info(
                     "Please check the config file path. There exists no such file in the path provided"
                 )
                 raise Exception()
@@ -114,10 +115,10 @@ class App:
 
         for dataset in self.config.datasets:
             dataset_dir = os.path.join(self.config.save_path, dataset["name"])
-            log.info(dataset_dir)
+            self.log.info(dataset_dir)
             if not os.path.exists(dataset_dir):
                 if self.debug:
-                    log.info(
+                    self.log.info(
                         f"Creating .callflow directory for dataset : {dataset['name']}"
                     )
                 os.makedirs(dataset_dir)
@@ -136,8 +137,7 @@ class App:
         @sockets.on("init", namespace="/")
         def init(data):
             caseStudy = data["caseStudy"]
-            log.info(f"Case Study: {caseStudy}")
-            # self.renderPipeline(caseStudy)
+            self.log.info(f"Case Study: {caseStudy}")
             self.config = self.callflow.request({"name": "init"})
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
             emit("init", config_json, json=True)

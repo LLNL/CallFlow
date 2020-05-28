@@ -11,7 +11,7 @@
 ##############################################################################
 import pandas as pd
 import time
-from callflow.utils.logger import log
+from callflow.utils.logger import Log
 
 import os
 import hatchet as ht
@@ -25,7 +25,8 @@ class CreateGraphFrame:
     """
 
     def __init__(self, config, name):
-        log.info(f"Creating graphframes: {name}")
+        self.log = Log("create_graphframe")
+        self.log.info(f"Creating graphframes: {name}")
         self.config = config
         self.callflow_path = config.callflow_path
         self.name = name
@@ -35,7 +36,7 @@ class CreateGraphFrame:
         data_path = os.path.abspath(
             os.path.join(self.callflow_path, self.config.paths[self.name])
         )
-        log.info(f"Data path: {data_path}")
+        self.log.info(f"Data path: {data_path}")
 
         if self.config.format[self.name] == "hpctoolkit":
             self.gf = ht.GraphFrame.from_hpctoolkit(data_path)

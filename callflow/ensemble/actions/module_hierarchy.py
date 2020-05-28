@@ -4,11 +4,12 @@ import networkx as nx
 from ast import literal_eval as make_tuple
 import math
 from networkx.readwrite import json_graph
-from callflow.utils import Timer, sanitizeName, log
+from callflow.utils import Timer, sanitizeName, Log
 
 
 class ModuleHierarchy:
     def __init__(self, state, module, config={}):
+        self.log = Log("module_hierarchy")
         self.graph = state.graph
         self.df = state.df
         self.config = config
