@@ -1,6 +1,4 @@
 import * as d3 from "d3";
-import VueSlider from "vue-slider-component";
-import "vue-slider-component/theme/antd.css";
 
 import Color from "./color/color";
 import Splitpanes from "splitpanes";
@@ -37,7 +35,6 @@ export default {
 	template: tpl,
 	components: {
 		Splitpanes,
-		VueSlider,
 		SuperGraph,
 		SingleCCT,
 		RuntimeScatterplot,
