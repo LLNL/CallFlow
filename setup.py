@@ -3,46 +3,37 @@
 #
 # SPDX-License-Identifier: MIT
 
-from setuptools import setup
-from codecs import open
-from os import path
+from setuptools import setup, find_packages
 
+# ------------------------------------------------------------------------------
 __version_info__ = ("0", "0", "1")
 __version__ = ".".join(__version_info__)
 
-here = path.abspath(path.dirname(__file__))
-
+# ------------------------------------------------------------------------------
 setup(
     name="CallFlow",
     version=__version__,
+    license="MIT",
     description="",
     url="https://github.com/LLNL/CallFlow",
     author="Suraj Kesavan",
     author_email="spkesavan@ucdavis.edu",
-    license="MIT",
     classifiers=[
         "Development Status :: 1 - Planning",
         "License :: OSI Approved :: MIT License",
     ],
     keywords="",
-    packages=[
-        "callflow",
-        "callflow.server",
-        "callflow.pipeline",
-        "callflow.ensemble",
-        "callflow.ensemble.actions",
-        "callflow.single",
-        "callflow.single.actions",
-        "callflow.utils",
-        "callflow.algorithm",
-    ],
+    packages=find_packages(),
     install_requires=[
-        "pandas",
-        "networkx == 2.2",
         "numpy",
+        "pandas",
         "flask",
         "flask_socketio",
         "sklearn",
+        "statsmodels",
+        "networkx == 2.2",
         "hatchet",
     ],
 )
+
+# ------------------------------------------------------------------------------

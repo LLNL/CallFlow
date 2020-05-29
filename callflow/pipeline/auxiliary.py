@@ -16,8 +16,8 @@ from ast import literal_eval as make_tuple
 import numpy as np
 from .gradients import Gradients
 from .boxplot import BoxPlot
-from ..utils.logger import Log
-from ..utils.timer import Timer
+from callflow.utils.logger import Log
+from callflow.utils.timer import Timer
 import time
 import math
 import os

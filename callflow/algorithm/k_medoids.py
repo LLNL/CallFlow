@@ -1,6 +1,6 @@
-from scipy.sparse import csr_matrix
-import numpy as np
 import random
+import numpy as np
+from scipy.sparse import csr_matrix
 
 
 class KMedoids:

@@ -10,6 +10,8 @@
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
 
+
+# ------------------------------------------------------------------------------
 # Library imports
 from flask import (
     Flask,
@@ -26,19 +28,22 @@ import uuid
 import argparse
 from networkx.readwrite import json_graph
 
+
 # Callflow imports
 from callflow.single import SingleCallFlow
 from callflow.ensemble import EnsembleCallFlow
 from callflow.pipeline import ConfigFileReader
 from callflow.utils import Log
 
+# ------------------------------------------------------------------------------
+
 app = Flask(__name__, static_url_path="/public")
 sockets = SocketIO(app, cors_allowed_origins="*")
 
-
-class App:
+# ------------------------------------------------------------------------------
+class CallFlowServer:
     def __init__(self):
-        self.log = Log("app")
+        self.log = Log("CallFlowServer")
         self.create_parser()
         self.verify_parser()
 
@@ -412,12 +417,12 @@ class App:
     def create_server(self):
         app.debug = True
         app.__dir__ = os.path.join(os.path.dirname(os.getcwd()), "")
-        # App routes
+        # CallFlowServer routes
         @app.route("/")
         def root():
-            print("App directory", app.__dir__)
+            print("CallFlowServer directory", app.__dir__)
             return send_from_directory(app.__dir__, "index.html")
 
 
 if __name__ == "__main__":
-    App()
+    CallFlowServer()

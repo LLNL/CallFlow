@@ -11,7 +11,7 @@
 ##############################################################################
 import pandas as pd
 import time
-from ..utils.logger import Log
+from callflow.utils.logger import Log
 
 
 class FilterHatchet:

@@ -1,25 +1,38 @@
-*~
-**/.DS_Store
-.vscode/*
+# ------------------------------------------------------------------------------
+# callflow specific
 
-
-
-.ipynb_checkpoints/*
-data/*
-
-old-code/*
-config_files*
-
-*.ipynb
 *.csv
 *.h5
 
-*pyc
+.callflow
+old-code/*
+config_files/*
+data/*
+
+app/node_modules*
+app/dist
+app/src/unused/*
+
+# ------------------------------------------------------------------------------
+# Editor hidden directories
+*.DS_Store
+.vscode
+*~
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
 .cache
 .pytest_cache
 
-*.egg-info
-build/*
-dist/*
+# Distribution / packaging
+.Python
+*.egg-info/
+*.egg
+build/
+dist/
 
-*.callflow
+# Jupyter Notebook
+.ipynb_checkpoints

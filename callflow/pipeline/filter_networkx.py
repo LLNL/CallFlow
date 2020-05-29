@@ -1,6 +1,6 @@
 import numpy as np
 import networkx as nx
-from ..utils.logger import Log
+from callflow.utils.logger import Log
 from ast import literal_eval as make_list
 
 

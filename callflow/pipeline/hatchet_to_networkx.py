@@ -2,9 +2,9 @@ import networkx as nx
 import math
 import json
 
-from ..utils.logger import Log
-from ..utils.hatchet import getNodeDictFromFrame
-from ..utils.df import sanitizeName
+from callflow.utils.logger import Log
+from callflow.utils.hatchet import getNodeDictFromFrame
+from callflow.utils.df import sanitizeName
 from ast import literal_eval as make_tuple
 
 
