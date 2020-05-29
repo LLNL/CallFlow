@@ -7,7 +7,6 @@
         "production": "webpack-dev-server --host 0.0.0.0 --port 80 --config build/webpack.prod.conf.js",
         "lint": "./node_modules/.bin/eslint --fix .",
         "start": "npm run dev",
-        "build": "node build/build.js",
         "prune": "node-prune"
     },
     "dependencies": {
