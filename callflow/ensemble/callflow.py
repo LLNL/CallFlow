@@ -65,8 +65,8 @@ class EnsembleCallFlow:
 
         self.target_df = {}
         for dataset in self.config.dataset_names:
-            self.target_df[dataset] = self.states["ensemble_entire"].df.loc[
-                self.states["ensemble_entire"].df["dataset"] == dataset
+            self.target_df[dataset] = self.states["ensemble_entire"].new_gf.df.loc[
+                self.states["ensemble_entire"].new_gf.df["dataset"] == dataset
             ]
 
     def processState(self, filterBy="Inclusive", filterPerc="10"):

@@ -36,6 +36,8 @@ class Pipeline:
         state = State(name)
         state.new_entire_gf = GraphFrame.from_config(self.config, name)
 
+        print (state.new_entire_gf)
+        print (type(state.new_entire_gf))
         #state.entire_gf = state.new_entire_gf
         #state.entire_df = state.new_entire_gf.df
         #state.entire_graph = state.new_entire_gf.graph
@@ -48,7 +50,7 @@ class Pipeline:
         '''
 
         self.log.info(
-            f"Number of call sites in CCT (From dataframe): {len(state.entire_df['name'].unique())}"
+            f"Number of call sites in CCT (From dataframe): {len(state.new_entire_gf.df['name'].unique())}"
         )
 
         return state
@@ -83,7 +85,9 @@ class Pipeline:
                 .build()
             )
 
-        state.new_gf = preprocess.new_gf
+
+        print (preprocess.gf)
+        state.new_gf = preprocess.gf
         #state.df = preprocess.new_gf.df
         #state.graph = preprocess.new_gf.graph
         self.entire_df = state.new_gf.df
@@ -93,8 +97,15 @@ class Pipeline:
     def hatchetToNetworkX(self, state, path):
         convert = HatchetToNetworkX(state, path, construct_graph=True, add_data=False)
 
+        print ('now, here')
+        print('--------', type(convert.nxg))
+        print('--------', convert.nxg)
+        print('--------', convert.nxg.edges())
+
         #state.g = convert.g
-        state.nxg = convert.g
+        state.new_entire_gf.nxg = convert.nxg
+        state.new_gf.nxg = convert.nxg
+
         return state
 
     # Uses the hatchet's filter method.
@@ -113,8 +124,8 @@ class Pipeline:
         u_graph = UnionGraph()
         u_df = pd.DataFrame()
         for idx, dataset in enumerate(states):
-            u_graph.unionize(states[dataset].g, dataset)
-            u_df = pd.concat([u_df, states[dataset].df], sort=True)
+            u_graph.unionize(states[dataset].new_gf.nxg, dataset)
+            u_df = pd.concat([u_df, states[dataset].new_gf.df], sort=True)
 
         state = State("union")
         state.new_gf = GraphFrame()
@@ -177,8 +188,12 @@ class Pipeline:
         return state
 
     def group(self, state, attr):
+        print (state.new_gf.nxg)
         grouped_graph = groupBy(state, attr)
-        state.new_gf.g = grouped_graph.g
+
+        #state.new_gf = groupBy(state, attr)
+
+        state.new_gf.nxg = grouped_graph.g
         state.new_gf.df = grouped_graph.df
         return state
 
@@ -203,7 +218,7 @@ class Pipeline:
             self.log.info(
                 f"Number of callsites in dataframe: {len(state.new_gf.df['name'].unique())}"
             )
-            self.log.info(f"Number of callsites in the graph: {len(state.new_gf.g.nodes())}")
+            self.log.info(f"Number of callsites in the graph: {len(state.new_gf.nxg.nodes())}")
             self.log.info(f"Modules in the graph: {state.new_gf.df['module'].unique()}")
 
         return state

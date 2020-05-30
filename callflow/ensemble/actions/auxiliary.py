@@ -16,8 +16,8 @@ from ast import literal_eval as make_tuple
 import numpy as np
 from .gradients import KDE_gradients
 from .boxplot import BoxPlot
-from utils.logger import log
-from utils.timer import Timer
+from callflow.utils.logger import Log as log
+from callflow.utils.timer import Timer
 import time
 import math
 import os
@@ -36,7 +36,7 @@ class Auxiliary:
         topCallsite=10,
     ):
         self.timer = Timer()
-        self.df = self.select_rows(states["ensemble_entire"].df, datasets)
+        self.df = self.select_rows(states["ensemble_entire"].new_gf.df, datasets)
         self.MPIBinCount = MPIBinCount
         self.RunBinCount = RunBinCount
         self.config = config
@@ -47,6 +47,8 @@ class Auxiliary:
 
         self.props = ["rank", "name", "dataset", "all_ranks"]
         self.filter = True
+
+        '''
         self.runPath = (
             self.config.callflow_path
             + "/"
@@ -57,6 +59,10 @@ class Auxiliary:
         self.h5IndexFilename = self.runPath + "/h5_index.json"
         self.moduleh5File = self.runPath + "/module_data.h5"
         self.callsiteh5File = self.runPath + "/callsite_data.h5"
+        '''
+        self.h5IndexFilename = os.path.join(self.config.save_path, "h5_index.json")
+        self.moduleh5File = os.path.join(self.config.save_path, "module_data.h5")
+        self.callsiteh5File = os.path.join(self.config.save_path, "callsite_data.h5")
 
         self.topCallsite = topCallsite
 

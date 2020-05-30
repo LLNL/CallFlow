@@ -35,15 +35,14 @@ class HatchetToNetworkX(nx.Graph):
             self.graph = state.new_gf.graph
 
         if construct_graph:
-            # print("Creating a Graph for {0}.".format(self.state.name))
-
-            self.g = nx.DiGraph()
+            print("Creating a Graph for {0}.".format(self.state.name))
+            self.nxg = nx.DiGraph()
             self.add_paths_from_graph()
         else:
             print("Using the existing graph from state {0}".format(state.name))
-            self.g = state.new_gf.nxg
+            self.nxg = state.new_gf.nxg
 
-        self.adj_matrix = nx.adjacency_matrix(self.g)
+        self.adj_matrix = nx.adjacency_matrix(self.nxg)
         self.dense_adj_matrix = self.adj_matrix.todense()
 
         # TODO: Store the adjacency matrix also somewhere.
@@ -79,7 +78,7 @@ class HatchetToNetworkX(nx.Graph):
                 else:
                     path_tuple = make_tuple(row[self.path_column_name])
                 corrected_path = self.no_cycle_path(path_tuple)
-                self.g.add_path(corrected_path)
+                self.nxg.add_path(corrected_path)
 
     def add_paths_from_graph(self):
         graph = self.graph
@@ -127,7 +126,7 @@ class HatchetToNetworkX(nx.Graph):
                                 target_node_name = sanitizeName(
                                     target_node_dict["name"]
                                 )
-                            self.g.add_edge(source_node_name, target_node_name)
+                            self.nxg.add_edge(source_node_name, target_node_name)
                     node = next(node_gen)
 
             except StopIteration:
@@ -142,4 +141,4 @@ class HatchetToNetworkX(nx.Graph):
         pass
 
     def raiseExceptionIfNetworkXGraphIsIncorrect(self):
-        print(len(self.graph), len(self.g.nodes))
+        print(len(self.graph), len(self.nxg.nodes))

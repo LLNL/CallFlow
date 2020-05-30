@@ -27,6 +27,7 @@ setup(
     install_requires=[
         "numpy",
         "pandas",
+        "tables",
         "flask",
         "flask_socketio",
         "sklearn",

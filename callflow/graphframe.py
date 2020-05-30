@@ -12,6 +12,9 @@ class GraphFrame(ht.GraphFrame):
         if graph is not None and dataframe is not None:
             super().__init__(graph, dataframe, exc_metrics, inc_metrics)
 
+            # shortcut!
+            self.df = self.dataframe
+
         # save a networkx graph
         self.nxg = None
 
