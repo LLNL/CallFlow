@@ -15,6 +15,7 @@ from .deltacon_similarity import Similarity
 from .process import PreProcess
 from .auxiliary import Auxiliary
 from .state import State
+from callflow.graphframe import GraphFrame
 
 from callflow.utils import Log
 
@@ -31,12 +32,19 @@ class Pipeline:
 
     # Create the State from the hatchet's graphframe.
     def create_gf(self, name):
-        state = State(name)
-        create = CreateGraphFrame(self.config, name)
 
+        state = State(name)
+        state.new_entire_gf = GraphFrame.from_config(self.config, name)
+        state.entire_gf = state.new_entire_gf
+        state.entire_df = state.new_entire_gf.df
+        state.entire_graph = state.new_entire_gf.graph
+
+        '''
+        create = CreateGraphFrame(self.config, name)
         state.entire_gf = create.gf
         state.entire_df = create.df
         state.entire_graph = create.graph
+        '''
 
         self.log.info(
             f"Number of call sites in CCT (From dataframe): {len(state.entire_df['name'].unique())}"
@@ -108,8 +116,17 @@ class Pipeline:
             u_df = pd.concat([u_df, states[dataset].df], sort=True)
 
         state = State("union")
+        state.new_gf = GraphFrame()
+        state.new_gf.df = u_df
+        state.new_gf.nxg = u_graph.R
+
+        state.df = state.new_gf.df
+        state.g = state.new_gf.nxg
+
+        '''
         state.df = u_df
         state.g = u_graph.R
+        '''
 
         if self.debug:
             self.log.info("Done with Union.")
@@ -134,8 +151,17 @@ class Pipeline:
             g = filter_obj.filter_graph_by_time(df, state.g)
 
         state = State("filter_union")
+        state.new_gf = GraphFrame()
+        state.new_gf.df = df
+        state.new_gf.nxg = g
+
+        state.df = state.new_gf.df
+        state.g = state.new_gf.nxg
+
+        '''
         state.df = df
         state.g = g
+        '''
 
         if self.debug:
             self.log.info("Done with Filtering the Union graph.")
@@ -161,8 +187,16 @@ class Pipeline:
         ).run()
 
         state = State("ensemble_union")
+        state.new_gf = GraphFrame()
+        state.new_gf.df = grouped_graph["df"]
+        state.new_gf.nxg = grouped_graph["g"]
+        state.g = state.new_gf.nxg
+        state.df = state.new_gf.df
+
+        '''
         state.g = grouped_graph["g"]
         state.df = grouped_graph["df"]
+        '''
 
         if self.debug:
             self.log.info(
@@ -170,6 +204,7 @@ class Pipeline:
             )
             self.log.info(f"Number of callsites in the graph: {len(state.g.nodes())}")
             self.log.info(f"Modules in the graph: {state.df['module'].unique()}")
+
         return state
 
     ##################### Write Functions ###########################
@@ -227,9 +262,18 @@ class Pipeline:
 
         with open(union_graph_filepath, "r") as union_graphFile:
             union_graph = json.load(union_graphFile)
-        state.g = json_graph.node_link_graph(union_graph)
 
+        state.new_gf = GraphFrame()
+        state.new_gf.nxg = json_graph.node_link_graph(union_graph)
+        state.new_gf.df = pd.read_csv(union_df_filepath)
+
+        state.g = state.new_gf.nxg
+        state.df = state.new_gf.df
+
+        '''
+        state.g = json_graph.node_link_graph(union_graph)
         state.df = pd.read_csv(union_df_filepath)
+        '''
 
         return state
 
@@ -249,11 +293,18 @@ class Pipeline:
             dataset_dirname + "/" + self.config.runName + "/" + name + "/env_params.txt"
         )
 
-        state.df = pd.read_csv(df_filepath)
 
+        state.new_gf = GraphFrame()
+        state.new_gf.df = pd.read_csv(df_filepath)
+        state.df = state.new_gf.df
+
+        #state.df = pd.read_csv(df_filepath)
         with open(graph_filepath, "r") as filter_graphFile:
             graph = json.load(filter_graphFile)
-        state.g = json_graph.node_link_graph(graph)
+
+        state.new_gf.nxg = json_graph.node_link_graph(graph)
+        state.g = state.new_gf.nxg
+        #state.g = json_graph.node_link_graph(graph)
 
         if self.config.runName.split("_")[0] == "osu_bcast":
             state.projection_data = {}
