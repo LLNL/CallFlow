@@ -9,6 +9,10 @@
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
+
+## TODO: this file is not needed anymore.
+# its functionality is not in graphframe.from_config()
+
 import pandas as pd
 import time
 from callflow.utils.logger import Log
