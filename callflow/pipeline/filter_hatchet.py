@@ -24,9 +24,10 @@ class FilterHatchet:
     def __init__(self, state, filterBy, filterPerc):
         self.log = Log("filter_hatchet")
         self.state = state
-        self.graph = state.entire_graph
-        self.df = state.entire_df
-        self.gf = state.entire_gf
+
+        self.graph = state.new_entire_gf.graph
+        self.df = state.new_entire_gf.df
+        self.gf = state.new_entire_gf
 
         # self.df.set_index(['node', 'rank'], drop=False, inplace=True)
 

@@ -14,8 +14,8 @@ import pandas as pd
 
 class Scatterplot:
     def __init__(self, state, module):
-        self.graph = state.graph
-        self.df = state.df
+        self.graph = state.new_gf.graph
+        self.df = state.new_gf.df
         self.module = module
         self.entry_funcs = {}
         self.run(state)

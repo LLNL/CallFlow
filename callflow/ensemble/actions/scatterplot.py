@@ -14,14 +14,16 @@ import pandas as pd
 
 class DiffScatterplot:
     def __init__(self, states, module):
-        self.graph = state.graph
-        self.df = state.df
+        self.graph = state.new_gf.graph
+        self.df = state.new_gf.df
         self.module = module
         self.entry_funcs = {}
         self.run(state)
 
     def run(self):
         ret = []
+
+        # this should not work because there is no self.state
         entire_df = self.state.entire_df
         func_in_module = (
             self.df[self.df.module == self.module]["name"].unique().tolist()

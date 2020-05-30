@@ -18,22 +18,25 @@ class State(object):
         self.new_entire_gf = None
 
         # these are the old variables
-        self.entire_g = None
-        self.entire_df = None
-        self.entire_graph = None
+        #self.entire_g = None
+        #self.entire_df = None
+        #self.entire_graph = None
+        #self.g = None
+        #self.df = None
+        #self.gf = None
+        #self.graph = None
 
-        self.g = None
-        self.df = None
-        self.gf = None
-        self.graph = None
+        # I cant see where these are used..
+        #self.roots = None
+        #self.map = None
+        #self.node_hash_map = {}
+        self.projection_data = {}
 
-        self.roots = None
-        self.map = None
-        self.node_hash_map = {}
-        smaself.projection_data = {}
-
-
+    '''
     def lookup_by_column(self, _hash, col_name):
+        # dont think this is used anywhere
+        assert False
+
         ret = []
         node_df = self.df.loc[self.df["node"] == self.map[str(_hash)]]
         node_df_T = node_df.T.squeeze()
@@ -44,7 +47,7 @@ class State(object):
             else:
                 ret = node_df_T_attr.tolist()
         return ret
-
+    '''
     def lookup(self, node):
         return self.new_gf.lookup(node)
         #return self.df.loc[

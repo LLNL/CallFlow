@@ -8,8 +8,8 @@ from ast import literal_eval as make_tuple
 
 class moduleHierarchy:
     def __init__(self, state, modFunc):
-        self.graph = state.graph
-        self.df = state.df
+        self.graph = state.new_gf.graph
+        self.df = state.new_gf.df
 
         self.modFunc = modFunc
         # Processing for the modFunc format to get the module name

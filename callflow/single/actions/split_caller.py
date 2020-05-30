@@ -18,8 +18,8 @@ from collections import defaultdict
 
 class splitCaller:
     def __init__(self, state, idList):
-        self.graph = state.graph
-        self.df = state.df
+        self.graph = state.new_gf.graph
+        self.df = state.new_gf.df
         self.d_graph = defaultdict(list)
         self.module = []
         self.nodes = []

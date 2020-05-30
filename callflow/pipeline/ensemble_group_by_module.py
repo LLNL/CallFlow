@@ -11,9 +11,9 @@ class ensembleGroupBy:
         self.log = Log("ensemble_group_by_module")
         self.state_filter = state_filter
         self.state_entire = state_entire
-        self.entire_df = self.state_entire.df
-        self.filter_df = self.state_filter.df
-        self.filter_g = self.state_filter.g
+        self.entire_df = self.state_entire.new_gf.df
+        self.filter_df = self.state_filter.new_gf.df
+        self.filter_g = self.state_filter.new_gf.nxg
 
         self.group_by = group_by
         self.eliminate_funcs = []
@@ -32,7 +32,7 @@ class ensembleGroupBy:
     # Drop all entries user does not want to see.
     def drop_eliminate_funcs(self):
         for idx, func in enumerate(self.eliminate_funcs):
-            self.state.df = self.state.df[self.state.df["module"] != func]
+            self.state.new_gf.df = self.state.new_gf.df[self.state.new_gf.df["module"] != func]
 
     def create_group_path_time(self, path):
         if isinstance(path, str):

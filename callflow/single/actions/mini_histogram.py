@@ -16,13 +16,13 @@ import json
 class MiniHistogram:
     def __init__(self, state, target_datasets):
         self.state = state
-        self.g = state.g
+        self.graph = state.new_gf.nxg
         self.target_datasets = target_datasets
         self.all_datasets = self.state.df["dataset"].unique().tolist()
         self.other_datasets = [
             item for item in self.all_datasets if item not in self.target_datasets
         ]
-        self.df = self.state.df.fillna(0.0)
+        self.df = self.state.new_gf.df.fillna(0.0)
         self.result = self.run()
 
     def run(self):

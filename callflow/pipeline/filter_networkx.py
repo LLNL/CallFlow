@@ -7,7 +7,8 @@ from ast import literal_eval as make_list
 class FilterNetworkX:
     def __init__(self, state):
         self.log = Log("filter_networkx")
-        self.df = state.df
+        #self.df = state.df
+        self.df = state.new_gf.df
         self.dataset_df = self.df.groupby(["dataset"])
         self.dataset_idx = {}
         self.set_max_min_times()

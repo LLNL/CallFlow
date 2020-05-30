@@ -3,8 +3,8 @@ import pandas as pd
 
 class splitLevel:
     def __init__(self, state, attr):
-        self.graph = state.graph
-        self.df = state.df
+        self.graph = state.new_gf.graph
+        self.df = state.new_gf.df
         # self.df_index = df_index
         self.module = attr["module"]
         self.level = attr["level"]

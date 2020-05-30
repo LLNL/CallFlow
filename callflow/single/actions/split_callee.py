@@ -17,8 +17,8 @@ import pandas as pd
 
 class splitCallee:
     def __init__(self, state, mod_index):
-        self.graph = state.graph
-        self.df = state.df
+        self.graph = state.new_gf.graph
+        self.df = state.new_gf.df
         self.mod_index = mod_index
         self.run(state)
 

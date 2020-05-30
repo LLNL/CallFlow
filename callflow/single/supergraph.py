@@ -35,11 +35,11 @@ class SingleSuperGraph(nx.Graph):
         self.dataset = dataset
         self.timer = Timer()
 
-        self.df = self.state.df
-        self.graph = self.state.graph
+        self.graph = state.new_gf.graph
+        self.df = state.new_gf.df
+        self.g = state.new_gf.nxg
 
         self.group_by = group_by_attr
-        self.g = self.state.g
 
         self.columns = [
             "time (inc)",

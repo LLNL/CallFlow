@@ -28,11 +28,11 @@ class HatchetToNetworkX(nx.Graph):
         self.state = state
 
         if graph_type == "entire":
-            self.df = state.entire_df
-            self.graph = state.entire_graph
+            self.df = state.new_entire_gf.df
+            self.graph = state.new_entire_gf.graph
         else:
-            self.df = state.df
-            self.graph = state.graph
+            self.df = state.new_gf.df
+            self.graph = state.new_gf.graph
 
         if construct_graph:
             # print("Creating a Graph for {0}.".format(self.state.name))
@@ -41,7 +41,7 @@ class HatchetToNetworkX(nx.Graph):
             self.add_paths_from_graph()
         else:
             print("Using the existing graph from state {0}".format(state.name))
-            self.g = state.g
+            self.g = state.new_gf.nxg
 
         self.adj_matrix = nx.adjacency_matrix(self.g)
         self.dense_adj_matrix = self.adj_matrix.todense()

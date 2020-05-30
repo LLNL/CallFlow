@@ -21,8 +21,8 @@ class SingleCCT:
     def __init__(self, state, functionsInCCT, config):
         self.timer = Timer()
 
-        self.g = state.g
-        self.df = state.df
+        self.g = state.new_gf.nxg
+        self.df = state.new_gf.df
         self.functionsInCCT = int(functionsInCCT)
         self.config = config
 

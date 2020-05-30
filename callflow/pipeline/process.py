@@ -59,13 +59,19 @@ class PreProcess:
             self.hatchet_nodes = {}
 
             if gf_type == "filter":
-                self.gf = state.gf
-                self.df = state.df
-                self.graph = state.entire_graph
+                #self.gf = state.gf
+                #self.df = state.df
+                #self.graph = state.entire_graph
+                self.gf = state.new_gf
+                self.df = state.new_gf.df
+                self.graph = state.new_entire_gf.graph
             elif gf_type == "entire":
-                self.gf = state.entire_gf
-                self.df = state.entire_df
-                self.graph = state.entire_graph
+                #self.gf = state.entire_gf
+                #self.df = state.entire_df
+                #self.graph = state.entire_graph
+                self.gf = state.new_entire_gf
+                self.df = state.new_entire_gf.df
+                self.graph = state.new_entire_gf.graph
 
             # Logger Information
             self.cct_nodes = []

@@ -10,8 +10,8 @@ from callflow.utils import Timer, sanitizeName, Log
 class ModuleHierarchy:
     def __init__(self, state, module, config={}):
         self.log = Log("module_hierarchy")
-        self.graph = state.graph
-        self.df = state.df
+        self.graph = state.new_gf.graph
+        self.df = state.new_gf.df
         self.config = config
         self.module = module
 

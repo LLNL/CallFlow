@@ -20,8 +20,8 @@ import os
 
 class Auxiliary:
     def __init__(self, state, binCount="20", dataset="", config={}, process=True):
-        self.graph = state.g
-        self.df = state.df
+        self.graph = state.new_gf.graph
+        self.df = state.new_gf.df
         self.config = config
         self.process = process
         self.dataset = dataset

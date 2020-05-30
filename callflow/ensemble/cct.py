@@ -21,11 +21,13 @@ class EnsembleCCT:
     def __init__(self, state, functionsInCCT, config):
         self.timer = Timer()
         self.config = config
-        number_of_nodes = len(state.df["name"].unique())
+        number_of_nodes = len(state.new_gf.df["name"].unique())
         self.functionsInCCT = int(functionsInCCT)
 
-        self.entire_graph = state.g
-        self.entire_df = state.df
+        #self.entire_graph = state.g
+        #self.entire_df = state.df
+        self.entire_graph = state.new_gf.g
+        self.entire_df = state.new_gf.df
 
         self.runs = self.entire_df["dataset"].unique()
         self.columns = ["time (inc)", "time", "name", "module"]

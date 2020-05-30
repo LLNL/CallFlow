@@ -16,9 +16,9 @@ import json
 class ToolTip:
     def __init__(self, state, module):
         self.state = state
-        self.graph = state.graph
-        self.df = state.df
-        self.entire_df = state.entire_df
+        self.graph = state.new_gf.graph
+        self.df = state.new_gf.df
+        self.entire_df = state.new_entire_gf.df
         self.module = module
         self.result = self.run()
 

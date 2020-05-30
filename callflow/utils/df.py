@@ -76,8 +76,8 @@ def getMaxExcTime(state):
 
 def getAvgIncTime(state):
     ret = 0.0
-    graph = state.graph
-    df = state.df
+    graph = state.new_gf.graph
+    df = state.new_gf.df
     for root in gf.graph.roots:
         ret += lookup(df, root)["time (inc)"].mean()
     return ret / len(gf.graph.roots)

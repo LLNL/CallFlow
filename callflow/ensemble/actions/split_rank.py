@@ -16,9 +16,9 @@ import numpy as np
 
 class splitRank:
     def __init__(self, state, ids):
-        self.graph = state.graph
-        self.df = state.df
-        self.entire_df = state.entire_df
+        self.graph = state.new_gf.graph
+        self.df = state.new_gf.df
+        self.entire_df = state.new_entire_gf.df
         self.ids = ids
         self.other_ids = self.find_other_ids()
 

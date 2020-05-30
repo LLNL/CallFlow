@@ -33,7 +33,7 @@ class EnsembleSuperGraph(nx.Graph):
         self.state_entire = self.states["ensemble_entire"]
         self.state_filter = self.states["ensemble_filter"]
         self.state_group = self.states["ensemble_group"]
-        self.ensemble_g = self.state_group.g
+        self.ensemble_g = self.state_group.nxg
         self.node_list = np.array(list(self.ensemble_g.nodes()))
 
         # Path type to group by
@@ -41,8 +41,8 @@ class EnsembleSuperGraph(nx.Graph):
         self.path = path
         self.group_by = group_by_attr
 
-        self.entire_df = self.state_entire.df
-        self.group_df = self.state_group.df
+        self.entire_df = self.state_entire.new_gf.df
+        self.group_df = self.state_group.new_gf.df
         # Columns to consider.
         # TODO: Generalize it either all columns or let user specify the value using config.json
         self.columns = [
