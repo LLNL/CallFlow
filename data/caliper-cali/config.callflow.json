@@ -1,0 +1,42 @@
+{
+  "run_name": "caliper-cali",
+  "save_path": "./data/caliper-cali/.callflow",
+  "datasets": [
+    {
+      "name": "caliper-ex",
+      "path": "./data/caliper-cali/caliper-ex.json",
+      "format": "caliper_json"
+    }
+  ],
+  "scheme": {
+    "filter_by": "time (inc)",
+    "filter_perc": 0,
+    "group_by": "name",
+    "module_map": {
+      "Lulesh": ["main"],
+      "LeapFrog": ["LagrangeNodal", "LagrangeLeapFrog"],
+      "CalcForce": [
+        "CalcForceForNodes",
+        "CalcVolumeForceForElems",
+        "CalcHourglassControlForElems",
+        "CalcFBHourglassForceForElems"
+      ],
+      "CalcLagrange": [
+        "LagrangeElements",
+        "UpdateVolumesForElems",
+        "CalcLagrangeElements",
+        "CalcKinematicsForElems",
+        "CalcQForElems",
+        "CalcMonotonicQForElems",
+        "ApplyMaterialPropertiesForElems",
+        "EvalEOSForElems",
+        "CalcEnergyForElems",
+        "IntegrateStressForElems"
+      ],
+      "Timer": ["TimeIncrement"],
+      "CalcConstraint": [
+        "CalcTimeConstraintsForElems"
+      ]
+    }
+  }
+}

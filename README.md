@@ -24,80 +24,19 @@ CCTs.
  ```
 pip install .
 ```
- 
 
- ## App server
+## App server
   For the web app, install the required packages.
 ```
 cd app
 npm install
 ```
 
-# Preparing Data.
+# Preparing Data
 
-Callflow currently, supports two formats, [hpctoolkit](http://hpctoolkit.org/) and [caliper](www.github.com/LLNL/caliper). Sample datasets can be found in the `data` folder. Please make sure the directory structure is as given below.
+See [instructions](https://github.com/jarusified/CallFlow/tree/v2/data/README.md).
 
-## HPCToolkit
-```
-{$CALLFLOW_PATH}/data/{hpctoolkit_dataset}
-	.../experiment.xml
-	.../experiment-001.metric-db
-	.../experiment-002.metric-db
-	.../experiment-003.metric-db
-	...
-```
-
-## Caliper	
-
-```
-{$CALLFLOW_PATH}/data/{caliper_dataset}
-	.../data/experiment.json
-
-```
-
-# Configuration file.
-CallFlow requires the user to specify how various data preprocessing operations are performed (i.e., filtering, grouping operations) using a scheme. We recommend naming the configuration file with the `.callflow.json` file extension.
-
-```
-{
-    "run_name": "{run_name}", // Name of the experiment. 
-    "save_path": "{data/run_name/.callflow}", // File path to save callflow generated files.
-    "datasets": [
-        {
-            "name": "dataset-1", // name of dataset
-            "path": "data/run_name/dataset_1}", // path to dataset 1
-            "format": "{profile_format}" // HPCToolkit|Caliper
-        },
-		{
-			"name": "dataset-1", // name of dataset
-            "path": "data/run_name/dataset_1}", // path to dataset 1
-            "format": "{profile_format}" // HPCToolkit|Caliper
-		}, 
-		...
-    ],
-    "scheme": {
-        "filter_by": "{filter_metric", // time (inc)|time
-        "filter_perc": "{filter_percentage}",
-        "group_by": "{group_metric", // name for CallGraph and module for SuperGraph.
-        "module_map": {
-            "module-1": [
-                "callsite-1",
-                "callsite-2",
-				...
-            ],
-			"module-2": [
-				...
-			],
-			...
-			"module-n": [
-				...
-			]
-
-        },
-    }
-}
-```
-
+See [data examples](https://github.com/jarusified/CallFlow/tree/v2/data)
 
 # Running the web app
 

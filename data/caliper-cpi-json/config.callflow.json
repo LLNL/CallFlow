@@ -1,0 +1,19 @@
+{
+    "run_name": "caliper-cpi-json",
+    "save_path": "./data/caliper-cpi-json/.callflow",
+    "datasets": [
+      {
+        "name": "caliper-ex",
+        "path": "./data/caliper-cpi-json/cpi-sample-callpathprofile.json",
+        "format": "caliper_json"
+      }
+    ],
+    "scheme": {
+      "filter_by": "time (inc)",
+      "filter_perc": 0,
+      "group_by": "name",
+      "module_map": {
+      }
+    }
+  }
+  

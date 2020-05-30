@@ -1,0 +1,20 @@
+{
+    "run_name": "gprof-cpi",
+    "save_path": "./data/gprof2dot-cpi/.callflow",
+    "datasets": [
+      {
+        "name": "calc-pi",
+        "path": "./data/gprof2dot-cpi/callgrind.dot.64042.0",
+        "format": "gprof"
+      }
+    ],
+    "scheme": {
+      "filter_by": "time (inc)",
+      "filter_perc": 0,
+      "group_by": "name",
+      "module_map": {
+        
+      }
+    }
+  }
+  

@@ -1,0 +1,19 @@
+{
+    "run_name": "hpctoolkit-threads-osu-allgather",
+    "save_path": "./data/hpctoolkit-threads-osu-allgather/.callflow",
+    "datasets": [
+      {
+        "name": "osu-allgather",
+        "path": "./data/hpctoolkit-threads-osu-allgather",
+        "format": "hpctoolkit"
+      }
+    ],
+    "scheme": {
+      "filter_by": "time (inc)",
+      "filter_perc": 0,
+      "group_by": "name",
+      "module_map": {
+      }
+    }
+  }
+  
