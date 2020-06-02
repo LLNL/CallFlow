@@ -1,3 +1,8 @@
+
+
+# TODO: if these are truly hatchet utils, why is hatchet not being imported?
+# that should tell you where these really belong
+
 def getPathListFromFrames(frames):
     paths = []
     for frame in frames:

@@ -13,6 +13,9 @@
 ## TODO: this file is not needed anymore.
 # its functionality is not in graphframe.from_config()
 
+# the functionality has been moved to datastructures/graphframe.py
+print ('WARNING: ({}) is deprecated and should be deleted!'.format(__file__))
+
 import pandas as pd
 import time
 from callflow.utils.logger import Log

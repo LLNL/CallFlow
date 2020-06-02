@@ -13,6 +13,7 @@
 import numpy as np
 import json
 
+print ('WARNING: ({}) is unused in the code and should be deleted!'.format(__file__))
 
 def trees_to_literal(graph, dataframe):
     """ Calls to_json in turn for each tree in the graph/forest

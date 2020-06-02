@@ -3,19 +3,19 @@ from networkx.readwrite import json_graph
 import pandas as pd
 import os
 
-from .create_graphframe import CreateGraphFrame
+#from .create_graphframe import CreateGraphFrame
 
 from .group_by_module import groupBy
-from .ensemble_group_by_module import ensembleGroupBy
+from .group_by_module_ensemble import ensembleGroupBy
 from .filter_hatchet import FilterHatchet
 from .filter_networkx import FilterNetworkX
-from .hatchet_to_networkx import HatchetToNetworkX
-from .union_graph import UnionGraph
-from .deltacon_similarity import Similarity
+from callflow.utils.hatchet_to_networkx import HatchetToNetworkX
+from callflow.datastructures.uniongraph import UnionGraph
+from callflow.algorithms.deltacon_similarity import Similarity
+from callflow.modules.auxiliary import Auxiliary
 from .process import PreProcess
-from .auxiliary import Auxiliary
 from .state import State
-from callflow.graphframe import GraphFrame
+from callflow import GraphFrame
 
 from callflow.utils import Log
 
@@ -347,7 +347,7 @@ class Pipeline:
             json.dump(ret, json_file)
 
     def read_all_data(self):
-        dirname = self.config.callflow_path
+        #dirname = self.config.callflow_path
         all_data_filepath = os.path.join(self.config.save_path, "all_data.json")
         self.log.info(f"[Read] {all_data_filepath}")
         with open(all_data_filepath, "r") as filter_graphFile:

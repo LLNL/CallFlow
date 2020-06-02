@@ -14,6 +14,9 @@ import os
 import json
 
 
+# ------------------------------------------------------------------------------
+# i see similar functions in graphframe.py (copied from state.py)
+# why are these different
 def lookup(df, node):
     return df.loc[df["name"] == getNodeName(node)]
 
@@ -30,7 +33,8 @@ def lookup_with_name(df, name):
 #     name_split = name.split("/")
 #     return name_split[len(name_split) - 1]
 
-
+# ------------------------------------------------------------------------------
+# a similar function in utils/hatchet.py
 def sanitizeName(name):
     ret_name = ""
     if name is None:
@@ -51,6 +55,7 @@ def sanitizeAMMName(name):
         name = name
     return name
 
+# ------------------------------------------------------------------------------
 
 def visModuleCallsiteName(name, df):
     return df.groupby(["name"]).unique()["module"]
@@ -135,18 +140,16 @@ def getAvgExcTime_from_gf(graph, dataframe):
 def getMinIncTime_from_gf(graph, dataframe):
     return 0
 
-
 def getMinExcTime_from_gf(graph, dataframe):
     return 0
-
 
 def getNumOfNodes_from_gf(graph, dataframe):
     return dataframe["module"].count()
 
-
 def getNumbOfRanks_from_gf(graph, dataframe):
     return len(dataframe["rank"].unique())
 
+# ------------------------------------------------------------------------------
 
 def debugWriteToFile(action="", data={}):
     action = "[callfow.py] Action: {0}".format(action)
@@ -167,3 +170,5 @@ def is_json(myjson):
     except ValueError as e:
         return False
     return True
+
+# ------------------------------------------------------------------------------

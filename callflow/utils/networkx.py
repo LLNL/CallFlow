@@ -1,9 +1,15 @@
+
 import networkx as nx
 from networkx.readwrite import json_graph
 
-
+# ------------------------------------------------------------------------------
+# networx utilities
+# ------------------------------------------------------------------------------
+# not sure if this is used anywhere
+# Also, why is this not consistent with the rest of the stlye (ie, actions)
 def dfs(graph, dataframe, limit):
-    def dfs_recurse(root, level):
+
+    def _dfs_recurse(root, level):
         for node in root.children:
             result = ""
             if level < limit:
@@ -35,4 +41,31 @@ def dfs(graph, dataframe, limit):
     level = 0
     for root in graph.roots:
         print("Root = {0} [{1}]".format("Root", root._hatchet_nid))
-        dfs_recurse(root, level)
+        _dfs_recurse(root, level)
+
+# ------------------------------------------------------------------------------
+def graphmltojson(graphfile, outfile):
+    # unused. cannot work without importing json
+    assert False
+    """
+	Converts GraphML file to json while adding communities/modularity groups
+	using python-louvain. JSON output is usable with D3 force layout.
+	"""
+    G = nx.read_graphml(graphfile)
+
+    # finds best community using louvain
+    #    partition = community_louvain.best_partition(G)
+
+    # adds partition/community number as attribute named 'modularitygroup'
+    #    for n,d in G.nodes_iter(data=True):
+    #        d['modularitygroup'] = partition[n]
+
+    node_link = json_graph.node_link_data(G)
+    json_data = json.dumps(node_link)
+
+    # Write to file
+    fo = open(outfile, "w")
+    fo.write(json_data)
+    fo.close()
+
+# ------------------------------------------------------------------------------

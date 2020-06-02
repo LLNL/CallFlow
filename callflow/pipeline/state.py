@@ -1,7 +1,7 @@
 import os
 #from hatchet import *
 
-from callflow.graphframe import GraphFrame
+from callflow import GraphFrame
 
 class State(object):
 
