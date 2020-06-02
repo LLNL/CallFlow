@@ -42,7 +42,8 @@ class GraphFrame(ht.GraphFrame):
             gf = ht.GraphFrame.from_caliper(config.data_path)
 
         elif config.format[name] == "caliper_json":
-            gf = ht.GraphFrame.from_caliper(config.data_path, query="")
+            data_path = os.path.join(config.data_path, config.paths[name])
+            gf = ht.GraphFrame.from_caliper(data_path, query="")
 
         elif config.format[name] == "gprof":
             gf = ht.GraphFrame.from_grof_dot(config.data_path)
