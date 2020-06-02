@@ -29,10 +29,11 @@ from callflow.single import (
     SingleSuperGraph,
     Auxiliary,
     MiniHistogram,
-    Histogram,
     Scatterplot,
     FunctionList,
 )
+
+from callflow.modules import RankHistogram
 
 
 class SingleCallFlow:

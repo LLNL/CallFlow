@@ -4,7 +4,6 @@ from .scatterplot import DiffScatterplot
 from .similarity import Similarity
 from .union_graph import UnionGraph
 from .gradients import KDE_gradients
-from .histogram import Histogram
 from .auxiliary import Auxiliary
 from .compare import Compare
 from .split_callee import SplitCallee

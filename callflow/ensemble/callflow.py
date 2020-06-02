@@ -33,12 +33,13 @@ from callflow.ensemble import (
     KDE_gradients,
     Similarity,
     ParameterProjection,
-    Histogram,
     Auxiliary,
     Compare,
     SplitCallee,
     SplitCaller,
 )
+
+from callflow.modules import RankHistogram
 
 
 # Create states for each dataset.
@@ -343,7 +344,7 @@ class EnsembleCallFlow:
             return minihistogram.result
 
         elif action_name == "histogram":
-            histogram = Histogram(self.states["ensemble"], action["module"])
+            histogram = RankHistogram(self.states["ensemble"], action["module"])
             return histogram.result
 
         elif action_name == "auxiliary":

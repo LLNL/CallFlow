@@ -13,7 +13,7 @@
 import pandas as pd
 
 
-class Histogram:
+class RankHistogram:
     def __init__(self, state, name):
         self.graph = state.new_gf.graph
         self.df = state.new_gf.df
