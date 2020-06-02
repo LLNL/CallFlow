@@ -4,7 +4,7 @@
   "datasets": [
     {
       "name": "caliper-ex",
-      "path": "./data/caliper-cali/caliper-ex.json",
+      "path": "caliper-ex.json",
       "format": "caliper_json"
     }
   ],
