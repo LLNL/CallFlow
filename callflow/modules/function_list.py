@@ -31,26 +31,7 @@ class FunctionList:
 
         self.module_df = self.df.loc[self.df["module"] == self.module]
 
-        # self.entry_funcs = state.entry_funcs[module]
-        # self.other_funcs = state.other_funcs[module]
         self.result = self.run()
-
-    # Convert "['<unknown procedure>']" to Array([<unknown procedure>])
-    def sanitize(self, string):
-        # strip_1 = string.strip(['"'])
-        strip_2 = string.strip("]")
-        strip_3 = strip_2.strip("[")
-        return strip_3.split(",")
-
-    # def add_paths(self, path_name):
-    #     for idx, row in self.entire_df.iterrows():
-    #         path = row[path_name][0]
-    #         # TODO: Sometimes the path becomes a string. Find why it happens.
-    #         # If path becomes a string.
-    #         if isinstance(path, str):
-    #             path = make_tuple(row[path_name])
-    #         print(path)
-    #         self.entire_g.add_path(path)
 
     def add_paths(self, path_name):
         for idx, row in self.df.iterrows():

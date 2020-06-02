@@ -19,8 +19,8 @@ import math
 class Compare:
     def __init__(self, state, dataset1, dataset2, col):
         self.state = state
-        self.df1 = self.state.df.loc[self.state.df["dataset"] == dataset1]
-        self.df2 = self.state.df.loc[self.state.df["dataset"] == dataset2]
+        self.df1 = self.state.new_gf.df.loc[self.state.df["dataset"] == dataset1]
+        self.df2 = self.state.new_gf.df.loc[self.state.df["dataset"] == dataset2]
 
         self.col = col
         self.dataset1 = dataset1

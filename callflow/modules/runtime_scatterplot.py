@@ -12,8 +12,8 @@
 import pandas as pd
 
 
-class Scatterplot:
-    def __init__(self, state, module):
+class RuntimeScatterplot:
+    def __init__(self, states, module):
         self.graph = state.new_gf.graph
         self.df = state.new_gf.df
         self.module = module
@@ -22,6 +22,8 @@ class Scatterplot:
 
     def run(self):
         ret = []
+
+        # this should not work because there is no self.state
         entire_df = self.state.entire_df
         func_in_module = (
             self.df[self.df.module == self.module]["name"].unique().tolist()

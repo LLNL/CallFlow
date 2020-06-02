@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import math
 
 
-class KDE_gradients:
+class Gradients:
     def __init__(self, dfs, binCount="20"):
         self.dfs = dfs
         self.binCount = binCount

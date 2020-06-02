@@ -10,7 +10,6 @@ from callflow.utils import Timer, sanitizeName, Log
 class ModuleHierarchy:
     def __init__(self, state, module, config={}):
         self.log = Log("module_hierarchy")
-        self.graph = state.new_gf.graph
         self.df = state.new_gf.df
         self.config = config
         self.module = module
@@ -20,9 +19,6 @@ class ModuleHierarchy:
         self.timer = Timer()
 
         self.result = self.run()
-
-    def run_graph(self):
-        self.hierarchy = nx.bfs_tree(self.graph, self.module, depth_limit=10)
 
     def create_source_targets(self, path):
         module = ""
@@ -101,14 +97,13 @@ class ModuleHierarchy:
 
     # instead of nid, get by module. nid seems very vulnerable rn.
     def run(self):
-        node_df = self.df.loc[self.df["module"] == self.module]
-        node_paths = node_df
+        node_paths_df = self.df.loc[self.df["module"] == self.module]
 
         if "component_path" not in self.df.columns:
             utils.debug("Error: Component path not defined in the df")
 
         with self.timer.phase("Add paths"):
-            self.add_paths(node_paths, "component_path")
+            self.add_paths(node_paths_df, "component_path")
 
         cycles = self.check_cycles(self.hierarchy)
         while len(cycles) != 0:

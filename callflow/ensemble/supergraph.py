@@ -33,7 +33,7 @@ class EnsembleSuperGraph(nx.Graph):
         self.state_entire = self.states["ensemble_entire"]
         self.state_filter = self.states["ensemble_filter"]
         self.state_group = self.states["ensemble_group"]
-        self.ensemble_g = self.state_group.nxg
+        self.ensemble_g = self.state_group.new_gf.nxg
         self.node_list = np.array(list(self.ensemble_g.nodes()))
 
         # Path type to group by

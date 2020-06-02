@@ -17,7 +17,7 @@ import sklearn
 from sklearn.manifold import TSNE, MDS
 from sklearn.datasets import load_digits
 from sklearn.preprocessing import scale
-from .similarity import Similarity
+from callflow.algorithms import DeltaConSimilarity
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
 from callflow.algorithms import KMedoids
@@ -28,8 +28,8 @@ class ParameterProjection:
         # self.similarities = similarities[targetDataset]
         # self.datasetOrder = {k: idx for idx, (k, v) in enumerate(similarities.items())}
         self.state = state
-        self.df = state.df
-        self.datasets = state.df["dataset"].unique().tolist()
+        self.df = state.new_gf.df
+        self.datasets = state.new_gf.df["dataset"].unique().tolist()
         self.projection = "MDS"
         self.clustering = "k_means"
         self.n_cluster = int(n_cluster)

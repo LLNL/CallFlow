@@ -27,9 +27,12 @@ from callflow.utils import (
 from callflow.single import (
     SingleCCT,
     SingleSuperGraph,
-    Auxiliary,
+)
+
+from callflow.modules import (
+    SingleAuxiliary,
     MiniHistogram,
-    Scatterplot,
+    RuntimeScatterplot,
     FunctionList,
 )
 

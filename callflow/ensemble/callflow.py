@@ -28,18 +28,21 @@ from callflow.utils import (
 from callflow.ensemble import (
     EnsembleCCT,
     EnsembleSuperGraph,
-    ModuleHierarchy,
-    UnionGraph,
-    KDE_gradients,
-    Similarity,
-    ParameterProjection,
-    Auxiliary,
-    Compare,
-    SplitCallee,
-    SplitCaller,
 )
 
-from callflow.modules import RankHistogram
+from callflow.modules import (
+    RankHistogram,
+    EnsembleAuxiliary,
+    Gradients,
+    ModuleHierarchy,
+    # UnionGraph,
+    ParameterProjection,
+    Compare,
+)
+
+from callflow.algorithms import (
+    DeltaConSimilarity
+)
 
 
 # Create states for each dataset.
@@ -349,7 +352,7 @@ class EnsembleCallFlow:
 
         elif action_name == "auxiliary":
             print(f"Reprocessing: {action['re-process']}")
-            aux = Auxiliary(
+            aux = EnsembleAuxiliary(
                 self.states,
                 MPIBinCount=action["MPIBinCount"],
                 RunBinCount=action["RunBinCount"],

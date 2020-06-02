@@ -18,7 +18,7 @@ from callflow.utils import Timer
 import os
 
 
-class Auxiliary:
+class SingleAuxiliary:
     def __init__(self, state, binCount="20", dataset="", config={}, process=True):
         self.graph = state.new_gf.graph
         self.df = state.new_gf.df

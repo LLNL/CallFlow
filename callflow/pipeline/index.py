@@ -11,8 +11,8 @@ from .filter_hatchet import FilterHatchet
 from .filter_networkx import FilterNetworkX
 from callflow.utils.hatchet_to_networkx import HatchetToNetworkX
 from callflow.datastructures.uniongraph import UnionGraph
-from callflow.algorithms.deltacon_similarity import Similarity
-from callflow.modules.auxiliary import Auxiliary
+from callflow.algorithms.deltacon_similarity import DeltaConSimilarity
+from callflow.modules.auxiliary_ensemble import EnsembleAuxiliary
 from .process import PreProcess
 from .state import State
 from callflow import GraphFrame
