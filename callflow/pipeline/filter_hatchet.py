@@ -11,6 +11,7 @@
 ##############################################################################
 import pandas as pd
 import time
+
 import callflow 
 LOGGER = callflow.get_logger(__name__)
 
@@ -23,7 +24,6 @@ class FilterHatchet:
     """
 
     def __init__(self, state, filterBy, filterPerc):
-        self.log = Log("filter_hatchet")
         self.state = state
 
         self.graph = state.new_entire_gf.graph
