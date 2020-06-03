@@ -20,9 +20,10 @@ from callflow.utils import (
     getMinExcTime,
     getMaxIncTime,
     getMinIncTime,
-    Log,
-    Timer,
 )
+
+from callflow.logger import Log
+from callflow.timer import Timer
 
 from callflow.single import (
     SingleCCT,

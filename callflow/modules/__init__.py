@@ -2,13 +2,13 @@ from .auxiliary_ensemble import EnsembleAuxiliary
 from .auxiliary_single import SingleAuxiliary
 from .auxiliary_hd5 import FastEnsembleAuxiliary
 from .boxplot import BoxPlot
-from .rank_histogram import RankHistogram
-from .mini_histogram import MiniHistogram
+from .histogram_rank import RankHistogram
+from .histogram_mini import MiniHistogram
+from .histogram_generic import GenericHistogram
 from .tooltip import ToolTip
 from .function_list import FunctionList
-from .generic_histogram import GenericHistogram
 from .gradients import Gradients
 from .runtime_scatterplot import RuntimeScatterplot
 from .parameter_projection import ParameterProjection
-from .compare import Compare
+from .diff_view import DiffView
 from .module_hierarchy import ModuleHierarchy

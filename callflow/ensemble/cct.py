@@ -14,7 +14,8 @@ import pandas as pd
 import networkx as nx
 from ast import literal_eval as make_tuple
 import math
-from callflow.utils import Timer, sanitizeName
+from callflow.timer import Timer
+from callflow.utils import sanitizeName
 
 
 class EnsembleCCT:

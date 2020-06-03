@@ -14,13 +14,16 @@ import json
 import networkx as nx
 from ast import literal_eval as make_tuple
 import numpy as np
-from .gradients import Gradients
-from .boxplot import BoxPlot
-from callflow.utils.logger import Log
-from callflow.utils.timer import Timer
 import time
 import math
 import os
+
+from .gradients import Gradients
+from .boxplot import BoxPlot
+
+from callflow.logger import Log
+from callflow.timer import Timer
+
 
 
 class EnsembleAuxiliary:

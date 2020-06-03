@@ -1,11 +1,10 @@
 import networkx as nx
 import math
 import json
-
-from callflow.utils.logger import Log
-from callflow.utils.hatchet import getNodeDictFromFrame
-from callflow.utils.df import sanitizeName
 from ast import literal_eval as make_tuple
+
+from callflow.logger import Log
+from callflow.utils import getNodeDictFromFrame, sanitizeName
 
 
 class HatchetToNetworkX(nx.Graph):

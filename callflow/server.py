@@ -33,7 +33,7 @@ from networkx.readwrite import json_graph
 from callflow.single import SingleCallFlow
 from callflow.ensemble import EnsembleCallFlow
 from callflow.pipeline import ConfigFileReader
-from callflow.utils import Log
+from callflow.logger import Log
 
 # ------------------------------------------------------------------------------
 

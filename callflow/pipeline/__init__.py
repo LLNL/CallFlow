@@ -4,3 +4,4 @@ from .group_by_module import groupBy
 from .process import PreProcess
 from .index import Pipeline
 from .state import State
+from .convert_hatchet_to_networkx import HatchetToNetworkX

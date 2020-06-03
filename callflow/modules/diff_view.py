@@ -16,7 +16,7 @@ from scipy import stats
 import math
 
 
-class Compare:
+class DiffView:
     def __init__(self, state, dataset1, dataset2, col):
         self.state = state
         self.df1 = self.state.new_gf.df.loc[self.state.df["dataset"] == dataset1]

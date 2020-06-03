@@ -9,7 +9,7 @@ from .group_by_module import groupBy
 from .group_by_module_ensemble import ensembleGroupBy
 from .filter_hatchet import FilterHatchet
 from .filter_networkx import FilterNetworkX
-from callflow.utils.hatchet_to_networkx import HatchetToNetworkX
+from callflow.pipeline.convert_hatchet_to_networkx import HatchetToNetworkX
 from callflow.datastructures.uniongraph import UnionGraph
 from callflow.algorithms.deltacon_similarity import DeltaConSimilarity
 from callflow.modules.auxiliary_ensemble import EnsembleAuxiliary
@@ -17,7 +17,7 @@ from .process import PreProcess
 from .state import State
 from callflow import GraphFrame
 
-from callflow.utils import Log
+from callflow.logger import Log
 
 
 class Pipeline:

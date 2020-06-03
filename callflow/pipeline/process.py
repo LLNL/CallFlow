@@ -21,9 +21,8 @@ from callflow.utils import (
     visModuleCallsiteName,
     getNodeDictFromFrame,
     getPathListFromFrames,
-    Log,
 )
-
+from callflow.logger import Log
 
 def logger(func):
     @wraps(func)

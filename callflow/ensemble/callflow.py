@@ -15,31 +15,26 @@ import json
 import pandas as pd
 
 from callflow.pipeline import State, Pipeline
-
 from callflow.utils import (
-    Log,
-    Timer,
     getMaxExcTime,
     getMinExcTime,
     getMaxIncTime,
-    getMinIncTime,
+    getMinIncTime
 )
-
+from callflow.logger import Log
+from callflow.timer import Timer
 from callflow.ensemble import (
     EnsembleCCT,
     EnsembleSuperGraph,
 )
-
 from callflow.modules import (
     RankHistogram,
     EnsembleAuxiliary,
     Gradients,
     ModuleHierarchy,
-    # UnionGraph,
     ParameterProjection,
-    Compare,
+    DiffView,
 )
-
 from callflow.algorithms import (
     DeltaConSimilarity
 )
@@ -379,7 +374,7 @@ class EnsembleCallFlow:
             elif action["selectedMetric"] == "Exclusive":
                 selectedMetric = "time"
 
-            compare = Compare(
+            compare = DiffView(
                 self.states["ensemble_entire"],
                 compareDataset,
                 targetDataset,

@@ -4,7 +4,8 @@ import pandas as pd
 import math, json
 from ast import literal_eval as make_list
 
-from callflow.utils import Timer, Log
+from callflow.timer import Timer
+from callflow.logger import Log
 
 
 class EnsembleSuperGraph(nx.Graph):

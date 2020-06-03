@@ -1,7 +1,7 @@
 import os
 
 import hatchet as ht
-from callflow.utils.logger import Log
+from callflow.logger import Log
 
 class GraphFrame(ht.GraphFrame):
 

@@ -1,10 +1,15 @@
-import pandas as pd
-import time
-import networkx as nx
-from ast import literal_eval as make_tuple
 import math
+import time
+
+import pandas as pd
+import networkx as nx
 from networkx.readwrite import json_graph
-from callflow.utils import Timer, sanitizeName, Log
+
+from ast import literal_eval as make_tuple
+
+from callflow.timer import Timer
+from callflow.utils import sanitizeName
+from callflow.logger import Log
 
 
 class ModuleHierarchy:

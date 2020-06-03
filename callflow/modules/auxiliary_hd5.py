@@ -21,8 +21,8 @@ import os
 
 from callflow.modules.gradients import Gradients
 from callflow.modules.boxplot import BoxPlot
-from callflow.utils.logger import Log as log
-from callflow.utils.timer import Timer
+from callflow.logger import Log as log
+from callflow.timer import Timer
 
 
 class FastEnsembleAuxiliary:

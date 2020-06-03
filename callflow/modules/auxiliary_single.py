@@ -9,13 +9,15 @@
 # For details, see: https://github.com/LLNL/Callflow
 # Please also read the LICENSE file for the MIT License notice.
 ##############################################################################
-import pandas as pd
-import json
-import networkx as nx
-from ast import literal_eval as make_tuple
-import numpy as np
-from callflow.utils import Timer
 import os
+import json
+
+import pandas as pd
+import networkx as nx
+import numpy as np
+from ast import literal_eval as make_tuple
+
+from callflow.timer import Timer
 
 
 class SingleAuxiliary:
