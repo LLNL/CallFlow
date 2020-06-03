@@ -2,12 +2,10 @@ import numpy as np
 import networkx as nx
 from ast import literal_eval as make_list
 
-from callflow.logger import Log
-
+import callflow
+LOGGER = callflow.get_logger(__name__)
 class FilterNetworkX:
     def __init__(self, state):
-        self.log = Log("filter_networkx")
-        #self.df = state.df
         self.df = state.new_gf.df
         self.dataset_df = self.df.groupby(["dataset"])
         self.dataset_idx = {}
@@ -34,11 +32,11 @@ class FilterNetworkX:
                 [self.min_time_exc_list, df["time"].min()]
             )
             count += 1
-        self.log.info("Dataset idx: ", self.dataset_idx)
-        self.log.info(f"Min. time (inc): {self.min_time_inc_list}")
-        self.log.info(f"Max. time (inc): {self.max_time_inc_list}")
-        self.log.info(f"Min. time (exc): {self.min_time_exc_list}")
-        self.log.info(f"Max. time (exc): {self.max_time_exc_list}")
+        LOGGER.info("Dataset idx: ", self.dataset_idx)
+        LOGGER.info(f"Min. time (inc): {self.min_time_inc_list}")
+        LOGGER.info(f"Max. time (inc): {self.max_time_inc_list}")
+        LOGGER.info(f"Min. time (exc): {self.min_time_exc_list}")
+        LOGGER.info(f"Max. time (exc): {self.max_time_exc_list}")
 
         self.max_time_inc = np.max(self.max_time_inc_list)
         self.min_time_inc = np.min(self.min_time_inc_list)
@@ -46,13 +44,13 @@ class FilterNetworkX:
         self.min_time_exc = np.min(self.min_time_exc_list)
 
     def filter_df_by_time_inc(self, perc):
-        self.log.debug(f"[Filter] By Inclusive time : {perc}")
+        LOGGER.debug(f"[Filter] By Inclusive time : {perc}")
         df = self.df.loc[(self.df["time (inc)"] > perc * 0.01 * self.max_time_inc)]
         filter_call_sites = df["name"].unique()
         return df[df["name"].isin(filter_call_sites)]
 
     def filter_df_by_time(self, perc):
-        self.log.debug(f"[Filter] By Exclusive time : {perc}")
+        LOGGER.debug(f"[Filter] By Exclusive time : {perc}")
         # df = self.df.loc[self.df['time'] > perc * 0.01 * self.max_time_exc]
         df = self.df.loc[self.df["time"] > perc]
         filter_call_sites = df["name"].unique()
@@ -69,7 +67,7 @@ class FilterNetworkX:
             if edge[0] in callsites and edge[1] in callsites:
                 ret.add_edge(edge[0], edge[1])
             else:
-                self.log.info(f"Removing the edge: {edge}")
+                LOGGER.info(f"Removing the edge: {edge}")
 
         return ret
 

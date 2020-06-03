@@ -17,12 +17,14 @@ from .process import PreProcess
 from .state import State
 from callflow import GraphFrame
 
-from callflow.logger import Log
+#from callflow.logger import Log
+import callflow
+LOGGER = callflow.get_logger(__name__)
 
 
 class Pipeline:
     def __init__(self, config):
-        self.log = Log("pipeline")
+        #self.log = Log("pipeline")
         self.config = config
         self.dirname = self.config.save_path
         self.debug = True
@@ -49,7 +51,7 @@ class Pipeline:
         #state.entire_graph = create.graph
         '''
 
-        self.log.info(
+        LOGGER.info(
             f"Number of call sites in CCT (From dataframe): {len(state.new_entire_gf.df['name'].unique())}"
         )
 
@@ -97,11 +99,6 @@ class Pipeline:
     def hatchetToNetworkX(self, state, path):
         convert = HatchetToNetworkX(state, path, construct_graph=True, add_data=False)
 
-        print ('now, here')
-        print('--------', type(convert.nxg))
-        print('--------', convert.nxg)
-        print('--------', convert.nxg.edges())
-
         #state.g = convert.g
         state.new_entire_gf.nxg = convert.nxg
         state.new_gf.nxg = convert.nxg
@@ -140,13 +137,13 @@ class Pipeline:
         #state.g = u_graph.R
         '''
 
-        if self.debug:
-            self.log.info("Done with Union.")
-            self.log.info(
+        if True: #self.debug:
+            LOGGER.debug("Done with Union.")
+            LOGGER.debug(
                 f"Number of callsites in dataframe: {len(state.new_gf.df['name'].unique())}"
             )
-            self.log.info(f"Number of callsites in the graph: {len(state.new_gf.nxg.nodes())}")
-            self.log.info(
+            LOGGER.debug(f"Number of callsites in the graph: {len(state.new_gf.nxg.nodes())}")
+            LOGGER.debug(
                 f"Number of modules in the graph: {len(state.new_gf.df['module'].unique())}"
             )
 
@@ -175,13 +172,13 @@ class Pipeline:
         #state.g = g
         '''
 
-        if self.debug:
-            self.log.info("Done with Filtering the Union graph.")
-            self.log.info(
+        if True: #self.debug:
+            LOGGER.debug("Done with Filtering the Union graph.")
+            LOGGER.debug(
                 f"Number of callsites in dataframe: {len(state.new_gf.df['name'].unique())}"
             )
-            self.log.info(f"Number of callsites in the graph: {len(state.new_gf.nxg.nodes())}")
-            self.log.info(
+            LOGGER.debug(f"Number of callsites in the graph: {len(state.new_gf.nxg.nodes())}")
+            LOGGER.debug(
                 f"Number of modules in the graph: {len(state.new_gf.df['module'].unique())}"
             )
 
@@ -214,12 +211,12 @@ class Pipeline:
         #state.df = grouped_graph["df"]
         '''
 
-        if self.debug:
-            self.log.info(
+        if True: #self.debug:
+            LOGGER.debug(
                 f"Number of callsites in dataframe: {len(state.new_gf.df['name'].unique())}"
             )
-            self.log.info(f"Number of callsites in the graph: {len(state.new_gf.nxg.nodes())}")
-            self.log.info(f"Modules in the graph: {state.new_gf.df['module'].unique()}")
+            LOGGER.debug(f"Number of callsites in the graph: {len(state.new_gf.nxg.nodes())}")
+            LOGGER.debug(f"Modules in the graph: {state.new_gf.df['module'].unique()}")
 
         return state
 
@@ -268,7 +265,7 @@ class Pipeline:
     ##################### Read Functions ###########################
     # Read the ensemble graph and dataframe.
     def read_ensemble_gf(self, name):
-        self.log.info(f"[Process] Reading the union dataframe and graph : {name}")
+        LOGGER.info(f"[Process] Reading the union dataframe and graph : {name}")
         state = State(name)
         dirname = self.config.save_path
 
@@ -295,7 +292,7 @@ class Pipeline:
     # Read a single dataset, pass the dataset name as a parameter.
     def read_dataset_gf(self, name):
         state = State(name)
-        self.log.info(
+        LOGGER.info(
             "[Process] Reading the dataframe and graph of state: {0}".format(name)
         )
         dataset_dirname = os.path.abspath(os.path.join(__file__, "../../..")) + "/data"
@@ -349,7 +346,7 @@ class Pipeline:
     def read_all_data(self):
         #dirname = self.config.callflow_path
         all_data_filepath = os.path.join(self.config.save_path, "all_data.json")
-        self.log.info(f"[Read] {all_data_filepath}")
+        LOGGER.info(f"[Read] {all_data_filepath}")
         with open(all_data_filepath, "r") as filter_graphFile:
             data = json.load(filter_graphFile)
         return data

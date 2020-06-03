@@ -22,8 +22,13 @@ from callflow.utils import (
     getNodeDictFromFrame,
     getPathListFromFrames,
 )
-from callflow.logger import Log
 
+#from callflow.logger import Log
+import callflow
+LOGGER = callflow.get_logger(__name__)
+
+'''
+# no need for this decorator
 def logger(func):
     @wraps(func)
     def tmp(*args, **kwargs):
@@ -32,7 +37,7 @@ def logger(func):
         return func(*args, **kwargs)
 
     return tmp
-
+'''
 
 class PreProcess:
     """
@@ -48,7 +53,7 @@ class PreProcess:
 
     class Builder(object):
         def __init__(self, state, gf_type="entire"):
-            self.log = Log("process")
+            #self.log = Log("process")
             self.state = state
 
             self.callers = {}
@@ -116,7 +121,7 @@ class PreProcess:
             return PreProcess(self)
 
         # Add the path information from the node object
-        @logger
+        #@logger
         def add_path(self):
             self.raiseExceptionIfNodeCountNotEqual(self.paths)
             self.df["path"] = self.df["name"].apply(
@@ -125,7 +130,7 @@ class PreProcess:
             return self
 
         # Imbalance percentage Series in the dataframe
-        @logger
+        #@logger
         def add_imbalance_perc(self):
             inclusive = {}
             exclusive = {}
@@ -196,7 +201,7 @@ class PreProcess:
 
             return self
 
-        @logger
+        #@logger
         def add_callers_and_callees(self):
             self.df["callees"] = self.df["name"].apply(lambda node: self.callees[node])
             self.df["callers"] = self.df["name"].apply(lambda node: self.callers[node])
@@ -204,7 +209,7 @@ class PreProcess:
             return self
 
         # node_name is different from name in dataframe. So creating a copy of it.
-        @logger
+        #@logger
         def add_vis_node_name(self):
             self.module_group_df = self.df.groupby(["module"])
             self.module_callsite_map = self.module_group_df["name"].unique()
@@ -219,41 +224,41 @@ class PreProcess:
             )
             return self
 
-        @logger
+        #@logger
         def add_node_name_hpctoolkit(self, node_name_map):
             self.df["node_name"] = self.df["name"].apply(
                 lambda name: node_name_map[name]
             )
             return self
 
-        @logger
+        #@logger
         def add_module_name_hpctoolkit(self):
             self.df["module"] = self.df["module"].apply(lambda name: sanitizeName(name))
             return self
 
-        @logger
+        #@logger
         def add_node_name_caliper(self, node_module_map):
             self.df["node_name"] = self.df["name"].apply(
                 lambda name: name_module_map[name]
             )
 
-        @logger
+        #@logger
         def add_module_name_caliper(self, module_map):
             self.df["module"] = self.df["name"].apply(lambda name: module_map[name])
             return self
 
-        @logger
+        #@logger
         def add_dataset_name(self):
             self.df["dataset"] = self.state.name
             return self
 
-        @logger
+        #@logger
         def add_rank_column(self):
             if "rank" not in self.df.columns:
                 self.df["rank"] = 0
             return self
 
-        @logger
+        #@logger
         def add_time_columns(self):
             if "time (inc)" not in self.df.columns:
                 self.df["time (inc)"] = self.df["inclusive#time.duration"]
@@ -262,7 +267,7 @@ class PreProcess:
                 self.df["time"] = self.df["sum#time.duration"]
             return self
 
-        @logger
+        #@logger
         def create_name_module_map(self):
             self.name_module_map = (
                 self.df.groupby(["name"])["module"].unique().to_dict()
@@ -272,7 +277,7 @@ class PreProcess:
         def raiseExceptionIfNodeCountNotEqual(self, attr):
             map_node_count = len(attr.keys())
             df_node_count = len(self.df["name"].unique())
-            self.log.debug(
+            LOGGER.debug(
                 f"[Validation] Map contains: {map_node_count} callsites, graph contains: {df_node_count} callsites"
             )
             if map_node_count != df_node_count:
@@ -280,9 +285,9 @@ class PreProcess:
                     f"Unmatched Preprocessing maps: Map contains: {map_node_count} nodes, graph contains: {df_node_count} nodes"
                 )
 
-        @logger
+        #@logger
         def logInformation(self):
-            self.log.info(f"CCT node count : {len(self.cct_nodes)}")
-            self.log.info(f"CallGraph node count: {len(self.callgraph_nodes)}")
-            self.log.info(f"SuperGraph node count: {len(self.df['module'].unique())}")
+            LOGGER.info(f"CCT node count : {len(self.cct_nodes)}")
+            LOGGER.info(f"CallGraph node count: {len(self.callgraph_nodes)}")
+            LOGGER.info(f"SuperGraph node count: {len(self.df['module'].unique())}")
             return self

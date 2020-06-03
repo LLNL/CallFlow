@@ -1,7 +1,8 @@
 import os
 
 import hatchet as ht
-from callflow.logger import Log
+import callflow
+LOGGER = callflow.get_logger(__name__)
 
 class GraphFrame(ht.GraphFrame):
 
@@ -30,10 +31,8 @@ class GraphFrame(ht.GraphFrame):
     @staticmethod
     def from_config(config, name):
 
-        # TODO: not proper use of logger
-        log = Log("create_graphframe")
-        log.info(f"Creating graphframes: {name}")
-        log.info(f"Data path: {config.data_path}")
+        LOGGER.info(f"Creating graphframes: {name}")
+        LOGGER.info(f"Data path: {config.data_path}")
 
         if config.format[name] == "hpctoolkit":
             gf = ht.GraphFrame.from_hpctoolkit(config.data_path)

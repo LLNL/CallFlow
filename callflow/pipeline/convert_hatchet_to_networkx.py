@@ -3,7 +3,8 @@ import math
 import json
 from ast import literal_eval as make_tuple
 
-from callflow.logger import Log
+import callflow
+LOGGER = callflow.get_logger(__name__)
 from callflow.utils import getNodeDictFromFrame, sanitizeName
 
 
@@ -22,7 +23,6 @@ class HatchetToNetworkX(nx.Graph):
         add_data=True,
     ):
         super(HatchetToNetworkX, self).__init__()
-        self.log = Log("hatchet_to_networkx")
         self.path_column_name = path_column_name
         self.state = state
 
@@ -34,7 +34,7 @@ class HatchetToNetworkX(nx.Graph):
             self.graph = state.new_gf.graph
 
         if construct_graph:
-            print("Creating a Graph for {0}.".format(self.state.name))
+            LOGGER.info("Creating a Graph for {0}.".format(self.state.name))
             self.nxg = nx.DiGraph()
             self.add_paths_from_graph()
         else:

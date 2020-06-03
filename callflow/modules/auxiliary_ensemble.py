@@ -21,7 +21,8 @@ import os
 from .gradients import Gradients
 from .boxplot import BoxPlot
 
-from callflow.logger import Log
+import callflow
+LOGGER = callflow.get_logger(__name__)
 from callflow.timer import Timer
 
 
@@ -37,9 +38,7 @@ class EnsembleAuxiliary:
         process=True,
         write=False,
     ):
-        self.log = Log("auxiliary")
         self.timer = Timer()
-        print(states["ensemble_entire"])
         self.df = self.select_rows(states["ensemble_entire"].new_gf.df, datasets)
         self.MPIBinCount = MPIBinCount
         self.RunBinCount = RunBinCount
@@ -467,7 +466,7 @@ class EnsembleAuxiliary:
         path = os.path.join(self.config.save_path, "all_data.json")
 
         if self.process:
-            self.log.info(
+            LOGGER.info(
                 "Calculating Gradients, Mean runtime variations, and Distribution."
             )
             with self.timer.phase("Process data"):
@@ -485,6 +484,6 @@ class EnsembleAuxiliary:
                     with open(path, "w") as f:
                         json.dump(ret, f)
 
-            self.log.debug(self.timer)
+            LOGGER.debug(self.timer)
 
         return ret

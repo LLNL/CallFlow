@@ -33,7 +33,12 @@ from networkx.readwrite import json_graph
 from callflow.single import SingleCallFlow
 from callflow.ensemble import EnsembleCallFlow
 from callflow.pipeline import ConfigFileReader
-from callflow.logger import Log
+#from callflow.logger import Log
+
+import callflow
+callflow.init_logger(level=1)
+LOGGER = callflow.get_logger(__name__)
+
 
 # ------------------------------------------------------------------------------
 
@@ -43,23 +48,31 @@ sockets = SocketIO(app, cors_allowed_origins="*")
 # ------------------------------------------------------------------------------
 class CallFlowServer:
     def __init__(self):
-        self.log = Log("CallFlowServer")
+
         self.create_parser()
         self.verify_parser()
+
 
         self.debug = True
         self.production = False
 
+        # processing mode!
         if self.args.process:
-            self.print("Pre-processing the datasets.")
+            LOGGER.info("Pre-processing the datasets.")
             self.processPipeline()
+            return
+
+
+        # else rendering mode!
+        self.renderPipeline()
+        self.create_socket_server()
+
+        if self.production == True:
+            sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
         else:
-            self.renderPipeline()
-            self.create_socket_server()
-            if self.production == True:
-                sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
-            else:
-                sockets.run(app, debug=False, use_reloader=True)
+            sockets.run(app, debug=False, use_reloader=True)
+
+
 
     def processPipeline(self):
         # Parse the config file and schema
@@ -82,7 +95,7 @@ class CallFlowServer:
             data_string = "Data: " + json.dumps(data, indent=4, sort_keys=True)
         else:
             data_string = ""
-        self.log.info("{0} {1}".format(action, data_string))
+        LOGGER.info("{0} {1}".format(action, data_string))
 
     # Parse the input arguments
     def create_parser(self):
@@ -103,27 +116,29 @@ class CallFlowServer:
     def verify_parser(self):
         # Check if the config file is provided and exists!
         if not self.args.config:
-            self.log.info("Please provide a config file. To see options, use --help")
+            LOGGER.info("Please provide a config file. To see options, use --help")
             raise Exception()
         else:
             if not os.path.isfile(self.args.config):
-                self.log.info(
+                LOGGER.info(
                     "Please check the config file path. There exists no such file in the path provided"
                 )
                 raise Exception()
 
     def create_dot_callflow_folder(self):
-        if self.debug:
-            self.print(f"Create .callflow directiory.: {self.config.save_path}")
+        LOGGER.info(f"Create directory.: {self.config.save_path}")
+        #if self.debug:
+        #    self.print(f"Create .callflow directiory.: {self.config.save_path}")
+
         if not os.path.exists(self.config.save_path):
             os.makedirs(self.config.save_path)
 
         for dataset in self.config.datasets:
             dataset_dir = os.path.join(self.config.save_path, dataset["name"])
-            self.log.info(dataset_dir)
+            LOGGER.info(dataset_dir)
             if not os.path.exists(dataset_dir):
                 if self.debug:
-                    self.log.info(
+                    LOGGER.info(
                         f"Creating .callflow directory for dataset : {dataset['name']}"
                     )
                 os.makedirs(dataset_dir)
@@ -142,15 +157,16 @@ class CallFlowServer:
         @sockets.on("init", namespace="/")
         def init(data):
             caseStudy = data["caseStudy"]
-            self.log.info(f"Case Study: {caseStudy}")
+            LOGGER.info(f"Case Study: {caseStudy}")
             self.config = self.callflow.request({"name": "init"})
             config_json = json.dumps(self.config, default=lambda o: o.__dict__)
             emit("init", config_json, json=True)
 
         @sockets.on("reset", namespace="/")
         def filter(data):
-            if self.debug:
-                self.print("Filter the dataset.", data)
+            #if self.debug:
+            #    self.print("Filter the dataset.", data)
+            LOGGER.debug("Filter the dataset. {}".format(data))
             dataset = data["dataset"]
             filterBy = data["filterBy"]
             filterPerc = data["filterPerc"]
@@ -165,8 +181,9 @@ class CallFlowServer:
 
         @sockets.on("single_callsite_data", namespace="/")
         def single_callsite_data(data):
-            if self.debug:
-                self.print("Callsite information: ", data)
+            #if self.debug:
+            #    self.print("Callsite information: ", data)
+            LOGGER.debug("Callsite information. {}".format(data))
             result = self.single_callflow.request(
                 {
                     "name": "auxiliary",
@@ -181,8 +198,9 @@ class CallFlowServer:
 
         @sockets.on("ensemble_callsite_data", namespace="/")
         def ensemble_callsite_data(data):
-            if self.debug:
-                self.print("Callsite information: ", data)
+            #if self.debug:
+            #    self.print("Callsite information: ", data)
+            LOGGER.debug("Callsite information. {}".format(data))
             result = self.callflow.request(
                 {
                     "name": "auxiliary",
@@ -199,9 +217,7 @@ class CallFlowServer:
         ################## CCT requests #########################
         @sockets.on("single_cct", namespace="/")
         def cct(data):
-            if self.debug:
-                self.print("CCT of the run", data)
-
+            LOGGER.debug("CCT of the run. {}".format(data))
             g = self.single_callflow.request(
                 {
                     "name": "cct",
@@ -214,8 +230,7 @@ class CallFlowServer:
 
         @sockets.on("comp_cct", namespace="/")
         def comp_cct(data):
-            if self.debug:
-                self.print("Comp-CCT for the two datasets.", data)
+            LOGGER.debug("Comp-CCT for the two datasets. {}".format(data))
             g1 = self.callflow.request(
                 {
                     "name": "cct",
@@ -240,9 +255,7 @@ class CallFlowServer:
 
         @sockets.on("ensemble_cct", namespace="/")
         def ensemble_cct(data):
-            if self.debug:
-                self.print("Ensemble-CCT for the datasets", data)
-
+            LOGGER.debug("Ensemble-CCT for the datasets. {}".format(data))
             ensemble_cct = self.callflow.request(
                 {
                     "name": "ensemble_cct",
@@ -257,8 +270,7 @@ class CallFlowServer:
         @sockets.on("single_supergraph", namespace="/")
         def single_supergraph(data):
             result = {}
-            if self.debug:
-                self.print("Single SuperGraph.", data)
+            LOGGER.debug("Single SuperGraph. {}".format(data))
             dataset = data["dataset"]
             groupBy = data["groupBy"].lower()
             nx_graph = self.single_callflow.request(
@@ -271,8 +283,7 @@ class CallFlowServer:
         @sockets.on("ensemble_supergraph", namespace="/")
         def ensemble_supergraph(data):
             result = {}
-            if self.debug:
-                self.print("Ensemble SuperGraph.", data)
+            LOGGER.debug("Ensemble SuperGraph. {}".format(data))
             datasets = data["datasets"]
             groupBy = data["groupBy"].lower()
             nx_graph = self.callflow.request(
@@ -285,8 +296,8 @@ class CallFlowServer:
         @sockets.on("ensemble_similarity", namespace="/")
         def ensemble_similarity(data):
             result = {}
-            if self.debug:
-                self.print("Similarity of the datasets", data)
+            LOGGER.debug("Similarity of the datasets. {}".format(data))
+
             result = self.callflow.request(
                 {
                     "name": "similarity",
@@ -299,8 +310,7 @@ class CallFlowServer:
 
         @sockets.on("module_hierarchy", namespace="/")
         def module_hierarchy(data):
-            if self.debug:
-                self.print("Hierarchy of the module", data)
+            LOGGER.debug("Hierarchy of the module. {}".format(data))
             hierarchy_graph = self.callflow.request(
                 {
                     "name": "hierarchy",
@@ -315,9 +325,8 @@ class CallFlowServer:
 
         @sockets.on("parameter_projection", namespace="/")
         def parameter_projection(data):
-            if self.debug:
-                self.print("Projection for the runs", data)
 
+            LOGGER.debug("Projection for the runs. {}".format(data))
             result = self.callflow.request(
                 {
                     "name": "projection",
@@ -331,8 +340,8 @@ class CallFlowServer:
 
         @sockets.on("parameter_information", namespace="/")
         def parameter_information(data):
-            if self.debug:
-                self.print("Run information: ", data)
+
+            LOGGER.debug("Run Information: {}".format(data))
 
             result = self.callflow.request(
                 {"name": "run-information", "datasets": data["datasets"]}
@@ -341,8 +350,8 @@ class CallFlowServer:
 
         @sockets.on("compare", namespace="/")
         def compare(data):
-            if self.debug:
-                self.print("Compare: ", data)
+
+            LOGGER.debug("Compare: {}".format(data))
             result = self.callflow.request(
                 {
                     "name": "compare",
@@ -355,8 +364,7 @@ class CallFlowServer:
 
         @sockets.on("reveal_callsite", namespace="/")
         def reveal_callsite(data):
-            if self.debug:
-                self.print(f"Reveal calliste: {data}.")
+            LOGGER.debug("Reveal callsite: {}".format(data))
             nx_graph = self.callflow.request(
                 {
                     "name": "supergraph",
@@ -371,8 +379,7 @@ class CallFlowServer:
 
         @sockets.on("split_by_entry_callsites", namespace="/")
         def split_by_entry_callsites(data):
-            if self.debug:
-                self.print(f"Reveal callsite: {data}.")
+            LOGGER.debug("Split by entry: {}".format(data))
             nx_graph = self.callflow.request(
                 {
                     "name": "supergraph",
@@ -387,8 +394,7 @@ class CallFlowServer:
 
         @sockets.on("split_by_callees", namespace="/")
         def split_by_callees(data):
-            if self.debug:
-                self.print(f"Reveal callsite: {data}.")
+            LOGGER.debug("Split by callees: {}".format(data))
             nx_graph = self.callflow.request(
                 {
                     "name": "supergraph",
@@ -403,8 +409,7 @@ class CallFlowServer:
 
         @sockets.on("mpi_range_data", namespace="/")
         def mpi_range_data(data):
-            if self.debug:
-                self.print(f"MPI range data: {data}.")
+            LOGGER.debug("MPI range data: {}".format(data))
             nx_graph = self.callflow.request(
                 {
                     "name": "mpi_range_data",
