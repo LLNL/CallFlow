@@ -25,7 +25,7 @@ from callflow.utils import (
     getMinIncTime
 )
 from callflow.timer import Timer
-from callflow.ensemble import (
+from callflow import (
     EnsembleCCT,
     EnsembleSuperGraph,
 )

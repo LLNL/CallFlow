@@ -26,7 +26,7 @@ from callflow.utils import (
 
 from callflow.timer import Timer
 
-from callflow.single import (
+from callflow import (
     SingleCCT,
     SingleSuperGraph,
 )
