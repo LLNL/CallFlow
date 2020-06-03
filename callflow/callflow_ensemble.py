@@ -17,6 +17,7 @@ import pandas as pd
 import callflow
 LOGGER = callflow.get_logger(__name__)
 from callflow.pipeline import State, Pipeline
+
 from callflow.utils import (
     getMaxExcTime,
     getMinExcTime,
@@ -39,6 +40,7 @@ from callflow.modules import (
 from callflow.algorithms import (
     DeltaConSimilarity
 )
+
 
 
 # Create states for each dataset.
