@@ -165,7 +165,7 @@ class EnsembleCallFlow:
         states["ensemble_entire"] = self.pipeline.read_ensemble_gf("ensemble_entire")
 
         stage18 = time.perf_counter()
-        aux = Auxiliary(
+        aux = EnsembleAuxiliary(
             states,
             MPIBinCount=self.currentMPIBinCount,
             RunBinCount=self.currentRunBinCount,

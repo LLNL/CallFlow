@@ -14,7 +14,7 @@ import json
 import networkx as nx
 from ast import literal_eval as make_tuple
 import numpy as np
-#from .gradients import Gradients
+from .gradients import Gradients
 from .boxplot import BoxPlot
 from callflow.utils.logger import Log
 from callflow.utils.timer import Timer
@@ -361,7 +361,7 @@ class EnsembleAuxiliary:
                 hists["Inclusive"][prop] = prop_histograms["Inclusive"]
                 hists["Exclusive"][prop] = prop_histograms["Exclusive"]
 
-            gradients = KDE_gradients(self.target_df, binCount=self.RunBinCount).run(
+            gradients = Gradients(self.target_df, binCount=self.RunBinCount).run(
                 columnName="name", callsiteOrModule=callsite
             )
             boxplot = BoxPlot(callsite_df)
@@ -424,7 +424,7 @@ class EnsembleAuxiliary:
                 hists["Exclusive"][prop] = prop_histograms["Exclusive"]
 
             # Calculate gradients
-            gradients = KDE_gradients(self.target_df, binCount=self.RunBinCount).run(
+            gradients = Gradients(self.target_df, binCount=self.RunBinCount).run(
                 columnName="module", callsiteOrModule=module
             )
             ensemble[module] = self.pack_json(
