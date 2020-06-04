@@ -62,44 +62,24 @@ class BaseCallFlow:
         if process:
             self.pipeline = Pipeline(self.config)
             self._create_dot_callflow_folder()
+            self.process_states()
 
-        self.appState = AppState(self.config)
+        else:
+            self.appState = AppState(self.config)
+            self.read_states()
 
+    # --------------------------------------------------------------------------
+    # public API. child classes should implement these functions
     def process_states(self):
-        pass
+        self._process_states()
 
     def read_states(self):
-        pass
+        self._read_states()
 
-    def _create_dot_callflow_folder(self):
-        """
-        Create a .callflow directory and empty files.
-        """
-        LOGGER.info(f"Saved .callflow directory is: {self.config.save_path}")
+    def request(self, operation):
+        self._request(operation)
 
-        if not os.path.exists(self.config.save_path):
-            os.makedirs(self.config.save_path)
-
-        for dataset in self.config.datasets:
-            dataset_dir = os.path.join(self.config.save_path, dataset["name"])
-            LOGGER.info(dataset_dir)
-            if not os.path.exists(dataset_dir):
-                if self.debug:
-                    LOGGER.info(
-                        f"Creating .callflow directory for dataset : {dataset['name']}"
-                    )
-                os.makedirs(dataset_dir)
-
-            files = [
-                "entire_df.csv",
-                "filter_df.csv",
-                "entire_graph.json",
-                "filter_graph.json",
-            ]
-            for f in files:
-                if not os.path.exists(dataset_dir + "/" + f):
-                    open(os.path.join(dataset_dir, f), "w").close()
-
+    # --------------------------------------------------------------------------
     def displayStats(self, name):
         log.warn("==========================")
         log.info("Number of datasets : {0}".format(len(self.config[name].paths.keys())))
@@ -117,5 +97,35 @@ class BaseCallFlow:
         log.info("Avg Exclusive time = {0} ".format(avg_exclusive_time))
         log.info("Number of nodes in CCT = {0}".format(num_of_nodes))
 
-    def request(self, operation):
-        pass
+    # --------------------------------------------------------------------------
+    def _create_dot_callflow_folder(self):
+        """
+        Create a .callflow directory and empty files.
+        """
+        LOGGER.debug(f"Saved .callflow directory is: {self.config.save_path}")
+
+        if not os.path.exists(self.config.save_path):
+            os.makedirs(self.config.save_path)
+
+        for dataset in self.config.datasets:
+            dataset_dir = os.path.join(self.config.save_path, dataset["name"])
+            LOGGER.debug(dataset_dir)
+            if not os.path.exists(dataset_dir):
+                #if self.debug:
+                LOGGER.debug(
+                    f"Creating .callflow directory for dataset : {dataset['name']}"
+                    )
+                os.makedirs(dataset_dir)
+
+            files = [
+                "entire_df.csv",
+                "filter_df.csv",
+                "entire_graph.json",
+                "filter_graph.json",
+            ]
+            for f in files:
+                fname = os.path.join(dataset_dir, f)
+                if not os.path.exists(fname):
+                    open(fname, "w").close()
+
+    # --------------------------------------------------------------------------

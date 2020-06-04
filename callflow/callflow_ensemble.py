@@ -39,25 +39,22 @@ from callflow.algorithms import DeltaConSimilarity
 # Note: graph is always updated.
 class EnsembleCallFlow(BaseCallFlow):
     def __init__(self, config=None, process=None):
-        BaseCallFlow.__init__(self, config, process)
+        super(SingleCallFlow, self).__init__(config, process)
 
-        self.config = config
         # Config contains properties set by the input config file.
         self.currentMPIBinCount = 20
         self.currentRunBinCount = 20
 
-        if process:
-            self.process_states()
-        else:
-            self.read_states()
-
+        # TODO: should go in appstate
         # self.target_df = {}
         # for dataset in self.config.dataset_names:
         #     self.target_df[dataset] = self.states["ensemble_entire"].new_gf.df.loc[
         #         self.states["ensemble_entire"].new_gf.df["dataset"] == dataset
         #     ]
 
-    def process_states(self, filterBy="Inclusive", filterPerc="10"):
+    # --------------------------------------------------------------------------
+    # TODo: look at the difference in signature
+    def _process_states(self, filterBy="Inclusive", filterPerc="10"):
         states = {}
         # col_names = ["stage", "time"]
         # time_perf_df = pd.DataFrame(columns=col_names)
@@ -165,7 +162,7 @@ class EnsembleCallFlow(BaseCallFlow):
 
         return states
 
-    def readState(self):
+    def _readState(self):
         states = {}
         states["ensemble_entire"] = self.pipeline.read_ensemble_gf("ensemble_entire")
         states["ensemble_filter"] = self.pipeline.read_ensemble_gf("ensemble_filter")
@@ -174,7 +171,7 @@ class EnsembleCallFlow(BaseCallFlow):
 
         return states
 
-    def request(self, action):
+    def _request(self, action):
         action_name = action["name"]
         LOGGER.info(f"Action: {action_name}")
         datasets = self.config.dataset_names
@@ -325,3 +322,5 @@ class EnsembleCallFlow(BaseCallFlow):
                 selectedMetric,
             )
             return compare.result
+
+    # --------------------------------------------------------------------------

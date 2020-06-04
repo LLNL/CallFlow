@@ -38,14 +38,12 @@ from callflow.modules import (
 
 
 class SingleCallFlow(BaseCallFlow):
-    def __init__(self, config=None, process=False):
-        # Decide if we need to processs or not.
-        if process:
-            self.process_states()
-        else:
-            self.read_states()
 
-    def process_states(self):
+    def __init__(self, config=None, process=False):
+        super(SingleCallFlow, self).__init__(config, process)
+
+    # --------------------------------------------------------------------------
+    def _process_states(self):
         for dataset_name in self.config.dataset_names:
             state = State(dataset_name)
             LOGGER.info("#########################################")
@@ -79,17 +77,17 @@ class SingleCallFlow(BaseCallFlow):
             stage6 = time.perf_counter()
             LOGGER.info(f"Write GraphFrame: {stage6 - stage5}")
             LOGGER.info("-----------------------------------------")
-            LOGGER.info(f'Module: {state.df["module"].unique()}')
+            LOGGER.info(f'Module: {state.new_gf.df["module"].unique()}')
 
         return state
 
-    def read_states(self, datasets):
+    def _read_states(self, datasets):
         states = {}
         for idx, dataset in enumerate(datasets):
             states[dataset] = self.pipeline.read_dataset_gf(dataset)
         return states
 
-    def request(self, action):
+    def _request(self, action):
         LOGGER.info("[Single Mode]", action)
         action_name = action["name"]
 
@@ -146,3 +144,5 @@ class SingleCallFlow(BaseCallFlow):
         elif action_name == "function":
             functionlist = FunctionList(state, action["module"], action["nid"])
             return functionlist.result
+
+    # --------------------------------------------------------------------------

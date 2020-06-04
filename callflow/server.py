@@ -32,7 +32,7 @@ import callflow
 from callflow import SingleCallFlow, EnsembleCallFlow
 from callflow.pipeline import ConfigFileReader
 
-callflow.init_logger(level=1)
+
 LOGGER = callflow.get_logger(__name__)
 
 
@@ -149,9 +149,9 @@ class CallFlowServer:
         def init(data):
             """
             # TODO: Change request tag to "config".
-            # TODO: Remove case study. 
+            # TODO: Remove case study.
             Essential data house for single callflow.
-            :return: Config file (JSON Format). 
+            :return: Config file (JSON Format).
             """
             if self.debug:
                 LOGGER.debug(f"[Socket request] init: {data}")
@@ -163,7 +163,7 @@ class CallFlowServer:
         @sockets.on("reveal_callsite", namespace="/")
         def reveal_callsite(data):
             """
-            Reveal the callpaths of selected callsites. 
+            Reveal the callpaths of selected callsites.
             :return: networkx graph (JSON)
             """
             if self.debug:
@@ -183,7 +183,7 @@ class CallFlowServer:
         @sockets.on("split_by_entry_callsites", namespace="/")
         def split_by_entry_callsites(data):
             """
-            Reveal the entry callsite of selected module. 
+            Reveal the entry callsite of selected module.
             :return: networkx graph (JSON)
             """
             if self.debug:
@@ -203,7 +203,7 @@ class CallFlowServer:
         @sockets.on("split_by_callees", namespace="/")
         def split_by_callees(data):
             """
-            Reveal the callees of selected module. 
+            Reveal the callees of selected module.
             :return: networkx graph (JSON)
             """
             if self.debug:
@@ -237,11 +237,11 @@ class CallFlowServer:
         @sockets.on("single_callsite_data", namespace="/")
         def single_callsite_data(data):
             """
-            TODO: Not sure if we can merge this with init. 
-            TODO: Needs discussion and a better naming convention. 
+            TODO: Not sure if we can merge this with init.
+            TODO: Needs discussion and a better naming convention.
 
             Data house for single callflow.
-            :return: Auxiliary data. 
+            :return: Auxiliary data.
             """
             if self.debug:
                 LOGGER.debug("[Socket request] single_callsite_data. {}".format(data))
@@ -261,7 +261,7 @@ class CallFlowServer:
         def single_cct(data):
             """
             Single CCT.
-            :return: CCT networkx graph (JSON format). 
+            :return: CCT networkx graph (JSON format).
             """
             if self.debug:
                 LOGGER.debug("[Socket request] Single CCT: {}".format(data))
@@ -280,7 +280,7 @@ class CallFlowServer:
         def single_supergraph(data):
             """
             Single SuperGraph.
-            :return: both SuperGraph networkx graphs (JSON format). 
+            :return: both SuperGraph networkx graphs (JSON format).
             """
             if self.debug:
                 LOGGER.debug("[Socket request] single_supergraph: {}".format(data))
@@ -298,11 +298,11 @@ class CallFlowServer:
         @sockets.on("ensemble_callsite_data", namespace="/")
         def ensemble_callsite_data(data):
             """
-            TODO: Not sure if we can merge this with init. 
-            TODO: Needs discussion and a better naming convention. 
+            TODO: Not sure if we can merge this with init.
+            TODO: Needs discussion and a better naming convention.
 
             Essential data house for ensemble callflow.
-            :return: Auxiliary data. 
+            :return: Auxiliary data.
             """
             if self.debug:
                 LOGGER.debug("[Socket request] ensemble_callsite_data: {}".format(data))
@@ -323,7 +323,7 @@ class CallFlowServer:
         def ensemble_cct(data):
             """
             Union of all CCTs.
-            :return: CCT networkx graph (JSON format). 
+            :return: CCT networkx graph (JSON format).
             """
             if self.debug:
                 LOGGER.debug("[Socket request] ensemble_cct: {}".format(data))
@@ -341,7 +341,7 @@ class CallFlowServer:
         def ensemble_supergraph(data):
             """
             Ensemble SuperGraph.
-            :return: both SuperGraph networkx graphs (JSON format). 
+            :return: both SuperGraph networkx graphs (JSON format).
             """
             if self.debug:
                 Logger.debug("[Socket request] ensemble_supergraph: {}".format(data))
@@ -359,7 +359,7 @@ class CallFlowServer:
         def ensemble_similarity(data):
             """
             Similarity Matrix for all callgraphs in ensemble.
-            :return: Pair-wise similarity matrix 
+            :return: Pair-wise similarity matrix
             """
             if self.debug:
                 LOGGER.debug("ensemble_similarity: {data}")
@@ -378,7 +378,7 @@ class CallFlowServer:
         def module_hierarchy(data):
             """
             Module hierarchy of the supergraph.
-            :return: CCT networkx graph (JSON format). 
+            :return: CCT networkx graph (JSON format).
             """
             if self.debug:
                 LOGGER.debug(f"module_hierarchy {data}")
@@ -396,9 +396,9 @@ class CallFlowServer:
         @sockets.on("parameter_projection", namespace="/")
         def parameter_projection(data):
             """
-            TODO: Verify the return type. 
+            TODO: Verify the return type.
             Parameter projection of the datasets.
-            :return: PCs. I guess. 
+            :return: PCs. I guess.
             """
             if self.debug:
                 LOGGER.debug(f"parameter_projection: {data}")
@@ -415,9 +415,9 @@ class CallFlowServer:
         @sockets.on("parameter_information", namespace="/")
         def parameter_information(data):
             """
-            TODO: Verify the return type. 
+            TODO: Verify the return type.
             Parameter information
-            :return: { "parameter1": [Array], "parameter2": [Array] ...  }. 
+            :return: { "parameter1": [Array], "parameter2": [Array] ...  }.
             """
             if self.debug:
                 LOGGER.debug(f"[Socket request] parameter_information: {data}")
@@ -430,9 +430,9 @@ class CallFlowServer:
         @sockets.on("compare", namespace="/")
         def compare(data):
             """
-            TODO: Verify the return type. 
+            TODO: Verify the return type.
             Compare two super-graphs.
-            :return: Gradients in some JSON format. 
+            :return: Gradients in some JSON format.
             """
             if self.debug:
                 LOGGER.debug("[Socket request] compare_supergraph {data}")
@@ -457,4 +457,8 @@ class CallFlowServer:
 
 
 if __name__ == "__main__":
+
+    # if verbose, level = 1
+    # else, level = 2
+    callflow.init_logger(level=1)
     CallFlowServer()
