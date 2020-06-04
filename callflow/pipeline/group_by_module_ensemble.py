@@ -4,7 +4,9 @@ import networkx as nx
 from ast import literal_eval as make_list
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
+
 
 class ensembleGroupBy:
     def __init__(self, state_entire, state_filter, group_by):
@@ -31,7 +33,9 @@ class ensembleGroupBy:
     # Drop all entries user does not want to see.
     def drop_eliminate_funcs(self):
         for idx, func in enumerate(self.eliminate_funcs):
-            self.state.new_gf.df = self.state.new_gf.df[self.state.new_gf.df["module"] != func]
+            self.state.new_gf.df = self.state.new_gf.df[
+                self.state.new_gf.df["module"] != func
+            ]
 
     def create_group_path_time(self, path):
         if isinstance(path, str):

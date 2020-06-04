@@ -13,8 +13,8 @@ class Callsite:
 class groupBy:
     def __init__(self, state, group_by):
         self.state = state
-        #self.g = state.g
-        #self.df = self.state.df
+        # self.g = state.g
+        # self.df = self.state.df
         self.g = self.state.new_gf.nxg
         self.df = self.state.new_gf.df
         self.group_by = group_by
@@ -31,14 +31,16 @@ class groupBy:
         self.run()
         self.df = self.state.new_gf.df
         self.graph = self.state.new_gf.graph
-        #self.df = self.state.df
-        #self.graph = self.state.graph
+        # self.df = self.state.df
+        # self.graph = self.state.graph
 
     # Drop all entries user does not want to see.
     def drop_eliminate_funcs(self):
         for idx, func in enumerate(self.eliminate_funcs):
-            #self.state.df = self.state.df[self.state.df["module"] != func]
-            self.state.new_gf.df = self.state.new_gf.df[self.state.new_gf.df["module"] != func]
+            # self.state.df = self.state.df[self.state.df["module"] != func]
+            self.state.new_gf.df = self.state.new_gf.df[
+                self.state.new_gf.df["module"] != func
+            ]
 
     def create_group_path(self, path):
         if isinstance(path, str):

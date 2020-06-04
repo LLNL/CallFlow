@@ -3,7 +3,10 @@ import networkx as nx
 from ast import literal_eval as make_list
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
+
+
 class FilterNetworkX:
     def __init__(self, state):
         self.df = state.new_gf.df

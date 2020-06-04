@@ -25,8 +25,8 @@ class EnsembleCCT:
         number_of_nodes = len(state.new_gf.df["name"].unique())
         self.functionsInCCT = int(functionsInCCT)
 
-        #self.entire_graph = state.g
-        #self.entire_df = state.df
+        # self.entire_graph = state.g
+        # self.entire_df = state.df
         self.entire_graph = state.new_gf.g
         self.entire_df = state.new_gf.df
 

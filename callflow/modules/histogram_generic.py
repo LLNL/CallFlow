@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class GenericHistogram:
     def __init__(self):
         pass

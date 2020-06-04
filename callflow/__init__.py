@@ -13,5 +13,3 @@ from .datastructures.cct_single import SingleCCT
 from .callflow_base import BaseCallFlow
 from .callflow_single import SingleCallFlow
 from .callflow_ensemble import EnsembleCallFlow
-
-

@@ -22,6 +22,7 @@ import os
 from callflow.modules.gradients import Gradients
 from callflow.modules.boxplot import BoxPlot
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 from callflow.timer import Timer
 
@@ -51,7 +52,7 @@ class FastEnsembleAuxiliary:
         self.props = ["rank", "name", "dataset", "all_ranks"]
         self.filter = True
 
-        '''
+        """
         self.runPath = (
             self.config.callflow_path
             + "/"
@@ -62,7 +63,7 @@ class FastEnsembleAuxiliary:
         self.h5IndexFilename = self.runPath + "/h5_index.json"
         self.moduleh5File = self.runPath + "/module_data.h5"
         self.callsiteh5File = self.runPath + "/callsite_data.h5"
-        '''
+        """
         self.h5IndexFilename = os.path.join(self.config.save_path, "h5_index.json")
         self.moduleh5File = os.path.join(self.config.save_path, "module_data.h5")
         self.callsiteh5File = os.path.join(self.config.save_path, "callsite_data.h5")

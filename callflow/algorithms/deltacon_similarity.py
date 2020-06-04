@@ -1,11 +1,12 @@
 from __future__ import division
 import pandas as pd
 import numpy as np
-import networkx as nx 
+import networkx as nx
 from scipy.sparse import dok_matrix, identity, diags
 from numpy.linalg import inv
 from numpy import square, trace, amax
 from math import sqrt
+
 
 class DeltaConSimilarity:
     def __init__(self, g1, g2):

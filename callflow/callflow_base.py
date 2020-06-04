@@ -1,21 +1,22 @@
 import os
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 from callflow.pipeline import Pipeline
+
 
 class AppState:
     def __init__(self, config):
         self.config = config
-        
+
         self.maxIncTime = {}
         self.maxExcTime = {}
         self.minIncTime = {}
         self.minExcTime = {}
         self.numOfRanks = {}
 
-
-    def add_target_df(self):    
+    def add_target_df(self):
         self.target_df = {}
         for dataset in self.config.dataset_names:
             self.target_df[dataset] = self.states["ensemble_entire"].new_gf.df.loc[
@@ -29,29 +30,15 @@ class AppState:
         minExcTime = 0
         maxNumOfRanks = 0
         for idx, dataset in enumerate(self.config.dataset_names):
-            self.maxIncTime[dataset] = self.target_df[dataset][
-                "time (inc)"
-            ].max()
+            self.maxIncTime[dataset] = self.target_df[dataset]["time (inc)"].max()
             self.maxExcTime[dataset] = self.target_df[dataset]["time"].max()
-            self.minIncTime[dataset] = self.target_df[dataset][
-                "time (inc)"
-            ].min()
+            self.minIncTime[dataset] = self.target_df[dataset]["time (inc)"].min()
             self.minExcTime[dataset] = self.target_df[dataset]["time"].min()
-            self.numOfRanks[dataset] = len(
-                self.target_df[dataset]["rank"].unique()
-            )
-            max_exclusive_time = max(
-                self.maxExcTime[dataset], maxExcTime
-            )
-            max_inclusive_time = max(
-                self.maxIncTime[dataset], maxIncTime
-            )
-            min_exclusive_time = min(
-                self.minExcTime[dataset], minExcTime
-            )
-            min_inclusive_time = min(
-                self.minIncTime[dataset], minIncTime
-            )
+            self.numOfRanks[dataset] = len(self.target_df[dataset]["rank"].unique())
+            max_exclusive_time = max(self.maxExcTime[dataset], maxExcTime)
+            max_inclusive_time = max(self.maxIncTime[dataset], maxIncTime)
+            min_exclusive_time = min(self.minExcTime[dataset], minExcTime)
+            min_inclusive_time = min(self.minIncTime[dataset], minIncTime)
             max_numOfRanks = max(self.numOfRanks[dataset], max_numOfRanks)
         self.maxIncTime["ensemble"] = maxIncTime
         self.maxExcTime["ensemble"] = maxExcTime
@@ -65,7 +52,7 @@ class Config:
         pass
 
 
-class BaseCallFlow: 
+class BaseCallFlow:
     def __init__(self, config={}, process=False):
 
         # Assert if config is provided.
@@ -73,18 +60,17 @@ class BaseCallFlow:
         self.config = config
 
         if process:
-            self.pipeline = Pipeline(self.config)    
+            self.pipeline = Pipeline(self.config)
             self._create_dot_callflow_folder()
 
         self.appState = AppState(self.config)
 
-        
     def process_states(self):
         pass
 
     def read_states(self):
         pass
-    
+
     def _create_dot_callflow_folder(self):
         """
         Create a .callflow directory and empty files.
@@ -113,7 +99,7 @@ class BaseCallFlow:
             for f in files:
                 if not os.path.exists(dataset_dir + "/" + f):
                     open(os.path.join(dataset_dir, f), "w").close()
-    
+
     def displayStats(self, name):
         log.warn("==========================")
         log.info("Number of datasets : {0}".format(len(self.config[name].paths.keys())))
@@ -131,8 +117,5 @@ class BaseCallFlow:
         log.info("Avg Exclusive time = {0} ".format(avg_exclusive_time))
         log.info("Number of nodes in CCT = {0}".format(num_of_nodes))
 
-
     def request(self, operation):
         pass
-
-        

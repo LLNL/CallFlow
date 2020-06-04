@@ -1,11 +1,10 @@
 import networkx as nx
 
+
 class SuperGraph(ht.GraphFrame):
+    def __init__(self, graph=None, dataframe=None, exc_metrics=None, inc_metrics=None):
 
-    def __init__(self, graph=None, dataframe=None,
-                       exc_metrics=None, inc_metrics=None):
-
-        #TODO: will we ever want to create a graphframe without data?
+        # TODO: will we ever want to create a graphframe without data?
         if graph is not None and dataframe is not None:
             super().__init__(graph, dataframe, exc_metrics, inc_metrics)
 
@@ -77,7 +76,6 @@ class SuperGraph(ht.GraphFrame):
                 if not hierarchy.has_edge(source, target):
                     hierarchy.add_edge(source, target)
 
-
     def module_hierarchy(self, module=None):
         hierarchy = nx.DiGraph()
         node_paths_df = self.df.loc[self.df["module"] == self.module]
@@ -95,5 +93,3 @@ class SuperGraph(ht.GraphFrame):
             print(f"cycles: {cycles}")
 
         return hierarchy
-
-

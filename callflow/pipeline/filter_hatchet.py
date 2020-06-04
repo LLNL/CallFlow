@@ -12,7 +12,8 @@
 import pandas as pd
 import time
 
-import callflow 
+import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
 
@@ -58,9 +59,7 @@ class FilterHatchet:
             )
         elif filterBy == "Exclusive":
             max_exclusive_time = utils.getMaxExcTime_from_gf(self.graph, self.df)
-            LOGGER.info(
-                "[Filter] By Exclusive time = {0})".format(max_exclusive_time)
-            )
+            LOGGER.info("[Filter] By Exclusive time = {0})".format(max_exclusive_time))
             filter_gf = self.gf.filter(
                 lambda x: True
                 if (x["time"] >= self.filterPercInDecimals * max_exclusive_time)

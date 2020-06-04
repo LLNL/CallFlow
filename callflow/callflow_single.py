@@ -14,6 +14,7 @@ import time
 import json
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
 from callflow.timer import Timer
@@ -25,11 +26,7 @@ from callflow.utils import (
     getMinIncTime,
 )
 
-from callflow import (
-    SingleCCT,
-    SingleSuperGraph,
-    BaseCallFlow
-)
+from callflow import SingleCCT, SingleSuperGraph, BaseCallFlow
 
 from callflow.modules import (
     SingleAuxiliary,
@@ -39,9 +36,10 @@ from callflow.modules import (
     FunctionList,
 )
 
+
 class SingleCallFlow(BaseCallFlow):
     def __init__(self, config=None, process=False):
-         # Decide if we need to processs or not.
+        # Decide if we need to processs or not.
         if process:
             self.process_states()
         else:

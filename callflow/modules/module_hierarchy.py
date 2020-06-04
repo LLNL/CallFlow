@@ -8,6 +8,7 @@ from networkx.readwrite import json_graph
 from ast import literal_eval as make_tuple
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 from callflow.timer import Timer
 from callflow.utils import sanitizeName

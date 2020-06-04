@@ -56,16 +56,16 @@ class CallFlowServer:
         configFile = args.config
         self.process = args.process
 
-        # Read the config file using config file reader. 
+        # Read the config file using config file reader.
         self.config = ConfigFileReader(configFile)
-            
-        # Call the version of callflow corresponding to number of datasets. 
-        if(len(self.config.datasets) == 1):
+
+        # Call the version of callflow corresponding to number of datasets.
+        if len(self.config.datasets) == 1:
             self.callflow = SingleCallFlow(config=self.config, process=self.process)
         else:
             self.callflow = EnsembleCallFlow(config=self.config, process=self.process)
 
-        # Create server if not processing. 
+        # Create server if not processing.
         if not self.process:
             self._create_server()
 
@@ -125,7 +125,7 @@ class CallFlowServer:
         General socket requests.
         """
 
-        # TODO: Find a better way to debug. 
+        # TODO: Find a better way to debug.
         @sockets.on("reset", namespace="/")
         def reset(data):
             """
@@ -185,7 +185,7 @@ class CallFlowServer:
             """
             Reveal the entry callsite of selected module. 
             :return: networkx graph (JSON)
-            """     
+            """
             if self.debug:
                 LOGGER.debug("Split by entry: {}".format(data))
             nxg = self.callflow.request(
@@ -205,9 +205,9 @@ class CallFlowServer:
             """
             Reveal the callees of selected module. 
             :return: networkx graph (JSON)
-            """ 
+            """
             if self.debug:
-               LOGGER.debug("Split by callees: {}".format(data))
+                LOGGER.debug("Split by callees: {}".format(data))
             nxg = self.callflow.request(
                 {
                     "name": "supergraph",

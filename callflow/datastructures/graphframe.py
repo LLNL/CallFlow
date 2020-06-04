@@ -2,14 +2,14 @@ import os
 
 import hatchet as ht
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
+
 class GraphFrame(ht.GraphFrame):
+    def __init__(self, graph=None, dataframe=None, exc_metrics=None, inc_metrics=None):
 
-    def __init__(self, graph=None, dataframe=None,
-                       exc_metrics=None, inc_metrics=None):
-
-        #TODO: will we ever want to create a graphframe without data?
+        # TODO: will we ever want to create a graphframe without data?
         if graph is not None and dataframe is not None:
             super().__init__(graph, dataframe, exc_metrics, inc_metrics)
 
@@ -70,7 +70,7 @@ class GraphFrame(ht.GraphFrame):
     def lookup_with_vis_nodeName(self, name):
         return self.df.loc[self.df["vis_node_name"] == name]
 
-    '''
+    """
     def lookup_by_column(self, _hash, col_name):
         ret = []
         node_df = self.df.loc[self.df["node"] == self.map[str(_hash)]]
@@ -82,7 +82,7 @@ class GraphFrame(ht.GraphFrame):
             else:
                 ret = node_df_T_attr.tolist()
         return ret
-    '''
+    """
     # --------------------------------------------------------------------------
     def update_df(self, col_name, mapping):
         self.df[col_name] = self.df["name"].apply(
@@ -91,9 +91,9 @@ class GraphFrame(ht.GraphFrame):
 
     def grouped_df(self, attr):
         pass
-        '''
+        """
         self.gdf[attr] = self.df.groupby(attr, as_index=True, squeeze=True)
         self.gdfKeys = self.gdf[attr].groups.keys()
-        '''
+        """
 
     # --------------------------------------------------------------------------

@@ -15,32 +15,22 @@ import json
 import pandas as pd
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 from callflow.pipeline import State, Pipeline
 
-from callflow.utils import (
-    getMaxExcTime,
-    getMinExcTime,
-    getMaxIncTime,
-    getMinIncTime
-)
+from callflow.utils import getMaxExcTime, getMinExcTime, getMaxIncTime, getMinIncTime
 from callflow.timer import Timer
-from callflow import (
-    EnsembleCCT,
-    EnsembleSuperGraph,
-    BaseCallFlow
-)
+from callflow import EnsembleCCT, EnsembleSuperGraph, BaseCallFlow
 from callflow.modules import (
     RankHistogram,
     EnsembleAuxiliary,
-    Gradients, 
+    Gradients,
     ModuleHierarchy,
     ParameterProjection,
     DiffView,
 )
-from callflow.algorithms import (
-    DeltaConSimilarity
-)
+from callflow.algorithms import DeltaConSimilarity
 
 # Create states for each dataset.
 # Note: gf would never change from create_gf.
@@ -55,12 +45,11 @@ class EnsembleCallFlow(BaseCallFlow):
         # Config contains properties set by the input config file.
         self.currentMPIBinCount = 20
         self.currentRunBinCount = 20
-        
+
         if process:
             self.process_states()
         else:
             self.read_states()
-
 
         # self.target_df = {}
         # for dataset in self.config.dataset_names:
@@ -171,9 +160,7 @@ class EnsembleCallFlow(BaseCallFlow):
         )
         aux.run()
         stage19 = time.perf_counter()
-        LOGGER.info(
-            f"Dump Gradient, distribution and variations: {stage19 - stage18}"
-        )
+        LOGGER.info(f"Dump Gradient, distribution and variations: {stage19 - stage18}")
         LOGGER.info("-----------------------------------------")
 
         return states

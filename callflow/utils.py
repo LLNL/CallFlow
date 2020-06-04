@@ -13,6 +13,7 @@ def lookup(df, node):
 def lookup_with_name(df, name):
     return df.loc[df["name"] == name]
 
+
 # ------------------------------------------------------------------------------
 # a similar function in utils/hatchet.py
 def sanitizeName(name):
@@ -35,7 +36,9 @@ def sanitizeAMMName(name):
         name = name
     return name
 
+
 # ------------------------------------------------------------------------------
+
 
 def visModuleCallsiteName(name, df):
     return df.groupby(["name"]).unique()["module"]
@@ -120,16 +123,21 @@ def getAvgExcTime_from_gf(graph, dataframe):
 def getMinIncTime_from_gf(graph, dataframe):
     return 0
 
+
 def getMinExcTime_from_gf(graph, dataframe):
     return 0
+
 
 def getNumOfNodes_from_gf(graph, dataframe):
     return dataframe["module"].count()
 
+
 def getNumbOfRanks_from_gf(graph, dataframe):
     return len(dataframe["rank"].unique())
 
+
 # ------------------------------------------------------------------------------
+
 
 def debugWriteToFile(action="", data={}):
     action = "[callfow.py] Action: {0}".format(action)
@@ -151,7 +159,9 @@ def is_json(myjson):
         return False
     return True
 
+
 # ------------------------------------------------------------------------------
+
 
 def median(arr):
     """
@@ -171,6 +181,7 @@ def median(arr):
 
     return median, indices
 
+
 def avg(arr):
     """
         Returns the average of the array.
@@ -186,13 +197,13 @@ def string_to_list(string: str, sep: str):
     """
     return string.strip("][").split(sep)
 
+
 # ------------------------------------------------------------------------------
 # networx utilities
 # ------------------------------------------------------------------------------
 # not sure if this is used anywhere
 # Also, why is this not consistent with the rest of the stlye (ie, actions)
 def dfs(graph, dataframe, limit):
-
     def _dfs_recurse(root, level):
         for node in root.children:
             result = ""
@@ -227,6 +238,7 @@ def dfs(graph, dataframe, limit):
         print("Root = {0} [{1}]".format("Root", root._hatchet_nid))
         _dfs_recurse(root, level)
 
+
 # ------------------------------------------------------------------------------
 def graphmltojson(graphfile, outfile):
     # unused. cannot work without importing json
@@ -252,7 +264,9 @@ def graphmltojson(graphfile, outfile):
     fo.write(json_data)
     fo.close()
 
+
 # ------------------------------------------------------------------------------
+
 
 def getPathListFromFrames(frames):
     paths = []
