@@ -16,6 +16,7 @@ import json
 import callflow
 LOGGER = callflow.get_logger(__name__)
 
+from callflow.timer import Timer
 from callflow.pipeline import State, Pipeline
 from callflow.utils import (
     getMaxExcTime,
@@ -24,119 +25,74 @@ from callflow.utils import (
     getMinIncTime,
 )
 
-from callflow.timer import Timer
-
 from callflow import (
     SingleCCT,
     SingleSuperGraph,
+    BaseCallFlow
 )
 
 from callflow.modules import (
     SingleAuxiliary,
+    RankHistogram,
     MiniHistogram,
     RuntimeScatterplot,
     FunctionList,
 )
 
-from callflow.modules import RankHistogram
-
-
-class SingleCallFlow:
+class SingleCallFlow(BaseCallFlow):
     def __init__(self, config=None, process=False):
-        # Config contains properties set by the input config file.
-        self.config = config
-        self.timer = Timer()
-
-        self.pipeline = Pipeline(self.config)
+         # Decide if we need to processs or not.
         if process:
-            self.process()
+            self.process_states()
         else:
-            LOGGER.info("[Single] Read Mode.")
-            self.states = self.readState(self.config.dataset_names)
+            self.read_states()
 
-    def readState(self, datasets):
-        states = {}
-        for idx, dataset in enumerate(datasets):
-            states[dataset] = self.pipeline.read_dataset_gf(dataset)
-        return states
-
-    def process(self):
+    def process_states(self):
         for dataset_name in self.config.dataset_names:
             state = State(dataset_name)
-            LOGGER.warn("#########################################")
-            LOGGER.warn(f"Run: {dataset_name}")
-            LOGGER.warn("#########################################")
+            LOGGER.info("#########################################")
+            LOGGER.info(f"Run: {dataset_name}")
+            LOGGER.info("#########################################")
 
             stage1 = time.perf_counter()
             state = self.pipeline.create_gf(dataset_name)
             stage2 = time.perf_counter()
-            LOGGER.debug(f"Create GraphFrame: {stage2 - stage1}")
+            LOGGER.info(f"Create GraphFrame: {stage2 - stage1}")
             LOGGER.info("-----------------------------------------")
 
             states = self.pipeline.process_gf(state, "entire")
             stage3 = time.perf_counter()
-            LOGGER.debug(f"Preprocess GraphFrame: {stage3 - stage2}")
+            LOGGER.info(f"Preprocess GraphFrame: {stage3 - stage2}")
             LOGGER.info("-----------------------------------------")
 
             state = self.pipeline.hatchetToNetworkX(state, "path")
             stage4 = time.perf_counter()
-            LOGGER.debug(f"Convert to NetworkX graph: {stage4 - stage3}")
+            LOGGER.info(f"Convert to NetworkX graph: {stage4 - stage3}")
             LOGGER.info("-----------------------------------------")
 
             state = self.pipeline.group(state, "module")
             stage5 = time.perf_counter()
-            LOGGER.debug(f"Group GraphFrame: {stage5 - stage4}")
+            LOGGER.info(f"Group GraphFrame: {stage5 - stage4}")
             LOGGER.info("-----------------------------------------")
 
             self.pipeline.write_dataset_gf(
                 state, dataset_name, "entire", write_graph=False
             )
             stage6 = time.perf_counter()
-            LOGGER.debug(f"Write GraphFrame: {stage6 - stage5}")
+            LOGGER.info(f"Write GraphFrame: {stage6 - stage5}")
             LOGGER.info("-----------------------------------------")
             LOGGER.info(f'Module: {state.df["module"].unique()}')
 
         return state
 
-    def setConfig(self):
-        self.config.max_incTime = {}
-        self.config.max_excTime = {}
-        self.config.min_incTime = {}
-        self.config.min_excTime = {}
-        self.config.numOfRanks = {}
-        max_inclusive_time = 0
-        max_exclusive_time = 0
-        min_inclusive_time = 0
-        min_exclusive_time = 0
-        for idx, state in enumerate(self.states):
-            if state != "ensemble":
-                self.config.max_incTime[state] = getMaxIncTime(self.states[state])
-                self.config.max_excTime[state] = getMaxExcTime(self.states[state])
-                self.config.min_incTime[state] = getMinIncTime(self.states[state])
-                self.config.min_excTime[state] = getMinExcTime(self.states[state])
-                self.config.numOfRanks[state] = len(
-                    self.states[state].df["rank"].unique()
-                )
-                print(self.config.numOfRanks)
-                max_exclusive_time = max(
-                    self.config.max_excTime[state], max_exclusive_time
-                )
-                max_inclusvie_time = max(
-                    self.config.max_incTime[state], max_exclusive_time
-                )
-                min_exclusive_time = min(
-                    self.config.min_excTime[state], min_exclusive_time
-                )
-                min_inclusive_time = min(
-                    self.config.min_incTime[state], min_inclusive_time
-                )
-        self.config.max_incTime["ensemble"] = max_inclusive_time
-        self.config.max_excTime["ensemble"] = max_exclusive_time
-        self.config.min_incTime["ensemble"] = min_inclusive_time
-        self.config.min_excTime["ensemble"] = min_exclusive_time
+    def read_states(self, datasets):
+        states = {}
+        for idx, dataset in enumerate(datasets):
+            states[dataset] = self.pipeline.read_dataset_gf(dataset)
+        return states
 
     def request(self, action):
-        log.info("[Single Mode]", action)
+        LOGGER.info("[Single Mode]", action)
         action_name = action["name"]
 
         if action_name == "init":
@@ -144,14 +100,14 @@ class SingleCallFlow:
             return self.config
 
         if "groupBy" in action:
-            log.debug("Grouping by: {0}".format(action["groupBy"]))
+            LOGGER.info("Grouping by: {0}".format(action["groupBy"]))
         else:
             action["groupBy"] = "name"
 
         dataset = action["dataset"]
         state = self.states[dataset]
 
-        log.info("The selected Dataset is {0}".format(dataset))
+        LOGGER.info("The selected Dataset is {0}".format(dataset))
 
         # Compare against the different operations
         if action_name == "reset":
@@ -179,16 +135,6 @@ class SingleCallFlow:
             ).g
             return self.states[dataset].g
 
-        elif action_name == "split-callee":
-            splitCallee(state, action["groupBy"])
-            nx = CallGraph(state, "path", True)
-            return nx.g
-
-        elif action_name == "split-caller":
-            splitCaller(state, action["groupBy"])
-            nx = CallGraph(state, "path", True)
-            return nx.g
-
         elif action_name == "mini-histogram":
             minihistogram = MiniHistogram(state)
             return minihistogram.result
@@ -202,20 +148,3 @@ class SingleCallFlow:
         elif action_name == "function":
             functionlist = FunctionList(state, action["module"], action["nid"])
             return functionlist.result
-
-    def displayStats(self, name):
-        log.warn("==========================")
-        log.info("Number of datasets : {0}".format(len(self.config[name].paths.keys())))
-        log.info("Stats: Dataset ({0}) ".format(name))
-        log.warn("==========================")
-        max_inclusive_time = utils.getMaxIncTime(gf)
-        max_exclusive_time = utils.getMaxExcTime(gf)
-        avg_inclusive_time = utils.getAvgIncTime(gf)
-        avg_exclusive_time = utils.getAvgExcTime(gf)
-        num_of_nodes = utils.getNumOfNodes(gf)
-        log.info("[] Rows in dataframe: {0}".format(self.states[name].df.shape[0]))
-        log.info("Max Inclusive time = {0} ".format(max_inclusive_time))
-        log.info("Max Exclusive time = {0} ".format(max_exclusive_time))
-        log.info("Avg Inclusive time = {0} ".format(avg_inclusive_time))
-        log.info("Avg Exclusive time = {0} ".format(avg_exclusive_time))
-        log.info("Number of nodes in CCT = {0}".format(num_of_nodes))

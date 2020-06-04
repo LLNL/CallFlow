@@ -15,7 +15,6 @@ import networkx as nx
 import math
 import json
 from ast import literal_eval as make_tuple
-from callflow.logger import Log
 from callflow.timer import Timer
 
 
