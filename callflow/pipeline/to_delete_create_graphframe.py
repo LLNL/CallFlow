@@ -14,7 +14,7 @@
 # its functionality is not in graphframe.from_config()
 
 # the functionality has been moved to datastructures/graphframe.py
-print ('WARNING: ({}) is deprecated and should be deleted!'.format(__file__))
+print("WARNING: ({}) is deprecated and should be deleted!".format(__file__))
 
 import pandas as pd
 import time
@@ -33,7 +33,7 @@ class CreateGraphFrame:
 
     def __init__(self, config, name):
         self.log = Log("create_graphframe")
-        self.log.info(f"Creating graphframes: {name}")
+        LOGGER.info(f"Creating graphframes: {name}")
         self.config = config
         self.callflow_path = config.callflow_path
         self.name = name
@@ -43,7 +43,7 @@ class CreateGraphFrame:
         data_path = os.path.abspath(
             os.path.join(self.callflow_path, self.config.paths[self.name])
         )
-        self.log.info(f"Data path: {data_path}")
+        LOGGER.info(f"Data path: {data_path}")
 
         if self.config.format[self.name] == "hpctoolkit":
             self.gf = ht.GraphFrame.from_hpctoolkit(data_path)

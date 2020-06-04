@@ -1,14 +1,15 @@
 import os
 
 import hatchet as ht
-from callflow.utils.logger import Log
+import callflow
+
+LOGGER = callflow.get_logger(__name__)
+
 
 class GraphFrame(ht.GraphFrame):
+    def __init__(self, graph=None, dataframe=None, exc_metrics=None, inc_metrics=None):
 
-    def __init__(self, graph=None, dataframe=None,
-                       exc_metrics=None, inc_metrics=None):
-
-        #TODO: will we ever want to create a graphframe without data?
+        # TODO: will we ever want to create a graphframe without data?
         if graph is not None and dataframe is not None:
             super().__init__(graph, dataframe, exc_metrics, inc_metrics)
 
@@ -30,10 +31,8 @@ class GraphFrame(ht.GraphFrame):
     @staticmethod
     def from_config(config, name):
 
-        # TODO: not proper use of logger
-        log = Log("create_graphframe")
-        log.info(f"Creating graphframes: {name}")
-        log.info(f"Data path: {config.data_path}")
+        LOGGER.info(f"Creating graphframes: {name}")
+        LOGGER.info(f"Data path: {config.data_path}")
 
         if config.format[name] == "hpctoolkit":
             gf = ht.GraphFrame.from_hpctoolkit(config.data_path)
@@ -42,7 +41,8 @@ class GraphFrame(ht.GraphFrame):
             gf = ht.GraphFrame.from_caliper(config.data_path)
 
         elif config.format[name] == "caliper_json":
-            gf = ht.GraphFrame.from_caliper(config.data_path, query="")
+            data_path = os.path.join(config.data_path, config.paths[name])
+            gf = ht.GraphFrame.from_caliper(data_path, query="")
 
         elif config.format[name] == "gprof":
             gf = ht.GraphFrame.from_grof_dot(config.data_path)
@@ -70,7 +70,7 @@ class GraphFrame(ht.GraphFrame):
     def lookup_with_vis_nodeName(self, name):
         return self.df.loc[self.df["vis_node_name"] == name]
 
-    '''
+    """
     def lookup_by_column(self, _hash, col_name):
         ret = []
         node_df = self.df.loc[self.df["node"] == self.map[str(_hash)]]
@@ -82,7 +82,7 @@ class GraphFrame(ht.GraphFrame):
             else:
                 ret = node_df_T_attr.tolist()
         return ret
-    '''
+    """
     # --------------------------------------------------------------------------
     def update_df(self, col_name, mapping):
         self.df[col_name] = self.df["name"].apply(
@@ -91,9 +91,9 @@ class GraphFrame(ht.GraphFrame):
 
     def grouped_df(self, attr):
         pass
-        '''
+        """
         self.gdf[attr] = self.df.groupby(attr, as_index=True, squeeze=True)
         self.gdfKeys = self.gdf[attr].groups.keys()
-        '''
+        """
 
     # --------------------------------------------------------------------------

@@ -4,8 +4,6 @@ import statsmodels.nonparametric.api as smnp
 import matplotlib.pyplot as plt
 import math
 
-print("WARNING: ({}) is unused in the code and should be deleted!".format(__file__))
-
 
 class Gradients:
     def __init__(self, dfs, binCount="20"):

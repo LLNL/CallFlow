@@ -1,13 +1,14 @@
 from __future__ import division
-import pandas as pd, numpy as np, networkx as nx, time
-from scipy.sparse import dok_matrix
-from scipy.sparse import identity
-from scipy.sparse import diags
+import pandas as pd
+import numpy as np
+import networkx as nx
+from scipy.sparse import dok_matrix, identity, diags
 from numpy.linalg import inv
-from numpy import square, trace, amax, sqrt
+from numpy import square, trace, amax
+from math import sqrt
 
 
-class Similarity:
+class DeltaConSimilarity:
     def __init__(self, g1, g2):
         self.R = nx.DiGraph()
         self.R.add_nodes_from(g1)

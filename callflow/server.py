@@ -28,129 +28,111 @@ import uuid
 import argparse
 from networkx.readwrite import json_graph
 
-
-# Callflow imports
-from callflow.single import SingleCallFlow
-from callflow.ensemble import EnsembleCallFlow
+import callflow
+from callflow import SingleCallFlow, EnsembleCallFlow
 from callflow.pipeline import ConfigFileReader
-from callflow.utils import Log
+
+
+LOGGER = callflow.get_logger(__name__)
+
 
 # ------------------------------------------------------------------------------
-
+# Create a Flask server.
 app = Flask(__name__, static_url_path="/public")
 sockets = SocketIO(app, cors_allowed_origins="*")
 
 # ------------------------------------------------------------------------------
+# Server class.
 class CallFlowServer:
     def __init__(self):
-        self.log = Log("CallFlowServer")
-        self.create_parser()
-        self.verify_parser()
+        # Parse the arguments passed.
+        args = self._create_parser()
 
-        self.debug = True
-        self.production = False
+        # Verify if only valid things are passed.
+        self._verify_parser(args)
 
-        if self.args.process:
-            self.print("Pre-processing the datasets.")
-            self.processPipeline()
+        self.debug = args.verbose or True
+        self.production = args.production or False
+        configFile = args.config
+        self.process = args.process
+
+        # Read the config file using config file reader.
+        self.config = ConfigFileReader(configFile)
+
+        # Call the version of callflow corresponding to number of datasets.
+        if len(self.config.datasets) == 1:
+            self.callflow = SingleCallFlow(config=self.config, process=self.process)
         else:
-            self.renderPipeline()
-            self.create_socket_server()
-            if self.production == True:
-                sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
-            else:
-                sockets.run(app, debug=False, use_reloader=True)
+            self.callflow = EnsembleCallFlow(config=self.config, process=self.process)
 
-    def processPipeline(self):
-        # Parse the config file and schema
-        self.config = ConfigFileReader(self.args.config)
-        self.create_dot_callflow_folder()
+        # Create server if not processing.
+        if not self.process:
+            self._create_server()
 
-        self.callflow = EnsembleCallFlow(self.config, process=True)
-        self.single_callflow = SingleCallFlow(self.config)
-
-    def renderPipeline(self):
-        self.config = ConfigFileReader(self.args.config)
-
-        self.callflow = EnsembleCallFlow(self.config)
-        self.single_callflow = SingleCallFlow(self.config)
-
-    # Custom print function.
-    def print(self, action, data={}):
-        action = "{0}".format(action)
-        if bool(data):
-            data_string = "Data: " + json.dumps(data, indent=4, sort_keys=True)
-        else:
-            data_string = ""
-        self.log.info("{0} {1}".format(action, data_string))
-
-    # Parse the input arguments
-    def create_parser(self):
+    @staticmethod
+    def _create_parser():
+        """
+        Parse the input arguments
+        """
         parser = argparse.ArgumentParser()
         parser.add_argument(
             "--verbose", action="store_true", help="Display debug points"
         )
         parser.add_argument("--config", help="Config file to be processed.")
+        parser.add_argument("--production", help="Launch app on production server.")
+
         parser.add_argument(
             "--process",
             action="store_true",
             help="Process mode. To preprocess at the required level of granularity, use the options --filter, --entire. If you are preprocessing multiple callgraphs, use --ensemble option.",
         )
-        self.args = parser.parse_args()
-        self.debug = self.args.verbose
+        args = parser.parse_args()
+        return args
 
-    # Raises expections if something is not provided
-    def verify_parser(self):
-        # Check if the config file is provided and exists!
-        if not self.args.config:
-            self.log.info("Please provide a config file. To see options, use --help")
+    @staticmethod
+    def _verify_parser(args):
+        """
+        Raises expections if something is not provided
+        Check if the config file is provided and exists!
+        """
+        if not args.config:
+            LOGGER.info("Please provide a config file. To see options, use --help")
             raise Exception()
         else:
-            if not os.path.isfile(self.args.config):
-                self.log.info(
+            if not os.path.isfile(args.config):
+                LOGGER.info(
                     "Please check the config file path. There exists no such file in the path provided"
                 )
                 raise Exception()
 
-    def create_dot_callflow_folder(self):
-        if self.debug:
-            self.print(f"Create .callflow directiory.: {self.config.save_path}")
-        if not os.path.exists(self.config.save_path):
-            os.makedirs(self.config.save_path)
+    def _create_server(self):
+        # Socket request handlers
+        self._request_handler_general()
+        if len(self.config.datasets) == 1:
+            self._request_handler_single()
+        else:
+            self._request_handler_single()
+            self._request_handler_ensemble()
 
-        for dataset in self.config.datasets:
-            dataset_dir = os.path.join(self.config.save_path, dataset["name"])
-            self.log.info(dataset_dir)
-            if not os.path.exists(dataset_dir):
-                if self.debug:
-                    self.log.info(
-                        f"Creating .callflow directory for dataset : {dataset['name']}"
-                    )
-                os.makedirs(dataset_dir)
+        # Start the server.
+        if self.production == True:
+            sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
+        else:
+            sockets.run(app, debug=False, use_reloader=True)
 
-            files = [
-                "entire_df.csv",
-                "filter_df.csv",
-                "entire_graph.json",
-                "filter_graph.json",
-            ]
-            for f in files:
-                if not os.path.exists(dataset_dir + "/" + f):
-                    open(os.path.join(dataset_dir, f), "w").close()
+    def _request_handler_general(self):
+        """
+        General socket requests.
+        """
 
-    def create_socket_server(self):
-        @sockets.on("init", namespace="/")
-        def init(data):
-            caseStudy = data["caseStudy"]
-            self.log.info(f"Case Study: {caseStudy}")
-            self.config = self.callflow.request({"name": "init"})
-            config_json = json.dumps(self.config, default=lambda o: o.__dict__)
-            emit("init", config_json, json=True)
-
+        # TODO: Find a better way to debug.
         @sockets.on("reset", namespace="/")
-        def filter(data):
+        def reset(data):
+            """
+            # TODO: This might have to be deleted.
+            """
             if self.debug:
-                self.print("Filter the dataset.", data)
+                LOGGER.debug("[Socket request] reset: {}".format(data))
             dataset = data["dataset"]
             filterBy = data["filterBy"]
             filterPerc = data["filterPerc"]
@@ -163,26 +145,167 @@ class CallFlowServer:
             result = self.callflow.request(obj)
             emit("reset", result, json=True)
 
+        @sockets.on("init", namespace="/")
+        def init(data):
+            """
+            # TODO: Change request tag to "config".
+            # TODO: Remove case study.
+            Essential data house for single callflow.
+            :return: Config file (JSON Format).
+            """
+            if self.debug:
+                LOGGER.debug(f"[Socket request] init: {data}")
+
+            caseStudy = data["caseStudy"]
+            result = json.dumps(self.config, default=lambda o: o.__dict__)
+            emit("init", result, json=True)
+
+        @sockets.on("reveal_callsite", namespace="/")
+        def reveal_callsite(data):
+            """
+            Reveal the callpaths of selected callsites.
+            :return: networkx graph (JSON)
+            """
+            if self.debug:
+                LOGGER.debug(f"[Socket request] reveal_callsite: {data}")
+            nxg = self.callflow.request(
+                {
+                    "name": "supergraph",
+                    "groupBy": "module",
+                    "datasets": data["datasets"],
+                    "reveal_callsites": data["reveal_callsites"],
+                }
+            )
+            result = json_graph.node_link_data(nxg)
+            json_result = json.dumps(result)
+            emit("ensemble_supergraph", json_result, json=True)
+
+        @sockets.on("split_by_entry_callsites", namespace="/")
+        def split_by_entry_callsites(data):
+            """
+            Reveal the entry callsite of selected module.
+            :return: networkx graph (JSON)
+            """
+            if self.debug:
+                LOGGER.debug("Split by entry: {}".format(data))
+            nxg = self.callflow.request(
+                {
+                    "name": "supergraph",
+                    "groupBy": "module",
+                    "datasets": data["datasets"],
+                    "split_entry_module": data["selectedModule"],
+                }
+            )
+            result = json_graph.node_link_data(nxg)
+            json_result = json.dumps(result)
+            emit("ensemble_supergraph", json_result, json=True)
+
+        @sockets.on("split_by_callees", namespace="/")
+        def split_by_callees(data):
+            """
+            Reveal the callees of selected module.
+            :return: networkx graph (JSON)
+            """
+            if self.debug:
+                LOGGER.debug("Split by callees: {}".format(data))
+            nxg = self.callflow.request(
+                {
+                    "name": "supergraph",
+                    "groupBy": "module",
+                    "datasets": data["datasets"],
+                    "split_by_callees": data["selectedModule"],
+                }
+            )
+            result = json_graph.node_link_data(nxg)
+            json_result = json.dumps(result)
+            emit("ensemble_supergraph", json_result, json=True)
+
+        # @sockets.on("mpi_range_data", namespace="/")
+        # def mpi_range_data(data):
+        #     if self.debug:
+        #         LOGGER.debug("MPI range data: {}".format(data))
+        #     nx_graph = self.callflow.request(
+        #         {
+        #             "name": "mpi_range_data",
+        #             "datasets": data["datasets"],
+        #             "range_from": data["range_from"],
+        #             "range_to": data["range_to"],
+        #         }
+        #     )
+
+    def _request_handler_single(self):
         @sockets.on("single_callsite_data", namespace="/")
         def single_callsite_data(data):
+            """
+            TODO: Not sure if we can merge this with init.
+            TODO: Needs discussion and a better naming convention.
+
+            Data house for single callflow.
+            :return: Auxiliary data.
+            """
             if self.debug:
-                self.print("Callsite information: ", data)
-            result = self.single_callflow.request(
+                LOGGER.debug("[Socket request] single_callsite_data. {}".format(data))
+
+            result = self.callflow.request(
                 {
                     "name": "auxiliary",
                     "dataset": data["dataset"],
                     "sortBy": data["sortBy"],
                     "binCount": data["binCount"],
                     "module": data["module"],
-                    # "re-process": data["re-process"],
                 }
             )
             emit("single_callsite_data", result, json=True)
 
+        @sockets.on("single_cct", namespace="/")
+        def single_cct(data):
+            """
+            Single CCT.
+            :return: CCT networkx graph (JSON format).
+            """
+            if self.debug:
+                LOGGER.debug("[Socket request] Single CCT: {}".format(data))
+
+            nxg = self.callflow.request(
+                {
+                    "name": "cct",
+                    "dataset": data["dataset"],
+                    "functionsInCCT": data["functionsInCCT"],
+                }
+            )
+            result = json_graph.node_link_data(nxg)
+            emit("single_cct", result, json=True)
+
+        @sockets.on("single_supergraph", namespace="/")
+        def single_supergraph(data):
+            """
+            Single SuperGraph.
+            :return: both SuperGraph networkx graphs (JSON format).
+            """
+            if self.debug:
+                LOGGER.debug("[Socket request] single_supergraph: {}".format(data))
+
+            dataset = data["dataset"]
+            groupBy = data["groupBy"].lower()
+            nxg = self.callflow.request(
+                {"name": "supergraph", "groupBy": groupBy, "dataset": dataset}
+            )
+            result = json_graph.node_link_data(nxg)
+            # json_result = json.dumps(result)
+            emit("single_supergraph", result, json=True)
+
+    def _request_handler_ensemble(self):
         @sockets.on("ensemble_callsite_data", namespace="/")
         def ensemble_callsite_data(data):
+            """
+            TODO: Not sure if we can merge this with init.
+            TODO: Needs discussion and a better naming convention.
+
+            Essential data house for ensemble callflow.
+            :return: Auxiliary data.
+            """
             if self.debug:
-                self.print("Callsite information: ", data)
+                LOGGER.debug("[Socket request] ensemble_callsite_data: {}".format(data))
             result = self.callflow.request(
                 {
                     "name": "auxiliary",
@@ -196,97 +319,51 @@ class CallFlowServer:
             )
             emit("ensemble_callsite_data", result, json=True)
 
-        ################## CCT requests #########################
-        @sockets.on("single_cct", namespace="/")
-        def cct(data):
-            if self.debug:
-                self.print("CCT of the run", data)
-
-            g = self.single_callflow.request(
-                {
-                    "name": "cct",
-                    "dataset": data["dataset"],
-                    "functionsInCCT": data["functionsInCCT"],
-                }
-            )
-            result = json_graph.node_link_data(g)
-            emit("single_cct", result, json=True)
-
-        @sockets.on("comp_cct", namespace="/")
-        def comp_cct(data):
-            if self.debug:
-                self.print("Comp-CCT for the two datasets.", data)
-            g1 = self.callflow.request(
-                {
-                    "name": "cct",
-                    "dataset1": data["dataset1"],
-                    "functionInCCT": data["functionInCCT"],
-                }
-            )
-            g2 = self.callflow.request(
-                {
-                    "name": "cct",
-                    "dataset1": data["dataset2"],
-                    "functionInCCT": data["functionInCCT"],
-                }
-            )
-            g1_result = json_graph.node_link_data(g1)
-            g2_result = json_graph.node_link_data(g2)
-            emit(
-                "comp_cct",
-                {data["dataset1"]: g1_result, data["dataset2"]: g2_result},
-                json=True,
-            )
-
         @sockets.on("ensemble_cct", namespace="/")
         def ensemble_cct(data):
+            """
+            Union of all CCTs.
+            :return: CCT networkx graph (JSON format).
+            """
             if self.debug:
-                self.print("Ensemble-CCT for the datasets", data)
-
-            ensemble_cct = self.callflow.request(
+                LOGGER.debug("[Socket request] ensemble_cct: {}".format(data))
+            nxg = self.callflow.request(
                 {
                     "name": "ensemble_cct",
                     "datasets": data["datasets"],
                     "functionsInCCT": data["functionsInCCT"],
                 }
             )
-            result = json_graph.node_link_data(ensemble_cct)
+            result = json_graph.node_link_data(nxg)
             emit("ensemble_cct", result, json=True)
-
-        ################## CCT requests #########################
-        @sockets.on("single_supergraph", namespace="/")
-        def single_supergraph(data):
-            result = {}
-            if self.debug:
-                self.print("Single SuperGraph.", data)
-            dataset = data["dataset"]
-            groupBy = data["groupBy"].lower()
-            nx_graph = self.single_callflow.request(
-                {"name": "supergraph", "groupBy": groupBy, "dataset": dataset}
-            )
-            result = json_graph.node_link_data(nx_graph)
-            result = json.dumps(result)
-            emit("single_supergraph", result, json=True)
 
         @sockets.on("ensemble_supergraph", namespace="/")
         def ensemble_supergraph(data):
-            result = {}
+            """
+            Ensemble SuperGraph.
+            :return: both SuperGraph networkx graphs (JSON format).
+            """
             if self.debug:
-                self.print("Ensemble SuperGraph.", data)
+                Logger.debug("[Socket request] ensemble_supergraph: {}".format(data))
+
             datasets = data["datasets"]
             groupBy = data["groupBy"].lower()
-            nx_graph = self.callflow.request(
+            nxg = self.callflow.request(
                 {"name": "supergraph", "groupBy": groupBy, "datasets": datasets}
             )
-            result = json_graph.node_link_data(nx_graph)
-            json_result = json.dumps(result)
-            emit("ensemble_supergraph", json_result, json=True)
+            result = json_graph.node_link_data(nxg)
+            # json_result = json.dumps(result)
+            emit("ensemble_supergraph", result, json=True)
 
         @sockets.on("ensemble_similarity", namespace="/")
         def ensemble_similarity(data):
-            result = {}
+            """
+            Similarity Matrix for all callgraphs in ensemble.
+            :return: Pair-wise similarity matrix
+            """
             if self.debug:
-                self.print("Similarity of the datasets", data)
+                LOGGER.debug("ensemble_similarity: {data}")
+
             result = self.callflow.request(
                 {
                     "name": "similarity",
@@ -299,31 +376,37 @@ class CallFlowServer:
 
         @sockets.on("module_hierarchy", namespace="/")
         def module_hierarchy(data):
+            """
+            Module hierarchy of the supergraph.
+            :return: CCT networkx graph (JSON format).
+            """
             if self.debug:
-                self.print("Hierarchy of the module", data)
-            hierarchy_graph = self.callflow.request(
+                LOGGER.debug(f"module_hierarchy {data}")
+            nxg = self.callflow.request(
                 {
                     "name": "hierarchy",
                     "datasets": data["datasets"],
                     "module": data["module"],
                 }
             )
-            print(hierarchy_graph)
-            result = json_graph.tree_data(hierarchy_graph, root=data["module"])
+            result = json_graph.tree_data(nxg, root=data["module"])
             json_result = json.dumps(result)
             emit("module_hierarchy", json_result, json=True)
 
         @sockets.on("parameter_projection", namespace="/")
         def parameter_projection(data):
+            """
+            TODO: Verify the return type.
+            Parameter projection of the datasets.
+            :return: PCs. I guess.
+            """
             if self.debug:
-                self.print("Projection for the runs", data)
-
+                LOGGER.debug(f"parameter_projection: {data}")
             result = self.callflow.request(
                 {
                     "name": "projection",
                     "datasets": data["datasets"],
                     "targetDataset": data["targetDataset"],
-                    # "algo": data["algo"],
                     "numOfClusters": data["numOfClusters"],
                 }
             )
@@ -331,8 +414,13 @@ class CallFlowServer:
 
         @sockets.on("parameter_information", namespace="/")
         def parameter_information(data):
+            """
+            TODO: Verify the return type.
+            Parameter information
+            :return: { "parameter1": [Array], "parameter2": [Array] ...  }.
+            """
             if self.debug:
-                self.print("Run information: ", data)
+                LOGGER.debug(f"[Socket request] parameter_information: {data}")
 
             result = self.callflow.request(
                 {"name": "run-information", "datasets": data["datasets"]}
@@ -341,8 +429,13 @@ class CallFlowServer:
 
         @sockets.on("compare", namespace="/")
         def compare(data):
+            """
+            TODO: Verify the return type.
+            Compare two super-graphs.
+            :return: Gradients in some JSON format.
+            """
             if self.debug:
-                self.print("Compare: ", data)
+                LOGGER.debug("[Socket request] compare_supergraph {data}")
             result = self.callflow.request(
                 {
                     "name": "compare",
@@ -352,67 +445,6 @@ class CallFlowServer:
                 }
             )
             emit("compare", result, json=True)
-
-        @sockets.on("reveal_callsite", namespace="/")
-        def reveal_callsite(data):
-            if self.debug:
-                self.print(f"Reveal calliste: {data}.")
-            nx_graph = self.callflow.request(
-                {
-                    "name": "supergraph",
-                    "groupBy": "module",
-                    "datasets": data["datasets"],
-                    "reveal_callsites": data["reveal_callsites"],
-                }
-            )
-            result = json_graph.node_link_data(nx_graph)
-            json_result = json.dumps(result)
-            emit("ensemble_supergraph", json_result, json=True)
-
-        @sockets.on("split_by_entry_callsites", namespace="/")
-        def split_by_entry_callsites(data):
-            if self.debug:
-                self.print(f"Reveal callsite: {data}.")
-            nx_graph = self.callflow.request(
-                {
-                    "name": "supergraph",
-                    "groupBy": "module",
-                    "datasets": data["datasets"],
-                    "split_entry_module": data["selectedModule"],
-                }
-            )
-            result = json_graph.node_link_data(nx_graph)
-            json_result = json.dumps(result)
-            emit("ensemble_supergraph", json_result, json=True)
-
-        @sockets.on("split_by_callees", namespace="/")
-        def split_by_callees(data):
-            if self.debug:
-                self.print(f"Reveal callsite: {data}.")
-            nx_graph = self.callflow.request(
-                {
-                    "name": "supergraph",
-                    "groupBy": "module",
-                    "datasets": data["datasets"],
-                    "split_by_callees": data["selectedModule"],
-                }
-            )
-            result = json_graph.node_link_data(nx_graph)
-            json_result = json.dumps(result)
-            emit("ensemble_supergraph", json_result, json=True)
-
-        @sockets.on("mpi_range_data", namespace="/")
-        def mpi_range_data(data):
-            if self.debug:
-                self.print(f"MPI range data: {data}.")
-            nx_graph = self.callflow.request(
-                {
-                    "name": "mpi_range_data",
-                    "datasets": data["datasets"],
-                    "range_from": data["range_from"],
-                    "range_to": data["range_to"],
-                }
-            )
 
     def create_server(self):
         app.debug = True
@@ -425,4 +457,8 @@ class CallFlowServer:
 
 
 if __name__ == "__main__":
+
+    # if verbose, level = 1
+    # else, level = 2
+    callflow.init_logger(level=1)
     CallFlowServer()

@@ -3,26 +3,29 @@ from networkx.readwrite import json_graph
 import pandas as pd
 import os
 
-#from .create_graphframe import CreateGraphFrame
+# from .create_graphframe import CreateGraphFrame
 
 from .group_by_module import groupBy
 from .group_by_module_ensemble import ensembleGroupBy
 from .filter_hatchet import FilterHatchet
 from .filter_networkx import FilterNetworkX
-from callflow.utils.hatchet_to_networkx import HatchetToNetworkX
+from callflow.pipeline.convert_hatchet_to_networkx import HatchetToNetworkX
 from callflow.datastructures.uniongraph import UnionGraph
-from callflow.algorithms.deltacon_similarity import Similarity
-from callflow.modules.auxiliary import Auxiliary
+from callflow.algorithms.deltacon_similarity import DeltaConSimilarity
+from callflow.modules.auxiliary_ensemble import EnsembleAuxiliary
 from .process import PreProcess
 from .state import State
 from callflow import GraphFrame
 
-from callflow.utils import Log
+# from callflow.logger import Log
+import callflow
+
+LOGGER = callflow.get_logger(__name__)
 
 
 class Pipeline:
     def __init__(self, config):
-        self.log = Log("pipeline")
+        # self.log = Log("pipeline")
         self.config = config
         self.dirname = self.config.save_path
         self.debug = True
@@ -36,20 +39,20 @@ class Pipeline:
         state = State(name)
         state.new_entire_gf = GraphFrame.from_config(self.config, name)
 
-        print (state.new_entire_gf)
-        print (type(state.new_entire_gf))
-        #state.entire_gf = state.new_entire_gf
-        #state.entire_df = state.new_entire_gf.df
-        #state.entire_graph = state.new_entire_gf.graph
+        print(state.new_entire_gf)
+        print(type(state.new_entire_gf))
+        # state.entire_gf = state.new_entire_gf
+        # state.entire_df = state.new_entire_gf.df
+        # state.entire_graph = state.new_entire_gf.graph
 
-        '''
+        """
         create = CreateGraphFrame(self.config, name)
         #state.entire_gf = create.gf
         #state.entire_df = create.df
         #state.entire_graph = create.graph
-        '''
+        """
 
-        self.log.info(
+        LOGGER.info(
             f"Number of call sites in CCT (From dataframe): {len(state.new_entire_gf.df['name'].unique())}"
         )
 
@@ -85,11 +88,10 @@ class Pipeline:
                 .build()
             )
 
-
-        print (preprocess.gf)
+        print(preprocess.gf)
         state.new_gf = preprocess.gf
-        #state.df = preprocess.new_gf.df
-        #state.graph = preprocess.new_gf.graph
+        # state.df = preprocess.new_gf.df
+        # state.graph = preprocess.new_gf.graph
         self.entire_df = state.new_gf.df
         return state
 
@@ -97,12 +99,7 @@ class Pipeline:
     def hatchetToNetworkX(self, state, path):
         convert = HatchetToNetworkX(state, path, construct_graph=True, add_data=False)
 
-        print ('now, here')
-        print('--------', type(convert.nxg))
-        print('--------', convert.nxg)
-        print('--------', convert.nxg.edges())
-
-        #state.g = convert.g
+        # state.g = convert.g
         state.new_entire_gf.nxg = convert.nxg
         state.new_gf.nxg = convert.nxg
 
@@ -132,21 +129,23 @@ class Pipeline:
         state.new_gf.df = u_df
         state.new_gf.nxg = u_graph.R
 
-        #state.df = state.new_gf.df
-        #state.g = state.new_gf.nxg
+        # state.df = state.new_gf.df
+        # state.g = state.new_gf.nxg
 
-        '''
+        """
         #state.df = u_df
         #state.g = u_graph.R
-        '''
+        """
 
-        if self.debug:
-            self.log.info("Done with Union.")
-            self.log.info(
+        if True:  # self.debug:
+            LOGGER.debug("Done with Union.")
+            LOGGER.debug(
                 f"Number of callsites in dataframe: {len(state.new_gf.df['name'].unique())}"
             )
-            self.log.info(f"Number of callsites in the graph: {len(state.new_gf.nxg.nodes())}")
-            self.log.info(
+            LOGGER.debug(
+                f"Number of callsites in the graph: {len(state.new_gf.nxg.nodes())}"
+            )
+            LOGGER.debug(
                 f"Number of modules in the graph: {len(state.new_gf.df['module'].unique())}"
             )
 
@@ -167,31 +166,33 @@ class Pipeline:
         state.new_gf.df = df
         state.new_gf.nxg = g
 
-        #state.df = state.new_gf.df
-        #state.g = state.new_gf.nxg
+        # state.df = state.new_gf.df
+        # state.g = state.new_gf.nxg
 
-        '''
+        """
         #state.df = df
         #state.g = g
-        '''
+        """
 
-        if self.debug:
-            self.log.info("Done with Filtering the Union graph.")
-            self.log.info(
+        if True:  # self.debug:
+            LOGGER.debug("Done with Filtering the Union graph.")
+            LOGGER.debug(
                 f"Number of callsites in dataframe: {len(state.new_gf.df['name'].unique())}"
             )
-            self.log.info(f"Number of callsites in the graph: {len(state.new_gf.nxg.nodes())}")
-            self.log.info(
+            LOGGER.debug(
+                f"Number of callsites in the graph: {len(state.new_gf.nxg.nodes())}"
+            )
+            LOGGER.debug(
                 f"Number of modules in the graph: {len(state.new_gf.df['module'].unique())}"
             )
 
         return state
 
     def group(self, state, attr):
-        print (state.new_gf.nxg)
+        print(state.new_gf.nxg)
         grouped_graph = groupBy(state, attr)
 
-        #state.new_gf = groupBy(state, attr)
+        # state.new_gf = groupBy(state, attr)
 
         state.new_gf.nxg = grouped_graph.g
         state.new_gf.df = grouped_graph.df
@@ -206,20 +207,22 @@ class Pipeline:
         state.new_gf = GraphFrame()
         state.new_gf.df = grouped_graph["df"]
         state.new_gf.nxg = grouped_graph["g"]
-        #state.g = state.new_gf.nxg
-        #state.df = state.new_gf.df
+        # state.g = state.new_gf.nxg
+        # state.df = state.new_gf.df
 
-        '''
+        """
         #state.g = grouped_graph["g"]
         #state.df = grouped_graph["df"]
-        '''
+        """
 
-        if self.debug:
-            self.log.info(
+        if True:  # self.debug:
+            LOGGER.debug(
                 f"Number of callsites in dataframe: {len(state.new_gf.df['name'].unique())}"
             )
-            self.log.info(f"Number of callsites in the graph: {len(state.new_gf.nxg.nodes())}")
-            self.log.info(f"Modules in the graph: {state.new_gf.df['module'].unique()}")
+            LOGGER.debug(
+                f"Number of callsites in the graph: {len(state.new_gf.nxg.nodes())}"
+            )
+            LOGGER.debug(f"Modules in the graph: {state.new_gf.df['module'].unique()}")
 
         return state
 
@@ -229,7 +232,9 @@ class Pipeline:
         # dump the filtered dataframe to csv.
 
         df_filepath = os.path.join(self.dirname, state_name, format_of_df + "_df.csv")
-        graph_filepath = os.path.join(self.dirname, state_name, format_of_df + "_graph.json")
+        graph_filepath = os.path.join(
+            self.dirname, state_name, format_of_df + "_graph.json"
+        )
 
         state.new_gf.df.to_csv(df_filepath)
 
@@ -261,14 +266,16 @@ class Pipeline:
             hatchet_graphFile.write(gf.tree(color=False))
 
         # TODO: why are the filenames hardcoded?
-        graph_filepath = os.path.join(self.dirname, state_name, "hatchet_graph_10_percent.txt")
+        graph_filepath = os.path.join(
+            self.dirname, state_name, "hatchet_graph_10_percent.txt"
+        )
         with open(graph_filepath, "a") as hatchet_graphFile:
             hatchet_graphFile.write(gf.tree(color=False, threshold=0.10))
 
     ##################### Read Functions ###########################
     # Read the ensemble graph and dataframe.
     def read_ensemble_gf(self, name):
-        self.log.info(f"[Process] Reading the union dataframe and graph : {name}")
+        LOGGER.info(f"[Process] Reading the union dataframe and graph : {name}")
         state = State(name)
         dirname = self.config.save_path
 
@@ -282,20 +289,20 @@ class Pipeline:
         state.new_gf.nxg = json_graph.node_link_graph(union_graph)
         state.new_gf.df = pd.read_csv(union_df_filepath)
 
-        #state.g = state.new_gf.nxg
-        #state.df = state.new_gf.df
+        # state.g = state.new_gf.nxg
+        # state.df = state.new_gf.df
 
-        '''
+        """
         #state.g = json_graph.node_link_graph(union_graph)
         #state.df = pd.read_csv(union_df_filepath)
-        '''
+        """
 
         return state
 
     # Read a single dataset, pass the dataset name as a parameter.
     def read_dataset_gf(self, name):
         state = State(name)
-        self.log.info(
+        LOGGER.info(
             "[Process] Reading the dataframe and graph of state: {0}".format(name)
         )
         dataset_dirname = os.path.abspath(os.path.join(__file__, "../../..")) + "/data"
@@ -305,20 +312,21 @@ class Pipeline:
         graph_filepath = os.path.join(self.dirname, name, "entire_graph.json")
         entire_graph_filepath = os.path.join(self.dirname, name, "entire_graph.json")
 
-        parameters_filepath = os.path.join(dataset_dirname, self.config.runName, name, "env_params.txt")
-
+        parameters_filepath = os.path.join(
+            dataset_dirname, self.config.runName, name, "env_params.txt"
+        )
 
         state.new_gf = GraphFrame()
         state.new_gf.df = pd.read_csv(df_filepath)
-        #state.df = state.new_gf.df
+        # state.df = state.new_gf.df
 
-        #state.df = pd.read_csv(df_filepath)
+        # state.df = pd.read_csv(df_filepath)
         with open(graph_filepath, "r") as filter_graphFile:
             graph = json.load(filter_graphFile)
 
         state.new_gf.nxg = json_graph.node_link_graph(graph)
-        #state.g = state.new_gf.nxg
-        #state.g = json_graph.node_link_graph(graph)
+        # state.g = state.new_gf.nxg
+        # state.g = json_graph.node_link_graph(graph)
 
         if self.config.runName.split("_")[0] == "osu_bcast":
             state.projection_data = {}
@@ -341,15 +349,15 @@ class Pipeline:
 
         dirname = self.config.callflow_dir
         name = self.config.runName
-        #similarity_filepath = dirname + "/" + "similarity.json"
+        # similarity_filepath = dirname + "/" + "similarity.json"
         similarity_filepath = os.path.join(dirname, "similarity.json")
         with open(similarity_filepath, "w") as json_file:
             json.dump(ret, json_file)
 
     def read_all_data(self):
-        #dirname = self.config.callflow_path
+        # dirname = self.config.callflow_path
         all_data_filepath = os.path.join(self.config.save_path, "all_data.json")
-        self.log.info(f"[Read] {all_data_filepath}")
+        LOGGER.info(f"[Read] {all_data_filepath}")
         with open(all_data_filepath, "r") as filter_graphFile:
             data = json.load(filter_graphFile)
         return data

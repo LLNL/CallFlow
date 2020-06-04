@@ -38,7 +38,7 @@ class ConfigFileReader:
         self.scheme = self.json["scheme"]
         self.datasets = self.json["datasets"]
         self.runName = self.json["run_name"]
-        self.save_path = os.path.join(self.data_path, '.callflow')
+        self.save_path = os.path.join(self.data_path, ".callflow")
 
         self.run()
 
@@ -103,9 +103,9 @@ class ConfigFileReader:
         # but only if we haven't already byteified it
         if isinstance(data, dict) and not ignore_dicts:
             return {
-                ConfigFileReader._byteify(key, ignore_dicts=True): ConfigFileReader._byteify(
-                    value, ignore_dicts=True
-                )
+                ConfigFileReader._byteify(
+                    key, ignore_dicts=True
+                ): ConfigFileReader._byteify(value, ignore_dicts=True)
                 for key, value in data.items()
             }
         # if it's anything else, return it in its original form

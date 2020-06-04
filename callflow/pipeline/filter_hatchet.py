@@ -11,7 +11,10 @@
 ##############################################################################
 import pandas as pd
 import time
-from callflow.utils.logger import Log
+
+import callflow
+
+LOGGER = callflow.get_logger(__name__)
 
 
 class FilterHatchet:
@@ -22,7 +25,6 @@ class FilterHatchet:
     """
 
     def __init__(self, state, filterBy, filterPerc):
-        self.log = Log("filter_hatchet")
         self.state = state
 
         self.graph = state.new_entire_gf.graph
@@ -46,7 +48,7 @@ class FilterHatchet:
         self.graph = self.fgf.graph
 
     def run(self):
-        self.log.info("Filtering the graph.")
+        LOGGER.info("Filtering the graph.")
         t = time.time()
         if self.filterBy == "Inclusive":
             max_inclusive_time = utils.getMaxIncTime_from_gf(self.graph, self.df)
@@ -57,19 +59,17 @@ class FilterHatchet:
             )
         elif filterBy == "Exclusive":
             max_exclusive_time = utils.getMaxExcTime_from_gf(self.graph, self.df)
-            self.log.info(
-                "[Filter] By Exclusive time = {0})".format(max_exclusive_time)
-            )
+            LOGGER.info("[Filter] By Exclusive time = {0})".format(max_exclusive_time))
             filter_gf = self.gf.filter(
                 lambda x: True
                 if (x["time"] >= self.filterPercInDecimals * max_exclusive_time)
                 else False
             )
         else:
-            self.log.warn("Not filtering.... Can take forever. Thou were warned")
+            LOGGER.warn("Not filtering.... Can take forever. Thou were warned")
             filter_gf = self.gf
 
-        self.log.info(
+        LOGGER.info(
             "[Filter] Removed {0} rows. (time={1})".format(
                 self.gf.dataframe.shape[0] - filter_gf.dataframe.shape[0],
                 time.time() - t,
@@ -79,10 +79,10 @@ class FilterHatchet:
         return filter_gf
 
     def graft(self):
-        self.log.info("Squashing the graph.")
+        LOGGER.info("Squashing the graph.")
         t = time.time()
         fgf = self.fgf.squash()
-        self.log.info(
+        LOGGER.info(
             "[Squash] {1} rows in dataframe (time={0})".format(
                 time.time() - t, fgf.dataframe.shape[0]
             )

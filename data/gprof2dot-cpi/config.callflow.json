@@ -4,7 +4,7 @@
     "datasets": [
       {
         "name": "calc-pi",
-        "path": "./data/gprof2dot-cpi/callgrind.dot.64042.0",
+        "path": "gprof2dot-cpi/callgrind.dot.64042.0",
         "format": "gprof"
       }
     ],

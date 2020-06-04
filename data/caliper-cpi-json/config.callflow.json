@@ -4,7 +4,7 @@
     "datasets": [
       {
         "name": "caliper-ex",
-        "path": "./data/caliper-cpi-json/cpi-sample-callpathprofile.json",
+        "path": "cpi-sample-callpathprofile.json",
         "format": "caliper_json"
       }
     ],
