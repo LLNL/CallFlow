@@ -105,7 +105,6 @@ export default {
 
 			EventHandler.$emit("ensemble_histogram", {
 				module: this.$store.selectedModule,
-				name: "main",
 				dataset: this.$store.runNames,
 			});
 		},

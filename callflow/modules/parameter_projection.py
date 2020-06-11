@@ -24,23 +24,22 @@ from callflow.algorithms import KMedoids
 
 
 class ParameterProjection:
-    def __init__(self, state, similarities={}, targetDataset="", n_cluster=3):
-        # self.similarities = similarities[targetDataset]
-        # self.datasetOrder = {k: idx for idx, (k, v) in enumerate(similarities.items())}
-        self.state = state
-        self.df = state.new_gf.df
-        self.datasets = state.new_gf.df["dataset"].unique().tolist()
+    def __init__(self, supergraph, similarities={}, targetDataset="", n_cluster=3):
+
+        self.df = supergraph.gf.df
+        self.datasets = self.df["dataset"].unique().tolist()
         self.projection = "MDS"
         self.clustering = "k_means"
         self.n_cluster = int(n_cluster)
         self.targetDataset = targetDataset
-        if len(self.datasets) > self.n_cluster:
+        if len(self.datasets) >= self.n_cluster:
             self.result = self.run()
         else:
             self.result = pd.DataFrame({})
 
     def add_df_params(self, dataset):
         ret = {}
+        print(self.df)
         ret["max_inclusive_time"] = self.df.loc[self.df["dataset"] == dataset][
             "time (inc)"
         ].max()

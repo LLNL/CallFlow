@@ -21,13 +21,13 @@ from callflow.timer import Timer
 
 
 class SingleAuxiliary:
-    def __init__(self, state, binCount="20", dataset="", config={}, process=True):
-        self.graph = state.new_gf.graph
-        self.df = state.new_gf.df
-        self.config = config
+    def __init__(self, gf, dataset="", MPIBinCount=20, props={}, process=True):
+        self.graph = gf.graph
+        self.df = gf.df
+        self.props = props
         self.process = process
         self.dataset = dataset
-        self.binCount = binCount
+        self.binCount = MPIBinCount
 
         ret_df = pd.DataFrame([])
         self.timer = Timer()
@@ -97,6 +97,9 @@ class SingleAuxiliary:
 
             hist_inc_grid = self.histogram(time_inc_target_arr)
             hist_exc_grid = self.histogram(time_exc_target_arr)
+
+        if "rank" not in group_df.keys():
+            group_df = group_df.reset_index(drop=False)
 
         result = {
             "name": node_name,
@@ -168,11 +171,7 @@ class SingleAuxiliary:
 
     def run(self):
         ret = {}
-        path = (
-            self.config.processed_path
-            + f"/{self.config.runName}"
-            + f"/{self.dataset}/all_data.json"
-        )
+        path = self.props["save_path"] + f"/{self.dataset}/auxiliary_data.json"
 
         # self.process = True
         if os.path.exists(path) and not self.process:

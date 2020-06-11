@@ -1,6 +1,7 @@
 {
     "run_name": "gprof-cpi",
     "save_path": "./data/gprof2dot-cpi/.callflow",
+    "read_parameter": false,
     "datasets": [
       {
         "name": "calc-pi",

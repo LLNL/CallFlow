@@ -1,6 +1,7 @@
 {
     "run_name": "caliper-cpi-json",
     "save_path": "./data/caliper-cpi-json/.callflow",
+    "read_parameter": false,
     "datasets": [
       {
         "name": "caliper-ex",

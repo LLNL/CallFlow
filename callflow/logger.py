@@ -25,9 +25,6 @@ def init_logger(**kwargs):
     level = int(kwargs.get("level", 2))
     do_color = str(kwargs.get("color", True))
 
-    # print ('level = ({})'.format(level))
-    # print ('do_color = ({})'.format(do_color))
-
     # --------------------------------------------------------------------------
     # get logging level in "logging" format
     assert level >= 1 and level <= 5
@@ -44,18 +41,6 @@ def init_logger(**kwargs):
 
     # --------------------------------------------------------------------------
     # get loging format
-    """
-    aliases = {
-        logging.DEBUG: "%(log_color)s(%(name)s.py) %(msg)s ",
-        logging.ERROR: "\033 %(log_color)s(%(name)s.py) ERROR: %(msg)s",
-        logging.CRITICAL: "\033 %(log_color)s(%(name)s.py) CRITICAL: %(msg)s",
-        logging.WARNING: "\033 %(log_color)s(%(name)s.py) WARN: %(msg)s",
-        logging.INFO: "%(log_color)s%(msg)s",
-    }
-    LOG_FMT = aliases[level]
-    """
-
-    # Harsh's suggestion
     # here, the initialization of the format doesnt depend upon "level"
     LOG_FMT = (
         "%(asctime)s - %(name)s:%(funcName)s:%(lineno)s - %(levelname)s - %(message)s"

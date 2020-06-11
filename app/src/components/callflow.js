@@ -115,7 +115,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: "<program root>",
 		modes: ["Ensemble", "Single"],
-		selectedMode: "Ensemble",
+		selectedMode: "Single",
 		// Presentation mode variables
 		exhibitModes: ["Presentation", "Default"],
 		selectedExhibitMode: "Default",
@@ -164,9 +164,11 @@ export default {
 
 	mounted() {
 		var socket = io.connect(this.server, { reconnect: false });
+		console.log(this.selectedMode)
 		this.$socket.emit("init", {
-			caseStudy: this.selectedCaseStudy
+			mode: this.selectedMode
 		});
+
 		EventHandler.$on("lasso_selection", () => {
 			this.$store.resetTargetDataset = true;
 
@@ -201,6 +203,7 @@ export default {
 			this.setTargetDataset();
 			this.setComponentMap();
 
+			console.log(this.selectedFormat.length, this.selectedMode)
 			if (this.selectedFormat == "SuperGraph") {
 				if (this.selectedMode == "Single") {
 					this.$socket.emit("single_callsite_data", {
@@ -266,13 +269,6 @@ export default {
 
 	methods: {
 		// Feature: Sortby the datasets and show the time. 
-		formatRuntimeWithoutUnits(val) {
-			let format = d3.format(".2");
-			let ret = format(val);
-			return ret;
-		},
-
-		// Feature: Sortby the datasets and show the time. 
 		sortDatasetsByAttr(datasets, attr) {
 			let ret = datasets.sort((a, b) => {
 				let x = 0, y = 0;
@@ -330,10 +326,10 @@ export default {
 				this.selectedMode = "Single";
 			}
 
-			this.$store.maxExcTime = data["max_excTime"];
-			this.$store.minExcTime = data["min_excTime"];
-			this.$store.maxIncTime = data["max_incTime"];
-			this.$store.minIncTime = data["min_incTime"];
+			this.$store.maxExcTime = data["maxExcTime"];
+			this.$store.minExcTime = data["minExcTime"];
+			this.$store.maxIncTime = data["maxIncTime"];
+			this.$store.minIncTime = data["minIncTime"];
 
 			this.$store.numOfRanks = data["numOfRanks"];
 			this.$store.moduleCallsiteMap = data["module_callsite_map"];
@@ -341,8 +337,6 @@ export default {
 
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
 			this.$store.selectedRunBinCount = this.selectedRunBinCount;
-
-			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3);
 
 			this.setViewDimensions();
 
@@ -383,6 +377,7 @@ export default {
 				this.$store.resetTargetDataset = true;
 			}
 			this.$store.selectedMetric = this.selectedMetric;
+			console.log(this.$store.selectedDatasets)
 			this.datasets = this.sortDatasetsByAttr(this.$store.selectedDatasets, "Inclusive");
 
 			let max_dataset = "";
@@ -411,8 +406,9 @@ export default {
 			else {
 				this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			}
+			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3);
 
-			console.log("Minimum among all runtimes: ", this.selectedTargetDataset);
+			console.log("Maximum among all runtimes: ", this.selectedTargetDataset);
 		},
 
 		setComponentMap() {
@@ -497,6 +493,7 @@ export default {
 
 		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime. 
 		sortModulesByMetric(attr) {
+			console.log(this.$store.modules)
 			let module_list = Object.keys(this.$store.modules["ensemble"]);
 
 			// Create a map for each dataset mapping the respective mean times. 
@@ -595,7 +592,9 @@ export default {
 			this.setupColors();
 			this.setOtherData();
 			this.setTargetDataset();
-			this.setSelectedModule();
+			if(this.selectedFormat == 'SuperGraph' && this.selectedMode == 'Ensemble'){
+				this.setSelectedModule();
+			}
 
 			console.log("Mode : ", this.selectedMode);
 			console.log("Number of runs :", this.$store.numOfRuns);
@@ -623,6 +622,7 @@ export default {
 					this.loadComponents(this.currentEnsembleCallGraphComponents);
 				}
 				else if (this.selectedFormat == "CCT") {
+					console.log(this.currentEnsembleCCTComponents)
 					this.initComponents(this.currentEnsembleCCTComponents);
 				}
 			}

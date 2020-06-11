@@ -1,92 +1,67 @@
-##############################################################################
-# Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
 #
-# This file is part of Callflow.
-# Created by Suraj Kesavan <kesavan1@llnl.gov>.
-# LLNL-CODE-741008. All rights reserved.
-#
-# For details, see: https://github.com/LLNL/Callflow
-# Please also read the LICENSE file for the MIT License notice.
-##############################################################################
+# SPDX-License-Identifier: MIT
 
+# ------------------------------------------------------------------------------
+# Library imports
 import sys
 import networkx as nx
 import math
 import json
 from ast import literal_eval as make_tuple
+
+# ------------------------------------------------------------------------------
+# CallFlow imports
+import callflow
 from callflow.timer import Timer
+from callflow import SuperGraph
 
+LOGGER = callflow.get_logger(__name__)
 
-class SingleSuperGraph(nx.Graph):
+# ------------------------------------------------------------------------------
+# Single Super Graph class.
+class SingleSuperGraph(SuperGraph):
     def __init__(
         self,
-        states,
+        supergraphs,
+        tag,
         dataset,
         path,
         group_by_attr="module",
         construct_graph=True,
         add_data=True,
-        debug=True,
     ):
-        super(SingleSuperGraph, self).__init__()
-        self.log = Log("supergraph")
-        self.state = states[dataset]
-        self.dataset = dataset
-        self.timer = Timer()
+        super(SingleSuperGraph, self).__init__(props=props, tag=tag, mode="render")
 
-        self.graph = state.new_gf.graph
-        self.df = state.new_gf.df
-        self.g = state.new_gf.nxg
+        self.ensemble_supergraph = self.supergraphs[tag]
+        self.group_df = self.ensemble_supergraph.gf.df
 
+        self.path = path
         self.group_by = group_by_attr
 
+        # Columns to consider.
         self.columns = [
             "time (inc)",
-            "group_path",
+            "module",
             "name",
             "time",
-            "callers",
-            "callees",
-            "vis_name",
+            "type",
             "module",
-            "show_node",
+            "actual_time",
         ]
 
         with self.timer.phase("Construct Graph"):
             if construct_graph:
-                log.info("Creating the SuperGraph for {0}.".format(self.state.name))
+                LOGGER.info("Creating the SuperGraph for {0}.".format(self.state.name))
                 self.mapper = {}
                 self.g = nx.DiGraph()
                 self.add_paths(path)
+                self.add_callback_paths()
             else:
                 print("Using the existing graph from state {0}".format(self.state.name))
 
-        if debug:
-            log.warn("Modules: {0}".format(self.df["module"].unique()))
-            log.warn("Top 10 Inclusive time: ")
-            top = 10
-            rank_df = self.df.groupby(["name", "nid"]).mean()
-            top_inclusive_df = rank_df.nlargest(top, "time (inc)", keep="first")
-            for name, row in top_inclusive_df.iterrows():
-                log.info("{0} [{1}]".format(name, row["time (inc)"]))
-
-            log.warn("Top 10 Enclusive time: ")
-            top_exclusive_df = rank_df.nlargest(top, "time", keep="first")
-            for name, row in top_exclusive_df.iterrows():
-                log.info("{0} [{1}]".format(name, row["time"]))
-
-            for node in self.g.nodes(data=True):
-                log.info("Node: {0}".format(node))
-            for edge in self.g.edges():
-                log.info("Edge: {0}".format(edge))
-
-            log.warn("Nodes in the tree: {0}".format(len(self.g.nodes)))
-            log.warn("Edges in the tree: {0}".format(len(self.g.edges)))
-            log.warn("Is it a tree? : {0}".format(nx.is_tree(self.g)))
-            log.warn("Flow hierarchy: {0}".format(nx.flow_hierarchy(self.g)))
-
-        # Variables to control the data properties globally.
+        # Remove.
         self.callbacks = []
         self.edge_direction = {}
 
@@ -94,30 +69,12 @@ class SingleSuperGraph(nx.Graph):
             if add_data == True:
                 self.add_node_attributes()
                 self.add_edge_attributes()
-            # else:
-            # print("Creating a Graph without node or edge attributes.")
-
-        log.info(self.timer)
-
-    def no_cycle_path(self, path):
-        ret = []
-        moduleMapper = {}
-        for idx, elem in enumerate(path):
-            call_site = elem.split("=")[1]
-            module = self.df.loc[self.df.name == call_site]["module"].tolist()[0]
-            if module not in moduleMapper and elem in self.mapper:
-                self.mapper[elem] += 1
-                moduleMapper[module] = True
-                ret.append(elem)
-            elif elem not in self.mapper:
-                self.mapper[elem] = 0
             else:
-                self.mapper[elem] += 1
-        return tuple(ret)
+                LOGGER.info("Creating a Graph without node or edge attributes.")
+
+        LOGGER.debug(self.timer)
 
     def add_paths(self, path):
-        # path_df = self.df[path].fillna("()")
-        # paths = path_df.drop_duplicates().tolist()
         paths = self.df[path].unique()
         for idx, path_str in enumerate(paths):
             if not isinstance(path_str, float):
@@ -138,6 +95,7 @@ class SingleSuperGraph(nx.Graph):
                         },
                     )
 
+    # TODO: remove this if not needed.
     def add_callback_paths(self):
         for from_module, to_modules in self.callbacks.items():
             for idx, to_module in enumerate(to_modules):
@@ -195,23 +153,6 @@ class SingleSuperGraph(nx.Graph):
             ret[(edge[0], edge[1])] = target_inc
 
         return ret
-
-    def tailhead(self, edge):
-        return (edge[0], edge[1])
-
-    def tailheadDir(self, edge):
-        return (str(edge[0]), str(edge[1]), self.edge_direction[edge])
-
-    def leaves_below(self, graph, node):
-        return set(
-            sum(
-                (
-                    [vv for vv in v if graph.out_degree(vv) == 0]
-                    for k, v in nx.dfs_successors(graph, node).items()
-                ),
-                [],
-            )
-        )
 
     def dataset_map(self, nodes, dataset):
         ret = {}

@@ -30,26 +30,56 @@ from callflow.timer import Timer
 class EnsembleAuxiliary:
     def __init__(
         self,
-        states,
+        gf=callflow.GraphFrame,
+        datasets=[],
+        props={},
         MPIBinCount="20",
         RunBinCount="20",
-        datasets=[],
-        config={},
         process=True,
         write=False,
     ):
-        self.timer = Timer()
-        self.df = self.select_rows(states["ensemble_entire"].new_gf.df, datasets)
+        self.gf = gf
         self.MPIBinCount = MPIBinCount
         self.RunBinCount = RunBinCount
-        self.config = config
-        self.states = states
+        self.timer = Timer()
+        self.props = props
+        self.datasets = self.props["dataset_names"]
+
+        self.df = self.select_rows(self.gf.df, self.datasets)
+
         self.process = process
         self.write = write
-        self.datasets = datasets
 
-        self.props = ["rank", "name", "dataset", "all_ranks"]
+        self.hist_props = ["rank", "name", "dataset", "all_ranks"]
         self.filter = True
+
+        if process:
+            self.compute()
+        else:
+            self.read()
+        print(self.timer)
+
+    def compute(self):
+        ret = {}
+        path = os.path.join(self.props["save_path"], "ensemble/auxiliary_data.json")
+
+        LOGGER.info("Calculating Gradients, Mean runtime variations, and Distribution.")
+        with self.timer.phase("Process data"):
+            self.group_frames()
+        with self.timer.phase("Collect Callsite data"):
+            ret["callsite"] = self.callsite_data()
+        with self.timer.phase("Collect Module data"):
+            ret["module"] = self.module_data()
+        with self.timer.phase("Module callsite map data"):
+            ret["moduleCallsiteMap"] = self.get_module_callsite_map()
+        # with self.timer.phase("Callsite module map data"):
+        #     ret['callsiteModuleMap'] = self.get_callsite_module_map()
+        # if self.write:
+        with self.timer.phase("Writing data"):
+            with open(path, "w") as f:
+                json.dump(ret, f)
+
+        return ret
 
     def filter_dict(self, result):
         ret = {}
@@ -61,14 +91,14 @@ class EnsembleAuxiliary:
         ret["callsite"] = {}
 
         group_df = self.df.groupby(["name"]).mean()
-        if self.config.filter_by == "time":
+        if self.props["filter_by"] == "time":
             f_group_df = group_df.loc[
-                group_df[self.config.filter_by] > self.config.filter_below
+                group_df[self.props["filter_by"]] > self.props["filter_below"]
             ]
-        elif self.config.filter_by == "time (inc)":
+        elif self.props["filter_by"] == "time (inc)":
             f_group_df = group_df.loc[
-                group_df[self.config.filter_by]
-                > 0.01 * self.config.filter_perc * group_df["time (inc)"].max()
+                group_df[self.props["filter_by"]]
+                > 0.01 * self.props["filter_perc"] * group_df["time (inc)"].max()
             ]
         callsites = f_group_df.index.values.tolist()
 
@@ -85,13 +115,12 @@ class EnsembleAuxiliary:
 
     def group_frames(self):
         if self.filter:
-            # self.df = self.df.loc[self.df['time'] > 0.01*self.config.filter_perc*self.df['time'].max() ]
-            # self.df = self.df.loc[self.df['time (inc)'] > self.config.filter_perc]['name'].unique()
             xgroup_df = self.df.groupby(["name"]).mean()
             sort_xgroup_df = xgroup_df.sort_values(by=["time (inc)"], ascending=False)
             top100callsites = sort_xgroup_df.nlargest(50, "time (inc)")
             self.df = self.df[self.df["name"].isin(top100callsites.index.values)]
 
+        self.df.drop(["rank"], axis=1)
         self.module_name_group_df = self.df.groupby(["module", "name"])
         self.module_group_df = self.df.groupby(["module"])
         self.name_group_df = self.df.groupby(["name"])
@@ -111,6 +140,122 @@ class EnsembleAuxiliary:
             self.target_name_group_df[dataset] = self.target_df[dataset].groupby(
                 ["name"]
             )
+
+    # Callsite grouped information
+    def callsite_data(self):
+        ret = {}
+
+        # Create the data dict.
+        ensemble = {}
+        for callsite, callsite_df in self.name_group_df:
+            callsite_ensemble_df = self.name_group_df.get_group(callsite)
+            hists = {}
+            hists["Inclusive"] = {}
+            hists["Exclusive"] = {}
+            for prop in self.hist_props:
+                prop_histograms = self.histogram_by_property_ensemble(
+                    callsite_ensemble_df, prop
+                )
+                hists["Inclusive"][prop] = prop_histograms["Inclusive"]
+                hists["Exclusive"][prop] = prop_histograms["Exclusive"]
+
+            gradients = Gradients(self.target_df, binCount=self.RunBinCount).run(
+                columnName="name", callsiteOrModule=callsite
+            )
+            boxplot = BoxPlot(callsite_df)
+            ensemble[callsite] = self.pack_json(
+                callsite_df,
+                callsite,
+                gradients=gradients,
+                q=boxplot.q,
+                outliers=boxplot.outliers,
+                prop_hists=hists,
+            )
+
+        ret["ensemble"] = ensemble
+
+        ## Target data.
+        # Loop through datasets and group the callsite by name.
+        for dataset in self.datasets:
+            name_grouped = self.target_name_group_df[dataset]
+            target = {}
+            for callsite, callsite_df in name_grouped:
+                callsite_ensemble_df = self.name_group_df.get_group(callsite)
+                callsite_target_df = callsite_df
+
+                if not callsite_df.empty:
+                    hists = {}
+                    hists["Inclusive"] = {}
+                    hists["Exclusive"] = {}
+                    for prop in self.hist_props:
+                        prop_histograms = self.histogram_by_property(
+                            callsite_ensemble_df, callsite_target_df, prop
+                        )
+                        hists["Inclusive"][prop] = prop_histograms["Inclusive"]
+                        hists["Exclusive"][prop] = prop_histograms["Exclusive"]
+
+                    boxplot = BoxPlot(callsite_df)
+                    target[callsite] = self.pack_json(
+                        df=callsite_target_df,
+                        name=callsite,
+                        prop_hists=hists,
+                        q=boxplot.q,
+                        outliers=boxplot.outliers,
+                    )
+            ret[dataset] = target
+
+        return ret
+
+    def module_data(self):
+        ret = {}
+        # Module grouped information
+        modules = self.df["module"].unique()
+        ensemble = {}
+        for module, module_df in self.module_group_df:
+            module_ensemble_df = self.module_group_df.get_group(module)
+            hists = {"Inclusive": {}, "Exclusive": {}}
+            for prop in self.hist_props:
+                prop_histograms = self.histogram_by_property_ensemble(
+                    module_ensemble_df, prop
+                )
+                hists["Inclusive"][prop] = prop_histograms["Inclusive"]
+                hists["Exclusive"][prop] = prop_histograms["Exclusive"]
+
+            # Calculate gradients
+            gradients = Gradients(self.target_df, binCount=self.RunBinCount).run(
+                columnName="module", callsiteOrModule=module
+            )
+            ensemble[module] = self.pack_json(
+                df=module_df, name=module, gradients=gradients, prop_hists=hists
+            )
+
+        ret["ensemble"] = ensemble
+
+        for dataset in self.datasets:
+            target = {}
+            module_group_df = self.target_module_group_df[dataset]
+            for module, module_df in module_group_df:
+                module_ensemble_df = self.module_group_df.get_group(module)
+                module_target_df = module_df
+                gradients = {"Inclusive": {}, "Exclusive": {}}
+                hists = {"Inclusive": {}, "Exclusive": {}}
+                if not module_target_df.empty:
+                    for prop in self.hist_props:
+                        prop_histograms = self.histogram_by_property(
+                            module_ensemble_df, module_target_df, prop
+                        )
+                        hists["Inclusive"][prop] = prop_histograms["Inclusive"]
+                        hists["Exclusive"][prop] = prop_histograms["Exclusive"]
+                    target[module] = self.pack_json(
+                        df=module_target_df,
+                        name=module,
+                        gradients=gradients,
+                        prop_hists=hists,
+                    )
+
+            ret[dataset] = target
+
+        return ret
 
     def select_rows(self, df, search_strings):
         unq, IDs = np.unique(df["dataset"], return_inverse=True)
@@ -188,8 +333,8 @@ class EnsembleAuxiliary:
             "id": "node-" + str(df["nid"].tolist()[0]),
             "dataset": df["dataset"].unique().tolist(),
             "module": df["module"].tolist()[0],
-            "callers": df["callers"].unique().tolist(),
-            "callees": df["callees"].unique().tolist(),
+            # "callers": df["callers"].unique().tolist(),
+            # "callees": df["callees"].unique().tolist(),
             "component_path": df["component_path"].unique().tolist(),
             "component_level": df["component_level"].unique().tolist(),
             "Inclusive": {
@@ -243,6 +388,7 @@ class EnsembleAuxiliary:
             time_ensemble_exclusive_arr = np.array(ensemble_df["time"].tolist())
 
         elif prop == "rank":
+            ensemble_df.reset_index(drop=True, inplace=True)
             ensemble_prop = ensemble_df.groupby(["dataset", prop])[
                 ["time", "time (inc)"]
             ].mean()
@@ -287,9 +433,12 @@ class EnsembleAuxiliary:
             time_target_inclusive_arr = np.array(target_df["time (inc)"].tolist())
             time_target_exclusive_arr = np.array(target_df["time"].tolist())
         elif prop == "rank":
+            ensemble_df.reset_index(drop=True, inplace=True)
             ensemble_prop = ensemble_df.groupby(["dataset", prop])[
                 ["time", "time (inc)"]
             ].mean()
+
+            target_df.reset_index(drop=True, inplace=True)
             target_prop = target_df.groupby(["dataset", prop])[
                 ["time", "time (inc)"]
             ].mean()
@@ -343,147 +492,4 @@ class EnsembleAuxiliary:
             "ensemble": self.histogram_format(histogram_ensemble_exclusive_grid),
             "target": self.histogram_format(histogram_target_exclusive_grid),
         }
-        return ret
-
-    # Callsite grouped information
-    def callsite_data(self):
-        ret = {}
-
-        # Create the data dict.
-        ensemble = {}
-        for callsite, callsite_df in self.name_group_df:
-            callsite_ensemble_df = self.name_group_df.get_group(callsite)
-            hists = {}
-            hists["Inclusive"] = {}
-            hists["Exclusive"] = {}
-            for prop in self.props:
-                prop_histograms = self.histogram_by_property_ensemble(
-                    callsite_ensemble_df, prop
-                )
-                hists["Inclusive"][prop] = prop_histograms["Inclusive"]
-                hists["Exclusive"][prop] = prop_histograms["Exclusive"]
-
-            gradients = Gradients(self.target_df, binCount=self.RunBinCount).run(
-                columnName="name", callsiteOrModule=callsite
-            )
-            boxplot = BoxPlot(callsite_df)
-            ensemble[callsite] = self.pack_json(
-                callsite_df,
-                callsite,
-                gradients=gradients,
-                q=boxplot.q,
-                outliers=boxplot.outliers,
-                prop_hists=hists,
-            )
-
-        ret["ensemble"] = ensemble
-
-        ## Target data.
-        # Loop through datasets and group the callsite by name.
-        for dataset in self.datasets:
-            name_grouped = self.target_name_group_df[dataset]
-            target = {}
-            for callsite, callsite_df in name_grouped:
-                callsite_ensemble_df = self.name_group_df.get_group(callsite)
-                callsite_target_df = callsite_df
-
-                if not callsite_df.empty:
-                    hists = {}
-                    hists["Inclusive"] = {}
-                    hists["Exclusive"] = {}
-                    for prop in self.props:
-                        prop_histograms = self.histogram_by_property(
-                            callsite_ensemble_df, callsite_target_df, prop
-                        )
-                        hists["Inclusive"][prop] = prop_histograms["Inclusive"]
-                        hists["Exclusive"][prop] = prop_histograms["Exclusive"]
-
-                    boxplot = BoxPlot(callsite_df)
-                    target[callsite] = self.pack_json(
-                        df=callsite_target_df,
-                        name=callsite,
-                        prop_hists=hists,
-                        q=boxplot.q,
-                        outliers=boxplot.outliers,
-                    )
-            ret[dataset] = target
-
-        return ret
-
-    def module_data(self):
-        ret = {}
-        # Module grouped information
-        modules = self.df["module"].unique()
-        ensemble = {}
-        for module, module_df in self.module_group_df:
-            module_ensemble_df = self.module_group_df.get_group(module)
-            hists = {"Inclusive": {}, "Exclusive": {}}
-            for prop in self.props:
-                prop_histograms = self.histogram_by_property_ensemble(
-                    module_ensemble_df, prop
-                )
-                hists["Inclusive"][prop] = prop_histograms["Inclusive"]
-                hists["Exclusive"][prop] = prop_histograms["Exclusive"]
-
-            # Calculate gradients
-            gradients = Gradients(self.target_df, binCount=self.RunBinCount).run(
-                columnName="module", callsiteOrModule=module
-            )
-            ensemble[module] = self.pack_json(
-                df=module_df, name=module, gradients=gradients, prop_hists=hists
-            )
-
-        ret["ensemble"] = ensemble
-
-        for dataset in self.datasets:
-            target = {}
-            module_group_df = self.target_module_group_df[dataset]
-            for module, module_df in module_group_df:
-                module_ensemble_df = self.module_group_df.get_group(module)
-                module_target_df = module_df
-                gradients = {"Inclusive": {}, "Exclusive": {}}
-                hists = {"Inclusive": {}, "Exclusive": {}}
-                if not module_target_df.empty:
-                    for prop in self.props:
-                        prop_histograms = self.histogram_by_property(
-                            module_ensemble_df, module_target_df, prop
-                        )
-                        hists["Inclusive"][prop] = prop_histograms["Inclusive"]
-                        hists["Exclusive"][prop] = prop_histograms["Exclusive"]
-                    target[module] = self.pack_json(
-                        df=module_target_df,
-                        name=module,
-                        gradients=gradients,
-                        prop_hists=hists,
-                    )
-
-            ret[dataset] = target
-
-        return ret
-
-    def run(self):
-        ret = {}
-        path = os.path.join(self.config.save_path, "all_data.json")
-
-        if self.process:
-            LOGGER.info(
-                "Calculating Gradients, Mean runtime variations, and Distribution."
-            )
-            with self.timer.phase("Process data"):
-                self.group_frames()
-            with self.timer.phase("Collect Callsite data"):
-                ret["callsite"] = self.callsite_data()
-            with self.timer.phase("Collect Module data"):
-                ret["module"] = self.module_data()
-            with self.timer.phase("Module callsite map data"):
-                ret["moduleCallsiteMap"] = self.get_module_callsite_map()
-            # with self.timer.phase("Callsite module map data"):
-            #     ret['callsiteModuleMap'] = self.get_callsite_module_map()
-            if self.write:
-                with self.timer.phase("Writing data"):
-                    with open(path, "w") as f:
-                        json.dump(ret, f)
-
-            LOGGER.debug(self.timer)
-
         return ret

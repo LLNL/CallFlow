@@ -16,7 +16,9 @@ from io import StringIO
 
 
 class Timer(object):
-    """Simple phase timer with a context manager."""
+    """
+    Simple phase timer with a context manager.
+    """
 
     def __init__(self):
         self._phase = None

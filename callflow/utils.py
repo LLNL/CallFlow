@@ -16,7 +16,7 @@ def lookup_with_name(df, name):
 
 # ------------------------------------------------------------------------------
 # a similar function in utils/hatchet.py
-def sanitizeName(name):
+def sanitize_name(name):
     ret_name = ""
     if name is None:
         ret_name = "Unknown"
@@ -199,10 +199,10 @@ def string_to_list(string: str, sep: str):
 
 
 # ------------------------------------------------------------------------------
-# networx utilities
+# networkx utilities
 # ------------------------------------------------------------------------------
 # not sure if this is used anywhere
-# Also, why is this not consistent with the rest of the stlye (ie, actions)
+# Also, why is this not consistent with the rest of the style (ie, actions)
 def dfs(graph, dataframe, limit):
     def _dfs_recurse(root, level):
         for node in root.children:
@@ -266,33 +266,6 @@ def graphmltojson(graphfile, outfile):
 
 
 # ------------------------------------------------------------------------------
-
-
-def getPathListFromFrames(frames):
-    paths = []
-    for frame in frames:
-        path = []
-        for f in frame:
-            if f["type"] == "function":
-                path.append(f["name"])
-            elif f["type"] == "statement":
-                path.append(f["file"] + ":" + str(f["line"]))
-            elif f["type"] == "loop":
-                path.append(f["file"] + ":" + str(f["line"]))
-        paths.append(path)
-    return path
-
-
-def framesToPathLists(paths):
-    all_paths = []
-    for path in paths:
-        curr_path = []
-        for frame in path:
-            curr_path.append(frame["name"])
-        all_paths.append(curr_path)
-    return all_paths
-
-
 def bfs_hatchet(graph):
     ret = {}
     node_count = 0
@@ -330,7 +303,7 @@ def getNodeParents(node):
     return node.parents
 
 
-def getNodeName(node):
+def get_callsite_name_from_frame(node):
     name = node.frame.get("name")
     if name != None:
         return node.frame.get("name")
@@ -338,18 +311,10 @@ def getNodeName(node):
         return node.frame.get("file")
 
 
-def sanitizeName(name):
-    if name is None:
-        return "Unknown"
-    if "/" in name:
-        name_split = name.split("/")
-        return name_split[len(name_split) - 1]
-    else:
-        return name
-
-
-# Return the Callsite name from frame.
-def getNodeDictFromFrame(frame):
+def node_dict_from_frame(frame):
+    """
+    Constructs callsite's name from Hatchet's frame.
+    """
     if frame["type"] == "function":
         return {"name": frame["name"], "line": "NA", "type": "function"}
     elif frame["type"] == "statement":
@@ -358,3 +323,21 @@ def getNodeDictFromFrame(frame):
         return {"name": frame["file"], "line": frame["line"], "type": "loop"}
     else:
         return {}
+
+
+def path_list_from_frames(frames):
+    """
+    Constructs callsite's path from Hatchet's frame.
+    """
+    paths = []
+    for frame in frames:
+        path = []
+        for f in frame:
+            if f["type"] == "function":
+                path.append(f["name"])
+            elif f["type"] == "statement":
+                path.append(f["file"] + ":" + str(f["line"]))
+            elif f["type"] == "loop":
+                path.append(f["file"] + ":" + str(f["line"]))
+        paths.append(path)
+    return path

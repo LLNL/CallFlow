@@ -37,7 +37,6 @@ class FunctionList:
         for idx, row in self.df.iterrows():
             # if row.show_node:
             path = row[path_name]
-            print(path)
             # TODO: Sometimes the path becomes a string. Find why it happens.
             # If it becomes a string
             if isinstance(path, str):
