@@ -1,10 +1,11 @@
 {
   "run_name": "caliper-lulesh-json",
   "save_path": "data/caliper-lulesh-json/.callflow",
+  "read_parameter": false,
   "datasets": [
     {
       "name": "lulesh",
-      "path": "data/caliper-lulesh-json/lulesh-sample-annotation-profile.json",
+      "path": "lulesh-sample-annotation-profile.json",
       "format": "caliper_json"
     }
   ],

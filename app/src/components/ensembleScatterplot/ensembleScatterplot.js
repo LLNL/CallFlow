@@ -79,7 +79,6 @@ export default {
 			this.$refs.ToolTip.init(this.svgID);
 			EventHandler.$emit("ensemble_scatterplot", {
 				module: this.$store.selectedModule,
-				name: "main",
 				dataset: this.$store.selectedDatasets,
 			});
 		},

@@ -1,10 +1,11 @@
 {
   "run_name": "caliper-cali",
   "save_path": "./data/caliper-cali/.callflow",
+  "read_parameter": false,
   "datasets": [
     {
       "name": "caliper-ex",
-      "path": "./data/caliper-cali/caliper-ex.json",
+      "path": "caliper-ex.json",
       "format": "caliper_json"
     }
   ],
