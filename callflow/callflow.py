@@ -11,7 +11,8 @@ import json
 # ------------------------------------------------------------------------------
 # CallFlow imports
 import callflow
-from callflow import SuperGraph, EnsembleGraph, CCT, EnsembleSuperGraph
+from callflow import SuperGraph, EnsembleGraph
+from callflow.layout import NodeLinkLayout, SankeyLayout
 from callflow.modules import (
     EnsembleAuxiliary,
     ModuleHierarchy,
@@ -24,37 +25,37 @@ LOGGER = callflow.get_logger(__name__)
 # ------------------------------------------------------------------------------
 # CallFlow class
 class CallFlow:
-    def __init__(self, config={}, process=False, ensemble=False):
+    def __init__(self, config, process=False, ensemble=False):
         """
         Entry interface to access CallFlow's functionalities. "
         """
 
         # Assert if config is provided.
-        assert config != None
+        assert isinstance(config, callflow.operations.ConfigFileReader)
 
         # Convert config json to props. Never touch self.config ever.
         self.props = json.loads(json.dumps(config, default=lambda o: o.__dict__))
-        # Assert ensemble if it really contains more than 1 dataset.
-        assert ensemble == (len(self.props["dataset_names"]) > 1)
+        #LOGGER.debug('Callflow.init() -- {}'.format(self.props.keys()))
+
+        ndatasets = len(self.props["dataset_names"])
+        assert ensemble == (ndatasets > 1)
 
         # Based on option, either process into .callflow or read from .callflow.
         if process:
             self._create_dot_callflow_folder()
-            if ensemble:
-                self._process_ensemble()
-            else:
-                self._process_single()
-        else:  # Rendering of call graphs.
+            if ensemble:    self._process_ensemble(self.props["dataset_names"])
+            else:           self._process_single(self.props["dataset_names"][0])
+
+         # Rendering of call graphs.
+        else:
             if ensemble:
                 self.supergraphs = self._read_ensemble()
                 # assertion here is 1 less than self.supergraph.keys, becasuse
                 # self.supergraphs contains the ensemble supergraph as well.
-                assert (
-                    len(self.props["dataset_names"]) == len(self.supergraphs.keys()) - 1
-                )
+                assert len(self.supergraphs.keys()) == 1 + ndatasets
             else:
                 self.supergraphs = self._read_single()
-                assert len(self.props["dataset_names"]) == 1
+                assert len(self.supergraphs.keys()) == 1
 
             # Adds basic information to props.
             # Props is later return to client app on "init" request.
@@ -93,18 +94,17 @@ class CallFlow:
 
     def _remove_dot_callflow_folder(self):
         """
-        TODO: We might want to delete the .callflow folder when we re-process/re-write. 
+        TODO: We might want to delete the .callflow folder when we re-process/re-write.
         """
         pass
 
-    def _process_single(self):
+    def _process_single(self, dataset):
         """
-        Single dataset processing. 
+        Single dataset processing.
         """
-        dataset_name = self.props["dataset_names"][0]
-        supergraph = SuperGraph(props=self.props, tag=dataset_name, mode="process")
+        supergraph = SuperGraph(props=self.props, tag=dataset, mode="process")
         LOGGER.info("#########################################")
-        LOGGER.info(f"Run: {dataset_name}")
+        LOGGER.info(f"Run: {dataset}")
         LOGGER.info("#########################################")
 
         # Process each graphframe.
@@ -119,17 +119,16 @@ class CallFlow:
         # Store the graphframe.
         supergraph.write_gf("entire")
 
-        supergraph.single_auxiliary(
-            dataset=dataset_name, binCount=20, process=True,
-        )
+        supergraph.single_auxiliary(dataset=dataset, #_name,
+                                        binCount=20, process=True)
 
-    def _process_ensemble(self):
+    def _process_ensemble(self, datasets):
         """
-        Ensemble processing of datasets. 
+        Ensemble processing of datasets.
         """
         # Before we process the ensemble, we perform single processing on all datasets.
         single_supergraphs = {}
-        for idx, dataset_name in enumerate(self.props["dataset_names"]):
+        for idx, dataset_name in enumerate(datasets):
             # Create an instance of dataset.
             single_supergraphs[dataset_name] = SuperGraph(
                 props=self.props, tag=dataset_name, mode="process"
@@ -140,6 +139,8 @@ class CallFlow:
 
             # Process each graphframe.
             single_supergraphs[dataset_name].process_gf()
+
+            single_supergraphs[dataset_name].group_gf(group_by="module")
 
             # Write the entire graphframe into .callflow.
             single_supergraphs[dataset_name].write_gf("entire")
@@ -155,13 +156,13 @@ class CallFlow:
         )
 
         # Write the graphframe to file.
-        ensemble_supergraph.write_gf("entire")
+        # ensemble_supergraph.write_gf("entire")
 
         # Filter the ensemble graphframe.
         ensemble_supergraph.filter_gf(mode="ensemble")
 
         # Write the filtered graphframe.
-        ensemble_supergraph.write_gf("filter")
+        # ensemble_supergraph.write_gf("filter")
 
         # Group by module.
         ensemble_supergraph.group_gf(group_by="module")
@@ -203,15 +204,13 @@ class CallFlow:
             supergraphs[dataset_name] = SuperGraph(
                 self.props, dataset_name, mode="render"
             )
-            supergraphs[dataset_name].read_gf(
-                read_parameter=self.props["read_parameter"]
-            )
+            #supergraphs[dataset_name].read_gf(read_parameter=self.props["read_parameter"])
 
         supergraphs["ensemble"] = EnsembleGraph(
             props=self.props, tag="ensemble", mode="render"
         )
-        supergraphs["ensemble"].read_gf(read_parameter=self.props["read_parameter"])
-        supergraphs["ensemble"].read_auxiliary_data()
+        #supergraphs["ensemble"].read_gf(read_parameter=self.props["read_parameter"])
+        #supergraphs["ensemble"].read_auxiliary_data()
         return supergraphs
 
     # --------------------------------------------------------------------------
@@ -258,79 +257,59 @@ class CallFlow:
 
     def request_single(self, operation):
         """
-        TODO: Write individual functiosn to do this.
-        Handles all the socket requests connected to Single CallFlow. 
+        Handles all the socket requests connected to Single CallFlow.
         """
-        LOGGER.info(f"[Single Mode] {operation}")
-        operation_tag = operation["name"]
+        _OPERATIONS = ["init", "reset", "auxiliary", "cct", "supergraph", "miniHistogram", "function"]
+        assert "name" in operation
+        assert operation["name"] in _OPERATIONS
 
-        if operation_tag == "init":
+        LOGGER.info(f"[Single Mode] {operation}")
+        operation_name = operation["name"]
+
+        if operation_name == "init":
             return self.props
 
-        if "groupBy" in operation:
-            LOGGER.info("Grouping by: {0}".format(operation["groupBy"]))
-        else:
-            operation["groupBy"] = "name"
+        elif operation_name == "auxiliary":
+            return self.supergraphs[operation["dataset"]].auxiliary_data
 
-        dataset = operation["dataset"]
+        elif operation_name == "supergraph":
+            single_supergraph = SankeyLayout(supergraph=self.supergraphs[operation['dataset']], path="group_path")
+            return single_supergraph.nxg
 
-        LOGGER.info("The selected Dataset is {0}".format(dataset))
-
-        # Compare against the different operations
-        # TODO: Probably remove.
-        if operation_tag == "reset":
-            datasets = [dataset]
-            self.reProcess = True
-            self.states = self.pipeline(
-                datasets, operation["filterBy"], operation["filterPerc"]
-            )
-            self.reProcess = False
-            self.states = self.pipeline(datasets)
-            return {}
-
-        elif operation_tag == "auxiliary":
-            return self.supergraphs[dataset].auxiliary_data
-
-        elif operation_tag == "supergraph":
-            return self.supergraphs[dataset].gf.nxg
-
-        elif operation_tag == "mini-histogram":
+        elif operation_name == "mini-histogram":
             minihistogram = MiniHistogram(state)
             return minihistogram.result
 
-        elif operation_tag == "cct":
-            graph = CCT(
-                supergraphs=self.supergraphs,
-                tag=operation["dataset"],
+        elif operation_name == "cct":
+            result = NodeLinkLayout(
+                supergraph=self.supergraphs[operation['dataset']],
                 callsite_count=operation["functionsInCCT"],
             )
-            return graph.g
+            return result.nxg
 
-        elif operation_tag == "function":
+        elif operation_name == "function":
             functionlist = FunctionList(state, operation["module"], operation["nid"])
             return functionlist.result
 
     def request_ensemble(self, operation):
         """
         TODO: Write individual functiosn to do this.
-        Handles all the socket requests connected to Single CallFlow. 
+        Handles all the socket requests connected to Single CallFlow.
         """
-        operation_tag = operation["name"]
+        operation_name = operation["name"]
         datasets = self.props["dataset_names"]
 
-        if operation_tag == "init":
+        if operation_name == "init":
             return self.props
 
-        elif operation_tag == "ensemble_cct":
-            result = CCT(
-                supergraphs=self.supergraphs,
-                tag="ensemble",
-                props=self.props,
+        elif operation_name == "ensemble_cct":
+            result = NodeLinkLayout(
+                supergraph=self.supergraphs['ensemble'],
                 callsite_count=operation["functionsInCCT"],
             )
-            return result.gf.nxg
+            return result.nxg
 
-        elif operation_tag == "supergraph":
+        elif operation_name == "supergraph":
             if "reveal_callsites" in operation:
                 reveal_callsites = operation["reveal_callsites"]
             else:
@@ -346,22 +325,23 @@ class CallFlow:
             else:
                 split_callee_module = ""
 
-            ensemble_super_graph = EnsembleSuperGraph(
-                supergraphs=self.supergraphs,
-                tag="ensemble",
-                path="group_path",
-                group_by_attr="module",
-                props=self.props,
-                construct_graph=True,
-                add_data=True,
-                reveal_callsites=reveal_callsites,
-                split_entry_module=split_entry_module,
-                split_callee_module=split_callee_module,
-            )
-            return ensemble_super_graph.agg_nxg
+            if len(operation["datasets"]) != len(self.props["dataset_names"]):
+                ensemble_supergraph.ensemble_auxiliary(
+                    # MPIBinCount=self.currentMPIBinCount,
+                    # RunBinCount=self.currentRunBinCount,
+                    datasets=operation["datasets"],
+                    MPIBinCount=20,
+                    RunBinCount=20,
+                    process=True,
+                    write=True,
+                )
+
+            ensemble_super_graph = SankeyLayout(supergraph=self.supergraphs["ensemble"], path="group_path")
+
+            return ensemble_super_graph.nxg
 
         # Not used.
-        elif operation_tag == "scatterplot":
+        elif operation_name == "scatterplot":
             assert False
             if operation["plot"] == "bland-altman":
                 state1 = self.states[operation["dataset"]]
@@ -376,7 +356,7 @@ class CallFlow:
             return ret
 
         # Not used.
-        elif operation_tag == "similarity":
+        elif operation_name == "similarity":
             assert False
             if operation["module"] == "all":
                 dirname = self.config.callflow_dir
@@ -395,11 +375,11 @@ class CallFlow:
                     self.similarities[dataset].append(union_similarity.result)
             return self.similarities
 
-        elif operation_tag == "hierarchy":
-            mH = ModuleHierarchy(self.supergraphs["ensemble"], operation["module"])
-            return mH.result
+        elif operation_name == "hierarchy":
+            modulehierarchy = ModuleHierarchy(self.supergraphs["ensemble"], operation["module"])
+            return modulehierarchy.nxg
 
-        elif operation_tag == "projection":
+        elif operation_name == "projection":
             self.similarities = {}
             # dirname = self.config.callflow_dir
             # name = self.config.runName
@@ -415,7 +395,7 @@ class CallFlow:
             return result.to_json(orient="columns")
 
         # Not used.
-        elif operation_tag == "run-information":
+        elif operation_name == "run-information":
             assert False
             ret = []
             for idx, state in enumerate(self.states):
@@ -425,7 +405,7 @@ class CallFlow:
 
         # TODO: need to handle re-processing case.
         # The commented code below was used to enable re-processing.
-        elif operation_tag == "auxiliary":
+        elif operation_name == "auxiliary":
             # print(f"Reprocessing: {operation['re-process']}")
             # aux = EnsembleAuxiliary(
             #     self.states,
@@ -447,7 +427,7 @@ class CallFlow:
 
             return self.supergraphs["ensemble"].auxiliary_data
 
-        elif operation_tag == "compare":
+        elif operation_name == "compare":
             compareDataset = operation["compareDataset"]
             targetDataset = operation["targetDataset"]
             if operation["selectedMetric"] == "Inclusive":

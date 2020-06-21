@@ -26,47 +26,32 @@ export default {
 			this.graph = graph;
 			this.edges = d3.select("#" + this.id);
 
-			this.links = graph.links.filter((link) => {
-				return link.type != "callback";
-			});
-
-			this.$store.selectedEdgeAlignment = "Top";
-
+			this.links = graph.links
 
 			this.initEdges("ensemble");
-			// if (this.$store.selectedEdgeAlignment == 'Middle') {
-			//     this.drawMiddleEdges('ensemble')
-			// }
-			// else if (this.$store.selectedEdgeAlignment == 'Top') {
 			this.drawTopEdges("ensemble");
-			this.drawTopEdges("target");
-			// }
-
-			if (this.$store.showTarget && this.$store.comparisonMode == false) {
-				this.initEdges("target");
-
-				// if (this.$store.selectedEdgeAlignment == 'Middle') {
-				// this.drawMiddleEdges('target')
-				// }
-				// else if (this.$store.selectedEdgeAlignment == 'Top') {
-				this.drawTopEdges("ensemble");
+			if(this.$store.selectedMode == 'Ensemble'){
 				this.drawTopEdges("target");
-				// }
 			}
 
+			// if (this.$store.showTarget && this.$store.comparisonMode == false && this.$store.selectedMode == 'Ensemble') {
+			// 	this.initEdges("target");
+			// 	this.drawTopEdges("ensemble");
+			// 	this.drawTopEdges("target");
+			// }
 
 			// this.$refs.ToolTip.init(this.$parent.id)
 		},
 
 		initEdges(dataset) {
 			let self = this;
-			this.edges.selectAll("#ensemble-edge-" + dataset)
+			this.edges.selectAll("#edge-" + dataset)
 				.data(this.links)
 				.enter().append("path")
 				.attrs({
-					"class": (d) => { return "ensemble-edge"; },
+					"class": (d) => { return "edge"; },
 					"id": (d) => {
-						return "ensemble-edge-" + dataset;
+						return "edge-" + dataset;
 					}
 				})
 				.style("fill", (d) => {
@@ -77,10 +62,6 @@ export default {
 						return this.$store.color.target;
 					}
 				})
-			// .style('fill-opacity', (d) => {
-			//     return d.number_of_runs / this.$store.numOfRuns
-			// })
-
 				.style("opacity", 0.5)
 				.on("mouseover", function (d) {
 					d3.select(this).style("stroke-opacity", "1.0");
@@ -172,7 +153,7 @@ export default {
 
 		drawTopEdges(dataset) {
 			let self = this;
-			this.edges.selectAll("#ensemble-edge-" + dataset)
+			this.edges.selectAll("#edge-" + dataset)
 				.data(this.links)
 				.attrs({
 					"d": (d) => {
@@ -191,7 +172,7 @@ export default {
 							edge_source_offset = 0;
 						}
 						else if (dataset == "target") {
-							edge_source_offset = 0;//this.offset
+							edge_source_offset = 0;
 						}
 
 						// Set target offset

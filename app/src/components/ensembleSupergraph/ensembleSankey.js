@@ -14,7 +14,7 @@ import * as  d3 from "d3";
 import { scalePow } from "d3-scale";
 import { max, min, sum } from "d3-array";
 
-export default function Sankey() {
+export default function EnsembleSankey() {
 	var sankey = {},
 		nodeWidth = 24,
 		nodePadding = 8,
@@ -603,7 +603,7 @@ export default function Sankey() {
 	}
 
 	function computeNodeDepths(iterations) {
-		// Nodes by breadth does not consider the intermediate nodes. 
+		// Nodes by breadth does not consider the intermediate nodes.
 		nodesByBreadth = d3.nest()
 			.key(function (d) { return d.level; })
 			.sortKeys(d3.ascending)
@@ -642,7 +642,7 @@ export default function Sankey() {
 			node.sourceLinks.sort(descendingTargetDepth);
 			node.targetLinks.sort(descendingSourceDepth);
 
-			// Push links having less weight to the bottom. 
+			// Push links having less weight to the bottom.
 			// node.sourceLinks.sort(ascendingEdgeValue);
 			// node.targetLinks.sort(descendingEdgeValue);
 

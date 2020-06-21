@@ -7,6 +7,11 @@
       "name": "caliper-ex",
       "path": "caliper-ex.json",
       "format": "caliper_json"
+    },
+    {
+      "name": "caliper-ex-2",
+      "path": "caliper-ex.cali",
+      "format": "caliper"
     }
   ],
   "scheme": {

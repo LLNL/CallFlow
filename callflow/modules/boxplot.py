@@ -1,11 +1,10 @@
-import numpy as np
-from scipy import stats
+#------------------------------------------------------------------------------
+# Library imports
 from scipy.stats import iqr
-import math
 import collections
 import numpy as np
 
-
+#------------------------------------------------------------------------------
 class BoxPlot:
     def __init__(self, df):
         self.q = {}

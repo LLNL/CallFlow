@@ -27,7 +27,7 @@ export default {
 		graph: null,
 		width: null,
 		height: null,
-		margin: {
+		padding: {
 			top: 10,
 			right: 10,
 			bottom: 15,
@@ -61,22 +61,19 @@ export default {
 
 	methods: {
 		init() {
-			this.toolbarHeight = document.getElementById("toolbar").clientHeight;
-			this.footerHeight = document.getElementById("footer").clientHeight;
 			this.width = window.innerWidth * 0.25;
-			this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.5;
+			this.height = this.$store.viewHeight * 0.5;
 
-			this.boxWidth = this.width - this.margin.right - this.margin.left;
-			this.boxHeight = this.height - this.margin.top - this.margin.bottom;
+			this.boxWidth = this.width - this.padding.right - this.padding.left;
+			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
 
 			this.svg = d3.select("#" + this.svgID)
-				.attr("width", this.boxWidth + this.margin.left - this.margin.right)
-				.attr("height", this.boxHeight + this.margin.top - this.margin.bottom)
-				.attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
+				.attr("width", this.boxWidth)
+				.attr("height", this.boxHeight)
+				.attr("transform", "translate(" + this.padding.left + "," + this.padding.top + ")");
 
 			EventHandler.$emit("single_scatterplot", {
-				module: "Lulesh",
-				name: "main",
+				module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
 				dataset: this.$store.selectedTargetDataset,
 			});
 		},
@@ -102,6 +99,7 @@ export default {
 			this.nameData = data["name"];
 
 			let temp;
+			this.$store.selectedScatterMode = "mean";
 			if (this.$store.selectedScatterMode == "mean") {
 				console.log("mean");
 				temp = this.scatterMean();
@@ -124,9 +122,8 @@ export default {
 			this.regressionY = this.leastSquaresCoeff["y_res"];
 			this.corre_coef = this.leastSquaresCoeff["corre_coef"];
 
-			this.xAxisHeight = this.boxWidth - 4 * this.margin.left;
-			this.yAxisHeight = this.boxHeight - 4 * this.margin.left;
-			console.log(this.xAxisHeight, this.yAxisHeight);
+			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
+			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
 			this.xScale = d3.scaleLinear().domain([this.xMin, 1.5 * this.xMax]).range([0, this.xAxisHeight]);
 			this.yScale = d3.scaleLinear().domain([this.yMin, 1.5 * this.yMax]).range([this.yAxisHeight, 0]);
 		},
@@ -286,7 +283,7 @@ export default {
 			this.svg.append("text")
 				.attr("class", "axis-label")
 				.attr("x", self.boxWidth)
-				.attr("y", self.yAxisHeight - this.margin.top)
+				.attr("y", self.yAxisHeight - this.padding.top)
 				.style("font-size", "12px")
 				.style("text-anchor", "end")
 				.text("Exclusive Runtime");
@@ -296,7 +293,7 @@ export default {
 			var xAxisLine = this.svg.append("g")
 				.attr("class", "axis")
 				.attr("id", "xAxis")
-				.attr("transform", "translate(" + 3 * self.margin.left + "," + xAxisHeightCorrected + ")")
+				.attr("transform", "translate(" + 3 * self.padding.left + "," + xAxisHeightCorrected + ")")
 				.call(xAxis);
 
 			xAxisLine.selectAll("path")
@@ -333,14 +330,14 @@ export default {
 			var yAxisLine = this.svg.append("g")
 				.attr("id", "yAxis")
 				.attr("class", "axis")
-				.attr("transform", "translate(" + 3 * self.margin.left + ", 0)")
+				.attr("transform", "translate(" + 3 * self.padding.left + ", 0)")
 				.call(yAxis);
 
 			this.svg.append("text")
 				.attr("class", "axis-label")
 				.attr("transform", "rotate(-90)")
 				.attr("x", 0)
-				.attr("y", 4 * this.margin.left)
+				.attr("y", 4 * this.padding.left)
 				.style("text-anchor", "end")
 				.style("font-size", "12px")
 				.text("Inclusive Runtime");
@@ -366,7 +363,7 @@ export default {
 			let self = this;
 			var line = d3.line()
 				.x(function (d, i) {
-					return self.xScale(self.xArray[i]) + 3 * self.margin.left;
+					return self.xScale(self.xArray[i]) + 3 * self.padding.left;
 				})
 				.y(function (d, i) {
 					return self.yScale(self.yArray[i]);
@@ -390,7 +387,7 @@ export default {
 				.attr("class", "dot")
 				.attr("r", 5)
 				.attr("cx", function (d, i) {
-					return self.xScale(self.xArray[i]) + 3 * self.margin.left;
+					return self.xScale(self.xArray[i]) + 3 * self.padding.left;
 				})
 				.attr("cy", function (d, i) {
 					return self.yScale(self.yArray[i]);

@@ -1,20 +1,16 @@
-##############################################################################
-# Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
 #
-# This file is part of Callflow.
-# Created by Suraj Kesavan <kesavan1@llnl.gov>.
-# LLNL-CODE-741008. All rights reserved.
-#
-# For details, see: https://github.com/LLNL/Callflow
-# Please also read the LICENSE file for the MIT License notice.
-##############################################################################
+# SPDX-License-Identifier: MIT
+
+#------------------------------------------------------------------------------
+# Library imports
 import pandas as pd
 import json
 import networkx as nx
 from ast import literal_eval as make_tuple
 
-
+#------------------------------------------------------------------------------
 class FunctionList:
     def __init__(self, state, modFunc, nid):
         self.graph = state.new_gf.graph

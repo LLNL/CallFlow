@@ -61,11 +61,8 @@ export default {
 
 	methods: {
 		init() {
-			this.toolbarHeight = document.getElementById("toolbar").clientHeight;
-			this.footerHeight = document.getElementById("footer").clientHeight;
-
 			this.width = window.innerWidth * 0.25;
-			this.height = (window.innerHeight - this.toolbarHeight - 2 * this.footerHeight) * 0.5;
+			this.height = this.$store.viewHeight * 0.5;
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left - this.boxOffset;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
@@ -85,8 +82,7 @@ export default {
 				});
 
 			EventHandler.$emit("single_histogram", {
-				module: "Lulesh",
-				name: "main",
+				module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
 				groupBy: this.$store.selectedGroupBy,
 				dataset: this.$store.selectedTargetDataset,
 			});
@@ -94,7 +90,8 @@ export default {
 
 		render(callsite) {
 			let data = this.$store.modules[this.$store.selectedTargetDataset][callsite];
-			console.log(this.$store.modules);
+			console.log(this.$store.selectedTargetDataset, callsite)
+			console.log(data);
 			let temp = this.dataProcess(data);
 			this.xVals = temp[0];
 			this.freq = temp[1];
@@ -102,32 +99,31 @@ export default {
 			this.binContainsProcID = temp[3];
 			this.logScaleBool = false;
 
-			const targetData = this.$store.modules[this.$store.selectedTargetDataset][callsite];
-			const targetTemp = this.dataProcess(targetData);
-			this.targetXVals = targetTemp[0];
-			this.targetFreq = targetTemp[1];
-			this.target_axis_x = targetTemp[3];
-			this.target_binContainsProcID = targetTemp[3];
+			// const targetData = this.$store.modules[this.$store.selectedTargetDataset][callsite];
+			// const targetTemp = this.dataProcess(targetData);
+			// this.targetXVals = targetTemp[0];
+			// this.targetFreq = targetTemp[1];
+			// this.target_axis_x = targetTemp[3];
+			// this.target_binContainsProcID = targetTemp[3];
 
 			this.$refs.ToolTip.init(this.svgID);
 
-			console.log(this.xVals, this.histogramWidth);
 			this.histogramXScale = d3.scaleBand()
 				.domain(this.xVals)
 				.range(["#c6dbef", "#6baed6", "#2171b5", "#084594"])
 				.rangeRound([0, this.histogramWidth - this.padding.left]);
 
-			// if (d3.max(this.freq) < 50) {
-			this.histogramYScale = d3.scaleLinear()
-				.domain([0, d3.max(this.freq)])
-				.range([this.histogramHeight - this.padding.top, 0]);
-			this.logScaleBool = false;
-			// } else {
-			// this.histogramYScale = d3.scaleLog()
-			// .domain([1, d3.max(this.freq)])
-			// .range([this.boxHeight, 10]);
-			// this.logScaleBool = true;
-			// }
+			if (this.$store.selectedScale == "Linear") {
+				this.histogramYScale = d3.scaleLinear()
+					.domain([0, d3.max(this.freq)])
+					.range([this.histogramHeight - this.padding.top, 0]);
+				this.logScaleBool = false;
+			} else if (this.$store.selectedScale == "Log") {
+				this.histogramYScale = d3.scaleLog()
+					.domain([1, d3.max(this.freq)])
+					.range([this.boxHeight, 10]);
+				this.logScaleBool = true;
+			}
 			this.visualize();
 		},
 
@@ -145,7 +141,7 @@ export default {
 		},
 
 		visualize() {
-			this.targetBars();
+			this.bars();
 			this.xAxis();
 			this.yAxis();
 			this.rankLineScale();
@@ -166,7 +162,6 @@ export default {
 			let dataMin = 0;
 			let dataMax = 0;
 
-			console.log(data);
 			if (this.$store.selectedMetric == "Inclusive") {
 				attr_data = data["hist_time (inc)"];
 				dataMin = data["min_time (inc)"];
@@ -263,15 +258,15 @@ export default {
 			};
 		},
 
-		targetBars() {
+		bars() {
 			let self = this;
 			this.svg.selectAll(".single-target")
-				.data(this.targetFreq)
+				.data(this.freq)
 				.enter()
 				.append("rect")
 				.attr("class", "single-histogram-bar single-target")
 				.attr("x", (d, i) => {
-					return this.histogramXScale(this.targetXVals[i]) + this.axisLabelFactor * this.padding.left;
+					return this.histogramXScale(this.xVals[i]) + this.axisLabelFactor * this.padding.left;
 				})
 				.attr("y", (d, i) => {
 					return Math.floor(this.histogramYScale(d));
@@ -307,14 +302,11 @@ export default {
 
 		/* Axis for the histogram */
 		xAxis() {
-			const xFormat = d3.format(".1e");
 			const xAxis = d3.axisBottom(this.histogramXScale)
-				.ticks(this.MPIcount)
 				.tickFormat((d, i) => {
 					let temp = this.axis_x[i];
 					if (i % 2 == 1 || i == this.MPIcount.length - 1) {
-						let value = temp * 0.000001;
-						return `${value.toFixed(2)}s`;
+						return
 					}
 				});
 
@@ -350,9 +342,14 @@ export default {
 
 		yAxis() {
 			const yAxis = d3.axisLeft(this.histogramYScale)
-				.ticks(this.freq.length)
+			.ticks(10)
 				.tickFormat((d, i) => {
-					return d;
+					if (d == 1) {
+						return d;
+					}
+					else if (d % 10 == 0) {
+						return d;
+					}
 				});
 
 			this.svg.append("text")

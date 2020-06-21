@@ -1,20 +1,19 @@
 {
-    "run_name": "hpctoolkit-cpi-database",
-    "save_path": "./data/hpctoolkit-cpi-database/.callflow",
-    "read_parameter": false,
-    "datasets": [
-      {
-        "name": "calc-pi",
-        "path": "./data/hpctoolkit-cpi-database",
-        "format": "hpctoolkit"
-      }
-    ],
-    "scheme": {
-      "filter_by": "time (inc)",
-      "filter_perc": 0,
-      "group_by": "name",
-      "module_map": {
-      }
+  "run_name": "hpctoolkit-cpi-database",
+  "save_path": "./data/hpctoolkit-cpi-database/.callflow",
+  "read_parameter": false,
+  "datasets": [
+    {
+      "name": "calc-pi",
+      "path": "./data/hpctoolkit-cpi-database",
+      "format": "hpctoolkit"
+    }
+  ],
+  "scheme": {
+    "filter_by": "time (inc)",
+    "filter_perc": 0,
+    "group_by": "name",
+    "module_map": {
     }
   }
-  
+}

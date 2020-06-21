@@ -1,21 +1,15 @@
-##############################################################################
-# Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
 #
-# This file is part of Callflow.
-# Created by Suraj Kesavan <kesavan1@llnl.gov>.
-# LLNL-CODE-741008. All rights reserved.
-#
-# For details, see: https://github.com/LLNL/Callflow
-# Please also read the LICENSE file for the MIT License notice.
-##############################################################################
-import pandas as pd
+# SPDX-License-Identifier: MIT
+
+#------------------------------------------------------------------------------
 import numpy as np
-import matplotlib.cm as cm
+import pandas as pd
 from scipy import stats
-import math
 
 
+#------------------------------------------------------------------------------
 class DiffView:
     def __init__(self, state, dataset1, dataset2, col):
         self.state = state

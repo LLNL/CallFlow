@@ -1,17 +1,3 @@
-/** *****************************************************************************
-	 * Copyright (c) 2017, Lawrence Livermore National Security, LLC.
-	 * Produced at the Lawrence Livermore National Laboratory.
-	 *
-	 * Written by Suraj Kesavan <spkesavan@ucdavis.edu>.
-	 *
-	 * LLNL-CODE-740862. All rights reserved.
-	 *
-	 * This file is part of CallFlow. For details, see:
-	 * https://github.com/LLNL/CallFlow
-	 * Please also read the LICENSE file for the MIT License notice.
-	 ***************************************************************************** */
-
-
 import tpl from "../../html/supergraph/index.html";
 import preprocess from "./preprocess";
 import Sankey from "./sankey";
@@ -58,40 +44,51 @@ export default {
 		single_supergraph(data) {
 			data = JSON.parse(data);
 			console.log("Data :", data);
-			this.clear();
+			let nodes = [];
+			for (let i = 0; i < data.nodes.length; i += 1) {
+				console.log("Node name: ", data.nodes[i].id);
+				console.log("Time (inc): ", data.nodes[i]["time (inc)"]);
+				console.log("Time: ", data.nodes[i]["time"]);
+			}
+
+			for (let i = 0; i < data.links.length; i += 1) {
+				console.log("Source: ", data.links[i].source);
+				console.log("Target: ", data.links[i].target);
+				console.log("Weight: ", data.links[i].weight);
+			}
 			this.render(data);
 		}
 	},
 
 	methods: {
-		init(data) {
-			this.toolbarHeight = document.getElementById("toolbar").clientHeight;
-			this.footerHeight = document.getElementById("footer").clientHeight;
-			this.width = window.innerWidth * 0.5 - this.margin.left - this.margin.right;
-			this.height = window.innerHeight - this.margin.top - this.margin.bottom - this.toolbarHeight - this.footerHeight;
+		init() {
+			this.width = 5 * this.$store.viewWidth;
+			this.height = 2 * this.$store.viewHeight;
 
-			this.zoom = d3.zoom()
-				.scaleExtent([0.5, 2])
-				.on("zoom", () => {
-					let tx = Math.min(0, Math.min(d3.event.transform.x, this.width * d3.event.transform.k));
-					let ty = Math.min(0, Math.min(d3.event.transform.y, this.height * d3.event.transform.k));
-					this.sankeySVG.attr("transform", "translate(" + [tx, ty] + ")scale(" + d3.event.transform.k + ")");
-				});
+			this.sankeyWidth = 0.7 * this.$store.viewWidth;
+			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
 			this.sankeySVG = d3.select("#" + this.id)
 				.attrs({
-					"width": this.width + this.margin.left + this.margin.right,
-					"height": this.height + this.margin.top + this.margin.bottom,
+					"width": this.width,
+					"height": this.height,
 					"top": this.toolbarHeight
-				})
-				.call(this.zoom);
-
+				});
 
 			this.$socket.emit("single_supergraph", {
 				dataset: this.$store.selectedTargetDataset,
-				format: this.$store.selectedFormat,
-				groupBy: this.$store.selectedGroupBy
+				groupBy: "module"
 			});
+
+			let inner = this.sankeySVG.select("#container");
+
+			var zoom = d3.zoom().on("zoom", function () {
+				inner.attrs({
+					"transform": d3.event.transform,
+					"scale": d3.event.scale
+				});
+			});
+			this.sankeySVG.call(zoom);
 		},
 
 		processJSON(data) {
@@ -235,7 +232,7 @@ export default {
 		},
 
 		// dragMove() {
-		// 	d3.select(this).attr("transform", 
+		// 	d3.select(this).attr("transform",
 		// 		"translate(" + (
 		// 			d.x = Math.max(0, Math.min(this.width - d.dx, d3.event.x))) + "," + (
 		// 			d.y = Math.max(0, Math.min(this.height - d.dy, d3.event.y))) + ")");

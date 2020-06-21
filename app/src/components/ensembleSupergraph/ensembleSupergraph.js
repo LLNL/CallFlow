@@ -1,5 +1,6 @@
 import tpl from "../../html/ensembleSupergraph/index.html";
-import Sankey from "./sankey";
+import EnsembleSankey from "./ensembleSankey";
+import SingleSankey from "./singleSankey"
 import EnsembleNodes from "./nodes";
 import MiniHistograms from "./miniHistograms";
 import EnsembleEdges from "./edges";
@@ -37,7 +38,9 @@ export default {
 		treeHeight: null,
 		data: null,
 		message: "Summary Graph View",
-		debug: false
+		debug: false,
+		sankeyWidth: 0,
+		sankeyHeight: 0
 	}),
 
 	mounted() {
@@ -79,18 +82,32 @@ export default {
 			}
 			this.render(data);
 		},
+
+		single_supergraph(data) {
+			data = JSON.parse(data);
+			console.log("Data :", data);
+			let nodes = [];
+			for (let i = 0; i < data.nodes.length; i += 1) {
+				console.log("Node name: ", data.nodes[i].id);
+				console.log("Time (inc): ", data.nodes[i]["time (inc)"]);
+				console.log("Time: ", data.nodes[i]["time"]);
+			}
+
+			for (let i = 0; i < data.links.length; i += 1) {
+				console.log("Source: ", data.links[i].source);
+				console.log("Target: ", data.links[i].target);
+				console.log("Weight: ", data.links[i].weight);
+			}
+			this.render(data);
+		}
 	},
 
 	methods: {
 		init() {
 			this.auxiliaryViewWidth = document.getElementById("auxiliary-function-overview").clientWidth;
 
-
 			this.width = 5 * this.$store.viewWidth;
 			this.height = 2 * this.$store.viewHeight;
-
-			this.sankeyWidth = 0.7 * this.$store.viewWidth;
-			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
 			this.sankeySVG = d3.select("#" + this.id)
 				.attrs({
@@ -99,10 +116,19 @@ export default {
 					"top": this.toolbarHeight
 				});
 
-			this.$socket.emit("ensemble_supergraph", {
-				datasets: this.$store.selectedDatasets,
-				groupBy: "module"
-			});
+			if (this.$store.selectedMode == 'Single') {
+				this.$socket.emit("single_supergraph", {
+					dataset: this.$store.selectedTargetDataset,
+					groupBy: "module"
+				});
+			}
+			else if(this.$store.selectedMode == 'Ensemble') {
+				this.$socket.emit("ensemble_supergraph", {
+					datasets: this.$store.selectedDatasets,
+					groupBy: "module"
+				});
+			}
+
 
 			let inner = this.sankeySVG.select("#container");
 
@@ -124,12 +150,16 @@ export default {
 		},
 
 		render(data) {
+
+			this.sankeyWidth = 0.7 * this.$store.viewWidth;
+			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
+
 			this.data = data;
 
 			this.data = this.addNodeMap(this.data);
 			this.data.graph = this.createGraphStructure(this.data);
 
-			// check cycle. 
+			// check cycle.
 			let detectcycle = detectDirectedCycle(this.data.graph);
 			console.log(detectcycle);
 			if (Object.keys(detectcycle).length != 0) {
@@ -166,7 +196,9 @@ export default {
 			this.$refs.EnsembleColorMap.init();
 			this.$refs.EnsembleNodes.init(this.$store.graph, this.view);
 			this.$refs.EnsembleEdges.init(this.$store.graph, this.view);
-			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
+			if(this.$store.selectedMode == 'Ensemble'){
+				this.$refs.MiniHistograms.init(this.$store.graph, this.view);
+			}
 		},
 
 		addNodeMap(graph) {
@@ -209,8 +241,20 @@ export default {
 
 		//Sankey computation
 		initSankey() {
-			console.log("Initiating sankey again:", this.$store.selectedTargetDataset);
-			this.sankey = Sankey()
+			console.log(this.sankeyWidth, this.sankeyHeight)
+			if (this.$store.selectedMode == 'Single'){
+				this.sankey = SingleSankey()
+				.nodeWidth(this.nodeWidth)
+				.nodePadding(this.ySpacing)
+				.size([this.sankeyWidth, this.sankeyHeight])
+				.maxLevel(this.data.maxLevel)
+				.levelSpacing(this.levelSpacing)
+				.dataset(this.$store.selectedTargetDataset)
+				.setMinNodeScale(this.nodeScale);
+
+			}
+			else if(this.$store.selectedMode == 'Ensemble'){
+				this.sankey = EnsembleSankey()
 				.nodeWidth(this.nodeWidth)
 				.nodePadding(this.ySpacing)
 				.size([this.sankeyWidth, this.sankeyHeight])
@@ -221,6 +265,7 @@ export default {
 				.dataset("ensemble")
 				.targetDataset(this.$store.selectedTargetDataset)
 				.store(this.$store);
+			}
 
 			let path = this.sankey.link();
 

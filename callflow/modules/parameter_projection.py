@@ -1,28 +1,20 @@
-##############################################################################
-# Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
 #
-# This file is part of Callflow.
-# Created by Suraj Kesavan <kesavan1@llnl.gov>.
-# LLNL-CODE-741008. All rights reserved.
-#
-# For details, see: https://github.com/LLNL/Callflow
-# Please also read the LICENSE file for the MIT License notice.
-##############################################################################
+# SPDX-License-Identifier: MIT
+#------------------------------------------------------------------------------
 
+import numpy as np
 import pandas as pd
 from collections import defaultdict
-import numpy as np
 import sklearn
-from sklearn.manifold import TSNE, MDS
-from sklearn.datasets import load_digits
-from sklearn.preprocessing import scale
-from callflow.algorithms import DeltaConSimilarity
 from sklearn import preprocessing
+from sklearn.manifold import TSNE, MDS
 from sklearn.cluster import KMeans
 from callflow.algorithms import KMedoids
+from callflow.algorithms import DeltaConSimilarity
 
-
+#------------------------------------------------------------------------------
 class ParameterProjection:
     def __init__(self, supergraph, similarities={}, targetDataset="", n_cluster=3):
 
