@@ -39,23 +39,27 @@ class BoxPlot:
         return median, indices
         pass
 
+    def quartiles_old(self, df, attr=""):
+        if(len(samples) == 1):
+            quartiles = [samples[0]]*5
+        else:
+            median, median_indices = self.median(samples)
+            q1, q1_indices = self.median(samples[:median_indices[0]])
+            q3, q3_indices = self.median(samples[median_indices[-1] + 1:])
+
+            minimum = samples[0]
+            maximum = samples[len(samples) - 1]
+
+            quartiles = [minimum, q1, median, q3, maximum]
+
+        return quartiles
+
     def quartiles(self, df, attr=""):
         samples = sorted(df[attr].tolist())
-        # if(len(samples) == 1):
-        #     quartiles = [samples[0]]*5
-        # else:
-        #     median, median_indices = self.median(samples)
-        #     q1, q1_indices = self.median(samples[:median_indices[0]])
-        #     q3, q3_indices = self.median(samples[median_indices[-1] + 1:])
-
-        #     minimum = samples[0]
-        #     maximum = samples[len(samples) - 1]
-
-        #     quartiles = [minimum, q1, median, q3, maximum]
         quartiles = np.quantile(np.array(samples), [0, 0.25, 0.5, 0.75, 1.0]).tolist()
-        # print("Samples: ", samples)
-        # print("Numpy Percentiles: ", np_quartiles)
-        # print("Percentiles: ", quartiles)
+        LOGGER.debug("Samples: ", samples)
+        LOGGER.debug("Numpy Percentiles: ", np_quartiles)
+        LOGGER.debug("Percentiles: ", quartiles)
         return quartiles
 
     def q1(self, x, axis=None):

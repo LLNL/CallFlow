@@ -163,7 +163,7 @@ class SankeyLayout:
                         and not has_cct_edge
                         and not has_callback_edge
                     ):
-                        print(
+                        LOGGER.info(
                             f"Add {edge_type} edge for : {source['module']}--{target['module']}"
                         )
                         nxg.add_node(source["module"], attr_dict=node_dict)

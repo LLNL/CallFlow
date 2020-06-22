@@ -55,16 +55,15 @@ class FunctionList:
         # Create a networkX graph.
         self.entire_g = nx.DiGraph()
         self.add_paths("path")
-        print(self.entire_g.nodes())
 
         entry_func_df = self.module_df.loc[self.module_df["component_level"] == 2]
         entry_funcs = entry_func_df["name"].unique()
         other_func_df = self.module_df.loc[self.module_df["component_level"] > 2]
         other_funcs = other_func_df["name"].unique()
         for idx, entry_func in enumerate(entry_funcs):
-            print("Entry func: ", entry_func)
+            LOGGER.debug("Entry func: ", entry_func)
 
-            print("predecessors", self.entire_g.predecessors(entry_func))
+            LOGGER.debug("predecessors", self.entire_g.predecessors(entry_func))
             callers[entry_func] = list(self.entire_g.predecessors(entry_func))
 
             for idx, caller in enumerate(callers[entry_func]):

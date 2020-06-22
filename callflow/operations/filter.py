@@ -94,11 +94,7 @@ class Filter:
             excludeSet.add(u)
         if n == 0:
             return [[u]]
-
-        print("Callsite: ", u)
-        for neighbor in g.neighbors(u):
-            print(neighbor)
-        # print("neighbors: ", g.neighbors(u))
+        
         paths = [
             [].append(path)
             for neighbor in g.neighbors(u)

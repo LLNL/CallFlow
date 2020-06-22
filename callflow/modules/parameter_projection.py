@@ -31,7 +31,6 @@ class ParameterProjection:
 
     def add_df_params(self, dataset):
         ret = {}
-        print(self.df)
         ret["max_inclusive_time"] = self.df.loc[self.df["dataset"] == dataset][
             "time (inc)"
         ].max()
@@ -66,7 +65,6 @@ class ParameterProjection:
 
         # TODO: Remove all string columns from the dataframe.
         if "dataset" in df.columns:
-            print("Removing {0} column from the dataframe".format("dataset"))
             df = df.drop(columns=["dataset"])
         x = df.values  # returns a numpy array
 
