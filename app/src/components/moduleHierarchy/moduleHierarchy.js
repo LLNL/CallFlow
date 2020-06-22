@@ -7,7 +7,7 @@ import tpl from "../../html/moduleHierarchy/index.html";
 import * as d3 from "d3";
 import ToolTip from "./tooltip";
 import * as utils from "../utils";
-import Queue from "../../core/queue";
+import Queue from "../../datastructures/queue";
 
 export default {
 	name: "ModuleHierarchy",

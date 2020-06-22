@@ -13,10 +13,10 @@ import * as  d3 from "d3";
 import EventHandler from "../EventHandler.js";
 import EnsembleColorMap from "./colormap";
 
-import Graph from "../../core/graph";
-import GraphVertex from "../../core/node";
-import GraphEdge from "../../core/edge";
-import detectDirectedCycle from "../../core/detectcycle";
+import Graph from "../../datastructures/graph";
+import GraphVertex from "../../datastructures/node";
+import GraphEdge from "../../datastructures/edge";
+import detectDirectedCycle from "../../algorithms/detectcycle";
 
 export default {
 	name: "EnsembleSuperGraph",
