@@ -1,3 +1,8 @@
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
 const categoricalColors = {
 	0: [0.31, 0.48, 0.65],
 	1: [0.94, 0.56, 0.22],

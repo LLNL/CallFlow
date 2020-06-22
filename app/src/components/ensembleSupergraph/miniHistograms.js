@@ -1,16 +1,8 @@
-/** *****************************************************************************
- * Copyright (c) 2017, Lawrence Livermore National Security, LLC.
- * Produced at the Lawrence Livermore National Laboratory.
- *
- * Written by Huu Tan Nguyen <htpnguyen@ucdavis.edu>.
- *
- * LLNL-CODE-740862. All rights reserved.
- *
- * This file is part of CallFlow. For details, see:
- * https://github.com/LLNL/CallFlow
- * Please also read the LICENSE file for the MIT License notice.
- ***************************************************************************** */
-
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
 import tpl from "../../html/supergraph/miniHistograms.html";
 import * as d3 from "d3";
 import "d3-selection-multi";

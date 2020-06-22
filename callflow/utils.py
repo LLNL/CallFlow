@@ -1,3 +1,9 @@
+# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
+# Library imports
 import os
 import json
 import networkx as nx

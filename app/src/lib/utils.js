@@ -1,3 +1,8 @@
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
 // String object
 String.prototype.trunc = String.prototype.trunc || function (n) {
 	return (this.length > n) ? this.substr(0, n - 1) + "..." : this;

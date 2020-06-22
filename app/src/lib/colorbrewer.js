@@ -1,3 +1,8 @@
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
 // This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
 // JavaScript specs as packaged in the D3 library (d3js.org). Please see license at http://colorbrewer.org/export/LICENSE.txt
 var colorbrewer = {

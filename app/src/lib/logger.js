@@ -1,8 +1,9 @@
-// Credits: borrowed code from fcomb/redux-logger
-
-import {
-	deepCopy
-} from "../core/utils";
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
+import { deepCopy } from "../core/utils";
 
 export default function createLogger({
 	collapsed = true,

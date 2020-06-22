@@ -1,3 +1,8 @@
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
 export default class Comparator {
 	/**
 	 * @param {function(a: *, b: *)} [compareFunction] - It may be custom compare function that, let's

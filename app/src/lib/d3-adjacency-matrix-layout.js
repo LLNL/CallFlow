@@ -1,5 +1,9 @@
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
 // https://github.com/micahstubbs/d3-adjacency-matrix-layout Version 1.0.0. Copyright 2016 contributors.
-
 // https://bl.ocks.org/micahstubbs/7f360cc66abfa28b400b96bc75b8984e
 import * as d3 from "d3";
 

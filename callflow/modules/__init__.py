@@ -1,3 +1,8 @@
+# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 from .auxiliary_ensemble import EnsembleAuxiliary
 from .auxiliary_single import SingleAuxiliary
 from .auxiliary_hd5 import FastEnsembleAuxiliary

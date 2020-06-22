@@ -1,3 +1,13 @@
+# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
+# Library imports
+import numpy as np
+import networkx as nx
+import copy
+
 """Weisfeiler_Lehman graph kernel.
 
 Python implementation based on: "Weisfeiler-Lehman Graph Kernels", by:
@@ -7,11 +17,6 @@ http://jmlr.csail.mit.edu/papers/v12/shervashidze11a.html
 
 Author : Sandro Vega-Pons, Emanuele Olivetti
 """
-
-import numpy as np
-import networkx as nx
-import copy
-
 
 class GK_WL:
     """

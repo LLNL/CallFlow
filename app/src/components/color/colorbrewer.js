@@ -1,5 +1,6 @@
-// This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
-// JavaScript specs as packaged in the D3 library (d3js.org). Please see license at http://colorbrewer.org/export/LICENSE.txt
+/** This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
+JavaScript specs as packaged in the D3 library (d3js.org). Please see license at http://colorbrewer.org/export/LICENSE.txt
+*/
 const colorbrewer = {
 	Default: {
 		3: ["#fffff", "#6C8B9F", "#023858"],

@@ -1,7 +1,15 @@
+# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
+# Library imports
 import numpy as np
 import networkx as nx
 from ast import literal_eval as make_list
 
+# ------------------------------------------------------------------------------
+# CallFlow imports
 import callflow
 
 LOGGER = callflow.get_logger(__name__)
