@@ -3,7 +3,6 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/auxiliaryFunction/boxplot.html";
 import Box from "./box";
 import Markers from "./markers";
 import Outliers from "./outlier";
@@ -13,7 +12,12 @@ import EventHandler from "../EventHandler";
 
 export default {
 	name: "BoxPlot",
-	template: tpl,
+	template: `<svg :id="id" :width="containerWidth" :height="containerHeight" class='boxplot'>
+				<Box ref="Box" />
+				<Markers ref="Markers" />
+				<Outliers ref="Outliers" />
+				<ToolTip ref="ToolTip" />
+			  </svg>`,
 	props: [
 		"callsite",
 		"width",

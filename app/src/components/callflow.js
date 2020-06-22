@@ -24,7 +24,7 @@ import Function from "./function/function";
 // Ensemble mode imports
 import EnsembleSuperGraph from "./ensembleSupergraph/ensembleSupergraph";
 import EnsembleCCT from "./ensembleCCT/ensembleCCT";
-import AuxiliaryFunction from "./auxiliaryFunction/auxiliaryFunction";
+import CallsiteCorrespondence from "./callsiteCorrespondence/index";
 import EnsembleHistogram from "./ensembleHistogram/ensembleHistogram";
 import ModuleHierarchy from "./moduleHierarchy/moduleHierarchy";
 import EnsembleScatterplot from "./ensembleScatterplot/ensembleScatterplot";
@@ -50,7 +50,7 @@ export default {
 		EnsembleCCT,
 		// SimilarityMatrix,
 		ParameterProjection,
-		AuxiliaryFunction,
+		CallsiteCorrespondence,
 		EnsembleHistogram,
 		EnsembleScatterplot,
 		// EnsembleDistribution
@@ -372,6 +372,7 @@ export default {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters;
 			this.$store.selectedMode = this.selectedMode
+			this.$store.selectedEdgeAlignment = "Top"
 
 
 			this.$store.datasetMap = {};
@@ -440,7 +441,7 @@ export default {
 				this.$refs.EnsembleSuperGraph,
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
-				this.$refs.AuxiliaryFunction,
+				this.$refs.CallsiteCorrespondence,
 				this.$refs.ParameterProjection,
 				this.$refs.ModuleHierarchy,
 			];

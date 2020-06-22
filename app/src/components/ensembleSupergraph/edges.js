@@ -8,7 +8,7 @@ import * as d3 from "d3";
 import ToolTip from "./edges/tooltip";
 
 export default {
-	template: tpl,
+	template: `<g :id="id"><ToolTip ref="ToolTip" /></g>`,
 	name: "EnsembleEdges",
 	components: {
 		ToolTip
@@ -23,7 +23,7 @@ export default {
 
 	},
 	mounted() {
-		this.id = "ensemble-edges";
+		this.id = "edges";
 	},
 
 	methods: {
@@ -34,16 +34,16 @@ export default {
 			this.links = graph.links
 
 			this.initEdges("ensemble");
-			this.drawTopEdges("ensemble");
-			if(this.$store.selectedMode == 'Ensemble'){
-				this.drawTopEdges("target");
+			this.drawEdges("ensemble");
+			if (this.$store.selectedMode == 'Ensemble') {
+				this.drawEdges("target");
 			}
 
-			// if (this.$store.showTarget && this.$store.comparisonMode == false && this.$store.selectedMode == 'Ensemble') {
-			// 	this.initEdges("target");
-			// 	this.drawTopEdges("ensemble");
-			// 	this.drawTopEdges("target");
-			// }
+			if (this.$store.showTarget && this.$store.comparisonMode == false && this.$store.selectedMode == 'Ensemble') {
+				this.initEdges("target");
+				this.drawEdges("ensemble");
+				this.drawEdges("target");
+			}
 
 			// this.$refs.ToolTip.init(this.$parent.id)
 		},
@@ -54,18 +54,13 @@ export default {
 				.data(this.links)
 				.enter().append("path")
 				.attrs({
-					"class": (d) => { return "edge"; },
-					"id": (d) => {
-						return "edge-" + dataset;
-					}
+					"class": "edge",
+					"id": "edge-" + dataset
 				})
 				.style("fill", (d) => {
-					if (dataset == "ensemble") {
+					if (dataset == "ensemble")
 						return this.$store.color.ensemble;
-					}
-					else {
-						return this.$store.color.target;
-					}
+					return this.$store.color.target;
 				})
 				.style("opacity", 0.5)
 				.on("mouseover", function (d) {
@@ -79,7 +74,7 @@ export default {
 		},
 
 
-		drawPath(d, linkHeight, edge_source_offset, edge_target_offset, dataset) {
+		drawPath(d, linkHeight, edge_source_offset=0, edge_target_offset=0, dataset) {
 			let Tx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
 				Tx1 = d.target_data.x - edge_target_offset,
 				Txi = d3.interpolateNumber(Tx0, Tx1),
@@ -112,13 +107,13 @@ export default {
 			}
 
 			return `M${Tx0},${Ty0
-			}C${Tx2},${Ty0
-			} ${Tx3},${Ty1
-			} ${Tx1},${Ty1
-			} ` + ` v ${rightMoveDown
-			}C${Bx3},${By1
-			} ${Bx2},${By0
-			} ${Bx0},${By0}`;
+				}C${Tx2},${Ty0
+				} ${Tx3},${Ty1
+				} ${Tx1},${Ty1
+				} ` + ` v ${rightMoveDown
+				}C${Bx3},${By1
+				} ${Bx2},${By0
+				} ${Bx0},${By0}`;
 		},
 
 		drawMiddlePath(d, linkHeight, edge_source_offset, edge_target_offset, dataset) {
@@ -147,16 +142,16 @@ export default {
 			let rightMoveDown = By1 - Ty1;
 
 			return `M${Tx0},${Ty0
-			}C${Tx2},${Ty0
-			} ${Tx3},${Ty1
-			} ${Tx1},${Ty1
-			} ` + ` v ${rightMoveDown
-			}C${Bx3},${By1
-			} ${Bx2},${By0
-			} ${Bx0},${By0}`;
+				}C${Tx2},${Ty0
+				} ${Tx3},${Ty1
+				} ${Tx1},${Ty1
+				} ` + ` v ${rightMoveDown
+				}C${Bx3},${By1
+				} ${Bx2},${By0
+				} ${Bx0},${By0}`;
 		},
 
-		drawTopEdges(dataset) {
+		drawEdges(dataset) {
 			let self = this;
 			this.edges.selectAll("#edge-" + dataset)
 				.data(this.links)
@@ -170,30 +165,11 @@ export default {
 						else if (dataset == "target") {
 							link_height = d.targetHeight;
 						}
-
-						// Set source offset
-						let edge_source_offset = 0;
-						if (d.source.split("_")[0] == "intermediate") {
-							edge_source_offset = 0;
-						}
-						else if (dataset == "target") {
-							edge_source_offset = 0;
-						}
-
-						// Set target offset
-						let edge_target_offset = 0;
-						if (d.target.split("_")[0] == "intermediate") {
-							edge_target_offset = 0;
-						}
-						else if (dataset == "target") {
-							edge_target_offset = 0;
-						}
-
 						if (this.$store.selectedEdgeAlignment == "Top") {
-							return this.drawPath(d, link_height, edge_source_offset, edge_target_offset, dataset);
+							return this.drawPath(d, link_height, 0, 0, dataset);
 						}
 						else if (this.$store.selectedEdgeAlignment == "Middle") {
-							return this.drawMiddlePath(d, link_height, edge_source_offset, edge_target_offset, dataset);
+							return this.drawMiddlePath(d, link_height, 0, 0, dataset);
 						}
 
 					},

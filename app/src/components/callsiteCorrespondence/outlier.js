@@ -3,12 +3,11 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/auxiliaryFunction/outlier.html";
 import * as d3 from "d3";
 
 export default {
 	name: "Outliers",
-	template: tpl,
+	template: `<g class="outlier"></g>`,
 	data: () => ({
 		paddingTop: 10,
 		textOffset: 40,

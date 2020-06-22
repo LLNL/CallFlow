@@ -3,12 +3,11 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/auxiliaryFunction/quartileBox.html";
 import * as d3 from "d3";
 
 export default {
 	name: "Box",
-	template: tpl,
+	template: `<g class="box"></g>`,
 
 	data: () => ({
 		id: "box",

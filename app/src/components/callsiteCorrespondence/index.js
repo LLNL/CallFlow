@@ -3,17 +3,16 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/auxiliaryFunction/index.html";
+import tpl from "../../html/callsiteCorrespondence.html";
 import EventHandler from "../EventHandler";
 import BoxPlot from "./boxplot";
 import * as d3 from "d3";
 import * as utils from "../utils";
 
 export default {
-	name: "AuxiliaryFunction",
+	name: "CallsiteCorrespondence",
 	template: tpl,
 	components: {
-		Settings,
 		BoxPlot,
 	},
 	data: () => ({

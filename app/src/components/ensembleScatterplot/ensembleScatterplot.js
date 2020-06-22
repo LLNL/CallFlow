@@ -14,7 +14,6 @@ export default {
 	template: tpl,
 	components: {
 		ToolTip,
-		Settings
 	},
 
 	data: () => ({

@@ -3,16 +3,16 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/ensembleSupergraph/index.html";
+import * as  d3 from "d3";
+
+import tpl from "../../html/supergraph.html";
 import EnsembleSankey from "./ensembleSankey";
 import SingleSankey from "./singleSankey"
 import EnsembleNodes from "./nodes";
 import MiniHistograms from "./miniHistograms";
 import EnsembleEdges from "./edges";
-import * as  d3 from "d3";
 import EventHandler from "../EventHandler.js";
 import EnsembleColorMap from "./colormap";
-
 import Graph from "../../datastructures/graph";
 import GraphVertex from "../../datastructures/node";
 import GraphEdge from "../../datastructures/edge";
