@@ -1,10 +1,9 @@
-import tpl from "../../html/supergraph/nodes.html";
 import * as d3 from "d3";
 import ToolTip from "./tooltip";
 import EventHandler from "../EventHandler";
 
 export default {
-	template: tpl,
+	template: `<g :id="id"><ToolTip ref="ToolTip" /></g>`,
 	name: "Nodes",
 	components: {
 		ToolTip

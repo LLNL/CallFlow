@@ -3,7 +3,6 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/ensembleSupergraph/nodes.html";
 import * as d3 from "d3";
 import EventHandler from "../EventHandler";
 import * as utils from "../utils";
@@ -16,7 +15,14 @@ import MeanDiff from "./nodes/meanDiff";
 import RankDiff from "./nodes/rankDiff";
 
 export default {
-	template: tpl,
+	template: `<g :id="id">
+    <MeanGradients ref="MeanGradients" />
+    <ToolTip ref="ToolTip" />
+    <Guides ref="Guides" />
+    <TargetLine ref="TargetLine" />
+    <MeanDiff ref="MeanDiff" />
+    <RankDiff ref="RankDiff" />
+</g>`,
 	name: "EnsembleNodes",
 	components: {
 		Mean,

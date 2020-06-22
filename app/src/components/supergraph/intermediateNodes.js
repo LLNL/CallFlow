@@ -1,8 +1,7 @@
-import tpl from "../../html/supergraph/intermediateNodes.html";
 import * as  d3 from "d3";
 
 export default {
-	template: tpl,
+	// template: tpl,
 	name: "IntermediateNodes",
 	components: {
 	},

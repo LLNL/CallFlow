@@ -1,8 +1,7 @@
-import tpl from "../../html/supergraph/edges.html";
 import * as d3 from "d3";
 
 export default {
-	template: tpl,
+	template: `<g :id="id"> </g>`,
 	name: "Edges",
 	components: {
 

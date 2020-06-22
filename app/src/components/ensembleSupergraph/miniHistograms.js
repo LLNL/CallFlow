@@ -3,13 +3,11 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/supergraph/miniHistograms.html";
 import * as d3 from "d3";
 import "d3-selection-multi";
-import { componentsPlugin } from "bootstrap-vue";
 
 export default {
-	template: tpl,
+	template: `<g :id="id"></g>`,
 	name: "MiniHistograms",
 	components: {},
 	props: [],

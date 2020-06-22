@@ -3,7 +3,7 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/ensembleScatterplot/index.html";
+import tpl from "../../html/ensembleScatterplot.html";
 import * as d3 from "d3";
 import ToolTip from "./tooltip";
 import * as utils from "../utils";

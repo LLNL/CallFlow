@@ -1,9 +1,8 @@
-import tpl from "../../html/supergraph/colormap.html";
 import * as d3 from "d3";
 import "d3-selection-multi";
 
 export default {
-	template: tpl,
+	template: "<g :id=\"id\"></g>",
 	name: "ColorMap",
 	components: {
 	},

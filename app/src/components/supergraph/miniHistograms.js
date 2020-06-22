@@ -11,12 +11,11 @@
  * Please also read the LICENSE file for the MIT License notice.
  ***************************************************************************** */
 
-import tpl from "../../html/supergraph/miniHistograms.html";
 import * as d3 from "d3";
 import "d3-selection-multi";
 
 export default {
-	template: tpl,
+	template: `<g :id="id"></g>`,
 	name: "MiniHistograms",
 	components: {},
 	props: [],

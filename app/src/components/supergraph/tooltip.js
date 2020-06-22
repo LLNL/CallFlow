@@ -1,8 +1,7 @@
-import tpl from "../../html/supergraph/tooltip.html";
 import * as d3 from "d3";
 
 export default {
-	template: tpl,
+	template: "<g id=\"tooltip\"> </g>",
 	name: "ToolTip",
 	components: {},
 	props: [

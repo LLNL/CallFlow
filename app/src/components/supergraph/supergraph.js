@@ -1,11 +1,10 @@
-import tpl from "../../html/supergraph/index.html";
+import tpl from "../../html/supergraph.html";
 import preprocess from "./preprocess";
 import Sankey from "./sankey";
 import Nodes from "./nodes";
 import IntermediateNodes from "./intermediateNodes";
 import MiniHistograms from "./miniHistograms";
 import Edges from "./edges";
-// import CallbackEdges from './callgraph/callbackEdges'
 import ColorMap from "./colormap";
 import * as d3 from "d3";
 

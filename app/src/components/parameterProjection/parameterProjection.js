@@ -5,7 +5,7 @@
  */
 import * as d3 from "d3";
 import { lasso } from "../../lib/lasso";
-import template from "../../html/parameterProjection/index.html";
+import template from "../../html/parameterProjection.html";
 import EventHandler from "../EventHandler.js";
 import * as utils from "../utils";
 
