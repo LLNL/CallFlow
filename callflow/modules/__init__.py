@@ -16,4 +16,3 @@ from .gradients import Gradients
 from .runtime_scatterplot import RuntimeScatterplot
 from .parameter_projection import ParameterProjection
 from .diff_view import DiffView
-from .module_hierarchy import ModuleHierarchy

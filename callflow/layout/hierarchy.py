@@ -13,14 +13,14 @@ import callflow
 LOGGER = callflow.get_logger(__name__)
 
 
-class ModuleHierarchy:
+class HierarchyLayout:
     def __init__(self, supergraph, module, filter_by="time (inc)", filter_perc=0.0):
         assert isinstance(supergraph, callflow.SuperGraph)
         assert "module" in supergraph.gf.df.columns
         assert module in supergraph.gf.df["module"].unique().tolist()
 
         module_df = supergraph.gf.df.loc[supergraph.gf.df["module"] == module]
-        self.nxg = ModuleHierarchy.create_nxg_tree_from_paths(
+        self.nxg = HierarchyLayout.create_nxg_tree_from_paths(
             module_df=module_df,
             path="component_path",
             filter_by=filter_by,
@@ -53,7 +53,7 @@ class ModuleHierarchy:
 
         for idx, path in enumerate(paths):
             path = make_tuple(path)
-            source_targets = ModuleHierarchy._create_source_targets(path)
+            source_targets = HierarchyLayout._create_source_targets(path)
             
             for edge in source_targets:
                 source = edge["source"]

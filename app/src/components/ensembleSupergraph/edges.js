@@ -40,7 +40,7 @@ export default {
 
 			if (this.$store.showTarget && this.$store.comparisonMode == false && this.$store.selectedMode == 'Ensemble') {
 				this.initEdges("target");
-				this.drawEdges("ensemble");
+				// this.drawEdges("ensemble");
 				this.drawEdges("target");
 			}
 
@@ -156,12 +156,13 @@ export default {
 				.data(this.links)
 				.attrs({
 					"d": (d) => {
-						// Set link height
+						console.log(d, d.height, d.targetHeight)
 						let link_height = 0;
 						if (dataset == "ensemble") {
 							link_height = d.height;
 						}
 						else if (dataset == "target") {
+							console.log(d.targetHeight)
 							link_height = d.targetHeight;
 						}
 						if (this.$store.selectedEdgeAlignment == "Top") {

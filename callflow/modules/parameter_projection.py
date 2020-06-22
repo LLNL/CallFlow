@@ -16,7 +16,7 @@ from callflow.algorithms import DeltaConSimilarity
 
 #------------------------------------------------------------------------------
 class ParameterProjection:
-    def __init__(self, supergraph, similarities={}, targetDataset="", n_cluster=3):
+    def __init__(self, supergraph, targetDataset="", n_cluster=3):
 
         self.df = supergraph.gf.df
         self.datasets = self.df["dataset"].unique().tolist()
@@ -43,6 +43,12 @@ class ParameterProjection:
         )
         # ret['similarity'] = self.similarities[self.datasetOrder[self.targetDataset]]
         return ret
+
+    def similarities(self):
+        name = self.supergraph.tag
+        similarity_filepath = dirname  + '/' + 'similarity.json'
+        with open(similarity_filepath, 'r') as similarity_file:
+            self.similarities = json.load(similarity_file)
 
     def run(self):
         rows = []

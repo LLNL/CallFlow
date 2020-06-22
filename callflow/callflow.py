@@ -11,10 +11,9 @@ import json
 # CallFlow imports
 import callflow
 from callflow import SuperGraph, EnsembleGraph
-from callflow.layout import NodeLinkLayout, SankeyLayout
+from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import (
     EnsembleAuxiliary,
-    ModuleHierarchy,
     ParameterProjection,
     FunctionList,
 )
@@ -280,19 +279,15 @@ class CallFlow:
             return minihistogram.result
 
         elif operation_name == "cct":
-            result = NodeLinkLayout(
-                supergraph=self.supergraphs[operation['dataset']],
-                callsite_count=operation["functionsInCCT"],
-            )
+            result = NodeLinkLayout(supergraph=self.supergraphs[operation['dataset']], callsite_count=operation["functionsInCCT"])
             return result.nxg
 
         elif operation_name == "function":
-            functionlist = FunctionList(state, operation["module"], operation["nid"])
+            functionlist = FunctionList(state, operation["module"])
             return functionlist.result
 
     def request_ensemble(self, operation):
         """
-        TODO: Write individual functiosn to do this.
         Handles all the socket requests connected to Single CallFlow.
         """
         operation_name = operation["name"]
@@ -301,7 +296,7 @@ class CallFlow:
         if operation_name == "init":
             return self.props
 
-        elif operation_name == "ensemble_cct":
+        elif operation_name == "cct":
             result = NodeLinkLayout(
                 supergraph=self.supergraphs['ensemble'],
                 callsite_count=operation["functionsInCCT"],
@@ -334,10 +329,16 @@ class CallFlow:
                     process=True,
                     write=True,
                 )
-
             ensemble_super_graph = SankeyLayout(supergraph=self.supergraphs["ensemble"], path="group_path")
-
             return ensemble_super_graph.nxg
+
+        elif operation_name == "hierarchy":
+            modulehierarchy = HierarchyLayout(self.supergraphs["ensemble"], operation["module"])
+            return modulehierarchy.nxg
+
+        elif operation_name == "projection":            
+            projection = ParameterProjection(supergraph=self.supergraphs["ensemble"], targetDataset=operation["targetDataset"], n_cluster=operation["numOfClusters"])
+            return projection.result.to_json(orient="columns")
 
         # Not used.
         elif operation_name == "scatterplot":
@@ -374,25 +375,6 @@ class CallFlow:
                     self.similarities[dataset].append(union_similarity.result)
             return self.similarities
 
-        elif operation_name == "hierarchy":
-            modulehierarchy = ModuleHierarchy(self.supergraphs["ensemble"], operation["module"])
-            return modulehierarchy.nxg
-
-        elif operation_name == "projection":
-            self.similarities = {}
-            # dirname = self.config.callflow_dir
-            # name = self.config.runName
-            # similarity_filepath = dirname  + '/' + 'similarity.json'
-            # with open(similarity_filepath, 'r') as similarity_file:
-            #     self.similarities = json.load(similarity_file)
-            result = ParameterProjection(
-                self.supergraphs["ensemble"],
-                self.similarities,
-                operation["targetDataset"],
-                n_cluster=operation["numOfClusters"],
-            ).result
-            return result.to_json(orient="columns")
-
         # Not used.
         elif operation_name == "run-information":
             assert False
@@ -402,28 +384,7 @@ class CallFlow:
                 ret.append(self.states[state].projection_data)
             return ret
 
-        # TODO: need to handle re-processing case.
-        # The commented code below was used to enable re-processing.
         elif operation_name == "auxiliary":
-            # print(f"Reprocessing: {operation['re-process']}")
-            # aux = EnsembleAuxiliary(
-            #     self.states,
-            #     MPIBinCount=operation["MPIBinCount"],
-            #     RunBinCount=operation["RunBinCount"],
-            #     datasets=operation["datasets"],
-            #     config=self.config,
-            #     process=True,
-            #     write=False,
-            # )
-            # if operation["re-process"] == 1:
-            #     result = aux.run()
-            # else:
-
-            # Need these two variables to belong to some class. Not sure where.
-            # Will take care when pre-processing is done.
-            # self.currentMPIBinCount = operation["MPIBinCount"]
-            # self.currentRunBinCount = operation["RunBinCount"]
-
             return self.supergraphs["ensemble"].auxiliary_data
 
         elif operation_name == "compare":
