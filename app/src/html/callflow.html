@@ -554,10 +554,10 @@
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Single'">
+		<v-layout v-show="selectedFormat == 'CCT'">
 			<splitpanes id="single-cct-dashboard">
 				<span>
-					<SingleCCT ref="SingleCCT" />
+					<EnsembleCCT ref="EnsembleCCT" />
 				</span>
 			</splitpanes>
 		</v-layout>
@@ -634,7 +634,7 @@
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Ensemble'">
+		<v-layout v-show="selectedFormat == 'CCT'">
 			<splitpanes id="ensemble-cct-dashboard">
 				<splitpanes
 					horizontal

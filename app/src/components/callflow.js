@@ -15,8 +15,6 @@ import EventHandler from "./EventHandler";
 import tpl from "../html/callflow.html";
 
 // Single mode imports
-import SuperGraph from "./supergraph/supergraph";
-import SingleCCT from "./cct/cct";
 import RuntimeScatterplot from "./runtimeScatterplot/runtimeScatterplot";
 import SingleHistogram from "./histogram/histogram";
 import Function from "./function/function";
@@ -40,8 +38,6 @@ export default {
 	template: tpl,
 	components: {
 		Splitpanes,
-		SuperGraph,
-		SingleCCT,
 		RuntimeScatterplot,
 		Function,
 		SingleHistogram,
@@ -426,7 +422,7 @@ export default {
 		},
 
 		setComponentMap() {
-			this.currentSingleCCTComponents = [this.$refs.SingleCCT];
+			this.currentSingleCCTComponents = [this.$refs.EnsembleCCT];
 			this.currentSingleCallGraphComponents = [];
 			this.currentSingleSuperGraphComponents = [
 				this.$refs.EnsembleSuperGraph,
