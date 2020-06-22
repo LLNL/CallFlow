@@ -3,12 +3,11 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/moduleHierarchy/tooltip.html";
 import * as d3 from "d3";
 import * as utils from "../utils";
 
 export default {
-	template: tpl,
+	template: '<g class="tooltip"></g>',
 	name: "ToolTip",
 	components: {},
 

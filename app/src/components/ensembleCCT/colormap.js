@@ -3,13 +3,12 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/ensembleCCT/colormap.html";
 import * as d3 from "d3";
 import "d3-selection-multi";
 import * as utils from "../utils";
 
 export default {
-	template: tpl,
+	template: `<g :id="colormap"></g>`,
 	name: "ColorMap",
 	components: {},
 

@@ -3,7 +3,7 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/ensembleCCT/index.html";
+import tpl from "../../html/cct.html";
 import ColorMap from "./colormap";
 
 import * as d3 from "d3";

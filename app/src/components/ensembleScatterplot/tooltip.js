@@ -3,12 +3,11 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/ensembleScatterplot/tooltip.html";
 import * as d3 from "d3";
 import * as utils from "../utils";
 
 export default {
-	template: tpl,
+	template: `<g id="tooltip_scatterplot"></g>`,
 	name: "ToolTip",
 	data: () => ({
 		id: "",

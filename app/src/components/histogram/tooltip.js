@@ -3,18 +3,13 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/histogram/tooltip.html";
 import * as d3 from "d3";
 
 export default {
-	template: tpl,
+	template: `<g id="tooltip-histogram"></g>`,
 	name: "ToolTip",
 	components: {},
-
-	props: [
-
-	],
-
+	props: [],
 	data: () => ({
 		id: "single-histogram-tooltip",
 		textCount: 0,
