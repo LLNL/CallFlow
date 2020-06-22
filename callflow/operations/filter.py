@@ -94,11 +94,7 @@ class Filter:
             excludeSet.add(u)
         if n == 0:
             return [[u]]
-
-        print("Callsite: ", u)
-        for neighbor in g.neighbors(u):
-            print(neighbor)
-        # print("neighbors: ", g.neighbors(u))
+        
         paths = [
             [].append(path)
             for neighbor in g.neighbors(u)
@@ -116,7 +112,6 @@ class Filter:
         for callsite in callsites:
             path = df.loc[df["name"] == callsite]["path"].tolist()[0]
             path = make_list(path)
-            # print(self.findPaths(g, callsite, 10))
             ret.add_path(path)
 
         return ret

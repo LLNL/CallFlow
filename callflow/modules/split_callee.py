@@ -56,7 +56,7 @@ class SplitCallee:
 
                     edge_type = "normal"
 
-                    print(f"Adding edge: {source_callsite}, {target_callsite}")
+                    LOGGER.info(f"Adding edge: {source_callsite}, {target_callsite}")
                     gf.nxg.add_node(source, attr_dict={"type": source_node_type})
                     gf.nxg.add_node(target, attr_dict={"type": target_node_type})
                     gf.nxg.add_edge(

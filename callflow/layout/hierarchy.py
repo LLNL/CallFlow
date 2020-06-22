@@ -31,7 +31,7 @@ class HierarchyLayout:
         while len(cycles) != 0:
             self.nxg = self.remove_cycles(self.nxg, cycles)
             cycles = self.check_cycles(self.hierarchy)
-            print(f"cycles: {cycles}")
+            LOGGER.debug(f"cycles: {cycles}")
 
     @staticmethod
     def create_nxg_tree_from_paths(module_df, path, filter_by, filter_perc):
@@ -47,9 +47,6 @@ class HierarchyLayout:
             
         nxg = nx.DiGraph()
         paths = module_df[path].unique()
-
-
-        print(paths)
 
         for idx, path in enumerate(paths):
             path = make_tuple(path)
@@ -126,13 +123,13 @@ class HierarchyLayout:
         for cycle in cycles:
             source = cycle[0]
             target = cycle[1]
-            print("Removing edge:", source, target)
+            LOGGER.debug("Removing edge:", source, target)
             if source == target:
                 G.remove_edge(source, target)
                 G.remove_node(source)
                 G.remove_node
 
             if cycle[2] == "reverse":
-                print("Removing edge:", source, target)
+                LOGGER.debug("Removing edge:", source, target)
                 G.remove_edge(source, target)
         return G

@@ -134,7 +134,7 @@ class DiffView:
 
         mean_diff = self.mean_difference(module)
 
-        print("Mean differences", mean_diff)
+        LOGGER.debug("Mean differences", mean_diff)
 
         dist_list = np.sort(diff).tolist()
 

@@ -296,7 +296,7 @@ class CallFlow:
         if operation_name == "init":
             return self.props
 
-        elif operation_name == "cct":
+        elif operation_name == "ensemble_cct":
             result = NodeLinkLayout(
                 supergraph=self.supergraphs['ensemble'],
                 callsite_count=operation["functionsInCCT"],

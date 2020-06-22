@@ -69,5 +69,4 @@ class DeltaConSimilarity:
         # print("d: ", d)
         d = sqrt(d)
         sim = 1 / (1 + d)
-        print("Similarity: ", 1 - sim)
         return 1 - sim

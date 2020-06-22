@@ -235,7 +235,6 @@ def dfs(graph, dataframe, limit):
                     + inclusive_runtime
                     + exclusive_runtime
                 )
-                print(result)
                 level += 1
                 dfs_recurse(node, level)
 
