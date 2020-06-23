@@ -519,15 +519,10 @@
 	</v-navigation-drawer>
 
 	<v-content class="pt-auto">
-		<v-layout v-show="selectedFormat == 'SuperGraph' && selectedMode == 'Single'">
-			<splitpanes
-				id="callgraph-dashboard"
-				class="default-theme"
-			>
-				<splitpanes
-					horizontal
-					:splitpanes-size="25"
-				>
+		<v-layout v-show="selectedFormat == 'SuperGraph'">
+			<splitpanes id="callgraph-dashboard" class="default-theme">
+				<!-- Left column-->
+				<splitpanes horizontal :splitpanes-size="25" v-if="selectedMode == 'Single'">
 					<span>
 						<SingleHistogram ref="SingleHistogram" />
 					</span>
@@ -535,46 +530,8 @@
 						<RuntimeScatterplot ref="RuntimeScatterplot" />
 					</span>
 				</splitpanes>
-				<splitpanes
-					horizontal
-					:splitpanes-size="55"
-				>
-					<span>
-						<!-- <EnsembleSuperGraph ref="EnsembleSuperGraph" /> -->
-					</span>
-				</splitpanes>
-				<splitpanes
-					horizontal
-					:splitpanes-size="20"
-				>
-					<span>
-						<Function ref="Function" />
-					</span>
-				</splitpanes>
-			</splitpanes>
-		</v-layout>
 
-		<v-layout v-show="selectedFormat == 'CCT'">
-			<splitpanes id="single-cct-dashboard">
-				<span>
-					<EnsembleCCT ref="EnsembleCCT" />
-				</span>
-			</splitpanes>
-		</v-layout>
-
-		<v-layout v-show="selectedMode == 'Ensemble' && selectedFormat == 'SuperGraph'">
-			<splitpanes
-				id="ensemble-supergraph-dashboard"
-				class="default-theme"
-				v-show="selectedData == 'Dataframe' && parameter_analysis == true"
-			>
-				<splitpanes
-					horizontal
-					:splitpanes-size="25"
-				>
-					<!-- <span>
-						<RunInformation ref="RunInformation" />
-					</span> -->
+				<splitpanes horizontal :splitpanes-size="25" v-if="selectedMode == 'Ensemble'"> 
 					<span>
 						<ModuleHierarchy ref="ModuleHierarchy" />
 					</span>
@@ -584,57 +541,43 @@
 					<span>
 						<EnsembleHistogram ref="EnsembleHistogram" />
 					</span>
-
 				</splitpanes>
-				<splitpanes
-					horizontal
-					:splitpanes-size="55"
-				>
+
+				<!-- Center column-->
+				<splitpanes horizontal :splitpanes-size="55" v-if="selectedMode == 'Single'">
+					<span>
+						<EnsembleSuperGraph ref="EnsembleSuperGraph" />
+					</span>
+				</splitpanes>
+				<splitpanes horizontal :splitpanes-size="55" v-if="selectedMode == 'Ensemble'">
 					<span>
 						<v-layout class="chip-container">
-							<v-chip
-								class="chip"
-								chips
-								color="teal"
-								label
-								outlined
-								clearable
-							> {{ summaryChip }}
+							<v-chip class="chip" chips color="teal" label outlined clearable>
+								 {{ summaryChip }}
 							</v-chip>
 							<v-spacer></v-spacer>
 							<span class="component-info">
 								Encoding = {{selectedMetric}} runtime.
 							</span>
 						</v-layout>
-						<EnsembleSuperGraph ref="EnsembleSuperGraph" />
+						<EnsembleSuperGraph ref="EnsembleSuperGraph"/>
 					</span>
 				</splitpanes>
-				<splitpanes
-					horizontal
-					:splitpanes-size="20"
-				>
+
+				<!-- Right column-->
+				<splitpanes horizontal :splitpanes-size="20">
 					<span>
 						<CallsiteCorrespondence ref="CallsiteCorrespondence" />
 					</span>
-					<span>
-						<ParameterProjection
-							ref="ParameterProjection"
-							@compare="updateCompareMode"
-						/>
+					<span v-show="selectedMode == 'Ensemble'">
+						<ParameterProjection ref="ParameterProjection" @compare="updateCompareMode" />
 					</span>
-					<!-- <span>
-						<SimilarityMatrix ref="SimilarityMatrix" />
-					</span> -->
-					<!-- <span>
-						<EnsembleDistribution ref="EnsembleDistribution" />
-					</span> -->
-
 				</splitpanes>
 
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-show="selectedFormat == 'CCT'">
+		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Compare'"">
 			<splitpanes id="ensemble-cct-dashboard">
 				<splitpanes
 					horizontal

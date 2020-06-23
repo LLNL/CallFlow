@@ -8,7 +8,7 @@ import * as utils from "../utils";
 
 export default {
 	name: "Markers",
-	template: `<g class="marker"></g>`,
+	template: "<g class=\"marker\"></g>",
 	data: () => ({
 		paddingTop: 10,
 		textOffset: 40,

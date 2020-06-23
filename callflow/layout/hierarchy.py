@@ -27,6 +27,7 @@ class HierarchyLayout:
             filter_perc=filter_perc
         )
 
+        # TODO: Need to verify it is always a Tree. 
         cycles = self.check_cycles(self.nxg)
         while len(cycles) != 0:
             self.nxg = self.remove_cycles(self.nxg, cycles)

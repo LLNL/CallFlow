@@ -10,13 +10,14 @@ import MeanGradients from "./nodes/meanGradients";
 import Guides from "./nodes/guides";
 import TargetLine from "./nodes/targetLine";
 import ToolTip from "./nodes/tooltip";
-import Mean from './nodes/mean';
+import Mean from "./nodes/mean";
 import MeanDiff from "./nodes/meanDiff";
 import RankDiff from "./nodes/rankDiff";
 
 export default {
 	template: `<g :id="id">
-    <MeanGradients ref="MeanGradients" />
+	<MeanGradients ref="MeanGradients" />
+	<Mean ref="Mean" />
     <ToolTip ref="ToolTip" />
     <Guides ref="Guides" />
     <TargetLine ref="TargetLine" />
@@ -124,10 +125,10 @@ export default {
 			this.rectangle();
 			this.postVis();
 
-			if(this.$store.selectedMode == 'Ensemble'){
-				this.$store.mode = "mean-gradients"
+			if(this.$store.selectedMode == "Ensemble"){
+				this.$store.mode = "mean-gradients";
 			}
-			else if(this.$store.selectedMode == 'Single'){
+			else if(this.$store.selectedMode == "Single"){
 				this.$store.mode = "mean";
 			}
 
@@ -146,7 +147,7 @@ export default {
 
 			this.ensemblePath();
 			this.text();
-			if (this.$store.showTarget && this.$store.selectedMode == 'Ensemble') {
+			if (this.$store.showTarget && this.$store.selectedMode == "Ensemble") {
 				this.$refs.TargetLine.init(this.graph.nodes);
 
 				if (this.$store.comparisonMode == false) {
@@ -199,7 +200,6 @@ export default {
 					"id": (d) => { return d.id + " callsite-rect" + d.client_idx; },
 					"class": "callsite-rect",
 					"height": (d) => {
-						console.log(d.height)
 						return d.height;
 					},
 					"width": this.nodeWidth,

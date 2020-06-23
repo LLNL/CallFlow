@@ -132,8 +132,8 @@ export default {
 						return this.$store.colorset[d[2]];
 					},
 					r: d => {
-						if (Object.entries(ts).length < 16) return 6.0;
-						else return 4.5;
+						if (Object.entries(ts).length < 16) {return 6.0;}
+						else {return 4.5;}
 					},
 					"stroke-width": 1.0,
 					fill: d => {
@@ -168,8 +168,8 @@ export default {
 			this.lasso
 				.items()
 				.attr("r", d => {
-					if (Object.entries(this.ts).length < 16) return 6.0;
-					else return 4.5;
+					if (Object.entries(this.ts).length < 16) {return 6.0;}
+					else {return 4.5;}
 				}) // reset size
 				.classed("not_possible", true)
 				.classed("selected", false);
@@ -207,8 +207,8 @@ export default {
 				.selectedItems()
 				.classed("selected", true)
 				.attr("r", d => {
-					if (Object.entries(this.ts).length < 16) return 6.0;
-					else return 6.0;
+					if (Object.entries(this.ts).length < 16) {return 6.0;}
+					else {return 6.0;}
 				})
 				.attr("id", d => {
 					this.selectedIds.push(d[3]);
@@ -246,7 +246,7 @@ export default {
 							return d3.interpolateGreys(
 								Math.pow(d.weight / this.$store.liveMax, 0.33)
 							);
-						} else return d3.interpolateGreys(0);
+						} else {return d3.interpolateGreys(0);}
 					});
 			}
 		},

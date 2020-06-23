@@ -7,7 +7,7 @@ import * as d3 from "d3";
 import * as utils from "../utils";
 
 export default {
-	template: '<g class="tooltip"></g>',
+	template: "<g class=\"tooltip\"></g>",
 	name: "ToolTip",
 	components: {},
 

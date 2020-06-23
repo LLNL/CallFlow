@@ -7,7 +7,7 @@ import * as d3 from "d3";
 import ToolTip from "./edges/tooltip";
 
 export default {
-	template: `<g :id="id"><ToolTip ref="ToolTip" /></g>`,
+	template: "<g :id=\"id\"><ToolTip ref=\"ToolTip\" /></g>",
 	name: "EnsembleEdges",
 	components: {
 		ToolTip
@@ -30,15 +30,15 @@ export default {
 			this.graph = graph;
 			this.edges = d3.select("#" + this.id);
 
-			this.links = graph.links
+			this.links = graph.links;
 
 			this.initEdges("ensemble");
 			this.drawEdges("ensemble");
-			if (this.$store.selectedMode == 'Ensemble') {
+			if (this.$store.selectedMode == "Ensemble") {
 				this.drawEdges("target");
 			}
 
-			if (this.$store.showTarget && this.$store.comparisonMode == false && this.$store.selectedMode == 'Ensemble') {
+			if (this.$store.showTarget && this.$store.comparisonMode == false && this.$store.selectedMode == "Ensemble") {
 				this.initEdges("target");
 				// this.drawEdges("ensemble");
 				this.drawEdges("target");
@@ -58,7 +58,7 @@ export default {
 				})
 				.style("fill", (d) => {
 					if (dataset == "ensemble")
-						return this.$store.color.ensemble;
+					{return this.$store.color.ensemble;}
 					return this.$store.color.target;
 				})
 				.style("opacity", 0.5)
@@ -106,13 +106,13 @@ export default {
 			}
 
 			return `M${Tx0},${Ty0
-				}C${Tx2},${Ty0
-				} ${Tx3},${Ty1
-				} ${Tx1},${Ty1
-				} ` + ` v ${rightMoveDown
-				}C${Bx3},${By1
-				} ${Bx2},${By0
-				} ${Bx0},${By0}`;
+			}C${Tx2},${Ty0
+			} ${Tx3},${Ty1
+			} ${Tx1},${Ty1
+			} ` + ` v ${rightMoveDown
+			}C${Bx3},${By1
+			} ${Bx2},${By0
+			} ${Bx0},${By0}`;
 		},
 
 		drawMiddlePath(d, linkHeight, edge_source_offset, edge_target_offset, dataset) {
@@ -141,13 +141,13 @@ export default {
 			let rightMoveDown = By1 - Ty1;
 
 			return `M${Tx0},${Ty0
-				}C${Tx2},${Ty0
-				} ${Tx3},${Ty1
-				} ${Tx1},${Ty1
-				} ` + ` v ${rightMoveDown
-				}C${Bx3},${By1
-				} ${Bx2},${By0
-				} ${Bx0},${By0}`;
+			}C${Tx2},${Ty0
+			} ${Tx3},${Ty1
+			} ${Tx1},${Ty1
+			} ` + ` v ${rightMoveDown
+			}C${Bx3},${By1
+			} ${Bx2},${By0
+			} ${Bx0},${By0}`;
 		},
 
 		drawEdges(dataset) {
@@ -156,13 +156,13 @@ export default {
 				.data(this.links)
 				.attrs({
 					"d": (d) => {
-						console.log(d, d.height, d.targetHeight)
+						console.log(d, d.height, d.targetHeight);
 						let link_height = 0;
 						if (dataset == "ensemble") {
 							link_height = d.height;
 						}
 						else if (dataset == "target") {
-							console.log(d.targetHeight)
+							console.log(d.targetHeight);
 							link_height = d.targetHeight;
 						}
 						if (this.$store.selectedEdgeAlignment == "Top") {
@@ -203,8 +203,9 @@ export default {
 		},
 
 		clear() {
-			this.edges.selectAll(".ensemble-edge").remove();
-			this.edges.selectAll(".target-edge").remove();
+			console.log("Here");
+			this.edges.selectAll(".edge-ensemble").remove();
+			this.edges.selectAll(".edge-target").remove();
 			this.edges.selectAll(".edgelabel").remove();
 			this.edges.selectAll(".edgelabelText").remove();
 		}

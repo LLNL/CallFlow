@@ -54,7 +54,7 @@ export default {
 	methods: {
 		init() {
 			this.width = window.innerWidth * 0.25;
-			this.height = this.$store.viewHeight * 0.5;
+			this.height = this.$store.viewHeight * 0.45;
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left - this.boxOffset;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
@@ -82,7 +82,7 @@ export default {
 
 		render(callsite) {
 			let data = this.$store.modules[this.$store.selectedTargetDataset][callsite];
-			console.log(this.$store.selectedTargetDataset, callsite)
+			console.log(this.$store.selectedTargetDataset, callsite);
 			console.log(data);
 			let temp = this.dataProcess(data);
 			this.xVals = temp[0];
@@ -269,7 +269,7 @@ export default {
 				.attr("height", (d) => {
 					return Math.floor(this.histogramHeight - this.histogramYScale(d)) - this.padding.top;
 				})
-				.attr("fill", this.$store.color.target)
+				.attr("fill", this.$store.color.ensemble)
 				.attr("opacity", 1)
 				.attr("stroke-width", (d, i) => "0.2px")
 				.attr("stroke", (d, i) => "black")
@@ -298,7 +298,7 @@ export default {
 				.tickFormat((d, i) => {
 					let temp = this.axis_x[i];
 					if (i % 2 == 1 || i == this.MPIcount.length - 1) {
-						return
+						return;
 					}
 				});
 
@@ -334,7 +334,7 @@ export default {
 
 		yAxis() {
 			const yAxis = d3.axisLeft(this.histogramYScale)
-			.ticks(10)
+				.ticks(10)
 				.tickFormat((d, i) => {
 					if (d == 1) {
 						return d;

@@ -22,12 +22,12 @@
 		var i = -1,
 			a = [];
 		if (arguments.length === 1)
-			while (++i < n)
-				a[i] = Infinity;
+		{while (++i < n)
+		{a[i] = Infinity;}}
 		else
-			while (++i < n)
-				a[i] = reorder.infinities.apply(
-					this, Array.prototype.slice.call(arguments, 1));
+		{while (++i < n)
+		{a[i] = reorder.infinities.apply(
+			this, Array.prototype.slice.call(arguments, 1));}}
 		return a;
 	};
 
@@ -35,34 +35,34 @@
 		var i = -1,
 			a = Array(n);
 		while (++i < n)
-			a[i] = v;
+		{a[i] = v;}
 		return a;
 	};
 
 	function check_distance_matrix(mat, tol) {
 		var i, j, v1, v2, n = mat.length, row;
 		if (! tol)
-			tol = 1e-10;
+		{tol = 1e-10;}
 
 		if (n != mat[0].length)
-			return "Inconsistent dimensions";
+		{return "Inconsistent dimensions";}
 
 		for (i = 0; i < (n-1); i++) {
 			row = mat[i];
 			v1 = row[i];
 			if (v1 < 0)
-				return "Negative value at diagonal "+i;
+			{return "Negative value at diagonal "+i;}
 			if (v1 > tol)
-				return "Diagonal not zero at "+i;
+			{return "Diagonal not zero at "+i;}
 			for (j = 1; j < n; j++) {
 				v1 = row[j];
 				v2 = mat[j][i];
 				if (Math.abs(v1 - v2) > tol)
-					return "Inconsistency at "+i+","+j;
+				{return "Inconsistency at "+i+","+j;}
 				if (v1 < 0)
-					return "Negative value at "+i+","+j;
+				{return "Negative value at "+i+","+j;}
 				if (v2 < 0)
-					return "Negative value at "+j+","+i;
+				{return "Negative value at "+j+","+i;}
 			}
 		}
 		return false;
@@ -71,17 +71,17 @@
 	function fix_distance_matrix(mat, tol) {
 		var i, j, v1, v2, n = mat.length, row;
 		if (! tol)
-			tol = 1e-10;
+		{tol = 1e-10;}
 
 		if (n != mat[0].length)
-			throw "Inconsistent dimensions "+n+" != "+mat[0].length;
+		{throw "Inconsistent dimensions "+n+" != "+mat[0].length;}
 
 		for (i = 0; i < (n-1); i++) {
 			row = mat[i];
 			v1 = row[i];
 			if (v1 < 0) {
 				if (-v1 > tol)
-					throw "Negative value at diagonal"+i;
+				{throw "Negative value at diagonal"+i;}
 				v1 = row[i] = 0;
 			}
 			else if (v1 > tol) {
@@ -91,11 +91,11 @@
 				v1 = row[j];
 				v2 = mat[j][i];
 				if (Math.abs(v1 - v2) > tol)
-					throw "Inconsistency at "+i+","+j;
+				{throw "Inconsistency at "+i+","+j;}
 				if (v1 < 0)
-					v1 = 0;
+				{v1 = 0;}
 				if (v2 < 0)
-					v2 = 0;
+				{v2 = 0;}
 				if (v1 != v2) {
 					v1 += v2;
 					v1 /= 2;
@@ -127,21 +127,21 @@
 	reorder.printvec = function(row, prec, colperm, line) {
 		var j;
 		if (! line)
-			line = "";
+		{line = "";}
 		for (j = 0; j < row.length; j++) {
 			if (line.length !== 0)
-				line += ", ";
+			{line += ", ";}
 			if (colperm)
-				line += row[colperm[j]].toFixed(prec);
+			{line += row[colperm[j]].toFixed(prec);}
 			else
-				line += row[j].toFixed(prec);
+			{line += row[j].toFixed(prec);}
 		}
 		console.log(line);
 	};
 
 	reorder.printmat = function(m, prec, rowperm, colperm) {
 		var i, j, row, line;
-		if (! prec) prec=4;
+		if (! prec) {prec=4;}
 		for (i = 0; i < m.length; i++) {
 			row = rowperm ? m[rowperm[i]] : m[i];
 			reorder.printvec(row, prec, colperm, i+": ");
@@ -157,7 +157,7 @@
 
 	reorder.printhcluster = function(cluster,indent) {
 		if (cluster.left === null)
-			return  Array(indent+1).join(" ")+"id: "+cluster.id;
+		{return  Array(indent+1).join(" ")+"id: "+cluster.id;}
 
 		return Array(indent+1).join(" ")
         +"id: "+cluster.id+", dist: "+cluster.dist+"\n"
@@ -168,20 +168,20 @@
 
 	reorder.meantranspose = function(v, j) {
 		var n = v.length;
-		if (n === 0) return NaN;
+		if (n === 0) {return NaN;}
 		var o = v[0].length,
 			m = 0,
 			i = -1,
 			row;
 
-		while(++i < n) m += (v[i][j] - m) / (i+1);
+		while(++i < n) {m += (v[i][j] - m) / (i+1);}
 
 		return m;
 	};
 
 	reorder.meancolumns = function(v) {
 		var n = v.length;
-		if (n === 0) return NaN;
+		if (n === 0) {return NaN;}
 		var o = v[0].length,
 			m = v[0].slice(0),
 			i = 0,
@@ -190,7 +190,7 @@
 		while(++i < n) {
 			row = v[i];
 			for (j = 0; j < o; j++)
-				m[j] += (row[j] - m[j]) / (i+1);
+			{m[j] += (row[j] - m[j]) / (i+1);}
 		}
 
 		return m;
@@ -200,8 +200,8 @@
 		var i = v.length,
 			s = 0;
 		while(i-- > 0)
-			if (! isNaN(v[i]))
-				s += v[i];
+		{if (! isNaN(v[i]))
+		{s += v[i];}}
 		return s;
 	}
 
@@ -251,7 +251,7 @@
 			while (i-- > 0) {
 				if (isNum(a[i], b[i])) {
 					x = Math.abs(a[i] - b[i]);
-					if (x > max) max = x;
+					if (x > max) {max = x;}
 				}
 			}
 			return max;
@@ -261,7 +261,7 @@
 				d = 0;
 			while (i-- > 0) {
 				if (isNum(a[i], b[i])) {
-					if (a[i] !== b[i]) d++;
+					if (a[i] !== b[i]) {d++;}
 				}
 			}
 			return d;
@@ -272,11 +272,11 @@
 				s = 0;
 			while (i-- > 0) {
 				if (isNum(a[i], b[i])) {
-					if (a[i] === b[i]) s++;
+					if (a[i] === b[i]) {s++;}
 					n++;
 				}
 			}
-			if (n === 0) return 0;
+			if (n === 0) {return 0;}
 			return s / n;
 		},
 		braycurtis: function(a, b) {
@@ -293,7 +293,7 @@
 					s1 += Math.abs(ai + bi);
 				}
 			}
-			if (s1 === 0) return 0;
+			if (s1 === 0) {return 0;}
 			return s0 / s1;
 		}
 	};
@@ -307,11 +307,11 @@
 		}
 		var range = [], i = start;
 		if (step < 0)
-			for (;i > stop; i += step)
-				range.push(i);
+		{for (;i > stop; i += step)
+		{range.push(i);}}
 		else
-			for (; i < stop; i += step)
-				range.push(i);
+		{for (; i < stop; i += step)
+		{range.push(i);}}
 		return range;
 	};
 	reorder.transpose = science.lin.transpose;
@@ -330,7 +330,7 @@
 			b = new Array(end-start);
 		while (++i < n) {
 			b[i] = new Array(m);
-			j = -1; while (++j < m) b[i-start][j] = a[j][i];
+			j = -1; while (++j < m) {b[i-start][j] = a[j][i];}
 		}
 		return b;
 	};
@@ -341,7 +341,7 @@
 				s1 = 0, s2 = 0, s3 = 0, i, dx, dy,
 				n = Math.min(a.length, b.length);
 			if (n === 0)
-				return NaN;
+			{return NaN;}
 			for (i = 0; i < n; i++) {
 				dx = (a[i] - ma);
 				dy = (b[i] - mb);
@@ -357,7 +357,7 @@
 				cor = reorder.correlation.pearson,
 				n = matrix.length, ret, mx, sx, sx2;
 			if (n === 0)
-				return NaN;
+			{return NaN;}
 			// do it the hard way for now, we'll optimize later
 			ret = reorder.zeroes(n, n);
 			for (i = 0; i < (n-1); i++) {
@@ -393,7 +393,7 @@
 	};
 	reorder.bandwidth = function(graph, order) {
 		if (! order)
-			order = reorder.range(graph.nodes().length);
+		{order = reorder.range(graph.nodes().length);}
 
 		var inv = inverse_permutation(order),
 			links = graph.links(),
@@ -408,7 +408,7 @@
 	};
 	reorder.edgesum = function(graph, order) {
 		if (! order)
-			order = reorder.range(graph.nodes().length);
+		{order = reorder.range(graph.nodes().length);}
 
 		var inv = inverse_permutation(order),
 			links = graph.links(),
@@ -441,7 +441,7 @@
 			components;
 
 		graph.nodes = function(x) {
-			if (!arguments.length) return nodes;
+			if (!arguments.length) {return nodes;}
 			nodes = x;
 			return graph;
 		};
@@ -455,12 +455,12 @@
 		graph.generate_nodes = function(n) {
 			nodes = [];
 			for (var i = 0; i < n; i++)
-				nodes.push({id: i});
+			{nodes.push({id: i});}
 			return graph;
 		};
 
 		graph.links = function(x) {
-			if (!arguments.length) return links;
+			if (!arguments.length) {return links;}
 			links = x;
 			return graph;
 		};
@@ -471,13 +471,13 @@
 			});
 		};
 		graph.linkDistance = function(x) {
-			if (!arguments.length) return linkDistance;
+			if (!arguments.length) {return linkDistance;}
 			linkDistance = typeof x === "function" ? x : +x;
 			return graph;
 		};
 
 		graph.directed = function(x) {
-			if (!arguments.length) return directed;
+			if (!arguments.length) {return directed;}
 			directed = x;
 			return graph;
 		};
@@ -493,19 +493,19 @@
 
 			for (i = 0; i < m; ++i) {
 				(o = links[i]).index = i;
-				if (typeof o.source == "number") o.source = nodes[o.source];
-				if (typeof o.target == "number") o.target = nodes[o.target];
-				if (! ("value" in o)) o.value = 1;
+				if (typeof o.source == "number") {o.source = nodes[o.source];}
+				if (typeof o.target == "number") {o.target = nodes[o.target];}
+				if (! ("value" in o)) {o.value = 1;}
 				++o.source.weight;
 				++o.target.weight;
 			}
 
 			if (typeof linkDistance === "function")
-				for (i = 0; i < m; ++i)
-					links[i].distance = +linkDistance.call(this, links[i], i);
+			{for (i = 0; i < m; ++i)
+			{links[i].distance = +linkDistance.call(this, links[i], i);}}
 			else
-				for (i = 0; i < m; ++i)
-					links[i].distance = linkDistance;
+			{for (i = 0; i < m; ++i)
+			{links[i].distance = linkDistance;}}
 
 			edges = Array(nodes.length);
 			for (i = 0; i < nodes.length; ++i) {
@@ -528,11 +528,11 @@
 				o = links[i];
 				edges[o.source.index].push(o);
 				if (o.source.index != o.target.index)
-					edges[o.target.index].push(o);
+				{edges[o.target.index].push(o);}
 				if (directed)
-					inEdges[o.source.index].push(o);
+				{inEdges[o.source.index].push(o);}
 				if (directed)
-					outEdges[o.target.index].push(o);
+				{outEdges[o.target.index].push(o);}
 			}
 
 			return graph;
@@ -552,31 +552,31 @@
 
 		graph.degree = function(node) {
 			if (typeof node != "number")
-				node = node.index;
+			{node = node.index;}
 			return edges[node].length;
 		};
 
 		graph.inEdges = function (node) {
 			if (typeof node != "number")
-				node = node.index;
+			{node = node.index;}
 			return inEdges[node];
 		};
 
 		graph.inDegree = function(node) {
 			if (typeof node != "number")
-				node = node.index;
+			{node = node.index;}
 			return inEdges[node].length;
 		};
 
 		graph.outEdges = function(node) {
 			if (typeof node != "number")
-				node = node.index;
+			{node = node.index;}
 			return outEdges[node];
 		};
 
 		graph.outDegree = function(node) {
 			if (typeof node != "number")
-				node = node.index;
+			{node = node.index;}
 			return outEdges[node].length;
 		};
 
@@ -586,7 +586,7 @@
 
 			for (i = 0; i < nodes.length; i++) {
 				if (graph.outEdges(i).length === 0)
-					sinks.push(i);
+				{sinks.push(i);}
 			}
 			return sinks;
 		};
@@ -597,7 +597,7 @@
 
 			for (i = 0; i < nodes.length; i++) {
 				if (graph.inEdges(i).length === 0)
-					sources.push(i);
+				{sources.push(i);}
 			}
 			return sources;
 		};
@@ -612,9 +612,9 @@
 			for (var i = 0; i < e.length; ++i) {
 				var o = e[i];
 				if (o.source.index == node)
-					ret.push(o.target);
+				{ret.push(o.target);}
 				else
-					ret.push(o.source);
+				{ret.push(o.source);}
 			}
 			return ret;
 		}
@@ -622,11 +622,11 @@
 
 		graph.other = function(o, node) {
 			if (typeof o == "number")
-				o = links[o];
+			{o = links[o];}
 			if (o.source.index == node)
-				return o.target;
+			{return o.target;}
 			else
-				return o.source;
+			{return o.source;}
 		};
 
 		function compute_components() {
@@ -636,11 +636,11 @@
 				i, j, v, l, o, e;
 
 			for (i = 0; i < n; i++)
-				nodes[i].comp = 0;
+			{nodes[i].comp = 0;}
 
 			for (j = 0; j < n; j++) {
 				if (nodes[j].comp !== 0)
-					continue;
+				{continue;}
 				comp = comp+1; // next connected component
 				nodes[j].comp = comp;
 				stack.push(j);
@@ -653,9 +653,9 @@
 						e = l[i];
 						o = e.source;
 						if (o.index == v)
-							o = e.target;
+						{o = e.target;}
 						if (o.index == v) // loop
-							continue;
+						{continue;}
 						if (o.comp === 0) {
 							o.comp = comp;
 							ccomp.push(o.index);
@@ -674,7 +674,7 @@
 
 		graph.components = function() {
 			if (! components)
-				components = compute_components();
+			{components = compute_components();}
 			return components;
 		};
 
@@ -682,9 +682,9 @@
 	};
 	reorder.graph_random_erdos_renyi = function(n, p, directed) {
 		if (p <= 0)
-			return reorder.graph_empty(n, directed);
+		{return reorder.graph_empty(n, directed);}
 		else if (p >= 1)
-			return reorder.graph_complete(n, directed);
+		{return reorder.graph_complete(n, directed);}
 
 		var nodes = graph_empty_nodes(n),
 			links = [],
@@ -698,15 +698,15 @@
 				lr = Math.log(1.0 - Math.random());
 				w = w + 1 + Math.floor(lr/lp);
 				if (v == w)
-					w = w+1;
+				{w = w+1;}
 				while (w >= n && v < n) {
 					w = w - n;
 					v = v + 1;
 					if (v == w)
-						w = w+1;
+					{w = w+1;}
 				}
 				if (v < n)
-					links.push({source: v, target: w});
+				{links.push({source: v, target: w});}
 			}
 		}
 		else {
@@ -718,7 +718,7 @@
 					v = v + 1;
 				}
 				if (v < n)
-					links.push({source: v, target: w});
+				{links.push({source: v, target: w});}
 			}
 		}
 		return reorder.graph(nodes, links, directed).init();
@@ -728,7 +728,7 @@
 	function graph_empty_nodes(n) {
 		var nodes = Array(n), i;
 		for (i = 0; i < n; i++)
-			nodes[i] = {id: i};
+		{nodes[i] = {id: i};}
 		return nodes;
 	}
 
@@ -746,14 +746,14 @@
 			for (i = 0; i < n; i++) {
 				for (j = 0; j < n; j++) {
 					if (i != j)
-						links.push({source: i, target: j });
+					{links.push({source: i, target: j });}
 				}
 			}
 		}
 		else {
 			for (i = 0; i < (n-1); i++) {
 				for (j = i+1; j < n; j++)
-					links.push({source: i, target: j });
+				{links.push({source: i, target: j });}
 			}
 		}
 		return reorder.graph(nodes, links, directed).init();
@@ -762,7 +762,7 @@
 		var i, j, links = graph.links();
 
 		if (! comps)
-			comps = graph.components();
+		{comps = graph.components();}
 
 		for (i = 0; i < (comps.length-1); i++) {
 			for (j = i+1; j < comps.length; j++) {
@@ -800,21 +800,21 @@
 		dist[v] = 0;
 		reorder.bfs(graph, v, function(v, c) {
 			if (c >= 0 && v != c)
-				dist[c] = dist[v]+1;
+			{dist[c] = dist[v]+1;}
 		});
 		return dist;
 	};
 
 	reorder.all_pairs_distance_bfs = function(graph, comps) {
 		if (! comps)
-			comps = [ graph.nodes_indices() ];
+		{comps = [ graph.nodes_indices() ];}
 		var nodes = comps.reduce(reorder.flatten)
 				.sort(reorder.cmp_number),
 			mat = Array(nodes.length),
 			i, j, dist;
 
 		for (i = 0; i < nodes.length; i++)
-			mat[i] = Array(nodes.length);
+		{mat[i] = Array(nodes.length);}
 
 		for (i = 0; i < nodes.length; i++) {
 			dist = reorder.bfs_distances(graph, i);
@@ -830,7 +830,7 @@
 	/*jshint loopfunc:true */
 	bfs_order = function(graph, comps) {
 		if (! comps)
-			comps = graph.components();
+		{comps = graph.components();}
 
 		var i, comp, order = [];
 
@@ -838,7 +838,7 @@
 			comp = comps[i];
 			reorder.bfs(graph, comp[0], function(v, c) {
 				if (c >= 0 && v != c)
-					order.push(v);
+				{order.push(v);}
 			});
 		}
 		return order;
@@ -851,7 +851,7 @@
 			i, j, v, m;
 
 		for (i = 0; i < n; i++)
-			nodes.push({id: i});
+		{nodes.push({id: i});}
 
 		for (i = 0; i < n; i++) {
 			v = mat[i];
@@ -859,10 +859,10 @@
 
 			for (j = m; j < v.length; j++) {
 				if (j == nodes.length)
-					nodes.push({id: j});
+				{nodes.push({id: j});}
 				if (v[j] !== 0) {
 					if (v[j] > max_value)
-						max_value = v[j];
+					{max_value = v[j];}
 					links.push({source: i, target: j, value: v[j]});
 				}
 			}
@@ -880,22 +880,22 @@
 			i, l, mat;
 
 		if (! directed)
-			directed = graph.directed();
+		{directed = graph.directed();}
 		if (directed) {
 			var rows = n,
 				cols = n;
 
 			for (i = n-1; i >= 0; i--) {
 				if (graph.inEdges(i).length !== 0)
-					break;
+				{break;}
 				else
-					rows--;
+				{rows--;}
 			}
 			for (i = n-1; i >= 0; i--) {
 				if (graph.outEdges(i).length !== 0)
-					break;
+				{break;}
 				else
-					cols--;
+				{cols--;}
 			}
 			//console.log("Rows: "+rows+" Cols: "+cols);
 			mat = reorder.zeroes(rows, cols);
@@ -962,7 +962,7 @@
 
 		firstIndex = 1;
 		while (firstIndex < south.length)
-			firstIndex <<= 1;
+		{firstIndex <<= 1;}
 		treeSize = 2 * firstIndex - 1;
 		firstIndex -= 1;
 		tree = reorder.zeroes(treeSize);
@@ -972,7 +972,7 @@
 			index = southsequence[i] + firstIndex;
 			tree[index]++;
 			while (index > 0) {
-				if (index%2) crosscount += tree[index+1];
+				if (index%2) {crosscount += tree[index+1];}
 				index = (index - 1) >> 1;
 				tree[index]++;
 			}
@@ -1000,7 +1000,7 @@
 			p0 = inv[w_edges[iw].target.index];
 			for (iv = 0; iv < v_edges.length; iv++) {
 				if (inv[v_edges[iv].target.index] > p0)
-					cross++;
+				{cross++;}
 			}
 		}
 		return cross;
@@ -1015,7 +1015,7 @@
 			p0 = inv[w_edges[iw].source.index];
 			for (iv = 0; iv < v_edges.length; iv++) {
 				if (inv[v_edges[iv].source.index] > p0)
-					cross++;
+				{cross++;}
 			}
 		}
 		return cross;
@@ -1096,22 +1096,22 @@
 	// Algorithmica, vol. 11 (1994) 379–403.
 	function median(neighbors) {
 		if (neighbors.length === 0)
-			return -1; // should not happen
+		{return -1;} // should not happen
 		if (neighbors.length === 1)
-			return neighbors[0];
+		{return neighbors[0];}
 		if (neighbors.length === 2)
-			return (neighbors[0]+neighbors[1])/2;
+		{return (neighbors[0]+neighbors[1])/2;}
 		neighbors.sort(reorder.cmp_number);
 		if (neighbors.length % 2)
-			return neighbors[(neighbors.length-1)/2];
+		{return neighbors[(neighbors.length-1)/2];}
 		var rm = neighbors.length/2,
 			lm = rm - 1,
 			rspan = neighbors[neighbors.length-1] - neighbors[rm],
 			lspan = neighbors[lm] - neighbors[0];
 		if (lspan == rspan)
-			return (neighbors[lm] + neighbors[rm])/2;
+		{return (neighbors[lm] + neighbors[rm])/2;}
 		else
-			return (neighbors[lm]*rspan + neighbors[rm]*lspan) / (lspan+rspan);
+		{return (neighbors[lm]*rspan + neighbors[rm]*lspan) / (lspan+rspan);}
 	}
 
 	reorder.barycenter = function(graph, comp, max_iter) {
@@ -1133,9 +1133,9 @@
 		}
 
 		if (! max_iter)
-			max_iter = 24;
+		{max_iter = 24;}
 		else if ((max_iter%2)==1)
-			max_iter++; // want even number of iterations
+		{max_iter++;} // want even number of iterations
 
 		inv_layer = inverse_permutation(layer2);
 
@@ -1155,8 +1155,8 @@
 					// degree vertex
 					d = (graph.edges(b).length%2) - (graph.edges(a).length%2);
 				}
-				if (d < 0) return -1;
-				else if (d > 0) return 1;
+				if (d < 0) {return -1;}
+				else if (d > 0) {return 1;}
 				return 0;
 			};
 
@@ -1169,16 +1169,16 @@
 				// its (real) value into node.pos
 				v = nodes[layer[i]];
 				if (layer == layer1)
-					neighbors = graph.outEdges(v.index);
+				{neighbors = graph.outEdges(v.index);}
 				else
-					neighbors = graph.inEdges(v.index);
+				{neighbors = graph.inEdges(v.index);}
 				neighbors = neighbors.map(inv_neighbor);
 				med[v.index] = +median(neighbors);
 				//console.log('median['+i+']='+med[v.index]);
 			}
 			layer.sort(barycenter_sort);
 			for (i = 0; i < layer.length; i++)
-				inv_layer = inverse_permutation(layer);
+			{inv_layer = inverse_permutation(layer);}
 			crossings = count_crossings(graph, layer1, layer2);
 			if (crossings < best_crossings) {
 				best_crossings = crossings;
@@ -1206,10 +1206,10 @@
 	reorder.all_pairs_distance = function(graph, comps) {
 		var distances = [];
 		if (! comps)
-			comps = graph.components();
+		{comps = graph.components();}
 
 		for (var i = 0; i < comps.length; i++)
-			distances.push(all_pairs_distance_floyd_warshall(graph, comps[i]));
+		{distances.push(all_pairs_distance_floyd_warshall(graph, comps[i]));}
 		return distances;
 	};
 
@@ -1231,12 +1231,12 @@
 		inv = inverse_permutation(comp);
 
 		for (i = 0; i < comp.length; i++)
-			dist[i][i] = 0;
+		{dist[i][i] = 0;}
 
 		var build_dist = function(e) {
-			if (e.source == e.target) return;
+			if (e.source == e.target) {return;}
 			if (! (e.source.index in inv) || ! (e.target.index in inv))
-				return; // ignore edges outside of comp
+			{return;} // ignore edges outside of comp
 			var u = inv[e.source.index],
 				v = inv[e.target.index];
 			dist[v][u] = dist[u][v] = graph.distance(e.index);
@@ -1247,14 +1247,14 @@
 
 		for (k=0; k<comp.length; k++) {
 			for (i=0; i<comp.length; i++)
-				if (dist[i][k] != Infinity) {
-					for (j=0; j<comp.length; j++)
-						if (dist[k][j] != Infinity
+			{if (dist[i][k] != Infinity) {
+				for (j=0; j<comp.length; j++)
+				{if (dist[k][j] != Infinity
                 && dist[i][j] > dist[i][k] + dist[k][j]) {
-							dist[i][j] = dist[i][k] + dist[k][j];
-							dist[j][i] = dist[i][j];
-						}
-				}
+					dist[i][j] = dist[i][k] + dist[k][j];
+					dist[j][i] = dist[i][j];
+				}}
+			}}
 		}
 		return dist;
 	}
@@ -1274,7 +1274,7 @@
      */
 	function floyd_warshall_with_path(graph, comp) {
 		if (! comp)
-			comp = graph.components()[0];
+		{comp = graph.components()[0];}
 
 		var dist = reorder.infinities(comp.length, comp.length),
 			next = Array(comp.length),
@@ -1292,7 +1292,7 @@
 		}
 
 		var build_dist = function(e) {
-			if (e.source == e.target) return;
+			if (e.source == e.target) {return;}
 			var u = inv[e.source.index],
 				v = inv[e.target.index];
 			dist[u][v] = graph.distance(e);
@@ -1335,7 +1335,7 @@
      * @return {list} a list of nodes in the shortest path from u to v
      */
 	function floyd_warshall_path(next, u, v) {
-		if (next[u][v] === undefined) return [];
+		if (next[u][v] === undefined) {return [];}
 		var path = [u];
 		while (u != v) {
 			u = next[u][v];
@@ -1366,7 +1366,7 @@
 
 	reorder.graph2valuemats = function(graph, comps) {
 		if (! comps)
-			comps = graph.components();
+		{comps = graph.components();}
 
 		var	dists = reorder.all_pairs_distance(graph, comps);
 		return dists.map(distmat2valuemat);
@@ -1408,7 +1408,7 @@
 		}
 
 		dist.distance = function(x) {
-			if (!arguments.length) return distance;
+			if (!arguments.length) {return distance;}
 			distance = x;
 			return dist;
 		};
@@ -1424,8 +1424,8 @@
 		for (i = 0; i < n; i++) {
 			row = distMatrix[i];
 			for (j = i+1; j < n; j++)
-				if (row[j] > max)
-					max = row[j];
+			{if (row[j] > max)
+			{max = row[j];}}
 		}
 		return max;
 	};
@@ -1438,8 +1438,8 @@
 		for (i = 0; i < n; i++) {
 			row = distMatrix[i];
 			for (j = i+1; j < n; j++)
-				if (row[j] < min)
-					min = row[j];
+			{if (row[j] < min)
+			{min = row[j];}}
 		}
 		return min;
 	};
@@ -1447,11 +1447,11 @@
 
 	reorder.dist_remove = function(dist, n, m) {
 		if (arguments.length < 3)
-			m = n+1;
+		{m = n+1;}
 		var i;
 		dist.splice(n, m-n);
 		for (i = dist.length; i-- > 0; )
-			dist[i].splice(n, m-n);
+		{dist[i].splice(n, m-n);}
 		return dist;
 	};
 	/* Fisher-Yates shuffle.
@@ -1481,24 +1481,24 @@
 	reorder.random_array = function(n, min, max) {
 		var ret = Array(n);
 		if (arguments.length == 1) {
-			while(n) ret[--n] = Math.random();
+			while(n) {ret[--n] = Math.random();}
 		}
 		else if (arguments.length == 2) {
-			while(n) ret[--n] = Math.random()*min;
+			while(n) {ret[--n] = Math.random()*min;}
 		}
 		else {
-			while(n) ret[--n] = min + Math.random()*(max-min);
+			while(n) {ret[--n] = min + Math.random()*(max-min);}
 		}
 		return ret;
 	};
 
 	reorder.random_matrix = function(p, n, m, sym) {
 		if (! m)
-			m = n;
+		{m = n;}
 		if (n != m)
-			sym = false;
+		{sym = false;}
 		else if (! sym)
-			sym = true;
+		{sym = true;}
 		var mat = reorder.zeroes(n, m), i, j, cnt;
 
 		if (sym) {
@@ -1526,7 +1526,7 @@
 					}
 				}
 				if (cnt === 0)
-					mat[i][Math.floor(Math.random()*m)] = 1;
+				{mat[i][Math.floor(Math.random()*m)] = 1;}
 			}
 		}
 		return mat;
@@ -1536,7 +1536,7 @@
 		var m = perm.length;
 		var copy = list.slice();
 		while (m--)
-			copy[m] = list[perm[m]];
+		{copy[m] = list[perm[m]];}
 		return copy;
 	}
 	reorder.permute = permute_copy;
@@ -1569,7 +1569,7 @@
 	reorder.permutetranspose = function(array, indexes) {
 		var m = array.length;
 		while (m-- > 0)
-			array[m] = reorder.permute(array[m], indexes);
+		{array[m] = reorder.permute(array[m], indexes);}
 		return array;
 	};
 
@@ -1625,25 +1625,25 @@
 					distMatrix[i] = [];
 					j = -1; while (++j < n) {
 						distMatrix[i][j] = i === j ? Infinity : distance(vectors[i] , vectors[j]);
-						if (distMatrix[i][dMin[i]] > distMatrix[i][j]) dMin[i] = j;
+						if (distMatrix[i][dMin[i]] > distMatrix[i][j]) {dMin[i] = j;}
 					}
 				}
 			}
 			else {
 				if (distMatrix.length < n || distMatrix[0].length < n)
-					throw {error: "Provided distance matrix length "+distMatrix.length+" instead of "+n};
+				{throw {error: "Provided distance matrix length "+distMatrix.length+" instead of "+n};}
 				i = -1; while (++i < n) {
 					dMin[i] = 0;
 					j = -1; while (++j < n) {
 						if (i === j)
-							distMatrix[i][j] = Infinity;
-						if (distMatrix[i][dMin[i]] > distMatrix[i][j]) dMin[i] = j;
+						{distMatrix[i][j] = Infinity;}
+						if (distMatrix[i][dMin[i]] > distMatrix[i][j]) {dMin[i] = j;}
 					}
 				}
 			}
 			// create leaves of the tree
 			i = -1; while (++i < n) {
-				if (i != id) console.log("i = %d, id = %d", i, id);
+				if (i != id) {console.log("i = %d, id = %d", i, id);}
 				clusters[i] = [];
 				clusters[i][0] = {
 					left: null,
@@ -1662,7 +1662,7 @@
 				// find the closest pair of clusters
 				c1 = 0;
 				for (i = 0; i < n; i++) {
-					if (distMatrix[i][dMin[i]] < distMatrix[c1][dMin[c1]]) c1 = i;
+					if (distMatrix[i][dMin[i]] < distMatrix[c1][dMin[c1]]) {c1 = i;}
 				}
 				c2 = dMin[c1];
 
@@ -1688,11 +1688,11 @@
 					switch (linkage) {
 					case "single":
 						if (distMatrix[c1][j] > distMatrix[c2][j])
-							distMatrix[j][c1] = distMatrix[c1][j] = distMatrix[c2][j];
+						{distMatrix[j][c1] = distMatrix[c1][j] = distMatrix[c2][j];}
 						break;
 					case "complete":
 						if (distMatrix[c1][j] < distMatrix[c2][j])
-							distMatrix[j][c1] = distMatrix[c1][j] = distMatrix[c2][j];
+						{distMatrix[j][c1] = distMatrix[c1][j] = distMatrix[c2][j];}
 						break;
 					case "average":
 						distMatrix[j][c1] = distMatrix[c1][j] = (cSize[c1] * distMatrix[c1][j] + cSize[c2] * distMatrix[c2][j]) / (cSize[c1] + cSize[j]);
@@ -1702,12 +1702,12 @@
 				distMatrix[c1][c1] = Infinity;
 
 				for (i = 0; i < n; i++)
-					distMatrix[i][c2] = distMatrix[c2][i] = Infinity;
+				{distMatrix[i][c2] = distMatrix[c2][i] = Infinity;}
 
 				// update dmin and replace ones that previous pointed to c2 to point to c1
 				for (j = 0; j < n; j++) {
-					if (dMin[j] == c2) dMin[j] = c1;
-					if (distMatrix[c1][j] < distMatrix[c1][dMin[c1]]) dMin[c1] = j;
+					if (dMin[j] == c2) {dMin[j] = c1;}
+					if (distMatrix[c1][j] < distMatrix[c1][dMin[c1]]) {dMin[c1] = j;}
 				}
 
 				// keep track of the last added cluster
@@ -1718,19 +1718,19 @@
 		}
 
 		hcluster.linkage = function(x) {
-			if (!arguments.length) return linkage;
+			if (!arguments.length) {return linkage;}
 			linkage = x;
 			return hcluster;
 		};
 
 		hcluster.distance = function(x) {
-			if (!arguments.length) return distance;
+			if (!arguments.length) {return distance;}
 			distance = x;
 			return hcluster;
 		};
 
 		hcluster.distanceMatrix = function(x) {
-			if (!arguments.length) return distMatrix;
+			if (!arguments.length) {return distMatrix;}
 			distMatrix = x.map(function(y) { return y.slice(0); });
 			return hcluster;
 		};
@@ -1775,28 +1775,28 @@
 		}
 
 		function leaves(n) {
-			if (n === null) return [];
+			if (n === null) {return [];}
 			if (n.id in leavesMap)
-				return leavesMap[n.id];
+			{return leavesMap[n.id];}
 			return (leavesMap[n.id] = _leaves(n));
 		}
 
 		function _leaves(n) {
-			if (n === null) return [];
-			if (n.depth === 0) return [n.id];
+			if (n === null) {return [];}
+			if (n.depth === 0) {return [n.id];}
 			return leaves(n.left).concat(leaves(n.right));
 		}
 
 		function order(v, i, j) {
 			var key = "k"+v.id + "-"+i+"-"+j; // ugly key
 			if (key in orderMap)
-				return orderMap[key];
+			{return orderMap[key];}
 			return (orderMap[key] = _order(v, i, j));
 		}
 
 		function _order(v, i, j) {
 			if (v.depth === 0) //isLeaf(v))
-				return [0, [v.id]];
+			{return [0, [v.id]];}
 			var l = v.left, r = v.right;
 			var L = leaves(l), R = leaves(r);
 
@@ -1808,16 +1808,16 @@
 				w = r; x = l;
 			}
 			else
-				throw {error: "Node is not common ancestor of "+i+", "+j};
+			{throw {error: "Node is not common ancestor of "+i+", "+j};}
 			var Wl = leaves(w.left), Wr = leaves(w.right);
 			var Ks = Wr.indexOf(i) != -1 ? Wl : Wr;
 			if (Ks.length === 0)
-				Ks = [i];
+			{Ks = [i];}
 
 			var Xl = leaves(x.left), Xr = leaves(x.right);
 			var Ls = Xr.indexOf(j) != -1 ? Xl : Xr;
 			if (Ls.length === 0)
-				Ls = [j];
+			{Ls = [j];}
 
 			var min = Infinity, optimal_order = [];
 
@@ -1844,7 +1844,7 @@
 				right = leaves(v.right);
 
 			if (reorder.debug)
-				console.log(reorder.printhcluster(v,0));
+			{console.log(reorder.printhcluster(v,0));}
 
 			for (var i = 0; i < left.length; i++) {
 				for (var j = 0; j < right.length; j++) {
@@ -1861,7 +1861,7 @@
 
 		function optimal_leaf_order(matrix) {
 			if (distanceMatrix === null)
-				distanceMatrix = (reorder.dist().distance(distance))(matrix);
+			{distanceMatrix = (reorder.dist().distance(distance))(matrix);}
 			var hcluster = science.stats.hcluster()
 				.linkage(linkage)
 				.distanceMatrix(distanceMatrix);
@@ -1871,20 +1871,20 @@
 		optimal_leaf_order.reorder = optimal_leaf_order;
 
 		optimal_leaf_order.distance = function(x) {
-			if (!arguments.length) return distance;
+			if (!arguments.length) {return distance;}
 			distance = x;
 			distanceMatrix = null;
 			return optimal_leaf_order;
 		};
 
 		optimal_leaf_order.linkage = function(x) {
-			if (!arguments.length) return linkage;
+			if (!arguments.length) {return linkage;}
 			linkage = x;
 			return optimal_leaf_order;
 		};
 
 		optimal_leaf_order.distance_matrix = function(x) {
-			if (!arguments.length) return distanceMatrix;
+			if (!arguments.length) {return distanceMatrix;}
 			// copy
 			distanceMatrix = x.map(function(y) { return y.slice(0); });
 			return optimal_leaf_order;
@@ -1947,7 +1947,7 @@
 					}
 				}
 				else if ((high-low) < 3)
-					except.splice(k-1, 2);
+				{except.splice(k-1, 2);}
 			}
 
 			try {
@@ -1967,16 +1967,16 @@
 
 			vector = vector.slice(i0, j0); // always make a copy
 			if (i === 0 && j == vector.length)
-				return _order_except();
+			{return _order_except();}
 
 			if (reorder.debug)
-				console.log("i0="+i0+" j0="+j0);
+			{console.log("i0="+i0+" j0="+j0);}
 
 			if (distanceMatrix !== null) {
 				if (j0 !== vector.length)
-					reorder.dist_remove(distanceMatrix, j0, vector.length);
+				{reorder.dist_remove(distanceMatrix, j0, vector.length);}
 				if (i0 > 0)
-					reorder.dist_remove(distanceMatrix, 0, i0);
+				{reorder.dist_remove(distanceMatrix, 0, i0);}
 			}
 			else {
 				_compute_dist();
@@ -1990,14 +1990,14 @@
 				// distance from row/column 0
 				row = distanceMatrix[0];
 				for (k = row.length; k-- > 1; )
-					row[k] += max;
+				{row[k] += max;}
 				for (k = distanceMatrix.length; k-- > 1; )
-					distanceMatrix[k][0] += max;
+				{distanceMatrix[k][0] += max;}
 				max += max;
 				// also fix the exception list
 				if (i0 !== 0) {
 					for (k = 0; k < except.length; k++)
-						except[k] -= i0;
+					{except[k] -= i0;}
 				}
 			}
 			if (j0 > j) {
@@ -2018,7 +2018,7 @@
 			perm = _order_except();
 			if (i0 < i) {
 				if (perm[0] !== 0)
-					perm.reverse();
+				{perm.reverse();}
 				if (j0 > j) {
 					reorder.assert(perm[0] === 0 && perm[perm.length-1]==perm.length-1,
 						"Invalid constrained permutation endpoints");
@@ -2030,7 +2030,7 @@
 			}
 			else if (j0 > j) {
 				if (perm[perm.length-1] !== (perm.length-1))
-					perm = perm.reverse();
+				{perm = perm.reverse();}
 				reorder.assert(perm[perm.length-1] == perm.length-1,
 					"Invalid constrained permutation end");
 			}
@@ -2054,7 +2054,7 @@
 				pos;
 
 			if (except.length === 0)
-				return _order_equiv();
+			{return _order_equiv();}
 
 			// TODO: postpone the calculation to avoid computing the except items
 			_compute_dist();
@@ -2068,7 +2068,7 @@
 				distanceMatrix = reorder.dist_remove(distanceMatrix, low+1, high-1);
 				vector.splice(low+1, high-low-2);
 				if (reorder.debug)
-					console.log("Except["+low+", "+high+"]");
+				{console.log("Except["+low+", "+high+"]");}
 				if (distanceMatrix[low][low+1] !== 0) {
 					// boundaries are equal, they will survive
 					distanceMatrix[low][low+1] = distanceMatrix[low+1][low] = -1;
@@ -2085,9 +2085,9 @@
 				// Prepare for inserting range [low+1,high-1]
 				for (l = 0; l < perm.length; l++) {
 					if (perm[l] > low)
-						perm[l] += (high-low-2);
+					{perm[l] += (high-low-2);}
 					else if (perm[l] == low)
-						pos = l;
+					{pos = l;}
 				}
 				if (pos > 0 && perm[pos-1] == (high-1)) {
 					// reversed order
@@ -2150,7 +2150,7 @@
 						vector.splice(l, 1);
 					}
 					else if (row[l] < 0)
-						has_1 = true;
+					{has_1 = true;}
 				}
 				if (e.length !== 0) {
 					e.unshift(k);
@@ -2225,11 +2225,11 @@
 				return l;
 			}
 			else
-				throw "Index not found";
+			{throw "Index not found";}
 		}
 
 		function _swap(perm, a, b) {
-			if (a == b) return;
+			if (a == b) {return;}
 			var c = perm[a];
 			perm[a] = perm[b];
 			perm[b] = c;
@@ -2237,15 +2237,15 @@
 
 		function _order() {
 			if (reorder.debug > 1)
-				reorder.printmat(distanceMatrix);
+			{reorder.printmat(distanceMatrix);}
 			if (reorder.debug > 2)
-				reorder.printmat(vector);
+			{reorder.printmat(vector);}
 
 			var perm = ordering()
 				.linkage(linkage)
 				.distanceMatrix(distanceMatrix)(vector);
 			if (reorder.debug)
-				console.log("Permutation: "+perm);
+			{console.log("Permutation: "+perm);}
 
 			return perm;
 		}
@@ -2259,35 +2259,35 @@
 
 		function _compute_dist() {
 			if (distanceMatrix === null)
-				distanceMatrix = (reorder.dist().distance(distance))(vector);
+			{distanceMatrix = (reorder.dist().distance(distance))(vector);}
 			return distanceMatrix;
 		}
 
 		order.distance = function(x) {
-			if (!arguments.length) return distance;
+			if (!arguments.length) {return distance;}
 			distance = x;
 			return order;
 		};
 
 		order.linkage = function(x) {
-			if (!arguments.length) return linkage;
+			if (!arguments.length) {return linkage;}
 			linkage = x;
 			return order;
 		};
 
 
 		order.limits = function(x, y) {
-			if (!arguments.length) return [i, j];
+			if (!arguments.length) {return [i, j];}
 			i = x;
 			j = y;
 			return order;
 		};
 
 		order.except = function(list) {
-			if (!arguments.length) return except.slice(0);
+			if (!arguments.length) {return except.slice(0);}
 			except = list.sort(function(a,b) {
 				if (a >= b)
-					throw "Invalid list, indices not sorted";
+				{throw "Invalid list, indices not sorted";}
 				return a-b;
 			});
 			return order;
@@ -2306,10 +2306,10 @@
 			for (k = 0; k < perm.length; k++) {
 				l = perm[k];
 				if (l > i)
-					perm[k] += j-i-2;
+				{perm[k] += j-i-2;}
 			}
 			if (pos !== 0 && perm[pos-1] === (j-1))
-				rev = true;
+			{rev = true;}
 			if (rev) {
 				perm.reverse();
 				pos = perm.length-pos-1;
@@ -2345,7 +2345,7 @@
 		}
 		for (i = 0; i < o; i++) {
 			for (j = i; j < o; j++)
-				cov[i][j] = cov[j][i] = reorder.covariancetranspose(v, i, j);
+			{cov[i][j] = cov[j][i] = reorder.covariancetranspose(v, i, j);}
 		}
 		return cov;
 	};
@@ -2377,15 +2377,15 @@
 	function normalize(v) {
 		var norm = reorder.length(v),
 			i = v.length;
-		if (norm === 0 || Math.abs(norm - 1) < 1e-9) return 1;
+		if (norm === 0 || Math.abs(norm - 1) < 1e-9) {return 1;}
 		while (i-- > 0)
-			v[i] /= norm;
+		{v[i] /= norm;}
 		return norm;
 	}
 
 	reorder.poweriteration = function(v, eps, init) {
 		if (! eps)
-			eps = 1e-9;
+		{eps = 1e-9;}
 
 		var n = v.length,
 			b,
@@ -2401,16 +2401,16 @@
 			b = reorder.random_array(n);
 		}
 		else
-			b = init.slice(); // copy
+		{b = init.slice();} // copy
 		normalize(b);
 		while (s-- > 0) {
 			for(i=0; i<n; i++) {
 				tmp[i] = 0;
-				for (j=0; j<n; j++) tmp[i] += v[i][j] * b[j];
+				for (j=0; j<n; j++) {tmp[i] += v[i][j] * b[j];}
 			}
 			normalize(tmp);
 			if (reorder.dot(tmp, b) > (1.0 - eps))
-				break;
+			{break;}
 			var t = tmp; tmp = b; b = t; // swap b/tmp
 		}
 		return tmp;
@@ -2418,7 +2418,7 @@
 
 	reorder.poweriteration_n = function(v, p, init, eps, start) {
 		if (! eps)
-			eps = 1e-9;
+		{eps = 1e-9;}
 
 		var n = v.length,
 			b = Array(p),
@@ -2442,7 +2442,7 @@
 			}
 		}
 		if (! start)
-			start = 0;
+		{start = 0;}
 
 		for (k = start; k < p; k++) {
 			bk = b[k];
@@ -2452,21 +2452,21 @@
 					row = b[l];
 					dot = reorder.dot(bk, row);
 					for (i = 0; i < n; i++)
-						bk[i] -= dot*row[i];
+					{bk[i] -= dot*row[i];}
 				}
 
 				for(i=0; i<n; i++) {
 					tmp[i] = 0;
 					for (j=0; j<n; j++)
-						tmp[i] += v[i][j] * bk[j];
+					{tmp[i] += v[i][j] * bk[j];}
 				}
 				eigenvalue[k] = normalize(tmp);
 				if (reorder.dot(tmp, bk) > (1 - eps))
-					break;
+				{break;}
 				bk = tmp; tmp = b[k]; b[k] = bk;  // swap b/tmp
 			}
 			if (reorder.debug)
-				console.log("eig[%d]=%j",k, bk);
+			{console.log("eig[%d]=%j",k, bk);}
 		}
 		return [b, eigenvalue];
 	};
@@ -2488,10 +2488,10 @@
 			row = B[i];
 			t = row[i];
 			for (j = 0; j < n; j++)
-				if (j != i)
-					t += Math.abs(row[j]);
+			{if (j != i)
+			{t += Math.abs(row[j]);}}
 			if (t > max)
-				max = t;
+			{max = t;}
 		}
 		if (reorder.debug) {
 			console.log("gershgorin_bound=%d", max);
@@ -2509,9 +2509,9 @@
 			row = Bhat[i];
 			for (j = 0; j < n; j++) {
 				if (i == j)
-					row[j] = g - row[j];
+				{row[j] = g - row[j];}
 				else
-					row[j] = - row[j];
+				{row[j] = - row[j];}
 			}
 		}
 		var init = [ reorder.array1d(n, 1), reorder.random_array(n) ],
@@ -2523,7 +2523,7 @@
 	function spectral_order(graph, comps) {
 		var i, vec, comp, perm, order = [];
 		if (! comps)
-			comps = graph.components();
+		{comps = graph.components();}
 
 		for (i = 0; i < comps.length; i++) {
 			comp = comps[i];
@@ -2540,7 +2540,7 @@
 	function center(v) {
 		var n = v.length;
 
-		if (n === 0) return null;
+		if (n === 0) {return null;}
 
 		var mean = reorder.meancolumns(v),
 			o = mean.length,
@@ -2562,7 +2562,7 @@
 	reorder.pca1d = function(v, eps) {
 		var n = v.length;
 
-		if (v.length === 0) return null;
+		if (v.length === 0) {return null;}
 
 		v = center(v);
 		var cov = reorder.variancecovariance(v);
@@ -2585,7 +2585,7 @@
 			row = v[i];
 			s = 0;
 			for (j = 0; j < o; j++)
-				s += row[j];
+			{s += row[j];}
 			sumrow[i] = s;
 		}
 		return sumrow;
@@ -2600,7 +2600,7 @@
 		for (i = 0; i < n; i++) {
 			row = v[i];
 			for (j = 0; j < o; j++)
-				sumcol[j] += row[j];
+			{sumcol[j] += row[j];}
 		}
 		return sumcol;
 	}
@@ -2638,14 +2638,14 @@
 			y = s1.cols;
 			yxmult(y, x, nr, nc, dat);
 			for (var i = 0; i < nr; i++)
-				x[i] /= aidot[i];
+			{x[i] /= aidot[i];}
 		}
 		return s1;
 	}
 
 	function trans(y, yy, x, aidot, mi, n, dat,prt) {
 		var i, j, a1;
-		if (prt) console.log("TRANS "+prt);
+		if (prt) {console.log("TRANS "+prt);}
 		yxmult(y,x,mi,n,dat,prt);
 		for (i = 0; i < mi; i++) {
 			x[i] = x[i]/aidot[i]; // 10
@@ -2675,12 +2675,12 @@
 			printvec(y,5, null, "y=");
 		}
 		for (j = 0; j < n; j++)
-			y[j] = 0.0; // 10
+		{y[j] = 0.0;} // 10
 		for (i = 0; i < mi; i++) {
 			ax = x[i];
 			row = dat[i];
 			for (j = 0; j < n; j++)
-				y[j] += ax*row[j]; // 20
+			{y[j] += ax*row[j];} // 20
 		}
 		if (prt) {
 			//console.log('xymult[1]=');
@@ -2732,7 +2732,7 @@
 			// 20
 			a = 0.0;
 			for (j = 0; j < n; j++)
-				a += y[j]*adotj[j]; // 30
+			{a += y[j]*adotj[j];} // 30
 			a /= tot;
 			ex = 0.0;
 			for (j = 0; j < n; j++) {
@@ -2742,7 +2742,7 @@
 			}
 			ex = Math.sqrt(ex);
 			for (j = 0; j < n; j++)
-				y[j] /= ex; // 50
+			{y[j] /= ex;} // 50
 			trans(y,y2,x,aidot,mi,n,dat);//,2);
 			a=0.0;
 			a11=0.0;
@@ -2766,9 +2766,9 @@
 			}
 			a12 = Math.sqrt(a12);
 			for (j = 0; j < n; j++)
-				y2[j] /= a12; // 80
+			{y2[j] /= a12;} // 80
 			if (a12 < tol || icount > 999)
-				break;
+			{break;}
 			icount++;
 			trans(y2,y3,x,aidot,mi,n,dat);//,3);
 			a = 0.0;
@@ -2814,10 +2814,10 @@
 				if(a34 > tol) {
 					// 135
 					for (j = 0; j < n; j++)
-						y4[j] /= a34; // 140
+					{y4[j] /= a34;} // 140
 					trans(y4,y5,x,aidot,mi,n,dat);//,5);
 					for (j = 0; j < n; j++)
-						a44 += y4[j]*y5[j]; // 150
+					{a44 += y4[j]*y5[j];} // 150
 				}
 				else {
 					a34=0.0;
@@ -2836,9 +2836,9 @@
 			// 	    ' ax4 '+ax4.toFixed(6));
 
 			// 180
-			if(a12 < tol) break;
+			if(a12 < tol) {break;}
 			for (j = 0; j < n; j++)
-				y[j]= ax1*y[j]+ax2*y2[j]+ax3*y3[j]+ax4*y4[j]; // 190
+			{y[j]= ax1*y[j]+ax2*y2[j]+ax3*y3[j]+ax4*y4[j];} // 190
 			// goto 20
 		}
 		// 200
@@ -2852,26 +2852,26 @@
 		for (j = 1; j < n; j++) {
 			a = y[j];
 			if (a < aymin)
-				aymin = a;
+			{aymin = a;}
 			else if (a > aymax)
-				aymax = a;
+			{aymax = a;}
 		}
 		if (-aymin > aymax) {
 			for (j = 0; j < n; j++) // 210
-				y[j] = -y[j];
+			{y[j] = -y[j];}
 		}
 		yxmult(y,x,mi,n,dat);//,true);
 		for (i = 0; i < mi; i++)
-			x[i] /= aidot[i]; // 220
+		{x[i] /= aidot[i];} // 220
 		// 225
 		var axlong = 0.0;
 		for (i = 0; i < mi; i++)
-			axlong += aidot[i]*sqr(x[i]); // 230
+		{axlong += aidot[i]*sqr(x[i]);} // 230
 		axlong = Math.sqrt(axlong);
 		for (i = 0; i < mi; i++)
-			x[i] /= axlong; // 240
+		{x[i] /= axlong;} // 240
 		for (j = 0; j < n; j++)
-			y[j] /= axlong; // 250
+		{y[j] /= axlong;} // 250
 		var sumsq=0.0,
 			ax;
 		for (i = 0; i < mi; i++) {
@@ -2887,11 +2887,11 @@
 			sd = aymax/axlong;
 			var sd1 = -aymin/axlong;
 			if (sd1 > sd)
-				sd = sd1;
+			{sd = sd1;}
 		}
 		// 265
 		for (j = 0; j < n; j++)
-			y[j] /= sd; // 270
+		{y[j] /= sd;} // 270
 
 		//printvec(x);
 		//printvec(y);
@@ -2929,7 +2929,7 @@
                    sqr(ax3-axx3/exx)+sqr(ax4-axx4/exx));
 			}
 			if (resi < tol*0.05)
-				break;
+			{break;}
 			// 170
 		}
 		// 180
@@ -2949,7 +2949,7 @@
 	/*jshint loopfunc:true */
 	reorder.cuthill_mckee = function(graph, comp) {
 		if (comp.length < 3)
-			return comp;
+		{return comp;}
 
 		var nodes = graph.nodes(),
 			start = comp[0],
@@ -2966,14 +2966,14 @@
 				min_deg = graph.degree(n);
 				start = n;
 				if (min_deg == 1)
-					break;
+				{break;}
 			}
 		}
 		queue.push(start);
 		while (queue.length !== 0) {
 			n = queue.shift();
 			if (visited[n])
-				continue;
+			{continue;}
 			visited[n] = true;
 			perm.push(n);
 			e = graph.edges(n)
@@ -3035,16 +3035,16 @@
 			}
 			for (; j < ret.length; j++) {
 				v = row[j];
-				if (v < min) min = v;
-				else if (v > max) max = v;
+				if (v < min) {min = v;}
+				else if (v > max) {max = v;}
 			}
 			s = max != min ? 1.0 / (max - min) : 0;
 			for (j = 1; j < ret.length; j++) {
 				v = row[j];
 				if (v !== null && v >= v)
-					row[j] = row[j]*s - min;
+				{row[j] = row[j]*s - min;}
 				else
-					v = NaN;
+				{v = NaN;}
 			}
 
 		}
@@ -3052,7 +3052,7 @@
 	};
 	function array_to_dicts(data, axes) {
 		if (arguments.length < 2)
-			axes = reorder.range(data[0].length);
+		{axes = reorder.range(data[0].length);}
 		var ret = [], row, dict, i, j;
 		for (i = 0; i < data.length; i++) {
 			row = data[i];
@@ -3069,7 +3069,7 @@
 
 	function dicts_to_array(dicts, keys) {
 		if (arguments.length < 2)
-			keys = Object.keys(dicts[0]);
+		{keys = Object.keys(dicts[0]);}
 		var n = keys.length,
 			m = dicts.length,
 			array = Array(m), i, j, row;
@@ -3078,7 +3078,7 @@
 			row = Array(n);
 			array[i] = row;
 			for (j = 0; j < n; j++)
-				row[j] = dicts[i][keys[j]];
+			{row[j] = dicts[i][keys[j]];}
 		}
 		return array;
 	}
@@ -3094,27 +3094,27 @@
 		for (i = 1; i < perm.length; i++) {
 			c = pcor[perm[i-1]][perm[i]];
 			if (c < 0)
-				sign = -sign;
+			{sign = -sign;}
 			if (sign < 0) {
 				signs.push(-1);
 				negs++;
 			}
 			else
-				signs.push(1);
+			{signs.push(1);}
 		}
 		if (reorder.debug)
-			console.log(signs);
+		{console.log(signs);}
 		sign = (negs > (perm.length-negs)) ? -1 : 1;
 		if (sign==-1) {
 			for (i = 0; i < (perm.length-1); i++)
-				signs[i] = signs[i]*sign;
+			{signs[i] = signs[i]*sign;}
 		}
 		return signs;
 	}
 
 	function pcp(data, axes) {
 		if (! axes)
-			axes = reorder.range(data[0].length);
+		{axes = reorder.range(data[0].length);}
 
 		var tdata = reorder.transpose(data),
 			pcor = reorder.correlation.pearsonMatrix(tdata),
@@ -3150,13 +3150,13 @@
 			if (types[d] == "number") {
 				row = [];
 				for (j = 0; j < data.length; j++)
-					row.push(data[j][d]);
+				{row.push(data[j][d]);}
 				tdata.push(row);
 			}
 			else if (types[d] == "date") {
 				row = [];
 				for (j = 0; j < data.length; j++)
-					row.push(data[j][d].getTime()*0.001);
+				{row.push(data[j][d].getTime()*0.001);}
 				tdata.push(row);
 			}
 			else {
@@ -3179,7 +3179,7 @@
 		var signs = pcp_flip_axes(perm, naxes, pcor);
 		for (i = 0; i < signs.length; i++) {
 			if (signs[i] < 0)
-				p.flip(dimensions[i]);
+			{p.flip(dimensions[i]);}
 		}
 		dimensions = discarded.reverse().concat(dimensions); // put back string columns
 		return p.dimensions(dimensions);

@@ -280,55 +280,55 @@ function boxPlot() {
 	}
 
 	box.width = function (x) {
-		if (!arguments.length) return width;
+		if (!arguments.length) {return width;}
 		width = x;
 		return box;
 	};
 
 	box.height = function (x) {
-		if (!arguments.length) return height;
+		if (!arguments.length) {return height;}
 		height = x;
 		return box;
 	};
 
 	box.tickFormat = function (x) {
-		if (!arguments.length) return tickFormat;
+		if (!arguments.length) {return tickFormat;}
 		tickFormat = x;
 		return box;
 	};
 
 	box.duration = function (x) {
-		if (!arguments.length) return duration;
+		if (!arguments.length) {return duration;}
 		duration = x;
 		return box;
 	};
 
 	box.domain = function (x) {
-		if (!arguments.length) return domain;
+		if (!arguments.length) {return domain;}
 		domain = x == null ? x : x;
 		return box;
 	};
 
 	box.value = function (x) {
-		if (!arguments.length) return value;
+		if (!arguments.length) {return value;}
 		value = x;
 		return box;
 	};
 
 	box.whiskers = function (x) {
-		if (!arguments.length) return whiskers;
+		if (!arguments.length) {return whiskers;}
 		whiskers = x;
 		return box;
 	};
 
 	box.showLabels = function (x) {
-		if (!arguments.length) return showLabels;
+		if (!arguments.length) {return showLabels;}
 		showLabels = x;
 		return box;
 	};
 
 	box.quartiles = function (x) {
-		if (!arguments.length) return quartiles;
+		if (!arguments.length) {return quartiles;}
 		quartiles = x;
 		return box;
 	};

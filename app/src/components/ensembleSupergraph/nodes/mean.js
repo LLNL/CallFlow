@@ -33,13 +33,16 @@ export default {
 				.duration(this.$parent.transitionDuration)
 				.attrs({
 					"opacity": d => {
-						console.log(d);
 						if (d.type == "intermediate") {
 							return 0.0;
 						}
 						else {
 							return 1.0;
 						}
+					},
+					"height": (d) => {
+						console.log(d);
+						return d.height;
 					},
 				})
 				.style("stroke", (d) => {
@@ -66,7 +69,6 @@ export default {
 					return runtimeColor;
 				})
 				.style("stroke-width", (d) => {
-					console.log(this.stroke_width)
 					if (d.type == "intermediate") {
 						return 1;
 					}
@@ -75,7 +77,7 @@ export default {
 					}
 				})
 				.style("fill", (d) => {
-					if (d.id.split("_")[0] == "intermediate") {
+					if (d.type == "intermediate") {
 						return this.$store.color.ensemble;
 					}
 					else {

@@ -14,21 +14,20 @@ import EventHandler from "./EventHandler";
 // Template import
 import tpl from "../html/callflow.html";
 
+import EnsembleSuperGraph from "./ensembleSupergraph/ensembleSupergraph";
+import EnsembleCCT from "./ensembleCCT/ensembleCCT";
+
 // Single mode imports
 import RuntimeScatterplot from "./runtimeScatterplot/runtimeScatterplot";
 import SingleHistogram from "./histogram/histogram";
 import Function from "./function/function";
 
 // Ensemble mode imports
-import EnsembleSuperGraph from "./ensembleSupergraph/ensembleSupergraph";
-import EnsembleCCT from "./ensembleCCT/ensembleCCT";
 import CallsiteCorrespondence from "./callsiteCorrespondence/index";
 import EnsembleHistogram from "./ensembleHistogram/ensembleHistogram";
 import ModuleHierarchy from "./moduleHierarchy/moduleHierarchy";
 import EnsembleScatterplot from "./ensembleScatterplot/ensembleScatterplot";
-// import EnsembleDistribution from './ensembleDistribution/ensembleDistribution'
 import ParameterProjection from "./parameterProjection/parameterProjection";
-// import SimilarityMatrix from './similarityMatrix/similarityMatrix'
 
 import io from "socket.io-client";
 import * as utils from "./utils";
@@ -44,12 +43,10 @@ export default {
 		ModuleHierarchy,
 		EnsembleSuperGraph,
 		EnsembleCCT,
-		// SimilarityMatrix,
 		ParameterProjection,
 		CallsiteCorrespondence,
 		EnsembleHistogram,
 		EnsembleScatterplot,
-		// EnsembleDistribution
 	},
 
 	watch: {
@@ -116,7 +113,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: "<program root>",
 		modes: ["Ensemble", "Single"],
-		selectedMode: "Ensemble",
+		selectedMode: "Single",
 		// Presentation mode variables
 		exhibitModes: ["Presentation", "Default"],
 		selectedExhibitMode: "Default",
@@ -158,14 +155,14 @@ export default {
 		targetColors: ["Green", "Blue", "Brown"],
 		selectedTargetColor: "",
 		selectedTargetColorText: "Green",
-		showTarget: true,
+		showTarget: false,
 		targetInfo: "Target Guides",
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time)
 	}),
 
 	mounted() {
 		var socket = io.connect(this.server, { reconnect: false });
-		console.log(this.selectedMode)
+		console.log(this.selectedMode);
 		this.$socket.emit("init", {
 			mode: this.selectedMode,
 		});
@@ -204,26 +201,26 @@ export default {
 			this.setTargetDataset();
 			this.setComponentMap();
 
-			console.log(this.selectedFormat.length, this.selectedMode)
+			console.log(this.selectedFormat.length, this.selectedMode);
 			if (this.selectedFormat == "SuperGraph") {
-				if (this.selectedMode == "Single") {
-					this.$socket.emit("single_callsite_data", {
-						dataset: this.$store.selectedTargetDataset,
-						sortBy: this.$store.auxiliarySortBy,
-						binCount: this.$store.selectedMPIBinCount,
-						module: "all"
-					});
-				}
-				else if (this.selectedMode == "Ensemble") {
-					this.$socket.emit("ensemble_callsite_data", {
-						datasets: this.$store.selectedDatasets,
-						sortBy: this.$store.auxiliarySortBy,
-						MPIBinCount: this.$store.selectedMPIBinCount,
-						RunBinCount: this.$store.selectedRunBinCount,
-						module: "all",
-						re_process: this.$store.reprocess
-					});
-				}
+				// if (this.selectedMode == "Single") {
+				// 	this.$socket.emit("single_callsite_data", {
+				// 		dataset: this.$store.selectedTargetDataset,
+				// 		sortBy: this.$store.auxiliarySortBy,
+				// 		binCount: this.$store.selectedMPIBinCount,
+				// 		module: "all"
+				// 	});
+				// }
+				// else if (this.selectedMode == "Ensemble") {
+				this.$socket.emit("ensemble_callsite_data", {
+					datasets: this.$store.selectedDatasets,
+					sortBy: this.$store.auxiliarySortBy,
+					MPIBinCount: this.$store.selectedMPIBinCount,
+					RunBinCount: this.$store.selectedRunBinCount,
+					module: "all",
+					re_process: this.$store.reprocess
+				});
+				// }
 			}
 			else if (this.selectedFormat == "CCT") {
 				this.init();
@@ -271,9 +268,9 @@ export default {
 	methods: {
 		// Feature: Sortby the datasets and show the time.
 		formatRuntimeWithoutUnits(val) {
-			let format = d3.format('.2')
-			let ret = format(val)
-			return ret
+			let format = d3.format(".2");
+			let ret = format(val);
+			return ret;
 		},
 
 		// Feature: Sortby the datasets and show the time.
@@ -367,8 +364,8 @@ export default {
 			this.$store.selectedIQRFactor = this.selectedIQRFactor;
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters;
-			this.$store.selectedMode = this.selectedMode
-			this.$store.selectedEdgeAlignment = "Top"
+			this.$store.selectedMode = this.selectedMode;
+			this.$store.selectedEdgeAlignment = "Top";
 
 
 			this.$store.datasetMap = {};
@@ -387,7 +384,7 @@ export default {
 				this.$store.resetTargetDataset = true;
 			}
 			this.$store.selectedMetric = this.selectedMetric;
-			console.log(this.$store.selectedDatasets)
+			console.log(this.$store.selectedDatasets);
 			this.datasets = this.sortDatasetsByAttr(this.$store.selectedDatasets, "Inclusive");
 
 			let max_dataset = "";
@@ -423,16 +420,14 @@ export default {
 
 		setComponentMap() {
 			this.currentSingleCCTComponents = [this.$refs.EnsembleCCT];
-			this.currentSingleCallGraphComponents = [];
 			this.currentSingleSuperGraphComponents = [
 				this.$refs.EnsembleSuperGraph,
 				this.$refs.SingleHistogram,
 				this.$refs.RuntimeScatterplot,
-				// this.$refs.Function
+				this.$refs.CallsiteCorrespondence,
 			];
 
 			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT];
-			this.currentEnsembleCallGraphComponents = [];
 			this.currentEnsembleSuperGraphComponents = [
 				this.$refs.EnsembleSuperGraph,
 				this.$refs.EnsembleHistogram,
@@ -535,9 +530,6 @@ export default {
 				if (this.selectedFormat == "CCT") {
 					this.clearComponents(this.currentSingleCCTComponents);
 				}
-				else if (this.selectedFormat == "Callgraph") {
-					this.clearComponents(this.currentSingleCallGraphComponents);
-				}
 				else if (this.selectedFormat == "SuperGraph") {
 					this.clearComponents(this.currentSingleSuperGraphComponents);
 				}
@@ -545,9 +537,6 @@ export default {
 			else if (this.selectedMode == "Single") {
 				if (this.selectedFormat == "CCT") {
 					this.clearComponents(this.currentEnsembleCCTComponents);
-				}
-				else if (this.selectedFormat == "CallGraph") {
-					this.clearComponents(this.currentEnsembleCallGraphComponents);
 				}
 				else if (this.selectedFormat == "SuperGraph") {
 					this.clearComponents(this.currentEnsembleSuperGraphComponents);
@@ -560,9 +549,6 @@ export default {
 				if (this.selectedFormat == "CCT") {
 					this.clearComponents(this.currentEnsembleCCTComponents);
 				}
-				else if (this.selectedFormat == "CallGraph") {
-					this.clearComponents(this.currentEnsembleCallGraphComponents);
-				}
 				else if (this.selectedFormat == "SuperGraph") {
 					this.clearComponents(this.currentEnsembleSuperGraphComponents);
 				}
@@ -571,9 +557,6 @@ export default {
 				if (this.selectedFormat == "CCT") {
 					this.clearComponents(this.currentSingleCCTComponents);
 				}
-				else if (this.selectedFormat == "CallGraph") {
-					this.clearComponents(this.currentSingleCallGraphComponents);
-				}
 				else if (this.selectedFormat == "SuperGraph") {
 					this.clearComponents(this.currentSingleSuperGraphComponents);
 				}
@@ -581,7 +564,9 @@ export default {
 		},
 
 		initComponents(componentList) {
+			console.log(componentList);
 			for (let i = 0; i < componentList.length; i++) {
+				console.log(componentList[i]);
 				componentList[i].init();
 			}
 		},
@@ -601,7 +586,7 @@ export default {
 			this.setupColors();
 			this.setOtherData();
 			this.setTargetDataset();
-			if(this.selectedFormat == 'SuperGraph' && this.selectedMode == 'Ensemble'){
+			if(this.selectedFormat == "SuperGraph" && this.selectedMode == "Ensemble"){
 				this.setSelectedModule();
 			}
 
@@ -631,7 +616,7 @@ export default {
 					this.loadComponents(this.currentEnsembleCallGraphComponents);
 				}
 				else if (this.selectedFormat == "CCT") {
-					console.log(this.currentEnsembleCCTComponents)
+					console.log(this.currentEnsembleCCTComponents);
 					this.initComponents(this.currentEnsembleCCTComponents);
 				}
 			}

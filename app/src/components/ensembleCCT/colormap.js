@@ -8,7 +8,7 @@ import "d3-selection-multi";
 import * as utils from "../utils";
 
 export default {
-	template: `<g :id="colormap"></g>`,
+	template: "<g :id=\"colormap\"></g>",
 	name: "ColorMap",
 	components: {},
 

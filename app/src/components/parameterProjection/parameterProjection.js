@@ -514,7 +514,7 @@ export default {
 			let s = d3.event.selection;
 			if (!s) {
 				if (!this.idleTimeout)
-					return this.idleTimeout = setTimeout(this.idled, idleDelay);
+				{return this.idleTimeout = setTimeout(this.idled, idleDelay);}
 				this.x.domain([2.0 * this.xMin, 2.0 * this.xMax]);
 				this.y.domain([2.0 * this.yMin, 2.0 * this.yMax]);
 			}
@@ -532,7 +532,7 @@ export default {
 				// console.log(d3.brushSelection(this.brushSvg.node()))
 
 				// https://github.com/d3/d3-brush/issues/10
-				if (!d3.event.sourceEvent) return;
+				if (!d3.event.sourceEvent) {return;}
 
 				// to set the brush movement to null. But doesnt do the required trick.
 				// Reason: maybe webpack

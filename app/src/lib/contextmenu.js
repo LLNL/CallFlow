@@ -33,7 +33,7 @@ let contextMenu = function (menu, openCallback) {
 
 		// the openCallback allows an action to fire before the menu is displayed
 		// an example usage would be closing a tooltip
-		if (openCallback) openCallback(data, index);
+		if (openCallback) {openCallback(data, index);}
 
 		// display context menu
 		d3.select(".d3-context-menu")

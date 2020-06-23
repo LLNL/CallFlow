@@ -7,7 +7,7 @@ import * as d3 from "d3";
 
 export default {
 	name: "Box",
-	template: `<g class="box"></g>`,
+	template: "<g class=\"box\"></g>",
 
 	data: () => ({
 		id: "box",

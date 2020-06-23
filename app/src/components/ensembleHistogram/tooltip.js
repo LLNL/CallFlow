@@ -6,7 +6,7 @@
 import * as d3 from "d3";
 
 export default {
-	template: `<g id="tooltip-ensemble-histogram"></g>`,
+	template: "<g id=\"tooltip-ensemble-histogram\"></g>",
 	name: "ToolTip",
 	components: {},
 

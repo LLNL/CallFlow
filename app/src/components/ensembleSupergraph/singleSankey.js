@@ -26,43 +26,43 @@ export default function SingleSankey() {
 	var minDistanceBetweenNode = 0;
 
 	sankey.nodeWidth = function (_) {
-		if (!arguments.length) return nodeWidth;
+		if (!arguments.length) {return nodeWidth;}
 		nodeWidth = +_;
 		return sankey;
 	};
 
 	sankey.levelSpacing = function (_) {
-		if (!arguments.length) return levelSpacing;
+		if (!arguments.length) {return levelSpacing;}
 		levelSpacing = +_;
 		return sankey;
 	};
 
 	sankey.nodePadding = function (_) {
-		if (!arguments.length) return nodePadding;
+		if (!arguments.length) {return nodePadding;}
 		nodePadding = +_;
 		return sankey;
 	};
 
 	sankey.nodes = function (_) {
-		if (!arguments.length) return nodes;
+		if (!arguments.length) {return nodes;}
 		nodes = _;
 		return sankey;
 	};
 
 	sankey.links = function (_) {
-		if (!arguments.length) return links;
+		if (!arguments.length) {return links;}
 		links = _;
 		return sankey;
 	};
 
 	sankey.size = function (_) {
-		if (!arguments.length) return size;
+		if (!arguments.length) {return size;}
 		size = _;
 		return sankey;
 	};
 
 	sankey.maxLevel = function (_) {
-		if (!arguments.length) return maxLevel;
+		if (!arguments.length) {return maxLevel;}
 		maxLevel = _;
 		return sankey;
 	};
@@ -76,7 +76,7 @@ export default function SingleSankey() {
 	};
 
 	sankey.dataset = function (_) {
-		if (!arguments.length) return dataset;
+		if (!arguments.length) {return dataset;}
 		dataset = _;
 		return sankey;
 	};
@@ -102,19 +102,19 @@ export default function SingleSankey() {
 	};
 
 	sankey.setXSpacing = function (_) {
-		if (!arguments.length) return xSpacing;
+		if (!arguments.length) {return xSpacing;}
 		xSpacing = +_;
 		return sankey;
 	};
 
 	sankey.setReferenceValue = function (_) {
-		if (!arguments.length) return referenceValue;
+		if (!arguments.length) {return referenceValue;}
 		referenceValue = +_;
 		return sankey;
 	};
 
 	sankey.setMinNodeScale = function (_) {
-		if (!arguments.length) return minNodeScale;
+		if (!arguments.length) {return minNodeScale;}
 		minNodeScale = +_;
 		return sankey;
 	};
@@ -138,7 +138,7 @@ export default function SingleSankey() {
 		}
 
 		link.curvature = function (_) {
-			if (!arguments.length) return curvature;
+			if (!arguments.length) {return curvature;}
 			curvature = +_;
 			return link;
 		};
@@ -241,7 +241,7 @@ export default function SingleSankey() {
 		}
 
 		minDistanceBetweenNode = nodeWidth * 2;
-		console.log(size)
+		console.log(size);
 		widthScale = scalePow().domain([0, level + 1]).range([minDistanceBetweenNode, size[0]]);
 		scaleNodeBreadths((size[0] - nodeWidth / 2) / (maxLevel - 1));
 
@@ -394,7 +394,7 @@ export default function SingleSankey() {
 					for (let i = nodes.length - 2; i > 0; --i) {
 						node = nodes[i];
 						dy = node.y + node.height + nodePadding - y0;
-						if (dy > 0) node.y -= dy;
+						if (dy > 0) {node.y -= dy;}
 						y0 = node.y;
 					}
 				}
@@ -481,8 +481,8 @@ export default function SingleSankey() {
 			node.layer = i;
 			node.x = x0 + i * kx;
 			// node.x1 = node.x0 + this.nodeWidth;
-			if (columns[i]) columns[i].push(node);
-			else columns[i] = [node];
+			if (columns[i]) {columns[i].push(node);}
+			else {columns[i] = [node];}
 		}
 
 		for (const column of columns) {

@@ -32,7 +32,7 @@ export default {
 		async query(type, ...params) {
 			// If we're currently loading content
 			// we don't submit an additional request.
-			if (this.loading) return;
+			if (this.loading) {return;}
 
 			this.loading = true;
 			try {

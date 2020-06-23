@@ -32,67 +32,67 @@ export default function EnsembleSankey() {
 	let minDistanceBetweenNode = 0;
 
 	sankey.nodeWidth = function (_) {
-		if (!arguments.length) return nodeWidth;
+		if (!arguments.length) {return nodeWidth;}
 		nodeWidth = +_;
 		return sankey;
 	};
 
 	sankey.levelSpacing = function (_) {
-		if (!arguments.length) return levelSpacing;
+		if (!arguments.length) {return levelSpacing;}
 		levelSpacing = +_;
 		return sankey;
 	};
 
 	sankey.nodePadding = function (_) {
-		if (!arguments.length) return nodePadding;
+		if (!arguments.length) {return nodePadding;}
 		nodePadding = +_;
 		return sankey;
 	};
 
 	sankey.nodes = function (_) {
-		if (!arguments.length) return nodes;
+		if (!arguments.length) {return nodes;}
 		nodes = _;
 		return sankey;
 	};
 
 	sankey.links = function (_) {
-		if (!arguments.length) return links;
+		if (!arguments.length) {return links;}
 		links = _;
 		return sankey;
 	};
 
 	sankey.size = function (_) {
-		if (!arguments.length) return size;
+		if (!arguments.length) {return size;}
 		size = _;
 		return sankey;
 	};
 
 	sankey.maxLevel = function (_) {
-		if (!arguments.length) return maxLevel;
+		if (!arguments.length) {return maxLevel;}
 		maxLevel = _;
 		return sankey;
 	};
 
 	sankey.dataset = function (_) {
-		if (!arguments.length) return dataset;
+		if (!arguments.length) {return dataset;}
 		dataset = _;
 		return sankey;
 	};
 
 	sankey.targetDataset = function (_) {
-		if (!arguments.length) return targetDataset;
+		if (!arguments.length) {return targetDataset;}
 		targetDataset = _;
 		return sankey;
 	};
 
 	sankey.datasets = function (_) {
-		if (!arguments.length) return datasets;
+		if (!arguments.length) {return datasets;}
 		datasets = _;
 		return sankey;
 	};
 
 	sankey.store = function (_) {
-		if (!arguments.length) return store;
+		if (!arguments.length) {return store;}
 		store = _;
 		return sankey;
 	};
@@ -100,15 +100,15 @@ export default function EnsembleSankey() {
 	sankey.layout = function (iterations) {
 		addLinkID();
 		computeNodeLinks();
-		console.log("[Sankey] Computed Node links.");
+		console.debug("[Sankey] Computed Node links.");
 		computeNodeValues();
-		console.log("[Sankey] Computed node values.");
+		console.debug("[Sankey] Computed node values.");
 		computeNodeBreadths();
-		console.log("[Sankey] Computed node breadths.");
+		console.debug("[Sankey] Computed node breadths.");
 		computeNodeDepths(iterations);
-		console.log("[Sankey] Computed node depths");
+		console.debug("[Sankey] Computed node depths");
 		computeLinkDepths();
-		console.log("[Sankey] Computed linke depths.");
+		console.debug("[Sankey] Computed linke depths.");
 		return sankey;
 	};
 
@@ -118,7 +118,7 @@ export default function EnsembleSankey() {
 	};
 
 	sankey.setMinNodeScale = function (_) {
-		if (!arguments.length) return minNodeScale;
+		if (!arguments.length) {return minNodeScale;}
 		minNodeScale = +_;
 		return sankey;
 	};
@@ -142,7 +142,7 @@ export default function EnsembleSankey() {
 		}
 
 		link.curvature = function (_) {
-			if (!arguments.length) return curvature;
+			if (!arguments.length) {return curvature;}
 			curvature = +_;
 			return link;
 		};
@@ -228,14 +228,13 @@ export default function EnsembleSankey() {
 			node.max_flow = Math.max(sourceSum, targetSum);
 
 			if (node.type == "intermediate") {
-				console.log(node.name, node.value, node.targetValue);
+				// console.log(node.name, node.value, node.targetValue);
 			}
 			else {
 				// node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
 				node.value = node["actual_time"]["Inclusive"];
 				node.targetValue = 0;
 				if (node[store.selectedTargetDataset] != undefined) {
-					// node.targetValue = Math.max(node[store.selectedTargetDataset]['actual_time']['Inclusive'], node[store.selectedTargetDataset]['actual_time']['Exclusive'])
 					node.targetValue = node[store.selectedTargetDataset]["actual_time"]["Inclusive"];
 				}
 			}
@@ -245,10 +244,8 @@ export default function EnsembleSankey() {
 				node.targetValue = Math.max(node.targetValue, Math.max(sourceTargetSum, targetTargetSum));
 			}
 
-			console.log(node.id, node.value, node.targetValue);
-
-			console.log("[Compute node values] Adjusted flow", node.id, ": ", node.value);
-			console.log("[Compute node values] Adjusted target flow", node.id, ": ", node.targetValue);
+			console.debug("[Compute node values] Adjusted flow", node.id, ": ", node.value);
+			console.debug("[Compute node values] Adjusted target flow", node.id, ": ", node.targetValue);
 		});
 	}
 
@@ -294,7 +291,7 @@ export default function EnsembleSankey() {
 			count += 1;
 		}
 
-		console.log("[Compute node breadths] Number of levels: ", level);
+		console.debug("[Compute node breadths] Number of levels: ", level);
 
 		minDistanceBetweenNode = nodeWidth * 2;
 		widthScale = scalePow().domain([0, level]).range([minDistanceBetweenNode, size[0]]);
@@ -412,8 +409,6 @@ export default function EnsembleSankey() {
 
 		let total_value = Math.max(link.source_data.value, link.source_data.max_flow);
 
-		// let total_value = Math.max(sourceSum, targetSum)
-
 		return (total_value / link.source_data.max_flow);
 	}
 
@@ -450,15 +445,15 @@ export default function EnsembleSankey() {
 				node.y = Math.max(nodeHeight, i);
 				node.parY = node.y;
 
-				console.log("[Compute node depths] Node: ", node.id);
-				console.log("[Compute node depths] value: ", node.value);
-				console.log("[Compute node depths] minNodeScale: ", minNodeScale);
-				console.log("[Compute node depths] Ensemble scaling: ", scale);
+				console.debug("[Compute node depths] Node: ", node.id);
+				console.debug("[Compute node depths] value: ", node.value);
+				console.debug("[Compute node depths] minNodeScale: ", minNodeScale);
+				console.debug("[Compute node depths] Ensemble scaling: ", scale);
 
 				node.height = node.value * minNodeScale * scale;
 				node.targetHeight = node.targetValue * minNodeScale * scale;
 
-				console.log("[Compute node depths] Node height: ", node.height);
+				console.debug("[Compute node depths] Node height: ", node.height);
 			});
 			levelCount += 1;
 		});
@@ -536,7 +531,7 @@ export default function EnsembleSankey() {
 				for (let i = nodes.length - 2; i > 0; --i) {
 					node = nodes[i];
 					dy = node.y + node.height + nodePadding - y0;
-					if (dy > 0) node.y -= dy;
+					if (dy > 0) {node.y -= dy;}
 					y0 = node.y;
 				}
 			}
@@ -564,7 +559,7 @@ export default function EnsembleSankey() {
 		for (; i < nodes.length; ++i) {
 			const node = nodes[i];
 			const dy = (y - node.y0) * alpha;
-			if (dy > 1e-6) node.y0 += dy, node.y1 += dy;
+			if (dy > 1e-6) {node.y0 += dy, node.y1 += dy;}
 			y = node.y1 + nodePadding;
 		}
 	}
@@ -574,7 +569,7 @@ export default function EnsembleSankey() {
 		for (; i >= 0; --i) {
 			const node = nodes[i];
 			const dy = (node.y1 - y) * alpha;
-			if (dy > 1e-6) node.y0 -= dy, node.y1 -= dy;
+			if (dy > 1e-6) {node.y0 -= dy, node.y1 -= dy;}
 			y = node.y0 - nodePadding;
 		}
 		return y;
@@ -716,8 +711,8 @@ export default function EnsembleSankey() {
 			node.layer = i;
 			node.x = x0 + i * kx;
 			// node.x1 = node.x0 + this.nodeWidth;
-			if (columns[i]) columns[i].push(node);
-			else columns[i] = [node];
+			if (columns[i]) {columns[i].push(node);}
+			else {columns[i] = [node];}
 		}
 
 		for (const column of columns) {
