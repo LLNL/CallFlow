@@ -173,11 +173,6 @@ body {
   fill: #009688;
   opacity: 0.5;
 }
-
-#run-information {
-  max-height: 300px;
-}
-
 #auxiliary-function-overview {
   overflow: auto;
 }

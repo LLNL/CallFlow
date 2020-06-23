@@ -156,7 +156,6 @@ export default {
 				let callsite_data = this.intersectionCallsites[callsite];
 				let data = callsite_data[this.$store.selectedMetric]["mean_time"];
 				let id = "callsite-information-" + callsite_data.id;
-				console.log(id, data, document.getElementById(id));
 				document.getElementById(id).style.borderColor = this.$store.color.getColorByValue(data);
 			}
 		},
