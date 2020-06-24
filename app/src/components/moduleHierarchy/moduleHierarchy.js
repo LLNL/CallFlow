@@ -410,7 +410,7 @@ export default {
 				this.hist_max = Math.max(this.hist_max, data[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
 			}
 
-			this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
+			// this.$store.color.setColorScale("MeanGradients", this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
 
 			for (let idx = 0; idx < callsites.length; idx += 1) {
 				let callsite = callsites[idx];
@@ -446,7 +446,7 @@ export default {
 					let current_value = (val[i]);
 					this.linearGradient.append("stop")
 						.attr("offset", 100 * x + "%")
-						.attr("stop-color", this.$store.binColor.getColorByValue(current_value));
+						.attr("stop-color", this.$store.color.getColorByValue(current_value));
 				}
 			}
 		},
@@ -467,7 +467,6 @@ export default {
 				this.hist_max = Math.max(this.hist_max, data[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
 			}
 
-			this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
 
 			for (let idx = 0; idx < modules.length; idx += 1) {
 				let thismodule = modules[idx];
@@ -503,7 +502,7 @@ export default {
 					let current_value = (val[i]);
 					this.linearGradient.append("stop")
 						.attr("offset", 100 * x + "%")
-						.attr("stop-color", this.$store.binColor.getColorByValue(current_value));
+						.attr("stop-color", this.$store.color.getColorByValue(current_value));
 				}
 			}
 		},

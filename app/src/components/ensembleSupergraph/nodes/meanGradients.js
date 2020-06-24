@@ -8,8 +8,6 @@ import * as d3 from "d3";
 export default {
 	template: "<g :id=\"id\"></g>",
 	name: "MeanGradients",
-	components: {},
-
 	data: () => ({
 		strokeWidth: 7,
 		id: "mean-gradients"
@@ -41,8 +39,8 @@ export default {
 					hist_max = Math.max(hist_max, this.ensemble_callsite_data[node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
 				}
 			}
-			this.$store.binColor.setColorScale(hist_min, hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
-			this.$parent.$parent.$refs.EnsembleColorMap.updateWithMinMax("bin", hist_min, hist_max);
+			this.$store.color.setColorScale("MeanGradients", hist_min, hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
+			this.$parent.$parent.$refs.EnsembleColorMap.update(this.$store.mode, hist_min, hist_max);
 		},
 
 		gradients() {
@@ -81,7 +79,7 @@ export default {
 					let current_value = (val[i]);
 					this.linearGradient.append("stop")
 						.attr("offset", 100 * x + "%")
-						.attr("stop-color", this.$store.binColor.getColorByValue(current_value));
+						.attr("stop-color", this.$store.color.getColorByValue(current_value));
 				}
 			}
 		},

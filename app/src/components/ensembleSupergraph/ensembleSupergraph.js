@@ -166,12 +166,6 @@ export default {
 
 			// check cycle.
 			let detectcycle = detectDirectedCycle(this.data.graph);
-			// if (Object.keys(detectcycle).length != 0) {
-			// 	console.debug("cycle detected. Sankey cannot be created. ");
-			// }
-			// else {
-			// 	console.debug("No cycles detected.");
-			// }
 
 			if (this.debug) {
 				for (let i = 0; i < this.data["links"].length; i += 1) {
@@ -184,7 +178,6 @@ export default {
 					console.log("[Ensemble SuperGraph] Source Name :", source_callsite);
 					console.log("[Ensemble SuperGraph] Target Name :", target_callsite);
 					console.log("[Ensemble SuperGraph] Weight: ", weight);
-
 				}
 			}
 			this.initSankey(this.data);
@@ -200,9 +193,7 @@ export default {
 			this.$refs.EnsembleColorMap.init();
 			this.$refs.EnsembleNodes.init(this.$store.graph, this.view);
 			this.$refs.EnsembleEdges.init(this.$store.graph, this.view);
-			// if(this.$store.selectedMode == "Ensemble"){
-				this.$refs.MiniHistograms.init(this.$store.graph, this.view);
-			// }
+			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
 		},
 
 		addNodeMap(graph) {
@@ -220,7 +211,6 @@ export default {
 				}
 				idx += 1;
 			}
-
 			graph.nodeMap = nodeMap;
 			return graph;
 		},

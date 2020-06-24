@@ -125,22 +125,22 @@ export default {
 			this.postVis();
 
 			if (this.$store.selectedMode == "Ensemble") {
-				this.$store.mode = "mean-gradients";
+				this.$store.mode = "MEAN_GRADIENTS";
 			}
 			else if (this.$store.selectedMode == "Single") {
-				this.$store.mode = "mean";
+				this.$store.mode = "MEAN";
 			}
 
-			if (this.$store.mode == "mean-gradients") {
+			if (this.$store.mode == "MEAN_GRADIENTS") {
 				this.$refs.MeanGradients.init(this.graph.nodes, this.containerG);
 			}
-			else if (this.$store.mode == "mean") {
+			else if (this.$store.mode == "MEAN") {
 				this.$refs.Mean.init(this.graph.nodes, this.containerG);
 			}
-			else if (this.$store.mode == "mean-diff") {
+			else if (this.$store.mode == "MEAN_DIFF") {
 				console.log("TODO");
 			}
-			else if (this.$store.mode == "rank-diff") {
+			else if (this.$store.mode == "RANK_DIFF") {
 				console.log("TODO");
 			}
 

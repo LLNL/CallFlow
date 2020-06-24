@@ -5,7 +5,7 @@
  */
 import * as d3 from "d3";
 
-import Color from "./color/color";
+import Color from "../lib/color/color";
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
@@ -441,31 +441,43 @@ export default {
 		},
 
 		setupColors() {
-			this.$store.color = new Color(this.selectedMetric);
-			this.$store.zeroToOneColor = new Color(this.selectedMetric);
-			this.$store.binColor = new Color("Bin");
-			this.$store.rankDiffColor = new Color("RankDiff");
-			this.$store.meanDiffColor = new Color("MeanDiff");
+			this.$store.color = new Color();
 
+			// Set the settings options. 
 			this.runtimeColorMap = this.$store.color.getAllColors();
 			this.distributionColorMap = this.$store.color.getAllColors();
+
+			// Find the min and max and assign color variables from Settings.
+			let colorMin = null
+			let colorMax = null
 			if (this.selectedMode == "Ensemble") {
 				if (this.selectedMetric == "Inclusive") {
+					colorMin = parseFloat(this.$store.minIncTime["ensemble"])
+					colorMax = parseFloat(this.$store.maxIncTime["ensemble"])
 					this.selectedColorMin = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.minIncTime["ensemble"]));
 					this.selectedColorMax = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.maxIncTime["ensemble"]));
 				}
 				else if (this.selectedMetric == "Exclusive") {
+					colorMin = parseFloat(this.$store.minExcTime["ensemble"])
+					colorMax = parseFloat(this.$store.maxExcTime["ensemble"])
 					this.selectedColorMin = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.minExcTime["ensemble"]));
 					this.selectedColorMax = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.maxExcTime["ensemble"]));
 				}
-				this.selectedColorMin = 0.0;
+				else if (this.selectedMetric == "Imbalance") {
+					this.selectedColorMin = 0.0;
+					this.selectedColorMax = 1.0;
+				}
 			}
 			else if (this.selectedMode == "Single") {
 				if (this.selectedMetric == "Inclusive") {
+					colorMin = parseFloat(this.$store.minIncTime[this.selectedTargetDataset])
+					colorMax = parseFloat(this.$store.maxIncTime[this.selectedTargetDataset])
 					this.selectedColorMin = this.$store.minIncTime[this.selectedTargetDataset];
 					this.selectedColorMax = this.$store.maxIncTime[this.selectedTargetDataset];
 				}
 				else if (this.selectedMetric == "Exclusive") {
+					colorMin = parseFloat(this.$store.minExcTime[this.selectedTargetDataset])
+					colorMax = parseFloat(this.$store.maxExcTime[this.selectedTargetDataset])
 					this.selectedColorMin = this.$store.minExcTime[this.selectedTargetDataset];
 					this.selectedColorMax = this.$store.maxExcTime[this.selectedTargetDataset];
 				}
@@ -475,19 +487,24 @@ export default {
 				}
 			}
 
-			this.$store.color.setColorScale(this.selectedColorMin, this.selectedColorMax, this.selectedRuntimeColorMap, this.selectedColorPoint);
-			this.$store.zeroToOneColor.setColorScale(0, 1, this.selectedRuntimeColorMap, this.selectedColorPoint);
+			// Set color scale
+			this.$store.color.setColorScale(this.$store.selectedMetric, colorMin, colorMax, this.selectedRuntimeColorMap, this.selectedColorPoint);
 
-			this.$store.colorPoint = this.selectedColorPoint;
+			// Set properties into store.
 			this.$store.selectedColorMin = this.selectedColorMin;
 			this.$store.selectedColorMax = this.selectedColorMax;
 			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap;
 			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap;
 			this.$store.selectedColorPoint = this.selectedColorPoint;
 			this.selectedColorMinText = this.selectedColorMin;
+
+
 			this.selectedColorMaxText = this.selectedColorMax;
-			this.$store.color.highlight = "#AF9B90";//'#4681B4'
 			this.selectedTargetColor = this.targetColorMap[this.selectedTargetColorText];
+			this.targetColors = Object.keys(this.targetColorMap);
+
+
+			this.$store.color.highlight = "#AF9B90";
 			this.$store.color.target = this.selectedTargetColor;
 			this.$store.color.ensemble = "#C0C0C0";//'#4681B4'
 			this.$store.color.compare = "#043060";
@@ -495,7 +512,6 @@ export default {
 			this.$store.intermediateColor = "#d9d9d9";
 			this.$store.showTarget = this.showTarget;
 
-			this.targetColors = Object.keys(this.targetColorMap);
 		},
 
 		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
