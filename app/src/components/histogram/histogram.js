@@ -46,7 +46,7 @@ export default {
 		let self = this;
 		EventHandler.$on("single_histogram", function (data) {
 			self.clear();
-			console.log("Single histogram: ", data["module"]);
+			console.debug("Single histogram: ", data["module"]);
 			self.render(data["module"]);
 		});
 	},
@@ -81,9 +81,9 @@ export default {
 		},
 
 		render(callsite) {
-			let data = this.$store.modules[this.$store.selectedTargetDataset][callsite];
-			console.log(this.$store.selectedTargetDataset, callsite);
-			console.log(data);
+			let store = this.$store.modules[this.$store.selectedTargetDataset][callsite];
+			let data = store[this.$store.selectedMetric]["prop_histograms"][this.$store.selectedProp]["ensemble"];
+
 			let temp = this.dataProcess(data);
 			this.xVals = temp[0];
 			this.freq = temp[1];
@@ -154,35 +154,37 @@ export default {
 			let dataMin = 0;
 			let dataMax = 0;
 
-			if (this.$store.selectedMetric == "Inclusive") {
-				attr_data = data["hist_time (inc)"];
-				dataMin = data["min_time (inc)"];
-				dataMax = data["max_time (inc)"];
-				dataSorted = data["sorted_time (inc)"];
-			} else if (this.$store.selectedMetric == "Exclusive") {
-				attr_data = data["hist_time"];
-				dataMin = data["min_time"];
-				dataMax = data["max_time"];
-				dataSorted = data["sorted_time"];
-			} else if (this.$store.selectedMetric == "Imbalance") {
-				attr_data = data["hist_imbalance"];
-			}
+			// if (this.$store.selectedMetric == "Inclusive") {
+			// 	attr_data = data["hist_time (inc)"];
+			// 	dataMin = data["min_time (inc)"];
+			// 	dataMax = data["max_time (inc)"];
+			// 	dataSorted = data["sorted_time (inc)"];
+			// } else if (this.$store.selectedMetric == "Exclusive") {
+			// 	attr_data = data["hist_time"];
+			// 	dataMin = data["min_time"];
+			// 	dataMax = data["max_time"];
+			// 	dataSorted = data["sorted_time"];
+			// } else if (this.$store.selectedMetric == "Imbalance") {
+			// 	attr_data = data["hist_imbalance"];
+			// }
+
+			attr_data = data
 
 			const dataWidth = ((dataMax - dataMin) / this.$store.selectedBinCount);
 			for (let i = 0; i < this.$store.selectedBinCount; i++) {
 				axis_x.push(dataMin + (i * dataWidth));
 			}
 
-			dataSorted.forEach((val, idx) => {
-				let pos = Math.floor((val - dataMin) / dataWidth);
-				if (pos >= this.$store.selectedBinCount) {
-					pos = this.$store.selectedBinCount - 1;
-				}
-				if (binContainsProcID[pos] == null) {
-					binContainsProcID[pos] = [];
-				}
-				binContainsProcID[pos].push(data["rank"][idx]);
-			});
+			// dataSorted.forEach((val, idx) => {
+			// 	let pos = Math.floor((val - dataMin) / dataWidth);
+			// 	if (pos >= this.$store.selectedBinCount) {
+			// 		pos = this.$store.selectedBinCount - 1;
+			// 	}
+			// 	if (binContainsProcID[pos] == null) {
+			// 		binContainsProcID[pos] = [];
+			// 	}
+			// 	binContainsProcID[pos].push(data["rank"][idx]);
+			// });
 			return [attr_data["x"], attr_data["y"], axis_x, binContainsProcID];
 		},
 

@@ -85,7 +85,7 @@ export default function detectDirectedCycle(graph) {
 		const firstWhiteKey = Object.keys(whiteSet)[0];
 		const startVertex = whiteSet[firstWhiteKey];
 
-		console.log(firstWhiteKey, startVertex);
+		console.debug(firstWhiteKey, startVertex);
 		// Do Depth First Search.
 		depthFirstSearch(graph, startVertex, callbacks);
 	}

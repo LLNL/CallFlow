@@ -46,6 +46,7 @@ export default {
 			this.target_module_data = this.$store.modules[this.$store.selectedTargetDataset];
 			this.target_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
 
+			console.log(this.$store.selectedProp)
 			for (const node of this.nodes) {
 				let module = node.module;
 				let callsite = node.name;

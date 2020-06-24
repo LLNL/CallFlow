@@ -62,7 +62,8 @@ export default {
 		selectedOutlierRanks: {},
 		selectedOutlierDatasets: {},
 		showKNCCallsite: {},
-		showuKNCCallsite: {}
+		showuKNCCallsite: {},
+		selectedMode: 'Single'
 	}),
 	mounted() {
 		let self = this;
@@ -122,6 +123,7 @@ export default {
 			this.differenceCallsites = this.hideAllCallsites(this.differenceCallsites);
 
 			this.selectedModule = this.$store.selectedModule;
+			this.selectedMode = this.$store.selectedMode;
 			this.selectedCallsite = this.$store.selectedCallsite;
 			this.selectedMetric = this.$store.selectedMetric;
 			this.ensembleColor = d3.rgb(this.$store.color.ensemble).darker(1);
@@ -187,7 +189,7 @@ export default {
 			else {
 				this.switchIsSelectedCallsite(true);
 			}
-			console.log("Selected callsites: ", this.revealCallsites);
+			console.debug("Selected callsites: ", this.revealCallsites);
 		},
 
 		switchIsSelectedCallsite(val) {

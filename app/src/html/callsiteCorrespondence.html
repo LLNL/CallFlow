@@ -76,24 +76,25 @@
             </v-flex>
         </v-layout>
 
-        <template v-if="callsite.reveal == false">
+        <template v-if="callsite.reveal == false" v-show="selectedMode == 'Ensemble'">
             <v-layout row wrap>
-                <div class="subtitle-2" :style="'color: ' + targetColor">Mean : {{targetMeans[callsite.name]}}</div>
+                <!-- <div class="subtitle-2" :style="'color: ' + targetColor">Mean : {{targetMeans[callsite.name]}}</div> -->
                 <v-spacer></v-spacer>
                 <!-- <div class="subtitle-2" :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}</div> -->
-                <div class="subtitle-2" :style="'color: ' + targetColor">Std. Dev. :
-                    {{targetStandardDeviation[callsite.name]}}
+                <div class="subtitle-2" :style="'color: ' + targetColor" v-if='selectedMode == "Ensemble"'>Std. Dev. :
+                    {{targetStandardDeviation[callsite.name]}}                {{selectedMode}}
+
                 </div>
             </v-layout>
         </template>
         <!-- <div>Percentage imbalance : {{callsite['imbalance_perc_inclusive']}}</div>
         <div>Skewness: {{callsite['skewness_inclusive']}}</div>
         <div>Kurtosis: {{callsite['kurtosis_inclusive']}}</div> -->
-        <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget=false v-if="selectedMode =='Ensemble'"/>
+        <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget=false v-if="selectedMode == 'Ensemble'"/>
 
         <template v-if="callsite.reveal == false">
             <v-layout row wrap>
-                <div class="subtitle-2" :style="'color: ' + ensembleColor">Mean : {{ensembleMeans[callsite.name]}}</div>
+                <div class="subtitle-2" :style="'color: ' + ensembleColor">Messan : {{ensembleMeans[callsite.name]}}</div>
                 <v-spacer></v-spacer>
                 <!-- <div class="subtitle-2" :style="'color: ' + ensembleColor">Variance :
                     {{ensembleVariance[callsite.name]}}

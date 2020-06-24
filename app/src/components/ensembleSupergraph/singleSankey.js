@@ -84,15 +84,15 @@ export default function SingleSankey() {
 	sankey.layout = function (iterations) {
 		addLinkID();
 		computeNodeLinks();
-		console.log("[Sankey] Computed Node links.");
+		console.debug("[Sankey] Computed Node links.");
 		computeNodeValues();
-		console.log("[Sankey] Computed node values.");
+		console.debug("[Sankey] Computed node values.");
 		computeNodeBreadths();
-		console.log("[Sankey] Computed node breadths.");
+		console.debug("[Sankey] Computed node breadths.");
 		computeNodeDepths(iterations);
-		console.log("[Sankey] Computed node depths");
+		console.debug("[Sankey] Computed node depths");
 		computeLinkDepths();
-		console.log("[Sankey] Computed linke depths.");
+		console.debug("[Sankey] Computed linke depths.");
 		return sankey;
 	};
 
@@ -150,7 +150,7 @@ export default function SingleSankey() {
 		nodes.forEach(function (node) {
 			nodeMap[node.id] = node;
 			if (debug) {
-				console.log("[Sankey] Assigning", node.id, "with map index: ", idx);
+				console.debug("[Sankey] Assigning", node.id, "with map index: ", idx);
 			}
 			idx += 1;
 		});
@@ -230,7 +230,6 @@ export default function SingleSankey() {
 			remainingNodes.forEach(function (node) {
 				node.level = level;
 				node.dx = nodeWidth;
-				// console.log(node.id, node.level, level)
 				node.sourceLinks.forEach(function (link) {
 					nextNodes.push(link.target_data);
 				});
@@ -241,7 +240,6 @@ export default function SingleSankey() {
 		}
 
 		minDistanceBetweenNode = nodeWidth * 2;
-		console.log(size);
 		widthScale = scalePow().domain([0, level + 1]).range([minDistanceBetweenNode, size[0]]);
 		scaleNodeBreadths((size[0] - nodeWidth / 2) / (maxLevel - 1));
 

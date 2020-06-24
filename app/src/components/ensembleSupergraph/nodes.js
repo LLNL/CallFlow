@@ -22,7 +22,7 @@ export default {
     <Guides ref="Guides" />
     <TargetLine ref="TargetLine" />
     <MeanDiff ref="MeanDiff" />
-    <RankDiff ref="RankDiff" />
+	<RankDiff ref="RankDiff" />
 </g>`,
 	name: "EnsembleNodes",
 	components: {

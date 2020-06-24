@@ -41,32 +41,9 @@ export default {
 						}
 					},
 					"height": (d) => {
-						console.log(d);
 						return d.height;
 					},
-				})
-				.style("stroke", (d) => {
-					let runtimeColor = "";
-					if (d.type == "intermediate") {
-						runtimeColor = this.$store.color.ensemble;
-					}
-					else if (d.type == "component-node") {
-						if (this.$store.callsites[this.$store.selectedTargetDataset][d.id] != undefined) {
-							runtimeColor = d3.rgb(this.$store.color.getColor(d));
-						}
-						else {
-							runtimeColor = this.$store.color.ensemble;
-						}
-					}
-					else if (d.type == "super-node") {
-						if (this.$store.modules[this.$store.selectedTargetDataset][d.id] != undefined) {
-							runtimeColor = d3.rgb(this.$store.color.getColor(d));
-						}
-						else {
-							runtimeColor = this.$store.color.ensemble;
-						}
-					}
-					return runtimeColor;
+					"stroke": "#000"
 				})
 				.style("stroke-width", (d) => {
 					if (d.type == "intermediate") {

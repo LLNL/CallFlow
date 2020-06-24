@@ -128,7 +128,6 @@ export default {
 			let mean_time = [];
 			let mean_time_inc = [];
 			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
-				// if (this.$store.selectedDatasets[i] != this.$store.selectedTargetDataset || this.includesTarget) {
 				let callsites_in_module = this.$store.moduleCallsiteMap["ensemble"][this.selectedModule];
 				for (let j = 0; j < callsites_in_module.length; j += 1) {
 					let thiscallsite = callsites_in_module[j];
@@ -144,10 +143,8 @@ export default {
 							"val": thisdata["Inclusive"]["mean_time"],
 							"run": this.$store.selectedDatasets[i]
 						});
-
 					}
 				}
-				// }
 			}
 
 			let all_data = this.$store.modules["ensemble"][this.selectedModule];

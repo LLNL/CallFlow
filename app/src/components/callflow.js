@@ -162,7 +162,6 @@ export default {
 
 	mounted() {
 		var socket = io.connect(this.server, { reconnect: false });
-		console.log(this.selectedMode);
 		this.$socket.emit("init", {
 			mode: this.selectedMode,
 		});
@@ -201,7 +200,6 @@ export default {
 			this.setTargetDataset();
 			this.setComponentMap();
 
-			console.log(this.selectedFormat.length, this.selectedMode);
 			if (this.selectedFormat == "SuperGraph") {
 				// if (this.selectedMode == "Single") {
 				// 	this.$socket.emit("single_callsite_data", {
@@ -229,7 +227,7 @@ export default {
 		},
 
 		single_callsite_data(data) {
-			console.log("Auxiliary Data: ", data);
+			console.debug("Auxiliary Data: ", data);
 			this.dataReady = true;
 
 			this.$store.modules = data["module"];
@@ -237,7 +235,7 @@ export default {
 			this.$store.gradients = data["gradients"];
 			this.$store.moduleCallsiteMap = data["moduleCallsiteMap"];
 			this.$store.callsiteModuleMap = data["callsiteModuleMap"];
-			console.log("[Socket] Single Callsite data processing done.");
+			console.debug("[Socket] Single Callsite data processing done.");
 			this.init();
 		},
 
@@ -250,7 +248,7 @@ export default {
 			this.$store.gradients = data["gradients"];
 			this.$store.moduleCallsiteMap = data["moduleCallsiteMap"];
 			this.$store.callsiteModuleMap = data["callsiteModuleMap"];
-			console.log("[Socket] Ensemble Callsite data processing done.");
+			console.debug("[Socket] Ensemble Callsite data processing done.");
 			this.init();
 		},
 
@@ -315,7 +313,7 @@ export default {
 
 		setupStore(data) {
 			data = JSON.parse(data);
-			console.log("Config file contains: 	", data);
+			console.log("Config file: ", data);
 			this.$store.numOfRuns = data["datasets"].length;
 			this.$store.selectedDatasets = data["names"];
 			this.datasets = this.$store.selectedDatasets;
@@ -356,15 +354,22 @@ export default {
 		setOtherData() {
 			this.$store.selectedScatterMode = "mean";
 			this.$store.nodeInfo = {};
+			this.$store.selectedMode = this.selectedMode;
 			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
-			this.$store.selectedProp = this.selectedProp;
+			console.log(this.$store.selectedMode)
+			if (this.$store.selectedMode == 'Single') {
+				console.log("aaa")
+				this.$store.selectedProp = 'all_ranks'
+			}
+			else{
+				this.$store.selectedProp = this.selectedProp;
+			}
 			this.$store.selectedScale = this.selectedScale;
 			this.$store.selectedCompareMode = this.selectedCompareMode;
 			this.$store.selectedIQRFactor = this.selectedIQRFactor;
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters;
-			this.$store.selectedMode = this.selectedMode;
 			this.$store.selectedEdgeAlignment = "Top";
 
 
@@ -384,7 +389,6 @@ export default {
 				this.$store.resetTargetDataset = true;
 			}
 			this.$store.selectedMetric = this.selectedMetric;
-			console.log(this.$store.selectedDatasets);
 			this.datasets = this.sortDatasetsByAttr(this.$store.selectedDatasets, "Inclusive");
 
 			let max_dataset = "";
@@ -564,9 +568,7 @@ export default {
 		},
 
 		initComponents(componentList) {
-			console.log(componentList);
 			for (let i = 0; i < componentList.length; i++) {
-				console.log(componentList[i]);
 				componentList[i].init();
 			}
 		},
@@ -616,7 +618,6 @@ export default {
 					this.loadComponents(this.currentEnsembleCallGraphComponents);
 				}
 				else if (this.selectedFormat == "CCT") {
-					console.log(this.currentEnsembleCCTComponents);
 					this.initComponents(this.currentEnsembleCCTComponents);
 				}
 			}

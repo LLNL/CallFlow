@@ -72,36 +72,36 @@ export default {
 	sockets: {
 		ensemble_supergraph(data) {
 			data = JSON.parse(data);
-			console.log("Data: ", data);
+			console.debug("Data: ", data);
 			let nodes = [];
 			for (let i = 0; i < data.nodes.length; i += 1) {
-				console.log("Node name: ", data.nodes[i].id);
-				console.log("Time (inc): ", data.nodes[i]["time (inc)"]);
-				console.log("Time: ", data.nodes[i]["time"]);
+				console.debug("Node name: ", data.nodes[i].id);
+				console.debug("Time (inc): ", data.nodes[i]["time (inc)"]);
+				console.debug("Time: ", data.nodes[i]["time"]);
 			}
 
 			for (let i = 0; i < data.links.length; i += 1) {
-				console.log("Source: ", data.links[i].source);
-				console.log("Target: ", data.links[i].target);
-				console.log("Weight: ", data.links[i].weight);
+				console.debug("Source: ", data.links[i].source);
+				console.debug("Target: ", data.links[i].target);
+				console.debug("Weight: ", data.links[i].weight);
 			}
 			this.render(data);
 		},
 
 		single_supergraph(data) {
 			data = JSON.parse(data);
-			console.log("Data :", data);
+			console.debug("Data :", data);
 			let nodes = [];
 			for (let i = 0; i < data.nodes.length; i += 1) {
-				console.log("Node name: ", data.nodes[i].id);
-				console.log("Time (inc): ", data.nodes[i]["time (inc)"]);
-				console.log("Time: ", data.nodes[i]["time"]);
+				console.debug("Node name: ", data.nodes[i].id);
+				console.debug("Time (inc): ", data.nodes[i]["time (inc)"]);
+				console.debug("Time: ", data.nodes[i]["time"]);
 			}
 
 			for (let i = 0; i < data.links.length; i += 1) {
-				console.log("Source: ", data.links[i].source);
-				console.log("Target: ", data.links[i].target);
-				console.log("Weight: ", data.links[i].weight);
+				console.debug("Source: ", data.links[i].source);
+				console.debug("Target: ", data.links[i].target);
+				console.debug("Weight: ", data.links[i].weight);
 			}
 			this.render(data);
 		}
@@ -166,13 +166,12 @@ export default {
 
 			// check cycle.
 			let detectcycle = detectDirectedCycle(this.data.graph);
-			console.log(detectcycle);
-			if (Object.keys(detectcycle).length != 0) {
-				console.log("cycle detected. Sankey cannot be created. ");
-			}
-			else {
-				console.log("No cycles detected.");
-			}
+			// if (Object.keys(detectcycle).length != 0) {
+			// 	console.debug("cycle detected. Sankey cannot be created. ");
+			// }
+			// else {
+			// 	console.debug("No cycles detected.");
+			// }
 
 			if (this.debug) {
 				for (let i = 0; i < this.data["links"].length; i += 1) {
@@ -201,9 +200,9 @@ export default {
 			this.$refs.EnsembleColorMap.init();
 			this.$refs.EnsembleNodes.init(this.$store.graph, this.view);
 			this.$refs.EnsembleEdges.init(this.$store.graph, this.view);
-			if(this.$store.selectedMode == "Ensemble"){
+			// if(this.$store.selectedMode == "Ensemble"){
 				this.$refs.MiniHistograms.init(this.$store.graph, this.view);
-			}
+			// }
 		},
 
 		addNodeMap(graph) {
@@ -414,8 +413,6 @@ export default {
 					});
 				}
 			}
-			console.log(temp_edges.length, removeActualEdges.length, edges.length);
-
 
 			if (this.debug) {
 				console.log("[Ensemble SuperGraph] Removing", removeActualEdges.length, " edges.");
@@ -433,7 +430,6 @@ export default {
 					}
 				}
 			}
-			console.log(edges.length);
 			return {
 				nodes: nodes,
 				links: edges

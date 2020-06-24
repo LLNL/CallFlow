@@ -310,7 +310,7 @@
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Compare'"">
+		<v-layout v-if="selectedFormat == 'CCT' && selectedMode == 'Compare'"">
 			<splitpanes id=" ensemble-cct-dashboard">
 			<splitpanes horizontal :splitpanes-size="100">
 				<span>
@@ -321,7 +321,7 @@
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Compare'">
+		<v-layout v-if="selectedFormat == 'CCT' && selectedMode == 'Compare'">
 			<splitpanes id="compare-cct-dashboard">
 				<splitpanes horizontal :splitpanes-size="50">
 					<span>
