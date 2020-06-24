@@ -7,13 +7,13 @@ import * as d3 from "d3";
 import * as utils from "../utils";
 
 import EventHandler from "../EventHandler";
-import MeanGradients from "./nodes/meanGradients";
-import Guides from "./nodes/guides";
-import TargetLine from "./nodes/targetLine";
-import ToolTip from "./nodes/tooltip";
-import Mean from "./nodes/mean";
-import MeanDiff from "./nodes/meanDiff";
-import RankDiff from "./nodes/rankDiff";
+import MeanGradients from "./encodings/meanGradients";
+import Guides from "./encodings/guides";
+import TargetLine from "./encodings/targetLine";
+import ToolTip from "./encodings/tooltip";
+import Mean from "./encodings/mean";
+import MeanDiff from "./encodings/meanDiff";
+import RankDiff from "./encodings/rankDiff";
 
 export default {
 	template: `<g :id="id">

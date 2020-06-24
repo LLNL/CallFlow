@@ -173,7 +173,7 @@ body {
   fill: #009688;
   opacity: 0.5;
 }
-#auxiliary-function-overview {
+#auxiliary-function-overview, #callsite-information-overview {
   overflow: auto;
 }
 

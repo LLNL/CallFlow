@@ -4,15 +4,16 @@
  * SPDX-License-Identifier: MIT
  */
 import * as  d3 from "d3";
+import EventHandler from "../EventHandler.js";
 
 import tpl from "../../html/supergraph.html";
 import EnsembleSankey from "./ensembleSankey";
 import SingleSankey from "./singleSankey";
 import EnsembleNodes from "./nodes";
-import MiniHistograms from "./miniHistograms";
 import EnsembleEdges from "./edges";
-import EventHandler from "../EventHandler.js";
+import MiniHistograms from "./miniHistograms";
 import EnsembleColorMap from "./colormap";
+
 import Graph from "../../datastructures/graph";
 import GraphVertex from "../../datastructures/node";
 import GraphEdge from "../../datastructures/edge";
@@ -109,10 +110,8 @@ export default {
 
 	methods: {
 		init() {
-			this.auxiliaryViewWidth = document.getElementById("auxiliary-function-overview").clientWidth;
-
 			this.width = 5 * this.$store.viewWidth;
-			this.height = 2 * this.$store.viewHeight;
+			this.height = 1 * this.$store.viewHeight;
 
 			this.sankeySVG = d3.select("#" + this.id)
 				.attrs({

@@ -20,7 +20,7 @@ import EnsembleCCT from "./ensembleCCT/ensembleCCT";
 // Single mode imports
 import RuntimeScatterplot from "./runtimeScatterplot/runtimeScatterplot";
 import SingleHistogram from "./histogram/histogram";
-import Function from "./function/function";
+import CallsiteInformation from "./CallsiteInformation/index";
 
 // Ensemble mode imports
 import CallsiteCorrespondence from "./callsiteCorrespondence/index";
@@ -37,16 +37,19 @@ export default {
 	template: tpl,
 	components: {
 		Splitpanes,
-		RuntimeScatterplot,
-		Function,
-		SingleHistogram,
-		ModuleHierarchy,
+		// Generic components
 		EnsembleSuperGraph,
 		EnsembleCCT,
-		ParameterProjection,
-		CallsiteCorrespondence,
+		// Single supergraph components.
+		RuntimeScatterplot,
+		CallsiteInformation,
+		SingleHistogram,
+		// Ensemble supergraph components.
 		EnsembleHistogram,
 		EnsembleScatterplot,
+		ModuleHierarchy,
+		ParameterProjection,
+		CallsiteCorrespondence,
 	},
 
 	watch: {
@@ -57,7 +60,6 @@ export default {
 
 	data: () => ({
 		appName: "CallFlow",
-		// server: '169.237.6.49:5000',
 		server: "localhost:5000",
 		config: {
 			headers: {
@@ -129,8 +131,6 @@ export default {
 			"ensemble_projection",
 		],
 		parameter_analysis: true,
-		caseStudy: ["Lulesh-Scaling-3-runs", "Lulesh-Scaling-8-runs", "Kripke-MPI", "OSU-Bcast", "Kripke-Scaling"],
-		selectedCaseStudy: "",
 		selectedRunBinCount: 20,
 		selectedMPIBinCount: 20,
 		selectedHierarchyMode: "Uniform",
@@ -157,7 +157,8 @@ export default {
 		selectedTargetColorText: "Green",
 		showTarget: false,
 		targetInfo: "Target Guides",
-		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time)
+		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
+		selectedCaseStudy : '',
 	}),
 
 	mounted() {
@@ -201,15 +202,6 @@ export default {
 			this.setComponentMap();
 
 			if (this.selectedFormat == "SuperGraph") {
-				// if (this.selectedMode == "Single") {
-				// 	this.$socket.emit("single_callsite_data", {
-				// 		dataset: this.$store.selectedTargetDataset,
-				// 		sortBy: this.$store.auxiliarySortBy,
-				// 		binCount: this.$store.selectedMPIBinCount,
-				// 		module: "all"
-				// 	});
-				// }
-				// else if (this.selectedMode == "Ensemble") {
 				this.$socket.emit("ensemble_callsite_data", {
 					datasets: this.$store.selectedDatasets,
 					sortBy: this.$store.auxiliarySortBy,
@@ -218,25 +210,11 @@ export default {
 					module: "all",
 					re_process: this.$store.reprocess
 				});
-				// }
 			}
 			else if (this.selectedFormat == "CCT") {
 				this.init();
 			}
 
-		},
-
-		single_callsite_data(data) {
-			console.debug("Auxiliary Data: ", data);
-			this.dataReady = true;
-
-			this.$store.modules = data["module"];
-			this.$store.callsites = data["callsite"];
-			this.$store.gradients = data["gradients"];
-			this.$store.moduleCallsiteMap = data["moduleCallsiteMap"];
-			this.$store.callsiteModuleMap = data["callsiteModuleMap"];
-			console.debug("[Socket] Single Callsite data processing done.");
-			this.init();
 		},
 
 		ensemble_callsite_data(data) {
@@ -248,7 +226,6 @@ export default {
 			this.$store.gradients = data["gradients"];
 			this.$store.moduleCallsiteMap = data["moduleCallsiteMap"];
 			this.$store.callsiteModuleMap = data["callsiteModuleMap"];
-			console.debug("[Socket] Ensemble Callsite data processing done.");
 			this.init();
 		},
 
@@ -316,6 +293,7 @@ export default {
 			console.log("Config file: ", data);
 			this.$store.numOfRuns = data["datasets"].length;
 			this.$store.selectedDatasets = data["names"];
+			this.selectedCaseStudy = data["runName"];
 			this.datasets = this.$store.selectedDatasets;
 
 			// Enable diff mode only if the number of datasets >= 2
@@ -345,7 +323,6 @@ export default {
 
 			this.$store.auxiliarySortBy = this.auxiliarySortBy;
 			this.$store.reprocess = 0;
-			this.selectedCaseStudy = data["runName"];
 			this.$store.comparisonMode = this.comparisonMode;
 			this.$store.fontSize = 14;
 			this.$store.transitionDuration = 1000;
@@ -423,7 +400,7 @@ export default {
 				this.$refs.EnsembleSuperGraph,
 				this.$refs.SingleHistogram,
 				this.$refs.RuntimeScatterplot,
-				this.$refs.CallsiteCorrespondence,
+				this.$refs.CallsiteInformation,
 			];
 
 			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT];

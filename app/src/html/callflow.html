@@ -59,45 +59,13 @@
 				<v-btn icon>
 					<v-icon v-on:click="reset()">refresh</v-icon>
 				</v-btn>
-				<!-- <v-flex xs12 class="ma-1">
-					<v-subheader class="teal center lighten-4">Pre-processing</v-subheader>
-				</v-flex>
-				<v-flex xs12 class="ma-1">
-					<UploadButton title="Upload the config file" :selectedCallback="fileSelected"></UploadButton>
-				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
-					<v-select label="Group By" :items="groupBy" v-model="selectedGroupBy"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateGroupBy()">
-					</v-select>
-				</v-flex>
-				<v-flex xs12 class="ma-1">
-					<v-select label="Filter By" :items="filterBy" v-model="selectedFilterBy"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateFilterBy()">
-					</v-select>
-				</v-flex>
-				<v-flex xs12 class="ma-1">
-					<v-text-field label="Filter Threshold (in seconds)" v-model="selectedIncTime" class="mt-0"
-						type="number" @change="updateFilterIncTime"></v-text-field>
-					<vue-slider id="frequency-slider" :width="200" :process="true" v-model="selectedFilterPerc" :tooltip="'always'"  :tooltip-placement="'top'"
-						:order="false" @change="updateFilterPerc">
-						<template #prepend>
-							<v-text-field v-model="filterPercRange[[0, selectedFilterPerc]]" class="pt-0 mt-0"
-								hide-details single-line type="number" style="width: 30px">
-							</v-text-field>
-						</template>
-					</vue-slider>
-				</v-flex>
-				<v-divider></v-divider> -->
 
 				<!-- --------------------------- General Information ----------------------------------->
 				<v-flex xs12 class="ma-1">
 					<v-subheader class="teal lighten-4">General</v-subheader>
 				</v-flex>
 				<v-flex xs12 class="ma-1">
-					<!-- <v-select label="Case study" :items="caseStudy" v-model="selectedCaseStudy"
-						:menu-props="{ maxHeight: '400' }" box v-on:change="updateCaseStudy()">
-					</v-select> -->
-					<v-text-field rows="1" label="Simulation" v-model="selectedCaseStudy" readonly>
+					<v-text-field rows="1" label="Experiment" v-model="selectedCaseStudy" readonly>
 					</v-text-field>
 				</v-flex>
 
@@ -231,22 +199,6 @@
 						persistent-hint v-on:change="updatePC2()">
 					</v-select>
 				</v-flex>
-				<!-- <v-flex xs12 class="ma-1" v-show="selectedFormat =='Callgraph'">
-					<v-select label="Scatter mode" :items="scatterMode" v-model="selectedScatterMode"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateScatterMode()">
-					</v-select>
-				</v-flex> -->
-				<!-- <v-flex xs12 class="ma-1" v-show="selectedFormat == 'CCT'">
-					<v-text-field label="Min. number of functions in CCT" class="mt-0" type="number"
-						v-model="selectedFunctionsInCCT" :menu-props="{ maxHeight: '200' }" persistent-hint
-						v-on:change="updateFunctionsInCCT()">
-					</v-text-field>
-				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat == 'Callgraph' && selectedMode == 'Ensemble'">
-					<v-select label="Align node to" :items="diffNodeAlignment" v-model="selectedDiffNodeAlignment"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateDiffNodeAlignment()">
-					</v-select>
-				</v-flex> -->
 			</v-layout>
 		</v-card>
 	</v-navigation-drawer>
@@ -293,12 +245,17 @@
 				</splitpanes>
 
 				<!-- Right column-->
-				<splitpanes horizontal :splitpanes-size="20">
-					<span>
+				<splitpanes horizontal :splitpanes-size="20" v-if="selectedMode == 'Ensemble'">
+					<span >
 						<CallsiteCorrespondence ref="CallsiteCorrespondence" />
 					</span>
-					<span v-show="selectedMode == 'Ensemble'">
+					<span>
 						<ParameterProjection ref="ParameterProjection" @compare="updateCompareMode" />
+					</span>
+				</splitpanes>
+				<splitpanes horizontal :splitpanes-size="20" v-if="selectedMode == 'Single'">
+					<span>
+						<CallsiteInformation ref="CallsiteInformation" />
 					</span>
 				</splitpanes>
 
