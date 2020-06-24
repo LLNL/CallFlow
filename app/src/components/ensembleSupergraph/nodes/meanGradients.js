@@ -18,28 +18,12 @@ export default {
 			this.nodes = nodes;
 			this.containerG = containerG;
 
-			this.ensemble_module_data = this.$store.modules["ensemble"];
-			this.ensemble_callsite_data = this.$store.callsites["ensemble"];
-
-			this.colorScale();
+			// this.colorScale();
 			this.gradients();
 			this.visualize();
 		},
 
 		colorScale() {
-			let hist_min = 0;
-			let hist_max = 0;
-			for (let node of this.nodes) {
-				if (node.type == "super-node") {
-					hist_min = Math.min(hist_min, this.ensemble_module_data[node.module][this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
-					hist_max = Math.max(hist_max, this.ensemble_module_data[node.module][this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
-				}
-				else if (node.type == "component-node") {
-					hist_min = Math.min(hist_min, this.ensemble_callsite_data[node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
-					hist_max = Math.max(hist_max, this.ensemble_callsite_data[node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
-				}
-			}
-			this.$store.color.setColorScale("MeanGradients", hist_min, hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
 			this.$parent.$parent.$refs.EnsembleColorMap.update(this.$store.mode, hist_min, hist_max);
 		},
 
@@ -61,12 +45,12 @@ export default {
 				let grid = [];
 				let val = [];
 				if (node.type == "super-node") {
-					grid = this.ensemble_module_data[node.module][this.$store.selectedMetric]["gradients"]["hist"]["x"];
-					val = this.ensemble_module_data[node.module][this.$store.selectedMetric]["gradients"]["hist"]["y"];
+					grid = this.$store.modules["ensemble"][node.module][this.$store.selectedMetric]["gradients"]["hist"]["x"];
+					val = this.$store.modules["ensemble"][node.module][this.$store.selectedMetric]["gradients"]["hist"]["y"];
 				}
 				else if (node.type == "component-node") {
-					grid = this.ensemble_callsite_data[node.name][this.$store.selectedMetric]["gradients"]["hist"]["x"];
-					val = this.ensemble_callsite_data[node.name][this.$store.selectedMetric]["gradients"]["hist"]["y"];
+					grid = this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["x"];
+					val = this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["y"];
 
 				}
 				else if (node.type == "intermediate") {
@@ -79,7 +63,7 @@ export default {
 					let current_value = (val[i]);
 					this.linearGradient.append("stop")
 						.attr("offset", 100 * x + "%")
-						.attr("stop-color", this.$store.color.getColorByValue(current_value));
+						.attr("stop-color", this.$store.distributionColor.getColorByValue(current_value));
 				}
 			}
 		},
@@ -102,24 +86,15 @@ export default {
 						}
 					},
 					"stroke": (d) => {
-						let runtimeColor = "";
-						if (d.type == "intermediate") {
-							runtimeColor = this.$store.color.ensemble;
-						}
-						else if (d.type == "component-node") {
+						let runtimeColor = this.$store.runtimeColor.intermediate;
+						if (d.type == "component-node") {
 							if (this.$store.callsites[this.$store.selectedTargetDataset][d.id] != undefined) {
-								runtimeColor = d3.rgb(this.$store.color.getColor(d));
-							}
-							else {
-								runtimeColor = this.$store.color.ensemble;
+								runtimeColor = d3.rgb(this.$store.runtimeColor.getColor(d));
 							}
 						}
 						else if (d.type == "super-node") {
 							if (this.$store.modules[this.$store.selectedTargetDataset][d.id] != undefined) {
-								runtimeColor = d3.rgb(this.$store.color.getColor(d));
-							}
-							else {
-								runtimeColor = this.$store.color.ensemble;
+								runtimeColor = d3.rgb(this.$store.runtimeColor.getColor(d));
 							}
 						}
 						return runtimeColor;
@@ -134,11 +109,11 @@ export default {
 					},
 					"fill": (d) => {
 						if (d.type == "intermediate") {
-							return this.$store.color.target;
+							return this.$store.runtimeColor.intermediate;
 						}
 						else if (d.type == "super-node") {
 							if (this.$store.modules[this.$store.selectedTargetDataset][d.id] == undefined) {
-								return this.intermediateColor;
+								return this.$store.runtimeColor.intermediate;
 							}
 							else {
 								return "url(#mean-gradient" + d.client_idx + ")";
@@ -146,7 +121,7 @@ export default {
 						}
 						else if (d.type == "component-node") {
 							if (this.$store.callsites[this.$store.selectedTargetDataset][d.name] == undefined) {
-								return this.intermediateColor;
+								return this.$store.runtimeColor.intermediate;
 							}
 							else {
 								return "url(#mean-gradient" + d.client_idx + ")";

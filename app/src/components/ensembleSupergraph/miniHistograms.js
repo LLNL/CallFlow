@@ -84,10 +84,10 @@ export default {
 
 			let color = "";
 			if (type == "ensemble") {
-				color = this.$store.color.ensemble;
+				color = this.$store.distributionColor.ensemble;
 			}
 			else if (type == "target") {
-				color = this.$store.color.target;
+				color = this.$store.distributionColor.target;
 			}
 
 			if (type == "ensemble") {

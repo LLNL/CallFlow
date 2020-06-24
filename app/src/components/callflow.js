@@ -82,7 +82,7 @@ export default {
 		selectedMetric: "Exclusive",
 		runtimeColorMap: [],
 		distributionColorMap: [],
-		selectedRuntimeColorMap: "Default",
+		selectedRuntimeColorMap: "Blues",
 		selectedDistributionColorMap: "Reds",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
 		selectedColorPoint: 9,
@@ -113,7 +113,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: "<program root>",
 		modes: ["Ensemble", "Single"],
-		selectedMode: "Single",
+		selectedMode: "Ensemble",
 		// Presentation mode variables
 		exhibitModes: ["Presentation", "Default"],
 		selectedExhibitMode: "Default",
@@ -360,7 +360,7 @@ export default {
 			if (this.$store.selectedMode == 'Single') {
 				this.$store.selectedProp = 'all_ranks'
 			}
-			else{
+			else {
 				this.$store.selectedProp = this.selectedProp;
 			}
 			this.$store.selectedScale = this.selectedScale;
@@ -370,16 +370,13 @@ export default {
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters;
 			this.$store.selectedEdgeAlignment = "Top";
 
-
 			this.$store.datasetMap = {};
 			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
 				this.$store.datasetMap[this.$store.selectedDatasets[i]] = "run-" + i;
 			}
 
 			this.$store.contextMenu = this.contextMenu;
-
-			this.$store.selectedSuperNodePositionMode = "Minimal edge  crossing";
-
+			this.$store.selectedSuperNodePositionMode = "Minimal edge crossing";
 		},
 
 		setTargetDataset() {
@@ -440,77 +437,95 @@ export default {
 			];
 		},
 
-		setupColors() {
-			this.$store.color = new Color();
-
-			// Set the settings options. 
-			this.runtimeColorMap = this.$store.color.getAllColors();
-			this.distributionColorMap = this.$store.color.getAllColors();
-
-			// Find the min and max and assign color variables from Settings.
+		// Set the min and max and assign color variables from Settings.
+		setRuntimeColorScale() {
 			let colorMin = null
 			let colorMax = null
 			if (this.selectedMode == "Ensemble") {
 				if (this.selectedMetric == "Inclusive") {
-					colorMin = parseFloat(this.$store.minIncTime["ensemble"])
-					colorMax = parseFloat(this.$store.maxIncTime["ensemble"])
-					this.selectedColorMin = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.minIncTime["ensemble"]));
-					this.selectedColorMax = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.maxIncTime["ensemble"]));
+					colorMin = parseFloat(this.$store.minIncTime["ensemble"]);
+					colorMax = parseFloat(this.$store.maxIncTime["ensemble"]);
 				}
 				else if (this.selectedMetric == "Exclusive") {
-					colorMin = parseFloat(this.$store.minExcTime["ensemble"])
-					colorMax = parseFloat(this.$store.maxExcTime["ensemble"])
-					this.selectedColorMin = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.minExcTime["ensemble"]));
-					this.selectedColorMax = utils.formatRuntimeWithoutUnits(parseFloat(this.$store.maxExcTime["ensemble"]));
+					colorMin = parseFloat(this.$store.minExcTime["ensemble"]);
+					colorMax = parseFloat(this.$store.maxExcTime["ensemble"]);
 				}
 				else if (this.selectedMetric == "Imbalance") {
-					this.selectedColorMin = 0.0;
-					this.selectedColorMax = 1.0;
+					colorMin = 0.0;
+					colorMax = 1.0;
 				}
 			}
 			else if (this.selectedMode == "Single") {
 				if (this.selectedMetric == "Inclusive") {
-					colorMin = parseFloat(this.$store.minIncTime[this.selectedTargetDataset])
-					colorMax = parseFloat(this.$store.maxIncTime[this.selectedTargetDataset])
-					this.selectedColorMin = this.$store.minIncTime[this.selectedTargetDataset];
-					this.selectedColorMax = this.$store.maxIncTime[this.selectedTargetDataset];
+					colorMin = parseFloat(this.$store.minIncTime[this.selectedTargetDataset]);
+					colorMax = parseFloat(this.$store.maxIncTime[this.selectedTargetDataset]);
 				}
 				else if (this.selectedMetric == "Exclusive") {
-					colorMin = parseFloat(this.$store.minExcTime[this.selectedTargetDataset])
-					colorMax = parseFloat(this.$store.maxExcTime[this.selectedTargetDataset])
-					this.selectedColorMin = this.$store.minExcTime[this.selectedTargetDataset];
-					this.selectedColorMax = this.$store.maxExcTime[this.selectedTargetDataset];
+					colorMin = parseFloat(this.$store.minExcTime[this.selectedTargetDataset]);
+					colorMax = parseFloat(this.$store.maxExcTime[this.selectedTargetDataset]);
 				}
 				else if (this.selectedMetric == "Imbalance") {
-					this.selectedColorMin = 0.0;
-					this.selectedColorMax = 1.0;
+					colorMin = 0.0;
+					colorMax = 1.0;
 				}
 			}
 
-			// Set color scale
-			this.$store.color.setColorScale(this.$store.selectedMetric, colorMin, colorMax, this.selectedRuntimeColorMap, this.selectedColorPoint);
+			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(parseFloat(colorMin));
+			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(parseFloat(colorMax));
+
+			this.$store.selectedColorMin = this.colorMin;
+			this.$store.selectedColorMax = this.colorMax;
+			
+			this.$store.runtimeColor.setColorScale(this.$store.selectedMetric, colorMin, colorMax, this.selectedRuntimeColorMap, this.selectedColorPoint);
+		},
+
+		setDistributionColorScale() {
+			let hist_min = 0;
+			let hist_max = 0;
+			for (let module in this.$store.modules["ensemble"]) {
+				let node = this.$store.modules["ensemble"][module]
+				// if (node.type == "super-node") {
+				hist_min = Math.min(hist_min, node[this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
+				hist_max = Math.max(hist_max, node[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
+				// }
+				// else if (node.type == "component-node") {
+					// hist_min = Math.min(hist_min, this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
+					// hist_max = Math.max(hist_max, this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
+				// }
+			}
+			console.log(this.selectedDistributionColorMap)
+			this.$store.distributionColor.setColorScale("MeanGradients", hist_min, hist_max, this.selectedDistributionColorMap, this.selectedColorPoint);
+		},
+
+		setupColors() {
+			// Create color object.
+			this.$store.runtimeColor = new Color();
+			this.runtimeColorMap = this.$store.runtimeColor.getAllColors();
+			this.setRuntimeColorScale()
+
+			if (this.selectedMode == "Ensemble") {
+				this.$store.distributionColor = new Color();
+				this.distributionColorMap = this.$store.distributionColor.getAllColors();
+				this.setDistributionColorScale();
+			}
+
+			
 
 			// Set properties into store.
-			this.$store.selectedColorMin = this.selectedColorMin;
-			this.$store.selectedColorMax = this.selectedColorMax;
 			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap;
 			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap;
 			this.$store.selectedColorPoint = this.selectedColorPoint;
-			this.selectedColorMinText = this.selectedColorMin;
-
-
-			this.selectedColorMaxText = this.selectedColorMax;
+			
 			this.selectedTargetColor = this.targetColorMap[this.selectedTargetColorText];
 			this.targetColors = Object.keys(this.targetColorMap);
 
-
-			this.$store.color.highlight = "#AF9B90";
-			this.$store.color.target = this.selectedTargetColor;
-			this.$store.color.ensemble = "#C0C0C0";//'#4681B4'
-			this.$store.color.compare = "#043060";
-			this.$store.color.edgeStrokeColor = "#888888";
-			this.$store.intermediateColor = "#d9d9d9";
-			this.$store.showTarget = this.showTarget;
+			this.$store.distributionColor.target = this.selectedTargetColor;
+			this.$store.distributionColor.ensemble = "#C0C0C0";
+			this.$store.distributionColor.compare = "#043060";
+			this.$store.runtimeColor.intermediate = "#d9d9d9";
+			this.$store.runtimeColor.highlight = "#C0C0C0";
+			this.$store.runtimeColor.textColor = "#3a3a3a";
+			this.$store.runtimeColor.edgeStrokeColor = "#888888";
 
 		},
 
@@ -602,7 +617,7 @@ export default {
 			this.setupColors();
 			this.setOtherData();
 			this.setTargetDataset();
-			if(this.selectedFormat == "SuperGraph"){
+			if (this.selectedFormat == "SuperGraph") {
 				this.setSelectedModule();
 			}
 

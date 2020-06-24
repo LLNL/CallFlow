@@ -280,7 +280,7 @@ export default {
 					},
 					"fill": (d) => {
 						if (d.type == "intermediate") {
-							return this.$store.color.target;
+							return this.$store.distributionColor.target;
 						}
 					},
 					"stroke": (d) => {
@@ -355,9 +355,18 @@ export default {
 				})
 				.style("opacity", 1)
 				.style("fill", d => {
-					let rgbArray = this.$store.color.getColor(d)
-					let hex = this.$store.color.rgbArrayToHex(rgbArray)
-					return this.$store.color.setContrast(hex)
+					if (this.$store.selectedMode == "Ensemble"){
+						return '#000'
+					}
+					let rgbArray = null
+					if (this.$store.selectedMetric == "Inclusive"){
+						rgbArray = this.$store.runtimeColor.getColor(d, "time (inc)");
+					}
+					else if(this.$store.selectedMetric == "Exclusive"){
+						rgbArray = this.$store.runtimeColor.getColor(d, "time")
+					}
+					let hex = this.$store.runtimeColor.rgbArrayToHex(rgbArray)
+					return this.$store.runtimeColor.setContrast(hex)
 				})
 				.text((d) => {
 					if (d.type != "intermediate") {

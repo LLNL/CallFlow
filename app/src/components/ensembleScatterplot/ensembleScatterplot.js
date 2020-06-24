@@ -488,7 +488,7 @@ export default {
 					})
 					.style("stroke", "#202020")
 					.style("stroke-width", 0.5)
-					.style("fill", this.$store.color.ensemble)
+					.style("fill", this.$store.distributionColor.ensemble)
 					.on("mouseover", () => {
 						let data = {
 							"callsite": callsite,
@@ -525,8 +525,8 @@ export default {
 							return this.yScale(self.ytargetArray[i].val);
 						}
 					})
-					.style("fill", this.$store.color.target)
-					.style("stroke", this.$store.color.edgeStrokeColor)
+					.style("fill", this.$store.distributionColor.target)
+					.style("stroke", this.$store.runtimeColor.edgeStrokeColor)
 					.style("stroke-width", 0.5)
 					.on("mouseover", () => {
 						let data = {

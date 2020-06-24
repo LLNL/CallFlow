@@ -46,7 +46,7 @@ export default {
 						"x2": this.$parent.nodeWidth,
 						"y2": y,
 						"stroke-width": 5,
-						"stroke": this.$store.color.target
+						"stroke": this.$store.distributionColor.target
 					});
 
 			}

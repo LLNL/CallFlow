@@ -8,6 +8,7 @@ import "d3-selection-multi";
 import * as utils from "../utils";
 import EventHandler from "../EventHandler";
 import { render } from "dagre-d3";
+import { color } from "dagre-d3/dist/dagre-d3";
 
 export default {
 	template: "<g :id=\"id\"></g>",
@@ -37,10 +38,11 @@ export default {
 	},
 
 	methods: {
-		init() {
-			this.colorMin = this.$store.color.colorMin;
-			this.colorMax = this.$store.color.colorMax;
-			this.innerHTMLText = [this.$store.colorMin, this.$store.colorMax];
+		init(colorScale) {
+			console.log("here")
+			this.colorScale = colorScale
+			this.colorMin = colorScale.colorMin;
+			this.colorMax = colorScale.colorMax;
 
 			this.containerWidth = this.$store.viewWidth / 2;
 			this.containerHeight = this.$store.viewHeight - this.$parent.margin.top - this.$parent.margin.bottom;
@@ -50,8 +52,7 @@ export default {
 				.attrs({
 					"id": "dist-colormap",
 				});
-			
-			render()
+			this.render()
 		},
 
 		render() {
@@ -62,35 +63,38 @@ export default {
 		_legends() {
 			this.clearTargetLegends();
 			if (this.$store.showTarget == true) {
-				this.drawLegend("Target run", this.containerWidth - this.padding.right, this.containerHeight - 4 * this.padding.bottom, this.$store.color.target)
+				this.drawLegend("Target run", this.containerWidth - this.padding.right, this.containerHeight - 4 * this.padding.bottom, this.$store.distributionColor.target)
 			}
 			if (this.$store.selectedMode == 'Ensemble') {
 				this.clearEnsembleLegends();
-				this.drawLegend("Ensemble of runs", this.containerWidth - this.padding.right, this.containerHeight - 3 * this.padding.bottom, this.$store.color.ensemble)
+				this.drawLegend("Ensemble of runs", this.containerWidth - this.padding.right, this.containerHeight - 3 * this.padding.bottom, this.$store.distributionColor.ensemble)
 			}
 		},
 
 		_color_map() {
 			this.clearColorMap();
-			if (this.$store.mode == "mean") {
-				let text = ""
-				if (this.$store.selectedMetric == "Exclusive") {
-					text = "Exc. Runtime colormap"
-				}
-				else if (this.$store.selectedMetric == "Inclusive") {
-					text = "Inc. Runtime colormap"
-				}
-				this.drawColorMap(text, this.containerWidth - this.padding.right, this.containerHeight - this.padding.bottom);
+			let text = ""
+			let offsetCount = 1
+
+			if (this.colorScale.type == "Exclusive") {
+				text = "Exc. Runtime colormap";
 			}
-			else if (this.$store.mode == "mean-gradients") {
-				this.drawColorMap("Distribution colormap", this.containerWidth - this.padding.right, this.containerHeight - 2 * this.padding.bottom)
+			else if (this.colorScale.type == "Inclusive") {
+				text = "Inc. Runtime colormap";
 			}
-			else if (this.$store.mode == "mean-diff") {
-				this.drawColorMap("Mean Difference colormap", this.containerWidth - this.padding.right, this.containerHeight - 2 * this.padding.bottom)
+			else if (this.colorScale.type == "MeanGradients") {
+				text = "Distribution colormap";
+				offsetCount = 2
 			}
-			else if (this.$store.mode == "rank-diff") {
-				this.drawColorMap("Rank Difference colormap", this.containerWidth - this.padding.right, this.containerHeight - 2 * this.padding.bottom)
+			else if (this.colorScale.type == "MeanDiff") {
+				text = "Mean Difference colormap";
+				offsetCount = 2
 			}
+			else if (this.colorScale.type == "RankDiff") {
+				text = "Rank Difference colormap";
+				offsetCount = 2
+			}
+			this.drawColorMap(text, this.containerWidth - this.padding.right, this.containerHeight - this.padding.bottom * offsetCount);
 		},
 
 		drawLegend(text, x, y, color) {
@@ -127,7 +131,7 @@ export default {
 						"x": i * (this.width / splits),
 						"class": "dist-colormap-rect-metric",
 						"transform": `translate(${x}, ${y})`,
-						"fill": this.$store.color.getColorByValue(splitColor)
+						"fill": this.colorScale.getColorByValue(splitColor)
 					});
 			}
 
@@ -156,7 +160,7 @@ export default {
 					"class": "dist-colormap-text-metric",
 					"transform": `translate(${x}, ${y})`,
 				})
-				.text(utils.formatRuntimeWithUnits(this.$store.color.colorMin));
+				.text(utils.formatRuntimeWithUnits(this.colorMin));
 
 			this.svg.append("text")
 				.style("fill", "black")
@@ -169,7 +173,7 @@ export default {
 					"class": "dist-colormap-text-metric",
 					"transform": `translate(${x + this.width}, ${y})`,
 				})
-				.text(utils.formatRuntimeWithUnits(this.$store.color.colorMax));
+				.text(utils.formatRuntimeWithUnits(this.colorMax));
 		},
 
 		clearColorMap() {

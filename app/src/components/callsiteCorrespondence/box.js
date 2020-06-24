@@ -54,7 +54,7 @@ export default {
 					"y": 0,
 					"x": this.xScale(this.q.q1),
 					"height": this.$parent.rectHeight,
-					"fill": this.$store.color.ensemble,
+					"fill": this.$store.distributionColor.ensemble,
 					"width": this.xScale(this.q.q3) - this.xScale(this.q.q1),
 					"stroke": "#202020",
 					"stroke-width": 0.5
@@ -77,7 +77,7 @@ export default {
 					"y": 0,
 					"x": this.xScale(this.targetq.q1),
 					"height": this.$parent.rectHeight,
-					"fill": this.$store.color.target,
+					"fill": this.$store.distributionColor.target,
 					"width": (d) => {
 						if (self.targetq.q1 == self.targetq.q3) {
 							return 3;

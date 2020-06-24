@@ -446,7 +446,7 @@ export default {
 					let current_value = (val[i]);
 					this.linearGradient.append("stop")
 						.attr("offset", 100 * x + "%")
-						.attr("stop-color", this.$store.color.getColorByValue(current_value));
+						.attr("stop-color", this.$store.distributionColor.getColorByValue(current_value));
 				}
 			}
 		},
@@ -502,7 +502,7 @@ export default {
 					let current_value = (val[i]);
 					this.linearGradient.append("stop")
 						.attr("offset", 100 * x + "%")
-						.attr("stop-color", this.$store.color.getColorByValue(current_value));
+						.attr("stop-color", this.$store.distributionColor.getColorByValue(current_value));
 				}
 			}
 		},
@@ -547,7 +547,7 @@ export default {
 						"x2": x,
 						"y2": (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth + 1) - this.offset,
 						"stroke-width": 5,
-						"stroke": this.$store.color.target
+						"stroke": this.$store.distributionColor.target
 					});
 			}
 		},
@@ -720,14 +720,14 @@ export default {
 							gradients = "url(#mean-callsite-gradient-" + d.data.data.id + ")";
 						}
 						else {
-							gradients = this.$store.color.ensemble;
+							gradients = this.$store.distributionColor.ensemble;
 						}
 					}
 					return gradients;
 				})
 				.style("stroke", (d) => {
 					let runtime = d.data.data[this.$store.selectedMetric]["max_time"];
-					return d3.rgb(this.$store.color.getColorByValue(runtime));
+					return d3.rgb(this.$store.runtimeColor.getColorByValue(runtime));
 				})
 				.style("stroke-width", this.stroke_width)
 				.style("opacity", (d) => {
@@ -805,7 +805,7 @@ export default {
 					return this.width;
 				})
 				.style("fill", (d) => {
-					let color = this.$store.color.setContrast(this.$store.color.getColor(d));
+					let color = this.$store.runtimeColor.setContrast(this.$store.runtimeColor.getColor(d));
 					return color;
 				})
 				.style("font-size", "14px")

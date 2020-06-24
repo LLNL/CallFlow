@@ -190,7 +190,8 @@ export default {
 			console.log("[Ensemble SuperGraph] Post-processing done.", this.data);
 
 			this.$store.graph = this.data;
-			this.$refs.EnsembleColorMap.init();
+			this.$refs.EnsembleColorMap.init(this.$store.runtimeColor);
+			this.$refs.EnsembleColorMap.init(this.$store.distributionColor)
 			this.$refs.EnsembleNodes.init(this.$store.graph, this.view);
 			this.$refs.EnsembleEdges.init(this.$store.graph, this.view);
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view);

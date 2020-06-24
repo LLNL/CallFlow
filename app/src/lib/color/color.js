@@ -48,47 +48,47 @@ export default class Color {
 	}
 
 	setColorScale(type = 'Inclusive', min = 0, max = 0, scaleType = "Default", colorPoint = '9') {
+		this.type = type
 		this.colorMin = min;
 		this.colorMax = max;
-		// this.colorMap = this.colorbrewer[scaleType][colorPoint];
+		let colors = this.colorbrewer[scaleType][colorPoint];
+		console.log(colors, this.colorbrewer)
 		this.colorPadding = this.setColorPadding(colorPoint);
 
 		let colorscale = null;
-		console.log(scaleType)
 		switch (type) {
 			case "Module":
 				colorscale = d3.scaleOrdinal(d3.schemeCategory10);
 				break;
 			case "Inclusive":
-				colorscale = chroma.scale(scaleType)
+				colorscale = chroma.scale(colors)
 					.padding([0.1, 0.0])
 					.gamma(0.5)
 					.domain([min, max]);
 				break;
 			case "Exclusive":
-				colorscale = chroma.scale(scaleType)
+				colorscale = chroma.scale(colors)
 					.padding([0.0, 0.0])
 					.gamma(2)
 					.domain([min, max])
-					// .correctLightness();
 				break;
 			case "Imbalance":
-				colorscale = chroma.scale(this.colorMap)
+				colorscale = chroma.scale(colors)
 					.domain([0, 1]);
 				break;
 			case "MeanDiff":
 				let mmax = Math.max(Math.abs(min), Math.abs(max));
-				colorscale = chroma.scale(scaleType)
+				colorscale = chroma.scale(colors)
 					.padding([0.0, 0.0])
 					.domain([mmax, -mmax]);
 				break;
 			case "RankDiff":
-				colorScale = chroma.scale(scaleType)
+				colorScale = chroma.scale(colors)
 					.gamma(0.5)
 					.domain([min, max]);
 				break;
 			case "MeanGradients":
-				colorscale = chroma.scale(scaleType)
+				colorscale = chroma.scale(colors)
 					.padding([0.05, 0.0])
 					.gamma(0.5)
 					.domain([min, max])

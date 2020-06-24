@@ -82,7 +82,7 @@ export default {
 					"x1": this.xScale(this.q.min),
 					"y2": this.markery2,
 					"x2": this.xScale(this.q.min),
-					"stroke": this.$store.color.ensemble
+					"stroke": this.$store.distributionColor.ensemble
 				})
 				.style("stroke-width", "1.5");
 
@@ -93,7 +93,7 @@ export default {
 					"x1": this.xScale(this.q.max),
 					"y2": this.markery2,
 					"x2": this.xScale(this.q.max),
-					"stroke": this.$store.color.ensemble
+					"stroke": this.$store.distributionColor.ensemble
 				})
 				.style("stroke-width", "1.5");
 		},
@@ -106,7 +106,7 @@ export default {
 					"x1": this.xScale(this.targetData.min),
 					"y2": this.markery2,
 					"x2": this.xScale(this.targetData.min),
-					"stroke": this.$store.color.target
+					"stroke": this.$store.distributionColor.target
 				})
 				.style("stroke-width", "1.5");
 
@@ -117,7 +117,7 @@ export default {
 					"x1": this.xScale(this.targetData.max),
 					"y2": this.markery2,
 					"x2": this.xScale(this.targetData.max),
-					"stroke": this.$store.color.target
+					"stroke": this.$store.distributionColor.target
 				})
 				.style("stroke-width", "1.5");
 		},
@@ -130,7 +130,7 @@ export default {
 						"class": "whiskerText body-1",
 						"x": 0.5 * this.fontSize,
 						"y": this.$parent.containerHeight * this.topPosition,
-						"fill": d3.rgb(this.$store.color.target).darker(1)
+						"fill": d3.rgb(this.$store.distributionColor.target).darker(1)
 					})
 					.style("stroke-width", "1")
 					.text("Min: " + utils.formatRuntimeWithoutUnits(min_target_val));
@@ -142,7 +142,7 @@ export default {
 					"class": "whiskerText body-1",
 					"x": 0.5 * this.fontSize,
 					"y": this.$parent.containerHeight * this.bottomPosition,
-					"fill": d3.rgb(this.$store.color.ensemble).darker(1)
+					"fill": d3.rgb(this.$store.distributionColor.ensemble).darker(1)
 				})
 				.style("stroke-width", "1")
 				.text("Min: " + utils.formatRuntimeWithoutUnits(min_ensemble_val));
@@ -156,7 +156,7 @@ export default {
 						"class": "whiskerText body-1",
 						"x": this.$parent.containerWidth - 9 * this.fontSize,
 						"y": this.$parent.containerHeight * this.topPosition,
-						"fill": d3.rgb(this.$store.color.target).darker(1)
+						"fill": d3.rgb(this.$store.distributionColor.target).darker(1)
 					})
 					.style("stroke-width", "1")
 					.text("Max:" + utils.formatRuntimeWithoutUnits(max_target_val));
@@ -168,7 +168,7 @@ export default {
 					"class": "whiskerText body-1",
 					"x": this.$parent.containerWidth - 9 * this.fontSize,
 					"y": this.$parent.containerHeight * this.bottomPosition,
-					"fill": d3.rgb(this.$store.color.ensemble).darker(1)
+					"fill": d3.rgb(this.$store.distributionColor.ensemble).darker(1)
 				})
 				.style("stroke-width", "1")
 				.text("Max:" + utils.formatRuntimeWithoutUnits(max_ensemble_val));
@@ -182,7 +182,7 @@ export default {
 						"class": "whiskerText body-1",
 						"x": this.$parent.containerWidth / 2 - 4.5 * this.fontSize,
 						"y": this.$parent.containerHeight * this.topPosition,
-						"fill": d3.rgb(this.$store.color.target).darker(1)
+						"fill": d3.rgb(this.$store.distributionColor.target).darker(1)
 					})
 					.style("stroke-width", "1")
 					.text("Med.:" + utils.formatRuntimeWithoutUnits(median_target_val));
@@ -194,7 +194,7 @@ export default {
 					"class": "whiskerText body-1",
 					"x": this.$parent.containerWidth / 2 - 4.5 * this.fontSize,
 					"y": this.$parent.containerHeight * this.bottomPosition,
-					"fill": d3.rgb(this.$store.color.ensemble).darker(1)
+					"fill": d3.rgb(this.$store.distributionColor.ensemble).darker(1)
 				})
 				.style("stroke-width", "1")
 				.text("Med.:" + utils.formatRuntimeWithoutUnits(median_ensemble_val));

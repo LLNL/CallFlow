@@ -33,7 +33,6 @@ export default {
 
 			// Get the SVG belonging to this callsite.
 			this.svg = d3.select("#boxplot-" + callsite.id);
-			console.log(this.svg);
 			this.g = this.svg
 				.select(".outlier")
 				.attrs({
@@ -254,7 +253,7 @@ export default {
 
 				})
 				.style("opacity", 1)
-				.style("fill", this.$store.color.ensemble)
+				.style("fill", this.$store.distributionColor.ensemble)
 				.on("click", (d) => {
 					// self.$parent.$parent.selectedOutlierRanks[self.callsite.name] = d['ranks'].sort((a, b) => a - b)
 					// self.$parent.$parent.selectedOutlierDatasets[self.callsite.name] = d['datasets'].filter((value, index, self) => {
@@ -311,7 +310,7 @@ export default {
 						"class": "target-outlier"
 					})
 					.style("opacity", 1)
-					.style("fill", this.$store.color.target)
+					.style("fill", this.$store.distributionColor.target)
 					.on("click", (d) => {
 						// self.$parent.$parent.selectedOutlierRanks[self.callsite.name] = d['ranks'].sort((a, b) => a - b)
 						// self.$parent.$parent.selectedOutlierDatasets[self.callsite.name] = d['datasets'].filter((value, index, self) => {

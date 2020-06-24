@@ -320,7 +320,7 @@ export default {
 					"height": (d) => {
 						return Math.abs(this.yAxisHeight - this.yScale(d));
 					},
-					"fill": this.$store.color.target,
+					"fill": this.$store.distributionColor.target,
 					"opacity": 1,
 					"stroke-width": "0.2px",
 					"stroke": "#202020",
@@ -338,7 +338,7 @@ export default {
 				})
 				.on("mouseout", function (d, i) {
 					// d3.select(this)
-					//     .attr('fill', self.$store.color.target);
+					//     .attr('fill', self.$store.distributionColor.target);
 					// d3.selectAll(`.lineRank_${i}`)
 					//     .style('fill', 'grey')
 					//     .style('fill-opacity', 0.4);
@@ -367,7 +367,7 @@ export default {
 						return Math.abs(this.yAxisHeight - this.yScale(d));
 					},
 					"fill": (d) => {
-						let color = self.$store.color.ensemble;
+						let color = self.$store.distributionColor.ensemble;
 						return color;
 					},
 					"opacity": 1,
@@ -392,7 +392,7 @@ export default {
 				})
 				.on("mouseout", function (d, i) {
 					// d3.select(this)
-					//     .attr('fill', self.$store.color.ensemble);
+					//     .attr('fill', self.$store.distributionColor.ensemble);
 					// d3.selectAll(`.lineRank_${i}`)
 					//     .style('fill', 'grey')
 					//     .style('fill-opacity', 0.4);
@@ -578,7 +578,7 @@ export default {
 						"d": line,
 						"class": "lineRank lineRank_" + idx
 					})
-					.style("fill", this.$store.color.ensemble)
+					.style("fill", this.$store.distributionColor.ensemble)
 					.style("fill-opacity", 0.4)
 					.attr("transform", `translate(${this.axisLabelFactor * this.padding.left},${-this.padding.bottom})`);
 			}
@@ -588,7 +588,7 @@ export default {
 						"d": line,
 						"class": "target_lineRank target_lineRank_" + idx
 					})
-					.style("fill", this.$store.color.target)
+					.style("fill", this.$store.distributionColor.target)
 					.style("fill-opacity", 0.4)
 					.attr("transform", `translate(${this.axisLabelFactor * this.padding.left},${-this.padding.bottom})`);
 			}

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 import * as d3 from "d3";
+import { tickStep } from "d3";
 
 export default {
 	template: "<g :id=\"id\"></g>",
@@ -17,10 +18,28 @@ export default {
 			this.nodes = nodes;
 			this.containerG = containerG;
 
-			this.ensemble_module_data = this.$store.modules["ensemble"];
-			this.ensemble_callsite_data = this.$store.callsites["ensemble"];
+			this.module_data = this.$store.modules[this.$store.selectedTargetDataset];
+			this.callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
 
+			this.setColorScale();
 			this.visualize();
+		},
+
+		setColorScale() {
+			let hist_min = 0;
+			let hist_max = 0;
+			for (let node of this.nodes) {
+				if (node.type == "super-node") {
+					hist_min = Math.min(hist_min, this.module_data[node.module][this.$store.selectedMetric]["mean_time"]);
+					hist_max = Math.max(hist_max, this.module_data[node.module][this.$store.selectedMetric]["mean_time"]);
+				}
+				else if (node.type == "component-node") {
+					hist_min = Math.min(hist_min, this.ensemble_callsite_data[node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
+					hist_max = Math.max(hist_max, this.ensemble_callsite_data[node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
+				}
+			}
+			this.$store.color.setColorScale(this.$store.selectedMetric, hist_min, hist_max, this.$store.selectedRuntimeColorMap, this.$store.selectedColorPoint);
+			this.$parent.$parent.$refs.EnsembleColorMap.update(this.$store.mode, hist_min, hist_max);
 		},
 
 		visualize() {
@@ -52,7 +71,12 @@ export default {
 						color = this.$store.color.ensemble;
 					}
 					else {
-						color = this.$store.color.getColor(d);
+						if (this.$store.selectedMetric == "Inclusive"){
+							color = this.$store.color.getColor(d, "time (inc)");
+						}
+						else if(this.$store.selectedMetric == "Exclusive"){
+							color = this.$store.color.getColor(d, "time")
+						}
 					}
 					return color;
 				});

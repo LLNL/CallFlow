@@ -58,8 +58,8 @@ export default {
 				})
 				.style("fill", (d) => {
 					if (dataset == "ensemble")
-					{return this.$store.color.ensemble;}
-					return this.$store.color.target;
+					{return this.$store.distributionColor.ensemble;}
+					return this.$store.distributionColor.target;
 				})
 				.style("opacity", 0.5)
 				.on("mouseover", function (d) {
@@ -173,13 +173,13 @@ export default {
 					},
 					"fill": (d) => {
 						if (dataset == "ensemble") {
-							return this.$store.color.ensemble;
+							return this.$store.distributionColor.ensemble;
 						}
 						else if (dataset == "target") {
-							return this.$store.color.target;
+							return this.$store.distributionColor.target;
 						}
 					},
-					"stroke": this.$store.color.edgeStrokeColor,
+					"stroke": this.$store.runtimeColor.edgeStrokeColor,
 				})
 				.on("mouseover", (d) => {
 					// self.$refs.ToolTip.render(self.graph, d)

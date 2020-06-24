@@ -154,7 +154,7 @@ export default function EnsembleSankey() {
 		nodes.forEach(function (node) {
 			nodeMap[node.id] = node;
 			if (debug) {
-				console.log("[Assign Link ids] ", node.id, "with index: ", idx);
+				console.debug("[Assign Link ids] ", node.id, "with index: ", idx);
 			}
 			idx += 1;
 		});
