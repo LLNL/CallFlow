@@ -357,9 +357,7 @@ export default {
 			this.$store.selectedMode = this.selectedMode;
 			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
-			console.log(this.$store.selectedMode)
 			if (this.$store.selectedMode == 'Single') {
-				console.log("aaa")
 				this.$store.selectedProp = 'all_ranks'
 			}
 			else{
@@ -588,7 +586,7 @@ export default {
 			this.setupColors();
 			this.setOtherData();
 			this.setTargetDataset();
-			if(this.selectedFormat == "SuperGraph" && this.selectedMode == "Ensemble"){
+			if(this.selectedFormat == "SuperGraph"){
 				this.setSelectedModule();
 			}
 

@@ -27,7 +27,7 @@ export default {
 			top: 10,
 			right: 10,
 			bottom: 10,
-			left: 10,
+			left: 15,
 		},
 		dataset_index: [],
 		id: "single-histogram-view",
@@ -37,7 +37,7 @@ export default {
 		freq: [],
 		selectedColorBy: "Inclusive",
 		MPIcount: 0,
-		message: "MPI Distribution",
+		message: "MPI Runtime Distribution",
 		axisLabelFactor: 3.5,
 		boxOffset: 20
 	}),
@@ -277,7 +277,7 @@ export default {
 				.attr("stroke", (d, i) => "black")
 				.on("mouseover", function (d, i) {
 					d3.select(this)
-						.attr("fill", "red");
+						.attr("fill", self.$store.color.target);
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
@@ -286,7 +286,7 @@ export default {
 				})
 				.on("mouseout", function (d, i) {
 					d3.select(this)
-						.attr("fill", self.$store.color.target);
+						.attr("fill", self.$store.color.ensemble);
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "grey")
 						.style("fill-opacity", 0.4);
@@ -347,15 +347,15 @@ export default {
 				});
 
 			this.svg.append("text")
-				.attr("transform", "rotate(-90)")
-				.attr("class", "histogram-axis-label")
-				// .attr('y', this.axisLabelFactor*2*this.padding.left)
-				// .attr('x', -this.padding.top)
-				.attr("x", - this.histogramHeight + this.padding.top)
-				.attr("y", this.padding.left)
+				.attrs({
+					"transform": "rotate(-90)",
+					"class": "histogram-axis-label",
+					"x": -this.padding.top,
+					"y": this.padding.left
+				})
 				.style("font-size", "12px")
 				.style("text-anchor", "end")
-				.text("Frequency");
+				.text("Number of Processes");
 
 			const yAxisLine = this.svg.append("g")
 				.attr("class", "y-axis")

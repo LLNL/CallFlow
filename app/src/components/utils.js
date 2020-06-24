@@ -5,6 +5,7 @@
  */
 import * as d3 from "d3";
 
+
 export function formatName(name) {
 	if (name.length < 20) {
 		return name;
@@ -18,23 +19,19 @@ export function formatRuntimeWithUnits(val) {
 		return val;
 	}
 	let format = d3.format(".2");
-	let ret = format(val) + " \u03BCs";
-	return ret;
+	return format(val) + " \u03BCs";
 }
 
 export function formatRunCounts(val) {
 	if (val == 1) {
 		return val + " run";
 	}
-	else {
-		return val + " runs";
-	}
+	return val + " runs";
 }
 
 export function formatRuntimeWithoutUnits(val) {
 	let format = d3.format(".2");
-	let ret = format(val);
-	return ret;
+	return format(val);
 }
 
 // Returns [mantessa, exponent, max_exponent]
@@ -97,7 +94,6 @@ export function truncNames(str, len) {
 	}
 
 	str = str.replace(/<unknown procedure>/g, "proc ");
-
 	return (str.length > len) ? str.substr(0, len - 1) + "..." : str;
 }
 
@@ -117,7 +113,6 @@ export function textSize(id, text) {
 		height: size.height
 	};
 }
-
 
 export function getGradients(store, node) {
 	let nodeName = "";

@@ -277,12 +277,7 @@
 				</splitpanes>
 
 				<!-- Center column-->
-				<splitpanes horizontal :splitpanes-size="55" v-if="selectedMode == 'Single'">
-					<span>
-						<EnsembleSuperGraph ref="EnsembleSuperGraph" />
-					</span>
-				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="55" v-if="selectedMode == 'Ensemble'">
+				<splitpanes horizontal :splitpanes-size="55">
 					<span>
 						<v-layout class="chip-container">
 							<v-chip class="chip" chips color="teal" label outlined clearable>
@@ -339,7 +334,7 @@
 		</v-layout>
 	</v-content>
 
-	<v-footer id="footer" color="teal" class="white-text" app>
+	<v-footer id="footer" color="teal" app>
 		Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis
 		<v-spacer></v-spacer>
 		<span>&copy; 2017 - 2020</span>

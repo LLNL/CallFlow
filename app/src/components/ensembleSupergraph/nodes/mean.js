@@ -8,13 +8,10 @@ import * as d3 from "d3";
 export default {
 	template: "<g :id=\"id\"></g>",
 	name: "Mean",
-	components: {},
-
 	data: () => ({
 		stroke_width: 7,
 		id: "mean"
 	}),
-
 	methods: {
 		init(nodes, containerG) {
 			this.nodes = nodes;
@@ -36,9 +33,7 @@ export default {
 						if (d.type == "intermediate") {
 							return 0.0;
 						}
-						else {
-							return 1.0;
-						}
+						return 1.0;
 					},
 					"height": (d) => {
 						return d.height;
@@ -49,18 +44,17 @@ export default {
 					if (d.type == "intermediate") {
 						return 1;
 					}
-					else {
-						return this.stroke_width;
-					}
+					return this.stroke_width;
 				})
 				.style("fill", (d) => {
+					let color = "";
 					if (d.type == "intermediate") {
-						return this.$store.color.ensemble;
+						color = this.$store.color.ensemble;
 					}
 					else {
-						let color = this.$store.color.getColor(d);
-						return color;
+						color = this.$store.color.getColor(d);
 					}
+					return color;
 				});
 		},
 

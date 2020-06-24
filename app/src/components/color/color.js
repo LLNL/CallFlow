@@ -105,14 +105,7 @@ export default class Color {
 			this.binColorScale = chroma.scale(this.colorMap)
 				.padding([0.05, 0.0])
 				.gamma(0.5)
-				.domain([min, max]);
-
-			// this.binColorScale = chroma.cubehelix()
-			//     .start(0)
-			//     .rotations(-0.35)
-			//     .gamma(0.2)
-			//     .lightness([1.0, 0.8])
-			//     .scale()
+				.domain([min, max])
 		}
 	}
 
@@ -196,7 +189,6 @@ export default class Color {
 		result.r = Math.round(result.r * 255);
 		result.g = Math.round(result.g * 255);
 		result.b = Math.round(result.b * 255);
-
 
 		function componentToHex(c) {
 			var hex = c.toString(16);

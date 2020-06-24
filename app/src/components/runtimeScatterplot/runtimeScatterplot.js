@@ -35,7 +35,7 @@ export default {
 		boxWidth: 0,
 		id: "scatterplot-view",
 		svgID: "scatterplot-view-svg",
-		message: "Runtime Scatterplot",
+		message: "MPI Runtime Scatterplot",
 		boxOffset: 20,
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
 		x_max_exponent: 0,
@@ -97,8 +97,11 @@ export default {
 			let mean_time = [];
 			let mean_time_inc = [];
 
+			let store = this.$store.modules[this.$store.selectedTargetDataset][this.$store.selectedModule];
+			console.log(store, this.$store.selectedModule)
+			console.log(store[this.$store.selectedMetric]["prop_histograms"][this.$store.selectedProp]["ensemble"])
+
 			let callsites_in_module = this.$store.moduleCallsiteMap[this.$store.selectedTargetDataset][this.selectedModule];
-			console.log(this.$store.moduleCallsiteMap, callsites_in_module)
 			for (let i = 0; i < callsites_in_module.length; i += 1) {
 				let thiscallsite = callsites_in_module[i];
 				let thisdata = this.$store.callsites[this.$store.selectedTargetDataset][thiscallsite];

@@ -288,4 +288,8 @@ body {
   background: #009688 !important;
   cursor: pointer;
 }
+
+#footer{ 
+  color:#fff
+}
 </style>

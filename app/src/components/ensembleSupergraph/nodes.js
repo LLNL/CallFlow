@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 import * as d3 from "d3";
-import EventHandler from "../EventHandler";
 import * as utils from "../utils";
+
+import EventHandler from "../EventHandler";
 import MeanGradients from "./nodes/meanGradients";
 import Guides from "./nodes/guides";
 import TargetLine from "./nodes/targetLine";
@@ -16,14 +17,14 @@ import RankDiff from "./nodes/rankDiff";
 
 export default {
 	template: `<g :id="id">
-	<MeanGradients ref="MeanGradients" />
-	<Mean ref="Mean" />
-    <ToolTip ref="ToolTip" />
-    <Guides ref="Guides" />
-    <TargetLine ref="TargetLine" />
-    <MeanDiff ref="MeanDiff" />
-	<RankDiff ref="RankDiff" />
-</g>`,
+				<MeanGradients ref="MeanGradients" />
+				<Mean ref="Mean" />
+				<ToolTip ref="ToolTip" />
+				<Guides ref="Guides" />
+				<TargetLine ref="TargetLine" />
+				<MeanDiff ref="MeanDiff" />
+				<RankDiff ref="RankDiff" />
+			</g>`,
 	name: "EnsembleNodes",
 	components: {
 		Mean,
@@ -75,7 +76,6 @@ export default {
 			else if (this.$store.selectedCompareMode == "mean-diff") {
 				this.$refs.MeanDiff.init(this.graph.nodes, this.containerG, data);
 			}
-
 		}
 	},
 	mounted() {
@@ -87,24 +87,23 @@ export default {
 			this.graph = graph;
 			this.containerG = d3.select("#" + this.id);
 
-			// https://observablehq.com/@geekplux/dragable-d3-sankey-diagram
 			this.drag = d3.drag()
 				.subject((d) => {
 					return d;
 				})
 				.on("start", function () {
 					this.parentNode.appendChild(this);
+				})
+				.on("drag", (d) => {
+					d3.select(`node_${d.client_idx}`).attr("transform",
+						"translate(" + (
+							d.x = Math.max(0, Math.min(this.$parent.width - d.dx, d3.event.x))
+						) + "," + (
+							d.y = Math.max(0, Math.min(this.$parent.height - d.dy, d3.event.y))
+						) + ")");
+					sankey.relayout();
+					link.attr("d", path);
 				});
-			// .on("drag", (d) => {
-			// 	d3.select(`node_${d.client_idx}`).attr("transform",
-			// 		"translate(" + (
-			// 			d.x = Math.max(0, Math.min(this.$parent.width - d.dx, d3.event.x))
-			// 		) + "," + (
-			// 			d.y = Math.max(0, Math.min(this.$parent.height - d.dy, d3.event.y))
-			// 		) + ")");
-			// 	sankey.relayout();
-			// 	link.attr("d", path);
-			// });
 
 			this.zoom = d3.zoom()
 				.scaleExtent([0.5, 2])
@@ -125,10 +124,10 @@ export default {
 			this.rectangle();
 			this.postVis();
 
-			if(this.$store.selectedMode == "Ensemble"){
+			if (this.$store.selectedMode == "Ensemble") {
 				this.$store.mode = "mean-gradients";
 			}
-			else if(this.$store.selectedMode == "Single"){
+			else if (this.$store.selectedMode == "Single") {
 				this.$store.mode = "mean";
 			}
 
@@ -155,7 +154,7 @@ export default {
 				}
 				this.$refs.Guides.init(this.graph.nodes);
 			}
-			// this.$refs.ToolTip.init(this.$parent.id)
+			this.$refs.ToolTip.init(this.$parent.id)
 		},
 
 		preVis() {
@@ -182,34 +181,24 @@ export default {
 				.data(this.graph.nodes)
 				.enter()
 				.append("g")
-				.attr("class", (d) => {
-					return "ensemble-callsite";
-				})
-				.attr("id", (d, i) => {
-					return "ensemble-callsite-" + d.client_idx;
-				})
-				.attr("transform", (d) => {
-					return `translate(${d.x},${d.y})`;
-				})
-				.attr("opacity", 1)
-				.attr("transform", d => `translate(${d.x},${d.y + this.$parent.ySpacing})`);
-
+				.attrs({
+					"class": "ensemble-callsite",
+					"id": (d) => "ensemble-callsite-" + d.client_idx,
+					"transform": (d) => `translate(${d.x},${d.y + this.$parent.ySpacing})`,
+					"opacity": 1,
+				});
 
 			this.nodesSVG.append("rect")
 				.attrs({
 					"id": (d) => { return d.id + " callsite-rect" + d.client_idx; },
 					"class": "callsite-rect",
-					"height": (d) => {
-						return d.height;
-					},
+					"height": (d) => d.height,
 					"width": this.nodeWidth,
 					"fill-opacity": (d) => {
 						if (d.type == "intermediate") {
 							return 0.0;
 						}
-						else {
-							return 1.0;
-						}
+						return 1.0;
 					}
 				})
 				.style("shape-rendering", "crispEdges")
@@ -263,12 +252,12 @@ export default {
 		},
 
 		mouseover(node) {
-			// this.$refs.ToolTip.visualize(self.graph, node)
+			this.$refs.ToolTip.visualize(self.graph, node)
 			this.$refs.Guides.visualize(node, "temporary");
 		},
 
 		mouseout(node) {
-			// this.$refs.ToolTip.clear()
+			this.$refs.ToolTip.clear()
 			this.$refs.Guides.clear(node, "temporary");
 			if (this.permanentGuides == false) {
 				d3.selectAll(".ensemble-edge")
@@ -288,30 +277,21 @@ export default {
 								+ "v " + (1) * d.targetHeight
 								+ "h " + (-1) * this.nodeWidth;
 						}
+					},
+					"fill": (d) => {
+						if (d.type == "intermediate") {
+							return this.$store.color.target;
+						}
+					},
+					"stroke": (d) => {
+						if (d.type == "intermediate") {
+							return this.intermediateColor;
+						}
 					}
 				})
-				.style("fill", (d) => {
-					if (d.type == "intermediate") {
-						return this.$store.color.target;
-					}
-				})
-				.style("opacity", (d) => {
-					return 0.6;
-				})
-				.style("fill-opacity", (d) => {
-					if (d.type == "intermediate") {
-						return 0.0;
-					}
-					else {
-						return 0;
-					}
-				})
-				.style("stroke", function (d) {
-					if (d.type == "intermediate") {
-						return this.intermediateColor;
-					}
-				})
-				.style("stroke-opacity", "0.0");
+				.style("opacity", 0.6)
+				.style("fill-opacity", 0)
+				.style("stroke-opacity", 0.0);
 
 			this.nodesSVG
 				.selectAll(".target-path")
@@ -319,9 +299,7 @@ export default {
 				.transition()
 				.duration(this.transitionDuration)
 				.delay(this.transitionDuration / 3)
-				.style("fill-opacity", (d) => {
-					return 1.0;
-				});
+				.style("fill-opacity", 1.0)
 		},
 
 		ensemblePath() {
@@ -336,14 +314,12 @@ export default {
 								+ "v " + (1) * d.height
 								+ "h " + (-1) * this.nodeWidth;
 						}
-					}
-				})
-				.style("fill", (d) => {
-					if (d.type == "intermediate") {
-						// return this.$store.color.ensemble
-						return this.intermediateColor;
-
-					}
+					},
+					"fill": (d) => {
+						if (d.type == "intermediate") {
+							return this.intermediateColor;
+						}
+					},
 				})
 				.style("opacity", (d) => {
 					if (this.$store.showTarget && this.$store.compareAnalysisMode == false) {
@@ -351,14 +327,7 @@ export default {
 					}
 					return 1;
 				})
-				.style("fill-opacity", (d) => {
-					if (d.type == "intermediate") {
-						return 0.0;
-					}
-					else {
-						return 0;
-					}
-				})
+				.style("fill-opacity", 0)
 				.style("stroke", function (d) {
 					if (d.type == "intermediate") {
 						return this.intermediateColor;
@@ -371,9 +340,7 @@ export default {
 				.transition()
 				.duration(this.transitionDuration)
 				.delay(this.transitionDuration / 3)
-				.style("fill-opacity", (d) => {
-					return 1.0;
-				});
+				.style("fill-opacity", 1.0)
 		},
 
 		text() {
@@ -388,7 +355,9 @@ export default {
 				})
 				.style("opacity", 1)
 				.style("fill", d => {
-					return "#000";
+					let rgbArray = this.$store.color.getColor(d)
+					let hex = this.$store.color.rgbArrayToHex(rgbArray)
+					return this.$store.color.setContrast(hex)
 				})
 				.text((d) => {
 					if (d.type != "intermediate") {
@@ -402,11 +371,9 @@ export default {
 						}
 
 						let characterCount = d.height / this.$store.fontSize;
-
 						return utils.truncNames(d.id, characterCount);
 					}
 				});
-
 		},
 
 		clearTargetPath() {

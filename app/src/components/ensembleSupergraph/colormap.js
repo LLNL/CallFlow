@@ -61,8 +61,10 @@ export default {
 			if (this.$store.showTarget == true) {
 				this.drawTargetLegend();
 			}
-			this.clearEnsembleLegends();
-			this.drawEnsembleLegend();
+			if(this.$store.selectedMode == 'Ensemble'){
+				this.clearEnsembleLegends();
+				this.drawEnsembleLegend();	
+			}
 			this.drawMeanColorMap();
 			this.drawMeanText();
 		},
