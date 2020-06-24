@@ -46,7 +46,6 @@ export default {
 			this.target_module_data = this.$store.modules[this.$store.selectedTargetDataset];
 			this.target_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
 
-			console.log(this.$store.selectedProp)
 			for (const node of this.nodes) {
 				let module = node.module;
 				let callsite = node.name;
@@ -78,34 +77,36 @@ export default {
 		},
 
 		histogram(data, node_dict, type) {
-
-			let xVals = data[type].x;
-			let freq = data[type].y;
-
 			let color = "";
+			let xVals = [], freq = [];
 			if (type == "ensemble") {
 				color = this.$store.distributionColor.ensemble;
+				xVals = data["ensemble"].x
+				freq = data["ensemble"].y
 			}
-			else if (type == "target") {
-				color = this.$store.distributionColor.target;
+			else if (type == "target" || type == "single") {
+				if(type == "target")
+					color = this.$store.distributionColor.target;
+				else if(type == "single")
+					color = this.$store.runtimeColor.intermediate;
+				xVals = data["target"].x
+				freq = data["target"].y
 			}
 
-			if (type == "ensemble") {
-				if (this.$store.selectedScale == "Linear") {
-					this.minimapYScale = d3.scaleLinear()
-						.domain([0, d3.max(freq)])
-						.range([this.$parent.ySpacing - 10, 0]);
-				}
-				else if (this.$store.selectedScale == "Log") {
-					this.minimapYScale = d3.scaleLog()
-						.domain([0.1, d3.max(freq)])
-						.range([this.$parent.ySpacing, 0]);
-				}
-				this.minimapXScale = d3.scaleBand()
-					.domain(xVals)
-					.rangeRound([0, this.$parent.nodeWidth]);
-				this.bandWidth = this.minimapXScale.bandwidth();
+			if (this.$store.selectedScale == "Linear") {
+				this.minimapYScale = d3.scaleLinear()
+					.domain([0, d3.max(freq)])
+					.range([this.$parent.ySpacing - 10, 0]);
 			}
+			else if (this.$store.selectedScale == "Log") {
+				this.minimapYScale = d3.scaleLog()
+					.domain([0.1, d3.max(freq)])
+					.range([this.$parent.ySpacing, 0]);
+			}
+			this.minimapXScale = d3.scaleBand()
+				.domain(xVals)
+				.rangeRound([0, this.$parent.nodeWidth]);
+			this.bandWidth = this.minimapXScale.bandwidth();
 
 			for (let i = 0; i < freq.length; i += 1) {
 				d3.select("#" + this.id)
@@ -130,9 +131,14 @@ export default {
 
 		render(data, node) {
 			let node_dict = this.nodes[this.nodeMap[node]];
-			this.histogram(data, node_dict, "ensemble");
-			if (this.$store.showTarget && this.$store.comparisonMode == false) {
-				this.histogram(data, node_dict, "target");
+			if (this.$store.selectedMode == "Ensemble"){
+				this.histogram(data, node_dict, "ensemble");
+				if (this.$store.showTarget && this.$store.comparisonMode == false) {
+					this.histogram(data, node_dict, "target");
+				}	
+			}
+			else if(this.$store.selectedMode == "Single") {
+				this.histogram(data, node_dict, "single");
 			}
 		}
 	}

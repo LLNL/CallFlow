@@ -21,7 +21,7 @@ export default {
 			this.module_data = this.$store.modules[this.$store.selectedTargetDataset];
 			this.callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
 
-			this.setColorScale();
+			// this.setColorScale();
 			this.visualize();
 		},
 
@@ -68,14 +68,14 @@ export default {
 				.style("fill", (d) => {
 					let color = "";
 					if (d.type == "intermediate") {
-						color = this.$store.color.ensemble;
+						color = this.$store.runtimeColor.intermediate;
 					}
 					else {
 						if (this.$store.selectedMetric == "Inclusive"){
-							color = this.$store.color.getColor(d, "time (inc)");
+							color = this.$store.runtimeColor.getColor(d, "time (inc)");
 						}
 						else if(this.$store.selectedMetric == "Exclusive"){
-							color = this.$store.color.getColor(d, "time")
+							color = this.$store.runtimeColor.getColor(d, "time")
 						}
 					}
 					return color;

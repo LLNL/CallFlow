@@ -4,13 +4,11 @@
  * SPDX-License-Identifier: MIT
  */
 import * as d3 from "d3";
-import ToolTip from "./edges/tooltip";
 
 export default {
 	template: "<g :id=\"id\"><ToolTip ref=\"ToolTip\" /></g>",
 	name: "EnsembleEdges",
 	components: {
-		ToolTip
 	},
 	props: [],
 	data: () => ({
@@ -30,36 +28,33 @@ export default {
 			this.graph = graph;
 			this.edges = d3.select("#" + this.id);
 
-			this.links = graph.links;
-
-			this.initEdges("ensemble");
-			this.drawEdges("ensemble");
 			if (this.$store.selectedMode == "Ensemble") {
-				this.drawEdges("target");
+				this.initEdges("ensemble");
+				this.drawEdges("ensemble");
+				if (this.$store.showTarget && this.$store.comparisonMode == false) {
+					this.initEdges("target");
+					this.drawEdges("target");
+				}
+			}
+			else if(this.$store.selectedMode == 'Single') {
+				this.initEdges("single");
+				this.drawEdges("single")
 			}
 
-			if (this.$store.showTarget && this.$store.comparisonMode == false && this.$store.selectedMode == "Ensemble") {
-				this.initEdges("target");
-				// this.drawEdges("ensemble");
-				this.drawEdges("target");
-			}
-
-			// this.$refs.ToolTip.init(this.$parent.id)
 		},
 
 		initEdges(dataset) {
 			let self = this;
 			this.edges.selectAll("#edge-" + dataset)
-				.data(this.links)
+				.data(this.graph.links)
 				.enter().append("path")
 				.attrs({
 					"class": "edge",
 					"id": "edge-" + dataset
 				})
 				.style("fill", (d) => {
-					if (dataset == "ensemble")
-					{return this.$store.distributionColor.ensemble;}
-					return this.$store.distributionColor.target;
+					if (dataset == "ensemble") { return this.$store.distributionColor.ensemble; }
+					return this.$store.runtimeColor.intermediate;
 				})
 				.style("opacity", 0.5)
 				.on("mouseover", function (d) {
@@ -73,7 +68,7 @@ export default {
 		},
 
 
-		drawPath(d, linkHeight, edge_source_offset=0, edge_target_offset=0, dataset) {
+		drawPath(d, linkHeight, edge_source_offset = 0, edge_target_offset = 0, dataset) {
 			let Tx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
 				Tx1 = d.target_data.x - edge_target_offset,
 				Txi = d3.interpolateNumber(Tx0, Tx1),
@@ -98,21 +93,21 @@ export default {
 
 			let rightMoveDown = By1 - Ty1;
 
-			if (d.source == "LeapFrog" && d.target == "intermediate_CalcLagrange" && dataset == "target") {
-				By0 = 398.074532;
-			}
-			else if (d.source == "LeapFrog" && d.target == "intermediate_CalcLagrange" && dataset == "ensemble") {
-				By0 = 415.328692;
-			}
+			// if (d.source == "LeapFrog" && d.target == "intermediate_CalcLagrange" && dataset == "target") {
+			// 	By0 = 398.074532;
+			// }
+			// else if (d.source == "LeapFrog" && d.target == "intermediate_CalcLagrange" && dataset == "ensemble") {
+			// 	By0 = 415.328692;
+			// }
 
 			return `M${Tx0},${Ty0
-			}C${Tx2},${Ty0
-			} ${Tx3},${Ty1
-			} ${Tx1},${Ty1
-			} ` + ` v ${rightMoveDown
-			}C${Bx3},${By1
-			} ${Bx2},${By0
-			} ${Bx0},${By0}`;
+				}C${Tx2},${Ty0
+				} ${Tx3},${Ty1
+				} ${Tx1},${Ty1
+				} ` + ` v ${rightMoveDown
+				}C${Bx3},${By1
+				} ${Bx2},${By0
+				} ${Bx0},${By0}`;
 		},
 
 		drawMiddlePath(d, linkHeight, edge_source_offset, edge_target_offset, dataset) {
@@ -141,23 +136,23 @@ export default {
 			let rightMoveDown = By1 - Ty1;
 
 			return `M${Tx0},${Ty0
-			}C${Tx2},${Ty0
-			} ${Tx3},${Ty1
-			} ${Tx1},${Ty1
-			} ` + ` v ${rightMoveDown
-			}C${Bx3},${By1
-			} ${Bx2},${By0
-			} ${Bx0},${By0}`;
+				}C${Tx2},${Ty0
+				} ${Tx3},${Ty1
+				} ${Tx1},${Ty1
+				} ` + ` v ${rightMoveDown
+				}C${Bx3},${By1
+				} ${Bx2},${By0
+				} ${Bx0},${By0}`;
 		},
 
 		drawEdges(dataset) {
 			let self = this;
 			this.edges.selectAll("#edge-" + dataset)
-				.data(this.links)
+				.data(this.graph.links)
 				.attrs({
 					"d": (d) => {
 						let link_height = 0;
-						if (dataset == "ensemble") {
+						if (dataset == "ensemble" || dataset == "single") {
 							link_height = d.height;
 						}
 						else if (dataset == "target") {
@@ -177,6 +172,9 @@ export default {
 						}
 						else if (dataset == "target") {
 							return this.$store.distributionColor.target;
+						}
+						else if(dataset == "single") {
+							return this.$store.runtimeColor.intermediate;
 						}
 					},
 					"stroke": this.$store.runtimeColor.edgeStrokeColor,

@@ -102,7 +102,7 @@ export default {
 		datas: ["Dataframe", "Graph"],
 		selectedData: "Dataframe",
 		firstRender: true,
-		summaryChip: "Ensemble SuperGraph",
+		summaryChip: "SuperGraph",
 		auxiliarySortBy: "time (inc)",
 		ranks: [],
 		initLoad: true,
@@ -113,7 +113,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: "<program root>",
 		modes: ["Ensemble", "Single"],
-		selectedMode: "Ensemble",
+		selectedMode: "Single",
 		// Presentation mode variables
 		exhibitModes: ["Presentation", "Default"],
 		selectedExhibitMode: "Default",
@@ -475,7 +475,7 @@ export default {
 
 			this.$store.selectedColorMin = this.colorMin;
 			this.$store.selectedColorMax = this.colorMax;
-			
+
 			this.$store.runtimeColor.setColorScale(this.$store.selectedMetric, colorMin, colorMax, this.selectedRuntimeColorMap, this.selectedColorPoint);
 		},
 
@@ -489,11 +489,10 @@ export default {
 				hist_max = Math.max(hist_max, node[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
 				// }
 				// else if (node.type == "component-node") {
-					// hist_min = Math.min(hist_min, this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
-					// hist_max = Math.max(hist_max, this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
+				// hist_min = Math.min(hist_min, this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
+				// hist_max = Math.max(hist_max, this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
 				// }
 			}
-			console.log(this.selectedDistributionColorMap)
 			this.$store.distributionColor.setColorScale("MeanGradients", hist_min, hist_max, this.selectedDistributionColorMap, this.selectedColorPoint);
 		},
 
@@ -507,21 +506,21 @@ export default {
 				this.$store.distributionColor = new Color();
 				this.distributionColorMap = this.$store.distributionColor.getAllColors();
 				this.setDistributionColorScale();
+				this.$store.distributionColor.target = this.selectedTargetColor;
+				this.$store.distributionColor.ensemble = "#C0C0C0";
+				this.$store.distributionColor.compare = "#043060";
 			}
 
-			
 
 			// Set properties into store.
 			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap;
 			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap;
 			this.$store.selectedColorPoint = this.selectedColorPoint;
-			
+
 			this.selectedTargetColor = this.targetColorMap[this.selectedTargetColorText];
 			this.targetColors = Object.keys(this.targetColorMap);
 
-			this.$store.distributionColor.target = this.selectedTargetColor;
-			this.$store.distributionColor.ensemble = "#C0C0C0";
-			this.$store.distributionColor.compare = "#043060";
+
 			this.$store.runtimeColor.intermediate = "#d9d9d9";
 			this.$store.runtimeColor.highlight = "#C0C0C0";
 			this.$store.runtimeColor.textColor = "#3a3a3a";

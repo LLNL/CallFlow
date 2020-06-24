@@ -174,24 +174,24 @@ export default {
 					let target_callsite = link["target"];
 					let weight = link["weight"];
 
-					console.log("=============================================");
-					console.log("[Ensemble SuperGraph] Source Name :", source_callsite);
-					console.log("[Ensemble SuperGraph] Target Name :", target_callsite);
-					console.log("[Ensemble SuperGraph] Weight: ", weight);
+					console.debug("=============================================");
+					console.debug("[Ensemble SuperGraph] Source Name :", source_callsite);
+					console.debug("[Ensemble SuperGraph] Target Name :", target_callsite);
+					console.debug("[Ensemble SuperGraph] Weight: ", weight);
 				}
 			}
 			this.initSankey(this.data);
 
-			console.log("[Ensemble SuperGraph] Layout Calculation.");
 			let postProcess = this.postProcess(this.data.nodes, this.data.links);
 			this.data.nodes = postProcess["nodes"];
 			this.data.links = postProcess["links"];
 			this.initSankey(this.data);
-			console.log("[Ensemble SuperGraph] Post-processing done.", this.data);
 
 			this.$store.graph = this.data;
 			this.$refs.EnsembleColorMap.init(this.$store.runtimeColor);
-			this.$refs.EnsembleColorMap.init(this.$store.distributionColor)
+			if (this.$store.selectedMode == 'Ensemble'){
+				this.$refs.EnsembleColorMap.init(this.$store.distributionColor)
+			}
 			this.$refs.EnsembleNodes.init(this.$store.graph, this.view);
 			this.$refs.EnsembleEdges.init(this.$store.graph, this.view);
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view);

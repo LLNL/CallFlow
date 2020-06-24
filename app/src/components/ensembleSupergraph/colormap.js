@@ -39,7 +39,6 @@ export default {
 
 	methods: {
 		init(colorScale) {
-			console.log("here")
 			this.colorScale = colorScale
 			this.colorMin = colorScale.colorMin;
 			this.colorMax = colorScale.colorMax;
@@ -169,7 +168,7 @@ export default {
 					"dy": ".35em",
 					"text-anchor": "middle",
 					"y": 10,
-					"x": 30,
+					"x": 40,
 					"class": "dist-colormap-text-metric",
 					"transform": `translate(${x + this.width}, ${y})`,
 				})

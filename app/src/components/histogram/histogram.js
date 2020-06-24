@@ -271,13 +271,13 @@ export default {
 				.attr("height", (d) => {
 					return Math.floor(this.histogramHeight - this.histogramYScale(d)) - this.padding.top;
 				})
-				.attr("fill", this.$store.color.ensemble)
+				.attr("fill", this.$store.runtimeColor.intermediate)
 				.attr("opacity", 1)
 				.attr("stroke-width", (d, i) => "0.2px")
 				.attr("stroke", (d, i) => "black")
 				.on("mouseover", function (d, i) {
 					d3.select(this)
-						.attr("fill", self.$store.color.target);
+						.attr("fill", self.$store.runtimeColor.highlight);
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
@@ -286,7 +286,7 @@ export default {
 				})
 				.on("mouseout", function (d, i) {
 					d3.select(this)
-						.attr("fill", self.$store.color.ensemble);
+						.attr("fill", self.$store.runtimeColor.intermediate);
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "grey")
 						.style("fill-opacity", 0.4);
