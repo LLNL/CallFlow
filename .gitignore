@@ -13,6 +13,7 @@ callflow/unused/*
 app/node_modules*
 app/src/unused/*
 
+videos/*
 # ------------------------------------------------------------------------------
 # Editor hidden directories
 *.DS_Store
