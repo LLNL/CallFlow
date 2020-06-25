@@ -12,15 +12,10 @@ import "splitpanes/dist/splitpanes.css";
 import EventHandler from "./EventHandler";
 
 // Template import
-import tpl from "../html/callflow.html";
+import tpl from "../html/callflowEnsemble.html";
 
 import SuperGraph from "./supergraph/supergraph";
 import CCT from "./cct/cct";
-
-// Single mode imports
-import SingleScatterplot from "./singleScatterplot/singleScatterplot";
-import SingleHistogram from "./singleHistogram/singleHistogram";
-import CallsiteInformation from "./callsiteInformation/callsiteInformation";
 
 // Ensemble mode imports
 import CallsiteCorrespondence from "./callsiteCorrespondence/callsiteCorrespondence";
@@ -33,17 +28,13 @@ import io from "socket.io-client";
 import * as utils from "./utils";
 
 export default {
-	name: "CallFlow",
+	name: "EnsembleCallFlow",
 	template: tpl,
 	components: {
 		Splitpanes,
 		// Generic components
 		SuperGraph,
 		CCT,
-		// Single supergraph components.
-		SingleScatterplot,
-		SingleHistogram,
-		CallsiteInformation,
 		// Ensemble supergraph components.
 		EnsembleScatterplot,
 		EnsembleHistogram,
@@ -115,7 +106,7 @@ export default {
 		selectedOutlierBand: 4,
 		defaultCallSite: "<program root>",
 		modes: ["Ensemble", "Single"],
-		selectedMode: "Single",
+		selectedMode: "Ensemble",
 		// Presentation mode variables
 		exhibitModes: ["Presentation", "Default"],
 		selectedExhibitMode: "Default",
@@ -394,17 +385,9 @@ export default {
 		},
 
 		setComponentMap() {
-			this.currentSingleCCTComponents = [this.$refs.CCT];
-			this.currentSingleSuperGraphComponents = [
-				this.$refs.SuperGraph,
-				this.$refs.SingleHistogram,
-				this.$refs.SingleScatterplot,
-				this.$refs.CallsiteInformation,
-			];
-
 			this.currentEnsembleCCTComponents = [this.$refs.CCT];
 			this.currentEnsembleSuperGraphComponents = [
-				this.$refs.SuperGraph,
+				this.$refs.EnsembleSuperGraph,
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
 				this.$refs.CallsiteCorrespondence,

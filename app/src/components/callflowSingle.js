@@ -12,7 +12,7 @@ import "splitpanes/dist/splitpanes.css";
 import EventHandler from "./EventHandler";
 
 // Template import
-import tpl from "../html/callflow.html";
+import tpl from "../html/callflowSingle.html";
 
 import SuperGraph from "./supergraph/supergraph";
 import CCT from "./cct/cct";
@@ -33,7 +33,7 @@ import io from "socket.io-client";
 import * as utils from "./utils";
 
 export default {
-	name: "CallFlow",
+	name: "SingleCallFlow",
 	template: tpl,
 	components: {
 		Splitpanes,
@@ -394,15 +394,15 @@ export default {
 		},
 
 		setComponentMap() {
-			this.currentSingleCCTComponents = [this.$refs.CCT];
+			this.currentSingleCCTComponents = [this.$refs.SingleCCT];
 			this.currentSingleSuperGraphComponents = [
-				this.$refs.SuperGraph,
+				this.$refs.SingleSuperGraph,
 				this.$refs.SingleHistogram,
 				this.$refs.SingleScatterplot,
 				this.$refs.CallsiteInformation,
 			];
 
-			this.currentEnsembleCCTComponents = [this.$refs.CCT];
+			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT];
 			this.currentEnsembleSuperGraphComponents = [
 				this.$refs.SuperGraph,
 				this.$refs.EnsembleHistogram,

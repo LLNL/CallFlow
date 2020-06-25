@@ -11,7 +11,7 @@
 		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
 		<v-flex xs3 class="ma-2">
 			<v-select label="Select Target run (Sorted by inclusive runtime)" :items="datasets"
-				v-if="selectedMode == 'Ensemble' && selectedFormat == 'SuperGraph'" v-model="selectedTargetDataset"
+			v-model="selectedTargetDataset"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
 				<template slot="selection" slot-scope="{item}">
 					{{ datasets.indexOf(item) + 1}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
@@ -21,14 +21,10 @@
 				</template>
 
 			</v-select>
-			<v-select label="Select a run" :items="datasets" v-if="selectedMode == 'Single' || selectedFormat == 'CCT'"
-				v-model="selectedTargetDataset" :menu-props="{ maxHeight: '400' }" box
-				v-on:change="updateTargetDataset()">
-			</v-select>
 		</v-flex>
 		<v-flex xs3 class="ma-2">
 			<v-select label="Select Compare run" :items="datasets"
-				v-if="selectedMode == 'Ensemble' && selectedFormat == 'SuperGraph'" v-model="selectedCompareDataset"
+				v-model="selectedCompareDataset"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateCompareDataset()">
 				<template slot="selection" slot-scope="{item}">
 					{{ datasets.indexOf(item) + 1}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
@@ -45,10 +41,6 @@
 			<v-select label="Graph to visualize" :items="formats" v-model="selectedFormat"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
 			</v-select>
-		</v-flex>
-		<v-flex xs2>
-			<v-select label="Analysis Mode" :items="modes" v-model="selectedMode" box :menu-props="{ maxHeight: '400' }"
-				v-on:change="updateMode()"></v-select>
 		</v-flex>
 	</v-toolbar>
 
@@ -203,20 +195,11 @@
 		</v-card>
 	</v-navigation-drawer>
 
-	<v-content class="pt-auto">
+	<v-content class="pt-auto" v-if="selectedMode == 'Ensemble'">
 		<v-layout v-show="selectedFormat == 'SuperGraph'">
 			<splitpanes id="callgraph-dashboard" class="default-theme">
 				<!-- Left column-->
-				<splitpanes horizontal :splitpanes-size="25" v-if="selectedMode == 'Single'">
-					<span>
-						<SingleHistogram ref="SingleHistogram" />
-					</span>
-					<span>
-						<SingleScatterplot ref="SingleScatterplot" />
-					</span>
-				</splitpanes>
-
-				<splitpanes horizontal :splitpanes-size="25" v-if="selectedMode == 'Ensemble'">
+				<splitpanes horizontal :splitpanes-size="25">
 					<span>
 						<ModuleHierarchy ref="ModuleHierarchy" />
 					</span>
@@ -240,40 +223,33 @@
 								Encoding = {{selectedMetric}} runtime.
 							</span>
 						</v-layout>
-						<SuperGraph ref="SuperGraph" />
+						<SuperGraph ref="EnsembleSuperGraph" />
 					</span>
 				</splitpanes>
 
 				<!-- Right column-->
-				<splitpanes horizontal :splitpanes-size="20" v-if="selectedMode == 'Ensemble'">
-					<span >
+				<splitpanes horizontal :splitpanes-size="20">
+					<span>
 						<CallsiteCorrespondence ref="CallsiteCorrespondence" />
 					</span>
 					<span>
 						<ParameterProjection ref="ParameterProjection" @compare="updateCompareMode" />
 					</span>
 				</splitpanes>
-				<splitpanes horizontal :splitpanes-size="20" v-if="selectedMode == 'Single'">
+			</splitpanes>
+		</v-layout>
+
+		<v-layout v-show="selectedFormat == 'CCT'">
+			<splitpanes id=" ensemble-cct-dashboard">
+				<splitpanes horizontal :splitpanes-size="100">
 					<span>
-						<CallsiteInformation ref="CallsiteInformation" />
+						<CCT ref="CCT" />
 					</span>
 				</splitpanes>
-
 			</splitpanes>
 		</v-layout>
-
-		<v-layout v-if="selectedFormat == 'CCT'">
-			<splitpanes id=" ensemble-cct-dashboard">
-			<splitpanes horizontal :splitpanes-size="100">
-				<span>
-					<EnsembleCCT ref="CCT" />
-				</span>
-				</span>
-			</splitpanes>
-			</splitpanes>
-		</v-layout>
-
-		<v-layout v-if="selectedFormat == 'CCT' && selectedMode == 'Compare'">
+		
+		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Compare'">
 			<splitpanes id="compare-cct-dashboard">
 				<splitpanes horizontal :splitpanes-size="50">
 					<span>

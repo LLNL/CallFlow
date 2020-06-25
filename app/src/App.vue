@@ -5,7 +5,19 @@
  -->
 <template>
   <div id="app">
-    <router-view />
+    <v-toolbar id="toolbar" color="teal" dark fixed app clipped-right>
+      <v-toolbar-title style="margin-right: 3em;">CallFlow</v-toolbar-title>
+
+      <v-btn depressed>
+        <router-link to="/single">Single</router-link>
+      </v-btn>
+
+      <v-btn depressed>
+        <router-link to="/ensemble">Ensemble</router-link>
+      </v-btn>
+    </v-toolbar>
+
+    <router-view></router-view>
   </div>
 </template>
 
@@ -16,10 +28,6 @@ export default {
 </script>
 
 <style>
-body,
-html {
-}
-
 #toolbar {
   padding: 0px 0px 0px;
 }
@@ -173,7 +181,8 @@ body {
   fill: #009688;
   opacity: 0.5;
 }
-#auxiliary-function-overview, #callsite-information-overview {
+#auxiliary-function-overview,
+#callsite-information-overview {
   overflow: auto;
 }
 
@@ -289,7 +298,7 @@ body {
   cursor: pointer;
 }
 
-#footer{ 
-  color:#fff
+#footer {
+  color: #fff;
 }
 </style>
