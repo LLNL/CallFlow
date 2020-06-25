@@ -7,8 +7,8 @@ import * as  d3 from "d3";
 import EventHandler from "../EventHandler.js";
 
 import tpl from "../../html/supergraph.html";
-import EnsembleSankey from "./ensembleSankey";
-import SingleSankey from "./singleSankey";
+import Sankey from "../../algorithms/sankey";
+
 import EnsembleNodes from "./nodes";
 import EnsembleEdges from "./edges";
 import MiniHistograms from "./miniHistograms";
@@ -126,7 +126,7 @@ export default {
 					groupBy: "module"
 				});
 			}
-			else if(this.$store.selectedMode == "Ensemble") {
+			else if (this.$store.selectedMode == "Ensemble") {
 				this.$socket.emit("ensemble_supergraph", {
 					datasets: this.$store.selectedDatasets,
 					groupBy: "module"
@@ -188,7 +188,7 @@ export default {
 
 			this.$store.graph = this.data;
 			this.$refs.EnsembleColorMap.init(this.$store.runtimeColor);
-			if (this.$store.selectedMode == 'Ensemble'){
+			if (this.$store.selectedMode == 'Ensemble') {
 				this.$refs.EnsembleColorMap.init(this.$store.distributionColor)
 			}
 			this.$refs.EnsembleNodes.init(this.$store.graph, this.view);
@@ -235,30 +235,17 @@ export default {
 
 		//Sankey computation
 		initSankey() {
-			if (this.$store.selectedMode == "Single"){
-				this.sankey = SingleSankey()
-					.nodeWidth(this.nodeWidth)
-					.nodePadding(this.ySpacing)
-					.size([this.sankeyWidth, this.sankeyHeight])
-					.maxLevel(this.data.maxLevel)
-					.levelSpacing(this.levelSpacing)
-					.dataset(this.$store.selectedTargetDataset)
-					.setMinNodeScale(this.nodeScale);
-
-			}
-			else if(this.$store.selectedMode == "Ensemble"){
-				this.sankey = EnsembleSankey()
-					.nodeWidth(this.nodeWidth)
-					.nodePadding(this.ySpacing)
-					.size([this.sankeyWidth, this.sankeyHeight])
-					.levelSpacing(this.levelSpacing)
-					.maxLevel(this.data.maxLevel)
-					.datasets(this.$store.runNames)
-					.setMinNodeScale(this.nodeScale)
-					.dataset("ensemble")
-					.targetDataset(this.$store.selectedTargetDataset)
-					.store(this.$store);
-			}
+			this.sankey = Sankey()
+				.nodeWidth(this.nodeWidth)
+				.nodePadding(this.ySpacing)
+				.size([this.sankeyWidth, this.sankeyHeight])
+				.levelSpacing(this.levelSpacing)
+				.maxLevel(this.data.maxLevel)
+				.datasets(this.$store.runNames)
+				.setMinNodeScale(this.nodeScale)
+				.dataset("ensemble")
+				.targetDataset(this.$store.selectedTargetDataset)
+				.store(this.$store);
 
 			let path = this.sankey.link();
 

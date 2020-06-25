@@ -8,6 +8,9 @@ from scipy.stats import iqr
 import collections
 import numpy as np
 
+import callflow
+LOGGER = callflow.get_logger(__name__)
+
 #------------------------------------------------------------------------------
 class BoxPlot:
     def __init__(self, df):
@@ -57,9 +60,6 @@ class BoxPlot:
     def quartiles(self, df, attr=""):
         samples = sorted(df[attr].tolist())
         quartiles = np.quantile(np.array(samples), [0, 0.25, 0.5, 0.75, 1.0]).tolist()
-        LOGGER.debug("Samples: ", samples)
-        LOGGER.debug("Numpy Percentiles: ", np_quartiles)
-        LOGGER.debug("Percentiles: ", quartiles)
         return quartiles
 
     def q1(self, x, axis=None):

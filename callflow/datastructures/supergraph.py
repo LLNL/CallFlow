@@ -16,7 +16,7 @@ import networkx as nx
 import callflow
 from callflow.timer import Timer
 from callflow.operations import Process, Group, Filter
-from callflow.modules import EnsembleAuxiliary
+from callflow.modules import EnsembleAuxiliary, SingleAuxiliary
 
 LOGGER = callflow.get_logger(__name__)
 
@@ -157,6 +157,14 @@ class SuperGraph(object):
                                    MPIBinCount=MPIBinCount,
                                    RunBinCount=RunBinCount,
                                    process=process, write=write)
+
+    def single_auxiliary(self, dataset="", binCount=20, process=True):
+        SingleAuxiliary(self.gf,
+            dataset=dataset,
+            props=self.props,
+            MPIBinCount=binCount,
+            process=process,
+        )
     # ------------------------------------------------------------------------
     # Read/Write functions for parameter file, auxiliary information (for the client), and pair-wise similarity.
     @staticmethod

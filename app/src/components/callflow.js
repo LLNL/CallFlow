@@ -14,16 +14,16 @@ import EventHandler from "./EventHandler";
 // Template import
 import tpl from "../html/callflow.html";
 
-import EnsembleSuperGraph from "./ensembleSupergraph/ensembleSupergraph";
-import EnsembleCCT from "./ensembleCCT/ensembleCCT";
+import SuperGraph from "./supergraph/supergraph";
+import CCT from "./cct/cct";
 
 // Single mode imports
-import RuntimeScatterplot from "./runtimeScatterplot/runtimeScatterplot";
-import SingleHistogram from "./histogram/histogram";
-import CallsiteInformation from "./CallsiteInformation/index";
+import SingleScatterplot from "./singleScatterplot/singleScatterplot";
+import SingleHistogram from "./singleHistogram/singleHistogram";
+import CallsiteInformation from "./callsiteInformation/callsiteInformation";
 
 // Ensemble mode imports
-import CallsiteCorrespondence from "./callsiteCorrespondence/index";
+import CallsiteCorrespondence from "./callsiteCorrespondence/callsiteCorrespondence";
 import EnsembleHistogram from "./ensembleHistogram/ensembleHistogram";
 import ModuleHierarchy from "./moduleHierarchy/moduleHierarchy";
 import EnsembleScatterplot from "./ensembleScatterplot/ensembleScatterplot";
@@ -38,15 +38,15 @@ export default {
 	components: {
 		Splitpanes,
 		// Generic components
-		EnsembleSuperGraph,
-		EnsembleCCT,
+		SuperGraph,
+		CCT,
 		// Single supergraph components.
-		RuntimeScatterplot,
-		CallsiteInformation,
+		SingleScatterplot,
 		SingleHistogram,
+		CallsiteInformation,
 		// Ensemble supergraph components.
-		EnsembleHistogram,
 		EnsembleScatterplot,
+		EnsembleHistogram,
 		ModuleHierarchy,
 		ParameterProjection,
 		CallsiteCorrespondence,
@@ -335,7 +335,7 @@ export default {
 			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
 			if (this.$store.selectedMode == 'Single') {
-				this.$store.selectedProp = 'all_ranks'
+				this.$store.selectedProp = 'rank'
 			}
 			else {
 				this.$store.selectedProp = this.selectedProp;
@@ -397,15 +397,15 @@ export default {
 		setComponentMap() {
 			this.currentSingleCCTComponents = [this.$refs.EnsembleCCT];
 			this.currentSingleSuperGraphComponents = [
-				this.$refs.EnsembleSuperGraph,
+				this.$refs.SuperGraph,
 				this.$refs.SingleHistogram,
-				this.$refs.RuntimeScatterplot,
+				this.$refs.SingleScatterplot,
 				this.$refs.CallsiteInformation,
 			];
 
 			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT];
 			this.currentEnsembleSuperGraphComponents = [
-				this.$refs.EnsembleSuperGraph,
+				this.$refs.SuperGraph,
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
 				this.$refs.CallsiteCorrespondence,
@@ -554,25 +554,27 @@ export default {
 		},
 
 		clearLocal() {
+			console.log(this.selectedFormat, this.selectedMode)
 			if (this.selectedMode == "Ensemble") {
 				if (this.selectedFormat == "CCT") {
-					this.clearComponents(this.currentEnsembleCCTComponents);
+					this.clearComponents(this.currentEnsembleSuperGraphComponents);
 				}
 				else if (this.selectedFormat == "SuperGraph") {
-					this.clearComponents(this.currentEnsembleSuperGraphComponents);
+					this.clearComponents(this.currentEnsembleCCTComponents);
 				}
 			}
 			else if (this.selectedMode == "Single") {
 				if (this.selectedFormat == "CCT") {
-					this.clearComponents(this.currentSingleCCTComponents);
+					this.clearComponents(this.currentSingleSuperGraphComponents);
 				}
 				else if (this.selectedFormat == "SuperGraph") {
-					this.clearComponents(this.currentSingleSuperGraphComponents);
+					this.clearComponents(this.currentSingleCCTComponents);
 				}
 			}
 		},
 
 		initComponents(componentList) {
+			console.log(componentList)
 			for (let i = 0; i < componentList.length; i++) {
 				componentList[i].init();
 			}

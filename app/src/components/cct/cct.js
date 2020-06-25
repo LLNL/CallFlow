@@ -10,7 +10,7 @@ import * as d3 from "d3";
 import dagreD3 from "dagre-d3/dist/dagre-d3";
 
 export default {
-	name: "EnsembleCCT",
+	name: "CCT",
 	template: tpl,
 	components: {
 		ColorMap
@@ -54,9 +54,6 @@ export default {
 			this.$refs.EnsembleCCT1.init(data[this.$store.selectedTargetDataset], "1");
 			this.$refs.EnsembleCCT2.init(data[this.$store.selectedTargetDataset], "2");
 		},
-	},
-
-	mounted() {
 	},
 
 	methods: {
@@ -122,7 +119,7 @@ export default {
 			this.g.nodes().forEach(function (v) {
 				let node = self.g.node(v);
 				if (node != undefined) {
-					let color = self.$store.color.getColor(node);
+					let color = self.$store.runtimeColor.getColor(node);
 					node.style = "fill:" + color;
 					node.rx = node.ry = 4;
 					node.id = "cct-node";

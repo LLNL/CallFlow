@@ -3,10 +3,13 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/histogram.html";
+
 import * as d3 from "d3";
 import "d3-selection-multi";
+
+import tpl from "../../html/histogram.html";
 import ToolTip from "./tooltip";
+import * as utils from "../utils";
 import EventHandler from "../EventHandler";
 
 export default {
@@ -38,8 +41,10 @@ export default {
 		selectedColorBy: "Inclusive",
 		MPIcount: 0,
 		message: "MPI Runtime Distribution",
-		axisLabelFactor: 3.5,
-		boxOffset: 20
+		paddingFactor: 3.5,
+		boxOffset: 20,
+		x_max_exponent: 0,
+		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
 	}),
 
 	mounted() {
@@ -56,20 +61,23 @@ export default {
 			this.width = window.innerWidth * 0.25;
 			this.height = this.$store.viewHeight * 0.45;
 
-			this.boxWidth = this.width - this.padding.right - this.padding.left - this.boxOffset;
+			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
 
-			this.histogramOffset = Math.floor(this.boxHeight / 3);
+			this.histogramOffset = Math.floor(this.boxHeight / 4);
 			this.histogramHeight = this.boxHeight - this.histogramOffset;
-			this.histogramWidth = this.boxWidth - this.padding.left - this.padding.right;
+			this.histogramWidth = this.boxWidth;
 
 			this.rankScaleHeight = this.boxHeight - this.histogramHeight;
-			this.rankScaleWidth = this.histogramWidth - this.padding.left;
+			this.rankScaleWidth = this.histogramWidth;
+
+			this.xAxisHeight = this.histogramWidth - (this.paddingFactor - 0.5) * this.padding.left;
+			this.yAxisHeight = this.histogramHeight- (this.paddingFactor - 0.5) * this.padding.left;
 
 			this.svg = d3.select("#" + this.svgID)
 				.attrs({
-					"width": this.boxWidth + this.padding.right + this.padding.left,
-					"height": this.boxHeight + this.padding.top + this.padding.bottom,
+					"width": this.boxWidth,
+					"height": this.boxHeight,
 					"transform": "translate(" + this.padding.left + "," + this.padding.top + ")"
 				});
 
@@ -91,29 +99,22 @@ export default {
 			this.binContainsProcID = temp[3];
 			this.logScaleBool = false;
 
-			// const targetData = this.$store.modules[this.$store.selectedTargetDataset][callsite];
-			// const targetTemp = this.dataProcess(targetData);
-			// this.targetXVals = targetTemp[0];
-			// this.targetFreq = targetTemp[1];
-			// this.target_axis_x = targetTemp[3];
-			// this.target_binContainsProcID = targetTemp[3];
-
 			this.$refs.ToolTip.init(this.svgID);
 
-			this.histogramXScale = d3.scaleBand()
+			this.xScale = d3.scaleBand()
 				.domain(this.xVals)
-				.range(["#c6dbef", "#6baed6", "#2171b5", "#084594"])
-				.rangeRound([0, this.histogramWidth - this.padding.left]);
+				.range([(this.paddingFactor) * this.padding.left, this.xAxisHeight]);
 
 			if (this.$store.selectedScale == "Linear") {
-				this.histogramYScale = d3.scaleLinear()
+				this.yScale = d3.scaleLinear()
 					.domain([0, d3.max(this.freq)])
-					.range([this.histogramHeight - this.padding.top, 0]);
+					.range([this.yAxisHeight, this.padding.top]);
 				this.logScaleBool = false;
-			} else if (this.$store.selectedScale == "Log") {
-				this.histogramYScale = d3.scaleLog()
+			} 
+			else if (this.$store.selectedScale == "Log") {
+				this.yScale = d3.scaleLog()
 					.domain([1, d3.max(this.freq)])
-					.range([this.boxHeight, 10]);
+					.range([this.yAxisHeight, this.padding.top]);
 				this.logScaleBool = true;
 			}
 			this.visualize();
@@ -147,45 +148,28 @@ export default {
 		},
 
 		dataProcess(data) {
-			let attr_data = {};
 			let axis_x = [];
 			let binContainsProcID = {};
 			let dataSorted = [];
 			let dataMin = 0;
 			let dataMax = 0;
 
-			// if (this.$store.selectedMetric == "Inclusive") {
-			// 	attr_data = data["hist_time (inc)"];
-			// 	dataMin = data["min_time (inc)"];
-			// 	dataMax = data["max_time (inc)"];
-			// 	dataSorted = data["sorted_time (inc)"];
-			// } else if (this.$store.selectedMetric == "Exclusive") {
-			// 	attr_data = data["hist_time"];
-			// 	dataMin = data["min_time"];
-			// 	dataMax = data["max_time"];
-			// 	dataSorted = data["sorted_time"];
-			// } else if (this.$store.selectedMetric == "Imbalance") {
-			// 	attr_data = data["hist_imbalance"];
-			// }
-
-			attr_data = data
-
 			const dataWidth = ((dataMax - dataMin) / this.$store.selectedBinCount);
 			for (let i = 0; i < this.$store.selectedBinCount; i++) {
 				axis_x.push(dataMin + (i * dataWidth));
 			}
 
-			// dataSorted.forEach((val, idx) => {
-			// 	let pos = Math.floor((val - dataMin) / dataWidth);
-			// 	if (pos >= this.$store.selectedBinCount) {
-			// 		pos = this.$store.selectedBinCount - 1;
-			// 	}
-			// 	if (binContainsProcID[pos] == null) {
-			// 		binContainsProcID[pos] = [];
-			// 	}
-			// 	binContainsProcID[pos].push(data["rank"][idx]);
-			// });
-			return [attr_data["x"], attr_data["y"], axis_x, binContainsProcID];
+			dataSorted.forEach((val, idx) => {
+				let pos = Math.floor((val - dataMin) / dataWidth);
+				if (pos >= this.$store.selectedBinCount) {
+					pos = this.$store.selectedBinCount - 1;
+				}
+				if (binContainsProcID[pos] == null) {
+					binContainsProcID[pos] = [];
+				}
+				binContainsProcID[pos].push(data["rank"][idx]);
+			});
+			return [data["x"], data["y"], axis_x, binContainsProcID];
 		},
 
 		removeDuplicates(arr) {
@@ -259,22 +243,16 @@ export default {
 				.enter()
 				.append("rect")
 				.attr("class", "single-histogram-bar single-target")
-				.attr("x", (d, i) => {
-					return this.histogramXScale(this.xVals[i]) + this.axisLabelFactor * this.padding.left;
+				.attrs({
+					"x": (d, i) => { return this.xScale(this.xVals[i]) },
+					"y": (d, i) => { return this.yScale(d); },
+					"width": this.xScale.bandwidth(),
+					"height": (d) => { return Math.abs(this.yAxisHeight - this.yScale(d)) },
+					"fill": this.$store.runtimeColor.intermediate,
+					"opacity": 1,
+					"stroke-width": "0.2px",
+					"stroke": "#202020",
 				})
-				.attr("y", (d, i) => {
-					return Math.floor(this.histogramYScale(d));
-				})
-				.attr("width", (d) => {
-					return this.histogramXScale.bandwidth();
-				})
-				.attr("height", (d) => {
-					return Math.floor(this.histogramHeight - this.histogramYScale(d)) - this.padding.top;
-				})
-				.attr("fill", this.$store.runtimeColor.intermediate)
-				.attr("opacity", 1)
-				.attr("stroke-width", (d, i) => "0.2px")
-				.attr("stroke", (d, i) => "black")
 				.on("mouseover", function (d, i) {
 					d3.select(this)
 						.attr("fill", self.$store.runtimeColor.highlight);
@@ -294,27 +272,40 @@ export default {
 				});
 		},
 
+		addxAxisLabel() {
+			let max_value = this.xScale.domain()[1];
+			console.log(max_value)
+			this.x_max_exponent = utils.formatExponent(max_value);
+			let exponent_string = this.superscript[this.x_max_exponent];
+			let label = "(e+" + this.x_max_exponent + ") " + this.$store.selectedMetric + " Runtime (" + "\u03BCs)";
+			this.svg.append("text")
+				.attrs({
+					"class": "histogram-axis-label",
+					"x": this.histogramWidth - this.padding.left,
+					"y": this.yAxisHeight + 3 * this.padding.top
+				})
+				.style("font-size", "12px")
+				.style("text-anchor", "end")
+				.text(label);
+		},
+
 		/* Axis for the histogram */
 		xAxis() {
-			const xAxis = d3.axisBottom(this.histogramXScale)
+			this.addxAxisLabel()
+			const xAxis = d3.axisBottom(this.xScale)
+				.ticks(10)
 				.tickFormat((d, i) => {
-					let temp = this.axis_x[i];
-					if (i % 2 == 1 || i == this.MPIcount.length - 1) {
-						return;
+					if (i % 3 == 0) {
+						let runtime = utils.formatRuntimeWithExponent(this.xVals[i], self.x_max_exponent);
+						return `${runtime[0]}`;
 					}
 				});
 
-			this.svg.append("text")
-				.attr("class", "histogram-axis-label")
-				.attr("x", this.boxWidth)
-				.attr("y", this.histogramHeight + this.padding.top * this.axisLabelFactor)
-				.style("font-size", "12px")
-				.style("text-anchor", "end")
-				.text(this.$store.selectedMetric + " Runtime");
-
 			const xAxisLine = this.svg.append("g")
-				.attr("class", "x-axis")
-				.attr("transform", `translate(${this.axisLabelFactor * this.padding.left},${this.histogramHeight - this.padding.top})`)
+				.attrs({
+					"class": "x-axis",
+					"transform": "translate(" + 0 + "," + this.yAxisHeight + ")"
+				})
 				.call(xAxis);
 
 			xAxisLine.selectAll("path")
@@ -335,7 +326,7 @@ export default {
 		},
 
 		yAxis() {
-			const yAxis = d3.axisLeft(this.histogramYScale)
+			const yAxis = d3.axisLeft(this.yScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
 					if (d == 1) {
@@ -358,9 +349,10 @@ export default {
 				.text("Number of Processes");
 
 			const yAxisLine = this.svg.append("g")
-				.attr("class", "y-axis")
-				.attr("transform", `translate(${this.axisLabelFactor * this.padding.left},${0})`)
-				.call(yAxis);
+				.attrs({
+					"class": "y-axis",
+					"transform": "translate(" + this.paddingFactor * this.padding.left + ", 0)"
+				}).call(yAxis);
 
 			yAxisLine.selectAll("path")
 				.style("fill", "none")
@@ -465,7 +457,7 @@ export default {
 			const rankLineAxisLine = this.svg.append("g")
 				.attr("class", "histogram-rank-axis")
 				.attr("id", "rankAxis")
-				.attr("transform", `translate(${this.axisLabelFactor * this.padding.left},${this.boxHeight - this.padding.bottom})`)
+				.attr("transform", `translate(${this.paddingFactor * this.padding.left},${this.boxHeight - this.padding.bottom})`)
 				.call(rankLineAxis);
 
 			rankLineAxisLine.selectAll("path")

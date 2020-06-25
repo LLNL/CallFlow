@@ -3,20 +3,20 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import tpl from "../../html/runtimeScatterplot.html";
 import * as d3 from "d3";
+
+import tpl from "../../html/runtimeScatterplot.html";
 import ToolTip from "./tooltip";
 import * as utils from "../utils";
 import EventHandler from "../EventHandler";
 
 
 export default {
-	name: "RuntimeScatterplot",
+	name: "SingleScatterplot",
 	template: tpl,
 	components: {
 		ToolTip
-	},
-
+	},	
 	data: () => ({
 		padding: {
 			top: 10,
@@ -55,7 +55,7 @@ export default {
 	methods: {
 		init() {
 			this.width = window.innerWidth * 0.25;
-			this.height = this.$store.viewHeight * 0.5;
+			this.height = this.$store.viewHeight * 0.45;
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
@@ -80,12 +80,6 @@ export default {
 
 			this.process();
 
-			this.xScale = d3.scaleLinear().domain([this.xMin, this.xMax]).range([this.padding.left, this.xAxisHeight]);
-			this.yScale = d3.scaleLinear().domain([this.yMin, this.yMax]).range([this.yAxisHeight, this.padding.top]);
-
-			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
-			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
-
 			this.xAxis();
 			this.yAxis();
 			// this.trendline()
@@ -94,100 +88,43 @@ export default {
 		},
 
 		process() {
-			let mean_time = [];
-			let mean_time_inc = [];
-
 			let store = this.$store.modules[this.$store.selectedTargetDataset][this.$store.selectedModule];
-			console.log(store, this.$store.selectedModule)
-			console.log(store[this.$store.selectedMetric]["prop_histograms"][this.$store.selectedProp]["ensemble"])
+			let mean_time_inc = store["Inclusive"]["data"]
+			let mean_time = store["Exclusive"]["data"]
 
-			let callsites_in_module = this.$store.moduleCallsiteMap[this.$store.selectedTargetDataset][this.selectedModule];
-			for (let i = 0; i < callsites_in_module.length; i += 1) {
-				let thiscallsite = callsites_in_module[i];
-				let thisdata = this.$store.callsites[this.$store.selectedTargetDataset][thiscallsite];
-				mean_time.push({
-					"callsite": thiscallsite,
-					"val": thisdata["Exclusive"]["mean_time"],
-					"run": this.$store.selectedTargetDataset
-				});
-				mean_time_inc.push({
-					"callsite": thiscallsite,
-					"val": thisdata["Inclusive"]["mean_time"],
-					"run": this.$store.selectedTargetDataset
-				});
+			let xArray = [];
+			let yArray = [];
+			let yMin = 0;
+			let xMin = 0;
+			let xMax = 0;
+			let yMax = 0;
+
+			for (const [idx, d] of Object.entries(mean_time)) {
+				xMin = Math.min(xMin, d);
+				xMax = Math.max(xMax, d);
+				xArray.push(d);
 			}
 
-			let temp;
-			this.$store.selectedScatterMode = "mean";
-			if (this.$store.selectedScatterMode == "mean") {
-				temp = this.scatterMean(mean_time, mean_time_inc);
+			for (const [idx, d] of Object.entries(mean_time_inc)) {
+				yMin = Math.min(yMin, d);
+				yMax = Math.max(yMax, d);
+				yArray.push(d);
 			}
-			else if (this.$store.selectedScatterMode == "all") {
-				let data = this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule];
-				temp = this.scatterAll(data["time"], data["time (inc)"]);
-			}
+
+			let temp = [xMin, yMin, xMax, yMax, xArray, yArray];
+			
 			this.xMin = temp[0];
 			this.yMin = temp[1];
 			this.xMax = temp[2];
 			this.yMax = temp[3];
 			this.xArray = temp[4];
 			this.yArray = temp[5];
-		},
 
-		scatterAll() {
-			let xArray = [];
-			let yArray = [];
-			let yMin = 0;
-			let xMin = 0;
-			let xMax = 0;
-			let yMax = 0;
+			this.xAxisHeight = this.boxWidth - 3 * this.padding.left;
+			this.yAxisHeight = this.boxHeight - 3 * this.padding.left;
 
-			for (const [idx, d] of Object.entries(this.yData)) {
-				//for (let rank = 0; rank < d.length; rank += 1) {
-				// yMin = Math.min(yMin, d[rank])
-				// yMax = Math.max(yMax, d[rank])
-				// yArray.push(d[rank])
-				// }
-				yMin = Math.min(yMin, d);
-				yMax = Math.max(yMax, d);
-				yArray.push(d);
-			}
-
-			for (const [idx, d] of Object.entries(this.xData)) {
-				// for (let rank = 0; rank < d.length; rank += 1) {
-				// xMin = Math.min(xMin, d[rank]);
-				// xMax = Math.max(xMax, d[rank]);
-				// xArray.push(d[rank])
-				// }
-				xMin = Math.min(xMin, d);
-				xMax = Math.max(xMax, d);
-				xArray.push(d);
-			}
-
-			return [xMin, yMin, xMax, yMax, xArray, yArray];
-		},
-
-		scatterMean(xData, yData) {
-			let xArray = [];
-			let yArray = [];
-			let yMin = 0;
-			let xMin = 0;
-			let xMax = 0;
-			let yMax = 0;
-
-			for (const [idx, d] of Object.entries(xData)) {
-				xMin = Math.min(xMin, d.val);
-				xMax = Math.max(xMax, d.val);
-				xArray.push(d);
-			}
-
-			for (const [idx, d] of Object.entries(yData)) {
-				yMin = Math.min(yMin, d.val);
-				yMax = Math.max(yMax, d.val);
-				yArray.push(d);
-			}
-
-			return [xMin, yMin, xMax, yMax, xArray, yArray];
+			this.xScale = d3.scaleLinear().domain(this.xArray).range([this.padding.left, this.xAxisHeight]);
+			this.yScale = d3.scaleLinear().domain(this.yArray).range([this.yAxisHeight, this.padding.top]);
 		},
 
 		// returns slope, intercept and r-square of the line
@@ -267,13 +204,13 @@ export default {
 
 		addxAxisLabel() {
 			let max_value = this.xScale.domain()[1];
+			console.log(max_value)
 			this.x_max_exponent = utils.formatExponent(max_value);
 			let exponent_string = this.superscript[this.x_max_exponent];
-			console.log(this.yAxisHeight)
 			let label = "(e+" + this.x_max_exponent + ") " + "Exclusive Runtime (" + "\u03BCs)";
 			this.svg.append("text")
 				.attr("class", "scatterplot-axis-label")
-				.attr("x", this.boxWidth - 1 * this.padding.right)
+				.attr("x", this.boxWidth)
 				.attr("y", this.yAxisHeight + 3 * this.padding.top)
 				.style("font-size", "12px")
 				.style("text-anchor", "end")
@@ -281,13 +218,13 @@ export default {
 		},
 
 		xAxis() {
+			let self = this
 			this.addxAxisLabel();
 			const xAxis = d3.axisBottom(this.xScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
-					console.log(d)
 					if (i % 3 == 0) {
-						let runtime = utils.formatRuntimeWithExponent(d, this.x_max_exponent);
+						let runtime = utils.formatRuntimeWithExponent(d, self.x_max_exponent);
 						return `${runtime[0]}`;
 					}
 				});
@@ -295,7 +232,7 @@ export default {
 			var xAxisLine = this.svg.append("g")
 				.attr("class", "axis")
 				.attr("id", "xAxis")
-				.attr("transform", "translate(" + 3 * this.padding.left + "," + this.yAxisHeight + ")")
+				.attr("transform", "translate(" + 2 * this.padding.left + "," + this.yAxisHeight + ")")
 				.call(xAxis);
 
 			xAxisLine.selectAll("path")
@@ -330,22 +267,22 @@ export default {
 		},
 
 		yAxis() {
-			let tickCount = 10;
+			let self = this
+			let tickCount = 10
 			this.addyAxisLabel();
 			let yAxis = d3.axisLeft(this.yScale)
-				.ticks(tickCount)
+				.ticks(10)
 				.tickFormat((d, i) => {
 					if (i % 3 == 0 || i == tickCount - 1) {
-						let runtime = utils.formatRuntimeWithExponent(d, this.y_max_exponent);
-						console.log(runtime)
-						return `${parseInt(runtime[0])}`;
+						let runtime = utils.formatRuntimeWithExponent(d, self.y_max_exponent);
+						return `${runtime[0]}`;
 					}
 				});
 
 			var yAxisLine = this.svg.append("g")
 				.attr("id", "yAxis")
 				.attr("class", "axis")
-				.attr("transform", "translate(" + 4 * this.padding.left + ", 0)")
+				.attr("transform", "translate(" + 3 * this.padding.left + ", 0)")
 				.call(yAxis);
 
 			yAxisLine.selectAll("path")
@@ -367,15 +304,15 @@ export default {
 
 		trendline() {
 			let self = this;
-			var line = d3.line()
+			let line = d3.line()
 				.x(function (d, i) {
-					return self.xScale(self.xArray[i]) + 3 * self.padding.left;
+					return self.xScale(self.xArray[i]);
 				})
 				.y(function (d, i) {
 					return self.yScale(self.yArray[i]);
 				});
 
-			var trendline = this.svg.append("g")
+			this.svg.append("g")
 				.attr("class", "trend-line")
 				.append("path")
 				.datum(this.regressionY)
@@ -393,12 +330,12 @@ export default {
 				.attr("class", "dot")
 				.attr("r", 5)
 				.attr("cx", function (d, i) {
-					return self.xScale(self.xArray[i]) + 3 * self.padding.left;
+					return self.xScale(self.xArray[i]);
 				})
 				.attr("cy", function (d, i) {
 					return self.yScale(self.yArray[i]);
 				})
-				.style("fill", "#4682b4");
+				.style("fill", this.$store.runtimeColor.intermediate);
 		},
 
 		correlationText() {

@@ -21,8 +21,6 @@ export default {
 		data: [],
 		width: null,
 		height: null,
-		histogramHeight: null,
-		histogramWidth: null,
 		padding: {
 			top: 10,
 			right: 10,
@@ -69,19 +67,6 @@ export default {
 			// Assign width and height for histogram and rankLine SVG.
 			this.boxWidth = this.width - 1 * (this.padding.right + this.padding.left);
 			this.boxHeight = this.height - 2 * (this.padding.top + this.padding.bottom);
-
-			//uncomment to include the rank scale
-			// this.histogramOffset = Math.floor(this.boxHeight / 3);
-			// this.histogramHeight = this.boxHeight - this.histogramOffset - this.padding.top
-			// this.histogramWidth = this.boxWidth - this.padding.left * this.axisLabelFactor - this.padding.right
-			// this.rankScaleHeight = this.boxHeight - this.histogramHeight
-			// this.rankScaleWidth = this.histogramWidth
-
-			this.histogramOffset = this.padding.top;
-			this.histogramHeight = this.boxHeight - this.histogramOffset - this.padding.top;
-			this.histogramWidth = this.boxWidth - this.padding.left * this.axisLabelFactor - this.padding.right;
-			this.rankScaleHeight = this.boxHeight - this.histogramHeight;
-			this.rankScaleWidth = this.histogramWidth;
 
 			this.xAxisHeight = this.boxWidth - (this.paddingFactor + 1) * this.padding.left;
 			this.yAxisHeight = this.boxHeight - (this.paddingFactor + 1) * this.padding.left;
@@ -180,7 +165,7 @@ export default {
 			else if (this.$store.selectedScale == "Log") {
 				this.yScale = d3.scaleLog()
 					.domain([0.1, d3.max(this.freq)])
-					.range([this.boxHeight, this.padding.top]);
+					.range([this.yAxisHeight, this.padding.top]);
 				this.logScaleBool = true;
 			}
 			return isTargetThere;
@@ -193,8 +178,6 @@ export default {
 			this.xAxis();
 			this.yAxis();
 			this.setTitle();
-			// this.rankLines()
-			// this.brushes()        
 
 			if (this.$store.showTarget && isTargetThere) {
 				this.targetBars();
@@ -527,230 +510,230 @@ export default {
 				.style("font-weight", "lighter");
 		},
 
-		drawRankLines(group, processIDs, xVals, idx, type) {
-			const binWidth = this.xScale.bandwidth();
-			const widthPerRank = binWidth / processIDs.length;
-			const binLocation = this.xScale(xVals);
-			let cumulativeBinSpace = 0;
-			let line;
-			if (group.length == 1) {
-				let start = group[0];
-				let end = start + 1;
-				let topX1 = cumulativeBinSpace + binLocation;
-				let topX2 = cumulativeBinSpace + binLocation + (1) * widthPerRank;
+		// drawRankLines(group, processIDs, xVals, idx, type) {
+		// 	const binWidth = this.xScale.bandwidth();
+		// 	const widthPerRank = binWidth / processIDs.length;
+		// 	const binLocation = this.xScale(xVals);
+		// 	let cumulativeBinSpace = 0;
+		// 	let line;
+		// 	if (group.length == 1) {
+		// 		let start = group[0];
+		// 		let end = start + 1;
+		// 		let topX1 = cumulativeBinSpace + binLocation;
+		// 		let topX2 = cumulativeBinSpace + binLocation + (1) * widthPerRank;
 
-				let botX3 = this.xScale(start);
-				let botX4 = this.xScale(start);
+		// 		let botX3 = this.xScale(start);
+		// 		let botX4 = this.xScale(start);
 
-				let topY = this.boxHeight - this.histogramOffset;
-				let botY = this.boxHeight - 3 * this.padding.bottom;
-				cumulativeBinSpace += (1) * widthPerRank;
+		// 		let topY = this.boxHeight - this.histogramOffset;
+		// 		let botY = this.boxHeight - 3 * this.padding.bottom;
+		// 		cumulativeBinSpace += (1) * widthPerRank;
 
-				line = "M" + topX1 + " " + topY +
-					"L " + topX2 + " " + topY +
-					"L " + botX4 + " " + botY +
-					"L " + botX3 + " " + botY;
-			}
-			else {
-				var start = group[0];
-				var end = group[1];
+		// 		line = "M" + topX1 + " " + topY +
+		// 			"L " + topX2 + " " + topY +
+		// 			"L " + botX4 + " " + botY +
+		// 			"L " + botX3 + " " + botY;
+		// 	}
+		// 	else {
+		// 		var start = group[0];
+		// 		var end = group[1];
 
-				var topX1 = cumulativeBinSpace + binLocation;
-				var topX2 = cumulativeBinSpace + (end - start + 1) * widthPerRank + binLocation;
-
-
-				var botX3 = this.xScale(xVals[start]);
-				var botX4 = this.xScale(xVals[end]);
-
-				var topY = this.boxHeight - this.histogramOffset;
-				var botY = this.boxHeight - 3 * this.padding.bottom;
-
-				cumulativeBinSpace += (end - start + 1) * widthPerRank;
-
-				line = "M" + topX1 + " " + topY +
-					"L " + topX2 + " " + topY +
-					"L " + botX4 + " " + botY +
-					"L " + botX3 + " " + botY;
-			}
-			if (type == "ensemble") {
-				this.rankLinesG.append("path")
-					.attrs({
-						"d": line,
-						"class": "lineRank lineRank_" + idx
-					})
-					.style("fill", this.$store.distributionColor.ensemble)
-					.style("fill-opacity", 0.4)
-					.attr("transform", `translate(${this.axisLabelFactor * this.padding.left},${-this.padding.bottom})`);
-			}
-			else if (type == "target") {
-				this.target_rankLinesG.append("path")
-					.attrs({
-						"d": line,
-						"class": "target_lineRank target_lineRank_" + idx
-					})
-					.style("fill", this.$store.distributionColor.target)
-					.style("fill-opacity", 0.4)
-					.attr("transform", `translate(${this.axisLabelFactor * this.padding.left},${-this.padding.bottom})`);
-			}
-		},
-
-		rankLines() {
-			this.ranklinescale = d3.scaleLinear()
-				.domain([0, this.rankCount - 1])
-				.range([0, this.rankScaleWidth]);
-
-			this.freq.forEach((fregVal, idx) => {
-				const processIDs = this.binContainsProcID[idx];
-				const target_processIDs = this.target_binContainsProcID[idx];
-				// For ensemble process ids.
-				if (processIDs) {
-					this.rankLinesG = this.svg.append("g")
-						.attrs({
-							"class": `binRank bin_${idx}`,
-							"data-name": idx,
-							"transform": `translate(${this.padding.left},${0})`
-						});
-
-					processIDs.sort((a, b) => a - b);
-
-					const groupArray = this.groupProcess(processIDs).array;
-
-					groupArray.forEach((group) => {
-						this.drawRankLines(group, processIDs, this.xVals[idx], idx, "ensemble");
-					});
-				}
-
-				// For the target process ids.
-				if (target_processIDs) {
-					this.target_rankLinesG = this.svg.append("g")
-						.attrs({
-							"class": `target_binRank targetbin_${idx}`,
-							"data-name": idx,
-							"transform": `translate(${this.padding.left},${0})`
-						});
-
-					target_processIDs.sort((a, b) => a - b);
-
-					const target_groupArray = this.groupProcess(target_processIDs).array;
-					target_groupArray.forEach((group) => {
-						this.drawRankLines(group, target_processIDs, this.targetXVals[idx], idx, "target");
-					});
-				}
-			});
+		// 		var topX1 = cumulativeBinSpace + binLocation;
+		// 		var topX2 = cumulativeBinSpace + (end - start + 1) * widthPerRank + binLocation;
 
 
-			const rankLineAxis = d3.axisBottom(this.ranklinescale)
-				.ticks(10)
-				.tickFormat((d, i) => {
-					if (this.$store.numOfRanks["ensemble"] <= 20) {
-						return d;
-					}
-					else {
-						if (d % 10 == 0 || d == this.$store.numOfRanks["ensemble"] - 1) {
-							return d;
-						}
-					}
-				});
+		// 		var botX3 = this.xScale(xVals[start]);
+		// 		var botX4 = this.xScale(xVals[end]);
 
-			this.rankLineAxisLine = this.svg.append("g")
-				.attrs({
-					"class": "ensemble-histogram-rank-axis",
-					"transform": `translate(${this.axisLabelFactor * this.padding.left},${this.boxHeight - 4 * this.padding.bottom})`
-				})
-				.call(rankLineAxis);
+		// 		var topY = this.boxHeight - this.histogramOffset;
+		// 		var botY = this.boxHeight - 3 * this.padding.bottom;
 
-			this.rankLineAxisLine.selectAll("path")
-				.style("fill", "none")
-				.style("stroke", "black")
-				.style("stroke-width", "1px");
+		// 		cumulativeBinSpace += (end - start + 1) * widthPerRank;
 
-			this.rankLineAxisLine.selectAll("line")
-				.style("fill", "none")
-				.style("stroke", "#000")
-				.style("stroke-width", "1px")
-				.style("opacity", 0.5);
+		// 		line = "M" + topX1 + " " + topY +
+		// 			"L " + topX2 + " " + topY +
+		// 			"L " + botX4 + " " + botY +
+		// 			"L " + botX3 + " " + botY;
+		// 	}
+		// 	if (type == "ensemble") {
+		// 		this.rankLinesG.append("path")
+		// 			.attrs({
+		// 				"d": line,
+		// 				"class": "lineRank lineRank_" + idx
+		// 			})
+		// 			.style("fill", this.$store.distributionColor.ensemble)
+		// 			.style("fill-opacity", 0.4)
+		// 			.attr("transform", `translate(${this.axisLabelFactor * this.padding.left},${-this.padding.bottom})`);
+		// 	}
+		// 	else if (type == "target") {
+		// 		this.target_rankLinesG.append("path")
+		// 			.attrs({
+		// 				"d": line,
+		// 				"class": "target_lineRank target_lineRank_" + idx
+		// 			})
+		// 			.style("fill", this.$store.distributionColor.target)
+		// 			.style("fill-opacity", 0.4)
+		// 			.attr("transform", `translate(${this.axisLabelFactor * this.padding.left},${-this.padding.bottom})`);
+		// 	}
+		// },
 
-			this.rankLineAxisLine.selectAll("text")
-				.style("font-size", "9px")
-				.style("font-family", "sans-serif")
-				.style("font-weight", "lighter");
+		// rankLines() {
+		// 	this.ranklinescale = d3.scaleLinear()
+		// 		.domain([0, this.rankCount - 1])
+		// 		.range([0, this.rankScaleWidth]);
 
-			this.rankLineAxisLineText = this.rankLineAxisLine
-				.append("text")
-				.attrs({
-					"y": 20,
-					"x": 25,
-					"dy": ".71em"
-				})
-				.style("text-anchor", "end")
-				.text("MPI Ranks");
-		},
+		// 	this.freq.forEach((fregVal, idx) => {
+		// 		const processIDs = this.binContainsProcID[idx];
+		// 		const target_processIDs = this.target_binContainsProcID[idx];
+		// 		// For ensemble process ids.
+		// 		if (processIDs) {
+		// 			this.rankLinesG = this.svg.append("g")
+		// 				.attrs({
+		// 					"class": `binRank bin_${idx}`,
+		// 					"data-name": idx,
+		// 					"transform": `translate(${this.padding.left},${0})`
+		// 				});
 
-		brushes() {
-			this.brushdata = [];
-			this.brushSVG = this.svg
-				.append("svg");
+		// 			processIDs.sort((a, b) => a - b);
 
-			this.brush = d3.brushX()
-				.extent([
-					[this.axisLabelFactor * this.padding.left, this.histogramHeight - this.padding.top],
-					[this.boxWidth, this.boxHeight - this.padding.top]
-				])
-				.on("brush", this.brushing)
-				.on("end", this.brushend);
-			let id = 0;
-			this.brushdata.push({
-				id: id,
-				brush: this.brush
-			});
+		// 			const groupArray = this.groupProcess(processIDs).array;
 
-			this.brushSVG
-				.selectAll(".brush")
-				.data(this.brushdata)
-				.enter()
-				.insert("g", ".brush")
-				.attr("class", "brush")
-				.call(this.brush);
-		},
+		// 			groupArray.forEach((group) => {
+		// 				this.drawRankLines(group, processIDs, this.xVals[idx], idx, "ensemble");
+		// 			});
+		// 		}
 
-		brushing() {
-			const brushScale = d3.scaleLinear()
-				.domain(this.xScale.domain())
-				.range(this.xScale.range());
+		// 		// For the target process ids.
+		// 		if (target_processIDs) {
+		// 			this.target_rankLinesG = this.svg.append("g")
+		// 				.attrs({
+		// 					"class": `target_binRank targetbin_${idx}`,
+		// 					"data-name": idx,
+		// 					"transform": `translate(${this.padding.left},${0})`
+		// 				});
 
-			let brushStart = d3.event.selection.map(brushScale.invert)[0];
-			let brushEnd = d3.event.selection.map(brushScale.invert)[1];
-			let brushPoints = this.xScale.domain().length;
+		// 			target_processIDs.sort((a, b) => a - b);
 
-			this.localBrushStart = Math.floor(brushStart * brushPoints);
-			this.localBrushEnd = Math.ceil(brushEnd * brushPoints);
+		// 			const target_groupArray = this.groupProcess(target_processIDs).array;
+		// 			target_groupArray.forEach((group) => {
+		// 				this.drawRankLines(group, target_processIDs, this.targetXVals[idx], idx, "target");
+		// 			});
+		// 		}
+		// 	});
 
-			// highlight rank lines that is brush
-			this.svg.selectAll(".binRank").attr("opacity", 0);
-			for (let i = this.localBrushStart; i < this.localBrushEnd; i++) {
-				this.svg.selectAll(`.bin_${i}`).attr("opacity", 1);
-			}
 
-			if (this.localBrushStart == this.localBrushEnd) {
-				this.svg.selectAll(".binRank").attr("opacity", 1);
-			}
-		},
+		// 	const rankLineAxis = d3.axisBottom(this.ranklinescale)
+		// 		.ticks(10)
+		// 		.tickFormat((d, i) => {
+		// 			if (this.$store.numOfRanks["ensemble"] <= 20) {
+		// 				return d;
+		// 			}
+		// 			else {
+		// 				if (d % 10 == 0 || d == this.$store.numOfRanks["ensemble"] - 1) {
+		// 					return d;
+		// 				}
+		// 			}
+		// 		});
 
-		brushend() {
-			let self = this;
-			const processIDList = [];
-			for (let i = this.localBrushStart; i < this.localBrushEnd; i++) {
-				if (self.binContainsProcID[i] != null) {
-					const curList = self.binContainsProcID[i];
-					curList.forEach((processID) => {
-						processIDList.push(processID);
-					});
-				}
-			}
-			self.$socket.emit("split-rank", {
-				"dataset": self.$store.selectedDataset,
-				"ids": processIDList
-			});
-		},
+		// 	this.rankLineAxisLine = this.svg.append("g")
+		// 		.attrs({
+		// 			"class": "ensemble-histogram-rank-axis",
+		// 			"transform": `translate(${this.axisLabelFactor * this.padding.left},${this.boxHeight - 4 * this.padding.bottom})`
+		// 		})
+		// 		.call(rankLineAxis);
+
+		// 	this.rankLineAxisLine.selectAll("path")
+		// 		.style("fill", "none")
+		// 		.style("stroke", "black")
+		// 		.style("stroke-width", "1px");
+
+		// 	this.rankLineAxisLine.selectAll("line")
+		// 		.style("fill", "none")
+		// 		.style("stroke", "#000")
+		// 		.style("stroke-width", "1px")
+		// 		.style("opacity", 0.5);
+
+		// 	this.rankLineAxisLine.selectAll("text")
+		// 		.style("font-size", "9px")
+		// 		.style("font-family", "sans-serif")
+		// 		.style("font-weight", "lighter");
+
+		// 	this.rankLineAxisLineText = this.rankLineAxisLine
+		// 		.append("text")
+		// 		.attrs({
+		// 			"y": 20,
+		// 			"x": 25,
+		// 			"dy": ".71em"
+		// 		})
+		// 		.style("text-anchor", "end")
+		// 		.text("MPI Ranks");
+		// },
+
+		// brushes() {
+		// 	this.brushdata = [];
+		// 	this.brushSVG = this.svg
+		// 		.append("svg");
+
+		// 	this.brush = d3.brushX()
+		// 		.extent([
+		// 			[this.axisLabelFactor * this.padding.left, this.histogramHeight - this.padding.top],
+		// 			[this.boxWidth, this.boxHeight - this.padding.top]
+		// 		])
+		// 		.on("brush", this.brushing)
+		// 		.on("end", this.brushend);
+		// 	let id = 0;
+		// 	this.brushdata.push({
+		// 		id: id,
+		// 		brush: this.brush
+		// 	});
+
+		// 	this.brushSVG
+		// 		.selectAll(".brush")
+		// 		.data(this.brushdata)
+		// 		.enter()
+		// 		.insert("g", ".brush")
+		// 		.attr("class", "brush")
+		// 		.call(this.brush);
+		// },
+
+		// brushing() {
+		// 	const brushScale = d3.scaleLinear()
+		// 		.domain(this.xScale.domain())
+		// 		.range(this.xScale.range());
+
+		// 	let brushStart = d3.event.selection.map(brushScale.invert)[0];
+		// 	let brushEnd = d3.event.selection.map(brushScale.invert)[1];
+		// 	let brushPoints = this.xScale.domain().length;
+
+		// 	this.localBrushStart = Math.floor(brushStart * brushPoints);
+		// 	this.localBrushEnd = Math.ceil(brushEnd * brushPoints);
+
+		// 	// highlight rank lines that is brush
+		// 	this.svg.selectAll(".binRank").attr("opacity", 0);
+		// 	for (let i = this.localBrushStart; i < this.localBrushEnd; i++) {
+		// 		this.svg.selectAll(`.bin_${i}`).attr("opacity", 1);
+		// 	}
+
+		// 	if (this.localBrushStart == this.localBrushEnd) {
+		// 		this.svg.selectAll(".binRank").attr("opacity", 1);
+		// 	}
+		// },
+
+		// brushend() {
+		// 	let self = this;
+		// 	const processIDList = [];
+		// 	for (let i = this.localBrushStart; i < this.localBrushEnd; i++) {
+		// 		if (self.binContainsProcID[i] != null) {
+		// 			const curList = self.binContainsProcID[i];
+		// 			curList.forEach((processID) => {
+		// 				processIDList.push(processID);
+		// 			});
+		// 		}
+		// 	}
+		// 	self.$socket.emit("split-rank", {
+		// 		"dataset": self.$store.selectedDataset,
+		// 		"ids": processIDList
+		// 	});
+		// },
 	}
 };

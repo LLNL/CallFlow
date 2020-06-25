@@ -165,6 +165,8 @@ class EnsembleAuxiliary:
                 q=boxplot.q,
                 outliers=boxplot.outliers,
                 prop_hists=hists,
+                isEnsemble=True,
+                isCallsite=True
             )
 
         ret["ensemble"] = ensemble
@@ -196,11 +198,14 @@ class EnsembleAuxiliary:
                         prop_hists=hists,
                         q=boxplot.q,
                         outliers=boxplot.outliers,
+                        isEnsemble=False,
+                        isCallsite=True
                     )
             ret[dataset] = target
 
         return ret
 
+    # Module grouped information.
     def module_data(self):
         ret = {}
         # Module grouped information
@@ -221,7 +226,7 @@ class EnsembleAuxiliary:
                 columnName="module", callsiteOrModule=module
             )
             ensemble[module] = self.pack_json(
-                df=module_df, name=module, gradients=gradients, prop_hists=hists
+                df=module_df, name=module, gradients=gradients, prop_hists=hists, isEnsemble=True
             )
 
         ret["ensemble"] = ensemble
@@ -246,6 +251,7 @@ class EnsembleAuxiliary:
                         name=module,
                         gradients=gradients,
                         prop_hists=hists,
+                        isEnsemble=False
                     )
 
             ret[dataset] = target
@@ -304,12 +310,14 @@ class EnsembleAuxiliary:
 
     def pack_json(
         self,
-        df=pd.DataFrame(),
+        df,
         name="",
         gradients={"Inclusive": {}, "Exclusive": {}},
         prop_hists={"Inclusive": {}, "Exclusive": {}},
         q={"Inclusive": {}, "Exclusive": {}},
         outliers={"Inclusive": {}, "Exclusive": {}},
+        isEnsemble=False,
+        isCallsite=False
     ):
         inclusive_variance = df["time (inc)"].var()
         exclusive_variance = df["time"].var()
@@ -323,6 +331,22 @@ class EnsembleAuxiliary:
             exclusive_variance = 0
             exclusive_std_deviation = 0
 
+        if(isCallsite):
+            if(isEnsemble):
+                time_inc = []
+                time = []
+            else:
+                time_inc = df["time (inc)"].tolist()
+                time = df["time"].tolist()
+        else:
+            if(isEnsemble):
+                time_inc = []
+                time = []
+            else:
+                gdf = df.groupby([df.index.get_level_values(1)]).mean()
+                time_inc = gdf['time (inc)'].tolist()
+                time = gdf['time'].tolist()
+
         result = {
             "name": name,
             "id": "node-" + str(df["nid"].tolist()[0]),
@@ -333,6 +357,7 @@ class EnsembleAuxiliary:
             "component_path": df["component_path"].unique().tolist(),
             "component_level": df["component_level"].unique().tolist(),
             "Inclusive": {
+                "data": time_inc,
                 "mean_time": df["time (inc)"].mean(),
                 "max_time": df["time (inc)"].max(),
                 "min_time": df["time (inc)"].min(),
@@ -347,6 +372,7 @@ class EnsembleAuxiliary:
                 "prop_histograms": prop_hists["Inclusive"],
             },
             "Exclusive": {
+                "data": time,
                 "mean_time": df["time"].mean(),
                 "max_time": df["time"].max(),
                 "min_time": df["time"].min(),
@@ -427,14 +453,13 @@ class EnsembleAuxiliary:
 
             time_target_inclusive_arr = np.array(target_df["time (inc)"].tolist())
             time_target_exclusive_arr = np.array(target_df["time"].tolist())
+            
         elif prop == "rank":
-            ensemble_df.reset_index(drop=True, inplace=True)
-            ensemble_prop = ensemble_df.groupby(["dataset", prop])[
+            ensemble_prop = ensemble_df.groupby(["dataset", ensemble_df.index.get_level_values(1)])[
                 ["time", "time (inc)"]
             ].mean()
 
-            target_df.reset_index(drop=True, inplace=True)
-            target_prop = target_df.groupby(["dataset", prop])[
+            target_prop = target_df.groupby(["dataset", target_df.index.get_level_values(1)])[
                 ["time", "time (inc)"]
             ].mean()
 

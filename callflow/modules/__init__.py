@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 from .auxiliary import EnsembleAuxiliary
+from .auxiliary_single import SingleAuxiliary
 from .auxiliary_fast import FastEnsembleAuxiliary
 from .boxplot import BoxPlot
 from .histogram_rank import RankHistogram

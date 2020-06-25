@@ -8,7 +8,7 @@ import * as  d3 from "d3";
 import { scalePow } from "d3-scale";
 import { max, min, sum } from "d3-array";
 
-export default function EnsembleSankey() {
+export default function Sankey() {
 	var sankey = {},
 		nodeWidth = 24,
 		nodePadding = 8,

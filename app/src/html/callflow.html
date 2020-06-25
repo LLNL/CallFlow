@@ -212,7 +212,7 @@
 						<SingleHistogram ref="SingleHistogram" />
 					</span>
 					<span>
-						<RuntimeScatterplot ref="RuntimeScatterplot" />
+						<SingleScatterplot ref="SingleScatterplot" />
 					</span>
 				</splitpanes>
 
@@ -240,7 +240,7 @@
 								Encoding = {{selectedMetric}} runtime.
 							</span>
 						</v-layout>
-						<EnsembleSuperGraph ref="EnsembleSuperGraph" />
+						<SuperGraph ref="SuperGraph" />
 					</span>
 				</splitpanes>
 
@@ -262,11 +262,11 @@
 			</splitpanes>
 		</v-layout>
 
-		<v-layout v-if="selectedFormat == 'CCT' && selectedMode == 'Compare'"">
+		<v-layout v-if="selectedFormat == 'CCT'">
 			<splitpanes id=" ensemble-cct-dashboard">
 			<splitpanes horizontal :splitpanes-size="100">
 				<span>
-					<EnsembleCCT ref="EnsembleCCT" />
+					<EnsembleCCT ref="CCT" />
 				</span>
 				</span>
 			</splitpanes>
@@ -277,13 +277,13 @@
 			<splitpanes id="compare-cct-dashboard">
 				<splitpanes horizontal :splitpanes-size="50">
 					<span>
-						<EnsembleCCT ref="EnsembleCCT1" />
+						<CCT ref="CCT1" />
 					</span>
 					</span>
 				</splitpanes>
 				<splitpanes horizontal :splitpanes-size="50">
 					<span>
-						<EnsembleCCT ref="EnsembleCCT2" />
+						<CCT ref="CCT2" />
 					</span>
 					</span>
 				</splitpanes>
