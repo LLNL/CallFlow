@@ -343,9 +343,10 @@ class EnsembleAuxiliary:
                 time_inc = []
                 time = []
             else:
-                gdf = df.groupby([df.index.get_level_values(1)]).mean()
-                time_inc = gdf['time (inc)'].tolist()
-                time = gdf['time'].tolist()
+                module_df = df.groupby(['module', df.index.get_level_values(1)]).mean()
+                x_df = module_df.xs(name, level='module')
+                time_inc = x_df['time (inc)'].tolist()
+                time = x_df['time'].tolist()
 
         result = {
             "name": name,

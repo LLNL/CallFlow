@@ -418,7 +418,7 @@ export default function Sankey() {
 
 		nodesByBreadth.forEach(function (nodes) {
 			if (store.selectedSuperNodePositionMode == "Minimal edge crossing") {
-				console.log("TODO");
+				console.log("TODO: Minimize edge crossing.");
 			}
 			else {
 				nodes.sort(function (a, b) {

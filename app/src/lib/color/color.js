@@ -6,7 +6,6 @@
 import * as d3 from "d3";
 import * as chroma from "chroma-js";
 import { CategoricalColors, UniformColorMaps, ColorBrewer } from "./COLORS";
-import { scale } from "chroma-js";
 
 export default class Color {
 	constructor() {
@@ -52,7 +51,6 @@ export default class Color {
 		this.colorMin = min;
 		this.colorMax = max;
 		let colors = this.colorbrewer[scaleType][colorPoint];
-		console.log(colors, this.colorbrewer)
 		this.colorPadding = this.setColorPadding(colorPoint);
 
 		let colorscale = null;

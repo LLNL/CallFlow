@@ -38,7 +38,6 @@ export function formatRuntimeWithoutUnits(val) {
 export function formatRuntimeWithExponent(val, min_exponent = 0) {
 	let format = d3.format(".2");
 	let ret = format(val);
-	console.log(ret)
 	if (ret == 0) {
 		return [0, 0, min_exponent];
 	}

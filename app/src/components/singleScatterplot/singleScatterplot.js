@@ -21,7 +21,7 @@ export default {
 		padding: {
 			top: 10,
 			right: 10,
-			bottom: 15,
+			bottom: 10,
 			left: 15
 		},
 		xData: [],
@@ -38,6 +38,7 @@ export default {
 		message: "MPI Runtime Scatterplot",
 		boxOffset: 20,
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
+		paddingFactor: 3.5,
 		x_max_exponent: 0,
 		y_max_exponent: 0,
 	}),
@@ -65,6 +66,9 @@ export default {
 				.attr("height", this.boxHeight)
 				.attr("transform", "translate(" + this.padding.left + "," + this.padding.top + ")");
 
+			this.xAxisHeight = this.boxWidth - (this.paddingFactor) * this.padding.left;
+			this.yAxisHeight = this.boxHeight - (this.paddingFactor) * this.padding.left;
+	
 			EventHandler.$emit("single_scatterplot", {
 				module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
 				dataset: this.$store.selectedTargetDataset,
@@ -78,13 +82,26 @@ export default {
 			this.firstRender = false;
 			this.selectedModule = module
 
-			this.process();
+			let temp = this.process();
+			this.xMin = temp[0];
+			this.yMin = temp[1];
+			this.xMax = temp[2];
+			this.yMax = temp[3];
+			this.xArray = temp[4];
+			this.yArray = temp[5];
 
+			this.xScale = d3.scaleLinear()
+				.domain(this.xArray)
+				.range([this.paddingFactor * this.padding.left, this.xAxisHeight]);
+			
+			this.yScale = d3.scaleLinear().domain(this.yArray).range([this.yAxisHeight, this.padding.top]);
+
+			this.regression = this.leastSquares(this.xArray, this.yArray)
 			this.xAxis();
 			this.yAxis();
-			// this.trendline()
 			this.dots();
 			this.correlationText();
+			// this.trendline()
 		},
 
 		process() {
@@ -111,20 +128,7 @@ export default {
 				yArray.push(d);
 			}
 
-			let temp = [xMin, yMin, xMax, yMax, xArray, yArray];
-			
-			this.xMin = temp[0];
-			this.yMin = temp[1];
-			this.xMax = temp[2];
-			this.yMax = temp[3];
-			this.xArray = temp[4];
-			this.yArray = temp[5];
-
-			this.xAxisHeight = this.boxWidth - 3 * this.padding.left;
-			this.yAxisHeight = this.boxHeight - 3 * this.padding.left;
-
-			this.xScale = d3.scaleLinear().domain(this.xArray).range([this.padding.left, this.xAxisHeight]);
-			this.yScale = d3.scaleLinear().domain(this.yArray).range([this.yAxisHeight, this.padding.top]);
+			return [xMin, yMin, xMax, yMax, xArray, yArray];
 		},
 
 		// returns slope, intercept and r-square of the line
@@ -198,13 +202,12 @@ export default {
 
 			return {
 				"y_res": yhat,
-				"corre_coef": corre_coef
+				"corr_coef": corre_coef
 			};
 		},
 
 		addxAxisLabel() {
 			let max_value = this.xScale.domain()[1];
-			console.log(max_value)
 			this.x_max_exponent = utils.formatExponent(max_value);
 			let exponent_string = this.superscript[this.x_max_exponent];
 			let label = "(e+" + this.x_max_exponent + ") " + "Exclusive Runtime (" + "\u03BCs)";
@@ -232,7 +235,7 @@ export default {
 			var xAxisLine = this.svg.append("g")
 				.attr("class", "axis")
 				.attr("id", "xAxis")
-				.attr("transform", "translate(" + 2 * this.padding.left + "," + this.yAxisHeight + ")")
+				.attr("transform", "translate(" + 0 + "," + this.yAxisHeight + ")")
 				.call(xAxis);
 
 			xAxisLine.selectAll("path")
@@ -246,7 +249,7 @@ export default {
 				.style("stroke-width", "1px");
 
 			xAxisLine.selectAll("text")
-				.style("font-size", "14px")
+				.style("font-size", "12px")
 				.style("font-family", "sans-serif")
 				.style("font-weight", "lighter");
 		},
@@ -315,7 +318,7 @@ export default {
 			this.svg.append("g")
 				.attr("class", "trend-line")
 				.append("path")
-				.datum(this.regressionY)
+				.datum(this.regressionY["y_res"])
 				.attr("d", line)
 				.style("stroke", "black")
 				.style("stroke-width", "1px")
@@ -330,7 +333,7 @@ export default {
 				.attr("class", "dot")
 				.attr("r", 5)
 				.attr("cx", function (d, i) {
-					return self.xScale(self.xArray[i]);
+					return self.xScale(self.xArray[i]) + 3 * self.padding.left
 				})
 				.attr("cy", function (d, i) {
 					return self.yScale(self.yArray[i]);
@@ -343,7 +346,7 @@ export default {
 			let decimalFormat = d3.format("0.2f");
 			this.svg.append("g").append("text")
 				.attr("class", "text")
-				.text("corr-coef: " + decimalFormat(this.corre_coef))
+				.text("corr-coef: " + decimalFormat(this.regression['corr_coef']))
 				.attr("x", function (d) {
 					return self.boxWidth - self.width / 3;
 				})

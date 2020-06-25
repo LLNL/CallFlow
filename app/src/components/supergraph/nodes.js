@@ -154,7 +154,7 @@ export default {
 				}
 				this.$refs.Guides.init(this.graph.nodes);
 			}
-			this.$refs.ToolTip.init(this.$parent.id)
+			// this.$refs.ToolTip.init(this.$parent.id)
 		},
 
 		preVis() {
@@ -252,12 +252,12 @@ export default {
 		},
 
 		mouseover(node) {
-			this.$refs.ToolTip.visualize(self.graph, node)
+			// this.$refs.ToolTip.visualize(self.graph, node)
 			this.$refs.Guides.visualize(node, "temporary");
 		},
 
 		mouseout(node) {
-			this.$refs.ToolTip.clear()
+			// this.$refs.ToolTip.clear()
 			this.$refs.Guides.clear(node, "temporary");
 			if (this.permanentGuides == false) {
 				d3.selectAll(".ensemble-edge")

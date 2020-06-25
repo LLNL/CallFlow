@@ -25,7 +25,6 @@ export default {
 		height: null,
 		histogramHeight: null,
 		histogramWidth: null,
-		histogramSVG: null,
 		padding: {
 			top: 10,
 			right: 10,
@@ -59,7 +58,7 @@ export default {
 	methods: {
 		init() {
 			this.width = window.innerWidth * 0.25;
-			this.height = this.$store.viewHeight * 0.45;
+			this.height = this.$store.viewHeight * 0.50;
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
@@ -103,7 +102,7 @@ export default {
 
 			this.xScale = d3.scaleBand()
 				.domain(this.xVals)
-				.range([(this.paddingFactor) * this.padding.left, this.xAxisHeight]);
+				.range([ this.paddingFactor * this.padding.left, this.xAxisHeight]);
 
 			if (this.$store.selectedScale == "Linear") {
 				this.yScale = d3.scaleLinear()
@@ -274,7 +273,6 @@ export default {
 
 		addxAxisLabel() {
 			let max_value = this.xScale.domain()[1];
-			console.log(max_value)
 			this.x_max_exponent = utils.formatExponent(max_value);
 			let exponent_string = this.superscript[this.x_max_exponent];
 			let label = "(e+" + this.x_max_exponent + ") " + this.$store.selectedMetric + " Runtime (" + "\u03BCs)";

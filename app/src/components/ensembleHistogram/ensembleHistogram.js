@@ -86,17 +86,12 @@ export default {
 		},
 
 		dataProcess(data) {
-			let attr_data = {};
 			let axis_x = [];
-			let binContainsProcID = {};
-			let dataSorted = [];
 			let dataMin = 0;
 			let dataMax = 0;
 
-			attr_data = data;
 			dataMin = data["x_min"];
 			dataMax = data["x_max"];
-			// dataSorted = data['sorted_time (inc)']
 
 			let dataWidth = ((dataMax - dataMin) / this.$store.selectedMPIBinCount);
 			if (dataWidth == 0) {
@@ -107,18 +102,7 @@ export default {
 				axis_x.push(dataMin + (i * dataWidth));
 			}
 
-			// dataSorted.forEach((val, idx) => {
-			//     let pos = Math.floor((val - dataMin) / dataWidth);
-			//     if (pos >= this.$store.selectedBinCount) {
-			//         pos = this.$store.selectedBinCount - 1;
-			//     }
-			//     if (binContainsProcID[pos] == null) {
-			//         binContainsProcID[pos] = [];
-			//     }
-			//     binContainsProcID[pos].push(data['rank'][idx]);
-			// });
-
-			return [attr_data["x"], attr_data["y"], axis_x, binContainsProcID];
+			return [data["x"], data["y"], axis_x];
 		},
 
 		setupScale(callsite) {

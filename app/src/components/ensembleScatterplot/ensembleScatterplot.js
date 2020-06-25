@@ -478,7 +478,7 @@ export default {
 					.attrs({
 						"class": "ensemble-dot",
 						"r": 7.5,
-						opacity: opacity,
+						"opacity": opacity,
 						"cx": () => {
 							return this.xScale(this.xArray[i].val) + 3 * this.padding.left;
 						},
