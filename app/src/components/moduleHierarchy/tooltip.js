@@ -1,9 +1,13 @@
-import tpl from "../../html/moduleHierarchy/tooltip.html";
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
 import * as d3 from "d3";
 import * as utils from "../utils";
 
 export default {
-	template: tpl,
+	template: "<g class=\"tooltip\"></g>",
 	name: "ToolTip",
 	components: {},
 

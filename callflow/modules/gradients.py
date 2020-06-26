@@ -1,10 +1,14 @@
+# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
+#------------------------------------------------------------------------------
+import math
 import numpy as np
 from scipy import stats
 import statsmodels.nonparametric.api as smnp
-import matplotlib.pyplot as plt
-import math
 
-
+#------------------------------------------------------------------------------
 class Gradients:
     def __init__(self, dfs, binCount="20"):
         self.dfs = dfs
@@ -51,37 +55,23 @@ class Gradients:
             dataset[state] = np.mean(np.array(d))
         return [mean, dataset]
 
-    def kde(
-        self,
-        data,
-        gridsize=10,
-        fft=True,
-        kernel="gau",
-        bw="scott",
-        cut=3,
-        clip=(-np.inf, np.inf),
-    ):
+    def kde(self, data, gridsize=10, fft=True, kernel="gau", bw="scott", cut=3, clip=(-np.inf, np.inf)):
         if bw == "scott":
             bw = stats.gaussian_kde(data).scotts_factor() * data.std(ddof=1)
-        # print("biwidth is: ", bw)
 
         kde = smnp.KDEUnivariate(data)
 
         # create the grid to fit the estimation.
         support_min = min(max(data.min() - bw * cut, clip[0]), 0)
         support_max = min(data.max() + bw * cut, clip[1])
-        # print(support_max, support_min)
         x = np.linspace(support_min, support_max, gridsize)
 
         kde.fit("gau", bw, fft, gridsize=gridsize, cut=cut, clip=clip)
         y = kde.density
-        # print("Y is: ", y.shape)
 
         return x, y
 
-    def histogram(
-        self, data, dataset_dict={}, data_min=np.nan, data_max=np.nan,
-    ):
+    def histogram(self, data, dataset_dict={}, data_min=np.nan, data_max=np.nan):
         if np.isnan(data_min) or np.isnan(data_max):
             data_min = data.min()
             data_max = data.max()
@@ -171,9 +161,6 @@ class Gradients:
         # kde_x_max = np.max(kde_grid[vis_node_name][0])
         # kde_y_min = np.min(kde_grid[vis_node_name][1])
         # kde_y_max = np.max(kde_grid[vis_node_name][1])
-
-        # print("hist ranges = {} {} {} {}\n"
-        #     .format(hist_x_min, hist_x_max, hist_y_min, hist_y_max))
 
         results = {
             "Inclusive": {

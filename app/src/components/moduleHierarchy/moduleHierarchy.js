@@ -1,8 +1,13 @@
-import tpl from "../../html/moduleHierarchy/index.html";
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
+import tpl from "../../html/moduleHierarchy.html";
 import * as d3 from "d3";
 import ToolTip from "./tooltip";
 import * as utils from "../utils";
-import Queue from "../../core/queue";
+import Queue from "../../datastructures/queue";
 
 export default {
 	name: "ModuleHierarchy",
@@ -140,7 +145,7 @@ export default {
 			this.maxLevel = this.level[1];
 
 			if (this.minLevel > this.maxLevel) {
-				console.log("Cannot generate icicle plot, min_level > max_level");
+				console.error("Cannot generate icicle plot, min_level > max_level");
 				return;
 			}
 
@@ -257,7 +262,7 @@ export default {
 			root.x1 = dx;
 			root.y1 = dy / n;
 			root.eachBefore(this.positionNode(dy, n));
-			if (round) root.eachBefore(this.roundNode);
+			if (round) {root.eachBefore(this.roundNode);}
 			return root;
 		},
 
@@ -276,8 +281,8 @@ export default {
 					y0 = node.y0,
 					x1 = node.x1 - self.padding,
 					y1 = node.y1 - self.padding;
-				if (x1 < x0) x0 = x1 = (x0 + x1) / 2;
-				if (y1 < y0) y0 = y1 = (y0 + y1) / 2;
+				if (x1 < x0) {x0 = x1 = (x0 + x1) / 2;}
+				if (y1 < y0) {y0 = y1 = (y0 + y1) / 2;}
 
 				node.x0 = x0;
 				node.y0 = y0;
@@ -357,11 +362,11 @@ export default {
 			// when the mouse leaves the parent g.
 			this.hierarchy.append("svg:rect")
 				.attr("width", () => {
-					if (this.selectedDirection == "LR") return this.icicleHeight;
+					if (this.selectedDirection == "LR") {return this.icicleHeight;}
 					return this.width;
 				})
 				.attr("height", () => {
-					if (this.selectedDirection == "LR") return this.width - 50;
+					if (this.selectedDirection == "LR") {return this.width - 50;}
 					return this.height - 50;
 				})
 				.style("opacity", 0);
@@ -405,7 +410,7 @@ export default {
 				this.hist_max = Math.max(this.hist_max, data[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
 			}
 
-			this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
+			// this.$store.color.setColorScale("MeanGradients", this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
 
 			for (let idx = 0; idx < callsites.length; idx += 1) {
 				let callsite = callsites[idx];
@@ -441,7 +446,7 @@ export default {
 					let current_value = (val[i]);
 					this.linearGradient.append("stop")
 						.attr("offset", 100 * x + "%")
-						.attr("stop-color", this.$store.binColor.getColorByValue(current_value));
+						.attr("stop-color", this.$store.distributionColor.getColorByValue(current_value));
 				}
 			}
 		},
@@ -462,7 +467,6 @@ export default {
 				this.hist_max = Math.max(this.hist_max, data[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
 			}
 
-			this.$store.binColor.setColorScale(this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
 
 			for (let idx = 0; idx < modules.length; idx += 1) {
 				let thismodule = modules[idx];
@@ -498,7 +502,7 @@ export default {
 					let current_value = (val[i]);
 					this.linearGradient.append("stop")
 						.attr("offset", 100 * x + "%")
-						.attr("stop-color", this.$store.binColor.getColorByValue(current_value));
+						.attr("stop-color", this.$store.distributionColor.getColorByValue(current_value));
 				}
 			}
 		},
@@ -543,7 +547,7 @@ export default {
 						"x2": x,
 						"y2": (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth + 1) - this.offset,
 						"stroke-width": 5,
-						"stroke": this.$store.color.target
+						"stroke": this.$store.distributionColor.target
 					});
 			}
 		},
@@ -716,14 +720,14 @@ export default {
 							gradients = "url(#mean-callsite-gradient-" + d.data.data.id + ")";
 						}
 						else {
-							gradients = this.$store.color.ensemble;
+							gradients = this.$store.distributionColor.ensemble;
 						}
 					}
 					return gradients;
 				})
 				.style("stroke", (d) => {
 					let runtime = d.data.data[this.$store.selectedMetric]["max_time"];
-					return d3.rgb(this.$store.color.getColorByValue(runtime));
+					return d3.rgb(this.$store.runtimeColor.getColorByValue(runtime));
 				})
 				.style("stroke-width", this.stroke_width)
 				.style("opacity", (d) => {
@@ -801,7 +805,7 @@ export default {
 					return this.width;
 				})
 				.style("fill", (d) => {
-					let color = this.$store.color.setContrast(this.$store.color.getColor(d));
+					let color = this.$store.runtimeColor.setContrast(this.$store.runtimeColor.getColor(d));
 					return color;
 				})
 				.style("font-size", "14px")

@@ -1,98 +1,190 @@
-import tpl from "../../html/supergraph/edges.html";
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
 import * as d3 from "d3";
 
 export default {
-	template: tpl,
-	name: "Edges",
+	template: "<g :id=\"id\"><ToolTip ref=\"ToolTip\" /></g>",
+	name: "EnsembleEdges",
 	components: {
-
 	},
-
-	props: [
-
-	],
-
+	props: [],
 	data: () => ({
 		transitionDuration: 1000,
 		id: "",
+		offset: 4,
 	}),
-
 	watch: {
 
 	},
-
 	mounted() {
-		this.id = "edges-" + this._uid;
+		this.id = "edges";
 	},
 
 	methods: {
-		init(graph, view) {
+		init(graph) {
+			this.graph = graph;
 			this.edges = d3.select("#" + this.id);
-			this.view = view;
 
-			let links = graph.links.filter((link) => {
-				return link.type != "callback";
-			});
+			if (this.$store.selectedMode == "Ensemble") {
+				this.initEdges("ensemble");
+				this.drawEdges("ensemble");
+				if (this.$store.showTarget && this.$store.comparisonMode == false) {
+					this.initEdges("target");
+					this.drawEdges("target");
+				}
+			}
+			else if(this.$store.selectedMode == 'Single') {
+				this.initEdges("single");
+				this.drawEdges("single")
+			}
 
-			this.edges.selectAll(".edge")
-				.data(links)
+		},
+
+		initEdges(dataset) {
+			let self = this;
+			this.edges.selectAll("#edge-" + dataset)
+				.data(this.graph.links)
 				.enter().append("path")
-				.attr("class", (d) => {
-					return "edge";
+				.attrs({
+					"class": "edge",
+					"id": "edge-" + dataset
 				})
-				.style("fill", d => {
-					return "#202020";
+				.style("fill", (d) => {
+					if (dataset == "ensemble") { return this.$store.distributionColor.ensemble; }
+					return this.$store.runtimeColor.intermediate;
 				})
-				.style("fill-opacity", 0)
-				.style("stroke", (d) => {
-					// return "url(#" + getGradID(d) + ")";
+				.style("opacity", 0.5)
+				.on("mouseover", function (d) {
+					d3.select(this).style("stroke-opacity", "1.0");
+					// self.clearEdgeLabels()
+					// self.drawEdgeLabels(d)
 				})
-				.style("stroke-opacity", "0.4");
-
-			this.edges.selectAll(".edge")
-				.data(links)
-				.style("fill-opacity", 0)
-				.attr("d", (d) => {
-					let source_data = d.source_data;
-					let target_data = d.target_data;
-
-					let Tx0 = source_data.x + source_data.dx,
-						Tx1 = target_data.x,
-						Txi = d3.interpolateNumber(Tx0, Tx1),
-						Tx2 = Txi(0.4),
-						Tx3 = Txi(1 - 0.4),
-						Ty0 = source_data.y + d.sy + this.$parent.ySpacing,
-						Ty1 = target_data.y + d.ty + this.$parent.ySpacing;
-
-					// note .ty is the y point that the edge meet the target(for top)
-					//		.sy is the y point of the source  (for top)
-					//		.dy is width of the edge
-
-					let Bx0 = source_data.x + source_data.dx,
-						Bx1 = target_data.x,
-						Bxi = d3.interpolateNumber(Bx0, Bx1),
-						Bx2 = Bxi(0.4),
-						Bx3 = Bxi(1 - 0.4),
-						By0 = source_data.y + d.height + d.sy + this.$parent.ySpacing,
-						By1 = target_data.y + d.ty + d.height + this.$parent.ySpacing;
-
-					const rightMoveDown = By1 - Ty1;
-					return `M${Tx0},${Ty0
-					}C${Tx2},${Ty0
-					} ${Tx3},${Ty1
-					} ${Tx1},${Ty1
-					} ` + ` v ${rightMoveDown
-					}C${Bx3},${By1
-					} ${Bx2},${By0
-					} ${Bx0},${By0}`;
+				.sort(function (a, b) {
+					return b.dy - a.dy;
 				});
+		},
 
-			this.edges.selectAll(".edge")
-				.data(graph.links)
-				.transition()
-				.duration(this.transitionDuration)
-				.delay(this.transitionDuration / 3)
-				.style("fill-opacity", 0.3);
+
+		drawPath(d, linkHeight, edge_source_offset = 0, edge_target_offset = 0, dataset) {
+			let Tx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
+				Tx1 = d.target_data.x - edge_target_offset,
+				Txi = d3.interpolateNumber(Tx0, Tx1),
+				Tx2 = Txi(0.4),
+				Tx3 = Txi(1 - 0.4),
+				Ty0 = d.source_data.y + this.$parent.ySpacing + d.sy,
+				Ty1 = d.target_data.y + this.$parent.ySpacing + d.ty;
+
+			// note .ty is the y point that the edge meet the target(for top)
+			//		.sy is the y point of the source  (for top)
+			//		.dy is width of the edge
+
+			let Bx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
+				Bx1 = d.target_data.x - edge_target_offset,
+				Bxi = d3.interpolateNumber(Bx0, Bx1),
+				Bx2 = Bxi(0.4),
+				Bx3 = Bxi(1 - 0.4);
+
+			let By0 = 0, By1 = 0;
+			By0 = d.source_data.y + this.$parent.ySpacing + d.sy + linkHeight;
+			By1 = d.target_data.y + this.$parent.ySpacing + d.ty + linkHeight;
+
+			let rightMoveDown = By1 - Ty1;
+
+			// if (d.source == "LeapFrog" && d.target == "intermediate_CalcLagrange" && dataset == "target") {
+			// 	By0 = 398.074532;
+			// }
+			// else if (d.source == "LeapFrog" && d.target == "intermediate_CalcLagrange" && dataset == "ensemble") {
+			// 	By0 = 415.328692;
+			// }
+
+			return `M${Tx0},${Ty0
+				}C${Tx2},${Ty0
+				} ${Tx3},${Ty1
+				} ${Tx1},${Ty1
+				} ` + ` v ${rightMoveDown
+				}C${Bx3},${By1
+				} ${Bx2},${By0
+				} ${Bx0},${By0}`;
+		},
+
+		drawMiddlePath(d, linkHeight, edge_source_offset, edge_target_offset, dataset) {
+			let Tx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
+				Tx1 = d.target_data.x - edge_target_offset,
+				Txi = d3.interpolateNumber(Tx0, Tx1),
+				Tx2 = Txi(0.4),
+				Tx3 = Txi(1 - 0.4),
+				Ty0 = d.source_data.y + this.$parent.ySpacing + d.sy + (d.source_data.height - linkHeight) * 0.5,
+				Ty1 = d.target_data.y + this.$parent.ySpacing + d.ty + (d.target_data.height - linkHeight) * 0.5;
+
+			// note .ty is the y point that the edge meet the target(for top)
+			//		.sy is the y point of the source  (for top)
+			//		.dy is width of the edge
+
+			let Bx0 = d.source_data.x + d.source_data.dx + edge_source_offset,
+				Bx1 = d.target_data.x - edge_target_offset,
+				Bxi = d3.interpolateNumber(Bx0, Bx1),
+				Bx2 = Bxi(0.4),
+				Bx3 = Bxi(1 - 0.4);
+
+			let By0 = 0, By1 = 0;
+			By0 = d.source_data.y + this.$parent.ySpacing + d.sy + linkHeight; //- (d. - linkHeight) * 0.5
+			By1 = d.target_data.y + this.$parent.ySpacing + d.ty + linkHeight;// - (d.target_data.height - linkHeight) * 0.5
+
+			let rightMoveDown = By1 - Ty1;
+
+			return `M${Tx0},${Ty0
+				}C${Tx2},${Ty0
+				} ${Tx3},${Ty1
+				} ${Tx1},${Ty1
+				} ` + ` v ${rightMoveDown
+				}C${Bx3},${By1
+				} ${Bx2},${By0
+				} ${Bx0},${By0}`;
+		},
+
+		drawEdges(dataset) {
+			let self = this;
+			this.edges.selectAll("#edge-" + dataset)
+				.data(this.graph.links)
+				.attrs({
+					"d": (d) => {
+						let link_height = 0;
+						if (dataset == "ensemble" || dataset == "single") {
+							link_height = d.height;
+						}
+						else if (dataset == "target") {
+							link_height = d.targetHeight;
+						}
+						if (this.$store.selectedEdgeAlignment == "Top") {
+							return this.drawPath(d, link_height, 0, 0, dataset);
+						}
+						else if (this.$store.selectedEdgeAlignment == "Middle") {
+							return this.drawMiddlePath(d, link_height, 0, 0, dataset);
+						}
+
+					},
+					"fill": (d) => {
+						if (dataset == "ensemble") {
+							return this.$store.distributionColor.ensemble;
+						}
+						else if (dataset == "target") {
+							return this.$store.distributionColor.target;
+						}
+						else if(dataset == "single") {
+							return this.$store.runtimeColor.intermediate;
+						}
+					},
+					"stroke": this.$store.runtimeColor.edgeStrokeColor,
+				})
+				.on("mouseover", (d) => {
+					// self.$refs.ToolTip.render(self.graph, d)
+				})
+				.on("mouseout", (d) => {
+					// self.$refs.ToolTip.clear()
+				});
 		},
 
 		//hide all links not connected to selected node
@@ -107,7 +199,9 @@ export default {
 		},
 
 		clear() {
-			d3.selectAll(".edge").remove();
-		},
+			this.edges.selectAll(".edge").remove();
+			this.edges.selectAll(".edgelabel").remove();
+			this.edges.selectAll(".edgelabelText").remove();
+		}
 	}
 };

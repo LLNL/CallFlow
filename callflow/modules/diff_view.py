@@ -1,26 +1,25 @@
-##############################################################################
-# Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
 #
-# This file is part of Callflow.
-# Created by Suraj Kesavan <kesavan1@llnl.gov>.
-# LLNL-CODE-741008. All rights reserved.
-#
-# For details, see: https://github.com/LLNL/Callflow
-# Please also read the LICENSE file for the MIT License notice.
-##############################################################################
-import pandas as pd
+# SPDX-License-Identifier: MIT
+#------------------------------------------------------------------------------
+# Library imports.
 import numpy as np
-import matplotlib.cm as cm
+import pandas as pd
 from scipy import stats
-import math
+
+#------------------------------------------------------------------------------
+# CallFlow imports
+import callflow
+LOGGER = callflow.get_logger(__name__)
 
 
+#------------------------------------------------------------------------------
 class DiffView:
     def __init__(self, state, dataset1, dataset2, col):
         self.state = state
-        self.df1 = self.state.new_gf.df.loc[self.state.df["dataset"] == dataset1]
-        self.df2 = self.state.new_gf.df.loc[self.state.df["dataset"] == dataset2]
+        self.df1 = self.state.gf.df.loc[self.state.gf.df["dataset"] == dataset1]
+        self.df2 = self.state.gf.df.loc[self.state.gf.df["dataset"] == dataset2]
 
         self.col = col
         self.dataset1 = dataset1
@@ -35,7 +34,7 @@ class DiffView:
 
     def run(self):
         results = []
-        nodes = self.state.df["module"].unique()
+        nodes = self.state.gf.df["module"].unique()
 
         for node in nodes:
             results.append(self.calculate_diff(node))
@@ -140,7 +139,7 @@ class DiffView:
 
         mean_diff = self.mean_difference(module)
 
-        print("Mean differences", mean_diff)
+        LOGGER.debug(f"Mean differences {mean_diff}")
 
         dist_list = np.sort(diff).tolist()
 

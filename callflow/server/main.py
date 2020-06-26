@@ -2,8 +2,6 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-
-
 # ------------------------------------------------------------------------------
 # Library imports
 from flask import (
@@ -51,15 +49,11 @@ class CallFlowServer:
         # Read the config file using config file reader.
         self.config = ConfigFileReader(args.config)
 
-        # Call the version of callflow corresponding to number of datasets.
-        if len(self.config.datasets) == 1:
-            self.callflow = callflow.CallFlow(
-                config=self.config, process=self.process, ensemble=False
-            )
-        else:
-            self.callflow = callflow.CallFlow(
-                config=self.config, process=self.process, ensemble=True
-            )
+        ndatasets = len(self.config.datasets)
+        assert ndatasets > 0
+        self.callflow = callflow.CallFlow(config = self.config,
+                                          process = self.process,
+                                          ensemble = ndatasets > 1)
 
         # Create server if not processing.
         if not self.process:
@@ -106,10 +100,10 @@ class CallFlowServer:
     def _create_server(self):
         """
         Create server's request handler and starts the server.
-        Current version abstracts the requests into 3 categores: 
+        Current version abstracts the requests into 3 categores:
         General: common requests for both ensemble and single.
         Single: requests for single dataset processing.
-        Ensemble: requests for ensemble dataset processing. 
+        Ensemble: requests for ensemble dataset processing.
         """
 
         # Socket request handlers
@@ -403,7 +397,7 @@ class CallFlowServer:
             :return: Gradients in some JSON format.
             """
             LOGGER.debug("[Socket request] compare_supergraph {data}")
-            result = self.callflow.request(
+            result = self.callflow.request_ensemble(
                 {
                     "name": "compare",
                     "targetDataset": data["targetDataset"],

@@ -1,30 +1,22 @@
-##############################################################################
-# Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
 #
-# This file is part of Callflow.
-# Created by Suraj Kesavan <kesavan1@llnl.gov>.
-# LLNL-CODE-741008. All rights reserved.
-#
-# For details, see: https://github.com/LLNL/Callflow
-# Please also read the LICENSE file for the MIT License notice.
-##############################################################################
+# SPDX-License-Identifier: MIT
+#------------------------------------------------------------------------------
 
+import numpy as np
 import pandas as pd
 from collections import defaultdict
-import numpy as np
 import sklearn
-from sklearn.manifold import TSNE, MDS
-from sklearn.datasets import load_digits
-from sklearn.preprocessing import scale
-from callflow.algorithms import DeltaConSimilarity
 from sklearn import preprocessing
+from sklearn.manifold import TSNE, MDS
 from sklearn.cluster import KMeans
 from callflow.algorithms import KMedoids
+from callflow.algorithms import DeltaConSimilarity
 
-
+#------------------------------------------------------------------------------
 class ParameterProjection:
-    def __init__(self, supergraph, similarities={}, targetDataset="", n_cluster=3):
+    def __init__(self, supergraph, targetDataset="", n_cluster=3):
 
         self.df = supergraph.gf.df
         self.datasets = self.df["dataset"].unique().tolist()
@@ -39,7 +31,6 @@ class ParameterProjection:
 
     def add_df_params(self, dataset):
         ret = {}
-        print(self.df)
         ret["max_inclusive_time"] = self.df.loc[self.df["dataset"] == dataset][
             "time (inc)"
         ].max()
@@ -51,6 +42,12 @@ class ParameterProjection:
         )
         # ret['similarity'] = self.similarities[self.datasetOrder[self.targetDataset]]
         return ret
+
+    def similarities(self):
+        name = self.supergraph.tag
+        similarity_filepath = dirname  + '/' + 'similarity.json'
+        with open(similarity_filepath, 'r') as similarity_file:
+            self.similarities = json.load(similarity_file)
 
     def run(self):
         rows = []
@@ -68,7 +65,6 @@ class ParameterProjection:
 
         # TODO: Remove all string columns from the dataframe.
         if "dataset" in df.columns:
-            print("Removing {0} column from the dataframe".format("dataset"))
             df = df.drop(columns=["dataset"])
         x = df.values  # returns a numpy array
 

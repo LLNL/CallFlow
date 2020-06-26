@@ -1,22 +1,13 @@
-/** *****************************************************************************
- * Copyright (c) 2017, Lawrence Livermore National Security, LLC.
- * Produced at the Lawrence Livermore National Laboratory.
- *
- * Written by Huu Tan Nguyen <htpnguyen@ucdavis.edu>.
- *
- * LLNL-CODE-740862. All rights reserved.
- *
- * This file is part of CallFlow. For details, see:
- * https://github.com/LLNL/CallFlow
- * Please also read the LICENSE file for the MIT License notice.
- ***************************************************************************** */
-
-import tpl from "../../html/supergraph/miniHistograms.html";
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
 import * as d3 from "d3";
 import "d3-selection-multi";
 
 export default {
-	template: tpl,
+	template: "<g :id=\"id\"></g>",
 	name: "MiniHistograms",
 	components: {},
 	props: [],
@@ -37,23 +28,40 @@ export default {
 		id: "",
 		nodes: null,
 		edges: null,
-		offset: 1,
+		offset: 7,
+		// offset: 0,
+		bandWidth: 0,
 	}),
 
 	mounted() {
-		this.id = "minihistogram-overview-" + this._uid;
+		this.id = "minihistogram-overview";
 	},
 
 	methods: {
 		init(graph, view) {
+			this.nodeMap = graph.nodeMap;
 			this.nodes = graph.nodes;
 			this.links = graph.links;
-			this.nodeMap = graph.nodeMap;
 			this.view = view;
-			for (const [idx, callsite] of Object.entries(graph.nodes)) {
-				let callsite_module = callsite[this.$store.selectedTargetDataset].module;
-				let callsite_name = callsite[this.$store.selectedTargetDataset].name;
-				this.render(callsite_name, callsite_module);
+			this.target_module_data = this.$store.modules[this.$store.selectedTargetDataset];
+			this.target_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
+
+			for (const node of this.nodes) {
+				let module = node.module;
+				let callsite = node.name;
+
+				if (node.type == "super-node" && this.target_module_data[module] != undefined) {
+					let data = this.target_module_data[module][this.$store.selectedMetric]["prop_histograms"][this.$store.selectedProp];
+					this.render(data, module);
+				}
+				else if (node.type == "component-node" && this.target_callsite_data[callsite] != undefined) {
+
+					let data = this.target_callsite_data[callsite][this.$store.selectedMetric]["prop_histograms"][this.$store.selectedProp];
+					this.render(data, callsite);
+				}
+				else if (node.type == "intermediate") {
+					console.log("TODO");
+				}
 			}
 		},
 
@@ -63,70 +71,74 @@ export default {
 			});
 		},
 
-		dataProcess(data) {
-			let attr_data = {};
-
-			if (this.$store.selectedMetric == "Inclusive") {
-				attr_data = data["hist_time (inc)"];
-			} else if (this.$store.selectedMetric == "Exclusive") {
-				attr_data = data["hist_time"];
-			} else if (this.$store.selectedMetric == "Imbalance") {
-				attr_data = data["hist_imbalance"];
-			}
-
-			return [attr_data["x"], attr_data["y"]];
-		},
-
 		clear() {
+			this.bandWidth = 0;
 			d3.selectAll("#histobars").remove();
 		},
 
-		render(callsite_name, callsite_module) {
-			let node_dict = this.nodes[this.nodeMap[callsite_module]];
-			let target_callsite_data = this.$store.modules[this.$store.selectedTargetDataset][callsite_module];
-
-			this.histogram(target_callsite_data, node_dict, "target");
-		},
-
 		histogram(data, node_dict, type) {
-			const processData = this.dataProcess(data);
-			let xVals = processData[0];
-			let freq = processData[1];
-
 			let color = "";
+			let xVals = [], freq = [];
 			if (type == "ensemble") {
-				color = this.$store.color.ensemble;
+				color = this.$store.distributionColor.ensemble;
+				xVals = data["ensemble"].x
+				freq = data["ensemble"].y
 			}
-			else if (type == "target") {
-				color = this.$store.color.target;
+			else if (type == "target" || type == "single") {
+				if(type == "target")
+					color = this.$store.distributionColor.target;
+				else if(type == "single")
+					color = this.$store.runtimeColor.intermediate;
+				xVals = data["target"].x
+				freq = data["target"].y
+			}
+
+			if (this.$store.selectedScale == "Linear") {
+				this.minimapYScale = d3.scaleLinear()
+					.domain([0, d3.max(freq)])
+					.range([this.$parent.ySpacing - 10, 0]);
+			}
+			else if (this.$store.selectedScale == "Log") {
+				this.minimapYScale = d3.scaleLog()
+					.domain([0.1, d3.max(freq)])
+					.range([this.$parent.ySpacing, 0]);
 			}
 			this.minimapXScale = d3.scaleBand()
 				.domain(xVals)
 				.rangeRound([0, this.$parent.nodeWidth]);
-
-			this.minimapYScale = d3.scaleLinear()
-				.domain([0, d3.max(freq)])
-				.range([this.$parent.ySpacing, 0]);
-
+			this.bandWidth = this.minimapXScale.bandwidth();
 
 			for (let i = 0; i < freq.length; i += 1) {
 				d3.select("#" + this.id)
 					.append("rect")
 					.attrs({
 						"id": "histobars",
-						"class": "histogram-bar " + type,
-						"width": () => this.minimapXScale.bandwidth(),
+						"class": "histogram-bar-" + type,
+						"width": () => this.bandWidth,
 						"height": (d) => {
-							return (this.$parent.nodeWidth) - this.minimapYScale(freq[i]);
+							return this.$parent.nodeWidth - this.minimapYScale(freq[i]);
 						},
 						"x": (d) => {
 							return node_dict.x + this.minimapXScale(xVals[i]);
 						},
-						"y": (d) => node_dict.y + this.minimapYScale(freq[i]) - this.offset,
+						"y": (d) => node_dict.y + this.minimapYScale(freq[i]) + this.offset,
 						"stroke-width": "0.2px",
 						"stroke": "black",
 						"fill": color,
 					});
+			}
+		},
+
+		render(data, node) {
+			let node_dict = this.nodes[this.nodeMap[node]];
+			if (this.$store.selectedMode == "Ensemble"){
+				this.histogram(data, node_dict, "ensemble");
+				if (this.$store.showTarget && this.$store.comparisonMode == false) {
+					this.histogram(data, node_dict, "target");
+				}	
+			}
+			else if(this.$store.selectedMode == "Single") {
+				this.histogram(data, node_dict, "single");
 			}
 		}
 	}

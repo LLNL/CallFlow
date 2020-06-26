@@ -1,193 +1,230 @@
-/** *****************************************************************************
-	 * Copyright (c) 2017, Lawrence Livermore National Security, LLC.
-	 * Produced at the Lawrence Livermore National Laboratory.
-	 *
-	 * Written by Suraj Kesavan <spkesavan@ucdavis.edu>.
-	 *
-	 * LLNL-CODE-740862. All rights reserved.
-	 *
-	 * This file is part of CallFlow. For details, see:
-	 * https://github.com/LLNL/CallFlow
-	 * Please also read the LICENSE file for the MIT License notice.
-	 ***************************************************************************** */
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
+import * as  d3 from "d3";
+import EventHandler from "../EventHandler.js";
 
+import tpl from "../../html/supergraph.html";
+import Sankey from "../../algorithms/sankey";
 
-import tpl from "../../html/supergraph/index.html";
-import preprocess from "./preprocess";
-import Sankey from "./sankey";
-import Nodes from "./nodes";
-import IntermediateNodes from "./intermediateNodes";
+import EnsembleNodes from "./nodes";
+import EnsembleEdges from "./edges";
 import MiniHistograms from "./miniHistograms";
-import Edges from "./edges";
-// import CallbackEdges from './callgraph/callbackEdges'
-import ColorMap from "./colormap";
-import * as d3 from "d3";
+import EnsembleColorMap from "../../lib/colormap";
+
+import Graph from "../../datastructures/graph";
+import GraphVertex from "../../datastructures/node";
+import GraphEdge from "../../datastructures/edge";
+import detectDirectedCycle from "../../algorithms/detectcycle";
 
 export default {
-	name: "SuperGraph",
+	name: "EnsembleSuperGraph",
 	template: tpl,
 	components: {
-		Nodes,
-		IntermediateNodes,
-		Edges,
+		EnsembleNodes,
+		EnsembleEdges,
 		MiniHistograms,
-		ColorMap,
+		EnsembleColorMap
 	},
-	props: [],
 	data: () => ({
-		id: "supergraph-overview",
-		dashboardID: "supergraph-dashboard",
+		graph: null,
+		id: "ensemble-supergraph-overview",
+		dashboardID: "ensemble-supergraph-dashboard",
 		nodeWidth: 50,
-		levelSpacing: 40,
-		ySpacing: 50,
 		nodeScale: 1.0,
+		ySpacing: 60,
+		levelSpacing: 50,
 		margin: {
-			top: 30,
-			right: 30,
-			bottom: 10,
-			left: 10
+			top: 10, right: 10, bottom: 20, left: 10
 		},
 		width: null,
 		height: null,
 		treeHeight: null,
 		data: null,
-		graph: null,
+		message: "Summary Graph View",
+		debug: false,
+		sankeyWidth: 0,
+		sankeyHeight: 0
 	}),
+	
+	mounted() {
+		this.id = "ensemble-supergraph-overview";
+		let self = this;
+		EventHandler.$on("clear_summary_view", function () {
+			console.log("Clearing Summary view");
+			self.clear();
+		});
+
+		EventHandler.$on("reveal_callsite", function () {
+			self.clear();
+		});
+
+		EventHandler.$on("split_by_entry_callsites", function () {
+			self.clear();
+		});
+
+		EventHandler.$on("split_by_callees", function () {
+			self.clear();
+		});
+	},
 
 	sockets: {
+		ensemble_supergraph(data) {
+			data = JSON.parse(data);
+			console.debug("Data: ", data);
+			let nodes = [];
+			for (let i = 0; i < data.nodes.length; i += 1) {
+				console.debug("Node name: ", data.nodes[i].id);
+				console.debug("Time (inc): ", data.nodes[i]["time (inc)"]);
+				console.debug("Time: ", data.nodes[i]["time"]);
+			}
+
+			for (let i = 0; i < data.links.length; i += 1) {
+				console.debug("Source: ", data.links[i].source);
+				console.debug("Target: ", data.links[i].target);
+				console.debug("Weight: ", data.links[i].weight);
+			}
+			this.render(data);
+		},
+
 		single_supergraph(data) {
 			data = JSON.parse(data);
-			console.log("Data :", data);
-			this.clear();
+			console.debug("Data :", data);
+			let nodes = [];
+			for (let i = 0; i < data.nodes.length; i += 1) {
+				console.debug("Node name: ", data.nodes[i].id);
+				console.debug("Time (inc): ", data.nodes[i]["time (inc)"]);
+				console.debug("Time: ", data.nodes[i]["time"]);
+			}
+
+			for (let i = 0; i < data.links.length; i += 1) {
+				console.debug("Source: ", data.links[i].source);
+				console.debug("Target: ", data.links[i].target);
+				console.debug("Weight: ", data.links[i].weight);
+			}
 			this.render(data);
 		}
 	},
 
 	methods: {
-		init(data) {
-			this.toolbarHeight = document.getElementById("toolbar").clientHeight;
-			this.footerHeight = document.getElementById("footer").clientHeight;
-			this.width = window.innerWidth * 0.5 - this.margin.left - this.margin.right;
-			this.height = window.innerHeight - this.margin.top - this.margin.bottom - this.toolbarHeight - this.footerHeight;
-
-			this.zoom = d3.zoom()
-				.scaleExtent([0.5, 2])
-				.on("zoom", () => {
-					let tx = Math.min(0, Math.min(d3.event.transform.x, this.width * d3.event.transform.k));
-					let ty = Math.min(0, Math.min(d3.event.transform.y, this.height * d3.event.transform.k));
-					this.sankeySVG.attr("transform", "translate(" + [tx, ty] + ")scale(" + d3.event.transform.k + ")");
-				});
+		init() {
+			this.width = 5 * this.$store.viewWidth;
+			this.height = 1 * this.$store.viewHeight;
 
 			this.sankeySVG = d3.select("#" + this.id)
 				.attrs({
-					"width": this.width + this.margin.left + this.margin.right,
-					"height": this.height + this.margin.top + this.margin.bottom,
+					"width": this.width,
+					"height": this.height,
 					"top": this.toolbarHeight
-				})
-				.call(this.zoom);
+				});
+
+			if (this.$store.selectedMode == "Single") {
+				this.$socket.emit("single_supergraph", {
+					dataset: this.$store.selectedTargetDataset,
+					groupBy: "module"
+				});
+			}
+			else if (this.$store.selectedMode == "Ensemble") {
+				this.$socket.emit("ensemble_supergraph", {
+					datasets: this.$store.selectedDatasets,
+					groupBy: "module"
+				});
+			}
 
 
-			this.$socket.emit("single_supergraph", {
-				dataset: this.$store.selectedTargetDataset,
-				format: this.$store.selectedFormat,
-				groupBy: this.$store.selectedGroupBy
+			let inner = this.sankeySVG.select("#container");
+
+			var zoom = d3.zoom().on("zoom", function () {
+				inner.attrs({
+					"transform": d3.event.transform,
+					"scale": d3.event.scale
+				});
 			});
-		},
-
-		processJSON(data) {
-			let json = JSON.parse(data);
-			let d = json.data;
-			let index = json.index;
-			let columns = json.columns;
-
-			let columnMap = {};
-			let idx = 0;
-			for (let column of columns) {
-				columnMap[column] = idx;
-				idx += 1;
-			}
-			return {
-				d: d,
-				index: index,
-				columns: columns,
-				columnMap: columnMap
-			};
-		},
-
-		processCallsite(data) {
-			let callsites = {};
-			for (let i = 0; i < data.index.length; i += 1) {
-				let callsite = {};
-				let callsite_name = data.d[i][data.columnMap["name"]];
-				for (let column of data.columns) {
-					callsite[column] = data.d[i][data.columnMap[column]];
-				}
-				callsites[callsite_name] = callsite;
-			}
-			return callsites;
-		},
-
-		processModule(data) {
-			let modules = {};
-			for (let i = 0; i < data.index.length; i += 1) {
-				let module_dict = {};
-				let module_name = data.d[i][data.columnMap["module"]];
-				for (let column of data.columns) {
-					module_dict[column] = data.d[i][data.columnMap[column]];
-				}
-				modules[module_name] = module_dict;
-			}
-			return modules;
+			this.sankeySVG.call(zoom);
 		},
 
 		clear() {
-			this.$refs.Nodes.clear();
-			this.$refs.Edges.clear();
+			this.$refs.EnsembleNodes.clear();
+			this.$refs.EnsembleEdges.clear();
 			this.$refs.MiniHistograms.clear();
-			this.$refs.ColorMap.clear(0);
+			this.$refs.EnsembleColorMap.clear();
 		},
 
 		render(data) {
-			this.graph = preprocess(data, false);
-			console.log("[Single SuperGraph] Preprocessing done.");
-			this.initSankey(this.graph);
-			console.log("[Single SuperGraph] Layout Calculation.");
 
-			let postProcess = this.postProcess(this.graph.nodes, this.graph.links);
-			this.graph.nodes = postProcess["nodes"];
-			this.graph.links = postProcess["links"];
-			this.initSankey(this.graph);
+			this.sankeyWidth = 0.7 * this.$store.viewWidth;
+			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
-			console.log("[Single SuperGraph] Post-processing done.");
+			this.data = data;
 
-			this.$store.graph = this.graph;
-			this.$refs.Nodes.init(this.graph, this.view);
-			this.$refs.Edges.init(this.graph, this.view);
-			this.$refs.MiniHistograms.init(this.graph, this.view);
-			this.$refs.ColorMap.init();
+			this.data = this.addNodeMap(this.data);
+			this.data.graph = this.createGraphStructure(this.data);
+
+			// check cycle.
+			let detectcycle = detectDirectedCycle(this.data.graph);
 
 			if (this.debug) {
-				for (let i = 0; i < this.graph["links"].length; i += 1) {
-					let link = this.graph["links"][i];
-					let source_callsite = link["attr_dict"]["source_callsite"];
-					let target_callsite = link["attr_dict"]["target_callsite"];
+				for (let i = 0; i < this.data["links"].length; i += 1) {
+					let link = this.data["links"][i];
+					let source_callsite = link["source"];
+					let target_callsite = link["target"];
 					let weight = link["weight"];
-					let exc_weight = link["exc_weight"];
-					let source_inclusive = link["source_data"]["512-cores"]["time (inc)"];
-					let source_exclusive = link["source_data"]["512-cores"]["time"];
-					let target_inclusive = link["target_data"]["512-cores"]["time (inc)"];
-					let target_exclusive = link["target_data"]["512-cores"]["time"];
 
-					console.log("[Single SuperGraph] Source Name :", source_callsite);
-					console.log("[Single SuperGraph] Target Name :", target_callsite);
-					console.log("[Single SuperGraph] Weight: ", weight);
-					console.log("[Single SuperGraph] Exc weight: ", exc_weight);
-					console.log("[Single SuperGraph] Source Inclusive: ", source_inclusive);
-					console.log("[Single SuperGraph] Source Exclusive: ", source_exclusive);
-					console.log("[Single SuperGraph] Target Inclusive: ", target_inclusive);
-					console.log("[Single SuperGraph] Target Exclusive: ", target_exclusive);
+					console.debug("=============================================");
+					console.debug("[Ensemble SuperGraph] Source Name :", source_callsite);
+					console.debug("[Ensemble SuperGraph] Target Name :", target_callsite);
+					console.debug("[Ensemble SuperGraph] Weight: ", weight);
 				}
 			}
+			this.initSankey(this.data);
+
+			let postProcess = this.postProcess(this.data.nodes, this.data.links);
+			this.data.nodes = postProcess["nodes"];
+			this.data.links = postProcess["links"];
+			this.initSankey(this.data);
+
+			this.$store.graph = this.data;
+			this.$refs.EnsembleColorMap.init(this.$store.runtimeColor);
+			if (this.$store.selectedMode == 'Ensemble') {
+				this.$refs.EnsembleColorMap.init(this.$store.distributionColor)
+			}
+			this.$refs.EnsembleNodes.init(this.$store.graph, this.view);
+			this.$refs.EnsembleEdges.init(this.$store.graph, this.view);
+			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
+		},
+
+		addNodeMap(graph) {
+			let nodeMap = {};
+			let idx = 0;
+			for (const node of graph.nodes) {
+				if (node.type == "super-node") {
+					nodeMap[node.module] = idx;
+				}
+				else if (node.type == "component-node") {
+					nodeMap[node.name] = idx;
+				}
+				if (this.debug) {
+					console.log("[Preprocess] Assigning", node.id, " with map index: ", idx);
+				}
+				idx += 1;
+			}
+			graph.nodeMap = nodeMap;
+			return graph;
+		},
+
+		createGraphStructure(data) {
+			let graph = new Graph(true);
+
+			for (let i = 0; i < data.links.length; i += 1) {
+				let source = new GraphVertex(data.links[i].source);
+				let target = new GraphVertex(data.links[i].target);
+				let weight = data.links[i].weight;
+				let edge = new GraphEdge(source, target, weight);
+				graph.addEdge(edge);
+			}
+			return graph;
 		},
 
 		updateMiniHistogram() {
@@ -195,53 +232,26 @@ export default {
 			this.$refs.MiniHistograms.init(this.graph, this.view);
 		},
 
-		updateColorMap() {
-			this.$refs.ColorMap.clear();
-			this.$refs.ColorMap.init();
-		},
-
-		resetStat() {
-			this.maxInc = 0;
-			this.minInc = Number.MAX_SAFE_INTEGER;
-			this.maxExc = 0;
-			this.minExc = Number.MAX_SAFE_INTEGER;
-		},
-
-		calcStat(incTime, excTime) {
-			this.maxInc = Math.max(this.maxInc, incTime);
-			this.minInc = Math.min(this.minInc, incTime);
-
-			this.maxExc = Math.max(this.maxExc, excTime);
-			this.minExc = Math.min(this.minExc, excTime);
-		},
-
 		//Sankey computation
 		initSankey() {
-			this.size = [this.width * 1.05, this.height - this.ySpacing];
 			this.sankey = Sankey()
 				.nodeWidth(this.nodeWidth)
 				.nodePadding(this.ySpacing)
-				.size(this.size)
+				.size([this.sankeyWidth, this.sankeyHeight])
 				.levelSpacing(this.levelSpacing)
-				.maxLevel(this.graph.maxLevel)
-				.dataset(this.$store.selectedTargetDataset)
-				.setMinNodeScale(this.nodeScale);
+				.maxLevel(this.data.maxLevel)
+				.datasets(this.$store.runNames)
+				.setMinNodeScale(this.nodeScale)
+				.dataset("ensemble")
+				.targetDataset(this.$store.selectedTargetDataset)
+				.store(this.$store);
 
 			let path = this.sankey.link();
 
-			this.sankey.nodes(this.graph.nodes)
-				.links(this.graph.links)
+			this.sankey.nodes(this.data.nodes)
+				.links(this.data.links)
 				.layout(32);
 		},
-
-		// dragMove() {
-		// 	d3.select(this).attr("transform", 
-		// 		"translate(" + (
-		// 			d.x = Math.max(0, Math.min(this.width - d.dx, d3.event.x))) + "," + (
-		// 			d.y = Math.max(0, Math.min(this.height - d.dy, d3.event.y))) + ")");
-		// 	sankey.relayout();
-		// 	link.attr("d", path);
-		// },
 
 		// Add intermediate nodes.
 		postProcess(nodes, edges) {
@@ -249,7 +259,10 @@ export default {
 			const temp_nodes = nodes.slice();
 			const temp_edges = edges.slice();
 
+			this.existingIntermediateNodes = {};
+
 			let removeActualEdges = [];
+			let count = {};
 
 			for (let i = 0; i < temp_edges.length; i++) {
 				const source = temp_edges[i].source;
@@ -257,18 +270,17 @@ export default {
 
 				if (this.debug) {
 					console.log("==============================");
-					console.log("[Single SuperGraph] Source Name", source);
-					console.log("[Single SuperGraph] Target Name", target);
-					console.log("[Single SuperGraph] This edge: ", temp_edges[i]);
-
+					console.log("[Ensemble SuperGraph] Source Name", source);
+					console.log("[Ensemble SuperGraph] Target Name", target);
+					console.log("[Ensemble SuperGraph] This edge: ", temp_edges[i]);
 				}
 
 				let source_node = temp_edges[i].source_data;
 				let target_node = temp_edges[i].target_data;
 
 				if (this.debug) {
-					console.log("[Single SuperGraph] Source Node", source_node, target_node.level);
-					console.log("[Single SuperGraph] Target Node", target_node, target_node.level);
+					console.log("[Ensemble SuperGraph] Source Node", source_node, target_node.level);
+					console.log("[Ensemble SuperGraph] Target Node", target_node, target_node.level);
 				}
 
 				const source_level = source_node.level;
@@ -277,52 +289,90 @@ export default {
 
 				if (this.debug) {
 					console.log(source_level, target_level);
-					console.log("[Single SuperGraph] Number of levels to shift: ", shift_level);
+					console.log("[Ensemble SuperGraph] Number of levels to shift: ", shift_level);
 				}
 
-				let dataset = this.$store.selectedTargetDataset;
+				let targetDataset = this.$store.selectedTargetDataset;
 				// Put in intermediate nodes.
+				let firstNode = true;
 				for (let j = shift_level; j > 1; j--) {
 					const intermediate_idx = nodes.length;
-					const tempNode = {
-						"attr_dict": temp_edges[i]["attr_dict"],
-						id: "intermediate_" + target_node.id,
-						level: j - 1,
-						height: temp_edges[i].height,
-						name: target_node.id,
-					};
-					tempNode[dataset] = target_node[this.$store.selectedTargetDataset];
 
-					if (this.debug) {
-						console.log("[Single SuperGraph] Adding intermediate node: ", tempNode);
+					let tempNode = {};
+					let actual_time = source_node["actual_time"];
+					let max_flow = source_node["max_flow"];
+					if (this.existingIntermediateNodes[target_node.id] == undefined) {
+						// Add the intermediate node to the array
+						tempNode = {
+							id: "intermediate_" + target_node.id,
+							level: j - 1,
+							value: temp_edges[i].weight,
+							targetValue: temp_edges[i].targetWeight,
+							height: temp_edges[i].height,
+							targetHeight: temp_edges[i].targetHeight,
+							// value: target_node.value,
+							// name: target_node.name,
+							module: target_node.module,
+							type: "intermediate",
+							count: 1
+						};
+						tempNode[targetDataset] = target_node[targetDataset];
+
+						if (firstNode) {
+							console.log(tempNode);
+							nodes.push(tempNode);
+							firstNode = false;
+						}
+
+						this.existingIntermediateNodes[target_node.id] = tempNode;
 					}
-					nodes.push(tempNode);
+					else {
+						if (count[temp_edges[i].source] == undefined) {
+							count[temp_edges[i].source] = 0;
+							console.log(temp_edges[i].weight, temp_edges[i].source, temp_edges[i].target);
+							this.existingIntermediateNodes[target_node.id].value += temp_edges[i].weight;
+						}
+						else {
+							count[temp_edges[i].source] += 1;
+						}
+						tempNode = this.existingIntermediateNodes[target_node.id];
+					}
+
+					// Add the source edge.
 					const sourceTempEdge = {
+						type: "source_intermediate",
 						source: source_node.id,
 						target: tempNode.id,
 						weight: temp_edges[i].weight,
+						targetWeight: temp_edges[i].targetWeight,
+						actual_time: actual_time,
+						max_flow: max_flow
 					};
-					if (this.debug) {
-						console.log("[Single SuperGraph] Adding intermediate source edge: ", sourceTempEdge);
-					}
 					edges.push(sourceTempEdge);
+					if (this.debug) {
+						console.log("[Ensemble SuperGraph] Adding intermediate source edge: ", sourceTempEdge);
+					}
 
 					if (j == shift_level) {
 						edges[i].original_target = target;
 					}
 					edges[i].target_data = nodes[intermediate_idx];
 					if (this.debug) {
-						console.log("[Single SuperGraph] Updating this edge:", edges[i]);
+						console.log("[Ensemble SuperGraph] Updating this edge:", edges[i]);
 					}
 
 					const targetTempEdge = {
+						type: "target_intermediate",
 						source: tempNode.id,
 						target: target_node.id,
-						weight: temp_edges[i].weight
+						actual_time: actual_time,
+						weight: temp_edges[i].weight,
+						targetWeight: temp_edges[i].targetWeight,
+						max_flow: max_flow
 					};
 					edges.push(targetTempEdge);
 					if (this.debug) {
-						console.log("[Single SuperGraph] Adding intermediate target edge: ", targetTempEdge);
+						console.log("[Ensemble SuperGraph] Adding intermediate target edge: ", targetTempEdge);
 					}
 
 					if (j == shift_level) {
@@ -330,7 +380,7 @@ export default {
 					}
 					edges[i].target_data = nodes[intermediate_idx];
 					if (this.debug) {
-						console.log("[Single SuperGraph] Updating this edge:", edges[i]);
+						console.log("[Ensemble SuperGraph] Updating this edge:", edges[i]);
 					}
 
 					removeActualEdges.push({
@@ -339,10 +389,15 @@ export default {
 					});
 				}
 			}
+
+			if (this.debug) {
+				console.log("[Ensemble SuperGraph] Removing", removeActualEdges.length, " edges.");
+			}
+
 			for (let i = 0; i < removeActualEdges.length; i += 1) {
 				let removeEdge = removeActualEdges[i];
 				if (this.debug) {
-					console.log("[Single SuperGraph] Removing", removeActualEdges.length, "actual edge: ", removeEdge);
+					console.log("[Ensemble SuperGraph] Removing edge: ", removeEdge);
 				}
 				for (let edge_idx = 0; edge_idx < edges.length; edge_idx += 1) {
 					let curr_edge = edges[edge_idx];
@@ -351,12 +406,10 @@ export default {
 					}
 				}
 			}
-
 			return {
 				nodes: nodes,
 				links: edges
 			};
 		},
-
 	}
 };

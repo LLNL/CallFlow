@@ -11,9 +11,11 @@ data/*
 callflow/unused/*
 
 app/node_modules*
-app/dist
 app/src/unused/*
 
+designs/*
+
+videos/*
 # ------------------------------------------------------------------------------
 # Editor hidden directories
 *.DS_Store

@@ -1,19 +1,11 @@
-/*******************************************************************************
- * Copyright (c) 2017, Lawrence Livermore National Security, LLC.
- * Produced at the Lawrence Livermore National Laboratory.
- *
- * Written by Huu Tan Nguyen <htpnguyen@ucdavis.edu>.
- *
- * LLNL-CODE-740862. All rights reserved.
- *
- * This file is part of CallFlow. For details, see:
- * https://github.com/LLNL/CallFlow
- * Please also read the LICENSE file for the MIT License notice.
- ******************************************************************************/
-import tpl from "../../html/ensembleScatterplot/index.html";
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
+import tpl from "../../html/ensembleScatterplot.html";
 import * as d3 from "d3";
 import ToolTip from "./tooltip";
-import Settings from "../settings/settings";
 import * as utils from "../utils";
 import EventHandler from "../EventHandler";
 
@@ -22,7 +14,6 @@ export default {
 	template: tpl,
 	components: {
 		ToolTip,
-		Settings
 	},
 
 	data: () => ({
@@ -137,7 +128,6 @@ export default {
 			let mean_time = [];
 			let mean_time_inc = [];
 			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
-				// if (this.$store.selectedDatasets[i] != this.$store.selectedTargetDataset || this.includesTarget) {
 				let callsites_in_module = this.$store.moduleCallsiteMap["ensemble"][this.selectedModule];
 				for (let j = 0; j < callsites_in_module.length; j += 1) {
 					let thiscallsite = callsites_in_module[j];
@@ -153,10 +143,8 @@ export default {
 							"val": thisdata["Inclusive"]["mean_time"],
 							"run": this.$store.selectedDatasets[i]
 						});
-
 					}
 				}
-				// }
 			}
 
 			let all_data = this.$store.modules["ensemble"][this.selectedModule];
@@ -490,7 +478,7 @@ export default {
 					.attrs({
 						"class": "ensemble-dot",
 						"r": 7.5,
-						opacity: opacity,
+						"opacity": opacity,
 						"cx": () => {
 							return this.xScale(this.xArray[i].val) + 3 * this.padding.left;
 						},
@@ -500,7 +488,7 @@ export default {
 					})
 					.style("stroke", "#202020")
 					.style("stroke-width", 0.5)
-					.style("fill", this.$store.color.ensemble)
+					.style("fill", this.$store.distributionColor.ensemble)
 					.on("mouseover", () => {
 						let data = {
 							"callsite": callsite,
@@ -534,11 +522,12 @@ export default {
 							return this.xScale(this.xtargetArray[i].val) + 3 * this.padding.left;
 						},
 						"cy": (d, i) => {
+							console.log(this.$store.distributionColor.target)
 							return this.yScale(self.ytargetArray[i].val);
 						}
 					})
-					.style("fill", this.$store.color.target)
-					.style("stroke", this.$store.color.edgeStrokeColor)
+					.style("fill", this.$store.distributionColor.target)
+					.style("stroke", this.$store.runtimeColor.edgeStrokeColor)
 					.style("stroke-width", 0.5)
 					.on("mouseover", () => {
 						let data = {

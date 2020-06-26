@@ -1,0 +1,169 @@
+<!--
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+-->
+<v-app id="inspire">
+	<v-toolbar id="toolbar" color="teal" dark fixed app clipped-right>
+		<v-toolbar-side-icon @click.stop="left = !left">
+			<v-icon>settings</v-icon>
+		</v-toolbar-side-icon>
+		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
+		<v-flex xs3 class="ma-2">
+			<v-select label="Select a run (Sorted by inclusive runtime)" :items="datasets" 
+				v-model="selectedTargetDataset"
+				:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
+				<template slot="selection" slot-scope="{item}">
+					{{ datasets.indexOf(item) + 1}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+				</template>
+				<template slot="item" slot-scope="{item}">
+					{{ datasets.indexOf(item) + 1 }}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+				</template>
+
+			</v-select>
+		</v-flex>
+		<v-spacer></v-spacer>
+		<v-flex xs2 class="ma-1">
+			<v-select label="Graph to visualize" :items="formats" v-model="selectedFormat"
+				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">
+			</v-select>
+		</v-flex>
+	</v-toolbar>
+
+	<v-navigation-drawer v-model="left" temporary fixed>
+		<v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
+		<v-card flex fill-height id="control-panel">
+			<v-layout row wrap>
+				<v-btn icon>
+					<v-icon v-on:click="reset()">refresh</v-icon>
+				</v-btn>
+
+				<!-- --------------------------- General Information ----------------------------------->
+				<v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">General</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-text-field rows="1" label="Experiment" v-model="selectedCaseStudy" readonly>
+					</v-text-field>
+				</v-flex>
+
+				<!-- --------------------------- Visual Encoding ----------------------------------->
+				<v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">Visual Encoding</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-select label="Metric" :items="metrics" v-model="selectedMetric"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateMetric()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-text-field label="Number of bins for MPI Distribution" class="mt-0" type="number"
+						v-model="selectedMPIBinCount" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateMPIBinCount()">
+					</v-text-field>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-select label="Scale" :items="scales" v-model="selectedScale" :menu-props="{ maxHeight: '200' }"
+						persistent-hint v-on:change="updateScale()">
+					</v-select>
+				</v-flex>
+
+
+				<!-- --------------------------- Encoding ----------------------------------->
+				<v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">Colors</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-select label="Runtime Color Map" :items="runtimeColorMap" v-model="selectedRuntimeColorMap"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColors()">
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-text-field label="Color points (3-9)" class="mt-0" type="number" v-model="selectedColorPoint"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateColors()">
+					</v-text-field>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-text-field label="Color minimum (in seconds)" class="mt-0" type="number"
+						v-model="selectedColorMinText" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateColors()">
+					</v-text-field>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-text-field label="Color maximum (in seconds)" class="mt-0" type="number"
+						v-model="selectedColorMaxText" :menu-props="{ maxHeight: '200' }" persistent-hint
+						v-on:change="updateColors()">
+					</v-text-field>
+				</v-flex>
+
+				<!----------------------------- Callsite information ----------------------------------->
+				<v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">Call site Information</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+					<v-select label="Sort by" :items="sortByModes" v-model="selectedRuntimeSortBy"
+						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateRuntimeSortBy()">
+					</v-select>
+				</v-flex>
+			</v-layout>
+		</v-card>
+	</v-navigation-drawer>
+
+	
+	<v-content class="pt-auto" v-if="selectedMode == 'Single'">
+		<v-layout v-show="selectedFormat == 'SuperGraph'">
+			<splitpanes id="callgraph-dashboard" class="default-theme">
+				<!-- Left column-->
+				<splitpanes horizontal :splitpanes-size="25">
+					<span>
+						<SingleHistogram ref="SingleHistogram" />
+					</span>
+					<span>
+						<SingleScatterplot ref="SingleScatterplot" />
+					</span>
+				</splitpanes>
+
+				<!-- Center column-->
+				<splitpanes horizontal :splitpanes-size="55">
+					<span>
+						<v-layout class="chip-container">
+							<v-chip class="chip" chips color="teal" label outlined clearable>
+								{{ summaryChip }}
+							</v-chip>
+							<v-spacer></v-spacer>
+							<span class="component-info">
+								Encoding = {{selectedMetric}} runtime.
+							</span>
+						</v-layout>
+						<SuperGraph ref="SingleSuperGraph" />
+					</span>
+				</splitpanes>
+
+				<!-- Right column-->
+				<splitpanes horizontal :splitpanes-size="20">
+					<span>
+						<CallsiteInformation ref="CallsiteInformation" />
+					</span>
+				</splitpanes>
+			</splitpanes>
+		</v-layout>
+
+		<v-layout v-show="selectedFormat == 'CCT'">
+			<splitpanes id="single-cct-dashboard">
+				<splitpanes horizontal :splitpanes-size="100">
+					<span>
+						<CCT ref="SingleCCT" />
+					</span>
+				</splitpanes>
+			</splitpanes>
+		</v-layout>
+	</v-content>
+
+
+	<v-footer id="footer" color="teal" app>
+		Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis
+		<v-spacer></v-spacer>
+		<span>&copy; 2017 - 2020</span>
+	</v-footer>
+
+</v-app>

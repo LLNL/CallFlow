@@ -1,6 +1,11 @@
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
 import * as d3 from "d3";
-import { lasso } from "../../thirdParty/lasso";
-import template from "../../html/parameterProjection/index.html";
+import { lasso } from "../../lib/lasso";
+import template from "../../html/parameterProjection.html";
 import EventHandler from "../EventHandler.js";
 import * as utils from "../utils";
 
@@ -242,11 +247,9 @@ export default {
 					r: (d) => {
 						return 6.0;
 					},
-					// 'stroke-width': 2.0,
 					fill: (d) => {
 						let color = "";
 						if (d[2] == self.$store.selectedTargetDataset && self.$store.showTarget) {
-							// color = d3.rgb(self.$store.color.ensemble)
 							color = this.colorset[d[4]];
 						}
 						else {
@@ -273,11 +276,10 @@ export default {
 					"stroke-width": 3.0,
 					stroke: (d) => {
 						if (d[2] == self.$store.selectedTargetDataset && self.$store.showTarget) {
-							// return d3.rgb(self.$store.color.target)
 							return this.colorset[d[4]];
 						}
 						else {
-							return d3.rgb(self.$store.color.ensemble);
+							return d3.rgb(self.$store.DistributionColor.ensemble);
 						}
 					},
 					"fill-opacity": 0,
@@ -355,18 +357,17 @@ export default {
 		},
 
 		click(d) {
-			console.log("click event");
 			let self = this;
 			this.selectedRun = d[2];
 			d3.selectAll(".dot")
-				.attr("stroke", self.$store.color.ensemble)
+				.attr("stroke", self.$store.distributionColor.ensemble)
 				.attr("stroke-width", 3);
 
 			d3.select("#dot-" + self.$store.datasetMap[d[2]])
-				.attr("stroke", self.$store.color.compare)
+				.attr("stroke", self.$store.distributionColor.compare)
 				.attr("stroke-width", 3);
 			d3.select("#outer-dot" + self.$store.datasetMap[self.$store.selectedTargetDataset])
-				.attr("stroke", self.$store.color.target)
+				.attr("stroke", self.$store.distributionColor.target)
 				.attr("stroke-width", 3);
 
 			// Set the local and global variables for compare dataset
@@ -509,7 +510,7 @@ export default {
 			let s = d3.event.selection;
 			if (!s) {
 				if (!this.idleTimeout)
-					return this.idleTimeout = setTimeout(this.idled, idleDelay);
+				{return this.idleTimeout = setTimeout(this.idled, idleDelay);}
 				this.x.domain([2.0 * this.xMin, 2.0 * this.xMax]);
 				this.y.domain([2.0 * this.yMin, 2.0 * this.yMax]);
 			}
@@ -527,7 +528,7 @@ export default {
 				// console.log(d3.brushSelection(this.brushSvg.node()))
 
 				// https://github.com/d3/d3-brush/issues/10
-				if (!d3.event.sourceEvent) return;
+				if (!d3.event.sourceEvent) {return;}
 
 				// to set the brush movement to null. But doesnt do the required trick.
 				// Reason: maybe webpack
@@ -548,14 +549,14 @@ export default {
 			this.circles = this.svg.selectAll("#dot-" + datasetID)
 				.attrs({
 					opacity: 1.0,
-					stroke: this.$store.color.target,
+					stroke: this.$store.distributionColor.target,
 					"stroke-width": 3.0,
 				});
 
 			this.circles = this.svg.selectAll("#dot-" + datasetID)
 				.attrs({
 					opacity: 1.0,
-					stroke: this.$store.color.target,
+					stroke: this.$store.distributionColor.target,
 					"stroke-width": 4.5,
 				});
 

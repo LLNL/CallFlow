@@ -1,3 +1,8 @@
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
 import Vue from "vue";
 import * as Vuex from "vuex";
 import Router from "vue-router";
@@ -11,14 +16,14 @@ import "vuetify/dist/vuetify.min.css";
 import "material-design-icons-iconfont/dist/material-design-icons.css";
 
 import App from "./App";
-import CallFlow from "./components/callflow";
+import SingleCallFlow from "./components/callflowSingle";
+import EnsembleCallFlow from './components/callflowEnsemble'
 
 Vue.use(Vuex);
 const store = new Vuex.Store();
 
 const socket = new VueSocketIO({
 	debug: false,
-	// connection: 'http://169.237.6.49:5000',
 	connection: "http://localhost:5000",
 	vuex: {
 		store,
@@ -31,9 +36,14 @@ const socket = new VueSocketIO({
 const router = new Router({
 	routes: [
 		{
-			path: "/",
-			name: "CallFlow",
-			component: CallFlow
+			path: "/single",
+			name: "SingleCallFlow",
+			component: SingleCallFlow
+		},
+		{
+			path: "/ensemble",
+			name: "EnsembleCallFlow",
+			component: EnsembleCallFlow
 		},
 	]
 });

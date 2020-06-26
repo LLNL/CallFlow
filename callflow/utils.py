@@ -1,3 +1,9 @@
+# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
+#
+# SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
+# Library imports
 import os
 import json
 import networkx as nx
@@ -229,7 +235,6 @@ def dfs(graph, dataframe, limit):
                     + inclusive_runtime
                     + exclusive_runtime
                 )
-                print(result)
                 level += 1
                 dfs_recurse(node, level)
 

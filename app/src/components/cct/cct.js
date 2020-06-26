@@ -1,11 +1,16 @@
-import tpl from "../../html/cct/index.html";
-import ColorMap from "./colormap";
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
+import tpl from "../../html/cct.html";
+import ColorMap from "../../lib/colormap";
 
 import * as d3 from "d3";
 import dagreD3 from "dagre-d3/dist/dagre-d3";
 
 export default {
-	name: "SingleCCT",
+	name: "CCT",
 	template: tpl,
 	components: {
 		ColorMap
@@ -13,7 +18,7 @@ export default {
 
 	data: () => ({
 		graph: null,
-		id: "single-cct-overview",
+		id: "ensemble-cct-overview",
 		sankey: {
 			nodeWidth: 50,
 			xSpacing: 0,
@@ -37,20 +42,24 @@ export default {
 	}),
 
 	sockets: {
-		single_cct(data) {
-			console.log("CCT data: ", data);
+		ensemble_cct(data) {
+			console.log("Ensemble CCT data: ", data);
 			this.data = data;
 			this.render();
 		},
-	},
 
-	mounted() {
+		// Fetch CCT for distribution mode.
+		comp_cct(data) {
+			console.log("Diff CCT data: ", data);
+			this.$refs.EnsembleCCT1.init(data[this.$store.selectedTargetDataset], "1");
+			this.$refs.EnsembleCCT2.init(data[this.$store.selectedTargetDataset], "2");
+		},
 	},
 
 	methods: {
 		init() {
-			this.$socket.emit("single_cct", {
-				dataset: this.$store.selectedTargetDataset,
+			this.$socket.emit("ensemble_cct", {
+				datasets: this.$store.selectedTargetDataset,
 				functionsInCCT: this.$store.selectedFunctionsInCCT,
 				selectedMetric: this.$store.selectedMetric,
 			});
@@ -74,9 +83,16 @@ export default {
 			let links = graph.links;
 
 			nodes.forEach((node, i) => {
+				let callsite_name = "";
+				if (node["name"] == undefined) {
+					callsite_name = node["id"];
+				}
+				else {
+					callsite_name = node["module"] + ":" + node["name"];
+				}
 				this.g.setNode(node["id"], {
-					label: node["module"] + ":" + node["id"],
-					"time": node["time"],
+					label: callsite_name,
+					time: node["time"],
 					"time (inc)": node["time (inc)"],
 					module: node["module"],
 					imbalance_perc: node["imbalance_perc"],
@@ -103,7 +119,13 @@ export default {
 			this.g.nodes().forEach(function (v) {
 				let node = self.g.node(v);
 				if (node != undefined) {
-					let color = self.$store.color.getColor(node);
+					let color = '';
+					if(self.$store.selectedMetric == 'Inclusive'){
+						color = self.$store.runtimeColor.getColor(node, 'time (inc)');
+					}
+					else if(self.$store.selectedMetric == 'Exclusive'){
+						color = self.$store.runtimeColor.getColor(node, 'time');
+					}
 					node.style = "fill:" + color;
 					node.rx = node.ry = 4;
 					node.id = "cct-node";
@@ -134,9 +156,8 @@ export default {
 			var initialScale = 1;
 			this.svg.call(zoom.transform, d3.zoomIdentity.translate((this.svg.attr("width") - this.g.graph().width * initialScale) / 2, 20).scale(initialScale));
 
-			this.$refs.ColorMap.init();
+			this.$refs.ColorMap.init(this.$store.runtimeColor);
 		},
-
 
 		clear() {
 			d3.selectAll("#cct-node").remove();

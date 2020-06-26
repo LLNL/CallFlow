@@ -1,4 +1,10 @@
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
 import * as d3 from "d3";
+
 
 export function formatName(name) {
 	if (name.length < 20) {
@@ -13,23 +19,19 @@ export function formatRuntimeWithUnits(val) {
 		return val;
 	}
 	let format = d3.format(".2");
-	let ret = format(val) + " \u03BCs";
-	return ret;
+	return format(val) + " \u03BCs";
 }
 
 export function formatRunCounts(val) {
 	if (val == 1) {
 		return val + " run";
 	}
-	else {
-		return val + " runs";
-	}
+	return val + " runs";
 }
 
 export function formatRuntimeWithoutUnits(val) {
 	let format = d3.format(".2");
-	let ret = format(val);
-	return ret;
+	return format(val);
 }
 
 // Returns [mantessa, exponent, max_exponent]
@@ -47,9 +49,8 @@ export function formatRuntimeWithExponent(val, min_exponent = 0) {
 		let split_ret_by_e = ret.toString().split("e");
 		exponent = parseInt(split_ret_by_e[1].split("+")[1]);
 		multiplier = parseInt(exponent) - min_exponent;
-		mantessa = parseFloat(split_ret_by_e[0] * (10 ** multiplier));
+		mantessa = parseFloat(split_ret_by_e[0]) //* (10 ** multiplier));
 	}
-
 	return [mantessa.toFixed(2), exponent, min_exponent];
 }
 
@@ -92,7 +93,6 @@ export function truncNames(str, len) {
 	}
 
 	str = str.replace(/<unknown procedure>/g, "proc ");
-
 	return (str.length > len) ? str.substr(0, len - 1) + "..." : str;
 }
 
@@ -113,7 +113,6 @@ export function textSize(id, text) {
 	};
 }
 
-
 export function getGradients(store, node) {
 	let nodeName = "";
 	let gradients = {};
@@ -129,4 +128,11 @@ export function getGradients(store, node) {
 		gradients = {};
 	}
 	return gradients;
+}
+
+export function removeDuplicates(arr) {
+	var seen = {};
+	return arr.filter(function (item) {
+		return seen.hasOwnProperty(item) ? false : (seen[item] = true);
+	});
 }

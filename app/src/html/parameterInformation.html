@@ -1,0 +1,103 @@
+<!--
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+-->
+<v-card class="scroll" :id="id">
+    <v-layout class="chip-container">
+        <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
+    </v-layout>
+    <template>
+        <md-table id="run-information" v-model="runs" md-card @md-selected="onSelect">
+            <md-table-row slot="md-table-row" slot-scope="{ item }" md-selectable="single">
+                <!-- <md-table-cell :md-label="dataset" :md-sort-by="dataset"> {{ dataset(labels) }} </md-table-cell> -->
+                <!-- <md-table-cell v-for="(key, idx) in item" :md-label="changeText(idx)" :md-sort-by="getLabel(idx)"> {{ key }} </md-table-cell> -->
+
+                <md-table-cell md-label="dataset" md-sort-by="dataset" id="dataset">
+                    {{ item.dataset }}</md-table-cell>
+
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE" md-label="ALLGATHER_SHORT_MSG_SIZE">
+                    {{ item.MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE" md-label="ALLGATHER_LONG_MSG_SIZE">
+                    {{ item.MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE"
+                    md-label="REDSCAT_COMMUTATIVE_LONG_MSG_SIZE">
+                    {{ item.MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_REDUCE_SHORT_MSG_SIZE" md-label="REDUCE_SHORT_MSG_SIZE">
+                    {{ item.MPIR_CVAR_REDUCE_SHORT_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ENABLE_SMP_REDUCE" md-label="ENABLE_SMP_REDUCE">
+                    {{ item.MPIR_CVAR_ENABLE_SMP_REDUCE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE" md-label="MAX_SMP_REDUCE_MSG_SIZE">
+                    {{ item.MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_GATHERV_INTER_SSEND_MIN_PROCS"
+                    md-label="GATHERV_INTER_SSEND_MIN_PROCS">
+                    {{ item.MPIR_CVAR_GATHERV_INTER_SSEND_MIN_PROCS }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_BCAST_MIN_PROCS" md-label="BCAST_MIN_PROCS">
+                    {{ item.MPIR_CVAR_BCAST_MIN_PROCS }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_BCAST_SHORT_MSG_SIZE" md-label="BCAST_SHORT_MSG_SIZE">
+                    {{ item.MPIR_CVAR_BCAST_SHORT_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_BCAST_LONG_MSG_SIZE" md-label="BCAST_LONG_MSG_SIZE">
+                    {{ item.MPIR_CVAR_BCAST_LONG_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ENABLE_SMP_BCAST" md-label="ENABLE_SMP_BCAST">
+                    {{ item.MPIR_CVAR_ENABLE_SMP_BCAST }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE" md-label="MAX_SMP_BCAST_MSG_SIZE">
+                    {{ item.MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE"
+                    md-label="SCATTER_INTER_SHORT_MSG_SIZE">
+                    {{ item.MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE" md-label="ALLTOALL_SHORT_MSG_SIZE">
+                    {{ item.MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE" md-label="ALLTOALL_MEDIUM_MSG_SIZE">
+                    {{ item.MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLTOALL_THROTTLE" md-label="ALLTOALL_THROTTLE">
+                    {{ item.MPIR_CVAR_ALLTOALL_THROTTLE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE"
+                    md-label="ALLGATHERV_PIPELINE_MSG_SIZE">
+                    {{ item.MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE" md-label="ALLREDUCE_SHORT_MSG_SIZE">
+                    {{ item.MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE}}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ENABLE_SMP_COLLECTIVES" md-label="ENABLE_SMP_COLLECTIVES">
+                    {{ item.MPIR_CVAR_ENABLE_SMP_COLLECTIVES }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_ENABLE_SMP_ALLREDUCE" md-label="ENABLE_SMP_ALLREDUCE">
+                    {{ item.MPIR_CVAR_ENABLE_SMP_ALLREDUCE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE" md-label="MAX_SMP_ALLREDUCE_MSG_SIZE">
+                    {{ item.MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_GATHER_VSMALL_MSG_SIZE" md-label="GATHER_VSMALL_MSG_SIZE">
+                    {{ item.MPIR_CVAR_GATHER_VSMALL_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-sort-by="MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE"
+                    md-label="GATHER_INTER_SHORT_MSG_SIZE">
+                    {{ item.MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE }}
+                </md-table-cell>
+                <md-table-cell md-label="SMP_BARRIER" md-sort-by="MPIR_CVAR_ENABLE_SMP_BARRIER">
+                    {{ item.MPIR_CVAR_ENABLE_SMP_BARRIER }}</md-table-cell>
+
+            </md-table-row>
+        </md-table>
+
+    </template>
+
+    <!-- <p>Selected:</p>
+        {{ selected }} -->
+</v-card>

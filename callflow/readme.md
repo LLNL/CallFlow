@@ -1,0 +1,43 @@
+CallFlow
+
+- algorithms - algorithms used by callflow.
+    - bland_altman.py [link](https://en.wikipedia.org/wiki/Bland%E2%80%93Altman_plot).
+    - deltacon_similarity.py (used for pair-wise similarity).
+    - k_mediods.py (used for projection view).
+    - prog_kmeans (potentially useful for next problem statment).
+    - wl_distance (potentially useful for next problem statment).
+- datastructures
+    - ensemblegraph.py
+    - graphframe.py
+    - supergraph.py
+- layout
+    - hierarchy.py
+    - node_link.py
+    - sankey.py
+- modules
+    - auxiliary.py
+    - auxiliary.fast.py
+    - boxplot.py
+    - diff_view.py
+    - function_list.py
+    - gradients.py
+    - histogram_generic.py
+    - histogram_mini.py
+    - histogram_rank.py
+    - parameter_projection.py
+    - runtime_scatterplot.py
+    - split_callee.py
+    - split_entry.py
+    - tooltip.py
+- operations
+    - filter.py
+    - group.py
+    - process.py
+    - read_config.py
+- server
+    - main.py
+
+- callflow.py
+- logger.py
+- timer.py
+- utils.py

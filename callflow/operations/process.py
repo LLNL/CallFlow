@@ -1,14 +1,9 @@
-##############################################################################
-# Copyright (c) 2018-2019, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# CallFlow Project Developers. See the top-level LICENSE file for details.
 #
-# This file is part of Callflowt.
-# Created by Suraj Kesavan <kesavan1@llnl.gov>.
-# LLNL-CODE-741008. All rights reserved.
-#
-# For details, see: https://github.com/LLNL/Callflow
-# Please also read the LICENSE file for the MIT License notice.
-##############################################################################
+# SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
+# Library imports
 import bisect
 import random
 from functools import wraps
@@ -16,6 +11,8 @@ from functools import wraps
 import numpy as np
 from scipy.stats import kurtosis, skew
 
+# ------------------------------------------------------------------------------
+# CallFlow imports
 import callflow
 
 LOGGER = callflow.get_logger(__name__)
