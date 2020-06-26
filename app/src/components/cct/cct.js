@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 import tpl from "../../html/cct.html";
-import ColorMap from "../supergraph/colormap";
+import ColorMap from "../../lib/colormap";
 
 import * as d3 from "d3";
 import dagreD3 from "dagre-d3/dist/dagre-d3";

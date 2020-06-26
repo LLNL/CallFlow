@@ -12,7 +12,7 @@ import Sankey from "../../algorithms/sankey";
 import EnsembleNodes from "./nodes";
 import EnsembleEdges from "./edges";
 import MiniHistograms from "./miniHistograms";
-import EnsembleColorMap from "./colormap";
+import EnsembleColorMap from "../../lib/colormap";
 
 import Graph from "../../datastructures/graph";
 import GraphVertex from "../../datastructures/node";

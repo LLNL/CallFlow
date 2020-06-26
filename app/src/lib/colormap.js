@@ -5,9 +5,7 @@
  */
 import * as d3 from "d3";
 import "d3-selection-multi";
-import * as utils from "../utils";
-import EventHandler from "../EventHandler";
-import { tickStep } from "d3";
+import * as utils from "../components/utils";
 
 
 export default {
@@ -32,9 +30,7 @@ export default {
 	}),
 
 	mounted() {
-		EventHandler.$on("show_target_auxiliary", (data) => {
-			this.init();
-		});
+
 	},
 
 	methods: {
