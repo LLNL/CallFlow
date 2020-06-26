@@ -145,7 +145,7 @@ export default {
 			this.maxLevel = this.level[1];
 
 			if (this.minLevel > this.maxLevel) {
-				console.log("Cannot generate icicle plot, min_level > max_level");
+				console.error("Cannot generate icicle plot, min_level > max_level");
 				return;
 			}
 

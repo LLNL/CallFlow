@@ -7,6 +7,7 @@ import * as d3 from "d3";
 import "d3-selection-multi";
 import * as utils from "../utils";
 import EventHandler from "../EventHandler";
+import { tickStep } from "d3";
 
 
 export default {
@@ -59,12 +60,11 @@ export default {
 		},
 
 		_legends() {
-			this.clearTargetLegends();
-			if (this.$store.showTarget == true) {
+			this.clearLegends();
+			if (this.$store.showTarget && ! this.$store.comparisonMode && this.$store.selectedMode == 'Ensemble' && this.$store.selectedFormat == 'SuperGraph') {
 				this.drawLegend("Target run", this.containerWidth - this.padding.right, this.containerHeight - 4 * this.padding.bottom, this.$store.distributionColor.target)
 			}
-			if (this.$store.selectedMode == 'Ensemble') {
-				this.clearEnsembleLegends();
+			if (this.$store.selectedMode == 'Ensemble' && this.$store.selectedFormat == 'SuperGraph') {
 				this.drawLegend("Ensemble of runs", this.containerWidth - this.padding.right, this.containerHeight - 3 * this.padding.bottom, this.$store.distributionColor.ensemble)
 			}
 		},
@@ -190,7 +190,7 @@ export default {
 			d3.selectAll(".target-circle-legend-text").remove();
 		},
 
-		clearEnsembleLegends() {
+		clearLegends() {
 			d3.selectAll(".legend").remove();
 			d3.selectAll(".legend-text").remove();
 		},

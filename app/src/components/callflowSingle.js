@@ -153,8 +153,7 @@ export default {
 			"Red": "#A90400"
 		},
 		targetColors: ["Green", "Blue", "Brown"],
-		selectedTargetColor: "",
-		selectedTargetColorText: "Green",
+		selectedTargetColor: "Green",
 		showTarget: false,
 		targetInfo: "Target Guides",
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
@@ -494,45 +493,25 @@ export default {
 		},
 
 		clear() {
-			if (this.selectedMode == "Ensemble") {
-				if (this.selectedFormat == "CCT") {
-					this.clearComponents(this.currentSingleCCTComponents);
-				}
-				else if (this.selectedFormat == "SuperGraph") {
-					this.clearComponents(this.currentSingleSuperGraphComponents);
-				}
+			if (this.selectedFormat == "CCT") {
+				this.clearComponents(this.currentSingleCCTComponents);
 			}
-			else if (this.selectedMode == "Single") {
-				if (this.selectedFormat == "CCT") {
-					this.clearComponents(this.currentSingleCCTComponents);
-				}
-				else if (this.selectedFormat == "SuperGraph") {
-					this.clearComponents(this.currentSingleSuperGraphComponents);
-				}
+			else if (this.selectedFormat == "SuperGraph") {
+				this.clearComponents(this.currentSingleSuperGraphComponents);
 			}
 		},
 
 		clearLocal() {
-			if (this.selectedMode == "Ensemble") {
-				if (this.selectedFormat == "CCT") {
-					this.clearComponents(this.currentEnsembleSuperGraphComponents);
-				}
-				else if (this.selectedFormat == "SuperGraph") {
-					this.clearComponents(this.currentEnsembleCCTComponents);
-				}
+			if (this.selectedFormat == "CCT") {
+				this.clearComponents(this.currentSingleSuperGraphComponents);
 			}
-			else if (this.selectedMode == "Single") {
-				if (this.selectedFormat == "CCT") {
-					this.clearComponents(this.currentSingleSuperGraphComponents);
-				}
-				else if (this.selectedFormat == "SuperGraph") {
-					this.clearComponents(this.currentSingleCCTComponents);
-				}
+			else if (this.selectedFormat == "SuperGraph") {
+				this.clearComponents(this.currentSingleCCTComponents);
 			}
+
 		},
 
 		initComponents(componentList) {
-			console.log(componentList)
 			for (let i = 0; i < componentList.length; i++) {
 				componentList[i].init();
 			}
@@ -752,7 +731,7 @@ export default {
 		},
 
 		updateTargetColor() {
-			this.clearLocal();
+			this.clear();
 			this.init();
 			EventHandler.$emit("show_target_auxiliary", {
 			});

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 import tpl from "../../html/cct.html";
-import ColorMap from "./colormap";
+import ColorMap from "../supergraph/colormap";
 
 import * as d3 from "d3";
 import dagreD3 from "dagre-d3/dist/dagre-d3";
@@ -119,7 +119,13 @@ export default {
 			this.g.nodes().forEach(function (v) {
 				let node = self.g.node(v);
 				if (node != undefined) {
-					let color = self.$store.runtimeColor.getColor(node);
+					let color = '';
+					if(self.$store.selectedMetric == 'Inclusive'){
+						color = self.$store.runtimeColor.getColor(node, 'time (inc)');
+					}
+					else if(self.$store.selectedMetric == 'Exclusive'){
+						color = self.$store.runtimeColor.getColor(node, 'time');
+					}
 					node.style = "fill:" + color;
 					node.rx = node.ry = 4;
 					node.id = "cct-node";
@@ -150,7 +156,7 @@ export default {
 			var initialScale = 1;
 			this.svg.call(zoom.transform, d3.zoomIdentity.translate((this.svg.attr("width") - this.g.graph().width * initialScale) / 2, 20).scale(initialScale));
 
-			this.$refs.ColorMap.init();
+			this.$refs.ColorMap.init(this.$store.runtimeColor);
 		},
 
 		clear() {

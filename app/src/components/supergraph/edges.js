@@ -199,8 +199,7 @@ export default {
 		},
 
 		clear() {
-			this.edges.selectAll(".edge-ensemble").remove();
-			this.edges.selectAll(".edge-target").remove();
+			this.edges.selectAll(".edge").remove();
 			this.edges.selectAll(".edgelabel").remove();
 			this.edges.selectAll(".edgelabelText").remove();
 		}

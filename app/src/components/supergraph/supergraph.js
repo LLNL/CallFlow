@@ -150,7 +150,6 @@ export default {
 			this.$refs.EnsembleEdges.clear();
 			this.$refs.MiniHistograms.clear();
 			this.$refs.EnsembleColorMap.clear();
-			this.$refs.EnsembleColorMap.clearMetric();
 		},
 
 		render(data) {

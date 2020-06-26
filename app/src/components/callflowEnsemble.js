@@ -104,7 +104,6 @@ export default {
 		compareModes: ["MEAN_DIFF", "RANK_DIFF"],
 		selectedCompareMode: "MEAN_DIFF",
 		selectedOutlierBand: 4,
-		defaultCallSite: "<program root>",
 		modes: ["Ensemble", "Single"],
 		selectedMode: "Ensemble",
 		// Presentation mode variables
@@ -458,6 +457,7 @@ export default {
 		},
 
 		setupColors() {
+			console.log("here")
 			// Create runtime color object.
 			this.$store.runtimeColor = new Color();
 			this.runtimeColorMap = this.$store.runtimeColor.getAllColors();
@@ -467,6 +467,7 @@ export default {
 			this.$store.distributionColor = new Color();
 			this.distributionColorMap = this.$store.distributionColor.getAllColors();
 			this.setDistributionColorScale();
+			this.selectedTargetColor = "Green";
 			this.$store.distributionColor.target = this.targetColorMap[this.selectedTargetColor];
 			this.$store.distributionColor.ensemble = "#C0C0C0";
 			this.$store.distributionColor.compare = "#043060";

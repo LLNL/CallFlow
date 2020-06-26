@@ -10,8 +10,8 @@
 		</v-toolbar-side-icon>
 		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
 		<v-flex xs3 class="ma-2">
-			<v-select label="Select a run (Sorted by inclusive runtime)" :items="datasets"
-				v-if="selectedFormat == 'SuperGraph'" v-model="selectedTargetDataset"
+			<v-select label="Select a run (Sorted by inclusive runtime)" :items="datasets" 
+				v-model="selectedTargetDataset"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateTargetDataset()">
 				<template slot="selection" slot-scope="{item}">
 					{{ datasets.indexOf(item) + 1}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
@@ -23,7 +23,6 @@
 			</v-select>
 		</v-flex>
 		<v-spacer></v-spacer>
-
 		<v-flex xs2 class="ma-1">
 			<v-select label="Graph to visualize" :items="formats" v-model="selectedFormat"
 				:menu-props="{ maxHeight: '400' }" box v-on:change="updateFormat()">

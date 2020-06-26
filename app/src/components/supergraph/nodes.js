@@ -172,13 +172,13 @@ export default {
 		},
 
 		rectangle() {
-			this.nodesSVG = this.containerG.selectAll(".ensemble-callsite")
+			this.nodesSVG = this.containerG.selectAll(".callsite")
 				.data(this.graph.nodes)
 				.enter()
 				.append("g")
 				.attrs({
-					"class": "ensemble-callsite",
-					"id": (d) => "ensemble-callsite-" + d.client_idx,
+					"class": "callsite",
+					"id": (d) => "callsite-" + d.client_idx,
 					"transform": (d) => `translate(${d.x},${d.y + this.$parent.ySpacing})`,
 					"opacity": 1,
 				});
@@ -203,7 +203,7 @@ export default {
 		},
 
 		click(node) {
-			let nodeSVG = this.containerG.select("#ensemble-callsite-" + node.client_idx);
+			let nodeSVG = this.containerG.select("#callsite-" + node.client_idx);
 
 			if (!this.drawGuidesMap[node.id]) {
 				this.$refs.Guides.visualize(node, "permanent", nodeSVG);
@@ -268,7 +268,7 @@ export default {
 			this.nodesSVG
 				.append("path")
 				.attrs({
-					"class": "target-path",
+					"class": "path",
 					"d": (d) => {
 						if (d.type == "intermediate") {
 							return "m" + 0 + " " + 0
@@ -305,7 +305,7 @@ export default {
 			this.nodesSVG
 				.append("path")
 				.attrs({
-					"class": "ensemble-path",
+					"class": "path",
 					"d": (d) => {
 						if (d.type == "intermediate") {
 							return "m" + 0 + " " + 0
@@ -334,7 +334,7 @@ export default {
 				})
 				.style("stroke-opacity", "0.0");
 
-			this.nodesSVG.selectAll(".ensemble-path")
+			this.nodesSVG.selectAll(".path")
 				.data(this.graph.nodes)
 				.transition()
 				.duration(this.transitionDuration)
@@ -347,6 +347,7 @@ export default {
 				.append("text")
 				.data(this.graph.nodes)
 				.attrs({
+					"class": 'callsite-text',
 					"dy": "0.35em",
 					"transform": "rotate(90)",
 					"x": "5",
@@ -354,7 +355,7 @@ export default {
 				})
 				.style("opacity", 1)
 				.style("fill", d => {
-					if (this.$store.selectedMode == "Ensemble"){
+					if (this.$store.encoding == "MEAN_GRADIENTS"){
 						return '#000'
 					}
 					let rgbArray = null
@@ -401,7 +402,9 @@ export default {
 		},
 
 		clear() {
-			d3.selectAll(".ensemble-callsite").remove();
+			d3.selectAll(".callsite").remove();
+			d3.selectAll('.callsite-text').remove();
+			d3.selectAll('.path').remove();
 			d3.selectAll(".targetLines").remove();
 			this.clearEncoding();
 			this.clearTargetPath();
