@@ -86,15 +86,24 @@ export default {
 						}
 					},
 					"stroke": (d) => {
+						let attr = ''
 						let runtimeColor = this.$store.runtimeColor.intermediate;
+						if (this.$store.selectedMetric == 'Inclusive') {
+							attr = 'time (inc)'
+						}
+						else {
+							attr = 'time'
+						} 
+						
 						if (d.type == "component-node") {
 							if (this.$store.callsites[this.$store.selectedTargetDataset][d.id] != undefined) {
-								runtimeColor = d3.rgb(this.$store.runtimeColor.getColor(d));
+								runtimeColor = d3.rgb(this.$store.runtimeColor.getColor(d, attr	));
 							}
 						}
 						else if (d.type == "super-node") {
+
 							if (this.$store.modules[this.$store.selectedTargetDataset][d.id] != undefined) {
-								runtimeColor = d3.rgb(this.$store.runtimeColor.getColor(d));
+								runtimeColor = d3.rgb(this.$store.runtimeColor.getColor(d, attr));
 							}
 						}
 						return runtimeColor;
@@ -131,12 +140,8 @@ export default {
 				});
 		},
 
-		//Gradients
-		clearGradients() {
-			this.svg.selectAll(".mean-gradient").remove();
-		},
-
 		clear() {
+			this.containerG.selectAll(".mean-gradient").remove();
 		},
 	}
 };

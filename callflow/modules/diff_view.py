@@ -8,13 +8,18 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+#------------------------------------------------------------------------------
+# CallFlow imports
+import callflow
+LOGGER = callflow.get_logger(__name__)
+
 
 #------------------------------------------------------------------------------
 class DiffView:
     def __init__(self, state, dataset1, dataset2, col):
         self.state = state
-        self.df1 = self.state.new_gf.df.loc[self.state.df["dataset"] == dataset1]
-        self.df2 = self.state.new_gf.df.loc[self.state.df["dataset"] == dataset2]
+        self.df1 = self.state.gf.df.loc[self.state.gf.df["dataset"] == dataset1]
+        self.df2 = self.state.gf.df.loc[self.state.gf.df["dataset"] == dataset2]
 
         self.col = col
         self.dataset1 = dataset1
@@ -29,7 +34,7 @@ class DiffView:
 
     def run(self):
         results = []
-        nodes = self.state.df["module"].unique()
+        nodes = self.state.gf.df["module"].unique()
 
         for node in nodes:
             results.append(self.calculate_diff(node))
@@ -134,7 +139,7 @@ class DiffView:
 
         mean_diff = self.mean_difference(module)
 
-        LOGGER.debug("Mean differences", mean_diff)
+        LOGGER.debug(f"Mean differences {mean_diff}")
 
         dist_list = np.sort(diff).tolist()
 

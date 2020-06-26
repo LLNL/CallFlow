@@ -5,6 +5,7 @@
  */
 import * as d3 from "d3";
 import * as utils from "../../utils";
+import { color } from "dagre-d3/dist/dagre-d3";
 
 export default {
 	template: "<g :id=\"id\"></g>",
@@ -19,6 +20,7 @@ export default {
 
 	methods: {
 		init(nodes, containerG, data) {
+			console.log(data)
 			this.nodes = nodes;
 			this.containerG = containerG;
 			this.data = data;
@@ -69,8 +71,9 @@ export default {
 		},
 
 		colorScale() {
-			this.$store.meanDiffColor.setColorScale(this.mean_diff_min, this.mean_diff_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
-			this.$parent.$parent.$refs.EnsembleColorMap.updateWithMinMax("meanDiff", this.mean_diff_min, this.mean_diff_max);
+			this.$store.diffColor.setColorScale("MeanDiff", this.mean_diff_min, this.mean_diff_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
+			console.log(this.$store.diffColor)
+			this.$parent.$parent.$refs.EnsembleColorMap.update("MeanDiff", this.$store.diffColor, this.mean_diff_min, this.mean_diff_max);
 		},
 
 		visualize() {
@@ -93,7 +96,7 @@ export default {
 					return 1;
 				})
 				.style("fill", (d, i) => {
-					let color = d3.rgb(this.$store.meanDiffColor.getColorByValue((this.meanDiff[d.module])));
+					let color = d3.rgb(this.$store.diffColor.getColorByValue((this.meanDiff[d.module])));
 					return color;
 				});
 		},

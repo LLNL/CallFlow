@@ -43,7 +43,6 @@ export default {
 		process(node) {
 			this.gradients[node.id] = utils.getGradients(this.$store, node);
 
-
 			if (this.gradients[node.id]["dataset"] != undefined) {
 				let datasetPositionMap = this.gradients[node.id]["dataset"]["position"];
 

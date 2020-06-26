@@ -68,11 +68,7 @@
 						persistent-hint v-on:change="updateScale()">
 					</v-select>
 				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
-					<v-select label="Bin by attribute" :items="props" v-model="selectedProp"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateProp()">
-					</v-select>
-				</v-flex>
+
 
 				<!-- --------------------------- Encoding ----------------------------------->
 				<v-flex xs12 class="ma-1">

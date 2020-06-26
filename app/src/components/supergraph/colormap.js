@@ -7,8 +7,7 @@ import * as d3 from "d3";
 import "d3-selection-multi";
 import * as utils from "../utils";
 import EventHandler from "../EventHandler";
-import { render } from "dagre-d3";
-import { color } from "dagre-d3/dist/dagre-d3";
+
 
 export default {
 	template: "<g :id=\"id\"></g>",
@@ -38,10 +37,10 @@ export default {
 	},
 
 	methods: {
-		init(colorScale) {
-			this.colorScale = colorScale
-			this.colorMin = colorScale.colorMin;
-			this.colorMax = colorScale.colorMax;
+		init(color) {
+			this.color = color
+			this.colorMin = color.getScale().domain()[0];
+			this.colorMax = color.getScale().domain()[1];
 
 			this.containerWidth = this.$store.viewWidth / 2;
 			this.containerHeight = this.$store.viewHeight - this.$parent.margin.top - this.$parent.margin.bottom;
@@ -49,7 +48,7 @@ export default {
 			this.svg = d3.select("#" + this.$parent.id)
 				.append("g")
 				.attrs({
-					"id": "dist-colormap",
+					"id": "Colormap",
 				});
 			this.render()
 		},
@@ -72,28 +71,28 @@ export default {
 
 		_color_map() {
 			this.clearColorMap();
-			let text = ""
-			let offsetCount = 1
+			let text = "";
+			let yOffsetCount = 1;
 
-			if (this.colorScale.type == "Exclusive") {
+			if (this.color.type == "Exclusive") {
 				text = "Exc. Runtime colormap";
 			}
-			else if (this.colorScale.type == "Inclusive") {
+			else if (this.color.type == "Inclusive") {
 				text = "Inc. Runtime colormap";
 			}
-			else if (this.colorScale.type == "MeanGradients") {
+			else if (this.color.type == "MeanGradients") {
 				text = "Distribution colormap";
-				offsetCount = 2
+				yOffsetCount = 2
 			}
-			else if (this.colorScale.type == "MeanDiff") {
+			else if (this.color.type == "MeanDiff") {
 				text = "Mean Difference colormap";
-				offsetCount = 2
+				yOffsetCount = 2
 			}
-			else if (this.colorScale.type == "RankDiff") {
+			else if (this.color.type == "RankDiff") {
 				text = "Rank Difference colormap";
-				offsetCount = 2
+				yOffsetCount = 2
 			}
-			this.drawColorMap(text, this.containerWidth - this.padding.right, this.containerHeight - this.padding.bottom * offsetCount);
+			this.drawColorMap(text, this.containerWidth - this.padding.right, this.containerHeight - this.padding.bottom * yOffsetCount);
 		},
 
 		drawLegend(text, x, y, color) {
@@ -102,7 +101,7 @@ export default {
 					"r": 10,
 					"cx": 10,
 					"cy": 10,
-					"class": "ensemble-circle-legend",
+					"class": "legend",
 					"transform": `translate(${x}, ${y})`,
 					"fill": color
 				});
@@ -111,7 +110,7 @@ export default {
 				.attrs({
 					"x": 30,
 					"y": 15,
-					"class": "ensemble-circle-legend-text",
+					"class": "legend-text",
 					"transform": `translate(${x}, ${y})`,
 				})
 				.text(text)
@@ -121,16 +120,17 @@ export default {
 
 		drawColorMap(text, x, y) {
 			let splits = this.$store.selectedColorPoint;
+			let dcolor = (this.colorMax - this.colorMin) / (splits - 1)
 			for (let i = 0; i < splits; i += 1) {
-				let splitColor = this.colorMin + ((i * this.colorMax) / (splits));
+				let splitColor = this.colorMin + dcolor * (splits - 1 - i);
 				this.svg.append("rect")
 					.attrs({
 						"width": this.width / splits,
 						"height": this.height,
-						"x": i * (this.width / splits),
-						"class": "dist-colormap-rect-metric",
+						"x": (splits- i - 1) * (this.width / splits),
+						"class": "colormap",
 						"transform": `translate(${x}, ${y})`,
-						"fill": this.colorScale.getColorByValue(splitColor)
+						"fill": this.color.getColorByValue(splitColor)
 					});
 			}
 
@@ -140,9 +140,9 @@ export default {
 				.attrs({
 					"dy": ".35em",
 					"y": 10,
-					"x": -125,
+					"x": -165,
 					"text-anchor": "middle",
-					"class": "dist-colormap-text-metric",
+					"class": "colormap-text",
 					"transform": `translate(${x}, ${y})`,
 				})
 				.text(text);
@@ -156,7 +156,7 @@ export default {
 					"text-anchor": "middle",
 					"y": 10,
 					"x": -40,
-					"class": "dist-colormap-text-metric",
+					"class": "colormap-text",
 					"transform": `translate(${x}, ${y})`,
 				})
 				.text(utils.formatRuntimeWithUnits(this.colorMin));
@@ -169,25 +169,21 @@ export default {
 					"text-anchor": "middle",
 					"y": 10,
 					"x": 40,
-					"class": "dist-colormap-text-metric",
+					"class": "colormap-text",
 					"transform": `translate(${x + this.width}, ${y})`,
 				})
 				.text(utils.formatRuntimeWithUnits(this.colorMax));
 		},
 
 		clearColorMap() {
-			d3.selectAll(".dist-colormap").remove();
+			d3.selectAll("#colormap").remove();
 		},
 
 		clear() {
-			d3.selectAll(".dist-colormap-text").remove();
-			d3.selectAll(".dist-colormap-rect").remove();
+			d3.selectAll(".colormap-text").remove();
+			d3.selectAll(".colormap").remove();
 		},
 
-		clearMetric() {
-			d3.selectAll(".dist-colormap-text-metric").remove();
-			d3.selectAll(".dist-colormap-rect-metric").remove();
-		},
 
 		clearTargetLegends() {
 			d3.selectAll(".target-circle-legend").remove();
@@ -195,18 +191,19 @@ export default {
 		},
 
 		clearEnsembleLegends() {
-			d3.selectAll(".ensemble-circle-legend").remove();
-			d3.selectAll(".ensemble-circle-legend-text").remove();
+			d3.selectAll(".legend").remove();
+			d3.selectAll(".legend-text").remove();
 		},
 
-		update(mode, min, max) {
+		update(mode, color, min, max) {
 			this.clear();
 			this.colorMin = min;
 			this.colorMax = max;
-			if (mode == "mean-difference" || mode == "rank-difference") {
+			if (mode == "MeanDiff" || mode == "RankDiff") {
 				this.colorMin = -1 * Math.max(Math.abs(min), Math.abs(max));
 				this.colorMax = 1 * Math.max(Math.abs(min), Math.abs(max));
 			}
+			this.color = color
 			this.render()
 		}
 	}

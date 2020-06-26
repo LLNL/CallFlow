@@ -158,6 +158,7 @@ export default {
 		showTarget: false,
 		targetInfo: "Target Guides",
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
+		selectedCaseStudy: '',
 	}),
 
 	mounted() {
@@ -181,7 +182,7 @@ export default {
 			});
 		});
 
-		EventHandler.$on("show_target_auxiliary", (data) => {
+		EventHandler.$on("show_target_auxiliary", () => {
 			this.clearLocal();
 			this.init();
 		});
@@ -213,7 +214,6 @@ export default {
 			else if (this.selectedFormat == "CCT") {
 				this.init();
 			}
-
 		},
 
 		ensemble_callsite_data(data) {
@@ -325,6 +325,7 @@ export default {
 			this.$store.comparisonMode = this.comparisonMode;
 			this.$store.fontSize = 14;
 			this.$store.transitionDuration = 1000;
+			this.$store.encoding = 'MEAN'
 		},
 
 		setOtherData() {
@@ -336,9 +337,7 @@ export default {
 			if (this.$store.selectedMode == 'Single') {
 				this.$store.selectedProp = 'rank'
 			}
-			else {
-				this.$store.selectedProp = this.selectedProp;
-			}
+
 			this.$store.selectedScale = this.selectedScale;
 			this.$store.selectedCompareMode = this.selectedCompareMode;
 			this.$store.selectedIQRFactor = this.selectedIQRFactor;
@@ -401,16 +400,6 @@ export default {
 				this.$refs.SingleScatterplot,
 				this.$refs.CallsiteInformation,
 			];
-
-			this.currentEnsembleCCTComponents = [this.$refs.EnsembleCCT];
-			this.currentEnsembleSuperGraphComponents = [
-				this.$refs.SuperGraph,
-				this.$refs.EnsembleHistogram,
-				this.$refs.EnsembleScatterplot,
-				this.$refs.CallsiteCorrespondence,
-				this.$refs.ParameterProjection,
-				this.$refs.ModuleHierarchy,
-			];
 		},
 
 		// Set the min and max and assign color variables from Settings.
@@ -455,38 +444,11 @@ export default {
 			this.$store.runtimeColor.setColorScale(this.$store.selectedMetric, colorMin, colorMax, this.selectedRuntimeColorMap, this.selectedColorPoint);
 		},
 
-		setDistributionColorScale() {
-			let hist_min = 0;
-			let hist_max = 0;
-			for (let module in this.$store.modules["ensemble"]) {
-				let node = this.$store.modules["ensemble"][module]
-				// if (node.type == "super-node") {
-				hist_min = Math.min(hist_min, node[this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
-				hist_max = Math.max(hist_max, node[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
-				// }
-				// else if (node.type == "component-node") {
-				// hist_min = Math.min(hist_min, this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
-				// hist_max = Math.max(hist_max, this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
-				// }
-			}
-			this.$store.distributionColor.setColorScale("MeanGradients", hist_min, hist_max, this.selectedDistributionColorMap, this.selectedColorPoint);
-		},
-
 		setupColors() {
 			// Create color object.
 			this.$store.runtimeColor = new Color();
 			this.runtimeColorMap = this.$store.runtimeColor.getAllColors();
 			this.setRuntimeColorScale()
-
-			if (this.selectedMode == "Ensemble") {
-				this.$store.distributionColor = new Color();
-				this.distributionColorMap = this.$store.distributionColor.getAllColors();
-				this.setDistributionColorScale();
-				this.$store.distributionColor.target = this.selectedTargetColor;
-				this.$store.distributionColor.ensemble = "#C0C0C0";
-				this.$store.distributionColor.compare = "#043060";
-			}
-
 
 			// Set properties into store.
 			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap;
@@ -496,12 +458,10 @@ export default {
 			this.selectedTargetColor = this.targetColorMap[this.selectedTargetColorText];
 			this.targetColors = Object.keys(this.targetColorMap);
 
-
 			this.$store.runtimeColor.intermediate = "#d9d9d9";
 			this.$store.runtimeColor.highlight = "#C0C0C0";
 			this.$store.runtimeColor.textColor = "#3a3a3a";
 			this.$store.runtimeColor.edgeStrokeColor = "#888888";
-
 		},
 
 		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.

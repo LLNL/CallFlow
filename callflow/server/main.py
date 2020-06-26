@@ -397,7 +397,7 @@ class CallFlowServer:
             :return: Gradients in some JSON format.
             """
             LOGGER.debug("[Socket request] compare_supergraph {data}")
-            result = self.callflow.request(
+            result = self.callflow.request_ensemble(
                 {
                     "name": "compare",
                     "targetDataset": data["targetDataset"],

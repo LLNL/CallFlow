@@ -13,6 +13,8 @@ callflow/unused/*
 app/node_modules*
 app/src/unused/*
 
+designs/*
+
 videos/*
 # ------------------------------------------------------------------------------
 # Editor hidden directories

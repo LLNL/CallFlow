@@ -48,7 +48,7 @@ export default {
 		sankeyWidth: 0,
 		sankeyHeight: 0
 	}),
-
+	
 	mounted() {
 		this.id = "ensemble-supergraph-overview";
 		let self = this;

@@ -101,8 +101,8 @@ export default {
 		initLoad: true,
 		comparisonMode: false,
 		selectedCompareDataset: null,
-		compareModes: ["mean-diff", "rank-diff"],
-		selectedCompareMode: "mean-diff",
+		compareModes: ["MEAN_DIFF", "RANK_DIFF"],
+		selectedCompareMode: "MEAN_DIFF",
 		selectedOutlierBand: 4,
 		defaultCallSite: "<program root>",
 		modes: ["Ensemble", "Single"],
@@ -144,11 +144,11 @@ export default {
 			"Red": "#A90400"
 		},
 		targetColors: ["Green", "Blue", "Brown"],
-		selectedTargetColor: "",
-		selectedTargetColorText: "Green",
+		selectedTargetColor: "Green",
 		showTarget: false,
 		targetInfo: "Target Guides",
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
+		selectedCaseStudy: ''
 	}),
 
 	mounted() {
@@ -316,6 +316,8 @@ export default {
 			this.$store.comparisonMode = this.comparisonMode;
 			this.$store.fontSize = 14;
 			this.$store.transitionDuration = 1000;
+			this.$store.showTarget = true;
+			this.$store.encoding = "MEAN_GRADIENTS";
 		},
 
 		setOtherData() {
@@ -456,20 +458,21 @@ export default {
 		},
 
 		setupColors() {
-			// Create color object.
+			// Create runtime color object.
 			this.$store.runtimeColor = new Color();
 			this.runtimeColorMap = this.$store.runtimeColor.getAllColors();
 			this.setRuntimeColorScale()
 
-			if (this.selectedMode == "Ensemble") {
-				this.$store.distributionColor = new Color();
-				this.distributionColorMap = this.$store.distributionColor.getAllColors();
-				this.setDistributionColorScale();
-				this.$store.distributionColor.target = this.selectedTargetColor;
-				this.$store.distributionColor.ensemble = "#C0C0C0";
-				this.$store.distributionColor.compare = "#043060";
-			}
+			// Create distribution color object
+			this.$store.distributionColor = new Color();
+			this.distributionColorMap = this.$store.distributionColor.getAllColors();
+			this.setDistributionColorScale();
+			this.$store.distributionColor.target = this.targetColorMap[this.selectedTargetColor];
+			this.$store.distributionColor.ensemble = "#C0C0C0";
+			this.$store.distributionColor.compare = "#043060";
 
+			// Create difference color object
+			this.$store.diffColor = new Color();
 
 			// Set properties into store.
 			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap;
@@ -724,6 +727,7 @@ export default {
 			this.summaryChip = "Diff SuperGraph";
 			this.$store.selectedCompareDataset = this.selectedCompareDataset;
 			this.$store.compareAnalysisMode = true;
+			this.$store.encoding = this.selectedCompareMode;
 			this.$socket.emit("compare", {
 				targetDataset: this.$store.selectedTargetDataset,
 				compareDataset: this.$store.selectedCompareDataset,

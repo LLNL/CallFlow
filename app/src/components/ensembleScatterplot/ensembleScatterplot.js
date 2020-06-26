@@ -522,6 +522,7 @@ export default {
 							return this.xScale(this.xtargetArray[i].val) + 3 * this.padding.left;
 						},
 						"cy": (d, i) => {
+							console.log(this.$store.distributionColor.target)
 							return this.yScale(self.ytargetArray[i].val);
 						}
 					})

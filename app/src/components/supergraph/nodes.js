@@ -48,34 +48,32 @@ export default {
 		intermediateColor: "#d9d9d9",
 		drawGuidesMap: {}
 	}),
-
 	sockets: {
+		// Move this to mean diff later.
 		compare(data) {
 			console.log("[Comparison] Data:", data);
-			this.clearGradients();
+			this.clearEncoding('MEAN_GRADIENTS');
 			// this.clearZeroLine()
 			d3.selectAll(".target-path").remove();
 
-			this.$refs.TargetLine.clearAll();
+			// Clear target lines. 
+			if(this.$store.showTarget){
+				this.$refs.TargetLine.clear();
+			}
 			d3.selectAll(".histogram-bar-target").remove();
 			d3.selectAll("#ensemble-edge-target").remove();
 
 			// remove target legend
-			d3.selectAll(".target-circle-legend").remove();
-			d3.selectAll(".target-circle-legend-text").remove();
-			// remove ensemble legend
-			d3.selectAll(".ensemble-circle-legend").remove();
-			d3.selectAll(".ensemble-circle-legend-text").remove();
+			d3.selectAll(".legend").remove();
+			d3.selectAll(".legend-text").remove();
+			// // remove ensemble legend
+			// d3.selectAll(".ensemble-circle-legend").remove();
+			// d3.selectAll(".ensemble-circle-legend-text").remove();
 
 			// remove colormap container
-			d3.selectAll(".dist-colormap").remove();
+			d3.selectAll(".colormap").remove();
 
-			if (this.$store.selectedCompareMode == "rank-diff") {
-				this.$refs.RankDiff.init(this.graph.nodes, this.containerG, data);
-			}
-			else if (this.$store.selectedCompareMode == "mean-diff") {
-				this.$refs.MeanDiff.init(this.graph.nodes, this.containerG, data);
-			}
+			this.setEncoding(this.$store.encoding, data)
 		}
 	},
 	mounted() {
@@ -124,25 +122,7 @@ export default {
 			this.rectangle();
 			this.postVis();
 
-			if (this.$store.selectedMode == "Ensemble") {
-				this.$store.mode = "MEAN_GRADIENTS";
-			}
-			else if (this.$store.selectedMode == "Single") {
-				this.$store.mode = "MEAN";
-			}
-
-			if (this.$store.mode == "MEAN_GRADIENTS") {
-				this.$refs.MeanGradients.init(this.graph.nodes, this.containerG);
-			}
-			else if (this.$store.mode == "MEAN") {
-				this.$refs.Mean.init(this.graph.nodes, this.containerG);
-			}
-			else if (this.$store.mode == "MEAN_DIFF") {
-				console.log("TODO");
-			}
-			else if (this.$store.mode == "RANK_DIFF") {
-				console.log("TODO");
-			}
+			this.setEncoding(this.$store.encoding);
 
 			this.ensemblePath();
 			this.text();
@@ -174,6 +154,21 @@ export default {
 
 		clearRectangle() {
 			d3.selectAll(".ensemble-callsite").remove();
+		},
+
+		setEncoding(encoding, data) {
+			if (encoding == "MEAN") {
+				this.$refs.Mean.init(this.graph.nodes, this.containerG);
+			}
+ 			else if (encoding == "MEAN_GRADIENTS") {
+				this.$refs.MeanGradients.init(this.graph.nodes, this.containerG);
+			}
+			else if (encoding == "MEAN_DIFF") {
+				this.$refs.MeanDiff.init(this.graph.nodes, this.containerG, data);
+			}
+			else if (encoding == "RANK_DIFF") {
+				this.$refs.RankDiff.init(this.graph.nodes, this.containerG, data);
+			}
 		},
 
 		rectangle() {
@@ -253,15 +248,19 @@ export default {
 
 		mouseover(node) {
 			// this.$refs.ToolTip.visualize(self.graph, node)
-			this.$refs.Guides.visualize(node, "temporary");
+			if(this.$store.selectedMode == "Ensemble"){
+				this.$refs.Guides.visualize(node, "temporary");
+			}
 		},
 
 		mouseout(node) {
 			// this.$refs.ToolTip.clear()
-			this.$refs.Guides.clear(node, "temporary");
-			if (this.permanentGuides == false) {
-				d3.selectAll(".ensemble-edge")
-					.style("opacity", 1.0);
+			if(this.$store.selectedMode == "Ensemble"){
+				this.$refs.Guides.clear(node, "temporary");
+				if (this.permanentGuides == false) {
+					d3.selectAll(".ensemble-edge")
+						.style("opacity", 1.0);
+				}
 			}
 		},
 
@@ -389,17 +388,14 @@ export default {
 			d3.selectAll(".target-path").remove();
 		},
 
-		clearGradients() {
-			if (this.$store.mode == "mean-gradients") {
+		clearEncoding(encoding) {
+			if (encoding== "MEAN_GRADIENTS") {
 				this.$refs.MeanGradients.clear(this.graph.nodes, this.containerG);
 			}
-			else if (this.$store.mode == "mean") {
-				console.log("TODO");
-			}
-			else if (this.$store.mode == "mean-diff") {
+			else if (encoding == "MEAN_DIFF") {
 				this.$refs.MeanDiff.clear(this.graph.nodes, this.containerG);
 			}
-			else if (this.$store.mode == "rank-diff") {
+			else if (encoding== "RANK_DIFF") {
 				this.$refs.RankDiff.clear(this.graph.nodes, this.containerG);
 			}
 		},
@@ -407,9 +403,9 @@ export default {
 		clear() {
 			d3.selectAll(".ensemble-callsite").remove();
 			d3.selectAll(".targetLines").remove();
-			this.clearGradients();
+			this.clearEncoding();
 			this.clearTargetPath();
-			this.$refs.ToolTip.clear();
+			// this.$refs.ToolTip.clear();
 		},
 	}
 };

@@ -15,7 +15,7 @@ from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import (
     EnsembleAuxiliary,
     ParameterProjection,
-    FunctionList,
+    DiffView,
 )
 
 LOGGER = callflow.get_logger(__name__)

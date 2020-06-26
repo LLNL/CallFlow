@@ -52,11 +52,7 @@ export default {
 			}
 		},
 
-		clear(node) {
-			node.svg.selectAll(".targetLines").remove();
-		},
-
-		clearAll() {
+		clear() {
 			d3.selectAll(".targetLines").remove();
 		}
 	}
