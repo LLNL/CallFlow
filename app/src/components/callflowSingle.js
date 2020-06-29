@@ -199,7 +199,6 @@ export default {
 			this.setupStore(data);
 			this.setTargetDataset();
 			this.setComponentMap();
-
 			if (this.selectedFormat == "SuperGraph") {
 				this.$socket.emit("ensemble_callsite_data", {
 					datasets: this.$store.selectedDatasets,
@@ -248,6 +247,10 @@ export default {
 
 		// Feature: Sortby the datasets and show the time.
 		sortDatasetsByAttr(datasets, attr) {
+			if (datasets.length == 1) {
+				this.metricTimeMap[datasets[0]] = this.$store.maxIncTime[datasets[0]]
+				return datasets;
+			}
 			let ret = datasets.sort((a, b) => {
 				let x = 0, y = 0;
 				if (attr == "Inclusive") {

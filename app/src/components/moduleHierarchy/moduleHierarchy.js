@@ -158,7 +158,7 @@ export default {
 					ret.push(this.path_hierarchy[i]);
 				}
 				else {
-					console.log("TODO;");
+					console.log("TODO: ");
 				}
 			}
 			this.path_hierarchy = ret;

@@ -58,14 +58,6 @@ class SuperGraph(object):
             self.parameters = SuperGraph.read_parameters(self.dirname)
         self.auxiliary_data = SuperGraph.read_auxiliary_data(self.dirname)
 
-        # NOTE: I dont think we need this anymore. But keeping it just in case.
-        # with self.timer.phase(f"Creating the data maps."):
-        #     self.cct_df = self.gf.df[self.gf.df["name"].isin(self.gf.nxg.nodes())]
-        #     self.create_ensemble_maps()
-        #     for dataset in self.props["dataset_names"]:
-        #         self.create_target_maps(dataset)
-
-
     def create_gf(self):
         """Create a graphframe based on the mode.
         If mode is process, union operation is performed on the df and graph.

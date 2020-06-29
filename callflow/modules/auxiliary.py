@@ -34,6 +34,9 @@ class EnsembleAuxiliary:
         write=False,
     ):
         self.gf = gf
+        if 'rank' in self.gf.df.index.values and 'rank' in self.gf.df.columns:
+            self.gf.df.reset_index(drop=True, inplace=True)
+        
         self.MPIBinCount = MPIBinCount
         self.RunBinCount = RunBinCount
         self.timer = Timer()
@@ -41,6 +44,7 @@ class EnsembleAuxiliary:
         self.datasets = self.props["dataset_names"]
 
         self.df = self.select_rows(self.gf.df, self.datasets)
+        self.df = self.df.rename_axis([None, None])
 
         self.process = process
         self.write = write
@@ -115,7 +119,6 @@ class EnsembleAuxiliary:
             top100callsites = sort_xgroup_df.nlargest(50, "time (inc)")
             self.df = self.df[self.df["name"].isin(top100callsites.index.values)]
 
-        self.df.drop(["rank"], axis=1)
         self.module_name_group_df = self.df.groupby(["module", "name"])
         self.module_group_df = self.df.groupby(["module"])
         self.name_group_df = self.df.groupby(["name"])
@@ -343,7 +346,7 @@ class EnsembleAuxiliary:
                 time_inc = []
                 time = []
             else:
-                module_df = df.groupby(['module', df.index.get_level_values(1)]).mean()
+                module_df = df.groupby(['module', "rank"]).mean()
                 x_df = module_df.xs(name, level='module')
                 time_inc = x_df['time (inc)'].tolist()
                 time = x_df['time'].tolist()
@@ -410,7 +413,6 @@ class EnsembleAuxiliary:
             time_ensemble_exclusive_arr = np.array(ensemble_df["time"].tolist())
 
         elif prop == "rank":
-            ensemble_df.reset_index(drop=True, inplace=True)
             ensemble_prop = ensemble_df.groupby(["dataset", prop])[
                 ["time", "time (inc)"]
             ].mean()
@@ -456,11 +458,11 @@ class EnsembleAuxiliary:
             time_target_exclusive_arr = np.array(target_df["time"].tolist())
             
         elif prop == "rank":
-            ensemble_prop = ensemble_df.groupby(["dataset", ensemble_df.index.get_level_values(1)])[
+            ensemble_prop = ensemble_df.groupby(["dataset", "rank"])[
                 ["time", "time (inc)"]
             ].mean()
 
-            target_prop = target_df.groupby(["dataset", target_df.index.get_level_values(1)])[
+            target_prop = target_df.groupby(["dataset", "rank"])[
                 ["time", "time (inc)"]
             ].mean()
 

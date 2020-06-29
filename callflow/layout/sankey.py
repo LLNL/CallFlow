@@ -7,6 +7,7 @@
 import math
 import pandas as pd
 import networkx as nx
+import numpy as np
 
 # ------------------------------------------------------------------------------
 # CallFlow imports

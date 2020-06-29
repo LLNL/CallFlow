@@ -119,8 +119,9 @@ class GraphFrame (ht.GraphFrame):
         LOGGER.info(f"Creating graphframes: {name}")
         LOGGER.info(f"Data path: {config['data_path']}")
 
+        data_path = os.path.join(config["data_path"], config["paths"][name])
         if config["format"][name] == "hpctoolkit":
-            gf = ht.GraphFrame.from_hpctoolkit(config["data_path"])
+            gf = ht.GraphFrame.from_hpctoolkit(data_path)
 
         elif config["format"][name] == "caliper":
             data_path = os.path.join(config["data_path"], config["paths"][name])

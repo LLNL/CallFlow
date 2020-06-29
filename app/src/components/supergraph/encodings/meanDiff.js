@@ -20,7 +20,6 @@ export default {
 
 	methods: {
 		init(nodes, containerG, data) {
-			console.log(data)
 			this.nodes = nodes;
 			this.containerG = containerG;
 			this.data = data;
@@ -72,7 +71,6 @@ export default {
 
 		colorScale() {
 			this.$store.diffColor.setColorScale("MeanDiff", this.mean_diff_min, this.mean_diff_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
-			console.log(this.$store.diffColor)
 			this.$parent.$parent.$refs.EnsembleColorMap.update("MeanDiff", this.$store.diffColor, this.mean_diff_min, this.mean_diff_max);
 		},
 

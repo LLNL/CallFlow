@@ -20,7 +20,6 @@ export default {
 		data: [],
 		minimapXScale: null,
 		minimapYScale: null,
-		selectedColorBy: "Inclusive",
 		padding: {
 			top: 0, left: 0, right: 0, bottom: 10
 		},
