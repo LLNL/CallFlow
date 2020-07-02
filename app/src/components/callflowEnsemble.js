@@ -147,7 +147,6 @@ export default {
 		showTarget: false,
 		targetInfo: "Target Guides",
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
-		selectedCaseStudy: ''
 	}),
 
 	mounted() {
@@ -203,7 +202,6 @@ export default {
 			else if (this.selectedFormat == "CCT") {
 				this.init();
 			}
-
 		},
 
 		ensemble_callsite_data(data) {
@@ -325,8 +323,8 @@ export default {
 			this.$store.selectedMode = this.selectedMode;
 			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
-			if (this.$store.selectedMode == 'Single') {
-				this.$store.selectedProp = 'rank'
+			if (this.$store.selectedMode == "Single") {
+				this.$store.selectedProp = "rank";
 			}
 			else {
 				this.$store.selectedProp = this.selectedProp;
@@ -399,8 +397,8 @@ export default {
 
 		// Set the min and max and assign color variables from Settings.
 		setRuntimeColorScale() {
-			let colorMin = null
-			let colorMax = null
+			let colorMin = null;
+			let colorMax = null;
 			if (this.selectedMode == "Ensemble") {
 				if (this.selectedMetric == "Inclusive") {
 					colorMin = parseFloat(this.$store.minIncTime["ensemble"]);
@@ -443,7 +441,7 @@ export default {
 			let hist_min = 0;
 			let hist_max = 0;
 			for (let module in this.$store.modules["ensemble"]) {
-				let node = this.$store.modules["ensemble"][module]
+				let node = this.$store.modules["ensemble"][module];
 				// if (node.type == "super-node") {
 				hist_min = Math.min(hist_min, node[this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
 				hist_max = Math.max(hist_max, node[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
@@ -457,11 +455,10 @@ export default {
 		},
 
 		setupColors() {
-			console.log("here")
 			// Create runtime color object.
 			this.$store.runtimeColor = new Color();
 			this.runtimeColorMap = this.$store.runtimeColor.getAllColors();
-			this.setRuntimeColorScale()
+			this.setRuntimeColorScale();
 
 			// Create distribution color object
 			this.$store.distributionColor = new Color();
@@ -559,7 +556,6 @@ export default {
 		},
 
 		initComponents(componentList) {
-			console.log(componentList)
 			for (let i = 0; i < componentList.length; i++) {
 				componentList[i].init();
 			}

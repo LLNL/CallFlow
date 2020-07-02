@@ -243,10 +243,10 @@ export default {
 				.append("rect")
 				.attr("class", "single-histogram-bar single-target")
 				.attrs({
-					"x": (d, i) => { return this.xScale(this.xVals[i]) },
+					"x": (d, i) => { return this.xScale(this.xVals[i]); },
 					"y": (d, i) => { return this.yScale(d); },
 					"width": this.xScale.bandwidth(),
-					"height": (d) => { return Math.abs(this.yAxisHeight - this.yScale(d)) },
+					"height": (d) => { return Math.abs(this.yAxisHeight - this.yScale(d)); },
 					"fill": this.$store.runtimeColor.intermediate,
 					"opacity": 1,
 					"stroke-width": "0.2px",
@@ -289,7 +289,7 @@ export default {
 
 		/* Axis for the histogram */
 		xAxis() {
-			this.addxAxisLabel()
+			this.addxAxisLabel();
 			const xAxis = d3.axisBottom(this.xScale)
 				.ticks(10)
 				.tickFormat((d, i) => {

@@ -36,9 +36,9 @@ export default {
 					this.drawEdges("target");
 				}
 			}
-			else if(this.$store.selectedMode == 'Single') {
+			else if(this.$store.selectedMode == "Single") {
 				this.initEdges("single");
-				this.drawEdges("single")
+				this.drawEdges("single");
 			}
 
 		},
@@ -101,13 +101,13 @@ export default {
 			// }
 
 			return `M${Tx0},${Ty0
-				}C${Tx2},${Ty0
-				} ${Tx3},${Ty1
-				} ${Tx1},${Ty1
-				} ` + ` v ${rightMoveDown
-				}C${Bx3},${By1
-				} ${Bx2},${By0
-				} ${Bx0},${By0}`;
+			}C${Tx2},${Ty0
+			} ${Tx3},${Ty1
+			} ${Tx1},${Ty1
+			} ` + ` v ${rightMoveDown
+			}C${Bx3},${By1
+			} ${Bx2},${By0
+			} ${Bx0},${By0}`;
 		},
 
 		drawMiddlePath(d, linkHeight, edge_source_offset, edge_target_offset, dataset) {
@@ -136,13 +136,13 @@ export default {
 			let rightMoveDown = By1 - Ty1;
 
 			return `M${Tx0},${Ty0
-				}C${Tx2},${Ty0
-				} ${Tx3},${Ty1
-				} ${Tx1},${Ty1
-				} ` + ` v ${rightMoveDown
-				}C${Bx3},${By1
-				} ${Bx2},${By0
-				} ${Bx0},${By0}`;
+			}C${Tx2},${Ty0
+			} ${Tx3},${Ty1
+			} ${Tx1},${Ty1
+			} ` + ` v ${rightMoveDown
+			}C${Bx3},${By1
+			} ${Bx2},${By0
+			} ${Bx0},${By0}`;
 		},
 
 		drawEdges(dataset) {

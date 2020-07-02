@@ -17,7 +17,7 @@ import "material-design-icons-iconfont/dist/material-design-icons.css";
 
 import App from "./App";
 import SingleCallFlow from "./components/callflowSingle";
-import EnsembleCallFlow from './components/callflowEnsemble'
+import EnsembleCallFlow from "./components/callflowEnsemble";
 
 Vue.use(Vuex);
 const store = new Vuex.Store();
@@ -48,7 +48,6 @@ const router = new Router({
 	]
 });
 
-
 Vue.config.productionTip = false;
 Vue.use(BootstrapVue);
 Vue.use(socket);
@@ -56,13 +55,11 @@ Vue.use(Router);
 Vue.use(Vuetify);
 Vue.use(VueMaterial);
 
-
 /* eslint-disable no-new */
 new Vue({
 	store,
 	el: "#app",
 	router,
-	// refer https://github.com/vuejs/vue-router/issues/976 as to why this was commented out
 	components: { App },
 	template: "<App/>"
 });

@@ -35,7 +35,7 @@ export default {
 
 	methods: {
 		init(color) {
-			this.color = color
+			this.color = color;
 			this.colorMin = color.getScale().domain()[0];
 			this.colorMax = color.getScale().domain()[1];
 
@@ -47,21 +47,21 @@ export default {
 				.attrs({
 					"id": "Colormap",
 				});
-			this.render()
+			this.render();
 		},
 
 		render() {
-			this._legends()
-			this._color_map()
+			this._legends();
+			this._color_map();
 		},
 
 		_legends() {
 			this.clearLegends();
-			if (this.$store.showTarget && ! this.$store.comparisonMode && this.$store.selectedMode == 'Ensemble' && this.$store.selectedFormat == 'SuperGraph') {
-				this.drawLegend("Target run", this.containerWidth - this.padding.right, this.containerHeight - 4 * this.padding.bottom, this.$store.distributionColor.target)
+			if (this.$store.showTarget && ! this.$store.comparisonMode && this.$store.selectedMode == "Ensemble" && this.$store.selectedFormat == "SuperGraph") {
+				this.drawLegend("Target run", this.containerWidth - this.padding.right, this.containerHeight - 4 * this.padding.bottom, this.$store.distributionColor.target);
 			}
-			if (this.$store.selectedMode == 'Ensemble' && this.$store.selectedFormat == 'SuperGraph') {
-				this.drawLegend("Ensemble of runs", this.containerWidth - this.padding.right, this.containerHeight - 3 * this.padding.bottom, this.$store.distributionColor.ensemble)
+			if (this.$store.selectedMode == "Ensemble" && this.$store.selectedFormat == "SuperGraph") {
+				this.drawLegend("Ensemble of runs", this.containerWidth - this.padding.right, this.containerHeight - 3 * this.padding.bottom, this.$store.distributionColor.ensemble);
 			}
 		},
 
@@ -78,15 +78,15 @@ export default {
 			}
 			else if (this.color.type == "MeanGradients") {
 				text = "Distribution colormap";
-				yOffsetCount = 2
+				yOffsetCount = 2;
 			}
 			else if (this.color.type == "MeanDiff") {
 				text = "Mean Difference colormap";
-				yOffsetCount = 2
+				yOffsetCount = 2;
 			}
 			else if (this.color.type == "RankDiff") {
 				text = "Rank Difference colormap";
-				yOffsetCount = 2
+				yOffsetCount = 2;
 			}
 			this.drawColorMap(text, this.containerWidth - this.padding.right, this.containerHeight - this.padding.bottom * yOffsetCount);
 		},
@@ -116,7 +116,7 @@ export default {
 
 		drawColorMap(text, x, y) {
 			let splits = this.$store.selectedColorPoint;
-			let dcolor = (this.colorMax - this.colorMin) / (splits - 1)
+			let dcolor = (this.colorMax - this.colorMin) / (splits - 1);
 			for (let i = 0; i < splits; i += 1) {
 				let splitColor = this.colorMin + dcolor * (splits - 1 - i);
 				this.svg.append("rect")
@@ -199,8 +199,8 @@ export default {
 				this.colorMin = -1 * Math.max(Math.abs(min), Math.abs(max));
 				this.colorMax = 1 * Math.max(Math.abs(min), Math.abs(max));
 			}
-			this.color = color
-			this.render()
+			this.color = color;
+			this.render();
 		}
 	}
 };

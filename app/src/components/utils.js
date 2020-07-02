@@ -49,7 +49,7 @@ export function formatRuntimeWithExponent(val, min_exponent = 0) {
 		let split_ret_by_e = ret.toString().split("e");
 		exponent = parseInt(split_ret_by_e[1].split("+")[1]);
 		multiplier = parseInt(exponent) - min_exponent;
-		mantessa = parseFloat(split_ret_by_e[0]) //* (10 ** multiplier));
+		mantessa = parseFloat(split_ret_by_e[0]); //* (10 ** multiplier));
 	}
 	return [mantessa.toFixed(2), exponent, min_exponent];
 }

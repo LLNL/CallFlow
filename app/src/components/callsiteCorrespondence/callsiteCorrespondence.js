@@ -63,7 +63,7 @@ export default {
 		selectedOutlierDatasets: {},
 		showKNCCallsite: {},
 		showuKNCCallsite: {},
-		selectedMode: 'Single'
+		selectedMode: "Single"
 	}),
 	mounted() {
 		let self = this;

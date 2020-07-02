@@ -52,7 +52,7 @@ export default {
 		// Move this to mean diff later.
 		compare(data) {
 			console.log("[Comparison] Data:", data);
-			this.clearEncoding('MEAN_GRADIENTS');
+			this.clearEncoding("MEAN_GRADIENTS");
 			// this.clearZeroLine()
 			d3.selectAll(".target-path").remove();
 
@@ -73,7 +73,7 @@ export default {
 			// remove colormap container
 			d3.selectAll(".colormap").remove();
 
-			this.setEncoding(this.$store.encoding, data)
+			this.setEncoding(this.$store.encoding, data);
 		}
 	},
 	mounted() {
@@ -99,7 +99,7 @@ export default {
 						) + "," + (
 							d.y = Math.max(0, Math.min(this.$parent.height - d.dy, d3.event.y))
 						) + ")");
-					sankey.relayout();
+					this.$parent.sankey.relayout();
 					link.attr("d", path);
 				});
 
@@ -298,7 +298,7 @@ export default {
 				.transition()
 				.duration(this.transitionDuration)
 				.delay(this.transitionDuration / 3)
-				.style("fill-opacity", 1.0)
+				.style("fill-opacity", 1.0);
 		},
 
 		ensemblePath() {
@@ -339,7 +339,7 @@ export default {
 				.transition()
 				.duration(this.transitionDuration)
 				.delay(this.transitionDuration / 3)
-				.style("fill-opacity", 1.0)
+				.style("fill-opacity", 1.0);
 		},
 
 		text() {
@@ -347,7 +347,7 @@ export default {
 				.append("text")
 				.data(this.graph.nodes)
 				.attrs({
-					"class": 'callsite-text',
+					"class": "callsite-text",
 					"dy": "0.35em",
 					"transform": "rotate(90)",
 					"x": "5",
@@ -356,17 +356,17 @@ export default {
 				.style("opacity", 1)
 				.style("fill", d => {
 					if (this.$store.encoding == "MEAN_GRADIENTS"){
-						return '#000'
+						return "#000";
 					}
-					let rgbArray = null
+					let rgbArray = null;
 					if (this.$store.selectedMetric == "Inclusive"){
 						rgbArray = this.$store.runtimeColor.getColor(d, "time (inc)");
 					}
 					else if(this.$store.selectedMetric == "Exclusive"){
-						rgbArray = this.$store.runtimeColor.getColor(d, "time")
+						rgbArray = this.$store.runtimeColor.getColor(d, "time");
 					}
-					let hex = this.$store.runtimeColor.rgbArrayToHex(rgbArray)
-					return this.$store.runtimeColor.setContrast(hex)
+					let hex = this.$store.runtimeColor.rgbArrayToHex(rgbArray);
+					return this.$store.runtimeColor.setContrast(hex);
 				})
 				.text((d) => {
 					if (d.type != "intermediate") {
@@ -403,8 +403,8 @@ export default {
 
 		clear() {
 			d3.selectAll(".callsite").remove();
-			d3.selectAll('.callsite-text').remove();
-			d3.selectAll('.path').remove();
+			d3.selectAll(".callsite-text").remove();
+			d3.selectAll(".path").remove();
 			d3.selectAll(".targetLines").remove();
 			this.clearEncoding();
 			this.clearTargetPath();

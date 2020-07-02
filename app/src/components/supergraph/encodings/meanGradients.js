@@ -86,13 +86,13 @@ export default {
 						}
 					},
 					"stroke": (d) => {
-						let attr = ''
+						let attr = "";
 						let runtimeColor = this.$store.runtimeColor.intermediate;
-						if (this.$store.selectedMetric == 'Inclusive') {
-							attr = 'time (inc)'
+						if (this.$store.selectedMetric == "Inclusive") {
+							attr = "time (inc)";
 						}
 						else {
-							attr = 'time'
+							attr = "time";
 						} 
 						
 						if (d.type == "component-node") {
