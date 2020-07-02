@@ -81,7 +81,7 @@ class GraphFrame (ht.GraphFrame):
 
         # Hatchet requires node and rank to be indexes.
         # remove the set indexes to maintain consistency.
-        self.df = self.df.set_index(['node', 'rank'])
+        # self.df = self.df.set_index(['node', 'rank'])
         self.df = self.df.reset_index(drop=False)
 
 

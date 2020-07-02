@@ -69,6 +69,8 @@ class SuperGraph(object):
         elif self.mode == "render":
             self._create_for_render()
 
+        self.gf.df.reset_index(drop=False, inplace=True)
+
     # -------------------------------------------------------------------------
     def get_module_name(self, callsite):
         """

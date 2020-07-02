@@ -34,8 +34,8 @@ class EnsembleAuxiliary:
         write=False,
     ):
         self.gf = gf
-        if 'rank' in self.gf.df.index.values and 'rank' in self.gf.df.columns:
-            self.gf.df.reset_index(drop=True, inplace=True)
+        # if 'rank' in self.gf.df.index.values and 'rank' in self.gf.df.columns:
+        #     self.gf.df.reset_index(drop=True, inplace=True)
         
         self.MPIBinCount = MPIBinCount
         self.RunBinCount = RunBinCount
@@ -44,7 +44,7 @@ class EnsembleAuxiliary:
         self.datasets = self.props["dataset_names"]
 
         self.df = self.select_rows(self.gf.df, self.datasets)
-        self.df = self.df.rename_axis([None, None])
+        # self.df = self.df.rename_axis(['Node', 'Rank'])
 
         self.process = process
         self.write = write
@@ -413,7 +413,7 @@ class EnsembleAuxiliary:
             time_ensemble_exclusive_arr = np.array(ensemble_df["time"].tolist())
 
         elif prop == "rank":
-            ensemble_prop = ensemble_df.groupby(["dataset", prop])[
+            ensemble_prop = ensemble_df.groupby(["dataset", "rank"])[
                 ["time", "time (inc)"]
             ].mean()
             time_ensemble_inclusive_arr = np.array(ensemble_prop["time (inc)"])
