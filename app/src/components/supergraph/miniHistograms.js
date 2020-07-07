@@ -84,9 +84,9 @@ export default {
 				freq = data["ensemble"].y;
 			}
 			else if (type == "target" || type == "single") {
-				if(type == "target")
+				if (type == "target")
 					color = this.$store.distributionColor.target;
-				else if(type == "single")
+				else if (type == "single")
 					color = this.$store.runtimeColor.intermediate;
 				xVals = data["target"].x;
 				freq = data["target"].y;
@@ -130,13 +130,13 @@ export default {
 
 		render(data, node) {
 			let node_dict = this.nodes[this.nodeMap[node]];
-			if (this.$store.selectedMode == "Ensemble"){
+			if (this.$store.selectedMode == "Ensemble") {
 				this.histogram(data, node_dict, "ensemble");
 				if (this.$store.showTarget && this.$store.comparisonMode == false) {
 					this.histogram(data, node_dict, "target");
-				}	
+				}
 			}
-			else if(this.$store.selectedMode == "Single") {
+			else if (this.$store.selectedMode == "Single") {
 				this.histogram(data, node_dict, "single");
 			}
 		}

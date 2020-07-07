@@ -2,16 +2,17 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Library imports
 from scipy.stats import iqr
 import collections
 import numpy as np
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class BoxPlot:
     def __init__(self, df):
         self.q = {}
@@ -43,12 +44,12 @@ class BoxPlot:
         pass
 
     def quartiles_old(self, df, attr=""):
-        if(len(samples) == 1):
-            quartiles = [samples[0]]*5
+        if len(samples) == 1:
+            quartiles = [samples[0]] * 5
         else:
             median, median_indices = self.median(samples)
-            q1, q1_indices = self.median(samples[:median_indices[0]])
-            q3, q3_indices = self.median(samples[median_indices[-1] + 1:])
+            q1, q1_indices = self.median(samples[: median_indices[0]])
+            q3, q3_indices = self.median(samples[median_indices[-1] + 1 :])
 
             minimum = samples[0]
             maximum = samples[len(samples) - 1]

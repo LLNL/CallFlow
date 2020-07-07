@@ -124,23 +124,23 @@ export const renderingDataTemplate = () => {
 			},
 		},
 		renderers: {
-			focus: () => {},
-			lasso: () => {},
-			line: () => {},
-			point: () => {}
+			focus: () => { },
+			lasso: () => { },
+			line: () => { },
+			point: () => { }
 		},
 		event_handlers: {
 			wheel_sensitiveness: 0.05,
-			wheel: () => {},
-			left_down: () => {},
-			left_move: () => {},
-			left_up: () => {},
+			wheel: () => { },
+			left_down: () => { },
+			left_move: () => { },
+			left_up: () => { },
 			right_move_sensitiveness: 0.002,
-			right_move: () => {},
-			enter: () => {},
-			out: () => {},
-			click: () => {},
-			shift_left_up: () => {}
+			right_move: () => { },
+			enter: () => { },
+			out: () => { },
+			click: () => { },
+			shift_left_up: () => { }
 		}
 	};
 };

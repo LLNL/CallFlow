@@ -36,10 +36,14 @@ class SankeyLayout:
 
         self.runs = self.supergraph.gf.df["dataset"].unique()
 
-        LOGGER.info("Creating the Single SankeyLayout for {0}.".format(self.supergraph.tag))
+        LOGGER.info(
+            "Creating the Single SankeyLayout for {0}.".format(self.supergraph.tag)
+        )
 
         with self.timer.phase("Construct Graph"):
-            self.nxg = SankeyLayout._create_nxg_from_paths(self.supergraph.gf.df, self.path)
+            self.nxg = SankeyLayout._create_nxg_from_paths(
+                self.supergraph.gf.df, self.path
+            )
 
         with self.timer.phase("Add graph attributes"):
             self._add_node_attributes()
@@ -53,14 +57,23 @@ class SankeyLayout:
         """
         Adds node attributes from the dataframe using the _COLUMNS.
         """
-        ensemble_mapping = SankeyLayout._ensemble_map(df=self.supergraph.gf.df, nxg=self.nxg, columns=SankeyLayout._COLUMNS)
+        ensemble_mapping = SankeyLayout._ensemble_map(
+            df=self.supergraph.gf.df, nxg=self.nxg, columns=SankeyLayout._COLUMNS
+        )
         for idx, key in enumerate(ensemble_mapping):
             nx.set_node_attributes(self.nxg, name=key, values=ensemble_mapping[key])
 
         dataset_mapping = {}
         for run in self.runs:
-            dataset_mapping[run] = SankeyLayout._dataset_map(df=self.supergraph.gf.df, nxg=self.nxg, tag=run, columns=SankeyLayout._COLUMNS)
-            nx.set_node_attributes(self.nxg, name=self.supergraph.tag, values=dataset_mapping[run])
+            dataset_mapping[run] = SankeyLayout._dataset_map(
+                df=self.supergraph.gf.df,
+                nxg=self.nxg,
+                tag=run,
+                columns=SankeyLayout._COLUMNS,
+            )
+            nx.set_node_attributes(
+                self.nxg, name=self.supergraph.tag, values=dataset_mapping[run]
+            )
 
     # --------------------------------------------------------------------------
     # Edge attribute methods.
@@ -72,10 +85,14 @@ class SankeyLayout:
         nx.set_edge_attributes(self.nxg, name="weight", values=inclusive_flow)
 
         entry_functions_mapping = SankeyLayout.entry_functions(self.nxg)
-        nx.set_edge_attributes(self.nxg, name="entry_callsites", values=entry_functions_mapping)
+        nx.set_edge_attributes(
+            self.nxg, name="entry_callsites", values=entry_functions_mapping
+        )
 
         exit_functions_mapping = SankeyLayout.exit_functions(self.nxg)
-        nx.set_edge_attributes(self.nxg, name="exit_callsites", values=exit_functions_mapping)
+        nx.set_edge_attributes(
+            self.nxg, name="exit_callsites", values=exit_functions_mapping
+        )
 
     # --------------------------------------------------------------------------
     @staticmethod
@@ -114,8 +131,8 @@ class SankeyLayout:
         """
         assert isinstance(df, pd.DataFrame)
         assert path in df.columns
-        assert 'name' in df.columns
-        assert 'module' in df.columns
+        assert "name" in df.columns
+        assert "module" in df.columns
 
         # Get the grouped dataframes.
         paths_df = df.groupby(["name", path])
@@ -135,8 +152,12 @@ class SankeyLayout:
                     source = path_list[callsite_idx]
                     target = path_list[callsite_idx + 1]
 
-                    source_df = module_name_group_df.get_group((source["module"], source["callsite"]))
-                    target_df = module_name_group_df.get_group((target["module"], target["callsite"]))
+                    source_df = module_name_group_df.get_group(
+                        (source["module"], source["callsite"])
+                    )
+                    target_df = module_name_group_df.get_group(
+                        (target["module"], target["callsite"])
+                    )
 
                     has_caller_edge = nxg.has_edge(source["module"], target["module"])
                     has_callback_edge = nxg.has_edge(target["module"], source["module"])
@@ -169,12 +190,18 @@ class SankeyLayout:
                         )
                         nxg.add_node(source["module"], attr_dict=node_dict)
                         nxg.add_node(target["module"], attr_dict=node_dict)
-                        nxg.add_edge(source["module"], target["module"], attr_dict=[edge_dict])
+                        nxg.add_edge(
+                            source["module"], target["module"], attr_dict=[edge_dict]
+                        )
 
                     # Edge exists for source["module"] -> target["module"]
                     elif not has_cct_edge and not has_callback_edge:
-                        edge_data = nxg.get_edge_data(*(source["module"], target["module"]))
-                        nxg[source["module"]][target["module"]]["attr_dict"].append(edge_dict)
+                        edge_data = nxg.get_edge_data(
+                            *(source["module"], target["module"])
+                        )
+                        nxg[source["module"]][target["module"]]["attr_dict"].append(
+                            edge_dict
+                        )
 
                     # If edge is not in CCT. Add it.
                     if not has_cct_edge:
@@ -218,13 +245,17 @@ class SankeyLayout:
                 flag = [p["level"] == idx for p in dataMap[module]]
                 if np.any(np.array(flag)):
                     moduleMapper[module] += 1
-                    dataMap[module].append({
+                    dataMap[module].append(
+                        {
                             "callsite": callsite,
                             "module": module + "=" + callsite,
                             "level": idx,
-                        })
+                        }
+                    )
                 else:
-                    dataMap[module].append({"callsite": callsite, "module": module, "level": idx})
+                    dataMap[module].append(
+                        {"callsite": callsite, "module": module, "level": idx}
+                    )
             ret.append(dataMap[module][-1])
 
         return ret
@@ -259,14 +290,20 @@ class SankeyLayout:
             if node_dict["type"] == "component-node":
                 module = node_name.split("=")[0]
                 callsite = node_name.split("=")[1]
-                actual_time = SankeyLayout.callsite_time(group_df=module_name_group_df, module=module, callsite=callsite)
+                actual_time = SankeyLayout.callsite_time(
+                    group_df=module_name_group_df, module=module, callsite=callsite
+                )
                 time_inc = name_time_inc_map[(module, callsite)]
                 time_exc = name_time_exc_map[(module, callsite)]
 
             elif node_dict["type"] == "super-node":
                 module = node_name
                 callsite = module_callsite_map[module].tolist()
-                actual_time = SankeyLayout.module_time(group_df=module_name_group_df, module_callsite_map=module_callsite_map, module=module)
+                actual_time = SankeyLayout.module_time(
+                    group_df=module_name_group_df,
+                    module_callsite_map=module_callsite_map,
+                    module=module,
+                )
 
                 time_inc = module_time_inc_map[module]
                 time_exc = module_time_exc_map[module]
@@ -311,7 +348,7 @@ class SankeyLayout:
         # Unique modules in the target run
         target_modules = target_df["module"].unique()
 
-         # Group the dataframe in two ways.
+        # Group the dataframe in two ways.
         # 1. by module
         # 2. by module and callsite
         target_module_group_df = target_df.groupby(["module"])
@@ -321,8 +358,12 @@ class SankeyLayout:
         target_module_callsite_map = target_module_group_df["name"].unique().to_dict()
 
         # Inclusive time maps for the module level and callsite level.
-        target_module_time_inc_map = target_module_group_df["time (inc)"].max().to_dict()
-        target_name_time_inc_map = target_module_name_group_df["time (inc)"].max().to_dict()
+        target_module_time_inc_map = (
+            target_module_group_df["time (inc)"].max().to_dict()
+        )
+        target_name_time_inc_map = (
+            target_module_name_group_df["time (inc)"].max().to_dict()
+        )
 
         # Exclusive time maps for the module level and callsite level.
         target_module_time_exc_map = target_module_group_df["time"].max().to_dict()
@@ -335,14 +376,22 @@ class SankeyLayout:
                 if node_dict["type"] == "component-node":
                     module = node_name.split("=")[0]
                     callsite = node_name.split("=")[1]
-                    actual_time = SankeyLayout.callsite_time(group_df=target_module_group_df,module=module, callsite=callsite)
+                    actual_time = SankeyLayout.callsite_time(
+                        group_df=target_module_group_df,
+                        module=module,
+                        callsite=callsite,
+                    )
                     time_inc = target_name_time_inc_map[(module, callsite)]
                     time_exc = target_name_time_exc_map[(module, callsite)]
 
                 elif node_dict["type"] == "super-node":
                     module = node_name
                     callsite = target_module_callsite_map[module].tolist()
-                    actual_time = SankeyLayout.module_time(group_df=target_module_name_group_df,module_callsite_map=target_module_callsite_map, module=module)
+                    actual_time = SankeyLayout.module_time(
+                        group_df=target_module_name_group_df,
+                        module_callsite_map=target_module_callsite_map,
+                        module=module,
+                    )
 
                     time_inc = target_module_time_inc_map[module]
                     time_exc = target_module_time_exc_map[module]

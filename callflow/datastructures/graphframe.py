@@ -12,14 +12,13 @@ import networkx as nx
 # -----------------------------------------------------------------------------
 # CallFlow imports
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
-#------------------------------------------------------------------------------
-class GraphFrame (ht.GraphFrame):
+# ------------------------------------------------------------------------------
+class GraphFrame(ht.GraphFrame):
 
-    _FILENAMES = {'ht': 'hatchet_tree.txt',
-                 'df': 'df.csv',
-                 'nxg': 'nxg.json'}
+    _FILENAMES = {"ht": "hatchet_tree.txt", "df": "df.csv", "nxg": "nxg.json"}
 
     # ------------------------------------------------------------------------
     def __init__(self, graph=None, dataframe=None, exc_metrics=None, inc_metrics=None):
@@ -37,7 +36,6 @@ class GraphFrame (ht.GraphFrame):
         if graph:
             self.nxg = self.hatchet_graph_to_nxg(graph)
 
-
     # -------------------------------------------------------------------------
     def write(self, path, write_df=True, write_graph=False, write_nxg=True):
         """
@@ -48,20 +46,21 @@ class GraphFrame (ht.GraphFrame):
             return
 
         import json
+
         LOGGER.info("Writing graphframe to ({0})".format(path))
 
         # dump the filtered dataframe to csv if write_df is true.
         if write_df:
-            self.df.to_csv(os.path.join(path, GraphFrame._FILENAMES['df']))
+            self.df.to_csv(os.path.join(path, GraphFrame._FILENAMES["df"]))
 
         if write_graph:
-            fname = os.path.join(os.path.join(path, GraphFrame._FILENAMES['ht']))
-            with open(fname, 'w') as fptr:
+            fname = os.path.join(os.path.join(path, GraphFrame._FILENAMES["ht"]))
+            with open(fname, "w") as fptr:
                 fptr.write(super().tree(color=False))
 
         if write_nxg:
-            fname = os.path.join(os.path.join(path, GraphFrame._FILENAMES['nxg']))
-            with open(fname, 'w') as fptr:
+            fname = os.path.join(os.path.join(path, GraphFrame._FILENAMES["nxg"]))
+            with open(fname, "w") as fptr:
                 nxg = nx.readwrite.json_graph.node_link_data(self.nxg)
                 json.dump(nxg, fptr, indent=2)
 
@@ -70,11 +69,12 @@ class GraphFrame (ht.GraphFrame):
         Read the GraphFrame from .callflow directory (refer _FILENAMES for file name mapping).
         """
         import json
+
         LOGGER.info("Reading graphframe from ({0})".format(path))
 
         # TODO: this function should not use assertions
         # but throw "ArgumentError" if file is not found, or data is not as expected
-        fname = os.path.join(path, GraphFrame._FILENAMES['df'])
+        fname = os.path.join(path, GraphFrame._FILENAMES["df"])
         self.df = pd.read_csv(fname)
         if self.df.empty:
             raise ValueError(f"{fname} is empty.")
@@ -84,17 +84,15 @@ class GraphFrame (ht.GraphFrame):
         # self.df = self.df.set_index(['node', 'rank'])
         self.df = self.df.reset_index(drop=False)
 
-
-        fname = os.path.join(path, GraphFrame._FILENAMES['nxg'])
+        fname = os.path.join(path, GraphFrame._FILENAMES["nxg"])
         with open(fname, "r") as nxg_file:
             graph = json.load(nxg_file)
             self.nxg = nx.readwrite.json_graph.node_link_graph(graph)
             assert self.nxg != None
 
-
         self.graph = None
         if read_graph:
-            fname = os.path.join(path, GraphFrame._FILENAMES['ht'])
+            fname = os.path.join(path, GraphFrame._FILENAMES["ht"])
             with open(fname, "r") as graph_file:
                 self.graph = json.load(graph_file)
 
@@ -154,7 +152,8 @@ class GraphFrame (ht.GraphFrame):
 
         def _get_node_name(nd):
             nm = callflow.utils.sanitize_name(nd["name"])
-            if nd["line"] != "NA":      nm += ":" + str(nd["line"])
+            if nd["line"] != "NA":
+                nm += ":" + str(nd["line"])
             return nm
 
         # `node_dict_from_frame` converts the hatchet's frame to a dictionary
@@ -210,8 +209,10 @@ class GraphFrame (ht.GraphFrame):
             return graph
 
         def label(x):
-            if is_string_like(x):   name = prefix + x
-            else:                   name = prefix + repr(x)
+            if is_string_like(x):
+                name = prefix + x
+            else:
+                name = prefix + repr(x)
             return name
 
         return nx.relabel_nodes(graph, label)
@@ -227,9 +228,15 @@ class GraphFrame (ht.GraphFrame):
     @staticmethod
     def leaves_below(nxg, node):
         assert isinstance(graph, nx.DiGraph)
-        return set(sum(([vv for vv in v if nxg.out_degree(vv) == 0]
-                            for k, v in nx.dfs_successors(nxg, node).items()),
-                        [],))
+        return set(
+            sum(
+                (
+                    [vv for vv in v if nxg.out_degree(vv) == 0]
+                    for k, v in nx.dfs_successors(nxg, node).items()
+                ),
+                [],
+            )
+        )
 
     # --------------------------------------------------------------------------
     # callflow.df utilities
@@ -237,14 +244,14 @@ class GraphFrame (ht.GraphFrame):
         assert isinstance(count, int) and isinstance(sort_attr, str)
         assert count > 0
 
-        df = self.df.groupby(['name']).mean()
+        df = self.df.groupby(["name"]).mean()
         df = df.sort_values(by=[sort_attr], ascending=False)
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
 
     def filter_by_name(self, names):
         assert isinstance(names, list)
-        return self.df[self.df['name'].isin(names)]
+        return self.df[self.df["name"].isin(names)]
 
     def lookup_with_node(self, node):
         return self.df.loc[self.df["name"] == node.callpath[-1]]
@@ -256,12 +263,14 @@ class GraphFrame (ht.GraphFrame):
         return self.df.loc[self.df["vis_node_name"] == name]
 
     def lookup(self, node):
-        return self.df.loc[ (self.df["name"] == node.callpath[-1]) &
-                            (self.df["nid"]  == node.nid) ]
+        return self.df.loc[
+            (self.df["name"] == node.callpath[-1]) & (self.df["nid"] == node.nid)
+        ]
 
     def update_df(self, col_name, mapping):
         self.df[col_name] = self.df["name"].apply(
-            lambda node: mapping[node] if node in mapping.keys() else "")
+            lambda node: mapping[node] if node in mapping.keys() else ""
+        )
 
     # --------------------------------------------------------------------------
     @staticmethod

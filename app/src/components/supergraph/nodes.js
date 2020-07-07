@@ -57,7 +57,7 @@ export default {
 			d3.selectAll(".target-path").remove();
 
 			// Clear target lines. 
-			if(this.$store.showTarget){
+			if (this.$store.showTarget) {
 				this.$refs.TargetLine.clear();
 			}
 			d3.selectAll(".histogram-bar-target").remove();
@@ -100,7 +100,7 @@ export default {
 							d.y = Math.max(0, Math.min(this.$parent.height - d.dy, d3.event.y))
 						) + ")");
 					this.$parent.sankey.relayout();
-					link.attr("d", path);
+					// link.attr("d", path);
 				});
 
 			this.zoom = d3.zoom()
@@ -160,7 +160,7 @@ export default {
 			if (encoding == "MEAN") {
 				this.$refs.Mean.init(this.graph.nodes, this.containerG);
 			}
- 			else if (encoding == "MEAN_GRADIENTS") {
+			else if (encoding == "MEAN_GRADIENTS") {
 				this.$refs.MeanGradients.init(this.graph.nodes, this.containerG);
 			}
 			else if (encoding == "MEAN_DIFF") {
@@ -248,14 +248,14 @@ export default {
 
 		mouseover(node) {
 			// this.$refs.ToolTip.visualize(self.graph, node)
-			if(this.$store.selectedMode == "Ensemble"){
+			if (this.$store.selectedMode == "Ensemble") {
 				this.$refs.Guides.visualize(node, "temporary");
 			}
 		},
 
 		mouseout(node) {
 			// this.$refs.ToolTip.clear()
-			if(this.$store.selectedMode == "Ensemble"){
+			if (this.$store.selectedMode == "Ensemble") {
 				this.$refs.Guides.clear(node, "temporary");
 				if (this.permanentGuides == false) {
 					d3.selectAll(".ensemble-edge")
@@ -355,14 +355,14 @@ export default {
 				})
 				.style("opacity", 1)
 				.style("fill", d => {
-					if (this.$store.encoding == "MEAN_GRADIENTS"){
+					if (this.$store.encoding == "MEAN_GRADIENTS") {
 						return "#000";
 					}
 					let rgbArray = null;
-					if (this.$store.selectedMetric == "Inclusive"){
+					if (this.$store.selectedMetric == "Inclusive") {
 						rgbArray = this.$store.runtimeColor.getColor(d, "time (inc)");
 					}
-					else if(this.$store.selectedMetric == "Exclusive"){
+					else if (this.$store.selectedMetric == "Exclusive") {
 						rgbArray = this.$store.runtimeColor.getColor(d, "time");
 					}
 					let hex = this.$store.runtimeColor.rgbArrayToHex(rgbArray);
@@ -390,13 +390,13 @@ export default {
 		},
 
 		clearEncoding(encoding) {
-			if (encoding== "MEAN_GRADIENTS") {
+			if (encoding == "MEAN_GRADIENTS") {
 				this.$refs.MeanGradients.clear(this.graph.nodes, this.containerG);
 			}
 			else if (encoding == "MEAN_DIFF") {
 				this.$refs.MeanDiff.clear(this.graph.nodes, this.containerG);
 			}
-			else if (encoding== "RANK_DIFF") {
+			else if (encoding == "RANK_DIFF") {
 				this.$refs.RankDiff.clear(this.graph.nodes, this.containerG);
 			}
 		},

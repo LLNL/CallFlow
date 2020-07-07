@@ -2,13 +2,13 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 import math
 import numpy as np
 from scipy import stats
 import statsmodels.nonparametric.api as smnp
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class Gradients:
     def __init__(self, dfs, binCount="20"):
         self.dfs = dfs
@@ -55,7 +55,16 @@ class Gradients:
             dataset[state] = np.mean(np.array(d))
         return [mean, dataset]
 
-    def kde(self, data, gridsize=10, fft=True, kernel="gau", bw="scott", cut=3, clip=(-np.inf, np.inf)):
+    def kde(
+        self,
+        data,
+        gridsize=10,
+        fft=True,
+        kernel="gau",
+        bw="scott",
+        cut=3,
+        clip=(-np.inf, np.inf),
+    ):
         if bw == "scott":
             bw = stats.gaussian_kde(data).scotts_factor() * data.std(ddof=1)
 

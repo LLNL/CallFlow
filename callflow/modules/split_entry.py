@@ -139,4 +139,3 @@ class SplitEntry:
             if target == reveal_module:
                 ret.append(edge)
         return ret
-

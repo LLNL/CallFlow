@@ -126,11 +126,11 @@ export default {
 			this.selectedMode = this.$store.selectedMode;
 			this.selectedCallsite = this.$store.selectedCallsite;
 			this.selectedMetric = this.$store.selectedMetric;
-			if(this.$store.selectedMetric == "Ensemble"){
+			if (this.$store.selectedMetric == "Ensemble") {
 				this.ensembleColor = d3.rgb(this.$store.distributionColor.ensemble).darker(1);
-				this.targetColor = d3.rgb(this.$store.distributionColor.target).darker(1);	
+				this.targetColor = d3.rgb(this.$store.distributionColor.target).darker(1);
 			}
-			else{
+			else {
 				// There is actually no target for single run. But we just set the value. 
 				this.ensembleColor = this.$store.runtimeColor.textColor;
 				this.targetColor = this.$store.runtimeColor.textColor;

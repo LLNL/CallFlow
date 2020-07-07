@@ -262,7 +262,7 @@ export default {
 			root.x1 = dx;
 			root.y1 = dy / n;
 			root.eachBefore(this.positionNode(dy, n));
-			if (round) {root.eachBefore(this.roundNode);}
+			if (round) { root.eachBefore(this.roundNode); }
 			return root;
 		},
 
@@ -281,8 +281,8 @@ export default {
 					y0 = node.y0,
 					x1 = node.x1 - self.padding,
 					y1 = node.y1 - self.padding;
-				if (x1 < x0) {x0 = x1 = (x0 + x1) / 2;}
-				if (y1 < y0) {y0 = y1 = (y0 + y1) / 2;}
+				if (x1 < x0) { x0 = x1 = (x0 + x1) / 2; }
+				if (y1 < y0) { y0 = y1 = (y0 + y1) / 2; }
 
 				node.x0 = x0;
 				node.y0 = y0;
@@ -362,11 +362,11 @@ export default {
 			// when the mouse leaves the parent g.
 			this.hierarchy.append("svg:rect")
 				.attr("width", () => {
-					if (this.selectedDirection == "LR") {return this.icicleHeight;}
+					if (this.selectedDirection == "LR") { return this.icicleHeight; }
 					return this.width;
 				})
 				.attr("height", () => {
-					if (this.selectedDirection == "LR") {return this.width - 50;}
+					if (this.selectedDirection == "LR") { return this.width - 50; }
 					return this.height - 50;
 				})
 				.style("opacity", 0);

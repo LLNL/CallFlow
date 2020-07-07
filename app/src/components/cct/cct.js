@@ -120,10 +120,10 @@ export default {
 				let node = self.g.node(v);
 				if (node != undefined) {
 					let color = "";
-					if(self.$store.selectedMetric == "Inclusive"){
+					if (self.$store.selectedMetric == "Inclusive") {
 						color = self.$store.runtimeColor.getColor(node, "time (inc)");
 					}
-					else if(self.$store.selectedMetric == "Exclusive"){
+					else if (self.$store.selectedMetric == "Exclusive") {
 						color = self.$store.runtimeColor.getColor(node, "time");
 					}
 					node.style = "fill:" + color;

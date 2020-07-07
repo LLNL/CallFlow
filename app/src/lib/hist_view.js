@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 import * as d3 from "d3";
-import { pallette, percentColToD3Rgb} from "./colors.js";
+import { pallette, percentColToD3Rgb } from "./colors.js";
 
 const genX = (data, svgArea, domain) => {
 	if (domain === undefined) {

@@ -36,7 +36,7 @@ export default {
 					this.drawEdges("target");
 				}
 			}
-			else if(this.$store.selectedMode == "Single") {
+			else if (this.$store.selectedMode == "Single") {
 				this.initEdges("single");
 				this.drawEdges("single");
 			}
@@ -173,7 +173,7 @@ export default {
 						else if (dataset == "target") {
 							return this.$store.distributionColor.target;
 						}
-						else if(dataset == "single") {
+						else if (dataset == "single") {
 							return this.$store.runtimeColor.intermediate;
 						}
 					},

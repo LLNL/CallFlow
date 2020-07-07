@@ -33,7 +33,7 @@ class CallFlow:
 
         # Convert config json to props. Never touch self.config ever.
         self.props = json.loads(json.dumps(config, default=lambda o: o.__dict__))
-        #LOGGER.debug('Callflow.init() -- {}'.format(self.props.keys()))
+        # LOGGER.debug('Callflow.init() -- {}'.format(self.props.keys()))
 
         ndatasets = len(self.props["dataset_names"])
         assert ensemble == (ndatasets > 1)
@@ -41,10 +41,12 @@ class CallFlow:
         # Based on option, either process into .callflow or read from .callflow.
         if process:
             self._create_dot_callflow_folder()
-            if ensemble:    self._process_ensemble(self.props["dataset_names"])
-            else:           self._process_single(self.props["dataset_names"][0])
+            if ensemble:
+                self._process_ensemble(self.props["dataset_names"])
+            else:
+                self._process_single(self.props["dataset_names"][0])
 
-         # Rendering of call graphs.
+        # Rendering of call graphs.
         else:
             if ensemble:
                 self.supergraphs = self._read_ensemble()
@@ -117,8 +119,9 @@ class CallFlow:
         # Store the graphframe.
         supergraph.write_gf("entire")
 
-        supergraph.single_auxiliary(dataset=dataset, #_name,
-                                        binCount=20, process=True)
+        supergraph.single_auxiliary(
+            dataset=dataset, binCount=20, process=True  # _name,
+        )
 
     def _process_ensemble(self, datasets):
         """
@@ -202,13 +205,13 @@ class CallFlow:
             supergraphs[dataset_name] = SuperGraph(
                 self.props, dataset_name, mode="render"
             )
-            #supergraphs[dataset_name].read_gf(read_parameter=self.props["read_parameter"])
+            # supergraphs[dataset_name].read_gf(read_parameter=self.props["read_parameter"])
 
         supergraphs["ensemble"] = EnsembleGraph(
             props=self.props, tag="ensemble", mode="render"
         )
-        #supergraphs["ensemble"].read_gf(read_parameter=self.props["read_parameter"])
-        #supergraphs["ensemble"].read_auxiliary_data()
+        # supergraphs["ensemble"].read_gf(read_parameter=self.props["read_parameter"])
+        # supergraphs["ensemble"].read_auxiliary_data()
         return supergraphs
 
     # --------------------------------------------------------------------------
@@ -257,7 +260,15 @@ class CallFlow:
         """
         Handles all the socket requests connected to Single CallFlow.
         """
-        _OPERATIONS = ["init", "reset", "auxiliary", "cct", "supergraph", "miniHistogram", "function"]
+        _OPERATIONS = [
+            "init",
+            "reset",
+            "auxiliary",
+            "cct",
+            "supergraph",
+            "miniHistogram",
+            "function",
+        ]
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
 
@@ -271,7 +282,9 @@ class CallFlow:
             return self.supergraphs[operation["dataset"]].auxiliary_data
 
         elif operation_name == "supergraph":
-            single_supergraph = SankeyLayout(supergraph=self.supergraphs[operation['dataset']], path="group_path")
+            single_supergraph = SankeyLayout(
+                supergraph=self.supergraphs[operation["dataset"]], path="group_path"
+            )
             return single_supergraph.nxg
 
         elif operation_name == "mini-histogram":
@@ -279,7 +292,10 @@ class CallFlow:
             return minihistogram.result
 
         elif operation_name == "cct":
-            result = NodeLinkLayout(supergraph=self.supergraphs[operation['dataset']], callsite_count=operation["functionsInCCT"])
+            result = NodeLinkLayout(
+                supergraph=self.supergraphs[operation["dataset"]],
+                callsite_count=operation["functionsInCCT"],
+            )
             return result.nxg
 
         elif operation_name == "function":
@@ -298,7 +314,7 @@ class CallFlow:
 
         elif operation_name == "ensemble_cct":
             result = NodeLinkLayout(
-                supergraph=self.supergraphs['ensemble'],
+                supergraph=self.supergraphs["ensemble"],
                 callsite_count=operation["functionsInCCT"],
             )
             return result.nxg
@@ -329,15 +345,23 @@ class CallFlow:
                     process=True,
                     write=True,
                 )
-            ensemble_super_graph = SankeyLayout(supergraph=self.supergraphs["ensemble"], path="group_path")
+            ensemble_super_graph = SankeyLayout(
+                supergraph=self.supergraphs["ensemble"], path="group_path"
+            )
             return ensemble_super_graph.nxg
 
         elif operation_name == "hierarchy":
-            modulehierarchy = HierarchyLayout(self.supergraphs["ensemble"], operation["module"])
+            modulehierarchy = HierarchyLayout(
+                self.supergraphs["ensemble"], operation["module"]
+            )
             return modulehierarchy.nxg
 
-        elif operation_name == "projection":            
-            projection = ParameterProjection(supergraph=self.supergraphs["ensemble"], targetDataset=operation["targetDataset"], n_cluster=operation["numOfClusters"])
+        elif operation_name == "projection":
+            projection = ParameterProjection(
+                supergraph=self.supergraphs["ensemble"],
+                targetDataset=operation["targetDataset"],
+                n_cluster=operation["numOfClusters"],
+            )
             return projection.result.to_json(orient="columns")
 
         # Not used.

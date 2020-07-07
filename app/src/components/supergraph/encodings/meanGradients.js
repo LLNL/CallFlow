@@ -24,7 +24,7 @@ export default {
 		},
 
 		colorScale() {
-			this.$parent.$parent.$refs.EnsembleColorMap.update(this.$store.mode, hist_min, hist_max);
+			// this.$parent.$parent.$refs.EnsembleColorMap.update(this.$store.mode, hist_min, hist_max);
 		},
 
 		gradients() {
@@ -93,11 +93,11 @@ export default {
 						}
 						else {
 							attr = "time";
-						} 
-						
+						}
+
 						if (d.type == "component-node") {
 							if (this.$store.callsites[this.$store.selectedTargetDataset][d.id] != undefined) {
-								runtimeColor = d3.rgb(this.$store.runtimeColor.getColor(d, attr	));
+								runtimeColor = d3.rgb(this.$store.runtimeColor.getColor(d, attr));
 							}
 						}
 						else if (d.type == "super-node") {

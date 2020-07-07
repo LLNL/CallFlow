@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Library imports
 import os
 import json
@@ -13,6 +13,7 @@ import numpy as np
 from ast import literal_eval as make_tuple
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 from callflow.timer import Timer
 

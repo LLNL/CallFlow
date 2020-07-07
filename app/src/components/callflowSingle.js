@@ -157,7 +157,7 @@ export default {
 		showTarget: false,
 		targetInfo: "Target Guides",
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
-		selectedCaseStudy: '',
+		selectedCaseStudy: "",
 	}),
 
 	mounted() {
@@ -248,7 +248,7 @@ export default {
 		// Feature: Sortby the datasets and show the time.
 		sortDatasetsByAttr(datasets, attr) {
 			if (datasets.length == 1) {
-				this.metricTimeMap[datasets[0]] = this.$store.maxIncTime[datasets[0]]
+				this.metricTimeMap[datasets[0]] = this.$store.maxIncTime[datasets[0]];
 				return datasets;
 			}
 			let ret = datasets.sort((a, b) => {
@@ -327,7 +327,7 @@ export default {
 			this.$store.comparisonMode = this.comparisonMode;
 			this.$store.fontSize = 14;
 			this.$store.transitionDuration = 1000;
-			this.$store.encoding = 'MEAN'
+			this.$store.encoding = "MEAN";
 		},
 
 		setOtherData() {
@@ -336,8 +336,8 @@ export default {
 			this.$store.selectedMode = this.selectedMode;
 			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
-			if (this.$store.selectedMode == 'Single') {
-				this.$store.selectedProp = 'rank'
+			if (this.$store.selectedMode == "Single") {
+				this.$store.selectedProp = "rank";
 			}
 
 			this.$store.selectedScale = this.selectedScale;
@@ -406,8 +406,8 @@ export default {
 
 		// Set the min and max and assign color variables from Settings.
 		setRuntimeColorScale() {
-			let colorMin = null
-			let colorMax = null
+			let colorMin = null;
+			let colorMax = null;
 			if (this.selectedMode == "Ensemble") {
 				if (this.selectedMetric == "Inclusive") {
 					colorMin = parseFloat(this.$store.minIncTime["ensemble"]);
@@ -450,7 +450,7 @@ export default {
 			// Create color object.
 			this.$store.runtimeColor = new Color();
 			this.runtimeColorMap = this.$store.runtimeColor.getAllColors();
-			this.setRuntimeColorScale()
+			this.setRuntimeColorScale();
 
 			// Set properties into store.
 			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap;

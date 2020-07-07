@@ -71,10 +71,10 @@ export default {
 						color = this.$store.runtimeColor.intermediate;
 					}
 					else {
-						if (this.$store.selectedMetric == "Inclusive"){
+						if (this.$store.selectedMetric == "Inclusive") {
 							color = this.$store.runtimeColor.getColor(d, "time (inc)");
 						}
-						else if(this.$store.selectedMetric == "Exclusive"){
+						else if (this.$store.selectedMetric == "Exclusive") {
 							color = this.$store.runtimeColor.getColor(d, "time");
 						}
 					}

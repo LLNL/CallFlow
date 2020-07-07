@@ -28,7 +28,7 @@ export default {
 
 	},
 
-	mounted() {},
+	mounted() { },
 	methods: {
 		init(id) {
 			this.id = id;
@@ -37,13 +37,13 @@ export default {
 				.attr("class", "toolTipSVG");
 
 			this.toolTipG = this.toolTipDiv.append("g");
-			this.height = document.getElementById(this.id).clientHeight/10;
+			this.height = document.getElementById(this.id).clientHeight / 10;
 			this.halfWidth = document.getElementById(this.id).clientWidth / 2;
 		},
 
 		render(data, node) {
 			this.clear();
-			this.width = data.length*this.fontSize + 10*this.fontSize;
+			this.width = data.length * this.fontSize + 10 * this.fontSize;
 			var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
 			this.mousePos = d3.mouse(d3.select("#" + this.id).node());
 			this.mousePosX = this.mousePos[0];
@@ -89,11 +89,11 @@ export default {
 						if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth - 25) {
 							return (this.mousePosX - this.width + this.offset) + "px";
 						}
-						return (this.mousePosX) + this.offset +  "px";
+						return (this.mousePosX) + this.offset + "px";
 
 					},
 					"y": () => {
-						return (this.mousePosY) + 2*this.offset + "px";
+						return (this.mousePosY) + 2 * this.offset + "px";
 					}
 				})
 				.text(text);

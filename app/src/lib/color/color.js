@@ -13,8 +13,8 @@ export default class Color {
 		this.grey = "#252525";
 		this.highlight = "#AF9B90";
 		this.ensemble = "#C0C0C0";
-		this.target = 
-		this.catColors = ["#3366cc", "#dc3912", "#ff9900", "#109618", "#990099", "#0099c6", "#dd4477", "#66aa00", "#b82e2e", "#316395", "#994499", "#22aa99", "#aaaa11", "#6633cc", "#e67300", "#8b0707", "#651067", "#329262", "#5574a6", "#3b3eac"];
+		this.target =
+			this.catColors = ["#3366cc", "#dc3912", "#ff9900", "#109618", "#990099", "#0099c6", "#dd4477", "#66aa00", "#b82e2e", "#316395", "#994499", "#22aa99", "#aaaa11", "#6633cc", "#e67300", "#8b0707", "#651067", "#329262", "#5574a6", "#3b3eac"];
 		this.colorPadding = [];
 		this.categoricalColors = CategoricalColors;
 		this.colorbrewer = ColorBrewer;
@@ -71,12 +71,13 @@ export default class Color {
 			colorscale = chroma.scale(colors)
 				.domain([0, 1]);
 			break;
-		case "MeanDiff":
+		case "MeanDiff": {
 			let mmax = Math.max(Math.abs(min), Math.abs(max));
 			colorscale = chroma.scale("RdYlGn")
 				.padding([0.0, 0.0])
 				.domain([mmax, -mmax]);
 			break;
+		}
 		case "RankDiff":
 			colorscale = chroma.scale(colors)
 				.gamma(0.5)
@@ -167,7 +168,7 @@ export default class Color {
 	}
 
 	valToD3Rgb(val, colormap) {
-		return this.percentColToD3Rgb(valToPercentColor(val, colormap));
+		return this.percentColToD3Rgb(this.valToPercentColor(val, colormap));
 	}
 
 }

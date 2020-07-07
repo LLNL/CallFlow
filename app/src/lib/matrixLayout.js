@@ -55,43 +55,43 @@ export default function adjacencyMatrixLayout() {
 	}
 
 	matrix.directed = function (x) {
-		if (!arguments.length) {return directed;}
+		if (!arguments.length) { return directed; }
 		directed = x;
 		return matrix;
 	};
 
 	matrix.size = function (x) {
-		if (!arguments.length) {return size;}
+		if (!arguments.length) { return size; }
 		size = x;
 		return matrix;
 	};
 
 	matrix.nodes = function (x) {
-		if (!arguments.length) {return nodes;}
+		if (!arguments.length) { return nodes; }
 		nodes = x;
 		return matrix;
 	};
 
 	matrix.links = function (x) {
-		if (!arguments.length) {return edges;}
+		if (!arguments.length) { return edges; }
 		edges = x;
 		return matrix;
 	};
 
 	matrix.adj = function (x) {
-		if (!arguments.length) {return adj;}
+		if (!arguments.length) { return adj; }
 		adj = x;
 		return matrix;
 	};
 
 	matrix.useadj = function (x) {
-		if (!arguments.length) {return useadj;}
+		if (!arguments.length) { return useadj; }
 		useadj = true;
 		return matrix;
 	};
 
 	matrix.edgeWeight = function (x) {
-		if (!arguments.length) {return edgeWeight;}
+		if (!arguments.length) { return edgeWeight; }
 		if (typeof x === "function") {
 			edgeWeight = x;
 		} else {
@@ -103,7 +103,7 @@ export default function adjacencyMatrixLayout() {
 	};
 
 	matrix.nodeID = function (x) {
-		if (!arguments.length) {return nodeID;}
+		if (!arguments.length) { return nodeID; }
 		if (typeof x === "function") {
 			nodeID = x;
 		}

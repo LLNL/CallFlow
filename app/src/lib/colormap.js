@@ -57,7 +57,7 @@ export default {
 
 		_legends() {
 			this.clearLegends();
-			if (this.$store.showTarget && ! this.$store.comparisonMode && this.$store.selectedMode == "Ensemble" && this.$store.selectedFormat == "SuperGraph") {
+			if (this.$store.showTarget && !this.$store.comparisonMode && this.$store.selectedMode == "Ensemble" && this.$store.selectedFormat == "SuperGraph") {
 				this.drawLegend("Target run", this.containerWidth - this.padding.right, this.containerHeight - 4 * this.padding.bottom, this.$store.distributionColor.target);
 			}
 			if (this.$store.selectedMode == "Ensemble" && this.$store.selectedFormat == "SuperGraph") {
@@ -123,7 +123,7 @@ export default {
 					.attrs({
 						"width": this.width / splits,
 						"height": this.height,
-						"x": (splits- i - 1) * (this.width / splits),
+						"x": (splits - i - 1) * (this.width / splits),
 						"class": "colormap",
 						"transform": `translate(${x}, ${y})`,
 						"fill": this.color.getColorByValue(splitColor)

@@ -52,23 +52,23 @@ export default {
 			EventHandler.$emit("highlight_dataset", item["dataset"]);
 		},
 
-		getLabel(id){
+		getLabel(id) {
 			return this.labels[id];
 		},
 
-		dataset(idx){
+		dataset(idx) {
 			return this.labels[idx];
 		},
 
-		changeText(idx){
+		changeText(idx) {
 			return this.labels[idx];
 		},
 
-		highlight(){
+		highlight() {
 			console.log("[Run information] highlight. ");
 		},
 
-		clear(){
+		clear() {
 
 		}
 	}
