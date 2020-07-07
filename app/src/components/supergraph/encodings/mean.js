@@ -75,7 +75,7 @@ export default {
 							color = this.$store.runtimeColor.getColor(d, "time (inc)");
 						}
 						else if(this.$store.selectedMetric == "Exclusive"){
-							color = this.$store.runtimeColor.getColor(d, "time")
+							color = this.$store.runtimeColor.getColor(d, "time");
 						}
 					}
 					return color;

@@ -143,6 +143,12 @@ class CallFlowServer:
             result = self.callflow.request(obj)
             emit("reset", result, json=True)
 
+        @sockets.on("config", namespace="/")
+        def config(data):
+            result = self.callflow.request_single({"name": "init"})
+            json_result = json.dumps(result)
+            emit("config", json_result, json=True)
+
         @sockets.on("init", namespace="/")
         def init(data):
             """

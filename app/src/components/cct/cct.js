@@ -119,12 +119,12 @@ export default {
 			this.g.nodes().forEach(function (v) {
 				let node = self.g.node(v);
 				if (node != undefined) {
-					let color = '';
-					if(self.$store.selectedMetric == 'Inclusive'){
-						color = self.$store.runtimeColor.getColor(node, 'time (inc)');
+					let color = "";
+					if(self.$store.selectedMetric == "Inclusive"){
+						color = self.$store.runtimeColor.getColor(node, "time (inc)");
 					}
-					else if(self.$store.selectedMetric == 'Exclusive'){
-						color = self.$store.runtimeColor.getColor(node, 'time');
+					else if(self.$store.selectedMetric == "Exclusive"){
+						color = self.$store.runtimeColor.getColor(node, "time");
 					}
 					node.style = "fill:" + color;
 					node.rx = node.ry = 4;

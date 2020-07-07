@@ -80,7 +80,7 @@ export default {
 				this.clear();
 			}
 			this.firstRender = false;
-			this.selectedModule = module
+			this.selectedModule = module;
 
 			let temp = this.process();
 			this.xMin = temp[0];
@@ -96,7 +96,7 @@ export default {
 			
 			this.yScale = d3.scaleLinear().domain(this.yArray).range([this.yAxisHeight, this.padding.top]);
 
-			this.regression = this.leastSquares(this.xArray, this.yArray)
+			this.regression = this.leastSquares(this.xArray, this.yArray);
 			this.xAxis();
 			this.yAxis();
 			this.dots();
@@ -106,8 +106,8 @@ export default {
 
 		process() {
 			let store = this.$store.modules[this.$store.selectedTargetDataset][this.$store.selectedModule];
-			let mean_time_inc = store["Inclusive"]["data"]
-			let mean_time = store["Exclusive"]["data"]
+			let mean_time_inc = store["Inclusive"]["data"];
+			let mean_time = store["Exclusive"]["data"];
 
 			let xArray = [];
 			let yArray = [];
@@ -221,7 +221,7 @@ export default {
 		},
 
 		xAxis() {
-			let self = this
+			let self = this;
 			this.addxAxisLabel();
 			const xAxis = d3.axisBottom(this.xScale)
 				.ticks(10)
@@ -270,8 +270,8 @@ export default {
 		},
 
 		yAxis() {
-			let self = this
-			let tickCount = 10
+			let self = this;
+			let tickCount = 10;
 			this.addyAxisLabel();
 			let yAxis = d3.axisLeft(this.yScale)
 				.ticks(10)
@@ -333,7 +333,7 @@ export default {
 				.attr("class", "dot")
 				.attr("r", 5)
 				.attr("cx", function (d, i) {
-					return self.xScale(self.xArray[i]) + 3 * self.padding.left
+					return self.xScale(self.xArray[i]) + 3 * self.padding.left;
 				})
 				.attr("cy", function (d, i) {
 					return self.yScale(self.yArray[i]);
@@ -346,7 +346,7 @@ export default {
 			let decimalFormat = d3.format("0.2f");
 			this.svg.append("g").append("text")
 				.attr("class", "text")
-				.text("corr-coef: " + decimalFormat(this.regression['corr_coef']))
+				.text("corr-coef: " + decimalFormat(this.regression["corr_coef"]))
 				.attr("x", function (d) {
 					return self.boxWidth - self.width / 3;
 				})
