@@ -272,7 +272,6 @@ export default {
 
 		// Reveal the boxplots on request. 
 		showIntersectionBoxPlot(callsite) {
-			console.log("here")
 			event.stopPropagation();
 			let callsite_name = event.currentTarget.id;
 			this.intersectionCallsites[callsite_name].reveal = true;

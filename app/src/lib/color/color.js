@@ -9,7 +9,7 @@ import { CategoricalColors, UniformColorMaps, ColorBrewer } from "./COLORS";
 
 export default class Color {
 	constructor() {
-		this.colorscale = null
+		this.colorscale = null;
 		this.grey = "#252525";
 		this.highlight = "#AF9B90";
 		this.ensemble = "#C0C0C0";
@@ -22,7 +22,7 @@ export default class Color {
 	}
 
 	getScale() {
-		return this.colorscale
+		return this.colorscale;
 	}
 
 	getColor(dictionary, attribute) {
@@ -30,7 +30,7 @@ export default class Color {
 	}
 
 	getColorByValue(value) {
-		return this.colorscale(value)
+		return this.colorscale(value);
 	}
 
 	setColorPadding(colorPoint) {
@@ -43,8 +43,8 @@ export default class Color {
 		return ret;
 	}
 
-	setColorScale(type = 'Inclusive', min = 0, max = 0, scaleType = "Default", colorPoint = '9') {
-		this.type = type
+	setColorScale(type = "Inclusive", min = 0, max = 0, scaleType = "Default", colorPoint = "9") {
+		this.type = type;
 		this.colorMin = min;
 		this.colorMax = max;
 		let colors = this.colorbrewer[scaleType][colorPoint];
@@ -52,44 +52,44 @@ export default class Color {
 
 		let colorscale = null;
 		switch (type) {
-			case "Module":
-				colorscale = d3.scaleOrdinal(d3.schemeCategory10);
-				break;
-			case "Inclusive":
-				colorscale = chroma.scale(colors)
-					.padding([0.0, 0.0])
-					.gamma(0.5)
-					.domain([min, max]);
-				break;
-			case "Exclusive":
-				colorscale = chroma.scale(colors)
-					.padding([0.0, 0.0])
-					.gamma(0.5)
-					.domain([min, max])
-				break;
-			case "Imbalance":
-				colorscale = chroma.scale(colors)
-					.domain([0, 1]);
-				break;
-			case "MeanDiff":
-				let mmax = Math.max(Math.abs(min), Math.abs(max));
-				colorscale = chroma.scale('RdYlGn')
-					.padding([0.0, 0.0])
-					.domain([mmax, -mmax]);
-				break;
-			case "RankDiff":
-				colorScale = chroma.scale(colors)
-					.gamma(0.5)
-					.domain([min, max]);
-				break;
-			case "MeanGradients":
-				colorscale = chroma.scale(colors)
-					.padding([0.05, 0.0])
-					.gamma(0.5)
-					.domain([min, max])
-				break;
+		case "Module":
+			colorscale = d3.scaleOrdinal(d3.schemeCategory10);
+			break;
+		case "Inclusive":
+			colorscale = chroma.scale(colors)
+				.padding([0.0, 0.0])
+				.gamma(0.5)
+				.domain([min, max]);
+			break;
+		case "Exclusive":
+			colorscale = chroma.scale(colors)
+				.padding([0.0, 0.0])
+				.gamma(0.5)
+				.domain([min, max]);
+			break;
+		case "Imbalance":
+			colorscale = chroma.scale(colors)
+				.domain([0, 1]);
+			break;
+		case "MeanDiff":
+			let mmax = Math.max(Math.abs(min), Math.abs(max));
+			colorscale = chroma.scale("RdYlGn")
+				.padding([0.0, 0.0])
+				.domain([mmax, -mmax]);
+			break;
+		case "RankDiff":
+			colorscale = chroma.scale(colors)
+				.gamma(0.5)
+				.domain([min, max]);
+			break;
+		case "MeanGradients":
+			colorscale = chroma.scale(colors)
+				.padding([0.05, 0.0])
+				.gamma(0.5)
+				.domain([min, max]);
+			break;
 		}
-		this.colorscale = colorscale
+		this.colorscale = colorscale;
 	}
 
 	CYKToRGB(CMYK) {

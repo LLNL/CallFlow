@@ -3,6 +3,7 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
+import * as d3 from "d3";
 import { pallette, percentColToD3Rgb} from "./colors.js";
 
 const genX = (data, svgArea, domain) => {

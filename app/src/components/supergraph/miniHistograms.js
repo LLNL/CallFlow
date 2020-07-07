@@ -80,16 +80,16 @@ export default {
 			let xVals = [], freq = [];
 			if (type == "ensemble") {
 				color = this.$store.distributionColor.ensemble;
-				xVals = data["ensemble"].x
-				freq = data["ensemble"].y
+				xVals = data["ensemble"].x;
+				freq = data["ensemble"].y;
 			}
 			else if (type == "target" || type == "single") {
 				if(type == "target")
 					color = this.$store.distributionColor.target;
 				else if(type == "single")
 					color = this.$store.runtimeColor.intermediate;
-				xVals = data["target"].x
-				freq = data["target"].y
+				xVals = data["target"].x;
+				freq = data["target"].y;
 			}
 
 			if (this.$store.selectedScale == "Linear") {

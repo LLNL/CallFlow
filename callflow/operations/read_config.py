@@ -41,7 +41,6 @@ class ConfigFileReader:
     # --------------------------------------------------------------------------
     def run(self):
         self.paths = {}
-        self.module_paths = {}
         self.format = {}
         self.names = []
         self.dataset_names = []
