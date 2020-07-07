@@ -94,7 +94,7 @@ class Filter:
             excludeSet.add(u)
         if n == 0:
             return [[u]]
-        
+
         paths = [
             [].append(path)
             for neighbor in g.neighbors(u)

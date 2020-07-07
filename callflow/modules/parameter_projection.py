@@ -2,7 +2,7 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import numpy as np
 import pandas as pd
@@ -14,7 +14,7 @@ from sklearn.cluster import KMeans
 from callflow.algorithms import KMedoids
 from callflow.algorithms import DeltaConSimilarity
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class ParameterProjection:
     def __init__(self, supergraph, targetDataset="", n_cluster=3):
 
@@ -45,8 +45,8 @@ class ParameterProjection:
 
     def similarities(self):
         name = self.supergraph.tag
-        similarity_filepath = dirname  + '/' + 'similarity.json'
-        with open(similarity_filepath, 'r') as similarity_file:
+        similarity_filepath = dirname + "/" + "similarity.json"
+        with open(similarity_filepath, "r") as similarity_file:
             self.similarities = json.load(similarity_file)
 
     def run(self):

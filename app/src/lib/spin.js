@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
  * CallFlow Project Developers. See the top-level LICENSE file for details.
@@ -37,13 +38,13 @@
 (function (root, factory) {
 
 	/* CommonJS */
-	if (typeof module == "object" && module.exports) {module.exports = factory();}
+	if (typeof module == "object" && module.exports) { module.exports = factory(); }
 
 	/* AMD module */
-	else if (typeof define == "function" && define.amd) {define(factory);}
+	else if (typeof define == "function" && define.amd) { define(factory); }
 
 	/* Browser global */
-	else {root.Spinner = factory();}
+	else { root.Spinner = factory(); }
 }(this, function () {
 	"use strict";
 
@@ -60,7 +61,7 @@
 		var el = document.createElement(tag || "div")
 			, n;
 
-		for (n in prop) {el[n] = prop[n];}
+		for (n in prop) { el[n] = prop[n]; }
 		return el;
 	}
 
@@ -112,10 +113,10 @@
 			, i;
 
 		prop = prop.charAt(0).toUpperCase() + prop.slice(1);
-		if (s[prop] !== undefined) {return prop;}
+		if (s[prop] !== undefined) { return prop; }
 		for (i = 0; i < prefixes.length; i++) {
 			pp = prefixes[i] + prop;
-			if (s[pp] !== undefined) {return pp;}
+			if (s[pp] !== undefined) { return pp; }
 		}
 	}
 
@@ -137,7 +138,7 @@
 		for (var i = 1; i < arguments.length; i++) {
 			var def = arguments[i];
 			for (var n in def) {
-				if (obj[n] === undefined) {obj[n] = def[n];}
+				if (obj[n] === undefined) { obj[n] = def[n]; }
 			}
 		}
 		return obj;
@@ -222,14 +223,14 @@
 					, astep = f / o.lines
 
 					; (function anim() {
-					i++;
-					for (var j = 0; j < o.lines; j++) {
-						alpha = Math.max(1 - (i + (o.lines - j) * astep) % f * ostep, o.opacity);
+						i++;
+						for (var j = 0; j < o.lines; j++) {
+							alpha = Math.max(1 - (i + (o.lines - j) * astep) % f * ostep, o.opacity);
 
-						self.opacity(el, j * o.direction + start, alpha, o);
-					}
-					self.timeout = self.el && setTimeout(anim, ~~(1000 / fps));
-				})();
+							self.opacity(el, j * o.direction + start, alpha, o);
+						}
+						self.timeout = self.el && setTimeout(anim, ~~(1000 / fps));
+					})();
 			}
 			return self;
 		}
@@ -241,7 +242,7 @@
 			var el = this.el;
 			if (el) {
 				clearTimeout(this.timeout);
-				if (el.parentNode) {el.parentNode.removeChild(el);}
+				if (el.parentNode) { el.parentNode.removeChild(el); }
 				this.el = undefined;
 			}
 			return this;
@@ -278,7 +279,7 @@
 					, animation: useCssAnimations && addAnimation(o.opacity, o.trail, start + i * o.direction, o.lines) + " " + 1 / o.speed + "s linear infinite"
 				});
 
-				if (o.shadow) {ins(seg, css(fill("#000", "0 0 4px #000"), { top: "2px" }));}
+				if (o.shadow) { ins(seg, css(fill("#000", "0 0 4px #000"), { top: "2px" })); }
 				ins(el, ins(seg, fill(getColor(o.color, i), "0 0 1px rgba(0,0,0,.1)")));
 			}
 			return el;
@@ -289,7 +290,7 @@
 		 * Will be overwritten in VML fallback mode below.
 		 */
 		, opacity: function (el, i, val) {
-			if (i < el.childNodes.length) {el.childNodes[i].style.opacity = val;}
+			if (i < el.childNodes.length) { el.childNodes[i].style.opacity = val; }
 		}
 
 	});
@@ -346,12 +347,13 @@
 				);
 			}
 
-			if (o.shadow)
-			{for (i = 1; i <= o.lines; i++) {
-				seg(i, -2, "progid:DXImageTransform.Microsoft.Blur(pixelradius=2,makeshadow=1,shadowopacity=.3)");
-			}}
+			if (o.shadow) {
+				for (i = 1; i <= o.lines; i++) {
+					seg(i, -2, "progid:DXImageTransform.Microsoft.Blur(pixelradius=2,makeshadow=1,shadowopacity=.3)");
+				}
+			}
 
-			for (i = 1; i <= o.lines; i++) {seg(i);}
+			for (i = 1; i <= o.lines; i++) { seg(i); }
 			return ins(el, g);
 		};
 
@@ -360,7 +362,7 @@
 			o = o.shadow && o.lines || 0;
 			if (c && i + o < c.childNodes.length) {
 				c = c.childNodes[i + o]; c = c && c.firstChild; c = c && c.firstChild;
-				if (c) {c.opacity = val;}
+				if (c) { c.opacity = val; }
 			}
 		};
 	}
@@ -374,8 +376,8 @@
 
 		var probe = css(createEl("group"), { behavior: "url(#default#VML)" });
 
-		if (!vendor(probe, "transform") && probe.adj) {initVML();}
-		else {useCssAnimations = vendor(probe, "animation");}
+		if (!vendor(probe, "transform") && probe.adj) { initVML(); }
+		else { useCssAnimations = vendor(probe, "animation"); }
 	}
 
 	return Spinner;

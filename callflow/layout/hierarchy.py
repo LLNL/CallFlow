@@ -24,10 +24,10 @@ class HierarchyLayout:
             module_df=module_df,
             path="component_path",
             filter_by=filter_by,
-            filter_perc=filter_perc
+            filter_perc=filter_perc,
         )
 
-        # TODO: Need to verify it is always a Tree. 
+        # TODO: Need to verify it is always a Tree.
         cycles = self.check_cycles(self.nxg)
         while len(cycles) != 0:
             self.nxg = self.remove_cycles(self.nxg, cycles)
@@ -40,19 +40,21 @@ class HierarchyLayout:
 
         from ast import literal_eval as make_tuple
 
-        if(filter_perc > 0.0):
+        if filter_perc > 0.0:
             group_df = module_df.groupby(["name"]).mean()
-            f_group_df = group_df.loc[group_df[filter_by] > filter_perc * group_df[filter_by].max()]
+            f_group_df = group_df.loc[
+                group_df[filter_by] > filter_perc * group_df[filter_by].max()
+            ]
             callsites = f_group_df.index.values.tolist()
             module_df = module_df[module_df["name"].isin(callsites)]
-            
+
         nxg = nx.DiGraph()
         paths = module_df[path].unique()
 
         for idx, path in enumerate(paths):
             path = make_tuple(path)
             source_targets = HierarchyLayout._create_source_targets(path)
-            
+
             for edge in source_targets:
                 source = edge["source"]
                 target = edge["target"]
@@ -67,7 +69,7 @@ class HierarchyLayout:
             path (list) - paths expressed as a list.
         Return: edges (array) - edges expressed as source-target pairs.
         """
-        
+
         edges = []
 
         for idx in range(len(path_list)):
@@ -76,7 +78,7 @@ class HierarchyLayout:
 
             source = callflow.utils.sanitize_name(path_list[idx])
             target = callflow.utils.sanitize_name(path_list[idx + 1])
-        
+
             edges.append({"source": source, "target": target})
         return edges
 

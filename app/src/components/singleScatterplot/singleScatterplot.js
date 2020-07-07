@@ -16,7 +16,7 @@ export default {
 	template: tpl,
 	components: {
 		ToolTip
-	},	
+	},
 	data: () => ({
 		padding: {
 			top: 10,
@@ -68,7 +68,7 @@ export default {
 
 			this.xAxisHeight = this.boxWidth - (this.paddingFactor) * this.padding.left;
 			this.yAxisHeight = this.boxHeight - (this.paddingFactor) * this.padding.left;
-	
+
 			EventHandler.$emit("single_scatterplot", {
 				module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
 				dataset: this.$store.selectedTargetDataset,
@@ -93,7 +93,7 @@ export default {
 			this.xScale = d3.scaleLinear()
 				.domain(this.xArray)
 				.range([this.paddingFactor * this.padding.left, this.xAxisHeight]);
-			
+
 			this.yScale = d3.scaleLinear().domain(this.yArray).range([this.yAxisHeight, this.padding.top]);
 
 			this.regression = this.leastSquares(this.xArray, this.yArray);

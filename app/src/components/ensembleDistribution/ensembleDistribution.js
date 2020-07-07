@@ -82,7 +82,7 @@ export default {
 			});
 		},
 
-		isConnection(row, column){
+		isConnection(row, column) {
 			return true;
 		},
 
@@ -108,11 +108,11 @@ export default {
 					grid = data[callsite]["Inclusive"][method]["x"];
 					val = data[callsite]["Inclusive"][method]["y"];
 				}
-				else if(row == column) {
+				else if (row == column) {
 					grid = data[callsite]["Exclusive"][method]["x"];
 					val = data[callsite]["Exclusive"][method]["y"];
 				}
-				else{
+				else {
 					grid = [];
 					val = [];
 				}

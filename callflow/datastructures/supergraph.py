@@ -25,6 +25,7 @@ class SuperGraph(object):
     """
     SuperGraph class to handle processing of a an input Dataset.
     """
+
     # --------------------------------------------------------------------------
     _FILENAMES = {"params": "env_params.txt", "aux": "auxiliary_data.json"}
 
@@ -36,7 +37,7 @@ class SuperGraph(object):
             tag (str): Tag for each call graph.
             mode (str): process|render. process performs pre-processing, and render calculates layout for the client.
         """
-        assert mode in ['process', 'render']
+        assert mode in ["process", "render"]
         self.timer = Timer()
 
         self.props = props
@@ -98,29 +99,33 @@ class SuperGraph(object):
         """
         if self.props["format"][self.tag] == "hpctoolkit":
 
-            process = (Process.Builder(self.gf, self.tag)
-                              .add_path()
-                              .create_name_module_map()
-                              .add_callers_and_callees()
-                              .add_dataset_name()
-                              .add_imbalance_perc()
-                              .add_module_name_hpctoolkit()
-                              .add_vis_node_name()
-                              .build())
+            process = (
+                Process.Builder(self.gf, self.tag)
+                .add_path()
+                .create_name_module_map()
+                .add_callers_and_callees()
+                .add_dataset_name()
+                .add_imbalance_perc()
+                .add_module_name_hpctoolkit()
+                .add_vis_node_name()
+                .build()
+            )
 
         elif self.props["format"][self.tag] == "caliper_json":
 
-            process = (Process.Builder(self.gf, self.tag)
-                              .add_time_columns()
-                              .add_rank_column()
-                              .add_callers_and_callees()
-                              .add_dataset_name()
-                              .add_imbalance_perc()
-                              .add_module_name_caliper(self.props["callsite_module_map"])
-                              .create_name_module_map()
-                              .add_vis_node_name()
-                              .add_path()
-                              .build())
+            process = (
+                Process.Builder(self.gf, self.tag)
+                .add_time_columns()
+                .add_rank_column()
+                .add_callers_and_callees()
+                .add_dataset_name()
+                .add_imbalance_perc()
+                .add_module_name_caliper(self.props["callsite_module_map"])
+                .create_name_module_map()
+                .add_vis_node_name()
+                .add_path()
+                .build()
+            )
 
         self.gf = process.gf
 
@@ -134,31 +139,41 @@ class SuperGraph(object):
         """
         Filter the graphframe.
         """
-        self.gf = Filter(gf=self.gf, mode=mode,
-                            filter_by=self.props["filter_by"],
-                            filter_perc=self.props["filter_perc"]).gf
+        self.gf = Filter(
+            gf=self.gf,
+            mode=mode,
+            filter_by=self.props["filter_by"],
+            filter_perc=self.props["filter_perc"],
+        ).gf
 
- 
     # --------------------------------------------------------------------------
     # Question: These functions just call another class, should we just call the corresponding classes directly?
     def write_gf(self, write_df=True, write_graph=False, write_nxg=True):
         self.gf.write(self.dirname, write_df, write_graph, write_nxg)
 
     # --------------------------------------------------------------------------
-    def ensemble_auxiliary(self, datasets, MPIBinCount=20, RunBinCount=20,
-                                           process=True, write=True):
-        EnsembleAuxiliary(self.gf, datasets=datasets, props=self.props,
-                                   MPIBinCount=MPIBinCount,
-                                   RunBinCount=RunBinCount,
-                                   process=process, write=write)
+    def ensemble_auxiliary(
+        self, datasets, MPIBinCount=20, RunBinCount=20, process=True, write=True
+    ):
+        EnsembleAuxiliary(
+            self.gf,
+            datasets=datasets,
+            props=self.props,
+            MPIBinCount=MPIBinCount,
+            RunBinCount=RunBinCount,
+            process=process,
+            write=write,
+        )
 
     def single_auxiliary(self, dataset="", binCount=20, process=True):
-        SingleAuxiliary(self.gf,
+        SingleAuxiliary(
+            self.gf,
             dataset=dataset,
             props=self.props,
             MPIBinCount=binCount,
             process=process,
         )
+
     # ------------------------------------------------------------------------
     # Read/Write functions for parameter file, auxiliary information (for the client), and pair-wise similarity.
     @staticmethod
@@ -205,5 +220,6 @@ class SuperGraph(object):
 
         similarity_filepath = os.path.join(self.dirname, "/ensemble/similarity.json")
         with open(similarity_filepath, "w") as json_file:
-            json.dump(ret, json_file)    
+            json.dump(ret, json_file)
+
     # ------------------------------------------------------------------------

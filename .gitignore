@@ -39,3 +39,6 @@ dist/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+
+config_files copy/*
+examples/*

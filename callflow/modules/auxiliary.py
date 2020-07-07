@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-#------------------------------------------------------------------------------
-# Library imports 
+# ------------------------------------------------------------------------------
+# Library imports
 import os
 import json
 import math
@@ -14,14 +14,14 @@ import numpy as np
 from .gradients import Gradients
 from .boxplot import BoxPlot
 
-#------------------------------------------------------------------------------
-# CallFlow imports 
+# ------------------------------------------------------------------------------
+# CallFlow imports
 import callflow
 
 LOGGER = callflow.get_logger(__name__)
 from callflow.timer import Timer
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class EnsembleAuxiliary:
     def __init__(
         self,
@@ -36,7 +36,7 @@ class EnsembleAuxiliary:
         self.gf = gf
         # if 'rank' in self.gf.df.index.values and 'rank' in self.gf.df.columns:
         #     self.gf.df.reset_index(drop=True, inplace=True)
-        
+
         self.MPIBinCount = MPIBinCount
         self.RunBinCount = RunBinCount
         self.timer = Timer()
@@ -169,7 +169,7 @@ class EnsembleAuxiliary:
                 outliers=boxplot.outliers,
                 prop_hists=hists,
                 isEnsemble=True,
-                isCallsite=True
+                isCallsite=True,
             )
 
         ret["ensemble"] = ensemble
@@ -202,7 +202,7 @@ class EnsembleAuxiliary:
                         q=boxplot.q,
                         outliers=boxplot.outliers,
                         isEnsemble=False,
-                        isCallsite=True
+                        isCallsite=True,
                     )
             ret[dataset] = target
 
@@ -229,7 +229,11 @@ class EnsembleAuxiliary:
                 columnName="module", callsiteOrModule=module
             )
             ensemble[module] = self.pack_json(
-                df=module_df, name=module, gradients=gradients, prop_hists=hists, isEnsemble=True
+                df=module_df,
+                name=module,
+                gradients=gradients,
+                prop_hists=hists,
+                isEnsemble=True,
             )
 
         ret["ensemble"] = ensemble
@@ -254,7 +258,7 @@ class EnsembleAuxiliary:
                         name=module,
                         gradients=gradients,
                         prop_hists=hists,
-                        isEnsemble=False
+                        isEnsemble=False,
                     )
 
             ret[dataset] = target
@@ -320,7 +324,7 @@ class EnsembleAuxiliary:
         q={"Inclusive": {}, "Exclusive": {}},
         outliers={"Inclusive": {}, "Exclusive": {}},
         isEnsemble=False,
-        isCallsite=False
+        isCallsite=False,
     ):
         inclusive_variance = df["time (inc)"].var()
         exclusive_variance = df["time"].var()
@@ -334,22 +338,22 @@ class EnsembleAuxiliary:
             exclusive_variance = 0
             exclusive_std_deviation = 0
 
-        if(isCallsite):
-            if(isEnsemble):
+        if isCallsite:
+            if isEnsemble:
                 time_inc = []
                 time = []
             else:
                 time_inc = df["time (inc)"].tolist()
                 time = df["time"].tolist()
         else:
-            if(isEnsemble):
+            if isEnsemble:
                 time_inc = []
                 time = []
             else:
-                module_df = df.groupby(['module', "rank"]).mean()
-                x_df = module_df.xs(name, level='module')
-                time_inc = x_df['time (inc)'].tolist()
-                time = x_df['time'].tolist()
+                module_df = df.groupby(["module", "rank"]).mean()
+                x_df = module_df.xs(name, level="module")
+                time_inc = x_df["time (inc)"].tolist()
+                time = x_df["time"].tolist()
 
         result = {
             "name": name,
@@ -456,7 +460,7 @@ class EnsembleAuxiliary:
 
             time_target_inclusive_arr = np.array(target_df["time (inc)"].tolist())
             time_target_exclusive_arr = np.array(target_df["time"].tolist())
-            
+
         elif prop == "rank":
             ensemble_prop = ensemble_df.groupby(["dataset", "rank"])[
                 ["time", "time (inc)"]

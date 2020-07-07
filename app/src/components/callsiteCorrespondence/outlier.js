@@ -181,7 +181,7 @@ export default {
 			for (const b of circles) {
 
 				// Remove circles from the queue that can’t intersect the new circle b.
-				while (head && head.x < b.x - radius2) {head = head.next;}
+				while (head && head.x < b.x - radius2) { head = head.next; }
 
 				// Choose the minimum non-intersecting tangent.
 				if (intersects(b.x, b.y = 0)) {
@@ -198,8 +198,8 @@ export default {
 
 				// Add b to the queue.
 				b.next = null;
-				if (head === null) {head = tail = b;}
-				else {tail = tail.next = b;}
+				if (head === null) { head = tail = b; }
+				else { tail = tail.next = b; }
 			}
 
 			let temp = this.groupByBand(circles, this.$store.bandWidth);

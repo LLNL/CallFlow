@@ -71,7 +71,7 @@ export default {
 			this.rankScaleWidth = this.histogramWidth;
 
 			this.xAxisHeight = this.histogramWidth - (this.paddingFactor - 0.5) * this.padding.left;
-			this.yAxisHeight = this.histogramHeight- (this.paddingFactor - 0.5) * this.padding.left;
+			this.yAxisHeight = this.histogramHeight - (this.paddingFactor - 0.5) * this.padding.left;
 
 			this.svg = d3.select("#" + this.svgID)
 				.attrs({
@@ -102,14 +102,14 @@ export default {
 
 			this.xScale = d3.scaleBand()
 				.domain(this.xVals)
-				.range([ this.paddingFactor * this.padding.left, this.xAxisHeight]);
+				.range([this.paddingFactor * this.padding.left, this.xAxisHeight]);
 
 			if (this.$store.selectedScale == "Linear") {
 				this.yScale = d3.scaleLinear()
 					.domain([0, d3.max(this.freq)])
 					.range([this.yAxisHeight, this.padding.top]);
 				this.logScaleBool = false;
-			} 
+			}
 			else if (this.$store.selectedScale == "Log") {
 				this.yScale = d3.scaleLog()
 					.domain([1, d3.max(this.freq)])

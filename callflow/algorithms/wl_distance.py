@@ -18,6 +18,7 @@ http://jmlr.csail.mit.edu/papers/v12/shervashidze11a.html
 Author : Sandro Vega-Pons, Emanuele Olivetti
 """
 
+
 class GK_WL:
     """
     Weisfeiler_Lehman graph kernel.

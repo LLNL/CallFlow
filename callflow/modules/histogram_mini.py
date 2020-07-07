@@ -2,12 +2,12 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Library imports
 import pandas as pd
 import json
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class MiniHistogram:
     def __init__(self, state, target_datasets):
         self.state = state

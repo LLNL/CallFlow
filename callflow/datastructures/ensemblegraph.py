@@ -2,14 +2,15 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Library imports
 import networkx as nx
 import pandas as pd
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # CallFlow imports
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 from callflow import SuperGraph
 

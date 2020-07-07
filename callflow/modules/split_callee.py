@@ -23,7 +23,6 @@ class SplitCallee:
         module_group_df = gf.df.groupby(["module"])
         module_name_group_df = gf.df.groupby(["module", "name"])
 
-
         for path in paths:
             component_edges = self.create_source_targets(path["component_path"])
             for idx, edge in enumerate(component_edges):

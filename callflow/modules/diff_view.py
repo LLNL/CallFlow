@@ -2,19 +2,20 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Library imports.
 import numpy as np
 import pandas as pd
 from scipy import stats
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # CallFlow imports
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class DiffView:
     def __init__(self, state, dataset1, dataset2, col):
         self.state = state

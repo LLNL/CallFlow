@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 import * as d3 from "d3";
-import {vec2} from "gl-matrix";
-import {tableau10} from "./colors";
+import { vec2 } from "gl-matrix";
+import { tableau10 } from "./colors";
 
 const svg = d3.select("body")
 	.append("svg")
@@ -29,8 +29,7 @@ export class Histogram {
 		barSize,
 		showHistogramIndicator = true,
 		offsetX = 0,
-		offsetY = 0)
-	{
+		offsetY = 0) {
 		this.data = data;
 		this.cluster = cluster;
 		this.featureName = featureName;
@@ -41,7 +40,7 @@ export class Histogram {
 		this.barSize = barSize;
 		this.numBins = this.data["target"].length;
 		this.maxBinHeight =
-            d3.max([d3.max(this.data["others"]), d3.max(this.data["target"])]);
+			d3.max([d3.max(this.data["others"]), d3.max(this.data["target"])]);
 		this.padding = {
 			"left": 40,
 			"top": 10,
@@ -61,11 +60,11 @@ export class Histogram {
 		this.center = vec2.create();
 
 		this.histogram =
-            histogramLayer.append("g").attr("class", "histogram-box");
+			histogramLayer.append("g").attr("class", "histogram-box");
 		this.annotation =
-            histogramLayer.append("g").attr("class", "annotation");
+			histogramLayer.append("g").attr("class", "annotation");
 		this.indicator =
-            indicatorLayer.append("line").style("stroke", "#767676");
+			indicatorLayer.append("line").style("stroke", "#767676");
 
 		this.addEvents();
 		this.update();
@@ -73,8 +72,7 @@ export class Histogram {
 		this.setHistogramIndicatorVisibility(showHistogramIndicator);
 	}
 
-	setHistogramIndicatorVisibility(b)
-	{
+	setHistogramIndicatorVisibility(b) {
 		if (b) {
 			this.indicator.attr("display", "");
 		}
@@ -83,13 +81,11 @@ export class Histogram {
 		}
 	}
 
-	toggleDraggable()
-	{
+	toggleDraggable() {
 		this.setDraggable(!this.draggable);
 	}
 
-	setDraggable(b)
-	{
+	setDraggable(b) {
 		this.draggable = b;
 		if (this.draggable) {
 			this.histogram.attr("class", "histogram-box accept-mouse-event");
@@ -99,8 +95,7 @@ export class Histogram {
 		}
 	}
 
-	addEvents()
-	{
+	addEvents() {
 		this.histogram.call(d3.drag().on("drag", () => {
 			this.offset[0] += d3.event["dx"];
 			this.offset[1] += d3.event["dy"];
@@ -112,14 +107,12 @@ export class Histogram {
 		});
 	}
 
-	update()
-	{
+	update() {
 		this.updateHistogram();
 		this.updatePosition();
 	}
 
-	updatePosition()
-	{
+	updatePosition() {
 		const b = this.targetElement.getBoundingClientRect();
 		vec2.set(this.anchor, b.x + b.width / 2, b.y + b.height / 2);
 		vec2.add(this.center, this.anchor, this.offset);
@@ -139,8 +132,7 @@ export class Histogram {
 			.attr("y2", this.center[1]);
 	}
 
-	updateHistogram()
-	{
+	updateHistogram() {
 		const others = this.histogram.append("rect")
 			.attr("class", "border")
 			.attr("width", this.width)
@@ -154,7 +146,7 @@ export class Histogram {
 
 		const y = (d, i) => {
 			return this.padding.top + this.barSize[1] -
-                   d * this.barSize[1] / this.maxBinHeight;
+				d * this.barSize[1] / this.maxBinHeight;
 		};
 
 		const h = (d, i) => {
@@ -200,8 +192,7 @@ export class Histogram {
 		this.updateBottomAxis();
 	}
 
-	updateLeftAxis()
-	{
+	updateLeftAxis() {
 		const scale = d3.scaleLinear().domain([0, this.maxBinHeight]).range([
 			this.innerHeight + this.padding.top, this.padding.top
 		]);
@@ -211,7 +202,7 @@ export class Histogram {
 			.call(
 				d3.axisLeft(scale)
 					.tickSize(3)
-				// .tickFormat(d3.format('.0%'))
+					// .tickFormat(d3.format('.0%'))
 					.tickFormat(d3.format(".2"))
 					.tickValues([0, this.maxBinHeight / 2, this.maxBinHeight]));
 		this.histogram.append("text")
@@ -224,8 +215,7 @@ export class Histogram {
 			.text("Relative frequency");
 	}
 
-	updateBottomAxis()
-	{
+	updateBottomAxis() {
 		const scale = d3.scalePoint().domain(this.data["bins"]).range([
 			this.padding.left, this.innerWidth + this.padding.left
 		]);
@@ -247,13 +237,12 @@ export class Histogram {
 			.attr("fill", "currentColor")
 			.attr("x", this.padding.left + this.innerWidth / 2 - 10)
 			.attr("y", this.height - 4)
-		// .attr('y', this.padding.top - 4)
+			// .attr('y', this.padding.top - 4)
 			.style("text-anchor", "middle")
 			.text(this.featureName);
 	}
 
-	updateAnnotNumber(number)
-	{
+	updateAnnotNumber(number) {
 		const annotationSize = 15.0;
 		const fontSize = annotationSize * 0.9;
 		this.annotationData = [number];
@@ -295,7 +284,7 @@ export class Histogram {
 			.attr("fill", "white")
 			.attr("font-size", fontSize)
 			.style("text-anchor", "middle")
-			.text((d) => {return d;})
+			.text((d) => { return d; })
 			.attr("pointer-events", "none")
 			.merge(annotText)
 			.attr("x", this.width - annotationSize + 5)
@@ -305,23 +294,20 @@ export class Histogram {
 			.attr("fill", "white")
 			.attr("font-size", fontSize)
 			.style("text-anchor", "middle")
-			.text((d) => {return d;})
+			.text((d) => { return d; })
 			.attr("pointer-events", "none");
 	}
 
-	remove()
-	{
+	remove() {
 		this.removed = true;
 		this.histogram.remove();
 		this.indicator.remove();
 		this.annotation.remove();
 	}
 
-	show()
-	{
+	show() {
 	}
 
-	hide()
-	{
+	hide() {
 	}
 }

@@ -2,11 +2,11 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Library imports
 import pandas as pd
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class RuntimeScatterplot:
     def __init__(self, states, module):
         self.graph = state.new_gf.graph
