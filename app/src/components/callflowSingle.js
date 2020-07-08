@@ -468,12 +468,12 @@ export default {
 
 		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
 		sortModulesByMetric(attr) {
-			let module_list = Object.keys(this.$store.modules["ensemble"]);
+			let module_list = Object.keys(this.$store.modules[this.selectedTargetDataset]);
 
 			// Create a map for each dataset mapping the respective mean times.
 			let map = {};
 			for (let module_name of module_list) {
-				map[module_name] = this.$store.modules["ensemble"][module_name][this.$store.selectedMetric]["mean_time"];
+				map[module_name] = this.$store.modules[this.selectedTargetDataset][module_name][this.$store.selectedMetric]["mean_time"];
 			}
 
 			// Create items array

@@ -164,7 +164,10 @@ class Group(callflow.GraphFrame):
             else:
                 # Assign the from and to callsite.
                 from_callsite = path[idx - 1]
-                to_callsite = callsite
+                if "/" in callsite:
+                    to_callsite = callsite.split("/")[-1]
+                else:
+                    to_callsite = callsite
 
                 from_module = self.callsite_module_map[from_callsite]
                 to_module = self.callsite_module_map[to_callsite]

@@ -24,7 +24,7 @@ export default {
 		},
 
 		colorScale() {
-			// this.$parent.$parent.$refs.EnsembleColorMap.update(this.$store.mode, hist_min, hist_max);
+			this.$parent.$parent.$refs.EnsembleColorMap.update(this.$store.mode, hist_min, hist_max);
 		},
 
 		gradients() {
@@ -44,7 +44,7 @@ export default {
 
 				let grid = [];
 				let val = [];
-				if (node.type == "super-node") {
+				if (node.type == "super-node" && this.$store.modules.ensemble[node.module] != undefined) {
 					grid = this.$store.modules["ensemble"][node.module][this.$store.selectedMetric]["gradients"]["hist"]["x"];
 					val = this.$store.modules["ensemble"][node.module][this.$store.selectedMetric]["gradients"]["hist"]["y"];
 				}

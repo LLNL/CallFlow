@@ -31,7 +31,6 @@ class EnsembleAuxiliary:
         MPIBinCount="20",
         RunBinCount="20",
         process=True,
-        write=False,
     ):
         self.gf = gf
         # if 'rank' in self.gf.df.index.values and 'rank' in self.gf.df.columns:
@@ -47,20 +46,22 @@ class EnsembleAuxiliary:
         # self.df = self.df.rename_axis(['Node', 'Rank'])
 
         self.process = process
-        self.write = write
 
         self.hist_props = ["rank", "name", "dataset", "all_ranks"]
         self.filter = True
 
         if process:
             self.compute()
-        else:
-            self.read()
+
         LOGGER.info(self.timer)
 
     def compute(self):
         ret = {}
-        path = os.path.join(self.props["save_path"], "ensemble/auxiliary_data.json")
+        if len(self.datasets) == 1:
+            filename = self.datasets[0] + "/auxiliary_data.json"
+        else:
+            filename = "ensemble/auxiliary_data.json"
+        path = os.path.join(self.props["save_path"], filename)
 
         LOGGER.info("Calculating Gradients, Mean runtime variations, and Distribution.")
         with self.timer.phase("Process data"):
