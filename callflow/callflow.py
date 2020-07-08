@@ -409,7 +409,9 @@ class CallFlow:
             return ret
 
         elif operation_name == "auxiliary":
-            return self.supergraphs["ensemble"].auxiliary_data
+            if len(operation["datasets"]) > 1:
+                return self.supergraphs["ensemble"].auxiliary_data
+            return self.supergraphs[operation["datasets"][0]].auxiliary_data
 
         elif operation_name == "compare":
             compareDataset = operation["compareDataset"]

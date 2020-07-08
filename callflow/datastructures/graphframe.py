@@ -122,15 +122,19 @@ class GraphFrame(ht.GraphFrame):
             gf = ht.GraphFrame.from_hpctoolkit(data_path)
 
         elif config["format"][name] == "caliper":
-            data_path = os.path.join(config["data_path"], config["paths"][name])
-            gf = ht.GraphFrame.from_caliper(data_path, query="")
+            grouping_attribute = "function"
+            default_metric = "sum(sum#time.duration), inclusive_sum(sum#time.duration)"
+            query = "select function,%s group by %s format json-split" % (
+                default_metric,
+                grouping_attribute,
+            )
+            gf = ht.GraphFrame.from_caliper(data_path, query=query)
 
         elif config["format"][name] == "caliper_json":
-            data_path = os.path.join(config["data_path"], config["paths"][name])
             gf = ht.GraphFrame.from_caliper(data_path, query="")
 
         elif config["format"][name] == "gprof":
-            gf = ht.GraphFrame.from_grof_dot(config["data_path"])
+            gf = ht.GraphFrame.from_gprof_dot(data_path)
 
         elif config["format"][name] == "literal":
             gf = ht.GraphFrame.from_literal(config["data_path"])

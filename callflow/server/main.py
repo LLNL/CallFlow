@@ -163,6 +163,26 @@ class CallFlowServer:
             json_result = json.dumps(result)
             emit("init", json_result, json=True)
 
+        @sockets.on("ensemble_callsite_data", namespace="/")
+        def ensemble_callsite_data(data):
+            """
+            Data house for ensemble callflow.
+            :return: Auxiliary data.
+            """
+            LOGGER.debug("[Socket request] ensemble_callsite_data: {}".format(data))
+            result = self.callflow.request_ensemble(
+                {
+                    "name": "auxiliary",
+                    "datasets": data["datasets"],
+                    "sortBy": data["sortBy"],
+                    "MPIBinCount": data["MPIBinCount"],
+                    "RunBinCount": data["RunBinCount"],
+                    "module": data["module"],
+                    "re-process": data["re_process"],
+                }
+            )
+            emit("ensemble_callsite_data", result, json=True)
+
         @sockets.on("reveal_callsite", namespace="/")
         def reveal_callsite(data):
             """
@@ -275,26 +295,6 @@ class CallFlowServer:
             emit("single_supergraph", json_result, json=True)
 
     def _request_handler_ensemble(self):
-        @sockets.on("ensemble_callsite_data", namespace="/")
-        def ensemble_callsite_data(data):
-            """
-            Data house for ensemble callflow.
-            :return: Auxiliary data.
-            """
-            LOGGER.debug("[Socket request] ensemble_callsite_data: {}".format(data))
-            result = self.callflow.request_ensemble(
-                {
-                    "name": "auxiliary",
-                    "datasets": data["datasets"],
-                    "sortBy": data["sortBy"],
-                    "MPIBinCount": data["MPIBinCount"],
-                    "RunBinCount": data["RunBinCount"],
-                    "module": data["module"],
-                    "re-process": data["re_process"],
-                }
-            )
-            emit("ensemble_callsite_data", result, json=True)
-
         @sockets.on("ensemble_cct", namespace="/")
         def ensemble_cct(data):
             """

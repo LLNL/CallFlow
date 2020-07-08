@@ -111,7 +111,10 @@ class SuperGraph(object):
                 .build()
             )
 
-        elif self.props["format"][self.tag] == "caliper_json":
+        elif (
+            self.props["format"][self.tag] == "caliper_json"
+            or self.props["format"][self.tag] == "caliper"
+        ):
 
             process = (
                 Process.Builder(self.gf, self.tag)
@@ -121,6 +124,21 @@ class SuperGraph(object):
                 .add_dataset_name()
                 .add_imbalance_perc()
                 .add_module_name_caliper(self.props["callsite_module_map"])
+                .create_name_module_map()
+                .add_vis_node_name()
+                .add_path()
+                .build()
+            )
+
+        elif self.props["format"][self.tag] == "gprof":
+            process = (
+                Process.Builder(self.gf, self.tag)
+                .add_nid_column()
+                .add_time_columns()
+                .add_rank_column()
+                .add_callers_and_callees()
+                .add_dataset_name()
+                .add_imbalance_perc()
                 .create_name_module_map()
                 .add_vis_node_name()
                 .add_path()
@@ -162,13 +180,12 @@ class SuperGraph(object):
             MPIBinCount=MPIBinCount,
             RunBinCount=RunBinCount,
             process=process,
-            write=write,
         )
 
     def single_auxiliary(self, dataset="", binCount=20, process=True):
-        SingleAuxiliary(
+        EnsembleAuxiliary(
             self.gf,
-            dataset=dataset,
+            datasets=[dataset],
             props=self.props,
             MPIBinCount=binCount,
             process=process,

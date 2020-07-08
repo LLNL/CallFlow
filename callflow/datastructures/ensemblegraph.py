@@ -100,8 +100,8 @@ class EnsembleGraph(SuperGraph):
         LOGGER.debug(f"Nodes in Graph 1 and Graph 2 are same? : {is_same}")
         if set(nxg_1) != set(nxg_2):
             LOGGER.debug(f"Difference is { list(set(nxg_1) - set(nxg_2))}")
-            LOGGER.debug(f"Nodes in Graph 1: {set(nxg_1)}")
-            LOGGER.debug(f"Nodes in Graph 2: {set(nxg_2)}")
+            # LOGGER.debug(f"Nodes in Graph 1: {set(nxg_1)}")
+            # LOGGER.debug(f"Nodes in Graph 2: {set(nxg_2)}")
         LOGGER.debug("-=========================-")
 
         if nxg_2.is_multigraph():

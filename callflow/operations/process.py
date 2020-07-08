@@ -9,6 +9,7 @@ import random
 from functools import wraps
 
 import numpy as np
+import pandas as pd
 from scipy.stats import kurtosis, skew
 
 # ------------------------------------------------------------------------------
@@ -213,12 +214,28 @@ class Process:
                 self.gf.df["rank"] = 0
             return self
 
+        def add_nid_column(self):
+            if "nid" not in self.gf.df.columns:
+                self.gf.df["nid"] = self.gf.df.groupby("name")["name"].transform(
+                    lambda x: pd.factorize(x)[0]
+                )
+            return self
+
         def add_time_columns(self):
             if "time (inc)" not in self.gf.df.columns:
                 self.gf.df["time (inc)"] = self.gf.df["inclusive#time.duration"]
 
-            if "time" not in self.gf.df.columns:
+            if (
+                "time" not in self.gf.df.columns
+                and "sum#time.duration" in self.gf.df.columns
+            ):
                 self.gf.df["time"] = self.gf.df["sum#time.duration"]
+
+            if (
+                "time" not in self.gf.df.columns
+                and "sum#sum#time.duration" in self.gf.df.columns
+            ):
+                self.gf.df["time"] = self.gf.df["sum#sum#time.duration"]
             return self
 
         def create_name_module_map(self):
