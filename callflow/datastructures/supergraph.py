@@ -183,9 +183,9 @@ class SuperGraph(object):
         )
 
     def single_auxiliary(self, dataset="", binCount=20, process=True):
-        EnsembleAuxiliary(
+        SingleAuxiliary(
             self.gf,
-            datasets=[dataset],
+            dataset=dataset,
             props=self.props,
             MPIBinCount=binCount,
             process=process,

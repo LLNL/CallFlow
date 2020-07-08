@@ -33,8 +33,6 @@ class EnsembleAuxiliary:
         process=True,
     ):
         self.gf = gf
-        # if 'rank' in self.gf.df.index.values and 'rank' in self.gf.df.columns:
-        #     self.gf.df.reset_index(drop=True, inplace=True)
 
         self.MPIBinCount = MPIBinCount
         self.RunBinCount = RunBinCount
@@ -43,7 +41,6 @@ class EnsembleAuxiliary:
         self.datasets = self.props["dataset_names"]
 
         self.df = self.select_rows(self.gf.df, self.datasets)
-        # self.df = self.df.rename_axis(['Node', 'Rank'])
 
         self.process = process
 
@@ -58,9 +55,9 @@ class EnsembleAuxiliary:
     def compute(self):
         ret = {}
         if len(self.datasets) == 1:
-            filename = self.datasets[0] + "/auxiliary_data.json"
+            filename = os.path.join(self.datasets[0], "auxiliary_data.json")
         else:
-            filename = "ensemble/auxiliary_data.json"
+            filename = os.path.join("ensemble", "auxiliary_data.json")
         path = os.path.join(self.props["save_path"], filename)
 
         LOGGER.info("Calculating Gradients, Mean runtime variations, and Distribution.")
@@ -72,9 +69,7 @@ class EnsembleAuxiliary:
             ret["module"] = self.module_data()
         with self.timer.phase("Module callsite map data"):
             ret["moduleCallsiteMap"] = self.get_module_callsite_map()
-        # with self.timer.phase("Callsite module map data"):
-        #     ret['callsiteModuleMap'] = self.get_callsite_module_map()
-        # if self.write:
+
         with self.timer.phase("Writing data"):
             with open(path, "w") as f:
                 json.dump(ret, f)

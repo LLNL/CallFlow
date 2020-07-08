@@ -652,20 +652,19 @@ export default {
 			this.clearLocal();
 			this.$socket.emit("init", {
 				mode: this.selectedMode,
-				dataset: this.$store.selectedTargetDataset
+				dataset: this.$store	.selectedTargetDataset
 			});
 			this.init();
 		},
 
 		updateTargetDataset() {
-			this.clear();
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			this.$store.compareDataset = ''
 			this.$store.encoding = 'MeanGradients'
 			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
-			this.init();
 			EventHandler.$emit("show_target_auxiliary", {
 			});
+			this.init();
 		},
 
 		updateMode() {

@@ -4,10 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 from setuptools import setup, find_packages
-
-# ------------------------------------------------------------------------------
-__version_info__ = ("0", "0", "1")
-__version__ = ".".join(__version_info__)
+from callflow import __version__
 
 # ------------------------------------------------------------------------------
 setup(

@@ -68,6 +68,11 @@ export default {
 		EventHandler.$on("split_by_callees", function () {
 			self.clear();
 		});
+
+		EventHandler.$on("show_target_auxiliary", (data) => {
+			self.$refs.EnsembleNodes.$refs.TargetLine.clear();
+			self.$refs.MiniHistograms.clear();
+		});
 	},
 
 	sockets: {

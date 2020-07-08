@@ -1,7 +1,6 @@
 # CallFlow
 
-CallFlow is an interactive visual analysis tool that provides a high-level overview of CCTs together with semantic refinement operations to progressively explore the
-CCTs.
+CallFlow is an interactive visual analysis tool that provides a high-level overview of CCTs together with semantic refinement operations to progressively explore the CCTs.
 
 # Requirements
 
@@ -41,15 +40,15 @@ See [data examples](https://github.com/jarusified/CallFlow/tree/v2/data)
 To process the datasets,
 
 ```
-cd callflow/server
-python3 app.py --config {config_file_path} --process
+cd server
+python3 server/main.py --config {config_file_path} --process
 ```
 
 To run the server,
 
 ```
-cd callflow/server
-python3 app.py --config {config_file_path}
+cd server
+python3 server/main.py --config {config_file_path}
 ```
 
 To run the web app server,

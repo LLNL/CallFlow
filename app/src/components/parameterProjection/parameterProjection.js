@@ -562,7 +562,7 @@ export default {
 		},
 
 		clear() {
-			d3.select("#parameter-projection-tooltip").remove();
+			d3.selectAll("#parameter-projection-tooltip").remove();
 			// this.svg.selectAll('.dot').remove()
 			d3.selectAll('.outer-circle').remove()
 			this.svg.selectAll('.lasso').remove()
