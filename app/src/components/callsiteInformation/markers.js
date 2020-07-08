@@ -52,9 +52,9 @@ export default {
 				.attrs({
 					"class": "median",
 					"y1": this.medianMarkery1,
-					"x1": this.xScale(this.q.q2),
+					"x1": this.xScale(this.targetq.q2),
 					"y2": this.medianMarkery2,
-					"x2": this.xScale(this.q.q2),
+					"x2": this.xScale(this.targetq.q2),
 					"stroke": "black"
 				})
 				.style("stroke-width", "2")

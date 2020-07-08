@@ -100,9 +100,9 @@ export default {
 				.attrs({
 					"class": "centerLine",
 					"y1": this.$parent.centerLinePosition,
-					"x1": this.xScale(this.q.min),
+					"x1": this.xScale(this.targetq.min),
 					"y2": this.$parent.centerLinePosition,
-					"x2": this.xScale(this.q.max),
+					"x2": this.xScale(this.targetq.max),
 					"stroke": "black"
 				})
 				.style("stroke-width", "1.5")

@@ -29,9 +29,6 @@
               <v-card-title>Data Path: {{ data.data_path }}</v-card-title>
             </v-card>
             <v-card tile>
-              <v-card-title>Run names: {{ data.dataset_names }}</v-card-title>
-            </v-card>
-            <v-card tile>
               <v-card-title>Runtime Information</v-card-title>
               <v-data-table
                 dense
@@ -51,7 +48,7 @@
                 </template>
               </v-data-table>
             </v-card>
-            <v-card tile>
+            <!-- <v-card tile>
               <v-card-title>Module Callsite Mapping</v-card-title>
               <v-data-table
                 dense
@@ -81,7 +78,7 @@
                   <td :colspan="headers.length">More info about {{ item.name }}</td>
                 </template>
               </v-data-table>
-            </v-card>
+            </v-card>-->
           </v-container>
         </v-layout>
       </v-content>

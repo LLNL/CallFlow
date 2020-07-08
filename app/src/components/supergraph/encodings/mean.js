@@ -3,14 +3,12 @@
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * SPDX-License-Identifier: MIT
  */
-import * as d3 from "d3";
-import { tickStep } from "d3";
 
 export default {
 	template: "<g :id=\"id\"></g>",
 	name: "Mean",
 	data: () => ({
-		stroke_width: 7,
+		stroke_width: 3,
 		id: "mean"
 	}),
 	methods: {
@@ -57,29 +55,29 @@ export default {
 					"height": (d) => {
 						return d.height;
 					},
-					"stroke": "#000"
-				})
-				.style("stroke-width", (d) => {
-					if (d.type == "intermediate") {
-						return 1;
-					}
-					return this.stroke_width;
-				})
-				.style("fill", (d) => {
-					let color = "";
-					if (d.type == "intermediate") {
-						color = this.$store.runtimeColor.intermediate;
-					}
-					else {
-						if (this.$store.selectedMetric == "Inclusive") {
-							color = this.$store.runtimeColor.getColor(d, "time (inc)");
+					"stroke": "#000",
+					"stroke-width": (d) => {
+						if (d.type == "intermediate") {
+							return 1;
 						}
-						else if (this.$store.selectedMetric == "Exclusive") {
-							color = this.$store.runtimeColor.getColor(d, "time");
+						return this.stroke_width;
+					},
+					"fill": (d) => {
+						let color = "";
+						if (d.type == "intermediate") {
+							color = this.$store.runtimeColor.intermediate;
 						}
+						else {
+							if (this.$store.selectedMetric == "Inclusive") {
+								color = this.$store.runtimeColor.getColor(d, "time (inc)");
+							}
+							else if (this.$store.selectedMetric == "Exclusive") {
+								color = this.$store.runtimeColor.getColor(d, "time");
+							}
+						}
+						return color;
 					}
-					return color;
-				});
+				})
 		},
 
 		clear() {

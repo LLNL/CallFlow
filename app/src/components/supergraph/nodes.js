@@ -126,7 +126,7 @@ export default {
 
 			this.ensemblePath();
 			this.text();
-			if (this.$store.showTarget && this.$store.selectedMode == "Ensemble") {
+			if (this.$store.showTarget && this.$store.selectedMode === "Ensemble") {
 				this.$refs.TargetLine.init(this.graph.nodes);
 
 				if (this.$store.comparisonMode == false) {
@@ -146,14 +146,15 @@ export default {
 			}
 		},
 
+		// Attach the svg into the node object. 
 		postVis() {
 			for (let node of this.graph.nodes) {
-				node.svg = this.containerG.select("#ensemble-callsite-" + node.client_idx);
+				node.svg = this.containerG.select("#callsite-" + node.client_idx);
 			}
 		},
 
 		clearRectangle() {
-			d3.selectAll(".ensemble-callsite").remove();
+			d3.selectAll(".callsite").remove();
 		},
 
 		setEncoding(encoding, data) {
@@ -205,57 +206,73 @@ export default {
 		click(node) {
 			let nodeSVG = this.containerG.select("#callsite-" + node.client_idx);
 
-			if (!this.drawGuidesMap[node.id]) {
-				this.$refs.Guides.visualize(node, "permanent", nodeSVG);
-				this.drawGuidesMap[node.id] = true;
+			if (this.$store.selectedMode == "Ensemble") {
+				if (!this.drawGuidesMap[node.id]) {
+					this.$refs.Guides.visualize(node, "permanent", nodeSVG);
+					this.drawGuidesMap[node.id] = true;
+				}
+
+				this.$socket.emit("module_hierarchy", {
+					module: this.$store.selectedModule,
+					name: this.$store.selectedName,
+					datasets: this.$store.selectedDatasets,
+				});
+
+				EventHandler.$emit("ensemble_histogram", {
+					module: this.$store.selectedModule,
+					datasets: this.$store.selectedDatasets,
+				});
+
+				EventHandler.$emit("ensemble_distribution", {
+					module: this.$store.selectedModule,
+					datasets: this.$store.selectedDatasets,
+				});
+
+				EventHandler.$emit("ensemble_scatterplot", {
+					module: this.$store.selectedModule,
+					dataset1: this.$store.selectedDatasets,
+				});
+
+				this.$socket.emit("ensemble_auxiliary", {
+					module: this.$store.selectedModule,
+					datasets: this.$store.selectedDatasets,
+					sortBy: this.$store.auxiliarySortBy,
+				});
+
+
 			}
+			else if (this.$store.selectedMode == "Single") {
+				EventHandler.$emit("single_histogram", {
+					module: this.$store.selectedModule,
+					groupBy: this.$store.selectedGroupBy,
+					dataset: this.$store.selectedTargetDataset,
+				});
 
-			this.$store.selectedNode = node;
-			this.$store.selectedModule = node.module;
-			this.$store.selectedName = node.name;
-
-			this.$socket.emit("module_hierarchy", {
-				module: this.$store.selectedModule,
-				name: this.$store.selectedName,
-				datasets: this.$store.selectedDatasets,
-			});
-
-			EventHandler.$emit("ensemble_histogram", {
-				module: this.$store.selectedModule,
-				datasets: this.$store.selectedDatasets,
-			});
-
-			EventHandler.$emit("ensemble_distribution", {
-				module: this.$store.selectedModule,
-				datasets: this.$store.selectedDatasets,
-			});
-
-			EventHandler.$emit("ensemble_scatterplot", {
-				module: this.$store.selectedModule,
-				dataset1: this.$store.selectedDatasets,
-			});
-
-			this.$socket.emit("ensemble_auxiliary", {
-				module: this.$store.selectedModule,
-				datasets: this.$store.selectedDatasets,
-				sortBy: this.$store.auxiliarySortBy,
-			});
+				EventHandler.$emit("single_scatterplot", {
+					module: this.$store.selectedModule,
+					dataset: this.$store.selectedTargetDataset,
+				});
+			}
 
 			EventHandler.$emit("select_module", {
 				module: this.$store.selectedModule,
 			});
+
+			this.$store.selectedNode = node;
+			this.$store.selectedModule = node.module;
+			this.$store.selectedName = node.name;
 		},
 
 		mouseover(node) {
 			// this.$refs.ToolTip.visualize(self.graph, node)
-			if (this.$store.selectedMode == "Ensemble") {
+			if (this.$store.selectedMode == "Ensemble" && this.$store.comparisonMode == false) {
 				this.$refs.Guides.visualize(node, "temporary");
 			}
 		},
 
 		mouseout(node) {
 			// this.$refs.ToolTip.clear()
-			if (this.$store.selectedMode == "Ensemble") {
+			if (this.$store.selectedMode == "Ensemble" && this.$store.comparisonMode == false) {
 				this.$refs.Guides.clear(node, "temporary");
 				if (this.permanentGuides == false) {
 					d3.selectAll(".ensemble-edge")

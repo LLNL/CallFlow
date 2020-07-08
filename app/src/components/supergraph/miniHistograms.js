@@ -28,7 +28,6 @@ export default {
 		nodes: null,
 		edges: null,
 		offset: 7,
-		// offset: 0,
 		bandWidth: 0,
 	}),
 
@@ -57,9 +56,6 @@ export default {
 
 					let data = this.target_callsite_data[callsite][this.$store.selectedMetric]["prop_histograms"][this.$store.selectedProp];
 					this.render(data, callsite);
-				}
-				else if (node.type == "intermediate") {
-					console.log("TODO");
 				}
 			}
 		},

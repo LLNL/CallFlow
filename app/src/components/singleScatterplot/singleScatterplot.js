@@ -63,11 +63,11 @@ export default {
 
 			this.svg = d3.select("#" + this.svgID)
 				.attr("width", this.boxWidth)
-				.attr("height", this.boxHeight)
+				.attr("height", this.boxHeight - this.padding.top)
 				.attr("transform", "translate(" + this.padding.left + "," + this.padding.top + ")");
 
-			this.xAxisHeight = this.boxWidth - (this.paddingFactor) * this.padding.left;
-			this.yAxisHeight = this.boxHeight - (this.paddingFactor) * this.padding.left;
+			this.xAxisHeight = this.boxWidth - (4) * this.padding.left;
+			this.yAxisHeight = this.boxHeight - (4) * this.padding.left;
 
 			EventHandler.$emit("single_scatterplot", {
 				module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
@@ -91,10 +91,12 @@ export default {
 			this.yArray = temp[5];
 
 			this.xScale = d3.scaleLinear()
-				.domain(this.xArray)
-				.range([this.paddingFactor * this.padding.left, this.xAxisHeight]);
+				.domain([this.xMin, this.xMax])
+				.range([0, this.xAxisHeight]);
 
-			this.yScale = d3.scaleLinear().domain(this.yArray).range([this.yAxisHeight, this.padding.top]);
+			this.yScale = d3.scaleLinear()
+				.domain([this.yMin, this.yMax])
+				.range([this.yAxisHeight, this.padding.top]);
 
 			this.regression = this.leastSquares(this.xArray, this.yArray);
 			this.xAxis();
@@ -212,8 +214,8 @@ export default {
 			let exponent_string = this.superscript[this.x_max_exponent];
 			let label = "(e+" + this.x_max_exponent + ") " + "Exclusive Runtime (" + "\u03BCs)";
 			this.svg.append("text")
-				.attr("class", "scatterplot-axis-label")
-				.attr("x", this.boxWidth)
+				.attr("class", "axis-label")
+				.attr("x", this.boxWidth - this.padding.right)
 				.attr("y", this.yAxisHeight + 3 * this.padding.top)
 				.style("font-size", "12px")
 				.style("text-anchor", "end")
@@ -226,16 +228,16 @@ export default {
 			const xAxis = d3.axisBottom(this.xScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
-					if (i % 3 == 0) {
-						let runtime = utils.formatRuntimeWithExponent(d, self.x_max_exponent);
-						return `${runtime[0]}`;
-					}
+					let runtime = utils.formatRuntimeWithExponent(d, self.x_max_exponent);
+					return `${runtime[0]}`;
 				});
 
-			var xAxisLine = this.svg.append("g")
-				.attr("class", "axis")
-				.attr("id", "xAxis")
-				.attr("transform", "translate(" + 0 + "," + this.yAxisHeight + ")")
+			let xAxisLine = this.svg.append("g")
+				.attrs({
+					"class": "axis",
+					"id": "xAxis",
+					"transform": "translate(" + this.paddingFactor * this.padding.left + "," + this.yAxisHeight + ")"
+				})
 				.call(xAxis);
 
 			xAxisLine.selectAll("path")
@@ -260,10 +262,12 @@ export default {
 			let exponent_string = this.superscript[this.y_max_exponent];
 			let label = "(e+" + this.y_max_exponent + ") " + "Inclusive Runtime (" + "\u03BCs)";
 			this.svg.append("text")
-				.attr("class", "scatterplot-axis-label")
-				.attr("transform", "rotate(-90)")
-				.attr("x", -this.padding.top)
-				.attr("y", this.padding.left)
+				.attrs({
+					"class": "axis-label",
+					"transform": "rotate(-90)",
+					"x": -this.padding.top,
+					"y": 0.5 * this.padding.left,
+				})
 				.style("text-anchor", "end")
 				.style("font-size", "12px")
 				.text(label);
@@ -276,16 +280,14 @@ export default {
 			let yAxis = d3.axisLeft(this.yScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
-					if (i % 3 == 0 || i == tickCount - 1) {
-						let runtime = utils.formatRuntimeWithExponent(d, self.y_max_exponent);
-						return `${runtime[0]}`;
-					}
+					let runtime = utils.formatRuntimeWithExponent(d, self.y_max_exponent);
+					return `${runtime[0]}`;
 				});
 
 			var yAxisLine = this.svg.append("g")
 				.attr("id", "yAxis")
 				.attr("class", "axis")
-				.attr("transform", "translate(" + 3 * this.padding.left + ", 0)")
+				.attr("transform", "translate(" + this.paddingFactor * this.padding.left + ", 0)")
 				.call(yAxis);
 
 			yAxisLine.selectAll("path")
@@ -318,11 +320,12 @@ export default {
 			this.svg.append("g")
 				.attr("class", "trend-line")
 				.append("path")
-				.datum(this.regressionY["y_res"])
+				.datum(this.regression["y_res"])
 				.attr("d", line)
-				.style("stroke", "black")
+				.style("stroke", this.$store.color.intermediate)
 				.style("stroke-width", "1px")
-				.style("opacity", 0.5);
+				.style("opacity", 0.5)
+				.attr("transform", "translate(" + this.paddingFactor * this.padding.left + ", 0)")
 		},
 
 		dots() {
@@ -338,7 +341,9 @@ export default {
 				.attr("cy", function (d, i) {
 					return self.yScale(self.yArray[i]);
 				})
-				.style("fill", this.$store.runtimeColor.intermediate);
+				.style("fill", this.$store.runtimeColor.intermediate)
+				.style("stroke", '#202020')
+				.style("stroke-width", 0.5);
 		},
 
 		correlationText() {
@@ -359,8 +364,8 @@ export default {
 			d3.selectAll(".dot").remove();
 			d3.selectAll(".axis").remove();
 			d3.selectAll(".trend-line").remove();
-			d3.selectAll(".axis-label").remove();
-			d3.selectAll(".text").remove();
+			// d3.selectAll('.axis-label"').remove();
+			this.svg.selectAll("text").remove();
 		},
 	}
 };

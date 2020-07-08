@@ -90,7 +90,7 @@ export default {
 		},
 
 		process(callsite) {
-			this.ensemble_data = this.$store.callsites["ensemble"][callsite.name][this.$store.selectedMetric]["q"];
+			// this.ensemble_data = this.$store.callsites[this.$store.selectedTargetDataset][callsite.name][this.$store.selectedMetric]["q"];
 			if (this.$store.callsites[this.$store.selectedTargetDataset][callsite.name] != undefined) {
 				this.target_data = this.$store.callsites[this.$store.selectedTargetDataset][callsite.name][this.$store.selectedMetric]["q"];
 			}
@@ -98,7 +98,7 @@ export default {
 				this.target_data = [0, 0, 0, 0, 0];
 			}
 
-			this.q = this.qFormat(this.ensemble_data);
+			// this.q = this.qFormat(this.ensemble_data);
 			this.targetq = this.qFormat(this.target_data);
 		},
 
@@ -129,11 +129,8 @@ export default {
 					"height": this.containerHeight
 				});
 
-			let min_x = Math.min(this.q.min, this.targetq.min);
-			let max_x = Math.max(this.q.max, this.targetq.max);
-
 			this.xScale = d3.scaleLinear()
-				.domain([min_x, max_x])
+				.domain([this.targetq.min, this.targetq.max])
 				.range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
 		},
 

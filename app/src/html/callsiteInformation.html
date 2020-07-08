@@ -60,11 +60,11 @@
             <v-flex md2>
                 <v-btn :id="callsite.name" icon color=" lighten-2" v-if="callsite.reveal == false"
                     @click=showIntersectionBoxPlot>
-                    <v-icon>input</v-icon>
+                    <v-icon>keyboard_arrow_down</v-icon>
                 </v-btn>
                 <v-btn :id="callsite.name" icon color="lighten-2" v-if="callsite.reveal == true"
                     @click=hideIntersectionBoxPlot>
-                    <v-icon>close</v-icon>
+                    <v-icon>keyboard_arrow_up</v-icon>
                 </v-btn>
             </v-flex>
         </v-layout>

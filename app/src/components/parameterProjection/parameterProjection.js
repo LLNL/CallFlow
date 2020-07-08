@@ -15,6 +15,7 @@ export default {
 	props: [],
 	data: () => ({
 		id: null,
+		svgId: null,
 		ts: null,
 		config: null,
 		vis: null,
@@ -37,6 +38,7 @@ export default {
 	},
 	mounted() {
 		this.id = "parameter-projection-view";
+		this.svgId = "parameter-projection-svg"
 		let self = this;
 		// EventHandler.$on('highlight_dataset', (dataset) => {
 		//     // console.log("[Projection] Highlighting the dataset :", dataset)
@@ -204,12 +206,11 @@ export default {
 		},
 
 		setup() {
-			this.svg = d3.select("#" + this.id).append("svg")
+			this.svg = d3.select("#" + this.svgId)
 				.attrs({
 					width: this.width,
 					height: this.height,
 					transform: "translate(0, 0)",
-					id: "parameter-projection-svg"
 				})
 				.style("stroke-width", 1)
 				.style("stroke", this.$store.ensemble)
@@ -236,7 +237,6 @@ export default {
 
 		drawInnerCircle() {
 			let self = this;
-			let selected = undefined;
 			this.circles = this.svg.selectAll("circle")
 				.data(this.$store.projection)
 				.enter()
@@ -562,11 +562,11 @@ export default {
 		},
 
 		clear() {
-			// d3.selectAll('#parameter-projection-svg').remove()
-			// d3.selectAll('#parameter-projection-tooltip').remove()
-			// d3.selectAll('.dot').remove()
-			// d3.selectAll('.outer-circle').remove()
-			// d3.selectAll('.lasso').remove()
+			d3.select("#parameter-projection-tooltip").remove();
+			// this.svg.selectAll('.dot').remove()
+			d3.selectAll('.outer-circle').remove()
+			this.svg.selectAll('.lasso').remove()
+			this.svg.selectAll('.projection-axis-label').remove()
 		}
 	},
 };

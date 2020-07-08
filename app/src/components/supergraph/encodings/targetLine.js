@@ -28,7 +28,7 @@ export default {
 		},
 
 		visualize(node) {
-			let gradients = utils.getGradients(this.$store, node);
+			const gradients = utils.getGradients(this.$store, node);
 
 			if (Object.keys(gradients).length != 0) {
 				let targetPos = gradients["dataset"]["position"][this.$store.selectedTargetDataset] + 1;

@@ -331,15 +331,10 @@ export default {
 				n = nodes.length,
 				k = value && (parent.x1 - parent.x0) / value;
 
-			console.log(k, value, x1, x0, x1 - x0);
-
 			while (++i < n) {
 				node = nodes[i], node.y0 = y0, node.y1 = y1;
 				node.x0 = x0;
 				node.x1 = x0 += node.data.data[this.metric] * k;
-				console.log(node.data.id, node.data);
-				console.log("x0: ", node.x0);
-				console.log("x1: ", node.x1);
 			}
 		},
 
@@ -711,7 +706,6 @@ export default {
 				})
 				.style("fill", (d, i) => {
 					let gradients = undefined;
-					console.log(d.data.data.name);
 					if (d.depth == 0 && this.$store.modules[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
 						gradients = "url(#mean-module-gradient-" + d.data.data.id + ")";
 					}

@@ -571,51 +571,6 @@ export default {
 			});
 		},
 
-		processJSON(json) {
-			let d = json.data;
-			let index = json.index;
-			let columns = json.columns;
-
-			let columnMap = {};
-			let idx = 0;
-			for (let column of columns) {
-				columnMap[column] = idx;
-				idx += 1;
-			}
-			return {
-				d: d,
-				index: index,
-				columns: columns,
-				columnMap: columnMap
-			};
-		},
-
-		processCallsite(data) {
-			let callsites = {};
-			for (let i = 0; i < data.index.length; i += 1) {
-				let callsite = {};
-				let callsite_name = data.d[i][data.columnMap["name"]];
-				for (let column of data.columns) {
-					callsite[column] = data.d[i][data.columnMap[column]];
-				}
-				callsites[callsite_name] = callsite;
-			}
-			return callsites;
-		},
-
-		processModule(data) {
-			let modules = {};
-			for (let i = 0; i < data.index.length; i += 1) {
-				let module_dict = {};
-				let module_name = data.d[i][data.columnMap["module"]];
-				for (let column of data.columns) {
-					module_dict[column] = data.d[i][data.columnMap[column]];
-				}
-				modules[module_name] = module_dict;
-			}
-			return modules;
-		},
-
 		updateColors() {
 			this.clearLocal();
 			this.setupColors();
@@ -632,7 +587,7 @@ export default {
 		},
 
 		updateTargetDataset() {
-			this.clearLocal();
+			this.clear();
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
 			this.init();
@@ -668,52 +623,14 @@ export default {
 			});
 		},
 
-		updateDiffNodeAlignment() {
-			console.log("Alignment mode: ", this.selectedDiffNodeAlignment);
-			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment;
-			EventHandler.$emit("update_diff_node_alignment");
-		},
-
 		updateAuxiliarySortBy() {
 			this.$store.auxiliarySortBy = this.auxiliarySortBy;
 			EventHandler.$emit("update_auxiliary_sortBy");
 		},
 
-		updateCompareDataset() {
-			this.summaryChip = "Diff SuperGraph";
-			this.$store.selectedCompareDataset = this.selectedCompareDataset;
-			this.$store.compareAnalysisMode = true;
-			this.$socket.emit("compare", {
-				targetDataset: this.$store.selectedTargetDataset,
-				compareDataset: this.$store.selectedCompareDataset,
-				selectedMetric: this.$store.selectedMetric
-			});
-		},
-
-		updateCompareMode() {
-			this.$store.selectedCompareMode = this.selectedCompareMode;
-			this.$socket.emit("compare", {
-				targetDataset: this.$store.selectedTargetDataset,
-				compareDataset: this.$store.selectedCompareDataset,
-				selectedMetric: this.$store.selectedMetric
-			});
-		},
-
-		updateProp() {
-			this.$store.selectedProp = this.selectedProp;
-			this.clearLocal();
-			this.init();
-		},
-
 		updateScale() {
 			this.$store.selectedScale = this.selectedScale;
-			this.clearLocal();
-			this.init();
-		},
-
-		updateHierarchyMode() {
-			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
@@ -726,35 +643,6 @@ export default {
 		updateRuntimeSortBy() {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
 			EventHandler.$emit("callsite_information_sort");
-		},
-
-		updateNumOfClusters() {
-			this.$store.selectedNumOfClusters = this.selectedNumOfClusters;
-			EventHandler.$emit("update_number_of_clusters");
-		},
-
-		updateTargetColor() {
-			this.clear();
-			this.init();
-			EventHandler.$emit("show_target_auxiliary", {
-			});
-		},
-
-		updateColorMin() {
-		},
-
-		updateRunBinCount() {
-			this.$store.selectedRunBinCount = this.selectedRunBinCount;
-			this.$socket.emit("ensemble_callsite_data", {
-				datasets: this.$store.selectedDatasets,
-				sortBy: this.$store.auxiliarySortBy,
-				MPIBinCount: this.$store.selectedMPIBinCount,
-				RunBinCount: this.$store.selectedRunBinCount,
-				module: "all",
-				re_process: 1
-			});
-			this.clearLocal();
-			this.init();
 		},
 
 		updateMPIBinCount() {

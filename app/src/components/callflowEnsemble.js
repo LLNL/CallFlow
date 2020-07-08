@@ -144,7 +144,7 @@ export default {
 		},
 		targetColors: ["Green", "Blue", "Brown"],
 		selectedTargetColor: "Green",
-		showTarget: false,
+		showTarget: true,
 		targetInfo: "Target Guides",
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
 	}),
@@ -313,7 +313,7 @@ export default {
 			this.$store.comparisonMode = this.comparisonMode;
 			this.$store.fontSize = 14;
 			this.$store.transitionDuration = 1000;
-			this.$store.showTarget = true;
+			this.$store.showTarget = this.showTarget;
 			this.$store.encoding = "MEAN_GRADIENTS";
 		},
 
@@ -323,6 +323,7 @@ export default {
 			this.$store.selectedMode = this.selectedMode;
 			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
+			this.$store.selectedFormat = this.selectedFormat;
 			if (this.$store.selectedMode == "Single") {
 				this.$store.selectedProp = "rank";
 			}
@@ -520,18 +521,10 @@ export default {
 		clear() {
 			if (this.selectedMode == "Ensemble") {
 				if (this.selectedFormat == "CCT") {
-					this.clearComponents(this.currentSingleCCTComponents);
+					this.clearComponents(this.currentEnsembleCCTComponents);
 				}
 				else if (this.selectedFormat == "SuperGraph") {
-					this.clearComponents(this.currentSingleSuperGraphComponents);
-				}
-			}
-			else if (this.selectedMode == "Single") {
-				if (this.selectedFormat == "CCT") {
-					this.clearComponents(this.currentSingleCCTComponents);
-				}
-				else if (this.selectedFormat == "SuperGraph") {
-					this.clearComponents(this.currentSingleSuperGraphComponents);
+					this.clearComponents(this.currentEnsembleSuperGraphComponents);
 				}
 			}
 		},
@@ -543,14 +536,6 @@ export default {
 				}
 				else if (this.selectedFormat == "SuperGraph") {
 					this.clearComponents(this.currentEnsembleCCTComponents);
-				}
-			}
-			else if (this.selectedMode == "Single") {
-				if (this.selectedFormat == "CCT") {
-					this.clearComponents(this.currentSingleSuperGraphComponents);
-				}
-				else if (this.selectedFormat == "SuperGraph") {
-					this.clearComponents(this.currentSingleCCTComponents);
 				}
 			}
 		},
@@ -673,8 +658,10 @@ export default {
 		},
 
 		updateTargetDataset() {
-			this.clearLocal();
+			this.clear();
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
+			this.$store.compareDataset = ''
+			this.$store.encoding = 'MeanGradients'
 			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
 			this.init();
 			EventHandler.$emit("show_target_auxiliary", {
@@ -693,7 +680,7 @@ export default {
 		},
 
 		updateColor() {
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
@@ -723,7 +710,7 @@ export default {
 		updateCompareDataset() {
 			this.summaryChip = "Diff SuperGraph";
 			this.$store.selectedCompareDataset = this.selectedCompareDataset;
-			this.$store.compareAnalysisMode = true;
+			this.$store.comparisonMode = true;
 			this.$store.encoding = this.selectedCompareMode;
 			this.$socket.emit("compare", {
 				targetDataset: this.$store.selectedTargetDataset,
@@ -743,7 +730,7 @@ export default {
 
 		updateProp() {
 			this.$store.selectedProp = this.selectedProp;
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
@@ -776,7 +763,8 @@ export default {
 		},
 
 		updateTargetColor() {
-			this.clearLocal();
+			this.$store.showTarget = this.showTarget
+			this.clear();
 			this.init();
 			EventHandler.$emit("show_target_auxiliary", {
 			});

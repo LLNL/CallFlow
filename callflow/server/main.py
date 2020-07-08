@@ -417,5 +417,5 @@ class CallFlowServer:
 if __name__ == "__main__":
     # if verbose, level = 1
     # else, level = 2
-    callflow.init_logger(level=1)
+    callflow.init_logger(level=2)
     CallFlowServer()
