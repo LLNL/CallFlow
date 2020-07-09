@@ -1,8 +1,15 @@
-# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
-# CallFlow Project Developers. See the top-level LICENSE file for details.
-#
-# SPDX-License-Identifier: MIT
-# ------------------------------------------------------------------------------
+# *******************************************************************************
+# * Copyright (c) 2020, Lawrence Livermore National Security, LLC.
+# * Produced at the Lawrence Livermore National Laboratory.
+# *
+# * Written by Suraj Kesavan <htpnguyen@ucdavis.edu>.
+# *
+# * LLNL-CODE-740862. All rights reserved.
+# *
+# * This file is part of CallFlow. For details, see:
+# * https://github.com/LLNL/CallFlow
+# * Please also read the LICENSE file for the MIT License notice.
+# ******************************************************************************
 # Library imports
 import bisect
 import random
@@ -12,7 +19,6 @@ import numpy as np
 import pandas as pd
 from scipy.stats import kurtosis, skew
 
-# ------------------------------------------------------------------------------
 # CallFlow imports
 import callflow
 

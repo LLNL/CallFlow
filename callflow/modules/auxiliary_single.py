@@ -1,9 +1,15 @@
-# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
-# CallFlow Project Developers. See the top-level LICENSE file for details.
-#
-# SPDX-License-Identifier: MIT
-
-# ------------------------------------------------------------------------------
+# *******************************************************************************
+# * Copyright (c) 2020, Lawrence Livermore National Security, LLC.
+# * Produced at the Lawrence Livermore National Laboratory.
+# *
+# * Written by Suraj Kesavan <htpnguyen@ucdavis.edu>.
+# *
+# * LLNL-CODE-740862. All rights reserved.
+# *
+# * This file is part of CallFlow. For details, see:
+# * https://github.com/LLNL/CallFlow
+# * Please also read the LICENSE file for the MIT License notice.
+# ******************************************************************************
 # Library imports
 import os
 import json
@@ -11,13 +17,9 @@ import pandas as pd
 import networkx as nx
 import numpy as np
 from ast import literal_eval as make_tuple
-
 import callflow
-
 LOGGER = callflow.get_logger(__name__)
 from callflow.timer import Timer
-
-
 class SingleAuxiliary:
     def __init__(self, gf, dataset="", MPIBinCount=20, props={}, process=True):
         self.graph = gf.graph
@@ -26,12 +28,10 @@ class SingleAuxiliary:
         self.process = process
         self.dataset = dataset
         self.binCount = MPIBinCount
-
         ret_df = pd.DataFrame([])
         self.timer = Timer()
         self.result = self.run()
         print(self.timer)
-
     def addID(self, name):
         name = "".join([i for i in name if not i.isdigit()])
         name = name.replace(":", "")
@@ -45,16 +45,13 @@ class SingleAuxiliary:
             name = name.split(":")[len(name.split(":")) - 1]
         else:
             name = name
-
         name = name.replace(" ", "-")
         name = name.replace("<", "")
         name = name.replace(">", "")
         return name
-
     def histogram(self, data):
         h, b = np.histogram(data, range=[0, data.max()], bins=int(self.binCount))
         return 0.5 * (b[1:] + b[:-1]), h
-
     def get_module_callsite_map(self):
         ret = {}
         ret["ensemble"] = {}
@@ -65,7 +62,6 @@ class SingleAuxiliary:
             )
             ret["ensemble"][module] = callsites
         return ret
-
     def get_callsite_module_map(self):
         ret = {}
         callsites = self.df["name"].unique().tolist()
@@ -74,31 +70,24 @@ class SingleAuxiliary:
                 self.df.loc[self.df["name"] == callsite]["module"].unique().tolist()
             )
             ret[callsite] = module
-
         return ret
-
     def pack_json(self, group_df, node_name, data_type):
         df = self.df.loc[self.df["name"] == node_name]
         with self.timer.phase("Calculate Histograms"):
             time_inc_ensemble_arr = np.array(df["time (inc)"].tolist())
             time_exc_ensemble_arr = np.array(df["time"].tolist())
-
             time_inc_target_arr = np.array(group_df["time (inc)"].tolist())
             time_exc_target_arr = np.array(group_df["time"].tolist())
-
             histogram_inc_array = np.concatenate(
                 (time_inc_target_arr, time_inc_ensemble_arr), axis=0
             )
             histogram_exc_array = np.concatenate(
                 (time_exc_target_arr, time_exc_ensemble_arr), axis=0
             )
-
             hist_inc_grid = self.histogram(time_inc_target_arr)
             hist_exc_grid = self.histogram(time_exc_target_arr)
-
         if "rank" not in group_df.keys():
             group_df = group_df.reset_index(drop=False)
-
         result = {
             "name": node_name,
             "time (inc)": group_df["time (inc)"].tolist(),
@@ -134,7 +123,6 @@ class SingleAuxiliary:
         }
         # print(result)
         return result
-
     # # Callsite grouped information
     def callsite_data(self):
         data_type = "callsite"
@@ -142,17 +130,13 @@ class SingleAuxiliary:
         ## Ensemble data.
         # Group callsite by the name
         name_grouped = self.df.groupby(["name"])
-
         # Create the data dict.
         ensemble = {}
         for name, group_df in name_grouped:
             name_df = self.df.loc[self.df["name"] == name]
             ensemble[name] = self.pack_json(name_df, name, data_type)
-
         ret[self.dataset] = ensemble
-
         return ret
-
     def module_data(self):
         data_type = "module"
         ret = {}
@@ -162,15 +146,11 @@ class SingleAuxiliary:
         for module in modules:
             module_df = self.df[self.df["module"] == module]
             ensemble[module] = self.pack_json(module_df, module, data_type)
-
         ret[self.dataset] = ensemble
-
         return ret
-
     def run(self):
         ret = {}
         path = self.props["save_path"] + f"/{self.dataset}/auxiliary_data.json"
-
         # self.process = True
         if os.path.exists(path) and not self.process:
             print(f"[Callsite info] Reading the data from file {path}")
