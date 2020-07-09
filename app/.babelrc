@@ -1,0 +1,19 @@
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * SPDX-License-Identifier: MIT
+ */
+{
+	"presets": [
+		["env", {
+			"modules": false,
+			"targets": {
+				"browsers": ["> 1%", "last 2 versions", "not ie <= 8"]
+			}
+		}],
+		"stage-2"
+	],
+	"plugins": ["transform-vue-jsx", "transform-runtime"],
+	"sourceType": "module",
+	"ignore": ["node_modules"]
+}
