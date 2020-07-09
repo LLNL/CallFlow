@@ -1,16 +1,44 @@
-*~
-**/.DS_Store
-src/public/node_modules
-src/public/bower_components
-src/public/dist
-tests/.ipynb_checkpoints/*
-.callflow/*
-.vscode/*
+# ------------------------------------------------------------------------------
+# callflow specific
+
+*.csv
+*.h5
+
+.callflow
+old-code/*
+config_files/*
 data/*
-*pyc
-.ipynb_checkpoints/*
-v1/src/node_modules
-v1/src/public/bower_components
-v1/src/public/react-redux/node_modules
-v1/data/*
-v1/old-server
+callflow/unused/*
+
+app/node_modules*
+app/src/unused/*
+
+designs/*
+
+videos/*
+# ------------------------------------------------------------------------------
+# Editor hidden directories
+*.DS_Store
+.vscode
+*~
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+.cache
+.pytest_cache
+
+# Distribution / packaging
+.Python
+*.egg-info/
+*.egg
+build/
+dist/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+config_files copy/*
+examples/*
