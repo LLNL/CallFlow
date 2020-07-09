@@ -1,8 +1,15 @@
-# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
-# CallFlow Project Developers. See the top-level LICENSE file for details.
-#
-# SPDX-License-Identifier: MIT
-# ----------------------------------------------------------------------------
+# *******************************************************************************
+# * Copyright (c) 2020, Lawrence Livermore National Security, LLC.
+# * Produced at the Lawrence Livermore National Laboratory.
+# *
+# * Written by Suraj Kesavan <htpnguyen@ucdavis.edu>.
+# *
+# * LLNL-CODE-740862. All rights reserved.
+# *
+# * This file is part of CallFlow. For details, see:
+# * https://github.com/LLNL/CallFlow
+# * Please also read the LICENSE file for the MIT License notice.
+# ******************************************************************************
 # Library imports
 import os
 import json
@@ -11,7 +18,6 @@ import pandas as pd
 import numpy as np
 import networkx as nx
 
-# ----------------------------------------------------------------------------
 # CallFlow imports
 import callflow
 from callflow.timer import Timer
@@ -20,7 +26,6 @@ from callflow.modules import EnsembleAuxiliary, SingleAuxiliary
 
 LOGGER = callflow.get_logger(__name__)
 
-# ----------------------------------------------------------------------------
 class SuperGraph(object):
     """
     SuperGraph class to handle processing of a an input Dataset.
