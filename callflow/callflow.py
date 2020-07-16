@@ -30,7 +30,7 @@ LOGGER = callflow.get_logger(__name__)
 # ------------------------------------------------------------------------------
 # CallFlow class
 class CallFlow:
-    def __init__(self, config, process=False, ensemble=False):
+    def __init__(self, config, ensemble=False):
         """
         Entry interface to access CallFlow's functionalities. "
         """
@@ -40,33 +40,8 @@ class CallFlow:
 
         # Convert config json to props. Never touch self.config ever.
         self.props = json.loads(json.dumps(config, default=lambda o: o.__dict__))
-        # LOGGER.debug('Callflow.init() -- {}'.format(self.props.keys()))
 
-        ndatasets = len(self.props["dataset_names"])
-        assert ensemble == (ndatasets > 1)
-
-        # Based on option, either process into .callflow or read from .callflow.
-        if process:
-            self._create_dot_callflow_folder()
-            if ensemble:
-                self._process_ensemble(self.props["dataset_names"])
-            else:
-                self._process_single(self.props["dataset_names"][0])
-
-        # Rendering of call graphs.
-        else:
-            if ensemble:
-                self.supergraphs = self._read_ensemble()
-                # assertion here is 1 less than self.supergraph.keys, becasuse
-                # self.supergraphs contains the ensemble supergraph as well.
-                assert len(self.supergraphs.keys()) == 1 + ndatasets
-            else:
-                self.supergraphs = self._read_single()
-                assert len(self.supergraphs.keys()) == 1
-
-            # Adds basic information to props.
-            # Props is later return to client app on "init" request.
-            self.add_basic_info_to_props()
+        self.ensemble = ensemble
 
     # --------------------------------------------------------------------------
     # Processing methods.
@@ -104,6 +79,37 @@ class CallFlow:
         TODO: We might want to delete the .callflow folder when we re-process/re-write.
         """
         pass
+
+    def process(self):
+        """
+        Process the datasets based on the format (i.e., either single or ensemble)
+        """
+        ndatasets = len(self.props["dataset_names"])
+        assert self.ensemble == (ndatasets > 1)
+
+        self._create_dot_callflow_folder()
+        if self.ensemble:
+            self._process_ensemble(self.props["dataset_names"])
+        else:
+            self._process_single(self.props["dataset_names"][0])
+
+    def load(self):
+        """
+        Load the processed datasets by the format.
+        """
+        ndatasets = len(self.props["dataset_names"])
+        if self.ensemble:
+            self.supergraphs = self._read_ensemble()
+            # assertion here is 1 less than self.supergraph.keys, becasuse
+            # self.supergraphs contains the ensemble supergraph as well.
+            assert len(self.supergraphs.keys()) == 1 + ndatasets
+        else:
+            self.supergraphs = self._read_single()
+            assert len(self.supergraphs.keys()) == 1
+
+        # Adds basic information to props.
+        # Props is later return to client app on "init" request.
+        self.add_basic_info_to_props()
 
     def _process_single(self, dataset):
         """

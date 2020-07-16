@@ -17,9 +17,13 @@ import pandas as pd
 import networkx as nx
 import numpy as np
 from ast import literal_eval as make_tuple
+
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 from callflow.timer import Timer
+
+
 class SingleAuxiliary:
     def __init__(self, gf, dataset="", MPIBinCount=20, props={}, process=True):
         self.graph = gf.graph
@@ -32,6 +36,7 @@ class SingleAuxiliary:
         self.timer = Timer()
         self.result = self.run()
         print(self.timer)
+
     def addID(self, name):
         name = "".join([i for i in name if not i.isdigit()])
         name = name.replace(":", "")
@@ -49,9 +54,11 @@ class SingleAuxiliary:
         name = name.replace("<", "")
         name = name.replace(">", "")
         return name
+
     def histogram(self, data):
         h, b = np.histogram(data, range=[0, data.max()], bins=int(self.binCount))
         return 0.5 * (b[1:] + b[:-1]), h
+
     def get_module_callsite_map(self):
         ret = {}
         ret["ensemble"] = {}
@@ -62,6 +69,7 @@ class SingleAuxiliary:
             )
             ret["ensemble"][module] = callsites
         return ret
+
     def get_callsite_module_map(self):
         ret = {}
         callsites = self.df["name"].unique().tolist()
@@ -71,6 +79,7 @@ class SingleAuxiliary:
             )
             ret[callsite] = module
         return ret
+
     def pack_json(self, group_df, node_name, data_type):
         df = self.df.loc[self.df["name"] == node_name]
         with self.timer.phase("Calculate Histograms"):
@@ -123,6 +132,7 @@ class SingleAuxiliary:
         }
         # print(result)
         return result
+
     # # Callsite grouped information
     def callsite_data(self):
         data_type = "callsite"
@@ -137,6 +147,7 @@ class SingleAuxiliary:
             ensemble[name] = self.pack_json(name_df, name, data_type)
         ret[self.dataset] = ensemble
         return ret
+
     def module_data(self):
         data_type = "module"
         ret = {}
@@ -148,6 +159,7 @@ class SingleAuxiliary:
             ensemble[module] = self.pack_json(module_df, module, data_type)
         ret[self.dataset] = ensemble
         return ret
+
     def run(self):
         ret = {}
         path = self.props["save_path"] + f"/{self.dataset}/auxiliary_data.json"
@@ -157,7 +169,7 @@ class SingleAuxiliary:
             with open(path, "r") as f:
                 ret = json.load(f)
         else:
-            print("Processing the data again.")
+            print("Processing: ", self.dataset)
             # with self.timer.phase("Pack Callsite data"):
             ret["callsite"] = self.callsite_data()
             # with self.timer.phase("Pack Module data"):
