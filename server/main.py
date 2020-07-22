@@ -58,9 +58,12 @@ class CallFlowServer:
 
         ndatasets = len(self.config.datasets)
         assert ndatasets > 0
-        self.callflow = callflow.CallFlow(
-            config=self.config, process=self.process, ensemble=ndatasets > 1
-        )
+        self.callflow = callflow.CallFlow(config=self.config, ensemble=ndatasets > 1)
+
+        if self.process:
+            self.callflow.process()
+        else:
+            self.callflow.load()
 
         # Create server if not processing.
         if not self.process:
