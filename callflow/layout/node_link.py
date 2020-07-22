@@ -46,14 +46,12 @@ class NodeLinkLayout:
 
         # add paths if not already present
         # TODO: is this really needed?
+        # should this be a local construct?
         if "path" not in cols:
             self.gf.add_paths()
 
         # Make this class support general metrics
         self.metrics = self.gf.get_metrics()
-
-        # temporary!
-        filter_metric = self.metrics[0]
 
         # get a list of callsites to work with
         if filter_metric == "":
@@ -65,15 +63,17 @@ class NodeLinkLayout:
             callsites = list(self.gf.get_top_by_attr(filter_count, filter_metric))
             df = self.gf.filter_by_name(callsites)
 
+        with self.timer.phase(f"Creating CCT for ({self.runs})"):
+            self.nxg = NodeLinkLayout._create_nxg_from_paths(df["path"].tolist())
+
+
+
         # Number of runs in the state.
         # TODO: handle this better.
         if "dataset" in cols:
             self.runs = df["dataset"].unique()
         else:
-            self.runs = ['single_run']
-
-        with self.timer.phase(f"Creating CCT for ({self.runs})"):
-            self.nxg = NodeLinkLayout._create_nxg_from_paths(df["path"].tolist())
+            self.runs = []
 
         # Add node and edge attributes.
         with self.timer.phase("Add graph attributes"):
@@ -85,72 +85,62 @@ class NodeLinkLayout:
             self.nxg.cycles = NodeLinkLayout._find_cycle(self.nxg)
 
     # --------------------------------------------------------------------------
+    @staticmethod
+    def _get_node_attrs_from_df(dataframe, attr2add, callsites2add, module_map):
 
-    def _dict_attrs_from_df(self, df, attr2add, callsites2add = []):
-
+        assert isinstance(dataframe, pd.DataFrame)
         assert isinstance(attr2add, list)
         assert isinstance(callsites2add, list)
+        assert isinstance(module_map, dict)
 
-        have_modules = "module" in attr2add
+        have_modules = len(module_map) > 0
 
-        # create maps for grouped df
-        name_maps = {}
-        for m in attr2add:
-            name_maps[m] = df[m].max().to_dict()
+        # group the dataframe by module and name
+        if have_modules:
+            grouped_df = dataframe.groupby(["module", "name"])
+        else:
+            grouped_df = dataframe.groupby(["name"])
 
-        datamap = {}
-        for callsite in self.nxg.nodes():
+        # create data maps for each node (key = (attribute, callsite))
+        node_data_maps = {}
 
-            if len(callsites2add) > 0 and callsite not in callsites2add:
-                continue
+        for attribute in attr2add:
+            attribute_map = grouped_df[attribute].max().to_dict()
+            node_data_maps[attribute] = {}
 
-            if have_modules:
-                module = self.gf.get_module_name(callsite)
-
-            for column in attr2add:
-                if column not in datamap:
-                    datamap[column] = {}
-
-                if column == "name":
-                    datamap[column][callsite] = callsite
-
-                elif column == "module":
-                    datamap[column][callsite] = module
-
+            for callsite in callsites2add:
+                if attribute == "name":
+                    node_data_maps[attribute][callsite] = callsite
+                elif attribute == "module":
+                    node_data_maps[attribute][callsite] = module_map[callsite]
                 elif have_modules:
-                    datamap[column][callsite] = name_maps[column][(module, callsite)]
-
+                    node_data_maps[attribute][callsite] = attribute_map[(module_map[callsite], callsite)]
                 else:
-                    datamap[column][callsite] = name_maps[column][(callsite)]
+                    node_data_maps[attribute][callsite] = attribute_map[callsite]
 
-        return datamap
+        return node_data_maps
 
     def _add_node_attributes(self):
 
         have_modules = "module" in list(self.gf.dataframe.columns)
 
+        # need to add these callsites (and their module map)
+        callsites2add = list(self.nxg.nodes())
+        module_map = {}
+
         # need to add these attributes to the nodes
         attr2add = self.metrics + ["name"]
+
         if have_modules:
             attr2add.append("module")
+            for c in callsites2add:
+                module_map[c] = self.gf.get_module_name(c)
 
         # ----------------------------------------------------------------------
-        # add the attributes of the dataframe
-        if have_modules:
-            grouped_df = self.gf.dataframe.groupby(["module", "name"])
-        else:
-            grouped_df = self.gf.dataframe.groupby(["name"])
-
         # compute data map
-        callsites2add = []
-        datamap = self._dict_attrs_from_df(grouped_df, attr2add, callsites2add)
-
+        datamap = self._get_node_attrs_from_df(self.gf.dataframe, attr2add, callsites2add, module_map)
         for idx, key in enumerate(datamap):
             nx.set_node_attributes(self.nxg, name=key, values=datamap[key])
-
-        # ----------------------------------------------------------------------
-        if len(self.runs) == 1 and self.runs[0] == 'single_run':
-            return
 
         # ----------------------------------------------------------------------
         # compute map across data
@@ -158,17 +148,16 @@ class NodeLinkLayout:
             target_df = self.gf.dataframe.loc[self.gf.dataframe["dataset"] == run]
 
             if have_modules:
-                target_module_group_df = target_df.groupby(["module", "name"])
-            else:
-                target_module_group_df = target_df.groupby(["name"])
+                target_module_group_df = target_df.groupby(["module"])
+                valid_callsites = list(target_module_group_df["name"].unique().to_dict().keys())
+                callsites2add_run = [c for c in callsites2add if c in valid_callsites]
 
-            # compute data map
-            callsites2add = list(target_module_group_df["name"].unique().to_dict().keys())
-            datamap = self._dict_attrs_from_df(target_module_group_df, attr2add, callsites2add)
-
+            datamap = self._get_node_attrs_from_df(target_df, attr2add, callsites2add_run, module_map)
             nx.set_node_attributes(self.nxg, name=run, values=datamap)
-        # ------------------------------------------------------------------
 
+        # ----------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------
     # TODO: delete this once the original behavior is tested!
     def _add_node_attributes_v0(self):
 
