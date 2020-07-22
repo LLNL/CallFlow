@@ -285,9 +285,10 @@ class GraphFrame(ht.GraphFrame):
         )
 
     # --------------------------------------------------------------------------
-    # TODO: this function is copied from supergraph.py
-    # Callflow.graphframe should support this interface to minimize dependency on a supergraph
-    # as principle, CCT should work on a graphframe, not a supergraph
+    def get_metrics(self):
+        ignore_cols = ["name", "nid", "module", "path"]
+        return [c for c in list(self.dataframe.columns) if c not in ignore_cols]
+
     def get_module_name(self, callsite):
         if "module" not in self.dataframe.columns:
             return callsite

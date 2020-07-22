@@ -306,8 +306,9 @@ class CallFlow:
 
         elif operation_name == "cct":
             result = NodeLinkLayout(
-                supergraph=self.supergraphs[operation["dataset"]],
-                callsite_count=operation["functionsInCCT"],
+                supergraph=self.supergraphs[operation["dataset"]].gf,
+                filter_metric="time (inc)",
+                filter_count=operation["functionsInCCT"],
             )
             return result.nxg
 
@@ -328,7 +329,8 @@ class CallFlow:
         elif operation_name == "ensemble_cct":
             result = NodeLinkLayout(
                 supergraph=self.supergraphs["ensemble"],
-                callsite_count=operation["functionsInCCT"],
+                filter_metric="time (inc)",
+                filter_count=operation["functionsInCCT"],
             )
             return result.nxg
 
