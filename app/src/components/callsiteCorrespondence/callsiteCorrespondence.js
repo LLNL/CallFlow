@@ -179,7 +179,7 @@ export default {
 
 		// create unique ID for each callsite.
 		getID(callsiteID) {
-			return "callsite-information-" + callsiteID;
+			return "callsite-correspondence-" + callsiteID;
 		},
 
 		// Code to select the callsite by the component-level button

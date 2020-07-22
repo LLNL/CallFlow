@@ -11,6 +11,7 @@
  * Please also read the LICENSE file for the MIT License notice.
  ******************************************************************************/
 import tpl from "../../html/cct.html";
+import '../../css/cct.css'
 import ColorMap from "../../lib/colormap";
 
 import * as d3 from "d3";
@@ -24,28 +25,16 @@ export default {
 	},
 
 	data: () => ({
-		graph: null,
 		id: "ensemble-cct-overview",
-		sankey: {
-			nodeWidth: 50,
-			xSpacing: 0,
-			ySpacing: 50,
-			nodeScale: 1.0,
-		},
 		margin: {
 			top: 0,
 			right: 0,
 			bottom: 0,
 			left: 0
 		},
-		view: {
-			color: null,
-		},
 		width: null,
 		height: null,
-		treeHeight: null,
-		color: null,
-		firstRender: true,
+		zoom: null,
 	}),
 
 	sockets: {
@@ -55,7 +44,7 @@ export default {
 			this.render();
 		},
 
-		// Fetch CCT for distribution mode.
+		// Fetch CCT for comparison mode.
 		comp_cct(data) {
 			console.log("Diff CCT data: ", data);
 			this.$refs.EnsembleCCT1.init(data[this.$store.selectedTargetDataset], "1");
@@ -64,6 +53,9 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Calls the socket to fetch data.
+		 */
 		init() {
 			this.$socket.emit("ensemble_cct", {
 				datasets: this.$store.selectedTargetDataset,
@@ -72,40 +64,141 @@ export default {
 			});
 		},
 
+		/**
+		 * Tooltip for the each node.
+		 * 
+		 * @param {String} name Callsite's name
+		 * @param {String} description Callsite's description
+		 */
+		tooltip(name, description) {
+			return "<p class='name'>" + name + "</p><p class='description'>" + description + "</p>";
+		},
 
-		render() {
-			this.width = this.$store.viewWidth - this.margin.left - this.margin.right;
-			this.height = this.$store.viewHeight - this.margin.bottom - this.margin.top;
+		/**
+		 * Create a dagre-d3 instance.
+		 * 
+		 * @return {dagreD3 Graph}
+		 */
+		createGraph() {
+			const g = new dagreD3.graphlib.Graph({
+				directed: true,
+				multigraph: false,
+				compound: true
+			});
 
-			this.svg = d3.select("#" + this.id)
-				.attrs({
-					"width": this.width,
-					"height": this.height,
-				});
+			g.setGraph({
+				rankDir: 'TD',
+				rankSep: 50,
+				marginx: 30,
+				marginy: 30
+			});
 
-			this.g = new dagreD3.graphlib.Graph().setGraph({});
+			return g;
+		},
 
-			let graph = this.data;
-			let nodes = graph.nodes;
-			let links = graph.links;
 
-			nodes.forEach((node, i) => {
-				let callsite_name = "";
-				if (node["name"] == undefined) {
-					callsite_name = node["id"];
-				}
-				else {
-					callsite_name = node["module"] + ":" + node["name"];
-				}
+		/**
+		 * Sets callsite's name. 
+		 * if module is present, name = module + ':' + name,
+		 * else name = name
+		 * 
+		 * @param {Object} callsite 
+		 * @return {String} callsite's name
+		 */
+		setCallsiteName(callsite) {
+			if (callsite["name"] == undefined) {
+				return callsite["id"];
+			}
+			else if (callsite["module"] == undefined) {
+				return callsite["name"];
+			}
+			return callsite["module"] + ":" + callsite["name"];
+		},
+
+		/**
+		 * Set callsite's text and fill color.
+		 *
+		 * @param {Object} callsite 
+		 * @return {JSON<{'node': Color, 'text': Color}>} 'node': fill color, 'text': text color
+		 */
+		setCallsiteColor(callsite) {
+			// Set node fill color.
+			let color = "";
+			if (this.$store.selectedMetric == "Inclusive") {
+				color = this.$store.runtimeColor.getColor(callsite, "time (inc)");
+			}
+			else if (this.$store.selectedMetric == "Exclusive") {
+				color = this.$store.runtimeColor.getColor(callsite, "time");
+			}
+
+			// Set node text color.
+			const nodeColor = this.$store.runtimeColor.rgbArrayToHex(color);
+			const textColor = this.$store.runtimeColor.setContrast(nodeColor);
+
+			return {
+				'node': nodeColor,
+				'text': textColor
+			}
+		},
+
+		/**
+		 * Sets the html content for rendering inside a node.
+		 * 
+		 * @param {String} callsite_name
+		 * @param {JSON<{'node': Color, 'text': Color}>} callsite_color
+		 * @return {HTML} html for rendering. 
+		 */
+		setCallsiteHTML(callsite_name, callsite_color) {
+			let module = callsite_name.split(':')[0];
+			let name = callsite_name.split(':')[1];
+
+			var html = (callsite_color['text'] === "#fff")
+				? ('<div class="white-text"><span>' + name + '</span><br/><span class="description"><b>Module :</b> ' + module + '</span> </div>')
+				: ('<div class="black-text"><span>' + name + '</span><br/><span class="description"><b>Module :</b> ' + module + '</span> </div>');
+			return html;
+		},
+
+		/**
+		 * Renders the nodes in the dagre d3 graph.
+		 * 
+		 * @param {JSON} data - networkX graph. 
+		 */
+		nodes(data) {
+			data.forEach((node, i) => {
+				const callsite_name = this.setCallsiteName(node);
+				const callsite_color = this.setCallsiteColor(node);
+				const label = this.setCallsiteHTML(callsite_name, callsite_color);
+
 				this.g.setNode(node["id"], {
-					label: callsite_name,
+					class: 'cct-node',
+					labelType: 'html',
+					label: label,
 					time: node["time"],
 					"time (inc)": node["time (inc)"],
 					module: node["module"],
 					imbalance_perc: node["imbalance_perc"],
+					fillColor: callsite_color['node']
 				});
 			});
 
+			let self = this;
+			// set styles.
+			this.g.nodes().forEach(function (v) {
+				let node = self.g.node(v);
+				if (node != undefined) {
+					node.style = "fill:" + node.fillColor;
+					node.rx = node.ry = 4;
+					node.id = node.name;
+				}
+			});
+		},
+
+		/**
+		 * Renders the edges in the dagre D3 graph.
+		 * 
+		 * @param {JSON} links - nxGraph edges.
+		 */
+		edges(links) {
 			// Set up the edges
 			for (let i = 0; i < links.length; i += 1) {
 				let edge_label = "";
@@ -116,56 +209,144 @@ export default {
 					edge_label = "";
 				}
 				this.g.setEdge(links[i]["source"], links[i]["target"], {
-					label: edge_label
+					label: edge_label,
+					arrowhead: "vee",
 				});
-
 			}
 
 			let self = this;
-			// Set some general styles
-			this.g.nodes().forEach(function (v) {
-				let node = self.g.node(v);
-				if (node != undefined) {
-					let color = "";
-					if (self.$store.selectedMetric == "Inclusive") {
-						color = self.$store.runtimeColor.getColor(node, "time (inc)");
-					}
-					else if (self.$store.selectedMetric == "Exclusive") {
-						color = self.$store.runtimeColor.getColor(node, "time");
-					}
-					node.style = "fill:" + color;
-					node.rx = node.ry = 4;
-					node.id = "cct-node";
-				}
-			});
-
 			this.g.edges().forEach((e) => {
 				var edge = self.g.edge(e);
 				edge.id = "cct-edge";
 				// g.edge(e).style = "stroke: 1.5px "
 			});
+		},
+
+		/**
+		 * Node click action. 
+		 * On click, the inbound and outbound paths are highlighted.
+		 * 
+		 * @param {dagreD3's ID} id 
+		 */
+		node_click_action(id) {
+			console.debug('click node : ' + id);
+			const default_dagreD3e_style = "fill: rgba(255,255,255, 0); stroke: #d5d5d5; stroke-width: 1.5px;";
+			const default_dagreD3arrowhead_style = "fill: #c5c5c5; stroke: #c5c5c5; stroke-width:4px;";
+
+			const outbound_edge_style = "fill: rgba(255,255,255, 0); stroke: #800080; stroke-width: 4px;";
+			const outbound_arrowhead_style = "fill: #800080; stroke: #800080; stroke-width:1.5px;";
+
+			const inbound_edge_style = "fill: rgba(255,255,255, 0); stroke: #32CD32; stroke-width: 4px;";
+			const inbound_arrowhead_style = "fill: #32CD32; stroke: #32CD32; stroke-width:1.5px;";
+
+			let nodeClass = this.g.node(id).class;
+
+			if (nodeClass.indexOf('highLight') != -1) {
+				this.g.node(id).class = nodeClass.toString().replace('highLight', ' ').trim();
+
+				this.g.edges().forEach(function (e, v, w) {
+					var edge = g.edge(e);
+					edge.style = default_dagreD3e_style;
+					edge.arrowhead = "vee";
+					edge.arrowheadStyle = default_dagreD3arrowhead_style;
+				});
+			}
+			else {
+				let self = this;
+				this.g.nodes().forEach(function (v) {
+					let node = self.g.node(v);
+					nodeClass = node.class;
+					if (nodeClass) node.class = nodeClass.replace('highLight', ' ').trim();
+				});
+				this.g.edges().forEach(function (e, v, w) {
+					let edge = self.g.edge(e);
+					edge.style = default_dagreD3e_style;
+					edge.arrowhead = "vee";
+					edge.arrowheadStyle = default_dagreD3arrowhead_style;
+					if (e.v == id) {
+						edge.style = outbound_edge_style;
+						edge.arrowhead = "vee";
+						edge.arrowheadStyle = outbound_arrowhead_style;
+					} else if (e.w == id) {
+						edge.style = inbound_edge_style;
+						edge.arrowhead = "vee";
+						edge.arrowheadStyle = inbound_arrowhead_style;
+					}
+				});
+				this.g.node(id).class += ' highLight';
+			}
+		},
+
+		/**
+		 * Translate and zoom to fit the graph to the entire SVG's context.
+		 * 
+		 */
+		zoomTranslate() {
+			const graphWidth = this.g.graph().width + 80;
+			const graphHeight = this.g.graph().height + 40;
+			const width = parseInt(this.svg.style("width").replace(/px/, ""));
+			var height = parseInt(this.svg.style("height").replace(/px/, ""));
+
+			let zoomScale = Math.min(width / graphWidth, height / graphHeight);
+			if (zoomScale > 1.4) zoomScale -= 0.1;
+			var translate = [(width / 2) - ((graphWidth * zoomScale) / 2), (height / 2) - ((graphHeight * zoomScale) / 2)];
+
+			this.svg.call(this.zoom.transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(zoomScale));
+		},
+
+		/**
+		 * Render method for the component
+		 * 
+		 */
+		render() {
+			let self = this;
+			this.width = this.$store.viewWidth - this.margin.left - this.margin.right;
+			this.height = this.$store.viewHeight - this.margin.bottom - this.margin.top;
+
+			this.svg = d3.select("#" + this.id)
+				.attrs({
+					"width": this.width,
+					"height": this.height,
+				});
+
+			this.g = this.createGraph();
+
+			this.nodes(this.data.nodes);
+			this.edges(this.data.links);
 
 			let inner = this.svg.select("#container");
 
+			// Create the renderer
+			const render = new dagreD3.render();
+
 			// Set up zoom support
-			var zoom = d3.zoom().on("zoom", function () {
+			this.zoom = d3.zoom().on("zoom", function () {
 				inner.attr("transform", d3.event.transform);
 			});
-			this.svg.call(zoom);
-
-			// Create the renderer
-			var render = new dagreD3.render();
+			this.svg.call(this.zoom);
 
 			// Run the renderer. This is what draws the final graph.
 			render(inner, this.g);
 
-			// Center the graph
-			var initialScale = 1;
-			this.svg.call(zoom.transform, d3.zoomIdentity.translate((this.svg.attr("width") - this.g.graph().width * initialScale) / 2, 20).scale(initialScale));
+			this.zoomTranslate();
+
+			// node click event (highlight)
+			this.svg.selectAll("g.node").on("click", function (id) {
+				self.node_click_action(id);
+				render(inner, self.g);
+			});
+
+			// Add tooltip
+			// inner.selectAll("g.node")
+			// 	.attr("title", function (v) { return this.tooltip(v, g.node(v).description) })
+			// 	.each(function (v) { $(this).tipsy({ gravity: "w", opacity: 1, html: true }); });
 
 			this.$refs.ColorMap.init(this.$store.runtimeColor);
 		},
 
+		/**
+		 * Clear method for the component.
+		 */
 		clear() {
 			d3.selectAll("#cct-node").remove();
 			d3.selectAll("#cct-edge").remove();
