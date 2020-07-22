@@ -38,6 +38,7 @@ class GraphFrame(ht.GraphFrame):
             super().__init__(graph, dataframe, exc_metrics, inc_metrics)
 
             # shortcut!
+            # TODO: remove the usage!
             self.df = self.dataframe
 
         if graph:
@@ -58,7 +59,7 @@ class GraphFrame(ht.GraphFrame):
 
         # dump the filtered dataframe to csv if write_df is true.
         if write_df:
-            self.df.to_csv(os.path.join(path, GraphFrame._FILENAMES["df"]))
+            self.dataframe.to_csv(os.path.join(path, GraphFrame._FILENAMES["df"]))
 
         if write_graph:
             fname = os.path.join(os.path.join(path, GraphFrame._FILENAMES["ht"]))
@@ -82,14 +83,14 @@ class GraphFrame(ht.GraphFrame):
         # TODO: this function should not use assertions
         # but throw "ArgumentError" if file is not found, or data is not as expected
         fname = os.path.join(path, GraphFrame._FILENAMES["df"])
-        self.df = pd.read_csv(fname)
-        if self.df.empty:
+        self.dataframe = pd.read_csv(fname)
+        if self.dataframe.empty:
             raise ValueError(f"{fname} is empty.")
 
         # Hatchet requires node and rank to be indexes.
         # remove the set indexes to maintain consistency.
-        # self.df = self.df.set_index(['node', 'rank'])
-        self.df = self.df.reset_index(drop=False)
+        # self.dataframe = self.dataframe.set_index(['node', 'rank'])
+        self.dataframe = self.dataframe.reset_index(drop=False)
 
         fname = os.path.join(path, GraphFrame._FILENAMES["nxg"])
         with open(fname, "r") as nxg_file:
@@ -255,33 +256,72 @@ class GraphFrame(ht.GraphFrame):
         assert isinstance(count, int) and isinstance(sort_attr, str)
         assert count > 0
 
-        df = self.df.groupby(["name"]).mean()
+        df = self.dataframe.groupby(["name"]).mean()
         df = df.sort_values(by=[sort_attr], ascending=False)
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
 
     def filter_by_name(self, names):
         assert isinstance(names, list)
-        return self.df[self.df["name"].isin(names)]
+        return self.dataframe[self.dataframe["name"].isin(names)]
 
     def lookup_with_node(self, node):
-        return self.df.loc[self.df["name"] == node.callpath[-1]]
+        return self.dataframe.loc[self.dataframe["name"] == node.callpath[-1]]
 
     def lookup_with_name(self, name):
-        return self.df.loc[self.df["name"] == name]
+        return self.dataframe.loc[self.dataframe["name"] == name]
 
     def lookup_with_vis_nodeName(self, name):
-        return self.df.loc[self.df["vis_node_name"] == name]
+        return self.dataframe.loc[self.dataframe["vis_node_name"] == name]
 
     def lookup(self, node):
-        return self.df.loc[
-            (self.df["name"] == node.callpath[-1]) & (self.df["nid"] == node.nid)
+        return self.dataframe.loc[
+            (self.dataframe["name"] == node.callpath[-1]) & (self.dataframe["nid"] == node.nid)
         ]
 
     def update_df(self, col_name, mapping):
-        self.df[col_name] = self.df["name"].apply(
+        self.dataframe[col_name] = self.dataframe["name"].apply(
             lambda node: mapping[node] if node in mapping.keys() else ""
         )
+
+    # --------------------------------------------------------------------------
+    # TODO: this function is copied from supergraph.py
+    # Callflow.graphframe should support this interface to minimize dependency on a supergraph
+    # as principle, CCT should work on a graphframe, not a supergraph
+    def get_module_name(self, callsite):
+        if "module" not in self.dataframe.columns:
+            return callsite
+        return self.lookup_with_name(callsite)["module"].unique()[0]
+
+    # --------------------------------------------------------------------------
+    # TODO: this function is copied from process.py
+    def add_paths(self):
+
+        node_paths = {}
+        # TODO: this snippet is copied from process.py/graphMapper
+        for node in self.graph.traverse():
+            node_dict = callflow.utils.node_dict_from_frame(node.frame)
+
+            if node_dict["type"] == "loop":
+                node_name = "Loop@" + callflow.utils.sanitize_name(
+                    node_dict["name"] + ":" + str(node_dict["line"])
+                )
+            elif node_dict["type"] == "statement":
+                node_name = (
+                        callflow.utils.sanitize_name(node_dict["name"])
+                        + ":"
+                        + str(node_dict["line"])
+                )
+            else:
+                node_name = node_dict["name"]
+
+            node_paths[node_name] = node.paths()
+
+        # TODO: this utils function should be moved here!
+        self.dataframe["path"] = self.dataframe["name"].apply(
+            lambda node_name: callflow.utils.path_list_from_frames(node_paths[node_name])
+        )
+        return self
 
     # --------------------------------------------------------------------------
     @staticmethod

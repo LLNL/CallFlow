@@ -18,7 +18,7 @@ import networkx as nx
 # CallFlow imports
 import callflow
 from callflow.timer import Timer
-from callflow import SuperGraph
+from callflow import SuperGraph, GraphFrame
 
 # CCT Rendering class.
 class NodeLinkLayout:
@@ -27,23 +27,41 @@ class NodeLinkLayout:
 
     def __init__(self, supergraph, callsite_count=50):
 
-        assert isinstance(supergraph, SuperGraph)
+        # Make this class support both supergraph and graphframe
+        assert isinstance(supergraph, SuperGraph) or isinstance(supergraph, GraphFrame)
         assert isinstance(callsite_count, int)
         assert callsite_count > 0
 
         # set the current graph being rendered.
-        self.supergraph = supergraph
+        if isinstance(supergraph, GraphFrame):
+            self.gf = supergraph
+        else:
+            self.gf = supergraph.gf
 
         self.timer = Timer()
 
+        cols = self.gf.dataframe.columns
+
+        # Make this class support general metrics
+        metric = "time (inc)"
+        if metric not in cols:
+            metric = cols[0]
+
         # Number of runs in the state.
-        self.runs = self.supergraph.gf.df["dataset"].unique()
+        if "dataset" in cols:
+            self.runs = self.gf.dataframe["dataset"].unique()
+        else:
+            self.runs = ['single_run']
 
         # Put the top callsites into a list.
-        callsites = self.supergraph.gf.get_top_by_attr(callsite_count, "time (inc)")
+        callsites = self.gf.get_top_by_attr(callsite_count, metric)
+
+        # add paths if not already present
+        if "path" not in cols:
+            self.gf.add_paths()
 
         # Filter out the callsites not in the list. (in a LOCAL copy)
-        df = self.supergraph.gf.filter_by_name(callsites)
+        df = self.gf.filter_by_name(callsites)
 
         with self.timer.phase(f"Creating CCT for ({self.runs})"):
             self.nxg = NodeLinkLayout._create_nxg_from_paths(df["path"].tolist())
@@ -60,39 +78,81 @@ class NodeLinkLayout:
     # --------------------------------------------------------------------------
     def _add_node_attributes(self):
 
-        module_name_group_df = self.supergraph.gf.df.groupby(["module", "name"])
-        name_time_inc_map = module_name_group_df["time (inc)"].max().to_dict()
-        name_time_exc_map = module_name_group_df["time"].max().to_dict()
+        cols = self.gf.dataframe.columns
+
+        if "module" in cols:
+            module_name_group_df = self.gf.dataframe.groupby(["module", "name"])
+        else:
+            module_name_group_df = self.gf.dataframe.groupby(["name"])
+
+        metric1, metric2 = "time (inc)", "time"
+        if metric1 not in cols:
+            metric1 = cols[0]
+        if metric2 not in cols:
+            metric2 = cols[0]
+
+        name_time_inc_map = module_name_group_df[metric1].max().to_dict()
+        name_time_exc_map = module_name_group_df[metric2].max().to_dict()
+
+        col2add = NodeLinkLayout._COLUMNS
+
+        if metric1 not in col2add:
+            col2add.append(metric1)
+        if metric2 not in col2add:
+            col2add.append(metric2)
 
         # compute data map
         datamap = {}
         for callsite in self.nxg.nodes():
 
-            module = self.supergraph.get_module_name(callsite)
-
+            module = self.gf.get_module_name(callsite)
             for column in NodeLinkLayout._COLUMNS:
                 if column not in datamap:
                     datamap[column] = {}
 
                 if column == "time (inc)":
-                    datamap[column][callsite] = name_time_inc_map[(module, callsite)]
+                    if "module" in cols:
+                        datamap[column][callsite] = name_time_inc_map[(module, callsite)]
+                    else:
+                        datamap[column][callsite] = name_time_inc_map[(callsite)]
+
                 elif column == "time":
-                    datamap[column][callsite] = name_time_exc_map[(module, callsite)]
+                    if "module" in cols:
+                        datamap[column][callsite] = name_time_exc_map[(module, callsite)]
+                    else:
+                        datamap[column][callsite] = name_time_inc_map[(callsite)]
+
                 elif column == "name":
                     datamap[column][callsite] = callsite
+
                 elif column == "module":
                     datamap[column][callsite] = module
+
+                elif column == metric1:
+                    if "module" in cols:
+                        datamap[column][callsite] = name_time_inc_map[(module, callsite)]
+                    else:
+                        datamap[column][callsite] = name_time_inc_map[(callsite)]
+
+                elif column == metric2:
+                    if "module" in cols:
+                        datamap[column][callsite] = name_time_exc_map[(module, callsite)]
+                    else:
+                        datamap[column][callsite] = name_time_inc_map[(callsite)]
 
         # ----------------------------------------------------------------------
         for idx, key in enumerate(datamap):
             nx.set_node_attributes(self.nxg, name=key, values=datamap[key])
 
+
+
+        if len(self.runs) == 1 and self.runs[0] == 'single_run':
+            return
+
         # ----------------------------------------------------------------------
         # compute map across data
         for run in self.runs:
-            target_df = self.supergraph.gf.df.loc[
-                self.supergraph.gf.df["dataset"] == run
-            ]
+            target_df = self.gf.dataframe.loc[self.gf.dataframe["dataset"] == run]
             target_module_group_df = target_df.groupby(["module"])
             target_module_name_group_df = target_df.groupby(["module", "name"])
             target_module_callsite_map = (
@@ -111,7 +171,7 @@ class NodeLinkLayout:
                 if callsite not in target_module_callsite_map.keys():
                     continue
 
-                module = self.supergraph.get_module_name(callsite)
+                module = self.gf.get_module_name(callsite)
 
                 if callsite not in datamap:
                     datamap[callsite] = {}
@@ -124,11 +184,17 @@ class NodeLinkLayout:
                     if column == "time (inc)":
                         datamap[callsite][column] = target_name_time_inc_map[module]
                     elif column == "time":
-                        datamap[callsite][column] = target_module_time_exc_map[module]
+                        datamap[callsite][column] = target_name_time_exc_map[module]
                     elif column == "module":
                         datamap[callsite][column] = module
                     elif column == "name":
                         datamap[callsite][column] = callsite
+
+                    elif column == metric1:
+                        datamap[column][callsite] = target_name_time_inc_map[(module, callsite)]
+
+                    elif column == metric2:
+                        datamap[column][callsite] = target_name_time_exc_map[(module, callsite)]
 
             # ------------------------------------------------------------------
             nx.set_node_attributes(self.nxg, name=run, values=datamap)
@@ -267,16 +333,18 @@ class NodeLinkLayout:
 
         assert isinstance(paths, list)
         from ast import literal_eval as make_tuple
-
         nxg = nx.DiGraph()
 
         # go over all path
         for i, path in enumerate(paths):
 
             # go over the callsites in this path
-            callsites = make_tuple(path)
-            plen = len(callsites)
+            if isinstance(path, list):
+                callsites = path
+            elif isinstance(path, str):
+                callsites = make_tuple(path)
 
+            plen = len(callsites)
             for j in range(plen - 1):
                 source = callflow.utils.sanitize_name(callsites[j])
                 target = callflow.utils.sanitize_name(callsites[j + 1])
