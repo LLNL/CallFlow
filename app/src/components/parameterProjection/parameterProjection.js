@@ -16,6 +16,8 @@ import template from "../../html/parameterProjection.html";
 import EventHandler from "../EventHandler.js";
 import * as utils from "../utils";
 
+import '../../css/parameterProjection.css'
+
 export default {
 	name: "ParameterProjection",
 	template: template,

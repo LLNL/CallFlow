@@ -1,0 +1,97 @@
+<!--
+/*******************************************************************************
+ * Copyright (c) 2020, Lawrence Livermore National Security, LLC.
+ * Produced at the Lawrence Livermore National Laboratory.
+ *
+ * Written by Suraj Kesavan <spkesavan@ucdavis.edu>.
+ *
+ * LLNL-CODE-740862. All rights reserved.
+ *
+ * This file is part of CallFlow. For details, see:
+ * https://github.com/LLNL/CallFlow
+ * Please also read the LICENSE file for the MIT License notice.
+ ******************************************************************************/
+-->
+<template>
+    <v-app>
+      <div id="app">
+        <v-toolbar id="toolbar" color="teal" fixed app clipped-right>
+          <v-toolbar-title style="margin-right: 3em; color: white">CallFlow</v-toolbar-title>
+  
+          <v-btn outlined>
+            <router-link to="/single">Single</router-link>
+          </v-btn>
+  
+          <v-btn outlined v-if="runCounts > 1">
+            <router-link to="/ensemble">Ensemble</router-link>
+          </v-btn>
+        </v-toolbar>
+  
+        <router-view></router-view>
+        <v-content>
+          <v-layout>
+            <v-container fluid>
+              <v-card tile>
+                <v-card-title>Experiment: {{ data.runName }}</v-card-title>
+              </v-card>
+              <v-card tile>
+                <v-card-title>Data Path: {{ data.data_path }}</v-card-title>
+              </v-card>
+              <v-card tile>
+                <v-card-title>Runtime Information</v-card-title>
+                <v-data-table
+                  dense
+                  :headers="runtimeHeaders"
+                  :items="runtime"
+                  :items-per-page="5"
+                  class="elevation-1"
+                >
+                  <template slot="items" slot-scope="props">
+                    <tr>
+                      <td nowrap="true">{{ props.item.dataset }}</td>
+                      <td nowrap="true">{{ props.item.min_inclusive_runtime }}</td>
+                      <td nowrap="true">{{ props.item.max_inclusive_runtime }}</td>
+                      <td nowrap="true">{{ props.item.min_exclusive_runtime }}</td>
+                      <td nowrap="true">{{ props.item.max_exclusive_runtime }}</td>
+                    </tr>
+                  </template>
+                </v-data-table>
+              </v-card>
+              <!-- <v-card tile>
+                <v-card-title>Module Callsite Mapping</v-card-title>
+                <v-data-table
+                  dense
+                  :headers="moduleHeaders"
+                  :items="modules"
+                  :items-per-page="5"
+                  :single-expand="singleExpand"
+                  :expanded.sync="expanded"
+                  item-key="name"
+                  show-expand
+                  class="elevation-1"
+                >
+                  <template slot="items" slot-scope="props">
+                    <tr>
+                      <td nowrap="true">{{ props.item.module }}</td>
+                      <td nowrap="true">{{ props.item.inclusive_runtime }}</td>
+                      <td nowrap="true">{{ props.item.exclusive_runtime }}</td>
+                      <td nowrap="true">{{ props.item.imbalance_perc }}</td>
+                      <td nowrap="true">{{ props.item.number_of_callsites }}</td>
+                      <td nowrap="true">
+                        <v-icon @click="expand(!isExpanded)">keyboard_arrow_down</v-icon>
+                      </td>
+                    </tr>
+                  </template>
+  
+                  <template v-slot:expanded-item="{ headers, item }">
+                    <td :colspan="headers.length">More info about {{ item.name }}</td>
+                  </template>
+                </v-data-table>
+              </v-card>-->
+            </v-container>
+          </v-layout>
+        </v-content>
+      </div>
+    </v-app>
+  </template>
+  

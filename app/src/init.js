@@ -22,7 +22,7 @@ import "vue-material/dist/theme/default.css";
 import "vuetify/dist/vuetify.min.css";
 import "material-design-icons-iconfont/dist/material-design-icons.css";
 
-import App from "./App";
+import App from "./components/app";
 import SingleCallFlow from "./components/callflowSingle";
 import EnsembleCallFlow from "./components/callflowEnsemble";
 

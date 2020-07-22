@@ -1,0 +1,89 @@
+/*******************************************************************************
+ * Copyright (c) 2020, Lawrence Livermore National Security, LLC.
+ * Produced at the Lawrence Livermore National Laboratory.
+ *
+ * Written by Suraj Kesavan <spkesavan@ucdavis.edu>.
+ *
+ * LLNL-CODE-740862. All rights reserved.
+ *
+ * This file is part of CallFlow. For details, see:
+ * https://github.com/LLNL/CallFlow
+ * Please also read the LICENSE file for the MIT License notice.
+ ******************************************************************************/
+ 
+#auxiliary-function-overview {
+    overflow: auto;
+}
+
+.show-boxplot-btn {
+    padding: 1;
+}
+
+.component-info {
+    color: #009688;
+    padding: 8px;
+}
+
+.component-data {
+    color: #009688;
+    padding: 0px;
+}
+
+.unselect-callsite {
+    color: #009688 !important;
+    background: white !important;
+    cursor: pointer;
+}
+
+.select-callsite {
+    color: white !important;
+    background: #009688 !important;
+    cursor: pointer;
+}
+
+.reveal-button {
+    float: right;
+    margin: 1px;
+    color: #009688 !important;
+    font-size: 75%;
+    padding: 2px;
+}
+
+.auxiliary-node {
+    padding-left: 10px;
+    padding-top:0px;
+    margin: 3px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #d0cccc;
+}
+
+.box {
+    font: 10px sans-serif;
+}
+
+.box line,
+.box rect,
+.box circle {
+    stroke: #000;
+    stroke-width: 1.5px;
+}
+
+.box .center {
+    stroke-dasharray: 3, 3;
+}
+
+.box .outlier {
+    fill: none;
+    stroke: #000;
+}
+
+.component-info {
+    color: #009688;
+    padding: 8px;
+}
+  
+.component-data {
+    color: #009688;
+    padding: 0px;
+}
