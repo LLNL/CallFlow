@@ -31,12 +31,16 @@ class NodeLinkLayout_New:
     # --------------------------------------------------------------------------
     def write_dot(self, filename="cct.dot"):
         from networkx.drawing.nx_agraph import write_dot
+
         write_dot(self.nxg, filename)
 
     # --------------------------------------------------------------------------
-    def compute(self, filter_metric = "",  # filter the CCT based on this metric
-                                                    # empty string: no filtering
-                      filter_count = 50):  # filter to these many nodes
+    def compute(
+        self,
+        filter_metric="",  # filter the CCT based on this metric
+        # empty string: no filtering
+        filter_count=50,
+    ):  # filter to these many nodes
 
         assert isinstance(filter_metric, str)
         assert isinstance(filter_count, int)
@@ -58,9 +62,13 @@ class NodeLinkLayout_New:
 
         else:
             if filter_metric not in metrics:
-                raise ValueError('filter_metric = ({}) not found in dataframe'.format(filter_metric))
+                raise ValueError(
+                    "filter_metric = ({}) not found in dataframe".format(filter_metric)
+                )
 
-            filtered_callsites = list(self.gf.get_top_by_attr(filter_count, filter_metric))
+            filtered_callsites = list(
+                self.gf.get_top_by_attr(filter_count, filter_metric)
+            )
             filtered_df = self.gf.filter_by_name(filtered_callsites)
 
         # ----------------------------------------------------------------------
@@ -74,8 +82,11 @@ class NodeLinkLayout_New:
                 path = callflow.utils.path_list_from_frames(node.paths())
                 for i in range(len(path) - 1):
 
-                    source, target = path[i], path[i+1]
-                    if source not in filtered_callsites or target not in filtered_callsites:
+                    source, target = path[i], path[i + 1]
+                    if (
+                        source not in filtered_callsites
+                        or target not in filtered_callsites
+                    ):
                         continue
 
                     source = callflow.utils.sanitize_name(source)
@@ -98,7 +109,9 @@ class NodeLinkLayout_New:
                     module_map[c] = self.gf.get_module_name(c)
 
             # compute data map
-            datamap = self.get_node_attrs_from_df(filtered_df, attr2add, filtered_callsites, module_map)
+            datamap = self.get_node_attrs_from_df(
+                filtered_df, attr2add, filtered_callsites, module_map
+            )
             for idx, key in enumerate(datamap):
                 nx.set_node_attributes(self.nxg, name=key, values=datamap[key])
 
@@ -150,7 +163,9 @@ class NodeLinkLayout_New:
                 elif attribute == "module":
                     node_data_maps[attribute][callsite] = module_map[callsite]
                 elif have_modules:
-                    node_data_maps[attribute][callsite] = attribute_map[(module_map[callsite], callsite)]
+                    node_data_maps[attribute][callsite] = attribute_map[
+                        (module_map[callsite], callsite)
+                    ]
                 else:
                     node_data_maps[attribute][callsite] = attribute_map[callsite]
 
@@ -159,17 +174,18 @@ class NodeLinkLayout_New:
     # --------------------------------------------------------------------------
 
 
-
-
 class NodeLinkLayout:
 
     # TODO: delete this once the "new" get_node_attributes is testeed
     _COLUMNS = ["time (inc)", "time", "name", "module"]
 
-    def __init__(self, graphframe,
-                       filter_metric="",  # filter the CCT based on this metric
-                                                # empty string: no filtering!
-                       filter_count=50):  # filter to these many nodes
+    def __init__(
+        self,
+        graphframe,
+        filter_metric="",  # filter the CCT based on this metric
+        # empty string: no filtering!
+        filter_count=50,
+    ):  # filter to these many nodes
 
         assert isinstance(graphframe, callflow.GraphFrame)
         assert isinstance(filter_count, int)
@@ -182,7 +198,7 @@ class NodeLinkLayout:
         self.gf = graphframe
 
         # all the columns of this dataframe
-        cols = list(self.gf.dataframe.columns)
+        cols = list(self.gf.df.columns)
 
         # add paths if not already present
         # TODO: is this really needed?
@@ -195,18 +211,18 @@ class NodeLinkLayout:
 
         # get a list of callsites to work with
         if filter_metric == "":
-            df = self.gf.dataframe
+            df = self.gf.df
 
         else:
             if filter_metric not in self.metrics:
-                raise ValueError('filter_metric = ({}) not found in dataframe'.format(filter_metric))
+                raise ValueError(
+                    "filter_metric = ({}) not found in dataframe".format(filter_metric)
+                )
             callsites = list(self.gf.get_top_by_attr(filter_count, filter_metric))
             df = self.gf.filter_by_name(callsites)
 
-        with self.timer.phase(f"Creating CCT for ({self.runs})"):
+        with self.timer.phase(f"Creating CCT."):
             self.nxg = NodeLinkLayout._create_nxg_from_paths(df["path"].tolist())
-
-
 
         # Number of runs in the state.
         # TODO: handle this better.
@@ -223,6 +239,8 @@ class NodeLinkLayout:
         # Find cycles in the nxg.
         with self.timer.phase(f"Find cycles"):
             self.nxg.cycles = NodeLinkLayout._find_cycle(self.nxg)
+
+        print(self.nxg.nodes())
 
     # --------------------------------------------------------------------------
     @staticmethod
@@ -254,7 +272,9 @@ class NodeLinkLayout:
                 elif attribute == "module":
                     node_data_maps[attribute][callsite] = module_map[callsite]
                 elif have_modules:
-                    node_data_maps[attribute][callsite] = attribute_map[(module_map[callsite], callsite)]
+                    node_data_maps[attribute][callsite] = attribute_map[
+                        (module_map[callsite], callsite)
+                    ]
                 else:
                     node_data_maps[attribute][callsite] = attribute_map[callsite]
 
@@ -262,7 +282,7 @@ class NodeLinkLayout:
 
     def _add_node_attributes(self):
 
-        have_modules = "module" in list(self.gf.dataframe.columns)
+        have_modules = "module" in list(self.gf.df.columns)
 
         # need to add these callsites (and their module map)
         callsites2add = list(self.nxg.nodes())
@@ -278,21 +298,27 @@ class NodeLinkLayout:
 
         # ----------------------------------------------------------------------
         # compute data map
-        datamap = self._get_node_attrs_from_df(self.gf.dataframe, attr2add, callsites2add, module_map)
+        datamap = self._get_node_attrs_from_df(
+            self.gf.df, attr2add, callsites2add, module_map
+        )
         for idx, key in enumerate(datamap):
             nx.set_node_attributes(self.nxg, name=key, values=datamap[key])
 
         # ----------------------------------------------------------------------
         # compute map across data
         for run in self.runs:
-            target_df = self.gf.dataframe.loc[self.gf.dataframe["dataset"] == run]
+            target_df = self.gf.df.loc[self.gf.df["dataset"] == run]
 
             if have_modules:
                 target_module_group_df = target_df.groupby(["module"])
-                valid_callsites = list(target_module_group_df["name"].unique().to_dict().keys())
+                valid_callsites = list(
+                    target_module_group_df["name"].unique().to_dict().keys()
+                )
                 callsites2add_run = [c for c in callsites2add if c in valid_callsites]
 
-            datamap = self._get_node_attrs_from_df(target_df, attr2add, callsites2add_run, module_map)
+            datamap = self._get_node_attrs_from_df(
+                target_df, attr2add, callsites2add_run, module_map
+            )
             nx.set_node_attributes(self.nxg, name=run, values=datamap)
 
         # ----------------------------------------------------------------------
@@ -508,13 +534,14 @@ class NodeLinkLayout:
 
         assert isinstance(paths, list)
         from ast import literal_eval as make_tuple
+
         nxg = nx.DiGraph()
 
         # go over all path
         for i, path in enumerate(paths):
 
             # go over the callsites in this path
-            #TODO: for me, path is looking like a list
+            # TODO: for me, path is looking like a list
             if isinstance(path, list):
                 callsites = path
             elif isinstance(path, str):

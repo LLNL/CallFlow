@@ -294,6 +294,14 @@ class CallFlow:
         elif operation_name == "auxiliary":
             return self.supergraphs[operation["dataset"]].auxiliary_data
 
+        elif operation_name == "cct":
+            result = NodeLinkLayout(
+                graphframe=self.supergraphs[operation["dataset"]].gf,
+                filter_metric="time (inc)",
+                filter_count=operation["functionsInCCT"],
+            )
+            return result.nxg
+
         elif operation_name == "supergraph":
             single_supergraph = SankeyLayout(
                 supergraph=self.supergraphs[operation["dataset"]], path="group_path"
@@ -326,7 +334,7 @@ class CallFlow:
         if operation_name == "init":
             return self.props
 
-        elif operation_name == "ensemble_cct":
+        elif operation_name == "cct":
             result = NodeLinkLayout(
                 graphframe=self.supergraphs["ensemble"].gf,
                 filter_metric="time (inc)",

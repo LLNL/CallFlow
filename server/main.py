@@ -91,14 +91,12 @@ class CallFlowServer:
         Check if the config file is provided and exists!
         """
         if not args.config:
-            LOGGER.info("Please provide a config file. To see options, use --help")
-            raise Exception()
-        else:
-            if not os.path.isfile(args.config):
-                LOGGER.info(
-                    "Please check the config file path. There exists no such file in the path provided"
-                )
-                raise Exception()
+            s = "Please provide a config file. To see options, use --help"
+            raise Exception(s)
+
+        if not os.path.isfile(args.config):
+            s = "Config file ({}) not found!".format(args.config)
+            raise Exception(s)
 
     def _create_server(self):
         """
@@ -277,8 +275,6 @@ class CallFlowServer:
                 }
             )
             result = json_graph.node_link_data(nxg)
-            # json_result = json.dumps(result)
-
             emit("single_cct", result, json=True)
 
         @sockets.on("single_supergraph", namespace="/")
@@ -307,13 +303,12 @@ class CallFlowServer:
             LOGGER.debug("[Socket request] ensemble_cct: {}".format(data))
             nxg = self.callflow.request_ensemble(
                 {
-                    "name": "ensemble_cct",
+                    "name": "cct",
                     "datasets": data["datasets"],
                     "functionsInCCT": data["functionsInCCT"],
                 }
             )
             result = json_graph.node_link_data(nxg)
-            # json_result = json.dumps(result)
             emit("ensemble_cct", result, json=True)
 
         @sockets.on("ensemble_supergraph", namespace="/")
