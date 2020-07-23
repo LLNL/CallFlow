@@ -26,6 +26,7 @@ from callflow.modules import EnsembleAuxiliary, SingleAuxiliary
 
 LOGGER = callflow.get_logger(__name__)
 
+
 class SuperGraph(object):
     """
     SuperGraph class to handle processing of a an input Dataset.
@@ -188,9 +189,9 @@ class SuperGraph(object):
         )
 
     def single_auxiliary(self, dataset="", binCount=20, process=True):
-        SingleAuxiliary(
+        EnsembleAuxiliary(
             self.gf,
-            dataset=dataset,
+            datasets=[dataset],
             props=self.props,
             MPIBinCount=binCount,
             process=process,
