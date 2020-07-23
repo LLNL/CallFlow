@@ -25,7 +25,7 @@ export default {
 	},
 
 	data: () => ({
-		id: "ensemble-cct-overview",
+		id: "cct-overview",
 		margin: {
 			top: 0,
 			right: 0,
@@ -35,20 +35,31 @@ export default {
 		width: null,
 		height: null,
 		zoom: null,
+		HAS_DATA_COLUMNS: ['module'], // Array of keys in incoming data to check for.
+		has_data_map: {}, // stores if the required data points are present in the incoming data. 
+
 	}),
 
 	sockets: {
-		ensemble_cct(data) {
-			console.log("Ensemble CCT data: ", data);
-			this.data = data;
-			this.render();
+		/**
+		 * Socket event listener for /single_cct endpoint
+		 * 
+		 * @param {JSON} data 
+		 */
+		single_cct(data) {
+			console.debug("Single CCT data: ", data);
+			this.render(data);
 		},
 
-		// Fetch CCT for comparison mode.
-		comp_cct(data) {
-			console.log("Diff CCT data: ", data);
-			this.$refs.EnsembleCCT1.init(data[this.$store.selectedTargetDataset], "1");
-			this.$refs.EnsembleCCT2.init(data[this.$store.selectedTargetDataset], "2");
+
+		/**
+		 * Socket event listener for /ensemble_cct endpoint
+		 * 
+		 * @param {JSON} data  
+		 */
+		ensemble_cct(data) {
+			console.debug("Ensemble CCT data: ", data);
+			this.render(data);
 		},
 	},
 
@@ -57,21 +68,29 @@ export default {
 		 * Calls the socket to fetch data.
 		 */
 		init() {
-			this.$socket.emit("ensemble_cct", {
-				datasets: this.$store.selectedTargetDataset,
-				functionsInCCT: this.$store.selectedFunctionsInCCT,
-				selectedMetric: this.$store.selectedMetric,
-			});
-		},
+			if (this.$store.selectedMode === 'Single') {
+				this.$socket.emit("single_cct", {
+					dataset: this.$store.selectedTargetDataset,
+					functionsInCCT: this.$store.selectedFunctionsInCCT,
+				});
+			}
+			else if (this.$store.selectedMode === 'Ensemble') {
+				this.$socket.emit("ensemble_cct", {
+					datasets: this.$store.selectedTargetDataset,
+					functionsInCCT: this.$store.selectedFunctionsInCCT,
+				});
+			}
 
-		/**
-		 * Tooltip for the each node.
-		 * 
-		 * @param {String} name Callsite's name
-		 * @param {String} description Callsite's description
-		 */
-		tooltip(name, description) {
-			return "<p class='name'>" + name + "</p><p class='description'>" + description + "</p>";
+			this.width = this.$store.viewWidth - this.margin.left - this.margin.right;
+			this.height = this.$store.viewHeight - this.margin.bottom - this.margin.top;
+
+			this.svg = d3.select("#" + this.id)
+				.attrs({
+					"width": this.width,
+					"height": this.height,
+				});
+
+			this.g = this.createGraph();
 		},
 
 		/**
@@ -99,8 +118,7 @@ export default {
 
 		/**
 		 * Sets callsite's name. 
-		 * if module is present, name = module + ':' + name,
-		 * else name = name
+		 * if key "name" is present, then use it, else use nxg node's id. 
 		 * 
 		 * @param {Object} callsite 
 		 * @return {String} callsite's name
@@ -109,10 +127,7 @@ export default {
 			if (callsite["name"] == undefined) {
 				return callsite["id"];
 			}
-			else if (callsite["module"] == undefined) {
-				return callsite["name"];
-			}
-			return callsite["module"] + ":" + callsite["name"];
+			return callsite["name"];
 		},
 
 		/**
@@ -132,11 +147,11 @@ export default {
 			}
 
 			// Set node text color.
-			const nodeColor = this.$store.runtimeColor.rgbArrayToHex(color);
-			const textColor = this.$store.runtimeColor.setContrast(nodeColor);
+			const fillColor = this.$store.runtimeColor.rgbArrayToHex(color);
+			const textColor = this.$store.runtimeColor.setContrast(fillColor);
 
 			return {
-				'node': nodeColor,
+				'node': fillColor,
 				'text': textColor
 			}
 		},
@@ -144,17 +159,21 @@ export default {
 		/**
 		 * Sets the html content for rendering inside a node.
 		 * 
-		 * @param {String} callsite_name
+		 * @param {String} callsite 
 		 * @param {JSON<{'node': Color, 'text': Color}>} callsite_color
 		 * @return {HTML} html for rendering. 
 		 */
-		setCallsiteHTML(callsite_name, callsite_color) {
-			let module = callsite_name.split(':')[0];
-			let name = callsite_name.split(':')[1];
+		setCallsiteHTML(callsite, callsite_color) {
+			let name = callsite["name"];
 
-			var html = (callsite_color['text'] === "#fff")
-				? ('<div class="white-text"><span>' + name + '</span><br/><span class="description"><b>Module :</b> ' + module + '</span> </div>')
-				: ('<div class="black-text"><span>' + name + '</span><br/><span class="description"><b>Module :</b> ' + module + '</span> </div>');
+			let html = (callsite_color['text'] === "#fff")
+				? '<div class="white-text"><span>' + name + '</span>'
+				: '<div class="black-text"><span>' + name + '</span>';
+			
+			if (this.has_data_map["module"]) {
+				module = callsite["module"];
+				html = html + '<br/><span class="description"><b>Module :</b> ' + module + '</span> </div>';
+			}
 			return html;
 		},
 
@@ -167,18 +186,17 @@ export default {
 			data.forEach((node, i) => {
 				const callsite_name = this.setCallsiteName(node);
 				const callsite_color = this.setCallsiteColor(node);
-				const label = this.setCallsiteHTML(callsite_name, callsite_color);
-
-				this.g.setNode(node["id"], {
+				const label = this.setCallsiteHTML(node, callsite_color);
+				
+				const payload = {
+					...node,
 					class: 'cct-node',
 					labelType: 'html',
 					label: label,
-					time: node["time"],
-					"time (inc)": node["time (inc)"],
-					module: node["module"],
-					imbalance_perc: node["imbalance_perc"],
 					fillColor: callsite_color['node']
-				});
+				};
+
+				this.g.setNode(callsite_name, payload);
 			});
 
 			let self = this;
@@ -241,33 +259,37 @@ export default {
 
 			let nodeClass = this.g.node(id).class;
 
+			let self = this
 			if (nodeClass.indexOf('highLight') != -1) {
 				this.g.node(id).class = nodeClass.toString().replace('highLight', ' ').trim();
 
 				this.g.edges().forEach(function (e, v, w) {
-					var edge = g.edge(e);
+					let edge = self.g.edge(e);
 					edge.style = default_dagreD3e_style;
 					edge.arrowhead = "vee";
 					edge.arrowheadStyle = default_dagreD3arrowhead_style;
 				});
 			}
 			else {
-				let self = this;
 				this.g.nodes().forEach(function (v) {
 					let node = self.g.node(v);
 					nodeClass = node.class;
-					if (nodeClass) node.class = nodeClass.replace('highLight', ' ').trim();
+					if (nodeClass !== 'cct-node') node.class = nodeClass.replace('highLight', ' ').trim();
 				});
+
 				this.g.edges().forEach(function (e, v, w) {
 					let edge = self.g.edge(e);
 					edge.style = default_dagreD3e_style;
 					edge.arrowhead = "vee";
 					edge.arrowheadStyle = default_dagreD3arrowhead_style;
+					// Attach style for the callee callsites.
 					if (e.v == id) {
 						edge.style = outbound_edge_style;
 						edge.arrowhead = "vee";
 						edge.arrowheadStyle = outbound_arrowhead_style;
-					} else if (e.w == id) {
+					}
+					// Attach style for the caller callsites. 
+					else if (e.w == id) {
 						edge.style = inbound_edge_style;
 						edge.arrowhead = "vee";
 						edge.arrowheadStyle = inbound_arrowhead_style;
@@ -284,40 +306,51 @@ export default {
 		zoomTranslate() {
 			const graphWidth = this.g.graph().width + 80;
 			const graphHeight = this.g.graph().height + 40;
+			
 			const width = parseInt(this.svg.style("width").replace(/px/, ""));
-			var height = parseInt(this.svg.style("height").replace(/px/, ""));
+			const height = parseInt(this.svg.style("height").replace(/px/, ""));
 
+			// Set the zoom scale
 			let zoomScale = Math.min(width / graphWidth, height / graphHeight);
 			if (zoomScale > 1.4) zoomScale -= 0.1;
-			var translate = [(width / 2) - ((graphWidth * zoomScale) / 2), (height / 2) - ((graphHeight * zoomScale) / 2)];
 
+			// Set the translate
+			const translate = [(width - (graphWidth * zoomScale)) * 0.5, (height - (graphHeight * zoomScale)) * 0.5 ];
+
+			// Move the svg based on translate.
 			this.svg.call(this.zoom.transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(zoomScale));
 		},
 
 		/**
-		 * Render method for the component
-		 * 
+		 *  Set the has data map.
 		 */
-		render() {
-			let self = this;
-			this.width = this.$store.viewWidth - this.margin.left - this.margin.right;
-			this.height = this.$store.viewHeight - this.margin.bottom - this.margin.top;
+		setHasDataMap() {
+			this.has_data_map = {}
+			for (let i = 0; i < this.HAS_DATA_COLUMNS.length; i += 1) {
+				let currentColumn = this.HAS_DATA_COLUMNS[i];
+				if (Object.keys(this.data['nodes'][0]).includes(currentColumn)) {
+					this.has_data_map[currentColumn] = true;
+				}
+				else {
+					this.has_data_map[currentColumn] = false
+				}
+			}
+		},
 
-			this.svg = d3.select("#" + this.id)
-				.attrs({
-					"width": this.width,
-					"height": this.height,
-				});
-
-			this.g = this.createGraph();
+		/**
+		 * Render method for the component.
+		 */
+		render(data) {
+			this.data = data;
+			this.setHasDataMap()
 
 			this.nodes(this.data.nodes);
 			this.edges(this.data.links);
 
-			let inner = this.svg.select("#container");
+			const inner = this.svg.select("#container");
 
 			// Create the renderer
-			const render = new dagreD3.render();
+			const dagreRender = new dagreD3.render();
 
 			// Set up zoom support
 			this.zoom = d3.zoom().on("zoom", function () {
@@ -326,14 +359,17 @@ export default {
 			this.svg.call(this.zoom);
 
 			// Run the renderer. This is what draws the final graph.
-			render(inner, this.g);
+			dagreRender(inner, this.g);
+
 
 			this.zoomTranslate();
 
 			// node click event (highlight)
+			let self = this;
 			this.svg.selectAll("g.node").on("click", function (id) {
 				self.node_click_action(id);
-				render(inner, self.g);
+				dagreRender(inner, self.g);
+				self.zoomTranslate();
 			});
 
 			// Add tooltip
