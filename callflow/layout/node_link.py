@@ -49,7 +49,7 @@ class NodeLinkLayout_New:
         timer = Timer()
 
         metrics = self.gf.get_metrics()
-        cols = list(self.gf.dataframe.columns)
+        cols = list(self.gf.df.columns)
 
         # does the dataframe contain module names?
         have_modules = "module" in cols
@@ -57,7 +57,7 @@ class NodeLinkLayout_New:
         # ----------------------------------------------------------------------
         # filter the dataframe if needed
         if filter_metric == "":
-            filtered_df = self.gf.dataframe
+            filtered_df = self.gf.df
             filtered_callsites = list(filtered_df["name"].unique().to_dict().keys())
 
         else:

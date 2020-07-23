@@ -598,8 +598,6 @@ export default {
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
 			this.init();
-			EventHandler.$emit("show_target_auxiliary", {
-			});
 		},
 
 		updateMode() {
