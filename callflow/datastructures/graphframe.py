@@ -286,7 +286,7 @@ class GraphFrame(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def get_metrics(self):
-        ignore_cols = ["name", "nid", "module", "path"]
+        ignore_cols = ["name", "nid", "type", "file", "line", "module", "path"]
         return [c for c in list(self.df.columns) if c not in ignore_cols]
 
     def get_module_name(self, callsite):

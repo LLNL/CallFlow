@@ -35,12 +35,10 @@ class NodeLinkLayout_New:
         write_dot(self.nxg, filename)
 
     # --------------------------------------------------------------------------
-    def compute(
-        self,
-        filter_metric="",  # filter the CCT based on this metric
-        # empty string: no filtering
-        filter_count=50,
-    ):  # filter to these many nodes
+    def compute(self, filter_metric="",   # filter the CCT based on this metric
+                                                  # empty string: no filtering
+                      filter_count=50,    # filter to these many nodes
+                ):
 
         assert isinstance(filter_metric, str)
         assert isinstance(filter_count, int)
@@ -154,6 +152,7 @@ class NodeLinkLayout_New:
         node_data_maps = {}
 
         for attribute in attr2add:
+            # TODO: this needs attention (why max?)
             attribute_map = grouped_df[attribute].max().to_dict()
             node_data_maps[attribute] = {}
 
@@ -163,9 +162,10 @@ class NodeLinkLayout_New:
                 elif attribute == "module":
                     node_data_maps[attribute][callsite] = module_map[callsite]
                 elif have_modules:
-                    node_data_maps[attribute][callsite] = attribute_map[
-                        (module_map[callsite], callsite)
-                    ]
+                    if module_map[callsite] is not None:
+                        node_data_maps[attribute][callsite] = attribute_map[
+                            (module_map[callsite], callsite)
+                        ]
                 else:
                     node_data_maps[attribute][callsite] = attribute_map[callsite]
 
