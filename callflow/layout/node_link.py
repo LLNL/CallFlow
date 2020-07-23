@@ -18,35 +18,202 @@ import networkx as nx
 # CallFlow imports
 import callflow
 from callflow.timer import Timer
-from callflow import SuperGraph
 
 # CCT Rendering class.
+class NodeLinkLayout_New:
+
+    # --------------------------------------------------------------------------
+    def __init__(self, graphframe):
+        assert isinstance(graphframe, callflow.GraphFrame)
+        self.gf = graphframe
+        self.nxg = nx.DiGraph()
+
+    # --------------------------------------------------------------------------
+    def write_dot(self, filename="cct.dot"):
+        from networkx.drawing.nx_agraph import write_dot
+        write_dot(self.nxg, filename)
+
+    # --------------------------------------------------------------------------
+    def compute(self, filter_metric = "",  # filter the CCT based on this metric
+                                                    # empty string: no filtering
+                      filter_count = 50):  # filter to these many nodes
+
+        assert isinstance(filter_metric, str)
+        assert isinstance(filter_count, int)
+        assert filter_count > 0
+
+        timer = Timer()
+
+        metrics = self.gf.get_metrics()
+        cols = list(self.gf.dataframe.columns)
+
+        # does the dataframe contain module names?
+        have_modules = "module" in cols
+
+        # ----------------------------------------------------------------------
+        # filter the dataframe if needed
+        if filter_metric == "":
+            filtered_df = self.gf.dataframe
+            filtered_callsites = list(filtered_df["name"].unique().to_dict().keys())
+
+        else:
+            if filter_metric not in metrics:
+                raise ValueError('filter_metric = ({}) not found in dataframe'.format(filter_metric))
+
+            filtered_callsites = list(self.gf.get_top_by_attr(filter_count, filter_metric))
+            filtered_df = self.gf.filter_by_name(filtered_callsites)
+
+        # ----------------------------------------------------------------------
+        # Create the graph (nodes and edges)
+        with timer.phase("Creating CCT"):
+
+            for node in self.gf.graph.traverse():
+                if "function" != node.frame["type"]:
+                    continue
+
+                path = callflow.utils.path_list_from_frames(node.paths())
+                for i in range(len(path) - 1):
+
+                    source, target = path[i], path[i+1]
+                    if source not in filtered_callsites or target not in filtered_callsites:
+                        continue
+
+                    source = callflow.utils.sanitize_name(source)
+                    target = callflow.utils.sanitize_name(target)
+
+                    if not self.nxg.has_edge(source, target):
+                        self.nxg.add_edge(source, target)
+
+        # ----------------------------------------------------------------------
+        # Add node attributes.
+        with timer.phase("Add node attributes"):
+
+            module_map = {}
+
+            # need to add these attributes to the nodes
+            attr2add = metrics + ["name"]
+            if have_modules:
+                attr2add.append("module")
+                for c in filtered_callsites:
+                    module_map[c] = self.gf.get_module_name(c)
+
+            # compute data map
+            datamap = self.get_node_attrs_from_df(filtered_df, attr2add, filtered_callsites, module_map)
+            for idx, key in enumerate(datamap):
+                nx.set_node_attributes(self.nxg, name=key, values=datamap[key])
+
+        # ----------------------------------------------------------------------
+        # Add edge attributes.
+        with timer.phase("Add edge counts"):
+
+            # how many times does an edge exist?
+            count_edge = {}
+
+            # TODO: why starting from every node?
+            # this should only be the root
+            for start_node in self.nxg.nbunch_iter(source):
+                for edge in nx.edge_dfs(self.nxg, start_node):
+                    count_edge[edge] = count_edge.get(edge, 0) + 1
+
+            nx.set_edge_attributes(self.nxg, name="count", values=count_edge)
+
+        return self.nxg
+        # ----------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------
+    @staticmethod
+    def get_node_attrs_from_df(dataframe, attr2add, callsites2add, module_map):
+
+        assert isinstance(dataframe, pd.DataFrame)
+        assert isinstance(attr2add, list)
+        assert isinstance(callsites2add, list)
+        assert isinstance(module_map, dict)
+
+        have_modules = len(module_map) > 0
+
+        # group the dataframe by module and name
+        if have_modules:
+            grouped_df = dataframe.groupby(["module", "name"])
+        else:
+            grouped_df = dataframe.groupby(["name"])
+
+        # create data maps for each node (key = (attribute, callsite))
+        node_data_maps = {}
+
+        for attribute in attr2add:
+            attribute_map = grouped_df[attribute].max().to_dict()
+            node_data_maps[attribute] = {}
+
+            for callsite in callsites2add:
+                if attribute == "name":
+                    node_data_maps[attribute][callsite] = callsite
+                elif attribute == "module":
+                    node_data_maps[attribute][callsite] = module_map[callsite]
+                elif have_modules:
+                    node_data_maps[attribute][callsite] = attribute_map[(module_map[callsite], callsite)]
+                else:
+                    node_data_maps[attribute][callsite] = attribute_map[callsite]
+
+        return node_data_maps
+
+    # --------------------------------------------------------------------------
+
+
+
+
 class NodeLinkLayout:
 
+    # TODO: delete this once the "new" get_node_attributes is testeed
     _COLUMNS = ["time (inc)", "time", "name", "module"]
 
-    def __init__(self, supergraph, callsite_count=50):
+    def __init__(self, graphframe,
+                       filter_metric="",  # filter the CCT based on this metric
+                                                # empty string: no filtering!
+                       filter_count=50):  # filter to these many nodes
 
-        assert isinstance(supergraph, SuperGraph)
-        assert isinstance(callsite_count, int)
-        assert callsite_count > 0
-
-        # set the current graph being rendered.
-        self.supergraph = supergraph
+        assert isinstance(graphframe, callflow.GraphFrame)
+        assert isinstance(filter_count, int)
+        assert isinstance(filter_metric, str)
+        assert filter_count > 0
 
         self.timer = Timer()
 
-        # Number of runs in the state.
-        self.runs = self.supergraph.gf.df["dataset"].unique()
+        # set the current graph being rendered.
+        self.gf = graphframe
 
-        # Put the top callsites into a list.
-        callsites = self.supergraph.gf.get_top_by_attr(callsite_count, "time (inc)")
+        # all the columns of this dataframe
+        cols = list(self.gf.dataframe.columns)
 
-        # Filter out the callsites not in the list. (in a LOCAL copy)
-        df = self.supergraph.gf.filter_by_name(callsites)
+        # add paths if not already present
+        # TODO: is this really needed?
+        # should this be a local construct?
+        if "path" not in cols:
+            self.gf.add_paths()
+
+        # Make this class support general metrics
+        self.metrics = self.gf.get_metrics()
+
+        # get a list of callsites to work with
+        if filter_metric == "":
+            df = self.gf.dataframe
+
+        else:
+            if filter_metric not in self.metrics:
+                raise ValueError('filter_metric = ({}) not found in dataframe'.format(filter_metric))
+            callsites = list(self.gf.get_top_by_attr(filter_count, filter_metric))
+            df = self.gf.filter_by_name(callsites)
 
         with self.timer.phase(f"Creating CCT for ({self.runs})"):
             self.nxg = NodeLinkLayout._create_nxg_from_paths(df["path"].tolist())
+
+
+
+        # Number of runs in the state.
+        # TODO: handle this better.
+        if "dataset" in cols:
+            self.runs = df["dataset"].unique()
+        else:
+            self.runs = []
 
         # Add node and edge attributes.
         with self.timer.phase("Add graph attributes"):
@@ -58,7 +225,81 @@ class NodeLinkLayout:
             self.nxg.cycles = NodeLinkLayout._find_cycle(self.nxg)
 
     # --------------------------------------------------------------------------
+    @staticmethod
+    def _get_node_attrs_from_df(dataframe, attr2add, callsites2add, module_map):
+
+        assert isinstance(dataframe, pd.DataFrame)
+        assert isinstance(attr2add, list)
+        assert isinstance(callsites2add, list)
+        assert isinstance(module_map, dict)
+
+        have_modules = len(module_map) > 0
+
+        # group the dataframe by module and name
+        if have_modules:
+            grouped_df = dataframe.groupby(["module", "name"])
+        else:
+            grouped_df = dataframe.groupby(["name"])
+
+        # create data maps for each node (key = (attribute, callsite))
+        node_data_maps = {}
+
+        for attribute in attr2add:
+            attribute_map = grouped_df[attribute].max().to_dict()
+            node_data_maps[attribute] = {}
+
+            for callsite in callsites2add:
+                if attribute == "name":
+                    node_data_maps[attribute][callsite] = callsite
+                elif attribute == "module":
+                    node_data_maps[attribute][callsite] = module_map[callsite]
+                elif have_modules:
+                    node_data_maps[attribute][callsite] = attribute_map[(module_map[callsite], callsite)]
+                else:
+                    node_data_maps[attribute][callsite] = attribute_map[callsite]
+
+        return node_data_maps
+
     def _add_node_attributes(self):
+
+        have_modules = "module" in list(self.gf.dataframe.columns)
+
+        # need to add these callsites (and their module map)
+        callsites2add = list(self.nxg.nodes())
+        module_map = {}
+
+        # need to add these attributes to the nodes
+        attr2add = self.metrics + ["name"]
+
+        if have_modules:
+            attr2add.append("module")
+            for c in callsites2add:
+                module_map[c] = self.gf.get_module_name(c)
+
+        # ----------------------------------------------------------------------
+        # compute data map
+        datamap = self._get_node_attrs_from_df(self.gf.dataframe, attr2add, callsites2add, module_map)
+        for idx, key in enumerate(datamap):
+            nx.set_node_attributes(self.nxg, name=key, values=datamap[key])
+
+        # ----------------------------------------------------------------------
+        # compute map across data
+        for run in self.runs:
+            target_df = self.gf.dataframe.loc[self.gf.dataframe["dataset"] == run]
+
+            if have_modules:
+                target_module_group_df = target_df.groupby(["module"])
+                valid_callsites = list(target_module_group_df["name"].unique().to_dict().keys())
+                callsites2add_run = [c for c in callsites2add if c in valid_callsites]
+
+            datamap = self._get_node_attrs_from_df(target_df, attr2add, callsites2add_run, module_map)
+            nx.set_node_attributes(self.nxg, name=run, values=datamap)
+
+        # ----------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------
+    # TODO: delete this once the original behavior is tested!
+    def _add_node_attributes_v0(self):
 
         module_name_group_df = self.supergraph.gf.df.groupby(["module", "name"])
         name_time_inc_map = module_name_group_df["time (inc)"].max().to_dict()
@@ -267,23 +508,25 @@ class NodeLinkLayout:
 
         assert isinstance(paths, list)
         from ast import literal_eval as make_tuple
-
         nxg = nx.DiGraph()
 
         # go over all path
         for i, path in enumerate(paths):
 
             # go over the callsites in this path
-            callsites = make_tuple(path)
-            plen = len(callsites)
+            #TODO: for me, path is looking like a list
+            if isinstance(path, list):
+                callsites = path
+            elif isinstance(path, str):
+                callsites = make_tuple(path)
 
+            plen = len(callsites)
             for j in range(plen - 1):
                 source = callflow.utils.sanitize_name(callsites[j])
                 target = callflow.utils.sanitize_name(callsites[j + 1])
 
                 if not nxg.has_edge(source, target):
                     nxg.add_edge(source, target)
-
         return nxg
 
     @staticmethod
