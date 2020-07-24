@@ -246,7 +246,7 @@ class NodeLinkLayout:
         with self.timer.phase(f"Find cycles"):
             self.nxg.cycles = NodeLinkLayout._find_cycle(self.nxg)
 
-        print(self.nxg.nodes())
+        #print(self.nxg.nodes())
 
     # --------------------------------------------------------------------------
     @staticmethod

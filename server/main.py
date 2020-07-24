@@ -271,7 +271,8 @@ class CallFlowServer:
                 {
                     "name": "cct",
                     "dataset": data["dataset"],
-                    "functionsInCCT": data["functionsInCCT"],
+                    "filter_metric": data["filter_metric"],
+                    "filter_count": data["filter_count"],
                 }
             )
             result = json_graph.node_link_data(nxg)
@@ -305,7 +306,8 @@ class CallFlowServer:
                 {
                     "name": "cct",
                     "datasets": data["datasets"],
-                    "functionsInCCT": data["functionsInCCT"],
+                    "filter_metric": data["filter_metric"],
+                    "filter_count": data["filter_count"],
                 }
             )
             result = json_graph.node_link_data(nxg)

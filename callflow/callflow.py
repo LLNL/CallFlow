@@ -297,8 +297,8 @@ class CallFlow:
         elif operation_name == "cct":
             result = NodeLinkLayout(
                 graphframe=self.supergraphs[operation["dataset"]].gf,
-                filter_metric="time (inc)",
-                filter_count=operation["functionsInCCT"],
+                filter_metric=operation["filter_metric"],
+                filter_count=operation["filter_count"],
             )
             return result.nxg
 
@@ -311,14 +311,6 @@ class CallFlow:
         elif operation_name == "mini-histogram":
             minihistogram = MiniHistogram(state)
             return minihistogram.result
-
-        elif operation_name == "cct":
-            result = NodeLinkLayout(
-                graphframe=self.supergraphs[operation["dataset"]].gf,
-                filter_metric="time (inc)",
-                filter_count=operation["functionsInCCT"],
-            )
-            return result.nxg
 
         elif operation_name == "function":
             functionlist = FunctionList(state, operation["module"])
@@ -337,7 +329,7 @@ class CallFlow:
         elif operation_name == "cct":
             result = NodeLinkLayout(
                 graphframe=self.supergraphs["ensemble"].gf,
-                filter_metric="time (inc)",
+                filter_metric=operation["filter_metric"],
                 filter_count=operation["functionsInCCT"],
             )
             return result.nxg

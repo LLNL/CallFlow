@@ -47,7 +47,6 @@ export default {
 		 * @param {JSON} data 
 		 */
 		single_cct(data) {
-			console.log(data)
 			console.debug("Single CCT data: ", data);
 			this.render(data);
 		},
@@ -73,14 +72,16 @@ export default {
 				console.debug("[Request] /single_cct")
 				this.$socket.emit("single_cct", {
 					dataset: this.$store.selectedTargetDataset,
-					functionsInCCT: this.$store.selectedFunctionsInCCT,
+					filter_metric: "time (inc)",
+					filter_count: this.$store.selectedFunctionsInCCT,
 				});
 			}
 			else if (this.$store.selectedMode === 'Ensemble') {
 				console.debug("[Request] /ensemble_cct")
 				this.$socket.emit("ensemble_cct", {
 					datasets: this.$store.selectedTargetDataset,
-					functionsInCCT: this.$store.selectedFunctionsInCCT,
+					filter_metric: "time (inc)",
+					filter_count: this.$store.selectedFunctionsInCCT,
 				});
 			}
 
