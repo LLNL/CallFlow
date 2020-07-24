@@ -21,97 +21,67 @@ import callflow
 from callflow.timer import Timer
 
 # CCT Rendering class.
-class NodeLinkLayout_New:
+class CallGraphLayout:
 
     # --------------------------------------------------------------------------
-    def __init__(self, graphframe):
-        assert isinstance(graphframe, ht.GraphFrame)
-        self.gf = graphframe
-        self.nxg = nx.DiGraph()
+    @staticmethod
+    def compute(gf, include_types=['function']):
 
-    # --------------------------------------------------------------------------
-    def write_dot(self, filename="cct.dot"):
-        from networkx.drawing.nx_agraph import write_dot
+        assert isinstance(gf, ht.GraphFrame)
+        assert isinstance(include_types, list)
+        assert all(isinstance(t, str) for t in include_types)
 
-        write_dot(self.nxg, filename)
-
-    # --------------------------------------------------------------------------
-    def compute(self, filter_metric="",   # filter the CCT based on this metric
-                                                  # empty string: no filtering
-                      filter_count=50,    # filter to these many nodes
-                ):
-
-        assert isinstance(filter_metric, str)
-        assert isinstance(filter_count, int)
-        assert filter_count > 0
-
+        nxg = nx.DiGraph()
         timer = Timer()
 
         ignore_cols = ["name", "nid", "type", "file", "line", "module", "path"]
-
-        cols = list(self.gf.dataframe.columns)
+        cols = list(gf.dataframe.columns)
         metrics = [c for c in cols if c not in ignore_cols]
 
         # does the dataframe contain module names?
         have_modules = "module" in cols
 
         # ----------------------------------------------------------------------
-        # filter the dataframe if needed
-        if filter_metric == "":
-            filtered_df = self.gf.dataframe
-            filtered_callsites = list(filtered_df["name"].unique())
-
-        else:
-            if filter_metric not in metrics:
-                raise ValueError(
-                    "filter_metric = ({}) not found in dataframe".format(filter_metric)
-                )
-
-            df = self.gf.dataframe.groupby(["name"]).mean()
-            filtered_callsites = callflow.utils.df_get_top_by_attr(df, filter_count, filter_metric)
-            filtered_df = callflow.utils.df_filter_by_attr(self.gf.dataframe, "name", filtered_callsites)
-
-        # ----------------------------------------------------------------------
         # Create the graph (nodes and edges)
         with timer.phase("Creating CCT"):
 
-            for node in self.gf.graph.traverse():
-                if "function" != node.frame["type"]:
+            for node in gf.graph.traverse():
+                if node.frame["type"] not in include_types:
                     continue
 
                 path = callflow.utils.path_list_from_frames(node.paths())
                 for i in range(len(path) - 1):
 
                     source, target = path[i], path[i + 1]
-                    if (source not in filtered_callsites or
-                        target not in filtered_callsites):
-                        continue
+                    #if (source not in callsites) or (target not in callsites):
+                    #    continue
 
                     source = callflow.utils.sanitize_name(source)
                     target = callflow.utils.sanitize_name(target)
 
-                    if not self.nxg.has_edge(source, target):
-                        self.nxg.add_edge(source, target)
+                    if not nxg.has_edge(source, target):
+                        nxg.add_edge(source, target)
 
         # ----------------------------------------------------------------------
         # Add node attributes.
         with timer.phase("Add node attributes"):
 
+            callsites = list(gf.dataframe["name"].unique())
             module_map = {}
 
             # need to add these attributes to the nodes
             attr2add = metrics + ["name"]
             if have_modules:
                 attr2add.append("module")
-                for c in filtered_callsites:
-                    module_map[c] = self.gf.dataframe.loc[self.gf.dataframe["name"] == c]["module"].unique()[0]
+                for c in callsites:
+                    module_map[c] = gf.dataframe.loc[gf.dataframe["name"] == c]["module"].unique()[0]
 
             # compute data map
-            datamap = self.get_node_attrs_from_df(
-                filtered_df, attr2add, filtered_callsites, module_map
+            datamap = CallGraphLayout._get_node_attrs_from_df(
+                gf.dataframe, attr2add, callsites, module_map
             )
             for idx, key in enumerate(datamap):
-                nx.set_node_attributes(self.nxg, name=key, values=datamap[key])
+                nx.set_node_attributes(nxg, name=key, values=datamap[key])
 
         # ----------------------------------------------------------------------
         # Add edge attributes.
@@ -119,21 +89,31 @@ class NodeLinkLayout_New:
 
             # how many times does an edge exist?
             count_edge = {}
+            source = None
 
             # TODO: why starting from every node?
             # this should only be the root
-            for start_node in self.nxg.nbunch_iter(source):
-                for edge in nx.edge_dfs(self.nxg, start_node):
+            for start_node in nxg.nbunch_iter(source):
+                for edge in nx.edge_dfs(nxg, start_node):
                     count_edge[edge] = count_edge.get(edge, 0) + 1
 
-            nx.set_edge_attributes(self.nxg, name="count", values=count_edge)
+            nx.set_edge_attributes(nxg, name="count", values=count_edge)
 
-        return self.nxg
-        # ----------------------------------------------------------------------
+        return nxg
 
     # --------------------------------------------------------------------------
     @staticmethod
-    def get_node_attrs_from_df(dataframe, attr2add, callsites2add, module_map):
+    def write_dot(nxg, filename="callgraph.dot"):
+
+        assert isinstance(nxg, nx.DiGraph)
+        assert isinstance(filename, str)
+
+        from networkx.drawing.nx_agraph import write_dot
+        write_dot(nxg, filename)
+
+    # --------------------------------------------------------------------------
+    @staticmethod
+    def _get_node_attrs_from_df(dataframe, attr2add, callsites2add, module_map):
 
         assert isinstance(dataframe, pd.DataFrame)
         assert isinstance(attr2add, list)
