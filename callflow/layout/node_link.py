@@ -16,6 +16,7 @@ import pandas as pd
 import networkx as nx
 
 # CallFlow imports
+import hatchet as ht
 import callflow
 from callflow.timer import Timer
 
@@ -24,7 +25,7 @@ class NodeLinkLayout_New:
 
     # --------------------------------------------------------------------------
     def __init__(self, graphframe):
-        assert isinstance(graphframe, callflow.GraphFrame)
+        assert isinstance(graphframe, ht.GraphFrame)
         self.gf = graphframe
         self.nxg = nx.DiGraph()
 
@@ -46,8 +47,10 @@ class NodeLinkLayout_New:
 
         timer = Timer()
 
-        metrics = self.gf.get_metrics()
-        cols = list(self.gf.df.columns)
+        ignore_cols = ["name", "nid", "type", "file", "line", "module", "path"]
+
+        cols = list(self.gf.dataframe.columns)
+        metrics = [c for c in cols if c not in ignore_cols]
 
         # does the dataframe contain module names?
         have_modules = "module" in cols
@@ -55,7 +58,7 @@ class NodeLinkLayout_New:
         # ----------------------------------------------------------------------
         # filter the dataframe if needed
         if filter_metric == "":
-            filtered_df = self.gf.df
+            filtered_df = self.gf.dataframe
             filtered_callsites = list(filtered_df["name"].unique().to_dict().keys())
 
         else:
@@ -64,10 +67,24 @@ class NodeLinkLayout_New:
                     "filter_metric = ({}) not found in dataframe".format(filter_metric)
                 )
 
-            filtered_callsites = list(
-                self.gf.get_top_by_attr(filter_count, filter_metric)
-            )
-            filtered_df = self.gf.filter_by_name(filtered_callsites)
+            # TODO: @suraj, please delete these calls
+            # once the replacement is functional
+            # filtered_callsites = list(
+            #    self.gf.get_top_by_attr(filter_count, filter_metric)
+            # )
+            # filtered_df = self.gf.filter_by_name(filtered_callsites)
+
+            # TODO: @suraj: please check if this is the correct replacement of code
+            # why do we do mean here?
+            df = self.gf.dataframe.groupby(["name"]).mean()
+            df = df.sort_values(by=[filter_metric], ascending=False)
+            df = df.nlargest(filter_count, filter_metric)
+            filtered_callsites = df.index.values.tolist()
+
+            # TODO: @Suraj, please check
+            # why do i need to filter the df again?
+            # could i not simply just use the df?
+            filtered_df = self.gf.dataframe[self.gf.dataframe["name"].isin(filtered_callsites)]
 
         # ----------------------------------------------------------------------
         # Create the graph (nodes and edges)
@@ -81,10 +98,8 @@ class NodeLinkLayout_New:
                 for i in range(len(path) - 1):
 
                     source, target = path[i], path[i + 1]
-                    if (
-                        source not in filtered_callsites
-                        or target not in filtered_callsites
-                    ):
+                    if (source not in filtered_callsites or
+                        target not in filtered_callsites):
                         continue
 
                     source = callflow.utils.sanitize_name(source)
@@ -104,7 +119,7 @@ class NodeLinkLayout_New:
             if have_modules:
                 attr2add.append("module")
                 for c in filtered_callsites:
-                    module_map[c] = self.gf.get_module_name(c)
+                    module_map[c] = self.gf.dataframe.loc[self.gf.dataframe["name"] == c]["module"].unique()[0]
 
             # compute data map
             datamap = self.get_node_attrs_from_df(
