@@ -59,7 +59,7 @@ class NodeLinkLayout_New:
         # filter the dataframe if needed
         if filter_metric == "":
             filtered_df = self.gf.dataframe
-            filtered_callsites = list(filtered_df["name"].unique().to_dict().keys())
+            filtered_callsites = list(filtered_df["name"].unique())
 
         else:
             if filter_metric not in metrics:
@@ -67,24 +67,9 @@ class NodeLinkLayout_New:
                     "filter_metric = ({}) not found in dataframe".format(filter_metric)
                 )
 
-            # TODO: @suraj, please delete these calls
-            # once the replacement is functional
-            # filtered_callsites = list(
-            #    self.gf.get_top_by_attr(filter_count, filter_metric)
-            # )
-            # filtered_df = self.gf.filter_by_name(filtered_callsites)
-
-            # TODO: @suraj: please check if this is the correct replacement of code
-            # why do we do mean here?
             df = self.gf.dataframe.groupby(["name"]).mean()
-            df = df.sort_values(by=[filter_metric], ascending=False)
-            df = df.nlargest(filter_count, filter_metric)
-            filtered_callsites = df.index.values.tolist()
-
-            # TODO: @Suraj, please check
-            # why do i need to filter the df again?
-            # could i not simply just use the df?
-            filtered_df = self.gf.dataframe[self.gf.dataframe["name"].isin(filtered_callsites)]
+            filtered_callsites = callflow.utils.df_get_top_by_attr(df, filter_count, filter_metric)
+            filtered_df = callflow.utils.df_filter_by_attr(self.gf.dataframe, "name", filtered_callsites)
 
         # ----------------------------------------------------------------------
         # Create the graph (nodes and edges)
