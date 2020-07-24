@@ -20,8 +20,7 @@ import hatchet as ht
 import callflow
 from callflow.timer import Timer
 
-# CCT Rendering class.
-class CallGraphLayout:
+class NodeLinkLayout:
 
     # --------------------------------------------------------------------------
     @staticmethod
@@ -103,7 +102,7 @@ class CallGraphLayout:
                     module_map[c] = gf.dataframe.loc[gf.dataframe["name"] == c]["module"].unique()[0]
 
             # compute data map
-            datamap = CallGraphLayout._get_node_attrs_from_df(
+            datamap = NodeLinkLayout._get_node_attrs_from_df(
                 gf.dataframe, attr2add, callsites, module_map
             )
             for idx, key in enumerate(datamap):
@@ -180,18 +179,21 @@ class CallGraphLayout:
     # --------------------------------------------------------------------------
 
 
-class NodeLinkLayout:
+# TODO:
+# ideally, we want the CallFlowNodeLinkLayout to derive from NodeLinkLayout
+# NodeLinkLayout works on a hatchet graphframe, and creates a cct or callgraph
+# the CallFlowNodeLinkLayout should do what callflow needs additionally
+# filtering, module map, ensembles, etc, and leave the core functionality
+# to callgrpah layout
+class CallFlowNodeLinkLayout:
 
     # TODO: delete this once the "new" get_node_attributes is testeed
     _COLUMNS = ["time (inc)", "time", "name", "module"]
 
-    def __init__(
-        self,
-        graphframe,
-        filter_metric="",  # filter the CCT based on this metric
-        # empty string: no filtering!
-        filter_count=50,
-    ):  # filter to these many nodes
+    def __init__(self, graphframe,
+                       filter_metric="",  # filter the CCT based on this metric (empty string: no filtering!)
+                       filter_count=50,   # filter to these many nodes
+                ):
 
         assert isinstance(graphframe, callflow.GraphFrame)
         assert isinstance(filter_count, int)
@@ -228,7 +230,7 @@ class NodeLinkLayout:
             df = self.gf.filter_by_name(callsites)
 
         with self.timer.phase(f"Creating CCT."):
-            self.nxg = NodeLinkLayout._create_nxg_from_paths(df["path"].tolist())
+            self.nxg = CallFlowNodeLinkLayout._create_nxg_from_paths(df["path"].tolist())
 
         # Number of runs in the state.
         # TODO: handle this better.
@@ -244,7 +246,7 @@ class NodeLinkLayout:
 
         # Find cycles in the nxg.
         with self.timer.phase(f"Find cycles"):
-            self.nxg.cycles = NodeLinkLayout._find_cycle(self.nxg)
+            self.nxg.cycles = CallFlowNodeLinkLayout._find_cycle(self.nxg)
 
         #print(self.nxg.nodes())
 
@@ -273,16 +275,17 @@ class NodeLinkLayout:
             node_data_maps[attribute] = {}
 
             for callsite in callsites2add:
+
                 if attribute == "name":
                     node_data_maps[attribute][callsite] = callsite
                 elif attribute == "module":
                     node_data_maps[attribute][callsite] = module_map[callsite]
-                elif have_modules:
+                elif not have_modules:
+                    node_data_maps[attribute][callsite] = attribute_map[callsite]
+                elif module_map[callsite] is not None:
                     node_data_maps[attribute][callsite] = attribute_map[
                         (module_map[callsite], callsite)
                     ]
-                else:
-                    node_data_maps[attribute][callsite] = attribute_map[callsite]
 
         return node_data_maps
 
@@ -343,7 +346,7 @@ class NodeLinkLayout:
 
             module = self.supergraph.get_module_name(callsite)
 
-            for column in NodeLinkLayout._COLUMNS:
+            for column in CallFlowNodeLinkLayout._COLUMNS:
                 if column not in datamap:
                     datamap[column] = {}
 
@@ -389,7 +392,7 @@ class NodeLinkLayout:
                 if callsite not in datamap:
                     datamap[callsite] = {}
 
-                for column in NodeLinkLayout._COLUMNS:
+                for column in CallFlowNodeLinkLayout._COLUMNS:
 
                     if column not in datamap:
                         datamap[column] = {}
@@ -418,7 +421,7 @@ class NodeLinkLayout:
         for start_node in self.nxg.nbunch_iter(source):
             for edge in nx.edge_dfs(self.nxg, start_node, orientation):
 
-                tail, head = NodeLinkLayout._tailhead(edge, is_directed, orientation)
+                tail, head = CallFlowNodeLinkLayout._tailhead(edge, is_directed, orientation)
 
                 if edge not in edge_counter:
                     edge_counter[edge] = 0
@@ -472,7 +475,7 @@ class NodeLinkLayout:
 
             for edge in nx.edge_dfs(G, start_node, orientation):
                 # Determine if this edge is a continuation of the active path.
-                tail, head = NodeLinkLayout._tailhead(edge, is_directed, orientation)
+                tail, head = CallFlowNodeLinkLayout._tailhead(edge, is_directed, orientation)
                 if head in explored:
                     # Then we've already explored it. No loop is possible.
                     continue
@@ -491,14 +494,14 @@ class NodeLinkLayout:
                             active_nodes = {tail}
                             break
                         else:
-                            popped_head = NodeLinkLayout._tailhead(
+                            popped_head = CallFlowNodeLinkLayout._tailhead(
                                 popped_edge, is_directed, orientation
                             )[1]
                             active_nodes.remove(popped_head)
 
                         if edges:
                             # how can you pass a single element into tailhead?
-                            last_head = NodeLinkLayout._tailhead(
+                            last_head = CallFlowNodeLinkLayout._tailhead(
                                 edges[-1], is_directed, orientation
                             )[1]
                             if tail == last_head:
@@ -529,7 +532,7 @@ class NodeLinkLayout:
         # So we need to remove from the beginning edges that are not relevant.
         i = 0
         for i, edge in enumerate(cycle):
-            tail, head = NodeLinkLayout._tailhead(edge, is_directed, orientation)
+            tail, head = CallFlowNodeLinkLayout._tailhead(edge, is_directed, orientation)
             if tail == final_node:
                 break
         return cycle[i:]

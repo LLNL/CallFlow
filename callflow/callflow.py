@@ -18,7 +18,7 @@ import json
 # CallFlow imports
 import callflow
 from callflow import SuperGraph, EnsembleGraph
-from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
+from callflow.layout import CallFlowNodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import (
     EnsembleAuxiliary,
     ParameterProjection,
@@ -295,7 +295,7 @@ class CallFlow:
             return self.supergraphs[operation["dataset"]].auxiliary_data
 
         elif operation_name == "cct":
-            result = NodeLinkLayout(
+            result = CallFlowNodeLinkLayout(
                 graphframe=self.supergraphs[operation["dataset"]].gf,
                 filter_metric=operation["filter_metric"],
                 filter_count=operation["filter_count"],
@@ -327,7 +327,7 @@ class CallFlow:
             return self.props
 
         elif operation_name == "cct":
-            result = NodeLinkLayout(
+            result = CallFlowNodeLinkLayout(
                 graphframe=self.supergraphs["ensemble"].gf,
                 filter_metric=operation["filter_metric"],
                 filter_count=operation["functionsInCCT"],
