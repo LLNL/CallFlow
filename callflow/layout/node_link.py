@@ -25,11 +25,17 @@ class CallGraphLayout:
 
     # --------------------------------------------------------------------------
     @staticmethod
-    def compute(gf, include_types=['function']):
+    def compute(gf, graph_type='callgraph',
+                    node_types_to_include=['function']):
 
         assert isinstance(gf, ht.GraphFrame)
-        assert isinstance(include_types, list)
-        assert all(isinstance(t, str) for t in include_types)
+        assert isinstance(graph_type, str)
+        assert isinstance(node_types_to_include, list)
+        assert graph_type in ['cct', 'callgraph']
+        assert all(isinstance(t, str) for t in node_types_to_include)
+        assert gf.graph.is_tree()
+
+        print('Computing {} for graphframe with {} entries'.format(graph_type, '?'))
 
         nxg = nx.DiGraph()
         timer = Timer()
@@ -38,31 +44,51 @@ class CallGraphLayout:
         cols = list(gf.dataframe.columns)
         metrics = [c for c in cols if c not in ignore_cols]
 
-        # does the dataframe contain module names?
-        have_modules = "module" in cols
+        # ----------------------------------------------------------------------
+        def label(frame):
+            assert isinstance(frame, ht.frame.Frame)
+            _type = frame['type']
+            if _type == "function":
+                return frame["name"]
+            elif _type in ["statement", "loop"]:
+                return '{}:{}'.format(frame["file"], frame["line"])
+            assert False
+
+        def nodeid(node):
+            assert isinstance(node, ht.node.Node)
+            if node.frame["type"] not in node_types_to_include:
+                return None
+            if graph_type == 'cct':
+                return node._hatchet_nid
+            else:
+                return label(node.frame)
 
         # ----------------------------------------------------------------------
         # Create the graph (nodes and edges)
-        with timer.phase("Creating CCT"):
+        with timer.phase("Creating {}".format(graph_type)):
 
             for node in gf.graph.traverse():
-                if node.frame["type"] not in include_types:
+
+                nid = nodeid(node)
+                # TODO: this will create a break.
+                # we should crawl up the tree to find a parent of required type
+                # e.g., if we have to skip statements, we should go up to
+                # find the function and connect the parent with children
+                if nid is None:
                     continue
 
-                path = callflow.utils.path_list_from_frames(node.paths())
-                for i in range(len(path) - 1):
-
-                    source, target = path[i], path[i + 1]
-                    #if (source not in callsites) or (target not in callsites):
-                    #    continue
-
-                    source = callflow.utils.sanitize_name(source)
-                    target = callflow.utils.sanitize_name(target)
-
-                    if not nxg.has_edge(source, target):
-                        nxg.add_edge(source, target)
+                nxg.add_node(nid, label=label(node.frame))
+                for c in node.children:
+                    cid = nodeid(c)
+                    if cid is None:
+                        continue
+                    nxg.add_node(cid, label=label(c.frame))
+                    nxg.add_edge(nid, cid)
 
         # ----------------------------------------------------------------------
+        # does the dataframe contain module names?
+        have_modules = "module" in cols
+
         # Add node attributes.
         with timer.phase("Add node attributes"):
 
