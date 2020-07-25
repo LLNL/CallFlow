@@ -195,7 +195,7 @@ export default {
 					class: 'cct-node',
 					labelType: 'html',
 					label: label,
-					fillColor: callsite_color['node'],
+					fillColor: callsite_color['node']
 				};
 
 				this.g.setNode(callsite_name, payload);
@@ -322,7 +322,7 @@ export default {
 		},
 
 		/**
-		 *  Set the this.has_data_map.
+		 *  Set the has data map.
 		 */
 		setHasDataMap() {
 			this.has_data_map = {}
@@ -353,7 +353,6 @@ export default {
 			const dagreRender = new dagreD3.render();
 
 			// Set up zoom support
-			let self = this;
 			this.zoom = d3.zoom().on("zoom", function () {
 				inner.attr("transform", d3.event.transform);
 			});
@@ -366,6 +365,7 @@ export default {
 			this.zoomTranslate();
 
 			// node click event (highlight)
+			let self = this;
 			this.svg.selectAll("g.node").on("click", function (id) {
 				self.node_click_action(id);
 				dagreRender(inner, self.g);
