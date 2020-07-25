@@ -15,6 +15,7 @@ import networkx as nx
 
 # CallFlow imports
 import callflow
+from callflow.utils import sanitize_name
 
 LOGGER = callflow.get_logger(__name__)
 
@@ -82,8 +83,8 @@ class HierarchyLayout:
             if idx == len(path_list) - 1:
                 break
 
-            source = callflow.utils.sanitize_name(path_list[idx])
-            target = callflow.utils.sanitize_name(path_list[idx + 1])
+            source = sanitize_name(path_list[idx])
+            target = sanitize_name(path_list[idx + 1])
 
             edges.append({"source": source, "target": target})
         return edges

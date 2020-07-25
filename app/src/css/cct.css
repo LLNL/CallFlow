@@ -1,0 +1,44 @@
+/*******************************************************************************
+ * Copyright (c) 2020, Lawrence Livermore National Security, LLC.
+ * Produced at the Lawrence Livermore National Laboratory.
+ *
+ * Written by Suraj Kesavan <spkesavan@ucdavis.edu>.
+ *
+ * LLNL-CODE-740862. All rights reserved.
+ *
+ * This file is part of CallFlow. For details, see:
+ * https://github.com/LLNL/CallFlow
+ * Please also read the LICENSE file for the MIT License notice.
+ ******************************************************************************/
+g.node {
+    cursor: pointer;
+}
+
+.white-text {
+    color: white !important;
+    text-align: center;
+}
+
+.black-text {
+    color: black !important;
+    text-align: center;
+}
+
+.description {
+    display: block;
+}
+
+.highLight > rect, .highLight > circle {
+    stroke: red;
+    stroke-width:2px;
+}
+
+.white-text > .description {
+    color: rgb(26, 26, 49);
+    font-size: 10pt;
+}
+
+.black-text > .description {
+    color: rgb(26, 26, 49);
+    font-size: 10pt;
+}

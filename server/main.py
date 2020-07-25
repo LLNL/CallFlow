@@ -58,9 +58,12 @@ class CallFlowServer:
 
         ndatasets = len(self.config.datasets)
         assert ndatasets > 0
-        self.callflow = callflow.CallFlow(
-            config=self.config, process=self.process, ensemble=ndatasets > 1
-        )
+        self.callflow = callflow.CallFlow(config=self.config, ensemble=ndatasets > 1)
+
+        if self.process:
+            self.callflow.process()
+        else:
+            self.callflow.load()
 
         # Create server if not processing.
         if not self.process:
@@ -95,14 +98,12 @@ class CallFlowServer:
         Check if the config file is provided and exists!
         """
         if not args.config:
-            LOGGER.info("Please provide a config file. To see options, use --help")
-            raise Exception()
-        else:
-            if not os.path.isfile(args.config):
-                LOGGER.info(
-                    "Please check the config file path. There exists no such file in the path provided"
-                )
-                raise Exception()
+            s = "Please provide a config file. To see options, use --help"
+            raise Exception(s)
+
+        if not os.path.isfile(args.config):
+            s = "Config file ({}) not found!".format(args.config)
+            raise Exception(s)
 
     def _create_server(self):
         """

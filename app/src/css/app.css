@@ -1,0 +1,106 @@
+
+/*******************************************************************************
+ * Copyright (c) 2020, Lawrence Livermore National Security, LLC.
+ * Produced at the Lawrence Livermore National Laboratory.
+ *
+ * Written by Suraj Kesavan <spkesavan@ucdavis.edu>.
+ *
+ * LLNL-CODE-740862. All rights reserved.
+ *
+ * This file is part of CallFlow. For details, see:
+ * https://github.com/LLNL/CallFlow
+ * Please also read the LICENSE file for the MIT License notice.
+ ******************************************************************************/
+ 
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    top: -10px !important;
+    font-family: "Open Sans", sans-serif;
+    margin-bottom: 0px;
+    height: 99%;
+    font-size: 16px;
+}
+
+#toolbar {
+    padding: 0px 0px 0px;
+}
+
+#toolbar > .v-toolbar__content {
+    height: 54px !important;
+}
+
+.selected {
+    stroke: #343838;
+    stroke-width: 1px;
+}
+
+.unselected {
+    stroke: #dbdbdb;
+    stroke-width: 3px;
+}
+
+.big_text {
+    font-size: 32px;
+}
+
+.ui.vis {
+    height: 98% !important;
+}
+
+.tight {
+    margin-left: -1em;
+}
+.ui.segment.vis_container {
+    margin-right: -1em;
+}
+
+.v-chip__content {
+    color: white;
+    font-size: 125%;
+}
+
+.scroll {
+    overflow-y: auto;
+}
+
+.tooltip {
+    padding-left: 10px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.setting-button {
+    border: 0px solid !important;
+    right: 0px !important;
+    color: #009688 !important;
+    font-size: 36px !important;
+    background-color: white !important;
+}
+
+.v-list {
+    padding: 8px;
+}
+
+.splitpanes.default-theme .splitpanes__pane {
+    background: #f7f7f7 !important;
+}
+
+.md-theme-default a:not(.md-button) {
+    color: #009687 !important;
+}
+
+.valueText {
+    font-weight: 700 !important;
+}
+
+.chip {
+    font-weight: 500 !important;    
+}
+
+#footer {
+    color: #fff;
+}

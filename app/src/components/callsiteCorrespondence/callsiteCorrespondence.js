@@ -15,6 +15,7 @@ import EventHandler from "../EventHandler";
 import BoxPlot from "./boxplot";
 import * as d3 from "d3";
 import * as utils from "../utils";
+import '../../css/callsiteCorrespondence.css'
 
 export default {
 	name: "CallsiteCorrespondence",
@@ -178,7 +179,7 @@ export default {
 
 		// create unique ID for each callsite.
 		getID(callsiteID) {
-			return "callsite-information-" + callsiteID;
+			return "callsite-correspondence-" + callsiteID;
 		},
 
 		// Code to select the callsite by the component-level button
@@ -217,7 +218,6 @@ export default {
 		selectedClassName(callsite) {
 			return this.selectClassName[callsite];
 		},
-
 
 		// Formatting for the html view
 		formatModule(module) {
@@ -282,6 +282,7 @@ export default {
 		showIntersectionBoxPlot(callsite) {
 			event.stopPropagation();
 			let callsite_name = event.currentTarget.id;
+			console.log("Toggling", callsite_name)
 			this.intersectionCallsites[callsite_name].reveal = true;
 			EventHandler.$emit("show_boxplot", this.intersectionCallsites[callsite_name]);
 		},
@@ -309,7 +310,7 @@ export default {
 			});
 
 			EventHandler.$emit("reveal_callsite");
-		},
+		}, 
 
 		showEntryFunctions(event) {
 			event.stopPropagation();
