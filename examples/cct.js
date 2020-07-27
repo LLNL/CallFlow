@@ -220,7 +220,7 @@
 
         const colorScale = d3.scaleLinear()
             .domain([colorMinMax[0], colorMinMax[1]])
-            .range(["red", "green"]);
+            .range(["red", "yellow", "green"]);
 
 
         // // Create a dagre D3 graph.
