@@ -43,7 +43,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
 			rewrites: [{
 				from: /.*/,
 				to: path.posix.join(config.dev.assetsPublicPath, "index.html")
-			}, ],
+			},],
 		},
 		hot: true,
 		contentBase: false, // since we use CopyWebpackPlugin.
