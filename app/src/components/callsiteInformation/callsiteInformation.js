@@ -11,6 +11,8 @@
  * Please also read the LICENSE file for the MIT License notice.
  ******************************************************************************/
 import tpl from "../../html/callsiteInformation.html";
+import '../../css/callsiteInformation.css';
+
 import EventHandler from "../EventHandler";
 import BoxPlot from "./boxplot";
 import * as d3 from "d3";

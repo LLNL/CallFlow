@@ -11,18 +11,10 @@
 # * Please also read the LICENSE file for the MIT License notice.
 # ******************************************************************************
 # Library imports
-from flask import (
-    Flask,
-    jsonify,
-    render_template,
-    send_from_directory,
-    request,
-)
-from flask_socketio import SocketIO, emit, send
+from flask import Flask
+from flask_socketio import SocketIO, emit
 import os
-import sys
 import json
-import uuid
 import argparse
 from networkx.readwrite import json_graph
 
@@ -38,6 +30,7 @@ LOGGER = callflow.get_logger(__name__)
 # Create a Flask server.
 app = Flask(__name__, static_url_path="/public")
 sockets = SocketIO(app, cors_allowed_origins="*")
+
 
 # ------------------------------------------------------------------------------
 # Server class.
@@ -58,7 +51,7 @@ class CallFlowServer:
 
         ndatasets = len(self.config.datasets)
         assert ndatasets > 0
-        self.callflow = callflow.CallFlow(config=self.config, ensemble=ndatasets > 1)
+        self.callflow = CallFlow(config=self.config, ensemble=ndatasets > 1)
 
         if self.process:
             self.callflow.process()
@@ -123,7 +116,7 @@ class CallFlowServer:
             self._request_handler_ensemble()
 
         # Start the server.
-        if self.production == True:
+        if self.production:
             sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
         else:
             sockets.run(app, debug=False, use_reloader=True)
@@ -278,12 +271,11 @@ class CallFlowServer:
                 {
                     "name": "cct",
                     "dataset": data["dataset"],
-                    "functionsInCCT": data["functionsInCCT"],
+                    "filter_metric": data["filter_metric"],
+                    "filter_count": data["filter_count"],
                 }
             )
             result = json_graph.node_link_data(nxg)
-            json_result = json.dumps(result)
-
             emit("single_cct", result, json=True)
 
         @sockets.on("single_supergraph", namespace="/")
@@ -312,13 +304,13 @@ class CallFlowServer:
             LOGGER.debug("[Socket request] ensemble_cct: {}".format(data))
             nxg = self.callflow.request_ensemble(
                 {
-                    "name": "ensemble_cct",
+                    "name": "cct",
                     "datasets": data["datasets"],
-                    "functionsInCCT": data["functionsInCCT"],
+                    "filter_metric": data["filter_metric"],
+                    "filter_count": data["filter_count"],
                 }
             )
             result = json_graph.node_link_data(nxg)
-            # json_result = json.dumps(result)
             emit("ensemble_cct", result, json=True)
 
         @sockets.on("ensemble_supergraph", namespace="/")

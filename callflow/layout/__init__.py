@@ -10,6 +10,6 @@
 # * https://github.com/LLNL/CallFlow
 # * Please also read the LICENSE file for the MIT License notice.
 # ******************************************************************************
-from .node_link import NodeLinkLayout
+from .node_link import NodeLinkLayout, CallFlowNodeLinkLayout
 from .sankey import SankeyLayout
 from .hierarchy import HierarchyLayout

@@ -18,7 +18,7 @@ import json
 # CallFlow imports
 import callflow
 from callflow import SuperGraph, EnsembleGraph
-from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
+from callflow.layout import CallFlowNodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import (
     EnsembleAuxiliary,
     ParameterProjection,
@@ -294,6 +294,14 @@ class CallFlow:
         elif operation_name == "auxiliary":
             return self.supergraphs[operation["dataset"]].auxiliary_data
 
+        elif operation_name == "cct":
+            result = CallFlowNodeLinkLayout(
+                graphframe=self.supergraphs[operation["dataset"]].gf,
+                filter_metric=operation["filter_metric"],
+                filter_count=operation["filter_count"],
+            )
+            return result.nxg
+
         elif operation_name == "supergraph":
             single_supergraph = SankeyLayout(
                 supergraph=self.supergraphs[operation["dataset"]], path="group_path"
@@ -303,13 +311,6 @@ class CallFlow:
         elif operation_name == "mini-histogram":
             minihistogram = MiniHistogram(state)
             return minihistogram.result
-
-        elif operation_name == "cct":
-            result = NodeLinkLayout(
-                supergraph=self.supergraphs[operation["dataset"]],
-                callsite_count=operation["functionsInCCT"],
-            )
-            return result.nxg
 
         elif operation_name == "function":
             functionlist = FunctionList(state, operation["module"])
@@ -325,10 +326,11 @@ class CallFlow:
         if operation_name == "init":
             return self.props
 
-        elif operation_name == "ensemble_cct":
-            result = NodeLinkLayout(
-                supergraph=self.supergraphs["ensemble"],
-                callsite_count=operation["functionsInCCT"],
+        elif operation_name == "cct":
+            result = CallFlowNodeLinkLayout(
+                graphframe=self.supergraphs["ensemble"].gf,
+                filter_metric=operation["filter_metric"],
+                filter_count=operation["functionsInCCT"],
             )
             return result.nxg
 

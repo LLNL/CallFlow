@@ -353,3 +353,24 @@ def path_list_from_frames(frames):
                 path.append(f["file"] + ":" + str(f["line"]))
         paths.append(path)
     return path
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+import pandas as pd
+
+def df_get_top_by_attr(df, count, sort_attr):
+    assert isinstance(df, pd.DataFrame)
+    assert isinstance(count, int) and isinstance(sort_attr, str)
+    assert count > 0
+
+    df = df.sort_values(by=[sort_attr], ascending=False)
+    df = df.nlargest(count, sort_attr)
+    return df.index.values.tolist()
+
+
+def df_filter_by_attr(df, attr, values):
+    assert isinstance(df, pd.DataFrame)
+    assert isinstance(attr, str) and isinstance(values, list)
+    return df[df[attr].isin(values)]
+
+# ------------------------------------------------------------------------------

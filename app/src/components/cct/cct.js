@@ -69,15 +69,19 @@ export default {
 		 */
 		init() {
 			if (this.$store.selectedMode === 'Single') {
+				console.debug("[Request] /single_cct")
 				this.$socket.emit("single_cct", {
 					dataset: this.$store.selectedTargetDataset,
-					functionsInCCT: this.$store.selectedFunctionsInCCT,
+					filter_metric: "time (inc)",
+					filter_count: this.$store.selectedFunctionsInCCT,
 				});
 			}
 			else if (this.$store.selectedMode === 'Ensemble') {
+				console.debug("[Request] /ensemble_cct")
 				this.$socket.emit("ensemble_cct", {
 					datasets: this.$store.selectedTargetDataset,
-					functionsInCCT: this.$store.selectedFunctionsInCCT,
+					filter_metric: "time (inc)",
+					filter_count: this.$store.selectedFunctionsInCCT,
 				});
 			}
 
@@ -164,15 +168,13 @@ export default {
 		 * @return {HTML} html for rendering. 
 		 */
 		setCallsiteHTML(callsite, callsite_color) {
-			let name = callsite["name"];
-
 			let html = (callsite_color['text'] === "#fff")
-				? '<div class="white-text"><span>' + name + '</span>'
-				: '<div class="black-text"><span>' + name + '</span>';
+				? '<div class="white-text"><span>' + callsite['name'] + '</span>'
+				: '<div class="black-text"><span>' + callsite['name'] + '</span>';
 			
 			if (this.has_data_map["module"]) {
 				module = callsite["module"];
-				html = html + '<br/><span class="description"><b>Module :</b> ' + module + '</span> </div>';
+				// html = html + '<br/><span class="description"><b>Module :</b> ' + module + '</span> </div>';
 			}
 			return html;
 		},
@@ -193,7 +195,7 @@ export default {
 					class: 'cct-node',
 					labelType: 'html',
 					label: label,
-					fillColor: callsite_color['node']
+					fillColor: callsite_color['node'],
 				};
 
 				this.g.setNode(callsite_name, payload);
@@ -206,7 +208,6 @@ export default {
 				if (node != undefined) {
 					node.style = "fill:" + node.fillColor;
 					node.rx = node.ry = 4;
-					node.id = node.name;
 				}
 			});
 		},
@@ -234,9 +235,8 @@ export default {
 
 			let self = this;
 			this.g.edges().forEach((e) => {
-				var edge = self.g.edge(e);
+				let edge = self.g.edge(e);
 				edge.id = "cct-edge";
-				// g.edge(e).style = "stroke: 1.5px "
 			});
 		},
 
@@ -322,7 +322,7 @@ export default {
 		},
 
 		/**
-		 *  Set the has data map.
+		 *  Set the this.has_data_map.
 		 */
 		setHasDataMap() {
 			this.has_data_map = {}
@@ -353,6 +353,7 @@ export default {
 			const dagreRender = new dagreD3.render();
 
 			// Set up zoom support
+			let self = this;
 			this.zoom = d3.zoom().on("zoom", function () {
 				inner.attr("transform", d3.event.transform);
 			});
@@ -365,7 +366,6 @@ export default {
 			this.zoomTranslate();
 
 			// node click event (highlight)
-			let self = this;
 			this.svg.selectAll("g.node").on("click", function (id) {
 				self.node_click_action(id);
 				dagreRender(inner, self.g);
