@@ -20,21 +20,23 @@ import hatchet as ht
 import callflow
 from callflow.timer import Timer
 
+LOGGER = callflow.get_logger(__name__)
+
+
 class NodeLinkLayout:
 
     # --------------------------------------------------------------------------
     @staticmethod
-    def compute(gf, graph_type='callgraph',
-                    node_types_to_include=['function']):
+    def compute(gf, graph_type="callgraph", node_types_to_include=["function"]):
 
         assert isinstance(gf, ht.GraphFrame)
         assert isinstance(graph_type, str)
         assert isinstance(node_types_to_include, list)
-        assert graph_type in ['cct', 'callgraph']
+        assert graph_type in ["cct", "callgraph"]
         assert all(isinstance(t, str) for t in node_types_to_include)
         assert gf.graph.is_tree()
 
-        print('Computing {} for graphframe with {} entries'.format(graph_type, '?'))
+        print("Computing {} for graphframe with {} entries".format(graph_type, "?"))
 
         nxg = nx.DiGraph()
         timer = Timer()
@@ -46,18 +48,18 @@ class NodeLinkLayout:
         # ----------------------------------------------------------------------
         def label(frame):
             assert isinstance(frame, ht.frame.Frame)
-            _type = frame['type']
+            _type = frame["type"]
             if _type == "function":
                 return frame["name"]
             elif _type in ["statement", "loop"]:
-                return '{}:{}'.format(frame["file"], frame["line"])
+                return "{}:{}".format(frame["file"], frame["line"])
             assert False
 
         def nodeid(node):
             assert isinstance(node, ht.node.Node)
             if node.frame["type"] not in node_types_to_include:
                 return None
-            if graph_type == 'cct':
+            if graph_type == "cct":
                 return node._hatchet_nid
             else:
                 return label(node.frame)
@@ -99,7 +101,9 @@ class NodeLinkLayout:
             if have_modules:
                 attr2add.append("module")
                 for c in callsites:
-                    module_map[c] = gf.dataframe.loc[gf.dataframe["name"] == c]["module"].unique()[0]
+                    module_map[c] = gf.dataframe.loc[gf.dataframe["name"] == c][
+                        "module"
+                    ].unique()[0]
 
             # compute data map
             datamap = NodeLinkLayout._get_node_attrs_from_df(
@@ -127,14 +131,69 @@ class NodeLinkLayout:
         return nxg
 
     # --------------------------------------------------------------------------
+    # TODO: This should later go into networkX utils file.
     @staticmethod
     def write_dot(nxg, filename="callgraph.dot"):
+        """
+        Write the networkX graph into a dot (graphviz) file.
+        """
 
         assert isinstance(nxg, nx.DiGraph)
         assert isinstance(filename, str)
 
         from networkx.drawing.nx_agraph import write_dot
+
         write_dot(nxg, filename)
+        LOGGER.info(f"Dot graph has been dumped into {filename}.")
+
+    @staticmethod
+    def write_pdf(nxg, filename="callgraph.pdf"):
+        """
+        Write the networkX graph {nxg} to a file.
+        Dumps the dot (graphviz) graph and converts it to a pdf.
+        """
+
+        # Check if graphviz is installed.
+        from shutil import which
+
+        return which("dot") is not None
+
+        import os
+
+        assert isinstance(nxg, nx.DiGraph)
+        assert isinstance(filename, str)
+
+        nxg.write_dot("{}.dot".format(filename))
+        os.system("dot -Tpdf {}.dot > {}.pdf".format(filename, filename))
+        LOGGER.info(f"Dot graph has been dumped into {filename}.")
+
+    @staticmethod
+    def write_json(nxg, filename="callgraph.json"):
+        """
+        Dumps the networkX graph {nxg} as a JSON into {filename}
+        """
+        assert isinstance(nxg, nx.DiGraph)
+
+        from networkx.readwrite import json_graph
+        import json
+
+        result = json_graph.node_link_data(nxg)
+        with open(filename, "w") as f:
+            json.dump(f, result)
+        LOGGER.info(f"JSON has been dumped into {filename}.")
+
+    @staticmethod
+    def to_json(nxg):
+        """
+        Return the networkX graph as JSON object.
+        """
+        assert isinstance(nxg, nx.DiGraph)
+
+        from networkx.readwrite import json_graph
+        import json
+
+        result = json_graph.node_link_data(nxg)
+        return json.dumps(result)
 
     # --------------------------------------------------------------------------
     @staticmethod
@@ -190,10 +249,12 @@ class CallFlowNodeLinkLayout:
     # TODO: delete this once the "new" get_node_attributes is testeed
     _COLUMNS = ["time (inc)", "time", "name", "module"]
 
-    def __init__(self, graphframe,
-                       filter_metric="",  # filter the CCT based on this metric (empty string: no filtering!)
-                       filter_count=50,   # filter to these many nodes
-                ):
+    def __init__(
+        self,
+        graphframe,
+        filter_metric="",  # filter the CCT based on this metric (empty string: no filtering!)
+        filter_count=50,  # filter to these many nodes
+    ):
 
         assert isinstance(graphframe, callflow.GraphFrame)
         assert isinstance(filter_count, int)
@@ -230,7 +291,9 @@ class CallFlowNodeLinkLayout:
             df = self.gf.filter_by_name(callsites)
 
         with self.timer.phase(f"Creating CCT."):
-            self.nxg = CallFlowNodeLinkLayout._create_nxg_from_paths(df["path"].tolist())
+            self.nxg = CallFlowNodeLinkLayout._create_nxg_from_paths(
+                df["path"].tolist()
+            )
 
         # Number of runs in the state.
         # TODO: handle this better.
@@ -248,7 +311,7 @@ class CallFlowNodeLinkLayout:
         with self.timer.phase(f"Find cycles"):
             self.nxg.cycles = CallFlowNodeLinkLayout._find_cycle(self.nxg)
 
-        #print(self.nxg.nodes())
+        # print(self.nxg.nodes())
 
     # --------------------------------------------------------------------------
     @staticmethod
@@ -421,7 +484,9 @@ class CallFlowNodeLinkLayout:
         for start_node in self.nxg.nbunch_iter(source):
             for edge in nx.edge_dfs(self.nxg, start_node, orientation):
 
-                tail, head = CallFlowNodeLinkLayout._tailhead(edge, is_directed, orientation)
+                tail, head = CallFlowNodeLinkLayout._tailhead(
+                    edge, is_directed, orientation
+                )
 
                 if edge not in edge_counter:
                     edge_counter[edge] = 0
@@ -475,7 +540,9 @@ class CallFlowNodeLinkLayout:
 
             for edge in nx.edge_dfs(G, start_node, orientation):
                 # Determine if this edge is a continuation of the active path.
-                tail, head = CallFlowNodeLinkLayout._tailhead(edge, is_directed, orientation)
+                tail, head = CallFlowNodeLinkLayout._tailhead(
+                    edge, is_directed, orientation
+                )
                 if head in explored:
                     # Then we've already explored it. No loop is possible.
                     continue
@@ -532,7 +599,9 @@ class CallFlowNodeLinkLayout:
         # So we need to remove from the beginning edges that are not relevant.
         i = 0
         for i, edge in enumerate(cycle):
-            tail, head = CallFlowNodeLinkLayout._tailhead(edge, is_directed, orientation)
+            tail, head = CallFlowNodeLinkLayout._tailhead(
+                edge, is_directed, orientation
+            )
             if tail == final_node:
                 break
         return cycle[i:]
