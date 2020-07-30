@@ -26,7 +26,7 @@ export function formatRuntimeWithUnits(val) {
 		return val;
 	}
 	let format = d3.format(".2");
-	return format(val) + " \u03BCs";
+	return format(val) + " s";
 }
 
 export function formatRunCounts(val) {
