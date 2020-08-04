@@ -7,3 +7,4 @@ colorlog
 statsmodels
 matplotlib
 sklearn
+hatchet
