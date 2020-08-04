@@ -27,7 +27,7 @@ export default {
 		selected: {},
 		id: "auxiliary-function-overview",
 		people: [],
-		message: "Call site Correspondence",
+		message: "Call Site Correspondence",
 		callsites: [],
 		dataReady: false,
 		numberOfIntersectionCallsites: 0,

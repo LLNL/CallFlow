@@ -102,7 +102,7 @@ export default {
 		datas: ["Dataframe", "Graph"],
 		selectedData: "Dataframe",
 		firstRender: true,
-		summaryChip: "SuperGraph",
+		summaryChip: "Ensemble Super Graph",
 		auxiliarySortBy: "time (inc)",
 		ranks: [],
 		initLoad: true,
