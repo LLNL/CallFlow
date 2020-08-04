@@ -239,7 +239,7 @@ export default function Sankey() {
 			}
 			else {
 				// node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
-				node.value = node["actual_time"]["Inclusive"];
+				node.value = node["actual_time"]["Exclusive"];
 				node.targetValue = 0;
 				if (node[store.selectedTargetDataset] != undefined) {
 					node.targetValue = node[store.selectedTargetDataset]["actual_time"]["Inclusive"];
@@ -466,7 +466,7 @@ export default function Sankey() {
 		});
 
 		links.forEach(function (link) {
-			let flowScale = (link.source_data.value / link.source_data.max_flow);
+			let flowScale = link.source_data.value / link.source_data.max_flow;
 			link.scaled_weight = link.weight * flowScale;
 			link.height = link.scaled_weight * scale;
 
@@ -643,8 +643,6 @@ export default function Sankey() {
 			// node.targetLinks.sort(descendingEdgeValue);
 
 		});
-
-
 
 		nodes.forEach(function (node) {
 			var sy = 0, ty = 0;

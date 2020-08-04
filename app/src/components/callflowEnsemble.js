@@ -79,7 +79,7 @@ export default {
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
 		metrics: ["Exclusive", "Inclusive"],//, 'Imbalance'],
-		selectedMetric: "Exclusive",
+		selectedMetric: "Inclusive",
 		runtimeColorMap: [],
 		distributionColorMap: [],
 		selectedRuntimeColorMap: "Blues",
@@ -398,7 +398,7 @@ export default {
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
 				this.$refs.CallsiteCorrespondence,
-				this.$refs.ParameterProjection,
+				// this.$refs.ParameterProjection,
 				this.$refs.ModuleHierarchy,
 			];
 		},

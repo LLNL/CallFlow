@@ -109,7 +109,7 @@ export default {
 		init() {
 			if (this.firstRender) {
 				this.width = document.getElementById(this.id).clientWidth;
-				let heightRatio = this.$store.selectedMode == "Ensemble" ? 0.66 : 1.0;
+				let heightRatio = this.$store.selectedMode == "Ensemble" ? 1.0 : 1.0;
 				this.height = heightRatio * this.$store.viewHeight;
 				this.boxplotWidth = this.width - this.padding.left - this.padding.right;
 				document.getElementById(this.id).style.maxHeight = this.height + "px";

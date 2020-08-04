@@ -26,7 +26,7 @@ export function formatRuntimeWithUnits(val) {
 		return val;
 	}
 	let format = d3.format(".2");
-	return format(val) + " s";
+	return format(val);
 }
 
 export function formatRunCounts(val) {
@@ -68,6 +68,9 @@ export function formatExponent(val) {
 	let exponent = ret;
 	if (ret.indexOf("e") != -1) {
 		exponent = parseInt(ret.toString().split("e")[1].split("+")[1]);
+	}
+	else {
+		exponent = 0
 	}
 	return exponent;
 }
