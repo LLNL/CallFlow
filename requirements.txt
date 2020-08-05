@@ -5,6 +5,6 @@ flask_socketio
 networkx==2.2
 colorlog
 statsmodels
-hatchet
 matplotlib
 sklearn
+hatchet
