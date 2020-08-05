@@ -15,6 +15,7 @@ import numpy as np
 from scipy import stats
 import statsmodels.nonparametric.api as smnp
 
+
 class Gradients:
     def __init__(self, dfs, binCount="20"):
         self.dfs = dfs
@@ -38,7 +39,6 @@ class Gradients:
     def freedman_diaconis_bins(self, arr):
         """Calculate number of hist bins using Freedman-Diaconis rule."""
         # From https://stats.stackexchange.com/questions/798/
-        a = np.asarray(arr)
         if len(arr) < 2:
             return 1
         # Calculate the iqr ranges.
@@ -134,13 +134,7 @@ class Gradients:
     def run(self, columnName="name", callsiteOrModule="", targetDataset=""):
         dist_inc = {}
         dist_exc = {}
-        mean_inc_dist = {}
-        max_inc_dist = {}
-        mean_exc_dist = {}
-        max_exc_dist = {}
-        mean_time_inc_map = {}
         num_of_bins = {}
-        kde_grid = {}
         hist_inc_grid = {}
         hist_exc_grid = {}
 

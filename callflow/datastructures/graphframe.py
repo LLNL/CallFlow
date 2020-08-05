@@ -22,7 +22,7 @@ import callflow
 
 LOGGER = callflow.get_logger(__name__)
 
-# ------------------------------------------------------------------------------
+
 class GraphFrame(ht.GraphFrame):
 
     _FILENAMES = {"ht": "hatchet_tree.txt", "df": "df.csv", "nxg": "nxg.json"}
@@ -95,7 +95,7 @@ class GraphFrame(ht.GraphFrame):
         with open(fname, "r") as nxg_file:
             graph = json.load(nxg_file)
             self.nxg = nx.readwrite.json_graph.node_link_graph(graph)
-            assert self.nxg != None
+            assert self.nxg is not None
 
         self.graph = None
         if read_graph:
@@ -174,16 +174,16 @@ class GraphFrame(ht.GraphFrame):
         for root in ht_graph.roots:
             node_gen = root.traverse()
 
-            root_dict = node_dict_from_frame(root.frame)
-            root_name = root_dict["name"]
-            root_paths = root.paths()
+            # root_dict = node_dict_from_frame(root.frame)
+            # root_name = root_dict["name"]
+            # root_paths = root.paths()
             node = root
 
             try:
                 while node:
 
-                    node_dict = node_dict_from_frame(node.frame)
-                    node_name = node_dict["name"]
+                    # node_dict = node_dict_from_frame(node.frame)
+                    # node_name = node_dict["name"]
 
                     # Get all node paths from hatchet.
                     node_paths = node.paths()
@@ -220,7 +220,7 @@ class GraphFrame(ht.GraphFrame):
             return graph
 
         def label(x):
-            if is_string_like(x):
+            if isinstance(x, str):
                 name = prefix + x
             else:
                 name = prefix + repr(x)
@@ -233,12 +233,12 @@ class GraphFrame(ht.GraphFrame):
         return (edge[0], edge[1])
 
     @staticmethod
-    def tailheadDir(edge):
-        return (str(edge[0]), str(edge[1]), self.edge_direction[edge])
+    def tailheadDir(edge, edge_direction):
+        return (str(edge[0]), str(edge[1]), edge_direction[edge])
 
     @staticmethod
     def leaves_below(nxg, node):
-        assert isinstance(graph, nx.DiGraph)
+        assert isinstance(nxg, nx.DiGraph)
         return set(
             sum(
                 (

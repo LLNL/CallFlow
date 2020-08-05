@@ -12,13 +12,15 @@
 # ******************************************************************************
 # Library imports.
 import numpy as np
-import pandas as pd
 from scipy import stats
 
 # CallFlow imports
-import callflow
+try:
+    import callflow
 
-LOGGER = callflow.get_logger(__name__)
+    LOGGER = callflow.get_logger(__name__)
+except Exception:
+    raise Exception("Module callflow not found not found.")
 
 
 class DiffView:
@@ -61,7 +63,6 @@ class DiffView:
     def freedman_diaconis_bins(self, arr):
         """Calculate number of hist bins using Freedman-Diaconis rule."""
         # From https://stats.stackexchange.com/questions/798/
-        a = np.asarray(arr)
         if len(arr) < 2:
             return 1
         # Calculate the iqr ranges.
@@ -117,17 +118,13 @@ class DiffView:
 
         data1 = np.asarray(node_df1[self.col])
         rank1 = np.asarray(node_df1["rank"])
-        name1 = np.asarray(node_df1["name"])
         dataset1 = np.array([self.dataset1 for _ in range(data1.shape[0])])
-        module1 = np.asarray(node_df1["module"])
         zero_inserted_data1 = self.insertZeroRuntime(data1, rank1)
 
         data2 = np.asarray(node_df2[self.col])
-        name2 = np.asarray(node_df2["name"])
         rank2 = np.asarray(node_df2["rank"])
         zero_inserted_data2 = self.insertZeroRuntime(data2, rank2)
         dataset2 = np.array([self.dataset2 for _ in range(data2.shape[0])])
-        module2 = np.asarray(node_df2["module"])
 
         dataset = np.concatenate([dataset1, dataset2], axis=0)
         mean = np.mean([zero_inserted_data1, zero_inserted_data2], axis=0)
@@ -170,6 +167,9 @@ class DiffView:
 
         result = {
             "name": module,
+            "mean1": mean1,
+            "mean2": mean2,
+            "dataset": dataset,
             "mean_diff": mean_diff,
             "bins": num_of_bins,
             "hist": {

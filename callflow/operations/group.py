@@ -11,9 +11,6 @@
 # * Please also read the LICENSE file for the MIT License notice.
 # ******************************************************************************
 # Library imports
-import pandas as pd
-import time
-import networkx as nx
 from ast import literal_eval as make_list
 
 # CallFlow imports
@@ -49,10 +46,6 @@ class Group(callflow.GraphFrame):
         module = {}
         change_name = {}
 
-        # module_idx = {}
-        # module_id_map = {}
-        # module_count = 0
-
         LOGGER.debug(
             f"Nodes: {len(self.gf.nxg.nodes())}, Edges: {len(self.gf.nxg.edges())}"
         )
@@ -69,15 +62,11 @@ class Group(callflow.GraphFrame):
             spath = self.callsite_path_map[snode]
             tpath = self.callsite_path_map[tnode]
 
-            stage1 = time.perf_counter()
             temp_group_path_results = self.create_group_path(spath)
             group_path[snode] = temp_group_path_results
-            stage2 = time.perf_counter()
 
-            stage3 = time.perf_counter()
             component_path[snode] = self.create_component_path(spath, group_path[snode])
             component_level[snode] = len(component_path[snode])
-            stage4 = time.perf_counter()
 
             temp_group_path_results = self.create_group_path(tpath)
             group_path[tnode] = temp_group_path_results
@@ -93,14 +82,6 @@ class Group(callflow.GraphFrame):
                 show_node[snode] = False
 
             node_name[snode] = self.callsite_module_map[snode] + "=" + snode
-
-            # TODO: remove if not used.
-            # if module[tnode] not in module_id_map:
-            #     module_count += 1
-            #     module_id_map[module[tnode]] = module_count
-            #     module_idx[tnode] = module_id_map[module[tnode]]
-            # else:
-            #     module_idx[tnode] = module_id_map[module[tnode]]
 
             if component_level[tnode] == 2:
                 entry_func[tnode] = True
@@ -119,6 +100,7 @@ class Group(callflow.GraphFrame):
         # self.update_df("mod_index", module_idx)
         self.update_df("entry_function", entry_func)
 
+    # flake8: noqa: C901
     def create_group_path(self, path):
         if isinstance(path, str):
             path = make_list(path)
@@ -128,7 +110,6 @@ class Group(callflow.GraphFrame):
             if idx == 0:
                 # Assign the first callsite as from_callsite and not push into an array.
                 from_callsite = callsite
-                # from_module = self.entire_df.loc[self.entire_df['name'] == from_callsite]['module'].unique()[0]
                 from_module = self.callsite_module_map[from_callsite]
 
                 # Store the previous module to check the hierarchy later.

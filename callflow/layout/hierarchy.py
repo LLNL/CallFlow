@@ -119,7 +119,7 @@ class HierarchyLayout:
         """
         try:
             cycles = list(nx.find_cycle(G, orientation="ignore"))
-        except:
+        except Exception:
             cycles = []
 
         return cycles

@@ -10,9 +10,11 @@
 # * https://github.com/LLNL/CallFlow
 # * Please also read the LICENSE file for the MIT License notice.
 # ******************************************************************************
-from numpy.linalg import inv
 from numpy import square, trace, amax
 from math import sqrt
+import networkx as nx
+from scipy.sparse import identity
+from scipy.sparse import diags
 
 
 class DeltaConSimilarity:
@@ -31,27 +33,19 @@ class DeltaConSimilarity:
         self.result = self.run(A1, A2)
 
     def InverseMatrix(self, A):
-        I = identity(A.shape[0])
-        # print("Identity :", I)
         D = diags(sum(A).toarray(), [0])
-        # print("Diag : ", D)
         c1 = trace(D.toarray()) + 2
-        # print("c1 : ", c1)
         c2 = trace(square(D).toarray()) - 1
-        # print("c2 : ", c2)
+
         h_h = sqrt((-c1 + sqrt(c1 * c1 + 4 * c2)) / (8 * c2))
-        # print("h_h : ", h_h)
         a = 4 * h_h * h_h / (1 - 4 * h_h * h_h)
-        # print("a : ", a)
         c = 2 * h_h / (1 - 4 * h_h * h_h)
-        # print("c: ", c)
         M = c * A - a * D
-        # print("M :",  M)
-        S = I
+
+        S = identity(A.shape[0])
         mat = M
         power = 1
         while amax(M.toarray()) > 1e-09:
-            # print(power)
             if power < 7:
                 S = S + mat
                 mat = mat * M

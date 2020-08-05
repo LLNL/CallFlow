@@ -10,10 +10,14 @@
 # * https://github.com/LLNL/CallFlow
 # * Please also read the LICENSE file for the MIT License notice.
 # ******************************************************************************
-# Library imports
-
 # CallFlow imports
-import callflow
+try:
+    import callflow
+
+    LOGGER = callflow.get_logger(__name__)
+except Exception:
+    raise Exception("Module callflow not found not found.")
+
 
 class SplitCallee:
     def __init__(self, gf, callsites):
@@ -25,7 +29,7 @@ class SplitCallee:
 
         paths = self.callsite_paths(callsites)
 
-        module_group_df = gf.df.groupby(["module"])
+        # module_group_df = gf.df.groupby(["module"])
         module_name_group_df = gf.df.groupby(["module", "name"])
 
         for path in paths:
@@ -40,13 +44,11 @@ class SplitCallee:
                 if not gf.nxg.has_edge(source, target):
                     if idx == 0:
                         source_callsite = source
-                        source_df = module_group_df.get_group((module))
+                        # source_df = module_group_df.get_group((module))
                         source_node_type = "super-node"
                     else:
                         source_callsite = source.split("=")[1]
-                        source_df = module_name_group_df.get_group(
-                            (module, source_callsite)
-                        )
+                        # source_df = module_name_group_df.get_group((module, source_callsite))
                         source_node_type = "component-node"
 
                     target_callsite = target.split("=")[1]
@@ -55,7 +57,7 @@ class SplitCallee:
                     )
                     target_node_type = "component-node"
 
-                    source_weight = source_df["time (inc)"].max()
+                    # source_weight = source_df["time (inc)"].max()
                     target_weight = target_df["time (inc)"].max()
 
                     edge_type = "normal"
@@ -70,9 +72,8 @@ class SplitCallee:
                             {
                                 "source_callsite": source_callsite,
                                 "target_callsite": target_callsite,
-                                "edge_type": edge_type,
                                 "weight": target_weight,
-                                "edge_type": "reveal_edge",
+                                "edge_type": edge_type,
                             }
                         ],
                     )
@@ -107,6 +108,8 @@ class SplitCallee:
         return edges
 
     def callsite_paths(self, callsites):
+        from ast import literal_eval as make_list
+
         paths = []
         for callsite in callsites:
             df = self.name_group_df.get_group(callsite)

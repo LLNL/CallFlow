@@ -16,12 +16,16 @@ import json
 import math
 import pandas as pd
 import numpy as np
+
 # CallFlow imports
 import callflow
 from callflow.modules.gradients import Gradients
 from callflow.modules.boxplot import BoxPlot
 from callflow.timer import Timer
+
 LOGGER = callflow.get_logger(__name__)
+
+
 class FastEnsembleAuxiliary:
     def __init__(
         self,
@@ -65,6 +69,7 @@ class FastEnsembleAuxiliary:
             self.group_frames()
         self.callsiteMap = {}
         self.moduleMap = {}
+
     def filter_dict(self, result):
         ret = {}
         # Modules will be the same as original.
@@ -92,11 +97,13 @@ class FastEnsembleAuxiliary:
                     ]
                     count += 1
         return ret
+
     def filter_frames(self, nCallsites, attr):
         xgroup_df = self.df.groupby(["name"]).mean()
         sort_xgroup_df = xgroup_df.sort_values(by=[attr], ascending=False)
         nCallsites_df = sort_xgroup_df.nlargest(nCallsites, attr)
         return nCallsites_df
+
     def group_frames(self):
         self.module_name_group_df = self.df.groupby(["module", "name"])
         self.module_group_df = self.df.groupby(["module"])
@@ -116,11 +123,13 @@ class FastEnsembleAuxiliary:
             self.target_name_group_df[dataset] = self.target_df[dataset].groupby(
                 ["name"]
             )
+
     def select_rows(self, df, search_strings):
         unq, IDs = np.unique(df["dataset"], return_inverse=True)
         unqIDs = np.searchsorted(unq, search_strings)
         mask = np.isin(IDs, unqIDs)
         return df[mask]
+
     def histogram(self, data, data_min=np.nan, data_max=np.nan):
         if np.isnan(data_min) or np.isnan(data_max):
             data_min = data.min()
@@ -129,8 +138,10 @@ class FastEnsembleAuxiliary:
             data, range=[data_min, data_max], bins=int(self.MPIBinCount)
         )
         return 0.5 * (b[1:] + b[:-1]), h
+
     def convert_pandas_array_to_list(self, series):
         return series.apply(lambda d: d.tolist())
+
     def get_module_callsite_map(self):
         ret = {}
         np_data = self.module_group_df["name"].unique()
@@ -139,6 +150,7 @@ class FastEnsembleAuxiliary:
             np_data = self.target_module_group_df[dataset]["name"].unique()
             ret[dataset] = self.convert_pandas_array_to_list(np_data).to_dict()
         return ret
+
     def get_callsite_module_map(self):
         ret = {}
         callsites = self.df["name"].unique().tolist()
@@ -158,6 +170,7 @@ class FastEnsembleAuxiliary:
                 )
                 ret[dataset][callsite] = module
         return ret
+
     def pack_json(
         self,
         df=pd.DataFrame(),
@@ -216,6 +229,7 @@ class FastEnsembleAuxiliary:
             },
         }
         return result
+
     # Return the histogram in the required form.
     def histogram_format(self, histogram_grid):
         return {
@@ -226,6 +240,7 @@ class FastEnsembleAuxiliary:
             "y_min": np.min(histogram_grid[1]).astype(np.float64),
             "y_max": np.max(histogram_grid[1]).astype(np.float64),
         }
+
     # Prop can be dataset, rank, name
     def histogram_by_property_ensemble(self, ensemble_df, prop):
         ret = {}
@@ -259,6 +274,7 @@ class FastEnsembleAuxiliary:
             "ensemble": self.histogram_format(histogram_ensemble_exclusive_grid),
         }
         return ret
+
     # Prop can be dataset, rank, name
     def histogram_by_property(self, ensemble_df, target_df, prop):
         ret = {}
@@ -318,6 +334,7 @@ class FastEnsembleAuxiliary:
             "target": self.histogram_format(histogram_target_exclusive_grid),
         }
         return ret
+
     # Callsite grouped information
     def callsite_data_old(self):
         ret = {}
@@ -334,7 +351,7 @@ class FastEnsembleAuxiliary:
                 )
                 hists["Inclusive"][prop] = prop_histograms["Inclusive"]
                 hists["Exclusive"][prop] = prop_histograms["Exclusive"]
-            gradients = KDE_gradients(self.target_df, binCount=self.RunBinCount).run(
+            gradients = Gradients(self.target_df, binCount=self.RunBinCount).run(
                 columnName="name", callsiteOrModule=callsite
             )
             boxplot = BoxPlot(callsite_df)
@@ -374,7 +391,7 @@ class FastEnsembleAuxiliary:
                         outliers=boxplot.outliers,
                     )
             ret[dataset] = target
-    #     return ret
+
     def get_data_from_hd5(self, nodes, col):
         ret = {}
         if col == "module":
@@ -395,7 +412,7 @@ class FastEnsembleAuxiliary:
                 hists["Exclusive"][prop] = prop_histograms["Exclusive"]
             # Calculate gradients
             gradients = {"Inclusive": {}, "Exclusive": {}}
-            gradients = KDE_gradients(self.target_df, binCount=self.RunBinCount).run(
+            gradients = Gradients(self.target_df, binCount=self.RunBinCount).run(
                 columnName=col, callsiteOrModule=node
             )
             quartiles = {"Inclusive": {}, "Exclusive": {}}
@@ -444,8 +461,8 @@ class FastEnsembleAuxiliary:
                     )
             ret[dataset] = target
         return ret
+
     def module_data(self):
-        ret = {}
         module_group_df = self.df.groupby(["module"])
         self.moduleMap = {}
         count = 0
@@ -455,8 +472,8 @@ class FastEnsembleAuxiliary:
             self.moduleMap[module] = key
             module_ensemble_df.to_hdf(self.moduleh5File, key=key)
             count += 1
+
     def callsite_data(self):
-        ret = {}
         name_group_df = self.df.groupby(["name"])
         count = 0
         for name, name_df in name_group_df:
@@ -465,18 +482,21 @@ class FastEnsembleAuxiliary:
             self.callsiteMap[name] = key
             callsite_ensemble_df.to_hdf(self.callsiteh5File, key=key)
             count += 1
+
     def write_maps(self):
         # as requested in comment
         exDict = {"moduleMap": self.moduleMap, "callsiteMap": self.callsiteMap}
         with open(self.h5IndexFilename, "w") as file:
             file.write(json.dumps(exDict))
             LOGGER.debug(f"writen to file : {self.h5IndexFilename}")
+
     def read_maps(self):
         f = open(self.h5IndexFilename, "r")
         data = json.load(f)
         self.moduleMap = data["moduleMap"]
         self.callsiteMap = data["callsiteMap"]
         LOGGER.debug("Read the h5 index map.")
+
     def run(self):
         LOGGER.info("Calculating Gradients, Mean runtime variations, and Distribution.")
         with self.timer.phase("Collect Callsite data"):
@@ -486,6 +506,7 @@ class FastEnsembleAuxiliary:
         with self.timer.phase("Write module's and callsite's hdf indexes"):
             self.write_maps()
         LOGGER.info(self.timer)
+
     def fetch(self):
         ret = {}
         with self.timer.phase("Read module's and callsite's hdf indexes"):

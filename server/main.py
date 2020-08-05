@@ -11,25 +11,16 @@
 # * Please also read the LICENSE file for the MIT License notice.
 # ******************************************************************************
 # Library imports
-from flask import (
-    Flask,
-    jsonify,
-    render_template,
-    send_from_directory,
-    request,
-)
-from flask_socketio import SocketIO, emit, send
+from flask import Flask
+from flask_socketio import SocketIO, emit
 import os
-import sys
 import json
-import uuid
 import argparse
 from networkx.readwrite import json_graph
 
 # ------------------------------------------------------------------------------
 # CallFlow imports.
 import callflow
-from callflow import CallFlow
 from callflow.operations import ConfigFileReader
 
 LOGGER = callflow.get_logger(__name__)
@@ -39,9 +30,12 @@ LOGGER = callflow.get_logger(__name__)
 app = Flask(__name__, static_url_path="/public")
 sockets = SocketIO(app, cors_allowed_origins="*")
 
-# ------------------------------------------------------------------------------
-# Server class.
+
 class CallFlowServer:
+    """
+    CallFlow Server class.
+    """
+
     def __init__(self):
         # Parse the arguments passed.
         args = self._create_parser()
@@ -123,7 +117,7 @@ class CallFlowServer:
             self._request_handler_ensemble()
 
         # Start the server.
-        if self.production == True:
+        if self.production:
             sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
         else:
             sockets.run(app, debug=False, use_reloader=True)
@@ -282,8 +276,6 @@ class CallFlowServer:
                 }
             )
             result = json_graph.node_link_data(nxg)
-            json_result = json.dumps(result)
-
             emit("single_cct", result, json=True)
 
         @sockets.on("single_supergraph", namespace="/")
