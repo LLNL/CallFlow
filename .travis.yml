@@ -12,7 +12,7 @@ jobs:
       language: python
       script:
         - black --diff --check .
-        - flake8
+        - flake8 --exclude=examples
 
 install:
   - pip install pandas matplotlib
