@@ -22,16 +22,16 @@ class ConfigFileReader:
     def __init__(self, filepath=None, config_json=None):
 
         # only one should be given
-        assert (filepath == None) != (config_json == None)
+        assert (filepath is None) != (config_json is None)
 
-        if filepath != None:
+        if filepath is not None:
             assert isinstance(filepath, str)
 
             f = open(filepath, "r").read()
             self.json = ConfigFileReader.json_data(f)
             self.data_path = os.path.dirname(filepath)
 
-        if config_json != None:
+        if config_json is not None:
             assert isinstance(config_json, dict)
 
             self.json = config_json

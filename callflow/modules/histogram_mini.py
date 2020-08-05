@@ -14,6 +14,7 @@
 import pandas as pd
 import json
 
+
 class MiniHistogram:
     def __init__(self, state, target_datasets):
         self.state = state

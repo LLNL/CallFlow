@@ -12,10 +12,21 @@
 # ******************************************************************************
 # Library imports
 import pandas as pd
-import json
 import networkx as nx
 from ast import literal_eval as make_tuple
+
+# CallFlow imports
+try:
+    import callflow
+    LOGGER = callflow.get_logger(__name__)
+except Exception:
+    raise Exception("Module callflow not found not found.")
+
+
 class FunctionList:
+    """
+    Callsite list (Remove)
+    """
     def __init__(self, state, modFunc, nid):
         self.graph = state.new_gf.graph
         self.df = state.new_gf.df
@@ -29,12 +40,10 @@ class FunctionList:
             self.module = modFunc.split("/")[0]
         self.module_df = self.df.loc[self.df["module"] == self.module]
         self.result = self.run()
+
     def add_paths(self, path_name):
         for idx, row in self.df.iterrows():
-            # if row.show_node:
             path = row[path_name]
-            # TODO: Sometimes the path becomes a string. Find why it happens.
-            # If it becomes a string
             if isinstance(path, str):
                 path = make_tuple(path)
             corrected_path = path[0]
@@ -43,6 +52,7 @@ class FunctionList:
                 target = corrected_path[-1]
                 if not self.entire_g.has_edge(source, target):
                     self.entire_g.add_edge(source, target)
+
     def run(self):
         callers = {}
         callees = {}

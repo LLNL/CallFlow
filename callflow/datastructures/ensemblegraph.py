@@ -15,12 +15,14 @@ import networkx as nx
 import pandas as pd
 
 # CallFlow imports
-import callflow
+try:
+    import callflow
+    LOGGER = callflow.get_logger(__name__)
+    from callflow import SuperGraph
+except Exception:
+    raise Exception("Module callflow not found not found.")
 
-LOGGER = callflow.get_logger(__name__)
-from callflow import SuperGraph
 
-# ------------------------------------------------------------------------------
 class EnsembleGraph(SuperGraph):
     """
     Ensemble SuperGraph Class to handle the processing of ensemble of call graphs.
@@ -128,17 +130,10 @@ class EnsembleGraph(SuperGraph):
 
     # TODO
     def add_edge_attributes(self):
-        edge_weight_mapping = self.edge_weight()
-        nx.set_edge_attributes(
-            self.union, name="number_of_runs", values=number_of_runs_mapping
-        )
+        pass
 
     # TODO
     def add_node_attributes(self, nxg, node, dataset_name):
-        """
-        """
-        for idx, (key, val) in enumerate(H.nodes.items()):
-            if dataset_name not in self.nxg.nodes[node]:
-                self.nxg.nodes[node] = self.vector[node]
+        pass
 
     # --------------------------------------------------------------------------

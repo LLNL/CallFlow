@@ -10,18 +10,20 @@
 # * https://github.com/LLNL/CallFlow
 # * Please also read the LICENSE file for the MIT License notice.
 # ******************************************************************************
-
-import numpy as np
+import json
 import pandas as pd
-from collections import defaultdict
-import sklearn
+import numpy as np
 from sklearn import preprocessing
 from sklearn.manifold import TSNE, MDS
 from sklearn.cluster import KMeans
 from callflow.algorithms import KMedoids
-from callflow.algorithms import DeltaConSimilarity
+# from callflow.algorithms import DeltaConSimilarity
+
 
 class ParameterProjection:
+    """
+    Parameter projection view
+    """
     def __init__(self, supergraph, targetDataset="", n_cluster=3):
 
         self.df = supergraph.gf.df
@@ -49,9 +51,8 @@ class ParameterProjection:
         # ret['similarity'] = self.similarities[self.datasetOrder[self.targetDataset]]
         return ret
 
-    def similarities(self):
-        name = self.supergraph.tag
-        similarity_filepath = dirname + "/" + "similarity.json"
+    def dump_similarities(self, name):
+        similarity_filepath = name + "/" + "similarity.json"
         with open(similarity_filepath, "r") as similarity_file:
             self.similarities = json.load(similarity_file)
 
@@ -90,12 +91,12 @@ class ParameterProjection:
         ret = pd.DataFrame(proj, columns=list("xy"))
         ret["dataset"] = self.datasets
 
-        if self.clustering == "prog_k_means":
-            self.clusters = ProgKMeans(n_clusters=self.n_cluster)
-            self.clusters.progressive_fit(X, latency_limit_in_msec=100)
-            ret["label"] = self.clusters.predict(X).tolist()
+        # if self.clustering == "prog_k_means":
+        #     self.clusters = ProgKMeans(n_clusters=self.n_cluster)
+        #     self.clusters.progressive_fit(X, latency_limit_in_msec=100)
+        #     ret["label"] = self.clusters.predict(X).tolist()
 
-        elif self.clustering == "k_medoids":
+        if self.clustering == "k_medoids":
             self.clusters = KMedoids(n_cluster=self.n_cluster)
             ret["label"] = self.clusters.fit(X)
         elif self.clustering == "k_means":

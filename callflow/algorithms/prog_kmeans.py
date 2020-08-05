@@ -12,7 +12,6 @@
 # ******************************************************************************
 # Library imports
 import time
-import numpy as np
 from sklearn.cluster import MiniBatchKMeans
 from random import shuffle
 from clustering.prog_kmeans import prog_kmeans_cpp

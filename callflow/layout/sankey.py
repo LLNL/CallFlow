@@ -11,24 +11,27 @@
 # * Please also read the LICENSE file for the MIT License notice.
 # ******************************************************************************
 # Library imports
-import math
 import pandas as pd
 import networkx as nx
 import numpy as np
 
 # CallFlow imports
-import callflow
-from callflow.timer import Timer
-from callflow import SuperGraph
+try:
+    import callflow
+    from callflow.timer import Timer
+    from callflow import SuperGraph
+    LOGGER = callflow.get_logger(__name__)
+except Exception:
+    raise Exception("Module callflow not found not found.")
 
-LOGGER = callflow.get_logger(__name__)
 
-# Single Super Graph class.
 class SankeyLayout:
-
+    """
+    Sankey layout
+    """
     _COLUMNS = ["actual_time", "time (inc)", "module", "name", "time", "type", "module"]
 
-    def __init__(self, supergraph, path="path"):
+    def __init__(self, supergraph, path="path", reveal_callsites=[], split_entry_module="", split_callee_module=""):
         assert isinstance(supergraph, SuperGraph)
         assert isinstance(path, str)
         assert path in ["path", "group_path", "component_path"]
@@ -201,9 +204,9 @@ class SankeyLayout:
 
                     # Edge exists for source["module"] -> target["module"]
                     elif not has_cct_edge and not has_callback_edge:
-                        edge_data = nxg.get_edge_data(
-                            *(source["module"], target["module"])
-                        )
+                        # edge_data = nxg.get_edge_data(
+                        #     *(source["module"], target["module"])
+                        # )
                         nxg[source["module"]][target["module"]]["attr_dict"].append(
                             edge_dict
                         )
@@ -351,7 +354,7 @@ class SankeyLayout:
         target_df = df.loc[df["dataset"] == tag]
 
         # Unique modules in the target run
-        target_modules = target_df["module"].unique()
+        # target_modules = target_df["module"].unique()
 
         # Group the dataframe in two ways.
         # 1. by module

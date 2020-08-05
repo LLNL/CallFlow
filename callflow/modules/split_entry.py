@@ -17,7 +17,7 @@ import callflow
 
 
 class SplitEntry:
-    def __init__(self, gf, module):
+    def __init__(self, gf, reveal_module):
         assert isinstance(gf, callflow.GraphFrame)
         assert "group_path" in gf.df.columns
 
@@ -61,7 +61,7 @@ class SplitEntry:
                                 "weight": self.module_name_group_df.get_group(
                                     (reveal_module, edge["source_callsite"])
                                 )["time (inc)"].max(),
-                                "edge_type": "reveal_edge",
+                                # "edge_type": "reveal_edge",
                             }
                         ],
                     )
@@ -88,7 +88,7 @@ class SplitEntry:
                                 "weight": self.module_name_group_df.get_group(
                                     (edge["target"], edge["target_callsite"])
                                 )["time (inc)"].max(),
-                                "edge_type": "reveal_edge",
+                                # "edge_type": "reveal_edge",
                             }
                         ],
                     )
@@ -109,7 +109,6 @@ class SplitEntry:
         return entry_functions
 
     def create_source_targets(self, path):
-        module = ""
         edges = []
         for idx, callsite in enumerate(path):
             if idx == len(path) - 1:
@@ -130,7 +129,6 @@ class SplitEntry:
         ret = []
         for idx, edge in enumerate(component_edges):
             source = edge["source"]
-            target = edge["target"]
 
             if source == reveal_module:
                 ret.append(edge)
@@ -139,7 +137,6 @@ class SplitEntry:
     def same_target_edges(self, component_edges, reveal_module):
         ret = []
         for idx, edge in enumerate(component_edges):
-            source = edge["source"]
             target = edge["target"]
 
             if target == reveal_module:

@@ -11,8 +11,6 @@
 # * Please also read the LICENSE file for the MIT License notice.
 # ******************************************************************************
 # Library imports
-import math
-import pandas as pd
 import networkx as nx
 
 # CallFlow imports
@@ -22,7 +20,9 @@ from callflow import SuperGraph
 
 # CCT Rendering class.
 class NodeLinkLayout:
-
+    """
+    Node link layout for CCT.
+    """
     _COLUMNS = ["time (inc)", "time", "name", "module"]
 
     def __init__(self, supergraph, callsite_count=50):
@@ -58,6 +58,7 @@ class NodeLinkLayout:
             self.nxg.cycles = NodeLinkLayout._find_cycle(self.nxg)
 
     # --------------------------------------------------------------------------
+    # flake8: noqa: C901
     def _add_node_attributes(self):
 
         module_name_group_df = self.supergraph.gf.df.groupby(["module", "name"])
@@ -76,8 +77,8 @@ class NodeLinkLayout:
 
                 if column == "time (inc)":
                     datamap[column][callsite] = name_time_inc_map[(module, callsite)]
-                elif column == "time":
-                    datamap[column][callsite] = name_time_exc_map[(module, callsite)]
+                # elif column == "time":
+                #     datamap[column][callsite] = name_time_exc_map[(module, callsite)]
                 elif column == "name":
                     datamap[column][callsite] = callsite
                 elif column == "module":
@@ -101,9 +102,9 @@ class NodeLinkLayout:
             target_name_time_inc_map = (
                 target_module_name_group_df["time (inc)"].max().to_dict()
             )
-            target_name_time_exc_map = (
-                target_module_name_group_df["time"].max().to_dict()
-            )
+            # target_name_time_exc_map = (
+            #     target_module_name_group_df["time"].max().to_dict()
+            # )
 
             datamap = {}
             for callsite in self.nxg.nodes():

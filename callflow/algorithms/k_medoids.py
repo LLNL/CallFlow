@@ -60,7 +60,7 @@ class KMedoids:
     def __update_clusters(self):
         for i in range(self.max_iter):
             cluster_dist_with_new_medoids = self.__swap_and_recalculate_clusters()
-            if self.__is_new_cluster_dist_small(cluster_dist_with_new_medoids) == True:
+            if self.__is_new_cluster_dist_small(cluster_dist_with_new_medoids):
                 self.clusters, self.cluster_distances = self.__calculate_clusters(
                     self.medoids
                 )
@@ -77,7 +77,7 @@ class KMedoids:
         return False
 
     def calculate_distance_of_clusters(self, cluster_dist=None):
-        if cluster_dist == None:
+        if cluster_dist is None:
             cluster_dist = self.cluster_distances
         dist = 0
         for medoid in cluster_dist.keys():
@@ -100,7 +100,7 @@ class KMedoids:
                         cluster_dist[data_index] = new_distance
                         is_shortest_medoid_found = True
                         break
-            if is_shortest_medoid_found == False:
+            if not is_shortest_medoid_found :
                 cluster_dist[medoid] = self.cluster_distances[medoid]
         return cluster_dist
 
@@ -165,12 +165,12 @@ class KMedoids:
     def __get_distance(self, x1, x2):
         a = (
             self.__data[x1].toarray()
-            if self.__is_csr == True
+            if self.__is_csr
             else np.array(self.__data[x1])
         )
         b = (
             self.__data[x2].toarray()
-            if self.__is_csr == True
+            if self.__is_csr
             else np.array(self.__data[x2])
         )
         return np.linalg.norm(a - b)

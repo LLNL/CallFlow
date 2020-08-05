@@ -10,24 +10,7 @@
 # * https://github.com/LLNL/CallFlow
 # * Please also read the LICENSE file for the MIT License notice.
 # ******************************************************************************
-# Library imports
-import os
-import json
-import networkx as nx
-from networkx.readwrite import json_graph
 
-# ------------------------------------------------------------------------------
-# i see similar functions in graphframe.py (copied from state.py)
-# why are these different
-def lookup(df, node):
-    return df.loc[df["name"] == getNodeName(node)]
-
-
-def lookup_with_name(df, name):
-    return df.loc[df["name"] == name]
-
-
-# ------------------------------------------------------------------------------
 # a similar function in utils/hatchet.py
 def sanitize_name(name):
     ret_name = ""
@@ -51,129 +34,13 @@ def sanitizeAMMName(name):
 
 
 # ------------------------------------------------------------------------------
-
-
 def visModuleCallsiteName(name, df):
     return df.groupby(["name"]).unique()["module"]
-
-
-def avg(l):
-    """uses floating-point division."""
-    return sum(l) / float(len(l))
-
-
-def getMaxIncTime(state):
-    df = state.df
-    ret = float(df["time (inc)"].max())
-    return ret
-
-
-# TODO: Get the maximum exclusive time from the graphframe.
-def getMaxExcTime(state):
-    df = state.df
-    ret = float(df["time"].max())
-    return ret
-
-
-def getAvgIncTime(state):
-    ret = 0.0
-    graph = state.new_gf.graph
-    df = state.new_gf.df
-    for root in gf.graph.roots:
-        ret += lookup(df, root)["time (inc)"].mean()
-    return ret / len(gf.graph.roots)
-
-
-def getAvgExcTime(state):
-    df = state.df
-    ret = df["time"].mean()
-    return ret
-
-
-def getMinIncTime(state):
-    return 0
-
-
-def getMinExcTime(state):
-    return 0
-
-
-def getNumOfNodes(state):
-    df = state.df
-    return df["module"].count()
-
-
-def getNumbOfRanks(state):
-    df = state.entire_df
-    return len(df["rank"].unique())
-
-
-def getMaxIncTime_from_gf(graph, dataframe):
-    ret = 0.0
-    for root in graph.roots:
-        node_df = lookup(dataframe, root)
-        ret = max(ret, float(max(node_df["time (inc)"].tolist())))
-    return ret
-
-
-def getMaxExcTime_from_gf(graph, dataframe):
-    ret = float(dataframe["time"].max())
-    return ret
-
-
-def getAvgIncTime_from_gf(graph, dataframe):
-    ret = 0.0
-    for root in graph.roots:
-        ret += lookup(dataframe, root)["time (inc)"].mean()
-    return ret / len(graph.roots)
-
-
-def getAvgExcTime_from_gf(graph, dataframe):
-    ret = dataframe["time"].mean()
-    return ret
-
-
-def getMinIncTime_from_gf(graph, dataframe):
-    return 0
-
-
-def getMinExcTime_from_gf(graph, dataframe):
-    return 0
-
-
-def getNumOfNodes_from_gf(graph, dataframe):
-    return dataframe["module"].count()
-
-
-def getNumbOfRanks_from_gf(graph, dataframe):
-    return len(dataframe["rank"].unique())
-
-
-# ------------------------------------------------------------------------------
-
-
-def debugWriteToFile(action="", data={}):
-    action = "[callfow.py] Action: {0}".format(action)
-    if bool(data):
-        data_string = "" + json.dumps(data, indent=4, sort_keys=True)
-    else:
-        data_string = ""
 
 
 def convertStringToList(string):
     res = string.strip("][").split(", ")
     return res
-
-
-def is_json(myjson):
-    try:
-        json_object = json.loads(myjson)
-    except ValueError as e:
-        return False
-    return True
-
-
-# ------------------------------------------------------------------------------
 
 
 def median(arr):
@@ -243,38 +110,12 @@ def dfs(graph, dataframe, limit):
                     + exclusive_runtime
                 )
                 level += 1
-                dfs_recurse(node, level)
+                _dfs_recurse(node, level)
 
     level = 0
     for root in graph.roots:
         print("Root = {0} [{1}]".format("Root", root._hatchet_nid))
         _dfs_recurse(root, level)
-
-
-# ------------------------------------------------------------------------------
-def graphmltojson(graphfile, outfile):
-    # unused. cannot work without importing json
-    assert False
-    """
-	Converts GraphML file to json while adding communities/modularity groups
-	using python-louvain. JSON output is usable with D3 force layout.
-	"""
-    G = nx.read_graphml(graphfile)
-
-    # finds best community using louvain
-    #    partition = community_louvain.best_partition(G)
-
-    # adds partition/community number as attribute named 'modularitygroup'
-    #    for n,d in G.nodes_iter(data=True):
-    #        d['modularitygroup'] = partition[n]
-
-    node_link = json_graph.node_link_data(G)
-    json_data = json.dumps(node_link)
-
-    # Write to file
-    fo = open(outfile, "w")
-    fo.write(json_data)
-    fo.close()
 
 
 # ------------------------------------------------------------------------------
@@ -287,7 +128,7 @@ def bfs_hatchet(graph):
 
         callpaths = root.paths()
         try:
-            while callpaths != None:
+            while callpaths is not None:
                 node_count += 1
                 ret[root.callpath[-1]] = root.df_index
                 root = next(node_gen)
@@ -304,7 +145,7 @@ def getNodeCallpath(node):
     list_of_frames = list(node.path())
     for frame in list_of_frames:
         name = frame.get("name")
-        if name != None:
+        if name is not None:
             ret.append(frame.get("name"))
         else:
             ret.append(frame.get("file"))
@@ -317,7 +158,7 @@ def getNodeParents(node):
 
 def get_callsite_name_from_frame(node):
     name = node.frame.get("name")
-    if name != None:
+    if name is not None:
         return node.frame.get("name")
     else:
         return node.frame.get("file")
