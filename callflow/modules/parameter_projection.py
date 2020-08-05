@@ -17,6 +17,7 @@ from sklearn import preprocessing
 from sklearn.manifold import TSNE, MDS
 from sklearn.cluster import KMeans
 from callflow.algorithms import KMedoids
+
 # from callflow.algorithms import DeltaConSimilarity
 
 
@@ -24,6 +25,7 @@ class ParameterProjection:
     """
     Parameter projection view
     """
+
     def __init__(self, supergraph, targetDataset="", n_cluster=3):
 
         self.df = supergraph.gf.df

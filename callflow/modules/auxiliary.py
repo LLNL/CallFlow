@@ -24,6 +24,7 @@ sys.path.insert(0, "..")
 # CallFlow imports
 try:
     import callflow
+
     LOGGER = callflow.get_logger(__name__)
     from callflow.timer import Timer
 except Exception:

@@ -17,6 +17,7 @@ from scipy import stats
 # CallFlow imports
 try:
     import callflow
+
     LOGGER = callflow.get_logger(__name__)
 except Exception:
     raise Exception("Module callflow not found not found.")

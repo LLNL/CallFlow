@@ -24,4 +24,18 @@ from .runtime_scatterplot import RuntimeScatterplot
 from .parameter_projection import ParameterProjection
 from .diff_view import DiffView
 
-__all__ = ['EnsembleAuxiliary', 'SingleAuxiliary', 'FastEnsembleAuxiliary', 'BoxPlot', 'RankHistogram', 'MiniHistogram', 'GenericHistogram', 'ToolTip', 'FunctionList', 'Gradients', 'RuntimeScatterplot', 'ParameterProjection', 'DiffView']
+__all__ = [
+    "EnsembleAuxiliary",
+    "SingleAuxiliary",
+    "FastEnsembleAuxiliary",
+    "BoxPlot",
+    "RankHistogram",
+    "MiniHistogram",
+    "GenericHistogram",
+    "ToolTip",
+    "FunctionList",
+    "Gradients",
+    "RuntimeScatterplot",
+    "ParameterProjection",
+    "DiffView",
+]

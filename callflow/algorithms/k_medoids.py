@@ -100,7 +100,7 @@ class KMedoids:
                         cluster_dist[data_index] = new_distance
                         is_shortest_medoid_found = True
                         break
-            if not is_shortest_medoid_found :
+            if not is_shortest_medoid_found:
                 cluster_dist[medoid] = self.cluster_distances[medoid]
         return cluster_dist
 
@@ -163,16 +163,8 @@ class KMedoids:
         return distances_index[random.randint(start_index, end_index)]
 
     def __get_distance(self, x1, x2):
-        a = (
-            self.__data[x1].toarray()
-            if self.__is_csr
-            else np.array(self.__data[x1])
-        )
-        b = (
-            self.__data[x2].toarray()
-            if self.__is_csr
-            else np.array(self.__data[x2])
-        )
+        a = self.__data[x1].toarray() if self.__is_csr else np.array(self.__data[x1])
+        b = self.__data[x2].toarray() if self.__is_csr else np.array(self.__data[x2])
         return np.linalg.norm(a - b)
 
     def __set_data_type(self):

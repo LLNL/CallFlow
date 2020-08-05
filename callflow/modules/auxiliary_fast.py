@@ -22,6 +22,7 @@ import callflow
 from callflow.modules.gradients import Gradients
 from callflow.modules.boxplot import BoxPlot
 from callflow.timer import Timer
+
 LOGGER = callflow.get_logger(__name__)
 
 

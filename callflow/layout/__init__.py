@@ -14,4 +14,4 @@ from .node_link import NodeLinkLayout
 from .sankey import SankeyLayout
 from .hierarchy import HierarchyLayout
 
-__all__ = ['NodeLinkLayout', 'SankeyLayout', 'HierarchyLayout']
+__all__ = ["NodeLinkLayout", "SankeyLayout", "HierarchyLayout"]

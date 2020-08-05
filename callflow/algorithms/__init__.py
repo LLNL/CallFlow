@@ -15,4 +15,4 @@ from .k_medoids import KMedoids
 from .bland_altman import BlandAltman
 from .deltacon_similarity import DeltaConSimilarity
 
-__all__ = ['KMedoids', 'DeltaConSimilarity', 'BlandAltman']
+__all__ = ["KMedoids", "DeltaConSimilarity", "BlandAltman"]

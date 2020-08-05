@@ -15,4 +15,4 @@ from .group import Group
 from .filter import Filter
 from .read_config import ConfigFileReader
 
-__all__ = ['Process', 'Group', 'Filter', 'ConfigFileReader']
+__all__ = ["Process", "Group", "Filter", "ConfigFileReader"]

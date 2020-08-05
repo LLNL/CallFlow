@@ -18,6 +18,7 @@ import numpy as np
 # CallFlow imports
 try:
     import callflow
+
     LOGGER = callflow.get_logger(__name__)
     from callflow.timer import Timer
 except Exception:
@@ -28,6 +29,7 @@ class SingleAuxiliary:
     """
     Single auxiliary data processing.
     """
+
     def __init__(self, gf, dataset="", MPIBinCount=20, props={}, process=True):
         self.graph = gf.graph
         self.df = gf.df

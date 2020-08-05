@@ -18,6 +18,7 @@ class ToolTip:
     """
     Tooltip information
     """
+
     def __init__(self, state, module):
         self.state = state
         self.graph = state.new_gf.graph
@@ -28,7 +29,9 @@ class ToolTip:
 
     def run(self):
         ret = []
-        func_in_module = self.df[self.df.module == self.module]["name"].unique().tolist()
+        func_in_module = (
+            self.df[self.df.module == self.module]["name"].unique().tolist()
+        )
 
         for idx, func in enumerate(func_in_module):
             name_entire_df = self.entire_df.loc[self.entire_df["name"] == func]

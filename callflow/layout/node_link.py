@@ -23,6 +23,7 @@ class NodeLinkLayout:
     """
     Node link layout for CCT.
     """
+
     _COLUMNS = ["time (inc)", "time", "name", "module"]
 
     def __init__(self, supergraph, callsite_count=50):

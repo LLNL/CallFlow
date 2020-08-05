@@ -35,6 +35,7 @@ class CallFlowServer:
     """
     CallFlow Server class.
     """
+
     def __init__(self):
         # Parse the arguments passed.
         args = self._create_parser()

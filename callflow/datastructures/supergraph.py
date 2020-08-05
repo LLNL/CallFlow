@@ -234,7 +234,9 @@ class SuperGraph(object):
         for idx, dataset in enumerate(datasets):
             ret[dataset] = []
             for idx_2, dataset2 in enumerate(datasets):
-                union_similarity = DeltaConSimilarity(states[dataset2].g, states[dataset].g)
+                union_similarity = DeltaConSimilarity(
+                    states[dataset2].g, states[dataset].g
+                )
                 ret[dataset].append(union_similarity.result)
         dirname = os.path.dirname(os.path.realpath(__file__))
         similarity_filepath = os.path.join(dirname, "/ensemble/similarity.json")

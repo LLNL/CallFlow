@@ -24,6 +24,7 @@ class BoxPlot:
     """
     Boxplot computation
     """
+
     def __init__(self, df):
         self.q = {}
         self.q["Inclusive"] = self.quartiles(df, attr="time (inc)")

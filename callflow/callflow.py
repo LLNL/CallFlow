@@ -20,12 +20,8 @@ import callflow
 from callflow import SuperGraph, EnsembleGraph
 from callflow.algorithms import DeltaConSimilarity, BlandAltman
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
-from callflow.modules import (
-    ParameterProjection,
-    DiffView,
-    MiniHistogram,
-    FunctionList
-)
+from callflow.modules import ParameterProjection, DiffView, MiniHistogram, FunctionList
+
 LOGGER = callflow.get_logger(__name__)
 
 
@@ -311,7 +307,9 @@ class CallFlow:
             return result.nxg
 
         elif operation_name == "function":
-            functionlist = FunctionList(self.supergraphs[operation["dataset"]], operation["module"])
+            functionlist = FunctionList(
+                self.supergraphs[operation["dataset"]], operation["module"]
+            )
             return functionlist.result
 
     # flake8: noqa: C901
@@ -349,7 +347,11 @@ class CallFlow:
                 split_callee_module = ""
 
             ensemble_super_graph = SankeyLayout(
-                supergraph=self.supergraphs["ensemble"], path="group_path", reveal_callsites=reveal_callsites, split_entry_module=split_entry_module, split_callee_module=split_callee_module
+                supergraph=self.supergraphs["ensemble"],
+                path="group_path",
+                reveal_callsites=reveal_callsites,
+                split_entry_module=split_entry_module,
+                split_callee_module=split_callee_module,
             )
             return ensemble_super_graph.nxg
 

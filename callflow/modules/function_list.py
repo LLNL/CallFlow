@@ -18,6 +18,7 @@ from ast import literal_eval as make_tuple
 # CallFlow imports
 try:
     import callflow
+
     LOGGER = callflow.get_logger(__name__)
 except Exception:
     raise Exception("Module callflow not found not found.")
@@ -27,6 +28,7 @@ class FunctionList:
     """
     Callsite list (Remove)
     """
+
     def __init__(self, state, modFunc, nid):
         self.graph = state.new_gf.graph
         self.df = state.new_gf.df

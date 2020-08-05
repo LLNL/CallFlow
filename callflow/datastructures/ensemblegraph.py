@@ -17,6 +17,7 @@ import pandas as pd
 # CallFlow imports
 try:
     import callflow
+
     LOGGER = callflow.get_logger(__name__)
     from callflow import SuperGraph
 except Exception:
