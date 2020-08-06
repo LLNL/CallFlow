@@ -5,6 +5,7 @@
 
 from math import sqrt
 import networkx as nx
+from numpy import square, trace, amax
 from scipy.sparse import identity
 from scipy.sparse import diags
 
