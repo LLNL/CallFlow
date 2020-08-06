@@ -40,7 +40,7 @@ export default {
 		nameData: [],
 		id: "ensemble-scatterplot-view",
 		svgID: "ensemble-scatterplot-view-svg",
-		message: "Runtime Scatterplot",
+		message: "Metric Correlation",
 		boxOffset: 20,
 		settings: [{ title: "Show Difference plot" }, { title: "aaa" }],
 		moduleUnDesirability: 1,

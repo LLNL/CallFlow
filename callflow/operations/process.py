@@ -11,10 +11,6 @@
 # * Please also read the LICENSE file for the MIT License notice.
 # ******************************************************************************
 # Library imports
-import bisect
-import random
-from functools import wraps
-
 import numpy as np
 import pandas as pd
 from scipy.stats import kurtosis, skew
@@ -200,10 +196,10 @@ class Process:
             )
             return self
 
-        def add_node_name_caliper(self, node_module_map):
-            self.gf.df["node_name"] = self.gf.df["name"].apply(
-                lambda name: name_module_map[name]
-            )
+        # def add_node_name_caliper(self, node_module_map):
+        #     self.gf.df["node_name"] = self.gf.df["name"].apply(
+        #         lambda name: name_module_map[name]
+        #     )
 
         def add_module_name_caliper(self, module_map):
             self.gf.df["module"] = self.gf.df["name"].apply(

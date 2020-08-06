@@ -11,17 +11,11 @@
 # * Please also read the LICENSE file for the MIT License notice.
 # ******************************************************************************
 # Library imports
-import os
-import time
 import logging
 import colorlog
 
-from logging import getLogger as get_logger
 
-# ------------------------------------------------------------------------------
 def init_logger(**kwargs):
-
-    # --------------------------------------------------------------------------
     # extract the logging parameters (defaults given)
     level = int(kwargs.get("level", 2))
     do_color = str(kwargs.get("color", True))

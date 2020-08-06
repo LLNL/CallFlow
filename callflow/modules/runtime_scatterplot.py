@@ -13,13 +13,14 @@
 # Library imports
 import pandas as pd
 
+
 class RuntimeScatterplot:
-    def __init__(self, states, module):
+    def __init__(self, state, module):
         self.graph = state.new_gf.graph
         self.df = state.new_gf.df
         self.module = module
         self.entry_funcs = {}
-        self.run(state)
+        self.run()
 
     def run(self):
         ret = []

@@ -19,7 +19,12 @@ import callflow
 
 LOGGER = callflow.get_logger(__name__)
 
+
 class BoxPlot:
+    """
+    Boxplot computation
+    """
+
     def __init__(self, df):
         self.q = {}
         self.q["Inclusive"] = self.quartiles(df, attr="time (inc)")
@@ -48,21 +53,6 @@ class BoxPlot:
 
         return median, indices
         pass
-
-    def quartiles_old(self, df, attr=""):
-        if len(samples) == 1:
-            quartiles = [samples[0]] * 5
-        else:
-            median, median_indices = self.median(samples)
-            q1, q1_indices = self.median(samples[: median_indices[0]])
-            q3, q3_indices = self.median(samples[median_indices[-1] + 1 :])
-
-            minimum = samples[0]
-            maximum = samples[len(samples) - 1]
-
-            quartiles = [minimum, q1, median, q3, maximum]
-
-        return quartiles
 
     def quartiles(self, df, attr=""):
         samples = sorted(df[attr].tolist())

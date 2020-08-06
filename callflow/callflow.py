@@ -19,17 +19,17 @@ import json
 import callflow
 from callflow import SuperGraph, EnsembleGraph
 from callflow.layout import CallFlowNodeLinkLayout, SankeyLayout, HierarchyLayout
-from callflow.modules import (
-    EnsembleAuxiliary,
-    ParameterProjection,
-    DiffView,
-)
+from callflow.algorithms import DeltaConSimilarity, BlandAltman
+from callflow.modules import ParameterProjection, DiffView, MiniHistogram, FunctionList
 
 LOGGER = callflow.get_logger(__name__)
 
-# ------------------------------------------------------------------------------
-# CallFlow class
+
 class CallFlow:
+    """
+    CallFlow class for handling operations.
+    """
+
     def __init__(self, config, ensemble=False):
         """
         Entry interface to access CallFlow's functionalities. "
@@ -244,7 +244,6 @@ class CallFlow:
         maxExcTime = 0
         minIncTime = 0
         minExcTime = 0
-        maxNumOfRanks = 0
         for idx, tag in enumerate(self.supergraphs):
             self.props["maxIncTime"][tag] = (
                 self.supergraphs[tag].gf.df["time (inc)"].max()
@@ -309,13 +308,16 @@ class CallFlow:
             return single_supergraph.nxg
 
         elif operation_name == "mini-histogram":
-            minihistogram = MiniHistogram(state)
+            minihistogram = MiniHistogram(self.supergraphs[operation["dataset"]])
             return minihistogram.result
 
         elif operation_name == "function":
-            functionlist = FunctionList(state, operation["module"])
+            functionlist = FunctionList(
+                self.supergraphs[operation["dataset"]], operation["module"]
+            )
             return functionlist.result
 
+    # flake8: noqa: C901
     def request_ensemble(self, operation):
         """
         Handles all the socket requests connected to Single CallFlow.
@@ -350,18 +352,12 @@ class CallFlow:
             else:
                 split_callee_module = ""
 
-            if len(operation["datasets"]) != len(self.props["dataset_names"]):
-                ensemble_supergraph.ensemble_auxiliary(
-                    # MPIBinCount=self.currentMPIBinCount,
-                    # RunBinCount=self.currentRunBinCount,
-                    datasets=operation["datasets"],
-                    MPIBinCount=20,
-                    RunBinCount=20,
-                    process=True,
-                    write=True,
-                )
             ensemble_super_graph = SankeyLayout(
-                supergraph=self.supergraphs["ensemble"], path="group_path"
+                supergraph=self.supergraphs["ensemble"],
+                path="group_path",
+                reveal_callsites=reveal_callsites,
+                split_entry_module=split_entry_module,
+                split_callee_module=split_callee_module,
             )
             return ensemble_super_graph.nxg
 
@@ -399,7 +395,6 @@ class CallFlow:
             assert False
             if operation["module"] == "all":
                 dirname = self.config.callflow_dir
-                name = self.config.runName
                 similarity_filepath = dirname + "/" + "similarity.json"
                 with open(similarity_filepath, "r") as similarity_file:
                     self.similarities = json.load(similarity_file)
@@ -408,7 +403,7 @@ class CallFlow:
                 for idx, dataset in enumerate(datasets):
                     self.similarities[dataset] = []
                     for idx_2, dataset2 in enumerate(datasets):
-                        union_similarity = Similarity(
+                        union_similarity = DeltaConSimilarity(
                             self.states[dataset2].g, self.states[dataset].g
                         )
                     self.similarities[dataset].append(union_similarity.result)

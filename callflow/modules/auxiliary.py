@@ -12,16 +12,25 @@
 # ******************************************************************************
 # Library imports
 import os
+import sys
 import json
 import math
-import pandas as pd
 import numpy as np
 from .gradients import Gradients
 from .boxplot import BoxPlot
+
+sys.path.insert(0, "..")
+
 # CallFlow imports
-import callflow
-LOGGER = callflow.get_logger(__name__)
-from callflow.timer import Timer
+try:
+    import callflow
+
+    LOGGER = callflow.get_logger(__name__)
+    from callflow.timer import Timer
+except Exception:
+    raise Exception("Module callflow not found not found.")
+
+
 class EnsembleAuxiliary:
     def __init__(
         self,
@@ -45,6 +54,7 @@ class EnsembleAuxiliary:
         if process:
             self.compute()
         LOGGER.info(self.timer)
+
     def compute(self):
         ret = {}
         if len(self.datasets) == 1:
@@ -65,6 +75,7 @@ class EnsembleAuxiliary:
             with open(path, "w") as f:
                 json.dump(ret, f)
         return ret
+
     def filter_dict(self, result):
         ret = {}
         # Modules will be the same as original.
@@ -92,6 +103,7 @@ class EnsembleAuxiliary:
                     ]
                     count += 1
         return ret
+
     def group_frames(self):
         if self.filter:
             xgroup_df = self.df.groupby(["name"]).mean()
@@ -116,6 +128,7 @@ class EnsembleAuxiliary:
             self.target_name_group_df[dataset] = self.target_df[dataset].groupby(
                 ["name"]
             )
+
     # Callsite grouped information
     def callsite_data(self):
         ret = {}
@@ -177,11 +190,11 @@ class EnsembleAuxiliary:
                     )
             ret[dataset] = target
         return ret
+
     # Module grouped information.
     def module_data(self):
         ret = {}
         # Module grouped information
-        modules = self.df["module"].unique()
         ensemble = {}
         for module, module_df in self.module_group_df:
             module_ensemble_df = self.module_group_df.get_group(module)
@@ -228,11 +241,13 @@ class EnsembleAuxiliary:
                     )
             ret[dataset] = target
         return ret
+
     def select_rows(self, df, search_strings):
         unq, IDs = np.unique(df["dataset"], return_inverse=True)
         unqIDs = np.searchsorted(unq, search_strings)
         mask = np.isin(IDs, unqIDs)
         return df[mask]
+
     def histogram(self, data, data_min=np.nan, data_max=np.nan):
         if np.isnan(data_min) or np.isnan(data_max):
             data_min = data.min()
@@ -241,8 +256,10 @@ class EnsembleAuxiliary:
             data, range=[data_min, data_max], bins=int(self.MPIBinCount)
         )
         return 0.5 * (b[1:] + b[:-1]), h
+
     def convert_pandas_array_to_list(self, series):
         return series.apply(lambda d: d.tolist())
+
     def get_module_callsite_map(self):
         ret = {}
         np_data = self.module_group_df["name"].unique()
@@ -251,6 +268,7 @@ class EnsembleAuxiliary:
             np_data = self.target_module_group_df[dataset]["name"].unique()
             ret[dataset] = self.convert_pandas_array_to_list(np_data).to_dict()
         return ret
+
     def get_callsite_module_map(self):
         ret = {}
         callsites = self.df["name"].unique().tolist()
@@ -270,6 +288,7 @@ class EnsembleAuxiliary:
                 )
                 ret[dataset][callsite] = module
         return ret
+
     def pack_json(
         self,
         df,
@@ -348,6 +367,7 @@ class EnsembleAuxiliary:
             },
         }
         return result
+
     # Return the histogram in the required form.
     def histogram_format(self, histogram_grid):
         return {
@@ -358,6 +378,7 @@ class EnsembleAuxiliary:
             "y_min": np.min(histogram_grid[1]).astype(np.float64),
             "y_max": np.max(histogram_grid[1]).astype(np.float64),
         }
+
     # Prop can be dataset, rank, name
     def histogram_by_property_ensemble(self, ensemble_df, prop):
         ret = {}
@@ -391,6 +412,7 @@ class EnsembleAuxiliary:
             "ensemble": self.histogram_format(histogram_ensemble_exclusive_grid),
         }
         return ret
+
     # Prop can be dataset, rank, name
     def histogram_by_property(self, ensemble_df, target_df, prop):
         ret = {}

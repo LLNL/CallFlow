@@ -1,0 +1,32 @@
+branches:
+  only:
+    - develop
+    - /^releases\/.*$/
+
+jobs:
+  fast_finish: true
+  include:
+    - stage: "style check"
+      python: '3.7'
+      os: linux
+      language: python
+      script:
+        - black --diff --check .
+        - flake8 --exclude=examples
+
+install:
+  - pip install pandas matplotlib
+  - pip install --upgrade -r requirements.txt
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then
+        pip install --upgrade black flake8;
+    fi
+  - python setup.py install
+  - python setup.py build_ext --inplace
+  - pip list
+
+notifications:
+  email:
+    recipients:
+      - spkesavan@ucdavis.edu
+    on_success: change
+    on_failure: always

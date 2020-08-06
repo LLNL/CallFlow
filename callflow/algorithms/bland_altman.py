@@ -29,21 +29,12 @@ class BlandAltman:
         self.results = self.run()
 
     def run(self):
-        ret = []
-
         data1 = np.asarray(self.df1[self.col])
-        name1 = np.asarray(self.df1["name"])
-        dataset1 = np.array([self.dataset1 for _ in range(data1.shape[0])])
-        module1 = np.asarray(self.df1["module"])
-
         data2 = np.asarray(self.df2[self.col])
-        name2 = np.asarray(self.df2["name"])
-        dataset2 = np.array([self.dataset2 for _ in range(data2.shape[0])])
         module2 = np.asarray(self.df2["module"])
 
-        name = name2
+        name = np.asarray(self.df2["name"])
         module = module2
-        dataset = np.concatenate([dataset1, dataset2], axis=0)
         mean = np.mean([data1, data2], axis=0)
         diff = data1 - data2
         md = np.mean(diff)
@@ -62,7 +53,6 @@ class BlandAltman:
         }
 
         data_df = pd.DataFrame(data)
-        group_df = data_df.groupby(["name"]).mean()
         result = {
             "data": data_df.to_json(orient="columns"),
             "color": colordict,

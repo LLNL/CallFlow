@@ -60,7 +60,7 @@ export default {
 		path_hierarchy: [],
 		id: "",
 		padding: 0,
-		message: "SuperNode Hierarchy",
+		message: "Supernode Hierarchy",
 		offset: 4,
 		stroke_width: 4,
 		metric: "",

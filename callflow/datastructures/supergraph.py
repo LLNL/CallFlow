@@ -13,14 +13,11 @@
 # Library imports
 import os
 import json
-import copy
-import pandas as pd
-import numpy as np
-import networkx as nx
 
 # CallFlow imports
 import callflow
 from callflow.timer import Timer
+from callflow.algorithms import DeltaConSimilarity
 from callflow.operations import Process, Group, Filter
 from callflow.modules import EnsembleAuxiliary, SingleAuxiliary
 
@@ -212,7 +209,6 @@ class SuperGraph(object):
 
         parameters = None
         for line in open(fname, "r"):
-            s = 0
             for num in line.strip().split(","):
                 split_num = num.split("=")
                 parameters[split_num[0]] = split_num[1]
@@ -241,10 +237,12 @@ class SuperGraph(object):
         for idx, dataset in enumerate(datasets):
             ret[dataset] = []
             for idx_2, dataset2 in enumerate(datasets):
-                union_similarity = Similarity(states[dataset2].g, states[dataset].g)
+                union_similarity = DeltaConSimilarity(
+                    states[dataset2].g, states[dataset].g
+                )
                 ret[dataset].append(union_similarity.result)
-
-        similarity_filepath = os.path.join(self.dirname, "/ensemble/similarity.json")
+        dirname = os.path.dirname(os.path.realpath(__file__))
+        similarity_filepath = os.path.join(dirname, "/ensemble/similarity.json")
         with open(similarity_filepath, "w") as json_file:
             json.dump(ret, json_file)
 

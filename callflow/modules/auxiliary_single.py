@@ -13,18 +13,23 @@
 # Library imports
 import os
 import json
-import pandas as pd
-import networkx as nx
 import numpy as np
-from ast import literal_eval as make_tuple
 
-import callflow
+# CallFlow imports
+try:
+    import callflow
 
-LOGGER = callflow.get_logger(__name__)
-from callflow.timer import Timer
+    LOGGER = callflow.get_logger(__name__)
+    from callflow.timer import Timer
+except Exception:
+    raise Exception("Module callflow not found not found.")
 
 
 class SingleAuxiliary:
+    """
+    Single auxiliary data processing.
+    """
+
     def __init__(self, gf, dataset="", MPIBinCount=20, props={}, process=True):
         self.graph = gf.graph
         self.df = gf.df
@@ -32,10 +37,8 @@ class SingleAuxiliary:
         self.process = process
         self.dataset = dataset
         self.binCount = MPIBinCount
-        ret_df = pd.DataFrame([])
         self.timer = Timer()
         self.result = self.run()
-        print(self.timer)
 
     def addID(self, name):
         name = "".join([i for i in name if not i.isdigit()])
@@ -81,18 +84,18 @@ class SingleAuxiliary:
         return ret
 
     def pack_json(self, group_df, node_name, data_type):
-        df = self.df.loc[self.df["name"] == node_name]
+        # df = self.df.loc[self.df["name"] == node_name]
         with self.timer.phase("Calculate Histograms"):
-            time_inc_ensemble_arr = np.array(df["time (inc)"].tolist())
-            time_exc_ensemble_arr = np.array(df["time"].tolist())
+            # time_inc_ensemble_arr = np.array(df["time (inc)"].tolist())
+            # time_exc_ensemble_arr = np.array(df["time"].tolist())
             time_inc_target_arr = np.array(group_df["time (inc)"].tolist())
             time_exc_target_arr = np.array(group_df["time"].tolist())
-            histogram_inc_array = np.concatenate(
-                (time_inc_target_arr, time_inc_ensemble_arr), axis=0
-            )
-            histogram_exc_array = np.concatenate(
-                (time_exc_target_arr, time_exc_ensemble_arr), axis=0
-            )
+            # histogram_inc_array = np.concatenate(
+            #     (time_inc_target_arr, time_inc_ensemble_arr), axis=0
+            # )
+            # histogram_exc_array = np.concatenate(
+            #     (time_exc_target_arr, time_exc_ensemble_arr), axis=0
+            # )
             hist_inc_grid = self.histogram(time_inc_target_arr)
             hist_exc_grid = self.histogram(time_exc_target_arr)
         if "rank" not in group_df.keys():

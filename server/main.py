@@ -21,7 +21,6 @@ from networkx.readwrite import json_graph
 # ------------------------------------------------------------------------------
 # CallFlow imports.
 import callflow
-from callflow import CallFlow
 from callflow.operations import ConfigFileReader
 
 LOGGER = callflow.get_logger(__name__)
@@ -32,9 +31,11 @@ app = Flask(__name__, static_url_path="/public")
 sockets = SocketIO(app, cors_allowed_origins="*")
 
 
-# ------------------------------------------------------------------------------
-# Server class.
 class CallFlowServer:
+    """
+    CallFlow Server class.
+    """
+
     def __init__(self):
         # Parse the arguments passed.
         args = self._create_parser()

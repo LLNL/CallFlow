@@ -11,8 +11,6 @@
 # * Please also read the LICENSE file for the MIT License notice.
 # ******************************************************************************
 # Library imports
-import math
-import pandas as pd
 import networkx as nx
 
 # CallFlow imports
@@ -21,6 +19,9 @@ import callflow
 from callflow.timer import Timer
 
 class NodeLinkLayout:
+    """
+    Node link layout for CCT.
+    """
 
     # --------------------------------------------------------------------------
     @staticmethod
@@ -289,9 +290,9 @@ class CallFlowNodeLinkLayout:
 
         return node_data_maps
 
+    # flake8: noqa: C901
     def _add_node_attributes(self):
-
-        have_modules = "module" in list(self.gf.df.columns)
+         have_modules = "module" in list(self.gf.df.columns)
 
         # need to add these callsites (and their module map)
         callsites2add = list(self.nxg.nodes())
@@ -352,8 +353,8 @@ class CallFlowNodeLinkLayout:
 
                 if column == "time (inc)":
                     datamap[column][callsite] = name_time_inc_map[(module, callsite)]
-                elif column == "time":
-                    datamap[column][callsite] = name_time_exc_map[(module, callsite)]
+                # elif column == "time":
+                #     datamap[column][callsite] = name_time_exc_map[(module, callsite)]
                 elif column == "name":
                     datamap[column][callsite] = callsite
                 elif column == "module":
@@ -377,9 +378,9 @@ class CallFlowNodeLinkLayout:
             target_name_time_inc_map = (
                 target_module_name_group_df["time (inc)"].max().to_dict()
             )
-            target_name_time_exc_map = (
-                target_module_name_group_df["time"].max().to_dict()
-            )
+            # target_name_time_exc_map = (
+            #     target_module_name_group_df["time"].max().to_dict()
+            # )
 
             datamap = {}
             for callsite in self.nxg.nodes():

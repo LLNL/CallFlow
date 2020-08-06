@@ -94,7 +94,7 @@ class Filter:
         return ret
 
     def findPaths(self, g, u, n, excludeSet=None):
-        if excludeSet == None:
+        if excludeSet is None:
             excludeSet = set([u])
         else:
             excludeSet.add(u)
