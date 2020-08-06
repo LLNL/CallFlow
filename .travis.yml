@@ -13,6 +13,8 @@ jobs:
       script:
         - black --diff --check .
         - flake8 --exclude=examples
+        - cd app && npm run lint 
+
 
 install:
   - pip install pandas matplotlib
