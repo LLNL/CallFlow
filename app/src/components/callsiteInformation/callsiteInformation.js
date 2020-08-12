@@ -6,6 +6,8 @@
  */
 
 import tpl from "../../html/callsiteInformation.html";
+import '../../css/callsiteInformation.css';
+
 import EventHandler from "../EventHandler";
 import BoxPlot from "./boxplot";
 import * as d3 from "d3";
