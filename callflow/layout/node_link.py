@@ -19,6 +19,8 @@ import hatchet as ht
 import callflow
 from callflow.timer import Timer
 
+LOGGER = callflow.get_logger(__name__)
+
 
 class NodeLinkLayout:
     """
@@ -131,8 +133,12 @@ class NodeLinkLayout:
         return nxg
 
     # --------------------------------------------------------------------------
+    # TODO: This should later go into networkX utils file.
     @staticmethod
     def write_dot(nxg, filename="callgraph.dot"):
+        """
+        Write the networkX graph into a dot (graphviz) file.
+        """
 
         assert isinstance(nxg, nx.DiGraph)
         assert isinstance(filename, str)
@@ -140,6 +146,56 @@ class NodeLinkLayout:
         from networkx.drawing.nx_agraph import write_dot
 
         write_dot(nxg, filename)
+        LOGGER.info(f"Dot graph has been dumped into {filename}.")
+
+    @staticmethod
+    def write_pdf(nxg, filename="callgraph.pdf"):
+        """
+        Write the networkX graph {nxg} to a file.
+        Dumps the dot (graphviz) graph and converts it to a pdf.
+        """
+
+        # Check if graphviz is installed.
+        from shutil import which
+
+        return which("dot") is not None
+
+        import os
+
+        assert isinstance(nxg, nx.DiGraph)
+        assert isinstance(filename, str)
+
+        nxg.write_dot("{}.dot".format(filename))
+        os.system("dot -Tpdf {}.dot > {}.pdf".format(filename, filename))
+        LOGGER.info(f"Dot graph has been dumped into {filename}.")
+
+    @staticmethod
+    def write_json(nxg, filename="callgraph.json"):
+        """
+        Dumps the networkX graph {nxg} as a JSON into {filename}
+        """
+        assert isinstance(nxg, nx.DiGraph)
+
+        from networkx.readwrite import json_graph
+        import json
+
+        result = json_graph.node_link_data(nxg)
+        with open(filename, "w") as f:
+            json.dump(f, result)
+        LOGGER.info(f"JSON has been dumped into {filename}.")
+
+    @staticmethod
+    def to_json(nxg):
+        """
+        Return the networkX graph as JSON object.
+        """
+        assert isinstance(nxg, nx.DiGraph)
+
+        from networkx.readwrite import json_graph
+        import json
+
+        result = json_graph.node_link_data(nxg)
+        return json.dumps(result)
 
     # --------------------------------------------------------------------------
     @staticmethod
