@@ -15,7 +15,7 @@ jobs:
         - flake8 --exclude=examples
 
 install:
-  - pip install pandas matplotlib
+  # - pip install pandas matplotlib
   - pip install --upgrade -r requirements.txt
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then
         pip install --upgrade black flake8;
