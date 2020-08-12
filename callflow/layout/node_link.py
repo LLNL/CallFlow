@@ -12,11 +12,13 @@
 # ******************************************************************************
 # Library imports
 import networkx as nx
+import pandas as pd
 
 # CallFlow imports
 import hatchet as ht
 import callflow
 from callflow.timer import Timer
+
 
 class NodeLinkLayout:
     """
@@ -25,17 +27,16 @@ class NodeLinkLayout:
 
     # --------------------------------------------------------------------------
     @staticmethod
-    def compute(gf, graph_type='callgraph',
-                    node_types_to_include=['function']):
+    def compute(gf, graph_type="callgraph", node_types_to_include=["function"]):
 
         assert isinstance(gf, ht.GraphFrame)
         assert isinstance(graph_type, str)
         assert isinstance(node_types_to_include, list)
-        assert graph_type in ['cct', 'callgraph']
+        assert graph_type in ["cct", "callgraph"]
         assert all(isinstance(t, str) for t in node_types_to_include)
         assert gf.graph.is_tree()
 
-        print('Computing {} for graphframe with {} entries'.format(graph_type, '?'))
+        print("Computing {} for graphframe with {} entries".format(graph_type, "?"))
 
         nxg = nx.DiGraph()
         timer = Timer()
@@ -47,18 +48,18 @@ class NodeLinkLayout:
         # ----------------------------------------------------------------------
         def label(frame):
             assert isinstance(frame, ht.frame.Frame)
-            _type = frame['type']
+            _type = frame["type"]
             if _type == "function":
                 return frame["name"]
             elif _type in ["statement", "loop"]:
-                return '{}:{}'.format(frame["file"], frame["line"])
+                return "{}:{}".format(frame["file"], frame["line"])
             assert False
 
         def nodeid(node):
             assert isinstance(node, ht.node.Node)
             if node.frame["type"] not in node_types_to_include:
                 return None
-            if graph_type == 'cct':
+            if graph_type == "cct":
                 return node._hatchet_nid
             else:
                 return label(node.frame)
@@ -100,7 +101,9 @@ class NodeLinkLayout:
             if have_modules:
                 attr2add.append("module")
                 for c in callsites:
-                    module_map[c] = gf.dataframe.loc[gf.dataframe["name"] == c]["module"].unique()[0]
+                    module_map[c] = gf.dataframe.loc[gf.dataframe["name"] == c][
+                        "module"
+                    ].unique()[0]
 
             # compute data map
             datamap = NodeLinkLayout._get_node_attrs_from_df(
@@ -135,6 +138,7 @@ class NodeLinkLayout:
         assert isinstance(filename, str)
 
         from networkx.drawing.nx_agraph import write_dot
+
         write_dot(nxg, filename)
 
     # --------------------------------------------------------------------------
@@ -191,10 +195,12 @@ class CallFlowNodeLinkLayout:
     # TODO: delete this once the "new" get_node_attributes is testeed
     _COLUMNS = ["time (inc)", "time", "name", "module"]
 
-    def __init__(self, graphframe,
-                       filter_metric="",  # filter the CCT based on this metric (empty string: no filtering!)
-                       filter_count=50,   # filter to these many nodes
-                ):
+    def __init__(
+        self,
+        graphframe,
+        filter_metric="",  # filter the CCT based on this metric (empty string: no filtering!)
+        filter_count=50,  # filter to these many nodes
+    ):
 
         assert isinstance(graphframe, callflow.GraphFrame)
         assert isinstance(filter_count, int)
@@ -231,7 +237,9 @@ class CallFlowNodeLinkLayout:
             df = self.gf.filter_by_name(callsites)
 
         with self.timer.phase(f"Creating CCT."):
-            self.nxg = CallFlowNodeLinkLayout._create_nxg_from_paths(df["path"].tolist())
+            self.nxg = CallFlowNodeLinkLayout._create_nxg_from_paths(
+                df["path"].tolist()
+            )
 
         # Number of runs in the state.
         # TODO: handle this better.
@@ -249,7 +257,7 @@ class CallFlowNodeLinkLayout:
         with self.timer.phase(f"Find cycles"):
             self.nxg.cycles = CallFlowNodeLinkLayout._find_cycle(self.nxg)
 
-        #print(self.nxg.nodes())
+        # print(self.nxg.nodes())
 
     # --------------------------------------------------------------------------
     @staticmethod
@@ -290,48 +298,48 @@ class CallFlowNodeLinkLayout:
 
         return node_data_maps
 
-    # flake8: noqa: C901
-    def _add_node_attributes(self):
-         have_modules = "module" in list(self.gf.df.columns)
+    # # flake8: noqa: C901
+    # def _add_node_attributes(self):
+    #      have_modules = "module" in list(self.gf.df.columns)
 
-        # need to add these callsites (and their module map)
-        callsites2add = list(self.nxg.nodes())
-        module_map = {}
+    #     # need to add these callsites (and their module map)
+    #     callsites2add = list(self.nxg.nodes())
+    #     module_map = {}
 
-        # need to add these attributes to the nodes
-        attr2add = self.metrics + ["name"]
+    #     # need to add these attributes to the nodes
+    #     attr2add = self.metrics + ["name"]
 
-        if have_modules:
-            attr2add.append("module")
-            for c in callsites2add:
-                module_map[c] = self.gf.get_module_name(c)
+    #     if have_modules:
+    #         attr2add.append("module")
+    #         for c in callsites2add:
+    #             module_map[c] = self.gf.get_module_name(c)
 
-        # ----------------------------------------------------------------------
-        # compute data map
-        datamap = self._get_node_attrs_from_df(
-            self.gf.df, attr2add, callsites2add, module_map
-        )
-        for idx, key in enumerate(datamap):
-            nx.set_node_attributes(self.nxg, name=key, values=datamap[key])
+    #     # ----------------------------------------------------------------------
+    #     # compute data map
+    #     datamap = self._get_node_attrs_from_df(
+    #         self.gf.df, attr2add, callsites2add, module_map
+    #     )
+    #     for idx, key in enumerate(datamap):
+    #         nx.set_node_attributes(self.nxg, name=key, values=datamap[key])
 
-        # ----------------------------------------------------------------------
-        # compute map across data
-        for run in self.runs:
-            target_df = self.gf.df.loc[self.gf.df["dataset"] == run]
+    #     # ----------------------------------------------------------------------
+    #     # compute map across data
+    #     for run in self.runs:
+    #         target_df = self.gf.df.loc[self.gf.df["dataset"] == run]
 
-            if have_modules:
-                target_module_group_df = target_df.groupby(["module"])
-                valid_callsites = list(
-                    target_module_group_df["name"].unique().to_dict().keys()
-                )
-                callsites2add_run = [c for c in callsites2add if c in valid_callsites]
+    #         if have_modules:
+    #             target_module_group_df = target_df.groupby(["module"])
+    #             valid_callsites = list(
+    #                 target_module_group_df["name"].unique().to_dict().keys()
+    #             )
+    #             callsites2add_run = [c for c in callsites2add if c in valid_callsites]
 
-            datamap = self._get_node_attrs_from_df(
-                target_df, attr2add, callsites2add_run, module_map
-            )
-            nx.set_node_attributes(self.nxg, name=run, values=datamap)
+    #         datamap = self._get_node_attrs_from_df(
+    #             target_df, attr2add, callsites2add_run, module_map
+    #         )
+    #         nx.set_node_attributes(self.nxg, name=run, values=datamap)
 
-        # ----------------------------------------------------------------------
+    #     # ----------------------------------------------------------------------
 
     # --------------------------------------------------------------------------
     # TODO: delete this once the original behavior is tested!
@@ -422,7 +430,9 @@ class CallFlowNodeLinkLayout:
         for start_node in self.nxg.nbunch_iter(source):
             for edge in nx.edge_dfs(self.nxg, start_node, orientation):
 
-                tail, head = CallFlowNodeLinkLayout._tailhead(edge, is_directed, orientation)
+                tail, head = CallFlowNodeLinkLayout._tailhead(
+                    edge, is_directed, orientation
+                )
 
                 if edge not in edge_counter:
                     edge_counter[edge] = 0
@@ -476,7 +486,9 @@ class CallFlowNodeLinkLayout:
 
             for edge in nx.edge_dfs(G, start_node, orientation):
                 # Determine if this edge is a continuation of the active path.
-                tail, head = CallFlowNodeLinkLayout._tailhead(edge, is_directed, orientation)
+                tail, head = CallFlowNodeLinkLayout._tailhead(
+                    edge, is_directed, orientation
+                )
                 if head in explored:
                     # Then we've already explored it. No loop is possible.
                     continue
@@ -533,7 +545,9 @@ class CallFlowNodeLinkLayout:
         # So we need to remove from the beginning edges that are not relevant.
         i = 0
         for i, edge in enumerate(cycle):
-            tail, head = CallFlowNodeLinkLayout._tailhead(edge, is_directed, orientation)
+            tail, head = CallFlowNodeLinkLayout._tailhead(
+                edge, is_directed, orientation
+            )
             if tail == final_node:
                 break
         return cycle[i:]

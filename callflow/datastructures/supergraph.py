@@ -48,7 +48,7 @@ class SuperGraph(object):
         self.tag = tag
         self.mode = mode
 
-        if 'no_create' in props.keys():
+        if "no_create" in props.keys():
             return
 
         self.create_gf()

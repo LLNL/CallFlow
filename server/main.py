@@ -52,7 +52,7 @@ class CallFlowServer:
 
         ndatasets = len(self.config.datasets)
         assert ndatasets > 0
-        self.callflow = CallFlow(config=self.config, ensemble=ndatasets > 1)
+        self.callflow = callflow.CallFlow(config=self.config, ensemble=ndatasets > 1)
 
         if self.process:
             self.callflow.process()

@@ -195,9 +195,11 @@ def path_list_from_frames(frames):
         paths.append(path)
     return path
 
+
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 import pandas as pd
+
 
 def df_get_top_by_attr(df, count, sort_attr):
     assert isinstance(df, pd.DataFrame)
@@ -213,5 +215,6 @@ def df_filter_by_attr(df, attr, values):
     assert isinstance(df, pd.DataFrame)
     assert isinstance(attr, str) and isinstance(values, list)
     return df[df[attr].isin(values)]
+
 
 # ------------------------------------------------------------------------------
