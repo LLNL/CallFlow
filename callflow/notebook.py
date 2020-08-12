@@ -2,8 +2,27 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+
+# NOTE: The manager.py adopts Tensorboard's philosophy of launching applications
+# through the IPython interface.
+# The code can be found at https://github.com/tensorflow/tensorboard/blob/master/tensorboard/notebook.py
+
 import shlex
 import json
+import random
+
+try:
+    import html
+
+    html_escape = html.escape
+    del html
+except ImportError:
+    import cgi
+
+    html_escape = cgi.escape
+    del cgi
+
+from callflow import manager
 
 
 def _load_ipython_extension(ipython):
@@ -56,7 +75,11 @@ def start(args_string):
             handle.update(IPython.display.Pretty(message))
 
     parsed_args = shlex.split(args_string, comments=True, posix=True)
-    print(parsed_args)
+    start_result = manager.start(parsed_args)
+    IPython.display.display(
+        IPython.display.Pretty(start_result), display_id=True,
+    )
+    print(start_result)
 
 
 def _display_ipython(port, height, display_handle):
