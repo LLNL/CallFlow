@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 import * as d3 from "d3";
+import * as utils from "../utils";
 
 export default {
 	name: "Box",
@@ -15,7 +16,8 @@ export default {
 		paddingTop: 10,
 		textOffset: 40,
 		fontSize: 10,
-		debug: false
+		debug: false,
+		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
 	}),
 
 	methods: {
@@ -40,6 +42,7 @@ export default {
 
 			this.targetBox();
 			this.centerLine();
+			this.axis();
 			this.$parent.$refs.ToolTip.init("boxplot-" + callsite.id);
 		},
 
@@ -108,6 +111,53 @@ export default {
 				})
 				.style("stroke-width", "1.5")
 				.style("z-index", 10);
+		},
+
+		addxAxisLabel() {
+			let max_value = this.xScale.domain()[1];
+			this.x_max_exponent = utils.formatExponent(max_value);
+			let exponent_string = this.superscript[this.x_max_exponent];
+			let label = "(e+" + this.x_max_exponent + ") " + "Exclusive Runtime (" + "\u03BCs)";
+			this.g.append("text")
+				.attr("class", "axis-label")
+				.attr("x", this.$parent.boxWidth - 20)
+				.attr("y", this.$parent.centerLinePosition * 3.8)
+				.style("font-size", "12px")
+				.style("text-anchor", "end")
+				.text(label);
+		},
+
+		axis() {
+			this.addxAxisLabel();
+			const xAxis = d3.axisBottom(this.xScale)
+				.ticks(5)
+				.tickFormat((d, i) => {
+					let runtime = utils.formatRuntimeWithExponent(d, 1);
+					return `${runtime[0]}`;
+				});
+
+			const xAxisLine = this.g.append("g")
+				.attrs({
+					"class": "axis",
+					"id": "xAxis",
+					"transform": "translate(" + 0 + "," + 2.5 * this.$parent.centerLinePosition + ")"
+				})
+				.call(xAxis);
+
+			xAxisLine.selectAll("path")
+				.style("fill", "none")
+				.style("stroke", "black")
+				.style("stroke-width", "1px");
+
+			xAxisLine.selectAll("line")
+				.style("fill", "none")
+				.style("stroke", "black")
+				.style("stroke-width", "1px");
+
+			xAxisLine.selectAll("text")
+				.style("font-size", "12px")
+				.style("font-family", "sans-serif")
+				.style("font-weight", "lighter");
 		},
 
 		clear() {

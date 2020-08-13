@@ -38,7 +38,7 @@
     </v-layout>
 
     <span class="component-data">
-        <p class="subtitle-2"> {{numberOfIntersectionCallsites}} call sites.</p>
+        <p class="subtitle-2"> {{numberOfcallsites}} call sites.</p>
     </span>
     <v-container class="callsite-information-node" v-for="callsite in callsites" :id="getID(callsite.id)">
         <v-layout row wrap>
@@ -55,7 +55,7 @@
                             </v-flex>
                         </template>
                         <span>
-                            Callsite depth:{{callsite.component_level}}
+                            Callsite depth:{{formatNumberOfHops(callsite.component_level)}}
                         </span> 
                     </v-tooltip>
                 </v-card>
@@ -73,20 +73,25 @@
             </v-flex>
         </v-layout>
 
-        <v-layout row wrap>
+        <v-layout row wrap class="information">
             <div class="subtitle-2">
                 Module: {{formatModule(callsite.module)}}
             </div>
         </v-layout>
-        <v-layout row wrap>
+        <v-layout row wrap class="information">
             <div class="subtitle-2">
-                Inc. runtime : {{targetMeans[callsite.name]}}
+                Mean : {{mean[callsite.name]}}
             </div>
             <v-spacer></v-spacer>
         </v-layout>
-        <v-layout row wrap>
+        <v-layout row wrap class="information">
             <div class="subtitle-2">
-                Exc. runtime : {{targetMeans[callsite.name]}}
+                Variance : {{variance[callsite.name]}}
+            </div>
+        </v-layout>
+        <v-layout row wrap class="information">
+            <div class="subtitle-2">
+                Std. deviation : {{stdDeviation[callsite.name]}}
             </div>
         </v-layout>
 

@@ -54,8 +54,7 @@ export default {
 		selectClassName: {},
 		selectedOutlierRanks: {},
 		selectedOutlierDatasets: {},
-		meanIncTime: {},
-		meanExcTime: {},
+		mean: {},
 		variance: {},
 		stdDeviation: {}
 	}),
@@ -91,7 +90,6 @@ export default {
 	methods: {
 		/**
 		 * Set up the view.
-		 * We only have to do this once.
 		 */
 		init() {
 			if (this.firstRender) {
@@ -106,20 +104,14 @@ export default {
 			this.visualize()
 		},
 
+		/**
+		 * Visualizes the callsite information in the view.
+		 * Three things are performed.
+		 */
 		visualize() {
-			this.borderColorByMetric()
 			this.setStates();
-
-			// TODO: Generalize this for all the possible metrics.
-			for (let callsite in this.callsites) {
-				let data = this.callsites[callsite][this.$store.selectedMetric]
-				this.meanIncTime[callsite] = utils.formatRuntimeWithoutUnits(data["mean_time"]);
-				this.variance[callsite] = utils.formatRuntimeWithoutUnits(data["variance"]);
-				this.stdDeviation[callsite] = utils.formatRuntimeWithoutUnits(data["std_deviation"]);
-
-				this.selectClassName[callsite] = "unselect-callsite";
-				EventHandler.$emit("show_mpi_boxplot", this.callsites[callsite]);
-			}
+			this.borderColorByMetric();
+			this.boxplotByMetric();
 		},
 
 		/**
@@ -141,11 +133,15 @@ export default {
 			this.selectedCallsite = this.$store.selectedCallsite;
 			this.selectedMetric = this.$store.selectedMetric;
 			this.targetColor = this.$store.runtimeColor.textColor;
+
+
+			// this.callsites store the callsites in the current context. 
+			// this.numberOfCallsites is used to show the number of callsites in the view. 
 			this.callsites = this.$store.callsites[this.$store.selectedTargetDataset];
-			this.numberOfIntersectionCallsites = Object.keys(this.callsites).length;
+			this.numberOfcallsites = Object.keys(this.callsites).length;
 
 			// Sort the callsites.
-			this.intersectionCallsites = this.sortByAttribute(this.callsites, this.$store.selectedMetric);
+			this.callsites = this.sortByAttribute(this.callsites, this.$store.selectedMetric);
 		},
 
 		/**
@@ -153,15 +149,32 @@ export default {
 		 */
 		borderColorByMetric() {
 			for (let callsite in this.callsites) {
-				let data = this.callsites[callsite][this.$store.selectedMetric];
-				let id = "callsite-information-node" + data.id;
-				document.getElementById(id).style.borderColor = this.$store.color.getColorByValue(data["mean_time"]);
+				let data = this.callsites[callsite];
+				let id = "#callsite-information-node-" + data.id;
+				console.log( this.$store.runtimeColor.getColorByValue(data[this.$store.selectedMetric]["mean_time"]))
+				d3.select(id).style("stroke", this.$store.runtimeColor.getColorByValue(data[this.$store.selectedMetric]["mean_time"]));
+			}
+		},
+
+		/**
+		 * Draws a boxplot for the callsites. 
+		 */
+		boxplotByMetric() {
+			// TODO: Generalize this for all the possible metrics.
+			for (let callsite in this.callsites) {
+				let data = this.callsites[callsite][this.selectedMetric];
+				this.mean[callsite] = utils.formatRuntimeWithoutUnits(data["mean_time"]);
+				this.variance[callsite] = utils.formatRuntimeWithoutUnits(data["variance"]);
+				this.stdDeviation[callsite] = utils.formatRuntimeWithoutUnits(data["std_deviation"]);
+
+				this.selectClassName[callsite] = "unselect-callsite";
+				EventHandler.$emit("show_mpi_boxplot", this.callsites[callsite]);
 			}
 		},
 
 		/**
 		 * Sort the callsite ordering based on the attribute.
-		* // TODO: Generalize this to any metric.
+		 * 
 		 * @param {Array} callsites - Callsites as a list.
 		 * @param {String} attribute - Attribute to sort by.
 		 */
@@ -218,19 +231,37 @@ export default {
 			console.debug("Selected callsites: ", this.revealCallsites);
 		},
 
+		/**
+		 * 
+		 * @param {*} val 
+		 */
 		switchIsSelectedCallsite(val) {
 			this.isCallsiteSelected = val;
 		},
 
+		/**
+		 * 
+		 * @param {*} val 
+		 */
 		switchIsSelectedModule(val) {
 			this.isModuleSelected = val;
 		},
 
+		/**
+		 * 
+		 * @param {*} callsite 
+		 */
 		selectedClassName(callsite) {
 			return this.selectClassName[callsite];
 		},
 
 		/**
+		 *
+		 */
+		/**
+		 * 
+		 * @param {*} str 
+		 * @param {*} n 
 		 * Formatting the text in view. 
 		 * TODO: move all this to utils. We should be able to 
 		 */
@@ -239,6 +270,10 @@ export default {
 			return (str.length > n) ? str.substr(0, n - 1) + "..." : str;
 		},
 
+		/**
+		 * 
+		 * @param {*} module 
+		 */
 		formatModule(module) {
 			if (module.length < 10) {
 				return module;
@@ -246,6 +281,10 @@ export default {
 			return this.trunc(module, 10);
 		},
 
+		/**
+		 * 
+		 * @param {*} name 
+		 */
 		formatName(name) {
 			if (name.length < 25) {
 				return name;
@@ -254,6 +293,10 @@ export default {
 			return ret;
 		},
 
+		/**
+		 * 
+		 * @param {*} name 
+		 */
 		formatNumberOfHops(name) {
 			if (name == undefined || name[0] == undefined) {
 				return "-";
@@ -261,22 +304,37 @@ export default {
 			return name[0] - 1;
 		},
 
+		/**
+		 * 
+		 * @param {*} val 
+		 */
 		formatRuntime(val) {
 			let format = d3.format(".2");
 			let ret = format(val) + " \u03BCs";
 			return ret;
 		},
 
+		/**
+		 * 
+		 */
 		clear() {
-			for(let callsite in this.callsites){ 
+			for (let callsite in this.callsites) {
 				EventHandler.$emit("hide_mpi_boxplot", this.callsites[callsite]);
 			}
 		},
 
+		/**
+		 * 
+		 * @param {*} idx 
+		 */
 		dataset(idx) {
 			return this.labels[idx];
 		},
 
+		/**
+		 * 
+		 * @param {*} event 
+		 */
 		clickCallsite(event) {
 			event.stopPropagation();
 			let callsite = event.currentTarget.id;
@@ -288,6 +346,10 @@ export default {
 			EventHandler.$emit("reveal_callsite");
 		},
 
+		/**
+		 * 
+		 * @param {*} event 
+		 */
 		showEntryFunctions(event) {
 			event.stopPropagation();
 			if (this.isEntryFunctionSelected == "unselect-callsite") {
@@ -300,6 +362,10 @@ export default {
 			this.showSplitButton = "true";
 		},
 
+		/**
+		 * 
+		 * @param {*} event 
+		 */
 		showExitFunctions(event) {
 			event.stopPropagation();
 			if (this.isCalleeSelected == "unselect-callsite") {
@@ -320,7 +386,7 @@ export default {
 		 */
 		selectModule(module) {
 			let callsites_in_module = this.$store.moduleCallsiteMap[this.$store.selectedTargetDataset][module];
-			
+
 			this.numberOfCallsites = Object.keys(callsites_in_module).length;
 
 			// Clear up the current callsites map.
@@ -336,10 +402,13 @@ export default {
 					this.callsites[callsite] = this.$store.callsites[this.$store.selectedTargetDataset][callsite];
 				}
 				console.log(this.callsites[callsite].id)
-				d3.select('#callsite-information-' + this.callsites[callsite].id).style("display","block");
+				d3.select('#callsite-information-' + this.callsites[callsite].id).style("display", "block");
 			});
 		},
 
+		/**
+		 * 
+		 */
 		selectCallsitesByModule(thismodule) {
 			this.selectedModule = thismodule;
 			this.selectedCallsite = "";
@@ -363,6 +432,10 @@ export default {
 			}
 		},
 
+		/**
+		 * 
+		 * @param {String} callsite 
+		 */
 		getSelectedOutlierRanks(callsite) {
 			return this.selectedOutlierRanks[callsite];
 		},

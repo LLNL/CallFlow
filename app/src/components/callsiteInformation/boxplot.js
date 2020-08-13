@@ -45,7 +45,7 @@ export default {
 		containerHeight: 150,
 		containerWidth: 0,
 		parentID: "",
-		informationHeight: 70,
+		informationHeight: 80,
 		outlierHeight: 20,
 		rectHeight: 0,
 		centerLinePosition: 0,
@@ -114,7 +114,7 @@ export default {
 		},
 
 		/**
-		 * 
+		 * Visualize the boxplot for the callsites.
 		 * @param {*} callsite 
 		 */
 		visualize(callsite) {
@@ -124,7 +124,7 @@ export default {
 		},
 
 		/**
-		 * 
+		 * Clear the components.
 		 */
 		clear() {
 			this.$refs.Box.clear();
