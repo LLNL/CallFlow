@@ -20,14 +20,10 @@ export default {
 		BoxPlot,
 	},
 	data: () => ({
-		selected: {},
 		id: "callsite-information-overview",
-		people: [],
 		message: "Call site Information",
 		callsites: [],
-		dataReady: false,
 		numberOfIntersectionCallsites: 0,
-		numberOfDifferenceCallsites: 0,
 		firstRender: true,
 		padding: { top: 0, right: 10, bottom: 0, left: 10 },
 		textOffset: 25,
@@ -36,26 +32,19 @@ export default {
 		duration: 300,
 		iqrFactor: 0.15,
 		outlierRadius: 4,
-		targetOutlierList: {},
 		outlierList: {},
 		callsiteIDMap: {},
 		settings: [
 			{ "title": "Sort by Inclusive runtime" },
 			{ "title": "Sort by Exclusive Runtime" }],
-		compareMode: false,
 		selectedModule: "",
 		selectedCallsite: "",
-		informationHeight: 70,
+		informationHeight: 0,
 		revealCallsites: [],
 		selectedMetric: "",
 		targetMeans: {},
 		targetVariance: {},
 		targetStandardDeviation: {},
-		ensembleMeans: {},
-		ensembleVariance: {},
-		ensembleStandardDeviation: {},
-		targetColor: "",
-		differenceCallsites: {},
 		intersectionCallsites: {},
 		isModuleSelected: false,
 		isCallsiteSelected: false,
@@ -65,9 +54,12 @@ export default {
 		selectClassName: {},
 		selectedOutlierRanks: {},
 		selectedOutlierDatasets: {},
-		showKNCCallsite: {},
-		showuKNCCallsite: {},
+		meanIncTime: {},
+		meanExcTime: {},
+		variance: {},
+		stdDeviation: {}
 	}),
+
 	mounted() {
 		let self = this;
 		EventHandler.$on("highlight_datasets", (datasets) => {
@@ -95,12 +87,15 @@ export default {
 
 		EventHandler.$on("callsite_information_sort", (data) => {
 			let attribute = self.$store.selectedRuntimeSortBy;
-			self.differenceCallsites = self.sortByAttribute(self.knc["difference"], attribute);
 			self.intersectionCallsites = self.sortByAttribute(self.knc["intersection"], attribute);
 		});
 	},
 
 	methods: {
+		/**
+		 * Set up the view.
+		 * We only have to do this once.
+		 */
 		init() {
 			if (this.firstRender) {
 				this.width = document.getElementById(this.id).clientWidth;
@@ -108,76 +103,98 @@ export default {
 				this.height = heightRatio * this.$store.viewHeight;
 				this.boxplotWidth = this.width - this.padding.left - this.padding.right;
 				document.getElementById(this.id).style.maxHeight = this.height + "px";
+				this.informationHeight = 50;
 				this.firstRender = false;
 			}
 
-			this.callsites = this.$store.callsites["ensemble"];
-			this.targetCallsites = this.$store.callsites[this.$store.selectedTargetDataset];
-
-			this.knc = this.KNC();
-
-			this.numberOfDifferenceCallsites = Object.keys(this.knc["difference"]).length;
-			this.numberOfIntersectionCallsites = Object.keys(this.knc["intersection"]).length;
-
-			this.differenceCallsites = this.sortByAttribute(this.knc["difference"], this.$store.selectedMetric);
-			this.intersectionCallsites = this.sortByAttribute(this.knc["intersection"], this.$store.selectedMetric);
-
-			this.intersectionCallsites = this.hideAllCallsites(this.intersectionCallsites);
-			this.differenceCallsites = this.hideAllCallsites(this.differenceCallsites);
-
-			this.selectedModule = this.$store.selectedModule;
-			this.selectedMode = this.$store.selectedMode;
-			this.selectedCallsite = this.$store.selectedCallsite;
-			this.selectedMetric = this.$store.selectedMetric;
-			if (this.$store.selectedMetric == "Ensemble") {
-				this.ensembleColor = d3.rgb(this.$store.distributionColor.ensemble).darker(1);
-				this.targetColor = d3.rgb(this.$store.distributionColor.target).darker(1);
-			}
-			else {
-				// There is actually no target for single run. But we just set the value. 
-				this.ensembleColor = this.$store.runtimeColor.textColor;
-				this.targetColor = this.$store.runtimeColor.textColor;
-			}
-
-			for (let callsite in this.callsites) {
-				if (this.targetCallsites[callsite] != undefined) {
-					this.targetMeans[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]["mean_time"]);
-					this.targetVariance[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]["variance"]);
-					this.targetStandardDeviation[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]["std_deviation"]);
-
-					this.ensembleMeans[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]["mean_time"]);
-					this.ensembleVariance[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]["variance"]);
-					this.ensembleStandardDeviation[callsite] = utils.formatRuntimeWithoutUnits(this.callsites[callsite][this.$store.selectedMetric]["std_deviation"]);
-				}
-				else {
-					this.targetMeans[callsite] = 0;
-					this.targetVariance[callsite] = 0;
-					this.targetStandardDeviation[callsite] = 0;
-					this.ensembleMeans[callsite] = 0;
-					this.ensembleVariance[callsite] = 0;
-					this.ensembleStandardDeviation[callsite] = 0;
-				}
-				this.selectClassName[callsite] = "unselect-callsite";
-			}
-
+			this.setStates();
 			// this.borderColorByMetric()
+			this.boxplots()
 		},
 
-		borderColorByMetric() {
-			for (let callsite in this.intersectionCallsites) {
-				let callsite_data = this.intersectionCallsites[callsite];
-				let data = callsite_data[this.$store.selectedMetric]["mean_time"];
-				let id = "callsite-information-" + callsite_data.id;
-				document.getElementById(id).style.borderColor = this.$store.color.getColorByValue(data);
-			}
-		},
-
-		// create unique ID for each callsite.
+		/**
+		 * Create ID for each callsite's div.
+		 * @param {*} callsiteID 
+		 */
 		getID(callsiteID) {
 			return "callsite-information-" + callsiteID;
 		},
 
-		// Code to select the callsite by the component-level button
+		/**
+		 * Set the states for the variables at the UI level.
+		 * Similar to how React.useState().
+		 */
+		setStates() {
+			// Set from Application store.
+			this.selectedModule = this.$store.selectedModule;
+			this.selectedMode = this.$store.selectedMode;
+			this.selectedCallsite = this.$store.selectedCallsite;
+			this.selectedMetric = this.$store.selectedMetric;
+			this.targetColor = this.$store.runtimeColor.textColor;
+			this.callsites = this.$store.callsites[this.$store.selectedTargetDataset];
+			console.log(this.callsites)
+			this.numberOfIntersectionCallsites = Object.keys(this.callsites).length;
+
+			// Sort the callsites.
+			this.intersectionCallsites = this.sortByAttribute(this.callsites, this.$store.selectedMetric);
+			
+			// TODO: Generalize this for all the possible metrics.
+			for (let callsite in this.callsites) {
+				let data = this.callsites[callsite][this.$store.selectedMetric]
+				this.meanIncTime[callsite] = utils.formatRuntimeWithoutUnits(data["mean_time"]);
+				this.variance[callsite] = utils.formatRuntimeWithoutUnits(data["variance"]);
+				this.stdDeviation[callsite] = utils.formatRuntimeWithoutUnits(data["std_deviation"]);
+
+				this.selectClassName[callsite] = "unselect-callsite";
+			}
+		},
+
+		/**
+		 * Color the border of the callsite information block by a metric.
+		 */
+		borderColorByMetric() {
+			for (let callsite in this.callsites) {
+				let data = this.callsites[callsite][this.$store.selectedMetric];
+				let id = "callsite-information-" + callsite_data.id;
+				document.getElementById(id).style.borderColor = this.$store.color.getColorByValue(data["mean_time"]);
+			}
+		},
+
+		/**
+		 * Sort the callsite ordering based on the attribute.
+		* // TODO: Generalize this to any metric.
+		 * @param {Array} callsites - Callsites as a list.
+		 * @param {String} attribute - Attribute to sort by.
+		 */
+		sortByAttribute(callsites, attribute) {
+			let items = Object.keys(callsites).map(function (key) {
+				return [key, callsites[key]];
+			});
+
+			// Sort the array based on the second element
+			if (attribute == "Exclusive" || attribute == "Inclusive") {
+				items = items.sort(function (first, second) {
+					return second[1][attribute]["mean_time"] - first[1][attribute]["mean_time"];
+				});
+			}
+			else if (attribute == "Standard Deviation") {
+				items.sort(function (first, second) {
+					return second[1][self.$store.selectedMetric]["std_deviation"] - first[1][self.$store.selectedMetric]["std_deviation"];
+				});
+			}
+
+			callsites = items.reduce(function (map, obj) {
+				map[obj[0]] = obj[1];
+				return map;
+			}, {});
+
+			return callsites;
+		},
+
+		/**
+		 * Selection feature.
+		 * Code to select the callsite by the component-level button
+		 */
 		changeSelectedClassName() {
 			event.stopPropagation();
 			let callsite = event.currentTarget.id;
@@ -214,8 +231,15 @@ export default {
 			return this.selectClassName[callsite];
 		},
 
+		/**
+		 * Formatting the text in view. 
+		 * TODO: move all this to utils. We should be able to 
+		 */
+		trunc(str, n) {
+			str = str.replace(/<unknown procedure>/g, "proc ");
+			return (str.length > n) ? str.substr(0, n - 1) + "..." : str;
+		},
 
-		// Formatting for the html view
 		formatModule(module) {
 			if (module.length < 10) {
 				return module;
@@ -224,10 +248,10 @@ export default {
 		},
 
 		formatName(name) {
-			if (name.length < 15) {
+			if (name.length < 25) {
 				return name;
 			}
-			let ret = utils.truncNames(name, 15);
+			let ret = utils.truncNames(name, 25);
 			return ret;
 		},
 
@@ -244,45 +268,36 @@ export default {
 			return ret;
 		},
 
-		// Find the known node correspondence. 
-		KNC() {
-			let callsites = new Set(Object.keys(this.$store.callsites["ensemble"]));
-			let targetCallsites = new Set(Object.keys(this.$store.callsites[this.$store.selectedTargetDataset]));
-			let difference = new Set(
-				[...callsites].filter(x => !targetCallsites.has(x)));
+		// // Show/hide the boxplots
+		// showAllCallsites(callsites) {
+		// 	for (let i = 0; i < callsites.length; i++) {
+		// 		callsites[i].reveal = true;
+		// 	}
+		// 	return callsites;
+		// },
 
-			let intersection = new Set(
-				[...callsites].filter(x => targetCallsites.has(x)));
+		// hideAllCallsites(callsites) {
+		// 	for (let callsite in callsites) {
+		// 		callsites[callsite].reveal = false;
+		// 	}
+		// 	return callsites;
+		// },
 
-			return {
-				"difference": Array.from(difference),
-				"intersection": Array.from(intersection)
-			};
-		},
-
-		// Show/hide the boxplots
-		showAllCallsites(callsites) {
-			for (let i = 0; i < callsites.length; i++) {
-				callsites[i].reveal = true;
-			}
-		},
-
-		hideAllCallsites(callsites) {
-			for (let callsite in callsites) {
-				callsites[callsite].reveal = false;
-			}
-			return callsites;
-		},
-
-		// Reveal the boxplots on request. 
-		showIntersectionBoxPlot(callsite) {
+		/**
+		 * Interaction: Show the callsite's boxplot.   
+		 * @param {String} callsite 
+		 */
+		showBoxplot(callsite) {
 			event.stopPropagation();
 			let callsite_name = event.currentTarget.id;
-			this.intersectionCallsites[callsite_name].reveal = true;
 			EventHandler.$emit("show_mpi_boxplot", this.intersectionCallsites[callsite_name]);
 		},
 
-		closeIntersectionBoxPlot(callsite) {
+		/**
+		 * Interaction: Hide the callsite's boxplot.
+		 * @param {String} callsite 
+		 */
+		hideBoxPlot(callsite) {
 			event.stopPropagation();
 			let callsite_name = event.currentTarget.id;
 			EventHandler.$emit("hide_mpi_boxplot", this.intersectionCallsites[callsite_name]);
@@ -331,11 +346,6 @@ export default {
 			this.showSplitButton = "true";
 		},
 
-		trunc(str, n) {
-			str = str.replace(/<unknown procedure>/g, "proc ");
-			return (str.length > n) ? str.substr(0, n - 1) + "..." : str;
-		},
-
 		selectModule(thismodule) {
 			let module_callsites = this.$store.moduleCallsiteMap["ensemble"][thismodule];
 			this.differenceCallsites = {};
@@ -378,43 +388,13 @@ export default {
 			}
 		},
 
-		// Sort the callsite information view by the attribute. 
-		sortByAttribute(callsites, attribute) {
-			// Create items array
-			let self = this;
-			let items = callsites.map(function (key) {
-				return [key, self.callsites[key]];
-			});
-			// Sort the array based on the second element
-			if (attribute == "Exclusive" || attribute == "Inclusive") {
-				items = items.sort(function (first, second) {
-					return second[1][attribute]["mean_time"] - first[1][attribute]["mean_time"];
-				});
-			}
-			else if (attribute == "Standard Deviation") {
-				items.sort(function (first, second) {
-					return second[1][self.$store.selectedMetric]["std_deviation"] - first[1][self.$store.selectedMetric]["std_deviation"];
-				});
-			}
-
-			callsites = items.reduce(function (map, obj) {
-				map[obj[0]] = obj[1];
-				return map;
-			}, {});
-
-			return callsites;
-		},
-
-		// Outlier interactions
-		getSelectedOutlierDatasets(callsite) {
-			return this.selectedOutlierDatasets[callsite];
-		},
-
 		getSelectedOutlierRanks(callsite) {
 			return this.selectedOutlierRanks[callsite];
 		},
 
-		// Split interactions
+		/**
+		 * Interaction: Graph splitting.
+		*/
 		split() {
 			if (this.isEntryFunctionSelected == "select-callsite") {
 				this.$socket.emit("split_by_entry_callsites", {

@@ -223,10 +223,10 @@ export default {
 		},
 
 		formatName(name) {
-			if (name.length < 15) {
+			if (name.length < 25) {
 				return name;
 			}
-			let ret = utils.truncNames(name, 15);
+			let ret = utils.truncNames(name, 25);
 			return ret;
 		},
 
