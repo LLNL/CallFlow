@@ -86,7 +86,7 @@ export default {
 
 	methods: {
 		/**
-		 * 
+		 * Init function, Sets up the width, height and etc.
 		 */
 		init() {
 			this.containerHeight = 150;

@@ -23,6 +23,10 @@ export default {
 	}),
 
 	methods: {
+		/**
+		 * 
+		 * @param {*} id 
+		 */
 		init(id) {
 			this.id = id;
 			this.toolTipDiv = d3.select("#" + id);
@@ -31,6 +35,10 @@ export default {
 			this.halfHeight = document.getElementById(this.id).clientHeight / 2;
 		},
 
+		/**
+		 * 
+		 * @param {*} text 
+		 */
 		addText(text) {
 			this.toolTipText = this.toolTipDiv
 				.append("text")
@@ -55,16 +63,27 @@ export default {
 			this.textCount += 1;
 		},
 
+		/**
+		 * 
+		 */
 		quartiles() {
 			this.addText("Q1: " + utils.formatRuntimeWithUnits(this.data.q1));
 			// this.addText('Q2: ' + utils.formatRuntimeWithUnits(this.data.q2))
 			this.addText("Q3: " + utils.formatRuntimeWithUnits(this.data.q3));
 		},
 
+		/**
+		 * 
+		 */
 		outliers() {
 			this.addText(this.data.count + " outliers");
 		},
 
+		/**
+		 * 
+		 * @param {*} widthCount 
+		 * @param {*} heightCount 
+		 */
 		drawRect(widthCount, heightCount) {
 			this.clear();
 			this.width = widthCount * this.fontSize;
@@ -99,23 +118,29 @@ export default {
 
 		},
 
+		/**
+		 * 
+		 * @param {*} data 
+		 */
 		renderQ(data) {
 			this.data = data;
 			this.drawRect(13, 4);
 			this.quartiles();
 		},
 
+		/**
+		 * 
+		 * @param {*} data 
+		 */
 		renderOutliers(data) {
 			this.data = data;
 			this.drawRect(10, 4);
 			this.outliers();
 		},
-
-		trunc(str, n) {
-			str = str.replace(/<unknown procedure>/g, "proc ");
-			return (str.length > n) ? str.substr(0, n - 1) + "..." : str;
-		},
-
+		
+		/**
+		 * 
+		 */
 		clear() {
 			this.textCount = 0;
 			d3.selectAll(".toolTipContent").remove();

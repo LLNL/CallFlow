@@ -23,7 +23,7 @@ export default {
 		id: "callsite-information-overview",
 		message: "Call site Information",
 		callsites: [],
-		numberOfIntersectionCallsites: 0,
+		numberOfcallsites: 0,
 		firstRender: true,
 		padding: { top: 0, right: 10, bottom: 0, left: 10 },
 		textOffset: 25,
@@ -61,29 +61,20 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("highlight_datasets", (datasets) => {
-			console.log("[Interaction] Highlighting the datasets :", datasets);
-			self.highlight(datasets);
-		});
-
-		EventHandler.$on("update_auxiliary_sortBy", (sortBy) => {
-			self.updateSortBy(sortBy);
-		});
-
+		
+		/**
+		 * Event handler when a user selects a supernode.
+		 */
 		EventHandler.$on("select_module", (data) => {
 			self.selectModule(data["module"]);
 		});
 
-		EventHandler.$on("highlight_dataset", (data) => {
-			let dataset = data["dataset"];
-			if (self.$store.showTarget) {
-				self.highlightCallsitesByDataset(dataset);
-			}
-		});
-
+		/**
+		 * Event handler for sorting the callsites by a metric.
+		 */
 		EventHandler.$on("callsite_information_sort", (data) => {
 			let attribute = self.$store.selectedRuntimeSortBy;
-			self.intersectionCallsites = self.sortByAttribute(self.knc["intersection"], attribute);
+			self.callsites = self.sortByAttribute(self.callsites, attribute);
 		});
 	},
 
@@ -151,7 +142,6 @@ export default {
 			for (let callsite in this.callsites) {
 				let data = this.callsites[callsite];
 				let id = "#callsite-information-node-" + data.id;
-				console.log( this.$store.runtimeColor.getColorByValue(data[this.$store.selectedMetric]["mean_time"]))
 				d3.select(id).style("stroke", this.$store.runtimeColor.getColorByValue(data[this.$store.selectedMetric]["mean_time"]));
 			}
 		},
@@ -401,7 +391,6 @@ export default {
 				if (callsites_in_module.indexOf(callsite) > -1) {
 					this.callsites[callsite] = this.$store.callsites[this.$store.selectedTargetDataset][callsite];
 				}
-				console.log(this.callsites[callsite].id)
 				d3.select('#callsite-information-' + this.callsites[callsite].id).style("display", "block");
 			});
 		},
