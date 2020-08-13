@@ -206,8 +206,17 @@ export default {
 		},
 
 		click(node) {
-			let nodeSVG = this.containerG.select("#callsite-" + node.client_idx);
+			event.stopPropagation();
 
+			// Set the data.
+			this.$store.selectedNode = node;
+			this.$store.selectedModule = node.module;
+			this.$store.selectedName = node.name;
+
+			//
+			const nodeSVG = this.containerG.select("#callsite-" + node.client_idx);
+
+			// Make appropriate event requests (Single and Ensemble).
 			if (this.$store.selectedMode == "Ensemble") {
 				if (!this.drawGuidesMap[node.id]) {
 					this.$refs.Guides.visualize(node, "permanent", nodeSVG);
@@ -240,8 +249,6 @@ export default {
 					datasets: this.$store.selectedDatasets,
 					sortBy: this.$store.auxiliarySortBy,
 				});
-
-
 			}
 			else if (this.$store.selectedMode == "Single") {
 				EventHandler.$emit("single_histogram", {
@@ -259,10 +266,6 @@ export default {
 			EventHandler.$emit("select_module", {
 				module: this.$store.selectedModule,
 			});
-
-			this.$store.selectedNode = node;
-			this.$store.selectedModule = node.module;
-			this.$store.selectedName = node.name;
 		},
 
 		mouseover(node) {

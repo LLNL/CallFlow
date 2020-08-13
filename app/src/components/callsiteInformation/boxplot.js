@@ -67,18 +67,17 @@ export default {
 			self.init();
 		});
 
-		EventHandler.$on("show_mpi_boxplot", (callsite) => {
+		EventHandler.$on("show_mpi_boxplot", (data) => {
 			let thisid = self.id.split("-")[1] + "-" + self.id.split("-")[2];
-			if (callsite.id == thisid) {
-				console.log("Showing boxpliot of ", callsite);
-				self.visualize(callsite);
+			if (data.id == thisid) {
+				console.log("Showing boxpliot of ", data);
+				self.init(data);
 			}
 		});
 
-		EventHandler.$on("hide_mpi_boxplot", (callsite) => {
-			self.clear();
+		EventHandler.$on("hide_mpi_boxplot", (data) => {
+			self.clear(data);
 		});
-
 	},
 
 	created() {
@@ -86,13 +85,58 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * 
+		 */
 		init() {
-			this.containerHeight = 0;
+			this.containerHeight = 150;
+			this.containerWidth = this.$parent.boxplotWidth - 2 * this.padding.right - 1 * this.padding.left;
+			this.boxHeight = this.containerHeight - this.informationHeight;
+			this.boxWidth = this.containerWidth;
 
+			this.boxPosition = this.informationHeight / 2 + this.outlierHeight / 2;
+			this.centerLinePosition = (this.boxHeight - this.informationHeight / 4) / 2;
+			this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4;
+
+			this.process(this.callsite);
+
+			this.svg = d3.select("#boxplot-" + this.callsite.id)
+				.attrs({
+					"width": this.containerWidth,
+					"height": this.containerHeight
+				});
+
+			this.xScale = d3.scaleLinear()
+				.domain([this.targetq.min, this.targetq.max])
+				.range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
+
+			this.visualize(this.callsite);
 		},
 
+		/**
+		 * 
+		 * @param {*} callsite 
+		 */
+		visualize(callsite) {
+			this.$refs.Box.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
+			this.$refs.Markers.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
+			this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget);
+		},
+
+		/**
+		 * 
+		 */
+		clear() {
+			this.$refs.Box.clear();
+			this.$refs.Markers.clear();
+			this.$refs.Outliers.clear();
+		},
+
+		/**
+		 * 
+		 * @param {*} callsite 
+		 */
 		process(callsite) {
-			// this.ensemble_data = this.$store.callsites[this.$store.selectedTargetDataset][callsite.name][this.$store.selectedMetric]["q"];
 			if (this.$store.callsites[this.$store.selectedTargetDataset][callsite.name] != undefined) {
 				this.target_data = this.$store.callsites[this.$store.selectedTargetDataset][callsite.name][this.$store.selectedMetric]["q"];
 			}
@@ -104,6 +148,10 @@ export default {
 			this.targetq = this.qFormat(this.target_data);
 		},
 
+		/**
+		 * 
+		 * @param {*} arr 
+		 */
 		qFormat(arr) {
 			let result = {
 				"min": arr[0],
@@ -114,43 +162,5 @@ export default {
 			};
 			return result;
 		},
-
-		drawSVG(callsite) {
-			this.containerHeight = 150;
-			this.containerWidth = this.$parent.boxplotWidth - 2 * this.padding.right - 1 * this.padding.left;
-			this.boxHeight = this.containerHeight - this.informationHeight;
-			this.boxWidth = this.containerWidth;
-
-			this.boxPosition = this.informationHeight / 2 + this.outlierHeight / 2;
-			this.centerLinePosition = (this.boxHeight - this.informationHeight / 4) / 2;
-			this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4;
-
-			this.svg = d3.select("#boxplot-" + callsite.id)
-				.attrs({
-					"width": this.containerWidth,
-					"height": this.containerHeight
-				});
-
-			this.xScale = d3.scaleLinear()
-				.domain([this.targetq.min, this.targetq.max])
-				.range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
-		},
-
-		visualize(callsite) {
-			this.process(callsite);
-			this.drawSVG(callsite);
-
-			this.$refs.Box.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Markers.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget);
-
-
-		},
-
-		clear() {
-			this.$refs.Box.clear();
-			this.$refs.Markers.clear();
-			this.$refs.Outliers.clear();
-		}
 	}
 };

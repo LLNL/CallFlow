@@ -40,65 +40,57 @@
     <span class="component-data">
         <p class="subtitle-2"> {{numberOfIntersectionCallsites}} call sites.</p>
     </span>
-    <v-container class="auxiliary-node" v-for="callsite in intersectionCallsites" :id="getID(callsite.id)">
+    <v-container class="callsite-information-node" v-for="callsite in callsites" :id="getID(callsite.id)">
         <v-layout row wrap>
             <v-flex md1>
-                <template>
-                    <v-card width="25px" class="mx-auto" tile outlined>
-                        <v-tooltip bottom>
-                            <template v-slot:activator="{ on }">
-                                <v-flex text-xs-center
-                                :id="callsite.name"  
-                                v-on="on" 
-                                :class="selectClassName[callsite.name]"
-                                    @click="changeSelectedClassName">
-                                    {{formatNumberOfHops(callsite.component_level)}}
-                                </v-flex>
-                            </template>
-                            <span>
-                                Callsite depth:{{callsite.component_level}}
-                            </span> 
-                        </v-tooltip>
-                    </v-card>
-                </template>
+                <v-card width="25px" class="mx-auto" tile outlined>
+                    <v-tooltip bottom>
+                        <template v-slot:activator="{ on }">
+                            <v-flex text-xs-center
+                            :id="callsite.name"  
+                            v-on="on" 
+                            :class="selectClassName[callsite.name]"
+                                @click="changeSelectedClassName">
+                                {{formatNumberOfHops(callsite.component_level)}}
+                            </v-flex>
+                        </template>
+                        <span>
+                            Callsite depth:{{callsite.component_level}}
+                        </span> 
+                    </v-tooltip>
+                </v-card>
             </v-flex>
 
             <v-flex md11>
-                <template>
-                    <v-tooltip bottom>
-                        <template v-slot:activator="{ on }">
-                            <v-flex class="pl-2 subtitle-2 font-weight-black" v-on="on">
-                                {{formatName(callsite.name)}}
-                            </v-flex>
-                        </template>
-                        <span>{{callsite.name}}</span>
-                    </v-tooltip>
-                </template>
+                <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                        <v-flex class="pl-2 subtitle-2 font-weight-black" v-on="on">
+                            {{formatName(callsite.name)}}
+                        </v-flex>
+                    </template>
+                    <span>{{callsite.name}}</span>
+                </v-tooltip>
             </v-flex>
         </v-layout>
 
-        <template>
-            <v-layout row wrap>
-                <div class="subtitle-2">
-                   Module: {{formatModule(callsite.module)}}
-                </div>
-            </v-layout>
-            <v-layout row wrap>
-                <div class="subtitle-2">
-                    Inc. runtime : {{targetMeans[callsite.name]}}
-                </div>
-                <v-spacer></v-spacer>
-            </v-layout>
-            <v-layout row wrap>
-                <div class="subtitle-2">
-                    Exc. runtime : {{targetMeans[callsite.name]}}
-                </div>
-            </v-layout>
-        </template>
+        <v-layout row wrap>
+            <div class="subtitle-2">
+                Module: {{formatModule(callsite.module)}}
+            </div>
+        </v-layout>
+        <v-layout row wrap>
+            <div class="subtitle-2">
+                Inc. runtime : {{targetMeans[callsite.name]}}
+            </div>
+            <v-spacer></v-spacer>
+        </v-layout>
+        <v-layout row wrap>
+            <div class="subtitle-2">
+                Exc. runtime : {{targetMeans[callsite.name]}}
+            </div>
+        </v-layout>
 
-        <template>
-            <BoxPlot :ref="callsite.id" :callsite="callsite" />
-        </template>
+        <BoxPlot :ref="callsite.id" :callsite="callsite" />
         
     </v-container>
 </v-layout>

@@ -72,10 +72,7 @@ export default {
 		});
 
 		EventHandler.$on("select_module", (data) => {
-			let thismodule = data["module"];
-			// self.selectCallsitesByModule(thismodule)
-			this.isModuleSelected = true;
-			self.selectModule(thismodule);
+			self.selectModule(data["module"]);
 		});
 
 		EventHandler.$on("highlight_dataset", (data) => {
@@ -106,10 +103,23 @@ export default {
 				this.informationHeight = 50;
 				this.firstRender = false;
 			}
+			this.visualize()
+		},
 
+		visualize() {
+			this.borderColorByMetric()
 			this.setStates();
-			// this.borderColorByMetric()
-			this.boxplots()
+
+			// TODO: Generalize this for all the possible metrics.
+			for (let callsite in this.callsites) {
+				let data = this.callsites[callsite][this.$store.selectedMetric]
+				this.meanIncTime[callsite] = utils.formatRuntimeWithoutUnits(data["mean_time"]);
+				this.variance[callsite] = utils.formatRuntimeWithoutUnits(data["variance"]);
+				this.stdDeviation[callsite] = utils.formatRuntimeWithoutUnits(data["std_deviation"]);
+
+				this.selectClassName[callsite] = "unselect-callsite";
+				EventHandler.$emit("show_mpi_boxplot", this.callsites[callsite]);
+			}
 		},
 
 		/**
@@ -132,21 +142,10 @@ export default {
 			this.selectedMetric = this.$store.selectedMetric;
 			this.targetColor = this.$store.runtimeColor.textColor;
 			this.callsites = this.$store.callsites[this.$store.selectedTargetDataset];
-			console.log(this.callsites)
 			this.numberOfIntersectionCallsites = Object.keys(this.callsites).length;
 
 			// Sort the callsites.
 			this.intersectionCallsites = this.sortByAttribute(this.callsites, this.$store.selectedMetric);
-			
-			// TODO: Generalize this for all the possible metrics.
-			for (let callsite in this.callsites) {
-				let data = this.callsites[callsite][this.$store.selectedMetric]
-				this.meanIncTime[callsite] = utils.formatRuntimeWithoutUnits(data["mean_time"]);
-				this.variance[callsite] = utils.formatRuntimeWithoutUnits(data["variance"]);
-				this.stdDeviation[callsite] = utils.formatRuntimeWithoutUnits(data["std_deviation"]);
-
-				this.selectClassName[callsite] = "unselect-callsite";
-			}
 		},
 
 		/**
@@ -155,7 +154,7 @@ export default {
 		borderColorByMetric() {
 			for (let callsite in this.callsites) {
 				let data = this.callsites[callsite][this.$store.selectedMetric];
-				let id = "callsite-information-" + callsite_data.id;
+				let id = "callsite-information-node" + data.id;
 				document.getElementById(id).style.borderColor = this.$store.color.getColorByValue(data["mean_time"]);
 			}
 		},
@@ -268,43 +267,10 @@ export default {
 			return ret;
 		},
 
-		// // Show/hide the boxplots
-		// showAllCallsites(callsites) {
-		// 	for (let i = 0; i < callsites.length; i++) {
-		// 		callsites[i].reveal = true;
-		// 	}
-		// 	return callsites;
-		// },
-
-		// hideAllCallsites(callsites) {
-		// 	for (let callsite in callsites) {
-		// 		callsites[callsite].reveal = false;
-		// 	}
-		// 	return callsites;
-		// },
-
-		/**
-		 * Interaction: Show the callsite's boxplot.   
-		 * @param {String} callsite 
-		 */
-		showBoxplot(callsite) {
-			event.stopPropagation();
-			let callsite_name = event.currentTarget.id;
-			EventHandler.$emit("show_mpi_boxplot", this.intersectionCallsites[callsite_name]);
-		},
-
-		/**
-		 * Interaction: Hide the callsite's boxplot.
-		 * @param {String} callsite 
-		 */
-		hideBoxPlot(callsite) {
-			event.stopPropagation();
-			let callsite_name = event.currentTarget.id;
-			EventHandler.$emit("hide_mpi_boxplot", this.intersectionCallsites[callsite_name]);
-		},
-
 		clear() {
-
+			for(let callsite in this.callsites){ 
+				EventHandler.$emit("hide_mpi_boxplot", this.callsites[callsite]);
+			}
 		},
 
 		dataset(idx) {
@@ -346,23 +312,32 @@ export default {
 			this.showSplitButton = "true";
 		},
 
-		selectModule(thismodule) {
-			let module_callsites = this.$store.moduleCallsiteMap["ensemble"][thismodule];
-			this.differenceCallsites = {};
-			this.knc["difference"].forEach((callsite) => {
-				if (module_callsites.indexOf(callsite) > -1) {
-					this.differenceCallsites[callsite] = this.$store.callsites["ensemble"][callsite];
-				}
-			});
-			this.numberOfDifferenceCallsites = Object.keys(this.differenceCallsites).length;
+		/**
+		 * Interaction: On supernode click, the callsites belonging to the supernode 
+		 * are only shown in the callsite information view.
+		 * 
+		 * @param {String} module 
+		 */
+		selectModule(module) {
+			let callsites_in_module = this.$store.moduleCallsiteMap[this.$store.selectedTargetDataset][module];
+			
+			this.numberOfCallsites = Object.keys(callsites_in_module).length;
 
-			this.intersectionCallsites = {};
-			this.knc["intersection"].forEach((callsite) => {
-				if (module_callsites.indexOf(callsite) > -1) {
-					this.intersectionCallsites[callsite] = this.$store.callsites["ensemble"][callsite];
+			// Clear up the current callsites map.
+			this.callsites = {};
+
+			// Set display: none to all .callsite-information-node.
+			// This hides the nodes when a supernode is selected.
+			d3.selectAll('.callsite-information-node').style("display", "none")
+
+			// Set the data and render each callsite.
+			callsites_in_module.forEach((callsite) => {
+				if (callsites_in_module.indexOf(callsite) > -1) {
+					this.callsites[callsite] = this.$store.callsites[this.$store.selectedTargetDataset][callsite];
 				}
+				console.log(this.callsites[callsite].id)
+				d3.select('#callsite-information-' + this.callsites[callsite].id).style("display","block");
 			});
-			this.numberOfIntersectionCallsites = Object.keys(this.intersectionCallsites).length;
 		},
 
 		selectCallsitesByModule(thismodule) {
