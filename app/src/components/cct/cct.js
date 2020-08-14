@@ -6,7 +6,7 @@
  */
 
 import tpl from "../../html/cct.html";
-import '../../css/cct.css'
+import "../../css/cct.css";
 import ColorMap from "../../lib/colormap";
 
 import * as d3 from "d3";
@@ -30,7 +30,7 @@ export default {
 		width: null,
 		height: null,
 		zoom: null,
-		HAS_DATA_COLUMNS: ['module'], // Array of keys in incoming data to check for.
+		HAS_DATA_COLUMNS: ["module"], // Array of keys in incoming data to check for.
 		has_data_map: {}, // stores if the required data points are present in the incoming data. 
 
 	}),
@@ -63,13 +63,13 @@ export default {
 		 * Calls the socket to fetch data.
 		 */
 		init() {
-			if (this.$store.selectedMode === 'Single') {
+			if (this.$store.selectedMode === "Single") {
 				this.$socket.emit("single_cct", {
 					dataset: this.$store.selectedTargetDataset,
 					functionsInCCT: this.$store.selectedFunctionsInCCT,
 				});
 			}
-			else if (this.$store.selectedMode === 'Ensemble') {
+			else if (this.$store.selectedMode === "Ensemble") {
 				this.$socket.emit("ensemble_cct", {
 					datasets: this.$store.selectedTargetDataset,
 					functionsInCCT: this.$store.selectedFunctionsInCCT,
@@ -101,7 +101,7 @@ export default {
 			});
 
 			g.setGraph({
-				rankDir: 'TD',
+				rankDir: "TD",
 				rankSep: 50,
 				marginx: 30,
 				marginy: 30
@@ -146,9 +146,9 @@ export default {
 			const textColor = this.$store.runtimeColor.setContrast(fillColor);
 
 			return {
-				'node': fillColor,
-				'text': textColor
-			}
+				"node": fillColor,
+				"text": textColor
+			};
 		},
 
 		/**
@@ -161,13 +161,13 @@ export default {
 		setCallsiteHTML(callsite, callsite_color) {
 			let name = callsite["name"];
 
-			let html = (callsite_color['text'] === "#fff")
-				? '<div class="white-text"><span>' + name + '</span>'
-				: '<div class="black-text"><span>' + name + '</span>';
+			let html = (callsite_color["text"] === "#fff")
+				? "<div class=\"white-text\"><span>" + name + "</span>"
+				: "<div class=\"black-text\"><span>" + name + "</span>";
 			
 			if (this.has_data_map["module"]) {
 				module = callsite["module"];
-				html = html + '<br/><span class="description"><b>Module :</b> ' + module + '</span> </div>';
+				html = html + "<br/><span class=\"description\"><b>Module :</b> " + module + "</span> </div>";
 			}
 			return html;
 		},
@@ -185,10 +185,10 @@ export default {
 				
 				const payload = {
 					...node,
-					class: 'cct-node',
-					labelType: 'html',
+					class: "cct-node",
+					labelType: "html",
 					label: label,
-					fillColor: callsite_color['node']
+					fillColor: callsite_color["node"]
 				};
 
 				this.g.setNode(callsite_name, payload);
@@ -242,7 +242,7 @@ export default {
 		 * @param {dagreD3's ID} id 
 		 */
 		node_click_action(id) {
-			console.debug('click node : ' + id);
+			console.debug("click node : " + id);
 			const default_dagreD3e_style = "fill: rgba(255,255,255, 0); stroke: #d5d5d5; stroke-width: 1.5px;";
 			const default_dagreD3arrowhead_style = "fill: #c5c5c5; stroke: #c5c5c5; stroke-width:4px;";
 
@@ -254,9 +254,9 @@ export default {
 
 			let nodeClass = this.g.node(id).class;
 
-			let self = this
-			if (nodeClass.indexOf('highLight') != -1) {
-				this.g.node(id).class = nodeClass.toString().replace('highLight', ' ').trim();
+			let self = this;
+			if (nodeClass.indexOf("highLight") != -1) {
+				this.g.node(id).class = nodeClass.toString().replace("highLight", " ").trim();
 
 				this.g.edges().forEach(function (e, v, w) {
 					let edge = self.g.edge(e);
@@ -269,7 +269,7 @@ export default {
 				this.g.nodes().forEach(function (v) {
 					let node = self.g.node(v);
 					nodeClass = node.class;
-					if (nodeClass !== 'cct-node') node.class = nodeClass.replace('highLight', ' ').trim();
+					if (nodeClass !== "cct-node") node.class = nodeClass.replace("highLight", " ").trim();
 				});
 
 				this.g.edges().forEach(function (e, v, w) {
@@ -290,7 +290,7 @@ export default {
 						edge.arrowheadStyle = inbound_arrowhead_style;
 					}
 				});
-				this.g.node(id).class += ' highLight';
+				this.g.node(id).class += " highLight";
 			}
 		},
 
@@ -320,14 +320,14 @@ export default {
 		 *  Set the has data map.
 		 */
 		setHasDataMap() {
-			this.has_data_map = {}
+			this.has_data_map = {};
 			for (let i = 0; i < this.HAS_DATA_COLUMNS.length; i += 1) {
 				let currentColumn = this.HAS_DATA_COLUMNS[i];
-				if (Object.keys(this.data['nodes'][0]).includes(currentColumn)) {
+				if (Object.keys(this.data["nodes"][0]).includes(currentColumn)) {
 					this.has_data_map[currentColumn] = true;
 				}
 				else {
-					this.has_data_map[currentColumn] = false
+					this.has_data_map[currentColumn] = false;
 				}
 			}
 		},
@@ -337,7 +337,7 @@ export default {
 		 */
 		render(data) {
 			this.data = data;
-			this.setHasDataMap()
+			this.setHasDataMap();
 
 			this.nodes(this.data.nodes);
 			this.edges(this.data.links);

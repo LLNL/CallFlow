@@ -86,8 +86,7 @@ export default {
 		selectedMetric: "Exclusive",
 		runtimeColorMap: [],
 		distributionColorMap: [],
-		selectedRuntimeColorMap: "Blues",
-		selectedDistributionColorMap: "Reds",
+		selectedRuntimeColorMap: "OrRd",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
 		selectedColorPoint: 9,
 		selectedColorMin: null,
@@ -99,8 +98,6 @@ export default {
 		scatterMode: ["mean", "all"],
 		selectedScatterMode: "all",
 		selectedFunctionsInCCT: 70,
-		selectedDiffNodeAlignment: "Top",
-		diffNodeAlignment: ["Middle", "Top"],
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
 		datas: ["Dataframe", "Graph"],
@@ -112,8 +109,6 @@ export default {
 		initLoad: true,
 		comparisonMode: false,
 		selectedCompareDataset: null,
-		compareModes: ["mean-diff", "rank-diff"],
-		selectedCompareMode: "mean-diff",
 		selectedOutlierBand: 4,
 		defaultCallSite: "<program root>",
 		modes: ["Ensemble", "Single"],
@@ -121,45 +116,15 @@ export default {
 		// Presentation mode variables
 		exhibitModes: ["Presentation", "Default"],
 		selectedExhibitMode: "Default",
-		presentationPage: 0,
-		presentationOrder: [
-			"run_information",
-			"ensemble_supergraph",
-			"ensemble_gradients",
-			"ensemble_mini_histogram",
-			"module_hierarchy",
-			"ensemble_auxiliary",
-			"ensemble_similarity",
-			"ensemble_projection",
-		],
-		parameter_analysis: true,
-		selectedRunBinCount: 20,
 		selectedMPIBinCount: 20,
-		selectedHierarchyMode: "Uniform",
-		hierarchyModes: ["Uniform", "Exclusive"],
 		selectedRuntimeSortBy: "Inclusive",
 		sortByModes: ["Inclusive", "Exclusive", "Standard Deviation"],
 		scales: ["Log", "Linear"],
 		selectedScale: "Linear",
 		props: ["name", "rank", "dataset", "all_ranks"],
 		selectedProp: "rank",
-		dimensions: ["max_inclusive_time", "max_exclusive_time", "rank_count"],
-		selectedPC1: "max_inclusive_time",
-		selectedPC2: "max_exclusive_time",
-		selectedIQRFactor: 0.15,
-		selectedNumOfClusters: 3,
-		targetColorMap: {
-			"Green": "#4EAF4A",
-			"Blue": "#4681B4",
-			"Brown": "#AF9B90",
-			"Red": "#A90400"
-		},
-		targetColors: ["Green", "Blue", "Brown"],
-		selectedTargetColor: "Green",
-		showTarget: false,
-		targetInfo: "Target Guides",
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
-		selectedCaseStudy: "",
+		selectedRunBinCount: 20,
 	}),
 
 	mounted() {
@@ -296,7 +261,6 @@ export default {
 			console.log("Config file: ", data);
 			this.$store.numOfRuns = data["datasets"].length;
 			this.$store.selectedDatasets = data["names"];
-			this.selectedCaseStudy = data["runName"];
 			this.datasets = this.$store.selectedDatasets;
 
 			// Enable diff mode only if the number of datasets >= 2
@@ -459,9 +423,6 @@ export default {
 			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap;
 			this.$store.selectedColorPoint = this.selectedColorPoint;
 
-			this.selectedTargetColor = this.targetColorMap[this.selectedTargetColorText];
-			this.targetColors = Object.keys(this.targetColorMap);
-
 			this.$store.runtimeColor.intermediate = "#d9d9d9";
 			this.$store.runtimeColor.highlight = "#C0C0C0";
 			this.$store.runtimeColor.textColor = "#3a3a3a";
@@ -529,14 +490,9 @@ export default {
 		},
 
 		init() {
-			if (this.selectedExhibitMode == "Presentation") {
-				this.enablePresentationMode();
-			}
-
 			// Initialize colors
 			this.setupColors();
 			this.setOtherData();
-			this.setTargetDataset();
 			if (this.selectedFormat == "SuperGraph") {
 				this.setSelectedModule();
 			}
@@ -623,11 +579,6 @@ export default {
 				dataset: this.$store.selectedTargetDataset,
 				functionInCCT: this.selectedFunctionsInCCT,
 			});
-		},
-
-		updateAuxiliarySortBy() {
-			this.$store.auxiliarySortBy = this.auxiliarySortBy;
-			EventHandler.$emit("update_auxiliary_sortBy");
 		},
 
 		updateScale() {

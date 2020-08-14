@@ -18,7 +18,7 @@ import Queue from "../../../data-structures/queue/Queue";
  * @property {function(vertices: Object)} [leaveVertex] - Called when BFS leaves the vertex.
  */
 
- /**
+/**
  * @param {Callbacks} [callbacks]
  * @returns {Callbacks}
  */
