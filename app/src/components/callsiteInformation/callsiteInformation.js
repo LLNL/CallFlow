@@ -6,7 +6,7 @@
  */
 
 import tpl from "../../html/callsiteInformation.html";
-import '../../css/callsiteInformation.css';
+import "../../css/callsiteInformation.css";
 
 import EventHandler from "../EventHandler";
 import BoxPlot from "./boxplot";
@@ -92,7 +92,7 @@ export default {
 				this.informationHeight = 50;
 				this.firstRender = false;
 			}
-			this.visualize()
+			this.visualize();
 		},
 
 		/**
@@ -384,14 +384,14 @@ export default {
 
 			// Set display: none to all .callsite-information-node.
 			// This hides the nodes when a supernode is selected.
-			d3.selectAll('.callsite-information-node').style("display", "none")
+			d3.selectAll(".callsite-information-node").style("display", "none");
 
 			// Set the data and render each callsite.
 			callsites_in_module.forEach((callsite) => {
 				if (callsites_in_module.indexOf(callsite) > -1) {
 					this.callsites[callsite] = this.$store.callsites[this.$store.selectedTargetDataset][callsite];
 				}
-				d3.select('#callsite-information-' + this.callsites[callsite].id).style("display", "block");
+				d3.select("#callsite-information-" + this.callsites[callsite].id).style("display", "block");
 			});
 		},
 

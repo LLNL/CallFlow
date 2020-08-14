@@ -78,7 +78,7 @@ export default {
 						}
 						return color;
 					}
-				})
+				});
 		},
 
 		clear() {

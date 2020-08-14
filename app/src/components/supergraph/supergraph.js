@@ -21,7 +21,7 @@ import GraphVertex from "../../datastructures/node";
 import GraphEdge from "../../datastructures/edge";
 import detectDirectedCycle from "../../algorithms/detectcycle";
 
-import '../../css/supergraph.css';
+import "../../css/supergraph.css";
 
 export default {
 	name: "EnsembleSuperGraph",

@@ -133,7 +133,7 @@ export default {
 
 		visualize(callsite) {
 			this.clear();
-			this.setupScale(callsite)
+			this.setupScale(callsite);
 			this.bars();
 			this.xAxis();
 			this.yAxis();
@@ -327,7 +327,7 @@ export default {
 			const yAxis = d3.axisLeft(this.yScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
-					return d
+					return d;
 				});
 
 			this.svg.append("text")

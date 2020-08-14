@@ -17,7 +17,7 @@
  * @property {function(vertices: Object)} [leaveVertex] - Called when DFS leaves the vertex.
  */
 
- /**
+/**
  * @param {Callbacks} [callbacks]
  * @returns {Callbacks}
  */
