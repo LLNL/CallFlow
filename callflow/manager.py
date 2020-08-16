@@ -81,17 +81,16 @@ def start(args, timeout=datetime.timedelta(seconds=60)):
     """
     (stdout_fd, stdout_path) = tempfile.mkstemp(prefix=".callflow-stdout-")
     (stderr_fd, stderr_path) = tempfile.mkstemp(prefix=".callflow-stderr-")
+    cwd = os.getcwd().split('CallFlow')[0] + "CallFlow/server/main.py"
+    cmd = ["python3", cwd] + args
     start_time_seconds = time.time()
     try:
         p = subprocess.Popen(
-            "python3 server/main.py " + " ".join(args),
+            cmd,
             stdout=stdout_fd,
             stderr=stderr_fd,
         )
 
-        from subprocess import check_output
-
-        out = check_output(["ls"])
     except OSError as e:
         return StartExecFailed(os_error=e)
     finally:
@@ -111,7 +110,7 @@ def start(args, timeout=datetime.timedelta(seconds=60)):
             )
         # for info in get_all():
         #     if info.pid == p.pid and info.start_time >= start_time_seconds:
-        return StartLaunched(info=out)
+        return StartLaunched(info="Started" + stdout_path)
     else:
         return StartTimedOut(pid=p.pid)
 

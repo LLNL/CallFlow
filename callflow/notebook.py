@@ -76,9 +76,7 @@ def start(args_string):
 
     parsed_args = shlex.split(args_string, comments=True, posix=True)
     start_result = manager.start(parsed_args)
-    IPython.display.display(
-        IPython.display.Pretty(start_result), display_id=True,
-    )
+   
     print(start_result)
 
 
