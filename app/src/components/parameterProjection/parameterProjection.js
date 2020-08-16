@@ -11,7 +11,7 @@ import template from "../../html/parameterProjection.html";
 import EventHandler from "../EventHandler.js";
 import * as utils from "../utils";
 
-import '../../css/parameterProjection.css'
+import "../../css/parameterProjection.css";
 
 export default {
 	name: "ParameterProjection",
@@ -42,7 +42,7 @@ export default {
 	},
 	mounted() {
 		this.id = "parameter-projection-view";
-		this.svgId = "parameter-projection-svg"
+		this.svgId = "parameter-projection-svg";
 		let self = this;
 		// EventHandler.$on('highlight_dataset', (dataset) => {
 		//     // console.log("[Projection] Highlighting the dataset :", dataset)
@@ -568,9 +568,9 @@ export default {
 		clear() {
 			d3.selectAll("#parameter-projection-tooltip").remove();
 			// this.svg.selectAll('.dot').remove()
-			d3.selectAll('.outer-circle').remove()
-			this.svg.selectAll('.lasso').remove()
-			this.svg.selectAll('.projection-axis-label').remove()
+			d3.selectAll(".outer-circle").remove();
+			this.svg.selectAll(".lasso").remove();
+			this.svg.selectAll(".projection-axis-label").remove();
 		}
 	},
 };

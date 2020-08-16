@@ -19,10 +19,15 @@ export default {
 		bottomPosition: 0.7
 	}),
 
-	mounted() {
-	},
-
 	methods: {
+		/**
+		 * Init function, sets up the svg for rendering.
+		 * @param {*} callsite 
+		 * @param {*} q 
+		 * @param {*} targetq 
+		 * @param {*} xScale 
+		 * @param {*} showTarget 
+		 */
 		init(callsite, q, targetq, xScale, showTarget) {
 			this.$store.selectedMarker = "target";
 			this.q = q;
@@ -46,6 +51,9 @@ export default {
 			// this.qTexts()
 		},
 
+		/**
+		 * Draws marker for the median value.
+		 */
 		medianMarker() {
 			this.medianMarkery1 = this.$parent.centerLinePosition - this.$parent.rectHeight;
 			this.medianMarkery2 = this.$parent.centerLinePosition + this.$parent.rectHeight;
@@ -63,6 +71,9 @@ export default {
 				.style("z-index", 10);
 		},
 
+		/**
+		 * Draw markers for min and max, median for ensemble 
+		 */
 		extremeMarkers() {
 			this.targetData = this.targetq;
 			this.data = this.q;
@@ -72,6 +83,7 @@ export default {
 			this.maxText();
 			this.medianText();
 		},
+
 
 		minMaxTargetMarker() {
 			this.g.append("line")
@@ -97,6 +109,9 @@ export default {
 				.style("stroke-width", "1.5");
 		},
 
+		/**
+		 * Min text
+		 */
 		minText() {
 			let min_target_val = this.targetData.min;
 			this.g.append("text")
@@ -112,6 +127,9 @@ export default {
 
 		},
 
+		/**
+		 * Max text.
+		 */
 		maxText() {
 			let max_target_val = this.targetData.max;
 			this.g.append("text")
@@ -125,6 +143,9 @@ export default {
 				.text("Max:" + utils.formatRuntimeWithoutUnits(max_target_val));
 		},
 
+		/**
+		 * Median text.
+		 */
 		medianText() {
 			let median_target_val = this.targetData.q2;
 			this.g.append("text")
@@ -138,11 +159,17 @@ export default {
 				.text("Med.:" + utils.formatRuntimeWithoutUnits(median_target_val));
 		},
 
+		/**
+		 * Fetch the results of quaritles (q1 and q3 specifically.)
+		 */
 		qTexts() {
 			this.q1Text();
 			this.q3Text();
 		},
 
+		/**
+		 * Writes out the q1.
+		 */
 		q1Text() {
 			this.g.append("text")
 				.attrs({
@@ -155,6 +182,9 @@ export default {
 				.text("q1: " + utils.formatRuntimeWithoutUnits(this.q.q1));
 		},
 
+		/**
+		 * Writes out the q3.
+		 */
 		q3Text() {
 			this.g.append("text")
 				.attrs({
@@ -167,6 +197,11 @@ export default {
 				.text("q3: " + utils.formatRuntimeWithoutUnits(this.q.q3));
 		},
 
+		/**
+		 * Format the name by truncating. 
+		 * TODO: move to utils.
+		 * @param {*} name 
+		 */
 		formatName(name) {
 			if (name.length < 20) {
 				return name;
@@ -175,6 +210,9 @@ export default {
 			return ret;
 		},
 
+		/**
+		 * Clear the context.
+		 */
 		clear() {
 			this.g.selectAll(".whiskerText").remove();
 			this.g.selectAll(".whisker").remove();

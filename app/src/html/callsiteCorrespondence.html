@@ -12,7 +12,7 @@
     </v-chip>
     <v-spacer></v-spacer>
     <span class="component-info">
-        <p> </p>
+        <p></p>
     </span>
 
     <v-layout row wrap v-if="isCallsiteSelected == true">
@@ -63,18 +63,18 @@
                             {{formatNumberOfHops(callsite.component_level)}}</span>
                     </v-tooltip>
                 </template>
-
             </v-flex>
+
             <v-flex md9>
                 <template>
                     <v-tooltip bottom>
                         <template v-slot:activator="{ on }">
                             <v-flex class="pl-2 subtitle-2 font-weight-black"
                                 v-on="on">
-                                {{formatModule(callsite.module)}}={{formatName(callsite.name)}}
+                                {{formatName(callsite.name)}}
                             </v-flex>
                         </template>
-                        <span>{{callsite.module}}={{callsite.name}}</span>
+                        <span>{{callsite.name}}</span>
                     </v-tooltip>
                 </template>
             </v-flex>
@@ -149,10 +149,10 @@
                     <template v-slot:activator="{ on }">
                         <v-flex class="pl-2 subtitle-2
                             font-weight-black" v-on="on">
-                            {{formatModule(callsite.module)}}={{formatName(callsite.name)}}
+                            {{formatName(callsite.name)}}
                         </v-flex>
                     </template>
-                    <span>{{callsite.module}}={{callsite.name}}</span>
+                    <span>{{callsite.name}}</span>
                 </v-tooltip>
             </v-flex>
             <v-flex md2>
@@ -162,7 +162,7 @@
                     @click=showIntersectionBoxPlot>
                     <v-icon size="25">keyboard_arrow_down</v-icon>
                 </v-btn>
-                <v-btn :id="callsite.name" icon color="lighten-2"
+                <v-btn :id="callsite.name" class="show-boxplot-btn" icon color="lighten-2"
                     v-if="callsite.reveal == true"
                     @click=hideIntersectionBoxPlot>
                     <v-icon size="25">keyboard_arrow_up</v-icon>

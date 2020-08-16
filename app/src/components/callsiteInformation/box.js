@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 import * as d3 from "d3";
+import * as utils from "../utils";
 
 export default {
 	name: "Box",
@@ -15,10 +16,19 @@ export default {
 		paddingTop: 10,
 		textOffset: 40,
 		fontSize: 10,
-		debug: false
+		debug: false,
+		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
 	}),
 
 	methods: {
+		/**
+		 * 
+		 * @param {*} callsite 
+		 * @param {*} q 
+		 * @param {*} targetq 
+		 * @param {*} xScale 
+		 * @param {*} showTarget 
+		 */
 		init(callsite, q, targetq, xScale, showTarget) {
 			if (this.debug) {
 				console.log("Ensemble q: ", q);
@@ -38,39 +48,20 @@ export default {
 					"transform": "translate(0, " + this.$parent.boxPosition + ")"
 				});
 
-			this.targetBox();
+			this.box();
 			this.centerLine();
+			this.axis();
 			this.$parent.$refs.ToolTip.init("boxplot-" + callsite.id);
 		},
 
-		ensembleBox() {
-			let self = this;
-			this.boxSVG = this.g
-				.append("rect")
-				.attrs({
-					"class": "ensembleBox",
-					"y": 0,
-					"x": this.xScale(this.q.q1),
-					"height": this.$parent.rectHeight,
-					"fill": this.$store.runtimeColor.intermediate,
-					"width": this.xScale(this.q.q3) - this.xScale(this.q.q1),
-					"stroke": "#202020",
-					"stroke-width": 0.5
-				})
-				.style("z-index", 1)
-				.on("mouseover", (d) => {
-					self.$parent.$refs.ToolTip.renderQ(self.q);
-				})
-				.on("mouseout", (d) => {
-					self.$parent.$refs.ToolTip.clear();
-				});
-		},
-
-		targetBox() {
+		/**
+		 * Draw the quartile box in the boxplot.
+		 */
+		box() {
 			let self = this;
 			this.targetBoxSVG = this.g
 				.append("rect")
-				.attr("class", "targetbox")
+				.attr("class", "box")
 				.attrs({
 					"y": 0,
 					"x": this.xScale(this.targetq.q1),
@@ -94,6 +85,9 @@ export default {
 				});
 		},
 
+		/**
+		 * Draw center line in the boxplot.
+		 */
 		centerLine() {
 			let self = this;
 			this.centerLineSVG = this.g
@@ -110,12 +104,67 @@ export default {
 				.style("z-index", 10);
 		},
 
+		/**
+		 * Add label for the x-axis.
+		 */
+		addxAxisLabel() {
+			let max_value = this.xScale.domain()[1];
+			this.x_max_exponent = utils.formatExponent(max_value);
+			let exponent_string = this.superscript[this.x_max_exponent];
+			let label = "(e+" + this.x_max_exponent + ") " + "Exclusive Runtime (" + "\u03BCs)";
+			this.g.append("text")
+				.attr("class", "axis-label")
+				.attr("x", this.$parent.boxWidth - 20)
+				.attr("y", this.$parent.centerLinePosition * 3.8)
+				.style("font-size", "12px")
+				.style("text-anchor", "end")
+				.text(label);
+		},
+
+		/**
+		 * Draw the axis for hte boxplot.
+		 */
+		axis() {
+			this.addxAxisLabel();
+			const xAxis = d3.axisBottom(this.xScale)
+				.ticks(5)
+				.tickFormat((d, i) => {
+					let runtime = utils.formatRuntimeWithExponent(d, 1);
+					return `${runtime[0]}`;
+				});
+
+			const xAxisLine = this.g.append("g")
+				.attrs({
+					"class": "axis",
+					"id": "xAxis",
+					"transform": "translate(" + 0 + "," + 2.5 * this.$parent.centerLinePosition + ")"
+				})
+				.call(xAxis);
+
+			xAxisLine.selectAll("path")
+				.style("fill", "none")
+				.style("stroke", "black")
+				.style("stroke-width", "1px");
+
+			xAxisLine.selectAll("line")
+				.style("fill", "none")
+				.style("stroke", "black")
+				.style("stroke-width", "1px");
+
+			xAxisLine.selectAll("text")
+				.style("font-size", "12px")
+				.style("font-family", "sans-serif")
+				.style("font-weight", "lighter");
+		},
+
+		/**
+		 * Clear the boxplot. (box, center line, and axis)
+		 */
 		clear() {
-			this.g.selectAll(".ensembleBox").remove();
-			if (this.$store.showTarget) {
-				this.g.selectAll(".targetbox").remove();
-			}
+			this.g.selectAll(".box").remove();
 			this.g.selectAll(".centerLine").remove();
+			this.g.selectAll(".axis-label").remove();
+			this.g.selectAll(".axis").remove();
 		}
 	}
 };

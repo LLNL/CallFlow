@@ -218,14 +218,14 @@
 					, astep = f / o.lines
 
 					; (function anim() {
-						i++;
-						for (var j = 0; j < o.lines; j++) {
-							alpha = Math.max(1 - (i + (o.lines - j) * astep) % f * ostep, o.opacity);
+					i++;
+					for (var j = 0; j < o.lines; j++) {
+						alpha = Math.max(1 - (i + (o.lines - j) * astep) % f * ostep, o.opacity);
 
-							self.opacity(el, j * o.direction + start, alpha, o);
-						}
-						self.timeout = self.el && setTimeout(anim, ~~(1000 / fps));
-					})();
+						self.opacity(el, j * o.direction + start, alpha, o);
+					}
+					self.timeout = self.el && setTimeout(anim, ~~(1000 / fps));
+				})();
 			}
 			return self;
 		}

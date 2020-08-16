@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
  
-g.node {
+.cct-node {
     cursor: pointer;
 }
 
@@ -29,7 +29,7 @@ g.node {
 }
 
 .white-text > .description {
-    color: rgb(26, 26, 49);
+    color: rgb(200, 195, 195));
     font-size: 10pt;
 }
 

@@ -759,7 +759,7 @@
 	reorder.all_pairs_distance_bfs = function (graph, comps) {
 		if (!comps) { comps = [graph.nodes_indices()]; }
 		var nodes = comps.reduce(reorder.flatten)
-			.sort(reorder.cmp_number),
+				.sort(reorder.cmp_number),
 			mat = Array(nodes.length),
 			i, j, dist;
 
@@ -1021,8 +1021,8 @@
 		for (var i = 0; i < comps.length; i++) {
 			var o = reorder.barycenter(graph, comps[i], max_iter);
 			orders = [orders[0].concat(o[0]),
-			orders[1].concat(o[1]),
-			orders[2] + o[2]];
+				orders[1].concat(o[1]),
+				orders[2] + o[2]];
 		}
 		return orders;
 	};
@@ -1072,9 +1072,9 @@
 		best_layer2 = layer2.slice();
 		best_iter = 0;
 		var inv_neighbor = function (e) {
-			var n = e.source == v ? e.target : e.source;
-			return inv_layer[n.index];
-		},
+				var n = e.source == v ? e.target : e.source;
+				return inv_layer[n.index];
+			},
 			barycenter_sort = function (a, b) {
 				var d = med[a] - med[b];
 				if (d === 0) {
@@ -1597,15 +1597,15 @@
 				// overwrite row c1 with respect to the linkage type
 				for (j = 0; j < n; j++) {
 					switch (linkage) {
-						case "single":
-							if (distMatrix[c1][j] > distMatrix[c2][j]) { distMatrix[j][c1] = distMatrix[c1][j] = distMatrix[c2][j]; }
-							break;
-						case "complete":
-							if (distMatrix[c1][j] < distMatrix[c2][j]) { distMatrix[j][c1] = distMatrix[c1][j] = distMatrix[c2][j]; }
-							break;
-						case "average":
-							distMatrix[j][c1] = distMatrix[c1][j] = (cSize[c1] * distMatrix[c1][j] + cSize[c2] * distMatrix[c2][j]) / (cSize[c1] + cSize[j]);
-							break;
+					case "single":
+						if (distMatrix[c1][j] > distMatrix[c2][j]) { distMatrix[j][c1] = distMatrix[c1][j] = distMatrix[c2][j]; }
+						break;
+					case "complete":
+						if (distMatrix[c1][j] < distMatrix[c2][j]) { distMatrix[j][c1] = distMatrix[c1][j] = distMatrix[c2][j]; }
+						break;
+					case "average":
+						distMatrix[j][c1] = distMatrix[c1][j] = (cSize[c1] * distMatrix[c1][j] + cSize[c2] * distMatrix[c2][j]) / (cSize[c1] + cSize[j]);
+						break;
 					}
 				}
 				distMatrix[c1][c1] = Infinity;

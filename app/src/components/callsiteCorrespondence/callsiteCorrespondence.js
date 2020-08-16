@@ -10,7 +10,7 @@ import EventHandler from "../EventHandler";
 import BoxPlot from "./boxplot";
 import * as d3 from "d3";
 import * as utils from "../utils";
-import '../../css/callsiteCorrespondence.css'
+import "../../css/callsiteCorrespondence.css";
 
 export default {
 	name: "CallsiteCorrespondence",
@@ -223,10 +223,10 @@ export default {
 		},
 
 		formatName(name) {
-			if (name.length < 15) {
+			if (name.length < 25) {
 				return name;
 			}
-			let ret = utils.truncNames(name, 15);
+			let ret = utils.truncNames(name, 25);
 			return ret;
 		},
 
@@ -277,7 +277,7 @@ export default {
 		showIntersectionBoxPlot(callsite) {
 			event.stopPropagation();
 			let callsite_name = event.currentTarget.id;
-			console.log("Toggling", callsite_name)
+			console.log("Toggling", callsite_name);
 			this.intersectionCallsites[callsite_name].reveal = true;
 			EventHandler.$emit("show_boxplot", this.intersectionCallsites[callsite_name]);
 		},

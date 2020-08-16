@@ -327,7 +327,7 @@ export default {
 				.style("stroke", this.$store.color.intermediate)
 				.style("stroke-width", "1px")
 				.style("opacity", 0.5)
-				.attr("transform", "translate(" + this.paddingFactor * this.padding.left + ", 0)")
+				.attr("transform", "translate(" + this.paddingFactor * this.padding.left + ", 0)");
 		},
 
 		dots() {
@@ -344,7 +344,7 @@ export default {
 					return self.yScale(self.yArray[i]);
 				})
 				.style("fill", this.$store.runtimeColor.intermediate)
-				.style("stroke", '#202020')
+				.style("stroke", "#202020")
 				.style("stroke-width", 0.5);
 		},
 

@@ -65,7 +65,7 @@ export function formatExponent(val) {
 		exponent = parseInt(ret.toString().split("e")[1].split("+")[1]);
 	}
 	else {
-		exponent = 0
+		exponent = 0;
 	}
 	return exponent;
 }
