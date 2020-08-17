@@ -12,6 +12,7 @@ import tpl from "../../html/histogram.html";
 import ToolTip from "./tooltip";
 import * as utils from "../utils";
 import EventHandler from "../EventHandler";
+import { brush } from "d3";
 
 export default {
 	template: tpl,
@@ -100,7 +101,6 @@ export default {
 			this.binContainsProcID = temp[3];
 			this.logScaleBool = false;
 
-			this.$refs.ToolTip.init(this.svgID);
 
 			this.xScale = d3.scaleBand()
 				.domain(this.xVals)
@@ -128,7 +128,8 @@ export default {
 			d3.selectAll(".binRank").remove();
 			d3.selectAll(".lineRank").remove();
 			d3.selectAll(".tick").remove();
-			// this.$refs.ToolTip.clear();
+			d3.selectAll(".brush").remove();
+			this.$refs.ToolTip.clear();
 		},
 
 		visualize(callsite) {
@@ -139,6 +140,7 @@ export default {
 			this.yAxis();
 			this.rankLineScale();
 			this.brushes();
+			this.$refs.ToolTip.init(this.svgID);
 		},
 
 		array_unique(arr) {
@@ -235,6 +237,10 @@ export default {
 			};
 		},
 
+		sanitizeGroupProc(string) {
+			return string.replace("[", "").replace("]", "")
+		},
+
 		bars() {
 			let self = this;
 			this.svg.selectAll(".single-histogram-bar")
@@ -252,6 +258,17 @@ export default {
 					"stroke-width": "0.2px",
 					"stroke": "#202020",
 				})
+				.style("z-index", 1)
+				.on("click", function(d, i) {
+					d3.select(this)
+						.attr("fill", self.$store.runtimeColor.highlight);
+					d3.selectAll(`.lineRank_${i}`)
+						.style("fill", "orange")
+						.style("fill-opacity", 1);
+					let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
+					groupProcStr = this.sanitizeGroupProc(groupProcStr);
+					self.$refs.ToolTip.render(groupProcStr, d);
+				})
 				.on("mouseover", function (d, i) {
 					d3.select(this)
 						.attr("fill", self.$store.runtimeColor.highlight);
@@ -259,6 +276,7 @@ export default {
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
 					let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
+					groupProcStr = this.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseout", function (d, i) {
@@ -327,7 +345,8 @@ export default {
 			const yAxis = d3.axisLeft(this.yScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
-					return d;
+					if (d % 1 == 0)
+						return d;
 				});
 
 			this.svg.append("text")
@@ -367,8 +386,8 @@ export default {
 		rankLineScale() {
 			let rankCount = this.numOfRanks;
 
-			const ranklinescale = d3.scaleLinear()
-				.domain([0, rankCount - 1])
+			this.ranklinescale = d3.scaleLinear()
+				.domain([0, rankCount])
 				.range([this.paddingFactor * this.padding.left, this.xAxisHeight]);
 
 			this.freq.forEach((freqVal, idx) => {
@@ -388,44 +407,31 @@ export default {
 					let cumulativeBinSpace = 0;
 
 					groupArray.forEach((group) => {
-						let line;
+						let start = 0, end = 0;
 						if (group.length == 1) {
-							var start = group[0];
-							var end = start + 1;
-							var topX1 = cumulativeBinSpace + binLocation;
-							var topX2 = cumulativeBinSpace + binLocation + (1) * widthPerRank;
-
-							var botX3 = ranklinescale(start);
-							var botX4 = ranklinescale(start);
-
-							var topY = this.boxHeight - this.histogramOffset;
-							var botY = this.boxHeight;
-							cumulativeBinSpace += (1) * widthPerRank;
-
-							line = "M" + topX1 + " " + topY +
-								"L " + topX2 + " " + topY +
-								"L " + botX4 + " " + botY +
-								"L " + botX3 + " " + botY;
-						} else {
-							let start = group[0];
-							let end = group[1];
-
-							let topX1 = cumulativeBinSpace + binLocation;
-							let topX2 = cumulativeBinSpace + (end - start + 1) * widthPerRank + binLocation;
-
-							let botX3 = ranklinescale(start);
-							let botX4 = ranklinescale(end);
-
-							let topY = this.boxHeight - this.histogramOffset;
-							let botY = this.boxHeight;
-
-							cumulativeBinSpace += (end - start + 1) * widthPerRank;
-
-							line = "M" + topX1 + " " + topY +
-								"L " + topX2 + " " + topY +
-								"L " + botX4 + " " + botY +
-								"L " + botX3 + " " + botY;
+							start = group[0];
+							end = start + 1;
+						} 
+						else {
+							start = group[0];
+							end = group[1] + 1;	
 						}
+						
+						let topX1 = cumulativeBinSpace + binLocation + widthPerRank;
+						let topX2 = cumulativeBinSpace + (end - start + 1) * widthPerRank + binLocation;
+
+						let botX3 = this.ranklinescale(start);
+						let botX4 = this.ranklinescale(end);
+
+						let topY = this.boxHeight - this.histogramOffset;
+						let botY = this.boxHeight;
+
+						cumulativeBinSpace += (end - start + 1) * widthPerRank;
+
+						const line = "M" + topX1 + " " + topY +
+								"L " + topX2 + " " + topY +
+								"L " + botX4 + " " + botY +
+								"L " + botX3 + " " + botY;
 
 						rankLinesG.append("path")
 							.attr("d", line)
@@ -439,7 +445,7 @@ export default {
 				}
 			});
 
-			const rankLineAxis = d3.axisBottom(ranklinescale)
+			const rankLineAxis = d3.axisBottom(this.ranklinescale)
 				.ticks(10)
 				.tickFormat((d, i) => {
 					if (d % 1 == 0)
@@ -477,8 +483,8 @@ export default {
 
 			this.brush = d3.brushX()
 				.extent([
-					[this.paddingFactor * this.padding.left, this.histogramHeight],
-					[this.paddingFactor * this.padding.left + this.xAxisHeight - (this.paddingFactor) * this.padding.left, this.histogramHeight + this.rankScaleHeight]
+					[this.paddingFactor * this.padding.left, this.yAxisHeight],
+					[this.paddingFactor * this.padding.left + this.xAxisHeight - (this.paddingFactor) * this.padding.left, this.yAxisHeight + this.rankScaleHeight]
 				])
 				.on("brush", this.brushing)
 				.on("end", this.brushend);
@@ -500,24 +506,27 @@ export default {
 
 		brushing() {
 			const brushScale = d3.scaleLinear()
-				.domain(this.xScale.domain())
+				.domain([this.xScale.domain()[0], this.xScale.domain()[this.xScale.domain().length -1 ]])
 				.range(this.xScale.range());
 
 			let brushStart = d3.event.selection.map(brushScale.invert)[0];
 			let brushEnd = d3.event.selection.map(brushScale.invert)[1];
 			let brushPoints = this.xScale.domain().length;
 
-			this.localBrushStart = Math.floor(brushStart * brushPoints);
-			this.localBrushEnd = Math.ceil(brushEnd * brushPoints);
+			let brushMin = this.xScale.domain()[0];
+			let brushMax = this.xScale.domain()[this.xScale.domain().length - 1];
+
+			this.localBrushStart = Math.floor((brushStart - brushMin)/(brushMax - brushMin) * brushPoints);
+			this.localBrushEnd = Math.ceil((brushEnd - brushMin)/(brushMax - brushMin) * brushPoints);
 
 			// highlight rank lines that is brush
-			this.histogramSVG.selectAll(".binRank").attr("opacity", 0);
+			this.svg.selectAll(".binRank").attr("opacity", 0.5);
 			for (let i = this.localBrushStart; i < this.localBrushEnd; i++) {
-				this.histogramSVG.selectAll(`.bin_${i}`).attr("opacity", 1);
+				this.svg.selectAll(`.bin_${i}`).attr("opacity", 1);
 			}
 
 			if (this.localBrushStart == this.localBrushEnd) {
-				this.histogramSVG.selectAll(".binRank").attr("opacity", 1);
+				this.svg.selectAll(".binRank").attr("opacity", 1);
 			}
 		},
 
@@ -525,6 +534,7 @@ export default {
 			let self = this;
 			const processIDList = [];
 			for (let i = this.localBrushStart; i < this.localBrushEnd; i++) {
+				// console.log(self.binContainsProcID)
 				if (self.binContainsProcID[i] != null) {
 					const curList = self.binContainsProcID[i];
 					curList.forEach((processID) => {
@@ -536,6 +546,7 @@ export default {
 				"dataset": self.$store.selectedDataset,
 				"ids": processIDList
 			});
+
 		},
 	}
 };

@@ -141,3 +141,42 @@ export function removeDuplicates(arr) {
 		return seen.hasOwnProperty(item) ? false : (seen[item] = true);
 	});
 }
+
+// create a dummy element, apply the appropriate classes,
+// and then measure the element
+export function measure(text) {
+	if (!text || text.length === 0) return { height: 0, width: 0 };
+
+	const container = d3.select('body').append('svg').attr('class', 'dummy');
+	container.append('text').attrs({ x: -1000, y: -1000 }).text(text);
+
+	const bbox = container.node().getBBox();
+	container.remove();
+
+	return { height: bbox.height, width: bbox.width };
+}
+
+export function textWrap(text, width) {
+	text.each(function () {
+		var text = d3.select(this),
+			words = text.text().split(/\s+/).reverse(),
+			word,
+			line = [],
+			lineNumber = 0,
+			lineHeight = 1.1, // ems
+			x = text.attr("x"),
+			y = text.attr("y"),
+			dy = 0,
+			tspan = text.text(null).append("tspan").attr("dy", dy + "em");
+		while (word = words.pop()) {
+			line.push(word);
+			tspan.text(line.join(" "));
+			if (tspan.node().getComputedTextLength() > width) {
+				line.pop();
+				tspan.text(line.join(" "));
+				line = [word];
+				tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+			}
+		}
+	});
+}
