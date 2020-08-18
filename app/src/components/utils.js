@@ -156,6 +156,11 @@ export function measure(text) {
 	return { height: bbox.height, width: bbox.width };
 }
 
+/**
+ * 
+ * @param {*} text 
+ * @param {*} width 
+ */
 export function textWrap(text, width) {
 	text.each(function () {
 		var text = d3.select(this),
@@ -179,4 +184,17 @@ export function textWrap(text, width) {
 			}
 		}
 	});
+}
+
+/**
+ * Calculate the distance between two given points.
+ * @param {Number} x1 1st coordinate (x)
+ * @param {Number} y1 1st coordinate (y)
+ * @param {Number} x2 2nd coordinate (x)
+ * @param {Number} y2 2nd coordinate (y)
+ */
+export function distanceBtwnPoints(x1, y1, x2, y2) {
+	const a = x1 - x2;
+	const b = y1 - y2;
+	return Math.abs(Math.sqrt( a*a + b*b ));
 }
