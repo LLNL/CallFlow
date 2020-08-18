@@ -135,6 +135,10 @@ export function getGradients(store, node) {
 	return gradients;
 }
 
+/**
+ * Remove duplicates from an array.
+ * @param {*} arr 
+ */
 export function removeDuplicates(arr) {
 	var seen = {};
 	return arr.filter(function (item) {
@@ -196,5 +200,14 @@ export function textWrap(text, width) {
 export function distanceBtwnPoints(x1, y1, x2, y2) {
 	const a = x1 - x2;
 	const b = y1 - y2;
-	return Math.abs(Math.sqrt( a*a + b*b ));
+	return Math.abs(Math.sqrt(a * a + b * b));
+}
+
+/**
+ * Split string to lists by , (paranthesis proof)
+ * @param {*} string 
+ */
+export function stringToList(string) {
+	const re = /(:\s|,\s)/; // regular expression with capturing parentheses
+	return string.split(re);
 }

@@ -88,8 +88,8 @@ export default {
 		 * @param {*} node 
 		 */
 		render(graph, node) {
-			this.xOffset = this.positionX();
-			this.yOffset = this.positionY(node);
+			this.xOffset = this.positionX() + 40;
+			this.yOffset = this.positionY() + 40;
 			this.nodeHeight = node.height;
 
 			const svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
@@ -112,7 +112,7 @@ export default {
 				});
 
 			this.runtimeInformation(node);
-			// this.pathInformation(node);
+			this.pathInformation(node);
 		},
 
 		/**
@@ -153,21 +153,29 @@ export default {
 		 * @param {*} node 
 		 */
 		pathInformation(node) {
-			let data = ''
+			let module_data = {}
 			if (this.$store.selectedMode == 'Single') {
-				data = this.$store.modules[this.$store.selectedTargetDataset][this.node.id];
+				module_data = this.$store.modules[this.$store.selectedTargetDataset];
 			}
 			else if (this.$store.selectedMode == "Ensemble") {
-				data = this.$store.modules["ensemble"][this.node.id];
+				module_data = this.$store.modules["ensemble"];
 			}
 
-			console.log(data);
+			let callsite_data = {}
+			if (this.$store.selectedMode == 'Single') {
+				callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
+			}
+			else if (this.$store.selectedMode == "Ensemble") {
+				callsite_data = this.$store.callsites["ensemble"];
+			}
 
-			let entry_functions = data["callers"];
+
+			// TODO : Improve the logic here to not process the string input multiple times. 
+			let entry_functions = node[this.$store.selectedTargetDataset]['entry_function'].split(",").map(String);
 			let entry_function_runtimes = {};
 			for (let i = 0; i < entry_functions.length; i += 1) {
-				let callsite = entry_functions[i].replace("'", "").replace("'", "").replace("[", "").replace("]", "");
-				entry_function_runtimes[callsite] = this.$store.callsites["ensemble"][callsite][this.$store.selectedMetric]["mean_time"];
+				let callsite = entry_functions[i].replace("'", "").replace("'", "").replace("[", "").replace("]", "").replace(" ", "");
+				entry_function_runtimes[callsite] = callsite_data[callsite][this.$store.selectedMetric]["mean_time"];
 			}
 
 			// Create items array
@@ -184,14 +192,17 @@ export default {
 
 			this.addText("");
 			this.addText("Entry call sites: ");
+			this.entryFunctionInformation(node, entry_function_data)
+		},
 
-			// TODO: Bug here
+		entryFunctionInformation(node, entry_function_data) {
+			// Needs clean up for sure.
 			for (var tIndex = 0; tIndex < Math.min(3, entry_function_data.length); tIndex++) {
 				this.textCount += 1;
-				let fromColor = this.$store.color.getColorByValue(entry_function_data[tIndex][1]);
-				let toColor = this.$store.color.getColor(this.node);
-				let fromFunc = entry_function_data[tIndex][0];
-				let toFunc = this.node.id;
+				let toColor = this.$store.runtimeColor.getColorByValue(entry_function_data[tIndex][1]);
+				let fromColor = this.$store.runtimeColor.getColorByValue(node);
+				let toFunc = entry_function_data[tIndex][0];
+				let fromFunc = node.id;
 				let xOffset = this.xOffset + this.margin;
 				let yOffset = this.yOffset + this.textyOffset + this.textPadding * this.textCount;
 
@@ -202,7 +213,7 @@ export default {
 						"height": this.rectWidth,
 						"x": xOffset + "px",
 						"y": yOffset - 10 + "px",
-						"class": "toolTipContent"
+						"class": "tooltip-content",
 					})
 					.style("fill", fromColor);
 
@@ -211,16 +222,16 @@ export default {
 					.attrs({
 						"x": xOffset + 15 + "px",
 						"y": yOffset + "px",
-						"class": "toolTipContent",
+						"class": "tooltip-content",
 					})
-					.text(this.trunc(fromFunc, 10));
+					.text(utils.truncNames(fromFunc, 10));
 
 				this.toolTipG
 					.append("text")
 					.attrs({
 						"x": xOffset + 120 + "px",
 						"y": yOffset + "px",
-						"class": "toolTipContent",
+						"class": "tooltip-content",
 					})
 					.text("->");
 
@@ -231,7 +242,7 @@ export default {
 						"height": this.rectWidth,
 						"x": xOffset + 140 + "px",
 						"y": yOffset - 10 + "px",
-						"class": "toolTipContent",
+						"class": "tooltip-content",
 					})
 					.style("fill", toColor);
 				this.toolTipG
@@ -239,9 +250,9 @@ export default {
 					.attrs({
 						"x": xOffset + 155 + "px",
 						"y": yOffset + "px",
-						"class": "toolTipContent",
+						"class": "tooltip-content",
 					})
-					.text(this.trunc(toFunc, 10));
+					.text(utils.truncNames(toFunc, 10));
 			}
 
 			let left_callsites = entry_function_data.length - 3;

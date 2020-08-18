@@ -23,7 +23,16 @@ class SankeyLayout:
     Sankey layout
     """
 
-    _COLUMNS = ["actual_time", "time (inc)", "module", "name", "time", "type", "module"]
+    _COLUMNS = [
+        "actual_time",
+        "time (inc)",
+        "module",
+        "name",
+        "time",
+        "type",
+        "module",
+        "entry_function",
+    ]
 
     def __init__(
         self,
@@ -385,7 +394,7 @@ class SankeyLayout:
                 if node_dict["type"] == "component-node":
                     module = node_name.split("=")[0]
                     callsite = node_name.split("=")[1]
-                    actual_time = SankeyLayout.callsite_time(
+                    agg_time = SankeyLayout.callsite_time(
                         group_df=target_module_group_df,
                         module=module,
                         callsite=callsite,
@@ -396,7 +405,7 @@ class SankeyLayout:
                 elif node_dict["type"] == "super-node":
                     module = node_name
                     callsite = target_module_callsite_map[module].tolist()
-                    actual_time = SankeyLayout.module_time(
+                    agg_time = SankeyLayout.module_time(
                         group_df=target_module_name_group_df,
                         module_callsite_map=target_module_callsite_map,
                         module=module,
@@ -419,7 +428,7 @@ class SankeyLayout:
                         ret[node_name][column] = module
 
                     elif column == "actual_time":
-                        ret[node_name][column] = actual_time
+                        ret[node_name][column] = agg_time
 
                     elif column == "name":
                         ret[node_name][column] = callsite
@@ -427,7 +436,26 @@ class SankeyLayout:
                     elif column == "type":
                         ret[node_name][column] = node_dict["type"]
 
+                    elif column == "entry_function":
+                        print(
+                            SankeyLayout.get_entry_functions(
+                                target_module_group_df, node_name
+                            )
+                        )
+                        ret[node_name][column] = SankeyLayout.get_entry_functions(
+                            target_module_group_df, node_name
+                        )
+
         return ret
+
+    @staticmethod
+    def get_entry_functions(df, module):
+        """
+        Get the entry function of a module from the dataframe.
+        """
+        module_df = df.get_group(module)
+        entry_func_df = module_df.loc[module_df["entry_function"]]
+        return entry_func_df["callees"].unique().tolist()[0]
 
     # --------------------------------------------------------------------------
     @staticmethod
