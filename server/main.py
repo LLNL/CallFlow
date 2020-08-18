@@ -405,6 +405,21 @@ class CallFlowServer:
             )
             emit("compare", result, json=True)
 
+        @sockets.on("split_mpi_distribution", namespace="/")
+        def split_mpi_rank(data):
+            """
+            Split a single run based on MPI distribution
+            """
+            LOGGER.debug("[Socket request] compare_supergraph {data}")
+            result = self.callflow.request_single(
+                {
+                    "name": "split_mpi_distribution",
+                    "dataset": data["dataset"],
+                    "ranks": data["ranks"],
+                }
+            )
+            emit("split_mpi_distribution", result, json=True)
+
 
 if __name__ == "__main__":
     # if verbose, level = 1

@@ -268,6 +268,7 @@ class CallFlow:
             "supergraph",
             "miniHistogram",
             "function",
+            "split_mpi_distribution",
         ]
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
@@ -303,6 +304,9 @@ class CallFlow:
                 self.supergraphs[operation["dataset"]], operation["module"]
             )
             return functionlist.result
+
+        elif operation_name == "split_mpi_distribution":
+            pass
 
     # flake8: noqa: C901
     def request_ensemble(self, operation):

@@ -542,9 +542,9 @@ export default {
 					});
 				}
 			}
-			self.$socket.emit("split-rank", {
+			self.$socket.emit("split-mpi-rank", {
 				"dataset": self.$store.selectedDataset,
-				"ids": processIDList
+				"ranks": processIDList
 			});
 
 		},
