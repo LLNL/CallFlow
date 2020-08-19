@@ -49,7 +49,7 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("ensemble_distribution", function (data) {
+		EventHandler.$on("ensemble-distribution", function (data) {
 			self.clear();
 			console.log("Ensemble Distribution: ", data["module"]);
 			self.visualize(data["module"]);
@@ -78,7 +78,7 @@ export default {
 
 			let modules_arr = Object.keys(this.$store.modules["ensemble"]);
 
-			EventHandler.$emit("ensemble_distribution", {
+			EventHandler.$emit("ensemble-distribution", {
 				"module": modules_arr[0],
 				"datasets": this.$store.runNames
 			});
