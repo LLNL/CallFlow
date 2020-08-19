@@ -14,6 +14,7 @@ import subprocess
 import collections
 import datetime
 import errno
+import json
 
 # The following five types enumerate the possible return values of the
 # `start` function.
@@ -73,31 +74,97 @@ def _exec(cmd):
     return
 
 
-def start(args, timeout=datetime.timedelta(seconds=60)):
+def _get_info_dir():
+    """Get path to directory in which to store info files.
+    The directory returned by this function is "owned" by this module. If
+    the contents of the directory are modified other than via the public
+    functions of this module, subsequent behavior is undefined.
+    The directory will be created if it does not exist.
+    """
+    path = os.path.join(tempfile.gettempdir(), ".callflow-info")
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+    else:
+        os.chmod(path, 0o777)
+    return path
+
+
+def get_launch_information():
+    info_dir = _get_info_dir()
+    results = []
+    for filename in os.listdir(info_dir):
+        filepath = os.path.join(info_dir, filename)
+        try:
+            with open(filepath) as infile:
+                contents = infile.read()
+        except IOError as e:
+            if e.errno == errno.EACCES:
+                # May have been written by this module in a process whose
+                # `umask` includes some bits of 0o444.
+                continue
+            else:
+                raise
+        try:
+            info = contents
+        except ValueError:
+            # Ignore unrecognized files, logging at debug only.
+            print("invalid info file: %r", filepath)
+        else:
+            results.append(info)
+    return results
+
+
+def start(args):
     """
     Start a CallFlow (server and client) as a subprocess in the background.
     TODO: Improve logic to check if there is a callflow process already. 
     TODO: Fix the path not found error.
     """
-    (stdout_fd, stdout_path) = tempfile.mkstemp(prefix=".callflow-stdout-")
-    (stderr_fd, stderr_path) = tempfile.mkstemp(prefix=".callflow-stderr-")
-    cwd = os.getcwd().split('CallFlow')[0] + "CallFlow/server/main.py"
-    cmd = ["python3", cwd] + args
+
+    """
+    Launch python server.
+    """
+    print("Launching Server")
+    cwd = os.getcwd().split("CallFlow")[0] + "CallFlow/server/main.py"
+    server_cmd = ["python3", cwd] + args
+    launch_cmd(server_cmd, alias="server")
+
+    """
+    Launch callflow app server.
+    """
+    print("Launching client")
+    cwd = os.getcwd().split("CallFlow")[0] + "CallFlow/app"
+    prefix_string = ["--silent", "--prefix=" + cwd]
+    client_cmd = ["npm", "run", "dev"] + prefix_string
+    print(client_cmd)
+    launch_cmd(client_cmd, alias="client")
+
+    return StartLaunched(info="Started")
+
+
+def launch_cmd(cmd, timeout=datetime.timedelta(seconds=60), alias=""):
+    """
+    Launch a cmd.
+    """
+    stdprefix_path = "/tmp/.callflow-info/" + alias + "-"
+    (stdout_fd, stdout_path) = tempfile.mkstemp(prefix=stdprefix_path + "stdout-")
+    (stderr_fd, stderr_path) = tempfile.mkstemp(prefix=stdprefix_path + "stderr-")
+
     start_time_seconds = time.time()
     try:
-        p = subprocess.Popen(
-            cmd,
-            stdout=stdout_fd,
-            stderr=stderr_fd,
-        )
-
+        p = subprocess.Popen(cmd, stdout=stdout_fd, stderr=stderr_fd,)
     except OSError as e:
         return StartExecFailed(os_error=e)
     finally:
         os.close(stdout_fd)
         os.close(stderr_fd)
 
-    poll_interval_seconds = 0.5
+    poll_interval_seconds = 2
     end_time_seconds = start_time_seconds + timeout.total_seconds()
     while time.time() < end_time_seconds:
         time.sleep(poll_interval_seconds)
@@ -108,11 +175,14 @@ def start(args, timeout=datetime.timedelta(seconds=60)):
                 stdout=_maybe_read_file(stdout_path),
                 stderr=_maybe_read_file(stderr_path),
             )
-        # for info in get_all():
-        #     if info.pid == p.pid and info.start_time >= start_time_seconds:
-        return StartLaunched(info="Started" + stdout_path)
-    else:
-        return StartTimedOut(pid=p.pid)
+            # for info in get_launch_information():
+            # if info.pid == p.pid and info.start_time >= start_time_seconds:
+            info = get_launch_information()
+            return StartLaunched(
+                info={"out_path": stdout_path, "err_path": stderr_path, "pid": p.pid,}
+            )
+        else:
+            return StartTimedOut(pid=p.pid)
 
 
 def _maybe_read_file(filename):

@@ -76,8 +76,13 @@ def start(args_string):
 
     parsed_args = shlex.split(args_string, comments=True, posix=True)
     start_result = manager.start(parsed_args)
-   
-    print(start_result)
+
+    print("aaaa", start_result)
+
+    if isinstance(start_result, manager.StartLaunched):
+        _display_ipython(
+            port=1024, height=500, display_handle=handle,
+        )
 
 
 def _display_ipython(port, height, display_handle):
@@ -99,29 +104,19 @@ def _display_ipython(port, height, display_handle):
         })();
       </script>
     """
-    proxy_url = os.environ.get("TENSORBOARD_PROXY_URL")
-    if proxy_url is not None:
-        # Allow %PORT% in $TENSORBOARD_PROXY_URL
-        proxy_url = proxy_url.replace("%PORT%", "%d" % port)
-        replacements = [
-            ("%HTML_ID%", html_escape(frame_id, quote=True)),
-            ("%JSON_ID%", json.dumps(frame_id)),
-            ("%HEIGHT%", "%d" % height),
-            ("%PORT%", "0"),
-            ("%URL%", json.dumps(proxy_url)),
-        ]
-    else:
-        replacements = [
-            ("%HTML_ID%", html_escape(frame_id, quote=True)),
-            ("%JSON_ID%", json.dumps(frame_id)),
-            ("%HEIGHT%", "%d" % height),
-            ("%PORT%", "%d" % port),
-            ("%URL%", json.dumps("/")),
-        ]
+
+    replacements = [
+        ("%HTML_ID%", html_escape(frame_id, quote=True)),
+        ("%JSON_ID%", json.dumps(frame_id)),
+        ("%HEIGHT%", "%d" % height),
+        ("%PORT%", "%d" % port),
+        ("%URL%", json.dumps("/")),
+    ]
 
     for (k, v) in replacements:
         shell = shell.replace(k, v)
     iframe = IPython.display.HTML(shell)
+    print(iframe)
     if display_handle:
         display_handle.update(iframe)
     else:
