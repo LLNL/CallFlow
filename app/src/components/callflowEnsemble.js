@@ -47,7 +47,7 @@ export default {
 
 	watch: {
 		showTarget: (val) => {
-			EventHandler.$emit("show_target_auxiliary");
+			EventHandler.$emit("show-target-auxiliary");
 		}
 	},
 
@@ -664,7 +664,7 @@ export default {
 			this.$store.compareDataset = "";
 			this.$store.encoding = "MeanGradients";
 			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
-			EventHandler.$emit("show_target_auxiliary", {
+			EventHandler.$emit("show-target-auxiliary", {
 			});
 			this.init();
 		},
@@ -700,12 +700,12 @@ export default {
 		updateDiffNodeAlignment() {
 			console.log("Alignment mode: ", this.selectedDiffNodeAlignment);
 			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment;
-			EventHandler.$emit("update_diff_node_alignment");
+			EventHandler.$emit("update-diff-node-alignment");
 		},
 
 		updateAuxiliarySortBy() {
 			this.$store.auxiliarySortBy = this.auxiliarySortBy;
-			EventHandler.$emit("update_auxiliary_sortBy");
+			EventHandler.$emit("update-auxiliary-sort-by");
 		},
 
 		updateCompareDataset() {
@@ -755,19 +755,19 @@ export default {
 
 		updateRuntimeSortBy() {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
-			EventHandler.$emit("callsite_information_sort");
+			EventHandler.$emit("callsite-information-sort");
 		},
 
 		updateNumOfClusters() {
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters;
-			EventHandler.$emit("update_number_of_clusters");
+			EventHandler.$emit("update-number-of-clusters");
 		},
 
 		updateTargetColor() {
 			this.$store.showTarget = this.showTarget;
 			this.clear();
 			this.init();
-			EventHandler.$emit("show_target_auxiliary", {
+			EventHandler.$emit("show-target-auxiliary", {
 			});
 		},
 

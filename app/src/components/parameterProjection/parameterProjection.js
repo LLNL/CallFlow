@@ -403,7 +403,7 @@ export default {
 			});
 			this.$store.selectedTargetDataset = dataset_name;
 
-			EventHandler.$emit("highlight_datasets", this.$store.selectedTargetDataset);
+			EventHandler.$emit("highlight-datasets", this.$store.selectedTargetDataset);
 		},
 
 		// ====================================
@@ -463,7 +463,7 @@ export default {
 
 			this.$store.selectedDatasets = this.selectedDatasets;
 			// EventHandler.$emit('highlight_datasets', this.selectedDatasets)
-			EventHandler.$emit("lasso_selection", this.$store.selectedDatasets);
+			EventHandler.$emit("lasso-selection", this.$store.selectedDatasets);
 		},
 
 		zoom() {
