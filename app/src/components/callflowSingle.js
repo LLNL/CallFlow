@@ -56,7 +56,7 @@ export default {
 
 	watch: {
 		showTarget: (val) => {
-			EventHandler.$emit("show_target_auxiliary");
+			EventHandler.$emit("show-target-auxiliary");
 		}
 	},
 
@@ -549,7 +549,7 @@ export default {
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
 			this.init();
-			EventHandler.$emit("show_target_auxiliary", {
+			EventHandler.$emit("show-target-auxiliary", {
 			});
 		},
 
@@ -595,7 +595,7 @@ export default {
 
 		updateRuntimeSortBy() {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
-			EventHandler.$emit("callsite_information_sort");
+			EventHandler.$emit("callsite-information-sort");
 		},
 
 		updateMPIBinCount() {

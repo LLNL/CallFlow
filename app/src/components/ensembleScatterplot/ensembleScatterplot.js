@@ -50,7 +50,7 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("ensemble_scatterplot", function (data) {
+		EventHandler.$on("ensemble-scatterplot", function (data) {
 			console.log("Ensemble Scatterplot: ", data);
 			self.visualize(data["module"]);
 		});
@@ -70,7 +70,7 @@ export default {
 				.attr("transform", "translate(" + this.padding.left + "," + this.padding.top + ")");
 
 			this.$refs.ToolTip.init(this.svgID);
-			EventHandler.$emit("ensemble_scatterplot", {
+			EventHandler.$emit("ensemble-scatterplot", {
 				module: this.$store.selectedModule,
 				dataset: this.$store.selectedDatasets,
 			});

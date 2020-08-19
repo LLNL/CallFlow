@@ -158,7 +158,7 @@ export default {
 				this.stdDeviation[callsite] = utils.formatRuntimeWithoutUnits(data["std_deviation"]);
 
 				this.selectClassName[callsite] = "unselect-callsite";
-				EventHandler.$emit("show_mpi_boxplot", this.callsites[callsite]);
+				EventHandler.$emit("show-mpi-boxplot", this.callsites[callsite]);
 			}
 		},
 
@@ -246,9 +246,6 @@ export default {
 		},
 
 		/**
-		 *
-		 */
-		/**
 		 * 
 		 * @param {*} str 
 		 * @param {*} n 
@@ -309,7 +306,7 @@ export default {
 		 */
 		clear() {
 			for (let callsite in this.callsites) {
-				EventHandler.$emit("hide_mpi_boxplot", this.callsites[callsite]);
+				EventHandler.$emit("hide-mpi-boxplot", this.callsites[callsite]);
 			}
 		},
 
@@ -333,7 +330,7 @@ export default {
 				datasets: this.$store.selectedDatasets,
 			});
 
-			EventHandler.$emit("reveal_callsite");
+			EventHandler.$emit("reveal-callsite");
 		},
 
 		/**
@@ -438,14 +435,14 @@ export default {
 					selectedModule: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
-				EventHandler.$emit("split_by_entry_callsites");
+				EventHandler.$emit("split-by-entry-callsites");
 			}
 			else if (this.isCalleeSelected == "select-callsite") {
 				this.$socket.emit("split_by_callees", {
 					selectedModule: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
-				EventHandler.$emit("split_by_callees");
+				EventHandler.$emit("split-by-callees");
 			}
 		}
 	}

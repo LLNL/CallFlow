@@ -26,7 +26,7 @@ export default {
 		},
 
 		colorScale() {
-			this.$parent.$parent.$refs.EnsembleColorMap.update(this.$store.mode, hist_min, hist_max);
+			// this.$parent.$parent.$refs.EnsembleColorMap.update(this.$store.mode, hist_min, hist_max);
 		},
 
 		gradients() {

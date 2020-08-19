@@ -70,30 +70,30 @@ export default {
 	}),
 	mounted() {
 		let self = this;
-		EventHandler.$on("highlight_datasets", (datasets) => {
+		EventHandler.$on("highlight-datasets", (datasets) => {
 			console.log("[Interaction] Highlighting the datasets :", datasets);
 			self.highlight(datasets);
 		});
 
-		EventHandler.$on("update_auxiliary_sortBy", (sortBy) => {
+		EventHandler.$on("update-auxiliary-sort-by", (sortBy) => {
 			self.updateSortBy(sortBy);
 		});
 
-		EventHandler.$on("select_module", (data) => {
+		EventHandler.$on("select-module", (data) => {
 			let thismodule = data["module"];
 			// self.selectCallsitesByModule(thismodule)
 			this.isModuleSelected = true;
 			self.selectModule(thismodule);
 		});
 
-		EventHandler.$on("highlight_dataset", (data) => {
+		EventHandler.$on("highlight-dataset", (data) => {
 			let dataset = data["dataset"];
 			if (self.$store.showTarget) {
 				self.highlightCallsitesByDataset(dataset);
 			}
 		});
 
-		EventHandler.$on("callsite_information_sort", (data) => {
+		EventHandler.$on("callsite-information-sort", (data) => {
 			let attribute = self.$store.selectedRuntimeSortBy;
 			self.differenceCallsites = self.sortByAttribute(self.knc["difference"], attribute);
 			self.intersectionCallsites = self.sortByAttribute(self.knc["intersection"], attribute);
@@ -279,13 +279,13 @@ export default {
 			let callsite_name = event.currentTarget.id;
 			console.log("Toggling", callsite_name);
 			this.intersectionCallsites[callsite_name].reveal = true;
-			EventHandler.$emit("show_boxplot", this.intersectionCallsites[callsite_name]);
+			EventHandler.$emit("show-boxplot", this.intersectionCallsites[callsite_name]);
 		},
 
 		closeIntersectionBoxPlot(callsite) {
 			event.stopPropagation();
 			let callsite_name = event.currentTarget.id;
-			EventHandler.$emit("hide_boxplot", this.intersectionCallsites[callsite_name]);
+			EventHandler.$emit("hide-boxplot", this.intersectionCallsites[callsite_name]);
 		},
 
 		clear() {
@@ -304,7 +304,7 @@ export default {
 				datasets: this.$store.selectedDatasets,
 			});
 
-			EventHandler.$emit("reveal_callsite");
+			EventHandler.$emit("reveal-callsite");
 		}, 
 
 		showEntryFunctions(event) {
@@ -421,14 +421,14 @@ export default {
 					selectedModule: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
-				EventHandler.$emit("split_by_entry_callsites");
+				EventHandler.$emit("split-by-entry-callsites");
 			}
 			else if (this.isCalleeSelected == "select-callsite") {
 				this.$socket.emit("split_by_callees", {
 					selectedModule: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
-				EventHandler.$emit("split_by_callees");
+				EventHandler.$emit("split-by-callees");
 			}
 		}
 	}

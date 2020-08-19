@@ -166,8 +166,8 @@ export default {
 				: "<div class=\"black-text\"><span>" + name + "</span>";
 			
 			if (this.has_data_map["module"]) {
-				module = callsite["module"];
-				html = html + "<br/><span class=\"description\"><b>Module :</b> " + module + "</span> </div>";
+				let thismodule = callsite["module"];
+				html = html + "<br/><span class=\"description\"><b>Module :</b> " + thismodule + "</span> </div>";
 			}
 			return html;
 		},

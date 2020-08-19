@@ -19,7 +19,7 @@ export default {
 	}),
 	mounted() {
 		let self = this;
-		EventHandler.$on("highlight_dataset", (datasets) => {
+		EventHandler.$on("highlight-dataset", (datasets) => {
 			console.log("[Interaction] Highlighting the datasets :", datasets);
 			self.highlight(datasets);
 		});
@@ -51,7 +51,7 @@ export default {
 		onSelect(item) {
 			this.selected = item;
 			this.$store.highlight_dataset = item["dataset"];
-			EventHandler.$emit("highlight_dataset", item["dataset"]);
+			EventHandler.$emit("highlight-dataset", item["dataset"]);
 		},
 
 		getLabel(id) {
