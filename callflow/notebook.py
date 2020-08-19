@@ -10,6 +10,7 @@
 import shlex
 import json
 import random
+import argparse
 
 try:
     import html
@@ -26,7 +27,7 @@ from callflow import manager
 
 
 def _load_ipython_extension(ipython):
-    """Load the TensorBoard notebook extension.
+    """Load the CallFLow notebook extension.
     Intended to be called from `%load_ext callflow`. Do not invoke this
     directly.
     Args:
@@ -50,13 +51,22 @@ def _start_magic(line):
     return start(line)
 
 
+def _jupyter_args_to_argparse(args_string):
+    """
+    Converts jupyter launch command to argparse.Namespace.
+    """
+    parser = argparse.ArgumentParser(prefix_chars="--")
+    parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--process", action="store_true")
+    parser.add_argument("--config", nargs="*")
+
+    return parser.parse_args(shlex.split(args_string))
+
+
 def start(args_string):
-    """Launch and display a TensorBoard instance as if at the command line.
+    """Launch and display a CallFlow instance as if at the command line.
     Args:
-      args_string: Command-line arguments to TensorBoard, to be
-        interpreted by `shlex.split`: e.g., "--logdir ./logs --port 0".
-        Shell metacharacters are not supported: e.g., "--logdir 2>&1" will
-        point the logdir at the literal directory named "2>&1".
+      args_string: Command-line arguments to CallFlow.
     """
     try:
         import IPython
@@ -74,14 +84,31 @@ def start(args_string):
         else:
             handle.update(IPython.display.Pretty(message))
 
-    parsed_args = shlex.split(args_string, comments=True, posix=True)
-    start_result = manager.start(parsed_args)
+    parsed_args = _jupyter_args_to_argparse(args_string)
+    start_result = manager.start(
+        parsed_args, shlex.split(args_string, comments=True, posix=True)
+    )
 
-    print("aaaa", start_result)
+    print(start_result)
 
     if isinstance(start_result, manager.StartLaunched):
         _display_ipython(
-            port=1024, height=500, display_handle=handle,
+            port=1024, height=800, display_handle=handle,
+        )
+
+    elif isinstance(start_result, manager.StartReused):
+        template = (
+            "Reusing CallFlow on port {port} (pid {pid}), started {delta} ago. "
+            "(Use '!kill {pid}' to kill it.)"
+        )
+        message = template.format(
+            port=start_result.info.port,
+            pid=start_result.info.pid,
+            delta=_time_delta_from_info(start_result.info),
+        )
+        print_or_update(message)
+        _display_ipython(
+            port=start_result.info.port, print_message=False, display_handle=None,
         )
 
 
@@ -116,7 +143,6 @@ def _display_ipython(port, height, display_handle):
     for (k, v) in replacements:
         shell = shell.replace(k, v)
     iframe = IPython.display.HTML(shell)
-    print(iframe)
     if display_handle:
         display_handle.update(iframe)
     else:

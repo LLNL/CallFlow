@@ -9,13 +9,17 @@ import os
 import json
 import argparse
 from networkx.readwrite import json_graph
+import time
 
 # ------------------------------------------------------------------------------
 # CallFlow imports.
 import callflow
 from callflow.operations import ConfigFileReader
+from callflow import manager
+from callflow import __version__
 
 LOGGER = callflow.get_logger(__name__)
+_CALLFLOW_SERVER_PORT = 5000
 
 # ------------------------------------------------------------------------------
 # Create a Flask server.
@@ -35,8 +39,15 @@ class CallFlowServer:
         # Verify if only valid things are passed.
         self._verify_parser(args)
 
+        print(vars(args))
+
+        # Set cache key to store the current instance's arguments.
+        self.cache_key = manager.cache_key(
+            working_directory=os.getcwd(), arguments=vars(args),
+        )
+
         self.debug = args.verbose or True
-        self.production = args.production or False
+        self.production = False
         self.process = args.process
 
         # Read the config file using config file reader.
@@ -67,8 +78,6 @@ class CallFlowServer:
             "--verbose", action="store_true", help="Display debug points"
         )
         parser.add_argument("--config", help="Config file to be processed.")
-        parser.add_argument("--production", help="Launch app on production server.")
-
         parser.add_argument(
             "--process",
             action="store_true",
@@ -108,11 +117,28 @@ class CallFlowServer:
             self._request_handler_single()
             self._request_handler_ensemble()
 
+        info = manager.CallFlowLaunchInfo(
+            version=__version__,
+            start_time=int(time.time()),
+            port=_CALLFLOW_SERVER_PORT,
+            pid=os.getpid(),
+            config_path=self.config.json,
+            cache_key=self.cache_key,
+        )
+
+        manager.write_info_file(info)
+
         # Start the server.
         if self.production:
-            sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
+            sockets.run(
+                app,
+                host="0.0.0.0",
+                debug=self.debug,
+                use_reloader=True,
+                port=_CALLFLOW_SERVER_PORT,
+            )
         else:
-            sockets.run(app, debug=False, use_reloader=True)
+            sockets.run(app, debug=False, use_reloader=True, port=_CALLFLOW_SERVER_PORT)
 
     def _request_handler_general(self):
         """

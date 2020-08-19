@@ -15,6 +15,8 @@ import collections
 import datetime
 import errno
 import json
+import base64
+import argparse
 
 # The following five types enumerate the possible return values of the
 # `start` function.
@@ -49,6 +51,80 @@ StartExecFailed = collections.namedtuple(
 # timeout period. The process may still be running under the included
 # PID.
 StartTimedOut = collections.namedtuple("StartTimedOut", ("pid",))
+
+# Information about a running CallFlow's info.
+_CALLFLOW_INFO_FIELDS = collections.OrderedDict(
+    (
+        ("version", str),
+        ("start_time", int),  # seconds since epoch
+        ("pid", int),
+        ("port", int),
+        ("config_path", str),  # may be empty
+        ("cache_key", str),  # opaque, as given by `cache_key` below
+    )
+)
+
+CallFlowLaunchInfo = collections.namedtuple(
+    "CallFlowLaunchInfo", _CALLFLOW_INFO_FIELDS,
+)
+
+
+def cache_key(working_directory, arguments):
+    """
+    @working_directory (str) - Current working directory
+    @arguments (argparse.Namespace) - Arguments passed during launch.
+
+    Returns a cache_key that encodes the input arguments
+    Used for comparing instances after launch.
+    """
+    if not isinstance(arguments, dict):
+        raise TypeError(
+            "'arguments' should be a list of arguments, but found: %r "
+            "(use `shlex.split` if given a string)" % (arguments,)
+        )
+
+    datum = {
+        "working_directory": working_directory,
+        "arguments": arguments,
+    }
+    raw = base64.b64encode(
+        json.dumps(datum, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    )
+    # `raw` is of type `bytes`, even though it only contains ASCII
+    # characters; we want it to be `str` in both Python 2 and 3.
+    return str(raw.decode("ascii"))
+
+
+def _info_to_string(info):
+    """
+    Convert the callflow's launch info to json.
+    """
+    json_value = {k: getattr(info, k) for k in _CALLFLOW_INFO_FIELDS}
+    return json.dumps(json_value, sort_keys=True, indent=4)
+
+
+def _get_info_file_path():
+    """Get path to info file for the current process.
+    As with `_get_info_dir`, the info directory will be created if it
+    does not exist.
+    """
+    return os.path.join(_get_info_dir(), "pid-%d.info" % os.getpid())
+
+
+def write_info_file(info):
+    """Write CallFlowInfo to the current process's info file.
+    This should be called by `main` once the server is ready. When the
+    server shuts down, `remove_info_file` should be called.
+    Args:
+      info: A valid `CallFlowLaunchInfo` object.
+    Raises:
+      ValueError: If any field on `info` is not of the correct type.
+    """
+    payload = "%s\n" % _info_to_string(info)
+    path = _get_info_file_path()
+    print("CallFlow config for this instance is dumped into", path)
+    with open(path, "w") as outfile:
+        outfile.write(payload)
 
 
 def _exec(cmd):
@@ -98,40 +174,46 @@ def get_launch_information():
     info_dir = _get_info_dir()
     results = []
     for filename in os.listdir(info_dir):
-        filepath = os.path.join(info_dir, filename)
-        try:
-            with open(filepath) as infile:
-                contents = infile.read()
-        except IOError as e:
-            if e.errno == errno.EACCES:
-                # May have been written by this module in a process whose
-                # `umask` includes some bits of 0o444.
-                continue
-            else:
-                raise
-        try:
-            info = contents
-        except ValueError:
-            # Ignore unrecognized files, logging at debug only.
-            print("invalid info file: %r", filepath)
-        else:
+        if filename.split("-")[0] == "pid":
+            filepath = os.path.join(info_dir, filename)
+            try:
+                with open(filepath) as infile:
+                    contents = infile.read()
+            except IOError as e:
+                if e.errno == errno.EACCES:
+                    # May have been written by this module in a process whose
+                    # `umask` includes some bits of 0o444.
+                    continue
+                else:
+                    raise
+            try:
+                info = json.loads(contents)
+            except ValueError:
+                # Ignore unrecognized files, logging at debug only.
+                print("invalid info file: %r", filepath)
             results.append(info)
     return results
 
 
-def start(args):
+def start(args, args_string):
     """
     Start a CallFlow (server and client) as a subprocess in the background.
     TODO: Improve logic to check if there is a callflow process already. 
-    TODO: Fix the path not found error.
     """
+
+    match = _find_matching_instance(
+        cache_key(working_directory=os.getcwd(), arguments=vars(args),),
+    )
+    print(match)
+    if match:
+        return StartReused(info=match)
 
     """
     Launch python server.
     """
     print("Launching Server")
     cwd = os.getcwd().split("CallFlow")[0] + "CallFlow/server/main.py"
-    server_cmd = ["python3", cwd] + args
+    server_cmd = ["python3", cwd] + args_string
     launch_cmd(server_cmd, alias="server")
 
     """
@@ -141,10 +223,23 @@ def start(args):
     cwd = os.getcwd().split("CallFlow")[0] + "CallFlow/app"
     prefix_string = ["--silent", "--prefix=" + cwd]
     client_cmd = ["npm", "run", "dev"] + prefix_string
-    print(client_cmd)
     launch_cmd(client_cmd, alias="client")
 
     return StartLaunched(info="Started")
+
+
+def _find_matching_instance(cache_key):
+    """Find a running CallFlow instance compatible with the cache key.
+    Returns:
+      A `CalLFlowInfo` object, or `None` if none matches the cache key.
+    """
+    infos = get_launch_information()
+    candidates = [info for info in infos if info["cache_key"] == cache_key]
+    print(candidates)
+    for candidate in sorted(candidates, key=lambda x: x.port):
+        print(candidate)
+        return candidate
+    return None
 
 
 def launch_cmd(cmd, timeout=datetime.timedelta(seconds=60), alias=""):
@@ -154,6 +249,8 @@ def launch_cmd(cmd, timeout=datetime.timedelta(seconds=60), alias=""):
     stdprefix_path = "/tmp/.callflow-info/" + alias + "-"
     (stdout_fd, stdout_path) = tempfile.mkstemp(prefix=stdprefix_path + "stdout-")
     (stderr_fd, stderr_path) = tempfile.mkstemp(prefix=stdprefix_path + "stderr-")
+
+    print(stdout_path, stderr_path)
 
     start_time_seconds = time.time()
     try:
@@ -175,12 +272,10 @@ def launch_cmd(cmd, timeout=datetime.timedelta(seconds=60), alias=""):
                 stdout=_maybe_read_file(stdout_path),
                 stderr=_maybe_read_file(stderr_path),
             )
-            # for info in get_launch_information():
-            # if info.pid == p.pid and info.start_time >= start_time_seconds:
-            info = get_launch_information()
-            return StartLaunched(
-                info={"out_path": stdout_path, "err_path": stderr_path, "pid": p.pid,}
-            )
+            for info in get_launch_information():
+                if info.pid == p.pid and info.start_time >= start_time_seconds:
+                    info = get_launch_information()
+                    return StartLaunched(info=info)
         else:
             return StartTimedOut(pid=p.pid)
 
