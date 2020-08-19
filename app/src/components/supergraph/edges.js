@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
- import * as d3 from "d3";
+import * as d3 from "d3";
 
 export default {
 	template: "<g :id=\"id\"><ToolTip ref=\"ToolTip\" /></g>",

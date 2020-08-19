@@ -661,8 +661,8 @@ export default {
 
 		updateTargetDataset() {
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
-			this.$store.compareDataset = ''
-			this.$store.encoding = 'MeanGradients'
+			this.$store.compareDataset = "";
+			this.$store.encoding = "MeanGradients";
 			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
 			EventHandler.$emit("show_target_auxiliary", {
 			});
@@ -764,7 +764,7 @@ export default {
 		},
 
 		updateTargetColor() {
-			this.$store.showTarget = this.showTarget
+			this.$store.showTarget = this.showTarget;
 			this.clear();
 			this.init();
 			EventHandler.$emit("show_target_auxiliary", {

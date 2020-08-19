@@ -23,6 +23,18 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * 
+		 * @param {*} q 
+		 * @param {*} targetq 
+		 * @param {*} ensembleWhiskerIndices 
+		 * @param {*} targetWhiskerIndices 
+		 * @param {*} d 
+		 * @param {*} targetd 
+		 * @param {*} xScale 
+		 * @param {*} callsite 
+		 * @param {*} showTarget 
+		 */
 		init(q, targetq, ensembleWhiskerIndices, targetWhiskerIndices, d, targetd, xScale, callsite, showTarget) {
 			this.q = q;
 			this.targetq = targetq;
@@ -52,6 +64,11 @@ export default {
 			this.$parent.$refs.ToolTip.init("boxplot-" + callsite.id);
 		},
 
+		/**
+		 * 
+		 * @param {*} data 
+		 * @param {*} band 
+		 */
 		groupByBand(data, band) {
 			let ret = [];
 			let temp_x = 0;
@@ -147,6 +164,12 @@ export default {
 			};
 		},
 
+		/**
+		 * 
+		 * @param {*} data 
+		 * @param {*} radius 
+		 * @param {*} datatype 
+		 */
 		groupOutliers(data, radius, datatype) {
 			const radius2 = radius ** 2;
 
@@ -210,6 +233,10 @@ export default {
 			return group_circles;
 		},
 
+		/**
+		 * 
+		 * @param {*} data 
+		 */
 		cleanUpEmptyOutliers(data) {
 			let ret = [];
 			for (let i = 0; i < data.length; i += 1) {
@@ -220,6 +247,9 @@ export default {
 			return ret;
 		},
 
+		/**
+		 * 
+		 */
 		targetOutliers() {
 			let self = this;
 
@@ -280,6 +310,9 @@ export default {
 			}
 		},
 
+		/**
+		 * 
+		 */
 		clear() {
 			this.g.selectAll(".ensemble-outlier").remove();
 			this.g.selectAll(".target-outlier").remove();

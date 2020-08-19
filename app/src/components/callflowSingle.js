@@ -581,11 +581,6 @@ export default {
 			});
 		},
 
-		updateAuxiliarySortBy() {
-			this.$store.auxiliarySortBy = this.auxiliarySortBy;
-			EventHandler.$emit("update_auxiliary_sortBy");
-		},
-
 		updateScale() {
 			this.$store.selectedScale = this.selectedScale;
 			this.clear();

@@ -37,7 +37,7 @@ export default class Color {
 	}
 
 	getColorByValue(value) {
-		return this.colorscale(value);
+		return this.rgbArrayToHex(this.colorscale(value));
 	}
 
 	setColorPadding(colorPoint) {

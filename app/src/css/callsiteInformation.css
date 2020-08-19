@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
  
- #callsite-information-overview {
+#callsite-information-overview {
     overflow: auto;
 }
 
@@ -43,10 +43,11 @@
     padding: 2px;
 }
 
-.auxiliary-node {
-    padding-left: 10px;
-    padding-top:0px;
-    margin: 3px;
+.callsite-information-node {
+    padding: 10px 0px 5px 5px;
+    /* padding-bottom: 4px;
+    padding-top:5px; */
+    margin: 10px;
     border-width: 1px;
     border-style: solid;
     border-color: #d0cccc;
@@ -80,4 +81,9 @@
 .component-data {
     color: #009688;
     padding: 0px;
+}
+
+.information {
+    margin-left: 15px;
+    font-size: 16px;
 }
