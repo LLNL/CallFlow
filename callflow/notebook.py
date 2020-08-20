@@ -59,7 +59,6 @@ def _jupyter_args_to_argparse(args_string):
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--process", action="store_true")
     parser.add_argument("--config", nargs="*")
-
     return parser.parse_args(shlex.split(args_string))
 
 
@@ -88,8 +87,6 @@ def start(args_string):
     start_result = manager.start(
         parsed_args, shlex.split(args_string, comments=True, posix=True)
     )
-
-    print(start_result)
 
     if isinstance(start_result, manager.StartLaunched):
         _display_ipython(

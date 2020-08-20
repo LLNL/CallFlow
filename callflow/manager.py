@@ -16,7 +16,6 @@ import datetime
 import errno
 import json
 import base64
-import argparse
 
 # The following five types enumerate the possible return values of the
 # `start` function.
@@ -171,6 +170,9 @@ def _get_info_dir():
 
 
 def get_launch_information():
+    """
+    Dump all current instances's CallFlowLaunchInfo into a list.
+    """
     info_dir = _get_info_dir()
     results = []
     for filename in os.listdir(info_dir):
@@ -204,7 +206,7 @@ def start(args, args_string):
     match = _find_matching_instance(
         cache_key(working_directory=os.getcwd(), arguments=vars(args),),
     )
-    print(match)
+    print("Is there a matching pid?", match != None)
     if match:
         return StartReused(info=match)
 
@@ -235,9 +237,7 @@ def _find_matching_instance(cache_key):
     """
     infos = get_launch_information()
     candidates = [info for info in infos if info["cache_key"] == cache_key]
-    print(candidates)
     for candidate in sorted(candidates, key=lambda x: x.port):
-        print(candidate)
         return candidate
     return None
 
@@ -249,8 +249,11 @@ def launch_cmd(cmd, timeout=datetime.timedelta(seconds=60), alias=""):
     stdprefix_path = "/tmp/.callflow-info/" + alias + "-"
     (stdout_fd, stdout_path) = tempfile.mkstemp(prefix=stdprefix_path + "stdout-")
     (stderr_fd, stderr_path) = tempfile.mkstemp(prefix=stdprefix_path + "stderr-")
+    pid_path = _get_info_file_path()
 
-    print(stdout_path, stderr_path)
+    print(f"stdout for {alias} is dumped in {stdout_path}.")
+    print(f"stderr for {alias} is dumped in {stdout_path}.")
+    print(f"CallFlow instance info is dumped in {pid_path}")
 
     start_time_seconds = time.time()
     try:
