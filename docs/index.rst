@@ -13,8 +13,7 @@ CallFlow
 ########
 
 CallFlow is an interactive visual analysis tool that provides a high-level
-overview of CCTs together with semantic refinement operations to progressively
-explore the CCTs.
+overview of CCTs together with semantic refinement operations to progressively explore the CCTs.
 
 You can get CallFlow from its `GitHub repository
 <https://github.com/LLNL/CallFlow>`_:
