@@ -149,7 +149,9 @@ class CallFlow:
 
             # Single auxiliary processing.
             single_supergraphs[dataset_name].single_auxiliary(
-                dataset=dataset_name, binCount=20, process=True,
+                dataset=dataset_name,
+                binCount=20,
+                process=True,
             )
 
         # Create a supergraph class for ensemble case.

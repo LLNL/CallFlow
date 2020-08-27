@@ -37,7 +37,7 @@ def convertStringToList(string):
 
 def median(arr):
     """
-        Returns the median and its index in the array.
+    Returns the median and its index in the array.
     """
     indices = []
 
@@ -56,16 +56,16 @@ def median(arr):
 
 def avg(arr):
     """
-        Returns the average of the array.
-        Uses floating-point division.
+    Returns the average of the array.
+    Uses floating-point division.
     """
     return sum(arr) / float(len(arr))
 
 
 def string_to_list(string: str, sep: str):
     """
-        Converts the string to list separated by the sep attribute.
-        Uses floating-point division.
+    Converts the string to list separated by the sep attribute.
+    Uses floating-point division.
     """
     return string.strip("][").split(sep)
 
