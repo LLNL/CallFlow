@@ -98,13 +98,3 @@ Currently, hatchet supports the following data formats as input:
 For more details on the different input file formats, refer to the
 :doc:`User Guide <user_guide>`.
 
-For more details on the visual design of CallFlow for single execution,
-refer to the
-:doc:`Visual Encodings for a single execution <visual_encoding_single>`.
-
-For more details on the visual design of CallFlow for ensemble of executions,
-refer to the
-:doc:`Visual Encodings for an ensemble of executions <visual_encoding_ensemble>`.
-
-For more examples for performance analysis using `callflow`, refer to the 
-:doc: `Performance Analysis <performance_analysis>`.

@@ -79,7 +79,7 @@ pkg_resources.working_set.add(dist)
 pygments_style = "callflow"
 
 # Set the master_doc to avoid the issue (https://github.com/readthedocs/readthedocs.org/issues/2569)
-master_doc = 'index'
+master_doc = "index"
 
 # -- Options for HTML output -------------------------------------------------
 
