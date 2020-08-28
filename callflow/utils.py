@@ -3,8 +3,17 @@
 #
 # SPDX-License-Identifier: MIT
 
-# a similar function in utils/hatchet.py
-def sanitize_name(name):
+# ------------------------------------------------------------------------------
+#  Utility functions used by callflow.
+# ------------------------------------------------------------------------------
+import callflow
+import hatchet
+
+
+def sanitize_name(name: str):
+    """
+    Sanitize the callsites for general dataset.
+    """
     ret_name = ""
     if name is None:
         ret_name = "Unknown"
@@ -17,7 +26,10 @@ def sanitize_name(name):
     return ret_name
 
 
-def sanitizeAMMName(name):
+def sanitizeAMMName(name: str):
+    """
+    Sanitize the callsites for AMM dataset.
+    """
     if "::" in name:
         name = name.split("::")[-1]
     else:
@@ -25,17 +37,14 @@ def sanitizeAMMName(name):
     return name
 
 
-# ------------------------------------------------------------------------------
-def visModuleCallsiteName(name, df):
-    return df.groupby(["name"]).unique()["module"]
+def convertStringToList(string: str):
+    """
+    Convert a string which is an array to an array
+    """
+    return string.strip("][").split(", ")
 
 
-def convertStringToList(string):
-    res = string.strip("][").split(", ")
-    return res
-
-
-def median(arr):
+def median(arr: list):
     """
     Returns the median and its index in the array.
     """
@@ -54,7 +63,7 @@ def median(arr):
     return median, indices
 
 
-def avg(arr):
+def avg(arr: list):
     """
     Returns the average of the array.
     Uses floating-point division.
@@ -70,12 +79,13 @@ def string_to_list(string: str, sep: str):
     return string.strip("][").split(sep)
 
 
-# ------------------------------------------------------------------------------
-# networkx utilities
-# ------------------------------------------------------------------------------
-# not sure if this is used anywhere
-# Also, why is this not consistent with the rest of the style (ie, actions)
-def dfs(graph, dataframe, limit):
+def dfs(gf: callflow.GraphFrame, limit: int):
+    """
+    Depth first search for debugging purposes.
+    """
+    dataframe = gf.dataframe
+    graph = gf.graph
+
     def _dfs_recurse(root, level):
         for node in root.children:
             result = ""
@@ -88,7 +98,6 @@ def dfs(graph, dataframe, limit):
                 ]
                 inclusive_runtime = " time (inc) = " + str(node_df["time (inc)"].mean())
                 exclusive_runtime = " time = " + str(node_df["time"].mean())
-                # module = "Module = " + str(node_df['module'].unique()[0])
                 module = ""
                 result += (
                     "Node = "
@@ -110,8 +119,11 @@ def dfs(graph, dataframe, limit):
         _dfs_recurse(root, level)
 
 
-# ------------------------------------------------------------------------------
-def bfs_hatchet(graph):
+def bfs(gf):
+    """
+    Breadth first search for debugging purposes.
+    """
+    graph = gf.graph
     ret = {}
     node_count = 0
     roots = graph.roots
@@ -132,7 +144,10 @@ def bfs_hatchet(graph):
             return ret
 
 
-def getNodeCallpath(node):
+def getNodeCallpath(node: hatchet.node):
+    """
+    Return the call path for a given callflow.GraphFrame.graph.Node
+    """
     ret = []
     list_of_frames = list(node.path())
     for frame in list_of_frames:
@@ -144,11 +159,17 @@ def getNodeCallpath(node):
     return ret
 
 
-def getNodeParents(node):
+def getNodeParents(node: hatchet.node):
+    """
+    Return parents of a hatchet.node
+    """
     return node.parents
 
 
-def get_callsite_name_from_frame(node):
+def get_callsite_name_from_frame(node: hatchet.node):
+    """
+    Return callsite name for hatchet.node
+    """
     name = node.frame.get("name")
     if name is not None:
         return node.frame.get("name")
@@ -156,21 +177,28 @@ def get_callsite_name_from_frame(node):
         return node.frame.get("file")
 
 
-def node_dict_from_frame(frame):
+def node_dict_from_frame(frame: hatchet.frame):
     """
     Constructs callsite's name from Hatchet's frame.
     """
+    if frame.get("type") == None and frame["name"] != None:
+        return {"name": frame.get("name"), "type": "function"}
+
     if frame["type"] == "function":
-        return {"name": frame["name"], "line": "NA", "type": "function"}
+        return {"name": frame.get("name"), "line": "NA", "type": "function"}
     elif frame["type"] == "statement":
-        return {"name": frame["file"], "line": frame["line"], "type": "statement"}
+        return {
+            "name": frame.get("file"),
+            "line": frame.get("line"),
+            "type": "statement",
+        }
     elif frame["type"] == "loop":
-        return {"name": frame["file"], "line": frame["line"], "type": "loop"}
+        return {"name": frame.get("file"), "line": frame.get("line"), "type": "loop"}
     else:
         return {}
 
 
-def path_list_from_frames(frames):
+def path_list_from_frames(frames: list):
     """
     Constructs callsite's path from Hatchet's frame.
     """
@@ -178,11 +206,13 @@ def path_list_from_frames(frames):
     for frame in frames:
         path = []
         for f in frame:
-            if f["type"] == "function":
-                path.append(f["name"])
-            elif f["type"] == "statement":
-                path.append(f["file"] + ":" + str(f["line"]))
-            elif f["type"] == "loop":
-                path.append(f["file"] + ":" + str(f["line"]))
+            if f.get("type") == "function":
+                path.append(f.get("name"))
+            elif f.get("type") == "statement":
+                path.append(f.get("file") + ":" + str(f.get("line")))
+            elif f.get("type") == "loop":
+                path.append(f.get("file") + ":" + str(f.get("line")))
+            else:
+                path.append(f.get("name"))
         paths.append(path)
     return path

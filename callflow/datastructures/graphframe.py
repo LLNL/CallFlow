@@ -155,8 +155,8 @@ class GraphFrame(ht.GraphFrame):
 
         def _get_node_name(nd):
             nm = callflow.utils.sanitize_name(nd["name"])
-            if nd["line"] != "NA":
-                nm += ":" + str(nd["line"])
+            if nd.get("line") != "NA" and nd.get("line") != None:
+                nm += ":" + str(nd.get("line"))
             return nm
 
         # `node_dict_from_frame` converts the hatchet's frame to a dictionary
