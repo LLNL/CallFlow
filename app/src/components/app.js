@@ -54,9 +54,9 @@ export default {
 	sockets: {
 		config(data) {
 			this.data = JSON.parse(data);
-			this.runCounts = this.data.dataset_names.length;
+			this.runCounts = this.data["properties"]["runs"].length;
 			// set the data for runtime.
-			for (let dataset of this.data.dataset_names) {
+			for (let dataset of this.data["properties"]["runs"]) {
 				this.runtime.push({
 					dataset: dataset,
 					min_inclusive_runtime: this.data.minIncTime[dataset],

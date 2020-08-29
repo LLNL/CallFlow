@@ -109,19 +109,33 @@ class SuperGraph(object):
             )
 
         elif profile_format == "caliper-json" or profile_format == "caliper":
-            process = (
-                Process.Builder(self.gf, self.tag)
-                .add_time_columns()
-                .add_rank_column()
-                .add_callers_and_callees()
-                .add_dataset_name()
-                .add_imbalance_perc()
-                .add_module_name_caliper(self.props["callsite_module_map"])
-                .create_name_module_map()
-                .add_vis_node_name()
-                .add_path()
-                .build()
-            )
+            if "callsite_module_map" in self.props:
+                process = (
+                    Process.Builder(self.gf, self.tag)
+                    .add_time_columns()
+                    .add_rank_column()
+                    .add_callers_and_callees()
+                    .add_dataset_name()
+                    .add_imbalance_perc()
+                    .add_module_name_caliper(self.props["callsite_module_map"])
+                    .create_name_module_map()
+                    .add_vis_node_name()
+                    .add_path()
+                    .build()
+                )
+            else:
+                process = (
+                    Process.Builder(self.gf, self.tag)
+                    .add_time_columns()
+                    .add_rank_column()
+                    .add_callers_and_callees()
+                    .add_dataset_name()
+                    .add_imbalance_perc()
+                    .create_name_module_map()
+                    .add_vis_node_name()
+                    .add_path()
+                    .build()
+                )
 
         elif profile_format == "gprof":
             process = (

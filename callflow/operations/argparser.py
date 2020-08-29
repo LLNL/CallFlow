@@ -59,6 +59,8 @@ class ArgParser:
         # validate the json.
         jsonschema.validate(instance=self.arguments, schema=schema)
 
+        LOGGER.debug(f"Arguments: {self.arguments}")
+
     def get_arguments(self):
         return self.arguments
 
@@ -79,6 +81,18 @@ class ArgParser:
             help="Profile format, either hpctoolkit | caliper | caliper_json",
         )
         parser.add_argument("--production", help="Launch app on production server.")
+        parser.add_argument("--filter_perc", help="Set filter percentage")
+        parser.add_argument(
+            "--filter_by", help="Set filter by (e.g., time or time (inc)"
+        )
+        parser.add_argument(
+            "--group_by",
+            help="Set group by (e.g., grouping by 'name' column gets call graph, and grouping by 'module' produces a super graph",
+        )
+        parser.add_argument("--save_path", help="Save path for the processed files")
+        parser.add_argument(
+            "--read_parameter", help="Enable parameter analysis", action="store_true"
+        )
 
         parser.add_argument(
             "--process",
@@ -111,18 +125,18 @@ class ArgParser:
             raise Exception(s)
 
         if args.config:
-            process_mode = "config"
+            read_mode = "config"
             if not os.path.isfile(args.config):
                 s = "Config file ({}) not found!".format(args.config)
                 raise Exception(s)
 
         elif args.data_dir:
-            process_mode = "directory"
+            read_mode = "directory"
 
         elif args.gfs:
-            process_mode = "graphframes"
+            read_mode = "graphframes"
 
-        return process_mode
+        return read_mode
 
     @staticmethod
     def _read_config(args: argparse.Namespace):
@@ -287,7 +301,65 @@ class ArgParser:
 
     @staticmethod
     def _read_directory(args):
-        pass
+        scheme = {}
+
+        # Set data path
+        scheme["data_path"] = args.data_dir
+
+        # Set experiement
+        scheme["experiment"] = scheme["data_path"].split("/")[-1]
+
+        # Set save_path
+        if args.save_path:
+            scheme["save_path"] = args.save_path
+        else:
+            scheme["save_path"] = os.path.abspath(
+                os.path.join(scheme["data_path"], ".callflow")
+            )
+
+        scheme["read_parameter"] = args.read_parameter
+
+        # Set the datasets key, according to the format.
+        _SCHEME_PROFILE_FORMAT_MAPPER = {
+            "hpctoolkit": ArgParser._scheme_dataset_map_hpctoolkit,
+            "caliper": ArgParser._scheme_dataset_map_caliper,
+            "caliper_json": ArgParser._scheme_dataset_map_caliper_json,
+            "default": ArgParser._scheme_dataset_map_default,
+        }
+        scheme["properties"] = []
+        if "profile_format" in args:
+            profile_format = args.profile_format
+
+            LOGGER.debug(f"Scheme: {profile_format}")
+
+            files = os.listdir(scheme["data_path"])
+            scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER[profile_format](
+                scheme["data_path"]
+            )
+        else:
+            scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER["default"](
+                scheme["data_path"]
+            )
+
+        # Set filter_perc
+        if args.filter_perc:
+            scheme["filter_perc"] = args.filter_perc
+        else:
+            scheme["filter_perc"] = 0
+
+        # Set filter_by
+        if args.filter_by:
+            scheme["filter_by"] = args.filter_by
+        else:
+            scheme["filter_by"] = "time (inc)"
+
+        # Set group_by
+        if args.group_by:
+            scheme["group_by"] = args.group_by
+        else:
+            scheme["group_by"] = "module"
+
+        return scheme
 
     @staticmethod
     def _read_gfs(self, args):
