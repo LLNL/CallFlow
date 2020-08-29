@@ -259,8 +259,8 @@ export default {
 		setupStore(data) {
 			data = JSON.parse(data);
 			console.log("Config file: ", data);
-			this.$store.numOfRuns = data["datasets"].length;
-			this.$store.selectedDatasets = data["names"];
+			this.$store.numOfRuns = data["properties"]["runs"].length;
+			this.$store.selectedDatasets = data["properties"]["runs"];
 			this.datasets = this.$store.selectedDatasets;
 
 			// Enable diff mode only if the number of datasets >= 2

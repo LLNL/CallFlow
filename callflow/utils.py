@@ -8,6 +8,7 @@
 # ------------------------------------------------------------------------------
 import callflow
 import hatchet
+import json
 
 
 def sanitize_name(name: str):
@@ -79,6 +80,37 @@ def string_to_list(string: str, sep: str):
     return string.strip("][").split(sep)
 
 
+def jsonify_string(string: str):
+    """
+    Convert a string input to a json object
+
+    """
+    assert isinstance(string, str)
+    _ = json.loads(string, object_hook=byteify)
+    return byteify(_, ignore_dicts=True)
+
+
+def byteify(data, ignore_dicts=False):
+
+    # if this is a unicode string, return its string representation
+    if isinstance(data, bytes):
+        return data.encode("utf-8")
+
+    # if this is a list of values, return list of byteified values
+    if isinstance(data, list):
+        return [byteify(item, ignore_dicts=True) for item in data]
+
+    # if this is a dictionary, return dictionary of byteified keys and values
+    # but only if we haven't already byteified it
+    if isinstance(data, dict) and not ignore_dicts:
+        return {
+            byteify(key, ignore_dicts=True): byteify(value, ignore_dicts=True)
+            for key, value in data.items()
+        }
+    # if it's anything else, return it in its original form
+    return data
+
+
 def dfs(gf: callflow.GraphFrame, limit: int):
     """
     Depth first search for debugging purposes.
@@ -144,7 +176,7 @@ def bfs(gf):
             return ret
 
 
-def getNodeCallpath(node: hatchet.node):
+def get_node_callpath(node: hatchet.node):
     """
     Return the call path for a given callflow.GraphFrame.graph.Node
     """
@@ -159,7 +191,7 @@ def getNodeCallpath(node: hatchet.node):
     return ret
 
 
-def getNodeParents(node: hatchet.node):
+def get_node_parents(node: hatchet.node):
     """
     Return parents of a hatchet.node
     """
