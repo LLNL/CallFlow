@@ -93,7 +93,7 @@ class SuperGraph(object):
         Note: Process class follows a builder pattern.
         (refer: https://en.wikipedia.org/wiki/Builder_pattern#:~:text=The%20builder%20pattern%20is%20a,Gang%20of%20Four%20design%20patterns.)
         """
-        profile_format = self.props["properties"]["format"][self.tag]
+        profile_format = self.props["properties"]["profile_format"][self.tag]
         if profile_format == "hpctoolkit":
 
             process = (
@@ -108,7 +108,7 @@ class SuperGraph(object):
                 .build()
             )
 
-        elif profile_format == "caliper-json" or profile_format == "caliper":
+        elif profile_format == "caliper_json" or profile_format == "caliper":
             if "callsite_module_map" in self.props:
                 process = (
                     Process.Builder(self.gf, self.tag)

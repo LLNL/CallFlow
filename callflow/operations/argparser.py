@@ -22,6 +22,8 @@ schema = {
     },
 }
 
+_SUPPORTED_PROFILE_FORMATS = ['hpctoolkit', 'caliper_json', 'caliper']
+
 
 class ArgParser:
     """
@@ -188,6 +190,7 @@ class ArgParser:
                 json["runs"]
             )
         elif "runs" not in json and "profile_format" in json:
+            assert json['profile_format'] in _SUPPORTED_PROFILE_FORMATS
             scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER[
                 json["profile_format"]
             ](json["runs"])
@@ -222,6 +225,8 @@ class ArgParser:
             # Assert if the profile_format is provided.
             if "profile_format" not in data:
                 raise Exception(f"Profile format not specified for the dataset: {name}")
+
+            assert data['profile_format'] in _SUPPORTED_PROFILE_FORMATS
 
             scheme["profile_format"][name] = data["profile_format"]
         return scheme
@@ -293,7 +298,7 @@ class ArgParser:
                 filename = name.split(".")[0]
                 scheme["runs"].append(filename)
                 scheme["paths"][filename] = subfolder_path
-                scheme["format"][filename] = "caliper-json"
+                scheme["profile_format"][filename] = "caliper_json"
 
         return scheme
 
