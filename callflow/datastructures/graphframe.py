@@ -158,7 +158,7 @@ class GraphFrame(ht.GraphFrame):
 
         def _get_node_name(nd):
             nm = callflow.utils.sanitize_name(nd["name"])
-            if nd.get("line") != "NA" and nd.get("line") != None:
+            if nd.get("line") != "NA" and nd.get("line") is not None:
                 nm += ":" + str(nd.get("line"))
             return nm
 

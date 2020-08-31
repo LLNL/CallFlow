@@ -189,7 +189,6 @@ class ArgParser:
 
             LOGGER.debug(f"Scheme: {profile_format}")
 
-            files = os.listdir(scheme["data_path"])
             scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER[profile_format](
                 scheme["data_path"]
             )
@@ -332,7 +331,6 @@ class ArgParser:
 
             LOGGER.debug(f"Scheme: {profile_format}")
 
-            files = os.listdir(scheme["data_path"])
             scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER[profile_format](
                 scheme["data_path"]
             )

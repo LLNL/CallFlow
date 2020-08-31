@@ -5,9 +5,7 @@
 # Library imports
 from flask import Flask
 from flask_socketio import SocketIO, emit
-import os
 import json
-import argparse
 from networkx.readwrite import json_graph
 
 # ------------------------------------------------------------------------------
