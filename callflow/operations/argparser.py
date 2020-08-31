@@ -177,26 +177,19 @@ class ArgParser:
             "caliper_json": ArgParser._scheme_dataset_map_caliper_json,
             "default": ArgParser._scheme_dataset_map_default,
         }
-        scheme["properties"] = []
-        if "runs" not in json:
-            assert "profile_format" in json or "profile_format" in args
 
-            if "profile_format" in json:
-                profile_format = json["profile_format"]
-
-            if "profile_format" in args:
-                profile_format = args.profile_format
-
-            LOGGER.debug(f"Scheme: {profile_format}")
-
-            scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER[profile_format](
-                scheme["data_path"]
-            )
-        else:
-            LOGGER.debug("Scheme: default")
+        LOGGER.debug("Scheme: default")
+        if "runs" not in json and "profile_format" not in json:
+            raise Exception("Either 'runs' or 'profile_format' key must be provided in the config file.")
+        elif "runs" in json and "profile_format" not in json:
             scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER["default"](
-                json["properties"]
+                json["runs"]
             )
+        elif "runs" not in json and "profile_format" in json:
+            scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER[json["profile_format"]](
+                json["runs"]
+            )
+        
 
         if "module_map" in json["scheme"]:
             scheme["module_callsite_map"] = json["scheme"]["module_map"]
@@ -224,7 +217,12 @@ class ArgParser:
             name = data["name"]
             scheme["runs"].append(name)
             scheme["paths"][name] = data["path"]
-            scheme["profile_format"][name] = data["format"]
+            
+            # Assert if the profile_format is provided.
+            if "profile_format" not in data:
+                raise Exception(f"Profile format not specified for the dataset: {name}")
+
+            scheme["profile_format"][name] = data["profile_format"]
         return scheme
 
     @staticmethod
