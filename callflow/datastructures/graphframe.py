@@ -116,11 +116,14 @@ class GraphFrame(ht.GraphFrame):
         LOGGER.info(f"Creating graphframes: {name}")
         LOGGER.info(f"Data path: {config['data_path']}")
 
-        data_path = os.path.join(config["data_path"], config["paths"][name])
-        if config["format"][name] == "hpctoolkit":
+        data_path = os.path.join(
+            config["data_path"], config["properties"]["paths"][name]
+        )
+        profile_format = config["properties"]["format"][name]
+        if profile_format == "hpctoolkit":
             gf = ht.GraphFrame.from_hpctoolkit(data_path)
 
-        elif config["format"][name] == "caliper":
+        elif profile_format == "caliper":
             grouping_attribute = "function"
             default_metric = "sum(sum#time.duration), inclusive_sum(sum#time.duration)"
             query = "select function,%s group by %s format json-split" % (
@@ -129,16 +132,16 @@ class GraphFrame(ht.GraphFrame):
             )
             gf = ht.GraphFrame.from_caliper(data_path, query=query)
 
-        elif config["format"][name] == "caliper_json":
-            gf = ht.GraphFrame.from_caliper(data_path, query="")
+        elif profile_format == "caliper-json":
+            gf = ht.GraphFrame.from_caliper_json(data_path)
 
-        elif config["format"][name] == "gprof":
+        elif profile_format == "gprof":
             gf = ht.GraphFrame.from_gprof_dot(data_path)
 
-        elif config["format"][name] == "literal":
+        elif profile_format == "literal":
             gf = ht.GraphFrame.from_literal(config["data_path"])
 
-        elif config["format"][name] == "lists":
+        elif profile_format == "lists":
             gf = ht.GraphFrame.from_lists(config["data_path"])
 
         return GraphFrame.from_hatchet(gf)
@@ -155,8 +158,8 @@ class GraphFrame(ht.GraphFrame):
 
         def _get_node_name(nd):
             nm = callflow.utils.sanitize_name(nd["name"])
-            if nd["line"] != "NA":
-                nm += ":" + str(nd["line"])
+            if nd.get("line") != "NA" and nd.get("line") is not None:
+                nm += ":" + str(nd.get("line"))
             return nm
 
         # `node_dict_from_frame` converts the hatchet's frame to a dictionary

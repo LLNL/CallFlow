@@ -48,7 +48,7 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("ensemble_histogram", function (data) {
+		EventHandler.$on("ensemble-histogram", function (data) {
 			console.log("Ensemble Histogram: ", data["module"]);
 			if (data["callsite"] != undefined) {
 				self.thisNode = data["module"] + "=" + data["callsite"];
@@ -81,7 +81,7 @@ export default {
 					"transform": "translate(" + this.padding.left + "," + this.padding.top + ")"
 				});
 
-			EventHandler.$emit("ensemble_histogram", {
+			EventHandler.$emit("ensemble-histogram", {
 				module: this.$store.selectedModule,
 				dataset: this.$store.runNames,
 			});

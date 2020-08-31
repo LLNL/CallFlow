@@ -50,7 +50,7 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("single_histogram", function (data) {
+		EventHandler.$on("single-histogram", function (data) {
 			console.log("Single histogram: ", data["module"]);
 			self.visualize(data["module"]);
 		});
@@ -81,7 +81,7 @@ export default {
 					"transform": "translate(" + this.padding.left + "," + this.padding.top + ")"
 				});
 
-			EventHandler.$emit("single_histogram", {
+			EventHandler.$emit("single-histogram", {
 				module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
 				groupBy: this.$store.selectedGroupBy,
 				dataset: this.$store.selectedTargetDataset,

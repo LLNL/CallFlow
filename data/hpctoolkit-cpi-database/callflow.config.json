@@ -1,8 +1,8 @@
 {
-  "run_name": "hpctoolkit-cpi-database",
+  "experiment": "hpctoolkit-cpi-database",
   "save_path": "./data/hpctoolkit-cpi-database/.callflow",
   "read_parameter": false,
-  "datasets": [
+  "runs": [
     {
       "name": "calc-pi",
       "path": "",

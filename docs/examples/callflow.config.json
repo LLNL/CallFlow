@@ -1,0 +1,36 @@
+{
+    "experiment": "experiment_name",
+    "save_path": "/path/to/dir",
+    "read_parameter": false,
+    "runs": [{
+            "name": "run-1",
+            "path": "/path/to/run-1",
+            "profile_format": "hpctoolkit | caliper | caliper_json"
+        },
+        {
+            "name": "run-2",
+            "path": "/path/to/run-2",
+            "profile_format": "hpctoolkit | caliper | caliper_json"
+        },
+        {
+            "name": "run-3",
+            "path": "/path/to/run-3",
+            "profile_format": "hpctoolkit | caliper | caliper_json"
+        }
+    ],
+    "schema": {
+        "filter_by": "time (inc)",
+        "filter_perc": 0,
+        "group_by": "name",
+        "module_map": {
+            "Lulesh": ["main", "lulesh.cycle"],
+            "LeapFrog": ["LagrangeNodal", "LagrangeLeapFrog"],
+            "CalcForce": ["CalcForceForNodes", "CalcVolumeForceForElems", "CalcHourglassControlForElems", "CalcFBHourglassForceForElems"],
+            "CalcLagrange": ["LagrangeElements", "UpdateVolumesForElems", "CalcLagrangeElements", "CalcKinematicsForElems", "CalcQForElems", "CalcMonotonicQGradientsForElems", "CalcMonotonicQRegionForElems", "ApplyMaterialPropertiesForElems", "EvalEOSForElems", "CalcEnergyForElems", "CalcPressureForElems", "CalcSoundSpeedForElems", "IntegrateStressForElems"],
+            "Timer": ["TimeIncrement"],
+            "CalcConstraint": ["CalcTimeConstraintsForElems", "CalcCourantConstraintForElems", "CalcHydroConstraintForElems"],
+            "NA": ["Unknown"],
+            "MPI": ["MPI_Barrier", "MPI_Reduce", "MPI_Allreduce", "MPI_Irecv", "MPI_Isend", "MPI_Wait", "MPI_Waitall", "MPI_Finalize"]
+        }
+    }
+}

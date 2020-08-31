@@ -213,7 +213,6 @@ export default {
 			this.$store.selectedModule = node.module;
 			this.$store.selectedName = node.name;
 
-			//
 			const nodeSVG = this.containerG.select("#callsite-" + node.client_idx);
 
 			// Make appropriate event requests (Single and Ensemble).
@@ -229,17 +228,17 @@ export default {
 					datasets: this.$store.selectedDatasets,
 				});
 
-				EventHandler.$emit("ensemble_histogram", {
+				EventHandler.$emit("ensemble-histogram", {
 					module: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
 
-				EventHandler.$emit("ensemble_distribution", {
+				EventHandler.$emit("ensemble-distribution", {
 					module: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
 
-				EventHandler.$emit("ensemble_scatterplot", {
+				EventHandler.$emit("ensemble-scatterplot", {
 					module: this.$store.selectedModule,
 					dataset1: this.$store.selectedDatasets,
 				});
@@ -251,19 +250,19 @@ export default {
 				});
 			}
 			else if (this.$store.selectedMode == "Single") {
-				EventHandler.$emit("single_histogram", {
+				EventHandler.$emit("single-histogram", {
 					module: this.$store.selectedModule,
 					groupBy: this.$store.selectedGroupBy,
 					dataset: this.$store.selectedTargetDataset,
 				});
 
-				EventHandler.$emit("single_scatterplot", {
+				EventHandler.$emit("single-scatterplot", {
 					module: this.$store.selectedModule,
 					dataset: this.$store.selectedTargetDataset,
 				});
 			}
 
-			EventHandler.$emit("select_module", {
+			EventHandler.$emit("select-module", {
 				module: this.$store.selectedModule,
 			});
 		},
