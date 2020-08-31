@@ -7,4 +7,6 @@ colorlog
 statsmodels
 matplotlib
 sklearn
+jsonschema
+eventlet
 hatchet

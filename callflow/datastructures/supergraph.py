@@ -25,7 +25,7 @@ class SuperGraph(object):
     _FILENAMES = {"params": "env_params.txt", "aux": "auxiliary_data.json"}
 
     # --------------------------------------------------------------------------
-    def __init__(self, props={}, tag="", mode="process"):
+    def __init__(self, config={}, tag="", mode="process"):
         """
         Arguments:
             props (dict): dictionary to store the configuration. CallFlow appends more information while processing.
@@ -35,7 +35,8 @@ class SuperGraph(object):
         assert mode in ["process", "render"]
         self.timer = Timer()
 
-        self.props = props
+        self.props = config
+        print(self.props["save_path"], tag)
         self.dirname = os.path.join(self.props["save_path"], tag)
         self.tag = tag
         self.mode = mode
@@ -92,7 +93,8 @@ class SuperGraph(object):
         Note: Process class follows a builder pattern.
         (refer: https://en.wikipedia.org/wiki/Builder_pattern#:~:text=The%20builder%20pattern%20is%20a,Gang%20of%20Four%20design%20patterns.)
         """
-        if self.props["format"][self.tag] == "hpctoolkit":
+        profile_format = self.props["properties"]["format"][self.tag]
+        if profile_format == "hpctoolkit":
 
             process = (
                 Process.Builder(self.gf, self.tag)
@@ -106,26 +108,36 @@ class SuperGraph(object):
                 .build()
             )
 
-        elif (
-            self.props["format"][self.tag] == "caliper_json"
-            or self.props["format"][self.tag] == "caliper"
-        ):
+        elif profile_format == "caliper-json" or profile_format == "caliper":
+            if "callsite_module_map" in self.props:
+                process = (
+                    Process.Builder(self.gf, self.tag)
+                    .add_time_columns()
+                    .add_rank_column()
+                    .add_callers_and_callees()
+                    .add_dataset_name()
+                    .add_imbalance_perc()
+                    .add_module_name_caliper(self.props["callsite_module_map"])
+                    .create_name_module_map()
+                    .add_vis_node_name()
+                    .add_path()
+                    .build()
+                )
+            else:
+                process = (
+                    Process.Builder(self.gf, self.tag)
+                    .add_time_columns()
+                    .add_rank_column()
+                    .add_callers_and_callees()
+                    .add_dataset_name()
+                    .add_imbalance_perc()
+                    .create_name_module_map()
+                    .add_vis_node_name()
+                    .add_path()
+                    .build()
+                )
 
-            process = (
-                Process.Builder(self.gf, self.tag)
-                .add_time_columns()
-                .add_rank_column()
-                .add_callers_and_callees()
-                .add_dataset_name()
-                .add_imbalance_perc()
-                .add_module_name_caliper(self.props["callsite_module_map"])
-                .create_name_module_map()
-                .add_vis_node_name()
-                .add_path()
-                .build()
-            )
-
-        elif self.props["format"][self.tag] == "gprof":
+        elif profile_format == "gprof":
             process = (
                 Process.Builder(self.gf, self.tag)
                 .add_nid_column()
