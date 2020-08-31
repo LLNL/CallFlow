@@ -77,6 +77,11 @@ class ArgParser:
         parser.add_argument("--config", help="Config file to be processed.")
         parser.add_argument("--data_dir", help="Input directory to be processed.")
         parser.add_argument(
+            "--process",
+            action="store_true",
+            help="Process mode. To preprocess at the required level of granularity, use the options --filter, --entire.",
+        )
+        parser.add_argument(
             "--profile_format",
             help="Profile format, either hpctoolkit | caliper | caliper_json",
         )
@@ -94,11 +99,6 @@ class ArgParser:
             "--read_parameter", help="Enable parameter analysis", action="store_true"
         )
 
-        parser.add_argument(
-            "--process",
-            action="store_true",
-            help="Process mode. To preprocess at the required level of granularity, use the options --filter, --entire. If you are preprocessing multiple callgraphs, use --ensemble option.",
-        )
         args = parser.parse_args()
         return args
 
@@ -178,7 +178,7 @@ class ArgParser:
             "default": ArgParser._scheme_dataset_map_default,
         }
         scheme["properties"] = []
-        if "run_props" not in json:
+        if "runs" not in json:
             assert "profile_format" in json or "profile_format" in args
 
             if "profile_format" in json:
@@ -219,13 +219,13 @@ class ArgParser:
         scheme = {}
         scheme["runs"] = []
         scheme["paths"] = {}
-        scheme["format"] = {}
+        scheme["profile_format"] = {}
         # Parse the information for each dataset
         for idx, data in enumerate(run_props):
             name = data["name"]
             scheme["runs"].append(name)
             scheme["paths"][name] = data["path"]
-            scheme["format"][name] = data["format"]
+            scheme["profile_format"][name] = data["format"]
         return scheme
 
     @staticmethod
@@ -236,7 +236,7 @@ class ArgParser:
         scheme = {}
         scheme["runs"] = []
         scheme["paths"] = {}
-        scheme["format"] = {}
+        scheme["profile_format"] = {}
         list_subfolders_with_paths = [
             f.path for f in os.scandir(data_path) if f.is_dir()
         ]
@@ -246,7 +246,7 @@ class ArgParser:
             if name != ".callflow":
                 scheme["runs"].append(name)
                 scheme["paths"][name] = subfolder_path
-                scheme["format"][name] = "hpctoolkit"
+                scheme["profile_format"][name] = "hpctoolkit"
 
         return scheme
 
@@ -258,7 +258,7 @@ class ArgParser:
         scheme = {}
         scheme["runs"] = []
         scheme["paths"] = {}
-        scheme["format"] = {}
+        scheme["profile_format"] = {}
         list_cali_paths = [
             f.path
             for f in os.scandir(data_path)
@@ -270,7 +270,7 @@ class ArgParser:
             if name != ".callflow":
                 scheme["runs"].append(name)
                 scheme["paths"][name] = subfolder_path
-                scheme["format"][name] = "caliper"
+                scheme["profile_format"][name] = "caliper"
 
         return scheme
 
