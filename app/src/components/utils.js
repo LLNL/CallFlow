@@ -151,8 +151,8 @@ export function removeDuplicates(arr) {
 export function measure(text) {
 	if (!text || text.length === 0) return { height: 0, width: 0 };
 
-	const container = d3.select('body').append('svg').attr('class', 'dummy');
-	container.append('text').attrs({ x: -1000, y: -1000 }).text(text);
+	const container = d3.select("body").append("svg").attr("class", "dummy");
+	container.append("text").attrs({ x: -1000, y: -1000 }).text(text);
 
 	const bbox = container.node().getBBox();
 	container.remove();
@@ -177,7 +177,8 @@ export function textWrap(text, width) {
 			y = text.attr("y"),
 			dy = 0,
 			tspan = text.text(null).append("tspan").attr("dy", dy + "em");
-		while (word = words.pop()) {
+
+		while ((word = words.pop())) {
 			line.push(word);
 			tspan.text(line.join(" "));
 			if (tspan.node().getComputedTextLength() > width) {

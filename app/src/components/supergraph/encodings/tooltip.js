@@ -50,7 +50,7 @@ export default {
 		 * Set the position for the tooltip SVG. (y-positioning)
 		 */
 		positionY() {
-			let ret = 0
+			let ret = 0;
 			if (this.mousePosY >= this.$store.viewHeight / 2) {
 				ret = this.mousePosY + this.textyOffset;
 			}
@@ -153,16 +153,16 @@ export default {
 		 * @param {*} node 
 		 */
 		pathInformation(node) {
-			let module_data = {}
-			if (this.$store.selectedMode == 'Single') {
+			let module_data = {};
+			if (this.$store.selectedMode == "Single") {
 				module_data = this.$store.modules[this.$store.selectedTargetDataset];
 			}
 			else if (this.$store.selectedMode == "Ensemble") {
 				module_data = this.$store.modules["ensemble"];
 			}
 
-			let callsite_data = {}
-			if (this.$store.selectedMode == 'Single') {
+			let callsite_data = {};
+			if (this.$store.selectedMode == "Single") {
 				callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
 			}
 			else if (this.$store.selectedMode == "Ensemble") {
@@ -171,7 +171,7 @@ export default {
 
 
 			// TODO : Improve the logic here to not process the string input multiple times. 
-			let entry_functions = node[this.$store.selectedTargetDataset]['entry_function'].split(",").map(String);
+			let entry_functions = node[this.$store.selectedTargetDataset]["entry_function"].split(",").map(String);
 			let entry_function_runtimes = {};
 			for (let i = 0; i < entry_functions.length; i += 1) {
 				let callsite = entry_functions[i].replace("'", "").replace("'", "").replace("[", "").replace("]", "").replace(" ", "");
@@ -192,7 +192,7 @@ export default {
 
 			this.addText("");
 			this.addText("Entry call sites: ");
-			this.entryFunctionInformation(node, entry_function_data)
+			this.entryFunctionInformation(node, entry_function_data);
 		},
 
 		entryFunctionInformation(node, entry_function_data) {

@@ -65,9 +65,9 @@ export default {
 			const rows = measure.width/this.containerWidth;
 
 			return {
-				'width': this.containerWidth,
-				'height': rows * measure.height
-			}
+				"width": this.containerWidth,
+				"height": rows * measure.height
+			};
 		},
 
 		addText(text) {
@@ -95,7 +95,7 @@ export default {
 						return (this.mousePosY) + "px";
 					}
 				})
-				.style("z-index", 2)
+				.style("z-index", 2);
 
 			this.textCount += 1;
 			this.toolTipText = this.toolTipG

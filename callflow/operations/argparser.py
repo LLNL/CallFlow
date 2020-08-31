@@ -180,16 +180,17 @@ class ArgParser:
 
         LOGGER.debug("Scheme: default")
         if "runs" not in json and "profile_format" not in json:
-            raise Exception("Either 'runs' or 'profile_format' key must be provided in the config file.")
+            raise Exception(
+                "Either 'runs' or 'profile_format' key must be provided in the config file."
+            )
         elif "runs" in json and "profile_format" not in json:
             scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER["default"](
                 json["runs"]
             )
         elif "runs" not in json and "profile_format" in json:
-            scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER[json["profile_format"]](
-                json["runs"]
-            )
-        
+            scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER[
+                json["profile_format"]
+            ](json["runs"])
 
         if "module_map" in json["scheme"]:
             scheme["module_callsite_map"] = json["scheme"]["module_map"]
@@ -217,7 +218,7 @@ class ArgParser:
             name = data["name"]
             scheme["runs"].append(name)
             scheme["paths"][name] = data["path"]
-            
+
             # Assert if the profile_format is provided.
             if "profile_format" not in data:
                 raise Exception(f"Profile format not specified for the dataset: {name}")

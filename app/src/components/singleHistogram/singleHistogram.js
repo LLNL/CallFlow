@@ -238,7 +238,7 @@ export default {
 		},
 
 		sanitizeGroupProc(string) {
-			return string.replace("[", "").replace("]", "")
+			return string.replace("[", "").replace("]", "");
 		},
 
 		bars() {
