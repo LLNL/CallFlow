@@ -6,6 +6,7 @@
  */
 
 import * as d3 from "d3";
+import * as utils from "../utils";
 
 export default {
 	template: "<g id=\"tooltip-histogram\"></g>",
@@ -48,12 +49,29 @@ export default {
 		render(data, node) {
 			this.clear();
 			this.width = data.length * this.fontSize + 10 * this.fontSize;
-			var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
-			console.log(d3.select("#" + this.parentID));
+			const svgScale = d3.scaleLinear().domain([2, 11]).range([this.containerWidth, this.containerHeight]);
 			this.mousePos = d3.mouse(d3.select("#" + this.parentID).node());
 			this.mousePosX = this.mousePos[0];
 			this.mousePosY = this.mousePos[1];
 			this.toolTipG.attr("height", svgScale(10) + "px");
+
+			this.node = node;
+			this.data = data;
+			this.addText("Processes (MPI ranks):" + this.data);
+		},
+
+		optimizeTextHeight(text) {
+			const measure = utils.measure(text);
+			const rows = measure.width/this.containerWidth;
+
+			return {
+				"width": this.containerWidth,
+				"height": rows * measure.height
+			};
+		},
+
+		addText(text) {
+			const measure = this.optimizeTextHeight(text);
 			this.toolTipRect = this.toolTipG
 				.append("rect")
 				.attrs({
@@ -62,9 +80,8 @@ export default {
 					"stroke": "black",
 					"rx": "10px",
 					"fill-opacity": 1,
-					"z-index": 100,
-					"width": this.containerWidth,
-					"height": this.containerHeight,
+					"width": measure.width + 20,
+					"height": measure.height,
 				})
 				.attrs({
 					"x": () => {
@@ -77,19 +94,9 @@ export default {
 					"y": () => {
 						return (this.mousePosY) + "px";
 					}
-				});
-			this.node = node;
-			this.data = data;
-			this.processes();
-		},
+				})
+				.style("z-index", 2);
 
-		trunc(str, n) {
-			str = str.replace(/<unknown procedure>/g, "proc ");
-			return (str.length > n) ? str.substr(0, n - 1) + "..." : str;
-		},
-
-
-		addText(text) {
 			this.textCount += 1;
 			this.toolTipText = this.toolTipG
 				.append("text")
@@ -108,13 +115,13 @@ export default {
 						return (this.mousePosY) + 2 * this.offset + "px";
 					}
 				})
-				.text(text);
+				.style("z-index", 2)
+				.text(text)
+				.call(utils.textWrap, measure.width);
 		},
 
 		processes() {
 			let self = this;
-			this.addText("Processes (MPI ranks): " + this.data);
-
 		},
 
 		clear() {

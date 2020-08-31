@@ -82,38 +82,19 @@ export default {
 	sockets: {
 		ensemble_supergraph(data) {
 			data = JSON.parse(data);
-			console.debug("Data: ", data);
-			let nodes = [];
-			for (let i = 0; i < data.nodes.length; i += 1) {
-				console.debug("Node name: ", data.nodes[i].id);
-				console.debug("Time (inc): ", data.nodes[i]["time (inc)"]);
-				console.debug("Time: ", data.nodes[i]["time"]);
-			}
-
-			for (let i = 0; i < data.links.length; i += 1) {
-				console.debug("Source: ", data.links[i].source);
-				console.debug("Target: ", data.links[i].target);
-				console.debug("Weight: ", data.links[i].weight);
-			}
+			this.debugData(data);
 			this.render(data);
 		},
 
 		single_supergraph(data) {
 			data = JSON.parse(data);
-			console.debug("Data :", data);
-			let nodes = [];
-			for (let i = 0; i < data.nodes.length; i += 1) {
-				console.debug("Node name: ", data.nodes[i].id);
-				console.debug("Time (inc): ", data.nodes[i]["time (inc)"]);
-				console.debug("Time: ", data.nodes[i]["time"]);
-			}
-
-			for (let i = 0; i < data.links.length; i += 1) {
-				console.debug("Source: ", data.links[i].source);
-				console.debug("Target: ", data.links[i].target);
-				console.debug("Weight: ", data.links[i].weight);
-			}
+			this.debugData(data);
 			this.render(data);
+		},
+
+		split_mpi_distribution(data) {
+			data = JSON.parse(data);
+			console.debug("Data: ", data);
 		}
 	},
 
@@ -152,6 +133,21 @@ export default {
 				});
 			});
 			this.sankeySVG.call(zoom);
+		},
+
+		debugData(data) {
+			console.debug("Data :", data);
+			for (let i = 0; i < data.nodes.length; i += 1) {
+				console.debug("Node name: ", data.nodes[i].id);
+				console.debug("Time (inc): ", data.nodes[i]["time (inc)"]);
+				console.debug("Time: ", data.nodes[i]["time"]);
+			}
+
+			for (let i = 0; i < data.links.length; i += 1) {
+				console.debug("Source: ", data.links[i].source);
+				console.debug("Target: ", data.links[i].target);
+				console.debug("Weight: ", data.links[i].weight);
+			}
 		},
 
 		clear() {
@@ -264,7 +260,7 @@ export default {
 
 		// Add intermediate nodes.
 		postProcess(nodes, edges) {
-			console.log("===================Adding intermediate nodes==================");
+			console.debug("===================Adding intermediate nodes==================");
 			const temp_nodes = nodes.slice();
 			const temp_edges = edges.slice();
 

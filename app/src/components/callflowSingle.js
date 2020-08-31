@@ -436,7 +436,6 @@ export default {
 			// Create a map for each dataset mapping the respective mean times.
 			let map = {};
 			for (let module_name of module_list) {
-				console.log(module_name, this.$store.modules[this.selectedTargetDataset][module_name])
 				map[module_name] = this.$store.modules[this.selectedTargetDataset][module_name][this.$store.selectedMetric]["mean_time"];
 			}
 
