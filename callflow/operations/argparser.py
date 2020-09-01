@@ -22,7 +22,7 @@ schema = {
     },
 }
 
-_SUPPORTED_PROFILE_FORMATS = ['hpctoolkit', 'caliper_json', 'caliper']
+_SUPPORTED_PROFILE_FORMATS = ["hpctoolkit", "caliper_json", "caliper"]
 
 
 class ArgParser:
@@ -190,7 +190,7 @@ class ArgParser:
                 json["runs"]
             )
         elif "runs" not in json and "profile_format" in json:
-            assert json['profile_format'] in _SUPPORTED_PROFILE_FORMATS
+            assert json["profile_format"] in _SUPPORTED_PROFILE_FORMATS
             scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER[
                 json["profile_format"]
             ](json["runs"])
@@ -199,12 +199,22 @@ class ArgParser:
             scheme["module_callsite_map"] = json["scheme"]["module_map"]
 
         scheme["callsite_module_map"] = ArgParser._process_module_map(
-            scheme["module_callsite_map"]
-        )
-        scheme["filter_perc"] = json["scheme"]["filter_perc"]
-        scheme["filter_by"] = json["scheme"]["filter_by"]
-        scheme["group_by"] = json["scheme"]["group_by"]
+            scheme["module_callsite_map"])
 
+        if args.filter_by:
+            scheme["filter_by"] = args.filter_by
+        else:
+            scheme["filter_by"] = json["scheme"]["filter_by"]
+
+        if args.filter_perc:
+            scheme["filter_perc"] = args.filter_perc
+        else:
+            scheme["filter_perc"] = json["scheme"]["filter_perc"]
+
+        if args.group_by:
+            scheme["group_by"] = args.group_by
+        else:
+            scheme["group_by"] = json["scheme"]["group_by"]
         return scheme
 
     @staticmethod
@@ -226,7 +236,7 @@ class ArgParser:
             if "profile_format" not in data:
                 raise Exception(f"Profile format not specified for the dataset: {name}")
 
-            assert data['profile_format'] in _SUPPORTED_PROFILE_FORMATS
+            assert data["profile_format"] in _SUPPORTED_PROFILE_FORMATS
 
             scheme["profile_format"][name] = data["profile_format"]
         return scheme
@@ -285,7 +295,7 @@ class ArgParser:
         scheme = {}
         scheme["runs"] = []
         scheme["paths"] = {}
-        scheme["format"] = {}
+        scheme["profile_format"] = {}
         list_json_paths = [
             f.path
             for f in os.scandir(data_path)

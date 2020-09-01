@@ -113,14 +113,12 @@ class CallFlow:
         supergraph.filter_gf(mode="single")
 
         # Group by module.
-        supergraph.group_gf(group_by="module")
+        supergraph.group_gf(group_by=self.config["group_by"])
 
         # Store the graphframe.
         supergraph.write_gf("entire")
 
-        supergraph.single_auxiliary(
-            dataset=dataset, binCount=20, process=True  # _name,
-        )
+        supergraph.single_auxiliary(dataset=dataset, binCount=20, process=True)
 
     def _process_ensemble(self, datasets):
         """
@@ -157,17 +155,11 @@ class CallFlow:
             self.config, "ensemble", mode="process", supergraphs=single_supergraphs
         )
 
-        # Write the graphframe to file.
-        # ensemble_supergraph.write_gf("entire")
-
         # Filter the ensemble graphframe.
         ensemble_supergraph.filter_gf(mode="ensemble")
 
-        # Write the filtered graphframe.
-        # ensemble_supergraph.write_gf("filter")
-
         # Group by module.
-        ensemble_supergraph.group_gf(group_by="module")
+        ensemble_supergraph.group_gf(group_by=self.config["group_by"])
 
         # Write the grouped graphframe.
         ensemble_supergraph.write_gf("group")
