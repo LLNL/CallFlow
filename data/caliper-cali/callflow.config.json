@@ -1,8 +1,8 @@
 {
-  "run_name": "caliper-cali",
+  "experiment": "caliper-cali",
   "save_path": "./data/caliper-cali/.callflow",
   "read_parameter": false,
-  "datasets": [
+  "runs": [
     {
       "name": "caliper-ex",
       "path": "caliper-ex.json",

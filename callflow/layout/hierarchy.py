@@ -63,7 +63,7 @@ class HierarchyLayout:
 
     @staticmethod
     def _create_source_targets(path_list):
-        """ Create edges from path list.
+        """Create edges from path list.
         Params:
             path (list) - paths expressed as a list.
         Return: edges (array) - edges expressed as source-target pairs.

@@ -38,7 +38,7 @@ class EnsembleAuxiliary:
         self.RunBinCount = RunBinCount
         self.timer = Timer()
         self.props = props
-        self.datasets = self.props["dataset_names"]
+        self.datasets = self.props["properties"]["runs"]
         self.df = self.select_rows(self.gf.df, self.datasets)
         self.process = process
         self.hist_props = ["rank", "name", "dataset", "all_ranks"]

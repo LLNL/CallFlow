@@ -188,11 +188,6 @@ class Process:
             )
             return self
 
-        # def add_node_name_caliper(self, node_module_map):
-        #     self.gf.df["node_name"] = self.gf.df["name"].apply(
-        #         lambda name: name_module_map[name]
-        #     )
-
         def add_module_name_caliper(self, module_map):
             self.gf.df["module"] = self.gf.df["name"].apply(
                 lambda name: module_map[name]
@@ -233,9 +228,12 @@ class Process:
             return self
 
         def create_name_module_map(self):
+            if "module" not in self.gf.df.columns:
+                self.gf.df["module"] = self.gf.df["name"]
             self.name_module_map = (
                 self.gf.df.groupby(["name"])["module"].unique().to_dict()
             )
+
             return self
 
         def raiseExceptionIfNodeCountNotEqual(self, attr):
@@ -248,9 +246,3 @@ class Process:
                 raise Exception(
                     f"Unmatched Preprocessing maps: Map contains: {map_node_count} nodes, graph contains: {df_node_count} nodes"
                 )
-
-        def logInformation(self):
-            LOGGER.info(f"CCT node count : {len(self.cct_nodes)}")
-            LOGGER.info(f"CallGraph node count: {len(self.callgraph_nodes)}")
-            LOGGER.info(f"SuperGraph node count: {len(self.gf.df['module'].unique())}")
-            return self

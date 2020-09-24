@@ -48,7 +48,7 @@ export default {
 
 	mounted() {
 		let self = this;
-		EventHandler.$on("single_scatterplot", function (data) {
+		EventHandler.$on("single-scatterplot", function (data) {
 			self.clear();
 			console.debug("Single Scatterplot: ", data["module"]);
 			self.render(data["module"]);
@@ -71,7 +71,7 @@ export default {
 			this.xAxisHeight = this.boxWidth - (4) * this.padding.left;
 			this.yAxisHeight = this.boxHeight - (4) * this.padding.left;
 
-			EventHandler.$emit("single_scatterplot", {
+			EventHandler.$emit("single-scatterplot", {
 				module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
 				dataset: this.$store.selectedTargetDataset,
 			});

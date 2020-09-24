@@ -9,7 +9,6 @@ import * as d3 from "d3";
 import "d3-selection-multi";
 import adjacencyMatrixLayout from "../../thirdParty/d3-adjacency-matrix-layout";
 import template from "../../html/similarityMatrix/index.html";
-// import LiveMatrixColormap from './LiveMatrixColormap'
 import EventHandler from "../EventHandler";
 
 
@@ -220,7 +219,7 @@ export default {
 						let target_dataset = this.$store.actual_dataset_names[d.target];
 						highlight_datasets.push(source_dataset);
 						highlight_datasets.push(target_dataset);
-						EventHandler.$emit("highlight_datasets", highlight_datasets);
+						EventHandler.$emit("highlight-datasets", highlight_datasets);
 					})
 					.on("mouseover", d => {
 

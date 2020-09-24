@@ -135,9 +135,80 @@ export function getGradients(store, node) {
 	return gradients;
 }
 
+/**
+ * Remove duplicates from an array.
+ * @param {*} arr 
+ */
 export function removeDuplicates(arr) {
 	var seen = {};
 	return arr.filter(function (item) {
 		return seen.hasOwnProperty(item) ? false : (seen[item] = true);
 	});
+}
+
+// create a dummy element, apply the appropriate classes,
+// and then measure the element
+export function measure(text) {
+	if (!text || text.length === 0) return { height: 0, width: 0 };
+
+	const container = d3.select("body").append("svg").attr("class", "dummy");
+	container.append("text").attrs({ x: -1000, y: -1000 }).text(text);
+
+	const bbox = container.node().getBBox();
+	container.remove();
+
+	return { height: bbox.height, width: bbox.width };
+}
+
+/**
+ * 
+ * @param {*} text 
+ * @param {*} width 
+ */
+export function textWrap(text, width) {
+	text.each(function () {
+		var text = d3.select(this),
+			words = text.text().split(/\s+/).reverse(),
+			word,
+			line = [],
+			lineNumber = 0,
+			lineHeight = 1.1, // ems
+			x = text.attr("x"),
+			y = text.attr("y"),
+			dy = 0,
+			tspan = text.text(null).append("tspan").attr("dy", dy + "em");
+
+		while ((word = words.pop())) {
+			line.push(word);
+			tspan.text(line.join(" "));
+			if (tspan.node().getComputedTextLength() > width) {
+				line.pop();
+				tspan.text(line.join(" "));
+				line = [word];
+				tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+			}
+		}
+	});
+}
+
+/**
+ * Calculate the distance between two given points.
+ * @param {Number} x1 1st coordinate (x)
+ * @param {Number} y1 1st coordinate (y)
+ * @param {Number} x2 2nd coordinate (x)
+ * @param {Number} y2 2nd coordinate (y)
+ */
+export function distanceBtwnPoints(x1, y1, x2, y2) {
+	const a = x1 - x2;
+	const b = y1 - y2;
+	return Math.abs(Math.sqrt(a * a + b * b));
+}
+
+/**
+ * Split string to lists by , (paranthesis proof)
+ * @param {*} string 
+ */
+export function stringToList(string) {
+	const re = /(:\s|,\s)/; // regular expression with capturing parentheses
+	return string.split(re);
 }

@@ -5,18 +5,14 @@
 # Library imports
 from flask import Flask
 from flask_socketio import SocketIO, emit
-import os
 import json
-import argparse
 from networkx.readwrite import json_graph
 import time
 
 # ------------------------------------------------------------------------------
 # CallFlow imports.
 import callflow
-from callflow.operations import ConfigFileReader
-from callflow import manager
-from callflow import __version__
+from callflow.operations import ArgParser
 
 LOGGER = callflow.get_logger(__name__)
 _CALLFLOW_SERVER_PORT = 5000
@@ -33,29 +29,15 @@ class CallFlowServer:
     """
 
     def __init__(self):
-        # Parse the arguments passed.
-        args = self._create_parser()
+        self.args = ArgParser().get_arguments()
 
-        # Verify if only valid things are passed.
-        self._verify_parser(args)
-
-        print(vars(args))
-
-        # Set cache key to store the current instance's arguments.
-        self.cache_key = manager.cache_key(
-            working_directory=os.getcwd(), arguments=vars(args),
-        )
-
-        self.debug = args.verbose or True
+        self.debug = True
         self.production = False
-        self.process = args.process
+        self.process = self.args["process"]
 
-        # Read the config file using config file reader.
-        self.config = ConfigFileReader(args.config)
-
-        ndatasets = len(self.config.datasets)
+        ndatasets = len(self.args["properties"]["runs"])
         assert ndatasets > 0
-        self.callflow = callflow.CallFlow(config=self.config, ensemble=ndatasets > 1)
+        self.callflow = callflow.CallFlow(config=self.args, ensemble=ndatasets > 1)
 
         if self.process:
             self.callflow.process()
@@ -67,38 +49,6 @@ class CallFlowServer:
             self._create_server()
 
     # ------------------------------------------------------------------------------
-    # Private methods.
-    @staticmethod
-    def _create_parser():
-        """
-        Parse the input arguments
-        """
-        parser = argparse.ArgumentParser()
-        parser.add_argument(
-            "--verbose", action="store_true", help="Display debug points"
-        )
-        parser.add_argument("--config", help="Config file to be processed.")
-        parser.add_argument(
-            "--process",
-            action="store_true",
-            help="Process mode. To preprocess at the required level of granularity, use the options --filter, --entire. If you are preprocessing multiple callgraphs, use --ensemble option.",
-        )
-        args = parser.parse_args()
-        return args
-
-    @staticmethod
-    def _verify_parser(args):
-        """
-        Raises expections if something is not provided
-        Check if the config file is provided and exists!
-        """
-        if not args.config:
-            s = "Please provide a config file. To see options, use --help"
-            raise Exception(s)
-
-        if not os.path.isfile(args.config):
-            s = "Config file ({}) not found!".format(args.config)
-            raise Exception(s)
 
     def _create_server(self):
         """
@@ -111,7 +61,7 @@ class CallFlowServer:
 
         # Socket request handlers
         self._request_handler_general()
-        if len(self.config.datasets) == 1:
+        if len(self.args["properties"]["runs"]) == 1:
             self._request_handler_single()
         else:
             self._request_handler_single()
@@ -430,6 +380,21 @@ class CallFlowServer:
                 }
             )
             emit("compare", result, json=True)
+
+        @sockets.on("split_mpi_distribution", namespace="/")
+        def split_mpi_rank(data):
+            """
+            Split a single run based on MPI distribution
+            """
+            LOGGER.debug("[Socket request] compare_supergraph {data}")
+            result = self.callflow.request_single(
+                {
+                    "name": "split_mpi_distribution",
+                    "dataset": data["dataset"],
+                    "ranks": data["ranks"],
+                }
+            )
+            emit("split_mpi_distribution", result, json=True)
 
 
 if __name__ == "__main__":

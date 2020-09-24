@@ -56,7 +56,7 @@ export default {
 
 	watch: {
 		showTarget: (val) => {
-			EventHandler.$emit("show_target_auxiliary");
+			EventHandler.$emit("show-target-auxiliary");
 		}
 	},
 
@@ -259,8 +259,8 @@ export default {
 		setupStore(data) {
 			data = JSON.parse(data);
 			console.log("Config file: ", data);
-			this.$store.numOfRuns = data["datasets"].length;
-			this.$store.selectedDatasets = data["names"];
+			this.$store.numOfRuns = data["properties"]["runs"].length;
+			this.$store.selectedDatasets = data["properties"]["runs"];
 			this.datasets = this.$store.selectedDatasets;
 
 			// Enable diff mode only if the number of datasets >= 2
@@ -549,7 +549,7 @@ export default {
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
 			this.init();
-			EventHandler.$emit("show_target_auxiliary", {
+			EventHandler.$emit("show-target-auxiliary", {
 			});
 		},
 
@@ -595,7 +595,7 @@ export default {
 
 		updateRuntimeSortBy() {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
-			EventHandler.$emit("callsite_information_sort");
+			EventHandler.$emit("callsite-information-sort");
 		},
 
 		updateMPIBinCount() {

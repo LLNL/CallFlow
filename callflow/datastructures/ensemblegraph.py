@@ -24,14 +24,14 @@ class EnsembleGraph(SuperGraph):
     """
 
     # --------------------------------------------------------------------------
-    def __init__(self, props={}, tag="", mode="process", supergraphs={}):
+    def __init__(self, config={}, tag="", mode="process", supergraphs={}):
         """
         Arguments:
             supergraphs (dict): dictionary of supergraphs keyed by their tag.
         """
         self.supergraphs = supergraphs
 
-        super().__init__(props, tag, mode)
+        super().__init__(config, tag, mode)
 
     # --------------------------------------------------------------------------
     def create_gf(self):

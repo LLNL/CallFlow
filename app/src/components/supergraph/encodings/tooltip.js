@@ -14,63 +14,92 @@ export default {
 	components: {},
 
 	data: () => ({
-		id: "",
+		id: "supernode-tooltip",
 		textCount: 0,
 		textxOffset: 20,
 		textyOffset: 20,
 		textPadding: 15,
 		height: 200,
-		margin: 35
+		margin: 35,
+		mousePosX: 0,
+		mousePosY: 0,
+		prevMousePosX: undefined,
+		prevMousePosY: undefined
 	}),
-
-	sockets: {
-		tooltip(data) {
-			this.render(data);
-		},
-	},
 
 	methods: {
 		init(id) {
 			this.id = id;
-			this.toolTipDiv = d3.select("#" + this.id);
-			this.toolTipG = this.toolTipDiv.append("g");
-			this.callgraphOverviewWidth = this.$store.viewWidth;
-			this.halfWidth = this.callgraphOverviewWidth / 2;
+			const toolTipDiv = d3.select("#" + this.id);
+			this.toolTipG = toolTipDiv.append("g");
 		},
 
+		/**
+		 * Set the position for the tooltip SVG. (x-positioning)
+		 */
 		positionX() {
 			let ret = 0;
-			if (this.mousePosX >= this.halfWidth) {
-				ret = this.mousePosX - this.halfWidth + this.textxOffset;
+			if (this.mousePosX >= this.$store.viewWidth / 2) {
+				ret = this.mousePosX + this.textxOffset;
 			}
-			else {
-				ret = this.halfWidth - this.mousePosX + this.textxOffset;
-			}
+			ret = this.mousePosX - this.textxOffset;
 			return ret;
 		},
 
-		positionY(node) {
-			if (this.mousePosY < node.y) {
-				return node.y - this.mousePosY + node.height / 2;
+		/**
+		 * Set the position for the tooltip SVG. (y-positioning)
+		 */
+		positionY() {
+			let ret = 0;
+			if (this.mousePosY >= this.$store.viewHeight / 2) {
+				ret = this.mousePosY + this.textyOffset;
 			}
-			return this.mousePosY - node.y + node.height / 2;
+			ret = this.mousePosY - this.textyOffset;
+			return ret;
 		},
 
+		/**
+		 * The below function decides if we have to render the tooltip or not.
+		 * 
+		 * @param {Graph} graph 
+		 * @param {*} node 
+		 */
 		visualize(graph, node) {
-			this.clear();
-			this.xOffset = this.positionX();
-			this.yOffset = this.positionY(node);
-			this.nodeHeight = node.height;
-			var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
+			// Set current mouse position.
 			this.mousePos = d3.mouse(d3.select("#" + this.id).node());
 			this.mousePosX = this.mousePos[0];
 			this.mousePosY = this.mousePos[1];
+
+			// Draw the tooltip again only if the distance is more than the width of the supernode.
+			// console.log(this.prevMousePosY, this.prevMousePosX, utils.distanceBtwnPoints(this.mousePosX, this.mousePosY, this.prevMousePosX, this.prevMousePosY))
+			// if (this.prevMousePosX && this.prevMousePosY && utils.distanceBtwnPoints(this.mousePosX, this.mousePosY, this.prevMousePosX, this.prevMousePosY) > 0 ) {
+			this.clear();
+			this.render(graph, node);
+			// }
+
+			// Store the previous mouse positions to calculate the distance.
+			this.prevMousePosX = this.mousePosX;
+			this.prevMousePosY = this.mousePosY;
+		},
+
+		/**
+		 * 
+		 * @param {*} graph 
+		 * @param {*} node 
+		 */
+		render(graph, node) {
+			this.xOffset = this.positionX() + 40;
+			this.yOffset = this.positionY() + 40;
+			this.nodeHeight = node.height;
+
+			const svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
+
 			this.toolTipG.attr("height", svgScale(10) + "px");
 			this.toolTipRect = this.toolTipG
 				.append("rect")
 				.attrs({
-					"class": "toolTipContent",
-					"fill": "#e0e0e0",
+					"class": "tooltip-container",
+					"fill": "#fff",
 					"stroke": "black",
 					"rx": "10px",
 					"fill-opacity": 1,
@@ -81,22 +110,24 @@ export default {
 					"x": this.xOffset,
 					"y": this.yOffset
 				});
-			this.graph = graph;
-			this.node = node;
 
-			this.times();
-			this.paths();
+			this.runtimeInformation(node);
+			this.pathInformation(node);
 		},
 
+		/**
+		 * Add a single line of text.
+		 * 
+		 * @param {*} text 
+		 */
 		addText(text) {
-			let self = this;
 			this.textCount += 1;
 			this.toolTipText = this.toolTipG
 				.append("text")
 				.style("font-family", "sans-serif")
 				.style("font-size", "")
 				.attrs({
-					"class": "toolTipContent",
+					"class": "tooltip-content",
 					"x": () => {
 						return this.xOffset + this.margin;
 					},
@@ -107,31 +138,44 @@ export default {
 				.text(text);
 		},
 
-		times() {
-			this.addText("Name: " + this.trunc(this.node.id, 40));
-			// this.addText('Inclusive Time: ' + (this.node['time (inc)'] * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node['time (inc)'] / this.$store.maxIncTime['ensemble']) * 100).toFixed(3)) + "%")
-			// this.addText('Exclusive Time: ' + (this.node['time'] * 0.000001).toFixed(3) + "s - " + Math.floor(((this.node['time'] / this.$store.maxExcTime['ensemble']) * 100).toFixed(3)) + "%")
-			// this.addText('Inclusive Time: ' + utils.formatRuntimeWithUnits(this.node.actual_time['Inclusive']))
-			// this.addText('Exclusive Time: ' + utils.formatRuntimeWithUnits(this.node.actual_time['Exclusive']))
-			this.addText("Inclusive Time: " + utils.formatRuntimeWithUnits(this.node["time (inc)"]));
-			this.addText("Exclusive Time: " + utils.formatRuntimeWithUnits(this.node["time"]));
-			// this.addText('Node value: ' + utils.formatRuntimeWithUnits(this.node.value))
-			// this.addText('Node height: ' + this.node.height)
-
+		/**
+		 * 
+		 * @param {*} node 
+		 */
+		runtimeInformation(node) {
+			this.addText("Name: " + utils.truncNames(node.id, 40));
+			this.addText("Inclusive Time: " + utils.formatRuntimeWithUnits(node["time (inc)"]));
+			this.addText("Exclusive Time: " + utils.formatRuntimeWithUnits(node["time"]));
 		},
 
-		trunc(str, n) {
-			str = str.replace(/<unknown procedure>/g, "proc ");
-			return (str.length > n) ? str.substr(0, n - 1) + "..." : str;
-		},
+		/**
+		 * 
+		 * @param {*} node 
+		 */
+		pathInformation(node) {
+			let module_data = {};
+			if (this.$store.selectedMode == "Single") {
+				module_data = this.$store.modules[this.$store.selectedTargetDataset];
+			}
+			else if (this.$store.selectedMode == "Ensemble") {
+				module_data = this.$store.modules["ensemble"];
+			}
 
-		paths() {
-			let entry_functions = this.$store.modules["ensemble"][this.node.id]["callers"];
+			let callsite_data = {};
+			if (this.$store.selectedMode == "Single") {
+				callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
+			}
+			else if (this.$store.selectedMode == "Ensemble") {
+				callsite_data = this.$store.callsites["ensemble"];
+			}
 
+
+			// TODO : Improve the logic here to not process the string input multiple times. 
+			let entry_functions = node[this.$store.selectedTargetDataset]["entry_function"].split(",").map(String);
 			let entry_function_runtimes = {};
 			for (let i = 0; i < entry_functions.length; i += 1) {
-				let callsite = entry_functions[i].replace("'", "").replace("'", "").replace("[", "").replace("]", "");
-				entry_function_runtimes[callsite] = this.$store.callsites["ensemble"][callsite][this.$store.selectedMetric]["mean_time"];
+				let callsite = entry_functions[i].replace("'", "").replace("'", "").replace("[", "").replace("]", "").replace(" ", "");
+				entry_function_runtimes[callsite] = callsite_data[callsite][this.$store.selectedMetric]["mean_time"];
 			}
 
 			// Create items array
@@ -148,14 +192,17 @@ export default {
 
 			this.addText("");
 			this.addText("Entry call sites: ");
+			this.entryFunctionInformation(node, entry_function_data);
+		},
 
-			// TODO: Bug here
+		entryFunctionInformation(node, entry_function_data) {
+			// Needs clean up for sure.
 			for (var tIndex = 0; tIndex < Math.min(3, entry_function_data.length); tIndex++) {
 				this.textCount += 1;
-				let fromColor = this.$store.color.getColorByValue(entry_function_data[tIndex][1]);
-				let toColor = this.$store.color.getColor(this.node);
-				let fromFunc = entry_function_data[tIndex][0];
-				let toFunc = this.node.id;
+				let toColor = this.$store.runtimeColor.getColorByValue(entry_function_data[tIndex][1]);
+				let fromColor = this.$store.runtimeColor.getColorByValue(node);
+				let toFunc = entry_function_data[tIndex][0];
+				let fromFunc = node.id;
 				let xOffset = this.xOffset + this.margin;
 				let yOffset = this.yOffset + this.textyOffset + this.textPadding * this.textCount;
 
@@ -166,7 +213,7 @@ export default {
 						"height": this.rectWidth,
 						"x": xOffset + "px",
 						"y": yOffset - 10 + "px",
-						"class": "toolTipContent"
+						"class": "tooltip-content",
 					})
 					.style("fill", fromColor);
 
@@ -175,16 +222,16 @@ export default {
 					.attrs({
 						"x": xOffset + 15 + "px",
 						"y": yOffset + "px",
-						"class": "toolTipContent",
+						"class": "tooltip-content",
 					})
-					.text(this.trunc(fromFunc, 10));
+					.text(utils.truncNames(fromFunc, 10));
 
 				this.toolTipG
 					.append("text")
 					.attrs({
 						"x": xOffset + 120 + "px",
 						"y": yOffset + "px",
-						"class": "toolTipContent",
+						"class": "tooltip-content",
 					})
 					.text("->");
 
@@ -195,7 +242,7 @@ export default {
 						"height": this.rectWidth,
 						"x": xOffset + 140 + "px",
 						"y": yOffset - 10 + "px",
-						"class": "toolTipContent",
+						"class": "tooltip-content",
 					})
 					.style("fill", toColor);
 				this.toolTipG
@@ -203,20 +250,23 @@ export default {
 					.attrs({
 						"x": xOffset + 155 + "px",
 						"y": yOffset + "px",
-						"class": "toolTipContent",
+						"class": "tooltip-content",
 					})
-					.text(this.trunc(toFunc, 10));
+					.text(utils.truncNames(toFunc, 10));
 			}
 
 			let left_callsites = entry_function_data.length - 3;
 			this.addText("and " + left_callsites + " call sites more.");
-
 		},
 
+
+		/**
+		 * Clear the content in the tooltip.
+		 */
 		clear() {
-			this.textCount = 0;
-			d3.selectAll(".toolTipContent").remove();
+			this.textCount = 0;			
+			d3.selectAll(".tooltip-container").remove();
+			d3.selectAll(".tooltip-content").remove();
 		},
-
 	}
 };

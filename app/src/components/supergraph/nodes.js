@@ -136,7 +136,7 @@ export default {
 				}
 				this.$refs.Guides.init(this.graph.nodes);
 			}
-			// this.$refs.ToolTip.init(this.$parent.id)
+			this.$refs.ToolTip.init(this.$parent.id);
 		},
 
 		preVis() {
@@ -213,7 +213,6 @@ export default {
 			this.$store.selectedModule = node.module;
 			this.$store.selectedName = node.name;
 
-			//
 			const nodeSVG = this.containerG.select("#callsite-" + node.client_idx);
 
 			// Make appropriate event requests (Single and Ensemble).
@@ -229,17 +228,17 @@ export default {
 					datasets: this.$store.selectedDatasets,
 				});
 
-				EventHandler.$emit("ensemble_histogram", {
+				EventHandler.$emit("ensemble-histogram", {
 					module: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
 
-				EventHandler.$emit("ensemble_distribution", {
+				EventHandler.$emit("ensemble-distribution", {
 					module: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
 
-				EventHandler.$emit("ensemble_scatterplot", {
+				EventHandler.$emit("ensemble-scatterplot", {
 					module: this.$store.selectedModule,
 					dataset1: this.$store.selectedDatasets,
 				});
@@ -251,32 +250,32 @@ export default {
 				});
 			}
 			else if (this.$store.selectedMode == "Single") {
-				EventHandler.$emit("single_histogram", {
+				EventHandler.$emit("single-histogram", {
 					module: this.$store.selectedModule,
 					groupBy: this.$store.selectedGroupBy,
 					dataset: this.$store.selectedTargetDataset,
 				});
 
-				EventHandler.$emit("single_scatterplot", {
+				EventHandler.$emit("single-scatterplot", {
 					module: this.$store.selectedModule,
 					dataset: this.$store.selectedTargetDataset,
 				});
 			}
 
-			EventHandler.$emit("select_module", {
+			EventHandler.$emit("select-module", {
 				module: this.$store.selectedModule,
 			});
 		},
 
 		mouseover(node) {
-			// this.$refs.ToolTip.visualize(self.graph, node)
+			this.$refs.ToolTip.visualize(self.graph, node);
 			if (this.$store.selectedMode == "Ensemble" && this.$store.comparisonMode == false) {
 				this.$refs.Guides.visualize(node, "temporary");
 			}
 		},
 
 		mouseout(node) {
-			// this.$refs.ToolTip.clear()
+			this.$refs.ToolTip.clear();
 			if (this.$store.selectedMode == "Ensemble" && this.$store.comparisonMode == false) {
 				this.$refs.Guides.clear(node, "temporary");
 				if (this.permanentGuides == false) {
