@@ -43,7 +43,8 @@ StartFailed = collections.namedtuple(
 
 # Indicates that a call to `start` failed to invoke the subprocess.
 StartExecFailed = collections.namedtuple(
-    "StartExecFailed", ("os_error",),  # `OSError` due to `Popen` invocation
+    "StartExecFailed",
+    ("os_error",),  # `OSError` due to `Popen` invocation
 )
 
 # Indicates that a call to `start` launched a CallFlow process, but
@@ -66,11 +67,13 @@ _CALLFLOW_INFO_FIELDS = collections.OrderedDict(
 )
 
 CallFlowLaunchInfo = collections.namedtuple(
-    "CallFlowLaunchInfo", _CALLFLOW_INFO_FIELDS,
+    "CallFlowLaunchInfo",
+    _CALLFLOW_INFO_FIELDS,
 )
 
 _CALLFLOW_DEFAULT_SERVER_PORT = 5000
 _CALLFLOW_DEFAULT_CLIENT_PORT = 1024
+
 
 def cache_key(working_directory, arguments):
     """
@@ -160,7 +163,7 @@ def _get_info_dir():
     functions of this module, subsequent behavior is undefined.
     The directory will be created if it does not exist.
     """
-    
+
     path = os.path.join("/tmp", "callflow-info")
     try:
         os.makedirs(path)
@@ -201,6 +204,7 @@ def get_launch_information():
             results.append(info)
     return results
 
+
 def _find_matching_instance(cache_key):
     """Find a running CallFlow instance compatible with the cache key.
     Returns:
@@ -212,10 +216,11 @@ def _find_matching_instance(cache_key):
         return candidate
     return None
 
+
 def start(args, args_string):
     """
     Start a CallFlow (server and client) as a subprocess in the background.
-    TODO: Improve logic to check if there is a callflow process already. 
+    TODO: Improve logic to check if there is a callflow process already.
     """
     instance_cache_key = cache_key(working_directory=os.getcwd(), arguments=vars(args))
     match = _find_matching_instance(instance_cache_key)
@@ -263,10 +268,13 @@ def launch_cmd(cmd, timeout=datetime.timedelta(seconds=100), alias=""):
     (stderr_fd, stderr_path) = tempfile.mkstemp(prefix=stdprefix_path + "stderr-")
     pid_path = _get_info_file_path()
 
-
     start_time_seconds = time.time()
     try:
-        p = subprocess.Popen(cmd, stdout=stdout_fd, stderr=stderr_fd,)
+        p = subprocess.Popen(
+            cmd,
+            stdout=stdout_fd,
+            stderr=stderr_fd,
+        )
     except OSError as e:
         return StartExecFailed(os_error=e)
     finally:
@@ -293,7 +301,6 @@ def launch_cmd(cmd, timeout=datetime.timedelta(seconds=100), alias=""):
                 return StartLaunched(info=info)
         else:
             return StartTimedOut(pid=p.pid)
-
 
 
 def _maybe_read_file(filename):

@@ -45,7 +45,9 @@ def _register_magics(ipython):
       ipython: An `InteractiveShell` instance.
     """
     ipython.register_magic_function(
-        _start_magic, magic_kind="line", magic_name="callflow",
+        _start_magic,
+        magic_kind="line",
+        magic_name="callflow",
     )
 
 
@@ -66,7 +68,8 @@ def start(args_string):
         IPython = None
 
     handle = IPython.display.display(
-        IPython.display.Pretty("Launching CallFlow..."), display_id=True,
+        IPython.display.Pretty("Launching CallFlow..."),
+        display_id=True,
     )
 
     def print_or_update(message):
@@ -76,11 +79,15 @@ def start(args_string):
             handle.update(IPython.display.Pretty(message))
 
     args = ArgParser(args_string)
-    start_result = manager.start(args, shlex.split(args_string, comments=True, posix=True))
+    start_result = manager.start(
+        args, shlex.split(args_string, comments=True, posix=True)
+    )
 
     if isinstance(start_result, manager.StartLaunched):
         _display_ipython(
-            port=1024, height=800, display_handle=handle,
+            port=1024,
+            height=800,
+            display_handle=handle,
         )
 
     elif isinstance(start_result, manager.StartReused):
@@ -98,6 +105,7 @@ def start(args_string):
         _display_ipython(
             port=start_result.info["client_port"], display_handle=None, height=800
         )
+
 
 def _time_delta_from_info(info):
     """Format the elapsed time for the given TensorBoardInfo.

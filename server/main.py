@@ -45,7 +45,9 @@ class CallFlowServer:
 
         ndatasets = len(self.args.config["properties"]["runs"])
         assert ndatasets > 0
-        self.callflow = callflow.CallFlow(config=self.args.config, ensemble=ndatasets > 1)
+        self.callflow = callflow.CallFlow(
+            config=self.args.config, ensemble=ndatasets > 1
+        )
 
         if self.process:
             self.callflow.process()

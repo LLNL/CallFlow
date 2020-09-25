@@ -46,7 +46,6 @@ class ArgParser:
         read_mode = self._verify_parser(args)
         LOGGER.debug(f"Read mode: {read_mode}")
 
-
         # Check if read mode is one of the keys of _READ_MODES.
         assert read_mode in _READ_MODES.keys()
 
@@ -97,7 +96,9 @@ class ArgParser:
             help="Set group by (e.g., grouping by 'name' column gets call graph, and grouping by 'module' produces a super graph",
         )
         parser.add_argument("--save_path", help="Save path for the processed files")
-        parser.add_argument("--read_parameter", help="Enable parameter analysis", action="store_true")
+        parser.add_argument(
+            "--read_parameter", help="Enable parameter analysis", action="store_true"
+        )
         parser.add_argument("--gfs", help="Enter graphframes")
 
         if args_string:
