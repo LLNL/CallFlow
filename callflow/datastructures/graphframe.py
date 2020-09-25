@@ -119,7 +119,7 @@ class GraphFrame(ht.GraphFrame):
         data_path = os.path.join(
             config["data_path"], config["properties"]["paths"][name]
         )
-        profile_format = config["properties"]["format"][name]
+        profile_format = config["properties"]["profile_format"][name]
         if profile_format == "hpctoolkit":
             gf = ht.GraphFrame.from_hpctoolkit(data_path)
 
@@ -132,7 +132,7 @@ class GraphFrame(ht.GraphFrame):
             )
             gf = ht.GraphFrame.from_caliper(data_path, query=query)
 
-        elif profile_format == "caliper-json":
+        elif profile_format == "caliper_json":
             gf = ht.GraphFrame.from_caliper_json(data_path)
 
         elif profile_format == "gprof":

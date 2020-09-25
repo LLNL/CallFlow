@@ -11,6 +11,9 @@ import shlex
 import json
 import random
 import argparse
+import time
+import datetime
+from callflow.operations import ArgParser
 
 try:
     import html
@@ -51,17 +54,6 @@ def _start_magic(line):
     return start(line)
 
 
-def _jupyter_args_to_argparse(args_string):
-    """
-    Converts jupyter launch command to argparse.Namespace.
-    """
-    parser = argparse.ArgumentParser(prefix_chars="--")
-    parser.add_argument("--verbose", action="store_true")
-    parser.add_argument("--process", action="store_true")
-    parser.add_argument("--config", nargs="*")
-    return parser.parse_args(shlex.split(args_string))
-
-
 def start(args_string):
     """Launch and display a CallFlow instance as if at the command line.
     Args:
@@ -83,10 +75,10 @@ def start(args_string):
         else:
             handle.update(IPython.display.Pretty(message))
 
-    parsed_args = _jupyter_args_to_argparse(args_string)
-    start_result = manager.start(
-        parsed_args, shlex.split(args_string, comments=True, posix=True)
-    )
+    args = ArgParser(args_string)
+
+    args = ArgParser(args_string)
+    start_result = manager.start(args, shlex.split(args_string, comments=True, posix=True))
 
     if isinstance(start_result, manager.StartLaunched):
         _display_ipython(
@@ -95,18 +87,30 @@ def start(args_string):
 
     elif isinstance(start_result, manager.StartReused):
         template = (
-            "Reusing CallFlow on port {port} (pid {pid}), started {delta} ago. "
+            "Reusing CallFlow's server is on port {server_port} and client is on {client_port} (pid {pid}), started {delta} ago. "
             "(Use '!kill {pid}' to kill it.)"
         )
         message = template.format(
-            port=start_result.info.port,
-            pid=start_result.info.pid,
+            server_port=start_result.info["server_port"],
+            client_port=start_result.info["client_port"],
+            pid=start_result.info["pid"],
             delta=_time_delta_from_info(start_result.info),
         )
         print_or_update(message)
         _display_ipython(
-            port=start_result.info.port, print_message=False, display_handle=None,
+            port=start_result.info["server_port"], display_handle=None, height=800
         )
+
+def _time_delta_from_info(info):
+    """Format the elapsed time for the given TensorBoardInfo.
+    Args:
+      info: A TensorBoardInfo value.
+    Returns:
+      A human-readable string describing the time since the server
+      described by `info` started: e.g., "2 days, 0:48:58".
+    """
+    delta_seconds = int(time.time()) - info["start_time"]
+    return str(datetime.timedelta(seconds=delta_seconds))
 
 
 def _display_ipython(port, height, display_handle):
@@ -128,7 +132,6 @@ def _display_ipython(port, height, display_handle):
         })();
       </script>
     """
-
     replacements = [
         ("%HTML_ID%", html_escape(frame_id, quote=True)),
         ("%JSON_ID%", json.dumps(frame_id)),

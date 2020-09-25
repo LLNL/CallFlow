@@ -8,10 +8,13 @@ from flask_socketio import SocketIO, emit
 import json
 from networkx.readwrite import json_graph
 import time
+import os
 
 # ------------------------------------------------------------------------------
 # CallFlow imports.
 import callflow
+from callflow.operations import ConfigFileReader
+from callflow import manager
 from callflow.operations import ArgParser
 
 LOGGER = callflow.get_logger(__name__)
@@ -29,15 +32,20 @@ class CallFlowServer:
     """
 
     def __init__(self):
-        self.args = ArgParser().get_arguments()
+        self.args = ArgParser()
+
+        # Set cache key to store the current instance's arguments.
+        self.cache_key = manager.cache_key(
+            working_directory=os.getcwd(), arguments=vars(self.args)
+        )
 
         self.debug = True
         self.production = False
-        self.process = self.args["process"]
+        self.process = self.args.process
 
-        ndatasets = len(self.args["properties"]["runs"])
+        ndatasets = len(self.args.config["properties"]["runs"])
         assert ndatasets > 0
-        self.callflow = callflow.CallFlow(config=self.args, ensemble=ndatasets > 1)
+        self.callflow = callflow.CallFlow(config=self.args.config, ensemble=ndatasets > 1)
 
         if self.process:
             self.callflow.process()
@@ -61,22 +69,11 @@ class CallFlowServer:
 
         # Socket request handlers
         self._request_handler_general()
-        if len(self.args["properties"]["runs"]) == 1:
+        if len(self.args.config["properties"]["runs"]) == 1:
             self._request_handler_single()
         else:
             self._request_handler_single()
             self._request_handler_ensemble()
-
-        info = manager.CallFlowLaunchInfo(
-            version=__version__,
-            start_time=int(time.time()),
-            port=_CALLFLOW_SERVER_PORT,
-            pid=os.getpid(),
-            config_path=self.config.json,
-            cache_key=self.cache_key,
-        )
-
-        manager.write_info_file(info)
 
         # Start the server.
         if self.production:

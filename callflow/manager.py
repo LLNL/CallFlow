@@ -16,6 +16,7 @@ import datetime
 import errno
 import json
 import base64
+from callflow import __version__
 
 # The following five types enumerate the possible return values of the
 # `start` function.
@@ -57,8 +58,9 @@ _CALLFLOW_INFO_FIELDS = collections.OrderedDict(
         ("version", str),
         ("start_time", int),  # seconds since epoch
         ("pid", int),
-        ("port", int),
-        ("config_path", str),  # may be empty
+        ("server_port", int),
+        ("client_port", int),
+        ("config", str),  # may be empty
         ("cache_key", str),  # opaque, as given by `cache_key` below
     )
 )
@@ -67,6 +69,8 @@ CallFlowLaunchInfo = collections.namedtuple(
     "CallFlowLaunchInfo", _CALLFLOW_INFO_FIELDS,
 )
 
+_CALLFLOW_DEFAULT_SERVER_PORT = 5000
+_CALLFLOW_DEFAULT_CLIENT_PORT = 8000
 
 def cache_key(working_directory, arguments):
     """
@@ -76,6 +80,7 @@ def cache_key(working_directory, arguments):
     Returns a cache_key that encodes the input arguments
     Used for comparing instances after launch.
     """
+
     if not isinstance(arguments, dict):
         raise TypeError(
             "'arguments' should be a list of arguments, but found: %r "
@@ -107,7 +112,7 @@ def _get_info_file_path():
     As with `_get_info_dir`, the info directory will be created if it
     does not exist.
     """
-    return os.path.join(_get_info_dir(), "pid-%d.info" % os.getpid())
+    return os.path.join(_get_info_dir(), "pid-%d.info" % os.getppid())
 
 
 def write_info_file(info):
@@ -121,7 +126,6 @@ def write_info_file(info):
     """
     payload = "%s\n" % _info_to_string(info)
     path = _get_info_file_path()
-    print("CallFlow config for this instance is dumped into", path)
     with open(path, "w") as outfile:
         outfile.write(payload)
 
@@ -156,7 +160,8 @@ def _get_info_dir():
     functions of this module, subsequent behavior is undefined.
     The directory will be created if it does not exist.
     """
-    path = os.path.join(tempfile.gettempdir(), ".callflow-info")
+    
+    path = os.path.join("/tmp", "callflow-info")
     try:
         os.makedirs(path)
     except OSError as e:
@@ -196,17 +201,24 @@ def get_launch_information():
             results.append(info)
     return results
 
+def _find_matching_instance(cache_key):
+    """Find a running CallFlow instance compatible with the cache key.
+    Returns:
+      A `CalLFlowInfo` object, or `None` if none matches the cache key.
+    """
+    infos = get_launch_information()
+    candidates = [info for info in infos if info["cache_key"] == cache_key]
+    for candidate in sorted(candidates, key=lambda x: x["server_port"]):
+        return candidate
+    return None
 
 def start(args, args_string):
     """
     Start a CallFlow (server and client) as a subprocess in the background.
     TODO: Improve logic to check if there is a callflow process already. 
     """
-
-    match = _find_matching_instance(
-        cache_key(working_directory=os.getcwd(), arguments=vars(args),),
-    )
-    print("Is there a matching pid?", match != None)
+    instance_cache_key = cache_key(working_directory=os.getcwd(), arguments=vars(args))
+    match = _find_matching_instance(instance_cache_key)
     if match:
         return StartReused(info=match)
 
@@ -227,33 +239,30 @@ def start(args, args_string):
     client_cmd = ["npm", "run", "dev"] + prefix_string
     launch_cmd(client_cmd, alias="client")
 
+    info = CallFlowLaunchInfo(
+        version=__version__,
+        start_time=int(time.time()),
+        server_port=_CALLFLOW_DEFAULT_SERVER_PORT,
+        client_port=_CALLFLOW_DEFAULT_CLIENT_PORT,
+        pid=os.getpid(),
+        config=args.config,
+        cache_key=instance_cache_key,
+    )
+
+    write_info_file(info)
+
     return StartLaunched(info="Started")
 
 
-def _find_matching_instance(cache_key):
-    """Find a running CallFlow instance compatible with the cache key.
-    Returns:
-      A `CalLFlowInfo` object, or `None` if none matches the cache key.
-    """
-    infos = get_launch_information()
-    candidates = [info for info in infos if info["cache_key"] == cache_key]
-    for candidate in sorted(candidates, key=lambda x: x.port):
-        return candidate
-    return None
-
-
-def launch_cmd(cmd, timeout=datetime.timedelta(seconds=60), alias=""):
+def launch_cmd(cmd, timeout=datetime.timedelta(seconds=100), alias=""):
     """
     Launch a cmd.
     """
-    stdprefix_path = "/tmp/.callflow-info/" + alias + "-"
+    stdprefix_path = "/tmp/callflow-info/" + alias + "-"
     (stdout_fd, stdout_path) = tempfile.mkstemp(prefix=stdprefix_path + "stdout-")
     (stderr_fd, stderr_path) = tempfile.mkstemp(prefix=stdprefix_path + "stderr-")
     pid_path = _get_info_file_path()
 
-    print(f"stdout for {alias} is dumped in {stdout_path}.")
-    print(f"stderr for {alias} is dumped in {stdout_path}.")
-    print(f"CallFlow instance info is dumped in {pid_path}")
 
     start_time_seconds = time.time()
     try:
@@ -270,17 +279,21 @@ def launch_cmd(cmd, timeout=datetime.timedelta(seconds=60), alias=""):
         time.sleep(poll_interval_seconds)
         subprocess_result = p.poll()
         if subprocess_result is not None:
+            print(f"stdout for {alias} is dumped in {stdout_path}.")
+            print(f"stderr for {alias} is dumped in {stdout_path}.")
             return StartFailed(
                 exit_code=subprocess_result,
                 stdout=_maybe_read_file(stdout_path),
                 stderr=_maybe_read_file(stderr_path),
             )
-            for info in get_launch_information():
-                if info.pid == p.pid and info.start_time >= start_time_seconds:
-                    info = get_launch_information()
-                    return StartLaunched(info=info)
+        for info in get_launch_information():
+            if info["pid"] == p.pid and info["start_time"] >= start_time_seconds:
+                info = get_launch_information()
+                print(f"CallFlow instance info is dumped in {pid_path}")
+                return StartLaunched(info=info)
         else:
             return StartTimedOut(pid=p.pid)
+
 
 
 def _maybe_read_file(filename):
@@ -293,6 +306,7 @@ def _maybe_read_file(filename):
     """
     try:
         with open(filename) as infile:
+            print(infile.read())
             return infile.read()
     except IOError as e:
         if e.errno == errno.ENOENT:
