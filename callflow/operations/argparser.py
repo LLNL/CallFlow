@@ -23,6 +23,8 @@ schema = {
     },
 }
 
+_SUPPORTED_PROFILE_FORMATS = ["hpctoolkit", "caliper_json", "caliper"]
+
 
 class ArgParser:
     """
@@ -192,6 +194,7 @@ class ArgParser:
                 json["runs"]
             )
         elif "runs" not in json and "profile_format" in json:
+            assert json["profile_format"] in _SUPPORTED_PROFILE_FORMATS
             scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER[
                 json["profile_format"]
             ](json["runs"])
@@ -202,10 +205,21 @@ class ArgParser:
         scheme["callsite_module_map"] = ArgParser._process_module_map(
             scheme["module_callsite_map"]
         )
-        scheme["filter_perc"] = json["scheme"]["filter_perc"]
-        scheme["filter_by"] = json["scheme"]["filter_by"]
-        scheme["group_by"] = json["scheme"]["group_by"]
 
+        if args.filter_by:
+            scheme["filter_by"] = args.filter_by
+        else:
+            scheme["filter_by"] = json["scheme"]["filter_by"]
+
+        if args.filter_perc:
+            scheme["filter_perc"] = args.filter_perc
+        else:
+            scheme["filter_perc"] = json["scheme"]["filter_perc"]
+
+        if args.group_by:
+            scheme["group_by"] = args.group_by
+        else:
+            scheme["group_by"] = json["scheme"]["group_by"]
         return scheme
 
     @staticmethod
@@ -226,6 +240,8 @@ class ArgParser:
             # Assert if the profile_format is provided.
             if "profile_format" not in data:
                 raise Exception(f"Profile format not specified for the dataset: {name}")
+
+            assert data["profile_format"] in _SUPPORTED_PROFILE_FORMATS
 
             scheme["profile_format"][name] = data["profile_format"]
         return scheme
