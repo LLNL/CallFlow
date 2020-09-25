@@ -45,3 +45,5 @@ docs/_build
 config_files copy/*
 examples/*
 internals/*
+
+*.png

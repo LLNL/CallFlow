@@ -6,6 +6,7 @@
 import os
 import jsonschema
 import argparse
+import shlex
 
 import callflow
 
@@ -31,7 +32,7 @@ class ArgParser:
     Config file contains the information to process datasets accrodingly.
     """
 
-    def __init__(self):
+    def __init__(self, args_string=[]):
 
         _READ_MODES = {
             "config": ArgParser._read_config,
@@ -40,7 +41,7 @@ class ArgParser:
         }
 
         # Parse the arguments passed.
-        args = self._create_parser()
+        args = self._create_parser(args_string)
 
         # Verify if only valid things are passed.
         # Read mode determines how arguments will be consumed by CallFlow.
@@ -50,29 +51,29 @@ class ArgParser:
         # Check if read mode is one of the keys of _READ_MODES.
         assert read_mode in _READ_MODES.keys()
 
-        self.arguments = _READ_MODES[read_mode](args)
+        self.config = _READ_MODES[read_mode](args)
 
         # Add read_mode to arguments.
-        self.arguments["read_mode"] = read_mode
+        self.read_mode = read_mode
 
         # Add process to arguments
-        self.arguments["process"] = args.process
+        self.process = args.process
 
         # validate the json.
-        jsonschema.validate(instance=self.arguments, schema=schema)
+        jsonschema.validate(instance=self.config, schema=schema)
 
-        LOGGER.debug(f"Arguments: {self.arguments}")
+        LOGGER.debug(f"CallFlow instantiation configuration: {self.config}")
 
     def get_arguments(self):
         return self.arguments
 
     # Private methods.
     @staticmethod
-    def _create_parser():
+    def _create_parser(args_string):
         """
         Parse the input arguments.
         """
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(prefix_chars="--")
         parser.add_argument(
             "--verbose", action="store_true", help="Display debug points"
         )
@@ -100,9 +101,12 @@ class ArgParser:
         parser.add_argument(
             "--read_parameter", help="Enable parameter analysis", action="store_true"
         )
+        parser.add_argument("--gfs", help="Enter graphframes")
 
-        args = parser.parse_args()
-        return args
+        if args_string:
+            return parser.parse_args(shlex.split(args_string))
+        else:
+            return parser.parse_args()
 
     @staticmethod
     def _verify_parser(args: argparse.Namespace):
@@ -122,7 +126,7 @@ class ArgParser:
         process_mode: 'config' or 'directory' or 'gfs'
             Process mode with which CallFlow will process the data.
         """
-        if not args.config and not args.data_dir and args.gfs:
+        if not args.config and not args.data_dir and not args.gfs:
             s = "Please provide a config file (or) directory (or) pass in the graphframes. To see options, use --help"
             raise Exception(s)
 

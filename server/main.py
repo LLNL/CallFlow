@@ -7,13 +7,16 @@ from flask import Flask
 from flask_socketio import SocketIO, emit
 import json
 from networkx.readwrite import json_graph
+import os
 
 # ------------------------------------------------------------------------------
 # CallFlow imports.
 import callflow
+from callflow import manager
 from callflow.operations import ArgParser
 
 LOGGER = callflow.get_logger(__name__)
+_CALLFLOW_SERVER_PORT = 5000
 
 # ------------------------------------------------------------------------------
 # Create a Flask server.
@@ -27,15 +30,22 @@ class CallFlowServer:
     """
 
     def __init__(self):
-        self.args = ArgParser().get_arguments()
+        self.args = ArgParser()
+
+        # Set cache key to store the current instance's arguments.
+        self.cache_key = manager.cache_key(
+            working_directory=os.getcwd(), arguments=vars(self.args)
+        )
 
         self.debug = True
         self.production = False
-        self.process = self.args["process"]
+        self.process = self.args.process
 
-        ndatasets = len(self.args["properties"]["runs"])
+        ndatasets = len(self.args.config["properties"]["runs"])
         assert ndatasets > 0
-        self.callflow = callflow.CallFlow(config=self.args, ensemble=ndatasets > 1)
+        self.callflow = callflow.CallFlow(
+            config=self.args.config, ensemble=ndatasets > 1
+        )
 
         if self.process:
             self.callflow.process()
@@ -59,7 +69,7 @@ class CallFlowServer:
 
         # Socket request handlers
         self._request_handler_general()
-        if len(self.args["properties"]["runs"]) == 1:
+        if len(self.args.config["properties"]["runs"]) == 1:
             self._request_handler_single()
         else:
             self._request_handler_single()
@@ -67,9 +77,15 @@ class CallFlowServer:
 
         # Start the server.
         if self.production:
-            sockets.run(app, host="0.0.0.0", debug=self.debug, use_reloader=True)
+            sockets.run(
+                app,
+                host="0.0.0.0",
+                debug=self.debug,
+                use_reloader=True,
+                port=_CALLFLOW_SERVER_PORT,
+            )
         else:
-            sockets.run(app, debug=False, use_reloader=True)
+            sockets.run(app, debug=False, use_reloader=True, port=_CALLFLOW_SERVER_PORT)
 
     def _request_handler_general(self):
         """

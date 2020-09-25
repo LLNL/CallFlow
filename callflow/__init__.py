@@ -15,7 +15,9 @@ from .datastructures.supergraph import SuperGraph
 from .datastructures.ensemblegraph import EnsembleGraph
 
 from .callflow import CallFlow
+from .notebook import _load_ipython_extension
 
+# CallFlow's public API.
 __all__ = [
     "init_logger",
     "get_logger",
@@ -23,4 +25,14 @@ __all__ = [
     "SuperGraph",
     "EnsembleGraph",
     "CallFlow",
+    "notebook",
 ]
+
+
+def load_ipython_extension(ipython):
+    """IPython API entry point.
+    Only intended to be called by the IPython runtime.
+    See:
+      https://ipython.readthedocs.io/en/stable/config/extensions/index.html
+    """
+    _load_ipython_extension(ipython)

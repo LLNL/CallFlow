@@ -92,7 +92,6 @@ export default {
 			let store = this.$store.modules[this.$store.selectedTargetDataset][callsite];
 			let data = store[this.$store.selectedMetric]["prop_histograms"]["rank"]["target"];
 			let mpiData = store[this.$store.selectedMetric]["data"];
-			this.numOfRanks = mpiData.length;
 
 			let temp = this.dataProcess(data, mpiData);
 			this.xVals = temp[0];

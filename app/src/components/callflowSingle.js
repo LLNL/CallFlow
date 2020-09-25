@@ -279,7 +279,6 @@ export default {
 			this.$store.maxIncTime = data["maxIncTime"];
 			this.$store.minIncTime = data["minIncTime"];
 
-			this.$store.numOfRanks = data["numOfRanks"];
 			this.$store.moduleCallsiteMap = data["module_callsite_map"];
 			this.$store.callsiteModuleMap = data["callsite_module_map"];
 

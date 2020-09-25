@@ -219,7 +219,6 @@ class CallFlow:
         self.config["maxExcTime"] = {}
         self.config["minIncTime"] = {}
         self.config["minExcTime"] = {}
-        self.config["numOfRanks"] = {}
         maxIncTime = 0
         maxExcTime = 0
         minIncTime = 0
@@ -233,20 +232,15 @@ class CallFlow:
                 self.supergraphs[tag].gf.df["time (inc)"].min()
             )
             self.config["minExcTime"][tag] = self.supergraphs[tag].gf.df["time"].min()
-            # self.config["numOfRanks"][dataset] = len(
-            #     self.datasets[dataset].gf.df["rank"].unique()
-            # )
             maxExcTime = max(self.config["maxExcTime"][tag], maxExcTime)
             maxIncTime = max(self.config["maxIncTime"][tag], maxIncTime)
             minExcTime = min(self.config["minExcTime"][tag], minExcTime)
             minIncTime = min(self.config["minIncTime"][tag], minIncTime)
-            # maxNumOfRanks = max(self.config["numOfRanks"][dataset], maxNumOfRanks)
 
         self.config["maxIncTime"]["ensemble"] = maxIncTime
         self.config["maxExcTime"]["ensemble"] = maxExcTime
         self.config["minIncTime"]["ensemble"] = minIncTime
         self.config["minExcTime"]["ensemble"] = minExcTime
-        # self.config["numOfRanks"]["ensemble"] = maxNumOfRanks
 
     def request_single(self, operation):
         """
