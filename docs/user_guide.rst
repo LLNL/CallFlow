@@ -108,3 +108,30 @@ or
 
    $ cd app
    $ npm run dev
+
+Using CallFlow inside Jupyter notebook environment
+--------------------------------------------------
+Use %callflow magic to run CallFlow in Jupyter notebook environment,
+
+1. To load the callflow's magic extension, use the command %load_ext.
+
+.. code-block:: console
+
+   %load_ext callflow
+
+2. Now, %callflow can be used to trigger the user interface like the command line.
+
+.. code-block:: console
+
+   %callflow --data_dir /path/to/directory --profile_format format 
+
+or 
+
+.. code-block:: console
+
+   %callflow --config /path/to/config/file 
+
+
+This feature will spawn the server and client in the background as child processes to Jupyter. It will also detect if any existing processes are in execution and attach seamlessly.
+
+For reference, see `an example notebook <https://github.com/LLNL/CallFlow/blob/develop/examples/%25callflow-ipython-magic.ipynb>`_
