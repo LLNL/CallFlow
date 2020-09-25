@@ -76,8 +76,6 @@ def start(args_string):
             handle.update(IPython.display.Pretty(message))
 
     args = ArgParser(args_string)
-
-    args = ArgParser(args_string)
     start_result = manager.start(args, shlex.split(args_string, comments=True, posix=True))
 
     if isinstance(start_result, manager.StartLaunched):
@@ -98,7 +96,7 @@ def start(args_string):
         )
         print_or_update(message)
         _display_ipython(
-            port=start_result.info["server_port"], display_handle=None, height=800
+            port=start_result.info["client_port"], display_handle=None, height=800
         )
 
 def _time_delta_from_info(info):

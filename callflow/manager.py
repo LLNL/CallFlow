@@ -70,7 +70,7 @@ CallFlowLaunchInfo = collections.namedtuple(
 )
 
 _CALLFLOW_DEFAULT_SERVER_PORT = 5000
-_CALLFLOW_DEFAULT_CLIENT_PORT = 8000
+_CALLFLOW_DEFAULT_CLIENT_PORT = 1024
 
 def cache_key(working_directory, arguments):
     """
