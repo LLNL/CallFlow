@@ -10,7 +10,6 @@
 import shlex
 import json
 import random
-import argparse
 import time
 import datetime
 from callflow.operations import ArgParser
