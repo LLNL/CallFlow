@@ -203,7 +203,8 @@ class ArgParser:
             scheme["module_callsite_map"] = json["scheme"]["module_map"]
 
         scheme["callsite_module_map"] = ArgParser._process_module_map(
-            scheme["module_callsite_map"])
+            scheme["module_callsite_map"]
+        )
 
         if args.filter_by:
             scheme["filter_by"] = args.filter_by
