@@ -10,6 +10,9 @@
     <v-layout class="chip-container">
         <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
     </v-layout>
+    <span class="component-info">
+        Corr. coef. = {{corr_coef}}.
+    </span>
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
 </v-layout>

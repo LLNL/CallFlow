@@ -265,6 +265,8 @@ export default {
 			EventHandler.$emit("select-module", {
 				module: this.$store.selectedModule,
 			});
+
+			EventHandler.$emit("show-target-auxiliary", {});
 		},
 
 		mouseover(node) {

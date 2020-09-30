@@ -62,7 +62,8 @@ export default {
 	mounted() {
 		this.init();
 		let self = this;
-		EventHandler.$on("show_target_auxiliary", (data) => {
+
+		EventHandler.$on("show-target-auxiliary", (data) => {
 			self.clear();
 			self.init();
 		});

@@ -97,3 +97,10 @@ body {
 #footer {
     color: #fff;
 }
+
+
+/* Over write the primary text to avoid blue color change on selection*/
+.my-app.v-application .primary--text {
+    color: #fff !important;
+    caret-color: #fff !important;
+}
