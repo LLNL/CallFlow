@@ -43,6 +43,7 @@ export default {
 		paddingFactor: 3.5,
 		x_max_exponent: 0,
 		y_max_exponent: 0,
+		corr_coef: 0
 	}),
 
 
@@ -101,10 +102,12 @@ export default {
 				.range([this.yAxisHeight, this.padding.top]);
 
 			this.regression = this.leastSquares(this.xArray, this.yArray);
+			this.corr_coef = Math.round(this.regression["corr_coef"] * 100) / 100;
+
 			this.xAxis();
 			this.yAxis();
 			this.dots();
-			this.correlationText();
+			// this.correlationText();
 			// this.trendline()
 		},
 
@@ -202,11 +205,10 @@ export default {
 			var step3 = (n * sum_y2) - (sum_y * sum_y);
 			var step4 = Math.sqrt(step2 * step3);
 
-			var corre_coef = step1 / step4;
-
+			let corr_coef = step1 / step4;
 			return {
 				"y_res": yhat,
-				"corr_coef": corre_coef
+				"corr_coef": corr_coef
 			};
 		},
 

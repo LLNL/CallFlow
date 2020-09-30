@@ -11,10 +11,6 @@
         
     </v-chip>
     <v-spacer></v-spacer>
-    <span class="component-info">
-        <p> </p>
-    </span>
-
     <v-layout row wrap v-if="isCallsiteSelected == true">
         <v-btn class="ma-1 reveal-button" small tile outlined color="white" @click="clickCallsite">
             Reveal
@@ -37,8 +33,8 @@
         </v-btn>
     </v-layout>
 
-    <span class="component-data">
-        <p class="subtitle-2"> {{numberOfcallsites}} call sites.</p>
+    <span class="component-info">
+        {{numberOfcallsites}} call sites.
     </span>
     <v-container class="callsite-information-node" v-for="callsite in callsites" :id="getID(callsite.id)">
         <v-layout row wrap>

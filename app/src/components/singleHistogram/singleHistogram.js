@@ -161,8 +161,8 @@ export default {
 
 			mpiData.forEach((val, idx) => {
 				let pos = Math.floor((val - dataMin) / dataWidth);
-				if (pos >= this.$store.selectedBinCount) {
-					pos = this.$store.selectedBinCount - 1;
+				if (pos >= this.$store.selectedMPIBinCount) {
+					pos = this.$store.selectedMPIBinCount - 1;
 				}
 				if (binContainsProcID[pos] == null) {
 					binContainsProcID[pos] = [];
@@ -237,7 +237,7 @@ export default {
 		},
 
 		sanitizeGroupProc(string) {
-			return string.replace("[", "").replace("]", "");
+			return string.replace(/\[/g, "").replace(/]/g, "");
 		},
 
 		bars() {
@@ -265,7 +265,7 @@ export default {
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
 					let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
-					groupProcStr = this.sanitizeGroupProc(groupProcStr);
+					groupProcStr = self.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseover", function (d, i) {
@@ -275,7 +275,7 @@ export default {
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
 					let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
-					groupProcStr = this.sanitizeGroupProc(groupProcStr);
+					groupProcStr = self.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseout", function (d, i) {
@@ -383,7 +383,7 @@ export default {
 		},
 
 		rankLineScale() {
-			let rankCount = this.numOfRanks;
+			let rankCount = this.$store.modules[this.$store.selectedTargetDataset][this.$store.selectedModule][this.$store.selectedMetric].data.length;
 
 			this.ranklinescale = d3.scaleLinear()
 				.domain([0, rankCount])

@@ -27,9 +27,8 @@ export default {
 		 * @param {*} q 
 		 * @param {*} targetq 
 		 * @param {*} xScale 
-		 * @param {*} showTarget 
 		 */
-		init(callsite, q, targetq, xScale, showTarget) {
+		init(callsite, q, targetq, xScale) {
 			if (this.debug) {
 				console.log("Ensemble q: ", q);
 				console.log("Target q: ", targetq);

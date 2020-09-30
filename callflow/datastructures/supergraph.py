@@ -78,8 +78,9 @@ class SuperGraph(object):
         Return:
             module name (str) - Returns the module name
         """
-        if callsite in self.props["callsite_module_map"]:
-            return self.props["callsite_module_map"][callsite]
+        if "callsite_module_map" in self.props:
+            if callsite in self.props["callsite_module_map"]:
+                return self.props["callsite_module_map"][callsite]
 
         return self.gf.lookup_with_name(callsite)["module"].unique()[0]
 

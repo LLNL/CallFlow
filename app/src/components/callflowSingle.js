@@ -24,13 +24,6 @@ import SingleScatterplot from "./singleScatterplot/singleScatterplot";
 import SingleHistogram from "./singleHistogram/singleHistogram";
 import CallsiteInformation from "./callsiteInformation/callsiteInformation";
 
-// Ensemble mode imports
-import CallsiteCorrespondence from "./callsiteCorrespondence/callsiteCorrespondence";
-import EnsembleHistogram from "./ensembleHistogram/ensembleHistogram";
-import ModuleHierarchy from "./moduleHierarchy/moduleHierarchy";
-import EnsembleScatterplot from "./ensembleScatterplot/ensembleScatterplot";
-import ParameterProjection from "./parameterProjection/parameterProjection";
-
 import io from "socket.io-client";
 import * as utils from "./utils";
 
@@ -46,12 +39,6 @@ export default {
 		SingleScatterplot,
 		SingleHistogram,
 		CallsiteInformation,
-		// Ensemble supergraph components.
-		EnsembleScatterplot,
-		EnsembleHistogram,
-		ModuleHierarchy,
-		ParameterProjection,
-		CallsiteCorrespondence,
 	},
 
 	watch: {
@@ -83,7 +70,7 @@ export default {
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
 		metrics: ["Exclusive", "Inclusive"],//, 'Imbalance'],
-		selectedMetric: "Exclusive",
+		selectedMetric: "Inclusive",
 		runtimeColorMap: [],
 		distributionColorMap: [],
 		selectedRuntimeColorMap: "OrRd",
@@ -489,6 +476,7 @@ export default {
 		},
 
 		init() {
+			console.assert(this.selectedMode, "Single");
 			// Initialize colors
 			this.setupColors();
 			this.setOtherData();
@@ -502,23 +490,13 @@ export default {
 			console.log("Format = ", this.selectedFormat);
 
 			// Call the appropriate socket to query the server.
-			if (this.selectedMode == "Single") {
-
-				if (this.selectedFormat == "SuperGraph") {
-					this.initComponents(this.currentSingleSuperGraphComponents);
-				}
-				else if (this.selectedFormat == "CCT") {
-					this.initComponents(this.currentSingleCCTComponents);
-				}
+			if (this.selectedFormat == "SuperGraph") {
+				this.initComponents(this.currentSingleSuperGraphComponents);
 			}
-			else if (this.selectedMode == "Ensemble") {
-				if (this.selectedFormat == "SuperGraph") {
-					this.initComponents(this.currentEnsembleSuperGraphComponents);
-				}
-				else if (this.selectedFormat == "CCT") {
-					this.initComponents(this.currentEnsembleCCTComponents);
-				}
+			else if (this.selectedFormat == "CCT") {
+				this.initComponents(this.currentSingleCCTComponents);
 			}
+			EventHandler.$emit("show-target-auxiliary", {});
 		},
 
 		reset() {
@@ -548,8 +526,6 @@ export default {
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
 			this.init();
-			EventHandler.$emit("show-target-auxiliary", {
-			});
 		},
 
 		updateMode() {
