@@ -44,9 +44,7 @@ def _register_magics(ipython):
       ipython: An `InteractiveShell` instance.
     """
     ipython.register_magic_function(
-        _start_magic,
-        magic_kind="line",
-        magic_name="callflow",
+        _start_magic, magic_kind="line", magic_name="callflow",
     )
 
 
@@ -67,8 +65,7 @@ def start(args_string):
         IPython = None
 
     handle = IPython.display.display(
-        IPython.display.Pretty("Launching CallFlow..."),
-        display_id=True,
+        IPython.display.Pretty("Launching CallFlow..."), display_id=True,
     )
 
     def print_or_update(message):
@@ -84,9 +81,7 @@ def start(args_string):
 
     if isinstance(start_result, manager.StartLaunched):
         _display_ipython(
-            port=1024,
-            height=800,
-            display_handle=handle,
+            port=1024, height=800, display_handle=handle,
         )
 
     elif isinstance(start_result, manager.StartReused):

@@ -43,8 +43,7 @@ StartFailed = collections.namedtuple(
 
 # Indicates that a call to `start` failed to invoke the subprocess.
 StartExecFailed = collections.namedtuple(
-    "StartExecFailed",
-    ("os_error",),  # `OSError` due to `Popen` invocation
+    "StartExecFailed", ("os_error",),  # `OSError` due to `Popen` invocation
 )
 
 # Indicates that a call to `start` launched a CallFlow process, but
@@ -67,8 +66,7 @@ _CALLFLOW_INFO_FIELDS = collections.OrderedDict(
 )
 
 CallFlowLaunchInfo = collections.namedtuple(
-    "CallFlowLaunchInfo",
-    _CALLFLOW_INFO_FIELDS,
+    "CallFlowLaunchInfo", _CALLFLOW_INFO_FIELDS,
 )
 
 _CALLFLOW_DEFAULT_SERVER_PORT = 5000
@@ -270,11 +268,7 @@ def launch_cmd(cmd, timeout=datetime.timedelta(seconds=100), alias=""):
 
     start_time_seconds = time.time()
     try:
-        p = subprocess.Popen(
-            cmd,
-            stdout=stdout_fd,
-            stderr=stderr_fd,
-        )
+        p = subprocess.Popen(cmd, stdout=stdout_fd, stderr=stderr_fd,)
     except OSError as e:
         return StartExecFailed(os_error=e)
     finally:
