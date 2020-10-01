@@ -171,11 +171,6 @@ export default {
 				"re_process": 1
 			});
 		});
-
-		EventHandler.$on("show_target_auxiliary", (data) => {
-			this.clearLocal();
-			this.init();
-		});
 	},
 
 	beforeDestroy() {
@@ -590,6 +585,7 @@ export default {
 					this.initComponents(this.currentEnsembleCCTComponents);
 				}
 			}
+			EventHandler.$emit("ensemble-auxiliary", {});
 		},
 
 		reset() {
@@ -654,7 +650,7 @@ export default {
 			this.clearLocal();
 			this.$socket.emit("init", {
 				mode: this.selectedMode,
-				dataset: this.$store	.selectedTargetDataset
+				dataset: this.$store.selectedTargetDataset
 			});
 			this.init();
 		},
@@ -664,8 +660,6 @@ export default {
 			this.$store.compareDataset = "";
 			this.$store.encoding = "MeanGradients";
 			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
-			EventHandler.$emit("show-target-auxiliary", {
-			});
 			this.init();
 		},
 

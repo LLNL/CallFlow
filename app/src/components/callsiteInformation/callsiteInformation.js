@@ -72,7 +72,7 @@ export default {
 		/**
 		 * Event handler for sorting the callsites by a metric.
 		 */
-		EventHandler.$on("callsite_information_sort", (data) => {
+		EventHandler.$on("callsite-information-sort", (data) => {
 			let attribute = self.$store.selectedRuntimeSortBy;
 			self.callsites = self.sortByAttribute(self.callsites, attribute);
 		});
@@ -158,7 +158,7 @@ export default {
 				this.stdDeviation[callsite] = utils.formatRuntimeWithoutUnits(data["std_deviation"]);
 
 				this.selectClassName[callsite] = "unselect-callsite";
-				EventHandler.$emit("show-mpi-boxplot", this.callsites[callsite]);
+				// EventHandler.$emit("show-mpi-boxplot", this.callsites[callsite]);
 			}
 		},
 
@@ -247,25 +247,13 @@ export default {
 
 		/**
 		 * 
-		 * @param {*} str 
-		 * @param {*} n 
-		 * Formatting the text in view. 
-		 * TODO: move all this to utils. We should be able to 
-		 */
-		trunc(str, n) {
-			str = str.replace(/<unknown procedure>/g, "proc ");
-			return (str.length > n) ? str.substr(0, n - 1) + "..." : str;
-		},
-
-		/**
-		 * 
 		 * @param {*} module 
 		 */
 		formatModule(module) {
 			if (module.length < 10) {
 				return module;
 			}
-			return this.trunc(module, 10);
+			return utils.truncNames(module, 10);
 		},
 
 		/**
