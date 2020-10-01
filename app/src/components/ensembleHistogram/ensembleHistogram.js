@@ -134,8 +134,6 @@ export default {
 				isTargetThere = true;
 			}
 
-			this.$refs.ToolTip.init(this.svgID);
-
 			this.rankCount = parseInt(this.$store.numOfRanks["ensemble"]);
 
 			this.xScale = d3.scaleBand()
@@ -168,6 +166,7 @@ export default {
 			if (this.$store.showTarget && isTargetThere) {
 				this.targetBars();
 			}
+			this.$refs.ToolTip.init(this.svgID);
 		},
 
 		setTitle() {
