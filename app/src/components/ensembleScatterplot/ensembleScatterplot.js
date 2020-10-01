@@ -540,7 +540,7 @@ export default {
 						self.$refs.ToolTip.render(data);
 					})
 					.on("mouseout", () => {
-						self.$refs.ToolTip.clear()
+						self.$refs.ToolTip.clear();
 					});
 			}
 		},

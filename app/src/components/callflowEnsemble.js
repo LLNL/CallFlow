@@ -495,7 +495,7 @@ export default {
 			this.$store.selectedModule = this.selectedModule;
 		},
 
-		clear() {
+		clearLocal() {
 			if (this.selectedFormat == "CCT") {
 				this.clearComponents(this.currentEnsembleCCTComponents);
 			}
@@ -504,7 +504,7 @@ export default {
 			}
 		},
 
-		clearLocal() {
+		clear() {
 			if (this.selectedFormat == "CCT") {
 				this.clearComponents(this.currentEnsembleSuperGraphComponents);
 			}
@@ -538,10 +538,10 @@ export default {
 				this.setSelectedModule();
 			}
 
-			console.log("Mode : ", this.selectedMode);
-			console.log("Number of runs :", this.$store.numOfRuns);
-			console.log("Dataset : ", this.selectedTargetDataset);
-			console.log("Format = ", this.selectedFormat);
+			console.info("Mode : ", this.selectedMode);
+			console.info("Number of runs :", this.$store.numOfRuns);
+			console.info("Dataset : ", this.selectedTargetDataset);
+			console.info("Format = ", this.selectedFormat);
 
 			if (this.selectedFormat == "SuperGraph") {
 				this.initComponents(this.currentEnsembleSuperGraphComponents);
@@ -622,8 +622,9 @@ export default {
 		updateTargetDataset() {
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			this.$store.compareDataset = "";
-			this.$store.encoding = "MeanGradients";
-			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
+			this.$store.encoding = "MEAN_GRADIENTS";
+			console.info("[Update] Target Dataset: ", this.selectedTargetDataset);
+			this.clearLocal();
 			this.init();
 		},
 
@@ -725,8 +726,7 @@ export default {
 			this.$store.showTarget = this.showTarget;
 			this.clear();
 			this.init();
-			EventHandler.$emit("show-target-auxiliary", {
-			});
+			EventHandler.$emit("ensemble-auxiliary", {});
 		},
 
 		updateColorMin() {
