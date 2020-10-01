@@ -158,7 +158,6 @@ export default {
 				this.stdDeviation[callsite] = utils.formatRuntimeWithoutUnits(data["std_deviation"]);
 
 				this.selectClassName[callsite] = "unselect-callsite";
-				// EventHandler.$emit("show-mpi-boxplot", this.callsites[callsite]);
 			}
 		},
 
