@@ -63,21 +63,9 @@ export default {
 		this.init();
 		let self = this;
 
-		EventHandler.$on("show-target-auxiliary", (data) => {
+		EventHandler.$on("single-auxiliary", (data) => {
 			self.clear();
 			self.init();
-		});
-
-		EventHandler.$on("show_mpi_boxplot", (data) => {
-			let thisid = self.id.split("-")[1] + "-" + self.id.split("-")[2];
-			if (data.id == thisid) {
-				console.log("Showing boxpliot of ", data);
-				self.init(data);
-			}
-		});
-
-		EventHandler.$on("hide_mpi_boxplot", (data) => {
-			self.clear(data);
 		});
 	},
 

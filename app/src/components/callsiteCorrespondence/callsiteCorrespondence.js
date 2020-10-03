@@ -110,7 +110,16 @@ export default {
 				document.getElementById(this.id).style.maxHeight = this.height + "px";
 				this.firstRender = false;
 			}
+			this.visualize();
+		},
 
+		visualize() {
+			this.setStates();
+			this.boxplotByMetric();
+			// this.borderColorByMetric()
+		},
+
+		setStates() {
 			this.callsites = this.$store.callsites["ensemble"];
 			this.targetCallsites = this.$store.callsites[this.$store.selectedTargetDataset];
 
@@ -138,7 +147,9 @@ export default {
 				this.ensembleColor = this.$store.runtimeColor.textColor;
 				this.targetColor = this.$store.runtimeColor.textColor;
 			}
+		},
 
+		boxplotByMetric(){
 			for (let callsite in this.callsites) {
 				if (this.targetCallsites[callsite] != undefined) {
 					this.targetMeans[callsite] = utils.formatRuntimeWithoutUnits(this.targetCallsites[callsite][this.$store.selectedMetric]["mean_time"]);
@@ -159,8 +170,6 @@ export default {
 				}
 				this.selectClassName[callsite] = "unselect-callsite";
 			}
-
-			// this.borderColorByMetric()
 		},
 
 		borderColorByMetric() {

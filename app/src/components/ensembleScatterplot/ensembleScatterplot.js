@@ -69,7 +69,6 @@ export default {
 				.attr("height", this.boxHeight - this.padding.top)
 				.attr("transform", "translate(" + this.padding.left + "," + this.padding.top + ")");
 
-			this.$refs.ToolTip.init(this.svgID);
 			EventHandler.$emit("ensemble-scatterplot", {
 				module: this.$store.selectedModule,
 				dataset: this.$store.selectedDatasets,
@@ -120,6 +119,7 @@ export default {
 			}
 			// this.correlationText()
 			this.setTitle();
+			this.$refs.ToolTip.init(this.svgID);
 		},
 
 		setTitle() {
@@ -540,7 +540,7 @@ export default {
 						self.$refs.ToolTip.render(data);
 					})
 					.on("mouseout", () => {
-						// self.$refs.ToolTip.clear()
+						self.$refs.ToolTip.clear();
 					});
 			}
 		},

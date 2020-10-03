@@ -477,26 +477,24 @@ export default {
 
 		init() {
 			console.assert(this.selectedMode, "Single");
-			// Initialize colors
-			this.setupColors();
-			this.setOtherData();
-			if (this.selectedFormat == "SuperGraph") {
-				this.setSelectedModule();
-			}
-
 			console.log("Mode : ", this.selectedMode);
 			console.log("Number of runs :", this.$store.numOfRuns);
 			console.log("Dataset : ", this.selectedTargetDataset);
 			console.log("Format = ", this.selectedFormat);
 
+			// Initialize colors
+			this.setupColors();
+			this.setOtherData();
+
 			// Call the appropriate socket to query the server.
 			if (this.selectedFormat == "SuperGraph") {
+				this.setSelectedModule();
 				this.initComponents(this.currentSingleSuperGraphComponents);
 			}
 			else if (this.selectedFormat == "CCT") {
 				this.initComponents(this.currentSingleCCTComponents);
 			}
-			EventHandler.$emit("show-target-auxiliary", {});
+			EventHandler.$emit("single-auxiliary", {});
 		},
 
 		reset() {
@@ -535,16 +533,6 @@ export default {
 
 		updateMetric() {
 			this.$store.selectedMetric = this.selectedMetric;
-			this.clearLocal();
-			this.init();
-		},
-
-		updateColor() {
-			this.clearLocal();
-			this.init();
-		},
-
-		updateColorPoint() {
 			this.clearLocal();
 			this.init();
 		},

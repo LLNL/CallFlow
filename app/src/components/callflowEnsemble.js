@@ -171,11 +171,6 @@ export default {
 				"re_process": 1
 			});
 		});
-
-		EventHandler.$on("show_target_auxiliary", (data) => {
-			this.clearLocal();
-			this.init();
-		});
 	},
 
 	beforeDestroy() {
@@ -326,12 +321,8 @@ export default {
 			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
 			this.$store.selectedFormat = this.selectedFormat;
-			if (this.$store.selectedMode == "Single") {
-				this.$store.selectedProp = "rank";
-			}
-			else {
-				this.$store.selectedProp = this.selectedProp;
-			}
+			
+			this.$store.selectedProp = this.selectedProp;
 			this.$store.selectedScale = this.selectedScale;
 			this.$store.selectedCompareMode = this.selectedCompareMode;
 			this.$store.selectedIQRFactor = this.selectedIQRFactor;
@@ -402,33 +393,17 @@ export default {
 		setRuntimeColorScale() {
 			let colorMin = null;
 			let colorMax = null;
-			if (this.selectedMode == "Ensemble") {
-				if (this.selectedMetric == "Inclusive") {
-					colorMin = parseFloat(this.$store.minIncTime["ensemble"]);
-					colorMax = parseFloat(this.$store.maxIncTime["ensemble"]);
-				}
-				else if (this.selectedMetric == "Exclusive") {
-					colorMin = parseFloat(this.$store.minExcTime["ensemble"]);
-					colorMax = parseFloat(this.$store.maxExcTime["ensemble"]);
-				}
-				else if (this.selectedMetric == "Imbalance") {
-					colorMin = 0.0;
-					colorMax = 1.0;
-				}
+			if (this.selectedMetric == "Inclusive") {
+				colorMin = parseFloat(this.$store.minIncTime["ensemble"]);
+				colorMax = parseFloat(this.$store.maxIncTime["ensemble"]);
 			}
-			else if (this.selectedMode == "Single") {
-				if (this.selectedMetric == "Inclusive") {
-					colorMin = parseFloat(this.$store.minIncTime[this.selectedTargetDataset]);
-					colorMax = parseFloat(this.$store.maxIncTime[this.selectedTargetDataset]);
-				}
-				else if (this.selectedMetric == "Exclusive") {
-					colorMin = parseFloat(this.$store.minExcTime[this.selectedTargetDataset]);
-					colorMax = parseFloat(this.$store.maxExcTime[this.selectedTargetDataset]);
-				}
-				else if (this.selectedMetric == "Imbalance") {
-					colorMin = 0.0;
-					colorMax = 1.0;
-				}
+			else if (this.selectedMetric == "Exclusive") {
+				colorMin = parseFloat(this.$store.minExcTime["ensemble"]);
+				colorMax = parseFloat(this.$store.maxExcTime["ensemble"]);
+			}
+			else if (this.selectedMetric == "Imbalance") {
+				colorMin = 0.0;
+				colorMax = 1.0;
 			}
 
 			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(parseFloat(colorMin));
@@ -520,25 +495,21 @@ export default {
 			this.$store.selectedModule = this.selectedModule;
 		},
 
-		clear() {
-			if (this.selectedMode == "Ensemble") {
-				if (this.selectedFormat == "CCT") {
-					this.clearComponents(this.currentEnsembleCCTComponents);
-				}
-				else if (this.selectedFormat == "SuperGraph") {
-					this.clearComponents(this.currentEnsembleSuperGraphComponents);
-				}
+		clearLocal() {
+			if (this.selectedFormat == "CCT") {
+				this.clearComponents(this.currentEnsembleCCTComponents);
+			}
+			else if (this.selectedFormat == "SuperGraph") {
+				this.clearComponents(this.currentEnsembleSuperGraphComponents);
 			}
 		},
 
-		clearLocal() {
-			if (this.selectedMode == "Ensemble") {
-				if (this.selectedFormat == "CCT") {
-					this.clearComponents(this.currentEnsembleSuperGraphComponents);
-				}
-				else if (this.selectedFormat == "SuperGraph") {
-					this.clearComponents(this.currentEnsembleCCTComponents);
-				}
+		clear() {
+			if (this.selectedFormat == "CCT") {
+				this.clearComponents(this.currentEnsembleSuperGraphComponents);
+			}
+			else if (this.selectedFormat == "SuperGraph") {
+				this.clearComponents(this.currentEnsembleCCTComponents);
 			}
 		},
 
@@ -567,29 +538,18 @@ export default {
 				this.setSelectedModule();
 			}
 
-			console.log("Mode : ", this.selectedMode);
-			console.log("Number of runs :", this.$store.numOfRuns);
-			console.log("Dataset : ", this.selectedTargetDataset);
-			console.log("Format = ", this.selectedFormat);
+			console.info("Mode : ", this.selectedMode);
+			console.info("Number of runs :", this.$store.numOfRuns);
+			console.info("Dataset : ", this.selectedTargetDataset);
+			console.info("Format = ", this.selectedFormat);
 
-			// Call the appropriate socket to query the server.
-			if (this.selectedMode == "Single") {
-
-				if (this.selectedFormat == "SuperGraph") {
-					this.initComponents(this.currentSingleSuperGraphComponents);
-				}
-				else if (this.selectedFormat == "CCT") {
-					this.initComponents(this.currentSingleCCTComponents);
-				}
+			if (this.selectedFormat == "SuperGraph") {
+				this.initComponents(this.currentEnsembleSuperGraphComponents);
 			}
-			else if (this.selectedMode == "Ensemble") {
-				if (this.selectedFormat == "SuperGraph") {
-					this.initComponents(this.currentEnsembleSuperGraphComponents);
-				}
-				else if (this.selectedFormat == "CCT") {
-					this.initComponents(this.currentEnsembleCCTComponents);
-				}
+			else if (this.selectedFormat == "CCT") {
+				this.initComponents(this.currentEnsembleCCTComponents);
 			}
+			EventHandler.$emit("ensemble-auxiliary", {});
 		},
 
 		reset() {
@@ -654,7 +614,7 @@ export default {
 			this.clearLocal();
 			this.$socket.emit("init", {
 				mode: this.selectedMode,
-				dataset: this.$store	.selectedTargetDataset
+				dataset: this.$store.selectedTargetDataset
 			});
 			this.init();
 		},
@@ -662,10 +622,9 @@ export default {
 		updateTargetDataset() {
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			this.$store.compareDataset = "";
-			this.$store.encoding = "MeanGradients";
-			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
-			EventHandler.$emit("show-target-auxiliary", {
-			});
+			this.$store.encoding = "MEAN_GRADIENTS";
+			console.info("[Update] Target Dataset: ", this.selectedTargetDataset);
+			this.clearLocal();
 			this.init();
 		},
 
@@ -731,7 +690,7 @@ export default {
 
 		updateProp() {
 			this.$store.selectedProp = this.selectedProp;
-			this.clear();
+			this.clearLocal();
 			this.init();
 		},
 
@@ -767,8 +726,7 @@ export default {
 			this.$store.showTarget = this.showTarget;
 			this.clear();
 			this.init();
-			EventHandler.$emit("show-target-auxiliary", {
-			});
+			EventHandler.$emit("ensemble-auxiliary", {});
 		},
 
 		updateColorMin() {

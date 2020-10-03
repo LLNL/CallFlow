@@ -161,7 +161,7 @@ class DiffView:
             "name": module,
             "mean1": mean1,
             "mean2": mean2,
-            "dataset": dataset,
+            "dataset": list(set(dataset)),
             "mean_diff": mean_diff,
             "bins": num_of_bins,
             "hist": {

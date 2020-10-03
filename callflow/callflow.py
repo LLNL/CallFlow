@@ -145,9 +145,7 @@ class CallFlow:
 
             # Single auxiliary processing.
             single_supergraphs[dataset_name].single_auxiliary(
-                dataset=dataset_name,
-                binCount=20,
-                process=True,
+                dataset=dataset_name, binCount=20, process=True,
             )
 
         # Create a supergraph class for ensemble case.
@@ -219,10 +217,12 @@ class CallFlow:
         self.config["maxExcTime"] = {}
         self.config["minIncTime"] = {}
         self.config["minExcTime"] = {}
+        self.config["numOfRanks"] = {}
         maxIncTime = 0
         maxExcTime = 0
         minIncTime = 0
         minExcTime = 0
+        maxNumOfRanks = 0
         for idx, tag in enumerate(self.supergraphs):
             self.config["maxIncTime"][tag] = (
                 self.supergraphs[tag].gf.df["time (inc)"].max()
@@ -232,15 +232,20 @@ class CallFlow:
                 self.supergraphs[tag].gf.df["time (inc)"].min()
             )
             self.config["minExcTime"][tag] = self.supergraphs[tag].gf.df["time"].min()
+            self.config["numOfRanks"][tag] = len(
+                self.supergraphs[tag].gf.df["rank"].unique()
+            )
             maxExcTime = max(self.config["maxExcTime"][tag], maxExcTime)
             maxIncTime = max(self.config["maxIncTime"][tag], maxIncTime)
             minExcTime = min(self.config["minExcTime"][tag], minExcTime)
             minIncTime = min(self.config["minIncTime"][tag], minIncTime)
+            maxNumOfRanks = max(self.config["numOfRanks"][tag], maxNumOfRanks)
 
         self.config["maxIncTime"]["ensemble"] = maxIncTime
         self.config["maxExcTime"]["ensemble"] = maxExcTime
         self.config["minIncTime"]["ensemble"] = minIncTime
         self.config["minExcTime"]["ensemble"] = minExcTime
+        self.config["numOfRanks"]["ensemble"] = maxNumOfRanks
 
     def request_single(self, operation):
         """

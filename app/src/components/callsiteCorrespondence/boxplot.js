@@ -62,23 +62,10 @@ export default {
 	mounted() {
 		this.init();
 		let self = this;
-		EventHandler.$on("show_target_auxiliary", (data) => {
+		EventHandler.$on("ensemble-auxiliary", (data) => {
 			self.clear();
 			self.init();
 		});
-
-		EventHandler.$on("show_boxplot", (callsite) => {
-			let thisid = self.id.split("-")[1] + "-" + self.id.split("-")[2];
-			if (callsite.id == thisid) {
-				console.log("Showing boxpliot of ", callsite);
-				self.visualize(callsite);
-			}
-		});
-
-		EventHandler.$on("hide_boxplot", (callsite) => {
-			self.clear();
-		});
-
 	},
 
 	created() {
@@ -87,8 +74,31 @@ export default {
 
 	methods: {
 		init() {
-			this.containerHeight = 0;
+			this.containerHeight = 150;
+			this.containerWidth = this.$parent.boxplotWidth - 2 * this.padding.right - 1 * this.padding.left;
+			this.boxHeight = this.containerHeight - this.informationHeight;
+			this.boxWidth = this.containerWidth;
 
+			this.boxPosition = this.informationHeight / 2 + this.outlierHeight / 2;
+			this.centerLinePosition = (this.boxHeight - this.informationHeight / 4) / 2;
+			this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4;
+
+			this.process(this.callsite);
+
+			this.svg = d3.select("#boxplot-" + this.callsite.id)
+				.attrs({
+					"width": this.containerWidth,
+					"height": this.containerHeight
+				});
+
+			let min_x = Math.min(this.q.min, this.targetq.min);
+			let max_x = Math.max(this.q.max, this.targetq.max);
+
+			this.xScale = d3.scaleLinear()
+				.domain([min_x, max_x])
+				.range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
+
+			this.visualize(this.callsite);
 		},
 
 		process(callsite) {
@@ -115,39 +125,10 @@ export default {
 			return result;
 		},
 
-		drawSVG(callsite) {
-			this.containerHeight = 150;
-			this.containerWidth = this.$parent.boxplotWidth - 2 * this.padding.right - 1 * this.padding.left;
-			this.boxHeight = this.containerHeight - this.informationHeight;
-			this.boxWidth = this.containerWidth;
-
-			this.boxPosition = this.informationHeight / 2 + this.outlierHeight / 2;
-			this.centerLinePosition = (this.boxHeight - this.informationHeight / 4) / 2;
-			this.rectHeight = this.boxHeight - this.informationHeight / 4 - this.outlierHeight / 4;
-
-			this.svg = d3.select("#boxplot-" + callsite.id)
-				.attrs({
-					"width": this.containerWidth,
-					"height": this.containerHeight
-				});
-
-			let min_x = Math.min(this.q.min, this.targetq.min);
-			let max_x = Math.max(this.q.max, this.targetq.max);
-
-			this.xScale = d3.scaleLinear()
-				.domain([min_x, max_x])
-				.range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
-		},
-
 		visualize(callsite) {
-			this.process(callsite);
-			this.drawSVG(callsite);
-
 			this.$refs.Box.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
 			this.$refs.Markers.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
 			this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget);
-
-
 		},
 
 		clear() {

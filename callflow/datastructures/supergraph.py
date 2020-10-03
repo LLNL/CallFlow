@@ -36,7 +36,6 @@ class SuperGraph(object):
         self.timer = Timer()
 
         self.props = config
-        print(self.props["save_path"], tag)
         self.dirname = os.path.join(self.props["save_path"], tag)
         self.tag = tag
         self.mode = mode

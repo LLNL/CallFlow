@@ -16,7 +16,7 @@ export default {
 		textOffset: 40,
 		fontSize: 10,
 		topPosition: -0.2,
-		bottomPosition: 0.7
+		bottomPosition: 0.75
 	}),
 
 	mounted() {
