@@ -35,8 +35,8 @@ class SankeyLayout:
         "entry_function",
     ]
 
-    _PRIMARY_GROUPBY_COLUMN = 'name'
-    _SECONDARY_GROUPBY_COLUMN = 'module'
+    _PRIMARY_GROUPBY_COLUMN = "name"
+    _SECONDARY_GROUPBY_COLUMN = "module"
 
     def __init__(
         self,
@@ -66,9 +66,18 @@ class SankeyLayout:
             "Creating the Single SankeyLayout for {0}.".format(self.supergraph.tag)
         )
 
-        self.primary_group_df = self.supergraph.gf.df.groupby([SankeyLayout._PRIMARY_GROUPBY_COLUMN])
-        self.secondary_group_df = self.supergraph.gf.df.groupby([SankeyLayout._SECONDARY_GROUPBY_COLUMN])
-        self.secondary_primary_group_df = self.supergraph.gf.df.groupby([SankeyLayout._SECONDARY_GROUPBY_COLUMN, SankeyLayout._PRIMARY_GROUPBY_COLUMN])
+        self.primary_group_df = self.supergraph.gf.df.groupby(
+            [SankeyLayout._PRIMARY_GROUPBY_COLUMN]
+        )
+        self.secondary_group_df = self.supergraph.gf.df.groupby(
+            [SankeyLayout._SECONDARY_GROUPBY_COLUMN]
+        )
+        self.secondary_primary_group_df = self.supergraph.gf.df.groupby(
+            [
+                SankeyLayout._SECONDARY_GROUPBY_COLUMN,
+                SankeyLayout._PRIMARY_GROUPBY_COLUMN,
+            ]
+        )
 
         with self.timer.phase("Construct Graph"):
             self.nxg = SankeyLayout._create_nxg_from_paths(
@@ -87,7 +96,7 @@ class SankeyLayout:
         LOGGER.debug(self.timer)
 
     # --------------------------------------------------------------------------
-    # Split by reveal callsite. 
+    # Split by reveal callsite.
     def create_source_targets(self, component_path):
         module = ""
         edges = []
@@ -114,7 +123,6 @@ class SankeyLayout:
                 )
 
         return edges
-
 
     def callsitePathInformation(self, callsites):
         paths = []
@@ -182,7 +190,7 @@ class SankeyLayout:
                     )
 
     # --------------------------------------------------------------------------
-    # Add callsites based on split by entry function interactions. 
+    # Add callsites based on split by entry function interactions.
     def module_entry_functions_map(self, graph):
         entry_functions = {}
         for edge in graph.edges(data=True):
@@ -288,7 +296,7 @@ class SankeyLayout:
                                 "source_callsite": edge["source_callsite"],
                                 "target_callsite": edge["target_callsite"],
                                 "edge_type": "normal",
-                                "weight": self.module_name_group_df.get_group(
+                                "weight": self.secondary_primary_group_df.get_group(
                                     (edge["target"], edge["target_callsite"])
                                 )["time (inc)"].max(),
                                 "edge_type": "reveal_edge",

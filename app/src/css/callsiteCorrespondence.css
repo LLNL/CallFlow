@@ -38,7 +38,7 @@
 .reveal-button {
     float: right;
     margin: 1px;
-    color: #009688 !important;
+    /* color: #009688 !important; */
     font-size: 75%;
     padding: 2px;
 }

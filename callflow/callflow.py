@@ -290,13 +290,13 @@ class CallFlow:
                 split_callee_module = operation["split_callee_module"]
             else:
                 split_callee_module = ""
-                
+
             single_supergraph = SankeyLayout(
-                supergraph=self.supergraphs[operation["dataset"]], 
+                supergraph=self.supergraphs[operation["dataset"]],
                 path="group_path",
                 reveal_callsites=reveal_callsites,
                 split_entry_module=split_entry_module,
-                split_callee_module=split_callee_module
+                split_callee_module=split_callee_module,
             )
             return single_supergraph.nxg
 

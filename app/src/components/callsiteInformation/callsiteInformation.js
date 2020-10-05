@@ -66,6 +66,7 @@ export default {
 		 * Event handler when a user selects a supernode.
 		 */
 		EventHandler.$on("single-select-module", (data) => {
+			this.isModuleSelected = true;
 			self.selectModule(data["module"]);
 		});
 
@@ -420,14 +421,14 @@ export default {
 			if (this.isEntryFunctionSelected == "select-callsite") {
 				this.$socket.emit("split_by_entry_callsites", {
 					selectedModule: this.$store.selectedModule,
-					datasets: this.$store.selectedDatasets,
+					dataset: this.$store.selectedTargetDataset,
 				});
 				EventHandler.$emit("split-by-entry-callsites");
 			}
 			else if (this.isCalleeSelected == "select-callsite") {
 				this.$socket.emit("split_by_callees", {
 					selectedModule: this.$store.selectedModule,
-					datasets: this.$store.selectedDatasets,
+					dataset: this.$store.selectedTargetDataset,
 				});
 				EventHandler.$emit("split-by-callees");
 			}

@@ -31,14 +31,14 @@ export default {
 
 		gradients() {
 			for (let node of this.nodes) {
-				var defs = d3.select("#" + this.id)
+				const defs = d3.select("#" + this.id)
 					.append("defs");
 
-				this.linearGradient = defs.append("linearGradient")
+				const linearGradient = defs.append("linearGradient")
 					.attr("id", "mean-gradient" + node.client_idx)
 					.attr("class", "mean-gradient");
 
-				this.linearGradient
+				linearGradient
 					.attr("x1", "0%")
 					.attr("y1", "0%")
 					.attr("x2", "0%")
@@ -53,7 +53,6 @@ export default {
 				else if (node.type == "component-node") {
 					grid = this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["x"];
 					val = this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["y"];
-
 				}
 				else if (node.type == "intermediate") {
 					grid = [];
@@ -63,7 +62,8 @@ export default {
 				for (let i = 0; i < grid.length; i += 1) {
 					let x = (i + i + 1) / (2 * grid.length);
 					let current_value = (val[i]);
-					this.linearGradient.append("stop")
+					console.log(this.$store.distributionColor.getColorByValue(current_value))
+					linearGradient.append("stop")
 						.attr("offset", 100 * x + "%")
 						.attr("stop-color", this.$store.distributionColor.getColorByValue(current_value));
 				}
@@ -143,7 +143,7 @@ export default {
 		},
 
 		clear() {
-			this.containerG.selectAll(".mean-gradient").remove();
+			// this.containerG.selectAll(".mean-gradient").remove();
 		},
 	}
 };

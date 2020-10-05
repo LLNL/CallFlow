@@ -306,11 +306,12 @@ export default {
 			event.stopPropagation();
 			let callsite = event.currentTarget.id;
 			this.$socket.emit("reveal_callsite", {
+				mode: this.$store.selectedMode,
 				reveal_callsites: this.revealCallsites,
 				datasets: this.$store.selectedDatasets,
 			});
 
-			EventHandler.$emit("reveal-callsite");
+			EventHandler.$emit("reveal_callsite");
 		}, 
 
 		showEntryFunctions(event) {
@@ -424,17 +425,19 @@ export default {
 		split() {
 			if (this.isEntryFunctionSelected == "select-callsite") {
 				this.$socket.emit("split_by_entry_callsites", {
+					mode: this.$store.selectedMode,
 					selectedModule: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
-				EventHandler.$emit("split-by-entry-callsites");
+				EventHandler.$emit("reveal_callsite");
 			}
 			else if (this.isCalleeSelected == "select-callsite") {
 				this.$socket.emit("split_by_callees", {
+					mode: this.$store.selectedMode,
 					selectedModule: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
-				EventHandler.$emit("split-by-callees");
+				EventHandler.$emit("reveal_callsite");
 			}
 		}
 	}
