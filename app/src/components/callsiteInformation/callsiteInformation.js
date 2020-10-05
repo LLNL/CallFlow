@@ -217,7 +217,6 @@ export default {
 			else {
 				this.switchIsSelectedCallsite(true);
 			}
-			console.info("Selected callsites: ", this.revealCallsites);
 		},
 
 		/**
@@ -311,14 +310,13 @@ export default {
 		 */
 		revealCallsite(event) {
 			event.stopPropagation();
-			console.log(this.$store.selectedTargetDataset)
 			this.$socket.emit("reveal_callsite", {
 				mode: this.$store.selectedMode,
 				reveal_callsites: this.revealCallsites,
 				dataset: this.$store.selectedTargetDataset,
 			});
 
-			EventHandler.$emit("reveal_callsite");
+			EventHandler.$emit("reveal-callsite");
 		},
 
 		/**

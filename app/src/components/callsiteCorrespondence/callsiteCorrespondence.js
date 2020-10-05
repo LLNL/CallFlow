@@ -311,7 +311,7 @@ export default {
 				datasets: this.$store.selectedDatasets,
 			});
 
-			EventHandler.$emit("reveal_callsite");
+			EventHandler.$emit("reveal-callsite");
 		}, 
 
 		showEntryFunctions(event) {
@@ -429,7 +429,7 @@ export default {
 					selectedModule: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
-				EventHandler.$emit("reveal_callsite");
+				EventHandler.$emit("reveal-callsite");
 			}
 			else if (this.isCalleeSelected == "select-callsite") {
 				this.$socket.emit("split_by_callees", {
@@ -437,7 +437,7 @@ export default {
 					selectedModule: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
-				EventHandler.$emit("reveal_callsite");
+				EventHandler.$emit("reveal-callsite");
 			}
 		}
 	}

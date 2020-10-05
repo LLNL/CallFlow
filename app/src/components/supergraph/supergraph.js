@@ -61,15 +61,7 @@ export default {
 			self.clear();
 		});
 
-		EventHandler.$on("reveal_callsite", function () {
-			self.clear();
-		});
-
-		EventHandler.$on("split_by_entry_callsites", function () {
-			self.clear();
-		});
-
-		EventHandler.$on("split_by_callees", function () {
+		EventHandler.$on("reveal-callsite", function () {
 			self.clear();
 		});
 

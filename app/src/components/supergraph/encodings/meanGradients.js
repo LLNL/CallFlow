@@ -62,7 +62,6 @@ export default {
 				for (let i = 0; i < grid.length; i += 1) {
 					let x = (i + i + 1) / (2 * grid.length);
 					let current_value = (val[i]);
-					console.log(this.$store.distributionColor.getColorByValue(current_value))
 					linearGradient.append("stop")
 						.attr("offset", 100 * x + "%")
 						.attr("stop-color", this.$store.distributionColor.getColorByValue(current_value));

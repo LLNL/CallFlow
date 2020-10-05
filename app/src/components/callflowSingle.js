@@ -523,7 +523,7 @@ export default {
 			this.clear();
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
-			d3.selectAll('.tick').remove();
+			d3.selectAll(".tick").remove();
 			this.init();
 		},
 
