@@ -152,13 +152,13 @@ class SankeyLayout:
                 if not self.nxg.has_edge(source, target):
                     if idx == 0:
                         source_callsite = source
-                        source_df = self.secondary_group_df.get_group((module))
+                        # source_df = self.secondary_group_df.get_group((module))
                         source_node_type = "super-node"
                     else:
                         source_callsite = source.split("=")[1]
-                        source_df = self.secondary_primary_group_df.get_group(
-                            (module, source_callsite)
-                        )
+                        # source_df = self.secondary_primary_group_df.get_group(
+                        #     (module, source_callsite)
+                        # )
                         source_node_type = "component-node"
 
                     target_callsite = target.split("=")[1]
@@ -167,10 +167,8 @@ class SankeyLayout:
                     )
                     target_node_type = "component-node"
 
-                    source_weight = source_df["time (inc)"].max()
+                    # source_weight = source_df["time (inc)"].max()
                     target_weight = target_df["time (inc)"].max()
-
-                    edge_type = "normal"
 
                     print(f"Adding edge: {source_callsite}, {target_callsite}")
                     self.nxg.add_node(source, attr_dict={"type": source_node_type})
@@ -182,7 +180,6 @@ class SankeyLayout:
                             {
                                 "source_callsite": source_callsite,
                                 "target_callsite": target_callsite,
-                                "edge_type": edge_type,
                                 "weight": target_weight,
                                 "edge_type": "reveal_edge",
                             }
@@ -204,7 +201,6 @@ class SankeyLayout:
         return entry_functions
 
     def create_source_targets_from_group_path(self, path):
-        module = ""
         edges = []
         for idx, callsite in enumerate(path):
             if idx == len(path) - 1:
@@ -225,7 +221,6 @@ class SankeyLayout:
         ret = []
         for idx, edge in enumerate(component_edges):
             source = edge["source"]
-            target = edge["target"]
 
             if source == reveal_module:
                 ret.append(edge)
@@ -234,7 +229,6 @@ class SankeyLayout:
     def same_target_edges(self, component_edges, reveal_module):
         ret = []
         for idx, edge in enumerate(component_edges):
-            source = edge["source"]
             target = edge["target"]
 
             if target == reveal_module:
@@ -271,7 +265,6 @@ class SankeyLayout:
                             {
                                 "source_callsite": edge["source_callsite"],
                                 "target_callsite": edge["target_callsite"],
-                                "edge_type": "normal",
                                 "weight": self.module_name_group_df.get_group(
                                     (reveal_module, edge["source_callsite"])
                                 )["time (inc)"].max(),
@@ -295,7 +288,6 @@ class SankeyLayout:
                             {
                                 "source_callsite": edge["source_callsite"],
                                 "target_callsite": edge["target_callsite"],
-                                "edge_type": "normal",
                                 "weight": self.secondary_primary_group_df.get_group(
                                     (edge["target"], edge["target_callsite"])
                                 )["time (inc)"].max(),
