@@ -62,7 +62,7 @@ export default {
 	mounted() {
 		this.init();
 		let self = this;
-		EventHandler.$on("ensemble-auxiliary", (data) => {
+		EventHandler.$on("ensemble-refresh-boxplot", (data) => {
 			self.clear();
 			self.init();
 		});

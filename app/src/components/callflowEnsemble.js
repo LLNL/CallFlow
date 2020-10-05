@@ -549,7 +549,7 @@ export default {
 			else if (this.selectedFormat == "CCT") {
 				this.initComponents(this.currentEnsembleCCTComponents);
 			}
-			EventHandler.$emit("ensemble-auxiliary", {});
+			EventHandler.$emit("ensemble-refresh-boxplot", {});
 		},
 
 		reset() {
@@ -672,15 +672,6 @@ export default {
 			this.$store.selectedCompareDataset = this.selectedCompareDataset;
 			this.$store.comparisonMode = true;
 			this.$store.encoding = this.selectedCompareMode;
-			this.$socket.emit("compare", {
-				targetDataset: this.$store.selectedTargetDataset,
-				compareDataset: this.$store.selectedCompareDataset,
-				selectedMetric: this.$store.selectedMetric
-			});
-		},
-
-		updateCompareMode() {
-			this.$store.selectedCompareMode = this.selectedCompareMode;
 			this.$socket.emit("compare", {
 				targetDataset: this.$store.selectedTargetDataset,
 				compareDataset: this.$store.selectedCompareDataset,

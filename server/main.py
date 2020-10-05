@@ -157,17 +157,20 @@ class CallFlowServer:
             :return: networkx graph (JSON)
             """
             LOGGER.debug(f"[Socket request] reveal_callsite: {data}")
-            nxg = self.callflow.request(
+            nxg = self.callflow.request_single(
                 {
                     "name": "supergraph",
                     "groupBy": "module",
-                    "datasets": data["datasets"],
+                    "dataset": data["dataset"],
                     "reveal_callsites": data["reveal_callsites"],
                 }
             )
             result = json_graph.node_link_data(nxg)
             json_result = json.dumps(result)
-            emit("ensemble_supergraph", json_result, json=True)
+            if data['mode'] == "Single":
+                emit("single_supergraph", json_result, json=True)
+            elif data["mode"] == "Ensemble":
+                emit("ensemble_supergraph", json_result, json=True)
 
         @sockets.on("split_by_entry_callsites", namespace="/")
         def split_by_entry_callsites(data):

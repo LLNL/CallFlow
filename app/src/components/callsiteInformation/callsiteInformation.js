@@ -65,7 +65,7 @@ export default {
 		/**
 		 * Event handler when a user selects a supernode.
 		 */
-		EventHandler.$on("select_module", (data) => {
+		EventHandler.$on("single-select-module", (data) => {
 			self.selectModule(data["module"]);
 		});
 
@@ -156,7 +156,6 @@ export default {
 				this.mean[callsite] = utils.formatRuntimeWithoutUnits(data["mean_time"]);
 				this.variance[callsite] = utils.formatRuntimeWithoutUnits(data["variance"]);
 				this.stdDeviation[callsite] = utils.formatRuntimeWithoutUnits(data["std_deviation"]);
-
 				this.selectClassName[callsite] = "unselect-callsite";
 			}
 		},
@@ -217,7 +216,7 @@ export default {
 			else {
 				this.switchIsSelectedCallsite(true);
 			}
-			console.debug("Selected callsites: ", this.revealCallsites);
+			console.info("Selected callsites: ", this.revealCallsites);
 		},
 
 		/**
@@ -309,15 +308,16 @@ export default {
 		 * 
 		 * @param {*} event 
 		 */
-		clickCallsite(event) {
+		revealCallsite(event) {
 			event.stopPropagation();
-			let callsite = event.currentTarget.id;
+			console.log(this.$store.selectedTargetDataset)
 			this.$socket.emit("reveal_callsite", {
+				mode: this.$store.selectedMode,
 				reveal_callsites: this.revealCallsites,
-				datasets: this.$store.selectedDatasets,
+				dataset: this.$store.selectedTargetDataset,
 			});
 
-			EventHandler.$emit("reveal-callsite");
+			EventHandler.$emit("reveal_callsite");
 		},
 
 		/**
@@ -363,18 +363,18 @@ export default {
 
 			this.numberOfCallsites = Object.keys(callsites_in_module).length;
 
+			// Set display: none to all .callsite-information-node.
+			// This hides the nodes when a supernode is selected.
+			for(let callsite in this.callsites){
+				d3.select("#callsite-information-" + callsite.id).style("display", "none");
+			}
+
 			// Clear up the current callsites map.
 			this.callsites = {};
 
-			// Set display: none to all .callsite-information-node.
-			// This hides the nodes when a supernode is selected.
-			d3.selectAll(".callsite-information-node").style("display", "none");
-
 			// Set the data and render each callsite.
 			callsites_in_module.forEach((callsite) => {
-				if (callsites_in_module.indexOf(callsite) > -1) {
-					this.callsites[callsite] = this.$store.callsites[this.$store.selectedTargetDataset][callsite];
-				}
+				this.callsites[callsite] = this.$store.callsites[this.$store.selectedTargetDataset][callsite];
 				d3.select("#callsite-information-" + this.callsites[callsite].id).style("display", "block");
 			});
 		},

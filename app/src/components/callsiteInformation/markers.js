@@ -79,9 +79,9 @@ export default {
 			this.data = this.q;
 
 			this.minMaxTargetMarker();
-			this.minText();
-			this.maxText();
-			this.medianText();
+			// this.minText();
+			// this.maxText();
+			// this.medianText();
 		},
 
 

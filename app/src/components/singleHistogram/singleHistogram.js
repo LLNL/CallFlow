@@ -126,7 +126,6 @@ export default {
 			d3.selectAll(".histogram-axis-label").remove();
 			d3.selectAll(".binRank").remove();
 			d3.selectAll(".lineRank").remove();
-			d3.selectAll(".tick").remove();
 			d3.selectAll(".brush").remove();
 			this.$refs.ToolTip.clear();
 		},

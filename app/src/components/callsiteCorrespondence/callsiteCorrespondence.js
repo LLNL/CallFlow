@@ -70,27 +70,24 @@ export default {
 	}),
 	mounted() {
 		let self = this;
-		EventHandler.$on("highlight-datasets", (datasets) => {
-			console.log("[Interaction] Highlighting the datasets :", datasets);
-			self.highlight(datasets);
-		});
-
-		EventHandler.$on("update-auxiliary-sort-by", (sortBy) => {
-			self.updateSortBy(sortBy);
-		});
-
-		EventHandler.$on("select-module", (data) => {
-			let thismodule = data["module"];
-			// self.selectCallsitesByModule(thismodule)
-			this.isModuleSelected = true;
-			self.selectModule(thismodule);
-		});
-
+		
 		EventHandler.$on("highlight-dataset", (data) => {
 			let dataset = data["dataset"];
 			if (self.$store.showTarget) {
 				self.highlightCallsitesByDataset(dataset);
 			}
+		});
+		
+		EventHandler.$on("highlight-datasets", (datasets) => {
+			console.log("[Interaction] Highlighting the datasets :", datasets);
+			self.highlight(datasets);
+		});
+
+		EventHandler.$on("ensemble-select-module", (data) => {
+			let thismodule = data["module"];
+			// self.selectCallsitesByModule(thismodule)
+			this.isModuleSelected = true;
+			self.selectModule(thismodule);
 		});
 
 		EventHandler.$on("callsite-information-sort", (data) => {

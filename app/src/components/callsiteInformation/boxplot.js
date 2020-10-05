@@ -63,7 +63,7 @@ export default {
 		this.init();
 		let self = this;
 
-		EventHandler.$on("single-auxiliary", (data) => {
+		EventHandler.$on("single-refresh-boxplot", (data) => {
 			self.clear();
 			self.init();
 		});
@@ -91,6 +91,7 @@ export default {
 
 			this.svg = d3.select("#boxplot-" + this.callsite.id)
 				.attrs({
+					"class": "boxplot",
 					"width": this.containerWidth,
 					"height": this.containerHeight
 				});

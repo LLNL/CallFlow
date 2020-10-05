@@ -67,13 +67,13 @@ export default {
 			this.targetData = this.targetq;
 			this.data = this.q;
 
-			this.minMaxEnsembleMarker();
+			// this.minMaxEnsembleMarker();
 			if (this.$store.showTarget) {
 				this.minMaxTargetMarker();
 			}
-			this.minText();
-			this.maxText();
-			this.medianText();
+			// this.minText();
+			// this.maxText();
+			// this.medianText();
 		},
 
 		minMaxEnsembleMarker() {
