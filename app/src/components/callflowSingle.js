@@ -494,7 +494,7 @@ export default {
 			else if (this.selectedFormat == "CCT") {
 				this.initComponents(this.currentSingleCCTComponents);
 			}
-			EventHandler.$emit("single-auxiliary", {});
+			EventHandler.$emit("single-refresh-boxplot", {});
 		},
 
 		reset() {
@@ -523,6 +523,7 @@ export default {
 			this.clear();
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
+			d3.selectAll(".tick").remove();
 			this.init();
 		},
 

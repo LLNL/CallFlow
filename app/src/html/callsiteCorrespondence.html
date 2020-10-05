@@ -46,7 +46,7 @@
             callsites.
         </p>
     </v-layout>
-    <v-container class="auxiliary-node" v-for="callsite in differenceCallsites"
+    <v-container class="callsite-information-node" v-for="callsite in differenceCallsites"
         :id="getID(callsite.id)">
         <v-layout row wrap>
             <v-flex md1>
@@ -113,11 +113,11 @@
             Matched {{numberOfIntersectionCallsites}} callsites.
         </p>
     </v-layout>
-    <v-container class="auxiliary-node" v-for="callsite in intersectionCallsites" 
+    <v-container class="callsite-information-node" v-for="callsite in intersectionCallsites" 
         :id="getID(callsite.id)">
         <v-layout row wrap style="align-items: center;">
             <v-flex md1>
-                <v-card width="20px" class="mx-auto" tile outlined>
+                <v-card width="25px" class="mx-auto" tile outlined>
                     <v-flex :id="callsite.name" text-xs-center
                         :class="selectClassName[callsite.name]"
                         @click="changeSelectedClassName">
@@ -139,12 +139,12 @@
         </v-layout>
 
         <v-layout row wrap>
-            <div class="subtitle-4" :style="'color: ' + targetColor">
+            <div class="body-2" :style="'color: ' + targetColor">
                 Mean : {{targetMeans[callsite.name]}}</div>
             <v-spacer></v-spacer>
             <!-- <div class="subtitle-2" :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}
     </div> -->
-            <div class="subtitle-4" :style="'color: ' + targetColor">
+            <div class="body-2" :style="'color: ' + targetColor">
                 Std. Dev. : {{targetStandardDeviation[callsite.name]}}
             </div>
         </v-layout>
@@ -154,13 +154,13 @@
 
         <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget=false />
         <v-layout row wrap>
-            <div class="subtitle-4" :style="'color: ' + ensembleColor">
+            <div class="body-2" :style="'color: ' + ensembleColor">
                 Mean : {{ensembleMeans[callsite.name]}}</div>
             <v-spacer></v-spacer>
             <!-- <div class="subtitle-2" :style="'color: ' + ensembleColor">Std. Dev. :
 {{ensembleVariance[callsite.name]}}
 </div> -->
-            <div class="subtitle-4" :style="'color: ' + ensembleColor">
+            <div class="body-2" :style="'color: ' + ensembleColor">
                 Std. Dev. : {{ensembleStandardDeviation[callsite.name]}}
             </div>
         </v-layout>

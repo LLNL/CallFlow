@@ -208,65 +208,68 @@ export default {
 		click(node) {
 			event.stopPropagation();
 
-			// Set the data.
-			this.$store.selectedNode = node;
-			this.$store.selectedModule = node.module;
-			this.$store.selectedName = node.name;
+			if (node !== this.$store.selectedNode) {
+				// Set the data.
+				this.$store.selectedNode = node;
+				this.$store.selectedModule = node.module;
+				this.$store.selectedName = node.name;
 
-			const nodeSVG = this.containerG.select("#callsite-" + node.client_idx);
+				const nodeSVG = this.containerG.select("#callsite-" + node.client_idx);
 
-			// Make appropriate event requests (Single and Ensemble).
-			if (this.$store.selectedMode == "Ensemble") {
-				if (!this.drawGuidesMap[node.id]) {
-					this.$refs.Guides.visualize(node, "permanent", nodeSVG);
-					this.drawGuidesMap[node.id] = true;
+				// Make appropriate event requests (Single and Ensemble).
+				if (this.$store.selectedMode == "Ensemble") {
+					if (!this.drawGuidesMap[node.id]) {
+						this.$refs.Guides.visualize(node, "permanent", nodeSVG);
+						this.drawGuidesMap[node.id] = true;
+					}
+
+					this.$socket.emit("module_hierarchy", {
+						module: this.$store.selectedModule,
+						name: this.$store.selectedName,
+						datasets: this.$store.selectedDatasets,
+					});
+
+					this.$socket.emit("ensemble_auxiliary", {
+						module: this.$store.selectedModule,
+						datasets: this.$store.selectedDatasets,
+						sortBy: this.$store.auxiliarySortBy,
+					});
+
+					EventHandler.$emit("ensemble-histogram", {
+						module: this.$store.selectedModule,
+						datasets: this.$store.selectedDatasets,
+					});
+
+					EventHandler.$emit("ensemble-scatterplot", {
+						module: this.$store.selectedModule,
+						dataset1: this.$store.selectedDatasets,
+					});
+
+					EventHandler.$emit("ensemble-select-module", {
+						module: this.$store.selectedModule,
+					});
+				}
+				else if (this.$store.selectedMode == "Single") {
+					EventHandler.$emit("single-histogram", {
+						module: this.$store.selectedModule,
+						groupBy: this.$store.selectedGroupBy,
+						dataset: this.$store.selectedTargetDataset,
+					});
+
+					EventHandler.$emit("single-scatterplot", {
+						module: this.$store.selectedModule,
+						dataset: this.$store.selectedTargetDataset,
+					});
+
+					EventHandler.$emit("single-select-module", {
+						module: this.$store.selectedModule,
+					});
 				}
 
-				this.$socket.emit("module_hierarchy", {
-					module: this.$store.selectedModule,
-					name: this.$store.selectedName,
-					datasets: this.$store.selectedDatasets,
-				});
-
-				EventHandler.$emit("ensemble-histogram", {
-					module: this.$store.selectedModule,
-					datasets: this.$store.selectedDatasets,
-				});
-
-				EventHandler.$emit("ensemble-distribution", {
-					module: this.$store.selectedModule,
-					datasets: this.$store.selectedDatasets,
-				});
-
-				EventHandler.$emit("ensemble-scatterplot", {
-					module: this.$store.selectedModule,
-					dataset1: this.$store.selectedDatasets,
-				});
-
-				this.$socket.emit("ensemble_auxiliary", {
-					module: this.$store.selectedModule,
-					datasets: this.$store.selectedDatasets,
-					sortBy: this.$store.auxiliarySortBy,
-				});
-			}
-			else if (this.$store.selectedMode == "Single") {
-				EventHandler.$emit("single-histogram", {
-					module: this.$store.selectedModule,
-					groupBy: this.$store.selectedGroupBy,
-					dataset: this.$store.selectedTargetDataset,
-				});
-
-				EventHandler.$emit("single-scatterplot", {
-					module: this.$store.selectedModule,
-					dataset: this.$store.selectedTargetDataset,
-				});
+				// EventHandler.$emit("show-target-auxiliary", {});
 			}
 
-			EventHandler.$emit("select-module", {
-				module: this.$store.selectedModule,
-			});
 
-			EventHandler.$emit("show-target-auxiliary", {});
 		},
 
 		mouseover(node) {

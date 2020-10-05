@@ -157,17 +157,30 @@ class CallFlowServer:
             :return: networkx graph (JSON)
             """
             LOGGER.debug(f"[Socket request] reveal_callsite: {data}")
-            nxg = self.callflow.request(
-                {
-                    "name": "supergraph",
-                    "groupBy": "module",
-                    "datasets": data["datasets"],
-                    "reveal_callsites": data["reveal_callsites"],
-                }
-            )
-            result = json_graph.node_link_data(nxg)
-            json_result = json.dumps(result)
-            emit("ensemble_supergraph", json_result, json=True)
+            if data["mode"] == "Single":
+                nxg = self.callflow.request_single(
+                    {
+                        "name": "supergraph",
+                        "groupBy": "module",
+                        "dataset": data["dataset"],
+                        "reveal_callsites": data["reveal_callsites"],
+                    }
+                )
+                result = json_graph.node_link_data(nxg)
+                json_result = json.dumps(result)
+                emit("single_supergraph", json_result, json=True)
+            elif data["mode"] == "Ensemble":
+                nxg = self.callflow.request_ensemble(
+                    {
+                        "name": "supergraph",
+                        "groupBy": "module",
+                        "datasets": data["datasets"],
+                        "reveal_callsites": data["reveal_callsites"],
+                    }
+                )
+                result = json_graph.node_link_data(nxg)
+                json_result = json.dumps(result)
+                emit("ensemble_supergraph", json_result, json=True)
 
         @sockets.on("split_by_entry_callsites", namespace="/")
         def split_by_entry_callsites(data):
@@ -176,17 +189,30 @@ class CallFlowServer:
             :return: networkx graph (JSON)
             """
             LOGGER.debug("Split by entry: {}".format(data))
-            nxg = self.callflow.request(
-                {
-                    "name": "supergraph",
-                    "groupBy": "module",
-                    "datasets": data["datasets"],
-                    "split_entry_module": data["selectedModule"],
-                }
-            )
-            result = json_graph.node_link_data(nxg)
-            json_result = json.dumps(result)
-            emit("ensemble_supergraph", json_result, json=True)
+            if data["mode"] == "Single":
+                nxg = self.callflow.request_single(
+                    {
+                        "name": "supergraph",
+                        "groupBy": "module",
+                        "dataset": data["dataset"],
+                        "split_entry_module": data["selectedModule"],
+                    }
+                )
+                result = json_graph.node_link_data(nxg)
+                json_result = json.dumps(result)
+                emit("single_supergraph", json_result, json=True)
+            elif data["mode"] == "Ensemble":
+                nxg = self.callflow.request_ensemble(
+                    {
+                        "name": "supergraph",
+                        "groupBy": "module",
+                        "datasets": data["datasets"],
+                        "split_entry_module": data["selectedModule"],
+                    }
+                )
+                result = json_graph.node_link_data(nxg)
+                json_result = json.dumps(result)
+                emit("ensemble_supergraph", json_result, json=True)
 
         @sockets.on("split_by_callees", namespace="/")
         def split_by_callees(data):
@@ -195,17 +221,31 @@ class CallFlowServer:
             :return: networkx graph (JSON)
             """
             LOGGER.debug("Split by callees: {}".format(data))
-            nxg = self.callflow.request(
-                {
-                    "name": "supergraph",
-                    "groupBy": "module",
-                    "datasets": data["datasets"],
-                    "split_by_callees": data["selectedModule"],
-                }
-            )
-            result = json_graph.node_link_data(nxg)
-            json_result = json.dumps(result)
-            emit("ensemble_supergraph", json_result, json=True)
+            if data["mode"] == "Single":
+                nxg = self.callflow.request_single(
+                    {
+                        "name": "supergraph",
+                        "groupBy": "module",
+                        "dataset": data["dataset"],
+                        "split_by_callees": data["selectedModule"],
+                    }
+                )
+                result = json_graph.node_link_data(nxg)
+                json_result = json.dumps(result)
+                emit("single_supergraph", json_result, json=True)
+
+            elif data["mode"] == "Ensemble":
+                nxg = self.callflow.request_ensemble(
+                    {
+                        "name": "supergraph",
+                        "groupBy": "module",
+                        "datasets": data["datasets"],
+                        "split_by_callees": data["selectedModule"],
+                    }
+                )
+                result = json_graph.node_link_data(nxg)
+                json_result = json.dumps(result)
+                emit("ensemble_supergraph", json_result, json=True)
 
     def _request_handler_single(self):
         @sockets.on("single_callsite_data", namespace="/")

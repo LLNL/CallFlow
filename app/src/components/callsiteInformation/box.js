@@ -48,8 +48,8 @@ export default {
 				});
 
 			this.box();
-			this.centerLine();
 			this.axis();
+			this.centerLine();
 			this.$parent.$refs.ToolTip.init("boxplot-" + callsite.id);
 		},
 
@@ -112,7 +112,7 @@ export default {
 			let exponent_string = this.superscript[this.x_max_exponent];
 			let label = "(e+" + this.x_max_exponent + ") " + "Exclusive Runtime (" + "\u03BCs)";
 			this.g.append("text")
-				.attr("class", "axis-label")
+				.attr("class", "boxplot-axis-label")
 				.attr("x", this.$parent.boxWidth - 20)
 				.attr("y", this.$parent.centerLinePosition * 3.8)
 				.style("font-size", "12px")
@@ -134,8 +134,7 @@ export default {
 
 			const xAxisLine = this.g.append("g")
 				.attrs({
-					"class": "axis",
-					"id": "xAxis",
+					"class": "boxplot-axis",
 					"transform": "translate(" + 0 + "," + 2.5 * this.$parent.centerLinePosition + ")"
 				})
 				.call(xAxis);
@@ -162,8 +161,8 @@ export default {
 		clear() {
 			this.g.selectAll(".box").remove();
 			this.g.selectAll(".centerLine").remove();
-			this.g.selectAll(".axis-label").remove();
-			this.g.selectAll(".axis").remove();
+			this.g.selectAll(".boxplot-axis-label").remove();
+			this.g.selectAll(".boxplot-axis").remove();
 		}
 	}
 };

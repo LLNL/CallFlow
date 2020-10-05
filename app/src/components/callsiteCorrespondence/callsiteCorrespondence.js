@@ -70,27 +70,24 @@ export default {
 	}),
 	mounted() {
 		let self = this;
-		EventHandler.$on("highlight-datasets", (datasets) => {
-			console.log("[Interaction] Highlighting the datasets :", datasets);
-			self.highlight(datasets);
-		});
-
-		EventHandler.$on("update-auxiliary-sort-by", (sortBy) => {
-			self.updateSortBy(sortBy);
-		});
-
-		EventHandler.$on("select-module", (data) => {
-			let thismodule = data["module"];
-			// self.selectCallsitesByModule(thismodule)
-			this.isModuleSelected = true;
-			self.selectModule(thismodule);
-		});
-
+		
 		EventHandler.$on("highlight-dataset", (data) => {
 			let dataset = data["dataset"];
 			if (self.$store.showTarget) {
 				self.highlightCallsitesByDataset(dataset);
 			}
+		});
+		
+		EventHandler.$on("highlight-datasets", (datasets) => {
+			console.log("[Interaction] Highlighting the datasets :", datasets);
+			self.highlight(datasets);
+		});
+
+		EventHandler.$on("ensemble-select-module", (data) => {
+			let thismodule = data["module"];
+			// self.selectCallsitesByModule(thismodule)
+			this.isModuleSelected = true;
+			self.selectModule(thismodule);
 		});
 
 		EventHandler.$on("callsite-information-sort", (data) => {
@@ -309,6 +306,7 @@ export default {
 			event.stopPropagation();
 			let callsite = event.currentTarget.id;
 			this.$socket.emit("reveal_callsite", {
+				mode: this.$store.selectedMode,
 				reveal_callsites: this.revealCallsites,
 				datasets: this.$store.selectedDatasets,
 			});
@@ -427,17 +425,19 @@ export default {
 		split() {
 			if (this.isEntryFunctionSelected == "select-callsite") {
 				this.$socket.emit("split_by_entry_callsites", {
+					mode: this.$store.selectedMode,
 					selectedModule: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
-				EventHandler.$emit("split-by-entry-callsites");
+				EventHandler.$emit("reveal-callsite");
 			}
 			else if (this.isCalleeSelected == "select-callsite") {
 				this.$socket.emit("split_by_callees", {
+					mode: this.$store.selectedMode,
 					selectedModule: this.$store.selectedModule,
 					datasets: this.$store.selectedDatasets,
 				});
-				EventHandler.$emit("split-by-callees");
+				EventHandler.$emit("reveal-callsite");
 			}
 		}
 	}
