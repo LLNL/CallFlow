@@ -13,8 +13,8 @@ from flask_socketio import SocketIO, emit
 # ------------------------------------------------------------------------------
 # CallFlow imports.
 import callflow
-from callflow import ArgParser
-from callflow import manager
+from callflow.argparser import ArgParser
+from . import manager
 
 
 LOGGER = callflow.get_logger(__name__)

@@ -7,12 +7,11 @@
 # through the IPython interface.
 # The code can be found at https://github.com/tensorflow/tensorboard/blob/master/tensorboard/notebook.py
 
-import shlex
 import json
-import random
 import time
 import datetime
-from callflow import ArgParser
+import shlex
+import random
 
 try:
     import html
@@ -25,8 +24,8 @@ except ImportError:
     html_escape = cgi.escape
     del cgi
 
-from callflow import manager
-
+from callflow.argparser import ArgParser
+from . import manager
 
 def _load_ipython_extension(ipython):
     """Load the CallFLow notebook extension.

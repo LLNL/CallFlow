@@ -16,7 +16,14 @@ import datetime
 import errno
 import json
 import base64
-from .version import __version__
+
+from codecs import open
+version = {}
+vfile = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                     '..', 'callflow', 'version.py')
+with open(vfile) as fp:
+    exec(fp.read(), version)
+__version__=version["__version__"]
 
 # The following five types enumerate the possible return values of the
 # `start` function.
@@ -231,16 +238,22 @@ def start(args, args_string):
     Launch python server.
     """
     print("Launching Server")
+    '''
     cwd = os.getcwd().split("CallFlow")[0] + "CallFlow/server/main.py"
     server_cmd = ["python3", cwd] + args_string
+    '''
+    server_cmd = ['callflow_server'] + args_string
     launch_cmd(server_cmd, alias="server")
+
 
     """
     Launch callflow app server.
     """
     print("Launching client")
-    cwd = os.getcwd().split("CallFlow")[0] + "CallFlow/app"
-    prefix_string = ["--silent", "--prefix=" + cwd]
+    #cwd = os.getcwd().split("CallFlow")[0] + "CallFlow/app"
+    #prefix_string = ["--silent", "--prefix=" + cwd]
+    app_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app')
+    prefix_string = ["--silent", "--prefix=" + app_path]
     client_cmd = ["npm", "run", "dev"] + prefix_string
     launch_cmd(client_cmd, alias="client")
 
