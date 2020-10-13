@@ -29,7 +29,7 @@ setup(
     packages=find_packages(),
     entry_points={
       'console_scripts': [
-          'callflow_server = callflow.server.main:main'
+          'callflow_server = server.main:main'
       ]
     },
     install_requires=[
@@ -42,7 +42,7 @@ setup(
         "statsmodels",
         "networkx == 2.2",
         "ipython",
-        "flask",
+        #"flask",
         "flask_socketio",
     ],
 )

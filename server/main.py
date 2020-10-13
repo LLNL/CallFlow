@@ -434,8 +434,11 @@ class CallFlowServer:
             emit("split_mpi_distribution", result, json=True)
 
 
-if __name__ == "__main__":
+def main():
     # if verbose, level = 1
     # else, level = 2
     callflow.init_logger(level=2)
     CallFlowServer()
+
+if __name__ == "__main__":
+    main()
