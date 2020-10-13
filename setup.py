@@ -12,6 +12,7 @@ with open("./callflow/version.py") as fp:
     exec(fp.read(), version)
 version=version["__version__"]
 
+print (find_packages())
 # now set up
 setup(
     name="CallFlow",
@@ -27,22 +28,28 @@ setup(
     ],
     keywords="",
     packages=find_packages(),
+    #package_data={'callflow': ['data/*']},
     entry_points={
       'console_scripts': [
           'callflow_server = server.main:main'
       ]
     },
     install_requires=[
+        #"Flask==1.1.1",
+        "Flask_SocketIO",
+        #"Pygments",
         "colorlog",
+        "ipython",
+        "jsonschema",
+        "hatchet",
+        "matplotlib",
+        "networkx",
         "numpy",
         "pandas",
-        "tables",
-        "hatchet",
-        "sklearn",
-        "statsmodels",
-        "networkx == 2.2",
-        "ipython",
-        #"flask",
-        "flask_socketio",
-    ],
+        "pydot",
+        "pytest",
+        "scikit_learn",
+        "scipy",
+        "statsmodels"
+    ]
 )
