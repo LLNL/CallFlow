@@ -27,6 +27,11 @@ setup(
     ],
     keywords="",
     packages=find_packages(),
+    entry_points={
+      'console_scripts': [
+          'callflow_server = callflow.server.main:main'
+      ]
+    },
     install_requires=[
         "colorlog",
         "numpy",
