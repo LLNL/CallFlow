@@ -16,7 +16,7 @@ import datetime
 import errno
 import json
 import base64
-from callflow import __version__
+from .version import __version__
 
 # The following five types enumerate the possible return values of the
 # `start` function.
