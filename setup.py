@@ -12,7 +12,6 @@ with open("./callflow/version.py") as fp:
     exec(fp.read(), version)
 version=version["__version__"]
 
-print (find_packages())
 # now set up
 setup(
     name="CallFlow",
@@ -35,9 +34,7 @@ setup(
       ]
     },
     install_requires=[
-        #"Flask==1.1.1",
-        "Flask_SocketIO",
-        #"Pygments",
+        "flask_socketio",
         "colorlog",
         "ipython",
         "jsonschema",

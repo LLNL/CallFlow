@@ -3,17 +3,19 @@
 #
 # SPDX-License-Identifier: MIT
 # Library imports
-from flask import Flask
-from flask_socketio import SocketIO, emit
+import os
 import json
 from networkx.readwrite import json_graph
-import os
+
+from flask import Flask
+from flask_socketio import SocketIO, emit
 
 # ------------------------------------------------------------------------------
 # CallFlow imports.
 import callflow
+from callflow import ArgParser
 from callflow import manager
-from callflow.operations import ArgParser
+
 
 LOGGER = callflow.get_logger(__name__)
 _CALLFLOW_SERVER_PORT = 5000

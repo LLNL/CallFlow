@@ -12,7 +12,7 @@ import json
 import random
 import time
 import datetime
-from callflow.operations import ArgParser
+from callflow import ArgParser
 
 try:
     import html
