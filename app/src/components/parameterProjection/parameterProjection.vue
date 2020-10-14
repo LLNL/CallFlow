@@ -23,7 +23,6 @@ import * as utils from "../utils";
 
 export default {
 	name: "ParameterProjection",
-	template: template,
 	props: [],
 	data: () => ({
 		id: null,
