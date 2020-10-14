@@ -21,7 +21,6 @@ from codecs import open
 
 # ------------------------------------------------------------------------------
 # CallFlow imports.
-import config
 
 version = {}
 vfile = os.path.join(
@@ -30,6 +29,9 @@ vfile = os.path.join(
 with open(vfile) as fp:
     exec(fp.read(), version)
 __version__ = version["__version__"]
+
+CALLFLOW_APP_PORT = int(os.getenv('CALLFLOW_APP_PORT', 8000))
+CALLFLOW_SERVER_PORT = int(os.getenv('CALLFLOW_SERVER_PORT', 5000))
 
 # The following five types enumerate the possible return values of the
 # `start` function.
@@ -258,8 +260,8 @@ def start(args, args_string):
     info = CallFlowLaunchInfo(
         version=__version__,
         start_time=int(time.time()),
-        server_port=config.CALLFLOW_SERVER_PORT,
-        client_port=config.CALLFLOW_CLIENT_PORT,
+        server_port=CALLFLOW_SERVER_PORT,
+        client_port=CALLFLOW_APP_PORT,
         pid=os.getpid(),
         config=args.config,
         cache_key=instance_cache_key,

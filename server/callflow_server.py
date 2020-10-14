@@ -21,8 +21,10 @@ LOGGER = callflow.get_logger(__name__)
 
 # ------------------------------------------------------------------------------
 # Create a Flask server.
-app = Flask(__name__, static_url_path="", static_folder="/app/dist")
+app = Flask(__name__, static_url_path="")
 sockets = SocketIO(app, cors_allowed_origins="*")
+
+CALLFLOW_SERVER_PORT = int(os.getenv('CALLFLOW_SERVER_PORT', 5000))
 
 
 class CallFlowServer:
@@ -88,12 +90,12 @@ class CallFlowServer:
                 host="127.0.0.1",
                 debug=self.debug,
                 use_reloader=True,
-                port=config.CALLFLOW_SERVER_PORT,
+                port=CALLFLOW_SERVER_PORT
             )
 
         else:
             sockets.run(
-                app, debug=False, use_reloader=True, port=config._CALLFLOW_SERVER_PORT
+                app, debug=False, use_reloader=True, port=CALLFLOW_SERVER_PORT
             )
 
     def _request_handler_general(self):
