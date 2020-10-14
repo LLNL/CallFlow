@@ -733,7 +733,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 #auxiliary-function-overview {
     overflow: auto;
 }

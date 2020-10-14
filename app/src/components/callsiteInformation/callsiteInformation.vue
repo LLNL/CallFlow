@@ -586,7 +586,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 #callsite-information-overview {
   overflow: auto;
 }

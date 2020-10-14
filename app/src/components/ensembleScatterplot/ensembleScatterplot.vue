@@ -4,17 +4,30 @@
  * 
  * SPDX-License-Identifier: MIT
  */
+<template>
+	<v-layout row wrap :id="id">
+    <v-layout class="chip-container">
+        <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
+        <v-spacer> </v-spacer>
+    </v-layout>
+    <span class="component-info">
+        <!-- Max. QCD= {{maxVarianceCallsite}} -->
+    </span>
+    <svg :id="svgID"></svg>
+    <ToolTip ref="ToolTip" />
+</v-layout>
+</template>
 
+
+<script>
 import * as d3 from "d3";
 
-import tpl from "../../html/ensembleScatterplot.html";
 import ToolTip from "./tooltip";
 import * as utils from "../utils";
 import EventHandler from "../EventHandler";
 
 export default {
 	name: "EnsembleScatterplot",
-	template: tpl,
 	components: {
 		ToolTip,
 	},
@@ -569,3 +582,5 @@ export default {
 		},
 	}
 };
+
+</script>
