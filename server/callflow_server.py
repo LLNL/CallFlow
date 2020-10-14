@@ -3,17 +3,19 @@
 #
 # SPDX-License-Identifier: MIT
 # Library imports
-from flask import Flask
-from flask_socketio import SocketIO, emit
+import os
 import json
 from networkx.readwrite import json_graph
-import os
+
+from flask import Flask
+from flask_socketio import SocketIO, emit
 
 # ------------------------------------------------------------------------------
 # CallFlow imports.
 import callflow
-from callflow import manager
-from callflow.operations import ArgParser
+from callflow.argparser import ArgParser
+from . import manager
+
 
 LOGGER = callflow.get_logger(__name__)
 _CALLFLOW_SERVER_PORT = 5000
@@ -434,8 +436,12 @@ class CallFlowServer:
             emit("split_mpi_distribution", result, json=True)
 
 
-if __name__ == "__main__":
+def main():
     # if verbose, level = 1
     # else, level = 2
     callflow.init_logger(level=2)
     CallFlowServer()
+
+
+if __name__ == "__main__":
+    main()
