@@ -41,11 +41,11 @@ You can get CallFlow from its `GitHub <https://github.com/LLNL/CallFlow>`_ using
 
 Install callflow python package
 -------------------------------
-To install callflow python package, run the following command using pip. 
+To install callflow python package, run the following command using `setup.py`. 
 
 .. code-block:: console
 
-   $ pip install .
+   $ python3 setup.py install
 
 To install in the dev mode,
 
