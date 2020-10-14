@@ -19,6 +19,10 @@ import base64
 
 from codecs import open
 
+# ------------------------------------------------------------------------------
+# CallFlow imports.
+import config
+
 version = {}
 vfile = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "callflow", "version.py"
@@ -52,8 +56,7 @@ StartFailed = collections.namedtuple(
 
 # Indicates that a call to `start` failed to invoke the subprocess.
 StartExecFailed = collections.namedtuple(
-    "StartExecFailed",
-    ("os_error",),  # `OSError` due to `Popen` invocation
+    "StartExecFailed", ("os_error",),  # `OSError` due to `Popen` invocation
 )
 
 # Indicates that a call to `start` launched a CallFlow process, but
@@ -76,12 +79,8 @@ _CALLFLOW_INFO_FIELDS = collections.OrderedDict(
 )
 
 CallFlowLaunchInfo = collections.namedtuple(
-    "CallFlowLaunchInfo",
-    _CALLFLOW_INFO_FIELDS,
+    "CallFlowLaunchInfo", _CALLFLOW_INFO_FIELDS,
 )
-
-_CALLFLOW_DEFAULT_SERVER_PORT = 5000
-_CALLFLOW_DEFAULT_CLIENT_PORT = 1024
 
 
 def cache_key(working_directory, arguments):
@@ -259,8 +258,8 @@ def start(args, args_string):
     info = CallFlowLaunchInfo(
         version=__version__,
         start_time=int(time.time()),
-        server_port=_CALLFLOW_DEFAULT_SERVER_PORT,
-        client_port=_CALLFLOW_DEFAULT_CLIENT_PORT,
+        server_port=config.CALLFLOW_SERVER_PORT,
+        client_port=config.CALLFLOW_CLIENT_PORT,
         pid=os.getpid(),
         config=args.config,
         cache_key=instance_cache_key,
@@ -282,11 +281,7 @@ def launch_cmd(cmd, timeout=datetime.timedelta(seconds=100), alias=""):
 
     start_time_seconds = time.time()
     try:
-        p = subprocess.Popen(
-            cmd,
-            stdout=stdout_fd,
-            stderr=stderr_fd,
-        )
+        p = subprocess.Popen(cmd, stdout=stdout_fd, stderr=stderr_fd,)
     except OSError as e:
         return StartExecFailed(os_error=e)
     finally:
