@@ -5,11 +5,15 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+	<g class="outlier"></g>
+</template>
+
+<script>
 import * as d3 from "d3";
 
 export default {
 	name: "Outliers",
-	template: "<g class=\"outlier\"></g>",
 	data: () => ({
 		paddingTop: 10,
 		textOffset: 40,
@@ -319,3 +323,4 @@ export default {
 		}
 	}
 };
+</script>

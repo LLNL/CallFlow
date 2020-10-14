@@ -5,13 +5,16 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+	<g class="box"></g>
+</template>
+
+<script>
 import * as d3 from "d3";
 import * as utils from "../utils";
 
 export default {
 	name: "Box",
-	template: "<g class=\"box\"></g>",
-
 	data: () => ({
 		id: "box",
 		paddingTop: 10,
@@ -22,7 +25,14 @@ export default {
 	}),
 
 	methods: {
-		init(callsite, q, targetq, xScale, showTarget) {
+		/**
+		 * 
+		 * @param {*} callsite 
+		 * @param {*} q 
+		 * @param {*} targetq 
+		 * @param {*} xScale 
+		 */
+		init(callsite, q, targetq, xScale) {
 			if (this.debug) {
 				console.log("Ensemble q: ", q);
 				console.log("Target q: ", targetq);
@@ -41,48 +51,25 @@ export default {
 					"transform": "translate(0, " + this.$parent.boxPosition + ")"
 				});
 
-			this.ensembleBox();
-			if (this.$store.showTarget && showTarget) {
-				this.targetBox();
-			}
-			this.centerLine();
+			this.box();
 			this.axis();
+			this.centerLine();
 			this.$parent.$refs.ToolTip.init("boxplot-" + callsite.id);
 		},
 
-		ensembleBox() {
-			let self = this;
-			this.boxSVG = this.g
-				.append("rect")
-				.attrs({
-					"class": "ensembleBox",
-					"y": 0,
-					"x": this.xScale(this.q.q1),
-					"height": this.$parent.rectHeight,
-					"fill": this.$store.distributionColor.ensemble,
-					"width": this.xScale(this.q.q3) - this.xScale(this.q.q1),
-					"stroke": "#202020",
-					"stroke-width": 0.5
-				})
-				.style("z-index", 1)
-				.on("mouseover", (d) => {
-					self.$parent.$refs.ToolTip.renderQ(self.q);
-				})
-				.on("mouseout", (d) => {
-					self.$parent.$refs.ToolTip.clear();
-				});
-		},
-
-		targetBox() {
+		/**
+		 * Draw the quartile box in the boxplot.
+		 */
+		box() {
 			let self = this;
 			this.targetBoxSVG = this.g
 				.append("rect")
-				.attr("class", "targetbox")
+				.attr("class", "box")
 				.attrs({
 					"y": 0,
 					"x": this.xScale(this.targetq.q1),
 					"height": this.$parent.rectHeight,
-					"fill": this.$store.distributionColor.target,
+					"fill": this.$store.runtimeColor.intermediate,
 					"width": (d) => {
 						if (self.targetq.q1 == self.targetq.q3) {
 							return 3;
@@ -101,6 +88,9 @@ export default {
 				});
 		},
 
+		/**
+		 * Draw center line in the boxplot.
+		 */
 		centerLine() {
 			let self = this;
 			this.centerLineSVG = this.g
@@ -108,21 +98,13 @@ export default {
 				.attrs({
 					"class": "centerLine",
 					"y1": this.$parent.centerLinePosition,
-					"x1": this.xScale(this.q.min),
+					"x1": this.xScale(this.targetq.min),
 					"y2": this.$parent.centerLinePosition,
-					"x2": this.xScale(this.q.max),
+					"x2": this.xScale(this.targetq.max),
 					"stroke": "black"
 				})
 				.style("stroke-width", "1.5")
 				.style("z-index", 10);
-		},
-
-		clear() {
-			this.g.selectAll(".ensembleBox").remove();
-			if (this.$store.showTarget) {
-				this.g.selectAll(".targetbox").remove();
-			}
-			this.g.selectAll(".centerLine").remove();
 		},
 
 		/**
@@ -134,7 +116,7 @@ export default {
 			let exponent_string = this.superscript[this.x_max_exponent];
 			let label = "(e+" + this.x_max_exponent + ") " + "Exclusive Runtime (" + "\u03BCs)";
 			this.g.append("text")
-				.attr("class", "axis-label")
+				.attr("class", "boxplot-axis-label")
 				.attr("x", this.$parent.boxWidth - 20)
 				.attr("y", this.$parent.centerLinePosition * 3.8)
 				.style("font-size", "12px")
@@ -156,8 +138,7 @@ export default {
 
 			const xAxisLine = this.g.append("g")
 				.attrs({
-					"class": "axis",
-					"id": "xAxis",
+					"class": "boxplot-axis",
 					"transform": "translate(" + 0 + "," + 2.5 * this.$parent.centerLinePosition + ")"
 				})
 				.call(xAxis);
@@ -177,5 +158,16 @@ export default {
 				.style("font-family", "sans-serif")
 				.style("font-weight", "lighter");
 		},
+
+		/**
+		 * Clear the boxplot. (box, center line, and axis)
+		 */
+		clear() {
+			this.g.selectAll(".box").remove();
+			this.g.selectAll(".centerLine").remove();
+			this.g.selectAll(".boxplot-axis-label").remove();
+			this.g.selectAll(".boxplot-axis").remove();
+		}
 	}
 };
+</script>

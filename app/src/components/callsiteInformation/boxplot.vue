@@ -5,6 +5,16 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+	<svg :id="id" :width="containerWidth" :height="containerHeight" class='boxplot'>
+		<Box ref="Box" />
+		<Markers ref="Markers" />
+		<Outliers ref="Outliers" />
+		<ToolTip ref="ToolTip" />
+	</svg>
+</template>
+
+<script>
 import Box from "./box";
 import Markers from "./markers";
 import Outliers from "./outlier";
@@ -14,12 +24,6 @@ import EventHandler from "../EventHandler";
 
 export default {
 	name: "BoxPlot",
-	template: `<svg :id="id" :width="containerWidth" :height="containerHeight" class='boxplot'>
-				<Box ref="Box" />
-				<Markers ref="Markers" />
-				<Outliers ref="Outliers" />
-				<ToolTip ref="ToolTip" />
-			  </svg>`,
 	props: [
 		"callsite",
 		"width",
@@ -45,7 +49,7 @@ export default {
 		containerHeight: 150,
 		containerWidth: 0,
 		parentID: "",
-		informationHeight: 70,
+		informationHeight: 80,
 		outlierHeight: 20,
 		rectHeight: 0,
 		centerLinePosition: 0,
@@ -62,7 +66,8 @@ export default {
 	mounted() {
 		this.init();
 		let self = this;
-		EventHandler.$on("ensemble-refresh-boxplot", (data) => {
+
+		EventHandler.$on("single-refresh-boxplot", (data) => {
 			self.clear();
 			self.init();
 		});
@@ -73,6 +78,9 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Init function, Sets up the width, height and etc.
+		 */
 		init() {
 			this.containerHeight = 150;
 			this.containerWidth = this.$parent.boxplotWidth - 2 * this.padding.right - 1 * this.padding.left;
@@ -87,22 +95,42 @@ export default {
 
 			this.svg = d3.select("#boxplot-" + this.callsite.id)
 				.attrs({
+					"class": "boxplot",
 					"width": this.containerWidth,
 					"height": this.containerHeight
 				});
 
-			let min_x = Math.min(this.q.min, this.targetq.min);
-			let max_x = Math.max(this.q.max, this.targetq.max);
-
 			this.xScale = d3.scaleLinear()
-				.domain([min_x, max_x])
+				.domain([this.targetq.min, this.targetq.max])
 				.range([0.05 * this.containerWidth, this.containerWidth - 0.05 * this.containerWidth]);
 
 			this.visualize(this.callsite);
 		},
 
+		/**
+		 * Visualize the boxplot for the callsites.
+		 * @param {*} callsite 
+		 */
+		visualize(callsite) {
+			this.$refs.Box.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
+			this.$refs.Markers.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
+			this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget);
+		},
+
+		/**
+		 * Clear the components.
+		 */
+		clear() {
+			this.$refs.Box.clear();
+			this.$refs.Markers.clear();
+			this.$refs.Outliers.clear();
+		},
+
+		/**
+		 * 
+		 * @param {*} callsite 
+		 */
 		process(callsite) {
-			this.ensemble_data = this.$store.callsites["ensemble"][callsite.name][this.$store.selectedMetric]["q"];
 			if (this.$store.callsites[this.$store.selectedTargetDataset][callsite.name] != undefined) {
 				this.target_data = this.$store.callsites[this.$store.selectedTargetDataset][callsite.name][this.$store.selectedMetric]["q"];
 			}
@@ -110,10 +138,14 @@ export default {
 				this.target_data = [0, 0, 0, 0, 0];
 			}
 
-			this.q = this.qFormat(this.ensemble_data);
+			// this.q = this.qFormat(this.ensemble_data);
 			this.targetq = this.qFormat(this.target_data);
 		},
 
+		/**
+		 * 
+		 * @param {*} arr 
+		 */
 		qFormat(arr) {
 			let result = {
 				"min": arr[0],
@@ -124,17 +156,6 @@ export default {
 			};
 			return result;
 		},
-
-		visualize(callsite) {
-			this.$refs.Box.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Markers.init(callsite, this.q, this.targetq, this.xScale, this.showTarget);
-			this.$refs.Outliers.init(this.q, this.targetq, this.ensembleWhiskerIndices, this.targetWhiskerIndices, this.d, this.targetd, this.xScale, this.callsite, this.showTarget);
-		},
-
-		clear() {
-			this.$refs.Box.clear();
-			this.$refs.Markers.clear();
-			this.$refs.Outliers.clear();
-		}
 	}
 };
+</script>
