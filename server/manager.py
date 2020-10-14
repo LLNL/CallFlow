@@ -30,8 +30,8 @@ with open(vfile) as fp:
     exec(fp.read(), version)
 __version__ = version["__version__"]
 
-CALLFLOW_APP_PORT = int(os.getenv('CALLFLOW_APP_PORT', 8000))
-CALLFLOW_SERVER_PORT = int(os.getenv('CALLFLOW_SERVER_PORT', 5000))
+CALLFLOW_APP_PORT = int(os.getenv("CALLFLOW_APP_PORT", 8000))
+CALLFLOW_SERVER_PORT = int(os.getenv("CALLFLOW_SERVER_PORT", 5000))
 
 # The following five types enumerate the possible return values of the
 # `start` function.
@@ -58,7 +58,8 @@ StartFailed = collections.namedtuple(
 
 # Indicates that a call to `start` failed to invoke the subprocess.
 StartExecFailed = collections.namedtuple(
-    "StartExecFailed", ("os_error",),  # `OSError` due to `Popen` invocation
+    "StartExecFailed",
+    ("os_error",),  # `OSError` due to `Popen` invocation
 )
 
 # Indicates that a call to `start` launched a CallFlow process, but
@@ -81,7 +82,8 @@ _CALLFLOW_INFO_FIELDS = collections.OrderedDict(
 )
 
 CallFlowLaunchInfo = collections.namedtuple(
-    "CallFlowLaunchInfo", _CALLFLOW_INFO_FIELDS,
+    "CallFlowLaunchInfo",
+    _CALLFLOW_INFO_FIELDS,
 )
 
 
@@ -283,7 +285,11 @@ def launch_cmd(cmd, timeout=datetime.timedelta(seconds=100), alias=""):
 
     start_time_seconds = time.time()
     try:
-        p = subprocess.Popen(cmd, stdout=stdout_fd, stderr=stderr_fd,)
+        p = subprocess.Popen(
+            cmd,
+            stdout=stdout_fd,
+            stderr=stderr_fd,
+        )
     except OSError as e:
         return StartExecFailed(os_error=e)
     finally:

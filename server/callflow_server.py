@@ -14,7 +14,7 @@ from flask_socketio import SocketIO, emit
 # CallFlow imports.
 import callflow
 from argparser import ArgParser
-import manager, config
+import manager
 
 
 LOGGER = callflow.get_logger(__name__)
@@ -24,7 +24,7 @@ LOGGER = callflow.get_logger(__name__)
 app = Flask(__name__, static_url_path="")
 sockets = SocketIO(app, cors_allowed_origins="*")
 
-CALLFLOW_SERVER_PORT = int(os.getenv('CALLFLOW_SERVER_PORT', 5000))
+CALLFLOW_SERVER_PORT = int(os.getenv("CALLFLOW_SERVER_PORT", 5000))
 
 
 class CallFlowServer:
@@ -90,13 +90,11 @@ class CallFlowServer:
                 host="127.0.0.1",
                 debug=self.debug,
                 use_reloader=True,
-                port=CALLFLOW_SERVER_PORT
+                port=CALLFLOW_SERVER_PORT,
             )
 
         else:
-            sockets.run(
-                app, debug=False, use_reloader=True, port=CALLFLOW_SERVER_PORT
-            )
+            sockets.run(app, debug=False, use_reloader=True, port=CALLFLOW_SERVER_PORT)
 
     def _request_handler_general(self):
         """
