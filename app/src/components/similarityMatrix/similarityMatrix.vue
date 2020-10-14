@@ -4,17 +4,24 @@
  * 
  * SPDX-License-Identifier: MIT
  */
+<template>
+<v-card :id="id">
+    <v-layout class="chip-container">
+        <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
+    </v-layout>
+    <!-- <LiveMatrixColormap ref="LiveMatrixColormap"/> -->
+</v-card>
+</template>
 
+<script>
 import * as d3 from "d3";
 import "d3-selection-multi";
 import adjacencyMatrixLayout from "../../thirdParty/d3-adjacency-matrix-layout";
-import template from "../../html/similarityMatrix/index.html";
 import EventHandler from "../EventHandler";
 
 
 export default {
 	name: "SimilarityMatrix",
-	template: template,
 	props: [],
 	components: {
 		// LiveMatrixColormap
@@ -256,4 +263,5 @@ export default {
 		},
 	}
 };
+</script>
 

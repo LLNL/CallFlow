@@ -32,8 +32,6 @@ import GraphVertex from "../../datastructures/node";
 import GraphEdge from "../../datastructures/edge";
 import detectDirectedCycle from "../../algorithms/detectcycle";
 
-import "../../css/supergraph.css";
-
 export default {
 	name: "EnsembleSuperGraph",
 	components: {
@@ -452,3 +450,31 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.node rect {
+    stroke: #333;
+    fill: #fff;
+}
+  
+.edgePath path {
+    stroke: #333;
+    fill: #333;
+    stroke-width: 1.5px;
+}
+
+.node circle {
+    stroke: black;
+    stroke-width: 0.5px;
+}
+
+.node text {
+    font: 12px sans-serif;
+}
+
+.link {
+    fill: none;
+    stroke: black;
+    stroke-width: 5px;
+}
+</style>

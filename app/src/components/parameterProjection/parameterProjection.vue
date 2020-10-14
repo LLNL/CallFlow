@@ -5,13 +5,21 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+	<v-card :id="id">
+    <v-layout class="chip-container">
+        <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
+    </v-layout>
+    <svg :id="svgId"></svg>
+</v-card>
+</template>
+
+<script>
 import * as d3 from "d3";
 import { lasso } from "../../lib/lasso";
-import template from "../../html/parameterProjection.html";
 import EventHandler from "../EventHandler.js";
 import * as utils from "../utils";
 
-import "../../css/parameterProjection.css";
 
 export default {
 	name: "ParameterProjection",
@@ -575,4 +583,4 @@ export default {
 	},
 };
 
-
+</script>
