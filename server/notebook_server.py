@@ -27,6 +27,7 @@ except ImportError:
 from callflow.argparser import ArgParser
 from . import manager
 
+
 def _load_ipython_extension(ipython):
     """Load the CallFLow notebook extension.
     Intended to be called from `%load_ext callflow`. Do not invoke this

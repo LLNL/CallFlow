@@ -5,6 +5,7 @@
 
 from .notebook_server import _load_ipython_extension
 
+
 def load_ipython_extension(ipython):
     """IPython API entry point.
     Only intended to be called by the IPython runtime.
