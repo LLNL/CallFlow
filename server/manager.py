@@ -251,8 +251,6 @@ def start(args, args_string):
     Launch callflow app server.
     """
     print("Launching client")
-    # cwd = os.getcwd().split("CallFlow")[0] + "CallFlow/app"
-    # prefix_string = ["--silent", "--prefix=" + cwd]
     app_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app")
     prefix_string = ["--silent", "--prefix=" + app_path]
     client_cmd = ["npm", "run", "dev"] + prefix_string

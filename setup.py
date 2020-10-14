@@ -18,12 +18,12 @@ with open(vfile) as fp:
     exec(fp.read(), version)
 version = version["__version__"]
 
+
 # ------------------------------------------------------------------------------
 # gather the data to be copied
 def list_files(directory):
     paths = []
     for (path, directories, filenames) in os.walk(directory):
-        files = [os.path.join(path, f) for f in filenames]
         paths.append((path, [os.path.join(path, f) for f in filenames]))
     return paths
 
@@ -62,7 +62,7 @@ setup(
     ],
     keywords="",
     packages=find_packages(),
-    data_files=data_files + example_files,
+    data_files=list_files("data") + list_files("examples"),
     entry_points={"console_scripts": ["callflow_server = server.callflow_server:main"]},
     install_requires=deps,
 )
