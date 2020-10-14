@@ -12,10 +12,10 @@ CallFlow is structured as three components:
 
 #### Installing CallFlow
 
-The `callflow` (python package) requires [python](https://realpython.com/installing-python/) (>= 3.6) and [pip](https://pip.pypa.io/en/stable/news/) (>= 20.1.1). Other dependencies are checked/installed during the installation of `callflow` using `pip`.
+The `callflow` (python package) requires [python](https://realpython.com/installing-python/) (>= 3.6) and [pip](https://pip.pypa.io/en/stable/news/) (>= 20.1.1). Other dependencies are checked/installed during the installation of `callflow` using `setup.py`.
 
 ```
-pip install .
+python3 setup.py install
 ```
 
 #### Installing Visualization Client
