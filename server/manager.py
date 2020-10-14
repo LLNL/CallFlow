@@ -19,6 +19,9 @@ import base64
 
 from codecs import open
 
+# ------------------------------------------------------------------------------
+# CallFlow imports.
+
 version = {}
 vfile = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "callflow", "version.py"
@@ -26,6 +29,9 @@ vfile = os.path.join(
 with open(vfile) as fp:
     exec(fp.read(), version)
 __version__ = version["__version__"]
+
+CALLFLOW_APP_PORT = int(os.getenv("CALLFLOW_APP_PORT", 8000))
+CALLFLOW_SERVER_PORT = int(os.getenv("CALLFLOW_SERVER_PORT", 5000))
 
 # The following five types enumerate the possible return values of the
 # `start` function.
@@ -79,9 +85,6 @@ CallFlowLaunchInfo = collections.namedtuple(
     "CallFlowLaunchInfo",
     _CALLFLOW_INFO_FIELDS,
 )
-
-_CALLFLOW_DEFAULT_SERVER_PORT = 5000
-_CALLFLOW_DEFAULT_CLIENT_PORT = 1024
 
 
 def cache_key(working_directory, arguments):
@@ -259,8 +262,8 @@ def start(args, args_string):
     info = CallFlowLaunchInfo(
         version=__version__,
         start_time=int(time.time()),
-        server_port=_CALLFLOW_DEFAULT_SERVER_PORT,
-        client_port=_CALLFLOW_DEFAULT_CLIENT_PORT,
+        server_port=CALLFLOW_SERVER_PORT,
+        client_port=CALLFLOW_APP_PORT,
         pid=os.getpid(),
         config=args.config,
         cache_key=instance_cache_key,
