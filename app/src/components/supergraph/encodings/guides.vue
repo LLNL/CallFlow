@@ -4,12 +4,16 @@
  * 
  * SPDX-License-Identifier: MIT
  */
+<template>
+	<g :id="id"></g>
+</template>
 
+<script>
 import * as d3 from "d3";
 import * as utils from "../../utils";
 
 export default {
-	template: "<g :id=\"id\"></g>",
+	template: "",
 	name: "Guides",
 	components: {},
 
@@ -222,4 +226,4 @@ export default {
 	}
 };
 
-
+</script>

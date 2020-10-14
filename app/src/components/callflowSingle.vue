@@ -5,6 +5,232 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+  <v-app id="inspire">
+    <v-toolbar id="toolbar" color="teal" dark fixed app clipped-right>
+      <v-toolbar-side-icon @click.stop="left = !left">
+        <v-icon>settings</v-icon>
+      </v-toolbar-side-icon>
+      <v-toolbar-title style="margin-right: 3em">{{ appName }}</v-toolbar-title>
+      <v-flex xs3 class="ma-2">
+        <v-select
+          label="Select a run (Sorted by inclusive runtime)"
+          :items="datasets"
+          v-model="selectedTargetDataset"
+          :menu-props="{ maxHeight: '400' }"
+          box
+          v-on:change="updateTargetDataset()"
+        >
+          <template slot="selection" slot-scope="{ item }">
+            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
+            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+          </template>
+          <template slot="item" slot-scope="{ item }">
+            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
+            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+          </template>
+        </v-select>
+      </v-flex>
+      <v-spacer></v-spacer>
+      <v-flex xs2 class="ma-1">
+        <v-select
+          label="Graph to visualize"
+          :items="formats"
+          v-model="selectedFormat"
+          :menu-props="{ maxHeight: '400' }"
+          box
+          v-on:change="updateFormat()"
+        >
+        </v-select>
+      </v-flex>
+    </v-toolbar>
+
+    <v-navigation-drawer v-model="left" temporary fixed>
+      <v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
+      <v-card flex fill-height id="control-panel">
+        <v-layout row wrap>
+          <v-btn icon>
+            <v-icon v-on:click="reset()">refresh</v-icon>
+          </v-btn>
+
+          <!-- --------------------------- Visual Encoding ----------------------------------->
+          <v-flex xs12 class="ma-1">
+            <v-subheader class="teal lighten-4">Visual Encoding</v-subheader>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-select
+              label="Metric"
+              :items="metrics"
+              v-model="selectedMetric"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateMetric()"
+            >
+            </v-select>
+          </v-flex>
+          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+            <v-text-field
+              label="Number of bins for MPI Distribution"
+              class="mt-0"
+              type="number"
+              v-model="selectedMPIBinCount"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateMPIBinCount()"
+            >
+            </v-text-field>
+          </v-flex>
+          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+            <v-select
+              label="Scale"
+              :items="scales"
+              v-model="selectedScale"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateScale()"
+            >
+            </v-select>
+          </v-flex>
+
+          <!-- --------------------------- Encoding ----------------------------------->
+          <v-flex xs12 class="ma-1">
+            <v-subheader class="teal lighten-4">Colors</v-subheader>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-select
+              label="Runtime Color Map"
+              :items="runtimeColorMap"
+              v-model="selectedRuntimeColorMap"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateColors()"
+            >
+            </v-select>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-text-field
+              label="Color points (3-9)"
+              class="mt-0"
+              type="number"
+              v-model="selectedColorPoint"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateColors()"
+            >
+            </v-text-field>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-text-field
+              label="Color minimum (in seconds)"
+              class="mt-0"
+              type="number"
+              v-model="selectedColorMinText"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateColors()"
+            >
+            </v-text-field>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-text-field
+              label="Color maximum (in seconds)"
+              class="mt-0"
+              type="number"
+              v-model="selectedColorMaxText"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateColors()"
+            >
+            </v-text-field>
+          </v-flex>
+
+          <!----------------------------- Callsite information ----------------------------------->
+          <v-flex xs12 class="ma-1">
+            <v-subheader class="teal lighten-4"
+              >Call site Information</v-subheader
+            >
+          </v-flex>
+          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+            <v-select
+              label="Sort by"
+              :items="sortByModes"
+              v-model="selectedRuntimeSortBy"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateRuntimeSortBy()"
+            >
+            </v-select>
+          </v-flex>
+        </v-layout>
+      </v-card>
+    </v-navigation-drawer>
+
+    <v-content class="pt-auto" v-if="selectedMode == 'Single'">
+      <v-layout v-show="selectedFormat == 'SuperGraph'">
+        <splitpanes id="callgraph-dashboard" class="default-theme">
+          <!-- Left column-->
+          <splitpanes horizontal :splitpanes-size="25">
+            <span>
+              <SingleHistogram ref="SingleHistogram" />
+            </span>
+            <span>
+              <SingleScatterplot ref="SingleScatterplot" />
+            </span>
+          </splitpanes>
+
+          <!-- Center column-->
+          <splitpanes horizontal :splitpanes-size="55">
+            <span>
+              <v-layout class="chip-container">
+                <v-chip
+                  class="chip"
+                  chips
+                  color="teal"
+                  label
+                  outlined
+                  clearable
+                >
+                  {{ summaryChip }}
+                </v-chip>
+                <v-spacer></v-spacer>
+                <span class="component-info">
+                  Encoding = {{ selectedMetric }} runtime.
+                </span>
+              </v-layout>
+              <SuperGraph ref="SingleSuperGraph" />
+            </span>
+          </splitpanes>
+
+          <!-- Right column-->
+          <splitpanes horizontal :splitpanes-size="20">
+            <span>
+              <CallsiteInformation ref="CallsiteInformation" />
+            </span>
+          </splitpanes>
+        </splitpanes>
+      </v-layout>
+
+      <v-layout v-show="selectedFormat == 'CCT'">
+        <splitpanes id="single-cct-dashboard">
+          <splitpanes horizontal :splitpanes-size="100">
+            <span>
+              <CCT ref="SingleCCT" />
+            </span>
+          </splitpanes>
+        </splitpanes>
+      </v-layout>
+    </v-content>
+
+    <v-footer id="footer" color="teal" app>
+      Lawrence Livermore National Laboratory and VIDi Labs, University of
+      California, Davis
+      <v-spacer></v-spacer>
+      <span>&copy; 2020</span>
+    </v-footer>
+  </v-app>
+</template>
+
+<script>
 import * as d3 from "d3";
 
 import Color from "../lib/color/color";
@@ -12,9 +238,6 @@ import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
 import EventHandler from "./EventHandler";
-
-// Template import
-import tpl from "../html/callflowSingle.html";
 
 import SuperGraph from "./supergraph/supergraph";
 import CCT from "./cct/cct";
@@ -29,7 +252,6 @@ import * as utils from "./utils";
 
 export default {
 	name: "SingleCallFlow",
-	template: tpl,
 	components: {
 		Splitpanes,
 		// Generic components
@@ -42,9 +264,9 @@ export default {
 	},
 
 	watch: {
-		showTarget: (val) => {
+		showTarget: function(val) {
 			EventHandler.$emit("show-target-auxiliary");
-		}
+		},
 	},
 
 	data: () => ({
@@ -52,8 +274,8 @@ export default {
 		server: "localhost:5000",
 		config: {
 			headers: {
-				"Access-Control-Allow-Origin": "*"
-			}
+				"Access-Control-Allow-Origin": "*",
+			},
 		},
 		left: false,
 		formats: ["CCT", "SuperGraph"],
@@ -69,7 +291,7 @@ export default {
 		selectedIncTime: 0,
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
-		metrics: ["Exclusive", "Inclusive"],//, 'Imbalance'],
+		metrics: ["Exclusive", "Inclusive"], //, 'Imbalance'],
 		selectedMetric: "Inclusive",
 		runtimeColorMap: [],
 		distributionColorMap: [],
@@ -131,7 +353,7 @@ export default {
 				MPIBinCount: this.$store.selectedMPIBinCount,
 				RunBinCount: this.$store.selectedRunBinCount,
 				module: "all",
-				"re_process": 1
+				re_process: 1,
 			});
 		});
 
@@ -160,10 +382,9 @@ export default {
 					MPIBinCount: this.$store.selectedMPIBinCount,
 					RunBinCount: this.$store.selectedRunBinCount,
 					module: "all",
-					re_process: this.$store.reprocess
+					re_process: this.$store.reprocess,
 				});
-			}
-			else if (this.selectedFormat == "CCT") {
+			} else if (this.selectedFormat == "CCT") {
 				this.init();
 			}
 		},
@@ -188,7 +409,7 @@ export default {
 
 		disconnect() {
 			console.log("Disconnected.");
-		}
+		},
 	},
 
 	methods: {
@@ -206,13 +427,13 @@ export default {
 				return datasets;
 			}
 			let ret = datasets.sort((a, b) => {
-				let x = 0, y = 0;
+				let x = 0,
+					y = 0;
 				if (attr == "Inclusive") {
 					x = this.$store.maxIncTime[a];
 					y = this.$store.maxIncTime[b];
 					this.metricTimeMap = this.$store.maxIncTime;
-				}
-				else if (attr == "Exclusive") {
+				} else if (attr == "Exclusive") {
 					x = this.$store.maxExcTime[a];
 					y = this.$store.maxExcTime[b];
 					this.metricTimeMap = this.$store.maxExcTime;
@@ -230,17 +451,16 @@ export default {
 			// Set toolbar height as 0 if undefined
 			if (document.getElementById("toolbar") == null) {
 				toolbarHeight = 0;
-			}
-			else {
+			} else {
 				toolbarHeight = document.getElementById("toolbar").clientHeight;
 			}
 			if (document.getElementById("footer") == null) {
 				footerHeight = 0;
-			}
-			else {
+			} else {
 				footerHeight = document.getElementById("footer").clientHeight;
 			}
-			this.$store.viewHeight = window.innerHeight - toolbarHeight - footerHeight;
+			this.$store.viewHeight =
+        window.innerHeight - toolbarHeight - footerHeight;
 		},
 
 		setupStore(data) {
@@ -254,8 +474,7 @@ export default {
 			if (this.numOfRuns >= 2) {
 				this.modes = ["Single", "Ensemble"];
 				this.selectedMode = "Ensemble";
-			}
-			else if (this.numOfRuns == 1) {
+			} else if (this.numOfRuns == 1) {
 				this.enableDist = false;
 				this.modes = ["Single"];
 				this.selectedMode = "Single";
@@ -313,7 +532,10 @@ export default {
 				this.$store.resetTargetDataset = true;
 			}
 			this.$store.selectedMetric = this.selectedMetric;
-			this.datasets = this.sortDatasetsByAttr(this.$store.selectedDatasets, "Inclusive");
+			this.datasets = this.sortDatasetsByAttr(
+				this.$store.selectedDatasets,
+				"Inclusive"
+			);
 
 			let max_dataset = "";
 			let current_max_time = 0.0;
@@ -321,8 +543,7 @@ export default {
 			let data = {};
 			if (this.$store.selectedMetric == "Inclusive") {
 				data = this.$store.maxIncTime;
-			}
-			else if (this.$store.selectedMetric == "Exclusive") {
+			} else if (this.$store.selectedMetric == "Exclusive") {
 				data = this.$store.maxExcTime;
 			}
 
@@ -337,11 +558,15 @@ export default {
 				this.selectedTargetDataset = max_dataset;
 				this.firstRender = false;
 				this.$store.resetTargetDataset = false;
-			}
-			else {
+			} else {
 				this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			}
-			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3);
+			this.selectedIncTime = (
+				(this.selectedFilterPerc *
+          this.$store.maxIncTime[this.selectedTargetDataset] *
+          0.000001) /
+        100
+			).toFixed(3);
 
 			console.log("Maximum among all runtimes: ", this.selectedTargetDataset);
 		},
@@ -364,38 +589,51 @@ export default {
 				if (this.selectedMetric == "Inclusive") {
 					colorMin = parseFloat(this.$store.minIncTime["ensemble"]);
 					colorMax = parseFloat(this.$store.maxIncTime["ensemble"]);
-				}
-				else if (this.selectedMetric == "Exclusive") {
+				} else if (this.selectedMetric == "Exclusive") {
 					colorMin = parseFloat(this.$store.minExcTime["ensemble"]);
 					colorMax = parseFloat(this.$store.maxExcTime["ensemble"]);
-				}
-				else if (this.selectedMetric == "Imbalance") {
+				} else if (this.selectedMetric == "Imbalance") {
 					colorMin = 0.0;
 					colorMax = 1.0;
 				}
-			}
-			else if (this.selectedMode == "Single") {
+			} else if (this.selectedMode == "Single") {
 				if (this.selectedMetric == "Inclusive") {
-					colorMin = parseFloat(this.$store.minIncTime[this.selectedTargetDataset]);
-					colorMax = parseFloat(this.$store.maxIncTime[this.selectedTargetDataset]);
-				}
-				else if (this.selectedMetric == "Exclusive") {
-					colorMin = parseFloat(this.$store.minExcTime[this.selectedTargetDataset]);
-					colorMax = parseFloat(this.$store.maxExcTime[this.selectedTargetDataset]);
-				}
-				else if (this.selectedMetric == "Imbalance") {
+					colorMin = parseFloat(
+						this.$store.minIncTime[this.selectedTargetDataset]
+					);
+					colorMax = parseFloat(
+						this.$store.maxIncTime[this.selectedTargetDataset]
+					);
+				} else if (this.selectedMetric == "Exclusive") {
+					colorMin = parseFloat(
+						this.$store.minExcTime[this.selectedTargetDataset]
+					);
+					colorMax = parseFloat(
+						this.$store.maxExcTime[this.selectedTargetDataset]
+					);
+				} else if (this.selectedMetric == "Imbalance") {
 					colorMin = 0.0;
 					colorMax = 1.0;
 				}
 			}
 
-			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(parseFloat(colorMin));
-			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(parseFloat(colorMax));
+			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
+				parseFloat(colorMin)
+			);
+			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
+				parseFloat(colorMax)
+			);
 
 			this.$store.selectedColorMin = this.colorMin;
 			this.$store.selectedColorMax = this.colorMax;
 
-			this.$store.runtimeColor.setColorScale(this.$store.selectedMetric, colorMin, colorMax, this.selectedRuntimeColorMap, this.selectedColorPoint);
+			this.$store.runtimeColor.setColorScale(
+				this.$store.selectedMetric,
+				colorMin,
+				colorMax,
+				this.selectedRuntimeColorMap,
+				this.selectedColorPoint
+			);
 		},
 
 		setupColors() {
@@ -417,12 +655,16 @@ export default {
 
 		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
 		sortModulesByMetric(attr) {
-			let module_list = Object.keys(this.$store.modules[this.selectedTargetDataset]);
+			let module_list = Object.keys(
+				this.$store.modules[this.selectedTargetDataset]
+			);
 
 			// Create a map for each dataset mapping the respective mean times.
 			let map = {};
 			for (let module_name of module_list) {
-				map[module_name] = this.$store.modules[this.selectedTargetDataset][module_name][this.$store.selectedMetric]["mean_time"];
+				map[module_name] = this.$store.modules[this.selectedTargetDataset][
+					module_name
+				][this.$store.selectedMetric]["mean_time"];
 			}
 
 			// Create items array
@@ -447,8 +689,7 @@ export default {
 		clear() {
 			if (this.selectedFormat == "CCT") {
 				this.clearComponents(this.currentSingleCCTComponents);
-			}
-			else if (this.selectedFormat == "SuperGraph") {
+			} else if (this.selectedFormat == "SuperGraph") {
 				this.clearComponents(this.currentSingleSuperGraphComponents);
 			}
 		},
@@ -456,11 +697,9 @@ export default {
 		clearLocal() {
 			if (this.selectedFormat == "CCT") {
 				this.clearComponents(this.currentSingleSuperGraphComponents);
-			}
-			else if (this.selectedFormat == "SuperGraph") {
+			} else if (this.selectedFormat == "SuperGraph") {
 				this.clearComponents(this.currentSingleCCTComponents);
 			}
-
 		},
 
 		initComponents(componentList) {
@@ -490,8 +729,7 @@ export default {
 			if (this.selectedFormat == "SuperGraph") {
 				this.setSelectedModule();
 				this.initComponents(this.currentSingleSuperGraphComponents);
-			}
-			else if (this.selectedFormat == "CCT") {
+			} else if (this.selectedFormat == "CCT") {
 				this.initComponents(this.currentSingleCCTComponents);
 			}
 			EventHandler.$emit("single-refresh-boxplot", {});
@@ -500,7 +738,7 @@ export default {
 		reset() {
 			this.$socket.emit("init", {
 				mode: this.selectedMode,
-				dataset: this.$store.selectedTargetDataset
+				dataset: this.$store.selectedTargetDataset,
 			});
 		},
 
@@ -514,7 +752,7 @@ export default {
 			this.clearLocal();
 			this.$socket.emit("init", {
 				mode: this.selectedMode,
-				dataset: this.$store.selectedTargetDataset
+				dataset: this.$store.selectedTargetDataset,
 			});
 			this.init();
 		},
@@ -571,10 +809,11 @@ export default {
 				MPIBinCount: this.$store.selectedMPIBinCount,
 				RunBinCount: this.$store.selectedRunBinCount,
 				module: "all",
-				re_process: 1
+				re_process: 1,
 			});
 			this.clearLocal();
 			this.init();
-		}
-	}
+		},
+	},
 };
+</script>

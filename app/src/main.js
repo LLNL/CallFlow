@@ -17,7 +17,7 @@ import "vue-material/dist/theme/default.css";
 import "vuetify/dist/vuetify.min.css";
 import "material-design-icons-iconfont/dist/material-design-icons.css";
 
-import App from "./components/app";
+import App from "./components/App";
 import SingleCallFlow from "./components/callflowSingle";
 import EnsembleCallFlow from "./components/callflowEnsemble";
 
@@ -60,6 +60,7 @@ Vue.use(VueMaterial);
 /* eslint-disable no-new */
 new Vue({
 	store,
+	render: h => h(App),
 	el: "#app",
 	router,
 	components: { App },

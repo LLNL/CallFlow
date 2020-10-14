@@ -5,16 +5,24 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+	<v-card :id="id">
+    <v-layout class="chip-container">
+        <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
+    </v-layout>
+    <svg :id="svg_id"></svg>
+</v-card>
+</template>
+
+<script>
 import * as d3 from "d3";
 import "d3-selection-multi";
 import adjacencyMatrixLayout from "../../thirdParty/d3-adjacency-matrix-layout";
-import template from "../../html/ensembleDistribution/index.html";
 import EventHandler from "../EventHandler";
 
 
 export default {
 	name: "EnsembleDistribution",
-	template: template,
 	props: [],
 	components: {
 
@@ -262,3 +270,4 @@ export default {
 	}
 };
 
+</script>

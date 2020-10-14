@@ -5,11 +5,15 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+  <g class="tooltip"></g>
+</template>
+
+<script>
 import * as d3 from "d3";
 import * as utils from "../utils";
 
 export default {
-	template: "<g class=\"tooltip\"></g>",
 	name: "ToolTip",
 	components: {},
 
@@ -44,19 +48,36 @@ export default {
 				.style("font-family", "sans-serif")
 				.style("font-size", "")
 				.attrs({
-					"class": "toolTipContent",
-					"x": () => {
-						if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth) {
-							return (this.mousePosX - this.width) + this.textxOffset + "px";
+					class: "toolTipContent",
+					x: () => {
+						if (
+							this.mousePosX + this.halfWidth >
+              document.getElementById(this.id).clientWidth
+						) {
+							return this.mousePosX - this.width + this.textxOffset + "px";
 						}
 						return this.mousePosX + this.textxOffset + "px";
 					},
-					"y": () => {
-						if (this.mousePosY + this.halfHeight > document.getElementById(this.id).clientHeight) {
-							return ((this.mousePosY) + this.textyOffset + this.textPadding * this.textCount) - this.height + "px";
+					y: () => {
+						if (
+							this.mousePosY + this.halfHeight >
+              document.getElementById(this.id).clientHeight
+						) {
+							return (
+								this.mousePosY +
+                this.textyOffset +
+                this.textPadding * this.textCount -
+                this.height +
+                "px"
+							);
 						}
-						return (this.mousePosY) + this.textyOffset + this.textPadding * this.textCount + "px";
-					}
+						return (
+							this.mousePosY +
+              this.textyOffset +
+              this.textPadding * this.textCount +
+              "px"
+						);
+					},
 				})
 				.text(text);
 			this.textCount += 1;
@@ -67,8 +88,7 @@ export default {
 			let label = "";
 			if (this.$store.selectedMetric == "Exclusive") {
 				label = "Exc.";
-			}
-			else if (this.$store.selectedMetric == "Inclusive") {
+			} else if (this.$store.selectedMetric == "Inclusive") {
 				label = "Inc.";
 			}
 			this.addText("Target " + label + " time: " + utils.formatRuntimeWithUnits(this.data.data.data[this.$store.selectedMetric]["max_time"]));
@@ -83,29 +103,27 @@ export default {
 			this.mousePosX = this.mousePos[0];
 			this.mousePosY = this.mousePos[1];
 			// this.toolTipDiv.attr('height', svgScale(10) + "px")
-			this.toolTipRect = this.toolTipDiv
-				.append("rect")
-				.attrs({
-					"class": "toolTipContent",
-					"fill": "white",
-					"stroke": "black",
-					"rx": "10px",
-					"fill-opacity": 1,
-					"width": this.width,
-					"height": "50",
-					"x": () => {
-						if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth) {
-							return (this.mousePosX - this.width) + "px";
-						}
-						return (this.mousePosX) + "px";
-					},
-					"y": () => {
-						if (this.mousePosY + this.halfHeight > document.getElementById(this.id).clientHeight) {
-							return (this.mousePosY - this.height) + "px";
-						}
-						return (this.mousePosY) + "px";
+			this.toolTipRect = this.toolTipDiv.append("rect").attrs({
+				class: "toolTipContent",
+				fill: "white",
+				stroke: "black",
+				rx: "10px",
+				"fill-opacity": 1,
+				width: this.width,
+				height: "50",
+				x: () => {
+					if (this.mousePosX + this.halfWidth > document.getElementById(this.id).clientWidth) {
+						return this.mousePosX - this.width + "px";
 					}
-				});
+					return this.mousePosX + "px";
+				},
+				y: () => {
+					if (this.mousePosY + this.halfHeight > document.getElementById(this.id).clientHeight) {
+						return this.mousePosY - this.height + "px";
+					}
+					return this.mousePosY + "px";
+				},
+			});
 
 			this.info();
 		},
@@ -114,5 +132,6 @@ export default {
 			this.textCount = 0;
 			d3.selectAll(".toolTipContent").remove();
 		},
-	}
+	},
 };
+</script>

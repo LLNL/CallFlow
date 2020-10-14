@@ -5,8 +5,12 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+	<g :id="id"></g>	
+</template>
+
+<script>
 export default {
-	template: "<g :id=\"id\"></g>",
 	name: "Mean",
 	data: () => ({
 		stroke_width: 3,
@@ -85,3 +89,4 @@ export default {
 		},
 	}
 };
+</script>

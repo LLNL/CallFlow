@@ -5,10 +5,16 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+	<g :id="id">
+		<ToolTip ref="ToolTip"/>	
+	</g>
+</template>
+
+<script>
 import * as d3 from "d3";
 
 export default {
-	template: "<g :id=\"id\"><ToolTip ref=\"ToolTip\" /></g>",
 	name: "EnsembleEdges",
 	components: {
 	},
@@ -200,3 +206,5 @@ export default {
 		}
 	}
 };
+
+</script>

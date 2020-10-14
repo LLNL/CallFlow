@@ -5,20 +5,31 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+  <v-layout row wrap :id="id">
+    <v-layout class="chip-container">
+      <v-chip class="chip" chips color="teal" label outlined clearable>
+        {{ message }}
+      </v-chip>
+    </v-layout>
+    <svg :id="svgID"></svg>
+    <ToolTip ref="ToolTip" />
+  </v-layout>
+</template>
+
+<script>
 import * as d3 from "d3";
 import "d3-selection-multi";
 
-import tpl from "../../html/histogram.html";
 import ToolTip from "./tooltip";
 import * as utils from "../utils";
 import EventHandler from "../EventHandler";
 import { brush } from "d3";
 
 export default {
-	template: tpl,
 	name: "SingleHistogram",
 	components: {
-		ToolTip
+		ToolTip,
 	},
 	props: [],
 	data: () => ({
@@ -59,7 +70,7 @@ export default {
 	methods: {
 		init() {
 			this.width = window.innerWidth * 0.25;
-			this.height = this.$store.viewHeight * 0.50;
+			this.height = this.$store.viewHeight * 0.5;
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
@@ -71,26 +82,33 @@ export default {
 			this.rankScaleHeight = this.boxHeight - this.histogramHeight;
 			this.rankScaleWidth = this.histogramWidth;
 
-			this.xAxisHeight = this.histogramWidth - (this.paddingFactor - 1.5) * this.padding.left;
-			this.yAxisHeight = this.histogramHeight - (this.paddingFactor - 1.5) * this.padding.left;
+			this.xAxisHeight =
+        this.histogramWidth - (this.paddingFactor - 1.5) * this.padding.left;
+			this.yAxisHeight =
+        this.histogramHeight - (this.paddingFactor - 1.5) * this.padding.left;
 
-			this.svg = d3.select("#" + this.svgID)
-				.attrs({
-					"width": this.boxWidth,
-					"height": this.boxHeight,
-					"transform": "translate(" + this.padding.left + "," + this.padding.top + ")"
-				});
+			this.svg = d3.select("#" + this.svgID).attrs({
+				width: this.boxWidth,
+				height: this.boxHeight,
+				transform:
+          "translate(" + this.padding.left + "," + this.padding.top + ")",
+			});
 
 			EventHandler.$emit("single-histogram", {
-				module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
+				module: Object.keys(
+					this.$store.modules[this.$store.selectedTargetDataset]
+				)[0],
 				groupBy: this.$store.selectedGroupBy,
 				dataset: this.$store.selectedTargetDataset,
 			});
 		},
 
 		setupScale(callsite) {
-			let store = this.$store.modules[this.$store.selectedTargetDataset][callsite];
-			let data = store[this.$store.selectedMetric]["prop_histograms"]["rank"]["target"];
+			let store = this.$store.modules[this.$store.selectedTargetDataset][
+				callsite
+			];
+			let data =
+        store[this.$store.selectedMetric]["prop_histograms"]["rank"]["target"];
 			let mpiData = store[this.$store.selectedMetric]["data"];
 
 			let temp = this.dataProcess(data, mpiData);
@@ -100,19 +118,20 @@ export default {
 			this.binContainsProcID = temp[3];
 			this.logScaleBool = false;
 
-
-			this.xScale = d3.scaleBand()
+			this.xScale = d3
+				.scaleBand()
 				.domain(this.xVals)
 				.range([this.paddingFactor * this.padding.left, this.xAxisHeight]);
 
 			if (this.$store.selectedScale == "Linear") {
-				this.yScale = d3.scaleLinear()
+				this.yScale = d3
+					.scaleLinear()
 					.domain([0, d3.max(this.freq)])
 					.range([this.yAxisHeight, this.padding.top]);
 				this.logScaleBool = false;
-			}
-			else if (this.$store.selectedScale == "Log") {
-				this.yScale = d3.scaleLog()
+			} else if (this.$store.selectedScale == "Log") {
+				this.yScale = d3
+					.scaleLog()
 					.domain([1, d3.max(this.freq)])
 					.range([this.yAxisHeight, this.padding.top]);
 				this.logScaleBool = true;
@@ -153,9 +172,9 @@ export default {
 			let dataMin = data["x_min"];
 			let dataMax = data["x_max"];
 
-			const dataWidth = ((dataMax - dataMin) / data["x"].length);
+			const dataWidth = (dataMax - dataMin) / data["x"].length;
 			for (let i = 0; i < data["x"].length; i++) {
-				axis_x.push(dataMin + (i * dataWidth));
+				axis_x.push(dataMin + i * dataWidth);
 			}
 
 			mpiData.forEach((val, idx) => {
@@ -231,7 +250,7 @@ export default {
 			groupArrayStr += " ]";
 			return {
 				string: groupArrayStr,
-				array: groupArray
+				array: groupArray,
 			};
 		},
 
@@ -241,45 +260,51 @@ export default {
 
 		bars() {
 			let self = this;
-			this.svg.selectAll(".single-histogram-bar")
+			this.svg
+				.selectAll(".single-histogram-bar")
 				.data(this.freq)
 				.enter()
 				.append("rect")
 				.attrs({
-					"class": "single-histogram-bar",
-					"x": (d, i) => { return this.xScale(this.xVals[i]); },
-					"y": (d, i) => { return this.yScale(d); },
-					"width": this.xScale.bandwidth(),
-					"height": (d) => { return Math.abs(this.yAxisHeight - this.yScale(d)); },
-					"fill": this.$store.runtimeColor.intermediate,
-					"opacity": 1,
+					class: "single-histogram-bar",
+					x: (d, i) => {
+						return this.xScale(this.xVals[i]);
+					},
+					y: (d, i) => {
+						return this.yScale(d);
+					},
+					width: this.xScale.bandwidth(),
+					height: (d) => {
+						return Math.abs(this.yAxisHeight - this.yScale(d));
+					},
+					fill: this.$store.runtimeColor.intermediate,
+					opacity: 1,
 					"stroke-width": "0.2px",
-					"stroke": "#202020",
+					stroke: "#202020",
 				})
 				.style("z-index", 1)
-				.on("click", function(d, i) {
-					d3.select(this)
-						.attr("fill", self.$store.runtimeColor.highlight);
+				.on("click", function (d, i) {
+					d3.select(this).attr("fill", self.$store.runtimeColor.highlight);
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
-					let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
+					let groupProcStr = self.groupProcess(self.binContainsProcID[i])
+						.string;
 					groupProcStr = self.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseover", function (d, i) {
-					d3.select(this)
-						.attr("fill", self.$store.runtimeColor.highlight);
+					d3.select(this).attr("fill", self.$store.runtimeColor.highlight);
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "orange")
 						.style("fill-opacity", 1);
-					let groupProcStr = self.groupProcess(self.binContainsProcID[i]).string;
+					let groupProcStr = self.groupProcess(self.binContainsProcID[i])
+						.string;
 					groupProcStr = self.sanitizeGroupProc(groupProcStr);
 					self.$refs.ToolTip.render(groupProcStr, d);
 				})
 				.on("mouseout", function (d, i) {
-					d3.select(this)
-						.attr("fill", self.$store.runtimeColor.intermediate);
+					d3.select(this).attr("fill", self.$store.runtimeColor.intermediate);
 					d3.selectAll(`.lineRank_${i}`)
 						.style("fill", "grey")
 						.style("fill-opacity", 0.4);
@@ -291,12 +316,19 @@ export default {
 			let max_value = this.xScale.domain()[1];
 			this.x_max_exponent = utils.formatExponent(max_value);
 			let exponent_string = this.superscript[this.x_max_exponent];
-			let label = "(e+" + this.x_max_exponent + ") " + this.$store.selectedMetric + " Runtime (" + "\u03BCs)";
-			this.svg.append("text")
+			let label =
+        "(e+" +
+        this.x_max_exponent +
+        ") " +
+        this.$store.selectedMetric +
+        " Runtime (" +
+        "\u03BCs)";
+			this.svg
+				.append("text")
 				.attrs({
-					"class": "histogram-axis-label",
-					"x": this.histogramWidth - this.padding.left,
-					"y": this.yAxisHeight + 3 * this.padding.top
+					class: "histogram-axis-label",
+					x: this.histogramWidth - this.padding.left,
+					y: this.yAxisHeight + 3 * this.padding.top,
 				})
 				.style("font-size", "12px")
 				.style("text-anchor", "end")
@@ -306,85 +338,103 @@ export default {
 		/* Axis for the histogram */
 		xAxis() {
 			this.addxAxisLabel();
-			const xAxis = d3.axisBottom(this.xScale)
+			const xAxis = d3
+				.axisBottom(this.xScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
 					if (i % 3 == 0) {
-						let runtime = utils.formatRuntimeWithExponent(this.xVals[i], self.x_max_exponent);
+						let runtime = utils.formatRuntimeWithExponent(
+							this.xVals[i],
+							self.x_max_exponent
+						);
 						return `${runtime[0]}`;
 					}
 				});
 
-			const xAxisLine = this.svg.append("g")
+			const xAxisLine = this.svg
+				.append("g")
 				.attrs({
-					"class": "x-axis",
-					"transform": "translate(" + 0 + "," + this.yAxisHeight + ")"
+					class: "x-axis",
+					transform: "translate(" + 0 + "," + this.yAxisHeight + ")",
 				})
 				.call(xAxis);
 
-			xAxisLine.selectAll("path")
+			xAxisLine
+				.selectAll("path")
 				.style("fill", "none")
 				.style("stroke", "black")
 				.style("stroke-width", "1px");
 
-			xAxisLine.selectAll("line")
+			xAxisLine
+				.selectAll("line")
 				.style("fill", "none")
 				.style("stroke", "#000")
 				.style("stroke-width", "1px")
 				.style("opacity", 0.5);
 
-			xAxisLine.selectAll("text")
+			xAxisLine
+				.selectAll("text")
 				.style("font-size", "12px")
 				.style("font-family", "sans-serif")
 				.style("font-weight", "lighter");
 		},
 
 		yAxis() {
-			const yAxis = d3.axisLeft(this.yScale)
+			const yAxis = d3
+				.axisLeft(this.yScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
-					if (d % 1 == 0)
-						return d;
+					if (d % 1 == 0) return d;
 				});
 
-			this.svg.append("text")
+			this.svg
+				.append("text")
 				.attrs({
-					"transform": "rotate(-90)",
-					"class": "histogram-axis-label",
-					"x": -this.padding.top,
-					"y": this.padding.left
+					transform: "rotate(-90)",
+					class: "histogram-axis-label",
+					x: -this.padding.top,
+					y: this.padding.left,
 				})
 				.style("font-size", "12px")
 				.style("text-anchor", "end")
 				.text("Number of Processes");
 
-			const yAxisLine = this.svg.append("g")
+			const yAxisLine = this.svg
+				.append("g")
 				.attrs({
-					"class": "y-axis",
-					"transform": "translate(" + this.paddingFactor * this.padding.left + ", 0)"
-				}).call(yAxis);
+					class: "y-axis",
+					transform:
+            "translate(" + this.paddingFactor * this.padding.left + ", 0)",
+				})
+				.call(yAxis);
 
-			yAxisLine.selectAll("path")
+			yAxisLine
+				.selectAll("path")
 				.style("fill", "none")
 				.style("stroke", "black")
 				.style("stroke-width", "1px");
 
-			yAxisLine.selectAll("line")
+			yAxisLine
+				.selectAll("line")
 				.style("fill", "none")
 				.style("stroke", "#000")
 				.style("stroke-width", "1px")
 				.style("opacity", 0.2);
 
-			yAxisLine.selectAll("text")
+			yAxisLine
+				.selectAll("text")
 				.style("font-size", "12px")
 				.style("font-family", "sans-serif")
 				.style("font-weight", "lighter");
 		},
 
 		rankLineScale() {
-			let rankCount = this.$store.modules[this.$store.selectedTargetDataset][this.$store.selectedModule][this.$store.selectedMetric].data.length;
+			let rankCount = this.$store.modules[this.$store.selectedTargetDataset][
+				this.$store.selectedModule
+			][this.$store.selectedMetric].data.length;
 
-			this.ranklinescale = d3.scaleLinear()
+			this.ranklinescale = d3
+				.scaleLinear()
 				.domain([0, rankCount])
 				.range([this.paddingFactor * this.padding.left, this.xAxisHeight]);
 
@@ -392,7 +442,8 @@ export default {
 				const processIDs = this.binContainsProcID[idx];
 
 				if (processIDs) {
-					const rankLinesG = this.svg.append("g")
+					const rankLinesG = this.svg
+						.append("g")
 						.attr("class", `binRank bin_${idx}`)
 						.attr("data-name", idx);
 
@@ -400,23 +451,26 @@ export default {
 
 					const groupArray = this.groupProcess(processIDs).array;
 					const binWidth = this.xScale.bandwidth();
-					const widthPerRank = binWidth / (rankCount);
+					const widthPerRank = binWidth / rankCount;
 					const binLocation = this.xScale(this.xVals[idx]);
 					let cumulativeBinSpace = 0;
 
 					groupArray.forEach((group) => {
-						let start = 0, end = 0;
+						let start = 0,
+							end = 0;
 						if (group.length == 1) {
 							start = group[0];
 							end = start + 1;
-						} 
-						else {
+						} else {
 							start = group[0];
-							end = group[1] + 1;	
+							end = group[1] + 1;
 						}
-						
+
 						let topX1 = cumulativeBinSpace + binLocation + widthPerRank;
-						let topX2 = cumulativeBinSpace + (end - start + 1) * widthPerRank + binLocation;
+						let topX2 =
+              cumulativeBinSpace +
+              (end - start + 1) * widthPerRank +
+              binLocation;
 
 						let botX3 = this.ranklinescale(start);
 						let botX4 = this.ranklinescale(end);
@@ -426,48 +480,69 @@ export default {
 
 						cumulativeBinSpace += (end - start + 1) * widthPerRank;
 
-						const line = "M" + topX1 + " " + topY +
-								"L " + topX2 + " " + topY +
-								"L " + botX4 + " " + botY +
-								"L " + botX3 + " " + botY;
+						const line =
+              "M" +
+              topX1 +
+              " " +
+              topY +
+              "L " +
+              topX2 +
+              " " +
+              topY +
+              "L " +
+              botX4 +
+              " " +
+              botY +
+              "L " +
+              botX3 +
+              " " +
+              botY;
 
-						rankLinesG.append("path")
+						rankLinesG
+							.append("path")
 							.attr("d", line)
 							.attr("class", "lineRank lineRank_" + idx)
 							.style("fill", (d) => {
 								return "grey";
 							})
 							.style("fill-opacity", 0.4)
-							.attr("transform", `translate(${0},${- 3 * this.padding.bottom})`);
+							.attr("transform", `translate(${0},${-3 * this.padding.bottom})`);
 					});
 				}
 			});
 
-			const rankLineAxis = d3.axisBottom(this.ranklinescale)
+			const rankLineAxis = d3
+				.axisBottom(this.ranklinescale)
 				.ticks(10)
 				.tickFormat((d, i) => {
-					if (d % 1 == 0)
-						return d;
+					if (d % 1 == 0) return d;
 				});
 
-			const rankLineAxisLine = this.svg.append("g")
+			const rankLineAxisLine = this.svg
+				.append("g")
 				.attr("class", "histogram-rank-axis")
 				.attr("id", "rankAxis")
-				.attr("transform", `translate(${0},${this.boxHeight - 3 * this.padding.bottom})`)
+				.attr(
+					"transform",
+					`translate(${0},${this.boxHeight - 3 * this.padding.bottom})`
+				)
 				.call(rankLineAxis);
 
-			rankLineAxisLine.selectAll("path")
+			rankLineAxisLine
+				.selectAll("path")
 				.style("fill", "none")
 				.style("stroke", "black")
 				.style("stroke-width", "1px");
 
-			rankLineAxisLine.selectAll("line")
+			rankLineAxisLine
+				.selectAll("line")
 				.style("fill", "none")
 				.style("stroke", "#000")
 				.style("stroke-width", "1px")
 				.style("opacity", 0.5);
 
-			rankLineAxisLine.selectAll("text")
+			rankLineAxisLine
+				.selectAll("text")
 				.style("font-size", "12px")
 				.style("font-family", "sans-serif")
 				.style("font-weight", "lighter");
@@ -476,13 +551,18 @@ export default {
 		brushes() {
 			this.brushdata = [];
 
-			this.brushSVG = this.svg
-				.append("svg");
+			this.brushSVG = this.svg.append("svg");
 
-			this.brush = d3.brushX()
+			this.brush = d3
+				.brushX()
 				.extent([
 					[this.paddingFactor * this.padding.left, this.yAxisHeight],
-					[this.paddingFactor * this.padding.left + this.xAxisHeight - (this.paddingFactor) * this.padding.left, this.yAxisHeight + this.rankScaleHeight]
+					[
+						this.paddingFactor * this.padding.left +
+              this.xAxisHeight -
+              this.paddingFactor * this.padding.left,
+						this.yAxisHeight + this.rankScaleHeight,
+					],
 				])
 				.on("brush", this.brushing)
 				.on("end", this.brushend);
@@ -490,7 +570,7 @@ export default {
 			let id = 0;
 			this.brushdata.push({
 				id: id,
-				brush: this.brush
+				brush: this.brush,
 			});
 
 			this.brushSVG
@@ -503,8 +583,12 @@ export default {
 		},
 
 		brushing() {
-			const brushScale = d3.scaleLinear()
-				.domain([this.xScale.domain()[0], this.xScale.domain()[this.xScale.domain().length -1 ]])
+			const brushScale = d3
+				.scaleLinear()
+				.domain([
+					this.xScale.domain()[0],
+					this.xScale.domain()[this.xScale.domain().length - 1],
+				])
 				.range(this.xScale.range());
 
 			let brushStart = d3.event.selection.map(brushScale.invert)[0];
@@ -514,8 +598,12 @@ export default {
 			let brushMin = this.xScale.domain()[0];
 			let brushMax = this.xScale.domain()[this.xScale.domain().length - 1];
 
-			this.localBrushStart = Math.floor((brushStart - brushMin)/(brushMax - brushMin) * brushPoints);
-			this.localBrushEnd = Math.ceil((brushEnd - brushMin)/(brushMax - brushMin) * brushPoints);
+			this.localBrushStart = Math.floor(
+				((brushStart - brushMin) / (brushMax - brushMin)) * brushPoints
+			);
+			this.localBrushEnd = Math.ceil(
+				((brushEnd - brushMin) / (brushMax - brushMin)) * brushPoints
+			);
 
 			// highlight rank lines that is brush
 			this.svg.selectAll(".binRank").attr("opacity", 0.5);
@@ -541,10 +629,10 @@ export default {
 				}
 			}
 			self.$socket.emit("split-mpi-rank", {
-				"dataset": self.$store.selectedDataset,
-				"ranks": processIDList
+				dataset: self.$store.selectedDataset,
+				ranks: processIDList,
 			});
-
 		},
-	}
+	},
 };
+</script>

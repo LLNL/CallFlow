@@ -20,7 +20,7 @@ _CALLFLOW_SERVER_PORT = 5000
 
 # ------------------------------------------------------------------------------
 # Create a Flask server.
-app = Flask(__name__, static_url_path="/public")
+app = Flask(__name__, static_url_path="", static_folder="/app/dist")
 sockets = SocketIO(app, cors_allowed_origins="*")
 
 
@@ -38,7 +38,7 @@ class CallFlowServer:
         )
 
         self.debug = True
-        self.production = False
+        self.production = True
         self.process = self.args.process
 
         ndatasets = len(self.args.config["properties"]["runs"])
@@ -77,13 +77,21 @@ class CallFlowServer:
 
         # Start the server.
         if self.production:
+
+            @app.route("/")
+            def index():
+                return app.send_static_file("index.html")
+
+            app.run(host="127.0.0.1", port=4000)
+
             sockets.run(
                 app,
-                host="0.0.0.0",
+                host="127.0.0.1",
                 debug=self.debug,
                 use_reloader=True,
                 port=_CALLFLOW_SERVER_PORT,
             )
+
         else:
             sockets.run(app, debug=False, use_reloader=True, port=_CALLFLOW_SERVER_PORT)
 

@@ -5,16 +5,27 @@
  * SPDX-License-Identifier: MIT
  */
 
-import * as  d3 from "d3";
+<template>
+  <svg :id="id">
+    <g id="container">
+      <EnsembleEdges ref="EnsembleEdges" />
+      <EnsembleNodes ref="EnsembleNodes" />
+      <MiniHistograms ref="MiniHistograms" />
+      <EnsembleColorMap ref="EnsembleColorMap" />
+    </g>
+  </svg>
+</template>
+
+<script>
+import * as d3 from "d3";
 import EventHandler from "../EventHandler.js";
 
-import tpl from "../../html/supergraph.html";
 import Sankey from "../../algorithms/sankey";
 
 import EnsembleNodes from "./nodes";
 import EnsembleEdges from "./edges";
 import MiniHistograms from "./miniHistograms";
-import EnsembleColorMap from "../../lib/colormap";
+import EnsembleColorMap from "../colormap";
 
 import Graph from "../../datastructures/graph";
 import GraphVertex from "../../datastructures/node";
@@ -25,12 +36,11 @@ import "../../css/supergraph.css";
 
 export default {
 	name: "EnsembleSuperGraph",
-	template: tpl,
 	components: {
 		EnsembleNodes,
 		EnsembleEdges,
 		MiniHistograms,
-		EnsembleColorMap
+		EnsembleColorMap,
 	},
 	data: () => ({
 		graph: null,
@@ -41,7 +51,10 @@ export default {
 		ySpacing: 60,
 		levelSpacing: 50,
 		margin: {
-			top: 10, right: 10, bottom: 20, left: 10
+			top: 10,
+			right: 10,
+			bottom: 20,
+			left: 10,
 		},
 		width: null,
 		height: null,
@@ -50,7 +63,7 @@ export default {
 		message: "Summary Graph View",
 		debug: false,
 		sankeyWidth: 0,
-		sankeyHeight: 0
+		sankeyHeight: 0,
 	}),
 
 	mounted() {
@@ -87,7 +100,7 @@ export default {
 		split_mpi_distribution(data) {
 			data = JSON.parse(data);
 			console.debug("Data: ", data);
-		}
+		},
 	},
 
 	methods: {
@@ -95,33 +108,30 @@ export default {
 			this.width = 5 * this.$store.viewWidth;
 			this.height = 1 * this.$store.viewHeight;
 
-			this.sankeySVG = d3.select("#" + this.id)
-				.attrs({
-					"width": this.width,
-					"height": this.height,
-					"top": this.toolbarHeight
-				});
+			this.sankeySVG = d3.select("#" + this.id).attrs({
+				width: this.width,
+				height: this.height,
+				top: this.toolbarHeight,
+			});
 
 			if (this.$store.selectedMode == "Single") {
 				this.$socket.emit("single_supergraph", {
 					dataset: this.$store.selectedTargetDataset,
-					groupBy: "module"
+					groupBy: "module",
 				});
-			}
-			else if (this.$store.selectedMode == "Ensemble") {
+			} else if (this.$store.selectedMode == "Ensemble") {
 				this.$socket.emit("ensemble_supergraph", {
 					datasets: this.$store.selectedDatasets,
-					groupBy: "module"
+					groupBy: "module",
 				});
 			}
-
 
 			let inner = this.sankeySVG.select("#container");
 
 			var zoom = d3.zoom().on("zoom", function () {
 				inner.attrs({
-					"transform": d3.event.transform,
-					"scale": d3.event.scale
+					transform: d3.event.transform,
+					scale: d3.event.scale,
 				});
 			});
 			this.sankeySVG.call(zoom);
@@ -150,9 +160,9 @@ export default {
 		},
 
 		render(data) {
-
 			this.sankeyWidth = 0.7 * this.$store.viewWidth;
-			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
+			this.sankeyHeight =
+        0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
 			this.data = data;
 
@@ -198,12 +208,16 @@ export default {
 			for (const node of graph.nodes) {
 				if (node.type == "super-node") {
 					nodeMap[node.module] = idx;
-				}
-				else if (node.type == "component-node") {
+				} else if (node.type == "component-node") {
 					nodeMap[node.name] = idx;
 				}
 				if (this.debug) {
-					console.log("[Preprocess] Assigning", node.id, " with map index: ", idx);
+					console.log(
+						"[Preprocess] Assigning",
+						node.id,
+						" with map index: ",
+						idx
+					);
 				}
 				idx += 1;
 			}
@@ -245,14 +259,14 @@ export default {
 
 			let path = this.sankey.link();
 
-			this.sankey.nodes(this.data.nodes)
-				.links(this.data.links)
-				.layout(32);
+			this.sankey.nodes(this.data.nodes).links(this.data.links).layout(32);
 		},
 
 		// Add intermediate nodes.
 		postProcess(nodes, edges) {
-			console.debug("===================Adding intermediate nodes==================");
+			console.debug(
+				"===================Adding intermediate nodes=================="
+			);
 			const temp_nodes = nodes.slice();
 			const temp_edges = edges.slice();
 
@@ -276,8 +290,16 @@ export default {
 				let target_node = temp_edges[i].target_data;
 
 				if (this.debug) {
-					console.log("[Ensemble SuperGraph] Source Node", source_node, target_node.level);
-					console.log("[Ensemble SuperGraph] Target Node", target_node, target_node.level);
+					console.log(
+						"[Ensemble SuperGraph] Source Node",
+						source_node,
+						target_node.level
+					);
+					console.log(
+						"[Ensemble SuperGraph] Target Node",
+						target_node,
+						target_node.level
+					);
 				}
 
 				const source_level = source_node.level;
@@ -286,7 +308,10 @@ export default {
 
 				if (this.debug) {
 					console.log(source_level, target_level);
-					console.log("[Ensemble SuperGraph] Number of levels to shift: ", shift_level);
+					console.log(
+						"[Ensemble SuperGraph] Number of levels to shift: ",
+						shift_level
+					);
 				}
 
 				let targetDataset = this.$store.selectedTargetDataset;
@@ -311,7 +336,7 @@ export default {
 							// name: target_node.name,
 							module: target_node.module,
 							type: "intermediate",
-							count: 1
+							count: 1,
 						};
 						tempNode[targetDataset] = target_node[targetDataset];
 
@@ -322,14 +347,17 @@ export default {
 						}
 
 						this.existingIntermediateNodes[target_node.id] = tempNode;
-					}
-					else {
+					} else {
 						if (count[temp_edges[i].source] == undefined) {
 							count[temp_edges[i].source] = 0;
-							console.log(temp_edges[i].weight, temp_edges[i].source, temp_edges[i].target);
-							this.existingIntermediateNodes[target_node.id].value += temp_edges[i].weight;
-						}
-						else {
+							console.log(
+								temp_edges[i].weight,
+								temp_edges[i].source,
+								temp_edges[i].target
+							);
+							this.existingIntermediateNodes[target_node.id].value +=
+                temp_edges[i].weight;
+						} else {
 							count[temp_edges[i].source] += 1;
 						}
 						tempNode = this.existingIntermediateNodes[target_node.id];
@@ -343,11 +371,14 @@ export default {
 						weight: temp_edges[i].weight,
 						targetWeight: temp_edges[i].targetWeight,
 						actual_time: actual_time,
-						max_flow: max_flow
+						max_flow: max_flow,
 					};
 					edges.push(sourceTempEdge);
 					if (this.debug) {
-						console.log("[Ensemble SuperGraph] Adding intermediate source edge: ", sourceTempEdge);
+						console.log(
+							"[Ensemble SuperGraph] Adding intermediate source edge: ",
+							sourceTempEdge
+						);
 					}
 
 					if (j == shift_level) {
@@ -365,11 +396,14 @@ export default {
 						actual_time: actual_time,
 						weight: temp_edges[i].weight,
 						targetWeight: temp_edges[i].targetWeight,
-						max_flow: max_flow
+						max_flow: max_flow,
 					};
 					edges.push(targetTempEdge);
 					if (this.debug) {
-						console.log("[Ensemble SuperGraph] Adding intermediate target edge: ", targetTempEdge);
+						console.log(
+							"[Ensemble SuperGraph] Adding intermediate target edge: ",
+							targetTempEdge
+						);
 					}
 
 					if (j == shift_level) {
@@ -382,13 +416,17 @@ export default {
 
 					removeActualEdges.push({
 						source,
-						target
+						target,
 					});
 				}
 			}
 
 			if (this.debug) {
-				console.log("[Ensemble SuperGraph] Removing", removeActualEdges.length, " edges.");
+				console.log(
+					"[Ensemble SuperGraph] Removing",
+					removeActualEdges.length,
+					" edges."
+				);
 			}
 
 			for (let i = 0; i < removeActualEdges.length; i += 1) {
@@ -398,15 +436,19 @@ export default {
 				}
 				for (let edge_idx = 0; edge_idx < edges.length; edge_idx += 1) {
 					let curr_edge = edges[edge_idx];
-					if (removeEdge.source == curr_edge.source && removeEdge.target == curr_edge.target) {
+					if (
+						removeEdge.source == curr_edge.source &&
+            removeEdge.target == curr_edge.target
+					) {
 						edges.splice(edge_idx, 1);
 					}
 				}
 			}
 			return {
 				nodes: nodes,
-				links: edges
+				links: edges,
 			};
 		},
-	}
+	},
 };
+</script>

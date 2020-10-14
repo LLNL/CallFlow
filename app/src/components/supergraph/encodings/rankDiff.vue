@@ -1,7 +1,18 @@
+/** 
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * 
+ * SPDX-License-Identifier: MIT
+ */
+
+<template>
+	<g :id="id"></g>
+</template>
+
+<script>
 import * as d3 from "d3";
 
 export default {
-	template: "<g :id=\"id\"></g>",
 	name: "MeanGradients",
 	components: {},
 
@@ -206,3 +217,5 @@ export default {
 		},
 	}
 };
+
+</script>

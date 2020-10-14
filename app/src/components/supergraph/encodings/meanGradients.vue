@@ -5,10 +5,14 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+<g :id="id"></g>	
+</template>
+
+<script>
 import * as d3 from "d3";
 
 export default {
-	template: "<g :id=\"id\"></g>",
 	name: "MeanGradients",
 	data: () => ({
 		strokeWidth: 7,
@@ -146,3 +150,5 @@ export default {
 		},
 	}
 };
+
+</script>

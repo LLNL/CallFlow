@@ -5,7 +5,23 @@
  * SPDX-License-Identifier: MIT
  */
 
-import tpl from "../../html/ensembleHistogram.html";
+ <template>
+  <div :id="id">
+    <v-layout class="chip-container">
+      <v-chip class="chip" chips color="teal" label outlined clearable>
+        {{ message }}
+      </v-chip>
+      <v-spacer></v-spacer>
+      <span class="component-info">
+        Number of {{ selectedPropLabel }} = {{ selectedPropSum }}
+      </span>
+    </v-layout>
+    <svg :id="svgID"></svg>
+    <ToolTip ref="ToolTip" />
+  </div>
+</template>
+
+<script>
 import * as d3 from "d3";
 import "d3-selection-multi";
 import ToolTip from "./tooltip";
@@ -13,10 +29,9 @@ import * as utils from "../utils";
 import EventHandler from "../EventHandler";
 
 export default {
-	template: tpl,
 	name: "EnsembleHistogram",
 	components: {
-		ToolTip
+		ToolTip,
 	},
 	props: [],
 	data: () => ({
@@ -52,8 +67,7 @@ export default {
 			console.log("Ensemble Histogram: ", data["module"]);
 			if (data["callsite"] != undefined) {
 				self.thisNode = data["module"] + "=" + data["callsite"];
-			}
-			else {
+			} else {
 				self.thisNode = data["module"];
 			}
 			self.visualize(data["module"]);
@@ -68,18 +82,21 @@ export default {
 
 			// Assign width and height for histogram and rankLine SVG.
 			this.boxWidth = this.width - 1 * (this.padding.right + this.padding.left);
-			this.boxHeight = this.height - 2 * (this.padding.top + this.padding.bottom);
+			this.boxHeight =
+        this.height - 2 * (this.padding.top + this.padding.bottom);
 
-			this.xAxisHeight = this.boxWidth - (this.paddingFactor + 1) * this.padding.left;
-			this.yAxisHeight = this.boxHeight - (this.paddingFactor + 1) * this.padding.left;
+			this.xAxisHeight =
+        this.boxWidth - (this.paddingFactor + 1) * this.padding.left;
+			this.yAxisHeight =
+        this.boxHeight - (this.paddingFactor + 1) * this.padding.left;
 
 			// Create the SVG
-			this.svg = d3.select("#" + this.svgID)
-				.attrs({
-					"width": this.boxWidth,
-					"height": this.boxHeight,
-					"transform": "translate(" + this.padding.left + "," + this.padding.top + ")"
-				});
+			this.svg = d3.select("#" + this.svgID).attrs({
+				width: this.boxWidth,
+				height: this.boxHeight,
+				transform:
+          "translate(" + this.padding.left + "," + this.padding.top + ")",
+			});
 
 			EventHandler.$emit("ensemble-histogram", {
 				module: this.$store.selectedModule,
@@ -95,21 +112,25 @@ export default {
 			dataMin = data["x_min"];
 			dataMax = data["x_max"];
 
-			let dataWidth = ((dataMax - dataMin) / this.$store.selectedMPIBinCount);
+			let dataWidth = (dataMax - dataMin) / this.$store.selectedMPIBinCount;
 			if (dataWidth == 0) {
 				dataWidth = 1;
 			}
 
 			for (let i = 0; i < this.$store.selectedBinCount; i++) {
-				axis_x.push(dataMin + (i * dataWidth));
+				axis_x.push(dataMin + i * dataWidth);
 			}
 
 			return [data["x"], data["y"], axis_x];
 		},
 
 		setupScale(callsite) {
-			let ensemble_store = this.$store.modules[this.$store.selectedTargetDataset][callsite];
-			let target_store = this.$store.modules[this.$store.selectedTargetDataset][callsite];
+			let ensemble_store = this.$store.modules[
+				this.$store.selectedTargetDataset
+			][callsite];
+			let target_store = this.$store.modules[this.$store.selectedTargetDataset][
+				callsite
+			];
 
 			let ensembleData = ensemble_store[this.$store.selectedMetric]["prop_histograms"][this.$store.selectedProp]["ensemble"];
 			let temp = this.dataProcess(ensembleData);
@@ -120,11 +141,10 @@ export default {
 			this.logScaleBool = false;
 			let isTargetThere = true;
 
-			// If the module is not present in the target run. 
+			// If the module is not present in the target run.
 			if (target_store == undefined) {
 				isTargetThere = false;
-			}
-			else {
+			} else {
 				const targetData = target_store[this.$store.selectedMetric]["prop_histograms"][this.$store.selectedProp]["target"];
 				const targetTemp = this.dataProcess(targetData);
 				this.targetXVals = targetTemp[0];
@@ -136,18 +156,20 @@ export default {
 
 			this.rankCount = parseInt(this.$store.numOfRanks["ensemble"]);
 
-			this.xScale = d3.scaleBand()
+			this.xScale = d3
+				.scaleBand()
 				.domain(this.xVals)
 				.rangeRound([0, this.xAxisHeight]);
 
 			if (this.$store.selectedScale == "Linear") {
-				this.yScale = d3.scaleLinear()
+				this.yScale = d3
+					.scaleLinear()
 					.domain([0, d3.max(this.freq)])
 					.range([this.yAxisHeight, this.padding.top]);
 				this.logScaleBool = false;
-			}
-			else if (this.$store.selectedScale == "Log") {
-				this.yScale = d3.scaleLog()
+			} else if (this.$store.selectedScale == "Log") {
+				this.yScale = d3
+					.scaleLog()
 					.domain([0.1, d3.max(this.freq)])
 					.range([this.yAxisHeight, this.padding.top]);
 				this.logScaleBool = true;
@@ -172,14 +194,14 @@ export default {
 		setTitle() {
 			if (this.$store.selectedProp == "rank") {
 				this.selectedPropLabel = "Ranks";
-			}
-			else if (this.$store.selectedProp == "name") {
+			} else if (this.$store.selectedProp == "name") {
 				this.selectedPropLabel = "Callsites";
-			}
-			else if (this.$store.selectedProp == "dataset") {
+			} else if (this.$store.selectedProp == "dataset") {
 				this.selectedPropLabel = "Runs";
 			}
-			this.selectedPropSum = this.freq.reduce((acc, val) => { return acc + val; });
+			this.selectedPropSum = this.freq.reduce((acc, val) => {
+				return acc + val;
+			});
 		},
 
 		clear() {
@@ -198,29 +220,35 @@ export default {
 
 		targetBars() {
 			let self = this;
-			this.svg.selectAll(".dist-target")
+			this.svg
+				.selectAll(".dist-target")
 				.data(this.targetFreq)
 				.enter()
 				.append("rect")
 				.attr("class", "dist-histogram-bar dist-target")
 				.attrs({
-					"x": (d, i) => {
+					x: (d, i) => {
 						return this.xScale(this.targetXVals[i]);
 					},
-					"y": (d, i) => {
+					y: (d, i) => {
 						return this.yScale(d);
 					},
-					"width": (d) => {
+					width: (d) => {
 						return this.xScale.bandwidth();
 					},
-					"height": (d) => {
+					height: (d) => {
 						return Math.abs(this.yAxisHeight - this.yScale(d));
 					},
-					"fill": this.$store.distributionColor.target,
-					"opacity": 1,
+					fill: this.$store.distributionColor.target,
+					opacity: 1,
 					"stroke-width": "0.2px",
-					"stroke": "#202020",
-					"transform": "translate(" + this.paddingFactor * this.padding.left + "," + 0 + ")"
+					stroke: "#202020",
+					transform:
+            "translate(" +
+            this.paddingFactor * this.padding.left +
+            "," +
+            0 +
+            ")",
 				})
 				.on("mouseover", function (d, i) {
 					self.$refs.ToolTip.render(d);
@@ -232,32 +260,38 @@ export default {
 
 		ensembleBars() {
 			let self = this;
-			this.svg.selectAll(".dist-ensemble")
+			this.svg
+				.selectAll(".dist-ensemble")
 				.data(this.freq)
 				.enter()
 				.append("rect")
 				.attr("class", "dist-histogram-bar dist-ensemble")
 				.attrs({
-					"x": (d, i) => {
+					x: (d, i) => {
 						return this.xScale(this.xVals[i]);
 					},
-					"y": (d, i) => {
+					y: (d, i) => {
 						return this.yScale(d);
 					},
-					"width": (d) => {
+					width: (d) => {
 						return this.xScale.bandwidth();
 					},
-					"height": (d) => {
+					height: (d) => {
 						return Math.abs(this.yAxisHeight - this.yScale(d));
 					},
-					"fill": (d) => {
+					fill: (d) => {
 						let color = self.$store.distributionColor.ensemble;
 						return color;
 					},
-					"opacity": 1,
+					opacity: 1,
 					"stroke-width": "0.2px",
-					"stroke": "#202020",
-					"transform": "translate(" + this.paddingFactor * this.padding.left + "," + 0 + ")"
+					stroke: "#202020",
+					transform:
+            "translate(" +
+            this.paddingFactor * this.padding.left +
+            "," +
+            0 +
+            ")",
 				})
 				.on("mouseover", function (d, i) {
 					self.$refs.ToolTip.render(d);
@@ -271,12 +305,19 @@ export default {
 			let max_value = this.xScale.domain()[1];
 			this.x_max_exponent = utils.formatExponent(max_value);
 			let exponent_string = this.superscript[this.x_max_exponent];
-			let label = "(e+" + this.x_max_exponent + ") " + this.$store.selectedMetric + " Runtime (" + "\u03BCs)";
-			this.svg.append("text")
+			let label =
+        "(e+" +
+        this.x_max_exponent +
+        ") " +
+        this.$store.selectedMetric +
+        " Runtime (" +
+        "\u03BCs)";
+			this.svg
+				.append("text")
 				.attrs({
-					"class": "histogram-axis-label",
-					"x": this.boxWidth - this.padding.left,
-					"y": this.yAxisHeight + 3 * this.padding.top
+					class: "histogram-axis-label",
+					x: this.boxWidth - this.padding.left,
+					y: this.yAxisHeight + 3 * this.padding.top,
 				})
 				.style("font-size", "12px")
 				.style("text-anchor", "end")
@@ -288,57 +329,68 @@ export default {
 		xAxis() {
 			let self = this;
 			this.addxAxisLabel();
-			const xAxis = d3.axisBottom(this.xScale)
+			const xAxis = d3
+				.axisBottom(this.xScale)
 				.ticks(5)
 				.tickFormat((d, i) => {
 					if (i % 3 == 0) {
-						let runtime = utils.formatRuntimeWithExponent(d, self.x_max_exponent);
+						let runtime = utils.formatRuntimeWithExponent(
+							d,
+							self.x_max_exponent
+						);
 						return `${runtime[0]}`;
 					}
 				});
 
-			const xAxisLine = this.svg.append("g")
+			const xAxisLine = this.svg
+				.append("g")
 				.attrs({
-					"class": "x-axis",
-					"transform": "translate(" + this.paddingFactor * this.padding.left + "," + this.yAxisHeight + ")"
+					class: "x-axis",
+					transform:
+            "translate(" +
+            this.paddingFactor * this.padding.left +
+            "," +
+            this.yAxisHeight +
+            ")",
 				})
 				.call(xAxis);
 
-			xAxisLine.selectAll("path")
+			xAxisLine
+				.selectAll("path")
 				.style("fill", "none")
 				.style("stroke", "black")
 				.style("stroke-width", "1px");
 
-			xAxisLine.selectAll("line")
+			xAxisLine
+				.selectAll("line")
 				.style("fill", "none")
 				.style("stroke", "#000")
 				.style("stroke-width", "1px")
 				.style("opacity", 0.5);
 
-			xAxisLine.selectAll("text")
+			xAxisLine
+				.selectAll("text")
 				.style("font-size", "12px")
 				.style("font-family", "sans-serif")
 				.style("font-weight", "lighter");
 		},
 
 		yAxis() {
-			const yAxis = d3.axisLeft(this.yScale)
+			const yAxis = d3
+				.axisLeft(this.yScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
 					if (this.$store.selectedProp == "rank") {
 						if (d == 1) {
 							return d;
-						}
-						else if (d % 10 == 0) {
+						} else if (d % 10 == 0) {
 							return d;
 						}
-					}
-					else if (this.$store.selectedProp == "dataset") {
+					} else if (this.$store.selectedProp == "dataset") {
 						if (d % 1 == 0) {
 							return d;
 						}
-					}
-					else if (this.$store.selectedProp == "name") {
+					} else if (this.$store.selectedProp == "name") {
 						if (d % 1 == 0) {
 							return d;
 						}
@@ -348,50 +400,54 @@ export default {
 			let yAxisText = "";
 			if (this.$store.selectedProp == "name") {
 				yAxisText = "Number of Callsites";
-			}
-			else if (this.$store.selectedProp == "dataset") {
+			} else if (this.$store.selectedProp == "dataset") {
 				yAxisText = "Number of Runs";
-			}
-			else if (this.$store.selectedProp == "rank") {
+			} else if (this.$store.selectedProp == "rank") {
 				yAxisText = "Number of Ranks";
-			}
-			else if (this.$store.selectedProp == "all_ranks") {
+			} else if (this.$store.selectedProp == "all_ranks") {
 				yAxisText = "Number of Processes";
 			}
 
-			this.svg.append("text")
+			this.svg
+				.append("text")
 				.attrs({
-					"transform": "rotate(-90)",
-					"class": "histogram-axis-label",
-					"x": -this.padding.top,
-					"y": this.padding.left
+					transform: "rotate(-90)",
+					class: "histogram-axis-label",
+					x: -this.padding.top,
+					y: this.padding.left,
 				})
 				.style("font-size", "12px")
 				.style("text-anchor", "end")
 				.text(yAxisText);
 
-			const yAxisLine = this.svg.append("g")
+			const yAxisLine = this.svg
+				.append("g")
 				.attrs({
-					"class": "y-axis",
-					"transform": "translate(" + this.paddingFactor * this.padding.left + ", 0)"
+					class: "y-axis",
+					transform:
+            "translate(" + this.paddingFactor * this.padding.left + ", 0)",
 				})
 				.call(yAxis);
 
-			yAxisLine.selectAll("path")
+			yAxisLine
+				.selectAll("path")
 				.style("fill", "none")
 				.style("stroke", "black")
 				.style("stroke-width", "1px");
 
-			yAxisLine.selectAll("line")
+			yAxisLine
+				.selectAll("line")
 				.style("fill", "none")
 				.style("stroke", "#000")
 				.style("stroke-width", "1px")
 				.style("opacity", 0.2);
 
-			yAxisLine.selectAll("text")
+			yAxisLine
+				.selectAll("text")
 				.style("font-size", "12px")
 				.style("font-family", "sans-serif")
 				.style("font-weight", "lighter");
 		},
-	}
+	},
 };
+</script>

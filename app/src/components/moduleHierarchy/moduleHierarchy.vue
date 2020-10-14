@@ -5,7 +5,21 @@
  * SPDX-License-Identifier: MIT
  */
 
-import tpl from "../../html/moduleHierarchy.html";
+<template>
+  <v-layout row wrap :id="id">
+    <v-layout class="chip-container">
+      <v-chip class="chip" chips color="teal" label outlined clearable>
+        {{ message }}
+      </v-chip>
+    </v-layout>
+    <span class="component-info">
+      Module = {{ formatModule(selectedModule) }}
+    </span>
+    <ToolTip ref="ToolTip" />
+  </v-layout>
+</template>
+
+<script>
 import * as d3 from "d3";
 import ToolTip from "./tooltip";
 import * as utils from "../utils";
@@ -13,9 +27,8 @@ import Queue from "../../datastructures/queue";
 
 export default {
 	name: "ModuleHierarchy",
-	template: tpl,
 	components: {
-		ToolTip
+		ToolTip,
 	},
 	props: [],
 	data: () => ({
@@ -35,21 +48,25 @@ export default {
 		height: null,
 		totalSize: 0,
 		b: {
-			w: 150, h: 30, s: 3, t: 10
+			w: 150,
+			h: 30,
+			s: 3,
+			t: 10,
 		},
 		selectedSplitOption: {
 			name: "split-caller",
 		},
 		splitOptions: [
 			{
-				"name": "split-caller",
+				name: "split-caller",
 			},
 			{
-				"name": "split-callee",
+				name: "split-callee",
 			},
 			{
-				"name": "split-level",
-			}],
+				name: "split-level",
+			},
+		],
 		placeholder: "Split options",
 		maxLevel: 0,
 		path_hierarchy: [],
@@ -68,8 +85,8 @@ export default {
 			handler: function (val, oldVal) {
 				this.update_level();
 			},
-			deep: true
-		}
+			deep: true,
+		},
 	},
 
 	sockets: {
@@ -81,7 +98,7 @@ export default {
 
 		level_change(data) {
 			this.update_maxlevels(data);
-		}
+		},
 	},
 
 	mounted() {
@@ -92,8 +109,7 @@ export default {
 		init() {
 			if (this.$store.selectedMetric == "Inclusive") {
 				this.metric = "max_time (inc)";
-			}
-			else if (this.$store.selectedMetric == "Exclusive") {
+			} else if (this.$store.selectedMetric == "Exclusive") {
 				this.metric = "max_time";
 			}
 			this.selectedModule = this.$store.selectedModule;
@@ -112,18 +128,18 @@ export default {
 		},
 
 		setupSVG() {
-
 			this.width = document.getElementById(this.id).clientWidth;
 			this.height = this.$store.viewHeight * 0.3;
 			this.icicleWidth = this.width - this.margin.right - this.margin.left;
 			this.icicleHeight = this.height - this.margin.top - this.margin.bottom;
 
-			this.hierarchySVG = d3.select("#" + this.id)
+			this.hierarchySVG = d3
+				.select("#" + this.id)
 				.append("svg")
 				.attrs({
-					"id": this.svgID,
-					"width": this.icicleWidth + this.margin.right + this.margin.left + 10,
-					"height": this.icicleHeight + this.margin.top + this.margin.bottom,
+					id: this.svgID,
+					width: this.icicleWidth + this.margin.right + this.margin.left + 10,
+					height: this.icicleHeight + this.margin.top + this.margin.bottom,
 				});
 
 			this.$refs.ToolTip.init(this.svgID);
@@ -155,11 +171,9 @@ export default {
 				let level = this.path_hierarchy[i][0].length;
 				if (level == 1) {
 					ret.push(this.path_hierarchy[i]);
-				}
-				else if (level >= this.minLevel || level < this.maxLevel) {
+				} else if (level >= this.minLevel || level < this.maxLevel) {
 					ret.push(this.path_hierarchy[i]);
-				}
-				else {
+				} else {
 					console.log("TODO: ");
 				}
 			}
@@ -194,8 +208,7 @@ export default {
 				if (!startVertexData) {
 					let callsite = currentVertex.id;
 					callsiteData = this.$store.callsites["ensemble"][callsite];
-				}
-				else {
+				} else {
 					let module = currentVertex.id;
 					callsiteData = this.$store.modules["ensemble"][module];
 					startVertexData = false;
@@ -224,7 +237,7 @@ export default {
 
 		trunc(str, n) {
 			str = str.replace(/<unknown procedure>/g, "proc ");
-			return (str.length > n) ? str.substr(0, n - 1) + "..." : str;
+			return str.length > n ? str.substr(0, n - 1) + "..." : str;
 		},
 
 		clear() {
@@ -264,7 +277,9 @@ export default {
 			root.x1 = dx;
 			root.y1 = dy / n;
 			root.eachBefore(this.positionNode(dy, n));
-			if (round) { root.eachBefore(this.roundNode); }
+			if (round) {
+				root.eachBefore(this.roundNode);
+			}
 			return root;
 		},
 
@@ -273,18 +288,33 @@ export default {
 			return function (node) {
 				if (node.children) {
 					if (self.$store.selectedHierarchyMode == "Exclusive") {
-						self.diceByValue(node, node.x0, dy * (node.depth + 1) / n, node.x1, dy * (node.depth + 2) / n);
-					}
-					else if (self.$store.selectedHierarchyMode == "Uniform") {
-						self.dice(node, node.x0, dy * (node.depth + 1) / n, node.x1, dy * (node.depth + 2) / n);
+						self.diceByValue(
+							node,
+							node.x0,
+							(dy * (node.depth + 1)) / n,
+							node.x1,
+							(dy * (node.depth + 2)) / n
+						);
+					} else if (self.$store.selectedHierarchyMode == "Uniform") {
+						self.dice(
+							node,
+							node.x0,
+							(dy * (node.depth + 1)) / n,
+							node.x1,
+							(dy * (node.depth + 2)) / n
+						);
 					}
 				}
 				var x0 = node.x0,
 					y0 = node.y0,
 					x1 = node.x1 - self.padding,
 					y1 = node.y1 - self.padding;
-				if (x1 < x0) { x0 = x1 = (x0 + x1) / 2; }
-				if (y1 < y0) { y0 = y1 = (y0 + y1) / 2; }
+				if (x1 < x0) {
+					x0 = x1 = (x0 + x1) / 2;
+				}
+				if (y1 < y0) {
+					y0 = y1 = (y0 + y1) / 2;
+				}
 
 				node.x0 = x0;
 				node.y0 = y0;
@@ -313,7 +343,7 @@ export default {
 				node.y0 = y0;
 				node.y1 = y1;
 				node.x0 = parent.x0 + x_offset;
-				x_offset += (parent.x1 - parent.x0) / (n);
+				x_offset += (parent.x1 - parent.x0) / n;
 				node.x1 = parent.x0 + x_offset;
 			}
 		},
@@ -322,8 +352,7 @@ export default {
 			let value = 1;
 			if (parent.parent == null) {
 				value = this.$store.modules["ensemble"][parent.data.id]["max_time"];
-			}
-			else {
+			} else {
 				value = this.$store.callsites["ensemble"][parent.data.id][this.metric];
 			}
 
@@ -334,7 +363,7 @@ export default {
 				k = value && (parent.x1 - parent.x0) / value;
 
 			while (++i < n) {
-				node = nodes[i], node.y0 = y0, node.y1 = y1;
+				(node = nodes[i]), (node.y0 = y0), (node.y1 = y1);
 				node.x0 = x0;
 				node.x1 = x0 += node.data.data[this.metric] * k;
 			}
@@ -345,10 +374,9 @@ export default {
 				this.clear();
 			} else {
 				this.setupSVG();
-				this.hierarchy = this.hierarchySVG
-					.attrs({
-						"id": this.svgID
-					});
+				this.hierarchy = this.hierarchySVG.attrs({
+					id: this.svgID,
+				});
 			}
 			// Setup the view components
 			// this.initializeBreadcrumbTrail();
@@ -357,13 +385,18 @@ export default {
 
 			// Bounding rect underneath the chart, to make it easier to detect
 			// when the mouse leaves the parent g.
-			this.hierarchy.append("svg:rect")
+			this.hierarchy
+				.append("svg:rect")
 				.attr("width", () => {
-					if (this.selectedDirection == "LR") { return this.icicleHeight; }
+					if (this.selectedDirection == "LR") {
+						return this.icicleHeight;
+					}
 					return this.width;
 				})
 				.attr("height", () => {
-					if (this.selectedDirection == "LR") { return this.width - 50; }
+					if (this.selectedDirection == "LR") {
+						return this.width - 50;
+					}
 					return this.height - 50;
 				})
 				.style("opacity", 0);
@@ -403,8 +436,14 @@ export default {
 			for (let idx = 0; idx < callsites.length; idx += 1) {
 				let callsite = callsites[idx];
 				let data = callsiteStore[callsite];
-				this.hist_min = Math.min(this.hist_min, data[this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
-				this.hist_max = Math.max(this.hist_max, data[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
+				this.hist_min = Math.min(
+					this.hist_min,
+					data[this.$store.selectedMetric]["gradients"]["hist"]["y_min"]
+				);
+				this.hist_max = Math.max(
+					this.hist_max,
+					data[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]
+				);
 			}
 
 			// this.$store.color.setColorScale("MeanGradients", this.hist_min, this.hist_max, this.$store.selectedDistributionColorMap, this.$store.selectedColorPoint);
@@ -413,10 +452,10 @@ export default {
 				let callsite = callsites[idx];
 				let data = callsiteStore[callsite];
 				let id = data.id;
-				var defs = d3.select("#module-hierarchy-svg")
-					.append("defs");
+				var defs = d3.select("#module-hierarchy-svg").append("defs");
 
-				this.linearGradient = defs.append("linearGradient")
+				this.linearGradient = defs
+					.append("linearGradient")
 					.attr("id", "mean-callsite-gradient-" + data.id)
 					.attr("class", "linear-gradient");
 
@@ -426,8 +465,7 @@ export default {
 						.attr("y1", "0%")
 						.attr("x2", "100%")
 						.attr("y2", "0%");
-				}
-				else {
+				} else {
 					this.linearGradient
 						.attr("x1", "0%")
 						.attr("y1", "0%")
@@ -440,10 +478,14 @@ export default {
 
 				for (let i = 0; i < grid.length; i += 1) {
 					let x = (i + i + 1) / (2 * grid.length);
-					let current_value = (val[i]);
-					this.linearGradient.append("stop")
+					let current_value = val[i];
+					this.linearGradient
+						.append("stop")
 						.attr("offset", 100 * x + "%")
-						.attr("stop-color", this.$store.distributionColor.getColorByValue(current_value));
+						.attr(
+							"stop-color",
+							this.$store.distributionColor.getColorByValue(current_value)
+						);
 				}
 			}
 		},
@@ -460,19 +502,24 @@ export default {
 			for (let idx = 0; idx < modules.length; idx += 1) {
 				let thismodule = modules[idx];
 				let data = moduleStore[thismodule];
-				this.hist_min = Math.min(this.hist_min, data[this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
-				this.hist_max = Math.max(this.hist_max, data[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
+				this.hist_min = Math.min(
+					this.hist_min,
+					data[this.$store.selectedMetric]["gradients"]["hist"]["y_min"]
+				);
+				this.hist_max = Math.max(
+					this.hist_max,
+					data[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]
+				);
 			}
-
 
 			for (let idx = 0; idx < modules.length; idx += 1) {
 				let thismodule = modules[idx];
 				let data = moduleStore[thismodule];
 				let id = data.id;
-				var defs = d3.select("#module-hierarchy-svg")
-					.append("defs");
+				var defs = d3.select("#module-hierarchy-svg").append("defs");
 
-				this.linearGradient = defs.append("linearGradient")
+				this.linearGradient = defs
+					.append("linearGradient")
 					.attr("id", "mean-module-gradient-" + data.id)
 					.attr("class", "linear-gradient");
 
@@ -482,8 +529,7 @@ export default {
 						.attr("y1", "0%")
 						.attr("x2", "100%")
 						.attr("y2", "0%");
-				}
-				else {
+				} else {
 					this.linearGradient
 						.attr("x1", "0%")
 						.attr("y1", "0%")
@@ -496,10 +542,14 @@ export default {
 
 				for (let i = 0; i < grid.length; i += 1) {
 					let x = (i + i + 1) / (2 * grid.length);
-					let current_value = (val[i]);
-					this.linearGradient.append("stop")
+					let current_value = val[i];
+					this.linearGradient
+						.append("stop")
 						.attr("offset", 100 * x + "%")
-						.attr("stop-color", this.$store.distributionColor.getColorByValue(current_value));
+						.attr(
+							"stop-color",
+							this.$store.distributionColor.getColorByValue(current_value)
+						);
 				}
 			}
 		},
@@ -513,15 +563,21 @@ export default {
 				let mean = 0;
 				let gradients = [];
 				let targetPos = undefined;
-				if (this.nodes[i].depth == 0 && this.$store.modules["ensemble"][node_data.id] != undefined) {
-					let data = this.$store.modules["ensemble"][node_data.id][this.$store.selectedMetric]["gradients"];
+				if (
+					this.nodes[i].depth == 0 &&
+          this.$store.modules["ensemble"][node_data.id] != undefined
+				) {
+					let data = this.$store.modules["ensemble"][node_data.id][
+						this.$store.selectedMetric
+					]["gradients"];
 					mean = data["dataset"]["mean"][dataset];
 					gradients = data["hist"];
 					targetPos = data["dataset"]["position"][dataset] + 1;
-				}
-				else {
+				} else {
 					if (this.$store.callsites["ensemble"][node_data.id] != undefined) {
-						let data = this.$store.callsites["ensemble"][node_data.id][this.$store.selectedMetric]["gradients"];
+						let data = this.$store.callsites["ensemble"][node_data.id][
+							this.$store.selectedMetric
+						]["gradients"];
 						mean = data["dataset"]["mean"][dataset];
 						gradients = data["hist"];
 						targetPos = data["dataset"]["position"][dataset] + 1;
@@ -531,21 +587,25 @@ export default {
 				let grid = gradients.x;
 				let vals = gradients.y;
 
-				let binWidth = (this.nodes[i].x1 - this.nodes[i].x0) / (this.$store.selectedRunBinCount);
+				let binWidth =
+          (this.nodes[i].x1 - this.nodes[i].x0) /
+          this.$store.selectedRunBinCount;
 
 				let x = this.nodes[i].x0 + binWidth * targetPos - binWidth / 2;
 
-				this.hierarchySVG
-					.append("line")
-					.attrs({
-						"class": "hierarchy-targetLines",
-						"x1": x,
-						"y1": (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth) + this.offset,
-						"x2": x,
-						"y2": (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth + 1) - this.offset,
-						"stroke-width": 5,
-						"stroke": this.$store.distributionColor.target
-					});
+				this.hierarchySVG.append("line").attrs({
+					class: "hierarchy-targetLines",
+					x1: x,
+					y1:
+            (this.nodes[i].y1 - this.nodes[i].y0) * this.nodes[i].depth +
+            this.offset,
+					x2: x,
+					y2:
+            (this.nodes[i].y1 - this.nodes[i].y0) * (this.nodes[i].depth + 1) -
+            this.offset,
+					"stroke-width": 5,
+					stroke: this.$store.distributionColor.target,
+				});
 			}
 		},
 
@@ -562,33 +622,37 @@ export default {
 			let mean = 0;
 			let gradients = [];
 			if (d.depth == 0) {
-				mean = this.$store.modules[dataset][node_data.id]["gradients"][this.$store.selectedMetric]["dataset"][dataset];
-				gradients = this.$store.modules["ensemble"][node_data.id]["gradients"][this.$store.selectedMetric]["hist"];
-			}
-			else {
-				mean = this.$store.callsites[dataset][node_data.id]["gradients"][this.$store.selectedMetric]["dataset"][dataset];
-				gradients = this.$store.callsites["ensemble"][node_data.id]["gradients"][this.$store.selectedMetric]["hist"];
+				mean = this.$store.modules[dataset][node_data.id]["gradients"][
+					this.$store.selectedMetric
+				]["dataset"][dataset];
+				gradients = this.$store.modules["ensemble"][node_data.id]["gradients"][
+					this.$store.selectedMetric
+				]["hist"];
+			} else {
+				mean = this.$store.callsites[dataset][node_data.id]["gradients"][
+					this.$store.selectedMetric
+				]["dataset"][dataset];
+				gradients = this.$store.callsites["ensemble"][node_data.id][
+					"gradients"
+				][this.$store.selectedMetric]["hist"];
 			}
 
 			let grid = gradients.x;
 			let vals = gradients.y;
-			let binWidth = (d.x1 - d.x0) / (this.$store.selectedRunBinCount);
+			let binWidth = (d.x1 - d.x0) / this.$store.selectedRunBinCount;
 
 			for (let idx = 0; idx < grid.length; idx += 1) {
-				let x = binWidth * (idx);
+				let x = binWidth * idx;
 
-				this.hierarchySVG
-					.append("line")
-					.attrs({
-						"class": "hierarchy-guideLines",
-						"x1": x,
-						"y1": (d.y1 - d.y0) * (d.depth),
-						"x2": x,
-						"y2": (d.y1 - d.y0) * (d.depth + 1),
-						"stroke-width": 3,
-						"stroke": "#202020"
-					});
-
+				this.hierarchySVG.append("line").attrs({
+					class: "hierarchy-guideLines",
+					x1: x,
+					y1: (d.y1 - d.y0) * d.depth,
+					x2: x,
+					y2: (d.y1 - d.y0) * (d.depth + 1),
+					"stroke-width": 3,
+					stroke: "#202020",
+				});
 
 				// d3.selectAll('.ensemble-edge')
 				// 	.style('opacity', 0.5)
@@ -677,9 +741,9 @@ export default {
 				.attr("x", (d) => {
 					if (this.selectedDirection == "LR") {
 						if (Number.isNaN(d.y0)) {
-							return d.data.count * this.width / d.data.length;
+							return (d.data.count * this.width) / d.data.length;
 						}
-						return d.data.count * this.width / d.data.length;
+						return (d.data.count * this.width) / d.data.length;
 					}
 					return d.x0;
 				})
@@ -692,9 +756,10 @@ export default {
 				.attr("width", (d) => {
 					if (this.selectedDirection == "LR") {
 						if (Number.isNaN(d.y1 - d.y0)) {
-							return this.width / d.data.length - this.offset - this.stroke_width;
-						}
-						else {
+							return (
+								this.width / d.data.length - this.offset - this.stroke_width
+							);
+						} else {
 							return d.y1 - d.y0 - this.offset - this.stroke_width;
 						}
 					}
@@ -710,12 +775,10 @@ export default {
 					let gradients = undefined;
 					if (d.depth == 0 && this.$store.modules[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
 						gradients = "url(#mean-module-gradient-" + d.data.data.id + ")";
-					}
-					else {
+					} else {
 						if (this.$store.callsites[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
 							gradients = "url(#mean-callsite-gradient-" + d.data.data.id + ")";
-						}
-						else {
+						} else {
 							gradients = this.$store.distributionColor.ensemble;
 						}
 					}
@@ -734,7 +797,7 @@ export default {
 				})
 				.on("click", this.click)
 				.on("mouseover", (d) => {
-					const percentage = (100 * d.value / this.totalSize).toPrecision(3);
+					const percentage = ((100 * d.value) / this.totalSize).toPrecision(3);
 					this.percentageString = `${percentage}%`;
 					if (percentage < 0.1) {
 						this.percentageString = "< 0.1%";
@@ -744,28 +807,28 @@ export default {
 					// this.updateBreadcrumbs(sequenceArray, percentageString);
 
 					// Fade all the segments.
-					d3.selectAll(".icicleNode")
-						.style("opacity", 0.1);
+					d3.selectAll(".icicleNode").style("opacity", 0.1);
 
 					// Then highlight only those that are an ancestor of the current segment.
-					this.hierarchy.selectAll(".icicleNode")
-						.filter(node => (sequenceArray.indexOf(node) >= 0))
+					this.hierarchy
+						.selectAll(".icicleNode")
+						.filter((node) => sequenceArray.indexOf(node) >= 0)
 						.style("opacity", 1);
 
 					// this.drawGuides(d)
 					this.$refs.ToolTip.render(d);
 				})
-				.on("mouseout", (d) => {// Fade all the segments.
-					d3.selectAll(".icicleNode")
-						.style("opacity", 1);
+				.on("mouseout", (d) => {
+					// Fade all the segments.
+					d3.selectAll(".icicleNode").style("opacity", 1);
 					// this.clearGuides()
 					// this.$refs.ToolTip.clear()
-				},
-				);
+				});
 		},
 
 		addText() {
-			this.hierarchy.selectAll(".icicleText")
+			this.hierarchy
+				.selectAll(".icicleText")
 				.data(this.nodes)
 				.enter()
 				.append("text")
@@ -779,9 +842,9 @@ export default {
 				.attr("x", (d) => {
 					if (this.selectedDirection == "LR") {
 						if (Number.isNaN(d.y0)) {
-							return d.data.count * this.width / d.data.length;
+							return (d.data.count * this.width) / d.data.length;
 						}
-						return d.data.count * this.width / d.data.length;
+						return (d.data.count * this.width) / d.data.length;
 					}
 					return d.x0 + this.offset * 2;
 				})
@@ -801,7 +864,9 @@ export default {
 					return this.width;
 				})
 				.style("fill", (d) => {
-					let color = this.$store.runtimeColor.setContrast(this.$store.runtimeColor.getColor(d));
+					let color = this.$store.runtimeColor.setContrast(
+						this.$store.runtimeColor.getColor(d)
+					);
 					return color;
 				})
 				.style("font-size", "14px")
@@ -823,26 +888,24 @@ export default {
 			let splitByOption = this.selectedSplitOption.name;
 
 			// Fade all the segments.
-			d3.selectAll(".icicleNode")
-				.style("opacity", 0.3);
+			d3.selectAll(".icicleNode").style("opacity", 0.3);
 
 			let sequenceArray = this.getAncestors(d);
 			// Then highlight only those that are an ancestor of the current segment.
-			this.hierarchy.selectAll(".icicleNode")
-				.filter(node => {
-					return (sequenceArray.indexOf(node) >= 0);
+			this.hierarchy
+				.selectAll(".icicleNode")
+				.filter((node) => {
+					return sequenceArray.indexOf(node) >= 0;
 				})
 				.style("opacity", 1);
 
-			this.$socket.emit(splitByOption, {
-			});
+			this.$socket.emit(splitByOption, {});
 		},
 
 		// Restore everything to full opacity when moving off the visualization.
 		mouseleave() {
 			// Hide the breadcrumb trail
-			d3.select("#trail")
-				.style("visibility", "hidden");
+			d3.select("#trail").style("visibility", "hidden");
 
 			// Deactivate all segments during transition.
 			d3.selectAll(".icicleNode").on("mouseover", null);
@@ -902,14 +965,14 @@ export default {
 		initializeBreadcrumbTrail() {
 			// Add the svg area.
 			const width = document.getElementById(this.svgID).clientWidth;
-			const trail = d3.select("#sequence").append("svg:svg")
+			const trail = d3
+				.select("#sequence")
+				.append("svg:svg")
 				.attr("width", this.icicleWidth)
 				.attr("height", 50)
 				.attr("id", "trail");
 			// Add the label at the end, for the percentage.
-			trail.append("svg:text")
-				.attr("id", "endlabel")
-				.style("fill", "#000");
+			trail.append("svg:text").attr("id", "endlabel").style("fill", "#000");
 		},
 
 		// Generate a string that describes the points of a breadcrumb polygon.
@@ -920,7 +983,8 @@ export default {
 			points.push(`${this.b.w + this.b.t},${this.b.h / 2}`);
 			points.push(`${this.b.w},${this.b.h}`);
 			points.push(`0,${this.b.h}`);
-			if (i > 0) { // Leftmost breadcrumb; don't include 6th vertex.
+			if (i > 0) {
+				// Leftmost breadcrumb; don't include 6th vertex.
 				points.push(`${this.b.t},${this.b.h / 2}`);
 			}
 			return points.join(" ");
@@ -929,32 +993,39 @@ export default {
 		// Update the breadcrumb trail to show the current sequence and percentage.
 		updateBreadcrumbs(nodeArray, percentageString) {
 			// Data join; key function combines name and depth (= position in sequence).
-			const g = d3.select("#trail")
+			const g = d3
+				.select("#trail")
 				.selectAll("g")
-				.data(nodeArray, d => d.name + d.depth);
+				.data(nodeArray, (d) => d.name + d.depth);
 
 			// Add breadcrumb and label for entering nodes.
 			const entering = g.enter().append("svg:g");
 
-			entering.append("svg:polygon")
+			entering
+				.append("svg:polygon")
 				.attr("points", this.breadcrumbPoints)
 				.style("fill", () => "#f1f1f1");
 
-			entering.append("svg:text")
+			entering
+				.append("svg:text")
 				.attr("x", (this.b.w + this.b.t) / 2)
 				.attr("y", this.b.h / 2)
 				.attr("dy", "0.35em")
 				.attr("text-anchor", "middle")
-				.text(d => d.name);
+				.text((d) => d.name);
 
 			// Set position for entering and updating nodes.
-			g.attr("transform", (d, i) => `translate(${i * (this.b.w + this.b.s)}, 0)`);
+			g.attr(
+				"transform",
+				(d, i) => `translate(${i * (this.b.w + this.b.s)}, 0)`
+			);
 
 			// Remove exiting nodes.
 			g.exit().remove();
 
 			// Now move and update the percentage at the end.
-			d3.select("#trail").select("#endlabel")
+			d3.select("#trail")
+				.select("#endlabel")
 				.attr("x", (nodeArray.length + 0.5) * (this.b.w + this.b.s))
 				.attr("y", this.b.h / 2)
 				.attr("dy", "0.35em")
@@ -962,8 +1033,7 @@ export default {
 				.text(percentageString);
 
 			// Make the breadcrumb trail visible, if it's hidden.
-			d3.select("#trail")
-				.style("visibility", "");
+			d3.select("#trail").style("visibility", "");
 		},
 
 		toggleLegend() {
@@ -974,5 +1044,6 @@ export default {
 				legend.style("visibility", "hidden");
 			}
 		},
-	}
+	},
 };
+</script>

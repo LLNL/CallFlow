@@ -5,26 +5,37 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+  <v-layout row wrap :id="id">
+    <v-layout class="chip-container">
+      <v-chip class="chip" chips color="teal" label outlined clearable>
+        {{ message }}
+      </v-chip>
+    </v-layout>
+    <span class="component-info"> Corr. coef. = {{ corr_coef }}. </span>
+    <svg :id="svgID"></svg>
+    <ToolTip ref="ToolTip" />
+  </v-layout>
+</template>
+
+<script>
 import * as d3 from "d3";
 
-import tpl from "../../html/runtimeScatterplot.html";
 import ToolTip from "./tooltip";
 import * as utils from "../utils";
 import EventHandler from "../EventHandler";
 
-
 export default {
 	name: "SingleScatterplot",
-	template: tpl,
 	components: {
-		ToolTip
+		ToolTip,
 	},
 	data: () => ({
 		padding: {
 			top: 10,
 			right: 10,
 			bottom: 10,
-			left: 15
+			left: 15,
 		},
 		xData: [],
 		yData: [],
@@ -43,9 +54,8 @@ export default {
 		paddingFactor: 3.5,
 		x_max_exponent: 0,
 		y_max_exponent: 0,
-		corr_coef: 0
+		corr_coef: 0,
 	}),
-
 
 	mounted() {
 		let self = this;
@@ -64,16 +74,22 @@ export default {
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
 
-			this.svg = d3.select("#" + this.svgID)
+			this.svg = d3
+				.select("#" + this.svgID)
 				.attr("width", this.boxWidth)
 				.attr("height", this.boxHeight - this.padding.top)
-				.attr("transform", "translate(" + this.padding.left + "," + this.padding.top + ")");
+				.attr(
+					"transform",
+					"translate(" + this.padding.left + "," + this.padding.top + ")"
+				);
 
-			this.xAxisHeight = this.boxWidth - (4) * this.padding.left;
-			this.yAxisHeight = this.boxHeight - (4) * this.padding.left;
+			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
+			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
 
 			EventHandler.$emit("single-scatterplot", {
-				module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
+				module: Object.keys(
+					this.$store.modules[this.$store.selectedTargetDataset]
+				)[0],
 				dataset: this.$store.selectedTargetDataset,
 			});
 		},
@@ -93,11 +109,13 @@ export default {
 			this.xArray = temp[4];
 			this.yArray = temp[5];
 
-			this.xScale = d3.scaleLinear()
+			this.xScale = d3
+				.scaleLinear()
 				.domain([this.xMin, this.xMax])
 				.range([0, this.xAxisHeight]);
 
-			this.yScale = d3.scaleLinear()
+			this.yScale = d3
+				.scaleLinear()
 				.domain([this.yMin, this.yMax])
 				.range([this.yAxisHeight, this.padding.top]);
 
@@ -112,7 +130,9 @@ export default {
 		},
 
 		process() {
-			let store = this.$store.modules[this.$store.selectedTargetDataset][this.$store.selectedModule];
+			let store = this.$store.modules[this.$store.selectedTargetDataset][
+				this.$store.selectedModule
+			];
 			let mean_time_inc = store["Inclusive"]["data"];
 			let mean_time = store["Exclusive"]["data"];
 
@@ -163,17 +183,16 @@ export default {
 				yr = ySeries[i] - y_mean;
 				term1 += xr * yr;
 				term2 += xr * xr;
-
 			}
 
 			var b1 = term1 / term2;
-			var b0 = y_mean - (b1 * x_mean);
+			var b0 = y_mean - b1 * x_mean;
 			// perform regression
 
 			let yhat = [];
 			// fit line using coeffs
 			for (i = 0; i < xSeries.length; i++) {
-				yhat.push(b0 + (xSeries[i] * b1));
+				yhat.push(b0 + xSeries[i] * b1);
 			}
 
 			//compute correlation coef
@@ -200,15 +219,15 @@ export default {
 				sum_x2 += x2[i];
 				sum_y2 += y2[i];
 			}
-			var step1 = (n * sum_xy) - (sum_x * sum_y);
-			var step2 = (n * sum_x2) - (sum_x * sum_x);
-			var step3 = (n * sum_y2) - (sum_y * sum_y);
+			var step1 = n * sum_xy - sum_x * sum_y;
+			var step2 = n * sum_x2 - sum_x * sum_x;
+			var step3 = n * sum_y2 - sum_y * sum_y;
 			var step4 = Math.sqrt(step2 * step3);
 
 			let corr_coef = step1 / step4;
 			return {
-				"y_res": yhat,
-				"corr_coef": corr_coef
+				y_res: yhat,
+				corr_coef: corr_coef,
 			};
 		},
 
@@ -216,8 +235,10 @@ export default {
 			let max_value = this.xScale.domain()[1];
 			this.x_max_exponent = utils.formatExponent(max_value);
 			let exponent_string = this.superscript[this.x_max_exponent];
-			let label = "(e+" + this.x_max_exponent + ") " + "Exclusive Runtime (" + "\u03BCs)";
-			this.svg.append("text")
+			let label =
+        "(e+" + this.x_max_exponent + ") " + "Exclusive Runtime (" + "\u03BCs)";
+			this.svg
+				.append("text")
 				.attr("class", "axis-label")
 				.attr("x", this.boxWidth - this.padding.right)
 				.attr("y", this.yAxisHeight + 3 * this.padding.top)
@@ -229,32 +250,42 @@ export default {
 		xAxis() {
 			let self = this;
 			this.addxAxisLabel();
-			const xAxis = d3.axisBottom(this.xScale)
+			const xAxis = d3
+				.axisBottom(this.xScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
 					let runtime = utils.formatRuntimeWithExponent(d, self.x_max_exponent);
 					return `${runtime[0]}`;
 				});
 
-			let xAxisLine = this.svg.append("g")
+			let xAxisLine = this.svg
+				.append("g")
 				.attrs({
-					"class": "axis",
-					"id": "xAxis",
-					"transform": "translate(" + this.paddingFactor * this.padding.left + "," + this.yAxisHeight + ")"
+					class: "axis",
+					id: "xAxis",
+					transform:
+            "translate(" +
+            this.paddingFactor * this.padding.left +
+            "," +
+            this.yAxisHeight +
+            ")",
 				})
 				.call(xAxis);
 
-			xAxisLine.selectAll("path")
+			xAxisLine
+				.selectAll("path")
 				.style("fill", "none")
 				.style("stroke", "black")
 				.style("stroke-width", "1px");
 
-			xAxisLine.selectAll("line")
+			xAxisLine
+				.selectAll("line")
 				.style("fill", "none")
 				.style("stroke", "#000")
 				.style("stroke-width", "1px");
 
-			xAxisLine.selectAll("text")
+			xAxisLine
+				.selectAll("text")
 				.style("font-size", "12px")
 				.style("font-family", "sans-serif")
 				.style("font-weight", "lighter");
@@ -264,13 +295,15 @@ export default {
 			let max_value = this.yScale.domain()[1];
 			this.y_max_exponent = utils.formatExponent(max_value);
 			let exponent_string = this.superscript[this.y_max_exponent];
-			let label = "(e+" + this.y_max_exponent + ") " + "Inclusive Runtime (" + "\u03BCs)";
-			this.svg.append("text")
+			let label =
+        "(e+" + this.y_max_exponent + ") " + "Inclusive Runtime (" + "\u03BCs)";
+			this.svg
+				.append("text")
 				.attrs({
-					"class": "axis-label",
-					"transform": "rotate(-90)",
-					"x": -this.padding.top,
-					"y": 0.5 * this.padding.left,
+					class: "axis-label",
+					transform: "rotate(-90)",
+					x: -this.padding.top,
+					y: 0.5 * this.padding.left,
 				})
 				.style("text-anchor", "end")
 				.style("font-size", "12px")
@@ -281,31 +314,39 @@ export default {
 			let self = this;
 			let tickCount = 10;
 			this.addyAxisLabel();
-			let yAxis = d3.axisLeft(this.yScale)
+			let yAxis = d3
+				.axisLeft(this.yScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
 					let runtime = utils.formatRuntimeWithExponent(d, self.y_max_exponent);
 					return `${runtime[0]}`;
 				});
 
-			var yAxisLine = this.svg.append("g")
+			var yAxisLine = this.svg
+				.append("g")
 				.attr("id", "yAxis")
 				.attr("class", "axis")
-				.attr("transform", "translate(" + this.paddingFactor * this.padding.left + ", 0)")
+				.attr(
+					"transform",
+					"translate(" + this.paddingFactor * this.padding.left + ", 0)"
+				)
 				.call(yAxis);
 
-			yAxisLine.selectAll("path")
+			yAxisLine
+				.selectAll("path")
 				.style("fill", "none")
 				.style("stroke", "black")
 				.style("stroke-width", "1px");
 
-			yAxisLine.selectAll("line")
+			yAxisLine
+				.selectAll("line")
 				.style("fill", "none")
 				.style("stroke", "#000")
 				.style("stroke-width", "1px")
 				.style("opacity", 0.5);
 
-			yAxisLine.selectAll("text")
+			yAxisLine
+				.selectAll("text")
 				.style("font-size", "14px")
 				.style("font-family", "sans-serif")
 				.style("font-weight", "lighter");
@@ -313,7 +354,8 @@ export default {
 
 		trendline() {
 			let self = this;
-			let line = d3.line()
+			let line = d3
+				.line()
 				.x(function (d, i) {
 					return self.xScale(self.xArray[i]);
 				})
@@ -321,7 +363,8 @@ export default {
 					return self.yScale(self.yArray[i]);
 				});
 
-			this.svg.append("g")
+			this.svg
+				.append("g")
 				.attr("class", "trend-line")
 				.append("path")
 				.datum(this.regression["y_res"])
@@ -329,14 +372,19 @@ export default {
 				.style("stroke", this.$store.color.intermediate)
 				.style("stroke-width", "1px")
 				.style("opacity", 0.5)
-				.attr("transform", "translate(" + this.paddingFactor * this.padding.left + ", 0)");
+				.attr(
+					"transform",
+					"translate(" + this.paddingFactor * this.padding.left + ", 0)"
+				);
 		},
 
 		dots() {
 			let self = this;
-			this.svg.selectAll(".dot")
+			this.svg
+				.selectAll(".dot")
 				.data(this.yArray)
-				.enter().append("circle")
+				.enter()
+				.append("circle")
 				.attr("class", "dot")
 				.attr("r", 5)
 				.attr("cx", function (d, i) {
@@ -353,7 +401,9 @@ export default {
 		correlationText() {
 			let self = this;
 			let decimalFormat = d3.format("0.2f");
-			this.svg.append("g").append("text")
+			this.svg
+				.append("g")
+				.append("text")
 				.attr("class", "text")
 				.text("corr-coef: " + decimalFormat(this.regression["corr_coef"]))
 				.attr("x", function (d) {
@@ -371,5 +421,6 @@ export default {
 			// d3.selectAll('.axis-label"').remove();
 			this.svg.selectAll("text").remove();
 		},
-	}
+	},
 };
+</script>

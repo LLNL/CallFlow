@@ -5,11 +5,15 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+	<g :id="id"></g>
+</template>
+
+<script>
 import * as utils from "../../utils";
 import * as d3 from "d3";
 
 export default {
-	template: "<g :id=\"id\"></g>",
 	name: "TargetLine",
 	components: {},
 
@@ -59,3 +63,5 @@ export default {
 		}
 	}
 };
+
+</script>

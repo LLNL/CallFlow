@@ -5,13 +5,17 @@
  * SPDX-License-Identifier: MIT
  */
 
+<template>
+	<g :id="id"></g>
+</template>
+
+<script>
 import * as d3 from "d3";
 import * as utils from "../../utils";
 import { color } from "dagre-d3/dist/dagre-d3";
 
 export default {
-	template: "<g :id=\"id\"></g>",
-	name: "MeanGradients",
+	name: "MeanDiff",
 	components: {},
 
 	data: () => ({
@@ -105,3 +109,5 @@ export default {
 		},
 	}
 };
+
+</script>
