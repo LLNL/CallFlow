@@ -23,6 +23,7 @@ install:
   - python setup.py install
   - python setup.py build_ext --inplace
   - pip list
+  - pytest calllflow/tests
   - npm install --prefix=app
   - npm run lint --prefix=app
 
