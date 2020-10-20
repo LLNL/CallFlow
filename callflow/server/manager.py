@@ -24,7 +24,7 @@ from codecs import open
 
 version = {}
 vfile = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "callflow", "version.py"
+    os.path.dirname(os.path.abspath(__file__)), "..", "version.py"
 )
 with open(vfile) as fp:
     exec(fp.read(), version)

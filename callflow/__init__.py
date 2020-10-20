@@ -22,3 +22,5 @@ __all__ = [
     "EnsembleGraph",
     "CallFlow",
 ]
+
+from .server import load_ipython_extension
