@@ -23,9 +23,7 @@ from codecs import open
 # CallFlow imports.
 
 version = {}
-vfile = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "version.py"
-)
+vfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "version.py")
 with open(vfile) as fp:
     exec(fp.read(), version)
 __version__ = version["__version__"]
