@@ -92,7 +92,7 @@ export default class Color {
 			break;
 		case "MeanGradients":
 			colorscale = chroma.scale(colors)
-				.padding([0.05, 0.0])
+				.padding([0.0, 0.0])
 				.gamma(0.5)
 				.domain([min, max]);
 			break;
