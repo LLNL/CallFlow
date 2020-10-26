@@ -13,7 +13,7 @@ from .datastructures.ensemblegraph import EnsembleGraph
 
 from .callflow import CallFlow
 
-from server.notebook_server import _load_ipython_extension
+from .server.notebook_server import _load_ipython_extension
 
 
 def load_ipython_extension(ipython):

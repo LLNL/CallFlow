@@ -6,7 +6,7 @@
     {
       "name": "calc-pi",
       "path": "",
-      "format": "hpctoolkit"
+      "profile_format": "hpctoolkit"
     }
   ],
   "scheme": {
