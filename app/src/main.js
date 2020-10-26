@@ -26,7 +26,7 @@ const store = new Vuex.Store();
 
 const socket = new VueSocketIO({
 	debug: false,
-	connection: "http://localhost:5000",
+	connection: "http://127.0.0.1:5000",
 	vuex: {
 		store,
 		actionPrefix: "SOCKET_",
