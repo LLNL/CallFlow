@@ -491,12 +491,11 @@
 					<span>
 						<CallsiteCorrespondence ref="CallsiteCorrespondence" />
 					</span>
-					<!-- <span> -->
-						<!-- <ParameterProjection
+					<span>
+						<ParameterProjection
 							ref="ParameterProjection"
-							@compare="updateCompareMode"
-						/> -->
-					<!-- </span> -->
+						/>
+					</span>
 				</splitpanes>
 			</splitpanes>
 		</v-layout>
@@ -566,7 +565,7 @@ import CallsiteCorrespondence from "./callsiteCorrespondence/callsiteCorresponde
 import EnsembleHistogram from "./ensembleHistogram/ensembleHistogram";
 import ModuleHierarchy from "./moduleHierarchy/moduleHierarchy";
 import EnsembleScatterplot from "./ensembleScatterplot/ensembleScatterplot";
-// import ParameterProjection from "./parameterProjection/parameterProjection";
+import ParameterProjection from "./parameterProjection/parameterProjection";
 
 import io from "socket.io-client";
 import * as utils from "./utils";
@@ -582,7 +581,7 @@ export default {
 		EnsembleScatterplot,
 		EnsembleHistogram,
 		ModuleHierarchy,
-		// ParameterProjection,
+		ParameterProjection,
 		CallsiteCorrespondence,
 	},
 
@@ -928,7 +927,7 @@ export default {
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
 				this.$refs.CallsiteCorrespondence,
-				// this.$refs.ParameterProjection,
+				this.$refs.ParameterProjection,
 				this.$refs.ModuleHierarchy,
 			];
 		},
