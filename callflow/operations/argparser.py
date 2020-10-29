@@ -43,8 +43,6 @@ class ArgParser:
         # Parse the arguments passed.
         args = self._create_parser(args_string)
 
-        print(args)
-
         # Verify if only valid things are passed.
         # Read mode determines how arguments will be consumed by CallFlow.
         read_mode = self._verify_parser(args)
@@ -154,7 +152,7 @@ class ArgParser:
         json = callflow.utils.jsonify_string(f)
 
         # Validate the input json.
-        jsonschema.validate(instance=json, schema=schema)
+        jsonschema.validate(instance=json, schema=SCHEMA)
 
         # Set the data_path, which is data directory.
         scheme["data_path"] = os.path.dirname(args.config)
