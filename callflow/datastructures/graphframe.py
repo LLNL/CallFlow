@@ -116,10 +116,8 @@ class GraphFrame(ht.GraphFrame):
         LOGGER.info(f"Creating graphframes: {name}")
         LOGGER.info(f"Data path: {config['data_path']}")
 
-        data_path = os.path.join(
-            config["data_path"], config["properties"]["paths"][name]
-        )
-        profile_format = config["properties"]["profile_format"][name]
+        data_path = os.path.join(config["data_path"], config["runs"]["paths"][name])
+        profile_format = config["runs"]["profile_format"][name]
         if profile_format == "hpctoolkit":
             gf = ht.GraphFrame.from_hpctoolkit(data_path)
 

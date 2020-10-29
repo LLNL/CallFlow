@@ -18,7 +18,7 @@ LOGGER = callflow.get_logger(__name__)
 
 
 class CallFlow:
-    def __init__(self, config: dict, ensemble=False):
+    def __init__(self, config: dict = None, data_dir: str = None):
         """
         Entry interface to access CallFlow's functionalities. "
         """
@@ -26,8 +26,14 @@ class CallFlow:
         # Assert if config is provided.
         assert isinstance(config, dict)
 
-        self.config = config
-        self.ensemble = ensemble
+        if config:
+            self.config = config
+        elif data_dir:
+            self.config = self.read_config()
+
+        ndatasets = len(self.config["runs"])
+        assert ndatasets > 0
+        self.ensemble = ndatasets > 1
 
     # --------------------------------------------------------------------------
     # Processing methods.
@@ -35,23 +41,24 @@ class CallFlow:
         """
         Create a .callflow directory and empty files.
         """
-        LOGGER.debug(f"Saved .callflow directory is: {self.config['save_path']}")
+        LOGGER.info(f".callflow directory is: {self.config['save_path']}")
 
         if not os.path.exists(self.config["save_path"]):
             os.makedirs(self.config["save_path"])
             os.makedirs(os.path.join(self.config["save_path"], "ensemble"))
 
-        dataset_folders = [k for k in self.config["properties"]["paths"].keys()]
-        # for dataset in self.config["properties"][""]:
-        #     dataset_folders.append(self.config["properties"]["name"])
+        dataset_folders = [
+            os.path.join(self.config["save_path"], k["name"])
+            for k in self.config["runs"]
+        ]
+
         dataset_folders.append("ensemble")
 
         for dataset in dataset_folders:
             dataset_dir = os.path.join(self.config["save_path"], dataset)
-            LOGGER.debug(dataset_dir)
             if not os.path.exists(dataset_dir):
                 # if self.debug:
-                LOGGER.debug(f"Creating .callflow directory for dataset : {dataset}")
+                LOGGER.info(f"Creating .callflow directory for dataset : {dataset}")
                 os.makedirs(dataset_dir)
 
             files = ["df.csv", "nxg.json", "hatchet_tree.txt", "auxiliary_data.json"]
@@ -70,20 +77,17 @@ class CallFlow:
         """
         Process the datasets based on the format (i.e., either single or ensemble)
         """
-        ndatasets = len(self.config["properties"]["runs"])
-        assert self.ensemble == (ndatasets > 1)
-
         self._create_dot_callflow_folder()
         if self.ensemble:
-            self._process_ensemble(self.config["properties"]["runs"])
+            self._process_ensemble(self.config["runs"])
         else:
-            self._process_single(self.config["properties"]["runs"][0])
+            self._process_single(self.configp["runs"][0])
 
     def load(self):
         """
         Load the processed datasets by the format.
         """
-        ndatasets = len(self.config["properties"]["runs"])
+        ndatasets = len(self.config["runs"])
         if self.ensemble:
             self.supergraphs = self._read_ensemble()
             # assertion here is 1 less than self.supergraph.keys, becasuse
@@ -101,9 +105,9 @@ class CallFlow:
         """
         Single dataset processing.
         """
-        LOGGER.debug("#########################################")
-        LOGGER.debug(f"Single Mode: {dataset}")
-        LOGGER.debug("#########################################")
+        LOGGER.info("#########################################")
+        LOGGER.info(f"Single Mode: {dataset}")
+        LOGGER.info("#########################################")
         supergraph = SuperGraph(config=self.config, tag=dataset, mode="process")
 
         # Process each graphframe.
@@ -126,11 +130,14 @@ class CallFlow:
         """
         # Before we process the ensemble, we perform single processing on all datasets.
         single_supergraphs = {}
-        for idx, dataset_name in enumerate(datasets):
+        for dataset in datasets:
+            print(datasets)
+            dataset_name = dataset["name"]
             # Create an instance of dataset.
-            LOGGER.debug("#########################################")
-            LOGGER.debug(f"Ensemble Mode: {dataset_name}")
-            LOGGER.debug("#########################################")
+            LOGGER.info("#########################################")
+            LOGGER.info(f"Ensemble Mode: {dataset_name}")
+            LOGGER.info("#########################################")
+            print(self.config)
             single_supergraphs[dataset_name] = SuperGraph(
                 config=self.config, tag=dataset_name, mode="process"
             )
@@ -145,9 +152,7 @@ class CallFlow:
 
             # Single auxiliary processing.
             single_supergraphs[dataset_name].single_auxiliary(
-                dataset=dataset_name,
-                binCount=20,
-                process=True,
+                dataset=dataset_name, binCount=20, process=True,
             )
 
         # Create a supergraph class for ensemble case.
@@ -168,7 +173,7 @@ class CallFlow:
         ensemble_supergraph.ensemble_auxiliary(
             # MPIBinCount=self.currentMPIBinCount,
             # RunBinCount=self.currentRunBinCount,
-            datasets=self.config["properties"]["runs"],
+            datasets=self.config["properties"],
             MPIBinCount=20,
             RunBinCount=20,
             process=True,
@@ -181,7 +186,7 @@ class CallFlow:
         """
         supergraphs = {}
         # Only consider the first dataset from the listing.
-        dataset_name = self.config["properties"]["runs"][0]
+        dataset_name = self.config["properties"][0]
         supergraphs[dataset_name] = SuperGraph(
             config=self.config, tag=dataset_name, mode="render"
         )
@@ -194,7 +199,7 @@ class CallFlow:
         """
         supergraphs = {}
 
-        for idx, dataset_name in enumerate(self.config["properties"]["runs"]):
+        for dataset_name in self.config["properties"]:
             supergraphs[dataset_name] = SuperGraph(
                 config=self.config, tag=dataset_name, mode="render"
             )

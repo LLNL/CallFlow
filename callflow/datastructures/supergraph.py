@@ -34,9 +34,8 @@ class SuperGraph(object):
         """
         assert mode in ["process", "render"]
         self.timer = Timer()
-
+        self.dirname = os.path.join(config["save_path"], tag)
         self.props = config
-        self.dirname = os.path.join(self.props["save_path"], tag)
         self.tag = tag
         self.mode = mode
 
