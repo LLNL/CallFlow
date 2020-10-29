@@ -20,6 +20,9 @@ SCHEMA = {
         "save_path": {"type": "string"},
         "read_parameter": {"type": "boolean"},
         "properties": {"type": "object"},
+        "filter_perc": {"type": "number"},
+        "filter_by": {"type": "string"},
+        "group_by": {"type": "string"},
     },
 }
 
@@ -139,6 +142,9 @@ class ArgParser:
 
         elif args.data_dir:
             read_mode = "directory"
+            if not args.profile_format:
+                s = "Provide format using --profile_format"
+                raise Exception(s)
 
         elif args.gfs:
             read_mode = "graphframes"
@@ -185,7 +191,7 @@ class ArgParser:
             "default": ArgParser._scheme_dataset_map_default,
         }
 
-        LOGGER.debug("Scheme: default")
+        LOGGER.debug("[ArgParser] Filling the scheme: Config File")
         if "runs" not in json and "profile_format" not in json:
             raise Exception(
                 "Either 'runs' or 'profile_format' key must be provided in the config file."
@@ -199,13 +205,6 @@ class ArgParser:
             scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER[
                 json["profile_format"]
             ](json["runs"])
-
-        if "module_map" in json["scheme"]:
-            scheme["module_callsite_map"] = json["scheme"]["module_map"]
-
-        scheme["callsite_module_map"] = ArgParser._process_module_map(
-            scheme["module_callsite_map"]
-        )
 
         if args.filter_by:
             scheme["filter_by"] = args.filter_by
