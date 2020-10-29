@@ -12,7 +12,7 @@ import callflow
 
 LOGGER = callflow.get_logger(__name__)
 
-schema = {
+SCHEMA = {
     "type": "object",
     "properties": {
         "data_path": {"type": "string"},
@@ -43,6 +43,8 @@ class ArgParser:
         # Parse the arguments passed.
         args = self._create_parser(args_string)
 
+        print(args)
+
         # Verify if only valid things are passed.
         # Read mode determines how arguments will be consumed by CallFlow.
         read_mode = self._verify_parser(args)
@@ -51,6 +53,7 @@ class ArgParser:
         # Check if read mode is one of the keys of _READ_MODES.
         assert read_mode in _READ_MODES.keys()
 
+        # Call the appropriate function belonging to the format.
         self.config = _READ_MODES[read_mode](args)
 
         # Add read_mode to arguments.
@@ -59,8 +62,8 @@ class ArgParser:
         # Add process to arguments
         self.process = args.process
 
-        # validate the json.
-        jsonschema.validate(instance=self.config, schema=schema)
+        # validate the config variable by checking with the schema.
+        jsonschema.validate(instance=self.config, schema=SCHEMA)
 
         LOGGER.debug(f"CallFlow instantiation configuration: {self.config}")
 
