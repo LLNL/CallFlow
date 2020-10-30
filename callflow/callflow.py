@@ -175,7 +175,7 @@ class CallFlow:
         ensemble_supergraph.ensemble_auxiliary(
             # MPIBinCount=self.currentMPIBinCount,
             # RunBinCount=self.currentRunBinCount,
-            datasets=list(self.config["parameter_props"]["data_path"].keys()),
+            datasets=self.config["parameter_props"]["runs"],
             MPIBinCount=20,
             RunBinCount=20,
             process=True,
@@ -201,7 +201,7 @@ class CallFlow:
         """
         supergraphs = {}
 
-        for dataset_name in self.config["parameter_props"]["data_path"].keys():
+        for dataset_name in self.config["parameter_props"]["runs"]:
             supergraphs[dataset_name] = SuperGraph(
                 config=self.config, tag=dataset_name, mode="render"
             )
@@ -255,12 +255,13 @@ class CallFlow:
         Adds parameter information (like path, tag name, and other information fetched).
         """
         props = {}
+        props["runs"] = []
         props["data_path"] = {}
         props["profile_format"] = {}
 
         for run in config["runs"]:
-            print(run)
             tag = run["name"]
+            props["runs"].append(tag)
             props["data_path"][tag] = run["path"]
             props["profile_format"][tag] = run["profile_format"]
 
@@ -343,7 +344,7 @@ class CallFlow:
         Handles all the socket requests connected to Single CallFlow.
         """
         operation_name = operation["name"]
-        datasets = self.config["properties"]["runs"]
+        datasets = self.config["parameter_props"]["runs"]
 
         if operation_name == "init":
             return self.config
