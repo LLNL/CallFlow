@@ -68,7 +68,7 @@ class CallFlowServer:
 
         # Socket request handlers
         self._request_handler_general()
-        if len(self.args.config["properties"]["runs"]) == 1:
+        if len(self.args.config["parameter_props"]["data_path"].keys()) == 1:
             self._request_handler_single()
         else:
             self._request_handler_single()

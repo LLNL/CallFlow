@@ -78,16 +78,20 @@ class CallFlow:
         Process the datasets based on the format (i.e., either single or ensemble)
         """
         self._create_dot_callflow_folder()
+        self.config["parameter_props"] = self._parameter_props(self.config)
+
         if self.ensemble:
             self._process_ensemble(self.config["runs"])
         else:
-            self._process_single(self.configp["runs"][0])
+            self._process_single(self.config["runs"][0])
 
     def load(self):
         """
         Load the processed datasets by the format.
         """
         ndatasets = len(self.config["runs"])
+        self.config["parameter_props"] = self._parameter_props(self.config)
+
         if self.ensemble:
             self.supergraphs = self._read_ensemble()
             # assertion here is 1 less than self.supergraph.keys, becasuse
@@ -99,7 +103,7 @@ class CallFlow:
 
         # Adds basic information to config.
         # Config is later return to client app on "init" request.
-        self.add_basic_info_to_config()
+        self.config["runtime_props"] = self._runtime_props(self.supergraphs)
 
     def _process_single(self, dataset):
         """
@@ -131,13 +135,11 @@ class CallFlow:
         # Before we process the ensemble, we perform single processing on all datasets.
         single_supergraphs = {}
         for dataset in datasets:
-            print(datasets)
             dataset_name = dataset["name"]
             # Create an instance of dataset.
             LOGGER.info("#########################################")
             LOGGER.info(f"Ensemble Mode: {dataset_name}")
             LOGGER.info("#########################################")
-            print(self.config)
             single_supergraphs[dataset_name] = SuperGraph(
                 config=self.config, tag=dataset_name, mode="process"
             )
@@ -173,7 +175,7 @@ class CallFlow:
         ensemble_supergraph.ensemble_auxiliary(
             # MPIBinCount=self.currentMPIBinCount,
             # RunBinCount=self.currentRunBinCount,
-            datasets=self.config["properties"],
+            datasets=list(self.config["parameter_props"]["data_path"].keys()),
             MPIBinCount=20,
             RunBinCount=20,
             process=True,
@@ -199,60 +201,70 @@ class CallFlow:
         """
         supergraphs = {}
 
-        for dataset_name in self.config["properties"]:
+        for dataset_name in self.config["parameter_props"]["data_path"].keys():
             supergraphs[dataset_name] = SuperGraph(
                 config=self.config, tag=dataset_name, mode="render"
             )
-            # supergraphs[dataset_name].read_gf(read_parameter=self.config["read_parameter"])
 
         supergraphs["ensemble"] = EnsembleGraph(
             config=self.config, tag="ensemble", mode="render"
         )
-        # supergraphs["ensemble"].read_gf(read_parameter=self.config["read_parameter"])
-        # supergraphs["ensemble"].read_auxiliary_data()
         return supergraphs
 
     # --------------------------------------------------------------------------
     # Reading and rendering methods.
     # All the functions below are Public methods that are accessed by the server.
 
-    def add_basic_info_to_config(self):
+    def _runtime_props(self, supergraphs):
         """
-        Adds basic information (like max, min inclusive and exclusive runtime) to self.config.
+        Adds runtime information (like max, min inclusive and exclusive runtime).
         """
-        self.config["maxIncTime"] = {}
-        self.config["maxExcTime"] = {}
-        self.config["minIncTime"] = {}
-        self.config["minExcTime"] = {}
-        self.config["numOfRanks"] = {}
+        props = {}
+        props["maxIncTime"] = {}
+        props["maxExcTime"] = {}
+        props["minIncTime"] = {}
+        props["minExcTime"] = {}
+        props["numOfRanks"] = {}
         maxIncTime = 0
         maxExcTime = 0
         minIncTime = 0
         minExcTime = 0
         maxNumOfRanks = 0
-        for idx, tag in enumerate(self.supergraphs):
-            self.config["maxIncTime"][tag] = (
-                self.supergraphs[tag].gf.df["time (inc)"].max()
-            )
-            self.config["maxExcTime"][tag] = self.supergraphs[tag].gf.df["time"].max()
-            self.config["minIncTime"][tag] = (
-                self.supergraphs[tag].gf.df["time (inc)"].min()
-            )
-            self.config["minExcTime"][tag] = self.supergraphs[tag].gf.df["time"].min()
-            self.config["numOfRanks"][tag] = len(
-                self.supergraphs[tag].gf.df["rank"].unique()
-            )
-            maxExcTime = max(self.config["maxExcTime"][tag], maxExcTime)
-            maxIncTime = max(self.config["maxIncTime"][tag], maxIncTime)
-            minExcTime = min(self.config["minExcTime"][tag], minExcTime)
-            minIncTime = min(self.config["minIncTime"][tag], minIncTime)
-            maxNumOfRanks = max(self.config["numOfRanks"][tag], maxNumOfRanks)
+        for idx, tag in enumerate(supergraphs):
+            props["maxIncTime"][tag] = supergraphs[tag].gf.df["time (inc)"].max()
+            props["maxExcTime"][tag] = supergraphs[tag].gf.df["time"].max()
+            props["minIncTime"][tag] = supergraphs[tag].gf.df["time (inc)"].min()
+            props["minExcTime"][tag] = supergraphs[tag].gf.df["time"].min()
+            props["numOfRanks"][tag] = len(supergraphs[tag].gf.df["rank"].unique())
+            maxExcTime = max(props["maxExcTime"][tag], maxExcTime)
+            maxIncTime = max(props["maxIncTime"][tag], maxIncTime)
+            minExcTime = min(props["minExcTime"][tag], minExcTime)
+            minIncTime = min(props["minIncTime"][tag], minIncTime)
+            maxNumOfRanks = max(props["numOfRanks"][tag], maxNumOfRanks)
 
-        self.config["maxIncTime"]["ensemble"] = maxIncTime
-        self.config["maxExcTime"]["ensemble"] = maxExcTime
-        self.config["minIncTime"]["ensemble"] = minIncTime
-        self.config["minExcTime"]["ensemble"] = minExcTime
-        self.config["numOfRanks"]["ensemble"] = maxNumOfRanks
+        props["maxIncTime"]["ensemble"] = maxIncTime
+        props["maxExcTime"]["ensemble"] = maxExcTime
+        props["minIncTime"]["ensemble"] = minIncTime
+        props["minExcTime"]["ensemble"] = minExcTime
+        props["numOfRanks"]["ensemble"] = maxNumOfRanks
+
+        return props
+
+    def _parameter_props(self, config):
+        """
+        Adds parameter information (like path, tag name, and other information fetched).
+        """
+        props = {}
+        props["data_path"] = {}
+        props["profile_format"] = {}
+
+        for run in config["runs"]:
+            print(run)
+            tag = run["name"]
+            props["data_path"][tag] = run["path"]
+            props["profile_format"][tag] = run["profile_format"]
+
+        return props
 
     def request_single(self, operation):
         """

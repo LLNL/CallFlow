@@ -114,10 +114,11 @@ class GraphFrame(ht.GraphFrame):
         Uses config file to create a graphframe.
         """
         LOGGER.info(f"Creating graphframes: {name}")
-        LOGGER.info(f"Data path: {config['data_path']}")
+        LOGGER.info(f"Data path: {config['parameter_props']['data_path'][name]}")
 
-        data_path = os.path.join(config["data_path"], config["runs"]["paths"][name])
-        profile_format = config["runs"]["profile_format"][name]
+        data_path = config["parameter_props"]["data_path"][name]
+        profile_format = config["parameter_props"]["profile_format"][name]
+
         if profile_format == "hpctoolkit":
             gf = ht.GraphFrame.from_hpctoolkit(data_path)
 
@@ -137,10 +138,10 @@ class GraphFrame(ht.GraphFrame):
             gf = ht.GraphFrame.from_gprof_dot(data_path)
 
         elif profile_format == "literal":
-            gf = ht.GraphFrame.from_literal(config["data_path"])
+            gf = ht.GraphFrame.from_literal(data_path)
 
         elif profile_format == "lists":
-            gf = ht.GraphFrame.from_lists(config["data_path"])
+            gf = ht.GraphFrame.from_lists(data_path)
 
         return GraphFrame.from_hatchet(gf)
 
