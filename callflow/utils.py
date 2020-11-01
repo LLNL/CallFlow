@@ -213,7 +213,7 @@ def node_dict_from_frame(frame: hatchet.frame):
     """
     Constructs callsite's name from Hatchet's frame.
     """
-    assert(frame.get("type") in ["function", "statement", "loop", "region"])
+    assert frame.get("type") in ["function", "statement", "loop", "region"]
 
     if frame["type"] == "function":
         return {"name": frame.get("name"), "line": "NA", "type": "function"}
