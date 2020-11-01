@@ -213,8 +213,7 @@ def node_dict_from_frame(frame: hatchet.frame):
     """
     Constructs callsite's name from Hatchet's frame.
     """
-    if frame.get("type") is None and frame["name"] is not None:
-        return {"name": frame.get("name"), "type": "function"}
+    assert frame.get("type") in ["function", "statement", "loop", "region"]
 
     if frame["type"] == "function":
         return {"name": frame.get("name"), "line": "NA", "type": "function"}
@@ -226,8 +225,8 @@ def node_dict_from_frame(frame: hatchet.frame):
         }
     elif frame["type"] == "loop":
         return {"name": frame.get("file"), "line": frame.get("line"), "type": "loop"}
-    else:
-        return {}
+    elif frame["type"] == "region":
+        return {"name": frame.get("name"), "line": "NA", "type": "region"}
 
 
 def path_list_from_frames(frames: list):
