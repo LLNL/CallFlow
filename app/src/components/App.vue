@@ -6,82 +6,82 @@
  */
 
 <template>
-  <v-app>
-    <div id="app">
-      <v-toolbar id="toolbar" color="teal" fixed app clipped-right>
-        <v-toolbar-title style="margin-right: 3em; color: white">
-          CallFlow
-        </v-toolbar-title>
+	<v-app>
+		<div id="app">
+			<v-toolbar id="toolbar" color="teal" fixed app clipped-right>
+				<v-toolbar-title style="margin-right: 3em; color: white">
+					CallFlow
+				</v-toolbar-title>
 
-        <v-btn outlined>
-          <router-link to="/single">Single</router-link>
-        </v-btn>
+				<v-btn outlined>
+					<router-link to="/single">Single</router-link>
+				</v-btn>
 
-        <v-btn outlined v-if="runCounts > 1">
-          <router-link to="/ensemble">Ensemble</router-link>
-        </v-btn>
-      </v-toolbar>
+				<v-btn outlined v-if="runCounts > 1">
+					<router-link to="/ensemble">Ensemble</router-link>
+				</v-btn>
+			</v-toolbar>
 
-      <router-view></router-view>
-      <v-content>
-        <v-layout>
-          <v-container fluid>
-            <v-card tile>
-              <v-card-title>Experiment: {{ data.experiment }}</v-card-title>
-            </v-card>
-            <v-card tile>
-              <v-card-title>Data path: {{ data.data_path }}</v-card-title>
-            </v-card>
-            <v-card tile>
-              <v-card-title
-                >.callflow save path: {{ data.save_path }}</v-card-title
-              >
-            </v-card>
-            <v-card tile>
-              <v-card-title
-                >Filter by attribute: {{ data.filter_by }}</v-card-title
-              >
-            </v-card>
-            <v-card tile>
-              <v-card-title
-                >Filter percentage: {{ data.filter_perc }}</v-card-title
-              >
-            </v-card>
-            <v-card tile>
-              <v-card-title
-                >Group by attribute: {{ data.group_by }}</v-card-title
-              >
-            </v-card>
+			<router-view></router-view>
+			<v-content>
+				<v-layout>
+					<v-container fluid>
+						<v-card tile>
+							<v-card-title>Experiment: {{ data.experiment }}</v-card-title>
+						</v-card>
+						<v-card tile>
+							<v-card-title>Data path: {{ data.data_path }}</v-card-title>
+						</v-card>
+						<v-card tile>
+							<v-card-title
+								>.callflow save path: {{ data.save_path }}</v-card-title
+							>
+						</v-card>
+						<v-card tile>
+							<v-card-title
+								>Filter by attribute: {{ data.filter_by }}</v-card-title
+							>
+						</v-card>
+						<v-card tile>
+							<v-card-title
+								>Filter percentage: {{ data.filter_perc }}</v-card-title
+							>
+						</v-card>
+						<v-card tile>
+							<v-card-title
+								>Group by attribute: {{ data.group_by }}</v-card-title
+							>
+						</v-card>
 
-            <v-card tile>
-              <v-card-title>Runtime Information</v-card-title>
-              <v-data-table
-                dense
-                :headers="runtimeHeaders"
-                :items="runtime"
-                :items-per-page="5"
-                class="elevation-1"
-              >
-                <template slot="items" slot-scope="props">
-                  <tr>
-                    <td nowrap="true">{{ props.item.dataset }}</td>
-                    <td nowrap="true">
-                      {{ props.item.min_inclusive_runtime }}
-                    </td>
-                    <td nowrap="true">
-                      {{ props.item.max_inclusive_runtime }}
-                    </td>
-                    <td nowrap="true">
-                      {{ props.item.min_exclusive_runtime }}
-                    </td>
-                    <td nowrap="true">
-                      {{ props.item.max_exclusive_runtime }}
-                    </td>
-                  </tr>
-                </template>
-              </v-data-table>
-            </v-card>
-            <!-- <v-card tile>
+						<v-card tile>
+							<v-card-title>Runtime Information</v-card-title>
+							<v-data-table
+								dense
+								:headers="runtimeHeaders"
+								:items="runtime"
+								:items-per-page="5"
+								class="elevation-1"
+							>
+								<template slot="items" slot-scope="props">
+									<tr>
+										<td nowrap="true">{{ props.item.dataset }}</td>
+										<td nowrap="true">
+											{{ props.item.min_inclusive_runtime }}
+										</td>
+										<td nowrap="true">
+											{{ props.item.max_inclusive_runtime }}
+										</td>
+										<td nowrap="true">
+											{{ props.item.min_exclusive_runtime }}
+										</td>
+										<td nowrap="true">
+											{{ props.item.max_exclusive_runtime }}
+										</td>
+									</tr>
+								</template>
+							</v-data-table>
+						</v-card>
+						<!-- <v-card tile>
 						<v-card-title>Module Callsite Mapping</v-card-title>
 						<v-data-table
 						dense
@@ -112,11 +112,11 @@
 						</template>
 						</v-data-table>
 					</v-card>-->
-          </v-container>
-        </v-layout>
-      </v-content>
-    </div>
-  </v-app>
+					</v-container>
+				</v-layout>
+			</v-content>
+		</div>
+	</v-app>
 </template>
 
 <script>
@@ -165,15 +165,17 @@ export default {
 	sockets: {
 		config(data) {
 			this.data = JSON.parse(data);
-			this.runCounts = this.data["properties"]["runs"].length;
+			this.runCounts = this.data.parameter_props.runs.length;
+			let datasets = Object.keys(this.data.parameter_props.data_path);
+
 			// set the data for runtime.
-			for (let dataset of this.data["properties"]["runs"]) {
+			for (let dataset of datasets) {
 				this.runtime.push({
 					dataset: dataset,
-					min_inclusive_runtime: this.data.minIncTime[dataset],
-					max_inclusive_runtime: this.data.maxIncTime[dataset],
-					min_exclusive_runtime: this.data.minExcTime[dataset],
-					max_exclusive_runtime: this.data.maxExcTime[dataset],
+					min_inclusive_runtime: this.data.runtime_props.minIncTime[dataset],
+					max_inclusive_runtime: this.data.runtime_props.maxIncTime[dataset],
+					min_exclusive_runtime: this.data.runtime_props.minExcTime[dataset],
+					max_exclusive_runtime: this.data.runtime_props.maxExcTime[dataset],
 				});
 			}
 			for (let module in this.data.module_callsite_map) {
@@ -193,101 +195,101 @@ export default {
 
 <style>
 * {
-  margin: 0;
-  padding: 0;
+	margin: 0;
+	padding: 0;
 }
 
 body {
-  top: -10px !important;
-  font-family: "Open Sans", sans-serif;
-  margin-bottom: 0px;
-  height: 99%;
-  font-size: 16px;
+	top: -10px !important;
+	font-family: "Open Sans", sans-serif;
+	margin-bottom: 0px;
+	height: 99%;
+	font-size: 16px;
 }
 
 #toolbar {
-  padding: 0px 0px 0px;
+	padding: 0px 0px 0px;
 }
 
 #toolbar > .v-toolbar__content {
-  height: 54px !important;
+	height: 54px !important;
 }
 
 .selected {
-  stroke: #343838;
-  stroke-width: 1px;
+	stroke: #343838;
+	stroke-width: 1px;
 }
 
 .unselected {
-  stroke: #dbdbdb;
-  stroke-width: 3px;
+	stroke: #dbdbdb;
+	stroke-width: 3px;
 }
 
 .big_text {
-  font-size: 32px;
+	font-size: 32px;
 }
 
 .ui.vis {
-  height: 98% !important;
+	height: 98% !important;
 }
 
 .tight {
-  margin-left: -1em;
+	margin-left: -1em;
 }
 .ui.segment.vis_container {
-  margin-right: -1em;
+	margin-right: -1em;
 }
 
 .v-chip__content {
-  color: white;
-  font-size: 125%;
+	color: white;
+	font-size: 125%;
 }
 
 .scroll {
-  overflow-y: auto;
+	overflow-y: auto;
 }
 
 .tooltip {
-  padding-left: 10px;
-  font-size: 14px;
-  font-weight: 500;
+	padding-left: 10px;
+	font-size: 14px;
+	font-weight: 500;
 }
 
 .setting-button {
-  border: 0px solid !important;
-  right: 0px !important;
-  color: #009688 !important;
-  font-size: 36px !important;
-  background-color: white !important;
+	border: 0px solid !important;
+	right: 0px !important;
+	color: #009688 !important;
+	font-size: 36px !important;
+	background-color: white !important;
 }
 
 .v-list {
-  padding: 8px;
+	padding: 8px;
 }
 
 .splitpanes.default-theme .splitpanes__pane {
-  background: #f7f7f7 !important;
+	background: #f7f7f7 !important;
 }
 
 .md-theme-default a:not(.md-button) {
-  color: #009687 !important;
+	color: #009687 !important;
 }
 
 .valueText {
-  font-weight: 700 !important;
+	font-weight: 700 !important;
 }
 
 .chip {
-  font-weight: 500 !important;
+	font-weight: 500 !important;
 }
 
 #footer {
-  color: #fff;
+	color: #fff;
 }
 
 /* Over write the primary text to avoid blue color change on selection*/
 .my-app.v-application .primary--text {
-  color: #fff !important;
-  caret-color: #fff !important;
+	color: #fff !important;
+	caret-color: #fff !important;
 }
 </style>

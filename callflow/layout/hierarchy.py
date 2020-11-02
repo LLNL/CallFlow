@@ -27,10 +27,10 @@ class HierarchyLayout:
         )
 
         # TODO: Need to verify it is always a Tree.
-        cycles = self.check_cycles(self.nxg)
+        cycles = HierarchyLayout._check_cycles(self.nxg)
         while len(cycles) != 0:
-            self.nxg = self.remove_cycles(self.nxg, cycles)
-            cycles = self.check_cycles(self.hierarchy)
+            self.nxg = HierarchyLayout._remove_cycles(self.nxg, cycles)
+            cycles = HierarchyLayout._check_cycles(self.nxg)
             LOGGER.debug(f"cycles: {cycles}")
 
     @staticmethod
@@ -102,7 +102,7 @@ class HierarchyLayout:
         return nxg
 
     @staticmethod
-    def check_cycles(G):
+    def _check_cycles(G):
         """
         Checks if there are cycles.
 
