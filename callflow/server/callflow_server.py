@@ -44,7 +44,7 @@ class CallFlowServer:
         self.production = True
         self.process = self.args.process
 
-        self.callflow = callflow.CallFlow(config=self.args.config,)
+        self.callflow = callflow.CallFlow(config=self.args.config)
 
         if self.process:
             self.callflow.process()

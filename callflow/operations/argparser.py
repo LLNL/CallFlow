@@ -228,7 +228,7 @@ class ArgParser:
     def _write_config(config):
         import json
 
-        filename = os.path.join(config["data_path"], "callflow.config.json")
+        filename = os.path.join(config["save_path"], "callflow.config.json")
         LOGGER.info("callflow.config.json dumped into {}".format(filename))
         with open(filename, "w") as fp:
             json.dump(config, fp)
