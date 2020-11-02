@@ -113,88 +113,88 @@ class IntermediateNodes {
                     tempNode = this.existingIntermediateNodes[target_node.id];
                 }
 
-                    // Add the source edge.
-                    const sourceTempEdge = {
-                        type: "source_intermediate",
-                        source: source_node.id,
-                        target: tempNode.id,
-                        weight: temp_edges[i].weight,
-                        targetWeight: temp_edges[i].targetWeight,
-                        actual_time: actual_time,
-                        max_flow: max_flow,
-                    };
-                    edges.push(sourceTempEdge);
+                // Add the source edge.
+                const sourceTempEdge = {
+                    type: "source_intermediate",
+                    source: source_node.id,
+                    target: tempNode.id,
+                    weight: temp_edges[i].weight,
+                    targetWeight: temp_edges[i].targetWeight,
+                    actual_time: actual_time,
+                    max_flow: max_flow,
+                };
+                edges.push(sourceTempEdge);
 
-                    if (debug) {
-                        console.log(
-                            "[Ensemble SuperGraph] Adding intermediate source edge: ",
-                            sourceTempEdge
-                        );
-                    }
+                if (debug) {
+                    console.log(
+                        "[Ensemble SuperGraph] Adding intermediate source edge: ",
+                        sourceTempEdge
+                    );
+                }
 
-                    if (j == shift_level) {
-                        edges[i].original_target = target;
-                    }
-                    edges[i].target_data = nodes[intermediate_idx];
-                    if (debug) {
-                        console.log("[Ensemble SuperGraph] Updating this edge:", edges[i]);
-                    }
+                if (j == shift_level) {
+                    edges[i].original_target = target;
+                }
+                edges[i].target_data = nodes[intermediate_idx];
+                if (debug) {
+                    console.log("[Ensemble SuperGraph] Updating this edge:", edges[i]);
+                }
 
-                    const targetTempEdge = {
-                        type: "target_intermediate",
-                        source: tempNode.id,
-                        target: target_node.id,
-                        actual_time: actual_time,
-                        weight: temp_edges[i].weight,
-                        targetWeight: temp_edges[i].targetWeight,
-                        max_flow: max_flow,
-                    };
-                    edges.push(targetTempEdge);
-                    if (debug) {
-                        console.log(
-                            "[Ensemble SuperGraph] Adding intermediate target edge: ",
-                            targetTempEdge
-                        );
-                    }
+                const targetTempEdge = {
+                    type: "target_intermediate",
+                    source: tempNode.id,
+                    target: target_node.id,
+                    actual_time: actual_time,
+                    weight: temp_edges[i].weight,
+                    targetWeight: temp_edges[i].targetWeight,
+                    max_flow: max_flow,
+                };
+                edges.push(targetTempEdge);
+                if (debug) {
+                    console.log(
+                        "[Ensemble SuperGraph] Adding intermediate target edge: ",
+                        targetTempEdge
+                    );
+                }
 
-                    if (j == shift_level) {
-                        edges[i].original_target = target;
-                    }
-                    edges[i].target_data = nodes[intermediate_idx];
-                    if (debug) {
-                        console.log("[Ensemble SuperGraph] Updating this edge:", edges[i]);
-                    }
+                if (j == shift_level) {
+                    edges[i].original_target = target;
+                }
+                edges[i].target_data = nodes[intermediate_idx];
+                if (debug) {
+                    console.log("[Ensemble SuperGraph] Updating this edge:", edges[i]);
+                }
 
-                    this.removeActualEdges.push({
-                        source,
-                        target,
-                    });
+                this.removeActualEdges.push({
+                    source,
+                    target,
+                });
+            }
+        }
+    }
+
+    /**
+     * Removes the edges that have been replaced by the intermediate edges.
+     * @param {Map} edges Edges that must be replaced
+     * @return {Array} 
+     */
+    _remove_updated_edges(edges) {
+        for (let i = 0; i < edges.length; i += 1) {
+            let removeEdge = edges[i];
+            if (debug) {
+                console.log("[Ensemble SuperGraph] Removing edge: ", removeEdge);
+            }
+            for (let edge_idx = 0; edge_idx < edges.length; edge_idx += 1) {
+                let curr_edge = edges[edge_idx];
+                if (
+                    removeEdge.source == curr_edge.source &&
+                    removeEdge.target == curr_edge.target
+                ) {
+                    edges.splice(edge_idx, 1);
                 }
             }
         }
 
-            /**
-             * Removes the edges that have been replaced by the intermediate edges.
-             * @param {Map} edges Edges that must be replaced
-             * @return {Array} 
-             */
-            _remove_updated_edges(edges) {
-                for (let i = 0; i < edges.length; i += 1) {
-                    let removeEdge = edges[i];
-                    if (debug) {
-                        console.log("[Ensemble SuperGraph] Removing edge: ", removeEdge);
-                    }
-                    for (let edge_idx = 0; edge_idx < edges.length; edge_idx += 1) {
-                        let curr_edge = edges[edge_idx];
-                        if (
-                            removeEdge.source == curr_edge.source &&
-                            removeEdge.target == curr_edge.target
-                        ) {
-                            edges.splice(edge_idx, 1);
-                        }
-                    }
-                }
-
-                return edges
-            }
-        }
+        return edges
+    }
+}

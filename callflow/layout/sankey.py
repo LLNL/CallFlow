@@ -168,7 +168,7 @@ class SankeyLayout:
                     target_node_type = "component-node"
 
                     # source_weight = source_df["time (inc)"].max()
-                    target_weight = target_df["time (inc)"].max()
+                    target_weight = target_df["time (inc)"].mean()
 
                     print(f"Adding edge: {source_callsite}, {target_callsite}")
                     self.nxg.add_node(source, attr_dict={"type": source_node_type})
@@ -351,7 +351,7 @@ class SankeyLayout:
         inc_time_max = 0
         for callsite in module_callsite_map[module]:
             callsite_df = group_df.get_group((module, callsite))
-            max_inc_time = callsite_df["time (inc)"].max()
+            max_inc_time = callsite_df["time (inc)"].mean()
             inc_time_max = max(inc_time_max, max_inc_time)
             max_exc_time = callsite_df["time"].max()
             exc_time_sum += max_exc_time
@@ -363,8 +363,8 @@ class SankeyLayout:
         For node attribute: Calculates the time spent by each callsite.
         """
         callsite_df = group_df.get_group((module, callsite))
-        max_inc_time = callsite_df["time (inc)"].max()
-        max_exc_time = callsite_df["time"].max()
+        max_inc_time = callsite_df["time (inc)"].mean()
+        max_exc_time = callsite_df["time"].mean()
 
         return {"Inclusive": max_inc_time, "Exclusive": max_exc_time}
 
@@ -419,7 +419,7 @@ class SankeyLayout:
                         "source_callsite": source["callsite"],
                         "target_callsite": target["callsite"],
                         "edge_type": edge_type,
-                        "weight": target_df["time (inc)"].max(),
+                        "weight": target_df["time (inc)"].mean(),
                         "source_dataset": source_df["dataset"].unique().tolist(),
                         "target_dataset": target_df["dataset"].unique().tolist(),
                     }
@@ -455,7 +455,7 @@ class SankeyLayout:
                         cct.add_edge(
                             source["callsite"],
                             target["callsite"],
-                            attr_dict={"weight": target_df["time (inc)"].max()},
+                            attr_dict={"weight": target_df["time (inc)"].mean()},
                         )
 
         return nxg
