@@ -93,8 +93,6 @@ class NodeLinkLayout:
                 target_group_df = target_df
                 target_name_group_df = target_df.groupby("name")
 
-            print(target_name_group_df['time'].mean())
-
             target_module_callsite_map = target_group_df["name"].to_dict()
             target_name_time_inc_map = target_name_group_df["time (inc)"].mean().to_dict()
             target_name_time_exc_map = target_name_group_df["time"].mean().to_dict()
