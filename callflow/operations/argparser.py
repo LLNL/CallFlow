@@ -222,6 +222,11 @@ class ArgParser:
         else:
             scheme["group_by"] = json["scheme"]["group_by"]
 
+        if "callsite_module_map" in json["scheme"]:
+            scheme["callsite_module_map"] = ArgParser._process_module_map(json["scheme"]["callsite_module_map"])
+
+        print(scheme)
+
         return scheme
 
     @staticmethod

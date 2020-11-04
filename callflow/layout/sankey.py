@@ -193,7 +193,6 @@ class SankeyLayout:
         for edge in graph.edges(data=True):
             attr_dict = edge[2]["attr_dict"]
             edge_tuple = (edge[0], edge[1])
-            print(edge_tuple)
             for edge_attr in attr_dict:
                 if edge_tuple[1] not in entry_functions:
                     entry_functions[edge_tuple[1]] = []
@@ -666,11 +665,6 @@ class SankeyLayout:
                         ret[node_name][column] = node_dict["type"]
 
                     elif column == "entry_function":
-                        print(
-                            SankeyLayout.get_entry_functions(
-                                target_module_group_df, node_name
-                            )
-                        )
                         ret[node_name][column] = SankeyLayout.get_entry_functions(
                             target_module_group_df, node_name
                         )
