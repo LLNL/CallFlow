@@ -491,12 +491,11 @@
 					<span>
 						<CallsiteCorrespondence ref="CallsiteCorrespondence" />
 					</span>
-					<!-- <span> -->
-						<!-- <ParameterProjection
+					<span>
+						<ParameterProjection
 							ref="ParameterProjection"
-							@compare="updateCompareMode"
-						/> -->
-					<!-- </span> -->
+						/>
+					</span>
 				</splitpanes>
 			</splitpanes>
 		</v-layout>
@@ -566,7 +565,7 @@ import CallsiteCorrespondence from "./callsiteCorrespondence/callsiteCorresponde
 import EnsembleHistogram from "./ensembleHistogram/ensembleHistogram";
 import ModuleHierarchy from "./moduleHierarchy/moduleHierarchy";
 import EnsembleScatterplot from "./ensembleScatterplot/ensembleScatterplot";
-// import ParameterProjection from "./parameterProjection/parameterProjection";
+import ParameterProjection from "./parameterProjection/parameterProjection";
 
 import io from "socket.io-client";
 import * as utils from "./utils";
@@ -582,7 +581,7 @@ export default {
 		EnsembleScatterplot,
 		EnsembleHistogram,
 		ModuleHierarchy,
-		// ParameterProjection,
+		ParameterProjection,
 		CallsiteCorrespondence,
 	},
 
@@ -814,9 +813,9 @@ export default {
 		setupStore(data) {
 			data = JSON.parse(data);
 			console.log("Config file: ", data);
-			this.$store.numOfRuns = data["properties"]["runs"].length;
-			this.$store.selectedDatasets = data["properties"]["runs"];
-			this.selectedCaseStudy = data["runName"];
+			this.$store.numOfRuns = data.parameter_props.runs.length;
+			this.$store.selectedDatasets = data.parameter_props.runs;
+			this.selectedCaseStudy = data.runName;
 			this.datasets = this.$store.selectedDatasets;
 
 			// Enable diff mode only if the number of datasets >= 2
@@ -829,12 +828,12 @@ export default {
 				this.selectedMode = "Single";
 			}
 
-			this.$store.maxExcTime = data["maxExcTime"];
-			this.$store.minExcTime = data["minExcTime"];
-			this.$store.maxIncTime = data["maxIncTime"];
-			this.$store.minIncTime = data["minIncTime"];
+			this.$store.maxExcTime = data.runtime_props.maxExcTime;
+			this.$store.minExcTime = data.runtime_props.minExcTime;
+			this.$store.maxIncTime = data.runtime_props.maxIncTime;
+			this.$store.minIncTime = data.runtime_props.minIncTime;
 
-			this.$store.numOfRanks = data["numOfRanks"];
+			this.$store.numOfRanks = data.runtime_props.numOfRanks;
 			this.$store.moduleCallsiteMap = data["module_callsite_map"];
 			this.$store.callsiteModuleMap = data["callsite_module_map"];
 
@@ -928,7 +927,7 @@ export default {
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
 				this.$refs.CallsiteCorrespondence,
-				// this.$refs.ParameterProjection,
+				this.$refs.ParameterProjection,
 				this.$refs.ModuleHierarchy,
 			];
 		},

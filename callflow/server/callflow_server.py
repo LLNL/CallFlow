@@ -13,7 +13,7 @@ from flask_socketio import SocketIO, emit
 # ------------------------------------------------------------------------------
 # CallFlow imports.
 import callflow
-from argparser import ArgParser
+from callflow.operations import ArgParser
 import manager
 
 
@@ -44,11 +44,7 @@ class CallFlowServer:
         self.production = True
         self.process = self.args.process
 
-        ndatasets = len(self.args.config["properties"]["runs"])
-        assert ndatasets > 0
-        self.callflow = callflow.CallFlow(
-            config=self.args.config, ensemble=ndatasets > 1
-        )
+        self.callflow = callflow.CallFlow(config=self.args.config)
 
         if self.process:
             self.callflow.process()
@@ -72,7 +68,7 @@ class CallFlowServer:
 
         # Socket request handlers
         self._request_handler_general()
-        if len(self.args.config["properties"]["runs"]) == 1:
+        if len(self.args.config["parameter_props"]["runs"]) == 1:
             self._request_handler_single()
         else:
             self._request_handler_single()

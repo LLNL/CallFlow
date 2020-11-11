@@ -28,7 +28,8 @@ export default function Sankey() {
 		datasets = [],
 		debug = true,
 		nodesByBreadth = [],
-		max_dy = 0;
+		max_dy = 0,
+		fitNodeInWindowHeight = 5;
 
 	let widthScale;
 	let minDistanceBetweenNode = 0;
@@ -369,7 +370,7 @@ export default function Sankey() {
 					return node.value;
 				});
 			}
-			return Math.abs((size[1] - (column.length) * nodePadding)) / divValue;
+			return Math.abs((size[1] - (fitNodeInWindowHeight) * nodePadding)) / divValue;
 		});
 
 		return ensembleScale;

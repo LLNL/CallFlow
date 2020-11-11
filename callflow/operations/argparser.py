@@ -12,14 +12,17 @@ import callflow
 
 LOGGER = callflow.get_logger(__name__)
 
-schema = {
+SCHEMA = {
     "type": "object",
     "properties": {
         "data_path": {"type": "string"},
         "experiment": {"type": "string"},
         "save_path": {"type": "string"},
         "read_parameter": {"type": "boolean"},
-        "properties": {"type": "object"},
+        "runs": {"type": "array"},
+        "filter_perc": {"type": "number"},
+        "filter_by": {"type": "string"},
+        "group_by": {"type": "string"},
     },
 }
 
@@ -41,16 +44,17 @@ class ArgParser:
         }
 
         # Parse the arguments passed.
-        args = self._create_parser(args_string)
+        args = ArgParser._create_parser(args_string)
 
         # Verify if only valid things are passed.
         # Read mode determines how arguments will be consumed by CallFlow.
-        read_mode = self._verify_parser(args)
+        read_mode = ArgParser._verify_parser(args)
         LOGGER.debug(f"Read mode: {read_mode}")
 
         # Check if read mode is one of the keys of _READ_MODES.
         assert read_mode in _READ_MODES.keys()
 
+        # Call the appropriate function belonging to the format.
         self.config = _READ_MODES[read_mode](args)
 
         # Add read_mode to arguments.
@@ -59,8 +63,11 @@ class ArgParser:
         # Add process to arguments
         self.process = args.process
 
-        # validate the json.
-        jsonschema.validate(instance=self.config, schema=schema)
+        # Write the config file.
+        ArgParser._write_config(self.config)
+
+        # validate the config variable by checking with the schema.
+        jsonschema.validate(instance=self.config, schema=SCHEMA)
 
         LOGGER.debug(f"CallFlow instantiation configuration: {self.config}")
 
@@ -138,6 +145,9 @@ class ArgParser:
 
         elif args.data_dir:
             read_mode = "directory"
+            if not args.profile_format:
+                s = "Provide format using --profile_format"
+                raise Exception(s)
 
         elif args.gfs:
             read_mode = "graphframes"
@@ -151,7 +161,7 @@ class ArgParser:
         json = callflow.utils.jsonify_string(f)
 
         # Validate the input json.
-        jsonschema.validate(instance=json, schema=schema)
+        jsonschema.validate(instance=json, schema=SCHEMA)
 
         # Set the data_path, which is data directory.
         scheme["data_path"] = os.path.dirname(args.config)
@@ -184,27 +194,18 @@ class ArgParser:
             "default": ArgParser._scheme_dataset_map_default,
         }
 
-        LOGGER.debug("Scheme: default")
+        LOGGER.debug("[ArgParser] Filling the scheme: Config File")
         if "runs" not in json and "profile_format" not in json:
             raise Exception(
                 "Either 'runs' or 'profile_format' key must be provided in the config file."
             )
         elif "runs" in json and "profile_format" not in json:
-            scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER["default"](
-                json["runs"]
-            )
+            scheme["runs"] = _SCHEME_PROFILE_FORMAT_MAPPER["default"](json["runs"])
         elif "runs" not in json and "profile_format" in json:
             assert json["profile_format"] in _SUPPORTED_PROFILE_FORMATS
-            scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER[
-                json["profile_format"]
-            ](json["runs"])
-
-        if "module_map" in json["scheme"]:
-            scheme["module_callsite_map"] = json["scheme"]["module_map"]
-
-        scheme["callsite_module_map"] = ArgParser._process_module_map(
-            scheme["module_callsite_map"]
-        )
+            scheme["runs"] = _SCHEME_PROFILE_FORMAT_MAPPER[json["profile_format"]](
+                json["runs"]
+            )
 
         if args.filter_by:
             scheme["filter_by"] = args.filter_by
@@ -220,41 +221,41 @@ class ArgParser:
             scheme["group_by"] = args.group_by
         else:
             scheme["group_by"] = json["scheme"]["group_by"]
+
         return scheme
+
+    @staticmethod
+    def _write_config(config):
+        import json
+
+        filename = os.path.join(config["save_path"], "callflow.config.json")
+        LOGGER.info("callflow.config.json dumped into {}".format(filename))
+        with open(filename, "w") as fp:
+            json.dump(config, fp)
 
     @staticmethod
     def _scheme_dataset_map_default(run_props: dict):
         """
         Derive the scheme for dataset_map, if dataset_map is provided through the config file.
         """
-        scheme = {}
-        scheme["runs"] = []
-        scheme["paths"] = {}
-        scheme["profile_format"] = {}
+        runs = []
         # Parse the information for each dataset
         for idx, data in enumerate(run_props):
-            name = data["name"]
-            scheme["runs"].append(name)
-            scheme["paths"][name] = data["path"]
+            run = {
+                "name": data["name"],
+                "path": data["path"],
+                "profile_format": data["profile_format"],
+            }
 
-            # Assert if the profile_format is provided.
-            if "profile_format" not in data:
-                raise Exception(f"Profile format not specified for the dataset: {name}")
-
-            assert data["profile_format"] in _SUPPORTED_PROFILE_FORMATS
-
-            scheme["profile_format"][name] = data["profile_format"]
-        return scheme
+            runs.append(run)
+        return runs
 
     @staticmethod
     def _scheme_dataset_map_hpctoolkit(data_path: str):
         """
         Derive the scheme for dataset_map for hpctoolkit format.
         """
-        scheme = {}
-        scheme["runs"] = []
-        scheme["paths"] = {}
-        scheme["profile_format"] = {}
+        runs = []
         list_subfolders_with_paths = [
             f.path for f in os.scandir(data_path) if f.is_dir()
         ]
@@ -262,21 +263,22 @@ class ArgParser:
         for idx, subfolder_path in enumerate(list_subfolders_with_paths):
             name = subfolder_path.split("/")[-1]
             if name != ".callflow":
-                scheme["runs"].append(name)
-                scheme["paths"][name] = subfolder_path
-                scheme["profile_format"][name] = "hpctoolkit"
+                run = {
+                    "name": name,
+                    "path": subfolder_path,
+                    "profile_format": "hpctoolkit",
+                }
 
-        return scheme
+                runs.append(run)
+
+        return runs
 
     @staticmethod
     def _scheme_dataset_map_caliper(data_path: str):
         """
         Derive the scheme for dataset_map for caliper format.
         """
-        scheme = {}
-        scheme["runs"] = []
-        scheme["paths"] = {}
-        scheme["profile_format"] = {}
+        runs = []
         list_cali_paths = [
             f.path
             for f in os.scandir(data_path)
@@ -286,36 +288,38 @@ class ArgParser:
         for idx, subfolder_path in enumerate(list_cali_paths):
             name = subfolder_path.split("/")[-1].split(".")[0]
             if name != ".callflow":
-                scheme["runs"].append(name)
-                scheme["paths"][name] = subfolder_path
-                scheme["profile_format"][name] = "caliper"
+                run = {
+                    "name": name,
+                    "paths": subfolder_path,
+                    "profile_format": "caliper",
+                }
 
-        return scheme
+                runs.append(run)
+
+        return runs
 
     @staticmethod
     def _scheme_dataset_map_caliper_json(data_path: str):
         """
         Derive the scheme for dataset_map for caliper json format.
         """
-        scheme = {}
-        scheme["runs"] = []
-        scheme["paths"] = {}
-        scheme["profile_format"] = {}
+        runs = []
         list_json_paths = [
             f.path
             for f in os.scandir(data_path)
             if os.path.splitext(f.path)[1] == ".json"
         ]
 
-        for idx, subfolder_path in enumerate(list_json_paths):
-            name = subfolder_path.split("/")[-1]
-            if name != "callflow.config.json":
-                filename = name.split(".")[0]
-                scheme["runs"].append(filename)
-                scheme["paths"][filename] = subfolder_path
-                scheme["profile_format"][filename] = "caliper_json"
-
-        return scheme
+        for path in list_json_paths:
+            filename = path.split("/")[-1]
+            if filename != "callflow.config.json":
+                run = {
+                    "name": filename.split(".")[0],
+                    "path": path,
+                    "profile_format": "caliper_json",
+                }
+                runs.append(run)
+        return runs
 
     @staticmethod
     def _read_directory(args):
@@ -344,17 +348,17 @@ class ArgParser:
             "caliper_json": ArgParser._scheme_dataset_map_caliper_json,
             "default": ArgParser._scheme_dataset_map_default,
         }
-        scheme["properties"] = []
+        scheme["runs"] = []
         if "profile_format" in args:
             profile_format = args.profile_format
 
             LOGGER.debug(f"Scheme: {profile_format}")
 
-            scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER[profile_format](
+            scheme["runs"] = _SCHEME_PROFILE_FORMAT_MAPPER[profile_format](
                 scheme["data_path"]
             )
         else:
-            scheme["properties"] = _SCHEME_PROFILE_FORMAT_MAPPER["default"](
+            scheme["runs"] = _SCHEME_PROFILE_FORMAT_MAPPER["default"](
                 scheme["data_path"]
             )
 

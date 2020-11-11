@@ -34,9 +34,8 @@ class SuperGraph(object):
         """
         assert mode in ["process", "render"]
         self.timer = Timer()
-
-        self.props = config
-        self.dirname = os.path.join(self.props["save_path"], tag)
+        self.dirname = os.path.join(config["save_path"], tag)
+        self.config = config
         self.tag = tag
         self.mode = mode
 
@@ -50,7 +49,7 @@ class SuperGraph(object):
         self.gf.read(self.dirname)
 
         # Read only if "read_parameters" is specified in the config file.
-        if self.props["read_parameter"]:
+        if self.config["read_parameter"]:
             self.parameters = SuperGraph.read_parameters(self.dirname)
         self.auxiliary_data = SuperGraph.read_auxiliary_data(self.dirname)
 
@@ -60,7 +59,7 @@ class SuperGraph(object):
         If mode is render, corresponding files from .callflow/ensemble are read.
         """
         if self.mode == "process":
-            self.gf = callflow.GraphFrame.from_config(self.props, self.tag)
+            self.gf = callflow.GraphFrame.from_config(self.config, self.tag)
 
         elif self.mode == "render":
             self._create_for_render()
@@ -77,9 +76,9 @@ class SuperGraph(object):
         Return:
             module name (str) - Returns the module name
         """
-        if "callsite_module_map" in self.props:
-            if callsite in self.props["callsite_module_map"]:
-                return self.props["callsite_module_map"][callsite]
+        if "callsite_module_map" in self.config:
+            if callsite in self.config["callsite_module_map"]:
+                return self.config["callsite_module_map"][callsite]
 
         return self.gf.lookup_with_name(callsite)["module"].unique()[0]
 
@@ -93,7 +92,7 @@ class SuperGraph(object):
         Note: Process class follows a builder pattern.
         (refer: https://en.wikipedia.org/wiki/Builder_pattern#:~:text=The%20builder%20pattern%20is%20a,Gang%20of%20Four%20design%20patterns.)
         """
-        profile_format = self.props["properties"]["profile_format"][self.tag]
+        profile_format = self.config["parameter_props"]["profile_format"][self.tag]
         if profile_format == "hpctoolkit":
 
             process = (
@@ -109,7 +108,7 @@ class SuperGraph(object):
             )
 
         elif profile_format == "caliper_json" or profile_format == "caliper":
-            if "callsite_module_map" in self.props:
+            if "callsite_module_map" in self.config:
                 process = (
                     Process.Builder(self.gf, self.tag)
                     .add_time_columns()
@@ -117,7 +116,7 @@ class SuperGraph(object):
                     .add_callers_and_callees()
                     .add_dataset_name()
                     .add_imbalance_perc()
-                    .add_module_name_caliper(self.props["callsite_module_map"])
+                    .add_module_name_caliper(self.config["callsite_module_map"])
                     .create_name_module_map()
                     .add_vis_node_name()
                     .add_path()
@@ -167,8 +166,8 @@ class SuperGraph(object):
         self.gf = Filter(
             gf=self.gf,
             mode=mode,
-            filter_by=self.props["filter_by"],
-            filter_perc=self.props["filter_perc"],
+            filter_by=self.config["filter_by"],
+            filter_perc=self.config["filter_perc"],
         ).gf
 
     # --------------------------------------------------------------------------
@@ -183,7 +182,7 @@ class SuperGraph(object):
         EnsembleAuxiliary(
             self.gf,
             datasets=datasets,
-            props=self.props,
+            props=self.config,
             MPIBinCount=MPIBinCount,
             RunBinCount=RunBinCount,
             process=process,
@@ -193,7 +192,7 @@ class SuperGraph(object):
         SingleAuxiliary(
             self.gf,
             dataset=dataset,
-            props=self.props,
+            props=self.config,
             MPIBinCount=binCount,
             process=process,
         )

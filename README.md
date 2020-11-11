@@ -26,16 +26,25 @@ Sample data and examples are provided in the [`data`](./data) and [`examples`](.
 
 The first step is to process the raw datasets to use with CallFlow. This preprocessing typically entails some filtering and aggregation of data to produce the reduced graphs at desired granularity. The parameters of the preprocessing are provided through a config file (see examples of config files in the sample data directories).
 
-To process the datasets,
+### Processing profiles with --data_dir mode
+For `--data-dir` processing, make sure --profile_format is passed.
+```
+python3 callflow/server/callflow_server.py --data_dir {path_to_data} --profile_format {hpctoolkit|caliper_json|caliper}--process
+```
 
+### Processing profiles with --config mode
+
+Using a `callflow.config.json` file to process and run the application provides added control to the user in how 
 ```
 callflow_server --config {config_file_path} --process
 ```
 
-Next, the server can be run,
+The processing of profiles generates a `.callflow` directory in the ${save_path}, which is provided either in the `callflow.config.json` or --save_path attribute. If not provided, the `.callflow` directory will be placed in the data folder.
+
+### Running the server with --data-dir mode
 
 ```
-callflow_server --config {config_file_path}
+callflow_server --data-dir {PATH_TO_DATA_DIRECTORY}
 ```
 
 Finally, the web application server can be run using
@@ -67,6 +76,8 @@ To start the `app`,
 ```
 npm run dev
 ```
+
+The basic architecture diagram can be found [here](/docs/figures/CallFlow-basic-architecture.png).
 
 ## CallFlow Citations
 

@@ -18,7 +18,7 @@ LOGGER = callflow.get_logger(__name__)
 
 
 class CallFlow:
-    def __init__(self, config: dict, ensemble=False):
+    def __init__(self, config: dict = None, data_dir: str = None):
         """
         Entry interface to access CallFlow's functionalities. "
         """
@@ -26,8 +26,14 @@ class CallFlow:
         # Assert if config is provided.
         assert isinstance(config, dict)
 
-        self.config = config
-        self.ensemble = ensemble
+        if config:
+            self.config = config
+        elif data_dir:
+            self.config = self.read_config()
+
+        ndatasets = len(self.config["runs"])
+        assert ndatasets > 0
+        self.ensemble = ndatasets > 1
 
     # --------------------------------------------------------------------------
     # Processing methods.
@@ -35,23 +41,24 @@ class CallFlow:
         """
         Create a .callflow directory and empty files.
         """
-        LOGGER.debug(f"Saved .callflow directory is: {self.config['save_path']}")
+        LOGGER.info(f".callflow directory is: {self.config['save_path']}")
 
         if not os.path.exists(self.config["save_path"]):
             os.makedirs(self.config["save_path"])
             os.makedirs(os.path.join(self.config["save_path"], "ensemble"))
 
-        dataset_folders = [k for k in self.config["properties"]["paths"].keys()]
-        # for dataset in self.config["properties"][""]:
-        #     dataset_folders.append(self.config["properties"]["name"])
+        dataset_folders = [
+            os.path.join(self.config["save_path"], k["name"])
+            for k in self.config["runs"]
+        ]
+
         dataset_folders.append("ensemble")
 
         for dataset in dataset_folders:
             dataset_dir = os.path.join(self.config["save_path"], dataset)
-            LOGGER.debug(dataset_dir)
             if not os.path.exists(dataset_dir):
                 # if self.debug:
-                LOGGER.debug(f"Creating .callflow directory for dataset : {dataset}")
+                LOGGER.info(f"Creating .callflow directory for dataset : {dataset}")
                 os.makedirs(dataset_dir)
 
             files = ["df.csv", "nxg.json", "hatchet_tree.txt", "auxiliary_data.json"]
@@ -70,20 +77,21 @@ class CallFlow:
         """
         Process the datasets based on the format (i.e., either single or ensemble)
         """
-        ndatasets = len(self.config["properties"]["runs"])
-        assert self.ensemble == (ndatasets > 1)
-
         self._create_dot_callflow_folder()
+        self.config["parameter_props"] = self._parameter_props(self.config)
+
         if self.ensemble:
-            self._process_ensemble(self.config["properties"]["runs"])
+            self._process_ensemble(self.config["runs"])
         else:
-            self._process_single(self.config["properties"]["runs"][0])
+            self._process_single(self.config["runs"][0])
 
     def load(self):
         """
         Load the processed datasets by the format.
         """
-        ndatasets = len(self.config["properties"]["runs"])
+        ndatasets = len(self.config["runs"])
+        self.config["parameter_props"] = self._parameter_props(self.config)
+
         if self.ensemble:
             self.supergraphs = self._read_ensemble()
             # assertion here is 1 less than self.supergraph.keys, becasuse
@@ -95,15 +103,15 @@ class CallFlow:
 
         # Adds basic information to config.
         # Config is later return to client app on "init" request.
-        self.add_basic_info_to_config()
+        self.config["runtime_props"] = self._runtime_props(self.supergraphs)
 
     def _process_single(self, dataset):
         """
         Single dataset processing.
         """
-        LOGGER.debug("#########################################")
-        LOGGER.debug(f"Single Mode: {dataset}")
-        LOGGER.debug("#########################################")
+        LOGGER.info("#########################################")
+        LOGGER.info(f"Single Mode: {dataset}")
+        LOGGER.info("#########################################")
         supergraph = SuperGraph(config=self.config, tag=dataset, mode="process")
 
         # Process each graphframe.
@@ -126,11 +134,12 @@ class CallFlow:
         """
         # Before we process the ensemble, we perform single processing on all datasets.
         single_supergraphs = {}
-        for idx, dataset_name in enumerate(datasets):
+        for dataset in datasets:
+            dataset_name = dataset["name"]
             # Create an instance of dataset.
-            LOGGER.debug("#########################################")
-            LOGGER.debug(f"Ensemble Mode: {dataset_name}")
-            LOGGER.debug("#########################################")
+            LOGGER.info("#########################################")
+            LOGGER.info(f"Ensemble Mode: {dataset_name}")
+            LOGGER.info("#########################################")
             single_supergraphs[dataset_name] = SuperGraph(
                 config=self.config, tag=dataset_name, mode="process"
             )
@@ -168,7 +177,7 @@ class CallFlow:
         ensemble_supergraph.ensemble_auxiliary(
             # MPIBinCount=self.currentMPIBinCount,
             # RunBinCount=self.currentRunBinCount,
-            datasets=self.config["properties"]["runs"],
+            datasets=self.config["parameter_props"]["runs"],
             MPIBinCount=20,
             RunBinCount=20,
             process=True,
@@ -181,7 +190,7 @@ class CallFlow:
         """
         supergraphs = {}
         # Only consider the first dataset from the listing.
-        dataset_name = self.config["properties"]["runs"][0]
+        dataset_name = self.config["properties"][0]
         supergraphs[dataset_name] = SuperGraph(
             config=self.config, tag=dataset_name, mode="render"
         )
@@ -194,60 +203,71 @@ class CallFlow:
         """
         supergraphs = {}
 
-        for idx, dataset_name in enumerate(self.config["properties"]["runs"]):
+        for dataset_name in self.config["parameter_props"]["runs"]:
             supergraphs[dataset_name] = SuperGraph(
                 config=self.config, tag=dataset_name, mode="render"
             )
-            # supergraphs[dataset_name].read_gf(read_parameter=self.config["read_parameter"])
 
         supergraphs["ensemble"] = EnsembleGraph(
             config=self.config, tag="ensemble", mode="render"
         )
-        # supergraphs["ensemble"].read_gf(read_parameter=self.config["read_parameter"])
-        # supergraphs["ensemble"].read_auxiliary_data()
         return supergraphs
 
     # --------------------------------------------------------------------------
     # Reading and rendering methods.
     # All the functions below are Public methods that are accessed by the server.
 
-    def add_basic_info_to_config(self):
+    def _runtime_props(self, supergraphs):
         """
-        Adds basic information (like max, min inclusive and exclusive runtime) to self.config.
+        Adds runtime information (like max, min inclusive and exclusive runtime).
         """
-        self.config["maxIncTime"] = {}
-        self.config["maxExcTime"] = {}
-        self.config["minIncTime"] = {}
-        self.config["minExcTime"] = {}
-        self.config["numOfRanks"] = {}
+        props = {}
+        props["maxIncTime"] = {}
+        props["maxExcTime"] = {}
+        props["minIncTime"] = {}
+        props["minExcTime"] = {}
+        props["numOfRanks"] = {}
         maxIncTime = 0
         maxExcTime = 0
         minIncTime = 0
         minExcTime = 0
         maxNumOfRanks = 0
-        for idx, tag in enumerate(self.supergraphs):
-            self.config["maxIncTime"][tag] = (
-                self.supergraphs[tag].gf.df["time (inc)"].max()
-            )
-            self.config["maxExcTime"][tag] = self.supergraphs[tag].gf.df["time"].max()
-            self.config["minIncTime"][tag] = (
-                self.supergraphs[tag].gf.df["time (inc)"].min()
-            )
-            self.config["minExcTime"][tag] = self.supergraphs[tag].gf.df["time"].min()
-            self.config["numOfRanks"][tag] = len(
-                self.supergraphs[tag].gf.df["rank"].unique()
-            )
-            maxExcTime = max(self.config["maxExcTime"][tag], maxExcTime)
-            maxIncTime = max(self.config["maxIncTime"][tag], maxIncTime)
-            minExcTime = min(self.config["minExcTime"][tag], minExcTime)
-            minIncTime = min(self.config["minIncTime"][tag], minIncTime)
-            maxNumOfRanks = max(self.config["numOfRanks"][tag], maxNumOfRanks)
+        for idx, tag in enumerate(supergraphs):
+            props["maxIncTime"][tag] = supergraphs[tag].gf.df["time (inc)"].max()
+            props["maxExcTime"][tag] = supergraphs[tag].gf.df["time"].max()
+            props["minIncTime"][tag] = supergraphs[tag].gf.df["time (inc)"].min()
+            props["minExcTime"][tag] = supergraphs[tag].gf.df["time"].min()
+            props["numOfRanks"][tag] = len(supergraphs[tag].gf.df["rank"].unique())
+            maxExcTime = max(props["maxExcTime"][tag], maxExcTime)
+            maxIncTime = max(props["maxIncTime"][tag], maxIncTime)
+            minExcTime = min(props["minExcTime"][tag], minExcTime)
+            minIncTime = min(props["minIncTime"][tag], minIncTime)
+            maxNumOfRanks = max(props["numOfRanks"][tag], maxNumOfRanks)
 
-        self.config["maxIncTime"]["ensemble"] = maxIncTime
-        self.config["maxExcTime"]["ensemble"] = maxExcTime
-        self.config["minIncTime"]["ensemble"] = minIncTime
-        self.config["minExcTime"]["ensemble"] = minExcTime
-        self.config["numOfRanks"]["ensemble"] = maxNumOfRanks
+        props["maxIncTime"]["ensemble"] = maxIncTime
+        props["maxExcTime"]["ensemble"] = maxExcTime
+        props["minIncTime"]["ensemble"] = minIncTime
+        props["minExcTime"]["ensemble"] = minExcTime
+        props["numOfRanks"]["ensemble"] = maxNumOfRanks
+
+        return props
+
+    def _parameter_props(self, config):
+        """
+        Adds parameter information (like path, tag name, and other information fetched).
+        """
+        props = {}
+        props["runs"] = []
+        props["data_path"] = {}
+        props["profile_format"] = {}
+
+        for run in config["runs"]:
+            tag = run["name"]
+            props["runs"].append(tag)
+            props["data_path"][tag] = run["path"]
+            props["profile_format"][tag] = run["profile_format"]
+
+        return props
 
     def request_single(self, operation):
         """
@@ -326,7 +346,7 @@ class CallFlow:
         Handles all the socket requests connected to Single CallFlow.
         """
         operation_name = operation["name"]
-        datasets = self.config["properties"]["runs"]
+        datasets = self.config["parameter_props"]["runs"]
 
         if operation_name == "init":
             return self.config
