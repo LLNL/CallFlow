@@ -20,6 +20,7 @@ import "material-design-icons-iconfont/dist/material-design-icons.css";
 import App from "./components/App";
 import SingleCallFlow from "./components/callflowSingle";
 import EnsembleCallFlow from "./components/callflowEnsemble";
+import ExperimentalCallFlow from "./components/callflowExperimental";
 
 Vue.use(Vuex);
 const store = new Vuex.Store();
@@ -47,6 +48,11 @@ const router = new Router({
 			name: "EnsembleCallFlow",
 			component: EnsembleCallFlow
 		},
+		{
+			path: "/experimental",
+			name: "ExperimentalCallFlow",
+			component: ExperimentalCallFlow
+		}
 	]
 });
 
