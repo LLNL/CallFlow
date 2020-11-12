@@ -96,7 +96,7 @@ setup(
     data_files=data_files + example_files,
     entry_points={
         "console_scripts": [
-            "callflow_server = server.callflow_server:main",
+            "callflow_server = callflow.server.callflow_server:main",
             "callflow_app = app.app:main",
         ]
     },
