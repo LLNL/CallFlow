@@ -692,7 +692,7 @@ export default {
 	}),
 
 	mounted() {
-		var socket = io.connect(this.server, { reconnect: false });
+		// var socket = io.connect(this.server, { reconnect: false });
 		this.reset();
 
 		EventHandler.$on("lasso_selection", () => {

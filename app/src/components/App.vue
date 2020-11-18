@@ -187,7 +187,7 @@ export default {
 		},
 	},
 	mounted() {
-		this.$socket.emit("config", {});
+		// this.$socket.emit("config", {});
 	},
 	methods: {},
 };

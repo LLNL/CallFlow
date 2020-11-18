@@ -241,6 +241,7 @@ import EventHandler from "./EventHandler";
 
 import SuperGraph from "./supergraph/supergraph";
 import CCT from "./cct/cct";
+import APIService from "../lib/APIService";
 
 // Single mode imports
 import SingleScatterplot from "./singleScatterplot/singleScatterplot";
@@ -353,20 +354,6 @@ export default {
 			this.init();
 		});
 
-		fetch(this.server + "/xxx", {
-			method: "GET",
-			mode: "no-cors", 
-			cache: "no-cache",
-			credentials: "same-origin",
-			headers: {
-				"Content-Type": "application/json"
-			},
-			redirect: "follow",
-			referrerPolicy: "no-referrer", 
-			// body: JSON.stringify(data) // body data type must match "Content-Type" header
-		})
-			.then((response) => response.json())
-			.then((data) => console.log(data));
 	},
 
 	beforeDestroy() {
@@ -382,9 +369,9 @@ export default {
 			this.setTargetDataset();
 			this.setComponentMap();
 			if (this.selectedFormat == "SuperGraph") {
-				this.requestEnsembleData();
+				// this.requestEnsembleData();
 			} else if (this.selectedFormat == "CCT") {
-				this.init();
+				// this.init();
 			}
 		},
 
@@ -397,7 +384,7 @@ export default {
 			this.$store.gradients = data["gradients"];
 			this.$store.moduleCallsiteMap = data["moduleCallsiteMap"];
 			this.$store.callsiteModuleMap = data["callsiteModuleMap"];
-			this.init();
+			// this.init();
 		},
 
 		// Reset to the init() function.
@@ -733,11 +720,13 @@ export default {
 			EventHandler.$emit("single-refresh-boxplot", {});
 		},
 
-		reset() {
-			this.$socket.emit("init", {
-				mode: this.selectedMode,
-				dataset: this.$store.selectedTargetDataset,
-			});
+		async reset() {
+			await APIService.getxxx("/Users/jarus/Work/llnl/CallFlow/data/hatchet-datasets/sc19-datasets/lulesh-16nodes");
+
+			// this.$socket.emit("init", {
+			// 	mode: this.selectedMode,
+			// 	dataset: this.$store.selectedTargetDataset,
+			// });
 		},
 
 		requestEnsembleData() {
@@ -759,7 +748,7 @@ export default {
 
 		updateFormat() {
 			this.clearLocal();
-			this.reset()
+			this.reset();
 			this.init();
 		},
 
