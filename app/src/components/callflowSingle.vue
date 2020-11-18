@@ -271,7 +271,7 @@ export default {
 
 	data: () => ({
 		appName: "CallFlow",
-		server: "localhost:5000",
+		server: "http://127.0.0.1:5000",
 		config: {
 			headers: {
 				"Access-Control-Allow-Origin": "*",
@@ -337,30 +337,36 @@ export default {
 	}),
 
 	mounted() {
-		var socket = io.connect(this.server, { reconnect: false });
-		this.$socket.emit("init", {
-			mode: this.selectedMode,
-		});
+		// var socket = io.connect(this.server, { reconnect: false });
+		this.reset();
 
 		EventHandler.$on("lasso_selection", () => {
 			this.$store.resetTargetDataset = true;
 
 			this.clearLocal();
 			this.setTargetDataset();
-			this.$socket.emit("ensemble_callsite_data", {
-				datasets: this.$store.selectedDatasets,
-				sortBy: this.$store.auxiliarySortBy,
-				MPIBinCount: this.$store.selectedMPIBinCount,
-				RunBinCount: this.$store.selectedRunBinCount,
-				module: "all",
-				re_process: 1,
-			});
+			this.requestEnsembleData();
 		});
 
 		EventHandler.$on("show_target_auxiliary", () => {
 			this.clearLocal();
 			this.init();
 		});
+
+		fetch(this.server + "/xxx", {
+			method: "GET",
+			mode: "no-cors", 
+			cache: "no-cache",
+			credentials: "same-origin",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			redirect: "follow",
+			referrerPolicy: "no-referrer", 
+			// body: JSON.stringify(data) // body data type must match "Content-Type" header
+		})
+			.then((response) => response.json())
+			.then((data) => console.log(data));
 	},
 
 	beforeDestroy() {
@@ -376,14 +382,7 @@ export default {
 			this.setTargetDataset();
 			this.setComponentMap();
 			if (this.selectedFormat == "SuperGraph") {
-				this.$socket.emit("ensemble_callsite_data", {
-					datasets: this.$store.selectedDatasets,
-					sortBy: this.$store.auxiliarySortBy,
-					MPIBinCount: this.$store.selectedMPIBinCount,
-					RunBinCount: this.$store.selectedRunBinCount,
-					module: "all",
-					re_process: this.$store.reprocess,
-				});
+				this.requestEnsembleData();
 			} else if (this.selectedFormat == "CCT") {
 				this.init();
 			}
@@ -741,6 +740,17 @@ export default {
 			});
 		},
 
+		requestEnsembleData() {
+			this.$socket.emit("ensemble_callsite_data", {
+				datasets: this.$store.selectedDatasets,
+				sortBy: this.$store.auxiliarySortBy,
+				MPIBinCount: this.$store.selectedMPIBinCount,
+				RunBinCount: this.$store.selectedRunBinCount,
+				module: "all",
+				re_process: 1,
+			});
+		},
+
 		updateColors() {
 			this.clearLocal();
 			this.setupColors();
@@ -749,10 +759,7 @@ export default {
 
 		updateFormat() {
 			this.clearLocal();
-			this.$socket.emit("init", {
-				mode: this.selectedMode,
-				dataset: this.$store.selectedTargetDataset,
-			});
+			this.reset()
 			this.init();
 		},
 
@@ -775,13 +782,6 @@ export default {
 			this.init();
 		},
 
-		updateFunctionsInCCT() {
-			this.$socket.emit("cct", {
-				dataset: this.$store.selectedTargetDataset,
-				functionInCCT: this.selectedFunctionsInCCT,
-			});
-		},
-
 		updateScale() {
 			this.$store.selectedScale = this.selectedScale;
 			this.clear();
@@ -802,14 +802,7 @@ export default {
 		updateMPIBinCount() {
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
 			this.$store.reprocess = 1;
-			this.$socket.emit("ensemble_callsite_data", {
-				datasets: this.$store.selectedDatasets,
-				sortBy: this.$store.auxiliarySortBy,
-				MPIBinCount: this.$store.selectedMPIBinCount,
-				RunBinCount: this.$store.selectedRunBinCount,
-				module: "all",
-				re_process: 1,
-			});
+			this.requestEnsembleData();
 			this.clearLocal();
 			this.init();
 		},

@@ -693,23 +693,13 @@ export default {
 
 	mounted() {
 		var socket = io.connect(this.server, { reconnect: false });
-		this.$socket.emit("init", {
-			mode: this.selectedMode,
-		});
+		this.reset();
 
 		EventHandler.$on("lasso_selection", () => {
 			this.$store.resetTargetDataset = true;
-
 			this.clearLocal();
 			this.setTargetDataset();
-			this.$socket.emit("ensemble_callsite_data", {
-				datasets: this.$store.selectedDatasets,
-				sortBy: this.$store.auxiliarySortBy,
-				MPIBinCount: this.$store.selectedMPIBinCount,
-				RunBinCount: this.$store.selectedRunBinCount,
-				module: "all",
-				re_process: 1,
-			});
+			this.requestEnsembleData();
 		});
 	},
 
@@ -727,14 +717,7 @@ export default {
 			this.setComponentMap();
 
 			if (this.selectedFormat == "SuperGraph") {
-				this.$socket.emit("ensemble_callsite_data", {
-					datasets: this.$store.selectedDatasets,
-					sortBy: this.$store.auxiliarySortBy,
-					MPIBinCount: this.$store.selectedMPIBinCount,
-					RunBinCount: this.$store.selectedRunBinCount,
-					module: "all",
-					re_process: this.$store.reprocess,
-				});
+				this.requestEnsembleData();
 			} else if (this.selectedFormat == "CCT") {
 				this.init();
 			}
@@ -1123,6 +1106,17 @@ export default {
 			});
 		},
 
+		requestEnsembleData() {
+			this.$socket.emit("ensemble_callsite_data", {
+				datasets: this.$store.selectedDatasets,
+				sortBy: this.$store.auxiliarySortBy,
+				MPIBinCount: this.$store.selectedMPIBinCount,
+				RunBinCount: this.$store.selectedRunBinCount,
+				module: "all",
+				re_process: this.$store.reprocess,
+			});
+		},
+
 		processJSON(json) {
 			let d = json.data;
 			let index = json.index;
@@ -1176,10 +1170,7 @@ export default {
 
 		updateFormat() {
 			this.clearLocal();
-			this.$socket.emit("init", {
-				mode: this.selectedMode,
-				dataset: this.$store.selectedTargetDataset,
-			});
+			this.reset();
 			this.init();
 		},
 
@@ -1284,18 +1275,9 @@ export default {
 			EventHandler.$emit("ensemble-auxiliary", {});
 		},
 
-		updateColorMin() {},
-
 		updateRunBinCount() {
 			this.$store.selectedRunBinCount = this.selectedRunBinCount;
-			this.$socket.emit("ensemble_callsite_data", {
-				datasets: this.$store.selectedDatasets,
-				sortBy: this.$store.auxiliarySortBy,
-				MPIBinCount: this.$store.selectedMPIBinCount,
-				RunBinCount: this.$store.selectedRunBinCount,
-				module: "all",
-				re_process: 1,
-			});
+			this.requestEnsembleData();
 			this.clearLocal();
 			this.init();
 		},
@@ -1303,14 +1285,7 @@ export default {
 		updateMPIBinCount() {
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
 			this.$store.reprocess = 1;
-			this.$socket.emit("ensemble_callsite_data", {
-				datasets: this.$store.selectedDatasets,
-				sortBy: this.$store.auxiliarySortBy,
-				MPIBinCount: this.$store.selectedMPIBinCount,
-				RunBinCount: this.$store.selectedRunBinCount,
-				module: "all",
-				re_process: 1,
-			});
+			this.requestEnsembleData();
 			this.clearLocal();
 			this.init();
 		},
