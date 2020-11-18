@@ -3,7 +3,7 @@ class APIService {
      * 
      */
 	constructor() {
-		this.url = "https://localhost:5000/"; // For local
+		this.url = "http://localhost:5000/"; // For local
 	}
   
 	/**
@@ -38,8 +38,12 @@ class APIService {
 	 * @return {Promise<JSON>} response
 	 */
 	POSTRequest(fullURL, headers, jsonBody) {
+		console.log("[POST Request]", fullURL, "headers:", headers, "body: ", jsonBody);
 		const httpResponse = fetch(fullURL, {
 			method: "POST",
+			mode: "no-cors",
+			cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
+			credentials: "same-origin", // include, *same-origin, omit
 			headers: headers,
 			body: JSON.stringify(jsonBody),
 		}).then((response) => {
@@ -67,8 +71,8 @@ class APIService {
 	 * @param {JSON} headers 
 	 * @return {Promise<JSON>} response
 	 */
-	GETRequest(fullURL, requestType, headers) {
-		console.log(fullURL, requestType, headers);
+	GETRequest(fullURL, headers) {
+		console.debug("[GET Request]", fullURL, headers);
 		const httpResponse = fetch(fullURL, {
 			method: "GET",
 			headers: headers,
@@ -95,7 +99,7 @@ class APIService {
      * @param {*} dataset 
      */
 	getxxx(datasetPath) {
-		this.GETRequest(this.url + "xxx", {}, {"datasetPath": datasetPath});
+		this.POSTRequest(this.url + "xxx", {"Content-Type": "application/json"}, {datasetPath});
 	}
 
 }
