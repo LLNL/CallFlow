@@ -1,0 +1,103 @@
+class APIService {
+	/**
+     * 
+     */
+	constructor() {
+		this.url = "https://localhost:5000/"; // For local
+	}
+  
+	/**
+     * Force to reject the promise in the specified seconds.
+     * @param {Numeric} ms milliseconds before rejecting the promise
+     * @param {Promise} promise Promise of interest.
+     * @return {Promise} A promise with timeout.
+     */
+	timeoutPromise(ms, promise) {
+		return new Promise((resolve, reject) => {
+			const timeoutId = setTimeout(() => {
+				reject(new Error("Promise times out"));
+			}, ms);
+			promise.then(
+				(res) => {
+					clearTimeout(timeoutId);
+					resolve(res);
+				},
+				(err) => {
+					clearTimeout(timeoutId);
+					reject(err);
+				},
+			);
+		});
+	}
+  
+	/**
+	 * Send a POST request to the firestore.
+	 * @param {String} fullURL 
+	 * @param {JSON} headers 
+	 * @param {JSON} jsonBody 
+	 * @return {Promise<JSON>} response
+	 */
+	POSTRequest(fullURL, headers, jsonBody) {
+		const httpResponse = fetch(fullURL, {
+			method: "POST",
+			headers: headers,
+			body: JSON.stringify(jsonBody),
+		}).then((response) => {
+			switch (response.status) {
+			case 200:
+				return response.json();
+			case 401:
+				return Promise.reject("unauthorized");
+			case 500:
+				return Promise.reject("not_allowed");
+			default:
+				return Promise.reject("unknown_error");
+			}
+		}).catch((error) => {
+			console.debug(error);
+			return Promise.reject(error);
+		});
+		return this.timeoutPromise(10000, httpResponse);
+	}
+
+	/**
+	 * Send a GET request to the firestore.
+	 * @param {String} fullURL 
+	 * @param {String} requestType 
+	 * @param {JSON} headers 
+	 * @return {Promise<JSON>} response
+	 */
+	GETRequest(fullURL, requestType, headers) {
+		console.log(fullURL, requestType, headers);
+		const httpResponse = fetch(fullURL, {
+			method: "GET",
+			headers: headers,
+		}).then((response) => {
+			switch (response.status) {
+			case 200:
+				return response.json();
+			case 401:
+				return Promise.reject("unauthorized");
+			case 500:
+				return Promise.reject("not_allowed");
+			default:
+				return Promise.reject("unknown_error");
+			}
+		}).catch((error) => {
+			console.debug(error);
+			return Promise.reject(error);
+		});
+		return this.timeoutPromise(10000, httpResponse);
+	}
+
+	/**
+     * Dummy query
+     * @param {*} dataset 
+     */
+	getxxx(datasetPath) {
+		this.GETRequest(this.url + "xxx", {}, {"datasetPath": datasetPath});
+	}
+
+}
+export default new APIService();
+  
