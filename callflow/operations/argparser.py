@@ -60,8 +60,11 @@ class ArgParser:
         # Add read_mode to arguments.
         self.read_mode = read_mode
 
-        # Add process to arguments
+        # Add process to arguments.
         self.process = args.process
+
+        # Create .callflow directory if it doesn't exist.
+        ArgParser._create_dot_callflow_folder(self.config)
 
         # Write the config file.
         ArgParser._write_config(self.config)
@@ -151,6 +154,7 @@ class ArgParser:
 
         elif args.gfs:
             read_mode = "graphframes"
+            # TODO: CAL-
 
         return read_mode
 
@@ -222,16 +226,20 @@ class ArgParser:
         else:
             scheme["group_by"] = json["scheme"]["group_by"]
 
+        if "callsite_module_map" in json["scheme"]:
+            scheme["callsite_module_map"] = ArgParser._process_module_map(json["scheme"]["callsite_module_map"])
+
         return scheme
 
     @staticmethod
     def _write_config(config):
         import json
 
-        filename = os.path.join(config["save_path"], "callflow.config.json")
-        LOGGER.info("callflow.config.json dumped into {}".format(filename))
-        with open(filename, "w") as fp:
-            json.dump(config, fp)
+        file_path = os.path.join(config["save_path"], "config.json")
+        LOGGER.info("callflow.config.json dumped into {}".format(file_path))
+        with open(file_path, "w+") as fp:
+            json_string = json.dumps(config, default=lambda o: o.__dict__, sort_keys=True, indent=2)
+            fp.write(json_string)
 
     @staticmethod
     def _scheme_dataset_map_default(run_props: dict):
@@ -387,6 +395,42 @@ class ArgParser:
         pass
 
     @staticmethod
+    def _create_dot_callflow_folder(config):
+        """
+        Create a .callflow directory and empty files.
+        """
+        LOGGER.info(f".callflow directory is: {config['save_path']}")
+
+        if not os.path.exists(config["save_path"]):
+            os.makedirs(config["save_path"])
+            os.makedirs(os.path.join(config["save_path"], "ensemble"))
+
+        dataset_folders = [
+            os.path.join(config["save_path"], k["name"])
+            for k in config["runs"]
+        ]
+
+        dataset_folders.append("ensemble")
+
+        for dataset in dataset_folders:
+            dataset_dir = os.path.join(config["save_path"], dataset)
+            if not os.path.exists(dataset_dir):
+                LOGGER.info(f"Creating .callflow directory for dataset : {dataset}")
+                os.makedirs(dataset_dir)
+
+            files = ["df.csv", "nxg.json", "hatchet_tree.txt", "auxiliary_data.json"]
+            for f in files:
+                fname = os.path.join(dataset_dir, f)
+                if not os.path.exists(fname):
+                    open(fname, "w").close()
+
+    def _remove_dot_callflow_folder(self):
+        """
+        TODO: We might want to delete the .callflow folder when we re-process/re-write.
+        """
+        pass
+
+    @staticmethod
     def _process_module_map(module_callsite_map):
         """
         Process module mapper file.
@@ -398,12 +442,9 @@ class ArgParser:
                 ret[callsite] = module
         return ret
 
-    # --------------------------------------------------------------------------
     def __str__(self):
         items = ("%s = %r" % (k, v) for k, v in self.__dict__.items())
         return "<%s: {%s}> \n" % (self.__class__.__name__, ", ".join(items))
 
     def __repr__(self):
         return self.__str__()
-
-    # --------------------------------------------------------------------------
