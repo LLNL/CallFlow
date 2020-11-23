@@ -120,6 +120,8 @@
 </template>
 
 <script>
+import APIService from "../lib/APIService";
+
 export default {
 	name: "App",
 	data: () => ({
@@ -187,7 +189,8 @@ export default {
 		},
 	},
 	mounted() {
-		// this.$socket.emit("config", {});
+		APIService.config();
+
 	},
 	methods: {},
 };

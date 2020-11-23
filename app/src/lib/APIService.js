@@ -1,6 +1,13 @@
+/**
+ * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 class APIService {
 	/**
-     * 
+     * A
      */
 	constructor() {
 		this.url = "http://localhost:5000/"; // For local
@@ -37,7 +44,7 @@ class APIService {
 	 * @param {JSON} jsonBody 
 	 * @return {Promise<JSON>} response
 	 */
-	POSTRequest(fullURL, headers, jsonBody) {
+	POSTRequest(fullURL, headers = {"Content-Type": "application/json"}, jsonBody={}) {
 		console.log("[POST Request]", fullURL, "headers:", headers, "body: ", jsonBody);
 		const httpResponse = fetch(fullURL, {
 			method: "POST",
@@ -71,7 +78,7 @@ class APIService {
 	 * @param {JSON} headers 
 	 * @return {Promise<JSON>} response
 	 */
-	GETRequest(fullURL, headers) {
+	GETRequest(fullURL, headers={"Content-Type": "application/json"}) {
 		console.debug("[GET Request]", fullURL, headers);
 		const httpResponse = fetch(fullURL, {
 			method: "GET",
@@ -95,12 +102,21 @@ class APIService {
 	}
 
 	/**
-     * Dummy query
+     * /init endpoint
      * @param {*} dataset 
      */
-	getxxx(datasetPath) {
-		this.POSTRequest(this.url + "xxx", {"Content-Type": "application/json"}, {datasetPath});
+	init(datasetPath) {
+		this.POSTRequest(this.url + "init", jsonBody={datasetPath});
 	}
+
+	/**
+	 * /config endpoint
+	 */
+	config() {
+		this.GETRequest(this.url + "config");
+	}
+
+
 
 }
 export default new APIService();
