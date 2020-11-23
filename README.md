@@ -18,7 +18,35 @@ The `callflow` (python package) requires [python](https://realpython.com/install
 python3 setup.py install
 ```
 
-#### Installing Visualization Client
+## Sample Data
+
+Sample data and examples are provided in the [`data`](./data) and [`examples`](./examples) directories.
+
+## Using CallFlow
+
+The first step is to process the raw datasets to use with CallFlow. This preprocessing typically entails some filtering and aggregation of data to produce the reduced graphs at desired granularity. The parameters of the preprocessing are provided through a config file (see examples of config files in the sample data directories).
+
+The processing of profiles generates a `.callflow` directory in the ${save_path}, which is provided either in the `callflow.config.json` or --save_path attribute. If not provided, the `.callflow` directory will be placed in the data folder.
+
+### Running the server
+
+```
+python3 callflow/server/callflow_server.py --data-dir {PATH_TO_DATA_DIRECTORY}
+```
+
+Finally, the web application server can be run using
+```
+callflow_app
+```
+
+By default, the application would run on port, 8000. If the port needs to be changed, please set the environment variables using,
+
+```
+export CALLFLOW_SERVER_PORT=<port_number>
+export CALLFLOW_APP_PORT=<port_number>
+```
+
+#### Contribution and Development
 
 The callflow `app` requires [node.js](https://nodejs.org/en/download/) (>= 13.7.0) and `npm` (>= 6.13.7). If there is an older version of `node` installed, install [nvm](https://github.com/nvm-sh/nvm) and use the following command to change version.
 `nvm use 13.7.0`
@@ -30,44 +58,9 @@ cd app
 npm install
 ```
 
-## Sample Data
-
-Sample data and examples are provided in the [`data`](./data) and [`examples`](./examples) directories.
-
-## Using CallFlow
-
-The first step is to process the raw datasets to use with CallFlow. This preprocessing typically entails some filtering and aggregation of data to produce the reduced graphs at desired granularity. The parameters of the preprocessing are provided through a config file (see examples of config files in the sample data directories).
-
-### Processing profiles with --data_dir mode
-For `--data-dir` processing, make sure --profile_format is passed.
-```
-python3 callflow/server/callflow_server.py --data_dir {path_to_data} --profile_format {hpctoolkit|caliper_json|caliper}--process
-```
-
-### Processing profiles with --config mode
-
-Using a `callflow.config.json` file to process and run the application provides added control to the user in how 
-```
-python3 callflow/server/callflow_server.py --config {config_file_path} --process
-```
-
-The processing of profiles generates a `.callflow` directory in the ${save_path}, which is provided either in the `callflow.config.json` or --save_path attribute. If not provided, the `.callflow` directory will be placed in the data folder.
-
-### Running the server with --data-dir mode
+To start the `app`,
 
 ```
-python3 callflow/server/callflow_server.py --data_dir {path_to_data} --profile_format {hpctoolkit|caliper_json|caliper}
-```
-
-### Running the server with --config mode
-```
-python3 callflow/server/callflow_server.py --config {config_file_path}
-```
-
-### Start the client `app`
-
-```
-cd app
 npm run dev
 ```
 
