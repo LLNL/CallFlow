@@ -4,8 +4,9 @@
 # SPDX-License-Identifier: MIT
 # Library imports
 
-import os
+from callflow.server.endpoints import Endpoints
 import json
+import warnings
 from flask import Flask
 from flask_socketio import SocketIO, emit
 from networkx.readwrite import json_graph
@@ -14,9 +15,8 @@ app = Flask(__name__, static_url_path="")
 sockets = SocketIO(app, cors_allowed_origins="*")
 
 import callflow
+from callflow.server.endpoints import Endpoints
 LOGGER = callflow.get_logger(__name__)
-
-CALLFLOW_SERVER_PORT = int(os.getenv("CALLFLOW_SERVER_PORT", 5000))
 
 
 class SocketProvider:
@@ -25,7 +25,7 @@ class SocketProvider:
     Keyword arguments:
     ensemble -- True, if number of datasets > 1, else False.
     """
-    def __init__(self, ensemble=False):
+    def __init__(self, host: str, port: str, ensemble: bool) -> None:
         self.handle_general()
         self.handle_single()
         if ensemble:
@@ -33,13 +33,27 @@ class SocketProvider:
 
         sockets.run(
             app,
-            host="127.0.0.1",
-            debug=self.debug,
+            host=host,
+            debug=False,
             use_reloader=True,
-            port=CALLFLOW_SERVER_PORT,
+            port=port,
         )
 
-    def handle_general(self):
+    @staticmethod
+    def emit_json(socket_id: str, json_data: any) -> None:
+        """
+        Package JSON and emit the converted data JSON.
+        """
+        try:
+            if callflow.utils.is_valid_json(json_data):       
+                json_result = json.dumps(json_data)
+                emit("", json_result, json=True)
+            else:
+                emit("config", json_data, json=False)
+        except:
+            warnings.warn("[Socket: config] emits no data")
+
+    def handle_general(self) -> None:
         """
         General socket requests.
         """
@@ -50,23 +64,18 @@ class SocketProvider:
             # TODO: This might have to be deleted.
             """
             LOGGER.debug("[Socket request] reset: {}".format(data))
-            dataset = data["dataset"]
-            filterBy = data["filterBy"]
-            filterPerc = data["filterPerc"]
-            obj = {
+            result = self.callflow.request({
                 "name": "reset",
-                "filterBy": filterBy,
-                "filterPerc": filterPerc,
-                "dataset1": dataset,
-            }
-            result = self.callflow.request(obj)
-            emit("reset", result, json=True)
+                "filterBy": data["filterBy"],
+                "filterPerc": data["filterPerc"],
+                "dataset1": data["dataset"],
+            })
+            SocketProvider.emit_json("reset", result)
 
         @sockets.on("config", namespace="/")
         def config(data):
             result = self.callflow.request_single({"name": "init"})
-            json_result = json.dumps(result)
-            emit("config", json_result, json=True)
+            SocketProvider.emit_json("config", result)
 
         @sockets.on("init", namespace="/")
         def init(data):
@@ -74,13 +83,9 @@ class SocketProvider:
             Essential data house for single callflow.
             :return: Config file (JSON Format).
             """
-            LOGGER.debug(f"[Socket request] init: {data}")
-            if data["mode"] == "Ensemble":
-                result = self.callflow.request_ensemble({"name": "init"})
-            elif data["mode"] == "Single":
-                result = self.callflow.request_single({"name": "init"})
-            json_result = json.dumps(result)
-            emit("init", json_result, json=True)
+            result = Endpoints.init(data=data)
+            SocketProvider.emit_json("init", result)
+
 
         @sockets.on("ensemble_callsite_data", namespace="/")
         def ensemble_callsite_data(data):
@@ -100,7 +105,8 @@ class SocketProvider:
                     "re-process": data["re_process"],
                 }
             )
-            emit("ensemble_callsite_data", result, json=True)
+            SocketProvider.emit_json("ensemble_callsite_data", result)
+
 
         @sockets.on("reveal_callsite", namespace="/")
         def reveal_callsite(data):
@@ -119,8 +125,6 @@ class SocketProvider:
                     }
                 )
                 result = json_graph.node_link_data(nxg)
-                json_result = json.dumps(result)
-                emit("single_supergraph", json_result, json=True)
             elif data["mode"] == "Ensemble":
                 nxg = self.callflow.request_ensemble(
                     {
@@ -131,8 +135,9 @@ class SocketProvider:
                     }
                 )
                 result = json_graph.node_link_data(nxg)
-                json_result = json.dumps(result)
-                emit("ensemble_supergraph", json_result, json=True)
+            else: 
+                result = {}
+            SocketProvider.emit_json("reveal_callsite", result)
 
         @sockets.on("split_by_entry_callsites", namespace="/")
         def split_by_entry_callsites(data):
@@ -151,8 +156,6 @@ class SocketProvider:
                     }
                 )
                 result = json_graph.node_link_data(nxg)
-                json_result = json.dumps(result)
-                emit("single_supergraph", json_result, json=True)
             elif data["mode"] == "Ensemble":
                 nxg = self.callflow.request_ensemble(
                     {
@@ -163,8 +166,10 @@ class SocketProvider:
                     }
                 )
                 result = json_graph.node_link_data(nxg)
-                json_result = json.dumps(result)
-                emit("ensemble_supergraph", json_result, json=True)
+            else:
+                result: dict = {}
+
+            SocketProvider.emit_json("reveal_callsite", result)
 
         @sockets.on("split_by_callees", namespace="/")
         def split_by_callees(data):
@@ -183,9 +188,6 @@ class SocketProvider:
                     }
                 )
                 result = json_graph.node_link_data(nxg)
-                json_result = json.dumps(result)
-                emit("single_supergraph", json_result, json=True)
-
             elif data["mode"] == "Ensemble":
                 nxg = self.callflow.request_ensemble(
                     {
@@ -196,8 +198,10 @@ class SocketProvider:
                     }
                 )
                 result = json_graph.node_link_data(nxg)
-                json_result = json.dumps(result)
-                emit("ensemble_supergraph", json_result, json=True)
+            else:
+                result = {}
+            SocketProvider.emit_json("split_by_callees", result)
+            
 
     def handle_single(self):
         @sockets.on("single_callsite_data", namespace="/")
@@ -216,7 +220,7 @@ class SocketProvider:
                     "module": data["module"],
                 }
             )
-            emit("single_callsite_data", result, json=True)
+            SocketProvider.emit_json("auxiliary", result)
 
         @sockets.on("single_cct", namespace="/")
         def single_cct(data):
@@ -233,7 +237,7 @@ class SocketProvider:
                 }
             )
             result = json_graph.node_link_data(nxg)
-            emit("single_cct", result, json=True)
+            SocketProvider.emit_json("cct", result)
 
         @sockets.on("single_supergraph", namespace="/")
         def single_supergraph(data):
@@ -248,8 +252,7 @@ class SocketProvider:
                 {"name": "supergraph", "groupBy": groupBy, "dataset": dataset}
             )
             result = json_graph.node_link_data(nxg)
-            json_result = json.dumps(result)
-            emit("single_supergraph", json_result, json=True)
+            SocketProvider.emit_json("single_supergraph", result)
 
     def handle_ensemble(self):
         @sockets.on("ensemble_cct", namespace="/")
@@ -267,8 +270,7 @@ class SocketProvider:
                 }
             )
             result = json_graph.node_link_data(nxg)
-            # json_result = json.dumps(result)
-            emit("ensemble_cct", result, json=True)
+            SocketProvider.emit_json("ensemble_cct", result)
 
         @sockets.on("ensemble_supergraph", namespace="/")
         def ensemble_supergraph(data):
@@ -283,8 +285,7 @@ class SocketProvider:
                 {"name": "supergraph", "groupBy": groupBy, "datasets": datasets}
             )
             result = json_graph.node_link_data(nxg)
-            json_result = json.dumps(result)
-            emit("ensemble_supergraph", json_result, json=True)
+            SocketProvider.emit_json("ensemble_supergraph", result)
 
         @sockets.on("ensemble_similarity", namespace="/")
         def ensemble_similarity(data):
@@ -301,7 +302,7 @@ class SocketProvider:
                     "module": data["module"],
                 }
             )
-            emit("ensemble_similarity", result, json=True)
+            SocketProvider.emit_json("ensemble_similarity", result)
 
         @sockets.on("module_hierarchy", namespace="/")
         def module_hierarchy(data):
@@ -318,8 +319,7 @@ class SocketProvider:
                 }
             )
             result = json_graph.tree_data(nxg, root=data["module"])
-            json_result = json.dumps(result)
-            emit("module_hierarchy", json_result, json=True)
+            SocketProvider.emit_json("module_hierarchy", result)
 
         @sockets.on("parameter_projection", namespace="/")
         def parameter_projection(data):
@@ -337,7 +337,7 @@ class SocketProvider:
                     "numOfClusters": data["numOfClusters"],
                 }
             )
-            emit("parameter_projection", result, json=True)
+            SocketProvider.emit_json("parameter_projection", result)
 
         # Not used now. But lets keep it. Will be useful.
         @sockets.on("parameter_information", namespace="/")
@@ -351,7 +351,7 @@ class SocketProvider:
             result = self.callflow.request(
                 {"name": "run-information", "datasets": data["datasets"]}
             )
-            emit("parameter_information", json.dumps(result), json=True)
+            SocketProvider.emit_json("parameter_information", result)
 
         @sockets.on("compare", namespace="/")
         def compare(data):
@@ -368,7 +368,7 @@ class SocketProvider:
                     "selectedMetric": data["selectedMetric"],
                 }
             )
-            emit("compare", result, json=True)
+            SocketProvider.emit_json("compare", result)
 
         @sockets.on("split_mpi_distribution", namespace="/")
         def split_mpi_rank(data):
@@ -383,4 +383,4 @@ class SocketProvider:
                     "ranks": data["ranks"],
                 }
             )
-            emit("split_mpi_distribution", result, json=True)
+            SocketProvider.emit_json("split_mpi_distribution", result)
