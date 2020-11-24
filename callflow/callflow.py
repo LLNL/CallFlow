@@ -109,10 +109,12 @@ class CallFlow:
         """
         Single dataset processing.
         """
+        dataset_tag = dataset["name"]
+
         LOGGER.info("#########################################")
-        LOGGER.info(f"Single Mode: {dataset}")
+        LOGGER.info(f"Single Mode: {dataset_tag}")
         LOGGER.info("#########################################")
-        supergraph = SuperGraph(config=self.config, tag=dataset, mode="process")
+        supergraph = SuperGraph(config=self.config, tag=dataset_tag, mode="process")
 
         # Process each graphframe.
         supergraph.process_gf()
@@ -190,7 +192,7 @@ class CallFlow:
         """
         supergraphs = {}
         # Only consider the first dataset from the listing.
-        dataset_name = self.config["properties"][0]
+        dataset_name = self.config["parameter_props"]["runs"][0]
         supergraphs[dataset_name] = SuperGraph(
             config=self.config, tag=dataset_name, mode="render"
         )

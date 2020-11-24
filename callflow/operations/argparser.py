@@ -63,11 +63,9 @@ class ArgParser:
         # Add process to arguments.
         self.process = args.process
 
-        # Create .callflow directory if it doesn't exist.
-        ArgParser._create_dot_callflow_folder(self.config)
-
-        # Write the config file.
-        ArgParser._write_config(self.config)
+        if self.read_mode != "config":
+            # Write the config file.
+            ArgParser._write_config(self.config)
 
         # validate the config variable by checking with the schema.
         jsonschema.validate(instance=self.config, schema=SCHEMA)
