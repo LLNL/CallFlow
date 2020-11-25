@@ -225,19 +225,19 @@ class ArgParser:
         if args.filter_by:
             scheme["filter_by"] = args.filter_by
         else:
-            scheme["filter_by"] = json["scheme"]["filter_by"]
+            scheme["filter_by"] = json["filter_by"]
 
         if args.filter_perc:
             scheme["filter_perc"] = args.filter_perc
         else:
-            scheme["filter_perc"] = json["scheme"]["filter_perc"]
+            scheme["filter_perc"] = json["filter_perc"]
 
         if args.group_by:
             scheme["group_by"] = args.group_by
         else:
-            scheme["group_by"] = json["scheme"]["group_by"]
+            scheme["group_by"] = json["group_by"]
 
-        if "callsite_module_map" in json["scheme"]:
+        if "callsite_module_map" in json:
             scheme["callsite_module_map"] = ArgParser._process_module_map(
                 json["scheme"]["callsite_module_map"]
             )
@@ -313,7 +313,7 @@ class ArgParser:
             if name != ".callflow":
                 run = {
                     "name": name,
-                    "paths": subfolder_path,
+                    "path": subfolder_path,
                     "profile_format": "caliper",
                 }
 
@@ -430,7 +430,6 @@ class ArgParser:
         for dataset in dataset_folders:
             dataset_dir = os.path.join(config["save_path"], dataset)
             if not os.path.exists(dataset_dir):
-                LOGGER.info(f"Creating .callflow directory for dataset : {dataset}")
                 os.makedirs(dataset_dir)
 
             files = ["df.csv", "nxg.json", "hatchet_tree.txt", "auxiliary_data.json"]
