@@ -209,7 +209,6 @@ class ArgParser:
             "default": ArgParser._scheme_dataset_map_default,
         }
 
-        print(json["runs"])
         if "runs" not in json and "profile_format" not in json:
             raise Exception(
                 "Either 'runs' or 'profile_format' key must be provided in the config file."
@@ -288,7 +287,7 @@ class ArgParser:
             if name != ".callflow":
                 run = {
                     "name": name,
-                    "path": subfolder_path,
+                    "path": name,
                     "profile_format": "hpctoolkit",
                 }
 
@@ -309,11 +308,11 @@ class ArgParser:
         ]
 
         for idx, subfolder_path in enumerate(list_cali_paths):
-            name = subfolder_path.split("/")[-1].split(".")[0]
+            name = subfolder_path.split("/")[-1]
             if name != ".callflow":
                 run = {
-                    "name": name,
-                    "path": subfolder_path,
+                    "name": name.split(".")[0],
+                    "path": name,
                     "profile_format": "caliper",
                 }
 
@@ -338,7 +337,7 @@ class ArgParser:
             if filename != "config.json":
                 run = {
                     "name": filename.split(".")[0],
-                    "path": path,
+                    "path": path.split("/")[-1],
                     "profile_format": "caliper_json",
                 }
                 runs.append(run)
