@@ -6,6 +6,7 @@
 # ------------------------------------------------------------------------------
 #  Utility functions used by callflow.
 # ------------------------------------------------------------------------------
+from callflow.callflow import LOGGER
 import callflow
 import hatchet
 import json
@@ -248,12 +249,14 @@ def path_list_from_frames(frames: list):
         paths.append(path)
     return path
 
-    def is_valid_json(data: any) -> bool:
-        """
-        docstring
-        """
-        try:
-            json_object = json.loads(data)
-        except ValueError as e:
-            return False
-        return True
+
+def is_valid_json(data: any) -> bool:
+    """
+    docstring
+    """
+    try:
+        json.loads(data)
+    except ValueError as err:
+        LOGGER.error(err)
+        return False
+    return True
