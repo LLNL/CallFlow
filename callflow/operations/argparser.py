@@ -31,8 +31,19 @@ _SUPPORTED_PROFILE_FORMATS = ["hpctoolkit", "caliper_json", "caliper"]
 
 class ArgParser:
     """
-    Read the config file.
-    Config file contains the information to process datasets accrodingly.
+    Argparser class decodes the arguments passed to the execution of CallFlow.
+    Current implementation supports three modes:
+        1) data_dir
+        2) config
+        3) graphframe (TODO: CAL-8: Add graphframe processing for Jupyter notebooks)
+
+    The class performs the following actions:
+    1. Parse the command line arguments.
+    2. Verify if the required parameters are provided.
+    3. Generate the config object containing the dataset information.
+    4. Create a .callflow directory if not present in the provided save_path.
+    5. Dump the config file.
+    6. Validate the generated or passed config object.
     """
 
     def __init__(self, args_string=[]):
@@ -60,11 +71,14 @@ class ArgParser:
         # Add read_mode to arguments.
         self.read_mode = read_mode
 
-        # Add process to arguments
+        # Add process to arguments.
         self.process = args.process
 
-        # Write the config file.
-        ArgParser._write_config(self.config)
+        ArgParser._create_dot_callflow_folder(self.config)
+
+        if self.read_mode != "config":
+            # Write the config file.
+            ArgParser._write_config(self.config)
 
         # validate the config variable by checking with the schema.
         jsonschema.validate(instance=self.config, schema=SCHEMA)
@@ -151,11 +165,16 @@ class ArgParser:
 
         elif args.gfs:
             read_mode = "graphframes"
+            # TODO: CAL-8: Add graphframe processing for Jupyter notebooks
 
         return read_mode
 
     @staticmethod
     def _read_config(args: argparse.Namespace):
+        """
+        Config file read mode.
+        This function would overwrite all the automatic config with the user-provided config.
+        """
         scheme = {}
         f = open(args.config, "r").read()
         json = callflow.utils.jsonify_string(f)
@@ -194,7 +213,6 @@ class ArgParser:
             "default": ArgParser._scheme_dataset_map_default,
         }
 
-        LOGGER.debug("[ArgParser] Filling the scheme: Config File")
         if "runs" not in json and "profile_format" not in json:
             raise Exception(
                 "Either 'runs' or 'profile_format' key must be provided in the config file."
@@ -210,28 +228,39 @@ class ArgParser:
         if args.filter_by:
             scheme["filter_by"] = args.filter_by
         else:
-            scheme["filter_by"] = json["scheme"]["filter_by"]
+            scheme["filter_by"] = json["filter_by"]
 
         if args.filter_perc:
             scheme["filter_perc"] = args.filter_perc
         else:
-            scheme["filter_perc"] = json["scheme"]["filter_perc"]
+            scheme["filter_perc"] = json["filter_perc"]
 
         if args.group_by:
             scheme["group_by"] = args.group_by
         else:
-            scheme["group_by"] = json["scheme"]["group_by"]
+            scheme["group_by"] = json["group_by"]
+
+        if "callsite_module_map" in json:
+            scheme["callsite_module_map"] = ArgParser._process_module_map(
+                json["scheme"]["callsite_module_map"]
+            )
 
         return scheme
 
     @staticmethod
     def _write_config(config):
+        """
+        Dump the config file into .callflow directory.
+        """
         import json
 
-        filename = os.path.join(config["save_path"], "callflow.config.json")
-        LOGGER.info("callflow.config.json dumped into {}".format(filename))
-        with open(filename, "w") as fp:
-            json.dump(config, fp)
+        file_path = os.path.join(config["save_path"], "config.json")
+        LOGGER.info("config.json dumped into {}".format(file_path))
+        with open(file_path, "w+") as fp:
+            json_string = json.dumps(
+                config, default=lambda o: o.__dict__, sort_keys=True, indent=2
+            )
+            fp.write(json_string)
 
     @staticmethod
     def _scheme_dataset_map_default(run_props: dict):
@@ -265,7 +294,7 @@ class ArgParser:
             if name != ".callflow":
                 run = {
                     "name": name,
-                    "path": subfolder_path,
+                    "path": name,
                     "profile_format": "hpctoolkit",
                 }
 
@@ -286,11 +315,11 @@ class ArgParser:
         ]
 
         for idx, subfolder_path in enumerate(list_cali_paths):
-            name = subfolder_path.split("/")[-1].split(".")[0]
+            name = subfolder_path.split("/")[-1]
             if name != ".callflow":
                 run = {
-                    "name": name,
-                    "paths": subfolder_path,
+                    "name": name.split(".")[0],
+                    "path": name,
                     "profile_format": "caliper",
                 }
 
@@ -312,10 +341,10 @@ class ArgParser:
 
         for path in list_json_paths:
             filename = path.split("/")[-1]
-            if filename != "callflow.config.json":
+            if filename != "config.json":
                 run = {
                     "name": filename.split(".")[0],
-                    "path": path,
+                    "path": path.split("/")[-1],
                     "profile_format": "caliper_json",
                 }
                 runs.append(run)
@@ -323,10 +352,14 @@ class ArgParser:
 
     @staticmethod
     def _read_directory(args):
+        """
+        Data directory read mode
+        This function fills the config object with dataset information from the provided directory.
+        """
         scheme = {}
 
         # Set data path
-        scheme["data_path"] = args.data_dir
+        scheme["data_path"] = os.path.abspath(args.data_dir)
 
         # Set experiement
         scheme["experiment"] = scheme["data_path"].split("/")[-1]
@@ -348,6 +381,7 @@ class ArgParser:
             "caliper_json": ArgParser._scheme_dataset_map_caliper_json,
             "default": ArgParser._scheme_dataset_map_default,
         }
+
         scheme["runs"] = []
         if "profile_format" in args:
             profile_format = args.profile_format
@@ -384,12 +418,50 @@ class ArgParser:
 
     @staticmethod
     def _read_gfs(self, args):
+        """
+        GraphFrame mode for Jupyter notebooks.
+        This function creates a config file based on the graphframes passed into the cmd line.
+        """
+        pass
+
+    @staticmethod
+    def _create_dot_callflow_folder(config):
+        """
+        Create a .callflow directory and empty files.
+        """
+        LOGGER.info(f".callflow directory is: {config['save_path']}")
+
+        if not os.path.exists(config["save_path"]):
+            os.makedirs(config["save_path"])
+            os.makedirs(os.path.join(config["save_path"], "ensemble"))
+
+        dataset_folders = [
+            os.path.join(config["save_path"], k["name"]) for k in config["runs"]
+        ]
+
+        dataset_folders.append("ensemble")
+
+        for dataset in dataset_folders:
+            dataset_dir = os.path.join(config["save_path"], dataset)
+            if not os.path.exists(dataset_dir):
+                os.makedirs(dataset_dir)
+
+            files = ["df.csv", "nxg.json", "hatchet_tree.txt", "auxiliary_data.json"]
+            for f in files:
+                fname = os.path.join(dataset_dir, f)
+                if not os.path.exists(fname):
+                    open(fname, "w").close()
+
+    def _remove_dot_callflow_folder(self):
+        """
+        TODO: CAL-9: remove the .callflow folder when we re-process/re-write.
+        """
         pass
 
     @staticmethod
     def _process_module_map(module_callsite_map):
         """
-        Process module mapper file.
+        Process module mapper file if a module map is provided.
         """
         ret = {}
         for module in module_callsite_map:
@@ -398,12 +470,9 @@ class ArgParser:
                 ret[callsite] = module
         return ret
 
-    # --------------------------------------------------------------------------
     def __str__(self):
         items = ("%s = %r" % (k, v) for k, v in self.__dict__.items())
         return "<%s: {%s}> \n" % (self.__class__.__name__, ", ".join(items))
 
     def __repr__(self):
         return self.__str__()
-
-    # --------------------------------------------------------------------------
