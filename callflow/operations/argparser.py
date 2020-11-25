@@ -31,8 +31,19 @@ _SUPPORTED_PROFILE_FORMATS = ["hpctoolkit", "caliper_json", "caliper"]
 
 class ArgParser:
     """
-    Read the config file.
-    Config file contains the information to process datasets accrodingly.
+    Argparser class decodes the arguments passed to the execution of CallFlow.
+    Current implementation supports three modes:
+        1) data_dir
+        2) config
+        3) graphframe (TODO: CAL-8: Add graphframe processing for Jupyter notebooks)
+
+    The class performs the following actions:
+    1. Parse the command line arguments.
+    2. Verify if the required parameters are provided
+    3. Generate the config object containing the 
+    4. Create a .callflow directory if not present in the provided save_path.
+    5. Dump the config file
+    6. Validate the generated or passed config object.
     """
 
     def __init__(self, args_string=[]):
@@ -62,6 +73,8 @@ class ArgParser:
 
         # Add process to arguments.
         self.process = args.process
+
+        ArgParser._create_dot_callflow_folder(self.config)
 
         if self.read_mode != "config":
             # Write the config file.
@@ -152,7 +165,7 @@ class ArgParser:
 
         elif args.gfs:
             read_mode = "graphframes"
-            # TODO: CAL-
+            # TODO: CAL-8: Add graphframe processing for Jupyter notebooks
 
         return read_mode
 
@@ -196,7 +209,7 @@ class ArgParser:
             "default": ArgParser._scheme_dataset_map_default,
         }
 
-        LOGGER.debug("[ArgParser] Filling the scheme: Config File")
+        print(json["runs"])
         if "runs" not in json and "profile_format" not in json:
             raise Exception(
                 "Either 'runs' or 'profile_format' key must be provided in the config file."
@@ -225,7 +238,9 @@ class ArgParser:
             scheme["group_by"] = json["scheme"]["group_by"]
 
         if "callsite_module_map" in json["scheme"]:
-            scheme["callsite_module_map"] = ArgParser._process_module_map(json["scheme"]["callsite_module_map"])
+            scheme["callsite_module_map"] = ArgParser._process_module_map(
+                json["scheme"]["callsite_module_map"]
+            )
 
         return scheme
 
@@ -236,7 +251,9 @@ class ArgParser:
         file_path = os.path.join(config["save_path"], "config.json")
         LOGGER.info("callflow.config.json dumped into {}".format(file_path))
         with open(file_path, "w+") as fp:
-            json_string = json.dumps(config, default=lambda o: o.__dict__, sort_keys=True, indent=2)
+            json_string = json.dumps(
+                config, default=lambda o: o.__dict__, sort_keys=True, indent=2
+            )
             fp.write(json_string)
 
     @staticmethod
@@ -318,7 +335,7 @@ class ArgParser:
 
         for path in list_json_paths:
             filename = path.split("/")[-1]
-            if filename != "callflow.config.json":
+            if filename != "config.json":
                 run = {
                     "name": filename.split(".")[0],
                     "path": path,
@@ -332,7 +349,7 @@ class ArgParser:
         scheme = {}
 
         # Set data path
-        scheme["data_path"] = args.data_dir
+        scheme["data_path"] = os.path.abspath(args.data_dir)
 
         # Set experiement
         scheme["experiment"] = scheme["data_path"].split("/")[-1]
@@ -354,6 +371,7 @@ class ArgParser:
             "caliper_json": ArgParser._scheme_dataset_map_caliper_json,
             "default": ArgParser._scheme_dataset_map_default,
         }
+
         scheme["runs"] = []
         if "profile_format" in args:
             profile_format = args.profile_format
@@ -404,8 +422,7 @@ class ArgParser:
             os.makedirs(os.path.join(config["save_path"], "ensemble"))
 
         dataset_folders = [
-            os.path.join(config["save_path"], k["name"])
-            for k in config["runs"]
+            os.path.join(config["save_path"], k["name"]) for k in config["runs"]
         ]
 
         dataset_folders.append("ensemble")
@@ -424,7 +441,7 @@ class ArgParser:
 
     def _remove_dot_callflow_folder(self):
         """
-        TODO: We might want to delete the .callflow folder when we re-process/re-write.
+        TODO: remove the .callflow folder when we re-process/re-write.
         """
         pass
 

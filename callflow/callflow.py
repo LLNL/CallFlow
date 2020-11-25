@@ -77,7 +77,6 @@ class CallFlow:
         """
         Process the datasets based on the format (i.e., either single or ensemble)
         """
-        self._create_dot_callflow_folder()
         self.config["parameter_props"] = self._parameter_props(self.config)
 
         if self.ensemble:
@@ -156,9 +155,7 @@ class CallFlow:
 
             # Single auxiliary processing.
             single_supergraphs[dataset_name].single_auxiliary(
-                dataset=dataset_name,
-                binCount=20,
-                process=True,
+                dataset=dataset_name, binCount=20, process=True,
             )
 
         # Create a supergraph class for ensemble case.

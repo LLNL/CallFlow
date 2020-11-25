@@ -34,7 +34,6 @@ class SuperGraph(object):
         """
         assert mode in ["process", "render"]
         self.timer = Timer()
-        print(config)
         self.dirname = os.path.join(config["save_path"], tag)
         self.config = config
         self.tag = tag
