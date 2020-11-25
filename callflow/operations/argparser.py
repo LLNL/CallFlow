@@ -39,10 +39,10 @@ class ArgParser:
 
     The class performs the following actions:
     1. Parse the command line arguments.
-    2. Verify if the required parameters are provided
-    3. Generate the config object containing the 
+    2. Verify if the required parameters are provided.
+    3. Generate the config object containing the dataset information.
     4. Create a .callflow directory if not present in the provided save_path.
-    5. Dump the config file
+    5. Dump the config file.
     6. Validate the generated or passed config object.
     """
 
@@ -171,6 +171,10 @@ class ArgParser:
 
     @staticmethod
     def _read_config(args: argparse.Namespace):
+        """
+        Config file read mode.
+        This function would overwrite all the automatic config with the user-provided config.
+        """
         scheme = {}
         f = open(args.config, "r").read()
         json = callflow.utils.jsonify_string(f)
@@ -245,10 +249,13 @@ class ArgParser:
 
     @staticmethod
     def _write_config(config):
+        """
+        Dump the config file into .callflow directory.
+        """
         import json
 
         file_path = os.path.join(config["save_path"], "config.json")
-        LOGGER.info("callflow.config.json dumped into {}".format(file_path))
+        LOGGER.info("config.json dumped into {}".format(file_path))
         with open(file_path, "w+") as fp:
             json_string = json.dumps(
                 config, default=lambda o: o.__dict__, sort_keys=True, indent=2
@@ -345,6 +352,10 @@ class ArgParser:
 
     @staticmethod
     def _read_directory(args):
+        """
+        Data directory read mode
+        This function fills the config object with dataset information from the provided directory.
+        """
         scheme = {}
 
         # Set data path
@@ -407,6 +418,10 @@ class ArgParser:
 
     @staticmethod
     def _read_gfs(self, args):
+        """
+        GraphFrame mode for Jupyter notebooks.
+        This function creates a config file based on the graphframes passed into the cmd line.
+        """
         pass
 
     @staticmethod
@@ -439,14 +454,14 @@ class ArgParser:
 
     def _remove_dot_callflow_folder(self):
         """
-        TODO: remove the .callflow folder when we re-process/re-write.
+        TODO: CAL-9: remove the .callflow folder when we re-process/re-write.
         """
         pass
 
     @staticmethod
     def _process_module_map(module_callsite_map):
         """
-        Process module mapper file.
+        Process module mapper file if a module map is provided.
         """
         ret = {}
         for module in module_callsite_map:

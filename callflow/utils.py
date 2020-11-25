@@ -248,7 +248,6 @@ def path_list_from_frames(frames: list):
         paths.append(path)
     return path
 
-
     def is_valid_json(data: any) -> bool:
         """
         docstring
