@@ -6,10 +6,11 @@
 # ------------------------------------------------------------------------------
 #  Utility functions used by callflow.
 # ------------------------------------------------------------------------------
-from callflow.callflow import LOGGER
 import callflow
 import hatchet
 import json
+
+LOGGER = callflow.get_logger(__name__)
 
 
 def sanitize_name(name: str):
@@ -252,7 +253,7 @@ def path_list_from_frames(frames: list):
 
 def is_valid_json(data: any) -> bool:
     """
-    docstring
+    Check if data is a valid JSON object.
     """
     try:
         json.loads(data)

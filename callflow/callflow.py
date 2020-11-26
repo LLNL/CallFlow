@@ -155,9 +155,7 @@ class CallFlow:
 
             # Single auxiliary processing.
             single_supergraphs[dataset_name].single_auxiliary(
-                dataset=dataset_name,
-                binCount=20,
-                process=True,
+                dataset=dataset_name, binCount=20, process=True,
             )
 
         # Create a supergraph class for ensemble case.
@@ -270,12 +268,25 @@ class CallFlow:
 
         return props
 
+    def request_general(self, operation):
+        """
+        Handles general requests
+        """
+        _OPERATIONS = ["init"]
+
+        assert "name" in operation
+        assert operation["name"] in _OPERATIONS
+
+        operation_name = operation["name"]
+
+        if operation_name == "init":
+            return self.config
+
     def request_single(self, operation):
         """
-        Handles all the socket requests connected to Single CallFlow.
+        Handles requests connected to Single CallFlow.
         """
         _OPERATIONS = [
-            "init",
             "reset",
             "auxiliary",
             "cct",
@@ -288,12 +299,8 @@ class CallFlow:
         assert operation["name"] in _OPERATIONS
 
         LOGGER.info(f"[Single Mode] {operation}")
-        operation_name = operation["name"]
 
-        if operation_name == "init":
-            return self.config
-
-        elif operation_name == "auxiliary":
+        if operation_name == "auxiliary":
             return self.supergraphs[operation["dataset"]].auxiliary_data
 
         elif operation_name == "supergraph":

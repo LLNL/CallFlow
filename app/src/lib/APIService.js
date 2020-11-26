@@ -44,7 +44,7 @@ class APIService {
 	 * @param {JSON} jsonBody 
 	 * @return {Promise<JSON>} response
 	 */
-	POSTRequest(fullURL, headers = {"Content-Type": "application/json"}, jsonBody={}) {
+	POSTRequest(fullURL="", headers = {"Content-Type": "application/json"}, jsonBody={}) {
 		console.log("[POST Request]", fullURL, "headers:", headers, "body: ", jsonBody);
 		const httpResponse = fetch(fullURL, {
 			method: "POST",
@@ -83,6 +83,9 @@ class APIService {
 		const httpResponse = fetch(fullURL, {
 			method: "GET",
 			headers: headers,
+			mode: "no-cors",
+			cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
+			credentials: "same-origin", // include, *same-origin, omit
 		}).then((response) => {
 			switch (response.status) {
 			case 200:
@@ -95,7 +98,7 @@ class APIService {
 				return Promise.reject("unknown_error");
 			}
 		}).catch((error) => {
-			console.debug(error);
+			console.log(error);
 			return Promise.reject(error);
 		});
 		return this.timeoutPromise(10000, httpResponse);
@@ -106,7 +109,7 @@ class APIService {
      * @param {*} dataset 
      */
 	init(datasetPath) {
-		this.POSTRequest(this.url + "init", jsonBody={datasetPath});
+		this.GETRequest(this.url + "init");
 	}
 
 	/**

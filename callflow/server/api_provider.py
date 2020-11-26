@@ -15,45 +15,45 @@ import callflow
 # Create a Flask server.
 app = Flask(__name__, static_url_path="")
 
+
 class APIProvider:
     """
 
     """
-    def __init__(self, host: str, port: str, ensemble: bool) -> None:
-        self.endpoints = Endpoints()
+
+    def __init__(
+        self, callflow: callflow.CallFlow, host: str, port: str, ensemble: bool
+    ) -> None:
+        self.callflow = callflow
+        self._handle_general()
+
         app.run(host=host, port=port, threaded=True)
 
-    
     @staticmethod
     def emit_json(endpoint: str, json_data: any) -> str:
         """
         Emit the json data to the endpoint
         """
-        try: 
-            if callflow.utils.is_valid_json(json_data):       
-                json_result = json.dumps(json_data)
-                return jsonify(isError= False,
-                    message= "Success",
-                    statusCode= 200,
-                    data= json_result)
+        try:
+            # if callflow.utils.is_valid_json(json_data):
+            # json_result = json.dumps(json_data)
+            return jsonify(
+                isError=False, message="Success", statusCode=200, data=json_data
+            )
         except:
-            warnings.warn("[Socket: config] emits no data")
+            warnings.warn(f"[API: {endpoint}] emits no data. Check the JSON format.")
+            return jsonify(isError=True, message="Error", statusCode=500, data={"a": 1})
 
-    def _handle_general(self, parameter_list):
+    def _handle_general(self):
         """
-        docstring
+        General API requests
         """
+
         @app.route("/")
         def index():
             return app.send_static_file("index.html")
 
-        @app.route("/init", methods=["POST"])
+        @app.route("/init", methods=["GET"])
         def init():
-            request_json = request.get_json(force=True)
-            result = self.endpoints.init(request_json)
-            APIProvider.emit_json(result)
-
-        @app.route("/config", methods=['GET'])
-        def config():
-            result = self.endpoints.config()
-            APIProvider.emit_json(result)
+            result = self.callflow.request_general({"name": "init"})
+            return APIProvider.emit_json("init", result)

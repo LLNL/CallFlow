@@ -61,13 +61,18 @@ class CallFlowServer:
         if len(self.args.config["parameter_props"]["runs"]) > 1:
             ensemble = True
         # SocketProvider(host=CALLFLOW_SERVER_HOST, port=CALLFLOW_SERVER_PORT, ensemble=ensemble)
-        APIProvider(host=CALLFLOW_SERVER_HOST, port=CALLFLOW_SERVER_PORT, ensemble=ensemble)
+        APIProvider(
+            callflow=self.callflow,
+            host=CALLFLOW_SERVER_HOST,
+            port=CALLFLOW_SERVER_PORT,
+            ensemble=ensemble,
+        )
 
         # Start the server.
         if self.production:
             # TODO: CAL-6-enable-production-server
             pass
-        
+
 
 def main():
     # if verbose, level = 1

@@ -165,7 +165,7 @@ export default {
 		modules: [],
 	}),
 	sockets: {
-		config(data) {
+		init(data) {
 			this.data = JSON.parse(data);
 			this.runCounts = this.data.parameter_props.runs.length;
 			let datasets = Object.keys(this.data.parameter_props.data_path);
@@ -189,10 +189,16 @@ export default {
 		},
 	},
 	mounted() {
-		APIService.config();
+		this.getInit();
 
 	},
-	methods: {},
+	methods: {
+
+		async getInit() {
+			const config = await APIService.init();
+			console.log(config);
+		}
+	},
 };
 </script>
 
