@@ -139,7 +139,7 @@ class CallFlow:
             dataset_name = dataset["name"]
             # Create an instance of dataset.
             LOGGER.info("#########################################")
-            LOGGER.info(f"Ensemble Mode: {dataset_name}")
+            LOGGER.info(f"Dataset name: {dataset_name}")
             LOGGER.info("#########################################")
             single_supergraphs[dataset_name] = SuperGraph(
                 config=self.config, tag=dataset_name, mode="process"

@@ -167,6 +167,16 @@ export default {
 	sockets: {
 		init(data) {
 			this.data = JSON.parse(data);
+			
+		},
+	},
+	mounted() {
+		this.getInit();
+
+	},
+	methods: {
+		async getInit() {
+			this.data = await APIService.init();
 			this.runCounts = this.data.parameter_props.runs.length;
 			let datasets = Object.keys(this.data.parameter_props.data_path);
 
@@ -186,17 +196,6 @@ export default {
 					number_of_callsites: this.data.module_callsite_map[module].length,
 				});
 			}
-		},
-	},
-	mounted() {
-		this.getInit();
-
-	},
-	methods: {
-
-		async getInit() {
-			const config = await APIService.init();
-			console.log(config);
 		}
 	},
 };

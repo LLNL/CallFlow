@@ -5,9 +5,8 @@
 
 # Library imports
 from callflow.server.endpoints import Endpoints
-import json
 import warnings
-from flask import Flask, request, jsonify
+from flask import Flask, request, json
 
 # CallFlow imports
 import callflow
@@ -15,6 +14,7 @@ import callflow
 # Create a Flask server.
 app = Flask(__name__, static_url_path="")
 
+LOGGER = callflow.get_logger(__name__)
 
 class APIProvider:
     """
@@ -27,6 +27,7 @@ class APIProvider:
         self.callflow = callflow
         self._handle_general()
 
+        LOGGER.info("Starting the API service")
         app.run(host=host, port=port, threaded=True)
 
     @staticmethod
@@ -36,10 +37,15 @@ class APIProvider:
         """
         try:
             # if callflow.utils.is_valid_json(json_data):
-            # json_result = json.dumps(json_data)
-            return jsonify(
-                isError=False, message="Success", statusCode=200, data=json_data
+            response = app.response_class(
+                response=json.dumps(json_data),
+                status=200,
+                mimetype='application/json'
             )
+            response.headers.add("Access-Control-Allow-Origin", "*")
+            response.headers.add("Access-Control-Allow-Headers", "*")
+            response.headers.add("Access-Control-Allow-Methods", "*")
+            return response
         except:
             warnings.warn(f"[API: {endpoint}] emits no data. Check the JSON format.")
             return jsonify(isError=True, message="Error", statusCode=500, data={"a": 1})

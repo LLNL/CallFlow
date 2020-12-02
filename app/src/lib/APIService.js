@@ -48,7 +48,6 @@ class APIService {
 		console.log("[POST Request]", fullURL, "headers:", headers, "body: ", jsonBody);
 		const httpResponse = fetch(fullURL, {
 			method: "POST",
-			mode: "no-cors",
 			cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
 			credentials: "same-origin", // include, *same-origin, omit
 			headers: headers,
@@ -65,7 +64,7 @@ class APIService {
 				return Promise.reject("unknown_error");
 			}
 		}).catch((error) => {
-			console.debug(error);
+			console.error(error);
 			return Promise.reject(error);
 		});
 		return this.timeoutPromise(10000, httpResponse);
@@ -83,10 +82,10 @@ class APIService {
 		const httpResponse = fetch(fullURL, {
 			method: "GET",
 			headers: headers,
-			mode: "no-cors",
 			cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
 			credentials: "same-origin", // include, *same-origin, omit
 		}).then((response) => {
+			console.log(response);
 			switch (response.status) {
 			case 200:
 				return response.json();
@@ -98,7 +97,7 @@ class APIService {
 				return Promise.reject("unknown_error");
 			}
 		}).catch((error) => {
-			console.log(error);
+			// console.log(error);
 			return Promise.reject(error);
 		});
 		return this.timeoutPromise(10000, httpResponse);
@@ -109,7 +108,7 @@ class APIService {
      * @param {*} dataset 
      */
 	init(datasetPath) {
-		this.GETRequest(this.url + "init");
+		return this.GETRequest(this.url + "init");
 	}
 
 	/**
