@@ -16,19 +16,6 @@ class Endpoints:
         """
         /init endpoint
         """
-        LOGGER.debug(f"[Socket request] init: {data}")
-        if data["mode"] == "Ensemble":
-            result = self.callflow.request_ensemble({"name": "init"})
-        elif data["mode"] == "Single":
-            result = self.callflow.request_single({"name": "init"})
-        else:
-            result = {}
-        return result
-
-    @staticmethod
-    def config():
-        """
-        /config endpoint
-        """
-        result = self.callflow.request_single({"name": "init"})
-        return result
+        LOGGER.debug(f"[Request] init: {data}")
+        print("here")
+        return self.callflow.request_general({"name": "init"})

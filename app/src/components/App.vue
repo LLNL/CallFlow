@@ -164,18 +164,11 @@ export default {
 		],
 		modules: [],
 	}),
-	sockets: {
-		init(data) {
-			this.data = JSON.parse(data);
-			
-		},
-	},
 	mounted() {
-		this.getInit();
-
+		this.fetchData();
 	},
 	methods: {
-		async getInit() {
+		async fetchData() {
 			this.data = await APIService.init();
 			this.runCounts = this.data.parameter_props.runs.length;
 			let datasets = Object.keys(this.data.parameter_props.data_path);

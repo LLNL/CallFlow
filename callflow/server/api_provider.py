@@ -36,7 +36,6 @@ class APIProvider:
         Emit the json data to the endpoint
         """
         try:
-            # if callflow.utils.is_valid_json(json_data):
             response = app.response_class(
                 response=json.dumps(json_data),
                 status=200,
@@ -47,7 +46,7 @@ class APIProvider:
             response.headers.add("Access-Control-Allow-Methods", "*")
             return response
         except:
-            warnings.warn(f"[API: {endpoint}] emits no data. Check the JSON format.")
+            warnings.warn(f"[API: {endpoint}] emits no data.")
             return jsonify(isError=True, message="Error", statusCode=500, data={"a": 1})
 
     def _handle_general(self):
@@ -63,3 +62,4 @@ class APIProvider:
         def init():
             result = self.callflow.request_general({"name": "init"})
             return APIProvider.emit_json("init", result)
+
