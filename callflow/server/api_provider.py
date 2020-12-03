@@ -91,6 +91,25 @@ class APIProvider:
             })
             return APIProvider.emit_json("single_supergraph", result)
 
+        @app.route("/single_cct", methods=["POST"])
+        def single_cct():
+            data = request.json
+            nxg = self.callflow.request_single({
+                "name": "cct",
+                **data
+            })
+            result = json_graph.node_link_data(nxg)
+            return APIProvider.emit_json("single_cct", result)
+
+        @app.route("/split_mpi_distribution", methods=["POST"])
+        def split_mpi_distribution():
+            data = request.json
+            result = self.callflow.request_single({
+                    "name": "split_mpi_distribution",
+                    **data,
+            })
+            return APIProvider.emit_json("split_mpi_distribution", result)
+
     def _handle_ensemble(self):
         """
         Ensemble CallFlow API requests
@@ -103,4 +122,52 @@ class APIProvider:
                 **data
             })
             return APIProvider.emit_json("ensemble_supergraph", result)
+
+        @app.route("/ensemble_cct", methods=["POST"])
+        def ensemble_cct():
+            data = request.json
+            nxg = self.callflow.request_ensemble({
+                "name": "ensemble_cct",
+                **data
+            })
+            result = json_graph.node_link_data(nxg)
+            return APIProvider.emit_json("ensemble_cct", result)
+
+        @app.route("/similarity", methods=["POST"])
+        def similarity():
+            data = request.json
+            result = self.callflow.request_ensemble({
+                    "name": "similarity",
+                    **data
+            })
+            return APIProvider.emit_json("similarity", result)
+
+        @app.route("/module_hierarchy", methods=["POST"])
+        def module_hierarchy():
+            data = request.json
+            nxg = self.callflow.request_ensemble({
+                    "name": "module_hierarchy",
+                    **data
+            })
+            result = json_graph.tree_data(nxg, root=data["module"])
+            return APIProvider.emit_json("module_hierarchy", result)
+
+        @app.route("/parameter_projection", methods=["POST"])
+        def parameter_projection():
+            data = request.json
+            nxg = self.callflow.request_ensemble({
+                    "name": "parameter_projection",
+                    **data
+            })
+            result = json_graph.tree_data(nxg, root=data["module"])
+            return APIProvider.emit_json("parameter_projection", result)
+
+        @app.route("/compare", methods=["POST"])
+        def compare():
+            data = request.json
+            result = self.callflow.request_ensemble({
+                    "name": "parameter_projection",
+                    **data
+            })
+            return APIProvider.emit_json("compare", result)
 
