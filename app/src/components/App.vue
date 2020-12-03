@@ -169,7 +169,7 @@ export default {
 	},
 	methods: {
 		async fetchData() {
-			this.data = await APIService.init();
+			this.data = await APIService.GETRequest("init");
 			this.runCounts = this.data.parameter_props.runs.length;
 			let datasets = Object.keys(this.data.parameter_props.data_path);
 

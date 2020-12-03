@@ -39,12 +39,13 @@ class APIService {
   
 	/**
 	 * Send a POST request to the firestore.
-	 * @param {String} fullURL 
+	 * @param {String} endpoint 
 	 * @param {JSON} headers 
 	 * @param {JSON} jsonBody 
 	 * @return {Promise<JSON>} response
 	 */
-	POSTRequest(fullURL="", headers = {"Content-Type": "application/json"}, jsonBody={}) {
+	POSTRequest(endpoint="", headers = {"Content-Type": "application/json"}, jsonBody={}) {
+		const fullURL = this.url + endpoint;
 		console.log("[POST Request]", fullURL, "headers:", headers, "body: ", jsonBody);
 		const httpResponse = fetch(fullURL, {
 			method: "POST",
@@ -72,12 +73,13 @@ class APIService {
 
 	/**
 	 * Send a GET request to the firestore.
-	 * @param {String} fullURL 
+	 * @param {String} endpoint 
 	 * @param {String} requestType 
 	 * @param {JSON} headers 
 	 * @return {Promise<JSON>} response
 	 */
-	GETRequest(fullURL, headers={"Content-Type": "application/json"}) {
+	GETRequest(endpoint="", headers={"Content-Type": "application/json"}) {
+		const fullURL = this.url + endpoint;
 		console.debug("[GET Request]", fullURL, headers);
 		const httpResponse = fetch(fullURL, {
 			method: "GET",
@@ -85,7 +87,6 @@ class APIService {
 			cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
 			credentials: "same-origin", // include, *same-origin, omit
 		}).then((response) => {
-			console.log(response);
 			switch (response.status) {
 			case 200:
 				return response.json();
@@ -108,16 +109,8 @@ class APIService {
      * @param {*} dataset 
      */
 	init(datasetPath) {
-		return this.GETRequest(this.url + "init");
+		return ;
 	}
-
-	/**
-	 * /config endpoint
-	 */
-	config() {
-		this.GETRequest(this.url + "config");
-	}
-
 
 
 }
