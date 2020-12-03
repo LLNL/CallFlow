@@ -64,7 +64,7 @@
 							>
 								<template slot="items" slot-scope="props">
 									<tr>
-										<td nowrap="true">{{ props.item.dataset }}</td>
+										<td nowrap="true">{{ props.item.run }}</td>
 										<td nowrap="true">
 											{{ props.item.min_inclusive_runtime }}
 										</td>
@@ -128,7 +128,7 @@ export default {
 		data: {},
 		runCounts: 0,
 		runtimeHeaders: [
-			{ text: "Run", value: "dataset" },
+			{ text: "Run", value: "run" },
 			{
 				text: "Min. Inclusive runtime (\u03BCs)",
 				value: "min_inclusive_runtime",
@@ -168,28 +168,44 @@ export default {
 		this.fetchData();
 	},
 	methods: {
+		/**
+		 * Send the request to /init endpoint
+		 * Parameters: {datasetPath: "path/to/dataset"}
+		*/ 
 		async fetchData() {
-			this.data = await APIService.GETRequest("init");
-			this.runCounts = this.data.parameter_props.runs.length;
-			let datasets = Object.keys(this.data.parameter_props.data_path);
+			this.data = await APIService.GETRequest("init", {"dataset_path": ""});
+			this.runs = Object.keys(this.data.parameter_props.data_path);
+			this.runtime_props = this.data.runtime_props;
+			this.module_callsite_map = this.data.module_callsite_map;
+			this.init();
+		},
 
+		init() {
+			this.runtimePropsTable();
+			this.moduleCallsiteTable();
+		},
+
+		runtimePropsTable() {
 			// set the data for runtime.
-			for (let dataset of datasets) {
+			for (let run of this.runs) {
 				this.runtime.push({
-					dataset: dataset,
-					min_inclusive_runtime: this.data.runtime_props.minIncTime[dataset],
-					max_inclusive_runtime: this.data.runtime_props.maxIncTime[dataset],
-					min_exclusive_runtime: this.data.runtime_props.minExcTime[dataset],
-					max_exclusive_runtime: this.data.runtime_props.maxExcTime[dataset],
+					run,
+					min_inclusive_runtime: this.runtime_props.minIncTime[run],
+					max_inclusive_runtime: this.runtime_props.maxIncTime[run],
+					min_exclusive_runtime: this.runtime_props.minExcTime[run],
+					max_exclusive_runtime: this.runtime_props.maxExcTime[run],
 				});
 			}
-			for (let module in this.data.module_callsite_map) {
+		},
+
+		moduleCallsiteTable() {
+			for (let module in this.module_callsite_map) {
 				this.modules.push({
 					module: module,
 					number_of_callsites: this.data.module_callsite_map[module].length,
 				});
 			}
-		}
+		},
 	},
 };
 </script>
