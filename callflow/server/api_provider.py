@@ -65,3 +65,18 @@ class APIProvider:
             result = self.callflow.request_general({"name": "init"})
             return APIProvider.emit_json("init", result)
 
+        @app.route("/supergraph_data", methods=["POST"])
+        def supergraph_data():
+            data = request.json
+            result = self.callflow.request_ensemble(
+                {
+                    "name": "auxiliary",
+                    "datasets": data["datasets"],
+                    "sortBy": data["sortBy"],
+                    "MPIBinCount": data["MPIBinCount"],
+                    "RunBinCount": data["RunBinCount"],
+                    "module": data["module"],
+                    "re-process": data["re_process"],
+                }
+            )
+            return APIProvider.emit_json("init", result)

@@ -272,12 +272,6 @@ export default {
 
 	data: () => ({
 		appName: "CallFlow",
-		server: "http://127.0.0.1:5000",
-		config: {
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-		},
 		left: false,
 		formats: ["CCT", "SuperGraph"],
 		selectedFormat: "SuperGraph",
@@ -314,7 +308,6 @@ export default {
 		selectedData: "Dataframe",
 		firstRender: true,
 		summaryChip: "SuperGraph",
-		auxiliarySortBy: "time (inc)",
 		ranks: [],
 		initLoad: true,
 		comparisonMode: false,
@@ -338,121 +331,48 @@ export default {
 	}),
 
 	mounted() {
-		// var socket = io.connect(this.server, { reconnect: false });
-		this.reset();
+		this.fetchData();
 
 		EventHandler.$on("lasso_selection", () => {
 			this.$store.resetTargetDataset = true;
-
 			this.clearLocal();
 			this.setTargetDataset();
-			this.requestEnsembleData();
+			this.fetchData();
 		});
 
 		EventHandler.$on("show_target_auxiliary", () => {
 			this.clearLocal();
 			this.init();
 		});
-
 	},
 
-	beforeDestroy() {
-		//Unsubscribe on destroy
-		this.$socket.emit("disconnect");
-	},
-
-	sockets: {
-		// Assign variables for the store and Callflow ui component.
-		// Assign colors and min, max inclusive and exclusive times.
-		init(data) {
+	methods: {
+		/**
+		 * Fetch the super graph data. 
+		 */
+		async fetchData() {
+			const data = await APIService.POSTRequest("supergraph_data", {
+				datasets: this.$store.selectedDatasets,
+				sortBy: this.$store.auxiliarySortBy,
+				MPIBinCount: this.$store.selectedMPIBinCount,
+				RunBinCount: this.$store.selectedRunBinCount,
+				module: "all",
+				re_process: 1,
+			});
+			
+			this.dataReady = true;
 			this.setupStore(data);
-			this.setTargetDataset();
-			this.setComponentMap();
-			if (this.selectedFormat == "SuperGraph") {
-				// this.requestEnsembleData();
-			} else if (this.selectedFormat == "CCT") {
-				// this.init();
-			}
+
+			this.init();
 		},
 
-		ensemble_callsite_data(data) {
-			console.log("Auxiliary Data: ", data);
-			this.dataReady = true;
-
+		setupStore(data) {
 			this.$store.modules = data["module"];
 			this.$store.callsites = data["callsite"];
 			this.$store.gradients = data["gradients"];
 			this.$store.moduleCallsiteMap = data["moduleCallsiteMap"];
 			this.$store.callsiteModuleMap = data["callsiteModuleMap"];
-			// this.init();
-		},
 
-		// Reset to the init() function.
-		reset(data) {
-			console.log("Data for", this.selectedFormat, ": ", data);
-			this.init();
-		},
-
-		disconnect() {
-			console.log("Disconnected.");
-		},
-	},
-
-	methods: {
-		// Feature: Sortby the datasets and show the time.
-		formatRuntimeWithoutUnits(val) {
-			let format = d3.format(".2");
-			let ret = format(val);
-			return ret;
-		},
-
-		// Feature: Sortby the datasets and show the time.
-		sortDatasetsByAttr(datasets, attr) {
-			if (datasets.length == 1) {
-				this.metricTimeMap[datasets[0]] = this.$store.maxIncTime[datasets[0]];
-				return datasets;
-			}
-			let ret = datasets.sort((a, b) => {
-				let x = 0,
-					y = 0;
-				if (attr == "Inclusive") {
-					x = this.$store.maxIncTime[a];
-					y = this.$store.maxIncTime[b];
-					this.metricTimeMap = this.$store.maxIncTime;
-				} else if (attr == "Exclusive") {
-					x = this.$store.maxExcTime[a];
-					y = this.$store.maxExcTime[b];
-					this.metricTimeMap = this.$store.maxExcTime;
-				}
-				return parseFloat(x) - parseFloat(y);
-			});
-			return ret;
-		},
-
-		setViewDimensions() {
-			this.$store.viewWidth = window.innerWidth;
-
-			let toolbarHeight = 0;
-			let footerHeight = 0;
-			// Set toolbar height as 0 if undefined
-			if (document.getElementById("toolbar") == null) {
-				toolbarHeight = 0;
-			} else {
-				toolbarHeight = document.getElementById("toolbar").clientHeight;
-			}
-			if (document.getElementById("footer") == null) {
-				footerHeight = 0;
-			} else {
-				footerHeight = document.getElementById("footer").clientHeight;
-			}
-			this.$store.viewHeight =
-        window.innerHeight - toolbarHeight - footerHeight;
-		},
-
-		setupStore(data) {
-			data = JSON.parse(data);
-			this.$store.numOfRuns = data.parameter_props.runs.length;
-			this.$store.selectedDatasets = data.parameter_props.runs;
 			this.datasets = this.$store.selectedDatasets;
 
 			// Enable diff mode only if the number of datasets >= 2
@@ -465,18 +385,11 @@ export default {
 				this.selectedMode = "Single";
 			}
 
-			this.$store.maxExcTime = data.runtime_props.maxExcTime;
-			this.$store.minExcTime = data.runtime_props.minExcTime;
-			this.$store.maxIncTime = data.runtime_props.maxIncTime;
-			this.$store.minIncTime = data.runtime_props.minIncTime;
-
 			this.$store.moduleCallsiteMap = data["module_callsite_map"];
 			this.$store.callsiteModuleMap = data["callsite_module_map"];
 
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
 			this.$store.selectedRunBinCount = this.selectedRunBinCount;
-
-			this.setViewDimensions();
 
 			this.$store.auxiliarySortBy = this.auxiliarySortBy;
 			this.$store.reprocess = 0;
@@ -486,7 +399,30 @@ export default {
 			this.$store.encoding = "MEAN";
 		},
 
-		setOtherData() {
+		init() {
+			console.assert(this.selectedMode, "Single");
+			console.log("Mode : ", this.selectedMode);
+			console.log("Number of runs :", this.$store.numOfRuns);
+			console.log("Dataset : ", this.selectedTargetDataset);
+			console.log("Format = ", this.selectedFormat);
+			
+			this.setGlobalVariables(); // Set the variables that do not depend on data. 
+			this.setTargetDataset(); // Set target dataset.
+			this.setupColors(); // Set up the colors.
+			this.setViewDimensions(); // Set the view dimensions.
+			this.setComponentMap();	 // Set component mapping for easy component tracking.
+
+			// Call the appropriate socket to query the server.
+			if (this.selectedFormat == "SuperGraph") {
+				this.setSelectedModule();
+				this.initComponents(this.currentSingleSuperGraphComponents);
+			} else if (this.selectedFormat == "CCT") {
+				this.initComponents(this.currentSingleCCTComponents);
+			}
+			EventHandler.$emit("single-refresh-boxplot", {});
+		},
+
+		setGlobalVariables() {
 			this.$store.selectedScatterMode = "mean";
 			this.$store.nodeInfo = {};
 			this.$store.selectedMode = this.selectedMode;
@@ -546,24 +482,45 @@ export default {
 			} else {
 				this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			}
-			this.selectedIncTime = (
-				(this.selectedFilterPerc *
-          this.$store.maxIncTime[this.selectedTargetDataset] *
-          0.000001) /
-        100
-			).toFixed(3);
+			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) /100).toFixed(3);
 
 			console.log("Maximum among all runtimes: ", this.selectedTargetDataset);
 		},
 
-		setComponentMap() {
-			this.currentSingleCCTComponents = [this.$refs.SingleCCT];
-			this.currentSingleSuperGraphComponents = [
-				this.$refs.SingleSuperGraph,
-				this.$refs.SingleHistogram,
-				this.$refs.SingleScatterplot,
-				this.$refs.CallsiteInformation,
-			];
+		setupColors() {
+			// Create color object.
+			this.$store.runtimeColor = new Color();
+			this.runtimeColorMap = this.$store.runtimeColor.getAllColors();
+			this.setRuntimeColorScale();
+
+			// Set properties into store.
+			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap;
+			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap;
+			this.$store.selectedColorPoint = this.selectedColorPoint;
+
+			this.$store.runtimeColor.intermediate = "#d9d9d9";
+			this.$store.runtimeColor.highlight = "#C0C0C0";
+			this.$store.runtimeColor.textColor = "#3a3a3a";
+			this.$store.runtimeColor.edgeStrokeColor = "#888888";
+		},
+		
+		setViewDimensions() {
+			this.$store.viewWidth = window.innerWidth;
+
+			let toolbarHeight = 0;
+			let footerHeight = 0;
+			// Set toolbar height as 0 if undefined
+			if (document.getElementById("toolbar") == null) {
+				toolbarHeight = 0;
+			} else {
+				toolbarHeight = document.getElementById("toolbar").clientHeight;
+			}
+			if (document.getElementById("footer") == null) {
+				footerHeight = 0;
+			} else {
+				footerHeight = document.getElementById("footer").clientHeight;
+			}
+			this.$store.viewHeight = window.innerHeight - toolbarHeight - footerHeight;
 		},
 
 		// Set the min and max and assign color variables from Settings.
@@ -621,54 +578,20 @@ export default {
 			);
 		},
 
-		setupColors() {
-			// Create color object.
-			this.$store.runtimeColor = new Color();
-			this.runtimeColorMap = this.$store.runtimeColor.getAllColors();
-			this.setRuntimeColorScale();
-
-			// Set properties into store.
-			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap;
-			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap;
-			this.$store.selectedColorPoint = this.selectedColorPoint;
-
-			this.$store.runtimeColor.intermediate = "#d9d9d9";
-			this.$store.runtimeColor.highlight = "#C0C0C0";
-			this.$store.runtimeColor.textColor = "#3a3a3a";
-			this.$store.runtimeColor.edgeStrokeColor = "#888888";
-		},
-
-		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
-		sortModulesByMetric(attr) {
-			let module_list = Object.keys(
-				this.$store.modules[this.selectedTargetDataset]
-			);
-
-			// Create a map for each dataset mapping the respective mean times.
-			let map = {};
-			for (let module_name of module_list) {
-				map[module_name] = this.$store.modules[this.selectedTargetDataset][
-					module_name
-				][this.$store.selectedMetric]["mean_time"];
-			}
-
-			// Create items array
-			let items = Object.keys(map).map(function (key) {
-				return [key, map[key]];
-			});
-
-			// Sort the array based on the second element
-			items.sort(function (first, second) {
-				return second[1] - first[1];
-			});
-
-			return items;
-		},
-
 		setSelectedModule() {
 			let modules_sorted_list_by_metric = this.sortModulesByMetric();
 			this.selectedModule = modules_sorted_list_by_metric[0][0];
 			this.$store.selectedModule = this.selectedModule;
+		},
+
+		setComponentMap() {
+			this.currentSingleCCTComponents = [this.$refs.SingleCCT];
+			this.currentSingleSuperGraphComponents = [
+				this.$refs.SingleSuperGraph,
+				this.$refs.SingleHistogram,
+				this.$refs.SingleScatterplot,
+				this.$refs.CallsiteInformation,
+			];
 		},
 
 		clear() {
@@ -699,45 +622,61 @@ export default {
 			}
 		},
 
-		init() {
-			console.assert(this.selectedMode, "Single");
-			console.log("Mode : ", this.selectedMode);
-			console.log("Number of runs :", this.$store.numOfRuns);
-			console.log("Dataset : ", this.selectedTargetDataset);
-			console.log("Format = ", this.selectedFormat);
+		// Feature: Sortby the datasets and show the time.
+		formatRuntimeWithoutUnits(val) {
+			let format = d3.format(".2");
+			let ret = format(val);
+			return ret;
+		},
 
-			// Initialize colors
-			this.setupColors();
-			this.setOtherData();
-
-			// Call the appropriate socket to query the server.
-			if (this.selectedFormat == "SuperGraph") {
-				this.setSelectedModule();
-				this.initComponents(this.currentSingleSuperGraphComponents);
-			} else if (this.selectedFormat == "CCT") {
-				this.initComponents(this.currentSingleCCTComponents);
+		sortDatasetsByAttr(datasets, attr) {
+			if (datasets.length == 1) {
+				this.metricTimeMap[datasets[0]] = this.$store.maxIncTime[datasets[0]];
+				return datasets;
 			}
-			EventHandler.$emit("single-refresh-boxplot", {});
-		},
-
-		async reset() {
-			await APIService.getxxx("/Users/jarus/Work/llnl/CallFlow/data/hatchet-datasets/sc19-datasets/lulesh-16nodes");
-
-			// this.$socket.emit("init", {
-			// 	mode: this.selectedMode,
-			// 	dataset: this.$store.selectedTargetDataset,
-			// });
-		},
-
-		requestEnsembleData() {
-			this.$socket.emit("ensemble_callsite_data", {
-				datasets: this.$store.selectedDatasets,
-				sortBy: this.$store.auxiliarySortBy,
-				MPIBinCount: this.$store.selectedMPIBinCount,
-				RunBinCount: this.$store.selectedRunBinCount,
-				module: "all",
-				re_process: 1,
+			let ret = datasets.sort((a, b) => {
+				let x = 0,
+					y = 0;
+				if (attr == "Inclusive") {
+					x = this.$store.maxIncTime[a];
+					y = this.$store.maxIncTime[b];
+					this.metricTimeMap = this.$store.maxIncTime;
+				} else if (attr == "Exclusive") {
+					x = this.$store.maxExcTime[a];
+					y = this.$store.maxExcTime[b];
+					this.metricTimeMap = this.$store.maxExcTime;
+				}
+				return parseFloat(x) - parseFloat(y);
 			});
+			return ret;
+		},
+
+
+		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
+		sortModulesByMetric(attr) {
+			let module_list = Object.keys(
+				this.$store.modules[this.selectedTargetDataset]
+			);
+
+			// Create a map for each dataset mapping the respective mean times.
+			let map = {};
+			for (let module_name of module_list) {
+				map[module_name] = this.$store.modules[this.selectedTargetDataset][
+					module_name
+				][this.$store.selectedMetric]["mean_time"];
+			}
+
+			// Create items array
+			let items = Object.keys(map).map(function (key) {
+				return [key, map[key]];
+			});
+
+			// Sort the array based on the second element
+			items.sort(function (first, second) {
+				return second[1] - first[1];
+			});
+
+			return items;
 		},
 
 		updateColors() {
@@ -746,9 +685,8 @@ export default {
 			this.init();
 		},
 
-		updateFormat() {
+		async updateFormat() {
 			this.clearLocal();
-			this.reset();
 			this.init();
 		},
 
