@@ -4,15 +4,17 @@
 # SPDX-License-Identifier: MIT
 
 # Library imports
-from callflow.server.endpoints import Endpoints
+import os
 import warnings
 from flask import Flask, request, json
 
 # CallFlow imports
 import callflow
 
+STATIC_FOLDER_PATH = os.path.abspath("app/dist/")
+
 # Create a Flask server.
-app = Flask(__name__, static_url_path="")
+app = Flask(__name__, static_url_path="", static_folder=STATIC_FOLDER_PATH)
 
 LOGGER = callflow.get_logger(__name__)
 

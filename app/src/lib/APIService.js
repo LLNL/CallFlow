@@ -98,21 +98,11 @@ class APIService {
 				return Promise.reject("unknown_error");
 			}
 		}).catch((error) => {
-			// console.log(error);
+			console.error(error);
 			return Promise.reject(error);
 		});
 		return this.timeoutPromise(10000, httpResponse);
 	}
-
-	/**
-     * /init endpoint
-     * @param {*} dataset 
-     */
-	init(datasetPath) {
-		return ;
-	}
-
-
 }
 export default new APIService();
   
