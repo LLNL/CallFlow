@@ -70,12 +70,10 @@ class APIProvider:
         @app.route("/supergraph_data", methods=["POST"])
         def supergraph_data():
             data = request.json
-            result = self.callflow.request_general(
-                {
-                    "name": "supergraph_data",
-                    **data,
-                }
-            )
+            result = self.callflow.request_general({
+                "name": "supergraph_data",
+                **data,
+            })
             return APIProvider.emit_json("supergraph_data", result)
 
     def _handle_single(self):
