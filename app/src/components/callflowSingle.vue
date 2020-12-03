@@ -351,15 +351,19 @@ export default {
 		 * Fetch the super graph data. 
 		 */
 		async fetchData() {
+			this.$store.auxiliarySortBy = this.auxiliarySortBy;
+			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
+			this.$store.selectedRunBinCount = this.selectedRunBinCount;
+
 			const data = await APIService.POSTRequest("supergraph_data", {
 				datasets: this.$store.selectedDatasets,
 				sortBy: this.$store.auxiliarySortBy,
 				MPIBinCount: this.$store.selectedMPIBinCount,
 				RunBinCount: this.$store.selectedRunBinCount,
-				module: "all",
 				re_process: 1,
 			});
 			
+			console.debug("[/supergraph_data]", data);
 			this.dataReady = true;
 			this.setupStore(data);
 

@@ -31,6 +31,7 @@ import Graph from "../../datastructures/graph";
 import GraphVertex from "../../datastructures/node";
 import GraphEdge from "../../datastructures/edge";
 import detectDirectedCycle from "../../algorithms/detectcycle";
+import APIService from "../../lib/APIService.js";
 
 export default {
 	name: "EnsembleSuperGraph",
@@ -80,28 +81,28 @@ export default {
 			self.$refs.EnsembleNodes.$refs.TargetLine.clear();
 			self.$refs.MiniHistograms.clear();
 		});
-	},
 
-	sockets: {
-		ensemble_supergraph(data) {
-			data = JSON.parse(data);
-			this.debugData(data);
-			this.render(data);
-		},
-
-		single_supergraph(data) {
-			data = JSON.parse(data);
-			this.debugData(data);
-			this.render(data);
-		},
-
-		split_mpi_distribution(data) {
-			data = JSON.parse(data);
-			console.debug("Data: ", data);
-		},
+		this.init();
+		this.fetchData();
 	},
 
 	methods: {
+		async fetchData() {
+			let data = {};
+			if (this.$store.selectedMode == "Single") {
+				data = APIService.POSTRequest("single_supergraph", {
+					dataset: this.$store.selectedTargetDataset,
+					groupBy: "module",
+				});
+			} else if (this.$store.selectedMode == "Ensemble") {
+				data = APIService.POSTRequest("ensemble_supergraph", {
+					datasets: this.$store.selectedDatasets,
+					groupBy: "module",
+				});
+			}
+			this.render(data);
+		},
+
 		init() {
 			this.width = 5 * this.$store.viewWidth;
 			this.height = 1 * this.$store.viewHeight;
@@ -111,18 +112,6 @@ export default {
 				height: this.height,
 				top: this.toolbarHeight,
 			});
-
-			if (this.$store.selectedMode == "Single") {
-				this.$socket.emit("single_supergraph", {
-					dataset: this.$store.selectedTargetDataset,
-					groupBy: "module",
-				});
-			} else if (this.$store.selectedMode == "Ensemble") {
-				this.$socket.emit("ensemble_supergraph", {
-					datasets: this.$store.selectedDatasets,
-					groupBy: "module",
-				});
-			}
 
 			let inner = this.sankeySVG.select("#container");
 
@@ -159,8 +148,7 @@ export default {
 
 		render(data) {
 			this.sankeyWidth = 0.7 * this.$store.viewWidth;
-			this.sankeyHeight =
-        0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
+			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
 			this.data = data;
 

@@ -272,7 +272,7 @@ class CallFlow:
         """
         Handles general requests
         """
-        _OPERATIONS = ["init"]
+        _OPERATIONS = ["init", "supergraph_data"]
 
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
@@ -281,6 +281,11 @@ class CallFlow:
 
         if operation_name == "init":
             return self.config
+
+        elif operation_name == "supergraph_data":
+            if len(operation["datasets"]) > 1:
+                return self.supergraphs["ensemble"].auxiliary_data
+            return self.supergraphs[operation["datasets"][0]].auxiliary_data
 
     def request_single(self, operation):
         """
@@ -447,11 +452,6 @@ class CallFlow:
                 self.states[state].projection_data["dataset"] = state
                 ret.append(self.states[state].projection_data)
             return ret
-
-        elif operation_name == "auxiliary":
-            if len(operation["datasets"]) > 1:
-                return self.supergraphs["ensemble"].auxiliary_data
-            return self.supergraphs[operation["datasets"][0]].auxiliary_data
 
         elif operation_name == "compare":
             compareDataset = operation["compareDataset"]

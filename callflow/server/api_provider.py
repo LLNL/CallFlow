@@ -28,6 +28,8 @@ class APIProvider:
     ) -> None:
         self.callflow = callflow
         self._handle_general()
+        self._handle_single()
+        self._handle_ensemble()
 
         LOGGER.info("Starting the API service")
         app.run(host=host, port=port, threaded=True)
@@ -68,15 +70,37 @@ class APIProvider:
         @app.route("/supergraph_data", methods=["POST"])
         def supergraph_data():
             data = request.json
-            result = self.callflow.request_ensemble(
+            result = self.callflow.request_general(
                 {
-                    "name": "auxiliary",
-                    "datasets": data["datasets"],
-                    "sortBy": data["sortBy"],
-                    "MPIBinCount": data["MPIBinCount"],
-                    "RunBinCount": data["RunBinCount"],
-                    "module": data["module"],
-                    "re-process": data["re_process"],
+                    "name": "supergraph_data",
+                    **data,
                 }
             )
-            return APIProvider.emit_json("init", result)
+            return APIProvider.emit_json("supergraph_data", result)
+
+    def _handle_single(self):
+        """
+        Single CallFlow API requests
+        """
+        @app.route("/single_supergraph", methods=["POST"])
+        def single_supergraph():
+            data = request.json
+            result = self.callflow.request_single({
+                "name": "supergraph",
+                **data
+            })
+            return APIProvider.emit_json("single_supergraph", result)
+
+    def _handle_ensemble(self):
+        """
+        Ensemble CallFlow API requests
+        """
+        @app.route("/ensemble_supergraph", methods=["POST"])
+        def ensemble_supergraph():
+            data = request.json
+            result = self.callflow.request_ensemble({
+                "name": "supergraph",
+                **data
+            })
+            return APIProvider.emit_json("ensemble_supergraph", result)
+

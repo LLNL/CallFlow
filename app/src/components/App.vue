@@ -25,6 +25,11 @@
 					<v-container fluid>
 						<v-card tile>
 							<v-card-title>
+								General Information
+							</v-card-title>
+						</v-card>
+						<v-card tile>
+							<v-card-title>
 								Experiment: {{ data.experiment }}
 							</v-card-title>
 						</v-card>
@@ -196,9 +201,6 @@ export default {
 		setStore() {
 			this.$store.selectedDatasets = this.runs;
 			this.$store.numOfRuns = this.runs.length;
-			this.$store.auxiliarySortBy = this.auxiliarySortBy;
-			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
-			this.$store.selectedRunBinCount = this.selectedRunBinCount;
 
 			this.$store.maxExcTime = this.data.runtime_props.maxExcTime;
 			this.$store.minExcTime = this.data.runtime_props.minExcTime;
@@ -206,8 +208,10 @@ export default {
 			this.$store.minIncTime = this.data.runtime_props.minIncTime;
 		},
 
+		/**
+		 * Set the data for runtime.
+		 */
 		runtimePropsTable() {
-			// set the data for runtime.
 			for (let run of this.runs) {
 				this.runtime.push({
 					run,
