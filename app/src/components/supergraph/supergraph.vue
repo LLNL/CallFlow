@@ -6,14 +6,23 @@
  */
 
 <template>
-  <svg :id="id">
-    <g id="container">
-      <EnsembleEdges ref="EnsembleEdges" />
-      <EnsembleNodes ref="EnsembleNodes" />
-      <MiniHistograms ref="MiniHistograms" />
-      <EnsembleColorMap ref="EnsembleColorMap" />
-    </g>
-  </svg>
+  <v-layout class="chip-container">
+    <v-chip class="chip" chips color="teal" label outlined clearable>
+      {{ summaryChip }}
+    </v-chip>
+    <v-spacer></v-spacer>
+    <span class="component-info">
+      Encoding = {{ selectedMetric }} runtime.
+    </span>
+    <svg :id="id">
+      <g id="container">
+        <EnsembleEdges ref="EnsembleEdges" />
+        <EnsembleNodes ref="EnsembleNodes" />
+        <MiniHistograms ref="MiniHistograms" />
+        <EnsembleColorMap ref="EnsembleColorMap" />
+      </g>
+    </svg>
+  </v-layout>
 </template>
 
 <script>
@@ -88,19 +97,40 @@ export default {
 
 	methods: {
 		async fetchData() {
-			let data = {};
 			if (this.$store.selectedMode == "Single") {
-				data = APIService.POSTRequest("single_supergraph", {
+				this.data = await APIService.POSTRequest("single_supergraph", {
 					dataset: this.$store.selectedTargetDataset,
 					groupBy: "module",
 				});
 			} else if (this.$store.selectedMode == "Ensemble") {
-				data = APIService.POSTRequest("ensemble_supergraph", {
+				this.data = await APIService.POSTRequest("ensemble_supergraph", {
 					datasets: this.$store.selectedDatasets,
 					groupBy: "module",
 				});
 			}
-			this.render(data);
+			console.debug("[/supergraph]", this.data);
+
+			this.data = this.addNodeMap(this.data);
+			this.data.graph = this.createGraphStructure(this.data);
+
+			// check cycle.
+			let detectcycle = detectDirectedCycle(this.data.graph);
+
+			if (this.debug) {
+				for (let i = 0; i < this.data.links.length; i += 1) {
+					let link = this.data.links[i];
+					let source_callsite = link["source"];
+					let target_callsite = link["target"];
+					let weight = link["weight"];
+
+					console.debug("=============================================");
+					console.debug("[Ensemble SuperGraph] Source Name :", source_callsite);
+					console.debug("[Ensemble SuperGraph] Target Name :", target_callsite);
+					console.debug("[Ensemble SuperGraph] Weight: ", weight);
+				}
+			}
+
+			this.render();
 		},
 
 		init() {
@@ -146,31 +176,11 @@ export default {
 			this.$refs.EnsembleColorMap.clear();
 		},
 
-		render(data) {
+		render() {
 			this.sankeyWidth = 0.7 * this.$store.viewWidth;
-			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
+			this.sankeyHeight =
+        0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
-			this.data = data;
-
-			this.data = this.addNodeMap(this.data);
-			this.data.graph = this.createGraphStructure(this.data);
-
-			// check cycle.
-			let detectcycle = detectDirectedCycle(this.data.graph);
-
-			if (this.debug) {
-				for (let i = 0; i < this.data["links"].length; i += 1) {
-					let link = this.data["links"][i];
-					let source_callsite = link["source"];
-					let target_callsite = link["target"];
-					let weight = link["weight"];
-
-					console.debug("=============================================");
-					console.debug("[Ensemble SuperGraph] Source Name :", source_callsite);
-					console.debug("[Ensemble SuperGraph] Target Name :", target_callsite);
-					console.debug("[Ensemble SuperGraph] Weight: ", weight);
-				}
-			}
 			this.initSankey(this.data);
 
 			let postProcess = this.postProcess(this.data.nodes, this.data.links);
@@ -441,28 +451,28 @@ export default {
 
 <style scoped>
 .node rect {
-    stroke: #333;
-    fill: #fff;
+  stroke: #333;
+  fill: #fff;
 }
-  
+
 .edgePath path {
-    stroke: #333;
-    fill: #333;
-    stroke-width: 1.5px;
+  stroke: #333;
+  fill: #333;
+  stroke-width: 1.5px;
 }
 
 .node circle {
-    stroke: black;
-    stroke-width: 0.5px;
+  stroke: black;
+  stroke-width: 0.5px;
 }
 
 .node text {
-    font: 12px sans-serif;
+  font: 12px sans-serif;
 }
 
 .link {
-    fill: none;
-    stroke: black;
-    stroke-width: 5px;
+  fill: none;
+  stroke: black;
+  stroke-width: 5px;
 }
 </style>

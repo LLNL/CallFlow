@@ -170,42 +170,18 @@
         <splitpanes id="callgraph-dashboard" class="default-theme">
           <!-- Left column-->
           <splitpanes horizontal :splitpanes-size="25">
-            <span>
-              <SingleHistogram ref="SingleHistogram" />
-            </span>
-            <span>
-              <SingleScatterplot ref="SingleScatterplot" />
-            </span>
+            <SingleHistogram ref="SingleHistogram" />
+            <SingleScatterplot ref="SingleScatterplot" />
           </splitpanes>
 
           <!-- Center column-->
           <splitpanes horizontal :splitpanes-size="55">
-            <span>
-              <v-layout class="chip-container">
-                <v-chip
-                  class="chip"
-                  chips
-                  color="teal"
-                  label
-                  outlined
-                  clearable
-                >
-                  {{ summaryChip }}
-                </v-chip>
-                <v-spacer></v-spacer>
-                <span class="component-info">
-                  Encoding = {{ selectedMetric }} runtime.
-                </span>
-              </v-layout>
-              <SuperGraph ref="SingleSuperGraph" />
-            </span>
+            <SuperGraph ref="SingleSuperGraph" />
           </splitpanes>
 
           <!-- Right column-->
           <splitpanes horizontal :splitpanes-size="20">
-            <span>
-              <CallsiteInformation ref="CallsiteInformation" />
-            </span>
+			<CallsiteInformation ref="CallsiteInformation" />
           </splitpanes>
         </splitpanes>
       </v-layout>
@@ -213,9 +189,7 @@
       <v-layout v-show="selectedFormat == 'CCT'">
         <splitpanes id="single-cct-dashboard">
           <splitpanes horizontal :splitpanes-size="100">
-            <span>
-              <CCT ref="SingleCCT" />
-            </span>
+			<CCT ref="SingleCCT" />
           </splitpanes>
         </splitpanes>
       </v-layout>
@@ -265,7 +239,7 @@ export default {
 	},
 
 	watch: {
-		showTarget: function(val) {
+		showTarget: function (val) {
 			EventHandler.$emit("show-target-auxiliary");
 		},
 	},
@@ -348,8 +322,8 @@ export default {
 
 	methods: {
 		/**
-		 * Fetch the super graph data. 
-		 */
+     * Fetch the super graph data.
+     */
 		async fetchData() {
 			this.$store.auxiliarySortBy = this.auxiliarySortBy;
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
@@ -362,7 +336,7 @@ export default {
 				RunBinCount: this.$store.selectedRunBinCount,
 				re_process: 1,
 			});
-			
+
 			console.debug("[/supergraph_data]", data);
 			this.dataReady = true;
 			this.setupStore(data);
@@ -394,13 +368,6 @@ export default {
 
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
 			this.$store.selectedRunBinCount = this.selectedRunBinCount;
-
-			this.$store.auxiliarySortBy = this.auxiliarySortBy;
-			this.$store.reprocess = 0;
-			this.$store.comparisonMode = this.comparisonMode;
-			this.$store.fontSize = 14;
-			this.$store.transitionDuration = 1000;
-			this.$store.encoding = "MEAN";
 		},
 
 		init() {
@@ -410,11 +377,11 @@ export default {
 			console.log("Dataset : ", this.selectedTargetDataset);
 			console.log("Format = ", this.selectedFormat);
 			
-			this.setGlobalVariables(); // Set the variables that do not depend on data. 
+			this.setGlobalVariables(); // Set the variables that do not depend on data.
 			this.setTargetDataset(); // Set target dataset.
 			this.setupColors(); // Set up the colors.
 			this.setViewDimensions(); // Set the view dimensions.
-			this.setComponentMap();	 // Set component mapping for easy component tracking.
+			this.setComponentMap(); // Set component mapping for easy component tracking.
 
 			// Call the appropriate socket to query the server.
 			if (this.selectedFormat == "SuperGraph") {
@@ -449,7 +416,14 @@ export default {
 			}
 
 			this.$store.contextMenu = this.contextMenu;
+			this.$store.encoding = "MEAN";
 			this.$store.selectedSuperNodePositionMode = "Minimal edge crossing";
+
+			this.$store.auxiliarySortBy = this.auxiliarySortBy;
+			this.$store.reprocess = 0;
+			this.$store.comparisonMode = this.comparisonMode;
+			this.$store.fontSize = 14;
+			this.$store.transitionDuration = 1000;
 		},
 
 		setTargetDataset() {
@@ -486,7 +460,12 @@ export default {
 			} else {
 				this.$store.selectedTargetDataset = this.selectedTargetDataset;
 			}
-			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) /100).toFixed(3);
+			this.selectedIncTime = (
+				(this.selectedFilterPerc *
+          this.$store.maxIncTime[this.selectedTargetDataset] *
+          0.000001) /
+        100
+			).toFixed(3);
 
 			console.log("Maximum among all runtimes: ", this.selectedTargetDataset);
 		},
@@ -507,7 +486,7 @@ export default {
 			this.$store.runtimeColor.textColor = "#3a3a3a";
 			this.$store.runtimeColor.edgeStrokeColor = "#888888";
 		},
-		
+
 		setViewDimensions() {
 			this.$store.viewWidth = window.innerWidth;
 
@@ -524,7 +503,8 @@ export default {
 			} else {
 				footerHeight = document.getElementById("footer").clientHeight;
 			}
-			this.$store.viewHeight = window.innerHeight - toolbarHeight - footerHeight;
+			this.$store.viewHeight =
+        window.innerHeight - toolbarHeight - footerHeight;
 		},
 
 		// Set the min and max and assign color variables from Settings.
@@ -654,7 +634,6 @@ export default {
 			});
 			return ret;
 		},
-
 
 		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
 		sortModulesByMetric(attr) {
