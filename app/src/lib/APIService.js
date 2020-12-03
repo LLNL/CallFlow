@@ -40,18 +40,17 @@ class APIService {
 	/**
 	 * Send a POST request to the firestore.
 	 * @param {String} endpoint 
-	 * @param {JSON} headers 
 	 * @param {JSON} jsonBody 
 	 * @return {Promise<JSON>} response
 	 */
-	POSTRequest(endpoint="", headers = {"Content-Type": "application/json"}, jsonBody={}) {
+	POSTRequest(endpoint="", jsonBody={}) {
 		const fullURL = this.url + endpoint;
-		console.log("[POST Request]", fullURL, "headers:", headers, "body: ", jsonBody);
+		console.log("[POST Request]", fullURL, "body: ", jsonBody);
 		const httpResponse = fetch(fullURL, {
 			method: "POST",
 			cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
 			credentials: "same-origin", // include, *same-origin, omit
-			headers: headers,
+			headers: {"Content-Type": "application/json"},
 			body: JSON.stringify(jsonBody),
 		}).then((response) => {
 			switch (response.status) {

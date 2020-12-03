@@ -12,7 +12,6 @@
 				<v-toolbar-title style="margin-right: 3em; color: white">
 					CallFlow
 				</v-toolbar-title>
-
 				<v-btn outlined>
 					<router-link to="/single">Single</router-link>
 				</v-btn>
@@ -21,38 +20,41 @@
 					<router-link to="/ensemble">Ensemble</router-link>
 				</v-btn>
 			</v-toolbar>
-
-			<router-view></router-view>
 			<v-content>
 				<v-layout>
 					<v-container fluid>
 						<v-card tile>
-							<v-card-title>Experiment: {{ data.experiment }}</v-card-title>
+							<v-card-title>
+								Experiment: {{ data.experiment }}
+							</v-card-title>
 						</v-card>
 						<v-card tile>
-							<v-card-title>Data path: {{ data.data_path }}</v-card-title>
+							<v-card-title>
+								Data path: {{ data.data_path }}
+							</v-card-title>
 						</v-card>
 						<v-card tile>
-							<v-card-title
-								>.callflow save path: {{ data.save_path }}</v-card-title
-							>
+							<v-card-title>
+								.callflow save path: {{ data.save_path }}
+							</v-card-title>
 						</v-card>
 						<v-card tile>
-							<v-card-title
-								>Filter by attribute: {{ data.filter_by }}</v-card-title
-							>
+							<v-card-title>
+								Filter by attribute: {{ data.filter_by }}
+							</v-card-title>
 						</v-card>
 						<v-card tile>
-							<v-card-title
-								>Filter percentage: {{ data.filter_perc }}</v-card-title
-							>
+							<v-card-title>
+								Filter percentage: {{ data.filter_perc }}
+							</v-card-title>
 						</v-card>
 						<v-card tile>
-							<v-card-title
-								>Group by attribute: {{ data.group_by }}</v-card-title
-							>
+							<v-card-title>
+								Group by attribute: {{ data.group_by }}
+							</v-card-title>
 						</v-card>
-
+					</v-container>
+					<v-container>
 						<v-card tile>
 							<v-card-title>Runtime Information</v-card-title>
 							<v-data-table
@@ -115,6 +117,7 @@
 					</v-container>
 				</v-layout>
 			</v-content>
+			<router-view></router-view>
 		</div>
 	</v-app>
 </template>
@@ -163,6 +166,9 @@ export default {
 			{ text: "", value: "data-table-expand" },
 		],
 		modules: [],
+		auxiliarySortBy: "time (inc)",
+		selectedRunBinCount: 20,
+		selectedMPIBinCount: 20,
 	}),
 	mounted() {
 		this.fetchData();
@@ -178,12 +184,26 @@ export default {
 			this.runCounts = this.runs.length;
 			this.runtime_props = this.data.runtime_props;
 			this.module_callsite_map = this.data.module_callsite_map;
+			this.setStore();
 			this.init();
 		},
 
 		init() {
 			this.runtimePropsTable();
 			this.moduleCallsiteTable();
+		},
+
+		setStore() {
+			this.$store.selectedDatasets = this.runs;
+			this.$store.numOfRuns = this.runs.length;
+			this.$store.auxiliarySortBy = this.auxiliarySortBy;
+			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
+			this.$store.selectedRunBinCount = this.selectedRunBinCount;
+
+			this.$store.maxExcTime = this.data.runtime_props.maxExcTime;
+			this.$store.minExcTime = this.data.runtime_props.minExcTime;
+			this.$store.maxIncTime = this.data.runtime_props.maxIncTime;
+			this.$store.minIncTime = this.data.runtime_props.minIncTime;
 		},
 
 		runtimePropsTable() {
