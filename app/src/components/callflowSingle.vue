@@ -281,7 +281,6 @@ export default {
 		datas: ["Dataframe", "Graph"],
 		selectedData: "Dataframe",
 		firstRender: true,
-		summaryChip: "SuperGraph",
 		ranks: [],
 		initLoad: true,
 		comparisonMode: false,

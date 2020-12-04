@@ -72,6 +72,8 @@ export default {
 		debug: false,
 		sankeyWidth: 0,
 		sankeyHeight: 0,
+		summaryChip: "SuperGraph",	
+		selectedMetric: "",
 	}),
 
 	mounted() {
@@ -91,8 +93,8 @@ export default {
 			self.$refs.MiniHistograms.clear();
 		});
 
-		this.init();
-		this.fetchData();
+		this.selectedMetric = this.$store.selectedMetric;
+		// this.init();
 	},
 
 	methods: {
@@ -134,6 +136,7 @@ export default {
 		},
 
 		init() {
+			this.fetchData();
 			this.width = 5 * this.$store.viewWidth;
 			this.height = 1 * this.$store.viewHeight;
 

@@ -6,7 +6,9 @@
 # Library imports
 import os
 import warnings
-from flask import Flask, request, json
+from flask import Flask, request, json, jsonify
+from networkx.readwrite import json_graph
+
 
 # CallFlow imports
 import callflow
@@ -23,7 +25,7 @@ class APIProvider:
 
     """
 
-    def __init__(
+    def __init__(   
         self, callflow: callflow.CallFlow, host: str, port: str, ensemble: bool
     ) -> None:
         self.callflow = callflow
@@ -83,10 +85,11 @@ class APIProvider:
         @app.route("/single_supergraph", methods=["POST"])
         def single_supergraph():
             data = request.json
-            result = self.callflow.request_single({
+            nxg = self.callflow.request_single({
                 "name": "supergraph",
                 **data
             })
+            result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("single_supergraph", result)
 
         @app.route("/single_cct", methods=["POST"])
@@ -96,6 +99,7 @@ class APIProvider:
                 "name": "cct",
                 **data
             })
+            print(nxg)
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("single_cct", result)
 
