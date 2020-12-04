@@ -324,6 +324,9 @@ export default {
      * Fetch the super graph data.
      */
 		async fetchData() {
+			if(this.$store.selectedDatasets === undefined) {
+				this.$router.push("/");
+			}
 			this.$store.auxiliarySortBy = this.auxiliarySortBy;
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
 			this.$store.selectedRunBinCount = this.selectedRunBinCount;

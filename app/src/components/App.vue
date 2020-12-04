@@ -13,11 +13,11 @@
 					CallFlow
 				</v-toolbar-title>
 				<v-btn outlined>
-					<router-link to="/single">Single</router-link>
+					<router-link to="/single" replace>Single</router-link>
 				</v-btn>
 
 				<v-btn outlined v-if="runCounts > 1">
-					<router-link to="/ensemble">Ensemble</router-link>
+					<router-link to="/ensemble" replace>Ensemble</router-link>
 				</v-btn>
 			</v-toolbar>
 			<v-content>
