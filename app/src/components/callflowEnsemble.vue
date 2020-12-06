@@ -6,154 +6,105 @@
  */
 
 <template>
-<v-app id="inspire">
-	<v-toolbar
-		id="toolbar"
-		color="teal"
-		dark
-		fixed
-		app
-		clipped-right
-	>
-		<v-toolbar-side-icon @click.stop="left = !left">
-			<v-icon>settings</v-icon>
-		</v-toolbar-side-icon>
-		<v-toolbar-title style="margin-right: 3em;">{{ appName }}</v-toolbar-title>
-		<v-flex
-			xs3
-			class="ma-2"
-		>
-			<v-select
-				label="Select Target run (Sorted by inclusive runtime)"
-				:items="datasets"
-				v-model="selectedTargetDataset"
-				:menu-props="{ maxHeight: '400' }"
-				box
-				v-on:change="updateTargetDataset()"
-			>
-				<template
-					slot="selection"
-					slot-scope="{item}"
-				>
-					{{ datasets.indexOf(item) + 1}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
-				</template>
-				<template
-					slot="item"
-					slot-scope="{item}"
-				>
-					{{ datasets.indexOf(item) + 1 }}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
-				</template>
+  <v-app id="inspire">
+    <v-toolbar id="toolbar" color="teal" dark fixed app clipped-right>
+      <v-toolbar-side-icon @click.stop="left = !left">
+        <v-icon>settings</v-icon>
+      </v-toolbar-side-icon>
+      <v-toolbar-title style="margin-right: 3em">{{ appName }}</v-toolbar-title>
+      <v-flex xs3 class="ma-2">
+        <v-select
+          label="Select Target run (Sorted by inclusive runtime)"
+          :items="datasets"
+          v-model="selectedTargetDataset"
+          :menu-props="{ maxHeight: '400' }"
+          box
+          v-on:change="updateTargetDataset()"
+        >
+          <template slot="selection" slot-scope="{ item }">
+            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
+            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+          </template>
+          <template slot="item" slot-scope="{ item }">
+            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
+            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+          </template>
+        </v-select>
+      </v-flex>
+      <v-flex xs3 class="ma-2">
+        <v-select
+          label="Select Compare run"
+          :items="datasets"
+          v-if="selectedFormat == 'SuperGraph'"
+          v-model="selectedCompareDataset"
+          :menu-props="{ maxHeight: '400' }"
+          box
+          v-on:change="updateCompareDataset()"
+        >
+          <template slot="selection" slot-scope="{ item }">
+            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
+            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+          </template>
+          <template slot="item" slot-scope="{ item }">
+            <!-- HTML that describe how select should render items when the select is open -->
+            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
+            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
+          </template>
+        </v-select>
+      </v-flex>
+      <v-spacer></v-spacer>
 
-			</v-select>
-		</v-flex>
-		<v-flex
-			xs3
-			class="ma-2"
-		>
-			<v-select
-				label="Select Compare run"
-				:items="datasets"
-				v-if="selectedFormat == 'SuperGraph'"
-				v-model="selectedCompareDataset"
-				:menu-props="{ maxHeight: '400' }"
-				box
-				v-on:change="updateCompareDataset()"
-			>
-				<template
-					slot="selection"
-					slot-scope="{item}"
-				>
-					{{ datasets.indexOf(item) + 1}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
-				</template>
-				<template
-					slot="item"
-					slot-scope="{item}"
-				>
-					<!-- HTML that describe how select should render items when the select is open -->
-					{{ datasets.indexOf(item) + 1}}. {{ item }} - {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
-				</template>
-			</v-select>
-		</v-flex>
-		<v-spacer></v-spacer>
+      <v-flex xs2 class="ma-1">
+        <v-select
+          label="Graph to visualize"
+          :items="formats"
+          v-model="selectedFormat"
+          :menu-props="{ maxHeight: '400' }"
+          box
+          v-on:change="updateFormat()"
+        >
+        </v-select>
+      </v-flex>
+    </v-toolbar>
 
-		<v-flex
-			xs2
-			class="ma-1"
-		>
-			<v-select
-				label="Graph to visualize"
-				:items="formats"
-				v-model="selectedFormat"
-				:menu-props="{ maxHeight: '400' }"
-				box
-				v-on:change="updateFormat()"
-			>
-			</v-select>
-		</v-flex>
-	</v-toolbar>
+    <v-navigation-drawer v-model="left" temporary fixed>
+      <v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
+      <v-card flex fill-height id="control-panel">
+        <v-layout row wrap>
+          <v-btn icon>
+            <v-icon v-on:click="reset()">refresh</v-icon>
+          </v-btn>
 
-	<v-navigation-drawer
-		v-model="left"
-		temporary
-		fixed
-	>
-		<v-btn
-			slot="activator"
-			color="primary"
-			dark
-		>Open Dialog</v-btn>
-		<v-card
-			flex
-			fill-height
-			id="control-panel"
-		>
-			<v-layout
-				row
-				wrap
-			>
-				<v-btn icon>
-					<v-icon v-on:click="reset()">refresh</v-icon>
-				</v-btn>
+          <!-- --------------------------- Visual Encoding ----------------------------------->
+          <v-flex xs12 class="ma-1">
+            <v-subheader class="teal lighten-4">Visual Encoding</v-subheader>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-subheader>
+              {{ targetInfo }}
+              <v-spacer></v-spacer>
+              <v-spacer></v-spacer>
+              <v-switch
+                v-model="showTarget"
+                v-on:change="updateTargetColor()"
+                color="#009687"
+              >
+              </v-switch>
+            </v-subheader>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-select
+              label="Metric"
+              :items="metrics"
+              v-model="selectedMetric"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateMetric()"
+            >
+            </v-select>
+          </v-flex>
 
-				<!-- --------------------------- Visual Encoding ----------------------------------->
-				<v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-subheader class="teal lighten-4">Visual Encoding</v-subheader>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-subheader>
-						{{targetInfo}}
-						<v-spacer></v-spacer>
-						<v-spacer></v-spacer>
-						<v-switch
-							v-model="showTarget"
-							v-on:change="updateTargetColor()"
-							color="#009687"
-						>
-						</v-switch>
-					</v-subheader>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-select
-						label="Metric"
-						:items="metrics"
-						v-model="selectedMetric"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateMetric()"
-					>
-					</v-select>
-				</v-flex>
-
-				<!-- <v-flex
+          <!-- <v-flex
 					xs12
 					class="ma-1"
 				>
@@ -167,25 +118,21 @@
 					>
 					</v-select>
 				</v-flex> -->
-				<v-flex
-					xs12
-					class="ma-1"
-					v-show="selectedFormat =='SuperGraph'"
-				>
-					<v-text-field
-						label="Number of bins for Run Distribution"
-						class="mt-0"
-						type="number"
-						v-model="selectedRunBinCount"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateRunBinCount()"
-					>
-					</v-text-field>
-				</v-flex>
+          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+            <v-text-field
+              label="Number of bins for Run Distribution"
+              class="mt-0"
+              type="number"
+              v-model="selectedRunBinCount"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateRunBinCount()"
+            >
+            </v-text-field>
+          </v-flex>
 
-				<!-- --------------------------- Hierarchy ----------------------------------->
-				<!-- <v-flex xs12 class="ma-1">
+          <!-- --------------------------- Hierarchy ----------------------------------->
+          <!-- <v-flex xs12 class="ma-1">
 					<v-subheader class="teal lighten-4">SuperNode Hierarchy</v-subheader>
 				</v-flex>
 				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
@@ -193,190 +140,148 @@
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateHierarchyMode()">
 					</v-select>
 				</v-flex> -->
-				<!-- <v-flex xs12 class="ma-1">
+          <!-- <v-flex xs12 class="ma-1">
 					<v-subheader class="teal lighten-4">Distribution</v-subheader>
 				</v-flex> -->
-				<v-flex
-					xs12
-					class="ma-1"
-					v-show="selectedFormat =='SuperGraph'"
-				>
-					<v-text-field
-						label="Number of bins for MPI Distribution"
-						class="mt-0"
-						type="number"
-						v-model="selectedMPIBinCount"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateMPIBinCount()"
-					>
-					</v-text-field>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-					v-show="selectedFormat =='SuperGraph'"
-				>
-					<v-select
-						label="Scale"
-						:items="scales"
-						v-model="selectedScale"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateScale()"
-					>
-					</v-select>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-					v-show="selectedFormat =='SuperGraph'"
-				>
-					<v-select
-						label="Bin by attribute"
-						:items="props"
-						v-model="selectedProp"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateProp()"
-					>
-					</v-select>
-				</v-flex>
+          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+            <v-text-field
+              label="Number of bins for MPI Distribution"
+              class="mt-0"
+              type="number"
+              v-model="selectedMPIBinCount"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateMPIBinCount()"
+            >
+            </v-text-field>
+          </v-flex>
+          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+            <v-select
+              label="Scale"
+              :items="scales"
+              v-model="selectedScale"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateScale()"
+            >
+            </v-select>
+          </v-flex>
+          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+            <v-select
+              label="Bin by attribute"
+              :items="props"
+              v-model="selectedProp"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateProp()"
+            >
+            </v-select>
+          </v-flex>
 
-				<!-- --------------------------- Encoding ----------------------------------->
-				<v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-subheader class="teal lighten-4">Colors</v-subheader>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-select
-						label="Runtime Color Map"
-						:items="runtimeColorMap"
-						v-model="selectedRuntimeColorMap"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateColors()"
-					>
-					</v-select>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-select
-						label="Distribution Color Map"
-						:items="distributionColorMap"
-						v-model="selectedDistributionColorMap"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateColors()"
-					>
-					</v-select>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-select
-						label="Target Color"
-						:items="targetColors"
-						v-model="selectedTargetColor"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateTargetColor()"
-					>
-					</v-select>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-text-field
-						label="Color points (3-9)"
-						class="mt-0"
-						type="number"
-						v-model="selectedColorPoint"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateColors()"
-					>
-					</v-text-field>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-text-field
-						label="Color minimum (in seconds)"
-						class="mt-0"
-						type="number"
-						v-model="selectedColorMinText"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateColors()"
-					>
-					</v-text-field>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-text-field
-						label="Color maximum (in seconds)"
-						class="mt-0"
-						type="number"
-						v-model="selectedColorMaxText"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateColors()"
-					>
-					</v-text-field>
-				</v-flex>
+          <!-- --------------------------- Encoding ----------------------------------->
+          <v-flex xs12 class="ma-1">
+            <v-subheader class="teal lighten-4">Colors</v-subheader>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-select
+              label="Runtime Color Map"
+              :items="runtimeColorMap"
+              v-model="selectedRuntimeColorMap"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateColors()"
+            >
+            </v-select>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-select
+              label="Distribution Color Map"
+              :items="distributionColorMap"
+              v-model="selectedDistributionColorMap"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateColors()"
+            >
+            </v-select>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-select
+              label="Target Color"
+              :items="targetColors"
+              v-model="selectedTargetColor"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateTargetColor()"
+            >
+            </v-select>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-text-field
+              label="Color points (3-9)"
+              class="mt-0"
+              type="number"
+              v-model="selectedColorPoint"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateColors()"
+            >
+            </v-text-field>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-text-field
+              label="Color minimum (in seconds)"
+              class="mt-0"
+              type="number"
+              v-model="selectedColorMinText"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateColors()"
+            >
+            </v-text-field>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-text-field
+              label="Color maximum (in seconds)"
+              class="mt-0"
+              type="number"
+              v-model="selectedColorMaxText"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateColors()"
+            >
+            </v-text-field>
+          </v-flex>
 
-				<!----------------------------- Callsite information ----------------------------------->
-				<v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-subheader class="teal lighten-4">Call site Correspondence</v-subheader>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-					v-show="selectedFormat =='SuperGraph'"
-				>
-					<v-select
-						label="Sort by"
-						:items="sortByModes"
-						v-model="selectedRuntimeSortBy"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateRuntimeSortBy()"
-					>
-					</v-select>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-					v-show="selectedFormat =='SuperGraph'"
-				>
-					<v-text-field
-						label="IQR Factor"
-						class="mt-0"
-						type="float"
-						v-model="selectedIQRFactor"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateIQRFactor()"
-					>
-					</v-text-field>
-				</v-flex>
-				<!-- <v-flex
+          <!----------------------------- Callsite information ----------------------------------->
+          <v-flex xs12 class="ma-1">
+            <v-subheader class="teal lighten-4"
+              >Call site Correspondence</v-subheader
+            >
+          </v-flex>
+          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+            <v-select
+              label="Sort by"
+              :items="sortByModes"
+              v-model="selectedRuntimeSortBy"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateRuntimeSortBy()"
+            >
+            </v-select>
+          </v-flex>
+          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+            <v-text-field
+              label="IQR Factor"
+              class="mt-0"
+              type="float"
+              v-model="selectedIQRFactor"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+              v-on:change="updateIQRFactor()"
+            >
+            </v-text-field>
+          </v-flex>
+          <!-- <v-flex
 					xs12
 					class="ma-1"
 				>
@@ -398,7 +303,7 @@
 					>
 					</v-text-field>
 				</v-flex> -->
-				<!-- <v-flex
+          <!-- <v-flex
 					xs12
 					class="ma-1"
 					v-show="selectedFormat =='SuperGraph'"
@@ -428,124 +333,94 @@
 					>
 					</v-select>
 				</v-flex> -->
-			</v-layout>
-		</v-card>
-	</v-navigation-drawer>
+        </v-layout>
+      </v-card>
+    </v-navigation-drawer>
 
-	<v-content
-		class="pt-auto"
-		v-if="selectedMode == 'Ensemble'"
-	>
-		<v-layout v-show="selectedFormat == 'SuperGraph'">
-			<splitpanes
-				id="callgraph-dashboard"
-				class="default-theme"
-			>
-				<!-- Left column-->
-				<splitpanes
-					horizontal
-					:splitpanes-size="25"
-				>
-					<span>
-						<ModuleHierarchy ref="ModuleHierarchy" />
-					</span>
-					<span>
-						<EnsembleScatterplot ref="EnsembleScatterplot" />
-					</span>
-					<span>
-						<EnsembleHistogram ref="EnsembleHistogram" />
-					</span>
-				</splitpanes>
+    <v-content class="pt-auto" v-if="selectedMode == 'Ensemble'">
+      <v-layout v-show="selectedFormat == 'SuperGraph'">
+        <splitpanes id="callgraph-dashboard" class="default-theme">
+          <!-- Left column-->
+          <splitpanes horizontal :splitpanes-size="25">
+            <span>
+              <ModuleHierarchy ref="ModuleHierarchy" />
+            </span>
+            <span>
+              <EnsembleScatterplot ref="EnsembleScatterplot" />
+            </span>
+            <span>
+              <EnsembleHistogram ref="EnsembleHistogram" />
+            </span>
+          </splitpanes>
 
-				<!-- Center column-->
-				<splitpanes
-					horizontal
-					:splitpanes-size="55"
-				>
-					<span>
-						<v-layout class="chip-container">
-							<v-chip
-								class="chip"
-								chips
-								color="teal"
-								label
-								outlined
-								clearable
-							>
-								{{ summaryChip }}
-							</v-chip>
-							<v-spacer></v-spacer>
-							<span class="component-info">
-								Encoding = {{selectedMetric}} runtime.
-							</span>
-						</v-layout>
-						<SuperGraph ref="EnsembleSuperGraph" />
-					</span>
-				</splitpanes>
+          <!-- Center column-->
+          <splitpanes horizontal :splitpanes-size="55">
+            <span>
+              <v-layout class="chip-container">
+                <v-chip
+                  class="chip"
+                  chips
+                  color="teal"
+                  label
+                  outlined
+                  clearable
+                >
+                  {{ summaryChip }}
+                </v-chip>
+                <v-spacer></v-spacer>
+                <span class="component-info">
+                  Encoding = {{ selectedMetric }} runtime.
+                </span>
+              </v-layout>
+              <SuperGraph ref="EnsembleSuperGraph" />
+            </span>
+          </splitpanes>
 
-				<!-- Right column-->
-				<splitpanes
-					horizontal
-					:splitpanes-size="20"
-				>
-					<span>
-						<CallsiteCorrespondence ref="CallsiteCorrespondence" />
-					</span>
-					<span>
-						<ParameterProjection
-							ref="ParameterProjection"
-						/>
-					</span>
-				</splitpanes>
-			</splitpanes>
-		</v-layout>
+          <!-- Right column-->
+          <splitpanes horizontal :splitpanes-size="20">
+            <span>
+              <CallsiteCorrespondence ref="CallsiteCorrespondence" />
+            </span>
+            <span>
+              <ParameterProjection ref="ParameterProjection" />
+            </span>
+          </splitpanes>
+        </splitpanes>
+      </v-layout>
 
-		<v-layout v-show="selectedFormat == 'CCT'">
-			<splitpanes id=" ensemble-cct-dashboard">
-				<splitpanes
-					horizontal
-					:splitpanes-size="100"
-				>
-					<span>
-						<CCT ref="CCT" />
-					</span>
-				</splitpanes>
-			</splitpanes>
-		</v-layout>
+      <v-layout v-show="selectedFormat == 'CCT'">
+        <splitpanes id=" ensemble-cct-dashboard">
+          <splitpanes horizontal :splitpanes-size="100">
+            <span>
+              <CCT ref="CCT" />
+            </span>
+          </splitpanes>
+        </splitpanes>
+      </v-layout>
 
-		<v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Compare'">
-			<splitpanes id="compare-cct-dashboard">
-				<splitpanes
-					horizontal
-					:splitpanes-size="50"
-				>
-					<span>
-						<CCT ref="CCT1" />
-					</span>
-				</splitpanes>
-				<splitpanes
-					horizontal
-					:splitpanes-size="50"
-				>
-					<span>
-						<CCT ref="CCT2" />
-					</span>
-				</splitpanes>
-			</splitpanes>
-		</v-layout>
-	</v-content>
+      <v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Compare'">
+        <splitpanes id="compare-cct-dashboard">
+          <splitpanes horizontal :splitpanes-size="50">
+            <span>
+              <CCT ref="CCT1" />
+            </span>
+          </splitpanes>
+          <splitpanes horizontal :splitpanes-size="50">
+            <span>
+              <CCT ref="CCT2" />
+            </span>
+          </splitpanes>
+        </splitpanes>
+      </v-layout>
+    </v-content>
 
-	<v-footer
-		id="footer"
-		color="teal"
-		app
-	>
-		Lawrence Livermore National Laboratory, and University of California, Davis
-		<v-spacer></v-spacer>
-		<span>&copy;2020</span>
-	</v-footer>
-
-</v-app>
+    <v-footer id="footer" color="teal" app>
+      Lawrence Livermore National Laboratory, and University of California,
+      Davis
+      <v-spacer></v-spacer>
+      <span>&copy;2020</span>
+    </v-footer>
+  </v-app>
 </template>
 
 <script>
