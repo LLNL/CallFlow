@@ -349,7 +349,7 @@
 
           <!-- Center column-->
           <splitpanes horizontal :splitpanes-size="55">
-			<SuperGraph ref="EnsembleSuperGraph" />
+			<SuperGraph ref="SuperGraph" />
           </splitpanes>
 
           <!-- Right column-->
@@ -709,7 +709,7 @@ export default {
 		setComponentMap() {
 			this.currentEnsembleCCTComponents = [this.$refs.CCT];
 			this.currentEnsembleSuperGraphComponents = [
-				this.$refs.EnsembleSuperGraph,
+				this.$refs.SuperGraph,
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
 				this.$refs.CallsiteCorrespondence,
@@ -940,7 +940,7 @@ export default {
 		},
 
 		updateFunctionsInCCT() {
-			this.$socket.emit("cct", {
+			APIService.POSTRequest("cct", {
 				dataset: this.$store.selectedTargetDataset,
 				functionInCCT: this.selectedFunctionsInCCT,
 			});
@@ -957,16 +957,17 @@ export default {
 			EventHandler.$emit("update-auxiliary-sort-by");
 		},
 
-		updateCompareDataset() {
+		async updateCompareDataset() {
 			this.summaryChip = "Diff SuperGraph";
 			this.$store.selectedCompareDataset = this.selectedCompareDataset;
 			this.$store.comparisonMode = true;
 			this.$store.encoding = this.selectedCompareMode;
-			this.$socket.emit("compare", {
+			const data = await APIService.POSTRequest("compare", {
 				targetDataset: this.$store.selectedTargetDataset,
 				compareDataset: this.$store.selectedCompareDataset,
 				selectedMetric: this.$store.selectedMetric,
 			});
+			this.$refs.SuperGraph.activateCompareMode(data);
 		},
 
 		updateProp() {

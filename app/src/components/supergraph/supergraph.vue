@@ -43,7 +43,7 @@ import detectDirectedCycle from "../../algorithms/detectcycle";
 import APIService from "../../lib/APIService.js";
 
 export default {
-	name: "EnsembleSuperGraph",
+	name: "SuperGraph",
 	components: {
 		EnsembleNodes,
 		EnsembleEdges,
@@ -94,7 +94,6 @@ export default {
 		});
 
 		this.selectedMetric = this.$store.selectedMetric;
-		// this.init();
 	},
 
 	methods: {
@@ -449,6 +448,10 @@ export default {
 				links: edges,
 			};
 		},
+
+		activateCompareMode(data) {
+			this.$refs.EnsembleNodes.comparisonMode(data);
+		}
 	},
 };
 </script>

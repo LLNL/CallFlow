@@ -168,7 +168,7 @@ class APIProvider:
         def compare():
             data = request.json
             result = self.callflow.request_ensemble({
-                    "name": "parameter_projection",
+                    "name": "compare",
                     **data
             })
             return APIProvider.emit_json("compare", result)
