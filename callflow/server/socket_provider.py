@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: MIT
 # Library imports
-
+import callflow
 from callflow.server.endpoints import Endpoints
+
 import json
 import warnings
 from flask import Flask
@@ -14,8 +15,6 @@ from networkx.readwrite import json_graph
 app = Flask(__name__, static_url_path="")
 sockets = SocketIO(app, cors_allowed_origins="*")
 
-import callflow
-from callflow.server.endpoints import Endpoints
 LOGGER = callflow.get_logger(__name__)
 
 
@@ -25,6 +24,7 @@ class SocketProvider:
     Keyword arguments:
     ensemble -- True, if number of datasets > 1, else False.
     """
+
     def __init__(self, host: str, port: str, ensemble: bool) -> None:
         self.handle_general()
         self.handle_single()
@@ -45,12 +45,12 @@ class SocketProvider:
         Package JSON and emit the converted data JSON.
         """
         try:
-            if callflow.utils.is_valid_json(json_data):       
+            if callflow.utils.is_valid_json(json_data):
                 json_result = json.dumps(json_data)
                 emit("", json_result, json=True)
             else:
                 emit("config", json_data, json=False)
-        except:
+        except ValueError:
             warnings.warn("[Socket: config] emits no data")
 
     def handle_general(self) -> None:
@@ -64,12 +64,14 @@ class SocketProvider:
             # TODO: This might have to be deleted.
             """
             LOGGER.debug("[Socket request] reset: {}".format(data))
-            result = self.callflow.request({
-                "name": "reset",
-                "filterBy": data["filterBy"],
-                "filterPerc": data["filterPerc"],
-                "dataset1": data["dataset"],
-            })
+            result = self.callflow.request(
+                {
+                    "name": "reset",
+                    "filterBy": data["filterBy"],
+                    "filterPerc": data["filterPerc"],
+                    "dataset1": data["dataset"],
+                }
+            )
             SocketProvider.emit_json("reset", result)
 
         @sockets.on("config", namespace="/")
@@ -85,7 +87,6 @@ class SocketProvider:
             """
             result = Endpoints.init(data=data)
             SocketProvider.emit_json("init", result)
-
 
         @sockets.on("ensemble_callsite_data", namespace="/")
         def ensemble_callsite_data(data):
@@ -106,7 +107,6 @@ class SocketProvider:
                 }
             )
             SocketProvider.emit_json("ensemble_callsite_data", result)
-
 
         @sockets.on("reveal_callsite", namespace="/")
         def reveal_callsite(data):
@@ -135,7 +135,7 @@ class SocketProvider:
                     }
                 )
                 result = json_graph.node_link_data(nxg)
-            else: 
+            else:
                 result = {}
             SocketProvider.emit_json("reveal_callsite", result)
 
@@ -201,7 +201,6 @@ class SocketProvider:
             else:
                 result = {}
             SocketProvider.emit_json("split_by_callees", result)
-            
 
     def handle_single(self):
         @sockets.on("single_callsite_data", namespace="/")

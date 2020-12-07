@@ -3,15 +3,13 @@
 #
 # SPDX-License-Identifier: MIT
 # Library imports
-from callflow.server.api_provider import APIProvider
 import os
-from flask import Flask, request, jsonify
 
 # ------------------------------------------------------------------------------
 # CallFlow imports.
 import callflow
 from callflow.operations import ArgParser
-from callflow.server.socket_provider import SocketProvider
+from callflow.server.api_provider import APIProvider
 import manager
 
 # Globals

@@ -155,7 +155,9 @@ class CallFlow:
 
             # Single auxiliary processing.
             single_supergraphs[dataset_name].single_auxiliary(
-                dataset=dataset_name, binCount=20, process=True,
+                dataset=dataset_name,
+                binCount=20,
+                process=True,
             )
 
         # Create a supergraph class for ensemble case.
@@ -349,13 +351,7 @@ class CallFlow:
         """
         Handles all the socket requests connected to Single CallFlow.
         """
-        _OPERATIONS = [
-            "cct",
-            "supergraph",
-            "module_hierarchy",
-            "projection",
-            "compare"
-        ]
+        _OPERATIONS = ["cct", "supergraph", "module_hierarchy", "projection", "compare"]
 
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
@@ -427,7 +423,7 @@ class CallFlow:
                 selectedMetric,
             )
             return compare.result
-        
+
         # Not used.
         elif operation_name == "scatterplot":
             assert False

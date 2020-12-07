@@ -20,12 +20,11 @@ app = Flask(__name__, static_url_path="", static_folder=STATIC_FOLDER_PATH)
 
 LOGGER = callflow.get_logger(__name__)
 
+
 class APIProvider:
-    """
+    """"""
 
-    """
-
-    def __init__(   
+    def __init__(
         self, callflow: callflow.CallFlow, host: str, port: str, ensemble: bool
     ) -> None:
         self.callflow = callflow
@@ -43,15 +42,13 @@ class APIProvider:
         """
         try:
             response = app.response_class(
-                response=json.dumps(json_data),
-                status=200,
-                mimetype='application/json'
+                response=json.dumps(json_data), status=200, mimetype="application/json"
             )
             response.headers.add("Access-Control-Allow-Origin", "*")
             response.headers.add("Access-Control-Allow-Headers", "*")
             response.headers.add("Access-Control-Allow-Methods", "*")
             return response
-        except:
+        except ValueError:
             warnings.warn(f"[API: {endpoint}] emits no data.")
             return jsonify(isError=True, message="Error", statusCode=500, data={"a": 1})
 
@@ -72,33 +69,30 @@ class APIProvider:
         @app.route("/supergraph_data", methods=["POST"])
         def supergraph_data():
             data = request.json
-            result = self.callflow.request_general({
-                "name": "supergraph_data",
-                **data,
-            })
+            result = self.callflow.request_general(
+                {
+                    "name": "supergraph_data",
+                    **data,
+                }
+            )
             return APIProvider.emit_json("supergraph_data", result)
 
     def _handle_single(self):
         """
         Single CallFlow API requests
         """
+
         @app.route("/single_supergraph", methods=["POST"])
         def single_supergraph():
             data = request.json
-            nxg = self.callflow.request_single({
-                "name": "supergraph",
-                **data
-            })
+            nxg = self.callflow.request_single({"name": "supergraph", **data})
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("single_supergraph", result)
 
         @app.route("/single_cct", methods=["POST"])
         def single_cct():
             data = request.json
-            nxg = self.callflow.request_single({
-                "name": "cct",
-                **data
-            })
+            nxg = self.callflow.request_single({"name": "cct", **data})
             print(nxg)
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("single_cct", result)
@@ -106,70 +100,54 @@ class APIProvider:
         @app.route("/split_mpi_distribution", methods=["POST"])
         def split_mpi_distribution():
             data = request.json
-            result = self.callflow.request_single({
+            result = self.callflow.request_single(
+                {
                     "name": "split_mpi_distribution",
                     **data,
-            })
+                }
+            )
             return APIProvider.emit_json("split_mpi_distribution", result)
 
     def _handle_ensemble(self):
         """
         Ensemble CallFlow API requests
         """
+
         @app.route("/ensemble_supergraph", methods=["POST"])
         def ensemble_supergraph():
             data = request.json
-            nxg = self.callflow.request_ensemble({
-                "name": "supergraph",
-                **data
-            })
+            nxg = self.callflow.request_ensemble({"name": "supergraph", **data})
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("ensemble_supergraph", result)
 
         @app.route("/ensemble_cct", methods=["POST"])
         def ensemble_cct():
             data = request.json
-            nxg = self.callflow.request_ensemble({
-                "name": "ensemble_cct",
-                **data
-            })
+            nxg = self.callflow.request_ensemble({"name": "ensemble_cct", **data})
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("ensemble_cct", result)
 
         @app.route("/similarity", methods=["POST"])
         def similarity():
             data = request.json
-            result = self.callflow.request_ensemble({
-                    "name": "similarity",
-                    **data
-            })
+            result = self.callflow.request_ensemble({"name": "similarity", **data})
             return APIProvider.emit_json("similarity", result)
 
         @app.route("/module_hierarchy", methods=["POST"])
         def module_hierarchy():
             data = request.json
-            nxg = self.callflow.request_ensemble({
-                    "name": "module_hierarchy",
-                    **data
-            })
+            nxg = self.callflow.request_ensemble({"name": "module_hierarchy", **data})
             result = json_graph.tree_data(nxg, root=data["module"])
             return APIProvider.emit_json("module_hierarchy", result)
 
         @app.route("/projection", methods=["POST"])
         def parameter_projection():
             data = request.json
-            result = self.callflow.request_ensemble({
-                    "name": "projection",
-                    **data
-            })
+            result = self.callflow.request_ensemble({"name": "projection", **data})
             return APIProvider.emit_json("projection", result)
 
         @app.route("/compare", methods=["POST"])
         def compare():
             data = request.json
-            result = self.callflow.request_ensemble({
-                    "name": "compare",
-                    **data
-            })
+            result = self.callflow.request_ensemble({"name": "compare", **data})
             return APIProvider.emit_json("compare", result)
-
