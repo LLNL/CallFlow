@@ -711,9 +711,9 @@ export default {
 			this.currentEnsembleSuperGraphComponents = [
 				this.$refs.EnsembleSuperGraph,
 				this.$refs.EnsembleHistogram,
-				// this.$refs.EnsembleScatterplot,
-				// this.$refs.CallsiteCorrespondence,
-				// this.$refs.ParameterProjection,
+				this.$refs.EnsembleScatterplot,
+				this.$refs.CallsiteCorrespondence,
+				this.$refs.ParameterProjection,
 				// this.$refs.ModuleHierarchy,
 			];
 		},

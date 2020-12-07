@@ -155,15 +155,14 @@ class APIProvider:
             result = json_graph.tree_data(nxg, root=data["module"])
             return APIProvider.emit_json("module_hierarchy", result)
 
-        @app.route("/parameter_projection", methods=["POST"])
+        @app.route("/projection", methods=["POST"])
         def parameter_projection():
             data = request.json
-            nxg = self.callflow.request_ensemble({
-                    "name": "parameter_projection",
+            result = self.callflow.request_ensemble({
+                    "name": "projection",
                     **data
             })
-            result = json_graph.tree_data(nxg, root=data["module"])
-            return APIProvider.emit_json("parameter_projection", result)
+            return APIProvider.emit_json("projection", result)
 
         @app.route("/compare", methods=["POST"])
         def compare():
