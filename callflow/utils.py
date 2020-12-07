@@ -10,6 +10,8 @@ import callflow
 import hatchet
 import json
 
+LOGGER = callflow.get_logger(__name__)
+
 
 def sanitize_name(name: str):
     """
@@ -247,3 +249,15 @@ def path_list_from_frames(frames: list):
                 path.append(f.get("name"))
         paths.append(path)
     return path
+
+
+def is_valid_json(data: any) -> bool:
+    """
+    Check if data is a valid JSON object.
+    """
+    try:
+        json.loads(data)
+    except ValueError as err:
+        LOGGER.error(err)
+        return False
+    return True

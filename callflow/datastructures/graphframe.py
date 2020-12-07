@@ -114,9 +114,11 @@ class GraphFrame(ht.GraphFrame):
         Uses config file to create a graphframe.
         """
         LOGGER.info(f"Creating graphframes: {name}")
-        LOGGER.info(f"Data path: {config['parameter_props']['data_path'][name]}")
+        data_path = os.path.join(
+            config["data_path"], config["parameter_props"]["data_path"][name]
+        )
+        LOGGER.info(f"Data path: {data_path}")
 
-        data_path = config["parameter_props"]["data_path"][name]
         profile_format = config["parameter_props"]["profile_format"][name]
 
         if profile_format == "hpctoolkit":

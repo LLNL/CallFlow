@@ -82,20 +82,16 @@ export default {
 
 			// Assign width and height for histogram and rankLine SVG.
 			this.boxWidth = this.width - 1 * (this.padding.right + this.padding.left);
-			this.boxHeight =
-        this.height - 2 * (this.padding.top + this.padding.bottom);
+			this.boxHeight = this.height - 2 * (this.padding.top + this.padding.bottom);
 
-			this.xAxisHeight =
-        this.boxWidth - (this.paddingFactor + 1) * this.padding.left;
-			this.yAxisHeight =
-        this.boxHeight - (this.paddingFactor + 1) * this.padding.left;
+			this.xAxisHeight = this.boxWidth - (this.paddingFactor + 1) * this.padding.left;
+			this.yAxisHeight = this.boxHeight - (this.paddingFactor + 1) * this.padding.left;
 
 			// Create the SVG
 			this.svg = d3.select("#" + this.svgID).attrs({
 				width: this.boxWidth,
 				height: this.boxHeight,
-				transform:
-          "translate(" + this.padding.left + "," + this.padding.top + ")",
+				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
 
 			EventHandler.$emit("ensemble-histogram", {

@@ -77,7 +77,6 @@ class CallFlow:
         """
         Process the datasets based on the format (i.e., either single or ensemble)
         """
-        self._create_dot_callflow_folder()
         self.config["parameter_props"] = self._parameter_props(self.config)
 
         if self.ensemble:
@@ -109,10 +108,12 @@ class CallFlow:
         """
         Single dataset processing.
         """
+        dataset_tag = dataset["name"]
+
         LOGGER.info("#########################################")
-        LOGGER.info(f"Single Mode: {dataset}")
+        LOGGER.info(f"Single Mode: {dataset_tag}")
         LOGGER.info("#########################################")
-        supergraph = SuperGraph(config=self.config, tag=dataset, mode="process")
+        supergraph = SuperGraph(config=self.config, tag=dataset_tag, mode="process")
 
         # Process each graphframe.
         supergraph.process_gf()
@@ -138,7 +139,7 @@ class CallFlow:
             dataset_name = dataset["name"]
             # Create an instance of dataset.
             LOGGER.info("#########################################")
-            LOGGER.info(f"Ensemble Mode: {dataset_name}")
+            LOGGER.info(f"Dataset name: {dataset_name}")
             LOGGER.info("#########################################")
             single_supergraphs[dataset_name] = SuperGraph(
                 config=self.config, tag=dataset_name, mode="process"
@@ -190,7 +191,7 @@ class CallFlow:
         """
         supergraphs = {}
         # Only consider the first dataset from the listing.
-        dataset_name = self.config["properties"][0]
+        dataset_name = self.config["parameter_props"]["runs"][0]
         supergraphs[dataset_name] = SuperGraph(
             config=self.config, tag=dataset_name, mode="render"
         )
@@ -269,33 +270,42 @@ class CallFlow:
 
         return props
 
-    def request_single(self, operation):
+    def request_general(self, operation):
         """
-        Handles all the socket requests connected to Single CallFlow.
+        Handles general requests
         """
-        _OPERATIONS = [
-            "init",
-            "reset",
-            "auxiliary",
-            "cct",
-            "supergraph",
-            "miniHistogram",
-            "function",
-            "split_mpi_distribution",
-        ]
+        _OPERATIONS = ["init", "supergraph_data"]
+
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
 
-        LOGGER.info(f"[Single Mode] {operation}")
         operation_name = operation["name"]
 
         if operation_name == "init":
             return self.config
 
-        elif operation_name == "auxiliary":
-            return self.supergraphs[operation["dataset"]].auxiliary_data
+        elif operation_name == "supergraph_data":
+            if len(operation["datasets"]) > 1:
+                return self.supergraphs["ensemble"].auxiliary_data
+            return self.supergraphs[operation["datasets"][0]].auxiliary_data
 
-        elif operation_name == "supergraph":
+    def request_single(self, operation):
+        """
+        Handles requests connected to Single CallFlow.
+        """
+        _OPERATIONS = [
+            "cct",
+            "supergraph",
+            "split_mpi_distribution",
+        ]
+        assert "name" in operation
+        assert operation["name"] in _OPERATIONS
+
+        operation_name = operation["name"]
+
+        LOGGER.info(f"[Single Mode] {operation}")
+
+        if operation_name == "supergraph":
             if "reveal_callsites" in operation:
                 reveal_callsites = operation["reveal_callsites"]
             else:
@@ -320,10 +330,6 @@ class CallFlow:
             )
             return single_supergraph.nxg
 
-        elif operation_name == "mini-histogram":
-            minihistogram = MiniHistogram(self.supergraphs[operation["dataset"]])
-            return minihistogram.result
-
         elif operation_name == "cct":
             result = NodeLinkLayout(
                 supergraph=self.supergraphs[operation["dataset"]],
@@ -345,13 +351,18 @@ class CallFlow:
         """
         Handles all the socket requests connected to Single CallFlow.
         """
+        _OPERATIONS = ["cct", "supergraph", "module_hierarchy", "projection", "compare"]
+
+        assert "name" in operation
+        assert operation["name"] in _OPERATIONS
+
         operation_name = operation["name"]
         datasets = self.config["parameter_props"]["runs"]
 
         if operation_name == "init":
             return self.config
 
-        elif operation_name == "ensemble_cct":
+        elif operation_name == "cct":
             result = NodeLinkLayout(
                 supergraph=self.supergraphs["ensemble"],
                 callsite_count=operation["functionsInCCT"],
@@ -383,7 +394,7 @@ class CallFlow:
             )
             return ensemble_super_graph.nxg
 
-        elif operation_name == "hierarchy":
+        elif operation_name == "module_hierarchy":
             modulehierarchy = HierarchyLayout(
                 self.supergraphs["ensemble"], operation["module"]
             )
@@ -396,6 +407,22 @@ class CallFlow:
                 n_cluster=operation["numOfClusters"],
             )
             return projection.result.to_json(orient="columns")
+
+        elif operation_name == "compare":
+            compareDataset = operation["compareDataset"]
+            targetDataset = operation["targetDataset"]
+            if operation["selectedMetric"] == "Inclusive":
+                selectedMetric = "time (inc)"
+            elif operation["selectedMetric"] == "Exclusive":
+                selectedMetric = "time"
+
+            compare = DiffView(
+                self.supergraphs["ensemble"],
+                compareDataset,
+                targetDataset,
+                selectedMetric,
+            )
+            return compare.result
 
         # Not used.
         elif operation_name == "scatterplot":
@@ -439,24 +466,3 @@ class CallFlow:
                 self.states[state].projection_data["dataset"] = state
                 ret.append(self.states[state].projection_data)
             return ret
-
-        elif operation_name == "auxiliary":
-            if len(operation["datasets"]) > 1:
-                return self.supergraphs["ensemble"].auxiliary_data
-            return self.supergraphs[operation["datasets"][0]].auxiliary_data
-
-        elif operation_name == "compare":
-            compareDataset = operation["compareDataset"]
-            targetDataset = operation["targetDataset"]
-            if operation["selectedMetric"] == "Inclusive":
-                selectedMetric = "time (inc)"
-            elif operation["selectedMetric"] == "Exclusive":
-                selectedMetric = "time"
-
-            compare = DiffView(
-                self.supergraphs["ensemble"],
-                compareDataset,
-                targetDataset,
-                selectedMetric,
-            )
-            return compare.result

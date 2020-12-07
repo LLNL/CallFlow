@@ -12,47 +12,55 @@
 				<v-toolbar-title style="margin-right: 3em; color: white">
 					CallFlow
 				</v-toolbar-title>
-
 				<v-btn outlined>
-					<router-link to="/single">Single</router-link>
+					<router-link to="/single" replace>Single</router-link>
 				</v-btn>
 
 				<v-btn outlined v-if="runCounts > 1">
-					<router-link to="/ensemble">Ensemble</router-link>
+					<router-link to="/ensemble" replace>Ensemble</router-link>
 				</v-btn>
 			</v-toolbar>
-
 			<router-view></router-view>
 			<v-content>
 				<v-layout>
 					<v-container fluid>
 						<v-card tile>
-							<v-card-title>Experiment: {{ data.experiment }}</v-card-title>
+							<v-card-title>
+								General Information
+							</v-card-title>
 						</v-card>
 						<v-card tile>
-							<v-card-title>Data path: {{ data.data_path }}</v-card-title>
+							<v-card-title>
+								Experiment: {{ data.experiment }}
+							</v-card-title>
 						</v-card>
 						<v-card tile>
-							<v-card-title
-								>.callflow save path: {{ data.save_path }}</v-card-title
-							>
+							<v-card-title>
+								Data path: {{ data.data_path }}
+							</v-card-title>
 						</v-card>
 						<v-card tile>
-							<v-card-title
-								>Filter by attribute: {{ data.filter_by }}</v-card-title
-							>
+							<v-card-title>
+								.callflow save path: {{ data.save_path }}
+							</v-card-title>
 						</v-card>
 						<v-card tile>
-							<v-card-title
-								>Filter percentage: {{ data.filter_perc }}</v-card-title
-							>
+							<v-card-title>
+								Filter by attribute: {{ data.filter_by }}
+							</v-card-title>
 						</v-card>
 						<v-card tile>
-							<v-card-title
-								>Group by attribute: {{ data.group_by }}</v-card-title
-							>
+							<v-card-title>
+								Filter percentage: {{ data.filter_perc }}
+							</v-card-title>
 						</v-card>
-
+						<v-card tile>
+							<v-card-title>
+								Group by attribute: {{ data.group_by }}
+							</v-card-title>
+						</v-card>
+					</v-container>
+					<v-container>
 						<v-card tile>
 							<v-card-title>Runtime Information</v-card-title>
 							<v-data-table
@@ -64,7 +72,7 @@
 							>
 								<template slot="items" slot-scope="props">
 									<tr>
-										<td nowrap="true">{{ props.item.dataset }}</td>
+										<td nowrap="true">{{ props.item.run }}</td>
 										<td nowrap="true">
 											{{ props.item.min_inclusive_runtime }}
 										</td>
@@ -120,13 +128,15 @@
 </template>
 
 <script>
+import APIService from "../lib/APIService";
+
 export default {
 	name: "App",
 	data: () => ({
 		data: {},
 		runCounts: 0,
 		runtimeHeaders: [
-			{ text: "Run", value: "dataset" },
+			{ text: "Run", value: "run" },
 			{
 				text: "Min. Inclusive runtime (\u03BCs)",
 				value: "min_inclusive_runtime",
@@ -161,24 +171,61 @@ export default {
 			{ text: "", value: "data-table-expand" },
 		],
 		modules: [],
+		auxiliarySortBy: "time (inc)",
+		selectedRunBinCount: 20,
+		selectedMPIBinCount: 20,
 	}),
-	sockets: {
-		config(data) {
-			this.data = JSON.parse(data);
-			this.runCounts = this.data.parameter_props.runs.length;
-			let datasets = Object.keys(this.data.parameter_props.data_path);
+	mounted() {
+		this.fetchData();
+	},
+	methods: {
+		/**
+		 * Send the request to /init endpoint
+		 * Parameters: {datasetPath: "path/to/dataset"}
+		*/ 
+		async fetchData() {
+			this.data = await APIService.GETRequest("init", {"dataset_path": ""});
+			this.runs = Object.keys(this.data.parameter_props.data_path);
+			this.runCounts = this.runs.length;
+			this.runtime_props = this.data.runtime_props;
+			this.module_callsite_map = this.data.module_callsite_map;
+			this.setStore();
+			this.init();
+		},
 
-			// set the data for runtime.
-			for (let dataset of datasets) {
+		init() {
+			this.runtimePropsTable();
+			this.moduleCallsiteTable();
+		},
+
+		setStore() {
+			this.$store.selectedDatasets = this.runs;
+			this.$store.numOfRuns = this.runs.length;
+
+			this.$store.maxExcTime = this.data.runtime_props.maxExcTime;
+			this.$store.minExcTime = this.data.runtime_props.minExcTime;
+			this.$store.maxIncTime = this.data.runtime_props.maxIncTime;
+			this.$store.minIncTime = this.data.runtime_props.minIncTime;
+			this.$store.numOfRanks = this.data.runtime_props.numOfRanks;
+		},
+
+		/**
+		 * Set the data for runtime.
+		 */
+		runtimePropsTable() {
+			for (let run of this.runs) {
 				this.runtime.push({
-					dataset: dataset,
-					min_inclusive_runtime: this.data.runtime_props.minIncTime[dataset],
-					max_inclusive_runtime: this.data.runtime_props.maxIncTime[dataset],
-					min_exclusive_runtime: this.data.runtime_props.minExcTime[dataset],
-					max_exclusive_runtime: this.data.runtime_props.maxExcTime[dataset],
+					run,
+					min_inclusive_runtime: this.runtime_props.minIncTime[run],
+					max_inclusive_runtime: this.runtime_props.maxIncTime[run],
+					min_exclusive_runtime: this.runtime_props.minExcTime[run],
+					max_exclusive_runtime: this.runtime_props.maxExcTime[run],
 				});
 			}
-			for (let module in this.data.module_callsite_map) {
+		},
+
+		moduleCallsiteTable() {
+			for (let module in this.module_callsite_map) {
 				this.modules.push({
 					module: module,
 					number_of_callsites: this.data.module_callsite_map[module].length,
@@ -186,10 +233,6 @@ export default {
 			}
 		},
 	},
-	mounted() {
-		this.$socket.emit("config", {});
-	},
-	methods: {},
 };
 </script>
 
