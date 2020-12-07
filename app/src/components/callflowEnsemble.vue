@@ -396,6 +396,7 @@ import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
 import EventHandler from "./EventHandler";
+import APIService from "../lib/APIService";
 
 import SuperGraph from "./supergraph/supergraph";
 import CCT from "./cct/cct";
@@ -407,7 +408,6 @@ import ModuleHierarchy from "./moduleHierarchy/moduleHierarchy";
 import EnsembleScatterplot from "./ensembleScatterplot/ensembleScatterplot";
 import ParameterProjection from "./parameterProjection/parameterProjection";
 
-import io from "socket.io-client";
 import * as utils from "./utils";
 
 export default {
@@ -573,7 +573,7 @@ export default {
 			console.assert(this.selectedMode, "Single");
 			console.log("Mode : ", this.selectedMode);
 			console.log("Number of runs :", this.$store.numOfRuns);
-			console.log("Dataset : ", this.selectedTargetDataset);
+			console.log("Datasets : ", this.$store.selectedDatasets);
 			console.log("Format = ", this.selectedFormat);
 			
 			this.setGlobalVariables(); // Set the variables that do not depend on data.
@@ -585,11 +585,11 @@ export default {
 			// Call the appropriate socket to query the server.
 			if (this.selectedFormat == "SuperGraph") {
 				this.setSelectedModule();
-				this.initComponents(this.currentSingleSuperGraphComponents);
+				this.initComponents(this.currentEnsembleSuperGraphComponents);
 			} else if (this.selectedFormat == "CCT") {
-				this.initComponents(this.currentSingleCCTComponents);
+				this.initComponents(this.currentEnsembleCCTComponents);
 			}
-			EventHandler.$emit("single-refresh-boxplot", {});
+			EventHandler.$emit("ensemble-refresh-boxplot", {});
 		},
 
 		setupStore(data) {
@@ -599,9 +599,6 @@ export default {
 			this.$store.moduleCallsiteMap = data["moduleCallsiteMap"];
 			this.$store.callsiteModuleMap = data["callsiteModuleMap"];
 
-			this.$store.numOfRuns = data.parameter_props.runs.length;
-			this.$store.selectedDatasets = data.parameter_props.runs;
-			this.selectedCaseStudy = data.runName;
 			this.datasets = this.$store.selectedDatasets;
 
 			// Enable diff mode only if the number of datasets >= 2
@@ -613,21 +610,12 @@ export default {
 				this.modes = ["Single"];
 				this.selectedMode = "Single";
 			}
+		},
 
-			this.$store.maxExcTime = data.runtime_props.maxExcTime;
-			this.$store.minExcTime = data.runtime_props.minExcTime;
-			this.$store.maxIncTime = data.runtime_props.maxIncTime;
-			this.$store.minIncTime = data.runtime_props.minIncTime;
-
-			this.$store.numOfRanks = data.runtime_props.numOfRanks;
-			this.$store.moduleCallsiteMap = data["module_callsite_map"];
-			this.$store.callsiteModuleMap = data["callsite_module_map"];
-
+		setGlobalVariables() {
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
 			this.$store.selectedRunBinCount = this.selectedRunBinCount;
-
-			this.setViewDimensions();
-
+			
 			this.$store.auxiliarySortBy = this.auxiliarySortBy;
 			this.$store.reprocess = 0;
 			this.$store.comparisonMode = this.comparisonMode;
@@ -635,9 +623,7 @@ export default {
 			this.$store.transitionDuration = 1000;
 			this.$store.showTarget = this.showTarget;
 			this.$store.encoding = "MEAN_GRADIENTS";
-		},
-
-		setGlobalVariables() {
+	
 			this.$store.selectedScatterMode = "mean";
 			this.$store.nodeInfo = {};
 			this.$store.selectedMode = this.selectedMode;
@@ -725,10 +711,10 @@ export default {
 			this.currentEnsembleSuperGraphComponents = [
 				this.$refs.EnsembleSuperGraph,
 				this.$refs.EnsembleHistogram,
-				this.$refs.EnsembleScatterplot,
-				this.$refs.CallsiteCorrespondence,
-				this.$refs.ParameterProjection,
-				this.$refs.ModuleHierarchy,
+				// this.$refs.EnsembleScatterplot,
+				// this.$refs.CallsiteCorrespondence,
+				// this.$refs.ParameterProjection,
+				// this.$refs.ModuleHierarchy,
 			];
 		},
 
@@ -890,49 +876,35 @@ export default {
 			}
 		},
 
-		init() {
-			if (this.selectedExhibitMode == "Presentation") {
-				this.enablePresentationMode();
-			}
-
-			// Initialize colors
-			this.setupColors();
-			this.setOtherData();
-			this.setTargetDataset();
-			if (this.selectedFormat == "SuperGraph") {
-				this.setSelectedModule();
-			}
-
-			console.info("Mode : ", this.selectedMode);
-			console.info("Number of runs :", this.$store.numOfRuns);
-			console.info("Dataset : ", this.selectedTargetDataset);
-			console.info("Format = ", this.selectedFormat);
-
-			if (this.selectedFormat == "SuperGraph") {
-				this.initComponents(this.currentEnsembleSuperGraphComponents);
-			} else if (this.selectedFormat == "CCT") {
-				this.initComponents(this.currentEnsembleCCTComponents);
-			}
-			EventHandler.$emit("ensemble-refresh-boxplot", {});
+		// Feature: Sortby the datasets and show the time.
+		formatRuntimeWithoutUnits(val) {
+			let format = d3.format(".2");
+			let ret = format(val);
+			return ret;
 		},
 
-		reset() {
-			this.$socket.emit("init", {
-				mode: this.selectedMode,
-				dataset: this.$store.selectedTargetDataset,
+		sortDatasetsByAttr(datasets, attr) {
+			if (datasets.length == 1) {
+				this.metricTimeMap[datasets[0]] = this.$store.maxIncTime[datasets[0]];
+				return datasets;
+			}
+			let ret = datasets.sort((a, b) => {
+				let x = 0,
+					y = 0;
+				if (attr == "Inclusive") {
+					x = this.$store.maxIncTime[a];
+					y = this.$store.maxIncTime[b];
+					this.metricTimeMap = this.$store.maxIncTime;
+				} else if (attr == "Exclusive") {
+					x = this.$store.maxExcTime[a];
+					y = this.$store.maxExcTime[b];
+					this.metricTimeMap = this.$store.maxExcTime;
+				}
+				return parseFloat(x) - parseFloat(y);
 			});
+			return ret;
 		},
 
-		requestEnsembleData() {
-			this.$socket.emit("ensemble_callsite_data", {
-				datasets: this.$store.selectedDatasets,
-				sortBy: this.$store.auxiliarySortBy,
-				MPIBinCount: this.$store.selectedMPIBinCount,
-				RunBinCount: this.$store.selectedRunBinCount,
-				module: "all",
-				re_process: this.$store.reprocess,
-			});
-		},
 
 		updateColors() {
 			this.clearLocal();

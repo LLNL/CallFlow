@@ -212,10 +212,10 @@ import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
 import EventHandler from "./EventHandler";
+import APIService from "../lib/APIService";
 
 import SuperGraph from "./supergraph/supergraph";
 import CCT from "./cct/cct";
-import APIService from "../lib/APIService";
 
 // Single mode imports
 import SingleScatterplot from "./singleScatterplot/singleScatterplot";
@@ -321,8 +321,8 @@ export default {
 
 	methods: {
 		/**
-     * Fetch the super graph data.
-     */
+     	* Fetch the super graph data.
+     	*/
 		async fetchData() {
 			if(this.$store.selectedDatasets === undefined) {
 				this.$router.push("/");

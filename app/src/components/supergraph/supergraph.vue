@@ -104,13 +104,14 @@ export default {
 					dataset: this.$store.selectedTargetDataset,
 					groupBy: "module",
 				});
+				console.debug("[/single_supergraph]", this.data);
 			} else if (this.$store.selectedMode == "Ensemble") {
 				this.data = await APIService.POSTRequest("ensemble_supergraph", {
 					datasets: this.$store.selectedDatasets,
 					groupBy: "module",
 				});
+				console.debug("[/ensemble_supergraph]", this.data);
 			}
-			console.debug("[/supergraph]", this.data);
 
 			this.data = this.addNodeMap(this.data);
 			this.data.graph = this.createGraphStructure(this.data);
@@ -135,8 +136,8 @@ export default {
 			this.render();
 		},
 
-		init() {
-			this.fetchData();
+		async init() {
+			await this.fetchData();
 			this.width = 5 * this.$store.viewWidth;
 			this.height = 1 * this.$store.viewHeight;
 

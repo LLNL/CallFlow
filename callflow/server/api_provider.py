@@ -119,10 +119,11 @@ class APIProvider:
         @app.route("/ensemble_supergraph", methods=["POST"])
         def ensemble_supergraph():
             data = request.json
-            result = self.callflow.request_ensemble({
+            nxg = self.callflow.request_ensemble({
                 "name": "supergraph",
                 **data
             })
+            result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("ensemble_supergraph", result)
 
         @app.route("/ensemble_cct", methods=["POST"])

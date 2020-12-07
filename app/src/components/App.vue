@@ -20,6 +20,7 @@
 					<router-link to="/ensemble" replace>Ensemble</router-link>
 				</v-btn>
 			</v-toolbar>
+			<router-view></router-view>
 			<v-content>
 				<v-layout>
 					<v-container fluid>
@@ -122,7 +123,6 @@
 					</v-container>
 				</v-layout>
 			</v-content>
-			<router-view></router-view>
 		</div>
 	</v-app>
 </template>
