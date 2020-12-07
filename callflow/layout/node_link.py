@@ -84,7 +84,9 @@ class NodeLinkLayout:
         # ----------------------------------------------------------------------
         # compute map across data
         for run in self.runs:
-            target_df = self.supergraph.gf.df.loc[self.supergraph.gf.df["dataset"] == run]
+            target_df = self.supergraph.gf.df.loc[
+                self.supergraph.gf.df["dataset"] == run
+            ]
 
             if not target_df["module"].equals(target_df["name"]):
                 target_group_df = target_df.groupby(["module"])
@@ -94,9 +96,10 @@ class NodeLinkLayout:
                 target_name_group_df = target_df.groupby("name")
 
             target_module_callsite_map = target_group_df["name"].to_dict()
-            target_name_time_inc_map = target_name_group_df["time (inc)"].mean().to_dict()
+            target_name_time_inc_map = (
+                target_name_group_df["time (inc)"].mean().to_dict()
+            )
             target_name_time_exc_map = target_name_group_df["time"].mean().to_dict()
-            
 
             datamap = {}
             for callsite in self.nxg.nodes():
