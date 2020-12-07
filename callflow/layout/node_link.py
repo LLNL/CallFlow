@@ -87,17 +87,19 @@ class NodeLinkLayout:
             target_df = self.supergraph.gf.df.loc[
                 self.supergraph.gf.df["dataset"] == run
             ]
-            target_module_group_df = target_df.groupby(["module"])
-            target_module_name_group_df = target_df.groupby(["module", "name"])
-            target_module_callsite_map = (
-                target_module_group_df["name"].unique().to_dict()
-            )
+
+            if not target_df["module"].equals(target_df["name"]):
+                target_group_df = target_df.groupby(["module"])
+                target_name_group_df = target_df.groupby(["module", "name"])
+            else:
+                target_group_df = target_df
+                target_name_group_df = target_df.groupby("name")
+
+            target_module_callsite_map = target_group_df["name"].to_dict()
             target_name_time_inc_map = (
-                target_module_name_group_df["time (inc)"].max().to_dict()
+                target_name_group_df["time (inc)"].mean().to_dict()
             )
-            # target_name_time_exc_map = (
-            #     target_module_name_group_df["time"].max().to_dict()
-            # )
+            target_name_time_exc_map = target_name_group_df["time"].mean().to_dict()
 
             datamap = {}
             for callsite in self.nxg.nodes():
@@ -118,13 +120,12 @@ class NodeLinkLayout:
                     if column == "time (inc)":
                         datamap[callsite][column] = target_name_time_inc_map[module]
                     elif column == "time":
-                        datamap[callsite][column] = target_module_time_exc_map[module]
+                        datamap[callsite][column] = target_name_time_exc_map[module]
                     elif column == "module":
                         datamap[callsite][column] = module
                     elif column == "name":
                         datamap[callsite][column] = callsite
 
-            # ------------------------------------------------------------------
             nx.set_node_attributes(self.nxg, name=run, values=datamap)
 
     # --------------------------------------------------------------------------

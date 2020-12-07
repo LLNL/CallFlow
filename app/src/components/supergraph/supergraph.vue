@@ -6,14 +6,27 @@
  */
 
 <template>
-  <svg :id="id">
-    <g id="container">
-      <EnsembleEdges ref="EnsembleEdges" />
-      <EnsembleNodes ref="EnsembleNodes" />
-      <MiniHistograms ref="MiniHistograms" />
-      <EnsembleColorMap ref="EnsembleColorMap" />
-    </g>
-  </svg>
+  <div>
+    <v-layout class="chip-container">
+      <v-chip class="chip" chips color="teal" label outlined clearable>
+        {{ summaryChip }}
+      </v-chip>
+      <v-spacer></v-spacer>
+      <span class="component-info">
+        Encoding = {{ selectedMetric }} runtime.
+      </span>
+    </v-layout>
+    <v-layout>
+      <svg :id="id">
+        <g id="container">
+          <EnsembleEdges ref="EnsembleEdges" />
+          <EnsembleNodes ref="EnsembleNodes" />
+          <MiniHistograms ref="MiniHistograms" />
+          <EnsembleColorMap ref="EnsembleColorMap" />
+        </g>
+      </svg>
+    </v-layout>
+  </div>
 </template>
 
 <script>
@@ -31,9 +44,10 @@ import Graph from "../../datastructures/graph";
 import GraphVertex from "../../datastructures/node";
 import GraphEdge from "../../datastructures/edge";
 import detectDirectedCycle from "../../algorithms/detectcycle";
+import APIService from "../../lib/APIService.js";
 
 export default {
-	name: "EnsembleSuperGraph",
+	name: "SuperGraph",
 	components: {
 		EnsembleNodes,
 		EnsembleEdges,
@@ -62,6 +76,8 @@ export default {
 		debug: false,
 		sankeyWidth: 0,
 		sankeyHeight: 0,
+		summaryChip: "SuperGraph",
+		selectedMetric: "",
 	}),
 
 	mounted() {
@@ -80,29 +96,51 @@ export default {
 			self.$refs.EnsembleNodes.$refs.TargetLine.clear();
 			self.$refs.MiniHistograms.clear();
 		});
-	},
 
-	sockets: {
-		ensemble_supergraph(data) {
-			data = JSON.parse(data);
-			this.debugData(data);
-			this.render(data);
-		},
-
-		single_supergraph(data) {
-			data = JSON.parse(data);
-			this.debugData(data);
-			this.render(data);
-		},
-
-		split_mpi_distribution(data) {
-			data = JSON.parse(data);
-			console.debug("Data: ", data);
-		},
+		this.selectedMetric = this.$store.selectedMetric;
 	},
 
 	methods: {
-		init() {
+		async fetchData() {
+			if (this.$store.selectedMode == "Single") {
+				this.data = await APIService.POSTRequest("single_supergraph", {
+					dataset: this.$store.selectedTargetDataset,
+					groupBy: "module",
+				});
+				console.debug("[/single_supergraph]", this.data);
+			} else if (this.$store.selectedMode == "Ensemble") {
+				this.data = await APIService.POSTRequest("ensemble_supergraph", {
+					datasets: this.$store.selectedDatasets,
+					groupBy: "module",
+				});
+				console.debug("[/ensemble_supergraph]", this.data);
+			}
+
+			this.data = this._add_node_map(this.data);
+			this.data.graph = this._construct_super_graph(this.data);
+
+			// check cycle.
+			let detectcycle = detectDirectedCycle(this.data.graph);
+
+			if (this.debug) {
+				for (let i = 0; i < this.data.links.length; i += 1) {
+					let link = this.data.links[i];
+					let source_callsite = link["source"];
+					let target_callsite = link["target"];
+					let weight = link["weight"];
+
+					console.debug("=============================================");
+					console.debug("[Ensemble SuperGraph] Source Name :", source_callsite);
+					console.debug("[Ensemble SuperGraph] Target Name :", target_callsite);
+					console.debug("[Ensemble SuperGraph] Weight: ", weight);
+				}
+			}
+
+			this.render();
+		},
+
+		async init() {
+			await this.fetchData();
 			this.width = 5 * this.$store.viewWidth;
 			this.height = 1 * this.$store.viewHeight;
 
@@ -111,18 +149,6 @@ export default {
 				height: this.height,
 				top: this.toolbarHeight,
 			});
-
-			if (this.$store.selectedMode == "Single") {
-				this.$socket.emit("single_supergraph", {
-					dataset: this.$store.selectedTargetDataset,
-					groupBy: "module",
-				});
-			} else if (this.$store.selectedMode == "Ensemble") {
-				this.$socket.emit("ensemble_supergraph", {
-					datasets: this.$store.selectedDatasets,
-					groupBy: "module",
-				});
-			}
 
 			let inner = this.sankeySVG.select("#container");
 
@@ -135,7 +161,7 @@ export default {
 			this.sankeySVG.call(zoom);
 		},
 
-		debugData(data) {
+		_debug_data(data) {
 			console.debug("Data :", data);
 			for (let i = 0; i < data.nodes.length; i += 1) {
 				console.debug("Node name: ", data.nodes[i].id);
@@ -157,38 +183,17 @@ export default {
 			this.$refs.EnsembleColorMap.clear();
 		},
 
-		render(data) {
+		render() {
 			this.sankeyWidth = 0.7 * this.$store.viewWidth;
-			this.sankeyHeight =
-        0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
+			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
-			this.data = data;
+			this._init_sankey(this.data);
 
-			this.data = this.addNodeMap(this.data);
-			this.data.graph = this.createGraphStructure(this.data);
-
-			// check cycle.
-			let detectcycle = detectDirectedCycle(this.data.graph);
-
-			if (this.debug) {
-				for (let i = 0; i < this.data["links"].length; i += 1) {
-					let link = this.data["links"][i];
-					let source_callsite = link["source"];
-					let target_callsite = link["target"];
-					let weight = link["weight"];
-
-					console.debug("=============================================");
-					console.debug("[Ensemble SuperGraph] Source Name :", source_callsite);
-					console.debug("[Ensemble SuperGraph] Target Name :", target_callsite);
-					console.debug("[Ensemble SuperGraph] Weight: ", weight);
-				}
-			}
-			this.initSankey(this.data);
-
-			let postProcess = this.postProcess(this.data.nodes, this.data.links);
+			let postProcess = this._add_intermediate(this.data.nodes, this.data.links);
 			this.data.nodes = postProcess["nodes"];
 			this.data.links = postProcess["links"];
-			this.initSankey(this.data);
+			
+			this._init_sankey();
 
 			this.$store.graph = this.data;
 			this.$refs.EnsembleColorMap.init(this.$store.runtimeColor);
@@ -200,7 +205,10 @@ export default {
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
 		},
 
-		addNodeMap(graph) {
+		/**
+		 * Add node map to maintain the index of the Sankey nodes.
+		 */
+		_add_node_map(graph) {
 			let nodeMap = {};
 			let idx = 0;
 			for (const node of graph.nodes) {
@@ -223,7 +231,10 @@ export default {
 			return graph;
 		},
 
-		createGraphStructure(data) {
+		/**
+		 * Internal function that construct the super graph structure.
+		 */
+		_construct_super_graph(data) {
 			let graph = new Graph(true);
 
 			for (let i = 0; i < data.links.length; i += 1) {
@@ -236,32 +247,29 @@ export default {
 			return graph;
 		},
 
-		updateMiniHistogram() {
-			this.$refs.MiniHistograms.clear();
-			this.$refs.MiniHistograms.init(this.graph, this.view);
-		},
-
-		//Sankey computation
-		initSankey() {
+		/**
+		 * Initialize the Sankey layout computation.
+		 */
+		_init_sankey() {
 			this.sankey = Sankey()
 				.nodeWidth(this.nodeWidth)
 				.nodePadding(this.ySpacing)
 				.size([this.sankeyWidth, this.sankeyHeight])
 				.levelSpacing(this.levelSpacing)
 				.maxLevel(this.data.maxLevel)
-				.datasets(this.$store.runNames)
 				.setMinNodeScale(this.nodeScale)
-				.dataset("ensemble")
 				.targetDataset(this.$store.selectedTargetDataset)
 				.store(this.$store);
 
-			let path = this.sankey.link();
+			this.sankey.link();
 
 			this.sankey.nodes(this.data.nodes).links(this.data.links).layout(32);
 		},
 
-		// Add intermediate nodes.
-		postProcess(nodes, edges) {
+		/**
+		 * Internal function to initiate the intermediate nodes and edges computation.
+		 */
+		_add_intermediate(nodes, edges) {
 			console.debug(
 				"===================Adding intermediate nodes=================="
 			);
@@ -330,8 +338,6 @@ export default {
 							targetValue: temp_edges[i].targetWeight,
 							height: temp_edges[i].height,
 							targetHeight: temp_edges[i].targetHeight,
-							// value: target_node.value,
-							// name: target_node.name,
 							module: target_node.module,
 							type: "intermediate",
 							count: 1,
@@ -447,34 +453,38 @@ export default {
 				links: edges,
 			};
 		},
+
+		activateCompareMode(data) {
+			this.$refs.EnsembleNodes.comparisonMode(data);
+		},
 	},
 };
 </script>
 
 <style scoped>
 .node rect {
-    stroke: #333;
-    fill: #fff;
+  stroke: #333;
+  fill: #fff;
 }
-  
+
 .edgePath path {
-    stroke: #333;
-    fill: #333;
-    stroke-width: 1.5px;
+  stroke: #333;
+  fill: #333;
+  stroke-width: 1.5px;
 }
 
 .node circle {
-    stroke: black;
-    stroke-width: 0.5px;
+  stroke: black;
+  stroke-width: 0.5px;
 }
 
 .node text {
-    font: 12px sans-serif;
+  font: 12px sans-serif;
 }
 
 .link {
-    fill: none;
-    stroke: black;
-    stroke-width: 5px;
+  fill: none;
+  stroke: black;
+  stroke-width: 5px;
 }
 </style>
