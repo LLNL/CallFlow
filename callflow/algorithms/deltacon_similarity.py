@@ -54,7 +54,6 @@ class DeltaConSimilarity:
         for i in range(A1.shape[0]):
             for j in range(A1.shape[0]):
                 d += (sqrt(S1.tocsr()[(i, j)]) - sqrt(S2.tocsr()[(i, j)])) ** 2
-        # print("d: ", d)
         d = sqrt(d)
         sim = 1 / (1 + d)
         return 1 - sim

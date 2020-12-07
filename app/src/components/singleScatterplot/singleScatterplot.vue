@@ -12,7 +12,7 @@
         {{ message }}
       </v-chip>
     </v-layout>
-    <span class="component-info"> Corr. coef. = {{ corr_coef }}. </span>
+    <span class="component-info"> Correlation : {{ corr_coef }} </span>
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
   </v-layout>

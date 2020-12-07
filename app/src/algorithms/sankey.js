@@ -22,14 +22,12 @@ export default function Sankey() {
 		minNodeScale = 0,
 		maxLevel = 1,
 		nodeMap = {},
-		dataset = "",
-		targetDataset = "",
 		store = {},
-		datasets = [],
 		debug = true,
 		nodesByBreadth = [],
 		max_dy = 0,
-		fitNodeInWindowHeight = 5;
+		fitNodeInWindowHeight = 5,
+		targetDataset = "";
 
 	let widthScale;
 	let minDistanceBetweenNode = 0;
@@ -76,21 +74,9 @@ export default function Sankey() {
 		return sankey;
 	};
 
-	sankey.dataset = function (_) {
-		if (!arguments.length) {return dataset;}
-		dataset = _;
-		return sankey;
-	};
-
 	sankey.targetDataset = function (_) {
 		if (!arguments.length) {return targetDataset;}
 		targetDataset = _;
-		return sankey;
-	};
-
-	sankey.datasets = function (_) {
-		if (!arguments.length) {return datasets;}
-		datasets = _;
 		return sankey;
 	};
 
@@ -234,15 +220,14 @@ export default function Sankey() {
 				// console.log(node.name, node.value, node.targetValue);
 			}
 			else {
-				// node.value = Math.max(node['actual_time']['Inclusive'], node['actual_time']['Exclusive'])
-				node.value = node["actual_time"]["Exclusive"];
+				node.value = node["actual_time"]["Inclusive"];
 				node.targetValue = 0;
 				if (node[store.selectedTargetDataset] != undefined) {
 					node.targetValue = node[store.selectedTargetDataset]["actual_time"]["Inclusive"];
 				}
 			}
 			// Relaxing the edges a nodes a bit to account for the flow. But target edges arent correct.
-			node.value = Math.max(node.value, Math.max(sourceSum, targetSum));
+			// node.value = Math.max(node.value, Math.max(sourceSum, targetSum));
 			if (node[store.selectedTargetDataset] != undefined) {
 				node.targetValue = Math.max(node.targetValue, Math.max(sourceTargetSum, targetTargetSum));
 			}
@@ -360,8 +345,7 @@ export default function Sankey() {
 
 	function fixEnsembleScale() {
 		let ensembleScale = min(nodesByBreadth, (column) => {
-			var divValue = 0;
-			let nodeCount = 0;
+			let divValue = 0;
 			if (referenceValue > 0) {
 				divValue = referenceValue;
 			}
@@ -370,7 +354,8 @@ export default function Sankey() {
 					return node.value;
 				});
 			}
-			return Math.abs((size[1] - (fitNodeInWindowHeight) * nodePadding)) / divValue;
+
+			return Math.abs((size[1] - (column.length - 1) * nodePadding)) / divValue;
 		});
 
 		return ensembleScale;
@@ -587,10 +572,6 @@ export default function Sankey() {
 	// }
 
 	function ascendingDepth(a, b) {
-		// if (a["parY"] > b["parY"]) {
-		//     return a["parY"] - b["parY"];
-		// }
-		// return a["maxLinks"] - b["maxLinks"];
 		return a["y"] - b["y"];
 	}
 
@@ -628,11 +609,11 @@ export default function Sankey() {
 
 	function computeLinkDepths() {
 		nodes.forEach(function (node) {
-			// node.sourceLinks.sort(ascendingTargetDepth);
-			// node.targetLinks.sort(ascendingSourceDepth);
+			node.sourceLinks.sort(ascendingTargetDepth);
+			node.targetLinks.sort(ascendingSourceDepth);
 
-			node.sourceLinks.sort(descendingTargetDepth);
-			node.targetLinks.sort(descendingSourceDepth);
+			// node.sourceLinks.sort(descendingTargetDepth);
+			// node.targetLinks.sort(descendingSourceDepth);
 
 			// Push links having less weight to the bottom.
 			// node.sourceLinks.sort(ascendingEdgeValue);

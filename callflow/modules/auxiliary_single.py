@@ -125,7 +125,6 @@ class SingleAuxiliary:
                 "y_max": np.max(hist_exc_grid[1]).astype(np.float64),
             },
         }
-        # print(result)
         return result
 
     # # Callsite grouped information
@@ -160,11 +159,11 @@ class SingleAuxiliary:
         path = self.props["save_path"] + f"/{self.dataset}/auxiliary_data.json"
         # self.process = True
         if os.path.exists(path) and not self.process:
-            print(f"[Callsite info] Reading the data from file {path}")
+            LOGGER.info(f"[Callsite info] Reading the data from file {path}")
             with open(path, "r") as f:
                 ret = json.load(f)
         else:
-            print("Processing: ", self.dataset)
+            LOGGER.info(f"Processing: {self.dataset}")
             # with self.timer.phase("Pack Callsite data"):
             ret["callsite"] = self.callsite_data()
             # with self.timer.phase("Pack Module data"):
