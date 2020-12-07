@@ -116,8 +116,8 @@ export default {
 				console.debug("[/ensemble_supergraph]", this.data);
 			}
 
-			this.data = this.addNodeMap(this.data);
-			this.data.graph = this.createGraphStructure(this.data);
+			this.data = this._add_node_map(this.data);
+			this.data.graph = this._construct_super_graph(this.data);
 
 			// check cycle.
 			let detectcycle = detectDirectedCycle(this.data.graph);
@@ -187,7 +187,7 @@ export default {
 			this.sankeyWidth = 0.7 * this.$store.viewWidth;
 			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
-			this.initSankey(this.data);
+			this._init_sankey(this.data);
 
 			let postProcess = this._add_intermediate(this.data.nodes, this.data.links);
 			this.data.nodes = postProcess["nodes"];
