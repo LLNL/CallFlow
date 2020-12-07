@@ -39,7 +39,6 @@ import "splitpanes/dist/splitpanes.css";
 
 import EventHandler from "./EventHandler";
 
-import io from "socket.io-client";
 import * as utils from "./utils";
 
 export default {
@@ -49,36 +48,14 @@ export default {
 	},
 
 	watch: {
-		showTarget: function(val) {
-			EventHandler.$emit("show-target-auxiliary");
-		},
+	
 	},
 
 	data: () => ({
-		appName: "CallFlow",
-		server: "localhost:5000",
-		config: {
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-		},
-		
+		appName: "CallFlow",		
 	}),
 
 	mounted() {
-		var socket = io.connect(this.server, { reconnect: false });
-		this.$socket.emit("init", {
-			mode: this.selectedMode,
-		});
-	},
-
-	beforeDestroy() {
-		//Unsubscribe on destroy
-		this.$socket.emit("disconnect");
-	},
-
-	sockets: {
-		
 	},
 
 	methods: {

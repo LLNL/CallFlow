@@ -19,6 +19,10 @@
 				<v-btn outlined v-if="runCounts > 1">
 					<router-link to="/ensemble" replace>Ensemble</router-link>
 				</v-btn>
+
+				<v-btn outlined>
+					<router-link to="/experimental" replace>Experimental</router-link>
+				</v-btn>
 			</v-toolbar>
 			<router-view></router-view>
 			<v-content>
