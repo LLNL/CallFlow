@@ -714,7 +714,7 @@ export default {
 				this.$refs.EnsembleScatterplot,
 				this.$refs.CallsiteCorrespondence,
 				this.$refs.ParameterProjection,
-				// this.$refs.ModuleHierarchy,
+				this.$refs.ModuleHierarchy,
 			];
 		},
 
