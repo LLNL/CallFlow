@@ -206,6 +206,7 @@ export default {
 			this.$store.minExcTime = this.data.runtime_props.minExcTime;
 			this.$store.maxIncTime = this.data.runtime_props.maxIncTime;
 			this.$store.minIncTime = this.data.runtime_props.minIncTime;
+			this.$store.numOfRanks = this.data.runtime_props.numOfRanks;
 		},
 
 		/**
