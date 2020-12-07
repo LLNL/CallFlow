@@ -250,8 +250,6 @@ class ArgParser:
                 json["scheme"]["callsite_module_map"]
             )
 
-        print(scheme)
-
         return scheme
 
     @staticmethod
