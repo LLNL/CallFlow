@@ -89,7 +89,6 @@ export default {
 		render(data) {
 			this.clear();
 			this.data = data;
-			console.log(data);
 			this.width = 10 * this.fontSize;
 			var svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
 			this.mousePos = d3.mouse(d3.select("#" + this.id).node());
