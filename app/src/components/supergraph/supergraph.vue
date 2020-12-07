@@ -6,23 +6,27 @@
  */
 
 <template>
-  <v-layout class="chip-container">
-    <v-chip class="chip" chips color="teal" label outlined clearable>
-      {{ summaryChip }}
-    </v-chip>
-    <v-spacer></v-spacer>
-    <span class="component-info">
-      Encoding = {{ selectedMetric }} runtime.
-    </span>
-    <svg :id="id">
-      <g id="container">
-        <EnsembleEdges ref="EnsembleEdges" />
-        <EnsembleNodes ref="EnsembleNodes" />
-        <MiniHistograms ref="MiniHistograms" />
-        <EnsembleColorMap ref="EnsembleColorMap" />
-      </g>
-    </svg>
-  </v-layout>
+  <div>
+    <v-layout class="chip-container">
+      <v-chip class="chip" chips color="teal" label outlined clearable>
+        {{ summaryChip }}
+      </v-chip>
+      <v-spacer></v-spacer>
+      <span class="component-info">
+        Encoding = {{ selectedMetric }} runtime.
+      </span>
+    </v-layout>
+    <v-layout>
+      <svg :id="id">
+        <g id="container">
+          <EnsembleEdges ref="EnsembleEdges" />
+          <EnsembleNodes ref="EnsembleNodes" />
+          <MiniHistograms ref="MiniHistograms" />
+          <EnsembleColorMap ref="EnsembleColorMap" />
+        </g>
+      </svg>
+    </v-layout>
+  </div>
 </template>
 
 <script>
@@ -72,7 +76,7 @@ export default {
 		debug: false,
 		sankeyWidth: 0,
 		sankeyHeight: 0,
-		summaryChip: "SuperGraph",	
+		summaryChip: "SuperGraph",
 		selectedMetric: "",
 	}),
 
@@ -451,7 +455,7 @@ export default {
 
 		activateCompareMode(data) {
 			this.$refs.EnsembleNodes.comparisonMode(data);
-		}
+		},
 	},
 };
 </script>
