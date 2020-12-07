@@ -80,7 +80,10 @@ class SuperGraph(object):
             if callsite in self.config["callsite_module_map"]:
                 return self.config["callsite_module_map"][callsite]
 
-        return self.gf.lookup_with_name(callsite)["module"].unique()[0]
+        if "module" in self.gf.df.columns:
+            return self.gf.lookup_with_name(callsite)["module"].unique()[0]
+        else:
+            return callsite
 
     # ------------------------------------------------------------------------
     # The next block of functions attach the calculated result to the variable `gf`.

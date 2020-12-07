@@ -690,7 +690,7 @@ export default {
 
 		updateMetric() {
 			this.$store.selectedMetric = this.selectedMetric;
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
