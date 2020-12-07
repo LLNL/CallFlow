@@ -10,7 +10,6 @@ import * as Vuex from "vuex";
 import Router from "vue-router";
 import Vuetify from "vuetify";
 import BootstrapVue from "bootstrap-vue";
-import VueSocketIO from "vue-socket.io";
 import VueMaterial from "vue-material";
 import "vue-material/dist/vue-material.min.css";
 import "vue-material/dist/theme/default.css";
@@ -24,40 +23,29 @@ import EnsembleCallFlow from "./components/callflowEnsemble";
 Vue.use(Vuex);
 const store = new Vuex.Store();
 
-const socket = new VueSocketIO({
-	debug: false,
-	connection: "http://127.0.0.1:5000",
-	vuex: {
-		store,
-		actionPrefix: "SOCKET_",
-		mutationPrefix: "SOCKET_"
-	},
-	pingTimeout: 5000000
-});
-
 const router = new Router({
 	routes: [
 		{
 			path: "/single",
 			name: "SingleCallFlow",
-			component: SingleCallFlow
+			component: SingleCallFlow,
+			props: true
 		},
 		{
 			path: "/ensemble",
 			name: "EnsembleCallFlow",
-			component: EnsembleCallFlow
+			component: EnsembleCallFlow,
+			props: true
 		},
 	]
 });
 
 Vue.config.productionTip = false;
 Vue.use(BootstrapVue);
-Vue.use(socket);
 Vue.use(Router);
 Vue.use(Vuetify);
 Vue.use(VueMaterial);
 
-/* eslint-disable no-new */
 new Vue({
 	store,
 	render: h => h(App),
