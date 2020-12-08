@@ -175,7 +175,13 @@ export default {
 
 
 			// TODO : Improve the logic here to not process the string input multiple times. 
-			let entry_functions = node[this.$store.selectedTargetDataset]["entry_function"].split(",").map(String);
+			let entry_functions = [];
+			if(this.$store.selectedMode !== "Ensemble") {
+				entry_functions = node[this.$store.selectedTargetDataset]["entry_function"].split(",").map(String);
+			}
+			else {
+				entry_functions = node["ensemble"]["entry_function"].split(",").map(String);
+			}
 			let entry_function_runtimes = {};
 			for (let i = 0; i < entry_functions.length; i += 1) {
 				let callsite = entry_functions[i].replace("'", "").replace("'", "").replace("[", "").replace("]", "").replace(" ", "");
@@ -260,7 +266,9 @@ export default {
 			}
 
 			let left_callsites = entry_function_data.length - 3;
-			this.addText("and " + left_callsites + " call sites more.");
+			if (left_callsites > 0) {
+				this.addText("and " + left_callsites + " call sites more.");
+			}
 		},
 
 
