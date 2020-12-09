@@ -95,8 +95,8 @@ export default {
 				groupBy: "module",
 				numOfClusters: this.$store.selectedNumOfClusters,
 			});
-			console.debug("[/projection] data: ", data);
 			data = JSON.parse(data);
+			console.debug("[/projection] data: ", data);
 			this.visualize(data);
 		},
 
