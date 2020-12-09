@@ -35,9 +35,37 @@ _GITHUB_EXAMPLE_FILES = [
     "CallFlow-python-interface-demo.ipynb",
 ]
 
+_APP_DIST_FOLDERS = [
+    "js",
+    "css",
+    "fonts",
+    "index.html"
+]
+
+# # gather the data to be copied
+# def list_files(directory, whitelist_files=[], whitelist_folders=[]):
+#     paths = []
+#     if len(whitelist_folders) > 0:
+#         for item in os.listdir(directory):
+#             if item in whitelist_folders:
+#                 for (path, directories, filenames) in os.walk(
+#                     os.path.join(directory, item)
+#                 ):
+#                     if ".callflow" not in path.split("/"):
+#                         paths.append((path, [os.path.join(path, f) for f in filenames]))
+
+#     if len(whitelist_files) > 0:
+#         for (path, directories, filenames) in os.walk(directory):
+#             paths.append(
+#                 (
+#                     path,
+#                     [os.path.join(path, f) for f in filenames if f in whitelist_files],
+#                 )
+#             )
+#     return paths
 
 # gather the data to be copied
-def list_files(directory, whitelist_files=[], whitelist_folders=[]):
+def list_files_update(directory, whitelist_files=[], whitelist_folders=[]):
     paths = []
     if len(whitelist_folders) > 0:
         for item in os.listdir(directory):
@@ -46,25 +74,19 @@ def list_files(directory, whitelist_files=[], whitelist_folders=[]):
                     os.path.join(directory, item)
                 ):
                     if ".callflow" not in path.split("/"):
-                        paths.append((path, [os.path.join(path, f) for f in filenames]))
+                        paths = [os.path.join(path, f) for f in filenames]
 
     if len(whitelist_files) > 0:
         for (path, directories, filenames) in os.walk(directory):
-            paths.append(
-                (
-                    path,
-                    [os.path.join(path, f) for f in filenames if f in whitelist_files],
-                )
-            )
+            paths = [os.path.join(path, f) for f in filenames if f in whitelist_files]
     return paths
 
 
 data_files = list_files("data", whitelist_folders=_GITHUB_DATA_FOLDERS)
 example_files = list_files("examples", whitelist_files=_GITHUB_EXAMPLE_FILES)
-
+app_dist_files = list_files("app/dist", whitelist_folders=_APP_DIST_FOLDERS)
 
 deps = [
-    "flask_socketio",
     "ipython",
     "colorlog",
     "jsonschema",
@@ -93,11 +115,16 @@ setup(
     ],
     keywords="",
     packages=find_packages(),
-    data_files=data_files + example_files,
+    include_package_data=True,
+    # data_files=data_files + example_files + app_dist_files,
+    package_data= {
+        "data": data_files, 
+        "examples": example_files,
+        "app": app_dist_files,
+    },
     entry_points={
         "console_scripts": [
             "callflow_server = callflow.server.callflow_server:main",
-            "callflow_app = app.app:main",
         ]
     },
     install_requires=deps,
