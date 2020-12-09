@@ -5,15 +5,19 @@
 
 import os
 from setuptools import setup, find_packages
+import pathlib
+
+here = pathlib.Path(__file__).parent.resolve()
+
+# Get the long description from the README file
+long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 # ------------------------------------------------------------------------------
 # get the version safely!
 from codecs import open
 
 version = {}
-vfile = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "callflow", "version.py"
-)
+vfile = os.path.join(here, "callflow", "version.py")
 with open(vfile) as fp:
     exec(fp.read(), version)
 version = version["__version__"]
@@ -82,9 +86,9 @@ def list_files_update(directory, whitelist_files=[], whitelist_folders=[]):
     return paths
 
 
-data_files = list_files("data", whitelist_folders=_GITHUB_DATA_FOLDERS)
-example_files = list_files("examples", whitelist_files=_GITHUB_EXAMPLE_FILES)
-app_dist_files = list_files("app/dist", whitelist_folders=_APP_DIST_FOLDERS)
+data_files = list_files_update("data", whitelist_folders=_GITHUB_DATA_FOLDERS)
+example_files = list_files_update("examples", whitelist_files=_GITHUB_EXAMPLE_FILES)
+app_dist_files = list_files_update("app/dist", whitelist_folders=_APP_DIST_FOLDERS)
 
 deps = [
     "ipython",
@@ -105,7 +109,7 @@ setup(
     name="CallFlow",
     version=version,
     license="MIT",
-    description="",
+    description=long_description,
     url="https://github.com/LLNL/CallFlow",
     author="Suraj Kesavan",
     author_email="spkesavan@ucdavis.edu",
@@ -117,7 +121,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     # data_files=data_files + example_files + app_dist_files,
-    package_data= {
+    package_data={
         "data": data_files, 
         "examples": example_files,
         "app": app_dist_files,
