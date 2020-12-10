@@ -246,9 +246,9 @@ class ArgParser:
             )
 
         if "callsite_module_map" in json["scheme"]:
-            scheme["callsite_module_map"] = ArgParser._process_module_map(json["scheme"]["callsite_module_map"])
-
-        print(scheme)
+            scheme["callsite_module_map"] = ArgParser._process_module_map(
+                json["scheme"]["callsite_module_map"]
+            )
 
         return scheme
 

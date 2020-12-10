@@ -82,33 +82,25 @@ export default {
 			this.rankScaleHeight = this.boxHeight - this.histogramHeight;
 			this.rankScaleWidth = this.histogramWidth;
 
-			this.xAxisHeight =
-        this.histogramWidth - (this.paddingFactor - 1.5) * this.padding.left;
-			this.yAxisHeight =
-        this.histogramHeight - (this.paddingFactor - 1.5) * this.padding.left;
+			this.xAxisHeight = this.histogramWidth - (this.paddingFactor - 1.5) * this.padding.left;
+			this.yAxisHeight = this.histogramHeight - (this.paddingFactor - 1.5) * this.padding.left;
 
 			this.svg = d3.select("#" + this.svgID).attrs({
 				width: this.boxWidth,
 				height: this.boxHeight,
-				transform:
-          "translate(" + this.padding.left + "," + this.padding.top + ")",
+				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
 
 			EventHandler.$emit("single-histogram", {
-				module: Object.keys(
-					this.$store.modules[this.$store.selectedTargetDataset]
-				)[0],
+				module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
 				groupBy: this.$store.selectedGroupBy,
 				dataset: this.$store.selectedTargetDataset,
 			});
 		},
 
 		setupScale(callsite) {
-			let store = this.$store.modules[this.$store.selectedTargetDataset][
-				callsite
-			];
-			let data =
-        store[this.$store.selectedMetric]["prop_histograms"]["rank"]["target"];
+			let store = this.$store.modules[this.$store.selectedTargetDataset][callsite];
+			let data = store[this.$store.selectedMetric]["prop_histograms"]["rank"]["target"];
 			let mpiData = store[this.$store.selectedMetric]["data"];
 
 			let temp = this.dataProcess(data, mpiData);
@@ -146,6 +138,7 @@ export default {
 			d3.selectAll(".binRank").remove();
 			d3.selectAll(".lineRank").remove();
 			d3.selectAll(".brush").remove();
+			d3.selectAll(".tick").remove();
 			this.$refs.ToolTip.clear();
 		},
 

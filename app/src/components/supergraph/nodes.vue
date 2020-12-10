@@ -28,6 +28,7 @@ import ToolTip from "./encodings/tooltip";
 import Mean from "./encodings/mean";
 import MeanDiff from "./encodings/meanDiff";
 import RankDiff from "./encodings/rankDiff";
+import APIService from "../../lib/APIService";
 
 export default {
 	name: "EnsembleNodes",
@@ -47,43 +48,12 @@ export default {
 		nodeHeights: {},
 		minHeightForText: 15,
 		textTruncForNode: 25,
-		id: "",
+		id: "ensemble-nodes",
 		graph: null,
 		nidNameMap: {},
 		intermediateColor: "#d9d9d9",
 		drawGuidesMap: {}
 	}),
-	sockets: {
-		// Move this to mean diff later.
-		compare(data) {
-			console.log("[Comparison] Data:", data);
-			this.clearEncoding("MEAN_GRADIENTS");
-			// this.clearZeroLine()
-			d3.selectAll(".target-path").remove();
-
-			// Clear target lines. 
-			if (this.$store.showTarget) {
-				this.$refs.TargetLine.clear();
-			}
-			d3.selectAll(".histogram-bar-target").remove();
-			d3.selectAll("#ensemble-edge-target").remove();
-
-			// remove target legend
-			d3.selectAll(".legend").remove();
-			d3.selectAll(".legend-text").remove();
-			// // remove ensemble legend
-			// d3.selectAll(".ensemble-circle-legend").remove();
-			// d3.selectAll(".ensemble-circle-legend-text").remove();
-
-			// remove colormap container
-			d3.selectAll(".colormap").remove();
-
-			this.setEncoding(this.$store.encoding, data);
-		}
-	},
-	mounted() {
-		this.id = "ensemble-nodes";
-	},
 
 	methods: {
 		init(graph) {
@@ -226,17 +196,17 @@ export default {
 						this.drawGuidesMap[node.id] = true;
 					}
 
-					this.$socket.emit("module_hierarchy", {
+					APIService.POSTRequest("module_hierarchy", {
 						module: this.$store.selectedModule,
 						name: this.$store.selectedName,
 						datasets: this.$store.selectedDatasets,
 					});
 
-					this.$socket.emit("ensemble_auxiliary", {
-						module: this.$store.selectedModule,
-						datasets: this.$store.selectedDatasets,
-						sortBy: this.$store.auxiliarySortBy,
-					});
+					// APIService.POSTRequest("ensemble_auxiliary", {
+					// 	module: this.$store.selectedModule,
+					// 	datasets: this.$store.selectedDatasets,
+					// 	sortBy: this.$store.auxiliarySortBy,
+					// });
 
 					EventHandler.$emit("ensemble-histogram", {
 						module: this.$store.selectedModule,
@@ -271,8 +241,6 @@ export default {
 
 				// EventHandler.$emit("show-target-auxiliary", {});
 			}
-
-
 		},
 
 		mouseover(node) {
@@ -439,6 +407,32 @@ export default {
 			this.clearTargetPath();
 			// this.$refs.ToolTip.clear();
 		},
+
+		comparisonMode(data) {
+			console.log("[Comparison] Data:", data);
+			this.clearEncoding("MEAN_GRADIENTS");
+			// this.clearZeroLine()
+			d3.selectAll(".target-path").remove();
+
+			// Clear target lines. 
+			if (this.$store.showTarget) {
+				this.$refs.TargetLine.clear();
+			}
+			d3.selectAll(".histogram-bar-target").remove();
+			d3.selectAll("#ensemble-edge-target").remove();
+
+			// remove target legend
+			d3.selectAll(".legend").remove();
+			d3.selectAll(".legend-text").remove();
+			// // remove ensemble legend
+			// d3.selectAll(".ensemble-circle-legend").remove();
+			// d3.selectAll(".ensemble-circle-legend-text").remove();
+
+			// remove colormap container
+			d3.selectAll(".colormap").remove();
+
+			this.setEncoding(this.$store.encoding, data);
+		}
 	}
 };
 

@@ -24,6 +24,7 @@ import * as d3 from "d3";
 import ToolTip from "./tooltip";
 import * as utils from "../utils";
 import Queue from "../../datastructures/queue";
+import APIService from "../../lib/APIService";
 
 export default {
 	name: "ModuleHierarchy",
@@ -88,32 +89,20 @@ export default {
 			deep: true,
 		},
 	},
-
-	sockets: {
-		module_hierarchy(data) {
-			data = JSON.parse(data);
-			console.log("Module hierarchy: ", data);
-			this.update_from_graph(data);
-		},
-
-		level_change(data) {
-			this.update_maxlevels(data);
-		},
-	},
-
+	
 	mounted() {
 		this.id = "module-hierarchy-overview";
 	},
 
 	methods: {
-		init() {
+		async init() {
 			if (this.$store.selectedMetric == "Inclusive") {
 				this.metric = "max_time (inc)";
 			} else if (this.$store.selectedMetric == "Exclusive") {
 				this.metric = "max_time";
 			}
 			this.selectedModule = this.$store.selectedModule;
-			this.$socket.emit("module_hierarchy", {
+			const data = await APIService.POSTRequest("module_hierarchy", {
 				module: this.$store.selectedModule,
 				datasets: this.$store.selectedDatasets,
 			});
