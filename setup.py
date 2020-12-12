@@ -90,6 +90,20 @@ data_files = list_files_update("data", whitelist_folders=_GITHUB_DATA_FOLDERS)
 example_files = list_files_update("examples", whitelist_files=_GITHUB_EXAMPLE_FILES)
 app_dist_files = list_files_update("app/dist", whitelist_folders=_APP_DIST_FOLDERS)
 
+# ------------------------------------------------------------------------------
+# these folders live outside the callflow "package" in the src distribution
+# but we want to install them within the callflow installed package
+# i.e., in .../site-packages/callflow/app
+# so, let's create a symlink inside the callflow folder
+# so setuptools can place them relative to the installed package
+if True:
+    os.chdir('./callflow')
+    for _ in ['data', 'app', 'examples']:
+        if not os.path.islink(_):
+            os.symlink(os.path.join('..', _), _)
+    os.chdir('..')
+
+# ------------------------------------------------------------------------------
 deps = [
     "ipython",
     "colorlog",
@@ -103,6 +117,7 @@ deps = [
     "networkx",
     "matplotlib",
 ]
+
 # ------------------------------------------------------------------------------
 # now set up
 setup(
@@ -120,12 +135,7 @@ setup(
     keywords="",
     packages=find_packages(),
     include_package_data=True,
-    # data_files=data_files + example_files + app_dist_files,
-    package_data={
-        "data": data_files, 
-        "examples": example_files,
-        "app": app_dist_files,
-    },
+    package_data={'callflow': data_files + example_files + app_dist_files},
     entry_points={
         "console_scripts": [
             "callflow_server = callflow.server.callflow_server:main",
@@ -133,5 +143,4 @@ setup(
     },
     install_requires=deps,
 )
-
 # ------------------------------------------------------------------------------
