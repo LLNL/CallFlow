@@ -9,6 +9,7 @@ import json
 # ------------------------------------------------------------------------------
 # CallFlow imports
 import callflow
+from callflow.timer import Timer
 from callflow import SuperGraph, EnsembleGraph
 from callflow.algorithms import DeltaConSimilarity, BlandAltman
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
@@ -25,6 +26,8 @@ class CallFlow:
 
         # Assert if config is provided.
         assert isinstance(config, dict)
+
+        self.timer = Timer()
 
         if config:
             self.config = config
@@ -113,21 +116,34 @@ class CallFlow:
         LOGGER.info("#########################################")
         LOGGER.info(f"Single Mode: {dataset_tag}")
         LOGGER.info("#########################################")
-        supergraph = SuperGraph(config=self.config, tag=dataset_tag, mode="process")
 
-        # Process each graphframe.
-        supergraph.process_gf()
+        with self.timer.phase("Create Supergraph"):
+            supergraph = SuperGraph(config=self.config, tag=dataset_tag, mode="process")
 
+        with self.timer.phase("Process GraphFrame"):
+            # Process each graphframe.
+            supergraph.process_gf()
+
+        # with self.timer.phase("Filter GraphFrame"):
         # Filter by inclusive or exclusive time.
-        supergraph.filter_gf(mode="single")
+        # supergraph.filter_gf(mode="single")
 
-        # Group by module.
-        supergraph.group_gf(group_by=self.config["group_by"])
+        with self.timer.phase("Writing the packaged data"):
+            # Store the graphframe.
+            supergraph.write_gf("entire")
 
-        # Store the graphframe.
-        supergraph.write_gf("entire")
+        with self.timer.phase("Group GraphFrame"):
+            # Group by module.
+            supergraph.group_gf(group_by=self.config["group_by"])
 
-        supergraph.single_auxiliary(dataset=dataset, binCount=20, process=True)
+        with self.timer.phase("Writing the packaged data"):
+            # Store the graphframe.
+            supergraph.write_gf("entire")
+
+        with self.timer.phase("Final processing"):
+            supergraph.single_auxiliary(dataset=dataset, binCount=20, process=True)
+
+        print(self.timer)
 
     def _process_ensemble(self, datasets):
         """
@@ -145,45 +161,53 @@ class CallFlow:
                 config=self.config, tag=dataset_name, mode="process"
             )
 
-            # Process each graphframe.
-            single_supergraphs[dataset_name].process_gf()
+            with self.timer.phase("Process GraphFrame"):
+                # Process each graphframe.
+                single_supergraphs[dataset_name].process_gf()
 
-            single_supergraphs[dataset_name].group_gf(group_by="module")
+            with self.timer.phase("Group GraphFrame"):
+                single_supergraphs[dataset_name].group_gf(group_by="module")
 
-            # Write the entire graphframe into .callflow.
-            single_supergraphs[dataset_name].write_gf("entire")
+            with self.timer.phase("Write GraphFrame"):
+                # Write the entire graphframe into .callflow.
+                single_supergraphs[dataset_name].write_gf("entire")
 
-            # Single auxiliary processing.
-            single_supergraphs[dataset_name].single_auxiliary(
-                dataset=dataset_name,
-                binCount=20,
-                process=True,
+            with self.timer.phase("Single auxiliary"):
+                # Single auxiliary processing.
+                single_supergraphs[dataset_name].single_auxiliary(
+                    dataset=dataset_name, binCount=20, process=True,
+                )
+
+        with self.timer.phase("Create Ensemble Supergraph"):
+            # Create a supergraph class for ensemble case.
+            ensemble_supergraph = EnsembleGraph(
+                self.config, "ensemble", mode="process", supergraphs=single_supergraphs
             )
 
-        # Create a supergraph class for ensemble case.
-        ensemble_supergraph = EnsembleGraph(
-            self.config, "ensemble", mode="process", supergraphs=single_supergraphs
-        )
+        with self.timer.phase("Filter ensemble GraphFrame"):
+            # Filter the ensemble graphframe.
+            ensemble_supergraph.filter_gf(mode="ensemble")
 
-        # Filter the ensemble graphframe.
-        ensemble_supergraph.filter_gf(mode="ensemble")
+        with self.timer.phase("Group ensemble GraphFrame"):
+            # Group by module.
+            ensemble_supergraph.group_gf(group_by=self.config["group_by"])
 
-        # Group by module.
-        ensemble_supergraph.group_gf(group_by=self.config["group_by"])
+        with self.timer.phase("Write ensemble GraphFrame"):
+            # Write the grouped graphframe.
+            ensemble_supergraph.write_gf("group")
 
-        # Write the grouped graphframe.
-        ensemble_supergraph.write_gf("group")
-
-        # Ensemble auxiliary processing.
-        ensemble_supergraph.ensemble_auxiliary(
-            # MPIBinCount=self.currentMPIBinCount,
-            # RunBinCount=self.currentRunBinCount,
-            datasets=self.config["parameter_props"]["runs"],
-            MPIBinCount=20,
-            RunBinCount=20,
-            process=True,
-            write=True,
-        )
+        with self.timer.phase("Ensemble Auxiliary"):
+            # Ensemble auxiliary processing.
+            ensemble_supergraph.ensemble_auxiliary(
+                # MPIBinCount=self.currentMPIBinCount,
+                # RunBinCount=self.currentRunBinCount,
+                datasets=self.config["parameter_props"]["runs"],
+                MPIBinCount=20,
+                RunBinCount=20,
+                process=True,
+                write=True,
+            )
+        print(self.timer)
 
     def _read_single(self):
         """
