@@ -34,6 +34,8 @@ class CallFlow:
         elif data_dir:
             self.config = self.read_config()
 
+        self.config["parameter_props"] = self._parameter_props(self.config)
+
         ndatasets = len(self.config["runs"])
         assert ndatasets > 0
         self.ensemble = ndatasets > 1
@@ -80,8 +82,6 @@ class CallFlow:
         """
         Process the datasets based on the format (i.e., either single or ensemble)
         """
-        self.config["parameter_props"] = self._parameter_props(self.config)
-
         if self.ensemble:
             self._process_ensemble(self.config["runs"])
         else:
@@ -127,10 +127,6 @@ class CallFlow:
         # with self.timer.phase("Filter GraphFrame"):
         # Filter by inclusive or exclusive time.
         # supergraph.filter_gf(mode="single")
-
-        with self.timer.phase("Writing the packaged data"):
-            # Store the graphframe.
-            supergraph.write_gf("entire")
 
         with self.timer.phase("Group GraphFrame"):
             # Group by module.
