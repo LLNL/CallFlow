@@ -103,8 +103,8 @@ class Process:
                 if mean_incTime == 0.0:
                     mean_incTime = 1.0
 
-                inclusive[node_name] = (max_incTime - mean_incTime) / mean_incTime
-                exclusive[node_name] = (max_excTime - mean_excTime) / mean_excTime
+                # inclusive[node_name] = (max_incTime - mean_incTime) / mean_incTime
+                # exclusive[node_name] = (max_excTime - mean_excTime) / mean_excTime
 
                 std_deviation_inclusive[node_name] = np.std(
                     node_df["time (inc)"].tolist(), ddof=1
@@ -119,12 +119,12 @@ class Process:
                 kurtosis_inclusive[node_name] = kurtosis(node_df["time (inc)"].tolist())
                 kurtosis_exclusive[node_name] = kurtosis(node_df["time"].tolist())
 
-            self.gf.df["imbalance_perc_inclusive"] = self.gf.df["name"].apply(
-                lambda name: inclusive[name]
-            )
-            self.gf.df["imbalance_perc_exclusive"] = self.gf.df["name"].apply(
-                lambda name: exclusive[name]
-            )
+            # self.gf.df["imbalance_perc_inclusive"] = self.gf.df["name"].apply(
+            #     lambda name: inclusive[name]
+            # )
+            # self.gf.df["imbalance_perc_exclusive"] = self.gf.df["name"].apply(
+            #     lambda name: exclusive[name]
+            # )
 
             self.gf.df["std_deviation_inclusive"] = self.gf.df["name"].apply(
                 lambda name: std_deviation_inclusive[name]

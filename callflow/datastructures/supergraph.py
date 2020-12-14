@@ -104,7 +104,7 @@ class SuperGraph(object):
                 .create_name_module_map()
                 .add_callers_and_callees()
                 .add_dataset_name()
-                .add_imbalance_perc()
+                # .add_imbalance_perc()
                 .add_module_name_hpctoolkit()
                 .add_vis_node_name()
                 .build()
