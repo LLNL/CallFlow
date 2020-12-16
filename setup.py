@@ -6,6 +6,7 @@
 import os
 from setuptools import setup, find_packages
 import pathlib
+
 # get the version safely!
 from codecs import open
 
