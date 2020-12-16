@@ -15,7 +15,7 @@ CallFlow is structured as three components:
 The `callflow` (python package) requires [python](https://realpython.com/installing-python/) (>= 3.6) and [pip](https://pip.pypa.io/en/stable/news/) (>= 20.1.1). Other dependencies are checked/installed during the installation of `callflow` using `setup.py`.
 
 ```
-pip install callflow
+python3 setup.py install --prefix PATH/TO/INSTALL
 ```
 
 ## Sample Data
@@ -31,7 +31,7 @@ The processing of profiles generates a `.callflow` directory in the ${save_path}
 ### Running the server
 
 ```
-python3 callflow/server/callflow_server.py --data-dir {PATH_TO_DATA_DIRECTORY}
+/PATH/TO/INSTALL/callflow_server --data-dir {PATH_TO_DATA_DIRECTORY}
 ```
 
 

@@ -6,6 +6,8 @@
 import os
 from setuptools import setup, find_packages
 import pathlib
+# get the version safely!
+from codecs import open
 
 here = pathlib.Path(__file__).parent.resolve()
 
@@ -13,9 +15,6 @@ here = pathlib.Path(__file__).parent.resolve()
 long_description = (here / "README.md").read_text(encoding="utf-8")
 
 # ------------------------------------------------------------------------------
-# get the version safely!
-from codecs import open
-
 version = {}
 vfile = os.path.join(here, "callflow", "version.py")
 with open(vfile) as fp:
@@ -47,8 +46,15 @@ _APP_DIST_FOLDERS = [
 
 _APP_DIST_INDEX_HTML = ["index.html"]
 
-# gather the data to be copied
+
 def list_files_update(directory, whitelist_files=[], whitelist_folders=[]):
+    """
+    Returns the paths of all children files after checking it with the
+    whitelisted folders or files.
+    directory: Path to iterate
+    whitelist_files: Array(files to only consider)
+    whitelist_folders: Array(folders to only consider)
+    """
     paths = []
     if len(whitelist_folders) > 0:
         for item in os.listdir(directory):
@@ -79,12 +85,11 @@ app_dist_index_html = list_files_update(
 # i.e., in .../site-packages/callflow/app
 # so, let's create a symlink inside the callflow folder
 # so setuptools can place them relative to the installed package
-if True:
-    os.chdir("./callflow")
-    for _ in ["data", "app", "examples"]:
-        if not os.path.islink(_):
-            os.symlink(os.path.join("..", _), _)
-    os.chdir("..")
+os.chdir("./callflow")
+for _ in ["data", "app", "examples"]:
+    if not os.path.islink(_):
+        os.symlink(os.path.join("..", _), _)
+os.chdir("..")
 
 # ------------------------------------------------------------------------------
 deps = [
@@ -122,7 +127,9 @@ setup(
         "callflow": data_files + example_files + app_dist_folders + app_dist_index_html
     },
     entry_points={
-        "console_scripts": ["callflow_server = callflow.server.callflow_server:main",]
+        "console_scripts": [
+            "callflow_server = callflow.server.callflow_server:main",
+        ]
     },
     install_requires=deps,
 )
