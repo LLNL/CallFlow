@@ -13,6 +13,10 @@ callflow/unused/*
 app/node_modules*
 app/src/unused/*
 
+callflow/app
+callflow/data
+callflow/examples
+
 designs/*
 
 videos/*
