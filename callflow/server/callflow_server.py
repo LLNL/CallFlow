@@ -10,7 +10,7 @@ import os
 import callflow
 from callflow.operations import ArgParser
 from callflow.server.api_provider import APIProvider
-import manager
+import callflow.server.manager as manager
 
 # Globals
 LOGGER = callflow.get_logger(__name__)

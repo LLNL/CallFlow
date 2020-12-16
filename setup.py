@@ -7,15 +7,15 @@ import os
 from setuptools import setup, find_packages
 import pathlib
 
-here = pathlib.Path(__file__).parent.resolve()
-
-# Get the long description from the README file
-long_description = (here / 'README.md').read_text(encoding='utf-8')
-
-# ------------------------------------------------------------------------------
 # get the version safely!
 from codecs import open
 
+here = pathlib.Path(__file__).parent.resolve()
+
+# Get the long description from the README file
+long_description = (here / "README.md").read_text(encoding="utf-8")
+
+# ------------------------------------------------------------------------------
 version = {}
 vfile = os.path.join(here, "callflow", "version.py")
 with open(vfile) as fp:
@@ -30,7 +30,7 @@ version = version["__version__"]
 _GITHUB_DATA_FOLDERS = [
     "caliper-cali",
     "caliper-lulesh-json",
-    "hpctoolkit-cpi-database",
+    "hpctoolkit-cpi-databases",
 ]
 
 # Only allow jupyter notebooks in https://github.com/LLNL/CallFlow/tree/develop/example to be added.
@@ -43,33 +43,19 @@ _APP_DIST_FOLDERS = [
     "js",
     "css",
     "fonts",
-    "index.html"
 ]
 
-# # gather the data to be copied
-# def list_files(directory, whitelist_files=[], whitelist_folders=[]):
-#     paths = []
-#     if len(whitelist_folders) > 0:
-#         for item in os.listdir(directory):
-#             if item in whitelist_folders:
-#                 for (path, directories, filenames) in os.walk(
-#                     os.path.join(directory, item)
-#                 ):
-#                     if ".callflow" not in path.split("/"):
-#                         paths.append((path, [os.path.join(path, f) for f in filenames]))
+_APP_DIST_INDEX_HTML = ["index.html"]
 
-#     if len(whitelist_files) > 0:
-#         for (path, directories, filenames) in os.walk(directory):
-#             paths.append(
-#                 (
-#                     path,
-#                     [os.path.join(path, f) for f in filenames if f in whitelist_files],
-#                 )
-#             )
-#     return paths
 
-# gather the data to be copied
 def list_files_update(directory, whitelist_files=[], whitelist_folders=[]):
+    """
+    Returns the paths of all children files after checking it with the
+    whitelisted folders or files.
+    directory: Path to iterate
+    whitelist_files: Array(files to only consider)
+    whitelist_folders: Array(folders to only consider)
+    """
     paths = []
     if len(whitelist_folders) > 0:
         for item in os.listdir(directory):
@@ -78,18 +64,35 @@ def list_files_update(directory, whitelist_files=[], whitelist_folders=[]):
                     os.path.join(directory, item)
                 ):
                     if ".callflow" not in path.split("/"):
-                        paths = [os.path.join(path, f) for f in filenames]
+                        paths += [os.path.join(path, f) for f in filenames]
 
     if len(whitelist_files) > 0:
         for (path, directories, filenames) in os.walk(directory):
-            paths = [os.path.join(path, f) for f in filenames if f in whitelist_files]
+            paths += [os.path.join(path, f) for f in filenames if f in whitelist_files]
+
     return paths
 
 
 data_files = list_files_update("data", whitelist_folders=_GITHUB_DATA_FOLDERS)
 example_files = list_files_update("examples", whitelist_files=_GITHUB_EXAMPLE_FILES)
-app_dist_files = list_files_update("app/dist", whitelist_folders=_APP_DIST_FOLDERS)
+app_dist_folders = list_files_update("app/dist", whitelist_folders=_APP_DIST_FOLDERS)
+app_dist_index_html = list_files_update(
+    "app/dist", whitelist_files=_APP_DIST_INDEX_HTML
+)
 
+# ------------------------------------------------------------------------------
+# these folders live outside the callflow "package" in the src distribution
+# but we want to install them within the callflow installed package
+# i.e., in .../site-packages/callflow/app
+# so, let's create a symlink inside the callflow folder
+# so setuptools can place them relative to the installed package
+os.chdir("./callflow")
+for _ in ["data", "app", "examples"]:
+    if not os.path.islink(_):
+        os.symlink(os.path.join("..", _), _)
+os.chdir("..")
+
+# ------------------------------------------------------------------------------
 deps = [
     "ipython",
     "colorlog",
@@ -103,6 +106,7 @@ deps = [
     "networkx",
     "matplotlib",
 ]
+
 # ------------------------------------------------------------------------------
 # now set up
 setup(
@@ -120,11 +124,8 @@ setup(
     keywords="",
     packages=find_packages(),
     include_package_data=True,
-    # data_files=data_files + example_files + app_dist_files,
     package_data={
-        "data": data_files, 
-        "examples": example_files,
-        "app": app_dist_files,
+        "callflow": data_files + example_files + app_dist_folders + app_dist_index_html
     },
     entry_points={
         "console_scripts": [
@@ -133,5 +134,4 @@ setup(
     },
     install_requires=deps,
 )
-
 # ------------------------------------------------------------------------------
