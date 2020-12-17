@@ -9,7 +9,7 @@
 	<v-app>
 		<div id="app">
 			<v-toolbar id="toolbar" color="teal" fixed app clipped-right>
-				<v-toolbar-title style="margin-right: 3em; color: white">
+				<v-toolbar-title class="toolbar-title">
 					CallFlow
 				</v-toolbar-title>
 				<v-btn outlined>
@@ -21,7 +21,7 @@
 				</v-btn>
 			</v-toolbar>
 			<router-view></router-view>
-			<v-content>
+			<v-content class="content">
 				<v-layout>
 					<v-container>
 						<BasicInformation :data="data" />
@@ -125,19 +125,27 @@ export default {
 }
 
 body {
-	top: -10px !important;
 	font-family: "Open Sans", sans-serif;
-	margin-bottom: 0px;
-	height: 99%;
 	font-size: 16px;
 }
 
-#toolbar {
+.toolbar {
 	padding: 0px 0px 0px;
 }
 
-#toolbar > .v-toolbar__content {
+.toolbar > .v-toolbar__content {
 	height: 54px !important;
+}
+
+.toolbar-title {
+	margin-right: 3em; 
+	font-size: 26px;
+	font-weight: 400;
+	color: white;
+}
+
+.content {
+	padding-top: 54px !important;
 }
 
 .selected {
@@ -161,6 +169,7 @@ body {
 .tight {
 	margin-left: -1em;
 }
+
 .ui.segment.vis_container {
 	margin-right: -1em;
 }
@@ -202,10 +211,6 @@ body {
 
 .valueText {
 	font-weight: 700 !important;
-}
-
-.chip {
-	font-weight: 500 !important;
 }
 
 #footer {
