@@ -23,105 +23,16 @@
 			<router-view></router-view>
 			<v-content>
 				<v-layout>
-					<v-container fluid>
-						<v-card tile>
-							<v-card-title>
-								General Information
-							</v-card-title>
-						</v-card>
-						<v-card tile>
-							<v-card-title>
-								Experiment: {{ data.experiment }}
-							</v-card-title>
-						</v-card>
-						<v-card tile>
-							<v-card-title>
-								Data path: {{ data.data_path }}
-							</v-card-title>
-						</v-card>
-						<v-card tile>
-							<v-card-title>
-								.callflow save path: {{ data.save_path }}
-							</v-card-title>
-						</v-card>
-						<v-card tile>
-							<v-card-title>
-								Filter by attribute: {{ data.filter_by }}
-							</v-card-title>
-						</v-card>
-						<v-card tile>
-							<v-card-title>
-								Filter percentage: {{ data.filter_perc }}
-							</v-card-title>
-						</v-card>
-						<v-card tile>
-							<v-card-title>
-								Group by attribute: {{ data.group_by }}
-							</v-card-title>
-						</v-card>
+					<v-container>
+						<BasicInformation :data="data" />
 					</v-container>
 					<v-container>
-						<v-card tile>
-							<v-card-title>Runtime Information</v-card-title>
-							<v-data-table
-								dense
-								:headers="runtimeHeaders"
-								:items="runtime"
-								:items-per-page="5"
-								class="elevation-1"
-							>
-								<template slot="items" slot-scope="props">
-									<tr>
-										<td nowrap="true">{{ props.item.run }}</td>
-										<td nowrap="true">
-											{{ props.item.min_inclusive_runtime }}
-										</td>
-										<td nowrap="true">
-											{{ props.item.max_inclusive_runtime }}
-										</td>
-										<td nowrap="true">
-											{{ props.item.min_exclusive_runtime }}
-										</td>
-										<td nowrap="true">
-											{{ props.item.max_exclusive_runtime }}
-										</td>
-									</tr>
-								</template>
-							</v-data-table>
-						</v-card>
-						<!-- <v-card tile>
-						<v-card-title>Module Callsite Mapping</v-card-title>
-						<v-data-table
-						dense
-						:headers="moduleHeaders"
-						:items="modules"
-						:items-per-page="5"
-						:single-expand="singleExpand"
-						:expanded.sync="expanded"
-						item-key="name"
-						show-expand
-						class="elevation-1"
-						>
-						<template slot="items" slot-scope="props">
-							<tr>
-							<td nowrap="true">{{ props.item.module }}</td>
-							<td nowrap="true">{{ props.item.inclusive_runtime }}</td>
-							<td nowrap="true">{{ props.item.exclusive_runtime }}</td>
-							<td nowrap="true">{{ props.item.imbalance_perc }}</td>
-							<td nowrap="true">{{ props.item.number_of_callsites }}</td>
-							<td nowrap="true">
-								<v-icon @click="expand(!isExpanded)">keyboard_arrow_down</v-icon>
-							</td>
-							</tr>
-						</template>
-
-						<template v-slot:expanded-item="{ headers, item }">
-							<td :colspan="headers.length">More info about {{ item.name }}</td>
-						</template>
-						</v-data-table>
-					</v-card>-->
+						<RuntimeInformation :data="runtime" />					
 					</v-container>
 				</v-layout>
+				<v-container>
+					<!-- <ModuleMappingInformation :data="moduleMapping" /> -->
+				</v-container>
 			</v-content>
 		</div>
 	</v-app>
@@ -129,51 +40,22 @@
 
 <script>
 import APIService from "../lib/APIService";
+import BasicInformation from "./general/basicInformation";
+import RuntimeInformation from "./general/runtimeInformation";
+import ModuleMappingInformation from "./general/moduleMappingInformation";
 
 export default {
 	name: "App",
+	components: {
+		BasicInformation,
+		RuntimeInformation,
+		// ModuleMappingInformation
+	},
 	data: () => ({
 		data: {},
 		runCounts: 0,
-		runtimeHeaders: [
-			{ text: "Run", value: "run" },
-			{
-				text: "Min. Inclusive runtime (\u03BCs)",
-				value: "min_inclusive_runtime",
-			},
-			{
-				text: "Max. Inclusive runtime (\u03BCs)",
-				value: "max_inclusive_runtime",
-				sortable: true,
-			},
-			{
-				text: "Min. Exclusive runtime (\u03BCs)",
-				value: "min_exclusive_runtime",
-			},
-			{
-				text: "Max. Exclusive runtime (\u03BCs)",
-				value: "max_exclusive_runtime",
-			},
-		],
 		runtime: [],
-		expanded: [],
-		singleExpand: false,
-		moduleHeaders: [
-			{ text: "Module", value: "module" },
-			{
-				text: "Inclusive runtime (\u03BCs)",
-				value: "inclusive_runtime",
-				sortable: true,
-			},
-			{ text: "Exclusive runtime (\u03BCs)", value: "exclusive_runtime" },
-			{ text: "Imbalance perc (%)", value: "imbalance_perc" },
-			{ text: "Number of Callsites", value: "number_of_callsites" },
-			{ text: "", value: "data-table-expand" },
-		],
-		modules: [],
-		auxiliarySortBy: "time (inc)",
-		selectedRunBinCount: 20,
-		selectedMPIBinCount: 20,
+		moduleMapping: [],
 	}),
 	mounted() {
 		this.fetchData();
@@ -226,7 +108,7 @@ export default {
 
 		moduleCallsiteTable() {
 			for (let module in this.module_callsite_map) {
-				this.modules.push({
+				this.moduleMapping.push({
 					module: module,
 					number_of_callsites: this.data.module_callsite_map[module].length,
 				});
