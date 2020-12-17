@@ -10,12 +10,12 @@ import os
 import callflow
 from callflow.operations import ArgParser
 from callflow.server.api_provider import APIProvider
-import manager
+import callflow.server.manager as manager
 
 # Globals
 LOGGER = callflow.get_logger(__name__)
-CALLFLOW_SERVER_HOST = "127.0.0.1"
-CALLFLOW_SERVER_PORT = int(os.getenv("CALLFLOW_SERVER_PORT", 5000))
+CALLFLOW_APP_HOST = "127.0.0.1"
+CALLFLOW_APP_PORT = int(os.getenv("CALLFLOW_APP_PORT", 5000))
 
 
 class CallFlowServer:
@@ -58,11 +58,11 @@ class CallFlowServer:
         # Socket request handlers
         if len(self.args.config["parameter_props"]["runs"]) > 1:
             ensemble = True
-        # SocketProvider(host=CALLFLOW_SERVER_HOST, port=CALLFLOW_SERVER_PORT, ensemble=ensemble)
+
         APIProvider(
             callflow=self.callflow,
-            host=CALLFLOW_SERVER_HOST,
-            port=CALLFLOW_SERVER_PORT,
+            host=CALLFLOW_APP_HOST,
+            port=CALLFLOW_APP_PORT,
             ensemble=ensemble,
         )
 

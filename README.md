@@ -15,7 +15,7 @@ CallFlow is structured as three components:
 The `callflow` (python package) requires [python](https://realpython.com/installing-python/) (>= 3.6) and [pip](https://pip.pypa.io/en/stable/news/) (>= 20.1.1). Other dependencies are checked/installed during the installation of `callflow` using `setup.py`.
 
 ```
-python3 setup.py install
+python3 setup.py install --prefix PATH/TO/INSTALL
 ```
 
 ## Sample Data
@@ -31,18 +31,13 @@ The processing of profiles generates a `.callflow` directory in the ${save_path}
 ### Running the server
 
 ```
-python3 callflow/server/callflow_server.py --data-dir {PATH_TO_DATA_DIRECTORY}
+/PATH/TO/INSTALL/callflow_server --data-dir {PATH_TO_DATA_DIRECTORY}
 ```
 
-Finally, the web application server can be run using
-```
-callflow_app
-```
 
-By default, the application would run on port, 8000. If the port needs to be changed, please set the environment variables using,
+By default, the application would run on port, 5000. If the port needs to be changed, please set the environment variables using,
 
 ```
-export CALLFLOW_SERVER_PORT=<port_number>
 export CALLFLOW_APP_PORT=<port_number>
 ```
 
@@ -61,11 +56,16 @@ npm install
 To start the `app`,
 
 ```
-npm run dev
+npm run serve
+```
+
+
+To build the `app`,
+```
+npm run build
 ```
 
 The basic architecture diagram can be found [here](/docs/figures/CallFlow-basic-architecture.png).
-
 ## CallFlow Citations
 
 Any published work that utilizes this software should include the following references:
