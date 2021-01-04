@@ -44,11 +44,6 @@ class Group(callflow.GraphFrame):
             snode = edge[0]
             tnode = edge[1]
 
-            if "/" in snode:
-                snode = snode.split("/")[-1]
-            if "/" in tnode:
-                tnode = tnode.split("/")[-1]
-
             spath = self.callsite_path_map[snode]
             tpath = self.callsite_path_map[tnode]
 
@@ -90,7 +85,6 @@ class Group(callflow.GraphFrame):
         self.update_df("entry_function", entry_func)
 
     def create_group_path(self, path):
-        print(type(path))
         if isinstance(path, str):
             path = make_list(path)
         group_path = []
@@ -120,9 +114,6 @@ class Group(callflow.GraphFrame):
             elif idx == len(path) - 1:
                 # Final callsite in the path.
                 to_callsite = callsite
-                if "/" in to_callsite:
-                    to_callsite = to_callsite.split("/")[-1]
-
                 to_module = self.callsite_module_map[to_callsite]
 
                 if prev_module != to_module:
@@ -141,20 +132,13 @@ class Group(callflow.GraphFrame):
             else:
                 # Assign the from and to callsite.
                 from_callsite = path[idx - 1]
-                if "/" in callsite:
-                    to_callsite = callsite.split("/")[-1]
-                else:
-                    to_callsite = callsite
+                to_callsite = callsite
 
                 if from_callsite in self.callsite_module_map.keys():
                     from_module = self.callsite_module_map[from_callsite]
-                else:
-                    from_module = "error"
+
                 if to_callsite in self.callsite_module_map.keys():
                     to_module = self.callsite_module_map[to_callsite]
-                else:
-                    print("Error with: ", to_callsite)
-                    to_module = "error"
 
                 # Create the entry function and other function dict if not already present.
                 if to_module not in self.entry_funcs:
@@ -175,13 +159,8 @@ class Group(callflow.GraphFrame):
 
                 elif to_module == prev_module:
                     to_callsite = callsite
-
-                    if to_callsite not in self.callsite_module_map:
-                        to_module = ""
-                    else:
-                        to_module = self.callsite_module_map[to_callsite]
-
-                        prev_module = to_module
+                    to_module = self.callsite_module_map[to_callsite]
+                    prev_module = to_module
 
                     if to_callsite not in self.other_funcs[to_module]:
                         self.other_funcs[to_module].append(to_callsite)
@@ -194,8 +173,6 @@ class Group(callflow.GraphFrame):
 
         for idx, node in enumerate(path):
             node_func = node
-            if "/" in node:
-                node = node.split("/")[-1]
             if node in self.callsite_module_map:
                 module = self.callsite_module_map[node]
                 if component_module == module:

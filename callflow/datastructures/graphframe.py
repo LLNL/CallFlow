@@ -161,6 +161,8 @@ class GraphFrame(ht.GraphFrame):
             nm = callflow.utils.sanitize_name(nd["name"])
             if nd.get("line") != "NA" and nd.get("line") is not None:
                 nm += ":" + str(nd.get("line"))
+            if nd.get("type") == "loop":
+                nm = "Loop@" + nm
             return nm
 
         # `node_dict_from_frame` converts the hatchet's frame to a dictionary
