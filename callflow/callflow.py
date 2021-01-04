@@ -137,7 +137,9 @@ class CallFlow:
             supergraph.write_gf("entire")
 
         with self.timer.phase("Final processing"):
-            supergraph.single_auxiliary(dataset=dataset, binCount=20, process=True)
+            supergraph.single_auxiliary(
+                dataset=dataset["name"], binCount=20, process=True
+            )
 
         print(self.timer)
 

@@ -58,6 +58,8 @@ class CallFlowServer:
         # Socket request handlers
         if len(self.args.config["parameter_props"]["runs"]) > 1:
             ensemble = True
+        else:
+            ensemble = False
 
         APIProvider(
             callflow=self.callflow,
