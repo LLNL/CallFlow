@@ -44,13 +44,13 @@ class EnsembleGraph(SuperGraph):
         """
         if self.mode == "process":
 
-            self.gf = callflow.GraphFrame()
-            self.gf.df = self.union_df()
-            """
-            TODO: Need to write a module to convert a NetowrkX graph to a Hatchet graph.
-            Currently, there is no way to convert networkX to hatchet graph yet. So we are setting this to None.
-            """
-            self.gf.graph = None
+            self.gf = self.supergraphs[list(self.supergraphs.keys())[0]].gf
+            print(list(self.supergraphs.keys())[0])
+
+            for idx, tag in enumerate(self.supergraphs):
+                if idx != 0:
+                    print(tag)
+                    self.gf.unify(self.supergraphs[tag].gf)
             self.gf.nxg = self.union_nxg()
 
         elif self.mode == "render":
@@ -66,7 +66,7 @@ class EnsembleGraph(SuperGraph):
         df = pd.DataFrame([])
 
         for idx, tag in enumerate(self.supergraphs):
-            df = pd.concat([df, self.supergraphs[tag].gf.df], sort=True)
+            df = df.merge(self.supergraphs[tag].gf.df, left_on=None)
 
         return df
 
@@ -101,8 +101,8 @@ class EnsembleGraph(SuperGraph):
         LOGGER.debug(f"Nodes in Graph 1 and Graph 2 are same? : {is_same}")
         if set(nxg_1) != set(nxg_2):
             LOGGER.debug(f"Difference is { list(set(nxg_1) - set(nxg_2))}")
-            # LOGGER.debug(f"Nodes in Graph 1: {set(nxg_1)}")
-            # LOGGER.debug(f"Nodes in Graph 2: {set(nxg_2)}")
+            LOGGER.debug(f"Nodes in Graph 1: {set(nxg_1)}")
+            LOGGER.debug(f"Nodes in Graph 2: {set(nxg_2)}")
         LOGGER.debug("-=========================-")
 
         if nxg_2.is_multigraph():

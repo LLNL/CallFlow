@@ -166,9 +166,9 @@ class CallFlow:
             with self.timer.phase("Group GraphFrame"):
                 single_supergraphs[dataset_name].group_gf(group_by="module")
 
-            with self.timer.phase("Write GraphFrame"):
-                # Write the entire graphframe into .callflow.
-                single_supergraphs[dataset_name].write_gf("entire")
+            # with self.timer.phase("Write GraphFrame"):
+            #     # Write the entire graphframe into .callflow.
+            #     single_supergraphs[dataset_name].write_gf("entire")
 
             with self.timer.phase("Single auxiliary"):
                 # Single auxiliary processing.
@@ -186,19 +186,17 @@ class CallFlow:
             # Filter the ensemble graphframe.
             ensemble_supergraph.filter_gf(mode="ensemble")
 
-        with self.timer.phase("Group ensemble GraphFrame"):
-            # Group by module.
-            ensemble_supergraph.group_gf(group_by=self.config["group_by"])
+        # with self.timer.phase("Group ensemble GraphFrame"):
+        #     # Group by module.
+        #     ensemble_supergraph.group_gf(group_by=self.config["group_by"])
 
-        with self.timer.phase("Write ensemble GraphFrame"):
-            # Write the grouped graphframe.
-            ensemble_supergraph.write_gf("group")
+        # with self.timer.phase("Write ensemble GraphFrame"):
+        #     # Write the grouped graphframe.
+        #     ensemble_supergraph.write_gf("group")
 
         with self.timer.phase("Ensemble Auxiliary"):
             # Ensemble auxiliary processing.
             ensemble_supergraph.ensemble_auxiliary(
-                # MPIBinCount=self.currentMPIBinCount,
-                # RunBinCount=self.currentRunBinCount,
                 datasets=self.config["parameter_props"]["runs"],
                 MPIBinCount=20,
                 RunBinCount=20,
