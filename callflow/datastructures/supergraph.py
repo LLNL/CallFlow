@@ -46,7 +46,7 @@ class SuperGraph(object):
 
         assert self.mode == "render"
         self.gf = callflow.GraphFrame()
-        self.gf.read(self.dirname)
+        # self.gf.read(self.dirname)
 
         # Read only if "read_parameters" is specified in the config file.
         if self.config["read_parameter"]:
@@ -63,8 +63,6 @@ class SuperGraph(object):
 
         elif self.mode == "render":
             self._create_for_render()
-
-        self.gf.df.reset_index(drop=False, inplace=True)
 
     # -------------------------------------------------------------------------
     def get_module_name(self, callsite):
@@ -104,7 +102,7 @@ class SuperGraph(object):
                 .create_name_module_map()
                 .add_callers_and_callees()
                 .add_dataset_name()
-                .add_imbalance_perc()
+                # .add_imbalance_perc()
                 .add_module_name_hpctoolkit()
                 .add_vis_node_name()
                 .build()

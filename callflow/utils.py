@@ -241,10 +241,25 @@ def path_list_from_frames(frames: list):
         for f in frame:
             if f.get("type") == "function":
                 path.append(f.get("name"))
+            elif f.get("type") == "statement" and (
+                (
+                    f.get("file").split("/")[-1] == "ParallelComm.cpp"
+                    and f.get("line") == 219
+                )
+                or (
+                    f.get("file").split("/")[-1] == "PartitionSpace.cpp"
+                    and f.get("line") == 46
+                )
+            ):
+                path.append(
+                    "Loop@" + f.get("file").split("/")[-1] + ":" + str(f.get("line"))
+                )
             elif f.get("type") == "statement":
-                path.append(f.get("file") + ":" + str(f.get("line")))
+                path.append(f.get("file").split("/")[-1] + ":" + str(f.get("line")))
             elif f.get("type") == "loop":
-                path.append(f.get("file") + ":" + str(f.get("line")))
+                path.append(
+                    "Loop@" + f.get("file").split("/")[-1] + ":" + str(f.get("line"))
+                )
             else:
                 path.append(f.get("name"))
         paths.append(path)

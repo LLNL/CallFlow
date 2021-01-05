@@ -23,8 +23,6 @@ class Group(callflow.GraphFrame):
         # Variables used by grouping operation.
         self.entry_funcs = {}
         self.other_funcs = {}
-        # TODO: remove this.
-        # self.module_id_map = {}
 
         self.compute()
 
@@ -45,11 +43,6 @@ class Group(callflow.GraphFrame):
         for idx, edge in enumerate(self.gf.nxg.edges()):
             snode = edge[0]
             tnode = edge[1]
-
-            if "/" in snode:
-                snode = snode.split("/")[-1]
-            if "/" in tnode:
-                tnode = tnode.split("/")[-1]
 
             spath = self.callsite_path_map[snode]
             tpath = self.callsite_path_map[tnode]
@@ -89,15 +82,14 @@ class Group(callflow.GraphFrame):
         self.update_df("show_node", entry_func)
         self.update_df("vis_name", node_name)
         self.update_df("component_level", component_level)
-        # self.update_df("mod_index", module_idx)
         self.update_df("entry_function", entry_func)
 
-    # flake8: noqa: C901
     def create_group_path(self, path):
         if isinstance(path, str):
             path = make_list(path)
         group_path = []
         prev_module = None
+
         for idx, callsite in enumerate(path):
             if idx == 0:
                 # Assign the first callsite as from_callsite and not push into an array.
@@ -122,9 +114,6 @@ class Group(callflow.GraphFrame):
             elif idx == len(path) - 1:
                 # Final callsite in the path.
                 to_callsite = callsite
-                if "/" in to_callsite:
-                    to_callsite = to_callsite.split("/")[-1]
-
                 to_module = self.callsite_module_map[to_callsite]
 
                 if prev_module != to_module:
@@ -143,13 +132,13 @@ class Group(callflow.GraphFrame):
             else:
                 # Assign the from and to callsite.
                 from_callsite = path[idx - 1]
-                if "/" in callsite:
-                    to_callsite = callsite.split("/")[-1]
-                else:
-                    to_callsite = callsite
+                to_callsite = callsite
 
-                from_module = self.callsite_module_map[from_callsite]
-                to_module = self.callsite_module_map[to_callsite]
+                if from_callsite in self.callsite_module_map.keys():
+                    from_module = self.callsite_module_map[from_callsite]
+
+                if to_callsite in self.callsite_module_map.keys():
+                    to_module = self.callsite_module_map[to_callsite]
 
                 # Create the entry function and other function dict if not already present.
                 if to_module not in self.entry_funcs:
@@ -170,9 +159,7 @@ class Group(callflow.GraphFrame):
 
                 elif to_module == prev_module:
                     to_callsite = callsite
-                    # to_module = self.entire_df.loc[self.entire_df['name'] == to_callsite]['module'].unique()[0]
                     to_module = self.callsite_module_map[to_callsite]
-
                     prev_module = to_module
 
                     if to_callsite not in self.other_funcs[to_module]:
@@ -186,11 +173,12 @@ class Group(callflow.GraphFrame):
 
         for idx, node in enumerate(path):
             node_func = node
-            if "/" in node:
-                node = node.split("/")[-1]
-            module = self.callsite_module_map[node]
-            if component_module == module:
-                component_path.append(node_func)
+            if node in self.callsite_module_map:
+                module = self.callsite_module_map[node]
+                if component_module == module:
+                    component_path.append(node_func)
+            else:
+                component_path.append("")
 
         component_path.insert(0, component_module)
         return tuple(component_path)

@@ -8,6 +8,10 @@ from contextlib import contextmanager
 from datetime import datetime
 from io import StringIO
 
+import callflow
+
+LOGGER = callflow.get_logger(__name__)
+
 
 class Timer(object):
     """
@@ -43,13 +47,14 @@ class Timer(object):
 
     def __str__(self):
         out = StringIO()
-        out.write(u"Times:\n")
+        out.write("Times:\n")
         for phase, delta in self._times.items():
-            out.write(u"    %-20s %.2fs\n" % (phase + ":", delta.total_seconds()))
+            out.write("    %-20s %.2fs\n" % (phase + ":", delta.total_seconds()))
         return out.getvalue()
 
     @contextmanager
     def phase(self, name):
         self.start_phase(name)
+        LOGGER.debug(f"[Timer] {name}")
         yield
         self.end_phase()

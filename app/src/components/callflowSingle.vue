@@ -342,7 +342,6 @@ export default {
 			console.debug("[/supergraph_data]", data);
 			this.dataReady = true;
 			this.setupStore(data);
-
 			this.init();
 		},
 
@@ -374,16 +373,17 @@ export default {
 
 		init() {
 			console.assert(this.selectedMode, "Single");
-			console.log("Mode : ", this.selectedMode);
-			console.log("Number of runs :", this.$store.numOfRuns);
-			console.log("Dataset : ", this.selectedTargetDataset);
-			console.log("Format = ", this.selectedFormat);
 			
 			this.setGlobalVariables(); // Set the variables that do not depend on data.
 			this.setTargetDataset(); // Set target dataset.
 			this.setupColors(); // Set up the colors.
 			this.setViewDimensions(); // Set the view dimensions.
 			this.setComponentMap(); // Set component mapping for easy component tracking.
+
+			console.log("Mode : ", this.selectedMode);
+			console.log("Number of runs :", this.$store.numOfRuns);
+			console.log("Dataset : ", this.selectedTargetDataset);
+			console.log("Format = ", this.selectedFormat);
 
 			// Call the appropriate socket to query the server.
 			if (this.selectedFormat == "SuperGraph") {
