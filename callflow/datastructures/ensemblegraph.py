@@ -43,13 +43,10 @@ class EnsembleGraph(SuperGraph):
         Note: Code for render is same as in SuperGraph class. Might have to find a way to avoid repetition.
         """
         if self.mode == "process":
-
             self.gf = self.supergraphs[list(self.supergraphs.keys())[0]].gf
-            print(list(self.supergraphs.keys())[0])
 
             for idx, tag in enumerate(self.supergraphs):
                 if idx != 0:
-                    print(tag)
                     self.gf.unify(self.supergraphs[tag].gf)
             self.gf.nxg = self.union_nxg()
 

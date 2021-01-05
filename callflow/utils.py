@@ -256,8 +256,6 @@ def path_list_from_frames(frames: list):
                 )
             elif f.get("type") == "statement":
                 path.append(f.get("file").split("/")[-1] + ":" + str(f.get("line")))
-            # elif f.get("type") == "loop" and (f.get("file").split('/')[-1] == "PartitionSpace.cpp" and f.get("line") == 46):
-            #     path.append(f.get("file").split('/')[-1] + ":" + str(f.get("line")))
             elif f.get("type") == "loop":
                 path.append(
                     "Loop@" + f.get("file").split("/")[-1] + ":" + str(f.get("line"))
