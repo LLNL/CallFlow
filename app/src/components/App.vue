@@ -28,7 +28,7 @@
 			<v-content class="content">
 				<v-layout>
 					<v-container>
-						<BasicInformation :data="data" />
+						<BasicInformation :data="basicInformation" />
 					</v-container>
 					<v-container>
 						<RuntimeInformation :data="runtime" />					
@@ -58,6 +58,7 @@ export default {
 	data: () => ({
 		data: {},
 		runCounts: 0,
+		basicInformation: {},
 		runtime: [],
 		moduleMapping: [],
 	}),
@@ -70,10 +71,11 @@ export default {
 		 * Parameters: {datasetPath: "path/to/dataset"}
 		*/ 
 		async fetchData() {
-			this.data = await APIService.GETRequest("init", {"dataset_path": ""});
-			this.runs = Object.keys(this.data.parameter_props.data_path);
+			this.data = await APIService.POSTRequest("init", {"dataset_path": ""});
+			this.basicInformation = this.data.config;
+			this.runs = this.data.config.parameter_props.runs;
 			this.runCounts = this.runs.length;
-			this.runtime_props = this.data.runtime_props;
+			this.runtime_props = this.data.config.runtime_props;
 			this.module_callsite_map = this.data.module_callsite_map;
 			this.setStore();
 			this.init();
@@ -87,12 +89,12 @@ export default {
 		setStore() {
 			this.$store.selectedDatasets = this.runs;
 			this.$store.numOfRuns = this.runs.length;
-
-			this.$store.maxExcTime = this.data.runtime_props.maxExcTime;
-			this.$store.minExcTime = this.data.runtime_props.minExcTime;
-			this.$store.maxIncTime = this.data.runtime_props.maxIncTime;
-			this.$store.minIncTime = this.data.runtime_props.minIncTime;
-			this.$store.numOfRanks = this.data.runtime_props.numOfRanks;
+			this.$store.data = this.data;
+			this.$store.maxExcTime = this.data.config.runtime_props.maxExcTime;
+			this.$store.minExcTime = this.data.config.runtime_props.minExcTime;
+			this.$store.maxIncTime = this.data.config.runtime_props.maxIncTime;
+			this.$store.minIncTime = this.data.config.runtime_props.minIncTime;
+			this.$store.numOfRanks = this.data.config.runtime_props.numOfRanks;			this.$store.numOfRanks = 1;
 		},
 
 		/**

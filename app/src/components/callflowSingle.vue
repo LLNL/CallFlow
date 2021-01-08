@@ -331,17 +331,9 @@ export default {
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
 			this.$store.selectedRunBinCount = this.selectedRunBinCount;
 
-			const data = await APIService.POSTRequest("supergraph_data", {
-				datasets: this.$store.selectedDatasets,
-				sortBy: this.$store.auxiliarySortBy,
-				MPIBinCount: this.$store.selectedMPIBinCount,
-				RunBinCount: this.$store.selectedRunBinCount,
-				re_process: 1,
-			});
-
-			console.debug("[/supergraph_data]", data);
+			console.debug("[/init]", this.$store.data);
 			this.dataReady = true;
-			this.setupStore(data);
+			this.setupStore(this.$store.data);
 			this.init();
 		},
 
@@ -565,7 +557,7 @@ export default {
 		},
 
 		setSelectedModule() {
-			let modules_sorted_list_by_metric = this.sortModulesByMetric();
+			const modules_sorted_list_by_metric = this.sortModulesByMetric();
 			this.selectedModule = modules_sorted_list_by_metric[0][0];
 			this.$store.selectedModule = this.selectedModule;
 		},

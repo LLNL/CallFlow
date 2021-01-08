@@ -178,12 +178,12 @@ class SuperGraph(object):
 
     # --------------------------------------------------------------------------
     def ensemble_auxiliary(
-        self, datasets, MPIBinCount=20, RunBinCount=20, process=True, write=True
+        self, datasets, props, MPIBinCount=20, RunBinCount=20, process=True, write=True
     ):
         EnsembleAuxiliary(
             self.gf,
+            props=props,
             datasets=datasets,
-            props=self.config,
             MPIBinCount=MPIBinCount,
             RunBinCount=RunBinCount,
             process=process,

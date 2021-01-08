@@ -63,6 +63,7 @@ class EnsembleAuxiliary:
             ret["module"] = self.module_data()
         with self.timer.phase("Module callsite map data"):
             ret["moduleCallsiteMap"] = self.get_module_callsite_map()
+        ret["config"] = self.props
         with self.timer.phase("Writing data"):
             with open(path, "w") as f:
                 json.dump(ret, f)

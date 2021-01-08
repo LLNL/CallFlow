@@ -22,7 +22,8 @@ LOGGER = callflow.get_logger(__name__)
 
 
 class APIProvider:
-    """"""
+    """
+    """
 
     def __init__(
         self, callflow: callflow.CallFlow, host: str, port: str, ensemble: bool
@@ -61,21 +62,11 @@ class APIProvider:
         def index():
             return app.send_static_file("index.html")
 
-        @app.route("/init", methods=["GET"])
+        @app.route("/init", methods=["POST"])
         def init():
-            result = self.callflow.request_general({"name": "init"})
-            return APIProvider.emit_json("init", result)
-
-        @app.route("/supergraph_data", methods=["POST"])
-        def supergraph_data():
             data = request.json
-            result = self.callflow.request_general(
-                {
-                    "name": "supergraph_data",
-                    **data,
-                }
-            )
-            return APIProvider.emit_json("supergraph_data", result)
+            result = self.callflow.request_general({"name": "supergraph_data", **data,})
+            return APIProvider.emit_json("init", result)
 
     def _handle_single(self):
         """
@@ -93,7 +84,6 @@ class APIProvider:
         def single_cct():
             data = request.json
             nxg = self.callflow.request_single({"name": "cct", **data})
-            print(nxg)
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("single_cct", result)
 
@@ -101,10 +91,7 @@ class APIProvider:
         def split_mpi_distribution():
             data = request.json
             result = self.callflow.request_single(
-                {
-                    "name": "split_mpi_distribution",
-                    **data,
-                }
+                {"name": "split_mpi_distribution", **data,}
             )
             return APIProvider.emit_json("split_mpi_distribution", result)
 
