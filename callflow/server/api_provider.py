@@ -7,6 +7,7 @@
 import os
 import warnings
 from flask import Flask, request, json, jsonify
+from flask_cors import CORS, cross_origin
 from networkx.readwrite import json_graph
 
 
@@ -19,6 +20,10 @@ STATIC_FOLDER_PATH = os.path.abspath("app/dist/")
 app = Flask(__name__, static_url_path="", static_folder=STATIC_FOLDER_PATH)
 
 LOGGER = callflow.get_logger(__name__)
+
+# Enable CORS
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 
 class APIProvider:
@@ -58,15 +63,18 @@ class APIProvider:
         """
 
         @app.route("/")
+        @cross_origin()
         def index():
             return app.send_static_file("index.html")
 
         @app.route("/init", methods=["GET"])
+        @cross_origin()
         def init():
             result = self.callflow.request_general({"name": "init"})
             return APIProvider.emit_json("init", result)
 
         @app.route("/supergraph_data", methods=["POST"])
+        @cross_origin()
         def supergraph_data():
             data = request.json
             result = self.callflow.request_general(
@@ -83,6 +91,7 @@ class APIProvider:
         """
 
         @app.route("/single_supergraph", methods=["POST"])
+        @cross_origin()
         def single_supergraph():
             data = request.json
             nxg = self.callflow.request_single({"name": "supergraph", **data})
@@ -90,6 +99,7 @@ class APIProvider:
             return APIProvider.emit_json("single_supergraph", result)
 
         @app.route("/single_cct", methods=["POST"])
+        @cross_origin()
         def single_cct():
             data = request.json
             nxg = self.callflow.request_single({"name": "cct", **data})
@@ -98,6 +108,7 @@ class APIProvider:
             return APIProvider.emit_json("single_cct", result)
 
         @app.route("/split_mpi_distribution", methods=["POST"])
+        @cross_origin()
         def split_mpi_distribution():
             data = request.json
             result = self.callflow.request_single(
@@ -114,6 +125,7 @@ class APIProvider:
         """
 
         @app.route("/ensemble_supergraph", methods=["POST"])
+        @cross_origin()
         def ensemble_supergraph():
             data = request.json
             nxg = self.callflow.request_ensemble({"name": "supergraph", **data})
@@ -121,6 +133,7 @@ class APIProvider:
             return APIProvider.emit_json("ensemble_supergraph", result)
 
         @app.route("/ensemble_cct", methods=["POST"])
+        @cross_origin()
         def ensemble_cct():
             data = request.json
             nxg = self.callflow.request_ensemble({"name": "ensemble_cct", **data})
@@ -128,12 +141,14 @@ class APIProvider:
             return APIProvider.emit_json("ensemble_cct", result)
 
         @app.route("/similarity", methods=["POST"])
+        @cross_origin()
         def similarity():
             data = request.json
             result = self.callflow.request_ensemble({"name": "similarity", **data})
             return APIProvider.emit_json("similarity", result)
 
         @app.route("/module_hierarchy", methods=["POST"])
+        @cross_origin()
         def module_hierarchy():
             data = request.json
             nxg = self.callflow.request_ensemble({"name": "module_hierarchy", **data})
@@ -141,12 +156,14 @@ class APIProvider:
             return APIProvider.emit_json("module_hierarchy", result)
 
         @app.route("/projection", methods=["POST"])
+        @cross_origin()
         def parameter_projection():
             data = request.json
             result = self.callflow.request_ensemble({"name": "projection", **data})
             return APIProvider.emit_json("projection", result)
 
         @app.route("/compare", methods=["POST"])
+        @cross_origin()
         def compare():
             data = request.json
             result = self.callflow.request_ensemble({"name": "compare", **data})
