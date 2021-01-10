@@ -23,7 +23,7 @@ LOGGER = callflow.get_logger(__name__)
 
 # Enable CORS
 cors = CORS(app)
-app.config['CORS_HEADERS'] = 'Content-Type'
+app.config["CORS_HEADERS"] = "Content-Type"
 
 
 class APIProvider:
