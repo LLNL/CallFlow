@@ -127,7 +127,13 @@ class CallFlow:
         # Store the graphframe.
         supergraph.write_gf("entire")
 
-        supergraph.single_auxiliary(dataset=dataset, binCount=20, process=True)
+        supergraph.ensemble_auxiliary(
+            datasets=[dataset_tag],
+            MPIBinCount=20,
+            RunBinCount=20,
+            process=True,
+            write=True,
+        )
 
     def _process_ensemble(self, datasets):
         """
@@ -136,28 +142,30 @@ class CallFlow:
         # Before we process the ensemble, we perform single processing on all datasets.
         single_supergraphs = {}
         for dataset in datasets:
-            dataset_name = dataset["name"]
+            dataset_tag = dataset["name"]
             # Create an instance of dataset.
             LOGGER.info("#########################################")
-            LOGGER.info(f"Dataset name: {dataset_name}")
+            LOGGER.info(f"Dataset name: {dataset_tag}")
             LOGGER.info("#########################################")
-            single_supergraphs[dataset_name] = SuperGraph(
-                config=self.config, tag=dataset_name, mode="process"
+            single_supergraphs[dataset_tag] = SuperGraph(
+                config=self.config, tag=dataset_tag, mode="process"
             )
 
             # Process each graphframe.
-            single_supergraphs[dataset_name].process_gf()
+            single_supergraphs[dataset_tag].process_gf()
 
-            single_supergraphs[dataset_name].group_gf(group_by="module")
+            single_supergraphs[dataset_tag].group_gf(group_by="module")
 
             # Write the entire graphframe into .callflow.
-            single_supergraphs[dataset_name].write_gf("entire")
+            single_supergraphs[dataset_tag].write_gf("entire")
 
             # Single auxiliary processing.
-            single_supergraphs[dataset_name].single_auxiliary(
-                dataset=dataset_name,
-                binCount=20,
+            single_supergraphs[dataset_tag].ensemble_auxiliary(
+                datasets=[dataset_tag],
+                MPIBinCount=20,
+                RunBinCount=20,
                 process=True,
+                write=True,
             )
 
         # Create a supergraph class for ensemble case.
@@ -176,8 +184,6 @@ class CallFlow:
 
         # Ensemble auxiliary processing.
         ensemble_supergraph.ensemble_auxiliary(
-            # MPIBinCount=self.currentMPIBinCount,
-            # RunBinCount=self.currentRunBinCount,
             datasets=self.config["parameter_props"]["runs"],
             MPIBinCount=20,
             RunBinCount=20,
@@ -265,7 +271,11 @@ class CallFlow:
         for run in config["runs"]:
             tag = run["name"]
             props["runs"].append(tag)
-            props["data_path"][tag] = run["path"]
+            if run["profile_format"] == "hpctoolkit":
+                props["data_path"][tag] = run["path"] + "/" + tag
+            else:
+                props["data_path"][tag] = run["path"]
+
             props["profile_format"][tag] = run["profile_format"]
 
         return props
