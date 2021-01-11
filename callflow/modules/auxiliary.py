@@ -39,7 +39,10 @@ class EnsembleAuxiliary:
         self.timer = Timer()
         self.props = props
         self.datasets = datasets
-        self.df = self.select_rows(self.gf.df, self.datasets)
+        if len(self.datasets) > 1:
+            self.df = self.select_rows(self.gf.df, self.datasets)
+        else:
+            self.df = self.gf.df
         self.process = process
         self.hist_props = ["rank", "name", "dataset", "all_ranks"]
         self.filter = True
