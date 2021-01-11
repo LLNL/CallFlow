@@ -9,3 +9,4 @@ numpy==1.17.2
 pandas==0.23.0
 ipython==7.18.1
 scikit_learn==0.23.2
+flask_cors=3.0.10
