@@ -294,16 +294,30 @@ class ArgParser:
             f.path for f in os.scandir(data_path) if f.is_dir()
         ]
 
-        for idx, subfolder_path in enumerate(list_subfolders_with_paths):
-            name = subfolder_path.split("/")[-1]
-            if name != ".callflow":
-                run = {
-                    "name": name,
-                    "path": name,
-                    "profile_format": "hpctoolkit",
-                }
+        list_files_inside_data_path = [
+            f.path.split("/")[-1] for f in os.scandir(data_path)
+        ]
 
-                runs.append(run)
+        # Check if experiment.xml and metric-db's is in the directory, if so, it
+        # is the data directory.
+        if "experiment.xml" in list_files_inside_data_path:
+            run = {
+                "name": data_path.split("/")[-1],
+                "path": "/".join(data_path.split("/")[:-1]),
+                "profile_format": "hpctoolkit",
+            }
+            runs.append(run)
+
+        else:
+            for idx, subfolder_path in enumerate(list_subfolders_with_paths):
+                name = subfolder_path.split("/")[-1]
+                if name != ".callflow":
+                    run = {
+                        "name": name,
+                        "path": "/".join(subfolder_path.split("/")[:-1]),
+                        "profile_format": "hpctoolkit",
+                    }
+                    runs.append(run)
 
         return runs
 
