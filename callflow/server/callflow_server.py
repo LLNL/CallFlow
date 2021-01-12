@@ -8,6 +8,12 @@
 import os
 import sys
 
+
+# this turns RuntimeWarnings into errors
+# and allows debugging!
+#import warnings
+#warnings.simplefilter('error', RuntimeWarning)
+
 # ------------------------------------------------------------------------------
 # CallFlow imports.
 import callflow
