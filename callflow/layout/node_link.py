@@ -36,7 +36,7 @@ class NodeLinkLayout:
         callsites = self.supergraph.gf.get_top_by_attr(callsite_count, "time (inc)")
 
         # Filter out the callsites not in the list. (in a LOCAL copy)
-        df = self.supergraph.gf.filter_by_name(callsites)
+        df = self.supergraph.gf.df_filter_by_name(callsites)
 
         with self.timer.phase(f"Creating CCT for ({self.runs})"):
             self.nxg = NodeLinkLayout._create_nxg_from_paths(df["path"].tolist())
