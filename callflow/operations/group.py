@@ -2,23 +2,34 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
 from ast import literal_eval as make_list
 
-# CallFlow imports
 import callflow
-
 LOGGER = callflow.get_logger(__name__)
 
 
-class Group(callflow.GraphFrame):
-    def __init__(self, gf=None, group_by="name"):
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+#TODO: why was this derived from GraphFrame?
+class Group(object): #callflow.GraphFrame):
+
+    VALID_MODES = ["name", "module"]
+
+    # TODO: why was gf=None?
+    def __init__(self, gf, group_by):
+
+        assert isinstance(gf, callflow.GraphFrame)
+        assert isinstance(group_by, str)
+        assert group_by in Group.VALID_MODES
+
         self.gf = gf
         self.group_by = group_by
 
         # Data.
-        self.callsite_module_map = self.gf.df.set_index("name")["module"].to_dict()
-        self.callsite_path_map = self.gf.df.set_index("name")["path"].to_dict()
+        self.callsite_module_map = self.gf.df_get_column("module","name").to_dict()
+        self.callsite_path_map = self.gf.df_get_column("path", "name").to_dict()
 
         # Variables used by grouping operation.
         self.entry_funcs = {}
@@ -84,13 +95,14 @@ class Group(callflow.GraphFrame):
 
             node_name[tnode] = self.callsite_module_map[snode] + "=" + tnode
 
-        self.update_df("group_path", group_path)
-        self.update_df("component_path", component_path)
-        self.update_df("show_node", entry_func)
-        self.update_df("vis_name", node_name)
-        self.update_df("component_level", component_level)
-        # self.update_df("mod_index", module_idx)
-        self.update_df("entry_function", entry_func)
+        # update the graph
+        self.gf.df_update_mapping("group_path", group_path)
+        self.gf.df_update_mapping("component_path", component_path)
+        self.gf.df_update_mapping("show_node", entry_func)
+        self.gf.df_update_mapping("vis_name", node_name)
+        self.gf.df_update_mapping("component_level", component_level)
+        # self.gf.df_update_mapping("mod_index", module_idx)
+        self.gf.df_update_mapping("entry_function", entry_func)
 
     # flake8: noqa: C901
     def create_group_path(self, path):
@@ -195,7 +207,9 @@ class Group(callflow.GraphFrame):
         component_path.insert(0, component_module)
         return tuple(component_path)
 
+    '''
     def update_df(self, col_name, mapping):
         self.gf.df[col_name] = self.gf.df["name"].apply(
             lambda node: mapping[node] if node in mapping.keys() else ""
         )
+    '''

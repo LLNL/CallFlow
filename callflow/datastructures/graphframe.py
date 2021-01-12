@@ -314,10 +314,13 @@ class GraphFrame(ht.GraphFrame):
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
 
-    def update_df(self, col_name, mapping):
+    def df_update_mapping(self, col_name, mapping):
         self.df[col_name] = self.df["name"].apply(
             lambda node: mapping[node] if node in mapping.keys() else ""
         )
+
+    def df_get_column(self, column, index="name"):
+        return self.df.set_index(index)[column]
 
     # --------------------------------------------------------------------------
     @staticmethod
