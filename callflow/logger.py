@@ -37,10 +37,9 @@ def init_logger(**kwargs):
     if do_color:
         LOG_COLORS = {
             "DEBUG": "cyan",
-            #"INFO": "white",
-            "INFO": "blue",
-            "WARNING": "yellow",
-            "ERROR": "red",
+            "INFO": "green",
+            "WARNING": "purple",
+            "ERROR": "bold_red",
             "CRITICAL": "red",
         }
         formatter = colorlog.ColoredFormatter(
