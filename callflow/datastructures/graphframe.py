@@ -2,19 +2,19 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
 import os
 import pandas as pd
 import hatchet as ht
 import networkx as nx
 
-# -----------------------------------------------------------------------------
-# CallFlow imports
 import callflow
-
 LOGGER = callflow.get_logger(__name__)
 
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class GraphFrame(ht.GraphFrame):
 
     _FILENAMES = {"ht": "hatchet_tree.txt", "df": "df.csv", "nxg": "nxg.json"}
@@ -247,6 +247,12 @@ class GraphFrame(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     # callflow.df utilities
+    def columns(self):
+        return self.df.columns
+
+    def reset_index(self):
+        self.df.reset_index(drop=False, inplace=True)
+
     def get_top_by_attr(self, count, sort_attr):
         assert isinstance(count, int) and isinstance(sort_attr, str)
         assert count > 0

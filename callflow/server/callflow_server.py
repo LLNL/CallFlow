@@ -2,12 +2,10 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-
 # ------------------------------------------------------------------------------
-# Library imports
+
 import os
 import sys
-
 
 # this turns RuntimeWarnings into errors
 # and allows debugging!
@@ -15,18 +13,17 @@ import sys
 #warnings.simplefilter('error', RuntimeWarning)
 
 # ------------------------------------------------------------------------------
-# CallFlow imports.
 import callflow
 from callflow.operations import ArgParser
 from callflow.server.api_provider import APIProvider
 import callflow.server.manager as manager
 
-# Globals
 LOGGER = callflow.get_logger(__name__)
 CALLFLOW_APP_HOST = os.getenv("CALLFLOW_APP_HOST", "127.0.0.1")
 CALLFLOW_APP_PORT = os.getenv("CALLFLOW_APP_PORT", "5000")
 
 
+# ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 class CallFlowServer:
     """
@@ -77,6 +74,15 @@ def main():
 
     log_level = 1 if '--verbose' in sys.argv else 2
     callflow.init_logger(level=log_level)
+
+    '''
+    LOGGER.debug('debug logging')
+    LOGGER.info('info logging')
+    LOGGER.warning('warning logging')
+    LOGGER.error('error logging')
+    LOGGER.critical('critical logging')
+    '''
+
     CallFlowServer(sys.argv)
 
 
