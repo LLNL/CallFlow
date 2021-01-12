@@ -2,20 +2,21 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
 import os
 import json
 
-# CallFlow imports
 import callflow
 from callflow.timer import Timer
 from callflow.algorithms import DeltaConSimilarity
 from callflow.operations import Process, Group, Filter
 from callflow.modules import EnsembleAuxiliary, SingleAuxiliary
-
 LOGGER = callflow.get_logger(__name__)
 
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class SuperGraph(object):
     """
     SuperGraph class to handle processing of a an input Dataset.
@@ -64,7 +65,7 @@ class SuperGraph(object):
         elif self.mode == "render":
             self._create_for_render()
 
-        self.gf.df.reset_index(drop=False, inplace=True)
+        self.gf.reset_index()
 
     # -------------------------------------------------------------------------
     def get_module_name(self, callsite):
@@ -80,7 +81,7 @@ class SuperGraph(object):
             if callsite in self.config["callsite_module_map"]:
                 return self.config["callsite_module_map"][callsite]
 
-        if "module" in self.gf.df.columns:
+        if "module" in self.gf.columns():
             return self.gf.lookup_with_name(callsite)["module"].unique()[0]
         else:
             return callsite

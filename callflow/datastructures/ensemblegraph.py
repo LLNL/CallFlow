@@ -2,20 +2,18 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
 import networkx as nx
 import pandas as pd
 
-# CallFlow imports
-try:
-    import callflow
-
-    LOGGER = callflow.get_logger(__name__)
-    from callflow import SuperGraph
-except Exception:
-    raise Exception("Module callflow not found not found.")
+import callflow
+from callflow import SuperGraph
+LOGGER = callflow.get_logger(__name__)
 
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class EnsembleGraph(SuperGraph):
     """
     Ensemble SuperGraph Class to handle the processing of ensemble of call graphs.
@@ -67,7 +65,6 @@ class EnsembleGraph(SuperGraph):
 
         for idx, tag in enumerate(self.supergraphs):
             df = pd.concat([df, self.supergraphs[tag].gf.df], sort=True)
-
         return df
 
     def union_nxg(self):
@@ -82,7 +79,6 @@ class EnsembleGraph(SuperGraph):
             LOGGER.debug("-=========================-")
             LOGGER.debug(tag)
             EnsembleGraph._union_nxg_recurse(nxg, self.supergraphs[tag].gf.nxg)
-
         return nxg
 
     # Return the union of graphs G and H.
