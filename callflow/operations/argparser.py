@@ -2,14 +2,13 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-
 # ------------------------------------------------------------------------------
+
 import os
 import json
 import jsonschema
 import argparse
 
-# ------------------------------------------------------------------------------
 import callflow
 LOGGER = callflow.get_logger(__name__)
 
