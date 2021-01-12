@@ -106,13 +106,16 @@ class Process:
                 inclusive[node_name] = (max_incTime - mean_incTime) / mean_incTime
                 exclusive[node_name] = (max_excTime - mean_excTime) / mean_excTime
 
-                std_deviation_inclusive[node_name] = np.std(
-                    node_df["time (inc)"].tolist(), ddof=1
-                )
-                std_deviation_exclusive[node_name] = np.std(
-                    node_df["time"].tolist(), ddof=1
-                )
+                if len(node_df.index) == 1:
+                    _sti, _ste = 0., 0.
+                else:
+                    _sti = np.std(node_df["time (inc)"].tolist(), ddof=1)
+                    _ste = np.std(node_df["time"].tolist(), ddof=1)
 
+                std_deviation_inclusive[node_name] = _sti
+                std_deviation_exclusive[node_name] = _ste
+
+                # TODO: why converting them to lists afain and again
                 skewness_inclusive[node_name] = skew(node_df["time (inc)"].tolist())
                 skewness_exclusive[node_name] = skew(node_df["time"].tolist())
 
