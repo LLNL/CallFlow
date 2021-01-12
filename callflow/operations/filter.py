@@ -2,35 +2,75 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
-# Library imports
 import numpy as np
-import networkx as nx
-from ast import literal_eval as make_list
+#import networkx as nx
+#from ast import literal_eval as make_list
 
-# CallFlow imports
 import callflow
-
 LOGGER = callflow.get_logger(__name__)
 
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class Filter:
-    def __init__(
-        self, gf=None, mode="single", filter_by="time (inc)", filter_perc="10"
-    ):
+
+    VALID_MODES = ["time", "time (inc)"]
+
+    def __init__(self, gf, mode="single",
+                 filter_by="time (inc)", filter_perc=10.):
+
+        assert isinstance(gf, callflow.GraphFrame)
+        assert isinstance(filter_by, str) and isinstance(filter_perc, (int, float))
+        assert filter_by in Filter.VALID_MODES
+        assert 0. <= filter_perc <= 100.
+
         self.gf = gf
+        self.filter_by = filter_by
         self.filter_perc = filter_perc
 
-        self.set_max_min_times()
+        # ----------------------------------------------------------------------
+        # compute the min/max
+        #self.set_max_min_times()
+        _mn, _mx = self.gf.df_minmax("time (inc)")
+        self.min_time_inc_list = np.array([_mn])
+        self.max_time_inc_list = np.array([_mx])
 
+        _mn, _mx = self.gf.df_minmax("time")
+        self.min_time_exc_list = np.array([_mn])
+        self.max_time_exc_list = np.array([_mx])
+
+        LOGGER.info(f"Min. time (inc): {self.min_time_inc_list}")
+        LOGGER.info(f"Max. time (inc): {self.max_time_inc_list}")
+        LOGGER.info(f"Min. time (exc): {self.min_time_exc_list}")
+        LOGGER.info(f"Max. time (exc): {self.max_time_exc_list}")
+
+        self.max_time_inc = np.max(self.max_time_inc_list)
+        self.min_time_inc = np.min(self.min_time_inc_list)
+        self.max_time_exc = np.max(self.max_time_exc_list)
+        self.min_time_exc = np.min(self.min_time_exc_list)
+
+        # ----------------------------------------------------------------------
         if filter_by == "time (inc)":
-            self.gf.df = self.df_by_time_inc()
-            self.gf.nxg = self.graph_by_time_inc()
-        elif filter_by == "time":
-            self.gf.df = self.df_by_time()
-            self.gf.nxg = self.graph_by_time()
+            value = self.filter_perc * 0.01 * self.max_time_inc
+            LOGGER.debug(f"[Filter] By \"{filter_by}\": {self.filter_perc}\% ==> {value}")
 
+            self.gf.filter_gf(filter_by, value)
+            #self.gf.df = self.df_by_time_inc()
+            #self.gf.nxg = self.graph_by_time_inc()
+
+        elif filter_by == "time":
+            value = self.filter_perc
+            LOGGER.debug(f"[Filter] By \"{filter_by}\": {self.filter_perc}\% ==> {value}")
+
+            self.gf.filter_gf(filter_by, value)
+            #self.gf.df = self.df_by_time()
+            #self.gf.nxg = self.graph_by_time()
+
+    '''
     def set_max_min_times(self):
+
         self.max_time_inc_list = np.array([])
         self.min_time_inc_list = np.array([])
         self.max_time_exc_list = np.array([])
@@ -48,17 +88,18 @@ class Filter:
         self.min_time_exc_list = np.hstack(
             [self.min_time_exc_list, self.gf.df["time"].min()]
         )
-
+        
         LOGGER.info(f"Min. time (inc): {self.min_time_inc_list}")
         LOGGER.info(f"Max. time (inc): {self.max_time_inc_list}")
         LOGGER.info(f"Min. time (exc): {self.min_time_exc_list}")
         LOGGER.info(f"Max. time (exc): {self.max_time_exc_list}")
 
+        
         self.max_time_inc = np.max(self.max_time_inc_list)
         self.min_time_inc = np.min(self.min_time_inc_list)
         self.max_time_exc = np.max(self.max_time_exc_list)
         self.min_time_exc = np.min(self.min_time_exc_list)
-
+    
     def df_by_time_inc(self):
         LOGGER.debug(f"[Filter] By Inclusive time : {self.filter_perc}")
         df = self.gf.df.loc[
@@ -102,7 +143,7 @@ class Filter:
         ]
         excludeSet.remove(u)
         return paths
-
+    
     def graph_by_time(self, df, g):
         callsites = df["name"].unique()
 
@@ -114,3 +155,4 @@ class Filter:
             ret.add_path(path)
 
         return ret
+    '''

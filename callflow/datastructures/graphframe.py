@@ -8,6 +8,7 @@ import os
 import pandas as pd
 import hatchet as ht
 import networkx as nx
+from ast import literal_eval as make_list
 
 import callflow
 LOGGER = callflow.get_logger(__name__)
@@ -246,12 +247,63 @@ class GraphFrame(ht.GraphFrame):
         )
 
     # --------------------------------------------------------------------------
+    def filter_gf(self, filter_by, filter_val):
+        self.df = self.df_filter_by_value(filter_by, filter_val)
+
+        callsites = self.df["name"].unique()
+        nxg = nx.DiGraph()
+
+        if filter_by == "time (inc)":
+            for edge in self.nxg.edges():
+                # If source is present in the callsites list
+                if edge[0] in callsites and edge[1] in callsites:
+                    nxg.add_edge(edge[0], edge[1])
+                else:
+                    LOGGER.debug(f"Removing the edge: {edge}")
+
+        elif filter_by == "time":
+            for callsite in callsites:
+                path = self.df_lookup_with_column("name",callsite)["path"].tolist()[0]
+                path = make_list(path)
+                nxg.add_path(path)
+
+        self.nxg = nxg
+
+    # --------------------------------------------------------------------------
     # callflow.df utilities
-    def columns(self):
+    def df_reset_index(self):
+        self.df.reset_index(drop=False, inplace=True)
+
+    def df_columns(self):
         return self.df.columns
 
-    def reset_index(self):
-        self.df.reset_index(drop=False, inplace=True)
+    def df_minmax(self, column):
+        return self.df[column].min(), self.df[column].max()
+
+    def df_filter_by_value(self, column, filter_val):
+        df = self.df.loc[self.df[column] > filter_val]
+        return df[df["name"].isin(df["name"].unique())]
+
+    def df_filter_by_name(self, names):
+        assert isinstance(names, list)
+        return self.df[self.df["name"].isin(names)]
+
+    def df_lookup_with_column(self, column, value):
+        return self.df.loc[self.df[column] == value]
+
+    def lookup_with_name(self, name):
+        return self.df_lookup_with_column("name", name)
+
+    def lookup_with_node_name(self, node):
+        return self.df_lookup_with_column("name", node.callpath[-1])
+
+    def lookup_with_vis_node_name(self, name):
+        return self.df_lookup_with_column("vis_node_name", name)
+
+    def lookup(self, node):
+        return self.df.loc[
+            (self.df["name"] == node.callpath[-1]) & (self.df["nid"] == node.nid)
+        ]
 
     def get_top_by_attr(self, count, sort_attr):
         assert isinstance(count, int) and isinstance(sort_attr, str)
@@ -261,24 +313,6 @@ class GraphFrame(ht.GraphFrame):
         df = df.sort_values(by=[sort_attr], ascending=False)
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
-
-    def filter_by_name(self, names):
-        assert isinstance(names, list)
-        return self.df[self.df["name"].isin(names)]
-
-    def lookup_with_node(self, node):
-        return self.df.loc[self.df["name"] == node.callpath[-1]]
-
-    def lookup_with_name(self, name):
-        return self.df.loc[self.df["name"] == name]
-
-    def lookup_with_vis_nodeName(self, name):
-        return self.df.loc[self.df["vis_node_name"] == name]
-
-    def lookup(self, node):
-        return self.df.loc[
-            (self.df["name"] == node.callpath[-1]) & (self.df["nid"] == node.nid)
-        ]
 
     def update_df(self, col_name, mapping):
         self.df[col_name] = self.df["name"].apply(

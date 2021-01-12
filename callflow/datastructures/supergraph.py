@@ -65,7 +65,7 @@ class SuperGraph(object):
         elif self.mode == "render":
             self._create_for_render()
 
-        self.gf.reset_index()
+        self.gf.df_reset_index()
 
     # -------------------------------------------------------------------------
     def get_module_name(self, callsite):
@@ -171,7 +171,7 @@ class SuperGraph(object):
             gf=self.gf,
             mode=mode,
             filter_by=self.config["filter_by"],
-            filter_perc=self.config["filter_perc"],
+            filter_perc=float(self.config["filter_perc"]),
         ).gf
 
     # --------------------------------------------------------------------------
