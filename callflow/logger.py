@@ -37,7 +37,8 @@ def init_logger(**kwargs):
     if do_color:
         LOG_COLORS = {
             "DEBUG": "cyan",
-            "INFO": "white",
+            #"INFO": "white",
+            "INFO": "blue",
             "WARNING": "yellow",
             "ERROR": "red",
             "CRITICAL": "red",
