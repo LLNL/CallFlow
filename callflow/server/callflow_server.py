@@ -2,8 +2,11 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+
+# ------------------------------------------------------------------------------
 # Library imports
 import os
+import sys
 
 # ------------------------------------------------------------------------------
 # CallFlow imports.
@@ -14,26 +17,28 @@ import callflow.server.manager as manager
 
 # Globals
 LOGGER = callflow.get_logger(__name__)
-CALLFLOW_APP_HOST = "127.0.0.1"
-CALLFLOW_APP_PORT = int(os.getenv("CALLFLOW_APP_PORT", 5000))
+CALLFLOW_APP_HOST = os.getenv("CALLFLOW_APP_HOST", "127.0.0.1")
+CALLFLOW_APP_PORT = os.getenv("CALLFLOW_APP_PORT", "5000")
 
 
+# ------------------------------------------------------------------------------
 class CallFlowServer:
     """
     CallFlow Server class.
     """
 
-    def __init__(self):
-        self.args = ArgParser()
+    def __init__(self, args):
+
+        self.args = ArgParser(args)
 
         # Set cache key to store the current instance's arguments.
         self.cache_key = manager.cache_key(
-            working_directory=os.getcwd(), arguments=vars(self.args)
+            working_directory=os.getcwd(), arguments=self.args.args
         )
 
-        self.debug = True
-        self.production = True
-        self.process = self.args.process
+        self.debug = self.args.args['verbose']
+        self.production = self.args.args['production']
+        self.process = self.args.args['process']
 
         self.callflow = callflow.CallFlow(config=self.args.config)
 
@@ -61,12 +66,16 @@ class CallFlowServer:
             pass
 
 
+# ------------------------------------------------------------------------------
 def main():
-    # if verbose, level = 1
-    # else, level = 2
-    callflow.init_logger(level=2)
-    CallFlowServer()
+
+    log_level = 1 if '--verbose' in sys.argv else 2
+    callflow.init_logger(level=log_level)
+    CallFlowServer(sys.argv)
 
 
 if __name__ == "__main__":
     main()
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
