@@ -7,17 +7,19 @@
 import os
 import json
 
-import callflow
+from callflow import get_logger
+from .graphframe import GraphFrame
+
 from callflow.timer import Timer
 from callflow.algorithms import DeltaConSimilarity
 from callflow.operations import Process, Group, Filter
 from callflow.modules import EnsembleAuxiliary, SingleAuxiliary
-LOGGER = callflow.get_logger(__name__)
+LOGGER = get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
-class SuperGraph(callflow.GraphFrame):
+class SuperGraph(GraphFrame):
     """
     SuperGraph class to handle processing of a an input Dataset.
     """
@@ -26,44 +28,60 @@ class SuperGraph(callflow.GraphFrame):
                   "aux": "auxiliary_data.json"}
 
     # --------------------------------------------------------------------------
-    def __init__(self, config={}, tag="", mode="process"):
+    def __init__(self, name, config=None, mode="process", df=None, nxg=None):
         """
         Arguments:
             props (dict): dictionary to store the configuration. CallFlow appends more information while processing.
             tag (str): Tag for each call graph.
             mode (str): process|render. process performs pre-processing, and render calculates layout for the client.
         """
+        assert isinstance(name, str)
         assert mode in ["process", "render"]
-        self.timer = Timer()
-        self.dirname = os.path.join(config["save_path"], tag)
-        self.config = config
-        self.tag = tag  # TODO: rename to "self.name"
-        self.mode = mode
+        assert (df is None) == (nxg is None)    # need both or neither
+        if config:
+            assert isinstance(config, dict)
 
+        self.name = name            # TODO: should be moved to graphframe
+        self.config = config
+
+        self.timer = Timer()
+        self.dirname = os.path.join(config["save_path"], self.name)
         self.parameters = None
         self.auxiliary_data = None
 
-        # ----------------------------------------------------------------------
-        # populate the graph frame now
-        if tag != 'ensemble': # had to add this condition to avoid initializing for ensemble
-            if mode == "process":
-                gf = callflow.GraphFrame.from_config(self.config, self.tag)
-                super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics)
+        LOGGER.info(f'###################### Creating SuperGraph ({self.name})')
 
-            elif self.mode == "render":
-                self._create_for_render()
-                self.df_add_time_proxies()
-            self.df_reset_index()
-        else:
+        # ----------------------------------------------------------------------
+        # render mode simply reads the data
+        if mode == "render":
             super().__init__()
+            super().read(self.dirname)
+
+            if self.config["read_parameter"]:
+                self.parameters = SuperGraph.read_parameters(self.dirname)
+            self.auxiliary_data = SuperGraph.read_auxiliary_data(self.dirname)
+
+        # copy over the dataframe and nxg
+        elif df is not None and nxg is not None:
+            super().__init__()
+            self.dataframe = df
+            self.nxg = nxg
+
+        # otherwise, need to create from config
+        elif mode == "process":
+            gf = GraphFrame.from_config(self.name, self.config)
+            super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics)
+
+        self.df_add_time_proxies()
+        self.df_reset_index()
         # ----------------------------------------------------------------------
 
     # --------------------------------------------------------------------------
-    def _create_for_render(self):
+    '''
+    def read_supergraph(self):
 
-        assert self.mode == "render"
-        super().__init__()
-        self.read(self.dirname)
+        super().read(self.dirname)
+        self.df_add_time_proxies()
 
         if self.config["read_parameter"]:
             self.parameters = SuperGraph.read_parameters(self.dirname)
@@ -72,7 +90,7 @@ class SuperGraph(callflow.GraphFrame):
         except Exception as e:
             LOGGER.critical(f"Failed to read aux file: {e}")
             self.auxiliary_data = None
-
+    '''
     '''
     def create_gf(self):
         """Create a graphframe based on the mode.
@@ -80,7 +98,7 @@ class SuperGraph(callflow.GraphFrame):
         If mode is render, corresponding files from .callflow/ensemble are read.
         """
         if self.mode == "process":
-            self = callflow.GraphFrame.from_config(self.config, self.tag)
+            self = callflow.GraphFrame.from_config(self.config, self.name)
 
         elif self.mode == "render":
             self._create_for_render()
@@ -101,7 +119,7 @@ class SuperGraph(callflow.GraphFrame):
             if callsite in self.config["callsite_module_map"]:
                 return self.config["callsite_module_map"][callsite]
 
-        if "module" in self.columns():
+        if "module" in self.df_columns():
             return self.lookup_with_name(callsite)["module"].unique()[0]
         else:
             return callsite
@@ -119,11 +137,11 @@ class SuperGraph(callflow.GraphFrame):
 
         #LOGGER.warning('>>>>>> before processing\n {}'.format(self.dataframe))
 
-        profile_format = self.config["parameter_props"]["profile_format"][self.tag]
+        profile_format = self.config["parameter_props"]["profile_format"][self.name]
         if profile_format == "hpctoolkit":
 
             process = (
-                Process.Builder(self, self.tag)
+                Process.Builder(self, self.name)
                 .add_path()
                 .create_name_module_map()
                 .add_callers_and_callees()
@@ -137,7 +155,7 @@ class SuperGraph(callflow.GraphFrame):
         elif profile_format == "caliper_json" or profile_format == "caliper":
             if "callsite_module_map" in self.config:
                 process = (
-                    Process.Builder(self, self.tag)
+                    Process.Builder(self, self.name)
                     .add_time_columns()
                     .add_rank_column()
                     .add_callers_and_callees()
@@ -151,7 +169,7 @@ class SuperGraph(callflow.GraphFrame):
                 )
             else:
                 process = (
-                    Process.Builder(self, self.tag)
+                    Process.Builder(self, self.name)
                     .add_time_columns()
                     .add_rank_column()
                     .add_callers_and_callees()
@@ -165,7 +183,7 @@ class SuperGraph(callflow.GraphFrame):
 
         elif profile_format == "gprof":
             process = (
-                Process.Builder(self, self.tag)
+                Process.Builder(self, self.name)
                 .add_nid_column()
                 .add_time_columns()
                 .add_rank_column()
@@ -236,27 +254,34 @@ class SuperGraph(callflow.GraphFrame):
         """
         Read parameters from "dataset_path/env_params.txt".
         """
-        fname = os.path.join(path, SuperGraph._FILENAMES["params"])
-        LOGGER.info(f"[Read] {fname}")
+        data = None
+        try:
+            fname = os.path.join(path, SuperGraph._FILENAMES["params"])
+            LOGGER.info(f"[Read] {fname}")
+            for line in open(fname, "r"):
+                for num in line.strip().split(","):
+                    split_num = num.split("=")
+                    data[split_num[0]] = split_num[1]
 
-        parameters = None
-        for line in open(fname, "r"):
-            for num in line.strip().split(","):
-                split_num = num.split("=")
-                parameters[split_num[0]] = split_num[1]
+        except Exception as e:
+            LOGGER.critical(f"Failed to read parameter file: {e}")
 
-        return parameters
+        return data
 
     @staticmethod
     def read_auxiliary_data(path):
         """
         Read the data stored in auxiliary_data.json
         """
-        fname = os.path.join(path, SuperGraph._FILENAMES["aux"])
-        LOGGER.info(f"[Read] {fname}")
         data = None
-        with open(fname, "r") as fptr:
-            data = json.load(fptr)
+        try:
+            fname = os.path.join(path, SuperGraph._FILENAMES["aux"])
+            LOGGER.info(f"[Read] {fname}")
+            with open(fname, "r") as fptr:
+                data = json.load(fptr)
+        except Exception as e:
+            LOGGER.critical(f"Failed to read aux file: {e}")
+
         return data
 
     @staticmethod

@@ -22,9 +22,8 @@ class GraphFrame(ht.GraphFrame):
     Graph extends functionality of ht.GraphFrame and provides several utils.
     """
     # --------------------------------------------------------------------------
-    _FILENAMES = {"ht": "hatchet_tree.txt",
-                  "df": "df.csv",
-                  "nxg": "nxg.json"}
+    _FORMATS = ["hpctoolkit", "caliper", "caliper_json", "gprof", "literal", "lists"]
+    _FILENAMES = {"ht": "hatchet_tree.txt", "df": "df.csv", "nxg": "nxg.json"}
     _METRIC_PROXIES = {"time (inc)": ["inclusive#time.duration"],
                        "time": ["sum#time.duration", "sum#sum#time.duration"]}
 
@@ -33,8 +32,6 @@ class GraphFrame(ht.GraphFrame):
         """
         Constructs a callflow.GraphFrame object.
         """
-        # TODO: each dataset name should be stored here for convenience
-        self.name = None
         self.dataframe = None
         self.graph = None
         self.nxg = None
@@ -50,6 +47,7 @@ class GraphFrame(ht.GraphFrame):
         if dataframe is not None:
             self.dataframe = dataframe
 
+        # TODO: need to remove this shortcut!
         # shortcut!
         self.df = self.dataframe
 
@@ -127,18 +125,20 @@ class GraphFrame(ht.GraphFrame):
 
     # create a graph frame directly from the config
     @staticmethod
-    def from_config(config, name):
+    def from_config(name, config):
         """
         Uses config file to create a graphframe.
         """
-        LOGGER.info(f"Creating graphframes: {name}")
-        data_path = os.path.join(
-            config["data_path"], config["parameter_props"]["data_path"][name]
-        )
-        LOGGER.info(f"Data path: {data_path}")
-
         profile_format = config["parameter_props"]["profile_format"][name]
+        data_path = config["parameter_props"]["data_path"][name]
+        data_path = os.path.join(config["data_path"], data_path)
 
+        LOGGER.info(f"Creating graphframe ({name}) from ({data_path}) using ({profile_format}) format")
+
+        if profile_format not in GraphFrame._FORMATS:
+            raise ValueError(f"Invalid profile format: {profile_format}")
+
+        gf = None
         if profile_format == "hpctoolkit":
             gf = ht.GraphFrame.from_hpctoolkit(data_path)
 
@@ -163,6 +163,7 @@ class GraphFrame(ht.GraphFrame):
         elif profile_format == "lists":
             gf = ht.GraphFrame.from_lists(data_path)
 
+        assert gf is not None
         return GraphFrame.from_hatchet(gf)
 
     # --------------------------------------------------------------------------

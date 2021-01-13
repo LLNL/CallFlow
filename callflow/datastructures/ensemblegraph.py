@@ -7,9 +7,9 @@
 import networkx as nx
 import pandas as pd
 
-import callflow
-from callflow import SuperGraph
-LOGGER = callflow.get_logger(__name__)
+from callflow import get_logger
+from .supergraph import SuperGraph
+LOGGER = get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
@@ -22,16 +22,29 @@ class EnsembleGraph(SuperGraph):
     """
 
     # --------------------------------------------------------------------------
-    def __init__(self, config={}, tag="", mode="process", supergraphs={}):
+    def __init__(self, name, config=None, mode="process", supergraphs={}):
         """
         Arguments:
             supergraphs (dict): dictionary of supergraphs keyed by their tag.
         """
+        assert name == 'ensemble'
+        assert mode in ["process", "render"]
+        if config:
+            assert isinstance(config, dict)
+
         self.supergraphs = supergraphs
-        super().__init__(config, tag, mode)
-        self.create_gf()
+
+        if mode == "process":
+            df = self.union_df()
+            nxg = self.union_nxg()
+        else:
+            df, nxg = None, None
+
+        super().__init__(name, config=config, mode=mode, df=df, nxg=nxg)
+        # ----------------------------------------------------------------------
 
     # --------------------------------------------------------------------------
+    '''
     def create_gf(self):
         """
         Create a new callflow.graphframe containing the information of the ensemble.
@@ -45,10 +58,10 @@ class EnsembleGraph(SuperGraph):
             # self.gf = callflow.GraphFrame(dataframe=self.union_df())
             # self.gf.dataframe = self.union_df()
 
-            '''
+            '' '
             self.gf = callflow.GraphFrame()
             self.gf.dataframe = self.union_df()
-            '''
+            '' '
             """
             TODO: Need to write a module to convert a NetowrkX graph to a Hatchet graph.
             Currently, there is no way to convert networkX to hatchet graph yet. So we are setting this to None.
@@ -58,9 +71,8 @@ class EnsembleGraph(SuperGraph):
             self.df_add_time_proxies()
 
         elif self.mode == "render":
-            self._create_for_render()
-            self.df_add_time_proxies()
-
+            self.read_supergraph()
+    '''
     # --------------------------------------------------------------------------
     def union_df(self):
         """
