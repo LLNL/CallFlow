@@ -9,9 +9,9 @@ import json
 #TODO: should be
 #from .datastructures import SuperGraph, EnsembleGraph
 from . import SuperGraph, EnsembleGraph
-from .algorithms import DeltaConSimilarity, BlandAltman
-from .layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
-from .modules import ParameterProjection, DiffView, MiniHistogram, FunctionList
+#from .algorithms import DeltaConSimilarity, BlandAltman
+#from .layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
+#from .modules import ParameterProjection, DiffView, MiniHistogram, FunctionList
 from .logger import get_logger
 LOGGER = get_logger(__name__)
 

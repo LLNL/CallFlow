@@ -111,7 +111,7 @@ def byteify(data, ignore_dicts=False):
     return data
 
 
-def dfs(gf: callflow.GraphFrame, limit: int):
+def dfs(gf: callflow.SuperGraph, limit: int):
     """
     Depth first search for debugging purposes.
     """
