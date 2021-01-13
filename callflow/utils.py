@@ -2,17 +2,15 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-#  Utility functions used by callflow.
-# ------------------------------------------------------------------------------
-import callflow
-import hatchet
 import json
-
+import hatchet
+import callflow
 LOGGER = callflow.get_logger(__name__)
 
 
+# ------------------------------------------------------------------------------
 def sanitize_name(name: str):
     """
     Sanitize the callsites for general dataset.

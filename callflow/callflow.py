@@ -2,41 +2,114 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
-import os
 import json
 
+#TODO: should be
+#from .datastructures import SuperGraph, EnsembleGraph
+from . import SuperGraph, EnsembleGraph
+from .algorithms import DeltaConSimilarity, BlandAltman
+from .layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
+from .modules import ParameterProjection, DiffView, MiniHistogram, FunctionList
+from .logger import get_logger
+LOGGER = get_logger(__name__)
+
+
 # ------------------------------------------------------------------------------
-# CallFlow imports
-import callflow
-from callflow import SuperGraph, EnsembleGraph
-from callflow.algorithms import DeltaConSimilarity, BlandAltman
-from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
-from callflow.modules import ParameterProjection, DiffView, MiniHistogram, FunctionList
-
-LOGGER = callflow.get_logger(__name__)
-
-
+# ------------------------------------------------------------------------------
 class CallFlow:
+
     def __init__(self, config: dict = None, data_dir: str = None):
         """
         Entry interface to access CallFlow's functionalities.
         """
-
-        # Assert if config is provided.
-        assert isinstance(config, dict)
+        assert config is not None or data_dir is not None
 
         if config:
+            assert isinstance(config, dict)
             self.config = config
+
         elif data_dir:
+            assert isinstance(config, str)
+            assert False
+            # TODO: this function does not exist!
             self.config = self.read_config()
 
-        ndatasets = len(self.config["runs"])
-        assert ndatasets > 0
-        self.ensemble = ndatasets > 1
+        self.ndatasets = len(self.config["runs"])
+        assert self.ndatasets > 0
+
+        self.config["parameter_props"] = CallFlow._parameter_props(self.config)
+        self.supergraphs = {}
+
+    # --------------------------------------------------------------------------
+    # load functionality
+    def load(self):
+        """
+        Load the processed datasets by the format.
+        """
+        # create supergraphs for all runs
+        for dataset_name in self.config["parameter_props"]["runs"]:
+            self.supergraphs[dataset_name] = SuperGraph(config=self.config,
+                                                        tag=dataset_name,
+                                                        mode="render")
+
+        # ensemble case
+        if self.ndatasets > 1:
+            self.supergraphs["ensemble"] = EnsembleGraph(config=self.config,
+                                                         tag="ensemble",
+                                                         mode="render")
+
+        # Adds basic information to config.
+        # Config is later return to client app on "init" request.
+        self.config["runtime_props"] = CallFlow._runtime_props(self.supergraphs)
+
+    # --------------------------------------------------------------------------
+    def process(self):
+        """
+        Process the datasets based on the format (i.e., either single or ensemble)
+        """
+        # process all datasets
+        for dataset in self.config["runs"]:
+
+            dataset_name = dataset["name"]
+            LOGGER.info("#########################################")
+            LOGGER.info(f"Dataset name: {dataset_name}")
+            LOGGER.info("#########################################")
+
+            sg = SuperGraph(config=self.config, tag=dataset_name, mode="process")
+
+            sg.process_gf()
+            if self.ndatasets == 1:
+                sg.filter_gf(mode="single")
+                sg.group_by(group_by = "module") # TODO: ask why is this here?
+            else:
+                sg.group_gf(group_by=self.config["group_by"])
+
+            sg.write_gf("entire")
+            sg.single_auxiliary(dataset=dataset_name, binCount=20, process=True)
+
+            self.supergraphs[dataset_name] = sg
+
+        # now, process ensemble
+        sg = EnsembleGraph(self.config, "ensemble", mode="process",
+                           supergraphs=self.supergraphs)
+
+        sg.filter_gf(mode="ensemble")
+        sg.group_gf(group_by=self.config["group_by"])
+
+        sg.write_gf("group")
+        sg.ensemble_auxiliary(
+                # MPIBinCount=self.currentMPIBinCount,
+                # RunBinCount=self.currentRunBinCount,
+                datasets=self.config["parameter_props"]["runs"],
+                MPIBinCount=20, RunBinCount=20,
+                process=True, write=True)
+        self.supergraphs["ensemble"] = sg
 
     # --------------------------------------------------------------------------
     # Processing methods.
+    '''
     def _create_dot_callflow_folder(self):
         """
         Create a .callflow directory and empty files.
@@ -72,7 +145,7 @@ class CallFlow:
         TODO: We might want to delete the .callflow folder when we re-process/re-write.
         """
         pass
-
+    
     def process(self):
         """
         Process the datasets based on the format (i.e., either single or ensemble)
@@ -103,7 +176,7 @@ class CallFlow:
         # Adds basic information to config.
         # Config is later return to client app on "init" request.
         self.config["runtime_props"] = self._runtime_props(self.supergraphs)
-
+    
     def _process_single(self, dataset):
         """
         Single dataset processing.
@@ -219,32 +292,51 @@ class CallFlow:
             config=self.config, tag="ensemble", mode="render"
         )
         return supergraphs
+    '''
 
     # --------------------------------------------------------------------------
     # Reading and rendering methods.
-    # All the functions below are Public methods that are accessed by the server.
+    @staticmethod
+    def _parameter_props(config):
+        """
+        Adds parameter information (like path, tag name, and other information fetched).
+        """
+        props = {"runs": [], "data_path": {}, "profile_format": {}}
+        for run in config["runs"]:
+            tag = run["name"]
+            props["runs"].append(tag)
+            if run["profile_format"] == "hpctoolkit":
+                props["data_path"][tag] = os.path.join(run["path"], tag)
+            else:
+                props["data_path"][tag] = run["path"]
+            props["profile_format"][tag] = run["profile_format"]
+        return props
 
-    def _runtime_props(self, supergraphs):
+    @staticmethod
+    def _runtime_props(supergraphs):
         """
         Adds runtime information (like max, min inclusive and exclusive runtime).
         """
-        props = {}
-        props["maxIncTime"] = {}
-        props["maxExcTime"] = {}
-        props["minIncTime"] = {}
-        props["minExcTime"] = {}
-        props["numOfRanks"] = {}
-        maxIncTime = 0
-        maxExcTime = 0
-        minIncTime = 0
-        minExcTime = 0
-        maxNumOfRanks = 0
+        props = {"maxIncTime": {}, "maxExcTime": {},
+                 "minIncTime": {}, "minExcTime": {}, "numOfRanks": {}}
+
+        maxIncTime = 0.
+        maxExcTime = 0.
+        minIncTime = 1e6
+        minExcTime = 1e6
+        maxNumOfRanks = 0.
+
         for idx, tag in enumerate(supergraphs):
-            props["maxIncTime"][tag] = supergraphs[tag].gf.df["time (inc)"].max()
-            props["maxExcTime"][tag] = supergraphs[tag].gf.df["time"].max()
-            props["minIncTime"][tag] = supergraphs[tag].gf.df["time (inc)"].min()
-            props["minExcTime"][tag] = supergraphs[tag].gf.df["time"].min()
-            props["numOfRanks"][tag] = len(supergraphs[tag].gf.df["rank"].unique())
+            props["numOfRanks"][tag] = supergraphs[tag].gf.df_count("rank")
+
+            _mn, _mx = supergraphs[tag].gf.df_minmax("time (inc)")
+            props["minIncTime"][tag] = _mn
+            props["maxIncTime"][tag] = _mx
+
+            _mn, _mx = supergraphs[tag].gf.df_minmax("time")
+            props["minExcTime"][tag] = _mn
+            props["maxExcTime"][tag] = _mx
+
             maxExcTime = max(props["maxExcTime"][tag], maxExcTime)
             maxIncTime = max(props["maxIncTime"][tag], maxIncTime)
             minExcTime = min(props["minExcTime"][tag], minExcTime)
@@ -259,27 +351,7 @@ class CallFlow:
 
         return props
 
-    def _parameter_props(self, config):
-        """
-        Adds parameter information (like path, tag name, and other information fetched).
-        """
-        props = {}
-        props["runs"] = []
-        props["data_path"] = {}
-        props["profile_format"] = {}
-
-        for run in config["runs"]:
-            tag = run["name"]
-            props["runs"].append(tag)
-            if run["profile_format"] == "hpctoolkit":
-                props["data_path"][tag] = run["path"] + "/" + tag
-            else:
-                props["data_path"][tag] = run["path"]
-
-            props["profile_format"][tag] = run["profile_format"]
-
-        return props
-
+    # --------------------------------------------------------------------------
     def request_general(self, operation):
         """
         Handles general requests
@@ -296,26 +368,39 @@ class CallFlow:
 
         elif operation_name == "supergraph_data":
             if len(operation["datasets"]) > 1:
-                return self.supergraphs["ensemble"].auxiliary_data
-            return self.supergraphs[operation["datasets"][0]].auxiliary_data
+                sgname = "ensemble"
+            else:
+                sgname = operation["datasets"][0]
+            return self.supergraphs[sgname].auxiliary_data
 
     def request_single(self, operation):
         """
         Handles requests connected to Single CallFlow.
         """
-        _OPERATIONS = [
-            "cct",
-            "supergraph",
-            "split_mpi_distribution",
-        ]
+        assert isinstance(operation, dict)
+        _OPERATIONS = ["cct", "supergraph", "function", "split_mpi_distribution"]
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
 
-        operation_name = operation["name"]
-
         LOGGER.info(f"[Single Mode] {operation}")
 
-        if operation_name == "supergraph":
+        # ----------------------------------------------------------------------
+        operation_name = operation["name"]
+        sg = self.supergraphs[operation["dataset"]]
+
+        # ----------------------------------------------------------------------
+        if operation_name == "cct":
+            nll = NodeLinkLayout(supergraph=sg,
+                                 callsite_count=operation["functionsInCCT"])
+            return nll.nxg
+
+        # ----------------------------------------------------------------------
+        elif operation_name == "supergraph":
+            reveal_callsites = operation.get("reveal_callsites", [])
+            split_entry_module = operation.get("split_entry_module", [])
+            split_callee_module = operation.get("split_callee_module", [])
+
+            '''
             if "reveal_callsites" in operation:
                 reveal_callsites = operation["reveal_callsites"]
             else:
@@ -330,33 +415,24 @@ class CallFlow:
                 split_callee_module = operation["split_callee_module"]
             else:
                 split_callee_module = ""
+            '''
+            ssg = SankeyLayout(supergraph=sg, path="group_path",
+                               reveal_callsites=reveal_callsites,
+                               split_entry_module=split_entry_module,
+                               split_callee_module=split_callee_module)
+            return ssg.nxg
 
-            single_supergraph = SankeyLayout(
-                supergraph=self.supergraphs[operation["dataset"]],
-                path="group_path",
-                reveal_callsites=reveal_callsites,
-                split_entry_module=split_entry_module,
-                split_callee_module=split_callee_module,
-            )
-            return single_supergraph.nxg
-
-        elif operation_name == "cct":
-            result = NodeLinkLayout(
-                supergraph=self.supergraphs[operation["dataset"]],
-                callsite_count=operation["functionsInCCT"],
-            )
-            return result.nxg
-
+        # ----------------------------------------------------------------------
         elif operation_name == "function":
-            functionlist = FunctionList(
-                self.supergraphs[operation["dataset"]], operation["module"]
-            )
-            return functionlist.result
+            fll = FunctionList(sg, operation["module"])
+            return fll.result
 
+        # ----------------------------------------------------------------------
         elif operation_name == "split_mpi_distribution":
+            assert False
             pass
+        # ----------------------------------------------------------------------
 
-    # flake8: noqa: C901
     def request_ensemble(self, operation):
         """
         Handles all the socket requests connected to Single CallFlow.
@@ -366,20 +442,30 @@ class CallFlow:
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
 
-        operation_name = operation["name"]
-        datasets = self.config["parameter_props"]["runs"]
+        LOGGER.info(f"[Ensemble Mode] {operation}")
 
+        # ----------------------------------------------------------------------
+        datasets = self.config["parameter_props"]["runs"]
+        operation_name = operation["name"]
+        sg = self.supergraphs["ensemble"]
+
+        # ----------------------------------------------------------------------
         if operation_name == "init":
             return self.config
 
+        # ----------------------------------------------------------------------
         elif operation_name == "cct":
-            result = NodeLinkLayout(
-                supergraph=self.supergraphs["ensemble"],
-                callsite_count=operation["functionsInCCT"],
-            )
-            return result.nxg
+            nll = NodeLinkLayout(supergraph=sg,
+                                 callsite_count=operation["functionsInCCT"])
+            return nll.nxg
 
+        # ----------------------------------------------------------------------
         elif operation_name == "supergraph":
+            reveal_callsites = operation.get("reveal_callsites", [])
+            split_entry_module = operation.get("split_entry_module", [])
+            split_callee_module = operation.get("split_callee_module", [])
+
+            '''
             if "reveal_callsites" in operation:
                 reveal_callsites = operation["reveal_callsites"]
             else:
@@ -394,46 +480,40 @@ class CallFlow:
                 split_callee_module = operation["split_callee_module"]
             else:
                 split_callee_module = ""
+            '''
+            ssg = SankeyLayout(supergraph=sg, path="group_path",
+                               reveal_callsites=reveal_callsites,
+                               split_entry_module=split_entry_module,
+                               split_callee_module=split_callee_module)
+            return ssg.nxg
 
-            ensemble_super_graph = SankeyLayout(
-                supergraph=self.supergraphs["ensemble"],
-                path="group_path",
-                reveal_callsites=reveal_callsites,
-                split_entry_module=split_entry_module,
-                split_callee_module=split_callee_module,
-            )
-            return ensemble_super_graph.nxg
-
+        # ----------------------------------------------------------------------
         elif operation_name == "module_hierarchy":
-            modulehierarchy = HierarchyLayout(
-                self.supergraphs["ensemble"], operation["module"]
-            )
-            return modulehierarchy.nxg
+            hl = HierarchyLayout(sg, operation["module"])
+            return hl.nxg
 
+        # ----------------------------------------------------------------------
         elif operation_name == "projection":
-            projection = ParameterProjection(
-                supergraph=self.supergraphs["ensemble"],
-                targetDataset=operation["targetDataset"],
-                n_cluster=operation["numOfClusters"],
-            )
-            return projection.result.to_json(orient="columns")
+            pp = ParameterProjection(supergraph=sg,
+                                     targetDataset=operation["targetDataset"],
+                                     n_cluster=operation["numOfClusters"])
+            return pp.result.to_json(orient="columns")
 
+        # ----------------------------------------------------------------------
         elif operation_name == "compare":
             compareDataset = operation["compareDataset"]
             targetDataset = operation["targetDataset"]
+
+            assert operation["selectedMetric"] in ["Inclusive", "Exclusive"]
             if operation["selectedMetric"] == "Inclusive":
                 selectedMetric = "time (inc)"
             elif operation["selectedMetric"] == "Exclusive":
                 selectedMetric = "time"
 
-            compare = DiffView(
-                self.supergraphs["ensemble"],
-                compareDataset,
-                targetDataset,
-                selectedMetric,
-            )
-            return compare.result
+            dv = DiffView(sg, compareDataset, targetDataset, selectedMetric)
+            return dv.result
 
+        # ----------------------------------------------------------------------
         # Not used.
         elif operation_name == "scatterplot":
             assert False
@@ -476,3 +556,5 @@ class CallFlow:
                 self.states[state].projection_data["dataset"] = state
                 ret.append(self.states[state].projection_data)
             return ret
+
+        # ----------------------------------------------------------------------

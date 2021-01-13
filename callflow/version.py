@@ -2,6 +2,9 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
 __version_info__ = ("1", "1", "2")
 __version__ = ".".join(__version_info__)
+
+# ------------------------------------------------------------------------------

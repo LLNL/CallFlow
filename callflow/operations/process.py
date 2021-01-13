@@ -2,24 +2,24 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
 import numpy as np
 import pandas as pd
 from scipy.stats import kurtosis, skew
 
-# CallFlow imports
 import callflow
-
 LOGGER = callflow.get_logger(__name__)
 
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class Process:
     """
     Preprocess the dataframe
     Builder object
     Preprocess.add_X().add_Y().....
     """
-
     def __init__(self, gf, tag):
         self.gf = gf
         self.tag = tag
@@ -32,10 +32,13 @@ class Process:
             self.graphMapper()
 
         def convertFrameList(self, nodes):
+            return [_.frame.get("name") for _ in nodes]
+            '''
             ret = []
             for node in nodes:
                 ret.append(node.frame.get("name"))
             return ret
+            '''
 
         def graphMapper(self):
             self.callers = {}
