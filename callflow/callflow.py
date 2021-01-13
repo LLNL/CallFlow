@@ -82,7 +82,7 @@ class CallFlow:
             sg.process_gf()
             if self.ndatasets == 1:
                 sg.filter_gf(mode="single")
-                sg.group_by(group_by = "module") # TODO: ask why is this here?
+                sg.group_gf(group_by = "module") # TODO: ask why is this here?
             else:
                 sg.group_gf(group_by=self.config["group_by"])
 
