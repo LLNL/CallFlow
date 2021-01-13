@@ -2,6 +2,7 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
 from collections import OrderedDict
 from contextlib import contextmanager
@@ -9,6 +10,8 @@ from datetime import datetime
 from io import StringIO
 
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class Timer(object):
     """
     Simple phase timer with a context manager.
@@ -53,3 +56,5 @@ class Timer(object):
         self.start_phase(name)
         yield
         self.end_phase()
+
+# ------------------------------------------------------------------------------

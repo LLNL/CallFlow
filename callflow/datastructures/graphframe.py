@@ -277,6 +277,9 @@ class GraphFrame(ht.GraphFrame):
     def df_columns(self):
         return self.df.columns
 
+    def df_count(self, column):
+        return len(self.df[column].unique())
+
     def df_minmax(self, column):
         return self.df[column].min(), self.df[column].max()
 
