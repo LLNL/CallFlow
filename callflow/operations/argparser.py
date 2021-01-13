@@ -92,7 +92,7 @@ class ArgParser:
         # Verify if only valid things are passed.
         # Read mode determines how arguments will be consumed by CallFlow.
         self.read_mode = self._verify_parser()
-        LOGGER.debug(f"Read mode: {self.read_mode}")
+        LOGGER.info(f"Read mode: {self.read_mode}")
 
         # Call the appropriate function belonging to the format.
         _READ_MODES = {
@@ -112,7 +112,7 @@ class ArgParser:
             _config_filename = os.path.join(self.config["save_path"], "config.json")
             write_config(self.config, _config_filename)
 
-        LOGGER.debug(f"CallFlow instantiation configuration: {self.config}")
+        LOGGER.info(f"CallFlow instantiation configuration: {self.config}")
 
     def __str__(self):
         items = ("%s = %r" % (k, v) for k, v in self.__dict__.items())
@@ -492,7 +492,7 @@ class ArgParser:
         """
         Create a staging directory for data.
         """
-        LOGGER.debug(f"Callflow is staging data in ({dot_cf_path})")
+        LOGGER.info(f"Callflow is staging data in ({dot_cf_path})")
 
         if not os.path.exists(dot_cf_path):
             os.makedirs(dot_cf_path)
