@@ -50,14 +50,14 @@ class CallFlow:
         """
         # create supergraphs for all runs
         for dataset_name in self.config["parameter_props"]["runs"]:
-            self.supergraphs[dataset_name] = SuperGraph(config=self.config,
-                                                        tag=dataset_name,
+            self.supergraphs[dataset_name] = SuperGraph(dataset_name,
+                                                        config=self.config,
                                                         mode="render")
 
         # ensemble case
         if self.ndatasets > 1:
-            self.supergraphs["ensemble"] = EnsembleGraph(config=self.config,
-                                                         tag="ensemble",
+            self.supergraphs["ensemble"] = EnsembleGraph("ensemble",
+                                                         config=self.config,
                                                          mode="render")
 
         # Adds basic information to config.
@@ -73,13 +73,14 @@ class CallFlow:
         for dataset in self.config["runs"]:
 
             dataset_name = dataset["name"]
-            LOGGER.info("#########################################")
-            LOGGER.info(f"Dataset name: {dataset_name}")
-            LOGGER.info("#########################################")
 
-            sg = SuperGraph(config=self.config, tag=dataset_name, mode="process")
+            #LOGGER.info("#########################################")
+            #LOGGER.info(f"Dataset name: {dataset_name}")
+            #LOGGER.info("#########################################")
 
+            sg = SuperGraph(dataset_name, config=self.config, mode="process")
             sg.process_gf()
+
             if self.ndatasets == 1:
                 sg.filter_gf_sg(mode="single")
                 sg.group_gf_sg(group_by = "module") # TODO: ask why is this here?
@@ -91,8 +92,9 @@ class CallFlow:
 
             self.supergraphs[dataset_name] = sg
 
+        # ----------------------------------------------------------------------
         # now, process ensemble
-        sg = EnsembleGraph(self.config, "ensemble", mode="process",
+        sg = EnsembleGraph("ensemble", self.config, mode="process",
                            supergraphs=self.supergraphs)
 
         sg.df_add_time_proxies()
@@ -107,6 +109,7 @@ class CallFlow:
                 MPIBinCount=20, RunBinCount=20,
                 process=True, write=True)
         self.supergraphs["ensemble"] = sg
+        # ----------------------------------------------------------------------
 
     # --------------------------------------------------------------------------
     # Processing methods.
