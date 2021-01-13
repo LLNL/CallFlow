@@ -81,10 +81,10 @@ class CallFlow:
 
             sg.process_gf()
             if self.ndatasets == 1:
-                sg.filter_gf(mode="single")
-                sg.group_gf(group_by = "module") # TODO: ask why is this here?
+                sg.filter_gf_sg(mode="single")
+                sg.group_gf_sg(group_by = "module") # TODO: ask why is this here?
             else:
-                sg.group_gf(group_by=self.config["group_by"])
+                sg.group_gf_sg(group_by=self.config["group_by"])
 
             sg.write_gf("entire")
             sg.single_auxiliary(dataset=dataset_name, binCount=20, process=True)
@@ -95,9 +95,9 @@ class CallFlow:
         sg = EnsembleGraph(self.config, "ensemble", mode="process",
                            supergraphs=self.supergraphs)
 
-        sg.gf.df_add_time_proxies()
-        sg.filter_gf(mode="ensemble")
-        sg.group_gf(group_by=self.config["group_by"])
+        sg.df_add_time_proxies()
+        sg.filter_gf_sg(mode="ensemble")
+        sg.group_gf_sg(group_by=self.config["group_by"])
 
         sg.write_gf("group")
         sg.ensemble_auxiliary(
@@ -328,13 +328,13 @@ class CallFlow:
         maxNumOfRanks = 0.
 
         for idx, tag in enumerate(supergraphs):
-            props["numOfRanks"][tag] = supergraphs[tag].gf.df_count("rank")
+            props["numOfRanks"][tag] = supergraphs[tag].df_count("rank")
 
-            _mn, _mx = supergraphs[tag].gf.df_minmax("time (inc)")
+            _mn, _mx = supergraphs[tag].df_minmax("time (inc)")
             props["minIncTime"][tag] = _mn
             props["maxIncTime"][tag] = _mx
 
-            _mn, _mx = supergraphs[tag].gf.df_minmax("time")
+            _mn, _mx = supergraphs[tag].df_minmax("time")
             props["minExcTime"][tag] = _mn
             props["maxExcTime"][tag] = _mx
 

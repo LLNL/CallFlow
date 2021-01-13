@@ -18,7 +18,10 @@ LOGGER = get_logger(__name__)
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 class GraphFrame(ht.GraphFrame):
-
+    """
+    Graph extends functionality of ht.GraphFrame and provides several utils.
+    """
+    # --------------------------------------------------------------------------
     _FILENAMES = {"ht": "hatchet_tree.txt",
                   "df": "df.csv",
                   "nxg": "nxg.json"}
@@ -51,9 +54,6 @@ class GraphFrame(ht.GraphFrame):
         self.df = self.dataframe
 
     # -------------------------------------------------------------------------
-    def set_name(self, name):
-        self.name = name
-
     def write(self, path, write_df=True, write_graph=False, write_nxg=True):
         """
         Write the GraphFrame as separate files (refer _FILENAMES for file name mapping).

@@ -156,9 +156,6 @@ class SingleAuxiliary:
 
     def run(self):
         ret = {}
-        LOGGER.error('auxiliary_single.run() is blocked!')
-        return ret
-
         path = self.props["save_path"] + f"/{self.dataset}/auxiliary_data.json"
         # self.process = True
         if os.path.exists(path) and not self.process:
