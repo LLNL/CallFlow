@@ -82,7 +82,7 @@ class Process:
                                 f"graph contains: {df_node_count} nodes" )
 
             self.gf.df_add_column('path',
-                                  lambda _: callflow.utils.path_list_from_frames(self.paths[_]))
+                                  apply_func=lambda _: callflow.utils.path_list_from_frames(self.paths[_]))
             '''
             self.raiseExceptionIfNodeCountNotEqual(self.paths)
             self.gf.df["path"] = self.gf.df["name"].apply(
@@ -133,7 +133,7 @@ class Process:
             for metric_key, col_suffix in zip(column_names, column_labels):
                 for metric in metrics:
                     self.gf.df_add_column(f'{metric}_{col_suffix}',
-                                          lambda _: metrics_dict[_][metric_key][metric])
+                                          apply_func=lambda _: metrics_dict[_][metric_key][metric])
 
             return self
 
@@ -212,8 +212,8 @@ class Process:
             '''
 
         def add_callers_and_callees(self):
-            self.gf.df_add_column('callees', lambda _: self.callees[_])
-            self.gf.df_add_column('callers', lambda _: self.callers[_])
+            self.gf.df_add_column('callees', apply_func=lambda _: self.callees[_])
+            self.gf.df_add_column('callers', apply_func=lambda _: self.callers[_])
 
             '''
             self.gf.df["callees"] = self.gf.df["name"].apply(
@@ -234,7 +234,7 @@ class Process:
             self.callsite_module_map = self.name_group_df["module"].unique().to_dict()
 
             self.gf.df_add_column('vis_node_name',
-                                  lambda _:
+                                  apply_func=lambda _:
                                   callflow.utils.sanitize_name(self.callsite_module_map[_][0]) + "=" + _)
 
             '''
@@ -249,7 +249,7 @@ class Process:
             return self
 
         def add_node_name_hpctoolkit(self, node_name_map):
-            self.gf.df_add_column('node_name', lambda _: node_name_map[_])
+            self.gf.df_add_column('node_name', apply_func=lambda _: node_name_map[_])
             '''
             self.gf.df["node_name"] = self.gf.df["name"].apply(
                 lambda name: node_name_map[name]
@@ -259,8 +259,8 @@ class Process:
 
         def add_module_name_hpctoolkit(self):
             self.gf.df_add_column('module',
-                                  lambda _: callflow.utils.sanitize_name(_),
-                                  'module')
+                                  apply_func=lambda _: callflow.utils.sanitize_name(_),
+                                  apply_on='module')
             '''
             self.gf.df["module"] = self.gf.df["module"].apply(
                 lambda name: callflow.utils.sanitize_name(name)
@@ -269,19 +269,28 @@ class Process:
             return self
 
         def add_module_name_caliper(self, module_map):
-            self.gf.df_add_column('module', lambda _: module_map[_])
-            #self.gf.df["module"] = self.gf.df["name"].apply(
-            #     lambda name: module_map[name]
-            #)
+            self.gf.df_add_column('module', apply_func=lambda _: module_map[_])
+            '''
+            self.gf.df["module"] = self.gf.df["name"].apply(
+                 lambda name: module_map[name]
+            )
+            '''
             return self
 
         def add_dataset_name(self):
+            self.gf.df_add_column('dataset', value=self.tag)
+            '''
             self.gf.df["dataset"] = self.tag
+            '''
             return self
 
         def add_rank_column(self):
+            self.gf.df_add_column('rank', value=0)
+            self.add_nid_column()
+            '''
             if "rank" not in self.gf.df.columns:
                 self.gf.df["rank"] = 0
+            '''
             return self
 
         def add_nid_column(self):
@@ -289,6 +298,7 @@ class Process:
                 self.gf.df["nid"] = self.gf.df.groupby("name")["name"].transform(
                     lambda x: pd.factorize(x)[0]
                 )
+                assert False
             return self
 
         def add_time_columns(self):
@@ -312,14 +322,21 @@ class Process:
             return self
 
         def create_name_module_map(self):
+            self.gf.df_add_column("module", apply_func=lambda _: _)
+            '''
             if "module" not in self.gf.df.columns:
                 self.gf.df["module"] = self.gf.df["name"]
+                self.gf.df["module2"] = self.gf.df["name"].apply(
+                 lambda name: name)
+            '''
+
             self.name_module_map = (
                 self.gf.df.groupby(["name"])["module"].unique().to_dict()
             )
 
             return self
 
+        '''
         def raiseExceptionIfNodeCountNotEqual(self, attr):
             map_node_count = len(attr.keys())
             df_node_count = len(self.gf.df["name"].unique())
@@ -330,3 +347,4 @@ class Process:
                 raise Exception(
                     f"Unmatched Preprocessing maps: Map contains: {map_node_count} nodes, graph contains: {df_node_count} nodes"
                 )
+        '''
