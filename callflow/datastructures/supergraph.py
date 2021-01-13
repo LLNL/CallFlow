@@ -14,11 +14,10 @@ from ast import literal_eval as make_list
 
 from callflow import get_logger
 #from .graphframe import GraphFrame
-
-from callflow.timer import Timer
-from callflow.algorithms import DeltaConSimilarity
+#from callflow.timer import Timer
+#from callflow.algorithms import DeltaConSimilarity
 from callflow.operations import Process, Group, Filter
-from callflow.modules import EnsembleAuxiliary, SingleAuxiliary
+#from callflow.modules import EnsembleAuxiliary, SingleAuxiliary
 LOGGER = get_logger(__name__)
 
 
@@ -276,6 +275,23 @@ class SuperGraph(ht.GraphFrame):
     def df_get_proxy(self, column):
         return self.proxy_columns.get(column, column)
 
+    def df_add_time_proxies(self):
+        for key, proxies in SuperGraph._METRIC_PROXIES.items():
+            if key in self.dataframe.columns:
+                continue
+            for _ in proxies:
+                if _ in self.dataframe.columns:
+                    self.proxy_columns[key] = _
+                    break
+            assert key in self.proxy_columns.keys()
+
+        if len(self.proxy_columns) > 0:
+            LOGGER.debug(f'created column proxies: {self.proxy_columns}')
+
+    def df_get_column(self, column, index="name"):
+        column = self.df_get_proxy(column)
+        return self.dataframe.set_index(index)[column]
+
     def df_add_column(self, column_name, value=None, apply_func=None, apply_on="name"):
 
         assert (value is None) != (apply_func is None)
@@ -292,18 +308,9 @@ class SuperGraph(ht.GraphFrame):
             LOGGER.debug(f'appending column \"{column_name}\" = {apply_func}')
             self.dataframe[column_name] = self.dataframe[apply_on].apply(apply_func)
 
-    def df_add_time_proxies(self):
-        for key, proxies in SuperGraph._METRIC_PROXIES.items():
-            if key in self.dataframe.columns:
-                continue
-            for _ in proxies:
-                if _ in self.dataframe.columns:
-                    self.proxy_columns[key] = _
-                    break
-            assert key in self.proxy_columns.keys()
-
-        if len(self.proxy_columns) > 0:
-            LOGGER.debug(f'created column proxies: {self.proxy_columns}')
+    def df_update_mapping(self, col_name, mapping, apply_on="name"):
+        self.dataframe[col_name] = self.dataframe[apply_on].apply(
+            lambda _: mapping[_] if _ in mapping.keys() else "")
 
     def df_count(self, column):
         column = self.df_get_proxy(column)
@@ -327,21 +334,25 @@ class SuperGraph(ht.GraphFrame):
         column = self.df_get_proxy(column)
         return self.dataframe.loc[self.dataframe[column] == value]
 
-    def lookup_with_name(self, name):
-        return self.df_lookup_with_column("name", name)
+    # HB removed the use of this function
+    #def lookup_with_name(self, name):
+    #    return self.df_lookup_with_column("name", name)
 
-    def lookup_with_node_name(self, node):
-        return self.df_lookup_with_column("name", node.callpath[-1])
+    # HB didnt find any use of this function
+    #def lookup_with_node_name(self, node):
+    #    return self.df_lookup_with_column("name", node.callpath[-1])
 
-    def lookup_with_vis_node_name(self, name):
-        return self.df_lookup_with_column("vis_node_name", name)
+    # HB didnt find any use of this function
+    #def lookup_with_vis_node_name(self, name):
+    #    return self.df_lookup_with_column("vis_node_name", name)
 
-    def lookup(self, node):
-        return self.dataframe.loc[
-            (self.dataframe["name"] == node.callpath[-1]) & (self.dataframe["nid"] == node.nid)
-            ]
+    # HB didnt find any use of this function
+    #def lookup(self, node):
+    #    return self.dataframe.loc[
+    #        (self.dataframe["name"] == node.callpath[-1]) & (self.dataframe["nid"] == node.nid)
+    #        ]
 
-    def get_top_by_attr(self, count, sort_attr):
+    def df_get_top_by_attr(self, count, sort_attr):
         assert isinstance(count, int) and isinstance(sort_attr, str)
         assert count > 0
 
@@ -350,17 +361,9 @@ class SuperGraph(ht.GraphFrame):
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
 
-    def df_update_mapping(self, col_name, mapping):
-        self.dataframe[col_name] = self.dataframe["name"].apply(
-            lambda _: mapping[_] if _ in mapping.keys() else ""
-        )
-
-    def df_get_column(self, column, index="name"):
-        column = self.df_get_proxy(column)
-        return self.dataframe.set_index(index)[column]
-
     # --------------------------------------------------------------------------
     # callflow.graph utilities.
+    # --------------------------------------------------------------------------
     @staticmethod
     def hatchet_graph_to_nxg(ht_graph):
         """
@@ -416,6 +419,7 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     # callflow.nxg utilities.
+    # --------------------------------------------------------------------------
     @staticmethod
     def add_prefix(graph, prefix):
         """
@@ -471,7 +475,8 @@ class SuperGraph(ht.GraphFrame):
                 return self.config["callsite_module_map"][callsite]
 
         if "module" in self.df_columns():
-            return self.lookup_with_name(callsite)["module"].unique()[0]
+            return self.df_lookup_with_column("name", callsite)["module"].unique()[0]
+            #return self.lookup_with_name(callsite)["module"].unique()[0]
         else:
             return callsite
 
