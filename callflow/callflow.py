@@ -87,7 +87,7 @@ class CallFlow:
             else:
                 sg.group_gf_sg(group_by=self.config["group_by"])
 
-            sg.write_gf("entire")
+            sg.write() #"entire")
             sg.single_auxiliary(dataset=dataset_name, binCount=20, process=True)
 
             self.supergraphs[dataset_name] = sg
@@ -101,7 +101,7 @@ class CallFlow:
         sg.filter_gf_sg(mode="ensemble")
         sg.group_gf_sg(group_by=self.config["group_by"])
 
-        sg.write_gf("group")
+        sg.write() #"group")
         sg.ensemble_auxiliary(
                 # MPIBinCount=self.currentMPIBinCount,
                 # RunBinCount=self.currentRunBinCount,

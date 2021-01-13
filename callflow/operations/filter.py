@@ -21,7 +21,7 @@ class Filter:
     def __init__(self, gf, mode="single",
                  filter_by="time (inc)", filter_perc=10.):
 
-        assert isinstance(gf, callflow.GraphFrame)
+        assert isinstance(gf, callflow.SuperGraph)
         assert isinstance(filter_by, str) and isinstance(filter_perc, (int, float))
         assert filter_by in Filter.VALID_MODES
         assert 0. <= filter_perc <= 100.
