@@ -40,6 +40,10 @@ class SuperGraph(object):
         self.tag = tag
         self.mode = mode
 
+        self.gf = None
+        self.parameters = None
+        self.auxiliary_data = None
+
         self.create_gf()
 
     # --------------------------------------------------------------------------
@@ -96,6 +100,9 @@ class SuperGraph(object):
         Note: Process class follows a builder pattern.
         (refer: https://en.wikipedia.org/wiki/Builder_pattern#:~:text=The%20builder%20pattern%20is%20a,Gang%20of%20Four%20design%20patterns.)
         """
+
+        #LOGGER.warning('>>>>>> before processing\n {}'.format(self.gf.df))
+
         profile_format = self.config["parameter_props"]["profile_format"][self.tag]
         if profile_format == "hpctoolkit":
 

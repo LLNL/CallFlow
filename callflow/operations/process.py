@@ -73,16 +73,71 @@ class Process:
 
         # Add the path information from the node object
         def add_path(self):
+
+            map_node_count = len(self.paths.keys())
+            df_node_count = self.gf.df_count("name")
+            if map_node_count != df_node_count:
+                raise Exception(f"Unmatched Preprocessing maps: "
+                                f"Map contains: {map_node_count} nodes, "
+                                f"graph contains: {df_node_count} nodes" )
+
+            self.gf.df_add_column('path',
+                                  lambda _: callflow.utils.path_list_from_frames(self.paths[_]))
+            '''
             self.raiseExceptionIfNodeCountNotEqual(self.paths)
             self.gf.df["path"] = self.gf.df["name"].apply(
                 lambda node_name: callflow.utils.path_list_from_frames(
                     self.paths[node_name]
                 )
             )
+            '''
             return self
 
         # Imbalance percentage Series in the dataframe
         def add_imbalance_perc(self):
+
+            # compute these metrics
+            metrics = ['imbalance_perc', 'std_deviation', 'skewness', 'kurtosis']
+
+            # compute for these columns
+            column_names = ["time (inc)", "time"]
+
+            # name the new columns as these
+            column_labels = ["inclusive", "exclusive"]
+
+            # proxy columns for required columns
+            column_proxies = [self.gf.df_get_proxy(_) for _ in column_names]
+
+            metrics_dict = {}
+            for node_name in self.gf.df["name"].unique():
+
+                node_df = self.gf.lookup_with_name(node_name)
+                node_dfsz = len(node_df.index)
+
+                metrics_dict[node_name] = {}
+                for i, _proxy in enumerate(column_proxies):
+                    _data = node_df[_proxy]
+
+                    _mean, _max = _data.mean(), _data.max()
+                    _perc = (_max-_mean)/_mean if not np.isclose(_mean, 0.) else _max
+                    _std = np.std(_data, ddof=1) if node_dfsz > 1 else 0.
+                    _skew = skew(_data)
+                    _kert = kurtosis(_data)
+
+                    # same order as metrics (not ideal, but OK)
+                    metrics_dict[node_name][column_names[i]] = {}
+                    for j, _val in enumerate([_perc, _std, _skew, _kert]):
+                        metrics_dict[node_name][column_names[i]][metrics[j]] = _val
+
+            # now, add these columns to the data frame
+            for metric_key, col_suffix in zip(column_names, column_labels):
+                for metric in metrics:
+                    self.gf.df_add_column(f'{metric}_{col_suffix}',
+                                          lambda _: metrics_dict[_][metric_key][metric])
+
+            return self
+
+            '''
             inclusive = {}
             exclusive = {}
             std_deviation_inclusive = {}
@@ -97,6 +152,7 @@ class Process:
             for node_name in self.gf.df["name"].unique():
                 node_df = self.gf.df.loc[self.gf.df["name"] == node_name]
 
+                # TODO: this is a bug!
                 max_incTime = node_df["time"].mean()
                 mean_incTime = node_df["time (inc)"].mean()
 
@@ -118,7 +174,7 @@ class Process:
                 std_deviation_inclusive[node_name] = _sti
                 std_deviation_exclusive[node_name] = _ste
 
-                # TODO: why converting them to lists afain and again
+                # TODO: why converting them to lists again and again
                 skewness_inclusive[node_name] = skew(node_df["time (inc)"].tolist())
                 skewness_exclusive[node_name] = skew(node_df["time"].tolist())
 
@@ -152,17 +208,21 @@ class Process:
             self.gf.df["kurtosis_exclusive"] = self.gf.df["name"].apply(
                 lambda name: kurtosis_exclusive[name]
             )
-
             return self
+            '''
 
         def add_callers_and_callees(self):
+            self.gf.df_add_column('callees', lambda _: self.callees[_])
+            self.gf.df_add_column('callers', lambda _: self.callers[_])
+
+            '''
             self.gf.df["callees"] = self.gf.df["name"].apply(
                 lambda node: self.callees[node]
             )
             self.gf.df["callers"] = self.gf.df["name"].apply(
                 lambda node: self.callers[node]
             )
-
+            '''
             return self
 
         # node_name is different from name in dataframe. So creating a copy of it.
@@ -173,6 +233,11 @@ class Process:
             self.name_group_df = self.gf.df.groupby(["name"])
             self.callsite_module_map = self.name_group_df["module"].unique().to_dict()
 
+            self.gf.df_add_column('vis_node_name',
+                                  lambda _:
+                                  callflow.utils.sanitize_name(self.callsite_module_map[_][0]) + "=" + _)
+
+            '''
             self.gf.df["vis_node_name"] = self.gf.df["name"].apply(
                 lambda name: callflow.utils.sanitize_name(
                     self.callsite_module_map[name][0]
@@ -180,24 +245,34 @@ class Process:
                 + "="
                 + name
             )
+            '''
             return self
 
         def add_node_name_hpctoolkit(self, node_name_map):
+            self.gf.df_add_column('node_name', lambda _: node_name_map[_])
+            '''
             self.gf.df["node_name"] = self.gf.df["name"].apply(
                 lambda name: node_name_map[name]
             )
+            '''
             return self
 
         def add_module_name_hpctoolkit(self):
+            self.gf.df_add_column('module',
+                                  lambda _: callflow.utils.sanitize_name(_),
+                                  'module')
+            '''
             self.gf.df["module"] = self.gf.df["module"].apply(
                 lambda name: callflow.utils.sanitize_name(name)
             )
+            '''
             return self
 
         def add_module_name_caliper(self, module_map):
-            self.gf.df["module"] = self.gf.df["name"].apply(
-                lambda name: module_map[name]
-            )
+            self.gf.df_add_column('module', lambda _: module_map[_])
+            #self.gf.df["module"] = self.gf.df["name"].apply(
+            #     lambda name: module_map[name]
+            #)
             return self
 
         def add_dataset_name(self):
@@ -217,6 +292,8 @@ class Process:
             return self
 
         def add_time_columns(self):
+            self.gf.df_add_time_proxies()
+            '''
             if "time (inc)" not in self.gf.df.columns:
                 self.gf.df["time (inc)"] = self.gf.df["inclusive#time.duration"]
 
@@ -231,6 +308,7 @@ class Process:
                 and "sum#sum#time.duration" in self.gf.df.columns
             ):
                 self.gf.df["time"] = self.gf.df["sum#sum#time.duration"]
+            '''
             return self
 
         def create_name_module_map(self):

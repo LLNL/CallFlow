@@ -54,7 +54,7 @@ class Filter:
         # ----------------------------------------------------------------------
         if filter_by == "time (inc)":
             value = self.filter_perc * 0.01 * self.max_time_inc
-            LOGGER.debug(f"[Filter] By \"{filter_by}\": {self.filter_perc}\% ==> {value}")
+            LOGGER.debug(f"[Filter] By \"{filter_by}\": {self.filter_perc} % ==> {value}")
 
             self.gf.filter_gf(filter_by, value)
             #self.gf.df = self.df_by_time_inc()
@@ -62,7 +62,7 @@ class Filter:
 
         elif filter_by == "time":
             value = self.filter_perc
-            LOGGER.debug(f"[Filter] By \"{filter_by}\": {self.filter_perc}\% ==> {value}")
+            LOGGER.debug(f"[Filter] By \"{filter_by}\": {self.filter_perc} % ==> {value}")
 
             self.gf.filter_gf(filter_by, value)
             #self.gf.df = self.df_by_time()
