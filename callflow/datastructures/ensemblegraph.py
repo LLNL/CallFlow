@@ -28,8 +28,8 @@ class EnsembleGraph(SuperGraph):
             supergraphs (dict): dictionary of supergraphs keyed by their tag.
         """
         self.supergraphs = supergraphs
-
         super().__init__(config, tag, mode)
+        self.create_gf()
 
     # --------------------------------------------------------------------------
     def create_gf(self):
@@ -41,8 +41,8 @@ class EnsembleGraph(SuperGraph):
         Note: Code for render is same as in SuperGraph class. Might have to find a way to avoid repetition.
         """
         if self.mode == "process":
-
-            self.gf = callflow.GraphFrame(dataframe=self.union_df())
+            self.dataframe = self.union_df()
+            # self.gf = callflow.GraphFrame(dataframe=self.union_df())
             # self.gf.dataframe = self.union_df()
 
             '''
@@ -53,11 +53,13 @@ class EnsembleGraph(SuperGraph):
             TODO: Need to write a module to convert a NetowrkX graph to a Hatchet graph.
             Currently, there is no way to convert networkX to hatchet graph yet. So we are setting this to None.
             """
-            self.gf.graph = None
-            self.gf.nxg = self.union_nxg()
+            self.graph = None
+            self.nxg = self.union_nxg()
+            self.df_add_time_proxies()
 
         elif self.mode == "render":
             self._create_for_render()
+            self.df_add_time_proxies()
 
     # --------------------------------------------------------------------------
     def union_df(self):
@@ -69,7 +71,7 @@ class EnsembleGraph(SuperGraph):
         df = pd.DataFrame([])
 
         for idx, tag in enumerate(self.supergraphs):
-            df = pd.concat([df, self.supergraphs[tag].gf.dataframe], sort=True)
+            df = pd.concat([df, self.supergraphs[tag].dataframe], sort=True)
         return df
 
     def union_nxg(self):
@@ -83,7 +85,7 @@ class EnsembleGraph(SuperGraph):
         for idx, tag in enumerate(self.supergraphs):
             LOGGER.debug("-=========================-")
             LOGGER.debug(tag)
-            EnsembleGraph._union_nxg_recurse(nxg, self.supergraphs[tag].gf.nxg)
+            EnsembleGraph._union_nxg_recurse(nxg, self.supergraphs[tag].nxg)
         return nxg
 
     # Return the union of graphs G and H.

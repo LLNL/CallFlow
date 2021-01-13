@@ -17,13 +17,13 @@ LOGGER = callflow.get_logger(__name__)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
-class SuperGraph(object):
+class SuperGraph(callflow.GraphFrame):
     """
     SuperGraph class to handle processing of a an input Dataset.
     """
-
     # --------------------------------------------------------------------------
-    _FILENAMES = {"params": "env_params.txt", "aux": "auxiliary_data.json"}
+    _FILENAMES = {"params": "env_params.txt",
+                  "aux": "auxiliary_data.json"}
 
     # --------------------------------------------------------------------------
     def __init__(self, config={}, tag="", mode="process"):
@@ -37,40 +37,56 @@ class SuperGraph(object):
         self.timer = Timer()
         self.dirname = os.path.join(config["save_path"], tag)
         self.config = config
-        self.tag = tag
+        self.tag = tag  # TODO: rename to "self.name"
         self.mode = mode
 
-        self.gf = None
         self.parameters = None
         self.auxiliary_data = None
 
-        self.create_gf()
+        # ----------------------------------------------------------------------
+        # populate the graph frame now
+        if tag != 'ensemble': # had to add this condition to avoid initializing for ensemble
+            if mode == "process":
+                gf = callflow.GraphFrame.from_config(self.config, self.tag)
+                super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics)
+
+            elif self.mode == "render":
+                self._create_for_render()
+                self.df_add_time_proxies()
+            self.df_reset_index()
+        else:
+            super().__init__()
+        # ----------------------------------------------------------------------
 
     # --------------------------------------------------------------------------
     def _create_for_render(self):
 
         assert self.mode == "render"
-        self.gf = callflow.GraphFrame()
-        self.gf.read(self.dirname)
+        super().__init__()
+        self.read(self.dirname)
 
-        # Read only if "read_parameters" is specified in the config file.
         if self.config["read_parameter"]:
             self.parameters = SuperGraph.read_parameters(self.dirname)
-        self.auxiliary_data = SuperGraph.read_auxiliary_data(self.dirname)
+        try:
+            self.auxiliary_data = SuperGraph.read_auxiliary_data(self.dirname)
+        except Exception as e:
+            LOGGER.critical(f"Failed to read aux file: {e}")
+            self.auxiliary_data = None
 
+    '''
     def create_gf(self):
         """Create a graphframe based on the mode.
         If mode is process, union operation is performed on the df and graph.
         If mode is render, corresponding files from .callflow/ensemble are read.
         """
         if self.mode == "process":
-            self.gf = callflow.GraphFrame.from_config(self.config, self.tag)
+            self = callflow.GraphFrame.from_config(self.config, self.tag)
 
         elif self.mode == "render":
             self._create_for_render()
 
-        self.gf.df_reset_index()
-
+        self.df_reset_index()
+    '''
     # -------------------------------------------------------------------------
     def get_module_name(self, callsite):
         """
@@ -85,8 +101,8 @@ class SuperGraph(object):
             if callsite in self.config["callsite_module_map"]:
                 return self.config["callsite_module_map"][callsite]
 
-        if "module" in self.gf.columns():
-            return self.gf.lookup_with_name(callsite)["module"].unique()[0]
+        if "module" in self.columns():
+            return self.lookup_with_name(callsite)["module"].unique()[0]
         else:
             return callsite
 
@@ -101,13 +117,13 @@ class SuperGraph(object):
         (refer: https://en.wikipedia.org/wiki/Builder_pattern#:~:text=The%20builder%20pattern%20is%20a,Gang%20of%20Four%20design%20patterns.)
         """
 
-        #LOGGER.warning('>>>>>> before processing\n {}'.format(self.gf.dataframe))
+        #LOGGER.warning('>>>>>> before processing\n {}'.format(self.dataframe))
 
         profile_format = self.config["parameter_props"]["profile_format"][self.tag]
         if profile_format == "hpctoolkit":
 
             process = (
-                Process.Builder(self.gf, self.tag)
+                Process.Builder(self, self.tag)
                 .add_path()
                 .create_name_module_map()
                 .add_callers_and_callees()
@@ -121,7 +137,7 @@ class SuperGraph(object):
         elif profile_format == "caliper_json" or profile_format == "caliper":
             if "callsite_module_map" in self.config:
                 process = (
-                    Process.Builder(self.gf, self.tag)
+                    Process.Builder(self, self.tag)
                     .add_time_columns()
                     .add_rank_column()
                     .add_callers_and_callees()
@@ -135,7 +151,7 @@ class SuperGraph(object):
                 )
             else:
                 process = (
-                    Process.Builder(self.gf, self.tag)
+                    Process.Builder(self, self.tag)
                     .add_time_columns()
                     .add_rank_column()
                     .add_callers_and_callees()
@@ -149,7 +165,7 @@ class SuperGraph(object):
 
         elif profile_format == "gprof":
             process = (
-                Process.Builder(self.gf, self.tag)
+                Process.Builder(self, self.tag)
                 .add_nid_column()
                 .add_time_columns()
                 .add_rank_column()
@@ -162,20 +178,20 @@ class SuperGraph(object):
                 .build()
             )
 
-        self.gf = process.gf
+        self = process.gf
 
-    def group_gf(self, group_by="module"):
+    def group_gf_sg(self, group_by="module"):
         """
         Group the graphframe based on `group_by` parameter.
         """
-        self.gf = Group(self.gf, group_by).gf
+        self = Group(self, group_by).gf
 
-    def filter_gf(self, mode="single"):
+    def filter_gf_sg(self, mode="single"):
         """
         Filter the graphframe.
         """
-        self.gf = Filter(
-            gf=self.gf,
+        self = Filter(
+            gf=self,
             mode=mode,
             filter_by=self.config["filter_by"],
             filter_perc=float(self.config["filter_perc"]),
@@ -184,14 +200,17 @@ class SuperGraph(object):
     # --------------------------------------------------------------------------
     # Question: These functions just call another class, should we just call the corresponding classes directly?
     def write_gf(self, write_df=True, write_graph=False, write_nxg=True):
-        self.gf.write(self.dirname, write_df, write_graph, write_nxg)
+        self.write(self.dirname, write_df, write_graph, write_nxg)
 
     # --------------------------------------------------------------------------
     def ensemble_auxiliary(
         self, datasets, MPIBinCount=20, RunBinCount=20, process=True, write=True
     ):
+        LOGGER.error('ensemble_auxiliary() is blocked!')
+        return
+
         EnsembleAuxiliary(
-            self.gf,
+            self,
             datasets=datasets,
             props=self.config,
             MPIBinCount=MPIBinCount,
@@ -200,8 +219,10 @@ class SuperGraph(object):
         )
 
     def single_auxiliary(self, dataset="", binCount=20, process=True):
+        LOGGER.error('single_auxiliary() is blocked!')
+        return
         SingleAuxiliary(
-            self.gf,
+            self,
             dataset=dataset,
             props=self.config,
             MPIBinCount=binCount,

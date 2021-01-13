@@ -52,9 +52,6 @@ class EnsembleAuxiliary:
 
     def compute(self):
         ret = {}
-        LOGGER.error('auxiliary.compute() is blocked!')
-        return ret
-
         if len(self.datasets) == 1:
             filename = os.path.join(self.datasets[0], "auxiliary_data.json")
         else:
