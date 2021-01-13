@@ -5,55 +5,67 @@
 # ------------------------------------------------------------------------------
 
 import os
+import json
 import pandas as pd
 import hatchet as ht
 import networkx as nx
 from ast import literal_eval as make_list
 
-import callflow
-LOGGER = callflow.get_logger(__name__)
+from callflow import get_logger
+LOGGER = get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 class GraphFrame(ht.GraphFrame):
 
-    _FILENAMES = {"ht": "hatchet_tree.txt", "df": "df.csv", "nxg": "nxg.json"}
+    _FILENAMES = {"ht": "hatchet_tree.txt",
+                  "df": "df.csv",
+                  "nxg": "nxg.json"}
+    _METRIC_PROXIES = {"time (inc)": ["inclusive#time.duration"],
+                       "time": ["sum#time.duration", "sum#sum#time.duration"]}
 
     # ------------------------------------------------------------------------
     def __init__(self, graph=None, dataframe=None, exc_metrics=None, inc_metrics=None):
         """
         Constructs a callflow.GraphFrame object.
         """
+        # TODO: each dataset name should be stored here for convenience
+        self.name = None
+        self.dataframe = None
+        self.graph = None
+        self.nxg = None
+        self.proxy_columns = {}
 
-        # TODO: will we ever want to create a graphframe without data?
         if graph is not None and dataframe is not None:
             super().__init__(graph, dataframe, exc_metrics, inc_metrics)
 
-            # shortcut!
-            self.df = self.dataframe
-
-        if graph:
+        if graph is not None:
+            self.graph = graph
             self.nxg = self.hatchet_graph_to_nxg(graph)
 
-        self.proxy_columns = {}
+        if dataframe is not None:
+            self.dataframe = dataframe
+
+        # shortcut!
+        self.df = self.dataframe
 
     # -------------------------------------------------------------------------
+    def set_name(self, name):
+        self.name = name
+
     def write(self, path, write_df=True, write_graph=False, write_nxg=True):
         """
         Write the GraphFrame as separate files (refer _FILENAMES for file name mapping).
         """
-
         if not write_df and not write_graph and not write_nxg:
             return
 
-        import json
-
-        LOGGER.info("Writing graphframe to ({0})".format(path))
+        LOGGER.info(f"Writing graphframe to ({path})")
 
         # dump the filtered dataframe to csv if write_df is true.
         if write_df:
-            self.df.to_csv(os.path.join(path, GraphFrame._FILENAMES["df"]))
+            self.dataframe.to_csv(os.path.join(path, GraphFrame._FILENAMES["df"]))
 
         if write_graph:
             fname = os.path.join(os.path.join(path, GraphFrame._FILENAMES["ht"]))
@@ -70,35 +82,38 @@ class GraphFrame(ht.GraphFrame):
         """
         Read the GraphFrame from .callflow directory (refer _FILENAMES for file name mapping).
         """
-        import json
+        LOGGER.info(f"Reading graphframe from ({path})")
 
-        LOGGER.info("Reading graphframe from ({0})".format(path))
-
-        # TODO: this function should not use assertions
-        # but throw "ArgumentError" if file is not found, or data is not as expected
-        fname = os.path.join(path, GraphFrame._FILENAMES["df"])
-        self.df = pd.read_csv(fname)
-        if self.df.empty:
-            raise ValueError(f"{fname} is empty.")
-
-        # Hatchet requires node and rank to be indexes.
-        # remove the set indexes to maintain consistency.
-        # self.df = self.df.set_index(['node', 'rank'])
-        self.df = self.df.reset_index(drop=False)
-
-        fname = os.path.join(path, GraphFrame._FILENAMES["nxg"])
-        with open(fname, "r") as nxg_file:
-            graph = json.load(nxg_file)
-            self.nxg = nx.readwrite.json_graph.node_link_graph(graph)
-            assert self.nxg is not None
-
+        self.dataframe = None
+        self.nxg = None
         self.graph = None
+
+        if True:
+            fname = os.path.join(path, GraphFrame._FILENAMES["df"])
+            self.dataframe = pd.read_csv(fname)
+            if self.dataframe is None or self.dataframe.empty:
+                raise ValueError(f"Did not find a valid dataframe in ({fname}).")
+
+            # Hatchet requires node and rank to be indexes.
+            # remove the set indexes to maintain consistency.
+            # self.dataframe = self.dataframe.set_index(['node', 'rank'])
+            # self.dataframe = self.dataframe.reset_index(drop=False)
+            self.df_reset_index()
+
+        if True:
+            fname = os.path.join(path, GraphFrame._FILENAMES["nxg"])
+            with open(fname, "r") as nxg_file:
+                graph = json.load(nxg_file)
+                self.nxg = nx.readwrite.json_graph.node_link_graph(graph)
+            if self.nxg is None:
+                raise ValueError(f"Did not find a valid nxg in ({fname}).")
+
         if read_graph:
             fname = os.path.join(path, GraphFrame._FILENAMES["ht"])
             with open(fname, "r") as graph_file:
                 self.graph = json.load(graph_file)
-
-            assert isinstance(graph, ht.GraphFrame.Graph)
+            if not isinstance(graph, ht.GraphFrame.Graph):
+                raise ValueError(f"Did not find a valid graph in ({fname}).")
 
     # --------------------------------------------------------------------------
     # Hatchet's GraphFrame utilities.
@@ -160,15 +175,15 @@ class GraphFrame(ht.GraphFrame):
         """
         assert isinstance(ht_graph, ht.graph.Graph)
 
+        from callflow.utils import sanitize_name, node_dict_from_frame
+
         def _get_node_name(nd):
-            nm = callflow.utils.sanitize_name(nd["name"])
+            nm = sanitize_name(nd["name"])
             if nd.get("line") != "NA" and nd.get("line") is not None:
                 nm += ":" + str(nd.get("line"))
             return nm
 
         # `node_dict_from_frame` converts the hatchet's frame to a dictionary
-        from callflow.utils import node_dict_from_frame
-
         nxg = nx.DiGraph()
         for root in ht_graph.roots:
             node_gen = root.traverse()
@@ -250,9 +265,9 @@ class GraphFrame(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def filter_gf(self, filter_by, filter_val):
-        self.df = self.df_filter_by_value(filter_by, filter_val)
+        self.dataframe = self.df_filter_by_value(filter_by, filter_val)
 
-        callsites = self.df["name"].unique()
+        callsites = self.dataframe["name"].unique()
         nxg = nx.DiGraph()
 
         if filter_by == "time (inc)":
@@ -274,10 +289,10 @@ class GraphFrame(ht.GraphFrame):
     # --------------------------------------------------------------------------
     # callflow.df utilities
     def df_reset_index(self):
-        self.df.reset_index(drop=False, inplace=True)
+        self.dataframe.reset_index(drop=False, inplace=True)
 
     def df_columns(self):
-        return self.df.columns
+        return self.dataframe.columns
 
     def df_get_proxy(self, column):
         return self.proxy_columns.get(column, column)
@@ -285,33 +300,27 @@ class GraphFrame(ht.GraphFrame):
     def df_add_column(self, column_name, value=None, apply_func=None, apply_on="name"):
 
         assert (value is None) != (apply_func is None)
-        if column_name in self.df.columns:
+        if column_name in self.dataframe.columns:
             return
 
         if value is not None:
             assert isinstance(value, (int, float, str))
-            LOGGER.debug(f'adding new column \"{column_name}\" = \"{value}\"')
-            self.df[column_name] = value
+            LOGGER.debug(f'appending column \"{column_name}\" = \"{value}\"')
+            self.dataframe[column_name] = value
 
         if apply_func is not None:
-            assert callable(apply_func)
-            assert isinstance(apply_on, str)
-            LOGGER.debug(f'adding new column \"{column_name}\" = {apply_func}')
-            self.df[column_name] = self.df[apply_on].apply(apply_func)
+            assert callable(apply_func) and isinstance(apply_on, str)
+            LOGGER.debug(f'appending column \"{column_name}\" = {apply_func}')
+            self.dataframe[column_name] = self.dataframe[apply_on].apply(apply_func)
 
     def df_add_time_proxies(self):
-        possible_proxies = {
-            "time (inc)": ["inclusive#time.duration"],
-            "time": ["sum#time.duration", "sum#sum#time.duration"],
-        }
-        for key, proxies in possible_proxies.items():
-            if key in self.df.columns:
+        for key, proxies in GraphFrame._METRIC_PROXIES.items():
+            if key in self.dataframe.columns:
                 continue
             for _ in proxies:
-                if _ in self.df.columns:
+                if _ in self.dataframe.columns:
                     self.proxy_columns[key] = _
                     break
-
             assert key in self.proxy_columns.keys()
 
         if len(self.proxy_columns) > 0:
@@ -319,24 +328,25 @@ class GraphFrame(ht.GraphFrame):
 
     def df_count(self, column):
         column = self.df_get_proxy(column)
-        return len(self.df[column].unique())
+        return len(self.dataframe[column].unique())
 
     def df_minmax(self, column):
         column = self.df_get_proxy(column)
-        return self.df[column].min(), self.df[column].max()
+        return self.dataframe[column].min(), self.dataframe[column].max()
 
-    def df_filter_by_value(self, column, filter_val):
+    def df_filter_by_value(self, column, value):
+        assert isinstance(value, (int, float))
         column = self.df_get_proxy(column)
-        df = self.df.loc[self.df[column] > filter_val]
+        df = self.dataframe.loc[self.dataframe[column] > value]
         return df[df["name"].isin(df["name"].unique())]
 
     def df_filter_by_name(self, names):
         assert isinstance(names, list)
-        return self.df[self.df["name"].isin(names)]
+        return self.dataframe[self.dataframe["name"].isin(names)]
 
     def df_lookup_with_column(self, column, value):
         column = self.df_get_proxy(column)
-        return self.df.loc[self.df[column] == value]
+        return self.dataframe.loc[self.dataframe[column] == value]
 
     def lookup_with_name(self, name):
         return self.df_lookup_with_column("name", name)
@@ -348,37 +358,37 @@ class GraphFrame(ht.GraphFrame):
         return self.df_lookup_with_column("vis_node_name", name)
 
     def lookup(self, node):
-        return self.df.loc[
-            (self.df["name"] == node.callpath[-1]) & (self.df["nid"] == node.nid)
+        return self.dataframe.loc[
+            (self.dataframe["name"] == node.callpath[-1]) & (self.dataframe["nid"] == node.nid)
         ]
 
     def get_top_by_attr(self, count, sort_attr):
         assert isinstance(count, int) and isinstance(sort_attr, str)
         assert count > 0
 
-        df = self.df.groupby(["name"]).mean()
+        df = self.dataframe.groupby(["name"]).mean()
         df = df.sort_values(by=[sort_attr], ascending=False)
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
 
     def df_update_mapping(self, col_name, mapping):
-        self.df[col_name] = self.df["name"].apply(
-            lambda node: mapping[node] if node in mapping.keys() else ""
+        self.dataframe[col_name] = self.dataframe["name"].apply(
+            lambda _: mapping[_] if _ in mapping.keys() else ""
         )
 
     def df_get_column(self, column, index="name"):
         column = self.df_get_proxy(column)
-        return self.df.set_index(index)[column]
+        return self.dataframe.set_index(index)[column]
 
     # --------------------------------------------------------------------------
     @staticmethod
     def print_information(gf, top_n_callsites=10):
         # Print modules in the call graph.
-        LOGGER.info("Modules: {0}".format(gf.df["module"].unique()))
+        LOGGER.info("Modules: {0}".format(gf.dataframe["module"].unique()))
 
         # Print top "N" callsites by inclusive time.
         LOGGER.info(f"Top {top_n_callsites} Inclusive time: ")
-        rank_df = gf.df.groupby(["name", "nid"]).mean()
+        rank_df = gf.dataframe.groupby(["name", "nid"]).mean()
         top_inclusive_df = rank_df.nlargest(top_n_callsites, "time (inc)", keep="first")
         for name, row in top_inclusive_df.iterrows():
             LOGGER.info("{0} [{1}]".format(name, row["time (inc)"]))
