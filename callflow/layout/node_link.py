@@ -33,7 +33,7 @@ class NodeLinkLayout:
         self.runs = self.supergraph.gf.df["dataset"].unique()
 
         # Put the top callsites into a list.
-        callsites = self.supergraph.gf.get_top_by_attr(callsite_count, "time (inc)")
+        callsites = self.supergraph.gf.df_get_top_by_attr(callsite_count, "time (inc)")
 
         # Filter out the callsites not in the list. (in a LOCAL copy)
         df = self.supergraph.gf.df_filter_by_name(callsites)

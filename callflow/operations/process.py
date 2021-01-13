@@ -111,7 +111,8 @@ class Process:
             metrics_dict = {}
             for node_name in self.gf.dataframe["name"].unique():
 
-                node_df = self.gf.lookup_with_name(node_name)
+                #node_df = self.gf.lookup_with_name(node_name)
+                node_df = self.gf.df_lookup_with_column("name", node_name)
                 node_dfsz = len(node_df.index)
 
                 metrics_dict[node_name] = {}

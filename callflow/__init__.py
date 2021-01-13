@@ -7,7 +7,7 @@
 from .logger import init_logger
 from logging import getLogger as get_logger
 
-from .datastructures.graphframe import GraphFrame
+#from .datastructures.graphframe import GraphFrame
 from .datastructures.supergraph import SuperGraph
 from .datastructures.ensemblegraph import EnsembleGraph
 
@@ -29,7 +29,7 @@ def load_ipython_extension(ipython):
 __all__ = [
     "init_logger",
     "get_logger",
-    "GraphFrame",
+    #"GraphFrame",
     "SuperGraph",
     "EnsembleGraph",
     "CallFlow",
