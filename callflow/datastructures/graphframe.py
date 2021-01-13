@@ -282,9 +282,22 @@ class GraphFrame(ht.GraphFrame):
     def df_get_proxy(self, column):
         return self.proxy_columns.get(column, column)
 
-    def df_add_column(self, column_name, apply_func, apply_on="name"):
-        LOGGER.debug(f'adding new column \"{column_name}\"')
-        self.df[column_name] = self.df[apply_on].apply(apply_func)
+    def df_add_column(self, column_name, value=None, apply_func=None, apply_on="name"):
+
+        assert (value is None) != (apply_func is None)
+        if column_name in self.df.columns:
+            return
+
+        if value is not None:
+            assert isinstance(value, (int, float, str))
+            LOGGER.debug(f'adding new column \"{column_name}\" = \"{value}\"')
+            self.df[column_name] = value
+
+        if apply_func is not None:
+            assert callable(apply_func)
+            assert isinstance(apply_on, str)
+            LOGGER.debug(f'adding new column \"{column_name}\" = {apply_func}')
+            self.df[column_name] = self.df[apply_on].apply(apply_func)
 
     def df_add_time_proxies(self):
         possible_proxies = {
