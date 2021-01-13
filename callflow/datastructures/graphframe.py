@@ -36,6 +36,8 @@ class GraphFrame(ht.GraphFrame):
         if graph:
             self.nxg = self.hatchet_graph_to_nxg(graph)
 
+        self.proxy_columns = {}
+
     # -------------------------------------------------------------------------
     def write(self, path, write_df=True, write_graph=False, write_nxg=True):
         """
@@ -277,13 +279,41 @@ class GraphFrame(ht.GraphFrame):
     def df_columns(self):
         return self.df.columns
 
+    def df_get_proxy(self, column):
+        return self.proxy_columns.get(column, column)
+
+    def df_add_column(self, column_name, apply_func, apply_on="name"):
+        LOGGER.debug(f'adding new column \"{column_name}\"')
+        self.df[column_name] = self.df[apply_on].apply(apply_func)
+
+    def df_add_time_proxies(self):
+        possible_proxies = {
+            "time (inc)": ["inclusive#time.duration"],
+            "time": ["sum#time.duration", "sum#sum#time.duration"],
+        }
+        for key, proxies in possible_proxies.items():
+            if key in self.df.columns:
+                continue
+            for _ in proxies:
+                if _ in self.df.columns:
+                    self.proxy_columns[key] = _
+                    break
+
+            assert key in self.proxy_columns.keys()
+
+        if len(self.proxy_columns) > 0:
+            LOGGER.debug(f'created column proxies: {self.proxy_columns}')
+
     def df_count(self, column):
+        column = self.df_get_proxy(column)
         return len(self.df[column].unique())
 
     def df_minmax(self, column):
+        column = self.df_get_proxy(column)
         return self.df[column].min(), self.df[column].max()
 
     def df_filter_by_value(self, column, filter_val):
+        column = self.df_get_proxy(column)
         df = self.df.loc[self.df[column] > filter_val]
         return df[df["name"].isin(df["name"].unique())]
 
@@ -292,6 +322,7 @@ class GraphFrame(ht.GraphFrame):
         return self.df[self.df["name"].isin(names)]
 
     def df_lookup_with_column(self, column, value):
+        column = self.df_get_proxy(column)
         return self.df.loc[self.df[column] == value]
 
     def lookup_with_name(self, name):
@@ -323,6 +354,7 @@ class GraphFrame(ht.GraphFrame):
         )
 
     def df_get_column(self, column, index="name"):
+        column = self.df_get_proxy(column)
         return self.df.set_index(index)[column]
 
     # --------------------------------------------------------------------------
