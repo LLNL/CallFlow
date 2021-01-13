@@ -20,7 +20,7 @@ class Group(object): #callflow.GraphFrame):
     # TODO: why was gf=None?
     def __init__(self, gf, group_by):
 
-        assert isinstance(gf, callflow.GraphFrame)
+        assert isinstance(gf, callflow.SuperGraph)
         assert isinstance(group_by, str)
         assert group_by in Group.VALID_MODES
 

@@ -109,7 +109,7 @@ class Process:
             column_proxies = [self.gf.df_get_proxy(_) for _ in column_names]
 
             metrics_dict = {}
-            for node_name in self.gf.df["name"].unique():
+            for node_name in self.gf.dataframe["name"].unique():
 
                 node_df = self.gf.lookup_with_name(node_name)
                 node_dfsz = len(node_df.index)
@@ -227,10 +227,10 @@ class Process:
 
         # node_name is different from name in dataframe. So creating a copy of it.
         def add_vis_node_name(self):
-            self.module_group_df = self.gf.df.groupby(["module"])
+            self.module_group_df = self.gf.dataframe.groupby(["module"])
             self.module_callsite_map = self.module_group_df["name"].unique()
 
-            self.name_group_df = self.gf.df.groupby(["name"])
+            self.name_group_df = self.gf.dataframe.groupby(["name"])
             self.callsite_module_map = self.name_group_df["module"].unique().to_dict()
 
             self.gf.df_add_column('vis_node_name',
@@ -294,8 +294,8 @@ class Process:
             return self
 
         def add_nid_column(self):
-            if "nid" not in self.gf.df.columns:
-                self.gf.df["nid"] = self.gf.df.groupby("name")["name"].transform(
+            if "nid" not in self.gf.dataframe.columns:
+                self.gf.df["nid"] = self.gf.dataframe.groupby("name")["name"].transform(
                     lambda x: pd.factorize(x)[0]
                 )
                 assert False
@@ -331,7 +331,7 @@ class Process:
             '''
 
             self.name_module_map = (
-                self.gf.df.groupby(["name"])["module"].unique().to_dict()
+                self.gf.dataframe.groupby(["name"])["module"].unique().to_dict()
             )
 
             return self

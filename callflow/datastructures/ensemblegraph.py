@@ -40,7 +40,7 @@ class EnsembleGraph(SuperGraph):
         else:
             df, nxg = None, None
 
-        super().__init__(name, config=config, mode=mode, df=df, nxg=nxg)
+        super().__init__(name, mode=mode, config=config, dataframe=df, nxg=nxg)
         # ----------------------------------------------------------------------
 
     # --------------------------------------------------------------------------
