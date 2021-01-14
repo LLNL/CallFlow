@@ -49,24 +49,13 @@ class CallFlowServer:
     def _create_server(self):
         """
         Create server's request handler and starts the server.
-        Current version abstracts the requests into 3 categores:
-        General: common requests for both ensemble and single.
-        Single: requests for single dataset processing.
-        Ensemble: requests for ensemble dataset processing.
         """
-
-        # Socket request handlers
-        if len(self.args.config["parameter_props"]["runs"]) > 1:
-            ensemble = True
-
         APIProvider(
-            callflow=self.callflow,
+            cf=self.callflow,
             host=CALLFLOW_APP_HOST,
             port=CALLFLOW_APP_PORT,
-            ensemble=ensemble,
         )
 
-        # Start the server.
         if self.production:
             # TODO: CAL-6-enable-production-server
             pass

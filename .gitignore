@@ -43,11 +43,17 @@ build/
 dist/
 docs/_build
 
-# Jupyter Notebook
+# Jupyter Notebook checkpoints
 .ipynb_checkpoints
 
+# local misc files 
 config_files copy/*
 examples/*
 internals/*
 
+# Ignore Screenshots
 *.png
+
+#  Pycharm IDE files
+.idea/*
+venv/*

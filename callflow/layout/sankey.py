@@ -9,14 +9,10 @@ import numpy as np
 from ast import literal_eval as make_list
 
 # CallFlow imports
-try:
-    import callflow
-    from callflow.timer import Timer
-    from callflow import SuperGraph
+import callflow
+from callflow import SuperGraph
 
-    LOGGER = callflow.get_logger(__name__)
-except Exception:
-    raise Exception("Module callflow not found not found.")
+LOGGER = callflow.get_logger(__name__)
 
 
 class SankeyLayout:
@@ -41,8 +37,8 @@ class SankeyLayout:
     def __init__(
         self,
         supergraph,
-        path="path",
-        reveal_callsites=[],
+        path,
+        reveal_callsites,
         split_entry_module="",
         split_callee_module="",
     ):
@@ -53,9 +49,6 @@ class SankeyLayout:
         # Set the current graph being rendered.
         self.supergraph = supergraph
         self.path = path
-
-        self.timer = Timer()
-
         self.runs = self.supergraph.gf.df["dataset"].unique()
 
         self.reveal_callsites = reveal_callsites
@@ -79,25 +72,21 @@ class SankeyLayout:
             ]
         )
 
-        with self.timer.phase("Construct Graph"):
-            self.nxg = SankeyLayout._create_nxg_from_paths(
-                self.supergraph.gf.df, self.path
-            )
-            self.add_reveal_paths(self.reveal_callsites)
-            if self.split_entry_module != "":
-                self.add_entry_callsite_paths(self.split_entry_module)
-            if self.split_callee_module != "":
-                self.add_exit_callees_paths()
+        self.nxg = SankeyLayout._create_nxg_from_paths(self.supergraph.gf.df, self.path)
+        self.add_reveal_paths(self.reveal_callsites)
+        if self.split_entry_module != "":
+            SankeyLayout.add_entry_callsite_paths(self.split_entry_module)
+        if self.split_callee_module != "":
+            # TODO: Find why the implementation is missing.
+            SankeyLayout.add_exit_callees_paths(self.split_callee_module)
 
-        with self.timer.phase("Add graph attributes"):
-            self._add_node_attributes()
-            self._add_edge_attributes()
-
-        LOGGER.debug(self.timer)
+        self._add_node_attributes()
+        self._add_edge_attributes()
 
     # --------------------------------------------------------------------------
     # Split by reveal callsite.
-    def create_source_targets(self, component_path):
+    @staticmethod
+    def create_source_targets(component_path):
         module = ""
         edges = []
         for idx, callsite in enumerate(component_path):
@@ -124,7 +113,7 @@ class SankeyLayout:
 
         return edges
 
-    def callsitePathInformation(self, callsites):
+    def callsite_path_information(self, callsites):
         paths = []
         for callsite in callsites:
             df = self.primary_group_df.get_group(callsite)
@@ -138,10 +127,10 @@ class SankeyLayout:
         return paths
 
     def add_reveal_paths(self, reveal_callsites):
-        paths = self.callsitePathInformation(reveal_callsites)
+        paths = self.callsite_path_information(reveal_callsites)
 
         for path in paths:
-            component_edges = self.create_source_targets(path["component_path"])
+            component_edges = SankeyLayout.create_source_targets(path["component_path"])
             for idx, edge in enumerate(component_edges):
                 module = edge["module"]
 
@@ -188,7 +177,8 @@ class SankeyLayout:
 
     # --------------------------------------------------------------------------
     # Add callsites based on split by entry function interactions.
-    def module_entry_functions_map(self, graph):
+    @staticmethod
+    def module_entry_functions_map(graph):
         entry_functions = {}
         for edge in graph.edges(data=True):
             attr_dict = edge[2]["attr_dict"]
@@ -199,7 +189,8 @@ class SankeyLayout:
                 entry_functions[edge_tuple[1]].append(edge_attr["target_callsite"])
         return entry_functions
 
-    def create_source_targets_from_group_path(self, path):
+    @staticmethod
+    def create_source_targets_from_group_path(path):
         edges = []
         for idx, callsite in enumerate(path):
             if idx == len(path) - 1:
@@ -216,7 +207,8 @@ class SankeyLayout:
             )
         return edges
 
-    def same_source_edges(self, component_edges, reveal_module):
+    @staticmethod
+    def same_source_edges(component_edges, reveal_module):
         ret = []
         for idx, edge in enumerate(component_edges):
             source = edge["source"]
@@ -225,7 +217,8 @@ class SankeyLayout:
                 ret.append(edge)
         return ret
 
-    def same_target_edges(self, component_edges, reveal_module):
+    @staticmethod
+    def same_target_edges(component_edges, reveal_module):
         ret = []
         for idx, edge in enumerate(component_edges):
             target = edge["target"]
@@ -234,20 +227,21 @@ class SankeyLayout:
                 ret.append(edge)
         return ret
 
-    def add_entry_callsite_paths(self, reveal_module):
-        entry_functions_map = self.module_entry_functions_map(self.nxg)
-        reveal_callsites = entry_functions_map[reveal_module]
+    @staticmethod
+    def add_entry_callsite_paths(self, entry_function):
+        entry_functions_map = SankeyLayout.module_entry_functions_map(self.nxg)
+        reveal_callsites = entry_functions_map[entry_function]
         paths = self.callsitePathInformation(reveal_callsites)
 
         for path in paths:
-            component_edges = self.create_source_targets_from_group_path(
+            component_edges = SankeyLayout.create_source_targets_from_group_path(
                 path["group_path"]
             )
-            source_edges_to_remove = self.same_source_edges(
-                component_edges, reveal_module
+            source_edges_to_remove = SankeyLayout.same_source_edges(
+                component_edges, entry_function
             )
-            target_edges_to_remove = self.same_target_edges(
-                component_edges, reveal_module
+            target_edges_to_remove = SankeyLayout.same_target_edges(
+                component_edges, entry_function
             )
 
             if len(source_edges_to_remove) != 0:
@@ -255,17 +249,20 @@ class SankeyLayout:
                     if self.nxg.has_edge(edge["source"], edge["target"]):
                         self.nxg.remove_edge((edge["source"], edge["target"]))
                     self.nxg.add_node(
-                        reveal_module + "=" + edge["source_callsite"],
+                        entry_function + "=" + edge["source_callsite"],
                         attr_dict={"type": "component-node"},
                     )
                     self.nxg.add_edge(
-                        (reveal_module + "=" + edge["source_callsite"], edge["target"]),
+                        (
+                            entry_function + "=" + edge["source_callsite"],
+                            edge["target"],
+                        ),
                         attr_dict=[
                             {
                                 "source_callsite": edge["source_callsite"],
                                 "target_callsite": edge["target_callsite"],
                                 "weight": self.module_name_group_df.get_group(
-                                    (reveal_module, edge["source_callsite"])
+                                    (entry_function, edge["source_callsite"])
                                 )["time (inc)"].max(),
                                 "edge_type": "reveal_edge",
                             }
@@ -277,12 +274,12 @@ class SankeyLayout:
                     if self.nxg.has_edge(edge["source"], edge["target"]):
                         self.nxg.remove_edge(edge["source"], edge["target"])
                     self.nxg.add_node(
-                        reveal_module + "=" + edge["target_callsite"],
+                        entry_function + "=" + edge["target_callsite"],
                         attr_dict={"type": "component-node"},
                     )
                     self.nxg.add_edge(
                         edge["source"],
-                        reveal_module + "=" + edge["target_callsite"],
+                        entry_function + "=" + edge["target_callsite"],
                         attr_dict=[
                             {
                                 "source_callsite": edge["source_callsite"],
@@ -295,7 +292,11 @@ class SankeyLayout:
                         ],
                     )
 
-        self.nxg.remove_node(reveal_module)
+        self.nxg.remove_node(entry_function)
+
+    # TODO: This function was missing in implementation.
+    def add_exit_callee_paths(self, callee):
+        pass
 
     # --------------------------------------------------------------------------
     # Node attribute methods.
@@ -373,7 +374,8 @@ class SankeyLayout:
     def _create_nxg_from_paths(df, path):
         """
         Construct a networkx graph from paths.
-        Note: Current logic constructs two graphs (one for cct, and one for supergraph) and later uses them to construct a module level supergraph.
+        Note: Current logic constructs two graphs (one for cct, and one for supergraph)
+        and later uses them to construct a module level supergraph.
         """
         assert isinstance(df, pd.DataFrame)
         assert path in df.columns
@@ -393,7 +395,7 @@ class SankeyLayout:
             path_list = SankeyLayout._break_cycles_in_paths(path)
 
             # loop through the path lists for each callsite.
-            for callsite_idx, callsite in enumerate(path_list):
+            for callsite_idx, callsite2 in enumerate(path_list):
                 if callsite_idx != len(path_list) - 1:
                     source = path_list[callsite_idx]
                     target = path_list[callsite_idx + 1]
@@ -437,8 +439,9 @@ class SankeyLayout:
                         nxg.add_node(source["module"], attr_dict=node_dict)
                         nxg.add_node(target["module"], attr_dict=node_dict)
                         nxg.add_edge(
-                            source["module"], target["module"], attr_dict=[edge_dict]
+                            source["module"], target["module"], attr_dict=edge_dict
                         )
+                        print(source, target)
 
                     # Edge exists for source["module"] -> target["module"]
                     elif not has_cct_edge and not has_callback_edge:
@@ -467,11 +470,9 @@ class SankeyLayout:
         Parameter:
             path: path array
         """
-        from ast import literal_eval as make_list
-
         ret = []
-        moduleMapper = {}
-        dataMap = {}
+        module_mapper = {}
+        data_mapper = {}
 
         # TODO: see if we can remove this.
         if isinstance(path, float):
@@ -482,16 +483,16 @@ class SankeyLayout:
         for idx, elem in enumerate(path_list):
             callsite = elem.split("=")[1]
             module = elem.split("=")[0]
-            if module not in dataMap:
-                moduleMapper[module] = 0
-                dataMap[module] = [
+            if module not in data_mapper:
+                module_mapper[module] = 0
+                data_mapper[module] = [
                     {"callsite": callsite, "module": module, "level": idx}
                 ]
             else:
-                flag = [p["level"] == idx for p in dataMap[module]]
+                flag = [p["level"] == idx for p in data_mapper[module]]
                 if np.any(np.array(flag)):
-                    moduleMapper[module] += 1
-                    dataMap[module].append(
+                    module_mapper[module] += 1
+                    data_mapper[module].append(
                         {
                             "callsite": callsite,
                             "module": module + "=" + callsite,
@@ -499,15 +500,15 @@ class SankeyLayout:
                         }
                     )
                 else:
-                    dataMap[module].append(
+                    data_mapper[module].append(
                         {"callsite": callsite, "module": module, "level": idx}
                     )
-            ret.append(dataMap[module][-1])
+            ret.append(data_mapper[module][-1])
 
         return ret
 
     @staticmethod
-    def _ensemble_map(df, nxg, columns=[]):
+    def _ensemble_map(df, nxg, columns):
         """
         Creates maps for all columns for the ensemble data.
         Note: For single supergraph, ensemble_map would be the same as dataset_map[single_run.tag].
@@ -530,9 +531,7 @@ class SankeyLayout:
 
         # loop through the nodes
         for node in nxg.nodes(data=True):
-            node_name = node[0]
-            node_dict = node[1]["attr_dict"]
-
+            node_name, node_dict = SankeyLayout.nx_deconstruct_node(node)
             if node_dict["type"] == "component-node":
                 module = node_name.split("=")[0]
                 callsite = node_name.split("=")[1]
@@ -579,7 +578,7 @@ class SankeyLayout:
         return ret
 
     @staticmethod
-    def _dataset_map(df, nxg, columns=[], tag=""):
+    def _dataset_map(df, nxg, columns, tag=""):
         """
         Creates maps for all node attributes (i.e., columns in df) for each dataset.
         """
@@ -616,8 +615,7 @@ class SankeyLayout:
         target_name_time_exc_map = target_module_name_group_df["time"].max().to_dict()
 
         for node in nxg.nodes(data=True):
-            node_name = node[0]
-            node_dict = node[1]["attr_dict"]
+            node_name, node_dict = SankeyLayout.nx_deconstruct_node(node)
             if node_name in target_module_callsite_map.keys():
                 if node_dict["type"] == "component-node":
                     module = node_name.split("=")[0]
@@ -688,7 +686,8 @@ class SankeyLayout:
         """
         ret = {}
         for edge in nxg.edges(data=True):
-            ret[(edge[0], edge[1])] = edge[2]["attr_dict"][0]["edge_type"]
+            edge_tuple, edge_dict = SankeyLayout.nx_deconstruct_edge(edge)
+            ret[edge_tuple] = edge_dict["edge_type"]
         return ret
 
     @staticmethod
@@ -698,28 +697,14 @@ class SankeyLayout:
         """
         flow_mapping = {}
         for edge in nxg.edges(data=True):
-            if (edge[0], edge[1]) not in flow_mapping:
-                flow_mapping[(edge[0], edge[1])] = 0
+            # edge here is (source, target) tuple.
+            edge_tuple, edge_dict = SankeyLayout.nx_deconstruct_edge(edge)
 
-            attr_dict = edge[2]["attr_dict"]
-            for d in attr_dict:
-                flow_mapping[(edge[0], edge[1])] += d["weight"]
-
-        ret = {}
-        for edge in nxg.edges(data=True):
-            edge_tuple = (edge[0], edge[1])
             if edge_tuple not in flow_mapping:
-                # Check if it s a reveal edge
-                attr_dict = edge[2]["attr_dict"]
-                if attr_dict["edge_type"] == "reveal_edge":
-                    flow_mapping[edge_tuple] = attr_dict["weight"]
-                    ret[edge_tuple] = flow_mapping[edge_tuple]
-                else:
-                    ret[edge_tuple] = 0
-            else:
-                ret[edge_tuple] = flow_mapping[edge_tuple]
+                flow_mapping[edge_tuple] = 0
 
-        return ret
+            flow_mapping[edge_tuple] += edge_dict["weight"]
+        return flow_mapping
 
     @staticmethod
     def entry_functions(nxg):
@@ -728,12 +713,10 @@ class SankeyLayout:
         """
         entry_functions = {}
         for edge in nxg.edges(data=True):
-            attr_dict = edge[2]["attr_dict"]
-            edge_tuple = (edge[0], edge[1])
-            for edge_attr in attr_dict:
-                if edge_tuple not in entry_functions:
-                    entry_functions[edge_tuple] = []
-                entry_functions[edge_tuple].append(edge_attr["target_callsite"])
+            edge_tuple, edge_dict = SankeyLayout.nx_deconstruct_edge(edge)
+            if edge_tuple not in entry_functions:
+                entry_functions[edge_tuple] = []
+            entry_functions[edge_tuple].append(edge_dict["target_callsite"])
         return entry_functions
 
     @staticmethod
@@ -743,10 +726,17 @@ class SankeyLayout:
         """
         exit_functions = {}
         for edge in nxg.edges(data=True):
-            attr_dict = edge[2]["attr_dict"]
-            edge_tuple = (edge[0], edge[1])
-            for edge_attr in attr_dict:
-                if edge_tuple not in exit_functions:
-                    exit_functions[edge_tuple] = []
-                exit_functions[edge_tuple].append(edge_attr["source_callsite"])
+            edge_tuple, edge_dict = SankeyLayout.nx_deconstruct_edge(edge)
+            if edge_tuple not in exit_functions:
+                exit_functions[edge_tuple] = []
+            exit_functions[edge_tuple].append(edge_dict["source_callsite"])
         return exit_functions
+
+    # TODO: Find a better place for this to reside.
+    @staticmethod
+    def nx_deconstruct_node(node):
+        return node[0], node[1]["attr_dict"]
+
+    @staticmethod
+    def nx_deconstruct_edge(edge):
+        return (edge[0], edge[1]), edge[2]["attr_dict"]
