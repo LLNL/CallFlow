@@ -26,7 +26,7 @@ except ImportError:
     html_escape = cgi.escape
     del cgi
 
-from callflow.operations import ArgParser
+from callflow.utils.argparser import ArgParser
 from . import manager
 
 

@@ -6,6 +6,5 @@
 from .process import Process
 from .group import Group
 from .filter import Filter
-from .argparser import ArgParser
 
-__all__ = ["Process", "Group", "Filter", "ArgParser"]
+__all__ = ["Process", "Group", "Filter"]

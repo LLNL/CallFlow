@@ -112,7 +112,7 @@ class ArgParser:
             _config_filename = os.path.join(self.config["save_path"], "config.json")
             write_config(self.config, _config_filename)
 
-        LOGGER.info(f"CallFlow instantiation configuration: {self.config}")
+        LOGGER.debug(f"CallFlow instantiation configuration: {self.config}")
 
     def __str__(self):
         items = ("%s = %r" % (k, v) for k, v in self.__dict__.items())
