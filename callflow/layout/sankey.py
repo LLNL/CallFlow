@@ -292,7 +292,7 @@ class SankeyLayout:
                         ],
                     )
 
-        self.nxg.remove_node(reveal_module)
+        self.nxg.remove_node(entry_function)
 
     # TODO: This function was missing in implementation.
     def add_exit_callee_paths(self, callee):

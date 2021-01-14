@@ -28,6 +28,10 @@ app.config["CORS_HEADERS"] = "Content-Type"
 class APIProvider:
     """
     APIProvider class handles the incoming RESTFul requests for CallFlow.
+    It abstracts the requests into 3 categores:
+        General: common requests for both ensemble and single.
+        Single: requests for single dataset processing.
+        Ensemble: requests for ensemble dataset processing.
     """
 
     def __init__(self, cf: callflow.CallFlow, host: str, port: int) -> None:
