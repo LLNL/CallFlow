@@ -27,15 +27,15 @@ app.config["CORS_HEADERS"] = "Content-Type"
 
 class APIProvider:
     """
-    APIProvider class 
+    APIProvider class handles the incoming RESTFul requests for CallFlow. 
     """
     def __init__(
-        self, callflow: callflow.CallFlow, host: str, port: str, ensemble: bool
+        self, cf: callflow.CallFlow, host: str, port: str
     ) -> None:
-        self.callflow = callflow
-        self._handle_general()
-        self._handle_single()
-        self._handle_ensemble()
+        self.cf = cf
+        self.handle_general()
+        self.handle_single()
+        self.handle_ensemble()
 
         LOGGER.info("Starting the API service")
         app.run(host=host, port=port, threaded=True)
@@ -56,7 +56,7 @@ class APIProvider:
             warnings.warn(f"[API: {endpoint}] emits no data.")
             return jsonify(isError=True, message="Error", statusCode=500)
 
-    def _handle_general(self):
+    def handle_general(self):
         """
         General API requests
         """
@@ -69,14 +69,14 @@ class APIProvider:
         @app.route("/init", methods=["GET"])
         @cross_origin()
         def init():
-            result = self.callflow.request_general({"name": "init"})
+            result = self.cf.request_general({"name": "init"})
             return APIProvider.emit_json("init", result)
 
         @app.route("/supergraph_data", methods=["POST"])
         @cross_origin()
         def supergraph_data():
             data = request.json
-            result = self.callflow.request_general(
+            result = self.cf.request_general(
                 {
                     "name": "supergraph_data",
                     **data,
@@ -84,7 +84,7 @@ class APIProvider:
             )
             return APIProvider.emit_json("supergraph_data", result)
 
-    def _handle_single(self):
+    def handle_single(self):
         """
         Single CallFlow API requests
         """
@@ -93,7 +93,7 @@ class APIProvider:
         @cross_origin()
         def single_supergraph():
             data = request.json
-            nxg = self.callflow.request_single({"name": "supergraph", **data})
+            nxg = self.cf.request_single({"name": "supergraph", **data})
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("single_supergraph", result)
 
@@ -101,7 +101,7 @@ class APIProvider:
         @cross_origin()
         def single_cct():
             data = request.json
-            nxg = self.callflow.request_single({"name": "cct", **data})
+            nxg = self.cf.request_single({"name": "cct", **data})
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("single_cct", result)
 
@@ -109,7 +109,7 @@ class APIProvider:
         @cross_origin()
         def split_mpi_distribution():
             data = request.json
-            result = self.callflow.request_single(
+            result = self.cf.request_single(
                 {
                     "name": "split_mpi_distribution",
                     **data,
@@ -117,7 +117,7 @@ class APIProvider:
             )
             return APIProvider.emit_json("split_mpi_distribution", result)
 
-    def _handle_ensemble(self):
+    def handle_ensemble(self):
         """
         Ensemble CallFlow API requests
         """
@@ -126,7 +126,7 @@ class APIProvider:
         @cross_origin()
         def ensemble_supergraph():
             data = request.json
-            nxg = self.callflow.request_ensemble({"name": "supergraph", **data})
+            nxg = self.cf.request_ensemble({"name": "supergraph", **data})
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("ensemble_supergraph", result)
 
@@ -134,7 +134,7 @@ class APIProvider:
         @cross_origin()
         def ensemble_cct():
             data = request.json
-            nxg = self.callflow.request_ensemble({"name": "ensemble_cct", **data})
+            nxg = self.cf.request_ensemble({"name": "ensemble_cct", **data})
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("ensemble_cct", result)
 
@@ -142,14 +142,14 @@ class APIProvider:
         @cross_origin()
         def similarity():
             data = request.json
-            result = self.callflow.request_ensemble({"name": "similarity", **data})
+            result = self.cf.request_ensemble({"name": "similarity", **data})
             return APIProvider.emit_json("similarity", result)
 
         @app.route("/module_hierarchy", methods=["POST"])
         @cross_origin()
         def module_hierarchy():
             data = request.json
-            nxg = self.callflow.request_ensemble({"name": "module_hierarchy", **data})
+            nxg = self.cf.request_ensemble({"name": "module_hierarchy", **data})
             result = json_graph.tree_data(nxg, root=data["module"])
             return APIProvider.emit_json("module_hierarchy", result)
 
@@ -157,12 +157,12 @@ class APIProvider:
         @cross_origin()
         def parameter_projection():
             data = request.json
-            result = self.callflow.request_ensemble({"name": "projection", **data})
+            result = self.cf.request_ensemble({"name": "projection", **data})
             return APIProvider.emit_json("projection", result)
 
         @app.route("/compare", methods=["POST"])
         @cross_origin()
         def compare():
             data = request.json
-            result = self.callflow.request_ensemble({"name": "compare", **data})
+            result = self.cf.request_ensemble({"name": "compare", **data})
             return APIProvider.emit_json("compare", result)

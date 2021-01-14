@@ -7,7 +7,9 @@
 
 class APIService {
 	/**
-     * A
+     * API service for CallFlow.
+	 * Two kinds of requests are supported, GET and POST.
+	 * fetch API is being used to trigger the requests.
      */
 	constructor() {
 		this.url = "http://localhost:5000/"; // For local
@@ -38,7 +40,7 @@ class APIService {
 	}
   
 	/**
-	 * Send a POST request to the firestore.
+	 * Send a POST request to the server.
 	 * @param {String} endpoint 
 	 * @param {JSON} jsonBody 
 	 * @return {Promise<JSON>} response
@@ -70,7 +72,7 @@ class APIService {
 	}
 
 	/**
-	 * Send a GET request to the firestore.
+	 * Send a GET request to the server.
 	 * @param {String} endpoint 
 	 * @param {String} requestType 
 	 * @param {JSON} headers 
