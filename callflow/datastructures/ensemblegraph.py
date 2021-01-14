@@ -20,32 +20,29 @@ class EnsembleGraph(SuperGraph):
     """
 
     # --------------------------------------------------------------------------
-    def __init__(self, name, mode, config, supergraphs = {}):
-        """
-        Arguments:
-            supergraphs (dict): dictionary of supergraphs keyed by their name.
-        """
-        assert isinstance(name, str) and isinstance(mode, str)
-        assert name == 'ensemble' and mode in ["process", "render"]
-        assert isinstance(config, dict)
-        assert isinstance(supergraphs, dict)
+    def __init__(self, name, config):
+
+        super().__init__(name, config)
+        assert name == 'ensemble'
+        self.supergraphs = {}
+
+    def unify(self, supergraphs):
 
         n = len(supergraphs)
-        assert (mode == "process") == (n > 0)
-
         self.supergraphs = supergraphs
-        if mode == "process":
-            LOGGER.info(f'Creating EnsembleGraph for {n} SuperGraphs')
-            if n == 1:
-                LOGGER.warning('Creating an ensemble requires 2 or more SuperGraphs')
+        LOGGER.info(f'Creating EnsembleGraph {self.name} for {n} SuperGraphs')
+        if n == 1:
+            LOGGER.warning('Creating an ensemble requires 2 or more SuperGraphs')
 
-            df = self.unify_df()
-            nxg = self.unify_nxg()
-        else:
-            df, nxg = None, None
+        self.dataframe = self.unify_df()
+        self.nxg = self.unify_nxg()
+        self.graph = None
 
-        super().__init__(name, mode=mode, config=config, dataframe=df, nxg=nxg)
-        # ----------------------------------------------------------------------
+        self.exc_metrics = []
+        self.inc_metrics = []
+
+        self.df_add_time_proxies()
+        self.df_reset_index()
 
     # --------------------------------------------------------------------------
     '''
