@@ -702,21 +702,6 @@ class SankeyLayout:
                 flow_mapping[(edge[0], edge[1])] = 0
 
             flow_mapping[(edge[0], edge[1])] += edge[2]["weight"]
-
-        # ret = {}
-        # for edge in nxg.edges(data=True):
-        #     edge_tuple = (edge[0], edge[1])
-        #     if edge_tuple not in flow_mapping:
-        #         # Check if it s a reveal edge
-        #         attr_dict = edge[2]["attr_dict"]
-        #         if attr_dict["edge_type"] == "reveal_edge":
-        #             flow_mapping[edge_tuple] = attr_dict["weight"]
-        #             ret[edge_tuple] = flow_mapping[edge_tuple]
-        #         else:
-        #             ret[edge_tuple] = 0
-        #     else:
-        #         ret[edge_tuple] = flow_mapping[edge_tuple]
-
         return flow_mapping
 
     @staticmethod

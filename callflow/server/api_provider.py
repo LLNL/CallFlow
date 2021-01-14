@@ -10,16 +10,15 @@ from flask import Flask, request, json, jsonify
 from flask_cors import CORS, cross_origin
 from networkx.readwrite import json_graph
 
-
 # CallFlow imports
 import callflow
 
+# Globals
 STATIC_FOLDER_PATH = os.path.abspath("app/dist/")
+LOGGER = callflow.get_logger(__name__)
 
 # Create a Flask server.
 app = Flask(__name__, static_url_path="", static_folder=STATIC_FOLDER_PATH)
-
-LOGGER = callflow.get_logger(__name__)
 
 # Enable CORS
 cors = CORS(app)
@@ -27,8 +26,9 @@ app.config["CORS_HEADERS"] = "Content-Type"
 
 
 class APIProvider:
-    """"""
-
+    """
+    APIProvider class 
+    """
     def __init__(
         self, callflow: callflow.CallFlow, host: str, port: str, ensemble: bool
     ) -> None:
@@ -55,7 +55,7 @@ class APIProvider:
             return response
         except ValueError:
             warnings.warn(f"[API: {endpoint}] emits no data.")
-            return jsonify(isError=True, message="Error", statusCode=500, data={"a": 1})
+            return jsonify(isError=True, message="Error", statusCode=500)
 
     def _handle_general(self):
         """
@@ -103,7 +103,6 @@ class APIProvider:
         def single_cct():
             data = request.json
             nxg = self.callflow.request_single({"name": "cct", **data})
-            print(nxg)
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("single_cct", result)
 

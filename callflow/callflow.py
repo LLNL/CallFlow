@@ -20,7 +20,7 @@ LOGGER = callflow.get_logger(__name__)
 class CallFlow:
     def __init__(self, config: dict = None, data_dir: str = None):
         """
-        Entry interface to access CallFlow's functionalities. "
+        Entry interface to access CallFlow's functionalities.
         """
 
         # Assert if config is provided.

@@ -70,7 +70,7 @@ export default {
 		 * Parameters: {datasetPath: "path/to/dataset"}
 		*/ 
 		async fetchData() {
-			this.data = await APIService.POSTRequest("init", {"dataset_path": ""});
+			this.data = await APIService.GETRequest("init");
 			this.runs = Object.keys(this.data.parameter_props.data_path);
 			this.runCounts = this.runs.length;
 			this.runtime_props = this.data.runtime_props;

@@ -158,8 +158,8 @@ export default function Sankey() {
 				nodeMap[link.target] = idx;
 				idx += 1;
 			}
-			link.source_data = nodeMap[link.source];
-			link.target_data = nodeMap[link.target];
+			link.source_data = nodeMap[link.source_callsite];
+			link.target_data = nodeMap[link.target_callsite];
 		});
 	}
 
