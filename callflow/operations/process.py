@@ -9,8 +9,8 @@ import pandas as pd
 from scipy.stats import kurtosis, skew
 
 import callflow
-import callflow.utils
-from callflow.sanitizer import Sanitizer
+from callflow.utils.utils import path_list_from_frames
+from callflow.utils.sanitizer import Sanitizer
 LOGGER = callflow.get_logger(__name__)
 
 
@@ -89,7 +89,7 @@ class Process:
                                 f"graph contains: {df_node_count} nodes" )
 
             self.gf.df_add_column('path',
-                                  apply_func=lambda _: callflow.utils.path_list_from_frames(self.paths[_]))
+                                  apply_func=lambda _: path_list_from_frames(self.paths[_]))
             '''
             self.raiseExceptionIfNodeCountNotEqual(self.paths)
             self.gf.df["path"] = self.gf.df["name"].apply(

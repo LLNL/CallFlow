@@ -11,13 +11,12 @@ import hatchet as ht
 import networkx as nx
 from ast import literal_eval as make_list
 
-
 from callflow import get_logger
-from callflow.sanitizer import Sanitizer
+from callflow.utils.sanitizer import Sanitizer
+from callflow.operations import Process, Group, Filter
 #from .graphframe import GraphFrame
 #from callflow.timer import Timer
 #from callflow.algorithms import DeltaConSimilarity
-from callflow.operations import Process, Group, Filter
 #from callflow.modules import EnsembleAuxiliary, SingleAuxiliary
 LOGGER = get_logger(__name__)
 
@@ -57,15 +56,17 @@ class SuperGraph(ht.GraphFrame):
         # self.timer = Timer()
 
         # ----------------------------------------------------------------------
-        LOGGER.info(f'###################### Creating SuperGraph ({self.name})')
+        log_str = f"##### Creating SuperGraph ({name})"
 
         # render mode simply reads the data
         if mode == "render":
             assert (dataframe is None) and (nxg is None)
+            LOGGER.info(log_str + f" from ({self.dir_path})")
             self.read(self.dir_path)
 
         # copy over the dataframe and nxg (used for creating ensemble)
         elif dataframe is not None and nxg is not None:
+            LOGGER.info(log_str + " from given dataframe and graph")
             self.graph = None
             self.dataframe = dataframe
             self.nxg = nxg
@@ -74,12 +75,17 @@ class SuperGraph(ht.GraphFrame):
 
         # otherwise, need to create from config
         elif mode == "process":
-            gf = SuperGraph.from_config(self.name, self.config)
+
+            profile_format = self.config["parameter_props"]["profile_format"][self.name]
+            data_path = self.config["parameter_props"]["data_path"][self.name]
+            data_path = os.path.join(self.config["data_path"], data_path)
+            LOGGER.info(log_str + f" from ({data_path}) using ({profile_format}) format")
+
+            gf = SuperGraph.from_config(data_path, profile_format)
             assert isinstance(gf, ht.GraphFrame)
             assert gf.graph is not None
             super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics)
 
-            profile_format = self.config["parameter_props"]["profile_format"][name]
             self.sanitizer = Sanitizer(profile_format)
             self.nxg = self.hatchet_graph_to_nxg(self.graph, self.sanitizer)
 
@@ -103,24 +109,29 @@ class SuperGraph(ht.GraphFrame):
     # --------------------------------------------------------------------------
     @staticmethod
     def write_df(path, df):
-        df.to_csv(os.path.join(path, SuperGraph._FILENAMES["df"]))
+        fname = os.path.join(path, SuperGraph._FILENAMES["df"])
+        LOGGER.debug(f"Writing ({fname})")
+        df.to_csv(fname)
 
     @staticmethod
     def write_nxg(path, nxg):
-        nxg_json = nx.readwrite.json_graph.node_link_data(nxg)
         fname = os.path.join(os.path.join(path, SuperGraph._FILENAMES["nxg"]))
+        LOGGER.debug(f"Writing ({fname})")
+        nxg_json = nx.readwrite.json_graph.node_link_data(nxg)
         with open(fname, "w") as fptr:
             json.dump(nxg_json, fptr, indent=2)
 
     @staticmethod
     def write_graph(path, graph_str):
         fname = os.path.join(os.path.join(path, SuperGraph._FILENAMES["ht"]))
+        LOGGER.debug(f"Writing ({fname})")
         with open(fname, "w") as fptr:
             fptr.write(graph_str)
 
     @staticmethod
     def read_df(path):
         fname = os.path.join(path, SuperGraph._FILENAMES["df"])
+        LOGGER.debug(f"Reading ({fname})")
         df = pd.read_csv(fname)
         if df is None or df.empty:
             raise ValueError(f"Did not find a valid dataframe in ({fname}).")
@@ -129,6 +140,7 @@ class SuperGraph(ht.GraphFrame):
     @staticmethod
     def read_nxg(path):
         fname = os.path.join(path, SuperGraph._FILENAMES["nxg"])
+        LOGGER.debug(f"Reading ({fname})")
         with open(fname, "r") as nxg_file:
             graph = json.load(nxg_file)
             nxg = nx.readwrite.json_graph.node_link_graph(graph)
@@ -139,6 +151,7 @@ class SuperGraph(ht.GraphFrame):
     @staticmethod
     def read_graph(path):
         fname = os.path.join(path, SuperGraph._FILENAMES["ht"])
+        LOGGER.debug(f"Reading ({fname})")
         with open(fname, "r") as graph_file:
             graph = json.load(graph_file)
         if not isinstance(graph, ht.GraphFrame.Graph):
@@ -150,7 +163,7 @@ class SuperGraph(ht.GraphFrame):
         data = {}
         try:
             fname = os.path.join(path, SuperGraph._FILENAMES["params"])
-            LOGGER.info(f"[Read] {fname}")
+            LOGGER.debug(f"Reading ({fname})")
             for line in open(fname, "r"):
                 for num in line.strip().split(","):
                     split_num = num.split("=")
@@ -166,7 +179,7 @@ class SuperGraph(ht.GraphFrame):
         data = {}
         try:
             fname = os.path.join(path, SuperGraph._FILENAMES["aux"])
-            LOGGER.info(f"[Read] {fname}")
+            LOGGER.debug(f"Reading ({fname})")
             with open(fname, "r") as fptr:
                 data = json.load(fptr)
         except Exception as e:
@@ -202,8 +215,6 @@ class SuperGraph(ht.GraphFrame):
         if path is None:
             path = self.dir_path
 
-        LOGGER.info(f"Reading SuperGraph from ({path})")
-
         self.dataframe = None
         self.nxg = None
         self.graph = None
@@ -226,15 +237,7 @@ class SuperGraph(ht.GraphFrame):
     # -------------------------------------------------------------------------
     # create a graph frame directly from the config
     @staticmethod
-    def from_config(name, config):
-        """
-        Uses config file to create a graphframe.
-        """
-        profile_format = config["parameter_props"]["profile_format"][name]
-        data_path = config["parameter_props"]["data_path"][name]
-        data_path = os.path.join(config["data_path"], data_path)
-
-        LOGGER.info(f"Creating SuperGraph ({name}) from ({data_path}) using ({profile_format}) format")
+    def from_config(data_path, profile_format):
 
         if profile_format not in SuperGraph._FORMATS:
             raise ValueError(f"Invalid profile format: {profile_format}")
