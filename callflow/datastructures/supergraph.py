@@ -80,8 +80,6 @@ class SuperGraph(ht.GraphFrame):
 
         # Hatchet requires node and rank to be indexes.
         # remove the set indexes to maintain consistency.
-        # self.dataframe = self.dataframe.set_index(['node', 'rank'])
-        # self.dataframe = self.dataframe.reset_index(drop=False)
         self.df_reset_index()
         # ----------------------------------------------------------------------
 
@@ -214,24 +212,6 @@ class SuperGraph(ht.GraphFrame):
         column = self.df_get_proxy(column)
         return self.dataframe.loc[self.dataframe[column] == value]
 
-    # HB removed the use of this function
-    #def lookup_with_name(self, name):
-    #    return self.df_lookup_with_column("name", name)
-
-    # HB didnt find any use of this function
-    #def lookup_with_node_name(self, node):
-    #    return self.df_lookup_with_column("name", node.callpath[-1])
-
-    # HB didnt find any use of this function
-    #def lookup_with_vis_node_name(self, name):
-    #    return self.df_lookup_with_column("vis_node_name", name)
-
-    # HB didnt find any use of this function
-    #def lookup(self, node):
-    #    return self.dataframe.loc[
-    #        (self.dataframe["name"] == node.callpath[-1]) & (self.dataframe["nid"] == node.nid)
-    #        ]
-
     def df_get_top_by_attr(self, count, sort_attr):
         assert isinstance(count, int) and isinstance(sort_attr, str)
         assert count > 0
@@ -272,31 +252,13 @@ class SuperGraph(ht.GraphFrame):
         """
         assert isinstance(ht_graph, ht.graph.Graph)
 
-        '''
-        from callflow.utils import sanitize_name, node_dict_from_frame
-
-        def _get_node_name(nd):
-            nm = sanitize_name(nd["name"])
-            if nd.get("line") != "NA" and nd.get("line") is not None:
-                nm += ":" + str(nd.get("line"))
-            return nm
-        '''
-
-        # `node_dict_from_frame` converts the hatchet's frame to a dictionary
         nxg = nx.DiGraph()
         for root in ht_graph.roots:
             node_gen = root.traverse()
-
-            # root_dict = node_dict_from_frame(root.frame)
-            # root_name = root_dict["name"]
-            # root_paths = root.paths()
             node = root
 
             try:
                 while node:
-
-                    # node_dict = node_dict_from_frame(node.frame)
-                    # node_name = node_dict["name"]
 
                     # Get all node paths from hatchet.
                     node_paths = node.paths()
@@ -304,18 +266,9 @@ class SuperGraph(ht.GraphFrame):
                     # Loop through all the node paths.
                     for node_path in node_paths:
                         if len(node_path) >= 2:
-                            '''
-                            src_node = sanitizer.node_dict_from_frame(node_path[-2])
-                            trg_node = sanitizer.node_dict_from_frame(node_path[-1])
-
-                            src_name = sanitizer.get_node_name(src_node)
-                            trg_name = sanitizer.get_node_name(trg_node)
-                            '''
                             src_name = Sanitizer.from_htframe(node_path[-2])
                             trg_name = Sanitizer.from_htframe(node_path[-1])
-
                             nxg.add_edge(src_name, trg_name)
-
                     node = next(node_gen)
 
             except StopIteration:
@@ -325,49 +278,6 @@ class SuperGraph(ht.GraphFrame):
 
         return nxg
 
-    '''
-    # --------------------------------------------------------------------------
-    # callflow.nxg utilities.
-    # --------------------------------------------------------------------------
-    @staticmethod
-    def notused_add_prefix(graph, prefix):
-        """
-        Rename graph to obtain disjoint node labels
-        """
-        assert isinstance(graph, nx.DiGraph)
-        if prefix is None:
-            return graph
-
-        def label(x):
-            if isinstance(x, str):
-                name = prefix + x
-            else:
-                name = prefix + repr(x)
-            return name
-
-        return nx.relabel_nodes(graph, label)
-
-    @staticmethod
-    def notused_tailhead(edge):
-        return (edge[0], edge[1])
-
-    @staticmethod
-    def notused_tailheadDir(edge, edge_direction):
-        return (str(edge[0]), str(edge[1]), edge_direction[edge])
-
-    @staticmethod
-    def notused_leaves_below(nxg, node):
-        assert isinstance(nxg, nx.DiGraph)
-        return set(
-            sum(
-                (
-                    [vv for vv in v if nxg.out_degree(vv) == 0]
-                    for k, v in nx.dfs_successors(nxg, node).items()
-                ),
-                [],
-            )
-        )
-    '''
     # --------------------------------------------------------------------------
     # static read/write functionality
     # --------------------------------------------------------------------------

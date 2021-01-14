@@ -112,6 +112,7 @@ def byteify(data, ignore_dicts=False):
     return data
 
 '''
+# commenting due to import issues.
 def dfs(gf: callflow.SuperGraph, limit: int):
     """
     Depth first search for debugging purposes.
@@ -260,3 +261,49 @@ def is_valid_json(data: any) -> bool:
         LOGGER.error(err)
         return False
     return True
+
+
+
+'''
+    # --------------------------------------------------------------------------
+    # callflow.nxg utilities.
+    # --------------------------------------------------------------------------
+    @staticmethod
+    def notused_add_prefix(graph, prefix):
+        """
+        Rename graph to obtain disjoint node labels
+        """
+        assert isinstance(graph, nx.DiGraph)
+        if prefix is None:
+            return graph
+
+        def label(x):
+            if isinstance(x, str):
+                name = prefix + x
+            else:
+                name = prefix + repr(x)
+            return name
+
+        return nx.relabel_nodes(graph, label)
+
+    @staticmethod
+    def notused_tailhead(edge):
+        return (edge[0], edge[1])
+
+    @staticmethod
+    def notused_tailheadDir(edge, edge_direction):
+        return (str(edge[0]), str(edge[1]), edge_direction[edge])
+
+    @staticmethod
+    def notused_leaves_below(nxg, node):
+        assert isinstance(nxg, nx.DiGraph)
+        return set(
+            sum(
+                (
+                    [vv for vv in v if nxg.out_degree(vv) == 0]
+                    for k, v in nx.dfs_successors(nxg, node).items()
+                ),
+                [],
+            )
+        )
+    '''

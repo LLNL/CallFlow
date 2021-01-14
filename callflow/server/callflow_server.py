@@ -49,9 +49,6 @@ class CallFlowServer:
             self.callflow.process()
         else:
             self.callflow.load()
-
-        # Create server if not processing.
-        if not self.process:
             self._create_server()
 
     def _create_server(self):
