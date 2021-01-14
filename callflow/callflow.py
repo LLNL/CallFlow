@@ -51,14 +51,14 @@ class CallFlow:
         # create supergraphs for all runs
         for dataset_name in self.config["parameter_props"]["runs"]:
             self.supergraphs[dataset_name] = SuperGraph(dataset_name,
-                                                        config=self.config,
-                                                        mode="render")
+                                                        mode="render",
+                                                        config=self.config)
 
         # ensemble case
         if self.ndatasets > 1:
             self.supergraphs["ensemble"] = EnsembleGraph("ensemble",
-                                                         config=self.config,
-                                                         mode="render")
+                                                         mode="render",
+                                                         config=self.config)
 
         # Adds basic information to config.
         # Config is later return to client app on "init" request.
@@ -94,7 +94,7 @@ class CallFlow:
 
         # ----------------------------------------------------------------------
         # now, process ensemble
-        sg = EnsembleGraph("ensemble", self.config, mode="process",
+        sg = EnsembleGraph("ensemble", mode="process", config=self.config,
                            supergraphs=self.supergraphs)
 
         sg.df_add_time_proxies()

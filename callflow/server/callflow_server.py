@@ -14,7 +14,7 @@ import sys
 
 # ------------------------------------------------------------------------------
 import callflow
-from callflow.operations import ArgParser
+from callflow.utils.argparser import ArgParser
 from callflow.server.api_provider import APIProvider
 import callflow.server.manager as manager
 
