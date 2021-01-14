@@ -9,6 +9,8 @@ import pandas as pd
 from scipy.stats import kurtosis, skew
 
 import callflow
+import callflow.utils
+from callflow.sanitizer import Sanitizer
 LOGGER = callflow.get_logger(__name__)
 
 
@@ -46,7 +48,10 @@ class Process:
             self.paths = {}
             self.hatchet_nodes = {}
 
+            s = Sanitizer()
+
             for node in self.gf.graph.traverse():
+                '''
                 node_dict = callflow.utils.node_dict_from_frame(node.frame)
 
                 if node_dict["type"] == "loop":
@@ -61,6 +66,8 @@ class Process:
                     )
                 else:
                     node_name = node_dict["name"]
+                '''
+                node_name = s.in_graphMapper(node.frame)
 
                 node_paths = node.paths()
                 self.paths[node_name] = node_paths
@@ -228,6 +235,7 @@ class Process:
 
         # node_name is different from name in dataframe. So creating a copy of it.
         def add_vis_node_name(self):
+            s = Sanitizer()
             self.module_group_df = self.gf.dataframe.groupby(["module"])
             self.module_callsite_map = self.module_group_df["name"].unique()
 
@@ -236,7 +244,7 @@ class Process:
 
             self.gf.df_add_column('vis_node_name',
                                   apply_func=lambda _:
-                                  callflow.utils.sanitize_name(self.callsite_module_map[_][0]) + "=" + _)
+                                  s.utils_sanitize_name(self.callsite_module_map[_][0]) + "=" + _)
 
             '''
             self.gf.df["vis_node_name"] = self.gf.df["name"].apply(
