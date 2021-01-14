@@ -311,7 +311,8 @@ class Process:
             return self
 
         def add_time_columns(self):
-            self.gf.df_add_time_proxies()
+            # this is now being called from the constructr
+            #self.gf.df_add_time_proxies()
             '''
             if "time (inc)" not in self.gf.df.columns:
                 self.gf.df["time (inc)"] = self.gf.df["inclusive#time.duration"]

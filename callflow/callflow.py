@@ -97,7 +97,7 @@ class CallFlow:
         sg = EnsembleGraph("ensemble", mode="process", config=self.config,
                            supergraphs=self.supergraphs)
 
-        sg.df_add_time_proxies()
+        #sg.df_add_time_proxies()
         sg.filter_gf_sg(mode="ensemble")
         sg.group_gf_sg(group_by=self.config["group_by"])
 
