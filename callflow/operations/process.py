@@ -32,15 +32,13 @@ class Process:
             self.tag = tag
 
             self.graphMapper()
-
+        '''
         def convertFrameList(self, nodes):
-            return [_.frame.get("name") for _ in nodes]
-            '''
             ret = []
             for node in nodes:
                 ret.append(node.frame.get("name"))
             return ret
-            '''
+        '''
 
         def graphMapper(self):
             self.callers = {}
@@ -69,8 +67,10 @@ class Process:
 
                 node_paths = node.paths()
                 self.paths[node_name] = node_paths
-                self.callers[node_name] = self.convertFrameList(node.parents)
-                self.callees[node_name] = self.convertFrameList(node.children)
+                #self.callers[node_name] = self.convertFrameList(node.parents)
+                #self.callees[node_name] = self.convertFrameList(node.children)
+                self.callers[node_name] = [_.frame.get("name") for _ in node.parents]
+                self.callees[node_name] = [_.frame.get("name") for _ in node.children]
                 self.hatchet_nodes[node_name] = node
 
         def build(self):
@@ -275,7 +275,9 @@ class Process:
             return self
 
         def add_module_name_caliper(self, module_map):
+            print ('--------', module_map)
             self.gf.df_add_column('module', apply_func=lambda _: module_map[_])
+            exit()
             '''
             self.gf.df["module"] = self.gf.df["name"].apply(
                  lambda name: module_map[name]

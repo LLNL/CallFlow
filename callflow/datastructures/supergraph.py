@@ -40,53 +40,40 @@ class SuperGraph(ht.GraphFrame):
                        "time": ["sum#time.duration", "sum#sum#time.duration"]}
 
     # --------------------------------------------------------------------------
-    def __init__(self, name, mode, config, dataframe=None, nxg=None):
+    def __init__(self, name, config):
 
-        assert isinstance(name, str) and isinstance(mode, str)
-        assert mode in ["process", "render"]
-        assert isinstance(config, dict)
-        assert (dataframe is None) == (nxg is None)       # need both or neither
+        assert isinstance(name, str) and isinstance(config, dict)
 
-        self.name = name                # dataset name
+        self.name = name        # dataset name
+        self.config = config
+
+        self.nxg = None
         self.parameters = {}
         self.auxiliary_data = {}
         self.proxy_columns = {}
-        self.config = config
         self.dir_path = os.path.join(self.config["save_path"], self.name)
-        # self.timer = Timer()
 
-        # ----------------------------------------------------------------------
-        log_str = f"Creating SuperGraph ({name})"
+    # --------------------------------------------------------------------------
+    def __str__(self):
+        return f"SuperGraph<{self.name}>"
 
-        # render mode simply reads the data
-        if mode == "render":
-            assert (dataframe is None) and (nxg is None)
-            LOGGER.info(log_str + f" from ({self.dir_path})")
-            self.read(self.dir_path)
+    def __repr__(self):
+        return self.__str__()
 
-        # copy over the dataframe and nxg (used for creating ensemble)
-        elif dataframe is not None and nxg is not None:
-            LOGGER.info(log_str + " from given dataframe and graph")
-            self.graph = None
-            self.dataframe = dataframe
-            self.nxg = nxg
-            self.exc_metrics = []
-            self.inc_metrics = []
+    # --------------------------------------------------------------------------
+    def create(self):
+        profile_format = self.config["parameter_props"]["profile_format"][self.name]
+        data_path = self.config["parameter_props"]["data_path"][self.name]
+        data_path = os.path.join(self.config["data_path"], data_path)
 
-        # otherwise, need to create from config
-        elif mode == "process":
+        LOGGER.info(f"Creating SuperGraph ({self.name}) from ({data_path}) using ({profile_format}) format")
 
-            profile_format = self.config["parameter_props"]["profile_format"][self.name]
-            data_path = self.config["parameter_props"]["data_path"][self.name]
-            data_path = os.path.join(self.config["data_path"], data_path)
-            LOGGER.info(log_str + f" from ({data_path}) using ({profile_format}) format")
+        gf = SuperGraph.from_config(data_path, profile_format)
+        assert isinstance(gf, ht.GraphFrame)
+        assert gf.graph is not None
+        super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics)
 
-            gf = SuperGraph.from_config(data_path, profile_format)
-            assert isinstance(gf, ht.GraphFrame)
-            assert gf.graph is not None
-            super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics)
-
-            self.nxg = self.hatchet_graph_to_nxg(self.graph)
+        self.nxg = self.hatchet_graph_to_nxg(self.graph)
 
         # ----------------------------------------------------------------------
         self.df_add_time_proxies()
@@ -98,94 +85,42 @@ class SuperGraph(ht.GraphFrame):
         self.df_reset_index()
         # ----------------------------------------------------------------------
 
-    def __str__(self):
-        return f"SuperGraph<{self.name}>"
-
-    def __repr__(self):
-        return self.__str__()
+        '''
+        ## TODO: read/create module map here!
+        if "callsite_module_map" in self.config:
+            print (self.config["callsite_module_map"])
+            exit ()
+        '''
 
     # --------------------------------------------------------------------------
-    # read/write functionality
-    # --------------------------------------------------------------------------
-    @staticmethod
-    def write_df(path, df):
-        fname = os.path.join(path, SuperGraph._FILENAMES["df"])
-        LOGGER.debug(f"Writing ({fname})")
-        df.to_csv(fname)
+    def load(self, path=None, read_graph=False):
+        # Load the SuperGraph (refer _FILENAMES for file name mapping).
+        if path is None:
+            path = self.dir_path
 
-    @staticmethod
-    def write_nxg(path, nxg):
-        fname = os.path.join(os.path.join(path, SuperGraph._FILENAMES["nxg"]))
-        LOGGER.debug(f"Writing ({fname})")
-        nxg_json = nx.readwrite.json_graph.node_link_data(nxg)
-        with open(fname, "w") as fptr:
-            json.dump(nxg_json, fptr, indent=2)
+        LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path})")
 
-    @staticmethod
-    def write_graph(path, graph_str):
-        fname = os.path.join(os.path.join(path, SuperGraph._FILENAMES["ht"]))
-        LOGGER.debug(f"Writing ({fname})")
-        with open(fname, "w") as fptr:
-            fptr.write(graph_str)
+        self.dataframe = None
+        self.nxg = None
+        self.graph = None
 
-    @staticmethod
-    def read_df(path):
-        fname = os.path.join(path, SuperGraph._FILENAMES["df"])
-        LOGGER.debug(f"Reading ({fname})")
-        df = pd.read_csv(fname)
-        if df is None or df.empty:
-            raise ValueError(f"Did not find a valid dataframe in ({fname}).")
-        return df
+        if True:
+            self.dataframe = SuperGraph.read_df(path)
 
-    @staticmethod
-    def read_nxg(path):
-        fname = os.path.join(path, SuperGraph._FILENAMES["nxg"])
-        LOGGER.debug(f"Reading ({fname})")
-        with open(fname, "r") as nxg_file:
-            graph = json.load(nxg_file)
-            nxg = nx.readwrite.json_graph.node_link_graph(graph)
-        if nxg is None:
-            raise ValueError(f"Did not find a valid nxg in ({fname}).")
-        return nxg
+        if True:
+            self.nxg = SuperGraph.read_nxg(path)
 
-    @staticmethod
-    def read_graph(path):
-        fname = os.path.join(path, SuperGraph._FILENAMES["ht"])
-        LOGGER.debug(f"Reading ({fname})")
-        with open(fname, "r") as graph_file:
-            graph = json.load(graph_file)
-        if not isinstance(graph, ht.GraphFrame.Graph):
-            raise ValueError(f"Did not find a valid graph in ({fname}).")
-        return graph
+        if read_graph:
+            self.graph = SuperGraph.read_graph(path)
 
-    @staticmethod
-    def read_params(path):
-        data = {}
-        try:
-            fname = os.path.join(path, SuperGraph._FILENAMES["params"])
-            LOGGER.debug(f"Reading ({fname})")
-            for line in open(fname, "r"):
-                for num in line.strip().split(","):
-                    split_num = num.split("=")
-                    data[split_num[0]] = split_num[1]
+        if self.config["read_parameter"]:
+            self.parameters = SuperGraph.read_params(path)
 
-        except Exception as e:
-            LOGGER.critical(f"Failed to read parameter file: {e}")
+        if True:
+            self.auxiliary_data = SuperGraph.read_aux(path)
 
-        return data
-
-    @staticmethod
-    def read_aux(path):
-        data = {}
-        try:
-            fname = os.path.join(path, SuperGraph._FILENAMES["aux"])
-            LOGGER.debug(f"Reading ({fname})")
-            with open(fname, "r") as fptr:
-                data = json.load(fptr)
-        except Exception as e:
-            LOGGER.critical(f"Failed to read aux file: {e}")
-
-        return data
+        self.df_add_time_proxies()
+        self.df_reset_index()
 
     # --------------------------------------------------------------------------
     def write(self, path=None, write_df=True, write_graph=False, write_nxg=True):
@@ -207,68 +142,6 @@ class SuperGraph(ht.GraphFrame):
 
         if write_nxg:
             SuperGraph.write_nxg(path, self.nxg)
-
-    def read(self, path, read_graph=False):
-        """
-        Read the SuperGraph (refer _FILENAMES for file name mapping).
-        """
-        if path is None:
-            path = self.dir_path
-
-        self.dataframe = None
-        self.nxg = None
-        self.graph = None
-
-        if True:
-            self.dataframe = SuperGraph.read_df(path)
-
-        if True:
-            self.nxg = SuperGraph.read_nxg(path)
-
-        if read_graph:
-            self.graph = SuperGraph.read_graph(path)
-
-        if self.config["read_parameter"]:
-            self.parameters = SuperGraph.read_params(path)
-
-        if True:
-            self.auxiliary_data = SuperGraph.read_aux(path)
-
-    # -------------------------------------------------------------------------
-    # create a graph frame directly from the config
-    @staticmethod
-    def from_config(data_path, profile_format):
-
-        if profile_format not in SuperGraph._FORMATS:
-            raise ValueError(f"Invalid profile format: {profile_format}")
-
-        gf = None
-        if profile_format == "hpctoolkit":
-            gf = ht.GraphFrame.from_hpctoolkit(data_path)
-
-        elif profile_format == "caliper":
-            grouping_attribute = "function"
-            default_metric = "sum(sum#time.duration), inclusive_sum(sum#time.duration)"
-            query = "select function,%s group by %s format json-split" % (
-                default_metric,
-                grouping_attribute,
-            )
-            gf = ht.GraphFrame.from_caliper(data_path, query=query)
-
-        elif profile_format == "caliper_json":
-            gf = ht.GraphFrame.from_caliper_json(data_path)
-
-        elif profile_format == "gprof":
-            gf = ht.GraphFrame.from_gprof_dot(data_path)
-
-        elif profile_format == "literal":
-            gf = ht.GraphFrame.from_literal(data_path)
-
-        elif profile_format == "lists":
-            gf = ht.GraphFrame.from_lists(data_path)
-
-        assert gf is not None
-        return gf
 
     # --------------------------------------------------------------------------
     # SuperGraph.dataframe api
@@ -368,6 +241,27 @@ class SuperGraph(ht.GraphFrame):
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
 
+    # -------------------------------------------------------------------------
+    # TODO: needs to be cleaned
+    def get_module_name(self, callsite):
+        """
+        Get the module name for a callsite.
+        Note: The module names can be specified using the config file.
+        If such a mapping exists, this function returns the module based on mapping. Else, it queries the graphframe for a module name.
+
+        Return:
+            module name (str) - Returns the module name
+        """
+        if "callsite_module_map" in self.config:
+            if callsite in self.config["callsite_module_map"]:
+                return self.config["callsite_module_map"][callsite]
+
+        if "module" in self.df_columns():
+            return self.df_lookup_with_column("name", callsite)["module"].unique()[0]
+            # return self.lookup_with_name(callsite)["module"].unique()[0]
+        else:
+            return callsite
+
     # --------------------------------------------------------------------------
     # callflow.graph utilities.
     # --------------------------------------------------------------------------
@@ -431,11 +325,12 @@ class SuperGraph(ht.GraphFrame):
 
         return nxg
 
+    '''
     # --------------------------------------------------------------------------
     # callflow.nxg utilities.
     # --------------------------------------------------------------------------
     @staticmethod
-    def add_prefix(graph, prefix):
+    def notused_add_prefix(graph, prefix):
         """
         Rename graph to obtain disjoint node labels
         """
@@ -453,15 +348,15 @@ class SuperGraph(ht.GraphFrame):
         return nx.relabel_nodes(graph, label)
 
     @staticmethod
-    def tailhead(edge):
+    def notused_tailhead(edge):
         return (edge[0], edge[1])
 
     @staticmethod
-    def tailheadDir(edge, edge_direction):
+    def notused_tailheadDir(edge, edge_direction):
         return (str(edge[0]), str(edge[1]), edge_direction[edge])
 
     @staticmethod
-    def leaves_below(nxg, node):
+    def notused_leaves_below(nxg, node):
         assert isinstance(nxg, nx.DiGraph)
         return set(
             sum(
@@ -472,27 +367,124 @@ class SuperGraph(ht.GraphFrame):
                 [],
             )
         )
+    '''
+    # --------------------------------------------------------------------------
+    # static read/write functionality
+    # --------------------------------------------------------------------------
+    # create a graph frame directly from the config
+    @staticmethod
+    def from_config(data_path, profile_format):
 
-    # -------------------------------------------------------------------------
-    # TODO:
-    def get_module_name(self, callsite):
-        """
-        Get the module name for a callsite.
-        Note: The module names can be specified using the config file.
-        If such a mapping exists, this function returns the module based on mapping. Else, it queries the graphframe for a module name.
+        if profile_format not in SuperGraph._FORMATS:
+            raise ValueError(f"Invalid profile format: {profile_format}")
 
-        Return:
-            module name (str) - Returns the module name
-        """
-        if "callsite_module_map" in self.config:
-            if callsite in self.config["callsite_module_map"]:
-                return self.config["callsite_module_map"][callsite]
+        gf = None
+        if profile_format == "hpctoolkit":
+            gf = ht.GraphFrame.from_hpctoolkit(data_path)
 
-        if "module" in self.df_columns():
-            return self.df_lookup_with_column("name", callsite)["module"].unique()[0]
-            #return self.lookup_with_name(callsite)["module"].unique()[0]
-        else:
-            return callsite
+        elif profile_format == "caliper":
+            grouping_attribute = "function"
+            default_metric = "sum(sum#time.duration), inclusive_sum(sum#time.duration)"
+            query = "select function,%s group by %s format json-split" % (
+                default_metric,
+                grouping_attribute,
+            )
+            gf = ht.GraphFrame.from_caliper(data_path, query=query)
+
+        elif profile_format == "caliper_json":
+            gf = ht.GraphFrame.from_caliper_json(data_path)
+
+        elif profile_format == "gprof":
+            gf = ht.GraphFrame.from_gprof_dot(data_path)
+
+        elif profile_format == "literal":
+            gf = ht.GraphFrame.from_literal(data_path)
+
+        elif profile_format == "lists":
+            gf = ht.GraphFrame.from_lists(data_path)
+
+        assert gf is not None
+        return gf
+
+    @staticmethod
+    def write_df(path, df):
+        fname = os.path.join(path, SuperGraph._FILENAMES["df"])
+        LOGGER.debug(f"Writing ({fname})")
+        df.to_csv(fname)
+
+    @staticmethod
+    def write_nxg(path, nxg):
+        fname = os.path.join(os.path.join(path, SuperGraph._FILENAMES["nxg"]))
+        LOGGER.debug(f"Writing ({fname})")
+        nxg_json = nx.readwrite.json_graph.node_link_data(nxg)
+        with open(fname, "w") as fptr:
+            json.dump(nxg_json, fptr, indent=2)
+
+    @staticmethod
+    def write_graph(path, graph_str):
+        fname = os.path.join(os.path.join(path, SuperGraph._FILENAMES["ht"]))
+        LOGGER.debug(f"Writing ({fname})")
+        with open(fname, "w") as fptr:
+            fptr.write(graph_str)
+
+    @staticmethod
+    def read_df(path):
+        fname = os.path.join(path, SuperGraph._FILENAMES["df"])
+        LOGGER.debug(f"Reading ({fname})")
+        df = pd.read_csv(fname)
+        if df is None or df.empty:
+            raise ValueError(f"Did not find a valid dataframe in ({fname}).")
+        return df
+
+    @staticmethod
+    def read_nxg(path):
+        fname = os.path.join(path, SuperGraph._FILENAMES["nxg"])
+        LOGGER.debug(f"Reading ({fname})")
+        with open(fname, "r") as nxg_file:
+            graph = json.load(nxg_file)
+            nxg = nx.readwrite.json_graph.node_link_graph(graph)
+        if nxg is None:
+            raise ValueError(f"Did not find a valid nxg in ({fname}).")
+        return nxg
+
+    @staticmethod
+    def read_graph(path):
+        fname = os.path.join(path, SuperGraph._FILENAMES["ht"])
+        LOGGER.debug(f"Reading ({fname})")
+        with open(fname, "r") as graph_file:
+            graph = json.load(graph_file)
+        if not isinstance(graph, ht.GraphFrame.Graph):
+            raise ValueError(f"Did not find a valid graph in ({fname}).")
+        return graph
+
+    @staticmethod
+    def read_params(path):
+        data = {}
+        try:
+            fname = os.path.join(path, SuperGraph._FILENAMES["params"])
+            LOGGER.debug(f"Reading ({fname})")
+            for line in open(fname, "r"):
+                for num in line.strip().split(","):
+                    split_num = num.split("=")
+                    data[split_num[0]] = split_num[1]
+
+        except Exception as e:
+            LOGGER.critical(f"Failed to read parameter file: {e}")
+
+        return data
+
+    @staticmethod
+    def read_aux(path):
+        data = {}
+        try:
+            fname = os.path.join(path, SuperGraph._FILENAMES["aux"])
+            LOGGER.debug(f"Reading ({fname})")
+            with open(fname, "r") as fptr:
+                data = json.load(fptr)
+        except Exception as e:
+            LOGGER.critical(f"Failed to read aux file: {e}")
+
+        return data
 
     # ------------------------------------------------------------------------
     # The next block of functions attach the calculated result to the variable `gf`.
@@ -509,7 +501,6 @@ class SuperGraph(ht.GraphFrame):
 
         profile_format = self.config["parameter_props"]["profile_format"][self.name]
         if profile_format == "hpctoolkit":
-
             process = (
                 Process.Builder(self, self.name)
                     .add_path()

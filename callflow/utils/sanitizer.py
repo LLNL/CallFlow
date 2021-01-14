@@ -1,8 +1,8 @@
 import os
 import hatchet as ht
 
-from callflow import get_logger
-LOGGER = get_logger(__name__)
+#from callflow import get_logger
+#LOGGER = get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
@@ -12,7 +12,7 @@ class Sanitizer:
     _KNOWN_TYPES = ["function", "statement", "loop", "region"]
 
     @staticmethod
-    def sanitize(_):
+    def sanitize(_: str):
         return os.path.basename(_) if _ is not None else 'Unknown'
 
     @staticmethod

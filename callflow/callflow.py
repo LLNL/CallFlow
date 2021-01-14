@@ -51,14 +51,15 @@ class CallFlow:
         # create supergraphs for all runs
         for dataset_name in self.config["parameter_props"]["runs"]:
             self.supergraphs[dataset_name] = SuperGraph(dataset_name,
-                                                        mode="render",
-                                                        config=self.config)
+                                                        self.config)
+            self.supergraphs[dataset_name].load()
 
         # ensemble case
         if self.ndatasets > 1:
-            self.supergraphs["ensemble"] = EnsembleGraph("ensemble",
-                                                         mode="render",
-                                                         config=self.config)
+            dataset_name = "ensemble"
+            self.supergraphs[dataset_name] = EnsembleGraph(dataset_name,
+                                                           self.config)
+            self.supergraphs[dataset_name].load()
 
         # Adds basic information to config.
         # Config is later return to client app on "init" request.
@@ -78,7 +79,8 @@ class CallFlow:
             #LOGGER.info(f"Dataset name: {dataset_name}")
             #LOGGER.info("#########################################")
 
-            sg = SuperGraph(dataset_name, config=self.config, mode="process")
+            sg = SuperGraph(dataset_name, self.config)
+            sg.create()
             sg.process_gf()
 
             if self.ndatasets == 1:
@@ -94,10 +96,9 @@ class CallFlow:
 
         # ----------------------------------------------------------------------
         # now, process ensemble
-        sg = EnsembleGraph("ensemble", mode="process", config=self.config,
-                           supergraphs=self.supergraphs)
+        sg = EnsembleGraph("ensemble", self.config)
+        sg.unify(self.supergraphs)
 
-        #sg.df_add_time_proxies()
         sg.filter_gf_sg(mode="ensemble")
         sg.group_gf_sg(group_by=self.config["group_by"])
 
