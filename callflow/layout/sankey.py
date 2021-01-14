@@ -293,7 +293,7 @@ class SankeyLayout:
 
         self.nxg.remove_node(reveal_module)
 
-    # TODO:
+    # TODO: This function was missing in implementation.
     def add_exit_callee_paths(self, callee):
         pass
 
@@ -530,9 +530,7 @@ class SankeyLayout:
 
         # loop through the nodes
         for node in nxg.nodes(data=True):
-            node_name = node[0]
-            node_dict = node[1]
-
+            node_name, node_dict = SankeyLayout.nx_deconstruct_node(node)
             if node_dict["type"] == "component-node":
                 module = node_name.split("=")[0]
                 callsite = node_name.split("=")[1]
@@ -616,8 +614,7 @@ class SankeyLayout:
         target_name_time_exc_map = target_module_name_group_df["time"].max().to_dict()
 
         for node in nxg.nodes(data=True):
-            node_name = node[0]
-            node_dict = node[1]
+            node_name, node_dict = SankeyLayout.nx_deconstruct_node(node)
             if node_name in target_module_callsite_map.keys():
                 if node_dict["type"] == "component-node":
                     module = node_name.split("=")[0]
@@ -688,7 +685,8 @@ class SankeyLayout:
         """
         ret = {}
         for edge in nxg.edges(data=True):
-            ret[(edge[0], edge[1])] = edge[2]["edge_type"]
+            edge_tuple, edge_dict = SankeyLayout.nx_deconstruct_edge(edge)
+            ret[edge_tuple] = edge_dict["edge_type"]
         return ret
 
     @staticmethod
@@ -698,10 +696,13 @@ class SankeyLayout:
         """
         flow_mapping = {}
         for edge in nxg.edges(data=True):
-            if (edge[0], edge[1]) not in flow_mapping:
-                flow_mapping[(edge[0], edge[1])] = 0
+            # edge here is (source, target) tuple.
+            edge_tuple, edge_dict = SankeyLayout.nx_deconstruct_edge(edge)
 
-            flow_mapping[(edge[0], edge[1])] += edge[2]["weight"]
+            if edge_tuple not in flow_mapping:
+                flow_mapping[edge_tuple] = 0
+
+            flow_mapping[edge_tuple] += edge_dict["weight"]
         return flow_mapping
 
     @staticmethod
@@ -711,11 +712,10 @@ class SankeyLayout:
         """
         entry_functions = {}
         for edge in nxg.edges(data=True):
-            attr_dict = edge[2]
-            edge_tuple = (edge[0], edge[1])
+            edge_tuple, edge_dict = SankeyLayout.nx_deconstruct_edge(edge)
             if edge_tuple not in entry_functions:
                 entry_functions[edge_tuple] = []
-            entry_functions[edge_tuple].append(attr_dict["target_callsite"])
+            entry_functions[edge_tuple].append(edge_dict["target_callsite"])
         return entry_functions
 
     @staticmethod
@@ -725,9 +725,17 @@ class SankeyLayout:
         """
         exit_functions = {}
         for edge in nxg.edges(data=True):
-            attr_dict = edge[2]
-            edge_tuple = (edge[0], edge[1])
+            edge_tuple, edge_dict = SankeyLayout.nx_deconstruct_edge(edge)
             if edge_tuple not in exit_functions:
                 exit_functions[edge_tuple] = []
-            exit_functions[edge_tuple].append(attr_dict["source_callsite"])
+            exit_functions[edge_tuple].append(edge_dict["source_callsite"])
         return exit_functions
+
+    # TODO: Find a better place for this to reside.
+    @staticmethod
+    def nx_deconstruct_node(node):
+        return node[0], node[1]["attr_dict"]
+
+    @staticmethod
+    def nx_deconstruct_edge(edge):
+        return (edge[0], edge[1]), edge[2]["attr_dict"]
