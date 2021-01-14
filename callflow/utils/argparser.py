@@ -98,7 +98,7 @@ class ArgParser:
         _READ_MODES = {
             "config": self._read_config,
             "directory": self._read_directory,
-            "gfs": self._read_gfs,
+            #"gfs": self._read_gfs,
         }
         assert self.read_mode in _READ_MODES.keys()
         self.config = _READ_MODES[self.read_mode]()
@@ -122,10 +122,6 @@ class ArgParser:
         return self.__str__()
 
     # --------------------------------------------------------------------------
-    #def get_arguments(self):
-    #    return self.arguments
-
-    # --------------------------------------------------------------------------
     # Private methods.
     @staticmethod
     def _create_parser():
@@ -137,9 +133,11 @@ class ArgParser:
         # config mode
         parser.add_argument("--config", type=str,
                             help="Config file to be processed (overwrites).")
+        '''
         # gfs mode
         parser.add_argument("--gfs", type=str,
                             help="Enter graph frames")
+        '''
         # args mode
         parser.add_argument("--data_path", type=str,
                             help="Input directory to be processed.")
@@ -196,10 +194,10 @@ class ArgParser:
         read_mode = ''
         _has_config = self.args["config"] is not None
         _has_dpath = self.args["data_path"] is not None
-        _has_gfs = self.args["gfs"] is not None
+        #_has_gfs = self.args["gfs"] is not None
 
-        if not _has_config and not _has_dpath and not _has_gfs:
-            s = "Please provide a config file (or) a directory (or) graph frames"
+        if not _has_config and not _has_dpath: # and not _has_gfs:
+            s = "Please provide a config file (or) a directory" # (or) graph frames"
             LOGGER.error(s)
             self.parser.print_help()
             exit(1)
@@ -224,20 +222,22 @@ class ArgParser:
                 LOGGER.error(s)
                 exit(1)
 
+        '''
         elif self.args["gfs"]:
             read_mode = "graphframes"
             # TODO: CAL-8: Add graphframe processing for Jupyter notebooks
-
+        '''
         return read_mode
 
     # --------------------------------------------------------------------------
+    '''
     def _read_gfs(self):
         """
         GraphFrame mode for Jupyter notebooks.
         This function creates a config file based on the graphframes passed into the cmd line.
         """
         assert False
-
+    '''
     # --------------------------------------------------------------------------
     def _read_directory(self):
         """
@@ -258,16 +258,6 @@ class ArgParser:
             self.args.get("profile_format", "default"),
             scheme["data_path"])
 
-        '''
-        _profile_fmt_scheme = {
-            "hpctoolkit": ArgParser._scheme_dataset_map_hpctoolkit,
-            "caliper": ArgParser._scheme_dataset_map_caliper,
-            "caliper_json": ArgParser._scheme_dataset_map_caliper_json,
-            "default": ArgParser._scheme_dataset_map_default,
-        }
-        _pformat = self.args.get("profile_format", "default")
-        scheme["runs"] = _profile_fmt_scheme[_pformat](scheme["data_path"])
-        '''
         return scheme
 
     # --------------------------------------------------------------------------
@@ -294,15 +284,6 @@ class ArgParser:
         if len(scheme["save_path"]) == 0:
             scheme["save_path"] = os.path.join(scheme["data_path"], ".callflow")
 
-        # Set the datasets key, according to the format.
-        '''
-        _profile_fmt_scheme = {
-            "hpctoolkit": ArgParser._scheme_dataset_map_hpctoolkit,
-            "caliper": ArgParser._scheme_dataset_map_caliper,
-            "caliper_json": ArgParser._scheme_dataset_map_caliper_json,
-            "default": ArgParser._scheme_dataset_map_default,
-        }
-        '''
         _has_runs = "runs" in json
         _has_glb_pformat = "profile_format" in json
 
@@ -317,24 +298,11 @@ class ArgParser:
 
         # process data using the global format
         elif "runs" not in json and "profile_format" in json:
-            # Harsh added this assert because there is a problem in this case
-            assert False
-            scheme["runs"] = ArgParser._scheme_dataset_map(json["profile_format"], run_props=json["runs"])
+            s = "Please provide a config or a data directory that contains runs"
+            LOGGER.error(s)
+            exit(1)
 
-        '''
-        if "runs" not in json and "profile_format" not in json:
-            raise Exception(
-                "Either 'runs' or 'profile_format' key must be provided in the config file."
-            )
-        elif "runs" in json and "profile_format" not in json:
-            scheme["runs"] = _SCHEME_PROFILE_FORMAT_MAPPER["default"](json["runs"])
-        elif "runs" not in json and "profile_format" in json:
-            assert json["profile_format"] in SUPPORTED_PROFILE_FORMATS
-            scheme["runs"] = _SCHEME_PROFILE_FORMAT_MAPPER[json["profile_format"]](
-                json["runs"]
-            )
-        '''
-
+        #
         if "callsite_module_map" in json:
             scheme["callsite_module_map"] = ArgParser._process_module_map(
                 json["scheme"]["callsite_module_map"]
@@ -369,110 +337,6 @@ class ArgParser:
         return [_mdict(_["name"], _["path"], _["profile_format"])
                 for i,_ in enumerate(run_props)]
 
-    '''
-    @staticmethod
-    def _scheme_dataset_map_default(run_props: dict):
-        """
-        Derive the scheme for dataset_map, if dataset_map is provided through the config file.
-        """
-        runs = []
-        # Parse the information for each dataset
-        for idx, data in enumerate(run_props):
-            run = {
-                "name": data["name"],
-                "path": data["path"],
-                "profile_format": data["profile_format"],
-            }
-
-            runs.append(run)
-        return runs
-
-    @staticmethod
-    def _scheme_dataset_map_hpctoolkit(data_path: str):
-        """
-        Derive the scheme for dataset_map for hpctoolkit format.
-        """
-        runs = []
-        list_subfolders_with_paths = [
-            f.path for f in os.scandir(data_path) if f.is_dir()
-        ]
-
-        list_files_inside_data_path = [
-            f.path.split("/")[-1] for f in os.scandir(data_path)
-        ]
-
-        # Check if experiment.xml and metric-db's is in the directory, if so, it
-        # is the data directory.
-        if "experiment.xml" in list_files_inside_data_path:
-            run = {
-                "name": data_path.split("/")[-1],
-                "path": "/".join(data_path.split("/")[:-1]),
-                "profile_format": "hpctoolkit",
-            }
-            runs.append(run)
-
-        else:
-            for idx, subfolder_path in enumerate(list_subfolders_with_paths):
-                name = subfolder_path.split("/")[-1]
-                if name != ".callflow":
-                    run = {
-                        "name": name,
-                        "path": "/".join(subfolder_path.split("/")[:-1]),
-                        "profile_format": "hpctoolkit",
-                    }
-                    runs.append(run)
-
-        return runs
-
-    @staticmethod
-    def _scheme_dataset_map_caliper(data_path: str):
-        """
-        Derive the scheme for dataset_map for caliper format.
-        """
-        runs = []
-        list_cali_paths = [
-            f.path
-            for f in os.scandir(data_path)
-            if os.path.splitext(f.path)[1] == ".cali"
-        ]
-
-        for idx, subfolder_path in enumerate(list_cali_paths):
-            name = subfolder_path.split("/")[-1]
-            if name != ".callflow":
-                run = {
-                    "name": name.split(".")[0],
-                    "path": name,
-                    "profile_format": "caliper",
-                }
-
-                runs.append(run)
-
-        return runs
-
-    @staticmethod
-    def _scheme_dataset_map_caliper_json(data_path: str):
-        """
-        Derive the scheme for dataset_map for caliper json format.
-        """
-        runs = []
-        list_json_paths = [
-            f.path
-            for f in os.scandir(data_path)
-            if os.path.splitext(f.path)[1] == ".json"
-        ]
-
-        for path in list_json_paths:
-            filename = path.split("/")[-1]
-            if filename != "config.json":
-                run = {
-                    "name": filename.split(".")[0],
-                    "path": path.split("/")[-1],
-                    "profile_format": "caliper_json",
-                }
-                runs.append(run)
-        return runs
-    '''
-
     # --------------------------------------------------------------------------
     @staticmethod
     def _process_module_map(module_callsite_map):
@@ -505,13 +369,6 @@ class ArgParser:
             dataset_dir = os.path.join(dot_cf_path, dataset)
             if not os.path.exists(dataset_dir):
                 os.makedirs(dataset_dir)
-
-            # TODO: why do we need to create empty files?
-            files = ["df.csv", "nxg.json", "hatchet_tree.txt", "auxiliary_data.json"]
-            for f in files:
-                fname = os.path.join(dataset_dir, f)
-                if not os.path.exists(fname):
-                    open(fname, "w").close()
 
     @staticmethod
     def _remove_data_staging(dot_cf_path):

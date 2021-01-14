@@ -45,36 +45,6 @@ class EnsembleGraph(SuperGraph):
         self.df_reset_index()
 
     # --------------------------------------------------------------------------
-    '''
-    def create_gf(self):
-        """
-        Create a new callflow.graphframe containing the information of the ensemble.
-        If mode is process, union operation is performed on the df and graph.
-        If mode is render, corresponding files from .callflow/ensemble are read.
-
-        Note: Code for render is same as in SuperGraph class. Might have to find a way to avoid repetition.
-        """
-        if self.mode == "process":
-            self.dataframe = self.union_df()
-            # self.gf = callflow.GraphFrame(dataframe=self.union_df())
-            # self.gf.dataframe = self.union_df()
-
-            '' '
-            self.gf = callflow.GraphFrame()
-            self.gf.dataframe = self.union_df()
-            '' '
-            """
-            TODO: Need to write a module to convert a NetowrkX graph to a Hatchet graph.
-            Currently, there is no way to convert networkX to hatchet graph yet. So we are setting this to None.
-            """
-            self.graph = None
-            self.nxg = self.union_nxg()
-            self.df_add_time_proxies()
-
-        elif self.mode == "render":
-            self.read_supergraph()
-    '''
-    # --------------------------------------------------------------------------
     def unify_df(self):
         """
         Unify the dataframes.
