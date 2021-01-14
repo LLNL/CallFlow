@@ -29,11 +29,16 @@ class EnsembleGraph(SuperGraph):
         assert name == 'ensemble' and mode in ["process", "render"]
         assert isinstance(config, dict)
         assert isinstance(supergraphs, dict)
-        assert len(supergraphs) > 1
 
-        LOGGER.info(f'Creating EnsembleGraph for {len(supergraphs)} SuperGraphs')
+        n = len(supergraphs)
+        assert (mode == "process") == (n > 0)
+
         self.supergraphs = supergraphs
         if mode == "process":
+            LOGGER.info(f'Creating EnsembleGraph for {n} SuperGraphs')
+            if n == 1:
+                LOGGER.warning('Creating an ensemble requires 2 or more SuperGraphs')
+
             df = self.unify_df()
             nxg = self.unify_nxg()
         else:

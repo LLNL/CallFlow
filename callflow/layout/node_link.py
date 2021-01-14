@@ -7,8 +7,10 @@ import networkx as nx
 
 # CallFlow imports
 import callflow
-from callflow.timer import Timer
 from callflow import SuperGraph
+from callflow.utils.timer import Timer
+from callflow.utils.sanitizer import Sanitizer
+
 
 # CCT Rendering class.
 class NodeLinkLayout:
@@ -273,8 +275,8 @@ class NodeLinkLayout:
             plen = len(callsites)
 
             for j in range(plen - 1):
-                source = callflow.utils.sanitize_name(callsites[j])
-                target = callflow.utils.sanitize_name(callsites[j + 1])
+                source = Sanitizer.sanitize(callsites[j])
+                target = Sanitizer.sanitize(callsites[j + 1])
 
                 if not nxg.has_edge(source, target):
                     nxg.add_edge(source, target)
