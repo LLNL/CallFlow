@@ -14,7 +14,8 @@ from networkx.readwrite import json_graph
 import callflow
 
 # Globals
-STATIC_FOLDER_PATH = os.path.abspath("app/dist/")
+CF_FOLDER_PATH = os.path.abspath(os.path.dirname(callflow.__file__))
+STATIC_FOLDER_PATH = os.path.join(CF_FOLDER_PATH, "app/dist/")
 LOGGER = callflow.get_logger(__name__)
 
 # Create a Flask server.
