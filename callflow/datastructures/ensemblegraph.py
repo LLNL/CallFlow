@@ -17,26 +17,25 @@ LOGGER = get_logger(__name__)
 class EnsembleGraph(SuperGraph):
     """
     Ensemble SuperGraph Class to handle the processing of ensemble of call graphs.
-
-    Note: I am thinking this might also not really be a class that extends SuperGraph.
     """
 
     # --------------------------------------------------------------------------
-    def __init__(self, name, config=None, mode="process", supergraphs={}):
+    def __init__(self, name, mode, config, supergraphs = {}):
         """
         Arguments:
-            supergraphs (dict): dictionary of supergraphs keyed by their tag.
+            supergraphs (dict): dictionary of supergraphs keyed by their name.
         """
-        assert name == 'ensemble'
-        assert mode in ["process", "render"]
-        if config:
-            assert isinstance(config, dict)
+        assert isinstance(name, str) and isinstance(mode, str)
+        assert name == 'ensemble' and mode in ["process", "render"]
+        assert isinstance(config, dict)
+        assert isinstance(supergraphs, dict)
+        assert len(supergraphs) > 1
 
+        LOGGER.info(f'Creating EnsembleGraph for {len(supergraphs)} SuperGraphs')
         self.supergraphs = supergraphs
-
         if mode == "process":
-            df = self.union_df()
-            nxg = self.union_nxg()
+            df = self.unify_df()
+            nxg = self.unify_nxg()
         else:
             df, nxg = None, None
 
@@ -74,62 +73,54 @@ class EnsembleGraph(SuperGraph):
             self.read_supergraph()
     '''
     # --------------------------------------------------------------------------
-    def union_df(self):
+    def unify_df(self):
         """
-        Union the dataframes.
+        Unify the dataframes.
         Return:
             (pd.DataFrame) DataFrame for union of the dataframes.
         """
+        LOGGER.info(f'Unifying {len(self.supergraphs)} dataframes')
         df = pd.DataFrame([])
-
         for idx, tag in enumerate(self.supergraphs):
             df = pd.concat([df, self.supergraphs[tag].dataframe], sort=True)
         return df
 
-    def union_nxg(self):
+    def unify_nxg(self):
         """
-        Union the netwprkX graph.
-
+        Unify the netwprkX graph.
         Return:
             (nx.DiGraph) NetworkX graph for union of graphs.
         """
+        LOGGER.info(f'Unifying {len(self.supergraphs)} graphs')
         nxg = nx.DiGraph()
-        for idx, tag in enumerate(self.supergraphs):
-            LOGGER.debug("-=========================-")
-            LOGGER.debug(tag)
-            EnsembleGraph._union_nxg_recurse(nxg, self.supergraphs[tag].nxg)
+        for idx, name in enumerate(self.supergraphs):
+            EnsembleGraph._unify_nxg_recurse(nxg, self.supergraphs[name].nxg, name)
         return nxg
 
-    # Return the union of graphs G and H.
     @staticmethod
-    def _union_nxg_recurse(nxg_1, nxg_2):
-        """
-        Pairwise Iterative concatenation of nodes from nxg_2 to nxg_1.
+    def _unify_nxg_recurse(nxg, nxg_2_merge, name_2_merge):
 
-        """
-        if not nxg_1.is_multigraph() == nxg_2.is_multigraph():
-            raise nx.NetworkXError("G and H must both be graphs or multigraphs.")
+        if not nxg.is_multigraph() == nxg_2_merge.is_multigraph():
+            raise nx.NetworkXError("Both nxg instances be graphs or multigraphs.")
 
-        nxg_1.update(nxg_2)
+        nxg.update(nxg_2_merge)
 
-        is_same = set(nxg_1) == set(nxg_2)
-        LOGGER.debug(f"Nodes in Graph 1 and Graph 2 are same? : {is_same}")
-        if set(nxg_1) != set(nxg_2):
-            LOGGER.debug(f"Difference is { list(set(nxg_1) - set(nxg_2))}")
+        is_same = set(nxg) == set(nxg_2_merge)
+        if not is_same:
+            LOGGER.debug(f"Difference between (ensemble) and ({name_2_merge}): "
+                         f"{list(set(nxg) - set(nxg_2_merge))}")
             # LOGGER.debug(f"Nodes in Graph 1: {set(nxg_1)}")
             # LOGGER.debug(f"Nodes in Graph 2: {set(nxg_2)}")
-        LOGGER.debug("-=========================-")
 
-        if nxg_2.is_multigraph():
-            new_edges = nxg_2.edges(keys=True, data=True)
+        if nxg_2_merge.is_multigraph():
+            new_edges = nxg_2_merge.edges(keys=True, data=True)
         else:
-            new_edges = nxg_2.edges(data=True)
+            new_edges = nxg_2_merge.edges(data=True)
 
         # add nodes and edges.
-        nxg_1.add_nodes_from(nxg_2)
-        nxg_1.add_edges_from(new_edges)
-
-        return nxg_1
+        nxg.add_nodes_from(nxg_2_merge)
+        nxg.add_edges_from(new_edges)
+        return nxg
 
     # --------------------------------------------------------------------------
     # TODO:

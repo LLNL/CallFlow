@@ -56,7 +56,7 @@ class SuperGraph(ht.GraphFrame):
         # self.timer = Timer()
 
         # ----------------------------------------------------------------------
-        log_str = f"##### Creating SuperGraph ({name})"
+        log_str = f"Creating SuperGraph ({name})"
 
         # render mode simply reads the data
         if mode == "render":
@@ -89,6 +89,7 @@ class SuperGraph(ht.GraphFrame):
             self.sanitizer = Sanitizer(profile_format)
             self.nxg = self.hatchet_graph_to_nxg(self.graph, self.sanitizer)
 
+        # ----------------------------------------------------------------------
         self.df_add_time_proxies()
 
         # Hatchet requires node and rank to be indexes.
@@ -99,10 +100,10 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
 
     def __str__(self):
-        return "str"
+        return f"SuperGraph<{self.name}>"
 
     def __repr__(self):
-        return "repr"
+        return self.__str__()
 
     # --------------------------------------------------------------------------
     # read/write functionality
