@@ -72,9 +72,7 @@ class SankeyLayout:
             ]
         )
 
-        self.nxg = SankeyLayout._create_nxg_from_paths(
-            self.supergraph.gf.df, self.path
-        )
+        self.nxg = SankeyLayout._create_nxg_from_paths(self.supergraph.gf.df, self.path)
         self.add_reveal_paths(self.reveal_callsites)
         if self.split_entry_module != "":
             SankeyLayout.add_entry_callsite_paths(self.split_entry_module)
@@ -255,7 +253,10 @@ class SankeyLayout:
                         attr_dict={"type": "component-node"},
                     )
                     self.nxg.add_edge(
-                        (entry_function + "=" + edge["source_callsite"], edge["target"]),
+                        (
+                            entry_function + "=" + edge["source_callsite"],
+                            edge["target"],
+                        ),
                         attr_dict=[
                             {
                                 "source_callsite": edge["source_callsite"],

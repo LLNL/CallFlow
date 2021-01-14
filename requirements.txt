@@ -3,10 +3,10 @@ statsmodels==0.10.1
 hatchet==1.0.1
 matplotlib==3.1.1
 jsonschema==3.0.2
-networkx==2.2
+networkx==2.5
 scipy==1.3.1
 numpy==1.17.2
 pandas==0.23.0
 ipython==7.18.1
 scikit_learn==0.23.2
-flask_cors=3.0.10
+flask_cors==3.0.10

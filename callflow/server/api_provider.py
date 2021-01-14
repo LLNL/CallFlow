@@ -27,11 +27,10 @@ app.config["CORS_HEADERS"] = "Content-Type"
 
 class APIProvider:
     """
-    APIProvider class handles the incoming RESTFul requests for CallFlow. 
+    APIProvider class handles the incoming RESTFul requests for CallFlow.
     """
-    def __init__(
-        self, cf: callflow.CallFlow, host: str, port: int
-    ) -> None:
+
+    def __init__(self, cf: callflow.CallFlow, host: str, port: int) -> None:
         self.cf = cf
         self.handle_general()
         self.handle_single()

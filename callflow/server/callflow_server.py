@@ -63,7 +63,6 @@ class CallFlowServer:
             cf=self.callflow,
             host=CALLFLOW_APP_HOST,
             port=CALLFLOW_APP_PORT,
-            #ensemble=ensemble,
         )
 
         # Start the server.
