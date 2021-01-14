@@ -11,6 +11,7 @@ LOGGER = callflow.get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
+'''
 def sanitize_name(name: str):
     """
     Sanitize the callsites for general dataset.
@@ -36,7 +37,7 @@ def sanitizeAMMName(name: str):
     else:
         name = name
     return name
-
+'''
 
 def convertStringToList(string: str):
     """
@@ -44,7 +45,7 @@ def convertStringToList(string: str):
     """
     return string.strip("][").split(", ")
 
-
+'''
 def median(arr: list):
     """
     Returns the median and its index in the array.
@@ -70,7 +71,7 @@ def avg(arr: list):
     Uses floating-point division.
     """
     return sum(arr) / float(len(arr))
-
+'''
 
 def string_to_list(string: str, sep: str):
     """
@@ -110,7 +111,7 @@ def byteify(data, ignore_dicts=False):
     # if it's anything else, return it in its original form
     return data
 
-
+'''
 def dfs(gf: callflow.SuperGraph, limit: int):
     """
     Depth first search for debugging purposes.
@@ -149,7 +150,7 @@ def dfs(gf: callflow.SuperGraph, limit: int):
     for root in graph.roots:
         print("Root = {0} [{1}]".format("Root", root._hatchet_nid))
         _dfs_recurse(root, level)
-
+'''
 
 def bfs(gf):
     """
@@ -197,7 +198,7 @@ def get_node_parents(node: hatchet.node):
     """
     return node.parents
 
-
+'''
 def get_callsite_name_from_frame(node: hatchet.node):
     """
     Return callsite name for hatchet.node
@@ -227,7 +228,7 @@ def node_dict_from_frame(frame: hatchet.frame):
         return {"name": frame.get("file"), "line": frame.get("line"), "type": "loop"}
     elif frame["type"] == "region":
         return {"name": frame.get("name"), "line": "NA", "type": "region"}
-
+'''
 
 def path_list_from_frames(frames: list):
     """
