@@ -30,7 +30,7 @@ class APIProvider:
     APIProvider class handles the incoming RESTFul requests for CallFlow. 
     """
     def __init__(
-        self, cf: callflow.CallFlow, host: str, port: str
+        self, cf: callflow.CallFlow, host: str, port: int
     ) -> None:
         self.cf = cf
         self.handle_general()
