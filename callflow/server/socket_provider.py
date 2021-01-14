@@ -44,7 +44,7 @@ class SocketProvider:
         Emit the JSON data to the endpoint.
         """
         try:
-            if callflow.utils.is_valid_json(json_data):
+            if json.loads(json_data):
                 json_result = json.dumps(json_data)
                 emit(endpoint, json_result, json=True)
             else:
@@ -59,7 +59,7 @@ class SocketProvider:
         """
 
         @sockets.on("init", namespace="/")
-        def init(data):
+        def init():
             """
             Essential data house for single callflow.
             :return: Config file (JSON Format).
@@ -84,14 +84,14 @@ class SocketProvider:
             :return: networkx graph (JSON)
             """
             if data["mode"] == "Single":
-                nxg = self.callflow.request_single(
+                nxg = self.cf.request_single(
                     {
                         "name": "supergraph",
                         **data,
                     }
                 )
             else:
-                nxg = self.callflow.request_ensemble(
+                nxg = self.cf.request_ensemble(
                     {
                         "name": "supergraph",
                         **data,
@@ -107,7 +107,7 @@ class SocketProvider:
             :return: networkx graph (JSON)
             """
             if data["mode"] == "Single":
-                nxg = self.callflow.request_single(
+                nxg = self.cf.request_single(
                     {
                         "name": "supergraph",
                         **data,
@@ -115,7 +115,7 @@ class SocketProvider:
                     }
                 )
             else:
-                nxg = self.callflow.request_ensemble(
+                nxg = self.cf.request_ensemble(
                     {
                         "name": "supergraph",
                         **data,
@@ -132,7 +132,7 @@ class SocketProvider:
             :return: networkx graph (JSON)
             """
             if data["mode"] == "Single":
-                nxg = self.callflow.request_single(
+                nxg = self.cf.request_single(
                     {
                         "name": "supergraph",
                         **data,
@@ -140,7 +140,7 @@ class SocketProvider:
                     }
                 )
             else:
-                nxg = self.callflow.request_ensemble(
+                nxg = self.cf.request_ensemble(
                     {
                         "name": "supergraph",
                         **data,
@@ -184,7 +184,6 @@ class SocketProvider:
             )
             SocketProvider.emit_json("split_mpi_distribution", result)
 
-    
     def handle_ensemble(self):
         @sockets.on("ensemble_cct", namespace="/")
         def ensemble_cct(data):
