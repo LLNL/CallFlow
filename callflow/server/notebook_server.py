@@ -2,10 +2,12 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
 # NOTE: The manager.py adopts Tensorboard's philosophy of launching applications
 # through the IPython interface.
 # The code can be found at https://github.com/tensorflow/tensorboard/blob/master/tensorboard/notebook.py
+# ------------------------------------------------------------------------------
 
 import json
 import time
@@ -28,7 +30,7 @@ from callflow.operations import ArgParser
 from . import manager
 
 
-def _load_ipython_extension(ipython):
+def load_ipython_extension(ipython):
     """Load the CallFLow notebook extension.
     Intended to be called from `%load_ext callflow`. Do not invoke this
     directly.

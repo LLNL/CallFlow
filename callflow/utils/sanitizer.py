@@ -74,7 +74,7 @@ class Sanitizer:
             node_name += ":" + str(node_dict.get("line"))
         # ----------------------------------------------------------------------
 
-        LOGGER.warning(f'{frame} --> {node_name}')
+        #LOGGER.warning(f'{frame} --> {node_name}')
         return node_name
 
     # --------------------------------------------------------------------------
@@ -101,6 +101,6 @@ class Sanitizer:
             node_name = node_dict["name"]
         # ----------------------------------------------------------------------
 
-        LOGGER.warning(f'{frame} --> {node_name}')
+        #LOGGER.warning(f'{frame} --> {node_name}')
         return node_name
 # ------------------------------------------------------------------------------

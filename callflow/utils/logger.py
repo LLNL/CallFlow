@@ -6,7 +6,6 @@
 
 import logging
 import colorlog
-
 from logging import getLogger as get_logger
 
 
@@ -66,3 +65,5 @@ def init_logger(**kwargs):
     logger.warning("Enabled")
     logger.error("Enabled")
     logger.critical("Enabled")
+
+# ------------------------------------------------------------------------------
