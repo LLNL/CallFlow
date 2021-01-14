@@ -49,7 +49,6 @@ class APIService {
 		const httpResponse = fetch(fullURL, {
 			method: "POST",
 			cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
-			credentials: "same-origin", // include, *same-origin, omit
 			headers: {"Content-Type": "application/json"},
 			body: JSON.stringify(jsonBody),
 		}).then((response) => {
@@ -84,7 +83,6 @@ class APIService {
 			method: "GET",
 			headers: headers,
 			cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
-			credentials: "same-origin", // include, *same-origin, omit
 		}).then((response) => {
 			switch (response.status) {
 			case 200:

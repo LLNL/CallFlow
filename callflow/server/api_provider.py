@@ -21,7 +21,7 @@ LOGGER = callflow.get_logger(__name__)
 app = Flask(__name__, static_url_path="", static_folder=STATIC_FOLDER_PATH)
 
 # Enable CORS
-cors = CORS(app)
+cors = CORS(app, automatic_options=True)
 app.config["CORS_HEADERS"] = "Content-Type"
 
 
@@ -49,7 +49,6 @@ class APIProvider:
             response = app.response_class(
                 response=json.dumps(json_data), status=200, mimetype="application/json"
             )
-            response.headers.add("Access-Control-Allow-Origin", "*")
             response.headers.add("Access-Control-Allow-Headers", "*")
             response.headers.add("Access-Control-Allow-Methods", "*")
             return response
