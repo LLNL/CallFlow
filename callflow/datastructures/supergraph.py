@@ -86,8 +86,7 @@ class SuperGraph(ht.GraphFrame):
             assert gf.graph is not None
             super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics)
 
-            self.sanitizer = Sanitizer(profile_format)
-            self.nxg = self.hatchet_graph_to_nxg(self.graph, self.sanitizer)
+            self.nxg = self.hatchet_graph_to_nxg(self.graph)
 
         # ----------------------------------------------------------------------
         self.df_add_time_proxies()
@@ -373,12 +372,11 @@ class SuperGraph(ht.GraphFrame):
     # callflow.graph utilities.
     # --------------------------------------------------------------------------
     @staticmethod
-    def hatchet_graph_to_nxg(ht_graph, sanitizer):
+    def hatchet_graph_to_nxg(ht_graph):
         """
         Constructs a networkX graph from hatchet graph.
         """
         assert isinstance(ht_graph, ht.graph.Graph)
-        assert isinstance(sanitizer, Sanitizer)
 
         '''
         from callflow.utils import sanitize_name, node_dict_from_frame
@@ -419,8 +417,8 @@ class SuperGraph(ht.GraphFrame):
                             src_name = sanitizer.get_node_name(src_node)
                             trg_name = sanitizer.get_node_name(trg_node)
                             '''
-                            src_name = sanitizer.from_htframe(node_path[-2])
-                            trg_name = sanitizer.from_htframe(node_path[-1])
+                            src_name = Sanitizer.from_htframe(node_path[-2])
+                            trg_name = Sanitizer.from_htframe(node_path[-1])
 
                             nxg.add_edge(src_name, trg_name)
 

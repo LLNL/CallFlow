@@ -12,7 +12,7 @@ LOGGER = callflow.get_logger(__name__)
 
 # ------------------------------------------------------------------------------
 '''
-def sanitize_name(name: str):
+def to_delete_sanitize_name(name: str):
     """
     Sanitize the callsites for general dataset.
     """
@@ -28,7 +28,7 @@ def sanitize_name(name: str):
     return ret_name
 
 
-def sanitizeAMMName(name: str):
+def to_delete_sanitizeAMMName(name: str):
     """
     Sanitize the callsites for AMM dataset.
     """
