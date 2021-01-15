@@ -15,8 +15,13 @@ import sys
 # ------------------------------------------------------------------------------
 import callflow
 from callflow.utils.argparser import ArgParser
-from callflow.server.api_provider import APIProvider
+
+
 import callflow.server.manager as manager
+
+from .provider_base import BaseProvider
+from .provider_api import APIProvider
+from .provider_socket import SocketProvider
 
 LOGGER = callflow.get_logger(__name__)
 CALLFLOW_APP_HOST = os.getenv("CALLFLOW_APP_HOST", "127.0.0.1")
@@ -43,14 +48,19 @@ class CallFlowServer:
         self.production = self.args.args['production']
         self.process = self.args.args['process']
 
-        self.callflow = callflow.CallFlow(config=self.args.config)
-
         if self.process:
-            self.callflow.process()
-        else:
-            self.callflow.load()
-            self._create_server()
+            cf = BaseProvider(config=self.args.config)
+            cf.process()
 
+        else:
+            if True:
+                cf = APIProvider(config=self.args.config)
+            else:
+                cf = SocketProvider(config=self.args.config)
+            cf.load()
+            cf.start(host=CALLFLOW_APP_HOST, port=CALLFLOW_APP_PORT)
+
+    '''
     def _create_server(self):
         """
         Create server's request handler and starts the server.
@@ -65,6 +75,7 @@ class CallFlowServer:
         if self.production:
             # TODO: CAL-6-enable-production-server
             pass
+    '''
 
 
 # ------------------------------------------------------------------------------

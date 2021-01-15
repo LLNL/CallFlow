@@ -2,42 +2,43 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-
-# Library imports
-import callflow
+# ------------------------------------------------------------------------------
 
 import json
 import warnings
+
 from flask import Flask
 from flask_socketio import SocketIO, emit
 from networkx.readwrite import json_graph
 
-app = Flask(__name__, static_url_path="")
-sockets = SocketIO(app, cors_allowed_origins="*")
+import callflow
+from .provider_base import BaseProvider
+
 
 LOGGER = callflow.get_logger(__name__)
 
+app = Flask(__name__, static_url_path="")
+sockets = SocketIO(app, cors_allowed_origins="*")
 
-class SocketProvider:
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+class SocketProvider(BaseProvider):
     """
     Socket provider class for CallFlow
     """
 
-    def __init__(self, cf: callflow.CallFlow, host: str, port: str) -> None:
-        self.cf = cf
+    def __init__(self, config: dict = None, data_dir: str = None) -> None:
+        super().__init__(config, data_dir)
         self.handle_general()
         self.handle_single()
         self.handle_ensemble()
 
+    def start(self, host: str, port: str):
         LOGGER.info("Starting the Socket service")
-        sockets.run(
-            app,
-            host=host,
-            port=port,
-            debug=False,
-            use_reloader=True,
-        )
+        sockets.run(app, host=host, port=port, debug=False, use_reloader=True)
 
+    # --------------------------------------------------------------------------
     @staticmethod
     def emit_json(endpoint: str, json_data: any) -> None:
         """
@@ -64,12 +65,12 @@ class SocketProvider:
             Essential data house for single callflow.
             :return: Config file (JSON Format).
             """
-            result = self.cf.request_general({"name": "init"})
+            result = self.request_general({"name": "init"})
             SocketProvider.emit_json("init", result)
 
         @sockets.on("supergraph_data", namespace="/")
         def ensemble_callsite_data(data):
-            result = self.cf.request_general(
+            result = self.request_general(
                 {
                     "name": "supergraph_data",
                     **data,
@@ -84,14 +85,14 @@ class SocketProvider:
             :return: networkx graph (JSON)
             """
             if data["mode"] == "Single":
-                nxg = self.cf.request_single(
+                nxg = self.request_single(
                     {
                         "name": "supergraph",
                         **data,
                     }
                 )
             else:
-                nxg = self.cf.request_ensemble(
+                nxg = self.request_ensemble(
                     {
                         "name": "supergraph",
                         **data,
@@ -107,7 +108,7 @@ class SocketProvider:
             :return: networkx graph (JSON)
             """
             if data["mode"] == "Single":
-                nxg = self.cf.request_single(
+                nxg = self.request_single(
                     {
                         "name": "supergraph",
                         **data,
@@ -115,7 +116,7 @@ class SocketProvider:
                     }
                 )
             else:
-                nxg = self.cf.request_ensemble(
+                nxg = self.request_ensemble(
                     {
                         "name": "supergraph",
                         **data,
@@ -132,7 +133,7 @@ class SocketProvider:
             :return: networkx graph (JSON)
             """
             if data["mode"] == "Single":
-                nxg = self.cf.request_single(
+                nxg = self.request_single(
                     {
                         "name": "supergraph",
                         **data,
@@ -140,7 +141,7 @@ class SocketProvider:
                     }
                 )
             else:
-                nxg = self.cf.request_ensemble(
+                nxg = self.request_ensemble(
                     {
                         "name": "supergraph",
                         **data,
@@ -157,7 +158,7 @@ class SocketProvider:
             Single CCT.
             :return: CCT networkx graph (JSON format).
             """
-            nxg = self.cf.request_single({"name": "cct", **data})
+            nxg = self.request_single({"name": "cct", **data})
             result = json_graph.node_link_data(nxg)
             SocketProvider.emit_json("cct", result)
 
@@ -167,7 +168,7 @@ class SocketProvider:
             Single SuperGraph.
             :return: both SuperGraph networkx graphs (JSON format).
             """
-            nxg = self.cf.request_single({"name": "supergraph", **data})
+            nxg = self.request_single({"name": "supergraph", **data})
             result = json_graph.node_link_data(nxg)
             SocketProvider.emit_json("single_supergraph", result)
 
@@ -176,7 +177,7 @@ class SocketProvider:
             """
             Split a single run based on MPI distribution
             """
-            result = self.cf.request_single(
+            result = self.request_single(
                 {
                     "name": "split_mpi_distribution",
                     **data,
@@ -191,7 +192,7 @@ class SocketProvider:
             Union of all CCTs.
             :return: CCT networkx graph (JSON format).
             """
-            nxg = self.cf.request_ensemble({"name": "supergraph", **data})
+            nxg = self.request_ensemble({"name": "supergraph", **data})
             result = json_graph.node_link_data(nxg)
             SocketProvider.emit_json("ensemble_cct", result)
 
@@ -201,7 +202,7 @@ class SocketProvider:
             Ensemble SuperGraph.
             :return: both SuperGraph networkx graphs (JSON format).
             """
-            nxg = self.cf.request_ensemble({"name": "ensemble_cct", **data})
+            nxg = self.request_ensemble({"name": "ensemble_cct", **data})
             result = json_graph.node_link_data(nxg)
             SocketProvider.emit_json("ensemble_supergraph", result)
 
@@ -211,7 +212,7 @@ class SocketProvider:
             Similarity Matrix for all callgraphs in ensemble.
             :return: Pair-wise similarity matrix
             """
-            result = self.cf.request_ensemble({"name": "similarity", **data})
+            result = self.request_ensemble({"name": "similarity", **data})
             SocketProvider.emit_json("ensemble_similarity", result)
 
         @sockets.on("module_hierarchy", namespace="/")
@@ -220,7 +221,7 @@ class SocketProvider:
             Module hierarchy of the supergraph.
             :return: CCT networkx graph (JSON format).
             """
-            nxg = self.cf.request_ensemble({"name": "module_hierarchy", **data})
+            nxg = self.request_ensemble({"name": "module_hierarchy", **data})
             result = json_graph.tree_data(nxg, root=data["module"])
             SocketProvider.emit_json("module_hierarchy", result)
 
@@ -229,7 +230,7 @@ class SocketProvider:
             """
             Parameter projection of the datasets.
             """
-            result = self.cf.request_ensemble({"name": "projection", **data})
+            result = self.request_ensemble({"name": "projection", **data})
             SocketProvider.emit_json("parameter_projection", result)
 
         @sockets.on("compare", namespace="/")
@@ -238,5 +239,7 @@ class SocketProvider:
             Compare two super-graphs.
             :return: Gradients in some JSON format.
             """
-            result = self.cf.request_ensemble({"name": "compare", **data})
+            result = self.request_ensemble({"name": "compare", **data})
             SocketProvider.emit_json("compare", result)
+
+# ------------------------------------------------------------------------------
