@@ -10,41 +10,49 @@ import statsmodels.nonparametric.api as smnp
 
 
 class Gradients:
-    def __init__(self, dfs, binCount="20"):
-        self.dfs = dfs
+    def __init__(self, df_dict, callsite: str, binCount="20"):
+        assert isinstance(callsite, str)
+        self.df_dict = df_dict
         self.binCount = binCount
 
         # Find the rank information.
         self.num_of_ranks = {}
         max_ranks = 0
-        for dataset in self.dfs:
-            self.num_of_ranks[dataset] = len(self.dfs[dataset]["rank"].unique())
+        for dataset in self.df_dict:
+            self.num_of_ranks[dataset] = len(self.df_dict[dataset]["rank"].unique())
             max_ranks = max(max_ranks, self.num_of_ranks[dataset])
         self.max_ranks = max_ranks
 
-    def iqr(self, arr):
+        self.result = self.compute(columnName="name", callsiteOrModule=callsite)
+
+    @staticmethod
+    def iqr(arr):
         """Calculate the IQR for an array of numbers."""
         a = np.asarray(arr)
-        self.q1 = stats.scoreatpercentile(a, 25)
-        self.q2 = stats.scoreatpercentile(a, 50)
-        self.q3 = stats.scoreatpercentile(a, 75)
+        q1 = stats.scoreatpercentile(a, 25)
+        q2 = stats.scoreatpercentile(a, 50)
+        q3 = stats.scoreatpercentile(a, 75)
+        q4 = stats.scoreatpercentile(a, 100)
+        return [q1, q2, q3, q4]
 
-    def freedman_diaconis_bins(self, arr):
+    @staticmethod
+    def freedman_diaconis_bins(arr):
         """Calculate number of hist bins using Freedman-Diaconis rule."""
         # From https://stats.stackexchange.com/questions/798/
         if len(arr) < 2:
             return 1
         # Calculate the iqr ranges.
-        self.iqr(arr)
+        [q1, q2, q3, q4] = Gradients.iqr(arr)
         # Calculate the h
-        h = 2 * (self.q3 - self.q1) / (len(arr) ** (1 / 3))
+        h = 2 * (q3 - q1) / (len(arr) ** (1 / 3))
         # fall back to sqrt(a) bins if iqr is 0
         if h == 0:
             return int(np.sqrt(arr.size))
         else:
             return int(np.ceil((arr.max() - arr.min()) / h))
 
-    def convert_dictmean_to_list(self, dictionary):
+    @staticmethod
+    def convert_dictmean_to_list(dictionary):
         mean = []
         dataset = {}
         for state in dictionary:
@@ -54,8 +62,8 @@ class Gradients:
             dataset[state] = np.mean(np.array(d))
         return [mean, dataset]
 
+    @staticmethod
     def kde(
-        self,
         data,
         gridsize=10,
         fft=True,
@@ -79,7 +87,8 @@ class Gradients:
 
         return x, y
 
-    def histogram(self, data, dataset_dict={}, data_min=np.nan, data_max=np.nan):
+    @staticmethod
+    def histogram(data, dataset_dict={}, data_min=np.nan, data_max=np.nan):
         if np.isnan(data_min) or np.isnan(data_max):
             data_min = data.min()
             data_max = data.max()
@@ -99,32 +108,35 @@ class Gradients:
 
         return 0.5 * (b[1:] + b[:-1]), h, dataset_position_dict
 
-    def clean_dict(self, in_dict):
+    @staticmethod
+    def clean_dict(in_dict):
+        # TODO: Remove, not in use
         ret = {k: in_dict[k] for k in in_dict if not math.isnan(in_dict[k])}
         return np.array(tuple(ret))
 
-    def packByRankDistribution(self, df, metric):
+    @staticmethod
+    def _pack_by_rank(df, metric):
         ret = {}
         if df.empty:
             ret = dict((rank, 0) for rank in range(0, self.max_ranks))
         else:
             ranks = df["rank"].tolist()
             metric_vals = df[metric].tolist()
-            # metric_vals = df.groupby("rank").max()[metric].tolist()
             ret = dict(zip(ranks, metric_vals))
         return ret
 
-    def get_runtime_data(self, df, column_name, debug=False):
+    @staticmethod
+    def get_runtime_data(df, column_name, debug=False):
         time_df = df[column_name]
         time_list = time_df.tolist()
 
         if len(time_list) == 0:
             time_list = [0] * self.max_ranks
 
-        ret = self.packByRankDistribution(df, column_name)
+        ret = Gradients._pack_by_rank(df, column_name)
         return ret
 
-    def run(self, columnName="name", callsiteOrModule="", targetDataset=""):
+    def compute(self, columnName="name", callsiteOrModule="", targetDataset=""):
         dist_inc = {}
         dist_exc = {}
         num_of_bins = {}
@@ -132,28 +144,28 @@ class Gradients:
         hist_exc_grid = {}
 
         # Get the runtimes for all the runs.
-        for idx, dataset in enumerate(self.dfs):
-            node_df = self.dfs[dataset].loc[
-                (self.dfs[dataset][columnName] == callsiteOrModule)
+        for idx, dataset in enumerate(self.df_dict):
+            node_df = self.df_dict[dataset].loc[
+                (self.df_dict[dataset][columnName] == callsiteOrModule)
             ]
             debug = False
-            dist_inc[dataset] = self.get_runtime_data(node_df, "time (inc)", debug)
-            dist_exc[dataset] = self.get_runtime_data(node_df, "time", debug)
+            dist_inc[dataset] = Gradients.get_runtime_data(node_df, "time (inc)", debug)
+            dist_exc[dataset] = Gradients.get_runtime_data(node_df, "time", debug)
 
         # convert the dictionary of values to list of values.
-        temp_inc = self.convert_dictmean_to_list(dist_inc)
+        temp_inc = Gradients.convert_dictmean_to_list(dist_inc)
         dist_inc_list = temp_inc[0]
         dataset_inc_list = temp_inc[1]
 
-        temp_exc = self.convert_dictmean_to_list(dist_exc)
+        temp_exc = Gradients.convert_dictmean_to_list(dist_exc)
         dist_exc_list = temp_exc[0]
         dataset_exc_list = temp_exc[1]
 
         # Calculate appropriate number of bins automatically.
         num_of_bins = self.binCount
 
-        hist_inc_grid = self.histogram(np.array(dist_inc_list), dataset_inc_list)
-        hist_exc_grid = self.histogram(np.array(dist_exc_list), dataset_exc_list)
+        hist_inc_grid = Gradients.histogram(np.array(dist_inc_list), dataset_inc_list)
+        hist_exc_grid = Gradients.histogram(np.array(dist_exc_list), dataset_exc_list)
 
         # max_num_of_bins = min(self.freedman_diaconis_bins(np.array(dist_list)), 50)
 
