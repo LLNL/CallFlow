@@ -83,7 +83,7 @@ class CallFlow:
             sg.process_gf()
             sg.filter_gf_sg()
             sg.group_gf_sg(group_by=self.config["group_by"])
-            sg.ensemble_auxiliary(datasets=self.config["parameter_props"]["runs"], MPIBinCount=20, RunBinCount=20)
+            sg.auxiliary_gf_sg()
             sg.write()
             # sg.single_auxiliary(dataset=dataset_name, binCount=20, process=True)
 
@@ -95,7 +95,7 @@ class CallFlow:
         sg.unify(self.supergraphs)
         sg.filter_gf_sg()
         sg.group_gf_sg(group_by=self.config["group_by"])
-        sg.ensemble_auxiliary(datasets=self.config["parameter_props"]["runs"], MPIBinCount=20, RunBinCount=20)
+        sg.auxiliary_gf_sg()
         sg.write()
 
         # Attach to self

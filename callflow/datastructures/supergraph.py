@@ -17,7 +17,7 @@ from callflow.operations import Process, Group, Filter
 #from .graphframe import GraphFrame
 #from callflow.timer import Timer
 #from callflow.algorithms import DeltaConSimilarity
-#from callflow.modules import EnsembleAuxiliary
+from callflow.modules import Auxiliary
 LOGGER = get_logger(__name__)
 
 
@@ -208,7 +208,7 @@ class SuperGraph(ht.GraphFrame):
         assert isinstance(names, list)
         return self.dataframe[self.dataframe["name"].isin(names)]
 
-     def df_filter_by_search_string(self, df, search_strings):
+    def df_filter_by_search_string(self, df, search_strings):
         unq, IDs = np.unique(df["dataset"], return_inverse=True)
         unqIDs = np.searchsorted(unq, search_strings)
         mask = np.isin(IDs, unqIDs)
@@ -516,4 +516,4 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def auxiliary_gf_sg(self):
-        self = EnsembleAuxiliary(supergraph=self)
+        self = Auxiliary(supergraph=self)
