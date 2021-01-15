@@ -78,9 +78,9 @@ class BaseProvider:
             dataset_name = dataset["name"]
             sg = SuperGraph(dataset_name, self.config)
             sg.create()
-            sg.process_gf()
-            sg.filter_gf_sg()
-            sg.group_gf_sg(group_by=self.config["group_by"])
+            sg.process_sg()
+            sg.filter_sg()
+            sg.group_sg(group_by=self.config["group_by"])
             sg.auxiliary_gf_sg()
             sg.write()
             #sg.single_auxiliary(dataset=dataset_name, binCount=20, process=True)
@@ -92,8 +92,8 @@ class BaseProvider:
         if len(self.supergraphs) > 1:
             sg = EnsembleGraph("ensemble", self.config)
             sg.unify(self.supergraphs)
-            sg.filter_gf_sg()
-            sg.group_gf_sg(group_by=self.config["group_by"])
+            sg.filter_sg()
+            sg.group_sg(group_by=self.config["group_by"])
             sg.auxiliary_gf_sg()
             sg.write()
 

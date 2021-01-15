@@ -55,12 +55,15 @@ class CallFlowServer:
         # self.endpoint_access = self.args.args['endpoint_access']
         self.endpoint_access = "REST"
 
+        assert self.endpoint_access in ["REST", "Sockets"]
+
         if self.process:
             cf = BaseProvider(config=self.args.config)
             cf.process()
 
         else:
-             if self.endpoint_access == "REST":
+            cf = None
+            if self.endpoint_access == "REST":
                 cf = APIProvider(config=self.args.config)
             else:
                 cf = SocketProvider(config=self.args.config)
