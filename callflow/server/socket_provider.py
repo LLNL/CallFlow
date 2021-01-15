@@ -23,8 +23,9 @@ class SocketProvider:
     Socket provider class for CallFlow
     """
 
-    def __init__(self, cf: callflow.CallFlow, host: str, port: str) -> None:
+    def __init__(self, cf: callflow.CallFlow, host: str, port: str, production: bool) -> None:
         self.cf = cf
+        self.production = production
         self.handle_general()
         self.handle_single()
         self.handle_ensemble()
