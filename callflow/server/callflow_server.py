@@ -7,10 +7,6 @@
 import os
 import sys
 
-# this turns RuntimeWarnings into errors
-# and allows debugging!
-#import warnings
-#warnings.simplefilter('error', RuntimeWarning)
 
 # ------------------------------------------------------------------------------
 import callflow
@@ -29,10 +25,17 @@ CALLFLOW_APP_PORT = os.getenv("CALLFLOW_APP_PORT", "5000")
 
 
 # ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
 class CallFlowServer:
     """
-    CallFlow Server class.
+    CallFlow Server:
+        * Consumes the arguments passed and transfers to ArgParser class.
+        * Stores a cache_key that holds information about the current launched
+        instance.
+        * Loads the CallFlow class.
+        * `self.process` determines the mode to run the tool. 
+            Process mode -- true (processing of datasets is performed.)
+            Client mode -- false (loads the processed callflow.json and df.csv)
+        * Create server using either APIProvider or SocketProvider 
     """
 
     def __init__(self, args):
@@ -40,6 +43,7 @@ class CallFlowServer:
         self.args = ArgParser(args)
 
         # Set cache key to store the current instance's arguments.
+        # 
         self.cache_key = manager.cache_key(
             working_directory=os.getcwd(), arguments=self.args.args
         )
@@ -47,35 +51,21 @@ class CallFlowServer:
         self.debug = self.args.args['verbose']
         self.production = self.args.args['production']
         self.process = self.args.args['process']
+        # TODO: link it to argParser
+        # self.endpoint_access = self.args.args['endpoint_access']
+        self.endpoint_access = "REST"
 
         if self.process:
             cf = BaseProvider(config=self.args.config)
             cf.process()
 
         else:
-            if True:
+             if self.endpoint_access == "REST":
                 cf = APIProvider(config=self.args.config)
             else:
                 cf = SocketProvider(config=self.args.config)
             cf.load()
             cf.start(host=CALLFLOW_APP_HOST, port=CALLFLOW_APP_PORT)
-
-    '''
-    def _create_server(self):
-        """
-        Create server's request handler and starts the server.
-        """
-        # Socket request handlers
-        APIProvider(
-            cf=self.callflow,
-            host=CALLFLOW_APP_HOST,
-            port=CALLFLOW_APP_PORT,
-        )
-
-        if self.production:
-            # TODO: CAL-6-enable-production-server
-            pass
-    '''
 
 
 # ------------------------------------------------------------------------------
@@ -84,6 +74,7 @@ def main():
     log_level = 1 if '--verbose' in sys.argv else 2
     callflow.init_logger(level=log_level)
 
+    # TODO: @HB do we need this out here?
     '''
     LOGGER.debug('debug logging')
     LOGGER.info('info logging')
@@ -98,5 +89,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------

@@ -30,6 +30,7 @@ class SocketProvider(BaseProvider):
 
     def __init__(self, config: dict = None, data_dir: str = None) -> None:
         super().__init__(config, data_dir)
+        #self.production = production
         self.handle_general()
         self.handle_single()
         self.handle_ensemble()
