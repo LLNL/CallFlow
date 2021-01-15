@@ -4,22 +4,23 @@
 # SPDX-License-Identifier: MIT
 
 import pandas as pd
+import numpy as np
 
+HIST_PROPS = ["rank", "name", "dataset", "all_ranks"]
 
 class Histogram:
-    HIST_PROPS = ["rank", "name", "dataset", "all_ranks"]
-    def __init__(self, ensemble_df, target_df):
-        hists = {
+    def __init__(self, ensemble_df, target_df=None, binCount=20):
+        self.result = {
             "Inclusive": {},
             "Exclusive": {}
         }
         for prop in HIST_PROPS:
-            if target_df:
+            if target_df is not None:
                 prop_histograms = self.bin_by_property_single(ensemble_df, target_df, prop)
             else:
                 prop_histograms = self.bin_by_property_ensemble(ensemble_df, prop)
-            hists["Inclusive"][prop] = prop_histograms["Inclusive"]
-            hists["Exclusive"][prop] = prop_histograms["Exclusive"]
+            self.result["Inclusive"][prop] = prop_histograms["Inclusive"]
+            self.result["Exclusive"][prop] = prop_histograms["Exclusive"]
 
     # Return the histogram in the required form.
     @staticmethod
@@ -34,13 +35,11 @@ class Histogram:
         }
 
     @staticmethod
-    def compute(data, data_min=np.nan, data_max=np.nan):
+    def compute(data, data_min=np.nan, data_max=np.nan, binCount=20):
         if np.isnan(data_min) or np.isnan(data_max):
             data_min = data.min()
             data_max = data.max()
-        h, b = np.histogram(
-            data, range=[data_min, data_max], bins=int(self.MPIBinCount)
-        )
+        h, b = np.histogram(data, range=[data_min, data_max], bins=binCount)
         return 0.5 * (b[1:] + b[:-1]), h
 
     def bin_by_property_ensemble(self, ensemble_df, prop):
@@ -60,9 +59,7 @@ class Histogram:
             time_ensemble_exclusive_arr = np.array(ensemble_prop["time"])
         inclusive_max = time_ensemble_inclusive_arr.max()
         inclusive_min = time_ensemble_inclusive_arr.min()
-        histogram_ensemble_inclusive_grid = Histogram.compute(
-            time_ensemble_inclusive_arr, inclusive_min, inclusive_max
-        )
+        histogram_ensemble_inclusive_grid = Histogram.compute(time_ensemble_inclusive_arr, inclusive_min, inclusive_max)
         exclusive_max = time_ensemble_exclusive_arr.max()
         exclusive_min = time_ensemble_exclusive_arr.min()
         histogram_ensemble_exclusive_grid = Histogram.compute(

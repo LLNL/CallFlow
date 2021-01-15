@@ -14,7 +14,6 @@ from .histogram import Histogram
 
 import callflow
 LOGGER = callflow.get_logger(__name__)
-from callflow.timer import Timer
 
 class Auxiliary:
     def __init__(self, supergraph, MPIBinCount: int = 20, RunBinCount: int = 20):
@@ -22,21 +21,22 @@ class Auxiliary:
         self.RunBinCount = RunBinCount
         self.hist_props = ["rank", "name", "dataset", "all_ranks"]
 
-        if len(supergraph.config["runs"]) > 1:
-            df = Auxiliary.select_rows(supergraph.dataframe, supergraph.config["runs"])
+        self.runs = supergraph.config["parameter_props"]["runs"]
+        if len(self.runs) > 1:
+            self.e_df = Auxiliary.select_rows(supergraph.dataframe, self.runs)
         else:
-            df = supergraph.dataframe
+            self.e_df = supergraph.dataframe
  
-        self.name_group_df = df.groupby(["name"])
-        self.module_group_df = df.groupby(["module"])
-        self.module_name_group_df = df.groupby(["module", "name"])
+        self.e_name_group_df = self.e_df.groupby(["name"])
+        self.e_module_group_df = self.e_df.groupby(["module"])
+        self.e_module_name_group_df = self.e_df.groupby(["module", "name"])
         
         self.t_df = {}
         self.t_module_group_df = {}
         self.t_module_name_group_df = {}
         self.t_name_group_df = {}
-        for dataset in supergraph.config["runs"]:
-            self.t_df[dataset] = df.loc[df["dataset"] == dataset]
+        for dataset in self.runs:
+            self.t_df[dataset] = self.e_df.loc[self.e_df["dataset"] == dataset]
             self.t_name_group_df[dataset] = self.t_df[dataset].groupby(["name"])
             self.t_module_group_df[dataset] = self.t_df[dataset].groupby(["module"])
             self.t_module_name_group_df[dataset] = self.t_df[dataset].groupby(["module", "name"])
@@ -48,12 +48,13 @@ class Auxiliary:
         }
 
     # Callsite grouped information
+    # TODO: Need to clean up this further.
     def callsite_data(self):
         ret = {}
         # Create the data dict.
         ensemble = {}
-        for callsite, callsite_df in self.name_group_df:
-            callsite_ensemble_df = self.name_group_df.get_group(callsite)
+        for callsite, callsite_df in self.e_name_group_df:
+            callsite_ensemble_df = self.e_name_group_df.get_group(callsite)
             histograms = Histogram(ensemble_df=callsite_ensemble_df)
             gradients = Gradients(self.t_df, binCount=self.RunBinCount, callsiteOrModule=callsite)
             boxplot = BoxPlot(callsite_df)
@@ -71,11 +72,11 @@ class Auxiliary:
 
         ## Target data.
         # Loop through datasets and group the callsite by name.
-        for dataset in self.datasets:
+        for dataset in self.runs:
             name_grouped = self.t_name_group_df[dataset]
             target = {}
             for callsite, callsite_df in name_grouped:
-                callsite_ensemble_df = self.name_group_df.get_group(callsite)
+                callsite_ensemble_df = self.e_name_group_df.get_group(callsite)
                 callsite_target_df = callsite_df
                 if not callsite_df.empty:
                     histogram = Histogram(ensemble_df=callsite_ensemble_df, target_df=callsite_target_df)
@@ -93,36 +94,37 @@ class Auxiliary:
         return ret
 
     # Module grouped information.
+    # TODO: Need to clean up this further.
     def module_data(self):
         ret = {}
         # Module grouped information
         ensemble = {}
-        for module, module_df in self.module_group_df:
-            module_ensemble_df = self.module_group_df.get_group(module)
+        for module, module_df in self.e_module_group_df:
+            module_ensemble_df = self.e_module_group_df.get_group(module)
             histogram = Histogram(ensemble_df=module_ensemble_df)
             gradients = Gradients(self.t_df, binCount=self.RunBinCount, callsiteOrModule=module)
             ensemble[module] = self.pack_json(
                 df=module_df,
                 name=module,
-                gradients=gradients,
-                prop_hists=hists,
+                gradients=gradients.result,
+                prop_hists=histogram.result,
                 isEnsemble=True,
             )
         ret["ensemble"] = ensemble
         
-        for dataset in self.datasets:
+        for dataset in self.runs:
             target = {}
-            module_group_df = self.target_module_group_df[dataset]
+            module_group_df = self.t_module_group_df[dataset]
             for module, module_df in module_group_df:
-                module_ensemble_df = self.module_group_df.get_group(module)
+                module_ensemble_df = self.e_module_group_df.get_group(module)
                 module_target_df = module_df
                 if not module_target_df.empty:
                     histogram = Histogram(ensemble_df=module_ensemble_df, target_df=module_target_df)
                     target[module] = self.pack_json(
                         df=module_target_df,
                         name=module,
-                        gradients=gradients,
-                        prop_hists=hists,
+                        gradients=gradients.result,
+                        prop_hists=histogram.result,
                         isEnsemble=False,
                     )
             ret[dataset] = target
@@ -135,6 +137,8 @@ class Auxiliary:
         mask = np.isin(IDs, unqIDs)
         return df[mask]
 
+    # TODO: Need to clean up this further.
+    # TODO: Figure out where this should belong.
     def get_module_callsite_map(self):
         ret = {}
         _data = self.module_group_df["name"].unique()
@@ -146,29 +150,22 @@ class Auxiliary:
         
         return ret
 
+    # TODO: Figure out where this should belong.
     def get_callsite_module_map(self):
         ret = {}
-        callsites = self.df["name"].unique().tolist()
+        callsites = self.e_df["name"].unique().tolist()
         for callsite in callsites:
-            module = (
-                self.df.loc[self.df["name"] == callsite]["module"].unique().tolist()
-            )
-            ret[callsite] = module
+            ret[callsite] = self.e_df.loc[self.e_df["name"] == callsite]["module"].unique().tolist()
         
-        for dataset in self.datasets:
+        for dataset in self.runs:
             ret[dataset] = {}
             for callsite in callsites:
-                module = (
-                    self.t_df[dataset]
-                    .loc[self.t_df[dataset]["name"] == callsite]["name"]
-                    .unique()
-                    .tolist()
-                )
-                ret[dataset][callsite] = module
+                ret[dataset][callsite] = self.t_df[dataset].loc[self.t_df[dataset]["name"] == callsite]["name"].unique().tolist()
         return ret
 
+    # TODO: Need to clean up this further.
+    @staticmethod
     def pack_json(
-        self,
         df,
         name="",
         gradients={"Inclusive": {}, "Exclusive": {}},
@@ -209,8 +206,6 @@ class Auxiliary:
             "id": "node-" + str(df["nid"].tolist()[0]),
             "dataset": df["dataset"].unique().tolist(),
             "module": df["module"].tolist()[0],
-            # "callers": df["callers"].unique().tolist(),
-            # "callees": df["callees"].unique().tolist(),
             "component_path": df["component_path"].unique().tolist(),
             "component_level": df["component_level"].unique().tolist(),
             "Inclusive": {
