@@ -473,7 +473,7 @@ class SuperGraph(ht.GraphFrame):
         """
         Group the graphframe based on `group_by` parameter.
         """
-        self = Group(self, group_by).gf
+        self = Group(self, group_by)
 
     def filter_gf_sg(self, mode="single"):
         """
@@ -484,7 +484,7 @@ class SuperGraph(ht.GraphFrame):
             mode=mode,
             filter_by=self.config["filter_by"],
             filter_perc=float(self.config["filter_perc"]),
-        ).gf
+        )
 
     def filter_gf(self, filter_by, filter_val):
         self.dataframe = self.df_filter_by_value(filter_by, filter_val)
@@ -509,28 +509,5 @@ class SuperGraph(ht.GraphFrame):
         self.nxg = nxg
 
     # --------------------------------------------------------------------------
-    def ensemble_auxiliary(
-        self, datasets, MPIBinCount=20, RunBinCount=20, process=True, write=True
-    ):
-        LOGGER.error('ensemble_auxiliary() is blocked!')
-        return
-
-        EnsembleAuxiliary(
-            self,
-            datasets=datasets,
-            props=self.config,
-            MPIBinCount=MPIBinCount,
-            RunBinCount=RunBinCount,
-            process=process,
-        )
-
-    def single_auxiliary(self, dataset="", binCount=20, process=True):
-        LOGGER.error('single_auxiliary() is blocked!')
-        return
-        SingleAuxiliary(
-            self,
-            dataset=dataset,
-            props=self.config,
-            MPIBinCount=binCount,
-            process=process,
-        )
+    def auxiliary_gf_sg(self, dataset):
+        self = EnsembleAuxiliary(supergraph=self, )

@@ -11,12 +11,29 @@ import numpy as np
 from .gradients import Gradients
 from .boxplot import BoxPlot
 
-import callflow
-LOGGER = callflow.get_logger(__name__)
-from callflow.timer import Timer
+sys.path.insert(0, "..")
+
+# CallFlow imports
+try:
+    import callflow
+
+    LOGGER = callflow.get_logger(__name__)
+    from callflow.timer import Timer
+except Exception:
+    raise Exception("Module callflow not found not found.")
+
 
 class EnsembleAuxiliary:
-    def __init__(self, supergraph, MPIBinCount: int = 20, RunBinCount: int = 20):
+    def __init__(
+        self,
+        gf=callflow.GraphFrame,
+        datasets=[],
+        props={},
+        MPIBinCount="20",
+        RunBinCount="20",
+        process=True,
+    ):
+        self.gf = gf
         self.MPIBinCount = MPIBinCount
         self.RunBinCount = RunBinCount
         self.timer = Timer()
