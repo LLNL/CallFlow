@@ -4,7 +4,7 @@
   "description": "Visualization tool for Calling Context Trees (CCTs)",
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "build": "vue-cli-service build && bash update_build.sh",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
