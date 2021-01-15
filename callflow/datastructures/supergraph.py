@@ -17,7 +17,7 @@ from callflow.operations import Process, Group, Filter
 #from .graphframe import GraphFrame
 #from callflow.timer import Timer
 #from callflow.algorithms import DeltaConSimilarity
-#from callflow.modules import EnsembleAuxiliary, SingleAuxiliary
+#from callflow.modules import EnsembleAuxiliary
 LOGGER = get_logger(__name__)
 
 
