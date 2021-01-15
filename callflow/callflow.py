@@ -15,6 +15,7 @@ from .utils.logger import get_logger
 
 LOGGER = get_logger(__name__)
 
+LOGGER = get_logger(__name__)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -45,21 +46,19 @@ class CallFlow:
     # --------------------------------------------------------------------------
     # load functionality
     def load(self):
-        """
-        Load the processed datasets by the format.
-        """
+
         # create supergraphs for all runs
         for dataset_name in self.config["parameter_props"]["runs"]:
-            self.supergraphs[dataset_name] = SuperGraph(dataset_name,
-                                                        self.config)
-            self.supergraphs[dataset_name].load()
+            sg = SuperGraph(dataset_name, self.config)
+            sg.load()
+            self.supergraphs[dataset_name] = sg
 
         # ensemble case
         if self.ndatasets > 1:
             dataset_name = "ensemble"
-            self.supergraphs[dataset_name] = EnsembleGraph(dataset_name,
-                                                           self.config)
-            self.supergraphs[dataset_name].load()
+            sg = EnsembleGraph(dataset_name, self.config)
+            sg.load()
+            self.supergraphs[dataset_name] = sg
 
         # Adds basic information to config.
         # Config is later return to client app on "init" request.
@@ -67,49 +66,42 @@ class CallFlow:
 
     # --------------------------------------------------------------------------
     def process(self):
-        """
-        Process the datasets based on the format (i.e., either single or ensemble)
-        """
         # process all datasets
         for dataset in self.config["runs"]:
 
             dataset_name = dataset["name"]
-
-            #LOGGER.info("#########################################")
-            #LOGGER.info(f"Dataset name: {dataset_name}")
-            #LOGGER.info("#########################################")
-
             sg = SuperGraph(dataset_name, self.config)
             sg.create()
-            sg.process_gf()
+            sg.process_sg()
 
             if self.ndatasets == 1:
-                sg.filter_gf_sg(mode="single")
-                sg.group_gf_sg(group_by = "module") # TODO: ask why is this here?
+                sg.filter_sg(mode="single")
+                sg.group_sg(group_by = "module") # TODO: ask why is this here?
             else:
-                sg.group_gf_sg(group_by=self.config["group_by"])
+                sg.group_sg(group_by=self.config["group_by"])
 
-            sg.write() #"entire")
+            sg.write()
             sg.single_auxiliary(dataset=dataset_name, binCount=20, process=True)
 
             self.supergraphs[dataset_name] = sg
 
         # ----------------------------------------------------------------------
         # now, process ensemble
-        sg = EnsembleGraph("ensemble", self.config)
-        sg.unify(self.supergraphs)
+        if len(self.supergraphs) > 1:
+            sg = EnsembleGraph("ensemble", self.config)
+            sg.unify(self.supergraphs)
 
-        sg.filter_gf_sg(mode="ensemble")
-        sg.group_gf_sg(group_by=self.config["group_by"])
+            sg.filter_sg(mode="ensemble")
+            sg.group_sg(group_by=self.config["group_by"])
 
-        sg.write() #"group")
-        sg.ensemble_auxiliary(
-                # MPIBinCount=self.currentMPIBinCount,
-                # RunBinCount=self.currentRunBinCount,
-                datasets=self.config["parameter_props"]["runs"],
-                MPIBinCount=20, RunBinCount=20,
-                process=True, write=True)
-        self.supergraphs["ensemble"] = sg
+            sg.write() #"group")
+            sg.ensemble_auxiliary(
+                    # MPIBinCount=self.currentMPIBinCount,
+                    # RunBinCount=self.currentRunBinCount,
+                    datasets=self.config["parameter_props"]["runs"],
+                    MPIBinCount=20, RunBinCount=20,
+                    process=True, write=True)
+            self.supergraphs["ensemble"] = sg
         # ----------------------------------------------------------------------
 
     # --------------------------------------------------------------------------
