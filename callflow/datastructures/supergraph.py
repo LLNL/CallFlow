@@ -41,6 +41,9 @@ class SuperGraph(ht.GraphFrame):
     _METRIC_PROXIES = {"time (inc)": ["inclusive#time.duration"],
                        "time": ["sum#time.duration", "sum#sum#time.duration"]}
 
+    _GROUP_MODES = ["name", "module"]
+    _FILTER_MODES = ["time", "time (inc)"]
+
     # --------------------------------------------------------------------------
     def __init__(self, name, config):
 
@@ -194,6 +197,13 @@ class SuperGraph(ht.GraphFrame):
             LOGGER.debug(f'appending column \"{column_name}\" = {apply_func}')
             self.dataframe[column_name] = self.dataframe[apply_on].apply(apply_func)
 
+    # TODO: merge this with the function above
+    def df_add_nid_column(self):
+        if "nid" in self.dataframe.columns:
+            return
+        self.dataframe["nid"] = self.dataframe.groupby("name")["name"]\
+            .transform(lambda x: pd.factorize(x)[0])
+
     def df_update_mapping(self, col_name, mapping, apply_on="name"):
         self.dataframe[col_name] = self.dataframe[apply_on].apply(
             lambda _: mapping[_] if _ in mapping.keys() else "")
@@ -229,26 +239,7 @@ class SuperGraph(ht.GraphFrame):
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
 
-    # -------------------------------------------------------------------------
-    # TODO: needs to be cleaned
-    def get_module_name(self, callsite):
-        """
-        Get the module name for a callsite.
-        Note: The module names can be specified using the config file.
-        If such a mapping exists, this function returns the module based on mapping. Else, it queries the graphframe for a module name.
 
-        Return:
-            module name (str) - Returns the module name
-        """
-        if "callsite_module_map" in self.config:
-            if callsite in self.config["callsite_module_map"]:
-                return self.config["callsite_module_map"][callsite]
-
-        if "module" in self.df_columns():
-            return self.df_lookup_with_column("name", callsite)["module"].unique()[0]
-            # return self.lookup_with_name(callsite)["module"].unique()[0]
-        else:
-            return callsite
 
     # --------------------------------------------------------------------------
     # callflow.graph utilities.
@@ -405,12 +396,16 @@ class SuperGraph(ht.GraphFrame):
         return data
 
     # --------------------------------------------------------------------------
-    def prc_add_dataset_name(self):
-        self.df_add_column('dataset', value=self.name)
+    def prc_add_vis_node_name(self):
+        self.module_group_df = self.dataframe.groupby(["module"])
+        self.module_callsite_map = self.module_group_df["name"].unique()
 
-    def prc_add_callers_and_callees(self):
-        self.df_add_column('callees', apply_func=lambda _: self.callees[_])
-        self.df_add_column('callers', apply_func=lambda _: self.callers[_])
+        self.name_group_df = self.dataframe.groupby(["name"])
+        self.callsite_module_map = self.name_group_df["module"].unique().to_dict()
+
+        self.df_add_column('vis_node_name',
+                           apply_func=lambda _:
+                           Sanitizer.sanitize(self.callsite_module_map[_][0]) + "=" + _)
 
     def prc_add_path(self):
 
@@ -426,41 +421,6 @@ class SuperGraph(ht.GraphFrame):
         from callflow.utils.utils import path_list_from_frames
         self.df_add_column('path',
                            apply_func=lambda _: path_list_from_frames(self.paths[_]))
-
-    def prc_create_name_module_map(self):
-        self.df_add_column("module", apply_func=lambda _: _)
-        self.name_module_map = self.dataframe.groupby(["name"])["module"]\
-            .unique().to_dict()
-
-    def prc_add_module_name_caliper(self, module_map):
-        self.df_add_column('module', apply_func=lambda _: module_map[_])
-
-    def prc_add_module_name_hpctoolkit(self):
-        self.df_add_column('module',
-                           apply_func=lambda _: Sanitizer.sanitize(_),
-                           apply_on='module')
-
-    def prc_add_vis_node_name(self):
-        self.module_group_df = self.dataframe.groupby(["module"])
-        self.module_callsite_map = self.module_group_df["name"].unique()
-
-        self.name_group_df = self.dataframe.groupby(["name"])
-        self.callsite_module_map = self.name_group_df["module"].unique().to_dict()
-
-        self.df_add_column('vis_node_name',
-                           apply_func=lambda _:
-                           Sanitizer.sanitize(self.callsite_module_map[_][0]) + "=" + _)
-
-    def prc_add_rank_column(self):
-        self.df_add_column('rank', value=0)
-        self.prc_add_nid_column()
-
-    def prc_add_nid_column(self):
-        if "nid" not in self.dataframe.columns:
-            self.df["nid"] = self.dataframe.groupby("name")["name"].transform(
-                lambda x: pd.factorize(x)[0]
-            )
-            assert False
 
     def prc_add_imbalance_perc(self):
 
@@ -487,7 +447,7 @@ class SuperGraph(ht.GraphFrame):
                 _data = node_df[_proxy]
 
                 _mean, _max = _data.mean(), _data.max()
-                _perc = (_max-_mean)/_mean if not np.isclose(_mean, 0.) else _max
+                _perc = (_max - _mean) / _mean if not np.isclose(_mean, 0.) else _max
                 _std = np.std(_data, ddof=1) if node_dfsz > 1 else 0.
                 _skew = skew(_data)
                 _kert = kurtosis(_data)
@@ -503,8 +463,42 @@ class SuperGraph(ht.GraphFrame):
                 self.df_add_column(f'{metric}_{col_suffix}',
                                    apply_func=lambda _: metrics_dict[_][metric_key][metric])
 
+    # --------------------------------------------------------------------------
+    def prc_create_name_module_map(self):
+        self.df_add_column("module", apply_func=lambda _: _)
+        self.name_module_map = self.dataframe.groupby(["name"])["module"]\
+            .unique().to_dict()
+
+    def prc_add_module_name_caliper(self, module_map):
+        self.df_add_column('module', apply_func=lambda _: module_map[_])
+
+    def prc_add_module_name_hpctoolkit(self):
+        self.df_add_column('module',
+                           apply_func=lambda _: Sanitizer.sanitize(_),
+                           apply_on='module')
+
     def add_module_name_caliper(self, module_map):
         self.df_add_column('module', apply_func=lambda _: module_map[_])
+
+    # TODO: needs to be cleaned
+    def get_module_name(self, callsite):
+        """
+        Get the module name for a callsite.
+        Note: The module names can be specified using the config file.
+        If such a mapping exists, this function returns the module based on mapping. Else, it queries the graphframe for a module name.
+
+        Return:
+            module name (str) - Returns the module name
+        """
+        if "callsite_module_map" in self.config:
+            if callsite in self.config["callsite_module_map"]:
+                return self.config["callsite_module_map"][callsite]
+
+        if "module" in self.df_columns():
+            return self.df_lookup_with_column("name", callsite)["module"].unique()[0]
+            # return self.lookup_with_name(callsite)["module"].unique()[0]
+        else:
+            return callsite
 
     # --------------------------------------------------------------------------
     # The next block of functions attach the calculated result to the variable `gf`.
@@ -519,6 +513,7 @@ class SuperGraph(ht.GraphFrame):
 
         # ----------------------------------------------------------------------
         # copied from Builder.__init__()
+        # TODO: should go in create/load?
         for node in self.graph.traverse():
             node_name = Sanitizer.from_htframe(node.frame)
             self.hatchet_nodes[node_name] = node
@@ -530,15 +525,39 @@ class SuperGraph(ht.GraphFrame):
         # LOGGER.warning('>>>>>> before processing\n {}'.format(self.dataframe))
         profile_format = self.config["parameter_props"]["profile_format"][self.name]
 
-        if profile_format == "hpctoolkit":
-            self.prc_add_path()
-            self.prc_create_name_module_map()
-            self.prc_add_dataset_name()
-            self.prc_add_imbalance_perc()
-            self.prc_add_module_name_hpctoolkit()
-            self.prc_add_vis_node_name()
+        # add new columns to the dataframe
+        self.df_add_column('dataset', value=self.name)
+        self.df_add_column('rank', value=0)
+        self.df_add_nid_column()
+        self.df_add_column('callees', apply_func=lambda _: self.callees[_])
+        self.df_add_column('callers', apply_func=lambda _: self.callers[_])
 
-            '''
+        # ----------------------------------------------------------------------
+        # TODO: check if we need to be so profile-specific!
+        if profile_format == "hpctoolkit":
+            self.prc_create_name_module_map()
+            self.prc_add_module_name_hpctoolkit()
+
+        elif profile_format == "caliper_json" or profile_format == "caliper":
+            if "callsite_module_map" in self.config:
+                self.prc_add_module_name_caliper(self.config["callsite_module_map"])
+            self.prc_create_name_module_map()
+
+        elif profile_format == "gprof":
+            self.prc_create_name_module_map()
+
+        # ----------------------------------------------------------------------
+        # TODO: these need more processing.
+        #  figure out if they need to store member variables
+        self.prc_add_imbalance_perc()
+        self.prc_add_vis_node_name()
+        self.prc_add_path()
+
+        # ----------------------------------------------------------------------
+        '''
+        # copied from Process
+        # ----------------------------------------------------------------------
+        if profile_format == "hpctoolkit":
             process = (
                 Process.Builder(self, self.name)
                     .add_path()
@@ -550,19 +569,9 @@ class SuperGraph(ht.GraphFrame):
                     .add_vis_node_name()
                     .build()
             )
-            '''
 
         elif profile_format == "caliper_json" or profile_format == "caliper":
             if "callsite_module_map" in self.config:
-                self.prc_add_rank_column()
-                self.prc_add_callers_and_callees()
-                self.prc_add_dataset_name()
-                self.prc_add_imbalance_perc()
-                self.prc_add_module_name_caliper(self.config["callsite_module_map"])
-                self.prc_create_name_module_map()
-                self.prc_add_vis_node_name()
-                self.prc_add_path()
-                '''
                 process = (
                     Process.Builder(self, self.name)
                         .add_time_columns()
@@ -576,16 +585,8 @@ class SuperGraph(ht.GraphFrame):
                         .add_path()
                         .build()
                 )
-                '''
+
             else:
-                self.prc_add_rank_column()
-                self.prc_add_callers_and_callees()
-                self.prc_add_dataset_name()
-                self.prc_add_imbalance_perc()
-                self.prc_create_name_module_map()
-                self.prc_add_vis_node_name()
-                self.prc_add_path()
-                '''
                 process = (
                     Process.Builder(self, self.name)
                         .add_time_columns()
@@ -598,17 +599,8 @@ class SuperGraph(ht.GraphFrame):
                         .add_path()
                         .build()
                 )
-                '''
 
         elif profile_format == "gprof":
-            self.prc_add_rank_column()
-            self.prc_add_callers_and_callees()
-            self.prc_add_dataset_name()
-            self.prc_add_imbalance_perc()
-            self.prc_create_name_module_map()
-            self.prc_add_vis_node_name()
-            self.prc_add_path()
-            '''
             process = (
                 Process.Builder(self, self.name)
                     .add_nid_column()
@@ -622,9 +614,9 @@ class SuperGraph(ht.GraphFrame):
                     .add_path()
                     .build()
             )
-            '''
 
         #self = process.gf
+        '''
 
     # --------------------------------------------------------------------------
     def group_sg(self, group_by="module"):
@@ -632,9 +624,7 @@ class SuperGraph(ht.GraphFrame):
         Group the graphframe based on `group_by` parameter.
         """
         #self = Group(self, group_by).gf
-        # TODO: move up
-        VALID_MODES = ["name", "module"]
-        assert group_by in VALID_MODES
+        assert group_by in SuperGraph._GROUP_MODES
 
         # ----------------------------------------------------------------------
         # Group.__init__
@@ -831,9 +821,7 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         filter_by = self.config["filter_by"]
         filter_perc = float(self.config["filter_perc"])
-
-        VALID_MODES = ["time", "time (inc)"]
-        assert filter_by in VALID_MODES
+        assert filter_by in SuperGraph._FILTER_MODES
         assert 0. <= filter_perc <= 100.
 
         # ----------------------------------------------------------------------
