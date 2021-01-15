@@ -7,18 +7,17 @@
 import os
 import sys
 
-# TODO: @HB Do we need this? 
-# this turns RuntimeWarnings into errors
-# and allows debugging!
-#import warnings
-#warnings.simplefilter('error', RuntimeWarning)
 
 # ------------------------------------------------------------------------------
 import callflow
 from callflow.utils.argparser import ArgParser
-from callflow.server.api_provider import APIProvider
-from callflow.server.socket_provider import SocketProvider
+
+
 import callflow.server.manager as manager
+
+from .provider_base import BaseProvider
+from .provider_api import APIProvider
+from .provider_socket import SocketProvider
 
 LOGGER = callflow.get_logger(__name__)
 CALLFLOW_APP_HOST = os.getenv("CALLFLOW_APP_HOST", "127.0.0.1")
@@ -52,34 +51,24 @@ class CallFlowServer:
         self.debug = self.args.args['verbose']
         self.production = self.args.args['production']
         self.process = self.args.args['process']
-        # @HB : Do we need to link it to argParser? I feel this can be an
-        # internal toggle. 
+        # TODO: link it to argParser
         # self.endpoint_access = self.args.args['endpoint_access']
         self.endpoint_access = "REST"
 
-        self.callflow = callflow.CallFlow(config=self.args.config)
+        assert self.endpoint_access in ["REST", "Sockets"]
 
         if self.process:
-            self.callflow.process()
-        else:
-            self.callflow.load()
-            self._create_server()
+            cf = BaseProvider(config=self.args.config)
+            cf.process()
 
-    def _create_server(self):
-        if self.endpoint_access == "REST":
-            APIProvider(
-                cf=self.callflow,
-                host=CALLFLOW_APP_HOST,
-                port=CALLFLOW_APP_PORT,
-                production=self.production
-            )
-        elif self.endpoint_access == "SOCKETS":
-            SocketProvider(
-                cf=self.callflow,
-                host=CALLFLOW_APP_HOST,
-                port=CALLFLOW_APP_PORT,
-                production=self.production
-            )
+        else:
+            cf = None
+            if self.endpoint_access == "REST":
+                cf = APIProvider(config=self.args.config)
+            else:
+                cf = SocketProvider(config=self.args.config)
+            cf.load()
+            cf.start(host=CALLFLOW_APP_HOST, port=CALLFLOW_APP_PORT)
 
 
 # ------------------------------------------------------------------------------

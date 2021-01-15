@@ -5,20 +5,18 @@
 # ------------------------------------------------------------------------------
 
 import json
+from callflow import SuperGraph, EnsembleGraph, get_logger
 
-from .datastructures import SuperGraph, EnsembleGraph
-from .utils.logger import get_logger
+LOGGER = get_logger(__name__)
 
 #from .algorithms import DeltaConSimilarity, BlandAltman
 #from .layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 #from .modules import ParameterProjection, DiffView, MiniHistogram, FunctionList
 
-LOGGER = get_logger(__name__)
-
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
-class CallFlow:
+class BaseProvider:
 
     def __init__(self, config: dict = None, data_dir: str = None):
         """
@@ -39,7 +37,7 @@ class CallFlow:
         self.ndatasets = len(self.config["runs"])
         assert self.ndatasets > 0
 
-        self.config["parameter_props"] = CallFlow._parameter_props(self.config)
+        self.config["parameter_props"] = BaseProvider._parameter_props(self.config)
         self.supergraphs = {}
 
     # --------------------------------------------------------------------------
@@ -50,20 +48,20 @@ class CallFlow:
         """
         # create supergraphs for all runs
         for dataset_name in self.config["parameter_props"]["runs"]:
-            self.supergraphs[dataset_name] = SuperGraph(dataset_name,
-                                                        self.config)
-            self.supergraphs[dataset_name].load()
+            sg = SuperGraph(dataset_name, self.config)
+            sg.load()
+            self.supergraphs[dataset_name] = sg
 
         # ensemble case
         if self.ndatasets > 1:
             dataset_name = "ensemble"
-            self.supergraphs[dataset_name] = EnsembleGraph(dataset_name,
-                                                           self.config)
-            self.supergraphs[dataset_name].load()
+            sg = EnsembleGraph(dataset_name, self.config)
+            sg.load()
+            self.supergraphs[dataset_name] = sg
 
         # Adds basic information to config.
         # Config is later return to client app on "init" request.
-        self.config["runtime_props"] = CallFlow._runtime_props(self.supergraphs)
+        self.config["runtime_props"] = BaseProvider._runtime_props(self.supergraphs)
 
     # --------------------------------------------------------------------------
     def process(self):
@@ -77,29 +75,29 @@ class CallFlow:
         # Stage-1: Each dataset is processed individually into a SuperGraph.
         for dataset in self.config["runs"]:
             dataset_name = dataset["name"]
-
             sg = SuperGraph(dataset_name, self.config)
             sg.create()
-            sg.process_gf()
-            sg.filter_gf_sg()
-            sg.group_gf_sg(group_by=self.config["group_by"])
+            sg.process_sg()
+            sg.filter_sg()
+            sg.group_sg(group_by=self.config["group_by"])
             sg.auxiliary_gf_sg()
             sg.write()
-            # sg.single_auxiliary(dataset=dataset_name, binCount=20, process=True)
+            #sg.single_auxiliary(dataset=dataset_name, binCount=20, process=True)
 
-            # Attach to self
             self.supergraphs[dataset_name] = sg
 
+        # ----------------------------------------------------------------------
         # Stage-3: EnsembleGraph processing
-        sg = EnsembleGraph("ensemble", self.config)
-        sg.unify(self.supergraphs)
-        sg.filter_gf_sg()
-        sg.group_gf_sg(group_by=self.config["group_by"])
-        sg.auxiliary_gf_sg()
-        sg.write()
+        if len(self.supergraphs) > 1:
+            sg = EnsembleGraph("ensemble", self.config)
+            sg.unify(self.supergraphs)
+            sg.filter_sg()
+            sg.group_sg(group_by=self.config["group_by"])
+            sg.auxiliary_gf_sg()
+            sg.write()
 
-        # Attach to self
-        self.supergraphs["ensemble"] = sg
+            # Attach to self
+            self.supergraphs["ensemble"] = sg
         # ----------------------------------------------------------------------
 
     # --------------------------------------------------------------------------

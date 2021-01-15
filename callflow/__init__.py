@@ -7,8 +7,6 @@
 # callflow.__init__.py
 from .utils.logger import init_logger, get_logger
 from .datastructures import SuperGraph, EnsembleGraph
-from .callflow import CallFlow
-
 from .server.notebook_server import load_ipython_extension
 
 '''
@@ -28,7 +26,6 @@ __all__ = [
     "get_logger",
     "SuperGraph",
     "EnsembleGraph",
-    "CallFlow",
 ]
 
 # ------------------------------------------------------------------------------
