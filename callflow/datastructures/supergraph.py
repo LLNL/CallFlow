@@ -226,6 +226,12 @@ class SuperGraph(ht.GraphFrame):
         assert isinstance(names, list)
         return self.dataframe[self.dataframe["name"].isin(names)]
 
+     def df_filter_by_search_string(self, df, search_strings):
+        unq, IDs = np.unique(df["dataset"], return_inverse=True)
+        unqIDs = np.searchsorted(unq, search_strings)
+        mask = np.isin(IDs, unqIDs)
+        return df[mask]
+
     def df_lookup_with_column(self, column, value):
         column = self.df_get_proxy(column)
         return self.dataframe.loc[self.dataframe[column] == value]
@@ -885,5 +891,5 @@ class SuperGraph(ht.GraphFrame):
         self.nxg = nxg
 
     # --------------------------------------------------------------------------
-    def auxiliary_gf_sg(self, dataset):
-        self = EnsembleAuxiliary(supergraph=self, )
+    def auxiliary_gf_sg(self):
+        self = EnsembleAuxiliary(supergraph=self)
