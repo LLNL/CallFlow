@@ -585,7 +585,6 @@ class SuperGraph(ht.GraphFrame):
                         .add_path()
                         .build()
                 )
-
             else:
                 process = (
                     Process.Builder(self, self.name)
@@ -886,28 +885,5 @@ class SuperGraph(ht.GraphFrame):
         self.nxg = nxg
 
     # --------------------------------------------------------------------------
-    def ensemble_auxiliary(
-        self, datasets, MPIBinCount=20, RunBinCount=20, process=True, write=True
-    ):
-        LOGGER.error('ensemble_auxiliary() is blocked!')
-        return
-
-        EnsembleAuxiliary(
-            self,
-            datasets=datasets,
-            props=self.config,
-            MPIBinCount=MPIBinCount,
-            RunBinCount=RunBinCount,
-            process=process,
-        )
-
-    def single_auxiliary(self, dataset="", binCount=20, process=True):
-        LOGGER.error('single_auxiliary() is blocked!')
-        return
-        SingleAuxiliary(
-            self,
-            dataset=dataset,
-            props=self.config,
-            MPIBinCount=binCount,
-            process=process,
-        )
+    def auxiliary_gf_sg(self, dataset):
+        self = EnsembleAuxiliary(supergraph=self, )
