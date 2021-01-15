@@ -64,42 +64,38 @@ class BaseProvider:
 
     # --------------------------------------------------------------------------
     def process(self):
-
-        # process all datasets
+        """
+        Process the datasets using a Pipeline of operations.
+            1. Each dataset is processed individually into a SuperGraph. Each 
+            SuperGraph is then processed according the provided config
+            variables, e.g., filter_perc, filter_by.
+            2. EnsembleGraph is then constructed from the processed SuperGraphs.
+        """
+        # Stage-1: Each dataset is processed individually into a SuperGraph.
         for dataset in self.config["runs"]:
-
             dataset_name = dataset["name"]
             sg = SuperGraph(dataset_name, self.config)
             sg.create()
-            sg.process_sg()
-
-            if self.ndatasets == 1:
-                sg.filter_sg(mode="single")
-                sg.group_sg(group_by = "module") # TODO: ask why is this here?
-            else:
-                sg.group_sg(group_by=self.config["group_by"])
-
+            sg.process_gf()
+            sg.filter_gf_sg()
+            sg.group_gf_sg(group_by=self.config["group_by"])
+            sg.ensemble_auxiliary(datasets=self.config["parameter_props"]["runs"], MPIBinCount=20, RunBinCount=20)
             sg.write()
-            sg.single_auxiliary(dataset=dataset_name, binCount=20, process=True)
+            #sg.single_auxiliary(dataset=dataset_name, binCount=20, process=True)
 
             self.supergraphs[dataset_name] = sg
 
         # ----------------------------------------------------------------------
-        # now, process ensemble
+        # Stage-3: EnsembleGraph processing
         if len(self.supergraphs) > 1:
             sg = EnsembleGraph("ensemble", self.config)
             sg.unify(self.supergraphs)
-
-            sg.filter_sg(mode="ensemble")
-            sg.group_sg(group_by=self.config["group_by"])
-
-            sg.write() #"group")
-            sg.ensemble_auxiliary(
-                    # MPIBinCount=self.currentMPIBinCount,
-                    # RunBinCount=self.currentRunBinCount,
-                    datasets=self.config["parameter_props"]["runs"],
-                    MPIBinCount=20, RunBinCount=20,
-                    process=True, write=True)
+            sg.filter_gf_sg()
+            sg.group_gf_sg(group_by=self.config["group_by"])
+            sg.ensemble_auxiliary(datasets=self.config["parameter_props"]["runs"], 
+                                  MPIBinCount=20, RunBinCount=20)
+            sg.write()
+            # Attach to self
             self.supergraphs["ensemble"] = sg
         # ----------------------------------------------------------------------
 
