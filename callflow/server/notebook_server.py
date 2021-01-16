@@ -110,7 +110,7 @@ StartTimedOut = collections.namedtuple("StartTimedOut", ("pid",))
 # ------------------------------------------------------------------------------
 # public api of the ipython environment
 # ------------------------------------------------------------------------------
-def setup_ipython_environment(args, config, host, port):
+def launch_ipython(args, config, host, port):
     """
     Setup the IPython environment.
 
@@ -120,11 +120,13 @@ def setup_ipython_environment(args, config, host, port):
     :param port:
     :return: StartLaunched or StartReused
     """
-    LOGGER.info('Setting up ipython environment')
-
-    # args or dictionary
     assert isinstance(args, dict) and isinstance(config, dict)
     assert isinstance(host, str) and isinstance(port, int)
+
+    _msg = f'Launching CallFlow in ipython environment ({host}) ({port})'
+    LOGGER.info(_msg)
+    handle = IPython.display.display(IPython.display.Pretty(_msg),
+                                     display_id=True)
 
     '''
     print(' -------------------- ')
@@ -149,46 +151,66 @@ def setup_ipython_environment(args, config, host, port):
     # Find a matching instance to the current launch.
     matching_instance = _find_matching_instance(launch_info_path)
 
+    # --------------------------------------------------------------------------
     # If a match exists, use it.
     if matching_instance:
         start_result = StartReused(info=matching_instance)
-        return start_result
+        #return start_result
 
+        print (start_result)
+        exit()
+        pid = int(start_result.info["pid"])
+        port = int(start_result.info["port"])
+        client_port = int(start_result.info["client_port"])
+        time_delta = int(time.time()) - start_result.info["start_time"]
+        time_delta = str(datetime.timedelta(seconds=time_delta))
+
+        _msg = f"Reusing CallFlow's server is on port {port} and " \
+               f"client is on {client_port} (pid {pid}), " \
+               f"started {time_delta} ago. (Use '!kill {pid}' to kill it.)"
+
+        LOGGER.info(_msg)
+        _print_message_in_ipython(handle, _msg)
+        _display_ipython(port=client_port, height=800, display_handle=None)
+
+    # --------------------------------------------------------------------------
     # Launch the server command
-    server_cmd = ["callflow_server"]
-    for k,v in args.items():
-        if v is not None:
-            server_cmd += [f'--{k}',f'{v}']
-    LOGGER.debug('launching ({})'.format(' '.join(server_cmd)))
+    else:
+        server_cmd = ["callflow_server"]
+        for k,v in args.items():
+            if v is not None:
+                server_cmd += [f'--{k}',f'{v}']
+        LOGGER.debug('launching ({})'.format(' '.join(server_cmd)))
 
-    server_cmd = ['callflow_server',
-                  '--data_path', './data/lulesh-8-runs-original',
-                  '--profile_format', 'caliper_json',
-                  '--verbose']
-    LOGGER.debug('launching ({})'.format(' '.join(server_cmd)))
+        # TODO: fix the hardcoding
+        server_cmd = ['callflow_server',
+                      '--data_path', './data/lulesh-8-runs-original',
+                      '--profile_format', 'caliper_json',
+                      '--verbose']
+        LOGGER.debug('launching ({})'.format(' '.join(server_cmd)))
 
-    launch_result = _launch_app(server_cmd,
-                                host=host, port=port,
-                                info_dir=launch_info_path,
-                                instance=matching_instance)
+        launch_result = _launch_app(server_cmd, host=host, port=port,
+                                    info_dir=launch_info_path,
+                                    instance=matching_instance)
 
-    if not isinstance(launch_result, StartLaunched):
-        LOGGER.critical('exiting due to launch failure')
-        exit(1)
+        if not isinstance(launch_result, StartLaunched):
+            LOGGER.critical('exiting due to launch failure')
+            exit(1)
 
-    # Construct the CallFlowLaunchInfo object.
-    launch_info = CallFlowLaunchInfo(version=version, port=port, host=host,
-                                     config=config,
-                                     start_time=int(time.time()),
-                                     pid=os.getpid(), cache_key=cache_key)
+        # Construct the CallFlowLaunchInfo object.
+        launch_info = CallFlowLaunchInfo(version=version, port=port, host=host,
+                                         config=config,
+                                         start_time=int(time.time()),
+                                         pid=os.getpid(), cache_key=cache_key)
 
-    # Store the CallFlowLaunchInfo object.
-    _write_launch_info_file(launch_info_file, launch_info)
+        # Store the CallFlowLaunchInfo object.
+        _write_launch_info_file(launch_info_file, launch_info)
 
-    # Trigger a return that the callflow process has been triggered.
-    return launch_result
+        # Trigger a return that the callflow process has been triggered.
+        #return launch_result
+        _display_ipython(port=port, height=800, display_handle=handle)
 
-
+'''
 def run_ipython_environment(start_result):
     """
     Run the jupyter environment
@@ -222,9 +244,9 @@ def run_ipython_environment(start_result):
 
         _print_message_in_ipython(handle, message)
         _display_ipython(port=client_port, height=800, display_handle=None)
+'''
 
-
-def load_ipython_extension(ipython, server):
+def load_ipython(ipython, server):
     """
     Load the CallFLow notebook extension.
     Intended to be called from `%load_ext callflow`. Do not invoke this

@@ -16,7 +16,7 @@ from callflow.utils.argparser import ArgParser
 from .provider_base import BaseProvider
 from .provider_api import APIProvider
 from .provider_socket import SocketProvider
-from .notebook_server import setup_ipython_environment, run_ipython_environment
+from .notebook_server import launch_ipython
 
 LOGGER = callflow.get_logger(__name__)
 
@@ -62,10 +62,8 @@ def main():
 
     # --------------------------------------------------------------------------
     elif not process and endpoint_access == "JUPYTER":
-        start_result = setup_ipython_environment(args.args, args.config,
-                                                 host=CALLFLOW_APP_HOST,
-                                                 port=CALLFLOW_APP_PORT)
-        run_ipython_environment(start_result=start_result)
+        launch_ipython(args.args, args.config,
+                       host=CALLFLOW_APP_HOST, port=CALLFLOW_APP_PORT)
 
     # --------------------------------------------------------------------------
     else:

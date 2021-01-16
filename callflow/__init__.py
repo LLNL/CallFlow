@@ -8,6 +8,14 @@
 from .utils.logger import init_logger, get_logger
 from .datastructures import SuperGraph, EnsembleGraph
 
+# CallFlow's public API.
+__all__ = [
+    "init_logger",
+    "get_logger",
+    "SuperGraph",
+    "EnsembleGraph",
+]
+
 
 # ------------------------------------------------------------------------------
 def load_ipython_extension(ipython):
@@ -18,17 +26,7 @@ def load_ipython_extension(ipython):
     """
     # TODO: this needs to be fixed
     from .server.callflow_server import main
-    from .server.notebook_server import load_ipython_extension
-    load_ipython_extension(ipython, main)
-
-
-# ------------------------------------------------------------------------------
-# CallFlow's public API.
-__all__ = [
-    "init_logger",
-    "get_logger",
-    "SuperGraph",
-    "EnsembleGraph",
-]
+    from .server.notebook_server import load_ipython
+    load_ipython(ipython, main)
 
 # ------------------------------------------------------------------------------
