@@ -42,7 +42,7 @@ def main():
     assert endpoint_access in ["REST", "SOCKETS"]
     assert endpoint_env in ['TERMINAL', 'JUPYTER']
 
-    endpoint_access = 'JUPYTER'
+    #endpoint_access = 'JUPYTER'
     # --------------------------------------------------------------------------
     # process and exit
     if process:
