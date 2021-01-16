@@ -6,7 +6,6 @@
 
 import os
 import json
-import jsonschema
 import argparse
 
 import callflow
@@ -28,39 +27,6 @@ JSONSCHEMA_CONFIG = {
         "group_by": {"type": "string"},
     },
 }
-
-
-# TODO: these could/should go to utils
-def validate_config(config):
-    jsonschema.validate(instance=config, schema=JSONSCHEMA_CONFIG)
-
-
-def read_config(filename):
-    f = open(filename, "r").read()
-    json = callflow.utils.jsonify_string(f)
-    return json
-
-
-def write_config(config, filename):
-    json_string = json.dumps(config, default=lambda o: o.__dict__,
-                             sort_keys=True, indent=2)
-
-    with open(filename, "w") as fp:
-        fp.write(json_string)
-
-
-def list_dirs(path):
-    exclude_name = '.callflow'
-    subdirs = [os.path.basename(f.path) for f in os.scandir(path)
-               if f.is_dir()]
-    return [_ for _ in subdirs if _ != exclude_name]
-
-
-def list_files(path, include_extn, exclude_name=''):
-    files = [os.path.basename(_) for _ in os.scandir(path)
-             if os.path.splitext(_)[1] == include_extn]
-    return [_ for _ in files if _ != exclude_name]
-
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -84,6 +50,9 @@ class ArgParser:
 
         assert isinstance(args_string, list)
 
+        from callflow.utils.utils import is_valid_json_with_schema, write_json
+
+
         # Parse the arguments passed.
         self.parser = ArgParser._create_parser()
         self.args = vars(self.parser.parse_args())
@@ -102,7 +71,7 @@ class ArgParser:
         }
         assert self.read_mode in _READ_MODES.keys()
         self.config = _READ_MODES[self.read_mode]()
-        validate_config(self.config)
+        is_valid_json_with_schema(data=self.config, schema=JSONSCHEMA_CONFIG)
 
         # Prepare the data staging area.
         ArgParser._prep_data_staging(self.config["save_path"], self.config["runs"])
@@ -110,7 +79,7 @@ class ArgParser:
         # Write the config file.
         if self.read_mode != "config":
             _config_filename = os.path.join(self.config["save_path"], "config.json")
-            write_config(self.config, _config_filename)
+            write_json(self.config, _config_filename)
 
         LOGGER.debug(f"CallFlow instantiation configuration: {self.config}")
 
@@ -267,8 +236,8 @@ class ArgParser:
         This function would overwrite all the automatic config with the user-provided config.
         """
         _configfile = self.args["config"]
-        json = read_config(_configfile)
-        validate_config(json)
+        json = callflow.utils.read_json(_configfile)
+        callflow.utils.is_valid_json_with_schema(data=json, schema=JSONSCHEMA_CONFIG)
 
         # ----------------------------------------------------------------------
         scheme = {}
@@ -319,11 +288,12 @@ class ArgParser:
     # --------------------------------------------------------------------------
     @staticmethod
     def _scheme_dataset_map(pformat, data_path: str = '', run_props: dict = {}):
+        from callflow.utils.utils import list_subdirs, list_files
 
         _mdict = lambda n,p,f: {"name": n, "path": p, "profile_format": f}
         if pformat == 'hpctoolkit':
             return [_mdict(_, _, pformat)
-                    for _ in list_dirs(data_path)]
+                    for _ in list_subdirs(data_path)]
 
         if pformat == 'caliper':
             return [_mdict(_.split(".")[0], _, pformat)
@@ -331,7 +301,7 @@ class ArgParser:
 
         if pformat == 'caliper_json':
             return [_mdict(_.split(".")[0], _, pformat)
-                    for _ in list_files(data_path, '.json', 'config.json')]
+                    for _ in list_files(data_path, '.json', ['config.json'])]
 
         # default!
         return [_mdict(_["name"], _["path"], _["profile_format"])
