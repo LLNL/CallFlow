@@ -42,34 +42,38 @@ def main():
     assert endpoint_access in ["REST", "SOCKETS"]
     assert endpoint_env in ['TERMINAL', 'JUPYTER']
 
-    #endpoint_access = 'JUPYTER'
+    # endpoint_access = 'JUPYTER'
+
     # --------------------------------------------------------------------------
     # process and exit
     if process:
+        assert endpoint_access == "TERMINAL"
         cf = BaseProvider(config=args.config)
         cf.process()
-        return
 
     # --------------------------------------------------------------------------
-    # load data and start the server
-    if endpoint_access == "REST":
-        cf = APIProvider(config=args.config)
-    else:
-        cf = SocketProvider(config=args.config)
-    cf.load()
-
-    # --------------------------------------------------------------------------
-    if endpoint_access == "TERMINAL":
+    elif not process and endpoint_access == "TERMINAL":
+        if endpoint_access == "REST":
+            cf = APIProvider(config=args.config)
+        else:
+            cf = SocketProvider(config=args.config)
+        cf.load()
         cf.start(host=CALLFLOW_APP_HOST, port=CALLFLOW_APP_PORT)
 
-    else:
+    # --------------------------------------------------------------------------
+    elif not process and endpoint_access == "JUPYTER":
         start_result = setup_ipython_environment(args.args, args.config,
                                                  host=CALLFLOW_APP_HOST,
                                                  port=CALLFLOW_APP_PORT)
         run_ipython_environment(start_result=start_result)
 
     # --------------------------------------------------------------------------
-    print (' ----------------- end!')
+    else:
+        s = f'Invalid options ' \
+            f'(process={process}, access={endpoint_access}, env={endpoint_env})'
+        raise Exception(s)
+
+    # --------------------------------------------------------------------------
 
 
 # --------------------------------------------------------------------------
