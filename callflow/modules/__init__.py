@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-from .auxiliary import EnsembleAuxiliary
-from .auxiliary_single import SingleAuxiliary
+from .auxiliary import Auxiliary
 from .auxiliary_fast import FastEnsembleAuxiliary
 from .boxplot import BoxPlot
 from .histogram_rank import RankHistogram
@@ -18,8 +17,7 @@ from .parameter_projection import ParameterProjection
 from .diff_view import DiffView
 
 __all__ = [
-    "EnsembleAuxiliary",
-    "SingleAuxiliary",
+    "Auxiliary",
     "FastEnsembleAuxiliary",
     "BoxPlot",
     "RankHistogram",

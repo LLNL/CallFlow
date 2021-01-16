@@ -19,7 +19,7 @@ from callflow.utils.sanitizer import Sanitizer
 #from .graphframe import GraphFrame
 #from callflow.timer import Timer
 #from callflow.algorithms import DeltaConSimilarity
-#from callflow.modules import EnsembleAuxiliary, SingleAuxiliary
+from callflow.modules import Auxiliary
 LOGGER = get_logger(__name__)
 
 
@@ -225,6 +225,12 @@ class SuperGraph(ht.GraphFrame):
     def df_filter_by_name(self, names):
         assert isinstance(names, list)
         return self.dataframe[self.dataframe["name"].isin(names)]
+
+    def df_filter_by_search_string(self, df, search_strings):
+        unq, IDs = np.unique(df["dataset"], return_inverse=True)
+        unqIDs = np.searchsorted(unq, search_strings)
+        mask = np.isin(IDs, unqIDs)
+        return df[mask]
 
     def df_lookup_with_column(self, column, value):
         column = self.df_get_proxy(column)
@@ -585,7 +591,6 @@ class SuperGraph(ht.GraphFrame):
                         .add_path()
                         .build()
                 )
-
             else:
                 process = (
                     Process.Builder(self, self.name)
@@ -886,28 +891,5 @@ class SuperGraph(ht.GraphFrame):
         self.nxg = nxg
 
     # --------------------------------------------------------------------------
-    def ensemble_auxiliary(
-        self, datasets, MPIBinCount=20, RunBinCount=20, process=True, write=True
-    ):
-        LOGGER.error('ensemble_auxiliary() is blocked!')
-        return
-
-        EnsembleAuxiliary(
-            self,
-            datasets=datasets,
-            props=self.config,
-            MPIBinCount=MPIBinCount,
-            RunBinCount=RunBinCount,
-            process=process,
-        )
-
-    def single_auxiliary(self, dataset="", binCount=20, process=True):
-        LOGGER.error('single_auxiliary() is blocked!')
-        return
-        SingleAuxiliary(
-            self,
-            dataset=dataset,
-            props=self.config,
-            MPIBinCount=binCount,
-            process=process,
-        )
+    def auxiliary_gf_sg(self):
+        self = Auxiliary(supergraph=self)

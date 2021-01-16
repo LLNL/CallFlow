@@ -7,20 +7,6 @@
 # callflow.__init__.py
 from .utils.logger import init_logger, get_logger
 from .datastructures import SuperGraph, EnsembleGraph
-from .callflow import CallFlow
-
-from .server.notebook_server import load_ipython_extension
-
-'''
-# ------------------------------------------------------------------------------
-def load_ipython_extension(ipython):
-    """IPython API entry point.
-    Only intended to be called by the IPython runtime.
-    See:
-      https://ipython.readthedocs.io/en/stable/config/extensions/index.html
-    """
-    _load_ipython_extension(ipython)
-'''
 
 # CallFlow's public API.
 __all__ = [
@@ -28,7 +14,19 @@ __all__ = [
     "get_logger",
     "SuperGraph",
     "EnsembleGraph",
-    "CallFlow",
 ]
+
+
+# ------------------------------------------------------------------------------
+def load_ipython_extension(ipython):
+    """IPython API entry point.
+    Only intended to be called by the IPython runtime.
+    See:
+      https://ipython.readthedocs.io/en/stable/config/extensions/index.html
+    """
+    # TODO: this needs to be fixed
+    from .server.callflow_server import main
+    from .server.notebook_server import load_ipython
+    load_ipython(ipython, main)
 
 # ------------------------------------------------------------------------------
