@@ -12,19 +12,20 @@
 import callflow
 
 def load_ipython_extension(ipython):
-    """Load the CallFLow notebook extension.
+    """
+    Load the CallFLow notebook extension.
     Intended to be called from `%load_ext callflow`. Do not invoke this
     directly.
-    Args:
-      ipython: An `IPython.InteractiveShell` instance.
+
+    :param ipython: An `IPython.InteractiveShell` instance.
     """
     _register_magics(ipython)
 
 def _register_magics(ipython):
     """
     Register IPython line/cell magics.
-    Args:
-      ipython: An `InteractiveShell` instance.
+    
+    :param ipython: An `InteractiveShell` instance.
     """
     ipython.register_magic_function(
         _start_magic,
@@ -36,7 +37,7 @@ def _start_magic(line):
     """
     Implementation of the `%callflow` line magic.
     Launches and display a CallFlow instance as if at the command line.
-    Args:
-      args_string: Command-line arguments to CallFlow.
+    
+    :param line: text (command-line arguments) passed using %callflow
     """
     callflow.CallFlowServer(args=line, env="JUPYTER")

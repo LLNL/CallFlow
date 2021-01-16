@@ -13,7 +13,14 @@ import base64
 import datetime
 
 # ------------------------------------------------------------------------------
-# Jupyter related imports.
+# IPython related imports.
+import IPython
+import time
+import errno
+import tempfile
+import subprocess
+import random
+
 try:
     import html
 
@@ -131,7 +138,6 @@ class CallFlowServer:
             cf = BaseProvider(config=self.args.config)
             cf.process()
         else:
-            cf = None
             if self.endpoint_access == "REST":
                 cf = APIProvider(config=self.args.config)
             else:
@@ -139,17 +145,15 @@ class CallFlowServer:
             cf.load()
             cf.start(host=CALLFLOW_APP_HOST, port=CALLFLOW_APP_PORT)
             if env == "JUPYTER":
-                self.start_result = self.setup_jupyter_environemnt()
-                self.run_jupyter_environment()
+                self.start_result = self.setup_ipython_environment(args_string=args)
+                self.run_ipython_environment(start_result=self.start_result)
 
-    def setup_jupyter_environemnt(self, args_string):
+    def setup_ipython_environment(self, args_string):
         """
-        Setup the jupyter environment.
-        Args:
-            args: Arguments (passed into CallFLow) as a string.
+        Setup the IPython environment.
 
-        Returns:
-            start_result: StartLaunched or StartReused
+        :param args_string: Arguments (passed into CallFLow) as a string.
+        :return: StartLaunched or StartReused
         """
         # Set cache key to store the current instance's arguments.
         cache_key = CallFlowServer._get_cache_key(working_directory=os.getcwd(), arguments=self.args.args)
@@ -158,54 +162,59 @@ class CallFlowServer:
         version = CallFlowServer._get_callflow_version() 
 
         # Launch information (CallFlowLaunchInfo) would be saved inside the config['save_path']
-        launch_info_path = os.path.join(config["save_path"], "launch-info")
+        launch_info_path = os.path.join(self.args.config["save_path"], "launch-info")
 
         # Create the launch info directory if needed. 
         info_dir = CallFlowServer._get_info_dir(launch_info_path)
 
+        all_instances = CallFlowServer._find_all_instance(info_dir=info_dir)
+
         # Find a matching instance to the current launch.
-        matching_instance = CallFlowServer._find_matching_instance()
+        matching_instance = CallFlowServer._find_matching_instance(all_instances, info_dir)
 
         # If a match exists, use it.
         if matching_instance:
-            return StartReused(info=match)
+            start_result = StartReused(info=matching_instance)
+            return start_result
 
         # Launch the server command 
         server_cmd = ["callflow_server"] + args_string
-        CallFlowServer._launch_app(server_cmd, alias="server")
+        CallFlowServer._launch_app(server_cmd, instance=matching_instance, info_dir=launch_info_path)
 
         # Construct the CallFlowLaunchInfo object.
         launch_info = CallFlowLaunchInfo(
-            version=__version__,
+            version=version,
             start_time=int(time.time()),
             port=CALLFLOW_APP_PORT,
             host=CALLFLOW_APP_HOST,
             pid=os.getpid(),
-            config=args.config,
-            cache_key=instance_cache_key,
+            config=self.args.config,
+            cache_key=cache_key,
         )
 
         # Store the CallFlowLaunchInfo object.
-        CallFlowServer._write_launch_info(launch_info)
+        CallFlowServer._write_launch_info_file(launch_info)
 
         # Trigger a return that the callflow process has been triggered.
-        return StartLaunched(info="Started")
+        start_result = StartLaunched(info="Started")
 
-    def run_jupyter_environment(self):
-        try:
-            import IPython
-            import IPython.display
-        except ImportError:
-            IPython = None
+        return start_result
 
-        self.handle = IPython.display.display(
+    def run_ipython_environment(self, start_result):
+        """
+        Run the jupyter environment
+
+        :param start_result: StartLaunched or StartReused
+        :return: None
+        """
+        handle = IPython.display.display(
             IPython.display.Pretty("Launching CallFlow..."),
             display_id=True,
         )
 
         if isinstance(self.start_result, StartLaunched):
-            _display_ipython(
-                port=1024,
+            CallFlowServer._display_ipython(
+                port=CALLFLOW_APP_PORT,
                 height=800,
                 display_handle=handle,
             )
@@ -219,32 +228,31 @@ class CallFlowServer:
             message = template.format(
                 port=self.start_result.info["port"],
                 pid=self.start_result.info["pid"],
-                delta=_time_delta_from_info(self.start_result.info),
+                delta=CallFlowServer._time_delta_from_info(self.start_result.info),
             )
 
-            CallFlowServer._print_message_in_jupyter(message)
+            CallFlowServer._print_message_in_jupyter(handle, message)
 
             CallFlowServer._display_ipython(
                 port=self.start_result.info["client_port"], display_handle=None, height=800
             )
+
+        return
     
     # ------------------------------------------------------------------------------
-    # Jupyter notebook - Setup utilities.
+    # IPython notebook - Setup utilities.
     @staticmethod
-    def _find_matching_instance(info_dir, cache_key):
+    def _find_all_instance(info_dir):
         """
-        Find a running CallFlow instance compatible with the cache key.
-        
-        Args:
-            info_dir: Directory where launch_info files are stored.
-            cache_key: Key to match with.
+        Find all existing CallFlow instances.
 
-        Returns:
-            A `CalLFlowInfo` object, or `None` if none matches the cache key.
+        :param info_dir: Directory where the CallFlowInfo is stored.
+        :return: all possible candidates that can be spawned.
         """
         launch_info = []
         for filename in os.listdir(info_dir):
             if filename.split("-")[0] == "pid":
+                info={}
                 filepath = os.path.join(info_dir, filename)
                 try:
                     with open(filepath) as infile:
@@ -263,20 +271,30 @@ class CallFlowServer:
                     print("invalid info file: %r", filepath)
                 launch_info.append(info)
 
-        candidates = [info for info in launch_info if info["cache_key"] == cache_key]
+        return launch_info
+
+    @staticmethod
+    def _find_matching_instance(instances, cache_key):
+        """
+        Find a matching instance for a given cache_key.
+
+        :param instances: List of all CallFlowInfo instances.
+        :param cache_key: Cache key that needs to be matched.
+        :return: A `CalLFlowInfo` object, or `None` if none matches the cache key.
+        """
+        candidates = [info for info in instances if info["cache_key"] == cache_key]
         for candidate in sorted(candidates, key=lambda x: x["port"]):
             return candidate
 
     @staticmethod
     def _get_cache_key(working_directory, arguments):
         """
-        @working_directory (str) - Current working directory
-        @arguments (argparse.Namespace) - Arguments passed during launch.
+        Get a cache key for an CallFlowLaunchInfo instance.
 
-        Returns a cache_key that encodes the input arguments
-        Used for comparing instances after launch.
+        :param working_directory: Current working directory
+        :param arguments:  Arguments passed during launch.
+        :return:  a cache_key that encodes the input arguments used for comparing instances after launch.
         """
-
         if not isinstance(arguments, dict):
             raise TypeError(
                 "'arguments' should be a list of arguments, but found: %r "
@@ -296,6 +314,10 @@ class CallFlowServer:
 
     @staticmethod
     def _get_callflow_version():
+        """
+        Get the callflow version.
+        :return: version
+        """
         text = {}
         vfile = os.path.join(CALLFLOW_DIR, "..", "version.py")
         with open(vfile) as fp:
@@ -305,9 +327,12 @@ class CallFlowServer:
     @staticmethod
     def _info_to_string(info):
         """
-        Convert the callflow's launch info to json.
+        Convert the CallFlow's launch info to json.
+
+        :param info: CallFlowLaunchInfo instance
+        :return: JSON representation for CallFlowLaunchInfo
         """
-        json_value = {k: getattr(info, k) for k in _CALLFLOW_INFO_FIELDS}
+        json_value = {k: getattr(info, k) for k in CALLFLOW_LAUNCH_INFO}
         return json.dumps(json_value, sort_keys=True, indent=4)
 
     @staticmethod
@@ -318,6 +343,9 @@ class CallFlowServer:
         the contents of the directory are modified other than via the public
         functions of this module, subsequent behavior is undefined.
         The directory will be created if it does not exist.
+
+        :param path:
+        :return:
         """
         try:
             os.makedirs(path)
@@ -337,31 +365,54 @@ class CallFlowServer:
         As with `_get_info_dir`, the info directory will be created if it
         does not exist.
         """
-        return os.path.join(_get_info_dir(), "pid-%d.info" % os.getppid())
+        return os.path.join(CallFlowServer._get_info_dir(), "pid-%d.info" % os.getppid())
 
     @staticmethod
-    def _write_launch_info(info):
+    def _read_launch_info_file(filename):
+        """
+        Read the given file, if it exists.
+
+        :param filename: A path to a file.
+        :return A string containing the file contents, or `None` if the file does not exist.
+        """
+        try:
+            with open(filename) as infile:
+                print(infile.read())
+                return infile.read()
+        except IOError as e:
+            if e.errno == errno.ENOENT:
+                return None
+
+    @staticmethod
+    def _write_launch_info_file(info):
         """
         Write CallFlowInfo to the current process's info file.
         This should be called by `main` once the server is ready. When the
         server shuts down, `remove_info_file` should be called.
-        
-        Args:
-            info: A valid `CallFlowLaunchInfo` object.
-        
+
         Raises:
            ValueError: If any field on `info` is not of the correct type.
+        
+        :param info: A valid `CallFlowLaunchInfo` object.
         """
-        payload = "%s\n" % _info_to_string(info)
-        path = _get_info_file_path()
+        payload = "%s\n" % CallFlowServer._info_to_string(info)
+        path = CallFlowServer._get_info_file_path()
         with open(path, "w") as outfile:
             outfile.write(payload)
 
     @staticmethod
-    def _launch_app(cmd, timeout=datetime.timedelta(seconds=100)):
-        (stdout_fd, stdout_path) = tempfile.mkstemp(prefix=stdprefix_path + "stdout-")
-        (stderr_fd, stderr_path) = tempfile.mkstemp(prefix=stdprefix_path + "stderr-")
-        pid_path = _get_info_file_path()
+    def _launch_app(cmd, info_dir, instance, timeout=datetime.timedelta(seconds=100)):
+        """
+        Launch the subprocess and the CallFlow app.
+        :param cmd:
+        :param info_dir:
+        :param instance:
+        :param timeout:
+        :return:
+        """
+        (stdout_fd, stdout_path) = tempfile.mkstemp(prefix=info_dir + "stdout-")
+        (stderr_fd, stderr_path) = tempfile.mkstemp(prefix=info_dir + "stderr-")
+        pid_path = CallFlowServer._get_info_file_path()
 
         start_time_seconds = time.time()
         try:
@@ -382,23 +433,25 @@ class CallFlowServer:
             time.sleep(poll_interval_seconds)
             subprocess_result = p.poll()
             if subprocess_result is not None:
-                print(f"stdout for {alias} is dumped in {stdout_path}.")
-                print(f"stderr for {alias} is dumped in {stdout_path}.")
+                print(f"stdout is dumped in {stdout_path}.")
+                print(f"stderr is dumped in {stdout_path}.")
                 return StartFailed(
                     exit_code=subprocess_result,
-                    stdout=_maybe_read_file(stdout_path),
-                    stderr=_maybe_read_file(stderr_path),
+                    stdout=CallFlowServer._read_launch_info_file(stdout_path),
+                    stderr=CallFlowServer._read_launch_info_file(stderr_path),
                 )
-            for info in get_launch_information():
-                if info["pid"] == p.pid and info["start_time"] >= start_time_seconds:
-                    info = get_launch_information()
-                    print(f"CallFlow instance info is dumped in {pid_path}")
-                    return StartLaunched(info=info)
             else:
-                return StartTimedOut(pid=p.pid)
+                return StartLaunched(info=instance)
+        return StartTimedOut(pid=p.pid)
 
     @staticmethod
-    def _print_message_in_jupyter(message):
+    def _print_message_in_ipython(handle, message):
+        """
+        Print message using ipython handle
+        :param handle: ipython handle
+        :param message: message to be printed
+        :return: None
+        """
         if handle is None:
             print(message)
         else:
@@ -407,19 +460,25 @@ class CallFlowServer:
     @staticmethod
     def _time_delta_from_info(info):
         """
-        Format the elapsed time for the given TensorBoardInfo.
-        Args:
-        info: A TensorBoardInfo value.
-        Returns:
-        A human-readable string describing the time since the server
-        described by `info` started: e.g., "2 days, 0:48:58".
+        Human-readable format for the elapsed time for the given CallFlowInstance.
+
+        :param info: A CallFlowInfo instance.
+        :return: A human-readable string describing the time since the server
+            described by `info` started: e.g., "2 days, 0:48:58".
         """
         delta_seconds = int(time.time()) - info["start_time"]
         return str(datetime.timedelta(seconds=delta_seconds))
 
     @staticmethod
     def _display_ipython(port, height, display_handle):
-        import IPython.display
+        """
+        Display Javascript and HTML in IPython cell.
+
+        :param port: 
+        :param height:
+        :param display_handle:
+        :return:
+        """
 
         frame_id = "callflow-frame-{:08x}".format(random.getrandbits(64))
         shell = """
