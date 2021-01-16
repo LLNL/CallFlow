@@ -2,16 +2,30 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-# ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+# General imports.
 import os
 import json
 import sys
 import collections
 import base64
 
+# ------------------------------------------------------------------------------
+# Jupyter related imports.
+try:
+    import html
+
+    html_escape = html.escape
+    del html
+except ImportError:
+    import cgi
+
+    html_escape = cgi.escape
+    del cgi
 
 # ------------------------------------------------------------------------------
+# CallFlow local imports.
 import callflow
 from callflow.utils.argparser import ArgParser
 
@@ -68,8 +82,8 @@ CALLFLOW_LAUNCH_INFO = collections.OrderedDict(
         ("version", str),
         ("start_time", int),  # seconds since epoch
         ("pid", int),
-        ("server_port", int),
-        ("client_port", int),
+        ("port", int), # port number
+        ("host", str), # host IP
         ("config", str),  # may be empty
         ("cache_key", str),  # opaque, as given by `cache_key` below
     )
@@ -118,8 +132,6 @@ class CallFlowServer:
             cf = BaseProvider(config=self.args.config)
             cf.process()
         else:
-            if env == "JUPYTER":
-                self.setup_jupyter_environemnt()
             cf = None
             if self.endpoint_access == "REST":
                 cf = APIProvider(config=self.args.config)
@@ -127,10 +139,18 @@ class CallFlowServer:
                 cf = SocketProvider(config=self.args.config)
             cf.load()
             cf.start(host=CALLFLOW_APP_HOST, port=CALLFLOW_APP_PORT)
+            if env == "JUPYTER":
+                self.start_result = self.setup_jupyter_environemnt()
+                self.run_jupyter_environment()
 
     def setup_jupyter_environemnt(self, args_string):
         """
+        Setup the jupyter environment.
+        Args:
+            args: Arguments (passed into CallFLow) as a string.
 
+        Returns:
+            start_result: StartLaunched or StartReused
         """
         # Set cache key to store the current instance's arguments.
         cache_key = CallFlowServer._get_cache_key(working_directory=os.getcwd(), arguments=self.args.args)
@@ -159,8 +179,8 @@ class CallFlowServer:
         launch_info = CallFlowLaunchInfo(
             version=__version__,
             start_time=int(time.time()),
-            server_port=CALLFLOW_SERVER_PORT,
-            client_port=CALLFLOW_APP_PORT,
+            port=CALLFLOW_APP_PORT,
+            host=CALLFLOW_APP_HOST,
             pid=os.getpid(),
             config=args.config,
             cache_key=instance_cache_key,
@@ -171,6 +191,43 @@ class CallFlowServer:
 
         # Trigger a return that the callflow process has been triggered.
         return StartLaunched(info="Started")
+
+    def run_jupyter_environment(self):
+        try:
+            import IPython
+            import IPython.display
+        except ImportError:
+            IPython = None
+
+        self.handle = IPython.display.display(
+            IPython.display.Pretty("Launching CallFlow..."),
+            display_id=True,
+        )
+
+        if isinstance(self.start_result, StartLaunched):
+            _display_ipython(
+                port=1024,
+                height=800,
+                display_handle=handle,
+            )
+
+        elif isinstance(start_result, StartReused):
+            template = (
+                "Reusing CallFlow's server is on port {port} and client is on {client_port} (pid {pid}), started {delta} ago. "
+                "(Use '!kill {pid}' to kill it.)"
+            )
+
+            message = template.format(
+                port=self.start_result.info["port"],
+                pid=self.start_result.info["pid"],
+                delta=_time_delta_from_info(self.start_result.info),
+            )
+
+            CallFlowServer._print_message_in_jupyter(message)
+
+            CallFlowServer._display_ipython(
+                port=self.start_result.info["client_port"], display_handle=None, height=800
+            )
     
     # ------------------------------------------------------------------------------
     # Jupyter notebook - Setup utilities.
@@ -208,7 +265,7 @@ class CallFlowServer:
                 launch_info.append(info)
 
         candidates = [info for info in launch_info if info["cache_key"] == cache_key]
-        for candidate in sorted(candidates, key=lambda x: x["server_port"]):
+        for candidate in sorted(candidates, key=lambda x: x["port"]):
             return candidate
 
     @staticmethod
@@ -340,6 +397,62 @@ class CallFlowServer:
                     return StartLaunched(info=info)
             else:
                 return StartTimedOut(pid=p.pid)
+
+    @staticmethod
+    def _print_message_in_jupyter(message):
+        if handle is None:
+            print(message)
+        else:
+            handle.update(IPython.display.Pretty(message))
+
+    @staticmethod
+    def _time_delta_from_info(info):
+        """
+        Format the elapsed time for the given TensorBoardInfo.
+        Args:
+        info: A TensorBoardInfo value.
+        Returns:
+        A human-readable string describing the time since the server
+        described by `info` started: e.g., "2 days, 0:48:58".
+        """
+        delta_seconds = int(time.time()) - info["start_time"]
+        return str(datetime.timedelta(seconds=delta_seconds))
+
+    @staticmethod
+    def _display_ipython(port, height, display_handle):
+        import IPython.display
+
+        frame_id = "callflow-frame-{:08x}".format(random.getrandbits(64))
+        shell = """
+        <iframe id="%HTML_ID%" width="100%" height="%HEIGHT%" frameborder="0">
+        </iframe>
+        <script>
+            (function() {
+            const frame = document.getElementById(%JSON_ID%);
+            const url = new URL(%URL%, window.location);
+            const port = %PORT%;
+            if (port) {
+                url.port = port;
+            }
+            frame.src = url;
+            })();
+        </script>
+        """
+        replacements = [
+            ("%HTML_ID%", html_escape(frame_id, quote=True)),
+            ("%JSON_ID%", json.dumps(frame_id)),
+            ("%HEIGHT%", "%d" % height),
+            ("%PORT%", "%d" % port),
+            ("%URL%", json.dumps("/")),
+        ]
+
+        for (k, v) in replacements:
+            shell = shell.replace(k, v)
+        iframe = IPython.display.HTML(shell)
+        if display_handle:
+            display_handle.update(iframe)
+        else:
+            IPython.display.display(iframe)
 
 # ------------------------------------------------------------------------------
 def main():

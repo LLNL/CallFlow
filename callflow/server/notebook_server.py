@@ -26,9 +26,7 @@ except ImportError:
     html_escape = cgi.escape
     del cgi
 
-from callflow.utils.argparser import ArgParser
-from . import manager
-
+import callflow
 
 def load_ipython_extension(ipython):
     """Load the CallFLow notebook extension.
@@ -39,9 +37,9 @@ def load_ipython_extension(ipython):
     """
     _register_magics(ipython)
 
-
 def _register_magics(ipython):
-    """Register IPython line/cell magics.
+    """
+    Register IPython line/cell magics.
     Args:
       ipython: An `InteractiveShell` instance.
     """
@@ -51,62 +49,14 @@ def _register_magics(ipython):
         magic_name="callflow",
     )
 
-
 def _start_magic(line):
-    """Implementation of the `%callflow` line magic."""
-    return start(line)
-
-
-def start(args_string):
-    """Launch and display a CallFlow instance as if at the command line.
+    """
+    Implementation of the `%callflow` line magic.
+    Launches and display a CallFlow instance as if at the command line.
     Args:
       args_string: Command-line arguments to CallFlow.
     """
-    try:
-        import IPython
-        import IPython.display
-    except ImportError:
-        IPython = None
-
-    handle = IPython.display.display(
-        IPython.display.Pretty("Launching CallFlow..."),
-        display_id=True,
-    )
-
-    def print_or_update(message):
-        if handle is None:
-            print(message)
-        else:
-            handle.update(IPython.display.Pretty(message))
-
-    args = ArgParser(args_string)
-    start_result = manager.start(
-        args, shlex.split(args_string, comments=True, posix=True)
-    )
-
-    if isinstance(start_result, manager.StartLaunched):
-        _display_ipython(
-            port=1024,
-            height=800,
-            display_handle=handle,
-        )
-
-    elif isinstance(start_result, manager.StartReused):
-        template = (
-            "Reusing CallFlow's server is on port {server_port} and client is on {client_port} (pid {pid}), started {delta} ago. "
-            "(Use '!kill {pid}' to kill it.)"
-        )
-        message = template.format(
-            server_port=start_result.info["server_port"],
-            client_port=start_result.info["client_port"],
-            pid=start_result.info["pid"],
-            delta=_time_delta_from_info(start_result.info),
-        )
-        print_or_update(message)
-        _display_ipython(
-            port=start_result.info["client_port"], display_handle=None, height=800
-        )
-
+    callflow.CallFlowServer(args=line, env="JUPYTER")
 
 def _time_delta_from_info(info):
     """Format the elapsed time for the given TensorBoardInfo.
