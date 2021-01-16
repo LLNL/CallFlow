@@ -10,6 +10,7 @@ import json
 import sys
 import collections
 import base64
+import datetime
 
 # ------------------------------------------------------------------------------
 # Jupyter related imports.
@@ -29,8 +30,6 @@ except ImportError:
 import callflow
 from callflow.utils.argparser import ArgParser
 
-
-import callflow.server.manager as manager
 
 from .provider_base import BaseProvider
 from .provider_api import APIProvider
