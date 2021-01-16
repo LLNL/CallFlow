@@ -82,8 +82,7 @@ class BaseProvider:
             sg.group_sg(group_by=self.config["group_by"])
             sg.auxiliary_gf_sg()
             sg.write()
-            #sg.single_auxiliary(dataset=dataset_name, binCount=20, process=True)
-
+            
             self.supergraphs[dataset_name] = sg
 
         # ----------------------------------------------------------------------
@@ -98,194 +97,6 @@ class BaseProvider:
 
             # Attach to self
             self.supergraphs["ensemble"] = sg
-        # ----------------------------------------------------------------------
-
-    # --------------------------------------------------------------------------
-    # Processing methods.
-    '''
-    def _create_dot_callflow_folder(self):
-        """
-        Create a .callflow directory and empty files.
-        """
-        LOGGER.info(f".callflow directory is: {self.config['save_path']}")
-
-        if not os.path.exists(self.config["save_path"]):
-            os.makedirs(self.config["save_path"])
-            os.makedirs(os.path.join(self.config["save_path"], "ensemble"))
-
-        dataset_folders = [
-            os.path.join(self.config["save_path"], k["name"])
-            for k in self.config["runs"]
-        ]
-
-        dataset_folders.append("ensemble")
-
-        for dataset in dataset_folders:
-            dataset_dir = os.path.join(self.config["save_path"], dataset)
-            if not os.path.exists(dataset_dir):
-                # if self.debug:
-                LOGGER.info(f"Creating .callflow directory for dataset : {dataset}")
-                os.makedirs(dataset_dir)
-
-            files = ["df.csv", "nxg.json", "hatchet_tree.txt", "auxiliary_data.json"]
-            for f in files:
-                fname = os.path.join(dataset_dir, f)
-                if not os.path.exists(fname):
-                    open(fname, "w").close()
-
-    def _remove_dot_callflow_folder(self):
-        """
-        TODO: We might want to delete the .callflow folder when we re-process/re-write.
-        """
-        pass
-    
-    def process(self):
-        """
-        Process the datasets based on the format (i.e., either single or ensemble)
-        """
-        self.config["parameter_props"] = self._parameter_props(self.config)
-
-        if self.ensemble:
-            self._process_ensemble(self.config["runs"])
-        else:
-            self._process_single(self.config["runs"][0])
-
-    def load(self):
-        """
-        Load the processed datasets by the format.
-        """
-        ndatasets = len(self.config["runs"])
-        self.config["parameter_props"] = self._parameter_props(self.config)
-
-        if self.ensemble:
-            self.supergraphs = self._read_ensemble()
-            # assertion here is 1 less than self.supergraph.keys, becasuse
-            # self.supergraphs contains the ensemble supergraph as well.
-            assert len(self.supergraphs.keys()) == 1 + ndatasets
-        else:
-            self.supergraphs = self._read_single()
-            assert len(self.supergraphs.keys()) == 1
-
-        # Adds basic information to config.
-        # Config is later return to client app on "init" request.
-        self.config["runtime_props"] = self._runtime_props(self.supergraphs)
-    
-    def _process_single(self, dataset):
-        """
-        Single dataset processing.
-        """
-        dataset_tag = dataset["name"]
-
-        LOGGER.info("#########################################")
-        LOGGER.info(f"Single Mode: {dataset_tag}")
-        LOGGER.info("#########################################")
-        supergraph = SuperGraph(config=self.config, tag=dataset_tag, mode="process")
-
-        # Process each graphframe.
-        supergraph.process_gf()
-
-        # Filter by inclusive or exclusive time.
-        supergraph.filter_gf(mode="single")
-
-        # Group by module.
-        supergraph.group_gf(group_by=self.config["group_by"])
-
-        # Store the graphframe.
-        supergraph.write_gf("entire")
-
-        supergraph.ensemble_auxiliary(
-            datasets=[dataset_tag],
-            MPIBinCount=20,
-            RunBinCount=20,
-            process=True,
-            write=True,
-        )
-
-    def _process_ensemble(self, datasets):
-        """
-        Ensemble processing of datasets.
-        """
-        # Before we process the ensemble, we perform single processing on all datasets.
-        single_supergraphs = {}
-        for dataset in datasets:
-            dataset_tag = dataset["name"]
-            # Create an instance of dataset.
-            LOGGER.info("#########################################")
-            LOGGER.info(f"Dataset name: {dataset_tag}")
-            LOGGER.info("#########################################")
-            single_supergraphs[dataset_tag] = SuperGraph(
-                config=self.config, tag=dataset_tag, mode="process"
-            )
-
-            # Process each graphframe.
-            single_supergraphs[dataset_tag].process_gf()
-
-            single_supergraphs[dataset_tag].group_gf(group_by="module")
-
-            # Write the entire graphframe into .callflow.
-            single_supergraphs[dataset_tag].write_gf("entire")
-
-            # Single auxiliary processing.
-            single_supergraphs[dataset_tag].ensemble_auxiliary(
-                datasets=[dataset_tag],
-                MPIBinCount=20,
-                RunBinCount=20,
-                process=True,
-                write=True,
-            )
-
-        # Create a supergraph class for ensemble case.
-        ensemble_supergraph = EnsembleGraph(
-            self.config, "ensemble", mode="process", supergraphs=single_supergraphs
-        )
-
-        # Filter the ensemble graphframe.
-        ensemble_supergraph.filter_gf(mode="ensemble")
-
-        # Group by module.
-        ensemble_supergraph.group_gf(group_by=self.config["group_by"])
-
-        # Write the grouped graphframe.
-        ensemble_supergraph.write_gf("group")
-
-        # Ensemble auxiliary processing.
-        ensemble_supergraph.ensemble_auxiliary(
-            datasets=self.config["parameter_props"]["runs"],
-            MPIBinCount=20,
-            RunBinCount=20,
-            process=True,
-            write=True,
-        )
-
-    def _read_single(self):
-        """
-        Read the single .callflow files required for client.
-        """
-        supergraphs = {}
-        # Only consider the first dataset from the listing.
-        dataset_name = self.config["parameter_props"]["runs"][0]
-        supergraphs[dataset_name] = SuperGraph(
-            config=self.config, tag=dataset_name, mode="render"
-        )
-
-        return supergraphs
-
-    def _read_ensemble(self):
-        """
-        Read the ensemble .callflow files required for client.
-        """
-        supergraphs = {}
-
-        for dataset_name in self.config["parameter_props"]["runs"]:
-            supergraphs[dataset_name] = SuperGraph(
-                config=self.config, tag=dataset_name, mode="render"
-            )
-
-        supergraphs["ensemble"] = EnsembleGraph(
-            config=self.config, tag="ensemble", mode="render"
-        )
-        return supergraphs
-    '''
 
     # --------------------------------------------------------------------------
     # Reading and rendering methods.
@@ -393,22 +204,6 @@ class BaseProvider:
             split_entry_module = operation.get("split_entry_module", [])
             split_callee_module = operation.get("split_callee_module", [])
 
-            '''
-            if "reveal_callsites" in operation:
-                reveal_callsites = operation["reveal_callsites"]
-            else:
-                reveal_callsites = []
-
-            if "split_entry_module" in operation:
-                split_entry_module = operation["split_entry_module"]
-            else:
-                split_entry_module = ""
-
-            if "split_callee_module" in operation:
-                split_callee_module = operation["split_callee_module"]
-            else:
-                split_callee_module = ""
-            '''
             ssg = SankeyLayout(supergraph=sg, path="group_path",
                                reveal_callsites=reveal_callsites,
                                split_entry_module=split_entry_module,
@@ -458,22 +253,6 @@ class BaseProvider:
             split_entry_module = operation.get("split_entry_module", [])
             split_callee_module = operation.get("split_callee_module", [])
 
-            '''
-            if "reveal_callsites" in operation:
-                reveal_callsites = operation["reveal_callsites"]
-            else:
-                reveal_callsites = []
-
-            if "split_entry_module" in operation:
-                split_entry_module = operation["split_entry_module"]
-            else:
-                split_entry_module = ""
-
-            if "split_callee_module" in operation:
-                split_callee_module = operation["split_callee_module"]
-            else:
-                split_callee_module = ""
-            '''
             ssg = SankeyLayout(supergraph=sg, path="group_path",
                                reveal_callsites=reveal_callsites,
                                split_entry_module=split_entry_module,
