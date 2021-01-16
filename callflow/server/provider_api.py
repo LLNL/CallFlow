@@ -51,7 +51,7 @@ class APIProvider(BaseProvider):
         self.handle_single()
         self.handle_ensemble()
 
-    def start(self, host: str, port: str):
+    def start(self, host: str, port: int):
         LOGGER.info("Starting the API service")
         app.run(host=host, port=port, threaded=True)
 

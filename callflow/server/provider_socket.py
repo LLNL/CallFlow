@@ -35,7 +35,7 @@ class SocketProvider(BaseProvider):
         self.handle_single()
         self.handle_ensemble()
 
-    def start(self, host: str, port: str):
+    def start(self, host: str, port: int):
         LOGGER.info("Starting the Socket service")
         sockets.run(app, host=host, port=port, debug=False, use_reloader=True)
 
