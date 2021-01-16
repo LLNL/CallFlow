@@ -307,3 +307,25 @@ def is_valid_json(data: any) -> bool:
             )
         )
     '''
+
+def not_used_cmd_exec(cmd):
+    """
+    cmd is expected to be something like "cd [place]"
+    """
+    cmd = cmd + " && pwd"
+    p = subprocess.Popen(
+        cmd,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )
+
+    out = p.stdout.read()
+    err = p.stderr.read()
+
+    if out != "":
+        os.chdir(out[0 : len(out) - 1])
+    if err != "":
+        print(err)
+    return
