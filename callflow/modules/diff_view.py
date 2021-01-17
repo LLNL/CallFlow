@@ -5,7 +5,7 @@
 
 import numpy as np
 from scipy import stats
-from callflow.modules import DLcon_Similarity, WL_Distance, BlandAltman_Plot
+from callflow.algorithms import DLcon_Similarity, WL_Distance, BlandAltman_Plot
 
 class DiffView:
     def __init__(self, ensemble_graph, dataset1, dataset2, col):

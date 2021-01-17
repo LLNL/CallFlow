@@ -10,7 +10,7 @@ from scipy.sparse import identity
 from scipy.sparse import diags
 
 
-class DL_Similarity:
+class DLcon_Similarity:
     def __init__(self, g1, g2):
         nxg_e = nx.DiGraph()
         nxg_e.add_nodes_from(g1)

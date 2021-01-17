@@ -47,7 +47,7 @@ def main():
     # --------------------------------------------------------------------------
     # process and exit
     if process:
-        assert endpoint_access == "TERMINAL"
+        assert endpoint_env == "TERMINAL"
         cf = BaseProvider(config=args.config)
         cf.process()
 

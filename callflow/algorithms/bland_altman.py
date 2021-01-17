@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.cm as cm
 
 
-class BlandAltman:
+class BlandAltman_Plot:
     def __init__(self):
         pass
 
@@ -36,7 +36,7 @@ class BlandAltman:
                 "module": module.tolist(),
                 "mean": mean.tolist(),
                 "diff": diff.tolist(),
-            }
+            },
             "color": colordict,
             "md": md.tolist(),
             "sd": sd.tolist(),
