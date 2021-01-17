@@ -18,12 +18,38 @@ Author : Sandro Vega-Pons, Emanuele Olivetti
 """
 
 
-class GK_WL:
+class WL_Distance:
     """
     Weisfeiler_Lehman graph kernel.
     """
 
-    def compare_list(self, graph_list, h=1, node_label=True):
+    def __init__(self, nxg_1, nxg_2):
+        """Compute the kernel value (similarity) between two graphs.
+        The kernel is normalized to [0,1] by the equation:
+        k_norm(g1, g2) = k(g1, g2) / sqrt(k(g1,g1) * k(g2,g2))
+
+        Parameters
+        ----------
+        nxg_1 : networkx.Graph
+            First graph.
+        nxg_2 : networkx.Graph
+            Second graph.
+        h : interger
+            Number of iterations.
+        node_label : boolean
+            Whether to use the values under the graph attribute 'node_label'
+            as node labels. If False, the degree of the nodes are used as
+            labels.
+
+        Returns
+        -------
+        k : The similarity value between g1 and g2.
+        """
+        gl = [nxg_1, nxg_2]
+        return self.compare_list(gl, h, node_label)[0, 1]
+
+
+    def compute(self, graph_list, h=1, node_label=True):
         """Compute the all-pairs kernel values for a list of graphs.
 
         This function can be used to directly compute the kernel
@@ -152,28 +178,3 @@ class GK_WL:
                 k_norm[i, j] = k[i, j] / np.sqrt(k[i, i] * k[j, j])
 
         return k_norm
-
-    def compare(self, g_1, g_2, h=1, node_label=True):
-        """Compute the kernel value (similarity) between two graphs.
-        The kernel is normalized to [0,1] by the equation:
-        k_norm(g1, g2) = k(g1, g2) / sqrt(k(g1,g1) * k(g2,g2))
-
-        Parameters
-        ----------
-        g_1 : networkx.Graph
-            First graph.
-        g_2 : networkx.Graph
-            Second graph.
-        h : interger
-            Number of iterations.
-        node_label : boolean
-            Whether to use the values under the graph attribute 'node_label'
-            as node labels. If False, the degree of the nodes are used as
-            labels.
-
-        Returns
-        -------
-        k : The similarity value between g1 and g2.
-        """
-        gl = [g_1, g_2]
-        return self.compare_list(gl, h, node_label)[0, 1]

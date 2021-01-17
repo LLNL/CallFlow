@@ -12,9 +12,6 @@ from .gradients import Gradients
 from .boxplot import BoxPlot
 from .histogram import Histogram
 
-import callflow
-LOGGER = callflow.get_logger(__name__)
-
 class Auxiliary:
     def __init__(self, supergraph, MPIBinCount: int = 20, RunBinCount: int = 20):
         self.MPIBinCount = MPIBinCount

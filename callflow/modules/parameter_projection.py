@@ -11,28 +11,26 @@ from sklearn.manifold import TSNE, MDS
 from sklearn.cluster import KMeans
 from callflow.algorithms import KMedoids
 
-# from callflow.algorithms import DeltaConSimilarity
-
 
 class ParameterProjection:
     """
     Parameter projection view
     """
 
-    def __init__(self, supergraph, targetDataset="", n_cluster=3):
+    def __init__(self, ensemble_graph, n_cluster=3):
 
-        self.df = supergraph.gf.df
+        self.df = ensemble_graph.gf.df
         self.datasets = self.df["dataset"].unique().tolist()
         self.projection = "MDS"
         self.clustering = "k_means"
         self.n_cluster = int(n_cluster)
-        self.targetDataset = targetDataset
         if len(self.datasets) >= self.n_cluster:
             self.result = self.run()
         else:
             self.result = pd.DataFrame({})
 
     def add_df_params(self, dataset):
+        # TODO: Research what more properties can be appended to the dataframe.
         ret = {}
         ret["max_inclusive_time"] = self.df.loc[self.df["dataset"] == dataset][
             "time (inc)"
@@ -43,25 +41,13 @@ class ParameterProjection:
         ret["rank_count"] = len(
             self.df.loc[self.df["dataset"] == dataset]["rank"].unique()
         )
-        # ret['similarity'] = self.similarities[self.datasetOrder[self.targetDataset]]
         return ret
-
-    def dump_similarities(self, name):
-        similarity_filepath = name + "/" + "similarity.json"
-        with open(similarity_filepath, "r") as similarity_file:
-            self.similarities = json.load(similarity_file)
 
     def run(self):
         rows = []
         for idx, dataset in enumerate(self.datasets):
             df_params = self.add_df_params(dataset)
             rows.append(df_params)
-            # self.states[state].projection_data.update(df_params)
-
-        # row_list = []
-        # for idx, state in enumerate(self.states):
-        #     if(state != 'ensemble'):
-        #         row_list.append(self.states[state].projection_data)
 
         df = pd.DataFrame(rows)
 
@@ -85,11 +71,6 @@ class ParameterProjection:
 
         ret = pd.DataFrame(proj, columns=list("xy"))
         ret["dataset"] = self.datasets
-
-        # if self.clustering == "prog_k_means":
-        #     self.clusters = ProgKMeans(n_clusters=self.n_cluster)
-        #     self.clusters.progressive_fit(X, latency_limit_in_msec=100)
-        #     ret["label"] = self.clusters.predict(X).tolist()
 
         if self.clustering == "k_medoids":
             self.clusters = KMedoids(n_cluster=self.n_cluster)

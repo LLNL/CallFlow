@@ -8,8 +8,6 @@ from sklearn.cluster import MiniBatchKMeans
 from random import shuffle
 from clustering.prog_kmeans import prog_kmeans_cpp
 
-# TODO: implement c++ version for minibacthkmeans
-
 
 class ProgKMeans(prog_kmeans_cpp.ProgKMeans):
     """Progressive usage of MiniBatchKMeans.

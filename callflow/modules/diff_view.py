@@ -5,21 +5,12 @@
 
 import numpy as np
 from scipy import stats
-
-# CallFlow imports
-try:
-    import callflow
-
-    LOGGER = callflow.get_logger(__name__)
-except Exception:
-    raise Exception("Module callflow not found not found.")
-
+from callflow.modules import DLcon_Similarity, WL_Distance, BlandAltman_Plot
 
 class DiffView:
-    def __init__(self, state, dataset1, dataset2, col):
-        self.state = state
-        self.df1 = self.state.gf.df.loc[self.state.gf.df["dataset"] == dataset1]
-        self.df2 = self.state.gf.df.loc[self.state.gf.df["dataset"] == dataset2]
+    def __init__(self, ensemble_graph, dataset1, dataset2, col):
+        self.df1 = ensemble_graph.gf.df.loc[ensemble_graph.gf.df["dataset"] == dataset1]
+        self.df2 = ensemble_graph.gf.df.loc[ensemble_graph.gf.df["dataset"] == dataset2]
 
         self.col = col
         self.dataset1 = dataset1
@@ -30,23 +21,16 @@ class DiffView:
         self.max_rank2 = len(self.df2["rank"].unique())
         self.max_rank = max(self.max_rank1, self.max_rank2)
 
-        self.result = self.run()
+        nodes = ensemble_graph.gf.df["module"].unique()
 
-    def run(self):
-        results = []
-        nodes = self.state.gf.df["module"].unique()
-
-        for node in nodes:
-            results.append(self.calculate_diff(node))
-
-        return results
+        self.result = [ self.compute(node) for node in nodes]
 
     def iqr(self, arr):
         """Calculate the IQR for an array of numbers."""
-        a = np.asarray(arr)
-        self.q1 = stats.scoreatpercentile(a, 25)
-        self.q2 = stats.scoreatpercentile(a, 50)
-        self.q3 = stats.scoreatpercentile(a, 75)
+        _ = np.asarray(arr)
+        self.q1 = stats.scoreatpercentile(_, 25)
+        self.q2 = stats.scoreatpercentile(_, 50)
+        self.q3 = stats.scoreatpercentile(_, 75)
 
     def histogram(self, data, nbins=20):
         h, b = np.histogram(data, range=[data.min(), data.max()], bins=nbins)
@@ -104,7 +88,7 @@ class DiffView:
 
         return mean2 - mean1
 
-    def calculate_diff(self, module):
+    def compute(self, module):
         node_df1 = self.df1.loc[self.df1["module"] == module]
         node_df2 = self.df2.loc[self.df2["module"] == module]
 

@@ -10,20 +10,23 @@ from scipy.sparse import identity
 from scipy.sparse import diags
 
 
-class DeltaConSimilarity:
+class DL_Similarity:
     def __init__(self, g1, g2):
-        self.R = nx.DiGraph()
-        self.R.add_nodes_from(g1)
-        self.R.add_nodes_from(g2)
-        self.R1 = nx.DiGraph()
-        self.R1.add_nodes_from(self.R)
-        self.R1.add_edges_from(g1.edges())
-        self.R2 = nx.DiGraph()
-        self.R2.add_nodes_from(self.R)
-        self.R2.add_edges_from(g2.edges())
-        A1 = nx.adjacency_matrix(self.R1)
-        A2 = nx.adjacency_matrix(self.R2)
-        self.result = self.run(A1, A2)
+        nxg_e = nx.DiGraph()
+        nxg_e.add_nodes_from(g1)
+        nxg_e.add_nodes_from(g2)
+        
+        nxg_1 = nx.DiGraph()
+        nxg_1.add_nodes_from(nxg_e)
+        nxg_1.add_edges_from(g1.edges())
+        nxg_2 = nx.DiGraph()
+        nxg_2.add_nodes_from(nxg_e)
+        nxg_2.add_edges_from(g2.edges())
+
+        adj_1 = nx.adjacency_matrix(nxg_1)
+        adj_2 = nx.adjacency_matrix(nxg_2)
+
+        self.result = self.compute(adj_1, adj_2)
 
     def InverseMatrix(self, A):
         D = diags(sum(A).toarray(), [0])
@@ -47,7 +50,7 @@ class DeltaConSimilarity:
                 break
         return S
 
-    def run(self, A1, A2):
+    def compute(self, A1, A2):
         S1 = self.InverseMatrix(A1)
         S2 = self.InverseMatrix(A2)
         d = 0

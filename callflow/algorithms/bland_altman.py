@@ -9,44 +9,34 @@ import matplotlib.cm as cm
 
 
 class BlandAltman:
-    def __init__(self, state1, state2, col, catcol, dataset1, dataset2):
-        self.graph1 = state1.graph
-        self.df1 = state1.df
-        self.graph2 = state2.graph
-        self.df2 = state2.df
-        self.col = col
-        self.catcol = catcol
-        self.dataset1 = dataset1
-        self.dataset2 = dataset2
-        self.results = self.run()
+    def __init__(self):
+        pass
 
-    def run(self):
-        data1 = np.asarray(self.df1[self.col])
-        data2 = np.asarray(self.df2[self.col])
-        module2 = np.asarray(self.df2["module"])
+    def compute(self, supergraph_1, supergraph_2, col, catcol, dataset1, dataset2):
+        assert col in supergraph_1.df
+        assert col in supergraph_2.df
+        assert catcol in supergraph_1.df
+        assert catcol in supergraph_2.df
+        
+        np_df_col_1 = np.asarray(supergraph_1.df[col])
+        np_df_col_2 = np.asarray(supergraph_2.df[col])
 
-        name = np.asarray(self.df2["name"])
-        module = module2
-        mean = np.mean([data1, data2], axis=0)
-        diff = data1 - data2
+        mean = np.mean([np_df_col_1, np_df_col_2], axis=0)
+        diff = np_df_col_1 - np_df_col_2
         md = np.mean(diff)
         sd = np.std(diff, axis=0)
-        categories = np.unique(self.df1[self.catcol].tolist())
+
+        categories = np.concatenate(np.unique(supergraph_1.df[catcol].tolist()), np.unique(supergraph_2.df[catcol].tolist()))
         colors = cm.rainbow(np.linspace(0, 1, len(categories)))
         colordict = list(dict(zip(categories, colors)))
-        # df1["Color"] = df1[catcol].apply(lambda x: colordict[x])
 
-        data = {
-            # 'dataset': dataset.tolist(),
-            "name": name.tolist(),
-            "module": module.tolist(),
-            "mean": mean.tolist(),
-            "diff": diff.tolist(),
-        }
-
-        data_df = pd.DataFrame(data)
         result = {
-            "data": data_df.to_json(orient="columns"),
+            "data": {
+                "name": name.tolist(),
+                "module": module.tolist(),
+                "mean": mean.tolist(),
+                "diff": diff.tolist(),
+            }
             "color": colordict,
             "md": md.tolist(),
             "sd": sd.tolist(),

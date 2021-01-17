@@ -7,10 +7,6 @@ from scipy.stats import iqr
 import collections
 import numpy as np
 
-import callflow
-
-LOGGER = callflow.get_logger(__name__)
-
 
 class BoxPlot:
     """
