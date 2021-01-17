@@ -2,26 +2,81 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
-from scipy.stats import iqr
+import logging
 import collections
 import numpy as np
+import pandas as pd
+from scipy.stats import iqr
+
+LOGGER = logging.getLogger(__name__)
 
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class BoxPlot:
     """
     Boxplot computation
     """
+    KEYS_AND_ATTRS = {'Inclusive': 'time (inc)',
+                      'Exclusive': 'time'}
 
     def __init__(self, df):
+
+        self.q = {}
+        self.outliers = {}
+        for k,a in BoxPlot.KEYS_AND_ATTRS.items():
+
+            self.q[k] = np.percentile(df[a], [0., 25., 50., 75., 100.])
+
+            mask = BoxPlot.outliers(df[a])
+            self.outliers[k] = {"values": (mask * df[a]).tolist(),
+                                "datasets": (mask * df['dataset']).tolist(),
+                                "ranks": (mask * df['rank']).tolist()}
+
+        '''
         self.q = {}
         self.q["Inclusive"] = self.quartiles(df, attr="time (inc)")
         self.q["Exclusive"] = self.quartiles(df, attr="time")
 
         self.outliers = {}
         self.outliers["Inclusive"] = self.iqr_outlier(df, attr="time (inc)", axis=0)
-        self.outliers["Exclusive"] = self.iqr_outlier(df, attr="time", axis=0)
+        self.outliers["Exclusive"] = self.iqr_outlier(df, attr="time", axis=0)\
+        '''
 
+    @staticmethod
+    def outliers(data, axis=0, scale=1.5, side="both"):
+        assert isinstance(data, pd.Series)
+
+        stat_shape = list(data.shape)
+        if isinstance(axis, collections.Iterable):
+            for single_axis in axis:
+                stat_shape[single_axis] = 1
+        else:
+            stat_shape[axis] = 1
+
+        d_q13 = np.percentile(data, [25., 75.], axis=axis)
+        iqr_distance = np.multiply(iqr(data, axis=axis), scale)
+
+        if side in ["gt", "both"]:
+            upper_range = d_q13[1] + iqr_distance
+            upper_outlier = np.greater(data - upper_range.reshape(stat_shape), 0)
+
+        if side in ["lt", "both"]:
+            lower_range = d_q13[0] - iqr_distance
+            lower_outlier = np.less(data - lower_range.reshape(stat_shape), 0)
+
+        if side == "gt":
+            return upper_outlier
+        if side == "lt":
+            return lower_outlier
+        if side == "both":
+            return np.logical_or(upper_outlier, lower_outlier)
+
+# ------------------------------------------------------------------------------
+
+    '''
     def median(self, arr):
         indices = []
 
@@ -92,3 +147,4 @@ class BoxPlot:
             "datasets": (mask * dataset_data).tolist(),
             "ranks": (mask * rank_data).tolist(),
         }
+    '''
