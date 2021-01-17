@@ -208,9 +208,12 @@ class SuperGraph(ht.GraphFrame):
         self.dataframe[col_name] = self.dataframe[apply_on].apply(
             lambda _: mapping[_] if _ in mapping.keys() else "")
 
-    def df_count(self, column):
+    def df_unique(self, column):
         column = self.df_get_proxy(column)
-        return len(self.dataframe[column].unique())
+        return self.dataframe[column].unique()
+
+    def df_count(self, column):
+        return len(self.df_unique(column))
 
     def df_minmax(self, column):
         column = self.df_get_proxy(column)
