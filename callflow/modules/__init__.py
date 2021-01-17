@@ -4,11 +4,12 @@
 # SPDX-License-Identifier: MIT
 
 from .auxiliary import Auxiliary
-from .auxiliary_fast import FastEnsembleAuxiliary
+#from .auxiliary_fast import FastEnsembleAuxiliary
 from .boxplot import BoxPlot
-from .histogram_rank import RankHistogram
-from .histogram_mini import MiniHistogram
-from .histogram_generic import GenericHistogram
+from .histogram import Histogram
+#from .histogram_rank import RankHistogram
+#from .histogram_mini import MiniHistogram
+#from .histogram_generic import GenericHistogram
 from .tooltip import ToolTip
 from .function_list import FunctionList
 from .gradients import Gradients
@@ -18,11 +19,12 @@ from .diff_view import DiffView
 
 __all__ = [
     "Auxiliary",
-    "FastEnsembleAuxiliary",
+    #"FastEnsembleAuxiliary",
     "BoxPlot",
-    "RankHistogram",
-    "MiniHistogram",
-    "GenericHistogram",
+    "Histogram",
+    # "RankHistogram",
+    #"MiniHistogram",
+    # "GenericHistogram",
     "ToolTip",
     "FunctionList",
     "Gradients",

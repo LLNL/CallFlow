@@ -2,46 +2,85 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
-import pandas as pd
 import numpy as np
 
-HIST_PROPS = ["rank", "name", "dataset", "all_ranks"]
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class Histogram:
-    def __init__(self, ensemble_df, target_df=None, binCount=20):
-        self.result = {
-            "Inclusive": {},
-            "Exclusive": {}
-        }
-        for prop in HIST_PROPS:
-            if target_df is not None:
-                prop_histograms = self.bin_by_property_single(ensemble_df, target_df, prop)
-            else:
-                prop_histograms = self.bin_by_property_ensemble(ensemble_df, prop)
-            self.result["Inclusive"][prop] = prop_histograms["Inclusive"]
-            self.result["Exclusive"][prop] = prop_histograms["Exclusive"]
 
+    HISTO_TYPES = ["rank", "name", "dataset", "all_ranks"]
+    KEYS_AND_ATTRS = {'Inclusive': 'time (inc)',
+                      'Exclusive': 'time'}
+
+    def __init__(self, ensemble_df, target_df=None, bins=20):
+
+        self.result = {"Inclusive": {}, "Exclusive": {}}
+
+        # for each property
+        for prop in Histogram.HISTO_TYPES:
+
+            if target_df is None:
+                _dfe = Histogram._get_data_by_property(ensemble_df, prop)
+                for k, a in Histogram.KEYS_AND_ATTRS.items():
+                    _hist = Histogram.compute(_dfe[a], bins=bins)
+                    self.result[k][prop] = {
+                        "ensemble": Histogram._format_data(_hist)
+                    }
+
+            else:
+                _dfe = Histogram._get_data_by_property(ensemble_df, prop)
+                _dft = Histogram._get_data_by_property(target_df, prop)
+
+                for k, a in Histogram.KEYS_AND_ATTRS.items():
+                    _e = _dfe[a]
+                    _t = _dft[a]
+
+                    _min = min(_e.min(), _t.min())
+                    _max = min(_e.max(), _t.max())
+
+                    _histe = Histogram.compute(_e, [_min, _max], bins=bins)
+                    _histt = Histogram.compute(_t, [_min, _max], bins=bins)
+
+                    self.result[k][prop] = {
+                        "ensemble": Histogram._format_data(_histe),
+                        "target": Histogram._format_data(_histt)
+                    }
+
+    # --------------------------------------------------------------------------
     # Return the histogram in the required form.
     @staticmethod
-    def _format_data(histogram_grid):
-        return {
-            "x": histogram_grid[0].tolist(),
-            "y": histogram_grid[1].tolist(),
-            "x_min": histogram_grid[0][0],
-            "x_max": histogram_grid[0][-1],
-            "y_min": np.min(histogram_grid[1]).astype(np.float64),
-            "y_max": np.max(histogram_grid[1]).astype(np.float64),
-        }
-
-    @staticmethod
-    def compute(data, data_min=np.nan, data_max=np.nan, binCount=20):
-        if np.isnan(data_min) or np.isnan(data_max):
-            data_min = data.min()
-            data_max = data.max()
-        h, b = np.histogram(data, range=[data_min, data_max], bins=binCount)
+    def compute(data, data_range=None, bins=20):
+        if data_range is None:
+            data_range = [data.min(), data.max()]
+        else:
+            assert isinstance(data_range, (list, np.ndarray))
+            assert len(data_range) == 2
+        h, b = np.histogram(data, range=data_range, bins=bins)
         return 0.5 * (b[1:] + b[:-1]), h
 
+    @staticmethod
+    def _get_data_by_property(data, prop):
+        if prop == "all_ranks":
+            return data
+        elif prop == "rank":
+            return data.groupby(["dataset", "rank"])[["time", "time (inc)"]].mean()
+        else:
+            return data.groupby([prop])[["time", "time (inc)"]].mean()
+
+    @staticmethod
+    def _format_data(histo):
+        return {"x": histo[0].tolist(),
+                "y": histo[1].tolist(),
+                "x_min": histo[0][0],
+                "x_max": histo[0][-1],
+                "y_min": np.min(histo[1]).astype(np.float64),
+                "y_max": np.max(histo[1]).astype(np.float64)}
+
+    # --------------------------------------------------------------------------
+    '''
     def bin_by_property_ensemble(self, ensemble_df, prop):
         ret = {}
         if prop == "all_ranks":
@@ -72,6 +111,7 @@ class Histogram:
             "ensemble": Histogram._format_data(histogram_ensemble_exclusive_grid),
         }
         return ret
+
 
     def bin_by_property_single(self, ensemble_df, target_df, prop):
         ret = {}
@@ -131,3 +171,5 @@ class Histogram:
             "target": Histogram._format_data(histogram_target_exclusive_grid),
         }
         return ret
+    '''
+# ------------------------------------------------------------------------------
