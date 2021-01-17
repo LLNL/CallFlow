@@ -138,12 +138,10 @@ class Auxiliary:
     # TODO: Figure out where this should belong.
     def get_module_callsite_map(self):
         ret = {}
-        _data = self.module_group_df["name"].unique()
-        ret["ensemble"] = _data.apply(lambda d: d.tolist()).to_dict()
+        ret["ensemble"] = self.module_group_df["name"].unique().apply(lambda d: d.tolist()).to_dict()
         
         for dataset in self.datasets:
-            _t_data = self.target_module_group_df[dataset]["name"].unique()
-            ret[dataset] = _t_data.apply(lambda d: d.tolist()).to_dict()
+            ret[dataset] = self.t_module_group_df[dataset]["name"].unique().apply(lambda d: d.tolist()).to_dict()
         
         return ret
 
@@ -238,4 +236,144 @@ class Auxiliary:
         }
         return result
 
+    # ------------------------------------------------------------------------------
+    # HDF5 methods (Not being used)
+    # ------------------------------------------------------------------------------
+
+    def h5_module_data(self):
+        module_group_df = self.df.groupby(["module"])
+        self.moduleMap = {}
+        count = 0
+        for module, module_df in module_group_df:
+            module_ensemble_df = module_group_df.get_group(module)
+            key = "module_" + str(count)
+            self.moduleMap[module] = key
+            module_ensemble_df.to_hdf(self.moduleh5File, key=key)
+            count += 1
+
+    def h5_callsite_data(self):
+        name_group_df = self.df.groupby(["name"])
+        count = 0
+        for name, name_df in name_group_df:
+            callsite_ensemble_df = name_group_df.get_group(name)
+            key = "callsite_" + str(callsite_ensemble_df["nid"].unique()[0])
+            self.callsiteMap[name] = key
+            callsite_ensemble_df.to_hdf(self.callsiteh5File, key=key)
+            count += 1
+
+    def h5_write(self):
+        exDict = {"moduleMap": self.moduleMap, "callsiteMap": self.callsiteMap}
+        with open(self.h5IndexFilename, "w") as file:
+            file.write(json.dumps(exDict))
+            LOGGER.debug(f"writen to file : {self.h5IndexFilename}")
+
+    def h5_read(self):
+        f = open(self.h5IndexFilename, "r")
+        data = json.load(f)
+        return data
+        LOGGER.debug("Read the h5 index map.")
+
+    def h5_process(self):
+        LOGGER.info("Calculating Gradients, Mean runtime variations, and Distribution.")
+        with self.timer.phase("Collect Callsite data"):
+            self.callsite_data()
+        with self.timer.phase("Collect Module data"):
+            self.module_data()
+        with self.timer.phase("Write module's and callsite's hdf indexes"):
+            self.write_h5()
+        LOGGER.info(self.timer)
+
+    def h5_fetch(self):
+        ret = {}
+        with self.timer.phase("Read module's and callsite's hdf indexes"):
+            data = self.read_maps()
+            self.moduleMap = data["moduleMap"]
+            self.callsiteMap = data["callsiteMap"]
+        with self.timer.phase("Collect Callsite data"):
+            modules = self.df["module"].unique().tolist()
+        with self.timer.phase("Filter"):
+            if self.filter:
+                # topCallsites_df = self.filter_frames(self.topCallsite, "time (inc)")
+                topCallsites_df = self.filter_frames(self.topCallsite, "time")
+                callsites = topCallsites_df.index.values
+                self.df = self.df[self.df["name"].isin(topCallsites_df.index.values)]
+            else:
+                callsites = self.df["name"].unique().tolist()
+        with self.timer.phase("Fetch module"):
+            ret["module"] = self.get_data_from_hd5(modules, "module")
+        with self.timer.phase("Fetch callsite"):
+            ret["callsite"] = self.get_data_from_hd5(callsites, "name")
+        with self.timer.phase("Module callsite map data"):
+            ret["moduleCallsiteMap"] = self.get_module_callsite_map()
+        return ret
+
+    def get_data_from_hd5(self, nodes, col):
+        ret = {}
+        if col == "module":
+            filename = self.moduleh5File
+            mapping = self.moduleMap
+        elif col == "name":
+            filename = self.callsiteh5File
+            mapping = self.callsiteMap
+        ensemble = {}
+        for node in nodes:
+            module_ensemble_df = pd.read_hdf(filename, key=mapping[node])
+            hists = {"Inclusive": {}, "Exclusive": {}}
+            for prop in self.props:
+                prop_histograms = self.histogram_by_property_ensemble(
+                    module_ensemble_df, prop
+                )
+                hists["Inclusive"][prop] = prop_histograms["Inclusive"]
+                hists["Exclusive"][prop] = prop_histograms["Exclusive"]
+            # Calculate gradients
+            gradients = {"Inclusive": {}, "Exclusive": {}}
+            gradients = Gradients(self.target_df, binCount=self.RunBinCount).run(
+                columnName=col, callsiteOrModule=node
+            )
+            quartiles = {"Inclusive": {}, "Exclusive": {}}
+            outliers = {"Inclusive": {}, "Exclusive": {}}
+            if col == "name":
+                boxplot = BoxPlot(module_ensemble_df)
+                quartiles = boxplot.q
+                outliers = boxplot.outliers
+            ensemble[node] = self.pack_json(
+                df=module_ensemble_df,
+                name=node,
+                gradients=gradients,
+                prop_hists=hists,
+                q=quartiles,
+                outliers=outliers,
+            )
+        ret["ensemble"] = ensemble
+        for dataset in self.datasets:
+            target = {}
+            module_target_df = module_ensemble_df.loc[
+                module_ensemble_df["dataset"] == dataset
+            ]
+            for node in nodes:
+                gradients = {"Inclusive": {}, "Exclusive": {}}
+                hists = {"Inclusive": {}, "Exclusive": {}}
+                quartiles = {"Inclusive": {}, "Exclusive": {}}
+                outliers = {"Inclusive": {}, "Exclusive": {}}
+                if module_target_df.shape[0] != 0:
+                    for prop in self.props:
+                        prop_histograms = self.histogram_by_property(
+                            module_ensemble_df, module_target_df, prop
+                        )
+                        hists["Inclusive"][prop] = prop_histograms["Inclusive"]
+                        hists["Exclusive"][prop] = prop_histograms["Exclusive"]
+                    if col == "name":
+                        boxplot = BoxPlot(module_target_df)
+                        quartiles = boxplot.q
+                        outliers = boxplot.outliers
+                    target[node] = self.pack_json(
+                        df=module_target_df,
+                        name=node,
+                        gradients=gradients,
+                        prop_hists=hists,
+                        q=quartiles,
+                        outliers=outliers,
+                    )
+            ret[dataset] = target
+        return ret
     
