@@ -22,11 +22,15 @@ LOGGER = callflow.get_logger(__name__)
 
 CALLFLOW_APP_HOST = os.getenv("CALLFLOW_APP_HOST", "127.0.0.1")
 CALLFLOW_APP_PORT = int(os.getenv("CALLFLOW_APP_PORT", 5000))
-CALLFLOW_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 # ------------------------------------------------------------------------------
 def main():
+
+    # --------------------------------------------------------------------------
+    print(f' ----------------- CallFlow {callflow.__version__} -----------------')
+
+    # --------------------------------------------------------------------------
 
     log_level = 1 if '--verbose' in sys.argv else 2
     callflow.init_logger(level=log_level)
@@ -52,7 +56,7 @@ def main():
         cf.process()
 
     # --------------------------------------------------------------------------
-    elif not process and endpoint_access == "TERMINAL":
+    elif not process and endpoint_env == "TERMINAL":
         if endpoint_access == "REST":
             cf = APIProvider(config=args.config)
         else:
@@ -61,9 +65,11 @@ def main():
         cf.start(host=CALLFLOW_APP_HOST, port=CALLFLOW_APP_PORT)
 
     # --------------------------------------------------------------------------
-    elif not process and endpoint_access == "JUPYTER":
+    elif not process and endpoint_env == "JUPYTER":
+        _launch_path = os.path.join(args.config["save_path"], "launch-info")
         launch_ipython(args.args, args.config,
-                       host=CALLFLOW_APP_HOST, port=CALLFLOW_APP_PORT)
+                       host=CALLFLOW_APP_HOST, port=CALLFLOW_APP_PORT,
+                       launch_path=_launch_path, app_version=callflow.__version__)
 
     # --------------------------------------------------------------------------
     else:

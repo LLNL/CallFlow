@@ -5,20 +5,22 @@
 *.h5
 
 .callflow
-old-code/*
-config_files/*
+#old-code/*
+#config_files/*
+#data/*
+#callflow/unused/*
+
 data/*
-callflow/unused/*
-
 app/node_modules*
-app/src/unused/*
+#app/src/unused/*
 
+# symlinks for installation
 callflow/app
 callflow/data
 callflow/examples
+callflow/server
 
 designs/*
-
 videos/*
 
 # ------------------------------------------------------------------------------
@@ -47,9 +49,9 @@ docs/_build
 .ipynb_checkpoints
 
 # local misc files 
-config_files copy/*
-examples/*
-internals/*
+#config_files copy/*
+#examples/*
+#internals/*
 
 # Ignore Screenshots
 *.png

@@ -5,6 +5,7 @@
 # ------------------------------------------------------------------------------
 
 # callflow.__init__.py
+from .version import __version__
 from .utils.logger import init_logger, get_logger
 from .datastructures import SuperGraph, EnsembleGraph
 
@@ -25,7 +26,7 @@ def load_ipython_extension(ipython):
       https://ipython.readthedocs.io/en/stable/config/extensions/index.html
     """
     # TODO: this needs to be fixed
-    from .server.callflow_server import main
+    from .server.main import main
     from .server.notebook_server import load_ipython
     load_ipython(ipython, main)
 

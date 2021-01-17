@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
-# NOTE: The manager.py adopts Tensorboard's philosophy of launching applications
+# NOTE: This code adopts Tensorboard's philosophy of launching applications
 # through the IPython interface.
 # The code can be found at https://github.com/tensorflow/tensorboard/blob/master/tensorboard/notebook.py
 # ------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ LOGGER = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 # Information about a running CallFlow's info.
 # ------------------------------------------------------------------------------
-CALLFLOW_LAUNCH_INFO = collections.OrderedDict(
+LAUNCH_INFO_DICT = collections.OrderedDict(
     (
         ("version", str),
         ("start_time", int),  # seconds since epoch
@@ -48,24 +48,11 @@ CALLFLOW_LAUNCH_INFO = collections.OrderedDict(
     )
 )
 
-CallFlowLaunchInfo = collections.namedtuple(
+LAUNCH_INFO_TUPLE = collections.namedtuple(
     "CallFlowLaunchInfo",
-    CALLFLOW_LAUNCH_INFO,
+    LAUNCH_INFO_DICT,
 )
 
-
-def _get_callflow_version():
-    """
-    Get the callflow version.
-    :return: version
-    """
-    text = {}
-
-    CALLFLOW_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    vfile = os.path.join(CALLFLOW_DIR, "version.py")
-    with open(vfile) as fp:
-        exec(fp.read(), text)
-        return text["__version__"]
 
 # ------------------------------------------------------------------------------
 # The following five types enumerate the possible return values of the
@@ -108,9 +95,24 @@ StartTimedOut = collections.namedtuple("StartTimedOut", ("pid",))
 
 
 # ------------------------------------------------------------------------------
+def _create_cmd(args):
+    # TODO: remove hardcoding
+    server_cmd = ['callflow',
+                  '--data_path', './data/lulesh-8-runs-original',
+                  '--profile_format', 'caliper_json',
+                  '--verbose']
+    return server_cmd
+
+    server_cmd = ["callflow"]
+    for k,v in args.items():
+        if v is not None:
+            server_cmd += [f'--{k}',f'{v}']
+
+
+# ------------------------------------------------------------------------------
 # public api of the ipython environment
 # ------------------------------------------------------------------------------
-def launch_ipython(args, config, host, port):
+def launch_ipython(args, config, host, port, launch_path, app_version):
     """
     Setup the IPython environment.
 
@@ -118,47 +120,38 @@ def launch_ipython(args, config, host, port):
     :param config:  Callflow config
     :param host:
     :param port:
+    :param launch_path:
+    :param app_version:
     :return: StartLaunched or StartReused
     """
     assert isinstance(args, dict) and isinstance(config, dict)
     assert isinstance(host, str) and isinstance(port, int)
+    assert isinstance(launch_path, str) and isinstance(app_version, str)
 
-    _msg = f'Launching CallFlow in ipython environment ({host}) ({port})'
+    _msg = f'Launching CallFlow {app_version} in ipython environment ({host}:{port})'
     LOGGER.info(_msg)
     handle = IPython.display.display(IPython.display.Pretty(_msg),
                                      display_id=True)
 
-    '''
-    print(' -------------------- ')
-    print (args)
-    print (' '.join(args))
-    print (config)
-    print (' -------------------- ')
-    '''
-
     # Set cache key to store the current instance's arguments.
     cache_key = _get_cache_key(working_directory=os.getcwd(), arguments=args)
 
-    # Collect the version of CallFlow being executed.
-    version = _get_callflow_version()
-
-    # Launch information (CallFlowLaunchInfo) would be saved inside the config['save_path']
-    launch_info_path = os.path.join(config["save_path"], "launch-info")
-    launch_info_path = os.path.abspath(launch_info_path)
-    launch_info_file = os.path.join(launch_info_path, "pid-{}.info".format(os.getppid()))
-    _mkdir(launch_info_path)
+    # Launch information
+    launch_path = os.path.abspath(launch_path)
+    launch_file = os.path.join(launch_path, "pid-{}.info".format(os.getppid()))
+    _mkdir(launch_path)
 
     # Find a matching instance to the current launch.
-    matching_instance = _find_matching_instance(launch_info_path)
+    matching_instance = _find_matching_instance(launch_path)
 
     # --------------------------------------------------------------------------
     # If a match exists, use it.
     if matching_instance:
         start_result = StartReused(info=matching_instance)
-        #return start_result
 
-        print (start_result)
-        exit()
+        print(start_result)
+        LOGGER.critical('blocking reuse')
+        exit(1)
         pid = int(start_result.info["pid"])
         port = int(start_result.info["port"])
         client_port = int(start_result.info["client_port"])
@@ -176,75 +169,30 @@ def launch_ipython(args, config, host, port):
     # --------------------------------------------------------------------------
     # Launch the server command
     else:
-        server_cmd = ["callflow_server"]
-        for k,v in args.items():
-            if v is not None:
-                server_cmd += [f'--{k}',f'{v}']
-        LOGGER.debug('launching ({})'.format(' '.join(server_cmd)))
-
-        # TODO: fix the hardcoding
-        server_cmd = ['callflow_server',
-                      '--data_path', './data/lulesh-8-runs-original',
-                      '--profile_format', 'caliper_json',
-                      '--verbose']
-        LOGGER.debug('launching ({})'.format(' '.join(server_cmd)))
-
+        server_cmd = _create_cmd(args)
+        LOGGER.debug(f'Launching command ({server_cmd})')
         launch_result = _launch_app(server_cmd, host=host, port=port,
-                                    info_dir=launch_info_path,
+                                    info_dir=launch_path,
                                     instance=matching_instance)
 
         if not isinstance(launch_result, StartLaunched):
-            LOGGER.critical('exiting due to launch failure')
+            LOGGER.critical('Exiting due to launch failure')
             exit(1)
 
         # Construct the CallFlowLaunchInfo object.
-        launch_info = CallFlowLaunchInfo(version=version, port=port, host=host,
-                                         config=config,
-                                         start_time=int(time.time()),
-                                         pid=os.getpid(), cache_key=cache_key)
+        launch_info = LAUNCH_INFO_TUPLE(version=app_version,
+                                        config=config,
+                                        port=port, host=host,
+                                        start_time=int(time.time()),
+                                        pid=os.getpid(),
+                                        cache_key=cache_key)
 
         # Store the CallFlowLaunchInfo object.
-        _write_launch_info_file(launch_info_file, launch_info)
+        _write_launch_info_file(launch_file, launch_info)
 
         # Trigger a return that the callflow process has been triggered.
-        #return launch_result
         _display_ipython(port=port, height=800, display_handle=handle)
 
-'''
-def run_ipython_environment(start_result):
-    """
-    Run the jupyter environment
-
-    :param start_result: StartLaunched or StartReused
-    :return: None
-    """
-    LOGGER.info(f'Executing the ipython environment ({start_result})')
-
-    handle = IPython.display.display(
-        IPython.display.Pretty("Launching CallFlow..."),
-        display_id=True,
-    )
-
-    if isinstance(start_result, StartLaunched):
-        # TODO: for consistency, should be result.info["port]
-        port = int(start_result.port)
-        _display_ipython(port=port, height=800, display_handle=handle)
-
-    elif isinstance(start_result, StartReused):
-
-        pid = int(start_result.info["pid"])
-        port = int(start_result.info["port"])
-        client_port = start_result.info["client_port"]
-        time_delta = int(time.time()) - start_result.info["start_time"]
-        time_delta = str(datetime.timedelta(seconds=time_delta))
-
-        message = f"Reusing CallFlow's server is on port {port} and " \
-                  f"client is on {client_port} (pid {pid}), " \
-                  f"started {time_delta} ago. (Use '!kill {pid}' to kill it.)"
-
-        _print_message_in_ipython(handle, message)
-        _display_ipython(port=client_port, height=800, display_handle=None)
-'''
 
 def load_ipython(ipython, server):
     """
@@ -253,6 +201,7 @@ def load_ipython(ipython, server):
     directly.
 
     :param ipython: An `IPython.InteractiveShell` instance.
+    :param server:
     """
     assert callable(server)
     _register_magics(ipython, server)
@@ -267,7 +216,7 @@ def _register_magics(ipython, server):
     :param ipython: An `InteractiveShell` instance.
     """
     assert callable(server)
-    # TODO: need to resgister with start magic
+    # TODO: need to register with start magic
     ipython.register_magic_function(_start_magic,
                                     magic_kind="line",
                                     magic_name="callflow")
@@ -304,6 +253,8 @@ def _launch_app(cmd, host, port, info_dir, instance,
     try:
         p = subprocess.Popen(cmd, stdout=stdout_fd, stderr=stderr_fd)
     except OSError as e:
+        LOGGER.critical(f'Launch failed. '
+                        f'For logs, see ({stdout_path}) and ({stderr_path})')
         return StartExecFailed(os_error=e)
     finally:
         os.close(stdout_fd)
@@ -409,40 +360,6 @@ def _mkdir(path):
         os.chmod(path, 0o777)
     return path
 
-'''
-def _get_info_file_path():
-    """
-    Get path to info file for the current process.
-    As with `_get_info_dir`, the info directory will be created if it
-    does not exist.
-    """
-    pid = os.getppid()
-    return os.path.join(_get_info_dir(), f"pid-{pid}.info")
-
-
-def _info_to_string(info):
-    """
-    Convert the CallFlow's launch info to json.
-
-    :param info: CallFlowLaunchInfo instance
-    :return: JSON representation for CallFlowLaunchInfo
-    """
-    json_value = {k: getattr(info, k) for k in CALLFLOW_LAUNCH_INFO}
-    return json.dumps(json_value, sort_keys=True, indent=4)
-
-
-def _time_delta_from_info(info):
-    """
-    Human-readable format for the elapsed time for the given CallFlowInstance.
-
-    :param info: A CallFlowInfo instance.
-    :return: A human-readable string describing the time since the server
-        described by `info` started: e.g., "2 days, 0:48:58".
-    """
-    delta_seconds = int(time.time()) - info["start_time"]
-    return str(datetime.timedelta(seconds=delta_seconds))
-'''
-
 
 # ------------------------------------------------------------------------------
 def _read_launch_info_file(filename):
@@ -454,7 +371,6 @@ def _read_launch_info_file(filename):
     """
     try:
         with open(filename) as infile:
-            #print(infile.read())
             return infile.read()
     except IOError as e:
         if e.errno == errno.ENOENT:
@@ -473,49 +389,13 @@ def _write_launch_info_file(filename, info):
 
     :param info: A valid `CallFlowLaunchInfo` object.
     """
-
-    json_value = {k: getattr(info, k) for k in CALLFLOW_LAUNCH_INFO}
+    json_value = {k: getattr(info, k) for k in LAUNCH_INFO_DICT}
     payload = json.dumps(json_value, sort_keys=True, indent=4)
-    # payload = "%s\n" % _info_to_string(info)
     with open(filename, "w") as outfile:
         outfile.write(payload + '\n')
 
 
 # ------------------------------------------------------------------------------
-'''
-def _find_all_instance(info_dir):
-    """
-    Find all existing CallFlow instances.
-
-    :param info_dir: Directory where the CallFlowInfo is stored.
-    :return: all possible candidates that can be spawned.
-    """
-    launch_info = []
-    for filename in os.listdir(info_dir):
-        if filename.split("-")[0] == "pid":
-            info = {}
-            filepath = os.path.join(info_dir, filename)
-            try:
-                with open(filepath) as infile:
-                    contents = infile.read()
-            except IOError as e:
-                if e.errno == errno.EACCES:
-                    # May have been written by this module in a process whose
-                    # `umask` includes some bits of 0o444.
-                    continue
-                else:
-                    raise
-            try:
-                info = json.loads(contents)
-            except ValueError:
-                # Ignore unrecognized files, logging at debug only.
-                print("invalid info file: %r", filepath)
-            launch_info.append(info)
-
-    return launch_info
-'''
-
-
 def _find_matching_instance(info_dir):
     """
     Find a matching instance for a given info_dir.
@@ -528,7 +408,7 @@ def _find_matching_instance(info_dir):
     # find all instances
     instances = []
     for filename in os.listdir(info_dir):
-        if filename.split("-")[0] == "pid": # TODO: should be central
+        if filename.split("-")[0] == "pid":
             info = {}
             filepath = os.path.join(info_dir, filename)
             try:
@@ -570,8 +450,7 @@ def _get_cache_key(working_directory, arguments):
                         "but found: %r  (use `shlex.split` if given a string)"
                         % (arguments,))
 
-    datum = {"working_directory": working_directory,
-             "arguments": arguments}
+    datum = {"working_directory": working_directory, "arguments": arguments}
     raw = base64.b64encode(
         json.dumps(datum, sort_keys=True, separators=(",", ":")).encode("utf-8")
     )
