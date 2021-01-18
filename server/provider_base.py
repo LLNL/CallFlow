@@ -211,11 +211,6 @@ class BaseProvider:
             return ssg.nxg
 
         # ----------------------------------------------------------------------
-        elif operation_name == "function":
-            fll = FunctionList(sg, operation["module"])
-            return fll.result
-
-        # ----------------------------------------------------------------------
         elif operation_name == "split_mpi_distribution":
             assert False
             pass

@@ -10,8 +10,8 @@ from .histogram import Histogram
 #from .histogram_rank import RankHistogram
 #from .histogram_mini import MiniHistogram
 #from .histogram_generic import GenericHistogram
-from .tooltip import ToolTip
-from .function_list import FunctionList
+# from .tooltip import ToolTip
+# from .function_list import FunctionList
 from .gradients import Gradients
 from .runtime_scatterplot import RuntimeScatterplot
 from .parameter_projection import ParameterProjection
@@ -25,8 +25,8 @@ __all__ = [
     # "RankHistogram",
     #"MiniHistogram",
     # "GenericHistogram",
-    "ToolTip",
-    "FunctionList",
+    # "ToolTip",
+    # "FunctionList",
     "Gradients",
     "RuntimeScatterplot",
     "ParameterProjection",
