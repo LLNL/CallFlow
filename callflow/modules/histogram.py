@@ -5,7 +5,12 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-from scipy import stats
+
+import callflow
+from callflow.utils.utils import histogram
+
+LOGGER = callflow.get_logger()
+
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -25,7 +30,7 @@ class Histogram:
             if target_df is None:
                 _dfe = Histogram._get_data_by_property(ensemble_df, prop)
                 for k, a in Histogram.KEYS_AND_ATTRS.items():
-                    _hist = Histogram.compute(_dfe[a], bins=bins)
+                    _hist = histogram(_dfe[a], bins=bins)
                     self.result[k][prop] = {
                         "ensemble": Histogram._format_data(_hist)
                     }
@@ -41,8 +46,8 @@ class Histogram:
                     _min = min(_e.min(), _t.min())
                     _max = min(_e.max(), _t.max())
 
-                    _histe = Histogram.compute(_e, [_min, _max], bins=bins)
-                    _histt = Histogram.compute(_t, [_min, _max], bins=bins)
+                    _histe = histogram(_e, [_min, _max], bins=bins)
+                    _histt = histogram(_t, [_min, _max], bins=bins)
 
                     self.result[k][prop] = {
                         "ensemble": Histogram._format_data(_histe),
@@ -51,41 +56,6 @@ class Histogram:
 
     # --------------------------------------------------------------------------
     # Return the histogram in the required form.
-    @staticmethod
-    def compute(data, data_range=None, bins=20):
-        if len(data) == 0:
-            return np.array([]), np.array([])
-
-        if data_range is None:
-            data_range = [data.min(), data.max()]
-        else:
-            assert isinstance(data_range, (list, np.ndarray))
-            assert len(data_range) == 2
-        h, b = np.histogram(data, range=data_range, bins=bins)
-        return 0.5 * (b[1:] + b[:-1]), h
-
-    @staticmethod
-    def freedman_diaconis_bins(arr):
-        """Calculate number of hist bins using Freedman-Diaconis rule."""
-        # From https://stats.stackexchange.com/questions/798/
-
-        n = len(arr)
-        if n < 2:
-            return 1
-
-        # Calculate the iqr ranges.
-        iqr = [stats.scoreatpercentile(arr, _) for _ in [25, 50, 75]]
-
-        # Calculate the h
-        h = 2 * (iqr[2] - iqr[0]) / (n ** (1 / 3))
-
-        # fall back to sqrt(a) bins if iqr is 0
-        if h == 0:
-            return int(np.sqrt(arr.size))
-
-        else:
-            return int(np.ceil((arr.max() - arr.min()) / h))
-
     @staticmethod
     def _get_data_by_property(data, prop):
         if prop == "all_ranks":
@@ -103,8 +73,7 @@ class Histogram:
                     "x_min": 0,
                     "x_max": 0,
                     "y_min": 0.,
-                    "y_max": 0.
-                    }
+                    "y_max": 0.}
 
         else:
             return {"x": histo[0].tolist(),

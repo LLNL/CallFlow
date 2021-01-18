@@ -4,6 +4,93 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+import numpy as np
+import pandas as pd
+from scipy import stats
+
+
+# ------------------------------------------------------------------------------
+# pandas dataframe utils
+# ------------------------------------------------------------------------------
+def df_unique(df, column):
+    return df[column].unique()
+
+
+def df_count(df, column):
+    return len(df_unique(df, column))
+
+
+def df_lookup_by_column(df, column, value):
+    return df.loc[df[column] == value]
+
+
+def df_names_in_module(df, module):
+    return df_unique(df_lookup_by_column(df, "module", module), "name")
+
+
+# ------------------------------------------------------------------------------
+# statistics utils
+# ------------------------------------------------------------------------------
+def histogram(data, data_range=None, bins=20):
+    if len(data) == 0:
+        return np.array([]), np.array([])
+
+    if data_range is None:
+        data_range = [data.min(), data.max()]
+    else:
+        assert isinstance(data_range, (list, np.ndarray))
+        assert len(data_range) == 2
+    h, b = np.histogram(data, range=data_range, bins=bins)
+    return 0.5 * (b[1:] + b[:-1]), h
+
+
+def freedman_diaconis_bins(arr):
+    """Calculate number of hist bins using Freedman-Diaconis rule."""
+    # From https://stats.stackexchange.com/questions/798/
+
+    n = len(arr)
+    if n < 2:
+        return 1
+
+    # Calculate the iqr ranges.
+    iqr = [stats.scoreatpercentile(arr, _) for _ in [25, 50, 75]]
+
+    # Calculate the h
+    h = 2 * (iqr[2] - iqr[0]) / (n ** (1 / 3))
+
+    # fall back to sqrt(a) bins if iqr is 0
+    if h == 0:
+        return int(np.sqrt(arr.size))
+
+    else:
+        return int(np.ceil((arr.max() - arr.min()) / h))
+
+
+def outliers(data, scale=1.5, side='both'):
+
+    assert isinstance(data, np.ndarray)
+    assert len(data.shape) == 1
+    assert isinstance(scale, float)
+    assert side in ['gt', 'lt', 'both']
+
+    d_q13 = np.percentile(data, [25., 75.])
+    iqr_distance = np.multiply(stats.iqr(data), scale)
+
+    if side in ["gt", "both"]:
+        upper_range = d_q13[1] + iqr_distance
+        upper_outlier = np.greater(data - upper_range.reshape(1), 0)
+
+    if side in ["lt", "both"]:
+        lower_range = d_q13[0] - iqr_distance
+        lower_outlier = np.less(data - lower_range.reshape(1), 0)
+
+    if side == "gt":
+        return upper_outlier
+    if side == "lt":
+        return lower_outlier
+    if side == "both":
+        return np.logical_or(upper_outlier, lower_outlier)
+
 
 # ------------------------------------------------------------------------------
 # JSON utilities

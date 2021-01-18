@@ -5,23 +5,13 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-import callflow as cf
+
+import callflow
+from callflow.utils.utils import histogram
+from callflow.utils.utils import df_count, df_lookup_by_column, df_names_in_module
 from .histogram import Histogram
 
-LOGGER = cf.get_logger()
-
-
-# TODO: should go to some util
-def df_lookup_by_column(df, column, value):
-    return df.loc[df[column] == value]
-
-
-def df_unique(df, column):
-    return df[column].unique()
-
-
-def df_count(df, column):
-    return len(df_unique(df, column))
+LOGGER = callflow.get_logger()
 
 
 # ------------------------------------------------------------------------------
@@ -30,7 +20,7 @@ class DiffView:
 
     def __init__(self, ensemble_graph, dataset1, dataset2, col):
 
-        assert isinstance(ensemble_graph, cf.EnsembleGraph)
+        assert isinstance(ensemble_graph, callflow.EnsembleGraph)
         assert isinstance(dataset1, str) and isinstance(dataset2, str)
         assert isinstance(col, str)
 
@@ -119,8 +109,8 @@ class DiffView:
             _data = df_lookup_by_column(_df, _selected_col, _node)[_col].to_numpy()
             return _data.mean() if len(_data) > 0 else 0
 
-        callsites_in_mod1 = df_unique(df_lookup_by_column(df1, "module", module), "name")
-        callsites_in_mod2 = df_unique(df_lookup_by_column(df2, "module", module), "name")
+        callsites_in_mod1 = df_names_in_module(df1, module)
+        callsites_in_mod2 = df_names_in_module(df2, module)
         mean1 = [_mean(df1, "name", _, "time") for _ in callsites_in_mod1]
         mean2 = [_mean(df2, "name", _, "time") for _ in callsites_in_mod2]
         return sum(mean2) - sum(mean1)
@@ -160,7 +150,7 @@ class DiffView:
 
         # now, need to compute the histogram
         num_of_bins = 20
-        hist_grid = Histogram.compute(diff, bins=num_of_bins)
+        hist_grid = histogram(diff, bins=num_of_bins)
         '''
         #dist_list = np.sort(diff)
         if len(dist_list) != 0:

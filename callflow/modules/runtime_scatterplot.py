@@ -2,37 +2,49 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
 import pandas as pd
 
+import callflow
+from callflow.utils.utils import df_lookup_by_column, df_names_in_module
 
+LOGGER = callflow.get_logger()
+
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class RuntimeScatterplot:
+
+    KEYS_TO_ADD = ['name', 'rank', 'time', 'time (inc)']
+
     def __init__(self, state, module):
+
+        self.entire_df = state.entire_df
         self.graph = state.new_gf.graph
         self.df = state.new_gf.df
+
+        assert 0
         self.module = module
         self.entry_funcs = {}
-        self.run()
+        self.result = self.run()
 
     def run(self):
+
         ret = []
 
-        # this should not work because there is no self.state
-        entire_df = self.state.entire_df
-        func_in_module = (
-            self.df[self.df.module == self.module]["name"].unique().tolist()
-        )
+        callsites = df_names_in_module(self.df, self.module)
+        for func in callsites:
 
-        for idx, func in enumerate(func_in_module):
-            ret.append(
-                {
-                    "name": func,
-                    "time (inc)": entire_df.loc[entire_df["name"] == func][
-                        "time (inc)"
-                    ].tolist(),
-                    "time": entire_df.loc[entire_df["name"] == func]["time"].tolist(),
-                    "rank": entire_df.loc[entire_df["name"] == func]["rank"].tolist(),
-                }
-            )
-        ret_df = pd.DataFrame(ret)
-        return ret_df.to_json(orient="columns")
+            _ret = {}
+            _df = df_lookup_by_column(self.entire_df, "name", func)
+            for _ in RuntimeScatterplot.KEYS_TO_ADD:
+                if _ == 'name':
+                    _ret[_] = func
+                else:
+                    _ret[_] = _df[_].tolist()
+            ret.append(_ret)
+
+        return pd.DataFrame(ret).to_json(orient="columns")
+
+# ------------------------------------------------------------------------------

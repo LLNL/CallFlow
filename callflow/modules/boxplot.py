@@ -4,13 +4,12 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
-import logging
-import collections
 import numpy as np
-import pandas as pd
-from scipy.stats import iqr
 
-LOGGER = logging.getLogger(__name__)
+import callflow
+from callflow.utils.utils import outliers
+
+LOGGER = callflow.get_logger()
 
 
 # ------------------------------------------------------------------------------
@@ -30,7 +29,7 @@ class BoxPlot:
 
             self.q[k] = np.percentile(df[a], [0., 25., 50., 75., 100.])
 
-            mask = BoxPlot.outliers(df[a])
+            mask = outliers(df[a])
             self.outliers[k] = {"values": (mask * df[a]).tolist(),
                                 "datasets": (mask * df['dataset']).tolist(),
                                 "ranks": (mask * df['rank']).tolist()}
@@ -45,6 +44,7 @@ class BoxPlot:
         self.outliers["Exclusive"] = self.iqr_outlier(df, attr="time", axis=0)\
         '''
 
+    '''
     @staticmethod
     def outliers(data, axis=0, scale=1.5, side="both"):
         assert isinstance(data, pd.Series)
@@ -55,7 +55,7 @@ class BoxPlot:
                 stat_shape[single_axis] = 1
         else:
             stat_shape[axis] = 1
-
+        
         d_q13 = np.percentile(data, [25., 75.], axis=axis)
         iqr_distance = np.multiply(iqr(data, axis=axis), scale)
 
@@ -73,8 +73,8 @@ class BoxPlot:
             return lower_outlier
         if side == "both":
             return np.logical_or(upper_outlier, lower_outlier)
-
-# ------------------------------------------------------------------------------
+    '''
+    # --------------------------------------------------------------------------
 
     '''
     def median(self, arr):

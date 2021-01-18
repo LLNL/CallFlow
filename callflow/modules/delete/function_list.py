@@ -2,20 +2,26 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
 import pandas as pd
 import networkx as nx
 from ast import literal_eval as make_tuple
 
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class FunctionList:
     """
     Callsite list (Remove)
     """
 
     def __init__(self, state, modFunc, nid):
+
         self.graph = state.new_gf.graph
         self.df = state.new_gf.df
         self.entire_df = state.new_entire_gf.df
+
         # Processing for the modFunc format to get the module name
         if "=" in modFunc:
             self.function = modFunc.split("=")[1]
@@ -23,20 +29,10 @@ class FunctionList:
         elif "/" in modFunc:
             self.function = modFunc.split("/")[1]
             self.module = modFunc.split("/")[0]
+
         self.module_df = self.df.loc[self.df["module"] == self.module]
         self.result = self.run()
 
-    def add_paths(self, path_name):
-        for idx, row in self.df.iterrows():
-            path = row[path_name]
-            if isinstance(path, str):
-                path = make_tuple(path)
-            corrected_path = path[0]
-            if len(corrected_path) >= 2:
-                source = corrected_path[-2]
-                target = corrected_path[-1]
-                if not self.entire_g.has_edge(source, target):
-                    self.entire_g.add_edge(source, target)
 
     def run(self):
         callers = {}
@@ -45,7 +41,7 @@ class FunctionList:
         ret = []
         # Create a networkX graph.
         self.entire_g = nx.DiGraph()
-        self.add_paths("path")
+        self._add_paths("path")
         entry_func_df = self.module_df.loc[self.module_df["component_level"] == 2]
         entry_funcs = entry_func_df["name"].unique()
         other_func_df = self.module_df.loc[self.module_df["component_level"] > 2]
@@ -66,3 +62,16 @@ class FunctionList:
         )
         ret_df = pd.DataFrame(ret)
         return ret_df.to_json(orient="columns")
+
+    # ------------------------------------------------------------------------------
+    def _add_paths(self, path_name):
+        for idx, row in self.df.iterrows():
+            path = row[path_name]
+            if isinstance(path, str):
+                path = make_tuple(path)
+            corrected_path = path[0]
+            if len(corrected_path) >= 2:
+                source = corrected_path[-2]
+                target = corrected_path[-1]
+                if not self.entire_g.has_edge(source, target):
+                    self.entire_g.add_edge(source, target)
