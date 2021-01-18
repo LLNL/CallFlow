@@ -7,6 +7,7 @@
 import numpy as np
 import pandas as pd
 from scipy import stats
+import statsmodels.nonparametric.api as smnp
 
 
 # ------------------------------------------------------------------------------
@@ -53,10 +54,10 @@ def freedman_diaconis_bins(arr):
         return 1
 
     # Calculate the iqr ranges.
-    iqr = [stats.scoreatpercentile(arr, _) for _ in [25, 50, 75]]
+    iqr = [stats.scoreatpercentile(arr, _) for _ in [25, 75]]
 
     # Calculate the h
-    h = 2 * (iqr[2] - iqr[0]) / (n ** (1 / 3))
+    h = 2 * (iqr[1] - iqr[0]) / (n ** (1 / 3))
 
     # fall back to sqrt(a) bins if iqr is 0
     if h == 0:
@@ -68,7 +69,7 @@ def freedman_diaconis_bins(arr):
 
 def outliers(data, scale=1.5, side='both'):
 
-    assert isinstance(data, np.ndarray)
+    assert isinstance(data, (pd.Series, np.ndarray))
     assert len(data.shape) == 1
     assert isinstance(scale, float)
     assert side in ['gt', 'lt', 'both']
@@ -91,6 +92,23 @@ def outliers(data, scale=1.5, side='both'):
     if side == "both":
         return np.logical_or(upper_outlier, lower_outlier)
 
+
+def kde(data, gridsize=10, fft=True,
+        kernel="gau", bw="scott", cut=3, clip=(-np.inf, np.inf)):
+
+    if bw == "scott":
+        bw = stats.gaussian_kde(data).scotts_factor() * data.std(ddof=1)
+
+    kde = smnp.KDEUnivariate(data)
+
+    # create the grid to fit the estimation.
+    support_min = min(max(data.min() - bw * cut, clip[0]), 0)
+    support_max = min(data.max() + bw * cut, clip[1])
+    x = np.linspace(support_min, support_max, gridsize)
+
+    kde.fit("gau", bw, fft, gridsize=gridsize, cut=cut, clip=clip)
+    y = kde.density
+    return x, y
 
 # ------------------------------------------------------------------------------
 # JSON utilities

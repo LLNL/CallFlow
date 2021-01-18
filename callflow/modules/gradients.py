@@ -2,12 +2,16 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
 import numpy as np
-from scipy import stats
-import statsmodels.nonparametric.api as smnp
+from .histogram import Histogram
+from callflow.utils.utils import histogram, kde, freedman_diaconis_bins
+from callflow.utils.utils import df_lookup_by_column
 
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class Gradients:
     """
     Gradients Class computes the ensemble gradients for the a given dictionary
@@ -17,9 +21,15 @@ class Gradients:
     callsiteOrModule : callsiteOrModule (can be a moddule) of a given call graph
     binCount : Number of bins to distribute the runtime information. 
     """
+
+    KEYS_AND_ATTRS = {'Inclusive': 'time (inc)',
+                      'Exclusive': 'time'}
+
     def __init__(self, df_dict, callsiteOrModule: str, binCount=20):
+        # TOD: why passing a df_dict? why not the supergraph/ensemble graph
         assert isinstance(callsiteOrModule, str)
         assert isinstance(df_dict, dict)
+
         self.callsiteOrModule = callsiteOrModule
         self.df_dict = df_dict
         self.binCount = binCount
@@ -38,6 +48,7 @@ class Gradients:
         max_ranks = max(rank_dict.values())
         return rank_dict, max_ranks
 
+    '''
     @staticmethod
     def _pack_by_rank(df, metric, max_ranks):
         ret = {}
@@ -89,7 +100,7 @@ class Gradients:
             return int(np.sqrt(arr.size))
         else:
             return int(np.ceil((arr.max() - arr.min()) / h))
-
+    '''
     @staticmethod
     def convert_dictmean_to_list(dictionary):
         mean = []
@@ -100,6 +111,7 @@ class Gradients:
             dataset[state] = np.mean(np.array(d))
         return [mean, dataset]
 
+    '''
     # ------------------------------------------------------------------------------
     # KDE and Histogram calculations
     @staticmethod
@@ -208,3 +220,71 @@ class Gradients:
         }
 
         return results
+    '''
+
+    # --------------------------------------------------------------------------
+    @staticmethod
+    def map_datasets_to_bins(bins, dataset_dict={}):
+
+        # TODO: previously, this logic applied to bin edges
+        # but, now, we aer working on bin_centers
+        binw = bins[1] - bins[0]
+        bin_edges = np.append(bins - 0.5*binw, bins[-1] + 0.5*binw)
+
+        # Map the datasets to their histogram indexes.
+        dataset_position_dict = {}
+        for dataset in dataset_dict:
+            mean = dataset_dict[dataset]
+            for idx, x in np.ndenumerate(bin_edges):
+                if x > float(mean):
+                    dataset_position_dict[dataset] = idx[0] - 1
+                    break
+                if idx[0] == len(bin_edges) - 1:
+                    dataset_position_dict[dataset] = len(bin_edges) - 2
+
+        return dataset_position_dict
+
+    # --------------------------------------------------------------------------
+    # Compute method.
+    def compute(self, columnName="name"):
+
+        dists = {}
+        for k,a in Gradients.KEYS_AND_ATTRS.items():
+            dists[k] = {}
+
+        # Get the runtimes for all the runs.
+        for idx, dataset in enumerate(self.df_dict):
+
+            node_df = df_lookup_by_column(self.df_dict[dataset], columnName, self.callsiteOrModule)
+            for k, a in Gradients.KEYS_AND_ATTRS.items():
+                if node_df.empty:
+                    dists[k][dataset] = dict((rank, 0) for rank in range(0, self.max_ranks))
+                else:
+                    dists[k][dataset] = dict(zip(node_df["rank"].tolist(), node_df[a].tolist()))
+
+        # Calculate appropriate number of bins automatically.
+        # num_of_bins = min(self.freedman_diaconis_bins(np.array(dist_list)),
+        num_of_bins = self.binCount
+
+        # convert the dictionary of values to list of values.
+        results = {}
+        for k,a in Gradients.KEYS_AND_ATTRS.items():
+
+            dists_list, datasets_list = Gradients.convert_dictmean_to_list(dists[k])
+            dists_list = np.array(dists_list)
+
+            hist_grid = histogram(dists_list, bins=self.binCount)
+            kde_grid = kde(dists_list, gridsize=num_of_bins)
+
+            dataset_pos = Gradients.map_datasets_to_bins(hist_grid[1], datasets_list)
+            results[k] = {
+                "bins": num_of_bins,
+                "dataset": {"mean": dists_list, "position": dataset_pos},
+                "kde": Histogram._format_data(kde_grid),
+                "hist": Histogram._format_data(hist_grid)
+            }
+
+        return results
+
+
+# ------------------------------------------------------------------------------
