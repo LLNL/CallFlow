@@ -229,11 +229,18 @@ class SuperGraph(ht.GraphFrame):
         assert isinstance(names, list)
         return self.dataframe[self.dataframe["name"].isin(names)]
 
-    def df_filter_by_search_string(self, df, search_strings):
-        unq, IDs = np.unique(df["dataset"], return_inverse=True)
-        unqIDs = np.searchsorted(unq, search_strings)
-        mask = np.isin(IDs, unqIDs)
-        return df[mask]
+    def df_filter_by_search_string(self, column, search_strings):
+        unq, ids = np.unique(self.dataframe[column], return_inverse=True)
+        unq_ids = np.searchsorted(unq, search_strings)
+        mask = np.isin(ids, unq_ids)
+        return self.dataframe[mask]
+
+    def df_group_by(self, columns):
+        if isinstance(columns, list):
+            return self.dataframe.groupby(columns)
+        else:
+            assert isinstance(columns, str)
+            return self.dataframe.groupby([columns])
 
     def df_lookup_with_column(self, column, value):
         column = self.df_get_proxy(column)

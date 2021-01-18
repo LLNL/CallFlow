@@ -8,7 +8,7 @@ import numpy as np
 
 import callflow
 from callflow.utils.utils import histogram
-from callflow.utils.utils import df_count, df_lookup_by_column, df_names_in_module
+from callflow.utils.utils import df_count, df_lookup_by_column, df_lookup_and_list
 from .histogram import Histogram
 
 LOGGER = callflow.get_logger()
@@ -109,8 +109,8 @@ class DiffView:
             _data = df_lookup_by_column(_df, _selected_col, _node)[_col].to_numpy()
             return _data.mean() if len(_data) > 0 else 0
 
-        callsites_in_mod1 = df_names_in_module(df1, module)
-        callsites_in_mod2 = df_names_in_module(df2, module)
+        callsites_in_mod1 = df_lookup_and_list(df1, "module", module, "name")
+        callsites_in_mod2 = df_lookup_and_list(df2, "module", module, "name")
         mean1 = [_mean(df1, "name", _, "time") for _ in callsites_in_mod1]
         mean2 = [_mean(df2, "name", _, "time") for _ in callsites_in_mod2]
         return sum(mean2) - sum(mean1)

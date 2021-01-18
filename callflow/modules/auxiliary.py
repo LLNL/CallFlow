@@ -2,31 +2,59 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
+# ------------------------------------------------------------------------------
 
-import os
-import sys
+#import os
+#import sys
 import json
 import math
 import numpy as np
+
+#from callflow import SuperGraph
+from callflow.utils.utils import df_group_by, df_unique, df_lookup_and_list
 from .gradients import Gradients
 from .boxplot import BoxPlot
 from .histogram import Histogram
 
+import logging
+LOGGER = logging.getLogger(__name__)
+
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class Auxiliary:
+
     def __init__(self, supergraph, MPIBinCount: int = 20, RunBinCount: int = 20):
+
+        #assert isinstance(supergraph, SuperGraph)
         self.MPIBinCount = MPIBinCount
         self.RunBinCount = RunBinCount
         self.hist_props = ["rank", "name", "dataset", "all_ranks"]
 
         self.runs = supergraph.config["parameter_props"]["runs"]
+
+        LOGGER.warning(f'Computing auxiliary data for ({supergraph}) with {len(self.runs)} runs: {self.runs}')
+        if supergraph.name is not 'ensemble':
+            return
+
+        if len(self.runs) == 1:
+            self.e_df = supergraph.dataframe
+        else:
+            self.e_df = supergraph.df_filter_by_search_string('dataset', self.runs)
+
+        # TODO: it appears aux is computed n times for all n supergraphs
+        '''    
         if len(self.runs) > 1:
             self.e_df = Auxiliary.select_rows(supergraph.dataframe, self.runs)
         else:
             self.e_df = supergraph.dataframe
- 
-        self.e_name_group_df = self.e_df.groupby(["name"])
-        self.e_module_group_df = self.e_df.groupby(["module"])
-        self.e_module_name_group_df = self.e_df.groupby(["module", "name"])
+        '''
+
+        # TODO: remove tthis and crreate a single dict
+        # copy from the three functions below
+        self.e_name_group_df = df_group_by(self.e_df, "name")
+        self.e_module_group_df = df_group_by(self.e_df, "module")
+        self.e_module_name_group_df = df_group_by(self.e_df, ["module", "name"])
         
         self.t_df = {}
         self.t_module_group_df = {}
@@ -34,20 +62,66 @@ class Auxiliary:
         self.t_name_group_df = {}
         for dataset in self.runs:
             self.t_df[dataset] = self.e_df.loc[self.e_df["dataset"] == dataset]
-            self.t_name_group_df[dataset] = self.t_df[dataset].groupby(["name"])
-            self.t_module_group_df[dataset] = self.t_df[dataset].groupby(["module"])
-            self.t_module_name_group_df[dataset] = self.t_df[dataset].groupby(["module", "name"])
+            self.t_name_group_df[dataset] = df_group_by(self.t_df[dataset], "name")
+            self.t_module_group_df[dataset] = df_group_by(self.t_df[dataset], "module")
+            self.t_module_name_group_df[dataset] = df_group_by(self.t_df[dataset], ["module", "name"])
 
         self.auxiliary_data = {
             "callsite": self.callsite_data(),
             "module": self.module_data(),
-            "moduleCallsiteMap": self.get_callsite_module_map()
+            "moduleCallsiteMap": self.callsite_module_map()
         }
 
+    # --------------------------------------------------------------------------
     # Callsite grouped information
     # TODO: Need to clean up this further.
     def callsite_data(self):
+
+        # ----------------------------------------------------------------------
+        dataframes_name_group = {'ensemble': self.e_name_group_df}
+        for dataset in self.runs:
+            dataframes_name_group[dataset] = self.t_name_group_df[dataset]
+
+        # ----------------------------------------------------------------------
         ret = {}
+
+        # for each supergraph
+        for dataset, df_name_grp in dataframes_name_group.items():
+
+            is_ensemble = dataset == 'ensemble'
+            ret[dataset] = {}
+
+            # for each callsite
+            for callsite, callsite_df in df_name_grp:
+
+                histogram, gradients, boxplot = None, None, None
+
+                if is_ensemble:
+                    histogram = Histogram(ensemble_df=callsite_df).result
+                    gradients = Gradients(callsite_df,
+                                          binCount=self.RunBinCount,
+                                          callsiteOrModule=callsite).result
+                    boxplot = BoxPlot(callsite_df)
+
+                elif not callsite_df.empty:
+
+                    callsite_ensemble_df = dataframes_name_group['ensemble']
+
+                    histogram = Histogram(ensemble_df=callsite_ensemble_df,
+                                          target_df=callsite_df).result
+                    boxplot = BoxPlot(callsite_df)
+
+                ret[dataset][callsite] = self.pack_json(name=callsite,
+                                                        df=callsite_df,
+                                                        prop_hists=histogram,
+                                                        gradients=gradients,
+                                                        q=boxplot.q,
+                                                        outliers=boxplot.outliers,
+                                                        isEnsemble=is_ensemble,
+                                                        isCallsite=True)
+
+        # ----------------------------------------------------------------------
+        '''
         # Create the data dict.
         ensemble = {}
         for callsite, callsite_df in self.e_name_group_df:
@@ -88,11 +162,51 @@ class Auxiliary:
                         isCallsite=True,
                     )
             ret[dataset] = target
+        '''
         return ret
 
     # Module grouped information.
     # TODO: Need to clean up this further.
     def module_data(self):
+
+        # ----------------------------------------------------------------------
+        dataframes_module_group = {'ensemble': self.e_module_group_df}
+        for dataset in self.runs:
+            dataframes_module_group[dataset] = self.t_module_group_df[dataset]
+
+        # ----------------------------------------------------------------------
+        ret = {}
+
+        # for each supergraph
+        for dataset, df_mod_grp in dataframes_module_group.items():
+
+            is_ensemble = dataset=='ensemble'
+            ret[dataset] = {}
+
+            # for each module
+            for module, module_df in df_mod_grp:
+
+                histogram, gradients = None, None
+                if is_ensemble:
+
+                    histogram = Histogram(ensemble_df=module_df).result
+                    gradients = Gradients(module_df,
+                                          binCount=self.RunBinCount,
+                                          callsiteOrModule=module).result
+
+                elif not module_df.empty:
+
+                    module_ensemble_df = dataframes_module_group['ensemble']
+                    histogram = Histogram(ensemble_df=module_ensemble_df,
+                                          target_df=module_df).result
+
+                ret[dataset][module] = self.pack_json(name=module, df=module_df,
+                                                      gradients=gradients,
+                                                      prop_hists=histogram,
+                                                      isEnsemble=is_ensemble)
+
+        # ----------------------------------------------------------------------
+        '''
         ret = {}
         # Module grouped information
         ensemble = {}
@@ -125,15 +239,17 @@ class Auxiliary:
                         isEnsemble=False,
                     )
             ret[dataset] = target
+        '''
         return ret
 
+    '''
     @staticmethod
     def select_rows(df, search_strings):
         unq, IDs = np.unique(df["dataset"], return_inverse=True)
         unqIDs = np.searchsorted(unq, search_strings)
         mask = np.isin(IDs, unqIDs)
         return df[mask]
-
+    
     # TODO: Need to clean up this further.
     # TODO: Figure out where this should belong.
     def get_module_callsite_map(self):
@@ -144,9 +260,26 @@ class Auxiliary:
             ret[dataset] = self.t_module_group_df[dataset]["name"].unique().apply(lambda d: d.tolist()).to_dict()
         
         return ret
+    '''
 
     # TODO: Figure out where this should belong.
-    def get_callsite_module_map(self):
+    def callsite_module_map(self):
+
+        # TODO: move this to init?
+        dataframes = {'ensemble': self.e_df}
+        for dataset in self.runs:
+            dataframes[dataset] = self.t_df[dataset]
+
+        ret = {}
+        callsites = df_unique(self.e_df, "name")
+        for dataset, df in dataframes.items():
+
+            ret[dataset] = {}
+            for callsite in callsites:
+                ret[dataset][callsite] = df_lookup_and_list(df, "name", callsite, "module")
+
+
+        '''
         ret = {}
         callsites = self.e_df["name"].unique().tolist()
         for callsite in callsites:
@@ -154,8 +287,10 @@ class Auxiliary:
         
         for dataset in self.runs:
             ret[dataset] = {}
+            #TODO: suraj, is this a bug? should this be module?
             for callsite in callsites:
                 ret[dataset][callsite] = self.t_df[dataset].loc[self.t_df[dataset]["name"] == callsite]["name"].unique().tolist()
+        '''
         return ret
 
     # TODO: Need to clean up this further.
@@ -170,6 +305,9 @@ class Auxiliary:
         isEnsemble=False,
         isCallsite=False,
     ):
+        if gradients is None:
+            gradients={"Inclusive": {}, "Exclusive": {}}
+
         inclusive_variance = df["time (inc)"].var()
         exclusive_variance = df["time"].var()
         inclusive_std_deviation = math.sqrt(df["time (inc)"].var())
@@ -236,6 +374,7 @@ class Auxiliary:
         }
         return result
 
+    '''
     # ------------------------------------------------------------------------------
     # HDF5 methods (Not being used)
     # ------------------------------------------------------------------------------
@@ -376,4 +515,5 @@ class Auxiliary:
                     )
             ret[dataset] = target
         return ret
-    
+    '''
+# ------------------------------------------------------------------------------

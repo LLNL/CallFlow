@@ -25,8 +25,16 @@ def df_lookup_by_column(df, column, value):
     return df.loc[df[column] == value]
 
 
-def df_names_in_module(df, module):
-    return df_unique(df_lookup_by_column(df, "module", module), "name")
+def df_lookup_and_list(df, col_lookup, val_lookup, col_list):
+    return df_unique(df_lookup_by_column(df, col_lookup, val_lookup), col_list)
+
+
+def df_group_by(df, columns):
+    if isinstance(columns, list):
+        return df.groupby(columns)
+    else:
+        assert isinstance(columns, str)
+        return df.groupby([columns])
 
 
 # ------------------------------------------------------------------------------

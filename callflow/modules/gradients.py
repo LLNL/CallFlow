@@ -7,7 +7,7 @@
 import numpy as np
 from .histogram import Histogram
 from callflow.utils.utils import histogram, kde, freedman_diaconis_bins
-from callflow.utils.utils import df_lookup_by_column
+from callflow.utils.utils import df_count, df_lookup_by_column
 
 
 # ------------------------------------------------------------------------------
@@ -33,10 +33,13 @@ class Gradients:
         self.callsiteOrModule = callsiteOrModule
         self.df_dict = df_dict
         self.binCount = binCount
-        [ self.rank_dict, self.max_ranks ] = Gradients._get_rank_dict(df_dict)
+
+        self.rank_dict = {dataset: df_count(df_dict[dataset], "rank") for dataset in df_dict}
+        self.max_ranks = max(self.rank_dict.values())
         self.result = self.compute(columnName="name")
 
     # ------------------------------------------------------------------------------
+    '''
     # Rank based calculations
     @staticmethod
     def _get_rank_dict(df_dict):
@@ -48,7 +51,6 @@ class Gradients:
         max_ranks = max(rank_dict.values())
         return rank_dict, max_ranks
 
-    '''
     @staticmethod
     def _pack_by_rank(df, metric, max_ranks):
         ret = {}

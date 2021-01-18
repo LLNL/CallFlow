@@ -33,7 +33,7 @@ class RuntimeScatterplot:
 
         ret = []
 
-        callsites = df_names_in_module(self.df, self.module)
+        callsites = df_lookup_and_list(self.df, "module", self.module, "name")
         for func in callsites:
 
             _ret = {}
