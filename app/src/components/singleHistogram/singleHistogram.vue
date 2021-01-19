@@ -1,5 +1,5 @@
 /** 
- * Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+ * Copyright 2017-2021 Lawrence Livermore National Security, LLC and other
  * CallFlow Project Developers. See the top-level LICENSE file for details.
  * 
  * SPDX-License-Identifier: MIT
@@ -19,7 +19,7 @@
 
 <script>
 import * as d3 from "d3";
-import "d3-selection-multi";
+import "d3-selection-multi"; 
 
 import ToolTip from "./tooltip";
 import * as utils from "../utils";

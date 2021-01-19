@@ -1,15 +1,9 @@
-/*******************************************************************************
- * Copyright (c) 2020, Lawrence Livermore National Security, LLC.
- * Produced at the Lawrence Livermore National Laboratory.
- *
- * Written by Suraj Kesavan <spkesavan@ucdavis.edu>.
- *
- * LLNL-CODE-740862. All rights reserved.
- *
- * This file is part of CallFlow. For details, see:
- * https://github.com/LLNL/CallFlow
- * Please also read the LICENSE file for the MIT License notice.
- ******************************************************************************/
+/** 
+ * Copyright 2017-2021 Lawrence Livermore National Security, LLC and other
+ * CallFlow Project Developers. See the top-level LICENSE file for details.
+ * 
+ * SPDX-License-Identifier: MIT
+ */
 export const CategoricalColors = {
 	0: [0.31, 0.48, 0.65],
 	1: [0.94, 0.56, 0.22],

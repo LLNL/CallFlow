@@ -85,5 +85,5 @@ CallFlow is released under MIT license. See the LICENSE file for details.
 
 Written by Suraj P. Kesavan (<spkesavan@ucdavis.edu>) and Huu Tan Nguyen (<htpnguyen@ucdavis.edu>).
 
-Copyright (c) 2020, Lawrence Livermore National Security, LLC.
+Copyright (c) 2021, Lawrence Livermore National Security, LLC.
 Produced at the Lawrence Livermore National Laboratory. All rights reserved.

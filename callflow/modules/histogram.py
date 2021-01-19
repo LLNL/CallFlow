@@ -1,4 +1,4 @@
-# Copyright 2017-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2017-2021 Lawrence Livermore National Security, LLC and other
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
@@ -35,7 +35,7 @@ class Histogram:
                         "ensemble": Histogram._format_data(_hist)
                     }
 
-            else:                
+            else:
                 _dfe = Histogram._get_data_by_property(ensemble_df, prop)
                 _dft = Histogram._get_data_by_property(target_df, prop)
 
