@@ -417,7 +417,6 @@ export default {
 				this.$store.datasetMap[this.$store.selectedDatasets[i]] = "run-" + i;
 			}
 
-			this.$store.contextMenu = this.contextMenu;
 			this.$store.encoding = "MEAN";
 			this.$store.selectedSuperNodePositionMode = "Minimal edge crossing";
 
