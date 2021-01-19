@@ -12,34 +12,35 @@ LOGGER = callflow.get_logger(__name__)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
-#TODO: why was this derived from GraphFrame?
-class Group(object): #callflow.GraphFrame):
+class Group:
 
     VALID_MODES = ["name", "module"]
 
-    # TODO: why was gf=None?
-    def __init__(self, gf, group_by):
+    def __init__(self, sg, group_by="module"):
 
-        assert isinstance(gf, callflow.SuperGraph)
+        assert isinstance(sg, callflow.SuperGraph)
         assert isinstance(group_by, str)
         assert group_by in Group.VALID_MODES
 
-        self.gf = gf
+        self.sg = sg
         self.group_by = group_by
 
-        # Data.
-        self.callsite_module_map = self.gf.df_get_column("module","name").to_dict()
-        self.callsite_path_map = self.gf.df_get_column("path", "name").to_dict()
-
-        # Variables used by grouping operation.
+        # ----------------------------------------------------------------------
+        self.callsite_module_map = {}
+        self.callsite_path_map = {}
         self.entry_funcs = {}
         self.other_funcs = {}
-        # TODO: remove this.
-        # self.module_id_map = {}
 
         self.compute()
 
+    # --------------------------------------------------------------------------
     def compute(self):
+
+        LOGGER.info(f'Grouping ({self.sg}) by \"{self.group_by}\"')
+
+        self.callsite_module_map = self.sg.df_get_column("module", "name").to_dict()
+        self.callsite_path_map = self.sg.df_get_column("path", "name").to_dict()
+
         group_path = {}
         component_path = {}
         component_level = {}
@@ -50,10 +51,10 @@ class Group(object): #callflow.GraphFrame):
         change_name = {}
 
         LOGGER.debug(
-            f"Nodes: {len(self.gf.nxg.nodes())}, Edges: {len(self.gf.nxg.edges())}"
+            f"Nodes: {len(self.sg.nxg.nodes())}, Edges: {len(self.sg.nxg.edges())}"
         )
 
-        for idx, edge in enumerate(self.gf.nxg.edges()):
+        for idx, edge in enumerate(self.sg.nxg.edges()):
             snode = edge[0]
             tnode = edge[1]
 
@@ -96,13 +97,13 @@ class Group(object): #callflow.GraphFrame):
             node_name[tnode] = self.callsite_module_map[snode] + "=" + tnode
 
         # update the graph
-        self.gf.df_update_mapping("group_path", group_path)
-        self.gf.df_update_mapping("component_path", component_path)
-        self.gf.df_update_mapping("show_node", entry_func)
-        self.gf.df_update_mapping("vis_name", node_name)
-        self.gf.df_update_mapping("component_level", component_level)
-        # self.gf.df_update_mapping("mod_index", module_idx)
-        self.gf.df_update_mapping("entry_function", entry_func)
+        self.sg.df_update_mapping("group_path", group_path)
+        self.sg.df_update_mapping("component_path", component_path)
+        self.sg.df_update_mapping("show_node", entry_func)
+        self.sg.df_update_mapping("vis_name", node_name)
+        self.sg.df_update_mapping("component_level", component_level)
+        # self.sg.df_update_mapping("mod_index", module_idx)
+        self.sg.df_update_mapping("entry_function", entry_func)
 
     # flake8: noqa: C901
     def create_group_path(self, path):
@@ -209,7 +210,8 @@ class Group(object): #callflow.GraphFrame):
 
     '''
     def update_df(self, col_name, mapping):
-        self.gf.df[col_name] = self.gf.df["name"].apply(
+        self.sg.df[col_name] = self.sg.df["name"].apply(
             lambda node: mapping[node] if node in mapping.keys() else ""
         )
     '''
+# ------------------------------------------------------------------------------

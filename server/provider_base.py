@@ -9,6 +9,7 @@ from callflow import SuperGraph, EnsembleGraph, get_logger
 
 LOGGER = get_logger(__name__)
 
+from callflow.operations import Filter, Group, Unify
 #from .algorithms import DeltaConSimilarity, BlandAltman
 #from .layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 #from .modules import ParameterProjection, DiffView, MiniHistogram, FunctionList
@@ -78,8 +79,11 @@ class BaseProvider:
             sg = SuperGraph(dataset_name, self.config)
             sg.create()
             sg.process_sg()
-            sg.filter_sg()
-            sg.group_sg(group_by=self.config["group_by"])
+
+            _f = Filter(sg, filter_by=self.config["filter_by"],
+                        filter_perc=self.config["filter_perc"])
+            _g = Group(sg, group_by=self.config["group_by"])
+
             sg.auxiliary_gf_sg()
             sg.write(write_aux=False)
             
@@ -88,10 +92,14 @@ class BaseProvider:
         # ----------------------------------------------------------------------
         # Stage-3: EnsembleGraph processing
         if len(self.supergraphs) > 1:
+
             sg = EnsembleGraph("ensemble", self.config)
-            sg.unify(self.supergraphs)
-            sg.filter_sg()
-            sg.group_sg(group_by=self.config["group_by"])
+
+            _u = Unify(sg, self.supergraphs)
+            _f = Filter(sg, filter_by=self.config["filter_by"],
+                        filter_perc=self.config["filter_perc"])
+            _g = Group(sg, group_by=self.config["group_by"])
+
             sg.auxiliary_gf_sg()
             sg.write()
 

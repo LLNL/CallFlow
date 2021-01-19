@@ -15,11 +15,13 @@ from ast import literal_eval as make_list
 
 from callflow import get_logger
 from callflow.utils.sanitizer import Sanitizer
+
 #from callflow.operations import Process, Group, Filter
 #from .graphframe import GraphFrame
 #from callflow.timer import Timer
 #from callflow.algorithms import DeltaConSimilarity
 from callflow.modules import Auxiliary
+
 LOGGER = get_logger(__name__)
 
 
@@ -66,7 +68,7 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def __str__(self):
-        return f"SuperGraph<{self.name}>"
+        return f"SuperGraph<{self.name}; df = {self.dataframe.shape}>"
 
     def __repr__(self):
         return self.__str__()
@@ -238,16 +240,16 @@ class SuperGraph(ht.GraphFrame):
         mask = np.isin(ids, unq_ids)
         return self.dataframe[mask]
 
+    def df_lookup_with_column(self, column, value):
+        column = self.df_get_proxy(column)
+        return self.dataframe.loc[self.dataframe[column] == value]
+
     def df_group_by(self, columns):
         if isinstance(columns, list):
             return self.dataframe.groupby(columns)
         else:
             assert isinstance(columns, str)
             return self.dataframe.groupby([columns])
-
-    def df_lookup_with_column(self, column, value):
-        column = self.df_get_proxy(column)
-        return self.dataframe.loc[self.dataframe[column] == value]
 
     def df_get_top_by_attr(self, count, sort_attr):
         assert isinstance(count, int) and isinstance(sort_attr, str)
@@ -642,7 +644,7 @@ class SuperGraph(ht.GraphFrame):
         '''
 
     # --------------------------------------------------------------------------
-    def group_sg(self, group_by="module"):
+    def todelete_group_sg(self, group_by="module"):
         """
         Group the graphframe based on `group_by` parameter.
         """
@@ -725,7 +727,7 @@ class SuperGraph(ht.GraphFrame):
         # self.df_update_mapping("mod_index", module_idx)
         self.df_update_mapping("entry_function", entry_func)
 
-    def create_group_path(self, path):
+    def todelete_create_group_path(self, path):
         if isinstance(path, str):
             path = make_list(path)
         group_path = []
@@ -812,7 +814,7 @@ class SuperGraph(ht.GraphFrame):
 
         return group_path
 
-    def create_component_path(self, path, group_path):
+    def todelete_create_component_path(self, path, group_path):
         component_path = []
         component_module = group_path[len(group_path) - 1].split("=")[0]
 
@@ -828,7 +830,7 @@ class SuperGraph(ht.GraphFrame):
         return tuple(component_path)
 
     # --------------------------------------------------------------------------
-    def filter_sg(self, mode="single"):
+    def todelete_filter_sg_sg(self, mode="single"):
         """
         Filter the graphframe.
         """
@@ -841,6 +843,7 @@ class SuperGraph(ht.GraphFrame):
             filter_perc=float(self.config["filter_perc"]),
         ).gf
         '''
+        assert 0
         # ----------------------------------------------------------------------
         filter_by = self.config["filter_by"]
         filter_perc = float(self.config["filter_perc"])
@@ -874,19 +877,22 @@ class SuperGraph(ht.GraphFrame):
         if filter_by == "time (inc)":
             value = filter_perc * 0.01 * self.max_time_inc
             LOGGER.debug(f"[Filter] By \"{filter_by}\": {filter_perc} % ==> {value}")
-            self.filter_gf(filter_by, value)
+            self.filter_sg(filter_by, value)
             # self.gf.df = self.df_by_time_inc()
             # self.gf.nxg = self.graph_by_time_inc()
 
         elif filter_by == "time":
             value = filter_perc
             LOGGER.debug(f"[Filter] By \"{filter_by}\": {filter_perc} % ==> {value}")
-            self.filter_gf(filter_by, value)
+            self.filter_sg(filter_by, value)
             # self.gf.df = self.df_by_time()
             # self.gf.nxg = self.graph_by_time()
 
     # --------------------------------------------------------------------------
-    def filter_gf(self, filter_by, filter_val):
+    # in place filtering!
+    def filter_sg(self, filter_by, filter_val):
+
+        LOGGER.debug(f"Filtering {self.__str__()}: \"{filter_by}\" <= {filter_val}")
         self.dataframe = self.df_filter_by_value(filter_by, filter_val)
 
         callsites = self.dataframe["name"].unique()
