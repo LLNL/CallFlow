@@ -5,11 +5,12 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
+import pandas as pd
 
 import callflow
 from callflow.utils.utils import histogram
 
-LOGGER = callflow.get_logger()
+LOGGER = callflow.get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
@@ -20,15 +21,20 @@ class Histogram:
     KEYS_AND_ATTRS = {'Inclusive': 'time (inc)',
                       'Exclusive': 'time'}
 
-    def __init__(self, ensemble_df, target_df=None, bins=20):
+    def __init__(self, df_ensemble, df_target=None, bins=20):
+
+        assert isinstance(df_ensemble, pd.DataFrame)
+        assert isinstance(df_target, pd.DataFrame) or df_target is None
+        assert isinstance(bins, int)
+        assert bins > 0
 
         self.result = {"Inclusive": {}, "Exclusive": {}}
 
         # for each property
         for prop in Histogram.HISTO_TYPES:
 
-            if target_df is None:
-                _dfe = Histogram._get_data_by_property(ensemble_df, prop)
+            if df_target is None:
+                _dfe = Histogram._get_data_by_property(df_ensemble, prop)
                 for k, a in Histogram.KEYS_AND_ATTRS.items():
                     _hist = histogram(_dfe[a], bins=bins)
                     self.result[k][prop] = {
@@ -36,8 +42,8 @@ class Histogram:
                     }
 
             else:
-                _dfe = Histogram._get_data_by_property(ensemble_df, prop)
-                _dft = Histogram._get_data_by_property(target_df, prop)
+                _dfe = Histogram._get_data_by_property(df_ensemble, prop)
+                _dft = Histogram._get_data_by_property(df_target, prop)
 
                 for k, a in Histogram.KEYS_AND_ATTRS.items():
                     _e = _dfe[a]
@@ -85,97 +91,4 @@ class Histogram:
                     "y_min": np.min(histo[1]).astype(np.float64),
                     "y_max": np.max(histo[1]).astype(np.float64)}
 
-    # --------------------------------------------------------------------------
-    '''
-    def bin_by_property_ensemble(self, ensemble_df, prop):
-        ret = {}
-        if prop == "all_ranks":
-            time_ensemble_inclusive_arr = np.array(ensemble_df["time (inc)"].tolist())
-            time_ensemble_exclusive_arr = np.array(ensemble_df["time"].tolist())
-        elif prop == "rank":
-            ensemble_prop = ensemble_df.groupby(["dataset", "rank"])[
-                ["time", "time (inc)"]
-            ].mean()
-            time_ensemble_inclusive_arr = np.array(ensemble_prop["time (inc)"])
-            time_ensemble_exclusive_arr = np.array(ensemble_prop["time"])
-        else:
-            ensemble_prop = ensemble_df.groupby([prop])[["time", "time (inc)"]].mean()
-            time_ensemble_inclusive_arr = np.array(ensemble_prop["time (inc)"])
-            time_ensemble_exclusive_arr = np.array(ensemble_prop["time"])
-        inclusive_max = time_ensemble_inclusive_arr.max()
-        inclusive_min = time_ensemble_inclusive_arr.min()
-        histogram_ensemble_inclusive_grid = Histogram.compute(time_ensemble_inclusive_arr, inclusive_min, inclusive_max)
-        exclusive_max = time_ensemble_exclusive_arr.max()
-        exclusive_min = time_ensemble_exclusive_arr.min()
-        histogram_ensemble_exclusive_grid = Histogram.compute(
-            time_ensemble_exclusive_arr, exclusive_min, exclusive_max
-        )
-        ret["Inclusive"] = {
-            "ensemble": Histogram._format_data(histogram_ensemble_inclusive_grid),
-        }
-        ret["Exclusive"] = {
-            "ensemble": Histogram._format_data(histogram_ensemble_exclusive_grid),
-        }
-        return ret
-
-
-    def bin_by_property_single(self, ensemble_df, target_df, prop):
-        ret = {}
-        if prop == "all_ranks":
-            time_ensemble_inclusive_arr = np.array(ensemble_df["time (inc)"].tolist())
-            time_ensemble_exclusive_arr = np.array(ensemble_df["time"].tolist())
-            time_target_inclusive_arr = np.array(target_df["time (inc)"].tolist())
-            time_target_exclusive_arr = np.array(target_df["time"].tolist())
-        elif prop == "rank":
-            ensemble_prop = ensemble_df.groupby(["dataset", "rank"])[
-                ["time", "time (inc)"]
-            ].mean()
-            target_prop = target_df.groupby(["dataset", "rank"])[
-                ["time", "time (inc)"]
-            ].mean()
-            time_ensemble_inclusive_arr = np.array(ensemble_prop["time (inc)"])
-            time_ensemble_exclusive_arr = np.array(ensemble_prop["time"])
-            time_target_inclusive_arr = np.array(target_prop["time (inc)"])
-            time_target_exclusive_arr = np.array(target_prop["time"])
-        else:
-            ensemble_prop = ensemble_df.groupby([prop])[["time", "time (inc)"]].mean()
-            target_prop = target_df.groupby([prop])[["time", "time (inc)"]].mean()
-            time_ensemble_inclusive_arr = np.array(ensemble_prop["time (inc)"])
-            time_ensemble_exclusive_arr = np.array(ensemble_prop["time"])
-            time_target_inclusive_arr = np.array(target_prop["time (inc)"])
-            time_target_exclusive_arr = np.array(target_prop["time"])
-        inclusive_max = max(
-            time_ensemble_inclusive_arr.max(), time_target_inclusive_arr.max()
-        )
-        inclusive_min = min(
-            time_ensemble_inclusive_arr.min(), time_target_inclusive_arr.min()
-        )
-        histogram_ensemble_inclusive_grid = Histogram.compute(
-            time_ensemble_inclusive_arr, inclusive_min, inclusive_max
-        )
-        histogram_target_inclusive_grid = Histogram.compute(
-            time_target_inclusive_arr, inclusive_min, inclusive_max
-        )
-        exclusive_max = max(
-            time_ensemble_exclusive_arr.max(), time_target_exclusive_arr.max()
-        )
-        exclusive_min = min(
-            time_ensemble_exclusive_arr.min(), time_target_exclusive_arr.min()
-        )
-        histogram_ensemble_exclusive_grid = Histogram.compute(
-            time_ensemble_exclusive_arr, exclusive_min, exclusive_max
-        )
-        histogram_target_exclusive_grid = Histogram.compute(
-            time_target_exclusive_arr, exclusive_min, exclusive_max
-        )
-        ret["Inclusive"] = {
-            "ensemble": Histogram._format_data(histogram_ensemble_inclusive_grid),
-            "target": Histogram._format_data(histogram_target_inclusive_grid),
-        }
-        ret["Exclusive"] = {
-            "ensemble": Histogram._format_data(histogram_ensemble_exclusive_grid),
-            "target": Histogram._format_data(histogram_target_exclusive_grid),
-        }
-        return ret
-    '''
 # ------------------------------------------------------------------------------

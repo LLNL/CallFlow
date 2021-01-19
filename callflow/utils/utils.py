@@ -41,6 +41,8 @@ def df_group_by(df, columns):
 # statistics utils
 # ------------------------------------------------------------------------------
 def histogram(data, data_range=None, bins=20):
+
+    assert isinstance(data, (pd.Series, np.ndarray))
     if len(data) == 0:
         return np.array([]), np.array([])
 
@@ -103,6 +105,7 @@ def outliers(data, scale=1.5, side='both'):
 
 def kde(data, gridsize=10, fft=True,
         kernel="gau", bw="scott", cut=3, clip=(-np.inf, np.inf)):
+    assert isinstance(data, (pd.Series, np.ndarray))
 
     if bw == "scott":
         bw = stats.gaussian_kde(data).scotts_factor() * data.std(ddof=1)

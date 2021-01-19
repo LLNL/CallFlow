@@ -6,41 +6,43 @@
 
 #import os
 #import sys
-import json
+#import json
 import math
-import numpy as np
+#import numpy as np
 
-#from callflow import SuperGraph
-from callflow.utils.utils import df_group_by, df_unique, df_lookup_and_list
+import callflow
+
+from callflow.utils.utils import df_group_by, df_unique, df_lookup_by_column, df_lookup_and_list
 from .gradients import Gradients
 from .boxplot import BoxPlot
 from .histogram import Histogram
 
-import logging
-LOGGER = logging.getLogger(__name__)
+LOGGER = callflow.get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 class Auxiliary:
 
-    def __init__(self, supergraph, MPIBinCount: int = 20, RunBinCount: int = 20):
+    def __init__(self, sg, MPIBinCount: int = 20, RunBinCount: int = 20):
 
-        #assert isinstance(supergraph, SuperGraph)
-        if supergraph.name is not 'ensemble':
-            return
+        assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
+
         self.MPIBinCount = MPIBinCount
         self.RunBinCount = RunBinCount
         self.hist_props = ["rank", "name", "dataset", "all_ranks"]
 
-        self.runs = supergraph.config["parameter_props"]["runs"]
+        self.runs = sg.config["parameter_props"]["runs"]
 
-        LOGGER.warning(f'Computing auxiliary data for ({supergraph}) with {len(self.runs)} runs: {self.runs}')
+        LOGGER.warning(f'Computing auxiliary data for ({sg}) with {len(self.runs)} runs: {self.runs}')
+        #if sg.name is not 'ensemble':
+        #    #print ('>>> returning')
+        #    #return
 
         if len(self.runs) == 1:
-            self.e_df = supergraph.dataframe
+            self.e_df = sg.dataframe
         else:
-            self.e_df = supergraph.df_filter_by_search_string('dataset', self.runs)
+            self.e_df = sg.df_filter_by_search_string('dataset', self.runs)
 
         # TODO: it appears aux is computed n times for all n supergraphs
         '''    
@@ -49,8 +51,8 @@ class Auxiliary:
         else:
             self.e_df = supergraph.dataframe
         '''
-
-        # TODO: remove tthis and crreate a single dict
+        '''
+        # TODO: remove this and create a single dict
         # copy from the three functions below
         self.e_name_group_df = df_group_by(self.e_df, "name")
         self.e_module_group_df = df_group_by(self.e_df, "module")
@@ -65,17 +67,99 @@ class Auxiliary:
             self.t_name_group_df[dataset] = df_group_by(self.t_df[dataset], "name")
             self.t_module_group_df[dataset] = df_group_by(self.t_df[dataset], "module")
             self.t_module_name_group_df[dataset] = df_group_by(self.t_df[dataset], ["module", "name"])
+        '''
+        # ----------------------------------------------------------------------
+        if isinstance(sg, callflow.EnsembleGraph):
+            callsites = df_unique(self.e_df, "name")
 
-        self.auxiliary_data = {
-            "callsite": self.callsite_data(),
-            "module": self.module_data(),
-            "moduleCallsiteMap": self.callsite_module_map()
+            dataframes = {'ensemble': self.e_df}
+            dataframes_name_group = {'ensemble': df_group_by(self.e_df, "name")}
+            dataframes_module_group = {'ensemble': df_group_by(self.e_df, "module")}
+
+            for dataset in self.runs:
+                dataframes[dataset] = df_lookup_by_column(self.e_df, "dataset", dataset)
+                dataframes_name_group[dataset] = df_group_by(dataframes[dataset], "name")
+                dataframes_module_group[dataset] = df_group_by(dataframes[dataset], "module")
+
+        else:
+            df = df_lookup_by_column(self.e_df, "dataset", sg.name)
+            callsites = df_unique(df, "name")
+            dataframes = {sg.name: df}
+            dataframes_name_group = {sg.name: df_group_by(df, "name")}
+            dataframes_module_group = {sg.name: df_group_by(df, "module")}
+
+        # ----------------------------------------------------------------------
+        self.result = {
+            "callsite": self._core_data(dataframes_name_group, 'callsite'),
+            "module":   self._core_data(dataframes_module_group, 'module'),
+            "moduleCallsiteMap": self.callsite_module_map(dataframes, callsites)
         }
+
+    # --------------------------------------------------------------------------
+    def _core_data(self, dataframes_group, grp_type='callsite'):
+
+        is_callsite = grp_type == 'callsite'
+        ret = {}
+
+        # for each supergraph
+        for dataset, df_group in dataframes_group.items():
+
+            is_ensemble = dataset == 'ensemble'
+            ret[dataset] = {}
+
+            # for each name in the group
+            for name, name_df in df_group:
+
+                histogram, gradients, boxplot = None, None, None
+
+                # --------------------------------------------------------------
+                if is_ensemble:
+                    # LOGGER.debug(f'-------- aux for {grp_type}={name}: 1 '
+                    #             f'{dataset} {type(name_df)} : {len(dataframes_group)}')
+                    histogram = Histogram(df_ensemble=name_df).result
+                    gradients = Gradients(name_df,
+                                          binCount=self.RunBinCount,
+                                          callsiteOrModule=name).result
+
+                elif "ensemble" in dataframes_group:
+
+                    assert not name_df.empty
+                    ensemble_df = dataframes_group['ensemble'].get_group(name)
+
+                    # LOGGER.debug(f'-------- aux for {grp_type}={name}: 2 not empty '
+                    #             f'{dataset} {type(ensemble_df)} {type(name_df)}')
+                    histogram = Histogram(df_ensemble=ensemble_df,
+                                          df_target=name_df).result
+
+                else:
+                    # LOGGER.debug(f'-------- aux for {grp_type}={name}: 3 not empty '
+                    #             f'{dataset}  {type(name_df)}')
+                    histogram = Histogram(df_ensemble=name_df).result
+
+
+                # collect results
+                if grp_type == 'callsite':
+                    boxplot = BoxPlot(name_df).result
+                    ret[dataset][name] = self.pack_json(name=name,
+                                                        df=name_df,
+                                                        prop_hists=histogram,
+                                                        gradients=gradients,
+                                                        q=boxplot['q'],
+                                                        outliers=boxplot['outliers'],
+                                                        isEnsemble=is_ensemble,
+                                                        isCallsite=is_callsite)
+                else:
+                    ret[dataset][name] = self.pack_json(name=name,
+                                                        df=name_df,
+                                                        prop_hists=histogram,
+                                                        gradients=gradients,
+                                                        isEnsemble=is_ensemble)
+
 
     # --------------------------------------------------------------------------
     # Callsite grouped information
     # TODO: Need to clean up this further.
-    def callsite_data(self):
+    def _delete_callsite_data(self):
 
         # ----------------------------------------------------------------------
         dataframes_name_group = {'ensemble': self.e_name_group_df}
@@ -163,7 +247,7 @@ class Auxiliary:
 
     # Module grouped information.
     # TODO: Need to clean up this further.
-    def module_data(self):
+    def _delete_module_data(self):
 
         # ----------------------------------------------------------------------
         dataframes_module_group = {'ensemble': self.e_module_group_df}
@@ -263,17 +347,18 @@ class Auxiliary:
     '''
 
     # TODO: Figure out where this should belong.
-    def callsite_module_map(self):
+    def callsite_module_map(self, dataframes, callsites):
 
+        '''
         # TODO: move this to init?
         dataframes = {'ensemble': self.e_df}
         for dataset in self.runs:
             dataframes[dataset] = self.t_df[dataset]
-
-        ret = {}
         callsites = df_unique(self.e_df, "name")
-        for dataset, df in dataframes.items():
+        '''
+        ret = {}
 
+        for dataset, df in dataframes.items():
             ret[dataset] = {}
             for callsite in callsites:
                 ret[dataset][callsite] = df_lookup_and_list(df, "name", callsite, "module").tolist()

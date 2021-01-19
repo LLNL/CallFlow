@@ -915,5 +915,11 @@ class SuperGraph(ht.GraphFrame):
         self.nxg = nxg
 
     # --------------------------------------------------------------------------
+    '''
     def auxiliary_gf_sg(self):
+<<<<<<< HEAD
         self.aux = Auxiliary(supergraph=self)
+=======
+        self = Auxiliary(supergraph=self)
+    '''
+>>>>>>> module cleanup 1

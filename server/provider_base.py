@@ -5,15 +5,18 @@
 # ------------------------------------------------------------------------------
 
 import json
-from callflow import SuperGraph, EnsembleGraph, get_logger
 
-LOGGER = get_logger(__name__)
-
+from callflow import SuperGraph, EnsembleGraph
+from callflow import get_logger
 from callflow.operations import Filter, Group, Unify
+from callflow.modules import Auxiliary
+
 #from .algorithms import DeltaConSimilarity, BlandAltman
 #from .layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 #from .modules import ParameterProjection, DiffView, MiniHistogram, FunctionList
 
+
+LOGGER = get_logger(__name__)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -73,7 +76,10 @@ class BaseProvider:
             variables, e.g., filter_perc, filter_by.
             2. EnsembleGraph is then constructed from the processed SuperGraphs.
         """
+
         # Stage-1: Each dataset is processed individually into a SuperGraph.
+        print(f'\n\n-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n')
+
         for dataset in self.config["runs"]:
             dataset_name = dataset["name"]
             sg = SuperGraph(dataset_name, self.config)
@@ -83,27 +89,25 @@ class BaseProvider:
             _f = Filter(sg, filter_by=self.config["filter_by"],
                         filter_perc=self.config["filter_perc"])
             _g = Group(sg, group_by=self.config["group_by"])
+            if len(self.supergraphs) == 1:
+                _a = Auxiliary(sg)
 
-            sg.auxiliary_gf_sg()
             sg.write(write_aux=False)
-            
             self.supergraphs[dataset_name] = sg
 
         # ----------------------------------------------------------------------
         # Stage-3: EnsembleGraph processing
         if len(self.supergraphs) > 1:
 
+            print(f'\n\n-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n')
             sg = EnsembleGraph("ensemble", self.config)
 
             _u = Unify(sg, self.supergraphs)
             _f = Filter(sg, filter_by=self.config["filter_by"],
                         filter_perc=self.config["filter_perc"])
             _g = Group(sg, group_by=self.config["group_by"])
-
-            sg.auxiliary_gf_sg()
+            _a = Auxiliary(sg)
             sg.write()
-
-            # Attach to self
             self.supergraphs["ensemble"] = sg
 
     # --------------------------------------------------------------------------
