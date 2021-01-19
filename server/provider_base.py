@@ -52,21 +52,24 @@ class BaseProvider:
         """
         Load the processed datasets by the format.
         """
+        load_path = self.config["save_path"]
+        read_param = self.config["read_parameter"]
+
         # create supergraphs for all runs
         # for dataset_name in self.config["parameter_props"]["runs"]:
         for run in self.config["runs"]:
 
-            dataset_name = run['name']
-            sg = SuperGraph(dataset_name, self.config)
-            sg.load()
-            self.supergraphs[dataset_name] = sg
+            name = run['name']
+            sg = SuperGraph(name) #, self.config)
+            sg.load(os.path.join(load_path, name), read_parameter=read_param)
+            self.supergraphs[name] = sg
 
         # ensemble case
         if self.ndatasets > 1:
-            dataset_name = "ensemble"
-            sg = EnsembleGraph(dataset_name, self.config)
-            sg.load()
-            self.supergraphs[dataset_name] = sg
+            name = "ensemble"
+            sg = EnsembleGraph(name) #, self.config)
+            sg.load(os.path.join(load_path, name), read_parameter=read_param)
+            self.supergraphs[name] = sg
 
         # TODO: shouldnt be used here
         # if needed, to be computed in supergraph and stored in the datastructure
@@ -84,44 +87,53 @@ class BaseProvider:
             2. EnsembleGraph is then constructed from the processed SuperGraphs.
         """
 
+        save_path = self.config["save_path"]
+        load_path = self.config["data_path"]
+        group_by = self.config["group_by"]
+        filter_by = self.config["filter_by"]
+        filter_perc = self.config["filter_perc"]
+        module_map = self.config.get("callsite_module_map", {})
+
+        run_props = {_['name']: (_['path'], _['profile_format'])
+                     for _ in self.config['runs']}
+
+        # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
         print(f'\n\n-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n')
 
-        path = self.config["data_path"]
-        props = {_['name']: (_['path'], _['profile_format']) for _ in self.config['runs']}
-
         for dataset in self.config["runs"]:
 
-            dataset_name = dataset["name"]
-            _prop = props[dataset_name]
+            name = dataset["name"]
+            _prop = run_props[name]
 
-            sg = SuperGraph(dataset_name, self.config)
-            sg.create(path=os.path.join(path, _prop[0]), profile_format=_prop[1])
-            sg.process_sg()
+            sg = SuperGraph(name) #, self.config)
+            sg.create(path=os.path.join(load_path, _prop[0]), profile_format=_prop[1])
+            sg.process_sg(module_map=module_map)
 
-            _f = Filter(sg, filter_by=self.config["filter_by"],
-                        filter_perc=self.config["filter_perc"])
-            _g = Group(sg, group_by=self.config["group_by"])
+            _f = Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
+            _g = Group(sg, group_by=group_by)
+
             if len(self.supergraphs) == 1:
                 _a = Auxiliary(sg)
 
-            sg.write(write_aux=False)
-            self.supergraphs[dataset_name] = sg
+            sg.write(os.path.join(save_path, name))
+            self.supergraphs[name] = sg
 
         # ----------------------------------------------------------------------
-        # Stage-3: EnsembleGraph processing
+        # Stage-2: EnsembleGraph processing
         if len(self.supergraphs) > 1:
 
             print(f'\n\n-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n')
-            sg = EnsembleGraph("ensemble", self.config)
+            name = "ensemble"
+            sg = EnsembleGraph(name) #, self.config)
 
             _u = Unify(sg, self.supergraphs)
-            _f = Filter(sg, filter_by=self.config["filter_by"],
-                        filter_perc=self.config["filter_perc"])
-            _g = Group(sg, group_by=self.config["group_by"])
+            _f = Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
+            _g = Group(sg, group_by=group_by)
             _a = Auxiliary(sg)
-            sg.write()
-            self.supergraphs["ensemble"] = sg
+
+            sg.write(os.path.join(save_path, name))
+            self.supergraphs[name] = sg
 
     # --------------------------------------------------------------------------
     # Reading and rendering methods.

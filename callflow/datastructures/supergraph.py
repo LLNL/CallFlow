@@ -16,12 +16,6 @@ from ast import literal_eval as make_list
 from callflow import get_logger
 from callflow.utils.sanitizer import Sanitizer
 
-#from callflow.operations import Process, Group, Filter
-#from .graphframe import GraphFrame
-#from callflow.timer import Timer
-#from callflow.algorithms import DeltaConSimilarity
-from callflow.modules import Auxiliary
-
 LOGGER = get_logger(__name__)
 
 
@@ -47,15 +41,15 @@ class SuperGraph(ht.GraphFrame):
     _FILTER_MODES = ["time", "time (inc)"]
 
     # --------------------------------------------------------------------------
-    def __init__(self, name, config):
+    def __init__(self, name):#, config):
 
-        assert isinstance(name, str) and isinstance(config, dict)
+        assert isinstance(name, str) # and isinstance(config, dict)
+
+        self.nxg = None
 
         self.name = name        # dataset name
-        self.config = config
-
         self.profile_format = ''
-        self.nxg = None
+
         self.parameters = {}
         self.auxiliary_data = {}
         self.proxy_columns = {}
@@ -64,8 +58,11 @@ class SuperGraph(ht.GraphFrame):
         self.paths = {}
         self.hatchet_nodes = {}
         self.name_module_map = None
+        self.module_map = None
 
-        self.dir_path = os.path.join(self.config["save_path"], self.name)
+        # TODO: can we remove "config" from supergraph?
+        #self.config = config
+        #self.dir_path = os.path.join(self.config["save_path"], self.name)
 
     # --------------------------------------------------------------------------
     def __str__(self):
@@ -103,13 +100,10 @@ class SuperGraph(ht.GraphFrame):
         '''
 
     # --------------------------------------------------------------------------
-    def load(self, path=None, read_graph=False):
+    def load(self, path, read_graph=False, read_parameter=False):
         # Load the SuperGraph (refer _FILENAMES for file name mapping).
-        if path is None:
-            path = self.dir_path
 
         LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path})")
-
         self.dataframe = None
         self.nxg = None
         self.graph = None
@@ -123,7 +117,7 @@ class SuperGraph(ht.GraphFrame):
         if read_graph:
             self.graph = SuperGraph.read_graph(path)
 
-        if self.config["read_parameter"]:
+        if read_parameter: #self.config["read_parameter"]:
             self.parameters = SuperGraph.read_params(path)
 
         if True:
@@ -133,15 +127,12 @@ class SuperGraph(ht.GraphFrame):
         self.df_reset_index()
 
     # --------------------------------------------------------------------------
-    def write(self, path=None, write_df=True, write_graph=False, write_nxg=True, write_aux=True):
+    def write(self, path, write_df=True, write_graph=False, write_nxg=True, write_aux=True):
         """
         Write the SuperGraph (refer _FILENAMES for file name mapping).
         """
         if not write_df and not write_graph and not write_nxg:
             return
-
-        if path is None:
-            path = self.dir_path
 
         LOGGER.info(f"Writing SuperGraph to ({path})")
         if write_df:
@@ -527,7 +518,7 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     # The next block of functions attach the calculated result to the variable `gf`.
-    def process_sg(self):
+    def process_sg(self, module_map={}):
         """
         Process graphframe to add properties depending on the format.
         Current processing is supported for hpctoolkit and caliper.
@@ -561,8 +552,11 @@ class SuperGraph(ht.GraphFrame):
             self.prc_add_module_name_hpctoolkit()
 
         elif self.profile_format in ["caliper_json", "caliper"]:
-            if "callsite_module_map" in self.config:
-                self.prc_add_module_name_caliper(self.config["callsite_module_map"])
+            if len(module_map) > 0:
+                self.module_map = module_map
+                self.prc_add_module_name_caliper(self.module_map)
+            #if "callsite_module_map" in self.config:
+            #    self.prc_add_module_name_caliper(self.config["callsite_module_map"])
             self.prc_create_name_module_map()
 
         elif self.profile_format == "gprof":

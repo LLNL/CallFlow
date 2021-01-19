@@ -32,8 +32,12 @@ class Auxiliary:
         self.RunBinCount = RunBinCount
         self.hist_props = ["rank", "name", "dataset", "all_ranks"]
 
-        #self.runs = sg.config["parameter_props"]["runs"]
-        self.runs = [_['name'] for _ in sg.config["runs"]]
+        # self.runs = sg.config["parameter_props"]["runs"]
+        if isinstance(sg, callflow.SuperGraph):
+            self.runs = [sg.name]
+
+        elif isinstance(sg, callflow.EnsembleGraph):
+            self.runs = [k for k,v in sg.supergraphs]
 
         LOGGER.warning(f'Computing auxiliary data for ({sg}) with {len(self.runs)} runs: {self.runs}')
         #if sg.name is not 'ensemble':
