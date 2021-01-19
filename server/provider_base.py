@@ -81,7 +81,7 @@ class BaseProvider:
             sg.filter_sg()
             sg.group_sg(group_by=self.config["group_by"])
             sg.auxiliary_gf_sg()
-            sg.write()
+            sg.write(write_aux=False)
             
             self.supergraphs[dataset_name] = sg
 

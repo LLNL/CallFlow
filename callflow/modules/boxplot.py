@@ -27,7 +27,7 @@ class BoxPlot:
         self.outliers = {}
         for k,a in BoxPlot.KEYS_AND_ATTRS.items():
 
-            self.q[k] = np.percentile(df[a], [0., 25., 50., 75., 100.])
+            self.q[k] = np.percentile(df[a], [0., 25., 50., 75., 100.]).tolist()
 
             mask = outliers(df[a])
             self.outliers[k] = {"values": (mask * df[a]).tolist(),

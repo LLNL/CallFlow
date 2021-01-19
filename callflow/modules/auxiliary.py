@@ -27,6 +27,8 @@ class Auxiliary:
     def __init__(self, supergraph, MPIBinCount: int = 20, RunBinCount: int = 20):
 
         #assert isinstance(supergraph, SuperGraph)
+        if supergraph.name is not 'ensemble':
+            return
         self.MPIBinCount = MPIBinCount
         self.RunBinCount = RunBinCount
         self.hist_props = ["rank", "name", "dataset", "all_ranks"]
@@ -34,8 +36,6 @@ class Auxiliary:
         self.runs = supergraph.config["parameter_props"]["runs"]
 
         LOGGER.warning(f'Computing auxiliary data for ({supergraph}) with {len(self.runs)} runs: {self.runs}')
-        if supergraph.name is not 'ensemble':
-            return
 
         if len(self.runs) == 1:
             self.e_df = supergraph.dataframe
@@ -93,32 +93,28 @@ class Auxiliary:
 
             # for each callsite
             for callsite, callsite_df in df_name_grp:
-
                 histogram, gradients, boxplot = None, None, None
 
                 if is_ensemble:
                     histogram = Histogram(ensemble_df=callsite_df).result
-                    gradients = Gradients(callsite_df,
+                    gradients = Gradients(self.t_df,
                                           binCount=self.RunBinCount,
                                           callsiteOrModule=callsite).result
                     boxplot = BoxPlot(callsite_df)
-
-                elif not callsite_df.empty:
-
-                    callsite_ensemble_df = dataframes_name_group['ensemble']
-
+                else:
+                    callsite_ensemble_df = dataframes_name_group['ensemble'].get_group(callsite)
                     histogram = Histogram(ensemble_df=callsite_ensemble_df,
                                           target_df=callsite_df).result
                     boxplot = BoxPlot(callsite_df)
 
                 ret[dataset][callsite] = self.pack_json(name=callsite,
-                                                        df=callsite_df,
-                                                        prop_hists=histogram,
-                                                        gradients=gradients,
-                                                        q=boxplot.q,
-                                                        outliers=boxplot.outliers,
-                                                        isEnsemble=is_ensemble,
-                                                        isCallsite=True)
+                                                    df=callsite_df,
+                                                    prop_hists=histogram,
+                                                    gradients=gradients,
+                                                    q=boxplot.q,
+                                                    outliers=boxplot.outliers,
+                                                    isEnsemble=is_ensemble,
+                                                    isCallsite=True)
 
         # ----------------------------------------------------------------------
         '''
@@ -190,15 +186,19 @@ class Auxiliary:
                 if is_ensemble:
 
                     histogram = Histogram(ensemble_df=module_df).result
-                    gradients = Gradients(module_df,
+                    gradients = Gradients(self.t_df,
                                           binCount=self.RunBinCount,
                                           callsiteOrModule=module).result
+                    boxplot = BoxPlot(module_df)
+
 
                 elif not module_df.empty:
 
-                    module_ensemble_df = dataframes_module_group['ensemble']
+                    module_ensemble_df = dataframes_module_group['ensemble'].get_group(module)
                     histogram = Histogram(ensemble_df=module_ensemble_df,
                                           target_df=module_df).result
+                    boxplot = BoxPlot(module_df)
+                    
 
                 ret[dataset][module] = self.pack_json(name=module, df=module_df,
                                                       gradients=gradients,
@@ -276,7 +276,7 @@ class Auxiliary:
 
             ret[dataset] = {}
             for callsite in callsites:
-                ret[dataset][callsite] = df_lookup_and_list(df, "name", callsite, "module")
+                ret[dataset][callsite] = df_lookup_and_list(df, "name", callsite, "module").tolist()
 
 
         '''

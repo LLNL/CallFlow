@@ -7,7 +7,7 @@
 import pandas as pd
 
 import callflow
-from callflow.utils.utils import df_lookup_by_column, df_names_in_module
+from callflow.utils.utils import df_lookup_by_column
 
 LOGGER = callflow.get_logger()
 

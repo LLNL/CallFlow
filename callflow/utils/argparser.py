@@ -5,7 +5,6 @@
 # ------------------------------------------------------------------------------
 
 import os
-import json
 import argparse
 
 import callflow
@@ -150,9 +149,7 @@ class ArgParser:
         Raises expections if something is not provided
         Check if the config file is provided and exists!
 
-        Parameters
-        ----------
-        args : argparse.Namespace
+        :pargs : argparse.Namespace
             Arguments passed by the user.
 
         Returns
@@ -236,8 +233,8 @@ class ArgParser:
         This function would overwrite all the automatic config with the user-provided config.
         """
         _configfile = self.args["config"]
-        json = callflow.utils.read_json(_configfile)
-        callflow.utils.is_valid_json_with_schema(data=json, schema=JSONSCHEMA_CONFIG)
+        json = callflow.utils.utils.read_json(_configfile)
+        callflow.utils.utils.is_valid_json_with_schema(data=json, schema=JSONSCHEMA_CONFIG)
 
         # ----------------------------------------------------------------------
         scheme = {}
@@ -287,7 +284,7 @@ class ArgParser:
     # --------------------------------------------------------------------------
     # --------------------------------------------------------------------------
     @staticmethod
-    def _scheme_dataset_map(pformat, data_path: str = '', run_props: dict = {}):
+    def _scheme_dataset_map(pformat, data_path: str = '', run_props: dict=None):
         from callflow.utils.utils import list_subdirs, list_files
 
         _mdict = lambda n,p,f: {"name": n, "path": p, "profile_format": f}
@@ -322,11 +319,11 @@ class ArgParser:
 
     # --------------------------------------------------------------------------
     @staticmethod
-    def _prep_data_staging(dot_cf_path, runs=[]):
+    def _prep_data_staging(dot_cf_path, runs: list = []):
         """
         Create a staging directory for data.
         """
-        LOGGER.info(f"Callflow is staging data in ({dot_cf_path})")
+        LOGGER.info(f"CallFlow is staging data in ({dot_cf_path})")
 
         if not os.path.exists(dot_cf_path):
             os.makedirs(dot_cf_path)

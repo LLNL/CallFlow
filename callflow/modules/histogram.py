@@ -35,7 +35,7 @@ class Histogram:
                         "ensemble": Histogram._format_data(_hist)
                     }
 
-            else:
+            else:                
                 _dfe = Histogram._get_data_by_property(ensemble_df, prop)
                 _dft = Histogram._get_data_by_property(target_df, prop)
 
@@ -44,7 +44,7 @@ class Histogram:
                     _t = _dft[a]
 
                     _min = min(_e.min(), _t.min())
-                    _max = min(_e.max(), _t.max())
+                    _max = max(_e.max(), _t.max())
 
                     _histe = histogram(_e, [_min, _max], bins=bins)
                     _histt = histogram(_t, [_min, _max], bins=bins)
@@ -61,8 +61,10 @@ class Histogram:
         if prop == "all_ranks":
             return data
         elif prop == "rank":
+            assert prop in data.columns
             return data.groupby(["dataset", "rank"])[["time", "time (inc)"]].mean()
         else:
+            assert prop in data.columns
             return data.groupby([prop])[["time", "time (inc)"]].mean()
 
     @staticmethod

@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
-# callflow.__init__.py
+# CallFlow.__init__.py
 from .version import __version__
 from .utils.logger import init_logger, get_logger
 from .datastructures import SuperGraph, EnsembleGraph

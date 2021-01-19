@@ -132,7 +132,7 @@ class SuperGraph(ht.GraphFrame):
         self.df_reset_index()
 
     # --------------------------------------------------------------------------
-    def write(self, path=None, write_df=True, write_graph=False, write_nxg=True):
+    def write(self, path=None, write_df=True, write_graph=False, write_nxg=True, write_aux=True):
         """
         Write the SuperGraph (refer _FILENAMES for file name mapping).
         """
@@ -151,6 +151,9 @@ class SuperGraph(ht.GraphFrame):
 
         if write_nxg:
             SuperGraph.write_nxg(path, self.nxg)
+
+        if write_aux: 
+            SuperGraph.write_aux(path, self.aux.auxiliary_data)
 
     # --------------------------------------------------------------------------
     # SuperGraph.dataframe api
@@ -351,6 +354,11 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.debug(f"Writing ({fname})")
         with open(fname, "w") as fptr:
             fptr.write(graph_str)
+
+    @staticmethod
+    def write_aux(path, data):
+        with open(os.path.join(os.path.join(path, SuperGraph._FILENAMES["aux"])), "w") as f:
+            json.dump(data, f)
 
     @staticmethod
     def read_df(path):
@@ -902,4 +910,4 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def auxiliary_gf_sg(self):
-        self = Auxiliary(supergraph=self)
+        self.aux = Auxiliary(supergraph=self)
