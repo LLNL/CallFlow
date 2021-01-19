@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+import os
 import json
 
 from callflow import SuperGraph, EnsembleGraph
@@ -17,6 +18,7 @@ from callflow.modules import Auxiliary
 
 
 LOGGER = get_logger(__name__)
+
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -41,7 +43,7 @@ class BaseProvider:
         self.ndatasets = len(self.config["runs"])
         assert self.ndatasets > 0
 
-        self.config["parameter_props"] = BaseProvider._parameter_props(self.config)
+        #self.config["parameter_props"] = BaseProvider._parameter_props(self.config)
         self.supergraphs = {}
 
     # --------------------------------------------------------------------------
@@ -51,7 +53,10 @@ class BaseProvider:
         Load the processed datasets by the format.
         """
         # create supergraphs for all runs
-        for dataset_name in self.config["parameter_props"]["runs"]:
+        # for dataset_name in self.config["parameter_props"]["runs"]:
+        for run in self.config["runs"]:
+
+            dataset_name = run['name']
             sg = SuperGraph(dataset_name, self.config)
             sg.load()
             self.supergraphs[dataset_name] = sg
@@ -63,9 +68,11 @@ class BaseProvider:
             sg.load()
             self.supergraphs[dataset_name] = sg
 
+        # TODO: shouldnt be used here
+        # if needed, to be computed in supergraph and stored in the datastructure
         # Adds basic information to config.
         # Config is later return to client app on "init" request.
-        self.config["runtime_props"] = BaseProvider._runtime_props(self.supergraphs)
+        #self.config["runtime_props"] = BaseProvider._runtime_props(self.supergraphs)
 
     # --------------------------------------------------------------------------
     def process(self):
@@ -80,10 +87,16 @@ class BaseProvider:
         # Stage-1: Each dataset is processed individually into a SuperGraph.
         print(f'\n\n-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n')
 
+        path = self.config["data_path"]
+        props = {_['name']: (_['path'], _['profile_format']) for _ in self.config['runs']}
+
         for dataset in self.config["runs"]:
+
             dataset_name = dataset["name"]
+            _prop = props[dataset_name]
+
             sg = SuperGraph(dataset_name, self.config)
-            sg.create()
+            sg.create(path=os.path.join(path, _prop[0]), profile_format=_prop[1])
             sg.process_sg()
 
             _f = Filter(sg, filter_by=self.config["filter_by"],
@@ -112,6 +125,7 @@ class BaseProvider:
 
     # --------------------------------------------------------------------------
     # Reading and rendering methods.
+    '''
     @staticmethod
     def _parameter_props(config):
         """
@@ -126,8 +140,10 @@ class BaseProvider:
             else:
                 props["data_path"][tag] = run["path"]
             props["profile_format"][tag] = run["profile_format"]
+
         return props
 
+    
     @staticmethod
     def _runtime_props(supergraphs):
         """
@@ -142,6 +158,8 @@ class BaseProvider:
         minExcTime = 1e6
         maxNumOfRanks = 0.
 
+        # TODO: should be computed in supergraph
+        # also computed in auxiliary
         for idx, tag in enumerate(supergraphs):
             props["numOfRanks"][tag] = supergraphs[tag].df_count("rank")
 
@@ -166,7 +184,7 @@ class BaseProvider:
         props["numOfRanks"]["ensemble"] = maxNumOfRanks
 
         return props
-
+    '''
     # --------------------------------------------------------------------------
     def request_general(self, operation):
         """

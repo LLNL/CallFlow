@@ -7,8 +7,8 @@
 #import os
 #import sys
 #import json
-import math
-#import numpy as np
+#import math
+import numpy as np
 
 import callflow
 
@@ -32,7 +32,8 @@ class Auxiliary:
         self.RunBinCount = RunBinCount
         self.hist_props = ["rank", "name", "dataset", "all_ranks"]
 
-        self.runs = sg.config["parameter_props"]["runs"]
+        #self.runs = sg.config["parameter_props"]["runs"]
+        self.runs = [_['name'] for _ in sg.config["runs"]]
 
         LOGGER.warning(f'Computing auxiliary data for ({sg}) with {len(self.runs)} runs: {self.runs}')
         #if sg.name is not 'ensemble':
@@ -99,13 +100,13 @@ class Auxiliary:
     def _core_data(self, dataframes_group, grp_type='callsite'):
 
         is_callsite = grp_type == 'callsite'
-        ret = {}
+        result = {}
 
         # for each supergraph
         for dataset, df_group in dataframes_group.items():
 
             is_ensemble = dataset == 'ensemble'
-            ret[dataset] = {}
+            result[dataset] = {}
 
             # for each name in the group
             for name, name_df in df_group:
@@ -114,47 +115,30 @@ class Auxiliary:
 
                 # --------------------------------------------------------------
                 if is_ensemble:
-                    # LOGGER.debug(f'-------- aux for {grp_type}={name}: 1 '
-                    #             f'{dataset} {type(name_df)} : {len(dataframes_group)}')
                     histogram = Histogram(df_ensemble=name_df).result
                     gradients = Gradients(name_df,
                                           binCount=self.RunBinCount,
                                           callsiteOrModule=name).result
 
                 elif "ensemble" in dataframes_group:
-
                     assert not name_df.empty
                     ensemble_df = dataframes_group['ensemble'].get_group(name)
-
-                    # LOGGER.debug(f'-------- aux for {grp_type}={name}: 2 not empty '
-                    #             f'{dataset} {type(ensemble_df)} {type(name_df)}')
                     histogram = Histogram(df_ensemble=ensemble_df,
                                           df_target=name_df).result
 
                 else:
-                    # LOGGER.debug(f'-------- aux for {grp_type}={name}: 3 not empty '
-                    #             f'{dataset}  {type(name_df)}')
                     histogram = Histogram(df_ensemble=name_df).result
 
-
-                # collect results
                 if grp_type == 'callsite':
                     boxplot = BoxPlot(name_df).result
-                    ret[dataset][name] = self.pack_json(name=name,
-                                                        df=name_df,
-                                                        prop_hists=histogram,
-                                                        gradients=gradients,
-                                                        q=boxplot['q'],
-                                                        outliers=boxplot['outliers'],
-                                                        isEnsemble=is_ensemble,
-                                                        isCallsite=is_callsite)
-                else:
-                    ret[dataset][name] = self.pack_json(name=name,
-                                                        df=name_df,
-                                                        prop_hists=histogram,
-                                                        gradients=gradients,
-                                                        isEnsemble=is_ensemble)
 
+                result[dataset][name] = self.pack_json(name=name, df=name_df,
+                                                       is_ensemble=is_ensemble,
+                                                       is_callsite=is_callsite,
+                                                       gradients=gradients,
+                                                       histograms=histogram,
+                                                       boxplots=boxplot)
+        return result
 
     # --------------------------------------------------------------------------
     # Callsite grouped information
@@ -378,9 +362,78 @@ class Auxiliary:
         '''
         return ret
 
+
+    @staticmethod
+    def pack_json(name, df, is_ensemble, is_callsite,
+                      gradients = None, histograms = None, boxplots = None):
+
+        KEYS_AND_ATTRS = {'Inclusive': 'time (inc)',
+                          'Exclusive': 'time'}
+
+        # create the dictionary with base info
+        result = {"name": name,
+                  "id": f"node-{df['nid'].tolist()[0]}",
+                  "dataset": df["dataset"].unique().tolist(),
+                  "module": df["module"].tolist()[0],
+                  "component_path": df["component_path"].unique().tolist(),
+                  "component_level": df["component_level"].unique().tolist()
+                  }
+
+        # TODO: check the meaning of this?
+        if not is_ensemble and not is_callsite:
+            module_df = df.groupby(["module", "rank"]).mean()
+            x_df = module_df.xs(name, level="module")
+
+        # now, append the data
+        for k,a in KEYS_AND_ATTRS.items():
+
+            _data = df[a].to_numpy()
+
+            # compute the statistics
+            _min, _mean, _max = _data.min(), _data.mean(), _data.max()
+            _var = _data.var() if _data.shape[0] > 0 else 0.
+            _std = np.sqrt(_var)
+
+            if k == "Inclusive":
+                _imb = df['imbalance_perc_inclusive'].tolist()[0]
+                _kurt = df['kurtosis_inclusive'].tolist()[0]
+                _skew = df['skewness_inclusive'].tolist()[0]
+            elif k == "Exclusive":
+                _imb = df['imbalance_perc_exclusive'].tolist()[0]
+                _kurt = df['kurtosis_exclusive'].tolist()[0]
+                _skew = df['skewness_exclusive'].tolist()[0]
+
+            # TODO: check the meaning of this?
+            if not is_ensemble and not is_callsite:
+                _data = x_df[a].to_numpy()
+
+            result[k] = {"data": _data,
+                         "min_time": _min,
+                         "mean_time": _mean,
+                         "max_time": _max,
+                         "variance": _var,
+                         "std_deviation": _std,
+                         "imbalance_perc": _imb,
+                         "kurtosis": _kurt,
+                         "skewness": _skew}
+
+            if gradients is not None:
+                result[k]['gradients'] = gradients[k]
+
+            if boxplots is not None:
+                result[k]['q'] = boxplots[k]['q']
+                result[k]['outliers'] = boxplots[k]['outliers']
+
+            if histograms is not None:
+                result[k]['prop_histograms'] = histograms[k]
+
+        return result
+
+
+    '''
     # TODO: Need to clean up this further.
     @staticmethod
-    def pack_json(
+    def pack_json_old(
         df,
         name="",
         gradients={"Inclusive": {}, "Exclusive": {}},
@@ -458,7 +511,7 @@ class Auxiliary:
             },
         }
         return result
-
+    '''
     '''
     # ------------------------------------------------------------------------------
     # HDF5 methods (Not being used)

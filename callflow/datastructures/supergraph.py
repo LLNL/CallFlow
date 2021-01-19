@@ -54,6 +54,7 @@ class SuperGraph(ht.GraphFrame):
         self.name = name        # dataset name
         self.config = config
 
+        self.profile_format = ''
         self.nxg = None
         self.parameters = {}
         self.auxiliary_data = {}
@@ -74,14 +75,12 @@ class SuperGraph(ht.GraphFrame):
         return self.__str__()
 
     # --------------------------------------------------------------------------
-    def create(self):
-        profile_format = self.config["parameter_props"]["profile_format"][self.name]
-        data_path = self.config["parameter_props"]["data_path"][self.name]
-        data_path = os.path.join(self.config["data_path"], data_path)
+    def create(self, path, profile_format):
 
-        LOGGER.info(f"Creating SuperGraph ({self.name}) from ({data_path}) using ({profile_format}) format")
+        self.profile_format = profile_format
+        LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path}) using ({self.profile_format}) format")
 
-        gf = SuperGraph.from_config(data_path, profile_format)
+        gf = SuperGraph.from_config(path, self.profile_format)
         assert isinstance(gf, ht.GraphFrame)
         assert gf.graph is not None
         super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics)
@@ -548,9 +547,6 @@ class SuperGraph(ht.GraphFrame):
             self.callees[node_name] = [_.frame.get("name") for _ in node.children]
 
         # ----------------------------------------------------------------------
-        # LOGGER.warning('>>>>>> before processing\n {}'.format(self.dataframe))
-        profile_format = self.config["parameter_props"]["profile_format"][self.name]
-
         # add new columns to the dataframe
         self.df_add_column('dataset', value=self.name)
         self.df_add_column('rank', value=0)
@@ -560,16 +556,16 @@ class SuperGraph(ht.GraphFrame):
 
         # ----------------------------------------------------------------------
         # TODO: check if we need to be so profile-specific!
-        if profile_format == "hpctoolkit":
+        if self.profile_format == "hpctoolkit":
             self.prc_create_name_module_map()
             self.prc_add_module_name_hpctoolkit()
 
-        elif profile_format == "caliper_json" or profile_format == "caliper":
+        elif self.profile_format in ["caliper_json", "caliper"]:
             if "callsite_module_map" in self.config:
                 self.prc_add_module_name_caliper(self.config["callsite_module_map"])
             self.prc_create_name_module_map()
 
-        elif profile_format == "gprof":
+        elif self.profile_format == "gprof":
             self.prc_create_name_module_map()
 
         # ----------------------------------------------------------------------

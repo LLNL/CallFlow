@@ -25,18 +25,18 @@ class BoxPlot:
     def __init__(self, df):
 
         assert isinstance(df, pd.DataFrame)
-
-        self.result = {"q": {}, "outliers": {}}
+        self.result = {}
 
         for k,a in BoxPlot.KEYS_AND_ATTRS.items():
 
             q = np.percentile(df[a], [0., 25., 50., 75., 100.])
             mask = outliers(df[a])
 
-            self.result["q"][k] = q
-            self.result["outliers"][k] = {
-                "values": (mask * df[a]),
-                "datasets": (mask * df['dataset']),
-                "ranks": (mask * df['rank'])}
+            self.result[k] = {'q': q,
+                              'outliers': {
+                                  "values": (mask * df[a]).tolist(),
+                                  "datasets": (mask * df['dataset']).tolist(),
+                                  "ranks": (mask * df['rank']).tolist()}
+                              }
 
 # ------------------------------------------------------------------------------
