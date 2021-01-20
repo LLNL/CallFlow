@@ -42,7 +42,7 @@ class RuntimeScatterplot:
                 if _ == 'name':
                     _ret[_] = func
                 else:
-                    _ret[_] = _df[_].tolist()
+                    _ret[_] = _df[_].to_numpy()
             ret.append(_ret)
 
         return pd.DataFrame(ret).to_json(orient="columns")

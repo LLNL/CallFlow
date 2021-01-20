@@ -26,19 +26,19 @@ class BlandAltman_Plot:
         md = np.mean(diff)
         sd = np.std(diff, axis=0)
 
-        categories = np.concatenate(np.unique(supergraph_1.df[catcol].tolist()), np.unique(supergraph_2.df[catcol].tolist()))
+        categories = np.concatenate(np.unique(supergraph_1.df[catcol]), np.unique(supergraph_2.df[catcol]))
         colors = cm.rainbow(np.linspace(0, 1, len(categories)))
         colordict = list(dict(zip(categories, colors)))
 
         result = {
             "data": {
-                "name": name.tolist(),
-                "module": module.tolist(),
-                "mean": mean.tolist(),
-                "diff": diff.tolist(),
+                "name": name,
+                "module": module,
+                "mean": mean,
+                "diff": diff,
             },
             "color": colordict,
-            "md": md.tolist(),
-            "sd": sd.tolist(),
+            "md": md,
+            "sd": sd,
         }
         return result

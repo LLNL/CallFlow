@@ -128,7 +128,7 @@ class Gradients:
 
             results[k] = {
                 "bins": num_of_bins,
-                "dataset": {"mean": dists_list.tolist(), "position": dataset_pos},
+                "dataset": {"mean": dists_list, "position": dataset_pos},
                 "kde": Histogram._format_data(kde_grid),
                 "hist": Histogram._format_data(hist_grid)
             }

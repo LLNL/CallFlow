@@ -126,7 +126,7 @@ class Auxiliary:
         for dataset, df in dataframes.items():
             ret[dataset] = {}
             for callsite in callsites:
-                ret[dataset][callsite] = df_lookup_and_list(df, "name", callsite, "module").tolist()
+                ret[dataset][callsite] = df_lookup_and_list(df, "name", callsite, "module")
 
         return ret
 
@@ -140,11 +140,11 @@ class Auxiliary:
 
         # create the dictionary with base info
         result = {"name": name,
-                  "id": f"node-{df['nid'].tolist()[0]}",
-                  "dataset": df["dataset"].unique().tolist(),
-                  "module": df["module"].tolist()[0],
-                  "component_path": df["component_path"].unique().tolist(),
-                  "component_level": df["component_level"].unique().tolist()
+                  "id": f"node-{df['nid'].unique()}",
+                  "dataset": df["dataset"].unique(),
+                  "module": df["module"].unique(),
+                  "component_path": df["component_path"].unique(),
+                  "component_level": df["component_level"].unique()
                   }
 
         # TODO: check the meaning of this?
@@ -169,7 +169,7 @@ class Auxiliary:
             if not is_ensemble and not is_callsite:
                 _data = x_df[a].to_numpy()
 
-            result[k] = {"_d": _data.tolist(),
+            result[k] = {"_d": _data,
                          "_min": _min,
                          "_mean": _mean,
                          "_max": _max,
@@ -248,7 +248,7 @@ class Auxiliary:
             self.moduleMap = data["moduleMap"]
             self.callsiteMap = data["callsiteMap"]
         with self.timer.phase("Collect Callsite data"):
-            modules = self.df["module"].unique().tolist()
+            modules = self.df["module"].unique()
         with self.timer.phase("Filter"):
             if self.filter:
                 # topCallsites_df = self.filter_frames(self.topCallsite, "time (inc)")

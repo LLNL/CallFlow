@@ -421,8 +421,8 @@ class SankeyLayout:
                         "target_callsite": target["callsite"],
                         "edge_type": edge_type,
                         "weight": target_df["time (inc)"].mean(),
-                        "source_dataset": source_df["dataset"].unique().tolist(),
-                        "target_dataset": target_df["dataset"].unique().tolist(),
+                        "source_dataset": source_df["dataset"].unique(),
+                        "target_dataset": target_df["dataset"].unique(),
                     }
 
                     node_dict = {"type": "super-node"}
@@ -543,7 +543,6 @@ class SankeyLayout:
 
             elif node_dict["type"] == "super-node":
                 module = node_name
-                callsite = module_callsite_map[module].tolist()
                 actual_time = SankeyLayout.module_time(
                     group_df=module_name_group_df,
                     module_callsite_map=module_callsite_map,
@@ -676,7 +675,7 @@ class SankeyLayout:
         """
         module_df = df.get_group(module)
         entry_func_df = module_df.loc[module_df["entry_function"]]
-        return entry_func_df["callees"].unique().tolist()[0]
+        return entry_func_df["callees"].unique()
 
     # --------------------------------------------------------------------------
     @staticmethod

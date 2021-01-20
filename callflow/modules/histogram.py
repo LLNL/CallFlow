@@ -84,8 +84,8 @@ class Histogram:
                     "y_max": 0.}
 
         else:
-            return {"x": histo[0].tolist(),
-                    "y": histo[1].tolist(),
+            return {"x": histo[0],
+                    "y": histo[1],
                     "x_min": histo[0][0],
                     "x_max": histo[0][-1],
                     "y_min": np.min(histo[1]).astype(np.float64),

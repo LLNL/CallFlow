@@ -96,8 +96,8 @@ class DiffView:
             "bins": num_of_bins,
             "hist": Histogram._format_data(hist_grid),
             "data_min": 0,
-            "mean": mean.tolist(),
-            "diff": diff.tolist(),
+            "mean": mean,
+            "diff": diff,
         }
         return result
 # ------------------------------------------------------------------------------

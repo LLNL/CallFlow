@@ -34,9 +34,10 @@ class BoxPlot:
 
             self.result[k] = {'q': q,
                               'outliers': {
-                                  "values": (mask * df[a]).tolist(),
-                                  "datasets": (mask * df['dataset']).tolist(),
-                                  "ranks": (mask * df['rank']).tolist()}
+                                  "values": (mask * df[a]).to_numpy(),
+                                  "datasets": (mask * df['dataset']).to_numpy(),
+                                  "ranks": (mask * df['rank']).to_numpy()
+                                }
                               }
 
 # ------------------------------------------------------------------------------
