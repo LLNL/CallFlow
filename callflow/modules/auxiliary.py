@@ -121,15 +121,14 @@ class Auxiliary:
 
     # TODO: Figure out where this should belong.
     def callsite_module_map(self, dataframes, callsites):
-
-        ret = {}
-        for dataset, df in dataframes.items():
-            ret[dataset] = {}
-            for callsite in callsites:
-                ret[dataset][callsite] = df_lookup_and_list(df, "name", callsite, "module")
-
-        return ret
-
+        return {
+            __ : {
+                _: df_lookup_and_list(df, "name", callsite, "module") \
+                for _ in callsites \
+                } \
+            for __, df in dataframes.items() 
+        }
+        
     # --------------------------------------------------------------------------
     @staticmethod
     def pack_json(name, df, is_ensemble, is_callsite,
@@ -139,13 +138,14 @@ class Auxiliary:
                           'Exclusive': 'time'}
 
         # create the dictionary with base info
-        result = {"name": name,
-                  "id": f"node-{df['nid'].unique()}",
-                  "dataset": df["dataset"].unique(),
-                  "module": df["module"].unique(),
-                  "component_path": df["component_path"].unique(),
-                  "component_level": df["component_level"].unique()
-                  }
+        result = {
+            "name": name,
+            "id": f"node-{df['nid'].unique()}",
+            "dataset": df["dataset"].unique(),
+            "module": df["module"].unique(),
+            "component_path": df["component_path"].unique(),
+            "component_level": df["component_level"].unique()
+        }
 
         # TODO: check the meaning of this?
         if not is_ensemble and not is_callsite:

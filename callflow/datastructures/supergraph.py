@@ -654,7 +654,6 @@ class SuperGraph(ht.GraphFrame):
         self.df_update_mapping("show_node", entry_func)
         self.df_update_mapping("vis_name", node_name)
         self.df_update_mapping("component_level", component_level)
-        # self.df_update_mapping("mod_index", module_idx)
         self.df_update_mapping("entry_function", entry_func)
 
     def todelete_create_group_path(self, path):
