@@ -305,7 +305,17 @@ def path_list_from_frames(frames: list):
     return path
 
 # ------------------------------------------------------------------------------
+# File encoding utilities.
+# ------------------------------------------------------------------------------
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
+# ------------------------------------------------------------------------------
+# Delete the below utilities.
+# ------------------------------------------------------------------------------
 '''
 def to_delete_sanitize_name(name: str):
     """

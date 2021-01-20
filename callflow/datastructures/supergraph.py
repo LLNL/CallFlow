@@ -15,15 +15,9 @@ from ast import literal_eval as make_list
 
 from callflow import get_logger
 from callflow.utils.sanitizer import Sanitizer
+from callflow.utils.utils import NumpyEncoder
 
 LOGGER = get_logger(__name__)
-
-
-class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return json.JSONEncoder.default(self, obj)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
