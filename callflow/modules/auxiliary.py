@@ -5,6 +5,7 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
+from scipy.stats import kurtosis, skew
 
 import callflow
 from callflow.utils.utils import df_group_by, df_unique, df_lookup_by_column, df_lookup_and_list
@@ -160,32 +161,23 @@ class Auxiliary:
             _min, _mean, _max = _data.min(), _data.mean(), _data.max()
             _var = _data.var() if _data.shape[0] > 0 else 0.
             _std = np.sqrt(_var)
+            _imb = (_max - _mean) / _mean if not np.isclose(_mean, 0.) else _max
+            _skew = skew(_data)
+            _kurt = kurtosis(_data)
 
-            # TODO: compute k/s/i directly here.
-            '''
-            # do not add to dataframe
-            if k == "Inclusive":
-                _imb = df['imbalance_perc_inclusive'].tolist()[0]
-                _kurt = df['kurtosis_inclusive'].tolist()[0]
-                _skew = df['skewness_inclusive'].tolist()[0]
-            elif k == "Exclusive":
-                _imb = df['imbalance_perc_exclusive'].tolist()[0]
-                _kurt = df['kurtosis_exclusive'].tolist()[0]
-                _skew = df['skewness_exclusive'].tolist()[0]
-            '''
             # TODO: check the meaning of this?
             if not is_ensemble and not is_callsite:
                 _data = x_df[a].to_numpy()
 
-            result[k] = {"data": _data.tolist(),
-                         "min_time": _min,
-                         "mean_time": _mean,
-                         "max_time": _max,
-                         "variance": _var,
-                         "std_deviation": _std,
-                         #"imbalance_perc": _imb,
-                         #"kurtosis": _kurt,
-                         #"skewness": _skew
+            result[k] = {"_d": _data.tolist(),
+                         "_min": _min,
+                         "_mean": _mean,
+                         "_max": _max,
+                         "_var": _var,
+                         "_std": _std,
+                         "_imb": _imb,
+                         "_kurt": _kurt,
+                         "_skew": _skew
             }
 
             if gradients is not None:

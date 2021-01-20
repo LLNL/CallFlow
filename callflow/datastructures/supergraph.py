@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import hatchet as ht
 import networkx as nx
-from scipy.stats import kurtosis, skew
+# from scipy.stats import kurtosis, skew
 from ast import literal_eval as make_list
 
 from callflow import get_logger
@@ -445,7 +445,8 @@ class SuperGraph(ht.GraphFrame):
         from callflow.utils.utils import path_list_from_frames
         self.df_add_column('path',
                            apply_func=lambda _: path_list_from_frames(self.paths[_]))
-
+    """
+    # Phased out to auxiliary.py
     def prc_add_imbalance_perc(self):
 
         assert 0
@@ -487,7 +488,7 @@ class SuperGraph(ht.GraphFrame):
             for metric in metrics:
                 self.df_add_column(f'{metric}_{col_suffix}',
                                    apply_func=lambda _: metrics_dict[_][metric_key][metric])
-
+    """
     # --------------------------------------------------------------------------
     def prc_create_name_module_map(self):
         self.df_add_column("module", apply_func=lambda _: _)
