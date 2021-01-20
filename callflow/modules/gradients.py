@@ -30,10 +30,12 @@ class Gradients:
     KEYS_AND_ATTRS = {'Inclusive': 'time (inc)',
                       'Exclusive': 'time'}
 
-    def __init__(self, df, callsiteOrModule: str, binCount=20):
+    def __init__(self, df, callsiteOrModule: str, bins=20):
 
         assert isinstance(df, pd.DataFrame)
         assert isinstance(callsiteOrModule, str)
+        assert isinstance(bins, int)
+        assert bins > 0
 
         # gradient should be computed only for ensemble dataframe
         # i.e., multiple values in dataframe column
@@ -42,7 +44,7 @@ class Gradients:
 
         self.df_dict = {"ensemble": df}
         self.callsiteOrModule = callsiteOrModule
-        self.binCount = binCount
+        self.binCount = bins
 
         #self.max_ranks = df_count(df, "rank")
         self.rank_dict = {_name: df_count(_df, "rank") for _name, _df in self.df_dict.items()}
@@ -132,6 +134,5 @@ class Gradients:
             }
 
         return results
-
 
 # ------------------------------------------------------------------------------

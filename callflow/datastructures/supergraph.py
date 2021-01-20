@@ -19,6 +19,12 @@ from callflow.utils.sanitizer import Sanitizer
 LOGGER = get_logger(__name__)
 
 
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 class SuperGraph(ht.GraphFrame):
@@ -145,7 +151,7 @@ class SuperGraph(ht.GraphFrame):
             SuperGraph.write_nxg(path, self.nxg)
 
         if write_aux: 
-            SuperGraph.write_aux(path, self.aux.auxiliary_data)
+            SuperGraph.write_aux(path, self.auxiliary_data)
 
     # --------------------------------------------------------------------------
     # SuperGraph.dataframe api
@@ -334,7 +340,7 @@ class SuperGraph(ht.GraphFrame):
 
     @staticmethod
     def write_nxg(path, nxg):
-        fname = os.path.join(os.path.join(path, SuperGraph._FILENAMES["nxg"]))
+        fname = os.path.join(path, SuperGraph._FILENAMES["nxg"])
         LOGGER.debug(f"Writing ({fname})")
         nxg_json = nx.readwrite.json_graph.node_link_data(nxg)
         with open(fname, "w") as fptr:
@@ -342,15 +348,17 @@ class SuperGraph(ht.GraphFrame):
 
     @staticmethod
     def write_graph(path, graph_str):
-        fname = os.path.join(os.path.join(path, SuperGraph._FILENAMES["ht"]))
+        fname = os.path.join(path, SuperGraph._FILENAMES["ht"])
         LOGGER.debug(f"Writing ({fname})")
         with open(fname, "w") as fptr:
             fptr.write(graph_str)
 
     @staticmethod
     def write_aux(path, data):
-        with open(os.path.join(os.path.join(path, SuperGraph._FILENAMES["aux"])), "w") as f:
-            json.dump(data, f)
+        fname = os.path.join(path, SuperGraph._FILENAMES["aux"])
+        LOGGER.debug(f"Writing ({fname})")
+        with open(fname, "w") as f:
+            json.dump(data, f, cls=NumpyEncoder)
 
     @staticmethod
     def read_df(path):
@@ -440,6 +448,7 @@ class SuperGraph(ht.GraphFrame):
 
     def prc_add_imbalance_perc(self):
 
+        assert 0
         # compute these metrics
         metrics = ['imbalance_perc', 'std_deviation', 'skewness', 'kurtosis']
 
@@ -565,7 +574,7 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         # TODO: these need more processing.
         #  figure out if they need to store member variables
-        self.prc_add_imbalance_perc()
+        #self.prc_add_imbalance_perc()
         self.prc_add_vis_node_name()
         self.prc_add_path()
 

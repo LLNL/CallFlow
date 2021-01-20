@@ -24,6 +24,7 @@ LOGGER = get_logger(__name__)
 # ------------------------------------------------------------------------------
 class BaseProvider:
 
+    # TODO: add additional module map argument
     def __init__(self, config: dict = None, data_dir: str = None):
         """
         Entry interface to access CallFlow's functionalities.
@@ -42,8 +43,6 @@ class BaseProvider:
 
         self.ndatasets = len(self.config["runs"])
         assert self.ndatasets > 0
-
-        #self.config["parameter_props"] = BaseProvider._parameter_props(self.config)
         self.supergraphs = {}
 
     # --------------------------------------------------------------------------
@@ -56,26 +55,19 @@ class BaseProvider:
         read_param = self.config["read_parameter"]
 
         # create supergraphs for all runs
-        # for dataset_name in self.config["parameter_props"]["runs"]:
         for run in self.config["runs"]:
 
             name = run['name']
-            sg = SuperGraph(name) #, self.config)
+            sg = SuperGraph(name)
             sg.load(os.path.join(load_path, name), read_parameter=read_param)
             self.supergraphs[name] = sg
 
         # ensemble case
         if self.ndatasets > 1:
             name = "ensemble"
-            sg = EnsembleGraph(name) #, self.config)
+            sg = EnsembleGraph(name)
             sg.load(os.path.join(load_path, name), read_parameter=read_param)
             self.supergraphs[name] = sg
-
-        # TODO: shouldnt be used here
-        # if needed, to be computed in supergraph and stored in the datastructure
-        # Adds basic information to config.
-        # Config is later return to client app on "init" request.
-        #self.config["runtime_props"] = BaseProvider._runtime_props(self.supergraphs)
 
     # --------------------------------------------------------------------------
     def process(self):
@@ -106,7 +98,7 @@ class BaseProvider:
             name = dataset["name"]
             _prop = run_props[name]
 
-            sg = SuperGraph(name) #, self.config)
+            sg = SuperGraph(name)
             sg.create(path=os.path.join(load_path, _prop[0]), profile_format=_prop[1])
             sg.process_sg(module_map=module_map)
 
