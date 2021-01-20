@@ -207,11 +207,4 @@ class Group:
 
         component_path.insert(0, component_module)
         return tuple(component_path)
-
-    '''
-    def update_df(self, col_name, mapping):
-        self.sg.df[col_name] = self.sg.df["name"].apply(
-            lambda node: mapping[node] if node in mapping.keys() else ""
-        )
-    '''
 # ------------------------------------------------------------------------------

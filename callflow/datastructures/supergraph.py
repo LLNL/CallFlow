@@ -574,73 +574,9 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         # TODO: these need more processing.
         #  figure out if they need to store member variables
-        #self.prc_add_imbalance_perc()
+        # self.prc_add_imbalance_perc()
         self.prc_add_vis_node_name()
         self.prc_add_path()
-
-        # ----------------------------------------------------------------------
-        '''
-        # copied from Process
-        # ----------------------------------------------------------------------
-        if profile_format == "hpctoolkit":
-            process = (
-                Process.Builder(self, self.name)
-                    .add_path()
-                    .create_name_module_map()
-                    .add_callers_and_callees()
-                    .add_dataset_name()
-                    .add_imbalance_perc()
-                    .add_module_name_hpctoolkit()
-                    .add_vis_node_name()
-                    .build()
-            )
-
-        elif profile_format == "caliper_json" or profile_format == "caliper":
-            if "callsite_module_map" in self.config:
-                process = (
-                    Process.Builder(self, self.name)
-                        .add_time_columns()
-                        .add_rank_column()
-                        .add_callers_and_callees()
-                        .add_dataset_name()
-                        .add_imbalance_perc()
-                        .add_module_name_caliper(self.config["callsite_module_map"])
-                        .create_name_module_map()
-                        .add_vis_node_name()
-                        .add_path()
-                        .build()
-                )
-            else:
-                process = (
-                    Process.Builder(self, self.name)
-                        .add_time_columns()
-                        .add_rank_column()
-                        .add_callers_and_callees()
-                        .add_dataset_name()
-                        .add_imbalance_perc()
-                        .create_name_module_map()
-                        .add_vis_node_name()
-                        .add_path()
-                        .build()
-                )
-
-        elif profile_format == "gprof":
-            process = (
-                Process.Builder(self, self.name)
-                    .add_nid_column()
-                    .add_time_columns()
-                    .add_rank_column()
-                    .add_callers_and_callees()
-                    .add_dataset_name()
-                    .add_imbalance_perc()
-                    .create_name_module_map()
-                    .add_vis_node_name()
-                    .add_path()
-                    .build()
-            )
-
-        #self = process.gf
-        '''
 
     # --------------------------------------------------------------------------
     def todelete_group_sg(self, group_by="module"):
@@ -833,15 +769,6 @@ class SuperGraph(ht.GraphFrame):
         """
         Filter the graphframe.
         """
-        # TODO: remove "mode" argument
-        '''
-        self = Filter(
-            gf=self,
-            mode=mode,
-            filter_by=self.config["filter_by"],
-            filter_perc=float(self.config["filter_perc"]),
-        ).gf
-        '''
         assert 0
         # ----------------------------------------------------------------------
         filter_by = self.config["filter_by"]
@@ -914,8 +841,3 @@ class SuperGraph(ht.GraphFrame):
         self.nxg = nxg
 
     # --------------------------------------------------------------------------
-    '''
-    def auxiliary_gf_sg(self):
-        self.aux = Auxiliary(supergraph=self)
-        self = Auxiliary(supergraph=self)
-    '''
