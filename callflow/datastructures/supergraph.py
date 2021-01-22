@@ -59,6 +59,7 @@ class SuperGraph(ht.GraphFrame):
         self.hatchet_nodes = {}
         self.callsite_module_map = None
         self.module_callsite_map = None
+        self.indexes = []
 
     # --------------------------------------------------------------------------
     def __str__(self):
@@ -92,9 +93,9 @@ class SuperGraph(ht.GraphFrame):
             
         self.callsite_module_map = {}
 
-
         # Hatchet requires node and rank to be indexes.
         # remove the indexes to maintain consistency.
+        self.indexes = list(self.dataframe.index.names)
         self.df_reset_index()
 
         # ----------------------------------------------------------------------
@@ -497,9 +498,13 @@ class SuperGraph(ht.GraphFrame):
         elif 'module' in self.dataframe.columns:
             self.df_add_column('module', apply_func=lambda _: Sanitizer.sanitize(_), apply_on='module')
             
-        self.module_fct_map = self.df_factorize_column('module', sanitize=True)
+        self.module_fct_map = self.df_factorize_column('module')
         self.df_add_column('path', apply_func=lambda _: SuperGraph.ht_path_from_frames(self.paths[_]))
         
+        # TODO: For faster searches, bring this back.
+        # self.indexes.insert(0, 'dataset')
+        # self.dataframe.set_index(self.indexes, inplace=True, drop=True)
+
     # --------------------------------------------------------------------------
     # in place filtering!
     def filter_sg(self, filter_by, filter_val):

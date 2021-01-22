@@ -293,7 +293,7 @@ class ArgParser:
             _experiment_xml_files = [f for f in os.listdir(data_path) if f.endswith('experiment.xml')]
 
             if len(_metric_db_files) > 0 and len(_experiment_xml_files) > 0:
-                return [_mdict('', '', pformat)] 
+                return [_mdict(data_path.split('/')[-1], '', pformat)] 
             
             return [_mdict(_, _, pformat)
                     for _ in list_subdirs(data_path)]
