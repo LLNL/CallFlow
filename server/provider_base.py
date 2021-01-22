@@ -105,11 +105,11 @@ class BaseProvider:
             _f = Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             _g = Group(sg, group_by=group_by)
 
+            self.supergraphs[name] = sg
             if len(self.supergraphs) == 1:
                 _a = Auxiliary(sg)
 
             sg.write(os.path.join(save_path, name))
-            self.supergraphs[name] = sg
 
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing

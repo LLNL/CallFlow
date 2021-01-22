@@ -31,18 +31,17 @@ class Group:
         self.entry_funcs = {}
         self.other_funcs = {}
 
-        if sg.module_map != None:
-            self.compute()
-        else:
-            LOGGER.info("Not grouping the data since a module_map is not provided.")
+        self.compute()
         
+    def _format_node_name(self, module, name):
+        return self.sg.module_fct_map[module] + '=' + name
 
     # --------------------------------------------------------------------------
     def compute(self):
 
         LOGGER.info(f'Grouping ({self.sg}) by \"{self.group_by}\"')
 
-        self.callsite_module_map = self.sg.module_map
+        self.callsite_module_map = self.sg.df_get_column("module", "name").to_dict()
         self.callsite_path_map = self.sg.df_get_column("path", "name").to_dict()
 
         group_path = {}
@@ -89,7 +88,7 @@ class Group:
                 entry_func[snode] = False
                 show_node[snode] = False
 
-            node_name[snode] = self.callsite_module_map[snode] + "=" + snode
+            node_name[snode] = self._format_node_name(self.callsite_module_map[snode], snode)
 
             if component_level[tnode] == 2:
                 entry_func[tnode] = True
@@ -98,7 +97,7 @@ class Group:
                 entry_func[tnode] = False
                 show_node[tnode] = False
 
-            node_name[tnode] = self.callsite_module_map[snode] + "=" + tnode
+            node_name[tnode] = self._format_node_name(self.callsite_module_map[snode], tnode)
 
         # update the graph
         self.sg.df_update_mapping("group_path", group_path)
@@ -134,7 +133,7 @@ class Group:
                 self.entry_funcs[from_module].append(from_callsite)
 
                 # Append to the group path.
-                group_path.append(from_module + "=" + from_callsite)
+                group_path.append(self._format_node_name(from_module, from_callsite))
 
             elif idx == len(path) - 1:
                 # Final callsite in the path.
@@ -145,7 +144,7 @@ class Group:
                 to_module = self.callsite_module_map[to_callsite]
 
                 if prev_module != to_module:
-                    group_path.append(to_module + "=" + to_callsite)
+                    group_path.append(self._format_node_name(to_module, to_callsite))
 
                 if to_module not in self.entry_funcs:
                     self.entry_funcs[to_module] = []
@@ -180,7 +179,7 @@ class Group:
                     if to_module in group_path:
                         prev_module = to_module
                     else:
-                        group_path.append(to_module + "=" + to_callsite)
+                        group_path.append(self._format_node_name(to_module, to_callsite))
                         prev_module = to_module
                         if to_callsite not in self.entry_funcs[to_module]:
                             self.entry_funcs[to_module].append(to_callsite)
@@ -202,12 +201,9 @@ class Group:
         component_module = group_path[len(group_path) - 1].split("=")[0]
 
         for idx, node in enumerate(path):
-            node_func = node
-            if "/" in node:
-                node = node.split("/")[-1]
             module = self.callsite_module_map[node]
             if component_module == module:
-                component_path.append(node_func)
+                component_path.append(node)
 
         component_path.insert(0, component_module)
         return tuple(component_path)

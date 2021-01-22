@@ -289,6 +289,12 @@ class ArgParser:
 
         _mdict = lambda n,p,f: {"name": n, "path": p, "profile_format": f}
         if pformat == 'hpctoolkit':
+            _metric_db_files = [f for f in os.listdir(data_path) if f.endswith('.metric-db')] 
+            _experiment_xml_files = [f for f in os.listdir(data_path) if f.endswith('experiment.xml')]
+
+            if len(_metric_db_files) > 0 and len(_experiment_xml_files) > 0:
+                return [_mdict('', '', pformat)] 
+            
             return [_mdict(_, _, pformat)
                     for _ in list_subdirs(data_path)]
 

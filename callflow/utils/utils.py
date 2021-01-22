@@ -285,25 +285,6 @@ def get_node_parents(node: hatchet.node):
     """
     return node.parents
 
-def path_list_from_frames(frames: list):
-    """
-    Constructs callsite's path from Hatchet's frame.
-    """
-    paths = []
-    for frame in frames:
-        path = []
-        for f in frame:
-            if f.get("type") == "function":
-                path.append(f.get("name"))
-            elif f.get("type") == "statement":
-                path.append(f.get("file") + ":" + str(f.get("line")))
-            elif f.get("type") == "loop":
-                path.append(f.get("file") + ":" + str(f.get("line")))
-            else:
-                path.append(f.get("name"))
-        paths.append(path)
-    return path
-
 # ------------------------------------------------------------------------------
 # File encoding utilities.
 # ------------------------------------------------------------------------------

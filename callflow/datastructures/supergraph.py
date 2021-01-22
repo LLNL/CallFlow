@@ -88,7 +88,7 @@ class SuperGraph(ht.GraphFrame):
             self.module_callsite_map = self.prc_construct_module_callsite_map(module_callsite_map=module_callsite_map)
 
         if "module" in self.dataframe.columns:
-            self.module_callsite_map = self.prc_construct_module_callsite_map(from_df=True)
+            self.module_callsite_map = self.prc_construct_module_callsite_map()
             
         self.callsite_module_map = {}
 
@@ -256,6 +256,15 @@ class SuperGraph(ht.GraphFrame):
         df = df.sort_values(by=[sort_attr], ascending=False)
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
+    
+    def df_factorize_column(self, column, sanitize=False):
+        column = self.df_get_proxy(column)
+        # Sanitize column name.
+        if sanitize:
+            self.dataframe[column] = self.dataframe[column].apply(lambda _: Sanitizer.sanitize(_))
+        _fct = self.dataframe[column].factorize()
+        self.dataframe[column] = _fct[0]
+        return _fct[1].values.tolist()
 
     # --------------------------------------------------------------------------
     # SuperGraph.graph utilities.
@@ -292,6 +301,26 @@ class SuperGraph(ht.GraphFrame):
                 del root
 
         return nxg
+
+    @staticmethod
+    def ht_path_from_frames(frames: list):
+        """Constructs callsite's path from Hatchet's frame.
+        """
+        paths = []
+        for frame in frames:
+            path = []
+            for f in frame:
+                if f.get("type") == "function":
+                    path.append(f.get("name"))
+                elif f.get("type") == "statement":
+                    path.append(f.get("file") + ":" + str(f.get("line")))
+                elif f.get("type") == "loop":
+                    path.append(f.get("file") + ":" + str(f.get("line")))
+                else:
+                    path.append(f.get("name"))
+            paths.append(path)
+        return path
+
 
     # --------------------------------------------------------------------------
     # static read/write functionality
@@ -425,7 +454,7 @@ class SuperGraph(ht.GraphFrame):
         """
         return self.module_map[callsite]
 
-    def prc_construct_module_callsite_map(self, module_callsite_map, from_df=True):
+    def prc_construct_module_callsite_map(self, module_callsite_map={}, from_df=True):
         """Construct the module map for a given dataset.
         Note: The module names can be specified using --module_map option.
 
@@ -441,31 +470,12 @@ class SuperGraph(ht.GraphFrame):
             module name (str) - Returns the module name
         """
         if from_df:
-            assert "module" in self.df.columns
+            assert "module" in self.dataframe.columns
             _gdf = self.df_group_by(columns=["module"])
             return _gdf["name"].unique()
 
-        if module_callsite_map:
+        if len(module_callsite_map) > 0:
             return module_callsite_map
-
-    @staticmethod
-    def ht_path_from_frames(frames: list):
-        """Constructs callsite's path from Hatchet's frame.
-        """
-        paths = []
-        for frame in frames:
-            path = []
-            for f in frame:
-                if f.get("type") == "function":
-                    path.append(f.get("name"))
-                elif f.get("type") == "statement":
-                    path.append(f.get("file") + ":" + str(f.get("line")))
-                elif f.get("type") == "loop":
-                    path.append(f.get("file") + ":" + str(f.get("line")))
-                else:
-                    path.append(f.get("name"))
-            paths.append(path)
-        return path
 
     # --------------------------------------------------------------------------
     # The next block of functions attach the calculated result to the variable `gf`.
@@ -482,7 +492,12 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_nid_column()
         self.df_add_column('callees', apply_func=lambda _: self.callees[_])
         self.df_add_column('callers', apply_func=lambda _: self.callers[_])
-        self.df_add_column('module', apply_func=lambda _: self.callsite_module_map[_])
+        if len(module_map) > 0:
+            self.df_add_column('module', apply_func=lambda _: module_map[_])
+        elif 'module' in self.dataframe.columns:
+            self.df_add_column('module', apply_func=lambda _: Sanitizer.sanitize(_), apply_on='module')
+            
+        self.module_fct_map = self.df_factorize_column('module', sanitize=True)
         self.df_add_column('path', apply_func=lambda _: SuperGraph.ht_path_from_frames(self.paths[_]))
         
     # --------------------------------------------------------------------------

@@ -123,7 +123,7 @@ class Auxiliary:
     def callsite_module_map(self, dataframes, callsites):
         return {
             __ : {
-                _: df_lookup_and_list(df, "name", callsite, "module") \
+                _: df_lookup_and_list(df, "name", _, "module") \
                 for _ in callsites \
                 } \
             for __, df in dataframes.items() 
