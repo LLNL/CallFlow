@@ -31,14 +31,18 @@ class Group:
         self.entry_funcs = {}
         self.other_funcs = {}
 
-        self.compute()
+        if sg.module_map != None:
+            self.compute()
+        else:
+            LOGGER.info("Not grouping the data since a module_map is not provided.")
+        
 
     # --------------------------------------------------------------------------
     def compute(self):
 
         LOGGER.info(f'Grouping ({self.sg}) by \"{self.group_by}\"')
 
-        self.callsite_module_map = self.sg.df_get_column("module", "name").to_dict()
+        self.callsite_module_map = self.sg.module_map
         self.callsite_path_map = self.sg.df_get_column("path", "name").to_dict()
 
         group_path = {}

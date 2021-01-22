@@ -84,7 +84,7 @@ class BaseProvider:
         group_by = self.config["group_by"]
         filter_by = self.config["filter_by"]
         filter_perc = self.config["filter_perc"]
-        module_map = self.config.get("callsite_module_map", {})
+        module_map = self.config.get("module_map", {})
 
         run_props = {_['name']: (_['path'], _['profile_format'])
                      for _ in self.config['runs']}
@@ -99,8 +99,8 @@ class BaseProvider:
             _prop = run_props[name]
 
             sg = SuperGraph(name)
-            sg.create(path=os.path.join(load_path, _prop[0]), profile_format=_prop[1])
-            sg.process_sg(module_map=module_map)
+            sg.create(path=os.path.join(load_path, _prop[0]), profile_format=_prop[1], module_callsite_map=module_map)
+            sg.process()
 
             _f = Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             _g = Group(sg, group_by=group_by)

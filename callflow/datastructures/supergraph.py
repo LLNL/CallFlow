@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 import hatchet as ht
 import networkx as nx
-# from scipy.stats import kurtosis, skew
 from ast import literal_eval as make_list
 
 from callflow import get_logger
@@ -58,12 +57,8 @@ class SuperGraph(ht.GraphFrame):
         self.callees = {}
         self.paths = {}
         self.hatchet_nodes = {}
-        self.name_module_map = None
-        self.module_map = None
-
-        # TODO: can we remove "config" from supergraph?
-        # self.config = config
-        # self.dir_path = os.path.join(self.config["save_path"], self.name)
+        self.callsite_module_map = None
+        self.module_callsite_map = None
 
     # --------------------------------------------------------------------------
     def __str__(self):
@@ -73,7 +68,7 @@ class SuperGraph(ht.GraphFrame):
         return self.__str__()
 
     # --------------------------------------------------------------------------
-    def create(self, path, profile_format):
+    def create(self, path, profile_format, module_callsite_map):
 
         self.profile_format = profile_format
         LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path}) using ({self.profile_format}) format")
@@ -89,10 +84,18 @@ class SuperGraph(ht.GraphFrame):
         # df-related operations
         self.df_add_time_proxies()
 
+        if len(module_callsite_map) > 0:
+            self.module_callsite_map = self.prc_construct_module_callsite_map(module_callsite_map=module_callsite_map)
+
+        if "module" in self.dataframe.columns:
+            self.module_callsite_map = self.prc_construct_module_callsite_map(from_df=True)
+            
+        self.callsite_module_map = {}
+
+
         # Hatchet requires node and rank to be indexes.
         # remove the indexes to maintain consistency.
         self.df_reset_index()
-        # ----------------------------------------------------------------------
 
         # ----------------------------------------------------------------------
         # graph-related operations
@@ -102,7 +105,6 @@ class SuperGraph(ht.GraphFrame):
             self.paths[node_name] = node.paths()
             self.callers[node_name] = [_.frame.get("name") for _ in node.parents]
             self.callees[node_name] = [_.frame.get("name") for _ in node.children]
-
 
     # --------------------------------------------------------------------------
     def load(self, path, read_graph=False, read_parameter=False):
@@ -414,96 +416,6 @@ class SuperGraph(ht.GraphFrame):
 
         return data
 
-    # --------------------------------------------------------------------------
-    def prc_add_vis_node_name(self):
-        self.module_group_df = self.dataframe.groupby(["module"])
-        self.module_callsite_map = self.module_group_df["name"].unique()
-
-        self.name_group_df = self.dataframe.groupby(["name"])
-        self.callsite_module_map = self.name_group_df["module"].unique().to_dict()
-
-        self.df_add_column('vis_node_name',
-                           apply_func=lambda _:
-                           Sanitizer.sanitize(self.callsite_module_map[_][0]) + "=" + _)
-
-    def prc_add_path(self):
-
-        map_node_count = len(self.paths.keys())
-        df_node_count = self.df_count("name")
-
-        if map_node_count != df_node_count:
-            raise Exception(f"Unmatched Preprocessing maps: "
-                            f"Map contains: {map_node_count} nodes, "
-                            f"graph contains: {df_node_count} nodes")
-
-        # TODO: see if this function needs to be pulled in from utils
-        from callflow.utils.utils import path_list_from_frames
-        self.df_add_column('path',
-                           apply_func=lambda _: path_list_from_frames(self.paths[_]))
-    """
-    # TODO: Remove the below segment of commented code.
-    # Phased out to auxiliary.py
-    def prc_add_imbalance_perc(self):
-
-        assert 0
-        # compute these metrics
-        metrics = ['imbalance_perc', 'std_deviation', 'skewness', 'kurtosis']
-
-        # compute for these columns
-        column_names = ["time (inc)", "time"]
-
-        # name the new columns as these
-        column_labels = ["inclusive", "exclusive"]
-
-        # proxy columns for required columns
-        column_proxies = [self.df_get_proxy(_) for _ in column_names]
-
-        metrics_dict = {}
-        for node_name in self.dataframe["name"].unique():
-
-            node_df = self.df_lookup_with_column("name", node_name)
-            node_dfsz = len(node_df.index)
-
-            metrics_dict[node_name] = {}
-            for i, _proxy in enumerate(column_proxies):
-                _data = node_df[_proxy]
-
-                _mean, _max = _data.mean(), _data.max()
-                _perc = (_max - _mean) / _mean if not np.isclose(_mean, 0.) else _max
-                _std = np.std(_data, ddof=1) if node_dfsz > 1 else 0.
-                _skew = skew(_data)
-                _kert = kurtosis(_data)
-
-                # same order as metrics (not ideal, but OK)
-                metrics_dict[node_name][column_names[i]] = {}
-                for j, _val in enumerate([_perc, _std, _skew, _kert]):
-                    metrics_dict[node_name][column_names[i]][metrics[j]] = _val
-
-        # now, add these columns to the data frame
-        for metric_key, col_suffix in zip(column_names, column_labels):
-            for metric in metrics:
-                self.df_add_column(f'{metric}_{col_suffix}',
-                                   apply_func=lambda _: metrics_dict[_][metric_key][metric])
-    """
-    # --------------------------------------------------------------------------
-    # TODO: Remove the below segment of commented code.
-    # def prc_create_name_module_map(self):
-    #     self.df_add_column("module", apply_func=lambda _: _)
-    #     self.name_module_map = self.dataframe.groupby(["name"])["module"]\
-    #         .unique().to_dict()
-    #
-    # def prc_add_module_name_caliper(self, module_map):
-    #     self.df_add_column('module', apply_func=lambda _: module_map[_])
-    #
-    # def prc_add_module_name_hpctoolkit(self):
-    #     self.df_add_column('module',
-    #                        apply_func=lambda _: Sanitizer.sanitize(_),
-    #                        apply_on='module')
-    #
-    # def add_module_name_caliper(self, module_map):
-    #     self.df_add_column('module', apply_func=lambda _: module_map[_])
-    # --------------------------------------------------------------------------
-
     def get_module(self, callsite):
         """If such a mapping exists, this function returns the module based on
         mapping. Else, it queries the graphframe for a module name.
@@ -513,7 +425,7 @@ class SuperGraph(ht.GraphFrame):
         """
         return self.module_map[callsite]
 
-    def prc_construct_module_map(self, module_map, from_df=True):
+    def prc_construct_module_callsite_map(self, module_callsite_map, from_df=True):
         """Construct the module map for a given dataset.
         Note: The module names can be specified using --module_map option.
 
@@ -533,8 +445,27 @@ class SuperGraph(ht.GraphFrame):
             _gdf = self.df_group_by(columns=["module"])
             return _gdf["name"].unique()
 
-        if module_map:
-            return module_map
+        if module_callsite_map:
+            return module_callsite_map
+
+    @staticmethod
+    def ht_path_from_frames(frames: list):
+        """Constructs callsite's path from Hatchet's frame.
+        """
+        paths = []
+        for frame in frames:
+            path = []
+            for f in frame:
+                if f.get("type") == "function":
+                    path.append(f.get("name"))
+                elif f.get("type") == "statement":
+                    path.append(f.get("file") + ":" + str(f.get("line")))
+                elif f.get("type") == "loop":
+                    path.append(f.get("file") + ":" + str(f.get("line")))
+                else:
+                    path.append(f.get("name"))
+            paths.append(path)
+        return path
 
     # --------------------------------------------------------------------------
     # The next block of functions attach the calculated result to the variable `gf`.
@@ -551,273 +482,9 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_nid_column()
         self.df_add_column('callees', apply_func=lambda _: self.callees[_])
         self.df_add_column('callers', apply_func=lambda _: self.callers[_])
-
-        # # ----------------------------------------------------------------------
-        # TODO: Remove the below segment of commented code.
-        # if self.profile_format == "hpctoolkit":
-        #     self.prc_create_name_module_map()
-        #     self.prc_add_module_name_hpctoolkit()
-        #
-        # elif self.profile_format in ["caliper_json", "caliper"]:
-        #     if len(module_map) > 0:
-        #         self.module_map = module_map
-        #         self.prc_add_module_name_caliper(self.module_map)
-        #     # if "callsite_module_map" in self.config:
-        #     #    self.prc_add_module_name_caliper(self.config["callsite_module_map"])
-        #     self.prc_create_name_module_map()
-        #
-        # elif self.profile_format == "gprof":
-        #     self.prc_create_name_module_map()
-        #
-        # # ----------------------------------------------------------------------
-
-        if len(module_map) > 0:
-            self.module_map = self.prc_construct_module_map(module_map=module_map)
-
-        if "module" in self.df.columns:
-            self.module_map = self.prc_construct_module_map(from_df=True)
-
-
-        # TODO: Remove the below line.
-        # self.prc_add_imbalance_perc()
-        self.prc_add_vis_node_name()
-        self.prc_add_path()
-
-    # --------------------------------------------------------------------------
-    def todelete_group_sg(self, group_by="module"):
-        """
-        Group the graphframe based on `group_by` parameter.
-        """
-        #self = Group(self, group_by).gf
-        assert group_by in SuperGraph._GROUP_MODES
-
-        # ----------------------------------------------------------------------
-        # Group.__init__
-        self.callsite_module_map = self.df_get_column("module", "name").to_dict()
-        self.callsite_path_map = self.df_get_column("path", "name").to_dict()
-
-        # Variables used by grouping operation.
-        self.entry_funcs = {}
-        self.other_funcs = {}
-
-        # ----------------------------------------------------------------------
-        # Group.compute
-        # TODO: this is doing in-place
-        group_path = {}
-        component_path = {}
-        component_level = {}
-        entry_func = {}
-        show_node = {}
-        node_name = {}
-        module = {}
-        change_name = {}
-
-        LOGGER.debug(
-            f"Nodes: {len(self.nxg.nodes())}, Edges: {len(self.nxg.edges())}"
-        )
-
-        for idx, edge in enumerate(self.nxg.edges()):
-            snode = edge[0]
-            tnode = edge[1]
-
-            if "/" in snode:
-                snode = snode.split("/")[-1]
-            if "/" in tnode:
-                tnode = tnode.split("/")[-1]
-
-            spath = self.callsite_path_map[snode]
-            tpath = self.callsite_path_map[tnode]
-
-            temp_group_path_results = self.create_group_path(spath)
-            group_path[snode] = temp_group_path_results
-
-            component_path[snode] = self.create_component_path(spath, group_path[snode])
-            component_level[snode] = len(component_path[snode])
-
-            temp_group_path_results = self.create_group_path(tpath)
-            group_path[tnode] = temp_group_path_results
-
-            component_path[tnode] = self.create_component_path(tpath, group_path[tnode])
-            component_level[tnode] = len(component_path[tnode])
-
-            if component_level[snode] == 2:
-                entry_func[snode] = True
-                show_node[snode] = True
-            else:
-                entry_func[snode] = False
-                show_node[snode] = False
-
-            node_name[snode] = self.callsite_module_map[snode] + "=" + snode
-
-            if component_level[tnode] == 2:
-                entry_func[tnode] = True
-                show_node[tnode] = True
-            else:
-                entry_func[tnode] = False
-                show_node[tnode] = False
-
-            node_name[tnode] = self.callsite_module_map[snode] + "=" + tnode
-
-        # update the graph
-        self.df_update_mapping("group_path", group_path)
-        self.df_update_mapping("component_path", component_path)
-        self.df_update_mapping("show_node", entry_func)
-        self.df_update_mapping("vis_name", node_name)
-        self.df_update_mapping("component_level", component_level)
-        self.df_update_mapping("entry_function", entry_func)
-
-    def todelete_create_group_path(self, path):
-        if isinstance(path, str):
-            path = make_list(path)
-        group_path = []
-        prev_module = None
-        for idx, callsite in enumerate(path):
-            if idx == 0:
-                # Assign the first callsite as from_callsite and not push into an array.
-                from_callsite = callsite
-                from_module = self.callsite_module_map[from_callsite]
-
-                # Store the previous module to check the hierarchy later.
-                prev_module = from_module
-
-                # Create the entry function and other functions dict.
-                if from_module not in self.entry_funcs:
-                    self.entry_funcs[from_module] = []
-                if from_module not in self.other_funcs:
-                    self.other_funcs[from_module] = []
-
-                # Push into entry function dict since it is the first callsite.
-                self.entry_funcs[from_module].append(from_callsite)
-
-                # Append to the group path.
-                group_path.append(from_module + "=" + from_callsite)
-
-            elif idx == len(path) - 1:
-                # Final callsite in the path.
-                to_callsite = callsite
-                if "/" in to_callsite:
-                    to_callsite = to_callsite.split("/")[-1]
-
-                to_module = self.callsite_module_map[to_callsite]
-
-                if prev_module != to_module:
-                    group_path.append(to_module + "=" + to_callsite)
-
-                if to_module not in self.entry_funcs:
-                    self.entry_funcs[to_module] = []
-                if to_module not in self.other_funcs:
-                    self.other_funcs[to_module] = []
-
-                if to_callsite not in self.other_funcs[to_module]:
-                    self.other_funcs[to_module].append(to_callsite)
-
-                if to_callsite not in self.entry_funcs[to_module]:
-                    self.entry_funcs[to_module].append(to_callsite)
-            else:
-                # Assign the from and to callsite.
-                from_callsite = path[idx - 1]
-                if "/" in callsite:
-                    to_callsite = callsite.split("/")[-1]
-                else:
-                    to_callsite = callsite
-
-                from_module = self.callsite_module_map[from_callsite]
-                to_module = self.callsite_module_map[to_callsite]
-
-                # Create the entry function and other function dict if not already present.
-                if to_module not in self.entry_funcs:
-                    self.entry_funcs[to_module] = []
-                if to_module not in self.other_funcs:
-                    self.other_funcs[to_module] = []
-
-                # if previous module is not same as the current module.
-                if to_module != prev_module:
-                    # TODO: Come back and check if it is in the path.
-                    if to_module in group_path:
-                        prev_module = to_module
-                    else:
-                        group_path.append(to_module + "=" + to_callsite)
-                        prev_module = to_module
-                        if to_callsite not in self.entry_funcs[to_module]:
-                            self.entry_funcs[to_module].append(to_callsite)
-
-                elif to_module == prev_module:
-                    to_callsite = callsite
-                    # to_module = self.entire_df.loc[self.entire_df['name'] == to_callsite]['module'].unique()[0]
-                    to_module = self.callsite_module_map[to_callsite]
-
-                    prev_module = to_module
-
-                    if to_callsite not in self.other_funcs[to_module]:
-                        self.other_funcs[to_module].append(to_callsite)
-
-        return group_path
-
-    def todelete_create_component_path(self, path, group_path):
-        component_path = []
-        component_module = group_path[len(group_path) - 1].split("=")[0]
-
-        for idx, node in enumerate(path):
-            node_func = node
-            if "/" in node:
-                node = node.split("/")[-1]
-            module = self.callsite_module_map[node]
-            if component_module == module:
-                component_path.append(node_func)
-
-        component_path.insert(0, component_module)
-        return tuple(component_path)
-
-    # --------------------------------------------------------------------------
-    def todelete_filter_sg_sg(self, mode="single"):
-        """
-        Filter the graphframe.
-        """
-        assert 0
-        # ----------------------------------------------------------------------
-        filter_by = self.config["filter_by"]
-        filter_perc = float(self.config["filter_perc"])
-        assert filter_by in SuperGraph._FILTER_MODES
-        assert 0. <= filter_perc <= 100.
-
-        # ----------------------------------------------------------------------
-        # compute the min/max
-        # TODO: these variables were defined as members of Filter operation
-        # do we need them here in SuperGraph?
-        # self.set_max_min_times()
-        _mn, _mx = self.df_minmax("time (inc)")
-        self.min_time_inc_list = np.array([_mn])
-        self.max_time_inc_list = np.array([_mx])
-
-        _mn, _mx = self.df_minmax("time")
-        self.min_time_exc_list = np.array([_mn])
-        self.max_time_exc_list = np.array([_mx])
-
-        LOGGER.info(f"Min. time (inc): {self.min_time_inc_list}")
-        LOGGER.info(f"Max. time (inc): {self.max_time_inc_list}")
-        LOGGER.info(f"Min. time (exc): {self.min_time_exc_list}")
-        LOGGER.info(f"Max. time (exc): {self.max_time_exc_list}")
-
-        self.max_time_inc = np.max(self.max_time_inc_list)
-        self.min_time_inc = np.min(self.min_time_inc_list)
-        self.max_time_exc = np.max(self.max_time_exc_list)
-        self.min_time_exc = np.min(self.min_time_exc_list)
-
-        # ----------------------------------------------------------------------
-        if filter_by == "time (inc)":
-            value = filter_perc * 0.01 * self.max_time_inc
-            LOGGER.debug(f"[Filter] By \"{filter_by}\": {filter_perc} % ==> {value}")
-            self.filter_sg(filter_by, value)
-            # self.gf.df = self.df_by_time_inc()
-            # self.gf.nxg = self.graph_by_time_inc()
-
-        elif filter_by == "time":
-            value = filter_perc
-            LOGGER.debug(f"[Filter] By \"{filter_by}\": {filter_perc} % ==> {value}")
-            self.filter_sg(filter_by, value)
-            # self.gf.df = self.df_by_time()
-            # self.gf.nxg = self.graph_by_time()
-
+        self.df_add_column('module', apply_func=lambda _: self.callsite_module_map[_])
+        self.df_add_column('path', apply_func=lambda _: SuperGraph.ht_path_from_frames(self.paths[_]))
+        
     # --------------------------------------------------------------------------
     # in place filtering!
     def filter_sg(self, filter_by, filter_val):
