@@ -15,9 +15,10 @@ from ast import literal_eval as make_list
 
 from callflow import get_logger
 from callflow.utils.sanitizer import Sanitizer
-from callflow.utils.utils import NumpyEncoder
+from callflow.utils.utils import NumpyEncoder, read_json
 
 LOGGER = get_logger(__name__)
+
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -31,7 +32,7 @@ class SuperGraph(ht.GraphFrame):
     _FILENAMES = {"ht": "hatchet_tree.txt",
                   "df": "df.csv",
                   "nxg": "nxg.json",
-                  "params": "env_params.txt",
+                  "env_params": "env_params.txt",
                   "aux": "auxiliary_data.json"}
 
     _METRIC_PROXIES = {"time (inc)": ["inclusive#time.duration"],
@@ -41,9 +42,9 @@ class SuperGraph(ht.GraphFrame):
     _FILTER_MODES = ["time", "time (inc)"]
 
     # --------------------------------------------------------------------------
-    def __init__(self, name):#, config):
+    def __init__(self, name):
 
-        assert isinstance(name, str) # and isinstance(config, dict)
+        assert isinstance(name, str)
 
         self.nxg = None
 
@@ -61,8 +62,8 @@ class SuperGraph(ht.GraphFrame):
         self.module_map = None
 
         # TODO: can we remove "config" from supergraph?
-        #self.config = config
-        #self.dir_path = os.path.join(self.config["save_path"], self.name)
+        # self.config = config
+        # self.dir_path = os.path.join(self.config["save_path"], self.name)
 
     # --------------------------------------------------------------------------
     def __str__(self):
@@ -85,19 +86,23 @@ class SuperGraph(ht.GraphFrame):
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
 
         # ----------------------------------------------------------------------
+        # df-related operations
         self.df_add_time_proxies()
 
         # Hatchet requires node and rank to be indexes.
-        # remove the set indexes to maintain consistency.
+        # remove the indexes to maintain consistency.
         self.df_reset_index()
         # ----------------------------------------------------------------------
 
-        '''
-        ## TODO: read/create module map here!
-        if "callsite_module_map" in self.config:
-            print (self.config["callsite_module_map"])
-            exit ()
-        '''
+        # ----------------------------------------------------------------------
+        # graph-related operations
+        for node in self.graph.traverse():
+            node_name = Sanitizer.from_htframe(node.frame)
+            self.hatchet_nodes[node_name] = node
+            self.paths[node_name] = node.paths()
+            self.callers[node_name] = [_.frame.get("name") for _ in node.parents]
+            self.callees[node_name] = [_.frame.get("name") for _ in node.children]
+
 
     # --------------------------------------------------------------------------
     def load(self, path, read_graph=False, read_parameter=False):
@@ -117,7 +122,7 @@ class SuperGraph(ht.GraphFrame):
         if read_graph:
             self.graph = SuperGraph.read_graph(path)
 
-        if read_parameter: #self.config["read_parameter"]:
+        if read_parameter:
             self.parameters = SuperGraph.read_params(path)
 
         if True:
@@ -250,10 +255,8 @@ class SuperGraph(ht.GraphFrame):
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
 
-
-
     # --------------------------------------------------------------------------
-    # callflow.graph utilities.
+    # SuperGraph.graph utilities.
     # --------------------------------------------------------------------------
     @staticmethod
     def hatchet_graph_to_nxg(ht_graph):
@@ -385,7 +388,7 @@ class SuperGraph(ht.GraphFrame):
         return graph
 
     @staticmethod
-    def read_params(path):
+    def read_env_params(path):
         data = {}
         try:
             fname = os.path.join(path, SuperGraph._FILENAMES["params"])
@@ -394,10 +397,8 @@ class SuperGraph(ht.GraphFrame):
                 for num in line.strip().split(","):
                     split_num = num.split("=")
                     data[split_num[0]] = split_num[1]
-
         except Exception as e:
-            LOGGER.critical(f"Failed to read parameter file: {e}")
-
+            LOGGER.critical(f"Failed to read env_params file: {e}")
         return data
 
     @staticmethod
@@ -440,6 +441,7 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_column('path',
                            apply_func=lambda _: path_list_from_frames(self.paths[_]))
     """
+    # TODO: Remove the below segment of commented code.
     # Phased out to auxiliary.py
     def prc_add_imbalance_perc(self):
 
@@ -484,62 +486,63 @@ class SuperGraph(ht.GraphFrame):
                                    apply_func=lambda _: metrics_dict[_][metric_key][metric])
     """
     # --------------------------------------------------------------------------
-    def prc_create_name_module_map(self):
-        self.df_add_column("module", apply_func=lambda _: _)
-        self.name_module_map = self.dataframe.groupby(["name"])["module"]\
-            .unique().to_dict()
+    # TODO: Remove the below segment of commented code.
+    # def prc_create_name_module_map(self):
+    #     self.df_add_column("module", apply_func=lambda _: _)
+    #     self.name_module_map = self.dataframe.groupby(["name"])["module"]\
+    #         .unique().to_dict()
+    #
+    # def prc_add_module_name_caliper(self, module_map):
+    #     self.df_add_column('module', apply_func=lambda _: module_map[_])
+    #
+    # def prc_add_module_name_hpctoolkit(self):
+    #     self.df_add_column('module',
+    #                        apply_func=lambda _: Sanitizer.sanitize(_),
+    #                        apply_on='module')
+    #
+    # def add_module_name_caliper(self, module_map):
+    #     self.df_add_column('module', apply_func=lambda _: module_map[_])
+    # --------------------------------------------------------------------------
 
-    def prc_add_module_name_caliper(self, module_map):
-        self.df_add_column('module', apply_func=lambda _: module_map[_])
+    def get_module(self, callsite):
+        """If such a mapping exists, this function returns the module based on
+        mapping. Else, it queries the graphframe for a module name.
 
-    def prc_add_module_name_hpctoolkit(self):
-        self.df_add_column('module',
-                           apply_func=lambda _: Sanitizer.sanitize(_),
-                           apply_on='module')
-
-    def add_module_name_caliper(self, module_map):
-        self.df_add_column('module', apply_func=lambda _: module_map[_])
-
-    # TODO: needs to be cleaned
-    def get_module_name(self, callsite):
+        :param callsite (str): call site
+        :return (str): module for a call site
         """
-        Get the module name for a callsite.
-        Note: The module names can be specified using the config file.
-        If such a mapping exists, this function returns the module based on mapping. Else, it queries the graphframe for a module name.
+        return self.module_map[callsite]
+
+    def prc_construct_module_map(self, module_map, from_df=True):
+        """Construct the module map for a given dataset.
+        Note: The module names can be specified using --module_map option.
+
+        The file should contain the module name as the key, and a list of
+        callsites to match on.
+
+        TODO: expand the callsites using regex expressions
+
+        :param module_map (bool):
+        :param from_df (bool):
 
         Return:
             module name (str) - Returns the module name
         """
-        if "callsite_module_map" in self.config:
-            if callsite in self.config["callsite_module_map"]:
-                return self.config["callsite_module_map"][callsite]
+        if from_df:
+            assert "module" in self.df.columns
+            _gdf = self.df_group_by(columns=["module"])
+            return _gdf["name"].unique()
 
-        if "module" in self.df_columns():
-            return self.df_lookup_with_column("name", callsite)["module"].unique()[0]
-            # return self.lookup_with_name(callsite)["module"].unique()[0]
-        else:
-            return callsite
+        if module_map:
+            return module_map
 
     # --------------------------------------------------------------------------
     # The next block of functions attach the calculated result to the variable `gf`.
-    def process_sg(self, module_map={}):
+    def process(self, module_map={}):
         """
         Process graphframe to add properties depending on the format.
         Current processing is supported for hpctoolkit and caliper.
-
-        Note: Process class follows a builder pattern.
-        (refer: https://en.wikipedia.org/wiki/Builder_pattern#:~:text=The%20builder%20pattern%20is%20a,Gang%20of%20Four%20design%20patterns.)
         """
-
-        # ----------------------------------------------------------------------
-        # copied from Builder.__init__()
-        # TODO: should go in create/load?
-        for node in self.graph.traverse():
-            node_name = Sanitizer.from_htframe(node.frame)
-            self.hatchet_nodes[node_name] = node
-            self.paths[node_name] = node.paths()
-            self.callers[node_name] = [_.frame.get("name") for _ in node.parents]
-            self.callees[node_name] = [_.frame.get("name") for _ in node.children]
 
         # ----------------------------------------------------------------------
         # add new columns to the dataframe
@@ -549,26 +552,33 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_column('callees', apply_func=lambda _: self.callees[_])
         self.df_add_column('callers', apply_func=lambda _: self.callers[_])
 
-        # ----------------------------------------------------------------------
-        # TODO: check if we need to be so profile-specific!
-        if self.profile_format == "hpctoolkit":
-            self.prc_create_name_module_map()
-            self.prc_add_module_name_hpctoolkit()
+        # # ----------------------------------------------------------------------
+        # TODO: Remove the below segment of commented code.
+        # if self.profile_format == "hpctoolkit":
+        #     self.prc_create_name_module_map()
+        #     self.prc_add_module_name_hpctoolkit()
+        #
+        # elif self.profile_format in ["caliper_json", "caliper"]:
+        #     if len(module_map) > 0:
+        #         self.module_map = module_map
+        #         self.prc_add_module_name_caliper(self.module_map)
+        #     # if "callsite_module_map" in self.config:
+        #     #    self.prc_add_module_name_caliper(self.config["callsite_module_map"])
+        #     self.prc_create_name_module_map()
+        #
+        # elif self.profile_format == "gprof":
+        #     self.prc_create_name_module_map()
+        #
+        # # ----------------------------------------------------------------------
 
-        elif self.profile_format in ["caliper_json", "caliper"]:
-            if len(module_map) > 0:
-                self.module_map = module_map
-                self.prc_add_module_name_caliper(self.module_map)
-            #if "callsite_module_map" in self.config:
-            #    self.prc_add_module_name_caliper(self.config["callsite_module_map"])
-            self.prc_create_name_module_map()
+        if len(module_map) > 0:
+            self.module_map = self.prc_construct_module_map(module_map=module_map)
 
-        elif self.profile_format == "gprof":
-            self.prc_create_name_module_map()
+        if "module" in self.df.columns:
+            self.module_map = self.prc_construct_module_map(from_df=True)
 
-        # ----------------------------------------------------------------------
-        # TODO: these need more processing.
-        #  figure out if they need to store member variables
+
+        # TODO: Remove the below line.
         # self.prc_add_imbalance_perc()
         self.prc_add_vis_node_name()
         self.prc_add_path()
