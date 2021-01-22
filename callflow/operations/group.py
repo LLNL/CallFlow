@@ -9,6 +9,7 @@ from ast import literal_eval as make_list
 import callflow
 LOGGER = callflow.get_logger(__name__)
 
+from callflow.utils.sanitizer import Sanitizer
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -137,9 +138,7 @@ class Group:
 
             elif idx == len(path) - 1:
                 # Final callsite in the path.
-                to_callsite = callsite
-                if "/" in to_callsite:
-                    to_callsite = to_callsite.split("/")[-1]
+                to_callsite = Sanitizer.from_htframe(callsite)
 
                 to_module = self.callsite_module_map[to_callsite]
 
@@ -159,10 +158,7 @@ class Group:
             else:
                 # Assign the from and to callsite.
                 from_callsite = path[idx - 1]
-                if "/" in callsite:
-                    to_callsite = callsite.split("/")[-1]
-                else:
-                    to_callsite = callsite
+                to_callsite = Sanitizer.from_htframe(callsite)
 
                 from_module = self.callsite_module_map[from_callsite]
                 to_module = self.callsite_module_map[to_callsite]

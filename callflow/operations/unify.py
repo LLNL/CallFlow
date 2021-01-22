@@ -27,6 +27,11 @@ class Unify:
 
         self.compute()
 
+        # TODO: we should fix this assumption
+        LOGGER.warning("Assuming that all module maps are the same!")
+        k0 = list(supergraphs.keys())[0]
+        self.eg.module_fct_map = supergraphs[k0].module_fct_map
+
         self.eg.df_add_time_proxies()
         self.eg.df_reset_index()
 

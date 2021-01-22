@@ -51,7 +51,6 @@ class ArgParser:
 
         from callflow.utils.utils import is_valid_json_with_schema, write_json
 
-
         # Parse the arguments passed.
         self.parser = ArgParser._create_parser()
         self.args = vars(self.parser.parse_args())
@@ -293,8 +292,12 @@ class ArgParser:
             _experiment_xml_files = [f for f in os.listdir(data_path) if f.endswith('experiment.xml')]
 
             if len(_metric_db_files) > 0 and len(_experiment_xml_files) > 0:
-                return [_mdict(data_path.split('/')[-1], '', pformat)] 
-            
+                # TODO: should be a better way to do
+                name = os.path.basename(data_path)
+                if name == '':
+                    name = os.path.basename(os.path.dirname(data_path))
+                return [_mdict(name, '', pformat)]
+
             return [_mdict(_, _, pformat)
                     for _ in list_subdirs(data_path)]
 
@@ -335,7 +338,7 @@ class ArgParser:
             os.makedirs(dot_cf_path)
             os.makedirs(os.path.join(dot_cf_path, "ensemble"))
 
-        dataset_folders = [os.path.join(dot_cf_path, k["name"]) for k in runs]
+        dataset_folders = [k["name"] for k in runs]
         dataset_folders.append("ensemble")
 
         for dataset in dataset_folders:

@@ -59,6 +59,7 @@ class SuperGraph(ht.GraphFrame):
         self.hatchet_nodes = {}
         self.callsite_module_map = None
         self.module_callsite_map = None
+        self.module_fct_map = {}
         self.indexes = []
 
     # --------------------------------------------------------------------------
@@ -173,9 +174,10 @@ class SuperGraph(ht.GraphFrame):
                 continue
             for _ in proxies:
                 if _ in self.dataframe.columns:
-                    self.proxy_columns[key] = _
+                    self.df_add_column(key, apply_func=lambda _: _, apply_on=_)
+                    #self.proxy_columns[key] = _
                     break
-            assert key in self.proxy_columns.keys()
+            #assert key in self.proxy_columns.keys()
 
         if len(self.proxy_columns) > 0:
             LOGGER.debug(f'created column proxies: {self.proxy_columns}')
@@ -302,26 +304,6 @@ class SuperGraph(ht.GraphFrame):
                 del root
 
         return nxg
-
-    @staticmethod
-    def ht_path_from_frames(frames: list):
-        """Constructs callsite's path from Hatchet's frame.
-        """
-        paths = []
-        for frame in frames:
-            path = []
-            for f in frame:
-                if f.get("type") == "function":
-                    path.append(f.get("name"))
-                elif f.get("type") == "statement":
-                    path.append(f.get("file") + ":" + str(f.get("line")))
-                elif f.get("type") == "loop":
-                    path.append(f.get("file") + ":" + str(f.get("line")))
-                else:
-                    path.append(f.get("name"))
-            paths.append(path)
-        return path
-
 
     # --------------------------------------------------------------------------
     # static read/write functionality
@@ -493,13 +475,17 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_nid_column()
         self.df_add_column('callees', apply_func=lambda _: self.callees[_])
         self.df_add_column('callers', apply_func=lambda _: self.callers[_])
-        if len(module_map) > 0:
-            self.df_add_column('module', apply_func=lambda _: module_map[_])
-        elif 'module' in self.dataframe.columns:
+
+        if 'module' in self.dataframe.columns:
             self.df_add_column('module', apply_func=lambda _: Sanitizer.sanitize(_), apply_on='module')
-            
+        elif len(module_map) > 0:
+            self.df_add_column('module', apply_func=lambda _: module_map[_])
+        else:
+            self.df_add_column('module', apply_func=lambda _: _, apply_on='name')
+
         self.module_fct_map = self.df_factorize_column('module')
-        self.df_add_column('path', apply_func=lambda _: SuperGraph.ht_path_from_frames(self.paths[_]))
+        self.df_add_column('path',
+                           apply_func=lambda _: [Sanitizer.from_htframe(f[0]) for f in self.paths[_]])
         
         # TODO: For faster searches, bring this back.
         # self.indexes.insert(0, 'dataset')
