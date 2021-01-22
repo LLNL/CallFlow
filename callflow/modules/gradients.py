@@ -9,7 +9,7 @@ import pandas as pd
 
 from .histogram import Histogram
 from callflow.utils.utils import histogram, kde, freedman_diaconis_bins
-from callflow.utils.utils import df_count, df_unique, df_lookup_by_column
+from callflow.utils.df import df_count, df_unique, df_lookup_by_column
 
 import callflow
 LOGGER = callflow.get_logger(__name__)
@@ -101,7 +101,8 @@ class Gradients:
                 if node_df.empty:
                     dists[k][dataset] = dict((rank, 0) for rank in range(0, self.max_ranks))
                 else:
-                    dists[k][dataset] = dict(zip(node_df["rank"].tolist(), node_df[a].tolist()))
+                    dists[k][dataset] = dict(zip(node_df["rank"], node_df[a]))
+                    #dists[k][dataset] = dict(zip(node_df["rank"].tolist(), node_df[a].tolist()))
 
         # Calculate appropriate number of bins automatically.
         # num_of_bins = min(self.freedman_diaconis_bins(np.array(dist_list)),

@@ -8,7 +8,7 @@ import numpy as np
 from scipy.stats import kurtosis, skew
 
 import callflow
-from callflow.utils.utils import df_group_by, df_unique, df_lookup_by_column, df_lookup_and_list
+from callflow.utils.df import df_group_by, df_unique, df_lookup_by_column, df_lookup_and_list
 
 from .gradients import Gradients
 from .boxplot import BoxPlot
@@ -94,7 +94,7 @@ class Auxiliary:
                 if is_ensemble:
                     histogram = Histogram(df_ensemble=name_df).result
                     gradients = Gradients(name_df,
-                                          binCount=self.RunBinCount,
+                                          bins=self.RunBinCount,
                                           callsiteOrModule=name).result
 
                 elif "ensemble" in dataframes_group:

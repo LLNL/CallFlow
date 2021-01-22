@@ -127,7 +127,7 @@ class SuperGraph(ht.GraphFrame):
             self.graph = SuperGraph.read_graph(path)
 
         if read_parameter:
-            self.parameters = SuperGraph.read_params(path)
+            self.parameters = SuperGraph.read_env_params(path)
 
         if True:
             self.auxiliary_data = SuperGraph.read_aux(path)
@@ -428,6 +428,9 @@ class SuperGraph(ht.GraphFrame):
 
         return data
 
+    # --------------------------------------------------------------------------
+    # functionality related to modules
+    # --------------------------------------------------------------------------
     def get_module(self, callsite):
         """If such a mapping exists, this function returns the module based on
         mapping. Else, it queries the graphframe for a module name.

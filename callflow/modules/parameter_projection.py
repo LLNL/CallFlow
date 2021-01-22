@@ -60,7 +60,8 @@ class ParameterProjection:
         min_max_scaler = preprocessing.MinMaxScaler()
         x_scaled = min_max_scaler.fit_transform(x)
         df = pd.DataFrame(x_scaled)
-        X = np.vstack([df.values.tolist()])
+        X = np.vstack([df.values])
+        #X = np.vstack([df.values.tolist()])
 
         random_number = 20150101
         if self.projection == "MDS":

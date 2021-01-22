@@ -9,7 +9,7 @@ import pandas as pd
 from scipy import stats
 import statsmodels.nonparametric.api as smnp
 
-
+'''
 # ------------------------------------------------------------------------------
 # pandas dataframe utils
 # ------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ def df_group_by(df, columns):
     else:
         assert isinstance(columns, str)
         return df.groupby([columns])
-
+'''
 
 # ------------------------------------------------------------------------------
 # statistics utils

@@ -8,7 +8,7 @@ import numpy as np
 
 import callflow
 from callflow.utils.utils import histogram
-from callflow.utils.utils import df_count, df_lookup_by_column, df_lookup_and_list
+from callflow.utils.df import df_count, df_lookup_by_column, df_lookup_and_list
 from .histogram import Histogram
 
 LOGGER = callflow.get_logger()
