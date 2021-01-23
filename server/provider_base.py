@@ -79,7 +79,6 @@ class BaseProvider:
 
         run_props = {_['name']: (_['path'], _['profile_format'])
                      for _ in self.config['runs']}
-        print(run_props)
 
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
@@ -119,70 +118,7 @@ class BaseProvider:
             sg.write(os.path.join(save_path, name))
             self.supergraphs[name] = sg
 
-    # --------------------------------------------------------------------------
-    # Reading and rendering methods.
-    '''
-    @staticmethod
-    def _parameter_props(config):
-        """
-        Adds parameter information (like path, tag name, and other information fetched).
-        """
-        props = {"runs": [], "data_path": {}, "profile_format": {}}
-        for run in config["runs"]:
-            tag = run["name"]
-            props["runs"].append(tag)
-            if run["profile_format"] == "hpctoolkit":
-                props["data_path"][tag] = os.path.join(run["path"], tag)
-            else:
-                props["data_path"][tag] = run["path"]
-            props["profile_format"][tag] = run["profile_format"]
-
-        return props
-
-    
-    @staticmethod
-    def _runtime_props(supergraphs):
-        """
-        Adds runtime information (like max, min inclusive and exclusive runtime).
-        """
-        props = {"maxIncTime": {}, "maxExcTime": {},
-                 "minIncTime": {}, "minExcTime": {}, "numOfRanks": {}}
-
-        maxIncTime = 0.
-        maxExcTime = 0.
-        minIncTime = 1e6
-        minExcTime = 1e6
-        maxNumOfRanks = 0.
-
-        # TODO: should be computed in supergraph
-        # also computed in auxiliary
-        for idx, tag in enumerate(supergraphs):
-            props["numOfRanks"][tag] = supergraphs[tag].df_count("rank")
-
-            _mn, _mx = supergraphs[tag].df_minmax("time (inc)")
-            props["minIncTime"][tag] = _mn
-            props["maxIncTime"][tag] = _mx
-
-            _mn, _mx = supergraphs[tag].df_minmax("time")
-            props["minExcTime"][tag] = _mn
-            props["maxExcTime"][tag] = _mx
-
-            maxExcTime = max(props["maxExcTime"][tag], maxExcTime)
-            maxIncTime = max(props["maxIncTime"][tag], maxIncTime)
-            minExcTime = min(props["minExcTime"][tag], minExcTime)
-            minIncTime = min(props["minIncTime"][tag], minIncTime)
-            maxNumOfRanks = max(props["numOfRanks"][tag], maxNumOfRanks)
-
-        props["maxIncTime"]["ensemble"] = maxIncTime
-        props["maxExcTime"]["ensemble"] = maxExcTime
-        props["minIncTime"]["ensemble"] = minIncTime
-        props["minExcTime"]["ensemble"] = minExcTime
-        props["numOfRanks"]["ensemble"] = maxNumOfRanks
-
-        return props
-    '''
-    # --------------------------------------------------------------------------
-    def request_general(self, operation):
+       def request_general(self, operation):
         """
         Handles general requests
         """
