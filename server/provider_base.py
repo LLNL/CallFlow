@@ -25,22 +25,13 @@ LOGGER = get_logger(__name__)
 class BaseProvider:
 
     # TODO: add additional module map argument
-    def __init__(self, config: dict = None, data_dir: str = None):
+    def __init__(self, config: dict = None):
         """
         Entry interface to access CallFlow's functionalities.
         """
-        assert config is not None or data_dir is not None
-
-        if config:
-            assert isinstance(config, dict)
-            self.config = config
-
-        elif data_dir:
-            assert isinstance(config, str)
-            assert False
-            # TODO: this function does not exist!
-            self.config = self.read_config()
-
+        assert config is not None 
+        assert isinstance(config, dict)
+        self.config = config
         self.ndatasets = len(self.config["runs"])
         assert self.ndatasets > 0
         self.supergraphs = {}
@@ -88,6 +79,7 @@ class BaseProvider:
 
         run_props = {_['name']: (_['path'], _['profile_format'])
                      for _ in self.config['runs']}
+        print(run_props)
 
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
