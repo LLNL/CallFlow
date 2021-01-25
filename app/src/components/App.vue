@@ -16,7 +16,7 @@
 					<router-link to="/single" replace>Single</router-link>
 				</v-btn>
 
-				<v-btn outlined v-if="runCounts > 1">
+				<v-btn outlined v-if="run_counts > 1">
 					<router-link to="/ensemble" replace>Ensemble</router-link>
 				</v-btn>
 
@@ -28,7 +28,7 @@
 			<v-content class="content">
 				<v-layout>
 					<v-container>
-						<BasicInformation :data="data" />
+						<BasicInformation :data="config" />
 					</v-container>
 					<v-container>
 						<RuntimeInformation :data="runtime" />					
@@ -57,9 +57,12 @@ export default {
 	},
 	data: () => ({
 		data: {},
-		runCounts: 0,
+		config: {},
 		runtime: [],
+		run_counts: 0,
 		moduleMapping: [],
+		rankBinCount: 20,
+		runBinCount: 20,
 	}),
 	mounted() {
 		this.fetchData();
@@ -70,44 +73,27 @@ export default {
 		 * Parameters: {datasetPath: "path/to/dataset"}
 		*/ 
 		async fetchData() {
-			this.data = await APIService.GETRequest("init");
-			this.runs = Object.keys(this.data.parameter_props.data_path);
-			this.runCounts = this.runs.length;
-			this.runtime_props = this.data.runtime_props;
-			this.module_callsite_map = this.data.module_callsite_map;
-			this.setStore();
-			this.init();
-		},
+			this.config = await APIService.GETRequest("init");
 
-		init() {
-			this.runtimePropsTable();
-			this.moduleCallsiteTable();
+			this.data = await APIService.POSTRequest("supergraph_data", {
+				datasets: this.config.runs,
+				rankBinCount: this.rankBinCount,
+				runBinCount: this.runBinCount,
+			});
+			console.log(this.data);
+
+			this.runs = this.data.runs;
+			this.run_counts = this.runs.length;
+			this.dataset_props = this.data.dataset;
+			this.module_callsite_map = this.data.moduleCallsiteMap;
+			this.runtime = Object.keys(this.dataset_props).map((_) =>  { return {"run": _, ...this.dataset_props[_]};});
+			
+			this.setStore();
 		},
 
 		setStore() {
 			this.$store.selectedDatasets = this.runs;
 			this.$store.numOfRuns = this.runs.length;
-
-			this.$store.maxExcTime = this.data.runtime_props.maxExcTime;
-			this.$store.minExcTime = this.data.runtime_props.minExcTime;
-			this.$store.maxIncTime = this.data.runtime_props.maxIncTime;
-			this.$store.minIncTime = this.data.runtime_props.minIncTime;
-			this.$store.numOfRanks = this.data.runtime_props.numOfRanks;
-		},
-
-		/**
-		 * Set the data for runtime.
-		 */
-		runtimePropsTable() {
-			for (let run of this.runs) {
-				this.runtime.push({
-					run,
-					min_inclusive_runtime: this.runtime_props.minIncTime[run],
-					max_inclusive_runtime: this.runtime_props.maxIncTime[run],
-					min_exclusive_runtime: this.runtime_props.minExcTime[run],
-					max_exclusive_runtime: this.runtime_props.maxExcTime[run],
-				});
-			}
 		},
 
 		moduleCallsiteTable() {

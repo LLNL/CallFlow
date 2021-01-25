@@ -38,7 +38,7 @@ class Auxiliary:
             self.e_df = sg.dataframe
 
         elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
-            self.runs = [v for k,v in enumerate(sg.supergraphs)]
+            self.runs = [k for k,v in sg.supergraphs.items()]
             self.e_df = sg.df_filter_by_search_string('dataset', self.runs)
 
         LOGGER.warning(f'Computing auxiliary data for ({sg}) with {len(self.runs)} runs: {self.runs}')
@@ -68,7 +68,8 @@ class Auxiliary:
             "dataset": self._collect_data_dataset(dataframes, sg),
             "callsite": self._collect_data(dataframes_name_group, 'callsite'),
             "module":   self._collect_data(dataframes_module_group, 'module'),
-            "moduleCallsiteMap": self.callsite_module_map(dataframes, callsites)
+            "moduleCallsiteMap": self.callsite_module_map(dataframes, callsites),
+            "runs": self.runs,
         }
 
         # TODO: this should not happen this way
