@@ -118,7 +118,7 @@ class BaseProvider:
             sg.write(os.path.join(save_path, name))
             self.supergraphs[name] = sg
 
-       def request_general(self, operation):
+    def request_general(self, operation):
         """
         Handles general requests
         """
@@ -137,6 +137,8 @@ class BaseProvider:
                 sgname = "ensemble"
             else:
                 sgname = operation["datasets"][0]
+            print(sgname)
+            print(self.supergraphs[sgname].auxiliary_data)
             return self.supergraphs[sgname].auxiliary_data
 
     def request_single(self, operation):

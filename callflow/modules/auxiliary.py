@@ -33,12 +33,12 @@ class Auxiliary:
             self.runs = selected_runs
             self.e_df = sg.df_filter_by_search_string('dataset', self.runs)
 
-        elif isinstance(sg, callflow.SuperGraph):
+        elif isinstance(sg, callflow.SuperGraph) and sg.name != "ensemble":
             self.runs = [sg.name]
             self.e_df = sg.dataframe
 
-        elif isinstance(sg, callflow.EnsembleGraph):
-            self.runs = [k for k,v in sg.supergraphs]
+        elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
+            self.runs = [v for k,v in enumerate(sg.supergraphs)]
             self.e_df = sg.df_filter_by_search_string('dataset', self.runs)
 
         LOGGER.warning(f'Computing auxiliary data for ({sg}) with {len(self.runs)} runs: {self.runs}')
@@ -65,6 +65,7 @@ class Auxiliary:
 
         # ----------------------------------------------------------------------
         self.result = {
+            "dataset": self._collect_data_dataset(dataframes[sg.name], sg),
             "callsite": self._collect_data(dataframes_name_group, 'callsite'),
             "module":   self._collect_data(dataframes_module_group, 'module'),
             "moduleCallsiteMap": self.callsite_module_map(dataframes, callsites)
@@ -72,6 +73,27 @@ class Auxiliary:
 
         # TODO: this should not happen this way
         sg.auxiliary_data = self.result
+
+    def _collect_data_dataset(self, df, sg):
+        _COLUMNS_OF_INTEREST = ['node', 'rank', 'time (inc)', 'time', 'dataset', 'component_level', 'module', 'name']
+        
+        _df = df[_COLUMNS_OF_INTEREST]
+        
+        _num_callsites = len(_df['name'].unique().tolist()) # Number of call sites
+        _num_ranks = len(_df['rank'].unique().tolist()) # Number of ranks
+        _run_time = _df['time (inc)'].max() # Maximum inclusive runtime
+        _num_modules = len(sg.module_fct_map) if "module" in _df.columns else 0 # Number of modules
+        _num_edges = len(sg.nxg.edges())
+
+        _json = {
+            "num_callsites": _num_callsites,
+            "num_ranks": _num_ranks,
+            "run_time": _run_time,
+            "num_modules": _num_modules,
+            "num_edges": _num_edges,
+        }
+
+        return _json
 
     # --------------------------------------------------------------------------
     def _collect_data(self, dataframes_group, grp_type='callsite'):
@@ -147,11 +169,6 @@ class Auxiliary:
             "component_level": df["component_level"].unique()
         }
 
-        # TODO: check the meaning of this?
-        if not is_ensemble and not is_callsite:
-            module_df = df.groupby(["module", "rank"]).mean()
-            x_df = module_df.xs(name, level="module")
-
         # now, append the data
         for k,a in KEYS_AND_ATTRS.items():
 
@@ -165,19 +182,15 @@ class Auxiliary:
             _skew = skew(_data)
             _kurt = kurtosis(_data)
 
-            # TODO: check the meaning of this?
-            if not is_ensemble and not is_callsite:
-                _data = x_df[a].to_numpy()
-
-            result[k] = {"_d": _data,
-                         "_min": _min,
-                         "_mean": _mean,
-                         "_max": _max,
-                         "_var": _var,
-                         "_std": _std,
-                         "_imb": _imb,
-                         "_kurt": _kurt,
-                         "_skew": _skew
+            result[k] = {"d": _data,
+                         "min": _min,
+                         "mean": _mean,
+                         "max": _max,
+                         "var": _var,
+                         "std": _std,
+                         "imb": _imb,
+                         "kurt": _kurt,
+                         "skew": _skew
             }
 
             if gradients is not None:

@@ -269,6 +269,10 @@ class SuperGraph(ht.GraphFrame):
         self.dataframe[column] = _fct[0]
         return _fct[1].values.tolist()
 
+    def df_xs_group_column(self, groups, column, apply_func):
+        module_df = df.groupby(groups).mean()
+        return module_df.xs(name, level=column)
+
     # --------------------------------------------------------------------------
     # SuperGraph.graph utilities.
     # --------------------------------------------------------------------------

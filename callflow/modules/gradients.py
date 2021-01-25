@@ -31,9 +31,9 @@ class Gradients:
                       'Exclusive': 'time'}
 
     def __init__(self, df, callsiteOrModule: str, bins=20):
-
         assert isinstance(df, pd.DataFrame)
-        assert isinstance(callsiteOrModule, str)
+        # For modules it is int. 
+        assert isinstance(callsiteOrModule, str) or isinstance(callsiteOrModule, int)
         assert isinstance(bins, int)
         assert bins > 0
 
@@ -123,14 +123,14 @@ class Gradients:
             dists_list = np.array(list(dists[k]['ensemble'].values()))
 
             hist_grid = histogram(dists_list, bins=num_of_bins)
-            kde_grid = kde(dists_list, gridsize=num_of_bins)
+            # kde_grid = kde(dists_list, gridsize=num_of_bins)
 
             dataset_pos = Gradients.map_datasets_to_bins(hist_grid[1], datasets_list)
 
             results[k] = {
                 "bins": num_of_bins,
                 "dataset": {"mean": dists_list, "position": dataset_pos},
-                "kde": Histogram._format_data(kde_grid),
+                # "kde": Histogram._format_data(kde_grid),
                 "hist": Histogram._format_data(hist_grid)
             }
 
