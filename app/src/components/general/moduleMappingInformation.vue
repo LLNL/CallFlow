@@ -9,7 +9,7 @@
         <v-card-title>Module Callsite Mapping</v-card-title>
         <v-data-table
         dense
-        :headers="moduleHeaders"
+        :headers="headers"
         :items="data"
         :items-per-page="5"
         :single-expand="singleExpand"
@@ -43,17 +43,16 @@ export default {
 	name: "ModuleMappingInformation",
 	props: ["data"],
 	data: () => ({
-		moduleHeaders: [
+		headers: [
 			{ text: "Module", value: "module" },
+			{ text: "Callsites", value: "callsites" },
 			{
 				text: "Inclusive runtime (\u03BCs)",
 				value: "inclusive_runtime",
 				sortable: true,
 			},
-			{ text: "Exclusive runtime (\u03BCs)", value: "exclusive_runtime" },
 			{ text: "Imbalance perc (%)", value: "imbalance_perc" },
 			{ text: "Number of Callsites", value: "number_of_callsites" },
-			{ text: "", value: "data-table-expand" },
 		],
 	})
 };

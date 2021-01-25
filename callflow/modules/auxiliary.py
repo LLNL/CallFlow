@@ -46,6 +46,7 @@ class Auxiliary:
         # ----------------------------------------------------------------------
         if isinstance(sg, callflow.EnsembleGraph):
             callsites = df_unique(self.e_df, "name")
+            modules = df_unique(self.e_df, "module")
 
             dataframes = {'ensemble': self.e_df}
             dataframes_name_group = {'ensemble': df_group_by(self.e_df, "name")}
@@ -59,6 +60,7 @@ class Auxiliary:
         else:
             df = df_lookup_by_column(self.e_df, "dataset", sg.name)
             callsites = df_unique(df, "name")
+            modules = df_unique(df, "module")
             dataframes = {sg.name: df}
             dataframes_name_group = {sg.name: df_group_by(df, "name")}
             dataframes_module_group = {sg.name: df_group_by(df, "module")}
@@ -68,7 +70,9 @@ class Auxiliary:
             "dataset": self._collect_data_dataset(dataframes, sg),
             "callsite": self._collect_data(dataframes_name_group, 'callsite'),
             "module":   self._collect_data(dataframes_module_group, 'module'),
-            "moduleCallsiteMap": self.callsite_module_map(dataframes, callsites),
+            "callsiteModuleMap": self._callsite_module_map(dataframes, callsites),
+            "moduleCallsiteMap": self._module_callsite_map(dataframes, modules),
+            "moduleIndexMap": sg.module_fct_map,
             "runs": self.runs,
         }
 
@@ -145,13 +149,22 @@ class Auxiliary:
         return result
 
     # TODO: Figure out where this should belong.
-    def callsite_module_map(self, dataframes, callsites):
+    def _callsite_module_map(self, dataframes, callsites):
         return {
             __ : {
-                _: df_lookup_and_list(df, "name", _, "module") \
+                _ : df_lookup_and_list(df, "name", _, "module") \
                 for _ in callsites \
                 } \
             for __, df in dataframes.items() 
+        }
+
+    def _module_callsite_map(self, dataframes, modules):
+        return {
+            __ : {
+                int(_) : df_lookup_and_list(df, "module", _, "name") \
+                for _ in modules \
+                } \
+            for __, df in dataframes.items()
         }
         
     # --------------------------------------------------------------------------

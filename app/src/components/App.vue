@@ -80,29 +80,21 @@ export default {
 				rankBinCount: this.rankBinCount,
 				runBinCount: this.runBinCount,
 			});
-			console.log(this.data);
 
 			this.runs = this.data.runs;
 			this.run_counts = this.runs.length;
 			this.dataset_props = this.data.dataset;
-			this.module_callsite_map = this.data.moduleCallsiteMap;
 			this.runtime = Object.keys(this.dataset_props).map((_) =>  { return {"run": _, ...this.dataset_props[_]};});
-			
+			const module_index_map = this.data.moduleIndexMap;
+			this.module_callsite_map = Object.keys(this.data.moduleCallsiteMap["ensemble"]).map((_) => { return {"module": module_index_map[_], ...this.data.moduleCallsiteMap[_]};});
+
+			console.log(this.module_callsite_map);
 			this.setStore();
 		},
 
 		setStore() {
 			this.$store.selectedDatasets = this.runs;
 			this.$store.numOfRuns = this.runs.length;
-		},
-
-		moduleCallsiteTable() {
-			for (let module in this.module_callsite_map) {
-				this.moduleMapping.push({
-					module: module,
-					number_of_callsites: this.data.module_callsite_map[module].length,
-				});
-			}
 		},
 	},
 };
