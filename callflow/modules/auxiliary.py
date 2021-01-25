@@ -65,7 +65,7 @@ class Auxiliary:
 
         # ----------------------------------------------------------------------
         self.result = {
-            "dataset": self._collect_data_dataset(dataframes[sg.name], sg),
+            "dataset": self._collect_data_dataset(dataframes, sg),
             "callsite": self._collect_data(dataframes_name_group, 'callsite'),
             "module":   self._collect_data(dataframes_module_group, 'module'),
             "moduleCallsiteMap": self.callsite_module_map(dataframes, callsites)
@@ -74,24 +74,26 @@ class Auxiliary:
         # TODO: this should not happen this way
         sg.auxiliary_data = self.result
 
-    def _collect_data_dataset(self, df, sg):
+    def _collect_data_dataset(self, dfs, sg):
         _COLUMNS_OF_INTEREST = ['node', 'rank', 'time (inc)', 'time', 'dataset', 'component_level', 'module', 'name']
         
-        _df = df[_COLUMNS_OF_INTEREST]
-        
-        _num_callsites = len(_df['name'].unique().tolist()) # Number of call sites
-        _num_ranks = len(_df['rank'].unique().tolist()) # Number of ranks
-        _run_time = _df['time (inc)'].max() # Maximum inclusive runtime
-        _num_modules = len(sg.module_fct_map) if "module" in _df.columns else 0 # Number of modules
-        _num_edges = len(sg.nxg.edges())
+        _json = {}
+        for k, v in dfs.items():
+            _df = v[_COLUMNS_OF_INTEREST]
+            
+            _num_callsites = len(_df['name'].unique().tolist()) # Number of call sites
+            _num_ranks = len(_df['rank'].unique().tolist()) # Number of ranks
+            _run_time = _df['time (inc)'].max() # Maximum inclusive runtime
+            _num_modules = len(sg.module_fct_map) if "module" in _df.columns else 0 # Number of modules
+            _num_edges = len(sg.nxg.edges())
 
-        _json = {
-            "num_callsites": _num_callsites,
-            "num_ranks": _num_ranks,
-            "run_time": _run_time,
-            "num_modules": _num_modules,
-            "num_edges": _num_edges,
-        }
+            _json[k] = {
+                "num_callsites": _num_callsites,
+                "num_ranks": _num_ranks,
+                "run_time": _run_time,
+                "num_modules": _num_modules,
+                "num_edges": _num_edges,
+            }
 
         return _json
 
