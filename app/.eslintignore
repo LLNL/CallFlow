@@ -1,11 +1,6 @@
 node_modules/**
-src/thirdParty/**
-src/unused/**
 .gitignore
-src/components/ensembleCCT/d3-graphviz.js
-src/components/cct/d3-graphviz.js
 build/**
-config/**
-src/lib/reorder.js
+src/lib/backup/reorder.js
 src/lib/spin.js
-src/lib/TreeModel.js
+src/lib/backup/TreeModel.js
