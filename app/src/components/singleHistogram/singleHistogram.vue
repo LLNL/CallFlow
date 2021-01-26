@@ -46,6 +46,7 @@ export default {
 		},
 		dataset_index: [],
 		id: "single-histogram-view",
+		svg: null,
 		svgID: "single-histogram-view-svg",
 		firstRender: true,
 		xVals: [],
@@ -90,12 +91,16 @@ export default {
 				height: this.boxHeight,
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
+			console.log(this.svg);
 
-			EventHandler.$emit("single-histogram", {
-				module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
-				groupBy: this.$store.selectedGroupBy,
-				dataset: this.$store.selectedTargetDataset,
-			});
+			// EventHandler.$emit("single-histogram", {
+			// 	module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
+			// 	groupBy: this.$store.selectedGroupBy,
+			// 	dataset: this.$store.selectedTargetDataset,
+			// });
+
+			const data = Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0];
+			this.visualize(data);
 		},
 
 		setupScale(callsite) {
@@ -104,7 +109,6 @@ export default {
 			let mpiData = store[this.$store.selectedMetric]["d"];
 
 			let temp = this.dataProcess(data, mpiData);
-			console.log(temp);
 			this.xVals = temp[0];
 			this.freq = temp[1];
 			this.axis_x = temp[2];
@@ -140,7 +144,7 @@ export default {
 			d3.selectAll(".lineRank").remove();
 			d3.selectAll(".brush").remove();
 			d3.selectAll(".tick").remove();
-			this.$refs.ToolTip.clear();
+			// this.$refs.ToolTip.clear();
 		},
 
 		visualize(callsite) {
@@ -161,23 +165,23 @@ export default {
 		},
 
 		dataProcess(data, mpiData) {
-			console.log(data, mpiData);
 			let axis_x = [];
 			let binContainsProcID = {};
 			let dataMin = data["x_min"];
 			let dataMax = data["x_max"];
 
-			const dataWidth = (dataMax - dataMin) / data["x"].length;
+			const dataWidth = (dataMax - dataMin) / (data["x"].length - 1);
 			for (let i = 0; i < data["x"].length; i++) {
 				axis_x.push(dataMin + i * dataWidth);
 			}
 
 			mpiData.forEach((val, idx) => {
-				console.log(val, idx);
 				let pos = Math.floor((val - dataMin) / dataWidth);
-				console.log(pos);
 				if (pos >= this.$store.selectedMPIBinCount) {
-					pos = this.$store.selectedMPIBinCount - 1;
+					pos = this.$store.selectedMPIBinCount;
+				}
+				if (pos < 0){
+					pos = 0;
 				}
 				if (binContainsProcID[pos] == null) {
 					binContainsProcID[pos] = [];
