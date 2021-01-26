@@ -100,10 +100,11 @@ export default {
 
 		setupScale(callsite) {
 			let store = this.$store.modules[this.$store.selectedTargetDataset][callsite];
-			let data = store[this.$store.selectedMetric]["prop_histograms"]["rank"]["target"];
-			let mpiData = store[this.$store.selectedMetric]["data"];
+			let data = store[this.$store.selectedMetric]["hists"]["rank"]["target"];
+			let mpiData = store[this.$store.selectedMetric]["d"];
 
 			let temp = this.dataProcess(data, mpiData);
+			console.log(temp);
 			this.xVals = temp[0];
 			this.freq = temp[1];
 			this.axis_x = temp[2];
@@ -160,6 +161,7 @@ export default {
 		},
 
 		dataProcess(data, mpiData) {
+			console.log(data, mpiData);
 			let axis_x = [];
 			let binContainsProcID = {};
 			let dataMin = data["x_min"];
@@ -171,7 +173,9 @@ export default {
 			}
 
 			mpiData.forEach((val, idx) => {
+				console.log(val, idx);
 				let pos = Math.floor((val - dataMin) / dataWidth);
+				console.log(pos);
 				if (pos >= this.$store.selectedMPIBinCount) {
 					pos = this.$store.selectedMPIBinCount - 1;
 				}
@@ -424,7 +428,7 @@ export default {
 		rankLineScale() {
 			let rankCount = this.$store.modules[this.$store.selectedTargetDataset][
 				this.$store.selectedModule
-			][this.$store.selectedMetric].data.length;
+			][this.$store.selectedMetric].d.length;
 
 			this.ranklinescale = d3
 				.scaleLinear()
@@ -473,23 +477,10 @@ export default {
 
 						cumulativeBinSpace += (end - start + 1) * widthPerRank;
 
-						const line =
-              "M" +
-              topX1 +
-              " " +
-              topY +
-              "L " +
-              topX2 +
-              " " +
-              topY +
-              "L " +
-              botX4 +
-              " " +
-              botY +
-              "L " +
-              botX3 +
-              " " +
-              botY;
+						const line = "M" + topX1 + " " + topY +
+									"L " + topX2 + " " + topY +
+									"L " + botX4 + " " + botY +
+									"L " + botX3 + " " + botY;
 
 						rankLinesG
 							.append("path")
@@ -613,7 +604,6 @@ export default {
 			let self = this;
 			const processIDList = [];
 			for (let i = this.localBrushStart; i < this.localBrushEnd; i++) {
-				// console.log(self.binContainsProcID)
 				if (self.binContainsProcID[i] != null) {
 					const curList = self.binContainsProcID[i];
 					curList.forEach((processID) => {

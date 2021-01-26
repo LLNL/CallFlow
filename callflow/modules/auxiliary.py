@@ -145,7 +145,9 @@ class Auxiliary:
                                                        is_callsite=is_callsite,
                                                        gradients=gradients,
                                                        histograms=histogram,
-                                                       boxplots=boxplot)
+                                                       boxplots=boxplot,
+                                                       grp_type=grp_type)
+
         return result
 
     # TODO: Figure out where this should belong.
@@ -170,7 +172,7 @@ class Auxiliary:
     # --------------------------------------------------------------------------
     @staticmethod
     def pack_json(name, df, is_ensemble, is_callsite,
-                  gradients = None, histograms = None, boxplots = None):
+                  gradients = None, histograms = None, boxplots = None, grp_type="callsite"):
 
         KEYS_AND_ATTRS = {'Inclusive': 'time (inc)',
                           'Exclusive': 'time'}
@@ -186,9 +188,12 @@ class Auxiliary:
         }
 
         # now, append the data
-        for k,a in KEYS_AND_ATTRS.items():
+        for k, a in KEYS_AND_ATTRS.items():
 
-            _data = df[a].to_numpy()
+            if grp_type == "callsite":
+                _data = df[a].to_numpy()
+            elif grp_type == "module":
+                _data = df.groupby(['rank'])[a].mean().to_numpy()
 
             # compute the statistics
             _min, _mean, _max = _data.min(), _data.mean(), _data.max()
@@ -216,7 +221,7 @@ class Auxiliary:
                 result[k]['boxplots'] = boxplots[k]
 
             if histograms is not None:
-                result[k]['prop_histograms'] = histograms[k]
+                result[k]['hists'] = histograms[k]
 
         return result
 
