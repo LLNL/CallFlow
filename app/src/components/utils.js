@@ -212,3 +212,7 @@ export function stringToList(string) {
 	const re = /(:\s|,\s)/; // regular expression with capturing parentheses
 	return string.split(re);
 }
+
+export function getModuleName(store, module_idx) {
+	return store["moduleFctList"][module_idx];
+}

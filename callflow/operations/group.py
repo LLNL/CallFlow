@@ -42,8 +42,8 @@ class Group:
         LOGGER.info(f'Grouping ({self.sg}) by \"{self.group_by}\"')
         self.compute()
         
-    def _format_node_name(self, module, name):
-        return self.sg.module_fct_map[module] + '=' + name
+    def _format_node_name(self, module_idx, name):
+        return self.sg.module_fct_list[module_idx] + '=' + name
 
     # --------------------------------------------------------------------------
     def compute(self):
@@ -154,7 +154,8 @@ class Group:
 
             elif idx == len(path) - 1:
                 # Final call site in the path.
-                to_callsite = Sanitizer.from_htframe(callsite)
+                # to_callsite = Sanitizer.from_htframe(callsite)
+                to_callsite = callsite
 
                 to_module = self.callsite_module_map[to_callsite]
 
@@ -174,7 +175,7 @@ class Group:
             else:
                 # Assign the from and to call site.
                 # from_callsite = path[idx - 1]
-                to_callsite = Sanitizer.from_htframe(callsite)
+                to_callsite = callsite
 
                 # from_module = self.callsite_module_map[from_callsite]
                 to_module = self.callsite_module_map[to_callsite]

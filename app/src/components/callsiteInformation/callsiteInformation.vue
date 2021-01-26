@@ -376,7 +376,7 @@ export default {
 		 * @param {*} module_idx
 		 */
 		formatModule(module_idx) {
-			const module = this.$store.moduleIndexMap[module_idx];
+			const module = utils.getModuleName(this.$store, module_idx[0]);
 			const splice = 15;
 			if (module.length < splice) {
 				return module;

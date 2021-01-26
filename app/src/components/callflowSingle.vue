@@ -211,7 +211,6 @@ import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
 import EventHandler from "./EventHandler";
-import APIService from "../lib/APIService";
 
 import SuperGraph from "./supergraph/supergraph";
 import CCT from "./cct/cct";
@@ -328,7 +327,6 @@ export default {
 		init() {
 			console.assert(this.$store.selectedMode, "Single");
 			this.setupStore();
-
 			this.setComponentMap(); // Set component mapping for easy component tracking.
 			
 			console.log("Mode : ", this.selectedMode);
@@ -344,7 +342,6 @@ export default {
 				this.initComponents(this.currentSingleCCTComponents);
 			}
 			EventHandler.$emit("single-refresh-boxplot", {});
-		
 		},
 
 		setupStore(data) {
@@ -454,16 +451,14 @@ export default {
 		},
 
 		sortModulesByMetric(attr) {
-			console.log(this.$store);
 			let module_list = Object.keys(
-				this.$store.modules[this.selectedTargetDataset]
+				this.$store.modules[this.$store.selectedTargetDataset]
 			);
 
 			// Create a map for each dataset mapping the respective mean times.
 			let map = {};
 			for (let module_name of module_list) {
-				let module_idx = this.$store.moduleIndexMap.indexOf(module_name);
-				console.log(module_name, this.selectedTargetDataset);
+				// let module_idx = this.$store.moduleIndexMap.indexOf(module_name);
 				map[module_name] = this.$store.modules[this.selectedTargetDataset][module_name][this.$store.selectedMetric]["_mean"];
 			}
 

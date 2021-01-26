@@ -13,7 +13,7 @@ from callflow.operations import Filter, Group, Unify
 from callflow.modules import Auxiliary
 
 #from .algorithms import DeltaConSimilarity, BlandAltman
-#from .layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
+from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 #from .modules import ParameterProjection, DiffView, MiniHistogram, FunctionList
 
 
@@ -50,14 +50,14 @@ class BaseProvider:
 
             name = run['name']
             sg = SuperGraph(name)
-            sg.load(os.path.join(load_path, name), read_parameter=read_param)
+            sg.load(os.path.join(load_path, name), read_parameter=read_param, read_aux=True)
             self.supergraphs[name] = sg
 
         # ensemble case
-        if self.ndatasets > 1:
+        if self.ndatasets >= 1:
             name = "ensemble"
             sg = EnsembleGraph(name)
-            sg.load(os.path.join(load_path, name), read_parameter=read_param)
+            sg.load(os.path.join(load_path, name), read_parameter=read_param, read_aux=True)
             self.supergraphs[name] = sg
 
     # --------------------------------------------------------------------------
@@ -104,11 +104,11 @@ class BaseProvider:
 
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
-        if len(self.supergraphs) > 1:
+        if len(self.supergraphs) >= 1:
 
             print(f'\n\n-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n')
             name = "ensemble"
-            sg = EnsembleGraph(name) #, self.config)
+            sg = EnsembleGraph(name)
 
             _u = Unify(sg, self.supergraphs)
             _f = Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
@@ -133,13 +133,7 @@ class BaseProvider:
             return self.config
 
         elif operation_name == "supergraph_data":
-            if len(operation["datasets"]) > 1:
-                sgname = "ensemble"
-            else:
-                sgname = operation["datasets"][0]
-            print(sgname)
-            print(self.supergraphs[sgname].auxiliary_data)
-            return self.supergraphs[sgname].auxiliary_data
+            return self.supergraphs["ensemble"].auxiliary_data
 
     def request_single(self, operation):
         """
@@ -167,8 +161,10 @@ class BaseProvider:
             reveal_callsites = operation.get("reveal_callsites", [])
             split_entry_module = operation.get("split_entry_module", [])
             split_callee_module = operation.get("split_callee_module", [])
+            selected_runs = operation.get("selected_runs", None)
 
-            ssg = SankeyLayout(supergraph=sg, path="group_path",
+            ssg = SankeyLayout(sg=sg, path="group_path",
+                               selected_runs=selected_runs,
                                reveal_callsites=reveal_callsites,
                                split_entry_module=split_entry_module,
                                split_callee_module=split_callee_module)

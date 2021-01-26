@@ -13,6 +13,8 @@ from networkx.readwrite import json_graph
 
 import callflow
 from .provider_base import BaseProvider
+from callflow.utils.utils import NumpyEncoder
+
 
 # Globals
 CF_FOLDER_PATH = os.path.abspath(os.path.dirname(callflow.__file__))
@@ -63,7 +65,7 @@ class APIProvider(BaseProvider):
         """
         try:
             response = app.response_class(
-                response=json.dumps(json_data), status=200, mimetype="application/json"
+                response=json.dumps(json_data, cls=NumpyEncoder), status=200, mimetype="application/json"
             )
             response.headers.add("Access-Control-Allow-Headers", "*")
             response.headers.add("Access-Control-Allow-Methods", "*")

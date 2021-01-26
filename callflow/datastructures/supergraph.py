@@ -59,7 +59,7 @@ class SuperGraph(ht.GraphFrame):
         self.hatchet_nodes = {}
         self.callsite_module_map = None
         self.module_callsite_map = None
-        self.module_fct_map = {}
+        self.module_fct_list = []
         self.indexes = []
 
     # --------------------------------------------------------------------------
@@ -109,7 +109,7 @@ class SuperGraph(ht.GraphFrame):
             self.callees[node_name] = [_.frame.get("name") for _ in node.children]
 
     # --------------------------------------------------------------------------
-    def load(self, path, read_graph=False, read_parameter=False):
+    def load(self, path, read_graph=False, read_parameter=False, read_aux=False):
         # Load the SuperGraph (refer _FILENAMES for file name mapping).
 
         LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path})")
@@ -129,8 +129,9 @@ class SuperGraph(ht.GraphFrame):
         if read_parameter:
             self.parameters = SuperGraph.read_env_params(path)
 
-        if True:
+        if read_aux:
             self.auxiliary_data = SuperGraph.read_aux(path)
+            self.module_fct_list = self.auxiliary_data['moduleFctList']
 
         self.df_add_time_proxies()
         self.df_reset_index()
@@ -308,6 +309,9 @@ class SuperGraph(ht.GraphFrame):
                 del root
 
         return nxg
+
+    def get_module_name(self, idx):
+        return self.module_fct_list.index(idx)
 
     # --------------------------------------------------------------------------
     # static read/write functionality
@@ -490,10 +494,11 @@ class SuperGraph(ht.GraphFrame):
         else:
             self.df_add_column('module', apply_func=lambda _: _, apply_on='name')
 
-        self.module_fct_map = self.df_factorize_column('module', sanitize=True)
+        self.module_fct_list = self.df_factorize_column('module', sanitize=True)
         self.df_add_column('path',
-                           apply_func=lambda _: [Sanitizer.from_htframe(f[0]) for f in self.paths[_]])
-        
+                           apply_func=lambda _: [[Sanitizer.from_htframe(_f) \
+                               for _f in f] \
+                               for f in self.paths[_]][0])
         # TODO: For faster searches, bring this back.
         # self.indexes.insert(0, 'dataset')
         # self.dataframe.set_index(self.indexes, inplace=True, drop=True)

@@ -72,7 +72,7 @@ class Auxiliary:
             "module":   self._collect_data(dataframes_module_group, 'module'),
             "callsiteModuleMap": self._callsite_module_map(dataframes, callsites),
             "moduleCallsiteMap": self._module_callsite_map(dataframes, modules),
-            "moduleIndexMap": sg.module_fct_map,
+            "moduleFctList": sg.module_fct_list,
             "runs": self.runs,
         }
 
@@ -89,7 +89,7 @@ class Auxiliary:
             _num_callsites = len(_df['name'].unique().tolist()) # Number of call sites
             _num_ranks = len(_df['rank'].unique().tolist()) # Number of ranks
             _run_time = _df['time (inc)'].max() # Maximum inclusive runtime
-            _num_modules = len(sg.module_fct_map) if "module" in _df.columns else 0 # Number of modules
+            _num_modules = len(sg.module_fct_list) if "module" in _df.columns else 0 # Number of modules
             _num_edges = len(sg.nxg.edges())
 
             _json[k] = {

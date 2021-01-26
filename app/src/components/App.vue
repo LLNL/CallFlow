@@ -93,9 +93,9 @@ export default {
 			// Render the tables in the view
 			const dataset_props = this.data.dataset;
 			this.runtime = Object.keys(dataset_props).map((_) =>  { return {"run": _, ...dataset_props[_]};});
-			const module_index_map = this.data.moduleIndexMap;
+			const module_fct_list = this.data.moduleFctList;
 			// TODO: Does not work as the format is weird.
-			this.module_callsite_map = Object.keys(this.data.moduleCallsiteMap["ensemble"]).map((_) => { return {"module": module_index_map[_], ...this.data.moduleCallsiteMap[_]};});
+			this.module_callsite_map = Object.keys(this.data.moduleCallsiteMap["ensemble"]).map((_) => { return {"module": module_fct_list[_], ...this.data.moduleCallsiteMap[_]};});
 			console.log(this.module_callsite_map);
 			
 			this.setStore();
@@ -116,7 +116,8 @@ export default {
 			this.$store.gradients = this.data.gradients;
 			this.$store.moduleCallsiteMap = this.data.moduleCallsiteMap;
 			this.$store.callsiteModuleMap = this.data.callsiteModuleMap;
-			this.$store.moduleIndexMap = this.data.moduleIndexMap;
+			this.$store.moduleFctList = this.data.moduleFctList;
+			console.log(this.$store.moduleFctList);
 			this.$store.selectedDatasets = this.data.runs;
 		},
 
