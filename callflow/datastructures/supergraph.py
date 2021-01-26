@@ -490,7 +490,7 @@ class SuperGraph(ht.GraphFrame):
         else:
             self.df_add_column('module', apply_func=lambda _: _, apply_on='name')
 
-        self.module_fct_map = self.df_factorize_column('module')
+        self.module_fct_map = self.df_factorize_column('module', sanitize=True)
         self.df_add_column('path',
                            apply_func=lambda _: [Sanitizer.from_htframe(f[0]) for f in self.paths[_]])
         

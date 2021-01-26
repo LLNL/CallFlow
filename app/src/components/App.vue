@@ -13,7 +13,8 @@
 					CallFlow
 				</v-toolbar-title>
 				<v-btn outlined>
-					<router-link to="/single" replace>Single</router-link>
+					<router-link :to="{ name: 'SingleCallFlow', params: { data }}">Single</router-link>
+					<!-- <router-link to="/single" replace>Single</router-link> -->
 				</v-btn>
 
 				<v-btn outlined v-if="run_counts > 1">
@@ -48,6 +49,9 @@ import BasicInformation from "./general/basicInformation";
 import RuntimeInformation from "./general/runtimeInformation";
 import ModuleMappingInformation from "./general/moduleMappingInformation";
 
+import * as utils from "./utils";
+import Color from "../lib/color/color";
+
 export default {
 	name: "App",
 	components: {
@@ -58,11 +62,13 @@ export default {
 	data: () => ({
 		data: {},
 		config: {},
-		runtime: [],
+		runs: {},
 		run_counts: 0,
+		runtime: [],
 		moduleMapping: [],
 		rankBinCount: 20,
 		runBinCount: 20,
+		selectedIQRFactor: 0.15,
 	}),
 	mounted() {
 		this.fetchData();
@@ -73,9 +79,9 @@ export default {
 		 * Parameters: {datasetPath: "path/to/dataset"}
 		*/ 
 		async fetchData() {
-			this.config = await APIService.GETRequest("init");
+			this.config = await APIService.GETRequest("config");
 
-			this.data = await APIService.POSTRequest("supergraph_data", {
+			this.data = await APIService.POSTRequest("aux_data", {
 				datasets: this.config.runs,
 				rankBinCount: this.rankBinCount,
 				runBinCount: this.runBinCount,
@@ -83,18 +89,184 @@ export default {
 
 			this.runs = this.data.runs;
 			this.run_counts = this.runs.length;
-			this.dataset_props = this.data.dataset;
-			this.runtime = Object.keys(this.dataset_props).map((_) =>  { return {"run": _, ...this.dataset_props[_]};});
-			const module_index_map = this.data.moduleIndexMap;
-			this.module_callsite_map = Object.keys(this.data.moduleCallsiteMap["ensemble"]).map((_) => { return {"module": module_index_map[_], ...this.data.moduleCallsiteMap[_]};});
 
+			// Render the tables in the view
+			const dataset_props = this.data.dataset;
+			this.runtime = Object.keys(dataset_props).map((_) =>  { return {"run": _, ...dataset_props[_]};});
+			const module_index_map = this.data.moduleIndexMap;
+			// TODO: Does not work as the format is weird.
+			this.module_callsite_map = Object.keys(this.data.moduleCallsiteMap["ensemble"]).map((_) => { return {"module": module_index_map[_], ...this.data.moduleCallsiteMap[_]};});
 			console.log(this.module_callsite_map);
+			
 			this.setStore();
+			this.setGlobalVariables(); // Set the variables that do not depend on data.
+			this.setTargetDataset(); // Set target dataset.
+			this.setupColors(); // Set up the colors.
+			this.setViewDimensions(); // Set the view dimensions.
 		},
 
+		/**
+		 * Attaches properties to central storage based on the data from .
+		 */
 		setStore() {
 			this.$store.selectedDatasets = this.runs;
 			this.$store.numOfRuns = this.runs.length;
+			this.$store.modules = this.data.module;
+			this.$store.callsites = this.data.callsite;
+			this.$store.gradients = this.data.gradients;
+			this.$store.moduleCallsiteMap = this.data.moduleCallsiteMap;
+			this.$store.callsiteModuleMap = this.data.callsiteModuleMap;
+			this.$store.moduleIndexMap = this.data.moduleIndexMap;
+			this.$store.selectedDatasets = this.data.runs;
+		},
+
+		setGlobalVariables() {
+			this.$store.selectedScatterMode = "mean";
+			this.$store.selectedProp = "rank";
+
+			this.$store.selectedIQRFactor = 0.15;
+			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
+			this.$store.selectedEdgeAlignment = "Top";
+
+			// Not needed for single. 
+			// this.$store.datasetMap = {};
+			// for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
+			// 	this.$store.datasetMap[this.$store.selectedDatasets[i]] = "run-" + i;
+			// }
+
+			this.$store.encoding = "MEAN";
+
+			// Used in sankey.js
+			// TODO: Sankey should not have any store related properties. 
+			this.$store.selectedSuperNodePositionMode = "Minimal edge crossing";
+
+			// this.$store.auxiliarySortBy = this.auxiliarySortBy;
+			this.$store.auxiliarySortBy = "time (inc)";
+			this.$store.selectedMetric = "Inclusive";
+		
+			// Shoud be specified in the CSS, not here.
+			this.$store.fontSize = 14;
+			this.$store.transitionDuration = 1000;
+	
+			// Set the selected mode (Single or Ensemble)
+			this.$store.selectedMode = this.run_counts > 1 ? "Ensemble": "Single";
+		},
+
+		setTargetDataset() {
+			// this.datasets = this.sortDatasetsByAttr(
+			// 	this.$store.selectedDatasets,
+			// 	"Inclusive"
+			// );
+
+			// let max_dataset = "";
+			// let current_max_time = 0.0;
+
+			// let data = {};
+			// if (this.$store.selectedMetric == "Inclusive") {
+			// 	data = this.$store.maxIncTime;
+			// } else if (this.$store.selectedMetric == "Exclusive") {
+			// 	data = this.$store.maxExcTime;
+			// }
+
+			// for (let dataset of this.$store.selectedDatasets) {
+			// 	if (current_max_time < data[dataset]) {
+			// 		current_max_time = data[dataset];
+			// 		max_dataset = dataset;
+			// 	}
+			// }
+			this.$store.selectedTargetDataset = this.$store.selectedDatasets[0];
+
+			console.log("Maximum among all runtimes: ", this.$store.selectedTargetDataset);
+		},
+
+		setupColors() {
+			// Create color object.
+			this.$store.runtimeColor = new Color();
+			this.runtimeColorMap = this.$store.runtimeColor.getAllColors();
+			this.setRuntimeColorScale();
+
+			// Set properties into store.
+			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap;
+			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap;
+			this.$store.selectedColorPoint = this.selectedColorPoint;
+
+			this.$store.runtimeColor.intermediate = "#d9d9d9";
+			this.$store.runtimeColor.highlight = "#C0C0C0";
+			this.$store.runtimeColor.textColor = "#3a3a3a";
+			this.$store.runtimeColor.edgeStrokeColor = "#888888";
+		},
+
+		setViewDimensions() {
+			this.$store.viewWidth = window.innerWidth;
+
+			// Set toolbar height 
+			let toolbarHeight = 0;
+			if (document.getElementById("toolbar") != null) {
+				toolbarHeight = document.getElementById("toolbar").clientHeight;
+			}
+
+			// Set footer height
+			let footerHeight = 0;
+			if (document.getElementById("footer") != null) {
+				footerHeight = document.getElementById("footer").clientHeight;
+			}
+
+			this.$store.viewHeight = window.innerHeight - toolbarHeight - footerHeight;
+		},
+
+		// Set the min and max and assign color variables from Settings.
+		setRuntimeColorScale() {
+			let colorMin = null;
+			let colorMax = null;
+			if (this.selectedMode == "Ensemble") {
+				if (this.selectedMetric == "Inclusive") {
+					colorMin = parseFloat(this.$store.minIncTime["ensemble"]);
+					colorMax = parseFloat(this.$store.maxIncTime["ensemble"]);
+				} else if (this.selectedMetric == "Exclusive") {
+					colorMin = parseFloat(this.$store.minExcTime["ensemble"]);
+					colorMax = parseFloat(this.$store.maxExcTime["ensemble"]);
+				} else if (this.selectedMetric == "Imbalance") {
+					colorMin = 0.0;
+					colorMax = 1.0;
+				}
+			} else if (this.selectedMode == "Single") {
+				if (this.selectedMetric == "Inclusive") {
+					colorMin = parseFloat(
+						this.$store.minIncTime[this.selectedTargetDataset]
+					);
+					colorMax = parseFloat(
+						this.$store.maxIncTime[this.selectedTargetDataset]
+					);
+				} else if (this.selectedMetric == "Exclusive") {
+					colorMin = parseFloat(
+						this.$store.minExcTime[this.selectedTargetDataset]
+					);
+					colorMax = parseFloat(
+						this.$store.maxExcTime[this.selectedTargetDataset]
+					);
+				} else if (this.selectedMetric == "Imbalance") {
+					colorMin = 0.0;
+					colorMax = 1.0;
+				}
+			}
+
+			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
+				parseFloat(colorMin)
+			);
+			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
+				parseFloat(colorMax)
+			);
+
+			this.$store.selectedColorMin = this.colorMin;
+			this.$store.selectedColorMax = this.colorMax;
+
+			this.$store.runtimeColor.setColorScale(
+				this.$store.selectedMetric,
+				colorMin,
+				colorMax,
+				"OrRd",
+				9
+			);
 		},
 	},
 };

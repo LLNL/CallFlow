@@ -82,13 +82,13 @@ class APIProvider(BaseProvider):
         def index():
             return app.send_static_file("index.html")
 
-        @app.route("/init", methods=["GET"])
+        @app.route("/config", methods=["GET"])
         @cross_origin()
         def init():
             result = self.request_general({"name": "init"})
-            return APIProvider.emit_json("init", result)
+            return APIProvider.emit_json("config", result)
 
-        @app.route("/supergraph_data", methods=["POST"])
+        @app.route("/aux_data", methods=["POST"])
         @cross_origin()
         def supergraph_data():
             data = request.json
@@ -98,7 +98,7 @@ class APIProvider(BaseProvider):
                     **data,
                 }
             )
-            return APIProvider.emit_json("supergraph_data", result)
+            return APIProvider.emit_json("aux_data", result)
 
     def handle_single(self):
         """
