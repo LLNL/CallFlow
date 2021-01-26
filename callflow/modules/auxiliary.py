@@ -67,9 +67,10 @@ class Auxiliary:
 
         # ----------------------------------------------------------------------
         self.result = {
+            "runtimeProps": Auxiliary._runtime_props(dataframes),
             "dataset": self._collect_data_dataset(dataframes, sg),
             "callsite": self._collect_data(dataframes_name_group, 'callsite'),
-            "module":   self._collect_data(dataframes_module_group, 'module'),
+            "module": self._collect_data(dataframes_module_group, 'module'),
             "callsiteModuleMap": self._callsite_module_map(dataframes, callsites),
             "moduleCallsiteMap": self._module_callsite_map(dataframes, modules),
             "moduleFctList": sg.module_fct_list,
@@ -78,6 +79,43 @@ class Auxiliary:
 
         # TODO: this should not happen this way
         sg.auxiliary_data = self.result
+
+    @staticmethod
+    def _runtime_props(dataframes):
+        """
+        Adds runtime information (like max, min inclusive and exclusive runtime).
+        """
+        props = {}
+        props["maxIncTime"] = {}
+        props["maxExcTime"] = {}
+        props["minIncTime"] = {}
+        props["minExcTime"] = {}
+        props["numOfRanks"] = {}
+        maxIncTime = 0
+        maxExcTime = 0
+        minIncTime = 0
+        minExcTime = 0
+        maxNumOfRanks = 0
+        for idx, tag in enumerate(dataframes):
+            props["maxIncTime"][tag] = dataframes[tag]["time (inc)"].max()
+            props["maxExcTime"][tag] = dataframes[tag]["time"].max()
+            props["minIncTime"][tag] = dataframes[tag]["time (inc)"].min()
+            props["minExcTime"][tag] = dataframes[tag]["time"].min()
+            props["numOfRanks"][tag] = len(dataframes[tag]["rank"].unique())
+            maxExcTime = max(props["maxExcTime"][tag], maxExcTime)
+            maxIncTime = max(props["maxIncTime"][tag], maxIncTime)
+            minExcTime = min(props["minExcTime"][tag], minExcTime)
+            minIncTime = min(props["minIncTime"][tag], minIncTime)
+            maxNumOfRanks = max(props["numOfRanks"][tag], maxNumOfRanks)
+
+        props["maxIncTime"]["ensemble"] = maxIncTime
+        props["maxExcTime"]["ensemble"] = maxExcTime
+        props["minIncTime"]["ensemble"] = minIncTime
+        props["minExcTime"]["ensemble"] = minExcTime
+        props["numOfRanks"]["ensemble"] = maxNumOfRanks
+
+        return props
+
 
     def _collect_data_dataset(self, dfs, sg):
         _COLUMNS_OF_INTEREST = ['node', 'rank', 'time (inc)', 'time', 'dataset', 'component_level', 'module', 'name']

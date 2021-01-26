@@ -213,6 +213,10 @@ export function stringToList(string) {
 	return string.split(re);
 }
 
+
+// ----------------------------------------------------
+// In-place store modifying utilities
+// ----------------------------------------------------
 export function getModuleName(store, module_idx) {
 	return store["moduleFctList"][module_idx];
 }

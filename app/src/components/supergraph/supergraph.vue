@@ -57,7 +57,6 @@ export default {
 	data: () => ({
 		graph: null,
 		id: "ensemble-supergraph-overview",
-		dashboardID: "ensemble-supergraph-dashboard",
 		nodeWidth: 50,
 		nodeScale: 1.0,
 		ySpacing: 60,
@@ -102,28 +101,29 @@ export default {
 
 	methods: {
 		async fetchData() {
+			let data = {};
 			if (this.$store.selectedMode == "Single") {
-				this.data = await APIService.POSTRequest("single_supergraph", {
+				data = await APIService.POSTRequest("single_supergraph", {
 					dataset: this.$store.selectedTargetDataset,
 					groupBy: "module",
 				});
-				console.debug("[/single_supergraph]", this.data);
+				console.debug("[/single_supergraph]", data);
 			} else if (this.$store.selectedMode == "Ensemble") {
-				this.data = await APIService.POSTRequest("ensemble_supergraph", {
+				data = await APIService.POSTRequest("ensemble_supergraph", {
 					datasets: this.$store.selectedDatasets,
 					groupBy: "module",
 				});
-				console.debug("[/ensemble_supergraph]", this.data);
+				console.debug("[/ensemble_supergraph]", data);
 			}
 
-			this.data = this._add_node_map(this.data);
-			this.data.graph = this._construct_super_graph(this.data);
+			data = this._add_node_map(data);
+			data.graph = this._construct_super_graph(data);
 
 			// check cycle.
-			let detectcycle = detectDirectedCycle(this.data.graph);
+			let detectcycle = detectDirectedCycle(data.graph);
 
-			for (let i = 0; i < this.data.links.length; i += 1) {
-				let link = this.data.links[i];
+			for (let i = 0; i <data.links.length; i += 1) {
+				let link = data.links[i];
 				let source_callsite = link["source"];
 				let target_callsite = link["target"];
 				let weight = link["weight"];
@@ -133,14 +133,13 @@ export default {
 				console.debug("[Ensemble SuperGraph] Target Name :", target_callsite);
 				console.debug("[Ensemble SuperGraph] Weight: ", weight);
 			}
-
-			this.render();
+			return data;
 		},
 
 		async init() {
-			await this.fetchData();
-			this.width = 5 * this.$store.viewWidth;
-			this.height = 1 * this.$store.viewHeight;
+			this.data = await this.fetchData();
+			this.width = this.$store.viewWidth;
+			this.height = this.$store.viewHeight;
 
 			this.sankeySVG = d3.select("#" + this.id).attrs({
 				width: this.width,
@@ -157,6 +156,7 @@ export default {
 				});
 			});
 			this.sankeySVG.call(zoom);
+			this.render();
 		},
 
 		_debug_data(data) {
@@ -182,6 +182,7 @@ export default {
 		},
 
 		render() {
+			console.log(this.$store.viewWidth, this.$store.viewHeight);
 			this.sankeyWidth = 0.7 * this.$store.viewWidth;
 			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
@@ -198,6 +199,7 @@ export default {
 			if (this.$store.selectedMode == "Ensemble") {
 				this.$refs.EnsembleColorMap.init(this.$store.distributionColor);
 			}
+
 			this.$refs.EnsembleNodes.init(this.$store.graph, this.view);
 			this.$refs.EnsembleEdges.init(this.$store.graph, this.view);
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view);

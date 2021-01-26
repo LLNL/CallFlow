@@ -69,6 +69,7 @@ export default {
 		rankBinCount: 20,
 		runBinCount: 20,
 		selectedIQRFactor: 0.15,
+		selectedRuntimeColorMap: "OrRd",
 	}),
 	mounted() {
 		this.fetchData();
@@ -96,7 +97,6 @@ export default {
 			const module_fct_list = this.data.moduleFctList;
 			// TODO: Does not work as the format is weird.
 			this.module_callsite_map = Object.keys(this.data.moduleCallsiteMap["ensemble"]).map((_) => { return {"module": module_fct_list[_], ...this.data.moduleCallsiteMap[_]};});
-			console.log(this.module_callsite_map);
 			
 			this.setStore();
 			this.setGlobalVariables(); // Set the variables that do not depend on data.
@@ -117,8 +117,8 @@ export default {
 			this.$store.moduleCallsiteMap = this.data.moduleCallsiteMap;
 			this.$store.callsiteModuleMap = this.data.callsiteModuleMap;
 			this.$store.moduleFctList = this.data.moduleFctList;
-			console.log(this.$store.moduleFctList);
 			this.$store.selectedDatasets = this.data.runs;
+			this.$store.runtimeProps = this.data.runtimeProps;
 		},
 
 		setGlobalVariables() {
@@ -153,48 +153,134 @@ export default {
 			this.$store.selectedMode = this.run_counts > 1 ? "Ensemble": "Single";
 		},
 
+		sortDatasetsByAttr(datasets, attr) {
+			let metricTimeMap = {};
+			if (datasets.length == 1) {
+				metricTimeMap[datasets[0]] = this.$store.runtimeProps.maxIncTime[datasets[0]];
+				return datasets;
+			}
+			let ret = datasets.sort((a, b) => {
+				let x = 0,
+					y = 0;
+				if (attr == "Inclusive") {
+					x = this.$store.runtimeProps.maxIncTime[a];
+					y = this.$store.runtimeProps.maxIncTime[b];
+					metricTimeMap = this.$store.runtimeProps.maxIncTime;
+				} else if (attr == "Exclusive") {
+					x = this.$store.runtimeProps.maxExcTime[a];
+					y = this.$store.runtimeProps.maxExcTime[b];
+					metricTimeMap = this.$store.runtimeProps.maxExcTime;
+				}
+				return parseFloat(x) - parseFloat(y);
+			});
+			return ret, metricTimeMap;
+		},
+
 		setTargetDataset() {
-			// this.datasets = this.sortDatasetsByAttr(
-			// 	this.$store.selectedDatasets,
-			// 	"Inclusive"
-			// );
+			this.datasets, this.$store.metricTimeMap = this.sortDatasetsByAttr(
+				this.runs,
+				"Inclusive"
+			);
 
-			// let max_dataset = "";
-			// let current_max_time = 0.0;
+			let max_dataset = "";
+			let current_max_time = 0.0;
 
-			// let data = {};
-			// if (this.$store.selectedMetric == "Inclusive") {
-			// 	data = this.$store.maxIncTime;
-			// } else if (this.$store.selectedMetric == "Exclusive") {
-			// 	data = this.$store.maxExcTime;
-			// }
+			let data = {};
+			if (this.$store.selectedMetric == "Inclusive") {
+				data = this.$store.runtimeProps.maxIncTime;
+			} else if (this.$store.selectedMetric == "Exclusive") {
+				data = this.$store.runtimeProps.maxExcTime;
+			}
 
-			// for (let dataset of this.$store.selectedDatasets) {
-			// 	if (current_max_time < data[dataset]) {
-			// 		current_max_time = data[dataset];
-			// 		max_dataset = dataset;
-			// 	}
-			// }
-			this.$store.selectedTargetDataset = this.$store.selectedDatasets[0];
+			for (let run_idx=0; run_idx < this.run_counts; run_idx += 1) {
+				if (current_max_time < data[this.runs[run_idx]]) {
+					current_max_time = data[this.runs[run_idx]];
+					max_dataset = this.runs[run_idx];
+				}
+			}
+			this.$store.selectedTargetDataset = max_dataset;
 
 			console.log("Maximum among all runtimes: ", this.$store.selectedTargetDataset);
 		},
 
-		setupColors() {
+		setupColors(selectedRuntimeColorMap) {
 			// Create color object.
 			this.$store.runtimeColor = new Color();
-			this.runtimeColorMap = this.$store.runtimeColor.getAllColors();
-			this.setRuntimeColorScale();
+			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
+			
+			if (selectedRuntimeColorMap) {
+				this.setRuntimeColorScale(selectedRuntimeColorMap);
+			}
+			else {
+				this.setRuntimeColorScale("OrRd");
+			}
 
 			// Set properties into store.
 			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap;
 			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap;
-			this.$store.selectedColorPoint = this.selectedColorPoint;
+			this.$store.selectedColorPoint = 9;
 
 			this.$store.runtimeColor.intermediate = "#d9d9d9";
 			this.$store.runtimeColor.highlight = "#C0C0C0";
 			this.$store.runtimeColor.textColor = "#3a3a3a";
 			this.$store.runtimeColor.edgeStrokeColor = "#888888";
+		},
+
+		// Set the min and max and assign color variables from Settings.
+		setRuntimeColorScale(selectedRuntimeColorMap) {
+			let colorMin = null;
+			let colorMax = null;
+			const runtimeProps = this.$store.runtimeProps;
+			if (this.run_counts > 1) {
+				if (this.$store.selectedMetric == "Inclusive") {
+					colorMin = parseFloat(runtimeProps.minIncTime["ensemble"]);
+					colorMax = parseFloat(runtimeProps.maxIncTime["ensemble"]);
+				} else if (this.$store.selectedMetric == "Exclusive") {
+					colorMin = parseFloat(runtimeProps.minExcTime["ensemble"]);
+					colorMax = parseFloat(runtimeProps.maxExcTime["ensemble"]);
+				} else if (this.$store.selectedMetric == "Imbalance") {
+					colorMin = 0.0;
+					colorMax = 1.0;
+				}
+			} else {
+				if (this.$store.selectedMetric == "Inclusive") {
+					colorMin = parseFloat(
+						runtimeProps.minIncTime[this.selectedTargetDataset]
+					);
+					colorMax = parseFloat(
+						runtimeProps.maxIncTime[this.selectedTargetDataset]
+					);
+				} else if (this.$store.selectedMetric == "Exclusive") {
+					colorMin = parseFloat(
+						runtimeProps.minExcTime[this.selectedTargetDataset]
+					);
+					colorMax = parseFloat(
+						runtimeProps.maxExcTime[this.selectedTargetDataset]
+					);
+				} else if (this.$store.selectedMetric == "Imbalance") {
+					colorMin = 0.0;
+					colorMax = 1.0;
+				}
+			}
+
+			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
+				parseFloat(colorMin)
+			);
+			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
+				parseFloat(colorMax)
+			);
+
+			this.$store.selectedColorMin = this.colorMin;
+			this.$store.selectedColorMax = this.colorMax;
+			this.$store.selectedRuntimeColorMap = selectedRuntimeColorMap;
+
+			this.$store.runtimeColor.setColorScale(
+				this.$store.selectedMetric,
+				colorMin,
+				colorMax,
+				this.$store.selectedRuntimeColorMap,
+				this.$store.selectedColorPoint
+			);
 		},
 
 		setViewDimensions() {
@@ -212,62 +298,7 @@ export default {
 				footerHeight = document.getElementById("footer").clientHeight;
 			}
 
-			this.$store.viewHeight = window.innerHeight - toolbarHeight - footerHeight;
-		},
-
-		// Set the min and max and assign color variables from Settings.
-		setRuntimeColorScale() {
-			let colorMin = null;
-			let colorMax = null;
-			if (this.selectedMode == "Ensemble") {
-				if (this.selectedMetric == "Inclusive") {
-					colorMin = parseFloat(this.$store.minIncTime["ensemble"]);
-					colorMax = parseFloat(this.$store.maxIncTime["ensemble"]);
-				} else if (this.selectedMetric == "Exclusive") {
-					colorMin = parseFloat(this.$store.minExcTime["ensemble"]);
-					colorMax = parseFloat(this.$store.maxExcTime["ensemble"]);
-				} else if (this.selectedMetric == "Imbalance") {
-					colorMin = 0.0;
-					colorMax = 1.0;
-				}
-			} else if (this.selectedMode == "Single") {
-				if (this.selectedMetric == "Inclusive") {
-					colorMin = parseFloat(
-						this.$store.minIncTime[this.selectedTargetDataset]
-					);
-					colorMax = parseFloat(
-						this.$store.maxIncTime[this.selectedTargetDataset]
-					);
-				} else if (this.selectedMetric == "Exclusive") {
-					colorMin = parseFloat(
-						this.$store.minExcTime[this.selectedTargetDataset]
-					);
-					colorMax = parseFloat(
-						this.$store.maxExcTime[this.selectedTargetDataset]
-					);
-				} else if (this.selectedMetric == "Imbalance") {
-					colorMin = 0.0;
-					colorMax = 1.0;
-				}
-			}
-
-			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMin)
-			);
-			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMax)
-			);
-
-			this.$store.selectedColorMin = this.colorMin;
-			this.$store.selectedColorMax = this.colorMax;
-
-			this.$store.runtimeColor.setColorScale(
-				this.$store.selectedMetric,
-				colorMin,
-				colorMax,
-				"OrRd",
-				9
-			);
+			this.$store.viewHeight = window.innerHeight - 2 * toolbarHeight - footerHeight;
 		},
 	},
 };

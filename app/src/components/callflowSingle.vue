@@ -119,7 +119,7 @@
             >
             </v-text-field>
           </v-flex>
-          <v-flex xs12 class="ma-1">
+          <!-- <v-flex xs12 class="ma-1">
             <v-text-field
               label="Color minimum (in seconds)"
               class="mt-0"
@@ -142,7 +142,7 @@
               v-on:change="updateColors()"
             >
             </v-text-field>
-          </v-flex>
+          </v-flex> -->
 
           <!----------------------------- Callsite information ----------------------------------->
           <v-flex xs12 class="ma-1">
@@ -325,7 +325,6 @@ export default {
 
 	methods: {
 		init() {
-			console.assert(this.$store.selectedMode, "Single");
 			this.setupStore();
 			this.setComponentMap(); // Set component mapping for easy component tracking.
 			
@@ -344,15 +343,9 @@ export default {
 			EventHandler.$emit("single-refresh-boxplot", {});
 		},
 
-		setupStore(data) {
+		setupStore() {
 			// Set the mode. (Either single or ensemble).
-			// TODO: Remove this.
-			// this.modes = ["Single"];
-			// this.selectedMode = "Single";
-			// this.$store.selectedMode = this.selectedMode;
-
-			// Set the datasets
-			this.datasets = this.$store.selectedDatasets;
+			this.$store.selectedMode = this.selectedMode;
 
 			// Set the number of callsites in the CCT
 			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
@@ -365,6 +358,15 @@ export default {
 
 			// Set this.selectedTargetDataset (need to remove)
 			this.selectedTargetDataset = this.$store.selectedTargetDataset;
+
+			// Set the datasets
+			this.datasets = this.$store.selectedDatasets;
+
+			// Set the metricTimeMap, used by the dropdown to select the dataset.
+			this.metricTimeMap = this.$store.metricTimeMap;
+
+			// Set the runtimeColorMap.
+			this.runtimeColorMap = this.$store.runtimeColorMap;
 		},
 
 		// ----------------------------------------------------------------
@@ -417,28 +419,6 @@ export default {
 			let ret = format(val);
 			return ret;
 		},
-
-		sortDatasetsByAttr(datasets, attr) {
-			if (datasets.length == 1) {
-				this.metricTimeMap[datasets[0]] = this.$store.maxIncTime[datasets[0]];
-				return datasets;
-			}
-			let ret = datasets.sort((a, b) => {
-				let x = 0,
-					y = 0;
-				if (attr == "Inclusive") {
-					x = this.$store.maxIncTime[a];
-					y = this.$store.maxIncTime[b];
-					this.metricTimeMap = this.$store.maxIncTime;
-				} else if (attr == "Exclusive") {
-					x = this.$store.maxExcTime[a];
-					y = this.$store.maxExcTime[b];
-					this.metricTimeMap = this.$store.maxExcTime;
-				}
-				return parseFloat(x) - parseFloat(y);
-			});
-			return ret;
-		},
 		
 		// ----------------------------------------------------------------
 		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
@@ -480,7 +460,10 @@ export default {
 		// ----------------------------------------------------------------
 		updateColors() {
 			this.clearLocal();
-			this.setupColors();
+			// TODO: Fix this. 
+			// setupColors should belong to the App.Vue and should make a call
+			// there.
+			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
 			this.init();
 		},
 

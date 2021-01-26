@@ -33,15 +33,15 @@ export default {
 			let hist_max = 0;
 			for (let node of this.nodes) {
 				if (node.type == "super-node") {
-					hist_min = Math.min(hist_min, this.module_data[node.module][this.$store.selectedMetric]["mean_time"]);
-					hist_max = Math.max(hist_max, this.module_data[node.module][this.$store.selectedMetric]["mean_time"]);
+					hist_min = Math.min(hist_min, this.module_data[node.module][this.$store.selectedMetric]["mean"]);
+					hist_max = Math.max(hist_max, this.module_data[node.module][this.$store.selectedMetric]["mean"]);
 				}
 				else if (node.type == "component-node") {
 					hist_min = Math.min(hist_min, this.ensemble_callsite_data[node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
 					hist_max = Math.max(hist_max, this.ensemble_callsite_data[node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
 				}
 			}
-			this.$store.color.setColorScale(this.$store.selectedMetric, hist_min, hist_max, this.$store.selectedRuntimeColorMap, this.$store.selectedColorPoint);
+			this.$store.runtimeColor.setColorScale(this.$store.selectedMetric, hist_min, hist_max, this.$store.selectedRuntimeColorMap, this.$store.selectedColorPoint);
 			this.$parent.$parent.$refs.EnsembleColorMap.update(this.$store.mode, hist_min, hist_max);
 		},
 
