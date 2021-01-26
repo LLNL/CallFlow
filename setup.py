@@ -94,17 +94,18 @@ os.chdir("..")
 
 # ------------------------------------------------------------------------------
 deps = [
-    "ipython",
-    "colorlog",
-    "jsonschema",
     "numpy",
     "scipy",
     "pandas",
-    "scikit_learn",
-    "statsmodels",
     "hatchet",
+    "statsmodels",
+    "scikit_learn",
+    "colorlog",
+    "jsonschema",
     "networkx",
     "matplotlib",
+    "ipython",
+    "flask_socketio",
     "flask_cors",
 ]
 
