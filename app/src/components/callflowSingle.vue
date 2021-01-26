@@ -220,6 +220,8 @@ import SingleScatterplot from "./singleScatterplot/singleScatterplot";
 import SingleHistogram from "./singleHistogram/singleHistogram";
 import CallsiteInformation from "./callsiteInformation/callsiteInformation";
 
+import * as utils from "./utils";
+
 export default {
 	name: "SingleCallFlow",
 	components: {
@@ -327,6 +329,8 @@ export default {
 		init() {
 			this.setupStore();
 			this.setComponentMap(); // Set component mapping for easy component tracking.
+			this.selectedModule = utils.setSelectedModule(this.$store, this.selectedTargetDataset);
+			this.$store.selectedModule = this.selectedModule;
 			
 			console.log("Mode : ", this.selectedMode);
 			console.log("Number of runs :", this.$store.numOfRuns);
@@ -335,7 +339,6 @@ export default {
 
 			// Call the appropriate socket to query the server.
 			if (this.selectedFormat == "SuperGraph") {
-				this.setSelectedModule();
 				this.initComponents(this.currentSingleSuperGraphComponents);
 			} else if (this.selectedFormat == "CCT") {
 				this.initComponents(this.currentSingleCCTComponents);
@@ -367,6 +370,9 @@ export default {
 
 			// Set the runtimeColorMap.
 			this.runtimeColorMap = this.$store.runtimeColorMap;
+		
+			// Set encoding method.
+			this.$store.encoding = "MEAN";
 		},
 
 		// ----------------------------------------------------------------
@@ -420,41 +426,6 @@ export default {
 			return ret;
 		},
 		
-		// ----------------------------------------------------------------
-		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
-		// ----------------------------------------------------------------
-
-		setSelectedModule() {
-			let modules_sorted_list_by_metric = this.sortModulesByMetric();
-			this.selectedModule = modules_sorted_list_by_metric[0][0];
-			this.$store.selectedModule = this.selectedModule;
-		},
-
-		sortModulesByMetric(attr) {
-			let module_list = Object.keys(
-				this.$store.modules[this.$store.selectedTargetDataset]
-			);
-
-			// Create a map for each dataset mapping the respective mean times.
-			let map = {};
-			for (let module_name of module_list) {
-				// let module_idx = this.$store.moduleIndexMap.indexOf(module_name);
-				map[module_name] = this.$store.modules[this.selectedTargetDataset][module_name][this.$store.selectedMetric]["_mean"];
-			}
-
-			// Create items array
-			let items = Object.keys(map).map(function (key) {
-				return [key, map[key]];
-			});
-
-			// Sort the array based on the second element
-			items.sort(function (first, second) {
-				return second[1] - first[1];
-			});
-
-			return items;
-		},
-
 		// ----------------------------------------------------------------
 		// Update methods, triggered when user interacts with the settings. 
 		// ----------------------------------------------------------------

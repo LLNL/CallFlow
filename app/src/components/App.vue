@@ -69,7 +69,12 @@ export default {
 		rankBinCount: 20,
 		runBinCount: 20,
 		selectedIQRFactor: 0.15,
-		selectedRuntimeColorMap: "OrRd",
+		targetColorMap: {
+			Green: "#4EAF4A",
+			Blue: "#4681B4",
+			Brown: "#AF9B90",
+			Red: "#A90400",
+		},
 	}),
 	mounted() {
 		this.fetchData();
@@ -134,8 +139,6 @@ export default {
 			// for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
 			// 	this.$store.datasetMap[this.$store.selectedDatasets[i]] = "run-" + i;
 			// }
-
-			this.$store.encoding = "MEAN";
 
 			// Used in sankey.js
 			// TODO: Sankey should not have any store related properties. 
@@ -203,7 +206,7 @@ export default {
 			console.log("Maximum among all runtimes: ", this.$store.selectedTargetDataset);
 		},
 
-		setupColors(selectedRuntimeColorMap) {
+		setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {
 			// Create color object.
 			this.$store.runtimeColor = new Color();
 			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
@@ -215,11 +218,37 @@ export default {
 				this.setRuntimeColorScale("OrRd");
 			}
 
-			// Set properties into store.
-			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap;
-			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap;
-			this.$store.selectedColorPoint = 9;
+			if(this.run_counts > 1) {
+				// Create distribution color object
+				this.$store.distributionColor = new Color();
+				this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
+				
+				if(selectedDistributionColorMap) {
+					this.setDistributionColorScale(selectedDistributionColorMap);
+				} else {
+					this.setDistributionColorScale("Reds");
+				}
 
+				this.selectedTargetColor = "Green";
+				this.$store.distributionColor.target = this.targetColorMap[
+					this.selectedTargetColor
+				];
+				this.$store.distributionColor.ensemble = "#C0C0C0";
+				this.$store.distributionColor.compare = "#043060";
+
+				// Create difference color object
+				this.$store.diffColor = new Color();
+
+				if(selectedDistributionColorMap) { 
+					this.$store.selectedDistributionColorMap = selectedDistributionColorMap;
+				}
+				else{
+					this.$store.selectedDistributionColorMap = "Reds";
+				}
+			}
+
+			// Set properties into store.
+			this.$store.selectedColorPoint = 9;
 			this.$store.runtimeColor.intermediate = "#d9d9d9";
 			this.$store.runtimeColor.highlight = "#C0C0C0";
 			this.$store.runtimeColor.textColor = "#3a3a3a";
@@ -272,13 +301,35 @@ export default {
 
 			this.$store.selectedColorMin = this.colorMin;
 			this.$store.selectedColorMax = this.colorMax;
-			this.$store.selectedRuntimeColorMap = selectedRuntimeColorMap;
 
 			this.$store.runtimeColor.setColorScale(
 				this.$store.selectedMetric,
 				colorMin,
 				colorMax,
-				this.$store.selectedRuntimeColorMap,
+				selectedRuntimeColorMap,
+				this.$store.selectedColorPoint
+			);
+		},
+
+		setDistributionColorScale(selectedDistributionColorMap) {
+			let hist_min = 0;
+			let hist_max = 0;
+			for (let module in this.$store.modules["ensemble"]) {
+				let node = this.$store.modules["ensemble"][module];
+				hist_min = Math.min(
+					hist_min,
+					node[this.$store.selectedMetric]["gradients"]["hist"]["y_min"]
+				);
+				hist_max = Math.max(
+					hist_max,
+					node[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]
+				);
+			}
+			this.$store.distributionColor.setColorScale(
+				"MeanGradients",
+				hist_min,
+				hist_max,
+				selectedDistributionColorMap,
 				this.$store.selectedColorPoint
 			);
 		},
@@ -299,6 +350,34 @@ export default {
 			}
 
 			this.$store.viewHeight = window.innerHeight - 2 * toolbarHeight - footerHeight;
+		},
+
+		// ----------------------------------------------------------------
+		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
+		// ----------------------------------------------------------------
+
+		setSelectedModule(dataset) {
+			let module_list = Object.keys(
+				this.$store.modules[dataset]
+			);
+
+			// Create a map for each dataset mapping the respective mean times.
+			let map = {};
+			for (let module_name of module_list) {
+				map[module_name] = this.$store.modules[dataset][module_name][this.$store.selectedMetric]["mean"];
+			}
+
+			// Create items array
+			let modules = Object.keys(map).map(function (key) {
+				return [key, map[key]];
+			});
+
+			// Sort the array based on the second element
+			modules.sort(function (first, second) {
+				return second[1] - first[1];
+			});
+
+			this.$store.selectedModule = modules[0][0];
 		},
 	},
 };

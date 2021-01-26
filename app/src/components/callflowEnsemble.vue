@@ -433,12 +433,6 @@ export default {
 
 	data: () => ({
 		appName: "CallFlow",
-		server: "localhost:5000",
-		config: {
-			headers: {
-				"Access-Control-Allow-Origin": "*",
-			},
-		},
 		left: false,
 		formats: ["CCT", "SuperGraph"],
 		selectedFormat: "SuperGraph",
@@ -532,7 +526,10 @@ export default {
 	}),
 
 	mounted() {
-		this.fetchData();
+		// Push to '/' when `this.$store.selectedDatasets` is undefined.
+		if(this.$store.selectedDatasets === undefined) {
+			this.$router.push("/");
+		}
 
 		EventHandler.$on("lasso_selection", () => {
 			this.$store.resetTargetDataset = true;
@@ -540,51 +537,24 @@ export default {
 			this.setTargetDataset();
 			this.requestEnsembleData();
 		});
+
+		this.init();
 	},
 
 	methods: {
-		/**
-     	* Fetch the super graph data.
-     	*/
-		async fetchData() {
-			if(this.$store.selectedDatasets === undefined) {
-				this.$router.push("/");
-			}
-			this.$store.auxiliarySortBy = this.auxiliarySortBy;
-			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
-			this.$store.selectedRunBinCount = this.selectedRunBinCount;
-
-			const data = await APIService.POSTRequest("supergraph_data", {
-				datasets: this.$store.selectedDatasets,
-				sortBy: this.$store.auxiliarySortBy,
-				MPIBinCount: this.$store.selectedMPIBinCount,
-				RunBinCount: this.$store.selectedRunBinCount,
-				re_process: 1,
-			});
-
-			console.debug("[/supergraph_data]", data);
-			this.dataReady = true;
-			this.setupStore(data);
-
-			this.init();
-		},
-
 		init() {
-			console.assert(this.selectedMode, "Single");
+			this.setupStore();
+			this.setComponentMap(); // Set component mapping for easy component tracking.
+			this.selectedModule = utils.setSelectedModule(this.$store, "ensemble");
+			this.$store.selectedModule = this.selectedModule;
+			
 			console.log("Mode : ", this.selectedMode);
-			console.log("Number of runs :", this.$store.numOfRuns);
+			console.log("Number of runs :", this.$store.run_counts);
 			console.log("Datasets : ", this.$store.selectedDatasets);
 			console.log("Format = ", this.selectedFormat);
 			
-			this.setGlobalVariables(); // Set the variables that do not depend on data.
-			this.setTargetDataset(); // Set target dataset.
-			this.setupColors(); // Set up the colors.
-			this.setViewDimensions(); // Set the view dimensions.
-			this.setComponentMap(); // Set component mapping for easy component tracking.
-
 			// Call the appropriate socket to query the server.
 			if (this.selectedFormat == "SuperGraph") {
-				this.setSelectedModule();
 				this.initComponents(this.currentEnsembleSuperGraphComponents);
 			} else if (this.selectedFormat == "CCT") {
 				this.initComponents(this.currentEnsembleCCTComponents);
@@ -593,40 +563,35 @@ export default {
 		},
 
 		setupStore(data) {
-			this.$store.modules = data["module"];
-			this.$store.callsites = data["callsite"];
-			this.$store.gradients = data["gradients"];
-			this.$store.moduleCallsiteMap = data["moduleCallsiteMap"];
-			this.$store.callsiteModuleMap = data["callsiteModuleMap"];
+			// Set the mode. (Either single or ensemble).
+			this.$store.selectedMode = this.selectedMode;
 
+			// Set the number of callsites in the CCT
+			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
+
+			// Set the scale for information (log or linear)
+			this.$store.selectedScale = this.selectedScale;
+			
+			// Comparison mode in histograms.
+			this.$store.comparisonMode = this.comparisonMode;
+
+			// Set the datasets
 			this.datasets = this.$store.selectedDatasets;
 
-			// Enable diff mode only if the number of datasets >= 2
-			if (this.numOfRuns >= 2) {
-				this.modes = ["Single", "Ensemble"];
-				this.selectedMode = "Ensemble";
-			} else if (this.numOfRuns == 1) {
-				this.enableDist = false;
-				this.modes = ["Single"];
-				this.selectedMode = "Single";
-			}
-		},
+			// Set this.selectedTargetDataset (need to remove)
+			this.selectedTargetDataset = this.$store.selectedTargetDataset;
 
-		setGlobalVariables() {
+			// TODO: Need to clean this up.....
+			// Too many repeated values....
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
 			this.$store.selectedRunBinCount = this.selectedRunBinCount;
 			
 			this.$store.auxiliarySortBy = this.auxiliarySortBy;
-			this.$store.reprocess = 0;
 			this.$store.comparisonMode = this.comparisonMode;
-			this.$store.fontSize = 14;
-			this.$store.transitionDuration = 1000;
 			this.$store.showTarget = this.showTarget;
 			this.$store.encoding = "MEAN_GRADIENTS";
 	
-			this.$store.selectedScatterMode = "mean";
 			this.$store.nodeInfo = {};
-			this.$store.selectedMode = this.selectedMode;
 			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
 			this.$store.selectedFormat = this.selectedFormat;
@@ -640,211 +605,21 @@ export default {
 			this.$store.selectedEdgeAlignment = "Top";
 
 			this.$store.datasetMap = {};
-			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
-				this.$store.datasetMap[this.$store.selectedDatasets[i]] = "run-" + i;
+			for (let i = 0; i < this.run_counts; i += 1) {
+				this.$store.datasetMap[this.runs[i]] = "run-" + i;
 			}
-
-			this.$store.selectedSuperNodePositionMode = "Minimal edge crossing";
-		},
-
-		setTargetDataset() {
-			if (this.firstRender) {
-				this.$store.resetTargetDataset = true;
-			}
-			this.$store.selectedMetric = this.selectedMetric;
-			this.datasets = this.sortDatasetsByAttr(
-				this.$store.selectedDatasets,
-				"Inclusive"
-			);
-
-			let max_dataset = "";
-			let current_max_time = 0.0;
-
-			let data = {};
-			if (this.$store.selectedMetric == "Inclusive") {
-				data = this.$store.maxIncTime;
-			} else if (this.$store.selectedMetric == "Exclusive") {
-				data = this.$store.maxExcTime;
-			}
-
-			for (let dataset of this.$store.selectedDatasets) {
-				if (current_max_time < data[dataset]) {
-					current_max_time = data[dataset];
-					max_dataset = dataset;
-				}
-			}
-			if (this.firstRender || this.$store.resetTargetDataset) {
-				this.$store.selectedTargetDataset = max_dataset;
-				this.selectedTargetDataset = max_dataset;
-				this.firstRender = false;
-				this.$store.resetTargetDataset = false;
-			} else {
-				this.$store.selectedTargetDataset = this.selectedTargetDataset;
-			}
-			this.selectedIncTime = ((this.selectedFilterPerc * this.$store.maxIncTime[this.selectedTargetDataset] * 0.000001) / 100).toFixed(3);
-
-			console.log("Maximum among all runtimes: ", this.selectedTargetDataset);
-		},
-
-		setViewDimensions() {
-			this.$store.viewWidth = window.innerWidth;
-
-			let toolbarHeight = 0;
-			let footerHeight = 0;
-			// Set toolbar height as 0 if undefined
-			if (document.getElementById("toolbar") == null) {
-				toolbarHeight = 0;
-			} else {
-				toolbarHeight = document.getElementById("toolbar").clientHeight;
-			}
-			if (document.getElementById("footer") == null) {
-				footerHeight = 0;
-			} else {
-				footerHeight = document.getElementById("footer").clientHeight;
-			}
-			this.$store.viewHeight = window.innerHeight - toolbarHeight - footerHeight;
 		},
 
 		setComponentMap() {
 			this.currentEnsembleCCTComponents = [this.$refs.CCT];
 			this.currentEnsembleSuperGraphComponents = [
-				this.$refs.SuperGraph,
+				// this.$refs.SuperGraph,
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
-				this.$refs.CallsiteCorrespondence,
-				this.$refs.ParameterProjection,
-				this.$refs.ModuleHierarchy,
+				// this.$refs.CallsiteCorrespondence,
+				// this.$refs.ParameterProjection,
+				// this.$refs.ModuleHierarchy,
 			];
-		},
-
-		// Set the min and max and assign color variables from Settings.
-		setRuntimeColorScale() {
-			let colorMin = null;
-			let colorMax = null;
-			if (this.selectedMetric == "Inclusive") {
-				colorMin = parseFloat(this.$store.minIncTime["ensemble"]);
-				colorMax = parseFloat(this.$store.maxIncTime["ensemble"]);
-			} else if (this.selectedMetric == "Exclusive") {
-				colorMin = parseFloat(this.$store.minExcTime["ensemble"]);
-				colorMax = parseFloat(this.$store.maxExcTime["ensemble"]);
-			} else if (this.selectedMetric == "Imbalance") {
-				colorMin = 0.0;
-				colorMax = 1.0;
-			}
-
-			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMin)
-			);
-			this.selectedColorMaxText = utils.formatRuntimeWithoutUnits(
-				parseFloat(colorMax)
-			);
-
-			this.$store.selectedColorMin = this.colorMin;
-			this.$store.selectedColorMax = this.colorMax;
-
-			this.$store.runtimeColor.setColorScale(
-				this.$store.selectedMetric,
-				colorMin,
-				colorMax,
-				this.selectedRuntimeColorMap,
-				this.selectedColorPoint
-			);
-		},
-
-		setDistributionColorScale() {
-			let hist_min = 0;
-			let hist_max = 0;
-			for (let module in this.$store.modules["ensemble"]) {
-				let node = this.$store.modules["ensemble"][module];
-				// if (node.type == "super-node") {
-				hist_min = Math.min(
-					hist_min,
-					node[this.$store.selectedMetric]["gradients"]["hist"]["y_min"]
-				);
-				hist_max = Math.max(
-					hist_max,
-					node[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]
-				);
-				// }
-				// else if (node.type == "component-node") {
-				// hist_min = Math.min(hist_min, this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_min"]);
-				// hist_max = Math.max(hist_max, this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["y_max"]);
-				// }
-			}
-			this.$store.distributionColor.setColorScale(
-				"MeanGradients",
-				hist_min,
-				hist_max,
-				this.selectedDistributionColorMap,
-				this.selectedColorPoint
-			);
-		},
-
-		setupColors() {
-			// Create runtime color object.
-			this.$store.runtimeColor = new Color();
-			this.runtimeColorMap = this.$store.runtimeColor.getAllColors();
-			this.setRuntimeColorScale();
-
-			// Create distribution color object
-			this.$store.distributionColor = new Color();
-			this.distributionColorMap = this.$store.distributionColor.getAllColors();
-			this.setDistributionColorScale();
-			this.selectedTargetColor = "Green";
-			this.$store.distributionColor.target = this.targetColorMap[
-				this.selectedTargetColor
-			];
-			this.$store.distributionColor.ensemble = "#C0C0C0";
-			this.$store.distributionColor.compare = "#043060";
-
-			// Create difference color object
-			this.$store.diffColor = new Color();
-
-			// Set properties into store.
-			this.$store.selectedRuntimeColorMap = this.selectedRuntimeColorMap;
-			this.$store.selectedDistributionColorMap = this.selectedDistributionColorMap;
-			this.$store.selectedColorPoint = this.selectedColorPoint;
-
-			this.selectedTargetColor = this.targetColorMap[
-				this.selectedTargetColorText
-			];
-			this.targetColors = Object.keys(this.targetColorMap);
-
-			this.$store.runtimeColor.intermediate = "#d9d9d9";
-			this.$store.runtimeColor.highlight = "#C0C0C0";
-			this.$store.runtimeColor.textColor = "#3a3a3a";
-			this.$store.runtimeColor.edgeStrokeColor = "#888888";
-		},
-
-		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
-		sortModulesByMetric(attr) {
-			let module_list = Object.keys(this.$store.modules["ensemble"]);
-
-			// Create a map for each dataset mapping the respective mean times.
-			let map = {};
-			for (let module_name of module_list) {
-				map[module_name] = this.$store.modules["ensemble"][module_name][
-					this.$store.selectedMetric
-				]["mean_time"];
-			}
-
-			// Create items array
-			let items = Object.keys(map).map(function (key) {
-				return [key, map[key]];
-			});
-
-			// Sort the array based on the second element
-			items.sort(function (first, second) {
-				return second[1] - first[1];
-			});
-
-			return items;
-		},
-
-		setSelectedModule() {
-			let modules_sorted_list_by_metric = this.sortModulesByMetric();
-			this.selectedModule = modules_sorted_list_by_metric[0][0];
-			this.$store.selectedModule = this.selectedModule;
 		},
 
 		clearLocal() {

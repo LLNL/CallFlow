@@ -220,3 +220,31 @@ export function stringToList(string) {
 export function getModuleName(store, module_idx) {
 	return store["moduleFctList"][module_idx];
 }
+
+
+// ----------------------------------------------------------------
+// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
+// ----------------------------------------------------------------
+// Returns the most expensive module in the call graph.
+export function setSelectedModule(store, dataset) {
+	let module_list = Object.keys(store.modules[dataset]);
+
+	// TODO: simplify the logic here. Directly convert to items array.
+	// Create a map for each dataset mapping the respective mean times.
+	let map = {};
+	for (let module_name of module_list) {
+		map[module_name] = store.modules[dataset][module_name][store.selectedMetric]["mean"];
+	}
+
+	// Create items array
+	let modules = Object.keys(map).map(function (key) {
+		return [key, map[key]];
+	});
+
+	// Sort the array based on the second element
+	modules.sort(function (first, second) {
+		return second[1] - first[1];
+	});
+
+	return modules[0][0];
+}

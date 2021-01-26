@@ -94,10 +94,12 @@ export default {
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
 
-			EventHandler.$emit("ensemble-histogram", {
-				module: this.$store.selectedModule,
-				dataset: this.$store.runNames,
-			});
+			// EventHandler.$emit("ensemble-histogram", {
+			// 	module: this.$store.selectedModule,
+			// 	dataset: this.$store.runNames,
+			// });
+
+			this.visualize(this.$store.selectedModule);
 		},
 
 		dataProcess(data) {
@@ -121,14 +123,10 @@ export default {
 		},
 
 		setupScale(callsite) {
-			let ensemble_store = this.$store.modules[
-				this.$store.selectedTargetDataset
-			][callsite];
-			let target_store = this.$store.modules[this.$store.selectedTargetDataset][
-				callsite
-			];
+			let ensemble_store = this.$store.modules[this.$store.selectedTargetDataset][callsite];
+			let target_store = this.$store.modules[this.$store.selectedTargetDataset][callsite];
 
-			let ensembleData = ensemble_store[this.$store.selectedMetric]["prop_histograms"][this.$store.selectedProp]["ensemble"];
+			let ensembleData = ensemble_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp]["ensemble"];
 			let temp = this.dataProcess(ensembleData);
 			this.xVals = temp[0];
 			this.freq = temp[1];
@@ -141,7 +139,7 @@ export default {
 			if (target_store == undefined) {
 				isTargetThere = false;
 			} else {
-				const targetData = target_store[this.$store.selectedMetric]["prop_histograms"][this.$store.selectedProp]["target"];
+				const targetData = target_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp]["target"];
 				const targetTemp = this.dataProcess(targetData);
 				this.targetXVals = targetTemp[0];
 				this.targetFreq = targetTemp[1];
@@ -150,7 +148,7 @@ export default {
 				isTargetThere = true;
 			}
 
-			this.rankCount = parseInt(this.$store.numOfRanks["ensemble"]);
+			this.rankCount = parseInt(this.$store.runtimeProps.numOfRanks["ensemble"]);
 
 			this.xScale = d3
 				.scaleBand()
