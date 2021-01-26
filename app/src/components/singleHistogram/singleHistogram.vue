@@ -91,8 +91,7 @@ export default {
 				height: this.boxHeight,
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
-			console.log(this.svg);
-
+			
 			// EventHandler.$emit("single-histogram", {
 			// 	module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
 			// 	groupBy: this.$store.selectedGroupBy,

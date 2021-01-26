@@ -200,8 +200,8 @@ export default {
 
 	methods: {
 		/**
-     * Set up the view.
-     */
+		 * Set up the view.
+		 */
 		init() {
 			if (this.firstRender) {
 				this.width = document.getElementById(this.id).clientWidth;
@@ -216,9 +216,9 @@ export default {
 		},
 
 		/**
-     * Visualizes the callsite information in the view.
-     * Three things are performed.
-     */
+		 * Visualizes the callsite information in the view.
+		 * Three things are performed.
+		 */
 		visualize() {
 			this.setStates();
 			this.borderColorByMetric();
@@ -226,17 +226,17 @@ export default {
 		},
 
 		/**
-     * Create ID for each callsite's div.
-     * @param {*} callsiteID
-     */
+		 * Create ID for each callsite's div.
+		 * @param {*} callsiteID
+		 */
 		getID(callsiteID) {
 			return "callsite-information-" + callsiteID;
 		},
 
 		/**
-     * Set the states for the variables at the UI level.
-     * Similar to how React.useState().
-     */
+		 * Set the states for the variables at the UI level.
+		 * Similar to how React.useState().
+		 */
 		setStates() {
 			// Set from Application store.
 			this.selectedModule = this.$store.selectedModule;
@@ -258,12 +258,12 @@ export default {
 		},
 
 		/**
-     * Color the border of the callsite information block by a metric.
-     */
+		 * Color the border of the callsite information block by a metric.
+		 */
 		borderColorByMetric() {
 			for (let callsite in this.callsites) {
 				let data = this.callsites[callsite];
-				let id = "#callsite-information-node-" + data.id;
+				let id = "#callsite-information-node-" + data.id[0];
 				d3.select(id).style(
 					"stroke",
 					this.$store.runtimeColor.getColorByValue(
@@ -274,31 +274,27 @@ export default {
 		},
 
 		/**
-     * Draws a boxplot for the callsites.
-     */
+		 * Draws a boxplot for the callsites.
+		 */
 		boxplotByMetric() {
 			// TODO: Generalize this for all the possible metrics.
 			for (let callsite in this.callsites) {
 				let data = this.callsites[callsite][this.selectedMetric];
-				this.mean[callsite] = utils.formatRuntimeWithoutUnits(
-					data["mean_time"]
-				);
-				this.variance[callsite] = utils.formatRuntimeWithoutUnits(
-					data["variance"]
-				);
+				this.mean[callsite] = utils.formatRuntimeWithoutUnits(data["mean"]);
+				this.variance[callsite] = utils.formatRuntimeWithoutUnits(data["var"]);
 				this.stdDeviation[callsite] = utils.formatRuntimeWithoutUnits(
-					data["std_deviation"]
+					data["std"]
 				);
 				this.selectClassName[callsite] = "unselect-callsite";
 			}
 		},
 
 		/**
-     * Sort the callsite ordering based on the attribute.
-     *
-     * @param {Array} callsites - Callsites as a list.
-     * @param {String} attribute - Attribute to sort by.
-     */
+		 * Sort the callsite ordering based on the attribute.
+		 *
+		 * @param {Array} callsites - Callsites as a list.
+		 * @param {String} attribute - Attribute to sort by.
+		 */
 		sortByAttribute(callsites, attribute) {
 			let items = Object.keys(callsites).map(function (key) {
 				return [key, callsites[key]];
@@ -329,9 +325,9 @@ export default {
 		},
 
 		/**
-     * Selection feature.
-     * Code to select the callsite by the component-level button
-     */
+     	* Selection feature.
+     	* Code to select the callsite by the component-level button
+     	*/
 		changeSelectedClassName() {
 			event.stopPropagation();
 			let callsite = event.currentTarget.id;
@@ -354,44 +350,44 @@ export default {
 		},
 
 		/**
-     *
-     * @param {*} val
-     */
+		 * 
+		 */
 		switchIsSelectedCallsite(val) {
 			this.isCallsiteSelected = val;
 		},
 
 		/**
-     *
-     * @param {*} val
-     */
+		 * 
+		 */
 		switchIsSelectedModule(val) {
 			this.isModuleSelected = val;
 		},
 
 		/**
-     *
-     * @param {*} callsite
-     */
+		 *
+		 * @param {*} callsite
+		 */
 		selectedClassName(callsite) {
 			return this.selectClassName[callsite];
 		},
 
 		/**
-     *
-     * @param {*} module
-     */
-		formatModule(module) {
-			if (module.length < 10) {
+		 *
+		 * @param {*} module_idx
+		 */
+		formatModule(module_idx) {
+			const module = this.$store.moduleIndexMap[module_idx];
+			const splice = 15;
+			if (module.length < splice) {
 				return module;
 			}
-			return utils.truncNames(module, 10);
+			return utils.truncNames(module, splice);
 		},
 
 		/**
-     *
-     * @param {*} name
-     */
+		 *
+		 * @param {*} name
+		 */
 		formatName(name) {
 			if (name.length < 25) {
 				return name;
@@ -401,9 +397,9 @@ export default {
 		},
 
 		/**
-     *
-     * @param {*} name
-     */
+		 *
+		 * @param {*} name
+		 */
 		formatNumberOfHops(name) {
 			if (name == undefined || name[0] == undefined) {
 				return "-";
@@ -412,9 +408,9 @@ export default {
 		},
 
 		/**
-     *
-     * @param {*} val
-     */
+		 *
+		 * @param {*} val
+		 */
 		formatRuntime(val) {
 			let format = d3.format(".2");
 			let ret = format(val) + " \u03BCs";
@@ -422,8 +418,8 @@ export default {
 		},
 
 		/**
-     *
-     */
+		 *
+		 */
 		clear() {
 			for (let callsite in this.callsites) {
 				EventHandler.$emit("hide-mpi-boxplot", this.callsites[callsite]);
@@ -431,17 +427,17 @@ export default {
 		},
 
 		/**
-     *
-     * @param {*} idx
-     */
+		 *
+		 * @param {*} idx
+		 */
 		dataset(idx) {
 			return this.labels[idx];
 		},
 
 		/**
-     *
-     * @param {*} event
-     */
+		 *
+		 * @param {*} event
+		 */
 		revealCallsite(event) {
 			event.stopPropagation();
 			this.$socket.emit("reveal_callsite", {
@@ -454,9 +450,9 @@ export default {
 		},
 
 		/**
-     *
-     * @param {*} event
-     */
+		 *
+		 * @param {*} event
+		 */
 		showEntryFunctions(event) {
 			event.stopPropagation();
 			if (this.isEntryFunctionSelected == "unselect-callsite") {
@@ -469,9 +465,9 @@ export default {
 		},
 
 		/**
-     *
-     * @param {*} event
-     */
+		 *
+		 * @param {*} event
+		 */
 		showExitFunctions(event) {
 			event.stopPropagation();
 			if (this.isCalleeSelected == "unselect-callsite") {
@@ -484,11 +480,11 @@ export default {
 		},
 
 		/**
-     * Interaction: On supernode click, the callsites belonging to the supernode
-     * are only shown in the callsite information view.
-     *
-     * @param {String} module
-     */
+		 * Interaction: On supernode click, the callsites belonging to the supernode
+		 * are only shown in the callsite information view.
+		 *
+		 * @param {String} module
+		 */
 		selectModule(module) {
 			let callsites_in_module = this.$store.moduleCallsiteMap[
 				this.$store.selectedTargetDataset
@@ -521,8 +517,8 @@ export default {
 		},
 
 		/**
-     *
-     */
+		 *
+		 */
 		selectCallsitesByModule(thismodule) {
 			this.selectedModule = thismodule;
 			this.selectedCallsite = "";
@@ -557,16 +553,16 @@ export default {
 		},
 
 		/**
-     *
-     * @param {String} callsite
-     */
+		 *
+		 * @param {String} callsite
+		 */
 		getSelectedOutlierRanks(callsite) {
 			return this.selectedOutlierRanks[callsite];
 		},
 
 		/**
-     * Interaction: Graph splitting.
-     */
+		 * Interaction: Graph splitting.
+		 */
 		split() {
 			if (this.isEntryFunctionSelected == "select-callsite") {
 				this.$socket.emit("split_by_entry_callsites", {
@@ -628,7 +624,7 @@ export default {
 .callsite-information-node {
   padding: 10px 0px 5px 5px;
   /* padding-bottom: 4px;
-    padding-top:5px; */
+	padding-top:5px; */
   margin: 10px;
   border-width: 1px;
   border-style: solid;

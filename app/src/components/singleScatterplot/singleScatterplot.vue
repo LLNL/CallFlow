@@ -86,15 +86,16 @@ export default {
 			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
 			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
 
-			EventHandler.$emit("single-scatterplot", {
-				module: Object.keys(
-					this.$store.modules[this.$store.selectedTargetDataset]
-				)[0],
-				dataset: this.$store.selectedTargetDataset,
-			});
+			const data = Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0];
+			this.visualize(data);
+
+			// EventHandler.$emit("single-scatterplot", {
+			// 	module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
+			// 	dataset: this.$store.selectedTargetDataset,
+			// });
 		},
 
-		render(module) {
+		visualize(module) {
 			if (!this.firstRender) {
 				this.clear();
 			}
@@ -133,8 +134,8 @@ export default {
 			let store = this.$store.modules[this.$store.selectedTargetDataset][
 				this.$store.selectedModule
 			];
-			let mean_time_inc = store["Inclusive"]["data"];
-			let mean_time = store["Exclusive"]["data"];
+			let mean_time_inc = store["Inclusive"]["d"];
+			let mean_time = store["Exclusive"]["d"];
 
 			let xArray = [];
 			let yArray = [];

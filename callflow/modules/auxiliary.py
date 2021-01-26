@@ -38,7 +38,7 @@ class Auxiliary:
             self.e_df = sg.dataframe
 
         elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
-            self.runs = [k for k,v in sg.supergraphs.items()]
+            self.runs = [k for k, v in sg.supergraphs.items()]
             self.e_df = sg.df_filter_by_search_string('dataset', self.runs)
 
         LOGGER.warning(f'Computing auxiliary data for ({sg}) with {len(self.runs)} runs: {self.runs}')
@@ -136,8 +136,8 @@ class Auxiliary:
                     histogram = Histogram(df_ensemble=name_df).result
 
                 # --------------------------------------------------------------
-                if grp_type == 'callsite':
-                    boxplot = BoxPlot(name_df).result
+                # if grp_type == 'callsite':
+                boxplot = BoxPlot(name_df).result
 
                 # --------------------------------------------------------------
                 result[dataset][name] = self.pack_json(name=name, df=name_df,
@@ -178,14 +178,23 @@ class Auxiliary:
                           'Exclusive': 'time'}
 
         # create the dictionary with base info
-        result = {
-            "name": name,
-            "id": f"node-{df['nid'].unique()}",
-            "dataset": df["dataset"].unique(),
-            "module": df["module"].unique(),
-            "component_path": df["component_path"].unique(),
-            "component_level": df["component_level"].unique()
-        }
+        if grp_type == "callsite":
+            result = {
+                "name": name,
+                "id": f"{grp_type}-{df['nid'].unique()[0]}",
+                "dataset": df["dataset"].unique(),
+                "module": df["module"].unique(),
+                "component_path": df["component_path"].unique(),
+                "component_level": df["component_level"].unique()
+            }
+        elif grp_type == "module":
+            result = {
+                "name": name,
+                "id": f"{grp_type}-{df['module'].unique()[0]}",
+                "dataset": df["dataset"].unique(),
+                "component_path": df["component_path"].unique(),
+                "component_level": df["component_level"].unique()
+            }
 
         # now, append the data
         for k, a in KEYS_AND_ATTRS.items():

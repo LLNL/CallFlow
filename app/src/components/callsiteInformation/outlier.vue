@@ -39,7 +39,7 @@ export default {
 		 * @param {*} callsite 
 		 * @param {*} showTarget 
 		 */
-		init(q, targetq, ensembleWhiskerIndices, targetWhiskerIndices, d, targetd, xScale, callsite, showTarget) {
+		init(q, targetq, ensembleWhiskerIndices, targetWhiskerIndices, d, targetd, xScale, callsite) {
 			this.q = q;
 			this.targetq = targetq;
 			this.ensembleWhiskerIndices = ensembleWhiskerIndices;
@@ -256,8 +256,7 @@ export default {
 		 */
 		targetOutliers() {
 			let self = this;
-
-			let callsite_data = this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name];
+			let callsite_data = this.callsite[this.$store.selectedMetric]["boxplots"]["outliers"][this.callsite.name];
 			let data = [];
 			if (callsite_data != undefined) {
 				data = callsite_data[this.$store.selectedMetric]["outliers"];

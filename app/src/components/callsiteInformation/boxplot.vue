@@ -132,13 +132,11 @@ export default {
 		 */
 		process(callsite) {
 			if (this.$store.callsites[this.$store.selectedTargetDataset][callsite.name] != undefined) {
-				this.target_data = this.$store.callsites[this.$store.selectedTargetDataset][callsite.name][this.$store.selectedMetric]["q"];
+				this.target_data = callsite[this.$store.selectedMetric]["boxplots"]["q"];
 			}
 			else {
 				this.target_data = [0, 0, 0, 0, 0];
 			}
-
-			// this.q = this.qFormat(this.ensemble_data);
 			this.targetq = this.qFormat(this.target_data);
 		},
 
