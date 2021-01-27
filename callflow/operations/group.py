@@ -33,7 +33,6 @@ class Group:
         self.sg = sg
         self.group_by = group_by
 
-        # ----------------------------------------------------------------------
         self.callsite_module_map = {}
         self.callsite_path_map = {}
         self.entry_funcs = {}
@@ -43,6 +42,10 @@ class Group:
         self.compute()
         
     def _format_node_name(self, module_idx, name):
+        # TODO: Hacking the way through heere....
+        # Need to recalculate the module_fct_list. 
+        if self.sg.name == "ensemble":
+            return name + '=' + name
         return self.sg.module_fct_list[module_idx] + '=' + name
 
     # --------------------------------------------------------------------------

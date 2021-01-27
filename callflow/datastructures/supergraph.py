@@ -499,6 +499,7 @@ class SuperGraph(ht.GraphFrame):
                            apply_func=lambda _: [[Sanitizer.from_htframe(_f) \
                                for _f in f] \
                                for f in self.paths[_]][0])
+
         # TODO: For faster searches, bring this back.
         # self.indexes.insert(0, 'dataset')
         # self.dataframe.set_index(self.indexes, inplace=True, drop=True)
