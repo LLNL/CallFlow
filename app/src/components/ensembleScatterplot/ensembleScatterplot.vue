@@ -82,10 +82,12 @@ export default {
 				.attr("height", this.boxHeight - this.padding.top)
 				.attr("transform", "translate(" + this.padding.left + "," + this.padding.top + ")");
 
-			EventHandler.$emit("ensemble-scatterplot", {
-				module: this.$store.selectedModule,
-				dataset: this.$store.selectedDatasets,
-			});
+			// EventHandler.$emit("ensemble-scatterplot", {
+			// 	module: this.$store.selectedModule,
+			// 	dataset: this.$store.selectedDatasets,
+			// });
+
+			this.visualize(this.$store.selectedModule);
 		},
 
 		preprocess(data, dataset_name) {
@@ -150,12 +152,12 @@ export default {
 					if (thisdata != undefined) {
 						mean_time.push({
 							"callsite": thiscallsite,
-							"val": thisdata["Exclusive"]["mean_time"],
+							"val": thisdata["Exclusive"]["mean"],
 							"run": this.$store.selectedDatasets[i]
 						});
 						mean_time_inc.push({
 							"callsite": thiscallsite,
-							"val": thisdata["Inclusive"]["mean_time"],
+							"val": thisdata["Inclusive"]["mean"],
 							"run": this.$store.selectedDatasets[i]
 						});
 					}
@@ -196,12 +198,12 @@ export default {
 				let thisdata = this.$store.callsites[this.$store.selectedTargetDataset][thiscallsite];
 				mean_time.push({
 					"callsite": thiscallsite,
-					"val": thisdata["Exclusive"]["mean_time"],
+					"val": thisdata["Exclusive"]["mean"],
 					"run": this.$store.selectedTargetDataset
 				});
 				mean_time_inc.push({
 					"callsite": thiscallsite,
-					"val": thisdata["Inclusive"]["mean_time"],
+					"val": thisdata["Inclusive"]["mean"],
 					"run": this.$store.selectedTargetDataset
 				});
 			}

@@ -12,9 +12,8 @@ from callflow import get_logger
 from callflow.operations import Filter, Group, Unify
 from callflow.modules import Auxiliary
 
-#from .algorithms import DeltaConSimilarity, BlandAltman
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
-#from .modules import ParameterProjection, DiffView, MiniHistogram, FunctionList
+from callflow.modules import ParameterProjection, DiffView
 
 
 LOGGER = get_logger(__name__)
@@ -189,7 +188,6 @@ class BaseProvider:
         LOGGER.info(f"[Ensemble Mode] {operation}")
 
         # ----------------------------------------------------------------------
-        datasets = self.config["parameter_props"]["runs"]
         operation_name = operation["name"]
         sg = self.supergraphs["ensemble"]
 
@@ -208,8 +206,10 @@ class BaseProvider:
             reveal_callsites = operation.get("reveal_callsites", [])
             split_entry_module = operation.get("split_entry_module", [])
             split_callee_module = operation.get("split_callee_module", [])
-
-            ssg = SankeyLayout(supergraph=sg, path="group_path",
+            selected_runs = operation.get("datasets", None)
+            
+            ssg = SankeyLayout(sg=sg, path="group_path",
+                               selected_runs=selected_runs,
                                reveal_callsites=reveal_callsites,
                                split_entry_module=split_entry_module,
                                split_callee_module=split_callee_module)
@@ -222,8 +222,8 @@ class BaseProvider:
 
         # ----------------------------------------------------------------------
         elif operation_name == "projection":
-            pp = ParameterProjection(supergraph=sg,
-                                     targetDataset=operation["targetDataset"],
+            pp = ParameterProjection(sg=sg,
+                                     selected_runs=operation["selectedRuns"],
                                      n_cluster=operation["numOfClusters"])
             return pp.result.to_json(orient="columns")
 

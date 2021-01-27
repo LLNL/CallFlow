@@ -388,33 +388,33 @@ export default {
 				if (this.targetCallsites[callsite] != undefined) {
 					this.targetMeans[callsite] = utils.formatRuntimeWithoutUnits(
 						this.targetCallsites[callsite][this.$store.selectedMetric][
-							"mean_time"
+							"mean"
 						]
 					);
 					this.targetVariance[callsite] = utils.formatRuntimeWithoutUnits(
 						this.targetCallsites[callsite][this.$store.selectedMetric][
-							"variance"
+							"var"
 						]
 					);
 					this.targetStandardDeviation[
 						callsite
 					] = utils.formatRuntimeWithoutUnits(
 						this.targetCallsites[callsite][this.$store.selectedMetric][
-							"std_deviation"
+							"std"
 						]
 					);
 
 					this.ensembleMeans[callsite] = utils.formatRuntimeWithoutUnits(
-						this.callsites[callsite][this.$store.selectedMetric]["mean_time"]
+						this.callsites[callsite][this.$store.selectedMetric]["mean"]
 					);
 					this.ensembleVariance[callsite] = utils.formatRuntimeWithoutUnits(
-						this.callsites[callsite][this.$store.selectedMetric]["variance"]
+						this.callsites[callsite][this.$store.selectedMetric]["var"]
 					);
 					this.ensembleStandardDeviation[
 						callsite
 					] = utils.formatRuntimeWithoutUnits(
 						this.callsites[callsite][this.$store.selectedMetric][
-							"std_deviation"
+							"std"
 						]
 					);
 				} else {
@@ -432,7 +432,7 @@ export default {
 		borderColorByMetric() {
 			for (let callsite in this.intersectionCallsites) {
 				let callsite_data = this.intersectionCallsites[callsite];
-				let data = callsite_data[this.$store.selectedMetric]["mean_time"];
+				let data = callsite_data[this.$store.selectedMetric]["mean"];
 				let id = "callsite-information-" + callsite_data.id;
 				document.getElementById(
 					id
@@ -682,14 +682,14 @@ export default {
 			if (attribute == "Exclusive" || attribute == "Inclusive") {
 				items = items.sort(function (first, second) {
 					return (
-						second[1][attribute]["mean_time"] - first[1][attribute]["mean_time"]
+						second[1][attribute]["mean"] - first[1][attribute]["mean"]
 					);
 				});
 			} else if (attribute == "Standard Deviation") {
 				items.sort(function (first, second) {
 					return (
-						second[1][self.$store.selectedMetric]["std_deviation"] -
-            first[1][self.$store.selectedMetric]["std_deviation"]
+						second[1][self.$store.selectedMetric]["std"] -
+            first[1][self.$store.selectedMetric]["std"]
 					);
 				});
 			}

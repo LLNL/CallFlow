@@ -72,13 +72,11 @@ class SankeyLayout:
         self.split_entry_module = split_entry_module
         self.split_callee_module = split_callee_module
 
-
         self.primary_group_df = df_group_by(self.df, [SankeyLayout._PRIMARY_GROUPBY_COLUMN])
         self.secondary_group_df = df_group_by(self.df, [SankeyLayout._SECONDARY_GROUPBY_COLUMN])
         self.secondary_primary_group_df = df_group_by(self.df, [SankeyLayout._SECONDARY_GROUPBY_COLUMN, SankeyLayout._PRIMARY_GROUPBY_COLUMN])
         self.paths_df = df_group_by(self.df, ["name", self.path])
         
-
         self.nxg = self._create_nxg_from_paths()
         self.add_reveal_paths(self.reveal_callsites)
         
@@ -90,8 +88,6 @@ class SankeyLayout:
 
         self._add_node_attributes()
         self._add_edge_attributes()
-
-        print(self.nxg.nodes())
 
     # --------------------------------------------------------------------------
     # Split by reveal callsite.

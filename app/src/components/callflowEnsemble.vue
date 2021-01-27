@@ -549,7 +549,7 @@ export default {
 			this.$store.selectedModule = this.selectedModule;
 			
 			console.log("Mode : ", this.selectedMode);
-			console.log("Number of runs :", this.$store.run_counts);
+			console.log("Number of runs :", this.$store.selectedDatasets.length);
 			console.log("Datasets : ", this.$store.selectedDatasets);
 			console.log("Format = ", this.selectedFormat);
 			
@@ -613,11 +613,11 @@ export default {
 		setComponentMap() {
 			this.currentEnsembleCCTComponents = [this.$refs.CCT];
 			this.currentEnsembleSuperGraphComponents = [
-				// this.$refs.SuperGraph,
+				this.$refs.SuperGraph,
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
-				// this.$refs.CallsiteCorrespondence,
-				// this.$refs.ParameterProjection,
+				this.$refs.CallsiteCorrespondence,
+				this.$refs.ParameterProjection,
 				// this.$refs.ModuleHierarchy,
 			];
 		},

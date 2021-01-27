@@ -52,13 +52,7 @@ export default {
 			"#D62728",
 		],
 	}),
-	sockets: {
-		parameter_projection(data) {
-			data = JSON.parse(data);
-			console.log("Projections: ", data);
-			this.visualize(data);
-		},
-	},
+	
 	mounted() {
 		let self = this;
 		EventHandler.$on("highlight_dataset", (dataset) => {
@@ -90,9 +84,7 @@ export default {
 			this.y = d3.scaleLinear().range([this.height, 0]);
 
 			let data = await APIService.POSTRequest("projection", {
-				datasets: this.$store.selectedDatasets,
-				targetDataset: this.$store.selectedTargetDataset,
-				groupBy: "module",
+				selectedRuns: this.$store.selectedDatasets,
 				numOfClusters: this.$store.selectedNumOfClusters,
 			});
 			data = JSON.parse(data);
@@ -213,8 +205,8 @@ export default {
 				ret[id].push(data["dataset"][id]);
 				ret[id].push(id);
 				ret[id].push(data["label"][id]);
-				ret[id].push(this.$store.maxIncTime[dataset]);
-				ret[id].push(this.$store.maxExcTime[dataset]);
+				ret[id].push(this.$store.runtimeProps.maxIncTime[dataset]);
+				ret[id].push(this.$store.runtimeProps.maxExcTime[dataset]);
 
 				let x = data["x"][id];
 				let y = data["y"][id];
@@ -387,10 +379,10 @@ export default {
           dataset +
           "<br/>" +
           "[PC1] Inc. time (max): " +
-          utils.formatRuntimeWithUnits(this.$store.maxIncTime[dataset]) +
+          utils.formatRuntimeWithUnits(this.$store.runtimeProps.maxIncTime[dataset]) +
           "<br/>" +
           "[PC2] Exc. time (max): " +
-          utils.formatRuntimeWithUnits(this.$store.maxExcTime[dataset])
+          utils.formatRuntimeWithUnits(this.$store.runtimeProps.maxExcTime[dataset])
 			);
 		},
 
