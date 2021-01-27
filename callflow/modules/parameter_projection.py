@@ -17,9 +17,22 @@ class ParameterProjection:
     Parameter projection view
     """
 
-    def __init__(self, ensemble_graph, n_cluster=3):
+    def __init__(self, sg, selected_runs=None, n_cluster=3):
 
-        self.df = ensemble_graph.gf.df
+        # TODO: This code is repeated in modules/auxiliary.py.
+        # Move to a instance method of SuperGraph.
+        if selected_runs is not None:
+            self.runs = selected_runs
+            self.df = sg.df_filter_by_search_string('dataset', self.runs)
+    
+        elif isinstance(sg, callflow.SuperGraph) and sg.name != "ensemble":
+            self.runs = [sg.name]
+            self.df = sg.dataframe
+
+        elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
+            self.runs = [k for k, v in sg.supergraphs.items()]
+            self.df = sg.df_filter_by_search_string('dataset', self.runs)
+
         self.datasets = self.df["dataset"].unique().tolist()
         self.projection = "MDS"
         self.clustering = "k_means"

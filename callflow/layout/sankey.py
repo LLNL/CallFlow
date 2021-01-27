@@ -461,7 +461,7 @@ class SankeyLayout:
     @staticmethod
     def _break_cycles_in_paths(path):
         """
-        Breaks cycles if present in the callpath.
+        Breaks cycles in the call graph, if present.
 
         Parameter:
             path: path array
