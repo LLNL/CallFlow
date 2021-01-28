@@ -11,6 +11,7 @@
 
 <script>
 import * as d3 from "d3";
+import * as utils from "../../utils";
 
 export default {
 	name: "MeanGradients",
@@ -23,14 +24,8 @@ export default {
 		init(nodes, containerG) {
 			this.nodes = nodes;
 			this.containerG = containerG;
-
-			// this.colorScale();
 			this.gradients();
 			this.visualize();
-		},
-
-		colorScale() {
-			// this.$parent.$parent.$refs.EnsembleColorMap.update(this.$store.mode, hist_min, hist_max);
 		},
 
 		gradients() {
@@ -51,6 +46,7 @@ export default {
 				let grid = [];
 				let val = [];
 				if (node.type == "super-node" && this.$store.modules.ensemble[node.module] != undefined) {
+					const module_name = utils.getModuleName(this.$store, node.module);
 					grid = this.$store.modules["ensemble"][node.module][this.$store.selectedMetric]["gradients"]["hist"]["x"];
 					val = this.$store.modules["ensemble"][node.module][this.$store.selectedMetric]["gradients"]["hist"]["y"];
 				}
@@ -126,7 +122,8 @@ export default {
 							return this.$store.runtimeColor.intermediate;
 						}
 						else if (d.type == "super-node") {
-							if (this.$store.modules[this.$store.selectedTargetDataset][d.id] == undefined) {
+							const module_idx = utils.getModuleIndex(this.$store, d.id);
+							if (this.$store.modules[this.$store.selectedTargetDataset][module_idx] == undefined) {
 								return this.$store.runtimeColor.intermediate;
 							}
 							else {

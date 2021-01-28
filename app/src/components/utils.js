@@ -221,6 +221,10 @@ export function getModuleName(store, module_idx) {
 	return store["moduleFctList"][module_idx];
 }
 
+export function getModuleIndex(store, module) {
+	return store["moduleFctList"].indexOf(module);
+}
+
 
 // ----------------------------------------------------------------
 // Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
