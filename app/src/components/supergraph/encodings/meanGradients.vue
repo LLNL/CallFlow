@@ -43,21 +43,9 @@ export default {
 					.attr("x2", "0%")
 					.attr("y2", "100%");
 
-				let grid = [];
-				let val = [];
-				if (node.type == "super-node" && this.$store.modules.ensemble[node.module] != undefined) {
-					const module_name = utils.getModuleName(this.$store, node.module);
-					grid = this.$store.modules["ensemble"][node.module][this.$store.selectedMetric]["gradients"]["hist"]["x"];
-					val = this.$store.modules["ensemble"][node.module][this.$store.selectedMetric]["gradients"]["hist"]["y"];
-				}
-				else if (node.type == "component-node") {
-					grid = this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["x"];
-					val = this.$store.callsites["ensemble"][node.name][this.$store.selectedMetric]["gradients"]["hist"]["y"];
-				}
-				else if (node.type == "intermediate") {
-					grid = [];
-					val = [];
-				}
+				const module_idx = utils.getModuleIndex(this.$store, node.id);	
+				const grid = this.$store.modules["ensemble"][module_idx][this.$store.selectedMetric]["gradients"]["hist"]["x"];
+				const val = this.$store.modules["ensemble"][module_idx][this.$store.selectedMetric]["gradients"]["hist"]["y"];
 
 				for (let i = 0; i < grid.length; i += 1) {
 					let x = (i + i + 1) / (2 * grid.length);
@@ -140,10 +128,6 @@ export default {
 						}
 					}
 				});
-		},
-
-		clear() {
-			// this.containerG.selectAll(".mean-gradient").remove();
 		},
 	}
 };

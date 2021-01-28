@@ -40,9 +40,9 @@ class Gradients:
         # gradient should be computed only for ensemble dataframe
         # i.e., multiple values in dataframe column
         datasets = df_unique(df, 'dataset')
-        # assert len(datasets) > 1
+        assert len(datasets) > 1
 
-        self.df_dict = {"ensemble": df}
+        self.df_dict = { _d: df.loc[df['dataset'] == _d] for _d in df['dataset'].unique() }
         self.callsiteOrModule = callsiteOrModule
         self.binCount = bins
 
@@ -52,16 +52,13 @@ class Gradients:
 
         self.result = self.compute(columnName="name")
 
-    # ------------------------------------------------------------------------------
-    @staticmethod
+    staticmethod
     def convert_dictmean_to_list(dictionary):
-        mean = []
-        dataset = {}
-        for state in dictionary:
-            d = list(dictionary[state].values())
-            mean.append(np.mean(np.array(d)))
-            dataset[state] = np.mean(np.array(d))
-        return [mean, dataset]
+        return [ np.mean(np.array(list(dictionary[_].values()))) for _ in dictionary]
+
+    @staticmethod
+    def convert_dictmean_to_dict(dictionary):
+        return { _ : np.mean(np.array(list(dictionary[_].values()))) for _ in dictionary}
 
     # --------------------------------------------------------------------------
     @staticmethod
@@ -78,7 +75,7 @@ class Gradients:
             mean = dataset_dict[dataset]
             for idx, x in np.ndenumerate(bin_edges):
                 if x > float(mean):
-                    dataset_position_dict[dataset] = idx[0] - 1
+                    dataset_position_dict[dataset] =len(bin_edges) - 2 #idx[0] - 1
                     break
                 if idx[0] == len(bin_edges) - 1:
                     dataset_position_dict[dataset] = len(bin_edges) - 2
@@ -102,7 +99,6 @@ class Gradients:
                     dists[k][dataset] = dict((rank, 0) for rank in range(0, self.max_ranks))
                 else:
                     dists[k][dataset] = dict(zip(node_df["rank"], node_df[a]))
-                    #dists[k][dataset] = dict(zip(node_df["rank"].tolist(), node_df[a].tolist()))
 
         # Calculate appropriate number of bins automatically.
         # num_of_bins = min(self.freedman_diaconis_bins(np.array(dist_list)),
@@ -110,17 +106,9 @@ class Gradients:
 
         # convert the dictionary of values to list of values.
         results = {}
-        for k,a in Gradients.KEYS_AND_ATTRS.items():
-
-            dists_list, datasets_list = Gradients.convert_dictmean_to_list(dists[k])
-            #dists_list = np.array(dists_list)
-
-            # TODO: this is likely wrong!
-            #print(type(dists[k]))
-            #print(list(dists[k].keys()))
-            #print(type(dists[k]['ensemble']))
-            #print(list(dists[k]['ensemble'].keys()))
-            dists_list = np.array(list(dists[k]['ensemble'].values()))
+        for k, a in Gradients.KEYS_AND_ATTRS.items():
+            dists_list = np.array(Gradients.convert_dictmean_to_list(dists[k]))
+            datasets_list = Gradients.convert_dictmean_to_dict(dists[k])
 
             hist_grid = histogram(dists_list, bins=num_of_bins)
             # kde_grid = kde(dists_list, gridsize=num_of_bins)
@@ -133,6 +121,7 @@ class Gradients:
                 # "kde": Histogram._format_data(kde_grid),
                 "hist": Histogram._format_data(hist_grid)
             }
+            print(results[k]["hist"])
 
         return results
 
