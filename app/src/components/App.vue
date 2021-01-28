@@ -77,6 +77,7 @@ export default {
 		},
 	}),
 	mounted() {
+		document.title = "CallFlow - ";
 		this.fetchData();
 	},
 	methods: {
@@ -86,6 +87,8 @@ export default {
 		*/ 
 		async fetchData() {
 			this.config = await APIService.GETRequest("config");
+
+			document.title = "CallFlow - " + this.config.experiment;
 
 			this.data = await APIService.POSTRequest("aux_data", {
 				datasets: this.config.runs,
@@ -351,10 +354,6 @@ export default {
 
 			this.$store.viewHeight = window.innerHeight - 2 * toolbarHeight - footerHeight;
 		},
-
-		// ----------------------------------------------------------------
-		// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
-		// ----------------------------------------------------------------
 
 		setSelectedModule(dataset) {
 			let module_list = Object.keys(
