@@ -528,6 +528,7 @@ export default {
 	mounted() {
 		// Push to '/' when `this.$store.selectedDatasets` is undefined.
 		if(this.$store.selectedDatasets === undefined) {
+			// TODO: Instead of pushing to /, we should populate the variables. 
 			this.$router.push("/");
 		}
 
@@ -688,7 +689,6 @@ export default {
 
 		updateFormat() {
 			this.clearLocal();
-			this.reset();
 			this.init();
 		},
 

@@ -13,7 +13,9 @@
 </template>
 
 <script>
+import APIService from "../../lib/APIService";
 import ColorMap from "../colormap";
+import * as utils from "../utils";
 
 import * as d3 from "d3";
 import dagreD3 from "dagre-d3/dist/dagre-d3";
@@ -38,45 +40,23 @@ export default {
 		HAS_DATA_COLUMNS: ["module"], // Array of keys in incoming data to check for.
 		has_data_map: {}, // stores if the required data points are present in the incoming data.
 	}),
-
-	sockets: {
-		/**
-     * Socket event listener for /single_cct endpoint
-     *
-     * @param {JSON} data
-     */
-		single_cct(data) {
-			console.debug("Single CCT data: ", data);
-			this.render(data);
-		},
-
-		/**
-     * Socket event listener for /ensemble_cct endpoint
-     *
-     * @param {JSON} data
-     */
-		ensemble_cct(data) {
-			console.debug("Ensemble CCT data: ", data);
-			this.render(data);
-		},
-	},
-
+	
 	methods: {
 		/**
-     * Calls the socket to fetch data.
-     */
-		init() {
-			if (this.$store.selectedMode === "Single") {
-				this.$socket.emit("single_cct", {
-					dataset: this.$store.selectedTargetDataset,
-					functionsInCCT: this.$store.selectedFunctionsInCCT,
-				});
-			} else if (this.$store.selectedMode === "Ensemble") {
-				this.$socket.emit("ensemble_cct", {
-					datasets: this.$store.selectedTargetDataset,
-					functionsInCCT: this.$store.selectedFunctionsInCCT,
-				});
-			}
+		 * Send the request to /init endpoint
+		 * Parameters: {datasetPath: "path/to/dataset"}
+		 */
+		async fetchData() {
+			return await APIService.POSTRequest("cct", {
+				datasets: this.$store.selectedTargetDataset,
+			});
+		},
+
+		/**
+		 * Calls the socket to fetch data.
+		 */
+		async init() {
+			this.data = await this.fetchData();
 
 			this.width = this.$store.viewWidth - this.margin.left - this.margin.right;
 			this.height =
@@ -88,6 +68,39 @@ export default {
 			});
 
 			this.g = this.createGraph();
+			this.setHasDataMap();
+
+			this.nodes(this.data.nodes);
+			this.edges(this.data.links);
+
+			const inner = this.svg.select("#container");
+
+			// Create the renderer
+			const dagreRender = new dagreD3.render();
+
+			// Set up zoom support
+			this.zoom = d3.zoom().on("zoom", function () {
+				inner.attr("transform", d3.event.transform);
+			});
+			this.svg.call(this.zoom);
+
+			// Run the renderer. This is what draws the final graph.
+			dagreRender(inner, this.g);
+
+			this.zoomTranslate();
+
+			this.svg.selectAll("g.node").on("click", function (id) {
+				self.node_click_action(id);
+				dagreRender(inner, self.g);
+				self.zoomTranslate();
+			});
+
+			// Add tooltip
+			// inner.selectAll("g.node")
+			// 	.attr("title", function (v) { return this.tooltip(v, g.node(v).description) })
+			// 	.each(function (v) { $(this).tipsy({ gravity: "w", opacity: 1, html: true }); });
+
+			this.$refs.ColorMap.init(this.$store.runtimeColor);
 		},
 
 		/**
@@ -161,16 +174,11 @@ export default {
 		setCallsiteHTML(callsite, callsite_color) {
 			let name = callsite["name"];
 
-			let html =
-        callsite_color["text"] === "#fff" ? "<div class=\"white-text\"><span>" + name + "</span>" : "<div class=\"black-text\"><span>" + name + "</span>";
+			let html = callsite_color["text"] === "#fff" ? "<div class=\"white-text\"><span>" + name + "</span>" : "<div class=\"black-text\"><span>" + name + "</span>";
 
 			if (this.has_data_map["module"]) {
-				let thismodule = callsite["module"];
-				html =
-          html +
-          "<br/><span class=\"description\"><b>Module :</b> " +
-          thismodule +
-          "</span> </div>";
+				let thismodule = utils.getModuleName(this.$store, callsite["module"]);
+				html = html + "<br/><span class=\"description\"><b>Module :</b> " + thismodule + "</span> </div>";
 			}
 			return html;
 		},
@@ -231,9 +239,9 @@ export default {
 
 			let self = this;
 			this.g.edges().forEach((e) => {
-				var edge = self.g.edge(e);
+				const edge = self.g.edge(e);
 				edge.id = "cct-edge";
-				// g.edge(e).style = "stroke: 1.5px "
+				self.g.edge(e).style = "fill: rgba(255,255,255, 0); stroke: #d5d5d5; stroke-width: 1.5px;";
 			});
 		},
 
@@ -349,48 +357,6 @@ export default {
 		},
 
 		/**
-     * Render method for the component.
-     */
-		render(data) {
-			this.data = data;
-			this.setHasDataMap();
-
-			this.nodes(this.data.nodes);
-			this.edges(this.data.links);
-
-			const inner = this.svg.select("#container");
-
-			// Create the renderer
-			const dagreRender = new dagreD3.render();
-
-			// Set up zoom support
-			this.zoom = d3.zoom().on("zoom", function () {
-				inner.attr("transform", d3.event.transform);
-			});
-			this.svg.call(this.zoom);
-
-			// Run the renderer. This is what draws the final graph.
-			dagreRender(inner, this.g);
-
-			this.zoomTranslate();
-
-			// node click event (highlight)
-			let self = this;
-			this.svg.selectAll("g.node").on("click", function (id) {
-				self.node_click_action(id);
-				dagreRender(inner, self.g);
-				self.zoomTranslate();
-			});
-
-			// Add tooltip
-			// inner.selectAll("g.node")
-			// 	.attr("title", function (v) { return this.tooltip(v, g.node(v).description) })
-			// 	.each(function (v) { $(this).tipsy({ gravity: "w", opacity: 1, html: true }); });
-
-			this.$refs.ColorMap.init(this.$store.runtimeColor);
-		},
-
-		/**
      * Clear method for the component.
      */
 		clear() {
@@ -427,12 +393,16 @@ export default {
 }
 
 .white-text > .description {
-    color: rgb(200, 195, 195));
+    color: rgb(200, 195, 195);
     font-size: 10pt;
 }
 
 .black-text > .description {
     color: rgb(26, 26, 49);
     font-size: 10pt;
+}
+
+#cct-edge {
+	fill: red;
 }
 </style>

@@ -20,28 +20,40 @@ class NodeLinkLayout:
 
     _COLUMNS = ["time (inc)", "time", "name", "module"]
 
-    def __init__(self, supergraph, callsite_count=50):
+    def __init__(self, sg, selected_runs=None):
 
-        assert isinstance(supergraph, SuperGraph)
-        assert isinstance(callsite_count, int)
-        assert callsite_count > 0
+        assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
 
         # set the current graph being rendered.
-        self.supergraph = supergraph
+        self.sg = sg
 
         self.timer = Timer()
 
-        # Number of runs in the state.
-        self.runs = self.supergraph.gf.df["dataset"].unique()
+        # TODO: This code is repeated in modules/auxiliary.py.
+        # Move to a instance method of SuperGraph.
+        if selected_runs is not None:
+            self.runs = selected_runs
+            self.df = sg.df_filter_by_search_string('dataset', self.runs)
+    
+        elif isinstance(sg, callflow.SuperGraph) and sg.name != "ensemble":
+            self.runs = [sg.name]
+            self.df = sg.dataframe
+
+        elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
+            self.runs = [k for k, v in sg.supergraphs.items()]
+            self.df = sg.df_filter_by_search_string('dataset', self.runs)
 
         # Put the top callsites into a list.
-        callsites = self.supergraph.gf.df_get_top_by_attr(callsite_count, "time (inc)")
+        callsite_count = len(sg.df_unique('name'))
+        callsites = sg.df_get_top_by_attr(callsite_count, "time (inc)")
 
         # Filter out the callsites not in the list. (in a LOCAL copy)
-        df = self.supergraph.gf.df_filter_by_name(callsites)
+        _fdf = sg.df_filter_by_name(callsites)
+
+        self.module_name_group_df = sg.df_group_by(["module", "name"])
 
         with self.timer.phase(f"Creating CCT for ({self.runs})"):
-            self.nxg = NodeLinkLayout._create_nxg_from_paths(df["path"].tolist())
+            self.nxg = NodeLinkLayout._create_nxg_from_paths(_fdf["path"].tolist())
 
         # Add node and edge attributes.
         with self.timer.phase("Add graph attributes"):
@@ -56,15 +68,14 @@ class NodeLinkLayout:
     # flake8: noqa: C901
     def _add_node_attributes(self):
 
-        module_name_group_df = self.supergraph.gf.df.groupby(["module", "name"])
-        name_time_inc_map = module_name_group_df["time (inc)"].max().to_dict()
-        name_time_exc_map = module_name_group_df["time"].max().to_dict()
+        name_time_inc_map = self.module_name_group_df["time (inc)"].max().to_dict()
+        name_time_exc_map = self.module_name_group_df["time"].max().to_dict()
 
         # compute data map
         datamap = {}
         for callsite in self.nxg.nodes():
 
-            module = self.supergraph.get_module_name(callsite)
+            module = self.sg.get_module_name(callsite)
 
             for column in NodeLinkLayout._COLUMNS:
                 if column not in datamap:
@@ -86,8 +97,8 @@ class NodeLinkLayout:
         # ----------------------------------------------------------------------
         # compute map across data
         for run in self.runs:
-            target_df = self.supergraph.gf.df.loc[
-                self.supergraph.gf.df["dataset"] == run
+            target_df = self.sg.dataframe.loc[
+                self.sg.dataframe["dataset"] == run
             ]
 
             if not target_df["module"].equals(target_df["name"]):
@@ -97,7 +108,7 @@ class NodeLinkLayout:
                 target_group_df = target_df
                 target_name_group_df = target_df.groupby("name")
 
-            target_module_callsite_map = target_group_df["name"].to_dict()
+            target_module_callsite_map = target_group_df["name"].unique().to_dict()
             target_name_time_inc_map = (
                 target_name_group_df["time (inc)"].mean().to_dict()
             )
@@ -109,7 +120,7 @@ class NodeLinkLayout:
                 if callsite not in target_module_callsite_map.keys():
                     continue
 
-                module = self.supergraph.get_module_name(callsite)
+                module = self.sg.get_module_name(callsite)
 
                 if callsite not in datamap:
                     datamap[callsite] = {}

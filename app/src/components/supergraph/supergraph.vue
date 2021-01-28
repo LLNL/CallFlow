@@ -104,7 +104,7 @@ export default {
 			let data = {};
 			if (this.$store.selectedMode == "Single") {
 				data = await APIService.POSTRequest("single_supergraph", {
-					dataset: this.$store.selectedTargetDataset,
+					datasets: this.$store.selectedTargetDataset,
 					groupBy: "module",
 				});
 				console.debug("[/single_supergraph]", data);

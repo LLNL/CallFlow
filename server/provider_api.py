@@ -49,9 +49,8 @@ class APIProvider(BaseProvider):
     def __init__(self, config: dict = None) -> None:
         super().__init__(config)
         #self.production = production
-        self.handle_general()
-        self.handle_single()
-        self.handle_ensemble()
+        self.handle_routes()
+       
 
     def start(self, host: str, port: int):
         LOGGER.info("Starting the API service")
@@ -74,9 +73,9 @@ class APIProvider(BaseProvider):
             warnings.warn(f"[API: {endpoint}] emits no data.")
             return jsonify(isError=True, message="Error", statusCode=500)
 
-    def handle_general(self):
+    def handle_routes(self):
         """
-        General API requests
+        API endpoints
         """
 
         @app.route("/")
@@ -102,11 +101,6 @@ class APIProvider(BaseProvider):
             )
             return APIProvider.emit_json("aux_data", result)
 
-    def handle_single(self):
-        """
-        Single CallFlow API requests
-        """
-
         @app.route("/single_supergraph", methods=["POST"])
         @cross_origin()
         def single_supergraph():
@@ -115,7 +109,7 @@ class APIProvider(BaseProvider):
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("single_supergraph", result)
 
-        @app.route("/single_cct", methods=["POST"])
+        @app.route("/cct", methods=["POST"])
         @cross_origin()
         def single_cct():
             data = request.json
@@ -135,11 +129,6 @@ class APIProvider(BaseProvider):
             )
             return APIProvider.emit_json("split_mpi_distribution", result)
 
-    def handle_ensemble(self):
-        """
-        Ensemble CallFlow API requests
-        """
-
         @app.route("/ensemble_supergraph", methods=["POST"])
         @cross_origin()
         def ensemble_supergraph():
@@ -148,13 +137,13 @@ class APIProvider(BaseProvider):
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("ensemble_supergraph", result)
 
-        @app.route("/ensemble_cct", methods=["POST"])
-        @cross_origin()
-        def ensemble_cct():
-            data = request.json
-            nxg = self.request_ensemble({"name": "ensemble_cct", **data})
-            result = json_graph.node_link_data(nxg)
-            return APIProvider.emit_json("ensemble_cct", result)
+        # @app.route("/ensemble_cct", methods=["POST"])
+        # @cross_origin()
+        # def ensemble_cct():
+        #     data = request.json
+        #     nxg = self.request_ensemble({"name": "ensemble_cct", **data})
+        #     result = json_graph.node_link_data(nxg)
+        #     return APIProvider.emit_json("ensemble_cct", result)
 
         @app.route("/similarity", methods=["POST"])
         @cross_origin()

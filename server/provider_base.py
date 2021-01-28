@@ -140,7 +140,7 @@ class BaseProvider:
         Handles requests connected to Single CallFlow.
         """
         assert isinstance(operation, dict)
-        _OPERATIONS = ["cct", "supergraph", "function", "split_mpi_distribution"]
+        _OPERATIONS = ["cct", "supergraph", "split_mpi_distribution"]
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
 
@@ -148,12 +148,12 @@ class BaseProvider:
 
         # ----------------------------------------------------------------------
         operation_name = operation["name"]
-        sg = self.supergraphs[operation["dataset"]]
+        print(operation)
+        sg = self.supergraphs[operation["datasets"]]
 
         # ----------------------------------------------------------------------
         if operation_name == "cct":
-            nll = NodeLinkLayout(supergraph=sg,
-                                 callsite_count=operation["functionsInCCT"])
+            nll = NodeLinkLayout(sg=sg, selected_runs=operation["datasets"])
             return nll.nxg
 
         # ----------------------------------------------------------------------
