@@ -62,7 +62,7 @@ export default {
 		EventHandler.$on("single-scatterplot", function (data) {
 			self.clear();
 			console.debug("Single Scatterplot: ", data["module"]);
-			self.render(data["module"]);
+			self.visualize(data["module"]);
 		});
 	},
 
@@ -126,7 +126,6 @@ export default {
 			this.xAxis();
 			this.yAxis();
 			this.dots();
-			// this.correlationText();
 			// this.trendline()
 		},
 
@@ -240,11 +239,13 @@ export default {
         "(e+" + this.x_max_exponent + ") " + "Exclusive Runtime (" + "\u03BCs)";
 			this.svg
 				.append("text")
-				.attr("class", "axis-label")
-				.attr("x", this.boxWidth - this.padding.right)
-				.attr("y", this.yAxisHeight + 3 * this.padding.top)
-				.style("font-size", "12px")
+				.attrs({
+					class: "ss-axis-label",
+					x: this.boxWidth - this.padding.right,
+					y: this.yAxisHeight + 3 * this.padding.top,
+				})
 				.style("text-anchor", "end")
+				.style("font-size", "12px")
 				.text(label);
 		},
 
@@ -301,7 +302,7 @@ export default {
 			this.svg
 				.append("text")
 				.attrs({
-					class: "axis-label",
+					class: "ss-axis-label",
 					transform: "rotate(-90)",
 					x: -this.padding.top,
 					y: 0.5 * this.padding.left,
@@ -323,7 +324,7 @@ export default {
 					return `${runtime[0]}`;
 				});
 
-			var yAxisLine = this.svg
+			const yAxisLine = this.svg
 				.append("g")
 				.attr("id", "yAxis")
 				.attr("class", "axis")
@@ -399,28 +400,12 @@ export default {
 				.style("stroke-width", 0.5);
 		},
 
-		correlationText() {
-			let self = this;
-			let decimalFormat = d3.format("0.2f");
-			this.svg
-				.append("g")
-				.append("text")
-				.attr("class", "text")
-				.text("corr-coef: " + decimalFormat(this.regression["corr_coef"]))
-				.attr("x", function (d) {
-					return self.boxWidth - self.width / 3;
-				})
-				.attr("y", function (d) {
-					return 20;
-				});
-		},
-
 		clear() {
 			d3.selectAll(".dot").remove();
 			d3.selectAll(".axis").remove();
 			d3.selectAll(".trend-line").remove();
 			// d3.selectAll('.axis-label"').remove();
-			this.svg.selectAll("text").remove();
+			d3.selectAll(".ss-axis-label").remove();
 		},
 	},
 };

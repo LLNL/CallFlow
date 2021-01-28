@@ -313,6 +313,9 @@ class SuperGraph(ht.GraphFrame):
     def get_module_name(self, idx):
         return self.module_fct_list.index(idx)
 
+    def get_module_idx(self, module):
+        return self.module_fct_list.index(module)
+
     # --------------------------------------------------------------------------
     # static read/write functionality
     # --------------------------------------------------------------------------

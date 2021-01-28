@@ -571,6 +571,12 @@ class SankeyLayout:
                 elif column == "type":
                     ret[column][node_name] = node_dict["type"]
 
+                elif column == "entry_function":
+                    module_idx = sg.get_module_idx(node_name)
+                    ret[column][node_name] = SankeyLayout.get_entry_functions(
+                        module_group_df, module_idx
+                    )
+
         return ret
 
     @staticmethod
@@ -659,8 +665,9 @@ class SankeyLayout:
                         ret[node_name][column] = node_dict["type"]
 
                     elif column == "entry_function":
+                        module_idx = sg.get_module_idx(node_name)
                         ret[node_name][column] = SankeyLayout.get_entry_functions(
-                            target_module_group_df, node_name
+                            target_module_group_df, module_idx
                         )
 
         return ret

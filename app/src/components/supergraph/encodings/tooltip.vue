@@ -175,19 +175,7 @@ export default {
 
 
 			// TODO : Improve the logic here to not process the string input multiple times. 
-			let entry_functions = [];
-			if(this.$store.selectedMode !== "Ensemble") {
-				entry_functions = node[this.$store.selectedTargetDataset]["entry_function"].split(",").map(String);
-			}
-			else {
-				entry_functions = node["ensemble"]["entry_function"].split(",").map(String);
-			}
-			let entry_function_runtimes = {};
-			for (let i = 0; i < entry_functions.length; i += 1) {
-				let callsite = entry_functions[i].replace("'", "").replace("'", "").replace("[", "").replace("]", "").replace(" ", "");
-				entry_function_runtimes[callsite] = callsite_data[callsite][this.$store.selectedMetric]["mean_time"];
-			}
-
+			let entry_function_runtimes = node["entry_function"].map((_c) => callsite_data[_c][this.$store.selectedMetric]["mean"]);
 			// Create items array
 			let items = Object.keys(entry_function_runtimes).map(function (key) {
 				return [key, entry_function_runtimes[key]];

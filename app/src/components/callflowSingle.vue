@@ -340,7 +340,7 @@ export default {
 			} else if (this.selectedFormat == "CCT") {
 				this.initComponents(this.currentSingleCCTComponents);
 			}
-			EventHandler.$emit("single-refresh-boxplot", {});
+			// EventHandler.$emit("single-refresh-boxplot", {});
 		},
 
 		setupStore() {
