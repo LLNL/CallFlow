@@ -96,6 +96,8 @@ export default {
 				runBinCount: this.runBinCount,
 			});
 
+			console.debug("[/aux_data] data: ", this.data);
+
 			this.runs = this.data.runs;
 			this.run_counts = this.runs.length;
 
@@ -121,7 +123,6 @@ export default {
 			this.$store.numOfRuns = this.runs.length;
 			this.$store.modules = this.data.module;
 			this.$store.callsites = this.data.callsite;
-			this.$store.gradients = this.data.gradients;
 			this.$store.moduleCallsiteMap = this.data.moduleCallsiteMap;
 			this.$store.callsiteModuleMap = this.data.callsiteModuleMap;
 			this.$store.moduleFctList = this.data.moduleFctList;
@@ -157,6 +158,9 @@ export default {
 	
 			// Set the selected mode (Single or Ensemble)
 			this.$store.selectedMode = this.run_counts > 1 ? "Ensemble": "Single";
+			
+			// Set the metric to sort the call site information
+			this.$store.selectedRuntimeSortBy = "Inclusive";
 		},
 
 		sortDatasetsByAttr(datasets, attr) {

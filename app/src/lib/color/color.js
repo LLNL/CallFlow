@@ -171,5 +171,4 @@ export default class Color {
 	valToD3Rgb(val, colormap) {
 		return this.percentColToD3Rgb(this.valToPercentColor(val, colormap));
 	}
-
 }

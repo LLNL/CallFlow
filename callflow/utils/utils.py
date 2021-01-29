@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 import statsmodels.nonparametric.api as smnp
+import hatchet as ht
 
 # ------------------------------------------------------------------------------
 # statistics utils
@@ -312,7 +313,7 @@ def nx_leaves_below(nxg, node):
 # --------------------------------------------------------------------------
 # Graph walking utilities.
 # --------------------------------------------------------------------------
-def ht_dfs(gf: callflow.SuperGraph, limit: int):
+def ht_dfs(gf: ht.GraphFrame, limit: int):
     """
     Depth first search for debugging purposes.
     """
@@ -352,7 +353,7 @@ def ht_dfs(gf: callflow.SuperGraph, limit: int):
         _dfs_recurse(root, level)
         
         
-def ht_bfs(gf):
+def ht_bfs(gf: ht.GraphFrame):
     """
     Breadth first search for debugging purposes.
     """

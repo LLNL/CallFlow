@@ -113,10 +113,12 @@ export default {
 		},
 
 		preVis() {
+			// TODO: Move this to backend.
 			let idx = 0;
 			for (let node of this.graph.nodes) {
-				this.nidNameMap[node.id] = idx;
 				node.client_idx = idx;
+				node.module_idx = node.module;
+				node.module = utils.getModuleName(this.$store, node.module);
 				idx += 1;
 			}
 		},
