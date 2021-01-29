@@ -9,39 +9,12 @@ import pandas as pd
 from scipy import stats
 import statsmodels.nonparametric.api as smnp
 
-'''
-# ------------------------------------------------------------------------------
-# pandas dataframe utils
-# ------------------------------------------------------------------------------
-def df_unique(df, column):
-    return df[column].unique()
-
-
-def df_count(df, column):
-    return len(df_unique(df, column))
-
-
-def df_lookup_by_column(df, column, value):
-    return df.loc[df[column] == value]
-
-
-def df_lookup_and_list(df, col_lookup, val_lookup, col_list):
-    return df_unique(df_lookup_by_column(df, col_lookup, val_lookup), col_list)
-
-
-def df_group_by(df, columns):
-    if isinstance(columns, list):
-        return df.groupby(columns)
-    else:
-        assert isinstance(columns, str)
-        return df.groupby([columns])
-'''
-
 # ------------------------------------------------------------------------------
 # statistics utils
 # ------------------------------------------------------------------------------
 def histogram(data, data_range=None, bins=20):
-
+    """Calculate the histogram and bins for a given data.
+    """
     assert isinstance(data, (pd.Series, np.ndarray))
     if len(data) == 0:
         return np.array([]), np.array([])
@@ -264,7 +237,7 @@ def execute_cmd(cmd: str) -> None:
 # ------------------------------------------------------------------------------
 import hatchet
 
-def get_node_callpath(node: hatchet.node):
+def hy_node_callpath(node: hatchet.node):
     """
     Return the call path for a given callflow.GraphFrame.graph.Node
     """
@@ -279,7 +252,7 @@ def get_node_callpath(node: hatchet.node):
     return ret
 
 
-def get_node_parents(node: hatchet.node):
+def ht_node_parents(node: hatchet.node):
     """
     Return parents of a hatchet.node
     """
@@ -294,69 +267,13 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
 
-# ------------------------------------------------------------------------------
-# Delete the below utilities.
-# ------------------------------------------------------------------------------
-'''
-def to_delete_sanitize_name(name: str):
-    """
-    Sanitize the callsites for general dataset.
-    """
-    ret_name = ""
-    if name is None:
-        ret_name = "Unknown"
-        return ret_name
-    if "/" in name:
-        name_split = name.split("/")
-        ret_name = name_split[len(name_split) - 1]
-    else:
-        ret_name = name
-    return ret_name
 
-
-def to_delete_sanitizeAMMName(name: str):
-    """
-    Sanitize the callsites for AMM dataset.
-    """
-    if "::" in name:
-        name = name.split("::")[-1]
-    else:
-        name = name
-    return name
-
-def median(arr: list):
-    """
-    Returns the median and its index in the array.
-    """
-    indices = []
-
-    list_size = len(arr)
-    median = 0
-    if list_size % 2 == 0:
-        indices.append(int(list_size / 2) - 1)  # -1 because index starts from 0
-        indices.append(int(list_size / 2))
-        median = (arr[indices[0]] + arr[indices[1]]) / 2
-    else:
-        indices.append(int(list_size / 2))
-        median = arr[indices[0]]
-
-    return median, indices
-
-
-def avg(arr: list):
-    """
-    Returns the average of the array.
-    Uses floating-point division.
-    """
-    return sum(arr) / float(len(arr))
-
-'''
 
 # --------------------------------------------------------------------------
 # callflow.nxg utilities.
 # --------------------------------------------------------------------------
-'''
-def notused_add_prefix(graph, prefix):
+
+def nx_add_prefix(graph, prefix):
     """
     Rename graph to obtain disjoint node labels
     """
@@ -373,13 +290,13 @@ def notused_add_prefix(graph, prefix):
 
     return nx.relabel_nodes(graph, label)
 
-def notused_tailhead(edge):
+def nx_tail_head(edge):
     return (edge[0], edge[1])
 
-def notused_tailheadDir(edge, edge_direction):
+def nx_tail_head_direc(edge, edge_direction):
     return (str(edge[0]), str(edge[1]), edge_direction[edge])
 
-def notused_leaves_below(nxg, node):
+def nx_leaves_below(nxg, node):
     assert isinstance(nxg, nx.DiGraph)
     return set(
         sum(
@@ -391,61 +308,11 @@ def notused_leaves_below(nxg, node):
         )
     )
 
-def convertStringToList(string: object) -> object:
-    """
-    Convert a string which is an array to an array
-    """
-    return string.strip("][").split(", ")
-    
-def string_to_list(string: str, sep: str):
-    """
-    Converts the string to list separated by the sep attribute.
-    Uses floating-point division.
-    """
-    return string.strip("][").split(sep)
-'''
 
-'''
 # --------------------------------------------------------------------------
-# callflow.sanitizer utilities.
+# Graph walking utilities.
 # --------------------------------------------------------------------------
-def get_callsite_name_from_frame(node: hatchet.node):
-    """
-    Return callsite name for hatchet.node
-    """
-    name = node.frame.get("name")
-    if name is not None:
-        return node.frame.get("name")
-    else:
-        return node.frame.get("file")
-
-
-def node_dict_from_frame(frame: hatchet.frame):
-    """
-    Constructs callsite's name from Hatchet's frame.
-    """
-    assert frame.get("type") in ["function", "statement", "loop", "region"]
-
-    if frame["type"] == "function":
-        return {"name": frame.get("name"), "line": "NA", "type": "function"}
-    elif frame["type"] == "statement":
-        return {
-            "name": frame.get("file"),
-            "line": frame.get("line"),
-            "type": "statement",
-        }
-    elif frame["type"] == "loop":
-        return {"name": frame.get("file"), "line": frame.get("line"), "type": "loop"}
-    elif frame["type"] == "region":
-        return {"name": frame.get("name"), "line": "NA", "type": "region"}
-'''
-
-'''
-# --------------------------------------------------------------------------
-# callflow.debugging utilities.
-# --------------------------------------------------------------------------
-# commenting due to import issues.
-def dfs(gf: callflow.SuperGraph, limit: int):
+def ht_dfs(gf: callflow.SuperGraph, limit: int):
     """
     Depth first search for debugging purposes.
     """
@@ -485,7 +352,7 @@ def dfs(gf: callflow.SuperGraph, limit: int):
         _dfs_recurse(root, level)
         
         
-def bfs(gf):
+def ht_bfs(gf):
     """
     Breadth first search for debugging purposes.
     """
@@ -508,4 +375,3 @@ def bfs(gf):
             print("Total nodes in the graph", node_count)
             del root
             return ret
-'''
