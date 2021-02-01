@@ -274,17 +274,17 @@ export default {
 			} else {
 				if (this.$store.selectedMetric == "Inclusive") {
 					colorMin = parseFloat(
-						runtimeProps.minIncTime[this.selectedTargetDataset]
+						runtimeProps.minIncTime[this.$store.selectedTargetDataset]
 					);
 					colorMax = parseFloat(
-						runtimeProps.maxIncTime[this.selectedTargetDataset]
+						runtimeProps.maxIncTime[this.$store.selectedTargetDataset]
 					);
 				} else if (this.$store.selectedMetric == "Exclusive") {
 					colorMin = parseFloat(
-						runtimeProps.minExcTime[this.selectedTargetDataset]
+						runtimeProps.minExcTime[this.$store.selectedTargetDataset]
 					);
 					colorMax = parseFloat(
-						runtimeProps.maxExcTime[this.selectedTargetDataset]
+						runtimeProps.maxExcTime[this.$store.selectedTargetDataset]
 					);
 				} else if (this.$store.selectedMetric == "Imbalance") {
 					colorMin = 0.0;
@@ -301,6 +301,8 @@ export default {
 
 			this.$store.selectedColorMin = this.colorMin;
 			this.$store.selectedColorMax = this.colorMax;
+
+			console.log(this.colorMin, this.colorMax, runtimeProps);
 
 			this.$store.runtimeColor.setColorScale(
 				this.$store.selectedMetric,

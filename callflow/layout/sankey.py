@@ -423,37 +423,6 @@ class SankeyLayout:
                         "target_dataset": target_df["dataset"].unique(),
                     }
                     
-                    # source_dict = SankeyLayout.nx_construct_node_dict(self.sg.is_module_in_dataframe, source["callsite"])
-                    # target_dict = SankeyLayout.nx_construct_node_dict(self.sg.is_module_in_dataframe, target["callsite"])                    
-
-                    # If the module-module edge does not exist.
-                    # if (
-                    #     not has_caller_edge
-                    #     and not has_cct_edge
-                    #     and not has_callback_edge
-                    # ):
-                    #     LOGGER.info(
-                    #         f"Add {edge_type} edge for : {source['module']}--{target['module']}"
-                    #     )
-                    #     nxg.add_node(source["module"], attr_dict=source)
-                    #     nxg.add_node(target["module"], attr_dict=target)
-                    #     nxg.add_edge(
-                    #         source["module"], target["module"], attr_dict=edge_dict
-                    #     )
-
-                    # # Edge exists for source["module"] -> target["module"]
-                    # elif not has_cct_edge and not has_callback_edge:
-                    #     nxg[source["module"]][target["module"]]["attr_dict"] = edge_dict
-                    
-
-                    # # If edge is not in CCT. Add it.
-                    # if not has_cct_edge:
-                    #     cct.add_edge(
-                    #         source["callsite"],
-                    #         target["callsite"],
-                    #         attr_dict={"weight": target_df["time (inc)"].mean()},
-                    #     )
-
                     if source['type'] == "super-node":
                         source_id = source['module']
 

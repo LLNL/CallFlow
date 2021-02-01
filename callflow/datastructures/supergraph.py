@@ -34,8 +34,8 @@ class SuperGraph(ht.GraphFrame):
                   "env_params": "env_params.txt",
                   "aux": "auxiliary_data.json"}
 
-    _METRIC_PROXIES = {"time (inc)": ["inclusive#time.duration"],
-                       "time": ["sum#time.duration", "sum#sum#time.duration"]}
+    _METRIC_PROXIES = {"time (inc)": ["inclusive#time.duration", "REALTIME (sec) (I)"],
+                       "time": ["sum#time.duration", "sum#sum#time.duration", "REALTIME (sec) (E)"]}
 
     _GROUP_MODES = ["name", "module"]
     _FILTER_MODES = ["time", "time (inc)"]

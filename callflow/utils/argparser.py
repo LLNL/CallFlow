@@ -267,16 +267,16 @@ class ArgParser:
             LOGGER.error(s)
             exit(1)
 
-        #
+        # TODO: Cleanup this with a new file that has the module mapping.
         if "callsite_module_map" in json:
             scheme["callsite_module_map"] = ArgParser._process_module_map(
-                json["scheme"]["callsite_module_map"]
+                json["callsite_module_map"]
             )
 
-        if "callsite_module_map" in json["scheme"]:
-            scheme["callsite_module_map"] = ArgParser._process_module_map(
-                json["scheme"]["callsite_module_map"]
-            )
+        # if "callsite_module_map" in json["scheme"]:
+            # scheme["callsite_module_map"] = ArgParser._process_module_map(
+            #     json["scheme"]["callsite_module_map"]
+            # )
 
         return scheme
 
