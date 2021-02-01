@@ -134,18 +134,25 @@ export default {
 			d3.selectAll(".lineRank").remove();
 			d3.selectAll(".brush").remove();
 			d3.selectAll(".tick").remove();
-			this.$refs.ToolTip.clear();
+			// this.$refs.ToolTip.clear();
 		},
 
 		visualize(callsite) {
-			this.clear();
+			if(!this.firstRender) {
+				this.clear();
+			}
+			else {
+				this.init();
+			}
+			this.firstRender = false;
+
 			this.setupScale(callsite);
 			this.bars();
 			this.xAxis();
 			this.yAxis();
 			this.rankLineScale(callsite);
 			this.brushes();
-			this.$refs.ToolTip.init(this.svgID);
+			// this.$refs.ToolTip.init(this.svgID);
 		},
 
 		array_unique(arr) {
@@ -422,6 +429,7 @@ export default {
 
 		rankLineScale(data) {
 			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
+			console.log(data, store);
 			let rankCount = store[this.$store.selectedMetric].d.length;
 
 			this.ranklinescale = d3

@@ -651,30 +651,7 @@ export default {
 			let ret = format(val);
 			return ret;
 		},
-
-		sortDatasetsByAttr(datasets, attr) {
-			if (datasets.length == 1) {
-				this.metricTimeMap[datasets[0]] = this.$store.maxIncTime[datasets[0]];
-				return datasets;
-			}
-			let ret = datasets.sort((a, b) => {
-				let x = 0,
-					y = 0;
-				if (attr == "Inclusive") {
-					x = this.$store.maxIncTime[a];
-					y = this.$store.maxIncTime[b];
-					this.metricTimeMap = this.$store.maxIncTime;
-				} else if (attr == "Exclusive") {
-					x = this.$store.maxExcTime[a];
-					y = this.$store.maxExcTime[b];
-					this.metricTimeMap = this.$store.maxExcTime;
-				}
-				return parseFloat(x) - parseFloat(y);
-			});
-			return ret;
-		},
-
-
+		
 		updateColors() {
 			this.clearLocal();
 			this.setupColors();

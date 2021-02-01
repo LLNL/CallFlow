@@ -195,11 +195,6 @@ export default {
 			this._init_sankey();
 
 			this.$store.graph = this.data;
-			
-			this.$refs.EnsembleColorMap.init(this.$store.runtimeColor);
-			if (this.$store.selectedMode == "Ensemble") {
-				this.$refs.EnsembleColorMap.init(this.$store.distributionColor);
-			}
 
 			this.$refs.EnsembleNodes.init(this.$store.graph, this.view);
 			this.$refs.EnsembleEdges.init(this.$store.graph, this.view);
@@ -231,6 +226,11 @@ export default {
 					node,
 					dataset: this.$store.selectedTargetDataset,
 				});
+			}
+			
+			if (this.$store.selectedMode == "Ensemble") {
+				this.$refs.EnsembleColorMap.init(this.$store.runtimeColor);
+				this.$refs.EnsembleColorMap.init(this.$store.distributionColor);
 			}
 		},
 

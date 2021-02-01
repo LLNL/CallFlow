@@ -376,9 +376,9 @@ export default {
 		setComponentMap() {
 			this.currentSingleCCTComponents = [this.$refs.SingleCCT];
 			this.currentSingleSuperGraphComponents = [
-				this.$refs.SingleSuperGraph,
 				this.$refs.SingleHistogram,
 				this.$refs.SingleScatterplot,
+				this.$refs.SingleSuperGraph,
 				this.$refs.CallsiteInformation,
 			];
 		},

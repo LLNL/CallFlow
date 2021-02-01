@@ -218,7 +218,7 @@ export default {
 				this.setRuntimeColorScale("OrRd");
 			}
 
-			if(this.run_counts > 1) {
+			if(this.$store.numOfRuns > 1) {
 				// Create distribution color object
 				this.$store.distributionColor = new Color();
 				this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
@@ -260,7 +260,7 @@ export default {
 			let colorMin = null;
 			let colorMax = null;
 			const runtimeProps = this.$store.runtimeProps;
-			if (this.run_counts > 1) {
+			if (this.$store.numOfRuns > 1) {
 				if (this.$store.selectedMetric == "Inclusive") {
 					colorMin = parseFloat(runtimeProps.minIncTime["ensemble"]);
 					colorMax = parseFloat(runtimeProps.maxIncTime["ensemble"]);
@@ -299,10 +299,8 @@ export default {
 				parseFloat(colorMax)
 			);
 
-			this.$store.selectedColorMin = this.colorMin;
-			this.$store.selectedColorMax = this.colorMax;
-
-			console.log(this.colorMin, this.colorMax, runtimeProps);
+			this.$store.selectedColorMin = colorMin;
+			this.$store.selectedColorMax = colorMax;
 
 			this.$store.runtimeColor.setColorScale(
 				this.$store.selectedMetric,

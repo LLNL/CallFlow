@@ -55,20 +55,21 @@ export default {
 		x_max_exponent: 0,
 		y_max_exponent: 0,
 		corr_coef: 0,
+		xAxisHeight: 0,
+		yAxisHeight: 0,
 	}),
 
 	mounted() {
 		let self = this;
 		EventHandler.$on("single-scatterplot", function (data) {
-			self.clear();
-			console.debug("Single Scatterplot: ", data["id"]);
+			console.debug("Single Scatterplot: ", data["node"].id);
 			self.visualize(data);
 		});
 	},
 
 	methods: {
 		init() {
-			this.width = window.innerWidth * 0.25;
+			this.width = this.$store.viewWidth * 0.25;
 			this.height = this.$store.viewHeight * 0.45;
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
@@ -85,19 +86,14 @@ export default {
 
 			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
 			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
-
-			// const data = Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0];
-			// this.visualize(data);
-
-			// EventHandler.$emit("single-scatterplot", {
-			// 	module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
-			// 	dataset: this.$store.selectedTargetDataset,
-			// });
 		},
 
 		visualize(data) {
 			if (!this.firstRender) {
 				this.clear();
+			}
+			else {
+				this.init();
 			}
 			this.firstRender = false;
 
@@ -315,7 +311,7 @@ export default {
 			this.addyAxisLabel();
 			let yAxis = d3
 				.axisLeft(this.yScale)
-				.ticks(10)
+				.ticks(tickCount)
 				.tickFormat((d, i) => {
 					let runtime = utils.formatRuntimeWithExponent(d, self.y_max_exponent);
 					return `${runtime[0]}`;
