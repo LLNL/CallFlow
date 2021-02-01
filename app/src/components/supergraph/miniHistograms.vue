@@ -18,21 +18,11 @@ export default {
 	components: {},
 	props: [],
 	data: () => ({
-		view: {},
-		xScale: [],
-		yScale: [],
-		vals: [],
-		freq: {},
-		data: [],
-		minimapXScale: null,
-		minimapYScale: null,
 		padding: {
 			top: 0, left: 0, right: 0, bottom: 10
 		},
 		nodeScale: 0.99,
 		id: "",
-		nodes: null,
-		edges: null,
 		offset: 7,
 		bandWidth: 0,
 	}),
@@ -43,25 +33,20 @@ export default {
 
 	methods: {
 		init(graph, view) {
-			this.nodeMap = graph.nodeMap;
-			this.nodes = graph.nodes;
-			this.links = graph.links;
-			this.view = view;
-			this.target_module_data = this.$store.modules[this.$store.selectedTargetDataset];
-			this.target_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
+			const t_module_data = this.$store.modules[this.$store.selectedTargetDataset];
+			const t_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
 
-			for (const node of this.nodes) {
-				let module = node.module;
-				let callsite = node.name;
+			for (const node of graph.nodes) {
+				const module = node.module_idx;
+				const callsite = node.name;
 
-				if (node.type == "super-node" && this.target_module_data[module] != undefined) {
-					let data = this.target_module_data[module][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
-					this.render(data, module);
+				if (node.type == "super-node") {
+					const data = t_module_data[module][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
+					this.render(data, graph, module);
 				}
 				else if (node.type == "component-node" && this.target_callsite_data[callsite] != undefined) {
-
-					let data = this.target_callsite_data[callsite][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
-					this.render(data, callsite);
+					const data = t_callsite_data[callsite][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
+					this.render(data, graph, callsite);
 				}
 			}
 		},
@@ -104,6 +89,7 @@ export default {
 					.domain([0.1, d3.max(freq)])
 					.range([this.$parent.ySpacing, 0]);
 			}
+
 			this.minimapXScale = d3.scaleBand()
 				.domain(xVals)
 				.rangeRound([0, this.$parent.nodeWidth]);
@@ -130,8 +116,8 @@ export default {
 			}
 		},
 
-		render(data, node) {
-			let node_dict = this.nodes[this.nodeMap[node]];
+		render(data, graph, node) {
+			let node_dict = graph.nodes[graph.nodeMap[node]];
 			if (this.$store.selectedMode == "Ensemble") {
 				this.histogram(data, node_dict, "ensemble");
 				if (this.$store.showTarget && this.$store.comparisonMode == false) {
