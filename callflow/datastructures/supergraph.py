@@ -72,7 +72,7 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def create(self, path, profile_format, module_callsite_map):
-
+        # Create SuperGraph.
         self.profile_format = profile_format
         LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path}) using ({self.profile_format}) format")
 
@@ -120,6 +120,7 @@ class SuperGraph(ht.GraphFrame):
 
         if True:
             self.dataframe = SuperGraph.read_df(path)
+            self.is_module_in_dataframe = 'module' in self.dataframe
 
         if True:
             self.nxg = SuperGraph.read_nxg(path)
@@ -170,6 +171,7 @@ class SuperGraph(ht.GraphFrame):
     def df_get_proxy(self, column):
         return self.proxy_columns.get(column, column)
 
+    # TODO: Bring back proxies.
     def df_add_time_proxies(self):
         for key, proxies in SuperGraph._METRIC_PROXIES.items():
             if key in self.dataframe.columns:
@@ -272,7 +274,8 @@ class SuperGraph(ht.GraphFrame):
         return _fct[1].values.tolist()
 
     def df_xs_group_column(self, groups, column, apply_func):
-        module_df = df.groupby(groups).mean()
+        # module_df = df.groupby(groups).mean()
+        module_df = df.groupby(groups).apply(apply_func)
         return module_df.xs(name, level=column)
 
     # --------------------------------------------------------------------------
@@ -493,13 +496,10 @@ class SuperGraph(ht.GraphFrame):
 
         if 'module' in self.dataframe.columns:
             self.df_add_column('module', apply_func=lambda _: Sanitizer.sanitize(_), apply_on='module')
-            self.is_module_map = True
         elif len(module_map) > 0:
             self.df_add_column('module', apply_func=lambda _: module_map[_])
-            self.is_module_map = True
         else:
             self.df_add_column('module', apply_func=lambda _: _, apply_on='name')
-            self.is_module_map = False
 
         self.module_fct_list = self.df_factorize_column('module', sanitize=True)
         self.df_add_column('path',

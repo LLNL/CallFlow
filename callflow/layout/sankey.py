@@ -423,7 +423,7 @@ class SankeyLayout:
                         "target_dataset": target_df["dataset"].unique(),
                     }
                     
-                    if self.sg.is_module_map:
+                    if self.sg.is_module_in_dataframe:
                         node_dict = {"type": "super-node"}
                     else:
                         node_dict = {"type": "component-node"}
