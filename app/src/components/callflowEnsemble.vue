@@ -546,8 +546,6 @@ export default {
 		init() {
 			this.setupStore();
 			this.setComponentMap(); // Set component mapping for easy component tracking.
-			this.selectedModule = utils.setSelectedModule(this.$store, "ensemble");
-			this.$store.selectedModule = this.selectedModule;
 			
 			console.log("Mode : ", this.selectedMode);
 			console.log("Number of runs :", this.$store.selectedDatasets.length);

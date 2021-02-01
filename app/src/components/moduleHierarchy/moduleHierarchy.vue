@@ -101,9 +101,9 @@ export default {
 			} else if (this.$store.selectedMetric == "Exclusive") {
 				this.metric = "max_time";
 			}
-			this.selectedModule = this.$store.selectedModule;
+			this.selectedNode = this.$store.selectedNode;
 			const data = await APIService.POSTRequest("module_hierarchy", {
-				module: this.$store.selectedModule,
+				module: this.$store.selectedNode,
 				datasets: this.$store.selectedDatasets,
 			});
 		},

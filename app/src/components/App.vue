@@ -13,17 +13,16 @@
 					CallFlow
 				</v-toolbar-title>
 				<v-btn outlined>
-					<router-link :to="{ name: 'SingleCallFlow', params: { data }}">Single</router-link>
-					<!-- <router-link to="/single" replace>Single</router-link> -->
+					<router-link to="/single" replace>Single</router-link>
 				</v-btn>
 
 				<v-btn outlined v-if="run_counts > 1">
 					<router-link to="/ensemble" replace>Ensemble</router-link>
 				</v-btn>
 
-				<v-btn outlined>
+				<!-- <v-btn outlined>
 					<router-link to="/experimental" replace>Experimental</router-link>
-				</v-btn>
+				</v-btn> -->
 			</v-toolbar>
 			<router-view></router-view>
 			<v-content class="content">
@@ -138,12 +137,6 @@ export default {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
 			this.$store.selectedEdgeAlignment = "Top";
 
-			// Not needed for single. 
-			// this.$store.datasetMap = {};
-			// for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
-			// 	this.$store.datasetMap[this.$store.selectedDatasets[i]] = "run-" + i;
-			// }
-
 			// Used in sankey.js
 			// TODO: Sankey should not have any store related properties. 
 			this.$store.selectedSuperNodePositionMode = "Minimal edge crossing";
@@ -189,7 +182,7 @@ export default {
 		setTargetDataset() {
 			this.datasets, this.$store.metricTimeMap = this.sortDatasetsByAttr(
 				this.runs,
-				"Inclusive"
+				this.$store.selectedMetric
 			);
 
 			let max_dataset = "";
@@ -210,7 +203,7 @@ export default {
 			}
 			this.$store.selectedTargetDataset = max_dataset;
 
-			console.log("Maximum among all runtimes: ", this.$store.selectedTargetDataset);
+			console.log("Dataset with most runtimes: ", this.$store.selectedTargetDataset);
 		},
 
 		setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {
@@ -357,30 +350,6 @@ export default {
 			}
 
 			this.$store.viewHeight = window.innerHeight - 2 * toolbarHeight - footerHeight;
-		},
-
-		setSelectedModule(dataset) {
-			let module_list = Object.keys(
-				this.$store.modules[dataset]
-			);
-
-			// Create a map for each dataset mapping the respective mean times.
-			let map = {};
-			for (let module_name of module_list) {
-				map[module_name] = this.$store.modules[dataset][module_name][this.$store.selectedMetric]["mean"];
-			}
-
-			// Create items array
-			let modules = Object.keys(map).map(function (key) {
-				return [key, map[key]];
-			});
-
-			// Sort the array based on the second element
-			modules.sort(function (first, second) {
-				return second[1] - first[1];
-			});
-
-			this.$store.selectedModule = modules[0][0];
 		},
 	},
 };

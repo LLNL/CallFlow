@@ -62,7 +62,7 @@ export default {
 		EventHandler.$on("single-scatterplot", function (data) {
 			self.clear();
 			console.debug("Single Scatterplot: ", data["module"]);
-			self.visualize(data["module"]);
+			self.visualize(data);
 		});
 	},
 
@@ -86,8 +86,8 @@ export default {
 			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
 			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
 
-			const data = Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0];
-			this.visualize(data);
+			// const data = Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0];
+			// this.visualize(data);
 
 			// EventHandler.$emit("single-scatterplot", {
 			// 	module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
@@ -95,14 +95,13 @@ export default {
 			// });
 		},
 
-		visualize(module) {
+		visualize(data) {
 			if (!this.firstRender) {
 				this.clear();
 			}
 			this.firstRender = false;
-			this.selectedModule = module;
 
-			let temp = this.process();
+			let temp = this.process(data);
 			this.xMin = temp[0];
 			this.yMin = temp[1];
 			this.xMax = temp[2];
@@ -129,10 +128,8 @@ export default {
 			// this.trendline()
 		},
 
-		process() {
-			let store = this.$store.modules[this.$store.selectedTargetDataset][
-				this.$store.selectedModule
-			];
+		process(data) {
+			let store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
 			let mean_time_inc = store["Inclusive"]["d"];
 			let mean_time = store["Exclusive"]["d"];
 

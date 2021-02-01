@@ -268,8 +268,6 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
 
-
-
 # --------------------------------------------------------------------------
 # callflow.nxg utilities.
 # --------------------------------------------------------------------------

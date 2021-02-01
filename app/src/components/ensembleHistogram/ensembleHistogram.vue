@@ -64,13 +64,8 @@ export default {
 	mounted() {
 		let self = this;
 		EventHandler.$on("ensemble-histogram", function (data) {
-			console.log("Ensemble Histogram: ", data["module"]);
-			if (data["callsite"] != undefined) {
-				self.thisNode = data["module"] + "=" + data["callsite"];
-			} else {
-				self.thisNode = data["module"];
-			}
-			self.visualize(data["module"]);
+			console.log("Ensemble Histogram: ", data["node"]);
+			self.visualize(data);
 		});
 	},
 
@@ -94,12 +89,7 @@ export default {
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
 
-			// EventHandler.$emit("ensemble-histogram", {
-			// 	module: this.$store.selectedModule,
-			// 	dataset: this.$store.runNames,
-			// });
-
-			this.visualize(this.$store.selectedModule);
+			// this.visualize(this.$store.selectedNode);
 		},
 
 		dataProcess(data) {
@@ -122,11 +112,11 @@ export default {
 			return [data["x"], data["y"], axis_x];
 		},
 
-		setupScale(callsite) {
-			let ensemble_store = this.$store.modules[this.$store.selectedTargetDataset][callsite];
-			let target_store = this.$store.modules[this.$store.selectedTargetDataset][callsite];
-
-			let ensembleData = ensemble_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp]["ensemble"];
+		setupScale(data) {
+			const _e_store = utils.getDataByNodeType(this.$store, "ensemble", data["node"]);
+			const _t_store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
+			
+			let ensembleData = _e_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp]["ensemble"];
 			let temp = this.dataProcess(ensembleData);
 			this.xVals = temp[0];
 			this.freq = temp[1];
@@ -136,10 +126,10 @@ export default {
 			let isTargetThere = true;
 
 			// If the module is not present in the target run.
-			if (target_store == undefined) {
+			if (_t_store == undefined) {
 				isTargetThere = false;
 			} else {
-				const targetData = target_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp]["target"];
+				const targetData = _t_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp]["target"];
 				const targetTemp = this.dataProcess(targetData);
 				this.targetXVals = targetTemp[0];
 				this.targetFreq = targetTemp[1];

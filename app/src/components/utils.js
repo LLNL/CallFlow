@@ -225,30 +225,46 @@ export function getModuleIndex(store, module) {
 	return store["moduleFctList"].indexOf(module);
 }
 
-
-// ----------------------------------------------------------------
-// Feature: the Supernode hierarchy is automatically selected from the mean metric runtime.
-// ----------------------------------------------------------------
+// TODO: Should be a computed property.
 // Returns the most expensive module in the call graph.
-export function setSelectedModule(store, dataset) {
-	let module_list = Object.keys(store.modules[dataset]);
-
+export function findExpensiveCallsite(store, dataset, granularity) {
 	// TODO: simplify the logic here. Directly convert to items array.
 	// Create a map for each dataset mapping the respective mean times.
 	let map = {};
-	for (let module_name of module_list) {
-		map[module_name] = store.modules[dataset][module_name][store.selectedMetric]["mean"];
+	if (granularity == "SuperGraph") {
+		for (let _ of Object.keys(store.modules[dataset])) {
+			map[_] = store.modules[dataset][_][store.selectedMetric]["mean"];
+		}	
+	}
+	else if (granularity == "CCT") {
+		for (let _ of Object.keys(store.callsites[dataset])) {
+			map[_] = store.callsites[dataset][_][store.selectedMetric]["mean"];
+		}
 	}
 
-	// Create items array
-	let modules = Object.keys(map).map(function (key) {
+	let nodes = Object.keys(map).map(function (key) {
 		return [key, map[key]];
 	});
 
 	// Sort the array based on the second element
-	modules.sort(function (first, second) {
+	nodes.sort(function (first, second) {
 		return second[1] - first[1];
 	});
 
-	return modules[0][0];
+	return nodes[0][0];
+}
+
+export function getDataByNodeType(store, dataset, node) {
+	console.assert(store !== null);
+
+	if(node.type == "super-node") {
+		return store.callsites[dataset][node];
+	}
+	else if(node.type == "component-node") {
+		return store.modules[dataset][node.module_idx];
+	}
+	else if(node.type == "intermediate") {
+		return {};
+	}
+	return {};
 }

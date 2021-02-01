@@ -64,8 +64,8 @@ export default {
 	mounted() {
 		let self = this;
 		EventHandler.$on("ensemble-scatterplot", function (data) {
-			console.log("Ensemble Scatterplot: ", data);
-			self.visualize(data["module"]);
+			console.log("Ensemble Scatterplot: ", data["node"]);
+			self.visualize(data);
 		});
 	},
 
@@ -82,12 +82,7 @@ export default {
 				.attr("height", this.boxHeight - this.padding.top)
 				.attr("transform", "translate(" + this.padding.left + "," + this.padding.top + ")");
 
-			// EventHandler.$emit("ensemble-scatterplot", {
-			// 	module: this.$store.selectedModule,
-			// 	dataset: this.$store.selectedDatasets,
-			// });
-
-			this.visualize(this.$store.selectedModule);
+			// this.visualize(this.$store.selectedNode);
 		},
 
 		preprocess(data, dataset_name) {
@@ -101,20 +96,20 @@ export default {
 			}
 		},
 
-		visualize(module) {
+		visualize(data) {
 			if (!this.firstRender) {
 				this.clear();
 			}
 			this.firstRender = false;
 			this.maxVarianceCallsite = "";
 			this.maxUndesirability = 0;
-			this.selectedModule = module;
+			this.selectedModule = data["node"]["module_idx"];
 
-			this.selectedEnsembleModuleData = this.$store.modules["ensemble"][this.selectedModule][this.$store.selectedMetric];
+			const _e_store = utils.getDataByNodeType(this.$store, "ensemble", data["node"])[this.$store.selectedMetric];
 			this.ensembleProcess();
 
 			if (this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule] != undefined) {
-				this.selectedTargetModuleData = this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule][this.$store.selectedMetric];
+				this.selectedTargetModuleData = utils.getDataByNodeType(this.$store, "ensemble", data["node"])[this.$store.selectedMetric];
 				this.targetProcess();
 			}
 
@@ -144,33 +139,32 @@ export default {
 		ensembleProcess() {
 			let mean_time = [];
 			let mean_time_inc = [];
+			// TODO: Expensivee!!!!
 			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
 				let callsites_in_module = this.$store.moduleCallsiteMap["ensemble"][this.selectedModule];
 				for (let j = 0; j < callsites_in_module.length; j += 1) {
-					let thiscallsite = callsites_in_module[j];
-					let thisdata = this.$store.callsites[this.$store.selectedDatasets[i]][thiscallsite];
-					if (thisdata != undefined) {
-						mean_time.push({
-							"callsite": thiscallsite,
-							"val": thisdata["Exclusive"]["mean"],
-							"run": this.$store.selectedDatasets[i]
-						});
-						mean_time_inc.push({
-							"callsite": thiscallsite,
-							"val": thisdata["Inclusive"]["mean"],
-							"run": this.$store.selectedDatasets[i]
-						});
-					}
+					let _c = callsites_in_module[j];
+					let _d = this.$store.callsites[this.$store.selectedDatasets[i]][_c];
+					mean_time.push({
+						"callsite": _c,
+						"val": _d["Exclusive"]["mean"],
+						"run": this.$store.selectedDatasets[i]
+					});
+					mean_time_inc.push({
+						"callsite": _c,
+						"val": _d["Inclusive"]["mean"],
+						"run": this.$store.selectedDatasets[i]
+					});
 				}
 			}
 
 			let all_data = this.$store.modules["ensemble"][this.selectedModule];
 			let temp;
 			if (this.$store.selectedScatterMode == "mean") {
-				temp = this.scatterMean(mean_time, mean_time_inc);
+				temp = this.scatter(mean_time, mean_time_inc);
 			}
 			else if (this.$store.selectedScatterMode == "all") {
-				temp = this.scatterAll(all_data["time"], all_data["time (inc)"]);
+				temp = this.scatter(all_data["time"], all_data["time (inc)"]);
 			}
 
 			this.xMin = temp[0];
@@ -211,11 +205,11 @@ export default {
 			let temp;
 			this.$store.selectedScatterMode = "mean";
 			if (this.$store.selectedScatterMode == "mean") {
-				temp = this.scatterMean(mean_time, mean_time_inc);
+				temp = this.scatter(mean_time, mean_time_inc);
 			}
 			else if (this.$store.selectedScatterMode == "all") {
 				let data = this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule];
-				temp = this.scatterAll(data["time"], data["time (inc)"]);
+				temp = this.scatter(data["time"], data["time (inc)"]);
 			}
 			this.xtargetMin = temp[0];
 			this.ytargetMin = temp[1];
@@ -225,30 +219,7 @@ export default {
 			this.ytargetArray = temp[5];
 		},
 
-		scatterAll(xData, yData) {
-			let xArray = [];
-			let yArray = [];
-			let yMin = 0;
-			let xMin = 0;
-			let xMax = 0;
-			let yMax = 0;
-
-			for (const [idx, d] of Object.entries(xData)) {
-				xMin = Math.min(xMin, d);
-				xMax = Math.max(xMax, d);
-				xArray.push(d);
-			}
-
-			for (const [idx, d] of Object.entries(yData)) {
-				yMin = Math.min(yMin, d);
-				yMax = Math.max(yMax, d);
-				yArray.push(d);
-			}
-
-			return [xMin, yMin, xMax, yMax, xArray, yArray];
-		},
-
-		scatterMean(xData, yData) {
+		scatter(xData, yData) {
 			let xArray = [];
 			let yArray = [];
 			let yMin = 0;

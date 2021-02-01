@@ -105,8 +105,6 @@ export default {
 				"hist"
 			]["y"];
 
-			console.log(grid, val);
-
 			for (let i = 0; i < grid.length; i += 1) {
 				let x = (i + i + 1) / (2 * grid.length);
 				let current_value = val[i];

@@ -199,24 +199,18 @@ export default {
 					}
 
 					APIService.POSTRequest("module_hierarchy", {
-						module: this.$store.selectedModule,
+						node,
 						name: this.$store.selectedName,
 						datasets: this.$store.selectedDatasets,
 					});
 
-					// APIService.POSTRequest("ensemble_auxiliary", {
-					// 	module: this.$store.selectedModule,
-					// 	datasets: this.$store.selectedDatasets,
-					// 	sortBy: this.$store.auxiliarySortBy,
-					// });
-
 					EventHandler.$emit("ensemble-histogram", {
-						module: this.$store.selectedModule,
+						node,
 						datasets: this.$store.selectedDatasets,
 					});
 
 					EventHandler.$emit("ensemble-scatterplot", {
-						module: this.$store.selectedModule,
+						node,
 						dataset1: this.$store.selectedDatasets,
 					});
 
@@ -226,18 +220,18 @@ export default {
 				}
 				else if (this.$store.selectedMode == "Single") {
 					EventHandler.$emit("single-histogram", {
-						module: this.$store.selectedModule,
+						node,
 						groupBy: this.$store.selectedGroupBy,
 						dataset: this.$store.selectedTargetDataset,
 					});
 
 					EventHandler.$emit("single-scatterplot", {
-						module: this.$store.selectedModule,
+						node,
 						dataset: this.$store.selectedTargetDataset,
 					});
 
 					EventHandler.$emit("single-select-module", {
-						module: this.$store.selectedModule,
+						node,
 					});
 				}
 

@@ -34,6 +34,7 @@ import * as d3 from "d3";
 import EventHandler from "../EventHandler.js";
 
 import Sankey from "../../algorithms/sankey";
+import * as utils from "../utils";
 
 import EnsembleNodes from "./nodes";
 import EnsembleEdges from "./edges";
@@ -182,7 +183,6 @@ export default {
 		},
 
 		render() {
-			console.log(this.$store.viewWidth, this.$store.viewHeight);
 			this.sankeyWidth = 0.7 * this.$store.viewWidth;
 			this.sankeyHeight = 0.9 * this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
@@ -195,6 +195,7 @@ export default {
 			this._init_sankey();
 
 			this.$store.graph = this.data;
+			
 			this.$refs.EnsembleColorMap.init(this.$store.runtimeColor);
 			if (this.$store.selectedMode == "Ensemble") {
 				this.$refs.EnsembleColorMap.init(this.$store.distributionColor);
@@ -203,6 +204,35 @@ export default {
 			this.$refs.EnsembleNodes.init(this.$store.graph, this.view);
 			this.$refs.EnsembleEdges.init(this.$store.graph, this.view);
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
+
+			const selectedNode = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "CCT");
+			// Get node id from the graph.
+			const node_id = this.$store.graph["nodeMap"][selectedNode];
+			const node = this.$store.graph["nodes"][node_id];
+
+
+			if (this.$store.selectedMode == "Single") {
+				EventHandler.$emit("single-histogram", {
+					node,
+					dataset: this.$store.selectedTargetDataset,
+				});
+
+				EventHandler.$emit("single-scatterplot", {
+					node,
+					dataset: this.$store.selectedTargetDataset,
+				});
+			}
+			else if(this.$store.selectedMode == "Ensemble") {
+				EventHandler.$emit("ensemble-histogram", {
+					node,
+					dataset: this.$store.selectedTargetDataset,
+				});
+
+				EventHandler.$emit("ensemble-scatterplot", {
+					node,
+					dataset: this.$store.selectedTargetDataset,
+				});
+			}
 		},
 
 		/**
@@ -261,7 +291,7 @@ export default {
 		},
 
 		/**
-		 * Internal function to initiate the intermediate nodes and edges computation.
+		 * Adds the intermediate nodes and edges to the SuperGraph.
 		 */
 		_add_intermediate(nodes, edges) {
 			const temp_nodes = nodes.slice();

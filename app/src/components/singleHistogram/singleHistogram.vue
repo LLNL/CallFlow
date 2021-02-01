@@ -63,8 +63,8 @@ export default {
 	mounted() {
 		let self = this;
 		EventHandler.$on("single-histogram", function (data) {
-			console.log("Single histogram: ", data["module"]);
-			self.visualize(data["module"]);
+			console.log("Single histogram: ", data["node"]);
+			self.visualize(data);
 		});
 	},
 
@@ -91,23 +91,14 @@ export default {
 				height: this.boxHeight,
 				transform: "translate(" + this.padding.left + "," + this.padding.top + ")",
 			});
-			
-			// EventHandler.$emit("single-histogram", {
-			// 	module: Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0],
-			// 	groupBy: this.$store.selectedGroupBy,
-			// 	dataset: this.$store.selectedTargetDataset,
-			// });
-
-			const data = Object.keys(this.$store.modules[this.$store.selectedTargetDataset])[0];
-			this.visualize(data);
 		},
 
-		setupScale(callsite) {
-			let store = this.$store.modules[this.$store.selectedTargetDataset][callsite];
-			let data = store[this.$store.selectedMetric]["hists"]["rank"]["target"];
-			let mpiData = store[this.$store.selectedMetric]["d"];
+		setupScale(data) {
+			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
+			const _data = store[this.$store.selectedMetric]["hists"]["rank"]["target"];
+			const _mpiData = store[this.$store.selectedMetric]["d"];
 
-			let temp = this.dataProcess(data, mpiData);
+			let temp = this.dataProcess(_data, _mpiData);
 			this.xVals = temp[0];
 			this.freq = temp[1];
 			this.axis_x = temp[2];
@@ -152,7 +143,7 @@ export default {
 			this.bars();
 			this.xAxis();
 			this.yAxis();
-			this.rankLineScale();
+			this.rankLineScale(callsite);
 			this.brushes();
 			this.$refs.ToolTip.init(this.svgID);
 		},
@@ -169,11 +160,12 @@ export default {
 			let dataMin = data["x_min"];
 			let dataMax = data["x_max"];
 
-			const dataWidth = (dataMax - dataMin) / (data["x"].length - 1);
+			const dataWidth = (dataMax - dataMin) / (data["x"].length);
 			for (let i = 0; i < data["x"].length; i++) {
 				axis_x.push(dataMin + i * dataWidth);
 			}
 
+			// TODO: Expensive !!!
 			mpiData.forEach((val, idx) => {
 				let pos = Math.floor((val - dataMin) / dataWidth);
 				if (pos >= this.$store.selectedMPIBinCount) {
@@ -428,10 +420,9 @@ export default {
 				.style("font-weight", "lighter");
 		},
 
-		rankLineScale() {
-			let rankCount = this.$store.modules[this.$store.selectedTargetDataset][
-				this.$store.selectedModule
-			][this.$store.selectedMetric].d.length;
+		rankLineScale(data) {
+			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
+			let rankCount = store[this.$store.selectedMetric].d.length;
 
 			this.ranklinescale = d3
 				.scaleLinear()
