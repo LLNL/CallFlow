@@ -422,8 +422,11 @@ class SankeyLayout:
                         "source_dataset": source_df["dataset"].unique(),
                         "target_dataset": target_df["dataset"].unique(),
                     }
-
-                    node_dict = {"type": "super-node"}
+                    
+                    if self.sg.is_module_map:
+                        node_dict = {"type": "super-node"}
+                    else:
+                        node_dict = {"type": "component-node"}
 
                     # If the module-module edge does not exist.
                     if (
@@ -526,8 +529,8 @@ class SankeyLayout:
         for node in nxg.nodes(data=True):
             node_name, node_dict = SankeyLayout.nx_deconstruct_node(node)
             if node_dict["type"] == "component-node":
-                module = node_name.split("=")[0]
-                callsite = node_name.split("=")[1]
+                module = sg.get_module_idx(node_name)
+                callsite = node_name
                 actual_time = SankeyLayout.callsite_time(
                     group_df=module_name_group_df, module=module, callsite=callsite
                 )

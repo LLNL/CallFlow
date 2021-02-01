@@ -44,7 +44,7 @@ export default {
 					const data = t_module_data[module][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
 					this.render(data, graph, module);
 				}
-				else if (node.type == "component-node" && this.target_callsite_data[callsite] != undefined) {
+				else if (node.type == "component-node" && t_callsite_data[callsite] != undefined) {
 					const data = t_callsite_data[callsite][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
 					this.render(data, graph, callsite);
 				}

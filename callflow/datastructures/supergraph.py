@@ -61,6 +61,7 @@ class SuperGraph(ht.GraphFrame):
         self.module_callsite_map = None
         self.module_fct_list = []
         self.indexes = []
+        self.is_module_map = False
 
     # --------------------------------------------------------------------------
     def __str__(self):
@@ -492,10 +493,13 @@ class SuperGraph(ht.GraphFrame):
 
         if 'module' in self.dataframe.columns:
             self.df_add_column('module', apply_func=lambda _: Sanitizer.sanitize(_), apply_on='module')
+            self.is_module_map = True
         elif len(module_map) > 0:
             self.df_add_column('module', apply_func=lambda _: module_map[_])
+            self.is_module_map = True
         else:
             self.df_add_column('module', apply_func=lambda _: _, apply_on='name')
+            self.is_module_map = False
 
         self.module_fct_list = self.df_factorize_column('module', sanitize=True)
         self.df_add_column('path',

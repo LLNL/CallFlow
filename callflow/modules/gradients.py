@@ -121,7 +121,6 @@ class Gradients:
                 # "kde": Histogram._format_data(kde_grid),
                 "hist": Histogram._format_data(hist_grid)
             }
-            print(results[k]["hist"])
 
         return results
 

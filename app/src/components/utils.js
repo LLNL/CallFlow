@@ -121,8 +121,8 @@ export function textSize(id, text) {
 export function getGradients(store, node) {
 	let nodeName = "";
 	let gradients = {};
-	if (node.type == "super-node" && store.modules["ensemble"][node.module] != undefined) {
-		nodeName = node.module;
+	if (node.type == "super-node"  && store.modules["ensemble"][node.module_idx] != undefined) {
+		nodeName = node.module_idx;
 		gradients = store.modules["ensemble"][nodeName][store.selectedMetric]["gradients"];
 	}
 	else if (node.type == "component-node") {

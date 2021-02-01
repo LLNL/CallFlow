@@ -560,7 +560,7 @@ export default {
 			} else if (this.selectedFormat == "CCT") {
 				this.initComponents(this.currentEnsembleCCTComponents);
 			}
-			EventHandler.$emit("ensemble-refresh-boxplot", {});
+			// EventHandler.$emit("ensemble-refresh-boxplot", {});
 		},
 
 		setupStore(data) {

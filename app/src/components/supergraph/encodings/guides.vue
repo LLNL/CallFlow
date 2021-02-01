@@ -26,6 +26,7 @@ export default {
 	}),
 
 	methods: {
+		// TODO: This component is very sloooooowwww....
 		init(nodes) {
 			this.nodes = nodes;
 
@@ -65,6 +66,7 @@ export default {
 		},
 
 		drawLines(node, guideType) {
+			console.log(this.gradients);
 			let xAxis = this.gradients[node.id]["hist"].x;
 			let binWidth = node.height / (xAxis.length);
 
