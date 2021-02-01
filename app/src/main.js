@@ -23,6 +23,8 @@ import ExperimentalCallFlow from "./components/callflowExperimental";
 
 Vue.use(Vuex);
 const store = new Vuex.Store();
+// import store from "./store";
+
 
 const router = new Router({
 	routes: [

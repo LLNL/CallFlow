@@ -588,18 +588,14 @@ export default {
 			this.$store.selectedRunBinCount = this.selectedRunBinCount;
 			
 			this.$store.auxiliarySortBy = this.auxiliarySortBy;
-			this.$store.comparisonMode = this.comparisonMode;
 			this.$store.showTarget = this.showTarget;
 			this.$store.encoding = "MEAN_GRADIENTS";
 	
 			this.$store.nodeInfo = {};
-			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
 			this.$store.selectedFormat = this.selectedFormat;
 
 			this.$store.selectedProp = this.selectedProp;
-			this.$store.selectedScale = this.selectedScale;
-			this.$store.selectedCompareMode = this.selectedCompareMode;
 			this.$store.selectedIQRFactor = this.selectedIQRFactor;
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters;
