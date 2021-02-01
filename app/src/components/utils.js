@@ -258,10 +258,10 @@ export function getDataByNodeType(store, dataset, node) {
 	console.assert(store !== null);
 
 	if(node.type == "super-node") {
-		return store.callsites[dataset][node];
+		return store.modules[dataset][node.module_idx];
 	}
 	else if(node.type == "component-node") {
-		return store.modules[dataset][node.module_idx];
+		return store.callsites[dataset][node.callsite];
 	}
 	else if(node.type == "intermediate") {
 		return {};

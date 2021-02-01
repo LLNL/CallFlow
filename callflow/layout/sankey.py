@@ -397,12 +397,12 @@ class SankeyLayout:
                     source = path_list[callsite_idx]
                     target = path_list[callsite_idx + 1]
 
-                    # TODO: Avoid sg.get_module_name
+                    # TODO: Avoid sg.get_module_idx
                     source_df = self.secondary_primary_group_df.get_group(
-                        (self.sg.get_module_name(source["module"]), source["callsite"])
+                        (self.sg.get_module_idx(source["module"]), source["callsite"])
                     )
                     target_df = self.secondary_primary_group_df.get_group(
-                        (self.sg.get_module_name(target["module"]), target["callsite"])
+                        (self.sg.get_module_idx(target["module"]), target["callsite"])
                     )
 
                     has_caller_edge = nxg.has_edge(source["module"], target["module"])
@@ -423,41 +423,54 @@ class SankeyLayout:
                         "target_dataset": target_df["dataset"].unique(),
                     }
                     
-                    if self.sg.is_module_in_dataframe:
-                        node_dict = {"type": "super-node"}
-                    else:
-                        node_dict = {"type": "component-node"}
+                    # source_dict = SankeyLayout.nx_construct_node_dict(self.sg.is_module_in_dataframe, source["callsite"])
+                    # target_dict = SankeyLayout.nx_construct_node_dict(self.sg.is_module_in_dataframe, target["callsite"])                    
 
                     # If the module-module edge does not exist.
-                    if (
-                        not has_caller_edge
-                        and not has_cct_edge
-                        and not has_callback_edge
-                    ):
-                        LOGGER.info(
-                            f"Add {edge_type} edge for : {source['module']}--{target['module']}"
-                        )
-                        nxg.add_node(source["module"], attr_dict=node_dict)
-                        nxg.add_node(target["module"], attr_dict=node_dict)
-                        nxg.add_edge(
-                            source["module"], target["module"], attr_dict=edge_dict
-                        )
+                    # if (
+                    #     not has_caller_edge
+                    #     and not has_cct_edge
+                    #     and not has_callback_edge
+                    # ):
+                    #     LOGGER.info(
+                    #         f"Add {edge_type} edge for : {source['module']}--{target['module']}"
+                    #     )
+                    #     nxg.add_node(source["module"], attr_dict=source)
+                    #     nxg.add_node(target["module"], attr_dict=target)
+                    #     nxg.add_edge(
+                    #         source["module"], target["module"], attr_dict=edge_dict
+                    #     )
 
-                    # Edge exists for source["module"] -> target["module"]
-                    elif not has_cct_edge and not has_callback_edge:
-                        # edge_data = nxg.get_edge_data(
-                        #     *(source["module"], target["module"])
-                        # )
-                        nxg[source["module"]][target["module"]]["attr_dict"] = edge_dict
+                    # # Edge exists for source["module"] -> target["module"]
+                    # elif not has_cct_edge and not has_callback_edge:
+                    #     nxg[source["module"]][target["module"]]["attr_dict"] = edge_dict
                     
 
-                    # If edge is not in CCT. Add it.
-                    if not has_cct_edge:
-                        cct.add_edge(
-                            source["callsite"],
-                            target["callsite"],
-                            attr_dict={"weight": target_df["time (inc)"].mean()},
-                        )
+                    # # If edge is not in CCT. Add it.
+                    # if not has_cct_edge:
+                    #     cct.add_edge(
+                    #         source["callsite"],
+                    #         target["callsite"],
+                    #         attr_dict={"weight": target_df["time (inc)"].mean()},
+                    #     )
+
+                    if source['type'] == "super-node":
+                        source_id = source['module']
+
+                    elif source['type'] == "component-node":
+                        source_id = source["module"] + '=' + source['callsite']
+                       
+                    if target['type'] == "super-node":
+                        target_id = target["module"]
+
+                    elif target['type'] == "component-node":
+                        target_id = target["module"] + '=' + target['callsite']
+
+                    nxg.add_node(source_id, attr_dict=source)
+                    nxg.add_node(target_id, attr_dict=target)
+                    nxg.add_edge(
+                        source_id, target_id, attr_dict=edge_dict
+                    )
 
         return nxg
 
@@ -476,13 +489,13 @@ class SankeyLayout:
         path_list = make_list(path)
 
         for idx, elem in enumerate(path_list):
-            callsite = elem.split("=")[1]
             module = elem.split("=")[0]
+            callsite = elem.split("=")[1]
 
             if module not in data_mapper:
-                module_mapper[module] = 0
+                module_mapper[module] = idx
                 data_mapper[module] = [
-                    {"callsite": callsite, "module": module, "level": idx}
+                    {"callsite": callsite, "module": module, "level": idx, "type": 'super-node'}
                 ]
             else:
                 flag = [p["level"] == idx for p in data_mapper[module]]
@@ -493,14 +506,14 @@ class SankeyLayout:
                             "callsite": callsite,
                             "module": module + "=" + callsite,
                             "level": idx,
+                            "type": "component-node"
                         }
                     )
                 else:
                     data_mapper[module].append(
-                        {"callsite": callsite, "module": module, "level": idx}
+                        {"callsite": callsite, "module": module, "level": idx, "type": "component-node"}
                     )
             ret.append(data_mapper[module][-1])
-
         return ret
 
     @staticmethod
@@ -529,8 +542,8 @@ class SankeyLayout:
         for node in nxg.nodes(data=True):
             node_name, node_dict = SankeyLayout.nx_deconstruct_node(node)
             if node_dict["type"] == "component-node":
-                module = sg.get_module_idx(node_name)
-                callsite = node_name
+                module = sg.get_module_idx(node_name.split('=')[0])
+                callsite = node_dict['callsite']
                 actual_time = SankeyLayout.callsite_time(
                     group_df=module_name_group_df, module=module, callsite=callsite
                 )
@@ -541,8 +554,8 @@ class SankeyLayout:
                 module_idx = node_name
                 # TODO: Add the entry function as the callsite.
                 callsite = ""
-                # TODO: Avoid sg.get_module_name
-                module = sg.get_module_name(module_idx)
+                # TODO: Avoid sg.get_module_idx
+                module = sg.get_module_idx(module_idx)
                 actual_time = SankeyLayout.module_time(
                     group_df=module_name_group_df,
                     module_callsite_map=module_callsite_map,
@@ -741,8 +754,20 @@ class SankeyLayout:
     # TODO: Find a better place for this to reside.
     @staticmethod
     def nx_deconstruct_node(node):
-        return node[0], node[1]["attr_dict"]
-
+        attr_dict = node[1]["attr_dict"]
+        return node[0], attr_dict
+        
     @staticmethod
     def nx_deconstruct_edge(edge):
         return (edge[0], edge[1]), edge[2]["attr_dict"]
+
+    @staticmethod
+    def nx_construct_node_dict(is_module_in_dataframe, node):
+        # If "module" column exists in a dataframe, it can have super-nodes
+        if '=' in node:
+            if node.split('=')[0] != node.split('=')[1]:
+                return {"type": "super-node"}
+            else:
+                return {"type": "component-node"}
+        else:
+            return {"type": "component-node"}

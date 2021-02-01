@@ -210,7 +210,6 @@ export default {
 			const node_id = this.$store.graph["nodeMap"][selectedNode];
 			const node = this.$store.graph["nodes"][node_id];
 
-
 			if (this.$store.selectedMode == "Single") {
 				EventHandler.$emit("single-histogram", {
 					node,
@@ -242,11 +241,7 @@ export default {
 			let nodeMap = {};
 			let idx = 0;
 			for (const node of graph.nodes) {
-				if (node.type == "super-node") {
-					nodeMap[node.module] = idx;
-				} else if (node.type == "component-node") {
-					nodeMap[node.name] = idx;
-				}
+				nodeMap[node.id] = idx;
 
 				console.debug(`[Supergraph] Assigning ${node.id} with index ${idx}`);
 				idx += 1;

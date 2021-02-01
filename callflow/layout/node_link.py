@@ -75,7 +75,7 @@ class NodeLinkLayout:
         datamap = {}
         for callsite in self.nxg.nodes():
 
-            module = self.sg.get_module_name(callsite)
+            module = self.sg.get_module_idx(callsite)
 
             for column in NodeLinkLayout._COLUMNS:
                 if column not in datamap:
@@ -120,7 +120,7 @@ class NodeLinkLayout:
                 if callsite not in target_module_callsite_map.keys():
                     continue
 
-                module = self.sg.get_module_name(callsite)
+                module = self.sg.get_module_idx(callsite)
 
                 if callsite not in datamap:
                     datamap[callsite] = {}

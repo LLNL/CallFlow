@@ -32,7 +32,7 @@ export default {
 	},
 
 	methods: {
-		init(graph, view) {
+		init(graph) {
 			const t_module_data = this.$store.modules[this.$store.selectedTargetDataset];
 			const t_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
 
@@ -40,14 +40,14 @@ export default {
 				const module = node.module_idx;
 				const callsite = node.name;
 
+				let data = {};
 				if (node.type == "super-node") {
-					const data = t_module_data[module][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
-					this.render(data, graph, module);
+					data = t_module_data[module][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
 				}
 				else if (node.type == "component-node" && t_callsite_data[callsite] != undefined) {
-					const data = t_callsite_data[callsite][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
-					this.render(data, graph, callsite);
+					data = t_callsite_data[callsite][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
 				}
+				this.render(data, graph, node);
 			}
 		},
 
@@ -117,7 +117,7 @@ export default {
 		},
 
 		render(data, graph, node) {
-			let node_dict = graph.nodes[graph.nodeMap[node]];
+			let node_dict = graph.nodes[graph.nodeMap[node.id]];
 			if (this.$store.selectedMode == "Ensemble") {
 				this.histogram(data, node_dict, "ensemble");
 				if (this.$store.showTarget && this.$store.comparisonMode == false) {

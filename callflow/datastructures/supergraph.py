@@ -314,10 +314,17 @@ class SuperGraph(ht.GraphFrame):
 
         return nxg
 
-    def get_module_name(self, idx):
-        return self.module_fct_list.index(idx)
-
     def get_module_idx(self, module):
+        # If it is not in the module_fct_list, it means its a node with a cycle.
+        # This might be the correct way to go, but lets place a quick fix by
+        # comparing the strings...
+        # if module not in self.module_fct_list:
+        #     self.module_fct_list.append(module)
+        #     return len(self.module_fct_list)
+
+        if '=' in module:
+            module = module.split('=')[0]
+        
         return self.module_fct_list.index(module)
 
     # --------------------------------------------------------------------------

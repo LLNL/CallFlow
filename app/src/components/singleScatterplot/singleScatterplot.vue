@@ -61,7 +61,7 @@ export default {
 		let self = this;
 		EventHandler.$on("single-scatterplot", function (data) {
 			self.clear();
-			console.debug("Single Scatterplot: ", data["module"]);
+			console.debug("Single Scatterplot: ", data["id"]);
 			self.visualize(data);
 		});
 	},
@@ -129,7 +129,7 @@ export default {
 		},
 
 		process(data) {
-			let store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
+			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
 			let mean_time_inc = store["Inclusive"]["d"];
 			let mean_time = store["Exclusive"]["d"];
 

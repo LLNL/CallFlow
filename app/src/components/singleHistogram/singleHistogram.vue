@@ -134,7 +134,7 @@ export default {
 			d3.selectAll(".lineRank").remove();
 			d3.selectAll(".brush").remove();
 			d3.selectAll(".tick").remove();
-			// this.$refs.ToolTip.clear();
+			this.$refs.ToolTip.clear();
 		},
 
 		visualize(callsite) {
