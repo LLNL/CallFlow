@@ -18,22 +18,45 @@ The `callflow` (python package) requires [python](https://realpython.com/install
 python3 setup.py install --prefix PATH/TO/INSTALL
 ```
 
+The installation places a binary, called `callflow` inside the /PATH/TO/INSTALL/bin.
+
 ## Sample Data
 
 Sample data and examples are provided in the [`data`](./data) and [`examples`](./examples) directories.
 
 ## Using CallFlow
 
-The first step is to process the raw datasets to use with CallFlow. This preprocessing typically entails some filtering and aggregation of data to produce the reduced graphs at desired granularity. The parameters of the preprocessing are provided through a config file (see examples of config files in the sample data directories).
+The first step is to process the raw datasets using `callflow`. The processing step typically entails some filtering and aggregation of data to produce the reduced graphs at desired granularity. 
+### Processing data
 
-The processing of profiles generates a `.callflow` directory in the ${save_path}, which is provided either in the `callflow.config.json` or --save_path attribute. If not provided, the `.callflow` directory will be placed in the data folder.
+```
+/PATH/TO/INSTALL/callflow --data-dir {/PATH/TO/DATA/DIRECTORY} --process --profile_format {hpctoolkit,caliper_json,caliper}
+```
+
+By default, The processing data resides inside a `.callflow` directory created
+inside the PATH_TO_DATA_DIRECTORY. 
+
+To modify the `.callflow` location, use the `--save_path` argument.
+
+The parameters of the processing step can be either passed in as arguments to
+the command line or modified using the config file, `.callflow/config.json`. To
+process using the `config.json`, use the --config option.
+
+```
+/PATH/TO/INSTALL/callflow --config {/PATH/TO/CONFIG} --process
+```
 
 ### Running the server
 
+via `--data-dir` option,
 ```
-/PATH/TO/INSTALL/callflow_server --data-dir {PATH_TO_DATA_DIRECTORY}
+/PATH/TO/INSTALL/callflow --data-dir {PATH_TO_DATA_DIRECTORY} --profile_format
 ```
 
+via `--config` option,
+```
+/PATH/TO/INSTALL/callflow --config {PATH_TO_CONFIG} --profile_format
+```
 
 By default, the application would run on port, 5000. If the port needs to be changed, please set the environment variables using,
 
@@ -41,7 +64,7 @@ By default, the application would run on port, 5000. If the port needs to be cha
 export CALLFLOW_APP_PORT=<port_number>
 ```
 
-#### Contribution and Development
+## Contribution and Development
 
 The callflow `app` requires [node.js](https://nodejs.org/en/download/) (>= 13.7.0) and `npm` (>= 6.13.7). If there is an older version of `node` installed, install [nvm](https://github.com/nvm-sh/nvm) and use the following command to change version.
 `nvm use 13.7.0`
@@ -58,7 +81,6 @@ To start the `app`,
 ```
 npm run serve
 ```
-
 
 To build the `app`,
 ```
@@ -83,7 +105,7 @@ For Callflow v1.1 that supports comparative visualization (ensembles of callgrap
 CallFlow is released under MIT license. See the LICENSE file for details.
 `LLNL-CODE-740862`.
 
-Written by Suraj P. Kesavan (<spkesavan@ucdavis.edu>) and Huu Tan Nguyen (<htpnguyen@ucdavis.edu>).
+Written by Suraj P. Kesavan (<spkesavan@ucdavis.edu>) and Harsh Bhatia (<bhatia4@llnl.gov>).
 
 Copyright (c) 2021, Lawrence Livermore National Security, LLC.
 Produced at the Lawrence Livermore National Laboratory. All rights reserved.
