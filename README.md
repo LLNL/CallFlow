@@ -19,7 +19,7 @@ python3 setup.py install --prefix PATH/TO/INSTALL
 ```
 
 The installation places a binary, called `callflow` inside the
-/PATH/TO/INSTALL/bin, which can exported to the $PATH environment variable.
+/PATH/TO/INSTALL/bin, which can be exported to the $PATH environment variable.
 
 ## Sample Data
 
@@ -85,6 +85,7 @@ npm run serve
 To build the `app`,
 ```
 npm run build
+sh update_build.sh
 ```
 
 The basic architecture diagram can be found [here](/docs/figures/CallFlow-basic-architecture.png).
