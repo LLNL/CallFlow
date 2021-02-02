@@ -18,7 +18,8 @@ The `callflow` (python package) requires [python](https://realpython.com/install
 python3 setup.py install --prefix PATH/TO/INSTALL
 ```
 
-The installation places a binary, called `callflow` inside the /PATH/TO/INSTALL/bin.
+The installation places a binary, called `callflow` inside the
+/PATH/TO/INSTALL/bin, which can exported to the $PATH environment variable.
 
 ## Sample Data
 
@@ -30,32 +31,31 @@ The first step is to process the raw datasets using `callflow`. The processing s
 ### Processing data
 
 ```
-/PATH/TO/INSTALL/callflow --data-dir {/PATH/TO/DATA/DIRECTORY} --process --profile_format {hpctoolkit,caliper_json,caliper}
+callflow --data-dir {/PATH/TO/DATA/DIRECTORY} --process --profile_format {hpctoolkit,caliper_json,caliper}
 ```
 
-By default, The processing data resides inside a `.callflow` directory created
-inside the PATH_TO_DATA_DIRECTORY. 
-
-To modify the `.callflow` location, use the `--save_path` argument.
+The processed data resides inside a `.callflow` directory created
+inside the /PATH/TO/DATA/DIRECTORY. To modify the `.callflow` location, use the `--save_path` argument.
 
 The parameters of the processing step can be either passed in as arguments to
-the command line or modified using the config file, `.callflow/config.json`. To
-process using the `config.json`, use the --config option.
+the command line or modified using the config file, `.callflow/config.json`. 
+
+To process using the `config.json`,
 
 ```
-/PATH/TO/INSTALL/callflow --config {/PATH/TO/CONFIG} --process
+callflow --config {/PATH/TO/CONFIG} --process
 ```
 
 ### Running the server
 
 via `--data-dir` option,
 ```
-/PATH/TO/INSTALL/callflow --data-dir {PATH_TO_DATA_DIRECTORY} --profile_format
+callflow --data-dir {PATH_TO_DATA_DIRECTORY} --profile_format
 ```
 
 via `--config` option,
 ```
-/PATH/TO/INSTALL/callflow --config {PATH_TO_CONFIG} --profile_format
+callflow --config {PATH_TO_CONFIG} --profile_format
 ```
 
 By default, the application would run on port, 5000. If the port needs to be changed, please set the environment variables using,
