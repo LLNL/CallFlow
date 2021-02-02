@@ -15,11 +15,11 @@ CallFlow is structured as three components:
 The `callflow` (python package) requires [python](https://realpython.com/installing-python/) (>= 3.6) and [pip](https://pip.pypa.io/en/stable/news/) (>= 20.1.1). Other dependencies are checked/installed during the installation of `callflow` using `setup.py`.
 
 ```
-python3 setup.py install --prefix PATH/TO/INSTALL
+python3 setup.py install --prefix /PATH/TO/INSTALL
 ```
 
 The installation places a binary, called `callflow` inside the
-/PATH/TO/INSTALL/bin, which can be exported to the $PATH environment variable.
+`/PATH/TO/INSTALL/bin`, which can be exported to the `$PATH` environment variable.
 
 ## Sample Data
 
@@ -27,39 +27,35 @@ Sample data and examples are provided in the [`data`](./data) and [`examples`](.
 
 ## Using CallFlow
 
-The first step is to process the raw datasets using `callflow`. The processing step typically entails some filtering and aggregation of data to produce the reduced graphs at desired granularity. 
+The first step is to process the "raw datasets" (performance profiles) using `callflow`. The processing step typically entails some filtering and aggregation of data to produce the reduced graphs at desired granularity.
+
 ### Processing data
 
 ```
-callflow --data-dir {/PATH/TO/DATA/DIRECTORY} --process --profile_format {hpctoolkit,caliper_json,caliper}
+callflow --data_path /PATH/TO/DATA/DIRECTORY --process --profile_format {hpctoolkit,caliper_json,caliper}
 ```
 
-The processed data resides inside a `.callflow` directory created
-inside the /PATH/TO/DATA/DIRECTORY. To modify the `.callflow` location, use the `--save_path` argument.
+The processed data is placed inside `/PATH/TO/DATA/DIRECTORY/.callflow`. To modify the location of the processed data, use the `--save_path` argument.
 
-The parameters of the processing step can be either passed in as arguments to
-the command line or modified using the config file, `.callflow/config.json`. 
-
-To process using the `config.json`,
+The parameters of the processing step can be either passed in as arguments to the command line or modified through the config file. To process using the `config.json`,
 
 ```
-callflow --config {/PATH/TO/CONFIG} --process
+callflow --config /PATH/TO/CONFIG_FILE --process
 ```
 
 ### Running the server
 
-via `--data-dir` option,
+##### via `--data_path` option,
 ```
-callflow --data-dir {PATH_TO_DATA_DIRECTORY} --profile_format
-```
-
-via `--config` option,
-```
-callflow --config {PATH_TO_CONFIG} --profile_format
+callflow --data_path /PATH/TO/DATA/DIRECTORY --profile_format {hpctoolkit,caliper_json,caliper}
 ```
 
-By default, the application would run on port, 5000. If the port needs to be changed, please set the environment variables using,
+##### via `--config` option,
+```
+callflow --config /PATH/TO/CONFIG_FILE --profile_format {hpctoolkit,caliper_json,caliper}
+```
 
+By default, the application runs on port `5000`. To use a different port, please set the environment variable.
 ```
 export CALLFLOW_APP_PORT=<port_number>
 ```
@@ -89,24 +85,26 @@ sh update_build.sh
 ```
 
 The basic architecture diagram can be found [here](/docs/figures/CallFlow-basic-architecture.png).
+
 ## CallFlow Citations
 
 Any published work that utilizes this software should include the following references:
 
-For CallFlow 1.0 that supports a single callgraph, cite:
-
-- Huu Tan Nguyen, Abhinav Bhatele, Nikhil Jain, Suraj P. Kesavan, Harsh Bhatia, Todd Gamblin, Kwan-Liu Ma, Peer-Timo Bremer. **Visualizing Hierarchical Performance Profiles of Parallel Codes using CallFlow.** _IEEE Transactions on Visualization and Computer Graphics_, 2019. doi:[10.1109/TVCG.2019.2953746](https://ieeexplore.ieee.org/document/8901998).
 
 For Callflow v1.1 that supports comparative visualization (ensembles of callgraphs), cite:
 
 - Suraj P. Kesavan, Harsh Bhatia, Abhinav Bhatele, Todd Gamblin, Peer-Timo Bremer, Kwan-Liu Ma. **Scalable Comparative Visualization of Ensembles of Call Graphs.** [arXiv:2007.01395](https://arxiv.org/abs/2007.01395).
+
+For CallFlow 1.0 that supports a single callgraph, cite:
+
+- Huu Tan Nguyen, Abhinav Bhatele, Nikhil Jain, Suraj P. Kesavan, Harsh Bhatia, Todd Gamblin, Kwan-Liu Ma, Peer-Timo Bremer. **Visualizing Hierarchical Performance Profiles of Parallel Codes using CallFlow.** _IEEE Transactions on Visualization and Computer Graphics_, 2019. doi:[10.1109/TVCG.2019.2953746](https://ieeexplore.ieee.org/document/8901998).
 
 ## License and Copyright
 
 CallFlow is released under MIT license. See the LICENSE file for details.
 `LLNL-CODE-740862`.
 
-Written by Suraj P. Kesavan (<spkesavan@ucdavis.edu>) and Harsh Bhatia (<bhatia4@llnl.gov>).
+Developed by Suraj P. Kesavan (<spkesavan@ucdavis.edu>), with contributions from Harsh Bhatia (<hbhatia@llnl.gov>).
 
 Copyright (c) 2021, Lawrence Livermore National Security, LLC.
 Produced at the Lawrence Livermore National Laboratory. All rights reserved.
