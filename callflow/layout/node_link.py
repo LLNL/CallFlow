@@ -12,16 +12,19 @@ from callflow.utils.timer import Timer
 from callflow.utils.sanitizer import Sanitizer
 
 
-# CCT Rendering class.
+# ------------------------------------------------------------------------------
+# Node link layout computation
+# ------------------------------------------------------------------------------
 class NodeLinkLayout:
-    """
-    Node link layout for CCT.
-    """
-
+    
     _COLUMNS = ["time (inc)", "time", "name", "module"]
 
     def __init__(self, sg, selected_runs=None):
-
+        """
+        Constructor for node link layout.
+        :param sg: SuperGraph
+        :param selected_runs: Array of SuperGraphs to consider
+        """
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
 
         # set the current graph being rendered.
@@ -62,12 +65,14 @@ class NodeLinkLayout:
 
         # Find cycles in the nxg.
         with self.timer.phase(f"Find cycles"):
-            self.nxg.cycles = NodeLinkLayout._find_cycle(self.nxg)
+            self.nxg.cycles = NodeLinkLayout._detect_cycle(self.nxg)
 
     # --------------------------------------------------------------------------
-    # flake8: noqa: C901
     def _add_node_attributes(self):
-
+        """
+        Add node attributes to the nxg.
+        :return: None
+        """
         name_time_inc_map = self.module_name_group_df["time (inc)"].max().to_dict()
         name_time_exc_map = self.module_name_group_df["time"].max().to_dict()
 
@@ -143,7 +148,10 @@ class NodeLinkLayout:
 
     # --------------------------------------------------------------------------
     def _add_edge_attributes(self):
-
+        """
+        Add edge attributes to nxg.
+        :return: None
+        """
         source = None
         orientation = None
         is_directed = self.nxg.is_directed()
@@ -169,24 +177,14 @@ class NodeLinkLayout:
     # --------------------------------------------------------------------------
     # Reports the number of cycles in the callpaths.
     @staticmethod
-    def _find_cycle(G, source=None, orientation=None):
+    def _detect_cycle(G, source=None, orientation=None):
         """
-        if not G.is_directed() or orientation in (None, "original"):
+        Detect cycles in the CCT.
 
-            def tailhead(edge):
-                return edge[:2]
-
-        elif orientation == "reverse":
-
-            def tailhead(edge):
-                return edge[1], edge[0]
-
-        elif orientation == "ignore":
-
-            def tailhead(edge):
-                if edge[-1] == "reverse":
-                    return edge[1], edge[0]
-                return edge[:2]
+        :param G: nxg Graph
+        :param source: source node to start searching
+        :param orientation: orientation of edges to consider
+        :return: Array of cycles [(source, target), ...]
         """
         explored = set()
         cycle = []
@@ -272,7 +270,11 @@ class NodeLinkLayout:
     # --------------------------------------------------------------------------
     @staticmethod
     def _create_nxg_from_paths(paths):
+        """
 
+        :param paths:
+        :return:
+        """
         assert isinstance(paths, list)
         from ast import literal_eval as make_tuple
 
@@ -296,7 +298,13 @@ class NodeLinkLayout:
 
     @staticmethod
     def _tailhead(edge, is_directed, orientation=None):
+        """
 
+        :param edge:
+        :param is_directed:
+        :param orientation:
+        :return:
+        """
         # Probably belongs on graphframe?
         # definitaly also used in supergraph
         assert isinstance(edge, tuple)

@@ -15,11 +15,10 @@ from callflow import SuperGraph
 
 LOGGER = callflow.get_logger(__name__)
 
-
+# ------------------------------------------------------------------------------
+# Sankey Layout Computation
+# ------------------------------------------------------------------------------
 class SankeyLayout:
-    """
-    Sankey layout
-    """
 
     _COLUMNS = [
         "actual_time",
@@ -44,6 +43,16 @@ class SankeyLayout:
         split_entry_module="",
         split_callee_module="",
     ):
+        """
+        Construct the Sankey layout.
+
+        :param sg: SuperGraph
+        :param path: path column to consider, e.g., path, group_path, component_path
+        :param selected_runs: array of selected SuperGraph names.
+        :param reveal_callsites: array of callsites to reveal
+        :param split_entry_module: array of entry modules to split
+        :param split_callee_module: array of callees to split
+        """
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
         assert isinstance(path, str)
         assert path in ["path", "group_path", "component_path"]
@@ -89,10 +98,14 @@ class SankeyLayout:
         self._add_node_attributes()
         self._add_edge_attributes()
 
-    # --------------------------------------------------------------------------
-    # Split by reveal callsite.
     @staticmethod
     def create_source_targets(component_path):
+        """
+        Split by reveal callsite.
+
+        :param component_path: path tuple
+        :return: edges array with attributes.
+        """
         module = ""
         edges = []
         for idx, callsite in enumerate(component_path):
@@ -120,6 +133,12 @@ class SankeyLayout:
         return edges
 
     def callsite_path_information(self, callsites):
+        """
+        Get callsite path information
+
+        :param callsites:
+        :return:
+        """
         paths = []
         for callsite in callsites:
             df = self.primary_group_df.get_group(callsite)
@@ -133,6 +152,12 @@ class SankeyLayout:
         return paths
 
     def add_reveal_paths(self, reveal_callsites):
+        """
+        Add paths to the reveal callsites array.
+
+        :param reveal_callsites: Array of call sites to reveal
+        :return: None
+        """
         paths = self.callsite_path_information(reveal_callsites)
 
         for path in paths:
@@ -185,6 +210,11 @@ class SankeyLayout:
     # Add callsites based on split by entry function interactions.
     @staticmethod
     def module_entry_functions_map(graph):
+        """
+
+        :param graph:
+        :return:
+        """
         entry_functions = {}
         for edge in graph.edges(data=True):
             attr_dict = edge[2]["attr_dict"]
@@ -197,6 +227,11 @@ class SankeyLayout:
 
     @staticmethod
     def create_source_targets_from_group_path(path):
+        """
+
+        :param path:
+        :return:
+        """
         edges = []
         for idx, callsite in enumerate(path):
             if idx == len(path) - 1:
@@ -215,6 +250,12 @@ class SankeyLayout:
 
     @staticmethod
     def same_source_edges(component_edges, reveal_module):
+        """
+
+        :param component_edges:
+        :param reveal_module:
+        :return:
+        """
         ret = []
         for idx, edge in enumerate(component_edges):
             source = edge["source"]
@@ -225,6 +266,12 @@ class SankeyLayout:
 
     @staticmethod
     def same_target_edges(component_edges, reveal_module):
+        """
+
+        :param component_edges:
+        :param reveal_module:
+        :return:
+        """
         ret = []
         for idx, edge in enumerate(component_edges):
             target = edge["target"]
@@ -234,6 +281,11 @@ class SankeyLayout:
         return ret
 
     def add_entry_callsite_paths(self, entry_function):
+        """
+
+        :param entry_function:
+        :return:
+        """
         entry_functions_map = self.module_entry_functions_map(self.nxg)
         reveal_callsites = entry_functions_map[entry_function]
         paths = self.callsitePathInformation(reveal_callsites)
@@ -301,6 +353,11 @@ class SankeyLayout:
 
     # TODO: This function was missing in implementation.
     def add_exit_callee_paths(self, callee):
+        """
+
+        :param callee:
+        :return:
+        """
         pass
 
     # --------------------------------------------------------------------------
@@ -308,6 +365,8 @@ class SankeyLayout:
     def _add_node_attributes(self):
         """
         Adds node attributes from the dataframe using the _COLUMNS.
+
+        :return:
         """
         ensemble_mapping = SankeyLayout._ensemble_map(
             sg=self.sg, df=self.df, nxg=self.nxg, columns=SankeyLayout._COLUMNS
@@ -331,6 +390,10 @@ class SankeyLayout:
     # --------------------------------------------------------------------------
     # Edge attribute methods.
     def _add_edge_attributes(self):
+        """
+
+        :return:
+        """
         edge_type_mapping = SankeyLayout.edge_type(self.nxg)
         nx.set_edge_attributes(self.nxg, name="edge_type", values=edge_type_mapping)
 
@@ -352,6 +415,11 @@ class SankeyLayout:
     def module_time(group_df, module_callsite_map, module):
         """
         For node attributes: Calculates the time spent inside the module overall
+
+        :param group_df:
+        :param module_callsite_map:
+        :param module:
+        :return:
         """
         exc_time_sum = 0
         inc_time_max = 0
@@ -367,6 +435,11 @@ class SankeyLayout:
     def callsite_time(group_df, module, callsite):
         """
         For node attribute: Calculates the time spent by each callsite.
+
+        :param group_df:
+        :param module:
+        :param callsite:
+        :return:
         """
         callsite_df = group_df.get_group((module, callsite))
         max_inc_time = callsite_df["time (inc)"].mean()
@@ -383,7 +456,6 @@ class SankeyLayout:
         and later uses them to construct a module level supergraph.
         """
 
-        # Empty networkx graphs.
         nxg = nx.DiGraph()
         cct = nx.DiGraph()
 
