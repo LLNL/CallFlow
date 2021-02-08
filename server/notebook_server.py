@@ -93,22 +93,6 @@ StartExecFailed = collections.namedtuple(
 # PID.
 StartTimedOut = collections.namedtuple("StartTimedOut", ("pid",))
 
-
-# ------------------------------------------------------------------------------
-def _create_cmd(args):
-    # TODO: remove hardcoding
-    server_cmd = ['callflow',
-                  '--data_path', './data/lulesh-8-runs-original',
-                  '--profile_format', 'caliper_json',
-                  '--verbose']
-    return server_cmd
-
-    server_cmd = ["callflow"]
-    for k,v in args.items():
-        if v is not None:
-            server_cmd += [f'--{k}',f'{v}']
-
-
 # ------------------------------------------------------------------------------
 # public api of the ipython environment
 # ------------------------------------------------------------------------------
@@ -116,12 +100,12 @@ def launch_ipython(args, config, host, port, launch_path, app_version):
     """
     Setup the IPython environment.
 
-    :param args:    Arguments (passed into CallFLow).
-    :param config:  Callflow config
-    :param host:
-    :param port:
-    :param launch_path:
-    :param app_version:
+    :param args: Arguments (passed into CallFLow).
+    :param config: CallFlow config
+    :param host: Host to run callflow app
+    :param port: Port to run callflow app
+    :param launch_path: Path to save launch information
+    :param app_version: CallFlow version id
     :return: StartLaunched or StartReused
     """
     assert isinstance(args, dict) and isinstance(config, dict)
@@ -193,7 +177,6 @@ def launch_ipython(args, config, host, port, launch_path, app_version):
         # Trigger a return that the callflow process has been triggered.
         _display_ipython(port=port, height=800, display_handle=handle)
 
-
 def load_ipython(ipython, server):
     """
     Load the CallFLow notebook extension.
@@ -206,9 +189,6 @@ def load_ipython(ipython, server):
     assert callable(server)
     _register_magics(ipython, server)
 
-
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
 def _register_magics(ipython, server):
     """
     Register IPython line/cell magics.
@@ -221,7 +201,6 @@ def _register_magics(ipython, server):
                                     magic_kind="line",
                                     magic_name="callflow")
 
-
 def _start_magic(line):
     """
     Implementation of the `%callflow` line magic.
@@ -232,8 +211,6 @@ def _start_magic(line):
     # TODO: needs to be fixed!
     callflow.CallFlowServer(args=line, env="JUPYTER")
 
-
-# ------------------------------------------------------------------------------
 def _launch_app(cmd, host, port, info_dir, instance,
                 timeout=datetime.timedelta(seconds=100)):
     """
@@ -279,7 +256,6 @@ def _launch_app(cmd, host, port, info_dir, instance,
                     f'For logs, see ({stdout_path}) and ({stderr_path})')
     return StartTimedOut(pid=p.pid)
 
-
 def _display_ipython(port, height, display_handle):
     """
     Display Javascript and HTML in IPython cell.
@@ -323,31 +299,15 @@ def _display_ipython(port, height, display_handle):
         IPython.display.display(iframe)
 
 
-def _print_message_in_ipython(handle, message):
-    """
-    Print message using ipython handle
-    :param handle: ipython handle
-    :param message: message to be printed
-    :return: None
-    """
-    if handle is None:
-        print(message)
-    else:
-        handle.update(IPython.display.Pretty(message))
-
-
 # ------------------------------------------------------------------------------
+# Utilities
 # ------------------------------------------------------------------------------
 def _mkdir(path):
     """
-    Get path to directory in which to store info files.
-    The directory returned by this function is "owned" by this module. If
-    the contents of the directory are modified other than via the public
-    functions of this module, subsequent behavior is undefined.
-    The directory will be created if it does not exist.
+    Make the directory, if it does not exist.
 
-    :param path:
-    :return:
+    :param path: path to directory to be checked
+    :return path: path where directory was created.
     """
     try:
         os.makedirs(path)
@@ -360,7 +320,38 @@ def _mkdir(path):
         os.chmod(path, 0o777)
     return path
 
+def _print_message_in_ipython(handle, message):
+    """
+    Print message using ipython handle
+    :param handle: ipython handle
+    :param message: message to be printed
+    :return: None
+    """
+    if handle is None:
+        print(message)
+    else:
+        handle.update(IPython.display.Pretty(message))
 
+def _create_cmd(args):
+    """
+    Create the `callflow` command with a default data and format
+    :param args: arguments passed into callflow through config object
+    :return server_cmd: Populated command based on the config object
+    """
+    # TODO: remove hardcoding
+    server_cmd = ['callflow',
+                  '--data_path', './data/lulesh-8-runs-original',
+                  '--profile_format', 'caliper_json',
+                  '--verbose']
+    return server_cmd
+
+    server_cmd = ["callflow"]
+    for k,v in args.items():
+        if v is not None:
+            server_cmd += [f'--{k}',f'{v}']
+
+# ------------------------------------------------------------------------------
+# Read-write operations to the LAUNCH_INFO to a file.
 # ------------------------------------------------------------------------------
 def _read_launch_info_file(filename):
     """
@@ -376,7 +367,6 @@ def _read_launch_info_file(filename):
         if e.errno == errno.ENOENT:
             return None
     return None
-
 
 def _write_launch_info_file(filename, info):
     """
@@ -394,7 +384,8 @@ def _write_launch_info_file(filename, info):
     with open(filename, "w") as outfile:
         outfile.write(payload + '\n')
 
-
+# ------------------------------------------------------------------------------
+# Find matching instance.
 # ------------------------------------------------------------------------------
 def _find_matching_instance(info_dir):
     """
@@ -436,7 +427,6 @@ def _find_matching_instance(info_dir):
 
     LOGGER.debug(f'Did not find any matching instances in ({info_dir})')
 
-
 def _get_cache_key(working_directory, arguments):
     """
     Get a cache key for an CallFlowLaunchInfo instance.
@@ -457,6 +447,4 @@ def _get_cache_key(working_directory, arguments):
     # `raw` is of type `bytes`, even though it only contains ASCII
     # characters; we want it to be `str` in both Python 2 and 3.
     return str(raw.decode("ascii"))
-
-
 # ------------------------------------------------------------------------------

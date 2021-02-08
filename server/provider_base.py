@@ -5,7 +5,6 @@
 # ------------------------------------------------------------------------------
 
 import os
-import json
 
 from callflow import SuperGraph, EnsembleGraph
 from callflow import get_logger
@@ -20,10 +19,11 @@ LOGGER = get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
+# BaseProvider Class
 # ------------------------------------------------------------------------------
 class BaseProvider:
 
-    # TODO: add additional module map argument
+    # TODO: CAL-38add additional module map argument
     def __init__(self, config: dict = None):
         """
         Entry interface to access CallFlow's functionalities.
@@ -36,11 +36,8 @@ class BaseProvider:
         self.supergraphs = {}
 
     # --------------------------------------------------------------------------
-    # load functionality
     def load(self):
-        """
-        Load the processed datasets by the format.
-        """
+        """Load the processed datasets by the format."""
         load_path = self.config["save_path"]
         read_param = self.config["read_parameter"]
 
@@ -61,8 +58,7 @@ class BaseProvider:
 
     # --------------------------------------------------------------------------
     def process(self):
-        """
-        Process the datasets using a Pipeline of operations.
+        """Process the datasets using a Pipeline of operations.
             1. Each dataset is processed individually into a SuperGraph. Each 
             SuperGraph is then processed according the provided config
             variables, e.g., filter_perc, filter_by.
@@ -146,17 +142,13 @@ class BaseProvider:
 
         LOGGER.info(f"[Single Mode] {operation}")
 
-        # ----------------------------------------------------------------------
         operation_name = operation["name"]
-        print(operation)
         sg = self.supergraphs[operation["datasets"]]
 
-        # ----------------------------------------------------------------------
         if operation_name == "cct":
             nll = NodeLinkLayout(sg=sg, selected_runs=operation["datasets"])
             return nll.nxg
 
-        # ----------------------------------------------------------------------
         elif operation_name == "supergraph":
             reveal_callsites = operation.get("reveal_callsites", [])
             split_entry_module = operation.get("split_entry_module", [])
@@ -170,11 +162,9 @@ class BaseProvider:
                                split_callee_module=split_callee_module)
             return ssg.nxg
 
-        # ----------------------------------------------------------------------
         elif operation_name == "split_mpi_distribution":
             assert False
             pass
-        # ----------------------------------------------------------------------
 
     def request_ensemble(self, operation):
         """
@@ -187,21 +177,17 @@ class BaseProvider:
 
         LOGGER.info(f"[Ensemble Mode] {operation}")
 
-        # ----------------------------------------------------------------------
         operation_name = operation["name"]
         sg = self.supergraphs["ensemble"]
 
-        # ----------------------------------------------------------------------
         if operation_name == "init":
             return self.config
 
-        # ----------------------------------------------------------------------
         elif operation_name == "cct":
             nll = NodeLinkLayout(supergraph=sg,
                                  callsite_count=operation["functionsInCCT"])
             return nll.nxg
 
-        # ----------------------------------------------------------------------
         elif operation_name == "supergraph":
             reveal_callsites = operation.get("reveal_callsites", [])
             split_entry_module = operation.get("split_entry_module", [])
@@ -215,74 +201,26 @@ class BaseProvider:
                                split_callee_module=split_callee_module)
             return ssg.nxg
 
-        # ----------------------------------------------------------------------
         elif operation_name == "module_hierarchy":
             hl = HierarchyLayout(sg, operation["module"])
             return hl.nxg
 
-        # ----------------------------------------------------------------------
         elif operation_name == "projection":
             pp = ParameterProjection(sg=sg,
                                      selected_runs=operation["selectedRuns"],
                                      n_cluster=operation["numOfClusters"])
             return pp.result.to_json(orient="columns")
 
-        # ----------------------------------------------------------------------
         elif operation_name == "compare":
-            compareDataset = operation["compareDataset"]
-            targetDataset = operation["targetDataset"]
+            compare_dataset = operation["compareDataset"]
+            target_dataset = operation["targetDataset"]
 
             assert operation["selectedMetric"] in ["Inclusive", "Exclusive"]
+            # TODO: CAL-37: Use proxies.
             if operation["selectedMetric"] == "Inclusive":
-                selectedMetric = "time (inc)"
+                selected_metric = "time (inc)"
             elif operation["selectedMetric"] == "Exclusive":
-                selectedMetric = "time"
+                selected_metric = "time"
 
-            dv = DiffView(sg, compareDataset, targetDataset, selectedMetric)
+            dv = DiffView(sg, compare_dataset, target_dataset, selected_metric)
             return dv.result
-
-        # ----------------------------------------------------------------------
-        # Not used.
-        elif operation_name == "scatterplot":
-            assert False
-            if operation["plot"] == "bland-altman":
-                state1 = self.states[operation["dataset"]]
-                state2 = self.states[operation["dataset2"]]
-                col = operation["col"]
-                catcol = operation["catcol"]
-                dataset1 = operation["dataset"]
-                dataset2 = operation["dataset2"]
-                ret = BlandAltman(
-                    state1, state2, col, catcol, dataset1, dataset2
-                ).results
-            return ret
-
-        # Not used.
-        elif operation_name == "similarity":
-            assert False
-            if operation["module"] == "all":
-                dirname = self.config.callflow_dir
-                similarity_filepath = dirname + "/" + "similarity.json"
-                with open(similarity_filepath, "r") as similarity_file:
-                    self.similarities = json.load(similarity_file)
-            else:
-                self.similarities = {}
-                for idx, dataset in enumerate(datasets):
-                    self.similarities[dataset] = []
-                    for idx_2, dataset2 in enumerate(datasets):
-                        union_similarity = DeltaConSimilarity(
-                            self.states[dataset2].g, self.states[dataset].g
-                        )
-                    self.similarities[dataset].append(union_similarity.result)
-            return self.similarities
-
-        # Not used.
-        elif operation_name == "run-information":
-            assert False
-            ret = []
-            for idx, state in enumerate(self.states):
-                self.states[state].projection_data["dataset"] = state
-                ret.append(self.states[state].projection_data)
-            return ret
-
-        # ----------------------------------------------------------------------

@@ -30,6 +30,7 @@ app.config["CORS_HEADERS"] = "Content-Type"
 
 
 # ------------------------------------------------------------------------------
+# API Provider Class
 # ------------------------------------------------------------------------------
 class APIProvider(BaseProvider):
     """
@@ -47,12 +48,24 @@ class APIProvider(BaseProvider):
     """
 
     def __init__(self, config: dict = None) -> None:
+        """
+        Constructor to APIProvider class.
+
+        :param config: CallFlow config object
+        """
         super().__init__(config)
         #self.production = production
         self.handle_routes()
        
 
-    def start(self, host: str, port: int):
+    def start(self, host: str, port: int) -> None:
+        """
+        Launch the Flask application.
+
+        :param host: host to run CallFlow API server
+        :param port: port to run CallFlow API server
+        :return: None
+        """
         LOGGER.info("Starting the API service")
         app.run(host=host, port=port, threaded=True)
 
@@ -61,6 +74,10 @@ class APIProvider(BaseProvider):
     def emit_json(endpoint: str, json_data: any) -> str:
         """
         Emit the json data to the endpoint
+
+        :param endpoint: Endpoint to emit information to.
+        :param json_data: Data to emit to the endpoint
+        :return response: Response packed with data (in JSON format).
         """
         try:
             response = app.response_class(
@@ -73,11 +90,10 @@ class APIProvider(BaseProvider):
             warnings.warn(f"[API: {endpoint}] emits no data.")
             return jsonify(isError=True, message="Error", statusCode=500)
 
-    def handle_routes(self):
+    def handle_routes(self) -> None:
         """
         API endpoints
         """
-
         @app.route("/")
         @cross_origin()
         def index():
@@ -136,14 +152,6 @@ class APIProvider(BaseProvider):
             nxg = self.request_ensemble({"name": "supergraph", **data})
             result = json_graph.node_link_data(nxg)
             return APIProvider.emit_json("ensemble_supergraph", result)
-
-        # @app.route("/ensemble_cct", methods=["POST"])
-        # @cross_origin()
-        # def ensemble_cct():
-        #     data = request.json
-        #     nxg = self.request_ensemble({"name": "ensemble_cct", **data})
-        #     result = json_graph.node_link_data(nxg)
-        #     return APIProvider.emit_json("ensemble_cct", result)
 
         @app.route("/similarity", methods=["POST"])
         @cross_origin()
