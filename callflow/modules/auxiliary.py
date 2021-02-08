@@ -18,11 +18,18 @@ LOGGER = callflow.get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
+# Auxiliary data (contains per call site and per module information).
 # ------------------------------------------------------------------------------
 class Auxiliary:
 
     def __init__(self, sg, selected_runs=None, MPIBinCount: int = 20, RunBinCount: int = 20):
+        """
 
+        :param sg:
+        :param selected_runs:
+        :param MPIBinCount:
+        :param RunBinCount:
+        """
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
 
         self.MPIBinCount = MPIBinCount
@@ -84,6 +91,9 @@ class Auxiliary:
     def _runtime_props(dataframes):
         """
         Adds runtime information (like max, min inclusive and exclusive runtime).
+
+        :param dataframes:
+        :return:
         """
         props = {}
         props["maxIncTime"] = {}
@@ -118,6 +128,12 @@ class Auxiliary:
 
 
     def _collect_data_dataset(self, dfs, sg):
+        """
+
+        :param dfs:
+        :param sg:
+        :return:
+        """
         _COLUMNS_OF_INTEREST = ['node', 'rank', 'time (inc)', 'time', 'dataset', 'component_level', 'module', 'name']
         
         _json = {}
@@ -142,6 +158,12 @@ class Auxiliary:
 
     # --------------------------------------------------------------------------
     def _collect_data(self, dataframes_group, grp_type='callsite'):
+        """
+
+        :param dataframes_group:
+        :param grp_type:
+        :return:
+        """
 
         is_callsite = grp_type == 'callsite'
         result = {}
@@ -190,6 +212,12 @@ class Auxiliary:
 
     # TODO: Figure out where this should belong.
     def _callsite_module_map(self, dataframes, callsites):
+        """
+
+        :param dataframes:
+        :param callsites:
+        :return:
+        """
         return {
             __ : {
                 _ : df_lookup_and_list(df, "name", _, "module") \
@@ -199,6 +227,12 @@ class Auxiliary:
         }
 
     def _module_callsite_map(self, dataframes, modules):
+        """
+
+        :param dataframes:
+        :param modules:
+        :return:
+        """
         return {
             __ : {
                 int(_) : df_lookup_and_list(df, "module", _, "name") \
@@ -211,6 +245,18 @@ class Auxiliary:
     @staticmethod
     def pack_json(name, df, is_ensemble, is_callsite,
                   gradients = None, histograms = None, boxplots = None, grp_type="callsite"):
+        """
+
+        :param name:
+        :param df:
+        :param is_ensemble:
+        :param is_callsite:
+        :param gradients:
+        :param histograms:
+        :param boxplots:
+        :param grp_type:
+        :return:
+        """
 
         KEYS_AND_ATTRS = {'Inclusive': 'time (inc)',
                           'Exclusive': 'time'}

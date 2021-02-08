@@ -20,12 +20,14 @@ LOGGER = get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
+# SuperGraph data structure
 # ------------------------------------------------------------------------------
 class SuperGraph(ht.GraphFrame):
     """
     SuperGraph class to handle processing of a an input Dataset.
     """
     # --------------------------------------------------------------------------
+    # Globals to class.
     _FORMATS = ["hpctoolkit", "caliper", "caliper_json", "gprof", "literal", "lists"]
 
     _FILENAMES = {"ht": "hatchet_tree.txt",
@@ -42,6 +44,10 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def __init__(self, name):
+        """
+        Constructor to SuperGraph
+        :param name: SuperGraph's name.
+        """
 
         assert isinstance(name, str)
 
@@ -65,14 +71,29 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def __str__(self):
+        """SuperGraph string representation"""
         return f"SuperGraph<{self.name}; df = {self.dataframe.shape}>"
 
     def __repr__(self):
+        """SuperGraph string representation"""
         return self.__str__()
 
     # --------------------------------------------------------------------------
-    def create(self, path, profile_format, module_callsite_map):
-        # Create SuperGraph.
+    def create(self, path, profile_format, module_callsite_map) -> None:
+        """
+        Create SuperGraph from basic information. It does the following:
+            1. Using the config object, it constructs the Hatchet GraphFrame.
+            2. Creates a NetworkX graph from the Hatchet GraphFrame.Graph.
+            3. Add time proxies.
+            4. Attempts to construct module callsite mapping, if information exists.
+            5. Resets the indexes of the dataframe,
+            6. Sanitizes the call site names and paths.
+
+        :param path: Path to data
+        :param profile_format: Format of data
+        :param module_callsite_map: Module callsite mapping
+        :return:
+        """
         self.profile_format = profile_format
         LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path}) using ({self.profile_format}) format")
 
@@ -110,9 +131,16 @@ class SuperGraph(ht.GraphFrame):
             self.callees[node_name] = [_.frame.get("name") for _ in node.children]
 
     # --------------------------------------------------------------------------
-    def load(self, path, read_graph=False, read_parameter=False, read_aux=False):
-        # Load the SuperGraph (refer _FILENAMES for file name mapping).
+    def load(self, path, read_graph=False, read_parameter=False, read_aux=False) -> None:
+        """
+        Load the SuperGraph class from reading .callflow data.
 
+        :param path: (str) Path to .callflow directory.
+        :param read_graph: (bool) Read the graph, default is False.
+        :param read_parameter: (bool) Read parameters, default is False.
+        :param read_aux: (bool) Read auxiliary data, default is True.
+        :return:
+        """
         LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path})")
         self.dataframe = None
         self.nxg = None
@@ -162,6 +190,8 @@ class SuperGraph(ht.GraphFrame):
     # --------------------------------------------------------------------------
     # SuperGraph.dataframe api
     # --------------------------------------------------------------------------
+    # (Not documented)
+    # TODO: CAL-65: Move to utils directory
     def df_reset_index(self):
         self.dataframe.reset_index(drop=False, inplace=True)
 
@@ -273,7 +303,7 @@ class SuperGraph(ht.GraphFrame):
         self.dataframe[column] = _fct[0]
         return _fct[1].values.tolist()
 
-    def df_xs_group_column(self, groups, column, apply_func):
+    def df_xs_group_column(self, df, groups, name, column, apply_func):
         # module_df = df.groupby(groups).mean()
         module_df = df.groupby(groups).apply(apply_func)
         return module_df.xs(name, level=column)
@@ -281,10 +311,14 @@ class SuperGraph(ht.GraphFrame):
     # --------------------------------------------------------------------------
     # SuperGraph.graph utilities.
     # --------------------------------------------------------------------------
+    # TODO: CAL-65: Move to utils directory
     @staticmethod
     def hatchet_graph_to_nxg(ht_graph):
         """
         Constructs a networkX graph from hatchet graph.
+
+        :param ht_graph:
+        :return:
         """
         assert isinstance(ht_graph, ht.graph.Graph)
 
@@ -315,6 +349,7 @@ class SuperGraph(ht.GraphFrame):
         return nxg
 
     def get_module_idx(self, module):
+        # TODO: CAL-53
         # If it is not in the module_fct_list, it means its a node with a cycle.
         # This might be the correct way to go, but lets place a quick fix by
         # comparing the strings...
@@ -328,12 +363,17 @@ class SuperGraph(ht.GraphFrame):
         return self.module_fct_list.index(module)
 
     # --------------------------------------------------------------------------
-    # static read/write functionality
+    # Create GraphFrame methods
     # --------------------------------------------------------------------------
-    # create a graph frame directly from the config
     @staticmethod
     def from_config(data_path, profile_format):
+        """
+        # Create a GraphFrame directly from the data_path and profile_format.
 
+        :param data_path: path to data
+        :param profile_format: Profile format
+        :return gf: GraphFrame
+        """
         if profile_format not in SuperGraph._FORMATS:
             raise ValueError(f"Invalid profile format: {profile_format}")
 
@@ -365,6 +405,10 @@ class SuperGraph(ht.GraphFrame):
         assert gf is not None
         return gf
 
+    # --------------------------------------------------------------------------
+    # static read/write functionality
+    # --------------------------------------------------------------------------
+    # TODO: CAL-66: Clean up unnecessary writing and reading functions.
     @staticmethod
     def write_df(path, df):
         fname = os.path.join(path, SuperGraph._FILENAMES["df"])
@@ -486,14 +530,17 @@ class SuperGraph(ht.GraphFrame):
             return module_callsite_map
 
     # --------------------------------------------------------------------------
-    # The next block of functions attach the calculated result to the variable `gf`.
-    def process(self, module_map={}):
+    # Processing functions attach the calculated result to the GraphFrame.
+    # --------------------------------------------------------------------------
+    def process(self, module_map={}) -> None:
         """
         Process graphframe to add properties depending on the format.
         Current processing is supported for hpctoolkit and caliper.
+
+        :param module_map: Module callsite mapping
+        :return: None
         """
 
-        # ----------------------------------------------------------------------
         # add new columns to the dataframe
         self.df_add_column('dataset', value=self.name)
         self.df_add_column('rank', value=0)
@@ -519,7 +566,8 @@ class SuperGraph(ht.GraphFrame):
         # self.dataframe.set_index(self.indexes, inplace=True, drop=True)
 
     # --------------------------------------------------------------------------
-    # in place filtering!
+    # In-place filtering on the NetworkX Graph.
+    # --------------------------------------------------------------------------
     def filter_sg(self, filter_by, filter_val):
 
         LOGGER.debug(f"Filtering {self.__str__()}: \"{filter_by}\" <= {filter_val}")

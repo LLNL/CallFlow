@@ -11,14 +11,18 @@ from sklearn.manifold import TSNE, MDS
 from sklearn.cluster import KMeans
 from callflow.algorithms import KMedoids
 
-
+# ------------------------------------------------------------------------------
+# Calculate Projections based on parameter information.
+# ------------------------------------------------------------------------------
 class ParameterProjection:
-    """
-    Parameter projection view
-    """
 
     def __init__(self, sg, selected_runs=None, n_cluster=3):
+        """
 
+        :param sg:
+        :param selected_runs:
+        :param n_cluster:
+        """
         # TODO: This code is repeated in modules/auxiliary.py.
         # Move to a instance method of SuperGraph.
         if selected_runs is not None:

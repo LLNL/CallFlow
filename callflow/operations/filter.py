@@ -11,16 +11,20 @@ from ast import literal_eval as make_list
 import callflow
 LOGGER = callflow.get_logger(__name__)
 
+# ------------------------------------------------------------------------------
+# Filters a SuperGraph.
+# ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-# Filter a SuperGraph
-# ------------------------------------------------------------------------------
 class Filter:
-
     VALID_MODES = ["time", "time (inc)"]
 
     def __init__(self, sg, filter_by="time (inc)", filter_perc=10.):
+        """
 
+        :param sg:
+        :param filter_by:
+        :param filter_perc:
+        """
         assert isinstance(sg, callflow.SuperGraph)
         assert isinstance(filter_by, str) and isinstance(filter_perc, (int, float))
         assert filter_by in Filter.VALID_MODES
@@ -34,7 +38,8 @@ class Filter:
 
     # --------------------------------------------------------------------------
     def compute(self):
-        """Filter the SuperGraph based on {filter_by} attribute and {filter_perc} percentage.
+        """
+        Filter the SuperGraph based on {filter_by} attribute and {filter_perc} percentage.
         """
         # compute the min/max
         min_vals = {}
@@ -55,7 +60,8 @@ class Filter:
 
     # --------------------------------------------------------------------------
     def _filter_sg(self, filter_by, filter_val):
-        """Performs in-place filtering based on parameters
+        """
+        Performs in-place filtering based on parameters
 
         :param filter_by (str): Attribute to filter by. (can be "time" or "time (inc)"
         :param filter_val (int): Filter percentage

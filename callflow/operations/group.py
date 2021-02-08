@@ -50,7 +50,8 @@ class Group:
 
     # --------------------------------------------------------------------------
     def compute(self):
-        """In-place Group by operation. Appends the following columns to the SuperGraph.dataframe.
+        """
+        In-place Group by operation. Appends the following columns to the SuperGraph.dataframe.
 
         Columns appended: group_path, component_path, component_level, entry_functions
 
@@ -125,7 +126,8 @@ class Group:
         self.sg.df_update_mapping("vis_name", node_name)
 
     def _construct_group_path(self, path):
-        """Construct the group_path from the `path` by appending the module name. See `compute` method for example.
+        """
+        Construct the group_path from the `path` by appending the module name. See `compute` method for example.
 
         :param path: call path from the root node.
         :return group_path (list): grouped call path from the root module.
@@ -213,7 +215,8 @@ class Group:
         return group_path
 
     def _construct_component_path(self, path, group_path):
-        """Construct the component path for a given path and group_path.
+        """
+        Construct the component path for a given path and group_path.
 
         :param path: path to the call site
         :param group_path: group_path for a call site

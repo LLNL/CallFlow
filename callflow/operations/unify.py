@@ -12,11 +12,16 @@ LOGGER = callflow.get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
+# Unify a supergraph
 # ------------------------------------------------------------------------------
 class Unify:
 
     def __init__(self, eg, supergraphs):
+        """
 
+        :param eg:
+        :param supergraphs:
+        """
         assert isinstance(eg, callflow.EnsembleGraph)
         assert isinstance(supergraphs, dict)
         for k,v in supergraphs.items():
@@ -37,7 +42,10 @@ class Unify:
 
     # --------------------------------------------------------------------------
     def compute(self):
-
+        """
+        
+        :return:
+        """
         n = len(self.eg.supergraphs)
         LOGGER.info(f'Unifying {n} supergraphs')
         if n == 1:

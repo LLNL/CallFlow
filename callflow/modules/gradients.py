@@ -16,6 +16,7 @@ LOGGER = callflow.get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
+# Calculate Gradients for a given callsite or module
 # ------------------------------------------------------------------------------
 class Gradients:
     """
@@ -31,6 +32,12 @@ class Gradients:
                       'Exclusive': 'time'}
 
     def __init__(self, df, callsiteOrModule: str, bins=20):
+        """
+
+        :param df:
+        :param callsiteOrModule:
+        :param bins:
+        """
         assert isinstance(df, pd.DataFrame)
         # For modules it is int. 
         assert isinstance(callsiteOrModule, str) or isinstance(callsiteOrModule, int)
@@ -54,16 +61,30 @@ class Gradients:
 
     staticmethod
     def convert_dictmean_to_list(dictionary):
+        """
+
+        :return:
+        """
         return [ np.mean(np.array(list(dictionary[_].values()))) for _ in dictionary]
 
     @staticmethod
     def convert_dictmean_to_dict(dictionary):
+        """
+
+        :param dictionary:
+        :return:
+        """
         return { _ : np.mean(np.array(list(dictionary[_].values()))) for _ in dictionary}
 
     # --------------------------------------------------------------------------
     @staticmethod
     def map_datasets_to_bins(bins, dataset_dict={}):
+        """
 
+        :param bins:
+        :param dataset_dict:
+        :return:
+        """
         # TODO: previously, this logic applied to bin edges
         # but, now, we aer working on bin_centers
         binw = bins[1] - bins[0]
@@ -83,9 +104,12 @@ class Gradients:
         return dataset_position_dict
 
     # --------------------------------------------------------------------------
-    # Compute method.
     def compute(self, columnName="name"):
+        """
 
+        :param columnName:
+        :return:
+        """
         dists = {}
         for k, a in Gradients.KEYS_AND_ATTRS.items():
             dists[k] = {}

@@ -13,13 +13,18 @@ LOGGER = callflow.get_logger()
 
 
 # ------------------------------------------------------------------------------
+# Calculate Scatterplot
 # ------------------------------------------------------------------------------
 class RuntimeScatterplot:
 
     KEYS_TO_ADD = ['name', 'rank', 'time', 'time (inc)']
 
     def __init__(self, state, module):
+        """
 
+        :param state:
+        :param module:
+        """
         self.entire_df = state.entire_df
         self.graph = state.new_gf.graph
         self.df = state.new_gf.df
@@ -30,7 +35,10 @@ class RuntimeScatterplot:
         self.result = self.run()
 
     def run(self):
+        """
 
+        :return:
+        """
         ret = []
 
         callsites = df_lookup_and_list(self.df, "module", self.module, "name")

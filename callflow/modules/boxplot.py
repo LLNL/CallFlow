@@ -14,6 +14,7 @@ LOGGER = callflow.get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
+# Compute Boxplots for a dataframe segment
 # ------------------------------------------------------------------------------
 class BoxPlot:
     """
@@ -23,7 +24,10 @@ class BoxPlot:
                       'Exclusive': 'time'}
 
     def __init__(self, df):
+        """
 
+        :param df:
+        """
         assert isinstance(df, pd.DataFrame)
         self.result = {}
 

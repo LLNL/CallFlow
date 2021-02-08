@@ -14,6 +14,7 @@ LOGGER = callflow.get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
+# Calculate Histogram (Per rank, All ranks, Per dataset)
 # ------------------------------------------------------------------------------
 class Histogram:
 
@@ -22,7 +23,12 @@ class Histogram:
                       'Exclusive': 'time'}
 
     def __init__(self, df_ensemble, df_target=None, bins=20):
+        """
 
+        :param df_ensemble:
+        :param df_target:
+        :param bins:
+        """
         assert isinstance(df_ensemble, pd.DataFrame)
         assert isinstance(df_target, pd.DataFrame) or df_target is None
         assert isinstance(bins, int)
@@ -64,6 +70,12 @@ class Histogram:
     # Return the histogram in the required form.
     @staticmethod
     def _get_data_by_property(data, prop):
+        """
+
+        :param data:
+        :param prop:
+        :return:
+        """
         if prop == "all_ranks":
             return data
         elif prop == "rank":
@@ -75,6 +87,11 @@ class Histogram:
 
     @staticmethod
     def _format_data(histo):
+        """
+
+        :param histo:
+        :return:
+        """
         if len(histo[0]) == 0 or len(histo[1]) == 0:
             return {"x": [],
                     "y": [],
