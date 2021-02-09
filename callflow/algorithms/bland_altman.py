@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: MIT
 
-import pandas as pd
 import numpy as np
 import matplotlib.cm as cm
+
 
 # ------------------------------------------------------------------------------
 # Bland altman plot calculation.
@@ -36,20 +36,20 @@ class BlandAltman_Plot:
         assert col in df_1 and catcol in df_1
         assert col in df_2 and catcol in df_2
 
-        np_df_col_1 = np.asarray(supergraph_1.df[col])
-        np_df_col_2 = np.asarray(supergraph_2.df[col])
+        np_df_col_1 = np.asarray(df_1[col])
+        np_df_col_2 = np.asarray(df_2[col])
 
         mean = np.mean([np_df_col_1, np_df_col_2], axis=0)
         diff = np_df_col_1 - np_df_col_2
         md = np.mean(diff)
         sd = np.std(diff, axis=0)
 
-        categories = np.concatenate(np.unique(supergraph_1.df[catcol]), np.unique(supergraph_2.df[catcol]))
+        categories = np.concatenate(np.unique(df_1[catcol]), np.unique(df_2[catcol]))
         colors = cm.rainbow(np.linspace(0, 1, len(categories)))
         colordict = list(dict(zip(categories, colors)))
 
         return {
-            "name": name,
+            "axis": catcol,
             "mean": mean,
             "diff": diff,
             "color": colordict,

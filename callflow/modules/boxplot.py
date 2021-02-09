@@ -20,8 +20,8 @@ class BoxPlot:
     """
     Boxplot computation
     """
-    KEYS_AND_ATTRS = {'Inclusive': 'time (inc)',
-                      'Exclusive': 'time'}
+
+    KEYS_AND_ATTRS = {"Inclusive": "time (inc)", "Exclusive": "time"}
 
     def __init__(self, df):
         """
@@ -31,17 +31,19 @@ class BoxPlot:
         assert isinstance(df, pd.DataFrame)
         self.result = {}
 
-        for k,a in BoxPlot.KEYS_AND_ATTRS.items():
+        for k, a in BoxPlot.KEYS_AND_ATTRS.items():
 
-            q = np.percentile(df[a], [0., 25., 50., 75., 100.])
+            q = np.percentile(df[a], [0.0, 25.0, 50.0, 75.0, 100.0])
             mask = outliers(df[a])
 
-            self.result[k] = {'q': q,
-                              'outliers': {
-                                  "values": (mask * df[a]).to_numpy(),
-                                  "datasets": (mask * df['dataset']).to_numpy(),
-                                  "ranks": (mask * df['rank']).to_numpy()
-                                }
-                              }
+            self.result[k] = {
+                "q": q,
+                "outliers": {
+                    "values": (mask * df[a]).to_numpy(),
+                    "datasets": (mask * df["dataset"]).to_numpy(),
+                    "ranks": (mask * df["rank"]).to_numpy(),
+                },
+            }
+
 
 # ------------------------------------------------------------------------------

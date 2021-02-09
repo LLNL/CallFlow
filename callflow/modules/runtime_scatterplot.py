@@ -17,7 +17,7 @@ LOGGER = callflow.get_logger()
 # ------------------------------------------------------------------------------
 class RuntimeScatterplot:
 
-    KEYS_TO_ADD = ['name', 'rank', 'time', 'time (inc)']
+    KEYS_TO_ADD = ["name", "rank", "time", "time (inc)"]
 
     def __init__(self, state, module):
         """
@@ -47,12 +47,13 @@ class RuntimeScatterplot:
             _ret = {}
             _df = df_lookup_by_column(self.entire_df, "name", func)
             for _ in RuntimeScatterplot.KEYS_TO_ADD:
-                if _ == 'name':
+                if _ == "name":
                     _ret[_] = func
                 else:
                     _ret[_] = _df[_].to_numpy()
             ret.append(_ret)
 
         return pd.DataFrame(ret).to_json(orient="columns")
+
 
 # ------------------------------------------------------------------------------

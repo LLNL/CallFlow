@@ -37,7 +37,7 @@ class DiffView:
         self.col = col
 
         # Calculate the max_rank.
-        self.max_rank = max(df_count(self.df1,"rank"),df_count(self.df2,"rank"))
+        self.max_rank = max(df_count(self.df1, "rank"), df_count(self.df2, "rank"))
 
         modules = ensemble_graph.df_unique("module")
         self.result = [self.compute(_) for _ in modules]
@@ -132,4 +132,6 @@ class DiffView:
             "diff": diff,
         }
         return result
+
+
 # ------------------------------------------------------------------------------

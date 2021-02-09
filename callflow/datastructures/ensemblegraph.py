@@ -6,6 +6,7 @@
 
 from callflow import get_logger
 from .supergraph import SuperGraph
+
 LOGGER = get_logger(__name__)
 
 
@@ -16,6 +17,7 @@ class EnsembleGraph(SuperGraph):
     """
     EnsembleGraph represents a unified graph and all components supergraphs.
     """
+
     def __init__(self, name):
         """
         Constructor to Ensemble SuperGraph
@@ -43,5 +45,6 @@ class EnsembleGraph(SuperGraph):
         :return:
         """
         return self.__str__()
+
 
 # ------------------------------------------------------------------------------

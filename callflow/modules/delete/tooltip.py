@@ -16,7 +16,7 @@ LOGGER = callflow.get_logger()
 # ------------------------------------------------------------------------------
 class ToolTip:
 
-    KEYS_TO_ADD = ['name', 'rank', 'time', 'time (inc)', 'callers', 'callees']
+    KEYS_TO_ADD = ["name", "rank", "time", "time (inc)", "callers", "callees"]
 
     def __init__(self, state, module):
 
@@ -41,13 +41,14 @@ class ToolTip:
             name_df = df_lookup_by_column(self.df, "name", func)
 
             for _ in ToolTip.KEYS_TO_ADD:
-                if _ == 'name':
+                if _ == "name":
                     _ret[_] = func
-                elif _ in ['callers', 'callees']:
+                elif _ in ["callers", "callees"]:
                     _ret[_] = name_df[_].tolist()
                 else:
                     _ret[_] = name_entire_df[_].tolist()
 
         return pd.DataFrame(ret).to_json(orient="columns")
+
 
 # ------------------------------------------------------------------------------

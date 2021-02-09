@@ -11,9 +11,8 @@ from callflow.utils.df import df_group_by
 
 # CallFlow imports
 import callflow
-from callflow import SuperGraph
-
 LOGGER = callflow.get_logger(__name__)
+
 
 # ------------------------------------------------------------------------------
 # Sankey Layout Computation
@@ -67,28 +66,38 @@ class SankeyLayout:
         # Move to a instance method of SuperGraph.
         if selected_runs is not None:
             self.runs = selected_runs
-            self.df = sg.df_filter_by_search_string('dataset', self.runs)
-    
+            self.df = sg.df_filter_by_search_string("dataset", self.runs)
+
         elif isinstance(sg, callflow.SuperGraph) and sg.name != "ensemble":
             self.runs = [sg.name]
             self.df = sg.dataframe
 
         elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
             self.runs = [k for k, v in sg.supergraphs.items()]
-            self.df = sg.df_filter_by_search_string('dataset', self.runs)
+            self.df = sg.df_filter_by_search_string("dataset", self.runs)
 
         self.reveal_callsites = reveal_callsites
         self.split_entry_module = split_entry_module
         self.split_callee_module = split_callee_module
 
-        self.primary_group_df = df_group_by(self.df, [SankeyLayout._PRIMARY_GROUPBY_COLUMN])
-        self.secondary_group_df = df_group_by(self.df, [SankeyLayout._SECONDARY_GROUPBY_COLUMN])
-        self.secondary_primary_group_df = df_group_by(self.df, [SankeyLayout._SECONDARY_GROUPBY_COLUMN, SankeyLayout._PRIMARY_GROUPBY_COLUMN])
+        self.primary_group_df = df_group_by(
+            self.df, [SankeyLayout._PRIMARY_GROUPBY_COLUMN]
+        )
+        self.secondary_group_df = df_group_by(
+            self.df, [SankeyLayout._SECONDARY_GROUPBY_COLUMN]
+        )
+        self.secondary_primary_group_df = df_group_by(
+            self.df,
+            [
+                SankeyLayout._SECONDARY_GROUPBY_COLUMN,
+                SankeyLayout._PRIMARY_GROUPBY_COLUMN,
+            ],
+        )
         self.paths_df = df_group_by(self.df, ["name", self.path])
-        
+
         self.nxg = self._create_nxg_from_paths()
         self.add_reveal_paths(self.reveal_callsites)
-        
+
         if len(self.split_entry_module) > 0:
             self.add_entry_callsite_paths(self.split_entry_module)
         if len(self.split_callee_module) > 0:
@@ -457,7 +466,7 @@ class SankeyLayout:
         """
 
         nxg = nx.DiGraph()
-        cct = nx.DiGraph()
+        # cct = nx.DiGraph()
 
         for (callsite, path), path_df in self.paths_df:
             # Break cycles, if any.
@@ -477,9 +486,9 @@ class SankeyLayout:
                         (self.sg.get_module_idx(target["module"]), target["callsite"])
                     )
 
-                    has_caller_edge = nxg.has_edge(source["module"], target["module"])
+                    # has_caller_edge = nxg.has_edge(source["module"], target["module"])
                     has_callback_edge = nxg.has_edge(target["module"], source["module"])
-                    has_cct_edge = cct.has_edge(source["callsite"], target["callsite"])
+                    # has_cct_edge = cct.has_edge(source["callsite"], target["callsite"])
 
                     if has_callback_edge:
                         edge_type = "callback"
@@ -494,24 +503,22 @@ class SankeyLayout:
                         "source_dataset": source_df["dataset"].unique(),
                         "target_dataset": target_df["dataset"].unique(),
                     }
-                    
-                    if source['type'] == "super-node":
-                        source_id = source['module']
 
-                    elif source['type'] == "component-node":
-                        source_id = source["module"] + '=' + source['callsite']
-                       
-                    if target['type'] == "super-node":
+                    if source["type"] == "super-node":
+                        source_id = source["module"]
+
+                    elif source["type"] == "component-node":
+                        source_id = source["module"] + "=" + source["callsite"]
+
+                    if target["type"] == "super-node":
                         target_id = target["module"]
 
-                    elif target['type'] == "component-node":
-                        target_id = target["module"] + '=' + target['callsite']
+                    elif target["type"] == "component-node":
+                        target_id = target["module"] + "=" + target["callsite"]
 
                     nxg.add_node(source_id, attr_dict=source)
                     nxg.add_node(target_id, attr_dict=target)
-                    nxg.add_edge(
-                        source_id, target_id, attr_dict=edge_dict
-                    )
+                    nxg.add_edge(source_id, target_id, attr_dict=edge_dict)
 
         return nxg
 
@@ -536,7 +543,12 @@ class SankeyLayout:
             if module not in data_mapper:
                 module_mapper[module] = idx
                 data_mapper[module] = [
-                    {"callsite": callsite, "module": module, "level": idx, "type": 'super-node'}
+                    {
+                        "callsite": callsite,
+                        "module": module,
+                        "level": idx,
+                        "type": "super-node",
+                    }
                 ]
             else:
                 flag = [p["level"] == idx for p in data_mapper[module]]
@@ -547,12 +559,17 @@ class SankeyLayout:
                             "callsite": callsite,
                             "module": module + "=" + callsite,
                             "level": idx,
-                            "type": "component-node"
+                            "type": "component-node",
                         }
                     )
                 else:
                     data_mapper[module].append(
-                        {"callsite": callsite, "module": module, "level": idx, "type": "component-node"}
+                        {
+                            "callsite": callsite,
+                            "module": module,
+                            "level": idx,
+                            "type": "component-node",
+                        }
                     )
             ret.append(data_mapper[module][-1])
         return ret
@@ -583,8 +600,8 @@ class SankeyLayout:
         for node in nxg.nodes(data=True):
             node_name, node_dict = SankeyLayout.nx_deconstruct_node(node)
             if node_dict["type"] == "component-node":
-                module = sg.get_module_idx(node_name.split('=')[0])
-                callsite = node_dict['callsite']
+                module = sg.get_module_idx(node_name.split("=")[0])
+                callsite = node_dict["callsite"]
                 actual_time = SankeyLayout.callsite_time(
                     group_df=module_name_group_df, module=module, callsite=callsite
                 )
@@ -797,7 +814,7 @@ class SankeyLayout:
     def nx_deconstruct_node(node):
         attr_dict = node[1]["attr_dict"]
         return node[0], attr_dict
-        
+
     @staticmethod
     def nx_deconstruct_edge(edge):
         return (edge[0], edge[1]), edge[2]["attr_dict"]
@@ -805,8 +822,8 @@ class SankeyLayout:
     @staticmethod
     def nx_construct_node_dict(is_module_in_dataframe, node):
         # If "module" column exists in a dataframe, it can have super-nodes
-        if '=' in node:
-            if node.split('=')[0] != node.split('=')[1]:
+        if "=" in node:
+            if node.split("=")[0] != node.split("=")[1]:
                 return {"type": "super-node"}
             else:
                 return {"type": "component-node"}

@@ -14,7 +14,7 @@ from ast import literal_eval as make_list
 
 from callflow import get_logger
 from callflow.utils.sanitizer import Sanitizer
-from callflow.utils.utils import NumpyEncoder, read_json
+from callflow.utils.utils import NumpyEncoder
 
 LOGGER = get_logger(__name__)
 
@@ -23,21 +23,22 @@ LOGGER = get_logger(__name__)
 # SuperGraph data structure
 # ------------------------------------------------------------------------------
 class SuperGraph(ht.GraphFrame):
-    """
-    SuperGraph class to handle processing of a an input Dataset.
-    """
     # --------------------------------------------------------------------------
     # Globals to class.
     _FORMATS = ["hpctoolkit", "caliper", "caliper_json", "gprof", "literal", "lists"]
 
-    _FILENAMES = {"ht": "hatchet_tree.txt",
-                  "df": "df.csv",
-                  "nxg": "nxg.json",
-                  "env_params": "env_params.txt",
-                  "aux": "auxiliary_data.json"}
+    _FILENAMES = {
+        "ht": "hatchet_tree.txt",
+        "df": "df.csv",
+        "nxg": "nxg.json",
+        "env_params": "env_params.txt",
+        "aux": "auxiliary_data.json",
+    }
 
-    _METRIC_PROXIES = {"time (inc)": ["inclusive#time.duration", "REALTIME (sec) (I)"],
-                       "time": ["sum#time.duration", "sum#sum#time.duration", "REALTIME (sec) (E)"]}
+    _METRIC_PROXIES = {
+        "time (inc)": ["inclusive#time.duration", "REALTIME (sec) (I)"],
+        "time": ["sum#time.duration", "sum#sum#time.duration", "REALTIME (sec) (E)"],
+    }
 
     _GROUP_MODES = ["name", "module"]
     _FILTER_MODES = ["time", "time (inc)"]
@@ -53,8 +54,8 @@ class SuperGraph(ht.GraphFrame):
 
         self.nxg = None
 
-        self.name = name        # dataset name
-        self.profile_format = ''
+        self.name = name  # dataset name
+        self.profile_format = ""
 
         self.parameters = {}
         self.auxiliary_data = {}
@@ -95,7 +96,9 @@ class SuperGraph(ht.GraphFrame):
         :return:
         """
         self.profile_format = profile_format
-        LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path}) using ({self.profile_format}) format")
+        LOGGER.info(
+            f"Creating SuperGraph ({self.name}) from ({path}) using ({self.profile_format}) format"
+        )
 
         gf = SuperGraph.from_config(path, self.profile_format)
         assert isinstance(gf, ht.GraphFrame)
@@ -109,11 +112,12 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_time_proxies()
 
         if len(module_callsite_map) > 0:
-            self.module_callsite_map = self.prc_construct_module_callsite_map(module_callsite_map=module_callsite_map)
+            self.module_callsite_map = self.prc_construct_module_callsite_map(
+                module_callsite_map=module_callsite_map
+            )
 
         if "module" in self.dataframe.columns:
             self.module_callsite_map = self.prc_construct_module_callsite_map()
-            
         self.callsite_module_map = {}
 
         # Hatchet requires node and rank to be indexes.
@@ -131,7 +135,9 @@ class SuperGraph(ht.GraphFrame):
             self.callees[node_name] = [_.frame.get("name") for _ in node.children]
 
     # --------------------------------------------------------------------------
-    def load(self, path, read_graph=False, read_parameter=False, read_aux=False) -> None:
+    def load(
+        self, path, read_graph=False, read_parameter=False, read_aux=False
+    ) -> None:
         """
         Load the SuperGraph class from reading .callflow data.
 
@@ -148,7 +154,7 @@ class SuperGraph(ht.GraphFrame):
 
         if True:
             self.dataframe = SuperGraph.read_df(path)
-            self.is_module_in_dataframe = 'module' in self.dataframe
+            self.is_module_in_dataframe = "module" in self.dataframe
 
         if True:
             self.nxg = SuperGraph.read_nxg(path)
@@ -161,13 +167,15 @@ class SuperGraph(ht.GraphFrame):
 
         if read_aux:
             self.auxiliary_data = SuperGraph.read_aux(path)
-            self.module_fct_list = self.auxiliary_data['moduleFctList']
+            self.module_fct_list = self.auxiliary_data["moduleFctList"]
 
         self.df_add_time_proxies()
         self.df_reset_index()
 
     # --------------------------------------------------------------------------
-    def write(self, path, write_df=True, write_graph=False, write_nxg=True, write_aux=True):
+    def write(
+        self, path, write_df=True, write_graph=False, write_nxg=True, write_aux=True
+    ):
         """
         Write the SuperGraph (refer _FILENAMES for file name mapping).
 
@@ -191,7 +199,7 @@ class SuperGraph(ht.GraphFrame):
         if write_nxg:
             SuperGraph.write_nxg(path, self.nxg)
 
-        if write_aux: 
+        if write_aux:
             SuperGraph.write_aux(path, self.auxiliary_data)
 
     # --------------------------------------------------------------------------
@@ -216,12 +224,12 @@ class SuperGraph(ht.GraphFrame):
             for _ in proxies:
                 if _ in self.dataframe.columns:
                     self.df_add_column(key, apply_func=lambda _: _, apply_on=_)
-                    #self.proxy_columns[key] = _
+                    # self.proxy_columns[key] = _
                     break
-            #assert key in self.proxy_columns.keys()
+            # assert key in self.proxy_columns.keys()
 
         if len(self.proxy_columns) > 0:
-            LOGGER.debug(f'created column proxies: {self.proxy_columns}')
+            LOGGER.debug(f"created column proxies: {self.proxy_columns}")
 
     def df_get_column(self, column, index="name"):
         column = self.df_get_proxy(column)
@@ -235,24 +243,26 @@ class SuperGraph(ht.GraphFrame):
 
         if value is not None:
             assert isinstance(value, (int, float, str))
-            LOGGER.debug(f'appending column \"{column_name}\" = \"{value}\"')
+            LOGGER.debug(f'appending column "{column_name}" = "{value}"')
             self.dataframe[column_name] = value
 
         if apply_func is not None:
             assert callable(apply_func) and isinstance(apply_on, str)
-            LOGGER.debug(f'appending column \"{column_name}\" = {apply_func}')
+            LOGGER.debug(f'appending column "{column_name}" = {apply_func}')
             self.dataframe[column_name] = self.dataframe[apply_on].apply(apply_func)
 
     # TODO: merge this with the function above
     def df_add_nid_column(self):
         if "nid" in self.dataframe.columns:
             return
-        self.dataframe["nid"] = self.dataframe.groupby("name")["name"]\
-            .transform(lambda x: pd.factorize(x)[0])
+        self.dataframe["nid"] = self.dataframe.groupby("name")["name"].transform(
+            lambda x: pd.factorize(x)[0]
+        )
 
     def df_update_mapping(self, col_name, mapping, apply_on="name"):
         self.dataframe[col_name] = self.dataframe[apply_on].apply(
-            lambda _: mapping[_] if _ in mapping.keys() else "")
+            lambda _: mapping[_] if _ in mapping.keys() else ""
+        )
 
     def df_unique(self, column):
         column = self.df_get_proxy(column)
@@ -300,12 +310,14 @@ class SuperGraph(ht.GraphFrame):
         df = df.sort_values(by=[sort_attr], ascending=False)
         df = df.nlargest(count, sort_attr)
         return df.index.values.tolist()
-    
+
     def df_factorize_column(self, column, sanitize=False):
         column = self.df_get_proxy(column)
         # Sanitize column name.
         if sanitize:
-            self.dataframe[column] = self.dataframe[column].apply(lambda _: Sanitizer.sanitize(_))
+            self.dataframe[column] = self.dataframe[column].apply(
+                lambda _: Sanitizer.sanitize(_)
+            )
         _fct = self.dataframe[column].factorize()
         self.dataframe[column] = _fct[0]
         return _fct[1].values.tolist()
@@ -364,9 +376,9 @@ class SuperGraph(ht.GraphFrame):
         #     self.module_fct_list.append(module)
         #     return len(self.module_fct_list)
 
-        if '=' in module:
-            module = module.split('=')[0]
-        
+        if "=" in module:
+            module = module.split("=")[0]
+
         return self.module_fct_list.index(module)
 
     # --------------------------------------------------------------------------
@@ -514,7 +526,9 @@ class SuperGraph(ht.GraphFrame):
         """
         return self.module_map[callsite]
 
-    def prc_construct_module_callsite_map(self, module_callsite_map={}, from_df=True) -> dict:
+    def prc_construct_module_callsite_map(
+        self, module_callsite_map={}, from_df=True
+    ) -> dict:
         """
         Construct the module map for a given dataset.
         Note: The module names can be specified using --module_map option.
@@ -551,30 +565,34 @@ class SuperGraph(ht.GraphFrame):
         """
 
         # add new columns to the dataframe
-        self.df_add_column('dataset', value=self.name)
-        self.df_add_column('rank', value=0)
+        self.df_add_column("dataset", value=self.name)
+        self.df_add_column("rank", value=0)
         self.df_add_nid_column()
-        self.df_add_column('callees', apply_func=lambda _: self.callees[_])
-        self.df_add_column('callers', apply_func=lambda _: self.callers[_])
+        self.df_add_column("callees", apply_func=lambda _: self.callees[_])
+        self.df_add_column("callers", apply_func=lambda _: self.callers[_])
 
-        if 'module' in self.dataframe.columns:
-            self.df_add_column('module', apply_func=lambda _: Sanitizer.sanitize(_), apply_on='module')
+        if "module" in self.dataframe.columns:
+            self.df_add_column(
+                "module", apply_func=lambda _: Sanitizer.sanitize(_), apply_on="module"
+            )
         elif len(module_map) > 0:
-            self.df_add_column('module', apply_func=lambda _: module_map[_])
+            self.df_add_column("module", apply_func=lambda _: module_map[_])
         else:
-            self.df_add_column('module', apply_func=lambda _: _, apply_on='name')
+            self.df_add_column("module", apply_func=lambda _: _, apply_on="name")
 
-        self.module_fct_list = self.df_factorize_column('module', sanitize=True)
-        self.df_add_column('path',
-                           apply_func=lambda _: [[Sanitizer.from_htframe(_f) \
-                               for _f in f] \
-                               for f in self.paths[_]][0])
+        self.module_fct_list = self.df_factorize_column("module", sanitize=True)
+        self.df_add_column(
+            "path",
+            apply_func=lambda _: [
+                [Sanitizer.from_htframe(_f) for _f in f] for f in self.paths[_]
+            ][0],
+        )
 
         # TODO: For faster searches, bring this back.
         # self.indexes.insert(0, 'dataset')
         # self.dataframe.set_index(self.indexes, inplace=True, drop=True)
 
-   def filter_sg(self, filter_by, filter_val) -> None:
+    def filter_sg(self, filter_by, filter_val) -> None:
         """
         In-place filtering on the NetworkX Graph.
 
@@ -582,7 +600,7 @@ class SuperGraph(ht.GraphFrame):
         :param filter_val: filter threshold
         :return: None
         """
-        LOGGER.debug(f"Filtering {self.__str__()}: \"{filter_by}\" <= {filter_val}")
+        LOGGER.debug(f'Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
         self.dataframe = self.df_filter_by_value(filter_by, filter_val)
 
         callsites = self.dataframe["name"].unique()

@@ -7,7 +7,6 @@ import networkx as nx
 
 # CallFlow imports
 import callflow
-from callflow import SuperGraph
 from callflow.utils.timer import Timer
 from callflow.utils.sanitizer import Sanitizer
 
@@ -16,7 +15,7 @@ from callflow.utils.sanitizer import Sanitizer
 # Node link layout computation
 # ------------------------------------------------------------------------------
 class NodeLinkLayout:
-    
+
     _COLUMNS = ["time (inc)", "time", "name", "module"]
 
     def __init__(self, sg, selected_runs=None):
@@ -36,18 +35,18 @@ class NodeLinkLayout:
         # Move to a instance method of SuperGraph.
         if selected_runs is not None:
             self.runs = selected_runs
-            self.df = sg.df_filter_by_search_string('dataset', self.runs)
-    
+            self.df = sg.df_filter_by_search_string("dataset", self.runs)
+
         elif isinstance(sg, callflow.SuperGraph) and sg.name != "ensemble":
             self.runs = [sg.name]
             self.df = sg.dataframe
 
         elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
             self.runs = [k for k, v in sg.supergraphs.items()]
-            self.df = sg.df_filter_by_search_string('dataset', self.runs)
+            self.df = sg.df_filter_by_search_string("dataset", self.runs)
 
         # Put the top callsites into a list.
-        callsite_count = len(sg.df_unique('name'))
+        callsite_count = len(sg.df_unique("name"))
         callsites = sg.df_get_top_by_attr(callsite_count, "time (inc)")
 
         # Filter out the callsites not in the list. (in a LOCAL copy)
@@ -64,7 +63,7 @@ class NodeLinkLayout:
             self._add_edge_attributes()
 
         # Find cycles in the nxg.
-        with self.timer.phase(f"Find cycles"):
+        with self.timer.phase("Find cycles"):
             self.nxg.cycles = NodeLinkLayout._detect_cycle(self.nxg)
 
     # --------------------------------------------------------------------------
@@ -74,7 +73,7 @@ class NodeLinkLayout:
         :return: None
         """
         name_time_inc_map = self.module_name_group_df["time (inc)"].max().to_dict()
-        name_time_exc_map = self.module_name_group_df["time"].max().to_dict()
+        # name_time_exc_map = self.module_name_group_df["time"].max().to_dict()
 
         # compute data map
         datamap = {}
@@ -102,9 +101,7 @@ class NodeLinkLayout:
         # ----------------------------------------------------------------------
         # compute map across data
         for run in self.runs:
-            target_df = self.sg.dataframe.loc[
-                self.sg.dataframe["dataset"] == run
-            ]
+            target_df = self.sg.dataframe.loc[self.sg.dataframe["dataset"] == run]
 
             if not target_df["module"].equals(target_df["name"]):
                 target_group_df = target_df.groupby(["module"])

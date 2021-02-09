@@ -4,18 +4,23 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+import os
+import json
+import jsonschema
+import subprocess
 import numpy as np
 import pandas as pd
 from scipy import stats
 import statsmodels.nonparametric.api as smnp
-import hatchet as ht
+import hatchet
+import networkx as nx
+
 
 # ------------------------------------------------------------------------------
 # statistics utils
 # ------------------------------------------------------------------------------
 def histogram(data, data_range=None, bins=20):
-    """Calculate the histogram and bins for a given data.
-    """
+    """Calculate the histogram and bins for a given data."""
     assert isinstance(data, (pd.Series, np.ndarray))
     if len(data) == 0:
         return np.array([]), np.array([])
@@ -51,14 +56,14 @@ def freedman_diaconis_bins(arr):
         return int(np.ceil((arr.max() - arr.min()) / h))
 
 
-def outliers(data, scale=1.5, side='both'):
+def outliers(data, scale=1.5, side="both"):
 
     assert isinstance(data, (pd.Series, np.ndarray))
     assert len(data.shape) == 1
     assert isinstance(scale, float)
-    assert side in ['gt', 'lt', 'both']
+    assert side in ["gt", "lt", "both"]
 
-    d_q13 = np.percentile(data, [25., 75.])
+    d_q13 = np.percentile(data, [25.0, 75.0])
     iqr_distance = np.multiply(stats.iqr(data), scale)
 
     if side in ["gt", "both"]:
@@ -77,8 +82,9 @@ def outliers(data, scale=1.5, side='both'):
         return np.logical_or(upper_outlier, lower_outlier)
 
 
-def kde(data, gridsize=10, fft=True,
-        kernel="gau", bw="scott", cut=3, clip=(-np.inf, np.inf)):
+def kde(
+    data, gridsize=10, fft=True, kernel="gau", bw="scott", cut=3, clip=(-np.inf, np.inf)
+):
     assert isinstance(data, (pd.Series, np.ndarray))
 
     if bw == "scott":
@@ -95,12 +101,10 @@ def kde(data, gridsize=10, fft=True,
     y = kde.density
     return x, y
 
+
 # ------------------------------------------------------------------------------
 # JSON utilities
 # ------------------------------------------------------------------------------
-import json
-import jsonschema
-
 def jsonify_string(string: str) -> any:
     """
     Convert a string input to a json object.
@@ -113,7 +117,7 @@ def jsonify_string(string: str) -> any:
     return byteify(_, ignore_dicts=True)
 
 
-def byteify(data: str, ignore_dicts: bool=False) -> any:
+def byteify(data: str, ignore_dicts: bool = False) -> any:
     """
     Byteify a string into a JSON-valid object.
 
@@ -139,6 +143,7 @@ def byteify(data: str, ignore_dicts: bool=False) -> any:
     # if it's anything else, return it in its original form
     return data
 
+
 def read_json(filename: str) -> any:
     """
     Read a JSON file as text and convert to JSON format.
@@ -150,6 +155,7 @@ def read_json(filename: str) -> any:
     json_data = jsonify_string(f)
     return json_data
 
+
 def write_json(json_data, filename) -> None:
     """
     Write a JSON object into a file.
@@ -159,7 +165,12 @@ def write_json(json_data, filename) -> None:
     :return: None
     """
     with open(filename, "w") as fp:
-        fp.write(json.dumps(json_data, default=lambda o: o.__dict__, sort_keys=True, indent=2))
+        fp.write(
+            json.dumps(
+                json_data, default=lambda o: o.__dict__, sort_keys=True, indent=2
+            )
+        )
+
 
 def is_valid_json(data: any) -> bool:
     """
@@ -172,13 +183,15 @@ def is_valid_json(data: any) -> bool:
         return False
     return True
 
+
 def is_valid_json_with_schema(data: any, schema: any) -> any:
     jsonschema.validate(instance=data, schema=schema)
+
 
 # ------------------------------------------------------------------------------
 # Directory utilities
 # ------------------------------------------------------------------------------
-def list_subdirs(path: str, exclude_subdirs: list=[]) -> list:
+def list_subdirs(path: str, exclude_subdirs: list = []) -> list:
     """
     List the sub directories in path. This excludes the subdirs in exclude_names.
 
@@ -186,12 +199,11 @@ def list_subdirs(path: str, exclude_subdirs: list=[]) -> list:
     :param exclude_subdirs: Exclude array
     :return: list of sub directories in the given path
     """
-    subdirs = [os.path.basename(f.path) for f in os.scandir(path)
-               if f.is_dir()]
+    subdirs = [os.path.basename(f.path) for f in os.scandir(path) if f.is_dir()]
     return [_ for _ in subdirs if _ not in exclude_subdirs]
 
 
-def list_files(path: str, include_file_extn: str, exclude_files: list=[]) -> list:
+def list_files(path: str, include_file_extn: str, exclude_files: list = []) -> list:
     """
     List files in path.
 
@@ -200,17 +212,17 @@ def list_files(path: str, include_file_extn: str, exclude_files: list=[]) -> lis
     :param exclude_files:
     :return:
     """
-    files = [os.path.basename(_) for _ in os.scandir(path)
-             if os.path.splitext(_)[1] == include_file_extn]
+    files = [
+        os.path.basename(_)
+        for _ in os.scandir(path)
+        if os.path.splitext(_)[1] == include_file_extn
+    ]
     return [_ for _ in files if _ not in exclude_files]
 
 
 # ------------------------------------------------------------------------------
 # Subprocess utilities
 # ------------------------------------------------------------------------------
-import subprocess
-import os
-
 def execute_cmd(cmd: str) -> None:
     """
     cmd is expected to be something like "cd [place]"
@@ -233,11 +245,10 @@ def execute_cmd(cmd: str) -> None:
         print(err)
     return
 
+
 # ------------------------------------------------------------------------------
 # Hatchet utilities
 # ------------------------------------------------------------------------------
-import hatchet
-
 def hy_node_callpath(node: hatchet.node):
     """
     Return the call path for a given callflow.GraphFrame.graph.Node
@@ -259,6 +270,7 @@ def ht_node_parents(node: hatchet.node):
     """
     return node.parents
 
+
 # ------------------------------------------------------------------------------
 # File encoding utilities.
 # ------------------------------------------------------------------------------
@@ -268,9 +280,11 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
 
+
 # --------------------------------------------------------------------------
 # callflow.nxg utilities.
 # --------------------------------------------------------------------------
+
 
 def nx_add_prefix(graph, prefix):
     """
@@ -289,11 +303,14 @@ def nx_add_prefix(graph, prefix):
 
     return nx.relabel_nodes(graph, label)
 
+
 def nx_tail_head(edge):
     return (edge[0], edge[1])
 
+
 def nx_tail_head_direc(edge, edge_direction):
     return (str(edge[0]), str(edge[1]), edge_direction[edge])
+
 
 def nx_leaves_below(nxg, node):
     assert isinstance(nxg, nx.DiGraph)
@@ -311,7 +328,7 @@ def nx_leaves_below(nxg, node):
 # --------------------------------------------------------------------------
 # Graph walking utilities.
 # --------------------------------------------------------------------------
-def ht_dfs(gf: ht.GraphFrame, limit: int):
+def ht_dfs(gf: hatchet.GraphFrame, limit: int):
     """
     Depth first search for debugging purposes.
     """
@@ -349,9 +366,9 @@ def ht_dfs(gf: ht.GraphFrame, limit: int):
     for root in graph.roots:
         print("Root = {0} [{1}]".format("Root", root._hatchet_nid))
         _dfs_recurse(root, level)
-        
-        
-def ht_bfs(gf: ht.GraphFrame):
+
+
+def ht_bfs(gf: hatchet.GraphFrame):
     """
     Breadth first search for debugging purposes.
     """

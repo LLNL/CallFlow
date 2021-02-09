@@ -33,17 +33,22 @@ def init_logger(**kwargs):
     # -------------------------------------------------------------------------
     # get logging format
     # here, the initialization of the format doesnt depend upon "level"
-    LOG_FMT = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)s - %(levelname)s - %(message)s"
-    LOG_COLORS = {"DEBUG": "cyan",
-                  "INFO": "green",
-                  "WARNING": "purple",
-                  "ERROR": "bold_red",
-                  "CRITICAL": "red"}
+    LOG_FMT = (
+        "%(asctime)s - %(name)s:%(funcName)s:%(lineno)s - %(levelname)s - %(message)s"
+    )
+    LOG_COLORS = {
+        "DEBUG": "cyan",
+        "INFO": "green",
+        "WARNING": "purple",
+        "ERROR": "bold_red",
+        "CRITICAL": "red",
+    }
 
     # create the actual formatter
     if do_color:
-        formatter = colorlog.ColoredFormatter("%(log_color)s" + LOG_FMT,
-                                              log_colors=LOG_COLORS)
+        formatter = colorlog.ColoredFormatter(
+            "%(log_color)s" + LOG_FMT, log_colors=LOG_COLORS
+        )
     else:
         formatter = logging.Formatter(LOG_FMT)
 
@@ -65,5 +70,6 @@ def init_logger(**kwargs):
     logger.warning("Enabled")
     logger.error("Enabled")
     logger.critical("Enabled")
+
 
 # ------------------------------------------------------------------------------

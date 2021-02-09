@@ -3,19 +3,20 @@
 #
 # SPDX-License-Identifier: MIT
 
-import json
 import pandas as pd
 import numpy as np
 from sklearn import preprocessing
 from sklearn.manifold import TSNE, MDS
 from sklearn.cluster import KMeans
+
+import callflow
 from callflow.algorithms import KMedoids
+
 
 # ------------------------------------------------------------------------------
 # Calculate Projections based on parameter information.
 # ------------------------------------------------------------------------------
 class ParameterProjection:
-
     def __init__(self, sg, selected_runs=None, n_cluster=3):
         """
 
@@ -27,15 +28,15 @@ class ParameterProjection:
         # Move to a instance method of SuperGraph.
         if selected_runs is not None:
             self.runs = selected_runs
-            self.df = sg.df_filter_by_search_string('dataset', self.runs)
-    
+            self.df = sg.df_filter_by_search_string("dataset", self.runs)
+
         elif isinstance(sg, callflow.SuperGraph) and sg.name != "ensemble":
             self.runs = [sg.name]
             self.df = sg.dataframe
 
         elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
             self.runs = [k for k, v in sg.supergraphs.items()]
-            self.df = sg.df_filter_by_search_string('dataset', self.runs)
+            self.df = sg.df_filter_by_search_string("dataset", self.runs)
 
         self.datasets = self.df["dataset"].unique().tolist()
         self.projection = "MDS"
@@ -78,7 +79,7 @@ class ParameterProjection:
         x_scaled = min_max_scaler.fit_transform(x)
         df = pd.DataFrame(x_scaled)
         X = np.vstack([df.values])
-        #X = np.vstack([df.values.tolist()])
+        # X = np.vstack([df.values.tolist()])
 
         random_number = 20150101
         if self.projection == "MDS":

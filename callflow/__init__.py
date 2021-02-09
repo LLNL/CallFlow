@@ -28,6 +28,8 @@ def load_ipython_extension(ipython):
     # TODO: this needs to be fixed
     from .server.main import main
     from .server.notebook_server import load_ipython
+
     load_ipython(ipython, main)
+
 
 # ------------------------------------------------------------------------------

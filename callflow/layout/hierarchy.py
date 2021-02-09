@@ -7,11 +7,9 @@ import networkx as nx
 
 # CallFlow imports
 import callflow
-#from callflow.utils import sanitize_name
 from callflow.utils.sanitizer import Sanitizer
-
-
 LOGGER = callflow.get_logger(__name__)
+
 
 # ------------------------------------------------------------------------------
 # Hierarchy Layout computation

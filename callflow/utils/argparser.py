@@ -8,6 +8,7 @@ import os
 import argparse
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
 SUPPORTED_PROFILE_FORMATS = ["hpctoolkit", "caliper_json", "caliper"]
@@ -27,6 +28,7 @@ JSONSCHEMA_CONFIG = {
     },
 }
 
+
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 class ArgParser:
@@ -45,6 +47,7 @@ class ArgParser:
     5. Dump the config file.
     6. Validate the generated or passed config object.
     """
+
     def __init__(self, args_string):
 
         assert isinstance(args_string, list)
@@ -65,7 +68,7 @@ class ArgParser:
         _READ_MODES = {
             "config": self._read_config,
             "directory": self._read_directory,
-            #"gfs": self._read_gfs,
+            # "gfs": self._read_gfs,
         }
         assert self.read_mode in _READ_MODES.keys()
         self.config = _READ_MODES[self.read_mode]()
@@ -98,45 +101,67 @@ class ArgParser:
         parser = argparse.ArgumentParser(prefix_chars="--")
         # -------------
         # config mode
-        parser.add_argument("--config", type=str,
-                            help="Config file to be processed (overwrites).")
-        '''
+        parser.add_argument(
+            "--config", type=str, help="Config file to be processed (overwrites)."
+        )
+        """
         # gfs mode
         parser.add_argument("--gfs", type=str,
                             help="Enter graph frames")
-        '''
+        """
         # args mode
-        parser.add_argument("--data_path", type=str,
-                            help="Input directory to be processed.")
-        parser.add_argument("--profile_format", choices=SUPPORTED_PROFILE_FORMATS,
-                            help="Profile format")
+        parser.add_argument(
+            "--data_path", type=str, help="Input directory to be processed."
+        )
+        parser.add_argument(
+            "--profile_format", choices=SUPPORTED_PROFILE_FORMATS, help="Profile format"
+        )
 
-        parser.add_argument("--process", action="store_true",
-                            help="Process mode. "
-                                 "To preprocess at the required granularity, "
-                                 "use the options --filter, --entire.")
+        parser.add_argument(
+            "--process",
+            action="store_true",
+            help="Process mode. "
+            "To preprocess at the required granularity, "
+            "use the options --filter, --entire.",
+        )
 
-        parser.add_argument("--production", action="store_true",
-                            help="Launch app on production server.")
+        parser.add_argument(
+            "--production", action="store_true", help="Launch app on production server."
+        )
 
-        parser.add_argument("--filter_perc", type=float, default=0.,
-                            help="Set filter percentage")
-        parser.add_argument("--filter_by", type=str, default="time (inc)",
-                            help="Set filter by (e.g., time or time (inc))")
+        parser.add_argument(
+            "--filter_perc", type=float, default=0.0, help="Set filter percentage"
+        )
+        parser.add_argument(
+            "--filter_by",
+            type=str,
+            default="time (inc)",
+            help="Set filter by (e.g., time or time (inc))",
+        )
 
-        parser.add_argument("--group_by", type=str, default="module",
-                            help="Set group by. "
-                                 "(e.g., grouping by 'name' column gets call graph "
-                                 "and grouping by 'module' produces a super graph)")
+        parser.add_argument(
+            "--group_by",
+            type=str,
+            default="module",
+            help="Set group by. "
+            "(e.g., grouping by 'name' column gets call graph "
+            "and grouping by 'module' produces a super graph)",
+        )
 
-        parser.add_argument("--read_parameter", action="store_true",
-                            help="Enable parameter analysis")
+        parser.add_argument(
+            "--read_parameter", action="store_true", help="Enable parameter analysis"
+        )
 
-        parser.add_argument("--save_path", type=str, default="",
-                            help="Save path for the processed files")
+        parser.add_argument(
+            "--save_path",
+            type=str,
+            default="",
+            help="Save path for the processed files",
+        )
 
-        parser.add_argument("--verbose", action="store_true",
-                            help="Display debug points")
+        parser.add_argument(
+            "--verbose", action="store_true", help="Display debug points"
+        )
 
         # -------------
         return parser
@@ -156,20 +181,20 @@ class ArgParser:
         process_mode: 'config' or 'directory' or 'gfs'
             Process mode with which CallFlow will process the data.
         """
-        read_mode = ''
+        read_mode = ""
         _has_config = self.args["config"] is not None
         _has_dpath = self.args["data_path"] is not None
-        #_has_gfs = self.args["gfs"] is not None
+        # _has_gfs = self.args["gfs"] is not None
 
-        if not _has_config and not _has_dpath: # and not _has_gfs:
-            s = "Please provide a config file (or) a directory" # (or) graph frames"
+        if not _has_config and not _has_dpath:  # and not _has_gfs:
+            s = "Please provide a config file (or) a directory"  # (or) graph frames"
             LOGGER.error(s)
             self.parser.print_help()
             exit(1)
 
         if _has_config:
             read_mode = "config"
-            print (self.args["config"])
+            print(self.args["config"])
             if not os.path.isfile(self.args["config"]):
                 s = "Config file ({}) not found!".format(self.args["config"])
                 LOGGER.error(s)
@@ -187,11 +212,11 @@ class ArgParser:
                 LOGGER.error(s)
                 exit(1)
 
-        '''
+        """
         elif self.args["gfs"]:
             read_mode = "graphframes"
             # TODO: CAL-8: Add graphframe processing for Jupyter notebooks
-        '''
+        """
         return read_mode
 
     # --------------------------------------------------------------------------
@@ -210,8 +235,14 @@ class ArgParser:
         This function fills the config object with dataset information from the provided directory.
         """
         scheme = {}
-        for _ in ["data_path", "save_path",
-                  "filter_perc", "filter_by", "group_by", "read_parameter"]:
+        for _ in [
+            "data_path",
+            "save_path",
+            "filter_perc",
+            "filter_by",
+            "group_by",
+            "read_parameter",
+        ]:
             scheme[_] = self.args[_]
 
         scheme["experiment"] = os.path.basename(scheme["data_path"])
@@ -220,8 +251,8 @@ class ArgParser:
 
         # Set the datasets key, according to the format.
         scheme["runs"] = ArgParser._scheme_dataset_map(
-            self.args.get("profile_format", "default"),
-            scheme["data_path"])
+            self.args.get("profile_format", "default"), scheme["data_path"]
+        )
 
         return scheme
 
@@ -233,7 +264,9 @@ class ArgParser:
         """
         _configfile = self.args["config"]
         json = callflow.utils.utils.read_json(_configfile)
-        callflow.utils.utils.is_valid_json_with_schema(data=json, schema=JSONSCHEMA_CONFIG)
+        callflow.utils.utils.is_valid_json_with_schema(
+            data=json, schema=JSONSCHEMA_CONFIG
+        )
 
         # ----------------------------------------------------------------------
         scheme = {}
@@ -242,8 +275,13 @@ class ArgParser:
         scheme["data_path"] = os.path.dirname(_configfile)
         scheme["experiment"] = os.path.basename(scheme["data_path"])
 
-        for _ in ["save_path",
-                  "filter_perc", "filter_by", "group_by", "read_parameter"]:
+        for _ in [
+            "save_path",
+            "filter_perc",
+            "filter_by",
+            "group_by",
+            "read_parameter",
+        ]:
             scheme[_] = self.args[_]
 
         if len(scheme["save_path"]) == 0:
@@ -259,7 +297,9 @@ class ArgParser:
 
         # process all runs using the default profile
         elif _has_runs and not _has_glb_pformat:
-            scheme["runs"] = ArgParser._scheme_dataset_map("default", run_props=json["runs"])
+            scheme["runs"] = ArgParser._scheme_dataset_map(
+                "default", run_props=json["runs"]
+            )
 
         # process data using the global format
         elif "runs" not in json and "profile_format" in json:
@@ -274,44 +314,53 @@ class ArgParser:
             )
 
         # if "callsite_module_map" in json["scheme"]:
-            # scheme["callsite_module_map"] = ArgParser._process_module_map(
-            #     json["scheme"]["callsite_module_map"]
-            # )
+        # scheme["callsite_module_map"] = ArgParser._process_module_map(
+        #     json["scheme"]["callsite_module_map"]
+        # )
 
         return scheme
 
     # --------------------------------------------------------------------------
     # --------------------------------------------------------------------------
     @staticmethod
-    def _scheme_dataset_map(pformat, data_path: str = '', run_props: dict=None):
+    def _scheme_dataset_map(pformat, data_path: str = "", run_props: dict = None):
         from callflow.utils.utils import list_subdirs, list_files
 
-        _mdict = lambda n,p,f: {"name": n, "path": p, "profile_format": f}
-        if pformat == 'hpctoolkit':
-            _metric_db_files = [f for f in os.listdir(data_path) if f.endswith('.metric-db')] 
-            _experiment_xml_files = [f for f in os.listdir(data_path) if f.endswith('experiment.xml')]
+        _mdict = lambda n, p, f: {"name": n, "path": p, "profile_format": f}
+        if pformat == "hpctoolkit":
+            _metric_db_files = [
+                f for f in os.listdir(data_path) if f.endswith(".metric-db")
+            ]
+            _experiment_xml_files = [
+                f for f in os.listdir(data_path) if f.endswith("experiment.xml")
+            ]
 
             if len(_metric_db_files) > 0 and len(_experiment_xml_files) > 0:
                 # TODO: should be a better way to do
                 name = os.path.basename(data_path)
-                if name == '':
+                if name == "":
                     name = os.path.basename(os.path.dirname(data_path))
-                return [_mdict(name, '', pformat)]
+                return [_mdict(name, "", pformat)]
 
-            return [_mdict(_, _, pformat)
-                    for _ in list_subdirs(data_path)]
+            return [_mdict(_, _, pformat) for _ in list_subdirs(data_path)]
 
-        if pformat == 'caliper':
-            return [_mdict(_.split(".")[0], _, pformat)
-                    for _ in list_files(data_path, '.cali')]
+        if pformat == "caliper":
+            return [
+                _mdict(_.split(".")[0], _, pformat)
+                for _ in list_files(data_path, ".cali")
+            ]
 
-        if pformat == 'caliper_json':
-            return [_mdict(_.split(".")[0], _, pformat)
-                    for _ in list_files(data_path, '.json', ['config.json'])]
+        if pformat == "caliper_json":
+            return [
+                _mdict(_.split(".")[0], _, pformat)
+                for _ in list_files(data_path, ".json", ["config.json"])
+            ]
 
         # default!
-        return [_mdict(_["name"], _["path"], _["profile_format"])
-                for i,_ in enumerate(run_props)]
+        return [
+            _mdict(_["name"], _["path"], _["profile_format"])
+            for i, _ in enumerate(run_props)
+        ]
 
     # --------------------------------------------------------------------------
     @staticmethod

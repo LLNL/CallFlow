@@ -9,13 +9,13 @@ from numpy import square, trace, amax
 from scipy.sparse import identity
 from scipy.sparse import diags
 
+
 # ------------------------------------------------------------------------------
 # DeltaCon similarity
 # Refer the paper DELTACON: A Principled Massive-Graph Similarity Function
 # https://arxiv.org/abs/1304.4657
 # ------------------------------------------------------------------------------
 class DLcon_Similarity:
-
     def __init__(self, g1, g2):
         """
 
@@ -26,7 +26,7 @@ class DLcon_Similarity:
         nxg_e = nx.DiGraph()
         nxg_e.add_nodes_from(g1)
         nxg_e.add_nodes_from(g2)
-        
+
         nxg_1 = nx.DiGraph()
         nxg_1.add_nodes_from(nxg_e)
         nxg_1.add_edges_from(g1.edges())

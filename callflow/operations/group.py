@@ -7,7 +7,6 @@
 from ast import literal_eval as make_list
 
 import callflow
-from callflow.utils.sanitizer import Sanitizer
 
 LOGGER = callflow.get_logger(__name__)
 
@@ -38,15 +37,15 @@ class Group:
         self.entry_funcs = {}
         self.other_funcs = {}
 
-        LOGGER.info(f'Grouping ({self.sg}) by \"{self.group_by}\"')
+        LOGGER.info(f'Grouping ({self.sg}) by "{self.group_by}"')
         self.compute()
-        
+
     def _format_node_name(self, module_idx, name):
         # TODO: Hacking the way through heere....
-        # Need to recalculate the module_fct_list. 
+        # Need to recalculate the module_fct_list.
         if self.sg.name == "ensemble":
-            return name + '=' + name
-        return self.sg.module_fct_list[module_idx] + '=' + name
+            return name + "=" + name
+        return self.sg.module_fct_list[module_idx] + "=" + name
 
     # --------------------------------------------------------------------------
     def compute(self):
@@ -89,13 +88,17 @@ class Group:
             temp_group_path_results = self._construct_group_path(spath)
             group_path[snode] = temp_group_path_results
 
-            component_path[snode] = self._construct_component_path(spath, group_path[snode])
+            component_path[snode] = self._construct_component_path(
+                spath, group_path[snode]
+            )
             component_level[snode] = len(component_path[snode])
 
             temp_group_path_results = self._construct_group_path(tpath)
             group_path[tnode] = temp_group_path_results
 
-            component_path[tnode] = self._construct_component_path(tpath, group_path[tnode])
+            component_path[tnode] = self._construct_component_path(
+                tpath, group_path[tnode]
+            )
             component_level[tnode] = len(component_path[tnode])
 
             if component_level[snode] == 2:
@@ -105,7 +108,9 @@ class Group:
                 entry_func[snode] = False
                 show_node[snode] = False
 
-            node_name[snode] = self._format_node_name(self.callsite_module_map[snode], snode)
+            node_name[snode] = self._format_node_name(
+                self.callsite_module_map[snode], snode
+            )
 
             if component_level[tnode] == 2:
                 entry_func[tnode] = True
@@ -114,7 +119,9 @@ class Group:
                 entry_func[tnode] = False
                 show_node[tnode] = False
 
-            node_name[tnode] = self._format_node_name(self.callsite_module_map[snode], tnode)
+            node_name[tnode] = self._format_node_name(
+                self.callsite_module_map[snode], tnode
+            )
 
         # update the graph
         self.sg.df_update_mapping("group_path", group_path)
@@ -197,7 +204,9 @@ class Group:
                     if to_module in group_path:
                         prev_module = to_module
                     else:
-                        group_path.append(self._format_node_name(to_module, to_callsite))
+                        group_path.append(
+                            self._format_node_name(to_module, to_callsite)
+                        )
                         prev_module = to_module
                         if to_callsite not in self.entry_funcs[to_module]:
                             self.entry_funcs[to_module].append(to_callsite)
@@ -232,4 +241,6 @@ class Group:
 
         component_path.insert(0, component_module)
         return tuple(component_path)
+
+
 # ------------------------------------------------------------------------------

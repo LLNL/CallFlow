@@ -9,7 +9,9 @@ import networkx as nx
 from ast import literal_eval as make_list
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
+
 
 # ------------------------------------------------------------------------------
 # Filters a SuperGraph.
@@ -17,7 +19,7 @@ LOGGER = callflow.get_logger(__name__)
 class Filter:
     VALID_MODES = ["time", "time (inc)"]
 
-    def __init__(self, sg, filter_by="time (inc)", filter_perc=10.):
+    def __init__(self, sg, filter_by="time (inc)", filter_perc=10.0):
         """
         Constructor to the filter operation.
         :param sg: SuperGraph
@@ -27,12 +29,14 @@ class Filter:
         assert isinstance(sg, callflow.SuperGraph)
         assert isinstance(filter_by, str) and isinstance(filter_perc, (int, float))
         assert filter_by in Filter.VALID_MODES
-        assert 0. <= filter_perc <= 100.
+        assert 0.0 <= filter_perc <= 100.0
 
         self.sg = sg
         self.filter_by = filter_by
         self.filter_perc = filter_perc
-        LOGGER.info(f'Filtering ({self.sg}) by \"{self.filter_by}\" = {self.filter_perc}%')
+        LOGGER.info(
+            f'Filtering ({self.sg}) by "{self.filter_by}" = {self.filter_perc}%'
+        )
         self.compute()
 
     # --------------------------------------------------------------------------
@@ -66,7 +70,7 @@ class Filter:
         :param filter_val (int): Filter percentage
         :return nxg (networkx.graph):
         """
-        LOGGER.debug(f"Filtering {self.__str__()}: \"{filter_by}\" <= {filter_val}")
+        LOGGER.debug(f'Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
         self.dataframe = self.sg.df_filter_by_value(filter_by, filter_val)
 
         callsites = self.dataframe["name"].unique()
@@ -82,11 +86,14 @@ class Filter:
 
         elif filter_by == "time":
             for callsite in callsites:
-                path = self.sg.df_lookup_with_column("name", callsite)["path"].tolist()[0]
+                path = self.sg.df_lookup_with_column("name", callsite)["path"].tolist()[
+                    0
+                ]
                 path = make_list(path)
                 nxg.add_path(path)
 
         self.nxg = nxg
+
     # --------------------------------------------------------------------------
 
 

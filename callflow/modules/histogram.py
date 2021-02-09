@@ -19,8 +19,7 @@ LOGGER = callflow.get_logger(__name__)
 class Histogram:
 
     HISTO_TYPES = ["rank", "name", "dataset", "all_ranks"]
-    KEYS_AND_ATTRS = {'Inclusive': 'time (inc)',
-                      'Exclusive': 'time'}
+    KEYS_AND_ATTRS = {"Inclusive": "time (inc)", "Exclusive": "time"}
 
     def __init__(self, df_ensemble, df_target=None, bins=20):
         """
@@ -43,9 +42,7 @@ class Histogram:
                 _dfe = Histogram._get_data_by_property(df_ensemble, prop)
                 for k, a in Histogram.KEYS_AND_ATTRS.items():
                     _hist = histogram(_dfe[a], bins=bins)
-                    self.result[k][prop] = {
-                        "ensemble": Histogram._format_data(_hist)
-                    }
+                    self.result[k][prop] = {"ensemble": Histogram._format_data(_hist)}
 
             else:
                 _dfe = Histogram._get_data_by_property(df_ensemble, prop)
@@ -63,7 +60,7 @@ class Histogram:
 
                     self.result[k][prop] = {
                         "ensemble": Histogram._format_data(_histe),
-                        "target": Histogram._format_data(_histt)
+                        "target": Histogram._format_data(_histt),
                     }
 
     # --------------------------------------------------------------------------
@@ -93,19 +90,24 @@ class Histogram:
         :return:
         """
         if len(histo[0]) == 0 or len(histo[1]) == 0:
-            return {"x": [],
-                    "y": [],
-                    "x_min": 0,
-                    "x_max": 0,
-                    "y_min": 0.,
-                    "y_max": 0.}
+            return {
+                "x": [],
+                "y": [],
+                "x_min": 0,
+                "x_max": 0,
+                "y_min": 0.0,
+                "y_max": 0.0,
+            }
 
         else:
-            return {"x": histo[0],
-                    "y": histo[1],
-                    "x_min": histo[0][0],
-                    "x_max": histo[0][-1],
-                    "y_min": np.min(histo[1]).astype(np.float64),
-                    "y_max": np.max(histo[1]).astype(np.float64)}
+            return {
+                "x": histo[0],
+                "y": histo[1],
+                "x_min": histo[0][0],
+                "x_max": histo[0][-1],
+                "y_min": np.min(histo[1]).astype(np.float64),
+                "y_max": np.max(histo[1]).astype(np.float64),
+            }
+
 
 # ------------------------------------------------------------------------------
