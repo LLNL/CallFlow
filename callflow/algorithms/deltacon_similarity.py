@@ -9,9 +9,20 @@ from numpy import square, trace, amax
 from scipy.sparse import identity
 from scipy.sparse import diags
 
-
+# ------------------------------------------------------------------------------
+# DeltaCon similarity
+# Refer the paper DELTACON: A Principled Massive-Graph Similarity Function
+# https://arxiv.org/abs/1304.4657
+# ------------------------------------------------------------------------------
 class DLcon_Similarity:
+
     def __init__(self, g1, g2):
+        """
+
+        :param g1: NetworkX graph 1
+        :param g2: NetworkX graph 2
+        """
+
         nxg_e = nx.DiGraph()
         nxg_e.add_nodes_from(g1)
         nxg_e.add_nodes_from(g2)
@@ -29,6 +40,12 @@ class DLcon_Similarity:
         self.result = self.compute(adj_1, adj_2)
 
     def InverseMatrix(self, A):
+        """
+        Calculate the inverse matrix of the adjacency matrix.
+
+        :param A: Adjacency matrix
+        :return: inverted matrix
+        """
         D = diags(sum(A).toarray(), [0])
         c1 = trace(D.toarray()) + 2
         c2 = trace(square(D).toarray()) - 1
@@ -51,6 +68,13 @@ class DLcon_Similarity:
         return S
 
     def compute(self, A1, A2):
+        """
+        Compare the adjacency matrixes and find similarity
+
+        :param A1: Adjacency matrix for graph 1
+        :param A2: Adjacency matrix for graph 2
+        :return: similarity (0 < x < 1)
+        """
         S1 = self.InverseMatrix(A1)
         S2 = self.InverseMatrix(A2)
         d = 0

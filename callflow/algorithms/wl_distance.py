@@ -17,11 +17,10 @@ http://jmlr.csail.mit.edu/papers/v12/shervashidze11a.html
 Author : Sandro Vega-Pons, Emanuele Olivetti
 """
 
-
+# ------------------------------------------------------------------------------
+# Weisfeiler_Lehman graph kernel.
+# ------------------------------------------------------------------------------
 class WL_Distance:
-    """
-    Weisfeiler_Lehman graph kernel.
-    """
 
     def __init__(self, nxg_1, nxg_2):
         """Compute the kernel value (similarity) between two graphs.

@@ -46,7 +46,7 @@ class SuperGraph(ht.GraphFrame):
     def __init__(self, name):
         """
         Constructor to SuperGraph
-        :param name: SuperGraph's name.
+        :param name: SuperGraph's tag.
         """
 
         assert isinstance(name, str)
@@ -170,6 +170,13 @@ class SuperGraph(ht.GraphFrame):
     def write(self, path, write_df=True, write_graph=False, write_nxg=True, write_aux=True):
         """
         Write the SuperGraph (refer _FILENAMES for file name mapping).
+
+        :param path: path to write the files. (.callflow directory)
+        :param write_df: (bool) write dataframe
+        :param write_graph: (bool) write graph
+        :param write_nxg: (bool) write networkX graph
+        :param write_aux: (bool) write auxiliary data
+        :return:
         """
         if not write_df and not write_graph and not write_nxg:
             return
@@ -368,7 +375,7 @@ class SuperGraph(ht.GraphFrame):
     @staticmethod
     def from_config(data_path, profile_format):
         """
-        # Create a GraphFrame directly from the data_path and profile_format.
+        Create a GraphFrame directly from the data_path and profile_format.
 
         :param data_path: path to data
         :param profile_format: Profile format
@@ -498,7 +505,8 @@ class SuperGraph(ht.GraphFrame):
     # functionality related to modules
     # --------------------------------------------------------------------------
     def get_module(self, callsite):
-        """If such a mapping exists, this function returns the module based on
+        """
+        If such a mapping exists, this function returns the module based on
         mapping. Else, it queries the graphframe for a module name.
 
         :param callsite (str): call site
@@ -506,8 +514,9 @@ class SuperGraph(ht.GraphFrame):
         """
         return self.module_map[callsite]
 
-    def prc_construct_module_callsite_map(self, module_callsite_map={}, from_df=True):
-        """Construct the module map for a given dataset.
+    def prc_construct_module_callsite_map(self, module_callsite_map={}, from_df=True) -> dict:
+        """
+        Construct the module map for a given dataset.
         Note: The module names can be specified using --module_map option.
 
         The file should contain the module name as the key, and a list of
@@ -565,11 +574,14 @@ class SuperGraph(ht.GraphFrame):
         # self.indexes.insert(0, 'dataset')
         # self.dataframe.set_index(self.indexes, inplace=True, drop=True)
 
-    # --------------------------------------------------------------------------
-    # In-place filtering on the NetworkX Graph.
-    # --------------------------------------------------------------------------
-    def filter_sg(self, filter_by, filter_val):
+   def filter_sg(self, filter_by, filter_val) -> None:
+        """
+        In-place filtering on the NetworkX Graph.
 
+        :param filter_by: filter by value at "time" and "time (inc)".
+        :param filter_val: filter threshold
+        :return: None
+        """
         LOGGER.debug(f"Filtering {self.__str__()}: \"{filter_by}\" <= {filter_val}")
         self.dataframe = self.df_filter_by_value(filter_by, filter_val)
 

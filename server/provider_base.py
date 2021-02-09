@@ -23,7 +23,7 @@ LOGGER = get_logger(__name__)
 # ------------------------------------------------------------------------------
 class BaseProvider:
 
-    # TODO: CAL-38add additional module map argument
+    # TODO: CAL-38: add additional module map argument
     def __init__(self, config: dict = None):
         """
         Entry interface to access CallFlow's functionalities.

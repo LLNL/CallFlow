@@ -14,16 +14,15 @@ LOGGER = callflow.get_logger(__name__)
 # ------------------------------------------------------------------------------
 # Filters a SuperGraph.
 # ------------------------------------------------------------------------------
-
 class Filter:
     VALID_MODES = ["time", "time (inc)"]
 
     def __init__(self, sg, filter_by="time (inc)", filter_perc=10.):
         """
-
-        :param sg:
-        :param filter_by:
-        :param filter_perc:
+        Constructor to the filter operation.
+        :param sg: SuperGraph
+        :param filter_by: filter by metric, can be "time (inc)" or "time"
+        :param filter_perc: filter percentage
         """
         assert isinstance(sg, callflow.SuperGraph)
         assert isinstance(filter_by, str) and isinstance(filter_perc, (int, float))

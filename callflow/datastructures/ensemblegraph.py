@@ -16,10 +16,11 @@ class EnsembleGraph(SuperGraph):
     """
     EnsembleGraph represents a unified graph and all components supergraphs.
     """
-
-    # --------------------------------------------------------------------------
     def __init__(self, name):
-
+        """
+        Constructor to Ensemble SuperGraph
+        :param name: tag for the ensemble
+        """
         super().__init__(name)
 
         self.supergraphs = {}
@@ -30,9 +31,17 @@ class EnsembleGraph(SuperGraph):
         self.inc_metrics = []
 
     def __str__(self):
+        """
+        String representation for an ensemble super graph.
+        :return:
+        """
         return f"EnsembleGraph<{self.name} of {len(self.supergraphs)} supergraphs; df = {self.dataframe.shape}>"
 
     def __repr__(self):
+        """
+        String representation for an ensemble super graph.
+        :return:
+        """
         return self.__str__()
 
 # ------------------------------------------------------------------------------
