@@ -257,6 +257,7 @@ class Auxiliary:
                 "nrnks": df_count(df, "rank") if "rank" in cols else 1,
                 "rtime": df_minmax(df, "time (inc)", self.proxy_columns)[1],
                 "nedgs": len(sg.nxg.edges()),
+>>>>>>> bring back column_proxies and associated changes in modules
             }
 
         return _json
