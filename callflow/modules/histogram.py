@@ -12,19 +12,20 @@ import pandas as pd
 
 import callflow
 from callflow.utils.utils import histogram
+from callflow.datastructures.metrics import TIME_COLUMNS
 
 LOGGER = callflow.get_logger(__name__)
 
 
+# ------------------------------------------------------------------------------
 class Histogram:
     """
     Calculate Histogram (Per rank, All ranks, Per dataset)
     """
 
     HISTO_TYPES = ["rank", "name", "dataset", "all_ranks"]
-    KEYS_AND_ATTRS = {"Inclusive": "time (inc)", "Exclusive": "time"}
 
-    def __init__(self, df_ensemble, df_target=None, bins=20):
+    def __init__(self, df_ensemble, df_target=None, bins=20, proxy_columns={}):
         """
 
         :param df_ensemble:
@@ -34,56 +35,63 @@ class Histogram:
         assert isinstance(df_ensemble, pd.DataFrame)
         assert isinstance(df_target, pd.DataFrame) or df_target is None
         assert isinstance(bins, int)
+        assert isinstance(proxy_columns, dict)
         assert bins > 0
 
-        self.result = {"Inclusive": {}, "Exclusive": {}}
+        self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
+        self.result = {_: {} for _ in TIME_COLUMNS}
 
-        # for each property
-        for prop in Histogram.HISTO_TYPES:
+        # for each type of histogram
+        for histo_type in Histogram.HISTO_TYPES:
 
             if df_target is None:
-                _dfe = Histogram._get_data_by_property(df_ensemble, prop)
-                for k, a in Histogram.KEYS_AND_ATTRS.items():
-                    _hist = histogram(_dfe[a], bins=bins)
-                    self.result[k][prop] = {"ensemble": Histogram._format_data(_hist)}
+                _dfe = self._get_data_by_histo_type(df_ensemble, histo_type)
+
+                # for each time column
+                for tk, tv in zip(TIME_COLUMNS, self.time_columns):
+                    _hist = histogram(_dfe[tv], bins=bins)
+                    self.result[tk][histo_type] = {
+                        "ensemble": Histogram._format_data(_hist)
+                    }
 
             else:
-                _dfe = Histogram._get_data_by_property(df_ensemble, prop)
-                _dft = Histogram._get_data_by_property(df_target, prop)
+                _dfe = self._get_data_by_histo_type(df_ensemble, histo_type)
+                _dft = self._get_data_by_histo_type(df_target, histo_type)
 
-                for k, a in Histogram.KEYS_AND_ATTRS.items():
-                    _e = _dfe[a]
-                    _t = _dft[a]
+                # for each time column
+                for tk, tv in zip(TIME_COLUMNS, self.time_columns):
+                    _e = _dfe[tv]
+                    _t = _dft[tv]
 
                     _min = min(_e.min(), _t.min())
                     _max = max(_e.max(), _t.max())
-
                     _histe = histogram(_e, [_min, _max], bins=bins)
                     _histt = histogram(_t, [_min, _max], bins=bins)
 
-                    self.result[k][prop] = {
+                    self.result[tk][histo_type] = {
                         "ensemble": Histogram._format_data(_histe),
-                        "target": Histogram._format_data(_histt),
+                        "target": Histogram._format_data(_histt)
                     }
 
     # --------------------------------------------------------------------------
     # Return the histogram in the required form.
-    @staticmethod
-    def _get_data_by_property(data, prop):
+    def _get_data_by_histo_type(self, df, histo_type):
         """
 
         :param data:
         :param prop:
         :return:
         """
-        if prop == "all_ranks":
-            return data
-        elif prop == "rank":
-            assert prop in data.columns
-            return data.groupby(["dataset", "rank"])[["time", "time (inc)"]].mean()
+        if histo_type == "all_ranks":
+            return df
+
+        assert histo_type in df.columns
+        if histo_type == "rank":
+            _df = df.groupby(["dataset", "rank"])
         else:
-            assert prop in data.columns
-            return data.groupby([prop])[["time", "time (inc)"]].mean()
+            _df = df.groupby([histo_type])
+
+        return _df[self.time_columns].mean()
 
     @staticmethod
     def _format_data(histo):
@@ -92,6 +100,8 @@ class Histogram:
         :param histo:
         :return:
         """
+        return {"x": histo[0], "y": histo[1]}
+
         if len(histo[0]) == 0 or len(histo[1]) == 0:
             return {
                 "x": [],
@@ -111,6 +121,5 @@ class Histogram:
                 "y_min": np.min(histo[1]).astype(np.float64),
                 "y_max": np.max(histo[1]).astype(np.float64),
             }
-
 
 # ------------------------------------------------------------------------------

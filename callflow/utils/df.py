@@ -16,8 +16,7 @@ def df_unique(df, column, proxy={}):
 
 
 def df_count(df, column, proxy={}):
-    column = proxy.get(column, column)
-    return len(df_unique(df, column))
+    return len(df_unique(df, column, proxy))
 
 
 def df_minmax(df, column, proxy={}):
@@ -26,9 +25,20 @@ def df_minmax(df, column, proxy={}):
 
 
 # ------------------------------------------------------------------------------
+def df_columns(df):
+    return df.columns
+
+
 def df_get_column(df, column, index="name", proxy={}):
     column = proxy.get(column, column)
     return df.set_index(index)[column]
+
+
+def df_fetch_columns(df, columns, proxy={}):
+    columns = [proxy.get(_, _) for _ in columns]
+    return df[columns]
+
+
 
 
 # ------------------------------------------------------------------------------

@@ -12,38 +12,40 @@ import pandas as pd
 
 import callflow
 from callflow.utils.utils import outliers
+from callflow.datastructures.metrics import TIME_COLUMNS
 
 LOGGER = callflow.get_logger(__name__)
 
 
+# ------------------------------------------------------------------------------
 class BoxPlot:
     """
     Boxplot computation for a dataframe segment
     """
 
-    KEYS_AND_ATTRS = {"Inclusive": "time (inc)", "Exclusive": "time"}
-
-    def __init__(self, df):
+    def __init__(self, df, proxy_columns={}):
         """
 
         :param df:
         """
         assert isinstance(df, pd.DataFrame)
-        self.result = {}
+        assert isinstance(proxy_columns, dict)
 
-        for k, a in BoxPlot.KEYS_AND_ATTRS.items():
+        self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
+        self.result = {_: {} for _ in TIME_COLUMNS}
 
-            q = np.percentile(df[a], [0.0, 25.0, 50.0, 75.0, 100.0])
-            mask = outliers(df[a])
+        for tk, tv in zip(TIME_COLUMNS, self.time_columns):
 
-            self.result[k] = {
+            q = np.percentile(df[tv], [0.0, 25.0, 50.0, 75.0, 100.0])
+            mask = outliers(df[tv])
+
+            self.result[tk] = {
                 "q": q,
                 "outliers": {
-                    "values": (mask * df[a]).to_numpy(),
+                    "values": (mask * df[tv]).to_numpy(),
                     "datasets": (mask * df["dataset"]).to_numpy(),
                     "ranks": (mask * df["rank"]).to_numpy(),
                 },
             }
-
 
 # ------------------------------------------------------------------------------

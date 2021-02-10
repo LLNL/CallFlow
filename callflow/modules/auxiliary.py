@@ -5,35 +5,32 @@
 # ------------------------------------------------------------------------------
 
 """
-CallFlow's module to consolidate the auxiliary information (i.e., histograms, gradients,
-and boxplots) for each call site or module based on the type of data requested.
+CallFlow's module to consolidate the auxiliary information
+(i.e., histograms, gradients, and boxplots)
+for each call site or module based on the type of data requested.
 """
-from .gradients import Gradients
-from .boxplot import BoxPlot
-from .histogram import Histogram
-
 import numpy as np
 from scipy.stats import kurtosis, skew
 
 import callflow
-from callflow.utils.df import (
-    df_group_by,
-    df_unique,
-    df_lookup_by_column,
-    df_lookup_and_list,
-)
+from callflow.utils.df import df_minmax, df_count, df_unique, df_group_by, \
+    df_fetch_columns, df_lookup_by_column, df_lookup_and_list
+
+from .gradients import Gradients
+from .boxplot import BoxPlot
+from .histogram import Histogram
+from callflow.datastructures.metrics import TIME_COLUMNS
 
 LOGGER = callflow.get_logger(__name__)
 
 
+# ------------------------------------------------------------------------------
 class Auxiliary:
     """
     Auxiliary: consolidates per-callsite and per-module information.
     """
-
-    def __init__(
-        self, sg, selected_runs=None, rankBinCount: int = 20, runBinCount: int = 20
-    ):
+    def __init__(self, sg, selected_runs=None,
+                 MPIBinCount: int = 20, RunBinCount: int = 20):
         """
         Constructor
         :param sg: SuperGraph
@@ -43,15 +40,17 @@ class Auxiliary:
         """
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
 
-        self.MPIBinCount = rankBinCount
-        self.RunBinCount = runBinCount
-        self.hist_props = ["rank", "name", "dataset", "all_ranks"]
+        self.MPIBinCount = MPIBinCount
+        self.RunBinCount = RunBinCount
+        #self.hist_props = ["rank", "name", "dataset", "all_ranks"]
 
-        selected_runs = sg.filter_by_datasets(selected_runs)
+        self.proxy_columns = sg.proxy_columns
+        self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
 
-        LOGGER.warning(
-            f"Computing auxiliary data for ({sg}) with {len(selected_runs)}."
-        )
+        self.runs = sg.filter_by_datasets(selected_runs)
+
+        LOGGER.warning(f"Computing auxiliary data for ({sg}) with "
+                       f"{len(self.runs)} runs: {self.runs}")
 
         # ----------------------------------------------------------------------
         if isinstance(sg, callflow.EnsembleGraph):
@@ -62,7 +61,7 @@ class Auxiliary:
             dataframes_name_group = {"ensemble": df_group_by(sg.dataframe, "name")}
             dataframes_module_group = {"ensemble": df_group_by(sg.dataframe, "module")}
 
-            for dataset in selected_runs:
+            for dataset in self.runs:
                 dataframes[dataset] = df_lookup_by_column(
                     sg.dataframe, "dataset", dataset
                 )
@@ -73,6 +72,7 @@ class Auxiliary:
                     dataframes[dataset], "module"
                 )
 
+        # ----------------------------------------------------------------------
         else:
             df = df_lookup_by_column(sg.dataframe, "dataset", sg.name)
             callsites = df_unique(df, "name")
@@ -83,26 +83,54 @@ class Auxiliary:
 
         # ----------------------------------------------------------------------
         self.result = {
-            "runtimeProps": Auxiliary._runtime_props_dataset(dataframes),
-            "dataset": self._collect_data_dataset(dataframes, sg),
-            "callsite": self._collect_data(dataframes_name_group, "callsite"),
-            "module": self._collect_data(dataframes_module_group, "module"),
+            "runs": self.runs,
+            "moduleFctList": sg.module_fct_list,
             "callsiteModuleMap": self._callsite_module_map(dataframes, callsites),
             "moduleCallsiteMap": self._module_callsite_map(dataframes, modules),
-            "moduleFctList": sg.module_fct_list,
-            "runs": selected_runs,
+
+            "runtimeProps": self._runtime_props(dataframes),
+            "dataset": self._collect_data_dataset(dataframes, sg),
+
+            "callsite": self._collect_data(dataframes_name_group, "callsite"),
+            "module": self._collect_data(dataframes_module_group, "module")
         }
 
         # TODO: this should not happen this way
         sg.auxiliary_data = self.result
 
-    @staticmethod
-    def _runtime_props(dataframes):
+    def _runtime_props(self, dataframes):
         """
         Adds runtime information, e.g., max, min inclusive and exclusive runtime.
         :param dataframes:
         :return:
         """
+        props = {_: {} for _ in TIME_COLUMNS + ['nranks']}
+
+        # gather the data for ensemble
+        trng = (100000,0)
+        tirng = (100000, 0)
+        nranks = 0
+
+        for idx, tag in enumerate(dataframes):
+            _trng = df_minmax(dataframes[tag], 'time', self.proxy_columns)
+            _tirng = df_minmax(dataframes[tag], 'time (inc)', self.proxy_columns)
+            _nranks = df_count(dataframes[tag], "rank", self.proxy_columns)
+
+            props['time'][tag] = _trng
+            props['time (inc)'][tag] = _tirng
+            props["nranks"][tag] = _nranks
+
+            # collect for ensemble
+            trng = (min(trng[0], _trng[0]), max(trng[1], _trng[1]))
+            tirng = (min(tirng[0], _tirng[0]), max(tirng[1], _tirng[1]))
+            nranks = max(nranks, _nranks)
+
+        tag = 'ensemble'
+        props['time'][tag] = trng
+        props['time (inc)'][tag] = tirng
+        props['nranks'][tag] = nranks
+
+        '''
         props = {}
         props["maxIncTime"] = {}
         props["maxExcTime"] = {}
@@ -131,67 +159,38 @@ class Auxiliary:
         props["minIncTime"]["ensemble"] = minIncTime
         props["minExcTime"]["ensemble"] = minExcTime
         props["numOfRanks"]["ensemble"] = maxNumOfRanks
-
+        '''
         return props
 
-    @staticmethod
-    def _runtime_props_dataset(dataframes):
+    def _collect_data_dataset(self, dataframes, sg):
         """
-        Adds runtime information, e.g., max, min inclusive and exclusive runtime.
 
         :param dataframes:
-        :return:
-        """
-        props = {}
-        props["Inclusive"] = {}
-        props["Exclusive"] = {}
-        props["numOfRanks"] = {}
-
-        min_max_payload = lambda df, metric: {"mean": df[metric].mean(), "max": df[metric].max(), "min": df[metric].min()}
-       
-        for idx, tag in enumerate(dataframes):
-            if tag != "ensemble":
-                props["Inclusive"][tag] = min_max_payload(dataframes[tag], "time (inc)")
-                props["Exclusive"][tag] = min_max_payload(dataframes[tag], "time")
-                props["numOfRanks"][tag] = len(dataframes[tag]["rank"].unique())
-        return props
-
-    def _collect_data_dataset(self, dfs, sg):
-        """
-
-        :param dfs:
         :param sg:
         :return:
         """
-        _COLUMNS_OF_INTEREST = [
-            "node",
-            "rank",
-            "time (inc)",
-            "time",
-            "dataset",
-            "component_level",
-            "module",
-            "name",
-        ]
+        _COLUMNS_OF_INTEREST = ["node", "rank", "time", "time (inc)",
+                                "dataset", "module", "name", "component_level"]
 
         _json = {}
-        for k, v in dfs.items():
-            _df = v[_COLUMNS_OF_INTEREST]
+        for k, df in dataframes.items():
 
+            _df = df_fetch_columns(df, _COLUMNS_OF_INTEREST, self.proxy_columns)
+            _num_modules = len(sg.module_fct_list) if "module" in _df.columns else 0
+
+            '''
             _num_callsites = len(_df["name"].unique().tolist())  # Number of call sites
             _num_ranks = len(_df["rank"].unique().tolist())  # Number of ranks
             _run_time = _df["time (inc)"].max()  # Maximum inclusive runtime
-            _num_modules = (
-                len(sg.module_fct_list) if "module" in _df.columns else 0
-            )  # Number of modules
             _num_edges = len(sg.nxg.edges())
+            '''
 
             _json[k] = {
-                "num_callsites": _num_callsites,
-                "num_ranks": _num_ranks,
-                "run_time": _run_time,
+                "num_callsites": df_count(_df, "name", self.proxy_columns),
+                "num_ranks": df_count(_df, "rank", self.proxy_columns),
+                "run_time": df_minmax(_df, "time (inc)", self.proxy_columns)[1],
                 "num_modules": _num_modules,
-                "num_edges": _num_edges,
+                "num_edges": len(sg.nxg.edges()),
             }
 
         return _json
@@ -221,24 +220,28 @@ class Auxiliary:
 
                 # --------------------------------------------------------------
                 if is_ensemble:
-                    histogram = Histogram(df_ensemble=name_df).result
-                    gradients = Gradients(
-                        name_df, bins=self.RunBinCount, callsiteOrModule=name
-                    ).result
+                    histogram = Histogram(df_ensemble=name_df,
+                                          proxy_columns=self.proxy_columns).result
+
+                    gradients = Gradients(name_df,
+                                          proxy_columns=self.proxy_columns,
+                                          bins=self.RunBinCount,
+                                          callsiteOrModule=name).result
 
                 elif "ensemble" in dataframes_group:
                     assert not name_df.empty
                     ensemble_df = dataframes_group["ensemble"].get_group(name)
-                    histogram = Histogram(
-                        df_ensemble=ensemble_df, df_target=name_df
-                    ).result
 
+                    histogram = Histogram(df_ensemble=ensemble_df,
+                                          df_target=name_df,
+                                          proxy_columns=self.proxy_columns).result
                 else:
-                    histogram = Histogram(df_ensemble=name_df).result
+                    histogram = Histogram(df_ensemble=name_df,
+                                          proxy_columns=self.proxy_columns).result
 
                 # --------------------------------------------------------------
                 # if grp_type == 'callsite':
-                boxplot = BoxPlot(name_df).result
+                boxplot = BoxPlot(name_df, proxy_columns=self.proxy_columns).result
 
                 # --------------------------------------------------------------
                 result[dataset][name] = self.pack_json(
@@ -263,8 +266,8 @@ class Auxiliary:
         :return:
         """
         return {
-            __: {_: df_lookup_and_list(df, "name", _, "module") for _ in callsites}
-            for __, df in dataframes.items()
+            _name: {_: df_lookup_and_list(_df, "name", _, "module") for _ in callsites}
+            for _name, _df in dataframes.items()
         }
 
     def _module_callsite_map(self, dataframes, modules):
@@ -275,22 +278,14 @@ class Auxiliary:
         :return:
         """
         return {
-            __: {int(_): df_lookup_and_list(df, "module", _, "name") for _ in modules}
-            for __, df in dataframes.items()
+            _name: {int(_): df_lookup_and_list(_df, "module", _, "name") for _ in modules}
+            for _name, _df in dataframes.items()
         }
 
     # --------------------------------------------------------------------------
-    @staticmethod
-    def pack_json(
-        name,
-        df,
-        is_ensemble,
-        is_callsite,
-        gradients=None,
-        histograms=None,
-        boxplots=None,
-        grp_type="callsite",
-    ):
+    def pack_json(self, name, df, is_ensemble, is_callsite,
+                  gradients=None, histograms=None, boxplots=None,
+                  grp_type="callsite"):
         """
 
         :param name:
@@ -303,35 +298,28 @@ class Auxiliary:
         :param grp_type:
         :return:
         """
+        assert grp_type in ['callsite', 'module']
 
-        KEYS_AND_ATTRS = {"Inclusive": "time (inc)", "Exclusive": "time"}
+        _id_col = 'nid' if grp_type == "callsite" else 'module'
+        result = {"name":               name,
+                  "id":                 f"{grp_type}-{df[_id_col].unique()[0]}",
+                  "dataset":            df_unique(df, "dataset"),
+                  "component_path":     df_unique(df, "component_path"),
+                  "component_level":    df_unique(df, "component_level")
+                  }
 
-        # create the dictionary with base info
-        if grp_type == "callsite":
-            result = {
-                "name": name,
-                "id": f"{grp_type}-{df['nid'].unique()[0]}",
-                "dataset": df["dataset"].unique(),
-                "module": df["module"].unique(),
-                "component_path": df["component_path"].unique(),
-                "component_level": df["component_level"].unique(),
-            }
-        elif grp_type == "module":
-            result = {
-                "name": name,
-                "id": f"{grp_type}-{df['module'].unique()[0]}",
-                "dataset": df["dataset"].unique(),
-                "component_path": df["component_path"].unique(),
-                "component_level": df["component_level"].unique(),
-            }
+        if grp_type == "module":
+            result["module"] = df_unique(df, "module")
 
         # now, append the data
-        for k, a in KEYS_AND_ATTRS.items():
+        for tk, tv in zip(TIME_COLUMNS, self.time_columns):
 
             if grp_type == "callsite":
-                _data = df[a].to_numpy()
+                _data = df[tv].to_numpy()
             elif grp_type == "module":
-                _data = df.groupby(["rank"])[a].mean().to_numpy()
+                _data = df.groupby(["rank"])[tv].mean().to_numpy()
+            else:
+                assert False
 
             # compute the statistics
             _min, _mean, _max = _data.min(), _data.mean(), _data.max()
@@ -341,26 +329,20 @@ class Auxiliary:
             _skew = skew(_data)
             _kurt = kurtosis(_data)
 
-            result[k] = {
-                "d": _data,
-                "min": _min,
-                "mean": _mean,
-                "max": _max,
-                "var": _var,
-                "std": _std,
-                "imb": _imb,
-                "kurt": _kurt,
-                "skew": _skew,
-            }
+            result[tk] = {"d": _data,
+                          "min": _min, "max": _max,
+                          "mean": _mean, "var": _var, "std": _std,
+                          "imb": _imb, "kurt": _kurt, "skew": _skew
+                          }
 
             if gradients is not None:
-                result[k]["gradients"] = gradients[k]
+                result[tk]["gradients"] = gradients[tk]
 
             if boxplots is not None:
-                result[k]["boxplots"] = boxplots[k]
+                result[tk]["boxplots"] = boxplots[tk]
 
             if histograms is not None:
-                result[k]["hists"] = histograms[k]
+                result[tk]["hists"] = histograms[tk]
 
         return result
 
