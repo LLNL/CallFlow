@@ -30,7 +30,7 @@ class SuperGraph(ht.GraphFrame):
     """
     _FILENAMES = {
         "ht": "hatchet_tree.txt",
-        "df": "df.csv",
+        "df": "df.pkl",
         "nxg": "nxg.json",
         "env_params": "env_params.txt",
         "aux": "auxiliary_data.json",
@@ -543,7 +543,12 @@ class SuperGraph(ht.GraphFrame):
         """
         fname = os.path.join(path, SuperGraph._FILENAMES["df"])
         LOGGER.debug(f"Writing ({fname})")
-        df.to_csv(fname)
+
+        ext = os.path.splitext(SuperGraph._FILENAMES["df"])[-1]
+        if '.csv' == ext:
+            df.to_csv(fname)
+        elif '.pkl' == ext:
+            df.to_pickle(fname)
 
     @staticmethod
     def write_nxg(path, nxg):
@@ -594,7 +599,14 @@ class SuperGraph(ht.GraphFrame):
         """
         fname = os.path.join(path, SuperGraph._FILENAMES["df"])
         LOGGER.debug(f"Reading ({fname})")
-        df = pd.read_csv(fname)
+
+        df = None
+        ext = os.path.splitext(SuperGraph._FILENAMES["df"])[-1]
+        if '.csv' == ext:
+            df = pd.read_csv(fname)
+        elif '.pkl' == ext:
+            df = pd.read_pickle(fname)
+
         if df is None or df.empty:
             raise ValueError(f"Did not find a valid dataframe in ({fname}).")
         return df
