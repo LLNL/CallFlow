@@ -13,6 +13,7 @@ from .supergraph import SuperGraph
 LOGGER = get_logger(__name__)
 
 
+# ------------------------------------------------------------------------------
 class EnsembleGraph(SuperGraph):
     "Ensemble SuperGraph Data structure"
     """
@@ -38,7 +39,8 @@ class EnsembleGraph(SuperGraph):
         String representation for an ensemble super graph.
         :return:
         """
-        return f"EnsembleGraph<{self.name} of {len(self.supergraphs)} supergraphs; df = {self.dataframe.shape}>"
+        return f"EnsembleGraph<{self.name} of {len(self.supergraphs)} supergraphs; " \
+               f"df = {self.dataframe.shape}>"
 
     def __repr__(self):
         """
