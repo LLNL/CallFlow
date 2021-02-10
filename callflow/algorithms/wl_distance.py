@@ -3,10 +3,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-import numpy as np
-import networkx as nx
-import copy
-
 """Weisfeiler_Lehman graph kernel.
 
 Python implementation based on: "Weisfeiler-Lehman Graph Kernels", by:
@@ -16,6 +12,9 @@ http://jmlr.csail.mit.edu/papers/v12/shervashidze11a.html
 
 Author : Sandro Vega-Pons, Emanuele Olivetti
 """
+import numpy as np
+import networkx as nx
+import copy
 
 
 class WL_Distance:
@@ -23,7 +22,7 @@ class WL_Distance:
     Weisfeiler_Lehman graph kernel.
     """
 
-    def __init__(self, nxg_1, nxg_2):
+    def __init__(self, nxg_1, nxg_2, h, node_label):
         """Compute the kernel value (similarity) between two graphs.
         The kernel is normalized to [0,1] by the equation:
         k_norm(g1, g2) = k(g1, g2) / sqrt(k(g1,g1) * k(g2,g2))
@@ -47,7 +46,6 @@ class WL_Distance:
         """
         gl = [nxg_1, nxg_2]
         return self.compare_list(gl, h, node_label)[0, 1]
-
 
     def compute(self, graph_list, h=1, node_label=True):
         """Compute the all-pairs kernel values for a list of graphs.

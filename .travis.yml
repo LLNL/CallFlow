@@ -13,12 +13,13 @@ jobs:
       script:
         - black --diff --check .
         - flake8 --exclude=examples
+        - pylint --disable=all --enable=missing-docstring callflow
 
 
 install:
   - pip install --upgrade -r requirements.txt
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then
-        pip install --upgrade black flake8;
+        pip install --upgrade black flake8 pylint;
     fi
   - python setup.py install
   - python setup.py build_ext --inplace

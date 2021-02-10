@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+"""
+CallFlow's module to get the dataframe's boxplot (for inclusive and exclusive runtime).
+"""
 import numpy as np
 import pandas as pd
 
@@ -13,31 +16,34 @@ from callflow.utils.utils import outliers
 LOGGER = callflow.get_logger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
 class BoxPlot:
     """
-    Boxplot computation
+    Boxplot computation for a dataframe segment
     """
-    KEYS_AND_ATTRS = {'Inclusive': 'time (inc)',
-                      'Exclusive': 'time'}
+
+    KEYS_AND_ATTRS = {"Inclusive": "time (inc)", "Exclusive": "time"}
 
     def __init__(self, df):
+        """
 
+        :param df:
+        """
         assert isinstance(df, pd.DataFrame)
         self.result = {}
 
-        for k,a in BoxPlot.KEYS_AND_ATTRS.items():
+        for k, a in BoxPlot.KEYS_AND_ATTRS.items():
 
-            q = np.percentile(df[a], [0., 25., 50., 75., 100.])
+            q = np.percentile(df[a], [0.0, 25.0, 50.0, 75.0, 100.0])
             mask = outliers(df[a])
 
-            self.result[k] = {'q': q,
-                              'outliers': {
-                                  "values": (mask * df[a]).to_numpy(),
-                                  "datasets": (mask * df['dataset']).to_numpy(),
-                                  "ranks": (mask * df['rank']).to_numpy()
-                                }
-                              }
+            self.result[k] = {
+                "q": q,
+                "outliers": {
+                    "values": (mask * df[a]).to_numpy(),
+                    "datasets": (mask * df["dataset"]).to_numpy(),
+                    "ranks": (mask * df["rank"]).to_numpy(),
+                },
+            }
+
 
 # ------------------------------------------------------------------------------

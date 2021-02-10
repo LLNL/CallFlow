@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+"""
+CallFlow operation for the comparing two or more dataset members from an ensemble.
+"""
 import numpy as np
 
 import callflow
@@ -14,12 +17,19 @@ from .histogram import Histogram
 LOGGER = callflow.get_logger()
 
 
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
 class DiffView:
+    """
+    Calculate differences from sections of dataframe
+    """
 
     def __init__(self, ensemble_graph, dataset1, dataset2, col):
-
+        """
+        Constructor.
+        :param ensemble_graph:
+        :param dataset1:
+        :param dataset2:
+        :param col:
+        """
         assert isinstance(ensemble_graph, callflow.EnsembleGraph)
         assert isinstance(dataset1, str) and isinstance(dataset2, str)
         assert isinstance(col, str)
@@ -31,7 +41,7 @@ class DiffView:
         self.col = col
 
         # Calculate the max_rank.
-        self.max_rank = max(df_count(self.df1,"rank"),df_count(self.df2,"rank"))
+        self.max_rank = max(df_count(self.df1, "rank"), df_count(self.df2, "rank"))
 
         modules = ensemble_graph.df_unique("module")
         self.result = [self.compute(_) for _ in modules]
@@ -39,8 +49,23 @@ class DiffView:
     # --------------------------------------------------------------------------
     @staticmethod
     def _mean_difference(df1, df2, module):
+        """
+
+        :param df1:
+        :param df2:
+        :param module:
+        :return:
+        """
 
         def _mean(_df, _selected_col, _node, _col):
+            """
+
+            :param _df:
+            :param _selected_col:
+            :param _node:
+            :param _col:
+            :return:
+            """
             _data = df_lookup_by_column(_df, _selected_col, _node)[_col].to_numpy()
             return _data.mean() if len(_data) > 0 else 0
 
@@ -52,8 +77,19 @@ class DiffView:
 
     # --------------------------------------------------------------------------
     def compute(self, module):
+        """
+
+        :param module:
+        :return:
+        """
 
         def _insertZeroRuntime(_arr, _rank_arr):
+            """
+
+            :param _arr:
+            :param _rank_arr:
+            :return:
+            """
             ret = np.zeros([self.max_rank])
             for idx, rank_idx in enumerate(_rank_arr):
                 ret[rank_idx] = _arr[idx]
@@ -100,4 +136,6 @@ class DiffView:
             "diff": diff,
         }
         return result
+
+
 # ------------------------------------------------------------------------------

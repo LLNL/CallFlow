@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
-
-from .supergraph import SuperGraph
-from .ensemblegraph import EnsembleGraph
+"""
+CallFlow's data structure API.
+"""
+from .supergraph import SuperGraph  # noqa
+from .ensemblegraph import EnsembleGraph  # noqa

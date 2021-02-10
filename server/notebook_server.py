@@ -21,16 +21,20 @@ import collections
 
 # IPython related imports.
 import IPython
+
 try:
     import html
+
     html_escape = html.escape
     del html
 except ImportError:
     import cgi
+
     html_escape = cgi.escape
     del cgi
 
 import logging
+
 LOGGER = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------------
@@ -41,10 +45,10 @@ LAUNCH_INFO_DICT = collections.OrderedDict(
         ("version", str),
         ("start_time", int),  # seconds since epoch
         ("pid", int),
-        ("port", int),        # port number
-        ("host", str),        # host IP
-        ("config", str),      # may be empty
-        ("cache_key", str),   # opaque, as given by `cache_key` below
+        ("port", int),  # port number
+        ("host", str),  # host IP
+        ("config", str),  # may be empty
+        ("cache_key", str),  # opaque, as given by `cache_key` below
     )
 )
 
@@ -66,8 +70,14 @@ StartReused = collections.namedtuple("StartReused", ("info",))
 
 # Indicates that a call to `start` successfully launched a new
 # CallFlow process, which is available with the provided info.
-StartLaunched = collections.namedtuple("StartLaunched",
-                                       ("info", "host", "port",))
+StartLaunched = collections.namedtuple(
+    "StartLaunched",
+    (
+        "info",
+        "host",
+        "port",
+    ),
+)
 
 # Indicates that a call to `start` tried to launch a new CallFlow
 # instance, but the subprocess exited with the given exit code and
@@ -95,43 +105,27 @@ StartTimedOut = collections.namedtuple("StartTimedOut", ("pid",))
 
 
 # ------------------------------------------------------------------------------
-def _create_cmd(args):
-    # TODO: remove hardcoding
-    server_cmd = ['callflow',
-                  '--data_path', './data/lulesh-8-runs-original',
-                  '--profile_format', 'caliper_json',
-                  '--verbose']
-    return server_cmd
-
-    server_cmd = ["callflow"]
-    for k,v in args.items():
-        if v is not None:
-            server_cmd += [f'--{k}',f'{v}']
-
-
-# ------------------------------------------------------------------------------
 # public api of the ipython environment
 # ------------------------------------------------------------------------------
 def launch_ipython(args, config, host, port, launch_path, app_version):
     """
     Setup the IPython environment.
 
-    :param args:    Arguments (passed into CallFLow).
-    :param config:  Callflow config
-    :param host:
-    :param port:
-    :param launch_path:
-    :param app_version:
+    :param args: Arguments (passed into CallFLow).
+    :param config: CallFlow config
+    :param host: Host to run callflow app
+    :param port: Port to run callflow app
+    :param launch_path: Path to save launch information
+    :param app_version: CallFlow version id
     :return: StartLaunched or StartReused
     """
     assert isinstance(args, dict) and isinstance(config, dict)
     assert isinstance(host, str) and isinstance(port, int)
     assert isinstance(launch_path, str) and isinstance(app_version, str)
 
-    _msg = f'Launching CallFlow {app_version} in ipython environment ({host}:{port})'
+    _msg = f"Launching CallFlow {app_version} in ipython environment ({host}:{port})"
     LOGGER.info(_msg)
-    handle = IPython.display.display(IPython.display.Pretty(_msg),
-                                     display_id=True)
+    handle = IPython.display.display(IPython.display.Pretty(_msg), display_id=True)
 
     # Set cache key to store the current instance's arguments.
     cache_key = _get_cache_key(working_directory=os.getcwd(), arguments=args)
@@ -150,7 +144,7 @@ def launch_ipython(args, config, host, port, launch_path, app_version):
         start_result = StartReused(info=matching_instance)
 
         print(start_result)
-        LOGGER.critical('blocking reuse')
+        LOGGER.critical("blocking reuse")
         exit(1)
         pid = int(start_result.info["pid"])
         port = int(start_result.info["port"])
@@ -158,9 +152,11 @@ def launch_ipython(args, config, host, port, launch_path, app_version):
         time_delta = int(time.time()) - start_result.info["start_time"]
         time_delta = str(datetime.timedelta(seconds=time_delta))
 
-        _msg = f"Reusing CallFlow's server is on port {port} and " \
-               f"client is on {client_port} (pid {pid}), " \
-               f"started {time_delta} ago. (Use '!kill {pid}' to kill it.)"
+        _msg = (
+            f"Reusing CallFlow's server is on port {port} and "
+            f"client is on {client_port} (pid {pid}), "
+            f"started {time_delta} ago. (Use '!kill {pid}' to kill it.)"
+        )
 
         LOGGER.info(_msg)
         _print_message_in_ipython(handle, _msg)
@@ -170,22 +166,29 @@ def launch_ipython(args, config, host, port, launch_path, app_version):
     # Launch the server command
     else:
         server_cmd = _create_cmd(args)
-        LOGGER.debug(f'Launching command ({server_cmd})')
-        launch_result = _launch_app(server_cmd, host=host, port=port,
-                                    info_dir=launch_path,
-                                    instance=matching_instance)
+        LOGGER.debug(f"Launching command ({server_cmd})")
+        launch_result = _launch_app(
+            server_cmd,
+            host=host,
+            port=port,
+            info_dir=launch_path,
+            instance=matching_instance,
+        )
 
         if not isinstance(launch_result, StartLaunched):
-            LOGGER.critical('Exiting due to launch failure')
+            LOGGER.critical("Exiting due to launch failure")
             exit(1)
 
         # Construct the CallFlowLaunchInfo object.
-        launch_info = LAUNCH_INFO_TUPLE(version=app_version,
-                                        config=config,
-                                        port=port, host=host,
-                                        start_time=int(time.time()),
-                                        pid=os.getpid(),
-                                        cache_key=cache_key)
+        launch_info = LAUNCH_INFO_TUPLE(
+            version=app_version,
+            config=config,
+            port=port,
+            host=host,
+            start_time=int(time.time()),
+            pid=os.getpid(),
+            cache_key=cache_key,
+        )
 
         # Store the CallFlowLaunchInfo object.
         _write_launch_info_file(launch_file, launch_info)
@@ -207,35 +210,33 @@ def load_ipython(ipython, server):
     _register_magics(ipython, server)
 
 
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
 def _register_magics(ipython, server):
     """
     Register IPython line/cell magics.
-    
+
     :param ipython: An `InteractiveShell` instance.
     """
     assert callable(server)
     # TODO: need to register with start magic
-    ipython.register_magic_function(_start_magic,
-                                    magic_kind="line",
-                                    magic_name="callflow")
+    ipython.register_magic_function(
+        _start_magic, magic_kind="line", magic_name="callflow"
+    )
 
 
 def _start_magic(line):
     """
     Implementation of the `%callflow` line magic.
     Launches and display a CallFlow instance as if at the command line.
-    
+
     :param line: text (command-line arguments) passed using %callflow
     """
     # TODO: needs to be fixed!
-    callflow.CallFlowServer(args=line, env="JUPYTER")
+    callflow.CallFlowServer(args=line, env="JUPYTER")  # noqa
 
 
-# ------------------------------------------------------------------------------
-def _launch_app(cmd, host, port, info_dir, instance,
-                timeout=datetime.timedelta(seconds=100)):
+def _launch_app(
+    cmd, host, port, info_dir, instance, timeout=datetime.timedelta(seconds=100)
+):
     """
     Launch the subprocess and the CallFlow app.
     :param cmd:
@@ -245,7 +246,7 @@ def _launch_app(cmd, host, port, info_dir, instance,
     :return:
     """
 
-    LOGGER.info(f'Launching app in ({info_dir})')
+    LOGGER.info(f"Launching app in ({info_dir})")
     (stdout_fd, stdout_path) = tempfile.mkstemp(prefix=info_dir + "stdout-")
     (stderr_fd, stderr_path) = tempfile.mkstemp(prefix=info_dir + "stderr-")
 
@@ -253,8 +254,9 @@ def _launch_app(cmd, host, port, info_dir, instance,
     try:
         p = subprocess.Popen(cmd, stdout=stdout_fd, stderr=stderr_fd)
     except OSError as e:
-        LOGGER.critical(f'Launch failed. '
-                        f'For logs, see ({stdout_path}) and ({stderr_path})')
+        LOGGER.critical(
+            f"Launch failed. " f"For logs, see ({stdout_path}) and ({stderr_path})"
+        )
         return StartExecFailed(os_error=e)
     finally:
         os.close(stdout_fd)
@@ -266,17 +268,21 @@ def _launch_app(cmd, host, port, info_dir, instance,
         time.sleep(poll_interval_seconds)
         subprocess_result = p.poll()
         if subprocess_result is not None:
-            LOGGER.critical(f'Launch failed. '
-                            f'For logs, see ({stdout_path}) and ({stderr_path})')
-            return StartFailed(exit_code=subprocess_result,
-                               stdout=_read_launch_info_file(stdout_path),
-                               stderr=_read_launch_info_file(stderr_path))
+            LOGGER.critical(
+                f"Launch failed. " f"For logs, see ({stdout_path}) and ({stderr_path})"
+            )
+            return StartFailed(
+                exit_code=subprocess_result,
+                stdout=_read_launch_info_file(stdout_path),
+                stderr=_read_launch_info_file(stderr_path),
+            )
         else:
-            LOGGER.info(f'Launch Successful.')
+            LOGGER.info("Launch Successful.")
             return StartLaunched(info=instance, host=host, port=port)
 
-    LOGGER.critical(f'Launch timed out. '
-                    f'For logs, see ({stdout_path}) and ({stderr_path})')
+    LOGGER.critical(
+        f"Launch timed out. " f"For logs, see ({stdout_path}) and ({stderr_path})"
+    )
     return StartTimedOut(pid=p.pid)
 
 
@@ -323,31 +329,15 @@ def _display_ipython(port, height, display_handle):
         IPython.display.display(iframe)
 
 
-def _print_message_in_ipython(handle, message):
-    """
-    Print message using ipython handle
-    :param handle: ipython handle
-    :param message: message to be printed
-    :return: None
-    """
-    if handle is None:
-        print(message)
-    else:
-        handle.update(IPython.display.Pretty(message))
-
-
 # ------------------------------------------------------------------------------
+# Utilities
 # ------------------------------------------------------------------------------
 def _mkdir(path):
     """
-    Get path to directory in which to store info files.
-    The directory returned by this function is "owned" by this module. If
-    the contents of the directory are modified other than via the public
-    functions of this module, subsequent behavior is undefined.
-    The directory will be created if it does not exist.
+    Make the directory, if it does not exist.
 
-    :param path:
-    :return:
+    :param path: path to directory to be checked
+    :return path: path where directory was created.
     """
     try:
         os.makedirs(path)
@@ -361,6 +351,44 @@ def _mkdir(path):
     return path
 
 
+def _print_message_in_ipython(handle, message):
+    """
+    Print message using ipython handle
+    :param handle: ipython handle
+    :param message: message to be printed
+    :return: None
+    """
+    if handle is None:
+        print(message)
+    else:
+        handle.update(IPython.display.Pretty(message))
+
+
+def _create_cmd(args):
+    """
+    Create the `callflow` command with a default data and format
+    :param args: arguments passed into callflow through config object
+    :return server_cmd: Populated command based on the config object
+    """
+    # TODO: remove hardcoding
+    server_cmd = [
+        "callflow",
+        "--data_path",
+        "./data/lulesh-8-runs-original",
+        "--profile_format",
+        "caliper_json",
+        "--verbose",
+    ]
+    return server_cmd
+
+    server_cmd = ["callflow"]
+    for k, v in args.items():
+        if v is not None:
+            server_cmd += [f"--{k}", f"{v}"]
+
+
+# ------------------------------------------------------------------------------
+# Read-write operations to the LAUNCH_INFO to a file.
 # ------------------------------------------------------------------------------
 def _read_launch_info_file(filename):
     """
@@ -392,9 +420,11 @@ def _write_launch_info_file(filename, info):
     json_value = {k: getattr(info, k) for k in LAUNCH_INFO_DICT}
     payload = json.dumps(json_value, sort_keys=True, indent=4)
     with open(filename, "w") as outfile:
-        outfile.write(payload + '\n')
+        outfile.write(payload + "\n")
 
 
+# ------------------------------------------------------------------------------
+# Find matching instance.
 # ------------------------------------------------------------------------------
 def _find_matching_instance(info_dir):
     """
@@ -403,7 +433,7 @@ def _find_matching_instance(info_dir):
     :param info_dir: Cache key that needs to be matched.
     :return: A `CalLFlowInfo` object, or `None` if none matches the cache key.
     """
-    LOGGER.debug(f'Finding matching instances in ({info_dir})')
+    LOGGER.debug(f"Finding matching instances in ({info_dir})")
 
     # find all instances
     instances = []
@@ -431,10 +461,10 @@ def _find_matching_instance(info_dir):
     # find matching
     candidates = [info for info in instances if info["cache_key"] == info_dir]
     for candidate in sorted(candidates, key=lambda x: x["port"]):
-        LOGGER.debug(f'Found a matching instances in ({info_dir})')
+        LOGGER.debug(f"Found a matching instances in ({info_dir})")
         return candidate
 
-    LOGGER.debug(f'Did not find any matching instances in ({info_dir})')
+    LOGGER.debug(f"Did not find any matching instances in ({info_dir})")
 
 
 def _get_cache_key(working_directory, arguments):
@@ -446,9 +476,10 @@ def _get_cache_key(working_directory, arguments):
     :return:  a cache_key that encodes the input arguments used for comparing instances after launch.
     """
     if not isinstance(arguments, dict):
-        raise TypeError("'arguments' should be a list of arguments, "
-                        "but found: %r  (use `shlex.split` if given a string)"
-                        % (arguments,))
+        raise TypeError(
+            "'arguments' should be a list of arguments, "
+            "but found: %r  (use `shlex.split` if given a string)" % (arguments,)
+        )
 
     datum = {"working_directory": working_directory, "arguments": arguments}
     raw = base64.b64encode(

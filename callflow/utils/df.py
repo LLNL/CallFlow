@@ -5,7 +5,6 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-import pandas as pd
 
 
 # ------------------------------------------------------------------------------
@@ -71,7 +70,7 @@ def df_lookup_and_list(df, col_lookup, val_lookup, col_list, proxy={}):
 # ------------------------------------------------------------------------------
 def df_group_by(df, columns, proxy={}):
     if isinstance(columns, list):
-        columns = [proxy.get(_,_) for _ in columns]
+        columns = [proxy.get(_, _) for _ in columns]
         return df.groupby(columns)
     else:
         assert isinstance(columns, str)

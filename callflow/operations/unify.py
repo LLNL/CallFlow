@@ -3,23 +3,31 @@
 #
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
-
+"""
+CallFlow's operation to unify a super graph.
+"""
 import pandas as pd
 import networkx as nx
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
 class Unify:
+    """
+    Unify a super graph.
+    """
 
     def __init__(self, eg, supergraphs):
-
+        """
+        Constructor
+        :param eg:
+        :param supergraphs:
+        """
         assert isinstance(eg, callflow.EnsembleGraph)
         assert isinstance(supergraphs, dict)
-        for k,v in supergraphs.items():
+        for k, v in supergraphs.items():
             assert isinstance(k, str) and isinstance(v, callflow.SuperGraph)
 
         self.eg = eg
@@ -37,11 +45,14 @@ class Unify:
 
     # --------------------------------------------------------------------------
     def compute(self):
+        """
 
+        :return:
+        """
         n = len(self.eg.supergraphs)
-        LOGGER.info(f'Unifying {n} supergraphs')
+        LOGGER.info(f"Unifying {n} supergraphs")
         if n == 1:
-            LOGGER.warning('Unifying should be used for 2 or more SuperGraphs')
+            LOGGER.warning("Unifying should be used for 2 or more SuperGraphs")
 
         self.eg.dataframe = pd.DataFrame([])
         self.eg.nxg = nx.DiGraph()
@@ -49,8 +60,7 @@ class Unify:
         for name, sg in self.eg.supergraphs.items():
 
             # unify the dataframe
-            self.eg.dataframe = \
-                pd.concat([self.eg.dataframe, sg.dataframe], sort=True)
+            self.eg.dataframe = pd.concat([self.eg.dataframe, sg.dataframe], sort=True)
 
             # unify the graph
             if not self.eg.nxg.is_multigraph() == sg.nxg.is_multigraph():
@@ -59,8 +69,10 @@ class Unify:
             self.eg.nxg.update(sg.nxg)
             is_same = set(self.eg.nxg) == set(sg.nxg)
             if not is_same:
-                LOGGER.debug(f"Difference between (ensemble) and ({name}): "
-                             f"{list(set(self.eg.nxg) - set(sg.nxg))}")
+                LOGGER.debug(
+                    f"Difference between (ensemble) and ({name}): "
+                    f"{list(set(self.eg.nxg) - set(sg.nxg))}"
+                )
 
             if sg.nxg.is_multigraph():
                 new_edges = sg.nxg.edges(keys=True, data=True)
@@ -70,5 +82,6 @@ class Unify:
             # add nodes and edges.
             self.eg.nxg.add_nodes_from(sg.nxg)
             self.eg.nxg.add_edges_from(new_edges)
+
 
 # ------------------------------------------------------------------------------

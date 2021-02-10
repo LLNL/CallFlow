@@ -4,12 +4,13 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
-# CallFlow.__init__.py
-from .version import __version__
+"""
+Instantiates CallFlow's public API.
+"""
+from .version import __version__  # noqa
 from .utils.logger import init_logger, get_logger
 from .datastructures import SuperGraph, EnsembleGraph
 
-# CallFlow's public API.
 __all__ = [
     "init_logger",
     "get_logger",
@@ -28,6 +29,8 @@ def load_ipython_extension(ipython):
     # TODO: this needs to be fixed
     from .server.main import main
     from .server.notebook_server import load_ipython
+
     load_ipython(ipython, main)
+
 
 # ------------------------------------------------------------------------------

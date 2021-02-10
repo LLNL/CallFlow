@@ -2,7 +2,9 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-
+"""
+CallFlow's algorithm to differentiate two given CCTs.
+"""
 from math import sqrt
 import networkx as nx
 from numpy import square, trace, amax
@@ -11,11 +13,23 @@ from scipy.sparse import diags
 
 
 class DLcon_Similarity:
+    """
+    DeltaCon similarity
+    Refer the paper DELTACON: A Principled Massive-Graph Similarity Function
+    https://arxiv.org/abs/1304.4657
+    """
+
     def __init__(self, g1, g2):
+        """
+
+        :param g1: NetworkX graph 1
+        :param g2: NetworkX graph 2
+        """
+
         nxg_e = nx.DiGraph()
         nxg_e.add_nodes_from(g1)
         nxg_e.add_nodes_from(g2)
-        
+
         nxg_1 = nx.DiGraph()
         nxg_1.add_nodes_from(nxg_e)
         nxg_1.add_edges_from(g1.edges())
@@ -29,6 +43,12 @@ class DLcon_Similarity:
         self.result = self.compute(adj_1, adj_2)
 
     def InverseMatrix(self, A):
+        """
+        Calculate the inverse matrix of the adjacency matrix.
+
+        :param A: Adjacency matrix
+        :return: inverted matrix
+        """
         D = diags(sum(A).toarray(), [0])
         c1 = trace(D.toarray()) + 2
         c2 = trace(square(D).toarray()) - 1
@@ -51,6 +71,13 @@ class DLcon_Similarity:
         return S
 
     def compute(self, A1, A2):
+        """
+        Compare the adjacency matrixes and find similarity
+
+        :param A1: Adjacency matrix for graph 1
+        :param A2: Adjacency matrix for graph 2
+        :return: similarity (0 < x < 1)
+        """
         S1 = self.InverseMatrix(A1)
         S2 = self.InverseMatrix(A2)
         d = 0

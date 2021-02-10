@@ -22,6 +22,7 @@ sockets = SocketIO(app, cors_allowed_origins="*")
 
 
 # ------------------------------------------------------------------------------
+# Socket Provider Class (Not used).
 # ------------------------------------------------------------------------------
 class SocketProvider(BaseProvider):
     """
@@ -30,7 +31,7 @@ class SocketProvider(BaseProvider):
 
     def __init__(self, config: dict = None) -> None:
         super().__init__(config)
-        #self.production = production
+        # self.production = production
         self.handle_general()
         self.handle_single()
         self.handle_ensemble()
@@ -42,8 +43,11 @@ class SocketProvider(BaseProvider):
     # --------------------------------------------------------------------------
     @staticmethod
     def emit_json(endpoint: str, json_data: any) -> None:
-        """
-        Emit the JSON data to the endpoint.
+        """Emit the json data to the endpoint
+
+        :param endpoint: Endpoint to emit information to.
+        :param json_data: Data to emit to the endpoint
+        :return response: Response packed with data (in JSON format).
         """
         try:
             if json.loads(json_data):
@@ -242,5 +246,6 @@ class SocketProvider(BaseProvider):
             """
             result = self.request_ensemble({"name": "compare", **data})
             SocketProvider.emit_json("compare", result)
+
 
 # ------------------------------------------------------------------------------

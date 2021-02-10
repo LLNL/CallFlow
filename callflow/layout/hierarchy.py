@@ -3,19 +3,33 @@
 #
 # SPDX-License-Identifier: MIT
 
+"""
+CallFlow's Hierarchy of a module computation API.
+"""
 import networkx as nx
 
 # CallFlow imports
 import callflow
-#from callflow.utils import sanitize_name
 from callflow.utils.sanitizer import Sanitizer
-
 
 LOGGER = callflow.get_logger(__name__)
 
 
 class HierarchyLayout:
+    """
+    Hierarchy Layout computation
+    """
+
     def __init__(self, supergraph, module, filter_by="time (inc)", filter_perc=0.0):
+        """
+        Hierarchy Layout computation
+
+        # TODO: Avoid filtering over here.
+        :param supergraph: SuperGraph
+        :param module: module name
+        :param filter_by: filter by the metric
+        :param filter_perc:  filter percentage
+        """
         assert isinstance(supergraph, callflow.SuperGraph)
         assert "module" in supergraph.gf.df.columns
         assert module in supergraph.gf.df["module"].unique().tolist()
@@ -37,8 +51,15 @@ class HierarchyLayout:
 
     @staticmethod
     def create_nxg_tree_from_paths(module_df, path, filter_by, filter_perc):
-        """Create a networkx graph for the module hierarchy. Filter if filter percentage is greater than 0."""
+        """
+        Create a networkx graph for the module hierarchy. Filter if filter percentage is greater than 0.
 
+        :param module_df: dataframe for the module
+        :param path: path column to consider, e.g., path, group_path, component_path
+        :param filter_by: filter by attribute
+        :param filter_perc: filter percentage
+        :return: NetworkX graph
+        """
         from ast import literal_eval as make_tuple
 
         if filter_perc > 0.0:
@@ -65,10 +86,11 @@ class HierarchyLayout:
 
     @staticmethod
     def _create_source_targets(path_list):
-        """Create edges from path list.
-        Params:
-            path (list) - paths expressed as a list.
-        Return: edges (array) - edges expressed as source-target pairs.
+        """
+        Create edges from path list.
+
+        :param path_list: paths expressed as a list.
+        :return: edges (array)  edges expressed as source-target pairs.
         """
 
         edges = []

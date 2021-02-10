@@ -3,25 +3,30 @@
 #
 # SPDX-License-Identifier: MIT
 
+"""
+CallFlow's layout API.
+"""
 import networkx as nx
 
 # CallFlow imports
 import callflow
-from callflow import SuperGraph
 from callflow.utils.timer import Timer
 from callflow.utils.sanitizer import Sanitizer
 
 
-# CCT Rendering class.
 class NodeLinkLayout:
     """
-    Node link layout for CCT.
+    Node link layout computation
     """
 
     _COLUMNS = ["time (inc)", "time", "name", "module"]
 
     def __init__(self, sg, selected_runs=None):
-
+        """
+        Constructor for node link layout.
+        :param sg: SuperGraph
+        :param selected_runs: Array of SuperGraphs to consider
+        """
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
 
         # set the current graph being rendered.
@@ -33,18 +38,18 @@ class NodeLinkLayout:
         # Move to a instance method of SuperGraph.
         if selected_runs is not None:
             self.runs = selected_runs
-            self.df = sg.df_filter_by_search_string('dataset', self.runs)
-    
+            self.df = sg.df_filter_by_search_string("dataset", self.runs)
+
         elif isinstance(sg, callflow.SuperGraph) and sg.name != "ensemble":
             self.runs = [sg.name]
             self.df = sg.dataframe
 
         elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
             self.runs = [k for k, v in sg.supergraphs.items()]
-            self.df = sg.df_filter_by_search_string('dataset', self.runs)
+            self.df = sg.df_filter_by_search_string("dataset", self.runs)
 
         # Put the top callsites into a list.
-        callsite_count = len(sg.df_unique('name'))
+        callsite_count = len(sg.df_unique("name"))
         callsites = sg.df_get_top_by_attr(callsite_count, "time (inc)")
 
         # Filter out the callsites not in the list. (in a LOCAL copy)
@@ -61,15 +66,17 @@ class NodeLinkLayout:
             self._add_edge_attributes()
 
         # Find cycles in the nxg.
-        with self.timer.phase(f"Find cycles"):
-            self.nxg.cycles = NodeLinkLayout._find_cycle(self.nxg)
+        with self.timer.phase("Find cycles"):
+            self.nxg.cycles = NodeLinkLayout._detect_cycle(self.nxg)
 
     # --------------------------------------------------------------------------
-    # flake8: noqa: C901
-    def _add_node_attributes(self):
-
+    def _add_node_attributes(self):  # noqa: C901
+        """
+        Add node attributes to the nxg.
+        :return: None
+        """
         name_time_inc_map = self.module_name_group_df["time (inc)"].max().to_dict()
-        name_time_exc_map = self.module_name_group_df["time"].max().to_dict()
+        # name_time_exc_map = self.module_name_group_df["time"].max().to_dict()
 
         # compute data map
         datamap = {}
@@ -97,9 +104,7 @@ class NodeLinkLayout:
         # ----------------------------------------------------------------------
         # compute map across data
         for run in self.runs:
-            target_df = self.sg.dataframe.loc[
-                self.sg.dataframe["dataset"] == run
-            ]
+            target_df = self.sg.dataframe.loc[self.sg.dataframe["dataset"] == run]
 
             if not target_df["module"].equals(target_df["name"]):
                 target_group_df = target_df.groupby(["module"])
@@ -143,7 +148,10 @@ class NodeLinkLayout:
 
     # --------------------------------------------------------------------------
     def _add_edge_attributes(self):
-
+        """
+        Add edge attributes to nxg.
+        :return: None
+        """
         source = None
         orientation = None
         is_directed = self.nxg.is_directed()
@@ -169,24 +177,14 @@ class NodeLinkLayout:
     # --------------------------------------------------------------------------
     # Reports the number of cycles in the callpaths.
     @staticmethod
-    def _find_cycle(G, source=None, orientation=None):
+    def _detect_cycle(G, source=None, orientation=None):
         """
-        if not G.is_directed() or orientation in (None, "original"):
+        Detect cycles in the CCT.
 
-            def tailhead(edge):
-                return edge[:2]
-
-        elif orientation == "reverse":
-
-            def tailhead(edge):
-                return edge[1], edge[0]
-
-        elif orientation == "ignore":
-
-            def tailhead(edge):
-                if edge[-1] == "reverse":
-                    return edge[1], edge[0]
-                return edge[:2]
+        :param G: nxg Graph
+        :param source: source node to start searching
+        :param orientation: orientation of edges to consider
+        :return: Array of cycles [(source, target), ...]
         """
         explored = set()
         cycle = []
@@ -272,7 +270,11 @@ class NodeLinkLayout:
     # --------------------------------------------------------------------------
     @staticmethod
     def _create_nxg_from_paths(paths):
+        """
 
+        :param paths:
+        :return:
+        """
         assert isinstance(paths, list)
         from ast import literal_eval as make_tuple
 
@@ -296,7 +298,13 @@ class NodeLinkLayout:
 
     @staticmethod
     def _tailhead(edge, is_directed, orientation=None):
+        """
 
+        :param edge:
+        :param is_directed:
+        :param orientation:
+        :return:
+        """
         # Probably belongs on graphframe?
         # definitaly also used in supergraph
         assert isinstance(edge, tuple)

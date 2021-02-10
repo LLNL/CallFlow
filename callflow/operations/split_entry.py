@@ -2,13 +2,23 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-
-# CallFlow imports
+"""
+CallFlow's operation to split by entry function.
+"""
 import callflow
 
 
 class SplitEntry:
+    """
+    Split by entry function
+    """
+
     def __init__(self, gf, reveal_module):
+        """
+
+        :param gf:
+        :param reveal_module:
+        """
         assert isinstance(gf, callflow.GraphFrame)
         assert "group_path" in gf.df.columns
 
@@ -89,6 +99,11 @@ class SplitEntry:
 
     # TODO: Need to make this a function of GraphFrame.
     def module_entry_functions_map(self, graph):
+        """
+
+        :param graph:
+        :return:
+        """
         entry_functions = {}
         for edge in graph.edges(data=True):
             attr_dict = edge[2]["attr_dict"]
@@ -100,6 +115,11 @@ class SplitEntry:
         return entry_functions
 
     def create_source_targets(self, path):
+        """
+
+        :param path:
+        :return:
+        """
         edges = []
         for idx, callsite in enumerate(path):
             if idx == len(path) - 1:
@@ -117,6 +137,12 @@ class SplitEntry:
         return edges
 
     def same_source_edges(self, component_edges, reveal_module):
+        """
+
+        :param component_edges:
+        :param reveal_module:
+        :return:
+        """
         ret = []
         for idx, edge in enumerate(component_edges):
             source = edge["source"]
@@ -126,6 +152,12 @@ class SplitEntry:
         return ret
 
     def same_target_edges(self, component_edges, reveal_module):
+        """
+
+        :param component_edges:
+        :param reveal_module:
+        :return:
+        """
         ret = []
         for idx, edge in enumerate(component_edges):
             target = edge["target"]

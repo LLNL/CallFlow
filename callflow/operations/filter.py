@@ -4,37 +4,49 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+"""
+CallFlow's operation to filter a super graph using runtime threshold's.
+"""
 import numpy as np
 import networkx as nx
 from ast import literal_eval as make_list
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# Filter a SuperGraph
-# ------------------------------------------------------------------------------
 class Filter:
+    """
+    Filters a SuperGraph.
+    """
 
     VALID_MODES = ["time", "time (inc)"]
 
-    def __init__(self, sg, filter_by="time (inc)", filter_perc=10.):
-
+    def __init__(self, sg, filter_by="time (inc)", filter_perc=10.0):
+        """
+        Constructor to the filter operation.
+        :param sg: SuperGraph
+        :param filter_by: filter by metric, can be "time (inc)" or "time"
+        :param filter_perc: filter percentage
+        """
         assert isinstance(sg, callflow.SuperGraph)
         assert isinstance(filter_by, str) and isinstance(filter_perc, (int, float))
         assert filter_by in Filter.VALID_MODES
-        assert 0. <= filter_perc <= 100.
+        assert 0.0 <= filter_perc <= 100.0
 
         self.sg = sg
         self.filter_by = filter_by
         self.filter_perc = filter_perc
-        LOGGER.info(f'Filtering ({self.sg}) by \"{self.filter_by}\" = {self.filter_perc}%')
+        LOGGER.info(
+            f'Filtering ({self.sg}) by "{self.filter_by}" = {self.filter_perc}%'
+        )
         self.compute()
 
     # --------------------------------------------------------------------------
     def compute(self):
-        """Filter the SuperGraph based on {filter_by} attribute and {filter_perc} percentage.
+        """
+        Filter the SuperGraph based on {filter_by} attribute and {filter_perc} percentage.
         """
         # compute the min/max
         min_vals = {}
@@ -55,13 +67,14 @@ class Filter:
 
     # --------------------------------------------------------------------------
     def _filter_sg(self, filter_by, filter_val):
-        """Performs in-place filtering based on parameters
+        """
+        Performs in-place filtering based on parameters
 
         :param filter_by (str): Attribute to filter by. (can be "time" or "time (inc)"
         :param filter_val (int): Filter percentage
         :return nxg (networkx.graph):
         """
-        LOGGER.debug(f"Filtering {self.__str__()}: \"{filter_by}\" <= {filter_val}")
+        LOGGER.debug(f'Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
         self.dataframe = self.sg.df_filter_by_value(filter_by, filter_val)
 
         callsites = self.dataframe["name"].unique()
@@ -77,11 +90,14 @@ class Filter:
 
         elif filter_by == "time":
             for callsite in callsites:
-                path = self.sg.df_lookup_with_column("name", callsite)["path"].tolist()[0]
+                path = self.sg.df_lookup_with_column("name", callsite)["path"].tolist()[
+                    0
+                ]
                 path = make_list(path)
                 nxg.add_path(path)
 
         self.nxg = nxg
+
     # --------------------------------------------------------------------------
 
 

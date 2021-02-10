@@ -3,46 +3,61 @@
 #
 # SPDX-License-Identifier: MIT
 
-import json
+"""
+CallFlow operation to calculate 2-dimensional projections based on run's parameter information.
+"""
+
 import pandas as pd
 import numpy as np
 from sklearn import preprocessing
 from sklearn.manifold import TSNE, MDS
 from sklearn.cluster import KMeans
+
+import callflow
 from callflow.algorithms import KMedoids
 
 
 class ParameterProjection:
     """
-    Parameter projection view
+    Calculate Parameter projections using common projection techniques like MDS, t-SNE.
     """
 
     def __init__(self, sg, selected_runs=None, n_cluster=3):
+        """
 
+        :param sg:
+        :param selected_runs:
+        :param n_cluster:
+        """
         # TODO: This code is repeated in modules/auxiliary.py.
         # Move to a instance method of SuperGraph.
         if selected_runs is not None:
             self.runs = selected_runs
-            self.df = sg.df_filter_by_search_string('dataset', self.runs)
-    
+            self.df = sg.df_filter_by_search_string("dataset", self.runs)
+
         elif isinstance(sg, callflow.SuperGraph) and sg.name != "ensemble":
             self.runs = [sg.name]
             self.df = sg.dataframe
 
         elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
             self.runs = [k for k, v in sg.supergraphs.items()]
-            self.df = sg.df_filter_by_search_string('dataset', self.runs)
+            self.df = sg.df_filter_by_search_string("dataset", self.runs)
 
         self.datasets = self.df["dataset"].unique().tolist()
         self.projection = "MDS"
         self.clustering = "k_means"
         self.n_cluster = int(n_cluster)
         if len(self.datasets) >= self.n_cluster:
-            self.result = self.run()
+            self.result = self.compute()
         else:
             self.result = pd.DataFrame({})
 
     def add_df_params(self, dataset):
+        """
+        Add information from the df about the dataset.
+        :param dataset: dataset tag
+        :return: dict comprising of "max_inclusive_time", "max_exclusive_time", and "rank_count".
+        """
         # TODO: Research what more properties can be appended to the dataframe.
         ret = {}
         ret["max_inclusive_time"] = self.df.loc[self.df["dataset"] == dataset][
@@ -56,7 +71,11 @@ class ParameterProjection:
         )
         return ret
 
-    def run(self):
+    def compute(self):
+        """
+        Main compute method.
+        :return:
+        """
         rows = []
         for idx, dataset in enumerate(self.datasets):
             df_params = self.add_df_params(dataset)
@@ -74,7 +93,7 @@ class ParameterProjection:
         x_scaled = min_max_scaler.fit_transform(x)
         df = pd.DataFrame(x_scaled)
         X = np.vstack([df.values])
-        #X = np.vstack([df.values.tolist()])
+        # X = np.vstack([df.values.tolist()])
 
         random_number = 20150101
         if self.projection == "MDS":
