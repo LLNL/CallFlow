@@ -99,12 +99,12 @@ class BaseProvider:
             )
             sg.process()
 
-            _f = Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
-            _g = Group(sg, group_by=group_by)
+            Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
+            Group(sg, group_by=group_by)
 
             # TODO: Avoid computing auxiliary in future for single datasets here.
             # if len(self.supergraphs) == 1:
-            _a = Auxiliary(sg)
+            Auxiliary(sg)
 
             self.supergraphs[name] = sg
             sg.write(os.path.join(save_path, name))
@@ -114,15 +114,15 @@ class BaseProvider:
         if len(self.supergraphs) >= 1:
 
             print(
-                f"\n\n-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n"
+                "\n\n-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n"
             )
             name = "ensemble"
             sg = EnsembleGraph(name)
 
-            _u = Unify(sg, self.supergraphs)
-            _f = Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
-            _g = Group(sg, group_by=group_by)
-            _a = Auxiliary(sg)
+            Unify(sg, self.supergraphs)
+            Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
+            Group(sg, group_by=group_by)
+            Auxiliary(sg)
 
             sg.write(os.path.join(save_path, name))
             self.supergraphs[name] = sg

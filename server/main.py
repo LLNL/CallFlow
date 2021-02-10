@@ -23,6 +23,7 @@ LOGGER = callflow.get_logger(__name__)
 CALLFLOW_APP_HOST = os.getenv("CALLFLOW_APP_HOST", "127.0.0.1")
 CALLFLOW_APP_PORT = int(os.getenv("CALLFLOW_APP_PORT", 5000))
 
+
 # ------------------------------------------------------------------------------
 def main():
     """
@@ -40,8 +41,8 @@ def main():
 
     # --------------------------------------------------------------------------
     args = ArgParser(sys.argv)
-    debug = args.args["verbose"]
-    production = args.args["production"]
+    debug = args.args["verbose"]  # noqa
+    production = args.args["production"]  # noqa
     process = args.args["process"]
     endpoint_access = args.args.get("endpoint_access", "REST")
     endpoint_env = args.args.get("endpoint_env", "TERMINAL")

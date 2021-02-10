@@ -6,7 +6,7 @@
 
 import logging
 import colorlog
-from logging import getLogger as get_logger # noqa
+from logging import getLogger as get_logger  # noqa
 
 
 # ------------------------------------------------------------------------------

@@ -103,6 +103,7 @@ StartExecFailed = collections.namedtuple(
 # PID.
 StartTimedOut = collections.namedtuple("StartTimedOut", ("pid",))
 
+
 # ------------------------------------------------------------------------------
 # public api of the ipython environment
 # ------------------------------------------------------------------------------
@@ -230,7 +231,7 @@ def _start_magic(line):
     :param line: text (command-line arguments) passed using %callflow
     """
     # TODO: needs to be fixed!
-    callflow.CallFlowServer(args=line, env="JUPYTER")
+    callflow.CallFlowServer(args=line, env="JUPYTER")  # noqa
 
 
 def _launch_app(
@@ -276,7 +277,7 @@ def _launch_app(
                 stderr=_read_launch_info_file(stderr_path),
             )
         else:
-            LOGGER.info(f"Launch Successful.")
+            LOGGER.info("Launch Successful.")
             return StartLaunched(info=instance, host=host, port=port)
 
     LOGGER.critical(

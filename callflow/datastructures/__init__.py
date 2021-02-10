@@ -6,5 +6,5 @@
 """
 CallFlow's data structure API.
 """
-from .supergraph import SuperGraph # noqa
-from .ensemblegraph import EnsembleGraph # noqa
+from .supergraph import SuperGraph  # noqa
+from .ensemblegraph import EnsembleGraph  # noqa

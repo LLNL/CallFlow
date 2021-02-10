@@ -326,7 +326,7 @@ class ArgParser:
     def _scheme_dataset_map(pformat, data_path: str = "", run_props: dict = None):
         from callflow.utils.utils import list_subdirs, list_files
 
-        _mdict = lambda n, p, f: {"name": n, "path": p, "profile_format": f} # noqa
+        _mdict = lambda n, p, f: {"name": n, "path": p, "profile_format": f}  # noqa
         if pformat == "hpctoolkit":
             _metric_db_files = [
                 f for f in os.listdir(data_path) if f.endswith(".metric-db")
