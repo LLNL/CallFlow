@@ -13,6 +13,7 @@ jobs:
       script:
         - black --diff --check .
         - flake8 --exclude=examples
+        - pylint --disable=all --enable=missing-docstring callflow
 
 
 install:

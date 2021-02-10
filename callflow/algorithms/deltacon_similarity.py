@@ -2,7 +2,9 @@
 # CallFlow Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: MIT
-
+"""
+CallFlow's algorithm to differentiate two given CCTs.
+"""
 from math import sqrt
 import networkx as nx
 from numpy import square, trace, amax
@@ -10,12 +12,12 @@ from scipy.sparse import identity
 from scipy.sparse import diags
 
 
-# ------------------------------------------------------------------------------
-# DeltaCon similarity
-# Refer the paper DELTACON: A Principled Massive-Graph Similarity Function
-# https://arxiv.org/abs/1304.4657
-# ------------------------------------------------------------------------------
 class DLcon_Similarity:
+    """
+    DeltaCon similarity
+    Refer the paper DELTACON: A Principled Massive-Graph Similarity Function
+    https://arxiv.org/abs/1304.4657
+    """
     def __init__(self, g1, g2):
         """
 

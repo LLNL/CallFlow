@@ -4,16 +4,17 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+"""
+CallFlow's ensemble super graph.
+"""
 from callflow import get_logger
 from .supergraph import SuperGraph
 
 LOGGER = get_logger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# Ensemble SuperGraph Data structure
-# ------------------------------------------------------------------------------
 class EnsembleGraph(SuperGraph):
+    "Ensemble SuperGraph Data structure"
     """
     EnsembleGraph represents a unified graph and all components supergraphs.
     """

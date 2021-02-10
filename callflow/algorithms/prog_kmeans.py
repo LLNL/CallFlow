@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: MIT
 
+"""
+Progressive KMeans coded by Suraj Kesavan and Takanori Fujiwara.
+"""
 import time
 from sklearn.cluster import MiniBatchKMeans
 from random import shuffle
@@ -183,6 +186,10 @@ class ProgKMeans(prog_kmeans_cpp.ProgKMeans):
         )
 
     def get_centers(self):
+        """
+
+        :return:
+        """
         centers = None
         if self.kmeans is not None:
             centers = self.kmeans.cluster_centers_

@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: MIT
 
+"""
+CallFlow's layout API.
+"""
 import networkx as nx
 
 # CallFlow imports
@@ -11,10 +14,10 @@ from callflow.utils.timer import Timer
 from callflow.utils.sanitizer import Sanitizer
 
 
-# ------------------------------------------------------------------------------
-# Node link layout computation
-# ------------------------------------------------------------------------------
 class NodeLinkLayout:
+    """
+    Node link layout computation
+    """
 
     _COLUMNS = ["time (inc)", "time", "name", "module"]
 

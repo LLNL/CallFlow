@@ -4,6 +4,10 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+"""
+CallFlow's operation to calculate runtime scatterplot (inclusive vs exclusive).
+"""
+
 import pandas as pd
 
 import callflow
@@ -12,16 +16,15 @@ from callflow.utils.df import df_lookup_by_column, df_lookup_and_list
 LOGGER = callflow.get_logger()
 
 
-# ------------------------------------------------------------------------------
-# Calculate Scatterplot
-# ------------------------------------------------------------------------------
 class RuntimeScatterplot:
-
+    """
+    Scatterplot plotting Inclusive vs Exclusive runtime.
+    """
     KEYS_TO_ADD = ["name", "rank", "time", "time (inc)"]
 
     def __init__(self, state, module):
         """
-
+        Constructor.
         :param state:
         :param module:
         """
@@ -32,11 +35,11 @@ class RuntimeScatterplot:
         assert 0
         self.module = module
         self.entry_funcs = {}
-        self.result = self.run()
+        self.result = self.compute()
 
-    def run(self):
+    def compute(self):
         """
-
+        Compute method.
         :return:
         """
         ret = []

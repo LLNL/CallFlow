@@ -3,7 +3,9 @@
 #
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
-
+"""
+CallFlow's operation to unify a super graph.
+"""
 import pandas as pd
 import networkx as nx
 
@@ -12,13 +14,13 @@ import callflow
 LOGGER = callflow.get_logger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# Unify a supergraph
-# ------------------------------------------------------------------------------
 class Unify:
+    """
+    Unify a super graph.
+    """
     def __init__(self, eg, supergraphs):
         """
-
+        Constructor
         :param eg:
         :param supergraphs:
         """

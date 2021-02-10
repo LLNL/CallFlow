@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: MIT
 
+"""
+CallFlow's Algorithm API.
+"""
 from .k_medoids import KMedoids
 from .bland_altman import BlandAltman_Plot
 from .deltacon_similarity import DLcon_Similarity

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+"""
+CallFlow operation for the comparing two or more dataset members from an ensemble.
+"""
 import numpy as np
 
 import callflow
@@ -14,13 +17,13 @@ from .histogram import Histogram
 LOGGER = callflow.get_logger()
 
 
-# ------------------------------------------------------------------------------
-# Calculate differences from sections of dataframe
-# ------------------------------------------------------------------------------
 class DiffView:
+    """
+    Calculate differences from sections of dataframe
+    """
     def __init__(self, ensemble_graph, dataset1, dataset2, col):
         """
-
+        Constructor.
         :param ensemble_graph:
         :param dataset1:
         :param dataset2:

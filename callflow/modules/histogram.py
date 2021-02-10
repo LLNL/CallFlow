@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+"""
+CallFlow's operation to calculate the rank and dataset histograms.
+"""
 import numpy as np
 import pandas as pd
 
@@ -13,10 +16,10 @@ from callflow.utils.utils import histogram
 LOGGER = callflow.get_logger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# Calculate Histogram (Per rank, All ranks, Per dataset)
-# ------------------------------------------------------------------------------
 class Histogram:
+    """
+    Calculate Histogram (Per rank, All ranks, Per dataset)
+    """
 
     HISTO_TYPES = ["rank", "name", "dataset", "all_ranks"]
     KEYS_AND_ATTRS = {"Inclusive": "time (inc)", "Exclusive": "time"}

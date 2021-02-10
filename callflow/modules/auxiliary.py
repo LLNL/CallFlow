@@ -4,6 +4,10 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+"""
+CallFlow's module to consolidate the auxiliary information (i.e., histograms, gradients,
+and boxplots) for each call site or module based on the type of data requested.
+"""
 import numpy as np
 from scipy.stats import kurtosis, skew
 
@@ -14,27 +18,26 @@ from callflow.utils.df import (
     df_lookup_by_column,
     df_lookup_and_list,
 )
+LOGGER = callflow.get_logger(__name__)
 
 from .gradients import Gradients
 from .boxplot import BoxPlot
 from .histogram import Histogram
 
-LOGGER = callflow.get_logger(__name__)
 
-
-# ------------------------------------------------------------------------------
-# Auxiliary data (contains per call site and per module information).
-# ------------------------------------------------------------------------------
 class Auxiliary:
+    """
+    Auxiliary: consolidates per-callsite and per-module information.
+    """
     def __init__(
         self, sg, selected_runs=None, MPIBinCount: int = 20, RunBinCount: int = 20
     ):
         """
-
-        :param sg:
-        :param selected_runs:
-        :param MPIBinCount:
-        :param RunBinCount:
+        Constructor 
+        :param sg: SuperGraph
+        :param selected_runs: Array of selected runs
+        :param MPIBinCount: Bin count for MPI-level histogram
+        :param RunBinCount: Bin count for run-level histogram
         """
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
 
@@ -102,7 +105,7 @@ class Auxiliary:
     @staticmethod
     def _runtime_props(dataframes):
         """
-        Adds runtime information (like max, min inclusive and exclusive runtime).
+        Adds runtime information, e.g., max, min inclusive and exclusive runtime.
 
         :param dataframes:
         :return:

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+"""
+CallFlow's module to get the dataframe's boxplot (for inclusive and exclusive runtime).
+"""
 import numpy as np
 import pandas as pd
 
@@ -13,12 +16,9 @@ from callflow.utils.utils import outliers
 LOGGER = callflow.get_logger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# Compute Boxplots for a dataframe segment
-# ------------------------------------------------------------------------------
 class BoxPlot:
     """
-    Boxplot computation
+    Boxplot computation for a dataframe segment
     """
 
     KEYS_AND_ATTRS = {"Inclusive": "time (inc)", "Exclusive": "time"}

@@ -3,6 +3,10 @@
 #
 # SPDX-License-Identifier: MIT
 
+"""
+CallFlow operation to calculate 2-dimensional projections based on run's parameter information.
+"""
+
 import pandas as pd
 import numpy as np
 from sklearn import preprocessing
@@ -13,10 +17,10 @@ import callflow
 from callflow.algorithms import KMedoids
 
 
-# ------------------------------------------------------------------------------
-# Calculate Projections based on parameter information.
-# ------------------------------------------------------------------------------
 class ParameterProjection:
+    """
+    Calculate Parameter projections using common projection techniques like MDS, t-SNE.
+    """
     def __init__(self, sg, selected_runs=None, n_cluster=3):
         """
 
@@ -43,11 +47,16 @@ class ParameterProjection:
         self.clustering = "k_means"
         self.n_cluster = int(n_cluster)
         if len(self.datasets) >= self.n_cluster:
-            self.result = self.run()
+            self.result = self.compute()
         else:
             self.result = pd.DataFrame({})
 
     def add_df_params(self, dataset):
+        """
+        Add information from the df about the dataset.
+        :param dataset: dataset tag
+        :return: dict comprising of "max_inclusive_time", "max_exclusive_time", and "rank_count".
+        """
         # TODO: Research what more properties can be appended to the dataframe.
         ret = {}
         ret["max_inclusive_time"] = self.df.loc[self.df["dataset"] == dataset][
@@ -61,7 +70,11 @@ class ParameterProjection:
         )
         return ret
 
-    def run(self):
+    def compute(self):
+        """
+        Main compute method.
+        :return:
+        """
         rows = []
         for idx, dataset in enumerate(self.datasets):
             df_params = self.add_df_params(dataset)

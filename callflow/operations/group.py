@@ -3,19 +3,19 @@
 #
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
-
+"""
+CallFlow's operation to group call sites by their semantic information.
+"""
 from ast import literal_eval as make_list
 
 import callflow
-
 LOGGER = callflow.get_logger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# Group a SuperGraph
-# ------------------------------------------------------------------------------
 class Group:
-
+    """
+    Group a SuperGraph
+    """
     VALID_MODES = ["name", "module"]
 
     def __init__(self, sg, group_by="module"):

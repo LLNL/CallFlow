@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: MIT
 
+"""
+CallFlow's Hierarchy of a module computation API.
+"""
 import networkx as nx
 
 # CallFlow imports
@@ -11,12 +14,14 @@ from callflow.utils.sanitizer import Sanitizer
 LOGGER = callflow.get_logger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# Hierarchy Layout computation
-# ------------------------------------------------------------------------------
 class HierarchyLayout:
+    """
+    Hierarchy Layout computation
+    """
     def __init__(self, supergraph, module, filter_by="time (inc)", filter_perc=0.0):
         """
+        Hierarchy Layout computation
+
         # TODO: Avoid filtering over here.
         :param supergraph: SuperGraph
         :param module: module name

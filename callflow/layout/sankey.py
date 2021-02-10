@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: MIT
 
+"""
+CallFlow's layout - Sankey.
+"""
 import pandas as pd
 import networkx as nx
 import numpy as np
@@ -14,11 +17,10 @@ import callflow
 LOGGER = callflow.get_logger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# Sankey Layout Computation
-# ------------------------------------------------------------------------------
 class SankeyLayout:
-
+    """
+    Appends all information to networkX graph to satisfy the user request.
+    """
     _COLUMNS = [
         "actual_time",
         "time (inc)",
@@ -812,15 +814,31 @@ class SankeyLayout:
     # TODO: Find a better place for this to reside.
     @staticmethod
     def nx_deconstruct_node(node):
+        """
+
+        :param node:
+        :return:
+        """
         attr_dict = node[1]["attr_dict"]
         return node[0], attr_dict
 
     @staticmethod
     def nx_deconstruct_edge(edge):
+        """
+
+        :param edge:
+        :return:
+        """
         return (edge[0], edge[1]), edge[2]["attr_dict"]
 
     @staticmethod
     def nx_construct_node_dict(is_module_in_dataframe, node):
+        """
+
+        :param is_module_in_dataframe:
+        :param node:
+        :return:
+        """
         # If "module" column exists in a dataframe, it can have super-nodes
         if "=" in node:
             if node.split("=")[0] != node.split("=")[1]:

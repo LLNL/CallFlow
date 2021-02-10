@@ -3,16 +3,22 @@
 #
 # SPDX-License-Identifier: MIT
 
-# CallFlow imports
+"""
+CallFlow's operation to split by callee.
+"""
 import callflow
-
 LOGGER = callflow.get_logger(__name__)
 
 
 class SplitCallee:
+    """
+    Split a callee if it is a module.
+    """
     def __init__(self, gf, callsites):
         """
-        TODO: Need to test this still.
+
+        :param gf:
+        :param callsites:
         """
         assert isinstance(gf, callflow.GraphFrame)
         assert "component_path" in gf.df.columns
@@ -71,6 +77,11 @@ class SplitCallee:
         return gf
 
     def create_source_targets(self, component_path):
+        """
+
+        :param component_path:
+        :return:
+        """
         module = ""
         edges = []
         for idx, callsite in enumerate(component_path):
@@ -98,6 +109,11 @@ class SplitCallee:
         return edges
 
     def callsite_paths(self, callsites):
+        """
+
+        :param callsites:
+        :return:
+        """
         from ast import literal_eval as make_list
 
         paths = []

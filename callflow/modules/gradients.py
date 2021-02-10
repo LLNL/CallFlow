@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+"""
+CallFlow's operation to calculate ensemble gradients per-callsite or per-module.
+"""
 import numpy as np
 import pandas as pd
 
@@ -15,17 +18,9 @@ import callflow
 LOGGER = callflow.get_logger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# Calculate Gradients for a given callsite or module
-# ------------------------------------------------------------------------------
 class Gradients:
     """
-    Gradients Class computes the ensemble gradients for the a given dictionary
-    of dataframes.
-
-    df_dict :  Dictinary of dataframes keyed by the dataset_name. For e.g., { "dataset_name": df }.
-    callsiteOrModule : callsiteOrModule (can be a moddule) of a given call graph
-    binCount : Number of bins to distribute the runtime information.
+    Computes the ensemble gradients for the a given dictionary of dataframes.
     """
 
     KEYS_AND_ATTRS = {"Inclusive": "time (inc)", "Exclusive": "time"}
@@ -33,9 +28,9 @@ class Gradients:
     def __init__(self, df, callsiteOrModule: str, bins: int = 20):
         """
         Constructor function
-        :param df:
-        :param callsiteOrModule:
-        :param bins:
+        :param df: Dictinary of dataframes keyed by the dataset_name. For e.g., { "dataset_name": df }.
+        :param callsiteOrModule: callsiteOrModule (can be a moddule) of a given call graph
+        :param bins: Number of bins to distribute the runtime information.
         """
         assert isinstance(df, pd.DataFrame)
         assert isinstance(callsiteOrModule, str) or isinstance(callsiteOrModule, int)

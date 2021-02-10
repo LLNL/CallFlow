@@ -3,16 +3,18 @@
 #
 # SPDX-License-Identifier: MIT
 
+"""
+CallFlow's algorithm to compute the bland-altman plot.
+"""
 import numpy as np
 import matplotlib.cm as cm
 
 
-# ------------------------------------------------------------------------------
-# Bland altman plot calculation.
-# A Bland–Altman plot or mean-difference plot to compare two executions by their
-# mean runtime.
-# ------------------------------------------------------------------------------
 class BlandAltman_Plot:
+    """
+    Bland altman plot calculation.
+    A Bland–Altman plot or mean-difference plot to compare two executions by their mean runtime.
+    """
     def __init__(self):
         pass
 

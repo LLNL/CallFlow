@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
 
+"""
+CallFlow's operation to filter a super graph using runtime threshold's.
+"""
 import numpy as np
 import networkx as nx
 from ast import literal_eval as make_list
@@ -13,10 +16,10 @@ import callflow
 LOGGER = callflow.get_logger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# Filters a SuperGraph.
-# ------------------------------------------------------------------------------
 class Filter:
+    """
+    Filters a SuperGraph.
+    """
     VALID_MODES = ["time", "time (inc)"]
 
     def __init__(self, sg, filter_by="time (inc)", filter_perc=10.0):

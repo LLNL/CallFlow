@@ -3,7 +3,9 @@
 #
 # SPDX-License-Identifier: MIT
 # ------------------------------------------------------------------------------
-
+"""
+CallFlow's data structure to construct Super Graphs.
+"""
 import os
 import json
 import numpy as np
@@ -19,11 +21,10 @@ from callflow.utils.utils import NumpyEncoder
 LOGGER = get_logger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# SuperGraph data structure
-# ------------------------------------------------------------------------------
 class SuperGraph(ht.GraphFrame):
-    # --------------------------------------------------------------------------
+    """
+    SuperGraph data structure
+    """
     # Globals to class.
     _FORMATS = ["hpctoolkit", "caliper", "caliper_json", "gprof", "literal", "lists"]
 
@@ -208,16 +209,33 @@ class SuperGraph(ht.GraphFrame):
     # (Not documented)
     # TODO: CAL-65: Move to utils directory
     def df_reset_index(self):
+        """
+
+        :return:
+        """
         self.dataframe.reset_index(drop=False, inplace=True)
 
     def df_columns(self):
+        """
+
+        :return:
+        """
         return self.dataframe.columns
 
     def df_get_proxy(self, column):
+        """
+
+        :param column:
+        :return:
+        """
         return self.proxy_columns.get(column, column)
 
     # TODO: Bring back proxies.
     def df_add_time_proxies(self):
+        """
+
+        :return:
+        """
         for key, proxies in SuperGraph._METRIC_PROXIES.items():
             if key in self.dataframe.columns:
                 continue
@@ -232,10 +250,24 @@ class SuperGraph(ht.GraphFrame):
             LOGGER.debug(f"created column proxies: {self.proxy_columns}")
 
     def df_get_column(self, column, index="name"):
+        """
+
+        :param column:
+        :param index:
+        :return:
+        """
         column = self.df_get_proxy(column)
         return self.dataframe.set_index(index)[column]
 
     def df_add_column(self, column_name, value=None, apply_func=None, apply_on="name"):
+        """
+
+        :param column_name:
+        :param value:
+        :param apply_func:
+        :param apply_on:
+        :return:
+        """
 
         assert (value is None) != (apply_func is None)
         if column_name in self.dataframe.columns:
@@ -253,6 +285,10 @@ class SuperGraph(ht.GraphFrame):
 
     # TODO: merge this with the function above
     def df_add_nid_column(self):
+        """
+
+        :return:
+        """
         if "nid" in self.dataframe.columns:
             return
         self.dataframe["nid"] = self.dataframe.groupby("name")["name"].transform(
@@ -260,42 +296,92 @@ class SuperGraph(ht.GraphFrame):
         )
 
     def df_update_mapping(self, col_name, mapping, apply_on="name"):
+        """
+
+        :param col_name:
+        :param mapping:
+        :param apply_on:
+        :return:
+        """
         self.dataframe[col_name] = self.dataframe[apply_on].apply(
             lambda _: mapping[_] if _ in mapping.keys() else ""
         )
 
     def df_unique(self, column):
+        """
+
+        :param column:
+        :return:
+        """
         column = self.df_get_proxy(column)
         return self.dataframe[column].unique()
 
     def df_count(self, column):
+        """
+
+        :param column:
+        :return:
+        """
         return len(self.df_unique(column))
 
     def df_minmax(self, column):
+        """
+
+        :param column:
+        :return:
+        """
         column = self.df_get_proxy(column)
         return self.dataframe[column].min(), self.dataframe[column].max()
 
     def df_filter_by_value(self, column, value):
+        """
+
+        :param column:
+        :param value:
+        :return:
+        """
         assert isinstance(value, (int, float))
         column = self.df_get_proxy(column)
         df = self.dataframe.loc[self.dataframe[column] > value]
         return df[df["name"].isin(df["name"].unique())]
 
     def df_filter_by_name(self, names):
+        """
+
+        :param names:
+        :return:
+        """
         assert isinstance(names, list)
         return self.dataframe[self.dataframe["name"].isin(names)]
 
     def df_filter_by_search_string(self, column, search_strings):
+        """
+
+        :param column:
+        :param search_strings:
+        :return:
+        """
         unq, ids = np.unique(self.dataframe[column], return_inverse=True)
         unq_ids = np.searchsorted(unq, search_strings)
         mask = np.isin(ids, unq_ids)
         return self.dataframe[mask]
 
     def df_lookup_with_column(self, column, value):
+        """
+
+        :param column:
+        :param value:
+        :return:
+        """
         column = self.df_get_proxy(column)
         return self.dataframe.loc[self.dataframe[column] == value]
 
     def df_group_by(self, columns):
+        """
+
+        :param columns:
+        :return:
+        """
         if isinstance(columns, list):
             return self.dataframe.groupby(columns)
         else:
@@ -303,6 +389,12 @@ class SuperGraph(ht.GraphFrame):
             return self.dataframe.groupby([columns])
 
     def df_get_top_by_attr(self, count, sort_attr):
+        """
+
+        :param count:
+        :param sort_attr:
+        :return:
+        """
         assert isinstance(count, int) and isinstance(sort_attr, str)
         assert count > 0
 
@@ -312,6 +404,12 @@ class SuperGraph(ht.GraphFrame):
         return df.index.values.tolist()
 
     def df_factorize_column(self, column, sanitize=False):
+        """
+
+        :param column:
+        :param sanitize:
+        :return:
+        """
         column = self.df_get_proxy(column)
         # Sanitize column name.
         if sanitize:
@@ -323,6 +421,15 @@ class SuperGraph(ht.GraphFrame):
         return _fct[1].values.tolist()
 
     def df_xs_group_column(self, df, groups, name, column, apply_func):
+        """
+
+        :param df:
+        :param groups:
+        :param name:
+        :param column:
+        :param apply_func:
+        :return:
+        """
         # module_df = df.groupby(groups).mean()
         module_df = df.groupby(groups).apply(apply_func)
         return module_df.xs(name, level=column)
@@ -368,6 +475,11 @@ class SuperGraph(ht.GraphFrame):
         return nxg
 
     def get_module_idx(self, module):
+        """
+        Get module index of a given module.
+        :param module:
+        :return:
+        """
         # TODO: CAL-53
         # If it is not in the module_fct_list, it means its a node with a cycle.
         # This might be the correct way to go, but lets place a quick fix by
@@ -430,12 +542,24 @@ class SuperGraph(ht.GraphFrame):
     # TODO: CAL-66: Clean up unnecessary writing and reading functions.
     @staticmethod
     def write_df(path, df):
+        """
+
+        :param path:
+        :param df:
+        :return:
+        """
         fname = os.path.join(path, SuperGraph._FILENAMES["df"])
         LOGGER.debug(f"Writing ({fname})")
         df.to_csv(fname)
 
     @staticmethod
     def write_nxg(path, nxg):
+        """
+
+        :param path:
+        :param nxg:
+        :return:
+        """
         fname = os.path.join(path, SuperGraph._FILENAMES["nxg"])
         LOGGER.debug(f"Writing ({fname})")
         nxg_json = nx.readwrite.json_graph.node_link_data(nxg)
@@ -444,6 +568,12 @@ class SuperGraph(ht.GraphFrame):
 
     @staticmethod
     def write_graph(path, graph_str):
+        """
+
+        :param path:
+        :param graph_str:
+        :return:
+        """
         fname = os.path.join(path, SuperGraph._FILENAMES["ht"])
         LOGGER.debug(f"Writing ({fname})")
         with open(fname, "w") as fptr:
@@ -451,6 +581,12 @@ class SuperGraph(ht.GraphFrame):
 
     @staticmethod
     def write_aux(path, data):
+        """
+
+        :param path:
+        :param data:
+        :return:
+        """
         fname = os.path.join(path, SuperGraph._FILENAMES["aux"])
         LOGGER.debug(f"Writing ({fname})")
         with open(fname, "w") as f:
@@ -458,6 +594,11 @@ class SuperGraph(ht.GraphFrame):
 
     @staticmethod
     def read_df(path):
+        """
+
+        :param path:
+        :return:
+        """
         fname = os.path.join(path, SuperGraph._FILENAMES["df"])
         LOGGER.debug(f"Reading ({fname})")
         df = pd.read_csv(fname)
@@ -467,6 +608,11 @@ class SuperGraph(ht.GraphFrame):
 
     @staticmethod
     def read_nxg(path):
+        """
+
+        :param path:
+        :return:
+        """
         fname = os.path.join(path, SuperGraph._FILENAMES["nxg"])
         LOGGER.debug(f"Reading ({fname})")
         with open(fname, "r") as nxg_file:
@@ -478,6 +624,11 @@ class SuperGraph(ht.GraphFrame):
 
     @staticmethod
     def read_graph(path):
+        """
+
+        :param path:
+        :return:
+        """
         fname = os.path.join(path, SuperGraph._FILENAMES["ht"])
         LOGGER.debug(f"Reading ({fname})")
         with open(fname, "r") as graph_file:
@@ -488,6 +639,11 @@ class SuperGraph(ht.GraphFrame):
 
     @staticmethod
     def read_env_params(path):
+        """
+
+        :param path:
+        :return:
+        """
         data = {}
         try:
             fname = os.path.join(path, SuperGraph._FILENAMES["params"])
@@ -502,6 +658,11 @@ class SuperGraph(ht.GraphFrame):
 
     @staticmethod
     def read_aux(path):
+        """
+
+        :param path:
+        :return:
+        """
         data = {}
         try:
             fname = os.path.join(path, SuperGraph._FILENAMES["aux"])
@@ -557,10 +718,10 @@ class SuperGraph(ht.GraphFrame):
     # --------------------------------------------------------------------------
     def process(self, module_map={}) -> None:
         """
-        Process graphframe to add properties depending on the format.
+        Process GraphFrame to add properties depending on the format.
         Current processing is supported for hpctoolkit and caliper.
 
-        :param module_map: Module callsite mapping
+        :param module_map: Module call site mapping
         :return: None
         """
 
