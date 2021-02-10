@@ -19,8 +19,8 @@
     <v-layout>
       <svg :id="id">
         <g id="container">
-          <EnsembleEdges ref="EnsembleEdges" />
-          <EnsembleNodes ref="EnsembleNodes" />
+          <Edges ref="Edges" />
+          <Nodes ref="Nodes" />
           <MiniHistograms ref="MiniHistograms" />
           <EnsembleColorMap ref="EnsembleColorMap" />
         </g>
@@ -36,8 +36,8 @@ import EventHandler from "../EventHandler.js";
 import Sankey from "../../algorithms/sankey";
 import * as utils from "../utils";
 
-import EnsembleNodes from "./nodes";
-import EnsembleEdges from "./edges";
+import Nodes from "./nodes";
+import Edges from "./edges";
 import MiniHistograms from "./miniHistograms";
 import EnsembleColorMap from "../colormap";
 
@@ -50,8 +50,8 @@ import APIService from "../../lib/APIService.js";
 export default {
 	name: "SuperGraph",
 	components: {
-		EnsembleNodes,
-		EnsembleEdges,
+		Nodes,
+		Edges,
 		MiniHistograms,
 		EnsembleColorMap,
 	},
@@ -93,7 +93,7 @@ export default {
 		});
 
 		EventHandler.$on("show_target_auxiliary", (data) => {
-			self.$refs.EnsembleNodes.$refs.TargetLine.clear();
+			self.$refs.Nodes.$refs.TargetLine.clear();
 			self.$refs.MiniHistograms.clear();
 		});
 
@@ -103,17 +103,15 @@ export default {
 	methods: {
 		async fetchData() {
 			let data = {};
+			const payload = {
+				datasets: this.$store.selectedTargetDataset,
+				groupBy: "module",
+			};
 			if (this.$store.selectedMode == "Single") {
-				data = await APIService.POSTRequest("single_supergraph", {
-					datasets: this.$store.selectedTargetDataset,
-					groupBy: "module",
-				});
+				data = await APIService.POSTRequest("single_supergraph", payload);
 				console.debug("[/single_supergraph]", data);
 			} else if (this.$store.selectedMode == "Ensemble") {
-				data = await APIService.POSTRequest("ensemble_supergraph", {
-					datasets: this.$store.selectedDatasets,
-					groupBy: "module",
-				});
+				data = await APIService.POSTRequest("ensemble_supergraph", payload);
 				console.debug("[/ensemble_supergraph]", data);
 			}
 
@@ -176,8 +174,8 @@ export default {
 		},
 
 		clear() {
-			this.$refs.EnsembleNodes.clear();
-			this.$refs.EnsembleEdges.clear();
+			this.$refs.Nodes.clear();
+			this.$refs.Edges.clear();
 			this.$refs.MiniHistograms.clear();
 			this.$refs.EnsembleColorMap.clear();
 		},
@@ -196,8 +194,8 @@ export default {
 
 			this.$store.graph = this.data;
 
-			this.$refs.EnsembleNodes.init(this.$store.graph, this.view);
-			this.$refs.EnsembleEdges.init(this.$store.graph, this.view);
+			this.$refs.Nodes.init(this.$store.graph, this.view);
+			this.$refs.Edges.init(this.$store.graph, this.view);
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
 
 			const selectedNode = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "CCT");
@@ -424,7 +422,7 @@ export default {
 		},
 
 		activateCompareMode(data) {
-			this.$refs.EnsembleNodes.comparisonMode(data);
+			this.$refs.Nodes.comparisonMode(data);
 		},
 	},
 };

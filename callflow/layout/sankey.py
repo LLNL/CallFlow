@@ -520,9 +520,16 @@ class SankeyLayout:
                     elif target["type"] == "component-node":
                         target_id = target["module"] + "=" + target["callsite"]
 
-                    nxg.add_node(source_id, attr_dict=source)
-                    nxg.add_node(target_id, attr_dict=target)
-                    nxg.add_edge(source_id, target_id, attr_dict=edge_dict)
+
+                    if not nxg.has_node(source_id):
+                        nxg.add_node(source_id, attr_dict=source)
+                    if not nxg.has_node(target_id):
+                        nxg.add_node(target_id, attr_dict=target)
+
+                    if not nxg.has_edge(source_id, target_id):
+                        nxg.add_edge(source_id, target_id, attr_dict=edge_dict)
+
+                        print(f"{source}, \n {target} \n\n")
 
         return nxg
 

@@ -31,7 +31,7 @@ import RankDiff from "./encodings/rankDiff";
 import APIService from "../../lib/APIService";
 
 export default {
-	name: "EnsembleNodes",
+	name: "Nodes",
 	components: {
 		Mean,
 		ToolTip,
