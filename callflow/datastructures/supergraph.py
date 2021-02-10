@@ -17,18 +17,17 @@ from ast import literal_eval as make_list
 from callflow import get_logger
 from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.utils import NumpyEncoder
+from callflow.utils.df import *
+from .metrics import FILE_FORMATS, METRIC_PROXIES
 
 LOGGER = get_logger(__name__)
 
 
+# ------------------------------------------------------------------------------
 class SuperGraph(ht.GraphFrame):
     """
     SuperGraph data structure
     """
-
-    # Globals to class.
-    _FORMATS = ["hpctoolkit", "caliper", "caliper_json", "gprof", "literal", "lists"]
-
     _FILENAMES = {
         "ht": "hatchet_tree.txt",
         "df": "df.csv",
@@ -37,21 +36,12 @@ class SuperGraph(ht.GraphFrame):
         "aux": "auxiliary_data.json",
     }
 
-    _METRIC_PROXIES = {
-        "time (inc)": ["inclusive#time.duration", "REALTIME (sec) (I)"],
-        "time": ["sum#time.duration", "sum#sum#time.duration", "REALTIME (sec) (E)"],
-    }
-
-    _GROUP_MODES = ["name", "module"]
-    _FILTER_MODES = ["time", "time (inc)"]
-
     # --------------------------------------------------------------------------
     def __init__(self, name):
         """
         Constructor to SuperGraph
         :param name: SuperGraph's tag.
         """
-
         assert isinstance(name, str)
 
         self.nxg = None
@@ -71,6 +61,7 @@ class SuperGraph(ht.GraphFrame):
         self.module_fct_list = []
         self.indexes = []
         self.is_module_map = False
+        self.is_module_in_dataframe = False
 
     # --------------------------------------------------------------------------
     def __str__(self):
@@ -98,9 +89,8 @@ class SuperGraph(ht.GraphFrame):
         :return:
         """
         self.profile_format = profile_format
-        LOGGER.info(
-            f"Creating SuperGraph ({self.name}) from ({path}) using ({self.profile_format}) format"
-        )
+        LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path}) "
+                    f"using ({self.profile_format}) format")
 
         gf = SuperGraph.from_config(path, self.profile_format)
         assert isinstance(gf, ht.GraphFrame)
@@ -231,24 +221,26 @@ class SuperGraph(ht.GraphFrame):
         """
         return self.proxy_columns.get(column, column)
 
-    # TODO: Bring back proxies.
     def df_add_time_proxies(self):
         """
 
         :return:
         """
-        for key, proxies in SuperGraph._METRIC_PROXIES.items():
+        for key, proxies in METRIC_PROXIES.items():
             if key in self.dataframe.columns:
                 continue
             for _ in proxies:
                 if _ in self.dataframe.columns:
-                    self.df_add_column(key, apply_func=lambda _: _, apply_on=_)
-                    # self.proxy_columns[key] = _
+                    #self.df_add_column(key, apply_func=lambda _: _, apply_on=_)
+                    self.proxy_columns[key] = _
                     break
-            # assert key in self.proxy_columns.keys()
+            assert key in self.proxy_columns.keys()
 
         if len(self.proxy_columns) > 0:
             LOGGER.debug(f"created column proxies: {self.proxy_columns}")
+
+    def df_columns(self):
+        return df_columns(self.dataframe)
 
     def df_get_column(self, column, index="name"):
         """
@@ -506,7 +498,7 @@ class SuperGraph(ht.GraphFrame):
         :param profile_format: Profile format
         :return gf: GraphFrame
         """
-        if profile_format not in SuperGraph._FORMATS:
+        if profile_format not in FILE_FORMATS:
             raise ValueError(f"Invalid profile format: {profile_format}")
 
         gf = None
@@ -734,21 +726,24 @@ class SuperGraph(ht.GraphFrame):
         self.df_add_column("callers", apply_func=lambda _: self.callers[_])
 
         if "module" in self.dataframe.columns:
-            self.df_add_column(
-                "module", apply_func=lambda _: Sanitizer.sanitize(_), apply_on="module"
-            )
+            self.df_add_column("module",
+                               apply_func=lambda _: Sanitizer.sanitize(_),
+                               apply_on="module")
+
         elif len(module_map) > 0:
-            self.df_add_column("module", apply_func=lambda _: module_map[_])
+            self.df_add_column("module",
+                               apply_func=lambda _: module_map[_])
+
         else:
-            self.df_add_column("module", apply_func=lambda _: _, apply_on="name")
+            self.df_add_column("module",
+                               apply_func=lambda _: _,
+                               apply_on="name")
 
         self.module_fct_list = self.df_factorize_column("module", sanitize=True)
-        self.df_add_column(
-            "path",
-            apply_func=lambda _: [
-                [Sanitizer.from_htframe(_f) for _f in f] for f in self.paths[_]
-            ][0],
-        )
+        self.df_add_column("path",
+                           apply_func=lambda _: [[
+                               Sanitizer.from_htframe(_f) for _f in f]
+                               for f in self.paths[_]][0])
 
         # TODO: For faster searches, bring this back.
         # self.indexes.insert(0, 'dataset')

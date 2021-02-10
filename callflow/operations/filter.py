@@ -16,6 +16,7 @@ import callflow
 LOGGER = callflow.get_logger(__name__)
 
 
+# ------------------------------------------------------------------------------
 class Filter:
     """
     Filters a SuperGraph.

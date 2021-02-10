@@ -10,23 +10,22 @@ CallFlow's operation to calculate ensemble gradients per-callsite or per-module.
 import numpy as np
 import pandas as pd
 
-from .histogram import Histogram
-from callflow.utils.utils import histogram
-from callflow.utils.df import df_count, df_lookup_by_column
-
 import callflow
+from callflow.utils.utils import histogram
+from callflow.utils.df import df_count, df_unique, df_lookup_by_column
+from callflow.datastructures.metrics import TIME_COLUMNS
+from .histogram import Histogram
 
 LOGGER = callflow.get_logger(__name__)
 
 
+# ------------------------------------------------------------------------------
 class Gradients:
     """
     Computes the ensemble gradients for the a given dictionary of dataframes.
     """
 
-    KEYS_AND_ATTRS = {"Inclusive": "time (inc)", "Exclusive": "time"}
-
-    def __init__(self, df, callsiteOrModule: str, bins: int = 20):
+    def __init__(self, df, callsiteOrModule: str, bins: int = 20, proxy_columns={}):
         """
         Constructor function
         :param df: Dictinary of dataframes keyed by the dataset_name. For e.g., { "dataset_name": df }.
@@ -36,23 +35,26 @@ class Gradients:
         assert isinstance(df, pd.DataFrame)
         assert isinstance(callsiteOrModule, str) or isinstance(callsiteOrModule, int)
         assert isinstance(bins, int)
+        assert isinstance(proxy_columns, dict)
         assert bins > 0
 
         # # gradient should be computed only for ensemble dataframe
         # # i.e., multiple values in dataframe column
-        # datasets = df_unique(df, "dataset")
-        # assert len(datasets) > 1
+        datasets = df_unique(df, "dataset")
+        assert len(datasets) > 1
 
-        self.df_dict = {
-            _d: df.loc[df["dataset"] == _d] for _d in df["dataset"].unique()
-        }
+        self.bins = bins
         self.callsiteOrModule = callsiteOrModule
-        self.binCount = bins
 
-        # self.max_ranks = df_count(df, "rank")
-        self.rank_dict = {
-            _name: df_count(_df, "rank") for _name, _df in self.df_dict.items()
-        }
+        self.proxy_columns = proxy_columns
+        self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
+
+        # TODO: this looks like a lot of wasted copy
+        self.df_dict = {_d: df_lookup_by_column(df, "dataset", _d)
+                        for _d in datasets}
+
+        self.rank_dict = {_d: df_count(_df, "rank")
+                          for _d, _df in self.df_dict.items()}
         self.max_ranks = max(self.rank_dict.values())
 
         self.result = self.compute(columnName="name")
@@ -108,40 +110,37 @@ class Gradients:
         :param columnName:
         :return:
         """
-        dists = {}
-        for k, a in Gradients.KEYS_AND_ATTRS.items():
-            dists[k] = {}
+        dists = {tk: {} for tk,tv in zip(TIME_COLUMNS, self.time_columns)}
 
         # Get the runtimes for all the runs.
         for idx, dataset in enumerate(self.df_dict):
 
-            node_df = df_lookup_by_column(
-                self.df_dict[dataset], columnName, self.callsiteOrModule
-            )
-            for k, a in Gradients.KEYS_AND_ATTRS.items():
+            node_df = df_lookup_by_column(self.df_dict[dataset], columnName,
+                                          self.callsiteOrModule)
+
+            for tk, tv in zip(TIME_COLUMNS, self.time_columns):
                 if node_df.empty:
-                    dists[k][dataset] = dict(
-                        (rank, 0) for rank in range(0, self.max_ranks)
-                    )
+                    dists[tk][dataset] = dict((rank, 0) for rank in range(0, self.max_ranks))
                 else:
-                    dists[k][dataset] = dict(zip(node_df["rank"], node_df[a]))
+                    dists[tk][dataset] = dict(zip(node_df["rank"], node_df[tv]))
 
         # Calculate appropriate number of bins automatically.
         # num_of_bins = min(self.freedman_diaconis_bins(np.array(dist_list)),
-        num_of_bins = self.binCount
+        num_of_bins = self.bins
 
         # convert the dictionary of values to list of values.
         results = {}
-        for k, a in Gradients.KEYS_AND_ATTRS.items():
-            dists_list = np.array(Gradients.convert_dictmean_to_list(dists[k]))
-            datasets_list = Gradients.convert_dictmean_to_dict(dists[k])
+        for tk, tv in zip(TIME_COLUMNS, self.time_columns):
+
+            dists_list = np.array(Gradients.convert_dictmean_to_list(dists[tk]))
+            datasets_list = Gradients.convert_dictmean_to_dict(dists[tk])
 
             hist_grid = histogram(dists_list, bins=num_of_bins)
             # kde_grid = kde(dists_list, gridsize=num_of_bins)
 
             dataset_pos = Gradients.map_datasets_to_bins(hist_grid[1], datasets_list)
 
-            results[k] = {
+            results[tk] = {
                 "bins": num_of_bins,
                 "dataset": {"mean": dists_list, "position": dataset_pos},
                 # "kde": Histogram._format_data(kde_grid),
@@ -149,6 +148,5 @@ class Gradients:
             }
 
         return results
-
 
 # ------------------------------------------------------------------------------
