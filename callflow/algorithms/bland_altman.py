@@ -15,6 +15,7 @@ class BlandAltman_Plot:
     Bland altman plot calculation.
     A Bland–Altman plot or mean-difference plot to compare two executions by their mean runtime.
     """
+
     def __init__(self):
         pass
 

@@ -21,6 +21,7 @@ class WL_Distance:
     """
     Weisfeiler_Lehman graph kernel.
     """
+
     def __init__(self, nxg_1, nxg_2, h, node_label):
         """Compute the kernel value (similarity) between two graphs.
         The kernel is normalized to [0,1] by the equation:

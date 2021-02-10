@@ -8,6 +8,10 @@
 CallFlow's module to consolidate the auxiliary information (i.e., histograms, gradients,
 and boxplots) for each call site or module based on the type of data requested.
 """
+from .gradients import Gradients
+from .boxplot import BoxPlot
+from .histogram import Histogram
+
 import numpy as np
 from scipy.stats import kurtosis, skew
 
@@ -18,22 +22,20 @@ from callflow.utils.df import (
     df_lookup_by_column,
     df_lookup_and_list,
 )
-LOGGER = callflow.get_logger(__name__)
 
-from .gradients import Gradients
-from .boxplot import BoxPlot
-from .histogram import Histogram
+LOGGER = callflow.get_logger(__name__)
 
 
 class Auxiliary:
     """
     Auxiliary: consolidates per-callsite and per-module information.
     """
+
     def __init__(
         self, sg, selected_runs=None, MPIBinCount: int = 20, RunBinCount: int = 20
     ):
         """
-        Constructor 
+        Constructor
         :param sg: SuperGraph
         :param selected_runs: Array of selected runs
         :param MPIBinCount: Bin count for MPI-level histogram

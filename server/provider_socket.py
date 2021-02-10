@@ -31,7 +31,7 @@ class SocketProvider(BaseProvider):
 
     def __init__(self, config: dict = None) -> None:
         super().__init__(config)
-        #self.production = production
+        # self.production = production
         self.handle_general()
         self.handle_single()
         self.handle_ensemble()
@@ -246,5 +246,6 @@ class SocketProvider(BaseProvider):
             """
             result = self.request_ensemble({"name": "compare", **data})
             SocketProvider.emit_json("compare", result)
+
 
 # ------------------------------------------------------------------------------

@@ -20,6 +20,7 @@ class Filter:
     """
     Filters a SuperGraph.
     """
+
     VALID_MODES = ["time", "time (inc)"]
 
     def __init__(self, sg, filter_by="time (inc)", filter_perc=10.0):

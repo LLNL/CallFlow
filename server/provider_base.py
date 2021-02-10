@@ -28,7 +28,7 @@ class BaseProvider:
         """
         Entry interface to access CallFlow's functionalities.
         """
-        assert config is not None 
+        assert config is not None
         assert isinstance(config, dict)
         self.config = config
         self.ndatasets = len(self.config["runs"])
@@ -44,25 +44,29 @@ class BaseProvider:
         # create supergraphs for all runs
         for run in self.config["runs"]:
 
-            name = run['name']
+            name = run["name"]
             sg = SuperGraph(name)
-            sg.load(os.path.join(load_path, name), read_parameter=read_param, read_aux=True)
+            sg.load(
+                os.path.join(load_path, name), read_parameter=read_param, read_aux=True
+            )
             self.supergraphs[name] = sg
 
         # ensemble case
         if self.ndatasets >= 1:
             name = "ensemble"
             sg = EnsembleGraph(name)
-            sg.load(os.path.join(load_path, name), read_parameter=read_param, read_aux=True)
+            sg.load(
+                os.path.join(load_path, name), read_parameter=read_param, read_aux=True
+            )
             self.supergraphs[name] = sg
 
     # --------------------------------------------------------------------------
     def process(self):
         """Process the datasets using a Pipeline of operations.
-            1. Each dataset is processed individually into a SuperGraph. Each 
-            SuperGraph is then processed according the provided config
-            variables, e.g., filter_perc, filter_by.
-            2. EnsembleGraph is then constructed from the processed SuperGraphs.
+        1. Each dataset is processed individually into a SuperGraph. Each
+        SuperGraph is then processed according the provided config
+        variables, e.g., filter_perc, filter_by.
+        2. EnsembleGraph is then constructed from the processed SuperGraphs.
         """
 
         save_path = self.config["save_path"]
@@ -72,12 +76,15 @@ class BaseProvider:
         filter_perc = self.config["filter_perc"]
         module_map = self.config.get("module_map", {})
 
-        run_props = {_['name']: (_['path'], _['profile_format'])
-                     for _ in self.config['runs']}
+        run_props = {
+            _["name"]: (_["path"], _["profile_format"]) for _ in self.config["runs"]
+        }
 
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
-        print(f'\n\n-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n')
+        print(
+            f'\n\n-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n'
+        )
 
         for dataset in self.config["runs"]:
 
@@ -85,7 +92,11 @@ class BaseProvider:
             _prop = run_props[name]
 
             sg = SuperGraph(name)
-            sg.create(path=os.path.join(load_path, _prop[0]), profile_format=_prop[1], module_callsite_map=module_map)
+            sg.create(
+                path=os.path.join(load_path, _prop[0]),
+                profile_format=_prop[1],
+                module_callsite_map=module_map,
+            )
             sg.process()
 
             _f = Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
@@ -102,7 +113,9 @@ class BaseProvider:
         # Stage-2: EnsembleGraph processing
         if len(self.supergraphs) >= 1:
 
-            print(f'\n\n-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n')
+            print(
+                f"\n\n-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n"
+            )
             name = "ensemble"
             sg = EnsembleGraph(name)
 
@@ -155,11 +168,14 @@ class BaseProvider:
             split_callee_module = operation.get("split_callee_module", [])
             selected_runs = operation.get("selected_runs", None)
 
-            ssg = SankeyLayout(sg=sg, path="group_path",
-                               selected_runs=selected_runs,
-                               reveal_callsites=reveal_callsites,
-                               split_entry_module=split_entry_module,
-                               split_callee_module=split_callee_module)
+            ssg = SankeyLayout(
+                sg=sg,
+                path="group_path",
+                selected_runs=selected_runs,
+                reveal_callsites=reveal_callsites,
+                split_entry_module=split_entry_module,
+                split_callee_module=split_callee_module,
+            )
             return ssg.nxg
 
         elif operation_name == "split_mpi_distribution":
@@ -184,8 +200,9 @@ class BaseProvider:
             return self.config
 
         elif operation_name == "cct":
-            nll = NodeLinkLayout(supergraph=sg,
-                                 callsite_count=operation["functionsInCCT"])
+            nll = NodeLinkLayout(
+                supergraph=sg, callsite_count=operation["functionsInCCT"]
+            )
             return nll.nxg
 
         elif operation_name == "supergraph":
@@ -193,12 +210,15 @@ class BaseProvider:
             split_entry_module = operation.get("split_entry_module", [])
             split_callee_module = operation.get("split_callee_module", [])
             selected_runs = operation.get("datasets", None)
-            
-            ssg = SankeyLayout(sg=sg, path="group_path",
-                               selected_runs=selected_runs,
-                               reveal_callsites=reveal_callsites,
-                               split_entry_module=split_entry_module,
-                               split_callee_module=split_callee_module)
+
+            ssg = SankeyLayout(
+                sg=sg,
+                path="group_path",
+                selected_runs=selected_runs,
+                reveal_callsites=reveal_callsites,
+                split_entry_module=split_entry_module,
+                split_callee_module=split_callee_module,
+            )
             return ssg.nxg
 
         elif operation_name == "module_hierarchy":
@@ -206,9 +226,11 @@ class BaseProvider:
             return hl.nxg
 
         elif operation_name == "projection":
-            pp = ParameterProjection(sg=sg,
-                                     selected_runs=operation["selectedRuns"],
-                                     n_cluster=operation["numOfClusters"])
+            pp = ParameterProjection(
+                sg=sg,
+                selected_runs=operation["selectedRuns"],
+                n_cluster=operation["numOfClusters"],
+            )
             return pp.result.to_json(orient="columns")
 
         elif operation_name == "compare":

@@ -18,6 +18,7 @@ class DLcon_Similarity:
     Refer the paper DELTACON: A Principled Massive-Graph Similarity Function
     https://arxiv.org/abs/1304.4657
     """
+
     def __init__(self, g1, g2):
         """
 

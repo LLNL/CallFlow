@@ -21,6 +21,7 @@ class ParameterProjection:
     """
     Calculate Parameter projections using common projection techniques like MDS, t-SNE.
     """
+
     def __init__(self, sg, selected_runs=None, n_cluster=3):
         """
 

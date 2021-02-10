@@ -12,6 +12,7 @@ class SplitEntry:
     """
     Split by entry function
     """
+
     def __init__(self, gf, reveal_module):
         """
 

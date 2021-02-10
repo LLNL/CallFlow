@@ -54,9 +54,8 @@ class APIProvider(BaseProvider):
         :param config: CallFlow config object
         """
         super().__init__(config)
-        #self.production = production
+        # self.production = production
         self.handle_routes()
-       
 
     def start(self, host: str, port: int) -> None:
         """
@@ -81,7 +80,9 @@ class APIProvider(BaseProvider):
         """
         try:
             response = app.response_class(
-                response=json.dumps(json_data, cls=NumpyEncoder), status=200, mimetype="application/json"
+                response=json.dumps(json_data, cls=NumpyEncoder),
+                status=200,
+                mimetype="application/json",
             )
             response.headers.add("Access-Control-Allow-Headers", "*")
             response.headers.add("Access-Control-Allow-Methods", "*")
@@ -94,6 +95,7 @@ class APIProvider(BaseProvider):
         """
         API endpoints
         """
+
         @app.route("/")
         @cross_origin()
         def index():
@@ -181,5 +183,6 @@ class APIProvider(BaseProvider):
             data = request.json
             result = self.request_ensemble({"name": "compare", **data})
             return APIProvider.emit_json("compare", result)
+
 
 # ------------------------------------------------------------------------------

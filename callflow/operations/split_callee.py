@@ -7,6 +7,7 @@
 CallFlow's operation to split by callee.
 """
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
 
@@ -14,6 +15,7 @@ class SplitCallee:
     """
     Split a callee if it is a module.
     """
+
     def __init__(self, gf, callsites):
         """
 

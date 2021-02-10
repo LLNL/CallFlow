@@ -11,6 +11,7 @@ import networkx as nx
 # CallFlow imports
 import callflow
 from callflow.utils.sanitizer import Sanitizer
+
 LOGGER = callflow.get_logger(__name__)
 
 
@@ -18,6 +19,7 @@ class HierarchyLayout:
     """
     Hierarchy Layout computation
     """
+
     def __init__(self, supergraph, module, filter_by="time (inc)", filter_perc=0.0):
         """
         Hierarchy Layout computation

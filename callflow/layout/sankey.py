@@ -14,6 +14,7 @@ from callflow.utils.df import df_group_by
 
 # CallFlow imports
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
 
@@ -21,6 +22,7 @@ class SankeyLayout:
     """
     Appends all information to networkX graph to satisfy the user request.
     """
+
     _COLUMNS = [
         "actual_time",
         "time (inc)",

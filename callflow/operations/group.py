@@ -9,6 +9,7 @@ CallFlow's operation to group call sites by their semantic information.
 from ast import literal_eval as make_list
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
 
@@ -16,6 +17,7 @@ class Group:
     """
     Group a SuperGraph
     """
+
     VALID_MODES = ["name", "module"]
 
     def __init__(self, sg, group_by="module"):
@@ -132,7 +134,7 @@ class Group:
         self.sg.df_update_mapping("show_node", entry_func)
         self.sg.df_update_mapping("vis_name", node_name)
 
-    def _construct_group_path(self, path):
+    def _construct_group_path(self, path):  # noqa: C901
         """
         Construct the group_path from the `path` by appending the module name. See `compute` method for example.
 

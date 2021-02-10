@@ -21,6 +21,7 @@ class DiffView:
     """
     Calculate differences from sections of dataframe
     """
+
     def __init__(self, ensemble_graph, dataset1, dataset2, col):
         """
         Constructor.

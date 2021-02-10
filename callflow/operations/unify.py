@@ -18,6 +18,7 @@ class Unify:
     """
     Unify a super graph.
     """
+
     def __init__(self, eg, supergraphs):
         """
         Constructor

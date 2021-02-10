@@ -25,6 +25,7 @@ class SuperGraph(ht.GraphFrame):
     """
     SuperGraph data structure
     """
+
     # Globals to class.
     _FORMATS = ["hpctoolkit", "caliper", "caliper_json", "gprof", "literal", "lists"]
 

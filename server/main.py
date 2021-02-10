@@ -31,24 +31,24 @@ def main():
     :return: None
     """
     # --------------------------------------------------------------------------
-    print(f' ----------------- CallFlow {callflow.__version__} -----------------')
+    print(f" ----------------- CallFlow {callflow.__version__} -----------------")
 
     # --------------------------------------------------------------------------
 
-    log_level = 1 if '--verbose' in sys.argv else 2
+    log_level = 1 if "--verbose" in sys.argv else 2
     callflow.init_logger(level=log_level)
 
     # --------------------------------------------------------------------------
     args = ArgParser(sys.argv)
-    debug = args.args['verbose']
-    production = args.args['production']
-    process = args.args['process']
-    endpoint_access = args.args.get('endpoint_access', 'REST')
-    endpoint_env = args.args.get('endpoint_env', 'TERMINAL')
+    debug = args.args["verbose"]
+    production = args.args["production"]
+    process = args.args["process"]
+    endpoint_access = args.args.get("endpoint_access", "REST")
+    endpoint_env = args.args.get("endpoint_env", "TERMINAL")
 
     assert endpoint_access in ["REST", "SOCKETS"]
-    assert endpoint_env in ['TERMINAL', 'JUPYTER']
-    
+    assert endpoint_env in ["TERMINAL", "JUPYTER"]
+
     # endpoint_access = 'JUPYTER'
 
     # --------------------------------------------------------------------------
@@ -72,15 +72,22 @@ def main():
     # launch an ipython instance
     elif not process and endpoint_env == "JUPYTER":
         _launch_path = os.path.join(args.config["save_path"], "launch-info")
-        launch_ipython(args.args, args.config,
-                       host=CALLFLOW_APP_HOST, port=CALLFLOW_APP_PORT,
-                       launch_path=_launch_path, app_version=callflow.__version__)
+        launch_ipython(
+            args.args,
+            args.config,
+            host=CALLFLOW_APP_HOST,
+            port=CALLFLOW_APP_PORT,
+            launch_path=_launch_path,
+            app_version=callflow.__version__,
+        )
 
     # --------------------------------------------------------------------------
     # Invalid options
     else:
-        s = f'Invalid options ' \
-            f'(process={process}, access={endpoint_access}, env={endpoint_env})'
+        s = (
+            f"Invalid options "
+            f"(process={process}, access={endpoint_access}, env={endpoint_env})"
+        )
         raise Exception(s)
 
     # --------------------------------------------------------------------------

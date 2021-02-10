@@ -15,6 +15,7 @@ from callflow.utils.utils import histogram
 from callflow.utils.df import df_count, df_unique, df_lookup_by_column
 
 import callflow
+
 LOGGER = callflow.get_logger(__name__)
 
 
@@ -40,7 +41,7 @@ class Gradients:
         # gradient should be computed only for ensemble dataframe
         # i.e., multiple values in dataframe column
         datasets = df_unique(df, "dataset")
-        # assert len(datasets) > 1
+        assert len(datasets) > 1
 
         self.df_dict = {
             _d: df.loc[df["dataset"] == _d] for _d in df["dataset"].unique()
@@ -148,5 +149,6 @@ class Gradients:
             }
 
         return results
+
 
 # ------------------------------------------------------------------------------

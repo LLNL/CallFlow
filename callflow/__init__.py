@@ -7,7 +7,7 @@
 """
 Instantiates CallFlow's public API.
 """
-from .version import __version__
+from .version import __version__ # noqa
 from .utils.logger import init_logger, get_logger
 from .datastructures import SuperGraph, EnsembleGraph
 

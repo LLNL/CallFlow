@@ -20,6 +20,7 @@ class RuntimeScatterplot:
     """
     Scatterplot plotting Inclusive vs Exclusive runtime.
     """
+
     KEYS_TO_ADD = ["name", "rank", "time", "time (inc)"]
 
     def __init__(self, state, module):

@@ -70,7 +70,7 @@ class NodeLinkLayout:
             self.nxg.cycles = NodeLinkLayout._detect_cycle(self.nxg)
 
     # --------------------------------------------------------------------------
-    def _add_node_attributes(self):
+    def _add_node_attributes(self):  # noqa: C901
         """
         Add node attributes to the nxg.
         :return: None
