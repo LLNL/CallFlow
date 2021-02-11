@@ -17,10 +17,15 @@
 	</g>
 </template>
 <script>
+// Library imports
 import * as d3 from "d3";
-import * as utils from "../utils";
 
-import EventHandler from "../EventHandler";
+// Local library imports
+import * as utils from "lib/utils";
+import EventHandler from "lib/routing/EventHandler";
+import APIService from "lib/routing/APIService";
+
+// local imports
 import MeanGradients from "./encodings/meanGradients";
 import Guides from "./encodings/guides";
 import TargetLine from "./encodings/targetLine";
@@ -28,7 +33,6 @@ import ToolTip from "./encodings/tooltip";
 import Mean from "./encodings/mean";
 import MeanDiff from "./encodings/meanDiff";
 import RankDiff from "./encodings/rankDiff";
-import APIService from "../../lib/APIService";
 
 export default {
 	name: "Nodes",

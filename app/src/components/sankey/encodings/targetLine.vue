@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import * as utils from "../../utils";
+import * as utils from "lib/utils";
 import * as d3 from "d3";
 
 export default {

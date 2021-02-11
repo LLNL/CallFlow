@@ -154,19 +154,19 @@
 </template>
 
 <script>
+// Library imports
 import * as d3 from "d3";
-
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
-import EventHandler from "./EventHandler";
+// Local library imports
+import EventHandler from "lib/routing/EventHandler";
 
-import Sankey from "./sankey/";
-
-// Single mode imports
+// Super graph dashboard imports
 import SingleScatterplot from "./singleScatterplot/singleScatterplot";
 import SingleHistogram from "./singleHistogram/singleHistogram";
 import CallsiteInformation from "./callsiteInformation/callsiteInformation";
+import Sankey from "./sankey/";
 
 export default {
 	name: "SuperGraph",

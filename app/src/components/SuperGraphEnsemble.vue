@@ -348,23 +348,22 @@
 </template>
 
 <script>
+// Library imports
 import * as d3 from "d3";
-
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
-import EventHandler from "./EventHandler";
-import APIService from "../lib/APIService";
+// Local library imports
+import EventHandler from "lib/routing/EventHandler";
+import APIService from "lib/routing/APIService";
 
-import Sankey from "./sankey/";
-
-// Ensemble mode imports
+// Ensemble super graph dashboard imports
 import CallsiteCorrespondence from "./callsiteCorrespondence/callsiteCorrespondence";
 import EnsembleHistogram from "./ensembleHistogram/ensembleHistogram";
 import ModuleHierarchy from "./moduleHierarchy/moduleHierarchy";
 import EnsembleScatterplot from "./ensembleScatterplot/ensembleScatterplot";
 import ParameterProjection from "./parameterProjection/parameterProjection";
-
+import Sankey from "./sankey/";
 
 export default {
 	name: "EnsembleSuperGraph",

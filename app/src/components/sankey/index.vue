@@ -30,22 +30,26 @@
 </template>
 
 <script>
+// Library imports
 import * as d3 from "d3";
-import EventHandler from "../EventHandler.js";
 
-import Sankey from "../../algorithms/sankey";
-import * as utils from "../utils";
+// Local library imports
+import EventHandler from "lib/routing/EventHandler.js";
+import Sankey from "lib/algorithms/sankey";
+import * as utils from "lib/utils";
+import Graph from "lib/datastructures/graph";
+import GraphVertex from "lib/datastructures/node";
+import GraphEdge from "lib/datastructures/edge";
+import detectDirectedCycle from "lib/algorithms/detectcycle";
+import APIService from "lib/routing/APIService.js";
 
+// General component imports
+import ColorMap from "../general/colormap";
+
+// Local component imports
 import Nodes from "./nodes";
 import Edges from "./edges";
 import MiniHistograms from "./miniHistograms";
-import ColorMap from "../general/colormap";
-
-import Graph from "../../datastructures/graph";
-import GraphVertex from "../../datastructures/node";
-import GraphEdge from "../../datastructures/edge";
-import detectDirectedCycle from "../../algorithms/detectcycle";
-import APIService from "../../lib/APIService.js";
 
 export default {
 	name: "Sankey",

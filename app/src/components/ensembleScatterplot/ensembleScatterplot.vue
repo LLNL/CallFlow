@@ -20,11 +20,15 @@
 
 
 <script>
+// Library imports
 import * as d3 from "d3";
 
+// Local library
+import * as utils from "lib/utils";
+import EventHandler from "lib/routing/EventHandler";
+
+// Local components
 import ToolTip from "./tooltip";
-import * as utils from "../utils";
-import EventHandler from "../EventHandler";
 
 export default {
 	name: "EnsembleScatterplot",

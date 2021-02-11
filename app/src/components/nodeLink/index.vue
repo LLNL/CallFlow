@@ -13,12 +13,12 @@
 </template>
 
 <script>
-import APIService from "../lib/APIService";
-import ColorMap from "./general/colormap";
-import * as utils from "./utils";
-
 import * as d3 from "d3";
 import dagreD3 from "dagre-d3/dist/dagre-d3";
+
+import APIService from "lib/routing/APIService";
+import ColorMap from "./general/colormap";
+import * as utils from "lib/utils";
 
 export default {
 	name: "NodeLink",

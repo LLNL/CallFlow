@@ -32,14 +32,14 @@
 
 <script>
 import * as d3 from "d3";
-
-import Color from "../lib/color/color";
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
-import EventHandler from "./EventHandler";
+import Color from "lib/color/";
 
-import * as utils from "./utils";
+import EventHandler from "lib/routing/EventHandler";
+
+import * as utils from "lib/utils";
 
 export default {
 	name: "TimelineSuperGraph",

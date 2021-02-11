@@ -47,14 +47,16 @@
 </template>
 
 <script>
-import APIService from "../lib/APIService";
+// Local library imports
+import * as utils from "lib/utils";
+import Color from "lib/color/";
+import APIService from "lib/routing/APIService";
+
+// Local components
 import BasicInformation from "./general/basicInformation";
 import RuntimeInformation from "./general/runtimeInformation";
 import ModuleMappingInformation from "./general/moduleMappingInformation";
 import Footer from "./general/footer";
-
-import * as utils from "./utils";
-import Color from "../lib/color/color";
 
 export default {
 	name: "App",

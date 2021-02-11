@@ -11,7 +11,7 @@
 
 <script>
 import * as d3 from "d3";
-import * as utils from "../utils";
+import * as utils from "lib/utils";
 
 export default {
 	name: "ToolTip",
