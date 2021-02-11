@@ -93,7 +93,7 @@ export default function Sankey() {
 		computeNodeValues();
 		console.debug("[Sankey] Computed node values.");
 		computeNodeBreadths();
-		// console.debug("[Sankey] Computed node breadths.");
+		console.debug("[Sankey] Computed node breadths.");
 		computeNodeDepths(iterations);
 		console.debug("[Sankey] Computed node depths");
 		computeLinkDepths();
@@ -424,18 +424,18 @@ export default function Sankey() {
 			nodes.forEach(function (node, i) {
 				let nodeHeight = 0;
 				console.log("node: ", node.id);
-				node.sourceLinks.forEach( (edge) => {
-					console.log("Source link: ", edge);
-					nodeHeight = Math.max(nodeHeight, edge.source_data.y);
-				});
-				// links.forEach(function (edge) {
-				// 	if (edge["target"] == node.id) {
-				// 		// if (edge["source"] != null && edge["source"]["y"] != null) {
-				// 		nodeHeight = Math.max(nodeHeight, edge["source_data"]["y"]);
-				// 		console.log("here", edge["source_data"]["y"]);
-				// 		// }
-				// 	}
+				// node.sourceLinks.forEach( (edge) => {
+				// 	console.log("Source link: ", edge);
+				// 	nodeHeight = Math.max(nodeHeight, edge.source_data.y);
 				// });
+				links.forEach(function (edge) {
+					if (edge["target"] == node.id) {
+						if (edge["source"] != null && edge["source"]["y"] != null) {
+							nodeHeight = Math.max(nodeHeight, edge["source_data"]["y"]);
+							console.log("here", edge["source_data"]["y"]);
+						}
+					}
+				});
 
 				console.log(nodeHeight);
 				node.y = Math.max(nodeHeight, i);
