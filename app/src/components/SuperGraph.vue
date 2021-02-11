@@ -27,7 +27,7 @@
               v-model="selectedMetric"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="update()"
+              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -50,7 +50,7 @@
               v-model="selectedScale"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="update()"
+              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -66,7 +66,7 @@
               v-model="selectedRuntimeColorMap"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateColors()"
+              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -78,7 +78,7 @@
               v-model="selectedColorPoint"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateColors()"
+              v-on:change="reset()"
             >
             </v-text-field>
           </v-flex>
@@ -104,7 +104,7 @@
       </v-card>
     </v-navigation-drawer>
 
-    <v-content class="pt-auto" v-if="selectedMode == 'Single'">
+    <v-content class="pt-auto">
       <v-layout>
         <splitpanes id="callgraph-dashboard" class="default-theme">
           <!-- Left column-->
@@ -223,6 +223,8 @@ export default {
 	}),
 
 	mounted() {
+		this.setupStore();
+
 		// Push to '/' when `this.$store.selectedDatasets` is undefined.
 		if(this.$store.selectedDatasets === undefined) {
 			this.$router.push("/");
@@ -245,7 +247,6 @@ export default {
 
 	methods: {
 		init() {
-			this.setupStore();
 			this.setComponentMap(); // Set component mapping for easy component tracking.
 			
 			console.log("Mode : ", this.selectedMode);
@@ -323,7 +324,7 @@ export default {
 			}
 		},
 
-		update() {
+		reset() {
 			this.clear();
 			this.updateStore();
 			this.init();

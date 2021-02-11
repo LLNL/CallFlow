@@ -50,6 +50,7 @@
 import * as utils from "lib/utils";
 import Color from "lib/color/";
 import APIService from "lib/routing/APIService";
+import EventHandler from "lib/routing/EventHandler";
 
 // Local components
 import BasicInformation from "./general/basicInformation";
@@ -84,10 +85,16 @@ export default {
 		footerText: "Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis",
 		year: "2021",
 	}),
+
 	mounted() {
 		document.title = "CallFlow - ";
-		this.fetchData();
+
+		EventHandler.$on("fetch_data", () => {
+			this.fetchData();
+		});
+
 	},
+
 	methods: {
 		/**
 		 * Send the request to /init endpoint
@@ -372,22 +379,6 @@ body {
 	font-family: "Open Sans", sans-serif;
 	font-size: 16px;
 }
-
-.toolbar {
-	padding: 0px 0px 0px;
-}
-
-.toolbar > .v-toolbar__content {
-	height: 54px !important;
-}
-
-.toolbar-title {
-	margin-right: 3em; 
-	font-size: 26px;
-	font-weight: 400;
-	color: white;
-}
-
 .content {
 	padding-top: 54px !important;
 }
@@ -455,10 +446,6 @@ body {
 
 .valueText {
 	font-weight: 700 !important;
-}
-
-#footer {
-	color: #fff;
 }
 
 /* Over write the primary text to avoid blue color change on selection*/

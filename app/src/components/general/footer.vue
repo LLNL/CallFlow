@@ -19,3 +19,9 @@ export default {
 	props: ["text", "year"],
 };
 </script>
+
+<style scoped>
+#footer {
+	color: #fff;
+}
+</style>

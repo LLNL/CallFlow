@@ -35,3 +35,20 @@ export default {
 };
 
 </script>
+
+<style scoped>
+.toolbar {
+	padding: 0px 0px 0px;
+}
+
+.toolbar > .v-toolbar__content {
+	height: 54px !important;
+}
+
+.toolbar-title {
+	margin-right: 3em; 
+	font-size: 26px;
+	font-weight: 400;
+	color: white;
+}
+</style>
