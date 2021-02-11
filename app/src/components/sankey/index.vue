@@ -48,7 +48,7 @@ import detectDirectedCycle from "../../algorithms/detectcycle";
 import APIService from "../../lib/APIService.js";
 
 export default {
-	name: "SuperGraph",
+	name: "Sankey",
 	components: {
 		Nodes,
 		Edges,

@@ -35,7 +35,6 @@
         <v-select
           label="Select Compare run"
           :items="datasets"
-          v-if="selectedFormat == 'SuperGraph'"
           v-model="selectedCompareDataset"
           :menu-props="{ maxHeight: '400' }"
           box
@@ -53,18 +52,6 @@
         </v-select>
       </v-flex>
       <v-spacer></v-spacer>
-
-      <v-flex xs2 class="ma-1">
-        <v-select
-          label="Graph to visualize"
-          :items="formats"
-          v-model="selectedFormat"
-          :menu-props="{ maxHeight: '400' }"
-          box
-          v-on:change="updateFormat()"
-        >
-        </v-select>
-      </v-flex>
     </v-toolbar>
 
     <v-navigation-drawer v-model="left" temporary fixed>
@@ -118,7 +105,7 @@
 					>
 					</v-select>
 				</v-flex> -->
-          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+          <v-flex xs12 class="ma-1">
             <v-text-field
               label="Number of bins for Run Distribution"
               class="mt-0"
@@ -135,7 +122,7 @@
           <!-- <v-flex xs12 class="ma-1">
 					<v-subheader class="teal lighten-4">SuperNode Hierarchy</v-subheader>
 				</v-flex>
-				<v-flex xs12 class="ma-1" v-show="selectedFormat =='SuperGraph'">
+				<v-flex xs12 class="ma-1">
 					<v-select label="Assign width by" :items="hierarchyModes" v-model="selectedHierarchyMode"
 						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateHierarchyMode()">
 					</v-select>
@@ -143,7 +130,7 @@
           <!-- <v-flex xs12 class="ma-1">
 					<v-subheader class="teal lighten-4">Distribution</v-subheader>
 				</v-flex> -->
-          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+          <v-flex xs12 class="ma-1">
             <v-text-field
               label="Number of bins for MPI Distribution"
               class="mt-0"
@@ -155,7 +142,7 @@
             >
             </v-text-field>
           </v-flex>
-          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+          <v-flex xs12 class="ma-1">
             <v-select
               label="Scale"
               :items="scales"
@@ -166,7 +153,7 @@
             >
             </v-select>
           </v-flex>
-          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+          <v-flex xs12 class="ma-1">
             <v-select
               label="Bin by attribute"
               :items="props"
@@ -258,7 +245,7 @@
               >Call site Correspondence</v-subheader
             >
           </v-flex>
-          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+          <v-flex xs12 class="ma-1">
             <v-select
               label="Sort by"
               :items="sortByModes"
@@ -269,7 +256,7 @@
             >
             </v-select>
           </v-flex>
-          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+          <v-flex xs12 class="ma-1">
             <v-text-field
               label="IQR Factor"
               class="mt-0"
@@ -290,7 +277,6 @@
 				<v-flex
 					xs12
 					class="ma-1"
-					v-show="selectedFormat =='SuperGraph'"
 				>
 					<v-text-field
 						label="Number of clusters"
@@ -306,7 +292,6 @@
           <!-- <v-flex
 					xs12
 					class="ma-1"
-					v-show="selectedFormat =='SuperGraph'"
 				>
 					<v-select
 						label="PC1"
@@ -321,7 +306,6 @@
 				<v-flex
 					xs12
 					class="ma-1"
-					v-show="selectedFormat =='SuperGraph'"
 				>
 					<v-select
 						label="PC2"
@@ -338,7 +322,7 @@
     </v-navigation-drawer>
 
     <v-content class="pt-auto" v-if="selectedMode == 'Ensemble'">
-      <v-layout v-show="selectedFormat == 'SuperGraph'">
+      <v-layout>
         <splitpanes id="callgraph-dashboard" class="default-theme">
           <!-- Left column-->
           <splitpanes horizontal :splitpanes-size="25">
@@ -349,7 +333,7 @@
 
           <!-- Center column-->
           <splitpanes horizontal :splitpanes-size="55">
-			<SuperGraph ref="SuperGraph" />
+			<Sankey ref="Sankey" />
           </splitpanes>
 
           <!-- Right column-->
@@ -359,47 +343,20 @@
           </splitpanes>
         </splitpanes>
       </v-layout>
-
-      <v-layout v-show="selectedFormat == 'CCT'">
-        <splitpanes id=" ensemble-cct-dashboard">
-          <splitpanes horizontal :splitpanes-size="100">
-			<CCT ref="CCT" />
-          </splitpanes>
-        </splitpanes>
-      </v-layout>
-
-      <v-layout v-show="selectedFormat == 'CCT' && selectedMode == 'Compare'">
-        <splitpanes id="compare-cct-dashboard">
-          <splitpanes horizontal :splitpanes-size="50">
-			<CCT ref="CCT1" />
-          </splitpanes>
-          <splitpanes horizontal :splitpanes-size="50">
-			<CCT ref="CCT2" />
-          </splitpanes>
-        </splitpanes>
-      </v-layout>
     </v-content>
-
-    <v-footer id="footer" color="teal" app>
-      Lawrence Livermore National Laboratory, and University of California, Davis
-      <v-spacer></v-spacer>
-      <span>&copy;2020</span>
-    </v-footer>
   </v-app>
 </template>
 
 <script>
 import * as d3 from "d3";
 
-import Color from "../lib/color/color";
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
 import EventHandler from "./EventHandler";
 import APIService from "../lib/APIService";
 
-import SuperGraph from "./supergraph/";
-import CCT from "./CCT";
+import Sankey from "./sankey/";
 
 // Ensemble mode imports
 import CallsiteCorrespondence from "./callsiteCorrespondence/callsiteCorrespondence";
@@ -414,8 +371,7 @@ export default {
 	components: {
 		Splitpanes,
 		// Generic components
-		SuperGraph,
-		CCT,
+		Sankey,
 		// Ensemble supergraph components.
 		EnsembleScatterplot,
 		EnsembleHistogram,
@@ -433,8 +389,6 @@ export default {
 	data: () => ({
 		appName: "CallFlow",
 		left: false,
-		formats: ["CCT", "SuperGraph"],
-		selectedFormat: "SuperGraph",
 		datasets: [],
 		selectedTargetDataset: "",
 		selectedDataset2: "",
@@ -549,18 +503,14 @@ export default {
 			console.log("Mode : ", this.selectedMode);
 			console.log("Number of runs :", this.$store.selectedDatasets.length);
 			console.log("Datasets : ", this.$store.selectedDatasets);
-			console.log("Format = ", this.selectedFormat);
 			
 			// Call the appropriate socket to query the server.
-			if (this.selectedFormat == "SuperGraph") {
-				this.initComponents(this.currentEnsembleSuperGraphComponents);
-			} else if (this.selectedFormat == "CCT") {
-				this.initComponents(this.currentEnsembleCCTComponents);
-			}
+			this.initComponents(this.currentEnsembleSuperGraphComponents);
+
 			// EventHandler.$emit("ensemble-refresh-boxplot", {});
 		},
 
-		setupStore(data) {
+		setupStore() {
 			// Set the mode. (Either single or ensemble).
 			this.$store.selectedMode = this.selectedMode;
 
@@ -590,7 +540,6 @@ export default {
 	
 			this.$store.nodeInfo = {};
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
-			this.$store.selectedFormat = this.selectedFormat;
 
 			this.$store.selectedProp = this.selectedProp;
 			this.$store.selectedIQRFactor = this.selectedIQRFactor;
@@ -607,7 +556,7 @@ export default {
 		setComponentMap() {
 			this.currentEnsembleCCTComponents = [this.$refs.CCT];
 			this.currentEnsembleSuperGraphComponents = [
-				this.$refs.SuperGraph,
+				this.$refs.Sankey,
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
 				this.$refs.CallsiteCorrespondence,
@@ -617,19 +566,11 @@ export default {
 		},
 
 		clearLocal() {
-			if (this.selectedFormat == "CCT") {
-				this.clearComponents(this.currentEnsembleCCTComponents);
-			} else if (this.selectedFormat == "SuperGraph") {
-				this.clearComponents(this.currentEnsembleSuperGraphComponents);
-			}
+			this.clearComponents(this.currentEnsembleSuperGraphComponents);
 		},
 
 		clear() {
-			if (this.selectedFormat == "CCT") {
-				this.clearComponents(this.currentEnsembleSuperGraphComponents);
-			} else if (this.selectedFormat == "SuperGraph") {
-				this.clearComponents(this.currentEnsembleCCTComponents);
-			}
+			this.clearComponents(this.currentEnsembleCCTComponents);
 		},
 
 		initComponents(componentList) {
@@ -652,13 +593,13 @@ export default {
 		},
 		
 		updateColors() {
-			this.clearLocal();
+			this.clear();
 			this.setupColors();
 			this.init();
 		},
 
 		updateFormat() {
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
@@ -669,7 +610,7 @@ export default {
 
 		updateMetric() {
 			this.$store.selectedMetric = this.selectedMetric;
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
@@ -679,7 +620,7 @@ export default {
 		},
 
 		updateColorPoint() {
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
@@ -716,25 +657,25 @@ export default {
 
 		updateProp() {
 			this.$store.selectedProp = this.selectedProp;
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
 		updateScale() {
 			this.$store.selectedScale = this.selectedScale;
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
 		updateHierarchyMode() {
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
 		updateIQRFactor() {
 			this.$store.selectedIQRFactor = this.selectedIQRFactor;
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
@@ -766,7 +707,7 @@ export default {
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
 			this.$store.reprocess = 1;
 			this.requestEnsembleData();
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 	},

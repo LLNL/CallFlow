@@ -16,7 +16,7 @@
 					<router-link to="/cct" replace>CCT</router-link>
 				</v-btn>
 				<v-btn outlined>
-					<router-link to="/super_graph" replace>SuperGraph</router-link>
+					<router-link to="/super_graph" replace>Super Graph</router-link>
 				</v-btn>
 
 				<v-btn outlined v-if="run_counts > 1">
@@ -42,6 +42,7 @@
 				</v-container>
 			</v-content>
 		</div>
+		<Footer ref="Footer" :text="footerText" :year="year"></Footer>
 	</v-app>
 </template>
 
@@ -50,6 +51,7 @@ import APIService from "../lib/APIService";
 import BasicInformation from "./general/basicInformation";
 import RuntimeInformation from "./general/runtimeInformation";
 import ModuleMappingInformation from "./general/moduleMappingInformation";
+import Footer from "./general/footer";
 
 import * as utils from "./utils";
 import Color from "../lib/color/color";
@@ -59,6 +61,7 @@ export default {
 	components: {
 		BasicInformation,
 		RuntimeInformation,
+		Footer,
 		// ModuleMappingInformation
 	},
 	data: () => ({
@@ -77,6 +80,8 @@ export default {
 			Brown: "#AF9B90",
 			Red: "#A90400",
 		},
+		footerText: "Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis",
+		year: "2021",
 	}),
 	mounted() {
 		document.title = "CallFlow - ";
@@ -205,8 +210,6 @@ export default {
 				}
 			}
 			this.$store.selectedTargetDataset = max_dataset;
-
-			console.log("Dataset with most runtimes: ", this.$store.selectedTargetDataset);
 		},
 
 		setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {

@@ -31,18 +31,6 @@
           </template>
         </v-select>
       </v-flex>
-      <v-spacer></v-spacer>
-      <v-flex xs2 class="ma-1">
-        <v-select
-          label="Graph to visualize"
-          :items="formats"
-          v-model="selectedFormat"
-          :menu-props="{ maxHeight: '400' }"
-          box
-          v-on:change="updateFormat()"
-        >
-        </v-select>
-      </v-flex>
     </v-toolbar>
 
     <v-navigation-drawer v-model="left" temporary fixed>
@@ -68,7 +56,7 @@
             >
             </v-select>
           </v-flex>
-          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+          <v-flex xs12 class="ma-1">
             <v-text-field
               label="Number of bins for MPI Distribution"
               class="mt-0"
@@ -80,7 +68,7 @@
             >
             </v-text-field>
           </v-flex>
-          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+          <v-flex xs12 class="ma-1">
             <v-select
               label="Scale"
               :items="scales"
@@ -119,38 +107,14 @@
             >
             </v-text-field>
           </v-flex>
-          <!-- <v-flex xs12 class="ma-1">
-            <v-text-field
-              label="Color minimum (in seconds)"
-              class="mt-0"
-              type="number"
-              v-model="selectedColorMinText"
-              :menu-props="{ maxHeight: '200' }"
-              persistent-hint
-              v-on:change="updateColors()"
-            >
-            </v-text-field>
-          </v-flex>
-          <v-flex xs12 class="ma-1">
-            <v-text-field
-              label="Color maximum (in seconds)"
-              class="mt-0"
-              type="number"
-              v-model="selectedColorMaxText"
-              :menu-props="{ maxHeight: '200' }"
-              persistent-hint
-              v-on:change="updateColors()"
-            >
-            </v-text-field>
-          </v-flex> -->
-
+          
           <!----------------------------- Callsite information ----------------------------------->
           <v-flex xs12 class="ma-1">
             <v-subheader class="teal lighten-4"
               >Call site Information</v-subheader
             >
           </v-flex>
-          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+          <v-flex xs12 class="ma-1">
             <v-select
               label="Sort by"
               :items="sortByModes"
@@ -166,7 +130,7 @@
     </v-navigation-drawer>
 
     <v-content class="pt-auto" v-if="selectedMode == 'Single'">
-      <v-layout v-show="selectedFormat == 'SuperGraph'">
+      <v-layout>
         <splitpanes id="callgraph-dashboard" class="default-theme">
           <!-- Left column-->
           <splitpanes horizontal :splitpanes-size="25">
@@ -176,7 +140,7 @@
 
           <!-- Center column-->
           <splitpanes horizontal :splitpanes-size="55">
-            <SuperGraph ref="SingleSuperGraph" />
+            <Sankey ref="Sankey" />
           </splitpanes>
 
           <!-- Right column-->
@@ -185,22 +149,7 @@
           </splitpanes>
         </splitpanes>
       </v-layout>
-
-      <v-layout v-show="selectedFormat == 'CCT'">
-        <splitpanes id="single-cct-dashboard">
-          <splitpanes horizontal :splitpanes-size="100">
-			<CCT ref="SingleCCT" />
-          </splitpanes>
-        </splitpanes>
-      </v-layout>
     </v-content>
-
-    <v-footer id="footer" color="teal" app>
-      Lawrence Livermore National Laboratory and VIDi Labs, University of
-      California, Davis
-      <v-spacer></v-spacer>
-      <span>&copy; 2020</span>
-    </v-footer>
   </v-app>
 </template>
 
@@ -212,8 +161,7 @@ import "splitpanes/dist/splitpanes.css";
 
 import EventHandler from "./EventHandler";
 
-import SuperGraph from "./supergraph/";
-import CCT from "./CCT";
+import Sankey from "./sankey/";
 
 // Single mode imports
 import SingleScatterplot from "./singleScatterplot/singleScatterplot";
@@ -225,8 +173,7 @@ export default {
 	components: {
 		Splitpanes,
 		// Generic components
-		SuperGraph,
-		CCT,
+		Sankey,
 		// Single supergraph components.
 		SingleScatterplot,
 		SingleHistogram,
@@ -246,8 +193,6 @@ export default {
 	data: () => ({
 		appName: "CallFlow",
 		left: false,
-		formats: ["CCT", "SuperGraph"],
-		selectedFormat: "SuperGraph",
 		datasets: [],
 		selectedTargetDataset: "",
 		selectedDataset2: "",
@@ -328,15 +273,11 @@ export default {
 			console.log("Mode : ", this.selectedMode);
 			console.log("Number of runs :", this.$store.numOfRuns);
 			console.log("Dataset : ", this.$store.selectedTargetDataset);
-			console.log("Format = ", this.selectedFormat);
 
 			// Call the appropriate socket to query the server.
-			if (this.selectedFormat == "SuperGraph") {
-				this.initComponents(this.currentSingleSuperGraphComponents);
-			} else if (this.selectedFormat == "CCT") {
-				this.initComponents(this.currentSingleCCTComponents);
-			}
-			// EventHandler.$emit("single-refresh-boxplot", {});
+			this.initComponents(this.currentSingleSuperGraphComponents);
+
+			EventHandler.$emit("single-refresh-boxplot", {});
 		},
 
 		setupStore() {
@@ -372,29 +313,16 @@ export default {
 		// Initialize the relevant modules for respective Modes. 
 		// ----------------------------------------------------------------
 		setComponentMap() {
-			this.currentSingleCCTComponents = [this.$refs.SingleCCT];
 			this.currentSingleSuperGraphComponents = [
 				this.$refs.SingleHistogram,
 				this.$refs.SingleScatterplot,
-				this.$refs.SingleSuperGraph,
+				this.$refs.Sankey,
 				this.$refs.CallsiteInformation,
 			];
 		},
 
 		clear() {
-			if (this.selectedFormat == "CCT") {
-				this.clearComponents(this.currentSingleCCTComponents);
-			} else if (this.selectedFormat == "SuperGraph") {
-				this.clearComponents(this.currentSingleSuperGraphComponents);
-			}
-		},
-
-		clearLocal() {
-			if (this.selectedFormat == "CCT") {
-				this.clearComponents(this.currentSingleSuperGraphComponents);
-			} else if (this.selectedFormat == "SuperGraph") {
-				this.clearComponents(this.currentSingleCCTComponents);
-			}
+			this.clearComponents(this.currentSingleSuperGraphComponents);
 		},
 
 		initComponents(componentList) {
@@ -412,7 +340,6 @@ export default {
 		// ----------------------------------------------------------------
 		// Feature: Sortby the datasets and show the time.
 		// ----------------------------------------------------------------
-
 		formatRuntimeWithoutUnits(val) {
 			let format = d3.format(".2");
 			let ret = format(val);
@@ -432,7 +359,7 @@ export default {
 		},
 
 		async updateFormat() {
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
@@ -463,7 +390,7 @@ export default {
 
 		updateIQRFactor() {
 			this.$store.selectedIQRFactor = this.selectedIQRFactor;
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
@@ -476,7 +403,7 @@ export default {
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
 			this.$store.reprocess = 1;
 			this.requestEnsembleData();
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 	},
