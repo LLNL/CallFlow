@@ -1,6 +1,6 @@
 <template>
     <v-toolbar id="toolbar" color="teal" dark fixed app clipped-right>
-        <v-toolbar-side-icon @click.stop="left = !left">
+        <v-toolbar-side-icon @click.stop="openSettings()">
             <v-icon>settings</v-icon>
         </v-toolbar-side-icon>
         <v-toolbar-title style="margin-right: 3em">{{ appName }}</v-toolbar-title>
@@ -21,11 +21,17 @@ export default {
 		RunSelection,
 		// ViewSelection,
 	},
+	props: ["left"],
 
 	data: () => ({
 		appName: "CallFlow",
-		left: false,
 	}),
+
+	methods: {
+		openSettings() {
+			this.$emit("update:left", !this.left);
+		}
+	}
 };
 
 </script>

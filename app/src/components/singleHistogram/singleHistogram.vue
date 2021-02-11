@@ -67,7 +67,6 @@ export default {
 	mounted() {
 		let self = this;
 		EventHandler.$on("single-histogram", function (data) {
-			console.log("Single histogram: ", data["node"]);
 			self.visualize(data);
 		});
 	},
@@ -433,7 +432,6 @@ export default {
 
 		rankLineScale(data) {
 			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
-			console.log(data, store);
 			let rankCount = store[this.$store.selectedMetric].d.length;
 
 			this.ranklinescale = d3

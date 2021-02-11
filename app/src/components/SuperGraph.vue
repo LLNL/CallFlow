@@ -7,8 +7,8 @@
 
 <template>
   <v-app id="inspire">
-	<Toolbar ref="ToolBar" />
-    <v-navigation-drawer v-model="left" temporary fixed>
+	<Toolbar ref="ToolBar" :left.sync="left" />
+    <v-navigation-drawer v-model.lazy="left" fixed>
       <v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
       <v-card flex fill-height id="control-panel">
         <v-layout row wrap>
@@ -27,7 +27,7 @@
               v-model="selectedMetric"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateMetric()"
+              v-on:change="update()"
             >
             </v-select>
           </v-flex>
@@ -50,7 +50,7 @@
               v-model="selectedScale"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateScale()"
+              v-on:change="update()"
             >
             </v-select>
           </v-flex>
@@ -161,6 +161,10 @@ export default {
 		showTarget: function (val) {
 			EventHandler.$emit("show-target-auxiliary");
 		},
+
+		left: function (val) {
+			this.$emit("update:left", val);
+		}
 	},
 
 	props: {
@@ -226,13 +230,13 @@ export default {
 
 		EventHandler.$on("lasso_selection", () => {
 			this.$store.resetTargetDataset = true;
-			this.clearLocal();
+			this.clear();
 			this.setTargetDataset();
 			this.fetchData();
 		});
 
 		EventHandler.$on("show_target_auxiliary", () => {
-			this.clearLocal();
+			this.clear();
 			this.init();
 		});
 
@@ -283,6 +287,14 @@ export default {
 			this.$store.encoding = "MEAN";
 		},
 
+		updateStore() {
+			this.$store.selectedMetric = this.selectedMetric;
+			this.$store.selectedScale = this.selectedScale;
+			this.$store.selectedIQRFactor = this.selectedIQRFactor;
+			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
+			this.$store.selectedTargetDataset = this.selectedTargetDataset;
+		},
+
 		// ----------------------------------------------------------------
 		// Initialize the relevant modules for respective Modes. 
 		// ----------------------------------------------------------------
@@ -313,7 +325,7 @@ export default {
 
 		update() {
 			this.clear();
-			this.setupStore();
+			this.updateStore();
 			this.init();
 		},
 		
@@ -321,7 +333,7 @@ export default {
 		// Update methods, triggered when user interacts with the settings. 
 		// ----------------------------------------------------------------
 		updateColors() {
-			this.clearLocal();
+			this.clear();
 			// TODO: Fix this. 
 			// setupColors should belong to the App.Vue and should make a call
 			// there.
@@ -329,41 +341,34 @@ export default {
 			this.init();
 		},
 
-		async updateFormat() {
-			this.clear();
-			this.init();
-		},
+		// updateTargetDataset() {
+		// 	this.clear();
+		// 	this.$store.selectedTargetDataset = this.selectedTargetDataset;
+		// 	this.init();
+		// },
 
-		updateTargetDataset() {
-			this.clear();
-			this.$store.selectedTargetDataset = this.selectedTargetDataset;
-			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
-			d3.selectAll(".tick").remove();
-			this.init();
-		},
+		// updateMode() {
+		// 	this.clear();
+		// 	this.init();
+		// },
 
-		updateMode() {
-			this.clear();
-			this.init();
-		},
+		// updateMetric() {
+		// 	this.$store.selectedMetric = this.selectedMetric;
+		// 	this.clear();
+		// 	this.init();
+		// },
 
-		updateMetric() {
-			this.$store.selectedMetric = this.selectedMetric;
-			this.clear();
-			this.init();
-		},
+		// updateScale() {
+		// 	this.$store.selectedScale = this.selectedScale;
+		// 	this.clear();
+		// 	this.init();
+		// },
 
-		updateScale() {
-			this.$store.selectedScale = this.selectedScale;
-			this.clear();
-			this.init();
-		},
-
-		updateIQRFactor() {
-			this.$store.selectedIQRFactor = this.selectedIQRFactor;
-			this.clear();
-			this.init();
-		},
+		// updateIQRFactor() {
+		// 	this.$store.selectedIQRFactor = this.selectedIQRFactor;
+		// 	this.clear();
+		// 	this.init();
+		// },
 
 		updateRuntimeSortBy() {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
@@ -373,7 +378,7 @@ export default {
 		updateMPIBinCount() {
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
 			this.$store.reprocess = 1;
-			this.requestEnsembleData();
+			this.fetchData();
 			this.clear();
 			this.init();
 		},
