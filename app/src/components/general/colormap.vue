@@ -12,11 +12,11 @@
 <script>
 import * as d3 from "d3";
 import "d3-selection-multi";
-import * as utils from "../components/utils";
+import * as utils from "../utils";
 
 
 export default {
-	name: "EnsembleColorMap",
+	name: "ColorMap",
 	components: {},
 
 	props: [],

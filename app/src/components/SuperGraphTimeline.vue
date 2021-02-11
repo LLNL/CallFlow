@@ -42,7 +42,7 @@ import EventHandler from "./EventHandler";
 import * as utils from "./utils";
 
 export default {
-	name: "ExperimentalCallFlow",
+	name: "TimelineSuperGraph",
 	components: {
 		
 	},

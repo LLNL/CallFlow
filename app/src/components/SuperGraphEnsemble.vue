@@ -398,8 +398,8 @@ import "splitpanes/dist/splitpanes.css";
 import EventHandler from "./EventHandler";
 import APIService from "../lib/APIService";
 
-import SuperGraph from "./supergraph/supergraph";
-import CCT from "./cct/cct";
+import SuperGraph from "./supergraph/";
+import CCT from "./CCT";
 
 // Ensemble mode imports
 import CallsiteCorrespondence from "./callsiteCorrespondence/callsiteCorrespondence";
@@ -408,10 +408,9 @@ import ModuleHierarchy from "./moduleHierarchy/moduleHierarchy";
 import EnsembleScatterplot from "./ensembleScatterplot/ensembleScatterplot";
 import ParameterProjection from "./parameterProjection/parameterProjection";
 
-import * as utils from "./utils";
 
 export default {
-	name: "EnsembleCallFlow",
+	name: "EnsembleSuperGraph",
 	components: {
 		Splitpanes,
 		// Generic components

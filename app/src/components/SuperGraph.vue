@@ -212,18 +212,16 @@ import "splitpanes/dist/splitpanes.css";
 
 import EventHandler from "./EventHandler";
 
-import SuperGraph from "./supergraph/supergraph";
-import CCT from "./cct/cct";
+import SuperGraph from "./supergraph/";
+import CCT from "./CCT";
 
 // Single mode imports
 import SingleScatterplot from "./singleScatterplot/singleScatterplot";
 import SingleHistogram from "./singleHistogram/singleHistogram";
 import CallsiteInformation from "./callsiteInformation/callsiteInformation";
 
-import * as utils from "./utils";
-
 export default {
-	name: "SingleCallFlow",
+	name: "SuperGraph",
 	components: {
 		Splitpanes,
 		// Generic components

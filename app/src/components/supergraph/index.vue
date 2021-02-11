@@ -22,7 +22,7 @@
           <Edges ref="Edges" />
           <Nodes ref="Nodes" />
           <MiniHistograms ref="MiniHistograms" />
-          <EnsembleColorMap ref="EnsembleColorMap" />
+          <ColorMap ref="ColorMap" />
         </g>
       </svg>
     </v-layout>
@@ -39,7 +39,7 @@ import * as utils from "../utils";
 import Nodes from "./nodes";
 import Edges from "./edges";
 import MiniHistograms from "./miniHistograms";
-import EnsembleColorMap from "../colormap";
+import ColorMap from "../general/colormap";
 
 import Graph from "../../datastructures/graph";
 import GraphVertex from "../../datastructures/node";
@@ -53,7 +53,7 @@ export default {
 		Nodes,
 		Edges,
 		MiniHistograms,
-		EnsembleColorMap,
+		ColorMap,
 	},
 	data: () => ({
 		graph: null,
@@ -177,7 +177,7 @@ export default {
 			this.$refs.Nodes.clear();
 			this.$refs.Edges.clear();
 			this.$refs.MiniHistograms.clear();
-			this.$refs.EnsembleColorMap.clear();
+			this.$refs.ColorMap.clear();
 		},
 
 		render() {
@@ -227,8 +227,8 @@ export default {
 			}
 			
 			if (this.$store.selectedMode == "Ensemble") {
-				this.$refs.EnsembleColorMap.init(this.$store.runtimeColor);
-				this.$refs.EnsembleColorMap.init(this.$store.distributionColor);
+				this.$refs.ColorMap.init(this.$store.runtimeColor);
+				this.$refs.ColorMap.init(this.$store.distributionColor);
 			}
 		},
 

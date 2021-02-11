@@ -13,15 +13,18 @@
 					CallFlow
 				</v-toolbar-title>
 				<v-btn outlined>
-					<router-link to="/single" replace>Single</router-link>
+					<router-link to="/cct" replace>CCT</router-link>
+				</v-btn>
+				<v-btn outlined>
+					<router-link to="/super_graph" replace>SuperGraph</router-link>
 				</v-btn>
 
 				<v-btn outlined v-if="run_counts > 1">
-					<router-link to="/ensemble" replace>Ensemble</router-link>
+					<router-link to="/ensemble_super_graph" replace>Ensemble Super Graph</router-link>
 				</v-btn>
 
 				<!-- <v-btn outlined>
-					<router-link to="/experimental" replace>Experimental</router-link>
+					<router-link to="/timeline_super_graph" replace>Timeline</router-link>
 				</v-btn> -->
 			</v-toolbar>
 			<router-view></router-view>

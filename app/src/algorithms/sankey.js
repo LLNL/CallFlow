@@ -93,7 +93,7 @@ export default function Sankey() {
 		computeNodeValues();
 		console.debug("[Sankey] Computed node values.");
 		computeNodeBreadths();
-		console.debug("[Sankey] Computed node breadths.");
+		// console.debug("[Sankey] Computed node breadths.");
 		computeNodeDepths(iterations);
 		console.debug("[Sankey] Computed node depths");
 		computeLinkDepths();
@@ -221,6 +221,8 @@ export default function Sankey() {
 			}
 			else {
 				node.value = node["actual_time"]["Inclusive"];
+				node.type = node["attr_dict"]["type"];
+				node.level = node["attr_dict"]["level"];
 				node.targetValue = 0;
 				if (node[store.selectedTargetDataset] != undefined) {
 					node.targetValue = node[store.selectedTargetDataset]["actual_time"]["Inclusive"];
@@ -268,7 +270,6 @@ export default function Sankey() {
 		while (remainingNodes.length) {
 			nextNodes = [];
 			remainingNodes.forEach(function (node) {
-				node.level = level;
 				node.dx = nodeWidth;
 				node.sourceLinks.forEach(function (link) {
 					nextNodes.push(link.target_data);
@@ -402,11 +403,10 @@ export default function Sankey() {
 
 	function initializeNodeDepth() {
 		let scale = fixEnsembleScale();
-		let levelCount = 0;
 
 		nodesByBreadth.forEach(function (nodes) {
 			if (store.selectedSuperNodePositionMode == "Minimal edge crossing") {
-				console.log("TODO: Minimize edge crossing.");
+				// TODO: Minimize edge crossing.
 			}
 			else {
 				nodes.sort(function (a, b) {
@@ -423,13 +423,21 @@ export default function Sankey() {
 
 			nodes.forEach(function (node, i) {
 				let nodeHeight = 0;
-				links.forEach(function (edge) {
-					if (edge["target"] == node) {
-						if (edge["source"] != null && edge["source"]["y"] != null) {
-							nodeHeight = Math.max(nodeHeight, edge["source"]["y"]);
-						}
-					}
+				console.log("node: ", node.id);
+				node.sourceLinks.forEach( (edge) => {
+					console.log("Source link: ", edge);
+					nodeHeight = Math.max(nodeHeight, edge.source_data.y);
 				});
+				// links.forEach(function (edge) {
+				// 	if (edge["target"] == node.id) {
+				// 		// if (edge["source"] != null && edge["source"]["y"] != null) {
+				// 		nodeHeight = Math.max(nodeHeight, edge["source_data"]["y"]);
+				// 		console.log("here", edge["source_data"]["y"]);
+				// 		// }
+				// 	}
+				// });
+
+				console.log(nodeHeight);
 				node.y = Math.max(nodeHeight, i);
 				node.parY = node.y;
 
@@ -443,7 +451,6 @@ export default function Sankey() {
 
 				console.debug("[Compute node depths] Node height: ", node.height);
 			});
-			levelCount += 1;
 		});
 
 		links.forEach(function (link) {
