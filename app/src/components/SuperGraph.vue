@@ -173,7 +173,6 @@ export default {
 
 	data: () => ({
 		left: false,
-		selectedDataset2: "",
 		groupBy: ["Name", "Module", "File"],
 		selectedGroupBy: "Module",
 		filterBy: ["Inclusive", "Exclusive"],
@@ -197,20 +196,15 @@ export default {
 		selectedGroupMode: "include callbacks",
 		scatterMode: ["mean", "all"],
 		selectedScatterMode: "all",
-		selectedFunctionsInCCT: 70,
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
 		ranks: [],
 		initLoad: true,
 		comparisonMode: false,
-		selectedCompareDataset: null,
 		selectedOutlierBand: 4,
 		defaultCallSite: "<program root>",
 		modes: ["Ensemble", "Single"],
 		selectedMode: "Single",
-		// Presentation mode variables
-		exhibitModes: ["Presentation", "Default"],
-		selectedExhibitMode: "Default",
 		selectedMPIBinCount: 20,
 		selectedRuntimeSortBy: "Inclusive",
 		sortByModes: ["Inclusive", "Exclusive", "Standard Deviation"],
@@ -263,9 +257,6 @@ export default {
 			// Set the mode. (Either single or ensemble).
 			this.$store.selectedMode = this.selectedMode;
 
-			// Set the number of callsites in the CCT
-			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
-		
 			// Set the scale for information (log or linear)
 			this.$store.selectedScale = this.selectedScale;
 
@@ -335,41 +326,9 @@ export default {
 		// ----------------------------------------------------------------
 		updateColors() {
 			this.clear();
-			// TODO: Fix this. 
-			// setupColors should belong to the App.Vue and should make a call
-			// there.
 			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
 			this.init();
 		},
-
-		// updateTargetDataset() {
-		// 	this.clear();
-		// 	this.$store.selectedTargetDataset = this.selectedTargetDataset;
-		// 	this.init();
-		// },
-
-		// updateMode() {
-		// 	this.clear();
-		// 	this.init();
-		// },
-
-		// updateMetric() {
-		// 	this.$store.selectedMetric = this.selectedMetric;
-		// 	this.clear();
-		// 	this.init();
-		// },
-
-		// updateScale() {
-		// 	this.$store.selectedScale = this.selectedScale;
-		// 	this.clear();
-		// 	this.init();
-		// },
-
-		// updateIQRFactor() {
-		// 	this.$store.selectedIQRFactor = this.selectedIQRFactor;
-		// 	this.clear();
-		// 	this.init();
-		// },
 
 		updateRuntimeSortBy() {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;

@@ -42,6 +42,7 @@ export default {
 
 	data: () => ({
 		id: "cct-overview",
+		selectedFunctionsInCCT: 70,
 	}),
 
 	mounted() {
