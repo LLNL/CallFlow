@@ -7,32 +7,7 @@
 
 <template>
   <v-app id="inspire">
-    <v-toolbar id="toolbar" color="teal" dark fixed app clipped-right>
-      <v-toolbar-side-icon @click.stop="left = !left">
-        <v-icon>settings</v-icon>
-      </v-toolbar-side-icon>
-      <v-toolbar-title style="margin-right: 3em">{{ appName }}</v-toolbar-title>
-      <v-flex xs3 class="ma-2">
-        <v-select
-          label="Select a run (Sorted by inclusive runtime)"
-          :items="datasets"
-          v-model="selectedTargetDataset"
-          :menu-props="{ maxHeight: '400' }"
-          box
-          v-on:change="updateTargetDataset()"
-        >
-          <template slot="selection" slot-scope="{ item }">
-            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
-            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
-          </template>
-          <template slot="item" slot-scope="{ item }">
-            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
-            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
-          </template>
-        </v-select>
-      </v-flex>
-    </v-toolbar>
-
+	<Toolbar ref="ToolBar" />
     <v-navigation-drawer v-model="left" temporary fixed>
       <v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
       <v-card flex fill-height id="control-panel">
@@ -167,11 +142,13 @@ import SingleScatterplot from "./singleScatterplot/singleScatterplot";
 import SingleHistogram from "./singleHistogram/singleHistogram";
 import CallsiteInformation from "./callsiteInformation/callsiteInformation";
 import Sankey from "./sankey/";
+import Toolbar from "./general/toolbar";
 
 export default {
 	name: "SuperGraph",
 	components: {
 		Splitpanes,
+		Toolbar,
 		// Generic components
 		Sankey,
 		// Single supergraph components.
@@ -191,10 +168,7 @@ export default {
 	},
 
 	data: () => ({
-		appName: "CallFlow",
 		left: false,
-		datasets: [],
-		selectedTargetDataset: "",
 		selectedDataset2: "",
 		groupBy: ["Name", "Module", "File"],
 		selectedGroupBy: "Module",
@@ -337,13 +311,10 @@ export default {
 			}
 		},
 
-		// ----------------------------------------------------------------
-		// Feature: Sortby the datasets and show the time.
-		// ----------------------------------------------------------------
-		formatRuntimeWithoutUnits(val) {
-			let format = d3.format(".2");
-			let ret = format(val);
-			return ret;
+		update() {
+			this.clear();
+			this.setupStore();
+			this.init();
 		},
 		
 		// ----------------------------------------------------------------

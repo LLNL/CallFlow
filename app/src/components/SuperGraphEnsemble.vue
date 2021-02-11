@@ -7,53 +7,7 @@
 
 <template>
   <v-app id="inspire">
-    <v-toolbar id="toolbar" color="teal" dark fixed app clipped-right>
-      <v-toolbar-side-icon @click.stop="left = !left">
-        <v-icon>settings</v-icon>
-      </v-toolbar-side-icon>
-      <v-toolbar-title style="margin-right: 3em">{{ appName }}</v-toolbar-title>
-      <v-flex xs3 class="ma-2">
-        <v-select
-          label="Select Target run (Sorted by inclusive runtime)"
-          :items="datasets"
-          v-model="selectedTargetDataset"
-          :menu-props="{ maxHeight: '400' }"
-          box
-          v-on:change="updateTargetDataset()"
-        >
-          <template slot="selection" slot-scope="{ item }">
-            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
-            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
-          </template>
-          <template slot="item" slot-scope="{ item }">
-            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
-            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
-          </template>
-        </v-select>
-      </v-flex>
-      <v-flex xs3 class="ma-2">
-        <v-select
-          label="Select Compare run"
-          :items="datasets"
-          v-model="selectedCompareDataset"
-          :menu-props="{ maxHeight: '400' }"
-          box
-          v-on:change="updateCompareDataset()"
-        >
-          <template slot="selection" slot-scope="{ item }">
-            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
-            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
-          </template>
-          <template slot="item" slot-scope="{ item }">
-            <!-- HTML that describe how select should render items when the select is open -->
-            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
-            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
-          </template>
-        </v-select>
-      </v-flex>
-      <v-spacer></v-spacer>
-    </v-toolbar>
-
+	<Toolbar ref="ToolBar" />
     <v-navigation-drawer v-model="left" temporary fixed>
       <v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
       <v-card flex fill-height id="control-panel">
@@ -364,11 +318,13 @@ import ModuleHierarchy from "./moduleHierarchy/moduleHierarchy";
 import EnsembleScatterplot from "./ensembleScatterplot/ensembleScatterplot";
 import ParameterProjection from "./parameterProjection/parameterProjection";
 import Sankey from "./sankey/";
+import Toolbar from "./general/toolbar";
 
 export default {
 	name: "EnsembleSuperGraph",
 	components: {
 		Splitpanes,
+		Toolbar,
 		// Generic components
 		Sankey,
 		// Ensemble supergraph components.
@@ -582,13 +538,6 @@ export default {
 			for (let i = 0; i < componentList.length; i++) {
 				componentList[i].clear();
 			}
-		},
-
-		// Feature: Sortby the datasets and show the time.
-		formatRuntimeWithoutUnits(val) {
-			let format = d3.format(".2");
-			let ret = format(val);
-			return ret;
 		},
 		
 		updateColors() {

@@ -22,8 +22,7 @@
 				<v-btn outlined v-if="run_counts > 1">
 					<router-link to="/ensemble_super_graph" replace>Ensemble Super Graph</router-link>
 				</v-btn>
-
-				<!-- <v-btn outlined>
+				<!-- <v-btn outlined v-if="run_counts > 1">
 					<router-link to="/timeline_super_graph" replace>Timeline</router-link>
 				</v-btn> -->
 			</v-toolbar>

@@ -6,25 +6,41 @@
  */
 
 <template>
-  <svg :id="id">
-    <g id="container"></g>
-    <ColorMap ref="ColorMap" />
-  </svg>
+	<v-app id="inspire">
+		<v-content class="pt-auto">
+			<v-layout>
+				<splitpanes id="cct-dashboard" class="default-theme">
+					<!-- Left column-->
+					<splitpanes horizontal :splitpanes-size="50">
+						<NodeLink ref="CCT1" />
+					</splitpanes>
+
+					<!-- Right column-->
+					<splitpanes horizontal :splitpanes-size="50">
+						<NodeLink ref="CCT1" />
+					</splitpanes>
+				</splitpanes>
+			</v-layout>
+		</v-content>
+	</v-app>
 </template>
 
 <script>
 import * as d3 from "d3";
 import dagreD3 from "dagre-d3/dist/dagre-d3";
+import Splitpanes from "splitpanes";
+import "splitpanes/dist/splitpanes.css";
 
 import APIService from "lib/routing/APIService";
 import * as utils from "lib/utils";
 
-import ColorMap from "./general/colormap";
+import NodeLink from "./nodeLink/";
 
 export default {
 	name: "CCT",
 	components: {
-		ColorMap,
+		Splitpanes,
+		NodeLink
 	},
 
 	data: () => ({
@@ -105,10 +121,10 @@ export default {
 		},
 
 		/**
-     * Create a dagre-d3 instance.
-     *
-     * @return {dagreD3 Graph}
-     */
+		 * Create a dagre-d3 instance.
+		 *
+		 * @return {dagreD3 Graph}
+		 */
 		createGraph() {
 			const g = new dagreD3.graphlib.Graph({
 				directed: true,
