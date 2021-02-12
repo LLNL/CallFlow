@@ -20,7 +20,7 @@ export default {
 		RunSelection,
 		// ViewSelection,
 	},
-	props: ["left"],
+	props: ["isSettingsOpen"],
 
 	data: () => ({
 		appName: "CallFlow",
@@ -28,7 +28,7 @@ export default {
 
 	methods: {
 		openSettings() {
-			this.$emit("update:left", !this.left);
+			this.$emit("update:isSettingsOpen", !this.isSettingsOpen);
 		}
 	}
 };

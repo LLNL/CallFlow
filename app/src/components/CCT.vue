@@ -7,6 +7,60 @@
 
 <template>
 	<v-app id="inspire">
+		<Toolbar ref="Toolbar" :isSettingsOpen.sync="isSettingsOpen" />
+		<v-navigation-drawer v-model.lazy="isSettingsOpen" fixed>
+			<v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
+			<v-card flex fill-height id="control-panel">
+				<v-layout row wrap>
+					<v-btn icon>
+						<v-icon v-on:click="reset()">refresh</v-icon>
+					</v-btn>
+				</v-layout>
+	
+				<v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">Visual Encoding</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-select
+					label="Metric"
+					:items="metrics"
+					v-model="selectedMetric"
+					:menu-props="{ maxHeight: '200' }"
+					persistent-hint
+					v-on:change="reset()"
+					>
+					</v-select>
+				</v-flex>
+
+				<v-flex xs12 class="ma-1">
+					<v-subheader class="teal lighten-4">Colors</v-subheader>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-select
+					label="Runtime Color Map"
+					:items="runtimeColorMap"
+					v-model="selectedRuntimeColorMap"
+					:menu-props="{ maxHeight: '200' }"
+					persistent-hint
+					v-on:change="reset()"
+					>
+					</v-select>
+				</v-flex>
+				<v-flex xs12 class="ma-1">
+					<v-text-field
+					label="Color points (3-9)"
+					class="mt-0"
+					type="number"
+					v-model="selectedColorPoint"
+					:menu-props="{ maxHeight: '200' }"
+					persistent-hint
+					v-on:change="reset()"
+					>
+					</v-text-field>
+				</v-flex>
+          
+			</v-card>
+		</v-navigation-drawer>
 		<v-content class="pt-auto">
 			<v-layout>
 				<splitpanes id="cct-dashboard" class="default-theme">
@@ -29,21 +83,29 @@
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
-import APIService from "lib/routing/APIService";
-
 import NodeLink from "./nodeLink/";
+import Toolbar from "./general/toolbar";
 
 export default {
 	name: "CCT",
 	components: {
 		Splitpanes,
-		NodeLink
+		NodeLink,
+		Toolbar
 	},
 
 	data: () => ({
 		id: "cct-overview",
 		selectedFunctionsInCCT: 70,
 		isComparisonMode: false,
+		isSettingsOpen: false,
+		metrics: ["Exclusive", "Inclusive"],
+		selectedMetric: "Inclusive",
+		runtimeColorMap: [],
+		selectedRuntimeColorMap: "OrRd",
+		colorPoints: [3, 4, 5, 6, 7, 8, 9],
+		selectedColorPoint: 9,
+
 	}),
 
 	mounted() {
@@ -55,6 +117,12 @@ export default {
 		}
 
 		this.init();
+	},
+
+	watch: {
+		isSettingsOpen: function (val) {
+			this.$emit("update:isSettingsOpen", val);
+		}
 	},
 	
 	methods: {
@@ -71,7 +139,7 @@ export default {
 
 		setupStore() {
 			// Set the mode. (Either single or ensemble).
-			this.$store.selectedMode = this.selectedMode;
+			this.selectedMode = this.$store.selectedMode;
 
 			// Set the number of callsites in the CCT
 			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
@@ -92,6 +160,11 @@ export default {
 			this.$store.encoding = "MEAN";
 
 			this.isComparisonMode = this.$store.isComparisonMode;
+
+			// TODO: Move this to viewSelection component
+			this.$store.selectedFormat = this.$route.name;
+
+			console.log(this.$store.selectedFormat);
 		},
 
 		// ----------------------------------------------------------------

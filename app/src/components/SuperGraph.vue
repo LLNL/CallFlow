@@ -162,8 +162,8 @@ export default {
 			EventHandler.$emit("show-target-auxiliary");
 		},
 
-		left: function (val) {
-			this.$emit("update:left", val);
+		isSettingsOpen: function (val) {
+			this.$emit("update:isSettingsOpen", val);
 		}
 	},
 

@@ -17,6 +17,8 @@ import * as d3 from "d3";
 import dagreD3 from "dagre-d3/dist/dagre-d3";
 
 import APIService from "lib/routing/APIService";
+import EventHandler from "lib/routing/EventHandler";
+
 import ColorMap from "../general/colormap";
 import * as utils from "lib/utils";
 
@@ -40,6 +42,14 @@ export default {
 		HAS_DATA_COLUMNS: ["module"], // Array of keys in incoming data to check for.
 		has_data_map: {}, // stores if the required data points are present in the incoming data.
 	}),
+
+	mounted() {
+		let self = this;
+		EventHandler.$on("fetch-cct", () => {
+			self.clear();
+			self.init();
+		});
+	},
 	
 	methods: {
 		/**

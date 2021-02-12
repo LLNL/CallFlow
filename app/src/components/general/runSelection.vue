@@ -4,7 +4,7 @@
 			<v-select
 				label="Select Target run (Sorted by inclusive runtime)"
 				:items="datasets"
-				:v-model="selectedTargetDataset"
+				v-model="selectedTargetDataset"
 				:menu-props="{maxHeight: '400'}"
 				box
 				v-on:change="updateTargetDataset()"
@@ -26,7 +26,7 @@
 				v-model="selectedCompareDataset"
 				:menu-props="{maxHeight: '400'}"
 				box
-				v-show="datasets.length > 1 && selectedMode == 'Ensemble'"
+				v-show="isComparisonMode"
 				v-on:change="updateCompareDataset()"
 			>
 				<template slot="selection" slot-scope="{item}">
@@ -56,8 +56,13 @@ export default {
 		datasets: [],
 		selectedTargetDataset: "",
 		selectedCompareDataset: "",
-		comparisonMode: false,
+		isComparisonMode: false,
 		selectedMode: "",	
+		emitMapper: {
+			"CCT": "fetch-cct",
+			"SuperGraph": "fetch-super-graph",
+			"EnsembleSuperGraph": "fetch-ensemble-super-graph",
+		}
 	}),
 	props: [],
 
@@ -66,8 +71,9 @@ export default {
 		this.metricTimeMap = this.$store.metricTimeMap;
 		this.datasets = this.$store.selectedDatasets;
 		this.selectedTargetDataset = this.$store.selectedTargetDataset;
+		this.isComparisonMode = this.$store.isComparisonMode;
 
-		if (this.comparisonMode) {
+		if (this.isComparisonMode) {
 			this.selectedCompareDataset = this.$store.selectedCompareDataset;
 		}
 
@@ -83,10 +89,8 @@ export default {
 		},
 
 		updateTargetDataset() {
-			console.log(this.selectedTargetDataset);
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
-			console.log(this.$store.selectedTargetDataset);
-			EventHandler.$emit("fetch-super-graph");
+			EventHandler.$emit(this.emitMapper[this.$store.selectedFormat]);
 		},
 
 		updateCompareDataset() {
