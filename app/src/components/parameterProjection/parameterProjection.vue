@@ -17,11 +17,14 @@
 </template>
 
 <script>
+// Library imports
 import * as d3 from "d3";
-import { lasso } from "../../lib/lasso";
-import EventHandler from "../EventHandler.js";
-import * as utils from "../utils";
-import APIService from "../../lib/APIService";
+
+// Local library
+import { lasso } from "lib/interactions/lasso";
+import * as utils from "lib/utils";
+import APIService from "lib/routing/APIService";
+import EventHandler from "lib/routing/EventHandler.js";
 
 export default {
 	name: "ParameterProjection",

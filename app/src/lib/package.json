@@ -1,0 +1,6 @@
+{
+    "name": "lib",
+    "version": "0.0.1",
+    "description": "Use package.json to make lib a module to avoid relative path",
+    "readme": "https://www.freecodecamp.org/news/how-to-structure-your-project-and-manage-static-resources-in-react-native-6f4cfc947d92/#use-package-json-to-avoid-relative-path"
+}

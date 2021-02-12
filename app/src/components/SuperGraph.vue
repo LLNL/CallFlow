@@ -7,45 +7,8 @@
 
 <template>
   <v-app id="inspire">
-    <v-toolbar id="toolbar" color="teal" dark fixed app clipped-right>
-      <v-toolbar-side-icon @click.stop="left = !left">
-        <v-icon>settings</v-icon>
-      </v-toolbar-side-icon>
-      <v-toolbar-title style="margin-right: 3em">{{ appName }}</v-toolbar-title>
-      <v-flex xs3 class="ma-2">
-        <v-select
-          label="Select a run (Sorted by inclusive runtime)"
-          :items="datasets"
-          v-model="selectedTargetDataset"
-          :menu-props="{ maxHeight: '400' }"
-          box
-          v-on:change="updateTargetDataset()"
-        >
-          <template slot="selection" slot-scope="{ item }">
-            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
-            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
-          </template>
-          <template slot="item" slot-scope="{ item }">
-            {{ datasets.indexOf(item) + 1 }}. {{ item }} -
-            {{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
-          </template>
-        </v-select>
-      </v-flex>
-      <v-spacer></v-spacer>
-      <v-flex xs2 class="ma-1">
-        <v-select
-          label="Graph to visualize"
-          :items="formats"
-          v-model="selectedFormat"
-          :menu-props="{ maxHeight: '400' }"
-          box
-          v-on:change="updateFormat()"
-        >
-        </v-select>
-      </v-flex>
-    </v-toolbar>
-
-    <v-navigation-drawer v-model="left" temporary fixed>
+	<Toolbar ref="ToolBar" :left.sync="left" />
+    <v-navigation-drawer v-model.lazy="left" fixed>
       <v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
       <v-card flex fill-height id="control-panel">
         <v-layout row wrap>
@@ -64,11 +27,11 @@
               v-model="selectedMetric"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateMetric()"
+              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
-          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+          <v-flex xs12 class="ma-1">
             <v-text-field
               label="Number of bins for MPI Distribution"
               class="mt-0"
@@ -80,14 +43,14 @@
             >
             </v-text-field>
           </v-flex>
-          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+          <v-flex xs12 class="ma-1">
             <v-select
               label="Scale"
               :items="scales"
               v-model="selectedScale"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateScale()"
+              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -103,7 +66,7 @@
               v-model="selectedRuntimeColorMap"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateColors()"
+              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -115,42 +78,18 @@
               v-model="selectedColorPoint"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateColors()"
+              v-on:change="reset()"
             >
             </v-text-field>
           </v-flex>
-          <!-- <v-flex xs12 class="ma-1">
-            <v-text-field
-              label="Color minimum (in seconds)"
-              class="mt-0"
-              type="number"
-              v-model="selectedColorMinText"
-              :menu-props="{ maxHeight: '200' }"
-              persistent-hint
-              v-on:change="updateColors()"
-            >
-            </v-text-field>
-          </v-flex>
-          <v-flex xs12 class="ma-1">
-            <v-text-field
-              label="Color maximum (in seconds)"
-              class="mt-0"
-              type="number"
-              v-model="selectedColorMaxText"
-              :menu-props="{ maxHeight: '200' }"
-              persistent-hint
-              v-on:change="updateColors()"
-            >
-            </v-text-field>
-          </v-flex> -->
-
+          
           <!----------------------------- Callsite information ----------------------------------->
           <v-flex xs12 class="ma-1">
             <v-subheader class="teal lighten-4"
               >Call site Information</v-subheader
             >
           </v-flex>
-          <v-flex xs12 class="ma-1" v-show="selectedFormat == 'SuperGraph'">
+          <v-flex xs12 class="ma-1">
             <v-select
               label="Sort by"
               :items="sortByModes"
@@ -165,8 +104,8 @@
       </v-card>
     </v-navigation-drawer>
 
-    <v-content class="pt-auto" v-if="selectedMode == 'Single'">
-      <v-layout v-show="selectedFormat == 'SuperGraph'">
+    <v-content class="pt-auto">
+      <v-layout>
         <splitpanes id="callgraph-dashboard" class="default-theme">
           <!-- Left column-->
           <splitpanes horizontal :splitpanes-size="25">
@@ -176,7 +115,7 @@
 
           <!-- Center column-->
           <splitpanes horizontal :splitpanes-size="55">
-            <SuperGraph ref="SingleSuperGraph" />
+            <Sankey ref="Sankey" />
           </splitpanes>
 
           <!-- Right column-->
@@ -185,50 +124,33 @@
           </splitpanes>
         </splitpanes>
       </v-layout>
-
-      <v-layout v-show="selectedFormat == 'CCT'">
-        <splitpanes id="single-cct-dashboard">
-          <splitpanes horizontal :splitpanes-size="100">
-			<CCT ref="SingleCCT" />
-          </splitpanes>
-        </splitpanes>
-      </v-layout>
     </v-content>
-
-    <v-footer id="footer" color="teal" app>
-      Lawrence Livermore National Laboratory and VIDi Labs, University of
-      California, Davis
-      <v-spacer></v-spacer>
-      <span>&copy; 2020</span>
-    </v-footer>
   </v-app>
 </template>
 
 <script>
+// Library imports
 import * as d3 from "d3";
-
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
-import EventHandler from "./EventHandler";
+// Local library imports
+import EventHandler from "lib/routing/EventHandler";
 
-import SuperGraph from "./supergraph/supergraph";
-import CCT from "./cct/cct";
-
-// Single mode imports
+// Super graph dashboard imports
 import SingleScatterplot from "./singleScatterplot/singleScatterplot";
 import SingleHistogram from "./singleHistogram/singleHistogram";
 import CallsiteInformation from "./callsiteInformation/callsiteInformation";
-
-import * as utils from "./utils";
+import Sankey from "./sankey/";
+import Toolbar from "./general/toolbar";
 
 export default {
-	name: "SingleCallFlow",
+	name: "SuperGraph",
 	components: {
 		Splitpanes,
+		Toolbar,
 		// Generic components
-		SuperGraph,
-		CCT,
+		Sankey,
 		// Single supergraph components.
 		SingleScatterplot,
 		SingleHistogram,
@@ -239,6 +161,10 @@ export default {
 		showTarget: function (val) {
 			EventHandler.$emit("show-target-auxiliary");
 		},
+
+		left: function (val) {
+			this.$emit("update:left", val);
+		}
 	},
 
 	props: {
@@ -246,13 +172,7 @@ export default {
 	},
 
 	data: () => ({
-		appName: "CallFlow",
 		left: false,
-		formats: ["CCT", "SuperGraph"],
-		selectedFormat: "SuperGraph",
-		datasets: [],
-		selectedTargetDataset: "",
-		selectedDataset2: "",
 		groupBy: ["Name", "Module", "File"],
 		selectedGroupBy: "Module",
 		filterBy: ["Inclusive", "Exclusive"],
@@ -276,20 +196,15 @@ export default {
 		selectedGroupMode: "include callbacks",
 		scatterMode: ["mean", "all"],
 		selectedScatterMode: "all",
-		selectedFunctionsInCCT: 70,
 		isCallgraphInitialized: false,
 		isCCTInitialized: false,
 		ranks: [],
 		initLoad: true,
 		comparisonMode: false,
-		selectedCompareDataset: null,
 		selectedOutlierBand: 4,
 		defaultCallSite: "<program root>",
 		modes: ["Ensemble", "Single"],
 		selectedMode: "Single",
-		// Presentation mode variables
-		exhibitModes: ["Presentation", "Default"],
-		selectedExhibitMode: "Default",
 		selectedMPIBinCount: 20,
 		selectedRuntimeSortBy: "Inclusive",
 		sortByModes: ["Inclusive", "Exclusive", "Standard Deviation"],
@@ -302,6 +217,8 @@ export default {
 	}),
 
 	mounted() {
+		this.setupStore();
+
 		// Push to '/' when `this.$store.selectedDatasets` is undefined.
 		if(this.$store.selectedDatasets === undefined) {
 			this.$router.push("/");
@@ -309,13 +226,13 @@ export default {
 
 		EventHandler.$on("lasso_selection", () => {
 			this.$store.resetTargetDataset = true;
-			this.clearLocal();
+			this.clear();
 			this.setTargetDataset();
 			this.fetchData();
 		});
 
 		EventHandler.$on("show_target_auxiliary", () => {
-			this.clearLocal();
+			this.clear();
 			this.init();
 		});
 
@@ -324,30 +241,22 @@ export default {
 
 	methods: {
 		init() {
-			this.setupStore();
 			this.setComponentMap(); // Set component mapping for easy component tracking.
 			
 			console.log("Mode : ", this.selectedMode);
 			console.log("Number of runs :", this.$store.numOfRuns);
 			console.log("Dataset : ", this.$store.selectedTargetDataset);
-			console.log("Format = ", this.selectedFormat);
 
 			// Call the appropriate socket to query the server.
-			if (this.selectedFormat == "SuperGraph") {
-				this.initComponents(this.currentSingleSuperGraphComponents);
-			} else if (this.selectedFormat == "CCT") {
-				this.initComponents(this.currentSingleCCTComponents);
-			}
-			// EventHandler.$emit("single-refresh-boxplot", {});
+			this.initComponents(this.currentSingleSuperGraphComponents);
+
+			EventHandler.$emit("single-refresh-boxplot", {});
 		},
 
 		setupStore() {
 			// Set the mode. (Either single or ensemble).
 			this.$store.selectedMode = this.selectedMode;
 
-			// Set the number of callsites in the CCT
-			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
-		
 			// Set the scale for information (log or linear)
 			this.$store.selectedScale = this.selectedScale;
 
@@ -370,33 +279,28 @@ export default {
 			this.$store.encoding = "MEAN";
 		},
 
+		updateStore() {
+			this.$store.selectedMetric = this.selectedMetric;
+			this.$store.selectedScale = this.selectedScale;
+			this.$store.selectedIQRFactor = this.selectedIQRFactor;
+			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
+			this.$store.selectedTargetDataset = this.selectedTargetDataset;
+		},
+
 		// ----------------------------------------------------------------
 		// Initialize the relevant modules for respective Modes. 
 		// ----------------------------------------------------------------
 		setComponentMap() {
-			this.currentSingleCCTComponents = [this.$refs.SingleCCT];
 			this.currentSingleSuperGraphComponents = [
 				this.$refs.SingleHistogram,
 				this.$refs.SingleScatterplot,
-				this.$refs.SingleSuperGraph,
+				this.$refs.Sankey,
 				this.$refs.CallsiteInformation,
 			];
 		},
 
 		clear() {
-			if (this.selectedFormat == "CCT") {
-				this.clearComponents(this.currentSingleCCTComponents);
-			} else if (this.selectedFormat == "SuperGraph") {
-				this.clearComponents(this.currentSingleSuperGraphComponents);
-			}
-		},
-
-		clearLocal() {
-			if (this.selectedFormat == "CCT") {
-				this.clearComponents(this.currentSingleSuperGraphComponents);
-			} else if (this.selectedFormat == "SuperGraph") {
-				this.clearComponents(this.currentSingleCCTComponents);
-			}
+			this.clearComponents(this.currentSingleSuperGraphComponents);
 		},
 
 		initComponents(componentList) {
@@ -411,61 +315,18 @@ export default {
 			}
 		},
 
-		// ----------------------------------------------------------------
-		// Feature: Sortby the datasets and show the time.
-		// ----------------------------------------------------------------
-
-		formatRuntimeWithoutUnits(val) {
-			let format = d3.format(".2");
-			let ret = format(val);
-			return ret;
+		reset() {
+			this.clear();
+			this.updateStore();
+			this.init();
 		},
 		
 		// ----------------------------------------------------------------
 		// Update methods, triggered when user interacts with the settings. 
 		// ----------------------------------------------------------------
 		updateColors() {
-			this.clearLocal();
-			// TODO: Fix this. 
-			// setupColors should belong to the App.Vue and should make a call
-			// there.
+			this.clear();
 			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
-			this.init();
-		},
-
-		async updateFormat() {
-			this.clearLocal();
-			this.init();
-		},
-
-		updateTargetDataset() {
-			this.clear();
-			this.$store.selectedTargetDataset = this.selectedTargetDataset;
-			console.debug("[Update] Target Dataset: ", this.selectedTargetDataset);
-			d3.selectAll(".tick").remove();
-			this.init();
-		},
-
-		updateMode() {
-			this.clear();
-			this.init();
-		},
-
-		updateMetric() {
-			this.$store.selectedMetric = this.selectedMetric;
-			this.clear();
-			this.init();
-		},
-
-		updateScale() {
-			this.$store.selectedScale = this.selectedScale;
-			this.clear();
-			this.init();
-		},
-
-		updateIQRFactor() {
-			this.$store.selectedIQRFactor = this.selectedIQRFactor;
-			this.clearLocal();
 			this.init();
 		},
 
@@ -477,8 +338,8 @@ export default {
 		updateMPIBinCount() {
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
 			this.$store.reprocess = 1;
-			this.requestEnsembleData();
-			this.clearLocal();
+			this.fetchData();
+			this.clear();
 			this.init();
 		},
 	},

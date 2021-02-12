@@ -111,7 +111,7 @@ class BaseProvider:
 
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
-        if len(self.supergraphs) >= 1:
+        if len(self.supergraphs) > 1:
 
             print(
                 "\n\n-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n"

@@ -219,10 +219,15 @@
 </template>
 
 <script>
-import EventHandler from "../EventHandler";
-import BoxPlot from "./boxplot";
+// Library imports
 import * as d3 from "d3";
-import * as utils from "../utils";
+
+// Local library imports
+import * as utils from "lib/utils";
+import EventHandler from "lib/routing/EventHandler";
+
+// Local component imports
+import BoxPlot from "./boxplot";
 
 export default {
 	name: "CallsiteCorrespondence",

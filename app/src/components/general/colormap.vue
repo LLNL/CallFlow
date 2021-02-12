@@ -12,15 +12,12 @@
 <script>
 import * as d3 from "d3";
 import "d3-selection-multi";
-import * as utils from "../components/utils";
 
+import * as utils from "lib/utils";
 
 export default {
-	name: "EnsembleColorMap",
+	name: "ColorMap",
 	components: {},
-
-	props: [],
-
 	data: () => ({
 		transitionDuration: 1000,
 		width: 230,
@@ -32,12 +29,8 @@ export default {
 			bottom: 30,
 			right: 400,
 		},
-		id: "ensemble-colormap"
+		id: "colormap"
 	}),
-
-	mounted() {
-
-	},
 
 	methods: {
 		init(color) {

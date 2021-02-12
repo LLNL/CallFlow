@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 <template>
-	<div>
+	<v-container>
 		<v-card tile>
 			<v-card-title> General Information </v-card-title>
 		</v-card>
@@ -27,7 +27,7 @@
 		<v-card tile>
 			<v-card-title> Group by attribute: {{ data.group_by }} </v-card-title>
 		</v-card>
-	</div>
+	</v-container>
 </template>
 
 

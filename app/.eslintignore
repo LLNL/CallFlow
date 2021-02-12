@@ -1,6 +1,5 @@
 node_modules/**
 .gitignore
 build/**
-src/lib/backup/reorder.js
-src/lib/spin.js
-src/lib/backup/TreeModel.js
+src/lib/backup/*
+src/lib/interactions/spin.js

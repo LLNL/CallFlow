@@ -17,9 +17,10 @@ import "vuetify/dist/vuetify.min.css";
 import "material-design-icons-iconfont/dist/material-design-icons.css";
 
 import App from "./components/App";
-import SingleCallFlow from "./components/callflowSingle";
-import EnsembleCallFlow from "./components/callflowEnsemble";
-import ExperimentalCallFlow from "./components/callflowExperimental";
+import CCT from "./components/CCT";
+import SuperGraph from "./components/SuperGraph";
+import EnsembleSuperGraph from "./components/SuperGraphEnsemble";
+import TimelineSuperGraph from "./components/SuperGraphTimeline";
 
 Vue.use(Vuex);
 const store = new Vuex.Store();
@@ -29,21 +30,28 @@ const store = new Vuex.Store();
 const router = new Router({
 	routes: [
 		{
-			path: "/single",
-			name: "SingleCallFlow",
-			component: SingleCallFlow,
+			path: "/cct",
+			name: "CCT",
+			component: CCT,
 			props: true
 		},
 		{
-			path: "/ensemble",
-			name: "EnsembleCallFlow",
-			component: EnsembleCallFlow,
+			path: "/super_graph",
+			name: "SuperGraph",
+			component: SuperGraph,
 			props: true
 		},
 		{
-			path: "/experimental",
-			name: "ExperimentalCallFlow",
-			component: ExperimentalCallFlow
+			path: "/ensemble_super_graph",
+			name: "EnsembleSuperGraph",
+			component: EnsembleSuperGraph,
+			props: true
+		},
+		{
+			path: "/timeline_super_graph",
+			name: "TimeLineSuperGraph",
+			component: TimelineSuperGraph,
+			props: true
 		}
 	]
 });

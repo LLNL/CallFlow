@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 <template>
+	<v-container>
 	<v-card tile>
 		<v-card-title>Dataset Information</v-card-title>
 		<v-data-table
@@ -27,6 +28,7 @@
 			</template>
 		</v-data-table>
 	</v-card>
+	</v-container>
 </template>
 
 <script>

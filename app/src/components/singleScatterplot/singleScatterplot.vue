@@ -19,11 +19,15 @@
 </template>
 
 <script>
+// Library imports
 import * as d3 from "d3";
 
+// Local library imports
+import EventHandler from "lib/routing/EventHandler";
+import * as utils from "lib/utils";
+
+// Local components
 import ToolTip from "./tooltip";
-import * as utils from "../utils";
-import EventHandler from "../EventHandler";
 
 export default {
 	name: "SingleScatterplot",

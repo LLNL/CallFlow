@@ -22,9 +22,9 @@
 <script>
 import * as d3 from "d3";
 import ToolTip from "./tooltip";
-import * as utils from "../utils";
-import Queue from "../../datastructures/queue";
-import APIService from "../../lib/APIService";
+import * as utils from "lib/utils";
+import Queue from "lib/datastructures/queue";
+import APIService from "lib/routing/APIService";
 
 export default {
 	name: "ModuleHierarchy",

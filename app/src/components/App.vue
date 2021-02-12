@@ -13,15 +13,17 @@
 					CallFlow
 				</v-toolbar-title>
 				<v-btn outlined>
-					<router-link to="/single" replace>Single</router-link>
+					<router-link to="/cct" replace>CCT</router-link>
+				</v-btn>
+				<v-btn outlined>
+					<router-link to="/super_graph" replace>Super Graph</router-link>
 				</v-btn>
 
 				<v-btn outlined v-if="run_counts > 1">
-					<router-link to="/ensemble" replace>Ensemble</router-link>
+					<router-link to="/ensemble_super_graph" replace>Ensemble Super Graph</router-link>
 				</v-btn>
-
-				<!-- <v-btn outlined>
-					<router-link to="/experimental" replace>Experimental</router-link>
+				<!-- <v-btn outlined v-if="run_counts > 1">
+					<router-link to="/timeline_super_graph" replace>Timeline</router-link>
 				</v-btn> -->
 			</v-toolbar>
 			<router-view></router-view>
@@ -39,23 +41,29 @@
 				</v-container>
 			</v-content>
 		</div>
+		<Footer ref="Footer" :text="footerText" :year="year"></Footer>
 	</v-app>
 </template>
 
 <script>
-import APIService from "../lib/APIService";
+// Local library imports
+import * as utils from "lib/utils";
+import Color from "lib/color/";
+import APIService from "lib/routing/APIService";
+import EventHandler from "lib/routing/EventHandler";
+
+// Local components
 import BasicInformation from "./general/basicInformation";
 import RuntimeInformation from "./general/runtimeInformation";
 import ModuleMappingInformation from "./general/moduleMappingInformation";
-
-import * as utils from "./utils";
-import Color from "../lib/color/color";
+import Footer from "./general/footer";
 
 export default {
 	name: "App",
 	components: {
 		BasicInformation,
 		RuntimeInformation,
+		Footer,
 		// ModuleMappingInformation
 	},
 	data: () => ({
@@ -74,11 +82,20 @@ export default {
 			Brown: "#AF9B90",
 			Red: "#A90400",
 		},
+		footerText: "Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis",
+		year: "2021",
 	}),
+
 	mounted() {
 		document.title = "CallFlow - ";
-		this.fetchData();
+
+		EventHandler.$on("fetch-data", () => {
+			this.fetchData();
+		});
+
+		EventHandler.$emit("fetch-data");
 	},
+
 	methods: {
 		/**
 		 * Send the request to /init endpoint
@@ -202,8 +219,6 @@ export default {
 				}
 			}
 			this.$store.selectedTargetDataset = max_dataset;
-
-			console.log("Dataset with most runtimes: ", this.$store.selectedTargetDataset);
 		},
 
 		setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {
@@ -361,26 +376,17 @@ export default {
 	padding: 0;
 }
 
-body {
-	font-family: "Open Sans", sans-serif;
-	font-size: 16px;
-}
-
-.toolbar {
-	padding: 0px 0px 0px;
-}
-
-.toolbar > .v-toolbar__content {
-	height: 54px !important;
-}
-
 .toolbar-title {
-	margin-right: 3em; 
-	font-size: 26px;
+	margin: 3em; 
+	font-size: 22px;
 	font-weight: 400;
 	color: white;
 }
 
+body {
+	font-family: "Open Sans", sans-serif;
+	font-size: 16px;
+}
 .content {
 	padding-top: 54px !important;
 }
@@ -448,10 +454,6 @@ body {
 
 .valueText {
 	font-weight: 700 !important;
-}
-
-#footer {
-	color: #fff;
 }
 
 /* Over write the primary text to avoid blue color change on selection*/

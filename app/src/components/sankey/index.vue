@@ -19,10 +19,10 @@
     <v-layout>
       <svg :id="id">
         <g id="container">
-          <EnsembleEdges ref="EnsembleEdges" />
-          <EnsembleNodes ref="EnsembleNodes" />
+          <Edges ref="Edges" />
+          <Nodes ref="Nodes" />
           <MiniHistograms ref="MiniHistograms" />
-          <EnsembleColorMap ref="EnsembleColorMap" />
+          <ColorMap ref="ColorMap" />
         </g>
       </svg>
     </v-layout>
@@ -30,30 +30,34 @@
 </template>
 
 <script>
+// Library imports
 import * as d3 from "d3";
-import EventHandler from "../EventHandler.js";
 
-import Sankey from "../../algorithms/sankey";
-import * as utils from "../utils";
+// Local library imports
+import EventHandler from "lib/routing/EventHandler.js";
+import Sankey from "lib/algorithms/sankey";
+import * as utils from "lib/utils";
+import Graph from "lib/datastructures/graph";
+import GraphVertex from "lib/datastructures/node";
+import GraphEdge from "lib/datastructures/edge";
+import detectDirectedCycle from "lib/algorithms/detectcycle";
+import APIService from "lib/routing/APIService.js";
 
-import EnsembleNodes from "./nodes";
-import EnsembleEdges from "./edges";
+// General component imports
+import ColorMap from "../general/colormap";
+
+// Local component imports
+import Nodes from "./nodes";
+import Edges from "./edges";
 import MiniHistograms from "./miniHistograms";
-import EnsembleColorMap from "../colormap";
-
-import Graph from "../../datastructures/graph";
-import GraphVertex from "../../datastructures/node";
-import GraphEdge from "../../datastructures/edge";
-import detectDirectedCycle from "../../algorithms/detectcycle";
-import APIService from "../../lib/APIService.js";
 
 export default {
-	name: "SuperGraph",
+	name: "Sankey",
 	components: {
-		EnsembleNodes,
-		EnsembleEdges,
+		Nodes,
+		Edges,
 		MiniHistograms,
-		EnsembleColorMap,
+		ColorMap,
 	},
 	data: () => ({
 		graph: null,
@@ -93,8 +97,13 @@ export default {
 		});
 
 		EventHandler.$on("show_target_auxiliary", (data) => {
-			self.$refs.EnsembleNodes.$refs.TargetLine.clear();
+			self.$refs.Nodes.$refs.TargetLine.clear();
 			self.$refs.MiniHistograms.clear();
+		});
+
+		EventHandler.$on("fetch-super-graph", () => {
+			self.clear();
+			self.init();
 		});
 
 		this.selectedMetric = this.$store.selectedMetric;
@@ -103,25 +112,23 @@ export default {
 	methods: {
 		async fetchData() {
 			let data = {};
+			const payload = {
+				datasets: this.$store.selectedTargetDataset,
+				groupBy: "module",
+			};
 			if (this.$store.selectedMode == "Single") {
-				data = await APIService.POSTRequest("single_supergraph", {
-					datasets: this.$store.selectedTargetDataset,
-					groupBy: "module",
-				});
+				data = await APIService.POSTRequest("single_supergraph", payload);
 				console.debug("[/single_supergraph]", data);
 			} else if (this.$store.selectedMode == "Ensemble") {
-				data = await APIService.POSTRequest("ensemble_supergraph", {
-					datasets: this.$store.selectedDatasets,
-					groupBy: "module",
-				});
+				data = await APIService.POSTRequest("ensemble_supergraph", payload);
 				console.debug("[/ensemble_supergraph]", data);
 			}
 
 			data = this._add_node_map(data);
-			data.graph = this._construct_super_graph(data);
+			// data.graph = this._construct_super_graph(data);
 
 			// check cycle.
-			let detectcycle = detectDirectedCycle(data.graph);
+			// let detectcycle = detectDirectedCycle(data.graph);
 
 			for (let i = 0; i <data.links.length; i += 1) {
 				let link = data.links[i];
@@ -176,10 +183,10 @@ export default {
 		},
 
 		clear() {
-			this.$refs.EnsembleNodes.clear();
-			this.$refs.EnsembleEdges.clear();
+			this.$refs.Nodes.clear();
+			this.$refs.Edges.clear();
 			this.$refs.MiniHistograms.clear();
-			this.$refs.EnsembleColorMap.clear();
+			this.$refs.ColorMap.clear();
 		},
 
 		render() {
@@ -196,8 +203,8 @@ export default {
 
 			this.$store.graph = this.data;
 
-			this.$refs.EnsembleNodes.init(this.$store.graph, this.view);
-			this.$refs.EnsembleEdges.init(this.$store.graph, this.view);
+			this.$refs.Nodes.init(this.$store.graph, this.view);
+			this.$refs.Edges.init(this.$store.graph, this.view);
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
 
 			const selectedNode = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "CCT");
@@ -229,8 +236,8 @@ export default {
 			}
 			
 			if (this.$store.selectedMode == "Ensemble") {
-				this.$refs.EnsembleColorMap.init(this.$store.runtimeColor);
-				this.$refs.EnsembleColorMap.init(this.$store.distributionColor);
+				this.$refs.ColorMap.init(this.$store.runtimeColor);
+				this.$refs.ColorMap.init(this.$store.distributionColor);
 			}
 		},
 
@@ -424,7 +431,7 @@ export default {
 		},
 
 		activateCompareMode(data) {
-			this.$refs.EnsembleNodes.comparisonMode(data);
+			this.$refs.Nodes.comparisonMode(data);
 		},
 	},
 };

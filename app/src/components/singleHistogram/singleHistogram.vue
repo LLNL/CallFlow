@@ -18,13 +18,17 @@
 </template>
 
 <script>
+// Library imports
 import * as d3 from "d3";
 import "d3-selection-multi"; 
-
-import ToolTip from "./tooltip";
-import * as utils from "../utils";
-import EventHandler from "../EventHandler";
 import { brush } from "d3";
+
+// Local library imports
+import * as utils from "lib/utils";
+import EventHandler from "lib/routing/EventHandler";
+
+// Local component imports
+import ToolTip from "./tooltip";
 
 export default {
 	name: "SingleHistogram",
@@ -63,7 +67,6 @@ export default {
 	mounted() {
 		let self = this;
 		EventHandler.$on("single-histogram", function (data) {
-			console.log("Single histogram: ", data["node"]);
 			self.visualize(data);
 		});
 	},
@@ -429,7 +432,6 @@ export default {
 
 		rankLineScale(data) {
 			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
-			console.log(data, store);
 			let rankCount = store[this.$store.selectedMetric].d.length;
 
 			this.ranklinescale = d3

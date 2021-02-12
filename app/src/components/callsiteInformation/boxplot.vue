@@ -15,12 +15,17 @@
 </template>
 
 <script>
+// Library imports
+import * as d3 from "d3";
+
+// Local library imports
+import EventHandler from "lib/routing/EventHandler";
+
+// Local component imports
 import Box from "./box";
 import Markers from "./markers";
 import Outliers from "./outlier";
 import ToolTip from "./tooltip";
-import * as d3 from "d3";
-import EventHandler from "../EventHandler";
 
 export default {
 	name: "BoxPlot",
