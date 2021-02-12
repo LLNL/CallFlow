@@ -7,13 +7,17 @@
 
 <template>
   <v-app id="inspire">
-	<Toolbar ref="ToolBar" :left.sync="left" />
-    <v-navigation-drawer v-model.lazy="left" fixed>
+    <Toolbar ref="ToolBar" :isSettingsOpen.sync="isSettingsOpen" />
+    <v-navigation-drawer v-model.lazy="isSettingsOpen" fixed>
       <v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
       <v-card flex fill-height id="control-panel">
         <v-layout row wrap>
           <v-btn icon>
             <v-icon v-on:click="reset()">refresh</v-icon>
+          </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn icon>
+            <v-icon v-on:click="closeSettings()">close</v-icon>
           </v-btn>
 
           <!-- --------------------------- Visual Encoding ----------------------------------->
@@ -25,9 +29,8 @@
               label="Metric"
               :items="metrics"
               v-model="selectedMetric"
-              :menu-props="{ maxHeight: '200' }"
+              :menu-props="{maxHeight: '200'}"
               persistent-hint
-              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -37,9 +40,8 @@
               class="mt-0"
               type="number"
               v-model="selectedMPIBinCount"
-              :menu-props="{ maxHeight: '200' }"
+              :menu-props="{maxHeight: '200'}"
               persistent-hint
-              v-on:change="updateMPIBinCount()"
             >
             </v-text-field>
           </v-flex>
@@ -48,9 +50,8 @@
               label="Scale"
               :items="scales"
               v-model="selectedScale"
-              :menu-props="{ maxHeight: '200' }"
+              :menu-props="{maxHeight: '200'}"
               persistent-hint
-              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -64,9 +65,8 @@
               label="Runtime Color Map"
               :items="runtimeColorMap"
               v-model="selectedRuntimeColorMap"
-              :menu-props="{ maxHeight: '200' }"
+              :menu-props="{maxHeight: '200'}"
               persistent-hint
-              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -76,13 +76,12 @@
               class="mt-0"
               type="number"
               v-model="selectedColorPoint"
-              :menu-props="{ maxHeight: '200' }"
+              :menu-props="{maxHeight: '200'}"
               persistent-hint
-              v-on:change="reset()"
             >
             </v-text-field>
           </v-flex>
-          
+
           <!----------------------------- Callsite information ----------------------------------->
           <v-flex xs12 class="ma-1">
             <v-subheader class="teal lighten-4"
@@ -94,9 +93,8 @@
               label="Sort by"
               :items="sortByModes"
               v-model="selectedRuntimeSortBy"
-              :menu-props="{ maxHeight: '200' }"
+              :menu-props="{maxHeight: '200'}"
               persistent-hint
-              v-on:change="updateRuntimeSortBy()"
             >
             </v-select>
           </v-flex>
@@ -120,7 +118,7 @@
 
           <!-- Right column-->
           <splitpanes horizontal :splitpanes-size="20">
-			<CallsiteInformation ref="CallsiteInformation" />
+            <CallsiteInformation ref="CallsiteInformation" />
           </splitpanes>
         </splitpanes>
       </v-layout>
@@ -164,7 +162,46 @@ export default {
 
 		isSettingsOpen: function (val) {
 			this.$emit("update:isSettingsOpen", val);
-		}
+		},
+
+		selectedMetric: function (val) {
+			this.$store.selectedMetric = val;
+			this.reset();
+		},
+
+		selectedRuntimeColorMap(val) {
+			this.clear();
+			this.$parent.$parent.setupColors(val);
+			this.init();
+		},
+
+		selectedRuntimeSortBy(val) {
+			this.$store.selectedRuntimeSortBy = val;
+			EventHandler.$emit("callsite-information-sort");
+		},
+
+		selectedMPIBinCount(val) {
+			this.$store.selectedMPIBinCount = val;
+			this.$store.reprocess = 1;
+			this.fetchData();
+			this.clear();
+			this.init();
+		},
+
+		selectedScale(val) {
+			this.$store.selectedScale = val;
+			this.reset();
+		},
+
+		selectedIQRFactor(val) {
+			this.$store.selectedIQRFactor = val;
+			this.reset();
+		},
+
+		selectedTargetDataset(val) {
+			this.$store.selectedTargetDataset = val;
+			this.reset();
+		},
 	},
 
 	props: {
@@ -172,7 +209,7 @@ export default {
 	},
 
 	data: () => ({
-		left: false,
+		isSettingsOpen: false,
 		groupBy: ["Name", "Module", "File"],
 		selectedGroupBy: "Module",
 		filterBy: ["Inclusive", "Exclusive"],
@@ -220,7 +257,7 @@ export default {
 		this.setupStore();
 
 		// Push to '/' when `this.$store.selectedDatasets` is undefined.
-		if(this.$store.selectedDatasets === undefined) {
+		if (this.$store.selectedDatasets === undefined) {
 			this.$router.push("/");
 		}
 
@@ -242,7 +279,7 @@ export default {
 	methods: {
 		init() {
 			this.setComponentMap(); // Set component mapping for easy component tracking.
-			
+
 			console.log("Mode : ", this.selectedMode);
 			console.log("Number of runs :", this.$store.numOfRuns);
 			console.log("Dataset : ", this.$store.selectedTargetDataset);
@@ -250,7 +287,7 @@ export default {
 			// Call the appropriate socket to query the server.
 			this.initComponents(this.currentSingleSuperGraphComponents);
 
-			EventHandler.$emit("single-refresh-boxplot", {});
+			// EventHandler.$emit("single-refresh-boxplot", {});
 		},
 
 		setupStore() {
@@ -274,21 +311,13 @@ export default {
 
 			// Set the runtimeColorMap.
 			this.runtimeColorMap = this.$store.runtimeColorMap;
-		
+
 			// Set encoding method.
 			this.$store.encoding = "MEAN";
 		},
 
-		updateStore() {
-			this.$store.selectedMetric = this.selectedMetric;
-			this.$store.selectedScale = this.selectedScale;
-			this.$store.selectedIQRFactor = this.selectedIQRFactor;
-			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
-			this.$store.selectedTargetDataset = this.selectedTargetDataset;
-		},
-
 		// ----------------------------------------------------------------
-		// Initialize the relevant modules for respective Modes. 
+		// Initialize the relevant modules for respective Modes.
 		// ----------------------------------------------------------------
 		setComponentMap() {
 			this.currentSingleSuperGraphComponents = [
@@ -317,30 +346,11 @@ export default {
 
 		reset() {
 			this.clear();
-			this.updateStore();
-			this.init();
-		},
-		
-		// ----------------------------------------------------------------
-		// Update methods, triggered when user interacts with the settings. 
-		// ----------------------------------------------------------------
-		updateColors() {
-			this.clear();
-			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
 			this.init();
 		},
 
-		updateRuntimeSortBy() {
-			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
-			EventHandler.$emit("callsite-information-sort");
-		},
-
-		updateMPIBinCount() {
-			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
-			this.$store.reprocess = 1;
-			this.fetchData();
-			this.clear();
-			this.init();
+		closeSettings() {
+			this.isSettingsOpen = !this.isSettingsOpen;
 		},
 	},
 };

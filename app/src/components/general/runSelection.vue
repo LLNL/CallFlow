@@ -78,7 +78,6 @@ export default {
 		}
 
 		this.selectedMode = this.$store.selectedMode;	
-		console.log(this.selectedMode);	
 	},
 
 	methods: {
@@ -90,6 +89,7 @@ export default {
 
 		updateTargetDataset() {
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
+			this.$store.selectedFormat = this.$route.name;
 			EventHandler.$emit(this.emitMapper[this.$store.selectedFormat]);
 		},
 
