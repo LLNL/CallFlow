@@ -15,6 +15,10 @@
 					<v-btn icon>
 						<v-icon v-on:click="reset()">refresh</v-icon>
 					</v-btn>
+					<v-spacer></v-spacer>
+					<v-btn icon>
+						<v-icon v-on:click="closeSettings()">close</v-icon>
+					</v-btn>
 				</v-layout>
 	
 				<v-flex xs12 class="ma-1">
@@ -42,7 +46,6 @@
 					v-model="selectedRuntimeColorMap"
 					:menu-props="{ maxHeight: '200' }"
 					persistent-hint
-					v-on:change="reset()"
 					>
 					</v-select>
 				</v-flex>
@@ -105,7 +108,6 @@ export default {
 		selectedRuntimeColorMap: "OrRd",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
 		selectedColorPoint: 9,
-
 	}),
 
 	mounted() {
@@ -122,6 +124,28 @@ export default {
 	watch: {
 		isSettingsOpen: function (val) {
 			this.$emit("update:isSettingsOpen", val);
+		},
+
+		selectedRuntimeColorMap: function (val) {
+			this.$store.selectedRuntimeColorMap = val;
+			this.$parent.$parent.setupColors(this.$store.selectedRuntimeColorMap);
+			this.reset();
+		},
+
+		selectedMetric: function (val) {
+			this.$store.selectedMetric = val;
+			this.reset();
+		},
+
+		selectedColorPoint: function (val) {
+			this.$store.selectedColorPoint = val;
+			this.$parent.$parent.setupColors(this.$store.selectedRuntimeColorMap);
+			this.reset();
+		},
+
+		selectedTargetDataset: function (val) {
+			this.$store.selectedTargetDataset = val;
+			this.reset();
 		}
 	},
 	
@@ -164,7 +188,19 @@ export default {
 			// TODO: Move this to viewSelection component
 			this.$store.selectedFormat = this.$route.name;
 
-			console.log(this.$store.selectedFormat);
+			this.selectedColorPoint = this.$store.selectedColorPoint;
+		},
+
+		updateStore() {
+			// TODO: Update only if there is a change in variable.
+			this.$store.selectedTargetDataset = this.selectedTargetDataset;
+
+			this.$store.runtimeColorMap = this.runtimeColorMap;
+
+			this.$store.selectedColorPoint = this.selectedColorPoint;
+
+			this.$store.selectedMetric = this.selectedMetric;
+
 		},
 
 		// ----------------------------------------------------------------
@@ -191,6 +227,16 @@ export default {
 				componentList[i].clear();
 			}
 		},
+
+		reset() {
+			this.clear();
+			// this.updateStore();
+			this.init();
+		},
+
+		closeSettings () {
+			this.isSettingsOpen = ! this.isSettingsOpen;
+		}
 	}
 };
 </script>
