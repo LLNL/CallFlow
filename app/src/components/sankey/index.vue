@@ -101,6 +101,11 @@ export default {
 			self.$refs.MiniHistograms.clear();
 		});
 
+		EventHandler.$on("fetch-super-graph", () => {
+			self.clear();
+			self.init();
+		});
+
 		this.selectedMetric = this.$store.selectedMetric;
 	},
 
@@ -120,10 +125,10 @@ export default {
 			}
 
 			data = this._add_node_map(data);
-			data.graph = this._construct_super_graph(data);
+			// data.graph = this._construct_super_graph(data);
 
 			// check cycle.
-			let detectcycle = detectDirectedCycle(data.graph);
+			// let detectcycle = detectDirectedCycle(data.graph);
 
 			for (let i = 0; i <data.links.length; i += 1) {
 				let link = data.links[i];

@@ -89,10 +89,11 @@ export default {
 	mounted() {
 		document.title = "CallFlow - ";
 
-		EventHandler.$on("fetch_data", () => {
+		EventHandler.$on("fetch-data", () => {
 			this.fetchData();
 		});
 
+		EventHandler.$emit("fetch-data");
 	},
 
 	methods: {
@@ -373,6 +374,13 @@ export default {
 * {
 	margin: 0;
 	padding: 0;
+}
+
+.toolbar-title {
+	margin: 3em; 
+	font-size: 22px;
+	font-weight: 400;
+	color: white;
 }
 
 body {

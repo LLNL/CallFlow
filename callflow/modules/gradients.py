@@ -12,7 +12,7 @@ import pandas as pd
 
 from .histogram import Histogram
 from callflow.utils.utils import histogram
-from callflow.utils.df import df_count, df_unique, df_lookup_by_column
+from callflow.utils.df import df_count, df_lookup_by_column
 
 import callflow
 

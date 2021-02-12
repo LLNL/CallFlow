@@ -423,7 +423,6 @@ export default function Sankey() {
 
 			nodes.forEach(function (node, i) {
 				let nodeHeight = 0;
-				console.log("node: ", node.id);
 				// node.sourceLinks.forEach( (edge) => {
 				// 	console.log("Source link: ", edge);
 				// 	nodeHeight = Math.max(nodeHeight, edge.source_data.y);
@@ -432,7 +431,6 @@ export default function Sankey() {
 					if (edge["target"] == node.id) {
 						if (edge["source"] != null && edge["source"]["y"] != null) {
 							nodeHeight = Math.max(nodeHeight, edge["source_data"]["y"]);
-							console.log("here", edge["source_data"]["y"]);
 						}
 					}
 				});

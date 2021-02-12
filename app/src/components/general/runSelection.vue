@@ -7,7 +7,7 @@
 				:v-model="selectedTargetDataset"
 				:menu-props="{maxHeight: '400'}"
 				box
-				v-on:change="updateDataset()"
+				v-on:change="updateTargetDataset()"
 			>
 				<template slot="selection" slot-scope="{item}">
 					{{ datasets.indexOf(item) + 1 }}. {{ item }}
@@ -83,8 +83,10 @@ export default {
 		},
 
 		updateTargetDataset() {
+			console.log(this.selectedTargetDataset);
 			this.$store.selectedTargetDataset = this.selectedTargetDataset;
-			EventHandler.$emit("reset");
+			console.log(this.$store.selectedTargetDataset);
+			EventHandler.$emit("fetch-super-graph");
 		},
 
 		updateCompareDataset() {

@@ -81,7 +81,7 @@ class NodeLinkLayout:
         # compute data map
         datamap = {}
         for callsite in self.nxg.nodes():
-            
+
             module = self.sg.get_module_idx(callsite)
 
             for column in NodeLinkLayout._COLUMNS:

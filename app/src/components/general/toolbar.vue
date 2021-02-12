@@ -3,9 +3,8 @@
         <v-toolbar-side-icon @click.stop="openSettings()">
             <v-icon>settings</v-icon>
         </v-toolbar-side-icon>
-        <v-toolbar-title style="margin-right: 3em">{{ appName }}</v-toolbar-title>
-		
-        <RunSelection ref="RunSelection" />
+        <v-toolbar-title class="toolbar-title">{{ appName }}</v-toolbar-title>
+		<RunSelection ref="RunSelection" />
 		<!-- <ViewSelection ref="ViewSelection" /> -->
     </v-toolbar>
 </template>
@@ -46,8 +45,8 @@ export default {
 }
 
 .toolbar-title {
-	margin-right: 3em; 
-	font-size: 26px;
+	margin: 0.5em; 
+	font-size: 22px;
 	font-weight: 400;
 	color: white;
 }

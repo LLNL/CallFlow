@@ -27,7 +27,7 @@
               <v-spacer></v-spacer>
               <v-switch
                 v-model="showTarget"
-                v-on:change="updateTargetColor()"
+                v-on:change="reset()"
                 color="#009687"
               >
               </v-switch>
@@ -40,7 +40,7 @@
               v-model="selectedMetric"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateMetric()"
+              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -103,7 +103,7 @@
               v-model="selectedScale"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateScale()"
+              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -114,7 +114,7 @@
               v-model="selectedProp"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateProp()"
+              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -218,7 +218,7 @@
               v-model="selectedIQRFactor"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateIQRFactor()"
+              v-on:change="reset()"
             >
             </v-text-field>
           </v-flex>
@@ -540,30 +540,15 @@ export default {
 			}
 		},
 		
-		updateColors() {
+		reset() {
 			this.clear();
 			this.setupColors();
 			this.init();
 		},
 
-		updateFormat() {
+		updateColors() {
 			this.clear();
-			this.init();
-		},
-
-		updateMode() {
-			this.clear();
-			this.init();
-		},
-
-		updateMetric() {
-			this.$store.selectedMetric = this.selectedMetric;
-			this.clear();
-			this.init();
-		},
-
-		updateColor() {
-			this.clear();
+			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
 			this.init();
 		},
 
@@ -572,16 +557,8 @@ export default {
 			this.init();
 		},
 
-		updateFunctionsInCCT() {
-			APIService.POSTRequest("cct", {
-				dataset: this.$store.selectedTargetDataset,
-				functionInCCT: this.selectedFunctionsInCCT,
-			});
-		},
-
 		updateDiffNodeAlignment() {
-			console.log("Alignment mode: ", this.selectedDiffNodeAlignment);
-			this.$store.selectedDiffNodeAlignment = this.selectedDiffNodeAlignment;
+			this.reset();
 			EventHandler.$emit("update-diff-node-alignment");
 		},
 
@@ -603,30 +580,7 @@ export default {
 			this.$refs.SuperGraph.activateCompareMode(data);
 		},
 
-		updateProp() {
-			this.$store.selectedProp = this.selectedProp;
-			this.clear();
-			this.init();
-		},
-
-		updateScale() {
-			this.$store.selectedScale = this.selectedScale;
-			this.clear();
-			this.init();
-		},
-
-		updateHierarchyMode() {
-			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
-			this.clear();
-			this.init();
-		},
-
-		updateIQRFactor() {
-			this.$store.selectedIQRFactor = this.selectedIQRFactor;
-			this.clear();
-			this.init();
-		},
-
+		
 		updateRuntimeSortBy() {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
 			EventHandler.$emit("callsite-information-sort");
@@ -647,7 +601,7 @@ export default {
 		updateRunBinCount() {
 			this.$store.selectedRunBinCount = this.selectedRunBinCount;
 			this.requestEnsembleData();
-			this.clearLocal();
+			this.clear();
 			this.init();
 		},
 
