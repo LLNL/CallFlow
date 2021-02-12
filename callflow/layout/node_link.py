@@ -37,16 +37,18 @@ class NodeLinkLayout:
         # TODO: This code is repeated in modules/auxiliary.py.
         # Move to a instance method of SuperGraph.
         if selected_runs is not None:
-            self.runs = selected_runs
-            self.df = sg.df_filter_by_search_string("dataset", self.runs)
+            runs = selected_runs
+            _df = sg.df_filter_by_search_string("dataset", runs)
 
         elif isinstance(sg, callflow.SuperGraph) and sg.name != "ensemble":
-            self.runs = [sg.name]
-            self.df = sg.dataframe
+            runs = [sg.name]
+            _df = sg.dataframe
 
         elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
-            self.runs = [k for k, v in sg.supergraphs.items()]
-            self.df = sg.df_filter_by_search_string("dataset", self.runs)
+            runs = [k for k, v in sg.supergraphs.items()]
+            _df = sg.df_filter_by_search_string("dataset", runs)
+
+        self.runs = runs
 
         # Put the top callsites into a list.
         callsite_count = len(sg.df_unique("name"))
@@ -55,9 +57,7 @@ class NodeLinkLayout:
         # Filter out the callsites not in the list. (in a LOCAL copy)
         _fdf = sg.df_filter_by_name(callsites)
 
-        self.module_name_group_df = sg.df_group_by(["module", "name"])
-
-        with self.timer.phase(f"Creating CCT for ({self.runs})"):
+        with self.timer.phase(f"Creating CCT for ({runs})"):
             self.nxg = NodeLinkLayout._create_nxg_from_paths(_fdf["path"].tolist())
 
         # Add node and edge attributes.
@@ -75,27 +75,26 @@ class NodeLinkLayout:
         Add node attributes to the nxg.
         :return: None
         """
-        name_time_inc_map = self.module_name_group_df["time (inc)"].max().to_dict()
-        # name_time_exc_map = self.module_name_group_df["time"].max().to_dict()
+        _gdf = self.sg.df_group_by(["name"])
+        name_time_inc_map = _gdf["time (inc)"].max().to_dict()
+        name_time_exc_map = _gdf["time"].max().to_dict()
+        module_map = _gdf["module"].unique().to_dict()
 
         # compute data map
         datamap = {}
         for callsite in self.nxg.nodes():
-
-            module = self.sg.get_module_idx(callsite)
-
             for column in NodeLinkLayout._COLUMNS:
                 if column not in datamap:
                     datamap[column] = {}
 
                 if column == "time (inc)":
-                    datamap[column][callsite] = name_time_inc_map[(module, callsite)]
-                # elif column == "time":
-                #     datamap[column][callsite] = name_time_exc_map[(module, callsite)]
+                    datamap[column][callsite] = name_time_inc_map[callsite]
+                elif column == "time":
+                    datamap[column][callsite] = name_time_exc_map[callsite]
                 elif column == "name":
                     datamap[column][callsite] = callsite
                 elif column == "module":
-                    datamap[column][callsite] = module
+                    datamap[column][callsite] = module_map[callsite]
 
         # ----------------------------------------------------------------------
         for idx, key in enumerate(datamap):

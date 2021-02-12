@@ -15,10 +15,10 @@
 						<NodeLink ref="CCT1" />
 					</splitpanes>
 
-					<!-- Right column-->
-					<splitpanes horizontal :splitpanes-size="50">
+					<!-- Right column
+					<splitpanes horizontal :splitpanes-size="50" :v-show="{isComparisonMode}">
 						<NodeLink ref="CCT1" />
-					</splitpanes>
+					</splitpanes> -->
 				</splitpanes>
 			</v-layout>
 		</v-content>
@@ -43,6 +43,7 @@ export default {
 	data: () => ({
 		id: "cct-overview",
 		selectedFunctionsInCCT: 70,
+		isComparisonMode: false,
 	}),
 
 	mounted() {
@@ -89,6 +90,8 @@ export default {
 		
 			// Set encoding method.
 			this.$store.encoding = "MEAN";
+
+			this.isComparisonMode = this.$store.isComparisonMode;
 		},
 
 		// ----------------------------------------------------------------
@@ -96,7 +99,7 @@ export default {
 		// ----------------------------------------------------------------
 		setComponentMap() {
 			this.currentSingleSuperGraphComponents = [
-				this.$refs.NodeLink,
+				this.$refs.CCT1,
 			];
 		},
 
