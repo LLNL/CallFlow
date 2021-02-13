@@ -47,5 +47,18 @@ class EnsembleGraph(SuperGraph):
         """
         return self.__str__()
 
+    def filter_by_datasets(self, selected_runs):
+        """
+        Filter by the selected runs
+        :param selected_runs: Array of dataset tag names.
+        :return: None
+        """
+        if selected_runs is not None:
+            runs = selected_runs
+            self.dataframe = self.df_filter_by_search_string("dataset", runs)
+        else:
+            runs = [k for k, v in self.supergraphs.items()]
+            self.dataframe = self.df_filter_by_search_string("dataset", runs)
+
 
 # ------------------------------------------------------------------------------

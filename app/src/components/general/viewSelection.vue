@@ -36,7 +36,7 @@ export default {
 
 	mounted() {
 		this.selectedFormat = this.$route.name;
-		console.log(this.selectedFormat);
+		this.$store.selectedFormat = this.$route.name;
 	},
 
 	methods: {
