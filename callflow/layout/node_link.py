@@ -34,21 +34,8 @@ class NodeLinkLayout:
 
         self.timer = Timer()
 
-        # TODO: This code is repeated in modules/auxiliary.py.
-        # Move to a instance method of SuperGraph.
-        if selected_runs is not None:
-            runs = selected_runs
-            _df = sg.df_filter_by_search_string("dataset", runs)
-
-        elif isinstance(sg, callflow.SuperGraph) and sg.name != "ensemble":
-            runs = [sg.name]
-            _df = sg.dataframe
-
-        elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
-            runs = [k for k, v in sg.supergraphs.items()]
-            _df = sg.df_filter_by_search_string("dataset", runs)
-
-        self.runs = runs
+        sg.filter_by_datasets(selected_runs)
+        self.runs = selected_runs
 
         # Put the top callsites into a list.
         callsite_count = len(sg.df_unique("name"))
@@ -57,7 +44,7 @@ class NodeLinkLayout:
         # Filter out the callsites not in the list. (in a LOCAL copy)
         _fdf = sg.df_filter_by_name(callsites)
 
-        with self.timer.phase(f"Creating CCT for ({runs})"):
+        with self.timer.phase(f"Creating CCT for ({self.runs})"):
             self.nxg = NodeLinkLayout._create_nxg_from_paths(_fdf["path"].tolist())
 
         # Add node and edge attributes.

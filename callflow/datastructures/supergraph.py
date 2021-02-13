@@ -784,4 +784,19 @@ class SuperGraph(ht.GraphFrame):
 
         self.nxg = nxg
 
+    def filter_by_datasets(self, selected_runs):
+        """
+        Filter by the selected runs
+        :param selected_runs: Array of dataset tag names.
+        :return: None
+        """
+        # TODO: This code is repeated in modules/auxiliary.py.
+        # Move to a instance method of SuperGraph.
+        if selected_runs is not None:
+            runs = selected_runs
+            self.dataframe = self.df_filter_by_search_string("dataset", runs)
+
+        else:
+            runs = [sg.name]
+            self.dataframe = self.dataframe
     # --------------------------------------------------------------------------

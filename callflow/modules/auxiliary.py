@@ -47,33 +47,23 @@ class Auxiliary:
         self.RunBinCount = RunBinCount
         self.hist_props = ["rank", "name", "dataset", "all_ranks"]
 
-        if selected_runs is not None:
-            self.runs = selected_runs
-            self.e_df = sg.df_filter_by_search_string("dataset", self.runs)
-
-        elif isinstance(sg, callflow.SuperGraph) and sg.name != "ensemble":
-            self.runs = [sg.name]
-            self.e_df = sg.dataframe
-
-        elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
-            self.runs = [k for k, v in sg.supergraphs.items()]
-            self.e_df = sg.df_filter_by_search_string("dataset", self.runs)
+        sg.filter_by_datasets(selected_runs)
 
         LOGGER.warning(
-            f"Computing auxiliary data for ({sg}) with {len(self.runs)} runs: {self.runs}"
+            f"Computing auxiliary data for ({sg}) with {len(selected_runs)}."
         )
 
         # ----------------------------------------------------------------------
         if isinstance(sg, callflow.EnsembleGraph):
-            callsites = df_unique(self.e_df, "name")
-            modules = df_unique(self.e_df, "module")
+            callsites = df_unique(sg.dataframe, "name")
+            modules = df_unique(sg.dataframe, "module")
 
-            dataframes = {"ensemble": self.e_df}
-            dataframes_name_group = {"ensemble": df_group_by(self.e_df, "name")}
-            dataframes_module_group = {"ensemble": df_group_by(self.e_df, "module")}
+            dataframes = {"ensemble": sg.dataframe}
+            dataframes_name_group = {"ensemble": df_group_by(sg.dataframe, "name")}
+            dataframes_module_group = {"ensemble": df_group_by(sg.dataframe, "module")}
 
-            for dataset in self.runs:
-                dataframes[dataset] = df_lookup_by_column(self.e_df, "dataset", dataset)
+            for dataset in selected_runs:
+                dataframes[dataset] = df_lookup_by_column(sg.dataframe, "dataset", dataset)
                 dataframes_name_group[dataset] = df_group_by(
                     dataframes[dataset], "name"
                 )
@@ -82,7 +72,7 @@ class Auxiliary:
                 )
 
         else:
-            df = df_lookup_by_column(self.e_df, "dataset", sg.name)
+            df = df_lookup_by_column(sg.dataframe, "dataset", sg.name)
             callsites = df_unique(df, "name")
             modules = df_unique(df, "module")
             dataframes = {sg.name: df}
@@ -98,7 +88,7 @@ class Auxiliary:
             "callsiteModuleMap": self._callsite_module_map(dataframes, callsites),
             "moduleCallsiteMap": self._module_callsite_map(dataframes, modules),
             "moduleFctList": sg.module_fct_list,
-            "runs": self.runs,
+            "runs": selected_runs,
         }
 
         # TODO: this should not happen this way

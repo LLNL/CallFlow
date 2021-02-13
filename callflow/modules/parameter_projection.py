@@ -29,30 +29,18 @@ class ParameterProjection:
         :param selected_runs:
         :param n_cluster:
         """
-        # TODO: This code is repeated in modules/auxiliary.py.
-        # Move to a instance method of SuperGraph.
-        if selected_runs is not None:
-            self.runs = selected_runs
-            self.df = sg.df_filter_by_search_string("dataset", self.runs)
+        sg.filter_by_datasets(selected_runs)
 
-        elif isinstance(sg, callflow.SuperGraph) and sg.name != "ensemble":
-            self.runs = [sg.name]
-            self.df = sg.dataframe
-
-        elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
-            self.runs = [k for k, v in sg.supergraphs.items()]
-            self.df = sg.df_filter_by_search_string("dataset", self.runs)
-
-        self.datasets = self.df["dataset"].unique().tolist()
         self.projection = "MDS"
         self.clustering = "k_means"
         self.n_cluster = int(n_cluster)
-        if len(self.datasets) >= self.n_cluster:
-            self.result = self.compute()
+
+        if len(selected_runs) >= self.n_cluster:
+            self.result = self.compute(sg, selected_runs)
         else:
             self.result = pd.DataFrame({})
 
-    def add_df_params(self, dataset):
+    def add_df_params(self, sg, dataset):
         """
         Add information from the df about the dataset.
         :param dataset: dataset tag
@@ -60,24 +48,24 @@ class ParameterProjection:
         """
         # TODO: Research what more properties can be appended to the dataframe.
         ret = {}
-        ret["max_inclusive_time"] = self.df.loc[self.df["dataset"] == dataset][
+        ret["max_inclusive_time"] = sg.dataframe.loc[sg.dataframe["dataset"] == dataset][
             "time (inc)"
         ].max()
-        ret["max_exclusive_time"] = self.df.loc[self.df["dataset"] == dataset][
+        ret["max_exclusive_time"] = sg.dataframe.loc[sg.dataframe["dataset"] == dataset][
             "time"
         ].max()
         ret["rank_count"] = len(
-            self.df.loc[self.df["dataset"] == dataset]["rank"].unique()
+            sg.dataframe.loc[sg.dataframe["dataset"] == dataset]["rank"].unique()
         )
         return ret
 
-    def compute(self):
+    def compute(self, sg, selected_runs):
         """
         Main compute method.
         :return:
         """
         rows = []
-        for idx, dataset in enumerate(self.datasets):
+        for idx, dataset in enumerate(sg, selected_runs):
             df_params = self.add_df_params(dataset)
             rows.append(df_params)
 
