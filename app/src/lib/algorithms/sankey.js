@@ -142,9 +142,9 @@ export default function Sankey() {
 		let idx = 0, node;
 		nodes.forEach(function (node) {
 			nodeMap[node.id] = node;
-			if (debug) {
-				console.debug("[Assign Link ids] ", node.id, "with index: ", idx);
-			}
+			// if (debug) {
+			// 	console.debug("[Assign Link ids] ", node.id, "with index: ", idx);
+			// }
 			idx += 1;
 		});
 
@@ -234,8 +234,8 @@ export default function Sankey() {
 				node.targetValue = Math.max(node.targetValue, Math.max(sourceTargetSum, targetTargetSum));
 			}
 
-			console.debug("[Compute node values] Adjusted flow", node.id, ": ", node.value);
-			console.debug("[Compute node values] Adjusted target flow", node.id, ": ", node.targetValue);
+			// console.debug("[Compute node values] Adjusted flow", node.id, ": ", node.value);
+			// console.debug("[Compute node values] Adjusted target flow", node.id, ": ", node.targetValue);
 		});
 	}
 
@@ -435,19 +435,18 @@ export default function Sankey() {
 					}
 				});
 
-				console.log(nodeHeight);
 				node.y = Math.max(nodeHeight, i);
 				node.parY = node.y;
 
-				console.debug("[Compute node depths] Node: ", node.id);
-				console.debug("[Compute node depths] value: ", node.value);
-				console.debug("[Compute node depths] minNodeScale: ", minNodeScale);
-				console.debug("[Compute node depths] Ensemble scaling: ", scale);
+				// console.debug("[Compute node depths] Node: ", node.id);
+				// console.debug("[Compute node depths] value: ", node.value);
+				// console.debug("[Compute node depths] minNodeScale: ", minNodeScale);
+				// console.debug("[Compute node depths] Ensemble scaling: ", scale);
 
 				node.height = node.value * minNodeScale * scale;
 				node.targetHeight = node.targetValue * minNodeScale * scale;
 
-				console.debug("[Compute node depths] Node height: ", node.height);
+				// console.debug("[Compute node depths] Node height: ", node.height);
 			});
 		});
 
