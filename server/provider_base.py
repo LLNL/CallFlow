@@ -143,8 +143,6 @@ class BaseProvider:
 
         elif operation_name == "supergraph_data":
             if operation["reProcess"]:
-                print("Procesing.....")
-                # TODO: Re-process the entier pipeline.
                 Auxiliary(self.supergraphs["ensemble"], selected_runs=operation["datasets"], rankBinCount=operation["rankBinCount"], runBinCount=operation["runBinCount"])
 
             return self.supergraphs["ensemble"].auxiliary_data

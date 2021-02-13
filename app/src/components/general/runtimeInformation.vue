@@ -12,15 +12,16 @@
 			dense
 			:headers="headers"
 			:items="data"
-			:items-per-page="5"
 			class="elevation-1"
 			:loading="isLoading"
 			loading-text="Loading... Please wait"
+			:sort-by="sortBy"
+			sort-desc="false"
 		>
 			<template slot="items" slot-scope="props">
 				<tr>
-					<td nowrap="true">{{ props.item.run }}</td>
 					<td nowrap="true">{{ props.item.run_time }}</td>
+					<td nowrap="true">{{ props.item.run }}</td>
 					<td nowrap="true">{{ props.item.num_ranks }}</td>
 					<td nowrap="true">{{ props.item.num_callsites }}</td>
 					<td nowrap="true">{{ props.item.num_edges }}</td>
@@ -37,14 +38,16 @@ export default {
 	props: ["data"],
 	data: () => ({
 		headers: [
+			{ text: "Mean runtime", value: "run_time"},
 			{ text: "Run", value: "run" },
-			{ text: "Total runtime", value: "run_time", sortable: true},
 			{ text: "Number of ranks", value: "num_ranks"},
 			{ text: "Number of call sites", value: "num_callsites"},
 			{ text: "Number of calls", value: "num_edges"}
 		],
 		// TODO: Fix the isLoading, it does not show since data lookup is fast.
-		isLoading: false
+		isLoading: false,
+		sortBy: "run_time",
+		sortDesc: false,
 	}),
 };
 </script>

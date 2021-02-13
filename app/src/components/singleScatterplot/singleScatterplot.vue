@@ -66,7 +66,6 @@ export default {
 	mounted() {
 		let self = this;
 		EventHandler.$on("single-scatterplot", function (data) {
-			console.debug("Single Scatterplot: ", data["node"].id);
 			self.visualize(data);
 		});
 	},

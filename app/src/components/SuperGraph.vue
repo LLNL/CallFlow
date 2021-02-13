@@ -133,7 +133,6 @@ import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
 // Local library imports
-import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
 
 // Super graph dashboard imports
@@ -234,8 +233,6 @@ export default {
 		selectedColorMax: null,
 		selectedColorMinText: "",
 		selectedColorMaxText: "",
-		groupModes: ["include callbacks", "exclude callbacks"],
-		selectedGroupMode: "include callbacks",
 		scatterMode: ["mean", "all"],
 		selectedScatterMode: "all",
 		isCallgraphInitialized: false,
@@ -260,7 +257,7 @@ export default {
 
 	mounted() {
 		this.setupStore();
-
+		
 		// Push to '/' when `this.$store.selectedDatasets` is undefined.
 		if (this.$store.selectedDatasets === undefined) {
 			this.requestAuxData();
@@ -280,7 +277,6 @@ export default {
 			this.clear();
 			this.init();
 		});
-
 	},
 
 	methods: {
@@ -293,8 +289,6 @@ export default {
 
 			// Call the appropriate socket to query the server.
 			this.initComponents(this.currentSingleSuperGraphComponents);
-
-			// EventHandler.$emit("single-refresh-boxplot", {});
 		},
 
 		setupStore() {
