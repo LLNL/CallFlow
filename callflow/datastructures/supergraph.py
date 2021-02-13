@@ -797,6 +797,7 @@ class SuperGraph(ht.GraphFrame):
             self.dataframe = self.df_filter_by_search_string("dataset", runs)
 
         else:
-            runs = [sg.name]
+            runs = [self.name]
             self.dataframe = self.dataframe
+
     # --------------------------------------------------------------------------

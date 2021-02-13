@@ -13,7 +13,6 @@ from sklearn import preprocessing
 from sklearn.manifold import TSNE, MDS
 from sklearn.cluster import KMeans
 
-import callflow
 from callflow.algorithms import KMedoids
 
 
@@ -48,12 +47,12 @@ class ParameterProjection:
         """
         # TODO: Research what more properties can be appended to the dataframe.
         ret = {}
-        ret["max_inclusive_time"] = sg.dataframe.loc[sg.dataframe["dataset"] == dataset][
-            "time (inc)"
-        ].max()
-        ret["max_exclusive_time"] = sg.dataframe.loc[sg.dataframe["dataset"] == dataset][
-            "time"
-        ].max()
+        ret["max_inclusive_time"] = sg.dataframe.loc[
+            sg.dataframe["dataset"] == dataset
+        ]["time (inc)"].max()
+        ret["max_exclusive_time"] = sg.dataframe.loc[
+            sg.dataframe["dataset"] == dataset
+        ]["time"].max()
         ret["rank_count"] = len(
             sg.dataframe.loc[sg.dataframe["dataset"] == dataset]["rank"].unique()
         )

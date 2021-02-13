@@ -56,9 +56,9 @@ class EnsembleGraph(SuperGraph):
         if selected_runs is not None:
             runs = selected_runs
             self.dataframe = self.df_filter_by_search_string("dataset", runs)
-
-        elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
-            runs = [k for k, v in sg.supergraphs.items()]
+        else:
+            runs = [k for k, v in self.supergraphs.items()]
             self.dataframe = self.df_filter_by_search_string("dataset", runs)
+
 
 # ------------------------------------------------------------------------------

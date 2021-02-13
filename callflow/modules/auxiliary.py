@@ -63,7 +63,9 @@ class Auxiliary:
             dataframes_module_group = {"ensemble": df_group_by(sg.dataframe, "module")}
 
             for dataset in selected_runs:
-                dataframes[dataset] = df_lookup_by_column(sg.dataframe, "dataset", dataset)
+                dataframes[dataset] = df_lookup_by_column(
+                    sg.dataframe, "dataset", dataset
+                )
                 dataframes_name_group[dataset] = df_group_by(
                     dataframes[dataset], "name"
                 )
