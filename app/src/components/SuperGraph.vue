@@ -166,13 +166,13 @@ export default {
 
 		selectedMetric: function (val) {
 			this.$store.selectedMetric = val;
+			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
 			this.reset();
 		},
 
 		selectedRuntimeColorMap(val) {
-			this.clear();
 			this.$parent.$parent.setupColors(val);
-			this.init();
+			this.reset();
 		},
 
 		selectedRuntimeSortBy(val) {
@@ -182,10 +182,14 @@ export default {
 
 		selectedMPIBinCount(val) {
 			this.$store.selectedMPIBinCount = val;
-			this.$store.reprocess = 1;
-			this.fetchData();
-			this.clear();
-			this.init();
+			const payload = {
+				datasets: this.$store.selectedTargetDataset,
+				rankBinCount: this.$store.selectedMPIBinCount,
+				runBinCount: this.$store.selectedRunBinCount,
+				reProcess: true
+			};
+			EventHandler.$emit("fetch-aux-data", payload);
+			this.reset();
 		},
 
 		selectedScale(val) {
@@ -202,6 +206,12 @@ export default {
 			this.$store.selectedTargetDataset = val;
 			this.reset();
 		},
+
+		selectedColorPoint(val) {
+			this.$store.selectedColorPoint = val;
+			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
+			this.reset();
+		}
 	},
 
 	props: {

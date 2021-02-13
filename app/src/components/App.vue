@@ -89,11 +89,11 @@ export default {
 	mounted() {
 		document.title = "CallFlow - ";
 
-		EventHandler.$on("fetch-data", () => {
-			this.fetchData();
+		EventHandler.$on("fetch-aux-data", async (payload) => {
+			return await this.fetchData(payload);
 		});
 
-		EventHandler.$emit("fetch-data");
+		EventHandler.$emit("fetch-aux-data");
 	},
 
 	methods: {
@@ -101,16 +101,19 @@ export default {
 		 * Send the request to /init endpoint
 		 * Parameters: {datasetPath: "path/to/dataset"}
 		*/ 
-		async fetchData() {
+		async fetchData(payload) {
 			this.config = await APIService.GETRequest("config");
 
 			document.title = "CallFlow - " + this.config.experiment;
-
-			this.data = await APIService.POSTRequest("aux_data", {
-				datasets: this.config.runs,
-				rankBinCount: this.rankBinCount,
-				runBinCount: this.runBinCount,
-			});
+			
+			if(!payload) {
+				payload = {
+					datasets: this.config.runs,
+					rankBinCount: this.rankBinCount,
+					runBinCount: this.runBinCount,
+				};
+			}
+			this.data = await APIService.POSTRequest("aux_data", payload);
 
 			console.debug("[/aux_data] data: ", this.data);
 
