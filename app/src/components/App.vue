@@ -111,6 +111,7 @@ export default {
 					datasets: this.config.runs,
 					rankBinCount: this.rankBinCount,
 					runBinCount: this.runBinCount,
+					reProcess: false,
 				};
 			}
 			this.data = await APIService.POSTRequest("aux_data", payload);
