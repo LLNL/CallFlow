@@ -50,7 +50,6 @@
 import * as utils from "lib/utils";
 import Color from "lib/color/";
 import APIService from "lib/routing/APIService";
-import EventHandler from "lib/routing/EventHandler";
 
 // Local components
 import BasicInformation from "./general/basicInformation";
@@ -76,6 +75,7 @@ export default {
 		rankBinCount: 20,
 		runBinCount: 20,
 		selectedIQRFactor: 0.15,
+		selectedDistributionColorMap: "Reds",
 		targetColorMap: {
 			Green: "#4EAF4A",
 			Blue: "#4681B4",
@@ -88,66 +88,77 @@ export default {
 
 	mounted() {
 		document.title = "CallFlow - ";
-
-		EventHandler.$on("fetch-aux-data", async (payload) => {
-			return await this.fetchData(payload);
-		});
-
-		EventHandler.$emit("fetch-aux-data");
+		this.init();
 	},
 
 	methods: {
+		async init() {
+			const data = await this.fetchData();
+			this.initStore(data);
+		},
+
 		/**
 		 * Send the request to /init endpoint
 		 * Parameters: {datasetPath: "path/to/dataset"}
 		*/ 
 		async fetchData(payload) {
-			this.config = await APIService.GETRequest("config");
+			if (!this.$store.config) {
+				this.config = await APIService.GETRequest("config");
+				this.$store.config = this.config;
+			}
 
-			document.title = "CallFlow - " + this.config.experiment;
+			document.title = "CallFlow - " + this.$store.config.experiment;
 			
 			if(!payload) {
 				payload = {
-					datasets: this.config.runs,
+					datasets: this.$store.config.runs,
 					rankBinCount: this.rankBinCount,
 					runBinCount: this.runBinCount,
 					reProcess: false,
 				};
 			}
-			this.data = await APIService.POSTRequest("aux_data", payload);
+			return await APIService.POSTRequest("aux_data", payload);
+		},
 
-			console.debug("[/aux_data] data: ", this.data);
-
-			this.runs = this.data.runs;
-			this.run_counts = this.runs.length;
-
-			// Render the tables in the view
-			const dataset_props = this.data.dataset;
-			this.runtime = Object.keys(dataset_props).map((_) =>  { return {"run": _, ...dataset_props[_]};});
-			const module_fct_list = this.data.moduleFctList;
-			// TODO: Does not work as the format is weird.
-			this.module_callsite_map = Object.keys(this.data.moduleCallsiteMap["ensemble"]).map((_) => { return {"module": module_fct_list[_], ...this.data.moduleCallsiteMap[_]};});
-			
-			this.setStore();
-			this.setGlobalVariables(); // Set the variables that do not depend on data.
-			this.setTargetDataset(); // Set target dataset.
-			this.setupColors(); // Set up the colors.
+		initStore(data) {
+			this.setGlobalVariables(); // Set the general variables in the store.
+			this.setLocalVariables(data); // Set the local variables (i.e., in this component).
+			this.setAuxVariables(data); // Set the variables that are affected by auxiliary data.
 			this.setViewDimensions(); // Set the view dimensions.
 		},
 
 		/**
-		 * Attaches properties to central storage based on the data from .
+		 * Attaches properties to central storage based on the data from `this.auxiliary_data`.
 		 */
-		setStore() {
-			this.$store.selectedDatasets = this.runs;
-			this.$store.numOfRuns = this.runs.length;
-			this.$store.modules = this.data.module;
-			this.$store.callsites = this.data.callsite;
-			this.$store.moduleCallsiteMap = this.data.moduleCallsiteMap;
-			this.$store.callsiteModuleMap = this.data.callsiteModuleMap;
-			this.$store.moduleFctList = this.data.moduleFctList;
-			this.$store.selectedDatasets = this.data.runs;
-			this.$store.runtimeProps = this.data.runtimeProps;
+		setAuxVariables(data) {
+			this.$store.selectedDatasets = data.runs;
+			this.$store.numOfRuns = data.runs.length;
+			this.$store.modules = data.module;
+			this.$store.callsites = data.callsite;
+			this.$store.moduleCallsiteMap = data.moduleCallsiteMap;
+			this.$store.callsiteModuleMap = data.callsiteModuleMap;
+			this.$store.moduleFctList = data.moduleFctList;
+			this.$store.selectedDatasets = data.runs;
+			this.$store.runtimeProps = data.runtimeProps;
+
+			this.$store.metricTimeMap = Object.keys(data.runtimeProps[this.$store.selectedMetric]).reduce((res, item, idx) => { 
+				res[item] = data.runtimeProps[this.$store.selectedMetric][item]["mean"];
+				return res;
+			}, {});
+			this.$store.selectedTargetDataset = utils.getKeyWithMaxValue(this.$store.metricTimeMap);
+			this.setupColors(this.selectedRuntimeColorMap, this.selectedDistributionColorMap); // Set up the colors.
+		},
+
+		setLocalVariables(data) {
+			this.runs = data.runs;
+			this.run_counts = data.runs.length;
+
+			// Render the tables in the view
+			const dataset_props = data.dataset;
+			this.runtime = Object.keys(dataset_props).map((_) =>  { return {"run": _, ...dataset_props[_]};});
+			const module_fct_list = data.moduleFctList;
+			// TODO: Does not work as the format is weird.
+			this.module_callsite_map = Object.keys(data.moduleCallsiteMap["ensemble"]).map((_) => { return {"module": module_fct_list[_], ...data.moduleCallsiteMap[_]};});
 		},
 
 		setGlobalVariables() {
@@ -155,7 +166,7 @@ export default {
 			this.$store.selectedProp = "rank";
 
 			this.$store.selectedIQRFactor = 0.15;
-			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
+			this.$store.selectedRunBinCount = 20;
 			this.$store.selectedEdgeAlignment = "Top";
 
 			// Used in sankey.js
@@ -175,78 +186,22 @@ export default {
 			
 			// Set the metric to sort the call site information
 			this.$store.selectedRuntimeSortBy = "Inclusive";
+			this.$store.selectedMetric = "Inclusive";
 		},
 
-		sortDatasetsByAttr(datasets, attr) {
-			let metricTimeMap = {};
-			if (datasets.length == 1) {
-				metricTimeMap[datasets[0]] = this.$store.runtimeProps.maxIncTime[datasets[0]];
-				return datasets;
-			}
-			let ret = datasets.sort((a, b) => {
-				let x = 0,
-					y = 0;
-				if (attr == "Inclusive") {
-					x = this.$store.runtimeProps.maxIncTime[a];
-					y = this.$store.runtimeProps.maxIncTime[b];
-					metricTimeMap = this.$store.runtimeProps.maxIncTime;
-				} else if (attr == "Exclusive") {
-					x = this.$store.runtimeProps.maxExcTime[a];
-					y = this.$store.runtimeProps.maxExcTime[b];
-					metricTimeMap = this.$store.runtimeProps.maxExcTime;
-				}
-				return parseFloat(x) - parseFloat(y);
-			});
-			return ret, metricTimeMap;
-		},
-
-		setTargetDataset() {
-			this.datasets, this.$store.metricTimeMap = this.sortDatasetsByAttr(
-				this.runs,
-				this.$store.selectedMetric
-			);
-
-			let max_dataset = "";
-			let current_max_time = 0.0;
-
-			let data = {};
-			if (this.$store.selectedMetric == "Inclusive") {
-				data = this.$store.runtimeProps.maxIncTime;
-			} else if (this.$store.selectedMetric == "Exclusive") {
-				data = this.$store.runtimeProps.maxExcTime;
-			}
-
-			for (let run_idx=0; run_idx < this.run_counts; run_idx += 1) {
-				if (current_max_time < data[this.runs[run_idx]]) {
-					current_max_time = data[this.runs[run_idx]];
-					max_dataset = this.runs[run_idx];
-				}
-			}
-			this.$store.selectedTargetDataset = max_dataset;
-		},
 
 		setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {
-			// Create color object.
 			this.$store.runtimeColor = new Color();
 			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
 			
-			if (selectedRuntimeColorMap) {
-				this.setRuntimeColorScale(selectedRuntimeColorMap);
-			}
-			else {
-				this.setRuntimeColorScale("OrRd");
-			}
+			this.setRuntimeColorScale(selectedRuntimeColorMap, this.$store.selectedMetric);
 
 			if(this.$store.numOfRuns > 1) {
 				// Create distribution color object
 				this.$store.distributionColor = new Color();
 				this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();
 				
-				if(selectedDistributionColorMap) {
-					this.setDistributionColorScale(selectedDistributionColorMap);
-				} else {
-					this.setDistributionColorScale("Reds");
-				}
+				this.setDistributionColorScale(selectedDistributionColorMap);
 
 				this.selectedTargetColor = "Green";
 				this.$store.distributionColor.target = this.targetColorMap[
@@ -257,13 +212,7 @@ export default {
 
 				// Create difference color object
 				this.$store.diffColor = new Color();
-
-				if(selectedDistributionColorMap) { 
-					this.$store.selectedDistributionColorMap = selectedDistributionColorMap;
-				}
-				else{
-					this.$store.selectedDistributionColorMap = "Reds";
-				}
+				this.$store.selectedDistributionColorMap = selectedDistributionColorMap;
 			}
 
 			// Set properties into store.
@@ -275,41 +224,10 @@ export default {
 		},
 
 		// Set the min and max and assign color variables from Settings.
-		setRuntimeColorScale(selectedRuntimeColorMap) {
-			let colorMin = null;
-			let colorMax = null;
-			const runtimeProps = this.$store.runtimeProps;
-			if (this.$store.numOfRuns > 1) {
-				if (this.$store.selectedMetric == "Inclusive") {
-					colorMin = parseFloat(runtimeProps.minIncTime["ensemble"]);
-					colorMax = parseFloat(runtimeProps.maxIncTime["ensemble"]);
-				} else if (this.$store.selectedMetric == "Exclusive") {
-					colorMin = parseFloat(runtimeProps.minExcTime["ensemble"]);
-					colorMax = parseFloat(runtimeProps.maxExcTime["ensemble"]);
-				} else if (this.$store.selectedMetric == "Imbalance") {
-					colorMin = 0.0;
-					colorMax = 1.0;
-				}
-			} else {
-				if (this.$store.selectedMetric == "Inclusive") {
-					colorMin = parseFloat(
-						runtimeProps.minIncTime[this.$store.selectedTargetDataset]
-					);
-					colorMax = parseFloat(
-						runtimeProps.maxIncTime[this.$store.selectedTargetDataset]
-					);
-				} else if (this.$store.selectedMetric == "Exclusive") {
-					colorMin = parseFloat(
-						runtimeProps.minExcTime[this.$store.selectedTargetDataset]
-					);
-					colorMax = parseFloat(
-						runtimeProps.maxExcTime[this.$store.selectedTargetDataset]
-					);
-				} else if (this.$store.selectedMetric == "Imbalance") {
-					colorMin = 0.0;
-					colorMax = 1.0;
-				}
-			}
+		setRuntimeColorScale(selectedRuntimeColorMap, metric) {
+			const _d = this.$store.runtimeProps[metric][this.$store.selectedTargetDataset];
+			const colorMin = parseFloat(_d["min"]);
+			const colorMax = parseFloat(_d["max"]);
 
 			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
 				parseFloat(colorMin)
@@ -322,7 +240,7 @@ export default {
 			this.$store.selectedColorMax = colorMax;
 
 			this.$store.runtimeColor.setColorScale(
-				this.$store.selectedMetric,
+				metric,
 				colorMin,
 				colorMax,
 				selectedRuntimeColorMap,

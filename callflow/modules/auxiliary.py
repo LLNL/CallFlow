@@ -32,22 +32,22 @@ class Auxiliary:
     """
 
     def __init__(
-        self, sg, selected_runs=None, MPIBinCount: int = 20, RunBinCount: int = 20
+        self, sg, selected_runs=None, rankBinCount: int = 20, runBinCount: int = 20
     ):
         """
         Constructor
         :param sg: SuperGraph
         :param selected_runs: Array of selected runs
-        :param MPIBinCount: Bin count for MPI-level histogram
-        :param RunBinCount: Bin count for run-level histogram
+        :param rankBinCount: Bin count for MPI-level histogram
+        :param runBinCount: Bin count for run-level histogram
         """
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
 
-        self.MPIBinCount = MPIBinCount
-        self.RunBinCount = RunBinCount
+        self.MPIBinCount = rankBinCount
+        self.RunBinCount = runBinCount
         self.hist_props = ["rank", "name", "dataset", "all_ranks"]
 
-        sg.filter_by_datasets(selected_runs)
+        selected_runs = sg.filter_by_datasets(selected_runs)
 
         LOGGER.warning(
             f"Computing auxiliary data for ({sg}) with {len(selected_runs)}."
@@ -105,34 +105,17 @@ class Auxiliary:
         :return:
         """
         props = {}
-        props["maxIncTime"] = {}
-        props["maxExcTime"] = {}
-        props["minIncTime"] = {}
-        props["minExcTime"] = {}
+        props["Inclusive"] = {}
+        props["Exclusive"] = {}
         props["numOfRanks"] = {}
-        maxIncTime = 0
-        maxExcTime = 0
-        minIncTime = 0
-        minExcTime = 0
-        maxNumOfRanks = 0
+
+        min_max_payload = lambda df, metric: {"mean": df[metric].mean(), "max": df[metric].max(), "min": df[metric].min()}
+       
         for idx, tag in enumerate(dataframes):
-            props["maxIncTime"][tag] = dataframes[tag]["time (inc)"].max()
-            props["maxExcTime"][tag] = dataframes[tag]["time"].max()
-            props["minIncTime"][tag] = dataframes[tag]["time (inc)"].min()
-            props["minExcTime"][tag] = dataframes[tag]["time"].min()
-            props["numOfRanks"][tag] = len(dataframes[tag]["rank"].unique())
-            maxExcTime = max(props["maxExcTime"][tag], maxExcTime)
-            maxIncTime = max(props["maxIncTime"][tag], maxIncTime)
-            minExcTime = min(props["minExcTime"][tag], minExcTime)
-            minIncTime = min(props["minIncTime"][tag], minIncTime)
-            maxNumOfRanks = max(props["numOfRanks"][tag], maxNumOfRanks)
-
-        props["maxIncTime"]["ensemble"] = maxIncTime
-        props["maxExcTime"]["ensemble"] = maxExcTime
-        props["minIncTime"]["ensemble"] = minIncTime
-        props["minExcTime"]["ensemble"] = minExcTime
-        props["numOfRanks"]["ensemble"] = maxNumOfRanks
-
+            if tag != "ensemble":
+                props["Inclusive"][tag] = min_max_payload(dataframes[tag], "time (inc)")
+                props["Exclusive"][tag] = min_max_payload(dataframes[tag], "time")
+                props["numOfRanks"][tag] = len(dataframes[tag]["rank"].unique())
         return props
 
     def _collect_data_dataset(self, dfs, sg):

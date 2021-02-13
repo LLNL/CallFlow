@@ -133,6 +133,7 @@ import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
 // Local library imports
+import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
 
 // Super graph dashboard imports
@@ -180,15 +181,9 @@ export default {
 			EventHandler.$emit("callsite-information-sort");
 		},
 
-		selectedMPIBinCount(val) {
+		async selectedMPIBinCount(val) {
 			this.$store.selectedMPIBinCount = val;
-			const payload = {
-				datasets: this.$store.selectedTargetDataset,
-				rankBinCount: this.$store.selectedMPIBinCount,
-				runBinCount: this.$store.selectedRunBinCount,
-				reProcess: true
-			};
-			EventHandler.$emit("fetch-aux-data", payload);
+			this.requestAuxData();
 			this.reset();
 		},
 
@@ -268,7 +263,10 @@ export default {
 
 		// Push to '/' when `this.$store.selectedDatasets` is undefined.
 		if (this.$store.selectedDatasets === undefined) {
-			this.$router.push("/");
+			this.requestAuxData();
+		}
+		else {
+			this.init();
 		}
 
 		EventHandler.$on("lasso_selection", () => {
@@ -283,7 +281,6 @@ export default {
 			this.init();
 		});
 
-		this.init();
 	},
 
 	methods: {
@@ -362,6 +359,12 @@ export default {
 		closeSettings() {
 			this.isSettingsOpen = !this.isSettingsOpen;
 		},
+
+		async requestAuxData() {
+			const data = await this.$parent.$parent.fetchData();
+			this.$parent.$parent.initStore(data);
+			this.init();
+		}
 	},
 };
 </script>
