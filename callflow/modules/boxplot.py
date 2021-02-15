@@ -43,12 +43,11 @@ class BoxPlot:
             mask = np.where(mask)[0]
 
             self.result[tk] = {"q": q,
-                               "outliers": {"values": df[tv].to_numpy()[mask],
-                                            "ranks": df['rank'].to_numpy()[mask],
-                                            },
+                               "oval": df[tv].to_numpy()[mask],
+                               "orank": df['rank'].to_numpy()[mask]
                                }
             if ndatasets > 1:
-                self.result[tk]['outliers']['datasets'] = df['dataset'].to_numpy()[mask]
+                self.result[tk]['odset'] = df['dataset'].to_numpy()[mask]
 
             '''
             self.result[tk] = {
