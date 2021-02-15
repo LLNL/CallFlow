@@ -33,7 +33,7 @@ class SuperGraph(ht.GraphFrame):
         "df": "df.pkl",
         "nxg": "nxg.json",
         "env_params": "env_params.txt",
-        "aux": "auxiliary_data.json",
+        "aux": "auxiliary_data.npy",
     }
 
     # --------------------------------------------------------------------------
@@ -587,8 +587,15 @@ class SuperGraph(ht.GraphFrame):
         """
         fname = os.path.join(path, SuperGraph._FILENAMES["aux"])
         LOGGER.debug(f"Writing ({fname})")
-        with open(fname, "w") as f:
-            json.dump(data, f, cls=NumpyEncoder)
+
+        ext = os.path.splitext(SuperGraph._FILENAMES["aux"])[-1]
+        if '.json' == ext:
+            with open(fname, "w") as f:
+                json.dump(data, f, cls=NumpyEncoder)
+        elif '.npy' == ext:
+            np.save(fname, data, allow_pickle=True)
+        else:
+            assert False
 
     @staticmethod
     def read_df(path):
@@ -643,6 +650,29 @@ class SuperGraph(ht.GraphFrame):
         return graph
 
     @staticmethod
+    def read_aux(path):
+        """
+
+        :param path:
+        :return:
+        """
+        fname = os.path.join(path, SuperGraph._FILENAMES["aux"])
+        LOGGER.debug(f"Reading ({fname})")
+
+        data = {}
+        ext = os.path.splitext(SuperGraph._FILENAMES["aux"])[-1]
+        try:
+            if '.json' == ext:
+                with open(fname, "r") as fptr:
+                    data = json.load(fptr)
+            elif '.npy' == ext:
+                data = np.load(fname, allow_pickle=True).item()
+
+        except Exception as e:
+            LOGGER.critical(f"Failed to read aux file: {e}")
+        return data
+
+    @staticmethod
     def read_env_params(path):
         """
 
@@ -659,24 +689,6 @@ class SuperGraph(ht.GraphFrame):
                     data[split_num[0]] = split_num[1]
         except Exception as e:
             LOGGER.critical(f"Failed to read env_params file: {e}")
-        return data
-
-    @staticmethod
-    def read_aux(path):
-        """
-
-        :param path:
-        :return:
-        """
-        data = {}
-        try:
-            fname = os.path.join(path, SuperGraph._FILENAMES["aux"])
-            LOGGER.debug(f"Reading ({fname})")
-            with open(fname, "r") as fptr:
-                data = json.load(fptr)
-        except Exception as e:
-            LOGGER.critical(f"Failed to read aux file: {e}")
-
         return data
 
     # --------------------------------------------------------------------------
