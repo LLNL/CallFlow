@@ -15,6 +15,35 @@ import statsmodels.nonparametric.api as smnp
 import hatchet
 import networkx as nx
 
+# ------------------------------------------------------------------------------
+def print_dict_recursive(d, indent=0):
+
+    _space = '   '
+    _indent = ''
+    for _ in range(indent):
+        _indent += _space
+
+    for k, v in d.items():
+        _s = f'{_indent} l{indent} ({k} = {type(v)}):'
+
+        if isinstance(v, (int, float, str, tuple)):
+            print(f'{_s} {v}')
+
+        elif isinstance(v, list):
+            if len(v) > 5:
+                print(f'{_s} {len(v)} {v[:5]}...')
+            else:
+                print(f'{_s} {len(v)} {v}')
+
+        elif isinstance(v, np.ndarray):
+            if len(v) > 5:
+                print(f'{_s} {v.shape} {v[:5]}...')
+            else:
+                print(f'{_s} {v.shape} {v}')
+
+        elif isinstance(v, dict):
+            print(f'{_s} {len(v)}')
+            print_dict_recursive(v, indent+1)
 
 # ------------------------------------------------------------------------------
 # statistics utils
