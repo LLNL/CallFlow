@@ -800,4 +800,6 @@ class SuperGraph(ht.GraphFrame):
             runs = [self.name]
             self.dataframe = self.dataframe
 
+        return runs
+
     # --------------------------------------------------------------------------

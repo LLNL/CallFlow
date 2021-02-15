@@ -47,7 +47,7 @@ class Auxiliary:
         self.RunBinCount = RunBinCount
         self.hist_props = ["rank", "name", "dataset", "all_ranks"]
 
-        sg.filter_by_datasets(selected_runs)
+        selected_runs = sg.filter_by_datasets(selected_runs)
 
         LOGGER.warning(
             f"Computing auxiliary data for ({sg}) with {len(selected_runs)}."
