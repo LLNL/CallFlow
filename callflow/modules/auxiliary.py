@@ -30,19 +30,18 @@ class Auxiliary:
     Auxiliary: consolidates per-callsite and per-module information.
     """
     def __init__(self, sg, selected_runs=None,
-                 MPIBinCount: int = 20, RunBinCount: int = 20):
+                 nbins_rank: int = 20, nbins_run: int = 20):
         """
         Constructor
         :param sg: SuperGraph
         :param selected_runs: Array of selected runs
-        :param MPIBinCount: Bin count for MPI-level histogram
-        :param RunBinCount: Bin count for run-level histogram
+        :param nbins_rank: Bin count for MPI-level histogram
+        :param nbins_run: Bin count for run-level histogram
         """
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
 
-        self.MPIBinCount = MPIBinCount
-        self.RunBinCount = RunBinCount
-        #self.hist_props = ["rank", "name", "dataset", "all_ranks"]
+        self.nbins_rank = nbins_rank
+        self.nbins_run = nbins_run
 
         self.proxy_columns = sg.proxy_columns
         self.time_columns = [self.proxy_columns.get(_, _) for _ in TIME_COLUMNS]
@@ -83,17 +82,29 @@ class Auxiliary:
 
         # ----------------------------------------------------------------------
         self.result = {
-            "runs": self.runs,
+            # HB removed: not needed snice this is tthe key for all others
+            # "runs": self.runs,
+
+            # HB brought these up
+            "dataset": self._collect_data_dataset(dataframes, sg),
             "moduleFctList": sg.module_fct_list,
+
             "callsiteModuleMap": self._callsite_module_map(dataframes, callsites),
             "moduleCallsiteMap": self._module_callsite_map(dataframes, modules),
-
             "runtimeProps": self._runtime_props(dataframes),
-            "dataset": self._collect_data_dataset(dataframes, sg),
-
-            "callsite": self._collect_data(dataframes_name_group, "callsite"),
-            "module": self._collect_data(dataframes_module_group, "module")
+            
+            # "callsite": self._collect_data(dataframes_name_group, "callsite"),
+            # "module": self._collect_data(dataframes_module_group, "module")
         }
+        print(self.result.keys())
+        for k, v in self.result.items():
+            if isinstance(v, list):
+                print('\n>', k, v)
+            elif isinstance(v, dict):
+                print('\n>', k, v.keys())
+                for _k, _v in v.items():
+                    print('\t>', _k, _v)
+        exit()
 
         # TODO: this should not happen this way
         sg.auxiliary_data = self.result
@@ -105,31 +116,26 @@ class Auxiliary:
         :param dataframes:
         :return:
         """
-        props = {_: {} for _ in TIME_COLUMNS + ['nranks']}
+        props = {_: {} for _ in TIME_COLUMNS + ['rank']}
 
-        # gather the data for ensemble
-        trng = (100000,0)
-        tirng = (100000, 0)
-        nranks = 0
+        for _p in list(props.keys()):
+            if _p == 'rank':
+                _enranks = 0
+                for idx, tag in enumerate(dataframes):
+                    _pnranks = df_count(dataframes[tag], _p, self.proxy_columns)
+                    _enranks = max(_enranks, _pnranks)
+                    props[_p][tag] = _pnranks
 
-        for idx, tag in enumerate(dataframes):
-            _trng = df_minmax(dataframes[tag], 'time', self.proxy_columns)
-            _tirng = df_minmax(dataframes[tag], 'time (inc)', self.proxy_columns)
-            _nranks = df_count(dataframes[tag], "rank", self.proxy_columns)
+                props[_p]['ensemble'] = _enranks
 
-            props['time'][tag] = _trng
-            props['time (inc)'][tag] = _tirng
-            props["nranks"][tag] = _nranks
+            else:
+                _erange = (100000, 0)
+                for idx, tag in enumerate(dataframes):
+                    _prange = df_minmax(dataframes[tag], _p, self.proxy_columns)
+                    _erange = (min(_erange[0], _prange[0]), max(_erange[1], _prange[1]))
+                    props[_p][tag] = _prange
 
-            # collect for ensemble
-            trng = (min(trng[0], _trng[0]), max(trng[1], _trng[1]))
-            tirng = (min(tirng[0], _tirng[0]), max(tirng[1], _tirng[1]))
-            nranks = max(nranks, _nranks)
-
-        tag = 'ensemble'
-        props['time'][tag] = trng
-        props['time (inc)'][tag] = tirng
-        props['nranks'][tag] = nranks
+                props[_p]['ensemble'] = _erange
 
         '''
         props = {}
@@ -226,7 +232,7 @@ class Auxiliary:
 
                     gradients = Gradients(name_df,
                                           proxy_columns=self.proxy_columns,
-                                          bins=self.RunBinCount,
+                                          bins=self.nbins_run,
                                           callsiteOrModule=name).result
 
                 elif "ensemble" in dataframes_group:
@@ -441,7 +447,7 @@ class Auxiliary:
                 hists["Exclusive"][prop] = prop_histograms["Exclusive"]
             # Calculate gradients
             gradients = {"Inclusive": {}, "Exclusive": {}}
-            gradients = Gradients(self.target_df, binCount=self.RunBinCount).run(
+            gradients = Gradients(self.target_df, binCount=self.nbins_run).run(
                 columnName=col, callsiteOrModule=node
             )
             quartiles = {"Inclusive": {}, "Exclusive": {}}
