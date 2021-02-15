@@ -9,6 +9,8 @@ CallFlow's operation to calculate the rank and dataset histograms.
 """
 import numpy as np
 import pandas as pd
+import itertools
+from callflow.utils.df import df_count
 
 import callflow
 from callflow.utils.utils import histogram
@@ -23,55 +25,48 @@ class Histogram:
     Calculate Histogram (Per rank, All ranks, Per dataset)
     """
 
-    HISTO_TYPES = ["rank", "name", "dataset", "all_ranks"]
+    HISTO_TYPES = ["rank", "name", "dataset"]
 
-    def __init__(self, df_ensemble, df_target=None, bins=20, proxy_columns={}):
+    def __init__(self, dataframes_as_dict, bins=20,
+                 histo_types = [], proxy_columns={}):
         """
 
-        :param df_ensemble:
-        :param df_target:
+        :param dataframes_as_dict:
+        :param histo_types:
         :param bins:
+        :param proxy_columns:
         """
-        assert isinstance(df_ensemble, pd.DataFrame)
-        assert isinstance(df_target, pd.DataFrame) or df_target is None
+        assert isinstance(dataframes_as_dict, dict)
         assert isinstance(bins, int)
         assert isinstance(proxy_columns, dict)
+        assert isinstance(histo_types, list)
         assert bins > 0
+        for k, v in dataframes_as_dict.items():
+            assert isinstance(k, str) and isinstance(v, pd.DataFrame)
 
         self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
         self.result = {_: {} for _ in TIME_COLUMNS}
 
-        # for each type of histogram
-        for histo_type in Histogram.HISTO_TYPES:
+        if len(histo_types) == 0:
+            histo_types = Histogram.HISTO_TYPES
 
-            if df_target is None:
-                _dfe = self._get_data_by_histo_type(df_ensemble, histo_type)
+        # for each type of histogram and each time column
+        for h,(tk,tv) in itertools.product(histo_types, zip(TIME_COLUMNS, self.time_columns)):
+            self.result[tk][h] = {}
 
-                # for each time column
-                for tk, tv in zip(TIME_COLUMNS, self.time_columns):
-                    _hist = histogram(_dfe[tv], bins=bins)
-                    self.result[tk][histo_type] = {
-                        "ensemble": Histogram._format_data(_hist)
-                    }
+            data = {dn: self._get_data_by_histo_type(df, h)[tv]
+                    for dn, df in dataframes_as_dict.items()}
 
-            else:
-                _dfe = self._get_data_by_histo_type(df_ensemble, histo_type)
-                _dft = self._get_data_by_histo_type(df_target, histo_type)
+            # in the first pass, compute the range
+            drange = [100000, -100000]
+            for dn, df in data.items():
+                drange[0] = min(drange[0], df.min())
+                drange[1] = max(drange[1], df.max())
 
-                # for each time column
-                for tk, tv in zip(TIME_COLUMNS, self.time_columns):
-                    _e = _dfe[tv]
-                    _t = _dft[tv]
-
-                    _min = min(_e.min(), _t.min())
-                    _max = max(_e.max(), _t.max())
-                    _histe = histogram(_e, [_min, _max], bins=bins)
-                    _histt = histogram(_t, [_min, _max], bins=bins)
-
-                    self.result[tk][histo_type] = {
-                        "ensemble": Histogram._format_data(_histe),
-                        "target": Histogram._format_data(_histt)
-                    }
+            # in the next pass, compute the histograms
+            for dn, df in data.items():
+                hist = histogram(df, drange, bins=bins)
+                self.result[tk][h][dn] = Histogram._format_data(hist)
 
     # --------------------------------------------------------------------------
     # Return the histogram in the required form.
@@ -82,10 +77,11 @@ class Histogram:
         :param prop:
         :return:
         """
-        if histo_type == "all_ranks":
+        assert histo_type in df.columns
+
+        if histo_type == "rank" and df_count(df, 'dataset') > 0:
             return df
 
-        assert histo_type in df.columns
         if histo_type == "rank":
             _df = df.groupby(["dataset", "rank"])
         else:
@@ -101,25 +97,5 @@ class Histogram:
         :return:
         """
         return {"x": histo[0], "y": histo[1]}
-
-        if len(histo[0]) == 0 or len(histo[1]) == 0:
-            return {
-                "x": [],
-                "y": [],
-                "x_min": 0,
-                "x_max": 0,
-                "y_min": 0.0,
-                "y_max": 0.0,
-            }
-
-        else:
-            return {
-                "x": histo[0],
-                "y": histo[1],
-                "x_min": histo[0][0],
-                "x_max": histo[0][-1],
-                "y_min": np.min(histo[1]).astype(np.float64),
-                "y_max": np.max(histo[1]).astype(np.float64),
-            }
 
 # ------------------------------------------------------------------------------
