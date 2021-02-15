@@ -260,7 +260,8 @@ export default {
 		
 		// Push to '/' when `this.$store.selectedDatasets` is undefined.
 		if (this.$store.selectedDatasets === undefined) {
-			this.requestAuxData();
+			// this.requestAuxData();  // TODO: Fix the bug here. 
+			this.$router.push("/");
 		}
 		else {
 			this.init();

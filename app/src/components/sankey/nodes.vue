@@ -234,9 +234,10 @@ export default {
 						dataset: this.$store.selectedTargetDataset,
 					});
 
-					EventHandler.$emit("single-select-module", {
-						node,
-					});
+					// TODO: Bring this back.
+					// EventHandler.$emit("single-select-module", {
+					// 	node,
+					// });
 				}
 
 				// EventHandler.$emit("show-target-auxiliary", {});

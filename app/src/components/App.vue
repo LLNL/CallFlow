@@ -131,7 +131,6 @@ export default {
 		 * Attaches properties to central storage based on the data from `this.auxiliary_data`.
 		 */
 		setAuxVariables(data) {
-			this.$store.selectedDatasets = data.runs;
 			this.$store.numOfRuns = data.runs.length;
 			this.$store.modules = data.module;
 			this.$store.callsites = data.callsite;

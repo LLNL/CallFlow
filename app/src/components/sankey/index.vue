@@ -411,8 +411,6 @@ export default {
 				}
 			}
 
-			console.debug(`[SuperGraph] Removing ${removeActualEdges.length} edges`);
-
 			for (let i = 0; i < removeActualEdges.length; i += 1) {
 				let removeEdge = removeActualEdges[i];
 

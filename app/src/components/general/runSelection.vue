@@ -64,7 +64,6 @@ export default {
 			"EnsembleSuperGraph": "fetch-ensemble-super-graph",
 		}
 	}),
-	props: [],
 
 	mounted() {
 		// Set the metricTimeMap, used by the dropdown to select the dataset.

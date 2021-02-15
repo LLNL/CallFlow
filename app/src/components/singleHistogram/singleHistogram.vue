@@ -148,14 +148,13 @@ export default {
 				this.init();
 			}
 			this.firstRender = false;
-
 			this.setupScale(callsite);
 			this.bars();
 			this.xAxis();
 			this.yAxis();
 			this.rankLineScale(callsite);
 			this.brushes();
-			// this.$refs.ToolTip.init(this.svgID);
+			// this.$refs.ToolTip.init(this.svgID); // TODO: CAL-87
 		},
 
 		array_unique(arr) {
