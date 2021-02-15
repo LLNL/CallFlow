@@ -100,6 +100,44 @@ class Auxiliary:
     def _runtime_props(dataframes):
         """
         Adds runtime information, e.g., max, min inclusive and exclusive runtime.
+        :param dataframes:
+        :return:
+        """
+        props = {}
+        props["maxIncTime"] = {}
+        props["maxExcTime"] = {}
+        props["minIncTime"] = {}
+        props["minExcTime"] = {}
+        props["numOfRanks"] = {}
+        maxIncTime = 0
+        maxExcTime = 0
+        minIncTime = 0
+        minExcTime = 0
+        maxNumOfRanks = 0
+        for idx, tag in enumerate(dataframes):
+            props["maxIncTime"][tag] = dataframes[tag]["time (inc)"].max()
+            props["maxExcTime"][tag] = dataframes[tag]["time"].max()
+            props["minIncTime"][tag] = dataframes[tag]["time (inc)"].min()
+            props["minExcTime"][tag] = dataframes[tag]["time"].min()
+            props["numOfRanks"][tag] = len(dataframes[tag]["rank"].unique())
+            maxExcTime = max(props["maxExcTime"][tag], maxExcTime)
+            maxIncTime = max(props["maxIncTime"][tag], maxIncTime)
+            minExcTime = min(props["minExcTime"][tag], minExcTime)
+            minIncTime = min(props["minIncTime"][tag], minIncTime)
+            maxNumOfRanks = max(props["numOfRanks"][tag], maxNumOfRanks)
+
+        props["maxIncTime"]["ensemble"] = maxIncTime
+        props["maxExcTime"]["ensemble"] = maxExcTime
+        props["minIncTime"]["ensemble"] = minIncTime
+        props["minExcTime"]["ensemble"] = minExcTime
+        props["numOfRanks"]["ensemble"] = maxNumOfRanks
+
+        return props
+
+    @staticmethod
+    def _runtime_props_dataset(dataframes):
+        """
+        Adds runtime information, e.g., max, min inclusive and exclusive runtime.
 
         :param dataframes:
         :return:

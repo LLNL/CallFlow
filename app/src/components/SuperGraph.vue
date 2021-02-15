@@ -128,7 +128,6 @@
 
 <script>
 // Library imports
-import * as d3 from "d3";
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
@@ -272,11 +271,6 @@ export default {
 			this.clear();
 			this.setTargetDataset();
 			this.fetchData();
-		});
-
-		EventHandler.$on("show_target_auxiliary", () => {
-			this.clear();
-			this.init();
 		});
 	},
 
