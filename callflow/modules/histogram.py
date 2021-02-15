@@ -96,6 +96,6 @@ class Histogram:
         :param histo:
         :return:
         """
-        return {"x": histo[0], "y": histo[1]}
+        return {"b": histo[0], "h": histo[1]}
 
 # ------------------------------------------------------------------------------
