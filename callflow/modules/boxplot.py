@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 
 import callflow
+from callflow.utils.df import df_count
 from callflow.utils.utils import outliers
 from callflow.datastructures.metrics import TIME_COLUMNS
 
@@ -31,6 +32,7 @@ class BoxPlot:
         assert isinstance(df, pd.DataFrame)
         assert isinstance(proxy_columns, dict)
 
+        ndatasets = df_count(df, 'dataset')
         self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
         self.result = {_: {} for _ in TIME_COLUMNS}
 
@@ -38,7 +40,17 @@ class BoxPlot:
 
             q = np.percentile(df[tv], [0.0, 25.0, 50.0, 75.0, 100.0])
             mask = outliers(df[tv])
+            mask = np.where(mask)[0]
 
+            self.result[tk] = {"q": q,
+                               "outliers": {"values": df[tv].to_numpy()[mask],
+                                            "ranks": df['rank'].to_numpy()[mask],
+                                            },
+                               }
+            if ndatasets > 1:
+                self.result[tk]['outliers']['datasets'] = df['dataset'].to_numpy()[mask]
+
+            '''
             self.result[tk] = {
                 "q": q,
                 "outliers": {
@@ -47,5 +59,6 @@ class BoxPlot:
                     "ranks": (mask * df["rank"]).to_numpy(),
                 },
             }
+            '''
 
 # ------------------------------------------------------------------------------
