@@ -13,6 +13,7 @@ import numpy as np
 from scipy.stats import kurtosis, skew
 
 import callflow
+from callflow.utils.utils import print_dict_recursive
 from callflow.utils.df import df_minmax, df_count, df_unique, df_group_by, \
     df_fetch_columns, df_lookup_by_column, df_lookup_and_list
 
@@ -82,29 +83,16 @@ class Auxiliary:
 
         # ----------------------------------------------------------------------
         self.result = {
-            # HB removed: not needed snice this is tthe key for all others
-            # "runs": self.runs,
-
-            # HB brought these up
             "dataset": self._collect_data_dataset(dataframes, sg),
             "moduleFctList": sg.module_fct_list,
-
             "callsiteModuleMap": self._callsite_module_map(dataframes, callsites),
             "moduleCallsiteMap": self._module_callsite_map(dataframes, modules),
             "runtimeProps": self._runtime_props(dataframes),
-            
-            # "callsite": self._collect_data(dataframes_name_group, "callsite"),
-            # "module": self._collect_data(dataframes_module_group, "module")
+            "module": self._collect_data(dataframes_module_group, "module"),
+            "callsite": self._collect_data(dataframes_name_group, "callsite"),
         }
-        print(self.result.keys())
-        for k, v in self.result.items():
-            if isinstance(v, list):
-                print('\n>', k, v)
-            elif isinstance(v, dict):
-                print('\n>', k, v.keys())
-                for _k, _v in v.items():
-                    print('\t>', _k, _v)
-        exit()
+
+        #print_dict_recursive(self.result)
 
         # TODO: this should not happen this way
         sg.auxiliary_data = self.result
@@ -129,7 +117,7 @@ class Auxiliary:
                 props[_p]['ensemble'] = _enranks
 
             else:
-                _erange = (100000, 0)
+                _erange = (100000, -100000)
                 for idx, tag in enumerate(dataframes):
                     _prange = df_minmax(dataframes[tag], _p, self.proxy_columns)
                     _erange = (min(_erange[0], _prange[0]), max(_erange[1], _prange[1]))
@@ -137,36 +125,6 @@ class Auxiliary:
 
                 props[_p]['ensemble'] = _erange
 
-        '''
-        props = {}
-        props["maxIncTime"] = {}
-        props["maxExcTime"] = {}
-        props["minIncTime"] = {}
-        props["minExcTime"] = {}
-        props["numOfRanks"] = {}
-        maxIncTime = 0
-        maxExcTime = 0
-        minIncTime = 0
-        minExcTime = 0
-        maxNumOfRanks = 0
-        for idx, tag in enumerate(dataframes):
-            props["maxIncTime"][tag] = dataframes[tag]["time (inc)"].max()
-            props["maxExcTime"][tag] = dataframes[tag]["time"].max()
-            props["minIncTime"][tag] = dataframes[tag]["time (inc)"].min()
-            props["minExcTime"][tag] = dataframes[tag]["time"].min()
-            props["numOfRanks"][tag] = len(dataframes[tag]["rank"].unique())
-            maxExcTime = max(props["maxExcTime"][tag], maxExcTime)
-            maxIncTime = max(props["maxIncTime"][tag], maxIncTime)
-            minExcTime = min(props["minExcTime"][tag], minExcTime)
-            minIncTime = min(props["minIncTime"][tag], minIncTime)
-            maxNumOfRanks = max(props["numOfRanks"][tag], maxNumOfRanks)
-
-        props["maxIncTime"]["ensemble"] = maxIncTime
-        props["maxExcTime"]["ensemble"] = maxExcTime
-        props["minIncTime"]["ensemble"] = minIncTime
-        props["minExcTime"]["ensemble"] = minExcTime
-        props["numOfRanks"]["ensemble"] = maxNumOfRanks
-        '''
         return props
 
     def _collect_data_dataset(self, dataframes, sg):
@@ -184,20 +142,12 @@ class Auxiliary:
 
             _df = df_fetch_columns(df, _COLUMNS_OF_INTEREST, self.proxy_columns)
             _num_modules = len(sg.module_fct_list) if "module" in _df.columns else 0
-
-            '''
-            _num_callsites = len(_df["name"].unique().tolist())  # Number of call sites
-            _num_ranks = len(_df["rank"].unique().tolist())  # Number of ranks
-            _run_time = _df["time (inc)"].max()  # Maximum inclusive runtime
-            _num_edges = len(sg.nxg.edges())
-            '''
-
             _json[k] = {
-                "num_callsites": df_count(_df, "name", self.proxy_columns),
-                "num_ranks": df_count(_df, "rank", self.proxy_columns),
-                "run_time": df_minmax(_df, "time (inc)", self.proxy_columns)[1],
-                "num_modules": _num_modules,
-                "num_edges": len(sg.nxg.edges()),
+                "nrnks": df_count(_df, "rank", self.proxy_columns),
+                "ncsts": df_count(_df, "name", self.proxy_columns),
+                "nmods": _num_modules,
+                "nedgs": len(sg.nxg.edges()),
+                "rtime": df_minmax(_df, "time (inc)", self.proxy_columns)[1],
             }
 
         return _json
@@ -227,7 +177,8 @@ class Auxiliary:
 
                 # --------------------------------------------------------------
                 if is_ensemble:
-                    histogram = Histogram(df_ensemble=name_df,
+                    histogram = Histogram({'ensemble': name_df},
+                                          histo_types=[],           # compute all
                                           proxy_columns=self.proxy_columns).result
 
                     gradients = Gradients(name_df,
@@ -237,13 +188,15 @@ class Auxiliary:
 
                 elif "ensemble" in dataframes_group:
                     assert not name_df.empty
-                    ensemble_df = dataframes_group["ensemble"].get_group(name)
 
-                    histogram = Histogram(df_ensemble=ensemble_df,
-                                          df_target=name_df,
+                    ensemble_df = dataframes_group["ensemble"].get_group(name)
+                    histogram = Histogram({'ensemble': ensemble_df,
+                                           'target': name_df},
+                                          histo_types=[],
                                           proxy_columns=self.proxy_columns).result
+
                 else:
-                    histogram = Histogram(df_ensemble=name_df,
+                    histogram = Histogram({dataset: name_df}, histo_types=['rank'],
                                           proxy_columns=self.proxy_columns).result
 
                 # --------------------------------------------------------------
@@ -272,10 +225,23 @@ class Auxiliary:
         :param callsites:
         :return:
         """
-        return {
-            _name: {_: df_lookup_and_list(_df, "name", _, "module") for _ in callsites}
-            for _name, _df in dataframes.items()
-        }
+        # TODO: discussed this with Suraj
+        # likely, there is a bug
+        # each callsite should map to a single module
+        # once that is asserted,
+        # we should return {callsite: module_idx}
+        # rather than {callsite: [module_idx]}
+        map = {_name: {_: df_lookup_and_list(_df, "name", _, "module")
+                       for _ in callsites}
+               for _name, _df in dataframes.items()}
+
+        for k,v in map.items():
+            for _k,_v in v.items():
+                if _v.shape[0] > 1:
+                    LOGGER.error(f'callsite2modulemap should have lists of 1: '
+                                 f'found [{k}: ({_k}: {_v})]')
+
+        return map
 
     def _module_callsite_map(self, dataframes, modules):
         """
@@ -284,10 +250,9 @@ class Auxiliary:
         :param modules:
         :return:
         """
-        return {
-            _name: {int(_): df_lookup_and_list(_df, "module", _, "name") for _ in modules}
-            for _name, _df in dataframes.items()
-        }
+        return {_name: {int(_): df_lookup_and_list(_df, "module", _, "name")
+                        for _ in modules}
+                for _name, _df in dataframes.items()}
 
     # --------------------------------------------------------------------------
     def pack_json(self, name, df, is_ensemble, is_callsite,
@@ -331,25 +296,27 @@ class Auxiliary:
             # compute the statistics
             _min, _mean, _max = _data.min(), _data.mean(), _data.max()
             _var = _data.var() if _data.shape[0] > 0 else 0.0
-            _std = np.sqrt(_var)
+            #_std = np.sqrt(_var)
             _imb = (_max - _mean) / _mean if not np.isclose(_mean, 0.0) else _max
             _skew = skew(_data)
             _kurt = kurtosis(_data)
 
             result[tk] = {"d": _data,
-                          "min": _min, "max": _max,
-                          "mean": _mean, "var": _var, "std": _std,
-                          "imb": _imb, "kurt": _kurt, "skew": _skew
+                          "rng": (_min, _max),
+                          "uv": (_mean, _var),
+                          #"std": _std,
+                          "imb": _imb,
+                          "ks": (_kurt, _skew)
                           }
 
             if gradients is not None:
-                result[tk]["gradients"] = gradients[tk]
+                result[tk]["grd"] = gradients[tk]
 
             if boxplots is not None:
-                result[tk]["boxplots"] = boxplots[tk]
+                result[tk]["box"] = boxplots[tk]
 
             if histograms is not None:
-                result[tk]["hists"] = histograms[tk]
+                result[tk]["hst"] = histograms[tk]
 
         return result
 
