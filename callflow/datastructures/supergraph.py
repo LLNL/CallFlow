@@ -56,12 +56,14 @@ class SuperGraph(ht.GraphFrame):
         self.callees = {}
         self.paths = {}
         self.hatchet_nodes = {}
-        self.callsite_module_map = None
-        self.module_callsite_map = None
-        self.module_fct_list = []
         self.indexes = []
-        self.is_module_map = False
-        self.is_module_in_dataframe = False
+
+        self.modules = []
+        self.callsite_module_map = {}
+        self.module_callsite_map = {}
+
+        #self.is_module_map = False
+        #self.is_module_in_dataframe = False
 
     # --------------------------------------------------------------------------
     def __str__(self):
@@ -73,7 +75,7 @@ class SuperGraph(ht.GraphFrame):
         return self.__str__()
 
     # --------------------------------------------------------------------------
-    def create(self, path, profile_format, module_callsite_map) -> None:
+    def create(self, path, profile_format, module_callsite_map: dict = {}) -> None:
         """
         Create SuperGraph from basic information. It does the following:
             1. Using the config object, it constructs the Hatchet GraphFrame.
@@ -100,24 +102,6 @@ class SuperGraph(ht.GraphFrame):
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
 
         # ----------------------------------------------------------------------
-        # df-related operations
-        self.df_add_time_proxies()
-
-        if len(module_callsite_map) > 0:
-            self.module_callsite_map = self.prc_construct_module_callsite_map(
-                module_callsite_map=module_callsite_map
-            )
-
-        if "module" in self.dataframe.columns:
-            self.module_callsite_map = self.prc_construct_module_callsite_map()
-        self.callsite_module_map = {}
-
-        # Hatchet requires node and rank to be indexes.
-        # remove the indexes to maintain consistency.
-        self.indexes = list(self.dataframe.index.names)
-        self.df_reset_index()
-
-        # ----------------------------------------------------------------------
         # graph-related operations
         for node in self.graph.traverse():
             node_name = Sanitizer.from_htframe(node.frame)
@@ -125,6 +109,39 @@ class SuperGraph(ht.GraphFrame):
             self.paths[node_name] = node.paths()
             self.callers[node_name] = [_.frame.get("name") for _ in node.parents]
             self.callees[node_name] = [_.frame.get("name") for _ in node.children]
+
+        # ----------------------------------------------------------------------
+        # Hatchet requires node and rank to be indexes.
+        # remove the indexes to maintain consistency.
+        self.indexes = list(self.dataframe.index.names)
+        self.df_reset_index()
+
+        # ----------------------------------------------------------------------
+        LOGGER.info(f'Loaded dataframe: {self.dataframe.shape}, '
+                    f'columns = {list(self.dataframe.columns)}')
+
+        # add time proxies and modules
+        self.add_time_proxies()
+        self.add_modules(module_callsite_map)
+
+        # add new columns to the dataframe
+        self.df_add_nid_column()
+        self.df_add_column("rank", value=0)
+        self.df_add_column("dataset", value=self.name)
+        self.df_add_column("callees", apply_func=lambda _: self.callees[_])
+        self.df_add_column("callers", apply_func=lambda _: self.callers[_])
+        self.df_add_column("path", apply_func=lambda _: [[
+            Sanitizer.from_htframe(_f) for _f in f] for f in self.paths[_]][0])
+
+        # ----------------------------------------------------------------------
+        # TODO: For faster searches, bring this back.
+        # self.indexes.insert(0, 'dataset')
+        # self.dataframe.set_index(self.indexes, inplace=True, drop=True)
+
+        LOGGER.info(f'Processed dataframe: {self.dataframe.shape}, '
+                    f'columns = {list(self.dataframe.columns)}')
+
+        # ----------------------------------------------------------------------
 
     # --------------------------------------------------------------------------
     def load(
@@ -146,7 +163,7 @@ class SuperGraph(ht.GraphFrame):
 
         if True:
             self.dataframe = SuperGraph.read_df(path)
-            self.is_module_in_dataframe = "module" in self.dataframe
+            #self.is_module_in_dataframe = "module" in self.dataframe
 
         if True:
             self.nxg = SuperGraph.read_nxg(path)
@@ -159,10 +176,67 @@ class SuperGraph(ht.GraphFrame):
 
         if read_aux:
             self.auxiliary_data = SuperGraph.read_aux(path)
-            self.module_fct_list = self.auxiliary_data["moduleFctList"]
+            self.modules = self.auxiliary_data["moduleFctList"]
 
-        self.df_add_time_proxies()
+        # ----------------------------------------------------------------------
+        self.add_time_proxies()
         self.df_reset_index()
+
+    # --------------------------------------------------------------------------
+    def add_modules(self, module_callsite_map={}):
+
+        has_modules_in_df = "module" in self.dataframe.columns
+        has_modules_in_map = len(module_callsite_map) > 0
+        assert not (has_modules_in_df and has_modules_in_map)
+
+        # ----------------------------------------------------------------------
+        # if dataframe already has modules
+        if has_modules_in_df:
+            LOGGER.info('Found \"module\" column in the dataframe')
+            assert 0    # are the module_map dictionaries getting populated?
+
+        # ----------------------------------------------------------------------
+        # use the given module-callsite map
+        elif has_modules_in_map:
+            LOGGER.info('Found user-specified module_callsite_map')
+
+            self.module_callsite_map = module_callsite_map
+            self.callsite_module_map = {}
+
+            for m, clist in self.module_callsite_map.items():
+                for c in clist:
+                    self.callsite_module_map[c] = m
+
+            self.df_add_column("module",
+                               apply_func=lambda _: self.callsite_module_map[_])
+
+        # ----------------------------------------------------------------------
+        else:
+            LOGGER.info('No module map found. Defaulting to "module=callsite"')
+            self.df_add_column("module",
+                               apply_func=lambda _: Sanitizer.sanitize(_),
+                               apply_on="name")
+
+        # ----------------------------------------------------------------------
+        self.modules = self.df_factorize_column("module", sanitize=True)
+
+    # --------------------------------------------------------------------------
+    def add_time_proxies(self):
+        """
+
+        :return:
+        """
+        for key, proxies in METRIC_PROXIES.items():
+            if key in self.dataframe.columns:
+                continue
+            for _ in proxies:
+                if _ in self.dataframe.columns:
+                    self.proxy_columns[key] = _
+                    break
+            assert key in self.proxy_columns.keys()
+
+        if len(self.proxy_columns) > 0:
+            LOGGER.info(f"created column proxies: {self.proxy_columns}")
 
     # --------------------------------------------------------------------------
     def write(
@@ -220,27 +294,6 @@ class SuperGraph(ht.GraphFrame):
         :return:
         """
         return self.proxy_columns.get(column, column)
-
-    def df_add_time_proxies(self):
-        """
-
-        :return:
-        """
-        for key, proxies in METRIC_PROXIES.items():
-            if key in self.dataframe.columns:
-                continue
-            for _ in proxies:
-                if _ in self.dataframe.columns:
-                    #self.df_add_column(key, apply_func=lambda _: _, apply_on=_)
-                    self.proxy_columns[key] = _
-                    break
-            assert key in self.proxy_columns.keys()
-
-        if len(self.proxy_columns) > 0:
-            LOGGER.debug(f"created column proxies: {self.proxy_columns}")
-
-    def df_columns(self):
-        return df_columns(self.dataframe)
 
     def df_get_column(self, column, index="name"):
         """
@@ -477,14 +530,14 @@ class SuperGraph(ht.GraphFrame):
         # If it is not in the module_fct_list, it means its a node with a cycle.
         # This might be the correct way to go, but lets place a quick fix by
         # comparing the strings...
-        # if module not in self.module_fct_list:
-        #     self.module_fct_list.append(module)
-        #     return len(self.module_fct_list)
+        # if module not in self.modules:
+        #     self.modules.append(module)
+        #     return len(self.modules)
 
         if "=" in module:
             module = module.split("=")[0]
 
-        return self.module_fct_list.index(module)
+        return self.modules.index(module)
 
     # --------------------------------------------------------------------------
     # Create GraphFrame methods
@@ -730,6 +783,7 @@ class SuperGraph(ht.GraphFrame):
         if len(module_callsite_map) > 0:
             return module_callsite_map
 
+    '''
     # --------------------------------------------------------------------------
     # Processing functions attach the calculated result to the GraphFrame.
     # --------------------------------------------------------------------------
@@ -772,6 +826,7 @@ class SuperGraph(ht.GraphFrame):
         # TODO: For faster searches, bring this back.
         # self.indexes.insert(0, 'dataset')
         # self.dataframe.set_index(self.indexes, inplace=True, drop=True)
+    '''
 
     def filter_sg(self, filter_by, filter_val) -> None:
         """

@@ -47,7 +47,7 @@ class Group:
         # Need to recalculate the module_fct_list.
         if self.sg.name == "ensemble":
             return name + "=" + name
-        return self.sg.module_fct_list[module_idx] + "=" + name
+        return self.sg.modules[module_idx] + "=" + name
 
     # --------------------------------------------------------------------------
     def compute(self):
