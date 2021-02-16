@@ -218,7 +218,7 @@ class SuperGraph(ht.GraphFrame):
                                apply_on="name")
 
         # ----------------------------------------------------------------------
-        self.modules = self.df_factorize_column("module", sanitize=True)
+        self.modules = np.array(self.df_factorize_column("module", sanitize=True))
 
     # --------------------------------------------------------------------------
     def add_time_proxies(self):

@@ -52,6 +52,9 @@ class Auxiliary:
         LOGGER.warning(f"Computing auxiliary data for ({sg}) with "
                        f"{len(self.runs)} runs: {self.runs}")
 
+        #self.sg = sg
+
+
         # ----------------------------------------------------------------------
         if isinstance(sg, callflow.EnsembleGraph):
             callsites = df_unique(sg.dataframe, "name")
@@ -74,6 +77,8 @@ class Auxiliary:
 
         # ----------------------------------------------------------------------
         else:
+            #sg.auxiliary_data = {}
+            #return
             df = sg.dataframe
             #df = df_lookup_by_column(sg.dataframe, "dataset", sg.name)
             callsites = df_unique(df, "name")
@@ -94,6 +99,7 @@ class Auxiliary:
         }
 
         #print_dict_recursive(self.result)
+        #exit ()
 
         # TODO: this should not happen this way
         sg.auxiliary_data = self.result
@@ -226,12 +232,22 @@ class Auxiliary:
         :param callsites:
         :return:
         """
-        # TODO: discussed this with Suraj
-        # likely, there is a bug
-        # each callsite should map to a single module
-        # once that is asserted,
-        # we should return {callsite: module_idx}
-        # rather than {callsite: [module_idx]}
+
+        map = {}
+        for _name, _df in dataframes.items():
+            map[_name] = {}
+            for _ in callsites:
+                mod_idx = df_lookup_and_list(_df, "name", _, "module")
+                assert mod_idx.shape[0] in [0, 1]
+                if mod_idx.shape[0] == 1:
+                    map[_name][_] = mod_idx[0]
+                '''
+                else:
+                    print(_name, _, mod_idx, _df.shape)
+                    print(_df[["name", "module"]])
+                '''
+
+        '''
         map = {_name: {_: df_lookup_and_list(_df, "name", _, "module")
                        for _ in callsites}
                for _name, _df in dataframes.items()}
@@ -241,7 +257,7 @@ class Auxiliary:
                 if _v.shape[0] > 1:
                     LOGGER.error(f'callsite2modulemap should have lists of 1: '
                                  f'found [{k}: ({_k}: {_v})]')
-
+        '''
         return map
 
     def _module_callsite_map(self, dataframes, modules):
