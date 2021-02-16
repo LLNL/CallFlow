@@ -126,8 +126,8 @@ class SuperGraph(ht.GraphFrame):
 
         # add new columns to the dataframe
         self.df_add_nid_column()
-        self.df_add_column("rank", value=0)
-        self.df_add_column("dataset", value=self.name)
+        #self.df_add_column("rank", value=0)
+        #self.df_add_column("dataset", value=self.name)
         self.df_add_column("callees", apply_func=lambda _: self.callees[_])
         self.df_add_column("callers", apply_func=lambda _: self.callers[_])
         self.df_add_column("path", apply_func=lambda _: [[
