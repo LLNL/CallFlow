@@ -69,6 +69,14 @@ export default {
 		EventHandler.$on("single-histogram", function (data) {
 			self.visualize(data);
 		});
+
+		// TODO: CAL-88: This code must return back once we fix the 
+		// // auxiliary processing.
+		// EventHandler.$on("update-rank-bin-size", function(data) {
+		// 	self.clear();
+		// 	EventHandler.$emit("single-histogram", data);		
+		// });
+
 	},
 
 	methods: {
@@ -137,6 +145,7 @@ export default {
 			d3.selectAll(".lineRank").remove();
 			d3.selectAll(".brush").remove();
 			d3.selectAll(".tick").remove();
+			d3.selectAll(".histogram-rank-axis").remove();
 			// this.$refs.ToolTip.clear();
 		},
 
@@ -148,14 +157,13 @@ export default {
 				this.init();
 			}
 			this.firstRender = false;
-
 			this.setupScale(callsite);
 			this.bars();
 			this.xAxis();
 			this.yAxis();
 			this.rankLineScale(callsite);
 			this.brushes();
-			// this.$refs.ToolTip.init(this.svgID);
+			// this.$refs.ToolTip.init(this.svgID); // TODO: CAL-87
 		},
 
 		array_unique(arr) {

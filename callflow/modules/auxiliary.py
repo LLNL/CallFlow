@@ -32,19 +32,19 @@ class Auxiliary:
     """
 
     def __init__(
-        self, sg, selected_runs=None, MPIBinCount: int = 20, RunBinCount: int = 20
+        self, sg, selected_runs=None, rankBinCount: int = 20, runBinCount: int = 20
     ):
         """
         Constructor
         :param sg: SuperGraph
         :param selected_runs: Array of selected runs
-        :param MPIBinCount: Bin count for MPI-level histogram
-        :param RunBinCount: Bin count for run-level histogram
+        :param rankBinCount: Bin count for MPI-level histogram
+        :param runBinCount: Bin count for run-level histogram
         """
         assert isinstance(sg, (callflow.SuperGraph, callflow.EnsembleGraph))
 
-        self.MPIBinCount = MPIBinCount
-        self.RunBinCount = RunBinCount
+        self.MPIBinCount = rankBinCount
+        self.RunBinCount = runBinCount
         self.hist_props = ["rank", "name", "dataset", "all_ranks"]
 
         selected_runs = sg.filter_by_datasets(selected_runs)
@@ -83,7 +83,7 @@ class Auxiliary:
 
         # ----------------------------------------------------------------------
         self.result = {
-            "runtimeProps": Auxiliary._runtime_props(dataframes),
+            "runtimeProps": Auxiliary._runtime_props_dataset(dataframes),
             "dataset": self._collect_data_dataset(dataframes, sg),
             "callsite": self._collect_data(dataframes_name_group, "callsite"),
             "module": self._collect_data(dataframes_module_group, "module"),
@@ -100,7 +100,6 @@ class Auxiliary:
     def _runtime_props(dataframes):
         """
         Adds runtime information, e.g., max, min inclusive and exclusive runtime.
-
         :param dataframes:
         :return:
         """
@@ -133,6 +132,28 @@ class Auxiliary:
         props["minExcTime"]["ensemble"] = minExcTime
         props["numOfRanks"]["ensemble"] = maxNumOfRanks
 
+        return props
+
+    @staticmethod
+    def _runtime_props_dataset(dataframes):
+        """
+        Adds runtime information, e.g., max, min inclusive and exclusive runtime.
+
+        :param dataframes:
+        :return:
+        """
+        props = {}
+        props["Inclusive"] = {}
+        props["Exclusive"] = {}
+        props["numOfRanks"] = {}
+
+        min_max_payload = lambda df, metric: {"mean": df[metric].mean(), "max": df[metric].max(), "min": df[metric].min()}
+       
+        for idx, tag in enumerate(dataframes):
+            if tag != "ensemble":
+                props["Inclusive"][tag] = min_max_payload(dataframes[tag], "time (inc)")
+                props["Exclusive"][tag] = min_max_payload(dataframes[tag], "time")
+                props["numOfRanks"][tag] = len(dataframes[tag]["rank"].unique())
         return props
 
     def _collect_data_dataset(self, dfs, sg):

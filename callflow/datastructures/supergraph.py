@@ -788,7 +788,7 @@ class SuperGraph(ht.GraphFrame):
         """
         Filter by the selected runs
         :param selected_runs: Array of dataset tag names.
-        :return: None
+        :return: runs
         """
         # TODO: This code is repeated in modules/auxiliary.py.
         # Move to a instance method of SuperGraph.

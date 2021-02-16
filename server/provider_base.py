@@ -142,6 +142,9 @@ class BaseProvider:
             return self.config
 
         elif operation_name == "supergraph_data":
+            if operation["reProcess"]:
+                Auxiliary(self.supergraphs["ensemble"], selected_runs=operation["datasets"], rankBinCount=int(operation["rankBinCount"]), runBinCount=int(operation["runBinCount"]))
+                
             return self.supergraphs["ensemble"].auxiliary_data
 
     def request_single(self, operation):

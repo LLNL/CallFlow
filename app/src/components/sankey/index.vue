@@ -125,22 +125,22 @@ export default {
 			}
 
 			data = this._add_node_map(data);
-			// data.graph = this._construct_super_graph(data);
+			data.graph = this._construct_super_graph(data);
 
 			// check cycle.
 			// let detectcycle = detectDirectedCycle(data.graph);
 
-			for (let i = 0; i <data.links.length; i += 1) {
-				let link = data.links[i];
-				let source_callsite = link["source"];
-				let target_callsite = link["target"];
-				let weight = link["weight"];
+			// for (let i = 0; i <data.links.length; i += 1) {
+			// 	let link = data.links[i];
+			// 	let source_callsite = link["source"];
+			// 	let target_callsite = link["target"];
+			// 	let weight = link["weight"];
 
-				console.debug("=============================================");
-				console.debug("[Ensemble SuperGraph] Source Name :", source_callsite);
-				console.debug("[Ensemble SuperGraph] Target Name :", target_callsite);
-				console.debug("[Ensemble SuperGraph] Weight: ", weight);
-			}
+			// 	console.debug("=============================================");
+			// 	console.debug("[Ensemble SuperGraph] Source Name :", source_callsite);
+			// 	console.debug("[Ensemble SuperGraph] Target Name :", target_callsite);
+			// 	console.debug("[Ensemble SuperGraph] Weight: ", weight);
+			// }
 			return data;
 		},
 
@@ -207,30 +207,30 @@ export default {
 			this.$refs.Edges.init(this.$store.graph, this.view);
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
 
-			const selectedNode = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "CCT");
+			const _node = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "CCT");
 			// Get node id from the graph.
-			const node_id = this.$store.graph["nodeMap"][selectedNode];
-			const node = this.$store.graph["nodes"][node_id];
+			const node_id = this.$store.graph["nodeMap"][_node];
+			this.$store.selectedNnode = this.$store.graph["nodes"][node_id];
 
 			if (this.$store.selectedMode == "Single") {
 				EventHandler.$emit("single-histogram", {
-					node,
+					node: this.$store.selectedNnode,
 					dataset: this.$store.selectedTargetDataset,
 				});
 
 				EventHandler.$emit("single-scatterplot", {
-					node,
+					node: this.$store.selectedNnode,
 					dataset: this.$store.selectedTargetDataset,
 				});
 			}
 			else if(this.$store.selectedMode == "Ensemble") {
 				EventHandler.$emit("ensemble-histogram", {
-					node,
+					node: this.$store.selectedNnode,
 					dataset: this.$store.selectedTargetDataset,
 				});
 
 				EventHandler.$emit("ensemble-scatterplot", {
-					node,
+					node: this.$store.selectedNnode,
 					dataset: this.$store.selectedTargetDataset,
 				});
 			}
@@ -250,7 +250,7 @@ export default {
 			for (const node of graph.nodes) {
 				nodeMap[node.id] = idx;
 
-				console.debug(`[Supergraph] Assigning ${node.id} with index ${idx}`);
+				// console.debug(`[Supergraph] Assigning ${node.id} with index ${idx}`);
 				idx += 1;
 			}
 			graph.nodeMap = nodeMap;
@@ -306,22 +306,22 @@ export default {
 				const source = temp_edges[i].source;
 				const target = temp_edges[i].target;
 
-				console.debug("[SuperGraph] Source Name", source);
-				console.debug("[SuperGraph] Target Name", target);
-				console.debug("[SuperGraph] This edge: ", temp_edges[i]);
+				// console.debug("[SuperGraph] Source Name", source);
+				// console.debug("[SuperGraph] Target Name", target);
+				// console.debug("[SuperGraph] This edge: ", temp_edges[i]);
 
 				let source_node = temp_edges[i].source_data;
 				let target_node = temp_edges[i].target_data;
 
-				console.debug(`[SuperGraph] Source Node: ${source_node}, Level: ${source_node.level}`);
-				console.debug(`[Ensemble SuperGraph] Target Node: ${target_node} Level: ${target_node.level}`);
+				// console.debug(`[SuperGraph] Source Node: ${source_node}, Level: ${source_node.level}`);
+				// console.debug(`[Ensemble SuperGraph] Target Node: ${target_node} Level: ${target_node.level}`);
 
 				const source_level = source_node.level;
 				const target_level = target_node.level;
 				const shift_level = target_level - source_level;
 
-				console.debug(source_level, target_level);
-				console.debug(`[SuperGraph] Number of levels to shift: ${shift_level}`);
+				// console.debug(source_level, target_level);
+				// console.debug(`[SuperGraph] Number of levels to shift: ${shift_level}`);
 
 				let targetDataset = this.$store.selectedTargetDataset;
 				// Put in intermediate nodes.
@@ -375,14 +375,14 @@ export default {
 					};
 					edges.push(sourceTempEdge);
 
-					console.debug(`[SuperGraph] Adding intermediate source edge: ${sourceTempEdge}`);
+					// console.debug(`[SuperGraph] Adding intermediate source edge: ${sourceTempEdge}`);
 
 					if (j == shift_level) {
 						edges[i].original_target = target;
 					}
 					edges[i].target_data = nodes[intermediate_idx];
 					
-					console.debug(`[SuperGraph] Updating this edge: ${edges[i]}`);
+					// console.debug(`[SuperGraph] Updating this edge: ${edges[i]}`);
 					
 					const targetTempEdge = {
 						type: "target_intermediate",
@@ -395,14 +395,14 @@ export default {
 					};
 					edges.push(targetTempEdge);
 
-					console.log(`[SuperGraph] Adding intermediate target edge: ${targetTempEdge}`);
+					// console.log(`[SuperGraph] Adding intermediate target edge: ${targetTempEdge}`);
 
 					if (j == shift_level) {
 						edges[i].original_target = target;
 					}
 					edges[i].target_data = nodes[intermediate_idx];
 
-					console.debug(`[SuperGraph] Updating this edge: ${edges[i]}`);
+					// console.debug(`[SuperGraph] Updating this edge: ${edges[i]}`);
 
 					removeActualEdges.push({
 						source,
@@ -410,8 +410,6 @@ export default {
 					});
 				}
 			}
-
-			console.debug(`[SuperGraph] Removing ${removeActualEdges.length} edges`);
 
 			for (let i = 0; i < removeActualEdges.length; i += 1) {
 				let removeEdge = removeActualEdges[i];

@@ -13,6 +13,8 @@
 import * as d3 from "d3";
 import "d3-selection-multi";
 
+import EventHandler from "lib/routing/EventHandler";
+
 export default {
 	name: "MiniHistograms",
 	components: {},
@@ -29,6 +31,16 @@ export default {
 
 	mounted() {
 		this.id = "minihistogram-overview";
+
+		// TODO: CAL-88: This code must return back once we fix the 
+		// auxiliary processing.
+		// let self = this;
+		// EventHandler.$on("update-rank-bin-size", function(data) {
+		// 	self.clear();
+		// 	EventHandler.$emit("single-histogram", {
+
+		// 	});			
+		// });
 	},
 
 	methods: {

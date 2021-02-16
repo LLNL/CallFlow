@@ -128,7 +128,6 @@
 
 <script>
 // Library imports
-import * as d3 from "d3";
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
@@ -166,13 +165,13 @@ export default {
 
 		selectedMetric: function (val) {
 			this.$store.selectedMetric = val;
+			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
 			this.reset();
 		},
 
 		selectedRuntimeColorMap(val) {
-			this.clear();
 			this.$parent.$parent.setupColors(val);
-			this.init();
+			this.reset();
 		},
 
 		selectedRuntimeSortBy(val) {
@@ -180,12 +179,21 @@ export default {
 			EventHandler.$emit("callsite-information-sort");
 		},
 
-		selectedMPIBinCount(val) {
+		// NOTE: This functionality is broken!!!
+		// The request times out because the auxiliary processing 
+		// exceeds the threshold set by the APIService. 
+		// TODO: CAL-88: Fix the time out error and use events 
+		// instead of a this.reset()
+		async selectedMPIBinCount(val) {
 			this.$store.selectedMPIBinCount = val;
-			this.$store.reprocess = 1;
-			this.fetchData();
-			this.clear();
-			this.init();
+			const data = await this.requestAuxData();
+			
+			// TODO: CAL-88 Fix the timeout error. 
+			// EventHandler.$emit("update-rank-bin-size", {
+			// 	node: this.$store.selectedNode,
+			// 	dataset: this.$store.selectedTargetDataset
+			// });
+			this.reset();
 		},
 
 		selectedScale(val) {
@@ -202,6 +210,12 @@ export default {
 			this.$store.selectedTargetDataset = val;
 			this.reset();
 		},
+
+		selectedColorPoint(val) {
+			this.$store.selectedColorPoint = val;
+			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
+			this.reset();
+		}
 	},
 
 	props: {
@@ -229,8 +243,6 @@ export default {
 		selectedColorMax: null,
 		selectedColorMinText: "",
 		selectedColorMaxText: "",
-		groupModes: ["include callbacks", "exclude callbacks"],
-		selectedGroupMode: "include callbacks",
 		scatterMode: ["mean", "all"],
 		selectedScatterMode: "all",
 		isCallgraphInitialized: false,
@@ -255,10 +267,14 @@ export default {
 
 	mounted() {
 		this.setupStore();
-
+		
 		// Push to '/' when `this.$store.selectedDatasets` is undefined.
 		if (this.$store.selectedDatasets === undefined) {
+			// this.requestAuxData();  // TODO: Fix the bug here. 
 			this.$router.push("/");
+		}
+		else {
+			this.init();
 		}
 
 		EventHandler.$on("lasso_selection", () => {
@@ -267,27 +283,21 @@ export default {
 			this.setTargetDataset();
 			this.fetchData();
 		});
-
-		EventHandler.$on("show_target_auxiliary", () => {
-			this.clear();
-			this.init();
-		});
-
-		this.init();
 	},
 
 	methods: {
 		init() {
 			this.setComponentMap(); // Set component mapping for easy component tracking.
 
-			console.log("Mode : ", this.selectedMode);
+			console.log("Mode : ", this.$store.selectedMode);
 			console.log("Number of runs :", this.$store.numOfRuns);
-			console.log("Dataset : ", this.$store.selectedTargetDataset);
+			console.log("Target Dataset : ", this.$store.selectedTargetDataset);
+			console.log("Node: ", this.$store.selectedNode);
+			console.log("Run Bin size", this.$store.selectedRunBinCount);
+			console.log("MPI Bin size", this.$store.selectedMPIBinCount);
 
 			// Call the appropriate socket to query the server.
 			this.initComponents(this.currentSingleSuperGraphComponents);
-
-			// EventHandler.$emit("single-refresh-boxplot", {});
 		},
 
 		setupStore() {
@@ -352,6 +362,16 @@ export default {
 		closeSettings() {
 			this.isSettingsOpen = !this.isSettingsOpen;
 		},
+
+		async requestAuxData() {
+			const payload = {
+				datasets: this.$store.selectedDatasets,
+				rankBinCount: this.$store.selectedMPIBinCount,
+				runBinCount: this.$store.selectedRunBinCount,
+				reProcess: true,
+			};
+			return await this.$parent.$parent.fetchData(payload);
+		}
 	},
 };
 </script>

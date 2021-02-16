@@ -320,3 +320,7 @@ export function getDataByNodeType(store, dataset, node) {
 	}
 	return {};
 }
+
+export function getKeyWithMaxValue(obj) {
+	return Object.keys(obj).reduce((a, b) => obj[a] > obj[b] ? a : b);
+}

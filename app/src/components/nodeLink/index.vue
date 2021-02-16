@@ -114,10 +114,10 @@ export default {
 		},
 
 		/**
-     * Create a dagre-d3 instance.
-     *
-     * @return {dagreD3 Graph}
-     */
+		 * Create a dagre-d3 instance.
+		 *
+		 * @return {dagreD3 Graph}
+		 */
 		createGraph() {
 			const g = new dagreD3.graphlib.Graph({
 				directed: true,
@@ -136,12 +136,12 @@ export default {
 		},
 
 		/**
-     * Sets callsite's name.
-     * if key "name" is present, then use it, else use nxg node's id.
-     *
-     * @param {Object} callsite
-     * @return {String} callsite's name
-     */
+		 * Sets callsite's name.
+		 * if key "name" is present, then use it, else use nxg node's id.
+		 *
+		 * @param {Object} callsite
+		 * @return {String} callsite's name
+		 */
 		setCallsiteName(callsite) {
 			if (callsite["name"] == undefined) {
 				return callsite["id"];
@@ -150,11 +150,11 @@ export default {
 		},
 
 		/**
-     * Set callsite's text and fill color.
-     *
-     * @param {Object} callsite
-     * @return {JSON<{'node': Color, 'text': Color}>} 'node': fill color, 'text': text color
-     */
+		 * Set callsite's text and fill color.
+		 *
+		 * @param {Object} callsite
+		 * @return {JSON<{'node': Color, 'text': Color}>} 'node': fill color, 'text': text color
+		 */
 		setCallsiteColor(callsite) {
 			// Set node fill color.
 			let color = "";
@@ -175,29 +175,30 @@ export default {
 		},
 
 		/**
-     * Sets the html content for rendering inside a node.
-     *
-     * @param {String} callsite
-     * @param {JSON<{'node': Color, 'text': Color}>} callsite_color
-     * @return {HTML} html for rendering.
-     */
+		 * Sets the html content for rendering inside a node.
+		 *
+		 * @param {String} callsite
+		 * @param {JSON<{'node': Color, 'text': Color}>} callsite_color
+		 * @return {HTML} html for rendering.
+		 */
 		setCallsiteHTML(callsite, callsite_color) {
 			let name = callsite["name"];
+			const class_name = callsite_color["text"] === "#fff" ? "white-text": "black-text";
 
-			let html = callsite_color["text"] === "#fff" ? "<div class=\"white-text\"><span>" + name + "</span>" : "<div class=\"black-text\"><span>" + name + "</span>";
-
+			let html = `<div><span class=${class_name} > ${name} </span> </div>`;
+			
 			if (this.has_data_map["module"]) {
 				let thismodule = utils.getModuleName(this.$store, callsite["module"]);
-				html = html + "<br/><span class=\"description\"><b>Module :</b> " + thismodule + "</span> </div>";
+				html = html + `<br/><span class= ${class_name}><b>Module :</b>` + thismodule + "</span> </div>";
 			}
 			return html;
 		},
 
 		/**
-     * Renders the nodes in the dagre d3 graph.
-     *
-     * @param {JSON} data - networkX graph.
-     */
+		 * Renders the nodes in the dagre d3 graph.
+		 *
+		 * @param {JSON} data - networkX graph.
+		 */
 		nodes(data) {
 			data.forEach((node, i) => {
 				const callsite_name = this.setCallsiteName(node);
@@ -220,7 +221,7 @@ export default {
 			this.g.nodes().forEach(function (v) {
 				let node = self.g.node(v);
 				if (node != undefined) {
-					node.style = "fill:" + node.fillColor;
+					node.style = `fill: ${node.fillColor}; color: "#f00";`;
 					node.rx = node.ry = 4;
 					node.id = node.name;
 				}
@@ -228,10 +229,10 @@ export default {
 		},
 
 		/**
-     * Renders the edges in the dagre D3 graph.
-     *
-     * @param {JSON} links - nxGraph edges.
-     */
+		 * Renders the edges in the dagre D3 graph.
+		 *
+		 * @param {JSON} links - nxGraph edges.
+		 */
 		edges(links) {
 			// Set up the edges
 			for (let i = 0; i < links.length; i += 1) {
@@ -251,18 +252,17 @@ export default {
 			this.g.edges().forEach((e) => {
 				const edge = self.g.edge(e);
 				edge.id = "cct-edge";
-				self.g.edge(e).style = "fill: rgba(255,255,255, 0); stroke: #d5d5d5; stroke-width: 1.5px;";
+				self.g.edge(e).style = "fill: rgba(255,255,255, 0); stroke: #3c3c3c; stroke-width: 2.5px;";
 			});
 		},
 
 		/**
-     * Node click action.
-     * On click, the inbound and outbound paths are highlighted.
-     *
-     * @param {dagreD3's ID} id
-     */
+		 * Node click action.
+		 * On click, the inbound and outbound paths are highlighted.
+		 *
+		 * @param {dagreD3's ID} id
+		 */
 		node_click_action(id) {
-			console.debug("click node : " + id);
 			const default_dagreD3e_style =
         "fill: rgba(255,255,255, 0); stroke: #d5d5d5; stroke-width: 1.5px;";
 			const default_dagreD3arrowhead_style =
@@ -324,9 +324,9 @@ export default {
 		},
 
 		/**
-     * Translate and zoom to fit the graph to the entire SVG's context.
-     *
-     */
+		 * Translate and zoom to fit the graph to the entire SVG's context.
+		 *
+		 */
 		zoomTranslate() {
 			const graphWidth = this.g.graph().width + 80;
 			const graphHeight = this.g.graph().height + 40;
@@ -352,8 +352,8 @@ export default {
 		},
 
 		/**
-     *  Set the has data map.
-     */
+		 *  Set the has data map.
+		 */
 		setHasDataMap() {
 			this.has_data_map = {};
 			for (let i = 0; i < this.HAS_DATA_COLUMNS.length; i += 1) {
@@ -367,8 +367,8 @@ export default {
 		},
 
 		/**
-     * Clear method for the component.
-     */
+		 * Clear method for the component.
+		 */
 		clear() {
 			d3.selectAll("#cct-node").remove();
 			d3.selectAll("#cct-edge").remove();
@@ -378,7 +378,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 .cct-node {
     cursor: pointer;
 }
@@ -388,7 +388,7 @@ export default {
     text-align: center;
 }
 
-.black-text {
+.c.black-text {
     color: black !important;
     text-align: center;
 }

@@ -9,7 +9,7 @@
 	<g :id="id">
 		<MeanGradients ref="MeanGradients" />
 		<Mean ref="Mean" />
-		<ToolTip ref="ToolTip" />
+		<!-- <ToolTip ref="ToolTip" /> -->
 		<Guides ref="Guides" />
 		<TargetLine ref="TargetLine" />
 		<MeanDiff ref="MeanDiff" />
@@ -29,7 +29,7 @@ import APIService from "lib/routing/APIService";
 import MeanGradients from "./encodings/meanGradients";
 import Guides from "./encodings/guides";
 import TargetLine from "./encodings/targetLine";
-import ToolTip from "./encodings/tooltip";
+// import ToolTip from "./encodings/tooltip";
 import Mean from "./encodings/mean";
 import MeanDiff from "./encodings/meanDiff";
 import RankDiff from "./encodings/rankDiff";
@@ -38,7 +38,7 @@ export default {
 	name: "Nodes",
 	components: {
 		Mean,
-		ToolTip,
+		// ToolTip,
 		MeanGradients,
 		Guides,
 		TargetLine,
@@ -113,7 +113,7 @@ export default {
 				}
 				this.$refs.Guides.init(this.graph.nodes);
 			}
-			this.$refs.ToolTip.init(this.$parent.id);
+			// this.$refs.ToolTip.init(this.$parent.id);
 		},
 
 		preVis() {
@@ -234,9 +234,10 @@ export default {
 						dataset: this.$store.selectedTargetDataset,
 					});
 
-					EventHandler.$emit("single-select-module", {
-						node,
-					});
+					// TODO: Bring this back.
+					// EventHandler.$emit("single-select-module", {
+					// 	node,
+					// });
 				}
 
 				// EventHandler.$emit("show-target-auxiliary", {});
@@ -244,14 +245,14 @@ export default {
 		},
 
 		mouseover(node) {
-			this.$refs.ToolTip.visualize(self.graph, node);
+			// this.$refs.ToolTip.visualize(self.graph, node);
 			if (this.$store.selectedMode == "Ensemble" && this.$store.comparisonMode == false) {
 				this.$refs.Guides.visualize(node, "temporary");
 			}
 		},
 
 		mouseout(node) {
-			this.$refs.ToolTip.clear();
+			// this.$refs.ToolTip.clear();
 			if (this.$store.selectedMode == "Ensemble" && this.$store.comparisonMode == false) {
 				this.$refs.Guides.clear(node, "temporary");
 				if (this.permanentGuides == false) {
