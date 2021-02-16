@@ -84,7 +84,7 @@ class Auxiliary:
         # ----------------------------------------------------------------------
         self.result = {
             "dataset": self._collect_data_dataset(dataframes, sg),
-            "moduleFctList": sg.module_fct_list,
+            "moduleFctList": sg.modules,
             "callsiteModuleMap": self._callsite_module_map(dataframes, callsites),
             "moduleCallsiteMap": self._module_callsite_map(dataframes, modules),
             "runtimeProps": self._runtime_props(dataframes),
@@ -140,7 +140,7 @@ class Auxiliary:
         for k, df in dataframes.items():
 
             _df = df_fetch_columns(df, _COLUMNS_OF_INTEREST, self.proxy_columns)
-            _num_modules = len(sg.module_fct_list) if "module" in _df.columns else 0
+            _num_modules = len(sg.modules) if "module" in _df.columns else 0
             _json[k] = {
                 "nrnks": df_count(_df, "rank", self.proxy_columns),
                 "ncsts": df_count(_df, "name", self.proxy_columns),

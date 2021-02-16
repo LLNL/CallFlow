@@ -52,7 +52,7 @@ class BaseProvider:
             self.supergraphs[name] = sg
 
         # ensemble case
-        if self.ndatasets >= 1:
+        if self.ndatasets > 1:
             name = "ensemble"
             sg = EnsembleGraph(name)
             sg.load(
@@ -97,7 +97,6 @@ class BaseProvider:
                 profile_format=_prop[1],
                 module_callsite_map=module_map,
             )
-            sg.process()
 
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             Group(sg, group_by=group_by)
