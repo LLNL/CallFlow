@@ -7,15 +7,7 @@
 
  <template>
   <div :id="id">
-    <v-layout class="chip-container">
-      <v-chip class="chip" chips color="teal" label outlined clearable>
-        {{ message }}
-      </v-chip>
-      <v-spacer></v-spacer>
-      <span class="component-info">
-        Number of {{ selectedPropLabel }} = {{ selectedPropSum }}
-      </span>
-    </v-layout>
+	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info"/>
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
   </div>
@@ -30,6 +22,8 @@ import "d3-selection-multi";
 import * as utils from "lib/utils";
 import EventHandler from "lib/routing/EventHandler";
 
+import InfoChip from "../general/infoChip";
+
 // Local component imports
 import ToolTip from "./tooltip";
 
@@ -37,6 +31,7 @@ export default {
 	name: "EnsembleHistogram",
 	components: {
 		ToolTip,
+		InfoChip
 	},
 	props: [],
 	data: () => ({
@@ -57,7 +52,9 @@ export default {
 		freq: [],
 		selectedColorBy: "Inclusive",
 		MPIcount: 0,
-		message: "Runtime Distribution",
+		title: "Runtime Distribution",
+		summary: "",
+		info: "",
 		paddingFactor: 3.5,
 		thisNode: "",
 		selectedPropLabel: "",
@@ -188,9 +185,13 @@ export default {
 			} else if (this.$store.selectedProp == "dataset") {
 				this.selectedPropLabel = "Runs";
 			}
+
 			this.selectedPropSum = this.freq.reduce((acc, val) => {
 				return acc + val;
 			});
+
+			this.info = "Number of " + this.selectedPropLabel + "= "+ this.selectedPropSum;
+			
 		},
 
 		clear() {

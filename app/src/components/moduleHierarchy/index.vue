@@ -7,11 +7,7 @@
 
 <template>
   <v-layout row wrap :id="id">
-    <v-layout class="chip-container">
-      <v-chip class="chip" chips color="teal" label outlined clearable>
-        {{ message }}
-      </v-chip>
-    </v-layout>
+	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info"/>
     <span class="component-info">
       Module = {{ formatModule(selectedModule) }}
     </span>
@@ -73,12 +69,14 @@ export default {
 		path_hierarchy: [],
 		id: "",
 		padding: 0,
-		message: "Supernode Hierarchy",
 		offset: 4,
 		stroke_width: 4,
 		metric: "",
 		selectedModule: "",
 		svgID: "module-hierarchy-svg",
+		title: "Super node Hierarchy",
+		summary: "",
+		info: "",
 	}),
 
 	watch: {

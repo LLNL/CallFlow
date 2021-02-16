@@ -6,10 +6,15 @@
  */
 
 <template>
-  <svg :id="id">
-    <g id="container"></g>
-    <ColorMap ref="ColorMap" />
-  </svg>
+  <div>
+    <v-layout class="chip-container">
+      <InfoChip ref="InfoChip" :title="title" :summary="summary" />
+    </v-layout>
+    <svg :id="id">
+      <g id="container"></g>
+      <ColorMap ref="ColorMap" />
+    </svg>
+  </div>
 </template>
 
 <script>
@@ -20,12 +25,14 @@ import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
 
 import ColorMap from "../general/colormap";
+import InfoChip from "../general/infoChip";
 import * as utils from "lib/utils";
 
 export default {
 	name: "NodeLink",
 	components: {
 		ColorMap,
+		InfoChip
 	},
 
 	data: () => ({
@@ -41,6 +48,8 @@ export default {
 		zoom: null,
 		HAS_DATA_COLUMNS: ["module"], // Array of keys in incoming data to check for.
 		has_data_map: {}, // stores if the required data points are present in the incoming data.
+		title: "CCT view",
+		summary: "This view provides the CCT "
 	}),
 
 	mounted() {
@@ -50,7 +59,7 @@ export default {
 			self.init();
 		});
 	},
-	
+		
 	methods: {
 		/**
 		 * Send the request to /init endpoint

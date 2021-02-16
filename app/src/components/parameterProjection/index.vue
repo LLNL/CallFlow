@@ -8,9 +8,7 @@
 <template>
   <v-card :id="id">
     <v-layout class="chip-container">
-      <v-chip class="chip" chips color="teal" label outlined clearable>
-        {{ message }}
-      </v-chip>
+		<InfoChip ref="InfoChip" :title="title" :summary="summary" />
     </v-layout>
     <svg :id="svgId"></svg>
   </v-card>
@@ -23,11 +21,17 @@ import * as d3 from "d3";
 // Local library
 import { lasso } from "lib/interactions/lasso";
 import * as utils from "lib/utils";
+
+import InfoChip from "../general/infoChip";
+
 import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler.js";
 
 export default {
 	name: "ParameterProjection",
+	components: {
+		InfoChip
+	},
 	props: [],
 	data: () => ({
 		id: "parameter-projection-view",
@@ -41,7 +45,8 @@ export default {
 		xMax: 0,
 		yMin: 0,
 		yMax: 0,
-		message: "Parameter Projection",
+		title: "Parameter Projection",
+		summary: "",
 		showMessage: false,
 		colorset: [
 			"#FF7F00",

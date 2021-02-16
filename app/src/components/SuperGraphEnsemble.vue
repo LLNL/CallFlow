@@ -242,11 +242,11 @@ import EventHandler from "lib/routing/EventHandler";
 import APIService from "lib/routing/APIService";
 
 // Ensemble super graph dashboard imports
-import CallsiteCorrespondence from "./callsiteCorrespondence/callsiteCorrespondence";
-import EnsembleHistogram from "./ensembleHistogram/ensembleHistogram";
-import ModuleHierarchy from "./moduleHierarchy/moduleHierarchy";
-import EnsembleScatterplot from "./ensembleScatterplot/ensembleScatterplot";
-import ParameterProjection from "./parameterProjection/parameterProjection";
+import CallsiteCorrespondence from "./callsiteCorrespondence";
+import EnsembleHistogram from "./ensembleHistogram/";
+import ModuleHierarchy from "./moduleHierarchy/";
+import EnsembleScatterplot from "./ensembleScatterplot/";
+import ParameterProjection from "./parameterProjection/";
 import Sankey from "./sankey/";
 import Toolbar from "./general/toolbar";
 
@@ -611,10 +611,6 @@ export default {
 			this.requestEnsembleData();
 			this.clear();
 			this.init();
-		},
-
-		closeSettings() {
-			this.isSettingsOpen = !this.isSettingsOpen;
 		},
 	},
 };
