@@ -60,7 +60,9 @@ class Unify:
         for name, sg in self.eg.supergraphs.items():
 
             # unify the dataframe
-            self.eg.dataframe = pd.concat([self.eg.dataframe, sg.dataframe], sort=True)
+            self.eg.dataframe = pd.concat([self.eg.dataframe,
+                                           sg.dataframe.assign(dataset=sg.name)],
+                                          sort=True)
 
             # unify the graph
             if not self.eg.nxg.is_multigraph() == sg.nxg.is_multigraph():

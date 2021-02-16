@@ -74,7 +74,8 @@ class Auxiliary:
 
         # ----------------------------------------------------------------------
         else:
-            df = df_lookup_by_column(sg.dataframe, "dataset", sg.name)
+            df = sg.dataframe
+            #df = df_lookup_by_column(sg.dataframe, "dataset", sg.name)
             callsites = df_unique(df, "name")
             modules = df_unique(df, "module")
             dataframes = {sg.name: df}
@@ -133,20 +134,20 @@ class Auxiliary:
         :param sg:
         :return:
         """
-        _COLUMNS_OF_INTEREST = ["node", "rank", "time", "time (inc)",
-                                "dataset", "module", "name", "component_level"]
+        #_COLUMNS_OF_INTEREST = ["node", "rank", "time", "time (inc)",
+        #                        "dataset", "module", "name", "component_level"]
 
         _json = {}
         for k, df in dataframes.items():
-
-            _df = df_fetch_columns(df, _COLUMNS_OF_INTEREST, self.proxy_columns)
-            _num_modules = len(sg.modules) if "module" in _df.columns else 0
+            cols = list(df.columns)
+            #_df = df_fetch_columns(df, _COLUMNS_OF_INTEREST, self.proxy_columns)
+            #_num_modules = len(sg.modules) if "module" in _df.columns else 0
             _json[k] = {
-                "nrnks": df_count(_df, "rank", self.proxy_columns),
-                "ncsts": df_count(_df, "name", self.proxy_columns),
-                "nmods": _num_modules,
+                "ncsts": df_count(df, "name"),
+                "nmods": df_count(df, "module") if "module" in cols else 0,
+                "nrnks": df_count(df, "rank") if "rank" in cols else 1,
+                "rtime": df_minmax(df, "time (inc)", self.proxy_columns)[1],
                 "nedgs": len(sg.nxg.edges()),
-                "rtime": df_minmax(_df, "time (inc)", self.proxy_columns)[1],
             }
 
         return _json
