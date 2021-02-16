@@ -7,15 +7,7 @@
 
 <template>
   <div>
-    <v-layout class="chip-container">
-      <v-chip class="chip" chips color="teal" label outlined clearable>
-        {{ summaryChip }}
-      </v-chip>
-      <v-spacer></v-spacer>
-      <span class="component-info">
-        Encoding = {{ selectedMetric }} runtime.
-      </span>
-    </v-layout>
+	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
     <v-layout>
       <svg :id="id">
         <g id="container">
@@ -45,6 +37,7 @@ import APIService from "lib/routing/APIService.js";
 
 // General component imports
 import ColorMap from "../general/colormap";
+import InfoChip from "../general/infoChip";
 
 // Local component imports
 import Nodes from "./nodes";
@@ -58,6 +51,7 @@ export default {
 		Edges,
 		MiniHistograms,
 		ColorMap,
+		InfoChip
 	},
 	data: () => ({
 		graph: null,
@@ -76,12 +70,13 @@ export default {
 		height: null,
 		treeHeight: null,
 		data: null,
-		message: "Summary Graph View",
 		sankeyWidth: 0,
 		sankeyHeight: 0,
-		summaryChip: "SuperGraph",
 		selectedMetric: "",
 		existingIntermediateNodes: {},
+		title: "Super Graph View",
+		message: "",
+		info: ""
 	}),
 
 	mounted() {
@@ -106,7 +101,7 @@ export default {
 			self.init();
 		});
 
-		this.selectedMetric = this.$store.selectedMetric;
+		this.selectedMetric = this.$store.selectedMetric;		
 	},
 
 	methods: {
@@ -145,6 +140,9 @@ export default {
 		},
 
 		async init() {
+			// set the component info.
+			this.info = "Encoding: " + this.$store.selectedMetric + " runtime";
+
 			this.data = await this.fetchData();
 			this.width = this.$store.viewWidth;
 			this.height = this.$store.viewHeight;

@@ -7,11 +7,7 @@
 
 <template>
   <v-layout row wrap :id="id">
-    <v-layout class="chip-container">
-      <v-chip class="chip" chips color="teal" label outlined clearable>
-        {{ message }}
-      </v-chip>
-    </v-layout>
+    <InfoChip ref="InfoChip" :title="title" :summary="summary" />
     <span class="component-info"> Correlation : {{ corr_coef }} </span>
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
@@ -26,6 +22,8 @@ import * as d3 from "d3";
 import EventHandler from "lib/routing/EventHandler";
 import * as utils from "lib/utils";
 
+import InfoChip from "../general/infoChip";
+
 // Local components
 import ToolTip from "./tooltip";
 
@@ -33,6 +31,7 @@ export default {
 	name: "SingleScatterplot",
 	components: {
 		ToolTip,
+		InfoChip
 	},
 	data: () => ({
 		padding: {
@@ -52,7 +51,6 @@ export default {
 		boxWidth: 0,
 		id: "scatterplot-view",
 		svgID: "scatterplot-view-svg",
-		message: "MPI Runtime Scatterplot",
 		boxOffset: 20,
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
 		paddingFactor: 3.5,
@@ -61,6 +59,9 @@ export default {
 		corr_coef: 0,
 		xAxisHeight: 0,
 		yAxisHeight: 0,
+		title: "MPI Runtime Scatterplot",
+		summary: "",
+		info: ""
 	}),
 
 	mounted() {

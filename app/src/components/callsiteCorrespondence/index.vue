@@ -6,14 +6,7 @@
  */
 <template>
   <v-layout row wrap :id="id">
-    <v-chip class="chip" chips color="teal" label outlined clearable>
-      {{ message }}
-    </v-chip>
-    <v-spacer></v-spacer>
-    <span class="component-info">
-      <p></p>
-    </span>
-
+	<InfoChip ref="InfoChip" :title="title" :summary="summary" />
     <v-layout row wrap v-if="isCallsiteSelected == true">
       <v-btn
         class="ma-1 reveal-button"
@@ -225,6 +218,8 @@ import * as d3 from "d3";
 import * as utils from "lib/utils";
 import EventHandler from "lib/routing/EventHandler";
 
+import InfoChip from "../general/infoChip";
+
 // Local component imports
 import BoxPlot from "./boxplot";
 
@@ -232,12 +227,14 @@ export default {
 	name: "CallsiteCorrespondence",
 	components: {
 		BoxPlot,
+		InfoChip
 	},
 	data: () => ({
 		selected: {},
 		id: "auxiliary-function-overview",
 		people: [],
-		message: "Call Site Correspondence",
+		title: "Call Site Correspondence",
+		summary: "",
 		callsites: [],
 		dataReady: false,
 		numberOfIntersectionCallsites: 0,

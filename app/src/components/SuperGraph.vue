@@ -135,9 +135,9 @@ import "splitpanes/dist/splitpanes.css";
 import EventHandler from "lib/routing/EventHandler";
 
 // Super graph dashboard imports
-import SingleScatterplot from "./singleScatterplot/singleScatterplot";
-import SingleHistogram from "./singleHistogram/singleHistogram";
-import CallsiteInformation from "./callsiteInformation/callsiteInformation";
+import SingleScatterplot from "./singleScatterplot/";
+import SingleHistogram from "./singleHistogram/";
+import CallsiteInformation from "./callsiteInformation/";
 import Sankey from "./sankey/";
 import Toolbar from "./general/toolbar";
 

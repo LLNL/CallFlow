@@ -6,16 +6,10 @@
  */
 <template>
 	<v-layout row wrap :id="id">
-    <v-layout class="chip-container">
-        <v-chip class="chip" chips color="teal" label outlined clearable> {{ message }} </v-chip>
-        <v-spacer> </v-spacer>
-    </v-layout>
-    <span class="component-info">
-        <!-- Max. QCD= {{maxVarianceCallsite}} -->
-    </span>
-    <svg :id="svgID"></svg>
-    <ToolTip ref="ToolTip" />
-</v-layout>
+		<InfoChip ref="InfoChip" :title="title" :summary="summary" />
+		<svg :id="svgID"></svg>
+		<ToolTip ref="ToolTip" />
+	</v-layout>
 </template>
 
 
@@ -25,6 +19,9 @@ import * as d3 from "d3";
 
 // Local library
 import * as utils from "lib/utils";
+
+import InfoChip from "../general/infoChip";
+
 import EventHandler from "lib/routing/EventHandler";
 
 // Local components
@@ -34,6 +31,7 @@ export default {
 	name: "EnsembleScatterplot",
 	components: {
 		ToolTip,
+		InfoChip
 	},
 	data: () => ({
 		padding: {
@@ -52,7 +50,9 @@ export default {
 		nameData: [],
 		id: "ensemble-scatterplot-view",
 		svgID: "ensemble-scatterplot-view-svg",
-		message: "Metric Correlation",
+		title: "Metric Correlation",
+		info: "",
+		message: "",
 		boxOffset: 20,
 		settings: [{ title: "Show Difference plot" }, { title: "aaa" }],
 		moduleUnDesirability: 1,

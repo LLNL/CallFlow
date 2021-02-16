@@ -7,11 +7,7 @@
 
 <template>
   <v-layout row wrap :id="id">
-    <v-layout class="chip-container">
-      <v-chip class="chip" chips color="teal" label outlined clearable>
-        {{ message }}
-      </v-chip>
-    </v-layout>
+	<InfoChip ref="InfoChip" :title="title" :summary="summary" />
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
   </v-layout>
@@ -27,6 +23,8 @@ import { brush } from "d3";
 import * as utils from "lib/utils";
 import EventHandler from "lib/routing/EventHandler";
 
+import InfoChip from "../general/infoChip";
+
 // Local component imports
 import ToolTip from "./tooltip";
 
@@ -34,6 +32,7 @@ export default {
 	name: "SingleHistogram",
 	components: {
 		ToolTip,
+		InfoChip
 	},
 	props: [],
 	data: () => ({
@@ -57,11 +56,12 @@ export default {
 		freq: [],
 		selectedColorBy: "Inclusive",
 		MPIcount: 0,
-		message: "MPI Runtime Distribution",
 		paddingFactor: 3.5,
 		boxOffset: 20,
 		x_max_exponent: 0,
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
+		title: "MPI Runtime Distribution",
+		summary: "",
 	}),
 
 	mounted() {
