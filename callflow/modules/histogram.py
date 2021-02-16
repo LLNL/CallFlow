@@ -80,14 +80,16 @@ class Histogram:
         ndata = df_count(df, 'dataset')
         nranks = df_count(df, 'rank')
 
-        # across rank for ensemble case
-        if histo_type == "rank" and ndata > 0:
-            return df
+        # across rank case
+        if histo_type == "rank":
+            if ndata > 0:                    # ensemble case
+                return df
+            elif ndata == 0 and nranks == 0: # single case and single rank
+                return df
+            else:                            # single case and multiple ranks
+                _df = df.groupby(["rank"])
 
-        # across rank for single case
-        if histo_type == "rank" and ndata == 0 and nranks > 0:
-            _df = df.groupby(["rank"])
-
+        # otherwise, group by the type
         else:
             _df = df.groupby([histo_type])
 
