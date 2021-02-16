@@ -7,14 +7,19 @@
 
 <template>
   <v-app id="inspire">
-	<Toolbar ref="ToolBar" />
-    <v-navigation-drawer v-model="left" temporary fixed>
+	<Toolbar ref="ToolBar" :isSettingsOpen.sync="isSettingsOpen" />
+    <v-navigation-drawer v-model.lazy="isSettingsOpen" temporary fixed>
       <v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
       <v-card flex fill-height id="control-panel">
         <v-layout row wrap>
-          <v-btn icon>
-            <v-icon v-on:click="reset()">refresh</v-icon>
-          </v-btn>
+			<v-btn icon>
+				<v-icon v-on:click="reset()">refresh</v-icon>
+			</v-btn>
+			<v-spacer></v-spacer>
+			<v-btn icon>
+				<v-icon v-on:click="closeSettings()">close</v-icon>
+			</v-btn>
+		
 
           <!-- --------------------------- Visual Encoding ----------------------------------->
           <v-flex xs12 class="ma-1">
@@ -40,7 +45,6 @@
               v-model="selectedMetric"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -67,23 +71,9 @@
               v-model="selectedRunBinCount"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateRunBinCount()"
             >
             </v-text-field>
           </v-flex>
-
-          <!-- --------------------------- Hierarchy ----------------------------------->
-          <!-- <v-flex xs12 class="ma-1">
-					<v-subheader class="teal lighten-4">SuperNode Hierarchy</v-subheader>
-				</v-flex>
-				<v-flex xs12 class="ma-1">
-					<v-select label="Assign width by" :items="hierarchyModes" v-model="selectedHierarchyMode"
-						:menu-props="{ maxHeight: '200' }" persistent-hint v-on:change="updateHierarchyMode()">
-					</v-select>
-				</v-flex> -->
-          <!-- <v-flex xs12 class="ma-1">
-					<v-subheader class="teal lighten-4">Distribution</v-subheader>
-				</v-flex> -->
           <v-flex xs12 class="ma-1">
             <v-text-field
               label="Number of bins for MPI Distribution"
@@ -92,7 +82,6 @@
               v-model="selectedMPIBinCount"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateMPIBinCount()"
             >
             </v-text-field>
           </v-flex>
@@ -103,7 +92,6 @@
               v-model="selectedScale"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -114,7 +102,6 @@
               v-model="selectedProp"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="reset()"
             >
             </v-select>
           </v-flex>
@@ -130,7 +117,6 @@
               v-model="selectedRuntimeColorMap"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateColors()"
             >
             </v-select>
           </v-flex>
@@ -141,7 +127,6 @@
               v-model="selectedDistributionColorMap"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateColors()"
             >
             </v-select>
           </v-flex>
@@ -152,7 +137,6 @@
               v-model="selectedTargetColor"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateTargetColor()"
             >
             </v-select>
           </v-flex>
@@ -164,11 +148,10 @@
               v-model="selectedColorPoint"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateColors()"
             >
             </v-text-field>
           </v-flex>
-          <v-flex xs12 class="ma-1">
+          <!-- <v-flex xs12 class="ma-1">
             <v-text-field
               label="Color minimum (in seconds)"
               class="mt-0"
@@ -176,7 +159,6 @@
               v-model="selectedColorMinText"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateColors()"
             >
             </v-text-field>
           </v-flex>
@@ -188,10 +170,9 @@
               v-model="selectedColorMaxText"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateColors()"
             >
             </v-text-field>
-          </v-flex>
+          </v-flex> -->
 
           <!----------------------------- Callsite information ----------------------------------->
           <v-flex xs12 class="ma-1">
@@ -206,7 +187,6 @@
               v-model="selectedRuntimeSortBy"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="updateRuntimeSortBy()"
             >
             </v-select>
           </v-flex>
@@ -218,59 +198,9 @@
               v-model="selectedIQRFactor"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
-              v-on:change="reset()"
             >
             </v-text-field>
           </v-flex>
-          <!-- <v-flex
-					xs12
-					class="ma-1"
-				>
-				<v-subheader class="teal lighten-4">Projection view</v-subheader>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-text-field
-						label="Number of clusters"
-						class="mt-0"
-						type="float"
-						v-model="selectedNumOfClusters"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updateNumOfClusters()"
-					>
-					</v-text-field>
-				</v-flex> -->
-          <!-- <v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-select
-						label="PC1"
-						:items="dimensions"
-						v-model="selectedPC1"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updatePC1()"
-					>
-					</v-select>
-				</v-flex>
-				<v-flex
-					xs12
-					class="ma-1"
-				>
-					<v-select
-						label="PC2"
-						:items="dimensions"
-						v-model="selectedPC2"
-						:menu-props="{ maxHeight: '200' }"
-						persistent-hint
-						v-on:change="updatePC2()"
-					>
-					</v-select>
-				</v-flex> -->
         </v-layout>
       </v-card>
     </v-navigation-drawer>
@@ -338,6 +268,75 @@ export default {
 	watch: {
 		showTarget: function (val) {
 			EventHandler.$emit("show-target-auxiliary");
+		},
+
+		isSettingsOpen: function (val) {
+			this.$emit("update:isSettingsOpen", val);
+		},
+
+		selectedMetric: function (val) {
+			this.$store.selectedMetric = val;
+			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
+			this.reset();
+		},
+
+		selectedRuntimeColorMap(val) {
+			this.$parent.$parent.setupColors(val);
+			this.reset();
+		},
+
+		selectedRuntimeSortBy(val) {
+			this.$store.selectedRuntimeSortBy = val;
+			EventHandler.$emit("callsite-information-sort");
+		},
+
+		selectedScale(val) {
+			this.$store.selectedScale = val;
+			this.reset();
+		},
+
+		selectedIQRFactor(val) {
+			this.$store.selectedIQRFactor = val;
+			this.reset();
+		},
+
+		selectedTargetDataset(val) {
+			this.$store.selectedTargetDataset = val;
+			this.reset();
+		},
+
+		selectedColorPoint(val) {
+			this.$store.selectedColorPoint = val;
+			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
+			this.reset();
+		},
+
+		selectedTargetColor(val) {
+			this.$store.selectedTargetColor = val;
+			this.reset();
+		},
+
+		async selectedRunBinCount(val) {
+			this.$store.selectedRunBinCount = val;
+			const data = await this.requestAuxData();
+			this.reset();
+		},
+
+		async selectedMPIBinCount(val) {
+			this.$store.selectedRunBinCount = val;
+			const data = await this.requestAuxData();
+			this.reset();
+		},
+
+		selectedProp(val) {
+			this.$store.selectedProp = val;
+			this.reset();
+		},
+
+		selectedDistributionColorMap(val) {
+			this.$store.selectedDistributionColorMap = val;
+			this.$parent.$parent.setupColors(this.selectedDistributionColorMap);
+			this.reset();
 		},
 	},
 
@@ -431,6 +430,7 @@ export default {
 		showTarget: true,
 		targetInfo: "Target Guides",
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
+		isSettingsOpen: false,
 	}),
 
 	mounted() {
@@ -611,6 +611,10 @@ export default {
 			this.requestEnsembleData();
 			this.clear();
 			this.init();
+		},
+
+		closeSettings() {
+			this.isSettingsOpen = !this.isSettingsOpen;
 		},
 	},
 };
