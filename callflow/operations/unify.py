@@ -6,11 +6,13 @@
 """
 CallFlow's operation to unify a super graph.
 """
+import numpy as np
 import pandas as pd
 import networkx as nx
+from functools import reduce
 
 import callflow
-
+from callflow.utils.utils import create_reindex_map
 LOGGER = callflow.get_logger(__name__)
 
 
@@ -33,13 +35,10 @@ class Unify:
         self.eg = eg
         self.eg.supergraphs = supergraphs
 
+        # collect all modules and compute a superset
+        self.eg.modules = reduce(np.union1d, [v.modules for k, v in supergraphs.items()])
+
         self.compute()
-
-        # TODO: we should fix this assumption
-        LOGGER.warning("Assuming that all module maps are the same!")
-        k0 = list(supergraphs.keys())[0]
-        self.eg.modules = supergraphs[k0].modules
-
         self.eg.add_time_proxies()
         self.eg.df_reset_index()
 
@@ -59,11 +58,19 @@ class Unify:
 
         for name, sg in self.eg.supergraphs.items():
 
+            # ------------------------------------------------------------------
             # unify the dataframe
-            self.eg.dataframe = pd.concat([self.eg.dataframe,
-                                           sg.dataframe.assign(dataset=sg.name)],
-                                          sort=True)
 
+            # add dataset name
+            _sg = sg.dataframe.assign(dataset=sg.name)
+
+            # remap the modules in this supergraph to the one in ensemble graph
+            _mod_map = create_reindex_map(sg.modules, self.eg.modules)
+            _sg['module'] = _sg['module'].apply(lambda _: _mod_map[_])
+
+            self.eg.dataframe = pd.concat([self.eg.dataframe, _sg], sort=True)
+
+            # ------------------------------------------------------------------
             # unify the graph
             if not self.eg.nxg.is_multigraph() == sg.nxg.is_multigraph():
                 raise nx.NetworkXError("Both nxg instances be graphs or multigraphs.")
@@ -85,5 +92,6 @@ class Unify:
             self.eg.nxg.add_nodes_from(sg.nxg)
             self.eg.nxg.add_edges_from(new_edges)
 
+            # ------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
