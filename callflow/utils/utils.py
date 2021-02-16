@@ -15,6 +15,16 @@ import statsmodels.nonparametric.api as smnp
 import hatchet
 import networkx as nx
 
+
+def create_reindex_map(lista, listb):
+    assert isinstance(lista, np.ndarray) and isinstance(listb, np.ndarray)
+    _map = {}
+    for i, m in enumerate(lista):
+        _ni = np.where(m == listb)[0]
+        assert _ni.shape[0] == 1
+        _map[i] = _ni[0]
+    return _map
+
 # ------------------------------------------------------------------------------
 def print_dict_recursive(d, indent=0):
 
