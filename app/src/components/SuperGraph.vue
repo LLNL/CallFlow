@@ -179,9 +179,20 @@ export default {
 			EventHandler.$emit("callsite-information-sort");
 		},
 
+		// NOTE: This functionality is broken!!!
+		// The request times out because the auxiliary processing 
+		// exceeds the threshold set by the APIService. 
+		// TODO: CAL-88: Fix the time out error and use events 
+		// instead of a this.reset()
 		async selectedMPIBinCount(val) {
 			this.$store.selectedMPIBinCount = val;
-			this.requestAuxData();
+			const data = await this.requestAuxData();
+			
+			// TODO: CAL-88 Fix the timeout error. 
+			// EventHandler.$emit("update-rank-bin-size", {
+			// 	node: this.$store.selectedNode,
+			// 	dataset: this.$store.selectedTargetDataset
+			// });
 			this.reset();
 		},
 
@@ -278,9 +289,12 @@ export default {
 		init() {
 			this.setComponentMap(); // Set component mapping for easy component tracking.
 
-			console.log("Mode : ", this.selectedMode);
+			console.log("Mode : ", this.$store.selectedMode);
 			console.log("Number of runs :", this.$store.numOfRuns);
-			console.log("Dataset : ", this.$store.selectedTargetDataset);
+			console.log("Target Dataset : ", this.$store.selectedTargetDataset);
+			console.log("Node: ", this.$store.selectedNode);
+			console.log("Run Bin size", this.$store.selectedRunBinCount);
+			console.log("MPI Bin size", this.$store.selectedMPIBinCount);
 
 			// Call the appropriate socket to query the server.
 			this.initComponents(this.currentSingleSuperGraphComponents);
@@ -350,9 +364,13 @@ export default {
 		},
 
 		async requestAuxData() {
-			const data = await this.$parent.$parent.fetchData();
-			this.$parent.$parent.initStore(data);
-			this.init();
+			const payload = {
+				datasets: this.$store.selectedDatasets,
+				rankBinCount: this.$store.selectedMPIBinCount,
+				runBinCount: this.$store.selectedRunBinCount,
+				reProcess: true,
+			};
+			return await this.$parent.$parent.fetchData(payload);
 		}
 	},
 };

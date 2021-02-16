@@ -83,7 +83,7 @@ class Auxiliary:
 
         # ----------------------------------------------------------------------
         self.result = {
-            "runtimeProps": Auxiliary._runtime_props(dataframes),
+            "runtimeProps": Auxiliary._runtime_props_dataset(dataframes),
             "dataset": self._collect_data_dataset(dataframes, sg),
             "callsite": self._collect_data(dataframes_name_group, "callsite"),
             "module": self._collect_data(dataframes_module_group, "module"),

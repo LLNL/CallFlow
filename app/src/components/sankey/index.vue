@@ -125,7 +125,7 @@ export default {
 			}
 
 			data = this._add_node_map(data);
-			// data.graph = this._construct_super_graph(data);
+			data.graph = this._construct_super_graph(data);
 
 			// check cycle.
 			// let detectcycle = detectDirectedCycle(data.graph);
@@ -207,30 +207,30 @@ export default {
 			this.$refs.Edges.init(this.$store.graph, this.view);
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
 
-			const selectedNode = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "CCT");
+			const _node = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "CCT");
 			// Get node id from the graph.
-			const node_id = this.$store.graph["nodeMap"][selectedNode];
-			const node = this.$store.graph["nodes"][node_id];
+			const node_id = this.$store.graph["nodeMap"][_node];
+			this.$store.selectedNnode = this.$store.graph["nodes"][node_id];
 
 			if (this.$store.selectedMode == "Single") {
 				EventHandler.$emit("single-histogram", {
-					node,
+					node: this.$store.selectedNnode,
 					dataset: this.$store.selectedTargetDataset,
 				});
 
 				EventHandler.$emit("single-scatterplot", {
-					node,
+					node: this.$store.selectedNnode,
 					dataset: this.$store.selectedTargetDataset,
 				});
 			}
 			else if(this.$store.selectedMode == "Ensemble") {
 				EventHandler.$emit("ensemble-histogram", {
-					node,
+					node: this.$store.selectedNnode,
 					dataset: this.$store.selectedTargetDataset,
 				});
 
 				EventHandler.$emit("ensemble-scatterplot", {
-					node,
+					node: this.$store.selectedNnode,
 					dataset: this.$store.selectedTargetDataset,
 				});
 			}
