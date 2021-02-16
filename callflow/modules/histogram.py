@@ -77,13 +77,17 @@ class Histogram:
         :param prop:
         :return:
         """
-        assert histo_type in df.columns
+        ndata = df_count(df, 'dataset')
+        nranks = df_count(df, 'rank')
 
-        if histo_type == "rank" and df_count(df, 'dataset') > 0:
+        # across rank for ensemble case
+        if histo_type == "rank" and ndata > 0:
             return df
 
-        if histo_type == "rank":
-            _df = df.groupby(["dataset", "rank"])
+        # across rank for single case
+        if histo_type == "rank" and ndata == 0 and nranks > 0:
+            _df = df.groupby(["rank"])
+
         else:
             _df = df.groupby([histo_type])
 

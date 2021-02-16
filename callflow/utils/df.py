@@ -12,6 +12,8 @@ import numpy as np
 # ------------------------------------------------------------------------------
 def df_unique(df, column, proxy={}):
     column = proxy.get(column, column)
+    if column not in df.columns:
+        return np.array([])
     return df[column].unique()
 
 
@@ -37,9 +39,6 @@ def df_get_column(df, column, index="name", proxy={}):
 def df_fetch_columns(df, columns, proxy={}):
     columns = [proxy.get(_, _) for _ in columns]
     return df[columns]
-
-
-
 
 # ------------------------------------------------------------------------------
 def df_filter_by_value(df, column, value, index="name", proxy={}):
