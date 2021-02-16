@@ -612,10 +612,6 @@ export default {
 			this.clear();
 			this.init();
 		},
-
-		closeSettings() {
-			this.isSettingsOpen = !this.isSettingsOpen;
-		},
 	},
 };
 </script>

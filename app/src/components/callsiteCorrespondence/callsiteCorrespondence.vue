@@ -85,7 +85,6 @@
                   text-xs-center
                   :class="selectClassName[callsite.name]"
                   @click="changeSelectedClassName"
-                  style=""
                 >
                   {{ formatNumberOfHops(callsite.component_level) }}
                 </v-flex>
