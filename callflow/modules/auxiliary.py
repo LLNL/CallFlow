@@ -10,6 +10,7 @@ CallFlow's module to consolidate the auxiliary information
 for each call site or module based on the type of data requested.
 """
 import numpy as np
+import pandas as pd
 from scipy.stats import kurtosis, skew
 
 import callflow
@@ -52,9 +53,53 @@ class Auxiliary:
         LOGGER.warning(f"Computing auxiliary data for ({sg}) with "
                        f"{len(self.runs)} runs: {self.runs}")
 
-        #self.sg = sg
+        self.result = {}
+        # ----------------------------------------------------------------------
+        # single super graph
+        if not isinstance(sg, callflow.EnsembleGraph):
 
+            df_module = df_group_by(sg.dataframe, "module")
+            df_name = df_group_by(sg.dataframe, "name")
 
+            self.result = {"summary": sg.summary(),
+                           "modules": sg.modules,
+                           "m2c": sg.df_mod2callsite(),
+                           "c2m": sg.df_callsite2mod(),
+                           "data_mod": self.new_collect_data(sg.name, "module", df_module),
+                           "data_cs": self.new_collect_data(sg.name, "name", df_name)
+                           }
+
+        # ----------------------------------------------------------------------
+        # ensemble graph
+        else:
+            edf_module = df_group_by(sg.dataframe, "module")
+            edf_name = df_group_by(sg.dataframe, "name")
+
+            self.result['ensemble'] = {"summary": sg.summary(),
+                                       "modules": sg.modules,
+                                       "m2c": sg.df_mod2callsite(),
+                                       "c2m": sg.df_callsite2mod(),
+                                       "data_mod": self.new_collect_data(sg.name, "module", edf_module),
+                                       "data_cs": self.new_collect_data(sg.name, "name", edf_name)
+                                       }
+
+            # for relative computation
+            for dataset in self.runs:
+                df = df_lookup_by_column(sg.dataframe, "dataset", dataset)
+                df_module = df_group_by(df, "module")
+                df_name = df_group_by(df, "name")
+
+                # TODO: how to compute summary etc for inidividual modules?
+                self.result[dataset] = {#"summary": sg.summary(),
+                                        #"modules": sg.modules,
+                                        #"m2c": sg.df_mod2callsite(),
+                                        #"c2m": sg.df_callsite2mod(),
+                                        "data_mod": self.new_collect_data(dataset, "module", df_module, edf_module),
+                                        "data_cs": self.new_collect_data(dataset, "name", df_name, edf_name)
+                                        }
+
+        # ----------------------------------------------------------------------
+        '''
         # ----------------------------------------------------------------------
         if isinstance(sg, callflow.EnsembleGraph):
             callsites = df_unique(sg.dataframe, "name")
@@ -97,6 +142,7 @@ class Auxiliary:
             "module": self._collect_data(dataframes_module_group, "module"),
             "callsite": self._collect_data(dataframes_name_group, "callsite"),
         }
+        '''
 
         #print_dict_recursive(self.result)
         #exit ()
@@ -104,6 +150,58 @@ class Auxiliary:
         # TODO: this should not happen this way
         sg.auxiliary_data = self.result
 
+        # --------------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------
+
+    def new_collect_data(self, name, grp_column, grp_df, grp_edf=None):
+
+        assert grp_column in ['module', 'name']
+        assert isinstance(grp_df, pd.core.groupby.generic.DataFrameGroupBy)
+        if grp_edf is not None:
+            assert isinstance(grp_edf, pd.core.groupby.generic.DataFrameGroupBy)
+
+        is_callsite = grp_column == "name"
+        is_ensemble = name == "ensemble"
+        is_relative = grp_edf is not None
+
+        assert not is_ensemble or not is_relative
+
+        histogram, boxplot, gradients = None, None, None
+        ensemble_df = None
+
+        result = {}
+        for grp_name, df in grp_df:
+
+            if is_relative:
+                ensemble_df = grp_edf.get_group(grp_name)
+
+            histogram = Histogram(df, relative_to_df=ensemble_df,
+                                  histo_types=['rank'],
+                                  proxy_columns=self.proxy_columns).result
+
+            # todo: boxplot should also be for target wrt ensemble
+            boxplot = BoxPlot(df, proxy_columns=self.proxy_columns).result
+
+            if is_ensemble:
+                gradients = Gradients(df, bins=self.nbins_run,
+                                      callsiteOrModule=name,
+                                      proxy_columns=self.proxy_columns).result
+
+            # ------------------------------------------------------------------
+            result[grp_name] = self.pack_json(df=df,
+                                              name=grp_name,
+                                              grp_type=grp_column,
+                                              is_ensemble=is_ensemble,
+                                              is_callsite=is_callsite,
+                                              gradients=gradients,
+                                              histograms=histogram,
+                                              boxplots=boxplot)
+
+        return result
+
+    '''
+    # --------------------------------------------------------------------------
     def _runtime_props(self, dataframes):
         """
         Adds runtime information, e.g., max, min inclusive and exclusive runtime.
@@ -240,13 +338,13 @@ class Auxiliary:
                 assert mod_idx.shape[0] in [0, 1]
                 if mod_idx.shape[0] == 1:
                     map[_name][_] = mod_idx[0]
-                '''
+                '' '
                 else:
                     print(_name, _, mod_idx, _df.shape)
                     print(_df[["name", "module"]])
-                '''
+                '' '
 
-        '''
+        '' '
         map = {_name: {_: df_lookup_and_list(_df, "name", _, "module")
                        for _ in callsites}
                for _name, _df in dataframes.items()}
@@ -256,7 +354,7 @@ class Auxiliary:
                 if _v.shape[0] > 1:
                     LOGGER.error(f'callsite2modulemap should have lists of 1: '
                                  f'found [{k}: ({_k}: {_v})]')
-        '''
+        '' '
         return map
 
     def _module_callsite_map(self, dataframes, modules):
@@ -269,11 +367,11 @@ class Auxiliary:
         return {_name: {int(_): df_lookup_and_list(_df, "module", _, "name")
                         for _ in modules}
                 for _name, _df in dataframes.items()}
-
+    '''
     # --------------------------------------------------------------------------
     def pack_json(self, name, df, is_ensemble, is_callsite,
                   gradients=None, histograms=None, boxplots=None,
-                  grp_type="callsite"):
+                  grp_type="name"):
         """
 
         :param name:
@@ -286,23 +384,23 @@ class Auxiliary:
         :param grp_type:
         :return:
         """
-        assert grp_type in ['callsite', 'module']
+        assert grp_type in ['name', 'module']
 
-        _id_col = 'nid' if grp_type == "callsite" else 'module'
+        _id_col = 'nid' if grp_type == "name" else 'module'
         result = {"name":               name,
                   "id":                 f"{grp_type}-{df[_id_col].unique()[0]}",
-                  "dataset":            df_unique(df, "dataset"),
+                  #"dataset":            df_unique(df, "dataset"),
                   "component_path":     df_unique(df, "component_path"),
-                  "component_level":    df_unique(df, "component_level")
+                  #"component_level":    df_unique(df, "component_level")
                   }
 
-        if grp_type == "module":
-            result["module"] = df_unique(df, "module")
+        #if grp_type == "module":
+        #    result["module"] = df_unique(df, "module")
 
         # now, append the data
         for tk, tv in zip(TIME_COLUMNS, self.time_columns):
 
-            if grp_type == "callsite":
+            if grp_type == "name":
                 _data = df[tv].to_numpy()
             elif grp_type == "module":
                 _data = df.groupby(["rank"])[tv].mean().to_numpy()
