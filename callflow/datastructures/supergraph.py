@@ -18,7 +18,7 @@ from callflow import get_logger
 from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.utils import NumpyEncoder
 from callflow.utils.df import *
-from .metrics import FILE_FORMATS, METRIC_PROXIES
+from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
 
 LOGGER = get_logger(__name__)
 
@@ -33,7 +33,7 @@ class SuperGraph(ht.GraphFrame):
         "df": "df.pkl",
         "nxg": "nxg.json",
         "env_params": "env_params.txt",
-        "aux": "auxiliary_data.npy",
+        "aux": "aux-{}.npz",
     }
 
     # --------------------------------------------------------------------------
@@ -266,10 +266,57 @@ class SuperGraph(ht.GraphFrame):
             SuperGraph.write_nxg(path, self.nxg)
 
         if write_aux:
-            SuperGraph.write_aux(path, self.auxiliary_data)
+            #if self.name in list(self.auxiliary_data.keys()):
+            if self.name == 'ensemble':
+                for k, v in self.auxiliary_data.items():
+                    SuperGraph.write_aux(path, v, k)
+            else:
+                SuperGraph.write_aux(path, self.auxiliary_data, self.name)
 
     # --------------------------------------------------------------------------
     # SuperGraph.dataframe api
+    # --------------------------------------------------------------------------
+    def summary(self):
+
+        cols = list(self.dataframe.columns)
+        result = {"ncallsites": self.df_count("name"),
+                  "nmodules": self.df_count("module"), # if "module" in cols else 0,
+                  "nranks": self.df_count("rank") if "rank" in cols else 1,
+                  "nedges": len(self.nxg.edges())}
+
+        for p in TIME_COLUMNS:
+            result[p] = self.df_minmax(p)
+
+        return result
+
+    # --------------------------------------------------------------------------
+    # added these functions to support auxiliary
+    # we need this
+    def df_mod2callsite(self, modules = None):
+
+        if modules is None:
+            modules = self.df_unique("module")
+        else:
+            assert isinstance(modules, (list, np.ndarray))
+
+        return {_: df_lookup_and_list(self.dataframe, "module", _, "name")
+                for _ in modules}
+
+    def df_callsite2mod(self, callsites = None):
+
+        if callsites is None:
+            callsites = self.df_unique("name")
+        else:
+            assert isinstance(callsites, (list, np.ndarray))
+
+        map = {}
+        for _ in callsites:
+            mod_idx = df_lookup_and_list(self.dataframe, "name", _, "module")
+            assert mod_idx.shape[0] in [0, 1]
+            if mod_idx.shape[0] == 1:
+                map[_] = mod_idx[0]
+        return map
+
     # --------------------------------------------------------------------------
     # (Not documented)
     # TODO: CAL-65: Move to utils directory
@@ -631,22 +678,22 @@ class SuperGraph(ht.GraphFrame):
             fptr.write(graph_str)
 
     @staticmethod
-    def write_aux(path, data):
+    def write_aux(path, data, name):
         """
 
         :param path:
         :param data:
         :return:
         """
-        fname = os.path.join(path, SuperGraph._FILENAMES["aux"])
+        fname = os.path.join(path, SuperGraph._FILENAMES["aux"].format(name))
         LOGGER.debug(f"Writing ({fname})")
 
         ext = os.path.splitext(SuperGraph._FILENAMES["aux"])[-1]
         if '.json' == ext:
             with open(fname, "w") as f:
                 json.dump(data, f, cls=NumpyEncoder)
-        elif '.npy' == ext:
-            np.save(fname, data, allow_pickle=True)
+        elif '.npz' == ext:
+            np.savez_compressed(fname, **data)
         else:
             assert False
 
@@ -703,13 +750,13 @@ class SuperGraph(ht.GraphFrame):
         return graph
 
     @staticmethod
-    def read_aux(path):
+    def read_aux(path, name):
         """
 
         :param path:
         :return:
         """
-        fname = os.path.join(path, SuperGraph._FILENAMES["aux"])
+        fname = os.path.join(path, SuperGraph._FILENAMES["aux"].format(name))
         LOGGER.debug(f"Reading ({fname})")
 
         data = {}
@@ -718,8 +765,8 @@ class SuperGraph(ht.GraphFrame):
             if '.json' == ext:
                 with open(fname, "r") as fptr:
                     data = json.load(fptr)
-            elif '.npy' == ext:
-                data = np.load(fname, allow_pickle=True).item()
+            elif '.npz' == ext:
+                data = np.load(fname, allow_pickle=True)['aux_data'].item()
 
         except Exception as e:
             LOGGER.critical(f"Failed to read aux file: {e}")

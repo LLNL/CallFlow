@@ -16,6 +16,7 @@ import hatchet
 import networkx as nx
 
 
+# ------------------------------------------------------------------------------
 def create_reindex_map(lista, listb):
     assert isinstance(lista, np.ndarray) and isinstance(listb, np.ndarray)
     _map = {}
@@ -24,6 +25,7 @@ def create_reindex_map(lista, listb):
         assert _ni.shape[0] == 1
         _map[i] = _ni[0]
     return _map
+
 
 # ------------------------------------------------------------------------------
 def print_dict_recursive(d, indent=0):
@@ -36,7 +38,7 @@ def print_dict_recursive(d, indent=0):
     for k, v in d.items():
         _s = f'{_indent} l{indent} ({k} = {type(v)}):'
 
-        if isinstance(v, (int, float, str, tuple)):
+        if isinstance(v, (int, float, str, tuple, int, float, np.int64, np.float64)):
             print(f'{_s} {v}')
 
         elif isinstance(v, list):
@@ -47,13 +49,16 @@ def print_dict_recursive(d, indent=0):
 
         elif isinstance(v, np.ndarray):
             if len(v) > 5:
-                print(f'{_s} {v.shape} {v[:5]}...')
+                print(f'{_s} {v.shape} {list(v[:5])}...')
             else:
-                print(f'{_s} {v.shape} {v}')
+                print(f'{_s} {v.shape} {list(v)}')
 
         elif isinstance(v, dict):
             print(f'{_s} {len(v)}')
             print_dict_recursive(v, indent+1)
+
+        else:
+            print(f'{_s} {type(v)}')
 
 # ------------------------------------------------------------------------------
 # statistics utils

@@ -86,6 +86,7 @@ class BaseProvider:
             f'\n\n-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n'
         )
 
+        process_individuals = False
         for dataset in self.config["runs"]:
 
             name = dataset["name"]
@@ -101,12 +102,11 @@ class BaseProvider:
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             Group(sg, group_by=group_by)
 
-            # TODO: Avoid computing auxiliary in future for single datasets here.
-            # if len(self.supergraphs) == 1:
-            Auxiliary(sg)
+            if process_individuals or len(self.config["runs"]) == 1:
+                Auxiliary(sg)
+                sg.write(os.path.join(save_path, name))
 
             self.supergraphs[name] = sg
-            sg.write(os.path.join(save_path, name))
 
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
