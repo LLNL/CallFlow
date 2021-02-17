@@ -82,9 +82,7 @@ class BaseProvider:
 
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
-        print(
-            f'\n\n-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n'
-        )
+        LOGGER.warning(f'-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n\n')
 
         # TODO: this flag should come from commandline
         # default = False (almost always, for ensemble we don't want)
@@ -120,30 +118,26 @@ class BaseProvider:
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
         if len(self.supergraphs) > 1:
+            LOGGER.warning('-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n')
 
-            print(
-                "\n\n-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n"
-            )
-            LOGGER.error(f'-----> starting with {get_memory_usage()}')
             name = "ensemble"
+            LOGGER.profile(f'Starting supergraph {name}')
             sg = EnsembleGraph(name)
 
-            LOGGER.error(f'-----> after init {get_memory_usage()}')
             Unify(sg, self.supergraphs)
-            LOGGER.error(f'-----> after unify {get_memory_usage()}')
+            LOGGER.profile(f'Created supergraph {name}')
 
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
+            LOGGER.profile(f'Filtered supergraph {name}')
             Group(sg, group_by=group_by)
+            LOGGER.profile(f'Grouped supergraph {name}')
 
-            LOGGER.error(f'-----> After filter and group {get_memory_usage()}')
             Auxiliary(sg)
-
-            LOGGER.error(f'-----> After aux {get_memory_usage()}')
+            LOGGER.profile(f'Created Aux for {name}')
 
             sg.write(os.path.join(save_path, name))
             self.supergraphs[name] = sg
-
-            LOGGER.error(f'-----> After storing in dict {get_memory_usage()}')
+            LOGGER.profile(f'Stored in dictionary {name}')
 
     def request_general(self, operation):
         """
