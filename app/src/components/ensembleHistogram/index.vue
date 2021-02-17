@@ -140,7 +140,7 @@ export default {
 				isTargetThere = true;
 			}
 
-			this.rankCount = parseInt(this.$store.runtimeProps.numOfRanks["ensemble"]);
+			this.rankCount = parseInt(this.$store.summary[this.$store.selectedTargetDataset].nranks);
 
 			this.xScale = d3
 				.scaleBand()
