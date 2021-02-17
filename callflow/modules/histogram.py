@@ -50,21 +50,32 @@ class Histogram:
         if len(histo_types) == 0:
             histo_types = Histogram.HISTO_TYPES
 
-        # for each type of histogram and each time column
-        for h,(tk,tv) in itertools.product(histo_types, zip(TIME_COLUMNS, self.time_columns)):
 
+        # for each type of histogram and each time column
+        # tk and tv would be the same for a Super Graph with no module mapping.
+        for h, (tk,tv) in itertools.product(histo_types, zip(TIME_COLUMNS, self.time_columns)):
+            
             # compute the range of the actual data
             df = self._get_data_by_histo_type(dataframe, h)[tv]
             drng = [df.min(), df.max()]
 
-            # compute the range of the relative_to_df
+            # compute the range df relative to the provided relative_to_df.
             if relative_to_df is None:
-                rrng = drng
+                # Note: For single super graph, it will enter the `if` case;
+                rrng = drng            
             else:
+                # Note: For ensemble super graph, we calculate relative to the
+                # ensemble_df. 
+                # print(self._get_data_by_histo_type(relative_to_df, h), h)
                 rdf = self._get_data_by_histo_type(relative_to_df, h)[tv]
                 rrng = [rdf.min(), rdf.max()]
-                assert rrng[0] <= drng[0]
-                assert rrng[1] >= drng[1]
+                # I feel this assertion is probably not correct. Why can't
+                # relative df's min or max go beyond the bound? e.g., comparing
+                # two datasets. 
+                # I think we should rather just consider the bounds to be more
+                # flexible. 
+                # assert rrng[0] <= drng[0]
+                # assert rrng[1] >= drng[1]
 
             # compute the histograms
             hist = histogram(df, rrng, bins=bins)
@@ -81,14 +92,14 @@ class Histogram:
         :param prop:
         :return:
         """
-        ndata = df_count(df, 'dataset')
+        ndatasets = df_count(df, 'dataset')
         nranks = df_count(df, 'rank')
 
         # across rank case
         if histo_type == "rank":
-            if ndata > 0:                    # ensemble case
+            if ndatasets > 0:                    # ensemble case
                 return df
-            elif ndata == 0 and nranks == 0: # single case and single rank
+            elif ndatasets == 0 and nranks == 0: # single case and single rank
                 return df
             else:                            # single case and multiple ranks
                 _df = df.groupby(["rank"])
