@@ -13,7 +13,7 @@ from callflow.modules import Auxiliary
 
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import ParameterProjection, DiffView
-
+from callflow.utils.utils import get_memory_usage
 
 LOGGER = get_logger(__name__)
 
@@ -89,6 +89,8 @@ class BaseProvider:
         process_individuals = False
         for dataset in self.config["runs"]:
 
+            LOGGER.error(f'-----> Starting with {get_memory_usage()}')
+
             name = dataset["name"]
             _prop = run_props[name]
 
@@ -99,14 +101,19 @@ class BaseProvider:
                 module_callsite_map=module_map,
             )
 
+            LOGGER.error(f'-----> after creating with {get_memory_usage()}')
+
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             Group(sg, group_by=group_by)
 
+            LOGGER.error(f'-----> After filter and group {get_memory_usage()}')
             if process_individuals or len(self.config["runs"]) == 1:
                 Auxiliary(sg)
                 sg.write(os.path.join(save_path, name))
+                LOGGER.error(f'-----> After aux {get_memory_usage()}')
 
             self.supergraphs[name] = sg
+            LOGGER.error(f'-----> After storing in dict {get_memory_usage()}')
 
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
@@ -115,16 +122,26 @@ class BaseProvider:
             print(
                 "\n\n-------------------- PROCESSING ENSEMBLE SUPERGRAPH --------------------\n\n"
             )
+            LOGGER.error(f'-----> starting with {get_memory_usage()}')
             name = "ensemble"
             sg = EnsembleGraph(name)
 
+            LOGGER.error(f'-----> after init {get_memory_usage()}')
             Unify(sg, self.supergraphs)
+            LOGGER.error(f'-----> after unify {get_memory_usage()}')
+
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
             Group(sg, group_by=group_by)
+
+            LOGGER.error(f'-----> After filter and group {get_memory_usage()}')
             Auxiliary(sg)
+
+            LOGGER.error(f'-----> After aux {get_memory_usage()}')
 
             sg.write(os.path.join(save_path, name))
             self.supergraphs[name] = sg
+
+            LOGGER.error(f'-----> After storing in dict {get_memory_usage()}')
 
     def request_general(self, operation):
         """
