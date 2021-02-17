@@ -44,7 +44,8 @@ class BaseProvider:
         # create supergraphs for all runs
         for run in self.config["runs"]:
 
-            name = run["name"]
+            # name = run["name"]
+            name = "ensemble"
             sg = SuperGraph(name)
             sg.load(
                 os.path.join(load_path, name), read_parameter=read_param, read_aux=True

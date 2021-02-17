@@ -6,6 +6,7 @@
 
 import os
 import warnings
+import numpy as np
 
 from flask import Flask, request, json, jsonify
 from flask_cors import CORS, cross_origin
@@ -111,12 +112,17 @@ class APIProvider(BaseProvider):
         @cross_origin()
         def supergraph_data():
             data = request.json
-            result = self.request_general(
+            aux_data = self.request_general(
                 {
                     "name": "supergraph_data",
                     **data,
                 }
             )
+            if isinstance(aux_data, np.lib.npyio.NpzFile):
+                result = APIProvider.unpack_aux_data(aux_data)
+            else:
+                result = aux_data
+
             return APIProvider.emit_json("aux_data", result)
 
         @app.route("/single_supergraph", methods=["POST"])
@@ -186,3 +192,16 @@ class APIProvider(BaseProvider):
 
 
 # ------------------------------------------------------------------------------
+    @staticmethod
+    def unpack_aux_data(npzFile):
+        dict_data = dict(npzFile)
+        return {
+            # "runtimeProps": Auxiliary._runtime_props_dataset(dataframes),
+            "summary": dict_data["summary"],
+            "callsite": dict_data["data_cs"],
+            "module": dict_data["data_mod"],
+            # "callsiteModuleMap": json.dumps(dict_data["c2m"], cls=NumpyEncoder),
+            # "moduleCallsiteMap": json.dumps(dict_data["m2c"], cls=NumpyEncoder),
+            "moduleFctList": dict_data["modules"],
+            # "runs": selected_runs,
+        }
