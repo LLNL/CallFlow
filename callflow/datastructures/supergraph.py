@@ -353,18 +353,20 @@ class SuperGraph(ht.GraphFrame):
         column = self.df_get_proxy(column)
         return self.dataframe.set_index(index)[column]
 
-    def df_add_column(self, column_name, value=None, apply_func=None, apply_on="name"):
+    def df_add_column(self, column_name, value=None, apply_func=None, apply_on="name",
+                      update=False,):
         """
 
         :param column_name:
         :param value:
         :param apply_func:
         :param apply_on:
+        :param update:
         :return:
         """
 
         assert (value is None) != (apply_func is None)
-        if column_name in self.dataframe.columns:
+        if column_name in self.dataframe.columns and not update:
             return
 
         if value is not None:
