@@ -63,11 +63,16 @@ class Histogram:
             else:
                 rdf = self._get_data_by_histo_type(relative_to_df, h)[tv]
                 rrng = [rdf.min(), rdf.max()]
-                #assert rrng[0] <= drng[0]
-                #assert rrng[1] >= drng[1]
+                assert rrng[0] <= drng[0]
+                assert rrng[1] >= drng[1]
+                '''
                 if drng[0] < rrng[0] or drng[1] > rrng[1]:
+                    LOGGER.error(list(df.to_numpy()))
+                    LOGGER.error(list(rdf.to_numpy()))
                     LOGGER.error(f'Found incorrect ranges for hist=({h},{tk})'
                                  f' drng = {drng}, rrng = {rrng}')
+                    assert False
+                '''
 
             # compute the histograms
             hist = histogram(df, rrng, bins=bins)
@@ -96,10 +101,13 @@ class Histogram:
             else:                            # single case and multiple ranks
                 _df = df.groupby(["rank"])
 
+        # TODO: check with Suraj reg this
         # otherwise, group by the type
         else:
-            _df = df.groupby([histo_type])
+            return df
+            #_df = df.groupby([histo_type])
 
+        # confused about this
         return _df[self.time_columns].mean()
 
     @staticmethod
