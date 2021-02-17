@@ -15,25 +15,25 @@ import statsmodels.nonparametric.api as smnp
 import hatchet
 import networkx as nx
 
-import psutil
+# import psutil
 
 # ------------------------------------------------------------------------------
 
 
-def get_memory_usage(process = None):
-    if process is None:
-        process = psutil.Process(os.getpid())
+# def get_memory_usage(process = None):
+#     if process is None:
+#         process = psutil.Process(os.getpid())
 
-    bytes = float(process.memory_info().rss)
+#     bytes = float(process.memory_info().rss)
 
-    if bytes < 1024.:
-        return f'{bytes} bytes'
+#     if bytes < 1024.:
+#         return f'{bytes} bytes'
 
-    kb = bytes / 1024.
-    if kb < 1024.:
-        return f'{kb} KB'
+#     kb = bytes / 1024.
+#     if kb < 1024.:
+#         return f'{kb} KB'
 
-    return f'{kb / 1024.} MB'
+#     return f'{kb / 1024.} MB'
 
 
 # ------------------------------------------------------------------------------

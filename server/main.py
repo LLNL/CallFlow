@@ -12,7 +12,7 @@ import sys
 # CallFlow local imports.
 import callflow
 from callflow.utils.argparser import ArgParser
-from callflow.utils.utils import get_memory_usage
+# from callflow.utils.utils import get_memory_usage
 
 from .provider_base import BaseProvider
 from .provider_api import APIProvider
@@ -40,7 +40,7 @@ def main():
     log_level = 1 if "--verbose" in sys.argv else 2
     callflow.init_logger(level=log_level)
 
-    LOGGER.profile(f'-----> Initialized with {get_memory_usage()}')
+    # LOGGER.profile(f'-----> Initialized with {get_memory_usage()}')
 
     # --------------------------------------------------------------------------
     args = ArgParser(sys.argv)
@@ -59,11 +59,11 @@ def main():
     # process and exit
     if process:
         assert endpoint_env == "TERMINAL"
-        LOGGER.error(f'-----> Create BaseProvider with {get_memory_usage()}')
+        # LOGGER.error(f'-----> Create BaseProvider with {get_memory_usage()}')
         cf = BaseProvider(config=args.config)
-        LOGGER.error(f'-----> Process with {get_memory_usage()}')
+        # LOGGER.error(f'-----> Process with {get_memory_usage()}')
         cf.process()
-        LOGGER.error(f'-----> All done with {get_memory_usage()}')
+        # LOGGER.error(f'-----> All done with {get_memory_usage()}')
 
     # --------------------------------------------------------------------------
     # start a server based on endpoint_access = "REST" | "SOCKET"
