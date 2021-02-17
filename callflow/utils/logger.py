@@ -10,6 +10,20 @@ from logging import getLogger as get_logger  # noqa
 
 
 # ------------------------------------------------------------------------------
+LOG_PROFILE = logging.CRITICAL + 1
+
+
+def _log_profile(self, message, *args, **kws):
+    if self.isEnabledFor(LOG_PROFILE):
+        self._log(LOG_PROFILE, message, args, **kws)
+
+
+logging.addLevelName(LOG_PROFILE, "PROFILE")
+logging.Logger.profile = _log_profile
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
 def init_logger(**kwargs):
 
     # extract the logging parameters (defaults given)
@@ -42,6 +56,7 @@ def init_logger(**kwargs):
         "WARNING": "purple",
         "ERROR": "bold_red",
         "CRITICAL": "red",
+        "PROFILE": "bold_red",
     }
 
     # create the actual formatter
