@@ -170,6 +170,10 @@ class Auxiliary:
         histogram, boxplot, gradients = None, None, None
         ensemble_df = None
 
+        histo_types = []
+        if not is_relative and not is_ensemble:
+            histo_types = ['rank']
+
         result = {}
         for grp_name, df in grp_df:
 
@@ -177,7 +181,7 @@ class Auxiliary:
                 ensemble_df = grp_edf.get_group(grp_name)
 
             histogram = Histogram(df, relative_to_df=ensemble_df,
-                                  histo_types=['rank'],
+                                  histo_types=histo_types,
                                   proxy_columns=self.proxy_columns).result
 
             # todo: boxplot should also be for target wrt ensemble
