@@ -175,8 +175,8 @@ class SuperGraph(ht.GraphFrame):
             self.parameters = SuperGraph.read_env_params(path)
 
         if read_aux:
-            self.auxiliary_data = SuperGraph.read_aux(path)
-            self.modules = self.auxiliary_data["moduleFctList"]
+            self.auxiliary_data = SuperGraph.read_aux(path, self.name)
+            self.modules = self.auxiliary_data["modules"]
 
         # ----------------------------------------------------------------------
         self.add_time_proxies()
@@ -767,8 +767,7 @@ class SuperGraph(ht.GraphFrame):
                 with open(fname, "r") as fptr:
                     data = json.load(fptr)
             elif '.npz' == ext:
-                data = np.load(fname, allow_pickle=True)['aux_data'].item()
-
+                data = np.load(fname, allow_pickle=True)
         except Exception as e:
             LOGGER.critical(f"Failed to read aux file: {e}")
         return data
