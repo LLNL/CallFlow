@@ -68,21 +68,4 @@ class EnsembleGraph(SuperGraph):
 
         return runs
 
-    def summary(self):
-        res = {}
-        for _d, sg in self.supergraphs.items():
-            _df = sg.dataframe
-            cols = list(_df.columns)
-
-            result = {"ncallsites": df_count(_df, "name"),
-                    "nmodules": df_count(_df, "module"), # if "module" in cols else 0,
-                    "nranks": df_count(_df, "rank") if "rank" in cols else 1,
-                    "nedges": len(self.nxg.edges())}
-
-            for p in TIME_COLUMNS:
-                result[p] = self.df_minmax(p)
-
-            res[_d] = result
-        return res
-
 # ------------------------------------------------------------------------------
