@@ -27,22 +27,22 @@ class Histogram:
 
     HISTO_TYPES = ["rank", "name", "dataset"]
 
-    def __init__(self, dataframes_as_dict, bins=20,
+    def __init__(self, dataframe, relative_to_df=None, bins=20,
                  histo_types = [], proxy_columns={}):
         """
 
-        :param dataframes_as_dict:
+        :param dataframe:
         :param histo_types:
         :param bins:
         :param proxy_columns:
         """
-        assert isinstance(dataframes_as_dict, dict)
+        assert isinstance(dataframe, pd.DataFrame)
+        if relative_to_df is not None:
+            assert isinstance(relative_to_df, pd.DataFrame)
         assert isinstance(bins, int)
         assert isinstance(proxy_columns, dict)
         assert isinstance(histo_types, list)
         assert bins > 0
-        for k, v in dataframes_as_dict.items():
-            assert isinstance(k, str) and isinstance(v, pd.DataFrame)
 
         self.time_columns = [proxy_columns.get(_, _) for _ in TIME_COLUMNS]
         self.result = {_: {} for _ in TIME_COLUMNS}
@@ -52,21 +52,25 @@ class Histogram:
 
         # for each type of histogram and each time column
         for h,(tk,tv) in itertools.product(histo_types, zip(TIME_COLUMNS, self.time_columns)):
-            self.result[tk][h] = {}
 
-            data = {dn: self._get_data_by_histo_type(df, h)[tv]
-                    for dn, df in dataframes_as_dict.items()}
+            # compute the range of the actual data
+            df = self._get_data_by_histo_type(dataframe, h)[tv]
+            drng = [df.min(), df.max()]
 
-            # in the first pass, compute the range
-            drange = [100000, -100000]
-            for dn, df in data.items():
-                drange[0] = min(drange[0], df.min())
-                drange[1] = max(drange[1], df.max())
+            # compute the range of the relative_to_df
+            if relative_to_df is None:
+                rrng = drng
+            else:
+                rdf = self._get_data_by_histo_type(relative_to_df, h)[tv]
+                rrng = [rdf.min(), rdf.max()]
+                assert rrng[0] <= drng[0]
+                assert rrng[1] >= drng[1]
 
-            # in the next pass, compute the histograms
-            for dn, df in data.items():
-                hist = histogram(df, drange, bins=bins)
-                self.result[tk][h][dn] = Histogram._format_data(hist)
+            # compute the histograms
+            hist = histogram(df, rrng, bins=bins)
+            if relative_to_df is not None:
+                hist = hist[1]                # dont's store the bins
+            self.result[tk] = {h: hist}
 
     # --------------------------------------------------------------------------
     # Return the histogram in the required form.
