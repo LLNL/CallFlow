@@ -20,11 +20,11 @@
 		>
 			<template slot="items" slot-scope="props">
 				<tr>
-					<td nowrap="true">{{ props.item.run_time }}</td>
 					<td nowrap="true">{{ props.item.run }}</td>
-					<td nowrap="true">{{ props.item.num_ranks }}</td>
-					<td nowrap="true">{{ props.item.num_callsites }}</td>
-					<td nowrap="true">{{ props.item.num_edges }}</td>
+					<td nowrap="true">{{ props.item.time[1] }}</td>
+					<td nowrap="true">{{ props.item.nranks }}</td>
+					<td nowrap="true">{{ props.item.ncallsites }}</td>
+					<td nowrap="true">{{ props.item.nedges }}</td>
 				</tr>
 			</template>
 		</v-data-table>
@@ -38,11 +38,11 @@ export default {
 	props: ["data"],
 	data: () => ({
 		headers: [
-			{ text: "Mean runtime", value: "run_time"},
 			{ text: "Run", value: "run" },
-			{ text: "Number of ranks", value: "num_ranks"},
-			{ text: "Number of call sites", value: "num_callsites"},
-			{ text: "Number of calls", value: "num_edges"}
+			{ text: "Mean runtime (inc)", value: "time"},
+			{ text: "Number of ranks", value: "nranks"},
+			{ text: "Number of call sites", value: "ncallsites"},
+			{ text: "Number of calls", value: "nedges"}
 		],
 		// TODO: Fix the isLoading, it does not show since data lookup is fast.
 		isLoading: false,

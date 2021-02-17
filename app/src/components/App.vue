@@ -131,17 +131,17 @@ export default {
 		 * Attaches properties to central storage based on the data from `this.auxiliary_data`.
 		 */
 		setAuxVariables(data) {
-			this.$store.numOfRuns = data.runs.length;
+			this.$store.numOfRuns = Object.keys(data.summary).length;
 			this.$store.modules = data.module;
 			this.$store.callsites = data.callsite;
-			this.$store.moduleCallsiteMap = data.moduleCallsiteMap;
-			this.$store.callsiteModuleMap = data.callsiteModuleMap;
+			// this.$store.moduleCallsiteMap = data.moduleCallsiteMap;
+			// this.$store.callsiteModuleMap = data.callsiteModuleMap;
 			this.$store.moduleFctList = data.moduleFctList;
-			this.$store.selectedDatasets = data.runs;
-			this.$store.runtimeProps = data.runtimeProps;
+			this.$store.selectedDatasets = Object.keys(data.summary);
+			this.$store.summary = data.summary;
 
-			this.$store.metricTimeMap = Object.keys(data.runtimeProps[this.$store.selectedMetric]).reduce((res, item, idx) => { 
-				res[item] = data.runtimeProps[this.$store.selectedMetric][item]["mean"];
+			this.$store.metricTimeMap = Object.keys(data.summary).reduce((res, item, idx) => { 
+				res[item] = data.summary[item][this.$store.selectedMetric][1];
 				return res;
 			}, {});
 			this.$store.selectedTargetDataset = utils.getKeyWithMaxValue(this.$store.metricTimeMap);
@@ -149,15 +149,15 @@ export default {
 		},
 
 		setLocalVariables(data) {
-			this.runs = data.runs;
-			this.run_counts = data.runs.length;
+			this.runs = Object.keys(data.summary);
+			this.run_counts = Object.keys(data.summary).length;
 
 			// Render the tables in the view
-			const dataset_props = data.dataset;
+			const dataset_props = data.summary;
 			this.runtime = Object.keys(dataset_props).map((_) =>  { return {"run": _, ...dataset_props[_]};});
-			const module_fct_list = data.moduleFctList;
+			// const module_fct_list = data.moduleFctList;
 			// TODO: Does not work as the format is weird.
-			this.module_callsite_map = Object.keys(data.moduleCallsiteMap["ensemble"]).map((_) => { return {"module": module_fct_list[_], ...data.moduleCallsiteMap[_]};});
+			// this.module_callsite_map = Object.keys(data.moduleCallsiteMap).map((_) => { return {"module": module_fct_list[_], ...data.moduleCallsiteMap[_]};});
 		},
 
 		setGlobalVariables() {
@@ -174,7 +174,7 @@ export default {
 
 			// this.$store.auxiliarySortBy = this.auxiliarySortBy;
 			this.$store.auxiliarySortBy = "time (inc)";
-			this.$store.selectedMetric = "Inclusive";
+			this.$store.selectedMetric = "time (inc)";
 		
 			// Shoud be specified in the CSS, not here.
 			this.$store.fontSize = 14;
@@ -185,7 +185,6 @@ export default {
 			
 			// Set the metric to sort the call site information
 			this.$store.selectedRuntimeSortBy = "Inclusive";
-			this.$store.selectedMetric = "Inclusive";
 		},
 
 
@@ -224,9 +223,9 @@ export default {
 
 		// Set the min and max and assign color variables from Settings.
 		setRuntimeColorScale(selectedRuntimeColorMap, metric) {
-			const _d = this.$store.runtimeProps[metric][this.$store.selectedTargetDataset];
-			const colorMin = parseFloat(_d["min"]);
-			const colorMax = parseFloat(_d["max"]);
+			const _d = this.$store.summary[this.$store.selectedTargetDataset][metric];
+			const colorMin = parseFloat(_d[0]);
+			const colorMax = parseFloat(_d[1]);
 
 			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
 				parseFloat(colorMin)
