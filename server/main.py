@@ -31,15 +31,13 @@ def main():
     Performs actions depending on the passed arguments
     :return: None
     """
-    # --------------------------------------------------------------------------
-    print(f" ----------------- CallFlow {callflow.__version__} -----------------")
-
-    # --------------------------------------------------------------------------
 
     log_level = 1 if "--verbose" in sys.argv else 2
     callflow.init_logger(level=log_level)
 
-    LOGGER.profile(f'-----> Initialized CallFlow')
+    # --------------------------------------------------------------------------
+    LOGGER.info(f" ------------ Initializing CallFlow {callflow.__version__} ------------")
+    LOGGER.profile(f'Initialized CallFlow')
 
     # --------------------------------------------------------------------------
     args = ArgParser(sys.argv)
