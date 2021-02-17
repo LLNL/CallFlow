@@ -91,10 +91,11 @@ class BaseProvider:
         process_individuals = False
         for dataset in self.config["runs"]:
 
-            LOGGER.error(f'-----> Starting with {get_memory_usage()}')
-
+            print('')
             name = dataset["name"]
             _prop = run_props[name]
+
+            LOGGER.profile(f'Starting supergraph {name}')
 
             sg = SuperGraph(name)
             sg.create(
@@ -102,20 +103,19 @@ class BaseProvider:
                 profile_format=_prop[1],
                 module_callsite_map=module_map,
             )
-
-            LOGGER.error(f'-----> after creating with {get_memory_usage()}')
-
+            LOGGER.profile(f'Created supergraph {name}')
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
+            LOGGER.profile(f'Filtered supergraph {name}')
             Group(sg, group_by=group_by)
+            LOGGER.profile(f'Grouped supergraph {name}')
 
-            LOGGER.error(f'-----> After filter and group {get_memory_usage()}')
             if process_individuals or len(self.config["runs"]) == 1:
                 Auxiliary(sg)
+                LOGGER.profile(f'Created Aux for {name}')
                 sg.write(os.path.join(save_path, name))
-                LOGGER.error(f'-----> After aux {get_memory_usage()}')
 
             self.supergraphs[name] = sg
-            LOGGER.error(f'-----> After storing in dict {get_memory_usage()}')
+            LOGGER.profile(f'Stored in dictionary {name}')
 
         # ----------------------------------------------------------------------
         # Stage-2: EnsembleGraph processing
