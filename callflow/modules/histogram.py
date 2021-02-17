@@ -50,7 +50,6 @@ class Histogram:
         if len(histo_types) == 0:
             histo_types = Histogram.HISTO_TYPES
 
-
         # for each type of histogram and each time column
         # tk and tv would be the same for a Super Graph with no module mapping.
         for h, (tk,tv) in itertools.product(histo_types, zip(TIME_COLUMNS, self.time_columns)):
@@ -62,7 +61,7 @@ class Histogram:
             # compute the range df relative to the provided relative_to_df.
             if relative_to_df is None:
                 # Note: For single super graph, it will enter the `if` case;
-                rrng = drng            
+                rrng = drng
             else:
                 # Note: For ensemble super graph, we calculate relative to the
                 # ensemble_df. 
@@ -73,9 +72,12 @@ class Histogram:
                 # relative df's min or max go beyond the bound? e.g., comparing
                 # two datasets. 
                 # I think we should rather just consider the bounds to be more
-                # flexible. 
-                # assert rrng[0] <= drng[0]
-                # assert rrng[1] >= drng[1]
+                # flexible.
+                #assert rrng[0] <= drng[0]
+                #assert rrng[1] >= drng[1]
+                if drng[0] < rrng[0] or drng[1] > rrng[1]:
+                    LOGGER.error(f'Found incorrect ranges for hist=({h},{tk})'
+                                 f' drng = {drng}, rrng = {rrng}')
 
             # compute the histograms
             hist = histogram(df, rrng, bins=bins)

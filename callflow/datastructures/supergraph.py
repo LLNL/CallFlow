@@ -193,7 +193,8 @@ class SuperGraph(ht.GraphFrame):
         # if dataframe already has modules
         if has_modules_in_df:
             LOGGER.info('Found \"module\" column in the dataframe')
-            assert 0    # are the module_map dictionaries getting populated?
+            self.module_callsite_map = self.df_mod2callsite()
+            self.callsite_module_map = self.df_callsite2mod()
 
         # ----------------------------------------------------------------------
         # use the given module-callsite map

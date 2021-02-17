@@ -19,6 +19,8 @@ LOGGER = callflow.get_logger(__name__)
 
 
 # ------------------------------------------------------------------------------
+# TODO: Boxplots also need to be computed "relative" to the ensemble
+# just like the histograms
 class BoxPlot:
     """
     Boxplot computation for a dataframe segment

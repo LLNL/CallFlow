@@ -15,6 +15,70 @@ import statsmodels.nonparametric.api as smnp
 import hatchet
 import networkx as nx
 
+import psutil
+
+# ------------------------------------------------------------------------------
+
+
+def get_memory_usage(process = None):
+    if process is None:
+        process = psutil.Process(os.getpid())
+
+    bytes = float(process.memory_info().rss)
+
+    if bytes < 1024.:
+        return f'{bytes} bytes'
+
+    kb = bytes / 1024.
+    if kb < 1024.:
+        return f'{kb} KB'
+
+    return f'{kb / 1024.} MB'
+
+
+# ------------------------------------------------------------------------------
+def create_reindex_map(lista, listb):
+    assert isinstance(lista, np.ndarray) and isinstance(listb, np.ndarray)
+    _map = {}
+    for i, m in enumerate(lista):
+        _ni = np.where(m == listb)[0]
+        assert _ni.shape[0] == 1
+        _map[i] = _ni[0]
+    return _map
+
+
+# ------------------------------------------------------------------------------
+def print_dict_recursive(d, indent=0):
+
+    _space = '   '
+    _indent = ''
+    for _ in range(indent):
+        _indent += _space
+
+    for k, v in d.items():
+        _s = f'{_indent} l{indent} ({k} = {type(v)}):'
+
+        if isinstance(v, (int, float, str, tuple, int, float, np.int64, np.float64)):
+            print(f'{_s} {v}')
+
+        elif isinstance(v, list):
+            if len(v) > 5:
+                print(f'{_s} {len(v)} {v[:5]}...')
+            else:
+                print(f'{_s} {len(v)} {v}')
+
+        elif isinstance(v, np.ndarray):
+            if len(v) > 5:
+                print(f'{_s} {v.shape} {list(v[:5])}...')
+            else:
+                print(f'{_s} {v.shape} {list(v)}')
+
+        elif isinstance(v, dict):
+            print(f'{_s} {len(v)}')
+            print_dict_recursive(v, indent+1)
+
+        else:
+            print(f'{_s} {type(v)}')
 
 # ------------------------------------------------------------------------------
 def create_reindex_map(lista, listb):

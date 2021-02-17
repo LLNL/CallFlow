@@ -89,11 +89,11 @@ class Auxiliary:
                 df_module = df_group_by(df, "module")
                 df_name = df_group_by(df, "name")
 
-                # TODO: how to compute summary etc for inidividual modules?
-                self.result[dataset] = {#"summary": sg.summary(),
-                                        #"modules": sg.modules,
-                                        #"m2c": sg.df_mod2callsite(),
-                                        #"c2m": sg.df_callsite2mod(),
+                # TODO: this assumes that the original dataframe was modified
+                self.result[dataset] = {"summary": sg.supergraphs[dataset].summary(),
+                                        "modules": sg.supergraphs[dataset].modules,
+                                        "m2c": sg.supergraphs[dataset].df_mod2callsite(),
+                                        "c2m": sg.supergraphs[dataset].df_callsite2mod(),
                                         "data_mod": self.new_collect_data(dataset, "module", df_module, edf_module),
                                         "data_cs": self.new_collect_data(dataset, "name", df_name, edf_name)
                                         }
@@ -209,6 +209,7 @@ class Auxiliary:
     def _runtime_props(self, dataframes):
         """
         Adds runtime information, e.g., max, min inclusive and exclusive runtime.
+
         :param dataframes:
         :return:
         """
