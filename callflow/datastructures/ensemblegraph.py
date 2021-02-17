@@ -9,6 +9,7 @@ CallFlow's ensemble super graph.
 """
 from callflow import get_logger
 from .supergraph import SuperGraph
+from .metrics import TIME_COLUMNS
 
 LOGGER = get_logger(__name__)
 
@@ -63,5 +64,20 @@ class EnsembleGraph(SuperGraph):
             self.dataframe = self.df_filter_by_search_string("dataset", runs)
 
         return runs
+
+    def summary(self):
+        res = {}
+        for _d, sg in self.supergraphs.items():
+            cols = list(sg.dataframe.columns)
+            result = {"ncallsites": self.df_count("name"),
+                    "nmodules": self.df_count("module"), # if "module" in cols else 0,
+                    "nranks": self.df_count("rank") if "rank" in cols else 1,
+                    "nedges": len(self.nxg.edges())}
+
+            for p in TIME_COLUMNS:
+                result[p] = self.df_minmax(p)
+
+            res[_d] = result
+        return res
 
 # ------------------------------------------------------------------------------
