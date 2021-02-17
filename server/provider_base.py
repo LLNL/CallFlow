@@ -86,6 +86,8 @@ class BaseProvider:
             f'\n\n-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n'
         )
 
+        # TODO: this flag should come from commandline
+        # default = False (almost always, for ensemble we don't want)
         process_individuals = False
         for dataset in self.config["runs"]:
 

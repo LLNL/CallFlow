@@ -60,15 +60,19 @@ class Unify:
 
             # ------------------------------------------------------------------
             # unify the dataframe
-
-            # add dataset name
-            _sg = sg.dataframe.assign(dataset=sg.name)
-
             # remap the modules in this supergraph to the one in ensemble graph
             _mod_map = create_reindex_map(sg.modules, self.eg.modules)
-            _sg['module'] = _sg['module'].apply(lambda _: _mod_map[_])
 
-            self.eg.dataframe = pd.concat([self.eg.dataframe, _sg], sort=True)
+            sg.df_add_column('dataset', sg.name)
+            sg.df_add_column('module',
+                             apply_func=lambda _: _mod_map[_],
+                             apply_on='module')
+
+            # _sg = sg.dataframe.assign(dataset=sg.name)
+            # _sg['module'] = _sg['module'].apply(lambda _: _mod_map[_])
+            # self.eg.dataframe = pd.concat([self.eg.dataframe, _sg], sort=True)
+            # TODO: *later*, avoid creating the concatenated dataframe
+            self.eg.dataframe = pd.concat([self.eg.dataframe, sg.dataframe], sort=True)
 
             # ------------------------------------------------------------------
             # unify the graph
