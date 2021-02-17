@@ -63,16 +63,19 @@ class Unify:
             # remap the modules in this supergraph to the one in ensemble graph
             _mod_map = create_reindex_map(sg.modules, self.eg.modules)
 
-            sg.df_add_column('dataset', sg.name)
-            sg.df_add_column('module',
-                             apply_func=lambda _: _mod_map[_],
-                             apply_on='module')
+            if 1:       # edit directly in the supergraph
+                sg.df_add_column('dataset', value=sg.name)
+                sg.df_add_column('module', update=True,
+                                 apply_func=lambda _: _mod_map[_],
+                                 apply_on='module')
+                self.eg.dataframe = pd.concat([self.eg.dataframe, sg.dataframe], sort=True)
 
-            # _sg = sg.dataframe.assign(dataset=sg.name)
-            # _sg['module'] = _sg['module'].apply(lambda _: _mod_map[_])
-            # self.eg.dataframe = pd.concat([self.eg.dataframe, _sg], sort=True)
+            else:       # create a new copy
+                _sg = sg.dataframe.assign(dataset=sg.name)
+                _sg['module'] = _sg['module'].apply(lambda _: _mod_map[_])
+                self.eg.dataframe = pd.concat([self.eg.dataframe, _sg], sort=True)
+
             # TODO: *later*, avoid creating the concatenated dataframe
-            self.eg.dataframe = pd.concat([self.eg.dataframe, sg.dataframe], sort=True)
 
             # ------------------------------------------------------------------
             # unify the graph
