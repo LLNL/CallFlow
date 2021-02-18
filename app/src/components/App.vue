@@ -38,6 +38,7 @@
 import * as utils from "lib/utils";
 import Color from "lib/color/";
 import APIService from "lib/routing/APIService";
+import EventHandler from "lib/routing/EventHandler";
 
 // Local components
 import Footer from "./general/footer";
@@ -78,6 +79,11 @@ export default {
 	mounted() {
 		document.title = "CallFlow - ";
 		this.init();
+
+		let self = this;
+		EventHandler.$on("setup-colors", () => {
+			self.setupColors(this.$store.selectedRuntimeColorMap);
+		});
 	},
 
 	methods: {

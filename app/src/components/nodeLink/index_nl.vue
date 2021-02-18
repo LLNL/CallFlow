@@ -11,7 +11,6 @@
 	<Loader :isDataReady="isDataReady" />
     <svg :id="id">
       <g id="container"></g>
-      <ColorMap ref="ColorMap" />
     </svg>
   </v-row>
 </template>
@@ -23,7 +22,6 @@ import dagreD3 from "dagre-d3/dist/dagre-d3";
 import APIService from "lib/routing/APIService";
 import EventHandler from "lib/routing/EventHandler";
 
-import ColorMap from "../general/colormap";
 import InfoChip from "../general/infoChip";
 import Loader from "../general/loader";
 
@@ -32,7 +30,6 @@ import * as utils from "lib/utils";
 export default {
 	name: "NodeLink",
 	components: {
-		ColorMap,
 		InfoChip,
 		Loader,
 	},
@@ -87,9 +84,9 @@ export default {
 			this.isDataReady = true;
 			console.log("CCT data: ", this.data);
 
-			this.width = this.$store.viewWidth - this.margin.left - this.margin.right;
+			this.width = this.$store.viewWidth;
 			this.height =
-        this.$store.viewHeight - this.margin.bottom - this.margin.top;
+        this.$store.viewHeight;
 
 			this.svg = d3.select("#" + this.id).attrs({
 				width: this.width - this.margin.right,
@@ -131,8 +128,6 @@ export default {
 			// inner.selectAll("g.node")
 			// 	.attr("title", function (v) { return this.tooltip(v, g.node(v).description) })
 			// 	.each(function (v) { $(this).tipsy({ gravity: "w", opacity: 1, html: true }); });
-
-			this.$refs.ColorMap.init(this.$store.runtimeColor);
 		},
 
 		/**

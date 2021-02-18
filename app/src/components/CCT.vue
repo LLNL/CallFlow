@@ -33,7 +33,6 @@
             v-model="selectedMetric"
             :menu-props="{maxHeight: '200'}"
             persistent-hint
-            v-on:change="reset()"
           >
           </v-select>
         </v-flex>
@@ -59,7 +58,6 @@
             v-model="selectedColorPoint"
             :menu-props="{maxHeight: '200'}"
             persistent-hint
-            v-on:change="reset()"
           >
           </v-text-field>
         </v-flex>
@@ -85,7 +83,13 @@
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
+// Library imports.
+import EventHandler from "lib/routing/EventHandler";
+
+// Local components
 import NodeLink from "./nodeLink/index_nl";
+
+// General components
 import Toolbar from "./general/toolbar";
 
 export default {
@@ -101,8 +105,8 @@ export default {
 		selectedFunctionsInCCT: 70,
 		isComparisonMode: false,
 		isSettingsOpen: false,
-		metrics: ["Exclusive", "Inclusive"],
-		selectedMetric: "Inclusive",
+		metrics: ["time", "time (inc)"],
+		selectedMetric: "time (inc)",
 		runtimeColorMap: [],
 		selectedRuntimeColorMap: "OrRd",
 		colorPoints: [3, 4, 5, 6, 7, 8, 9],
@@ -127,7 +131,7 @@ export default {
 
 		selectedRuntimeColorMap: function (val) {
 			this.$store.selectedRuntimeColorMap = val;
-			this.$parent.$parent.setupColors(this.$store.selectedRuntimeColorMap);
+			EventHandler.$emit("setup-colors");
 			this.reset();
 		},
 
@@ -138,7 +142,7 @@ export default {
 
 		selectedColorPoint: function (val) {
 			this.$store.selectedColorPoint = val;
-			this.$parent.$parent.setupColors(this.$store.selectedRuntimeColorMap);
+			EventHandler.$emit("setup-colors");
 			this.reset();
 		},
 
