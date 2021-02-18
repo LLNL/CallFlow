@@ -927,6 +927,55 @@ class SuperGraph(ht.GraphFrame):
 
         return runs
 
+    def unpack_box(self, box):
+        return {
+            "q": box["q"].tolist(),
+            "outliers": {
+                "values": box["oval"].tolist(),
+                "ranks": box["orank"].tolist()
+            }
+        }
+    
+    def unpack_hists(self, hists, prop):
+        return {
+            "x": hists[prop][0].tolist(),
+            "y": hists[prop][1].tolist(),
+            "x_min": float(hists[prop][0][0]),
+            "x_max": float(hists[prop][0][-1]),
+            "y_min": float(hists[prop][1].min()),
+            "y_max": float(hists[prop][1].max()),
+        }
+
+    def unpack_metric(self, d, metric):
+        return {
+            "d": d[metric]['d'].tolist(),
+            "min": float(d[metric]["rng"][0]),
+            "max": float(d[metric]["rng"][1]),
+            "mean": float(d[metric]["uv"][0]),
+            "var": float(d[metric]["uv"][1]),
+            "imb": float(d[metric]["imb"]),
+            "kurt": float(d[metric]["ks"][0]),
+            "skew": float(d[metric]["ks"][1]),
+            "hists": {
+                "rank": self.unpack_hists(d[metric]["hst"], "rank"),
+            },
+            "boxplots": self.unpack_box(d[metric]["box"])
+        }
+    
+    def unpack_data(self, data):
+        _d = data.item()
+        ret = {}
+        for cs in _d.keys():
+            ret[cs] = {
+                "name": _d[cs]['name'],
+                "id": str(_d[cs]["id"]),
+                "component_path": _d[cs]["component_path"].tolist(),
+                "Inclusive": self.unpack_metric(_d[cs], "time (inc)"),
+                "Exclusive": self.unpack_metric(_d[cs], "time"),
+            }
+        return ret
+
+
     def unpack_aux_data(self, load_ensemble=False):
         _d = self.aux_data[self.name]
         _summary = _d["summary"]
@@ -935,7 +984,9 @@ class SuperGraph(ht.GraphFrame):
             "summary": {
                 self.name: _d["summary"]
             },
-            "modules": _d["modules"]
+            "modules": _d["modules"],
+            "data_cs": self.unpack_data(_d["data_cs"]),
+            "data_mod": self.unpack_data(_d["data_mod"])
         }
 
     # --------------------------------------------------------------------------
