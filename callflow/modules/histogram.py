@@ -78,7 +78,6 @@ class Histogram:
                     LOGGER.error(f'Found incorrect ranges for hist=({h},{tk})'
                                  f' drng = {drng}, rrng = {rrng}')
                     assert False
-                '''
 
             # compute the histograms
             hist = histogram(df, rrng, bins=bins)
