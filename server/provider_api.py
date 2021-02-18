@@ -6,6 +6,7 @@
 
 import os
 import warnings
+import numpy as np
 
 from flask import Flask, request, json, jsonify
 from flask_cors import CORS, cross_origin
@@ -113,7 +114,7 @@ class APIProvider(BaseProvider):
             data = request.json
             result = self.request_general(
                 {
-                    "name": "supergraph_data",
+                    "name": "aux_data",
                     **data,
                 }
             )

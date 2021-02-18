@@ -33,7 +33,7 @@
 						<BasicInformation :data="config" />
 					</v-container>
 					<v-container>
-						<RuntimeInformation :data="runtime" />					
+						<RuntimeInformation :data="summary" />					
 					</v-container>
 				</v-layout>
 				<v-container>
@@ -70,7 +70,7 @@ export default {
 		config: {},
 		runs: {},
 		run_counts: 0,
-		runtime: [],
+		summary: [],
 		moduleMapping: [],
 		rankBinCount: 20,
 		runBinCount: 20,
@@ -94,6 +94,7 @@ export default {
 	methods: {
 		async init() {
 			const data = await this.fetchData();
+			console.log("Aux data", data);
 			this.initStore(data);
 		},
 
@@ -108,10 +109,13 @@ export default {
 			}
 
 			document.title = "CallFlow - " + this.$store.config.experiment;
+
+			this.runs = this.$store.config.runs.map((_) => _["name"]);
+			this.run_counts = this.runs.length;
 			
 			if(!payload) {
 				payload = {
-					datasets: this.$store.config.runs,
+					datasets: this.runs,
 					rankBinCount: this.rankBinCount,
 					runBinCount: this.runBinCount,
 					reProcess: false,
@@ -131,17 +135,17 @@ export default {
 		 * Attaches properties to central storage based on the data from `this.auxiliary_data`.
 		 */
 		setAuxVariables(data) {
-			this.$store.numOfRuns = data.runs.length;
-			this.$store.modules = data.module;
-			this.$store.callsites = data.callsite;
-			this.$store.moduleCallsiteMap = data.moduleCallsiteMap;
-			this.$store.callsiteModuleMap = data.callsiteModuleMap;
-			this.$store.moduleFctList = data.moduleFctList;
+			this.$store.summary = data.summary;
+			// this.$store.modules = data.module;
+			// this.$store.callsites = data.callsite;
+			// this.$store.moduleCallsiteMap = data.moduleCallsiteMap;
+			// this.$store.callsiteModuleMap = data.callsiteModuleMap;
+			this.$store.moduleFctList = data.modules;
 			this.$store.selectedDatasets = data.runs;
-			this.$store.runtimeProps = data.runtimeProps;
 
-			this.$store.metricTimeMap = Object.keys(data.runtimeProps[this.$store.selectedMetric]).reduce((res, item, idx) => { 
-				res[item] = data.runtimeProps[this.$store.selectedMetric][item]["mean"];
+			this.$store.metricTimeMap = Object.keys(data.summary).reduce((res, item, idx) => { 
+				console.log(res, item, idx);
+				res[item] = data.summary[item][this.$store.selectedMetric][1];
 				return res;
 			}, {});
 			this.$store.selectedTargetDataset = utils.getKeyWithMaxValue(this.$store.metricTimeMap);
@@ -149,15 +153,11 @@ export default {
 		},
 
 		setLocalVariables(data) {
-			this.runs = data.runs;
-			this.run_counts = data.runs.length;
-
 			// Render the tables in the view
-			const dataset_props = data.dataset;
-			this.runtime = Object.keys(dataset_props).map((_) =>  { return {"run": _, ...dataset_props[_]};});
+			this.summary = Object.keys(data.summary).map((_) =>  { return {"run": _, ...data.summary[_]};});
 			const module_fct_list = data.moduleFctList;
 			// TODO: Does not work as the format is weird.
-			this.module_callsite_map = Object.keys(data.moduleCallsiteMap["ensemble"]).map((_) => { return {"module": module_fct_list[_], ...data.moduleCallsiteMap[_]};});
+			// this.module_callsite_map = Object.keys(data.moduleCallsiteMap["ensemble"]).map((_) => { return {"module": module_fct_list[_], ...data.moduleCallsiteMap[_]};});
 		},
 
 		setGlobalVariables() {
@@ -172,9 +172,8 @@ export default {
 			// TODO: Sankey should not have any store related properties. 
 			this.$store.selectedSuperNodePositionMode = "Minimal edge crossing";
 
-			// this.$store.auxiliarySortBy = this.auxiliarySortBy;
 			this.$store.auxiliarySortBy = "time (inc)";
-			this.$store.selectedMetric = "Inclusive";
+			this.$store.selectedMetric = "time (inc)";
 		
 			// Shoud be specified in the CSS, not here.
 			this.$store.fontSize = 14;
@@ -184,10 +183,11 @@ export default {
 			this.$store.selectedMode = this.run_counts > 1 ? "Ensemble": "Single";
 			
 			// Set the metric to sort the call site information
-			this.$store.selectedRuntimeSortBy = "Inclusive";
-			this.$store.selectedMetric = "Inclusive";
-		},
+			this.$store.selectedRuntimeSortBy = "time (inc)";
+			this.$store.selectedMetric = "time (inc)";
 
+			this.$store.numOfRuns = this.runs;
+		},
 
 		setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {
 			this.$store.runtimeColor = new Color();
@@ -224,9 +224,9 @@ export default {
 
 		// Set the min and max and assign color variables from Settings.
 		setRuntimeColorScale(selectedRuntimeColorMap, metric) {
-			const _d = this.$store.runtimeProps[metric][this.$store.selectedTargetDataset];
-			const colorMin = parseFloat(_d["min"]);
-			const colorMax = parseFloat(_d["max"]);
+			const _d = this.$store.summary[this.$store.selectedTargetDataset][metric];
+			const colorMin = parseFloat(_d[0]);
+			const colorMax = parseFloat(_d[1]);
 
 			this.selectedColorMinText = utils.formatRuntimeWithoutUnits(
 				parseFloat(colorMin)

@@ -69,6 +69,7 @@ class Auxiliary:
                            "data_cs": self.new_collect_data(sg.name, "name", df_name)
                            }
 
+
         # ----------------------------------------------------------------------
         # ensemble graph
         else:
@@ -148,7 +149,7 @@ class Auxiliary:
         #exit ()
 
         # TODO: this should not happen this way
-        sg.auxiliary_data = self.result
+        sg.aux_data = self.result
 
         # --------------------------------------------------------------------------
 
