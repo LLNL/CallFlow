@@ -1,9 +1,8 @@
 <template>
-  <v-layout>
-    <v-row class="grey lighten-5">
+    <v-row class="ml-2 mt-4">
       <v-col cols="2">
-        <v-chip class="chip" chips color="teal" label outlined clearable>
-          <span class="chip-title">
+        <v-chip class="pa-1 chip" chips color="teal" label clearable>
+          <span class="ma-2">
             {{ title }}
           </span>
           <v-tooltip bottom max-width="300">
@@ -16,15 +15,14 @@
           </v-tooltip>
         </v-chip>
       </v-col>
-      <v-col cols="8">
+      <v-col cols="7">
       </v-col>
       <v-col cols="2" class="text-right chip-info">
-        <!-- <span> -->
           {{ info }}
-        <!-- </span> -->
+      </v-col>
+      <v-col cols="1">
       </v-col>
     </v-row>
-  </v-layout>
 </template>
 
 <script>
@@ -36,16 +34,11 @@ export default {
 
 <style scoped>
 .chip {
-  padding: 1px;
   font-size: 14px;
 }
 
-.chip-title {
-  padding: 1px;
-  margin: 0px;
-}
-
 .chip-info {
+  right: 20px;
   color: #009688;
 }
 

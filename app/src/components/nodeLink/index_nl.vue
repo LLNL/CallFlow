@@ -7,7 +7,7 @@
 
 <template>
   <v-row>
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
+    <InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
     <svg :id="id">
       <g id="container"></g>
       <ColorMap ref="ColorMap" />
@@ -30,15 +30,15 @@ export default {
 	name: "NodeLink",
 	components: {
 		ColorMap,
-		InfoChip
+		InfoChip,
 	},
 
 	data: () => ({
 		id: "cct-overview",
 		margin: {
-			top: 10,
+			top: 20,
 			right: 20,
-			bottom: 60,
+			bottom: 20,
 			left: 20,
 		},
 		width: null,
@@ -47,7 +47,8 @@ export default {
 		HAS_DATA_COLUMNS: ["module"], // Array of keys in incoming data to check for.
 		has_data_map: {}, // stores if the required data points are present in the incoming data.
 		title: "CCT view",
-		summary: "CCT view visualizes the unique call paths of a sampled profile. Each call site is colored based on the selected metric (use settings to change the metric). On click, each node's callers (green) and callees (purple) are highlighted using the links.",
+		summary:
+      "CCT view visualizes the unique call paths of a sampled profile. Each call site is colored based on the selected metric (use settings to change the metric). On click, each node's callers (green) and callees (purple) are highlighted using the links.",
 		info: "",
 		b_node_height: 50,
 		s_node_height: 30,
@@ -60,12 +61,12 @@ export default {
 			self.init();
 		});
 	},
-		
+
 	methods: {
 		/**
-		 * Send the request to /init endpoint
-		 * Parameters: {datasetPath: "path/to/dataset"}
-		 */
+     * Send the request to /init endpoint
+     * Parameters: {datasetPath: "path/to/dataset"}
+     */
 		async fetchData() {
 			this.info = "Selected metric : " + this.$store.selectedMetric;
 			return await APIService.POSTRequest("cct", {
@@ -74,18 +75,21 @@ export default {
 		},
 
 		/**
-		 * Calls the socket to fetch data.
-		 */
+     * Calls the socket to fetch data.
+     */
 		async init() {
 			this.data = await this.fetchData();
 			console.log("CCT data: ", this.data);
 
 			this.width = this.$store.viewWidth - this.margin.left - this.margin.right;
-			this.height = this.$store.viewHeight - this.margin.bottom - this.margin.top;
+			this.height =
+        this.$store.viewHeight - this.margin.bottom - this.margin.top;
 
 			this.svg = d3.select("#" + this.id).attrs({
-				width: this.width,
-				height: this.height,
+				width: this.width - this.margin.right,
+				height: this.height - this.margin.bottom,
+				left: this.margin.left,
+				top: this.margin.top,
 			});
 
 			this.g = this.createGraph();
@@ -126,10 +130,10 @@ export default {
 		},
 
 		/**
-		 * Create a dagre-d3 instance.
-		 *
-		 * @return {dagreD3 Graph}
-		 */
+     * Create a dagre-d3 instance.
+     *
+     * @return {dagreD3 Graph}
+     */
 		createGraph() {
 			const g = new dagreD3.graphlib.Graph({
 				directed: true,
@@ -148,12 +152,12 @@ export default {
 		},
 
 		/**
-		 * Sets callsite's name.
-		 * if key "name" is present, then use it, else use nxg node's id.
-		 *
-		 * @param {Object} callsite
-		 * @return {String} callsite's name
-		 */
+     * Sets callsite's name.
+     * if key "name" is present, then use it, else use nxg node's id.
+     *
+     * @param {Object} callsite
+     * @return {String} callsite's name
+     */
 		setCallsiteName(callsite) {
 			if (callsite.name == undefined) {
 				return callsite.id;
@@ -162,15 +166,18 @@ export default {
 		},
 
 		/**
-		 * Set callsite's text and fill color.
-		 *
-		 * @param {Object} callsite
-		 * @return {JSON<{'node': Color, 'text': Color}>} 'node': fill color, 'text': text color
-		 */
+     * Set callsite's text and fill color.
+     *
+     * @param {Object} callsite
+     * @return {JSON<{'node': Color, 'text': Color}>} 'node': fill color, 'text': text color
+     */
 		setCallsiteColor(callsite) {
 			// Set node fill color.
-			const color = this.$store.runtimeColor.getColor(callsite, this.$store.selectedMetric);
-			
+			const color = this.$store.runtimeColor.getColor(
+				callsite,
+				this.$store.selectedMetric,
+			);
+
 			// Set node color.
 			const fillColor = this.$store.runtimeColor.rgbArrayToHex(color);
 
@@ -184,29 +191,34 @@ export default {
 		},
 
 		/**
-		 * Sets the html content for rendering inside a node.
-		 *
-		 * @param {String} callsite
-		 * @param {JSON<{'node': Color, 'text': Color}>} callsite_color
-		 * @return {HTML} html for rendering.
-		 */
+     * Sets the html content for rendering inside a node.
+     *
+     * @param {String} callsite
+     * @param {JSON<{'node': Color, 'text': Color}>} callsite_color
+     * @return {HTML} html for rendering.
+     */
 		setCallsiteHTML(callsite, callsite_color) {
 			let name = callsite.name;
-			const class_name = callsite_color["text"] === "#fff" ? "white-text": "black-text";
+			const class_name =
+        callsite_color["text"] === "#fff" ? "white-text" : "black-text";
 
 			let html = `<div><span class=${class_name} > ${name} </span> </div>`;
 			if (this.has_data_map["module"] && callsite.id != callsite.name) {
 				let thismodule = utils.getModuleName(this.$store, callsite.module);
-				html = html + `<br/><span class= ${class_name}><b>Module :</b>` + thismodule + "</span> </div>";
+				html =
+          html +
+          `<br/><span class= ${class_name}><b>Module :</b>` +
+          thismodule +
+          "</span> </div>";
 			}
 			return html;
 		},
 
 		/**
-		 * Renders the nodes in the dagre d3 graph.
-		 *
-		 * @param {JSON} data - networkX graph.
-		 */
+     * Renders the nodes in the dagre d3 graph.
+     *
+     * @param {JSON} data - networkX graph.
+     */
 		nodes(data) {
 			data.forEach((node, i) => {
 				const callsite_name = this.setCallsiteName(node);
@@ -234,20 +246,18 @@ export default {
 					node.id = node.name;
 					if (node.id != node.name) {
 						node.height = self.b_node_height;
-					}
-					else {
+					} else {
 						node.height = self.s_node_height;
 					}
-
 				}
 			});
 		},
 
 		/**
-		 * Renders the edges in the dagre D3 graph.
-		 *
-		 * @param {JSON} links - nxGraph edges.
-		 */
+     * Renders the edges in the dagre D3 graph.
+     *
+     * @param {JSON} links - nxGraph edges.
+     */
 		edges(links) {
 			// Set up the edges
 			for (let i = 0; i < links.length; i += 1) {
@@ -267,16 +277,17 @@ export default {
 			this.g.edges().forEach((e) => {
 				const edge = self.g.edge(e);
 				edge.id = "cct-edge";
-				self.g.edge(e).style = "fill: rgba(255,255,255, 0); stroke: #3c3c3c; stroke-width: 2.5px;";
+				self.g.edge(e).style =
+          "fill: rgba(255,255,255, 0); stroke: #3c3c3c; stroke-width: 2.5px;";
 			});
 		},
 
 		/**
-		 * Node click action.
-		 * On click, the inbound and outbound paths are highlighted.
-		 *
-		 * @param {dagreD3's ID} id
-		 */
+     * Node click action.
+     * On click, the inbound and outbound paths are highlighted.
+     *
+     * @param {dagreD3's ID} id
+     */
 		node_click_action(id) {
 			const default_dagreD3e_style =
         "fill: rgba(255,255,255, 0); stroke: #d5d5d5; stroke-width: 1.5px;";
@@ -339,15 +350,18 @@ export default {
 		},
 
 		/**
-		 * Translate and zoom to fit the graph to the entire SVG's context.
-		 *
-		 */
+     * Translate and zoom to fit the graph to the entire SVG's context.
+     *
+     */
 		zoomTranslate() {
 			const graphWidth = this.g.graph().width + 80;
 			const graphHeight = this.g.graph().height + 40;
 
 			// Set the zoom scale
-			let zoomScale = Math.min(this.width / graphWidth, this.height / graphHeight);
+			let zoomScale = Math.min(
+				this.width / graphWidth,
+				this.height / graphHeight,
+			);
 			if (zoomScale > 1.4) zoomScale -= 0.1;
 
 			// Set the translate
@@ -359,13 +373,13 @@ export default {
 			// Move the svg based on translate.
 			this.svg.call(
 				this.zoom.transform,
-				d3.zoomIdentity.translate(translate[0], translate[1]).scale(zoomScale)
+				d3.zoomIdentity.translate(translate[0], translate[1]).scale(zoomScale),
 			);
 		},
 
 		/**
-		 *  Set the has data map.
-		 */
+     *  Set the has data map.
+     */
 		setHasDataMap() {
 			this.has_data_map = {};
 			for (let i = 0; i < this.HAS_DATA_COLUMNS.length; i += 1) {
@@ -379,8 +393,8 @@ export default {
 		},
 
 		/**
-		 * Clear method for the component.
-		 */
+     * Clear method for the component.
+     */
 		clear() {
 			d3.selectAll("#cct-node").remove();
 			d3.selectAll("#cct-edge").remove();
@@ -392,39 +406,40 @@ export default {
 
 <style>
 .cct-node {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .white-text {
-    color: white !important;
-    text-align: center;
+  color: white !important;
+  text-align: center;
 }
 
 .c.black-text {
-    color: black !important;
-    text-align: center;
+  color: black !important;
+  text-align: center;
 }
 
 .description {
-    display: block;
+  display: block;
 }
 
-.highLight > rect, .highLight > circle {
-    stroke: black;
-    stroke-width:2px;
+.highLight > rect,
+.highLight > circle {
+  stroke: black;
+  stroke-width: 2px;
 }
 
 .white-text > .description {
-    color: rgb(200, 195, 195);
-    font-size: 10pt;
+  color: rgb(200, 195, 195);
+  font-size: 10pt;
 }
 
 .black-text > .description {
-    color: rgb(26, 26, 49);
-    font-size: 10pt;
+  color: rgb(26, 26, 49);
+  font-size: 10pt;
 }
 
 #cct-edge {
-	fill: gray;
+  fill: gray;
 }
 </style>
