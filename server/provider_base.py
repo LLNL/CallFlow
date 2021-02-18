@@ -86,10 +86,9 @@ class BaseProvider:
 
         # TODO: this flag should come from commandline
         # default = False (almost always, for ensemble we don't want)
-        process_individuals = False
+        process_individuals = True
         for dataset in self.config["runs"]:
 
-            print('')
             name = dataset["name"]
             _prop = run_props[name]
 
@@ -143,7 +142,7 @@ class BaseProvider:
         """
         Handles general requests
         """
-        _OPERATIONS = ["init", "supergraph_data"]
+        _OPERATIONS = ["init", "aux_data"]
 
         assert "name" in operation
         assert operation["name"] in _OPERATIONS
@@ -153,11 +152,15 @@ class BaseProvider:
         if operation_name == "init":
             return self.config
 
-        elif operation_name == "supergraph_data":
+        elif operation_name == "aux_data":
             if operation["reProcess"]:
                 Auxiliary(self.supergraphs["ensemble"], selected_runs=operation["datasets"], rankBinCount=int(operation["rankBinCount"]), runBinCount=int(operation["runBinCount"]))
                 
-            return self.supergraphs["ensemble"].auxiliary_data
+            if len(operation["datasets"]) == 1:
+                return self.supergraphs[operation["datasets"][0]].unpack_aux_data()
+            else:
+                return self.supergraphs["ensemble"].unpack_aux_data(load_ensemble=True)
+
 
     def request_single(self, operation):
         """

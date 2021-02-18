@@ -50,7 +50,7 @@ class SuperGraph(ht.GraphFrame):
         self.profile_format = ""
 
         self.parameters = {}
-        self.auxiliary_data = {}
+        self.aux_data = {}
         self.proxy_columns = {}
         self.callers = {}
         self.callees = {}
@@ -175,8 +175,8 @@ class SuperGraph(ht.GraphFrame):
             self.parameters = SuperGraph.read_env_params(path)
 
         if read_aux:
-            self.auxiliary_data = SuperGraph.read_aux(path, self.name)
-            self.modules = self.auxiliary_data["modules"]
+            self.aux_data[self.name] = SuperGraph.read_aux(path, self.name)
+            self.modules = self.aux_data[self.name]["modules"]
 
         # ----------------------------------------------------------------------
         self.add_time_proxies()
@@ -269,10 +269,10 @@ class SuperGraph(ht.GraphFrame):
         if write_aux:
             #if self.name in list(self.auxiliary_data.keys()):
             if self.name == 'ensemble':
-                for k, v in self.auxiliary_data.items():
+                for k, v in self.aux_data.items():
                     SuperGraph.write_aux(path, v, k)
             else:
-                SuperGraph.write_aux(path, self.auxiliary_data, self.name)
+                SuperGraph.write_aux(path, self.aux_data, self.name)
 
     # --------------------------------------------------------------------------
     # SuperGraph.dataframe api
@@ -280,7 +280,8 @@ class SuperGraph(ht.GraphFrame):
     def summary(self):
 
         cols = list(self.dataframe.columns)
-        result = {"ncallsites": self.df_count("name"),
+        result = {"meantime": 0.0,
+                  "ncallsites": self.df_count("name"),
                   "nmodules": self.df_count("module"), # if "module" in cols else 0,
                   "nranks": self.df_count("rank") if "rank" in cols else 1,
                   "nedges": len(self.nxg.edges())}
@@ -925,5 +926,16 @@ class SuperGraph(ht.GraphFrame):
             self.dataframe = self.dataframe
 
         return runs
+
+    def unpack_aux_data(self, load_ensemble=False):
+        _d = self.aux_data[self.name]
+        _summary = _d["summary"]
+
+        return {
+            "summary": {
+                self.name: _d["summary"]
+            },
+            "modules": _d["modules"]
+        }
 
     # --------------------------------------------------------------------------
