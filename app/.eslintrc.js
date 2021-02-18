@@ -20,7 +20,7 @@ module.exports = {
 	],
 	"overrides": [
 		{
-			"files": ["node_modules/*", "src/thirdParty/*", "src/unused/*"],
+			"files": ["node_modules/*", "src/thirdParty/*", "src/unused/*", "vue.config.js"],
 			"rules": {
 				"require-jsdoc": "off"
 			}

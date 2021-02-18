@@ -6,7 +6,7 @@
  */
 
 <template>
-  <v-app id="inspire">
+  <div id="inspire">
 	<Toolbar ref="ToolBar" :isSettingsOpen.sync="isSettingsOpen" />
     <v-navigation-drawer v-model.lazy="isSettingsOpen" temporary fixed>
       <v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
@@ -205,7 +205,7 @@
       </v-card>
     </v-navigation-drawer>
 
-    <v-content class="pt-auto" v-if="selectedMode == 'Ensemble'">
+    <v-main class="pt-auto" v-if="selectedMode == 'Ensemble'">
       <v-layout>
         <splitpanes id="callgraph-dashboard" class="default-theme">
           <!-- Left column-->
@@ -227,8 +227,8 @@
           </splitpanes>
         </splitpanes>
       </v-layout>
-    </v-content>
-  </v-app>
+    </v-main>
+  </div>
 </template>
 
 <script>

@@ -6,80 +6,81 @@
  */
 
 <template>
-	<v-app id="inspire">
-		<Toolbar ref="Toolbar" :isSettingsOpen.sync="isSettingsOpen" />
-		<v-navigation-drawer v-model.lazy="isSettingsOpen" fixed>
-			<v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
-			<v-card flex fill-height id="control-panel">
-				<v-layout row wrap>
-					<v-btn icon>
-						<v-icon v-on:click="reset()">refresh</v-icon>
-					</v-btn>
-					<v-spacer></v-spacer>
-					<v-btn icon>
-						<v-icon v-on:click="closeSettings()">close</v-icon>
-					</v-btn>
-				</v-layout>
-	
-				<v-flex xs12 class="ma-1">
-					<v-subheader class="teal lighten-4">Visual Encoding</v-subheader>
-				</v-flex>
-				<v-flex xs12 class="ma-1">
-					<v-select
-					label="Metric"
-					:items="metrics"
-					v-model="selectedMetric"
-					:menu-props="{ maxHeight: '200' }"
-					persistent-hint
-					v-on:change="reset()"
-					>
-					</v-select>
-				</v-flex>
+  <div id="inspire">
+    <Toolbar ref="Toolbar" :isSettingsOpen.sync="isSettingsOpen" />
+    <v-navigation-drawer v-model.lazy="isSettingsOpen" fixed>
+      <!-- <v-btn slot="activator" color="primary" dark>Open Dialog</v-btn> -->
+      <v-card fill-height>
+        <v-flex xs12 class="ml-4 mt-4 mb-6">
+          <v-row align="center" justify="space-around">
+            <v-btn class="mx-10" icon>
+              <span> Reload </span>
+              <v-icon v-on:click="reset()">refresh</v-icon>
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn class="mx-4" icon>
+              <v-icon v-on:click="closeSettings()">close</v-icon>
+            </v-btn>
+          </v-row>
+        </v-flex>
+        <v-flex xs12 class="ma-1">
+          <v-subheader class="teal lighten-4">Visual Encoding</v-subheader>
+        </v-flex>
+        <v-flex xs12 class="ma-1">
+          <v-select
+            label="Metric"
+            :items="metrics"
+            v-model="selectedMetric"
+            :menu-props="{maxHeight: '200'}"
+            persistent-hint
+            v-on:change="reset()"
+          >
+          </v-select>
+        </v-flex>
 
-				<v-flex xs12 class="ma-1">
-					<v-subheader class="teal lighten-4">Colors</v-subheader>
-				</v-flex>
-				<v-flex xs12 class="ma-1">
-					<v-select
-					label="Runtime Color Map"
-					:items="runtimeColorMap"
-					v-model="selectedRuntimeColorMap"
-					:menu-props="{ maxHeight: '200' }"
-					persistent-hint
-					>
-					</v-select>
-				</v-flex>
-				<v-flex xs12 class="ma-1">
-					<v-text-field
-					label="Color points (3-9)"
-					class="mt-0"
-					type="number"
-					v-model="selectedColorPoint"
-					:menu-props="{ maxHeight: '200' }"
-					persistent-hint
-					v-on:change="reset()"
-					>
-					</v-text-field>
-				</v-flex>
-          
-			</v-card>
-		</v-navigation-drawer>
-		<v-content class="pt-auto">
-			<v-layout>
-				<splitpanes id="cct-dashboard" class="default-theme">
-					<!-- Left column-->
-					<splitpanes horizontal :splitpanes-size="100">
-						<NodeLink ref="CCT1" />
-					</splitpanes>
+        <v-flex xs12 class="ma-1">
+          <v-subheader class="teal lighten-4">Colors</v-subheader>
+        </v-flex>
+        <v-flex xs12 class="ma-1">
+          <v-select
+            label="Runtime Color Map"
+            :items="runtimeColorMap"
+            v-model="selectedRuntimeColorMap"
+            :menu-props="{maxHeight: '200'}"
+            persistent-hint
+          >
+          </v-select>
+        </v-flex>
+        <v-flex xs12 class="ma-1">
+          <v-text-field
+            label="Color points (3-9)"
+            class="mt-0"
+            type="number"
+            v-model="selectedColorPoint"
+            :menu-props="{maxHeight: '200'}"
+            persistent-hint
+            v-on:change="reset()"
+          >
+          </v-text-field>
+        </v-flex>
+      </v-card>
+    </v-navigation-drawer>
+    <v-main class="pt-auto">
+      <v-layout>
+        <splitpanes id="cct-dashboard" class="default-theme">
+          <!-- Left column-->
+          <splitpanes horizontal :splitpanes-size="100">
+            <NodeLink ref="CCT1" />
+          </splitpanes>
 
-					<!-- Right column
+          <!-- Right column
 					<splitpanes horizontal :splitpanes-size="50" :v-show="{isComparisonMode}">
 						<NodeLink ref="CCT1" />
 					</splitpanes> -->
-				</splitpanes>
-			</v-layout>
-		</v-content>
-	</v-app>
+        </splitpanes>
+      </v-layout>
+    </v-main>
+  </div>
 </template>
 
 <script>
@@ -94,7 +95,7 @@ export default {
 	components: {
 		Splitpanes,
 		NodeLink,
-		Toolbar
+		Toolbar,
 	},
 
 	data: () => ({
@@ -114,7 +115,7 @@ export default {
 		this.setupStore();
 
 		// Push to '/' when `this.$store.selectedDatasets` is undefined.
-		if(this.$store.selectedDatasets === undefined) {
+		if (this.$store.selectedDatasets === undefined) {
 			this.$router.push("/");
 		}
 
@@ -146,9 +147,9 @@ export default {
 		selectedTargetDataset: function (val) {
 			this.$store.selectedTargetDataset = val;
 			this.reset();
-		}
+		},
 	},
-	
+
 	methods: {
 		init() {
 			this.setComponentMap(); // Set component mapping for easy component tracking.
@@ -167,7 +168,7 @@ export default {
 
 			// Set the number of callsites in the CCT
 			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
-		
+
 			// Set this.selectedTargetDataset (need to remove)
 			this.selectedTargetDataset = this.$store.selectedTargetDataset;
 
@@ -179,7 +180,7 @@ export default {
 
 			// Set the runtimeColorMap.
 			this.runtimeColorMap = this.$store.runtimeColorMap;
-		
+
 			// Set encoding method.
 			this.$store.encoding = "MEAN";
 
@@ -200,16 +201,13 @@ export default {
 			this.$store.selectedColorPoint = this.selectedColorPoint;
 
 			this.$store.selectedMetric = this.selectedMetric;
-
 		},
 
 		// ----------------------------------------------------------------
-		// Initialize the relevant modules for respective Modes. 
+		// Initialize the relevant modules for respective Modes.
 		// ----------------------------------------------------------------
 		setComponentMap() {
-			this.currentSingleSuperGraphComponents = [
-				this.$refs.CCT1,
-			];
+			this.currentSingleSuperGraphComponents = [this.$refs.CCT1];
 		},
 
 		clear() {
@@ -234,13 +232,12 @@ export default {
 			this.init();
 		},
 
-		closeSettings () {
-			this.isSettingsOpen = ! this.isSettingsOpen;
-		}
-	}
+		closeSettings() {
+			this.isSettingsOpen = !this.isSettingsOpen;
+		},
+	},
 };
 </script>
 
 <style scoped>
-
 </style>

@@ -16,7 +16,6 @@
 			:loading="isLoading"
 			loading-text="Loading... Please wait"
 			:sort-by="sortBy"
-			sort-desc="false"
 		>
 			<template slot="items" slot-scope="props">
 				<tr>

@@ -17,10 +17,12 @@ import "vuetify/dist/vuetify.min.css";
 import "material-design-icons-iconfont/dist/material-design-icons.css";
 
 import App from "./components/App";
+import Summary from "./components/Summary";
 import CCT from "./components/CCT";
 import SuperGraph from "./components/SuperGraph";
 import EnsembleSuperGraph from "./components/SuperGraphEnsemble";
 import TimelineSuperGraph from "./components/SuperGraphTimeline";
+import vuetify from "./lib/plugins/vuetify";
 
 Vue.use(Vuex);
 const store = new Vuex.Store();
@@ -68,6 +70,7 @@ new Vue({
 	el: "#app",
 	router,
 	components: { App },
+	vuetify,
 	template: "<App/>"
 });
 Vue.config.devtools = true;
