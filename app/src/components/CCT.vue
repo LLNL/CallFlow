@@ -86,7 +86,7 @@
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
-import NodeLink from "./nodeLink/";
+import NodeLink from "./nodeLink/index_nl";
 import Toolbar from "./general/toolbar";
 
 export default {

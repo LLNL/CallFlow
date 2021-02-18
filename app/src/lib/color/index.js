@@ -44,7 +44,7 @@ export default class Color {
 		return ret;
 	}
 
-	setColorScale(type = "Inclusive", min = 0, max = 0, scaleType = "OrRd", colorPoint = "9") {
+	setColorScale(type = "time (inc)", min = 0, max = 0, scaleType = "OrRd", colorPoint = "9") {
 		this.type = type;
 		this.colorMin = min;
 		this.colorMax = max;
@@ -56,13 +56,13 @@ export default class Color {
 		case "Module":
 			colorscale = d3.scaleOrdinal(d3.schemeCategory10);
 			break;
-		case "Inclusive":
+		case "time (inc)":
 			colorscale = chroma.scale(colors)
 				.padding([0.0, 0.0])
 				.gamma(0.5)
 				.domain([min, max]);
 			break;
-		case "Exclusive":
+		case "time":
 			colorscale = chroma.scale(colors)
 				.padding([0.0, 0.0])
 				.gamma(0.5)

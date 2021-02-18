@@ -282,8 +282,6 @@ class NodeLinkLayout:
                 source = Sanitizer.sanitize(path[j])
                 target = Sanitizer.sanitize(path[j + 1])
 
-                print(source, target)
-
                 if not nxg.has_edge(source, target):
                     nxg.add_edge(source, target)
 
