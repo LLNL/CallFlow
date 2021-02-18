@@ -1,12 +1,14 @@
 <template>
-    <v-toolbar id="toolbar" color="teal" dark fixed app clipped-right>
-        <v-toolbar-side-icon @click.stop="openSettings()">
-            <v-icon>settings</v-icon>
-        </v-toolbar-side-icon>
-        <v-toolbar-title class="toolbar-title">{{ appName }}</v-toolbar-title>
-		<RunSelection ref="RunSelection" />
-		<!-- <ViewSelection ref="ViewSelection" /> -->
-    </v-toolbar>
+	<v-container class="pa-0">
+		<v-app-bar id="toolbar" color="teal" fixed>
+			<div @click.stop="openSettings()" align-left>
+				<v-icon color="white">settings</v-icon>
+			</div>
+			<div class="toolbar-title">{{ appName }}</div>
+			
+			<RunSelection ref="RunSelection" />
+		</v-app-bar>
+	</v-container>
 </template>
 
 <script>
@@ -36,18 +38,11 @@ export default {
 </script>
 
 <style scoped>
-.toolbar {
-	padding: 0px 0px 0px;
-}
-
-.toolbar > .v-toolbar__content {
-	height: 54px !important;
-}
 
 .toolbar-title {
-	margin: 0.5em; 
+	margin: 1em; 
 	font-size: 22px;
-	font-weight: 400;
+	font-weight: 500;
 	color: white;
 }
 </style>

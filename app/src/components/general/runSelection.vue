@@ -1,12 +1,13 @@
 <template>
-	<v-layout>
-		<v-flex xs4 class="ma-1">
+	<v-row no-gutters>
+		<v-col cols="4">
 			<v-select
+				class="pt-8 pl-2"
+				dark
 				label="Select Target run (Sorted by inclusive runtime)"
 				:items="datasets"
 				v-model="selectedTargetDataset"
 				:menu-props="{maxHeight: '400'}"
-				box
 				v-on:change="updateTargetDataset()"
 			>
 				<template slot="selection" slot-scope="{item}">
@@ -17,15 +18,15 @@
 					{{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
 				</template>
 			</v-select>
-		</v-flex>
+		</v-col>
 
-		<v-flex xs4 class="ma-1">
+		<v-col cols="4">
 			<v-select
+				class="pt-8 pl-2"
 				label="Select Compare run"
 				:items="datasets"
 				v-model="selectedCompareDataset"
 				:menu-props="{maxHeight: '400'}"
-				box
 				v-show="isComparisonMode"
 				v-on:change="updateCompareDataset()"
 			>
@@ -39,8 +40,8 @@
 					{{ formatRuntimeWithoutUnits(metricTimeMap[item]) }}
 				</template>
 			</v-select>
-		</v-flex>
-	</v-layout>
+		</v-col>
+	</v-row>
 </template>
 
 <script>

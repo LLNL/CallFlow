@@ -6,13 +6,13 @@
  */
 
 <template>
-  <div>
+  <v-row>
 	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
     <svg :id="id">
       <g id="container"></g>
       <ColorMap ref="ColorMap" />
     </svg>
-  </div>
+  </v-row>
 </template>
 
 <script>
@@ -36,10 +36,10 @@ export default {
 	data: () => ({
 		id: "cct-overview",
 		margin: {
-			top: 0,
-			right: 0,
-			bottom: 0,
-			left: 0,
+			top: 10,
+			right: 20,
+			bottom: 60,
+			left: 20,
 		},
 		width: null,
 		height: null,

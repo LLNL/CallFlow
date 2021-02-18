@@ -7,40 +7,27 @@
 
 <template>
 	<v-app>
-		<div id="app">
-			<v-toolbar id="toolbar" color="teal" fixed app clipped-right>
-				<v-toolbar-title class="toolbar-title">
-					CallFlow
-				</v-toolbar-title>
-				<v-btn outlined>
-					<router-link to="/cct" replace>CCT</router-link>
-				</v-btn>
-				<v-btn outlined>
-					<router-link to="/super_graph" replace>Super Graph</router-link>
-				</v-btn>
-
-				<v-btn outlined v-if="run_counts > 1">
-					<router-link to="/ensemble_super_graph" replace>Ensemble Super Graph</router-link>
-				</v-btn>
-				<!-- <v-btn outlined v-if="run_counts > 1">
-					<router-link to="/timeline_super_graph" replace>Timeline</router-link>
-				</v-btn> -->
-			</v-toolbar>
+		<v-app-bar color="teal" id="toolbar" app>
+			<div class="toolbar-title">
+				CallFlow
+			</div>
+			<v-btn class="mr-md-4">
+				<router-link to="/cct" replace>CCT</router-link>
+			</v-btn>
+			<v-btn>
+				<router-link to="/super_graph" replace>Super Graph</router-link>
+			</v-btn>
+			<v-btn v-if="run_counts > 1">
+				<router-link to="/ensemble_super_graph" replace>Ensemble Super Graph</router-link>
+			</v-btn>
+			<!-- <v-btn v-if="run_counts > 1">
+				<router-link to="/timeline_super_graph" replace>Timeline</router-link>
+			</v-btn> -->
+		</v-app-bar>
+		<v-main>
 			<router-view></router-view>
-			<v-content class="content">
-				<v-layout>
-					<v-container>
-						<BasicInformation :data="config" />
-					</v-container>
-					<v-container>
-						<Summary :data="summary" />					
-					</v-container>
-				</v-layout>
-				<v-container>
-					<!-- <ModuleMappingInformation :data="moduleMapping" /> -->
-				</v-container>
-			</v-content>
-		</div>
+			<Summary v-if="$route.path == '/'" :config="config" :profiles="profiles" />
+		</v-main>
 		<Footer ref="Footer" :text="footerText" :year="year"></Footer>
 	</v-app>
 </template>
@@ -52,26 +39,22 @@ import Color from "lib/color/";
 import APIService from "lib/routing/APIService";
 
 // Local components
-import BasicInformation from "./general/basicInformation";
-import Summary from "./general/summary";
-import ModuleMappingInformation from "./general/moduleMappingInformation";
 import Footer from "./general/footer";
+import Summary from "./Summary";
 
 export default {
 	name: "App",
 	components: {
-		BasicInformation,
 		Summary,
 		Footer,
-		// ModuleMappingInformation
 	},
 	data: () => ({
 		data: {},
-		config: {},
 		runs: {},
+		config: {},
+		profiles: [],
+		moduleMap: [],
 		run_counts: 0,
-		summary: [],
-		moduleMapping: [],
 		rankBinCount: 20,
 		runBinCount: 20,
 		selectedIQRFactor: 0.15,
@@ -112,7 +95,7 @@ export default {
 
 			this.runs = this.$store.config.runs.map((_) => _["name"]);
 			this.run_counts = this.runs.length;
-			
+
 			if(!payload) {
 				payload = {
 					datasets: this.runs,
@@ -144,7 +127,6 @@ export default {
 			this.$store.selectedDatasets = this.runs;
 
 			this.$store.metricTimeMap = Object.keys(data.summary).reduce((res, item, idx) => { 
-				console.log(res, item, idx);
 				res[item] = data.summary[item][this.$store.selectedMetric][1];
 				return res;
 			}, {});
@@ -154,7 +136,7 @@ export default {
 
 		setLocalVariables(data) {
 			// Render the tables in the view
-			this.summary = Object.keys(data.summary).map((_) =>  { return {"run": _, ...data.summary[_]};});
+			this.profiles = Object.keys(data.summary).map((_) =>  { return {"run": _, ...data.summary[_]};});
 			const module_fct_list = data.moduleFctList;
 			// TODO: Does not work as the format is weird.
 			// this.module_callsite_map = Object.keys(data.moduleCallsiteMap["ensemble"]).map((_) => { return {"module": module_fct_list[_], ...data.moduleCallsiteMap[_]};});
@@ -285,7 +267,7 @@ export default {
 				footerHeight = document.getElementById("footer").clientHeight;
 			}
 
-			this.$store.viewHeight = window.innerHeight - 2 * toolbarHeight - footerHeight;
+			this.$store.viewHeight = window.innerHeight;/// - 2 * toolbarHeight - footerHeight;
 		},
 	},
 };
@@ -298,7 +280,7 @@ export default {
 }
 
 .toolbar-title {
-	margin: 3em; 
+	margin: 1em; 
 	font-size: 22px;
 	font-weight: 400;
 	color: white;
@@ -308,9 +290,7 @@ body {
 	font-family: "Open Sans", sans-serif;
 	font-size: 16px;
 }
-.content {
-	padding-top: 54px !important;
-}
+
 
 .selected {
 	stroke: #343838;

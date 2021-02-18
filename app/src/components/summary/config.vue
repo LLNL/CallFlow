@@ -33,7 +33,7 @@
 
 <script>
 export default {
-	name: "BasicInformation",
+	name: "ConfigInformation",
 	props: ["data"],
 };
 </script>

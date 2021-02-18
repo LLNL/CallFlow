@@ -77,9 +77,9 @@
       </v-card>
     </v-navigation-drawer>
 
-    <v-content class="pt-auto" v-if="selectedMode == 'Single'">
+    <v-main class="pt-auto" v-if="selectedMode == 'Single'">
       
-    </v-content>
+    </v-main>
 
     <v-footer id="footer" color="teal" app>
       Lawrence Livermore National Laboratory and VIDi Labs, University of
