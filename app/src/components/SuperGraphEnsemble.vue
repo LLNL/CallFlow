@@ -247,7 +247,7 @@ import EnsembleHistogram from "./ensembleHistogram/";
 import ModuleHierarchy from "./moduleHierarchy/";
 import EnsembleScatterplot from "./ensembleScatterplot/";
 import ParameterProjection from "./parameterProjection/";
-import Sankey from "./sankey/";
+import Sankey from "./sankey/index_sg";
 import Toolbar from "./general/toolbar";
 
 export default {

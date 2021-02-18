@@ -102,26 +102,24 @@
       </v-card>
     </v-navigation-drawer>
 
-    <v-main class="pt-auto">
-      <v-layout>
-        <splitpanes id="callgraph-dashboard" class="default-theme">
-          <!-- Left column-->
-          <splitpanes horizontal :splitpanes-size="25">
-            <SingleHistogram ref="SingleHistogram" />
-            <SingleScatterplot ref="SingleScatterplot" />
-          </splitpanes>
-
-          <!-- Center column-->
-          <splitpanes horizontal :splitpanes-size="55">
-            <Sankey ref="Sankey" />
-          </splitpanes>
-
-          <!-- Right column-->
-          <splitpanes horizontal :splitpanes-size="20">
-            <CallsiteInformation ref="CallsiteInformation" />
-          </splitpanes>
+    <v-main class="pt-0">
+      <splitpanes id="callgraph-dashboard" class="default-theme">
+        <!-- Left column-->
+        <splitpanes horizontal :splitpanes-size="25">
+          <SingleHistogram ref="SingleHistogram" />
+          <SingleScatterplot ref="SingleScatterplot" />
         </splitpanes>
-      </v-layout>
+
+        <!-- Center column-->
+        <splitpanes horizontal :splitpanes-size="55">
+          <Sankey ref="Sankey" />
+        </splitpanes>
+
+        <!-- Right column-->
+        <splitpanes horizontal :splitpanes-size="20">
+          <CallsiteInformation ref="CallsiteInformation" />
+        </splitpanes>
+      </splitpanes>
     </v-main>
   </div>
 </template>
@@ -138,7 +136,7 @@ import EventHandler from "lib/routing/EventHandler";
 import SingleScatterplot from "./singleScatterplot/";
 import SingleHistogram from "./singleHistogram/";
 import CallsiteInformation from "./callsiteInformation/";
-import Sankey from "./sankey/";
+import Sankey from "./sankey/index_sg";
 import Toolbar from "./general/toolbar";
 
 export default {
@@ -154,72 +152,8 @@ export default {
 		CallsiteInformation,
 	},
 
-	watch: {
-		showTarget: function (val) {
-			EventHandler.$emit("show-target-auxiliary");
-		},
-
-		isSettingsOpen: function (val) {
-			this.$emit("update:isSettingsOpen", val);
-		},
-
-		selectedMetric: function (val) {
-			this.$store.selectedMetric = val;
-			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
-			this.reset();
-		},
-
-		selectedRuntimeColorMap(val) {
-			this.$parent.$parent.setupColors(val);
-			this.reset();
-		},
-
-		selectedRuntimeSortBy(val) {
-			this.$store.selectedRuntimeSortBy = val;
-			EventHandler.$emit("callsite-information-sort");
-		},
-
-		// NOTE: This functionality is broken!!!
-		// The request times out because the auxiliary processing 
-		// exceeds the threshold set by the APIService. 
-		// TODO: CAL-88: Fix the time out error and use events 
-		// instead of a this.reset()
-		async selectedMPIBinCount(val) {
-			this.$store.selectedMPIBinCount = val;
-			const data = await this.requestAuxData();
-			
-			// TODO: CAL-88 Fix the timeout error. 
-			// EventHandler.$emit("update-rank-bin-size", {
-			// 	node: this.$store.selectedNode,
-			// 	dataset: this.$store.selectedTargetDataset
-			// });
-			this.reset();
-		},
-
-		selectedScale(val) {
-			this.$store.selectedScale = val;
-			this.reset();
-		},
-
-		selectedIQRFactor(val) {
-			this.$store.selectedIQRFactor = val;
-			this.reset();
-		},
-
-		selectedTargetDataset(val) {
-			this.$store.selectedTargetDataset = val;
-			this.reset();
-		},
-
-		selectedColorPoint(val) {
-			this.$store.selectedColorPoint = val;
-			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
-			this.reset();
-		}
-	},
-
 	props: {
-		data: Object,
+		aux_data: Object,
 	},
 
 	data: () => ({
@@ -263,17 +197,82 @@ export default {
 		selectedProp: "rank",
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
 		selectedRunBinCount: 20,
+		summary: "Super Graph View"
 	}),
+
+	watch: {
+		showTarget: function (val) {
+			EventHandler.$emit("show-target-auxiliary");
+		},
+
+		isSettingsOpen: function (val) {
+			this.$emit("update:isSettingsOpen", val);
+		},
+
+		selectedMetric: function (val) {
+			this.$store.selectedMetric = val;
+			EventHandler.$emit("setup-colors");
+			this.reset();
+		},
+
+		selectedRuntimeColorMap(val) {
+			this.$parent.$parent.setupColors(val);
+			this.reset();
+		},
+
+		selectedRuntimeSortBy(val) {
+			this.$store.selectedRuntimeSortBy = val;
+			EventHandler.$emit("callsite-information-sort");
+		},
+
+		// NOTE: This functionality is broken!!!
+		// The request times out because the auxiliary processing
+		// exceeds the threshold set by the APIService.
+		// TODO: CAL-88: Fix the time out error and use events
+		// instead of a this.reset()
+		async selectedMPIBinCount(val) {
+			this.$store.selectedMPIBinCount = val;
+			const data = await this.requestAuxData();
+
+			// TODO: CAL-88 Fix the timeout error.
+			// EventHandler.$emit("update-rank-bin-size", {
+			// 	node: this.$store.selectedNode,
+			// 	dataset: this.$store.selectedTargetDataset
+			// });
+			this.reset();
+		},
+
+		selectedScale(val) {
+			this.$store.selectedScale = val;
+			this.reset();
+		},
+
+		selectedIQRFactor(val) {
+			this.$store.selectedIQRFactor = val;
+			this.reset();
+		},
+
+		selectedTargetDataset(val) {
+			this.$store.selectedTargetDataset = val;
+			this.reset();
+		},
+
+		selectedColorPoint(val) {
+			this.$store.selectedColorPoint = val;
+			EventHandler.$emit("setup-colors");
+			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
+			this.reset();
+		},
+	},
 
 	mounted() {
 		this.setupStore();
-		
+
 		// Push to '/' when `this.$store.selectedDatasets` is undefined.
 		if (this.$store.selectedDatasets === undefined) {
-			// this.requestAuxData();  // TODO: Fix the bug here. 
+			// this.requestAuxData();  // TODO: Fix the bug here.
 			this.$router.push("/");
-		}
-		else {
+		} else {
 			this.init();
 		}
 
@@ -331,9 +330,9 @@ export default {
 		// ----------------------------------------------------------------
 		setComponentMap() {
 			this.currentSingleSuperGraphComponents = [
-				this.$refs.SingleHistogram,
-				this.$refs.SingleScatterplot,
-				this.$refs.Sankey,
+				// this.$refs.SingleHistogram,
+				// this.$refs.SingleScatterplot,
+				// this.$refs.Sankey,
 				this.$refs.CallsiteInformation,
 			];
 		},
@@ -371,7 +370,7 @@ export default {
 				reProcess: true,
 			};
 			return await this.$parent.$parent.fetchData(payload);
-		}
+		},
 	},
 };
 </script>
