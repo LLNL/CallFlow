@@ -34,7 +34,10 @@ class NodeLinkLayout:
 
         self.timer = Timer()
 
-        sg.filter_by_datasets(selected_runs)
+        # Do not filter if the selected_runs is a single run.
+        if not isinstance(sg, callflow.SuperGraph):
+            sg.filter_by_datasets(selected_runs)
+
         self.runs = selected_runs
 
         # Put the top callsites into a list.
@@ -90,7 +93,10 @@ class NodeLinkLayout:
         # ----------------------------------------------------------------------
         # compute map across data
         for run in self.runs:
-            target_df = self.sg.dataframe.loc[self.sg.dataframe["dataset"] == run]
+            if isinstance(self.sg, callflow.SuperGraph):
+                target_df = self.sg.dataframe
+            else:
+                target_df = self.sg.dataframe.loc[self.sg.dataframe["dataset"] == run]
 
             if not target_df["module"].equals(target_df["name"]):
                 target_group_df = target_df.groupby(["module"])
@@ -270,12 +276,13 @@ class NodeLinkLayout:
         for i, path in enumerate(paths):
 
             # go over the callsites in this path
-            callsites = make_tuple(path)
-            plen = len(callsites)
+            plen = len(path)
 
             for j in range(plen - 1):
-                source = Sanitizer.sanitize(callsites[j])
-                target = Sanitizer.sanitize(callsites[j + 1])
+                source = Sanitizer.sanitize(path[j])
+                target = Sanitizer.sanitize(path[j + 1])
+
+                print(source, target)
 
                 if not nxg.has_edge(source, target):
                     nxg.add_edge(source, target)
