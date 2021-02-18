@@ -65,9 +65,8 @@
         </v-flex>
       </v-card>
     </v-navigation-drawer>
-    <v-main class="pt-auto">
-      <v-layout>
-        <splitpanes id="cct-dashboard" class="default-theme">
+    <v-main class="pt-0">
+        <splitpanes id="cct-dashboard">
           <!-- Left column-->
           <splitpanes horizontal :splitpanes-size="100">
             <NodeLink ref="CCT1" />
@@ -78,7 +77,6 @@
 						<NodeLink ref="CCT1" />
 					</splitpanes> -->
         </splitpanes>
-      </v-layout>
     </v-main>
   </div>
 </template>
