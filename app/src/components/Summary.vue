@@ -1,9 +1,9 @@
 <template>
   <v-row>
-    <v-col cols="3">
+    <v-col cols="5">
       <ConfigInformation v-if="Object.keys(config).length > 0" :data="config" />
     </v-col>
-    <v-col cols="9">
+    <v-col cols="7">
       <ProfileInformation v-if="profiles.length > 0" :data="profiles" />
     </v-col>
   </v-row>

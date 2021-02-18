@@ -7,25 +7,13 @@
 <template>
 	<v-container>
 		<v-card tile>
-			<v-card-title> General Information </v-card-title>
-		</v-card>
-		<v-card tile>
-			<v-card-title> Experiment: {{ data.experiment }} </v-card-title>
-		</v-card>
-		<v-card tile>
-			<v-card-title> Data path: {{ data.data_path }} </v-card-title>
-		</v-card>
-		<v-card tile>
-			<v-card-title> .callflow save path: {{ data.save_path }} </v-card-title>
-		</v-card>
-		<v-card tile>
-			<v-card-title> Filter by attribute: {{ data.filter_by }} </v-card-title>
-		</v-card>
-		<v-card tile>
-			<v-card-title> Filter percentage: {{ data.filter_perc }} </v-card-title>
-		</v-card>
-		<v-card tile>
-			<v-card-title> Group by attribute: {{ data.group_by }} </v-card-title>
+			<v-card-title class="pa-4 pb-0"> General Information </v-card-title>
+			<v-row class="ma-4 pa-1"> <b>Experiment: </b> {{ data.experiment }} </v-row>
+			<v-row class="ma-4 pa-1"> <b>Data path: </b> {{ data.data_path }} </v-row>
+			<v-row class="ma-4 pa-1"> <b>.callflow save path: </b> {{ data.save_path }} </v-row>
+			<v-row class="ma-4 pa-1"> <b>Filter by attribute: </b> {{ data.filter_by }} </v-row>
+			<v-row class="ma-4 pa-1"> <b>Filter percentage: </b> {{ data.filter_perc }} </v-row>
+			<v-row class="ma-4 pa-1"> <b>Group by attribute: </b> {{ data.group_by }} </v-row>
 		</v-card>
 	</v-container>
 </template>
