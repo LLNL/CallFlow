@@ -26,6 +26,7 @@ export default {
 		colorMax: 0,
 		offset: 30,
 		padding: {
+			top: 0,
 			bottom: 30,
 			right: 400,
 		},
@@ -34,12 +35,13 @@ export default {
 
 	methods: {
 		init(color) {
+			console.log(color);
 			this.color = color;
 			this.colorMin = this.color.getScale().domain()[0];
 			this.colorMax = this.color.getScale().domain()[1];
 
 			this.containerWidth = this.$store.viewWidth / 2;
-			this.containerHeight = this.$store.viewHeight - this.$parent.margin.top - this.$parent.margin.bottom;
+			this.containerHeight = 0;
 
 			this.svg = d3.select("#" + this.$parent.id)
 				.append("g")
@@ -69,10 +71,10 @@ export default {
 			let text = "";
 			let yOffsetCount = 1;
 
-			if (this.color.type == "Exclusive") {
+			if (this.color.type == "time") {
 				text = "Exc. Runtime colormap";
 			}
-			else if (this.color.type == "Inclusive") {
+			else if (this.color.type == "time (inc)") {
 				text = "Inc. Runtime colormap";
 			}
 			else if (this.color.type == "MeanGradients") {
