@@ -7,9 +7,7 @@
 
 <template>
   <div>
-    <v-layout class="chip-container">
-      <InfoChip ref="InfoChip" :title="title" :summary="summary" />
-    </v-layout>
+	<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
     <svg :id="id">
       <g id="container"></g>
       <ColorMap ref="ColorMap" />
@@ -49,7 +47,10 @@ export default {
 		HAS_DATA_COLUMNS: ["module"], // Array of keys in incoming data to check for.
 		has_data_map: {}, // stores if the required data points are present in the incoming data.
 		title: "CCT view",
-		summary: "This view provides the CCT "
+		summary: "CCT view visualizes the unique call paths of a sampled profile. Metrics on each node can be inclusive or exclusive.",
+		info: "",
+		b_node_height: 50,
+		s_node_height: 30,
 	}),
 
 	mounted() {
@@ -66,6 +67,7 @@ export default {
 		 * Parameters: {datasetPath: "path/to/dataset"}
 		 */
 		async fetchData() {
+			this.info = "Selected metric : " + this.$store.selectedMetric;
 			return await APIService.POSTRequest("cct", {
 				datasets: this.$store.selectedTargetDataset,
 			});
@@ -76,10 +78,10 @@ export default {
 		 */
 		async init() {
 			this.data = await this.fetchData();
+			console.log("CCT data: ", this.data);
 
 			this.width = this.$store.viewWidth - this.margin.left - this.margin.right;
-			this.height =
-        this.$store.viewHeight - this.margin.bottom - this.margin.top;
+			this.height = this.$store.viewHeight - this.margin.bottom - this.margin.top;
 
 			this.svg = d3.select("#" + this.id).attrs({
 				width: this.width,
@@ -108,6 +110,7 @@ export default {
 
 			this.zoomTranslate();
 
+			let self = this;
 			this.svg.selectAll("g.node").on("click", function (id) {
 				self.node_click_action(id);
 				dagreRender(inner, self.g);
@@ -152,10 +155,10 @@ export default {
 		 * @return {String} callsite's name
 		 */
 		setCallsiteName(callsite) {
-			if (callsite["name"] == undefined) {
-				return callsite["id"];
+			if (callsite.name == undefined) {
+				return callsite.id;
 			}
-			return callsite["name"];
+			return callsite.name;
 		},
 
 		/**
@@ -166,15 +169,12 @@ export default {
 		 */
 		setCallsiteColor(callsite) {
 			// Set node fill color.
-			let color = "";
-			if (this.$store.selectedMetric == "Inclusive") {
-				color = this.$store.runtimeColor.getColor(callsite, "time (inc)");
-			} else if (this.$store.selectedMetric == "Exclusive") {
-				color = this.$store.runtimeColor.getColor(callsite, "time");
-			}
-
-			// Set node text color.
+			const color = this.$store.runtimeColor.getColor(callsite, this.$store.selectedMetric);
+			
+			// Set node color.
 			const fillColor = this.$store.runtimeColor.rgbArrayToHex(color);
+
+			// Set text color (contrast to the fill color).
 			const textColor = this.$store.runtimeColor.setContrast(fillColor);
 
 			return {
@@ -191,13 +191,12 @@ export default {
 		 * @return {HTML} html for rendering.
 		 */
 		setCallsiteHTML(callsite, callsite_color) {
-			let name = callsite["name"];
+			let name = callsite.name;
 			const class_name = callsite_color["text"] === "#fff" ? "white-text": "black-text";
 
 			let html = `<div><span class=${class_name} > ${name} </span> </div>`;
-			
-			if (this.has_data_map["module"]) {
-				let thismodule = utils.getModuleName(this.$store, callsite["module"]);
+			if (this.has_data_map["module"] && callsite.id != callsite.name) {
+				let thismodule = utils.getModuleName(this.$store, callsite.module);
 				html = html + `<br/><span class= ${class_name}><b>Module :</b>` + thismodule + "</span> </div>";
 			}
 			return html;
@@ -233,6 +232,13 @@ export default {
 					node.style = `fill: ${node.fillColor}; color: "#f00";`;
 					node.rx = node.ry = 4;
 					node.id = node.name;
+					if (node.id != node.name) {
+						node.height = self.b_node_height;
+					}
+					else {
+						node.height = self.s_node_height;
+					}
+
 				}
 			});
 		},
@@ -340,17 +346,14 @@ export default {
 			const graphWidth = this.g.graph().width + 80;
 			const graphHeight = this.g.graph().height + 40;
 
-			const width = parseInt(this.svg.style("width").replace(/px/, ""));
-			const height = parseInt(this.svg.style("height").replace(/px/, ""));
-
 			// Set the zoom scale
-			let zoomScale = Math.min(width / graphWidth, height / graphHeight);
+			let zoomScale = Math.min(this.width / graphWidth, this.height / graphHeight);
 			if (zoomScale > 1.4) zoomScale -= 0.1;
 
 			// Set the translate
 			const translate = [
-				(width - graphWidth * zoomScale) * 0.5,
-				(height - graphHeight * zoomScale) * 0.5,
+				(this.width - graphWidth * zoomScale) * 0.5,
+				(this.height - graphHeight * zoomScale) * 0.5,
 			];
 
 			// Move the svg based on translate.

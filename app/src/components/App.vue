@@ -141,7 +141,7 @@ export default {
 			// this.$store.moduleCallsiteMap = data.moduleCallsiteMap;
 			// this.$store.callsiteModuleMap = data.callsiteModuleMap;
 			this.$store.moduleFctList = data.modules;
-			this.$store.selectedDatasets = data.runs;
+			this.$store.selectedDatasets = this.runs;
 
 			this.$store.metricTimeMap = Object.keys(data.summary).reduce((res, item, idx) => { 
 				console.log(res, item, idx);
