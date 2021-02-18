@@ -1,14 +1,14 @@
 <template>
-  <v-flex row wrap>
+  <v-flex column wrap>
     <v-chip class="chip" chips color="teal" label outlined clearable>
       <span class="chip-title">
         {{ title }}
       </span>
-      <v-tooltip bottom>
+      <v-tooltip bottom max-width="300">
         <template v-slot:activator="{on}">
           <v-icon v-on="on" color="white" dark>info</v-icon>
         </template>
-        <span>
+        <span class="chip-summary">
           {{ summary }}
         </span>
       </v-tooltip>
@@ -41,5 +41,9 @@ export default {
 .chip-info {
   color: #009688;
   padding-left: 0px;
+}
+
+.chip-summary {
+  width: 200px;
 }
 </style>

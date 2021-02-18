@@ -47,7 +47,7 @@ export default {
 		HAS_DATA_COLUMNS: ["module"], // Array of keys in incoming data to check for.
 		has_data_map: {}, // stores if the required data points are present in the incoming data.
 		title: "CCT view",
-		summary: "CCT view visualizes the unique call paths of a sampled profile. Metrics on each node can be inclusive or exclusive.",
+		summary: "CCT view visualizes the unique call paths of a sampled profile. Each call site is colored based on the selected metric (use settings to change the metric). On click, each node's callers (green) and callees (purple) are highlighted using the links.",
 		info: "",
 		b_node_height: 50,
 		s_node_height: 30,
@@ -410,7 +410,7 @@ export default {
 }
 
 .highLight > rect, .highLight > circle {
-    stroke: red;
+    stroke: black;
     stroke-width:2px;
 }
 
@@ -425,6 +425,6 @@ export default {
 }
 
 #cct-edge {
-	fill: red;
+	fill: gray;
 }
 </style>
