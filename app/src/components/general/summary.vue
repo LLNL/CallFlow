@@ -7,7 +7,7 @@
 <template>
 	<v-container>
 	<v-card tile>
-		<v-card-title>Dataset Information</v-card-title>
+		<v-card-title>Summary</v-card-title>
 		<v-data-table
 			dense
 			:headers="headers"
@@ -34,12 +34,12 @@
 
 <script>
 export default {
-	name: "RuntimeInformation",
+	name: "Summary",
 	props: ["data"],
 	data: () => ({
 		headers: [
-			{ text: "Mean runtime", value: "meantime"},
 			{ text: "Run", value: "run" },
+			{ text: "Mean runtime", value: "meantime"},
 			{ text: "Number of ranks", value: "nranks"},
 			{ text: "Number of call sites", value: "ncallsites"},
 			{ text: "Number of calls", value: "nedges"}

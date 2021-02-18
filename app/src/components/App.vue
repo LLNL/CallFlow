@@ -33,7 +33,7 @@
 						<BasicInformation :data="config" />
 					</v-container>
 					<v-container>
-						<RuntimeInformation :data="summary" />					
+						<Summary :data="summary" />					
 					</v-container>
 				</v-layout>
 				<v-container>
@@ -53,7 +53,7 @@ import APIService from "lib/routing/APIService";
 
 // Local components
 import BasicInformation from "./general/basicInformation";
-import RuntimeInformation from "./general/runtimeInformation";
+import Summary from "./general/summary";
 import ModuleMappingInformation from "./general/moduleMappingInformation";
 import Footer from "./general/footer";
 
@@ -61,7 +61,7 @@ export default {
 	name: "App",
 	components: {
 		BasicInformation,
-		RuntimeInformation,
+		Summary,
 		Footer,
 		// ModuleMappingInformation
 	},
