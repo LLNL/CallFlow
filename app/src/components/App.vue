@@ -25,6 +25,7 @@
 			</v-btn> -->
 		</v-app-bar>
 		<v-main>
+			<Loader :isDataReady="isDataReady" />
 			<router-view></router-view>
 			<Summary v-if="$route.path == '/'" :config="config" :profiles="profiles" />
 		</v-main>
@@ -40,6 +41,9 @@ import APIService from "lib/routing/APIService";
 
 // Local components
 import Footer from "./general/footer";
+import Loader from "./general/loader";
+
+// General components
 import Summary from "./Summary";
 
 export default {
@@ -47,6 +51,7 @@ export default {
 	components: {
 		Summary,
 		Footer,
+		Loader,
 	},
 	data: () => ({
 		data: {},
@@ -67,6 +72,7 @@ export default {
 		},
 		footerText: "Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis",
 		year: "2021",
+		isDataReady: false,
 	}),
 
 	mounted() {
@@ -78,6 +84,7 @@ export default {
 		async init() {
 			const data = await this.fetchData();
 			console.log("Aux data", data);
+			this.isDataReady = true;
 			this.initStore(data);
 		},
 

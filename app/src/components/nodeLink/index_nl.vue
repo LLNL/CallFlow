@@ -8,6 +8,7 @@
 <template>
   <v-row>
     <InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
+	<Loader :isDataReady="isDataReady" />
     <svg :id="id">
       <g id="container"></g>
       <ColorMap ref="ColorMap" />
@@ -24,6 +25,8 @@ import EventHandler from "lib/routing/EventHandler";
 
 import ColorMap from "../general/colormap";
 import InfoChip from "../general/infoChip";
+import Loader from "../general/loader";
+
 import * as utils from "lib/utils";
 
 export default {
@@ -31,6 +34,7 @@ export default {
 	components: {
 		ColorMap,
 		InfoChip,
+		Loader,
 	},
 
 	data: () => ({
@@ -52,6 +56,7 @@ export default {
 		info: "",
 		b_node_height: 50,
 		s_node_height: 30,
+		isDataReady: false,
 	}),
 
 	mounted() {
@@ -79,6 +84,7 @@ export default {
      */
 		async init() {
 			this.data = await this.fetchData();
+			this.isDataReady = true;
 			console.log("CCT data: ", this.data);
 
 			this.width = this.$store.viewWidth - this.margin.left - this.margin.right;
