@@ -135,7 +135,7 @@ import EventHandler from "lib/routing/EventHandler";
 // Super graph dashboard imports
 import SingleScatterplot from "./singleScatterplot/";
 import SingleHistogram from "./singleHistogram/";
-import CallsiteInformation from "./callsiteInformation/";
+import CallsiteInformation from "./callsiteInformation/index_ci";
 import Sankey from "./sankey/index_sg";
 import Toolbar from "./general/toolbar";
 
@@ -323,6 +323,8 @@ export default {
 
 			// Set encoding method.
 			this.$store.encoding = "MEAN";
+
+			this.$store.selectedNode = "ApplyMaterialPropertiesForElems";
 		},
 
 		// ----------------------------------------------------------------

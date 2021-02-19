@@ -937,6 +937,7 @@ class SuperGraph(ht.GraphFrame):
         }
     
     def unpack_hists(self, hists, prop):
+        print(hists)
         return {
             "x": hists[prop][0].tolist(),
             "y": hists[prop][1].tolist(),
@@ -958,6 +959,8 @@ class SuperGraph(ht.GraphFrame):
             "skew": float(d[metric]["ks"][1]),
             "hists": {
                 "rank": self.unpack_hists(d[metric]["hst"], "rank"),
+                # "name": self.unpack_hists(d[metric]["hst"], "name"),
+                # "dataset": self.unpack_hists(d[metric]["hst"], "dataset"),
             },
             "boxplots": self.unpack_box(d[metric]["box"])
         }
@@ -970,14 +973,17 @@ class SuperGraph(ht.GraphFrame):
                 "name": _d[cs]['name'],
                 "id": str(_d[cs]["id"]),
                 "component_path": _d[cs]["component_path"].tolist(),
-                "Inclusive": self.unpack_metric(_d[cs], "time (inc)"),
-                "Exclusive": self.unpack_metric(_d[cs], "time"),
+                "time (inc)": self.unpack_metric(_d[cs], "time (inc)"),
+                "time": self.unpack_metric(_d[cs], "time"),
             }
         return ret
 
 
     def unpack_aux_data(self, load_ensemble=False):
         _d = self.aux_data[self.name]
+        c2m_dict = _d["c2m"].item()
+        m2c_dict = _d["m2c"].item()
+        modules = _d["modules"]
         _summary = _d["summary"]
 
         return {
@@ -985,8 +991,14 @@ class SuperGraph(ht.GraphFrame):
                 self.name: _d["summary"]
             },
             "modules": _d["modules"],
-            "data_cs": self.unpack_data(_d["data_cs"]),
-            "data_mod": self.unpack_data(_d["data_mod"])
+            "data_cs": {
+                self.name: self.unpack_data(_d["data_cs"]),
+            },
+            "data_mod": {
+                self.name: self.unpack_data(_d["data_mod"]),
+            },
+            "c2m": { c: modules[c2m_dict[c]]  for c in c2m_dict },
+            "m2c": { modules[m]: m2c_dict[m].tolist() for m in m2c_dict}
         }
 
     # --------------------------------------------------------------------------
