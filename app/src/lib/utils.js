@@ -270,11 +270,11 @@ export function stringToList(string) {
 // In-place store modifying utilities
 // ----------------------------------------------------
 export function getModuleName(store, module_idx) {
-	return store["moduleFctList"][module_idx];
+	return store["modules"][module_idx];
 }
 
 export function getModuleIndex(store, module) {
-	return store["moduleFctList"].indexOf(module);
+	return store["modules"].indexOf(module);
 }
 
 // TODO: Should be a computed property.
@@ -284,13 +284,13 @@ export function findExpensiveCallsite(store, dataset, granularity) {
 	// Create a map for each dataset mapping the respective mean times.
 	let map = {};
 	if (granularity == "SuperGraph") {
-		for (let _ of Object.keys(store.modules[dataset])) {
-			map[_] = store.modules[dataset][_][store.selectedMetric]["mean"];
+		for (let _ of Object.keys(store.data_mod[dataset])) {
+			map[_] = store.data_mod[dataset][_][store.selectedMetric]["mean"];
 		}	
 	}
 	else if (granularity == "CCT") {
-		for (let _ of Object.keys(store.callsites[dataset])) {
-			map[_] = store.callsites[dataset][_][store.selectedMetric]["mean"];
+		for (let _ of Object.keys(store.data_cs[dataset])) {
+			map[_] = store.data_cs[dataset][_][store.selectedMetric]["mean"];
 		}
 	}
 
@@ -310,10 +310,10 @@ export function getDataByNodeType(store, dataset, node) {
 	console.assert(store !== null);
 
 	if(node.type == "super-node") {
-		return store.modules[dataset][node.module_idx];
+		return store.data_mod[dataset][node.module_idx];
 	}
 	else if(node.type == "component-node") {
-		return store.callsites[dataset][node.callsite];
+		return store.data_cs[dataset][node.callsite];
 	}
 	else if(node.type == "intermediate") {
 		return {};

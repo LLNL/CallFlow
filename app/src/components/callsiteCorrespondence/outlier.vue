@@ -231,7 +231,7 @@ export default {
 			this.$store.bandWidth = 10;
 			let self = this;
 
-			let data = this.$store.callsites["ensemble"][this.callsite.name][this.$store.selectedMetric]["boxplots"]["outliers"];
+			let data = this.$store.data_cs["ensemble"][this.callsite.name][this.$store.selectedMetric]["boxplots"]["outliers"];
 			let ensembleOutlierList = [];
 			for (let idx = 0; idx < data["values"].length; idx += 1) {
 				if (data["values"][idx] != 0) {
@@ -282,7 +282,7 @@ export default {
 		targetOutliers() {
 			let self = this;
 
-			let callsite_data = this.$store.callsites[this.$store.selectedTargetDataset][this.callsite.name];
+			let callsite_data = this.$store.data_cs[this.$store.selectedTargetDataset][this.callsite.name];
 			let data = [];
 			if (callsite_data != undefined) {
 				data = callsite_data[this.$store.selectedMetric]["boxplots"]["outliers"];

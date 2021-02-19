@@ -336,8 +336,8 @@ export default {
 		},
 
 		setStates() {
-			this.callsites = this.$store.callsites["ensemble"];
-			this.targetCallsites = this.$store.callsites[
+			this.callsites = this.$store.data_cs["ensemble"];
+			this.targetCallsites = this.$store.data_cs[
 				this.$store.selectedTargetDataset
 			];
 
@@ -512,9 +512,9 @@ export default {
 
 		// Find the known node correspondence.
 		KNC() {
-			let callsites = new Set(Object.keys(this.$store.callsites["ensemble"]));
+			let callsites = new Set(Object.keys(this.$store.data_cs["ensemble"]));
 			let targetCallsites = new Set(
-				Object.keys(this.$store.callsites[this.$store.selectedTargetDataset])
+				Object.keys(this.$store.data_cs[this.$store.selectedTargetDataset])
 			);
 			let difference = new Set(
 				[...callsites].filter((x) => !targetCallsites.has(x))
@@ -617,7 +617,7 @@ export default {
 			this.differenceCallsites = {};
 			this.knc["difference"].forEach((callsite) => {
 				if (module_callsites.indexOf(callsite) > -1) {
-					this.differenceCallsites[callsite] = this.$store.callsites[
+					this.differenceCallsites[callsite] = this.$store.data_cs[
 						"ensemble"
 					][callsite];
 				}
@@ -629,7 +629,7 @@ export default {
 			this.intersectionCallsites = {};
 			this.knc["intersection"].forEach((callsite) => {
 				if (module_callsites.indexOf(callsite) > -1) {
-					this.intersectionCallsites[callsite] = this.$store.callsites[
+					this.intersectionCallsites[callsite] = this.$store.data_cs[
 						"ensemble"
 					][callsite];
 				}
@@ -644,9 +644,9 @@ export default {
 			this.selectedCallsite = "";
 
 			let all_callsites = Object.keys(
-				this.$store.callsites[this.$store.selectedTargetDataset]
+				this.$store.data_cs[this.$store.selectedTargetDataset]
 			);
-			let ensemble_callsites = this.$store.callsites["ensemble"];
+			let ensemble_callsites = this.$store.data_cs["ensemble"];
 
 			for (let callsite in all_callsites) {
 				if (ensemble_callsites.hasOwnProperty(callsite)) {

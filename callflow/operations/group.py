@@ -87,40 +87,34 @@ class Group:
             spath = self.callsite_path_map[snode]
             tpath = self.callsite_path_map[tnode]
 
-            temp_group_path_results = self._construct_group_path(spath)
-            group_path[snode] = temp_group_path_results
-
+            # Mappers for the source node, snode.
+            group_path[snode] = self._construct_group_path(spath)
             component_path[snode] = self._construct_component_path(
                 spath, group_path[snode]
             )
             component_level[snode] = len(component_path[snode])
-
-            temp_group_path_results = self._construct_group_path(tpath)
-            group_path[tnode] = temp_group_path_results
-
-            component_path[tnode] = self._construct_component_path(
-                tpath, group_path[tnode]
-            )
-            component_level[tnode] = len(component_path[tnode])
-
             if component_level[snode] == 2:
                 entry_func[snode] = True
                 show_node[snode] = True
             else:
                 entry_func[snode] = False
                 show_node[snode] = False
-
             node_name[snode] = self._format_node_name(
                 self.callsite_module_map[snode], snode
             )
 
+            # Mappers for the target node, tnode.
+            group_path[tnode] = self._construct_group_path(tpath)
+            component_path[tnode] = self._construct_component_path(
+                tpath, group_path[tnode]
+            )
+            component_level[tnode] = len(component_path[tnode])
             if component_level[tnode] == 2:
                 entry_func[tnode] = True
                 show_node[tnode] = True
             else:
                 entry_func[tnode] = False
                 show_node[tnode] = False
-
             node_name[tnode] = self._format_node_name(
                 self.callsite_module_map[snode], tnode
             )
@@ -223,7 +217,7 @@ class Group:
                     if to_callsite not in self.other_funcs[to_module]:
                         self.other_funcs[to_module].append(to_callsite)
 
-        return group_path
+        return tuple(group_path)
 
     def _construct_component_path(self, path, group_path):
         """

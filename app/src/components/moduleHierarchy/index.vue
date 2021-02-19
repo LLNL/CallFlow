@@ -177,7 +177,7 @@ export default {
 			let startVertex = graph;
 
 			let thismodule = startVertex.id;
-			let moduleData = this.$store.modules["ensemble"][thismodule];
+			let moduleData = this.$store.data_mod["ensemble"][thismodule];
 
 			startVertex.data = moduleData;
 
@@ -194,10 +194,10 @@ export default {
 				let callsiteData = {};
 				if (!startVertexData) {
 					let callsite = currentVertex.id;
-					callsiteData = this.$store.callsites["ensemble"][callsite];
+					callsiteData = this.$store.data_cs["ensemble"][callsite];
 				} else {
 					let module = currentVertex.id;
-					callsiteData = this.$store.modules["ensemble"][module];
+					callsiteData = this.$store.data_mod["ensemble"][module];
 					startVertexData = false;
 				}
 
@@ -338,9 +338,9 @@ export default {
 		diceByValue(parent, x0, y0, x1, y1) {
 			let value = 1;
 			if (parent.parent == null) {
-				value = this.$store.modules["ensemble"][parent.data.id]["max_time"];
+				value = this.$store.data_mod["ensemble"][parent.data.id]["max_time"];
 			} else {
-				value = this.$store.callsites["ensemble"][parent.data.id][this.metric];
+				value = this.$store.data_cs["ensemble"][parent.data.id][this.metric];
 			}
 
 			var nodes = parent.children,
@@ -412,14 +412,14 @@ export default {
 
 		setupCallsiteMeanGradients() {
 			let module = this.$store.selectedModule;
-			let callsites = Object.keys(this.$store.callsites["ensemble"]);
+			let callsites = Object.keys(this.$store.data_cs["ensemble"]);
 
 			let method = "";
 			let mode = "Horizontal";
 
 			this.hist_min = 0;
 			this.hist_max = 0;
-			let callsiteStore = this.$store.callsites["ensemble"];
+			let callsiteStore = this.$store.data_cs["ensemble"];
 			for (let idx = 0; idx < callsites.length; idx += 1) {
 				let callsite = callsites[idx];
 				let data = callsiteStore[callsite];
@@ -478,14 +478,14 @@ export default {
 		},
 
 		setupModuleMeanGradients() {
-			let modules = Object.keys(this.$store.modules["ensemble"]);
+			let modules = Object.keys(this.$store.data_mod["ensemble"]);
 
 			let method = "";
 			let mode = "Horizontal";
 
 			this.hist_min = 0;
 			this.hist_max = 0;
-			let moduleStore = this.$store.modules["ensemble"];
+			let moduleStore = this.$store.data_mod["ensemble"];
 			for (let idx = 0; idx < modules.length; idx += 1) {
 				let thismodule = modules[idx];
 				let data = moduleStore[thismodule];
@@ -552,17 +552,17 @@ export default {
 				let targetPos = undefined;
 				if (
 					this.nodes[i].depth == 0 &&
-          this.$store.modules["ensemble"][node_data.id] != undefined
+          this.$store.data_mod["ensemble"][node_data.id] != undefined
 				) {
-					let data = this.$store.modules["ensemble"][node_data.id][
+					let data = this.$store.data_mod["ensemble"][node_data.id][
 						this.$store.selectedMetric
 					]["gradients"];
 					mean = data["dataset"]["mean"][dataset];
 					gradients = data["hist"];
 					targetPos = data["dataset"]["position"][dataset] + 1;
 				} else {
-					if (this.$store.callsites["ensemble"][node_data.id] != undefined) {
-						let data = this.$store.callsites["ensemble"][node_data.id][
+					if (this.$store.data_cs["ensemble"][node_data.id] != undefined) {
+						let data = this.$store.data_cs["ensemble"][node_data.id][
 							this.$store.selectedMetric
 						]["gradients"];
 						mean = data["dataset"]["mean"][dataset];
@@ -603,23 +603,23 @@ export default {
 		drawGuides(d) {
 			let dataset = this.$store.selectedTargetDataset;
 
-			let data = this.$store.modules;
+			let data = this.$store.data_mod;
 			let node_data = d.data;
 
 			let mean = 0;
 			let gradients = [];
 			if (d.depth == 0) {
-				mean = this.$store.modules[dataset][node_data.id]["gradients"][
+				mean = this.$store.data_mod[dataset][node_data.id]["gradients"][
 					this.$store.selectedMetric
 				]["dataset"][dataset];
-				gradients = this.$store.modules["ensemble"][node_data.id]["gradients"][
+				gradients = this.$store.data_mod["ensemble"][node_data.id]["gradients"][
 					this.$store.selectedMetric
 				]["hist"];
 			} else {
-				mean = this.$store.callsites[dataset][node_data.id]["gradients"][
+				mean = this.$store.data_cs[dataset][node_data.id]["gradients"][
 					this.$store.selectedMetric
 				]["dataset"][dataset];
-				gradients = this.$store.callsites["ensemble"][node_data.id][
+				gradients = this.$store.data_cs["ensemble"][node_data.id][
 					"gradients"
 				][this.$store.selectedMetric]["hist"];
 			}
@@ -760,10 +760,10 @@ export default {
 				})
 				.style("fill", (d, i) => {
 					let gradients = undefined;
-					if (d.depth == 0 && this.$store.modules[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
+					if (d.depth == 0 && this.$store.data_mod[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
 						gradients = "url(#mean-module-gradient-" + d.data.data.id + ")";
 					} else {
-						if (this.$store.callsites[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
+						if (this.$store.data_cs[this.$store.selectedTargetDataset][d.data.data.name] != undefined) {
 							gradients = "url(#mean-callsite-gradient-" + d.data.data.id + ")";
 						} else {
 							gradients = this.$store.distributionColor.ensemble;

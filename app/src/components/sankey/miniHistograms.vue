@@ -45,16 +45,16 @@ export default {
 
 	methods: {
 		init(graph) {
-			const t_module_data = this.$store.modules[this.$store.selectedTargetDataset];
-			const t_callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
-
+			const t_module_data = this.$store.data_mod[this.$store.selectedTargetDataset];
+			const t_callsite_data = this.$store.data_cs[this.$store.selectedTargetDataset];
+			
 			for (const node of graph.nodes) {
-				const module = node.module_idx;
+				const module_idx = node.module_idx;
 				const callsite = node.name;
 
 				let data = {};
 				if (node.type == "super-node") {
-					data = t_module_data[module][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
+					data = t_module_data[module_idx][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
 				}
 				else if (node.type == "component-node" && t_callsite_data[callsite] != undefined) {
 					data = t_callsite_data[callsite][this.$store.selectedMetric]["hists"][this.$store.selectedProp];
@@ -87,8 +87,8 @@ export default {
 					color = this.$store.distributionColor.target;
 				else if (type == "single")
 					color = this.$store.runtimeColor.intermediate;
-				xVals = data["target"].x;
-				freq = data["target"].y;
+				xVals = data.x;
+				freq = data.y;
 			}
 
 			if (this.$store.selectedScale == "Linear") {

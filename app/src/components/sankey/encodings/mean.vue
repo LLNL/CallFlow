@@ -21,8 +21,8 @@ export default {
 			this.nodes = nodes;
 			this.containerG = containerG;
 
-			this.module_data = this.$store.modules[this.$store.selectedTargetDataset];
-			this.callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
+			this.module_data = this.$store.data_mod[this.$store.selectedTargetDataset];
+			this.callsite_data = this.$store.data_cs[this.$store.selectedTargetDataset];
 
 			// this.setColorScale();
 			this.visualize();
@@ -54,14 +54,8 @@ export default {
 						if (d.type == "intermediate") {
 							return this.$store.runtimeColor.intermediate;
 						}
-						else {
-							if (this.$store.selectedMetric == "Inclusive") {
-								return this.$store.runtimeColor.getColor(d, "time (inc)");
-							}
-							else if (this.$store.selectedMetric == "Exclusive") {
-								return this.$store.runtimeColor.getColor(d, "time");
-							}
-						}
+							
+						return this.$store.runtimeColor.getColor(d, this.$store.selectedMetric);						
 					}
 				});
 		},

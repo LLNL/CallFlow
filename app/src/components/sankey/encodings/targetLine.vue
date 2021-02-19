@@ -25,8 +25,8 @@ export default {
 		init(nodes) {
 			this.nodes = nodes;
 
-			this.ensemble_module_data = this.$store.modules["ensemble"];
-			this.ensemble_callsite_data = this.$store.callsites["ensemble"];
+			this.ensemble_module_data = this.$store.data_mod["ensemble"];
+			this.ensemble_callsite_data = this.$store.data_cs["ensemble"];
 
 			for (let node of nodes) {
 				this.visualize(node);

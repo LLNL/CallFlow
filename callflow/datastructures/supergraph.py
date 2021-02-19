@@ -176,7 +176,7 @@ class SuperGraph(ht.GraphFrame):
 
         if read_aux:
             self.aux_data[self.name] = SuperGraph.read_aux(path, self.name)
-            self.modules = self.aux_data[self.name]["modules"]
+            self.modules = self.aux_data[self.name]["modules"].tolist()
 
         # ----------------------------------------------------------------------
         self.add_time_proxies()
@@ -937,7 +937,6 @@ class SuperGraph(ht.GraphFrame):
         }
     
     def unpack_hists(self, hists, prop):
-        print(hists)
         return {
             "x": hists[prop][0].tolist(),
             "y": hists[prop][1].tolist(),

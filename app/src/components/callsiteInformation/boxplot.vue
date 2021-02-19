@@ -136,7 +136,7 @@ export default {
 		 * @param {*} callsite 
 		 */
 		process(callsite) {
-			if (this.$store.callsites[this.$store.selectedTargetDataset][callsite.name] != undefined) {
+			if (this.$store.data_cs[this.$store.selectedTargetDataset][callsite.name] != undefined) {
 				this.target_data = callsite[this.$store.selectedMetric]["boxplots"]["q"];
 			}
 			else {

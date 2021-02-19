@@ -132,8 +132,8 @@ export default {
 		 */
 		setAuxVariables(data) {
 			this.$store.summary = data.summary;
-			this.$store.modules = data.data_mod;
-			this.$store.callsites = data.data_cs;
+			this.$store.data_mod = data.data_mod;
+			this.$store.data_cs = data.data_cs;
 			this.$store.m2c = data.m2c;
 			this.$store.c2m = data.c2m;
 			this.$store.modules = data.modules;
@@ -245,8 +245,8 @@ export default {
 		setDistributionColorScale(selectedDistributionColorMap) {
 			let hist_min = 0;
 			let hist_max = 0;
-			for (let module in this.$store.modules["ensemble"]) {
-				let node = this.$store.modules["ensemble"][module];
+			for (let module in this.$store.data_mod["ensemble"]) {
+				let node = this.$store.data_mod["ensemble"][module];
 				hist_min = Math.min(
 					hist_min,
 					node[this.$store.selectedMetric]["gradients"]["hist"]["y_min"]

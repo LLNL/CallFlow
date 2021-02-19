@@ -76,7 +76,8 @@ export default {
 		existingIntermediateNodes: {},
 		title: "Super Graph View",
 		message: "",
-		info: ""
+		info: "",
+		summary: "",
 	}),
 
 	mounted() {
@@ -111,6 +112,7 @@ export default {
 				datasets: this.$store.selectedTargetDataset,
 				groupBy: "module",
 			};
+			console.log(payload);
 			if (this.$store.selectedMode == "Single") {
 				data = await APIService.POSTRequest("single_supergraph", payload);
 				console.debug("[/single_supergraph]", data);
@@ -145,7 +147,7 @@ export default {
 
 			this.data = await this.fetchData();
 			this.width = this.$store.viewWidth;
-			this.height = this.$store.viewHeight;
+			this.height = this.$store.viewHeight - this.margin.top - this.margin.bottom;
 
 			this.sankeySVG = d3.select("#" + this.id).attrs({
 				width: this.width,
@@ -205,30 +207,28 @@ export default {
 			this.$refs.Edges.init(this.$store.graph, this.view);
 			this.$refs.MiniHistograms.init(this.$store.graph, this.view);
 
-			const _node = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "CCT");
-			// Get node id from the graph.
-			const node_id = this.$store.graph["nodeMap"][_node];
-			this.$store.selectedNnode = this.$store.graph["nodes"][node_id];
+			const node_id = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "SuperGraph");
+			this.$store.selectedNode = this.$store.graph["nodes"][node_id];
 
 			if (this.$store.selectedMode == "Single") {
 				EventHandler.$emit("single-histogram", {
-					node: this.$store.selectedNnode,
+					node: this.$store.selectedNode,
 					dataset: this.$store.selectedTargetDataset,
 				});
 
 				EventHandler.$emit("single-scatterplot", {
-					node: this.$store.selectedNnode,
+					node: this.$store.selectedNode,
 					dataset: this.$store.selectedTargetDataset,
 				});
 			}
 			else if(this.$store.selectedMode == "Ensemble") {
 				EventHandler.$emit("ensemble-histogram", {
-					node: this.$store.selectedNnode,
+					node: this.$store.selectedNode,
 					dataset: this.$store.selectedTargetDataset,
 				});
 
 				EventHandler.$emit("ensemble-scatterplot", {
-					node: this.$store.selectedNnode,
+					node: this.$store.selectedNode,
 					dataset: this.$store.selectedTargetDataset,
 				});
 			}
