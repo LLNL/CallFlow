@@ -132,11 +132,11 @@ export default {
 		 */
 		setAuxVariables(data) {
 			this.$store.summary = data.summary;
-			// this.$store.modules = data.module;
-			// this.$store.callsites = data.callsite;
-			// this.$store.moduleCallsiteMap = data.moduleCallsiteMap;
-			// this.$store.callsiteModuleMap = data.callsiteModuleMap;
-			this.$store.moduleFctList = data.modules;
+			this.$store.modules = data.data_mod;
+			this.$store.callsites = data.data_cs;
+			this.$store.m2c = data.m2c;
+			this.$store.c2m = data.c2m;
+			this.$store.modules = data.modules;
 			this.$store.selectedDatasets = this.runs;
 
 			this.$store.metricTimeMap = Object.keys(data.summary).reduce((res, item, idx) => { 
@@ -150,9 +150,8 @@ export default {
 		setLocalVariables(data) {
 			// Render the tables in the view
 			this.profiles = Object.keys(data.summary).map((_) =>  { return {"run": _, ...data.summary[_]};});
-			const module_fct_list = data.moduleFctList;
 			// TODO: Does not work as the format is weird.
-			// this.module_callsite_map = Object.keys(data.moduleCallsiteMap["ensemble"]).map((_) => { return {"module": module_fct_list[_], ...data.moduleCallsiteMap[_]};});
+			this.module_callsite_map = Object.keys(data.m2c).map((_) => { return {"module": data.modules[_], ...data.m2c[_]};});
 		},
 
 		setGlobalVariables() {
@@ -161,6 +160,7 @@ export default {
 
 			this.$store.selectedIQRFactor = 0.15;
 			this.$store.selectedRunBinCount = 20;
+			this.$store.selectedMPIBinCount = 20;
 			this.$store.selectedEdgeAlignment = "Top";
 
 			// Used in sankey.js
