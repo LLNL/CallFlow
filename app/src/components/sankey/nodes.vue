@@ -90,8 +90,8 @@ export default {
 					this.sankeySVG.attr("transform", "translate(" + [tx, ty] + ")scale(" + d3.event.transform.k + ")");
 				});
 
-			this.ensemble_module_data = this.$store.modules["ensemble"];
-			this.ensemble_callsite_data = this.$store.callsites["ensemble"];
+			this.ensemble_module_data = this.$store.data_mod["ensemble"];
+			this.ensemble_callsite_data = this.$store.data_cs["ensemble"];
 
 			this.preVis();
 			this.visualize();
@@ -122,7 +122,7 @@ export default {
 			for (let node of this.graph.nodes) {
 				node.client_idx = idx;
 				node.module_idx = node.module;
-				node.module = utils.getModuleName(this.$store, node.module);
+				node.module = utils.getModuleName(this.$store, node.module_idx);
 				idx += 1;
 			}
 		},
@@ -356,13 +356,7 @@ export default {
 					if (this.$store.encoding == "MEAN_GRADIENTS") {
 						return "#000";
 					}
-					let rgbArray = null;
-					if (this.$store.selectedMetric == "Inclusive") {
-						rgbArray = this.$store.runtimeColor.getColor(d, "time (inc)");
-					}
-					else if (this.$store.selectedMetric == "Exclusive") {
-						rgbArray = this.$store.runtimeColor.getColor(d, "time");
-					}
+					let rgbArray = this.$store.runtimeColor.getColor(d, this.$store.selectedMetric);
 					let hex = this.$store.runtimeColor.rgbArrayToHex(rgbArray);
 					return this.$store.runtimeColor.setContrast(hex);
 				})

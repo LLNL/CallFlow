@@ -66,38 +66,26 @@ class SankeyLayout:
         self.path = path
         self.sg = sg
 
-        # TODO: This code is repeated in modules/auxiliary.py.
-        # Move to a instance method of SuperGraph.
-        if selected_runs is not None:
-            self.runs = selected_runs
-            self.df = sg.df_filter_by_search_string("dataset", self.runs)
-
-        elif isinstance(sg, callflow.SuperGraph) and sg.name != "ensemble":
-            self.runs = [sg.name]
-            self.df = sg.dataframe
-
-        elif isinstance(sg, callflow.EnsembleGraph) and sg.name == "ensemble":
-            self.runs = [k for k, v in sg.supergraphs.items()]
-            self.df = sg.df_filter_by_search_string("dataset", self.runs)
+        self.runs = sg.filter_by_datasets(selected_runs)
 
         self.reveal_callsites = reveal_callsites
         self.split_entry_module = split_entry_module
         self.split_callee_module = split_callee_module
 
         self.primary_group_df = df_group_by(
-            self.df, [SankeyLayout._PRIMARY_GROUPBY_COLUMN]
+            self.sg.dataframe, [SankeyLayout._PRIMARY_GROUPBY_COLUMN]
         )
         self.secondary_group_df = df_group_by(
-            self.df, [SankeyLayout._SECONDARY_GROUPBY_COLUMN]
+            self.sg.dataframe, [SankeyLayout._SECONDARY_GROUPBY_COLUMN]
         )
         self.secondary_primary_group_df = df_group_by(
-            self.df,
+            self.sg.dataframe,
             [
                 SankeyLayout._SECONDARY_GROUPBY_COLUMN,
                 SankeyLayout._PRIMARY_GROUPBY_COLUMN,
             ],
         )
-        self.paths_df = df_group_by(self.df, ["name", self.path])
+        self.paths_df = df_group_by(self.sg.dataframe, [SankeyLayout._PRIMARY_GROUPBY_COLUMN, self.path])
 
         self.nxg = self._create_nxg_from_paths()
         self.add_reveal_paths(self.reveal_callsites)
@@ -382,7 +370,7 @@ class SankeyLayout:
         :return:
         """
         ensemble_mapping = SankeyLayout._ensemble_map(
-            sg=self.sg, df=self.df, nxg=self.nxg, columns=SankeyLayout._COLUMNS
+            sg=self.sg, nxg=self.nxg, columns=SankeyLayout._COLUMNS
         )
         for idx, key in enumerate(ensemble_mapping):
             nx.set_node_attributes(self.nxg, name=key, values=ensemble_mapping[key])
@@ -391,7 +379,6 @@ class SankeyLayout:
         for run in self.runs:
             dataset_mapping[run] = SankeyLayout._dataset_map(
                 sg=self.sg,
-                df=self.df,
                 nxg=self.nxg,
                 tag=run,
                 columns=SankeyLayout._COLUMNS,
@@ -504,8 +491,7 @@ class SankeyLayout:
                         "target_callsite": target["callsite"],
                         "edge_type": edge_type,
                         "weight": target_df["time (inc)"].mean(),
-                        "source_dataset": source_df["dataset"].unique(),
-                        "target_dataset": target_df["dataset"].unique(),
+                        "dataset": self.sg.name,
                     }
 
                     if source["type"] == "super-node":
@@ -544,7 +530,7 @@ class SankeyLayout:
         module_mapper = {}
         data_mapper = {}
 
-        path_list = make_list(path)
+        path_list = list(path)
 
         for idx, elem in enumerate(path_list):
             module = elem.split("=")[0]
@@ -585,14 +571,13 @@ class SankeyLayout:
         return ret
 
     @staticmethod
-    def _ensemble_map(sg, df, nxg, columns):
+    def _ensemble_map(sg, nxg, columns):
         """
         Creates maps for all columns for the ensemble data.
         Note: For single supergraph, ensemble_map would be the same as dataset_map[single_run.tag].
         TODO: There is code repetition among ensemble_maps and dataset_maps. Need to simplify.
         """
-        assert isinstance(df, pd.DataFrame)
-        assert isinstance(nxg, nx.DiGraph)
+        df = sg.dataframe
         ret = {}
 
         module_group_df = df.groupby(["module"])
@@ -664,17 +649,17 @@ class SankeyLayout:
         return ret
 
     @staticmethod
-    def _dataset_map(sg, df, nxg, columns, tag=""):
+    def _dataset_map(sg, nxg, columns, tag=""):
         """
         Creates maps for all node attributes (i.e., columns in df) for each dataset.
         """
-        assert isinstance(df, pd.DataFrame)
-        assert isinstance(nxg, nx.DiGraph)
-
         ret = {}
 
         # Reduce the entire_df to respective target dfs.
-        target_df = df.loc[df["dataset"] == tag]
+        if isinstance(sg, callflow.SuperGraph):
+            target_df = sg.dataframe
+        else:
+            target_df = sg["ensemble"].dataframe
 
         # Unique modules in the target run
         # target_modules = target_df["module"].unique()

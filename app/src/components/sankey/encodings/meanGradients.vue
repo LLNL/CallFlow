@@ -58,14 +58,14 @@ export default {
 				return this.$store.runtimeColor.intermediate;
 			} else if (d.type == "component-node") {
 				if (
-					this.$store.callsites[this.$store.selectedTargetDataset][d.id] !=
+					this.$store.data_cs[this.$store.selectedTargetDataset][d.id] !=
           undefined
 				) {
 					return d3.rgb(this.$store.runtimeColor.getColor(d, metric));
 				}
 			} else if (d.type == "super-node") {
 				if (
-					this.$store.modules[this.$store.selectedTargetDataset][d.id] !=
+					this.$store.data_mod[this.$store.selectedTargetDataset][d.id] !=
           undefined
 				) {
 					return d3.rgb(this.$store.runtimeColor.getColor(d, metric));
@@ -98,10 +98,10 @@ export default {
 				return color.intermediate;
 			}
 
-			const grid = this.$store.callsites["ensemble"][d.id][metric][
+			const grid = this.$store.data_cs["ensemble"][d.id][metric][
 				"gradients"
 			]["hist"]["x"];
-			const val = this.$store.callsites["ensemble"][d.id][metric]["gradients"][
+			const val = this.$store.data_cs["ensemble"][d.id][metric]["gradients"][
 				"hist"
 			]["y"];
 

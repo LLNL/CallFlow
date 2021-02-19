@@ -7,8 +7,7 @@
 
 <template>
   <v-layout row wrap :id="id">
-    <InfoChip ref="InfoChip" :title="title" :summary="summary" />
-    <span class="component-info"> Correlation : {{ corr_coef }} </span>
+    <InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
     <svg :id="svgID"></svg>
     <ToolTip ref="ToolTip" />
   </v-layout>
@@ -56,7 +55,6 @@ export default {
 		paddingFactor: 3.5,
 		x_max_exponent: 0,
 		y_max_exponent: 0,
-		corr_coef: 0,
 		xAxisHeight: 0,
 		yAxisHeight: 0,
 		title: "MPI Runtime Scatterplot",
@@ -120,7 +118,9 @@ export default {
 				.range([this.yAxisHeight, this.padding.top]);
 
 			this.regression = this.leastSquares(this.xArray, this.yArray);
-			this.corr_coef = Math.round(this.regression["corr_coef"] * 100) / 100;
+			const corr_coef = Math.round(this.regression["corr_coef"] * 100) / 100;
+			this.info = "Correlation : " + corr_coef;
+
 
 			this.xAxis();
 			this.yAxis();
@@ -130,8 +130,8 @@ export default {
 
 		process(data) {
 			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
-			let mean_time_inc = store["Inclusive"]["d"];
-			let mean_time = store["Exclusive"]["d"];
+			let mean_time_inc = store["time (inc)"]["d"];
+			let mean_time = store["time"]["d"];
 
 			let xArray = [];
 			let yArray = [];

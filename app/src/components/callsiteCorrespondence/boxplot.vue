@@ -111,9 +111,9 @@ export default {
 		},
 
 		process(callsite) {
-			this.ensemble_data = this.$store.callsites["ensemble"][callsite.name][this.$store.selectedMetric]["boxplots"]["q"];
-			if (this.$store.callsites[this.$store.selectedTargetDataset][callsite.name] != undefined) {
-				this.target_data = this.$store.callsites[this.$store.selectedTargetDataset][callsite.name][this.$store.selectedMetric]["boxplots"]["q"];
+			this.ensemble_data = this.$store.data_cs["ensemble"][callsite.name][this.$store.selectedMetric]["boxplots"]["q"];
+			if (this.$store.data_cs[this.$store.selectedTargetDataset][callsite.name] != undefined) {
+				this.target_data = this.$store.data_css[this.$store.selectedTargetDataset][callsite.name][this.$store.selectedMetric]["boxplots"]["q"];
 			}
 			else {
 				this.target_data = [0, 0, 0, 0, 0];

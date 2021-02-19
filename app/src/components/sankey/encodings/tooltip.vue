@@ -159,18 +159,18 @@ export default {
 		pathInformation(node) {
 			let module_data = {};
 			if (this.$store.selectedMode == "Single") {
-				module_data = this.$store.modules[this.$store.selectedTargetDataset];
+				module_data = this.$store.data_mod[this.$store.selectedTargetDataset];
 			}
 			else if (this.$store.selectedMode == "Ensemble") {
-				module_data = this.$store.modules["ensemble"];
+				module_data = this.$store.data_mod["ensemble"];
 			}
 
 			let callsite_data = {};
 			if (this.$store.selectedMode == "Single") {
-				callsite_data = this.$store.callsites[this.$store.selectedTargetDataset];
+				callsite_data = this.$store.data_cs[this.$store.selectedTargetDataset];
 			}
 			else if (this.$store.selectedMode == "Ensemble") {
-				callsite_data = this.$store.callsites["ensemble"];
+				callsite_data = this.$store.data_cs["ensemble"];
 			}
 
 

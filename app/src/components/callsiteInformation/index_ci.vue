@@ -265,7 +265,7 @@ export default {
 			// this.callsites store the callsites in the current context.
 			// this.numberOfCallsites is used to show the number of callsites in
 			// the view.
-			this.callsites = this.$store.callsites[this.$store.selectedTargetDataset];
+			this.callsites = this.$store.data_cs[this.$store.selectedTargetDataset];
 			this.numberOfcallsites = Object.keys(this.callsites).length;
 
 			this.info = this.numberOfcallsites + " call sites";
@@ -523,7 +523,7 @@ export default {
 
 			// Set the data and render each callsite.
 			callsites_in_module.forEach((callsite) => {
-				this.callsites[callsite] = this.$store.callsites[
+				this.callsites[callsite] = this.$store.data_cs[
 					this.$store.selectedTargetDataset
 				][callsite];
 				d3.select("#callsite-information-" + this.callsites[callsite].id).style(
@@ -541,9 +541,9 @@ export default {
 			this.selectedCallsite = "";
 
 			let all_callsites = Object.keys(
-				this.$store.callsites[this.$store.selectedTargetDataset],
+				this.$store.data_cs[this.$store.selectedTargetDataset],
 			);
-			let ensemble_callsites = this.$store.callsites["ensemble"];
+			let ensemble_callsites = this.$store.data_cs["ensemble"];
 
 			for (let callsite in all_callsites) {
 				if (ensemble_callsites.hasOwnProperty(callsite)) {

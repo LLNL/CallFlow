@@ -112,7 +112,7 @@ export default {
 			const _e_store = utils.getDataByNodeType(this.$store, "ensemble", data["node"])[this.$store.selectedMetric];
 			this.ensembleProcess();
 
-			if (this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule] != undefined) {
+			if (this.$store.data_mod[this.$store.selectedTargetDataset][this.selectedModule] != undefined) {
 				this.selectedTargetModuleData = utils.getDataByNodeType(this.$store, "ensemble", data["node"])[this.$store.selectedMetric];
 				this.targetProcess();
 			}
@@ -128,7 +128,7 @@ export default {
 			this.xAxis();
 			this.yAxis();
 			this.ensembleDots();
-			if (this.$store.showTarget && this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule] != undefined) {
+			if (this.$store.showTarget && this.$store.data_mod[this.$store.selectedTargetDataset][this.selectedModule] != undefined) {
 				this.targetDots();
 			}
 			// this.correlationText()
@@ -148,7 +148,7 @@ export default {
 				let callsites_in_module = this.$store.moduleCallsiteMap["ensemble"][this.selectedModule];
 				for (let j = 0; j < callsites_in_module.length; j += 1) {
 					let _c = callsites_in_module[j];
-					let _d = this.$store.callsites[this.$store.selectedDatasets[i]][_c];
+					let _d = this.$store.data_cs[this.$store.selectedDatasets[i]][_c];
 					mean_time.push({
 						"callsite": _c,
 						"val": _d["Exclusive"]["mean"],
@@ -162,7 +162,7 @@ export default {
 				}
 			}
 
-			let all_data = this.$store.modules["ensemble"][this.selectedModule];
+			let all_data = this.$store.data_mod["ensemble"][this.selectedModule];
 			let temp;
 			if (this.$store.selectedScatterMode == "mean") {
 				temp = this.scatter(mean_time, mean_time_inc);
@@ -193,7 +193,7 @@ export default {
 			let callsites_in_module = this.$store.moduleCallsiteMap[this.$store.selectedTargetDataset][this.selectedModule];
 			for (let i = 0; i < callsites_in_module.length; i += 1) {
 				let thiscallsite = callsites_in_module[i];
-				let thisdata = this.$store.callsites[this.$store.selectedTargetDataset][thiscallsite];
+				let thisdata = this.$store.data_cs[this.$store.selectedTargetDataset][thiscallsite];
 				mean_time.push({
 					"callsite": thiscallsite,
 					"val": thisdata["Exclusive"]["mean"],
@@ -212,7 +212,7 @@ export default {
 				temp = this.scatter(mean_time, mean_time_inc);
 			}
 			else if (this.$store.selectedScatterMode == "all") {
-				let data = this.$store.modules[this.$store.selectedTargetDataset][this.selectedModule];
+				let data = this.$store.data_mod[this.$store.selectedTargetDataset][this.selectedModule];
 				temp = this.scatter(data["time"], data["time (inc)"]);
 			}
 			this.xtargetMin = temp[0];
@@ -440,7 +440,7 @@ export default {
 		},
 
 		calculateQDC(callsite, run) {
-			let q = this.$store.callsites[run][callsite][this.$store.selectedMetric]["q"];
+			let q = this.$store.data_cs[run][callsite][this.$store.selectedMetric]["q"];
 
 			if (q[3] == 0 && q[1] == 0) {
 				this.undesirability[callsite] = 1;

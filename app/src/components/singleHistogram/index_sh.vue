@@ -105,8 +105,9 @@ export default {
 		},
 
 		setupScale(data) {
+			console.log(data);
 			const store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
-			const _data = store[this.$store.selectedMetric]["hists"]["rank"]["target"];
+			const _data = store[this.$store.selectedMetric]["hists"][this.$store.selectedProp];
 			const _mpiData = store[this.$store.selectedMetric]["d"];
 
 			let temp = this.dataProcess(_data, _mpiData);
@@ -175,6 +176,7 @@ export default {
 		dataProcess(data, mpiData) {
 			let axis_x = [];
 			let binContainsProcID = {};
+			console.log(data);
 			let dataMin = data["x_min"];
 			let dataMax = data["x_max"];
 
@@ -211,6 +213,7 @@ export default {
 		// return a string version and an array version
 		// stolen from this: https://gist.github.com/XciA/10572206
 		groupProcess(processIDs) {
+			console.log(processIDs);
 			const constData = processIDs.slice();
 			let a = 0;
 			let groupArrayStr = "[ ";

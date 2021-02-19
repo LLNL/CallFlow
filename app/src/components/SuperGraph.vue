@@ -133,8 +133,8 @@ import "splitpanes/dist/splitpanes.css";
 import EventHandler from "lib/routing/EventHandler";
 
 // Super graph dashboard imports
-import SingleScatterplot from "./singleScatterplot/";
-import SingleHistogram from "./singleHistogram/";
+import SingleScatterplot from "./singleScatterplot/index_ss";
+import SingleHistogram from "./singleHistogram/index_sh";
 import CallsiteInformation from "./callsiteInformation/index_ci";
 import Sankey from "./sankey/index_sg";
 import Toolbar from "./general/toolbar";
@@ -332,9 +332,9 @@ export default {
 		// ----------------------------------------------------------------
 		setComponentMap() {
 			this.currentSingleSuperGraphComponents = [
-				// this.$refs.SingleHistogram,
-				// this.$refs.SingleScatterplot,
-				// this.$refs.Sankey,
+				this.$refs.SingleHistogram,
+				this.$refs.SingleScatterplot,
+				this.$refs.Sankey,
 				this.$refs.CallsiteInformation,
 			];
 		},
