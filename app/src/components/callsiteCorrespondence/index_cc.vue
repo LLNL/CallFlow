@@ -6,7 +6,7 @@
  */
 <template>
   <v-layout row wrap :id="id">
-	<InfoChip ref="InfoChip" :title="title" :summary="summary" />
+    <InfoChip ref="InfoChip" :title="title" :summary="summary" />
     <v-layout row wrap v-if="isCallsiteSelected == true">
       <v-btn
         class="ma-1 reveal-button"
@@ -63,24 +63,27 @@
         callsites.
       </p>
     </v-layout>
+
     <v-container
       class="callsite-information-node"
       v-for="callsite in differenceCallsites"
       :key="getID(callsite.id)"
     >
-      <v-layout row wrap>
-        <v-flex md1>
-          <v-card width="25px" class="mx-auto" tile outlined>
+      <v-row wrap>
+        <v-col cols="1">
+          <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
-              <template >
-                <v-flex
+              <template v-slot:activator="{on}">
+                <v-row
+                  class="pl-2"
                   :id="callsite.name"
                   text-xs-center
+                  :v-on="on"
                   :class="selectClassName[callsite.name]"
                   @click="changeSelectedClassName"
                 >
                   {{ formatNumberOfHops(callsite.component_level) }}
-                </v-flex>
+                </v-row>
               </template>
               <span
                 >Component level:
@@ -88,124 +91,152 @@
               >
             </v-tooltip>
           </v-card>
-        </v-flex>
+        </v-col>
 
-        <v-flex md11>
+        <v-col cols="11">
           <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-flex class="pl-2 subtitle-2 font-weight-black" v-on="on">
+            <template v-slot:activator="{on}">
+              <v-row class="pl-2 subtitle-2 font-weight-black" v-on="on">
                 {{ formatName(callsite.name) }}
-              </v-flex>
+              </v-row>
             </template>
             <span>{{ callsite.name }}</span>
           </v-tooltip>
-        </v-flex>
-      </v-layout>
+        </v-col>
+      </v-row>
 
-      <v-layout row wrap>
+      <v-row wrap class="information">
+        <v-col class="pa-0 subtitle-2">
+          Module: {{ formatModule(callsite) }}
+        </v-col>
+      </v-row>
+      <v-row>
         <!-- <div class="subtitle-2" :style="'color: ' + targetColor">Mean : {{targetMeans[callsite.name]}}</div> -->
         <v-spacer></v-spacer>
         <!-- <div class="subtitle-2" :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}</div> -->
-        <div
+        <v-col
           class="subtitle-2"
           :style="'color: ' + targetColor"
           v-if="selectedMode == 'Ensemble'"
         >
           Std. Dev. : {{ targetStandardDeviation[callsite.name] }}
           {{ selectedMode }}
-        </div>
-      </v-layout>
-      <!-- <div>Percentage imbalance : {{callsite['imbalance_perc_inclusive']}}</div>
-        <div>Skewness: {{callsite['skewness_inclusive']}}</div>
-        <div>Kurtosis: {{callsite['kurtosis_inclusive']}}</div> -->
+        </v-col>
+      </v-row>
+      <!-- <v-row wrap class="information">
+		<v-col class="pa-0 subtitle-2">Min : {{ min[callsite.name] }}</v-col>
+		<v-col class="pa-0 subtitle-2">Max : {{ max[callsite.name] }}</v-col>
+      </v-row>
+      <v-row wrap class="information">
+        <v-col class="pa-0 subtitle-2">Mean : {{ mean[callsite.name] }}</v-col>
+        <v-spacer></v-spacer>
+      </v-row>
+      <v-row wrap class="information">
+        <v-col class="pa-0 subtitle-2"
+          >Variance : {{ variance[callsite.name] }}</v-col
+        >
+        <v-col class="pa-0 subtitle-2"
+          >Imbalance : {{ imb[callsite.name] }}</v-col
+        >
+      </v-row>
+      <v-row wrap class="information">
+        <v-col class="pa-0 subtitle-2">
+          Kurtosis : {{ kurt[callsite.name] }}
+        </v-col>
+        <v-col class="pa-0 subtitle-2">
+          Skewness : {{ skew[callsite.name] }}
+        </v-col>
+      </v-row> -->
+
       <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget="false" />
 
-      <v-layout row wrap>
-        <div class="subtitle-2" :style="'color: ' + ensembleColor">
+      <v-row wrap>
+        <v-col class="subtitle-2" :style="'color: ' + ensembleColor">
           Mean : {{ ensembleMeans[callsite.name] }}
-        </div>
+        </v-col>
         <v-spacer></v-spacer>
         <!-- <div class="subtitle-2" :style="'color: ' + ensembleColor">Variance :
             {{ensembleVariance[callsite.name]}}
         </div> -->
-        <div class="subtitle-2" :style="'color: ' + ensembleColor">
+        <v-col class="subtitle-2" :style="'color: ' + ensembleColor">
           Std. Dev. :
           {{ ensembleStandardDeviation[callsite.name] }}
-        </div>
-      </v-layout>
+        </v-col>
+      </v-row>
     </v-container>
 
-    <v-layout row wrap class="component-data">
+    <v-row wrap class="component-data">
       <p class="subtitle-2">
         Matched {{ numberOfIntersectionCallsites }} callsites.
       </p>
-    </v-layout>
+    </v-row>
     <v-container
       class="callsite-information-node"
       v-for="callsite in intersectionCallsites"
       :key="getID(callsite.id)"
     >
-      <v-layout row wrap style="align-items: center">
-        <v-flex md1>
-          <v-card width="25px" class="mx-auto" tile outlined>
-            <v-flex
-              :id="callsite.name"
-              text-xs-center
-              :class="selectClassName[callsite.name]"
-              @click="changeSelectedClassName"
-            >
-              {{ formatNumberOfHops(callsite.component_level) }}
-            </v-flex>
+      <v-row wrap style="align-items: center">
+        <v-col cols="1">
+          <v-card class="ma-2 ml-4" tile outlined>
+            <v-tooltip bottom>
+              <template v-slot:activator="{on}">
+                <v-row
+                  :id="callsite.name"
+                  text-xs-center
+                  v-on="on"
+                  :class="selectClassName[callsite.name]"
+                  @click="changeSelectedClassName"
+                >
+                  {{ formatNumberOfHops(callsite.component_level) }}
+                </v-row>
+              </template>
+              <span>
+                Callsite depth:{{ formatNumberOfHops(callsite.component_path) }}
+              </span>
+            </v-tooltip>
           </v-card>
-        </v-flex>
-        <v-flex md11>
+        </v-col>
+
+        <v-col cols="11">
           <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-flex class="pl-2 subtitle-2 font-weight-black" v-on="on">
+            <template v-slot:activator="{on}">
+              <v-row class="pl-2 subtitle-2 font-weight-black" v-on="on">
                 {{ formatName(callsite.name) }}
-              </v-flex>
+              </v-row>
             </template>
             <span>{{ callsite.name }}</span>
           </v-tooltip>
-        </v-flex>
-      </v-layout>
+        </v-col>
+      </v-row>
 
-      <v-layout row wrap>
-        <div class="body-2" :style="'color: ' + targetColor">
+      <v-row wrap class="information">
+        <v-col class="body-2" :style="'color: ' + targetColor">
           Mean : {{ targetMeans[callsite.name] }}
-        </div>
+        </v-col>
         <v-spacer></v-spacer>
-        <!-- <div class="subtitle-2" :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}
-    </div> -->
-        <div class="body-2" :style="'color: ' + targetColor">
+        <v-col class="body-2" :style="'color: ' + targetColor">
           Std. Dev. : {{ targetStandardDeviation[callsite.name] }}
-        </div>
-      </v-layout>
-      <!-- <div>Percentage imbalance : {{callsite['imbalance_perc_inclusive']}}</div>
-<div>Skewness: {{callsite['skewness_inclusive']}}</div>
-    <div>Kurtosis: {{callsite['kurtosis_inclusive']}}</div> -->
+        </v-col>
+      </v-row>
 
       <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget="false" />
-      <v-layout row wrap>
-        <div class="body-2" :style="'color: ' + ensembleColor">
+      <v-row wrap>
+        <v-col class="body-2" :style="'color: ' + ensembleColor">
           Mean : {{ ensembleMeans[callsite.name] }}
-        </div>
+        </v-col>
         <v-spacer></v-spacer>
-        <!-- <div class="subtitle-2" :style="'color: ' + ensembleColor">Std. Dev. :
-{{ensembleVariance[callsite.name]}}
-</div> -->
-        <div class="body-2" :style="'color: ' + ensembleColor">
+        <v-col class="body-2" :style="'color: ' + ensembleColor">
           Std. Dev. : {{ ensembleStandardDeviation[callsite.name] }}
-        </div>
-      </v-layout>
+        </v-col>
+      </v-row>
 
-      <v-layout row wrap>
-        <v-flex md12 class="body-2">Ranks : {{ selectedOutlierRanks }} </v-flex>
+      <v-row wrap>
+        <v-col md12 class="body-2">Ranks : {{ selectedOutlierRanks }} </v-col>
         <v-spacer></v-spacer>
-        <v-flex md12 class="body-2"
-          >Datasets : {{ selectedOutlierDatasets }}</v-flex
-        >
-      </v-layout>
+        <v-col md12 class="body-2"
+          >Datasets : {{ selectedOutlierDatasets }}
+        </v-col>
+      </v-row>
     </v-container>
   </v-layout>
 </template>
@@ -227,7 +258,7 @@ export default {
 	name: "CallsiteCorrespondence",
 	components: {
 		BoxPlot,
-		InfoChip
+		InfoChip,
 	},
 	data: () => ({
 		selected: {},
@@ -240,7 +271,7 @@ export default {
 		numberOfIntersectionCallsites: 0,
 		numberOfDifferenceCallsites: 0,
 		firstRender: true,
-		padding: { top: 0, right: 10, bottom: 0, left: 10 },
+		padding: {top: 0, right: 10, bottom: 0, left: 10},
 		textOffset: 25,
 		boxplotHeight: 340,
 		boxplotWidth: 0,
@@ -251,8 +282,8 @@ export default {
 		outlierList: {},
 		callsiteIDMap: {},
 		settings: [
-			{ title: "Sort by Inclusive runtime" },
-			{ title: "Sort by Exclusive Runtime" },
+			{title: "Sort by Inclusive runtime"},
+			{title: "Sort by Exclusive Runtime"},
 		],
 		compareMode: false,
 		selectedModule: "",
@@ -307,11 +338,11 @@ export default {
 			let attribute = self.$store.selectedRuntimeSortBy;
 			self.differenceCallsites = self.sortByAttribute(
 				self.knc["difference"],
-				attribute
+				attribute,
 			);
 			self.intersectionCallsites = self.sortByAttribute(
 				self.knc["intersection"],
-				attribute
+				attribute,
 			);
 		});
 	},
@@ -344,26 +375,26 @@ export default {
 			this.knc = this.KNC();
 
 			this.numberOfDifferenceCallsites = Object.keys(
-				this.knc["difference"]
+				this.knc["difference"],
 			).length;
 			this.numberOfIntersectionCallsites = Object.keys(
-				this.knc["intersection"]
+				this.knc["intersection"],
 			).length;
 
 			this.differenceCallsites = this.sortByAttribute(
 				this.knc["difference"],
-				this.$store.selectedMetric
+				this.$store.selectedMetric,
 			);
 			this.intersectionCallsites = this.sortByAttribute(
 				this.knc["intersection"],
-				this.$store.selectedMetric
+				this.$store.selectedMetric,
 			);
 
 			this.intersectionCallsites = this.hideAllCallsites(
-				this.intersectionCallsites
+				this.intersectionCallsites,
 			);
 			this.differenceCallsites = this.hideAllCallsites(
-				this.differenceCallsites
+				this.differenceCallsites,
 			);
 
 			this.selectedModule = this.$store.selectedModule;
@@ -388,35 +419,27 @@ export default {
 			for (let callsite in this.callsites) {
 				if (this.targetCallsites[callsite] != undefined) {
 					this.targetMeans[callsite] = utils.formatRuntimeWithoutUnits(
-						this.targetCallsites[callsite][this.$store.selectedMetric][
-							"mean"
-						]
+						this.targetCallsites[callsite][this.$store.selectedMetric]["mean"],
 					);
 					this.targetVariance[callsite] = utils.formatRuntimeWithoutUnits(
-						this.targetCallsites[callsite][this.$store.selectedMetric][
-							"var"
-						]
+						this.targetCallsites[callsite][this.$store.selectedMetric]["var"],
 					);
 					this.targetStandardDeviation[
 						callsite
 					] = utils.formatRuntimeWithoutUnits(
-						this.targetCallsites[callsite][this.$store.selectedMetric][
-							"std"
-						]
+						this.targetCallsites[callsite][this.$store.selectedMetric]["std"],
 					);
 
 					this.ensembleMeans[callsite] = utils.formatRuntimeWithoutUnits(
-						this.callsites[callsite][this.$store.selectedMetric]["mean"]
+						this.callsites[callsite][this.$store.selectedMetric]["mean"],
 					);
 					this.ensembleVariance[callsite] = utils.formatRuntimeWithoutUnits(
-						this.callsites[callsite][this.$store.selectedMetric]["var"]
+						this.callsites[callsite][this.$store.selectedMetric]["var"],
 					);
 					this.ensembleStandardDeviation[
 						callsite
 					] = utils.formatRuntimeWithoutUnits(
-						this.callsites[callsite][this.$store.selectedMetric][
-							"std"
-						]
+						this.callsites[callsite][this.$store.selectedMetric]["std"],
 					);
 				} else {
 					this.targetMeans[callsite] = 0;
@@ -436,7 +459,7 @@ export default {
 				let data = callsite_data[this.$store.selectedMetric]["mean"];
 				let id = "callsite-information-" + callsite_data.id;
 				document.getElementById(
-					id
+					id,
 				).style.borderColor = this.$store.color.getColorByValue(data);
 			}
 		},
@@ -514,14 +537,14 @@ export default {
 		KNC() {
 			let callsites = new Set(Object.keys(this.$store.data_cs["ensemble"]));
 			let targetCallsites = new Set(
-				Object.keys(this.$store.data_cs[this.$store.selectedTargetDataset])
+				Object.keys(this.$store.data_cs[this.$store.selectedTargetDataset]),
 			);
 			let difference = new Set(
-				[...callsites].filter((x) => !targetCallsites.has(x))
+				[...callsites].filter((x) => !targetCallsites.has(x)),
 			);
 
 			let intersection = new Set(
-				[...callsites].filter((x) => targetCallsites.has(x))
+				[...callsites].filter((x) => targetCallsites.has(x)),
 			);
 
 			return {
@@ -552,7 +575,7 @@ export default {
 			this.intersectionCallsites[callsite_name].reveal = true;
 			EventHandler.$emit(
 				"show-boxplot",
-				this.intersectionCallsites[callsite_name]
+				this.intersectionCallsites[callsite_name],
 			);
 		},
 
@@ -561,7 +584,7 @@ export default {
 			let callsite_name = event.currentTarget.id;
 			EventHandler.$emit(
 				"hide-boxplot",
-				this.intersectionCallsites[callsite_name]
+				this.intersectionCallsites[callsite_name],
 			);
 		},
 
@@ -617,13 +640,13 @@ export default {
 			this.differenceCallsites = {};
 			this.knc["difference"].forEach((callsite) => {
 				if (module_callsites.indexOf(callsite) > -1) {
-					this.differenceCallsites[callsite] = this.$store.data_cs[
-						"ensemble"
-					][callsite];
+					this.differenceCallsites[callsite] = this.$store.data_cs["ensemble"][
+						callsite
+					];
 				}
 			});
 			this.numberOfDifferenceCallsites = Object.keys(
-				this.differenceCallsites
+				this.differenceCallsites,
 			).length;
 
 			this.intersectionCallsites = {};
@@ -635,7 +658,7 @@ export default {
 				}
 			});
 			this.numberOfIntersectionCallsites = Object.keys(
-				this.intersectionCallsites
+				this.intersectionCallsites,
 			).length;
 		},
 
@@ -644,17 +667,17 @@ export default {
 			this.selectedCallsite = "";
 
 			let all_callsites = Object.keys(
-				this.$store.data_cs[this.$store.selectedTargetDataset]
+				this.$store.data_cs[this.$store.selectedTargetDataset],
 			);
 			let ensemble_callsites = this.$store.data_cs["ensemble"];
 
 			for (let callsite in all_callsites) {
 				if (ensemble_callsites.hasOwnProperty(callsite)) {
 					document.getElementById(
-						ensemble_callsites[callsite].id
+						ensemble_callsites[callsite].id,
 					).style.opacity = 0.2;
 					document.getElementById(
-						ensemble_callsites[callsite].id
+						ensemble_callsites[callsite].id,
 					).style.borderStyle = "solid";
 				}
 			}
@@ -663,10 +686,10 @@ export default {
 			for (let callsite in highlight_callsites) {
 				if (ensemble_callsites.hasOwnProperty(callsite)) {
 					document.getElementById(
-						ensemble_callsites[callsite].id
+						ensemble_callsites[callsite].id,
 					).style.opacity = 1;
 					document.getElementById(
-						ensemble_callsites[callsite].id
+						ensemble_callsites[callsite].id,
 					).style.borderStyle = "dotted";
 				}
 			}
@@ -682,9 +705,7 @@ export default {
 			// Sort the array based on the second element
 			if (attribute == "Exclusive" || attribute == "Inclusive") {
 				items = items.sort(function (first, second) {
-					return (
-						second[1][attribute]["mean"] - first[1][attribute]["mean"]
-					);
+					return second[1][attribute]["mean"] - first[1][attribute]["mean"];
 				});
 			} else if (attribute == "Standard Deviation") {
 				items.sort(function (first, second) {
@@ -736,79 +757,79 @@ export default {
 
 <style>
 #auxiliary-function-overview {
-    overflow: auto;
+  overflow: auto;
 }
 
 .show-boxplot-btn {
-    padding: 1;
+  padding: 1;
 }
 
 .component-info {
-    color: #009688;
-    padding: 8px;
+  color: #009688;
+  padding: 8px;
 }
 
 .component-data {
-    color: #009688;
-    padding: 0px;
+  color: #009688;
+  padding: 0px;
 }
 
 .unselect-callsite {
-    color: #009688 !important;
-    background: white !important;
-    cursor: pointer;
+  color: #009688 !important;
+  background: white !important;
+  cursor: pointer;
 }
 
 .select-callsite {
-    color: white !important;
-    background: #009688 !important;
-    cursor: pointer;
+  color: white !important;
+  background: #009688 !important;
+  cursor: pointer;
 }
 
 .reveal-button {
-    float: right;
-    margin: 1px;
-    /* color: #009688 !important; */
-    font-size: 75%;
-    padding: 2px;
+  float: right;
+  margin: 1px;
+  /* color: #009688 !important; */
+  font-size: 75%;
+  padding: 2px;
 }
 
 .auxiliary-node {
-    padding-left: 10px;
-    padding-top:0px;
-    margin: 3px;
-    border-width: 1px;
-    border-style: solid;
-    border-color: #d0cccc;
+  padding-left: 10px;
+  padding-top: 0px;
+  margin: 3px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #d0cccc;
 }
 
 .box {
-    font: 10px sans-serif;
+  font: 10px sans-serif;
 }
 
 .box line,
 .box rect,
 .box circle {
-    stroke: #000;
-    stroke-width: 1.5px;
+  stroke: #000;
+  stroke-width: 1.5px;
 }
 
 .box .center {
-    stroke-dasharray: 3, 3;
+  stroke-dasharray: 3, 3;
 }
 
 .box .outlier {
-    fill: none;
-    stroke: #000;
+  fill: none;
+  stroke: #000;
 }
 
 .component-info {
-    color: #009688;
-    padding: 8px;
+  color: #009688;
+  padding: 8px;
 }
-  
+
 .component-data {
-    color: #009688;
-    padding: 0px;
+  color: #009688;
+  padding: 0px;
 }
 </style>
