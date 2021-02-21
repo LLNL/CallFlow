@@ -21,10 +21,8 @@ class UnpackAuxiliary:
             npz = UnpackAuxiliary.read_aux(path, name)
             self.result = UnpackAuxiliary.unpack_single(npz, name)
         else:
-            data = {}
-            data['ensemble'] = UnpackAuxiliary.read_aux(path, 'ensemble')
-            # data['']
-            self.result = {}
+            npz = UnpackAuxiliary.read_aux(path, 'ensemble')
+            self.result = UnpackAuxiliary.unpack_single(npz, name)
             
     @staticmethod
     def read_aux(path, name):
@@ -103,10 +101,13 @@ class UnpackAuxiliary:
             }
         else:
             ret["hists"] = {
-                "name": UnpackAuxiliary.unpack_hists(d[metric]["hst"], "name"),
+                # "name": UnpackAuxiliary.unpack_hists(d[metric]["hst"], "name"),
                 "dataset": UnpackAuxiliary.unpack_hists(d[metric]["hst"], "dataset"),
             }
         ret["boxplots"] = UnpackAuxiliary.unpack_box(d[metric]["box"])
+
+        if unpack_ensemble:
+            ret["gradients"] = d[metric]["grd"]
 
         return ret
     

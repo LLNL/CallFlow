@@ -237,7 +237,7 @@ export default {
 				if (data["values"][idx] != 0) {
 					ensembleOutlierList.push({
 						"value": data["values"][idx],
-						"dataset": data["datasets"][idx],
+						// "dataset": data["datasets"][idx],
 						"rank": data["ranks"][idx]
 					});
 				}
@@ -292,7 +292,7 @@ export default {
 					if (data["values"][idx] != 0) {
 						targetOutlierList.push({
 							"value": data["values"][idx],
-							"dataset": data["datasets"][idx],
+							// "dataset": data["datasets"][idx],
 							"rank": data["ranks"][idx]
 						});
 					}

@@ -86,7 +86,7 @@ export default {
 				.attr("width", this.boxWidth)
 				.attr("height", this.boxHeight - this.padding.top)
 				.attr("transform", "translate(" + this.padding.left + "," + this.padding.top + ")");
-
+				
 			// this.visualize(this.$store.selectedNode);
 		},
 
@@ -108,7 +108,7 @@ export default {
 			this.firstRender = false;
 			this.maxVarianceCallsite = "";
 			this.maxUndesirability = 0;
-			this.selectedModule = data["node"]["module_idx"];
+			this.selectedModule = this.$store.selectedNode["id"];
 
 			const _e_store = utils.getDataByNodeType(this.$store, "ensemble", data["node"])[this.$store.selectedMetric];
 			this.ensembleProcess();
@@ -134,7 +134,7 @@ export default {
 			}
 			// this.correlationText()
 			this.setTitle();
-			this.$refs.ToolTip.init(this.svgID);
+			// this.$refs.ToolTip.init(this.svgID);
 		},
 
 		setTitle() {
@@ -146,18 +146,18 @@ export default {
 			let mean_time_inc = [];
 			// TODO: Expensivee!!!!
 			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
-				let callsites_in_module = this.$store.moduleCallsiteMap["ensemble"][this.selectedModule];
+				let callsites_in_module = this.$store.m2c["ensemble"][this.selectedModule];
 				for (let j = 0; j < callsites_in_module.length; j += 1) {
 					let _c = callsites_in_module[j];
 					let _d = this.$store.data_cs[this.$store.selectedDatasets[i]][_c];
 					mean_time.push({
 						"callsite": _c,
-						"val": _d["Exclusive"]["mean"],
+						"val": _d["time"]["mean"],
 						"run": this.$store.selectedDatasets[i]
 					});
 					mean_time_inc.push({
 						"callsite": _c,
-						"val": _d["Inclusive"]["mean"],
+						"val": _d["time (inc)"]["mean"],
 						"run": this.$store.selectedDatasets[i]
 					});
 				}
@@ -191,18 +191,18 @@ export default {
 			let mean_time = [];
 			let mean_time_inc = [];
 
-			let callsites_in_module = this.$store.moduleCallsiteMap[this.$store.selectedTargetDataset][this.selectedModule];
+			let callsites_in_module = this.$store.m2c[this.$store.selectedTargetDataset][this.selectedModule];
 			for (let i = 0; i < callsites_in_module.length; i += 1) {
 				let thiscallsite = callsites_in_module[i];
 				let thisdata = this.$store.data_cs[this.$store.selectedTargetDataset][thiscallsite];
 				mean_time.push({
 					"callsite": thiscallsite,
-					"val": thisdata["Exclusive"]["mean"],
+					"val": thisdata["time"]["mean"],
 					"run": this.$store.selectedTargetDataset
 				});
 				mean_time_inc.push({
 					"callsite": thiscallsite,
-					"val": thisdata["Inclusive"]["mean"],
+					"val": thisdata["time (inc)"]["mean"],
 					"run": this.$store.selectedTargetDataset
 				});
 			}
@@ -216,6 +216,7 @@ export default {
 				let data = this.$store.data_mod[this.$store.selectedTargetDataset][this.selectedModule];
 				temp = this.scatter(data["time"], data["time (inc)"]);
 			}
+
 			this.xtargetMin = temp[0];
 			this.ytargetMin = temp[1];
 			this.xtargetMax = temp[2];

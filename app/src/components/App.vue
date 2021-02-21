@@ -147,7 +147,9 @@ export default {
 			this.module_callsite_map = utils.swapKeysToDict(data, "c2m");
 
 			this.$store.metricTimeMap = Object.keys(data).reduce((res, item, idx) => { 
-				res[item] = data[item]["summary"][this.$store.selectedMetric][1];
+				if(item != "ensemble"){
+					res[item] = data[item]["summary"][this.$store.selectedMetric][1];
+				}
 				return res;
 			}, {});
 
@@ -249,13 +251,14 @@ export default {
 			let hist_max = 0;
 			for (let module in this.$store.data_mod["ensemble"]) {
 				let node = this.$store.data_mod["ensemble"][module];
+				const vals = node[this.$store.selectedMetric]["gradients"]["hist"]["h"];
 				hist_min = Math.min(
 					hist_min,
-					node[this.$store.selectedMetric]["gradients"]["hist"]["y_min"]
+					Math.min(...vals)
 				);
 				hist_max = Math.max(
 					hist_max,
-					node[this.$store.selectedMetric]["gradients"]["hist"]["y_max"]
+					Math.max(...vals)
 				);
 			}
 			this.$store.distributionColor.setColorScale(

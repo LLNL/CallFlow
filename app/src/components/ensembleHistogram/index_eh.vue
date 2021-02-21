@@ -66,7 +66,7 @@ export default {
 	mounted() {
 		let self = this;
 		EventHandler.$on("ensemble-histogram", function (data) {
-			console.log("Ensemble Histogram: ", data["node"]);
+			console.log("Ensemble Histogram: ", data);
 			self.visualize(data);
 		});
 	},
@@ -99,8 +99,8 @@ export default {
 			let dataMin = 0;
 			let dataMax = 0;
 
-			dataMin = data["x_min"];
-			dataMax = data["x_max"];
+			dataMin = Math.min(...data["x"]);
+			dataMax = Math.max(...data["x"]);
 
 			let dataWidth = (dataMax - dataMin) / this.$store.selectedMPIBinCount;
 			if (dataWidth == 0) {
@@ -118,7 +118,7 @@ export default {
 			const _e_store = utils.getDataByNodeType(this.$store, "ensemble", data["node"]);
 			const _t_store = utils.getDataByNodeType(this.$store, data["dataset"], data["node"]);
 			
-			let ensembleData = _e_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp]["ensemble"];
+			let ensembleData = _e_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp];
 			let temp = this.dataProcess(ensembleData);
 			this.xVals = temp[0];
 			this.freq = temp[1];
@@ -131,7 +131,7 @@ export default {
 			if (_t_store == undefined) {
 				isTargetThere = false;
 			} else {
-				const targetData = _t_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp]["target"];
+				const targetData = _t_store[this.$store.selectedMetric]["hists"][this.$store.selectedProp];
 				const targetTemp = this.dataProcess(targetData);
 				this.targetXVals = targetTemp[0];
 				this.targetFreq = targetTemp[1];
@@ -140,7 +140,7 @@ export default {
 				isTargetThere = true;
 			}
 
-			this.rankCount = parseInt(this.$store.runtimeProps.numOfRanks["ensemble"]);
+			this.rankCount = parseInt(this.$store.summary["ensemble"].nranks);
 
 			this.xScale = d3
 				.scaleBand()
@@ -174,7 +174,7 @@ export default {
 			if (this.$store.showTarget && isTargetThere) {
 				this.targetBars();
 			}
-			this.$refs.ToolTip.init(this.svgID);
+			// this.$refs.ToolTip.init(this.svgID);
 		},
 
 		setTitle() {
@@ -205,7 +205,7 @@ export default {
 			d3.selectAll(".target_lineRank").remove();
 			d3.selectAll(".tick").remove();
 			d3.selectAll(".histogram-axis-label").remove();
-			this.$refs.ToolTip.clear();
+			// this.$refs.ToolTip.clear();
 		},
 
 		targetBars() {

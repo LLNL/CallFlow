@@ -98,20 +98,17 @@ export default {
 				return color.intermediate;
 			}
 
-			const grid = this.$store.data_cs["ensemble"][d.id][metric][
-				"gradients"
-			]["hist"]["x"];
-			const val = this.$store.data_cs["ensemble"][d.id][metric]["gradients"][
-				"hist"
-			]["y"];
+			const ensemble_data = this.$store.data_cs["ensemble"][d.id][metric];
+
+			const grid = ensemble_data["gradients"]["hist"]["b"];
+			const val = ensemble_data["gradients"]["hist"]["h"];
 
 			for (let i = 0; i < grid.length; i += 1) {
 				let x = (i + i + 1) / (2 * grid.length);
-				let current_value = val[i];
 				linearGradient
 					.append("stop")
 					.attr("offset", 100 * x + "%")
-					.attr("stop-color", color.getColorByValue(current_value));
+					.attr("stop-color", color.getColorByValue(val[i]));
 			}
 
 			return "url(#mean-gradient" + index + ")";
