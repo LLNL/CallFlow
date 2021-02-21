@@ -152,6 +152,7 @@ export default {
 		CallsiteInformation,
 	},
 
+	// Not used currently. 
 	props: {
 		aux_data: Object,
 	},

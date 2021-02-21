@@ -205,35 +205,32 @@
       </v-card>
     </v-navigation-drawer>
 
-    <v-main class="pt-auto" v-if="selectedMode == 'Ensemble'">
-      <v-layout>
-        <splitpanes id="callgraph-dashboard" class="default-theme">
-          <!-- Left column-->
-          <splitpanes horizontal :splitpanes-size="25">
+    <v-main class="pt-0">
+		<splitpanes id="callgraph-dashboard" class="default-theme">
+			<!-- Left column-->
+			<splitpanes horizontal :splitpanes-size="25">
 			<!-- <ModuleHierarchy ref="ModuleHierarchy" /> -->
 			<EnsembleScatterplot ref="EnsembleScatterplot" />
 			<EnsembleHistogram ref="EnsembleHistogram" />
-          </splitpanes>
+			</splitpanes>
 
-          <!-- Center column-->
-          <splitpanes horizontal :splitpanes-size="55">
+			<!-- Center column-->
+			<splitpanes horizontal :splitpanes-size="55">
 			<Sankey ref="Sankey" />
-          </splitpanes>
+			</splitpanes>
 
-          <!-- Right column-->
-          <splitpanes horizontal :splitpanes-size="20">
+			<!-- Right column-->
+			<splitpanes horizontal :splitpanes-size="20">
 			<CallsiteCorrespondence ref="CallsiteCorrespondence" />
 			<ParameterProjection ref="ParameterProjection" />
-          </splitpanes>
-        </splitpanes>
-      </v-layout>
+			</splitpanes>
+		</splitpanes>
     </v-main>
   </div>
 </template>
 
 <script>
 // Library imports
-import * as d3 from "d3";
 import Splitpanes from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
@@ -265,79 +262,9 @@ export default {
 		CallsiteCorrespondence,
 	},
 
-	watch: {
-		showTarget: function (val) {
-			EventHandler.$emit("show-target-auxiliary");
-		},
-
-		isSettingsOpen: function (val) {
-			this.$emit("update:isSettingsOpen", val);
-		},
-
-		selectedMetric: function (val) {
-			this.$store.selectedMetric = val;
-			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
-			this.reset();
-		},
-
-		selectedRuntimeColorMap(val) {
-			this.$parent.$parent.setupColors(val);
-			this.reset();
-		},
-
-		selectedRuntimeSortBy(val) {
-			this.$store.selectedRuntimeSortBy = val;
-			EventHandler.$emit("callsite-information-sort");
-		},
-
-		selectedScale(val) {
-			this.$store.selectedScale = val;
-			this.reset();
-		},
-
-		selectedIQRFactor(val) {
-			this.$store.selectedIQRFactor = val;
-			this.reset();
-		},
-
-		selectedTargetDataset(val) {
-			this.$store.selectedTargetDataset = val;
-			this.reset();
-		},
-
-		selectedColorPoint(val) {
-			this.$store.selectedColorPoint = val;
-			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
-			this.reset();
-		},
-
-		selectedTargetColor(val) {
-			this.$store.selectedTargetColor = val;
-			this.reset();
-		},
-
-		async selectedRunBinCount(val) {
-			this.$store.selectedRunBinCount = val;
-			const data = await this.requestAuxData();
-			this.reset();
-		},
-
-		async selectedMPIBinCount(val) {
-			this.$store.selectedRunBinCount = val;
-			const data = await this.requestAuxData();
-			this.reset();
-		},
-
-		selectedProp(val) {
-			this.$store.selectedProp = val;
-			this.reset();
-		},
-
-		selectedDistributionColorMap(val) {
-			this.$store.selectedDistributionColorMap = val;
-			this.$parent.$parent.setupColors(this.selectedDistributionColorMap);
-			this.reset();
-		},
+	// Not used currently. 
+	props: {
+		aux_data: Object
 	},
 
 	data: () => ({
@@ -433,11 +360,115 @@ export default {
 		isSettingsOpen: false,
 	}),
 
+	watch: {
+		showTarget: function (val) {
+			EventHandler.$emit("show-target-auxiliary");
+		},
+
+		isSettingsOpen: function (val) {
+			this.$emit("update:isSettingsOpen", val);
+		},
+
+		selectedMetric: function (val) {
+			this.$store.selectedMetric = val;
+			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
+			this.reset();
+		},
+
+		selectedRuntimeColorMap(val) {
+			this.$parent.$parent.setupColors(val);
+			this.reset();
+		},
+
+		selectedRuntimeSortBy(val) {
+			this.$store.selectedRuntimeSortBy = val;
+			EventHandler.$emit("callsite-information-sort");
+		},
+
+		selectedScale(val) {
+			this.$store.selectedScale = val;
+			this.reset();
+		},
+
+		selectedIQRFactor(val) {
+			this.$store.selectedIQRFactor = val;
+			this.reset();
+		},
+
+		selectedTargetDataset(val) {
+			this.$store.selectedTargetDataset = val;
+			this.reset();
+		},
+
+		selectedColorPoint(val) {
+			this.$store.selectedColorPoint = val;
+			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
+			this.reset();
+		},
+
+		selectedTargetColor(val) {
+			this.$store.selectedTargetColor = val;
+			this.reset();
+		},
+
+		auxiliarySortBy(val) {
+			this.$store.auxiliarySortBy = val;
+			EventHandler.$emit("update-auxiliary-sort-by");
+		},
+
+		async selectedRunBinCount(val) {
+			this.$store.selectedRunBinCount = val;
+			// TODO: Need to do something here.
+			const data = await this.requestAuxData();
+			this.reset();
+		},
+
+		async selectedMPIBinCount(val) {
+			this.$store.selectedRunBinCount = val;
+			const data = await this.requestAuxData();
+			this.reset();
+		},
+
+		selectedProp(val) {
+			this.$store.selectedProp = val;
+			this.reset();
+		},
+
+		selectedDistributionColorMap(val) {
+			this.$store.selectedDistributionColorMap = val;
+			this.$parent.$parent.setupColors(this.selectedDistributionColorMap);
+			this.reset();
+		},
+
+		async selectedCompareDataset(val) {
+			this.summaryChip = "Diff SuperGraph";
+			this.$store.selectedCompareDataset = val;
+			this.$store.comparisonMode = true;
+			this.$store.encoding = this.selectedCompareMode;
+			const data = await APIService.POSTRequest("compare", {
+				targetDataset: this.$store.selectedTargetDataset,
+				compareDataset: this.$store.selectedCompareDataset,
+				selectedMetric: this.$store.selectedMetric,
+			});
+			this.$refs.SuperGraph.activateCompareMode(data);
+		},
+
+		selectedNumOfClusters(val) {
+			this.$store.selectedNumOfClusters = val;
+			EventHandler.$emit("update-number-of-clusters");
+		},
+	},
+
 	mounted() {
+		this.setupStore();
+
 		// Push to '/' when `this.$store.selectedDatasets` is undefined.
-		if(this.$store.selectedDatasets === undefined) {
+		if (this.$store.selectedDatasets === undefined) {
 			// TODO: Instead of pushing to /, we should populate the variables. 
 			this.$router.push("/");
+		}
+		else {
+			this.init();
 		}
 
 		EventHandler.$on("lasso_selection", () => {
@@ -446,19 +477,19 @@ export default {
 			this.setTargetDataset();
 			this.requestEnsembleData();
 		});
-
-		this.init();
 	},
 
 	methods: {
 		init() {
-			this.setupStore();
 			this.setComponentMap(); // Set component mapping for easy component tracking.
 			
 			console.log("Mode : ", this.selectedMode);
 			console.log("Number of runs :", this.$store.selectedDatasets.length);
 			console.log("Datasets : ", this.$store.selectedDatasets);
-			
+			console.log("Node: ", this.$store.selectedNode);
+			console.log("Run Bin size", this.$store.selectedRunBinCount);
+			console.log("MPI Bin size", this.$store.selectedMPIBinCount);
+
 			// Call the appropriate socket to query the server.
 			this.initComponents(this.currentEnsembleSuperGraphComponents);
 
@@ -469,21 +500,25 @@ export default {
 			// Set the mode. (Either single or ensemble).
 			this.$store.selectedMode = this.selectedMode;
 
-			// Set the number of callsites in the CCT
-			this.$store.selectedFunctionsInCCT = this.selectedFunctionsInCCT;
-
 			// Set the scale for information (log or linear)
 			this.$store.selectedScale = this.selectedScale;
 			
 			// Comparison mode in histograms.
 			this.$store.comparisonMode = this.comparisonMode;
 
+			// Set this.selectedTargetDataset (need to remove)
+			this.selectedTargetDataset = this.$store.selectedTargetDataset;
+			
+			// Set the metricTimeMap, used by the dropdown to select the dataset.
+			this.metricTimeMap = this.$store.metricTimeMap;
+
 			// Set the datasets
 			this.datasets = this.$store.selectedDatasets;
 
-			// Set this.selectedTargetDataset (need to remove)
-			this.selectedTargetDataset = this.$store.selectedTargetDataset;
+			this.$store.encoding = "MEAN_GRADIENTS";
 
+			this.$store.selectedNode = "ApplyMaterialPropertiesForElems";
+			
 			// TODO: Need to clean this up.....
 			// Too many repeated values....
 			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
@@ -491,7 +526,6 @@ export default {
 			
 			this.$store.auxiliarySortBy = this.auxiliarySortBy;
 			this.$store.showTarget = this.showTarget;
-			this.$store.encoding = "MEAN_GRADIENTS";
 	
 			this.$store.nodeInfo = {};
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
@@ -509,7 +543,6 @@ export default {
 		},
 
 		setComponentMap() {
-			this.currentEnsembleCCTComponents = [this.$refs.CCT];
 			this.currentEnsembleSuperGraphComponents = [
 				// this.$refs.Sankey,
 				// this.$refs.EnsembleHistogram,
@@ -520,12 +553,8 @@ export default {
 			];
 		},
 
-		clearLocal() {
-			this.clearComponents(this.currentEnsembleSuperGraphComponents);
-		},
-
 		clear() {
-			this.clearComponents(this.currentEnsembleCCTComponents);
+			this.clearComponents(this.currentEnsembleSuperGraphComponents);
 		},
 
 		initComponents(componentList) {
@@ -542,74 +571,21 @@ export default {
 		
 		reset() {
 			this.clear();
-			this.setupColors();
 			this.init();
 		},
 
-		updateColors() {
-			this.clear();
-			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
-			this.init();
+		closeSettings() {
+			this.isSettingsOpen = !this.isSettingsOpen;
 		},
 
-		updateColorPoint() {
-			this.clear();
-			this.init();
-		},
-
-		updateDiffNodeAlignment() {
-			this.reset();
-			EventHandler.$emit("update-diff-node-alignment");
-		},
-
-		updateAuxiliarySortBy() {
-			this.$store.auxiliarySortBy = this.auxiliarySortBy;
-			EventHandler.$emit("update-auxiliary-sort-by");
-		},
-
-		async updateCompareDataset() {
-			this.summaryChip = "Diff SuperGraph";
-			this.$store.selectedCompareDataset = this.selectedCompareDataset;
-			this.$store.comparisonMode = true;
-			this.$store.encoding = this.selectedCompareMode;
-			const data = await APIService.POSTRequest("compare", {
-				targetDataset: this.$store.selectedTargetDataset,
-				compareDataset: this.$store.selectedCompareDataset,
-				selectedMetric: this.$store.selectedMetric,
-			});
-			this.$refs.SuperGraph.activateCompareMode(data);
-		},
-		
-		updateRuntimeSortBy() {
-			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
-			EventHandler.$emit("callsite-information-sort");
-		},
-
-		updateNumOfClusters() {
-			this.$store.selectedNumOfClusters = this.selectedNumOfClusters;
-			EventHandler.$emit("update-number-of-clusters");
-		},
-
-		updateTargetColor() {
-			this.$store.showTarget = this.showTarget;
-			this.clear();
-			this.init();
-			EventHandler.$emit("ensemble-auxiliary", {});
-		},
-
-		updateRunBinCount() {
-			this.$store.selectedRunBinCount = this.selectedRunBinCount;
-			this.requestEnsembleData();
-			this.clear();
-			this.init();
-		},
-
-		updateMPIBinCount() {
-			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
-			this.$store.reprocess = 1;
-			this.requestEnsembleData();
-			this.clear();
-			this.init();
+		async requestAuxData() {
+			const payload = {
+				datasets: this.$store.selectedDatasets,
+				rankBinCount: this.$store.selectedMPIBinCount,
+				runBinCount: this.$store.selectedRunBinCount,
+				reProcess: true,
+			};
+			return await this.$parent.$parent.fetchData(payload);
 		},
 	},
 };
