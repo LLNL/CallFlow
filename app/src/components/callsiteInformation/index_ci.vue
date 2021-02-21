@@ -54,7 +54,6 @@
       </v-btn>
     </v-layout>
 
-    <!-- <span class="component-info">  </span> -->
     <v-container
       class="ml-4 callsite-information-node"
       v-for="callsite in callsites"
@@ -85,9 +84,9 @@
         <v-col cols="11">
           <v-tooltip bottom>
             <template v-slot:activator="{on}">
-              <v-flex class="pl-2 subtitle-2 font-weight-black" v-on="on">
+              <v-row class="pl-2 subtitle-2 font-weight-black" v-on="on">
                 {{ formatName(callsite.name) }}
-              </v-flex>
+              </v-row>
             </template>
             <span>{{ callsite.name }}</span>
           </v-tooltip>
