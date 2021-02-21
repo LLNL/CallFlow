@@ -175,11 +175,11 @@ export function getGradients(store, node) {
 	let gradients = {};
 	if (node.type == "super-node"  && store.modules["ensemble"][node.module_idx] != undefined) {
 		nodeName = node.module_idx;
-		gradients = store.modules["ensemble"][nodeName][store.selectedMetric]["gradients"];
+		gradients = store.data_mod["ensemble"][nodeName][store.selectedMetric]["gradients"];
 	}
 	else if (node.type == "component-node") {
 		nodeName = node.name;
-		gradients = store.callsites["ensemble"][nodeName][store.selectedMetric]["gradients"];
+		gradients = store.data_cs["ensemble"][nodeName][store.selectedMetric]["gradients"];
 	}
 	else if (node.type == "intermediate") {
 		gradients = {};

@@ -178,9 +178,7 @@ class SuperGraph(ht.GraphFrame):
 
         if read_aux:
             self.aux_data = UnpackAuxiliary(path, self.name).result
-            # TODO: We need to unpack accrodingly. 
-            if self.name != "ensemble":
-                self.modules = self.aux_data["modules"].tolist()
+            self.modules = self.aux_data["modules"].tolist()
 
         # ----------------------------------------------------------------------
         self.add_time_proxies()

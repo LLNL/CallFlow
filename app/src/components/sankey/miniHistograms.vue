@@ -79,8 +79,8 @@ export default {
 			let xVals = [], freq = [];
 			if (type == "ensemble") {
 				color = this.$store.distributionColor.ensemble;
-				xVals = data["ensemble"].x;
-				freq = data["ensemble"].y;
+				xVals = data.x;
+				freq = data.y;
 			}
 			else if (type == "target" || type == "single") {
 				if (type == "target")

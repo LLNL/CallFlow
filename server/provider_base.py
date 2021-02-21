@@ -156,6 +156,8 @@ class BaseProvider:
             if operation["reProcess"]:
                 Auxiliary(self.supergraphs["ensemble"], selected_runs=operation["datasets"], rankBinCount=int(operation["rankBinCount"]), runBinCount=int(operation["runBinCount"]))
                 
+            if len(operation["datasets"]) > 1:
+                operation["datasets"].append("ensemble")
             ret = {dataset: self.supergraphs[dataset].aux_data for dataset in operation["datasets"]}
             return ret
 
@@ -171,10 +173,10 @@ class BaseProvider:
         LOGGER.info(f"[Single Mode] {operation}")
 
         operation_name = operation["name"]
-        sg = self.supergraphs[operation["datasets"]]
+        sg = self.supergraphs[operation["dataset"]]
 
         if operation_name == "cct":
-            nll = NodeLinkLayout(sg=sg, selected_runs=operation["datasets"])
+            nll = NodeLinkLayout(sg=sg, selected_runs=operation["dataset"])
             return nll.nxg
 
         elif operation_name == "supergraph":
@@ -224,7 +226,7 @@ class BaseProvider:
             reveal_callsites = operation.get("reveal_callsites", [])
             split_entry_module = operation.get("split_entry_module", [])
             split_callee_module = operation.get("split_callee_module", [])
-            selected_runs = operation.get("datasets", None)
+            selected_runs = operation.get("selected_runs", None)
 
             ssg = SankeyLayout(
                 sg=sg,

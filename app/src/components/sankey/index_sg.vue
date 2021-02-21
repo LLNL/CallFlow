@@ -109,14 +109,16 @@ export default {
 		async fetchData() {
 			let data = {};
 			const payload = {
-				datasets: this.$store.selectedTargetDataset,
+				selected_runs: [this.$store.selectedTargetDataset],
 				groupBy: "module",
 			};
 			console.log(payload);
 			if (this.$store.selectedMode == "Single") {
+				payload["dataset"] = this.$store.selectedTargetDataset;
 				data = await APIService.POSTRequest("single_supergraph", payload);
 				console.debug("[/single_supergraph]", data);
 			} else if (this.$store.selectedMode == "Ensemble") {
+				payload["selected_runs"] = this.$store.selectedDatasets;
 				data = await APIService.POSTRequest("ensemble_supergraph", payload);
 				console.debug("[/ensemble_supergraph]", data);
 			}

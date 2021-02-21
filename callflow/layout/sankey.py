@@ -66,7 +66,10 @@ class SankeyLayout:
         self.path = path
         self.sg = sg
 
-        self.runs = sg.filter_by_datasets(selected_runs)
+        if len(selected_runs) > 1:
+            self.runs = sg.filter_by_datasets(selected_runs)
+        else:
+            self.runs = selected_runs
 
         self.reveal_callsites = reveal_callsites
         self.split_entry_module = split_entry_module

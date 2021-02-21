@@ -66,7 +66,7 @@ export default {
 		},
 
 		drawLines(node, guideType) {
-			let xAxis = this.gradients[node.id]["hist"].x;
+			let xAxis = this.gradients[node.id]["hist"].b;
 			let binWidth = node.height / (xAxis.length);
 
 			for (let idx = 0; idx < xAxis.length; idx += 1) {
@@ -91,8 +91,8 @@ export default {
 
 		// TODO: Clean up the different modes. 
 		drawText(node, guideType) {
-			let xAxis = this.gradients[node.id]["hist"].x;
-			let yAxis = this.gradients[node.id]["hist"].y;
+			let xAxis = this.gradients[node.id]["hist"].b;
+			let yAxis = this.gradients[node.id]["hist"].h;
 
 			let binWidth = node.height / (xAxis.length);
 

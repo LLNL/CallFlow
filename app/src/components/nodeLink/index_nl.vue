@@ -72,7 +72,7 @@ export default {
 		async fetchData() {
 			this.info = "Selected metric : " + this.$store.selectedMetric;
 			return await APIService.POSTRequest("cct", {
-				datasets: this.$store.selectedTargetDataset,
+				dataset: this.$store.selectedTargetDataset,
 			});
 		},
 
