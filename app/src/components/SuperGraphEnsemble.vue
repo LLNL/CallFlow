@@ -210,7 +210,7 @@
         <splitpanes id="callgraph-dashboard" class="default-theme">
           <!-- Left column-->
           <splitpanes horizontal :splitpanes-size="25">
-			<ModuleHierarchy ref="ModuleHierarchy" />
+			<!-- <ModuleHierarchy ref="ModuleHierarchy" /> -->
 			<EnsembleScatterplot ref="EnsembleScatterplot" />
 			<EnsembleHistogram ref="EnsembleHistogram" />
           </splitpanes>
@@ -242,11 +242,11 @@ import EventHandler from "lib/routing/EventHandler";
 import APIService from "lib/routing/APIService";
 
 // Ensemble super graph dashboard imports
-import CallsiteCorrespondence from "./callsiteCorrespondence";
-import EnsembleHistogram from "./ensembleHistogram/";
+import CallsiteCorrespondence from "./callsiteCorrespondence/index_cc";
+import EnsembleHistogram from "./ensembleHistogram/index_eh";
 import ModuleHierarchy from "./moduleHierarchy/";
-import EnsembleScatterplot from "./ensembleScatterplot/";
-import ParameterProjection from "./parameterProjection/";
+import EnsembleScatterplot from "./ensembleScatterplot/index_es";
+import ParameterProjection from "./parameterProjection/index_pp";
 import Sankey from "./sankey/index_sg";
 import Toolbar from "./general/toolbar";
 
@@ -260,7 +260,7 @@ export default {
 		// Ensemble supergraph components.
 		EnsembleScatterplot,
 		EnsembleHistogram,
-		ModuleHierarchy,
+		// ModuleHierarchy,
 		ParameterProjection,
 		CallsiteCorrespondence,
 	},
@@ -511,11 +511,11 @@ export default {
 		setComponentMap() {
 			this.currentEnsembleCCTComponents = [this.$refs.CCT];
 			this.currentEnsembleSuperGraphComponents = [
-				this.$refs.Sankey,
-				this.$refs.EnsembleHistogram,
-				this.$refs.EnsembleScatterplot,
+				// this.$refs.Sankey,
+				// this.$refs.EnsembleHistogram,
+				// this.$refs.EnsembleScatterplot,
 				this.$refs.CallsiteCorrespondence,
-				this.$refs.ParameterProjection,
+				// this.$refs.ParameterProjection,
 				// this.$refs.ModuleHierarchy,
 			];
 		},
@@ -579,7 +579,6 @@ export default {
 			});
 			this.$refs.SuperGraph.activateCompareMode(data);
 		},
-
 		
 		updateRuntimeSortBy() {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
