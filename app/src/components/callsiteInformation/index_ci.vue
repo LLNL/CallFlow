@@ -396,7 +396,7 @@ export default {
      * @param {*} callsite
      */
 		formatModule(callsite) {
-			const _m = this.$store.c2m[callsite["name"]];
+			const _m = this.$store.c2m[this.$store.selectedTargetDataset][callsite["name"]];
 			const splice = 15;
 			if (_m.length < splice) {
 				return _m;

@@ -324,3 +324,13 @@ export function getDataByNodeType(store, dataset, node) {
 export function getKeyWithMaxValue(obj) {
 	return Object.keys(obj).reduce((a, b) => obj[a] > obj[b] ? a : b);
 }
+
+export function swapKeysToArray(data, key) {
+	return Object.keys(data).map((_) =>  { return {"run": _, ...data[_][key]};});
+}
+
+export function swapKeysToDict(data, key) {
+	return Object.keys(data).reduce((acc, post) => {
+		return {...acc, [post]: data[post][key]};	
+	}, {});
+}

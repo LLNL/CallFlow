@@ -14,10 +14,10 @@
 			<v-btn class="mr-md-4">
 				<router-link to="/cct" replace>CCT</router-link>
 			</v-btn>
-			<v-btn>
+			<v-btn class="mr-md-4">
 				<router-link to="/super_graph" replace>Super Graph</router-link>
 			</v-btn>
-			<v-btn v-if="run_counts > 1">
+			<v-btn class="mr-md-4" v-if="run_counts > 1">
 				<router-link to="/ensemble_super_graph" replace>Ensemble Super Graph</router-link>
 			</v-btn>
 			<!-- <v-btn v-if="run_counts > 1">
@@ -121,9 +121,9 @@ export default {
 		},
 
 		initStore(data) {
+			this.setAuxVariables(data); // Set the variables that are affected by auxiliary data.
 			this.setGlobalVariables(); // Set the general variables in the store.
 			this.setLocalVariables(data); // Set the local variables (i.e., in this component).
-			this.setAuxVariables(data); // Set the variables that are affected by auxiliary data.
 			this.setViewDimensions(); // Set the view dimensions.
 		},
 
@@ -131,27 +131,28 @@ export default {
 		 * Attaches properties to central storage based on the data from `this.auxiliary_data`.
 		 */
 		setAuxVariables(data) {
-			this.$store.summary = data.summary;
-			this.$store.data_mod = data.data_mod;
-			this.$store.data_cs = data.data_cs;
-			this.$store.m2c = data.m2c;
-			this.$store.c2m = data.c2m;
-			this.$store.modules = data.modules;
-			this.$store.selectedDatasets = this.runs;
-
-			this.$store.metricTimeMap = Object.keys(data.summary).reduce((res, item, idx) => { 
-				res[item] = data.summary[item][this.$store.selectedMetric][1];
-				return res;
-			}, {});
-			this.$store.selectedTargetDataset = utils.getKeyWithMaxValue(this.$store.metricTimeMap);
-			this.setupColors(this.selectedRuntimeColorMap, this.selectedDistributionColorMap); // Set up the colors.
+			this.$store.summary = utils.swapKeysToDict(data, "summary");
+			this.$store.data_mod = utils.swapKeysToDict(data, "data_mod");
+			this.$store.data_cs = utils.swapKeysToDict(data, "data_cs");
+			this.$store.m2c = utils.swapKeysToDict(data, "m2c");
+			this.$store.c2m = utils.swapKeysToDict(data, "c2m");
+			this.$store.modules = utils.swapKeysToDict(data, "modules");
 		},
 
 		setLocalVariables(data) {
 			// Render the tables in the view
-			this.profiles = Object.keys(data.summary).map((_) =>  { return {"run": _, ...data.summary[_]};});
+			this.profiles = utils.swapKeysToArray(data, "summary");
+				
 			// TODO: Does not work as the format is weird.
-			this.module_callsite_map = Object.keys(data.m2c).map((_) => { return {"module": data.modules[_], ...data.m2c[_]};});
+			this.module_callsite_map = utils.swapKeysToDict(data, "c2m");
+
+			this.$store.metricTimeMap = Object.keys(data).reduce((res, item, idx) => { 
+				res[item] = data[item]["summary"][this.$store.selectedMetric][1];
+				return res;
+			}, {});
+
+			this.$store.selectedTargetDataset = utils.getKeyWithMaxValue(this.$store.metricTimeMap);
+			this.setupColors(this.selectedRuntimeColorMap, this.selectedDistributionColorMap); // Set up the colors.
 		},
 
 		setGlobalVariables() {
@@ -181,7 +182,8 @@ export default {
 			this.$store.selectedRuntimeSortBy = "time (inc)";
 			this.$store.selectedMetric = "time (inc)";
 
-			this.$store.numOfRuns = this.runs;
+			this.$store.numOfRuns = this.runs.length;
+			this.$store.selectedDatasets = this.runs;
 		},
 
 		setupColors(selectedRuntimeColorMap, selectedDistributionColorMap) {
