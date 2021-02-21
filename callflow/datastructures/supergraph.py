@@ -14,11 +14,13 @@ import hatchet as ht
 import networkx as nx
 from ast import literal_eval as make_list
 
+import callflow
 from callflow import get_logger
 from callflow.utils.sanitizer import Sanitizer
 from callflow.utils.utils import NumpyEncoder
 from callflow.utils.df import *
 from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
+from callflow.modules import UnpackAuxiliary
 
 LOGGER = get_logger(__name__)
 
@@ -175,8 +177,10 @@ class SuperGraph(ht.GraphFrame):
             self.parameters = SuperGraph.read_env_params(path)
 
         if read_aux:
-            self.aux_data[self.name] = SuperGraph.read_aux(path, self.name)
-            self.modules = self.aux_data[self.name]["modules"].tolist()
+            self.aux_data = UnpackAuxiliary(path, self.name).result
+            # TODO: We need to unpack accrodingly. 
+            if self.name != "ensemble":
+                self.modules = self.aux_data["modules"].tolist()
 
         # ----------------------------------------------------------------------
         self.add_time_proxies()
@@ -925,79 +929,5 @@ class SuperGraph(ht.GraphFrame):
             runs = [self.name]
             self.dataframe = self.dataframe
 
-        return runs
-
-    def unpack_box(self, box):
-        return {
-            "q": box["q"].tolist(),
-            "outliers": {
-                "values": box["oval"].tolist(),
-                "ranks": box["orank"].tolist()
-            }
-        }
-    
-    def unpack_hists(self, hists, prop):
-        return {
-            "x": hists[prop][0].tolist(),
-            "y": hists[prop][1].tolist(),
-            "x_min": float(hists[prop][0][0]),
-            "x_max": float(hists[prop][0][-1]),
-            "y_min": float(hists[prop][1].min()),
-            "y_max": float(hists[prop][1].max()),
-        }
-
-    def unpack_metric(self, d, metric):
-        return {
-            "d": d[metric]['d'].tolist(),
-            "min": float(d[metric]["rng"][0]),
-            "max": float(d[metric]["rng"][1]),
-            "mean": float(d[metric]["uv"][0]),
-            "var": float(d[metric]["uv"][1]),
-            "imb": float(d[metric]["imb"]),
-            "kurt": float(d[metric]["ks"][0]),
-            "skew": float(d[metric]["ks"][1]),
-            "hists": {
-                "rank": self.unpack_hists(d[metric]["hst"], "rank"),
-                # "name": self.unpack_hists(d[metric]["hst"], "name"),
-                # "dataset": self.unpack_hists(d[metric]["hst"], "dataset"),
-            },
-            "boxplots": self.unpack_box(d[metric]["box"])
-        }
-    
-    def unpack_data(self, data):
-        _d = data.item()
-        ret = {}
-        for cs in _d.keys():
-            ret[cs] = {
-                "name": _d[cs]['name'],
-                "id": str(_d[cs]["id"]),
-                "component_path": _d[cs]["component_path"].tolist(),
-                "time (inc)": self.unpack_metric(_d[cs], "time (inc)"),
-                "time": self.unpack_metric(_d[cs], "time"),
-            }
-        return ret
-
-
-    def unpack_aux_data(self, load_ensemble=False):
-        _d = self.aux_data[self.name]
-        c2m_dict = _d["c2m"].item()
-        m2c_dict = _d["m2c"].item()
-        modules = _d["modules"]
-        _summary = _d["summary"]
-
-        return {
-            "summary": {
-                self.name: _d["summary"]
-            },
-            "modules": _d["modules"],
-            "data_cs": {
-                self.name: self.unpack_data(_d["data_cs"]),
-            },
-            "data_mod": {
-                self.name: self.unpack_data(_d["data_mod"]),
-            },
-            "c2m": { c: modules[c2m_dict[c]]  for c in c2m_dict },
-            "m2c": { modules[m]: m2c_dict[m].tolist() for m in m2c_dict}
-        }
-
+        return runs    
     # --------------------------------------------------------------------------
