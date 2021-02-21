@@ -13,6 +13,7 @@ from .gradients import Gradients
 from .runtime_scatterplot import RuntimeScatterplot
 from .parameter_projection import ParameterProjection
 from .diff_view import DiffView
+from .unpack_auxiliary import UnpackAuxiliary
 
 __all__ = [
     "Auxiliary",
@@ -22,6 +23,7 @@ __all__ = [
     "RuntimeScatterplot",
     "ParameterProjection",
     "DiffView",
+    "UnpackAuxiliary"
 ]
 
 

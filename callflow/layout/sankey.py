@@ -514,7 +514,7 @@ class SankeyLayout:
                     if not nxg.has_edge(source_id, target_id):
                         nxg.add_edge(source_id, target_id, attr_dict=edge_dict)
 
-                        print(f"{source}, \n {target} \n\n")
+                        # print(f"{source}, \n {target} \n\n")
 
         return nxg
 

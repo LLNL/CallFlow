@@ -156,11 +156,8 @@ class BaseProvider:
             if operation["reProcess"]:
                 Auxiliary(self.supergraphs["ensemble"], selected_runs=operation["datasets"], rankBinCount=int(operation["rankBinCount"]), runBinCount=int(operation["runBinCount"]))
                 
-            if len(operation["datasets"]) == 1:
-                return self.supergraphs[operation["datasets"][0]].unpack_aux_data()
-            else:
-                return self.supergraphs["ensemble"].unpack_aux_data(load_ensemble=True)
-
+            ret = {dataset: self.supergraphs[dataset].aux_data for dataset in operation["datasets"]}
+            return ret
 
     def request_single(self, operation):
         """
