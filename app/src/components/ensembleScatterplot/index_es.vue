@@ -62,7 +62,8 @@ export default {
 		includesTarget: true,
 		undesirability: {},
 		maxUndesirability: 0,
-		maxVarianceCallsite: ""
+		maxVarianceCallsite: "",
+		summary:"",
 	}),
 
 	mounted() {
