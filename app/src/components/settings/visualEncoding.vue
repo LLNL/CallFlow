@@ -24,7 +24,29 @@
       >
       </v-select>
     </v-flex>
-	
+
+	<v-flex xs12 class="ma-1">
+		<v-select
+			label="Distribution Color Map"
+			:items="distributionColorMap"
+			v-model="selectedDistributionColorMap"
+			:menu-props="{ maxHeight: '200' }"
+			persistent-hint
+		>
+		</v-select>
+	</v-flex>
+		
+	<v-flex xs12 class="ma-1">
+		<v-select
+			label="Target Color"
+			:items="targetColors"
+			v-model="selectedTargetColor"
+			:menu-props="{ maxHeight: '200' }"
+			persistent-hint
+		>
+		</v-select>
+	</v-flex>
+
     <v-flex xs12 class="ma-1">
       <v-text-field
         label="Color points (3-9)"
@@ -37,10 +59,34 @@
       </v-text-field>
     </v-flex>
 
+	<!-- <v-flex xs12 class="ma-1">
+            <v-text-field
+              label="Color minimum (in seconds)"
+              class="mt-0"
+              type="number"
+              v-model="selectedColorMinText"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+            >
+            </v-text-field>
+          </v-flex>
+          <v-flex xs12 class="ma-1">
+            <v-text-field
+              label="Color maximum (in seconds)"
+              class="mt-0"
+              type="number"
+              v-model="selectedColorMaxText"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+            >
+            </v-text-field>
+          </v-flex> -->
+
 	<template :v-if="selectedFormat=='SuperGraph'">
 		<v-flex xs12 class="ma-1">
-			<v-subheader class="teal lighten-4">MPI Histograms</v-subheader>
+			<v-subheader class="teal lighten-4">Histograms</v-subheader>
 		</v-flex>
+
 		<v-flex xs12 class="ma-1" :v-show="selectedFormat=='SuperGraph'">
 			<v-text-field
 				label="Number of bins for MPI Distribution"
@@ -54,6 +100,18 @@
 		</v-flex>
 
 		<v-flex xs12 class="ma-1">
+            <v-text-field
+              label="Number of bins for Run Distribution"
+              class="mt-0"
+              type="number"
+              v-model="selectedRunBinCount"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+            >
+            </v-text-field>
+          </v-flex>
+
+		<v-flex xs12 class="ma-1">
 			<v-select
 				label="Distribution Scale"
 				:items="scales"
@@ -63,6 +121,17 @@
 			>
 			</v-select>
 		</v-flex>
+
+		<v-flex xs12 class="ma-1">
+            <v-select
+              label="Bin by attribute"
+              :items="props"
+              v-model="selectedProp"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+            >
+            </v-select>
+          </v-flex>
 	</template>
 
 	<template :v-if="selectedFormat=='SuperGraph'">
@@ -78,6 +147,18 @@
 				persistent-hint
 			/>
 		</v-flex>
+
+		<v-flex xs12 class="ma-1">
+            <v-text-field
+              label="IQR Factor"
+              class="mt-0"
+              type="float"
+              v-model="selectedIQRFactor"
+              :menu-props="{ maxHeight: '200' }"
+              persistent-hint
+            >
+            </v-text-field>
+          </v-flex>
 	</template>
   </v-col>
 </template>
@@ -85,6 +166,7 @@
 
 <script>
 import EventHandler from "lib/routing/EventHandler";
+import APIService from "lib/routing/APIService";
 
 export default {
 	name: "VisualEncoding",
@@ -96,13 +178,32 @@ export default {
 		selectedMetric: "time (inc)",
 		selectedRuntimeColorMap: "OrRd",
 		runtimeColorMap: [],
+		distributionColorMap: [],
 		selectedRunBinCount: 20,
 		selectedMPIBinCount: 20,
-		selectedRuntimeSortBy: "Inclusive",
-		sortByModes: ["Inclusive", "Exclusive", "Standard Deviation"],
+		selectedRuntimeSortBy: "time",
+		sortByModes: ["time", "time (inc)", "var", "kert", "skew"],
 		scales: ["Log", "Linear"],
 		selectedScale: "Linear",
 		selectedFormat: "",
+		selectedDistributionColorMap: "Reds",
+		compareModes: ["MEAN_DIFF", "RANK_DIFF"],
+		selectedCompareMode: "MEAN_DIFF",
+		props: ["name", "rank", "dataset", "all_ranks"],
+		selectedProp: "dataset",
+		dimensions: ["max_inclusive_time", "max_exclusive_time", "rank_count"],
+		selectedPC1: "max_inclusive_time",
+		selectedPC2: "max_exclusive_time",
+		selectedIQRFactor: 0.15,
+		selectedNumOfClusters: 3,
+		targetColorMap: {
+			Green: "#4EAF4A",
+			Blue: "#4681B4",
+			Brown: "#AF9B90",
+			Red: "#A90400",
+		},
+		targetColors: ["Green", "Blue", "Brown"],
+		selectedTargetColor: "Green",
 	}),
   
 	watch: {
@@ -154,6 +255,53 @@ export default {
 			this.$store.selectedRuntimeSortBy = val;
 			EventHandler.$emit("callsite-information-sort");
 		},
+
+		selectedTargetColor(val) {
+			this.$store.selectedTargetColor = val;
+			this.reset();
+		},
+
+		auxiliarySortBy(val) {
+			this.$store.auxiliarySortBy = val;
+			EventHandler.$emit("update-auxiliary-sort-by");
+		},
+
+		async selectedRunBinCount(val) {
+			this.$store.selectedRunBinCount = val;
+			// TODO: Need to do something here.
+			const data = await this.requestAuxData();
+			this.reset();
+		},
+
+		selectedProp(val) {
+			this.$store.selectedProp = val;
+			this.reset();
+		},
+
+		selectedDistributionColorMap(val) {
+			this.$store.selectedDistributionColorMap = val;
+			this.$parent.$parent.setupColors(this.selectedDistributionColorMap);
+			this.reset();
+		},
+
+		async selectedCompareDataset(val) {
+			this.summaryChip = "Diff SuperGraph";
+			this.$store.selectedCompareDataset = val;
+			this.$store.comparisonMode = true;
+			this.$store.encoding = this.selectedCompareMode;
+			const data = await APIService.POSTRequest("compare", {
+				targetDataset: this.$store.selectedTargetDataset,
+				compareDataset: this.$store.selectedCompareDataset,
+				selectedMetric: this.$store.selectedMetric,
+			});
+			this.$refs.SuperGraph.activateCompareMode(data);
+		},
+
+		selectedNumOfClusters(val) {
+			this.$store.selectedNumOfClusters = val;
+			EventHandler.$emit("update-number-of-clusters");
+		},
+
 	},
 
 	mounted() {
@@ -175,6 +323,16 @@ export default {
 				this.$store.selectedScale = this.selectedScale;
 			} 
 
+			else if (this.$store.selectedFormat == "EnsembleSuperGraph") {
+				this.selectedRunBinCount = this.$store.selectedRunBinCount;
+
+				this.selectedProp = this.$store.selectedProp;
+
+				this.distributionColorMap = this.$store.distributionColorMap;
+
+				this.selectedRuntimeColorMap = "Blues";
+			} 
+
 			console.log("Mode : ", this.$store.selectedMode);
 			console.log("Number of runs :", this.$store.numOfRuns);
 			console.log("Target Dataset : ", this.$store.selectedTargetDataset);
@@ -187,13 +345,17 @@ export default {
 			if (this.$store.selectedFormat == "CCT") {
 				EventHandler.$emit("cct-reset");
 			}
+			else if (this.$store.selectedFormat == "SuperGraph") {
+				EventHandler.$emit("supergraph-reset");
+			}
+			else if (this.$store.selectedFormat == "EnsembleSuperGraph") {
+				EventHandler.$emit("ensemble-supergraph-reset");
+			}
 		},
 
 		clear() {
 			// This should always be empty.
 		},
-
 	}
-  
 };
 </script>

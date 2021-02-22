@@ -84,7 +84,7 @@
         <v-col cols="11">
           <v-tooltip bottom>
             <template v-slot:activator="{on}">
-              <v-row class="pl-2 subtitle-2 font-weight-black" v-on="on">
+              <v-row class="mt-0 ml-2 pl-2 subtitle-2 font-weight-black" v-on="on">
                 {{ formatName(callsite.name) }}
               </v-row>
             </template>
