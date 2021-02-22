@@ -103,19 +103,12 @@ export default {
 		selectedColorMaxText: "",
 		scatterMode: ["mean", "all"],
 		selectedScatterMode: "all",
-		isCallgraphInitialized: false,
-		isCCTInitialized: false,
-		ranks: [],
-		initLoad: true,
 		comparisonMode: false,
 		selectedOutlierBand: 4,
-		defaultCallSite: "<program root>",
-		modes: ["Ensemble", "Single"],
-		selectedMode: "Single",
-		props: ["name", "rank", "dataset", "all_ranks"],
-		selectedProp: "rank",
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
-		summary: "Super Graph View"
+		summary: "Super Graph View",
+		info: "",
+		selectedMode: "Single",
 	}),
 
 	watch: {
@@ -144,19 +137,17 @@ export default {
 			this.init();
 		}
 
-		EventHandler.$on("lasso_selection", () => {
-			this.$store.resetTargetDataset = true;
-			this.clear();
-			this.setTargetDataset();
-			this.fetchData();
+		let self = this;
+		EventHandler.$on("supergraph-reset", () => {
+			self.reset();
 		});
+
 	},
 
 	methods: {
 		init() {
-			this.setComponentMap(); // Set component mapping for easy component tracking.
-
-			this.initComponents(this.currentSingleSuperGraphComponents);
+			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
+			this.initComponents(this.currentComponents);
 		},
 
 		setupStore() {
@@ -175,9 +166,6 @@ export default {
 			// Set the metricTimeMap, used by the dropdown to select the dataset.
 			this.metricTimeMap = this.$store.metricTimeMap;
 
-			// Set the runtimeColorMap.
-			this.runtimeColorMap = this.$store.runtimeColorMap;
-
 			// Set encoding method.
 			this.$store.encoding = "MEAN";
 
@@ -190,7 +178,7 @@ export default {
 		// Initialize the relevant modules for respective Modes.
 		// ----------------------------------------------------------------
 		setComponentMap() {
-			this.currentSingleSuperGraphComponents = [
+			return [
 				this.$refs.SingleHistogram,
 				this.$refs.SingleScatterplot,
 				this.$refs.Sankey,
@@ -200,7 +188,7 @@ export default {
 		},
 
 		clear() {
-			this.clearComponents(this.currentSingleSuperGraphComponents);
+			this.clearComponents(this.currentComponents);
 		},
 
 		initComponents(componentList) {
