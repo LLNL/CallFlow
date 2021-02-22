@@ -9,97 +9,24 @@
   <div id="inspire">
     <Toolbar ref="ToolBar" :isSettingsOpen.sync="isSettingsOpen" />
     <v-navigation-drawer v-model.lazy="isSettingsOpen" fixed>
-      <v-btn slot="activator" color="primary" dark>Open Dialog</v-btn>
-      <v-card flex fill-height id="control-panel">
-        <v-layout row wrap>
-          <v-btn icon>
-            <v-icon v-on:click="reset()">refresh</v-icon>
-          </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn icon>
-            <v-icon v-on:click="closeSettings()">close</v-icon>
-          </v-btn>
-
-          <!-- --------------------------- Visual Encoding ----------------------------------->
-          <v-flex xs12 class="ma-1">
-            <v-subheader class="teal lighten-4">Visual Encoding</v-subheader>
-          </v-flex>
-          <v-flex xs12 class="ma-1">
-            <v-select
-              label="Metric"
-              :items="metrics"
-              v-model="selectedMetric"
-              :menu-props="{maxHeight: '200'}"
-              persistent-hint
-            >
-            </v-select>
-          </v-flex>
-          <v-flex xs12 class="ma-1">
-            <v-text-field
-              label="Number of bins for MPI Distribution"
-              class="mt-0"
-              type="number"
-              v-model="selectedMPIBinCount"
-              :menu-props="{maxHeight: '200'}"
-              persistent-hint
-            >
-            </v-text-field>
-          </v-flex>
-          <v-flex xs12 class="ma-1">
-            <v-select
-              label="Scale"
-              :items="scales"
-              v-model="selectedScale"
-              :menu-props="{maxHeight: '200'}"
-              persistent-hint
-            >
-            </v-select>
-          </v-flex>
-
-          <!-- --------------------------- Encoding ----------------------------------->
-          <v-flex xs12 class="ma-1">
-            <v-subheader class="teal lighten-4">Colors</v-subheader>
-          </v-flex>
-          <v-flex xs12 class="ma-1">
-            <v-select
-              label="Runtime Color Map"
-              :items="runtimeColorMap"
-              v-model="selectedRuntimeColorMap"
-              :menu-props="{maxHeight: '200'}"
-              persistent-hint
-            >
-            </v-select>
-          </v-flex>
-          <v-flex xs12 class="ma-1">
-            <v-text-field
-              label="Color points (3-9)"
-              class="mt-0"
-              type="number"
-              v-model="selectedColorPoint"
-              :menu-props="{maxHeight: '200'}"
-              persistent-hint
-            >
-            </v-text-field>
-          </v-flex>
-
-          <!----------------------------- Callsite information ----------------------------------->
-          <v-flex xs12 class="ma-1">
-            <v-subheader class="teal lighten-4"
-              >Call site Information</v-subheader
-            >
-          </v-flex>
-          <v-flex xs12 class="ma-1">
-            <v-select
-              label="Sort by"
-              :items="sortByModes"
-              v-model="selectedRuntimeSortBy"
-              :menu-props="{maxHeight: '200'}"
-              persistent-hint
-            >
-            </v-select>
-          </v-flex>
-        </v-layout>
+      <v-card fill-height>
+        <v-col>
+			<v-row>
+				<v-icon color="teal">settings</v-icon>
+				<v-col cols="9" class="center teal--text">SETTINGS</v-col>
+				<v-btn icon>
+					<v-icon v-on:click="closeSettings()">close</v-icon>
+				</v-btn>
+			</v-row>
+			<v-row align="center" justify="space-around">
+				<v-btn class="mx-0" icon>
+					Reload
+					<v-icon v-on:click="reset()">refresh</v-icon>
+				</v-btn>
+			</v-row>
+		</v-col>
       </v-card>
+	<VisualEncoding ref="VisualEncoding"/>
     </v-navigation-drawer>
 
     <v-main class="pt-0">
@@ -139,6 +66,8 @@ import CallsiteInformation from "./callsiteInformation/index_ci";
 import Sankey from "./sankey/index_sg";
 import Toolbar from "./general/toolbar";
 
+import VisualEncoding from "./settings/visualEncoding";
+
 export default {
 	name: "SuperGraph",
 	components: {
@@ -150,6 +79,7 @@ export default {
 		SingleScatterplot,
 		SingleHistogram,
 		CallsiteInformation,
+		VisualEncoding,
 	},
 
 	// Not used currently. 
@@ -167,13 +97,6 @@ export default {
 		selectedIncTime: 0,
 		filterPercRange: [0, 100],
 		selectedFilterPerc: 5,
-		metrics: ["Exclusive", "Inclusive"],
-		selectedMetric: "Inclusive",
-		runtimeColorMap: [],
-		distributionColorMap: [],
-		selectedRuntimeColorMap: "OrRd",
-		colorPoints: [3, 4, 5, 6, 7, 8, 9],
-		selectedColorPoint: 9,
 		selectedColorMin: null,
 		selectedColorMax: null,
 		selectedColorMinText: "",
@@ -189,15 +112,9 @@ export default {
 		defaultCallSite: "<program root>",
 		modes: ["Ensemble", "Single"],
 		selectedMode: "Single",
-		selectedMPIBinCount: 20,
-		selectedRuntimeSortBy: "Inclusive",
-		sortByModes: ["Inclusive", "Exclusive", "Standard Deviation"],
-		scales: ["Log", "Linear"],
-		selectedScale: "Linear",
 		props: ["name", "rank", "dataset", "all_ranks"],
 		selectedProp: "rank",
 		metricTimeMap: {}, // Stores the metric map for each dataset (sorted by inclusive/exclusive time),
-		selectedRunBinCount: 20,
 		summary: "Super Graph View"
 	}),
 
@@ -210,58 +127,8 @@ export default {
 			this.$emit("update:isSettingsOpen", val);
 		},
 
-		selectedMetric: function (val) {
-			this.$store.selectedMetric = val;
-			EventHandler.$emit("setup-colors");
-			this.reset();
-		},
-
-		selectedRuntimeColorMap(val) {
-			this.$parent.$parent.setupColors(val);
-			this.reset();
-		},
-
-		selectedRuntimeSortBy(val) {
-			this.$store.selectedRuntimeSortBy = val;
-			EventHandler.$emit("callsite-information-sort");
-		},
-
-		// NOTE: This functionality is broken!!!
-		// The request times out because the auxiliary processing
-		// exceeds the threshold set by the APIService.
-		// TODO: CAL-88: Fix the time out error and use events
-		// instead of a this.reset()
-		async selectedMPIBinCount(val) {
-			this.$store.selectedMPIBinCount = val;
-			const data = await this.requestAuxData();
-
-			// TODO: CAL-88 Fix the timeout error.
-			// EventHandler.$emit("update-rank-bin-size", {
-			// 	node: this.$store.selectedNode,
-			// 	dataset: this.$store.selectedTargetDataset
-			// });
-			this.reset();
-		},
-
-		selectedScale(val) {
-			this.$store.selectedScale = val;
-			this.reset();
-		},
-
-		selectedIQRFactor(val) {
-			this.$store.selectedIQRFactor = val;
-			this.reset();
-		},
-
 		selectedTargetDataset(val) {
 			this.$store.selectedTargetDataset = val;
-			this.reset();
-		},
-
-		selectedColorPoint(val) {
-			this.$store.selectedColorPoint = val;
-			EventHandler.$emit("setup-colors");
-			this.$parent.$parent.setupColors(this.selectedRuntimeColorMap);
 			this.reset();
 		},
 	},
@@ -289,23 +156,12 @@ export default {
 		init() {
 			this.setComponentMap(); // Set component mapping for easy component tracking.
 
-			console.log("Mode : ", this.$store.selectedMode);
-			console.log("Number of runs :", this.$store.numOfRuns);
-			console.log("Target Dataset : ", this.$store.selectedTargetDataset);
-			console.log("Node: ", this.$store.selectedNode);
-			console.log("Run Bin size", this.$store.selectedRunBinCount);
-			console.log("MPI Bin size", this.$store.selectedMPIBinCount);
-
-			// Call the appropriate socket to query the server.
 			this.initComponents(this.currentSingleSuperGraphComponents);
 		},
 
 		setupStore() {
 			// Set the mode. (Either single or ensemble).
 			this.$store.selectedMode = this.selectedMode;
-
-			// Set the scale for information (log or linear)
-			this.$store.selectedScale = this.selectedScale;
 
 			// Comparison mode in histograms.
 			this.$store.comparisonMode = this.comparisonMode;
@@ -326,6 +182,8 @@ export default {
 			this.$store.encoding = "MEAN";
 
 			this.$store.selectedNode = "ApplyMaterialPropertiesForElems";
+		
+			this.$store.selectedFormat = "SuperGraph";
 		},
 
 		// ----------------------------------------------------------------
@@ -337,6 +195,7 @@ export default {
 				this.$refs.SingleScatterplot,
 				this.$refs.Sankey,
 				this.$refs.CallsiteInformation,
+				this.$refs.VisualEncoding,
 			];
 		},
 
