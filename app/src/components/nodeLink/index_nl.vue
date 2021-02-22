@@ -6,13 +6,18 @@
  */
 
 <template>
-  <v-row>
-    <InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
-	<Loader :isDataReady="isDataReady" />
-    <svg :id="id">
-      <g id="container"></g>
-    </svg>
-  </v-row>
+	<v-col>
+		<v-row>
+			<InfoChip ref="InfoChip" :title="title" :summary="summary" :info="info" />
+			<Loader :isDataReady="isDataReady" />
+			<svg :id="id">
+			<g id="container"></g>
+			</svg>
+		</v-row>
+		<v-row>
+			<ColorMap ref="ColorMap" />
+		</v-row>
+	</v-col>
 </template>
 
 <script>
@@ -24,6 +29,7 @@ import EventHandler from "lib/routing/EventHandler";
 
 import InfoChip from "../general/infoChip";
 import Loader from "../general/loader";
+import ColorMap from "../general/colormap";
 
 import * as utils from "lib/utils";
 
@@ -32,6 +38,7 @@ export default {
 	components: {
 		InfoChip,
 		Loader,
+		ColorMap
 	},
 
 	data: () => ({
@@ -128,6 +135,8 @@ export default {
 			// inner.selectAll("g.node")
 			// 	.attr("title", function (v) { return this.tooltip(v, g.node(v).description) })
 			// 	.each(function (v) { $(this).tipsy({ gravity: "w", opacity: 1, html: true }); });
+
+			// this.$store.ColorMap.init();
 		},
 
 		/**
@@ -399,7 +408,7 @@ export default {
 		clear() {
 			d3.selectAll("#cct-node").remove();
 			d3.selectAll("#cct-edge").remove();
-			this.$refs.ColorMap.clear();
+			// this.$refs.ColorMap.clear();
 		},
 	},
 };
