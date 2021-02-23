@@ -25,7 +25,7 @@ class Histogram:
     Calculate Histogram (Per rank, All ranks, Per dataset)
     """
 
-    HISTO_TYPES = ["rank", "name", "dataset"]
+    HISTO_TYPES = ["rank"]#, "name", "dataset"]
 
     def __init__(self, dataframe, relative_to_df=None, bins=20,
                  histo_types = [], proxy_columns={}):
@@ -82,8 +82,8 @@ class Histogram:
             # compute the histograms
             hist = histogram(df, rrng, bins=bins)
             if relative_to_df is not None:
-                hist = hist[1]                # dont's store the bins
-            self.result[tk] = {h: hist}
+                hist = hist[1]              # dont's store the bins
+            self.result[tk][h] = hist
 
     # --------------------------------------------------------------------------
     # Return the histogram in the required form.
@@ -109,8 +109,8 @@ class Histogram:
         # TODO: check with Suraj reg this
         # otherwise, group by the type
         else:
-            return df
-            #_df = df.groupby([histo_type])
+            # return df
+            _df = df.groupby([histo_type])
 
         # confused about this
         return _df[self.time_columns].mean()

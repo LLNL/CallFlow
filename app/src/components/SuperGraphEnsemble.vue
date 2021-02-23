@@ -209,7 +209,8 @@ export default {
 			this.$store.nodeInfo = {};
 			this.$store.selectedHierarchyMode = this.selectedHierarchyMode;
 
-			this.$store.selectedProp = this.selectedProp;
+			this.$store.selectedProp = "rank";
+			this.$store.selectedScale = "Linear";
 			this.$store.selectedIQRFactor = this.selectedIQRFactor;
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters;
