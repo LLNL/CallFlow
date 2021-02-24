@@ -315,7 +315,6 @@ export default {
 		},
 
 		/* Axis for the histogram */
-		/* Axis for the histogram */
 		xAxis() {
 			let self = this;
 			this.addxAxisLabel();
