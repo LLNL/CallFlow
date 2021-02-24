@@ -57,19 +57,26 @@
       </v-btn>
     </v-layout>
 
-    <v-layout row wrap class="component-data">
-      <p class="subtitle-2">
-        Unmatched {{ numberOfDifferenceCallsites }}
-        callsites.
-      </p>
-    </v-layout>
+	<v-row class="ml-4">
+		<v-col>
+		<p class="subtitle-2">
+			Matched {{ numberOfIntersectionCallsites }} callsites.
+		</p>
+		</v-col>
+		<v-col>
+		<p class="subtitle-2">
+			Unmatched {{ numberOfDifferenceCallsites }}
+			callsites.
+		</p>
+		</v-col>
+	</v-row>
 
     <v-container
-      class="callsite-information-node"
+      class="ml-4 callsite-information-node"
       v-for="callsite in differenceCallsites"
       :key="getID(callsite.id)"
     >
-      <v-row wrap>
+      <v-row>
         <v-col cols="1">
           <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
@@ -86,7 +93,7 @@
                 </v-row>
               </template>
               <span
-                >Component level:
+                >Callsite depth:
                 {{ formatNumberOfHops(callsite.component_level) }}</span
               >
             </v-tooltip>
@@ -105,14 +112,13 @@
         </v-col>
       </v-row>
 
-      <v-row wrap class="information">
+      <v-row class="information">
         <v-col class="pa-0 subtitle-2">
           Module: {{ formatModule(callsite) }}
         </v-col>
       </v-row>
       <v-row>
-        <!-- <div class="subtitle-2" :style="'color: ' + targetColor">Mean : {{targetMeans[callsite.name]}}</div> -->
-        <v-spacer></v-spacer>
+        <div class="subtitle-2" :style="'color: ' + targetColor">Mean : {{tMeans[callsite.name]}}</div>
         <!-- <div class="subtitle-2" :style="'color: ' + targetColor">Variance : {{variance[callsite.name]}}</div> -->
         <v-col
           class="subtitle-2"
@@ -150,37 +156,29 @@
 
       <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget="false" />
 
-      <v-row wrap>
-        <v-col class="subtitle-2" :style="'color: ' + ensembleColor">
+      <v-row>
+        <v-col class="pl-2subtitle-2" :style="'color: ' + ensembleColor">
           Mean : {{ ensembleMeans[callsite.name] }}
         </v-col>
-        <v-spacer></v-spacer>
-        <!-- <div class="subtitle-2" :style="'color: ' + ensembleColor">Variance :
-            {{ensembleVariance[callsite.name]}}
-        </div> -->
-        <v-col class="subtitle-2" :style="'color: ' + ensembleColor">
+        <v-col class="pl-2subtitle-2" :style="'color: ' + ensembleColor">
           Std. Dev. :
           {{ ensembleStandardDeviation[callsite.name] }}
         </v-col>
       </v-row>
     </v-container>
 
-    <v-row wrap class="component-data">
-      <p class="subtitle-2">
-        Matched {{ numberOfIntersectionCallsites }} callsites.
-      </p>
-    </v-row>
     <v-container
-      class="callsite-information-node"
+      class="ml-4 callsite-information-node"
       v-for="callsite in intersectionCallsites"
       :key="getID(callsite.id)"
     >
-      <v-row wrap style="align-items: center">
+      <v-row  class="pt-2">
         <v-col cols="1">
           <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
               <template v-slot:activator="{on}">
                 <v-row
+				class="pl-2"
                   :id="callsite.name"
                   text-xs-center
                   v-on="on"
@@ -200,7 +198,7 @@
         <v-col cols="11">
           <v-tooltip bottom>
             <template v-slot:activator="{on}">
-              <v-row class="pl-2 subtitle-2 font-weight-black" v-on="on">
+              <v-row class="mt-0 ml-2 pl-2 subtitle-2 font-weight-black" v-on="on">
                 {{ formatName(callsite.name) }}
               </v-row>
             </template>
@@ -209,33 +207,28 @@
         </v-col>
       </v-row>
 
-      <v-row wrap class="information">
+      <v-row>
         <v-col class="body-2" :style="'color: ' + targetColor">
-          Mean : {{ targetMeans[callsite.name] }}
+          Mean : {{ tMeans[callsite.name] }}
         </v-col>
-        <v-spacer></v-spacer>
         <v-col class="body-2" :style="'color: ' + targetColor">
-          Std. Dev. : {{ targetStandardDeviation[callsite.name] }}
+          Variance : {{ tVariance[callsite.name] }}
         </v-col>
       </v-row>
 
       <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget="false" />
-      <v-row wrap>
+      <v-row>
         <v-col class="body-2" :style="'color: ' + ensembleColor">
-          Mean : {{ ensembleMeans[callsite.name] }}
+          Mean : {{ eMeans[callsite.name] }}
         </v-col>
-        <v-spacer></v-spacer>
         <v-col class="body-2" :style="'color: ' + ensembleColor">
-          Std. Dev. : {{ ensembleStandardDeviation[callsite.name] }}
+          Variance. : {{ eVariance[callsite.name] }}
         </v-col>
       </v-row>
 
-      <v-row wrap>
-        <v-col md12 class="body-2">Ranks : {{ selectedOutlierRanks }} </v-col>
-        <v-spacer></v-spacer>
-        <v-col md12 class="body-2"
-          >Datasets : {{ selectedOutlierDatasets }}
-        </v-col>
+      <v-row>
+        <v-col class="body-2">Ranks : {{ selectedOutlierRanks }} </v-col>
+        <v-col class="body-2">Datasets : {{ selectedOutlierDatasets }} </v-col>
       </v-row>
     </v-container>
   </v-layout>
@@ -291,12 +284,11 @@ export default {
 		informationHeight: 70,
 		revealCallsites: [],
 		selectedMetric: "",
-		targetMeans: {},
-		targetVariance: {},
-		targetStandardDeviation: {},
-		ensembleMeans: {},
-		ensembleVariance: {},
-		ensembleStandardDeviation: {},
+		tMeans: {},
+		tVariance: {},
+		eMeans: {},
+		eVariance: {},
+		eStandardDeviation: {},
 		targetColor: "",
 		differenceCallsites: {},
 		intersectionCallsites: {},
@@ -368,9 +360,7 @@ export default {
 
 		setStates() {
 			this.callsites = this.$store.data_cs["ensemble"];
-			this.targetCallsites = this.$store.data_cs[
-				this.$store.selectedTargetDataset
-			];
+			this.targetCallsites = this.$store.data_cs[this.$store.selectedTargetDataset];
 
 			this.knc = this.KNC();
 
@@ -417,38 +407,18 @@ export default {
 
 		boxplotByMetric() {
 			for (let callsite in this.callsites) {
-				if (this.targetCallsites[callsite] != undefined) {
-					this.targetMeans[callsite] = utils.formatRuntimeWithoutUnits(
-						this.targetCallsites[callsite][this.$store.selectedMetric]["mean"],
-					);
-					this.targetVariance[callsite] = utils.formatRuntimeWithoutUnits(
-						this.targetCallsites[callsite][this.$store.selectedMetric]["var"],
-					);
-					this.targetStandardDeviation[
-						callsite
-					] = utils.formatRuntimeWithoutUnits(
-						this.targetCallsites[callsite][this.$store.selectedMetric]["std"],
-					);
+				const t_data = this.targetCallsites[callsite][this.selectedMetric];
+				const e_data = this.callsites[callsite][this.selectedMetric];
 
-					this.ensembleMeans[callsite] = utils.formatRuntimeWithoutUnits(
-						this.callsites[callsite][this.$store.selectedMetric]["mean"],
-					);
-					this.ensembleVariance[callsite] = utils.formatRuntimeWithoutUnits(
-						this.callsites[callsite][this.$store.selectedMetric]["var"],
-					);
-					this.ensembleStandardDeviation[
-						callsite
-					] = utils.formatRuntimeWithoutUnits(
-						this.callsites[callsite][this.$store.selectedMetric]["std"],
-					);
+				if (this.targetCallsites[callsite] != undefined) {
+					this.tMeans[callsite] = utils.formatRuntimeWithoutUnits(t_data["mean"]);
+					this.tVariance[callsite] = utils.formatRuntimeWithoutUnits(t_data["var"]);
 				} else {
-					this.targetMeans[callsite] = 0;
-					this.targetVariance[callsite] = 0;
-					this.targetStandardDeviation[callsite] = 0;
-					this.ensembleMeans[callsite] = 0;
-					this.ensembleVariance[callsite] = 0;
-					this.ensembleStandardDeviation[callsite] = 0;
+					this.tMeans[callsite] = 0;
+					this.tVariance[callsite] = 0;
 				}
+				this.eMeans[callsite] = utils.formatRuntimeWithoutUnits(e_data["mean"]);
+				this.eVariance[callsite] = utils.formatRuntimeWithoutUnits(e_data["var"]);
 				this.selectClassName[callsite] = "unselect-callsite";
 			}
 		},
@@ -764,16 +734,6 @@ export default {
   padding: 1;
 }
 
-.component-info {
-  color: #009688;
-  padding: 8px;
-}
-
-.component-data {
-  color: #009688;
-  padding: 0px;
-}
-
 .unselect-callsite {
   color: #009688 !important;
   background: white !important;
@@ -794,7 +754,7 @@ export default {
   padding: 2px;
 }
 
-.auxiliary-node {
+.callsite-information-node {
   padding-left: 10px;
   padding-top: 0px;
   margin: 3px;

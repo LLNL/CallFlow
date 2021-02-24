@@ -59,8 +59,8 @@
       v-for="callsite in callsites"
       :key="getID(callsite.id)"
     >
-      <v-row>
-        <v-col cols="1">
+      <v-row class="pt-2">
+        <v-col cols="1" >
           <v-card class="ma-2 ml-4" tile outlined>
             <v-tooltip bottom>
               <template v-slot:activator="{on}">
@@ -93,7 +93,7 @@
         </v-col>
       </v-row>
 
-      <v-row wrap class="information">
+      <v-row class="information">
         <v-col class="pa-0 subtitle-2">
           Module: {{ formatModule(callsite) }}
         </v-col>
@@ -605,16 +605,6 @@ export default {
 
 .show-boxplot-btn {
   padding: 1;
-}
-
-.component-info {
-  color: #009688;
-  padding: 8px;
-}
-
-.component-data {
-  color: #009688;
-  padding: 0px;
 }
 
 .unselect-callsite {
