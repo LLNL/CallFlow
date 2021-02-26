@@ -89,12 +89,12 @@
                   :class="selectClassName[callsite.name]"
                   @click="changeSelectedClassName"
                 >
-                  {{ formatNumberOfHops(callsite.component_level) }}
+                  {{ formatNumberOfHops(callsite.component_path) }}
                 </v-row>
               </template>
               <span
                 >Callsite depth:
-                {{ formatNumberOfHops(callsite.component_level) }}</span
+                {{ formatNumberOfHops(callsite.component_path) }}</span
               >
             </v-tooltip>
           </v-card>
@@ -129,30 +129,6 @@
           {{ selectedMode }}
         </v-col>
       </v-row>
-      <!-- <v-row wrap class="information">
-		<v-col class="pa-0 subtitle-2">Min : {{ min[callsite.name] }}</v-col>
-		<v-col class="pa-0 subtitle-2">Max : {{ max[callsite.name] }}</v-col>
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2">Mean : {{ mean[callsite.name] }}</v-col>
-        <v-spacer></v-spacer>
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2"
-          >Variance : {{ variance[callsite.name] }}</v-col
-        >
-        <v-col class="pa-0 subtitle-2"
-          >Imbalance : {{ imb[callsite.name] }}</v-col
-        >
-      </v-row>
-      <v-row wrap class="information">
-        <v-col class="pa-0 subtitle-2">
-          Kurtosis : {{ kurt[callsite.name] }}
-        </v-col>
-        <v-col class="pa-0 subtitle-2">
-          Skewness : {{ skew[callsite.name] }}
-        </v-col>
-      </v-row> -->
 
       <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget="false" />
 
@@ -185,7 +161,7 @@
                   :class="selectClassName[callsite.name]"
                   @click="changeSelectedClassName"
                 >
-                  {{ formatNumberOfHops(callsite.component_level) }}
+                  {{ formatNumberOfHops(callsite.component_path) }}
                 </v-row>
               </template>
               <span>
@@ -537,11 +513,8 @@ export default {
 			return ret;
 		},
 
-		formatNumberOfHops(name) {
-			if (name == undefined || name[0] == undefined) {
-				return "-";
-			}
-			return name[0] - 1;
+		formatNumberOfHops(path) {
+			return path.length - 1;
 		},
 
 		formatRuntime(val) {

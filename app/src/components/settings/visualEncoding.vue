@@ -95,6 +95,7 @@
 				v-model="selectedMPIBinCount"
 				:menu-props="{maxHeight: '200'}"
 				persistent-hint
+				disabled
 			>
 			</v-text-field>
 		</v-flex>
@@ -107,6 +108,7 @@
               v-model="selectedRunBinCount"
               :menu-props="{ maxHeight: '200' }"
               persistent-hint
+			disabled
             >
             </v-text-field>
           </v-flex>
