@@ -208,9 +208,9 @@ export default {
 		/**
      * Event handler for sorting the callsites by a metric.
      */
-		EventHandler.$on("callsite-information-sort", (data) => {
-			let attribute = self.$store.selectedRuntimeSortBy;
-			self.callsites = self.sortByAttribute(self.callsites, attribute);
+		EventHandler.$on("callsite-information-sort", (val) => {
+			self.$store.selectedRuntimeSortBy = val;
+			self.callsites = self.sortByAttribute(self.callsites, val);
 		});
 	},
 
@@ -319,21 +319,9 @@ export default {
 				return [key, callsites[key]];
 			});
 
-			// Sort the array based on the second element
-			if (attribute == "Exclusive" || attribute == "Inclusive") {
-				items = items.sort(function (first, second) {
-					return (
-						second[1][attribute]["mean_time"] - first[1][attribute]["mean_time"]
-					);
-				});
-			} else if (attribute == "Standard Deviation") {
-				items.sort(function (first, second) {
-					return (
-						second[1][self.$store.selectedMetric]["std_deviation"] -
-            first[1][self.$store.selectedMetric]["std_deviation"]
-					);
-				});
-			}
+			items = items.sort( (first, second) => {
+				return second[1][this.$store.selectedMetric][attribute] - first[1][this.$store.selectedMetric][attribute];
+			});
 
 			callsites = items.reduce(function (map, obj) {
 				map[obj[0]] = obj[1];
