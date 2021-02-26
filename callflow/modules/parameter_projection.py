@@ -64,8 +64,8 @@ class ParameterProjection:
         :return:
         """
         rows = []
-        for idx, dataset in enumerate(sg, selected_runs):
-            df_params = self.add_df_params(dataset)
+        for dataset in selected_runs:
+            df_params = self.add_df_params(sg, dataset)
             rows.append(df_params)
 
         df = pd.DataFrame(rows)
@@ -90,7 +90,7 @@ class ParameterProjection:
             proj = TSNE(random_state=random_number).fit_transform(X)
 
         ret = pd.DataFrame(proj, columns=list("xy"))
-        ret["dataset"] = self.datasets
+        ret["dataset"] = selected_runs
 
         if self.clustering == "k_medoids":
             self.clusters = KMedoids(n_cluster=self.n_cluster)

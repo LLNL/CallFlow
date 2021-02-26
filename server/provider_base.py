@@ -243,10 +243,13 @@ class BaseProvider:
             return hl.nxg
 
         elif operation_name == "projection":
+            selected_runs = operation.get("selected_runs", [])
+            n_cluster = operation.get("n_cluster", 3)
+
             pp = ParameterProjection(
                 sg=sg,
-                selected_runs=operation["selectedRuns"],
-                n_cluster=operation["numOfClusters"],
+                selected_runs=selected_runs,
+                n_cluster=n_cluster,
             )
             return pp.result.to_json(orient="columns")
 

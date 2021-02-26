@@ -164,6 +164,12 @@ export default {
 		init() {
 			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
 			
+			// TODO: need to rework on this.
+			this.$store.datasetMap = {};
+			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
+				this.$store.datasetMap[this.$store.selectedDatasets[i]] = "run-" + i;
+			}
+			
 			console.log("Mode : ", this.selectedMode);
 			console.log("Number of runs :", this.$store.selectedDatasets.length);
 			console.log("Datasets : ", this.$store.selectedDatasets);
@@ -215,11 +221,6 @@ export default {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters;
 			this.$store.selectedEdgeAlignment = "Top";
-
-			this.$store.datasetMap = {};
-			for (let i = 0; i < this.run_counts; i += 1) {
-				this.$store.datasetMap[this.runs[i]] = "run-" + i;
-			}
 		},
 
 		setComponentMap() {
@@ -228,7 +229,7 @@ export default {
 				this.$refs.EnsembleHistogram,
 				this.$refs.EnsembleScatterplot,
 				this.$refs.CallsiteCorrespondence,
-				// this.$refs.ParameterProjection,
+				this.$refs.ParameterProjection,
 				// this.$refs.ModuleHierarchy,
 				this.$refs.VisualEncoding
 			];

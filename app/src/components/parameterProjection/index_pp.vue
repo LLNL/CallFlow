@@ -92,8 +92,8 @@ export default {
 			this.y = d3.scaleLinear().range([this.height, 0]);
 
 			let data = await APIService.POSTRequest("projection", {
-				selectedRuns: this.$store.selectedDatasets,
-				numOfClusters: this.$store.selectedNumOfClusters,
+				selected_runs: this.$store.selectedDatasets,
+				n_cluster: this.$store.selectedNumOfClusters,
 			});
 			data = JSON.parse(data);
 			console.debug("[/projection] data: ", data);
@@ -213,8 +213,8 @@ export default {
 				ret[id].push(data["dataset"][id]);
 				ret[id].push(id);
 				ret[id].push(data["label"][id]);
-				ret[id].push(this.$store.runtimeProps.maxIncTime[dataset]);
-				ret[id].push(this.$store.runtimeProps.maxExcTime[dataset]);
+				ret[id].push(this.$store.summary[dataset]["time (inc)"][1]);
+				ret[id].push(this.$store.summary[dataset]["time"][1]);
 
 				let x = data["x"][id];
 				let y = data["y"][id];
@@ -387,10 +387,10 @@ export default {
           dataset +
           "<br/>" +
           "[PC1] Inc. time (max): " +
-          utils.formatRuntimeWithUnits(this.$store.runtimeProps.maxIncTime[dataset]) +
+          utils.formatRuntimeWithUnits(this.$store.summary[dataset]["time (inc)"][1]) +
           "<br/>" +
           "[PC2] Exc. time (max): " +
-          utils.formatRuntimeWithUnits(this.$store.runtimeProps.maxExcTime[dataset])
+          utils.formatRuntimeWithUnits(this.$store.summary[dataset]["time"][1])
 			);
 		},
 
