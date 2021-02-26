@@ -18,7 +18,7 @@ export default {
 	data: () => ({
 		id: "mean-gradients",
 		intermediateStrokeWidth: 1,
-		defaultStrokeWidth: 7,
+		defaultStrokeWidth: 3,
 	}),
 
 	methods: {
@@ -37,11 +37,11 @@ export default {
 				.duration(this.$store.transitionDuration)
 				.attrs({
 					opacity: (d) => (d.type == "intermediate" ? 0.4 : 1),
-					stroke: (d) => this.stroke_by_metric(d),
+					stroke: (d) => this.stroke_by_metric(d, this.$store.selectedMetric),
 					"stroke-width": (d) =>
 						d.type == "intermediate"
 							? this.intermediateStrokeWidth
-							: this.strokeWidth,
+							: this.defaultStrokeWidth,
 					fill: (d) =>
 						this.fill_with_gradients(
 							d,
@@ -51,26 +51,13 @@ export default {
 				});
 		},
 
-		stroke_by_metric(d) {
-			let metric =
-        this.$store.selectedMetric == "Inclusive" ? "time (inc)" : "time";
-
+		stroke_by_metric(d, metric) {
 			if (d.type == "intermediate") {
 				return this.$store.runtimeColor.intermediate;
 			} else if (d.type == "component-node") {
-				if (
-					this.$store.data_cs[this.$store.selectedTargetDataset][d.id] !=
-          undefined
-				) {
-					return d3.rgb(this.$store.runtimeColor.getColor(d, metric));
-				}
+				return d3.rgb(this.$store.runtimeColor.getColor(d, metric));
 			} else if (d.type == "super-node") {
-				if (
-					this.$store.data_mod[this.$store.selectedTargetDataset][d.id] !=
-          undefined
-				) {
-					return d3.rgb(this.$store.runtimeColor.getColor(d, metric));
-				}
+				return d3.rgb(this.$store.runtimeColor.getColor(d, metric));
 			}
 		},
 
