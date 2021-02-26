@@ -17,14 +17,14 @@ class UnpackAuxiliary:
     }
 
     def __init__(self, path, name):
-        save_path = "/Users/jarus/Work/llnl/callflow_data/lulesh-8-runs/.callflow"
+        parent_dir = os.path.dirname(path)
         self.name = name
         if name != "ensemble":
-            path = os.path.join(save_path, name)
+            path = os.path.join(parent_dir, name)
             npz = UnpackAuxiliary.read_aux(path, name)
             self.result = UnpackAuxiliary.unpack_single(npz)
         else:
-            e_path = os.path.join(save_path, "ensemble")
+            e_path = os.path.join(parent_dir, "ensemble")
             e_npz = UnpackAuxiliary.read_aux(e_path, "ensemble")
             npz = UnpackAuxiliary.read_aux(e_path, name)
             self.result = UnpackAuxiliary.unpack_ensemble(npz, e_npz)
