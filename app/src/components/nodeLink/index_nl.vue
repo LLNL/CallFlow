@@ -12,10 +12,8 @@
 			<Loader :isDataReady="isDataReady" />
 			<svg :id="id">
 			<g id="container"></g>
-			</svg>
-		</v-row>
-		<v-row>
 			<ColorMap ref="ColorMap" />
+			</svg>
 		</v-row>
 	</v-col>
 </template>
@@ -136,7 +134,7 @@ export default {
 			// 	.attr("title", function (v) { return this.tooltip(v, g.node(v).description) })
 			// 	.each(function (v) { $(this).tipsy({ gravity: "w", opacity: 1, html: true }); });
 
-			// this.$store.ColorMap.init();
+			this.$refs.ColorMap.init(this.$store.runtimeColor);
 		},
 
 		/**

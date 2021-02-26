@@ -215,30 +215,22 @@ export default {
 			const node_id = utils.findExpensiveCallsite(this.$store, this.$store.selectedTargetDataset, "SuperGraph");
 			this.$store.selectedNode = this.$store.graph["nodes"][node_id];
 
-			if (this.$store.selectedMode == "Single") {
-				EventHandler.$emit("single-histogram", {
-					node: this.$store.selectedNode,
-					dataset: this.$store.selectedTargetDataset,
-				});
 
-				EventHandler.$emit("single-scatterplot", {
-					node: this.$store.selectedNode,
-					dataset: this.$store.selectedTargetDataset,
-				});
+			const mode_lower = this.$store.selectedMode.toLowerCase();
+			EventHandler.$emit(mode_lower + "-histogram", {
+				node: this.$store.selectedNode,
+				dataset: this.$store.selectedTargetDataset,
+			});
+
+			EventHandler.$emit(mode_lower + "-scatterplot", {
+				node: this.$store.selectedNode,
+				dataset: this.$store.selectedTargetDataset,
+			});
+
+			if (this.$store.selectedMode == "Single") {
+				this.$refs.ColorMap.init(this.$store.runtimeColor);
 			}
 			else if(this.$store.selectedMode == "Ensemble") {
-				EventHandler.$emit("ensemble-histogram", {
-					node: this.$store.selectedNode,
-					dataset: this.$store.selectedTargetDataset,
-				});
-
-				EventHandler.$emit("ensemble-scatterplot", {
-					node: this.$store.selectedNode,
-					dataset: this.$store.selectedTargetDataset,
-				});
-			}
-			
-			if (this.$store.selectedMode == "Ensemble") {
 				this.$refs.ColorMap.init(this.$store.runtimeColor);
 				this.$refs.ColorMap.init(this.$store.distributionColor);
 			}
