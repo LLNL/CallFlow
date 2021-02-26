@@ -64,6 +64,7 @@ export default {
 		maxUndesirability: 0,
 		maxVarianceCallsite: "",
 		summary:"",
+		svg: undefined,
 	}),
 
 	mounted() {
@@ -72,6 +73,8 @@ export default {
 			console.log("Ensemble Scatterplot: ", data["node"]);
 			self.visualize(data);
 		});
+
+		// this.init();
 	},
 
 	methods: {
@@ -81,12 +84,12 @@ export default {
 
 			this.boxWidth = this.width - this.padding.right - this.padding.left;
 			this.boxHeight = this.height - this.padding.top - this.padding.bottom;
-
 			this.svg = d3.select("#" + this.svgID)
 				.attr("width", this.boxWidth)
 				.attr("height", this.boxHeight - this.padding.top)
 				.attr("transform", "translate(" + this.padding.left + "," + this.padding.top + ")");
-				
+			
+			console.log(this.svg);
 			// this.visualize(this.$store.selectedNode);
 		},
 
@@ -105,6 +108,9 @@ export default {
 			if (!this.firstRender) {
 				this.clear();
 			}
+			else {
+				this.init();
+			}
 			this.firstRender = false;
 			this.maxVarianceCallsite = "";
 			this.maxUndesirability = 0;
@@ -113,21 +119,29 @@ export default {
 			const _e_store = utils.getDataByNodeType(this.$store, "ensemble", data["node"])[this.$store.selectedMetric];
 			this.ensembleProcess();
 
+
+			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
+			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
 			if (this.$store.data_mod[this.$store.selectedTargetDataset][this.selectedModule] != undefined) {
 				this.selectedTargetModuleData = utils.getDataByNodeType(this.$store, "ensemble", data["node"])[this.$store.selectedMetric];
 				this.targetProcess();
+
+				let xScaleMax = Math.max(this.xMax, this.xtargetMax);
+				let xScaleMin = Math.min(this.xMin, this.xtargetMin);
+				let yScaleMax = Math.max(this.yMax, this.ytargetMax);
+				let yScaleMin = Math.min(this.yMin, this.ytargetMin);
+
+				this.xScale = d3.scaleLinear().domain([xScaleMin, xScaleMax]).range([this.padding.left, this.xAxisHeight]);
+				this.yScale = d3.scaleLinear().domain([yScaleMin, yScaleMax]).range([this.yAxisHeight, this.padding.top]);
 			}
-
-			let xScaleMax = Math.max(this.xMax, this.xtargetMax);
-			let xScaleMin = Math.min(this.xMin, this.xtargetMin);
-			let yScaleMax = Math.max(this.yMax, this.ytargetMax);
-			let yScaleMin = Math.min(this.yMin, this.ytargetMin);
-
-			this.xScale = d3.scaleLinear().domain([xScaleMin, xScaleMax]).range([this.padding.left, this.xAxisHeight]);
-			this.yScale = d3.scaleLinear().domain([yScaleMin, yScaleMax]).range([this.yAxisHeight, this.padding.top]);
-
-			this.xAxis();
-			this.yAxis();
+			else{
+				this.xScale = d3.scaleLinear().domain([this.xMin, this.xMax]).range([this.padding.left, this.xAxisHeight]);
+				this.yScale = d3.scaleLinear().domain([this.yMin, this.yMax]).range([this.yAxisHeight, this.padding.top]);
+			}
+			
+		
+			this.drawXAxis(this.svg);
+			this.drawYAxis(this.svg);
 			this.ensembleDots();
 			if (this.$store.showTarget && this.$store.data_mod[this.$store.selectedTargetDataset][this.selectedModule] != undefined) {
 				this.targetDots();
@@ -172,6 +186,7 @@ export default {
 				temp = this.scatter(all_data["time"], all_data["time (inc)"]);
 			}
 
+
 			this.xMin = temp[0];
 			this.yMin = temp[1];
 			this.xMax = temp[2];
@@ -182,9 +197,6 @@ export default {
 			this.leastSquaresCoeff = this.leastSquares(this.xArray.slice(), this.yArray.slice());
 			this.regressionY = this.leastSquaresCoeff["y_res"];
 			this.corre_coef = this.leastSquaresCoeff["corre_coef"];
-
-			this.xAxisHeight = this.boxWidth - 4 * this.padding.left;
-			this.yAxisHeight = this.boxHeight - 4 * this.padding.left;
 		},
 
 		targetProcess() {
@@ -324,12 +336,12 @@ export default {
 
 		},
 
-		addxAxisLabel() {
+		addxAxisLabel(svg) {
 			let max_value = this.xScale.domain()[1];
 			this.x_max_exponent = utils.formatExponent(max_value);
 			let exponent_string = this.superscript[this.x_max_exponent];
 			let label = "(e+" + this.x_max_exponent + ") " + "Exclusive Runtime (" + "\u03BCs)";
-			this.svg.append("text")
+			svg.append("text")
 				.attr("class", "scatterplot-axis-label")
 				.attr("x", this.boxWidth - 1 * this.padding.right)
 				.attr("y", this.yAxisHeight + 3 * this.padding.top)
@@ -338,8 +350,8 @@ export default {
 				.text(label);
 		},
 
-		xAxis() {
-			this.addxAxisLabel();
+		drawXAxis(svg) {
+			this.addxAxisLabel(svg);
 			const xAxis = d3.axisBottom(this.xScale)
 				.ticks(10)
 				.tickFormat((d, i) => {
@@ -349,7 +361,7 @@ export default {
 					}
 				});
 
-			var xAxisLine = this.svg.append("g")
+			var xAxisLine = svg.append("g")
 				.attr("class", "axis")
 				.attr("id", "xAxis")
 				.attr("transform", "translate(" + 3 * this.padding.left + "," + this.yAxisHeight + ")")
@@ -371,12 +383,12 @@ export default {
 				.style("font-weight", "lighter");
 		},
 
-		addyAxisLabel() {
+		addyAxisLabel(svg) {
 			let max_value = this.yScale.domain()[1];
 			this.y_max_exponent = utils.formatExponent(max_value);
 			let exponent_string = this.superscript[this.y_max_exponent];
 			let label = "(e+" + this.y_max_exponent + ") " + "Inclusive Runtime (" + "\u03BCs)";
-			this.svg.append("text")
+			svg.append("text")
 				.attr("class", "scatterplot-axis-label")
 				.attr("transform", "rotate(-90)")
 				.attr("x", -this.padding.top)
@@ -386,9 +398,9 @@ export default {
 				.text(label);
 		},
 
-		yAxis() {
+		drawYAxis(svg) {
 			let tickCount = 10;
-			this.addyAxisLabel();
+			this.addyAxisLabel(svg);
 			let yAxis = d3.axisLeft(this.yScale)
 				.ticks(tickCount)
 				.tickFormat((d, i) => {
@@ -398,7 +410,7 @@ export default {
 					}
 				});
 
-			var yAxisLine = this.svg.append("g")
+			var yAxisLine = svg.append("g")
 				.attr("id", "yAxis")
 				.attr("class", "axis")
 				.attr("transform", "translate(" + 4 * this.padding.left + ", 0)")
@@ -474,10 +486,10 @@ export default {
 						"r": 7.5,
 						"opacity": opacity,
 						"cx": () => {
-							return this.xScale(this.xArray[i].val) + 3 * this.padding.left;
+							return self.xScale(self.xArray[i].val) + 3 * self.padding.left;
 						},
 						"cy": () => {
-							return this.yScale(this.yArray[i].val);
+							return self.yScale(self.yArray[i].val);
 						}
 					})
 					.style("stroke", "#202020")
