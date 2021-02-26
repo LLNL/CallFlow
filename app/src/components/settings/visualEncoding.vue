@@ -186,7 +186,7 @@ export default {
 		scales: ["Log", "Linear"],
 		selectedScale: "Linear",
 		selectedFormat: "",
-		selectedDistributionColorMap: "Reds",
+		selectedDistributionColorMap: "Blues",
 		compareModes: ["MEAN_DIFF", "RANK_DIFF"],
 		selectedCompareMode: "MEAN_DIFF",
 		props: ["name", "rank", "dataset", "all_ranks"],
@@ -285,7 +285,7 @@ export default {
 
 		selectedDistributionColorMap(val) {
 			this.$store.selectedDistributionColorMap = val;
-			this.$parent.$parent.setupColors(this.selectedDistributionColorMap);
+			EventHandler.$emit("setup-colors");
 			this.reset();
 		},
 
@@ -319,6 +319,7 @@ export default {
 			this.selectedMetric = this.$store.selectedMetric;
 			this.selectedColorPoint = this.$store.selectedColorPoint;
 			this.runtimeColorMap = this.$store.runtimeColorMap;
+			this.distributionColorMap = this.$store.runtimeColorMap;
 			this.selectedFormat = this.$store.selectedFormat;
 
 			if (this.$store.selectedFormat == "SuperGraph") {
@@ -330,11 +331,9 @@ export default {
 
 			else if (this.$store.selectedFormat == "EnsembleSuperGraph") {
 				this.selectedRunBinCount = this.$store.selectedRunBinCount;
-
 				this.selectedProp = this.$store.selectedProp;
 
-				this.distributionColorMap = this.$store.distributionColorMap;
-
+				this.selectedDistributionColorMap = this.$store.selectedDistributionColorMap;
 				this.selectedRuntimeColorMap = "Blues";
 			} 
 

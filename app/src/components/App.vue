@@ -64,7 +64,6 @@ export default {
 		rankBinCount: 20,
 		runBinCount: 20,
 		selectedIQRFactor: 0.15,
-		selectedDistributionColorMap: "Reds",
 		targetColorMap: {
 			Green: "#4EAF4A",
 			Blue: "#4681B4",
