@@ -145,8 +145,11 @@ export default {
 
 		async init() {
 			// set the component info.
-			this.info = "Encoding: " + this.$store.selectedMetric + " runtime";
-
+			this.info = { 
+				"Metric": this.$store.selectedMetric + " runtime",
+				"Callsite": this.$store.selectedNode
+			};
+			
 			this.data = await this.fetchData();
 			this.width = this.$store.viewWidth;
 			this.height = this.$store.viewHeight - this.margin.top - this.margin.bottom;

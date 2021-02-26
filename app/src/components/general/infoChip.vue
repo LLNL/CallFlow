@@ -15,9 +15,6 @@
           </v-tooltip>
         </v-chip>
       </v-col>
-      <!-- <v-col cols="8">
-        <ColorMap ref="ColorMap" />
-      </v-col> -->
       <v-col cols="auto pt-4" class="chip-info">
           {{ info }}
       </v-col>
@@ -25,17 +22,10 @@
 </template>
 
 <script>
-import ColorMap from "./colormap";
 
 export default {
 	name: "InfoChip",
-	components: {
-		// ColorMap
-	},
 	props: ["title", "summary", "info"],
-	mounted() {
-		// this.$refs.ColorMap.init(this.$store.runtimeColor);
-	}
 };
 </script>
 
