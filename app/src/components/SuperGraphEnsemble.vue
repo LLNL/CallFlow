@@ -201,8 +201,6 @@ export default {
 			this.datasets = this.$store.selectedDatasets;
 
 			this.$store.encoding = "MEAN_GRADIENTS";
-
-			this.$store.selectedNode = "ApplyMaterialPropertiesForElems";
 			
 			// TODO: Need to clean this up.....
 			// Too many repeated values....
