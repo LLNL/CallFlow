@@ -18,7 +18,7 @@
       <v-col cols="auto pt-4" class="chip-info">
           {{ info }}
       </v-col>
-    </v-row>
+  </v-row>
 </template>
 
 <script>

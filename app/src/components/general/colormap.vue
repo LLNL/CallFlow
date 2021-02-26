@@ -41,7 +41,8 @@ export default {
 			this.colorMax = this.color.getScale().domain()[1];
 
 			this.containerWidth = this.$store.viewWidth / 2;
-			this.containerHeight = 0;
+			// TODO: need to fix hard coding.
+			this.containerHeight = window.innerHeight - 200;
 
 			this.svg = d3.select("#" + this.$parent.id)
 				.append("g")
