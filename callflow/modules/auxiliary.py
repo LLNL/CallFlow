@@ -190,7 +190,7 @@ class Auxiliary:
 
             if is_ensemble:
                 gradients = Gradients(df, bins=self.nbins_run,
-                                      callsiteOrModule=name,
+                                      callsiteOrModule=grp_name,
                                       proxy_columns=self.proxy_columns).result
 
             # ------------------------------------------------------------------

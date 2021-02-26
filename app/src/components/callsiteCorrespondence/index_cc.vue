@@ -363,7 +363,6 @@ export default {
 		});
 
 		EventHandler.$on("callsite-correspondence-sort", (val) => {
-			console.log(self.knc);
 			self.$store.selectedRuntimeSortBy = val;
 			self.differenceCallsites = self.sortByAttribute(
 				self.knc["difference"],
