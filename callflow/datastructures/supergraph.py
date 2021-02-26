@@ -102,6 +102,7 @@ class SuperGraph(ht.GraphFrame):
         super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics)
 
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
+        self.roots = self.get_roots(self.nxg)
 
         # ----------------------------------------------------------------------
         # graph-related operations
@@ -282,7 +283,7 @@ class SuperGraph(ht.GraphFrame):
     def summary(self):
 
         cols = list(self.dataframe.columns)
-        result = {"meantime": 0.0,
+        result = {"meantime": self.df_mean_runtime(self.nxg),
                   "ncallsites": self.df_count("name"),
                   "nmodules": self.df_count("module"), # if "module" in cols else 0,
                   "nranks": self.df_count("rank") if "rank" in cols else 1,
@@ -572,6 +573,19 @@ class SuperGraph(ht.GraphFrame):
                 del root
 
         return nxg
+
+    def df_mean_runtime(self, roots):
+        mean_runtime = 0.0
+        for root in roots:
+            mean_runtime = max(mean_runtime, self.dataframe.loc[self.dataframe['name'] == root]["time (inc)"].mean())
+        return round(mean_runtime, 2)
+
+    def get_roots(self, nxg):
+        roots = []
+        for component in nx.weakly_connected_components(nxg):
+            G_sub = nxg.subgraph(component)
+            roots.extend([n for n,d in G_sub.in_degree() if d==0])
+        return roots
 
     def get_module_idx(self, module):
         """
