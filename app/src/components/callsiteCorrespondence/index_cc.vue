@@ -207,28 +207,55 @@
         </v-col>
       </v-row>
 
-      <v-row>
-        <v-col class="body-2" :style="'color: ' + targetColor">
-          Mean : {{ tMeans[callsite.name] }}
+     <v-row wrap class="information">
+		<v-col class="pa-0 subtitle-2">Min : {{ tMin[callsite.name] }}</v-col>
+		<v-col class="pa-0 subtitle-2">Max : {{ tMax[callsite.name] }}</v-col>
+      </v-row>
+      <v-row wrap class="information">
+        <v-col class="pa-0 subtitle-2">Mean : {{ tMean[callsite.name] }}</v-col>
+      </v-row>
+      <v-row wrap class="information">
+        <v-col class="pa-0 subtitle-2"
+          >Variance : {{ tVariance[callsite.name] }}</v-col
+        >
+        <v-col class="pa-0 subtitle-2"
+          >Imbalance : {{ tImb[callsite.name] }}</v-col
+        >
+      </v-row>
+      <v-row wrap class="information">
+        <v-col class="pa-0 subtitle-2">
+          Kurtosis : {{ tKurt[callsite.name] }}
         </v-col>
-        <v-col class="body-2" :style="'color: ' + targetColor">
-          Variance : {{ tVariance[callsite.name] }}
+        <v-col class="pa-0 subtitle-2">
+          Skewness : {{ tSkew[callsite.name] }}
         </v-col>
       </v-row>
 
       <BoxPlot :ref="callsite.id" :callsite="callsite" showTarget="false" />
-      <v-row>
-        <v-col class="body-2" :style="'color: ' + ensembleColor">
-          Mean : {{ eMeans[callsite.name] }}
-        </v-col>
-        <v-col class="body-2" :style="'color: ' + ensembleColor">
-          Variance. : {{ eVariance[callsite.name] }}
-        </v-col>
-      </v-row>
+      
 
-      <v-row>
-        <v-col class="body-2">Ranks : {{ selectedOutlierRanks }} </v-col>
-        <v-col class="body-2">Datasets : {{ selectedOutlierDatasets }} </v-col>
+	<v-row wrap class="information">
+		<v-col class="pa-0 subtitle-2">Min : {{ eMin[callsite.name] }}</v-col>
+		<v-col class="pa-0 subtitle-2">Max : {{ eMax[callsite.name] }}</v-col>
+      </v-row>
+      <v-row wrap class="information">
+        <v-col class="pa-0 subtitle-2">Mean : {{ eMean[callsite.name] }}</v-col>
+      </v-row>
+      <v-row wrap class="information">
+        <v-col class="pa-0 subtitle-2"
+          >Variance : {{ eVariance[callsite.name] }}</v-col
+        >
+        <v-col class="pa-0 subtitle-2"
+          >Imbalance : {{ eImb[callsite.name] }}</v-col
+        >
+      </v-row>
+      <v-row wrap class="information">
+        <v-col class="pa-0 subtitle-2">
+          Kurtosis : {{ eKurt[callsite.name] }}
+        </v-col>
+        <v-col class="pa-0 subtitle-2">
+          Skewness : {{ eSkew[callsite.name] }}
+        </v-col>
       </v-row>
     </v-container>
   </v-layout>
@@ -284,11 +311,6 @@ export default {
 		informationHeight: 70,
 		revealCallsites: [],
 		selectedMetric: "",
-		tMeans: {},
-		tVariance: {},
-		eMeans: {},
-		eVariance: {},
-		eStandardDeviation: {},
 		targetColor: "",
 		differenceCallsites: {},
 		intersectionCallsites: {},
@@ -303,6 +325,20 @@ export default {
 		showKNCCallsite: {},
 		showuKNCCallsite: {},
 		selectedMode: "Single",
+		tMin: {},
+		tMax: {},
+		tMean: {},
+		tVariance: {},
+		tImb: {},
+		tKurt: {},
+		tSkew: {},
+		eMin: {},
+		eMax: {},
+		eMean: {},
+		eVariance: {},
+		eImb: {},
+		eKurt: {},
+		eSkew: {},
 	}),
 	mounted() {
 		let self = this;
@@ -411,14 +447,25 @@ export default {
 				const e_data = this.callsites[callsite][this.selectedMetric];
 
 				if (this.targetCallsites[callsite] != undefined) {
-					this.tMeans[callsite] = utils.formatRuntimeWithoutUnits(t_data["mean"]);
+					this.tMin[callsite] = utils.formatRuntimeWithoutUnits(t_data["min"]);
+					this.tMax[callsite] = utils.formatRuntimeWithoutUnits(t_data["max"]);
+					this.tMean[callsite] = utils.formatRuntimeWithoutUnits(t_data["mean"]);
 					this.tVariance[callsite] = utils.formatRuntimeWithoutUnits(t_data["var"]);
+					this.tImb[callsite] = utils.formatRuntimeWithoutUnits(t_data["imb"]);
+					this.tKurt[callsite] = utils.formatRuntimeWithoutUnits(t_data["kurt"]);
+					this.tSkew[callsite] = utils.formatRuntimeWithoutUnits(t_data["skew"]);
 				} else {
 					this.tMeans[callsite] = 0;
 					this.tVariance[callsite] = 0;
 				}
-				this.eMeans[callsite] = utils.formatRuntimeWithoutUnits(e_data["mean"]);
+
+				this.eMin[callsite] = utils.formatRuntimeWithoutUnits(e_data["min"]);
+				this.eMax[callsite] = utils.formatRuntimeWithoutUnits(e_data["max"]);
+				this.eMean[callsite] = utils.formatRuntimeWithoutUnits(e_data["mean"]);
 				this.eVariance[callsite] = utils.formatRuntimeWithoutUnits(e_data["var"]);
+				this.eImb[callsite] = utils.formatRuntimeWithoutUnits(e_data["imb"]);
+				this.eKurt[callsite] = utils.formatRuntimeWithoutUnits(e_data["kurt"]);
+				this.eSkew[callsite] = utils.formatRuntimeWithoutUnits(e_data["skew"]);
 				this.selectClassName[callsite] = "unselect-callsite";
 			}
 		},
@@ -755,8 +802,7 @@ export default {
 }
 
 .callsite-information-node {
-  padding-left: 10px;
-  padding-top: 0px;
+  padding: 10px;
   margin: 3px;
   border-width: 1px;
   border-style: solid;
