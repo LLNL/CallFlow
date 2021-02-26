@@ -63,6 +63,7 @@ class SuperGraph(ht.GraphFrame):
         self.modules = []
         self.callsite_module_map = {}
         self.module_callsite_map = {}
+        self.roots = []
 
         #self.is_module_map = False
         #self.is_module_in_dataframe = False
@@ -184,6 +185,7 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         self.add_time_proxies()
         self.df_reset_index()
+        self.roots = self.get_roots(self.nxg)
 
     # --------------------------------------------------------------------------
     def add_modules(self, module_callsite_map={}):
@@ -284,6 +286,7 @@ class SuperGraph(ht.GraphFrame):
 
         cols = list(self.dataframe.columns)
         result = {"meantime": self.df_mean_runtime(self.nxg),
+                  "roots": self.roots,
                   "ncallsites": self.df_count("name"),
                   "nmodules": self.df_count("module"), # if "module" in cols else 0,
                   "nranks": self.df_count("rank") if "rank" in cols else 1,

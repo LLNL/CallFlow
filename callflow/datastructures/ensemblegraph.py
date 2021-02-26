@@ -33,6 +33,7 @@ class EnsembleGraph(SuperGraph):
         self.graph = None
         self.exc_metrics = []
         self.inc_metrics = []
+        self.roots = [] # TODO: Populate this!
 
     def __str__(self):
         """

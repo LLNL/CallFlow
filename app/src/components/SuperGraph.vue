@@ -169,7 +169,7 @@ export default {
 			// Set encoding method.
 			this.$store.encoding = "MEAN";
 
-			this.$store.selectedNode = "ApplyMaterialPropertiesForElems";
+			this.$store.selectedNode = this.$store.summary["roots"];
 		
 			this.$store.selectedFormat = "SuperGraph";
 		},

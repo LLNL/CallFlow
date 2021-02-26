@@ -153,6 +153,9 @@ export default {
 			}, {});
 
 			this.$store.selectedTargetDataset = utils.getKeyWithMaxValue(this.$store.metricTimeMap);
+			console.log(this.$store.summary);
+			this.$store.selectedNode = this.$store.summary[this.$store.selectedTargetDataset]["roots"][0];
+
 			this.setupColors(this.selectedRuntimeColorMap, this.selectedDistributionColorMap); // Set up the colors.
 		},
 
