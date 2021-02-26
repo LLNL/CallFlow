@@ -362,15 +362,16 @@ export default {
 			self.selectModule(thismodule);
 		});
 
-		EventHandler.$on("callsite-information-sort", (data) => {
-			let attribute = self.$store.selectedRuntimeSortBy;
+		EventHandler.$on("callsite-correspondence-sort", (val) => {
+			console.log(self.knc);
+			self.$store.selectedRuntimeSortBy = val;
 			self.differenceCallsites = self.sortByAttribute(
 				self.knc["difference"],
-				attribute,
+				val,
 			);
 			self.intersectionCallsites = self.sortByAttribute(
 				self.knc["intersection"],
-				attribute,
+				val,
 			);
 		});
 	},
@@ -719,19 +720,10 @@ export default {
 			let items = callsites.map(function (key) {
 				return [key, self.callsites[key]];
 			});
-			// Sort the array based on the second element
-			if (attribute == "Exclusive" || attribute == "Inclusive") {
-				items = items.sort(function (first, second) {
-					return second[1][attribute]["mean"] - first[1][attribute]["mean"];
-				});
-			} else if (attribute == "Standard Deviation") {
-				items.sort(function (first, second) {
-					return (
-						second[1][self.$store.selectedMetric]["std"] -
-            first[1][self.$store.selectedMetric]["std"]
-					);
-				});
-			}
+
+			items = items.sort( (first, second) => {
+				return second[1][this.$store.selectedMetric][attribute] - first[1][this.$store.selectedMetric][attribute];
+			});
 
 			callsites = items.reduce(function (map, obj) {
 				map[obj[0]] = obj[1];

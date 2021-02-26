@@ -181,8 +181,8 @@ export default {
 		distributionColorMap: [],
 		selectedRunBinCount: 20,
 		selectedMPIBinCount: 20,
-		selectedRuntimeSortBy: "time",
-		sortByModes: ["time", "time (inc)", "var", "kert", "skew"],
+		selectedRuntimeSortBy: "mean",
+		sortByModes: ["min", "mean", "max", "imb", "var", "kert", "skew"],
 		scales: ["Log", "Linear"],
 		selectedScale: "Linear",
 		selectedFormat: "",
@@ -253,7 +253,12 @@ export default {
 
 		selectedRuntimeSortBy(val) {
 			this.$store.selectedRuntimeSortBy = val;
-			EventHandler.$emit("callsite-information-sort");
+			if (this.$store.selectedFormat == "EnsembleSuperGraph") {
+				EventHandler.$emit("callsite-correspondence-sort", val);
+			}
+			else if(this.$store.selectedFormat == "SuperGraph"){
+				EventHandler.$emit("callsite-information-sort", val);
+			}
 		},
 
 		selectedTargetColor(val) {
