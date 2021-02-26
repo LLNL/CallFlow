@@ -206,8 +206,8 @@ export default {
 			
 			// TODO: Need to clean this up.....
 			// Too many repeated values....
-			this.$store.selectedMPIBinCount = this.selectedMPIBinCount;
-			this.$store.selectedRunBinCount = this.selectedRunBinCount;
+			this.$store.selectedMPIBinCount = 20;
+			this.$store.selectedRunBinCount = 20;
 			
 			this.$store.auxiliarySortBy = this.auxiliarySortBy;
 			this.$store.showTarget = this.showTarget;

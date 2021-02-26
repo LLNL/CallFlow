@@ -96,7 +96,7 @@ class Gradients:
             mean = dataset_dict[dataset]
             for idx, x in np.ndenumerate(bin_edges):
                 if x > float(mean):
-                    dataset_position_dict[dataset] = len(bin_edges) - 2  # idx[0] - 1
+                    dataset_position_dict[dataset] = idx[0]
                     break
                 if idx[0] == len(bin_edges) - 1:
                     dataset_position_dict[dataset] = len(bin_edges) - 2
@@ -138,7 +138,7 @@ class Gradients:
             hist_grid = histogram(dists_list, bins=num_of_bins)
             # kde_grid = kde(dists_list, gridsize=num_of_bins)
 
-            dataset_pos = Gradients.map_datasets_to_bins(hist_grid[1], datasets_list)
+            dataset_pos = Gradients.map_datasets_to_bins(hist_grid[0], datasets_list)
 
             results[tk] = {
                 "bins": num_of_bins,
