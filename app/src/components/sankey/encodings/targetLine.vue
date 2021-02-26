@@ -37,10 +37,9 @@ export default {
 			const gradients = utils.getGradients(this.$store, node);
 
 			if (Object.keys(gradients).length != 0) {
-				let targetPos = gradients["dataset"]["position"][this.$store.selectedTargetDataset] + 1;
+				let targetPos = gradients["dataset"]["position"][this.$store.selectedTargetDataset];
 				let binWidth = node.height / (this.$store.selectedRunBinCount);
-
-				let y = binWidth * targetPos - binWidth / 2;
+				let y = binWidth * targetPos;
 
 				node.svg
 					.append("line")

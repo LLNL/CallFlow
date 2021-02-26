@@ -173,15 +173,26 @@ export function textSize(id, text) {
 export function getGradients(store, node) {
 	let nodeName = "";
 	let gradients = {};
-	if (node.type == "super-node"  && store.modules["ensemble"][node.module_idx] != undefined) {
+
+	// If the module callsite map only node, then its a component node.
+	let type = "";
+	if (store.m2c["ensemble"][node.id].length == 1) {
+		type = "component-node";
+	} 
+	else {
+		type = node.type;
+	}
+
+
+	if (type == "super-node") {
 		nodeName = node.module_idx;
 		gradients = store.data_mod["ensemble"][nodeName][store.selectedMetric]["gradients"];
 	}
-	else if (node.type == "component-node") {
-		nodeName = node.name;
+	else if (type == "component-node") {
+		nodeName = node.id;
 		gradients = store.data_cs["ensemble"][nodeName][store.selectedMetric]["gradients"];
 	}
-	else if (node.type == "intermediate") {
+	else if (type == "intermediate") {
 		gradients = {};
 	}
 	return gradients;

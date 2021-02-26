@@ -11,6 +11,7 @@
 
 <script>
 import * as d3 from "d3";
+import * as utils from "lib/utils";
 
 export default {
 	name: "MeanGradients",
@@ -98,10 +99,9 @@ export default {
 				return color.intermediate;
 			}
 
-			const ensemble_data = this.$store.data_cs["ensemble"][d.id][metric];
-
-			const grid = ensemble_data["gradients"]["hist"]["b"];
-			const val = ensemble_data["gradients"]["hist"]["h"];
+			const ensemble_gradients = utils.getGradients(this.$store, d);
+			const grid = ensemble_gradients["hist"]["b"];
+			const val = ensemble_gradients["hist"]["h"];
 
 			for (let i = 0; i < grid.length; i += 1) {
 				let x = (i + i + 1) / (2 * grid.length);
