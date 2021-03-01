@@ -31,6 +31,7 @@ def init_logger(**kwargs):
     # extract the logging parameters (defaults given)
     level = int(kwargs.get("level", 2))
     do_color = str(kwargs.get("color", True))
+    file = str(kwargs.get("file", ''))
 
     # --------------------------------------------------------------------------
     # get logging level in "logging" format
@@ -62,17 +63,20 @@ def init_logger(**kwargs):
     }
 
     # create the actual formatter
-    if do_color:
+    if do_color and file == '':
         formatter = colorlog.ColoredFormatter(
             "%(log_color)s" + LOG_FMT, log_colors=LOG_COLORS
         )
     else:
         formatter = logging.Formatter(LOG_FMT)
 
-    # --------------------------------------------------------------------------
-    # create a stream handler
-    sh = logging.StreamHandler()
-    sh.setFormatter(formatter)
+    # create a handler
+    if file == '':
+        sh = logging.StreamHandler()
+        sh.setFormatter(formatter)
+    else:
+        sh = logging.FileHandler(file)
+        sh.setFormatter(formatter)
 
     # finally, create a logger
     logger = logging.getLogger()  # root logger

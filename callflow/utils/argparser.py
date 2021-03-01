@@ -163,6 +163,13 @@ class ArgParser:
             "--verbose", action="store_true", help="Display debug points"
         )
 
+        parser.add_argument(
+            "--log",
+            type=str,
+            default="stdout",
+            help="Path for logfile (stdout if no path is given)",
+        )
+
         # -------------
         return parser
 

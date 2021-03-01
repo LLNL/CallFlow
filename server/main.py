@@ -31,9 +31,21 @@ def main():
     Performs actions depending on the passed arguments
     :return: None
     """
-
+    # --------------------------------------------------------------------------
+    # scan the args for log file and log level
+    nargs = len(sys.argv)
+    log_file = ""
+    for i in range(1, nargs):
+        if sys.argv[i] != '--log':
+            continue
+        if i == nargs-1:
+            raise ValueError('Please provide a filename to go with --log option')
+        log_file = sys.argv[i+1]
+        if log_file.startswith('--'):
+            raise ValueError('Please provide a valid filename to go with --log option')
+        break
     log_level = 1 if "--verbose" in sys.argv else 2
-    callflow.init_logger(level=log_level)
+    callflow.init_logger(level=log_level, file=log_file)
 
     # --------------------------------------------------------------------------
     LOGGER.info(f" ------------ Initializing CallFlow {callflow.__version__} ------------")
@@ -49,8 +61,6 @@ def main():
 
     assert endpoint_access in ["REST", "SOCKETS"]
     assert endpoint_env in ["TERMINAL", "JUPYTER"]
-
-    # endpoint_access = 'JUPYTER'
 
     # --------------------------------------------------------------------------
     # process and exit
