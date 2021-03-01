@@ -261,7 +261,7 @@ export default {
 		id: "auxiliary-function-overview",
 		people: [],
 		title: "Call Site Correspondence",
-		summary: "",
+		summary: "Call site Correspondence view provides an insight into the runtime distribution among its MPI ranks. Boxplots are calculated to represent the range of the distribution and outliers (dots) correspond to the ranks which are beyond the 1.5*IQR. Additionally, several statistical measures are also provided. The (green) boxplots and dots belong to the target run's statistics. Both matched (callsites in both target and ensemble) and unmatched (callsites not in target but in ensemble) are shown in separate lists",
 		callsites: [],
 		dataReady: false,
 		numberOfIntersectionCallsites: 0,
