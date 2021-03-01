@@ -86,7 +86,7 @@ class BaseProvider:
 
         # TODO: this flag should come from commandline
         # default = False (almost always, for ensemble we don't want)
-        process_individuals = True
+        process_individuals = False
         for dataset in self.config["runs"]:
 
             name = dataset["name"]
@@ -106,10 +106,11 @@ class BaseProvider:
             Group(sg, group_by=group_by)
             LOGGER.profile(f'Grouped supergraph {name}')
 
-            if process_individuals or len(self.config["runs"]) == 1:
+            if process_individuals:
                 Auxiliary(sg)
-                LOGGER.profile(f'Created Aux for {name}')
-                sg.write(os.path.join(save_path, name))
+            
+            LOGGER.profile(f'Created Aux for {name}')
+            sg.write(os.path.join(save_path, name), write_aux=process_individuals)
 
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
