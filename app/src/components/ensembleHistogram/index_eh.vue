@@ -53,7 +53,7 @@ export default {
 		selectedColorBy: "Inclusive",
 		MPIcount: 0,
 		title: "Runtime Distribution",
-		summary: "",
+		summary: "MPI runtime distribution view shows the sampled distribution of the process-based metrics for a selected node. To connect the processes (e.g., MPI ranks) to the physical domain, we use shadow lines to visualize the rank-to-bin mapping. Shadow lines map the bins in the histogram to the process/rank id laid out on an ordered line at the bottom of the histogram.",
 		info: "",
 		paddingFactor: 3.5,
 		thisNode: "",

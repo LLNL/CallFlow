@@ -63,7 +63,7 @@ export default {
 		undesirability: {},
 		maxUndesirability: 0,
 		maxVarianceCallsite: "",
-		summary:"",
+		summary: "MPI Runtime Scatterplot view correlates between the inclusive and exclusive runtime metrics across the ensemble. Each dot or point in the view represents a process.",
 		svg: undefined,
 	}),
 

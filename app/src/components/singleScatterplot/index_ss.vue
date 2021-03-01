@@ -58,7 +58,7 @@ export default {
 		xAxisHeight: 0,
 		yAxisHeight: 0,
 		title: "MPI Runtime Scatterplot",
-		summary: "",
+		summary: "MPI Runtime Scatterplot view correlates between the inclusive and exclusive runtime metrics. Each dot or point in the view represents a process.",
 		info: ""
 	}),
 
