@@ -220,12 +220,12 @@ export default function Sankey() {
 				// console.log(node.name, node.value, node.targetValue);
 			}
 			else {
-				node.value = node["actual_time"]["Inclusive"];
+				node.value = node["time (inc)"];
 				node.type = node["attr_dict"]["type"];
 				node.level = node["attr_dict"]["level"];
 				node.targetValue = 0;
 				if (node[store.selectedTargetDataset] != undefined) {
-					node.targetValue = node[store.selectedTargetDataset]["actual_time"]["Inclusive"];
+					node.targetValue = node[store.selectedTargetDataset]["time (inc)"];
 				}
 			}
 			// Relaxing the edges a nodes a bit to account for the flow. But target edges arent correct.

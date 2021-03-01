@@ -18,16 +18,12 @@ class UnpackAuxiliary:
 
     def __init__(self, path, name):
         parent_dir = os.path.dirname(path)
-        self.name = name
-        if name != "ensemble":
-            path = os.path.join(parent_dir, name)
-            npz = UnpackAuxiliary.read_aux(path, name)
-            self.result = UnpackAuxiliary.unpack_single(npz)
-        else:
-            e_path = os.path.join(parent_dir, "ensemble")
-            e_npz = UnpackAuxiliary.read_aux(e_path, "ensemble")
-            npz = UnpackAuxiliary.read_aux(e_path, name)
-            self.result = UnpackAuxiliary.unpack_ensemble(npz, e_npz)
+        e_path = os.path.join(parent_dir, "ensemble")
+
+        npz = UnpackAuxiliary.read_aux(e_path, name)
+        e_npz = UnpackAuxiliary.read_aux(e_path, "ensemble")
+
+        self.result = UnpackAuxiliary.unpack_ensemble(npz, e_npz)
             
     # TODO: Remove this later.
     @staticmethod
@@ -53,20 +49,6 @@ class UnpackAuxiliary:
             LOGGER.critical(f"Failed to read aux file: {e}")
         return data
 
-    def unpack_single(npz):
-        c2m_dict = npz["c2m"].item()
-        m2c_dict = npz["m2c"].item()
-        modules = npz["modules"]
-        summary = npz["summary"]
-
-        return {
-            "summary": summary,
-            "modules": modules,
-            "data_cs": UnpackAuxiliary.unpack_data(npz["data_cs"]),
-            "data_mod": UnpackAuxiliary.unpack_data(npz["data_mod"]),
-            "c2m": { c: modules[c2m_dict[c]]  for c in c2m_dict },
-            "m2c": { modules[m]: m2c_dict[m].tolist() for m in m2c_dict}
-        }
 
     @staticmethod
     def unpack_ensemble(npz, e_npz):
@@ -89,16 +71,12 @@ class UnpackAuxiliary:
 
     def unpack_data(data, e_data=None):
         _d = data.item()
-        
-        if e_data is not None:
-            _e_d = e_data.item()
+        e_d = e_data.item() if e_data is not None else {}
 
         ret = {}
+        _e_d_cs = None
         for cs in _d.keys():
-            if e_data is None:
-                _e_d_cs = None
-            else:
-                _e_d_cs = _e_d[cs]
+            _e_d_cs = e_d[cs] if e_d else None
             ret[cs] = {
                 "name": _d[cs]['name'],
                 "id": str(_d[cs]["id"]),
@@ -127,9 +105,9 @@ class UnpackAuxiliary:
             }
         else:
             ret["hists"] = {
-                "rank": UnpackAuxiliary.unpack_hists("rank", d[metric]["hst"], e_d[metric]["hst"], False),
-                "name": UnpackAuxiliary.unpack_hists("name", d[metric]["hst"], e_d[metric]["hst"], False),
-                "dataset": UnpackAuxiliary.unpack_hists("dataset", d[metric]["hst"], e_d[metric]["hst"], False),
+                "rank": UnpackAuxiliary.unpack_hists("rank", d[metric]["hst"], e_d[metric]["hst"]),
+                # "name": UnpackAuxiliary.unpack_hists("name", d[metric]["hst"], e_d[metric]["hst"]),
+                # "dataset": UnpackAuxiliary.unpack_hists("dataset", d[metric]["hst"], e_d[metric]["hst"]),
             }
             # ret["e_hists"] = {
             #     "rank": UnpackAuxiliary.unpack_hists("rank", d[metric]["hst"], e_d[metric]["hst"], True),
@@ -144,29 +122,17 @@ class UnpackAuxiliary:
         return ret
     
     @staticmethod
-    def unpack_hists(prop, hists, e_hists=None, ensemble=False):
+    def unpack_hists(prop, hists, e_hists=None):
         if e_hists is None:
             e_hists = hists
-
-        if ensemble:
-            result = {
-                "x": e_hists[prop][0].tolist(),
-                "y": e_hists[prop][1].tolist(),
-                "x_min": float(e_hists[prop][0][0]),
-                "x_max": float(e_hists[prop][0][-1]),
-                "y_min": float(e_hists[prop][1].min()),
-                "y_max": float(e_hists[prop][1].max()),
-            }
-
-        else:
-            result = {
-                "x": e_hists[prop][0].tolist(),
-                "y": hists[prop][1].tolist(),
-                "x_min": float(e_hists[prop][0][0]),
-                "x_max": float(e_hists[prop][0][-1]),
-                "y_min": float(hists[prop][1].min()),
-                "y_max": float(hists[prop][1].max()),
-            }
+        result = {
+            "x": e_hists[prop][0].tolist(),
+            "y": e_hists[prop][1].tolist(),
+            "x_min": float(e_hists[prop][0][0]),
+            "x_max": float(e_hists[prop][0][-1]),
+            "y_min": float(hists[prop][1].min()),
+            "y_max": float(hists[prop][1].max()),
+        }
         
         return result
 

@@ -67,9 +67,9 @@ class SankeyLayout:
         self.sg = sg
 
         if len(selected_runs) > 1:
-            self.runs = sg.filter_by_datasets(selected_runs)
+            self.runs = sg.filter_by_datasets(selected_runs) # Filter based on the sub set asked by the client
         else:
-            self.runs = selected_runs
+            self.runs = selected_runs # Do not filter
 
         self.reveal_callsites = reveal_callsites
         self.split_entry_module = split_entry_module
@@ -472,14 +472,6 @@ class SankeyLayout:
                     source = path_list[callsite_idx]
                     target = path_list[callsite_idx + 1]
 
-                    # TODO: Avoid sg.get_module_idx
-                    source_df = self.secondary_primary_group_df.get_group(
-                        (self.sg.get_module_idx(source["module"]), source["callsite"])
-                    )
-                    target_df = self.secondary_primary_group_df.get_group(
-                        (self.sg.get_module_idx(target["module"]), target["callsite"])
-                    )
-
                     # has_caller_edge = nxg.has_edge(source["module"], target["module"])
                     has_callback_edge = nxg.has_edge(target["module"], source["module"])
                     # has_cct_edge = cct.has_edge(source["callsite"], target["callsite"])
@@ -493,7 +485,7 @@ class SankeyLayout:
                         "source_callsite": source["callsite"],
                         "target_callsite": target["callsite"],
                         "edge_type": edge_type,
-                        "weight": target_df["time (inc)"].mean(),
+                        "weight": self.sg.aux_data["data_cs"][target["callsite"]]["time (inc)"]['mean'],
                         "dataset": self.sg.name,
                     }
 
@@ -600,11 +592,11 @@ class SankeyLayout:
             if node_dict["type"] == "component-node":
                 module = sg.get_module_idx(node_name.split("=")[0])
                 callsite = node_dict["callsite"]
-                actual_time = SankeyLayout.callsite_time(
-                    group_df=module_name_group_df, module=module, callsite=callsite
-                )
-                time_inc = name_time_inc_map[(module, callsite)]
-                time_exc = name_time_exc_map[(module, callsite)]
+                # actual_time = SankeyLayout.callsite_time(
+                #     group_df=module_name_group_df, module=module, callsite=callsite
+                # )
+                # time_inc = name_time_inc_map[(module, callsite)]
+                # time_exc = name_time_exc_map[(module, callsite)]
 
             elif node_dict["type"] == "super-node":
                 module_idx = node_name
@@ -626,13 +618,13 @@ class SankeyLayout:
                     ret[column] = {}
 
                 if column == "time (inc)":
-                    ret[column][node_name] = time_inc
+                    ret[column][node_name] = sg.aux_data["data_cs"][node_name]["time (inc)"]['mean']
 
                 elif column == "time":
-                    ret[column][node_name] = time_exc
+                    ret[column][node_name] = sg.aux_data["data_cs"][node_name]["time"]['mean']
 
-                elif column == "actual_time":
-                    ret[column][node_name] = actual_time
+                # elif column == "actual_time":
+                #     ret[column][node_name] = actual_time
 
                 elif column == "module":
                     ret[column][node_name] = module

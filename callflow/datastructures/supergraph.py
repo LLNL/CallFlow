@@ -65,9 +65,6 @@ class SuperGraph(ht.GraphFrame):
         self.module_callsite_map = {}
         self.roots = []
 
-        #self.is_module_map = False
-        #self.is_module_in_dataframe = False
-
     # --------------------------------------------------------------------------
     def __str__(self):
         """SuperGraph string representation"""
@@ -130,8 +127,6 @@ class SuperGraph(ht.GraphFrame):
 
         # add new columns to the dataframe
         self.df_add_nid_column()
-        #self.df_add_column("rank", value=0)
-        #self.df_add_column("dataset", value=self.name)
         self.df_add_column("callees", apply_func=lambda _: self.callees[_])
         self.df_add_column("callers", apply_func=lambda _: self.callers[_])
         self.df_add_column("path", apply_func=lambda _: [[
@@ -167,7 +162,6 @@ class SuperGraph(ht.GraphFrame):
 
         if True:
             self.dataframe = SuperGraph.read_df(path)
-            #self.is_module_in_dataframe = "module" in self.dataframe
 
         if True:
             self.nxg = SuperGraph.read_nxg(path)
