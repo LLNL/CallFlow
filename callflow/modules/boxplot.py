@@ -56,15 +56,5 @@ class BoxPlot:
             if ndatasets > 1:
                 self.result[tk]['odset'] = df['dataset'].to_numpy()[mask]
 
-            '''
-            self.result[tk] = {
-                "q": q,
-                "outliers": {
-                    "values": (mask * df[tv]).to_numpy(),
-                    "datasets": (mask * df["dataset"]).to_numpy(),
-                    "ranks": (mask * df["rank"]).to_numpy(),
-                },
-            }
-            '''
 
 # ------------------------------------------------------------------------------
