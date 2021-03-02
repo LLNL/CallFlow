@@ -71,6 +71,12 @@ class SankeyLayout:
         else:
             self.runs = selected_runs # Do not filter
 
+        if isinstance(self.sg, callflow.EnsembleGraph):
+            self.aux_data = self.sg.aux_data["ensemble"]
+        else:
+            print(self.sg, self.sg.aux_data["ensemble"]
+            self.aux_data = self.sg.aux_data
+
         self.reveal_callsites = reveal_callsites
         self.split_entry_module = split_entry_module
         self.split_callee_module = split_callee_module
@@ -372,7 +378,7 @@ class SankeyLayout:
 
         :return:
         """
-        ensemble_mapping = SankeyLayout._ensemble_map(
+        ensemble_mapping = self._ensemble_map(
             sg=self.sg, nxg=self.nxg, columns=SankeyLayout._COLUMNS
         )
         for idx, key in enumerate(ensemble_mapping):
@@ -485,7 +491,7 @@ class SankeyLayout:
                         "source_callsite": source["callsite"],
                         "target_callsite": target["callsite"],
                         "edge_type": edge_type,
-                        "weight": self.sg.aux_data["data_cs"][target["callsite"]]["time (inc)"]['mean'],
+                        "weight": self.aux_data["data_cs"][target["callsite"]]["time (inc)"]['mean'],
                         "dataset": self.sg.name,
                     }
 
@@ -565,8 +571,7 @@ class SankeyLayout:
             ret.append(data_mapper[module][-1])
         return ret
 
-    @staticmethod
-    def _ensemble_map(sg, nxg, columns):
+    def _ensemble_map(self, sg, nxg, columns):
         """
         Creates maps for all columns for the ensemble data.
         Note: For single supergraph, ensemble_map would be the same as dataset_map[single_run.tag].
@@ -618,10 +623,10 @@ class SankeyLayout:
                     ret[column] = {}
 
                 if column == "time (inc)":
-                    ret[column][node_name] = sg.aux_data["data_cs"][node_name]["time (inc)"]['mean']
+                    ret[column][node_name] = self.aux_data["data_cs"][node_name]["time (inc)"]['mean']
 
                 elif column == "time":
-                    ret[column][node_name] = sg.aux_data["data_cs"][node_name]["time"]['mean']
+                    ret[column][node_name] = self.aux_data["data_cs"][node_name]["time"]['mean']
 
                 # elif column == "actual_time":
                 #     ret[column][node_name] = actual_time
