@@ -195,7 +195,7 @@ export default {
 			
 			this.setRuntimeColorScale(selectedRuntimeColorMap, this.$store.selectedMetric);
 
-			if(this.$store.numOfRuns > 1) {
+			if(this.$store.numOfRuns > 1 && this.$store.selectedFormat == "EnsembleSuperGraph") {
 				// Create distribution color object
 				this.$store.distributionColor = new Color();
 				this.$store.distributionColorMap = this.$store.distributionColor.getAllColors();

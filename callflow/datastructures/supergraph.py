@@ -174,7 +174,6 @@ class SuperGraph(ht.GraphFrame):
 
         if read_aux:
             self.aux_data = UnpackAuxiliary(path, self.name).result
-            self.modules = self.aux_data["modules"].tolist()
 
         # ----------------------------------------------------------------------
         self.add_time_proxies()

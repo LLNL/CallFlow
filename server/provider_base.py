@@ -17,6 +17,9 @@ from callflow.utils.utils import get_memory_usage
 
 LOGGER = get_logger(__name__)
 
+# TODO: this flag should come from commandline
+indivdual_aux_for_ensemble = False
+
 
 # ------------------------------------------------------------------------------
 # BaseProvider Class
@@ -41,24 +44,33 @@ class BaseProvider:
         load_path = self.config["save_path"]
         read_param = self.config["read_parameter"]
 
+        is_not_ensemble = self.ndatasets == 1
+        
         # create supergraphs for all runs
         for run in self.config["runs"]:
-
             name = run["name"]
             sg = SuperGraph(name)
-            sg.load(
-                os.path.join(load_path, name), read_parameter=read_param, read_aux=True
-            )
+            sg.load(os.path.join(load_path, name),
+                    read_parameter=read_param,
+                    read_aux=is_not_ensemble or indivdual_aux_for_ensemble)
             self.supergraphs[name] = sg
-
+        
         # ensemble case
-        if self.ndatasets > 1:
+        if not is_not_ensemble:
             name = "ensemble"
             sg = EnsembleGraph(name)
-            sg.load(
-                os.path.join(load_path, name), read_parameter=read_param, read_aux=True
-            )
+            sg.load(os.path.join(load_path, name),
+                    read_parameter=read_param,
+                    read_aux=True)
+
+            sg.modules = sg.aux_data["ensemble"]["modules"].tolist()
             self.supergraphs[name] = sg
+
+            # TODO:  This is repopulation of data. Avoiddd!!!!
+            for run in self.config["runs"]:
+                LOGGER.warning("Duplicating aux data for each run!!")
+                self.supergraphs[run["name"]].aux_data = self.supergraphs["ensemble"].aux_data[run["name"]]
+                self.supergraphs[run["name"]].modules = self.supergraphs["ensemble"].modules
 
     # --------------------------------------------------------------------------
     def process(self):
@@ -80,13 +92,12 @@ class BaseProvider:
             _["name"]: (_["path"], _["profile_format"]) for _ in self.config["runs"]
         }
 
+        is_not_ensemble = len(self.config["runs"]) == 1
+
         # ----------------------------------------------------------------------
         # Stage-1: Each dataset is processed individually into a SuperGraph.
         LOGGER.warning(f'-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n\n')
 
-        # TODO: this flag should come from commandline
-        # default = False (almost always, for ensemble we don't want)
-        process_individuals = False
         for dataset in self.config["runs"]:
 
             name = dataset["name"]
@@ -106,11 +117,11 @@ class BaseProvider:
             Group(sg, group_by=group_by)
             LOGGER.profile(f'Grouped supergraph {name}')
 
-            if process_individuals:
+            if is_not_ensemble or indivdual_aux_for_ensemble:
                 Auxiliary(sg)
-            
-            LOGGER.profile(f'Created Aux for {name}')
-            sg.write(os.path.join(save_path, name), write_aux=process_individuals)
+
+                LOGGER.profile(f'Created Aux for {name}')
+                sg.write(os.path.join(save_path, name), write_aux=process_individuals)
 
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
@@ -159,7 +170,11 @@ class BaseProvider:
                 
             if len(operation["datasets"]) > 1:
                 operation["datasets"].append("ensemble")
-            ret = {dataset: self.supergraphs[dataset].aux_data for dataset in operation["datasets"]}
+                ret = {dataset: self.supergraphs["ensemble"].aux_data[dataset] for dataset in operation["datasets"]}
+            else:
+                dataset = operation["datasets"][0]
+                ret = self.supergraphs[dataset].aux_data
+
             return ret
 
     def request_single(self, operation):

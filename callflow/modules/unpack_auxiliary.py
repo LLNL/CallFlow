@@ -18,12 +18,26 @@ class UnpackAuxiliary:
 
     def __init__(self, path, name):
         parent_dir = os.path.dirname(path)
-        e_path = os.path.join(parent_dir, "ensemble")
+        self.result = {}
 
-        npz = UnpackAuxiliary.read_aux(e_path, name)
-        e_npz = UnpackAuxiliary.read_aux(e_path, "ensemble")
+        if name != "ensemble":
+            path = os.path.join(parent_dir, name)
+            # .callflow/1-core/aux-1-core.npz
+            npz = UnpackAuxiliary.read_aux(path, name)
+            self.result = UnpackAuxiliary.unpack_single(npz)
+        else:
+            e_path = os.path.join(parent_dir, "ensemble")
+            # .callflow/ensemble/aux-ensemble.npz
 
-        self.result = UnpackAuxiliary.unpack_ensemble(npz, e_npz)
+            e_npz = UnpackAuxiliary.read_aux(e_path, "ensemble")
+
+            self.result = {}
+            self.result["ensemble"] = UnpackAuxiliary.unpack_single(e_npz)
+            for run in e_npz['runs']:
+                # .callflow/ensemble/aux-1-core.npz
+                npz = UnpackAuxiliary.read_aux(e_path, run)
+                self.result[run] =  UnpackAuxiliary.unpack_ensemble(npz, e_npz)
+
             
     # TODO: Remove this later.
     @staticmethod
@@ -49,15 +63,27 @@ class UnpackAuxiliary:
             LOGGER.critical(f"Failed to read aux file: {e}")
         return data
 
+    @staticmethod
+    def unpack_single(npz):
+        c2m_dict = npz["c2m"].item()
+        m2c_dict = npz["m2c"].item()
+        modules = npz["modules"]
+        summary = npz["summary"]
+
+        return {
+            "summary": summary,
+            "modules": modules,
+            "data_cs": UnpackAuxiliary.unpack_data(npz["data_cs"]),
+            "data_mod": UnpackAuxiliary.unpack_data(npz["data_mod"]),
+            "c2m": { c: modules[c2m_dict[c]]  for c in c2m_dict },
+            "m2c": { modules[m]: m2c_dict[m].tolist() for m in m2c_dict}
+        }
 
     @staticmethod
     def unpack_ensemble(npz, e_npz):
         c2m_dict = npz["c2m"].item()
         m2c_dict = npz["m2c"].item()
-        if e_npz is None:
-            modules = npz["modules"]
-        else:
-            modules = e_npz["modules"]
+        modules = e_npz["modules"]
         summary = npz["summary"]
 
         return {

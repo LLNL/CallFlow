@@ -81,7 +81,8 @@ class Auxiliary:
                                        "m2c": sg.df_mod2callsite(),
                                        "c2m": sg.df_callsite2mod(),
                                        "data_mod": self.new_collect_data(sg.name, "module", edf_module),
-                                       "data_cs": self.new_collect_data(sg.name, "name", edf_name)
+                                       "data_cs": self.new_collect_data(sg.name, "name", edf_name),
+                                       "runs": self.runs,
                                        }
 
             # for relative computation
@@ -96,7 +97,8 @@ class Auxiliary:
                                         "m2c": sg.supergraphs[dataset].df_mod2callsite(),
                                         "c2m": sg.supergraphs[dataset].df_callsite2mod(),
                                         "data_mod": self.new_collect_data(dataset, "module", df_module, edf_module),
-                                        "data_cs": self.new_collect_data(dataset, "name", df_name, edf_name)
+                                        "data_cs": self.new_collect_data(dataset, "name", df_name, edf_name),
+                                        "runs": self.runs,
                                         }
 
         # TODO: this should not happen this way
