@@ -174,6 +174,11 @@ class SuperGraph(ht.GraphFrame):
 
         if read_aux:
             self.aux_data = UnpackAuxiliary(path, self.name).result
+            # TODO: this should be handled better
+            if "modules" in self.aux_data.keys():   # single case
+                self.modules = self.aux_data["modules"].tolist()
+            elif self.name in self.aux_data.keys():     # ensemble base
+                self.modules = self.aux_data[self.name]["modules"].tolist()
 
         # ----------------------------------------------------------------------
         self.add_time_proxies()
