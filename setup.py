@@ -87,7 +87,8 @@ app_dist_index_html = list_files_update(
 # so, let's create a symlink inside the callflow folder
 # so setuptools can place them relative to the installed package
 os.chdir("./callflow")
-for _ in ["server", "app", "data", "examples"]:
+for _ in ["app", "data", "examples"]:
+
     if not os.path.islink(_):
         os.symlink(os.path.join("..", _), _)
 os.chdir("..")
@@ -126,6 +127,7 @@ setup(
     keywords="",
     packages=find_packages(),
     include_package_data=True,
+    zip_safe=False,
     package_data={
         "callflow": data_files + example_files + app_dist_folders + app_dist_index_html
     },

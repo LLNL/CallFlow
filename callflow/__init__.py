@@ -20,6 +20,7 @@ __all__ = [
 
 
 # ------------------------------------------------------------------------------
+'''
 def load_ipython_extension(ipython):
     """IPython API entry point.
     Only intended to be called by the IPython runtime.
@@ -31,6 +32,6 @@ def load_ipython_extension(ipython):
     from .server.notebook_server import load_ipython
 
     load_ipython(ipython, main)
-
+'''
 
 # ------------------------------------------------------------------------------
