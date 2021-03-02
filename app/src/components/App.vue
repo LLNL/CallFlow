@@ -81,7 +81,7 @@ export default {
 
 		let self = this;
 		EventHandler.$on("setup-colors", () => {
-			self.setupColors(this.$store.selectedRuntimeColorMap);
+			self.setupColors(this.$store.selectedRuntimeColorMap, this.$store.selectedDistributionColorMap);
 		});
 	},
 
@@ -154,8 +154,6 @@ export default {
 
 			this.$store.selectedTargetDataset = utils.getKeyWithMaxValue(this.$store.metricTimeMap);
 			this.$store.selectedNode = this.$store.summary[this.$store.selectedTargetDataset]["roots"][0];
-
-			this.setupColors(this.selectedRuntimeColorMap, this.selectedDistributionColorMap); // Set up the colors.
 		},
 
 		setGlobalVariables() {
@@ -194,6 +192,7 @@ export default {
 			this.$store.runtimeColorMap = this.$store.runtimeColor.getAllColors();
 			
 			this.setRuntimeColorScale(selectedRuntimeColorMap, this.$store.selectedMetric);
+
 
 			if(this.$store.numOfRuns > 1 && this.$store.selectedFormat == "EnsembleSuperGraph") {
 				// Create distribution color object
@@ -250,8 +249,8 @@ export default {
 		setDistributionColorScale(selectedDistributionColorMap) {
 			let hist_min = 0;
 			let hist_max = 0;
-			for (let module in this.$store.data_mod["ensemble"]) {
-				let node = this.$store.data_mod["ensemble"][module];
+			for (let module in this.$store.data_mod[this.$store.selectedTargetDataset]) {
+				let node = this.$store.data_mod[this.$store.selectedTargetDataset][module];
 				const vals = node[this.$store.selectedMetric]["gradients"]["hist"]["h"];
 				hist_min = Math.min(
 					hist_min,
