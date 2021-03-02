@@ -490,7 +490,7 @@ class SankeyLayout:
                         "source_callsite": source["callsite"],
                         "target_callsite": target["callsite"],
                         "edge_type": edge_type,
-                        "weight": self.aux_data["data_cs"][target["callsite"]]["time (inc)"]['mean'],
+                        "weight": self._get_runtime(target["callsite"], "time (inc)", 'mean'),
                         "dataset": self.sg.name,
                     }
 
@@ -622,13 +622,10 @@ class SankeyLayout:
                     ret[column] = {}
 
                 if column == "time (inc)":
-                    ret[column][node_name] = self.aux_data["data_cs"][node_name]["time (inc)"]['mean']
+                    ret[column][node_name] = self._get_runtime(node_name, column, "mean")
 
                 elif column == "time":
-                    ret[column][node_name] = self.aux_data["data_cs"][node_name]["time"]['mean']
-
-                # elif column == "actual_time":
-                #     ret[column][node_name] = actual_time
+                    ret[column][node_name] = self._get_runtime(node_name, column, "mean")
 
                 elif column == "module":
                     ret[column][node_name] = module
@@ -839,3 +836,25 @@ class SankeyLayout:
                 return {"type": "component-node"}
         else:
             return {"type": "component-node"}
+
+
+    # Getters for aux_data
+    # TODO: Find a more suitable place for this. 
+    # TODO: We should technically use the "node_type" to recognize what data to
+    # look for. But we are doing this because for runs with "no module map" by
+    # default assume each node to be a "super-node". However the grouping logic
+    # consumes only "super-node", so changing that to "component-node" does not
+    # solve the underlying problem. 
+    # NOTE: THe desired code should be as follows:
+    # if node.type = "super-node": return information from "data_mod"
+    # elif node.type == "component-node": return information from "data_cs"
+    def _get_runtime(self, node_name, metric, measure):
+        if node_name in self.sg.modules:    
+            module_idx = self.sg.get_module_idx(node_name)
+            return self.aux_data["data_mod"][module_idx][metric][measure]
+        else:
+            if "=" in node_name:
+                node_name = node_name.split("=")[-1]
+
+            return self.aux_data["data_cs"][node_name][metric][measure]
+
