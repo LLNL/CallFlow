@@ -45,18 +45,18 @@ class BaseProvider:
         read_param = self.config["read_parameter"]
 
         is_not_ensemble = self.ndatasets == 1
-        
+
         # create supergraphs for all runs
         for run in self.config["runs"]:
             name = run["name"]
+            read_aux = is_not_ensemble or indivdual_aux_for_ensemble
+
             sg = SuperGraph(name)
             sg.load(os.path.join(load_path, name),
                     read_parameter=read_param,
-                    read_aux=is_not_ensemble or indivdual_aux_for_ensemble)
+                    read_aux=read_aux)
             self.supergraphs[name] = sg
-            # TODO: This is repopulation of data. Avoiddd!!!!
-            self.supergraphs[name].modules = sg.aux_data["modules"].tolist()
-        
+
         # ensemble case
         if not is_not_ensemble:
             name = "ensemble"
@@ -64,15 +64,14 @@ class BaseProvider:
             sg.load(os.path.join(load_path, name),
                     read_parameter=read_param,
                     read_aux=True)
-
-            sg.modules = sg.aux_data["ensemble"]["modules"].tolist()
             self.supergraphs[name] = sg
 
-            # TODO: This is repopulation of data. Avoiddd!!!!
+            # TODO: This is repopulation of data. Avoid!
             for run in self.config["runs"]:
-                LOGGER.warning("Duplicating aux data for each run!!")
-                self.supergraphs[run["name"]].aux_data = self.supergraphs["ensemble"].aux_data[run["name"]]
-                self.supergraphs[run["name"]].modules = self.supergraphs["ensemble"].modules
+                name = run["name"]
+                LOGGER.warning(f"Duplicating aux data for run {name}!")
+                self.supergraphs[name].modules = self.supergraphs["ensemble"].modules
+                self.supergraphs[name].aux_data = self.supergraphs["ensemble"].aux_data[name]
 
     # --------------------------------------------------------------------------
     def process(self):
@@ -169,7 +168,7 @@ class BaseProvider:
         elif operation_name == "aux_data":
             if operation["reProcess"]:
                 Auxiliary(self.supergraphs["ensemble"], selected_runs=operation["datasets"], rankBinCount=int(operation["rankBinCount"]), runBinCount=int(operation["runBinCount"]))
-                
+
             if len(operation["datasets"]) > 1:
                 operation["datasets"].append("ensemble")
                 ret = {dataset: self.supergraphs["ensemble"].aux_data[dataset] for dataset in operation["datasets"]}
