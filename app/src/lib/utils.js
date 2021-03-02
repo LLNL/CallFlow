@@ -176,7 +176,7 @@ export function getGradients(store, node) {
 
 	// If the module callsite map only node, then its a component node.
 	let type = "";
-	if (store.m2c["ensemble"][node.id].length == 1) {
+	if (store.m2c[store.selectedTargetDataset][node.id].length == 1) {
 		type = "component-node";
 	} 
 	else {
@@ -186,11 +186,11 @@ export function getGradients(store, node) {
 
 	if (type == "super-node") {
 		nodeName = node.module_idx;
-		gradients = store.data_mod["ensemble"][nodeName][store.selectedMetric]["gradients"];
+		gradients = store.data_mod[store.selectedTargetDataset][nodeName][store.selectedMetric]["gradients"];
 	}
 	else if (type == "component-node") {
 		nodeName = node.id;
-		gradients = store.data_cs["ensemble"][nodeName][store.selectedMetric]["gradients"];
+		gradients = store.data_cs[store.selectedTargetDataset][nodeName][store.selectedMetric]["gradients"];
 	}
 	else if (type == "intermediate") {
 		gradients = {};

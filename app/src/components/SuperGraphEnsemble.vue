@@ -163,7 +163,8 @@ export default {
 	methods: {
 		init() {
 			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
-			
+			EventHandler.$emit("setup-colors");
+
 			// TODO: need to rework on this.
 			this.$store.datasetMap = {};
 			for (let i = 0; i < this.$store.selectedDatasets.length; i += 1) {
@@ -219,6 +220,8 @@ export default {
 			this.$store.selectedRuntimeSortBy = this.selectedRuntimeSortBy;
 			this.$store.selectedNumOfClusters = this.selectedNumOfClusters;
 			this.$store.selectedEdgeAlignment = "Top";
+
+			this.$store.selectedFormat = "EnsembleSuperGraph";
 		},
 
 		setComponentMap() {

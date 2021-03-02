@@ -74,7 +74,6 @@ class SankeyLayout:
         if isinstance(self.sg, callflow.EnsembleGraph):
             self.aux_data = self.sg.aux_data["ensemble"]
         else:
-            print(self.sg, self.sg.aux_data["ensemble"]
             self.aux_data = self.sg.aux_data
 
         self.reveal_callsites = reveal_callsites

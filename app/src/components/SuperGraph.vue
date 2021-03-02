@@ -147,6 +147,7 @@ export default {
 	methods: {
 		init() {
 			this.currentComponents = this.setComponentMap(); // Set component mapping for easy component tracking.
+			EventHandler.$emit("setup-colors");
 			this.initComponents(this.currentComponents);
 		},
 
