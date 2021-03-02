@@ -54,6 +54,8 @@ class BaseProvider:
                     read_parameter=read_param,
                     read_aux=is_not_ensemble or indivdual_aux_for_ensemble)
             self.supergraphs[name] = sg
+            # TODO: This is repopulation of data. Avoiddd!!!!
+            self.supergraphs[name].modules = sg.aux_data["modules"].tolist()
         
         # ensemble case
         if not is_not_ensemble:
@@ -66,7 +68,7 @@ class BaseProvider:
             sg.modules = sg.aux_data["ensemble"]["modules"].tolist()
             self.supergraphs[name] = sg
 
-            # TODO:  This is repopulation of data. Avoiddd!!!!
+            # TODO: This is repopulation of data. Avoiddd!!!!
             for run in self.config["runs"]:
                 LOGGER.warning("Duplicating aux data for each run!!")
                 self.supergraphs[run["name"]].aux_data = self.supergraphs["ensemble"].aux_data[run["name"]]
@@ -121,7 +123,7 @@ class BaseProvider:
                 Auxiliary(sg)
 
                 LOGGER.profile(f'Created Aux for {name}')
-                sg.write(os.path.join(save_path, name), write_aux=process_individuals)
+                sg.write(os.path.join(save_path, name), write_aux=is_not_ensemble)
 
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
@@ -173,7 +175,7 @@ class BaseProvider:
                 ret = {dataset: self.supergraphs["ensemble"].aux_data[dataset] for dataset in operation["datasets"]}
             else:
                 dataset = operation["datasets"][0]
-                ret = self.supergraphs[dataset].aux_data
+                ret = {dataset: self.supergraphs[dataset].aux_data}
 
             return ret
 
