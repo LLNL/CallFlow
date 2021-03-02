@@ -66,6 +66,9 @@ class SankeyLayout:
         self.path = path
         self.sg = sg
 
+        self.time_exc = self.sg.df_get_proxy("time")
+        self.time_inc = self.sg.df_get_proxy("time (inc)")
+
         if len(selected_runs) > 1:
             self.runs = sg.filter_by_datasets(selected_runs) # Filter based on the sub set asked by the client
         else:
@@ -196,8 +199,8 @@ class SankeyLayout:
                     )
                     target_node_type = "component-node"
 
-                    # source_weight = source_df["time (inc)"].max()
-                    target_weight = target_df["time (inc)"].mean()
+                    # source_weight = source_df[self.time_inc].max()
+                    target_weight = target_df[self.time_inc].mean()
 
                     print(f"Adding edge: {source_callsite}, {target_callsite}")
                     self.nxg.add_node(source, attr_dict={"type": source_node_type})
@@ -329,7 +332,7 @@ class SankeyLayout:
                                 "target_callsite": edge["target_callsite"],
                                 "weight": self.module_name_group_df.get_group(
                                     (entry_function, edge["source_callsite"])
-                                )["time (inc)"].max(),
+                                )[self.time_inc].max(),
                                 "edge_type": "reveal_edge",
                             }
                         ],
@@ -352,7 +355,7 @@ class SankeyLayout:
                                 "target_callsite": edge["target_callsite"],
                                 "weight": self.secondary_primary_group_df.get_group(
                                     (edge["target"], edge["target_callsite"])
-                                )["time (inc)"].max(),
+                                )[self.time_inc].max(),
                                 "edge_type": "reveal_edge",
                             }
                         ],
@@ -385,7 +388,7 @@ class SankeyLayout:
 
         dataset_mapping = {}
         for run in self.runs:
-            dataset_mapping[run] = SankeyLayout._dataset_map(
+            dataset_mapping[run] = self._dataset_map(
                 sg=self.sg,
                 nxg=self.nxg,
                 tag=run,
@@ -419,8 +422,7 @@ class SankeyLayout:
         )
 
     # --------------------------------------------------------------------------
-    @staticmethod
-    def module_time(group_df, module_callsite_map, module):
+    def module_time(self, group_df, module_callsite_map, module):
         """
         For node attributes: Calculates the time spent inside the module overall
 
@@ -433,14 +435,13 @@ class SankeyLayout:
         inc_time_max = 0
         for callsite in module_callsite_map[module]:
             callsite_df = group_df.get_group((module, callsite))
-            max_inc_time = callsite_df["time (inc)"].mean()
+            max_inc_time = callsite_df[self.time_inc].mean()
             inc_time_max = max(inc_time_max, max_inc_time)
-            max_exc_time = callsite_df["time"].max()
+            max_exc_time = callsite_df[self.time_exc].max()
             exc_time_sum += max_exc_time
         return {"Inclusive": inc_time_max, "Exclusive": exc_time_sum}
 
-    @staticmethod
-    def callsite_time(group_df, module, callsite):
+    def callsite_time(self, group_df, module, callsite):
         """
         For node attribute: Calculates the time spent by each callsite.
 
@@ -450,8 +451,8 @@ class SankeyLayout:
         :return:
         """
         callsite_df = group_df.get_group((module, callsite))
-        max_inc_time = callsite_df["time (inc)"].mean()
-        max_exc_time = callsite_df["time"].mean()
+        max_inc_time = callsite_df[self.time_inc].mean()
+        max_exc_time = callsite_df[self.time_exc].mean()
 
         return {"Inclusive": max_inc_time, "Exclusive": max_exc_time}
 
@@ -490,7 +491,7 @@ class SankeyLayout:
                         "source_callsite": source["callsite"],
                         "target_callsite": target["callsite"],
                         "edge_type": edge_type,
-                        "weight": self._get_runtime(target["callsite"], "time (inc)", 'mean'),
+                        "weight": self._get_runtime(target["callsite"], self.time_inc, 'mean'),
                         "dataset": self.sg.name,
                     }
 
@@ -584,11 +585,11 @@ class SankeyLayout:
 
         module_callsite_map = module_group_df["name"].unique().to_dict()
 
-        module_time_inc_map = module_group_df["time (inc)"].max().to_dict()
-        module_time_exc_map = module_group_df["time"].max().to_dict()
+        module_time_inc_map = module_group_df[self.time_inc].max().to_dict()
+        module_time_exc_map = module_group_df[self.time_exc].max().to_dict()
 
-        name_time_inc_map = module_name_group_df["time (inc)"].max().to_dict()
-        name_time_exc_map = module_name_group_df["time"].max().to_dict()
+        name_time_inc_map = module_name_group_df[self.time_inc].max().to_dict()
+        name_time_exc_map = module_name_group_df[self.time_exc].max().to_dict()
 
         # loop through the nodes
         for node in nxg.nodes(data=True):
@@ -608,7 +609,7 @@ class SankeyLayout:
                 callsite = ""
                 # TODO: Avoid sg.get_module_idx
                 module = sg.get_module_idx(module_idx)
-                actual_time = SankeyLayout.module_time(
+                actual_time = self.module_time(
                     group_df=module_name_group_df,
                     module_callsite_map=module_callsite_map,
                     module=module,
@@ -621,10 +622,10 @@ class SankeyLayout:
                 if column not in ret:
                     ret[column] = {}
 
-                if column == "time (inc)":
+                if column == self.time_inc:
                     ret[column][node_name] = self._get_runtime(node_name, column, "mean")
 
-                elif column == "time":
+                elif column == self.time_exc:
                     ret[column][node_name] = self._get_runtime(node_name, column, "mean")
 
                 elif column == "module":
@@ -644,8 +645,7 @@ class SankeyLayout:
 
         return ret
 
-    @staticmethod
-    def _dataset_map(sg, nxg, columns, tag=""):
+    def _dataset_map(self, sg, nxg, columns, tag=""):
         """
         Creates maps for all node attributes (i.e., columns in df) for each dataset.
         """
@@ -670,16 +670,12 @@ class SankeyLayout:
         target_module_callsite_map = target_module_group_df["name"].unique().to_dict()
 
         # Inclusive time maps for the module level and callsite level.
-        target_module_time_inc_map = (
-            target_module_group_df["time (inc)"].max().to_dict()
-        )
-        target_name_time_inc_map = (
-            target_module_name_group_df["time (inc)"].max().to_dict()
-        )
+        target_module_time_inc_map = target_module_group_df[self.time_inc].max().to_dict()
+        target_name_time_inc_map = target_module_name_group_df[self.time_inc].max().to_dict()
 
         # Exclusive time maps for the module level and callsite level.
-        target_module_time_exc_map = target_module_group_df["time"].max().to_dict()
-        target_name_time_exc_map = target_module_name_group_df["time"].max().to_dict()
+        target_module_time_exc_map = target_module_group_df[self.time_exc].max().to_dict()
+        target_name_time_exc_map = target_module_name_group_df[self.time_exc].max().to_dict()
 
         for node in nxg.nodes(data=True):
             node_name, node_dict = SankeyLayout.nx_deconstruct_node(node)
@@ -687,7 +683,7 @@ class SankeyLayout:
                 if node_dict["type"] == "component-node":
                     module = node_name.split("=")[0]
                     callsite = node_name.split("=")[1]
-                    agg_time = SankeyLayout.callsite_time(
+                    agg_time = self.callsite_time(
                         group_df=target_module_group_df,
                         module=module,
                         callsite=callsite,
@@ -698,7 +694,7 @@ class SankeyLayout:
                 elif node_dict["type"] == "super-node":
                     module = node_name
                     callsite = target_module_callsite_map[module].tolist()
-                    agg_time = SankeyLayout.module_time(
+                    agg_time = self.module_time(
                         group_df=target_module_name_group_df,
                         module_callsite_map=target_module_callsite_map,
                         module=module,
@@ -711,10 +707,10 @@ class SankeyLayout:
                     ret[node_name] = {}
 
                 for column in columns:
-                    if column == "time (inc)":
+                    if column == self.time_inc:
                         ret[node_name][column] = time_inc
 
-                    elif column == "time":
+                    elif column == self.time_exc:
                         ret[node_name][column] = time_exc
 
                     elif column == "module":
