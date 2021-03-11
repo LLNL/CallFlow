@@ -380,4 +380,17 @@ body {
 	color: #fff !important;
 	caret-color: #fff !important;
 }
+
+/** start Lasso CSS */
+.drawn {
+	fill: rgba(255, 255, 255, 0.5);
+	stroke: #009688;
+	stroke-width: 1.5px;
+}
+
+.origin {
+	fill: #009688;
+	opacity: 0.5;
+}
+/** end Lasso CSS */
 </style>
