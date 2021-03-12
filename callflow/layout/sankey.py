@@ -184,13 +184,9 @@ class SankeyLayout:
                 if not self.nxg.has_edge(source, target):
                     if idx == 0:
                         source_callsite = source
-                        # source_df = self.secondary_group_df.get_group((module))
                         source_node_type = "super-node"
                     else:
                         source_callsite = source.split("=")[1]
-                        # source_df = self.secondary_primary_group_df.get_group(
-                        #     (module, source_callsite)
-                        # )
                         source_node_type = "component-node"
 
                     target_callsite = target.split("=")[1]
@@ -212,7 +208,7 @@ class SankeyLayout:
                             {
                                 "source_callsite": source_callsite,
                                 "target_callsite": target_callsite,
-                                "weight": target_weight,
+                                "weight": 0,
                                 "edge_type": "reveal_edge",
                             }
                         ],
@@ -491,7 +487,7 @@ class SankeyLayout:
                         "source_callsite": source["callsite"],
                         "target_callsite": target["callsite"],
                         "edge_type": edge_type,
-                        "weight": self._get_runtime(target["callsite"], self.time_inc, 'mean'),
+                        "weight": self._get_runtime(target, self.time_inc, 'mean'),
                         "dataset": self.sg.name,
                     }
 
@@ -623,10 +619,10 @@ class SankeyLayout:
                     ret[column] = {}
 
                 if column == self.time_inc:
-                    ret[column][node_name] = self._get_runtime(node_name, column, "mean")
+                    ret[column][node_name] = self._get_runtime(node_dict, column, "mean")
 
                 elif column == self.time_exc:
-                    ret[column][node_name] = self._get_runtime(node_name, column, "mean")
+                    ret[column][node_name] = self._get_runtime(node_dict, column, "mean")
 
                 elif column == "module":
                     ret[column][node_name] = module
@@ -844,13 +840,9 @@ class SankeyLayout:
     # NOTE: THe desired code should be as follows:
     # if node.type = "super-node": return information from "data_mod"
     # elif node.type == "component-node": return information from "data_cs"
-    def _get_runtime(self, node_name, metric, measure):
-        if node_name in self.sg.modules:    
-            module_idx = self.sg.get_module_idx(node_name)
-            return self.aux_data["data_mod"][module_idx][metric][measure]
-        else:
-            if "=" in node_name:
-                node_name = node_name.split("=")[-1]
+    def _get_runtime(self, node, metric, measure):
+        node_name = node["callsite"]
 
-            return self.aux_data["data_cs"][node_name][metric][measure]
-
+        if "=" in node_name:
+            node_name = node_name.split("=")[-1]
+        return self.aux_data["data_cs"][node_name][metric][measure]

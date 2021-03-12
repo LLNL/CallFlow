@@ -80,7 +80,6 @@ class ArgParser:
 
         # Write the config file.
         if self.read_mode != "config":
-            print("Writing config")
             _config_filename = os.path.join(self.config["save_path"], "config.json")
             write_json(self.config, _config_filename)
 
