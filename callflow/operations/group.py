@@ -43,10 +43,6 @@ class Group:
         self.compute()
 
     def _format_node_name(self, module_idx, name):
-        # TODO: Hacking the way through heere....
-        # Need to recalculate the module_fct_list.
-        if self.sg.name == "ensemble":
-            return name + "=" + name
         return self.sg.modules[module_idx] + "=" + name
 
     # --------------------------------------------------------------------------
