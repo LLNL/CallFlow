@@ -6,7 +6,7 @@
  */
 
 <template>
-  <div row class="pa-0">
+  <div id="inspire">
     <Toolbar ref="ToolBar" :isSettingsOpen.sync="isSettingsOpen" />
     <v-navigation-drawer v-model.lazy="isSettingsOpen" fixed>
       <v-card fill-height>
