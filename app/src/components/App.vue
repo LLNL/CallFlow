@@ -83,14 +83,25 @@ export default {
 		EventHandler.$on("setup-colors", () => {
 			self.setupColors(this.$store.selectedRuntimeColorMap, this.$store.selectedDistributionColorMap);
 		});
+
+		EventHandler.$on("aux-data", (payload) => {
+			this.fetchData(payload);
+		});
 	},
 
 	methods: {
 		async init() {
-			const data = await this.fetchData();
-			console.log("Aux data", data);
+			this.config = await APIService.GETRequest("config");
+			this.$store.config = this.config;
+
+			document.title = "CallFlow - " + this.$store.config.experiment;
+
+			this.runs = this.$store.config.runs.map((_) => _["name"]);
+			this.run_counts = this.runs.length;
+
+			await this.fetchData();
 			this.isDataReady = true;
-			this.initStore(data);
+			// this.initStore(data);
 		},
 
 		/**
@@ -98,16 +109,6 @@ export default {
 		 * Parameters: {datasetPath: "path/to/dataset"}
 		*/ 
 		async fetchData(payload) {
-			if (!this.$store.config) {
-				this.config = await APIService.GETRequest("config");
-				this.$store.config = this.config;
-			}
-
-			document.title = "CallFlow - " + this.$store.config.experiment;
-
-			this.runs = this.$store.config.runs.map((_) => _["name"]);
-			this.run_counts = this.runs.length;
-
 			if(!payload) {
 				payload = {
 					datasets: this.runs,
@@ -116,7 +117,9 @@ export default {
 					reProcess: false,
 				};
 			}
-			return await APIService.POSTRequest("aux_data", payload);
+			const aux_data = await APIService.POSTRequest("aux_data", payload);
+			this.initStore(aux_data);
+			return;
 		},
 
 		initStore(data) {
