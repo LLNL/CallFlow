@@ -178,11 +178,13 @@ export function getGradients(store, node) {
 	let type = "";
 	if (store.m2c[store.selectedTargetDataset][node.id].length == 1) {
 		type = "component-node";
-	} 
+		if (store.data_mod[store.selectedTargetDataset][nodeName] != undefined) {
+			type = "super-node";
+		}
+	}
 	else {
 		type = node.type;
 	}
-
 
 	if (type == "super-node") {
 		nodeName = node.module_idx;

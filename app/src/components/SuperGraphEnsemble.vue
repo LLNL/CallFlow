@@ -133,11 +133,6 @@ export default {
 		isSettingsOpen: function (val) {
 			this.$emit("update:isSettingsOpen", val);
 		},
-
-		selectedTargetDataset(val) {
-			this.$store.selectedTargetDataset = val;
-			this.reset();
-		},
 	},
 
 	mounted() {

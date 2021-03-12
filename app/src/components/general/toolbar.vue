@@ -6,10 +6,9 @@
 			</div>
 			<router-link
 				to="/"
-				v-slot="{ href, navigate, isActive }">
+				v-slot="{  navigate, isActive }">
 				<a
 					:class="isActive ? 'your-custom-class' : 'anything'"
-					:href="type !== 'internal' ? href : 'javascript:void(0);'"
 					@click="customNavigate(navigate.bind($event))">
 					<slot ></slot>
 					<div class="toolbar-title"> CallFlow </div>
