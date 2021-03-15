@@ -201,13 +201,7 @@ export default {
 						this.$refs.Guides.visualize(node, "permanent", nodeSVG);
 						this.drawGuidesMap[node.id] = true;
 					}
-
-					APIService.POSTRequest("module_hierarchy", {
-						node,
-						name: this.$store.selectedName,
-						datasets: this.$store.selectedDatasets,
-					});
-
+					
 					EventHandler.$emit("ensemble-histogram", {
 						node,
 						datasets: this.$store.selectedDatasets,
@@ -221,6 +215,13 @@ export default {
 					EventHandler.$emit("ensemble-select-module", {
 						module: this.$store.selectedModule,
 					});
+
+					APIService.POSTRequest("module_hierarchy", {
+						node,
+						name: this.$store.selectedName,
+						datasets: this.$store.selectedDatasets,
+					});
+
 				}
 				else if (this.$store.selectedMode == "Single") {
 					EventHandler.$emit("single-histogram", {

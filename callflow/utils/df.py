@@ -5,7 +5,7 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-
+import pandas as pd
 
 # ------------------------------------------------------------------------------
 # pandas dataframe utils
@@ -86,5 +86,24 @@ def df_group_by(df, columns, proxy={}):
         columns = proxy.get(columns, columns)
         return df.groupby([columns])
 
+def df_bi_level_group(df, frst_group_attr, scnd_group_attr, cols, apply_func, proxy={}):
+    """
+    """
+    g_df = df.groupby(frst_group_attr)
+
+    _cols = [proxy.get(_, _) for _ in cols]    
+    ret_df = pd.DataFrame([])
+    for grp in g_df.groups:
+        _df = g_df.get_group(grp)
+        if "dataset" in _df.columns:
+            group_cols = ["dataset", scnd_group_attr]
+        else:
+            group_cols = [scnd_group_attr]
+        ret_df = pd.concat([ret_df, _df.groupby(group_cols)[_cols].apply(apply_func)])
+        
+    ret_df["module"] = ret_df["module"].astype(int)
+        
+    ret_df.reset_index(drop=False, inplace=True)
+    return ret_df
 
 # ------------------------------------------------------------------------------

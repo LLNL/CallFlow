@@ -87,7 +87,7 @@ class BaseProvider:
         group_by = self.config["group_by"]
         filter_by = self.config["filter_by"]
         filter_perc = self.config["filter_perc"]
-        module_map = self.config.get("module_map", {})
+        module_callsite_map = self.config.get("module_callsite_map", {})
 
         run_props = {
             _["name"]: (_["path"], _["profile_format"]) for _ in self.config["runs"]
@@ -110,7 +110,7 @@ class BaseProvider:
             sg.create(
                 path=os.path.join(load_path, _prop[0]),
                 profile_format=_prop[1],
-                module_callsite_map=module_map,
+                module_callsite_map=module_callsite_map,
             )
             LOGGER.profile(f'Created supergraph {name}')
             Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
@@ -121,8 +121,8 @@ class BaseProvider:
             if is_not_ensemble or indivdual_aux_for_ensemble:
                 Auxiliary(sg)
 
-                LOGGER.profile(f'Created Aux for {name}')
-                sg.write(os.path.join(save_path, name), write_aux=is_not_ensemble)
+            LOGGER.profile(f'Created Aux for {name}')
+            sg.write(os.path.join(save_path, name), write_aux=is_not_ensemble)
 
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')

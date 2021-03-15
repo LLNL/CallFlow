@@ -25,6 +25,7 @@ JSONSCHEMA_CONFIG = {
         "filter_perc": {"type": "number"},
         "filter_by": {"type": "string"},
         "group_by": {"type": "string"},
+        "module_callsite_map": {"type": "object"}
     },
 }
 
@@ -315,15 +316,12 @@ class ArgParser:
             exit(1)
 
         # TODO: Cleanup this with a new file that has the module mapping.
-        if "callsite_module_map" in json:
+        if "module_callsite_map" in json:
+            scheme["module_callsite_map"] = json["module_callsite_map"]
             scheme["callsite_module_map"] = ArgParser._process_module_map(
-                json["callsite_module_map"]
+                json["module_callsite_map"]
             )
 
-        # if "callsite_module_map" in json["scheme"]:
-        # scheme["callsite_module_map"] = ArgParser._process_module_map(
-        #     json["scheme"]["callsite_module_map"]
-        # )
 
         return scheme
 

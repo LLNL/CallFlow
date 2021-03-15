@@ -133,11 +133,6 @@ export default {
 		isSettingsOpen: function (val) {
 			this.$emit("update:isSettingsOpen", val);
 		},
-
-		selectedTargetDataset(val) {
-			this.$store.selectedTargetDataset = val;
-			this.reset();
-		},
 	},
 
 	mounted() {
@@ -152,11 +147,16 @@ export default {
 			this.init();
 		}
 
-		EventHandler.$on("lasso_selection", () => {
+		EventHandler.$on("lasso-selection", (selectedDatasets) => {
 			this.$store.resetTargetDataset = true;
-			this.clearLocal();
-			this.setTargetDataset();
-			this.requestEnsembleData();
+			this.$store.selectedDatasets = selectedDatasets;
+			EventHandler.$emit("aux-data", {
+				datasets: this.$store.selectedDatasets,
+				rankBinCount: this.$store.selectedMPIBinCount,
+				runBinCount: this.$store.selectedRunBinCount,
+				reProcess: true,
+			});
+			this.reset();
 		});
 	},
 

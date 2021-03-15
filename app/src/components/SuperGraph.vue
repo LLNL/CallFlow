@@ -29,7 +29,7 @@
 	<VisualEncoding ref="VisualEncoding"/>
     </v-navigation-drawer>
 
-    <v-main class="pt-0">
+    <v-row class="pa-0 ma-0">
       <splitpanes id="callgraph-dashboard" class="default-theme">
         <!-- Left column-->
         <splitpanes horizontal :splitpanes-size="25">
@@ -47,7 +47,7 @@
           <CallsiteInformation ref="CallsiteInformation" />
         </splitpanes>
       </splitpanes>
-    </v-main>
+    </v-row>
   </div>
 </template>
 
@@ -118,11 +118,6 @@ export default {
 
 		isSettingsOpen: function (val) {
 			this.$emit("update:isSettingsOpen", val);
-		},
-
-		selectedTargetDataset(val) {
-			this.$store.selectedTargetDataset = val;
-			this.reset();
 		},
 	},
 

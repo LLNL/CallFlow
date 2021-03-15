@@ -4,8 +4,15 @@
 			<div @click.stop="openSettings()" align-left>
 				<v-icon color="white">settings</v-icon>
 			</div>
-			<div class="toolbar-title">{{ appName }}</div>
-			
+			<router-link
+				to="/"
+				v-slot="{  navigate }">
+				<a
+					@click="customNavigate(navigate.bind($event))">
+					<slot ></slot>
+					<div class="toolbar-title"> CallFlow </div>
+				</a>
+			</router-link>
 			<RunSelection ref="RunSelection" />
 		</v-app-bar>
 	</v-container>

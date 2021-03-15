@@ -17,7 +17,6 @@
 // Library imports
 import * as d3 from "d3";
 import "d3-selection-multi"; 
-import { brush } from "d3";
 
 // Local library imports
 import * as utils from "lib/utils";
@@ -44,7 +43,7 @@ export default {
 		padding: {
 			top: 10,
 			right: 10,
-			bottom: 10,
+			bottom: 20,
 			left: 15,
 		},
 		dataset_index: [],
@@ -57,6 +56,7 @@ export default {
 		selectedColorBy: "Inclusive",
 		MPIcount: 0,
 		paddingFactor: 3.5,
+		bottomMargin: 15,
 		boxOffset: 20,
 		x_max_exponent: 0,
 		superscript: "⁰¹²³⁴⁵⁶⁷⁸⁹",
@@ -484,7 +484,7 @@ export default {
 						let botX3 = this.ranklinescale(start);
 						let botX4 = this.ranklinescale(end);
 
-						let topY = this.boxHeight - this.histogramOffset;
+						let topY = this.boxHeight - this.histogramOffset + 10;
 						let botY = this.boxHeight;
 
 						cumulativeBinSpace += (end - start + 1) * widthPerRank;
@@ -502,7 +502,7 @@ export default {
 								return "grey";
 							})
 							.style("fill-opacity", 0.4)
-							.attr("transform", `translate(${0},${-3 * this.padding.bottom})`);
+							.attr("transform", `translate(${0},${-3 * this.bottomMargin})`);
 					});
 				}
 			});
@@ -520,7 +520,7 @@ export default {
 				.attr("id", "rankAxis")
 				.attr(
 					"transform",
-					`translate(${0},${this.boxHeight - 3 * this.padding.bottom})`
+					`translate(${0},${this.boxHeight - 3 * this.bottomMargin})`
 				)
 				.call(rankLineAxis);
 

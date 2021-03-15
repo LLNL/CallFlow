@@ -36,8 +36,8 @@ export default {
 		padding: {
 			top: 10,
 			right: 10,
-			bottom: 10,
-			left: 15,
+			bottom: 30,
+			left: 20,
 		},
 		xData: [],
 		yData: [],

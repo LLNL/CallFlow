@@ -25,7 +25,7 @@ class Gradients:
     Computes the ensemble gradients for the a given dictionary of dataframes.
     """
 
-    def __init__(self, df, callsiteOrModule: str, bins: int = 20, proxy_columns={}):
+    def __init__(self, df, callsiteOrModule: str, grp_type: str="name", bins: int = 20, proxy_columns={}):
         """
         Constructor function
         :param df: Dictinary of dataframes keyed by the dataset_name. For e.g., { "dataset_name": df }.
@@ -57,7 +57,7 @@ class Gradients:
                           for _d, _df in self.df_dict.items()}
         self.max_ranks = max(self.rank_dict.values())
 
-        self.result = self.compute(columnName="name")
+        self.result = self.compute(grp_type)
 
     @staticmethod
     def convert_dictmean_to_list(dictionary):
@@ -114,7 +114,6 @@ class Gradients:
 
         # Get the runtimes for all the runs.
         for idx, dataset in enumerate(self.df_dict):
-
             node_df = df_lookup_by_column(self.df_dict[dataset], columnName,
                                           self.callsiteOrModule)
 

@@ -102,6 +102,11 @@ export default {
 			self.init();
 		});
 
+		EventHandler.$on("fetch-ensemble-super-graph", () => {
+			self.clear();
+			self.init();
+		});
+
 		this.selectedMetric = this.$store.selectedMetric;		
 	},
 
