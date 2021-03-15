@@ -33,7 +33,7 @@ class Gradients:
         :param bins: Number of bins to distribute the runtime information.
         """
         assert isinstance(df, pd.DataFrame)
-        assert isinstance(callsiteOrModule, str) or isinstance(callsiteOrModule, int) or isinstance(callsiteOrModule, float)
+        assert isinstance(callsiteOrModule, str) or isinstance(callsiteOrModule, int)
         assert isinstance(bins, int)
         assert isinstance(proxy_columns, dict)
         assert bins > 0

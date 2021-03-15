@@ -73,7 +73,9 @@ class Auxiliary:
         # ----------------------------------------------------------------------
         # ensemble graph
         else:
-            edf_module = df_bi_level_group(sg.dataframe, "module", "rank", cols=["time", "time (inc)", "name", "module"], apply_func=lambda _: _.mean())
+            edf = df_bi_level_group(sg.dataframe, "module", "rank", cols=["time", "time (inc)", "name", "module"], apply_func=lambda _: _.mean())
+            edf_module = edf.groupby("module")
+            
             edf_name = df_group_by(sg.dataframe, "name")
 
             self.result['ensemble'] = {"summary": sg.summary(),
@@ -88,7 +90,10 @@ class Auxiliary:
             # for relative computation
             for dataset in self.runs:
                 df = df_lookup_by_column(sg.dataframe, "dataset", dataset)
-                df_module = df_bi_level_group(df, "module", "rank", cols=["time", "time (inc)", "name", "module"], apply_func=lambda _: _.mean())
+                # df_module = df_bi_level_group(df, "module", "rank",
+                # cols=["time", "time (inc)", "name", "module"],
+                # apply_func=lambda _: _.mean())
+                df_module = edf.loc[edf['dataset'] == dataset].groupby("module")
                 df_name = df_group_by(df, "name")
 
                 # TODO: this assumes that the original dataframe was modified
