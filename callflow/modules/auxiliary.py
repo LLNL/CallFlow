@@ -16,7 +16,7 @@ from scipy.stats import kurtosis, skew
 import callflow
 from callflow.utils.utils import print_dict_recursive
 from callflow.utils.df import df_minmax, df_count, df_unique, df_group_by, \
-    df_fetch_columns, df_lookup_by_column, df_lookup_and_list
+    df_fetch_columns, df_lookup_by_column, df_lookup_and_list, df_bi_level_group
 
 from .gradients import Gradients
 from .boxplot import BoxPlot
@@ -58,7 +58,7 @@ class Auxiliary:
         # single super graph
         if not isinstance(sg, callflow.EnsembleGraph):
 
-            df_module = df_group_by(sg.dataframe, "module")
+            df_module = df_bi_level_group(sg.dataframe, "module", "rank", cols=["time", "time (inc)", "name", "module"], apply_func=lambda _: _.mean())
             df_name = df_group_by(sg.dataframe, "name")
 
             self.result = {"summary": sg.summary(),
@@ -73,7 +73,7 @@ class Auxiliary:
         # ----------------------------------------------------------------------
         # ensemble graph
         else:
-            edf_module = df_group_by(sg.dataframe, "module")
+            edf_module = df_bi_level_group(sg.dataframe, "module", "rank", cols=["time", "time (inc)", "name", "module"], apply_func=lambda _: _.mean())
             edf_name = df_group_by(sg.dataframe, "name")
 
             self.result['ensemble'] = {"summary": sg.summary(),
@@ -88,7 +88,7 @@ class Auxiliary:
             # for relative computation
             for dataset in self.runs:
                 df = df_lookup_by_column(sg.dataframe, "dataset", dataset)
-                df_module = df_group_by(df, "module")
+                df_module = df_bi_level_group(df, "module", "rank", cols=["time", "time (inc)", "name", "module"], apply_func=lambda _: _.mean())
                 df_name = df_group_by(df, "name")
 
                 # TODO: this assumes that the original dataframe was modified
@@ -141,6 +141,7 @@ class Auxiliary:
             if is_ensemble:
                 gradients = Gradients(df, bins=self.nbins_run,
                                       callsiteOrModule=grp_name,
+                                      grp_type=grp_column,
                                       proxy_columns=self.proxy_columns).result
 
             # ------------------------------------------------------------------
