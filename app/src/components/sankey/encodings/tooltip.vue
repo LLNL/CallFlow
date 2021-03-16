@@ -23,7 +23,7 @@ export default {
 		textxOffset: 20,
 		textyOffset: 20,
 		textPadding: 15,
-		height: 200,
+		// height: 100,
 		margin: 35,
 		mousePosX: 0,
 		mousePosY: 0,
@@ -98,6 +98,7 @@ export default {
 
 			const svgScale = d3.scaleLinear().domain([2, 11]).range([50, 150]);
 
+			const height = 3 * 33.3 + node["entry_function"].length * 33.3;
 			this.toolTipG.attr("height", svgScale(10) + "px");
 			this.toolTipRect = this.toolTipG
 				.append("rect")
@@ -108,7 +109,7 @@ export default {
 					"rx": "10px",
 					"fill-opacity": 1,
 					"width": "325",
-					"height": this.height,
+					"height": height,
 				})
 				.attrs({
 					"x": this.xOffset,
@@ -188,9 +189,11 @@ export default {
 
 			this.rectWidth = "10px";
 
-			this.addText("");
-			this.addText("Entry call sites: ");
-			this.entryFunctionInformation(node, entry_function_data);
+			if(entry_function_data.length > 0) {
+				this.addText("");
+				this.addText("Entry call sites: ");
+				this.entryFunctionInformation(node, entry_function_data);
+			}
 		},
 
 		entryFunctionInformation(node, entry_function_data) {
