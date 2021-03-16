@@ -8,7 +8,7 @@
 				to="/"
 				v-slot="{  navigate }">
 				<a
-					@click="customNavigate(navigate.bind($event))">
+					@click="navigate.bind($event)">
 					<slot ></slot>
 					<div class="toolbar-title"> CallFlow </div>
 				</a>
