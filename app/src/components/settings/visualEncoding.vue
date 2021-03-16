@@ -32,6 +32,7 @@
 			v-model="selectedDistributionColorMap"
 			:menu-props="{ maxHeight: '200' }"
 			persistent-hint
+			:disabled="selectedFormat=='SuperGraph'? true : false"
 		>
 		</v-select>
 	</v-flex>
@@ -43,6 +44,7 @@
 			v-model="selectedTargetColor"
 			:menu-props="{ maxHeight: '200' }"
 			persistent-hint
+			:disabled="selectedFormat=='SuperGraph'? true : false"
 		>
 		</v-select>
 	</v-flex>
@@ -191,7 +193,7 @@ export default {
 		selectedDistributionColorMap: "Blues",
 		compareModes: ["MEAN_DIFF", "RANK_DIFF"],
 		selectedCompareMode: "MEAN_DIFF",
-		props: ["name", "rank", "dataset", "all_ranks"],
+		props: ["name", "rank", "dataset"],
 		selectedProp: "dataset",
 		dimensions: ["max_inclusive_time", "max_exclusive_time", "rank_count"],
 		selectedPC1: "max_inclusive_time",
