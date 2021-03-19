@@ -47,6 +47,11 @@ class SuperGraph(ht.GraphFrame):
         """
         assert isinstance(name, str)
 
+        self.roots = [] # Roots of the call graph
+        self.mean_root_inc = 0.0 # Mean inc. metric of the root nodes
+        self.callsites = [] # all callsites in the call graph
+        self.f_callsites = [] # filtered callsites (after QueryMatcher))
+
         self.nxg = None
 
         self.name = name  # dataset name
@@ -77,7 +82,7 @@ class SuperGraph(ht.GraphFrame):
         return self.__str__()
 
     # --------------------------------------------------------------------------
-    def create(self, path, profile_format, module_callsite_map: dict = {}) -> None:
+    def create(self, path, profile_format, module_callsite_map: dict = {}, filter_by="time (inc)", filter_perc=10.0) -> None: 
         """
         Create SuperGraph from basic information. It does the following:
             1. Using the config object, it constructs the Hatchet GraphFrame.
@@ -100,13 +105,29 @@ class SuperGraph(ht.GraphFrame):
         gf = SuperGraph.from_config(path, self.profile_format)
         assert isinstance(gf, ht.GraphFrame)
         assert gf.graph is not None
-        super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics)
+        LOGGER.debug("Input Dataframe shape", gf.dataframe.shape)
+
+        super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics) # Initialize here so that we dont drop index levels.
+
+        self.callsites = df_unique(gf.dataframe, "name")
+        LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
+
+        self.roots = SuperGraph.hatchet_get_roots(gf.graph) # Contains all unfiltered roots as well.
+        self.mean_root_inctime = SuperGraph.df_mean_runtime(gf.dataframe, self.roots)
+        
+        # Filter the graphframe using hatchet (initial filtering) using QueryMatcher.
+        query = [
+            ("*", {f"{filter_by}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
+        ]
+        LOGGER.debug(f"Query is :{query}")
+        gf.drop_index_levels()
+        gf = gf.filter(query)
+        
+        self.f_callsites = df_unique(gf.dataframe, "name")
+        LOGGER.info(f"Number of callsites in after QueryMatcher: {len(self.f_callsites)}")
 
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
         self.roots = self.get_roots(self.nxg)  
-        self.profiler.stop()
-        print(self.profiler.output_text(unicode=True, color=True))       
-
 
         # ----------------------------------------------------------------------
         # Hatchet requires node and rank to be indexes.
@@ -132,11 +153,6 @@ class SuperGraph(ht.GraphFrame):
 
         LOGGER.info(f'Processed dataframe: {self.dataframe.shape}, '
                     f'columns = {list(self.dataframe.columns)}')
-          
-        # ----------------------------------------------------------------------
-
-    def post_filter(self):
-        self.profiler.start()
 
         # ----------------------------------------------------------------------
         # graph-related operations
@@ -153,9 +169,6 @@ class SuperGraph(ht.GraphFrame):
             Sanitizer.from_htframe(_f) for _f in f] for f in self.paths[_]][0]) # Expensive.
 
         self.modules = np.array(self.df_factorize_column("module", sanitize=True))  # As expensive as 
-        self.module_callsite_map = self.df_mod2callsite()
-        self.callsite_module_map = self.df_callsite2mod() # Expensive...
-
 
         self.profiler.stop()
         print(self.profiler.output_text(unicode=True, color=True))       
@@ -206,8 +219,6 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def add_modules(self, module_callsite_map={}):
-        self.profiler = Profiler()
-        self.profiler.start()
 
         has_modules_in_df = "module" in self.dataframe.columns
         has_modules_in_map = len(module_callsite_map) > 0
@@ -217,8 +228,8 @@ class SuperGraph(ht.GraphFrame):
         # if dataframe already has modules
         if has_modules_in_df:
             LOGGER.info('Found \"module\" column in the dataframe. Doing nothing.')
-            # self.module_callsite_map = self.df_mod2callsite()
-            # self.callsite_module_map = self.df_callsite2mod() # Expensive...
+            self.module_callsite_map = self.df_mod2callsite()
+            self.callsite_module_map = self.df_callsite2mod() # Expensive...
 
         # ----------------------------------------------------------------------
         # use the given module-callsite map
@@ -243,9 +254,6 @@ class SuperGraph(ht.GraphFrame):
                                apply_on="name")
 
         # ----------------------------------------------------------------------
-
-        self.profiler.stop()
-        print(self.profiler.output_text(unicode=True, color=True))       
 
 
     # --------------------------------------------------------------------------
@@ -307,7 +315,7 @@ class SuperGraph(ht.GraphFrame):
     def summary(self):
 
         cols = list(self.dataframe.columns)
-        result = {"meantime": self.df_mean_runtime(self.nxg),
+        result = {"meantime": SuperGraph.df_mean_runtime(self.dataframe, self.roots),
                   "roots": self.roots,
                   "ncallsites": self.df_count("name"),
                   "nmodules": self.df_count("module"), # if "module" in cols else 0,
@@ -599,10 +607,15 @@ class SuperGraph(ht.GraphFrame):
 
         return nxg
 
-    def df_mean_runtime(self, roots):
+    @staticmethod
+    def hatchet_get_roots(graph):
+        return [root.frame.get('name') for root in graph.roots]
+
+    @staticmethod
+    def df_mean_runtime(df, roots):
         mean_runtime = 0.0
         for root in roots:
-            mean_runtime = max(mean_runtime, self.dataframe.loc[self.dataframe['name'] == root]["time (inc)"].mean())
+            mean_runtime = max(mean_runtime, df.loc[df['name'] == root]["time (inc)"].mean())
         return round(mean_runtime, 2)
 
     def get_roots(self, nxg):

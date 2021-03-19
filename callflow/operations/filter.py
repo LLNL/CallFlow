@@ -64,7 +64,6 @@ class Filter:
 
         if self.filter_by == "time (inc)":
             value = self.filter_perc * 0.01 * np.max(max_vals["time (inc)"])
-            print(value)
             self._filter_sg(self.filter_by, value)
 
         elif self.filter_by == "time":
@@ -84,7 +83,7 @@ class Filter:
         self.dataframe = self.sg.df_filter_by_value(filter_by, filter_val)
         LOGGER.info(f'Filtered dataframe comprises of: "{self.dataframe.shape}"')
 
-        callsites = self.dataframe["name"].unique()
+        callsites = self.sg.f_callsites
         nxg = nx.DiGraph()
 
         if filter_by == "time (inc)":
