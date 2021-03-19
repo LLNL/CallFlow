@@ -148,10 +148,11 @@ class BaseProvider:
             Unify(sg, self.supergraphs)
             LOGGER.profile(f'Created supergraph {name}')
 
-            Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
-            LOGGER.profile(f'Filtered supergraph {name}')
             Group(sg, group_by=group_by)
             LOGGER.profile(f'Grouped supergraph {name}')
+
+            Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
+            LOGGER.profile(f'Filtered supergraph {name}')
 
             Auxiliary(sg)
             LOGGER.profile(f'Created Aux for {name}')
