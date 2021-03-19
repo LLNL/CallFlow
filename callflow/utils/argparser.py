@@ -290,7 +290,7 @@ class ArgParser:
             "group_by",
             "read_parameter",
         ]:
-            scheme[_] = self.args[_]
+            scheme[_] = json[_]
 
         if len(scheme["save_path"]) == 0:
             scheme["save_path"] = os.path.join(scheme["data_path"], ".callflow")
@@ -321,7 +321,6 @@ class ArgParser:
             scheme["callsite_module_map"] = ArgParser._process_module_map(
                 json["module_callsite_map"]
             )
-
 
         return scheme
 
