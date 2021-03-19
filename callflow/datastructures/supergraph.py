@@ -21,6 +21,7 @@ from callflow.utils.utils import NumpyEncoder
 from callflow.utils.df import *
 from .metrics import FILE_FORMATS, METRIC_PROXIES, TIME_COLUMNS
 from callflow.modules import UnpackAuxiliary
+from pyinstrument import Profiler
 
 LOGGER = get_logger(__name__)
 
@@ -64,6 +65,7 @@ class SuperGraph(ht.GraphFrame):
         self.callsite_module_map = {}
         self.module_callsite_map = {}
         self.roots = []
+        self.profiler = Profiler()
 
     # --------------------------------------------------------------------------
     def __str__(self):
@@ -90,6 +92,7 @@ class SuperGraph(ht.GraphFrame):
         :param module_callsite_map: Module callsite mapping
         :return:
         """
+        self.profiler.start()
         self.profile_format = profile_format
         LOGGER.info(f"Creating SuperGraph ({self.name}) from ({path}) "
                     f"using ({self.profile_format}) format")
@@ -100,16 +103,10 @@ class SuperGraph(ht.GraphFrame):
         super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics)
 
         self.nxg = self.hatchet_graph_to_nxg(self.graph)
-        self.roots = self.get_roots(self.nxg)
+        self.roots = self.get_roots(self.nxg)  
+        self.profiler.stop()
+        print(self.profiler.output_text(unicode=True, color=True))       
 
-        # ----------------------------------------------------------------------
-        # graph-related operations
-        for node in self.graph.traverse():
-            node_name = Sanitizer.from_htframe(node.frame)
-            self.hatchet_nodes[node_name] = node
-            self.paths[node_name] = node.paths()
-            self.callers[node_name] = [_.frame.get("name") for _ in node.parents]
-            self.callees[node_name] = [_.frame.get("name") for _ in node.children]
 
         # ----------------------------------------------------------------------
         # Hatchet requires node and rank to be indexes.
@@ -127,11 +124,7 @@ class SuperGraph(ht.GraphFrame):
 
         # add new columns to the dataframe
         self.df_add_nid_column()
-        self.df_add_column("callees", apply_func=lambda _: self.callees[_])
-        self.df_add_column("callers", apply_func=lambda _: self.callers[_])
-        self.df_add_column("path", apply_func=lambda _: [[
-            Sanitizer.from_htframe(_f) for _f in f] for f in self.paths[_]][0])
-
+        
         # ----------------------------------------------------------------------
         # TODO: For faster searches, bring this back.
         # self.indexes.insert(0, 'dataset')
@@ -139,8 +132,34 @@ class SuperGraph(ht.GraphFrame):
 
         LOGGER.info(f'Processed dataframe: {self.dataframe.shape}, '
                     f'columns = {list(self.dataframe.columns)}')
+          
+        # ----------------------------------------------------------------------
+
+    def post_filter(self):
+        self.profiler.start()
 
         # ----------------------------------------------------------------------
+        # graph-related operations
+        for node in self.graph.traverse():
+            node_name = Sanitizer.from_htframe(node.frame)
+            self.hatchet_nodes[node_name] = node
+            self.paths[node_name] = node.paths()
+            self.callers[node_name] = [_.frame.get("name") for _ in node.parents]
+            self.callees[node_name] = [_.frame.get("name") for _ in node.children]
+
+        self.df_add_column("callees", apply_func=lambda _: self.callees[_])
+        self.df_add_column("callers", apply_func=lambda _: self.callers[_])
+        self.df_add_column("path", apply_func=lambda _: [[
+            Sanitizer.from_htframe(_f) for _f in f] for f in self.paths[_]][0]) # Expensive.
+
+        self.modules = np.array(self.df_factorize_column("module", sanitize=True))  # As expensive as 
+        self.module_callsite_map = self.df_mod2callsite()
+        self.callsite_module_map = self.df_callsite2mod() # Expensive...
+
+
+        self.profiler.stop()
+        print(self.profiler.output_text(unicode=True, color=True))       
+
 
     # --------------------------------------------------------------------------
     def load(
@@ -187,6 +206,8 @@ class SuperGraph(ht.GraphFrame):
 
     # --------------------------------------------------------------------------
     def add_modules(self, module_callsite_map={}):
+        self.profiler = Profiler()
+        self.profiler.start()
 
         has_modules_in_df = "module" in self.dataframe.columns
         has_modules_in_map = len(module_callsite_map) > 0
@@ -195,9 +216,9 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         # if dataframe already has modules
         if has_modules_in_df:
-            LOGGER.info('Found \"module\" column in the dataframe')
-            self.module_callsite_map = self.df_mod2callsite()
-            self.callsite_module_map = self.df_callsite2mod()
+            LOGGER.info('Found \"module\" column in the dataframe. Doing nothing.')
+            # self.module_callsite_map = self.df_mod2callsite()
+            # self.callsite_module_map = self.df_callsite2mod() # Expensive...
 
         # ----------------------------------------------------------------------
         # use the given module-callsite map
@@ -222,7 +243,10 @@ class SuperGraph(ht.GraphFrame):
                                apply_on="name")
 
         # ----------------------------------------------------------------------
-        self.modules = np.array(self.df_factorize_column("module", sanitize=True))
+
+        self.profiler.stop()
+        print(self.profiler.output_text(unicode=True, color=True))       
+
 
     # --------------------------------------------------------------------------
     def add_time_proxies(self):
@@ -624,6 +648,7 @@ class SuperGraph(ht.GraphFrame):
 
         gf = None
         if profile_format == "hpctoolkit":
+            print(data_path)
             gf = ht.GraphFrame.from_hpctoolkit(data_path)
 
         elif profile_format == "caliper":
