@@ -14,6 +14,7 @@ from callflow.modules import Auxiliary
 from callflow.layout import NodeLinkLayout, SankeyLayout, HierarchyLayout
 from callflow.modules import ParameterProjection, DiffView
 from callflow.utils.utils import get_memory_usage
+from pyinstrument import Profiler
 
 LOGGER = get_logger(__name__)
 
@@ -104,6 +105,8 @@ class BaseProvider:
             _prop = run_props[name]
 
             LOGGER.profile(f'Starting supergraph {name}')
+            profile = Profiler()
+            profile.start()
 
             sg = SuperGraph(name)
             sg.create(
@@ -128,6 +131,8 @@ class BaseProvider:
             LOGGER.profile(f'Created Aux for {name}')
             sg.write(os.path.join(save_path, name), write_aux=is_not_ensemble)
 
+            profile.stop()
+            print(profile.output_text(unicode=True, color=True))
             self.supergraphs[name] = sg
             LOGGER.profile(f'Stored in dictionary {name}')
 
