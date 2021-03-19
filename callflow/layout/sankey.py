@@ -508,10 +508,8 @@ class SankeyLayout:
                     if not nxg.has_node(target_id):
                         nxg.add_node(target_id, attr_dict=target)
 
-                    if not nxg.has_edge(source_id, target_id):
+                    if not nxg.has_edge(source_id, target_id) and edge_dict["weight"] > 0:
                         nxg.add_edge(source_id, target_id, attr_dict=edge_dict)
-
-                        # print(f"{source}, \n {target} \n\n")
 
         return nxg
 

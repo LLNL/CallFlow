@@ -113,11 +113,12 @@ class BaseProvider:
                 module_callsite_map=module_callsite_map,
             )
             LOGGER.profile(f'Created supergraph {name}')
-            Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
-            LOGGER.profile(f'Filtered supergraph {name}')
             Group(sg, group_by=group_by)
             LOGGER.profile(f'Grouped supergraph {name}')
 
+            Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
+            LOGGER.profile(f'Filtered supergraph {name}')
+            
             if is_not_ensemble or indivdual_aux_for_ensemble:
                 Auxiliary(sg)
 

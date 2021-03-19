@@ -43,6 +43,10 @@ class Filter:
             f'Filtering ({self.sg}) by "{self.filter_by}" = {self.filter_perc}%'
         )
         self.compute()
+        
+        # TODO: Find a better way to do this.
+        self.sg.dataframe = self.dataframe
+        self.sg.nxg = self.nxg
 
     # --------------------------------------------------------------------------
     def compute(self):
@@ -60,6 +64,7 @@ class Filter:
 
         if self.filter_by == "time (inc)":
             value = self.filter_perc * 0.01 * np.max(max_vals["time (inc)"])
+            print(value)
             self._filter_sg(self.filter_by, value)
 
         elif self.filter_by == "time":
@@ -77,6 +82,7 @@ class Filter:
         """
         LOGGER.debug(f'Filtering {self.__str__()}: "{filter_by}" <= {filter_val}')
         self.dataframe = self.sg.df_filter_by_value(filter_by, filter_val)
+        LOGGER.info(f'Filtered dataframe comprises of: "{self.dataframe.shape}"')
 
         callsites = self.dataframe["name"].unique()
         nxg = nx.DiGraph()
