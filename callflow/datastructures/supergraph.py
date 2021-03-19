@@ -337,7 +337,10 @@ class SuperGraph(ht.GraphFrame):
         else:
             assert isinstance(modules, (list, np.ndarray))
 
-        return {_: df_lookup_and_list(self.dataframe, "module", _, "name")
+        _indexes = ["module"] + self.indexes
+        _df = self.dataframe.set_index(_indexes)
+
+        return {_: _df.xs(_, 0)["name"].unique()
                 for _ in modules}
 
     def df_callsite2mod(self, callsites = None):
@@ -352,9 +355,9 @@ class SuperGraph(ht.GraphFrame):
 
         map = {}
         for _ in callsites:
-            __df =  _df.xs(callsites[0], 0)
+            __df =  _df.xs(_, 0)
             mod_idx = __df["module"].unique()
-            assert mod_idx.shape[0] in [0, 1]
+            # assert mod_idx.shape[0] in [0, 1]
             if mod_idx.shape[0] == 1:
                 map[_] = mod_idx[0]
         return map
