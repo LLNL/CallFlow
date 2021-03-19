@@ -12,7 +12,7 @@ import networkx as nx
 import callflow
 from callflow.utils.timer import Timer
 from callflow.utils.sanitizer import Sanitizer
-
+from hatchet.query_matcher import QueryMatcher
 
 class NodeLinkLayout:
     """
@@ -48,8 +48,10 @@ class NodeLinkLayout:
         _fdf = sg.df_filter_by_name(callsites)
 
         with self.timer.phase(f"Creating CCT for ({self.runs})"):
-            self.nxg = NodeLinkLayout._create_nxg_from_paths(_fdf["path"].tolist())
-
+            _fdf['path'] = _fdf['path'].astype(str) # Convert 1D path array to str to perform unique operation
+            paths = _fdf['path'].unique().tolist()
+            self.nxg = NodeLinkLayout._create_nxg_from_paths(callsites, paths)
+    
         # Add node and edge attributes.
         with self.timer.phase("Add graph attributes"):
             self._add_node_attributes()
@@ -66,8 +68,8 @@ class NodeLinkLayout:
         :return: None
         """
         _gdf = self.sg.df_group_by(["name"])
-        name_time_inc_map = _gdf["time (inc)"].max().to_dict()
-        name_time_exc_map = _gdf["time"].max().to_dict()
+        name_time_inc_map = _gdf["time (inc)"].mean().to_dict()
+        name_time_exc_map = _gdf["time"].mean().to_dict()
         module_map = _gdf["module"].unique().to_dict()
 
         # compute data map
@@ -261,29 +263,41 @@ class NodeLinkLayout:
 
     # --------------------------------------------------------------------------
     @staticmethod
-    def _create_nxg_from_paths(paths):
+    def _create_nxg_from_paths(callsites, paths):
         """
 
         :param paths:
         :return:
         """
         assert isinstance(paths, list)
-        from ast import literal_eval as make_tuple
+        from ast import literal_eval as make_list
 
         nxg = nx.DiGraph()
 
         # go over all path
-        for i, path in enumerate(paths):
+        for i, path_str in enumerate(paths):
+            
+            path = make_list(path_str)
 
             # go over the callsites in this path
             plen = len(path)
 
-            for j in range(plen - 1):
-                source = Sanitizer.sanitize(path[j])
-                target = Sanitizer.sanitize(path[j + 1])
+            j = 0
+            k = 0
 
-                if not nxg.has_edge(source, target):
-                    nxg.add_edge(source, target)
+            while j < plen and j + k + 1 < plen:
+                source = Sanitizer.sanitize(path[j])
+                target = Sanitizer.sanitize(path[j + k + 1])
+
+                if target in callsites and source in callsites:
+                    if not nxg.has_edge(source, target):
+                        nxg.add_edge(source, target)
+                        j = j + k + 1
+                        k = 0
+                    else:
+                        j += 1
+                else:
+                    k += 1
 
         return nxg
 

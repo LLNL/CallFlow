@@ -64,7 +64,6 @@ class Filter:
 
         if self.filter_by == "time (inc)":
             value = self.filter_perc * 0.01 * np.max(max_vals["time (inc)"])
-            print(value)
             self._filter_sg(self.filter_by, value)
 
         elif self.filter_by == "time":
