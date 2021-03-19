@@ -132,7 +132,7 @@ class SuperGraph(ht.GraphFrame):
         # ----------------------------------------------------------------------
         # Hatchet requires node and rank to be indexes.
         # remove the indexes to maintain consistency.
-        self.indexes = list(self.dataframe.index.names)
+        self.indexes = list(self.dataframe.index.names) # We will remove node since it gets droped when `gf.drop_index_levels()`
         self.df_reset_index()
 
         # ----------------------------------------------------------------------
@@ -347,10 +347,14 @@ class SuperGraph(ht.GraphFrame):
         else:
             assert isinstance(callsites, (list, np.ndarray))
 
+        _indexes = ["name"] + self.indexes
+        _df = self.dataframe.set_index(_indexes)
+
         map = {}
         for _ in callsites:
-            mod_idx = df_lookup_and_list(self.dataframe, "name", _, "module")
-            # assert mod_idx.shape[0] in [0, 1]
+            __df =  _df.xs(callsites[0], 0)
+            mod_idx = __df["module"].unique()
+            assert mod_idx.shape[0] in [0, 1]
             if mod_idx.shape[0] == 1:
                 map[_] = mod_idx[0]
         return map

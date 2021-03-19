@@ -73,7 +73,7 @@ def df_lookup_by_column(df, column, value, proxy={}):
 def df_lookup_and_list(df, col_lookup, val_lookup, col_list, proxy={}):
     col_lookup = proxy.get(col_lookup, col_lookup)
     col_list = proxy.get(col_list, col_list)
-    return df_unique(df_lookup_by_column(df, col_lookup, val_lookup), col_list)
+    return np.array(list(set(df_lookup_by_column(df, col_lookup, val_lookup)[col_list].values)))
 
 
 # ------------------------------------------------------------------------------

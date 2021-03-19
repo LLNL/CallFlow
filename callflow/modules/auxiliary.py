@@ -16,7 +16,7 @@ from scipy.stats import kurtosis, skew
 import callflow
 from callflow.utils.utils import print_dict_recursive
 from callflow.utils.df import df_minmax, df_count, df_unique, df_group_by, \
-    df_fetch_columns, df_lookup_by_column, df_lookup_and_list, df_bi_level_group
+    df_fetch_columns, df_lookup_by_column, df_bi_level_group
 
 from .gradients import Gradients
 from .boxplot import BoxPlot
