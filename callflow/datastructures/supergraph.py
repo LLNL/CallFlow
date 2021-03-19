@@ -105,7 +105,7 @@ class SuperGraph(ht.GraphFrame):
         gf = SuperGraph.from_config(path, self.profile_format)
         assert isinstance(gf, ht.GraphFrame)
         assert gf.graph is not None
-        LOGGER.debug("Input Dataframe shape", gf.dataframe.shape)
+        LOGGER.debug(f"Input Dataframe shape: {gf.dataframe.shape}")
 
         super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics) # Initialize here so that we dont drop index levels.
 
@@ -350,7 +350,7 @@ class SuperGraph(ht.GraphFrame):
         map = {}
         for _ in callsites:
             mod_idx = df_lookup_and_list(self.dataframe, "name", _, "module")
-            assert mod_idx.shape[0] in [0, 1]
+            # assert mod_idx.shape[0] in [0, 1]
             if mod_idx.shape[0] == 1:
                 map[_] = mod_idx[0]
         return map
