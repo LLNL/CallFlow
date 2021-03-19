@@ -58,7 +58,8 @@ class Auxiliary:
         # single super graph
         if not isinstance(sg, callflow.EnsembleGraph):
 
-            df_module = df_bi_level_group(sg.dataframe, "module", "rank", cols=["time", "time (inc)", "name", "module"], apply_func=lambda _: _.mean())
+            _df = df_bi_level_group(sg.dataframe, "module", "rank", cols=["time", "time (inc)", "name", "module"], apply_func=lambda _: _.mean())
+            df_module = _df.groupby("module")
             df_name = df_group_by(sg.dataframe, "name")
 
             self.result = {"summary": sg.summary(),
