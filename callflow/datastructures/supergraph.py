@@ -159,14 +159,13 @@ class SuperGraph(ht.GraphFrame):
         for node in self.graph.traverse():
             node_name = Sanitizer.from_htframe(node.frame)
             self.hatchet_nodes[node_name] = node
-            self.paths[node_name] = node.paths()
+            self.paths[node_name] = [ Sanitizer.from_htframe(_) for _ in node.paths()[0]]
             self.callers[node_name] = [_.frame.get("name") for _ in node.parents]
             self.callees[node_name] = [_.frame.get("name") for _ in node.children]
 
         self.df_add_column("callees", apply_func=lambda _: self.callees[_])
         self.df_add_column("callers", apply_func=lambda _: self.callers[_])
-        self.df_add_column("path", apply_func=lambda _: [[
-            Sanitizer.from_htframe(_f) for _f in f] for f in self.paths[_]][0]) # Expensive.
+        self.df_add_column("path", apply_func=lambda _: self.paths[_])
 
         self.modules = np.array(self.df_factorize_column("module", sanitize=True))  # As expensive as 
 
@@ -243,8 +242,7 @@ class SuperGraph(ht.GraphFrame):
                 for c in clist:
                     self.callsite_module_map[c] = m
 
-            self.df_add_column("module",
-                               apply_func=lambda _: self.callsite_module_map[_])
+            df_add_column(self.dataframe, "module", apply_on="name", lookup_dict=self.callsite_module_map)
 
         # ----------------------------------------------------------------------
         else:
