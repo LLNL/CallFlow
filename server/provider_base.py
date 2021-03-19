@@ -100,6 +100,7 @@ class BaseProvider:
         LOGGER.warning(f'-------------------- PROCESSING {len(self.config["runs"])} SUPERGRAPHS --------------------\n\n\n')
 
         for dataset in self.config["runs"]:
+            print(dataset)
 
             name = dataset["name"]
             _prop = run_props[name]
@@ -112,12 +113,16 @@ class BaseProvider:
                 profile_format=_prop[1],
                 module_callsite_map=module_callsite_map,
             )
+            
+            Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
+            LOGGER.profile(f'Filtered supergraph {name}')
+
+            sg.post_filter()
+            # exit()
+
             LOGGER.profile(f'Created supergraph {name}')
             Group(sg, group_by=group_by)
             LOGGER.profile(f'Grouped supergraph {name}')
-
-            Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
-            LOGGER.profile(f'Filtered supergraph {name}')
             
             if is_not_ensemble or indivdual_aux_for_ensemble:
                 Auxiliary(sg)
