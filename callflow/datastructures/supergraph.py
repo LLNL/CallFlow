@@ -108,16 +108,17 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.debug(f"Input Dataframe shape: {gf.dataframe.shape}")
 
         super().__init__(gf.graph, gf.dataframe, gf.exc_metrics, gf.inc_metrics) # Initialize here so that we dont drop index levels.
+        self.add_time_proxies()
 
         self.callsites = df_unique(gf.dataframe, "name")
         LOGGER.info(f"Number of callsites before QueryMatcher: {len(self.callsites)}")
 
         self.roots = SuperGraph.hatchet_get_roots(gf.graph) # Contains all unfiltered roots as well.
-        self.mean_root_inctime = SuperGraph.df_mean_runtime(gf.dataframe, self.roots)
+        self.mean_root_inctime = self.df_mean_runtime(self.roots, "time (inc)")
         
         # Filter the graphframe using hatchet (initial filtering) using QueryMatcher.
         query = [
-            ("*", {f"{filter_by}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
+            ("*", {f"{self.df_get_proxy(filter_by)}": f"> {filter_perc * 0.01 * self.mean_root_inctime}"})
         ]
         LOGGER.debug(f"Query is :{query}")
         gf.drop_index_levels()
@@ -139,8 +140,7 @@ class SuperGraph(ht.GraphFrame):
         LOGGER.info(f'Loaded dataframe: {self.dataframe.shape}, '
                     f'columns = {list(self.dataframe.columns)}')
 
-        # add time proxies and modules
-        self.add_time_proxies()
+        # add modules
         self.add_modules(module_callsite_map)
 
         # add new columns to the dataframe
@@ -313,7 +313,7 @@ class SuperGraph(ht.GraphFrame):
     def summary(self):
 
         cols = list(self.dataframe.columns)
-        result = {"meantime": SuperGraph.df_mean_runtime(self.dataframe, self.roots),
+        result = {"meantime": self.df_mean_runtime(self.roots, "time (inc)"),
                   "roots": self.roots,
                   "ncallsites": self.df_count("name"),
                   "nmodules": self.df_count("module"), # if "module" in cols else 0,
@@ -616,11 +616,11 @@ class SuperGraph(ht.GraphFrame):
     def hatchet_get_roots(graph):
         return [root.frame.get('name') for root in graph.roots]
 
-    @staticmethod
-    def df_mean_runtime(df, roots):
+    def df_mean_runtime(self, roots, column):
         mean_runtime = 0.0
+        column = self.df_get_proxy(column)
         for root in roots:
-            mean_runtime = max(mean_runtime, df.loc[df['name'] == root]["time (inc)"].mean())
+            mean_runtime = max(mean_runtime, self.dataframe.loc[self.dataframe['name'] == root][column].mean())
         return round(mean_runtime, 2)
 
     def get_roots(self, nxg):

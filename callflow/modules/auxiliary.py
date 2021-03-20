@@ -58,7 +58,7 @@ class Auxiliary:
         # single super graph
         if not isinstance(sg, callflow.EnsembleGraph):
 
-            _df = df_bi_level_group(sg.dataframe, "module", "rank", cols=["time", "time (inc)", "name", "module"], apply_func=lambda _: _.mean())
+            _df = df_bi_level_group(sg.dataframe, "module", "rank", cols= self.time_columns + ["name", "module"], apply_func=lambda _: _.mean())
             df_module = _df.groupby("module")
             df_name = df_group_by(sg.dataframe, "name")
 
@@ -74,7 +74,7 @@ class Auxiliary:
         # ----------------------------------------------------------------------
         # ensemble graph
         else:
-            edf = df_bi_level_group(sg.dataframe, "module", "rank", cols=["time", "time (inc)", "name", "module"], apply_func=lambda _: _.mean())
+            edf = df_bi_level_group(sg.dataframe, "module", "rank", cols= self.time_columns + ["name", "module"], apply_func=lambda _: _.mean())
             edf_module = edf.groupby("module")
             
             edf_name = df_group_by(sg.dataframe, "name")
