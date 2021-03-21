@@ -116,8 +116,6 @@ class BaseProvider:
                 filter_by=filter_by, filter_perc=filter_perc
             )
 
-
-            
             LOGGER.profile(f'Created supergraph {name}')
             Group(sg, group_by=group_by)
             LOGGER.profile(f'Grouped supergraph {name}')
