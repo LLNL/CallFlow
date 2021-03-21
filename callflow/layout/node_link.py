@@ -34,6 +34,9 @@ class NodeLinkLayout:
 
         self.timer = Timer()
 
+        self.time_exc = self.sg.df_get_proxy("time")
+        self.time_inc = self.sg.df_get_proxy("time (inc)")
+
         # Do not filter if the selected_runs is a single run.
         if not isinstance(sg, callflow.SuperGraph):
             sg.filter_by_datasets(selected_runs)
@@ -42,7 +45,7 @@ class NodeLinkLayout:
 
         # Put the top callsites into a list.
         callsite_count = len(sg.df_unique("name"))
-        callsites = sg.df_get_top_by_attr(callsite_count, "time (inc)")
+        callsites = sg.df_get_top_by_attr(callsite_count, self.time_inc)
 
         # Filter out the callsites not in the list. (in a LOCAL copy)
         _fdf = sg.df_filter_by_name(callsites)
@@ -66,8 +69,9 @@ class NodeLinkLayout:
         :return: None
         """
         _gdf = self.sg.df_group_by(["name"])
-        name_time_inc_map = _gdf["time (inc)"].max().to_dict()
-        name_time_exc_map = _gdf["time"].max().to_dict()
+
+        name_time_inc_map = _gdf[self.time_inc].max().to_dict()
+        name_time_exc_map = _gdf[self.time_exc].max().to_dict()
         module_map = _gdf["module"].unique().to_dict()
 
         # compute data map
@@ -77,9 +81,9 @@ class NodeLinkLayout:
                 if column not in datamap:
                     datamap[column] = {}
 
-                if column == "time (inc)":
+                if column == self.time_inc:
                     datamap[column][callsite] = name_time_inc_map[callsite]
-                elif column == "time":
+                elif column == self.time_exc:
                     datamap[column][callsite] = name_time_exc_map[callsite]
                 elif column == "name":
                     datamap[column][callsite] = callsite
@@ -107,9 +111,9 @@ class NodeLinkLayout:
 
             target_module_callsite_map = target_group_df["name"].unique().to_dict()
             target_name_time_inc_map = (
-                target_name_group_df["time (inc)"].mean().to_dict()
+                target_name_group_df[self.time_inc].mean().to_dict()
             )
-            target_name_time_exc_map = target_name_group_df["time"].mean().to_dict()
+            target_name_time_exc_map = target_name_group_df[self.time_exc].mean().to_dict()
 
             datamap = {}
             for callsite in self.nxg.nodes():
@@ -127,9 +131,9 @@ class NodeLinkLayout:
                     if column not in datamap:
                         datamap[column] = {}
 
-                    if column == "time (inc)":
+                    if column == self.time_inc:
                         datamap[callsite][column] = target_name_time_inc_map[module]
-                    elif column == "time":
+                    elif column == self.time_exc:
                         datamap[callsite][column] = target_name_time_exc_map[module]
                     elif column == "module":
                         datamap[callsite][column] = module
