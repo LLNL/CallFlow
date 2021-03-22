@@ -39,8 +39,10 @@ export default {
 			xTitle: 20,
 			yTitle: 20,
 		},
-		chartType: "STACKED_BAR_CHART",
-		chartXAttr: "total",
+		// chartType: "STACKED_BAR_CHART",
+		chartType: "STACKED_AREA_CHART",
+		// chartXAttr: "total",
+		chartXAttr: "time",
 	}),
 
 	mounted() {
@@ -109,8 +111,8 @@ export default {
 				this.x = d3
 					.scaleBand()
 					.domain(data.map((d) => d.name))
-					.range([0, this.width - 2 * (this.padding.right + this.padding.left)])
-					.padding(0.5);
+					.range([0, this.width - 2 * (this.padding.right + this.padding.left)]);
+				// .padding(0.5);
 			}
 			else if(this.chartType == "STACKED_AREA_CHART") {
 				this.x = d3.scaleUtc()
@@ -149,16 +151,18 @@ export default {
 					.append("title")
 					.text((d) => `[${d.data.name}] ${d.key} - ${utils.formatRuntimeWithoutUnits(d.data[d.key])}`);
 			}
-			else if (this.chartType == "STACKED_AREA_CHART") {
-				const area = d3.area()
+			else if (this.chartType == "STACKED_AREA_CHART") { // If stacked or not stacked....
+				const area = d3.line()
 					.x(d => this.x(d.data.time))
-					.y0(d => this.y(d[0]))
+					// .y0(d => this.y(d[0]))
+					.y0(d => 0)
 					.y1(d => this.y(d[1]));
+
 				this.mainSvg.append("g")
 					.selectAll("path")
 					.data(series)
 					.join("path")
-					.attr("fill", ({key}) => this.color(key))
+					// .attr("fill", ({key}) => this.color(key))
 					.attr("d", area)
 					.append("title")
 					.text(({key}) => key);
