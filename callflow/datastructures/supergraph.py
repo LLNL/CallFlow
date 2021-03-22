@@ -174,6 +174,17 @@ class SuperGraph(ht.GraphFrame):
 
 
     # --------------------------------------------------------------------------
+    def check_load(self, path):
+        dataset = os.path.basename(path)
+        for f_type, f_name in SuperGraph._FILENAMES.items():
+            ext = os.path.splitext(SuperGraph._FILENAMES[f_type])[-1]
+            if f_type == "aux":
+                f_name = f_name.format(dataset)
+
+            if not os.path.isfile(os.path.join(path, f_name)):
+                return False
+        return True
+    
     def load(
         self, path, read_graph=False, read_parameter=False, read_aux=False
     ) -> None:
@@ -242,8 +253,7 @@ class SuperGraph(ht.GraphFrame):
                 for c in clist:
                     self.callsite_module_map[c] = m
 
-            df_add_column(self.dataframe, "module", apply_on="name", lookup_dict=self.callsite_module_map)
-
+            self.df_add_column("module", apply_func=lambda _: self.callsite_module_map[_])
         # ----------------------------------------------------------------------
         else:
             LOGGER.info('No module map found. Defaulting to "module=callsite"')
