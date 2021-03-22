@@ -171,6 +171,12 @@ class ArgParser:
             help="Path for logfile (stdout if no path is given)",
         )
 
+        parser.add_argument(
+            "--reset",
+            action="store_true",
+            help="Resets the .callflow directory to re-process entire ensemble"
+        )
+
         # -------------
         return parser
 
