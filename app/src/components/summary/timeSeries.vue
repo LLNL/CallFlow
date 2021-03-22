@@ -15,34 +15,17 @@
 <script>
 import * as d3 from "d3";
 import * as utils from "lib/utils";
+import moment from "moment";
 
 export default {
 	name: "TimeSeries",
 	props: [],
 	data: () => ({
 		id: null,
-		view: null,
-		vis: null,
-		container: null,
-		enableInteraction: true,
 		height: 0,
 		width: 0,
-		metrics: null,
-		selectedMeasure: null,
-		current_views: [],
-		selectedIds: [],
 		yMin: 0,
 		yMax: 0,
-		isLabelled: false,
-		brushes: [],
-		cpds: [],
-		prev_cpd: 0,
-		message: "Performance Behavior view",
-		showMessage: true,
-		actualTime: [],
-		clusterMap: {},
-		cluster: [],
-		showCircleLabels: true,
 		padding: {
 			top: 20,
 			bottom: 30,
@@ -55,11 +38,9 @@ export default {
 			yAxis: 20,
 			xTitle: 20,
 			yTitle: 20,
-			navChart: 70,
 		},
-		currentMovingAvg: 0,
-		movingAvgTs: {},
-		navDrag: false,
+		chartType: "STACKED_BAR_CHART",
+		chartXAttr: "total",
 	}),
 
 	mounted() {
@@ -74,7 +55,7 @@ export default {
 
 			this.initSVG();
 			this.initLine();
-			this.renderAbsoluteStackedBarPlots(data);
+			this.plot(data);
 			this.axis();
 			this.label();
 			this.colorMap();
@@ -113,21 +94,29 @@ export default {
 				});
 		},
 
-		renderAbsoluteStackedBarPlots(data) {
+		plot(data) {
 			this.keys = Object.keys(data[0]);
-			this.keys = this.keys.filter( (e) => e != "total" && e != "name");
+			const filter_keys = ["time", "total", "name"];
+			this.keys = this.keys.filter((e) =>  !filter_keys.includes(e));
 
-			const self = this;
 			const series = d3
 				.stack()
-				.keys(self.keys)(data)
+				.keys(this.keys)(data)
 				.map((d) => (d.forEach((v) => (v.key = d.key)), d));
+			console.log(series);
 
-			this.x = d3
-				.scaleBand()
-				.domain(data.map((d) => d.name))
-				.range([0, this.width - 2 * (this.padding.right + this.padding.left)])
-				.padding(0.5);
+			if (this.chartType == "STACKED_BAR_CHART") {
+				this.x = d3
+					.scaleBand()
+					.domain(data.map((d) => d.name))
+					.range([0, this.width - 2 * (this.padding.right + this.padding.left)])
+					.padding(0.5);
+			}
+			else if(this.chartType == "STACKED_AREA_CHART") {
+				this.x = d3.scaleUtc()
+					.domain(d3.extent(data, d => d[this.chartXAttr]))
+					.range([this.padding.left, this.width - this.padding.right]);
+			}
 
 			this.y = d3
 				.scaleLinear()
@@ -143,34 +132,43 @@ export default {
 				.range(d3.schemeSpectral[series.length])
 				.unknown("#ccc");
 
-			const formatValue = (x) => (isNaN(x) ? "N/A" : x.toLocaleString("en"));
-
-			this.mainSvg
-				.append("g")
-				.selectAll("g")
-				.data(series)
-				.join("g")
-				.attr("fill", (d) => this.color(d.key))
-				.selectAll("rect")
-				.data((d) => d)
-				.join("rect")
-				.attr("x", (d, i) => this.x(d.data.name))
-				.attr("y", (d) => this.y(d[1]))
-				.attr("height", (d) => this.y(d[0]) - this.y(d[1]))
-				.attr("width", this.x.bandwidth())
-				.append("title")
-				.text(
-					(d) => `${d.data.name} ${d.key}
-				${formatValue(d.data[d.key])}`,
-				);
+			if (this.chartType == "STACKED_BAR_CHART") {
+				this.mainSvg
+					.append("g")
+					.selectAll("g")
+					.data(series)
+					.join("g")
+					.attr("fill", (d) => this.color(d.key))
+					.selectAll("rect")
+					.data((d) => d)
+					.join("rect")
+					.attr("x", (d, i) => this.x(d.data.name))
+					.attr("y", (d) => this.y(d[1]))
+					.attr("height", (d) => this.y(d[0]) - this.y(d[1]))
+					.attr("width", this.x.bandwidth())
+					.append("title")
+					.text((d) => `[${d.data.name}] ${d.key} - ${utils.formatRuntimeWithoutUnits(d.data[d.key])}`);
+			}
+			else if (this.chartType == "STACKED_AREA_CHART") {
+				const area = d3.area()
+					.x(d => this.x(d.data.time))
+					.y0(d => this.y(d[0]))
+					.y1(d => this.y(d[1]));
+				this.mainSvg.append("g")
+					.selectAll("path")
+					.data(series)
+					.join("path")
+					.attr("fill", ({key}) => this.color(key))
+					.attr("d", area)
+					.append("title")
+					.text(({key}) => key);
+			}
 		},
 
 		initLine() {
 			this.line = d3
 				.line()
 				.x((d, i) => {
-					// let windowActualTime = this.windowActualTime.splice(this.windowActualTime.length -1 , 1)
-					// console.log(windowActualTime)
 					return this.x(this.windowActualTime[i]);
 				})
 				.y((d) => this.y(d));
@@ -191,7 +189,12 @@ export default {
 				.axisBottom(this.x)
 				.tickPadding(10)
 				.tickFormat((d, i) => {
-					return d;
+					if (this.chartXAttr == "total") {
+						return `${d}`;
+					}
+					else if(this.chartXAttr == "time") {
+						return moment(d).format("DD-MM-YY");
+					}
 				});
 
 			const yFormat = d3.format("0.01s");
@@ -199,7 +202,7 @@ export default {
 				.axisLeft(this.y)
 				.tickPadding(10)
 				.tickFormat((d, i) => {
-					return `${utils.formatRuntimeWithoutUnits(d)}`;
+					return `${utils.formatRuntimeWithoutUnits(d)}`;	
 				});
 
 			this.xAxisSVG = this.mainSvg
@@ -240,7 +243,7 @@ export default {
 					})`,
 				})
 				.style("text-anchor", "middle")
-				.text("t");
+				.text(this.chartXAttr);
 
 			this.svg
 				.append("text")
