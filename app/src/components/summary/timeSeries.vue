@@ -109,12 +109,6 @@ export default {
 		},
 
 		renderAbsoluteStackedBarPlots(data) {
-			const sortable = Object.entries(data["ensemble"])
-				.sort(([,a],[,b]) => a-b)
-				.reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
-
-			console.log(sortable);
-
 			const keys = Object.keys(data[0]);
 
 			const series = d3.stack().keys(keys)(data)

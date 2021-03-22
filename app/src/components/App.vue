@@ -148,25 +148,47 @@ export default {
 		/**
      	 * Per dataset information.
      	 */
-		setModuleWiseInfo(data, module_idx, metric_type, info_type, sort_by) {
+		setModuleWiseInfo(data, module_idx, metric_type, info_type, sort_by, include_modules) {
 			let ret = [];
 			for (let [dataset, d] of Object.entries(data)) {
 				let _r = {};
 				_r["name"] = dataset;
 				let total = 0;
 				for (let [elem, _d] of Object.entries(d)) {
-					_r[module_idx[dataset][elem]] = _d[metric_type][info_type];
+					console.log(elem, _d);
+					const module_name = module_idx[dataset][elem];
+					if(include_modules.includes(module_name)) {
+						_r[module_idx[dataset][elem]] = _d[metric_type][info_type];
+					}
 					total += _d[metric_type][info_type];
 				}
 				_r["total"] = total;
 				ret.push(_r);
 			}
-			return ret.sort((a, b) => b.total - a.total);
+			return ret.sort((a, b) => b[sort_by] - a[sort_by]);
+		},
+
+		sortByAttribute(callsites, metric_type, info_type, top_n, module_idx) {
+			let items = Object.keys(callsites).map( (key) => {
+				return [key, callsites[key]];
+			});
+ 
+			items = items.sort( (first, second) => {
+				return second[1][metric_type][info_type] - first[1][metric_type][info_type];
+			});
+
+			items = items.slice(items.length - top_n);
+
+			callsites = items.reduce((lst, obj) => { lst.push(module_idx[obj[1]["name"]]); return lst; }, []);
+
+			return callsites;
 		},
 
 		setLocalVariables(data) {
 			// Render the tables in the view
 			this.profiles = utils.swapKeysToArray(data, "summary");
+			const top_10_modules = this.sortByAttribute(this.$store.data_mod["ensemble"], "time", "mean", 10, this.$store.modules["ensemble"]);
+			console.log(top_10_modules);
 
 			// Formulate the data for the module-wise summary information.
 			this.moduleCallsiteMap = this.setModuleWiseInfo(
@@ -174,7 +196,8 @@ export default {
 				this.$store.modules,
 				"time (inc)",
 				"mean",
-				"total"
+				"total",
+				top_10_modules
 			);
 
 
