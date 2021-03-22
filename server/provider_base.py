@@ -109,26 +109,32 @@ class BaseProvider:
             profile.start()
 
             sg = SuperGraph(name)
-            sg.create(
-                path=os.path.join(load_path, _prop[0]),
-                profile_format=_prop[1],
-                module_callsite_map=module_callsite_map,
-                filter_by=filter_by, filter_perc=filter_perc
-            )
+            # TODO: Add a re-process mode.
+            read_param = self.config["read_parameter"]
+            read_aux = False
+            if(not sg.check_load(os.path.join(save_path, name))):
+                LOGGER.info("Not creating new directories!!! Moving on.")
+            else:
+                sg.create(
+                        path=os.path.join(load_path, _prop[0]),
+                        profile_format=_prop[1],
+                        module_callsite_map=module_callsite_map,
+                        filter_by=filter_by, filter_perc=filter_perc
+                    )
 
-            LOGGER.profile(f'Created supergraph {name}')
-            Group(sg, group_by=group_by)
-            LOGGER.profile(f'Grouped supergraph {name}')
+                LOGGER.profile(f'Created supergraph {name}')
+                Group(sg, group_by=group_by)
+                LOGGER.profile(f'Grouped supergraph {name}')
 
-            Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
-            LOGGER.profile(f'Filtered supergraph {name}')
-            
-            if is_not_ensemble or indivdual_aux_for_ensemble:
-                Auxiliary(sg)
+                Filter(sg, filter_by=filter_by, filter_perc=filter_perc)
+                LOGGER.profile(f'Filtered supergraph {name}')
 
-            LOGGER.profile(f'Created Aux for {name}')
-            sg.write(os.path.join(save_path, name), write_aux=is_not_ensemble)
+                if (is_not_ensemble or indivdual_aux_for_ensemble) or True:
+                    Auxiliary(sg)
 
+                LOGGER.profile(f'Created Aux for {name}')
+                sg.write(os.path.join(save_path, name), write_aux=is_not_ensemble)
+ 
             profile.stop()
             print(profile.output_text(unicode=True, color=True))
             self.supergraphs[name] = sg
