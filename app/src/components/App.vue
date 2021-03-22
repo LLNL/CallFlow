@@ -25,9 +25,10 @@
 			</v-btn> -->
 		</v-app-bar>
 		<v-main>
-			<Loader :isDataReady="isDataReady" />
+			<Loader ref="Loader" :isDataReady="isDataReady" />
 			<router-view></router-view>
-			<Summary v-if="$route.path == '/'" :config="config" :profiles="profiles" />
+			<Summary ref="Summary" v-if="$route.path == '/'" :config="config"
+			:profiles="profiles" :moduleCallsiteMap="moduleCallsiteMap" />
 		</v-main>
 		<Footer ref="Footer" :text="footerText" :year="year"></Footer>
 	</v-app>
@@ -73,6 +74,7 @@ export default {
 		footerText: "Lawrence Livermore National Laboratory and VIDi Labs, University of California, Davis",
 		year: "2021",
 		isDataReady: false,
+		moduleCallsiteMap: {},
 	}),
 
 	mounted() {
@@ -119,6 +121,8 @@ export default {
 			}
 			const aux_data = await APIService.POSTRequest("aux_data", payload);
 			this.initStore(aux_data);
+			// TODO: Remove this shortcut.
+			this.$refs.Summary.init(this.moduleCallsiteMap);
 			return;
 		},
 
@@ -146,7 +150,8 @@ export default {
 			this.profiles = utils.swapKeysToArray(data, "summary");
 				
 			// TODO: Does not work as the format is weird.
-			this.module_callsite_map = utils.swapKeysToDict(data, "c2m");
+			this.moduleCallsiteMap = {"x": [333, 323]};
+			console.log("assigned", this.moduleCallsiteMap);
 
 			this.$store.metricTimeMap = Object.keys(data).reduce((res, item, idx) => { 
 				if(item != "ensemble"){
